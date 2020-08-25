@@ -5,12 +5,6 @@
  */
 
 [@deriving show({with_path: false})]
-type editorRenderWhitespace =
-  | All
-  | Boundary
-  | None;
-
-[@deriving show({with_path: false})]
 type vimUseSystemClipboard = {
   yank: bool,
   delete: bool,
@@ -41,18 +35,11 @@ type t = {
   editorHoverDelay: int,
   editorHoverEnabled: bool,
   editorLargeFileOptimizations: bool,
-  editorLineNumbers: LineNumber.setting,
-  editorMatchBrackets: bool,
-  editorAcceptSuggestionOnEnter: [ | `on | `off | `smart],
-  editorMinimapEnabled: bool,
-  editorMinimapShowSlider: bool,
-  editorMinimapMaxColumn: int,
   editorInsertSpaces: bool,
   editorIndentSize: int,
   editorTabSize: int,
   editorHighlightActiveIndentGuide: bool,
   editorRenderIndentGuides: bool,
-  editorRenderWhitespace,
   editorRulers: list(int),
   terminalIntegratedFontFile: string,
   terminalIntegratedFontSize: float,
@@ -91,18 +78,11 @@ let default = {
   editorHoverDelay: 1000,
   editorHoverEnabled: true,
   editorLargeFileOptimizations: true,
-  editorMatchBrackets: true,
-  editorAcceptSuggestionOnEnter: `on,
-  editorMinimapEnabled: true,
-  editorMinimapShowSlider: true,
-  editorMinimapMaxColumn: Constants.minimapMaxColumn,
-  editorLineNumbers: On,
   editorInsertSpaces: true,
   editorIndentSize: 4,
   editorTabSize: 4,
   editorRenderIndentGuides: true,
   editorHighlightActiveIndentGuide: true,
-  editorRenderWhitespace: None,
   editorRulers: [],
   terminalIntegratedFontFile: Constants.defaultFontFile,
   terminalIntegratedFontSize: Constants.defaultTerminalFontSize,

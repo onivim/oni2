@@ -164,9 +164,9 @@ let renderDefinition =
      });
 
 let renderTokens =
-    (~context, ~line, ~colors, ~tokens, ~shouldRenderWhitespace) => {
+    (~selection, ~context, ~line, ~colors, ~tokens, ~shouldRenderWhitespace) => {
   tokens
-  |> WhitespaceTokenFilter.filter(shouldRenderWhitespace)
+  |> WhitespaceTokenFilter.filter(~selection, shouldRenderWhitespace)
   |> List.iter(Draw.token(~context, ~line, ~colors));
 };
 
@@ -225,6 +225,7 @@ let renderText =
         );
 
       renderTokens(
+        ~selection=selectionRange,
         ~context,
         ~line=item |> EditorCoreTypes.LineNumber.ofZeroBased,
         ~colors,
