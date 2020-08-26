@@ -174,12 +174,10 @@ let item =
   };
 };
 
-let textItem = (~onClick=?, ~background, ~font: UiFont.t, ~theme, ~text, ()) =>
+let textItem = (~onClick=?, ~font: UiFont.t, ~theme, ~text, ()) =>
   <item ?onClick>
     <Text
-      style={Styles.text(
-        ~color=Colors.StatusBar.foreground.from(theme),
-      )}
+      style={Styles.text(~color=Colors.StatusBar.foreground.from(theme))}
       fontFamily={font.family}
       fontSize=11.
       text
@@ -191,7 +189,6 @@ let notificationCount =
       ~theme,
       ~font: UiFont.t,
       ~foreground as color,
-      ~background,
       ~notifications: Feature_Notification.model,
       ~contextMenu,
       ~dispatch,
@@ -253,7 +250,7 @@ let notificationCount =
 };
 
 let diagnosticCount =
-    (~font: UiFont.t, ~background, ~theme, ~diagnostics, ~dispatch, ()) => {
+    (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => {
   let color = Colors.StatusBar.foreground.from(theme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
@@ -417,7 +414,7 @@ module View = {
     let indentation = () => {
       let text = indentationSettings |> indentationToString;
 
-      <textItem font background theme text />;
+      <textItem font theme text />;
     };
 
     let fileType = () => {
@@ -429,7 +426,6 @@ module View = {
 
       <textItem
         font
-        background
         theme
         text
         onClick={() => {dispatch(FileTypeClicked)}}
@@ -446,7 +442,7 @@ module View = {
       activeBuffer
       |> OptionEx.flatMap(Buffer.getLineEndings)
       |> Option.map(toString)
-      |> Option.map(text => {<textItem font background theme text />})
+      |> Option.map(text => {<textItem font theme text />})
       |> Option.value(~default=React.empty);
     };
 
@@ -457,7 +453,7 @@ module View = {
         |> positionToString;
       };
 
-      <textItem font background theme text />;
+      <textItem font theme text />;
     };
 
     let notificationPopups = () =>
@@ -475,7 +471,6 @@ module View = {
           theme
           font
           foreground
-          background
           notifications
           contextMenu
         />
@@ -483,7 +478,7 @@ module View = {
       <sectionGroup>
         <section align=`FlexStart> leftItems </section>
         <section align=`FlexStart>
-          <diagnosticCount font background theme diagnostics dispatch />
+          <diagnosticCount font theme diagnostics dispatch />
           scmItems
         </section>
         <section align=`Center />

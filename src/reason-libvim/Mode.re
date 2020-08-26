@@ -35,9 +35,10 @@ let current = () => {
     })
   | Native.CommandLine => CommandLine
   | Native.Replace => Replace
-  | Native.Operator => Operator({
-    pending: Operator.get() |> Option.value(~default=Operator.default)
-  })
+  | Native.Operator =>
+    Operator({
+      pending: Operator.get() |> Option.value(~default=Operator.default),
+    })
   | Native.Insert => Insert
   | Native.Select =>
     Select({
