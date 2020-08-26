@@ -1702,11 +1702,7 @@ module Request: {
   };
 
   module FileSystemEventService: {
-    let onFileEvent: (
-      ~events: Files.FileSystemEvents.t,
-      Client.t
-    ) => unit;
-
+    let onFileEvent: (~events: Files.FileSystemEvents.t, Client.t) => unit;
     // TODO
     // - onWillRunFileOperation
     // - onDidRunFileOperation

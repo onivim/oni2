@@ -245,10 +245,12 @@ module FileSystemEvents = {
   };
 
   let encode = ({created, changed, deleted}) => {
-    Json.Encode.(obj([
-      ("created", created |> list(Oni_Core.Uri.encode)),
-      ("changed", changed |> list(Oni_Core.Uri.encode)),
-      ("deleted", deleted |> list(Oni_Core.Uri.encode)),
-    ]))
-  }
-}
+    Json.Encode.(
+      obj([
+        ("created", created |> list(Oni_Core.Uri.encode)),
+        ("changed", changed |> list(Oni_Core.Uri.encode)),
+        ("deleted", deleted |> list(Oni_Core.Uri.encode)),
+      ])
+    );
+  };
+};
