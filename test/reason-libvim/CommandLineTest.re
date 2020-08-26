@@ -150,7 +150,7 @@ describe("CommandLine", ({describe, _}) => {
       input("g");
       key("<cr>");
 
-      expect.bool(Mode.getCurrent() == Normal).toBe(true);
+      expect.bool(Mode.current() == Normal).toBe(true);
 
       let line = Buffer.getLine(buffer, LineNumber.ofOneBased(3));
       expect.string(line).toEqual("Dhis is the third line of a test file");

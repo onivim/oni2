@@ -76,8 +76,10 @@ let linePaddingInPixels: t => float;
 let setLineHeight: (~lineHeight: LineHeight.t, t) => t;
 let characterWidthInPixels: t => float;
 
-let selection: t => VisualRange.t;
+let selection: t => option(VisualRange.t);
 let setSelection: (~selection: VisualRange.t, t) => t;
+let clearSelection: t => t;
+
 let selectionOrCursorRange: t => ByteRange.t;
 
 let totalViewLines: t => int;

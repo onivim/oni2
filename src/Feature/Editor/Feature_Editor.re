@@ -122,6 +122,7 @@ let update = (editor, msg) => {
       Editor.setSelection(~selection, editor),
       Nothing,
     )
+  | SelectionCleared => (Editor.clearSelection(editor), Nothing)
   | CursorsChanged(cursors) => (
       Editor.setCursors(~cursors, editor),
       Nothing,

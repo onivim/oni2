@@ -10,7 +10,7 @@ describe("Mode", ({describe, _}) => {
       // Enter replace mode
       let _ = Vim.input("R");
 
-      expect.equal(Vim.Mode.getCurrent(), Vim.Types.Replace);
+      expect.equal(Vim.Mode.current(), Vim.Mode.Replace);
     })
   });
   describe("select mode", ({test, _}) => {
@@ -19,11 +19,11 @@ describe("Mode", ({describe, _}) => {
 
       // Enter replace mode
       let _ = Vim.input("V");
-      expect.equal(Vim.Mode.getCurrent(), Vim.Types.Visual);
+      expect.equal(Vim.Mode.isVisual(Vim.Mode.current()), true);
 
       let _ = Vim.key("<C-g>");
 
-      expect.equal(Vim.Mode.getCurrent(), Vim.Types.Select);
+      expect.equal(Vim.Mode.isSelect(Vim.Mode.current()), true);
     })
   });
 });

@@ -262,11 +262,28 @@ module Format: {
       });
 };
 
+module Mode: {
+  type t =
+    | Normal
+    | Insert
+    | CommandLine
+    | Replace
+    | Visual({range: VisualRange.t})
+    | Operator
+    | Select({range: VisualRange.t});
+
+  let current: unit => t;
+
+  let isVisual: t => bool;
+  let isSelect: t => bool;
+};
+
 module Effect: {
   type t =
     | Goto(Goto.effect)
     | TabPage(TabPage.effect)
-    | Format(Format.effect);
+    | Format(Format.effect)
+    | ModeChanged(Mode.t);
 };
 
 /**
@@ -384,7 +401,6 @@ module Clipboard = Clipboard;
 module CommandLine = CommandLine;
 module Cursor = Cursor;
 module Event = Event;
-module Mode = Mode;
 module Options = Options;
 module Search = Search;
 module Types = Types;

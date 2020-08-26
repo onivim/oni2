@@ -41,7 +41,7 @@ type t = {
   maxLineLength: int,
   viewLines: int,
   cursors: [@opaque] list(BytePosition.t),
-  selection: [@opaque] VisualRange.t,
+  selection: [@opaque] option(VisualRange.t),
   pixelWidth: int,
   pixelHeight: int,
 };
@@ -49,7 +49,11 @@ type t = {
 let key = ({key, _}) => key;
 let totalViewLines = ({viewLines, _}) => viewLines;
 let selection = ({selection, _}) => selection;
-let setSelection = (~selection, editor) => {...editor, selection};
+let setSelection = (~selection, editor) => {
+  ...editor,
+  selection: Some(selection),
+};
+let clearSelection = editor => {...editor, selection: None};
 let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
 let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
 let scrollY = ({scrollY, _}) => scrollY;
@@ -148,16 +152,7 @@ let create = (~config, ~buffer, ()) => {
      * if a buffer loads prior to our first render.
      */
     cursors: [{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}],
-    selection:
-      VisualRange.create(
-        ~mode=Vim.Types.None,
-        EditorCoreTypes.(
-          ByteRange.{
-            start: BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
-            stop: BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
-          }
-        ),
-      ),
+    selection: None,
     pixelWidth: 1,
     pixelHeight: 1,
   };
@@ -340,7 +335,7 @@ let getPrimaryCursorByte = editor =>
     BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}
   };
 let selectionOrCursorRange = editor => {
-  switch (editor.selection.mode) {
+  switch (editor.selection) {
   | None =>
     let pos = getPrimaryCursorByte(editor);
     ByteRange.{
@@ -351,9 +346,7 @@ let selectionOrCursorRange = editor => {
           byte: ByteIndex.zero,
         },
     };
-  | Line
-  | Block
-  | Character => editor.selection.range
+  | Some(selection) => selection.range
   };
 };
 

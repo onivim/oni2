@@ -5,7 +5,7 @@ open Oni_Core.Utility;
 
 type model = {mode: Vim.Mode.t};
 
-let initial = {mode: Vim.Types.Normal};
+let initial = {mode: Vim.Mode.Normal};
 
 let mode = ({mode}) => mode;
 
