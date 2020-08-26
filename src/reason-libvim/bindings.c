@@ -567,8 +567,6 @@ CAMLprim value libvim_vimGetPendingOperator(value unit) {
   CAMLparam0();
   CAMLlocal2(inner, ret);
 
-  printf("vimGetPendingOperator - 1\n");
-
   pendingOp_T pendingOp;
   if (vimGetPendingOperator(&pendingOp)) {
     inner = caml_alloc(3, 0);
