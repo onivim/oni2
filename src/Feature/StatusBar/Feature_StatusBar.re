@@ -249,8 +249,7 @@ let notificationCount =
   </item>;
 };
 
-let diagnosticCount =
-    (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => {
+let diagnosticCount = (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => {
   let color = Colors.StatusBar.foreground.from(theme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
@@ -276,19 +275,28 @@ let diagnosticCount =
   </item>;
 };
 
-let modeIndicator = (~font: UiFont.t, ~theme, ~mode, ()) => {
-  let background = Colors.Oni.backgroundFor(mode).from(theme);
-  let foreground = Colors.Oni.foregroundFor(mode).from(theme);
+module ModeIndicator = {
+  let transitionDuration = Revery.Time.milliseconds(300);
 
-  <item backgroundColor=background>
-    <Text
-      style={Styles.text(~color=foreground)}
-      text={Mode.toString(mode)}
-      fontFamily={font.family}
-      fontWeight=Medium
-      fontSize=11.
-    />
-  </item>;
+  let%component make = (~font: UiFont.t, ~theme, ~mode, ()) => {
+    let background = Colors.Oni.backgroundFor(mode).from(theme);
+    let foreground = Colors.Oni.foregroundFor(mode).from(theme);
+
+    let%hook background =
+      CustomHooks.colorTransition(~duration=transitionDuration, background);
+    let%hook foreground =
+      CustomHooks.colorTransition(~duration=transitionDuration, foreground);
+
+    <item backgroundColor=background>
+      <Text
+        style={Styles.text(~color=foreground)}
+        text={Mode.toString(mode)}
+        fontFamily={font.family}
+        fontWeight=Medium
+        fontSize=11.
+      />
+    </item>;
+  };
 };
 
 let transitionAnimation =
@@ -491,7 +499,7 @@ module View = {
         </section>
         <notificationPopups />
       </sectionGroup>
-      <section align=`FlexEnd> <modeIndicator font theme mode /> </section>
+      <section align=`FlexEnd> <ModeIndicator font theme mode /> </section>
     </View>;
   };
 };
