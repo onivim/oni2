@@ -3,7 +3,8 @@ open Oni_Core;
 open Config.Schema;
 
 module CustomDecoders: {
-  let whitespace: Config.Schema.codec([ | `All | `Boundary | `None]);
+  let whitespace:
+    Config.Schema.codec([ | `All | `Boundary | `Selection | `None]);
   let lineNumbers: Config.Schema.codec([ | `On | `Relative | `Off]);
   let time: Config.Schema.codec(Time.t);
 } = {
@@ -16,8 +17,9 @@ module CustomDecoders: {
                fun
                | "none" => `None
                | "boundary" => `Boundary
+               | "selection" => `Selection
                | "all"
-               | _ => `All,
+               | _ => `Selection,
              )
         ),
       ~encode=
@@ -25,6 +27,7 @@ module CustomDecoders: {
           fun
           | `None => string("none")
           | `Boundary => string("boundary")
+          | `Selection => string("selection")
           | `All => string("all")
         ),
     );
@@ -84,7 +87,7 @@ let matchBrackets = setting("editor.matchBrackets", bool, ~default=true);
 let renderIndentGuides =
   setting("editor.renderIndentGuides", bool, ~default=true);
 let renderWhitespace =
-  setting("editor.renderWhitespace", whitespace, ~default=`All);
+  setting("editor.renderWhitespace", whitespace, ~default=`Selection);
 let rulers = setting("editor.rulers", list(int), ~default=[]);
 let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
 let smoothScroll = setting("editor.smoothScroll", bool, ~default=true);

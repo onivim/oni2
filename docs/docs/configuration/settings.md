@@ -64,6 +64,12 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
    This allows enabling code-completions based on the current syntax scope.
 
+- `editor.renderWhitespace` __(_"all"|"boundary"|"selection"|"none"_ default: `"selection"`)__ - Controls how whitespace (tabs/spaces) are rendered:
+    - _"all"_ - Render all whitespace
+    - _"boundary"_ - Render whitespace except for single characters between text
+    - _"selection"_ - Render whitespace characters in visual mode selected text
+    - _"none"_ - Don't render whitespace at all
+
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
 - `editor.scrollShadow` __(_bool_ default: `true`)__ - When `true`, show a drop-shadow effect at the borders when there is additional content past the visible area.
