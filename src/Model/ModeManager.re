@@ -3,9 +3,10 @@ open Oni_Core;
 module Internal = {
   let getTerminalNormalMode =
     fun
-    | Vim.Types.Visual => Mode.TerminalVisual
-    | Vim.Types.Operator => Mode.Operator
-    | Vim.Types.CommandLine => Mode.CommandLine
+    | Vim.Mode.Visual({range}) =>
+      Mode.TerminalVisual({range: Oni_Core.VisualRange.ofVim(range)})
+    | Vim.Mode.Operator => Mode.Operator
+    | Vim.Mode.CommandLine => Mode.CommandLine
     | _ => Mode.TerminalNormal;
 };
 
@@ -21,12 +22,14 @@ let current: State.t => Oni_Core.Mode.t =
     |> Option.value(
          ~default=
            switch (Feature_Vim.mode(state.vim)) {
-           | Vim.Types.Insert => Mode.Insert
-           | Vim.Types.Normal => Mode.Normal
-           | Vim.Types.Visual => Mode.Visual
-           | Vim.Types.Select => Mode.Select
-           | Vim.Types.Replace => Mode.Replace
-           | Vim.Types.Operator => Mode.Operator
-           | Vim.Types.CommandLine => Mode.CommandLine
+           | Vim.Mode.Insert => Mode.Insert
+           | Vim.Mode.Normal => Mode.Normal
+           | Vim.Mode.Visual({range}) =>
+             Mode.Visual({range: Oni_Core.VisualRange.ofVim(range)})
+           | Vim.Mode.Select({range}) =>
+             Mode.Select({range: Oni_Core.VisualRange.ofVim(range)})
+           | Vim.Mode.Replace => Mode.Replace
+           | Vim.Mode.Operator => Mode.Operator
+           | Vim.Mode.CommandLine => Mode.CommandLine
            },
        );

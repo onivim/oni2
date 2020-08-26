@@ -4,6 +4,8 @@ type t = {
   stop: BytePosition.t,
 };
 
+let zero: t;
+
 let contains: (BytePosition.t, t) => bool;
 
 /**

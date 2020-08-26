@@ -869,7 +869,7 @@ let update =
     ({...state, signatureHelp, languageSupport: languageSupport'}, shEffect);
 
   | Vim(msg) =>
-    let wasInInsertMode = Feature_Vim.mode(state.vim) == Vim.Types.Insert;
+    let wasInInsertMode = Feature_Vim.mode(state.vim) == Vim.Mode.Insert;
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
     let state = {...state, vim};
 
@@ -894,7 +894,7 @@ let update =
         ({...state, layout: layout'}, Isolinear.Effect.none);
       };
 
-    let isInInsertMode = Feature_Vim.mode(state'.vim) == Vim.Types.Insert;
+    let isInInsertMode = Feature_Vim.mode(state'.vim) == Vim.Mode.Insert;
 
     // Entered insert mode
     let languageSupport =

@@ -152,12 +152,31 @@ let start =
               ~endLine,
             ),
           ),
-        ),
-    );
+        )
+      | ModeChanged(newMode) => {
+          dispatch(Actions.Vim(Feature_Vim.ModeChanged(newMode)));
 
-  let _: unit => unit =
-    Vim.Mode.onChanged(newMode =>
-      dispatch(Actions.Vim(Feature_Vim.ModeChanged(newMode)))
+          let editorId =
+            Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
+
+          switch (newMode) {
+          | Visual({range})
+          | Select({range}) =>
+            dispatch(
+              Editor({
+                scope: Oni_Model.EditorScope.Editor(editorId),
+                msg: SelectionChanged(Oni_Core.VisualRange.ofVim(range)),
+              }),
+            )
+          | _ =>
+            dispatch(
+              Editor({
+                scope: Oni_Model.EditorScope.Editor(editorId),
+                msg: SelectionCleared,
+              }),
+            )
+          };
+        },
     );
 
   let _: unit => unit =
@@ -274,23 +293,6 @@ let start =
             NewTerminal({cmd, splitDirection, closeOnExit: closeOnFinish}),
           ),
         ),
-      );
-    });
-
-  let _: unit => unit =
-    Vim.Visual.onRangeChanged(vr => {
-      open Vim.VisualRange;
-
-      let {visualType, range} = vr;
-      let vr = Core.VisualRange.create(~mode=visualType, range);
-
-      let editorId =
-        Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
-      dispatch(
-        Editor({
-          scope: Oni_Model.EditorScope.Editor(editorId),
-          msg: SelectionChanged(vr),
-        }),
       );
     });
 

@@ -7,14 +7,14 @@ runTest(
   ~name="InsertMode test - effects batched to runEffects",
   (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Mode.Normal
   );
 
   // Edit
   dispatch(KeyboardInput({isText: true, input: "i"}));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Insert
+    Feature_Vim.mode(state.vim) == Vim.Mode.Insert
   );
 
   dispatch(KeyboardInput({isText: true, input: "a"}));

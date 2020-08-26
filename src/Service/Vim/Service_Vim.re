@@ -30,8 +30,8 @@ let quitAll = () =>
 module Effects = {
   let paste = (~toMsg, text) => {
     Isolinear.Effect.createWithDispatch(~name="vim.clipboardPaste", dispatch => {
-      let isCmdLineMode = Vim.Mode.getCurrent() == Vim.Types.CommandLine;
-      let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
+      let isCmdLineMode = Vim.Mode.current() == Vim.Mode.CommandLine;
+      let isInsertMode = Vim.Mode.current() == Vim.Mode.Insert;
 
       if (isInsertMode || isCmdLineMode) {
         if (!isCmdLineMode) {

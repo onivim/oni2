@@ -1,6 +1,15 @@
 type buffer = Types.buffer;
 type lineEnding = Types.lineEnding;
 
+type mode =
+  | Normal
+  | Insert
+  | CommandLine
+  | Replace
+  | Visual
+  | Operator
+  | Select;
+
 type formatType =
   | Indentation
   | Formatting;
@@ -19,7 +28,7 @@ external vimInput: string => unit = "libvim_vimInput";
 external vimKey: string => unit = "libvim_vimKey";
 external vimCommand: string => unit = "libvim_vimCommand";
 
-external vimGetMode: unit => Types.mode = "libvim_vimGetMode";
+external vimGetMode: unit => mode = "libvim_vimGetMode";
 
 external vimBufferOpen: string => buffer = "libvim_vimBufferOpen";
 external vimBufferGetId: buffer => int = "libvim_vimBufferGetId";

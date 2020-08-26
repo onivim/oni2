@@ -173,12 +173,10 @@ let runWith = (~context: Context.t, f) => {
   context.lineComment |> Option.iter(Options.setLineComment);
 
   let oldBuf = Buffer.getCurrent();
-  let prevMode = Mode.getCurrent();
+  let prevMode = Mode.current();
   //  let prevLocation = Cursor.get();
-  let prevRange = Visual.getRange();
   //  let prevTopLine = Window.getTopLine();
   //  let prevLeftColumn = Window.getLeftColumn();
-  let prevVisualMode = Visual.getType();
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
@@ -190,18 +188,16 @@ let runWith = (~context: Context.t, f) => {
 
   let newBuf = Buffer.getCurrent();
   //  let newLocation = Cursor.get();
-  let newMode = Mode.getCurrent();
-  let newRange = Visual.getRange();
+  let newMode = Mode.current();
   //  let newLeftColumn = Window.getLeftColumn();
   //  let newTopLine = Window.getTopLine();
-  let newVisualMode = Visual.getType();
   let newModified = Buffer.isModified(newBuf);
   let newLineEndings = Buffer.getLineEndings(newBuf);
 
   BufferInternal.checkCurrentBufferForUpdate();
 
   if (newMode != prevMode) {
-    Event.dispatch(newMode, Listeners.modeChanged);
+    Event.dispatch(Effect.ModeChanged(newMode), Listeners.effect);
 
     if (newMode == CommandLine) {
       Event.dispatch(
@@ -216,27 +212,6 @@ let runWith = (~context: Context.t, f) => {
       CommandLineInternal.getState(),
       Listeners.commandLineUpdate,
     );
-  };
-
-  //  if (BytePosition.(prevLocation == newLocation)) {
-  //    Event.dispatch(newLocation, Listeners.cursorMoved);
-  //  };
-  //
-  //  if (prevTopLine != newTopLine) {
-  //    Event.dispatch(newTopLine, Listeners.topLineChanged);
-  //  };
-  //
-  //  if (prevLeftColumn != newLeftColumn) {
-  //    Event.dispatch(newLeftColumn, Listeners.leftColumnChanged);
-  //  };
-
-  if (!ByteRange.equals(prevRange, newRange)
-      || newMode == Visual
-      && prevMode != Visual
-      || prevVisualMode != newVisualMode) {
-    let vr =
-      VisualRange.create(~range=newRange, ~visualType=newVisualMode, ());
-    Event.dispatch(vr, Listeners.visualRangeChanged);
   };
 
   let id = Buffer.getId(newBuf);
@@ -465,7 +440,7 @@ let init = () => {
 
   Native.vimInit();
 
-  Event.dispatch(Mode.getCurrent(), Listeners.modeChanged);
+  Event.dispatch(Effect.ModeChanged(Mode.current()), Listeners.effect);
   BufferInternal.checkCurrentBufferForUpdate();
 };
 
@@ -478,7 +453,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
 
       let runCursor = cursor => {
         Cursor.set(cursor);
-        if (Mode.getCurrent() == Types.Insert) {
+        if (Mode.current() == Mode.Insert) {
           let position: BytePosition.t = Cursor.get();
           let line = Buffer.getLine(Buffer.getCurrent(), position.line);
 
@@ -540,19 +515,19 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         Cursor.get();
       };
 
-      let mode = Mode.getCurrent();
+      let mode = Mode.current();
       let cursors = Internal.getDefaultCursors(cursors);
-      if (mode == Types.Insert) {
+      if (mode == Mode.Insert) {
         // Run first command, verify we don't go back to normal mode
         switch (cursors) {
         | [hd, ...tail] =>
           let newHead = runCursor(hd);
 
-          let newMode = Mode.getCurrent();
+          let newMode = Mode.current();
           // If we're still in insert mode, run the command for all the rest of the characters too
           let remainingCursors =
             switch (newMode) {
-            | Types.Insert => List.map(runCursor, tail)
+            | Mode.Insert => List.map(runCursor, tail)
             | _ => tail
             };
 
