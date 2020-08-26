@@ -359,7 +359,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   };
 
   let redirect =
-    if (Timber.App.isEnabled()) {
+//    if (Timber.App.isEnabled()) {
       [
         Luv.Process.inherit_fd(
           ~fd=Luv.Process.stdin,
@@ -377,9 +377,9 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           (),
         ),
       ];
-    } else {
-      [];
-    };
+//    } else {
+//      [];
+//    };
 
   let _process: Luv.Process.t =
     LuvEx.Process.spawn(

@@ -19,11 +19,23 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
     if (scm == Feature_SCM.initial) {
       Isolinear.Effect.none;
     } else {
-      Service_Exthost.Effects.Commands.executeContributedCommand(
-        ~command="git.refresh",
-        ~arguments=[`String(uri |> Oni_Core.Uri.toFileSystemPath)],
-        extHostClient,
-      );
+      Isolinear.Effect.create(~name="fileevent", () => {
+        Exthost.Request.FileSystemEventService.onFileEvent(
+          ~events=Exthost.Files.FileSystemEvents.{
+            created: [],
+            deleted: [],
+            changed: [
+              uri
+            ]
+          },
+          extHostClient
+        );
+      });
+//      Service_Exthost.Effects.Commands.executeContributedCommand(
+//        ~command="git.refresh",
+//        ~arguments=[`String(uri |> Oni_Core.Uri.toFileSystemPath)],
+//        extHostClient,
+//      );
     };
 
   let discoveredExtensionsEffect = extensions =>
