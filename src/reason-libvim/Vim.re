@@ -17,6 +17,7 @@ module Effect = Effect;
 module Event = Event;
 module Format = Format;
 module Goto = Goto;
+module Operator = Operator;
 module TabPage = TabPage;
 module Mode = Mode;
 module Options = Options;

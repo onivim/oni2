@@ -563,6 +563,15 @@ CAMLprim value libvim_vimBufferGetModifiable(value vBuf) {
   return Val_bool(modifiable);
 }
 
+CAMLprim value libvim_vimGetPendingOperator(value unit) {
+  CAMLparam0();
+  CAMLlocal1(ret);
+
+  ret = Val_none;
+
+  CAMLreturn(ret);
+}
+
 CAMLprim value libvim_vimBufferSetModifiable(value vMod, value vBuf) {
   buf_T *buf = (buf_T *)vBuf;
   int modifiable = Bool_val(vMod);
