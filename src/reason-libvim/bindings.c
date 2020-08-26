@@ -565,9 +565,20 @@ CAMLprim value libvim_vimBufferGetModifiable(value vBuf) {
 
 CAMLprim value libvim_vimGetPendingOperator(value unit) {
   CAMLparam0();
-  CAMLlocal1(ret);
+  CAMLlocal2(inner, ret);
 
-  ret = Val_none;
+  printf("vimGetPendingOperator - 1\n");
+
+  pendingOp_T pendingOp;
+  if (vimGetPendingOperator(&pendingOp)) {
+    inner = caml_alloc(3, 0);
+    Store_field(inner, 0, Val_int(pendingOp.op_type));
+    Store_field(inner, 1, Val_int(pendingOp.regname));
+    Store_field(inner, 2, Val_int(pendingOp.count));
+    ret = Val_some(inner);
+  } else {
+    ret = Val_none;
+  }
 
   CAMLreturn(ret);
 }

@@ -98,6 +98,8 @@ module Operator: {
   };
 
   let get: unit => option(pending);
+
+  let toString: pending => string;
 };
 
 module Edit: {
@@ -312,7 +314,7 @@ module Mode: {
     | CommandLine
     | Replace
     | Visual({range: VisualRange.t})
-    | Operator
+    | Operator({ pending: Operator.pending })
     | Select({range: VisualRange.t});
 
   let current: unit => t;

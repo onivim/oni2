@@ -128,15 +128,15 @@ module Styles = {
   let item = bg => [
     flexDirection(`Column),
     justifyContent(`Center),
+    alignItems(`Center),
     backgroundColor(bg),
     paddingHorizontal(10),
     minWidth(50),
   ];
 
-  let text = (~color, ~background) => [
+  let text = (~color) => [
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
-    backgroundColor(background),
   ];
 };
 
@@ -179,7 +179,6 @@ let textItem = (~onClick=?, ~background, ~font: UiFont.t, ~theme, ~text, ()) =>
     <Text
       style={Styles.text(
         ~color=Colors.StatusBar.foreground.from(theme),
-        ~background,
       )}
       fontFamily={font.family}
       fontSize=11.
@@ -244,7 +243,7 @@ let notificationCount =
         <FontIcon icon=FontAwesome.bell color />
       </View>
       <Text
-        style={Styles.text(~color, ~background)}
+        style={Styles.text(~color)}
         text
         fontFamily={font.family}
         fontSize=11.
@@ -271,7 +270,7 @@ let diagnosticCount =
         <FontIcon icon=FontAwesome.timesCircle color />
       </View>
       <Text
-        style={Styles.text(~color, ~background)}
+        style={Styles.text(~color)}
         text
         fontFamily={font.family}
         fontSize=11.
@@ -286,7 +285,7 @@ let modeIndicator = (~font: UiFont.t, ~theme, ~mode, ()) => {
 
   <item backgroundColor=background>
     <Text
-      style={Styles.text(~color=foreground, ~background)}
+      style={Styles.text(~color=foreground)}
       text={Mode.toString(mode)}
       fontFamily={font.family}
       fontWeight=Medium

@@ -70,6 +70,27 @@ type pending = {
     count: int,
 };
 
+let default = {
+    operation: NoPending,
+    register: 0,
+    count: 0,
+};
+
+let toString = ({operation, count, _}) => {
+    if (count > 0) {
+        Printf.sprintf("%d%s", count, operation |> operationToString)
+    } else {
+        operation |> operationToString
+    }
+};
+
 let get = () => {
-    None;
+    Native.vimOperatorGetPending()
+    |> Option.map((nativeOp: Native.operatorPendingInfo) => {
+    ({
+        operation: nativeOp.operation,
+        register: nativeOp.register,
+        count: nativeOp.count
+    })
+    });
 }
