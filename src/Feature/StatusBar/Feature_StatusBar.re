@@ -128,15 +128,15 @@ module Styles = {
   let item = bg => [
     flexDirection(`Column),
     justifyContent(`Center),
+    alignItems(`Center),
     backgroundColor(bg),
     paddingHorizontal(10),
     minWidth(50),
   ];
 
-  let text = (~color, ~background) => [
+  let text = (~color) => [
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
-    backgroundColor(background),
   ];
 };
 
@@ -174,13 +174,10 @@ let item =
   };
 };
 
-let textItem = (~onClick=?, ~background, ~font: UiFont.t, ~theme, ~text, ()) =>
+let textItem = (~onClick=?, ~font: UiFont.t, ~theme, ~text, ()) =>
   <item ?onClick>
     <Text
-      style={Styles.text(
-        ~color=Colors.StatusBar.foreground.from(theme),
-        ~background,
-      )}
+      style={Styles.text(~color=Colors.StatusBar.foreground.from(theme))}
       fontFamily={font.family}
       fontSize=11.
       text
@@ -192,7 +189,6 @@ let notificationCount =
       ~theme,
       ~font: UiFont.t,
       ~foreground as color,
-      ~background,
       ~notifications: Feature_Notification.model,
       ~contextMenu,
       ~dispatch,
@@ -244,7 +240,7 @@ let notificationCount =
         <FontIcon icon=FontAwesome.bell color />
       </View>
       <Text
-        style={Styles.text(~color, ~background)}
+        style={Styles.text(~color)}
         text
         fontFamily={font.family}
         fontSize=11.
@@ -253,8 +249,7 @@ let notificationCount =
   </item>;
 };
 
-let diagnosticCount =
-    (~font: UiFont.t, ~background, ~theme, ~diagnostics, ~dispatch, ()) => {
+let diagnosticCount = (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => {
   let color = Colors.StatusBar.foreground.from(theme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
@@ -271,7 +266,7 @@ let diagnosticCount =
         <FontIcon icon=FontAwesome.timesCircle color />
       </View>
       <Text
-        style={Styles.text(~color, ~background)}
+        style={Styles.text(~color)}
         text
         fontFamily={font.family}
         fontSize=11.
@@ -280,19 +275,28 @@ let diagnosticCount =
   </item>;
 };
 
-let modeIndicator = (~font: UiFont.t, ~theme, ~mode, ()) => {
-  let background = Colors.Oni.backgroundFor(mode).from(theme);
-  let foreground = Colors.Oni.foregroundFor(mode).from(theme);
+module ModeIndicator = {
+  let transitionDuration = Revery.Time.milliseconds(300);
 
-  <item backgroundColor=background>
-    <Text
-      style={Styles.text(~color=foreground, ~background)}
-      text={Mode.toString(mode)}
-      fontFamily={font.family}
-      fontWeight=Medium
-      fontSize=11.
-    />
-  </item>;
+  let%component make = (~font: UiFont.t, ~theme, ~mode, ()) => {
+    let background = Colors.Oni.backgroundFor(mode).from(theme);
+    let foreground = Colors.Oni.foregroundFor(mode).from(theme);
+
+    let%hook background =
+      CustomHooks.colorTransition(~duration=transitionDuration, background);
+    let%hook foreground =
+      CustomHooks.colorTransition(~duration=transitionDuration, foreground);
+
+    <item backgroundColor=background>
+      <Text
+        style={Styles.text(~color=foreground)}
+        text={Mode.toString(mode)}
+        fontFamily={font.family}
+        fontWeight=Medium
+        fontSize=11.
+      />
+    </item>;
+  };
 };
 
 let transitionAnimation =
@@ -418,7 +422,7 @@ module View = {
     let indentation = () => {
       let text = indentationSettings |> indentationToString;
 
-      <textItem font background theme text />;
+      <textItem font theme text />;
     };
 
     let fileType = () => {
@@ -430,7 +434,6 @@ module View = {
 
       <textItem
         font
-        background
         theme
         text
         onClick={() => {dispatch(FileTypeClicked)}}
@@ -447,7 +450,7 @@ module View = {
       activeBuffer
       |> OptionEx.flatMap(Buffer.getLineEndings)
       |> Option.map(toString)
-      |> Option.map(text => {<textItem font background theme text />})
+      |> Option.map(text => {<textItem font theme text />})
       |> Option.value(~default=React.empty);
     };
 
@@ -458,7 +461,7 @@ module View = {
         |> positionToString;
       };
 
-      <textItem font background theme text />;
+      <textItem font theme text />;
     };
 
     let notificationPopups = () =>
@@ -476,7 +479,6 @@ module View = {
           theme
           font
           foreground
-          background
           notifications
           contextMenu
         />
@@ -484,7 +486,7 @@ module View = {
       <sectionGroup>
         <section align=`FlexStart> leftItems </section>
         <section align=`FlexStart>
-          <diagnosticCount font background theme diagnostics dispatch />
+          <diagnosticCount font theme diagnostics dispatch />
           scmItems
         </section>
         <section align=`Center />
@@ -497,7 +499,7 @@ module View = {
         </section>
         <notificationPopups />
       </sectionGroup>
-      <section align=`FlexEnd> <modeIndicator font theme mode /> </section>
+      <section align=`FlexEnd> <ModeIndicator font theme mode /> </section>
     </View>;
   };
 };

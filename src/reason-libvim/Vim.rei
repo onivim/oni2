@@ -57,6 +57,51 @@ module Context: {
 
 module Registers: {let get: (~register: char) => option(array(string));};
 
+module Operator: {
+  type operation =
+    | NoPending
+    | Delete
+    | Yank
+    | Change
+    | LeftShift
+    | RightShift
+    | Filter
+    | SwitchCase
+    | Indent
+    | Format
+    | Colon
+    | MakeUpperCase
+    | MakeLowerCase
+    | Join
+    | JoinNS
+    | Rot13
+    | Replace
+    | Insert
+    | Append
+    | Fold
+    | FoldOpen
+    | FoldOpenRecursive
+    | FoldClose
+    | FoldCloseRecursive
+    | FoldDelete
+    | FoldDeleteRecursive
+    | Format2
+    | Function
+    | NumberAdd
+    | NumberSubtract
+    | Comment;
+
+  type pending = {
+    operation,
+    register: int,
+    count: int,
+  };
+
+  let get: unit => option(pending);
+
+  let toString: pending => string;
+};
+
 module Edit: {
   [@deriving show]
   type t = {
@@ -269,7 +314,7 @@ module Mode: {
     | CommandLine
     | Replace
     | Visual({range: VisualRange.t})
-    | Operator
+    | Operator({pending: Operator.pending})
     | Select({range: VisualRange.t});
 
   let current: unit => t;

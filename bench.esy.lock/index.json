@@ -1,5 +1,5 @@
 {
-  "checksum": "03fcb789f98a1964a223269a253e696f",
+  "checksum": "a5ed0a677c5a2d951a81b9682fdfc3d0",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -154,7 +154,7 @@
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.0@e0bac278",
         "@opam/ctypes@opam:0.15.1@b0227b2f",
-        "@opam/charInfo_width@opam:1.1.0@b400bb29",
+        "@opam/charInfo_width@opam:1.1.0@4296bdfe",
         "@opam/bos@opam:0.2.0@df49e63f", "@glennsl/timber@1.2.0@d41d8cd9",
         "@esy-ocaml/reason@3.6.2@d41d8cd9",
         "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#10cab2d@d41d8cd9"
@@ -424,14 +424,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.55@d41d8cd9": {
-      "id": "libvim@8.10869.55@d41d8cd9",
+    "libvim@8.10869.56@d41d8cd9": {
+      "id": "libvim@8.10869.56@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.55",
+      "version": "8.10869.56",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.55.tgz#sha1:0ec26790ce7a9ea83286018e5040fff905c79cc7"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.56.tgz#sha1:bf7e2064a97260f5affa0a76d4f9178f20bd2b36"
         ]
       },
       "overrides": [],
@@ -943,7 +943,7 @@
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
-        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.55@d41d8cd9",
+        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.56@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#a3785f9@d41d8cd9",
@@ -973,7 +973,7 @@
         "@opam/dune@opam:2.5.0@e0bac278",
         "@opam/dir@github:bryphe/reason-native:dir.opam#fd0225@d41d8cd9",
         "@opam/decoders-yojson@opam:0.4.0@cb39dea6",
-        "@opam/charInfo_width@opam:1.1.0@b400bb29",
+        "@opam/charInfo_width@opam:1.1.0@4296bdfe",
         "@opam/angstrom@opam:0.14.1@07e286b0",
         "@glennsl/timber@1.2.0@d41d8cd9"
       ],
@@ -1156,7 +1156,7 @@
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/react@opam:1.2.1@0e11855f",
         "@opam/dune@opam:2.5.0@e0bac278",
-        "@opam/charInfo_width@opam:1.1.0@b400bb29",
+        "@opam/charInfo_width@opam:1.1.0@4296bdfe",
         "@opam/camomile@opam:1.0.2@40411a6b",
         "@opam/base-bytes@opam:base@19d0c2ff",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
@@ -1164,7 +1164,7 @@
       "devDependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/react@opam:1.2.1@0e11855f",
         "@opam/dune@opam:2.5.0@e0bac278",
-        "@opam/charInfo_width@opam:1.1.0@b400bb29",
+        "@opam/charInfo_width@opam:1.1.0@4296bdfe",
         "@opam/camomile@opam:1.0.2@40411a6b",
         "@opam/base-bytes@opam:base@19d0c2ff"
       ]
@@ -3078,15 +3078,15 @@
       ],
       "devDependencies": []
     },
-    "@opam/charInfo_width@opam:1.1.0@b400bb29": {
-      "id": "@opam/charInfo_width@opam:1.1.0@b400bb29",
+    "@opam/charInfo_width@opam:1.1.0@4296bdfe": {
+      "id": "@opam/charInfo_width@opam:1.1.0@4296bdfe",
       "name": "@opam/charInfo_width",
       "version": "opam:1.1.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/c4/c4ab038e06f06a29692c05fdd7c268c5#md5:c4ab038e06f06a29692c05fdd7c268c5",
-          "archive:https://bitbucket.org/zandoye/charinfo_width/get/1.1.0.tar.gz#md5:c4ab038e06f06a29692c05fdd7c268c5"
+          "archive:https://opam.ocaml.org/cache/md5/a5/a539436d1da4aeb93711303f107bec7e#md5:a539436d1da4aeb93711303f107bec7e",
+          "archive:https://github.com/kandu/charInfo_width/archive/1.1.0.tar.gz#md5:a539436d1da4aeb93711303f107bec7e"
         ],
         "opam": {
           "name": "charInfo_width",

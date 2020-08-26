@@ -11,7 +11,7 @@ type t =
   | Visual({range: VisualRange.t})
   | Select({range: VisualRange.t})
   | Replace
-  | Operator
+  | Operator({pending: Vim.Operator.pending})
   | CommandLine
   // Additional modes
   | TerminalInsert
@@ -37,7 +37,7 @@ let toString =
     | None => "Select"
     }
   | Replace => "Replace"
-  | Operator => "Operator"
+  | Operator({pending}) => Vim.Operator.toString(pending)
   | CommandLine => "Command Line"
   | TerminalInsert => "Terminal Insert"
   | TerminalNormal => "Terminal Normal"

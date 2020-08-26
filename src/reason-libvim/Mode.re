@@ -4,7 +4,7 @@ type t =
   | CommandLine
   | Replace
   | Visual({range: VisualRange.t})
-  | Operator
+  | Operator({pending: Operator.pending})
   | Select({range: VisualRange.t});
 
 let show = (mode: t) => {
@@ -13,7 +13,7 @@ let show = (mode: t) => {
   | Visual(_) => "Visual"
   | CommandLine => "CommandLine"
   | Replace => "Replace"
-  | Operator => "Operator"
+  | Operator(_) => "Operator"
   | Insert => "Insert"
   | Select(_) => "Select"
   };
@@ -35,7 +35,10 @@ let current = () => {
     })
   | Native.CommandLine => CommandLine
   | Native.Replace => Replace
-  | Native.Operator => Operator
+  | Native.Operator =>
+    Operator({
+      pending: Operator.get() |> Option.value(~default=Operator.default),
+    })
   | Native.Insert => Insert
   | Native.Select =>
     Select({

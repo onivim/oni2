@@ -5,7 +5,7 @@ module Internal = {
     fun
     | Vim.Mode.Visual({range}) =>
       Mode.TerminalVisual({range: Oni_Core.VisualRange.ofVim(range)})
-    | Vim.Mode.Operator => Mode.Operator
+    | Vim.Mode.Operator({pending}) => Mode.Operator({pending: pending})
     | Vim.Mode.CommandLine => Mode.CommandLine
     | _ => Mode.TerminalNormal;
 };
@@ -29,7 +29,8 @@ let current: State.t => Oni_Core.Mode.t =
            | Vim.Mode.Select({range}) =>
              Mode.Select({range: Oni_Core.VisualRange.ofVim(range)})
            | Vim.Mode.Replace => Mode.Replace
-           | Vim.Mode.Operator => Mode.Operator
+           | Vim.Mode.Operator({pending}) =>
+             Mode.Operator({pending: pending})
            | Vim.Mode.CommandLine => Mode.CommandLine
            },
        );
