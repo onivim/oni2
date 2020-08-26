@@ -3,7 +3,8 @@ open Oni_Core;
 open Config.Schema;
 
 module CustomDecoders: {
-  let whitespace: Config.Schema.codec([ | `All | `Boundary | `Selection | `None]);
+  let whitespace:
+    Config.Schema.codec([ | `All | `Boundary | `Selection | `None]);
   let lineNumbers: Config.Schema.codec([ | `On | `Relative | `Off]);
   let time: Config.Schema.codec(Time.t);
 } = {

@@ -37,10 +37,11 @@ let filter =
     ) => {
   switch (whitespaceSetting) {
   | `All => tokens
-  | `Selection => switch(selection) {
+  | `Selection =>
+    switch (selection) {
     | None => List.filter(filterAllWhitespace, tokens)
     | Some(byteRange) => List.filter(filterRange(byteRange), tokens)
-  }
+    }
   | `Boundary => List.filter(filterBoundaryWhitespace, tokens)
   | `None => List.filter(filterAllWhitespace, tokens)
   };
