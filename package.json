@@ -196,6 +196,7 @@
     "format": "esy dune build @fmt --auto-promote",
     "checkhealth": "esy x Oni2 -f --checkhealth",
     "check": "esy b dune build @check",
+    "dce": "reanalyze.exe -dce-cmt #{self.target_dir}",
     "lint": "esy b bash ./scripts/lint.sh",
     "run": "esy x Oni2",
     "watch": "dune build --watch -p libvim,textmate,Oni2 -j4",
@@ -228,6 +229,7 @@
     "@opam/ppx_let": "v0.13.0",
     "@opam/ppxlib": ">=0.10.0",
     "@opam/re": "*",
+    "@opam/reanalyze": "*",
     "@opam/reason": "^3.6.0",
     "@opam/uucp": "*",
     "@opam/uutf": "*",
@@ -251,17 +253,18 @@
     "revery-terminal": "*"
   },
   "resolutions": {
+    "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
+    "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
+    "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
+    "@opam/conf-pkg-config": "1.2",
+    "@opam/reanalyze": "cristianoc/reanalyze:reanalyze.opam#97c622c0a3f480ffc9cacfa33b9bd0ce42c2d83b",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
     "revery": "revery-ui/revery#e646df2",
     "esy-skia": "revery-ui/esy-skia#a3785f9",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
     "isolinear": "revery-ui/isolinear#8cad3b0",
-    "revery-terminal": "revery-ui/revery-terminal#37e19a3",
-    "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
-    "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
-    "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
-    "@opam/conf-pkg-config": "1.2"
+    "revery-terminal": "revery-ui/revery-terminal#37e19a3"
   },
   "devDependencies": {
     "ocaml": "~4.10",

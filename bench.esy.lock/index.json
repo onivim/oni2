@@ -1,5 +1,5 @@
 {
-  "checksum": "a5ed0a677c5a2d951a81b9682fdfc3d0",
+  "checksum": "dfc6ece1e0e1f8b0448488b276090dcc",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -954,8 +954,9 @@
         "@reason-native-web/esy-openssl@1.1.1006@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/uutf@opam:1.0.2@4440868f", "@opam/uucp@opam:13.0.0@e9b515e0",
-        "@opam/reason@opam:3.6.0@58adb39a", "@opam/re@opam:1.9.0@d4d5e13d",
-        "@opam/ppxlib@opam:0.13.0@3d7c6edb",
+        "@opam/reason@opam:3.6.0@58adb39a",
+        "@opam/reanalyze@github:cristianoc/reanalyze:reanalyze.opam#97c622c0a3f480ffc9cacfa33b9bd0ce42c2d83b@d41d8cd9",
+        "@opam/re@opam:1.9.0@d4d5e13d", "@opam/ppxlib@opam:0.13.0@3d7c6edb",
         "@opam/ppx_let@opam:v0.13.0@5703d2be",
         "@opam/ppx_inline_test@opam:v0.13.1@dbfe49b7",
         "@opam/ppx_deriving_yojson@opam:3.5.3@253e094d",
@@ -1526,6 +1527,28 @@
         "@opam/merlin-extend@opam:0.6@404f814c",
         "@opam/menhir@opam:20200624@8629ff13",
         "@opam/fix@opam:20200131@0ecd2f01", "@opam/dune@opam:2.5.0@e0bac278"
+      ]
+    },
+    "@opam/reanalyze@github:cristianoc/reanalyze:reanalyze.opam#97c622c0a3f480ffc9cacfa33b9bd0ce42c2d83b@d41d8cd9": {
+      "id":
+        "@opam/reanalyze@github:cristianoc/reanalyze:reanalyze.opam#97c622c0a3f480ffc9cacfa33b9bd0ce42c2d83b@d41d8cd9",
+      "name": "@opam/reanalyze",
+      "version":
+        "github:cristianoc/reanalyze:reanalyze.opam#97c622c0a3f480ffc9cacfa33b9bd0ce42c2d83b",
+      "source": {
+        "type": "install",
+        "source": [
+          "github:cristianoc/reanalyze:reanalyze.opam#97c622c0a3f480ffc9cacfa33b9bd0ce42c2d83b"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.0@d41d8cd9", "@opam/reason@opam:3.6.0@58adb39a",
+        "@opam/dune@opam:2.5.0@e0bac278", "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.10.0@d41d8cd9", "@opam/reason@opam:3.6.0@58adb39a",
+        "@opam/dune@opam:2.5.0@e0bac278"
       ]
     },
     "@opam/react@opam:1.2.1@0e11855f": {
