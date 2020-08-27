@@ -326,16 +326,16 @@ module Mode: {
 module Setting: {
   [@deriving show]
   type value =
-  | String(string)
-  | Int(int);
-  
+    | String(string)
+    | Int(int);
+
   [@deriving show]
   type t = {
     fullName: string,
     shortName: string,
-    value: value,
+    value,
   };
-}
+};
 
 module Effect: {
   type t =

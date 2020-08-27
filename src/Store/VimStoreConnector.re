@@ -177,9 +177,8 @@ let start =
             )
           };
         }
-        | SettingChanged(setting) => dispatch(Actions.Vim(
-          Feature_Vim.SettingChanged(setting)
-        ))
+      | SettingChanged(setting) =>
+        dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting))),
     );
 
   let _: unit => unit =

@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Core.Utility;
 
 module Log = (val Oni_Core.Log.withNamespace("Oni2.Feature.Configuration"));
 
@@ -82,9 +83,14 @@ let update = (~getUserSettings, model, msg) =>
     (updated, ConfigurationChanged({changed: changed}));
   };
 
-let resolver = (model, ~vimSetting as _, key) => {
-  switch (Config.Settings.get(key, model.merged)) {
-  | None => Config.NotSet
-  | Some(json) => Config.Json(json);
-  }
+let resolver = (model, vimModel, ~vimSetting, key) => {
+  let vimResolver = Feature_Vim.Configuration.resolver(vimModel);
+  vimSetting
+  |> OptionEx.flatMap(vimResolver)
+  |> Option.map(setting => Config.Vim(setting))
+  |> OptionEx.or_lazy(() => {
+       Config.Settings.get(key, model.merged)
+       |> Option.map(json => Config.Json(json))
+     })
+  |> Option.value(~default=Config.NotSet);
 };

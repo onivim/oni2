@@ -6,8 +6,8 @@ open Oni_Core.Utility;
 
 type model = {
   mode: Vim.Mode.t,
-  settings: StringMap.t(Vim.Setting.value)
-  };
+  settings: StringMap.t(Vim.Setting.value),
+};
 
 let initial = {mode: Vim.Mode.Normal, settings: StringMap.empty};
 
@@ -38,10 +38,10 @@ let update = (msg, model: model) => {
       );
     (model, Effect(eff));
   | PasteCompleted({cursors}) => (model, CursorsUpdated(cursors))
-  | SettingChanged({ fullName, value, _}: Vim.Setting.t) => ({
-      ...model,
-      settings: model.settings |> StringMap.add(fullName, value)
-    }, Nothing)
+  | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
+      {...model, settings: model.settings |> StringMap.add(fullName, value)},
+      Nothing,
+    )
   };
 };
 
@@ -80,11 +80,9 @@ module CommandLine = {
 };
 
 module Configuration = {
-  
   type resolver = string => option(Vim.Setting.value);
 
-  let resolver = ({settings, _}) => (settingName) => {
-    settings
-    |> StringMap.find_opt(settingName);
-  }
-}
+  let resolver = ({settings, _}, settingName) => {
+    settings |> StringMap.find_opt(settingName);
+  };
+};

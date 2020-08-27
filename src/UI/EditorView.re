@@ -72,7 +72,7 @@ module Parts = {
         tokenTheme={state.tokenTheme}
         languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
-        config={Feature_Configuration.resolver(state.config)}
+        config={Feature_Configuration.resolver(state.config, state.vim)}
         renderOverlays
       />;
     };
@@ -294,7 +294,7 @@ let make =
       isZenMode={state.zenMode}
       showTabs
       model={state.layout}
-      config={Feature_Configuration.resolver(state.config)}
+      config={Feature_Configuration.resolver(state.config, state.vim)}
       dispatch={msg => dispatch(Actions.Layout(msg))}>
       ...(module ContentProvider)
     </Feature_Layout.View>

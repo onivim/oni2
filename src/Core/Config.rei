@@ -2,8 +2,9 @@ type key;
 
 // A pre-decode value from a configuration provider
 type rawValue =
-| Json(Json.t)
-| NotSet;
+  | Json(Json.t)
+  | Vim(Vim.Setting.value)
+  | NotSet;
 
 type resolver = (~vimSetting: option(string), key) => rawValue;
 

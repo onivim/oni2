@@ -421,7 +421,7 @@ let update =
             newBuffer,
           ),
         ~grammars=grammarRepository,
-        ~config=Feature_Configuration.resolver(state.config),
+        ~config=Feature_Configuration.resolver(state.config, state.vim),
         ~theme=state.tokenTheme,
         update,
         state.syntaxHighlights,
@@ -464,7 +464,7 @@ let update =
 
     let buffers = Feature_Buffers.update(msg, state.buffers);
 
-    let config = Feature_Configuration.resolver(state.config);
+    let config = Feature_Configuration.resolver(state.config, state.vim);
     (
       {
         ...state,
@@ -592,7 +592,7 @@ let update =
   | Terminal(msg) =>
     let (model, eff) =
       Feature_Terminal.update(
-        ~config=Feature_Configuration.resolver(state.config),
+        ~config=Feature_Configuration.resolver(state.config, state.vim),
         state.terminals,
         msg,
       );
@@ -854,7 +854,8 @@ let update =
                ~bytePosition=activeCursorByte,
                state.syntaxHighlights,
              );
-           let config = Feature_Configuration.resolver(state.config);
+           let config =
+             Feature_Configuration.resolver(state.config, state.vim);
            Feature_LanguageSupport.bufferUpdated(
              ~buffer,
              ~config,

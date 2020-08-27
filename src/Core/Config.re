@@ -4,8 +4,9 @@ module Log = (val Log.withNamespace("Oni2.Core.Config"));
 module Lookup = Kernel.KeyedStringTree;
 
 type rawValue =
-| Json(Json.t)
-| NotSet;
+  | Json(Json.t)
+  | Vim(Vim.Setting.value)
+  | NotSet;
 
 type key = Lookup.path;
 type resolver = (~vimSetting: option(string), key) => rawValue;
@@ -158,6 +159,7 @@ module Schema = {
               );
               default;
             }
+          | Vim(_)
           | NotSet =>
             Log.warnf(m => m("Missing default value for `%s`", key));
             default;
