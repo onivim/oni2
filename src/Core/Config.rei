@@ -1,7 +1,13 @@
 type key;
-type resolver = key => option(Json.t);
 
-let key: string => key;
+// A pre-decode value from a configuration provider
+type rawValue =
+| Json(Json.t)
+| NotSet;
+
+type resolver = (~vimSetting: option(string), key) => rawValue;
+
+//let key: string => key;
 let keyAsString: key => string;
 
 // SETTINGS

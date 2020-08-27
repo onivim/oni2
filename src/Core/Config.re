@@ -3,10 +3,14 @@ open Revery;
 module Log = (val Log.withNamespace("Oni2.Core.Config"));
 module Lookup = Kernel.KeyedStringTree;
 
-type key = Lookup.path;
-type resolver = key => option(Json.t);
+type rawValue =
+| Json(Json.t)
+| NotSet;
 
-let key = Lookup.path;
+type key = Lookup.path;
+type resolver = (~vimSetting: option(string), key) => rawValue;
+
+//let key = Lookup.path;
 let keyAsString = Lookup.key;
 
 // SETTINGS
@@ -140,8 +144,8 @@ module Schema = {
           default: codec.encode(default),
         },
         get: resolve => {
-          switch (resolve(path)) {
-          | Some(jsonValue) =>
+          switch (resolve(~vimSetting=None, path)) {
+          | Json(jsonValue) =>
             switch (Json.Decode.decode_value(codec.decode, jsonValue)) {
             | Ok(value) => value
             | Error(err) =>
@@ -154,7 +158,7 @@ module Schema = {
               );
               default;
             }
-          | None =>
+          | NotSet =>
             Log.warnf(m => m("Missing default value for `%s`", key));
             default;
           };

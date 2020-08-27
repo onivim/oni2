@@ -82,4 +82,9 @@ let update = (~getUserSettings, model, msg) =>
     (updated, ConfigurationChanged({changed: changed}));
   };
 
-let resolver = (model, key) => Config.Settings.get(key, model.merged);
+let resolver = (model, ~vimSetting as _, key) => {
+  switch (Config.Settings.get(key, model.merged)) {
+  | None => Config.NotSet
+  | Some(json) => Config.Json(json);
+  }
+};
