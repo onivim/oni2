@@ -13,7 +13,8 @@ let mode: model => Vim.Mode.t;
 type msg =
   | ModeChanged([@opaque] Vim.Mode.t)
   | PasteCompleted({cursors: [@opaque] list(BytePosition.t)})
-  | Pasted(string);
+  | Pasted(string)
+  | SettingChanged(Vim.Setting.t);
 
 type outmsg =
   | Nothing
@@ -25,3 +26,11 @@ type outmsg =
 let update: (msg, model) => (model, outmsg);
 
 module CommandLine: {let getCompletionMeet: string => option(int);};
+
+// CONFIGURATION
+
+module Configuration: {
+  type resolver = string => option(Vim.Setting.value);
+
+  let resolver: model => resolver;
+};
