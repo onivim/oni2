@@ -23,6 +23,12 @@ module Effects: {
       Isolinear.Effect.t('msg);
   };
 
+  module FileSystemEventService: {
+    let onFileEvent:
+      (~events: Exthost.Files.FileSystemEvents.t, Exthost.Client.t) =>
+      Isolinear.Effect.t(_);
+  };
+
   module SCM: {
     let getOriginalContent:
       (
