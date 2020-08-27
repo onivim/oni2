@@ -22,6 +22,7 @@ module TabPage = TabPage;
 module Mode = Mode;
 module Options = Options;
 module Search = Search;
+module Setting = Setting;
 module Types = Types;
 module Testing = {
   module Undo = Undo;

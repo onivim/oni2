@@ -176,7 +176,9 @@ let start =
               }),
             )
           };
-        },
+        }
+        // TODO: Wire up SettingChanged!
+        | SettingChanged(_) => ()
     );
 
   let _: unit => unit =

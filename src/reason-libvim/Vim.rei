@@ -323,12 +323,25 @@ module Mode: {
   let isSelect: t => bool;
 };
 
+module Setting: {
+  type value =
+  | String(string)
+  | Int(int);
+  
+  type t = {
+    fullName: string,
+    shortName: string,
+    value: value,
+  };
+}
+
 module Effect: {
   type t =
     | Goto(Goto.effect)
     | TabPage(TabPage.effect)
     | Format(Format.effect)
-    | ModeChanged(Mode.t);
+    | ModeChanged(Mode.t)
+    | SettingChanged(Setting.t);
 };
 
 /**
