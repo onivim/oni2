@@ -84,10 +84,12 @@ let update = (~getUserSettings, model, msg) =>
   };
 
 let resolver = (model, vimModel, ~vimSetting, key) => {
+  // Try to get the vim setting, first...
   let vimResolver = Feature_Vim.Configuration.resolver(vimModel);
   vimSetting
   |> OptionEx.flatMap(vimResolver)
   |> Option.map(setting => Config.Vim(setting))
+  // If the vim setting isn't set, fall back to our JSON config.
   |> OptionEx.or_lazy(() => {
        Config.Settings.get(key, model.merged)
        |> Option.map(json => Config.Json(json))

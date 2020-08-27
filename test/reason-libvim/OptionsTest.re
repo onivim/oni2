@@ -8,6 +8,52 @@ let input = s => ignore(Vim.input(s));
 let key = s => ignore(Vim.key(s));
 
 describe("Options", ({describe, _}) => {
+  describe("effect", ({test, _}) => {
+    test(":set rnu", ({expect, _}) => {
+      let _ = resetBuffer();
+
+      let effects = ref([]);
+      let dispose = onEffect(eff => effects := [eff, ...effects^]);
+
+      let _: Context.t = Vim.command("set rnu");
+      expect.equal(
+        effects^,
+        [
+          SettingChanged(
+            Setting.{
+              fullName: "relativenumber",
+              shortName: "rnu",
+              value: Int(1),
+            },
+          ),
+        ],
+      );
+
+      dispose();
+    });
+    test(":set rtp", ({expect, _}) => {
+      let _ = resetBuffer();
+
+      let effects = ref([]);
+      let dispose = onEffect(eff => effects := [eff, ...effects^]);
+
+      let _: Context.t = Vim.command("set rtp=abc");
+      expect.equal(
+        effects^,
+        [
+          SettingChanged(
+            Setting.{
+              fullName: "runtimepath",
+              shortName: "rtp",
+              value: String("abc"),
+            },
+          ),
+        ],
+      );
+
+      dispose();
+    });
+  });
   describe("tabs / spaces", ({test, _}) => {
     test("get / set tab options", ({expect, _}) => {
       let _ = resetBuffer();
