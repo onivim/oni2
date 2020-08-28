@@ -465,6 +465,32 @@ module View = {
       <textItem font theme text />;
     };
 
+    let macro = (~register, ()) => {
+      Oni_Components.(
+        <item>
+          <View
+            style=Style.[
+              flexDirection(`Row),
+              justifyContent(`Center),
+              alignItems(`Center),
+            ]>
+            <View style=Style.[margin(4)]>
+              <Codicon icon=Codicon.circleFilled color=Revery.Colors.red />
+            </View>
+            <Text
+              text={String.make(1, register)}
+              style={Styles.text(
+                ~color=Colors.StatusBar.foreground.from(theme),
+              )}
+              fontFamily={font.family}
+              fontWeight=Revery.Font.Weight.Bold
+              fontSize=11.
+            />
+          </View>
+        </item>
+      );
+    };
+
     let notificationPopups = () =>
       activeNotifications
       |> List.rev
@@ -475,7 +501,7 @@ module View = {
 
     let macroElement =
       recordingMacro
-      |> Option.map(register => {<Text text={String.make(1, register)} />})
+      |> Option.map(register => <macro register />)
       |> Option.value(~default=React.empty);
 
     <View style={Styles.view(background, yOffset)}>
