@@ -178,7 +178,15 @@ let start =
           };
         }
       | SettingChanged(setting) =>
-        dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting))),
+        dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
+      | MacroRecordingStarted({register}) =>
+        dispatch(
+          Actions.Vim(
+            Feature_Vim.MacroRecordingStarted({register: register}),
+          ),
+        )
+      | MacroRecordingStopped(_) =>
+        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped)),
     );
 
   let _: unit => unit =

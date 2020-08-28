@@ -14,7 +14,9 @@ type msg =
   | ModeChanged([@opaque] Vim.Mode.t)
   | PasteCompleted({cursors: [@opaque] list(BytePosition.t)})
   | Pasted(string)
-  | SettingChanged(Vim.Setting.t);
+  | SettingChanged(Vim.Setting.t)
+  | MacroRecordingStarted({register: char})
+  | MacroRecordingStopped;
 
 type outmsg =
   | Nothing
