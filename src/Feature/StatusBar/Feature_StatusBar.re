@@ -506,7 +506,6 @@ module View = {
 
     <View style={Styles.view(background, yOffset)}>
       <section align=`FlexStart>
-        macroElement
         <notificationCount
           dispatch
           theme
@@ -517,6 +516,7 @@ module View = {
         />
       </section>
       <sectionGroup>
+        <section align=`FlexStart> {macroElement}  </section>
         <section align=`FlexStart> leftItems </section>
         <section align=`FlexStart>
           <diagnosticCount font theme diagnostics dispatch />
