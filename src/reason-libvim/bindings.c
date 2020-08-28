@@ -73,7 +73,7 @@ void onSettingChanged(optionSet_T *options) {
   if (lv_onSettingChanged == NULL) {
     lv_onSettingChanged = caml_named_value("lv_onSettingChanged");
   }
-
+  
   if (options->type == 1 || options-> type == 0) {
     // String value
     if (options->type == 0) {
@@ -86,7 +86,11 @@ void onSettingChanged(optionSet_T *options) {
 
     settingValue = caml_alloc(3, 0);
     Store_field(settingValue, 0, caml_copy_string((const char *)options->fullname));
-    Store_field(settingValue, 1, caml_copy_string((const char *)options->shortname));
+    if (options->shortname == NULL) {
+      Store_field(settingValue, 1, Val_none);
+    } else {
+      Store_field(settingValue, 1, Val_some(caml_copy_string((const char *)options->shortname)));
+    }
     Store_field(settingValue, 2, innerValue);
 
     caml_callback(*lv_onSettingChanged, settingValue);

@@ -6,6 +6,6 @@ type value =
 [@deriving show]
 type t = {
   fullName: string,
-  shortName: string,
+  shortName: option(string),
   value,
 };

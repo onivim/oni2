@@ -1,11 +1,24 @@
+open Utility;
 open Revery;
 
 module Log = (val Log.withNamespace("Oni2.Core.Config"));
 module Lookup = Kernel.KeyedStringTree;
 
+module VimSetting = {
+  type t =
+    | String(string)
+    | Int(int);
+
+  let toBool =
+    fun
+    | String(_) => None
+    | Int(1) => Some(true)
+    | Int(_) => Some(false);
+};
+
 type rawValue =
   | Json(Json.t)
-  | Vim(Vim.Setting.value)
+  | Vim(VimSetting.t)
   | NotSet;
 
 type key = Lookup.path;
@@ -136,37 +149,73 @@ module Schema = {
 
     let custom = (~decode, ~encode) => {decode, encode};
 
-    let setting = (key, codec, ~default) => {
-      let path = Lookup.path(key);
+    type vimSetting('a) = resolver => option('a);
 
-      {
-        spec: {
-          path,
-          default: codec.encode(default),
-        },
-        get: resolve => {
-          switch (resolve(~vimSetting=None, path)) {
-          | Json(jsonValue) =>
-            switch (Json.Decode.decode_value(codec.decode, jsonValue)) {
-            | Ok(value) => value
-            | Error(err) =>
-              Log.errorf(m =>
-                m(
-                  "Failed to decode value for `%s`:\n\t%s",
-                  key,
-                  Json.Decode.string_of_error(err),
-                )
-              );
-              default;
-            }
-          | Vim(_)
-          | NotSet =>
-            Log.warnf(m => m("Missing default value for `%s`", key));
-            default;
-          };
-        },
+    let toVimSettingOpt = (resolver, name) => {
+      switch (resolver(~vimSetting=Some(name), [])) {
+      | Vim(setting) => Some(setting)
+      | Json(_) => None
+      | NotSet => None
       };
     };
+
+    let vim = (name, converter: VimSetting.t => 'a, resolver) => {
+      name |> toVimSettingOpt(resolver) |> Option.map(converter);
+    };
+
+    let vim2 =
+        (
+          nameA: string,
+          nameB: string,
+          converter:
+            (option(VimSetting.t), option(VimSetting.t)) => option('a),
+          resolver,
+        ) => {
+      let settingA = nameA |> toVimSettingOpt(resolver);
+      let settingB = nameB |> toVimSettingOpt(resolver);
+
+      converter(settingA, settingB);
+    };
+
+    let setting:
+      (~vim: vimSetting('a)=?, string, codec('a), ~default: 'a) =>
+      setting('a) =
+      (~vim=?, key, codec, ~default) => {
+        let path = Lookup.path(key);
+
+        {
+          spec: {
+            path,
+            default: codec.encode(default),
+          },
+          get: resolve => {
+            // Try and call vim resolver
+            vim
+            |> OptionEx.flatMap(f => f(resolve))
+            |> OptionEx.value_or_lazy(() => {
+                 switch (resolve(~vimSetting=None, path)) {
+                 | Json(jsonValue) =>
+                   switch (Json.Decode.decode_value(codec.decode, jsonValue)) {
+                   | Ok(value) => value
+                   | Error(err) =>
+                     Log.errorf(m =>
+                       m(
+                         "Failed to decode value for `%s`:\n\t%s",
+                         key,
+                         Json.Decode.string_of_error(err),
+                       )
+                     );
+                     default;
+                   }
+                 | Vim(_)
+                 | NotSet =>
+                   Log.warnf(m => m("Missing default value for `%s`", key));
+                   default;
+                 }
+               });
+          },
+        };
+      };
   };
 
   include DSL;

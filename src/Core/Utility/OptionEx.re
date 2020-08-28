@@ -69,6 +69,11 @@ let zip = (a, b) =>
 
 let values = list => List.filter_map(Fun.id, list);
 
+let value_or_lazy = f =>
+  fun
+  | Some(v) => v
+  | None => f();
+
 let toString = f =>
   fun
   | Some(v) => Printf.sprintf("Some(%s)", f(v))
