@@ -4,12 +4,6 @@
  * Settings and utilities for managing Linumbers
  */
 
-[@deriving (yojson, show)]
-type setting =
-  | [@name "on"] On
-  | [@name "off"] Off
-  | [@name "relative"] Relative;
-
 /*
  * Given a number of lines, gives the number of digits
  * needed to represent the line numbers
@@ -32,6 +26,7 @@ let getLineNumberPixelWidth = (~lines: int, ~fontPixelWidth: float, ()) => {
 
 let getLineNumber = (~bufferLine: int, ~cursorLine: int, ~setting, ()) =>
   switch (setting) {
+  | `RelativeOnly => abs(bufferLine - cursorLine)
   | `Relative =>
     if (bufferLine === cursorLine) {
       bufferLine;

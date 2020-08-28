@@ -51,7 +51,7 @@ let renderLineNumber =
     );
 
   let lineNumberXOffset =
-    isActiveLine
+    isActiveLine && lineSetting == `Relative
       ? 0.
       : lineNumberWidth
         /. 2.

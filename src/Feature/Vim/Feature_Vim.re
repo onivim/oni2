@@ -1,13 +1,17 @@
 open EditorCoreTypes;
+open Oni_Core;
 open Oni_Core.Utility;
 
 // MODEL
 
-type model = {mode: Vim.Mode.t};
+type model = {
+  mode: Vim.Mode.t,
+  settings: StringMap.t(Vim.Setting.value),
+};
 
-let initial = {mode: Vim.Mode.Normal};
+let initial = {mode: Vim.Mode.Normal, settings: StringMap.empty};
 
-let mode = ({mode}) => mode;
+let mode = ({mode, _}) => mode;
 
 // MSG
 
@@ -15,7 +19,8 @@ let mode = ({mode}) => mode;
 type msg =
   | ModeChanged([@opaque] Vim.Mode.t)
   | PasteCompleted({cursors: [@opaque] list(BytePosition.t)})
-  | Pasted(string);
+  | Pasted(string)
+  | SettingChanged(Vim.Setting.t);
 
 type outmsg =
   | Nothing
@@ -24,7 +29,7 @@ type outmsg =
 
 let update = (msg, model: model) => {
   switch (msg) {
-  | ModeChanged(mode) => ({mode: mode}: model, Nothing)
+  | ModeChanged(mode) => ({...model, mode}, Nothing)
   | Pasted(text) =>
     let eff =
       Service_Vim.Effects.paste(
@@ -33,6 +38,10 @@ let update = (msg, model: model) => {
       );
     (model, Effect(eff));
   | PasteCompleted({cursors}) => (model, CursorsUpdated(cursors))
+  | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
+      {...model, settings: model.settings |> StringMap.add(fullName, value)},
+      Nothing,
+    )
   };
 };
 
@@ -67,5 +76,13 @@ module CommandLine = {
 
   let%test "meet with a path, spaces" = {
     getCompletionMeet("vsp /path with spaces/") == Some(4);
+  };
+};
+
+module Configuration = {
+  type resolver = string => option(Vim.Setting.value);
+
+  let resolver = ({settings, _}, settingName) => {
+    settings |> StringMap.find_opt(settingName);
   };
 };

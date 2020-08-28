@@ -1,7 +1,23 @@
 type key;
-type resolver = key => option(Json.t);
 
-let key: string => key;
+module VimSetting: {
+  type t =
+    | String(string)
+    | Int(int);
+
+  let toBool: t => option(bool);
+  let toInt: t => option(int);
+};
+
+// A pre-decode value from a configuration provider
+type rawValue =
+  | Json(Json.t)
+  | Vim(VimSetting.t)
+  | NotSet;
+
+type resolver = (~vimSetting: option(string), key) => rawValue;
+
+//let key: string => key;
 let keyAsString: key => string;
 
 // SETTINGS
@@ -49,6 +65,8 @@ module Schema: {
     get: resolver => 'a,
   };
 
+  type vimSetting('a);
+
   // DSL
 
   module DSL: {
@@ -60,7 +78,11 @@ module Schema: {
     let custom:
       (~decode: Json.decoder('a), ~encode: Json.encoder('a)) => codec('a);
 
-    let setting: (string, codec('a), ~default: 'a) => setting('a);
+    let vim: (string, VimSetting.t => 'a) => vimSetting('a);
+
+    let setting:
+      (~vim: vimSetting('a)=?, string, codec('a), ~default: 'a) =>
+      setting('a);
   };
 
   let bool: codec(bool);
@@ -68,10 +90,20 @@ module Schema: {
   let string: codec(string);
   let list: codec('a) => codec(list('a));
 
+  let vim: (string, VimSetting.t => 'a) => vimSetting('a);
+  let vim2:
+    (
+      string,
+      string,
+      (option(VimSetting.t), option(VimSetting.t)) => option('a)
+    ) =>
+    vimSetting('a);
+
   let custom:
     (~decode: Json.decoder('a), ~encode: Json.encoder('a)) => codec('a);
 
-  let setting: (string, codec('a), ~default: 'a) => setting('a);
+  let setting:
+    (~vim: vimSetting('a)=?, string, codec('a), ~default: 'a) => setting('a);
 };
 
 module Sub: {

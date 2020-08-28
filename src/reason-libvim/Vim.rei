@@ -323,12 +323,27 @@ module Mode: {
   let isSelect: t => bool;
 };
 
+module Setting: {
+  [@deriving show]
+  type value =
+    | String(string)
+    | Int(int);
+
+  [@deriving show]
+  type t = {
+    fullName: string,
+    shortName: option(string),
+    value,
+  };
+};
+
 module Effect: {
   type t =
     | Goto(Goto.effect)
     | TabPage(TabPage.effect)
     | Format(Format.effect)
-    | ModeChanged(Mode.t);
+    | ModeChanged(Mode.t)
+    | SettingChanged(Setting.t);
 };
 
 /**

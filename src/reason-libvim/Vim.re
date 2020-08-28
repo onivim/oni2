@@ -22,6 +22,7 @@ module TabPage = TabPage;
 module Mode = Mode;
 module Options = Options;
 module Search = Search;
+module Setting = Setting;
 module Types = Types;
 module Testing = {
   module Undo = Undo;
@@ -418,6 +419,12 @@ let _onVersion = () => {
   queue(() => Event.dispatch((), Listeners.version));
 };
 
+let _onSettingChanged = (setting: Setting.t) => {
+  queue(() =>
+    Event.dispatch(Effect.SettingChanged(setting), Listeners.effect)
+  );
+};
+
 let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);
   Callback.register("lv_onBufferChanged", _onBufferChanged);
@@ -429,6 +436,7 @@ let init = () => {
   Callback.register("lv_onTabPage", _onTabPage);
   Callback.register("lv_onIntro", _onIntro);
   Callback.register("lv_onMessage", _onMessage);
+  Callback.register("lv_onSettingChanged", _onSettingChanged);
   Callback.register("lv_onQuit", _onQuit);
   Callback.register("lv_onUnhandledEscape", _onUnhandledEscape);
   Callback.register("lv_onStopSearch", _onStopSearch);
