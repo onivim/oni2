@@ -4,18 +4,24 @@ title: License Key Bounty
 sidebar_label: License Key Bounty
 ---
 
-If you make a contribution to Onivim that fixes a bug or implement a new feature, we consider you part of the team.
+## License Key Bounty
 
-For qualifying pull requests, starting September 1st, 2020, we'll __award a free lifetime license key__. If you help us build Onivim, we want to make sure you're able to use it.
+For qualifying pull requests, starting September 1st, 2020, we'll __award a free lifetime license key__. 
+
+If you make a contribution to Onivim that fixes a bug or implements a new feature, we consider you part of our team, and want to make sure you have a license key.
 
 The requirements are as follows:
 
-1) The fix or change must be non-trivial (ie, not a typo fix). This is primarily a judgement call - there might be small code changes that require significant investigation.
+1) The fix or change must be non-trivial (ie, not a typo fix).
 2) The contribution must completely resolve an issue or implement a feature.
 3) Any required test cases or benchmarks must be implemented.
-4) The work must be primarily done by you. We're happy to help and give feedback!
-5) The pull request must address an issue logged by another user. If there is not an issue tracking the work, check with us first to make sure it is within scope.
+4) The work must be primarily done by you. We're happy to help and give feedback.
+5) The pull request must address an issue logged by another user. 
 6) The code must follow all relevant [style guidelines](./style-guide.md).
+
+Some of these are judgement calls - for example, there may be a long investigation to make a single-line fix. We'll do our best to be fair and revise these guidelines as we go.
+
+If you have an idea for a feature or work that doesn't meet these guidelines, feel free to reach out.
 
 ## Eligible Projects
 
@@ -33,15 +39,15 @@ Yes! These are a great place to start.
 
 ### Can I transfer license keys earned through this to another user?
 
-Sure. Bonus points if you brag about the feature / bug fix you implemented.
+Sure. Bonus points if you brag about the feature or bug fix you implemented.
 
 ### Is there a limit on the number of license keys I may earn?
 
-There is no limit (at least, until we run out of issues to fix and features to implement...)
+There is no limit... at least, until we run out of issues to fix and features to implement.
 
-### I just bought a license, and then submitted a qualifying pull request?
+### I just bought a license, and then submitted a qualifying pull request, what do I do?
 
-Wow, you're amazing! If it's within 30 days of purchasing the license - we'll be happy to refund the original purchase, and you can stick with the bounty license key.
+Wow, you're amazing! If the PR is submitted within 30 days of purchasing the license - we'll be happy to refund the original purchase, and you may use the bounty license key.
 
 If it is after the 30-day period, we unfortunately can't refund, but feel free to transfer the bounty license key to someone else.
 
