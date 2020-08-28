@@ -14,6 +14,11 @@ module VimSetting = {
     | String(_) => None
     | Int(1) => Some(true)
     | Int(_) => Some(false);
+
+  let toInt =
+    fun
+    | String(_) => None
+    | Int(v) => Some(v);
 };
 
 type rawValue =

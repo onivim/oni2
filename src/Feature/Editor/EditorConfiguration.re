@@ -67,6 +67,21 @@ module CustomDecoders: {
 };
 
 module VimSettings = {
+  let smoothScroll =
+    vim("smoothscroll", scrollSetting => {
+      scrollSetting
+      |> Config.VimSetting.toBool
+      |> Option.value(~default=false)
+    });
+
+  let lineSpace =
+    vim("linespace", lineSpaceSetting => {
+      lineSpaceSetting
+      |> Config.VimSetting.toInt
+      |> Option.map(LineHeight.padding)
+      |> Option.value(~default=LineHeight.default)
+    });
+
   let lineNumbers =
     vim2("relativenumber", "number", (maybeRelative, maybeNumber) => {
       let maybeRelativeBool =
@@ -113,6 +128,7 @@ let fontLigatures = setting("editor.fontLigatures", bool, ~default=true);
 let fontSize = setting("editor.fontSize", int, ~default=14);
 let lineHeight =
   setting(
+    ~vim=VimSettings.lineSpace,
     "editor.lineHeight",
     custom(~decode=LineHeight.decode, ~encode=LineHeight.encode),
     ~default=LineHeight.default,
@@ -137,7 +153,13 @@ let renderWhitespace =
   setting("editor.renderWhitespace", whitespace, ~default=`Selection);
 let rulers = setting("editor.rulers", list(int), ~default=[]);
 let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
-let smoothScroll = setting("editor.smoothScroll", bool, ~default=true);
+let smoothScroll =
+  setting(
+    ~vim=VimSettings.smoothScroll,
+    "editor.smoothScroll",
+    bool,
+    ~default=true,
+  );
 
 let tabSize = setting("editor.tabSize", int, ~default=4);
 

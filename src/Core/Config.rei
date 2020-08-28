@@ -6,6 +6,7 @@ module VimSetting: {
     | Int(int);
 
   let toBool: t => option(bool);
+  let toInt: t => option(int);
 };
 
 // A pre-decode value from a configuration provider
