@@ -18,6 +18,8 @@ let initial = {
 
 let mode = ({mode, _}) => mode;
 
+let recordingMacro = ({recordingMacro, _}) => recordingMacro;
+
 // MSG
 
 [@deriving show]

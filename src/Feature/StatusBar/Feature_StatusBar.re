@@ -314,8 +314,9 @@ let indentationToString = (indentation: IndentationSettings.t) => {
 module View = {
   let%component make =
                 (
-                  ~mode: Oni_Core.Mode.t,
+                  ~mode,
                   ~notifications: Feature_Notification.model,
+                  ~recordingMacro: option(char),
                   ~diagnostics: Diagnostics.t,
                   ~font: UiFont.t,
                   ~contextMenu: Feature_ContextMenu.model,
@@ -472,8 +473,14 @@ module View = {
          )
       |> React.listToElement;
 
+    let macroElement =
+      recordingMacro
+      |> Option.map(register => {<Text text={String.make(1, register)} />})
+      |> Option.value(~default=React.empty);
+
     <View style={Styles.view(background, yOffset)}>
       <section align=`FlexStart>
+        macroElement
         <notificationCount
           dispatch
           theme
