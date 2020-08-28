@@ -92,13 +92,13 @@ module VimSettings = {
       let justRelative =
         fun
         | Some(true) => Some(`RelativeOnly)
-        | Some(false)
+        | Some(false) => Some(`Off)
         | None => None;
 
       let justAbsolute =
         fun
         | Some(true) => Some(`On)
-        | Some(false)
+        | Some(false) => Some(`Off)
         | None => None;
 
       OptionEx.map2(
