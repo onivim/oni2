@@ -409,12 +409,12 @@ let _onSettingChanged = (setting: Setting.t) => {
 let _onColorSchemeChanged = (maybeScheme: option(string)) => {
   queue(() => {
     Event.dispatch(Effect.ColorSchemeChanged(maybeScheme), Listeners.effect)
-  })
-}
+  });
+};
 
-let _colorSchemesGet = (pattern) => {
-  (GlobalState.colorSchemeProvider^)(pattern)
-}
+let _colorSchemesGet = pattern => {
+  GlobalState.colorSchemeProvider^(pattern);
+};
 
 let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);

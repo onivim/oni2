@@ -83,10 +83,12 @@ let themeByName = (~name, model) => {
 let themesByName = (~filter: string, model) => {
   model
   |> pick((manifest: Exthost.Extension.Manifest.t) => {
-    Exthost.Extension.Contributions.(manifest.contributes.themes)
-  })
+       Exthost.Extension.Contributions.(manifest.contributes.themes)
+     })
   |> List.flatten
-  |> List.map(({label, _}: Exthost.Extension.Contributions.Theme.t) => label)
+  |> List.map(({label, _}: Exthost.Extension.Contributions.Theme.t) =>
+       label
+     )
   |> List.filter(label => Utility.StringEx.contains(filter, label));
 };
 

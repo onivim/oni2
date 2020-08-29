@@ -7,8 +7,9 @@ let input = s => ignore(Vim.input(s));
 let key = s => ignore(Vim.key(s));
 
 describe("CommandLine", ({describe, _}) => {
-  let emptyColorSchemeProvider = () => [||];
-  let getCompletions = CommandLine.getCompletions(~colorSchemeProvider=emptyColorSchemeProvider);
+  let emptyColorSchemeProvider = _ => [||];
+  let getCompletions =
+    CommandLine.getCompletions(~colorSchemeProvider=emptyColorSchemeProvider);
   describe("getType", ({test, _}) =>
     test("simple command line", ({expect, _}) => {
       let _ = reset();
@@ -26,7 +27,61 @@ describe("CommandLine", ({describe, _}) => {
     })
   );
 
-  describe("getCompletions", ({test, _}) => {
+  describe("getCompletions", ({describe, test, _}) => {
+    describe("ColorSchemes", ({test, _}) => {
+      test("gc stress test", ({expect, _}) => {
+        let _ = reset();
+
+        input(":colorscheme ");
+        let colorSchemeProvider = _ => {
+          Gc.full_major();
+          Array.make(10000, String.make(1000, 'a'));
+        };
+
+        expect.int(
+          Array.length(CommandLine.getCompletions(~colorSchemeProvider, ())),
+        ).
+          toBe(
+          10000,
+        );
+      });
+      test("pattern gets set", ({expect, _}) => {
+        let _ = reset();
+
+        let lastPattern = ref(None);
+        input(":colorscheme ");
+        let colorSchemeProvider = pattern => {
+          lastPattern := Some(pattern);
+          [|"a"|];
+        };
+
+        expect.int(
+          Array.length(CommandLine.getCompletions(~colorSchemeProvider, ())),
+        ).
+          toBe(
+          1,
+        );
+        expect.equal(lastPattern^, Some(""));
+
+        input("a");
+        expect.int(
+          Array.length(CommandLine.getCompletions(~colorSchemeProvider, ())),
+        ).
+          toBe(
+          1,
+        );
+        expect.equal(lastPattern^, Some("a"));
+
+        input("b");
+        expect.int(
+          Array.length(CommandLine.getCompletions(~colorSchemeProvider, ())),
+        ).
+          toBe(
+          1,
+        );
+        expect.equal(lastPattern^, Some("ab"));
+      });
+    });
     test("basic completion test", ({expect, _}) => {
       let _ = reset();
       input(":");

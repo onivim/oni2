@@ -29,7 +29,7 @@ let start =
   let libvimHasInitialized = ref(false);
   let currentTriggerKey = ref(None);
 
-  let colorSchemeProvider = (pattern) =>  {
+  let colorSchemeProvider = pattern => {
     getState().extensions
     |> Feature_Extensions.themesByName(~filter=pattern)
     |> Array.of_list;
@@ -186,10 +186,11 @@ let start =
       | SettingChanged(setting) =>
         dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
       | ColorSchemeChanged(maybeColorScheme) =>
-        switch(maybeColorScheme) {
-         | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker));
-         | Some(colorScheme) => dispatch(Actions.ThemeLoadByName(colorScheme))
-        }
+        switch (maybeColorScheme) {
+        | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker))
+        | Some(colorScheme) =>
+          dispatch(Actions.ThemeLoadByName(colorScheme))
+        },
     );
 
   let _: unit => unit =
@@ -490,7 +491,8 @@ let start =
     Vim.CommandLine.getText()
     |> Option.iter(commandStr =>
          if (position == String.length(commandStr)) {
-           let completions = Vim.CommandLine.getCompletions(~colorSchemeProvider, ());
+           let completions =
+             Vim.CommandLine.getCompletions(~colorSchemeProvider, ());
 
            Log.debugf(m =>
              m("  got %n completions.", Array.length(completions))
