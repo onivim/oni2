@@ -877,6 +877,7 @@ let start =
               since: Persistence.Global.version(),
             }),
           )
+        | Image => Some(BufferRenderer.Image)
         | Welcome => Some(BufferRenderer.Welcome)
         | Changelog => Some(BufferRenderer.FullChangelog)
         | FilePath(_) => None
