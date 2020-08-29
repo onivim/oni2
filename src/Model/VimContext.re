@@ -109,7 +109,10 @@ let current = (state: State.t) => {
 
   let insertSpaces = indentation.mode == Spaces;
 
-  let colorSchemeProvider = () => [||];
+  let colorSchemeProvider = () => {
+    prerr_endline ("Color scheme provider called");
+    [|"Nord"|]
+  };
 
   Vim.Context.{
     autoIndent,

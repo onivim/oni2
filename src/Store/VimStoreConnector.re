@@ -598,9 +598,12 @@ let start =
 
         let context = Oni_Model.VimContext.current(state);
 
+        prerr_endline ("-- INPUT: BEGIN");
+
         currentTriggerKey := Some(key);
         let {cursors, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t =
           isText ? Vim.input(~context, key) : Vim.key(~context, key);
+          prerr_endline ("-- INPUT: DONE");
         currentTriggerKey := None;
 
         // TODO: This has a sensitive timing dependency - the scroll actions need to happen first,

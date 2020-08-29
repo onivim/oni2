@@ -179,14 +179,15 @@ let runWith = (~context: Context.t, f) => {
 
   let oldBuf = Buffer.getCurrent();
   let prevMode = Mode.current();
-  //  let prevLocation = Cursor.get();
-  //  let prevTopLine = Window.getTopLine();
-  //  let prevLeftColumn = Window.getLeftColumn();
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
   GlobalState.autoIndent := Some(context.autoIndent);
   GlobalState.colorSchemeProvider := context.colorSchemeProvider;
+
+  prerr_endline ("Trying to call before key...");
+  let _ = context.colorSchemeProvider();
+  prerr_endline ("Trying to call before key: done");
 
   let cursors = f();
 
@@ -194,10 +195,7 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
 
   let newBuf = Buffer.getCurrent();
-  //  let newLocation = Cursor.get();
   let newMode = Mode.current();
-  //  let newLeftColumn = Window.getLeftColumn();
-  //  let newTopLine = Window.getTopLine();
   let newModified = Buffer.isModified(newBuf);
   let newLineEndings = Buffer.getLineEndings(newBuf);
 
@@ -436,11 +434,18 @@ let _onColorSchemeChanged = (maybeScheme: option(string)) => {
   })
 }
 
+let _colorSchemesGet = () => {
+
+  prerr_endline ("Vim::_onColorSchemes get");
+  (GlobalState.colorSchemeProvider^)()
+}
+
 let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);
   Callback.register("lv_onBufferChanged", _onBufferChanged);
   Callback.register("lv_onAutocommand", _onAutocommand);
   Callback.register("lv_onAutoIndent", _onAutoIndent);
+  Callback.register("lv_getColorSchemesCallback", _colorSchemesGet);
   Callback.register("lv_onColorSchemeChanged", _onColorSchemeChanged);
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
   Callback.register("lv_onFormat", _onFormat);
