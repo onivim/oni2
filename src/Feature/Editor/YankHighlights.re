@@ -28,11 +28,7 @@ module Animations = {
     );
 };
 
-let%component make =
-              (
-                ~highlights: Editor.yankHighlight,
-                (),
-              ) => {
+let%component make = (~highlights: Editor.yankHighlight, ()) => {
   let ranges = highlights.pixelRanges;
 
   let%hook (opacity, _animationState, _reset) =

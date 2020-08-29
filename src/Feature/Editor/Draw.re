@@ -300,7 +300,7 @@ let ruler = (~context, ~color, x) =>
   );
 
 let lineHighlight = (~context, ~color, lineIdx: EditorCoreTypes.LineNumber.t) => {
-  let ({x: pixelY, _}: PixelPosition.t, _) =
+  let ({y: pixelY, _}: PixelPosition.t, _) =
     Editor.bufferBytePositionToPixel(
       ~position=BytePosition.{line: lineIdx, byte: ByteIndex.zero},
       context.editor,

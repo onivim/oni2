@@ -163,16 +163,7 @@ let create = (~config, ~buffer, ()) => {
     selection: None,
     pixelWidth: 1,
     pixelHeight: 1,
-    yankHighlight:
-      Some({
-        key: Brisk_reconciler.Key.create(),
-        pixelRanges: [
-          PixelRange.create(
-            ~start=PixelPosition.{x: 50., y: 50.},
-            ~stop=PixelPosition.{x: 150., y: 150.},
-          ),
-        ],
-      }),
+    yankHighlight: None,
   };
 };
 

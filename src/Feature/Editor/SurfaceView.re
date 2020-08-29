@@ -161,10 +161,7 @@ let%component make =
     editor
     |> Editor.yankHighlight
     |> Option.map((highlights: Editor.yankHighlight) =>
-         <YankHighlights
-           key={highlights.key}
-           highlights
-         />
+         <YankHighlights key={highlights.key} highlights />
        )
     |> Option.value(~default=React.empty);
 
