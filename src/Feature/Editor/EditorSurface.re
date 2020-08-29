@@ -291,7 +291,7 @@ let%component make =
 
     maybeHover
     |> Option.map(((position: CharacterPosition.t, sections)) => {
-         let ({pixelX, pixelY}: Editor.pixelPosition, _) =
+         let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
            Editor.bufferCharacterPositionToPixel(~position, editor);
          let popupX = pixelX +. gutterWidth |> int_of_float;
          let popupTopY = pixelY |> int_of_float;

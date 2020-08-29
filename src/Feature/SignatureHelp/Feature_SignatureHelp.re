@@ -628,7 +628,7 @@ module View = {
         }
       )
       |> Option.map((characterPosition: CharacterPosition.t) => {
-           let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
+           let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
              Feature_Editor.Editor.bufferCharacterPositionToPixel(
                ~position=characterPosition,
                editor,

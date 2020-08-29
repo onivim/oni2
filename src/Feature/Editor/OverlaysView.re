@@ -58,7 +58,7 @@ let make =
       ~editorFont: Service_Font.font,
       (),
     ) => {
-  let ({pixelX, pixelY}: Editor.pixelPosition, _) =
+  let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
     Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
 
   let cursorPixelY = pixelY |> int_of_float;
