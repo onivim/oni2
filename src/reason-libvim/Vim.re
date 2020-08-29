@@ -406,6 +406,7 @@ let _onSettingChanged = (setting: Setting.t) => {
   );
 };
 
+<<<<<<< HEAD
 let _onColorSchemeChanged = (maybeScheme: option(string)) => {
   queue(() => {
     Event.dispatch(Effect.ColorSchemeChanged(maybeScheme), Listeners.effect)
@@ -414,6 +415,24 @@ let _onColorSchemeChanged = (maybeScheme: option(string)) => {
 
 let _colorSchemesGet = pattern => {
   GlobalState.colorSchemeProvider^(pattern);
+=======
+let _onMacroStartRecording = (register: char) => {
+  queue(() => {
+    Event.dispatch(
+      Effect.MacroRecordingStarted({register: register}),
+      Listeners.effect,
+    )
+  });
+};
+
+let _onMacroStopRecording = (register: char, value: option(string)) => {
+  queue(() => {
+    Event.dispatch(
+      Effect.MacroRecordingStopped({register, value}),
+      Listeners.effect,
+    )
+  });
+>>>>>>> master
 };
 
 let init = () => {
@@ -429,6 +448,8 @@ let init = () => {
   Callback.register("lv_onTabPage", _onTabPage);
   Callback.register("lv_onIntro", _onIntro);
   Callback.register("lv_onMessage", _onMessage);
+  Callback.register("lv_onMacroStartRecording", _onMacroStartRecording);
+  Callback.register("lv_onMacroStopRecording", _onMacroStopRecording);
   Callback.register("lv_onSettingChanged", _onSettingChanged);
   Callback.register("lv_onQuit", _onQuit);
   Callback.register("lv_onUnhandledEscape", _onUnhandledEscape);
