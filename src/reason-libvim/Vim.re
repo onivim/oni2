@@ -406,7 +406,6 @@ let _onSettingChanged = (setting: Setting.t) => {
   );
 };
 
-<<<<<<< HEAD
 let _onColorSchemeChanged = (maybeScheme: option(string)) => {
   queue(() => {
     Event.dispatch(Effect.ColorSchemeChanged(maybeScheme), Listeners.effect)
@@ -415,7 +414,8 @@ let _onColorSchemeChanged = (maybeScheme: option(string)) => {
 
 let _colorSchemesGet = pattern => {
   GlobalState.colorSchemeProvider^(pattern);
-=======
+};
+
 let _onMacroStartRecording = (register: char) => {
   queue(() => {
     Event.dispatch(
@@ -432,7 +432,6 @@ let _onMacroStopRecording = (register: char, value: option(string)) => {
       Listeners.effect,
     )
   });
->>>>>>> master
 };
 
 let init = () => {

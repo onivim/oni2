@@ -191,7 +191,7 @@ let start =
         | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker))
         | Some(colorScheme) =>
           dispatch(Actions.ThemeLoadByName(colorScheme))
-        },
+        }
 
       | MacroRecordingStarted({register}) =>
         dispatch(
