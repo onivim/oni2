@@ -109,9 +109,12 @@ let current = (state: State.t) => {
 
   let insertSpaces = indentation.mode == Spaces;
 
+  let colorSchemeProvider = () => [||];
+
   Vim.Context.{
     autoIndent,
     bufferId,
+    colorSchemeProvider,
     leftColumn,
     topLine,
     width,

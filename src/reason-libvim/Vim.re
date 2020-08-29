@@ -9,6 +9,7 @@ module Buffer = Buffer;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
 module Clipboard = Clipboard;
+module ColorScheme = ColorScheme;
 module CommandLine = CommandLine;
 module Context = Context;
 module Cursor = Cursor;
@@ -42,6 +43,8 @@ module GlobalState = {
     ) =
     ref(None);
   let queuedFunctions: ref(list(unit => unit)) = ref([]);
+
+  let colorSchemeProvider: ref(unit => array(string)) = ref(() => [||]);
 
   let overriddenMessageHandler:
     ref(option((Types.msgPriority, string, string) => unit)) =
@@ -183,10 +186,12 @@ let runWith = (~context: Context.t, f) => {
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
   GlobalState.autoIndent := Some(context.autoIndent);
+  GlobalState.colorSchemeProvider := context.colorSchemeProvider;
 
   let cursors = f();
 
   GlobalState.autoIndent := None;
+  GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
 
   let newBuf = Buffer.getCurrent();
   //  let newLocation = Cursor.get();
@@ -425,11 +430,18 @@ let _onSettingChanged = (setting: Setting.t) => {
   );
 };
 
+let _onColorSchemeChanged = (maybeScheme: option(string)) => {
+  queue(() => {
+    Event.dispatch(Effect.ColorSchemeChanged(maybeScheme), Listeners.effect)
+  })
+}
+
 let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);
   Callback.register("lv_onBufferChanged", _onBufferChanged);
   Callback.register("lv_onAutocommand", _onAutocommand);
   Callback.register("lv_onAutoIndent", _onAutoIndent);
+  Callback.register("lv_onColorSchemeChanged", _onColorSchemeChanged);
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
   Callback.register("lv_onFormat", _onFormat);
   Callback.register("lv_onGoto", _onGoto);

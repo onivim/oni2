@@ -178,7 +178,12 @@ let start =
           };
         }
       | SettingChanged(setting) =>
-        dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting))),
+        dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
+      | ColorSchemeChanged(maybeColorScheme) =>
+        maybeColorScheme
+        |> Option.iter(colorScheme => {
+          dispatch(Actions.ThemeLoadByName(colorScheme))
+        })
     );
 
   let _: unit => unit =
