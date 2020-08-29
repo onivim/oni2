@@ -109,9 +109,10 @@ let current = (state: State.t) => {
 
   let insertSpaces = indentation.mode == Spaces;
 
-  let colorSchemeProvider = () => {
-    prerr_endline ("Color scheme provider called");
-    [|"Nord"|]
+  let colorSchemeProvider = (pattern) =>  {
+    state.extensions
+    |> Feature_Extensions.themesByName(~filter=pattern)
+    |> Array.of_list;
   };
 
   Vim.Context.{

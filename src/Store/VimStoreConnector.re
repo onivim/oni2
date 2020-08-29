@@ -29,13 +29,9 @@ let start =
   let libvimHasInitialized = ref(false);
   let currentTriggerKey = ref(None);
 
-  let colorSchemeProvider = () => {
+  let colorSchemeProvider = (pattern) =>  {
     getState().extensions
-    |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
-         Exthost.Extension.Contributions.(manifest.contributes.themes)
-       })
-    |> List.flatten
-    |> List.map(({label, _}: Exthost.Extension.Contributions.Theme.t) => label)
+    |> Feature_Extensions.themesByName(~filter=pattern)
     |> Array.of_list;
   };
 

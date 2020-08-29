@@ -8,7 +8,7 @@
     ref(None);
   let queuedFunctions: ref(list(unit => unit)) = ref([]);
 
-  let colorSchemeProvider: ref(unit => array(string)) = ref(() => [||]);
+  let colorSchemeProvider: ref(ColorScheme.Provider.t) = ref(ColorScheme.Provider.default);
 
   let overriddenMessageHandler:
     ref(option((Types.msgPriority, string, string) => unit)) =

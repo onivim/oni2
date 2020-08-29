@@ -167,10 +167,6 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.autoIndent := Some(context.autoIndent);
   GlobalState.colorSchemeProvider := context.colorSchemeProvider;
 
-  prerr_endline ("Trying to call before key...");
-  let _ = context.colorSchemeProvider();
-  prerr_endline ("Trying to call before key: done");
-
   let cursors = f();
 
   GlobalState.autoIndent := None;
@@ -416,10 +412,8 @@ let _onColorSchemeChanged = (maybeScheme: option(string)) => {
   })
 }
 
-let _colorSchemesGet = () => {
-
-  prerr_endline ("Vim::_onColorSchemes get");
-  (GlobalState.colorSchemeProvider^)()
+let _colorSchemesGet = (pattern) => {
+  (GlobalState.colorSchemeProvider^)(pattern)
 }
 
 let init = () => {

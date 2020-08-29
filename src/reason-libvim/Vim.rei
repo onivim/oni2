@@ -37,7 +37,7 @@ module AutoIndent: {
 
 module ColorScheme: {
   module Provider: {
-    type t = unit => array(string);
+    type t = string => array(string);
     let default: t;
   };
 };

@@ -65,9 +65,9 @@ int onAutoIndent(int lnum, buf_T *buf, char_u *prevLine, char_u *newLine) {
   CAMLreturnT(int, ret);
 };
 
-int getColorSchemesCallback(int *num_schemes, char_u ***schemes) {
+int getColorSchemesCallback(char_u *pat, int *num_schemes, char_u ***schemes) {
   CAMLparam0();
-  CAMLlocal1(vSchemes);
+  CAMLlocal2(vPat, vSchemes);
 
   static const value *lv_getColorSchemesCallback = NULL;
 
@@ -75,7 +75,8 @@ int getColorSchemesCallback(int *num_schemes, char_u ***schemes) {
     lv_getColorSchemesCallback = caml_named_value("lv_getColorSchemesCallback");
   }
 
-  vSchemes = caml_callback(*lv_getColorSchemesCallback, Val_unit);
+  vPat = caml_copy_string((const char*)pat);
+  vSchemes = caml_callback(*lv_getColorSchemesCallback, vPat);
 
   int len = Wosize_val(vSchemes);
   *num_schemes = len;

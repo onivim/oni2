@@ -1,4 +1,4 @@
 module Provider = {
-    type t = unit => array(string);
-    let default = () => [||];
+    type t = string => array(string);
+    let default = (_) => [||];
 };
