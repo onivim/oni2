@@ -516,7 +516,7 @@ module View = {
         />
       </section>
       <sectionGroup>
-        <section align=`FlexStart> {macroElement}  </section>
+        <section align=`FlexStart> macroElement </section>
         <section align=`FlexStart> leftItems </section>
         <section align=`FlexStart>
           <diagnosticCount font theme diagnostics dispatch />
