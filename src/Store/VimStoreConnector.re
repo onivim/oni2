@@ -185,7 +185,7 @@ let start =
         }
       | SettingChanged(setting) =>
         dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
-        
+
       | ColorSchemeChanged(maybeColorScheme) =>
         switch (maybeColorScheme) {
         | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker))
@@ -199,7 +199,7 @@ let start =
             Feature_Vim.MacroRecordingStarted({register: register}),
           ),
         )
-        
+
       | MacroRecordingStopped(_) =>
         dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped)),
     );
