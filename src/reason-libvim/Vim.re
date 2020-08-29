@@ -33,24 +33,6 @@ module VisualRange = VisualRange;
 module Window = Window;
 module Yank = Yank;
 
-module GlobalState = {
-  let autoIndent:
-    ref(
-      option(
-        (~previousLine: string, ~beforePreviousLine: option(string)) =>
-        AutoIndent.action,
-      ),
-    ) =
-    ref(None);
-  let queuedFunctions: ref(list(unit => unit)) = ref([]);
-
-  let colorSchemeProvider: ref(unit => array(string)) = ref(() => [||]);
-
-  let overriddenMessageHandler:
-    ref(option((Types.msgPriority, string, string) => unit)) =
-    ref(None);
-};
-
 module Internal = {
   let nativeFormatRequestToEffect: Native.formatRequest => Format.effect =
     ({bufferId, startLine, endLine, returnCursor, formatType, lineCount}) => {

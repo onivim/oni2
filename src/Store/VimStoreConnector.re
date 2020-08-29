@@ -29,6 +29,16 @@ let start =
   let libvimHasInitialized = ref(false);
   let currentTriggerKey = ref(None);
 
+  let colorSchemeProvider = () => {
+    getState().extensions
+    |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
+         Exthost.Extension.Contributions.(manifest.contributes.themes)
+       })
+    |> List.flatten
+    |> List.map(({label, _}: Exthost.Extension.Contributions.Theme.t) => label)
+    |> Array.of_list;
+  };
+
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
     let yankConfig =
@@ -484,7 +494,7 @@ let start =
     Vim.CommandLine.getText()
     |> Option.iter(commandStr =>
          if (position == String.length(commandStr)) {
-           let completions = Vim.CommandLine.getCompletions();
+           let completions = Vim.CommandLine.getCompletions(~colorSchemeProvider, ());
 
            Log.debugf(m =>
              m("  got %n completions.", Array.length(completions))
