@@ -101,6 +101,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       <View style=Styles.statusBar>
         <Feature_StatusBar.View
           mode
+          recordingMacro={state.vim |> Feature_Vim.recordingMacro}
           notifications={state.notifications}
           contextMenu
           diagnostics={state.diagnostics}

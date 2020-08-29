@@ -7,11 +7,18 @@ open Oni_Core.Utility;
 type model = {
   mode: Vim.Mode.t,
   settings: StringMap.t(Vim.Setting.value),
+  recordingMacro: option(char),
 };
 
-let initial = {mode: Vim.Mode.Normal, settings: StringMap.empty};
+let initial = {
+  mode: Vim.Mode.Normal,
+  settings: StringMap.empty,
+  recordingMacro: None,
+};
 
 let mode = ({mode, _}) => mode;
+
+let recordingMacro = ({recordingMacro, _}) => recordingMacro;
 
 // MSG
 
@@ -20,7 +27,9 @@ type msg =
   | ModeChanged([@opaque] Vim.Mode.t)
   | PasteCompleted({cursors: [@opaque] list(BytePosition.t)})
   | Pasted(string)
-  | SettingChanged(Vim.Setting.t);
+  | SettingChanged(Vim.Setting.t)
+  | MacroRecordingStarted({register: char})
+  | MacroRecordingStopped;
 
 type outmsg =
   | Nothing
@@ -42,6 +51,11 @@ let update = (msg, model: model) => {
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
       Nothing,
     )
+  | MacroRecordingStarted({register}) => (
+      {...model, recordingMacro: Some(register)},
+      Nothing,
+    )
+  | MacroRecordingStopped => ({...model, recordingMacro: None}, Nothing)
   };
 };
 

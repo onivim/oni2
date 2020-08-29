@@ -7,6 +7,8 @@ let initial: model;
 
 let mode: model => Vim.Mode.t;
 
+let recordingMacro: model => option(char);
+
 // MSG
 
 [@deriving show]
@@ -14,7 +16,9 @@ type msg =
   | ModeChanged([@opaque] Vim.Mode.t)
   | PasteCompleted({cursors: [@opaque] list(BytePosition.t)})
   | Pasted(string)
-  | SettingChanged(Vim.Setting.t);
+  | SettingChanged(Vim.Setting.t)
+  | MacroRecordingStarted({register: char})
+  | MacroRecordingStopped;
 
 type outmsg =
   | Nothing

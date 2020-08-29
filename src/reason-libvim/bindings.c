@@ -244,6 +244,40 @@ void onFormat(formatRequest_T *pRequest) {
   CAMLreturn0;
 }
 
+void onMacroStartRecord(int regname) {
+  CAMLparam0();
+
+  static const value *lv_onMacroStartRecording = NULL;
+
+  if (lv_onMacroStartRecording == NULL) {
+    lv_onMacroStartRecording = caml_named_value("lv_onMacroStartRecording");
+  }
+
+  caml_callback(*lv_onMacroStartRecording, Val_int(regname));
+  CAMLreturn0;
+}
+
+void onMacroStopRecord(int regname, char_u *regvalue) {
+  CAMLparam0();
+  CAMLlocal2(vRegister, vStr);
+
+  static const value *lv_onMacroStopRecording = NULL;
+
+  if (lv_onMacroStopRecording == NULL) {
+    lv_onMacroStopRecording = caml_named_value("lv_onMacroStopRecording");
+  }
+
+  vRegister = Val_none;
+
+  if (regvalue != NULL) {
+    vStr = caml_copy_string((const char *)regvalue);
+    vRegister = Val_some(vStr);
+  }
+
+  caml_callback2(*lv_onMacroStopRecording, Val_int(regname), vRegister);
+  CAMLreturn0;
+}
+
 void onMessage(char_u *title, char_u *contents, msgPriority_T priority) {
   CAMLparam0();
   CAMLlocal2(titleString, contentsString);
@@ -484,6 +518,8 @@ void onWriteFailure(writeFailureReason_T reason, buf_T *buf) {
 }
 
 CAMLprim value libvim_vimInit(value unit) {
+  vimMacroSetStartRecordCallback(&onMacroStartRecord);
+  vimMacroSetStopRecordCallback(&onMacroStopRecord);
   vimSetAutoCommandCallback(&onAutocommand);
   vimSetAutoIndentCallback(&onAutoIndent);
   vimSetBufferUpdateCallback(&onBufferChanged);
