@@ -7,6 +7,8 @@ let input = s => ignore(Vim.input(s));
 let key = s => ignore(Vim.key(s));
 
 describe("CommandLine", ({describe, _}) => {
+  let emptyColorSchemeProvider = () => [||];
+  let getCompletions = CommandLine.getCompletions(~colorSchemeProvider=emptyColorSchemeProvider);
   describe("getType", ({test, _}) =>
     test("simple command line", ({expect, _}) => {
       let _ = reset();
@@ -30,7 +32,7 @@ describe("CommandLine", ({describe, _}) => {
       input(":");
       input("e");
 
-      expect.int(Array.length(CommandLine.getCompletions())).toBe(20);
+      expect.int(Array.length(getCompletions())).toBe(20);
     });
 
     test("request completions multiple times", ({expect, _}) => {
@@ -38,10 +40,10 @@ describe("CommandLine", ({describe, _}) => {
       input(":");
       input("e");
 
-      expect.int(Array.length(CommandLine.getCompletions())).toBe(20);
-      expect.int(Array.length(CommandLine.getCompletions())).toBe(20);
+      expect.int(Array.length(getCompletions())).toBe(20);
+      expect.int(Array.length(getCompletions())).toBe(20);
 
-      let completions = CommandLine.getCompletions();
+      let completions = getCompletions();
       expect.string(completions[0]).toEqual("earlier");
     });
 
@@ -51,7 +53,7 @@ describe("CommandLine", ({describe, _}) => {
       input("e");
       input("h");
 
-      expect.int(Array.length(CommandLine.getCompletions())).toBe(0);
+      expect.int(Array.length(getCompletions())).toBe(0);
     });
   });
 

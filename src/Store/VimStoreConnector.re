@@ -190,10 +190,10 @@ let start =
       | SettingChanged(setting) =>
         dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
       | ColorSchemeChanged(maybeColorScheme) =>
-        maybeColorScheme
-        |> Option.iter(colorScheme => {
-          dispatch(Actions.ThemeLoadByName(colorScheme))
-        })
+        switch(maybeColorScheme) {
+         | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker));
+         | Some(colorScheme) => dispatch(Actions.ThemeLoadByName(colorScheme))
+        }
     );
 
   let _: unit => unit =
@@ -608,12 +608,9 @@ let start =
 
         let context = Oni_Model.VimContext.current(state);
 
-        prerr_endline ("-- INPUT: BEGIN");
-
         currentTriggerKey := Some(key);
         let {cursors, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t =
           isText ? Vim.input(~context, key) : Vim.key(~context, key);
-          prerr_endline ("-- INPUT: DONE");
         currentTriggerKey := None;
 
         // TODO: This has a sensitive timing dependency - the scroll actions need to happen first,
