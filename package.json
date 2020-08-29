@@ -241,7 +241,7 @@
     "esy-skia": "*",
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.57",
+    "libvim": "8.10869.58",
     "ocaml": "~4.7.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
     "reasonFuzz": "*",
@@ -251,7 +251,6 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
     "revery": "revery-ui/revery#e646df2",
     "esy-skia": "revery-ui/esy-skia#a3785f9",
     "rench": "bryphe/rench#a976fe5",
@@ -261,7 +260,8 @@
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
-    "@opam/conf-pkg-config": "1.2"
+    "@opam/conf-pkg-config": "1.2",
+    "@opam/yojson": "onivim/yojson:yojson.opam#f480aef"
   },
   "devDependencies": {
     "ocaml": "~4.10",
