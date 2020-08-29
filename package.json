@@ -251,6 +251,7 @@
     "revery-terminal": "*"
   },
   "resolutions": {
+    "libvim": "link:../libvim/src",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
     "revery": "revery-ui/revery#e646df2",
     "esy-skia": "revery-ui/esy-skia#a3785f9",
