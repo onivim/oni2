@@ -9,6 +9,7 @@ module Buffer = Buffer;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
 module Clipboard = Clipboard;
+module ColorScheme = ColorScheme;
 module CommandLine = CommandLine;
 module Context = Context;
 module Cursor = Cursor;
@@ -31,22 +32,6 @@ module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;
 module Yank = Yank;
-
-module GlobalState = {
-  let autoIndent:
-    ref(
-      option(
-        (~previousLine: string, ~beforePreviousLine: option(string)) =>
-        AutoIndent.action,
-      ),
-    ) =
-    ref(None);
-  let queuedFunctions: ref(list(unit => unit)) = ref([]);
-
-  let overriddenMessageHandler:
-    ref(option((Types.msgPriority, string, string) => unit)) =
-    ref(None);
-};
 
 module Internal = {
   let nativeFormatRequestToEffect: Native.formatRequest => Format.effect =
@@ -176,23 +161,19 @@ let runWith = (~context: Context.t, f) => {
 
   let oldBuf = Buffer.getCurrent();
   let prevMode = Mode.current();
-  //  let prevLocation = Cursor.get();
-  //  let prevTopLine = Window.getTopLine();
-  //  let prevLeftColumn = Window.getLeftColumn();
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
   GlobalState.autoIndent := Some(context.autoIndent);
+  GlobalState.colorSchemeProvider := context.colorSchemeProvider;
 
   let cursors = f();
 
   GlobalState.autoIndent := None;
+  GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
 
   let newBuf = Buffer.getCurrent();
-  //  let newLocation = Cursor.get();
   let newMode = Mode.current();
-  //  let newLeftColumn = Window.getLeftColumn();
-  //  let newTopLine = Window.getTopLine();
   let newModified = Buffer.isModified(newBuf);
   let newLineEndings = Buffer.getLineEndings(newBuf);
 
@@ -425,6 +406,16 @@ let _onSettingChanged = (setting: Setting.t) => {
   );
 };
 
+let _onColorSchemeChanged = (maybeScheme: option(string)) => {
+  queue(() => {
+    Event.dispatch(Effect.ColorSchemeChanged(maybeScheme), Listeners.effect)
+  });
+};
+
+let _colorSchemesGet = pattern => {
+  GlobalState.colorSchemeProvider^(pattern);
+};
+
 let _onMacroStartRecording = (register: char) => {
   queue(() => {
     Event.dispatch(
@@ -448,6 +439,8 @@ let init = () => {
   Callback.register("lv_onBufferChanged", _onBufferChanged);
   Callback.register("lv_onAutocommand", _onAutocommand);
   Callback.register("lv_onAutoIndent", _onAutoIndent);
+  Callback.register("lv_getColorSchemesCallback", _colorSchemesGet);
+  Callback.register("lv_onColorSchemeChanged", _onColorSchemeChanged);
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
   Callback.register("lv_onFormat", _onFormat);
   Callback.register("lv_onGoto", _onGoto);

@@ -33,6 +33,7 @@ type outmsg =
 let pick: (Exthost.Extension.Manifest.t => 'a, model) => list('a);
 
 let themeByName: (~name: string, model) => option(Contributions.Theme.t);
+let themesByName: (~filter: string, model) => list(string);
 
 let isBusy: model => bool;
 let isSearchInProgress: model => bool;

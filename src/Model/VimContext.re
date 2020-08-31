@@ -109,9 +109,16 @@ let current = (state: State.t) => {
 
   let insertSpaces = indentation.mode == Spaces;
 
+  let colorSchemeProvider = pattern => {
+    state.extensions
+    |> Feature_Extensions.themesByName(~filter=pattern)
+    |> Array.of_list;
+  };
+
   Vim.Context.{
     autoIndent,
     bufferId,
+    colorSchemeProvider,
     leftColumn,
     topLine,
     width,
