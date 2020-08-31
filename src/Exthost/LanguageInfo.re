@@ -31,6 +31,15 @@ type t = {
   languageToScope: [@opaque] StringMap.t(string),
 };
 
+let defaultFileTypes = [
+  (".png", "image"),
+  (".gif", "image"),
+  (".tga", "image"),
+  (".jpg", "image"),
+  (".jpeg", "image"),
+  (".bmp", "image"),
+] |> 
+
 let languages = ({languages, _}) => {
   languages
   |> List.fold_left(
@@ -67,7 +76,7 @@ let defaultLanguage = Oni_Core.Buffer.FileType.default;
 let getLanguageFromExtension = (li: t, ext: string) => {
   switch (StringMap.find_opt(ext, li.extToLanguage)) {
   | Some(v) => v
-  | None => defaultLanguage
+  | None => 
   };
 };
 
