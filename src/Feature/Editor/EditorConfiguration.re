@@ -162,6 +162,8 @@ let smoothScroll =
   );
 
 let tabSize = setting("editor.tabSize", int, ~default=4);
+let yankHighlightAnimation =
+  setting("editor.yankHighlightAnimation", bool, ~default=true);
 
 module Hover = {
   let enabled = setting("editor.hover.enabled", bool, ~default=true);
@@ -220,6 +222,7 @@ let contributions = [
   scrollShadow.spec,
   smoothScroll.spec,
   tabSize.spec,
+  yankHighlightAnimation.spec,
   Hover.enabled.spec,
   Hover.delay.spec,
   Minimap.enabled.spec,

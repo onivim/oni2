@@ -181,7 +181,9 @@ let%component make =
     onEditorSizeChanged(editorId, width, height);
   };
 
-  let maybeYankHighlights = editor |> Editor.yankHighlight;
+  let showYankHighlightAnimation = Config.yankHighlightAnimation.get(config);
+  let maybeYankHighlights =
+    showYankHighlightAnimation ? editor |> Editor.yankHighlight : None;
 
   let colors =
     backgroundColor
