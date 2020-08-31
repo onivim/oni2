@@ -4,23 +4,6 @@ open Revery;
 module Log = (val Log.withNamespace("Oni2.Core.Config"));
 module Lookup = Kernel.KeyedStringTree;
 
-module VimSetting = {
-  type t =
-    | String(string)
-    | Int(int);
-
-  let toBool =
-    fun
-    | String(_) => None
-    | Int(1) => Some(true)
-    | Int(_) => Some(false);
-
-  let toInt =
-    fun
-    | String(_) => None
-    | Int(v) => Some(v);
-};
-
 type rawValue =
   | Json(Json.t)
   | Vim(VimSetting.t)

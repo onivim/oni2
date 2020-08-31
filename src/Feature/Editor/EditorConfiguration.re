@@ -67,17 +67,36 @@ module CustomDecoders: {
 };
 
 module VimSettings = {
+  open VimSetting.Schema;
   let smoothScroll =
     vim("smoothscroll", scrollSetting => {
       scrollSetting
-      |> Config.VimSetting.toBool
+      |> VimSetting.decode_value_opt(bool)
       |> Option.value(~default=false)
+    });
+
+  let minimap =
+    vim("minimap", scrollSetting => {
+      scrollSetting
+      |> VimSetting.decode_value_opt(bool)
+      |> Option.value(~default=false)
+    });
+
+  let guifont =
+    vim("guifont", guifontSetting => {
+      prerr_endline("GUI FONT?");
+      guifontSetting
+      |> VimSetting.decode_value_opt(font)
+      |> Option.map(({fontFamily, _}: VimSetting.fontDescription) =>
+           fontFamily
+         )
+      |> Option.value(~default="JetBrainsMono-Regular.ttf");
     });
 
   let lineSpace =
     vim("linespace", lineSpaceSetting => {
       lineSpaceSetting
-      |> Config.VimSetting.toInt
+      |> VimSetting.decode_value_opt(int)
       |> Option.map(LineHeight.padding)
       |> Option.value(~default=LineHeight.default)
     });
@@ -85,9 +104,9 @@ module VimSettings = {
   let lineNumbers =
     vim2("relativenumber", "number", (maybeRelative, maybeNumber) => {
       let maybeRelativeBool =
-        maybeRelative |> OptionEx.flatMap(Config.VimSetting.toBool);
+        maybeRelative |> OptionEx.flatMap(VimSetting.decode_value_opt(bool));
       let maybeNumberBool =
-        maybeNumber |> OptionEx.flatMap(Config.VimSetting.toBool);
+        maybeNumber |> OptionEx.flatMap(VimSetting.decode_value_opt(bool));
 
       let justRelative =
         fun
@@ -123,7 +142,12 @@ open CustomDecoders;
 let detectIndentation =
   setting("editor.detectIndentation", bool, ~default=true);
 let fontFamily =
-  setting("editor.fontFamily", string, ~default="JetBrainsMono-Regular.ttf");
+  setting(
+    ~vim=VimSettings.guifont,
+    "editor.fontFamily",
+    string,
+    ~default="JetBrainsMono-Regular.ttf",
+  );
 let fontLigatures = setting("editor.fontLigatures", bool, ~default=true);
 let fontSize = setting("editor.fontSize", int, ~default=14);
 let lineHeight =
@@ -171,15 +195,7 @@ module Hover = {
 module Minimap = {
   let enabled =
     setting(
-      ~vim=
-        Config.Schema.(
-          vim(
-            "minimap",
-            fun
-            | Config.VimSetting.Int(1) => true
-            | _ => false,
-          )
-        ),
+      ~vim=VimSettings.minimap,
       "editor.minimap.enabled",
       bool,
       ~default=true,
