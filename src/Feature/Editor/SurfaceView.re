@@ -163,6 +163,7 @@ let%component make =
     |> Option.map((highlights: Editor.yankHighlight) =>
          <YankHighlights
            key={highlights.key}
+           colors
            pixelRanges={highlights.pixelRanges}
          />
        )
