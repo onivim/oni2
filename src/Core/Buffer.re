@@ -79,7 +79,7 @@ let getMediumFriendlyName =
        | Terminal({cmd, _}) => "Terminal - " ++ cmd
        | UpdateChangelog => "Updates"
        | Changelog => "Changelog"
-       | Image => "Image" 
+       | Image => "Image"
        | FilePath(fp) =>
          switch (workingDirectory) {
          | Some(base) => Path.toRelative(~base, fp)

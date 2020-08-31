@@ -137,16 +137,21 @@ module Parts = {
           renderOverlays
         />;
 
-      | Image => 
-            buffer
-            |> Oni_Core.Buffer.getFilePath
-            |> Option.map(filePath => {
-                <View style=Style.[flexGrow(1), flexDirection(`Column), justifyContent(`Center), alignItems(`Center),
-                ]>
-                  <Image src=`File(filePath) />
-                </View>
-            })
-            |> Option.value(~default=<Text text="Unable to load." />);
+      | Image =>
+        buffer
+        |> Oni_Core.Buffer.getFilePath
+        |> Option.map(filePath => {
+             <View
+               style=Style.[
+                 flexGrow(1),
+                 flexDirection(`Column),
+                 justifyContent(`Center),
+                 alignItems(`Center),
+               ]>
+               <Image src={`File(filePath)} />
+             </View>
+           })
+        |> Option.value(~default=<Text text="Unable to load." />)
 
       | Terminal({id, _}) =>
         state.terminals

@@ -27,12 +27,13 @@ let extensionDetails = "oni://ExtensionDetails";
 let terminalRegex = OnigRegExp.create("oni://terminal/([0-9]*)/(.*)");
 
 let imageExtensions = [".png", ".bmp", ".gif", ".tga", ".jpg", ".jpeg"];
-let isImageExtension = (ext) => List.exists(imageExt => imageExt == ext, imageExtensions);
+let isImageExtension = ext =>
+  List.exists(imageExt => imageExt == ext, imageExtensions);
 
 let parse = bufferPath => {
   let extension = bufferPath |> Utility.Path.getExtension;
   if (isImageExtension(extension)) {
-    Image
+    Image;
   } else if (String.equal(bufferPath, welcome)) {
     Welcome;
   } else if (String.equal(bufferPath, version)) {
