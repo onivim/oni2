@@ -35,6 +35,13 @@ module AutoIndent: {
     | DecreaseIndent;
 };
 
+module ColorScheme: {
+  module Provider: {
+    type t = string => array(string);
+    let default: t;
+  };
+};
+
 module Context: {
   type t = {
     autoClosingPairs: AutoClosingPairs.t,
@@ -42,6 +49,7 @@ module Context: {
       (~previousLine: string, ~beforePreviousLine: option(string)) =>
       AutoIndent.action,
     bufferId: int,
+    colorSchemeProvider: ColorScheme.Provider.t,
     width: int,
     height: int,
     leftColumn: int,
@@ -344,6 +352,7 @@ module Effect: {
     | Format(Format.effect)
     | ModeChanged(Mode.t)
     | SettingChanged(Setting.t)
+    | ColorSchemeChanged(option(string))
     | MacroRecordingStarted({register: char})
     | MacroRecordingStopped({
         register: char,

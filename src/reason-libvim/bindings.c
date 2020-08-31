@@ -65,6 +65,55 @@ int onAutoIndent(int lnum, buf_T *buf, char_u *prevLine, char_u *newLine) {
   CAMLreturnT(int, ret);
 };
 
+int getColorSchemesCallback(char_u *pat, int *num_schemes, char_u ***schemes) {
+  CAMLparam0();
+  CAMLlocal2(vPat, vSchemes);
+
+  static const value *lv_getColorSchemesCallback = NULL;
+
+  if (lv_getColorSchemesCallback == NULL) {
+    lv_getColorSchemesCallback = caml_named_value("lv_getColorSchemesCallback");
+  }
+
+  vPat = caml_copy_string((const char*)pat);
+  vSchemes = caml_callback(*lv_getColorSchemesCallback, vPat);
+
+  int len = Wosize_val(vSchemes);
+  *num_schemes = len;
+  char_u **out = malloc(sizeof(char_u*) * len);
+
+  for (int i = 0; i < len; i++) {
+    const char *sz = String_val(Field(vSchemes, i));
+    out[i] = malloc((sizeof(char) * strlen(sz)) + 1); 
+    strcpy((char *)out[i], sz);
+  }
+
+  *schemes = out;
+
+  CAMLreturnT(int, OK);
+}
+
+int onColorSchemeChanged(char_u *colorscheme) {
+  CAMLparam0();
+  CAMLlocal2(vThemeStr, vThemeOpt);
+  static const value *lv_onColorSchemeChanged = NULL;
+
+  if (lv_onColorSchemeChanged == NULL) {
+    lv_onColorSchemeChanged = caml_named_value("lv_onColorSchemeChanged");
+  }
+
+  if (colorscheme == NULL) {
+    vThemeOpt = Val_none;
+  } else {
+    vThemeStr = caml_copy_string((const char *)colorscheme);
+    vThemeOpt = Val_some(vThemeStr);
+  }
+  
+  caml_callback(*lv_onColorSchemeChanged, vThemeOpt);
+  
+  CAMLreturnT(int, OK);
+};
+
 void onSettingChanged(optionSet_T *options) {
   CAMLparam0();
   CAMLlocal2(innerValue, settingValue);
@@ -524,6 +573,8 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetAutoIndentCallback(&onAutoIndent);
   vimSetBufferUpdateCallback(&onBufferChanged);
   vimSetClipboardGetCallback(&getClipboardCallback);
+  vimColorSchemeSetChangedCallback(&onColorSchemeChanged);
+  vimColorSchemeSetCompletionCallback(&getColorSchemesCallback);
   vimSetDirectoryChangedCallback(&onDirectoryChanged);
   vimSetDisplayIntroCallback(&onIntro);
   vimSetDisplayVersionCallback(&onVersion);
