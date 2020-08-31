@@ -1,14 +1,5 @@
 type key;
 
-module VimSetting: {
-  type t =
-    | String(string)
-    | Int(int);
-
-  let toBool: t => option(bool);
-  let toInt: t => option(int);
-};
-
 // A pre-decode value from a configuration provider
 type rawValue =
   | Json(Json.t)
@@ -72,6 +63,7 @@ module Schema: {
   module DSL: {
     let bool: codec(bool);
     let int: codec(int);
+    let float: codec(float);
     let string: codec(string);
     let list: codec('a) => codec(list('a));
 
@@ -79,6 +71,13 @@ module Schema: {
       (~decode: Json.decoder('a), ~encode: Json.encoder('a)) => codec('a);
 
     let vim: (string, VimSetting.t => 'a) => vimSetting('a);
+    let vim2:
+      (
+        string,
+        string,
+        (option(VimSetting.t), option(VimSetting.t)) => option('a)
+      ) =>
+      vimSetting('a);
 
     let setting:
       (~vim: vimSetting('a)=?, string, codec('a), ~default: 'a) =>
@@ -87,6 +86,7 @@ module Schema: {
 
   let bool: codec(bool);
   let int: codec(int);
+  let float: codec(float);
   let string: codec(string);
   let list: codec('a) => codec(list('a));
 

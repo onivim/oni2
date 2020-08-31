@@ -18,7 +18,6 @@
            ExtHostCompletionTest
            ExtHostDefinitionTest
            FileWatcherTest
-           FontSizeChangeTest
            KeybindingsInvalidJsonTest
            KeySequenceJJTest
            InputIgnoreTest
@@ -84,7 +83,6 @@
         ExtHostCompletionTest.exe
         ExtHostDefinitionTest.exe
         FileWatcherTest.exe
-        FontSizeChangeTest.exe
         KeybindingsInvalidJsonTest.exe
         KeySequenceJJTest.exe
         InputIgnoreTest.exe

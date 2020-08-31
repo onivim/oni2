@@ -100,40 +100,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
-  let getExpectedValue = (valueGetter, configuration) => {
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(parsedConfig) => Configuration.getValue(valueGetter, parsedConfig)
-    | Error(_) => failwith("Unable to parse configuration: " ++ configuration)
-    };
-  };
-
-  describe("editor.fontSize", ({test, _}) => {
-    let getFontSize = getExpectedValue(c => c.editorFontSize);
-    test("parses string if possible", ({expect, _}) => {
-      let fontSize =
-        getFontSize({|
-        { "editor.fontSize": "12" }
-      |});
-      expect.float(fontSize).toBeCloseTo(12.);
-    });
-
-    test("uses default size if unable to parse", ({expect, _}) => {
-      let fontSize =
-        getFontSize({|
-        { "editor.fontSize": "true" }
-      |});
-      expect.float(fontSize).toBeCloseTo(Constants.defaultFontSize);
-    });
-
-    test("does not allow value lower than minimum size", ({expect, _}) => {
-      let fontSize =
-        getFontSize({|
-        { "editor.fontSize": 1 }
-      |});
-      expect.float(fontSize).toBeCloseTo(Constants.minimumFontSize);
-    });
-  });
-
   test("vimUseSystemClipboard value", ({expect, _}) => {
     let configuration = {|
       { "vim.useSystemClipboard": [] }

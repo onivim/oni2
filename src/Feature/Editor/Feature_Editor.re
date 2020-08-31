@@ -15,6 +15,8 @@ module EditorDiffMarkers = EditorDiffMarkers;
 
 module Wrapping = Wrapping;
 
+module Configuration = EditorConfiguration;
+
 module Contributions = {
   let configuration = EditorConfiguration.contributions;
 };

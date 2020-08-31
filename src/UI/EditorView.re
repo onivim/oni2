@@ -280,10 +280,11 @@ let make =
 
   let editorShowTabs =
     state.configuration
-    |> Configuration.getValue(c => c.workbenchEditorShowTabs);
+    |> Oni_Core.Configuration.getValue(c => c.workbenchEditorShowTabs);
 
   let hideZenModeTabs =
-    state.configuration |> Configuration.getValue(c => c.zenModeHideTabs);
+    state.configuration
+    |> Oni_Core.Configuration.getValue(c => c.zenModeHideTabs);
 
   let showTabs = editorShowTabs && (!state.zenMode || !hideZenModeTabs);
 

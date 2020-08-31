@@ -85,8 +85,8 @@ let update = (~getUserSettings, model, msg) =>
 
 let vimToCoreSetting =
   fun
-  | Vim.Setting.String(str) => Config.VimSetting.String(str)
-  | Vim.Setting.Int(i) => Config.VimSetting.Int(i);
+  | Vim.Setting.String(str) => VimSetting.String(str)
+  | Vim.Setting.Int(i) => VimSetting.Int(i);
 
 let resolver = (model, vimModel, ~vimSetting, key) => {
   // Try to get the vim setting, first...

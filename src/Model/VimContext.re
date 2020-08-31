@@ -24,7 +24,7 @@ module Internal = {
 
   let autoClosingPairs = (~syntaxScope, ~maybeLanguageConfig, state: State.t) => {
     let acpEnabled =
-      Configuration.getValue(
+      Oni_Core.Configuration.getValue(
         c => c.editorAutoClosingBrackets,
         state.configuration,
       )
