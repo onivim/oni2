@@ -28,8 +28,8 @@ module Animations = {
     );
 };
 
-let%component make = (~highlights: Editor.yankHighlight, ()) => {
-  let ranges = highlights.pixelRanges;
+let%component make = (~pixelRanges: list(PixelRange.t), ()) => {
+  let ranges = pixelRanges;
 
   let%hook (opacity, _animationState, _reset) =
     Hooks.animation(Animations.fadeIn, ~active=true);

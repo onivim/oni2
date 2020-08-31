@@ -882,8 +882,23 @@ let update =
     | Some(buffer) =>
       let byteRanges = Selection.getRanges(range, buffer);
 
+      let cursorLine =
+        activeEditor
+        |> Editor.getPrimaryCursor
+        |> (
+          ({line, _}: CharacterPosition.t) =>
+            line |> EditorCoreTypes.LineNumber.toZeroBased
+        );
+
+      let maxDelta = 400;
+
       let pixelRanges =
         byteRanges
+        |> List.filter(({start, _}: ByteRange.t) => {
+             let lineNumber =
+               start.line |> EditorCoreTypes.LineNumber.toZeroBased;
+             abs(lineNumber - cursorLine) < maxDelta;
+           })
         |> List.map(({start, stop}: ByteRange.t) => {
              let (pixelStart, _) =
                Editor.bufferBytePositionToPixel(

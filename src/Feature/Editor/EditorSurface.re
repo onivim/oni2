@@ -60,6 +60,7 @@ let minimap =
       ~colors,
       ~dispatch,
       ~matchingPairs,
+      ~maybeYankHighlights,
       ~bufferSyntaxHighlights,
       ~selectionRanges,
       ~showMinimapSlider,
@@ -95,6 +96,7 @@ let minimap =
       dispatch
       width=minimapPixelWidth
       height=pixelHeight
+      maybeYankHighlights
       count
       diagnostics=diagnosticsMap
       getTokensForLine={getTokensForLine(
@@ -178,6 +180,8 @@ let%component make =
     lastDimensions := Some((width, height));
     onEditorSizeChanged(editorId, width, height);
   };
+
+  let maybeYankHighlights = editor |> Editor.yankHighlight;
 
   let colors =
     backgroundColor
@@ -329,6 +333,7 @@ let%component make =
       diagnosticsMap
       selectionRanges
       matchingPairs
+      maybeYankHighlights
       bufferHighlights
       languageSupport
       bufferSyntaxHighlights
@@ -350,6 +355,7 @@ let%component make =
            colors
            dispatch
            matchingPairs
+           maybeYankHighlights
            bufferSyntaxHighlights
            selectionRanges
            showMinimapSlider={Config.Minimap.showSlider.get(config)}

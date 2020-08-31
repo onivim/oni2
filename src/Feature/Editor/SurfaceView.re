@@ -55,6 +55,7 @@ let%component make =
                 ~languageSupport,
                 ~bufferSyntaxHighlights,
                 ~bottomVisibleLine,
+                ~maybeYankHighlights,
                 ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
@@ -158,10 +159,12 @@ let%component make =
   let pixelHeight = Editor.visiblePixelHeight(editor);
 
   let yankHighlightElement =
-    editor
-    |> Editor.yankHighlight
+    maybeYankHighlights
     |> Option.map((highlights: Editor.yankHighlight) =>
-         <YankHighlights key={highlights.key} highlights />
+         <YankHighlights
+           key={highlights.key}
+           pixelRanges={highlights.pixelRanges}
+         />
        )
     |> Option.value(~default=React.empty);
 
