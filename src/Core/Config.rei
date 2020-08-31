@@ -63,6 +63,7 @@ module Schema: {
   module DSL: {
     let bool: codec(bool);
     let int: codec(int);
+    let float: codec(float);
     let string: codec(string);
     let list: codec('a) => codec(list('a));
 
@@ -85,6 +86,7 @@ module Schema: {
 
   let bool: codec(bool);
   let int: codec(int);
+  let float: codec(float);
   let string: codec(string);
   let list: codec('a) => codec(list('a));
 

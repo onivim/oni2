@@ -238,8 +238,12 @@ let start =
 
     let fontFamily = Feature_Editor.Configuration.fontFamily.get(config);
     let fontSize = Feature_Editor.Configuration.fontSize.get(config);
+
     let fontLigatures =
-      Feature_Editor.Configuration.fontLigatures.get(config);
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontLigatures,
+        state.configuration,
+      );
 
     let fontSmoothing =
       Oni_Core.Configuration.getValue(

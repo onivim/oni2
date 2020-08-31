@@ -57,12 +57,9 @@ module Schema = {
   let font =
     string
     |> and_then(fontString => {
-         prerr_endline("HERE: " ++ fontString);
          let splitString = String.split_on_char(':', fontString);
          switch (splitString) {
-         | [fontFamily, ..._] =>
-           prerr_endline("Got family:" ++ fontFamily);
-           Ok({fontFamily, height: None});
+         | [fontFamily, ..._] => Ok({fontFamily, height: None})
          | [] => Error("Unexpected format: " ++ fontString)
          };
        });

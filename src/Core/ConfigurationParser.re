@@ -182,6 +182,13 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
+    "editor.fontSmoothing",
+    (config, json) => {
+      ...config,
+      editorFontSmoothing: parseFontSmoothing(json),
+    },
+  ),
+  (
     "editor.hover.delay",
     (config, json) => {...config, editorHoverDelay: parseInt(json)},
   ),
@@ -192,6 +199,13 @@ let configurationParsers: list(configurationTuple) = [
   (
     "editor.detectIndentation",
     (config, json) => {...config, editorDetectIndentation: parseBool(json)},
+  ),
+  (
+    "editor.fontLigatures",
+    (config, json) => {
+      ...config,
+      editorFontLigatures: parseFontLigatures(json),
+    },
   ),
   (
     "editor.insertSpaces",

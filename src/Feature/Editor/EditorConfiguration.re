@@ -9,6 +9,7 @@ module CustomDecoders: {
   let lineNumbers:
     Config.Schema.codec([ | `On | `Relative | `RelativeOnly | `Off]);
   let time: Config.Schema.codec(Time.t);
+  let fontSize: Config.Schema.codec(float);
 } = {
   let whitespace =
     custom(
@@ -32,6 +33,19 @@ module CustomDecoders: {
           | `Selection => string("selection")
           | `All => string("all")
         ),
+    );
+
+  let fontSize =
+    custom(
+      ~decode=
+        Json.Decode.(
+          float
+          |> map(size => {
+               size < Constants.minimumFontSize
+                 ? Constants.minimumFontSize : size
+             })
+        ),
+      ~encode=Json.Encode.float,
     );
 
   let lineNumbers =
@@ -84,13 +98,12 @@ module VimSettings = {
 
   let guifont =
     vim("guifont", guifontSetting => {
-      prerr_endline("GUI FONT?");
       guifontSetting
       |> VimSetting.decode_value_opt(font)
       |> Option.map(({fontFamily, _}: VimSetting.fontDescription) =>
            fontFamily
          )
-      |> Option.value(~default="JetBrainsMono-Regular.ttf");
+      |> Option.value(~default="JetBrainsMono-Regular.ttf")
     });
 
   let lineSpace =
@@ -149,7 +162,7 @@ let fontFamily =
     ~default="JetBrainsMono-Regular.ttf",
   );
 let fontLigatures = setting("editor.fontLigatures", bool, ~default=true);
-let fontSize = setting("editor.fontSize", int, ~default=14);
+let fontSize = setting("editor.fontSize", fontSize, ~default=14.);
 let lineHeight =
   setting(
     ~vim=VimSettings.lineSpace,

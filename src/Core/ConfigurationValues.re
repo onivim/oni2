@@ -28,6 +28,8 @@ type fontLigatures = [ | `Bool(bool) | `List(list(string))];
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
   editorDetectIndentation: bool,
+  editorFontLigatures: fontLigatures,
+  editorFontSmoothing: fontSmoothing,
   editorHoverDelay: int,
   editorHoverEnabled: bool,
   editorLargeFileOptimizations: bool,
@@ -67,6 +69,8 @@ type t = {
 let default = {
   editorAutoClosingBrackets: LanguageDefined,
   editorDetectIndentation: true,
+  editorFontSmoothing: Default,
+  editorFontLigatures: `Bool(true),
   editorHoverDelay: 1000,
   editorHoverEnabled: true,
   editorLargeFileOptimizations: true,
