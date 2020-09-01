@@ -1,5 +1,3 @@
-open Oni_Core;
-open Revery;
 open Revery.UI;
 
 module Styles = {
