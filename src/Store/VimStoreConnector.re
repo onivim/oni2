@@ -215,8 +215,47 @@ let start =
     });
 
   let _: unit => unit =
-    Vim.onYank(({lines, register, operator, yankType, _}) => {
+    Vim.onYank(
+      (
+        {
+          lines,
+          register,
+          operator,
+          yankType,
+          startLine,
+          startColumn,
+          endLine,
+          endColumn,
+        },
+      ) => {
       let state = getState();
+
+      if (operator == Vim.Yank.Yank) {
+        let visualType =
+          switch (yankType) {
+          | Block => Vim.Types.Block
+          | Line => Vim.Types.Line
+          | Char => Vim.Types.Character
+          };
+
+        let range =
+          ByteRange.{
+            start:
+              BytePosition.{
+                line: LineNumber.ofOneBased(startLine),
+                byte: ByteIndex.ofInt(startColumn),
+              },
+            stop:
+              BytePosition.{
+                line: LineNumber.ofOneBased(endLine),
+                byte: ByteIndex.ofInt(endColumn),
+              },
+          };
+        let visualRange =
+          Oni_Core.VisualRange.create(~mode=visualType, range);
+        dispatch(Actions.Yank({range: visualRange}));
+      };
+
       let yankConfig =
         Selectors.getActiveConfigurationValue(state, c =>
           c.vimUseSystemClipboard

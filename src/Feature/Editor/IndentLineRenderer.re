@@ -89,7 +89,7 @@ let render =
 
   let editor = context.editor;
   let bufferPositionToPixel = lineIdx => {
-    let ({pixelX, pixelY}: Editor.pixelPosition, _) =
+    let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
       Editor.bufferBytePositionToPixel(
         ~position=
           BytePosition.{

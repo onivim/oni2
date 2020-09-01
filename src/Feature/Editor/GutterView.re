@@ -27,7 +27,7 @@ let renderLineNumber =
     );
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
   let isActiveLine = lineNumber == cursorLine;
-  let ({pixelY: yOffset, _}: Editor.pixelPosition, _) =
+  let ({y: yOffset, _}: PixelPosition.t, _) =
     Editor.bufferBytePositionToPixel(
       ~position=
         BytePosition.{

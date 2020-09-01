@@ -4,11 +4,6 @@ open Oni_Core;
 [@deriving show]
 type t;
 
-type pixelPosition = {
-  pixelX: float,
-  pixelY: float,
-};
-
 type scrollbarMetrics = {
   visible: bool,
   thumbSize: int,
@@ -19,6 +14,11 @@ type viewLine = {
   contents: BufferLine.t,
   byteOffset: int,
   characterOffset: int,
+};
+
+type yankHighlight = {
+  key: Brisk_reconciler.Key.t,
+  pixelRanges: list(PixelRange.t),
 };
 
 let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
@@ -45,6 +45,9 @@ let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setCursors: (~cursors: list(BytePosition.t), t) => t;
+
+let yankHighlight: t => option(yankHighlight);
+let setYankHighlight: (~yankHighlight: yankHighlight, t) => t;
 
 let isMinimapEnabled: t => bool;
 let setMinimapEnabled: (~enabled: bool, t) => t;
@@ -111,9 +114,9 @@ let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
 
 // They return both the pixel position, as well as the character width of the target character.
 let bufferBytePositionToPixel:
-  (~position: BytePosition.t, t) => (pixelPosition, float);
+  (~position: BytePosition.t, t) => (PixelPosition.t, float);
 let bufferCharacterPositionToPixel:
-  (~position: CharacterPosition.t, t) => (pixelPosition, float);
+  (~position: CharacterPosition.t, t) => (PixelPosition.t, float);
 
 // PROJECTION
 

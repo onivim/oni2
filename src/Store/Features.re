@@ -869,6 +869,75 @@ let update =
 
     ({...state, signatureHelp, languageSupport: languageSupport'}, shEffect);
 
+  | Yank({range}) =>
+    open EditorCoreTypes;
+    open Feature_Editor;
+
+    let activeEditor = state.layout |> Feature_Layout.activeEditor;
+    let activeEditorId = activeEditor |> Editor.getId;
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+
+    switch (maybeBuffer) {
+    | None => (state, Isolinear.Effect.none)
+    | Some(buffer) =>
+      let byteRanges = Selection.getRanges(range, buffer);
+
+      let cursorLine =
+        activeEditor
+        |> Editor.getPrimaryCursor
+        |> (
+          ({line, _}: CharacterPosition.t) =>
+            line |> EditorCoreTypes.LineNumber.toZeroBased
+        );
+
+      let maxDelta = 400;
+
+      let pixelRanges =
+        byteRanges
+        |> List.filter(({start, _}: ByteRange.t) => {
+             let lineNumber =
+               start.line |> EditorCoreTypes.LineNumber.toZeroBased;
+             abs(lineNumber - cursorLine) < maxDelta;
+           })
+        |> List.map(({start, stop}: ByteRange.t) => {
+             let (pixelStart, _) =
+               Editor.bufferBytePositionToPixel(
+                 ~position=start,
+                 activeEditor,
+               );
+
+             let (pixelStop, _) =
+               Editor.bufferBytePositionToPixel(~position=stop, activeEditor);
+             let lineHeightInPixels =
+               activeEditor |> Editor.lineHeightInPixels;
+             let range =
+               PixelRange.create(
+                 ~start=pixelStart,
+                 ~stop={
+                   x: pixelStop.x,
+                   y: pixelStart.y +. lineHeightInPixels,
+                 },
+               );
+             range;
+           });
+      let layout' =
+        state.layout
+        |> Feature_Layout.map(editor =>
+             if (Editor.getId(editor) == activeEditorId) {
+               Editor.setYankHighlight(
+                 ~yankHighlight={
+                   key: Brisk_reconciler.Key.create(),
+                   pixelRanges,
+                 },
+                 editor,
+               );
+             } else {
+               editor;
+             }
+           );
+      ({...state, layout: layout'}, Isolinear.Effect.none);
+    };
+
   | Vim(msg) =>
     let wasInInsertMode = Feature_Vim.mode(state.vim) == Vim.Mode.Insert;
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
