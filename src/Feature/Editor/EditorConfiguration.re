@@ -225,6 +225,9 @@ module ZenMode = {
 };
 
 module Experimental = {
+  let smoothScroll =
+    setting("experimental.editor.smoothScroll", bool, ~default=true);
+
   let cursorSmoothCaretAnimation =
     setting(
       "experimental.editor.cursorSmoothCaretAnimation",

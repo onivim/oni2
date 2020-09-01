@@ -12,12 +12,20 @@ function activate(context) {
         vscode.window.showInformationMessage(JSON.stringify(val))
     }
     // Create a simple status bar
+<<<<<<< HEAD
     let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000)
     item.color = new vscode.ThemeColor("foreground")
     item.command = "developer.oni.statusBarClicked"
     item.text = "$(wrench) Developer"
     item.tooltip = "Hello from oni-dev-extension!"
 //    item.show()
+=======
+    let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000);
+    item.color = new vscode.ThemeColor("foreground");
+    item.command = "developer.oni.statusBarClicked";
+    item.text = "$(wrench) Developer";
+    //item.show();
+>>>>>>> 5fd939f4a03902e224c9553086106958c84c0b0f
 
     let cleanup = (disposable) => context.subscriptions.push(disposable)
 
