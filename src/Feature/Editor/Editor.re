@@ -474,59 +474,50 @@ let getLeftVisibleColumn = view => {
 
 let getLineFromPixelY = (~pixelY, editor) => {
   let lineHeight = lineHeightInPixels(editor);
-  let rec loop = (accumulatedLines, accumulatedPixels, remainingInlineElements) => {
-
-    prerr_endline(Printf.sprintf(
-      "-- Accumulated Lines: %d accumulated Pixels: %f", 
-      accumulatedLines, accumulatedPixels
-    ));
+  let rec loop =
+          (accumulatedLines, accumulatedPixels, remainingInlineElements) =>
     if (pixelY < accumulatedPixels) {
-      prerr_endline ("backtrack");
-      accumulatedLines - 1
+      accumulatedLines - 1;
     } else {
-      switch (remainingInlineElements: InlineElements.t) {
-      | [] => 
-      prerr_endline ("All empty");
-      let lineNumber = int_of_float((pixelY -. accumulatedPixels) /. lineHeight);
-      prerr_endline ("linenumber: " ++ string_of_int(lineNumber));
-      prerr_endline ("accumulated lines: " ++ string_of_int(accumulatedLines));
-      lineNumber + accumulatedLines
+      switch ((remainingInlineElements: InlineElements.t)) {
+      | [] =>
+        let lineNumber =
+          int_of_float((pixelY -. accumulatedPixels) /. lineHeight);
+        lineNumber + accumulatedLines;
       | [hd, ...tail] =>
-        let additionalRegion = float(hd.line - accumulatedLines) *. lineHeight;
-        if ((additionalRegion +. accumulatedPixels) >= pixelY) {
+        let additionalRegion =
+          float(hd.line - accumulatedLines) *. lineHeight;
+        if (additionalRegion +. accumulatedPixels >= pixelY) {
           // The line is prior to the next inline element!
-          prerr_endline ("In region");
-          let lineNumber = int_of_float((pixelY -. accumulatedPixels) /. lineHeight);
-          lineNumber + accumulatedLines
-          
+          let lineNumber =
+            int_of_float((pixelY -. accumulatedPixels) /. lineHeight);
+          lineNumber + accumulatedLines;
         } else {
           // We need to advance
-          loop(hd.line + 1, 
-          accumulatedPixels +.
-          additionalRegion +. hd.height +. lineHeight , tail);
-        }
-      }
-    }
-    
-  };
-
+          loop(
+            hd.line + 1,
+            accumulatedPixels +. additionalRegion +. hd.height +. lineHeight,
+            tail,
+          );
+        };
+      };
+    };
 
   loop(0, 0., editor.inlineElements);
-  
 };
 
 let getTopVisibleLine = editor => {
-  let top = getLineFromPixelY(~pixelY=editor.scrollY, editor) + 1;
-  prerr_endline ("getTopVisibleLine: " ++ string_of_int(top));
-  top;
-}
+  getLineFromPixelY(~pixelY=editor.scrollY, editor) + 1;
+};
 
 let getBottomVisibleLine = editor => {
-  let absoluteBottomLine = getLineFromPixelY(
-  ~pixelY=editor.scrollY +. float_of_int(editor.pixelHeight), editor);
-  let ret = absoluteBottomLine > editor.viewLines ? editor.viewLines : absoluteBottomLine;
-  prerr_endline ("getBottomVisibleLine: " ++ string_of_int(ret));
-  ret;
+  let absoluteBottomLine =
+    getLineFromPixelY(
+      ~pixelY=editor.scrollY +. float_of_int(editor.pixelHeight),
+      editor,
+    );
+  absoluteBottomLine > editor.viewLines
+    ? editor.viewLines : absoluteBottomLine;
 };
 
 let setSize = (~pixelWidth, ~pixelHeight, editor) => {
@@ -675,10 +666,7 @@ let removeInlineElement = (~uniqueId, editor) => {
 module Slow = {
   let pixelPositionToBytePosition =
       (~buffer, ~pixelX: float, ~pixelY: float, view) => {
-
-    let rawLine =  getLineFromPixelY(~pixelY=pixelY +. view.scrollY, view);
-
-    prerr_endline ("rawline: " ++ string_of_int(rawLine));
+    let rawLine = getLineFromPixelY(~pixelY=pixelY +. view.scrollY, view);
 
     let totalLinesInBuffer = Buffer.getNumberOfLines(buffer);
 

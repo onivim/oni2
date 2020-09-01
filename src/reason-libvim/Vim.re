@@ -146,7 +146,6 @@ let runWith = (~context: Context.t, f) => {
   };
 
   if (Window.getHeight() != context.height) {
-    prerr_endline ("SETTING NEW HEIGHT: " ++ string_of_int(context.height));
     Window.setHeight(context.height);
   };
 
