@@ -4,23 +4,6 @@ open Revery;
 module Log = (val Log.withNamespace("Oni2.Core.Config"));
 module Lookup = Kernel.KeyedStringTree;
 
-module VimSetting = {
-  type t =
-    | String(string)
-    | Int(int);
-
-  let toBool =
-    fun
-    | String(_) => None
-    | Int(1) => Some(true)
-    | Int(_) => Some(false);
-
-  let toInt =
-    fun
-    | String(_) => None
-    | Int(v) => Some(v);
-};
-
 type rawValue =
   | Json(Json.t)
   | Vim(VimSetting.t)
@@ -145,6 +128,7 @@ module Schema = {
     };
 
     let bool = {decode: Json.Decode.bool, encode: Json.Encode.bool};
+    let float = {decode: Json.Decode.float, encode: Json.Encode.float};
     let int = {decode: Json.Decode.int, encode: Json.Encode.int};
     let string = {decode: Json.Decode.string, encode: Json.Encode.string};
     let list = valueCodec => {

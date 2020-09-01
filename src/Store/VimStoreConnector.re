@@ -29,6 +29,12 @@ let start =
   let libvimHasInitialized = ref(false);
   let currentTriggerKey = ref(None);
 
+  let colorSchemeProvider = pattern => {
+    getState().extensions
+    |> Feature_Extensions.themesByName(~filter=pattern)
+    |> Array.of_list;
+  };
+
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
     let yankConfig =
@@ -179,12 +185,21 @@ let start =
         }
       | SettingChanged(setting) =>
         dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
+
+      | ColorSchemeChanged(maybeColorScheme) =>
+        switch (maybeColorScheme) {
+        | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker))
+        | Some(colorScheme) =>
+          dispatch(Actions.ThemeLoadByName(colorScheme))
+        }
+
       | MacroRecordingStarted({register}) =>
         dispatch(
           Actions.Vim(
             Feature_Vim.MacroRecordingStarted({register: register}),
           ),
         )
+
       | MacroRecordingStopped(_) =>
         dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped)),
     );
@@ -200,8 +215,47 @@ let start =
     });
 
   let _: unit => unit =
-    Vim.onYank(({lines, register, operator, yankType, _}) => {
+    Vim.onYank(
+      (
+        {
+          lines,
+          register,
+          operator,
+          yankType,
+          startLine,
+          startColumn,
+          endLine,
+          endColumn,
+        },
+      ) => {
       let state = getState();
+
+      if (operator == Vim.Yank.Yank) {
+        let visualType =
+          switch (yankType) {
+          | Block => Vim.Types.Block
+          | Line => Vim.Types.Line
+          | Char => Vim.Types.Character
+          };
+
+        let range =
+          ByteRange.{
+            start:
+              BytePosition.{
+                line: LineNumber.ofOneBased(startLine),
+                byte: ByteIndex.ofInt(startColumn),
+              },
+            stop:
+              BytePosition.{
+                line: LineNumber.ofOneBased(endLine),
+                byte: ByteIndex.ofInt(endColumn),
+              },
+          };
+        let visualRange =
+          Oni_Core.VisualRange.create(~mode=visualType, range);
+        dispatch(Actions.Yank({range: visualRange}));
+      };
+
       let yankConfig =
         Selectors.getActiveConfigurationValue(state, c =>
           c.vimUseSystemClipboard
@@ -487,7 +541,8 @@ let start =
     Vim.CommandLine.getText()
     |> Option.iter(commandStr =>
          if (position == String.length(commandStr)) {
-           let completions = Vim.CommandLine.getCompletions();
+           let completions =
+             Vim.CommandLine.getCompletions(~colorSchemeProvider, ());
 
            Log.debugf(m =>
              m("  got %n completions.", Array.length(completions))

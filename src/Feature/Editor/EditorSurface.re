@@ -60,6 +60,7 @@ let minimap =
       ~colors,
       ~dispatch,
       ~matchingPairs,
+      ~maybeYankHighlights,
       ~bufferSyntaxHighlights,
       ~selectionRanges,
       ~showMinimapSlider,
@@ -95,6 +96,7 @@ let minimap =
       dispatch
       width=minimapPixelWidth
       height=pixelHeight
+      maybeYankHighlights
       count
       diagnostics=diagnosticsMap
       getTokensForLine={getTokensForLine(
@@ -178,6 +180,10 @@ let%component make =
     lastDimensions := Some((width, height));
     onEditorSizeChanged(editorId, width, height);
   };
+
+  let showYankHighlightAnimation = Config.yankHighlightAnimation.get(config);
+  let maybeYankHighlights =
+    showYankHighlightAnimation ? editor |> Editor.yankHighlight : None;
 
   let colors =
     backgroundColor
@@ -291,7 +297,7 @@ let%component make =
 
     maybeHover
     |> Option.map(((position: CharacterPosition.t, sections)) => {
-         let ({pixelX, pixelY}: Editor.pixelPosition, _) =
+         let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
            Editor.bufferCharacterPositionToPixel(~position, editor);
          let popupX = pixelX +. gutterWidth |> int_of_float;
          let popupTopY = pixelY |> int_of_float;
@@ -329,6 +335,7 @@ let%component make =
       diagnosticsMap
       selectionRanges
       matchingPairs
+      maybeYankHighlights
       bufferHighlights
       languageSupport
       bufferSyntaxHighlights
@@ -350,6 +357,7 @@ let%component make =
            colors
            dispatch
            matchingPairs
+           maybeYankHighlights
            bufferSyntaxHighlights
            selectionRanges
            showMinimapSlider={Config.Minimap.showSlider.get(config)}

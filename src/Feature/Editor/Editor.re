@@ -11,15 +11,16 @@ module GlobalState = {
   };
 };
 
-type pixelPosition = {
-  pixelX: float,
-  pixelY: float,
-};
-
 type viewLine = {
   contents: BufferLine.t,
   byteOffset: int,
   characterOffset: int,
+};
+
+[@deriving show]
+type yankHighlight = {
+  key: [@opaque] Brisk_reconciler.Key.t,
+  pixelRanges: list(PixelRange.t),
 };
 
 [@deriving show]
@@ -44,6 +45,7 @@ type t = {
   selection: [@opaque] option(VisualRange.t),
   pixelWidth: int,
   pixelHeight: int,
+  yankHighlight: option(yankHighlight),
 };
 
 let key = ({key, _}) => key;
@@ -85,7 +87,7 @@ let bufferBytePositionToPixel =
   let lineCount = EditorBuffer.numberOfLines(buffer);
   let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
   if (line < 0 || line >= lineCount) {
-    ({pixelX: 0., pixelY: 0.}, 0.);
+    ({x: 0., y: 0.}: PixelPosition.t, 0.);
   } else {
     let bufferLine = buffer |> EditorBuffer.line(line);
 
@@ -97,8 +99,14 @@ let bufferBytePositionToPixel =
 
     let pixelY = lineHeightInPixels(editor) *. float(line) -. scrollY +. 0.5;
 
-    ({pixelX, pixelY}, width);
+    ({x: pixelX, y: pixelY}: PixelPosition.t, width);
   };
+};
+
+let yankHighlight = ({yankHighlight, _}) => yankHighlight;
+let setYankHighlight = (~yankHighlight, editor) => {
+  ...editor,
+  yankHighlight: Some(yankHighlight),
 };
 
 let viewLine = (editor, lineNumber) => {
@@ -112,7 +120,7 @@ let bufferCharacterPositionToPixel =
   let lineCount = EditorBuffer.numberOfLines(buffer);
   let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
   if (line < 0 || line >= lineCount) {
-    ({pixelX: 0., pixelY: 0.}, 0.);
+    ({x: 0., y: 0.}: PixelPosition.t, 0.);
   } else {
     let (cursorOffset, width) =
       buffer
@@ -123,7 +131,7 @@ let bufferCharacterPositionToPixel =
 
     let pixelY = lineHeightInPixels(editor) *. float(line) -. scrollY +. 0.5;
 
-    ({pixelX, pixelY}, width);
+    ({x: pixelX, y: pixelY}: PixelPosition.t, width);
   };
 };
 
@@ -155,6 +163,7 @@ let create = (~config, ~buffer, ()) => {
     selection: None,
     pixelWidth: 1,
     pixelHeight: 1,
+    yankHighlight: None,
   };
 };
 
@@ -434,7 +443,7 @@ let exposePrimaryCursor = editor => {
     let {pixelHeight, scrollX, scrollY, _} = editor;
     let pixelHeight = float(pixelHeight);
 
-    let ({pixelX, pixelY}, _width) =
+    let ({x: pixelX, y: pixelY}: PixelPosition.t, _width) =
       bufferBytePositionToPixel(~position=primaryCursor, editor);
 
     let scrollOffX = getCharacterWidth(editor) *. 2.;

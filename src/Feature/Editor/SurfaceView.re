@@ -55,6 +55,7 @@ let%component make =
                 ~languageSupport,
                 ~bufferSyntaxHighlights,
                 ~bottomVisibleLine,
+                ~maybeYankHighlights,
                 ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
@@ -157,6 +158,17 @@ let%component make =
   let pixelWidth = Editor.visiblePixelWidth(editor);
   let pixelHeight = Editor.visiblePixelHeight(editor);
 
+  let yankHighlightElement =
+    maybeYankHighlights
+    |> Option.map((highlights: Editor.yankHighlight) =>
+         <YankHighlights
+           key={highlights.key}
+           colors
+           pixelRanges={highlights.pixelRanges}
+         />
+       )
+    |> Option.value(~default=React.empty);
+
   <View
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
     style={Styles.bufferViewClipped(
@@ -232,6 +244,7 @@ let%component make =
         };
       }}
     />
+    yankHighlightElement
     <CursorView
       config
       editor

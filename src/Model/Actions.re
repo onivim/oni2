@@ -180,6 +180,7 @@ type t =
     })
   | Vim(Feature_Vim.msg)
   | TabPage(Vim.TabPage.effect)
+  | Yank({range: [@opaque] VisualRange.t})
   | Noop
 and command = {
   commandCategory: option(string),

@@ -236,24 +236,18 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Terminal(msg));
 
-    let fontFamily =
-      Oni_Core.Configuration.getValue(
-        c => c.editorFontFile,
-        state.configuration,
-      );
-    let fontSize =
-      Oni_Core.Configuration.getValue(
-        c => c.editorFontSize,
-        state.configuration,
-      );
-    let fontSmoothing =
-      Oni_Core.Configuration.getValue(
-        c => c.editorFontSmoothing,
-        state.configuration,
-      );
+    let fontFamily = Feature_Editor.Configuration.fontFamily.get(config);
+    let fontSize = Feature_Editor.Configuration.fontSize.get(config);
+
     let fontLigatures =
       Oni_Core.Configuration.getValue(
         c => c.editorFontLigatures,
+        state.configuration,
+      );
+
+    let fontSmoothing =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontSmoothing,
         state.configuration,
       );
     let editorFontSubscription =
