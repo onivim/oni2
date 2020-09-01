@@ -123,7 +123,7 @@ module VimSettings = {
 
       let justRelative =
         fun
-        | Some(true) => Some(`RelativeOnly)
+        | Some(true) => Some(`Relative)
         | Some(false) => Some(`Off)
         | None => None;
 
