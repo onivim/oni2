@@ -220,12 +220,8 @@ switch (eff) {
         ~createOptions=
           WindowCreateOptions.create(
             ~forceScaleFactor,
-<<<<<<< HEAD
-            ~maximized=false,
-=======
             ~acceleration=cliOptions.gpuAcceleration,
-            ~maximized,
->>>>>>> master
+            ~maximized=false,
             ~vsync=Vsync.Immediate,
             ~icon,
             ~titlebarStyle=WindowStyles.Transparent,

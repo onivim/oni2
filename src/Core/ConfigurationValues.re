@@ -86,12 +86,8 @@ let default = {
   workbenchActivityBarVisible: true,
   workbenchColorTheme: "LaserWave Italic",
   workbenchEditorShowTabs: true,
-<<<<<<< HEAD
-  workbenchSideBarVisible: false,
-=======
   workbenchSideBarLocation: "left",
-  workbenchSideBarVisible: true,
->>>>>>> master
+  workbenchSideBarVisible: false,
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
   workbenchTreeIndent: 2,
