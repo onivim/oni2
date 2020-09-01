@@ -5,12 +5,6 @@
  */
 
 [@deriving show({with_path: false})]
-type editorRenderWhitespace =
-  | All
-  | Boundary
-  | None;
-
-[@deriving show({with_path: false})]
 type vimUseSystemClipboard = {
   yank: bool,
   delete: bool,
@@ -34,25 +28,16 @@ type fontLigatures = [ | `Bool(bool) | `List(list(string))];
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
   editorDetectIndentation: bool,
-  editorFontFile: string,
-  editorFontSize: float,
   editorFontLigatures: fontLigatures,
   editorFontSmoothing: fontSmoothing,
   editorHoverDelay: int,
   editorHoverEnabled: bool,
   editorLargeFileOptimizations: bool,
-  editorLineNumbers: LineNumber.setting,
-  editorMatchBrackets: bool,
-  editorAcceptSuggestionOnEnter: [ | `on | `off | `smart],
-  editorMinimapEnabled: bool,
-  editorMinimapShowSlider: bool,
-  editorMinimapMaxColumn: int,
   editorInsertSpaces: bool,
   editorIndentSize: int,
   editorTabSize: int,
   editorHighlightActiveIndentGuide: bool,
   editorRenderIndentGuides: bool,
-  editorRenderWhitespace,
   editorRulers: list(int),
   terminalIntegratedFontFile: string,
   terminalIntegratedFontSize: float,
@@ -84,25 +69,16 @@ type t = {
 let default = {
   editorAutoClosingBrackets: LanguageDefined,
   editorDetectIndentation: true,
-  editorFontFile: Constants.defaultFontFile,
   editorFontSmoothing: Default,
-  editorFontSize: Constants.defaultFontSize,
   editorFontLigatures: `Bool(true),
   editorHoverDelay: 1000,
   editorHoverEnabled: true,
   editorLargeFileOptimizations: true,
-  editorMatchBrackets: true,
-  editorAcceptSuggestionOnEnter: `on,
-  editorMinimapEnabled: true,
-  editorMinimapShowSlider: true,
-  editorMinimapMaxColumn: Constants.minimapMaxColumn,
-  editorLineNumbers: On,
   editorInsertSpaces: true,
   editorIndentSize: 4,
   editorTabSize: 4,
   editorRenderIndentGuides: true,
   editorHighlightActiveIndentGuide: true,
-  editorRenderWhitespace: None,
   editorRulers: [],
   terminalIntegratedFontFile: Constants.defaultFontFile,
   terminalIntegratedFontSize: Constants.defaultTerminalFontSize,

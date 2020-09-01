@@ -31,6 +31,7 @@ type t =
   | MouseHovered({bytePosition: BytePosition.t})
   | MouseMoved({bytePosition: BytePosition.t})
   | SelectionChanged([@opaque] VisualRange.t)
+  | SelectionCleared
   | CursorsChanged([@opaque] list(BytePosition.t))
   | ScrollToLine(int)
   | ScrollToColumn(int)

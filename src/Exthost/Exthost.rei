@@ -838,6 +838,16 @@ module Files: {
     let decode: Json.decoder(t);
     let encode: Json.encoder(t);
   };
+
+  module FileSystemEvents: {
+    type t = {
+      created: list(Oni_Core.Uri.t),
+      changed: list(Oni_Core.Uri.t),
+      deleted: list(Oni_Core.Uri.t),
+    };
+
+    let encode: Json.encoder(t);
+  };
 };
 
 module ModelAddedDelta: {
@@ -1689,6 +1699,13 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(unit);
+  };
+
+  module FileSystemEventService: {
+    let onFileEvent: (~events: Files.FileSystemEvents.t, Client.t) => unit;
+    // TODO
+    // - onWillRunFileOperation
+    // - onDidRunFileOperation
   };
 
   module LanguageFeatures: {

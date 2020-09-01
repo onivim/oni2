@@ -597,11 +597,11 @@ module Oni = {
 
   let backgroundFor = (mode: Mode.t) =>
     switch (mode) {
-    | Select
-    | TerminalVisual
-    | Visual => visualModeBackground
+    | Select(_)
+    | TerminalVisual(_)
+    | Visual(_) => visualModeBackground
     | CommandLine => commandlineModeBackground
-    | Operator => operatorModeBackground
+    | Operator(_) => operatorModeBackground
     | TerminalInsert
     | Insert => insertModeBackground
     | Replace => replaceModeBackground
@@ -611,11 +611,11 @@ module Oni = {
 
   let foregroundFor = (mode: Mode.t) =>
     switch (mode) {
-    | Select
-    | TerminalVisual
-    | Visual => visualModeForeground
+    | Select(_)
+    | TerminalVisual(_)
+    | Visual(_) => visualModeForeground
     | CommandLine => commandlineModeForeground
-    | Operator => operatorModeForeground
+    | Operator(_) => operatorModeForeground
     | TerminalInsert
     | Insert => insertModeForeground
     | Replace => replaceModeForeground

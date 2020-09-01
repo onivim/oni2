@@ -51,6 +51,16 @@ module Effects = {
         })
       );
   };
+  module FileSystemEventService = {
+    let onFileEvent = (~events, extHostClient) =>
+      Isolinear.Effect.create(~name="fileSystemEventService.onFileEvent", () => {
+        Exthost.Request.FileSystemEventService.onFileEvent(
+          ~events,
+          extHostClient,
+        )
+      });
+  };
+
   module SCM = {
     let getOriginalContent = (~handle, ~uri, ~toMsg, client) =>
       Isolinear.Effect.createWithDispatch(

@@ -322,10 +322,10 @@ module Vertical = {
         ),
       ];
     };
-    let getSelectionElements = (selection: VisualRange.t) => {
-      switch (selection.mode) {
-      | Vim.Types.None => []
-      | _ =>
+    let getSelectionElements = (selection: option(VisualRange.t)) => {
+      switch (selection) {
+      | None => []
+      | Some(selection) =>
         let topLine =
           Editor.projectLine(
             ~line=selection.range.start.line,

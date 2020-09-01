@@ -26,7 +26,3 @@ let getRange = () => {
 };
 
 let getType = Native.vimVisualGetType;
-
-let onRangeChanged = f => {
-  Event.add(f, Listeners.visualRangeChanged);
-};

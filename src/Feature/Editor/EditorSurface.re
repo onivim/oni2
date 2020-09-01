@@ -208,7 +208,7 @@ let%component make =
     );
 
   let matchingPairCheckPosition =
-    mode == Vim.Types.Insert
+    mode == Vim.Mode.Insert
       ? CharacterPosition.{
           line: cursorPosition.line,
           character: CharacterIndex.(cursorPosition.character - 1),
@@ -226,7 +226,11 @@ let%component make =
 
   let diagnosticsMap = Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =
-    Selection.getRanges(Editor.selection(editor), buffer) |> ByteRange.toHash;
+    editor
+    |> Editor.selection
+    |> Option.map(selection => Selection.getRanges(selection, buffer))
+    |> Option.map(ByteRange.toHash)
+    |> Option.value(~default=Hashtbl.create(1));
 
   let diffMarkers =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers

@@ -217,6 +217,19 @@ module ExtensionService = {
   };
 };
 
+module FileSystemEventService = {
+  open Json.Encode;
+
+  let onFileEvent = (~events, client) => {
+    Client.notify(
+      ~rpcName="ExtHostFileSystemEventService",
+      ~method="$onFileEvent",
+      ~args=`List([events |> encode_value(Files.FileSystemEvents.encode)]),
+      client,
+    );
+  };
+};
+
 module LanguageFeatures = {
   let provideCodeLenses = (~handle: int, ~resource: Uri.t, client) => {
     let decoder = Json.Decode.(nullable(CodeLens.List.decode));

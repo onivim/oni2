@@ -7,7 +7,7 @@ open Feature_Editor;
 
 runTestWithInput(~name="EditorUtf8Test", (input, dispatch, wait, _) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Mode.Normal
   );
 
   let testFile = getAssetPath("utf8.txt");

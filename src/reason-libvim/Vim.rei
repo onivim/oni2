@@ -35,6 +35,13 @@ module AutoIndent: {
     | DecreaseIndent;
 };
 
+module ColorScheme: {
+  module Provider: {
+    type t = string => array(string);
+    let default: t;
+  };
+};
+
 module Context: {
   type t = {
     autoClosingPairs: AutoClosingPairs.t,
@@ -42,6 +49,7 @@ module Context: {
       (~previousLine: string, ~beforePreviousLine: option(string)) =>
       AutoIndent.action,
     bufferId: int,
+    colorSchemeProvider: ColorScheme.Provider.t,
     width: int,
     height: int,
     leftColumn: int,
@@ -56,6 +64,51 @@ module Context: {
 };
 
 module Registers: {let get: (~register: char) => option(array(string));};
+
+module Operator: {
+  type operation =
+    | NoPending
+    | Delete
+    | Yank
+    | Change
+    | LeftShift
+    | RightShift
+    | Filter
+    | SwitchCase
+    | Indent
+    | Format
+    | Colon
+    | MakeUpperCase
+    | MakeLowerCase
+    | Join
+    | JoinNS
+    | Rot13
+    | Replace
+    | Insert
+    | Append
+    | Fold
+    | FoldOpen
+    | FoldOpenRecursive
+    | FoldClose
+    | FoldCloseRecursive
+    | FoldDelete
+    | FoldDeleteRecursive
+    | Format2
+    | Function
+    | NumberAdd
+    | NumberSubtract
+    | Comment;
+
+  type pending = {
+    operation,
+    register: int,
+    count: int,
+  };
+
+  let get: unit => option(pending);
+
+  let toString: pending => string;
+};
 
 module Edit: {
   [@deriving show]
@@ -262,11 +315,49 @@ module Format: {
       });
 };
 
+module Mode: {
+  type t =
+    | Normal
+    | Insert
+    | CommandLine
+    | Replace
+    | Visual({range: VisualRange.t})
+    | Operator({pending: Operator.pending})
+    | Select({range: VisualRange.t});
+
+  let current: unit => t;
+
+  let isVisual: t => bool;
+  let isSelect: t => bool;
+};
+
+module Setting: {
+  [@deriving show]
+  type value =
+    | String(string)
+    | Int(int);
+
+  [@deriving show]
+  type t = {
+    fullName: string,
+    shortName: option(string),
+    value,
+  };
+};
+
 module Effect: {
   type t =
     | Goto(Goto.effect)
     | TabPage(TabPage.effect)
-    | Format(Format.effect);
+    | Format(Format.effect)
+    | ModeChanged(Mode.t)
+    | SettingChanged(Setting.t)
+    | ColorSchemeChanged(option(string))
+    | MacroRecordingStarted({register: char})
+    | MacroRecordingStopped({
+        register: char,
+        value: option(string),
+      });
 };
 
 /**
@@ -384,7 +475,6 @@ module Clipboard = Clipboard;
 module CommandLine = CommandLine;
 module Cursor = Cursor;
 module Event = Event;
-module Mode = Mode;
 module Options = Options;
 module Search = Search;
 module Types = Types;

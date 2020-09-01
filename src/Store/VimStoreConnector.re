@@ -29,6 +29,12 @@ let start =
   let libvimHasInitialized = ref(false);
   let currentTriggerKey = ref(None);
 
+  let colorSchemeProvider = pattern => {
+    getState().extensions
+    |> Feature_Extensions.themesByName(~filter=pattern)
+    |> Array.of_list;
+  };
+
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
     let yankConfig =
@@ -152,12 +158,50 @@ let start =
               ~endLine,
             ),
           ),
-        ),
-    );
+        )
+      | ModeChanged(newMode) => {
+          dispatch(Actions.Vim(Feature_Vim.ModeChanged(newMode)));
 
-  let _: unit => unit =
-    Vim.Mode.onChanged(newMode =>
-      dispatch(Actions.Vim(Feature_Vim.ModeChanged(newMode)))
+          let editorId =
+            Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
+
+          switch (newMode) {
+          | Visual({range})
+          | Select({range}) =>
+            dispatch(
+              Editor({
+                scope: Oni_Model.EditorScope.Editor(editorId),
+                msg: SelectionChanged(Oni_Core.VisualRange.ofVim(range)),
+              }),
+            )
+          | _ =>
+            dispatch(
+              Editor({
+                scope: Oni_Model.EditorScope.Editor(editorId),
+                msg: SelectionCleared,
+              }),
+            )
+          };
+        }
+      | SettingChanged(setting) =>
+        dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
+
+      | ColorSchemeChanged(maybeColorScheme) =>
+        switch (maybeColorScheme) {
+        | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker))
+        | Some(colorScheme) =>
+          dispatch(Actions.ThemeLoadByName(colorScheme))
+        }
+
+      | MacroRecordingStarted({register}) =>
+        dispatch(
+          Actions.Vim(
+            Feature_Vim.MacroRecordingStarted({register: register}),
+          ),
+        )
+
+      | MacroRecordingStopped(_) =>
+        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped)),
     );
 
   let _: unit => unit =
@@ -274,23 +318,6 @@ let start =
             NewTerminal({cmd, splitDirection, closeOnExit: closeOnFinish}),
           ),
         ),
-      );
-    });
-
-  let _: unit => unit =
-    Vim.Visual.onRangeChanged(vr => {
-      open Vim.VisualRange;
-
-      let {visualType, range} = vr;
-      let vr = Core.VisualRange.create(~mode=visualType, range);
-
-      let editorId =
-        Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
-      dispatch(
-        Editor({
-          scope: Oni_Model.EditorScope.Editor(editorId),
-          msg: SelectionChanged(vr),
-        }),
       );
     });
 
@@ -475,7 +502,8 @@ let start =
     Vim.CommandLine.getText()
     |> Option.iter(commandStr =>
          if (position == String.length(commandStr)) {
-           let completions = Vim.CommandLine.getCompletions();
+           let completions =
+             Vim.CommandLine.getCompletions(~colorSchemeProvider, ());
 
            Log.debugf(m =>
              m("  got %n completions.", Array.length(completions))

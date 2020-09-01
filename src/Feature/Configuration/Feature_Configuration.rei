@@ -34,4 +34,6 @@ let update:
   (~getUserSettings: unit => result(Config.Settings.t, string), model, msg) =>
   (model, outmsg);
 
-let resolver: (model, Config.key) => option(Json.t);
+let resolver:
+  (model, Feature_Vim.model, ~vimSetting: option(string), Config.key) =>
+  Config.rawValue;

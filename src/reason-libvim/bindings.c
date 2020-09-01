@@ -65,6 +65,89 @@ int onAutoIndent(int lnum, buf_T *buf, char_u *prevLine, char_u *newLine) {
   CAMLreturnT(int, ret);
 };
 
+int getColorSchemesCallback(char_u *pat, int *num_schemes, char_u ***schemes) {
+  CAMLparam0();
+  CAMLlocal2(vPat, vSchemes);
+
+  static const value *lv_getColorSchemesCallback = NULL;
+
+  if (lv_getColorSchemesCallback == NULL) {
+    lv_getColorSchemesCallback = caml_named_value("lv_getColorSchemesCallback");
+  }
+
+  vPat = caml_copy_string((const char*)pat);
+  vSchemes = caml_callback(*lv_getColorSchemesCallback, vPat);
+
+  int len = Wosize_val(vSchemes);
+  *num_schemes = len;
+  char_u **out = malloc(sizeof(char_u*) * len);
+
+  for (int i = 0; i < len; i++) {
+    const char *sz = String_val(Field(vSchemes, i));
+    out[i] = malloc((sizeof(char) * strlen(sz)) + 1); 
+    strcpy((char *)out[i], sz);
+  }
+
+  *schemes = out;
+
+  CAMLreturnT(int, OK);
+}
+
+int onColorSchemeChanged(char_u *colorscheme) {
+  CAMLparam0();
+  CAMLlocal2(vThemeStr, vThemeOpt);
+  static const value *lv_onColorSchemeChanged = NULL;
+
+  if (lv_onColorSchemeChanged == NULL) {
+    lv_onColorSchemeChanged = caml_named_value("lv_onColorSchemeChanged");
+  }
+
+  if (colorscheme == NULL) {
+    vThemeOpt = Val_none;
+  } else {
+    vThemeStr = caml_copy_string((const char *)colorscheme);
+    vThemeOpt = Val_some(vThemeStr);
+  }
+  
+  caml_callback(*lv_onColorSchemeChanged, vThemeOpt);
+  
+  CAMLreturnT(int, OK);
+};
+
+void onSettingChanged(optionSet_T *options) {
+  CAMLparam0();
+  CAMLlocal2(innerValue, settingValue);
+  static const value *lv_onSettingChanged = NULL;
+
+  if (lv_onSettingChanged == NULL) {
+    lv_onSettingChanged = caml_named_value("lv_onSettingChanged");
+  }
+  
+  if (options->type == 1 || options-> type == 0) {
+    // String value
+    if (options->type == 0) {
+      innerValue = caml_alloc(1, 0);
+      Store_field(innerValue, 0, caml_copy_string((const char *)options->stringval));
+    } else {
+      innerValue = caml_alloc(1, 1);
+      Store_field(innerValue, 0, Val_int(options->numval));
+    }
+
+    settingValue = caml_alloc(3, 0);
+    Store_field(settingValue, 0, caml_copy_string((const char *)options->fullname));
+    if (options->shortname == NULL) {
+      Store_field(settingValue, 1, Val_none);
+    } else {
+      Store_field(settingValue, 1, Val_some(caml_copy_string((const char *)options->shortname)));
+    }
+    Store_field(settingValue, 2, innerValue);
+
+    caml_callback(*lv_onSettingChanged, settingValue);
+  };
+
+  CAMLreturn0;
+};
+
 int onGoto(gotoRequest_T gotoInfo) {
   static const value *lv_onGoto = NULL;
 
@@ -207,6 +290,40 @@ void onFormat(formatRequest_T *pRequest) {
   Store_field(ret, 5, Val_int(lineCount));
 
   caml_callback(*lv_onFormat, ret);
+  CAMLreturn0;
+}
+
+void onMacroStartRecord(int regname) {
+  CAMLparam0();
+
+  static const value *lv_onMacroStartRecording = NULL;
+
+  if (lv_onMacroStartRecording == NULL) {
+    lv_onMacroStartRecording = caml_named_value("lv_onMacroStartRecording");
+  }
+
+  caml_callback(*lv_onMacroStartRecording, Val_int(regname));
+  CAMLreturn0;
+}
+
+void onMacroStopRecord(int regname, char_u *regvalue) {
+  CAMLparam0();
+  CAMLlocal2(vRegister, vStr);
+
+  static const value *lv_onMacroStopRecording = NULL;
+
+  if (lv_onMacroStopRecording == NULL) {
+    lv_onMacroStopRecording = caml_named_value("lv_onMacroStopRecording");
+  }
+
+  vRegister = Val_none;
+
+  if (regvalue != NULL) {
+    vStr = caml_copy_string((const char *)regvalue);
+    vRegister = Val_some(vStr);
+  }
+
+  caml_callback2(*lv_onMacroStopRecording, Val_int(regname), vRegister);
   CAMLreturn0;
 }
 
@@ -450,15 +567,20 @@ void onWriteFailure(writeFailureReason_T reason, buf_T *buf) {
 }
 
 CAMLprim value libvim_vimInit(value unit) {
+  vimMacroSetStartRecordCallback(&onMacroStartRecord);
+  vimMacroSetStopRecordCallback(&onMacroStopRecord);
   vimSetAutoCommandCallback(&onAutocommand);
   vimSetAutoIndentCallback(&onAutoIndent);
   vimSetBufferUpdateCallback(&onBufferChanged);
   vimSetClipboardGetCallback(&getClipboardCallback);
+  vimColorSchemeSetChangedCallback(&onColorSchemeChanged);
+  vimColorSchemeSetCompletionCallback(&getColorSchemesCallback);
   vimSetDirectoryChangedCallback(&onDirectoryChanged);
   vimSetDisplayIntroCallback(&onIntro);
   vimSetDisplayVersionCallback(&onVersion);
   vimSetFormatCallback(&onFormat);
   vimSetGotoCallback(&onGoto);
+  vimSetOptionSetCallback(&onSettingChanged);
   vimSetTabPageCallback(&onTabPage);
   vimSetMessageCallback(&onMessage);
   vimSetQuitCallback(&onQuit);
@@ -561,6 +683,24 @@ CAMLprim value libvim_vimBufferGetModifiable(value vBuf) {
   buf_T *buf = (buf_T *)vBuf;
   int modifiable = vimBufferGetModifiable(buf);
   return Val_bool(modifiable);
+}
+
+CAMLprim value libvim_vimGetPendingOperator(value unit) {
+  CAMLparam0();
+  CAMLlocal2(inner, ret);
+
+  pendingOp_T pendingOp;
+  if (vimGetPendingOperator(&pendingOp)) {
+    inner = caml_alloc(3, 0);
+    Store_field(inner, 0, Val_int(pendingOp.op_type));
+    Store_field(inner, 1, Val_int(pendingOp.regname));
+    Store_field(inner, 2, Val_int(pendingOp.count));
+    ret = Val_some(inner);
+  } else {
+    ret = Val_none;
+  }
+
+  CAMLreturn(ret);
 }
 
 CAMLprim value libvim_vimBufferSetModifiable(value vMod, value vBuf) {

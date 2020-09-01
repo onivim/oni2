@@ -29,7 +29,7 @@ let editors =
         switch (ModeManager.current(state)) {
         | TerminalInsert
         | TerminalNormal
-        | TerminalVisual => false
+        | TerminalVisual(_) => false
         | _ => true
         }
       ),
@@ -37,7 +37,7 @@ let editors =
         switch (ModeManager.current(state)) {
         | TerminalInsert
         | TerminalNormal
-        | TerminalVisual => true
+        | TerminalVisual(_) => true
         | _ => false
         }
       ),
@@ -60,8 +60,8 @@ let editors =
       ),
       bool("visualMode", state =>
         switch (ModeManager.current(state)) {
-        | TerminalVisual
-        | Visual => true
+        | TerminalVisual(_)
+        | Visual(_) => true
         | _ => false
         }
       ),

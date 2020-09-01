@@ -4,7 +4,6 @@
 
 open Oni_Core;
 open Oni_Core.Utility;
-open Rench;
 
 open Exthost_Extension;
 open Scanner.ScanResult;
@@ -133,7 +132,7 @@ let getLanguageFromFirstLine = (li: t, buffer: Buffer.t) => {
 };
 
 let getLanguageFromFilePath = (li: t, fp: string) => {
-  let fileName = Path.filename(fp);
+  let fileName = Utility.Path.filename(fp);
   let extension = Utility.Path.getExtension(fp);
 
   let updateIfDefault = (f, res) =>

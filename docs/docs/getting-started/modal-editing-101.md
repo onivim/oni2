@@ -29,7 +29,7 @@ In normal mode, you can move the cursor around:
 You can also prefix these characters with a number, for example:
 
 - <kbd>5</kbd><kbd>j</kbd> moves the cursor 5 lines down
-- <kbd>1</kbd><kbd>0</kbd><kbd>l</kbd> moves the cursor 10 lines right
+- <kbd>1</kbd><kbd>0</kbd><kbd>l</kbd> moves the cursor 10 characters to the right
 
 This tends to be faster than repeatedly pressing or holding a key.
 

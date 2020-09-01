@@ -109,7 +109,7 @@ module Internal = {
         (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
         measurementsCache,
       );
-      Log.debugf(m =>
+      Log.tracef(m =>
         m(
           "MeasurementCache : Hit! Typeface : %s, Font Size: %f, Uchar: %s (%d)",
           Skia.Typeface.getFamilyName(typeface),
@@ -120,7 +120,7 @@ module Internal = {
       );
       pixelWidth;
     | None =>
-      Log.debugf(m =>
+      Log.tracef(m =>
         m(
           "MeasurementCache : Miss! Typeface : %s, Uchar: %s (%d)",
           Skia.Typeface.getFamilyName(typeface),
@@ -195,7 +195,7 @@ module Internal = {
         let pixelWidth =
           measure(~typeface=skiaFace, ~cache, glyphSubstr, uchar);
 
-        Log.debugf(m =>
+        Log.tracef(m =>
           m(
             "resolveTo loop: uchar : %s, glyphStringByte : %d, pixelPosition : %f, glyphNumber : %d",
             Zed_utf8.singleton(uchar),
@@ -222,12 +222,12 @@ module Internal = {
         // Since all OCaml strings are 8bits/1byte, if the next position would
         // overshoot the length of the string, we go to the next glyph string
         if (glyphStringByte^ + 2 >= String.length(glyphStr)) {
-          Log.debug("Reached end of current glyphString");
+          Log.trace("Reached end of current glyphString");
           glyphStringByte := 0;
           glyphStrings := List.tl(glyphStrings^);
         } else {
           // Otherwise we go to the next two bytes
-          Log.debug("Continuing on current glyphString");
+          Log.trace("Continuing on current glyphString");
           glyphStringByte := glyphStringByte^ + 2;
         };
         incr(i);

@@ -15,6 +15,8 @@ module EditorDiffMarkers = EditorDiffMarkers;
 
 module Wrapping = Wrapping;
 
+module Configuration = EditorConfiguration;
+
 module Contributions = {
   let configuration = EditorConfiguration.contributions;
 };
@@ -122,6 +124,7 @@ let update = (editor, msg) => {
       Editor.setSelection(~selection, editor),
       Nothing,
     )
+  | SelectionCleared => (Editor.clearSelection(editor), Nothing)
   | CursorsChanged(cursors) => (
       Editor.setCursors(~cursors, editor),
       Nothing,

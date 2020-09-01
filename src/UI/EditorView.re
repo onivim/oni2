@@ -72,7 +72,7 @@ module Parts = {
         tokenTheme={state.tokenTheme}
         languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
-        config={Feature_Configuration.resolver(state.config)}
+        config={Feature_Configuration.resolver(state.config, state.vim)}
         renderOverlays
       />;
     };
@@ -280,10 +280,11 @@ let make =
 
   let editorShowTabs =
     state.configuration
-    |> Configuration.getValue(c => c.workbenchEditorShowTabs);
+    |> Oni_Core.Configuration.getValue(c => c.workbenchEditorShowTabs);
 
   let hideZenModeTabs =
-    state.configuration |> Configuration.getValue(c => c.zenModeHideTabs);
+    state.configuration
+    |> Oni_Core.Configuration.getValue(c => c.zenModeHideTabs);
 
   let showTabs = editorShowTabs && (!state.zenMode || !hideZenModeTabs);
 
@@ -294,7 +295,7 @@ let make =
       isZenMode={state.zenMode}
       showTabs
       model={state.layout}
-      config={Feature_Configuration.resolver(state.config)}
+      config={Feature_Configuration.resolver(state.config, state.vim)}
       dispatch={msg => dispatch(Actions.Layout(msg))}>
       ...(module ContentProvider)
     </Feature_Layout.View>

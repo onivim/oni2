@@ -68,38 +68,4 @@ describe("Visual", ({describe, _}) => {
       expect.bool(vt == None).toBe(true);
     })
   );
-
-  describe("onRangeChanged", ({test, _}) =>
-    test("dispatches on change", ({expect, _}) => {
-      let _ = resetBuffer();
-
-      let rangeChanges: ref(list(ByteRange.t)) = ref([]);
-      let dispose =
-        Visual.onRangeChanged(vr => {
-          open Vim.VisualRange;
-          let {range, _} = vr;
-          rangeChanges := [range, ...rangeChanges^];
-        });
-
-      input("V");
-
-      expect.int(List.length(rangeChanges^)).toBe(1);
-      let r = List.hd(rangeChanges^);
-      expect.int(r.start.line |> lineNumberToInt).toBe(0);
-      expect.int(r.start.byte |> byteToInt).toBe(0);
-      expect.int(r.stop.line |> lineNumberToInt).toBe(0);
-      expect.int(r.stop.byte |> byteToInt).toBe(0);
-
-      input("j");
-
-      expect.int(List.length(rangeChanges^)).toBe(2);
-      let r = List.hd(rangeChanges^);
-      expect.int(r.start.line |> lineNumberToInt).toBe(0);
-      expect.int(r.start.byte |> byteToInt).toBe(0);
-      expect.int(r.stop.line |> lineNumberToInt).toBe(1);
-      expect.int(r.stop.byte |> byteToInt).toBe(0);
-
-      dispose();
-    })
-  );
 });
