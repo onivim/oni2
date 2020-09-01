@@ -289,25 +289,6 @@ let getCharacterBehindCursor = ({cursors, buffer, _}) => {
   };
 };
 
-//let byteToCharacter = (cursor: BytePosition.t, {buffer, _}) => {
-//    let line = cursor.line |> EditorCoreTypes.LineNumber.toZeroBased;
-//    //let line = cursor.line |> EditorCoreTypes.LineNumber.toZeroBased;
-//    let bufferLineCount = EditorBuffer.numberOfLines(buffer);
-//    if (line < bufferLineCount) {
-//      let bufferLine = EditorBuffer.line(line, buffer);
-//      let index = BufferLine.getIndex(~byte=cursor.byte, bufferLine);
-//      Some(CharacterPosition.{
-//        line: cursor.line,
-//        character: index,
-//      });
-//      try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
-//      | _exn => None
-//      };
-//    } else {
-//      None;
-//    };
-//}
-
 let getCharacterUnderCursor = ({cursors, buffer, _}) => {
   switch (cursors) {
   | [] => None
@@ -491,17 +472,61 @@ let getLeftVisibleColumn = view => {
   int_of_float(view.scrollX /. getCharacterWidth(view));
 };
 
-let getTopVisibleLine = view =>
-  int_of_float(view.scrollY /. lineHeightInPixels(view)) + 1;
+let getLineFromPixelY = (~pixelY, editor) => {
+  let lineHeight = lineHeightInPixels(editor);
+  let rec loop = (accumulatedLines, accumulatedPixels, remainingInlineElements) => {
 
-let getBottomVisibleLine = view => {
-  let absoluteBottomLine =
-    int_of_float(
-      (view.scrollY +. float_of_int(view.pixelHeight))
-      /. lineHeightInPixels(view),
-    );
+    prerr_endline(Printf.sprintf(
+      "-- Accumulated Lines: %d accumulated Pixels: %f", 
+      accumulatedLines, accumulatedPixels
+    ));
+    if (pixelY < accumulatedPixels) {
+      prerr_endline ("backtrack");
+      accumulatedLines - 1
+    } else {
+      switch (remainingInlineElements: InlineElements.t) {
+      | [] => 
+      prerr_endline ("All empty");
+      let lineNumber = int_of_float((pixelY -. accumulatedPixels) /. lineHeight);
+      prerr_endline ("linenumber: " ++ string_of_int(lineNumber));
+      prerr_endline ("accumulated lines: " ++ string_of_int(accumulatedLines));
+      lineNumber + accumulatedLines
+      | [hd, ...tail] =>
+        let additionalRegion = float(hd.line - accumulatedLines) *. lineHeight;
+        if ((additionalRegion +. accumulatedPixels) >= pixelY) {
+          // The line is prior to the next inline element!
+          prerr_endline ("In region");
+          let lineNumber = int_of_float((pixelY -. accumulatedPixels) /. lineHeight);
+          lineNumber + accumulatedLines
+          
+        } else {
+          // We need to advance
+          loop(hd.line + 1, 
+          accumulatedPixels +.
+          additionalRegion +. hd.height +. lineHeight , tail);
+        }
+      }
+    }
+    
+  };
 
-  absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
+
+  loop(0, 0., editor.inlineElements);
+  
+};
+
+let getTopVisibleLine = editor => {
+  let top = getLineFromPixelY(~pixelY=editor.scrollY, editor) + 1;
+  prerr_endline ("getTopVisibleLine: " ++ string_of_int(top));
+  top;
+}
+
+let getBottomVisibleLine = editor => {
+  let absoluteBottomLine = getLineFromPixelY(
+  ~pixelY=editor.scrollY +. float_of_int(editor.pixelHeight), editor);
+  let ret = absoluteBottomLine > editor.viewLines ? editor.viewLines : absoluteBottomLine;
+  prerr_endline ("getBottomVisibleLine: " ++ string_of_int(ret));
+  ret;
 };
 
 let setSize = (~pixelWidth, ~pixelHeight, editor) => {
@@ -650,8 +675,10 @@ let removeInlineElement = (~uniqueId, editor) => {
 module Slow = {
   let pixelPositionToBytePosition =
       (~buffer, ~pixelX: float, ~pixelY: float, view) => {
-    let rawLine =
-      int_of_float((pixelY +. view.scrollY) /. lineHeightInPixels(view));
+
+    let rawLine =  getLineFromPixelY(~pixelY=pixelY +. view.scrollY, view);
+
+    prerr_endline ("rawline: " ++ string_of_int(rawLine));
 
     let totalLinesInBuffer = Buffer.getNumberOfLines(buffer);
 

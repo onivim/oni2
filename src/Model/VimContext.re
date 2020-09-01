@@ -101,6 +101,8 @@ let current = (state: State.t) => {
 
   let leftColumn = Editor.getLeftVisibleColumn(editor);
   let topLine = Editor.getTopVisibleLine(editor);
+  let bottomLine = Editor.getBottomVisibleLine(editor);
+  let height = bottomLine - topLine + 1;
 
   // Set configured line comment
   let lineComment = Internal.lineComment(~maybeLanguageConfig);

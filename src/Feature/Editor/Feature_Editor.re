@@ -12,6 +12,7 @@ module EditorLayout = EditorLayout;
 module EditorSurface = EditorSurface;
 
 module EditorDiffMarkers = EditorDiffMarkers;
+module LineHeight = LineHeight;
 
 module Wrapping = Wrapping;
 

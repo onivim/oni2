@@ -40,15 +40,30 @@ let createContext =
 };
 
 let renderImmediate = (~context, ~count, render) => {
+  let editor = context.editor;
   let scrollY = Editor.scrollY(context.editor);
-  ImmediateList.render(
-    ~scrollY,
-    ~rowHeight=Editor.lineHeightInPixels(context.editor),
-    ~height=float(context.height),
-    ~count,
-    ~render=(i, offsetY) => render(i, offsetY),
-    (),
-  );
+  let topLine = Editor.getTopVisibleLine(editor) - 1;
+  let bottomLine = Editor.getBottomVisibleLine(editor) - 1;
+
+  for (i in topLine to bottomLine) {
+    let offsetY = Editor.bufferBytePositionToPixel(
+      ~position=BytePosition.{
+        line: LineNumber.ofZeroBased(i),
+        byte: ByteIndex.zero
+      },
+      editor
+    );
+    render(i, offsetY);
+  };
+
+//  ImmediateList.render(
+//    ~scrollY,
+//    ~rowHeight=Editor.lineHeightInPixels(context.editor),
+//    ~height=float(context.height),
+//    ~count,
+//    ~render=(i, offsetY) => render(i, offsetY),
+//    (),
+//  );
 };
 
 let drawRect = {
