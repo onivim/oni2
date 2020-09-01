@@ -3,7 +3,11 @@ open TestFramework;
 open Vim;
 
 let zeroLocation = Location.create(~line=Index.zero, ~column=Index.zero);
-let zeroRange = Range.{start: zeroLocation, stop: zeroLocation};
+let zeroRange =
+  CharacterRange.{
+    start: CharacterPosition.zero,
+    stop: CharacterPosition.zero,
+  };
 
 let arrayProvider = (strArray, idx) =>
   if (idx >= Array.length(strArray) || idx < 0) {
@@ -13,17 +17,17 @@ let arrayProvider = (strArray, idx) =>
   };
 
 let range = (startLine, startColumn, endLine, endColumn) => {
-  Range.{
+  CharacterRange.{
     start:
-      Location.create(
-        ~line=Index.(zero + startLine),
-        ~column=Index.(zero + startColumn),
-      ),
+      CharacterPosition.{
+        line: LineNumber.(zero + startLine),
+        character: CharacterIndex.(zero + startColumn),
+      },
     stop:
-      Location.create(
-        ~line=Index.(zero + endLine),
-        ~column=Index.(zero + endColumn),
-      ),
+      CharacterPosition.{
+        line: LineNumber.(zero + endLine),
+        character: CharacterIndex.(zero + endColumn),
+      },
   };
 };
 

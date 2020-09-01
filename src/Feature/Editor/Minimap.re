@@ -57,9 +57,8 @@ let renderLine =
   let f = (token: BufferViewTokenizer.t) => {
     switch (token.tokenType) {
     | Text =>
-      // TODO: Fix this
-      let startPosition = Index.toZeroBased(token.startIndex);
-      let endPosition = Index.toZeroBased(token.endIndex);
+      let startPosition = CharacterIndex.toInt(token.startIndex);
+      let endPosition = CharacterIndex.toInt(token.endIndex);
       let tokenWidth = endPosition - startPosition;
 
       let x = float(Constants.minimapCharacterWidth * startPosition);
@@ -112,16 +111,22 @@ let%component make =
               (
                 ~dispatch: Msg.t => unit,
                 ~editor: Editor.t,
-                ~cursorPosition: Location.t,
+                ~cursorPosition: CharacterPosition.t,
                 ~width: int,
                 ~height: int,
                 ~count,
                 ~diagnostics,
+                ~maybeYankHighlights: option(Editor.yankHighlight),
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
-                ~selection: Hashtbl.t(Index.t, list(Range.t)),
+                ~selection:
+                   Hashtbl.t(
+                     EditorCoreTypes.LineNumber.t,
+                     list(ByteRange.t),
+                   ),
                 ~showSlider,
                 ~colors: Colors.t,
                 ~bufferHighlights,
+                ~languageSupport,
                 ~diffMarkers,
                 (),
               ) => {
@@ -228,6 +233,33 @@ let%component make =
     isHovering
       ? colors.minimapSliderHoverBackground : colors.minimapSliderBackground;
 
+  // Convert an editor surface pixel range (post-scroll) to a
+  // minimap pixel range. For now, this just has per-line fidelity.
+  let mapPixelRange = ({start, stop}: PixelRange.t) => {
+    let editorPixelYToMinimapPixelY = pixelY => {
+      let scaleFactor = rowHeight /. Editor.lineHeightInPixels(editor);
+      pixelY *. scaleFactor +. thumbTop;
+    };
+
+    PixelRange.{
+      start: PixelPosition.{x: 0., y: editorPixelYToMinimapPixelY(start.y)},
+      stop:
+        PixelPosition.{
+          x: float(width),
+          y: editorPixelYToMinimapPixelY(stop.y),
+        },
+    };
+  };
+
+  let yankHighlightElement =
+    maybeYankHighlights
+    |> Option.map(({key, pixelRanges}: Editor.yankHighlight) => {
+         let pixelRanges = pixelRanges |> List.map(mapPixelRange);
+
+         <YankHighlights key colors pixelRanges />;
+       })
+    |> Option.value(~default=React.empty);
+
   <View
     style={Styles.container(backgroundColor)}
     onMouseDown
@@ -277,7 +309,11 @@ let%component make =
           ~left=Constants.leftMargin,
           ~top=
             rowHeight
-            *. float(Index.toZeroBased(Location.(cursorPosition.line)))
+            *. float(
+                 EditorCoreTypes.LineNumber.toZeroBased(
+                   CharacterPosition.(cursorPosition.line),
+                 ),
+               )
             -. scrollY,
           ~height=float(Constants.minimapCharacterHeight),
           ~width=float(width),
@@ -285,34 +321,49 @@ let%component make =
           canvasContext,
         );
 
-        let renderRange = (~color, ~offset, range: Range.t) =>
-          {let startX =
-             float(Index.toZeroBased(range.start.column))
-             *. float(Constants.minimapCharacterWidth)
-             +. Constants.leftMargin
-             +. Constants.gutterWidth;
-           let endX =
-             float(Index.toZeroBased(range.stop.column))
-             *. float(Constants.minimapCharacterWidth);
+        let renderRange = (~color, ~offset, range: ByteRange.t) =>
+          {let maybeCharacterStart =
+             Editor.byteToCharacter(range.start, editor);
+           let maybeCharacterStop =
+             Editor.byteToCharacter(range.stop, editor);
 
-           Skia.Paint.setColor(minimapPaint, Revery.Color.toSkia(color));
-           CanvasContext.drawRectLtwh(
-             ~left=startX -. 1.0,
-             ~top=offset -. 1.0,
-             ~height=float(Constants.minimapCharacterHeight) +. 2.0,
-             ~width=endX -. startX +. 2.,
-             ~paint=minimapPaint,
-             canvasContext,
+           OptionEx.iter2(
+             (characterStart, characterStop) => {
+               let startX =
+                 CharacterPosition.(
+                   float(CharacterIndex.toInt(characterStart.character))
+                   *. float(Constants.minimapCharacterWidth)
+                   +. Constants.leftMargin
+                   +. Constants.gutterWidth
+                 );
+               let endX =
+                 CharacterPosition.(
+                   float(CharacterIndex.toInt(characterStop.character))
+                   *. float(Constants.minimapCharacterWidth)
+                 );
+
+               Skia.Paint.setColor(minimapPaint, Revery.Color.toSkia(color));
+               CanvasContext.drawRectLtwh(
+                 ~left=startX -. 1.0,
+                 ~top=offset -. 1.0,
+                 ~height=float(Constants.minimapCharacterHeight) +. 2.0,
+                 ~width=endX -. startX +. 2.,
+                 ~paint=minimapPaint,
+                 canvasContext,
+               );
+             },
+             maybeCharacterStart,
+             maybeCharacterStop,
            )};
 
-        let renderUnderline = (~color, ~offset, range: Range.t) =>
+        let renderUnderline = (~color, ~offset, range: CharacterRange.t) =>
           {let startX =
-             float(Index.toZeroBased(range.start.column))
+             float(CharacterIndex.toInt(range.start.character))
              *. float(Constants.minimapCharacterWidth)
              +. Constants.leftMargin
              +. Constants.gutterWidth;
            let endX =
-             float(Index.toZeroBased(range.stop.column))
+             float(CharacterIndex.toInt(range.stop.character))
              *. float(Constants.minimapCharacterWidth);
 
            Skia.Paint.setColor(minimapPaint, Revery.Color.toSkia(color));
@@ -332,9 +383,8 @@ let%component make =
           ~count,
           ~render=
             (item, offset) => {
-              open Range;
               /* draw selection */
-              let index = Index.fromZeroBased(item);
+              let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
               switch (Hashtbl.find_opt(selection, index)) {
               | None => ()
               | Some(v) =>
@@ -343,20 +393,33 @@ let%component make =
               };
 
               let tokens = getTokensForLine(item);
+              let bufferId = Editor.getBufferId(editor);
 
-              let highlightRanges =
+              let searchHighlightRanges =
                 BufferHighlights.getHighlightsByLine(
-                  ~bufferId=Editor.getBufferId(editor),
+                  ~bufferId,
                   ~line=index,
                   bufferHighlights,
+                )
+                |> List.filter_map(byteRange => {
+                     Editor.byteRangeToCharacterRange(byteRange, editor)
+                   });
+
+              let documentHighlightRanges =
+                Feature_LanguageSupport.DocumentHighlights.getByLine(
+                  ~bufferId,
+                  ~line=EditorCoreTypes.LineNumber.toZeroBased(index),
+                  languageSupport,
                 );
+
+              let highlights = searchHighlightRanges @ documentHighlightRanges;
 
               let shouldHighlight = i =>
                 List.exists(
-                  r =>
-                    Index.toZeroBased(r.start.column) <= i
-                    && Index.toZeroBased(r.stop.column) >= i,
-                  highlightRanges,
+                  (r: CharacterRange.t) =>
+                    CharacterIndex.toInt(r.start.character) <= i
+                    && CharacterIndex.toInt(r.stop.character) >= i,
+                  highlights,
                 );
 
               // Draw error highlight
@@ -421,5 +484,6 @@ let%component make =
         );
       }}
     />
+    yankHighlightElement
   </View>;
 };

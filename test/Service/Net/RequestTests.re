@@ -61,6 +61,19 @@ describe("Request", ({describe, _}) => {
 
       // Validate there are at least some bytes written...
       expect.equal(size == 35588, true);
-    })
+    });
+    test("returns same dest for multiple downloads (caching)", ({expect, _}) => {
+      let downloadPath1 =
+        Request.download(~setup, "https://httpbin.org/image/jpeg")
+        |> LwtEx.sync;
+
+      let downloadPath2 =
+        Request.download(~setup, "https://httpbin.org/image/jpeg")
+        |> LwtEx.sync;
+
+      expect.equal(Result.is_ok(downloadPath2), true);
+
+      expect.equal(downloadPath1, downloadPath2);
+    });
   });
 });

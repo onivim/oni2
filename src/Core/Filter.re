@@ -12,6 +12,11 @@ type result('a) = {
   highlight: list((int, int)),
 };
 
+let map = (f, result) => {
+  item: f(result.item),
+  highlight: result.highlight,
+};
+
 let makeResult = ((maybeMatch, item)) =>
   switch (maybeMatch) {
   | Some(match) => {

@@ -5,8 +5,73 @@ open TestFramework;
 let resetBuffer = () =>
   Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
+let key = s => ignore(Vim.key(s));
 
 describe("Options", ({describe, _}) => {
+  describe("effect", ({test, _}) => {
+    test(":set minimap", ({expect, _}) => {
+      let _ = resetBuffer();
+
+      let effects = ref([]);
+      let dispose = onEffect(eff => effects := [eff, ...effects^]);
+
+      let _: Context.t = Vim.command("set minimap");
+      expect.equal(
+        effects^,
+        [
+          SettingChanged(
+            Setting.{fullName: "minimap", shortName: None, value: Int(1)},
+          ),
+        ],
+      );
+
+      dispose();
+    });
+    test(":set rnu", ({expect, _}) => {
+      let _ = resetBuffer();
+
+      let effects = ref([]);
+      let dispose = onEffect(eff => effects := [eff, ...effects^]);
+
+      let _: Context.t = Vim.command("set rnu");
+      expect.equal(
+        effects^,
+        [
+          SettingChanged(
+            Setting.{
+              fullName: "relativenumber",
+              shortName: Some("rnu"),
+              value: Int(1),
+            },
+          ),
+        ],
+      );
+
+      dispose();
+    });
+    test(":set rtp", ({expect, _}) => {
+      let _ = resetBuffer();
+
+      let effects = ref([]);
+      let dispose = onEffect(eff => effects := [eff, ...effects^]);
+
+      let _: Context.t = Vim.command("set rtp=abc");
+      expect.equal(
+        effects^,
+        [
+          SettingChanged(
+            Setting.{
+              fullName: "runtimepath",
+              shortName: Some("rtp"),
+              value: String("abc"),
+            },
+          ),
+        ],
+      );
+
+      dispose();
+    });
+  });
   describe("tabs / spaces", ({test, _}) => {
     test("get / set tab options", ({expect, _}) => {
       let _ = resetBuffer();
@@ -48,23 +113,23 @@ describe("Options", ({describe, _}) => {
       Options.setInsertSpaces(true);
 
       input("I");
-      input("<tab>");
+      key("<tab>");
 
-      expect.string(Buffer.getLine(b, Index.zero)).toEqual(
+      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
         "   This is the first line of a test file",
       );
 
-      input("<bs>");
+      key("<bs>");
 
-      expect.string(Buffer.getLine(b, Index.zero)).toEqual(
+      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
         "This is the first line of a test file",
       );
 
       Options.setTabSize(3);
       Options.setInsertSpaces(false);
 
-      input("<tab>");
-      expect.string(Buffer.getLine(b, Index.zero)).toEqual(
+      key("<tab>");
+      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
         "\tThis is the first line of a test file",
       );
     });
@@ -80,7 +145,7 @@ describe("Options", ({describe, _}) => {
       input("c");
       input("c");
 
-      expect.string(Buffer.getLine(b, Index.zero)).toEqual(
+      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
         "; This is the first line of a test file",
       );
 
@@ -88,7 +153,7 @@ describe("Options", ({describe, _}) => {
       input("c");
       input("c");
 
-      expect.string(Buffer.getLine(b, Index.zero)).toEqual(
+      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
         "This is the first line of a test file",
       );
 
@@ -98,7 +163,7 @@ describe("Options", ({describe, _}) => {
       input("c");
       input("c");
 
-      expect.string(Buffer.getLine(b, Index.zero)).toEqual(
+      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
         "!!This is the first line of a test file",
       );
     })

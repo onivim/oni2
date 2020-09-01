@@ -4,8 +4,8 @@ let resetBuffer = filePath => {
   /* Reset clipboard provider */
   Clipboard.setProvider(_ => None);
 
-  let _ = input("<esc>");
-  let _ = input("<esc>");
+  let _ = key("<esc>");
+  let _ = key("<esc>");
   let _context = command("e!");
   let ret = Buffer.openFile(filePath);
 

@@ -87,3 +87,79 @@ let create =
   user,
   workspace,
 };
+
+// Must be kept in-sync with:
+// https://github.com/onivim/vscode-exthost/blob/c7df89c1cf0087ca5decaf8f6d4c0fd0257a8b7a/src/vs/platform/configuration/common/configuration.ts#L30
+module Target = {
+  [@deriving show]
+  type t =
+    | User
+    | UserLocal
+    | UserRemote
+    | Workspace
+    | WorkspaceFolder
+    | Default
+    | Memory;
+
+  let toInt =
+    fun
+    | User => 1
+    | UserLocal => 2
+    | UserRemote => 3
+    | Workspace => 4
+    | WorkspaceFolder => 5
+    | Default => 6
+    | Memory => 7;
+
+  let ofInt =
+    fun
+    | 1 => Some(User)
+    | 2 => Some(UserLocal)
+    | 3 => Some(UserRemote)
+    | 4 => Some(Workspace)
+    | 5 => Some(WorkspaceFolder)
+    | 6 => Some(Default)
+    | 7 => Some(Memory)
+    | _ => None;
+
+  let toString =
+    fun
+    | User => "USER"
+    | UserLocal => "USER_LOCAL"
+    | UserRemote => "USER_REMOTE"
+    | Workspace => "WORKSPACE"
+    | WorkspaceFolder => "WORKSPACE_FOLDER"
+    | Default => "DEFAULT"
+    | Memory => "MEMORY";
+
+  let encode = target => target |> toInt |> Json.Encode.int;
+
+  let decode =
+    Json.Decode.(
+      int
+      |> map(ofInt)
+      |> and_then(
+           fun
+           | Some(target) => succeed(target)
+           | None => fail("Unable to parse target"),
+         )
+    );
+};
+
+module Overrides = {
+  [@deriving show]
+  type t = {
+    overrideIdentifier: option(string),
+    resource: option(Oni_Core.Uri.t),
+  };
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          overrideIdentifier: field.optional("overrideIdentifier", string),
+          resource: field.optional("resource", Oni_Core.Uri.decode),
+        }
+      )
+    );
+};

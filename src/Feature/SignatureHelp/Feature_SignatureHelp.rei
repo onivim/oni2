@@ -28,11 +28,14 @@ type msg =
       activeParameter: int,
       requestID: int,
       editorID: int,
+      location: EditorCoreTypes.CharacterPosition.t,
+      context: Exthost.SignatureHelp.RequestContext.t,
     })
   | EmptyInfoReceived(int)
   | RequestFailed(string)
   | SignatureIncrementClicked
-  | SignatureDecrementClicked;
+  | SignatureDecrementClicked
+  | CursorMoved(int);
 
 type outmsg =
   | Nothing
@@ -67,6 +70,7 @@ module View: {
       ~uiFont: UiFont.t,
       ~editorFont: Service_Font.font,
       ~model: model,
+      ~buffer: Oni_Core.Buffer.t,
       ~editor: Feature_Editor.Editor.t,
       ~gutterWidth: float,
       ~grammars: Oni_Syntax.GrammarRepository.t,

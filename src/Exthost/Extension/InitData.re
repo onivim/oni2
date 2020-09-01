@@ -1,32 +1,75 @@
 open Oni_Core;
 
-module Extension = {
+module Log = (val Timber.Log.withNamespace("Exthost.Extension.InitData"));
+
+module Identifier = {
   [@deriving (show, yojson({strict: false}))]
   type t = {
-    identifier: string,
-    extensionLocation: Uri.t,
-    name: string,
-    main: option(string),
-    version: string,
-    engines: string,
-    activationEvents: list(string),
-    extensionDependencies: list(string),
-    extensionKind: string,
-    enableProposedApi: bool,
+    value: string,
+    _lower: string,
   };
 
-  let ofManifestAndPath = (manifest: Manifest.t, path: string) => {
-    identifier: Manifest.identifier(manifest),
-    extensionLocation: path |> Uri.fromPath,
-    name: manifest.name,
-    main: manifest.main,
-    version: manifest.version,
-    engines: manifest.engines,
-    activationEvents: manifest.activationEvents,
-    extensionDependencies: manifest.extensionDependencies,
-    // TODO: Convert correctly
-    extensionKind: "ui",
-    enableProposedApi: manifest.enableProposedApi,
+  let fromString = str => {value: str, _lower: String.lowercase_ascii(str)};
+};
+
+module Hacks = {
+  // TEMPORARY workarounds for external bugs blocking extensions
+  let hacks = [
+    // Workaround for https://github.com/open-vsx/publish-extensions/issues/106
+    (
+      "matklad.rust-analyzer",
+      Utility.JsonEx.update(
+        "releaseTag",
+        fun
+        | Some(`String(str)) => Some(`String(str))
+        | _ => Some(`String("2020-08-04")),
+      ),
+    ),
+  ];
+
+  let apply = (~extensionId, initDataJson) => {
+    hacks
+    |> List.fold_left(
+         (acc, curr) => {
+           let (toApplyId, hackF) = curr;
+
+           if (String.equal(toApplyId, extensionId)) {
+             Log.infof(m => m("Applying extension patch to: %s", toApplyId));
+             hackF(acc);
+           } else {
+             acc;
+           };
+         },
+         initDataJson,
+       );
+  };
+};
+
+module Extension = {
+  [@deriving (show, yojson({strict: false}))]
+  type t = Yojson.Safe.t;
+
+  let ofScanResult = (scanner: Scanner.ScanResult.t) => {
+    let extensionId = scanner.manifest |> Manifest.identifier;
+    let identifier = extensionId |> Identifier.fromString;
+    let extensionLocation = scanner.path |> Uri.fromPath;
+
+    let json =
+      switch (scanner.rawPackageJson) {
+      | `Assoc(items) =>
+        `Assoc([
+          ("identifier", Identifier.to_yojson(identifier)),
+          ("extensionLocation", Uri.to_yojson(extensionLocation)),
+          ...items,
+        ])
+      | json =>
+        Log.warnf(m =>
+          m("Unexpected package format: %s", Yojson.Safe.to_string(json))
+        );
+        json;
+      };
+
+    json |> Hacks.apply(~extensionId);
   };
 };
 
@@ -36,24 +79,33 @@ module Environment = {
     isExtensionDevelopmentDebug: bool,
     appName: string,
     appLanguage: string,
+    appRoot: Uri.t,
+    globalStorageHome: option(Uri.t),
+    userHome: option(Uri.t),
     // TODO
     /*
-     appRoot: option(Uri.t),
      appUriScheme: string,
      appSettingsHome: option(Uri.t),
-     globalStorageHome: Uri.t,
-     userHome: Uri.t,
      webviewResourceRoot: string,
      webviewCspSource: string,
      useHostProxy: boolean,
      */
   };
 
-  let default = {
+  let default = () => {
     isExtensionDevelopmentDebug: false,
-    appName: "reason-vscode-exthost",
+    appName: "Onivim 2",
     // TODO - INTL: Get proper user language
     appLanguage: "en-US",
+    appRoot: Revery.Environment.getExecutingDirectory() |> Uri.fromPath,
+    globalStorageHome:
+      Oni_Core.Filesystem.getGlobalStorageFolder()
+      |> Result.to_option
+      |> Option.map(Uri.fromPath),
+    userHome:
+      Oni_Core.Filesystem.getUserDataDirectory()
+      |> Result.to_option
+      |> Option.map(Uri.fromPath),
   };
 };
 
@@ -73,12 +125,18 @@ module Remote = {
 module TelemetryInfo = {
   [@deriving (show, yojson({strict: false}))]
   type t = {
-    sessionId: int,
-    machineId: int,
-    instanceId: int,
+    sessionId: string,
+    machineId: string,
+    instanceId: string,
+    msftInternal: bool,
   };
 
-  let default = {sessionId: 0, machineId: 0, instanceId: 0};
+  let default = {
+    sessionId: "Anonymous",
+    machineId: "Anonymous",
+    instanceId: "Anonymous",
+    msftInternal: false,
+  };
 };
 
 [@deriving (show, yojson({strict: false}))]
@@ -103,23 +161,30 @@ let create =
       ~parentPid,
       ~logsLocation,
       ~logFile,
-      ~environment=Environment.default,
+      ~environment=?,
       ~logLevel=0,
       ~autoStart=true,
       ~remote=Remote.default,
       ~telemetryInfo=TelemetryInfo.default,
       extensions,
     ) => {
-  version,
-  parentPid,
-  logLevel,
-  extensions,
-  resolvedExtensions: [],
-  hostExtensions: [],
-  environment,
-  logsLocation,
-  logFile,
-  autoStart,
-  remote,
-  telemetryInfo,
+  let environment =
+    switch (environment) {
+    | None => Environment.default()
+    | Some(env) => env
+    };
+  {
+    version,
+    parentPid,
+    logLevel,
+    extensions,
+    resolvedExtensions: [],
+    hostExtensions: [],
+    environment,
+    logsLocation,
+    logFile,
+    autoStart,
+    remote,
+    telemetryInfo,
+  };
 };

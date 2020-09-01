@@ -1,26 +1,26 @@
 open Oni_Core;
 
-type font = {
-  fontFile: string,
-  fontFamily: Revery.Font.Family.t,
-  fontSize: float,
-  measuredWidth: float,
-  measuredHeight: float,
-  descenderHeight: float,
-  smoothing: Revery.Font.Smoothing.t,
-};
+[@deriving show({with_path: false})]
+type font =
+  Oni_Core.Font.t = {
+    fontFamily: [@opaque] Revery.Font.Family.t,
+    fontSize: float,
+    spaceWidth: float,
+    underscoreWidth: float,
+    avgCharWidth: float,
+    maxCharWidth: float,
+    measuredHeight: float,
+    descenderHeight: float,
+    smoothing: [@opaque] Revery.Font.Smoothing.t,
+    features: [@opaque] list(Revery.Font.Feature.t),
+  };
 
 let toString: font => string;
 
 let default: font;
 
 let resolveWithFallback:
-  (
-    ~mono: bool=?,
-    ~italic: bool=?,
-    Revery_Font.Weight.t,
-    Revery_Font.Family.t
-  ) =>
+  (~italic: bool=?, Revery_Font.Weight.t, Revery_Font.Family.t) =>
   Revery_Font.t;
 
 let measure: (~text: string, font) => float;
@@ -38,6 +38,7 @@ module Sub: {
       ~uniqueId: string,
       ~fontFamily: string,
       ~fontSize: float,
+      ~fontLigatures: ConfigurationValues.fontLigatures,
       ~fontSmoothing: ConfigurationValues.fontSmoothing
     ) =>
     Isolinear.Sub.t(msg);

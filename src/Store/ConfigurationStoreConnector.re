@@ -53,7 +53,7 @@ let start =
       Log.error("Unable to load configuration: " ++ msg);
       Isolinear.Effect.none;
     | Ok(configPath) =>
-      if (!Buffers.isModifiedByPath(buffers, configPath)) {
+      if (!Feature_Buffers.isModifiedByPath(buffers, configPath)) {
         Oni_Core.Log.perf("Apply configuration transform", () => {
           let parsedJson = Yojson.Safe.from_file(configPath);
           let newJson = transformer(parsedJson);

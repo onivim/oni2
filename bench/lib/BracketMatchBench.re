@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Feature_Editor;
 
 open BenchFramework;
@@ -16,8 +17,11 @@ let bracketFind = buffer => {
   let _: option(BracketMatch.pair) =
     BracketMatch.find(
       ~buffer,
-      ~line=5000,
-      ~index=0,
+      ~characterPosition=
+        CharacterPosition.{
+          line: LineNumber.ofZeroBased(5000),
+          character: CharacterIndex.zero,
+        },
       ~start=Uchar.of_char('{'),
       ~stop=Uchar.of_char('}'),
     );

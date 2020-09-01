@@ -217,6 +217,19 @@ module ExtensionService = {
   };
 };
 
+module FileSystemEventService = {
+  open Json.Encode;
+
+  let onFileEvent = (~events, client) => {
+    Client.notify(
+      ~rpcName="ExtHostFileSystemEventService",
+      ~method="$onFileEvent",
+      ~args=`List([events |> encode_value(Files.FileSystemEvents.encode)]),
+      client,
+    );
+  };
+};
+
 module LanguageFeatures = {
   let provideCodeLenses = (~handle: int, ~resource: Uri.t, client) => {
     let decoder = Json.Decode.(nullable(CodeLens.List.decode));
@@ -243,7 +256,7 @@ module LanguageFeatures = {
     // empty set of suggestions.
     let decoder =
       Json.Decode.(
-        nullable(SuggestResult.decode)
+        nullable(SuggestResult.Dto.decode)
         |> map(
              fun
              | Some(suggestResult) => suggestResult
@@ -262,6 +275,30 @@ module LanguageFeatures = {
           Uri.to_yojson(resource),
           OneBasedPosition.to_yojson(position),
           CompletionContext.to_yojson(context),
+        ]),
+      client,
+    );
+  };
+
+  let resolveCompletionItem =
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~position: OneBasedPosition.t,
+        ~chainedCacheId: ChainedCacheId.t,
+        client,
+      ) => {
+    Client.request(
+      ~decoder=SuggestItem.Dto.decode,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$resolveCompletionItem",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          chainedCacheId |> Json.Encode.encode_value(ChainedCacheId.encode),
         ]),
       client,
     );
@@ -460,6 +497,37 @@ module LanguageFeatures = {
           options |> Json.Encode.encode_value(FormattingOptions.encode),
         ]),
       client,
+    );
+  };
+
+  let provideRenameEdits = (~handle, ~resource, ~position, ~newName: string) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(WorkspaceEdit.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideRenameEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          `String(newName),
+        ]),
+    );
+  };
+
+  let resolveRenameLocation = (~handle, ~resource, ~position) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(RenameLocation.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$resolveRenameLocation",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+        ]),
     );
   };
 };

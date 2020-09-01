@@ -6,6 +6,10 @@ module OptionEx = Core.Utility.OptionEx;
 
 module Log = (val Core.Log.withNamespace("Oni2.Service_Syntax"));
 
+module Constants = {
+  let defaultScope = "source.text";
+};
+
 [@deriving show({with_path: false})]
 type serverMsg =
   | ServerStarted
@@ -46,7 +50,7 @@ module Internal = {
 module Sub = {
   type serverParams = {
     id: string,
-    languageInfo: Exthost.LanguageInfo.t,
+    grammarInfo: Exthost.GrammarInfo.t,
     setup: Core.Setup.t,
     tokenTheme: Syntax.TokenTheme.t,
     useTreeSitter: bool,
@@ -84,7 +88,7 @@ module Sub = {
                 Internal.notifyTokensReceived(bufferId, tokens)
               },
             ~onHealthCheckResult=_ => (),
-            params.languageInfo,
+            params.grammarInfo,
             params.setup,
           );
 
@@ -148,11 +152,11 @@ module Sub = {
       };
     });
 
-  let server = (~useTreeSitter, ~languageInfo, ~setup, ~tokenTheme) => {
+  let server = (~useTreeSitter, ~grammarInfo, ~setup, ~tokenTheme) => {
     SyntaxServerSubscription.create({
       id: "syntax-highligher",
       useTreeSitter,
-      languageInfo,
+      grammarInfo,
       setup,
       tokenTheme,
     });
@@ -161,6 +165,7 @@ module Sub = {
   type bufferParams = {
     client: Oni_Syntax_Client.t,
     buffer: Core.Buffer.t,
+    scope: string,
     visibleRanges: list(Range.t),
   };
 
@@ -170,6 +175,7 @@ module Sub = {
       type nonrec params = bufferParams;
 
       type state = {
+        lastScope: string,
         lastVisibleRanges: list(Range.t),
         unsubscribe: unit => unit,
       };
@@ -177,13 +183,7 @@ module Sub = {
       let name = "BufferSubscription";
       let id = params => {
         let bufferId = params.buffer |> Core.Buffer.getId |> string_of_int;
-
-        let fileType =
-          params.buffer
-          |> Core.Buffer.getFileType
-          |> Option.value(~default="(none)");
-
-        bufferId ++ fileType;
+        bufferId;
       };
 
       let init = (~params, ~dispatch) => {
@@ -195,25 +195,35 @@ module Sub = {
 
         Log.infof(m => m("Starting buffer subscription for: %d", bufferId));
 
-        params.buffer
-        |> Core.Buffer.getFileType
-        |> Option.iter(filetype => {
-             Oni_Syntax_Client.startHighlightingBuffer(
-               ~filetype,
-               ~bufferId,
-               ~visibleRanges=params.visibleRanges,
-               ~lines=Core.Buffer.getLines(params.buffer),
-               params.client,
-             )
-           });
+        Oni_Syntax_Client.startHighlightingBuffer(
+          ~scope=params.scope,
+          ~bufferId,
+          ~visibleRanges=params.visibleRanges,
+          ~lines=Core.Buffer.getLines(params.buffer),
+          params.client,
+        );
 
-        {lastVisibleRanges: params.visibleRanges, unsubscribe};
+        {
+          lastVisibleRanges: params.visibleRanges,
+          unsubscribe,
+          lastScope: params.scope,
+        };
       };
 
       let update = (~params, ~state, ~dispatch as _) => {
         let currentVisibleRanges = state.lastVisibleRanges;
 
-        if (currentVisibleRanges != params.visibleRanges) {
+        if (state.lastScope != params.scope) {
+          let bufferId = Core.Buffer.getId(params.buffer);
+          Oni_Syntax_Client.stopHighlightingBuffer(~bufferId, params.client);
+          Oni_Syntax_Client.startHighlightingBuffer(
+            ~scope=params.scope,
+            ~bufferId,
+            ~visibleRanges=params.visibleRanges,
+            ~lines=Core.Buffer.getLines(params.buffer),
+            params.client,
+          );
+        } else if (currentVisibleRanges != params.visibleRanges) {
           Oni_Syntax_Client.notifyBufferVisibilityChanged(
             ~bufferId=Core.Buffer.getId(params.buffer),
             ~ranges=params.visibleRanges,
@@ -221,7 +231,11 @@ module Sub = {
           );
         };
 
-        {...state, lastVisibleRanges: params.visibleRanges};
+        {
+          ...state,
+          lastVisibleRanges: params.visibleRanges,
+          lastScope: params.scope,
+        };
       };
 
       let dispose = (~params, ~state) => {
@@ -232,7 +246,14 @@ module Sub = {
       };
     });
 
-  let buffer = (~client, ~buffer, ~visibleRanges) => {
-    BufferSubscription.create({client, buffer, visibleRanges});
+  let buffer = (~client, ~buffer, ~languageInfo, ~visibleRanges) => {
+    let scope =
+      buffer
+      |> Core.Buffer.getFileType
+      |> Core.Buffer.FileType.toString
+      |> Exthost.LanguageInfo.getScopeFromLanguage(languageInfo)
+      |> Option.value(~default=Constants.defaultScope);
+
+    BufferSubscription.create({client, buffer, scope, visibleRanges});
   };
 };

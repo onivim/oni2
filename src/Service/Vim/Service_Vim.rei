@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 let forceReload: unit => Isolinear.Effect.t(_);
 let forceOverwrite: unit => Isolinear.Effect.t(_);
 let reload: unit => Isolinear.Effect.t(_);
@@ -5,6 +7,14 @@ let saveAllAndQuit: unit => Isolinear.Effect.t(_);
 let quitAll: unit => Isolinear.Effect.t(_);
 
 module Effects: {
+  let paste:
+    (~toMsg: list(BytePosition.t) => 'msg, string) =>
+    Isolinear.Effect.t('msg);
+
+  let getRegisterValue:
+    (~toMsg: option(array(string)) => 'msg, char) =>
+    Isolinear.Effect.t('msg);
+
   let applyEdits:
     (
       ~bufferId: int,
@@ -13,4 +23,20 @@ module Effects: {
       result(unit, string) => 'msg
     ) =>
     Isolinear.Effect.t('msg);
+
+  let loadBuffer:
+    (~filePath: string, (~bufferId: int) => 'msg) => Isolinear.Effect.t('msg);
+
+  let applyCompletion:
+    (
+      ~meetColumn: CharacterIndex.t,
+      ~insertText: string,
+      ~toMsg: list(BytePosition.t) => 'msg
+    ) =>
+    Isolinear.Effect.t('msg);
+};
+
+module Sub: {
+  let eval:
+    (~toMsg: result(string, string) => 'msg, string) => Isolinear.Sub.t('msg);
 };

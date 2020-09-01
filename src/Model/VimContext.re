@@ -4,18 +4,17 @@ open Oni_Core.Utility;
 open Feature_Editor;
 
 module Internal = {
-  let syntaxScope = (~cursor: option(Vim.Cursor.t), state: State.t) => {
+  let syntaxScope = (~maybeCursor: option(BytePosition.t), state: State.t) => {
     state
     |> Selectors.getActiveBuffer
     |> OptionEx.flatMap(buffer => {
          let bufferId = Buffer.getId(buffer);
 
-         cursor
-         |> Option.map((cursor: Vim.Cursor.t) => {
+         maybeCursor
+         |> Option.map((cursor: BytePosition.t) => {
               Feature_Syntax.getSyntaxScope(
                 ~bufferId,
-                ~line=cursor.line,
-                ~bytePosition=Index.toZeroBased(cursor.column),
+                ~bytePosition=cursor,
                 state.syntaxHighlights,
               )
             });
@@ -25,7 +24,7 @@ module Internal = {
 
   let autoClosingPairs = (~syntaxScope, ~maybeLanguageConfig, state: State.t) => {
     let acpEnabled =
-      Configuration.getValue(
+      Oni_Core.Configuration.getValue(
         c => c.editorAutoClosingBrackets,
         state.configuration,
       )
@@ -62,18 +61,20 @@ module Internal = {
 let current = (state: State.t) => {
   let editor = Feature_Layout.activeEditor(state.layout);
   let bufferId = Editor.getBufferId(editor);
-  let cursors = Editor.getVimCursors(editor);
+  let cursors = Editor.getCursors(editor);
 
   let editorBuffer = Selectors.getActiveBuffer(state);
   let maybeLanguageConfig: option(LanguageConfiguration.t) =
     editorBuffer
-    |> OptionEx.flatMap(Buffer.getFileType)
+    |> OptionEx.flatMap(buf =>
+         Buffer.getFileType(buf) |> Buffer.FileType.toOption
+       )
     |> OptionEx.flatMap(
          Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
        );
 
   let maybeCursor =
-    switch (Editor.getVimCursors(editor)) {
+    switch (Editor.getCursors(editor)) {
     | [hd, ..._] => Some(hd)
     | [] => None
     };
@@ -86,7 +87,7 @@ let current = (state: State.t) => {
          Vim.AutoIndent.KeepIndent
        );
 
-  let syntaxScope = Internal.syntaxScope(~cursor=maybeCursor, state);
+  let syntaxScope = Internal.syntaxScope(~maybeCursor, state);
   let autoClosingPairs =
     Internal.autoClosingPairs(~syntaxScope, ~maybeLanguageConfig, state);
 
@@ -108,9 +109,16 @@ let current = (state: State.t) => {
 
   let insertSpaces = indentation.mode == Spaces;
 
+  let colorSchemeProvider = pattern => {
+    state.extensions
+    |> Feature_Extensions.themesByName(~filter=pattern)
+    |> Array.of_list;
+  };
+
   Vim.Context.{
     autoIndent,
     bufferId,
+    colorSchemeProvider,
     leftColumn,
     topLine,
     width,

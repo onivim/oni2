@@ -40,6 +40,9 @@ module Provider: {
     count: int,
     commitTemplate: string,
     acceptInputCommand: option(command),
+    inputVisible: bool,
+    validationEnabled: bool,
+    statusBarCommands: list(Exthost.Command.t),
   };
 };
 
@@ -48,36 +51,45 @@ type model;
 
 let initial: model;
 
-// EFFECTS
-
-module Effects: {
-  let getOriginalUri:
-    (Exthost.Client.t, model, string, Uri.t => 'msg) =>
-    Isolinear.Effect.t('msg);
-};
+let statusBarCommands: model => list(Exthost.Command.t);
 
 // UPDATE
 
 [@deriving show]
 type msg;
 
-module Msg: {let keyPressed: string => msg;};
+module Msg: {
+  let keyPressed: string => msg;
+  let paste: string => msg;
+  let documentContentProvider: Exthost.Msg.DocumentContentProvider.msg => msg;
+};
 
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
+  | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
   | Nothing;
 
 let update: (Exthost.Client.t, model, msg) => (model, outmsg);
 
+let getOriginalLines: (Oni_Core.Buffer.t, model) => option(array(string));
+let setOriginalLines: (Oni_Core.Buffer.t, array(string), model) => model;
+
 let handleExtensionMessage:
   (~dispatch: msg => unit, Exthost.Msg.SCM.msg) => unit;
+
+// SUBSCRIPTION
+
+let sub:
+  (~activeBuffer: Oni_Core.Buffer.t, ~client: Exthost.Client.t, model) =>
+  Isolinear.Sub.t(msg);
 
 // VIEW
 
 module Pane: {
   let make:
     (
+      ~key: Brisk_reconciler.Key.t=?,
       ~model: model,
       ~workingDirectory: string,
       ~onItemClick: Resource.t => unit,

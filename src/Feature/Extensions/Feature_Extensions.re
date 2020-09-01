@@ -3,78 +3,15 @@ open Exthost.Extension;
 
 include Model;
 
-type outmsg =
-  | Nothing
-  | Focus
-  | Effect(Isolinear.Effect.t(msg));
+module Msg = {
+  let exthost = msg => Exthost(msg);
+  let storage = (~resolver, msg) => Storage({resolver, msg});
+  let discovered = extensions => Discovered(extensions);
+  let keyPressed = key => KeyPressed(key);
+  let pasted = key => Pasted(key);
 
-module Internal = {
-  let markActivated = (id: string, model) => {
-    ...model,
-    activatedIds: [id, ...model.activatedIds],
-  };
-
-  let add = (extensions, model) => {
-    ...model,
-    extensions: extensions @ model.extensions,
-  };
-};
-
-let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
-  if (previousText != newText) {
-    if (String.length(newText) == 0) {
-      None;
-    } else {
-      Some(Service_Extensions.Query.create(~searchText=newText));
-    };
-  } else {
-    query;
-  };
-
-let update = (~extHostClient, msg, model) => {
-  switch (msg) {
-  | Activated(id) => (Internal.markActivated(id, model), Nothing)
-  | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
-  | ExecuteCommand({command, arguments}) => (
-      model,
-      Effect(
-        Service_Exthost.Effects.Commands.executeContributedCommand(
-          ~command,
-          ~arguments,
-          extHostClient,
-        ),
-      ),
-    )
-  | KeyPressed(key) =>
-    let previousText = model.searchText |> Feature_InputText.value;
-    let searchText' = Feature_InputText.handleInput(~key, model.searchText);
-    let newText = searchText' |> Feature_InputText.value;
-    let latestQuery =
-      checkAndUpdateSearchText(
-        ~previousText,
-        ~newText,
-        ~query=model.latestQuery,
-      );
-    ({...model, searchText: searchText', latestQuery}, Nothing);
-  | SearchText(msg) =>
-    let previousText = model.searchText |> Feature_InputText.value;
-    let searchText' = Feature_InputText.update(msg, model.searchText);
-    let newText = searchText' |> Feature_InputText.value;
-    let latestQuery =
-      checkAndUpdateSearchText(
-        ~previousText,
-        ~newText,
-        ~query=model.latestQuery,
-      );
-    ({...model, searchText: searchText', latestQuery}, Focus);
-  | SearchQueryResults(queryResults) => (
-      {...model, latestQuery: Some(queryResults)},
-      Nothing,
-    )
-  | SearchQueryError(_queryResults) =>
-    // TODO: Error experience?
-    ({...model, latestQuery: None}, Nothing)
-  };
+  let command = (~command, ~arguments) =>
+    ExecuteCommand({command, arguments});
 };
 
 let all = ({extensions, _}) => extensions;
@@ -121,7 +58,42 @@ let menus = model =>
   |> Seq.map(((id, items)) => Menu.Schema.{id, items})
   |> List.of_seq;
 
+let pick = (f, {extensions, _}) => {
+  extensions
+  |> List.map((scanResult: Exthost.Extension.Scanner.ScanResult.t) => {
+       f(scanResult.manifest)
+     });
+};
+
+let themeByName = (~name, model) => {
+  model
+  |> pick(manifest => manifest.contributes.themes)
+  |> List.flatten
+  |> List.fold_left(
+       (acc, curr: Contributions.Theme.t) =>
+         if (curr.label == name) {
+           Some(curr);
+         } else {
+           acc;
+         },
+       None,
+     );
+};
+
+let themesByName = (~filter: string, model) => {
+  model
+  |> pick((manifest: Exthost.Extension.Manifest.t) => {
+       Exthost.Extension.Contributions.(manifest.contributes.themes)
+     })
+  |> List.flatten
+  |> List.map(({label, _}: Exthost.Extension.Contributions.Theme.t) =>
+       label
+     )
+  |> List.filter(label => Utility.StringEx.contains(filter, label));
+};
+
 module ListView = ListView;
+module DetailsView = DetailsView;
 
 let sub = (~setup, model) => {
   let toMsg =

@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Core.Utility;
 
 module Log = (val Oni_Core.Log.withNamespace("Oni2.Feature.Configuration"));
 
@@ -47,6 +48,7 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
   let user =
     Config.Settings.fromList([
       ("reason_language_server.location", Json.Encode.string(setup.rlsPath)),
+      ("telemetry.enableTelemetry", Json.Encode.bool(false)),
       ("terminal.integrated.env.windows", Json.Encode.null),
       ("terminal.integrated.env.linux", Json.Encode.null),
       ("terminal.integrated.env.osx", Json.Encode.null),
@@ -81,4 +83,21 @@ let update = (~getUserSettings, model, msg) =>
     (updated, ConfigurationChanged({changed: changed}));
   };
 
-let resolver = (model, key) => Config.Settings.get(key, model.merged);
+let vimToCoreSetting =
+  fun
+  | Vim.Setting.String(str) => VimSetting.String(str)
+  | Vim.Setting.Int(i) => VimSetting.Int(i);
+
+let resolver = (model, vimModel, ~vimSetting, key) => {
+  // Try to get the vim setting, first...
+  let vimResolver = Feature_Vim.Configuration.resolver(vimModel);
+  vimSetting
+  |> OptionEx.flatMap(vimResolver)
+  |> Option.map(setting => Config.Vim(vimToCoreSetting(setting)))
+  // If the vim setting isn't set, fall back to our JSON config.
+  |> OptionEx.or_lazy(() => {
+       Config.Settings.get(key, model.merged)
+       |> Option.map(json => Config.Json(json))
+     })
+  |> Option.value(~default=Config.NotSet);
+};

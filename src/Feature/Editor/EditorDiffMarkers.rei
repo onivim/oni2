@@ -10,7 +10,7 @@ and marker =
   | DeletedAfter
   | Unmodified;
 
-let generate: Buffer.t => option(t);
+let generate: (~scm: Feature_SCM.model, Buffer.t) => option(t);
 
 let render:
   (

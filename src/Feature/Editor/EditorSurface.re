@@ -17,10 +17,8 @@ module Config = EditorConfiguration;
 
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
-module Definition = Feature_LanguageSupport.Definition;
 
 module Constants = {
   include Constants;
@@ -58,10 +56,11 @@ module Styles = {
 let minimap =
     (
       ~bufferHighlights,
-      ~cursorPosition: Location.t,
+      ~cursorPosition: CharacterPosition.t,
       ~colors,
       ~dispatch,
       ~matchingPairs,
+      ~maybeYankHighlights,
       ~bufferSyntaxHighlights,
       ~selectionRanges,
       ~showMinimapSlider,
@@ -70,6 +69,7 @@ let minimap =
       ~diagnosticsMap,
       ~bufferWidthInCharacters,
       ~minimapWidthInPixels,
+      ~languageSupport,
       (),
     ) => {
   let minimapPixelWidth = minimapWidthInPixels + Constants.minimapPadding * 2;
@@ -96,12 +96,14 @@ let minimap =
       dispatch
       width=minimapPixelWidth
       height=pixelHeight
+      maybeYankHighlights
       count
       diagnostics=diagnosticsMap
       getTokensForLine={getTokensForLine(
         ~editor,
         ~bufferHighlights,
-        ~cursorLine=Index.toZeroBased(cursorPosition.line),
+        ~cursorLine=
+          EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
         ~colors,
         ~matchingPairs,
         ~bufferSyntaxHighlights,
@@ -113,6 +115,7 @@ let minimap =
       colors
       bufferHighlights
       diffMarkers
+      languageSupport
     />
   </View>;
 };
@@ -125,6 +128,8 @@ let%component make =
               (
                 ~dispatch,
                 ~languageConfiguration,
+                ~languageInfo,
+                ~grammarRepository,
                 ~showDiffMarkers=true,
                 ~backgroundColor: option(Revery.Color.t)=?,
                 ~foregroundColor: option(Revery.Color.t)=?,
@@ -132,18 +137,19 @@ let%component make =
                 ~onEditorSizeChanged,
                 ~isActiveSplit: bool,
                 ~editor: Editor.t,
+                ~uiFont: Oni_Core.UiFont.t,
                 ~theme,
                 ~mode: Vim.Mode.t,
                 ~bufferHighlights,
                 ~bufferSyntaxHighlights,
                 ~diagnostics,
-                ~completions,
                 ~tokenTheme,
                 ~onCursorChange,
-                ~definition,
+                ~languageSupport,
+                ~scm,
                 ~windowIsFocused,
                 ~config,
-                ~renderOverlays=(~gutterWidth as _: float) => <View />,
+                ~renderOverlays,
                 (),
               ) => {
   let colors = Colors.precompute(theme);
@@ -175,6 +181,10 @@ let%component make =
     onEditorSizeChanged(editorId, width, height);
   };
 
+  let showYankHighlightAnimation = Config.yankHighlightAnimation.get(config);
+  let maybeYankHighlights =
+    showYankHighlightAnimation ? editor |> Editor.yankHighlight : None;
+
   let colors =
     backgroundColor
     |> Option.map(editorBackground =>
@@ -204,10 +214,10 @@ let%component make =
     );
 
   let matchingPairCheckPosition =
-    mode == Vim.Types.Insert
-      ? Location.{
+    mode == Vim.Mode.Insert
+      ? CharacterPosition.{
           line: cursorPosition.line,
-          column: Index.(cursorPosition.column - 1),
+          character: CharacterIndex.(cursorPosition.character - 1),
         }
       : cursorPosition;
 
@@ -215,20 +225,24 @@ let%component make =
     !Config.matchBrackets.get(config)
       ? None
       : Editor.getNearestMatchingPair(
-          ~location=matchingPairCheckPosition,
+          ~characterPosition=matchingPairCheckPosition,
           ~pairs=LanguageConfiguration.(languageConfiguration.brackets),
           editor,
         );
 
   let diagnosticsMap = Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =
-    Selection.getRanges(Editor.selection(editor), buffer) |> Range.toHash;
+    editor
+    |> Editor.selection
+    |> Option.map(selection => Selection.getRanges(selection, buffer))
+    |> Option.map(ByteRange.toHash)
+    |> Option.value(~default=Hashtbl.create(1));
 
   let diffMarkers =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
-      ? EditorDiffMarkers.generate(buffer) : None;
+      ? EditorDiffMarkers.generate(~scm, buffer) : None;
 
-  let smoothScroll = Config.Experimental.smoothScroll.get(config);
+  let smoothScroll = Config.smoothScroll.get(config);
   let isScrollAnimated = Editor.isScrollAnimated(editor);
 
   let%hook (scrollY, _setScrollYImmediately) =
@@ -262,9 +276,49 @@ let%component make =
       colors
       count=lineCount
       editorFont
-      cursorLine={Index.toZeroBased(cursorPosition.line)}
+      cursorLine={EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line)}
       diffMarkers
     />;
+
+  let hoverPopup = {
+    let maybeHover =
+      Feature_LanguageSupport.Hover.Popup.make(
+        ~theme,
+        ~uiFont,
+        ~editorFont,
+        ~model=languageSupport,
+        ~diagnostics,
+        ~tokenTheme,
+        ~grammars=grammarRepository,
+        ~buffer,
+        ~editorId=Some(editorId),
+        ~languageInfo,
+      );
+
+    maybeHover
+    |> Option.map(((position: CharacterPosition.t, sections)) => {
+         let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
+           Editor.bufferCharacterPositionToPixel(~position, editor);
+         let popupX = pixelX +. gutterWidth |> int_of_float;
+         let popupTopY = pixelY |> int_of_float;
+         let popupBottomY =
+           pixelY +. Editor.lineHeightInPixels(editor) |> int_of_float;
+
+         let popupAvailableWidth = layout.bufferWidthInPixels |> int_of_float;
+         let popupAvailableHeight = pixelHeight;
+
+         <Oni_Components.Popup
+           x=popupX
+           topY=popupTopY
+           bottomY=popupBottomY
+           availableWidth=popupAvailableWidth
+           availableHeight=popupAvailableHeight
+           sections
+           theme
+         />;
+       })
+    |> Option.value(~default=React.empty);
+  };
 
   <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
@@ -281,8 +335,9 @@ let%component make =
       diagnosticsMap
       selectionRanges
       matchingPairs
+      maybeYankHighlights
       bufferHighlights
-      definition
+      languageSupport
       bufferSyntaxHighlights
       bottomVisibleLine
       mode
@@ -302,12 +357,14 @@ let%component make =
            colors
            dispatch
            matchingPairs
+           maybeYankHighlights
            bufferSyntaxHighlights
            selectionRanges
            showMinimapSlider={Config.Minimap.showSlider.get(config)}
            diffMarkers
            bufferWidthInCharacters={layout.bufferWidthInCharacters}
            minimapWidthInPixels={layout.minimapWidthInPixels}
+           languageSupport
          />
        : React.empty}
     <OverlaysView
@@ -316,12 +373,12 @@ let%component make =
       editor
       gutterWidth
       editorFont
-      completions
-      colors
+      languageSupport
       theme
       tokenTheme
     />
     {renderOverlays(~gutterWidth)}
+    hoverPopup
     <View style=Styles.verticalScrollBar>
       <Scrollbar.Vertical
         dispatch
@@ -333,6 +390,7 @@ let%component make =
         diagnostics=diagnosticsMap
         colors
         bufferHighlights
+        languageSupport
       />
     </View>
     <View

@@ -7,25 +7,25 @@ runTest(
   ~name="InsertMode test - effects batched to runEffects",
   (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Mode.Normal
   );
 
   // Edit
-  dispatch(KeyboardInput("i"));
+  dispatch(KeyboardInput({isText: true, input: "i"}));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Insert
+    Feature_Vim.mode(state.vim) == Vim.Mode.Insert
   );
 
-  dispatch(KeyboardInput("a"));
-  dispatch(KeyboardInput("b"));
-  dispatch(KeyboardInput("c"));
+  dispatch(KeyboardInput({isText: true, input: "a"}));
+  dispatch(KeyboardInput({isText: true, input: "b"}));
+  dispatch(KeyboardInput({isText: true, input: "c"}));
 
-  dispatch(KeyboardInput("<esc>"));
+  dispatch(KeyboardInput({isText: false, input: "<esc>"}));
 
-  dispatch(KeyboardInput("/"));
-  dispatch(KeyboardInput("a"));
-  dispatch(KeyboardInput("<cr>"));
+  dispatch(KeyboardInput({isText: true, input: "/"}));
+  dispatch(KeyboardInput({isText: true, input: "a"}));
+  dispatch(KeyboardInput({isText: false, input: "<cr>"}));
 
   runEffects();
 
@@ -41,12 +41,10 @@ runTest(
     }
   );
 
-  dispatch(KeyboardInput(":"));
-  dispatch(KeyboardInput("n"));
-  dispatch(KeyboardInput("o"));
-  dispatch(KeyboardInput("h"));
-  dispatch(KeyboardInput("l"));
-  dispatch(KeyboardInput("<cr>"));
+  dispatch(KeyboardInput({isText: true, input: ":"}));
+  dispatch(KeyboardInput({isText: true, input: "nohl"}));
+  dispatch(KeyboardInput({isText: false, input: "<cr>"}));
+
   runEffects();
 
   wait(~name="Buffer search highlights are cleared", (state: State.t) =>

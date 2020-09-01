@@ -10,13 +10,13 @@ module TextRun = {
     /*
      * Bytes refer to the byte position in the parent string
      */
-    startByte: int,
-    endByte: int,
+    startByte: ByteIndex.t,
+    endByte: ByteIndex.t,
     /*
      * Indices refer to the UTF-8 position in the parent string
      */
-    startIndex: Index.t,
-    endIndex: Index.t,
+    startIndex: CharacterIndex.t,
+    endIndex: CharacterIndex.t,
   };
 
   let create = (~text, ~startByte, ~endByte, ~startIndex, ~endIndex, ()) => {
@@ -30,11 +30,11 @@ module TextRun = {
 
 type splitFunc =
   (
-    ~index0: int,
-    ~byte0: int,
+    ~index0: CharacterIndex.t,
+    ~byte0: ByteIndex.t,
     ~char0: Uchar.t,
-    ~index1: int,
-    ~byte1: int,
+    ~index1: CharacterIndex.t,
+    ~byte1: ByteIndex.t,
     ~char1: Uchar.t
   ) =>
   bool;
@@ -47,8 +47,8 @@ let _getNextBreak =
   let found = ref(false);
 
   while (pos^ < max - 1 && ! found^) {
-    let index0 = pos^;
-    let index1 = pos^ + 1;
+    let index0 = CharacterIndex.ofInt(pos^);
+    let index1 = CharacterIndex.ofInt(pos^ + 1);
     let char0 = BufferLine.getUcharExn(~index=index0, bufferLine);
     let char1 = BufferLine.getUcharExn(~index=index1, bufferLine);
     let byte0 = BufferLine.getByteFromIndex(~index=index0, bufferLine);
@@ -67,8 +67,15 @@ let _getNextBreak =
 };
 
 let tokenize =
-    (~startIndex=0, ~endIndex, ~f: splitFunc, bufferLine: BufferLine.t) => {
-  let len = BufferLine.lengthBounded(~max=endIndex, bufferLine);
+    (
+      ~start=CharacterIndex.zero,
+      ~stop: CharacterIndex.t,
+      ~f: splitFunc,
+      bufferLine: BufferLine.t,
+    ) => {
+  let startIndex = CharacterIndex.toInt(start);
+  let endIndex = CharacterIndex.toInt(stop);
+  let len = BufferLine.lengthBounded(~max=stop, bufferLine);
 
   if (len == 0 || startIndex >= len) {
     [];
@@ -84,22 +91,29 @@ let tokenize =
 
       let text =
         BufferLine.subExn(
-          ~index=startToken,
+          ~index=CharacterIndex.ofInt(startToken),
           ~length=endToken - startToken,
           bufferLine,
         );
 
       let startByte =
-        BufferLine.getByteFromIndex(~index=startToken, bufferLine);
-      let endByte = BufferLine.getByteFromIndex(~index=endToken, bufferLine);
+        BufferLine.getByteFromIndex(
+          ~index=CharacterIndex.ofInt(startToken),
+          bufferLine,
+        );
+      let endByte =
+        BufferLine.getByteFromIndex(
+          ~index=CharacterIndex.ofInt(endToken),
+          bufferLine,
+        );
 
       let textRun =
         TextRun.create(
           ~text,
           ~startByte,
           ~endByte,
-          ~startIndex=Index.fromZeroBased(startToken),
-          ~endIndex=Index.fromZeroBased(endToken),
+          ~startIndex=CharacterIndex.ofInt(startToken),
+          ~endIndex=CharacterIndex.ofInt(endToken),
           (),
         );
 

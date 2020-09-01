@@ -18,7 +18,6 @@
            ExtHostCompletionTest
            ExtHostDefinitionTest
            FileWatcherTest
-           FontSizeChangeTest
            KeybindingsInvalidJsonTest
            KeySequenceJJTest
            InputIgnoreTest
@@ -35,8 +34,9 @@
            SyntaxServerParentPidCorrectTest
            SyntaxServerReadExceptionTest
            Regression1671Test
+           Regression2349EnewTest
            RegressionCommandLineNoCompletionTest
-           RegressionDeleteAllLinesTest
+           RegressionFontFallbackTest
            RegressionFileModifiedIndicationTest
            RegressionNonExistentDirectory
            RegressionVspEmptyInitialBufferTest
@@ -83,7 +83,6 @@
         ExtHostCompletionTest.exe
         ExtHostDefinitionTest.exe
         FileWatcherTest.exe
-        FontSizeChangeTest.exe
         KeybindingsInvalidJsonTest.exe
         KeySequenceJJTest.exe
         InputIgnoreTest.exe
@@ -93,9 +92,10 @@
         LineEndingsLFTest.exe
         QuickOpenEventuallyCompletesTest.exe
         Regression1671Test.exe
+        Regression2349EnewTest.exe
         RegressionCommandLineNoCompletionTest.exe
-        RegressionDeleteAllLinesTest.exe
         RegressionFileModifiedIndicationTest.exe
+        RegressionFontFallbackTest.exe
         RegressionVspEmptyInitialBufferTest.exe
         RegressionNonExistentDirectory.exe
         RegressionVspEmptyExistingBufferTest.exe
@@ -124,4 +124,5 @@
         test.crlf
         test.lf
         utf8.txt
+        utf8-test-file.htm
 ))

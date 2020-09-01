@@ -9,6 +9,7 @@ module Buffer = Buffer;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
 module Clipboard = Clipboard;
+module ColorScheme = ColorScheme;
 module CommandLine = CommandLine;
 module Context = Context;
 module Cursor = Cursor;
@@ -17,10 +18,12 @@ module Effect = Effect;
 module Event = Event;
 module Format = Format;
 module Goto = Goto;
+module Operator = Operator;
 module TabPage = TabPage;
 module Mode = Mode;
 module Options = Options;
 module Search = Search;
+module Setting = Setting;
 module Types = Types;
 module Testing = {
   module Undo = Undo;
@@ -29,18 +32,6 @@ module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;
 module Yank = Yank;
-
-module GlobalState = {
-  let autoIndent:
-    ref(
-      option(
-        (~previousLine: string, ~beforePreviousLine: option(string)) =>
-        AutoIndent.action,
-      ),
-    ) =
-    ref(None);
-  let queuedFunctions: ref(list(unit => unit)) = ref([]);
-};
 
 module Internal = {
   let nativeFormatRequestToEffect: Native.formatRequest => Format.effect =
@@ -59,13 +50,13 @@ module Internal = {
           formatType,
           bufferId,
           adjustCursor,
-          startLine: Index.fromOneBased(startLine),
-          endLine: Index.fromOneBased(endLine),
+          startLine: EditorCoreTypes.LineNumber.ofOneBased(startLine),
+          endLine: EditorCoreTypes.LineNumber.ofOneBased(endLine),
         });
       };
     };
 
-  let getDefaultCursors = (cursors: list(Cursor.t)) =>
+  let getDefaultCursors = (cursors: list(BytePosition.t)) =>
     if (cursors == []) {
       [Cursor.get()];
     } else {
@@ -169,35 +160,27 @@ let runWith = (~context: Context.t, f) => {
   context.lineComment |> Option.iter(Options.setLineComment);
 
   let oldBuf = Buffer.getCurrent();
-  let prevMode = Mode.getCurrent();
-  let prevLocation = Cursor.getLocation();
-  let prevRange = Visual.getRange();
-  let prevTopLine = Window.getTopLine();
-  let prevLeftColumn = Window.getLeftColumn();
-  let prevVisualMode = Visual.getType();
+  let prevMode = Mode.current();
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
   GlobalState.autoIndent := Some(context.autoIndent);
+  GlobalState.colorSchemeProvider := context.colorSchemeProvider;
 
   let cursors = f();
 
   GlobalState.autoIndent := None;
+  GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
 
   let newBuf = Buffer.getCurrent();
-  let newLocation = Cursor.getLocation();
-  let newMode = Mode.getCurrent();
-  let newRange = Visual.getRange();
-  let newLeftColumn = Window.getLeftColumn();
-  let newTopLine = Window.getTopLine();
-  let newVisualMode = Visual.getType();
+  let newMode = Mode.current();
   let newModified = Buffer.isModified(newBuf);
   let newLineEndings = Buffer.getLineEndings(newBuf);
 
   BufferInternal.checkCurrentBufferForUpdate();
 
   if (newMode != prevMode) {
-    Event.dispatch(newMode, Listeners.modeChanged);
+    Event.dispatch(Effect.ModeChanged(newMode), Listeners.effect);
 
     if (newMode == CommandLine) {
       Event.dispatch(
@@ -212,27 +195,6 @@ let runWith = (~context: Context.t, f) => {
       CommandLineInternal.getState(),
       Listeners.commandLineUpdate,
     );
-  };
-
-  if (!Location.(prevLocation == newLocation)) {
-    Event.dispatch(newLocation, Listeners.cursorMoved);
-  };
-
-  if (prevTopLine != newTopLine) {
-    Event.dispatch(newTopLine, Listeners.topLineChanged);
-  };
-
-  if (prevLeftColumn != newLeftColumn) {
-    Event.dispatch(newLeftColumn, Listeners.leftColumnChanged);
-  };
-
-  if (!Range.equals(prevRange, newRange)
-      || newMode == Visual
-      && prevMode != Visual
-      || prevVisualMode != newVisualMode) {
-    let vr =
-      VisualRange.create(~range=newRange, ~visualType=newVisualMode, ());
-    Event.dispatch(vr, Listeners.visualRangeChanged);
   };
 
   let id = Buffer.getId(newBuf);
@@ -288,7 +250,11 @@ let _onIntro = () => {
 };
 
 let _onMessage = (priority, title, message) => {
-  queue(() => Event.dispatch3(priority, title, message, Listeners.message));
+  switch (GlobalState.overriddenMessageHandler^) {
+  | None =>
+    queue(() => Event.dispatch3(priority, title, message, Listeners.message))
+  | Some(handler) => handler(priority, title, message)
+  };
 };
 
 let _onQuit = (q, f) => {
@@ -371,14 +337,14 @@ let _onAutoIndent = (lnum: int, sourceLine: string) => {
   // lnum is one-based, coming from Vim - we'd only have a beforePreviousLine if the current line is line 3
   let beforePreviousLine =
     if (lnum >= 3 && lnum <= lineCount) {
-      lnum - 2 |> Index.fromOneBased |> Buffer.getLine(buf) |> Option.some;
+      lnum - 2 |> LineNumber.ofOneBased |> Buffer.getLine(buf) |> Option.some;
     } else {
       None;
     };
 
   let beforeLine =
     if (lnum >= 2 && lnum <= lineCount) {
-      lnum - 1 |> Index.fromOneBased |> Buffer.getLine(buf);
+      lnum - 1 |> LineNumber.ofOneBased |> Buffer.getLine(buf);
     } else {
       ""; // This should never happen... but follow the Vim convention for empty lines.
     };
@@ -434,17 +400,56 @@ let _onVersion = () => {
   queue(() => Event.dispatch((), Listeners.version));
 };
 
+let _onSettingChanged = (setting: Setting.t) => {
+  queue(() =>
+    Event.dispatch(Effect.SettingChanged(setting), Listeners.effect)
+  );
+};
+
+let _onColorSchemeChanged = (maybeScheme: option(string)) => {
+  queue(() => {
+    Event.dispatch(Effect.ColorSchemeChanged(maybeScheme), Listeners.effect)
+  });
+};
+
+let _colorSchemesGet = pattern => {
+  GlobalState.colorSchemeProvider^(pattern);
+};
+
+let _onMacroStartRecording = (register: char) => {
+  queue(() => {
+    Event.dispatch(
+      Effect.MacroRecordingStarted({register: register}),
+      Listeners.effect,
+    )
+  });
+};
+
+let _onMacroStopRecording = (register: char, value: option(string)) => {
+  queue(() => {
+    Event.dispatch(
+      Effect.MacroRecordingStopped({register, value}),
+      Listeners.effect,
+    )
+  });
+};
+
 let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);
   Callback.register("lv_onBufferChanged", _onBufferChanged);
   Callback.register("lv_onAutocommand", _onAutocommand);
   Callback.register("lv_onAutoIndent", _onAutoIndent);
+  Callback.register("lv_getColorSchemesCallback", _colorSchemesGet);
+  Callback.register("lv_onColorSchemeChanged", _onColorSchemeChanged);
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
   Callback.register("lv_onFormat", _onFormat);
   Callback.register("lv_onGoto", _onGoto);
   Callback.register("lv_onTabPage", _onTabPage);
   Callback.register("lv_onIntro", _onIntro);
   Callback.register("lv_onMessage", _onMessage);
+  Callback.register("lv_onMacroStartRecording", _onMacroStartRecording);
+  Callback.register("lv_onMacroStopRecording", _onMacroStopRecording);
+  Callback.register("lv_onSettingChanged", _onSettingChanged);
   Callback.register("lv_onQuit", _onQuit);
   Callback.register("lv_onUnhandledEscape", _onUnhandledEscape);
   Callback.register("lv_onStopSearch", _onStopSearch);
@@ -457,11 +462,11 @@ let init = () => {
 
   Native.vimInit();
 
-  Event.dispatch(Mode.getCurrent(), Listeners.modeChanged);
+  Event.dispatch(Effect.ModeChanged(Mode.current()), Listeners.effect);
   BufferInternal.checkCurrentBufferForUpdate();
 };
 
-let input = (~context=Context.current(), v: string) => {
+let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
   let {autoClosingPairs, cursors, _}: Context.t = context;
   runWith(
     ~context,
@@ -470,14 +475,14 @@ let input = (~context=Context.current(), v: string) => {
 
       let runCursor = cursor => {
         Cursor.set(cursor);
-        if (Mode.getCurrent() == Types.Insert) {
-          let location = Cursor.getLocation();
-          let line = Buffer.getLine(Buffer.getCurrent(), location.line);
+        if (Mode.current() == Mode.Insert) {
+          let position: BytePosition.t = Cursor.get();
+          let line = Buffer.getLine(Buffer.getCurrent(), position.line);
 
           let isBetweenClosingPairs = () => {
             AutoClosingPairs.isBetweenClosingPairs(
               line,
-              location.column,
+              position.byte,
               autoClosingPairs,
             );
           };
@@ -485,66 +490,66 @@ let input = (~context=Context.current(), v: string) => {
           let canCloseBefore = () =>
             AutoClosingPairs.canCloseBefore(
               line,
-              location.column,
+              position.byte,
               autoClosingPairs,
             );
 
           if (v == "<BS>"
               && AutoClosingPairs.isBetweenDeletionPairs(
                    line,
-                   location.column,
+                   position.byte,
                    autoClosingPairs,
                  )) {
-            Native.vimInput("<DEL>");
-            Native.vimInput("<BS>");
+            Native.vimKey("<DEL>");
+            Native.vimKey("<BS>");
           } else if (v == "<CR>" && isBetweenClosingPairs()) {
             let precedingWhitespace =
               Internal.getPrecedingWhitespace(
-                ~max=location.column |> Index.toOneBased,
+                ~max=position.byte |> ByteIndex.toInt,
                 line,
               );
-            Native.vimInput("<CR>");
-            Native.vimInput("<CR>");
-            Native.vimInput("<UP>");
+            Native.vimKey("<CR>");
+            Native.vimKey("<CR>");
+            Native.vimKey("<UP>");
             if (String.length(precedingWhitespace) > 0) {
               Native.vimInput(precedingWhitespace);
             };
-            Native.vimInput("<TAB>");
+            Native.vimKey("<TAB>");
           } else if (AutoClosingPairs.isPassThrough(
                        v,
                        line,
-                       location.column,
+                       position.byte,
                        autoClosingPairs,
                      )) {
-            Native.vimInput("<RIGHT>");
+            Native.vimKey("<RIGHT>");
           } else if (AutoClosingPairs.isOpeningPair(v, autoClosingPairs)
                      && canCloseBefore()) {
             let pair = AutoClosingPairs.getByOpeningPair(v, autoClosingPairs);
             Native.vimInput(v);
             Native.vimInput(pair.closing);
-            Native.vimInput("<LEFT>");
+            Native.vimKey("<LEFT>");
           } else {
-            Native.vimInput(v);
+            inputFn(v);
           };
         } else {
-          Native.vimInput(v);
+          inputFn(v);
         };
         Cursor.get();
       };
 
-      let mode = Mode.getCurrent();
+      let mode = Mode.current();
       let cursors = Internal.getDefaultCursors(cursors);
-      if (mode == Types.Insert) {
+      if (mode == Mode.Insert) {
         // Run first command, verify we don't go back to normal mode
         switch (cursors) {
         | [hd, ...tail] =>
           let newHead = runCursor(hd);
 
-          let newMode = Mode.getCurrent();
+          let newMode = Mode.current();
           // If we're still in insert mode, run the command for all the rest of the characters too
           let remainingCursors =
             switch (newMode) {
-            | Types.Insert => List.map(runCursor, tail)
+            | Mode.Insert => List.map(runCursor, tail)
             | _ => tail
             };
 
@@ -557,11 +562,18 @@ let input = (~context=Context.current(), v: string) => {
         | [hd, ..._] => Cursor.set(hd)
         | _ => ()
         };
-        Native.vimInput(v);
+        inputFn(v);
         Internal.getDefaultCursors([]);
       };
     },
   );
+};
+
+let input = inputCommon(~inputFn=Native.vimInput);
+let key = inputCommon(~inputFn=Native.vimKey);
+
+module Registers = {
+  let get = (~register) => Native.vimRegisterGet(int_of_char(register));
 };
 
 let command = v => {
@@ -573,6 +585,28 @@ let command = v => {
     },
   );
 };
+
+let eval = v =>
+  // Error messages come through the message handler,
+  // so we'll temporarily override it during the course of the eval
+  if (v == "") {
+    Ok("");
+  } else {
+    let lastMessage = ref(None);
+
+    GlobalState.overriddenMessageHandler :=
+      Some((_priority, _title, msg) => {lastMessage := Some(msg)});
+
+    let maybeEval = Native.vimEval(v);
+
+    GlobalState.overriddenMessageHandler := None;
+
+    switch (maybeEval, lastMessage^) {
+    | (Some(eval), _) => Ok(eval)
+    | (None, Some(msg)) => Error(msg)
+    | (None, None) => Error("Unknown error evaluating " ++ v)
+    };
+  };
 
 let onDirectoryChanged = f => {
   Event.add(f, Listeners.directoryChanged);

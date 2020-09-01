@@ -36,6 +36,7 @@ let make =
             style=highlightStyle
             ?fontFamily
             ?fontSize
+            fontWeight=Revery.Font.Weight.Bold
             text={String.sub(text, low, high + 1 - low)}
           />,
           ...highlighter(high + 1, rest),

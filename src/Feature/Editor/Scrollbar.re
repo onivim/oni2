@@ -179,7 +179,11 @@ module Vertical = {
        })
     |> List.map(line => {
          let diagTop =
-           Editor.projectLine(~line, ~pixelHeight=totalHeight, editor)
+           Editor.projectLine(
+             ~line=EditorCoreTypes.LineNumber.ofZeroBased(line),
+             ~pixelHeight=totalHeight,
+             editor,
+           )
            |> int_of_float;
 
          let diagnosticStyle =
@@ -221,12 +225,14 @@ module Vertical = {
 
     matchingPair
     |> Option.map(mp => {
-         open Location;
-         let (startPos, endPos) = mp;
+         let (
+           startPos: EditorCoreTypes.CharacterPosition.t,
+           endPos: EditorCoreTypes.CharacterPosition.t,
+         ) = mp;
 
          let topLine =
            Editor.projectLine(
-             ~line=Index.toZeroBased(startPos.line),
+             ~line=startPos.line,
              ~pixelHeight=totalHeight,
              editor,
            )
@@ -234,7 +240,7 @@ module Vertical = {
 
          let botLine =
            Editor.projectLine(
-             ~line=Index.toZeroBased(endPos.line),
+             ~line=endPos.line,
              ~pixelHeight=totalHeight,
              editor,
            )
@@ -261,7 +267,6 @@ module Vertical = {
       ];
 
     let searchHighlightToElement = line => {
-      let line = Index.toZeroBased(line);
       let position =
         Editor.projectLine(~line, ~pixelHeight=totalHeight, editor)
         |> int_of_float;
@@ -273,6 +278,34 @@ module Vertical = {
       bufferHighlights,
     )
     |> List.map(searchHighlightToElement)
+    |> React.listToElement;
+  };
+
+  let documentHighlightMarkers =
+      (~languageSupport, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
+    let searchMatches = t =>
+      Style.[
+        position(`Absolute),
+        top(t - 3),
+        left(4),
+        right(4),
+        height(8),
+        backgroundColor(colors.findMatchBackground),
+      ];
+
+    let documentHighlightToElement = lineIdx => {
+      let line = EditorCoreTypes.LineNumber.ofZeroBased(lineIdx);
+      let position =
+        Editor.projectLine(~line, ~pixelHeight=totalHeight, editor)
+        |> int_of_float;
+      <View style={searchMatches(position)} />;
+    };
+
+    Feature_LanguageSupport.DocumentHighlights.getLinesWithHighlight(
+      ~bufferId=Editor.getBufferId(editor),
+      languageSupport,
+    )
+    |> List.map(documentHighlightToElement)
     |> React.listToElement;
   };
 
@@ -289,20 +322,20 @@ module Vertical = {
         ),
       ];
     };
-    let getSelectionElements = (selection: VisualRange.t) => {
-      switch (selection.mode) {
-      | Vim.Types.None => []
-      | _ =>
+    let getSelectionElements = (selection: option(VisualRange.t)) => {
+      switch (selection) {
+      | None => []
+      | Some(selection) =>
         let topLine =
           Editor.projectLine(
-            ~line=Index.toZeroBased(selection.range.start.line),
+            ~line=selection.range.start.line,
             ~pixelHeight=totalHeight,
             editor,
           )
           |> int_of_float;
         let botLine =
           Editor.projectLine(
-            ~line=Index.toZeroBased(selection.range.stop.line) + 1,
+            ~line=EditorCoreTypes.LineNumber.(selection.range.stop.line + 1),
             ~pixelHeight=totalHeight,
             editor,
           )
@@ -318,13 +351,14 @@ module Vertical = {
       (
         ~dispatch: Msg.t => unit,
         ~editor: Editor.t,
-        ~matchingPair: option((Location.t, Location.t)),
-        ~cursorPosition: Location.t,
+        ~matchingPair: option((CharacterPosition.t, CharacterPosition.t)),
+        ~cursorPosition: CharacterPosition.t,
         ~height as totalHeight,
         ~width as totalWidth,
         ~diagnostics: IntMap.t(list(Diagnostic.t)),
         ~colors: Colors.t,
         ~bufferHighlights,
+        ~languageSupport,
         (),
       ) => {
     let scrollMetrics =
@@ -332,7 +366,7 @@ module Vertical = {
 
     let cursorLine =
       Editor.projectLine(
-        ~line=Index.toZeroBased(Location.(cursorPosition.line)),
+        ~line=cursorPosition.line,
         ~pixelHeight=totalHeight,
         editor,
       )
@@ -413,6 +447,12 @@ module Vertical = {
               colors
             />
             <searchMarkers bufferHighlights editor totalHeight colors />
+            <documentHighlightMarkers
+              languageSupport
+              editor
+              totalHeight
+              colors
+            />
           </View>
         </View>
       }}

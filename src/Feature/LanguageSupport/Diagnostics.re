@@ -53,7 +53,7 @@ let _updateDiagnosticsMap =
 let _explodeDiagnostics = (buffer, diagnostics) => {
   let f = (prev, curr: Diagnostic.t) => {
     IntMap.update(
-      Index.toZeroBased(curr.range.start.line),
+      EditorCoreTypes.LineNumber.toZeroBased(curr.range.start.line),
       existing =>
         switch (existing) {
         | None => Some([curr])
@@ -153,7 +153,9 @@ let getAllDiagnostics = (diagnostics: t) => {
 
 let getDiagnosticsAtPosition = (instance, buffer, position) => {
   getDiagnostics(instance, buffer)
-  |> List.filter((Diagnostic.{range, _}) => Range.contains(position, range));
+  |> List.filter((Diagnostic.{range, _}) =>
+       CharacterRange.contains(position, range)
+     );
 };
 
 let getDiagnosticsMap = (instance, buffer) => {

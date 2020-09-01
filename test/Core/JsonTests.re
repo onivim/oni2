@@ -19,14 +19,14 @@ Expected ',' or '}' but found something else
 
         let maybeError = Json.Error.ofString(validError);
         let range =
-          Range.{
+          CharacterRange.{
             start: {
-              line: Index.(zero + 5),
-              column: Index.(zero + 2),
+              line: LineNumber.(zero + 5),
+              character: CharacterIndex.(zero + 2),
             },
             stop: {
-              line: Index.(zero + 5),
-              column: Index.(zero + 35),
+              line: LineNumber.(zero + 5),
+              character: CharacterIndex.(zero + 35),
             },
           };
         let message = "Expected ',' or '}' but found something else";

@@ -16,7 +16,7 @@ runTest(
   ~name="EditorFontFromPath",
   (_, wait, _) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
-      Feature_Vim.mode(state.vim) == Vim.Types.Normal
+      Feature_Vim.mode(state.vim) == Vim.Mode.Normal
     );
 
     print_endline("Using font: " ++ font);
@@ -25,9 +25,15 @@ runTest(
       ~name="The new font should be set",
       ~timeout=10.,
       (state: State.t) => {
-        print_endline("Current font is: " ++ state.editorFont.fontFile);
-        print_endline("Expected font is: " ++ font);
-        String.equal(state.editorFont.fontFile, font);
+        let currentFontName =
+          state.editorFont.fontFamily
+          |> Revery_Font.Family.toSkia(Revery_Font.Weight.Normal)
+          |> Option.map(tf => Skia.Typeface.getFamilyName(tf))
+          |> Option.value(~default="");
+        let expectedFontName = "Inconsolata";
+        print_endline("Current font is: " ++ currentFontName);
+        print_endline("Expected font is: " ++ expectedFontName);
+        String.equal(currentFontName, expectedFontName);
       },
     );
   },

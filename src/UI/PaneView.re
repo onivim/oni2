@@ -82,7 +82,7 @@ let content = (~selected, ~theme, ~uiFont, ~editorFont, ~state: State.t, ()) =>
   };
 
 let closeButton = (~theme, ()) =>
-  <Sneakable onClick=closePane style=Styles.closeButton>
+  <Sneakable sneakId="close" onClick=closePane style=Styles.closeButton>
     <FontIcon
       icon=FontAwesome.times
       color={Colors.Tab.activeForeground.from(theme)}

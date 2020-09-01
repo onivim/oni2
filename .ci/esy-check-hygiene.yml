@@ -40,9 +40,17 @@ steps:
     displayName: esy format
   - script: git diff --exit-code
     displayName: 'check that formatting is correct. If this fails, run `esy format` and re-submit PR.'
+  - script: esy lint
+    displayName: esy lint
   - script: yarn audit
     workingDirectory: node
     displayName: 'yarn audit: node'
   - script: yarn audit
     workingDirectory: extensions
     displayName: 'yarn audit: extensions'
+  - script: npm install
+    workingDirectory: docs/website
+    displayName: 'install website dependencies'
+  - script: npm run build
+    workingDirectory: docs/website
+    displayName: 'build website'

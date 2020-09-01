@@ -46,6 +46,20 @@ Feature_LanguageSupport_Test.TestFramework.run(
   ),
 );
 
+EditorCoreTypes_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
+
+EditorInput_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
+
 Exthost_Transport_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
     [Default, JUnit("./junit.xml")],
@@ -88,7 +102,21 @@ Service_Net_Test.TestFramework.run(
     Rely.RunConfig.initialize(),
   ),
 );
+
+Service_OS_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
 Textmate_Test.TestFramework.run(
+  Rely.RunConfig.withReporters(
+    [Default, JUnit("./junit.xml")],
+    Rely.RunConfig.initialize(),
+  ),
+);
+
+TreeSitter_Test.TestFramework.run(
   Rely.RunConfig.withReporters(
     [Default, JUnit("./junit.xml")],
     Rely.RunConfig.initialize(),

@@ -23,9 +23,9 @@ module AutoClosingPairs: {
     ) =>
     t;
 
-  let isBetweenClosingPairs: (string, Index.t, t) => bool;
+  let isBetweenClosingPairs: (string, ByteIndex.t, t) => bool;
 
-  let isBetweenDeletionPairs: (string, Index.t, t) => bool;
+  let isBetweenDeletionPairs: (string, ByteIndex.t, t) => bool;
 };
 
 module AutoIndent: {
@@ -35,6 +35,13 @@ module AutoIndent: {
     | DecreaseIndent;
 };
 
+module ColorScheme: {
+  module Provider: {
+    type t = string => array(string);
+    let default: t;
+  };
+};
+
 module Context: {
   type t = {
     autoClosingPairs: AutoClosingPairs.t,
@@ -42,11 +49,12 @@ module Context: {
       (~previousLine: string, ~beforePreviousLine: option(string)) =>
       AutoIndent.action,
     bufferId: int,
+    colorSchemeProvider: ColorScheme.Provider.t,
     width: int,
     height: int,
     leftColumn: int,
     topLine: int,
-    cursors: list(Cursor.t),
+    cursors: list(BytePosition.t),
     lineComment: option(string),
     tabSize: int,
     insertSpaces: bool,
@@ -55,16 +63,63 @@ module Context: {
   let current: unit => t;
 };
 
+module Registers: {let get: (~register: char) => option(array(string));};
+
+module Operator: {
+  type operation =
+    | NoPending
+    | Delete
+    | Yank
+    | Change
+    | LeftShift
+    | RightShift
+    | Filter
+    | SwitchCase
+    | Indent
+    | Format
+    | Colon
+    | MakeUpperCase
+    | MakeLowerCase
+    | Join
+    | JoinNS
+    | Rot13
+    | Replace
+    | Insert
+    | Append
+    | Fold
+    | FoldOpen
+    | FoldOpenRecursive
+    | FoldClose
+    | FoldCloseRecursive
+    | FoldDelete
+    | FoldDeleteRecursive
+    | Format2
+    | Function
+    | NumberAdd
+    | NumberSubtract
+    | Comment;
+
+  type pending = {
+    operation,
+    register: int,
+    count: int,
+  };
+
+  let get: unit => option(pending);
+
+  let toString: pending => string;
+};
+
 module Edit: {
   [@deriving show]
   type t = {
-    range: Range.t,
+    range: CharacterRange.t,
     text: array(string),
   };
 
   type editResult = {
-    oldStartLine: Index.t,
-    oldEndLine: Index.t,
+    oldStartLine: EditorCoreTypes.LineNumber.t,
+    oldEndLine: EditorCoreTypes.LineNumber.t,
     newLines: array(string),
   };
 
@@ -118,7 +173,7 @@ module Buffer: {
   /**
   [getline(buffer, line)] returns the text content at the one-based line number [line] for buffer [buffer].
   */
-  let getLine: (t, Index.t) => string;
+  let getLine: (t, LineNumber.t) => string;
 
   /**
   [getId(buffer)] returns the id of buffer [buffer];
@@ -156,7 +211,13 @@ module Buffer: {
   - If neither [start] or [stop] are specified, the lines in the buffer will be replaced with [lines]
   */
   let setLines:
-    (~start: Index.t=?, ~stop: Index.t=?, ~lines: array(string), t) => unit;
+    (
+      ~start: LineNumber.t=?,
+      ~stop: LineNumber.t=?,
+      ~lines: array(string),
+      t
+    ) =>
+    unit;
 
   let applyEdits: (~edits: list(Edit.t), t) => result(unit, string);
 
@@ -248,17 +309,55 @@ module Format: {
     | Range({
         formatType,
         bufferId: int,
-        startLine: Index.t,
-        endLine: Index.t,
+        startLine: LineNumber.t,
+        endLine: LineNumber.t,
         adjustCursor: bool,
       });
+};
+
+module Mode: {
+  type t =
+    | Normal
+    | Insert
+    | CommandLine
+    | Replace
+    | Visual({range: VisualRange.t})
+    | Operator({pending: Operator.pending})
+    | Select({range: VisualRange.t});
+
+  let current: unit => t;
+
+  let isVisual: t => bool;
+  let isSelect: t => bool;
+};
+
+module Setting: {
+  [@deriving show]
+  type value =
+    | String(string)
+    | Int(int);
+
+  [@deriving show]
+  type t = {
+    fullName: string,
+    shortName: option(string),
+    value,
+  };
 };
 
 module Effect: {
   type t =
     | Goto(Goto.effect)
     | TabPage(TabPage.effect)
-    | Format(Format.effect);
+    | Format(Format.effect)
+    | ModeChanged(Mode.t)
+    | SettingChanged(Setting.t)
+    | ColorSchemeChanged(option(string))
+    | MacroRecordingStarted({register: char})
+    | MacroRecordingStopped({
+        register: char,
+        value: option(string),
+      });
 };
 
 /**
@@ -269,16 +368,29 @@ module Effect: {
 let init: unit => unit;
 
 /**
-[input(s)] sends a single keystroke to Vim.
+[input(s)] sends a string of text to Vim
 
-The value [s] may be of the following form:
-- A single ASCII character, ie ["a"] or [":"]
+The value [s] must be a string of UTF-8 characters.
+- A string of
 - A Vim key, ie ["<cr>"] or ["<bs>"]
 - A Vim key with modifiers, ie ["<C-a>"]
 
 The keystroke is processed synchronously.
 */
 let input: (~context: Context.t=?, string) => Context.t;
+
+/**
+[key(s)] sends a single keystroke.
+
+The value [s] must be a valid Vim key, such as:
+- A Vim key, ie ["<cr>"] or ["<bs>"]
+- A Vim key with modifiers, ie ["<C-a>"]
+*/
+
+// TODO: Strongly type these keys...
+let key: (~context: Context.t=?, string) => Context.t;
+
+let eval: string => result(string, string);
 
 /**
 [command(cmd)] executes [cmd] as an Ex command.
@@ -363,7 +475,6 @@ module Clipboard = Clipboard;
 module CommandLine = CommandLine;
 module Cursor = Cursor;
 module Event = Event;
-module Mode = Mode;
 module Options = Options;
 module Search = Search;
 module Types = Types;

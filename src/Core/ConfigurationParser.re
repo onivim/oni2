@@ -5,7 +5,6 @@
  */
 open Kernel;
 open ConfigurationValues;
-open LineNumber;
 open Utility;
 
 let parseBool = json =>
@@ -69,18 +68,6 @@ let parseIntList = json => {
   };
 };
 
-let parseLineNumberSetting = json =>
-  switch (json) {
-  | `String(v) =>
-    switch (v) {
-    | "on" => On
-    | "off" => Off
-    | "relative" => Relative
-    | _ => On
-    }
-  | _ => On
-  };
-
 let parseVimUseSystemClipboardSetting = json => {
   let parseItems = items =>
     List.fold_left(
@@ -106,18 +93,6 @@ let parseVimUseSystemClipboardSetting = json => {
   | _ => {yank: true, delete: false, paste: false}
   };
 };
-
-let parseRenderWhitespace = json =>
-  switch (json) {
-  | `String(v) =>
-    switch (v) {
-    | "all" => All
-    | "boundary" => Boundary
-    | "none" => None
-    | _ => All
-    }
-  | _ => All
-  };
 
 let parseEditorFontSize = (~default=Constants.defaultFontSize, json) =>
   json
@@ -157,39 +132,40 @@ let parseAutoClosingBrackets:
     | _ => Never
     };
 
-let parseQuickSuggestions: Yojson.Safe.t => quickSuggestionsEnabled = {
-  let decode =
-    Json.Decode.(
-      field("other", bool)
-      >>= (
-        other =>
-          field("comments", bool)
-          >>= (
-            comments =>
-              field("strings", bool)
-              >>= (strings => succeed({other, comments, strings}))
-          )
-      )
-    )
-    |> Json.Decode.decode_value;
-  json =>
-    switch (json) {
-    | `Bool(enabled) => {other: enabled, comments: enabled, strings: enabled}
-    // TODO: Parse JS objects of the form:
-    // { "other": bool, "comments": bool, "strings": bool }
-    | _ =>
-      json
-      |> decode
-      |> Result.value(
-           ~default={other: false, comments: false, strings: false},
-         )
-    };
-};
-
 let parseString = (~default="", json) =>
   switch (json) {
   | `String(v) => v
   | _ => default
+  };
+
+let parseFontLigatures = json =>
+  switch (json) {
+  | `Bool(_) as bool => bool
+  | `String(str) =>
+    open Angstrom;
+
+    let quoted = p => char('\'') *> p <* char('\'');
+
+    let isAlphaNumeric = (
+      fun
+      | 'a'..'z'
+      | 'A'..'Z'
+      | '0'..'9' => true
+      | _ => false
+    );
+
+    let alphaString = take_while1(isAlphaNumeric);
+
+    let feature = quoted(alphaString);
+    let spaces = many(char(' '));
+
+    let parse = sep_by(char(',') <* spaces, feature);
+
+    switch (Angstrom.parse_string(~consume=All, parse, str)) {
+    | Ok(list) => `List(list)
+    | Error(_) => `Bool(true)
+    };
+  | _ => `Bool(true)
   };
 
 type parseFunction =
@@ -203,20 +179,6 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {
       ...config,
       editorAutoClosingBrackets: parseAutoClosingBrackets(json),
-    },
-  ),
-  (
-    "editor.fontFamily",
-    (config, json) => {
-      ...config,
-      editorFontFile: parseString(~default=Constants.defaultFontFile, json),
-    },
-  ),
-  (
-    "editor.fontSize",
-    (config, json) => {
-      ...config,
-      editorFontSize: parseEditorFontSize(json),
     },
   ),
   (
@@ -235,48 +197,15 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, editorHoverEnabled: parseBool(json)},
   ),
   (
-    "editor.lineNumbers",
-    (config, json) => {
-      ...config,
-      editorLineNumbers: parseLineNumberSetting(json),
-    },
-  ),
-  (
-    "editor.matchBrackets",
-    (config, json) => {...config, editorMatchBrackets: parseBool(json)},
-  ),
-  (
-    "editor.acceptSuggestionOnEnter",
-    (config, json) => {
-      ...config,
-      editorAcceptSuggestionOnEnter:
-        switch (json) {
-        | `String("on") => `on
-        | `String("off") => `off
-        | `String("smart") => `smart
-        | _ => `on
-        },
-    },
-  ),
-  (
-    "editor.minimap.enabled",
-    (config, json) => {...config, editorMinimapEnabled: parseBool(json)},
-  ),
-  (
-    "editor.minimap.showSlider",
-    (config, json) => {...config, editorMinimapShowSlider: parseBool(json)},
-  ),
-  (
-    "editor.minimap.maxColumn",
-    (config, json) => {...config, editorMinimapMaxColumn: parseInt(json)},
-  ),
-  (
-    "editor.minimap.showSlider",
-    (config, json) => {...config, editorMinimapShowSlider: parseBool(json)},
-  ),
-  (
     "editor.detectIndentation",
     (config, json) => {...config, editorDetectIndentation: parseBool(json)},
+  ),
+  (
+    "editor.fontLigatures",
+    (config, json) => {
+      ...config,
+      editorFontLigatures: parseFontLigatures(json),
+    },
   ),
   (
     "editor.insertSpaces",
@@ -305,24 +234,10 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.quickSuggestions",
-    (config, json) => {
-      ...config,
-      editorQuickSuggestions: parseQuickSuggestions(json),
-    },
-  ),
-  (
     "editor.renderIndentGuides",
     (config, json) => {
       ...config,
       editorRenderIndentGuides: parseBool(json),
-    },
-  ),
-  (
-    "editor.renderWhitespace",
-    (config, json) => {
-      ...config,
-      editorRenderWhitespace: parseRenderWhitespace(json),
     },
   ),
   (
@@ -378,6 +293,13 @@ let configurationParsers: list(configurationTuple) = [
   (
     "workbench.editor.showTabs",
     (config, json) => {...config, workbenchEditorShowTabs: parseBool(json)},
+  ),
+  (
+    "workbench.sideBar.location",
+    (config, json) => {
+      ...config,
+      workbenchSideBarLocation: parseString(json),
+    },
   ),
   (
     "workbench.sideBar.visible",

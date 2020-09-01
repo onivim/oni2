@@ -1,126 +1,11 @@
-open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-
-module ExtensionCompletionProvider = {
-  let suggestionItemToCompletionItem: Exthost.SuggestItem.t => CompletionItem.t =
-    suggestion => {
-      {
-        label: suggestion.label,
-        kind: suggestion.kind,
-        detail: suggestion.detail,
-      };
-    };
-
-  let suggestionsToCompletionItems:
-    Exthost.SuggestResult.t => list(CompletionItem.t) =
-    ({completions, _}) => {
-      completions |> List.map(suggestionItemToCompletionItem);
-    };
-
-  let create =
-      (
-        id: int,
-        selector: Exthost.DocumentSelector.t,
-        client: Exthost.Client.t,
-        (buffer, _completionMeet, location),
-      ) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideCompletionItems(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        ~context=
-          Exthost.CompletionContext.{
-            triggerKind: Invoke,
-            triggerCharacter: None,
-          },
-        client,
-      )
-      |> Lwt.map(items => {suggestionsToCompletionItems(items)})
-    });
-  };
-};
-
-module ExtensionDefinitionProvider = {
-  let definitionToModel = defs => {
-    let def = List.hd(defs);
-    let Exthost.DefinitionLink.{uri, range, originSelectionRange, _} = def;
-    let Range.{start, _}: EditorCoreTypes.Range.t =
-      Exthost.OneBasedRange.toRange(range);
-
-    let originRange: option(EditorCoreTypes.Range.t) =
-      originSelectionRange |> Option.map(Exthost.OneBasedRange.toRange);
-
-    LanguageFeatures.DefinitionResult.create(
-      ~originRange,
-      ~uri,
-      ~location=start,
-    );
-  };
-
-  let create = (id, selector, client, (buffer, location)) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideDefinition(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        client,
-      )
-      |> Lwt.map(definitionToModel)
-    });
-  };
-};
-
-module ExtensionDocumentHighlightProvider = {
-  let definitionToModel = (highlights: list(Exthost.DocumentHighlight.t)) => {
-    highlights
-    |> List.map(highlight => {
-         Exthost.OneBasedRange.toRange(
-           Exthost.DocumentHighlight.(highlight.range),
-         )
-       });
-  };
-
-  let create =
-      (
-        id: int,
-        selector: Exthost.DocumentSelector.t,
-        client,
-        (buffer, location),
-      ) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideDocumentHighlights(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        client,
-      )
-      |> Lwt.map(definitionToModel)
-    });
-  };
-};
-
-module ExtensionFindAllReferencesProvider = {
-  let create = (id, selector, client, (buffer, location)) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideReferences(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        ~position=Exthost.OneBasedPosition.ofPosition(location),
-        ~context=Exthost.ReferenceContext.{includeDeclaration: true},
-        client,
-      )
-    });
-  };
-};
 
 module ExtensionDocumentSymbolProvider = {
   let create =
@@ -145,26 +30,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let extensionInfo =
-    extensions
-    |> List.map(
-         ({manifest, path, _}: Exthost.Extension.Scanner.ScanResult.t) =>
-         Exthost.Extension.InitData.Extension.ofManifestAndPath(
-           manifest,
-           path,
-         )
-       );
-
-  let onRegisterDefinitionProvider = (handle, selector, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let definitionProvider =
-      ExtensionDefinitionProvider.create(handle, selector, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.DefinitionProviderAvailable(id, definitionProvider),
-      ),
-    );
-  };
+    extensions |> List.map(Exthost.Extension.InitData.Extension.ofScanResult);
 
   let onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
     let id = "exthost." ++ string_of_int(handle);
@@ -177,48 +43,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           id,
           documentSymbolProvider,
         ),
-      ),
-    );
-  };
-
-  let onRegisterReferencesProvider = (handle, selector, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let findAllReferencesProvider =
-      ExtensionFindAllReferencesProvider.create(handle, selector, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.FindAllReferencesProviderAvailable(
-          id,
-          findAllReferencesProvider,
-        ),
-      ),
-    );
-  };
-
-  let onRegisterDocumentHighlightProvider = (handle, selector, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let documentHighlightProvider =
-      ExtensionDocumentHighlightProvider.create(handle, selector, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.DocumentHighlightProviderAvailable(
-          id,
-          documentHighlightProvider,
-        ),
-      ),
-    );
-  };
-
-  let onRegisterSuggestProvider = (handle, selector, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let completionProvider =
-      ExtensionCompletionProvider.create(handle, selector, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.CompletionProviderAvailable(id, completionProvider),
       ),
     );
   };
@@ -252,154 +76,222 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     | Some(client) => f(client)
     };
 
-  let handler = msg => {
-    switch (msg) {
-    | SCM(msg) =>
-      Feature_SCM.handleExtensionMessage(
-        ~dispatch=msg => dispatch(Actions.SCM(msg)),
-        msg,
-      );
-      Lwt.return(Reply.okEmpty);
+  let handler: Msg.t => Lwt.t(Reply.t) =
+    msg => {
+      switch (msg) {
+      | DownloadService(msg) => Middleware.download(msg)
+      | FileSystem(msg) => Middleware.filesystem(msg)
+      | SCM(msg) =>
+        Feature_SCM.handleExtensionMessage(
+          ~dispatch=msg => dispatch(Actions.SCM(msg)),
+          msg,
+        );
+        Lwt.return(Reply.okEmpty);
 
-    | LanguageFeatures(
-        RegisterDocumentSymbolProvider({handle, selector, label}),
-      ) =>
-      withClient(onRegisterDocumentSymbolProvider(handle, selector, label));
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(RegisterDefinitionSupport({handle, selector})) =>
-      withClient(onRegisterDefinitionProvider(handle, selector));
-      Lwt.return(Reply.okEmpty);
+      | Storage(msg) =>
+        let (promise, resolver) = Lwt.task();
 
-    | LanguageFeatures(RegisterDocumentHighlightProvider({handle, selector})) =>
-      withClient(onRegisterDocumentHighlightProvider(handle, selector));
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(RegisterReferenceSupport({handle, selector})) =>
-      withClient(onRegisterReferencesProvider(handle, selector));
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(
-        RegisterRangeFormattingSupport({handle, selector, displayName, _}),
-      ) =>
-      dispatch(
-        Formatting(
-          Feature_Formatting.RangeFormatterAvailable({
-            handle,
-            selector,
-            displayName,
-          }),
-        ),
-      );
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(
-        RegisterDocumentFormattingSupport({handle, selector, displayName, _}),
-      ) =>
-      dispatch(
-        Formatting(
-          Feature_Formatting.DocumentFormatterAvailable({
-            handle,
-            selector,
-            displayName,
-          }),
-        ),
-      );
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(
-        RegisterSuggestSupport({
-          handle,
-          selector,
-          _,
-          // TODO: Handle additional configuration from suggest registration!
-        }),
-      ) =>
-      withClient(onRegisterSuggestProvider(handle, selector));
-      Lwt.return(Reply.okEmpty);
-    | LanguageFeatures(RegisterHoverProvider({handle, selector})) =>
-      dispatch(
-        Actions.Hover(Feature_Hover.ProviderRegistered({handle, selector})),
-      );
-      Lwt.return(Reply.okEmpty);
+        let storageMsg = Feature_Extensions.Msg.storage(~resolver, msg);
+        dispatch(Extensions(storageMsg));
 
-    | LanguageFeatures(
-        RegisterSignatureHelpProvider({handle, selector, metadata}),
-      ) =>
-      dispatch(
-        Actions.SignatureHelp(
-          Feature_SignatureHelp.ProviderRegistered({
-            handle,
-            selector,
-            metadata,
-          }),
-        ),
-      );
-      Lwt.return(Reply.okEmpty);
+        promise;
 
-    | Diagnostics(Clear({owner})) =>
-      dispatch(Actions.DiagnosticsClear(owner));
-      Lwt.return(Reply.okEmpty);
-    | Diagnostics(ChangeMany({owner, entries})) =>
-      onDiagnosticsChangeMany(owner, entries);
-      Lwt.return(Reply.okEmpty);
+      | Configuration(RemoveConfigurationOption({key, _})) =>
+        dispatch(
+          Actions.ConfigurationTransform(
+            "configuration.json",
+            ConfigurationTransformer.removeField(key),
+          ),
+        );
+        Lwt.return(Reply.okEmpty);
 
-    | DocumentContentProvider(RegisterTextContentProvider({handle, scheme})) =>
-      dispatch(NewTextContentProvider({handle, scheme}));
-      Lwt.return(Reply.okEmpty);
+      | Configuration(UpdateConfigurationOption({key, value, _})) =>
+        dispatch(
+          Actions.ConfigurationTransform(
+            "configuration.json",
+            ConfigurationTransformer.setField(key, value),
+          ),
+        );
+        Lwt.return(Reply.okEmpty);
 
-    | DocumentContentProvider(UnregisterTextContentProvider({handle})) =>
-      dispatch(LostTextContentProvider({handle: handle}));
-      Lwt.return(Reply.okEmpty);
+      | LanguageFeatures(
+          RegisterDocumentSymbolProvider({handle, selector, label}),
+        ) =>
+        withClient(
+          onRegisterDocumentSymbolProvider(handle, selector, label),
+        );
+        Lwt.return(Reply.okEmpty);
 
-    | Decorations(RegisterDecorationProvider({handle, label})) =>
-      dispatch(NewDecorationProvider({handle, label}));
-      Lwt.return(Reply.okEmpty);
-    | Decorations(UnregisterDecorationProvider({handle})) =>
-      dispatch(LostDecorationProvider({handle: handle}));
-      Lwt.return(Reply.okEmpty);
-    | Decorations(DecorationsDidChange({handle, uris})) =>
-      dispatch(DecorationsChanged({handle, uris}));
-      Lwt.return(Reply.okEmpty);
+      | Diagnostics(Clear({owner})) =>
+        dispatch(Actions.DiagnosticsClear(owner));
+        Lwt.return(Reply.okEmpty);
+      | Diagnostics(ChangeMany({owner, entries})) =>
+        onDiagnosticsChangeMany(owner, entries);
+        Lwt.return(Reply.okEmpty);
 
-    | ExtensionService(ExtensionActivationError({extensionId, errorMessage})) =>
-      Log.errorf(m =>
-        m("Extension '%s' failed to activate: %s", extensionId, errorMessage)
-      );
-      Lwt.return(Reply.okEmpty);
-    | ExtensionService(DidActivateExtension({extensionId, _})) =>
-      dispatch(
-        Actions.Extensions(Feature_Extensions.Activated(extensionId)),
-      );
-      Lwt.return(Reply.okEmpty);
-
-    | MessageService(ShowMessage({severity, message, extensionId})) =>
-      dispatch(ExtMessageReceived({severity, message, extensionId}));
-      Lwt.return(Reply.okEmpty);
-
-    | StatusBar(
-        SetEntry({id, label, alignment, priority, color, command, _}),
-      ) =>
-      let command =
-        command |> Option.map(({id, _}: Exthost.Command.t) => id);
-      dispatch(
-        Actions.StatusBar(
-          Feature_StatusBar.ItemAdded(
-            Feature_StatusBar.Item.create(
-              ~command?,
-              ~color?,
-              ~id,
-              ~label,
-              ~alignment,
-              ~priority,
-              (),
+      | DocumentContentProvider(documentContentProviderMsg) =>
+        dispatch(
+          Actions.SCM(
+            Feature_SCM.Msg.documentContentProvider(
+              documentContentProviderMsg,
             ),
           ),
-        ),
-      );
-      Lwt.return(Reply.okEmpty);
+        );
 
-    | TerminalService(msg) =>
-      Service_Terminal.handleExtensionMessage(msg);
-      Lwt.return(Reply.okEmpty);
-    | _ => Lwt.return(Reply.okEmpty)
+        Lwt.return(Reply.okEmpty);
+
+      | Decorations(RegisterDecorationProvider({handle, label})) =>
+        dispatch(NewDecorationProvider({handle, label}));
+        Lwt.return(Reply.okEmpty);
+      | Decorations(UnregisterDecorationProvider({handle})) =>
+        dispatch(LostDecorationProvider({handle: handle}));
+        Lwt.return(Reply.okEmpty);
+      | Decorations(DecorationsDidChange({handle, uris})) =>
+        dispatch(DecorationsChanged({handle, uris}));
+        Lwt.return(Reply.okEmpty);
+
+      | Documents(documentsMsg) =>
+        let (promise, resolver) = Lwt.task();
+        dispatch(
+          Actions.Exthost(
+            Feature_Exthost.Msg.document(documentsMsg, resolver),
+          ),
+        );
+        promise;
+
+      | ExtensionService(extMsg) =>
+        Log.infof(m => m("ExtensionService: %s", Exthost.Msg.show(msg)));
+        dispatch(
+          Actions.Extensions(Feature_Extensions.Msg.exthost(extMsg)),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | LanguageFeatures(
+          RegisterSignatureHelpProvider({handle, selector, metadata}),
+        ) =>
+        dispatch(
+          Actions.SignatureHelp(
+            Feature_SignatureHelp.ProviderRegistered({
+              handle,
+              selector,
+              metadata,
+            }),
+          ),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | LanguageFeatures(msg) =>
+        dispatch(
+          Actions.LanguageSupport(Feature_LanguageSupport.Msg.exthost(msg)),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | MessageService(msg) =>
+        Feature_Messages.Msg.exthost(
+          ~dispatch=msg => dispatch(Actions.Messages(msg)),
+          msg,
+        )
+        |> Lwt.map(
+             fun
+             | None => Reply.okEmpty
+             | Some(handle) =>
+               Reply.okJson(Exthost.Message.handleToJson(handle)),
+           )
+
+      | QuickOpen(msg) =>
+        switch (msg) {
+        | QuickOpen.Show({instance, _}) =>
+          let (promise, resolver) = Lwt.task();
+          dispatch(
+            QuickmenuShow(
+              Extension({id: instance, hasItems: false, resolver}),
+            ),
+          );
+
+          promise |> Lwt.map(handle => Reply.okJson(`Int(handle)));
+        | QuickOpen.SetItems({instance, items}) =>
+          dispatch(QuickmenuUpdateExtensionItems({id: instance, items}));
+          Lwt.return(Reply.okEmpty);
+        | msg =>
+          // TODO: Additional quick open messages
+          Log.warnf(m =>
+            m(
+              "Unhandled QuickOpen message: %s",
+              Exthost.Msg.QuickOpen.show_msg(msg),
+            )
+          );
+          Lwt.return(Reply.okEmpty);
+        }
+
+      | StatusBar(
+          SetEntry({
+            id,
+            label,
+            alignment,
+            priority,
+            color,
+            command,
+            tooltip,
+            _,
+          }),
+        ) =>
+        let command =
+          command |> Option.map(({id, _}: Exthost.Command.t) => id);
+        dispatch(
+          Actions.StatusBar(
+            Feature_StatusBar.ItemAdded(
+              Feature_StatusBar.Item.create(
+                ~command?,
+                ~color?,
+                ~tooltip?,
+                ~id,
+                ~label,
+                ~alignment,
+                ~priority,
+                (),
+              ),
+            ),
+          ),
+        );
+        Lwt.return(Reply.okEmpty);
+
+      | StatusBar(Dispose({id})) =>
+        dispatch(Actions.StatusBar(ItemDisposed(id |> string_of_int)));
+        Lwt.return(Reply.okEmpty);
+
+      | TerminalService(msg) =>
+        Service_Terminal.handleExtensionMessage(msg);
+        Lwt.return(Reply.okEmpty);
+      | Window(OpenUri({uri})) =>
+        Service_OS.Api.openURL(uri |> Oni_Core.Uri.toString)
+          ? Lwt.return(Reply.okEmpty)
+          : Lwt.return(Reply.error("Unable to open URI"))
+      | Window(GetWindowVisibility) =>
+        Lwt.return(Reply.okJson(`Bool(true)))
+      | Workspace(StartFileSearch({includePattern, excludePattern, _})) =>
+        Service_OS.Api.glob(
+          ~includeFiles=?includePattern,
+          ~excludeDirectories=?excludePattern,
+          // TODO: Pull from store
+          Sys.getcwd(),
+        )
+        |> Lwt.map(paths =>
+             Reply.okJson(
+               `List(
+                 paths
+                 |> List.map(str =>
+                      Oni_Core.Uri.fromPath(str) |> Oni_Core.Uri.to_yojson
+                    ),
+               ),
+             )
+           )
+      | unhandledMsg =>
+        Log.warnf(m =>
+          m("Unhandled message: %s", Exthost.Msg.show(unhandledMsg))
+        );
+        Lwt.return(Reply.okEmpty);
+      };
     };
-  };
 
   let parentPid = Luv.Pid.getpid();
   let name = Printf.sprintf("exthost-client-%s", parentPid |> string_of_int);

@@ -4,7 +4,7 @@
 open Oni_Core;
 open EditorCoreTypes;
 
-module Log = (val Log.withNamespace("Oni.Feature.SignatureHelp"));
+module Log = (val Log.withNamespace("Oni2.Feature.SignatureHelp"));
 module IDGenerator =
   Utility.IDGenerator.Make({});
 
@@ -24,6 +24,8 @@ type model = {
   activeSignature: option(int),
   activeParameter: option(int),
   editorID: option(int),
+  location: option(CharacterPosition.t),
+  context: option(Exthost.SignatureHelp.RequestContext.t),
 };
 
 let initial = {
@@ -35,6 +37,8 @@ let initial = {
   activeSignature: None,
   activeParameter: None,
   editorID: None,
+  location: None,
+  context: None,
 };
 
 [@deriving show({with_path: false})]
@@ -54,11 +58,14 @@ type msg =
       activeParameter: int,
       requestID: int,
       editorID: int,
+      location: CharacterPosition.t,
+      context: Exthost.SignatureHelp.RequestContext.t,
     })
   | EmptyInfoReceived(int)
   | RequestFailed(string)
   | SignatureIncrementClicked
-  | SignatureDecrementClicked;
+  | SignatureDecrementClicked
+  | CursorMoved(int);
 
 type outmsg =
   | Nothing
@@ -109,8 +116,7 @@ let getEffectsForLocation =
       ~requestID,
       ~editor,
     ) => {
-  let filetype =
-    buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
+  let filetype = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
   let matchingProviders =
     model.providers
@@ -135,6 +141,8 @@ let getEffectsForLocation =
              activeParameter,
              requestID,
              editorID: Feature_Editor.Editor.getId(editor),
+             location,
+             context,
            })
          | Ok(None) => EmptyInfoReceived(requestID)
          | Error(s) => RequestFailed(s)
@@ -189,6 +197,8 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       activeParameter,
       requestID,
       editorID,
+      location,
+      context,
     }) =>
     switch (model.lastRequestID) {
     | Some(reqID) when reqID == requestID => (
@@ -198,6 +208,8 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
           activeSignature: Some(activeSignature),
           activeParameter: Some(activeParameter),
           editorID: Some(editorID),
+          location: Some(location),
+          context: Some(context),
         },
         Nothing,
       )
@@ -225,8 +237,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
   | KeyPressed(maybeKey, before) =>
     switch (maybeBuffer, maybeEditor, maybeKey) {
     | (Some(buffer), Some(editor), Some(key)) =>
-      let filetype =
-        buffer |> Buffer.getFileType |> Option.value(~default="plaintext");
+      let filetype = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
       let matchingProviders =
         model.providers
         |> List.filter(({selector, _}) =>
@@ -244,10 +255,9 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
            );
       let location =
         if (before) {
-          open Index;
-          let Location.{line, column: col} =
+          let CharacterPosition.{line, character: col} =
             Feature_Editor.Editor.getPrimaryCursor(editor);
-          Location.create(~line, ~column=col + 1);
+          CharacterPosition.{line, character: CharacterIndex.(col + 1)};
         } else {
           Feature_Editor.Editor.getPrimaryCursor(editor);
         };
@@ -348,6 +358,40 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       },
       Nothing,
     )
+  | CursorMoved(editorID) =>
+    switch (model.editorID, maybeEditor, maybeBuffer, model.context) {
+    | (Some(editorID'), Some(editor), Some(buffer), Some(context))
+        when
+          editorID == editorID'
+          && editorID == Feature_Editor.Editor.getId(editor) =>
+      let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
+
+      let loc =
+        CharacterPosition.{
+          line: cursorLocation.line,
+          character: CharacterIndex.(cursorLocation.character + 1),
+        };
+      switch (model.location) {
+      | Some(location) when location == loc =>
+        let requestID = IDGenerator.get();
+        let effects =
+          getEffectsForLocation(
+            ~buffer,
+            ~editor,
+            ~location=cursorLocation,
+            ~extHostClient,
+            ~model,
+            ~context,
+            ~requestID,
+          );
+        (
+          {...model, shown: true, lastRequestID: Some(requestID)},
+          Effect(effects),
+        );
+      | _ => (model, Nothing)
+      };
+    | _ => (model, Nothing)
+    }
   };
 
 module View = {
@@ -405,6 +449,7 @@ module View = {
         ~uiFont: UiFont.t,
         ~editorFont: Service_Font.font,
         ~model,
+        ~buffer,
         ~editor,
         ~grammars,
         ~signatureIndex,
@@ -412,11 +457,14 @@ module View = {
         ~dispatch,
         (),
       ) => {
-    let signatureHelpMarkdown = (~markdown) =>
+    let defaultLanguage =
+      Buffer.getFileType(buffer) |> Buffer.FileType.toString;
+    let signatureHelpMarkdown = (~markdown) => {
       Oni_Components.Markdown.make(
         ~colorTheme,
         ~tokenTheme,
         ~languageInfo,
+        ~defaultLanguage,
         ~fontFamily=uiFont.family,
         ~codeFontFamily=editorFont.fontFamily,
         ~grammars,
@@ -424,11 +472,12 @@ module View = {
         ~baseFontSize=uiFont.size,
         ~codeBlockFontSize=editorFont.fontSize,
       );
+    };
     let maybeSignature: option(Signature.t) =
-      List.nth_opt(model.signatures, signatureIndex);
+      Base.List.nth(model.signatures, signatureIndex);
     let maybeParameter: option(ParameterInformation.t) =
       Option.bind(maybeSignature, signature =>
-        List.nth_opt(signature.parameters, parameterIndex)
+        Base.List.nth(signature.parameters, parameterIndex)
       );
     let renderLabel = () =>
       switch (maybeSignature, maybeParameter) {
@@ -562,6 +611,7 @@ module View = {
         ~uiFont: UiFont.t,
         ~editorFont: Service_Font.font,
         ~model,
+        ~buffer,
         ~editor,
         ~gutterWidth,
         ~grammars,
@@ -577,11 +627,10 @@ module View = {
           None;
         }
       )
-      |> Option.map((Location.{line, column}) => {
-           let ({pixelX, pixelY}: Feature_Editor.Editor.pixelPosition, _) =
-             Feature_Editor.Editor.bufferLineCharacterToPixel(
-               ~line=line |> Index.toZeroBased,
-               ~characterIndex=column |> Index.toZeroBased,
+      |> Option.map((characterPosition: CharacterPosition.t) => {
+           let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
+             Feature_Editor.Editor.bufferCharacterPositionToPixel(
+               ~position=characterPosition,
                editor,
              );
            (pixelX +. gutterWidth |> int_of_float, pixelY |> int_of_float);
@@ -596,6 +645,7 @@ module View = {
         languageInfo
         uiFont
         editorFont
+        buffer
         model
         editor
         grammars

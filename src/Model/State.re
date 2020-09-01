@@ -9,9 +9,7 @@ open Oni_Input;
 open Oni_Syntax;
 
 module KeyDisplayer = Oni_Components.KeyDisplayer;
-module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 type windowDisplayMode =
@@ -21,21 +19,21 @@ type windowDisplayMode =
   | Fullscreen;
 
 type t = {
-  buffers: Buffers.t,
+  buffers: Feature_Buffers.model,
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
   changelog: Feature_Changelog.model,
+  clipboard: Feature_Clipboard.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   contextMenu: Feature_ContextMenu.model,
-  completions: Completions.t,
+  //completions: Completions.t,
   config: Feature_Configuration.model,
   configuration: Configuration.t,
   decorationProviders: list(DecorationProvider.t),
   diagnostics: Diagnostics.t,
-  definition: Definition.t,
   editorFont: Service_Font.font,
-  formatting: Feature_Formatting.model,
+  messages: Feature_Messages.model,
   terminalFont: Service_Font.font,
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
@@ -43,16 +41,19 @@ type t = {
   // Token theme is theming for syntax highlights
   tokenTheme: TokenTheme.t,
   extensions: Feature_Extensions.model,
+  exthost: Feature_Exthost.model,
   iconTheme: IconTheme.t,
   isQuitting: bool,
   keyBindings: Keybindings.t,
   keyDisplayer: option(KeyDisplayer.t),
   languageFeatures: LanguageFeatures.t,
+  languageSupport: Feature_LanguageSupport.model,
   languageInfo: Exthost.LanguageInfo.t,
   grammarRepository: Oni_Syntax.GrammarRepository.t,
   lifecycle: Lifecycle.t,
   notifications: Feature_Notification.model,
-  references: References.t,
+  //  references: References.t,
+  registers: Feature_Registers.model,
   scm: Feature_SCM.model,
   sneak: Feature_Sneak.model,
   statusBar: Feature_StatusBar.model,
@@ -60,7 +61,6 @@ type t = {
   terminals: Feature_Terminal.t,
   layout: Feature_Layout.model,
   fileExplorer: FileExplorer.t,
-  hover: Feature_Hover.model,
   signatureHelp: Feature_SignatureHelp.model,
   // [windowTitle] is the title of the window
   windowTitle: string,
@@ -81,9 +81,12 @@ let initial =
     (
       ~initialBuffer,
       ~initialBufferRenderers,
+      ~extensionGlobalPersistence,
+      ~extensionWorkspacePersistence,
       ~getUserSettings,
       ~contributedCommands,
       ~workingDirectory,
+      ~extensionsFolder,
     ) => {
   let config =
     Feature_Configuration.initial(
@@ -92,47 +95,50 @@ let initial =
         Feature_Editor.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
+        Feature_LanguageSupport.Contributions.configuration,
         Feature_Layout.Contributions.configuration,
       ],
     );
   let initialEditor = {
     open Feature_Editor;
     let editorBuffer = initialBuffer |> EditorBuffer.ofBuffer;
-    let config = Feature_Configuration.resolver(config);
-    Editor.create(
-      ~config,
-      ~font=Service_Font.default,
-      ~buffer=editorBuffer,
-      (),
-    );
+    let config = Feature_Configuration.resolver(config, Feature_Vim.initial);
+    Editor.create(~config, ~buffer=editorBuffer, ());
   };
 
   {
-    buffers:
-      Buffers.empty |> IntMap.add(Buffer.getId(initialBuffer), initialBuffer),
+    buffers: Feature_Buffers.empty |> Feature_Buffers.add(initialBuffer),
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
+    clipboard: Feature_Clipboard.initial,
     colorTheme:
       Feature_Theme.initial([
+        Feature_LanguageSupport.Contributions.colors,
         Feature_Terminal.Contributions.colors,
         Feature_Notification.Contributions.colors,
       ]),
     commands: Feature_Commands.initial(contributedCommands),
     contextMenu: Feature_ContextMenu.initial,
-    completions: Completions.initial,
+    //completions: Completions.initial,
     config,
     configuration: Configuration.default,
     decorationProviders: [],
-    definition: Definition.empty,
     diagnostics: Diagnostics.create(),
     quickmenu: None,
     editorFont: Service_Font.default,
     terminalFont: Service_Font.default,
-    extensions: Feature_Extensions.initial,
-    formatting: Feature_Formatting.initial,
+    extensions:
+      Feature_Extensions.initial(
+        ~globalPersistence=extensionGlobalPersistence,
+        ~workspacePersistence=extensionWorkspacePersistence,
+        ~extensionsFolder,
+      ),
+    exthost: Feature_Exthost.initial,
     languageFeatures: LanguageFeatures.empty,
+    languageSupport: Feature_LanguageSupport.initial,
     lifecycle: Lifecycle.create(),
+    messages: Feature_Messages.initial,
     uiFont: UiFont.default,
     sideBar: Feature_SideBar.initial,
     tokenTheme: TokenTheme.empty,
@@ -143,7 +149,8 @@ let initial =
     languageInfo: Exthost.LanguageInfo.initial,
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,
-    references: References.initial,
+    //    references: References.initial,
+    registers: Feature_Registers.initial,
     scm: Feature_SCM.initial,
     sneak: Feature_Sneak.initial,
     statusBar: Feature_StatusBar.initial,
@@ -154,7 +161,6 @@ let initial =
     windowDisplayMode: Windowed,
     workspace: Workspace.initial(workingDirectory),
     fileExplorer: FileExplorer.initial,
-    hover: Feature_Hover.initial,
     signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
     pane: Feature_Pane.initial,

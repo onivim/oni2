@@ -73,6 +73,39 @@ module ActivityBar = {
   ];
 };
 
+module ActivityBarBadge = {
+  let background =
+    define(
+      "activityBarBadge.background",
+      {dark: hex("#333333"), light: hex("#2C2C2C"), hc: hex("#000000")},
+    );
+  let foreground = define("activityBarBadge.foreground", all(hex("#FFF")));
+
+  let defaults = [background, foreground];
+};
+
+module Button = {
+  let foreground =
+    define(
+      "button.foreground",
+      {dark: hex("#FFF"), light: hex("#FFF"), hc: hex("#FFF")},
+    );
+
+  let background =
+    define(
+      "button.background",
+      {dark: hex("#0E639C"), light: hex("#007ACC"), hc: unspecified},
+    );
+
+  let hoverBackground =
+    define(
+      "button.hoverBackground",
+      {dark: ref(background), light: ref(background), hc: unspecified},
+    );
+
+  let defaults = [background, foreground, hoverBackground];
+};
+
 module Dropdown = {
   let background =
     define(
@@ -281,6 +314,51 @@ module EditorWidget = {
     );
 
   let defaults = [background, foreground, border];
+};
+
+module Notifications = {
+  let background =
+    define("notifications.background", all(ref(EditorWidget.background)));
+  let foreground =
+    define("notifications.foreground", all(ref(EditorWidget.foreground)));
+
+  let headerForeground =
+    define("notificationsCenterHeader.foreground", all(ref(foreground)));
+
+  let headerBackground =
+    define("notificationsCenterHeader.background", all(ref(background)));
+
+  let headerBorder =
+    define("notificationsCenterHeader.border", all(ref(headerBackground)));
+
+  let border = define("notifications.border", all(ref(headerBackground)));
+
+  let errorIcon =
+    define(
+      "notificationsErrorIcon.foreground",
+      all(ref(EditorError.foreground)),
+    );
+  let warningIcon =
+    define(
+      "notificationsWarningIcon.foreground",
+      all(ref(EditorWarning.foreground)),
+    );
+  let infoIcon =
+    define(
+      "notificationsWarningIcon.foreground",
+      all(ref(EditorInfo.foreground)),
+    );
+
+  let defaults = [
+    background,
+    foreground,
+    headerForeground,
+    headerBackground,
+    border,
+    errorIcon,
+    warningIcon,
+    infoIcon,
+  ];
 };
 
 module EditorHoverWidget = {
@@ -519,11 +597,11 @@ module Oni = {
 
   let backgroundFor = (mode: Mode.t) =>
     switch (mode) {
-    | Select
-    | TerminalVisual
-    | Visual => visualModeBackground
+    | Select(_)
+    | TerminalVisual(_)
+    | Visual(_) => visualModeBackground
     | CommandLine => commandlineModeBackground
-    | Operator => operatorModeBackground
+    | Operator(_) => operatorModeBackground
     | TerminalInsert
     | Insert => insertModeBackground
     | Replace => replaceModeBackground
@@ -533,11 +611,11 @@ module Oni = {
 
   let foregroundFor = (mode: Mode.t) =>
     switch (mode) {
-    | Select
-    | TerminalVisual
-    | Visual => visualModeForeground
+    | Select(_)
+    | TerminalVisual(_)
+    | Visual(_) => visualModeForeground
     | CommandLine => commandlineModeForeground
-    | Operator => operatorModeForeground
+    | Operator(_) => operatorModeForeground
     | TerminalInsert
     | Insert => insertModeForeground
     | Replace => replaceModeForeground
@@ -563,8 +641,10 @@ module Oni = {
   module Modal = {
     let backdrop = define("oni.modal.backdrop", all(hex("#0004")));
     let background =
-      define("oni.modal.background", all(ref(Editor.background)));
-    let foreground = define("oni.modal.foreground", all(ref(foreground)));
+      define("oni.modal.background", all(ref(Notifications.background)));
+    let foreground =
+      define("oni.modal.foreground", all(ref(Notifications.foreground)));
+    let border = define("oni.modal.border", all(ref(Notifications.border)));
     let shortcutForeground =
       define(
         "oni.modal.shortcutForeground",
@@ -835,6 +915,107 @@ module StatusBar = {
   let foreground = define("statusBar.foreground", all(hex("#FFF")));
 
   let defaults = [background, foreground];
+};
+
+module SymbolIcon = {
+  let arrayForeground =
+    define("symbolIcon.arrayForeground", all(ref(foreground)));
+  let booleanForeground =
+    define("symbolIcon.booleanForeground", all(ref(foreground)));
+  let classForeground =
+    define("symbolIcon.classForeground", all(ref(foreground)));
+  let colorForeground =
+    define("symbolIcon.colorForeground", all(ref(foreground)));
+  let constantForeground =
+    define("symbolIcon.constantForeground", all(ref(foreground)));
+  let constructorForeground =
+    define("symbolIcon.constructorForeground", all(ref(foreground)));
+  let enumeratorForeground =
+    define("symbolIcon.enumeratorForeground", all(ref(foreground)));
+  let enumeratorMemberForeground =
+    define("symbolIcon.enumeratorMemberForeground", all(ref(foreground)));
+  let eventForeground =
+    define("symbolIcon.eventForeground", all(ref(foreground)));
+  let fieldForeground =
+    define("symbolIcon.fieldForeground", all(ref(foreground)));
+  let fileForeground =
+    define("symbolIcon.fileForeground", all(ref(foreground)));
+  let folderForeground =
+    define("symbolIcon.folderForeground", all(ref(foreground)));
+  let functionForeground =
+    define("symbolIcon.functionForeground", all(ref(foreground)));
+  let interfaceForeground =
+    define("symbolIcon.interfaceForeground", all(ref(foreground)));
+  let keyForeground =
+    define("symbolIcon.keyForeground", all(ref(foreground)));
+  let keywordForeground =
+    define("symbolIcon.keywordForeground", all(ref(foreground)));
+  let methodForeground =
+    define("symbolIcon.methodForeground", all(ref(foreground)));
+  let moduleForeground =
+    define("symbolIcon.moduleForeground", all(ref(foreground)));
+  let namespaceForeground =
+    define("symbolIcon.namespaceForeground", all(ref(foreground)));
+  let nullForeground =
+    define("symbolIcon.nullForeground", all(ref(foreground)));
+  let objectForeground =
+    define("symbolIcon.objectForeground", all(ref(foreground)));
+  let operatorForeground =
+    define("symbolIcon.operatorForeground", all(ref(foreground)));
+  let packageForeground =
+    define("symbolIcon.packageForeground", all(ref(foreground)));
+  let propertyForeground =
+    define("symbolIcon.propertyForeground", all(ref(foreground)));
+  let referenceForeground =
+    define("symbolIcon.referenceForeground", all(ref(foreground)));
+  let snippetForeground =
+    define("symbolIcon.snippetForeground", all(ref(foreground)));
+  let stringForeground =
+    define("symbolIcon.stringForeground", all(ref(foreground)));
+  let structForeground =
+    define("symbolIcon.structForeground", all(ref(foreground)));
+  let textForeground =
+    define("symbolIcon.textForeground", all(ref(foreground)));
+  let typeParameterForeground =
+    define("symbolIcon.typeParameterForeground", all(ref(foreground)));
+  let unitForeground =
+    define("symbolIcon.unitForeground", all(ref(foreground)));
+  let variableForeground =
+    define("symbolIcon.variableForeground", all(ref(foreground)));
+
+  let defaults = [
+    arrayForeground,
+    booleanForeground,
+    classForeground,
+    colorForeground,
+    constantForeground,
+    constructorForeground,
+    enumeratorForeground,
+    enumeratorMemberForeground,
+    eventForeground,
+    fieldForeground,
+    fileForeground,
+    folderForeground,
+    functionForeground,
+    interfaceForeground,
+    keyForeground,
+    keywordForeground,
+    methodForeground,
+    moduleForeground,
+    namespaceForeground,
+    nullForeground,
+    objectForeground,
+    packageForeground,
+    propertyForeground,
+    referenceForeground,
+    snippetForeground,
+    stringForeground,
+    structForeground,
+    textForeground,
+    typeParameterForeground,
+    unitForeground,
+    variableForeground,
+  ];
 };
 
 module Tab = {

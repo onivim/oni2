@@ -43,6 +43,7 @@ module View: {
     let make:
       (
         ~key: Brisk_reconciler.Key.t=?,
+        ~sneakId: string,
         ~style: list(Revery_UI.Style.viewStyleProps)=?,
         ~onClick: unit => unit=?,
         ~onRightClick: unit => unit=?,
@@ -53,6 +54,8 @@ module View: {
         ~tabindex: int=?,
         ~onKeyDown: Revery_UI.NodeEvents.keyDownHandler=?,
         ~onKeyUp: Revery_UI.NodeEvents.keyUpHandler=?,
+        ~onMouseEnter: Revery_UI.NodeEvents.mouseMoveHandler=?,
+        ~onMouseLeave: Revery_UI.NodeEvents.mouseMoveHandler=?,
         ~onTextEdit: Revery_UI.NodeEvents.textEditHandler=?,
         ~onTextInput: Revery_UI.NodeEvents.textInputHandler=?,
         ~children: Revery.UI.element,

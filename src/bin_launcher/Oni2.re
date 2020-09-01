@@ -50,6 +50,17 @@ let spec =
       " Do not load user configuration (use default configuration).",
     ),
     (
+      "--gpu-acceleration",
+      passthroughString,
+      " Override default renderer strategy - one of: "
+      ++ {|
+
+      - auto: automatically choose between software / hardware rendering (default)
+      - hardware: force hardware renderer
+      - software: force software renderer
+      |},
+    ),
+    (
       "--install-extension",
       passthroughStringAndStayAttached,
       " Install extension by specifying a path to the .vsix file",

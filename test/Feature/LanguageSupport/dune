@@ -2,4 +2,4 @@
     (name Feature_LanguageSupport_Test)
     (library_flags (-linkall -g))
     (modules (:standard))
-    (libraries Oni2.core Oni2.feature.language_support rely.lib editor-core-types))
+    (libraries Oni2.core Oni2.feature.language_support rely.lib Oni2.editor-core-types))

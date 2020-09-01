@@ -4,6 +4,11 @@ let bind2 = (a, b, f) =>
   | _ => None
   };
 
+let filter = f =>
+  fun
+  | Some(x) as v => f(x) ? v : None
+  | None => None;
+
 let flatMap = f =>
   fun
   | Some(x) => f(x)
@@ -46,6 +51,11 @@ let or_lazy = f =>
   | Some(_) as orig => orig
   | None => f();
 
+let lazyDefault = f =>
+  fun
+  | Some(v) => v
+  | None => f();
+
 let of_list =
   fun
   | [] => None
@@ -58,6 +68,11 @@ let zip = (a, b) =>
   };
 
 let values = list => List.filter_map(Fun.id, list);
+
+let value_or_lazy = f =>
+  fun
+  | Some(v) => v
+  | None => f();
 
 let toString = f =>
   fun

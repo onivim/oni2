@@ -21,10 +21,12 @@ type t;
 
 let empty: t;
 
-let getTokens: (~bufferId: int, ~line: Index.t, t) => list(ThemeToken.t);
+let getTokens:
+  (~bufferId: int, ~line: EditorCoreTypes.LineNumber.t, t) =>
+  list(ThemeToken.t);
 
 let getSyntaxScope:
-  (~bufferId: int, ~line: Index.t, ~bytePosition: int, t) => SyntaxScope.t;
+  (~bytePosition: BytePosition.t, ~bufferId: int, t) => SyntaxScope.t;
 
 let setTokensForLine:
   (~bufferId: int, ~line: int, ~tokens: list(ThemeToken.t), t) => t;
@@ -57,6 +59,7 @@ module Effect: {
 let subscription:
   (
     ~config: Config.resolver,
+    ~grammarInfo: Exthost.GrammarInfo.t,
     ~languageInfo: Exthost.LanguageInfo.t,
     ~setup: Setup.t,
     ~tokenTheme: Oni_Syntax.TokenTheme.t,

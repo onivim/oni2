@@ -15,11 +15,15 @@
         Feature_LanguageSupport_Test
         Service_Extensions_Test
         Service_Net_Test
+        Service_OS_Test
+        EditorCoreTypes_Test
+        EditorInput_Test
         Exthost_Transport_Test
         Exthost_Test
         Libvim_Test
         Oniguruma_Test
         Textmate_Test
+        TreeSitter_Test
         reason-native-crash-utils.asan
             ))
 
@@ -142,10 +146,14 @@
         Feature_LanguageSupport_Test
         Service_Extensions_Test
         Service_Net_Test
+        Service_OS_Test
+        EditorCoreTypes_Test
+        EditorInput_Test
         Exthost_Transport_Test
         Exthost_Test
         Libvim_Test
         Oniguruma_Test
         Textmate_Test
+        TreeSitter_Test
         reason-native-crash-utils.asan
             ))

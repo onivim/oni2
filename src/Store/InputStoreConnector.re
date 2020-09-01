@@ -10,7 +10,6 @@ open Oni_Input;
 module Model = Oni_Model;
 module State = Model.State;
 module Actions = Model.Actions;
-module Completions = Feature_LanguageSupport.Completions;
 
 module Log = (val Log.withNamespace("Oni2.Store.Input"));
 
@@ -43,12 +42,14 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     (state, immediateDispatchEffect(actions));
   };
 
-  let handleTextEffect = (state: State.t, k: string) => {
+  let handleTextEffect = (~isText, state: State.t, k: string) => {
     switch (Model.FocusManager.current(state)) {
     | Editor
     | Wildmenu => [
-        Actions.KeyboardInput(k),
-        Actions.Hover(Feature_Hover.KeyPressed(k)),
+        Actions.KeyboardInput({isText, input: k}),
+        Actions.LanguageSupport(
+          Feature_LanguageSupport.Msg.Hover.keyPressed(k),
+        ),
         Actions.SignatureHelp(
           Feature_SignatureHelp.KeyPressed(Some(k), true),
         ),
@@ -69,24 +70,64 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       ]
 
     | Search => [Actions.Search(Feature_Search.Input(k))]
-    | Extensions => [Actions.Extensions(Feature_Extensions.KeyPressed(k))]
+    | Extensions => [
+        Actions.Extensions(Feature_Extensions.Msg.keyPressed(k)),
+      ]
 
     | Modal => [Actions.Modals(Feature_Modals.KeyPressed(k))]
+    | InsertRegister => [
+        Actions.Registers(Feature_Registers.Msg.keyPressed(k)),
+      ]
+    | LanguageSupport => [
+        Actions.LanguageSupport(Feature_LanguageSupport.Msg.keyPressed(k)),
+      ]
     };
   };
+
+  let pasteEffect = (~rawText, ~isMultiLine as _, ~lines, state) =>
+    if (Array.length(lines) >= 1) {
+      let firstLine = lines[0];
+      let action =
+        switch (Model.FocusManager.current(state)) {
+        | Editor => Actions.Vim(Feature_Vim.Pasted(rawText))
+        | Wildmenu => Actions.Vim(Feature_Vim.Pasted(firstLine))
+        | Quickmenu => Actions.QuickmenuPaste(firstLine)
+        | Extensions =>
+          Actions.Extensions(Feature_Extensions.Msg.pasted(firstLine))
+        | SCM => Actions.SCM(Feature_SCM.Msg.paste(firstLine))
+        | Search => Actions.Search(Feature_Search.Pasted(firstLine))
+        | LanguageSupport =>
+          Actions.LanguageSupport(
+            Feature_LanguageSupport.Msg.pasted(firstLine),
+          )
+
+        // No paste handling in these UIs, currently...
+        | Terminal(_) => Actions.Noop
+        | InsertRegister
+        | Sneak
+        | FileExplorer
+        | Modal => Actions.Noop
+        };
+
+      Isolinear.Effect.createWithDispatch(~name="input.pasteEffect", dispatch => {
+        dispatch(action)
+      });
+    } else {
+      Isolinear.Effect.none;
+    };
 
   let effectToActions = (state, effect) =>
     switch (effect) {
     | Keybindings.Execute(command) => [
         Actions.KeybindingInvoked({command: command}),
       ]
-    | Keybindings.Text(text) => handleTextEffect(state, text)
+    | Keybindings.Text(text) => handleTextEffect(~isText=true, state, text)
     | Keybindings.Unhandled(key) =>
       let isTextInputActive = isTextInputActive();
       let maybeKeyString = Handler.keyPressToCommand(~isTextInputActive, key);
       switch (maybeKeyString) {
       | None => []
-      | Some(k) => handleTextEffect(state, k)
+      | Some(k) => handleTextEffect(~isText=false, state, k)
       };
     };
 
@@ -212,6 +253,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
            );
 
       handleTextInput({...state, keyDisplayer}, text);
+
+    | Pasted({rawText, isMultiLine, lines}) => (
+        state,
+        pasteEffect(~rawText, ~isMultiLine, ~lines, state),
+      )
 
     | _ => (state, Isolinear.Effect.none)
     };

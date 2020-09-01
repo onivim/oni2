@@ -10,16 +10,19 @@ open Oni_Core.Utility;
 module Editor = Feature_Editor.Editor;
 
 let getBufferById = (state: State.t, id: int) => {
-  Buffers.getBuffer(id, state.buffers);
+  Feature_Buffers.get(id, state.buffers);
 };
 
 let getBufferForEditor = (buffers, editor: Editor.t) => {
-  Buffers.getBuffer(Editor.getBufferId(editor), buffers);
+  Feature_Buffers.get(Editor.getBufferId(editor), buffers);
 };
 
 let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
   let fileType =
-    Exthost.LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
+    Option.value(
+      ~default=Exthost.LanguageInfo.defaultLanguage,
+      Buffer.getFileType(buffer) |> Buffer.FileType.toOption,
+    );
   Configuration.getValue(~fileType, f, state.configuration);
 };
 
@@ -32,9 +35,10 @@ let getActiveBuffer = (state: State.t) => {
 let withActiveBufferAndFileType = (state: State.t, f) => {
   let () =
     getActiveBuffer(state)
-    |> OptionEx.flatMap(buf =>
-         Buffer.getFileType(buf) |> Option.map(ft => (buf, ft))
-       )
+    |> Option.map(buf => {
+         let fileType = Buffer.getFileType(buf) |> Buffer.FileType.toString;
+         (buf, fileType);
+       })
     |> Option.iter(((buf, ft)) => f(buf, ft));
   ();
 };
@@ -43,8 +47,8 @@ let getActiveConfigurationValue = (state: State.t, f) => {
   switch (getActiveBuffer(state)) {
   | None => Configuration.getValue(f, state.configuration)
   | Some(buffer) =>
-    let fileType =
-      Exthost.LanguageInfo.getLanguageFromBuffer(state.languageInfo, buffer);
+    let fileType = Buffer.getFileType(buffer) |> Buffer.FileType.toString;
+
     Configuration.getValue(~fileType, f, state.configuration);
   };
 };

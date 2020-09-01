@@ -37,7 +37,7 @@ module VersionView = {
       justifyContent(`Center),
       alignItems(`Center),
       height(18),
-      maxWidth(400),
+      maxWidth(500),
       minWidth(150),
       flexGrow(0),
       borderBottom(~color=Revery.Color.rgba(1.0, 1.0, 1.0, 0.2), ~width=1),
@@ -120,6 +120,16 @@ let make = (~theme, ~uiFont, ~editorFont, ()) => {
     <version name="Compiler Version " version=Sys.ocaml_version />
     <header text="libuv" />
     <version name="Version " version={Luv.Version.string()} />
+    // spacer
+    <header text="Harfbuzz" />
+    <version
+      name="Harfbuzz Compiled"
+      version={Harfbuzz.hb_version_string_compiled()}
+    />
+    <version
+      name="Harfbuzz Linked"
+      version={Harfbuzz.hb_version_string_runtime()}
+    />
     // spacer
     <header text="SDL" />
     <version

@@ -32,6 +32,7 @@ let getDefaultConfigString = configName =>
   "workbench.activityBar.visible": true,
   "workbench.editor.showTabs": true,
   "workbench.iconTheme": "vs-seti",
+  "workbench.sideBar.location": "left",
   "workbench.sideBar.visible": true,
   "workbench.statusBar.visible": true,
   "workbench.tree.indent": 2,

@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 module Log = (val Log.withNamespace("Service_Vim"));
 
@@ -27,6 +28,33 @@ let quitAll = () =>
   );
 
 module Effects = {
+  let paste = (~toMsg, text) => {
+    Isolinear.Effect.createWithDispatch(~name="vim.clipboardPaste", dispatch => {
+      let isCmdLineMode = Vim.Mode.current() == Vim.Mode.CommandLine;
+      let isInsertMode = Vim.Mode.current() == Vim.Mode.Insert;
+
+      if (isInsertMode || isCmdLineMode) {
+        if (!isCmdLineMode) {
+          Vim.command("set paste") |> ignore;
+        };
+
+        Log.infof(m => m("Pasting: %s", text));
+        let latestContext: Vim.Context.t = Oni_Core.VimEx.inputString(text);
+
+        if (!isCmdLineMode) {
+          Vim.command("set nopaste") |> ignore;
+          dispatch(toMsg(latestContext.cursors));
+        };
+      };
+    });
+  };
+
+  let getRegisterValue = (~toMsg, char) =>
+    Isolinear.Effect.createWithDispatch(~name="vim.getRegisterValue", dispatch => {
+      let result = Vim.Registers.get(~register=char);
+      dispatch(toMsg(result));
+    });
+
   let applyEdits =
       (
         ~bufferId: int,
@@ -58,5 +86,53 @@ module Effects = {
 
       result |> toMsg |> dispatch;
     });
+  };
+  let applyCompletion = (~meetColumn, ~insertText, ~toMsg) =>
+    Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
+      let cursor = Vim.Cursor.get();
+      // TODO: Does this logic correctly handle unicode characters?
+      let delta =
+        ByteIndex.toInt(cursor.byte) - CharacterIndex.toInt(meetColumn);
+
+      let _: Vim.Context.t = VimEx.repeatKey(delta, "<BS>");
+      let {cursors, _}: Vim.Context.t = VimEx.inputString(insertText);
+
+      dispatch(toMsg(cursors));
+    });
+
+  let loadBuffer = (~filePath: string, toMsg) => {
+    Isolinear.Effect.createWithDispatch(~name="loadBuffer", dispatch => {
+      let currentBuffer = Vim.Buffer.getCurrent();
+
+      let newBuffer = Vim.Buffer.openFile(filePath);
+
+      // Revert to previous buffer
+      Vim.Buffer.setCurrent(currentBuffer);
+
+      dispatch(toMsg(~bufferId=Vim.Buffer.getId(newBuffer)));
+    });
+  };
+};
+
+module Sub = {
+  module EvalSubscription =
+    Isolinear.Sub.Make({
+      type state = unit;
+      type params = string;
+      type msg = result(string, string);
+      let name = "Vim.Sub.Eval";
+      let id = params => params;
+      let init = (~params, ~dispatch) => {
+        Vim.eval(params) |> dispatch;
+      };
+      let update = (~params as _, ~state as _, ~dispatch as _) => {
+        ();
+      };
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+  let eval = (~toMsg, expression) => {
+    EvalSubscription.create(expression) |> Isolinear.Sub.map(toMsg);
   };
 };

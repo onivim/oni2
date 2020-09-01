@@ -1,9 +1,10 @@
+open EditorCoreTypes;
 open Oni_Core;
 
 type bufferPosition = {
-  line: int,
-  byteOffset: int,
-  characterOffset: int,
+  line: EditorCoreTypes.LineNumber.t,
+  byteOffset: ByteIndex.t,
+  characterOffset: CharacterIndex.t,
 };
 
 type t = {
@@ -58,15 +59,24 @@ module Internal = {
             currentLine + 1,
             tail,
             {
-              line: bufferLine,
+              line: EditorCoreTypes.LineNumber.ofZeroBased(bufferLine),
               byteOffset: hd.byte,
-              characterOffset: hd.index,
+              characterOffset: hd.character,
             },
           )
         };
       };
 
-    loop(-1, 0, [], {line: 0, byteOffset: 0, characterOffset: 0});
+    loop(
+      -1,
+      0,
+      [],
+      {
+        line: EditorCoreTypes.LineNumber.zero,
+        byteOffset: ByteIndex.zero,
+        characterOffset: CharacterIndex.zero,
+      },
+    );
   };
 };
 
@@ -82,8 +92,10 @@ let update = (~update as _: Oni_Core.BufferUpdate.t, ~newBuffer, {wrap, _}) => {
   wraps: Internal.bufferToWraps(~wrap, newBuffer),
 };
 
-let bufferLineByteToViewLine = (~line, ~byteIndex: int, wrap) => {
+let bufferBytePositionToViewLine = (~bytePosition: BytePosition.t, wrap) => {
+  let line = EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line);
   let startViewLine = Internal.bufferLineToViewLine(line, wrap);
+  let byteIndex = bytePosition.byte;
 
   let viewLines = wrap.wraps[line];
 
@@ -92,7 +104,7 @@ let bufferLineByteToViewLine = (~line, ~byteIndex: int, wrap) => {
     | [] => idx
     | [_] => idx
     | [hd, next, ...tail] =>
-      if (byteIndex >= hd.byte && byteIndex < next.byte) {
+      if (ByteIndex.(byteIndex >= hd.byte && byteIndex < next.byte)) {
         idx;
       } else {
         loop(idx + 1, [next, ...tail]);

@@ -8,7 +8,6 @@
 
 module Actions = Actions;
 module ActivityBar = ActivityBar;
-module Buffers = Buffers;
 module BufferRenderer = BufferRenderer;
 module BufferRenderers = BufferRenderers;
 module ContextKeys = ContextKeys;
@@ -25,11 +24,9 @@ module Lifecycle = Lifecycle;
 module Quickmenu = Quickmenu;
 module FilterJob = FilterJob;
 module ModeManager = ModeManager;
-module References = References;
 module Selectors = Selectors;
 module State = State;
 module Sub = Sub;
-module ThemeInfo = ThemeInfo;
 module Title = Title;
 module Workspace = Workspace;
 module VimContext = VimContext;

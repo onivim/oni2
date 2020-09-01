@@ -9,6 +9,13 @@ open Rench;
 
 module Log = (val Log.withNamespace("Exthost.Extension.Contributions"));
 
+module Breakpoint = {
+  [@deriving show]
+  type t = Yojson.Safe.t;
+  let decode = Json.Decode.value;
+  let encode = Json.Encode.value;
+};
+
 module Command = {
   [@deriving show]
   type t = {
@@ -43,6 +50,14 @@ module Command = {
         ("category", command.category |> nullable(string)),
       ])
     );
+};
+
+module Debugger = {
+  [@deriving show]
+  type t = Yojson.Safe.t;
+
+  let decode = Json.Decode.value;
+  let encode = Json.Encode.value;
 };
 
 module Menu = {
@@ -346,6 +361,9 @@ module Language = {
   type t = {
     id: string,
     extensions: list(string),
+    filenames: list(string),
+    filenamePatterns: list(string),
+    firstLine: option(string),
     aliases: list(string),
     configuration: option(string),
   };
@@ -356,6 +374,10 @@ module Language = {
         {
           id: field.required("id", string),
           extensions: field.withDefault("extensions", [], list(string)),
+          filenames: field.withDefault("filenames", [], list(string)),
+          filenamePatterns:
+            field.withDefault("filenamePatterns", [], list(string)),
+          firstLine: field.optional("firstLine", string),
           aliases: field.withDefault("aliases", [], list(string)),
           configuration: field.optional("configuration", string),
         }
@@ -367,6 +389,9 @@ module Language = {
       obj([
         ("id", language.id |> string),
         ("extensions", language.extensions |> list(string)),
+        ("filenames", language.filenames |> list(string)),
+        ("filenamePatterns", language.filenamePatterns |> list(string)),
+        ("firstLine", language.firstLine |> nullable(string)),
         ("aliases", language.aliases |> list(string)),
         ("configuration", language.configuration |> nullable(string)),
       ])
@@ -474,7 +499,9 @@ module IconTheme = {
 
 [@deriving show]
 type t = {
+  breakpoints: list(Breakpoint.t),
   commands: list(Command.t),
+  debuggers: list(Debugger.t),
   menus: list(Menu.t),
   languages: list(Language.t),
   grammars: list(Grammar.t),
@@ -491,6 +518,8 @@ let default = {
   themes: [],
   iconThemes: [],
   configuration: [],
+  debuggers: [],
+  breakpoints: [],
 };
 
 let decode =
@@ -506,6 +535,9 @@ let decode =
           field.withDefault("iconThemes", [], list(IconTheme.decode)),
         configuration:
           field.withDefault("configuration", [], Configuration.decode),
+        debuggers: field.withDefault("debuggers", [], list(Debugger.decode)),
+        breakpoints:
+          field.withDefault("breakpoints", [], list(Breakpoint.decode)),
       }
     )
   );
@@ -520,8 +552,19 @@ let encode = data =>
       ("themes", data.themes |> list(Theme.encode)),
       ("iconThemes", data.iconThemes |> list(IconTheme.encode)),
       ("configuration", null),
+      ("debuggers", data.debuggers |> list(Debugger.encode)),
+      ("breakpoints", data.breakpoints |> list(Breakpoint.encode)),
     ])
   );
+let to_yojson = contributes => {
+  contributes |> Json.Encode.encode_value(encode);
+};
+
+let of_yojson = json => {
+  json
+  |> Json.Decode.decode_value(decode)
+  |> Result.map_error(Json.Decode.string_of_error);
+};
 
 let _remapGrammars = (path: string, grammars: list(Grammar.t)) => {
   List.map(g => Grammar.toAbsolutePath(path, g), grammars);

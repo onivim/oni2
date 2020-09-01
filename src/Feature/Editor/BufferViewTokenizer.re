@@ -15,8 +15,10 @@ type tokenType =
 type t = {
   tokenType,
   text: string,
-  startIndex: Index.t,
-  endIndex: Index.t,
+  startIndex: CharacterIndex.t,
+  endIndex: CharacterIndex.t,
+  startByte: ByteIndex.t,
+  endByte: ByteIndex.t,
   color: Color.t,
   backgroundColor: Color.t,
   bold: bool,
@@ -57,6 +59,8 @@ let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
     text: r.text,
     startIndex: r.startIndex,
     endIndex: r.endIndex,
+    startByte: r.startByte,
+    endByte: r.endByte,
     color,
     backgroundColor,
     bold,
@@ -66,10 +70,10 @@ let textRunToToken = (colorizer, r: Tokenizer.TextRun.t) => {
 
 let tokenize =
     (
-      ~startIndex=0,
-      ~endIndex,
+      ~start=CharacterIndex.zero,
+      ~stop,
       line,
-      colorizer: int => BufferLineColorizer.themedToken,
+      colorizer: ByteIndex.t => BufferLineColorizer.themedToken,
     ) => {
   let split =
       (
@@ -93,7 +97,7 @@ let tokenize =
     || Uchar.equal(c1, tab);
   };
 
-  Tokenizer.tokenize(~startIndex, ~endIndex, ~f=split, line)
+  Tokenizer.tokenize(~start, ~stop, ~f=split, line)
   |> List.filter(filterRuns)
   |> List.map(textRunToToken(colorizer));
 };

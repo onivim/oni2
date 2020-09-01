@@ -22,6 +22,7 @@ let initial = {
 [@deriving show({with_path: false})]
 type msg =
   | Input(string)
+  | Pasted(string)
   | Update([@opaque] list(Ripgrep.Match.t))
   | Complete
   | SearchError(string)
@@ -49,6 +50,10 @@ let update = (model, msg) => {
       };
 
     (model, None);
+
+  | Pasted(text) =>
+    let findInput = Feature_InputText.paste(~text, model.findInput);
+    ({...model, findInput}, None);
 
   | FindInput(msg) => (
       {...model, findInput: Feature_InputText.update(msg, model.findInput)},
@@ -128,9 +133,9 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
   LocationList.{
     file: hit.file,
     location:
-      Location.{
-        line: Index.fromOneBased(hit.lineNumber),
-        column: Index.fromZeroBased(hit.charStart),
+      CharacterPosition.{
+        line: EditorCoreTypes.LineNumber.ofOneBased(hit.lineNumber),
+        character: CharacterIndex.ofInt(hit.charStart),
       },
     text: hit.text,
     highlight:

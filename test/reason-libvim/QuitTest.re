@@ -3,6 +3,7 @@ open Vim;
 
 let resetBuffer = () => Helpers.resetBuffer("test/testfile.txt");
 let input = s => ignore(Vim.input(s));
+let key = s => ignore(Vim.key(s));
 
 describe("Quit", ({test, _}) => {
   test("q command", ({expect, _}) => {
@@ -41,7 +42,7 @@ describe("Quit", ({test, _}) => {
 
     input(":");
     input("q");
-    input("<cr>");
+    key("<cr>");
     let (qt, forced) = List.hd(updates^);
 
     expect.int(List.length(updates^)).toBe(1);

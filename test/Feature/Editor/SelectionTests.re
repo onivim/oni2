@@ -15,9 +15,13 @@ describe("Selection", ({test, _}) =>
     let vr =
       VisualRange.create(
         ~mode=Vim.Types.Line,
-        Range.{
-          start: Location.{line: Index.zero, column: Index.zero},
-          stop: Location.{line: Index.(zero + 1), column: Index.(zero + 4)},
+        ByteRange.{
+          start: BytePosition.zero,
+          stop:
+            BytePosition.{
+              line: LineNumber.(zero + 1),
+              byte: ByteIndex.(zero + 4),
+            },
         },
       );
 
@@ -29,19 +33,24 @@ describe("Selection", ({test, _}) =>
     let r1 = List.nth(ranges, 1);
 
     let expectedR0 =
-      Range.{
-        start: Location.{line: Index.zero, column: Index.zero},
-        stop: Location.{line: Index.zero, column: Index.(zero + 3)},
+      ByteRange.{
+        start: BytePosition.zero,
+        stop:
+          BytePosition.{line: LineNumber.zero, byte: ByteIndex.(zero + 3)},
       };
 
     let expectedR1 =
-      Range.create(
-        ~start=Location.create(~line=Index.(zero + 1), ~column=Index.zero),
-        ~stop=
-          Location.create(~line=Index.(zero + 1), ~column=Index.(zero + 4)),
-      );
+      ByteRange.{
+        start:
+          BytePosition.{line: LineNumber.(zero + 1), byte: ByteIndex.zero},
+        stop:
+          BytePosition.{
+            line: LineNumber.(zero + 1),
+            byte: ByteIndex.(zero + 4),
+          },
+      };
 
-    validateRange(expect, r0, expectedR0);
-    validateRange(expect, r1, expectedR1);
+    validateByteRange(expect, r0, expectedR0);
+    validateByteRange(expect, r1, expectedR1);
   })
 );

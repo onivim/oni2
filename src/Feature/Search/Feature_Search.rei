@@ -9,6 +9,7 @@ let initial: model;
 [@deriving show]
 type msg =
   | Input(string)
+  | Pasted(string)
   | Update([@opaque] list(Ripgrep.Match.t))
   | Complete
   | SearchError(string)
@@ -29,7 +30,7 @@ let make:
     ~editorFont: Service_Font.font,
     ~isFocused: bool,
     ~model: model,
-    ~onSelectResult: (string, Location.t) => unit,
+    ~onSelectResult: (string, CharacterPosition.t) => unit,
     ~dispatch: msg => unit,
     unit
   ) =>

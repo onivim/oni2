@@ -17,6 +17,15 @@ let input = (~insertSpaces=false, ~tabSize=3, ~autoIndent, s) => {
   );
 };
 
+let key = (~insertSpaces=false, ~tabSize=3, ~autoIndent, s) => {
+  ignore(
+    Vim.key(
+      ~context={...Context.current(), insertSpaces, tabSize, autoIndent},
+      s,
+    ): Context.t,
+  );
+};
+
 describe("AutoIndent", ({test, _}) => {
   let keepIndent = (~previousLine as _, ~beforePreviousLine: option(string)) => {
     ignore(beforePreviousLine);
@@ -38,7 +47,7 @@ describe("AutoIndent", ({test, _}) => {
     input(~autoIndent=keepIndent, "o");
     input(~autoIndent=keepIndent, "a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 1));
     expect.string(line).toEqual("a");
   });
 
@@ -47,7 +56,7 @@ describe("AutoIndent", ({test, _}) => {
     input(~autoIndent=increaseIndent, "o");
     input(~autoIndent=increaseIndent, "a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 1));
     expect.string(line).toEqual("\ta");
   });
 
@@ -58,7 +67,7 @@ describe("AutoIndent", ({test, _}) => {
     input("o");
     input("a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 1));
     expect.string(line).toEqual("   a");
   });
 
@@ -66,13 +75,14 @@ describe("AutoIndent", ({test, _}) => {
     let buffer = resetBuffer();
 
     let input = input(~insertSpaces=true, ~autoIndent=decreaseIndent);
+    let key = key(~insertSpaces=true, ~autoIndent=decreaseIndent);
     input("o");
     input("\t");
     input("a");
-    input("<CR>");
+    key("<CR>");
     input("b");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 2));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 2));
     expect.string(line).toEqual("b");
   });
   test(
@@ -143,7 +153,7 @@ describe("AutoIndent", ({test, _}) => {
     input("O");
     input("a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 2));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 2));
     expect.string(line).toEqual("  a");
   });
 
@@ -156,7 +166,7 @@ describe("AutoIndent", ({test, _}) => {
     input("O");
     input("a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 1));
     expect.string(line).toEqual("a");
   });
 
@@ -169,7 +179,7 @@ describe("AutoIndent", ({test, _}) => {
     input("O");
     input("a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 1));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 1));
     expect.string(line).toEqual("  a");
   });
 
@@ -183,7 +193,7 @@ describe("AutoIndent", ({test, _}) => {
     input("O");
     input("a");
 
-    let line = Buffer.getLine(buffer, Index.(zero + 2));
+    let line = Buffer.getLine(buffer, LineNumber.(zero + 2));
     expect.string(line).toEqual("a");
   });
 

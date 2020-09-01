@@ -82,6 +82,16 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let indentationSettings = Oni_Model.Indentation.getForActiveBuffer(state);
 
   let statusBarDispatch = msg => dispatch(Actions.StatusBar(msg));
+  let messagesDispatch = msg => dispatch(Actions.Messages(msg));
+
+  let messages = () => {
+    <Feature_Messages.View
+      theme
+      font={state.uiFont}
+      model={state.messages}
+      dispatch=messagesDispatch
+    />;
+  };
 
   let statusBar = () =>
     if (Selectors.getActiveConfigurationValue(state, c =>
@@ -91,10 +101,12 @@ let make = (~dispatch, ~state: State.t, ()) => {
       <View style=Styles.statusBar>
         <Feature_StatusBar.View
           mode
+          recordingMacro={state.vim |> Feature_Vim.recordingMacro}
           notifications={state.notifications}
           contextMenu
           diagnostics={state.diagnostics}
           font={state.uiFont}
+          scm={state.scm}
           statusBar={state.statusBar}
           activeBuffer=maybeActiveBuffer
           activeEditor={Some(activeEditor)}
@@ -112,7 +124,13 @@ let make = (~dispatch, ~state: State.t, ()) => {
           c.workbenchActivityBarVisible
         )
         && !zenMode) {
-      <Dock theme sideBar pane />;
+      <Dock
+        font={state.uiFont}
+        theme
+        sideBar
+        pane
+        extensions={state.extensions}
+      />;
     } else {
       React.empty;
     };
@@ -157,6 +175,18 @@ let make = (~dispatch, ~state: State.t, ()) => {
     | Oni_Model.State.Windowed => Feature_TitleBar.Windowed
     | Oni_Model.State.Fullscreen => Feature_TitleBar.Fullscreen;
 
+  let defaultSurfaceComponents = [
+    <activityBar />,
+    <sideBar />,
+    <EditorView state theme dispatch />,
+  ];
+
+  let surfaceComponents =
+    switch (Feature_SideBar.location(state.sideBar)) {
+    | Feature_SideBar.Left => defaultSurfaceComponents
+    | Feature_SideBar.Right => List.rev(defaultSurfaceComponents)
+    };
+
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
       isFocused={state.windowIsFocused}
@@ -168,9 +198,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
-        <activityBar />
-        <sideBar />
-        <EditorView state theme dispatch />
+        {React.listToElement(surfaceComponents)}
       </View>
       <PaneView theme uiFont editorFont state />
     </View>
@@ -184,10 +212,17 @@ let make = (~dispatch, ~state: State.t, ()) => {
        | Some(model) => <KeyDisplayer model uiFont bottom=50 right=50 />
        | None => React.empty
        }}
+      <Feature_Registers.View
+        theme
+        registers={state.registers}
+        font
+        dispatch={msg => dispatch(Actions.Registers(msg))}
+      />
     </Overlay>
     <statusBar />
     <contextMenuOverlay />
     <Tooltip.Overlay theme font=uiFont />
+    <messages />
     <modals />
     <Overlay>
       <Feature_Sneak.View.Overlay model={state.sneak} theme font />

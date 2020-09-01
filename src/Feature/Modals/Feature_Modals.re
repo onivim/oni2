@@ -73,6 +73,10 @@ module View = {
 
   module Colors = Feature_Theme.Colors;
 
+  module Constants = {
+    let messageFontSize = 12.;
+  };
+
   module Styles = {
     open Style;
 
@@ -129,7 +133,7 @@ module View = {
       <Text
         style={Styles.text(~theme)}
         fontFamily={font.family}
-        fontSize={font.size}
+        fontSize=Constants.messageFontSize
         text="You have unsaved changes in the following files:"
       />
       <View style=Styles.files>
@@ -148,7 +152,7 @@ module View = {
       <Text
         style={Styles.text(~theme)}
         fontFamily={font.family}
-        fontSize={font.size}
+        fontSize=Constants.messageFontSize
         text="Would you like to to save them before closing?"
       />
     </MessageBox>;
@@ -159,13 +163,13 @@ module View = {
       <Text
         style={Styles.text(~theme)}
         fontFamily={font.family}
-        fontSize={font.size}
+        fontSize=Constants.messageFontSize
         text="Unable to save gracefully because the file has changed on disk."
       />
       <Text
         style={Styles.text(~theme)}
         fontFamily={font.family}
-        fontSize={font.size}
+        fontSize=Constants.messageFontSize
         text="Would you like to force overwrite or discard the unsaved changes?"
       />
     </MessageBox>;

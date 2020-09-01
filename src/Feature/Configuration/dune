@@ -4,6 +4,7 @@
     (libraries 
       Oni2.core
       Oni2.exthost
+      Oni2.feature.vim
       isolinear
       base
     )

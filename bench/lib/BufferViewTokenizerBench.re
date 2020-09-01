@@ -1,6 +1,6 @@
+open EditorCoreTypes;
 open Oni_Core;
 open BenchFramework;
-open Revery;
 open Feature_Editor;
 
 let giantString =
@@ -14,8 +14,8 @@ let setup = () => ();
 let indentationSettings = IndentationSettings.default;
 let simpleColorizer = _ =>
   BufferLineColorizer.{
-    color: Colors.black,
-    backgroundColor: Colors.white,
+    color: Revery.Colors.black,
+    backgroundColor: Revery.Colors.white,
     bold: false,
     italic: false,
   };
@@ -23,7 +23,7 @@ let simpleColorizer = _ =>
 let tokenizeLine = () => {
   let _ =
     BufferViewTokenizer.tokenize(
-      ~endIndex=1000,
+      ~stop=CharacterIndex.ofInt(1000),
       giantString,
       simpleColorizer,
     );

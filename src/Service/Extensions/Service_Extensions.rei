@@ -2,6 +2,7 @@ open Oni_Core;
 
 module Catalog: {
   module Identifier: {
+    [@deriving show]
     type t = {
       publisher: string,
       name: string,
@@ -12,6 +13,7 @@ module Catalog: {
   };
 
   module VersionInfo: {
+    [@deriving show]
     type t = {
       version: string,
       url: string,
@@ -19,19 +21,20 @@ module Catalog: {
   };
 
   module Details: {
+    [@deriving show]
     type t = {
       downloadUrl: string,
       repositoryUrl: string,
       homepageUrl: string,
       manifestUrl: string,
-      iconUrl: string,
-      readmeUrl: string,
-      licenseName: string,
+      iconUrl: option(string),
+      readmeUrl: option(string),
+      licenseName: option(string),
       //      licenseUrl: string,
       name: string,
       namespace: string,
       //      downloadCount: int,
-      displayName: string,
+      displayName: option(string),
       description: string,
       //      categories: list(string),
       version: string,
@@ -56,6 +59,8 @@ module Catalog: {
 
     let name: t => string;
 
+    let id: t => string;
+
     let toString: t => string;
   };
 
@@ -76,7 +81,7 @@ module Catalog: {
 
 module Management: {
   let install:
-    (~setup: Setup.t, ~extensionsFolder: string=?, string) => Lwt.t(string);
+    (~setup: Setup.t, ~extensionsFolder: string=?, string) => Lwt.t(unit);
 
   let uninstall: (~extensionsFolder: string=?, string) => Lwt.t(unit);
 
@@ -91,8 +96,31 @@ module Query: {
   let create: (~searchText: string) => t;
 
   let isComplete: t => bool;
+  let searchText: t => string;
   let percentComplete: t => float;
   let results: t => list(Catalog.Summary.t);
+};
+
+module Effects: {
+  let uninstall:
+    (
+      ~extensionsFolder: option(string),
+      ~toMsg: result(unit, string) => 'a,
+      string
+    ) =>
+    Isolinear.Effect.t('a);
+
+  let install:
+    (
+      ~extensionsFolder: option(string),
+      ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'a,
+      string
+    ) =>
+    Isolinear.Effect.t('a);
+
+  let details:
+    (~extensionId: string, ~toMsg: result(Catalog.Details.t, string) => 'a) =>
+    Isolinear.Effect.t('a);
 };
 
 module Sub: {

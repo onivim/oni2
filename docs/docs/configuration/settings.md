@@ -33,11 +33,15 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.fontSmoothing` __(_"none"|"antialiased"|"subpixel-antialiased"_)__ - The smoothing strategy used when rendering fonts. The `"antialiased"` setting smooths font edges, and `"subpixel-antialiased"` means characters may be positioned fractionally on the pixel grid. 
 
+- `editor.fontLigatures` __(_string|bool_ default: `true`)__ - Sets whether or not font ligatures are enabled. When `true`, the font's default features are enabled. When `false`, contextual alternates and standard ligatues are disabled. If a string is entered, it must be of the form `"'tag1', 'tag2', ..."`, where each tag listed will be enabled. This is particularly useful for enabling stylistic sets, i.e. `"'ss01', 'ss02', ..."`.
+
 - `editor.hover.delay` __(_int_ default: `1000`)__ - The delay in milliseconds before showing the hover UI.
 
 - `editor.hover.enabled` __(_bool_ default: `true`)__ - Controls whether or not the hover UI is enabled.
 
 - `editor.largeFileOptimizations` __(_bool_ default: `true`)__ - When `true`, Onivim will turn off certain settings like syntax highlighting for large files.
+
+- `editor.lineHeight` __(_float_ default: `0.`)__ - Controls the absolute height of lines on the editor surface. Use 0 to compute lineHeight from the font size.
 
 - `editor.lineNumbers` __(_"on"|"off"|"relative"_ default: `"on"`)__ - Controls how line numbers are rendered on the editor surface
     - _"on"_ - absolute line numbers are displayed
@@ -60,21 +64,39 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
    This allows enabling code-completions based on the current syntax scope.
 
+- `editor.renderWhitespace` __(_"all"|"boundary"|"selection"|"none"_ default: `"selection"`)__ - Controls how whitespace (tabs/spaces) are rendered:
+    - _"all"_ - Render all whitespace
+    - _"boundary"_ - Render whitespace except for single characters between text
+    - _"selection"_ - Render whitespace characters in visual mode selected text
+    - _"none"_ - Don't render whitespace at all
+
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
 - `editor.scrollShadow` __(_bool_ default: `true`)__ - When `true`, show a drop-shadow effect at the borders when there is additional content past the visible area.
+
+- `editor.smoothScroll` __(_bool_ default: `true`)__ - When `true`, smoothly scroll the editor when the viewport is adjusted due to a cursor motion.
+
+- `editor.yankHighlightAnimation` __(_bool_ default: `true`)__ - When `true`, briefly highlight yanks on the editor surface.
 
 - `editor.zenMode.singleFile` __(_bool_ default: `true`)__ - When `true`, the Onivim will automatically enter zen mode when started up with a single file. Zen mode hides most of the UI until disabled via the command pallette.
 
 - `editor.zenMode.hideTabs` __(_bool_ default: `true`)__ - When `true`, the Onivim will hide the buffer tabs from the user whilst in zen mode. Zen mode can be toggled in the command pallette, or automatically enabled with the `editor.zenMode.singleFile` configuration option.
 
-- `workbench.colorTheme` __(_string)_ default:`"One Dark Pro"`)__ - Color theme to use.
+- `workbench.colorTheme` __(_string_ default:`"One Dark Pro"`)__ - Color theme to use.
+
+- `workbench.iconTheme` __(_string_ default: `"vs-seti"`)__ - Icon theme to use.
 
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
 
 ## Layout
 
 - `workbench.editor.showTabs` __(_bool_ default: `true`)__ - When `false`, hides the editor tabs.
+
+- `workbench.sideBar.location` __(_"left"|"right"_ default: `"left"`)__ - Controls the location of the sidebar.
+
+- `workbench.sideBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the sidebar.
+
+- `workbench.statusBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the status bar.
 
 - `oni.layout.showLayoutTabs` __(_"always"|"smart"|"never"_ default: `"smart"`)__ - Controls the display of layout tabs. `"smart"` will only show the tabs if there's more than one.
 
