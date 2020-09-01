@@ -137,6 +137,12 @@ module Parts = {
           renderOverlays
         />;
 
+      | Image =>
+        buffer
+        |> Oni_Core.Buffer.getFilePath
+        |> Option.map(filePath => {<Feature_ImagePreview.View filePath />})
+        |> Option.value(~default=<Text text="Unable to load." />)
+
       | Terminal({id, _}) =>
         state.terminals
         |> Feature_Terminal.getTerminalOpt(id)
