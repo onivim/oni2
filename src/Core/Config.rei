@@ -73,7 +73,9 @@ module Schema: {
     // [vim(~compatible, settingName, converter)] specifies a vim
     // setting. The optional [compatible] value will be used if the
     // setting itself is not set, but `set vimcompatible` is active.
-    let vim: (~compatibilityDefault: 'a=?, string, VimSetting.t => 'a) => vimSetting('a);
+    let vim:
+      (~compatibilityDefault: 'a=?, string, VimSetting.t => 'a) =>
+      vimSetting('a);
     let vim2:
       (
         string,
@@ -93,7 +95,9 @@ module Schema: {
   let string: codec(string);
   let list: codec('a) => codec(list('a));
 
-  let vim: (~compatibilityDefault: 'a=?, string, VimSetting.t => 'a) => vimSetting('a);
+  let vim:
+    (~compatibilityDefault: 'a=?, string, VimSetting.t => 'a) =>
+    vimSetting('a);
   let vim2:
     (
       string,

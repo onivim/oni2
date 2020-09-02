@@ -50,7 +50,6 @@ module Codec: {
 
 module VimSettings = {
   open Config.Schema;
-  open VimSetting.Schema;
 
   let singleTabMode =
     vim(
