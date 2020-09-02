@@ -148,8 +148,19 @@ module Schema = {
       };
     };
 
-    let vim = (name, converter: VimSetting.t => 'a, resolver) => {
-      name |> toVimSettingOpt(resolver) |> Option.map(converter);
+    let getVimCompatibilitySetting = (resolver, maybeDefault) => {
+      maybeDefault
+      |> OptionEx.flatMap((default) => {
+        switch (toVimSettingOpt(resolver, "vimcompatible")) {
+        | Some(VimSetting.Int(1)) => maybeDefault
+        | _ => None
+        };
+      });
+    };
+
+    let vim = (~compatibilityDefault=?, name, converter: VimSetting.t => 'a, resolver) => {
+      name |> toVimSettingOpt(resolver) |> Option.map(converter)
+      |> OptionEx.or_(getVimCompatibilitySetting(resolver, compatibilityDefault))
     };
 
     let vim2 =
