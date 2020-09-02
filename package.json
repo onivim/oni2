@@ -224,8 +224,8 @@
     "@opam/ocamlbuild": "*",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
-    "@opam/ppx_inline_test": "v0.13.1",
-    "@opam/ppx_let": "v0.13.0",
+    "@opam/ppx_inline_test": "v0.14.1",
+    "@opam/ppx_let": "v0.14.0",
     "@opam/ppxlib": ">=0.10.0",
     "@opam/re": "*",
     "@opam/reason": "^3.6.0",
@@ -251,7 +251,7 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#e646df2",
+    "revery": "revery-ui/revery#11d4fb4",
     "esy-skia": "revery-ui/esy-skia#a3785f9",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",

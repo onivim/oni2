@@ -8,6 +8,7 @@ module OptionEx = Utility.OptionEx;
 
 type t =
   | Changelog
+  | Image
   | FilePath(string)
   | Terminal({
       bufferId: int,
@@ -25,8 +26,15 @@ let version = "oni://Version";
 let extensionDetails = "oni://ExtensionDetails";
 let terminalRegex = OnigRegExp.create("oni://terminal/([0-9]*)/(.*)");
 
-let parse = bufferPath =>
-  if (String.equal(bufferPath, welcome)) {
+let imageExtensions = [".png", ".bmp", ".gif", ".tga", ".jpg", ".jpeg"];
+let isImageExtension = ext =>
+  List.exists(imageExt => imageExt == ext, imageExtensions);
+
+let parse = bufferPath => {
+  let extension = bufferPath |> Utility.Path.getExtension;
+  if (isImageExtension(extension)) {
+    Image;
+  } else if (String.equal(bufferPath, welcome)) {
     Welcome;
   } else if (String.equal(bufferPath, version)) {
     Version;
@@ -53,3 +61,4 @@ let parse = bufferPath =>
        })
     |> Option.value(~default=FilePath(bufferPath));
   };
+};
