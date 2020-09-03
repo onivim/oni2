@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Core.Utility;
 module Log = (val Timber.Log.withNamespace("ExtHost.TestLib.Node"));
 
 let spawn = (~env=[], ~onExit, args) => {
@@ -27,6 +28,6 @@ let spawn = (~env=[], ~onExit, args) => {
     nodeFullPath,
     [nodeFullPath, ...args],
   )
-  |> ResultEx.tap_error(msg => prerr_endline(Luv.Error.strerror(msg)))
+  |> ResultEx.tapError(msg => prerr_endline(Luv.Error.strerror(msg)))
   |> Result.get_ok;
 };
