@@ -367,7 +367,16 @@ let recomputeAllItems = (sessions: IntMap.t(Session.t)) => {
       ) => {
     let sortValue = String.compare(a.item.sortText, b.item.sortText);
     if (sortValue == 0) {
-      String.compare(a.item.label, b.item.label);
+      // Check score
+      if (a.score != b.score) {
+        // Descending order - higher scores have priority!
+        Float.compare(
+          b.score,
+          a.score,
+        );
+      } else {
+        String.compare(a.item.label, b.item.label);
+      };
     } else {
       sortValue;
     };
