@@ -1240,7 +1240,10 @@ module StatusBar = {
       let%bind alignmentNumber =
         alignmentJson |> Internal.decode_value(Decode.int);
       let alignment = alignmentNumber |> intToAlignment;
-      let%bind priority = priorityJson |> Internal.decode_value(Decode.int);
+      let%bind priority =
+        priorityJson
+        |> Internal.decode_value(nullable(Decode.int))
+        |> Result.map(Option.value(~default=0));
       Ok(
         SetEntry({
           id,
