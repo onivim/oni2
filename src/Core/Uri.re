@@ -134,14 +134,13 @@ let fromScheme = (~scheme: Scheme.t, ~authority=?, ~query=?, path: string) => {
 
 let fromMemory = path => fromScheme(~scheme=Scheme.Memory, path);
 let fromPath = path => {
-
   // On Windows - we need to normalize backward slashes to forward slashes,
   // to be in sync with the logic from vscode:
   // https://github.com/onivim/vscode-exthost/blob/c7df89c1cf0087ca5decaf8f6d4c0fd0257a8b7a/src/vs/base/common/uri.ts#L306
   // Also see: https://github.com/onivim/oni2/issues/2282
-  let backSlashRegex = Str.regexp("\\\\");
-  let normalizePath = p => Str.global_replace(backSlashRegex, "/", p);
-  fromScheme(~scheme=Scheme.File, normalizePath(path));
+  let path = Sys.win32 ? Utility.Path.normalizeBackSlashes(path) : path;
+
+  fromScheme(~scheme=Scheme.File, path);
 };
 
 let toString = ({scheme, authority, path, query}: t) => {

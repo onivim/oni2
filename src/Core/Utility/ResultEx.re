@@ -24,6 +24,7 @@ let tap = f =>
     }
   | Error(_) as err => err;
 
-let value = (~default) => fun
-| Ok(v) => v
-| Error(_) => default;
+let value = (~default) =>
+  fun
+  | Ok(v) => v
+  | Error(_) => default;
