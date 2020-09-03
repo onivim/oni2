@@ -16,22 +16,23 @@ let getRangesForLinewiseSelection = (startLine, endLine, buffer) => {
     let currentPos = pos^;
     ranges :=
       [
-        Range.create(
-          ~start=
-            Location.create(
-              ~line=Index.fromZeroBased(currentPos),
-              ~column=Index.zero,
-            ),
-          ~stop=
-            Location.create(
-              ~line=Index.fromZeroBased(currentPos),
-              ~column=
-                Index.fromZeroBased(
+        EditorCoreTypes.(
+          ByteRange.{
+            start:
+              BytePosition.{
+                line: LineNumber.ofZeroBased(currentPos),
+                byte: ByteIndex.zero,
+              },
+            stop: {
+              line: LineNumber.ofZeroBased(currentPos),
+              byte:
+                ByteIndex.ofInt(
                   buffer
                   |> Buffer.getLine(currentPos)
                   |> BufferLine.lengthInBytes,
                 ),
-            ),
+            },
+          }
         ),
         ...ranges^,
       ];
@@ -43,39 +44,32 @@ let getRangesForLinewiseSelection = (startLine, endLine, buffer) => {
 };
 
 let getRangesForVisualSelection =
-    (startLine, startColumn, endLine, endColumn, buffer) => {
+    (startLine: int, startColumn: int, endLine: int, endColumn: int, buffer) => {
   let pos = ref(startLine);
   let ranges = ref([]);
 
   while (pos^ <= endLine) {
     let currentPos = pos^;
+    let startCharacterIdx = startLine == currentPos ? startColumn : 0;
+    let endCharacterIdx =
+      endLine == currentPos
+        ? endColumn + 1
+        : buffer |> Buffer.getLine(currentPos) |> BufferLine.lengthInBytes;
     ranges :=
       [
-        Range.create(
-          ~start=
-            Location.create(
-              ~line=Index.fromZeroBased(currentPos),
-              ~column=
-                Index.fromZeroBased(
-                  {
-                    startLine == pos^ ? startColumn : 0;
-                  },
-                ),
-            ),
-          ~stop=
-            Location.create(
-              ~line=Index.fromZeroBased(currentPos),
-              ~column=
-                Index.fromZeroBased(
-                  {
-                    endLine == currentPos
-                      ? endColumn + 1
-                      : buffer
-                        |> Buffer.getLine(currentPos)
-                        |> BufferLine.lengthInBytes;
-                  },
-                ),
-            ),
+        EditorCoreTypes.(
+          ByteRange.{
+            start:
+              BytePosition.{
+                line: LineNumber.ofZeroBased(currentPos),
+                byte: ByteIndex.ofInt(startCharacterIdx),
+              },
+            stop:
+              BytePosition.{
+                line: LineNumber.ofZeroBased(currentPos),
+                byte: ByteIndex.ofInt(endCharacterIdx),
+              },
+          }
         ),
         ...ranges^,
       ];
@@ -105,19 +99,18 @@ let getRangesForBlockSelection =
     let newRange =
       if (startC < bufferLength) {
         Some(
-          Range.create(
-            ~start=
-              Location.create(
-                ~line=Index.fromZeroBased(currentPos),
-                ~column=Index.fromZeroBased(startC),
-              ),
-            ~stop=
-              Location.create(
-                ~line=Index.fromZeroBased(currentPos),
-                ~column=
-                  Index.fromZeroBased(min(endColumn + 1, bufferLength)),
-              ),
-          ),
+          ByteRange.{
+            start:
+              BytePosition.{
+                line: EditorCoreTypes.LineNumber.ofZeroBased(currentPos),
+                byte: ByteIndex.ofInt(startC),
+              },
+            stop:
+              BytePosition.{
+                line: EditorCoreTypes.LineNumber.ofZeroBased(currentPos),
+                byte: ByteIndex.ofInt(min(endColumn + 1, bufferLength)),
+              },
+          },
         );
       } else {
         None;
@@ -147,16 +140,20 @@ let getRangesForBlockSelection =
  * getRanges returns a list of Range.t in Buffer Space,
  * where selection highlights should be displayed
  */
-let getRanges: (VisualRange.t, Buffer.t) => list(Range.t) =
+let getRanges: (VisualRange.t, Buffer.t) => list(ByteRange.t) =
   (selection, buffer) => {
-    let startLine = Index.toZeroBased(selection.range.start.line);
-    let startCharacter = Index.toZeroBased(selection.range.start.column);
+    let startLine =
+      EditorCoreTypes.LineNumber.toZeroBased(selection.range.start.line);
+    let startCharacter = ByteIndex.toInt(selection.range.start.byte);
 
     let bufferLines = Buffer.getNumberOfLines(buffer);
 
     let endLine =
-      min(Index.toZeroBased(selection.range.stop.line), bufferLines - 1);
-    let endCharacter = Index.toZeroBased(selection.range.stop.column);
+      min(
+        EditorCoreTypes.LineNumber.toZeroBased(selection.range.stop.line),
+        bufferLines - 1,
+      );
+    let endCharacter = ByteIndex.toInt(selection.range.stop.byte);
 
     switch (selection.mode) {
     | Vim.Types.Block =>

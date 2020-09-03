@@ -3,6 +3,10 @@ type pane =
   | SCM
   | Extensions;
 
+type location =
+  | Left
+  | Right;
+
 [@deriving show]
 type msg =
   | ResizeInProgress(int)
@@ -23,10 +27,12 @@ type model = {
   width: int,
   resizeDelta: int,
   shouldSnapShut: bool,
+  location,
 };
 
 let selected = ({selected, _}) => selected;
 let isOpen = ({isOpen, _}) => isOpen;
+let location = ({location, _}) => location;
 
 let initial = {
   openByDefault: false,
@@ -35,13 +41,19 @@ let initial = {
   width: Constants.defaultWidth,
   resizeDelta: 0,
   shouldSnapShut: true,
+  location: Left,
 };
 
-let width = ({width, resizeDelta, isOpen, shouldSnapShut, _}) =>
+let width = ({width, resizeDelta, isOpen, location, shouldSnapShut, _}) =>
   if (!isOpen) {
     0;
   } else {
-    let candidate = width + resizeDelta;
+    let candidate =
+      switch (location) {
+      | Left => width + resizeDelta
+      | Right => width - resizeDelta
+      };
+
     if (candidate < Constants.minWidth && shouldSnapShut) {
       0;
     } else if (candidate > Constants.maxWidth) {
@@ -91,3 +103,19 @@ let toggle = (pane, state) =>
   } else {
     {...state, shouldSnapShut: true, isOpen: true, selected: pane};
   };
+
+let setDefaultLocation = (state, setting) => {
+  let location = setting == "right" ? Right : Left;
+  {...state, location};
+};
+
+type settings = {
+  sideBarLocation: string,
+  sideBarVisibility: bool,
+};
+
+let setDefaults = (state, settings) => {
+  let {sideBarVisibility, sideBarLocation} = settings;
+  let state = setDefaultLocation(state, sideBarLocation);
+  setDefaultVisibility(state, sideBarVisibility);
+};

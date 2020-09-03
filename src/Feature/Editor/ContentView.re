@@ -5,7 +5,6 @@ open Oni_Core;
 open Helpers;
 
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
-module Definition = Feature_LanguageSupport.Definition;
 
 let renderLine =
     (
@@ -14,12 +13,13 @@ let renderLine =
       ~colors: Colors.t,
       ~diagnosticsMap,
       ~selectionRanges,
-      ~matchingPairs,
+      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~bufferHighlights,
+      ~languageSupport,
       item,
       _offset,
     ) => {
-  let index = Index.fromZeroBased(item);
+  let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
   let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) =>
     Draw.underline(~context, ~color=colors.errorForeground, diagnostic.range);
 
@@ -33,7 +33,7 @@ let renderLine =
   | None => ()
   | Some(selections) =>
     List.iter(
-      Draw.range(~context, ~color=colors.selectionBackground),
+      Draw.rangeByte(~context, ~color=colors.selectionBackground),
       selections,
     )
   };
@@ -42,26 +42,45 @@ let renderLine =
   switch (matchingPairs) {
   | None => ()
   | Some((startPos, endPos)) =>
-    Draw.range(
+    Draw.rangeCharacter(
       ~context,
       ~color=colors.selectionBackground,
-      Range.{start: startPos, stop: startPos},
+      CharacterRange.{start: startPos, stop: startPos},
     );
-    Draw.range(
+    Draw.rangeCharacter(
       ~context,
       ~color=colors.selectionBackground,
-      Range.{start: endPos, stop: endPos},
+      CharacterRange.{start: endPos, stop: endPos},
     );
   };
 
+  let bufferId = Buffer.getId(buffer);
   /* Draw search highlights */
   BufferHighlights.getHighlightsByLine(
-    ~bufferId=Buffer.getId(buffer),
+    ~bufferId,
     ~line=index,
     bufferHighlights,
   )
   |> List.iter(
-       Draw.range(~context, ~padding=1., ~color=colors.findMatchBackground),
+       Draw.rangeByte(
+         ~context,
+         ~padding=1.,
+         ~color=colors.findMatchBackground,
+       ),
+     );
+
+  /* Draw document highlights */
+  Feature_LanguageSupport.DocumentHighlights.getByLine(
+    ~bufferId,
+    ~line=index |> EditorCoreTypes.LineNumber.toZeroBased,
+    languageSupport,
+  )
+  |> List.iter(
+       Draw.rangeCharacter(
+         ~context,
+         ~padding=1.,
+         ~color=colors.findMatchBackground,
+       ),
      );
 };
 
@@ -75,6 +94,7 @@ let renderEmbellishments =
       ~selectionRanges,
       ~matchingPairs,
       ~bufferHighlights,
+      ~languageSupport,
     ) =>
   Draw.renderImmediate(
     ~context,
@@ -87,25 +107,28 @@ let renderEmbellishments =
       ~selectionRanges,
       ~matchingPairs,
       ~bufferHighlights,
+      ~languageSupport,
     ),
   );
 
 let renderDefinition =
     (
       ~context,
+      ~bufferId,
+      ~languageSupport,
       ~leftVisibleColumn,
-      ~cursorPosition: Location.t,
+      ~cursorPosition: CharacterPosition.t,
       ~editor,
       ~bufferHighlights,
       ~colors,
-      ~matchingPairs,
+      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~bufferSyntaxHighlights,
       ~bufferWidthInCharacters,
     ) =>
   getTokenAtPosition(
     ~editor,
     ~bufferHighlights,
-    ~cursorLine=Index.toZeroBased(cursorPosition.line),
+    ~cursorLine=EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
     ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,
@@ -115,18 +138,35 @@ let renderDefinition =
   )
   |> Option.iter((token: BufferViewTokenizer.t) => {
        let range =
-         Range.{
+         CharacterRange.{
            start:
-             Location.{line: cursorPosition.line, column: token.startIndex},
-           stop: Location.{line: cursorPosition.line, column: token.endIndex},
+             CharacterPosition.{
+               line: cursorPosition.line,
+               character: token.startIndex,
+             },
+           stop:
+             CharacterPosition.{
+               line: cursorPosition.line,
+               character: token.endIndex,
+             },
          };
-       Draw.underline(~context, ~color=token.color, range);
+
+       // Double-check that the range of the token falls into our definition position
+
+       Feature_LanguageSupport.Definition.getAt(
+         ~bufferId,
+         ~range,
+         languageSupport,
+       )
+       |> Option.iter(_ => {
+            Draw.underline(~context, ~color=token.color, range)
+          });
      });
 
 let renderTokens =
-    (~context, ~line, ~colors, ~tokens, ~shouldRenderWhitespace) => {
+    (~selection, ~context, ~line, ~colors, ~tokens, ~shouldRenderWhitespace) => {
   tokens
-  |> WhitespaceTokenFilter.filter(shouldRenderWhitespace)
+  |> WhitespaceTokenFilter.filter(~selection, shouldRenderWhitespace)
   |> List.iter(Draw.token(~context, ~line, ~colors));
 };
 
@@ -141,15 +181,14 @@ let renderText =
       ~colors,
       ~matchingPairs,
       ~bufferSyntaxHighlights,
-      ~leftVisibleColumn,
       ~shouldRenderWhitespace,
-      ~bufferWidthInCharacters,
+      ~bufferWidthInPixels,
     ) =>
   Draw.renderImmediate(
     ~context,
     ~count,
     (item, _offsetY) => {
-      let index = Index.fromZeroBased(item);
+      let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
       let selectionRange =
         switch (Hashtbl.find_opt(selectionRanges, index)) {
         | None => None
@@ -159,6 +198,18 @@ let renderText =
           | _ => Some(List.hd(v))
           }
         };
+      let bufferLine = Editor.viewLine(editor, item).contents;
+      let startPixel = Editor.scrollX(editor);
+      let startCharacter =
+        BufferLine.Slow.getIndexFromPixel(~pixel=startPixel, bufferLine)
+        |> CharacterIndex.toInt;
+      let endCharacter =
+        BufferLine.Slow.getIndexFromPixel(
+          ~pixel=startPixel +. float(bufferWidthInPixels),
+          bufferLine,
+        )
+        |> CharacterIndex.toInt;
+
       let tokens =
         getTokensForLine(
           ~editor,
@@ -168,14 +219,15 @@ let renderText =
           ~matchingPairs,
           ~bufferSyntaxHighlights,
           ~selection=selectionRange,
-          leftVisibleColumn,
-          leftVisibleColumn + bufferWidthInCharacters,
+          startCharacter,
+          endCharacter + 1,
           item,
         );
 
       renderTokens(
+        ~selection=selectionRange,
         ~context,
-        ~line=item,
+        ~line=item |> EditorCoreTypes.LineNumber.ofZeroBased,
         ~colors,
         ~tokens,
         ~shouldRenderWhitespace,
@@ -193,13 +245,14 @@ let render =
       ~colors,
       ~diagnosticsMap,
       ~selectionRanges,
-      ~matchingPairs,
+      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~bufferHighlights,
-      ~cursorPosition: Location.t,
-      ~definition,
+      ~cursorPosition: CharacterPosition.t,
+      ~languageSupport,
       ~bufferSyntaxHighlights,
       ~shouldRenderWhitespace,
       ~bufferWidthInCharacters,
+      ~bufferWidthInPixels,
     ) => {
   renderEmbellishments(
     ~context,
@@ -210,14 +263,17 @@ let render =
     ~selectionRanges,
     ~matchingPairs,
     ~bufferHighlights,
+    ~languageSupport,
   );
 
-  if (Definition.isAvailable(
-        Buffer.getId(buffer),
-        cursorPosition,
-        definition,
+  let bufferId = Buffer.getId(buffer);
+  if (Feature_LanguageSupport.Definition.isAvailable(
+        ~bufferId,
+        languageSupport,
       )) {
     renderDefinition(
+      ~bufferId,
+      ~languageSupport,
       ~context,
       ~editor,
       ~leftVisibleColumn,
@@ -236,12 +292,11 @@ let render =
     ~selectionRanges,
     ~editor,
     ~bufferHighlights,
-    ~cursorLine=Index.toZeroBased(cursorPosition.line),
+    ~cursorLine=EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
     ~colors,
     ~matchingPairs,
     ~bufferSyntaxHighlights,
-    ~leftVisibleColumn,
     ~shouldRenderWhitespace,
-    ~bufferWidthInCharacters,
+    ~bufferWidthInPixels,
   );
 };

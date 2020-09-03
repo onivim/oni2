@@ -8,6 +8,6 @@
         Oni_Core_Test
         rely.lib
         luv
-        editor-core-types
+        Oni2.editor-core-types
         unix
     ))

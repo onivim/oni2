@@ -60,6 +60,7 @@ module View: {
 
     let id: t => int;
     let title: t => string;
+    let tooltip: t => string;
     let icon: t => option(IconTheme.IconDefinition.t);
     let isModified: t => bool;
 

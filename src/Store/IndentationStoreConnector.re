@@ -37,13 +37,15 @@ let start = () => {
         };
 
       dispatch(
-        Actions.BufferSetIndentation(
-          Buffer.getId(buffer),
-          IndentationSettings.create(
-            ~mode=guess.mode,
-            ~size,
-            ~tabSize=size,
-            (),
+        Actions.Buffers(
+          Feature_Buffers.IndentationSet(
+            Buffer.getId(buffer),
+            IndentationSettings.create(
+              ~mode=guess.mode,
+              ~size,
+              ~tabSize=size,
+              (),
+            ),
           ),
         ),
       );
@@ -53,9 +55,11 @@ let start = () => {
     Isolinear.Effect.createWithDispatch(
       ~name="indentation.setConfigured", dispatch =>
       dispatch(
-        Actions.BufferSetIndentation(
-          Buffer.getId(buffer),
-          IndentationSettings.ofConfiguration(state.configuration),
+        Actions.Buffers(
+          Feature_Buffers.IndentationSet(
+            Buffer.getId(buffer),
+            IndentationSettings.ofConfiguration(state.configuration),
+          ),
         ),
       )
     );
@@ -79,9 +83,9 @@ let start = () => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.BufferEnter({buffer, _}) =>
+    | Actions.Buffers(Feature_Buffers.Entered({buffer, _})) =>
       let id = Oni_Core.Buffer.getId(buffer);
-      switch (Buffers.getBuffer(id, state.buffers)) {
+      switch (Feature_Buffers.get(id, state.buffers)) {
       | Some(buffer) when !Buffer.isIndentationSet(buffer) => (
           state,
           checkIndentationEffect(state, buffer),
@@ -89,7 +93,7 @@ let start = () => {
       | _ => (state, Isolinear.Effect.none)
       };
 
-    | Actions.BufferUpdate({oldBuffer, newBuffer, _})
+    | Actions.Buffers(Feature_Buffers.Update({oldBuffer, newBuffer, _}))
         when
           Buffer.getNumberOfLines(oldBuffer) <= 1
           && Buffer.getNumberOfLines(newBuffer) > 2 => (

@@ -34,9 +34,20 @@ module Internal = {
              },
            icon: item.icon,
            highlight: [],
+           handle: None,
          }
        )
     |> Array.of_list;
+
+  let extensionItem: Exthost.QuickOpen.Item.t => Actions.menuItem =
+    item => {
+      category: None,
+      name: item.label,
+      handle: Some(item.handle),
+      icon: None,
+      highlight: [],
+      command: () => Actions.Noop,
+    };
 
   let commandPaletteItems = (commands, menus, contextKeys) => {
     let contextKeys =
@@ -57,7 +68,7 @@ module Internal = {
   };
 };
 
-let start = (themeInfo: ThemeInfo.t) => {
+let start = () => {
   let selectItemEffect = (item: Actions.menuItem) =>
     Isolinear.Effect.createWithDispatch(~name="quickmenu.selectItem", dispatch => {
       let action = item.command();
@@ -69,7 +80,7 @@ let start = (themeInfo: ThemeInfo.t) => {
       ~name="quickmenu.executeVimCommand", dispatch => {
       // TODO: Hard-coding "<CR>" and assuming `KeyboardInput` reaches vim seems very sketchy
       dispatch(
-        Actions.KeyboardInput("<CR>"),
+        Actions.KeyboardInput({isText: false, input: "<CR>"}),
       )
     });
 
@@ -77,8 +88,23 @@ let start = (themeInfo: ThemeInfo.t) => {
     Isolinear.Effect.createWithDispatch(~name="quickmenu.exitMode", dispatch => {
       // TODO: Hard-coding "<ESC>" and assuming `KeyboardInput` reaches vim seems very sketchy
       dispatch(
-        Actions.KeyboardInput("<ESC>"),
+        Actions.KeyboardInput({isText: false, input: "<ESC>"}),
       )
+    });
+
+  exception MenuCancelled;
+
+  let selectExtensionItemEffect = (~resolver, item: Actions.menuItem) =>
+    Isolinear.Effect.create(~name="quickmenu.selectExtensionItem", () => {
+      switch (item.handle) {
+      | Some(handle) => Lwt.wakeup(resolver, handle)
+      | None => Lwt.wakeup_exn(resolver, MenuCancelled)
+      }
+    });
+
+  let cancelExtensionMenuEffect = (~resolver) =>
+    Isolinear.Effect.create(~name="quickmenu.cancelExtensionMenu", () => {
+      Lwt.wakeup_exn(resolver, MenuCancelled)
     });
 
   let makeBufferCommands = (languageInfo, iconTheme, buffers) => {
@@ -107,6 +133,7 @@ let start = (themeInfo: ThemeInfo.t) => {
                },
                icon: FileExplorer.getFileIcon(languageInfo, iconTheme, path),
                highlight: [],
+               handle: None,
              },
            maybeName,
            maybePath,
@@ -125,7 +152,6 @@ let start = (themeInfo: ThemeInfo.t) => {
         buffers,
         languageInfo,
         iconTheme,
-        themeInfo,
         commands,
         menus,
         contextKeys,
@@ -159,6 +185,14 @@ let start = (themeInfo: ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
+    | QuickmenuShow(Extension({id, hasItems, resolver})) => (
+        Some({
+          ...Quickmenu.defaults(Extension({id, hasItems, resolver})),
+          focused: Some(0),
+        }),
+        Isolinear.Effect.none,
+      )
+
     | QuickmenuShow(FilesPicker) => (
         Some({
           ...Quickmenu.defaults(FilesPicker),
@@ -178,9 +212,9 @@ let start = (themeInfo: ThemeInfo.t) => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(ThemesPicker) =>
+    | QuickmenuShow(ThemesPicker(themes)) =>
       let items =
-        ThemeInfo.getThemes(themeInfo)
+        themes
         |> List.map((theme: ExtensionContributions.Theme.t) => {
              Actions.{
                category: Some("Theme"),
@@ -188,12 +222,42 @@ let start = (themeInfo: ThemeInfo.t) => {
                command: () => ThemeLoadByName(theme.label),
                icon: None,
                highlight: [],
+               handle: None,
              }
            })
         |> Array.of_list;
 
       (
-        Some({...Quickmenu.defaults(ThemesPicker), items}),
+        Some({...Quickmenu.defaults(ThemesPicker(themes)), items}),
+        Isolinear.Effect.none,
+      );
+
+    | QuickmenuShow(FileTypesPicker({bufferId, languages})) =>
+      let items =
+        languages
+        |> List.map(((fileType, maybeIcon)) => {
+             Actions.{
+               category: None,
+               name: fileType,
+               command: () =>
+                 Buffers(
+                   Feature_Buffers.FileTypeChanged({
+                     id: bufferId,
+                     fileType: Oni_Core.Buffer.FileType.explicit(fileType),
+                   }),
+                 ),
+               icon: maybeIcon,
+               highlight: [],
+               handle: None,
+             }
+           })
+        |> Array.of_list;
+
+      (
+        Some({
+          ...Quickmenu.defaults(FileTypesPicker({bufferId, languages})),
+          items,
+        }),
         Isolinear.Effect.none,
       );
 
@@ -234,13 +298,13 @@ let start = (themeInfo: ThemeInfo.t) => {
               if (transition > 0) {
                 for (_ in 0 to transition) {
                   GlobalContext.current().dispatch(
-                    Actions.KeyboardInput("<LEFT>"),
+                    Actions.KeyboardInput({isText: false, input: "<LEFT>"}),
                   );
                 };
               } else if (transition < 0) {
                 for (_ in 0 downto transition) {
                   GlobalContext.current().dispatch(
-                    Actions.KeyboardInput("<RIGHT>"),
+                    Actions.KeyboardInput({isText: false, input: "<RIGHT>"}),
                   );
                 };
               };
@@ -270,6 +334,27 @@ let start = (themeInfo: ThemeInfo.t) => {
     | QuickmenuUpdateRipgrepProgress(progress) => (
         Option.map(
           (state: Quickmenu.t) => {...state, ripgrepProgress: progress},
+          state,
+        ),
+        Isolinear.Effect.none,
+      )
+
+    | QuickmenuUpdateExtensionItems({items, _}) => (
+        Option.map(
+          (state: Quickmenu.t) => {
+            switch (state.variant) {
+            | Extension({id, resolver, _}) => {
+                ...
+                  Quickmenu.defaults(
+                    Extension({id, hasItems: true, resolver}),
+                  ),
+                focused: None,
+                items:
+                  items |> List.map(Internal.extensionItem) |> Array.of_list,
+              }
+            | _ => state
+            }
+          },
           state,
         ),
         Isolinear.Effect.none,
@@ -339,6 +424,20 @@ let start = (themeInfo: ThemeInfo.t) => {
       switch (state) {
       | Some({variant: Wildmenu(_), _}) => (None, executeVimCommandEffect)
 
+      | Some({
+          variant: Extension({resolver, _}),
+          items,
+          focused: Some(focused),
+          _,
+        }) =>
+        switch (items[focused]) {
+        | item => (None, selectExtensionItemEffect(~resolver, item))
+        | exception (Invalid_argument(_)) => (
+            None,
+            cancelExtensionMenuEffect(~resolver),
+          )
+        }
+
       | Some({items, focused: Some(focused), _}) =>
         switch (items[focused]) {
         | item => (None, selectItemEffect(item))
@@ -379,7 +478,6 @@ let start = (themeInfo: ThemeInfo.t) => {
         state.buffers,
         state.languageInfo,
         state.iconTheme,
-        themeInfo,
         State.commands(state),
         State.menus(state),
         WhenExpr.ContextKeys.fromSchema(ContextKeys.all, state),
@@ -440,6 +538,7 @@ let subscriptions = (ripgrep, dispatch) => {
         command: () => Actions.OpenFileByPath(fullPath, None, None),
         icon: FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
         highlight: [],
+        handle: None,
       };
 
     RipgrepSubscription.create(
@@ -467,12 +566,17 @@ let subscriptions = (ripgrep, dispatch) => {
       switch (quickmenu.variant) {
       | CommandPalette
       | EditorsPicker
-      | ThemesPicker => [filter(query, quickmenu.items)]
+      | ThemesPicker(_) => [filter(query, quickmenu.items)]
+
+      | Extension({hasItems, _}) =>
+        hasItems ? [filter(query, quickmenu.items)] : []
 
       | FilesPicker => [
           filter(query, quickmenu.items),
           ripgrep(state.languageInfo, state.iconTheme, state.configuration),
         ]
+
+      | FileTypesPicker(_) => [filter(query, quickmenu.items)]
 
       | Wildmenu(_) => []
       | DocumentSymbols =>

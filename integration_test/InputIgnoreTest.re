@@ -7,17 +7,17 @@ module Log = (val Log.withNamespace("IntegrationTest.inputIgnore"));
 // This test validates that certain keystrokes are ignored by our Vim layer
 runTest(~name="InputIgnore test", (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Mode.Normal
   );
 
-  dispatch(KeyboardInput("i"));
+  dispatch(KeyboardInput({isText: true, input: "i"}));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Insert
+    Feature_Vim.mode(state.vim) == Vim.Mode.Insert
   );
 
-  dispatch(KeyboardInput("<D-A->"));
-  dispatch(KeyboardInput("b"));
+  dispatch(KeyboardInput({isText: false, input: "<D-A->"}));
+  dispatch(KeyboardInput({isText: false, input: "b"}));
   runEffects();
 
   wait(~name="Buffer is correct", (state: State.t) =>

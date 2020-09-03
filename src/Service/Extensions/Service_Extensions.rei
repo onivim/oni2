@@ -2,6 +2,7 @@ open Oni_Core;
 
 module Catalog: {
   module Identifier: {
+    [@deriving show]
     type t = {
       publisher: string,
       name: string,
@@ -12,6 +13,7 @@ module Catalog: {
   };
 
   module VersionInfo: {
+    [@deriving show]
     type t = {
       version: string,
       url: string,
@@ -19,13 +21,14 @@ module Catalog: {
   };
 
   module Details: {
+    [@deriving show]
     type t = {
       downloadUrl: string,
       repositoryUrl: string,
       homepageUrl: string,
       manifestUrl: string,
       iconUrl: option(string),
-      readmeUrl: string,
+      readmeUrl: option(string),
       licenseName: option(string),
       //      licenseUrl: string,
       name: string,
@@ -93,6 +96,7 @@ module Query: {
   let create: (~searchText: string) => t;
 
   let isComplete: t => bool;
+  let searchText: t => string;
   let percentComplete: t => float;
   let results: t => list(Catalog.Summary.t);
 };
@@ -112,6 +116,10 @@ module Effects: {
       ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'a,
       string
     ) =>
+    Isolinear.Effect.t('a);
+
+  let details:
+    (~extensionId: string, ~toMsg: result(Catalog.Details.t, string) => 'a) =>
     Isolinear.Effect.t('a);
 };
 

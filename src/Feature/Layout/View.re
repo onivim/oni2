@@ -17,6 +17,7 @@ module type ContentModel = {
 
   let id: t => int;
   let title: t => string;
+  let tooltip: t => string;
   let icon: t => option(Oni_Core.IconTheme.IconDefinition.t);
   let isModified: t => bool;
 
@@ -156,6 +157,7 @@ module Tab = {
   let%component make =
                 (
                   ~title,
+                  ~tooltip,
                   ~isGroupFocused,
                   ~isActive,
                   ~isModified,
@@ -200,6 +202,7 @@ module Tab = {
         ~theme,
       )}>
       <Sneakable
+        sneakId=title
         onSneak=onClick
         onAnyClick
         style=Style.[
@@ -210,15 +213,17 @@ module Tab = {
           justifyContent(`Center),
         ]>
         <View style=Styles.icon> fileIconView </View>
-        <Text
-          style={Styles.text(~isGroupFocused, ~isActive, ~theme)}
-          fontFamily={uiFont.family}
-          italic={isGroupFocused && isActive}
-          fontSize={uiFont.size}
-          text=title
-        />
+        <Tooltip text=tooltip>
+          <Text
+            style={Styles.text(~isGroupFocused, ~isActive, ~theme)}
+            fontFamily={uiFont.family}
+            italic={isGroupFocused && isActive}
+            fontSize={uiFont.size}
+            text=title
+          />
+        </Tooltip>
       </Sneakable>
-      <Sneakable onClick=onClose style=Styles.icon>
+      <Sneakable onClick=onClose style=Styles.icon sneakId={title ++ ".close"}>
         <FontIcon
           icon={isModified ? FontAwesome.circle : FontAwesome.times}
           color={
@@ -255,6 +260,7 @@ module EditorGroupView = {
 
     let id: t => int;
     let title: t => string;
+    let tooltip: t => string;
     let icon: t => option(IconTheme.IconDefinition.t);
     let isModified: t => bool;
 
@@ -297,6 +303,7 @@ module EditorGroupView = {
                 uiFont
                 theme
                 title={ContentModel.title(item)}
+                tooltip={ContentModel.tooltip({item})}
                 isGroupFocused=isActive
                 isActive=isSelected
                 isModified={ContentModel.isModified(item)}
@@ -605,6 +612,7 @@ let make =
             uiFont
             theme
             title
+            tooltip=title
             isActive=isSelected
             isGroupFocused=true
             isModified

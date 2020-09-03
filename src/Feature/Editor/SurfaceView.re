@@ -25,7 +25,8 @@ module Constants = {
   let hoverTime = 1.0;
 };
 
-let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
+let drawCurrentLineHighlight =
+    (~context, ~colors: Colors.t, line: EditorCoreTypes.LineNumber.t) =>
   Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
 
 let renderRulers = (~context: Draw.context, ~colors: Colors.t, rulers) => {
@@ -44,16 +45,17 @@ let%component make =
                 ~dispatch,
                 ~topVisibleLine,
                 ~onCursorChange,
-                ~cursorPosition: Location.t,
+                ~cursorPosition: CharacterPosition.t,
                 ~editorFont: Service_Font.font,
                 ~leftVisibleColumn,
                 ~diagnosticsMap,
                 ~selectionRanges,
                 ~matchingPairs,
                 ~bufferHighlights,
-                ~definition,
+                ~languageSupport,
                 ~bufferSyntaxHighlights,
                 ~bottomVisibleLine,
+                ~maybeYankHighlights,
                 ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
@@ -92,7 +94,7 @@ let%component make =
          let relX = mouseX -. minX;
          let relY = mouseY -. minY;
 
-         Editor.Slow.pixelPositionToBufferLineByte(
+         Editor.Slow.pixelPositionToBytePosition(
            ~buffer,
            ~pixelX=relX,
            ~pixelY=relY,
@@ -103,16 +105,8 @@ let%component make =
 
   let onMouseMove = (evt: NodeEvents.mouseMoveEventParams) => {
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-    |> Option.iter(((line, col)) => {
-         dispatch(
-           Msg.MouseMoved({
-             location:
-               EditorCoreTypes.Location.create(
-                 ~line=Index.fromZeroBased(line),
-                 ~column=Index.fromZeroBased(col),
-               ),
-           }),
-         )
+    |> Option.iter(bytePosition => {
+         dispatch(Msg.MouseMoved({bytePosition: bytePosition}))
        });
     hoverTimerActive := true;
     lastMousePosition := Some((evt.mouseX, evt.mouseY));
@@ -139,17 +133,9 @@ let%component make =
         |> Utility.OptionEx.flatMap(((mouseX, mouseY)) =>
              getMaybeLocationFromMousePosition(mouseX, mouseY)
            )
-        |> Option.iter(((line, col)) =>
-             dispatch(
-               Msg.MouseHovered({
-                 location:
-                   EditorCoreTypes.Location.create(
-                     ~line=Index.fromZeroBased(line),
-                     ~column=Index.fromZeroBased(col),
-                   ),
-               }),
-             )
-           );
+        |> Option.iter(bytePosition => {
+             dispatch(Msg.MouseHovered({bytePosition: bytePosition}))
+           });
         hoverTimerActive := false;
         resetHoverTimer();
         None;
@@ -160,22 +146,28 @@ let%component make =
     Log.trace("editorMouseUp");
 
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-    |> Option.iter(((line, col)) => {
+    |> Option.iter(bytePosition => {
          Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
-         Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
-
-         let cursor =
-           Vim.Cursor.create(
-             ~line=Index.fromOneBased(line + 1),
-             ~column=Index.fromZeroBased(col),
-           );
-
-         onCursorChange(cursor);
+         Log.tracef(m =>
+           m("  setPosition (%s)", BytePosition.show(bytePosition))
+         );
+         onCursorChange(bytePosition);
        });
   };
 
   let pixelWidth = Editor.visiblePixelWidth(editor);
   let pixelHeight = Editor.visiblePixelHeight(editor);
+
+  let yankHighlightElement =
+    maybeYankHighlights
+    |> Option.map((highlights: Editor.yankHighlight) =>
+         <YankHighlights
+           key={highlights.key}
+           colors
+           pixelRanges={highlights.pixelRanges}
+         />
+       )
+    |> Option.value(~default=React.empty);
 
   <View
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
@@ -199,31 +191,9 @@ let%component make =
             ~editorFont,
           );
 
-        drawCurrentLineHighlight(
-          ~context,
-          ~colors,
-          cursorPosition.line |> Index.toZeroBased,
-        );
+        drawCurrentLineHighlight(~context, ~colors, cursorPosition.line);
 
         renderRulers(~context, ~colors, Config.rulers.get(config));
-
-        ContentView.render(
-          ~context,
-          ~count=lineCount,
-          ~buffer,
-          ~editor,
-          ~leftVisibleColumn,
-          ~colors,
-          ~diagnosticsMap,
-          ~selectionRanges,
-          ~matchingPairs,
-          ~bufferHighlights,
-          ~cursorPosition,
-          ~definition,
-          ~bufferSyntaxHighlights,
-          ~shouldRenderWhitespace=Config.renderWhitespace.get(config),
-          ~bufferWidthInCharacters,
-        );
 
         if (Config.renderIndentGuides.get(config)) {
           IndentLineRenderer.render(
@@ -237,6 +207,25 @@ let%component make =
             indentation,
           );
         };
+
+        ContentView.render(
+          ~context,
+          ~count=lineCount,
+          ~buffer,
+          ~editor,
+          ~leftVisibleColumn,
+          ~colors,
+          ~diagnosticsMap,
+          ~selectionRanges,
+          ~matchingPairs,
+          ~bufferHighlights,
+          ~cursorPosition,
+          ~languageSupport,
+          ~bufferSyntaxHighlights,
+          ~shouldRenderWhitespace=Config.renderWhitespace.get(config),
+          ~bufferWidthInCharacters,
+          ~bufferWidthInPixels=bufferPixelWidth,
+        );
 
         if (Config.scrollShadow.get(config)) {
           let () =
@@ -255,6 +244,7 @@ let%component make =
         };
       }}
     />
+    yankHighlightElement
     <CursorView
       config
       editor

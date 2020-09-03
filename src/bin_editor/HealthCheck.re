@@ -71,6 +71,19 @@ let commonChecks = [
       true;
     },
   ),
+  (
+    "Verify harfbuzz dependency",
+    _ => {
+      Log.infof(m =>
+        m(
+          "harfbuzz versions - compiled: %s linked: %s",
+          Harfbuzz.hb_version_string_compiled(),
+          Harfbuzz.hb_version_string_runtime(),
+        )
+      );
+      true;
+    },
+  ),
 ];
 
 let mainChecks = [
@@ -122,7 +135,9 @@ let mainChecks = [
     _ => {
       let fontPath =
         Revery.Environment.executingDirectory ++ "JetBrainsMono-Regular.ttf";
-      switch (Revery.Font.load(fontPath)) {
+      let family = Revery.Font.Family.fromFile(fontPath);
+      let maybeSkia = Revery.Font.Family.toSkia(Normal, family);
+      switch (Revery.Font.load(maybeSkia)) {
       | Ok(font) =>
         let metrics = Revery.Font.getMetrics(font, 12.0);
         ignore(metrics);
@@ -191,7 +206,7 @@ let mainChecks = [
           ~onClose=_ => {closed := true},
           ~onHighlights=(~bufferId as _, ~tokens as _) => (),
           ~onHealthCheckResult=res => {healthCheckResult := res},
-          Exthost.LanguageInfo.initial,
+          Exthost.GrammarInfo.initial,
           setup,
         )
         |> Result.get_ok;

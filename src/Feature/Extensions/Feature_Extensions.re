@@ -3,6 +3,17 @@ open Exthost.Extension;
 
 include Model;
 
+module Msg = {
+  let exthost = msg => Exthost(msg);
+  let storage = (~resolver, msg) => Storage({resolver, msg});
+  let discovered = extensions => Discovered(extensions);
+  let keyPressed = key => KeyPressed(key);
+  let pasted = key => Pasted(key);
+
+  let command = (~command, ~arguments) =>
+    ExecuteCommand({command, arguments});
+};
+
 let all = ({extensions, _}) => extensions;
 let activatedIds = ({activatedIds, _}) => activatedIds;
 
@@ -47,7 +58,42 @@ let menus = model =>
   |> Seq.map(((id, items)) => Menu.Schema.{id, items})
   |> List.of_seq;
 
+let pick = (f, {extensions, _}) => {
+  extensions
+  |> List.map((scanResult: Exthost.Extension.Scanner.ScanResult.t) => {
+       f(scanResult.manifest)
+     });
+};
+
+let themeByName = (~name, model) => {
+  model
+  |> pick(manifest => manifest.contributes.themes)
+  |> List.flatten
+  |> List.fold_left(
+       (acc, curr: Contributions.Theme.t) =>
+         if (curr.label == name) {
+           Some(curr);
+         } else {
+           acc;
+         },
+       None,
+     );
+};
+
+let themesByName = (~filter: string, model) => {
+  model
+  |> pick((manifest: Exthost.Extension.Manifest.t) => {
+       Exthost.Extension.Contributions.(manifest.contributes.themes)
+     })
+  |> List.flatten
+  |> List.map(({label, _}: Exthost.Extension.Contributions.Theme.t) =>
+       label
+     )
+  |> List.filter(label => Utility.StringEx.contains(filter, label));
+};
+
 module ListView = ListView;
+module DetailsView = DetailsView;
 
 let sub = (~setup, model) => {
   let toMsg =

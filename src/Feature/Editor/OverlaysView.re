@@ -7,10 +7,8 @@ module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Completions = Feature_LanguageSupport.Completions;
 module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
-module Definition = Feature_LanguageSupport.Definition;
 
 module Styles = {
   open Style;
@@ -27,47 +25,41 @@ module Styles = {
 
 let completionsView =
     (
-      ~completions,
+      ~languageSupport,
       ~cursorPixelX,
       ~cursorPixelY,
-      ~colors,
       ~theme,
       ~tokenTheme,
       ~editorFont: Service_Font.font,
       (),
     ) =>
-  Completions.isActive(completions)
-    ? <CompletionsView
+  Feature_LanguageSupport.Completion.isActive(languageSupport)
+    ? <Feature_LanguageSupport.Completion.View
         x=cursorPixelX
         y=cursorPixelY
         lineHeight={editorFont.measuredHeight}
-        colors
         theme
         tokenTheme
         editorFont
-        completions
+        //colors
+        model=languageSupport
       />
     : React.empty;
 
 let make =
     (
       ~isActiveSplit,
-      ~cursorPosition: Location.t,
+      ~cursorPosition: CharacterPosition.t,
       ~editor: Editor.t,
       ~gutterWidth,
-      ~completions,
-      ~colors,
       ~theme,
       ~tokenTheme,
+      ~languageSupport,
       ~editorFont: Service_Font.font,
       (),
     ) => {
-  let ({pixelX, pixelY}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(
-      ~line=Index.toZeroBased(cursorPosition.line),
-      ~byteIndex=Index.toZeroBased(cursorPosition.column),
-      editor,
-    );
+  let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
+    Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
 
   let cursorPixelY = pixelY |> int_of_float;
   let cursorPixelX = pixelX +. gutterWidth |> int_of_float;
@@ -75,10 +67,9 @@ let make =
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
         <completionsView
-          completions
+          languageSupport
           cursorPixelX
           cursorPixelY
-          colors
           theme
           tokenTheme
           editorFont

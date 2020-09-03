@@ -5,6 +5,8 @@ module Log = (val Oni_Core.Log.withNamespace("Oni2.Feature.Theme"));
 
 module Colors = GlobalColors;
 
+type theme = Exthost.Extension.Contributions.Theme.t;
+
 type model = {
   schema: ColorTheme.Schema.t,
   theme: ColorTheme.t,
@@ -14,6 +16,7 @@ let defaults =
   [
     Colors.ActivityBar.defaults,
     Colors.ActivityBarBadge.defaults,
+    Colors.Button.defaults,
     Colors.Dropdown.defaults,
     Colors.Editor.defaults,
     Colors.EditorError.defaults,
@@ -37,6 +40,7 @@ let defaults =
     Colors.Minimap.defaults,
     Colors.MinimapSlider.defaults,
     Colors.MinimapGutter.defaults,
+    Colors.Notifications.defaults,
     Colors.Oni.defaults,
     Colors.Oni.Modal.defaults,
     Colors.Oni.Sneak.defaults,
@@ -48,6 +52,7 @@ let defaults =
     Colors.SideBar.defaults,
     Colors.SideBarSectionHeader.defaults,
     Colors.StatusBar.defaults,
+    Colors.SymbolIcon.defaults,
     Colors.Tab.defaults,
     Colors.TextLink.defaults,
     Colors.TitleBar.defaults,
@@ -112,25 +117,58 @@ let colors =
 };
 
 [@deriving show({with_path: false})]
+type command =
+  | SelectTheme;
+
+[@deriving show({with_path: false})]
 type msg =
+  | Command(command)
   | TextmateThemeLoaded(ColorTheme.variant, [@opaque] Textmate.ColorTheme.t);
+
+module Msg = {
+  let openThemePicker = Command(SelectTheme);
+};
+
+type outmsg =
+  | Nothing
+  | OpenThemePicker(list(theme));
 
 let update = (model, msg) => {
   switch (msg) {
-  | TextmateThemeLoaded(variant, colors) => {
-      ...model,
-      theme: {
-        variant,
-        colors:
-          Textmate.ColorTheme.fold(
-            (key, color, acc) =>
-              color == ""
-                ? acc : [(ColorTheme.key(key), Color.hex(color)), ...acc],
-            colors,
-            [],
-          )
-          |> ColorTheme.Colors.fromList,
+  | TextmateThemeLoaded(variant, colors) => (
+      {
+        ...model,
+        theme: {
+          variant,
+          colors:
+            Textmate.ColorTheme.fold(
+              (key, color, acc) =>
+                color == ""
+                  ? acc : [(ColorTheme.key(key), Color.hex(color)), ...acc],
+              colors,
+              [],
+            )
+            |> ColorTheme.Colors.fromList,
+        },
       },
-    }
+      Nothing,
+    )
+  | Command(SelectTheme) => (model, OpenThemePicker([]))
   };
+};
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let selectTheme =
+    define(
+      ~category="Preferences",
+      ~title="Theme Picker",
+      "workbench.action.selectTheme",
+      Command(SelectTheme),
+    );
+};
+
+module Contributions = {
+  let commands = [Commands.selectTheme];
 };

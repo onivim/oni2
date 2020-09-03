@@ -22,7 +22,7 @@ let start:
     ~onHighlights: (~bufferId: int, ~tokens: list(Protocol.TokenUpdate.t)) =>
                    unit,
     ~onHealthCheckResult: bool => unit,
-    Exthost.LanguageInfo.t,
+    Exthost.GrammarInfo.t,
     Setup.t
   ) =>
   result(t, string);
@@ -30,7 +30,7 @@ let start:
 let startHighlightingBuffer:
   (
     ~bufferId: int,
-    ~filetype: string,
+    ~scope: string,
     ~visibleRanges: list(Range.t),
     ~lines: array(string),
     t

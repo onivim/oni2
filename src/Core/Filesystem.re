@@ -376,6 +376,12 @@ let getStoreFolder = () =>
   >>= (dir => getPath(dir, "store"))
   >>= getOrCreateConfigFolder;
 
+let getGlobalStorageFolder = () =>
+  getUserDataDirectory()
+  >>= getOniDirectory
+  >>= (dir => getPath(dir, "global"))
+  >>= getOrCreateConfigFolder;
+
 let rec getOrCreateConfigFile = (~overridePath=?, filename) => {
   switch (overridePath) {
   | Some(path) =>

@@ -10,18 +10,18 @@ runTest(
   ~name="InsertMode test - effects batched to runEffects",
   (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) == Vim.Mode.Normal
   );
 
-  dispatch(KeyboardInput("i"));
+  dispatch(KeyboardInput({isText: true, input: "i"}));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Insert
+    Feature_Vim.mode(state.vim) == Vim.Mode.Insert
   );
 
   setClipboard(Some("def\nghi"));
 
-  dispatch(KeyboardInput("A"));
+  dispatch(KeyboardInput({isText: true, input: "A"}));
   dispatch(Actions.Clipboard(Feature_Clipboard.Msg.paste));
   wait(~name="Paste goes through", (state: State.t) =>
     state
@@ -30,7 +30,7 @@ runTest(
     |> Option.value(~default=false)
   );
 
-  dispatch(KeyboardInput("B"));
+  dispatch(KeyboardInput({isText: true, input: "B"}));
 
   runEffects();
 

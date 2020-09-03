@@ -65,6 +65,7 @@ type t = {
   displayName: option(LocalizedToken.t),
   description: option(string),
   publisher: option(string),
+  defaults: Yojson.Safe.t,
   main: option(string),
   icon: option(string),
   categories: list(string),
@@ -72,6 +73,7 @@ type t = {
   engines: string,
   activationEvents: list(string),
   extensionDependencies: list(string),
+  runtimeDependencies: Yojson.Safe.t,
   extensionPack: list(string),
   extensionKind: list(Kind.t),
   contributes: Contributions.t,
@@ -119,10 +121,13 @@ module Decode = {
           categories: field.withDefault("categories", [], list(string)),
           keywords: field.withDefault("keywords", [], list(string)),
           engines: field.required("engines", engine),
+          defaults: field.withDefault("defaults", `Assoc([]), value),
           activationEvents:
             field.withDefault("activationEvents", [], list(string)),
           extensionDependencies:
             field.withDefault("extensionDependencies", [], list(string)),
+          runtimeDependencies:
+            field.withDefault("runtimeDependencies", `Null, value),
           extensionPack:
             field.withDefault("extensionPack", [], list(string)),
           extensionKind:

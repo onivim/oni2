@@ -1,6 +1,6 @@
-open EditorCoreTypes;
 open Oni_Core;
 open BenchFramework;
+module LineNumber = EditorCoreTypes.LineNumber;
 
 open Revery.UI;
 
@@ -25,8 +25,8 @@ let addLinesToEmptyBuffer = () => {
   let _ =
     BufferUpdate.create(
       ~id=emptyBufferId,
-      ~startLine=Index.zero,
-      ~endLine=Index.fromZeroBased(-1),
+      ~startLine=LineNumber.zero,
+      ~endLine=LineNumber.ofZeroBased(-1),
       ~lines=hundredThousandLines,
       ~version=1,
       (),
@@ -39,8 +39,8 @@ let clearLargeBuffer = () => {
   let _ =
     BufferUpdate.create(
       ~id=hundredThousandLineBufferId,
-      ~startLine=Index.zero,
-      ~endLine=Index.fromZeroBased(-1),
+      ~startLine=LineNumber.zero,
+      ~endLine=LineNumber.ofZeroBased(-1),
       ~lines=[||],
       ~version=1,
       (),
@@ -53,8 +53,8 @@ let insertInMiddleOfSmallBuffer = () => {
   let _ =
     BufferUpdate.create(
       ~id=smallBufferId,
-      ~startLine=Index.fromZeroBased(50),
-      ~endLine=Index.fromZeroBased(51),
+      ~startLine=LineNumber.ofZeroBased(50),
+      ~endLine=LineNumber.ofZeroBased(51),
       ~lines=[|"this is a new line"|],
       ~version=1,
       (),
@@ -67,8 +67,8 @@ let insertInMiddleOfLargeBuffer = () => {
   let _ =
     BufferUpdate.create(
       ~id=hundredThousandLineBufferId,
-      ~startLine=Index.fromZeroBased(5000),
-      ~endLine=Index.fromZeroBased(50001),
+      ~startLine=LineNumber.ofZeroBased(5000),
+      ~endLine=LineNumber.ofZeroBased(50001),
       ~lines=[|"this is a new line"|],
       ~version=1,
       (),

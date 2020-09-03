@@ -18,18 +18,18 @@ type sneak = {
 type model = {
   active: bool,
   allSneaks: list(sneak),
-  inputText: Feature_InputText.model,
+  inputText: string,
   filteredSneaks: list(sneak),
 };
 
 let initial: model = {
   active: false,
   allSneaks: [],
-  inputText: Feature_InputText.create(~placeholder=""),
+  inputText: "",
   filteredSneaks: [],
 };
 
-let prefix = ({inputText, _}) => inputText |> Feature_InputText.value;
+let prefix = ({inputText, _}) => inputText;
 
 let getTextHighlight = (text: string, model) => {
   let prefix = model |> prefix;
@@ -81,10 +81,22 @@ module Internal = {
 let refine = (characterToAdd: string, sneaks: model) => {
   let characterToAdd = String.uppercase_ascii(characterToAdd);
 
-  let inputText =
-    Feature_InputText.handleInput(~key=characterToAdd, sneaks.inputText);
-
-  {...sneaks, inputText} |> Internal.applyFilter;
+  if (String.length(characterToAdd) == 1) {
+    let inputText = sneaks.inputText ++ characterToAdd;
+    {...sneaks, inputText} |> Internal.applyFilter;
+  } else if (characterToAdd == "<BS>" || characterToAdd == "<C-H>") {
+    let inputText =
+      String.length(sneaks.inputText) >= 1
+        ? String.sub(
+            sneaks.inputText,
+            0,
+            String.length(sneaks.inputText) - 1,
+          )
+        : sneaks.inputText;
+    {...sneaks, inputText} |> Internal.applyFilter;
+  } else {
+    sneaks;
+  };
 };
 
 let add = (sneaksToAdd: list(sneakInfo), sneaks: model) => {
@@ -118,33 +130,34 @@ let getFiltered = ({filteredSneaks, _}) => filteredSneaks;
 
 module Registry = {
   type sneakInfo = {
-    node: ref(option(Revery.UI.node)),
+    id: int,
+    boundingBoxRef: ref(option(Revery.Math.BoundingBox2d.t)),
     callback: unit => unit,
   };
 
   module MutableState = {
+    let nextId = ref(0);
     let singleton = ref([]);
   };
 
-  let register = (node: ref(option(Revery.UI.node)), callback) => {
-    MutableState.singleton := [{node, callback}, ...MutableState.singleton^];
+  let register = (boundingBoxRef, callback) => {
+    let id = MutableState.nextId^;
+    incr(MutableState.nextId);
+
+    MutableState.singleton :=
+      [{id, boundingBoxRef, callback}, ...MutableState.singleton^];
+    id;
   };
 
-  let unregister = (node: ref(option(Revery.UI.node))) => {
-    let filter = sneakInfo => sneakInfo.node !== node;
+  let unregister = id => {
+    let filter = sneakInfo => sneakInfo.id !== id;
     MutableState.singleton := List.filter(filter, MutableState.singleton^);
   };
 
   let getSneaks = () => {
     MutableState.singleton^
-    |> List.filter_map(item => {
-         switch (item.node^) {
-         | Some(node) => Some((node, item.callback))
-         | None => None
-         }
-       })
-    |> List.map(((node, callback)) => {
-         {callback, boundingBox: node#getBoundingBox()}
+    |> List.filter_map(({boundingBoxRef, callback, _}) => {
+         boundingBoxRef^ |> Option.map(boundingBox => {callback, boundingBox})
        });
   };
 };
@@ -318,6 +331,7 @@ module View = {
   module Sneakable = {
     let%component make =
                   (
+                    ~sneakId,
                     ~style=[],
                     ~onClick=() => (),
                     ~onRightClick=() => (),
@@ -328,32 +342,27 @@ module View = {
                     ~tabindex=?,
                     ~onKeyDown=?,
                     ~onKeyUp=?,
+                    ~onMouseEnter=?,
+                    ~onMouseLeave=?,
                     ~onTextEdit=?,
                     ~onTextInput=?,
                     ~children,
                     (),
                   ) => {
-      let%hook (holder: ref(option(Revery.UI.node)), _) =
-        Hooks.state(ref(None));
-
-      let componentRef = (node: Revery.UI.node) => {
-        holder := Some(node);
-      };
+      let%hook bboxRef = Hooks.ref(None);
 
       let%hook () =
         Hooks.effect(
-          OnMount,
+          OnMountAndIf((!=), sneakId),
           () => {
-            switch (onSneak) {
-            | Some(cb) => Registry.register(holder, cb)
-            | None => Registry.register(holder, onClick)
-            };
+            let maybeId =
+              switch (onSneak) {
+              | Some(cb) => Some(Registry.register(bboxRef, cb))
+              | None => Some(Registry.register(bboxRef, onClick))
+              };
 
             Some(
-              () => {
-                holder := None;
-                Registry.unregister(holder);
-              },
+              () => {maybeId |> Option.iter(id => Registry.unregister(id))},
             );
           },
         );
@@ -363,12 +372,14 @@ module View = {
         onClick
         onRightClick
         onAnyClick
-        componentRef
+        onBoundingBoxChanged={bbox => bboxRef := Some(bbox)}
         ?onBlur
         ?onFocus
         ?tabindex
         ?onKeyDown
         ?onKeyUp
+        ?onMouseEnter
+        ?onMouseLeave
         ?onTextEdit
         ?onTextInput>
         children

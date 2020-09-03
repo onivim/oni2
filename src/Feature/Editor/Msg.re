@@ -22,10 +22,12 @@ type t =
       deltaX: float,
       deltaY: float,
     })
-  | MouseHovered({location: Location.t})
-  | MouseMoved({location: Location.t})
+  | MouseHovered({bytePosition: BytePosition.t})
+  | MouseMoved({bytePosition: BytePosition.t})
   | SelectionChanged([@opaque] VisualRange.t)
-  | CursorsChanged([@opaque] list(Vim.Cursor.t))
+  | SelectionCleared
+  | CursorsChanged([@opaque] list(BytePosition.t))
   | ScrollToLine(int)
   | ScrollToColumn(int)
-  | MinimapEnabledConfigChanged(bool);
+  | MinimapEnabledConfigChanged(bool)
+  | LineHeightConfigChanged(LineHeight.t);

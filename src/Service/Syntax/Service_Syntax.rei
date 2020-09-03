@@ -16,7 +16,7 @@ module Sub: {
   let server:
     (
       ~useTreeSitter: bool,
-      ~languageInfo: Exthost.LanguageInfo.t,
+      ~grammarInfo: Exthost.GrammarInfo.t,
       ~setup: Setup.t,
       ~tokenTheme: TokenTheme.t
     ) =>
@@ -26,6 +26,7 @@ module Sub: {
     (
       ~client: Oni_Syntax_Client.t,
       ~buffer: Buffer.t,
+      ~languageInfo: Exthost.LanguageInfo.t,
       ~visibleRanges: list(Range.t)
     ) =>
     Isolinear.Sub.t(bufferMsg);

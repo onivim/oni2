@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open BenchFramework;
 open Feature_Editor;
@@ -22,7 +23,7 @@ let simpleColorizer = _ =>
 let tokenizeLine = () => {
   let _ =
     BufferViewTokenizer.tokenize(
-      ~endIndex=1000,
+      ~stop=CharacterIndex.ofInt(1000),
       giantString,
       simpleColorizer,
     );

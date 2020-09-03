@@ -6,13 +6,36 @@
 
 type t;
 
+module FileType: {
+  [@deriving show]
+  type t;
+
+  let default: string;
+
+  let none: t;
+  let inferred: string => t;
+  let explicit: string => t;
+
+  let ofOption: option(string) => t;
+
+  let toString: t => string;
+  let toOption: t => option(string);
+};
+
 let initial: t;
 
 let show: t => string;
 
-let ofLines: (~id: int=?, array(string)) => t;
+let ofLines: (~id: int=?, ~font: Font.t=?, array(string)) => t;
 let ofMetadata:
-  (~id: int, ~version: int, ~filePath: option(string), ~modified: bool) => t;
+  (
+    ~font: Font.t=?,
+    ~id: int,
+    ~version: int,
+    ~filePath: option(string),
+    ~modified: bool
+  ) =>
+  t;
 
 let getId: t => int;
 let getUri: t => Uri.t;
@@ -28,17 +51,11 @@ let getShortFriendlyName: t => option(string);
 let getMediumFriendlyName: (~workingDirectory: string=?, t) => option(string);
 let getLongFriendlyName: t => option(string);
 
-let getFileType: t => option(string);
-let setFileType: (option(string), t) => t;
+let getFileType: t => FileType.t;
+let setFileType: (FileType.t, t) => t;
 let getLine: (int, t) => BufferLine.t;
 let getLines: t => array(string);
 let getNumberOfLines: t => int;
-
-let getOriginalUri: t => option(Uri.t);
-let setOriginalUri: (Uri.t, t) => t;
-
-let getOriginalLines: t => option(array(string));
-let setOriginalLines: (array(string), t) => t;
 
 let getVersion: t => int;
 let setVersion: (int, t) => t;
@@ -58,3 +75,6 @@ let getLastUsed: t => float;
 
 let shouldApplyUpdate: (BufferUpdate.t, t) => bool;
 let update: (t, BufferUpdate.t) => t;
+
+let getFont: t => Font.t;
+let setFont: (Font.t, t) => t;

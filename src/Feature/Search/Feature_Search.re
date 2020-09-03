@@ -133,9 +133,9 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
   LocationList.{
     file: hit.file,
     location:
-      Location.{
-        line: Index.fromOneBased(hit.lineNumber),
-        column: Index.fromZeroBased(hit.charStart),
+      CharacterPosition.{
+        line: EditorCoreTypes.LineNumber.ofOneBased(hit.lineNumber),
+        character: CharacterIndex.ofInt(hit.charStart),
       },
     text: hit.text,
     highlight:

@@ -21,6 +21,7 @@ let isComplete = ({maybeRemainingCount, _}) => {
 };
 
 let results = ({items, _}) => items;
+let searchText = ({searchText, _}) => searchText;
 
 let percentComplete = ({items, maybeRemainingCount, _}) => {
   switch (maybeRemainingCount) {

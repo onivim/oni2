@@ -16,15 +16,6 @@ type lineEnding =
   | LF
   | CRLF;
 
-type mode =
-  | Normal
-  | Insert
-  | CommandLine
-  | Replace
-  | Visual
-  | Operator
-  | Select;
-
 type cmdlineType =
   | Ex
   | SearchForward

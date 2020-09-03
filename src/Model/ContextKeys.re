@@ -29,7 +29,7 @@ let editors =
         switch (ModeManager.current(state)) {
         | TerminalInsert
         | TerminalNormal
-        | TerminalVisual => false
+        | TerminalVisual(_) => false
         | _ => true
         }
       ),
@@ -37,7 +37,7 @@ let editors =
         switch (ModeManager.current(state)) {
         | TerminalInsert
         | TerminalNormal
-        | TerminalVisual => true
+        | TerminalVisual(_) => true
         | _ => false
         }
       ),
@@ -60,8 +60,8 @@ let editors =
       ),
       bool("visualMode", state =>
         switch (ModeManager.current(state)) {
-        | TerminalVisual
-        | Visual => true
+        | TerminalVisual(_)
+        | Visual(_) => true
         | _ => false
         }
       ),
@@ -74,12 +74,6 @@ let editors =
 let other =
   fromList(
     State.[
-      bool(
-        "suggestWidgetVisible",
-        fun
-        | {completions, _} when Completions.isActive(completions) => true
-        | _ => false,
-      ),
       bool("isLinux", _state =>
         Revery.Environment.os == Revery.Environment.Linux
       ),
@@ -98,6 +92,8 @@ let all =
     Feature_Registers.Contributions.contextKeys
     |> fromList
     |> map(({registers, _}: State.t) => registers),
+    Feature_LanguageSupport.Contributions.contextKeys
+    |> map(({languageSupport, _}: State.t) => languageSupport),
     menus |> map((state: State.t) => state.quickmenu),
     editors,
     other,

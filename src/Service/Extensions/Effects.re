@@ -1,3 +1,12 @@
+open Oni_Core.Utility;
+
+module Internal = {
+  let exceptionToString =
+    fun
+    | LuvEx.LuvException(exn) => Luv.Error.strerror(exn)
+    | exn => Printexc.to_string(exn);
+};
+
 let uninstall = (~extensionsFolder, ~toMsg, extensionId) =>
   Isolinear.Effect.createWithDispatch(
     ~name="Service_Extensions.Effect.uninstall", dispatch => {
@@ -5,7 +14,7 @@ let uninstall = (~extensionsFolder, ~toMsg, extensionId) =>
 
     Lwt.on_success(promise, () => dispatch(Ok()));
     Lwt.on_failure(promise, exn => {
-      dispatch(Error(Printexc.to_string(exn)))
+      dispatch(Error(Internal.exceptionToString(exn)))
     });
   })
   |> Isolinear.Effect.map(toMsg);
@@ -22,7 +31,24 @@ let install = (~extensionsFolder, ~toMsg, extensionId) =>
 
     Lwt.on_success(promise, scanResult => dispatch(Ok(scanResult)));
     Lwt.on_failure(promise, exn => {
-      dispatch(Error(Printexc.to_string(exn)))
+      dispatch(Error(Internal.exceptionToString(exn)))
     });
   })
   |> Isolinear.Effect.map(toMsg);
+
+let details = (~extensionId, ~toMsg) =>
+  Isolinear.Effect.createWithDispatch(
+    ~name="Service_Extensions.Effect.details", dispatch => {
+    let maybeIdentifier = Catalog.Identifier.fromString(extensionId);
+    switch (maybeIdentifier) {
+    | None => dispatch(toMsg(Error("Invalid identifier: " ++ extensionId)))
+    | Some(id) =>
+      let promise = Catalog.details(~setup=Oni_Core.Setup.init(), id);
+
+      Lwt.on_success(promise, details => {dispatch(toMsg(Ok(details)))});
+
+      Lwt.on_failure(promise, exn => {
+        dispatch(toMsg(Error(Printexc.to_string(exn))))
+      });
+    };
+  });

@@ -15,7 +15,8 @@ let _getTextForVimBuffer = () => {
   let i = ref(1);
   let lines = ref([]);
   while (i^ <= count) {
-    lines := [Vim.Buffer.getLine(buffer, Index.fromOneBased(i^)), ...lines^];
+    lines :=
+      [Vim.Buffer.getLine(buffer, LineNumber.ofOneBased(i^)), ...lines^];
     incr(i);
   };
   "fulltext:" ++ String.concat("|", lines^ |> List.rev) ++ "|";
@@ -53,10 +54,10 @@ let validateTextIsSynchronized =
       // Request the latest buffer text from the extension
       dispatch(
         Model.Actions.Extensions(
-          ExecuteCommand({
-            command: "developer.oni.getBufferText",
-            arguments: [],
-          }),
+          Feature_Extensions.Msg.command(
+            ~command="developer.oni.getBufferText",
+            ~arguments=[],
+          ),
         ),
       );
 

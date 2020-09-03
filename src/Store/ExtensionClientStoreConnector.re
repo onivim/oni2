@@ -11,27 +11,15 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStoreConnector"));
 
-module CompletionItem = Feature_LanguageSupport.CompletionItem;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 let start = (extensions, extHostClient: Exthost.Client.t) => {
-  let gitRefreshEffect = (scm: Feature_SCM.model) =>
-    if (scm == Feature_SCM.initial) {
-      Isolinear.Effect.none;
-    } else {
-      Service_Exthost.Effects.Commands.executeContributedCommand(
-        ~command="git.refresh",
-        ~arguments=[],
-        extHostClient,
-      );
-    };
-
   let discoveredExtensionsEffect = extensions =>
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.discoverExtensions", dispatch =>
       dispatch(
-        Actions.Extensions(Feature_Extensions.Discovered(extensions)),
+        Actions.Extensions(Feature_Extensions.Msg.discovered(extensions)),
       )
     );
 
@@ -51,34 +39,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ~workspace=Some(Exthost.WorkspaceData.fromPath(path)),
         extHostClient,
       )
-    });
-
-  let getOriginalContent = (bufferId, uri, providers) =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="scm.getOriginalSourceLines", dispatch => {
-      let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
-      providers
-      |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
-      |> Option.iter(provider => {
-           let (handle, _) = provider;
-           let promise =
-             Exthost.Request.DocumentContentProvider.provideTextDocumentContent(
-               ~handle,
-               ~uri,
-               extHostClient,
-             );
-
-           Lwt.on_success(promise, maybeContent => {
-             switch (maybeContent) {
-             | None => ()
-             | Some(content) =>
-               let lines =
-                 content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
-
-               dispatch(Actions.GotOriginalContent({bufferId, lines}));
-             }
-           });
-         });
     });
 
   let provideDecorationsEffect = {
@@ -133,18 +93,38 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ]),
       )
 
-    | BufferUpdate({update, newBuffer, triggerKey, _}) => (
+    | Buffers(
+        Feature_Buffers.Update({update, newBuffer, triggerKey, oldBuffer}),
+      ) => (
         state,
         Service_Exthost.Effects.Documents.modelChanged(
-          ~buffer=newBuffer, ~update, extHostClient, () =>
+          ~previousBuffer=oldBuffer,
+          ~buffer=newBuffer,
+          ~update,
+          extHostClient,
+          () =>
           Actions.ExtensionBufferUpdateQueued({triggerKey: triggerKey})
         ),
       )
 
-    | BufferSaved(_) => (
-        state,
-        Isolinear.Effect.batch([gitRefreshEffect(state.scm)]),
-      )
+    | Buffers(Feature_Buffers.Saved(bufferId)) =>
+      let effect =
+        state.buffers
+        |> Feature_Buffers.get(bufferId)
+        |> Option.map(buffer => {
+             Service_Exthost.Effects.FileSystemEventService.onFileEvent(
+               ~events=
+                 Exthost.Files.FileSystemEvents.{
+                   created: [],
+                   deleted: [],
+                   changed: [buffer |> Oni_Core.Buffer.getUri],
+                 },
+               extHostClient,
+             )
+           })
+        |> Option.value(~default=Isolinear.Effect.none);
+
+      (state, effect);
 
     | StatusBar(ContributedItemClicked({command, _})) => (
         state,
@@ -155,69 +135,7 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         ),
       )
 
-    | VimDirectoryChanged(path) => (state, changeWorkspaceEffect(path))
-
-    | BufferEnter({id, filePath, _}) =>
-      let eff =
-        switch (filePath) {
-        | Some(path) =>
-          Feature_SCM.Effects.getOriginalUri(
-            extHostClient, state.scm, path, uri =>
-            Actions.GotOriginalUri({bufferId: id, uri})
-          )
-
-        | None => Isolinear.Effect.none
-        };
-      (state, eff);
-
-    | NewTextContentProvider({handle, scheme}) => (
-        {
-          ...state,
-          textContentProviders: [
-            (handle, scheme),
-            ...state.textContentProviders,
-          ],
-        },
-        Isolinear.Effect.none,
-      )
-
-    | LostTextContentProvider({handle}) => (
-        {
-          ...state,
-          textContentProviders:
-            List.filter(
-              ((h, _)) => h != handle,
-              state.textContentProviders,
-            ),
-        },
-        Isolinear.Effect.none,
-      )
-
-    | GotOriginalUri({bufferId, uri}) => (
-        {
-          ...state,
-          buffers:
-            IntMap.update(
-              bufferId,
-              Option.map(Buffer.setOriginalUri(uri)),
-              state.buffers,
-            ),
-        },
-        getOriginalContent(bufferId, uri, state.textContentProviders),
-      )
-
-    | GotOriginalContent({bufferId, lines}) => (
-        {
-          ...state,
-          buffers:
-            IntMap.update(
-              bufferId,
-              Option.map(Buffer.setOriginalLines(lines)),
-              state.buffers,
-            ),
-        },
-        Isolinear.Effect.none,
-      )
+    | DirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
     | NewDecorationProvider({handle, label}) => (
         {
@@ -273,25 +191,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         },
         Isolinear.Effect.none,
       )
-
-    | ExtMessageReceived({severity, message, extensionId}) =>
-      let kind: Feature_Notification.kind =
-        switch (severity) {
-        | Exthost.Msg.MessageService.Ignore => Info
-        | Exthost.Msg.MessageService.Info => Info
-        | Exthost.Msg.MessageService.Warning => Warning
-        | Exthost.Msg.MessageService.Error => Error
-        };
-
-      (
-        state,
-        Feature_Notification.Effects.create(
-          ~kind,
-          ~source=?extensionId,
-          message,
-        )
-        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
-      );
 
     | _ => (state, Isolinear.Effect.none)
     };

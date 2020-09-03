@@ -3,7 +3,11 @@ open Exthost.Extension;
 
 [@deriving show({with_path: false})]
 type msg =
-  | Activated(string /* id */)
+  | Exthost(Exthost.Msg.ExtensionService.msg)
+  | Storage({
+      resolver: [@opaque] Lwt.u(Exthost.Reply.t),
+      msg: Exthost.Msg.Storage.msg,
+    })
   | Discovered([@opaque] list(Scanner.ScanResult.t))
   | ExecuteCommand({
       command: string,
@@ -28,16 +32,91 @@ type msg =
   | InstallExtensionFailed({
       extensionId: string,
       errorMsg: string,
-    });
+    })
+  | SetThemeClicked({extensionId: string})
+  | LocalExtensionSelected({extensionInfo: [@opaque] Scanner.ScanResult.t})
+  | RemoteExtensionClicked({extensionId: string})
+  | RemoteExtensionSelected({
+      extensionInfo: Service_Extensions.Catalog.Details.t,
+    })
+  | RemoteExtensionUnableToFetchDetails({errorMsg: string});
+
+module Msg = {
+  let exthost = msg => Exthost(msg);
+  let keyPressed = key => KeyPressed(key);
+  let pasted = contents => Pasted(contents);
+  let discovered = scanResult => Discovered(scanResult);
+};
 
 type outmsg =
   | Nothing
   | Focus
   | Effect(Isolinear.Effect.t(msg))
+  | InstallSucceeded({
+      extensionId: string,
+      contributions: Exthost.Extension.Contributions.t,
+    })
   | NotifySuccess(string)
-  | NotifyFailure(string);
+  | NotifyFailure(string)
+  | OpenExtensionDetails
+  | SelectTheme({themes: list(Exthost.Extension.Contributions.Theme.t)});
+
+module Selected = {
+  open Exthost_Extension;
+  open Exthost_Extension.Manifest;
+  type t =
+    | Local(Scanner.ScanResult.t)
+    | Remote(Service_Extensions.Catalog.Details.t);
+
+  let identifier =
+    fun
+    | Local(scanResult) => scanResult.manifest |> Manifest.identifier
+    | Remote(details) => details.namespace ++ "." ++ details.name;
+
+  let logo =
+    fun
+    | Local(scanResult) => scanResult.manifest.icon
+    | Remote({iconUrl, _}) => iconUrl;
+
+  let displayName =
+    fun
+    | Local(scanResult) => scanResult.manifest |> Manifest.getDisplayName
+    | Remote({displayName, namespace, name, _}) =>
+      displayName |> Option.value(~default=namespace ++ "." ++ name);
+
+  let description =
+    fun
+    | Local(scanResult) => scanResult.manifest.description
+    | Remote({description, _}) => Some(description);
+
+  let readme =
+    fun
+    | Local(scanResult) =>
+      Some(Rench.Path.join(scanResult.path, "README.md"))
+    | Remote({readmeUrl, _}) => readmeUrl;
+
+  let version =
+    fun
+    | Local({manifest, _}) => manifest.version
+    | Remote({version, _}) => version;
+};
+
+module Effect = {
+  let replySuccess = (~resolver) =>
+    Isolinear.Effect.create(~name="feature.extensions.replySuccess", () => {
+      Lwt.wakeup(resolver, Exthost.Reply.okEmpty)
+    });
+
+  let replyJson = (~resolver, json) =>
+    Isolinear.Effect.create(~name="feature.extensions.replyJson", () => {
+      Lwt.wakeup(resolver, Exthost.Reply.okJson(json))
+    });
+};
+
+type extensionState = {isRestartRequired: bool};
 
 type model = {
+  selected: option(Selected.t),
   activatedIds: list(string),
   extensions: list(Scanner.ScanResult.t),
   searchText: Feature_InputText.model,
@@ -45,20 +124,80 @@ type model = {
   extensionsFolder: option(string),
   pendingInstalls: list(string),
   pendingUninstalls: list(string),
+  globalValues: Yojson.Safe.t,
+  localValues: Yojson.Safe.t,
+  extensionState: StringMap.t(extensionState),
 };
 
-let initial = (~extensionsFolder) => {
+module Persistence = {
+  type t = Yojson.Safe.t;
+  let initial = `Assoc([]);
+
+  let codec = Oni_Core.Persistence.Schema.value;
+
+  let get = (~shared, model) =>
+    shared ? model.globalValues : model.localValues;
+};
+
+let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => {
   activatedIds: [],
+  selected: None,
   extensions: [],
   searchText: Feature_InputText.create(~placeholder="Type to search..."),
   latestQuery: None,
   extensionsFolder,
   pendingInstalls: [],
   pendingUninstalls: [],
+  globalValues: globalPersistence,
+  localValues: workspacePersistence,
+  extensionState: StringMap.empty,
 };
 
 let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
   pendingInstalls != [] || pendingUninstalls != [];
+};
+
+let isInstalling = (~extensionId, {pendingInstalls, _}) => {
+  pendingInstalls |> List.exists(id => id == extensionId);
+};
+
+let themes = (~extensionId, {extensions, _}) => {
+  extensions
+  |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
+       String.equal(ext.manifest |> Manifest.identifier, extensionId)
+     )
+  |> (
+    l =>
+      List.nth_opt(l, 0)
+      |> Option.map(({manifest, _}: Exthost.Extension.Scanner.ScanResult.t) =>
+           manifest.contributes.themes
+         )
+  );
+};
+
+let isInstalled = (~extensionId, {extensions, _}) => {
+  extensions
+  |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
+       String.equal(ext.manifest |> Manifest.identifier, extensionId)
+     )
+  != [];
+};
+
+let hasThemes = (~extensionId, model) => {
+  themes(~extensionId, model)
+  |> Option.map(themes => themes != [])
+  |> Option.value(~default=false);
+};
+
+let isUninstalling = (~extensionId, {pendingUninstalls, _}) => {
+  pendingUninstalls |> List.exists(id => id == extensionId);
+};
+
+let isRestartRequired = (~extensionId, {extensionState, _}) => {
+  extensionState
+  |> StringMap.find_opt(extensionId)
+  |> Option.map(({isRestartRequired}) => isRestartRequired)
+  |> Option.value(~default=false);
 };
 
 let searchResults = ({latestQuery, _}) =>
@@ -116,8 +255,23 @@ module Internal = {
       List.filter(id => id != extensionId, model.pendingUninstalls),
   };
 
+  let markRestartNeeded = (~extensionId, model) => {
+    ...model,
+    extensionState:
+      StringMap.update(
+        extensionId,
+        fun
+        | None => Some({isRestartRequired: true})
+        | Some(_prev) => Some({isRestartRequired: true}),
+        model.extensionState,
+      ),
+  };
+
   let installed = (~extensionId, ~scanResult, model) => {
-    let model' = model |> clearPendingInstall(~extensionId);
+    let model' =
+      model
+      |> clearPendingInstall(~extensionId)
+      |> markRestartNeeded(~extensionId);
 
     {...model', extensions: [scanResult, ...model'.extensions]};
   };
@@ -150,6 +304,13 @@ let getExtensions = (~category, model) => {
   };
 };
 
+let getPersistedValue = (~shared, ~key, model) => {
+  let store = shared ? model.globalValues : model.localValues;
+  [store]
+  |> Yojson.Safe.Util.filter_member(key)
+  |> (l => List.nth_opt(l, 0));
+};
+
 let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
   if (previousText != newText) {
     if (String.length(newText) == 0) {
@@ -163,8 +324,47 @@ let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
 
 let update = (~extHostClient, msg, model) => {
   switch (msg) {
-  | Activated(id) => (Internal.markActivated(id, model), Nothing)
+  | Exthost(WillActivateExtension(_))
+  | Exthost(ExtensionRuntimeError(_)) => (model, Nothing)
+  | Exthost(ActivateExtension({extensionId, _})) => (
+      Internal.markActivated(extensionId, model),
+      Nothing,
+    )
+  | Exthost(ExtensionActivationError({errorMessage, _})) => (
+      model,
+      NotifyFailure(Printf.sprintf("Error: %s", errorMessage)),
+    )
+  | Exthost(DidActivateExtension({extensionId, _})) => (
+      Internal.markActivated(extensionId, model),
+      Nothing,
+    )
+
+  | Storage({resolver, msg}) =>
+    switch (msg) {
+    | GetValue({shared, key}) =>
+      let value = getPersistedValue(~shared, ~key, model);
+
+      let eff =
+        switch (value) {
+        | None => Effect.replyJson(~resolver, `Null)
+        | Some(json) => Effect.replyJson(~resolver, json)
+        };
+      (model, Effect(eff));
+
+    | SetValue({shared, key, value}) =>
+      let store = shared ? model.globalValues : model.localValues;
+      let store' = Utility.JsonEx.update(key, _ => Some(value), store);
+      let model' =
+        shared
+          ? {...model, globalValues: store'}
+          : {...model, localValues: store'};
+
+      let eff = Effect.replySuccess(~resolver);
+      (model', Effect(eff));
+    }
+
   | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
+
   | ExecuteCommand({command, arguments}) => (
       model,
       Effect(
@@ -175,6 +375,7 @@ let update = (~extHostClient, msg, model) => {
         ),
       ),
     )
+
   | KeyPressed(key) =>
     let previousText = model.searchText |> Feature_InputText.value;
     let searchText' = Feature_InputText.handleInput(~key, model.searchText);
@@ -208,10 +409,12 @@ let update = (~extHostClient, msg, model) => {
         ~query=model.latestQuery,
       );
     ({...model, searchText: searchText', latestQuery}, Focus);
-  | SearchQueryResults(queryResults) => (
-      {...model, latestQuery: Some(queryResults)},
-      Nothing,
-    )
+  | SearchQueryResults(queryResults) =>
+    queryResults
+    |> Service_Extensions.Query.searchText
+    == (model.searchText |> Feature_InputText.value)
+      ? ({...model, latestQuery: Some(queryResults)}, Nothing)
+      : (model, Nothing)
   | SearchQueryError(_queryResults) =>
     // TODO: Error experience?
     ({...model, latestQuery: None}, Nothing)
@@ -230,7 +433,7 @@ let update = (~extHostClient, msg, model) => {
     (model |> Internal.addPendingUninstall(~extensionId), Effect(eff));
   | UninstallExtensionSuccess({extensionId}) => (
       model |> Internal.uninstalled(~extensionId),
-      NotifyFailure(
+      NotifySuccess(
         Printf.sprintf("Successfully uninstalled %s", extensionId),
       ),
     )
@@ -257,14 +460,14 @@ let update = (~extHostClient, msg, model) => {
         extensionId,
       );
     (model |> Internal.addPendingInstall(~extensionId), Effect(eff));
+
   | InstallExtensionSuccess({extensionId, scanResult}) => (
       model |> Internal.installed(~extensionId, ~scanResult),
-      NotifySuccess(
-        Printf.sprintf(
-          "Extension %s was installed successfully and will be activated on restart.",
-          extensionId,
-        ),
-      ),
+      InstallSucceeded({
+        extensionId,
+        contributions:
+          Exthost.Extension.Manifest.(scanResult.manifest.contributes),
+      }),
     )
   | InstallExtensionFailed({extensionId, errorMsg}) => (
       model |> Internal.clearPendingInstall(~extensionId),
@@ -276,5 +479,44 @@ let update = (~extHostClient, msg, model) => {
         ),
       ),
     )
+  | LocalExtensionSelected({extensionInfo}) => (
+      {...model, selected: Some(Selected.Local(extensionInfo))},
+      OpenExtensionDetails,
+    )
+  | RemoteExtensionClicked({extensionId}) => (
+      model,
+      Effect(
+        Service_Extensions.Effects.details(
+          ~extensionId,
+          ~toMsg={
+            fun
+            | Ok(extensionInfo) =>
+              RemoteExtensionSelected({extensionInfo: extensionInfo})
+            | Error(errorMsg) =>
+              RemoteExtensionUnableToFetchDetails({errorMsg: errorMsg});
+          },
+        ),
+      ),
+    )
+  | RemoteExtensionSelected({extensionInfo}) => (
+      {...model, selected: Some(Selected.Remote(extensionInfo))},
+      OpenExtensionDetails,
+    )
+  | RemoteExtensionUnableToFetchDetails({errorMsg}) => (
+      model,
+      NotifyFailure(errorMsg),
+    )
+
+  | SetThemeClicked({extensionId}) =>
+    themes(~extensionId, model)
+    |> Option.map(themes => {(model, SelectTheme({themes: themes}))})
+    |> Option.value(
+         ~default=(
+           model,
+           NotifyFailure(
+             Printf.sprintf("Unable to find extension: %s", extensionId),
+           ),
+         ),
+       )
   };
 };

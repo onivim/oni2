@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Revery.UI;
 open Oni_Core;
 
@@ -26,13 +27,18 @@ let renderLineNumber =
     );
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
   let isActiveLine = lineNumber == cursorLine;
-  let ({pixelY: yOffset, _}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(
-      ~line=lineNumber,
-      ~byteIndex=0,
+  let ({y: yOffset, _}: PixelPosition.t, _) =
+    Editor.bufferBytePositionToPixel(
+      ~position=
+        BytePosition.{
+          line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+          byte: ByteIndex.zero,
+        },
       context.editor,
     );
-  let y = yOffset -. fontMetrics.ascent;
+
+  let paddingY = context.editor |> Editor.linePaddingInPixels;
+  let y = paddingY +. yOffset -. fontMetrics.ascent;
 
   let lineNumber =
     string_of_int(
@@ -45,7 +51,7 @@ let renderLineNumber =
     );
 
   let lineNumberXOffset =
-    isActiveLine
+    isActiveLine && lineSetting == `Relative
       ? 0.
       : lineNumberWidth
         /. 2.
@@ -64,8 +70,7 @@ let renderLineNumber =
     ~color,
     ~bold=false,
     ~italic=false,
-    ~mono=false,
-    lineNumber,
+    ~text=lineNumber,
   );
 };
 
@@ -167,7 +172,7 @@ let make =
     showLineNumbers != `Off
       ? LineNumber.getLineNumberPixelWidth(
           ~lines=count,
-          ~fontPixelWidth=editorFont.measuredWidth,
+          ~fontPixelWidth=editorFont.underscoreWidth,
           (),
         )
       : 0.0;

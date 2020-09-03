@@ -1,46 +1,65 @@
 ---
 id: extensions
-title: VSCode Extensions
-sidebar_label: VSCode Extensions
+title: Extensions
+sidebar_label: Extensions
 ---
 
-Onivim is capable of loading VSCode extensions. The current capabilities of the
-extension host can be found [here](https://github.com/onivim/oni2/issues/1058).
+## VSCode Extensions
 
-## Installing extensions
+Onivim is capable of loading VSCode extensions, and supports functionality such as:
 
-Onivim has two ways of installing VSCode extensions currently, though in the future this
-will be expanded to include an in-editor experience.
+- Code completion
+- Diagnostics
+- Go-to definition
+- Hover
+- Signature Help
+- Status bar items
+- Source control
+- Themes
+- Syntax Highlights
 
-Extensions by default are installed in the following folders:
+The VSCode marketplace is proprietary - so Onivim uses the [Open VSX](https://open-vsx.org) marketplace: an open, vendor-neutral repository of VSCode extensions.
 
- - `~/.config/oni2/extensions` - Linux/macOS
- - `%LOCALAPPDATA%/Oni2/extensions` - Windows
+There are more details about the Open VSX project in the [Eclipse Open VSX article](https://www.eclipse.org/community/eclipse_newsletter/2020/march/1.php)
 
-This can be overridden with the `--extensions-dir` command line flag however.
+### Install via the UI
 
-### Installing `vsix` files
+![image](https://user-images.githubusercontent.com/13532591/88987848-18b52300-d28c-11ea-86fa-e20ed1558fb5.png)
 
-The Onivim command line executable has a `--install-extension` flag, that can be given a
-path to a `.vsix` file like so:
+> __HINT:__ Use [sneak mode](./../using-onivim/moving-in-onivim#sneak-mode) to avoid the mouse.
+
+### Install via the CLI
+
+Extensions can be installed via the CLI, using the `--install-extension` argument:
 
 ```sh
-oni2 --install-extension /path/to/some-extension.vsix
+oni2 --install-extension <extension>
 ```
+
+where _extension_ is either an extension identifier (ie, `redhat.java`) or the full path to a `vsix` file on the local disk.
 
 > __NOTE:__ Currently, `oni2` is only added to the user's `PATH` on Windows. Find instructions on adding it to your `PATH` on macOS and Linux over [here](./../using-onivim/command-line.md).
 
-### Installing manually
+### Publishing an Extension
 
-If a `.vsix` file can not be found, the alternative way of installing a VSCode extension
-is to download the extension manually into the extension folder.
+Open VSX is still new - so there are many extensions that aren't hosted there, yet. 
 
-```sh
-cd $ONI2_CONFIG_DIR/extensions
-git clone https://github.com/thomaspink/vscode-github-theme.git
-```
+If your favorite extension is missing - you can help us out by publishing it to Open VSX:
 
-## Listing extensions
+1) Register for an account using the [Open VSX GitHub OAuth](https://open-vsx.org/oauth2/authorization/github) provider
+2) Create a [personal access token](https://open-vsx.org/user-settings/tokens) 
+3) Install the `ovsx` tool - `npm install -g ovsx`
+4) Create a namespace corrresponding to your extension: `ovsx create-namespace <publisher> --pat <token>`
+5) Run `ovsx publish --pat <token>` in the directory of the extension you want to publish.
 
-The currently installed extensions are listed in the editor, in the extensions panel.
-Alternatively, this can be achieved with the `--list-extensions` command line flag.
+## Vim Extensions
+
+WIP
+
+## Listing Extensions via the UI
+
+Installed extensions can be viewed in the extensions pane:
+
+![extensions-pane](https://user-images.githubusercontent.com/13532591/88988024-911be400-d28c-11ea-91db-4decbeb37eb8.png)
+
+or, via the CLI: `oni2 --list-extensions` command.

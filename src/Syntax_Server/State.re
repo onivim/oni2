@@ -11,6 +11,10 @@ open Oni_Syntax;
 
 type logFunc = string => unit;
 
+module Constants = {
+  let defaultScope = "source.text";
+};
+
 type bufferInfo = {
   lines: array(string),
   version: int,
@@ -21,7 +25,7 @@ type t = {
   useTreeSitter: bool,
   setup: option(Setup.t),
   bufferInfo: IntMap.t(bufferInfo),
-  languageInfo: Exthost.LanguageInfo.t,
+  grammarInfo: Exthost.GrammarInfo.t,
   treesitterRepository: TreesitterRepository.t,
   grammarRepository: GrammarRepository.t,
   theme: TokenTheme.t,
@@ -36,21 +40,17 @@ let empty = {
   visibleBuffers: [],
   highlightsMap: IntMap.empty,
   theme: TokenTheme.empty,
-  languageInfo: Exthost.LanguageInfo.initial,
+  grammarInfo: Exthost.GrammarInfo.initial,
   grammarRepository: GrammarRepository.empty,
   treesitterRepository: TreesitterRepository.empty,
 };
 
-let initialize = (~log, languageInfo, setup, state) => {
+let initialize = (~log, grammarInfo, setup, state) => {
   ...state,
-  languageInfo,
-  grammarRepository: GrammarRepository.create(~log, languageInfo),
-  treesitterRepository: TreesitterRepository.create(~log, languageInfo),
+  grammarInfo,
+  grammarRepository: GrammarRepository.create(~log, grammarInfo),
+  treesitterRepository: TreesitterRepository.create(~log, grammarInfo),
   setup: Some(setup),
-};
-
-module Constants = {
-  let defaultScope = "source.text";
 };
 
 let getVisibleBuffers = state => state.visibleBuffers;
@@ -210,8 +210,10 @@ let applyBufferUpdate = (~update: BufferUpdate.t, state) => {
              let newLines =
                ArrayEx.replace(
                  ~replacement=update.lines,
-                 ~start=update.startLine |> Index.toZeroBased,
-                 ~stop=update.endLine |> Index.toZeroBased,
+                 ~start=
+                   update.startLine |> EditorCoreTypes.LineNumber.toZeroBased,
+                 ~stop=
+                   update.endLine |> EditorCoreTypes.LineNumber.toZeroBased,
                  lines,
                );
              Some({scope, lines: newLines, version: update.version});
@@ -253,7 +255,7 @@ let updateBufferVisibility =
 };
 
 let bufferEnter =
-    (~bufferId: int, ~filetype: string, ~lines, ~visibleRanges, state: t) => {
+    (~bufferId: int, ~scope: string, ~lines, ~visibleRanges, state: t) => {
   let exists = List.exists(id => id == bufferId, state.visibleBuffers);
   let visibleBuffers =
     if (exists) {
@@ -261,10 +263,6 @@ let bufferEnter =
     } else {
       [bufferId, ...state.visibleBuffers];
     };
-
-  let scope =
-    Exthost.LanguageInfo.getScopeFromLanguage(state.languageInfo, filetype)
-    |> Option.value(~default=Constants.defaultScope);
 
   let bufferInfo =
     state.bufferInfo

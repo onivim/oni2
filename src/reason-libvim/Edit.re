@@ -4,13 +4,13 @@ module Log = (val Timber.Log.withNamespace("SingleEdit"));
 
 [@deriving show]
 type t = {
-  range: Range.t,
+  range: CharacterRange.t,
   text: array(string),
 };
 
 type editResult = {
-  oldStartLine: Index.t,
-  oldEndLine: Index.t,
+  oldStartLine: LineNumber.t,
+  oldEndLine: LineNumber.t,
   newLines: array(string),
 };
 
@@ -41,10 +41,11 @@ let applyEdit = (~provider, edit) => {
   // For now, we assume the start line and end line are the same
   // this is safe for formatting operations, but we'll need to
   // improve this for more general edits (like code actions).
-  let startLine = edit.range.start.line |> Index.toZeroBased;
-  let endLine = edit.range.stop.line |> Index.toZeroBased;
-  let startColumn = edit.range.start.column |> Index.toZeroBased;
-  let endColumn = edit.range.stop.column |> Index.toZeroBased;
+  let startLine =
+    edit.range.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
+  let endLine = edit.range.stop.line |> EditorCoreTypes.LineNumber.toZeroBased;
+  let startColumn = edit.range.start.character |> CharacterIndex.toInt;
+  let endColumn = edit.range.stop.character |> CharacterIndex.toInt;
 
   try({
     let prefix =
@@ -83,11 +84,13 @@ let sort = edits => {
     let rangeA = editA.range;
     let rangeB = editB.range;
 
-    let startLineA = rangeA.start.line |> Index.toZeroBased;
-    let startLineB = rangeB.start.line |> Index.toZeroBased;
+    let startLineA =
+      rangeA.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
+    let startLineB =
+      rangeB.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
 
-    let startColumnA = rangeA.start.column |> Index.toZeroBased;
-    let startColumnB = rangeB.start.column |> Index.toZeroBased;
+    let startColumnA = rangeA.start.character |> CharacterIndex.toInt;
+    let startColumnB = rangeB.start.character |> CharacterIndex.toInt;
 
     if (startLineA == startLineB) {
       startColumnB - startColumnA;

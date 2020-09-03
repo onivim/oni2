@@ -11,25 +11,21 @@ module Colors = Feature_Theme.Colors;
 
 type item = {
   file: string,
-  location: Location.t,
+  location: CharacterPosition.t,
   text: string,
   highlight: option((Index.t, Index.t)),
 };
 
 // TODO: move to Revery
-let getFontAdvance = (fontFile, fontSize) => {
-  let dimensions =
-    switch (Revery.Font.load(fontFile)) {
-    | Ok(font) =>
-      Revery.Font.FontRenderer.measure(
-        ~smoothing=Revery.Font.Smoothing.default,
-        font,
-        fontSize,
-        "x",
-      )
-    | Error(_) => {width: 0., height: 0.}
-    };
-  dimensions;
+let getFontAdvance = (fontFamily, fontSize) => {
+  let font =
+    Service_Font.resolveWithFallback(Revery.Font.Weight.Normal, fontFamily);
+  Revery.Font.FontRenderer.measure(
+    ~smoothing=Revery.Font.Smoothing.default,
+    font,
+    fontSize,
+    "x",
+  );
 };
 
 module Styles = {
@@ -85,7 +81,7 @@ let item =
     Printf.sprintf(
       "%s:%n - ",
       Path.toRelative(~base=workingDirectory, item.file),
-      Index.toOneBased(item.location.line),
+      EditorCoreTypes.LineNumber.toOneBased(item.location.line),
     );
 
   let locationWidth = {
@@ -127,8 +123,7 @@ let item =
     switch (item.highlight) {
     | Some((indexStart, indexEnd)) =>
       let availableWidth = float(width) -. locationWidth;
-      let maxLength =
-        int_of_float(availableWidth /. editorFont.measuredWidth);
+      let maxLength = int_of_float(availableWidth /. editorFont.spaceWidth);
       let charStart = Index.toZeroBased(indexStart);
       let charEnd = Index.toZeroBased(indexEnd);
 
@@ -184,7 +179,7 @@ let%component make =
   let editorFont = {
     ...editorFont,
     fontSize: uiFont.size,
-    measuredWidth: getFontAdvance(editorFont.fontFile, uiFont.size).width,
+    spaceWidth: getFontAdvance(editorFont.fontFamily, uiFont.size).width,
     // measuredHeight:
     //   editorFont.measuredHeight
     //   *. (float(uiFont.fontSize) /. float(editorFont.fontSize)),

@@ -7,9 +7,9 @@
         yojson
         ppx_deriving.runtime
         ppx_deriving_yojson.runtime
-        editor-input
         Oni2.core
         Oni2.core.whenExpr
+        Oni2.editor-input
         Oni2.model
         Oni2.input
         Oni2.syntax_client
@@ -21,20 +21,21 @@
         Oni2.service.vim
         Oni2.components
         Oni2.ui
+        Oni2.feature.buffers
         Oni2.feature.clipboard
         Oni2.feature.commands
         Oni2.feature.contextMenu
         Oni2.feature.extensions
         Oni2.feature.exthost
-        Oni2.feature.formatting
+        Oni2.feature.language_support
         Oni2.feature.menus
         Oni2.feature.notification
         Oni2.feature.theme
         Oni2.feature.registers
+        Oni2.feature.snippets
         Oni2.feature.statusbar
         Oni2.feature.terminal
         Oni2.feature.modals
-        Oni2.feature.hover
         Oni2.feature.vim
         Oni2.feature.signature_help
         Oni2.feature.editor

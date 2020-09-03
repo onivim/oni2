@@ -22,6 +22,7 @@ module Url = {
 };
 
 module Identifier = {
+  [@deriving show]
   type t = {
     publisher: string,
     name: string,
@@ -39,6 +40,7 @@ module Identifier = {
     String.concat("", [publisher, ".", name]);
 };
 module VersionInfo = {
+  [@deriving show]
   type t = {
     version: string,
     url: string,
@@ -55,13 +57,14 @@ module VersionInfo = {
 };
 
 module Details = {
+  [@deriving show]
   type t = {
     downloadUrl: string,
     repositoryUrl: string,
     homepageUrl: string,
     manifestUrl: string,
     iconUrl: option(string),
-    readmeUrl: string,
+    readmeUrl: option(string),
     licenseName: option(string),
     //      licenseUrl: string,
     name: string,
@@ -109,7 +112,7 @@ module Details = {
     let downloadUrl = files("download", string);
     let manifestUrl = files("manifest", string);
     let iconUrl = files("icon", nullable(string));
-    let readmeUrl = files("readme", string);
+    let readmeUrl = files("readme", nullable(string));
     let homepageUrl = field("publishedBy", field("homepage", string));
 
     let decode =
@@ -121,8 +124,8 @@ module Details = {
           readmeUrl: whatever(readmeUrl),
           repositoryUrl: field.required("repository", string),
           homepageUrl: whatever(homepageUrl),
-          licenseName: field.required("license", nullable(string)),
-          displayName: field.required("displayName", nullable(string)),
+          licenseName: field.optional("license", string),
+          displayName: field.optional("displayName", string),
           description: field.required("description", string),
           name: field.required("name", string),
           namespace: field.required("namespace", string),
@@ -174,7 +177,7 @@ module Summary = {
         version: field.required("version", string),
         name: field.required("name", string),
         namespace: field.required("namespace", string),
-        displayName: field.required("displayName", nullable(string)),
+        displayName: field.optional("displayName", string),
         description: field.required("description", string),
       }
     );

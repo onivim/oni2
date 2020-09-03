@@ -18,6 +18,12 @@ let makeResult = ((item, match: Fzy.Result.t)) => {
   score: match.score,
 };
 
+let map = (f, result) => {
+  item: f(result.item),
+  highlight: result.highlight,
+  score: result.score,
+};
+
 let rank = (query, format, items) => {
   let shouldLower = query == String.lowercase_ascii(query);
   let format = item => format(item, ~shouldLower);

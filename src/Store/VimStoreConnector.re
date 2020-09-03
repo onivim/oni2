@@ -13,8 +13,6 @@ module Core = Oni_Core;
 open Core.Utility;
 
 module Zed_utf8 = Core.ZedBundled;
-module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
-module Definition = Feature_LanguageSupport.Definition;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Editor = Feature_Editor.Editor;
 
@@ -22,7 +20,6 @@ module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
 let start =
     (
-      ~showUpdateChangelog: bool,
       languageInfo: Exthost.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
@@ -31,6 +28,12 @@ let start =
   let (stream, dispatch) = Isolinear.Stream.create();
   let libvimHasInitialized = ref(false);
   let currentTriggerKey = ref(None);
+
+  let colorSchemeProvider = pattern => {
+    getState().extensions
+    |> Feature_Extensions.themesByName(~filter=pattern)
+    |> Array.of_list;
+  };
 
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
@@ -69,32 +72,64 @@ let start =
 
   let _: unit => unit =
     Vim.Buffer.onLineEndingsChanged((id, lineEndings) => {
-      Actions.BufferLineEndingsChanged({id, lineEndings}) |> dispatch
+      Actions.Buffers(Feature_Buffers.LineEndingsChanged({id, lineEndings}))
+      |> dispatch
+    });
+
+  let _: unit => unit =
+    Vim.Buffer.onFiletypeChanged(metadata => {
+      let Vim.BufferMetadata.{id, fileType, _} = metadata;
+
+      switch (fileType) {
+      | None => ()
+      | Some(fileType) =>
+        Log.infof(m => m("Setting filetype %s for buffer %d", fileType, id));
+        dispatch(
+          Actions.Buffers(
+            Feature_Buffers.FileTypeChanged({
+              id,
+              fileType: Oni_Core.Buffer.FileType.explicit(fileType),
+            }),
+          ),
+        );
+      };
     });
 
   let handleGoto = gotoType => {
     switch (gotoType) {
-    | Vim.Goto.Hover => dispatch(Actions.Hover(Feature_Hover.Command(Show)))
+    | Vim.Goto.Hover =>
+      dispatch(
+        Actions.LanguageSupport(Feature_LanguageSupport.Msg.Hover.show),
+      )
 
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
-      Log.debug("Goto definition requested");
+      Log.info("Goto definition requested");
       // Get buffer and cursor position
       let state = getState();
       let maybeBuffer = state |> Selectors.getActiveBuffer;
 
-      let editor = Feature_Layout.activeEditor(state.layout);
-
       let getDefinition = buffer => {
         let id = Core.Buffer.getId(buffer);
-        let position = Editor.getPrimaryCursor(editor);
-        Definition.getAt(id, position, state.definition)
-        |> Option.map((definitionResult: LanguageFeatures.DefinitionResult.t) => {
+        Feature_LanguageSupport.Definition.get(
+          ~bufferId=id,
+          state.languageSupport,
+        )
+        |> Option.map((definitionResult: Exthost.DefinitionLink.t) => {
+             let {startLineNumber, startColumn, _}: Exthost.OneBasedRange.t =
+               definitionResult.range;
+
+             let position =
+               CharacterPosition.{
+                 line: EditorCoreTypes.LineNumber.ofOneBased(startLineNumber),
+                 character: CharacterIndex.ofInt(startColumn - 1),
+               };
+
              Actions.OpenFileByPath(
                definitionResult.uri |> Core.Uri.toFileSystemPath,
                None,
-               Some(definitionResult.location),
-             )
+               Some(position),
+             );
            });
       };
 
@@ -111,24 +146,67 @@ let start =
       | TabPage(msg) => dispatch(TabPage(msg))
       | Format(Buffer(_)) =>
         dispatch(
-          Actions.Formatting(Feature_Formatting.Command(FormatDocument)),
+          Actions.LanguageSupport(
+            Feature_LanguageSupport.Msg.Formatting.formatDocument,
+          ),
         )
       | Format(Range({startLine, endLine, _})) =>
         dispatch(
-          Actions.Formatting(
-            Feature_Formatting.FormatRange({startLine, endLine}),
+          Actions.LanguageSupport(
+            Feature_LanguageSupport.Msg.Formatting.formatRange(
+              ~startLine,
+              ~endLine,
+            ),
           ),
-        ),
-    );
+        )
+      | ModeChanged(newMode) => {
+          dispatch(Actions.Vim(Feature_Vim.ModeChanged(newMode)));
 
-  let _: unit => unit =
-    Vim.Mode.onChanged(newMode =>
-      dispatch(Actions.Vim(Feature_Vim.ModeChanged(newMode)))
+          let editorId =
+            Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
+
+          switch (newMode) {
+          | Visual({range})
+          | Select({range}) =>
+            dispatch(
+              Editor({
+                scope: Oni_Model.EditorScope.Editor(editorId),
+                msg: SelectionChanged(Oni_Core.VisualRange.ofVim(range)),
+              }),
+            )
+          | _ =>
+            dispatch(
+              Editor({
+                scope: Oni_Model.EditorScope.Editor(editorId),
+                msg: SelectionCleared,
+              }),
+            )
+          };
+        }
+      | SettingChanged(setting) =>
+        dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
+
+      | ColorSchemeChanged(maybeColorScheme) =>
+        switch (maybeColorScheme) {
+        | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker))
+        | Some(colorScheme) =>
+          dispatch(Actions.ThemeLoadByName(colorScheme))
+        }
+
+      | MacroRecordingStarted({register}) =>
+        dispatch(
+          Actions.Vim(
+            Feature_Vim.MacroRecordingStarted({register: register}),
+          ),
+        )
+
+      | MacroRecordingStopped(_) =>
+        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped)),
     );
 
   let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
-      dispatch(Actions.VimDirectoryChanged(newDir))
+      dispatch(Actions.DirectoryChanged(newDir))
     );
 
   let _: unit => unit =
@@ -137,8 +215,47 @@ let start =
     });
 
   let _: unit => unit =
-    Vim.onYank(({lines, register, operator, yankType, _}) => {
+    Vim.onYank(
+      (
+        {
+          lines,
+          register,
+          operator,
+          yankType,
+          startLine,
+          startColumn,
+          endLine,
+          endColumn,
+        },
+      ) => {
       let state = getState();
+
+      if (operator == Vim.Yank.Yank) {
+        let visualType =
+          switch (yankType) {
+          | Block => Vim.Types.Block
+          | Line => Vim.Types.Line
+          | Char => Vim.Types.Character
+          };
+
+        let range =
+          ByteRange.{
+            start:
+              BytePosition.{
+                line: LineNumber.ofOneBased(startLine),
+                byte: ByteIndex.ofInt(startColumn),
+              },
+            stop:
+              BytePosition.{
+                line: LineNumber.ofOneBased(endLine),
+                byte: ByteIndex.ofInt(endColumn),
+              },
+          };
+        let visualRange =
+          Oni_Core.VisualRange.create(~mode=visualType, range);
+        dispatch(Actions.Yank({range: visualRange}));
+      };
+
       let yankConfig =
         Selectors.getActiveConfigurationValue(state, c =>
           c.vimUseSystemClipboard
@@ -170,32 +287,47 @@ let start =
   let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
+      // TODO: This isn't buffer aware, so it won't be able to deal with the
+      // firstline way of getting syntax, which means if that is in use,
+      // it will get wiped when renaming the file.
+      //
+      // Other notes: The file path is going to be updated in BufferFilenameChanged,
+      // so you can't use the buffer here, as it will have the old path.
+      // Additionally, the syntax server will need to be notified on the filetype
+      // change / hook it up to onFileTypeChanged.
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Some(Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v))
-        | None => None
+          Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v)
+          |> Oni_Core.Buffer.FileType.inferred
+        | None => Oni_Core.Buffer.FileType.none
         };
 
       dispatch(
-        Actions.BufferFilenameChanged({
-          id: meta.id,
-          newFileType: fileType,
-          newFilePath: meta.filePath,
-          isModified: meta.modified,
-          version: meta.version,
-        }),
+        Actions.Buffers(
+          Feature_Buffers.FilenameChanged({
+            id: meta.id,
+            newFileType: fileType,
+            newFilePath: meta.filePath,
+            isModified: meta.modified,
+            version: meta.version,
+          }),
+        ),
       );
     });
 
   let _: unit => unit =
     Vim.Buffer.onModifiedChanged((id, isModified) => {
       Log.debugf(m => m("Buffer metadata changed: %n | %b", id, isModified));
-      dispatch(Actions.BufferSetModified(id, isModified));
+      dispatch(
+        Actions.Buffers(Feature_Buffers.ModifiedSet(id, isModified)),
+      );
     });
 
   let _: unit => unit =
-    Vim.Buffer.onWrite(id => {dispatch(Actions.BufferSaved(id))});
+    Vim.Buffer.onWrite(id => {
+      dispatch(Actions.Buffers(Feature_Buffers.Saved(id)))
+    });
 
   let _: unit => unit =
     Vim.Search.onStopSearchHighlight(() => {
@@ -225,36 +357,6 @@ let start =
             NewTerminal({cmd, splitDirection, closeOnExit: closeOnFinish}),
           ),
         ),
-      );
-    });
-
-  let _: unit => unit =
-    Vim.Visual.onRangeChanged(vr => {
-      open Vim.VisualRange;
-
-      let {visualType, range} = vr;
-      let vr =
-        Core.VisualRange.create(
-          ~mode=visualType,
-          Range.{
-            start: {
-              ...range.start,
-              column: range.start.column,
-            },
-            stop: {
-              ...range.stop,
-              column: range.stop.column,
-            },
-          },
-        );
-
-      let editorId =
-        Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
-      dispatch(
-        Editor({
-          scope: Oni_Model.EditorScope.Editor(editorId),
-          msg: SelectionChanged(vr),
-        }),
       );
     });
 
@@ -294,10 +396,9 @@ let start =
         let fileType =
           switch (metadata.filePath) {
           | Some(v) =>
-            Some(
-              Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v),
-            )
-          | None => None
+            Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v)
+            |> Oni_Core.Buffer.FileType.inferred
+          | None => Oni_Core.Buffer.FileType.none
           };
 
         let lineEndings: option(Vim.lineEnding) =
@@ -312,6 +413,7 @@ let start =
             | None =>
               Oni_Core.Buffer.ofMetadata(
                 ~id=metadata.id,
+                ~font=state.editorFont,
                 ~version=- metadata.version,
                 ~filePath=metadata.filePath,
                 ~modified=metadata.modified,
@@ -321,16 +423,19 @@ let start =
           |> Oni_Core.Buffer.setFileType(fileType);
 
         dispatch(
-          Actions.BufferEnter({
-            id: metadata.id,
-            buffer,
-            fileType,
-            lineEndings,
-            // Version must be 0 so that a buffer update will be processed
-            version: 0,
-            isModified: metadata.modified,
-            filePath: metadata.filePath,
-          }),
+          Actions.Buffers(
+            Feature_Buffers.Entered({
+              id: metadata.id,
+              buffer,
+              fileType,
+              lineEndings,
+              // Version must be 0 so that a buffer update will be processed
+              version: 0,
+              isModified: metadata.modified,
+              filePath: metadata.filePath,
+              font: Oni_Core.Buffer.getFont(buffer),
+            }),
+          ),
         );
       };
     });
@@ -343,7 +448,7 @@ let start =
 
       let isFull = update.endLine == (-1);
 
-      let maybeBuffer = Buffers.getBuffer(update.id, getState().buffers);
+      let maybeBuffer = Feature_Buffers.get(update.id, getState().buffers);
 
       // If this is a 'full' update, check if there was a previous buffer.
       // We need to keep track of the previous line count for some
@@ -361,8 +466,8 @@ let start =
         Core.BufferUpdate.create(
           ~id=update.id,
           ~isFull,
-          ~startLine=Index.fromOneBased(update.startLine),
-          ~endLine=Index.fromOneBased(endLine),
+          ~startLine=EditorCoreTypes.LineNumber.ofOneBased(update.startLine),
+          ~endLine=EditorCoreTypes.LineNumber.ofOneBased(endLine),
           ~lines=update.lines,
           ~version=update.version,
           (),
@@ -384,13 +489,36 @@ let start =
         maybeBuffer
         |> Option.iter(oldBuffer => {
              let newBuffer = Core.Buffer.update(oldBuffer, bu);
+             // If the first line changes, re-run the file detection.
+             let firstLineChanged =
+               EditorCoreTypes.(
+                 LineNumber.equals(bu.startLine, LineNumber.zero)
+               )
+               || bu.isFull;
+
+             let newBuffer =
+               if (firstLineChanged) {
+                 let fileType =
+                   Oni_Core.Buffer.FileType.inferred(
+                     Exthost.LanguageInfo.getLanguageFromBuffer(
+                       languageInfo,
+                       newBuffer,
+                     ),
+                   );
+                 newBuffer |> Core.Buffer.setFileType(fileType);
+               } else {
+                 newBuffer;
+               };
+
              dispatch(
-               Actions.BufferUpdate({
-                 update: bu,
-                 newBuffer,
-                 oldBuffer,
-                 triggerKey: currentTriggerKey^,
-               }),
+               Actions.Buffers(
+                 Feature_Buffers.Update({
+                   update: bu,
+                   newBuffer,
+                   oldBuffer,
+                   triggerKey: currentTriggerKey^,
+                 }),
+               ),
              );
            });
       } else {
@@ -409,24 +537,34 @@ let start =
   let checkCommandLineCompletions = () => {
     Log.debug("checkCommandLineCompletions");
 
-    let completions = Vim.CommandLine.getCompletions();
+    let position = Vim.CommandLine.getPosition();
+    Vim.CommandLine.getText()
+    |> Option.iter(commandStr =>
+         if (position == String.length(commandStr)) {
+           let completions =
+             Vim.CommandLine.getCompletions(~colorSchemeProvider, ());
 
-    Log.debugf(m => m("  got %n completions.", Array.length(completions)));
+           Log.debugf(m =>
+             m("  got %n completions.", Array.length(completions))
+           );
 
-    let items =
-      Array.map(
-        name =>
-          Actions.{
-            name,
-            category: None,
-            icon: None,
-            command: () => Noop,
-            highlight: [],
-          },
-        completions,
-      );
+           let items =
+             Array.map(
+               name =>
+                 Actions.{
+                   name,
+                   category: None,
+                   icon: None,
+                   command: () => Noop,
+                   highlight: [],
+                   handle: None,
+                 },
+               completions,
+             );
 
-    dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
+           dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
+         }
+       );
   };
 
   let _: unit => unit =
@@ -450,8 +588,8 @@ let start =
       | SearchReverse =>
         let highlights = Vim.Search.getHighlights();
 
-        let sameLineFilter = (range: Range.t) =>
-          range.start.line == range.stop.line;
+        let sameLineFilter = (range: ByteRange.t) =>
+          EditorCoreTypes.LineNumber.(range.start.line == range.stop.line);
 
         let buffer = Vim.Buffer.getCurrent();
         let id = Vim.Buffer.getId(buffer);
@@ -473,13 +611,7 @@ let start =
 
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
-      if (showUpdateChangelog
-          && Core.BuildInfo.commitId != Persistence.Global.version()) {
-        dispatch(
-          Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
-        );
-      };
-      libvimHasInitialized := true;
+      libvimHasInitialized := true
     });
 
   let updateActiveEditorCursors = cursors => {
@@ -514,7 +646,7 @@ let start =
     });
   };
 
-  let inputEffect = key =>
+  let inputEffect = (~isText, key) =>
     Isolinear.Effect.createWithDispatch(~name="vim.input", dispatch =>
       if (isVimKey(key)) {
         // Set cursors based on current editor
@@ -526,15 +658,16 @@ let start =
 
         currentTriggerKey := Some(key);
         let {cursors, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t =
-          Vim.input(~context, key);
+          isText ? Vim.input(~context, key) : Vim.key(~context, key);
         currentTriggerKey := None;
 
-        dispatch(
-          Actions.Editor({
-            scope: EditorScope.Editor(editorId),
-            msg: CursorsChanged(cursors),
-          }),
-        );
+        // TODO: This has a sensitive timing dependency - the scroll actions need to happen first,
+        // and then the cursor changed. This is because the cursor changed may impact the scroll
+        // (ensuring the cursor is visible).
+        //
+        // Ultimately - we want to get rid of those topline/columnline sync, and have Onivim wholly
+        // own the 'scroll' experience.
+        // ie: https://github.com/onivim/oni2/pull/2067/commits/a1eb60dd3b9679d0aabda83616c4400ebe1eb3d3
         dispatch(
           Actions.Editor({
             scope: EditorScope.Editor(editorId),
@@ -545,6 +678,13 @@ let start =
           Actions.Editor({
             scope: EditorScope.Editor(editorId),
             msg: ScrollToColumn(newLeftColumn),
+          }),
+        );
+
+        dispatch(
+          Actions.Editor({
+            scope: EditorScope.Editor(editorId),
+            msg: CursorsChanged(cursors),
           }),
         );
 
@@ -560,12 +700,11 @@ let start =
       dispatch(onComplete(bufferId));
     });
 
-  let gotoLocationEffect = (editorId, location: Location.t) =>
+  let gotoLocationEffect = (editorId, location: BytePosition.t) =>
     Isolinear.Effect.create(~name="vim.gotoLocation", () => {
-      let cursor = (location :> Vim.Cursor.t);
-      updateActiveEditorCursors([cursor]);
+      updateActiveEditorCursors([location]);
 
-      let topLine: int = max(Index.toZeroBased(location.line) - 10, 0);
+      let topLine: int = max(LineNumber.toZeroBased(location.line) - 10, 0);
 
       dispatch(
         Actions.Editor({
@@ -605,7 +744,7 @@ let start =
         isCompleting := true;
         let currentPos = ref(Vim.CommandLine.getPosition());
         while (currentPos^ > position) {
-          let _: Vim.Context.t = Vim.input("<bs>");
+          let _: Vim.Context.t = Vim.key("<bs>");
           currentPos := Vim.CommandLine.getPosition();
         };
 
@@ -645,51 +784,51 @@ let start =
 
   let undoEffect =
     Isolinear.Effect.create(~name="vim.undo", () => {
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let {cursors, _}: Vim.Context.t = Vim.input("u");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let {cursors, _}: Vim.Context.t = Vim.key("u");
       updateActiveEditorCursors(cursors);
       ();
     });
 
   let redoEffect =
     Isolinear.Effect.create(~name="vim.redo", () => {
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let {cursors, _}: Vim.Context.t = Vim.input("<c-r>");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let {cursors, _}: Vim.Context.t = Vim.key("<c-r>");
       updateActiveEditorCursors(cursors);
       ();
     });
 
   let saveEffect =
     Isolinear.Effect.create(~name="vim.save", () => {
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let _: Vim.Context.t = Vim.input(":");
-      let _: Vim.Context.t = Vim.input("w");
-      let _: Vim.Context.t = Vim.input("<CR>");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let _: Vim.Context.t = Vim.key(":");
+      let _: Vim.Context.t = Vim.key("w");
+      let _: Vim.Context.t = Vim.key("<CR>");
       ();
     });
 
   let escapeEffect =
     Isolinear.Effect.create(~name="vim.esc", () => {
-      let _: Vim.Context.t = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.key("<esc>");
       ();
     });
 
   let indentEffect =
     Isolinear.Effect.create(~name="vim.indent", () => {
-      let _: Vim.Context.t = Vim.input(">");
-      let _: Vim.Context.t = Vim.input("g");
-      let _: Vim.Context.t = Vim.input("v");
+      let _: Vim.Context.t = Vim.key(">");
+      let _: Vim.Context.t = Vim.key("g");
+      let _: Vim.Context.t = Vim.key("v");
       ();
     });
 
   let outdentEffect =
     Isolinear.Effect.create(~name="vim.outdent", () => {
-      let _: Vim.Context.t = Vim.input("<");
-      let _: Vim.Context.t = Vim.input("g");
-      let _: Vim.Context.t = Vim.input("v");
+      let _: Vim.Context.t = Vim.key("<");
+      let _: Vim.Context.t = Vim.key("g");
+      let _: Vim.Context.t = Vim.key("v");
       ();
     });
 
@@ -706,8 +845,8 @@ let start =
            });
 
       // Clear out previous mode
-      let _: Vim.Context.t = Vim.input("<esc>");
-      let _: Vim.Context.t = Vim.input("<esc>");
+      let _: Vim.Context.t = Vim.key("<esc>");
+      let _: Vim.Context.t = Vim.key("<esc>");
       // Jump to bottom
       let _: Vim.Context.t = Vim.input("g");
       let _: Vim.Context.t = Vim.input("g");
@@ -777,6 +916,7 @@ let start =
     | BufferOpened(path, maybeLocation, bufferId) =>
       let maybeRenderer =
         switch (Core.BufferPath.parse(path)) {
+        | ExtensionDetails => Some(BufferRenderer.ExtensionDetails)
         | Terminal({bufferId, _}) =>
           Some(
             BufferRenderer.Terminal({
@@ -792,13 +932,14 @@ let start =
               since: Persistence.Global.version(),
             }),
           )
+        | Image => Some(BufferRenderer.Image)
         | Welcome => Some(BufferRenderer.Welcome)
         | Changelog => Some(BufferRenderer.FullChangelog)
         | FilePath(_) => None
         };
 
-      let editorId =
-        Feature_Layout.activeEditor(state.layout) |> Editor.getId;
+      let editor = Feature_Layout.activeEditor(state.layout);
+      let editorId = editor |> Editor.getId;
 
       (
         state,
@@ -807,6 +948,9 @@ let start =
           |> Option.map(addBufferRendererEffect(bufferId))
           |> Option.value(~default=Isolinear.Effect.none),
           maybeLocation
+          |> OptionEx.flatMap(loc =>
+               Feature_Editor.Editor.characterToByte(loc, editor)
+             )
           |> Option.map(gotoLocationEffect(editorId))
           |> Option.value(~default=Isolinear.Effect.none),
         ]),
@@ -876,9 +1020,20 @@ let start =
             let layout =
               Feature_Layout.map(
                 editor =>
-                  Editor.getBufferId(editor) == bufferId
-                    ? Editor.setFont(~font=state.terminalFont, editor)
-                    : editor,
+                  if (Editor.getBufferId(editor) == bufferId) {
+                    state.buffers
+                    |> Feature_Buffers.get(bufferId)
+                    |> Option.map(buffer => {
+                         let updatedBuffer =
+                           buffer
+                           |> Oni_Core.Buffer.setFont(state.terminalFont)
+                           |> Feature_Editor.EditorBuffer.ofBuffer;
+                         Editor.updateBuffer(~buffer=updatedBuffer, editor);
+                       })
+                    |> Option.value(~default=editor);
+                  } else {
+                    editor;
+                  },
                 state.layout,
               );
 
@@ -894,14 +1049,14 @@ let start =
 
       (state, effect);
 
-    | KeyboardInput(s) => (state, inputEffect(s))
+    | KeyboardInput({isText, input}) => (state, inputEffect(~isText, input))
 
     | CopyActiveFilepathToClipboard => (
         state,
         copyActiveFilepathToClipboardEffect,
       )
 
-    | VimDirectoryChanged(workingDirectory) =>
+    | DirectoryChanged(workingDirectory) =>
       let newState = {
         ...state,
         workspace: {

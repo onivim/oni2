@@ -14,6 +14,7 @@ let wait = (~timeout=10.0, ~name="TODO", condition) => {
   };
 
   if (!condition()) {
+    Log.errorf(m => m("Waiter failed '%s' after %f seconds", name, delta()));
     failwith("Condition failed: " ++ name);
   } else {
     Log.infof(m =>

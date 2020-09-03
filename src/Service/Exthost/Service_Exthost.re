@@ -18,12 +18,19 @@ module Effects = {
   };
   module Documents = {
     let modelChanged =
-        (~buffer: Buffer.t, ~update: BufferUpdate.t, client, toMsg) =>
+        (
+          ~previousBuffer,
+          ~buffer: Buffer.t,
+          ~update: BufferUpdate.t,
+          client,
+          toMsg,
+        ) =>
       Isolinear.Effect.createWithDispatch(
         ~name="exthost.bufferUpdate", dispatch =>
         Oni_Core.Log.perf("exthost.bufferUpdate", () => {
           let modelContentChange =
             Exthost.ModelContentChange.ofBufferUpdate(
+              ~previousBuffer,
               update,
               Exthost.Eol.default,
             );
@@ -44,25 +51,37 @@ module Effects = {
         })
       );
   };
-  module SCM = {
-    let provideOriginalResource = (~handles, extHostClient, path, toMsg) =>
-      Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
-        // Try our luck with every provider. If several returns Last-Writer-Wins
-        // TODO: Is there a better heuristic? Perhaps use rootUri to choose the "nearest" provider?
-        handles
-        |> List.iter(handle => {
-             let promise =
-               Exthost.Request.SCM.provideOriginalResource(
-                 ~handle,
-                 ~uri=Uri.fromPath(path),
-                 extHostClient,
-               );
+  module FileSystemEventService = {
+    let onFileEvent = (~events, extHostClient) =>
+      Isolinear.Effect.create(~name="fileSystemEventService.onFileEvent", () => {
+        Exthost.Request.FileSystemEventService.onFileEvent(
+          ~events,
+          extHostClient,
+        )
+      });
+  };
 
-             Lwt.on_success(
-               promise,
-               Option.iter(uri => dispatch(toMsg(uri))),
-             );
-           })
+  module SCM = {
+    let getOriginalContent = (~handle, ~uri, ~toMsg, client) =>
+      Isolinear.Effect.createWithDispatch(
+        ~name="scm.getOriginalSourceLines", dispatch => {
+        let promise =
+          Exthost.Request.DocumentContentProvider.provideTextDocumentContent(
+            ~handle,
+            ~uri,
+            client,
+          );
+
+        Lwt.on_success(promise, maybeContent => {
+          switch (maybeContent) {
+          | None => ()
+          | Some(content) =>
+            let lines =
+              content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
+
+            dispatch(toMsg(lines));
+          }
+        });
       });
 
     let onInputBoxValueChange = (~handle, ~value, extHostClient) =>
@@ -145,6 +164,29 @@ module Effects = {
       });
     };
 
+    let provideReferences =
+        (~handle, ~uri, ~position, ~context, client, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="language.provideReferences", dispatch => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideReferences(
+            ~handle,
+            ~resource=uri,
+            ~position=Exthost.OneBasedPosition.ofPosition(position),
+            ~context,
+            client,
+          );
+
+        Lwt.on_success(promise, locations =>
+          dispatch(toMsg(Ok(locations)))
+        );
+
+        Lwt.on_failure(promise, err =>
+          dispatch(toMsg(Error(Printexc.to_string(err))))
+        );
+      });
+    };
+
     let provideSignatureHelp =
         (~handle, ~uri, ~position, ~context, client, toMsg) => {
       Isolinear.Effect.createWithDispatch(
@@ -177,8 +219,7 @@ module Internal = {
     let lines = Buffer.getLines(buffer) |> Array.to_list;
     let version = Buffer.getVersion(buffer);
     let maybeFilePath = Buffer.getFilePath(buffer);
-    let modeId =
-      Buffer.getFileType(buffer) |> Option.value(~default="plaintext");
+    let modeId = Buffer.getFileType(buffer) |> Buffer.FileType.toString;
 
     // The extension host does not like a completely empty buffer,
     // so at least send a single line with an empty string.
@@ -202,23 +243,84 @@ module Internal = {
        });
   };
 
-  let activateFileType = (~client, maybeFileType: option(string)) =>
-    maybeFileType
-    |> Option.iter(ft =>
-         if (!Hashtbl.mem(MutableState.activatedFileTypes, ft)) {
-           // If no entry, we haven't activated yet
-           Exthost.Request.ExtensionService.activateByEvent(
-             ~event="onLanguage:" ++ ft,
-             client,
-           );
-           Hashtbl.add(MutableState.activatedFileTypes, ft, true);
-         }
-       );
+  let activateFileType = (~client, fileType: string) =>
+    if (!Hashtbl.mem(MutableState.activatedFileTypes, fileType)) {
+      // If no entry, we haven't activated yet
+      Exthost.Request.ExtensionService.activateByEvent(
+        ~event="onLanguage:" ++ fileType,
+        client,
+      );
+      Hashtbl.add(MutableState.activatedFileTypes, fileType, true);
+    };
+};
+
+// This is a temporary helper to avoid dispatching after a subscription is disposed
+// Really, this needs to be baked into isolinear - we should not ignore dispatches that
+// occur in the context of a disposed description. However - at this point in this release,
+// it's risky, so we'll scope it to just some of the new subscriptions.
+module Latch = {
+  type state =
+    | Open
+    | Closed;
+
+  type t = ref(state);
+
+  let create = () => ref(Open);
+
+  let isOpen = latch => latch^ == Open;
+
+  let close = latch => latch := Closed;
 };
 
 // SUBSCRIPTIONS
 
 module Sub = {
+  module SCM = {
+    type originalUriParams = {
+      filePath: string,
+      handle: int,
+      client: Exthost.Client.t,
+    };
+
+    module OriginalUriSubscription =
+      Isolinear.Sub.Make({
+        type nonrec msg = Uri.t;
+        type nonrec params = originalUriParams;
+        type state = unit;
+
+        let name = "Service_Exthost.SCM.OriginalUriSubscription";
+        let id = params => string_of_int(params.handle) ++ params.filePath;
+
+        let init = (~params, ~dispatch) => {
+          let promise =
+            Exthost.Request.SCM.provideOriginalResource(
+              ~handle=params.handle,
+              ~uri=Uri.fromPath(params.filePath),
+              params.client,
+            );
+
+          Lwt.on_success(
+            promise,
+            fun
+            | None => ()
+            | Some(uri) => dispatch(uri),
+          );
+
+          ();
+        };
+
+        let update = (~params as _, ~state, ~dispatch as _) => {
+          state;
+        };
+
+        let dispose = (~params as _, ~state as _) => ();
+      });
+
+    let originalUri = (~handle, ~filePath, ~toMsg, client) => {
+      OriginalUriSubscription.create({filePath, handle, client})
+      |> Isolinear.Sub.map(uri => toMsg(uri));
+    };
+  };
   type bufferParams = {
     client: Exthost.Client.t,
     buffer: Oni_Core.Buffer.t,
@@ -226,23 +328,29 @@ module Sub = {
 
   module BufferSubscription =
     Isolinear.Sub.Make({
-      type nonrec msg = unit;
+      type nonrec msg = [ | `Added];
       type nonrec params = bufferParams;
-      type state = {didAdd: bool};
+      type state = {
+        didAdd: bool,
+        lastFileType: string,
+      };
 
       let name = "Service_Exthost.BufferSubscription";
       let id = params => {
         params.buffer |> Oni_Core.Buffer.getId |> string_of_int;
       };
 
-      let init = (~params, ~dispatch as _) => {
+      let init = (~params, ~dispatch) => {
         let bufferId = Oni_Core.Buffer.getId(params.buffer);
+
+        let fileType =
+          params.buffer
+          |> Oni_Core.Buffer.getFileType
+          |> Oni_Core.Buffer.FileType.toString;
 
         Log.infof(m => m("Starting buffer subscription for: %d", bufferId));
 
-        params.buffer
-        |> Oni_Core.Buffer.getFileType
-        |> Internal.activateFileType(~client=params.client);
+        fileType |> Internal.activateFileType(~client=params.client);
 
         let maybeMetadata =
           Internal.bufferMetadataToModelAddedDelta(params.buffer);
@@ -260,13 +368,39 @@ module Sub = {
             ~delta=addedDelta,
             params.client,
           );
-          {didAdd: true};
-        | None => {didAdd: false}
+          dispatch(`Added);
+          {lastFileType: fileType, didAdd: true};
+        | None => {lastFileType: fileType, didAdd: false}
         };
       };
 
-      let update = (~params as _, ~state, ~dispatch as _) => {
-        state;
+      let update = (~params, ~state, ~dispatch as _) => {
+        let newFileType =
+          Oni_Core.Buffer.getFileType(params.buffer)
+          |> Oni_Core.Buffer.FileType.toString;
+
+        if (state.lastFileType != newFileType && state.didAdd) {
+          // Ensure relevant extensions are activated
+          newFileType |> Internal.activateFileType(~client=params.client);
+
+          Log.infof(m =>
+            m(
+              "Updated mode for extension host - old: %s new: %s",
+              state.lastFileType,
+              newFileType,
+            )
+          );
+          let () =
+            Exthost.Request.Documents.acceptModelModeChanged(
+              ~uri=Oni_Core.Buffer.getUri(params.buffer),
+              ~oldModeId=state.lastFileType,
+              ~newModeId=newFileType,
+              params.client,
+            );
+          ();
+        };
+
+        {...state, lastFileType: newFileType};
       };
 
       let dispose = (~params, ~state) =>
@@ -288,8 +422,8 @@ module Sub = {
         };
     });
 
-  let buffer = (~buffer, ~client) =>
-    BufferSubscription.create({buffer, client});
+  let buffer = (~buffer, ~client, ~toMsg) =>
+    BufferSubscription.create({buffer, client}) |> Isolinear.Sub.map(toMsg);
 
   type editorParams = {
     client: Exthost.Client.t,
@@ -403,5 +537,280 @@ module Sub = {
 
   let activeEditor = (~activeEditorId, ~client) => {
     ActiveEditorSubscription.create({activeEditorId, client});
+  };
+
+  type bufferPositionParams = {
+    handle: int,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+    position: Exthost.OneBasedPosition.t,
+  };
+
+  let idFromBufferPosition = (~handle, ~buffer, ~position, name) => {
+    Exthost.OneBasedPosition.(
+      Printf.sprintf(
+        "%d-%d-%d-%d.%s",
+        handle,
+        Oni_Core.Buffer.getId(buffer),
+        position.lineNumber,
+        position.column,
+        name,
+      )
+    );
+  };
+  let idFromBufferPositionVersion = (~handle, ~buffer, ~position, name) => {
+    Exthost.OneBasedPosition.(
+      Printf.sprintf(
+        "%d-%d-%d-%d.%d.%s",
+        handle,
+        Oni_Core.Buffer.getId(buffer),
+        position.lineNumber,
+        position.column,
+        Oni_Core.Buffer.getVersion(buffer),
+        name,
+      )
+    );
+  };
+
+  module DefinitionSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = list(Exthost.DefinitionLink.t);
+      type nonrec params = bufferPositionParams;
+
+      type state = {latch: Latch.t};
+
+      let name = "Service_Exthost.DefinitionSubscription";
+      let id = ({handle, buffer, position, _}: bufferPositionParams) =>
+        idFromBufferPosition(
+          ~handle,
+          ~buffer,
+          ~position,
+          "DefinitionSubscription",
+        );
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideDefinition(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            ~position=params.position,
+            params.client,
+          );
+
+        let latch = Latch.create();
+
+        Lwt.on_success(promise, definitionLinks =>
+          if (Latch.isOpen(latch)) {
+            dispatch(definitionLinks);
+          }
+        );
+
+        Lwt.on_failure(promise, _ =>
+          if (Latch.isOpen(latch)) {
+            dispatch([]);
+          }
+        );
+
+        {latch: latch};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state) => {
+        Latch.close(state.latch);
+      };
+    });
+
+  let definition = (~handle, ~buffer, ~position, ~toMsg, client) => {
+    let position = position |> Exthost.OneBasedPosition.ofPosition;
+    DefinitionSubscription.create({handle, buffer, position, client})
+    |> Isolinear.Sub.map(toMsg);
+  };
+
+  module DocumentHighlightsSub =
+    Isolinear.Sub.Make({
+      type nonrec msg = list(Exthost.DocumentHighlight.t);
+      type nonrec params = bufferPositionParams;
+
+      type state = {latch: Latch.t};
+
+      let name = "Service_Exthost.DocumentHighlightsSubscription";
+      let id = ({handle, buffer, position, _}) =>
+        idFromBufferPositionVersion(
+          ~handle,
+          ~buffer,
+          ~position,
+          "DocumentHighlightsSubscription",
+        );
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideDocumentHighlights(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            ~position=params.position,
+            params.client,
+          );
+
+        let latch = Latch.create();
+
+        Lwt.on_success(promise, documentHighlights =>
+          if (Latch.isOpen(latch)) {
+            dispatch(documentHighlights);
+          }
+        );
+
+        Lwt.on_failure(promise, _ =>
+          if (Latch.isOpen(latch)) {
+            dispatch([]);
+          }
+        );
+
+        {latch: latch};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state) => {
+        Latch.close(state.latch);
+      };
+    });
+
+  let documentHighlights = (~handle, ~buffer, ~position, ~toMsg, client) => {
+    let position = position |> Exthost.OneBasedPosition.ofPosition;
+    DocumentHighlightsSub.create({handle, buffer, position, client})
+    |> Isolinear.Sub.map(toMsg);
+  };
+
+  type completionParams = {
+    handle: int,
+    context: Exthost.CompletionContext.t,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+    position: Exthost.OneBasedPosition.t,
+  };
+
+  module CompletionSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(Exthost.SuggestResult.t, string);
+      type nonrec params = completionParams;
+
+      type state = {latch: Latch.t};
+
+      let name = "Service_Exthost.CompletionSubscription";
+      let id = ({handle, buffer, position, _}: params) =>
+        idFromBufferPosition(
+          ~handle,
+          ~buffer,
+          ~position,
+          "CompletionSubscription",
+        );
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideCompletionItems(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            ~position=params.position,
+            ~context=params.context,
+            params.client,
+          );
+
+        let latch = Latch.create();
+
+        Lwt.on_success(promise, suggestResult =>
+          if (Latch.isOpen(latch)) {
+            dispatch(Ok(suggestResult));
+          }
+        );
+
+        Lwt.on_failure(promise, exn =>
+          if (Latch.isOpen(latch)) {
+            dispatch(Error(Printexc.to_string(exn)));
+          }
+        );
+
+        {latch: latch};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state) => {
+        Latch.close(state.latch);
+      };
+    });
+  let completionItems =
+      (~handle, ~context, ~buffer, ~position, ~toMsg, client) => {
+    let position = position |> Exthost.OneBasedPosition.ofPosition;
+    CompletionSubscription.create(
+      {handle, context, buffer, position, client}: completionParams,
+    )
+    |> Isolinear.Sub.map(toMsg);
+  };
+
+  type completionItemParams = {
+    handle: int,
+    chainedCacheId: Exthost.ChainedCacheId.t,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+    position: Exthost.OneBasedPosition.t,
+  };
+
+  module CompletionItemSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(Exthost.SuggestItem.t, string);
+      type nonrec params = completionItemParams;
+
+      type state = {latch: Latch.t};
+
+      let name = "Service_Exthost.CompletionItemSubscription";
+      let id = ({handle, buffer, position, chainedCacheId, _}: params) =>
+        idFromBufferPosition(
+          ~handle,
+          ~buffer,
+          ~position,
+          chainedCacheId |> Exthost.ChainedCacheId.show,
+        );
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.resolveCompletionItem(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            ~position=params.position,
+            ~chainedCacheId=params.chainedCacheId,
+            params.client,
+          );
+
+        let latch = Latch.create();
+
+        Lwt.on_success(promise, suggestItem =>
+          if (Latch.isOpen(latch)) {
+            dispatch(Ok(suggestItem));
+          }
+        );
+
+        Lwt.on_failure(promise, exn =>
+          if (Latch.isOpen(latch)) {
+            dispatch(Error(Printexc.to_string(exn)));
+          }
+        );
+
+        {latch: latch};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state) => {
+        Latch.close(state.latch);
+      };
+    });
+  let completionItem =
+      (~handle, ~chainedCacheId, ~buffer, ~position, ~toMsg, client) => {
+    let position = position |> Exthost.OneBasedPosition.ofPosition;
+    CompletionItemSubscription.create(
+      {handle, chainedCacheId, buffer, position, client}: completionItemParams,
+    )
+    |> Isolinear.Sub.map(toMsg);
   };
 };

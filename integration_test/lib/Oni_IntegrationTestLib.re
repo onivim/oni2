@@ -132,7 +132,13 @@ let runTest =
   let initialBuffer = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
       Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
-    Core.Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+    Core.Buffer.ofMetadata(
+      ~font=Oni_Core.Font.default,
+      ~id,
+      ~version,
+      ~filePath,
+      ~modified,
+    );
   };
 
   let currentState =
@@ -144,6 +150,8 @@ let runTest =
         ~contributedCommands=[],
         ~workingDirectory=Sys.getcwd(),
         ~extensionsFolder=None,
+        ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
+        ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
       ),
     );
 
@@ -167,10 +175,10 @@ let runTest =
           <Oni_UI.Root state dispatch=uiDispatch^ />,
         );
       },
-      //        Revery.Utility.HeadlessWindow.takeScreenshot(
-      //          headlessWindow,
-      //          "screenshot.png",
-      //        );
+      //      Revery.Utility.HeadlessWindow.takeScreenshot(
+      //        headlessWindow,
+      //        "screenshot.png",
+      //      );
       Revery.Time.zero,
     );
 
@@ -198,7 +206,6 @@ let runTest =
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
-      ~showUpdateChangelog=false,
       ~getUserSettings,
       ~setup,
       ~onAfterDispatch,
@@ -296,7 +303,7 @@ let runTestWithInput =
     ~onAfterDispatch?,
     (dispatch, wait, runEffects) => {
       let input = key => {
-        dispatch(Model.Actions.KeyboardInput(key));
+        dispatch(Model.Actions.KeyboardInput({isText: false, input: key}));
         runEffects();
       };
 

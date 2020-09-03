@@ -1,19 +1,26 @@
-open EditorCoreTypes;
 open Oni_Core;
 open Oni_Model;
 open Oni_Store;
 open Feature_Editor;
 
+module LineNumber = EditorCoreTypes.LineNumber;
+
 Vim.init();
 
-let config = _ => None;
+let config = (~vimSetting as _, _) => Config.NotSet;
 
 /* Create a state with some editor size */
 let simpleState = {
   let initialBuffer = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
       Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
-    Buffer.ofMetadata(~id, ~version, ~filePath, ~modified);
+    Buffer.ofMetadata(
+      ~font=Font.default,
+      ~id,
+      ~version,
+      ~filePath,
+      ~modified,
+    );
   };
 
   let state =
@@ -21,6 +28,8 @@ let simpleState = {
       ~initialBuffer,
       ~initialBufferRenderers=BufferRenderers.initial,
       ~getUserSettings=() => Ok(Config.Settings.empty),
+      ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
+      ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
       ~contributedCommands=[],
       ~workingDirectory=Sys.getcwd(),
       ~extensionsFolder=None,
@@ -33,13 +42,16 @@ let simpleState = {
 };
 
 let defaultFont: Service_Font.font = {
-  fontFile: "JetBrainsMono-Regular.ttf",
   fontFamily: Revery.Font.Family.fromFile("JetBrainsMono-Regular.ttf"),
   fontSize: 10.,
-  measuredWidth: 10.,
+  spaceWidth: 10.,
+  underscoreWidth: 10.,
+  avgCharWidth: 10.,
+  maxCharWidth: 10.,
   measuredHeight: 10.,
   descenderHeight: 1.,
   smoothing: Revery.Font.Smoothing.default,
+  features: [],
 };
 
 let simpleState =
@@ -56,12 +68,14 @@ let defaultEditorBuffer =
   defaultBuffer |> Feature_Editor.EditorBuffer.ofBuffer;
 
 let simpleEditor =
-  Editor.create(~config, ~font=defaultFont, ~buffer=defaultEditorBuffer, ())
+  Editor.create(~config, ~buffer=defaultEditorBuffer, ())
   |> Editor.setSize(~pixelWidth=3440, ~pixelHeight=1440);
 
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {
   let newBuffer = Buffer.update(oldBuffer, update);
-  Actions.BufferUpdate({update, oldBuffer, newBuffer, triggerKey: None});
+  Actions.Buffers(
+    Feature_Buffers.Update({update, oldBuffer, newBuffer, triggerKey: None}),
+  );
 };
 
 let thousandLineBuffer = Buffer.ofLines(thousandLines);
@@ -72,8 +86,8 @@ let thousandLineState =
     createUpdateAction(
       thousandLineBuffer,
       BufferUpdate.create(
-        ~startLine=Index.zero,
-        ~endLine=Index.fromZeroBased(1),
+        ~startLine=LineNumber.zero,
+        ~endLine=LineNumber.ofZeroBased(1),
         ~lines=thousandLines,
         ~version=1,
         (),
@@ -98,8 +112,8 @@ let thousandLineStateWithIndents =
     createUpdateAction(
       thousandLineBuffer,
       BufferUpdate.create(
-        ~startLine=Index.zero,
-        ~endLine=Index.fromZeroBased(1),
+        ~startLine=LineNumber.zero,
+        ~endLine=LineNumber.ofZeroBased(1),
         ~lines=thousandLinesWithIndents,
         ~version=1,
         (),
@@ -116,8 +130,8 @@ let hundredThousandLineState =
     createUpdateAction(
       Buffer.ofLines([||]),
       BufferUpdate.create(
-        ~startLine=Index.zero,
-        ~endLine=Index.fromZeroBased(1),
+        ~startLine=LineNumber.zero,
+        ~endLine=LineNumber.ofZeroBased(1),
         ~lines=hundredThousandLines,
         ~version=1,
         (),

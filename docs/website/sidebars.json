@@ -9,6 +9,7 @@
     "Basic Usage": [
       "using-onivim/moving-in-onivim",
       "using-onivim/editing-and-deleting",
+      "using-onivim/language-features",
       "using-onivim/visual-mode",
       "using-onivim/working-with-files",
       "using-onivim/command-line",
@@ -20,14 +21,20 @@
       "configuration/extensions"
     ],
     "Languages": [
-      "languages/overview",
-      "languages/reason-ocaml"
+      "languages/reason-ocaml",
+      "languages/python",
+      "languages/go",
+      "languages/java",
+      "languages/c",
+      "languages/c-sharp",
+      "languages/rust"
     ],
     "For Developers": [
       "for-developers/architecture",
       "for-developers/building",
       "for-developers/contributing",
-      "for-developers/style-guide"
+      "for-developers/style-guide",
+      "for-developers/free-license"
     ],
     "Other": [
       "other/faq",

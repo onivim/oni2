@@ -11,11 +11,6 @@ module GlobalState = {
   };
 };
 
-type pixelPosition = {
-  pixelX: float,
-  pixelY: float,
-};
-
 type viewLine = {
   contents: BufferLine.t,
   byteOffset: int,
@@ -23,10 +18,17 @@ type viewLine = {
 };
 
 [@deriving show]
-// TODO: This type needs to be private, so we can maintain invariants with the `EditorBuffer.t` and computed properties
+type yankHighlight = {
+  key: [@opaque] Brisk_reconciler.Key.t,
+  pixelRanges: list(PixelRange.t),
+};
+
+[@deriving show]
 type t = {
+  key: [@opaque] Brisk_reconciler.Key.t,
   buffer: [@opaque] EditorBuffer.t,
   editorId: EditorId.t,
+  lineHeight: LineHeight.t,
   scrollX: float,
   scrollY: float,
   isScrollAnimated: bool,
@@ -39,24 +41,38 @@ type t = {
    */
   maxLineLength: int,
   viewLines: int,
-  cursors: [@opaque] list(Vim.Cursor.t),
-  selection: [@opaque] VisualRange.t,
-  font: [@opaque] Service_Font.font,
+  cursors: [@opaque] list(BytePosition.t),
+  selection: [@opaque] option(VisualRange.t),
   pixelWidth: int,
   pixelHeight: int,
+  yankHighlight: option(yankHighlight),
 };
 
+let key = ({key, _}) => key;
 let totalViewLines = ({viewLines, _}) => viewLines;
 let selection = ({selection, _}) => selection;
-let setSelection = (~selection, editor) => {...editor, selection};
+let setSelection = (~selection, editor) => {
+  ...editor,
+  selection: Some(selection),
+};
+let clearSelection = editor => {...editor, selection: None};
 let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
 let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
 let scrollY = ({scrollY, _}) => scrollY;
 let scrollX = ({scrollX, _}) => scrollX;
 let minimapScrollY = ({minimapScrollY, _}) => minimapScrollY;
-let lineHeightInPixels = ({font, _}) => font.measuredHeight;
-let characterWidthInPixels = ({font, _}) => font.measuredWidth;
-let font = ({font, _}) => font;
+let lineHeightInPixels = ({buffer, lineHeight, _}) =>
+  lineHeight
+  |> LineHeight.calculate(
+       ~measuredFontHeight=EditorBuffer.font(buffer).measuredHeight,
+     );
+
+let linePaddingInPixels = ({buffer, _} as editor) =>
+  (lineHeightInPixels(editor) -. EditorBuffer.font(buffer).measuredHeight)
+  /. 2.;
+let characterWidthInPixels = ({buffer, _}) =>
+  EditorBuffer.font(buffer).spaceWidth;
+let font = ({buffer, _}) => EditorBuffer.font(buffer);
 
 let setMinimapEnabled = (~enabled, editor) => {
   ...editor,
@@ -66,24 +82,31 @@ let setMinimapEnabled = (~enabled, editor) => {
 let isMinimapEnabled = ({isMinimapEnabled, _}) => isMinimapEnabled;
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
-let bufferLineByteToPixel =
-    (~line, ~byteIndex, {scrollX, scrollY, buffer, font, _}) => {
+let bufferBytePositionToPixel =
+    (~position: BytePosition.t, {scrollX, scrollY, buffer, _} as editor) => {
   let lineCount = EditorBuffer.numberOfLines(buffer);
+  let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
   if (line < 0 || line >= lineCount) {
-    ({pixelX: 0., pixelY: 0.}, 0.);
+    ({x: 0., y: 0.}: PixelPosition.t, 0.);
   } else {
     let bufferLine = buffer |> EditorBuffer.line(line);
 
-    let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
+    let index = BufferLine.getIndex(~byte=position.byte, bufferLine);
     let (cursorOffset, width) =
-      BufferLine.getPositionAndWidth(~index, bufferLine);
+      BufferLine.getPixelPositionAndWidth(~index, bufferLine);
 
-    let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
+    let pixelX = cursorOffset -. scrollX +. 0.5;
 
-    let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
+    let pixelY = lineHeightInPixels(editor) *. float(line) -. scrollY +. 0.5;
 
-    ({pixelX, pixelY}, float(width) *. font.measuredWidth);
+    ({x: pixelX, y: pixelY}: PixelPosition.t, width);
   };
+};
+
+let yankHighlight = ({yankHighlight, _}) => yankHighlight;
+let setYankHighlight = (~yankHighlight, editor) => {
+  ...editor,
+  yankHighlight: Some(yankHighlight),
 };
 
 let viewLine = (editor, lineNumber) => {
@@ -92,32 +115,37 @@ let viewLine = (editor, lineNumber) => {
   {contents, byteOffset: 0, characterOffset: 0};
 };
 
-let bufferLineCharacterToPixel =
-    (~line, ~characterIndex, {scrollX, scrollY, buffer, font, _}) => {
+let bufferCharacterPositionToPixel =
+    (~position: CharacterPosition.t, {scrollX, scrollY, buffer, _} as editor) => {
   let lineCount = EditorBuffer.numberOfLines(buffer);
+  let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
   if (line < 0 || line >= lineCount) {
-    ({pixelX: 0., pixelY: 0.}, 0.);
+    ({x: 0., y: 0.}: PixelPosition.t, 0.);
   } else {
     let (cursorOffset, width) =
       buffer
       |> EditorBuffer.line(line)
-      |> BufferLine.getPositionAndWidth(~index=characterIndex);
+      |> BufferLine.getPixelPositionAndWidth(~index=position.character);
 
-    let pixelX = font.measuredWidth *. float(cursorOffset) -. scrollX +. 0.5;
+    let pixelX = cursorOffset -. scrollX +. 0.5;
 
-    let pixelY = font.measuredHeight *. float(line) -. scrollY +. 0.5;
+    let pixelY = lineHeightInPixels(editor) *. float(line) -. scrollY +. 0.5;
 
-    ({pixelX, pixelY}, float(width) *. font.measuredWidth);
+    ({x: pixelX, y: pixelY}: PixelPosition.t, width);
   };
 };
 
-let create = (~config, ~font, ~buffer, ()) => {
+let create = (~config, ~buffer, ()) => {
   let id = GlobalState.generateId();
+  let key = Brisk_reconciler.Key.create();
 
   let isMinimapEnabled = EditorConfiguration.Minimap.enabled.get(config);
+  let lineHeight = EditorConfiguration.lineHeight.get(config);
 
   {
     editorId: id,
+    key,
+    lineHeight,
     isMinimapEnabled,
     isScrollAnimated: false,
     buffer,
@@ -131,25 +159,19 @@ let create = (~config, ~font, ~buffer, ()) => {
      * We need an initial editor size, otherwise we'll immediately scroll the view
      * if a buffer loads prior to our first render.
      */
-    cursors: [Vim.Cursor.create(~line=Index.zero, ~column=Index.zero)],
-    selection:
-      VisualRange.create(
-        ~mode=Vim.Types.None,
-        Range.{
-          start: Location.{line: Index.zero, column: Index.zero},
-          stop: Location.{line: Index.zero, column: Index.zero},
-        },
-      ),
-    font,
+    cursors: [{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}],
+    selection: None,
     pixelWidth: 1,
     pixelHeight: 1,
+    yankHighlight: None,
   };
 };
 
 let copy = editor => {
   let id = GlobalState.generateId();
+  let key = Brisk_reconciler.Key.create();
 
-  {...editor, editorId: id};
+  {...editor, key, editorId: id};
 };
 
 type scrollbarMetrics = {
@@ -158,53 +180,66 @@ type scrollbarMetrics = {
   thumbOffset: int,
 };
 
-let getVimCursors = ({cursors, _}) => cursors;
-let setVimCursors = (~cursors, editor) => {...editor, cursors};
+let getCursors = ({cursors, _}) => cursors;
 
-let getNearestMatchingPair = (~location: Location.t, ~pairs, {buffer, _}) => {
-  BracketMatch.findFirst(
-    ~buffer,
-    ~line=location.line |> Index.toZeroBased,
-    ~index=location.column |> Index.toZeroBased,
-    ~pairs,
-  )
-  |> Option.map(({start, stop}: BracketMatch.pair) =>
-       (
-         Location.{
-           line: start.line |> Index.fromZeroBased,
-           column: start.index |> Index.fromZeroBased,
-         },
-         Location.{
-           line: stop.line |> Index.fromZeroBased,
-           column: stop.index |> Index.fromZeroBased,
-         },
-       )
-     );
+let getNearestMatchingPair =
+    (~characterPosition: CharacterPosition.t, ~pairs, {buffer, _}) => {
+  BracketMatch.findFirst(~buffer, ~characterPosition, ~pairs)
+  |> Option.map(({start, stop}: BracketMatch.pair) => (start, stop));
 };
 
-let mapCursor = (~position: Vim.Cursor.t, editor) => {
-  let byte = position.column |> Index.toZeroBased;
-  let line = position.line |> Index.toZeroBased;
+let byteToCharacter = (position: BytePosition.t, editor) => {
+  let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
 
   let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
 
   if (line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, editor.buffer);
+    let character = BufferLine.getIndex(~byte=position.byte, bufferLine);
 
-    let column = BufferLine.getIndex(~byte, bufferLine);
-
-    Location.{line: Index.(zero + line), column: Index.(zero + column)};
+    Some(
+      EditorCoreTypes.(CharacterPosition.{line: position.line, character}),
+    );
   } else {
-    Location.{line: Index.zero, column: Index.zero};
+    None;
   };
 };
 
-let getCharacterAtPosition = (~line, ~index, {buffer, _}) => {
+let byteRangeToCharacterRange = ({start, stop}: ByteRange.t, editor) => {
+  let maybeCharacterStart = byteToCharacter(start, editor);
+  let maybeCharacterStop = byteToCharacter(stop, editor);
+
+  Oni_Core.Utility.OptionEx.map2(
+    (start, stop) => {CharacterRange.{start, stop}},
+    maybeCharacterStart,
+    maybeCharacterStop,
+  );
+};
+
+let characterToByte = (position: CharacterPosition.t, editor) => {
+  let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
+
+  let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
+
+  if (line < bufferLineCount) {
+    let bufferLine = EditorBuffer.line(line, editor.buffer);
+    let byteIndex =
+      BufferLine.getByteFromIndex(~index=position.character, bufferLine);
+
+    Some(
+      EditorCoreTypes.(BytePosition.{line: position.line, byte: byteIndex}),
+    );
+  } else {
+    None;
+  };
+};
+let getCharacterAtPosition = (~position: CharacterPosition.t, {buffer, _}) => {
+  let line = EditorCoreTypes.LineNumber.toZeroBased(position.line);
   let bufferLineCount = EditorBuffer.numberOfLines(buffer);
 
   if (line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, buffer);
-    try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+    try(Some(BufferLine.getUcharExn(~index=position.character, bufferLine))) {
     | _exn => None
     };
   } else {
@@ -216,15 +251,28 @@ let getCharacterBehindCursor = ({cursors, buffer, _}) => {
   switch (cursors) {
   | [] => None
   | [cursor, ..._] =>
-    let byte = cursor.column |> Index.toZeroBased;
-    let line = cursor.line |> Index.toZeroBased;
+    let line = cursor.line |> EditorCoreTypes.LineNumber.toZeroBased;
 
     let bufferLineCount = EditorBuffer.numberOfLines(buffer);
 
     if (line < bufferLineCount) {
       let bufferLine = EditorBuffer.line(line, buffer);
-      let index = max(0, BufferLine.getIndex(~byte, bufferLine) - 1);
-      try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+      let index =
+        max(
+          0,
+          CharacterIndex.toInt(
+            BufferLine.getIndex(~byte=cursor.byte, bufferLine),
+          )
+          - 1,
+        );
+      try(
+        Some(
+          BufferLine.getUcharExn(
+            ~index=CharacterIndex.ofInt(index),
+            bufferLine,
+          ),
+        )
+      ) {
       | _exn => None
       };
     } else {
@@ -232,19 +280,37 @@ let getCharacterBehindCursor = ({cursors, buffer, _}) => {
     };
   };
 };
+
+//let byteToCharacter = (cursor: BytePosition.t, {buffer, _}) => {
+//    let line = cursor.line |> EditorCoreTypes.LineNumber.toZeroBased;
+//    //let line = cursor.line |> EditorCoreTypes.LineNumber.toZeroBased;
+//    let bufferLineCount = EditorBuffer.numberOfLines(buffer);
+//    if (line < bufferLineCount) {
+//      let bufferLine = EditorBuffer.line(line, buffer);
+//      let index = BufferLine.getIndex(~byte=cursor.byte, bufferLine);
+//      Some(CharacterPosition.{
+//        line: cursor.line,
+//        character: index,
+//      });
+//      try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
+//      | _exn => None
+//      };
+//    } else {
+//      None;
+//    };
+//}
 
 let getCharacterUnderCursor = ({cursors, buffer, _}) => {
   switch (cursors) {
   | [] => None
   | [cursor, ..._] =>
-    let byte = cursor.column |> Index.toZeroBased;
-    let line = cursor.line |> Index.toZeroBased;
+    let line = cursor.line |> EditorCoreTypes.LineNumber.toZeroBased;
 
     let bufferLineCount = EditorBuffer.numberOfLines(buffer);
 
     if (line < bufferLineCount) {
       let bufferLine = EditorBuffer.line(line, buffer);
-      let index = BufferLine.getIndex(~byte, bufferLine);
+      let index = BufferLine.getIndex(~byte=cursor.byte, bufferLine);
       try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
       | _exn => None
       };
@@ -254,40 +320,61 @@ let getCharacterUnderCursor = ({cursors, buffer, _}) => {
   };
 };
 
-let getPrimaryCursor = editor =>
-  switch (editor.cursors) {
-  | [cursor, ..._] => mapCursor(~position=cursor, editor)
-  | [] => Location.{line: Index.zero, column: Index.zero}
-  };
+let getPrimaryCursor = editor => {
+  let maybeCharacterCursor =
+    switch (editor.cursors) {
+    | [cursor, ..._] => byteToCharacter(cursor, editor)
+    | [] => None
+    };
 
+  maybeCharacterCursor
+  |> Option.value(
+       ~default=
+         CharacterPosition.{
+           line: EditorCoreTypes.LineNumber.zero,
+           character: CharacterIndex.zero,
+         },
+     );
+};
+
+let getPrimaryCursorByte = editor =>
+  switch (editor.cursors) {
+  | [cursor, ..._] => cursor
+  | [] =>
+    BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}
+  };
 let selectionOrCursorRange = editor => {
-  switch (editor.selection.mode) {
+  switch (editor.selection) {
   | None =>
-    let pos = getPrimaryCursor(editor);
-    let range =
-      Range.{
-        start: Location.{line: pos.line, column: Index.zero},
-        stop: Location.{line: Index.(pos.line + 1), column: Index.zero},
-      };
-    range;
-  | Line
-  | Block
-  | Character => editor.selection.range
+    let pos = getPrimaryCursorByte(editor);
+    ByteRange.{
+      start: BytePosition.{line: pos.line, byte: ByteIndex.zero},
+      stop:
+        BytePosition.{
+          line: EditorCoreTypes.LineNumber.(pos.line + 1),
+          byte: ByteIndex.zero,
+        },
+    };
+  | Some(selection) => selection.range
   };
 };
+
+let setLineHeight = (~lineHeight, editor) => {...editor, lineHeight};
 
 let getId = model => model.editorId;
 
-let getLineHeight = editor => editor.font.measuredHeight;
-let getCharacterWidth = editor => editor.font.measuredWidth;
+let getCharacterWidth = ({buffer, _}) =>
+  EditorBuffer.font(buffer).spaceWidth;
 
 let getVisibleView = editor => {
   let {pixelHeight, _} = editor;
-  int_of_float(float_of_int(pixelHeight) /. getLineHeight(editor));
+  int_of_float(float_of_int(pixelHeight) /. lineHeightInPixels(editor));
 };
 
 let getTotalHeightInPixels = editor =>
-  int_of_float(float_of_int(editor.viewLines) *. getLineHeight(editor));
+  int_of_float(
+    float_of_int(editor.viewLines) *. lineHeightInPixels(editor),
+  );
 
 let getTotalWidthInPixels = editor =>
   int_of_float(
@@ -337,7 +424,7 @@ let getLayout = (~showLineNumbers, ~maxMinimapCharacters, view) => {
       ~pixelWidth=float_of_int(pixelWidth),
       ~pixelHeight=float_of_int(pixelHeight),
       ~characterWidth=getCharacterWidth(view),
-      ~characterHeight=getLineHeight(view),
+      ~characterHeight=lineHeightInPixels(view),
       ~bufferLineCount=view.viewLines,
       (),
     );
@@ -345,23 +432,69 @@ let getLayout = (~showLineNumbers, ~maxMinimapCharacters, view) => {
   layout;
 };
 
+let exposePrimaryCursor = editor => {
+  switch (editor.cursors) {
+  | [primaryCursor, ..._tail] =>
+    let {bufferWidthInPixels, _}: EditorLayout.t =
+      getLayout(~showLineNumbers=true, ~maxMinimapCharacters=999, editor);
+
+    let pixelWidth = bufferWidthInPixels;
+
+    let {pixelHeight, scrollX, scrollY, _} = editor;
+    let pixelHeight = float(pixelHeight);
+
+    let ({x: pixelX, y: pixelY}: PixelPosition.t, _width) =
+      bufferBytePositionToPixel(~position=primaryCursor, editor);
+
+    let scrollOffX = getCharacterWidth(editor) *. 2.;
+    let scrollOffY = lineHeightInPixels(editor);
+
+    let availableX = pixelWidth -. scrollOffX;
+    let availableY = pixelHeight -. scrollOffY;
+
+    let adjustedScrollX =
+      if (pixelX < 0.) {
+        scrollX +. pixelX;
+      } else if (pixelX >= availableX) {
+        scrollX +. (pixelX -. availableX);
+      } else {
+        scrollX;
+      };
+
+    let adjustedScrollY =
+      if (pixelY < 0.) {
+        scrollY +. pixelY;
+      } else if (pixelY >= availableY) {
+        scrollY +. (pixelY -. availableY);
+      } else {
+        scrollY;
+      };
+
+    {...editor, scrollX: adjustedScrollX, scrollY: adjustedScrollY};
+
+  | _ => editor
+  };
+};
+
+let setCursors = (~cursors, editor) =>
+  {...editor, cursors} |> exposePrimaryCursor;
+
 let getLeftVisibleColumn = view => {
   int_of_float(view.scrollX /. getCharacterWidth(view));
 };
 
 let getTopVisibleLine = view =>
-  int_of_float(view.scrollY /. getLineHeight(view)) + 1;
+  int_of_float(view.scrollY /. lineHeightInPixels(view)) + 1;
 
 let getBottomVisibleLine = view => {
   let absoluteBottomLine =
     int_of_float(
-      (view.scrollY +. float_of_int(view.pixelHeight)) /. getLineHeight(view),
+      (view.scrollY +. float_of_int(view.pixelHeight))
+      /. lineHeightInPixels(view),
     );
 
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
-
-let setFont = (~font, editor) => {...editor, font};
 
 let setSize = (~pixelWidth, ~pixelHeight, editor) => {
   ...editor,
@@ -373,7 +506,7 @@ let scrollToPixelY = (~pixelY as newScrollY, view) => {
   let {pixelHeight, _} = view;
   let newScrollY = max(0., newScrollY);
   let availableScroll =
-    max(float_of_int(view.viewLines - 1), 0.) *. getLineHeight(view);
+    max(float_of_int(view.viewLines - 1), 0.) *. lineHeightInPixels(view);
   let newScrollY = min(newScrollY, availableScroll);
 
   let scrollPercentage =
@@ -395,7 +528,7 @@ let scrollToPixelY = (~pixelY as newScrollY, view) => {
 };
 
 let scrollToLine = (~line, view) => {
-  let pixelY = float_of_int(line) *. getLineHeight(view);
+  let pixelY = float_of_int(line) *. lineHeightInPixels(view);
   {...scrollToPixelY(~pixelY, view), isScrollAnimated: true};
 };
 
@@ -446,7 +579,8 @@ let project = (~line, ~column: int, ~pixelWidth: int, ~pixelHeight, editor) => {
   ignore(column);
   ignore(pixelWidth);
 
-  let editorPixelY = float_of_int(line) *. editor.font.measuredHeight;
+  let lineIdx = EditorCoreTypes.LineNumber.toZeroBased(line);
+  let editorPixelY = float_of_int(lineIdx) *. lineHeightInPixels(editor);
   let totalEditorHeight = getTotalHeightInPixels(editor) |> float_of_int;
   let transformedPixelY =
     editorPixelY
@@ -486,33 +620,39 @@ let updateBuffer = (~buffer, editor) => {
 };
 
 module Slow = {
-  let pixelPositionToBufferLineByte =
+  let pixelPositionToBytePosition =
       (~buffer, ~pixelX: float, ~pixelY: float, view) => {
     let rawLine =
-      int_of_float((pixelY +. view.scrollY) /. getLineHeight(view));
-    let rawColumn =
-      int_of_float((pixelX +. view.scrollX) /. getCharacterWidth(view));
+      int_of_float((pixelY +. view.scrollY) /. lineHeightInPixels(view));
 
     let totalLinesInBuffer = Buffer.getNumberOfLines(buffer);
 
-    let line =
+    let lineIdx =
       if (rawLine >= totalLinesInBuffer) {
         max(0, totalLinesInBuffer - 1);
       } else {
         rawLine;
       };
 
-    if (line >= 0 && line < totalLinesInBuffer) {
-      let bufferLine = Buffer.getLine(line, buffer);
-      let byte =
-        BufferLine.Slow.getByteFromPosition(~position=rawColumn, bufferLine);
-      (line, byte);
+    if (lineIdx >= 0 && lineIdx < totalLinesInBuffer) {
+      let bufferLine = Buffer.getLine(lineIdx, buffer);
+      let index =
+        BufferLine.Slow.getIndexFromPixel(
+          ~pixel=pixelX +. view.scrollX,
+          bufferLine,
+        );
+
+      let byteIndex = BufferLine.getByteFromIndex(~index, bufferLine);
+
+      BytePosition.{
+        line: EditorCoreTypes.LineNumber.ofZeroBased(lineIdx),
+        byte: byteIndex,
+      };
     } else {
-      (
-        // Empty buffer
-        0,
-        0,
-      );
+      BytePosition.{
+        line: EditorCoreTypes.LineNumber.zero,
+        byte: ByteIndex.zero,
+      };
     };
   };
 };

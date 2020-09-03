@@ -1,28 +1,44 @@
-// MODEL
+open EditorCoreTypes;
+open Oni_Core;
 open Oni_Core.Utility;
 
-type model = {mode: Vim.Mode.t};
+// MODEL
 
-let initial = {mode: Vim.Types.Normal};
+type model = {
+  mode: Vim.Mode.t,
+  settings: StringMap.t(Vim.Setting.value),
+  recordingMacro: option(char),
+};
 
-let mode = ({mode}) => mode;
+let initial = {
+  mode: Vim.Mode.Normal,
+  settings: StringMap.empty,
+  recordingMacro: None,
+};
+
+let mode = ({mode, _}) => mode;
+
+let recordingMacro = ({recordingMacro, _}) => recordingMacro;
 
 // MSG
 
 [@deriving show]
 type msg =
   | ModeChanged([@opaque] Vim.Mode.t)
-  | PasteCompleted({cursors: [@opaque] list(Vim.Cursor.t)})
-  | Pasted(string);
+  | PasteCompleted({cursors: [@opaque] list(BytePosition.t)})
+  | Pasted(string)
+  | SettingChanged(Vim.Setting.t)
+  | MacroRecordingStarted({register: char})
+  | MacroRecordingStopped;
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | CursorsUpdated(list(Vim.Cursor.t));
+  | CursorsUpdated(list(BytePosition.t));
 
 let update = (msg, model: model) => {
   switch (msg) {
-  | ModeChanged(mode) => ({mode: mode}: model, Nothing)
+  | ModeChanged(mode) => ({...model, mode}, Nothing)
   | Pasted(text) =>
     let eff =
       Service_Vim.Effects.paste(
@@ -31,6 +47,15 @@ let update = (msg, model: model) => {
       );
     (model, Effect(eff));
   | PasteCompleted({cursors}) => (model, CursorsUpdated(cursors))
+  | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
+      {...model, settings: model.settings |> StringMap.add(fullName, value)},
+      Nothing,
+    )
+  | MacroRecordingStarted({register}) => (
+      {...model, recordingMacro: Some(register)},
+      Nothing,
+    )
+  | MacroRecordingStopped => ({...model, recordingMacro: None}, Nothing)
   };
 };
 
@@ -65,5 +90,13 @@ module CommandLine = {
 
   let%test "meet with a path, spaces" = {
     getCompletionMeet("vsp /path with spaces/") == Some(4);
+  };
+};
+
+module Configuration = {
+  type resolver = string => option(Vim.Setting.value);
+
+  let resolver = ({settings, _}, settingName) => {
+    settings |> StringMap.find_opt(settingName);
   };
 };

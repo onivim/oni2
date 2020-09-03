@@ -13,7 +13,10 @@ let setup = () => {
   hwnd;
 };
 
-let configResolver = (settings, key) => Config.Settings.get(key, settings);
+let configResolver = (settings, _vimModel, ~vimSetting as _, key) =>
+  Config.Settings.get(key, settings)
+  |> Option.map(configJson => Config.Json(configJson))
+  |> Option.value(~default=Config.NotSet);
 
 let editor = (editor, buffer, state: State.t) => {
   <EditorSurface
@@ -27,13 +30,17 @@ let editor = (editor, buffer, state: State.t) => {
     bufferHighlights={state.bufferHighlights}
     bufferSyntaxHighlights={state.syntaxHighlights}
     diagnostics={state.diagnostics}
-    completions={state.completions}
     tokenTheme={state.tokenTheme}
-    definition={state.definition}
+    languageSupport={state.languageSupport}
     mode={Feature_Vim.mode(state.vim)}
     theme={Feature_Theme.colors(state.colorTheme)}
     windowIsFocused=true
-    config={configResolver(Config.Settings.empty)}
+    scm=Feature_SCM.initial
+    config={configResolver(Config.Settings.empty, Feature_Vim.initial)}
+    languageInfo=Exthost.LanguageInfo.initial
+    grammarRepository=Oni_Syntax.GrammarRepository.empty
+    uiFont=Oni_Core.UiFont.default
+    renderOverlays={(~gutterWidth as _) => <Revery.UI.View />}
   />;
 };
 

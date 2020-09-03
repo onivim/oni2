@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 module Log = (val Log.withNamespace("Service_Vim"));
 
@@ -29,8 +30,8 @@ let quitAll = () =>
 module Effects = {
   let paste = (~toMsg, text) => {
     Isolinear.Effect.createWithDispatch(~name="vim.clipboardPaste", dispatch => {
-      let isCmdLineMode = Vim.Mode.getCurrent() == Vim.Types.CommandLine;
-      let isInsertMode = Vim.Mode.getCurrent() == Vim.Types.Insert;
+      let isCmdLineMode = Vim.Mode.current() == Vim.Mode.CommandLine;
+      let isInsertMode = Vim.Mode.current() == Vim.Mode.Insert;
 
       if (isInsertMode || isCmdLineMode) {
         if (!isCmdLineMode) {
@@ -84,6 +85,31 @@ module Effects = {
         };
 
       result |> toMsg |> dispatch;
+    });
+  };
+  let applyCompletion = (~meetColumn, ~insertText, ~toMsg) =>
+    Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
+      let cursor = Vim.Cursor.get();
+      // TODO: Does this logic correctly handle unicode characters?
+      let delta =
+        ByteIndex.toInt(cursor.byte) - CharacterIndex.toInt(meetColumn);
+
+      let _: Vim.Context.t = VimEx.repeatKey(delta, "<BS>");
+      let {cursors, _}: Vim.Context.t = VimEx.inputString(insertText);
+
+      dispatch(toMsg(cursors));
+    });
+
+  let loadBuffer = (~filePath: string, toMsg) => {
+    Isolinear.Effect.createWithDispatch(~name="loadBuffer", dispatch => {
+      let currentBuffer = Vim.Buffer.getCurrent();
+
+      let newBuffer = Vim.Buffer.openFile(filePath);
+
+      // Revert to previous buffer
+      Vim.Buffer.setCurrent(currentBuffer);
+
+      dispatch(toMsg(~bufferId=Vim.Buffer.getId(newBuffer)));
     });
   };
 };

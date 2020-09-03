@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 module BracketMatch = BracketMatch;
 module BufferLineColorizer = BufferLineColorizer;
 module BufferViewTokenizer = BufferViewTokenizer;
@@ -13,6 +15,8 @@ module EditorDiffMarkers = EditorDiffMarkers;
 
 module Wrapping = Wrapping;
 
+module Configuration = EditorConfiguration;
+
 module Contributions = {
   let configuration = EditorConfiguration.contributions;
 };
@@ -24,8 +28,14 @@ type msg = Msg.t;
 
 type outmsg =
   | Nothing
-  | MouseHovered(EditorCoreTypes.Location.t)
-  | MouseMoved(EditorCoreTypes.Location.t);
+  | MouseHovered({
+      bytePosition: BytePosition.t,
+      characterPosition: CharacterPosition.t,
+    })
+  | MouseMoved({
+      bytePosition: BytePosition.t,
+      characterPosition: CharacterPosition.t,
+    });
 
 type model = Editor.t;
 
@@ -90,14 +100,33 @@ let update = (editor, msg) => {
   | HorizontalScrollbarMouseRelease
   | VerticalScrollbarMouseRelease
   | VerticalScrollbarMouseDown => (editor, Nothing)
-  | MouseHovered({location}) => (editor, MouseHovered(location))
-  | MouseMoved({location}) => (editor, MouseMoved(location))
+  | MouseHovered({bytePosition}) => (
+      editor,
+      {
+        Editor.byteToCharacter(bytePosition, editor)
+        |> Option.map(characterPosition => {
+             MouseHovered({bytePosition, characterPosition})
+           })
+        |> Option.value(~default=Nothing);
+      },
+    )
+  | MouseMoved({bytePosition}) => (
+      editor,
+      {
+        Editor.byteToCharacter(bytePosition, editor)
+        |> Option.map(characterPosition => {
+             MouseMoved({bytePosition, characterPosition})
+           })
+        |> Option.value(~default=Nothing);
+      },
+    )
   | SelectionChanged(selection) => (
       Editor.setSelection(~selection, editor),
       Nothing,
     )
+  | SelectionCleared => (Editor.clearSelection(editor), Nothing)
   | CursorsChanged(cursors) => (
-      Editor.setVimCursors(~cursors, editor),
+      Editor.setCursors(~cursors, editor),
       Nothing,
     )
   | ScrollToLine(line) => (Editor.scrollToLine(~line, editor), Nothing)
@@ -107,6 +136,10 @@ let update = (editor, msg) => {
     )
   | MinimapEnabledConfigChanged(enabled) => (
       Editor.setMinimapEnabled(~enabled, editor),
+      Nothing,
+    )
+  | LineHeightConfigChanged(lineHeight) => (
+      Editor.setLineHeight(~lineHeight, editor),
       Nothing,
     )
   };
@@ -119,10 +152,27 @@ module Sub = {
       let schema = EditorConfiguration.Minimap.enabled;
       type msg = Msg.t;
     });
+  module LineHeightSub =
+    Oni_Core.Config.Sub.Make({
+      type configValue = LineHeight.t;
+      let schema = EditorConfiguration.lineHeight;
+      type msg = Msg.t;
+    });
   let global = (~config) => {
-    MinimapEnabledSub.create(
-      ~config, ~name="Feature_Editor.Config.minimapEnabled", ~toMsg=enabled =>
-      MinimapEnabledConfigChanged(enabled)
-    );
+    let minimapEnabledConfig =
+      MinimapEnabledSub.create(
+        ~config, ~name="Feature_Editor.Config.minimapEnabled", ~toMsg=enabled =>
+        MinimapEnabledConfigChanged(enabled)
+      );
+
+    let lineHeightConfig =
+      LineHeightSub.create(
+        ~config,
+        ~name="Feature_Editor.Config.lineHeightEnabled",
+        ~toMsg=lineHeight =>
+        LineHeightConfigChanged(lineHeight)
+      );
+
+    [minimapEnabledConfig, lineHeightConfig] |> Isolinear.Sub.batch;
   };
 };
