@@ -13,6 +13,7 @@
            EditorFontValidTest
            EditorUtf8Test
            ExCommandKeybindingTest
+           ExCommandKeybindingWithArgsTest
            ExtConfigurationChangedTest
            ExtHostBufferOpenTest
            ExtHostBufferUpdatesTest
@@ -79,6 +80,7 @@
         EditorFontValidTest.exe
         EditorUtf8Test.exe
         ExCommandKeybindingTest.exe
+        ExCommandKeybindingWithArgsTest.exe
         ExtConfigurationChangedTest.exe
         ExtHostBufferOpenTest.exe
         ExtHostBufferUpdatesTest.exe
