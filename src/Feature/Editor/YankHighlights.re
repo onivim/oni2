@@ -29,13 +29,7 @@ module Animations = {
     );
 };
 
-let%component make =
-              (
-                ~config,
-                ~colors: EditorColors.t,
-                ~pixelRanges: list(PixelRange.t),
-                (),
-              ) => {
+let%component make = (~config, ~pixelRanges: list(PixelRange.t), ()) => {
   let ranges = pixelRanges;
 
   let duration = EditorConfiguration.yankHighlightDuration.get(config);

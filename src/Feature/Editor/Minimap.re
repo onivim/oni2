@@ -257,7 +257,7 @@ let%component make =
     |> Option.map(({key, pixelRanges}: Editor.yankHighlight) => {
          let pixelRanges = pixelRanges |> List.map(mapPixelRange);
 
-         <YankHighlights config key colors pixelRanges />;
+         <YankHighlights config key pixelRanges />;
        })
     |> Option.value(~default=React.empty);
 

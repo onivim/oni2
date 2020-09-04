@@ -17,13 +17,14 @@ module CustomDecoders: {
       ~decode=
         Json.Decode.(
           string
-          |> and_then(colorString =>
+          |> and_then(colorString
                // TODO: This should return an option in Revery.
                // We should have a more general parse method that handles rgb, rgba, etc.
-               try(succeed(Revery.Color.hex(colorString))) {
-               | _exn => fail("Unable to parse color: " ++ colorString)
-               }
-             )
+               =>
+                 try(succeed(Revery.Color.hex(colorString))) {
+                 | _exn => fail("Unable to parse color: " ++ colorString)
+                 }
+               )
         ),
       ~encode=
         Json.Encode.(

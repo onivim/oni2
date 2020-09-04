@@ -164,7 +164,6 @@ let%component make =
          <YankHighlights
            config
            key={highlights.key}
-           colors
            pixelRanges={highlights.pixelRanges}
          />
        )
