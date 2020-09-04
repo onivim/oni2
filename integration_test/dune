@@ -12,6 +12,7 @@
            EditorFontFromPathTest
            EditorFontValidTest
            EditorUtf8Test
+           ExCommandKeybindingTest
            ExtConfigurationChangedTest
            ExtHostBufferOpenTest
            ExtHostBufferUpdatesTest
@@ -77,6 +78,7 @@
         EditorFontFromPathTest.exe
         EditorFontValidTest.exe
         EditorUtf8Test.exe
+        ExCommandKeybindingTest.exe
         ExtConfigurationChangedTest.exe
         ExtHostBufferOpenTest.exe
         ExtHostBufferUpdatesTest.exe
