@@ -76,53 +76,18 @@ module Make = (Config: Config) => {
     // However, there are several ways we could improve this:
     // - If the query is just a stricter version... we could add the filter items back to completed
     // - If the query is broader, we could keep our current filtered items anyway
-    let oldExplodedFilter = pending.explodedFilter;
     let explodedFilter = Zed_utf8.explode(filter);
     let shouldLower = filter == String.lowercase_ascii(filter);
 
-    let currentMatches = ListEx.firstk(Constants.maxItemsToFilter, filtered);
-
-    // If the new query matches the old one... we can re-use results
-    // TODO: This breaks new queries! The letter highlights will be wrong.
-    if (pending.filter != ""
-        && Filter.fuzzyMatches(oldExplodedFilter, filter)
-        && List.length(currentMatches) < Constants.maxItemsToFilter) {
-      let newPendingWork = {...pending, filter, explodedFilter, shouldLower};
-
-      let newCompletedWork =
-        CompletedWork.{
-          filtered:
-            List.filter(
-              item =>
-                Filter.fuzzyMatches(
-                  explodedFilter,
-                  format(item, ~shouldLower),
-                ),
-              filtered,
-            ),
-          ranked:
-            List.filter(
-              (Filter.{item, _}) =>
-                Filter.fuzzyMatches(
-                  explodedFilter,
-                  format(item, ~shouldLower),
-                ),
-              ranked,
-            ),
-        };
-
-      (false, newPendingWork, newCompletedWork);
-    } else {
-      let newPendingWork = {
-        ...pending,
-        filter,
-        explodedFilter,
-        queue: pending.allItems, // Reset items to filter
-        shouldLower,
-      };
-
-      (false, newPendingWork, CompletedWork.initial);
+    let newPendingWork = {
+      ...pending,
+      filter,
+      explodedFilter,
+      queue: pending.allItems, // Reset items to filter
+      shouldLower,
     };
+
+    (false, newPendingWork, CompletedWork.initial);
   };
 
   /* [addItems] is a helper for `Job.map` that updates the job when items have been added */
