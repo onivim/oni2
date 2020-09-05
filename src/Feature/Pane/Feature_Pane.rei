@@ -3,6 +3,7 @@
  *
  * Feature for the bottom pane, hosting notifications, diagnostics, etc.
  */
+open Oni_Core;
 
 [@deriving show({with_path: false})]
 type pane =
@@ -25,6 +26,11 @@ module Msg: {
 type model;
 
 let update: (msg, model) => (model, outmsg);
+
+module Contributions: {
+  let commands: list(Command.t(msg));
+  let keybindings: list(Oni_Input.Keybindings.keybinding);
+};
 
 let initial: model;
 
