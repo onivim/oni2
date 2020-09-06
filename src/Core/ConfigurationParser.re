@@ -245,6 +245,10 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, editorRulers: parseIntList(json)},
   ),
   (
+    "explorer.autoReveal",
+    (config, json) => {...config, explorerAutoReveal: parseBool(json)},
+  ),
+  (
     "files.exclude",
     (config, json) => {...config, filesExclude: parseStringList(json)},
   ),
