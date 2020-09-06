@@ -313,11 +313,11 @@ let start =
 
     let fileExplorerActiveFileSub =
       autoReveal
-      ? Model.Sub.activeFile(
-        ~id="activeFile.fileExplorer", ~state, ~toMsg=maybeFilePath =>
-        Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
-      )
-      : Isolinear.Sub.none;
+        ? Model.Sub.activeFile(
+          ~id="activeFile.fileExplorer", ~state, ~toMsg=maybeFilePath =>
+          Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
+        )
+        : Isolinear.Sub.none;
 
     let languageSupportSub =
       maybeActiveBuffer
