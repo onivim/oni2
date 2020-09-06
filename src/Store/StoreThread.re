@@ -250,6 +250,13 @@ let start =
         c => c.editorFontSmoothing,
         state.configuration,
       );
+
+    let autoReveal =
+      Oni_Core.Configuration.getValue(
+        c => c.explorerAutoReveal,
+        state.configuration,
+      );
+
     let editorFontSubscription =
       Service_Font.Sub.font(
         ~uniqueId="editorFont",
@@ -305,10 +312,12 @@ let start =
       |> Isolinear.Sub.map(msg => Model.Actions.Exthost(msg));
 
     let fileExplorerActiveFileSub =
-      Model.Sub.activeFile(
+      autoReveal
+      ? Model.Sub.activeFile(
         ~id="activeFile.fileExplorer", ~state, ~toMsg=maybeFilePath =>
         Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
-      );
+      )
+      : Isolinear.Sub.none;
 
     let languageSupportSub =
       maybeActiveBuffer
