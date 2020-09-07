@@ -168,6 +168,14 @@ let parseFontLigatures = json =>
   | _ => `Bool(true)
   };
 
+let parseAutoReveal = json =>
+  switch (json) {
+  | `Bool(true) => `HighlightAndScroll
+  | `Bool(false) => `NoReveal
+  | `String("focusNoScroll") => `HighlightOnly
+  | _ => `NoReveal
+  };
+
 type parseFunction =
   (ConfigurationValues.t, Yojson.Safe.t) => ConfigurationValues.t;
 
@@ -246,7 +254,7 @@ let configurationParsers: list(configurationTuple) = [
   ),
   (
     "explorer.autoReveal",
-    (config, json) => {...config, explorerAutoReveal: parseBool(json)},
+    (config, json) => {...config, explorerAutoReveal: parseAutoReveal(json)},
   ),
   (
     "files.exclude",
