@@ -25,6 +25,8 @@ type fontSmoothing =
 
 type fontLigatures = [ | `Bool(bool) | `List(list(string))];
 
+type autoReveal = [ | `HighlightAndScroll | `HighlightOnly | `NoReveal];
+
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
   editorDetectIndentation: bool,
@@ -39,7 +41,7 @@ type t = {
   editorHighlightActiveIndentGuide: bool,
   editorRenderIndentGuides: bool,
   editorRulers: list(int),
-  explorerAutoReveal: bool,
+  explorerAutoReveal: autoReveal,
   terminalIntegratedFontFile: string,
   terminalIntegratedFontSize: float,
   terminalIntegratedFontSmoothing: fontSmoothing,
@@ -81,7 +83,7 @@ let default = {
   editorRenderIndentGuides: true,
   editorHighlightActiveIndentGuide: true,
   editorRulers: [],
-  explorerAutoReveal: true,
+  explorerAutoReveal: `HighlightAndScroll,
   terminalIntegratedFontFile: Constants.defaultFontFile,
   terminalIntegratedFontSize: Constants.defaultTerminalFontSize,
   terminalIntegratedFontSmoothing: Default,
