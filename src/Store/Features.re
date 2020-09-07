@@ -394,10 +394,10 @@ let update =
           Effect.none,
         )
 
-      | ClearNotifications => ({
-        ...state',
-        notifications: Feature_Notification.initial,
-      }, Effect.none)
+      | ClearNotifications => (
+          {...state', notifications: Feature_Notification.initial},
+          Effect.none,
+        )
       | ToggleNotifications => (
           {
             ...state',

@@ -163,7 +163,6 @@ let getDiagnosticsMap = (instance, buffer) => {
 };
 
 module View = {
-  open Revery;
   open Revery.UI;
   open Oni_Components;
 

@@ -188,7 +188,6 @@ let start =
         ~getUserSettings,
         ~setup,
       ),
-      PaneStore.update,
       contextMenuUpdater,
     ]);
 

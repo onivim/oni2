@@ -68,7 +68,6 @@ let make = (~dispatch, ~state: State.t, ()) => {
         editorFont,
         sideBar,
         zenMode,
-        pane,
         buffers,
         _,
       } = state;

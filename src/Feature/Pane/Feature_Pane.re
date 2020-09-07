@@ -66,7 +66,6 @@ let close = model => {...model, isOpen: false};
 
 let update = (msg, model) =>
   switch (msg) {
-
   | DiagnosticItemClicked({filePath, position}) => (
       model,
       OpenFile({filePath, position}),
@@ -74,12 +73,12 @@ let update = (msg, model) =>
   | CloseButtonClicked => ({...model, isOpen: false}, Nothing)
 
   | TabClicked(pane) => ({...model, selected: pane}, Nothing)
-  
+
   | Command(ToggleProblems) =>
     if (!model.isOpen) {
       (show(~pane=Diagnostics, model), Nothing);
     } else if (model.selected == Diagnostics) {
-      (close(model), Nothing)
+      (close(model), Nothing);
     } else {
       (show(~pane=Diagnostics, model), Nothing);
     }
@@ -265,10 +264,7 @@ module View = {
         (),
       ) => {
     let onSelectFile = (~filePath, ~position) => {
-      dispatch(DiagnosticItemClicked({
-        filePath,
-        position,
-      }))
+      dispatch(DiagnosticItemClicked({filePath, position}));
     };
 
     let problemsTabClicked = () => {

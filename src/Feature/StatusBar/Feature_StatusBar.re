@@ -76,7 +76,7 @@ let update = (model, msg) => {
     ({items: [item, ...newItems]}, Nothing);
 
   | ItemDisposed(id) => ({items: removeItemById(model.items, id)}, Nothing)
-  
+
   | FileTypeClicked => (model, ShowFileTypePicker)
 
   | ContextMenuNotificationOpenClicked
