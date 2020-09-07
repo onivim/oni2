@@ -1,7 +1,8 @@
 type pane =
   | FileExplorer
   | SCM
-  | Extensions;
+  | Extensions
+  | Search;
 
 type location =
   | Left

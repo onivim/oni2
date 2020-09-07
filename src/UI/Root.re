@@ -124,13 +124,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
           c.workbenchActivityBarVisible
         )
         && !zenMode) {
-      <Dock
-        font={state.uiFont}
-        theme
-        sideBar
-        pane
-        extensions={state.extensions}
-      />;
+      <Dock font={state.uiFont} theme sideBar extensions={state.extensions} />;
     } else {
       React.empty;
     };
@@ -200,7 +194,16 @@ let make = (~dispatch, ~state: State.t, ()) => {
       <View style=Styles.surface>
         {React.listToElement(surfaceComponents)}
       </View>
-      <PaneView theme uiFont editorFont state />
+      <Feature_Pane.View
+        theme
+        uiFont
+        editorFont
+        diagnostics={state.diagnostics}
+        notifications={state.notifications}
+        dispatch={msg => dispatch(Actions.Pane(msg))}
+        notificationDispatch={msg => dispatch(Actions.Notification(msg))}
+        pane={state.pane}
+      />
     </View>
     <Overlay>
       {switch (state.quickmenu) {

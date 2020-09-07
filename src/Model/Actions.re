@@ -142,8 +142,6 @@ type t =
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
-  | PaneTabClicked(Feature_Pane.pane)
-  | PaneCloseButtonClicked
   | DirectoryChanged(string)
   | VimExecuteCommand(string)
   | VimMessageReceived({

@@ -26,6 +26,8 @@ let reduce = (~zenMode, state: Feature_SideBar.model, action: Actions.t) => {
     Feature_SideBar.toggle(Feature_SideBar.SCM, state)
   | ActivityBar(ActivityBar.ExtensionsClick) when !zenMode =>
     Feature_SideBar.toggle(Feature_SideBar.Extensions, state)
+  | ActivityBar(ActivityBar.SearchClick) when !zenMode =>
+    Feature_SideBar.toggle(Feature_SideBar.Search, state)
   | ConfigurationSet(newConfig) =>
     let sideBarLocation =
       Configuration.getValue(c => c.workbenchSideBarLocation, newConfig);

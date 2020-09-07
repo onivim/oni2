@@ -6,7 +6,6 @@
 
 [@deriving show({with_path: false})]
 type pane =
-  | Search
   | Diagnostics
   | Notifications;
 
@@ -15,7 +14,10 @@ type msg;
 
 type outmsg =
   | Nothing
-  | PopFocus(pane);
+  | OpenFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    });
 
 module Msg: {
   let resizeHandleDragged: int => msg;
@@ -34,4 +36,21 @@ let isVisible: (pane, model) => bool;
 let isOpen: model => bool;
 
 let show: (~pane: pane, model) => model;
+let toggle: (~pane: pane, model) => model;
 let close: model => model;
+
+module View: {
+  let make:
+    (
+      ~theme: Oni_Core.ColorTheme.Colors.t,
+      ~uiFont: Oni_Core.UiFont.t,
+      ~editorFont: Service_Font.font,
+      ~diagnostics: Feature_LanguageSupport.Diagnostics.t,
+      ~notifications: Feature_Notification.model,
+      ~dispatch: msg => unit,
+      ~notificationDispatch: Feature_Notification.msg => unit,
+      ~pane: model,
+      unit
+    ) =>
+    Revery.UI.element;
+};

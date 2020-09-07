@@ -5,6 +5,8 @@
       Oni2.core
       Oni2.components
       Oni2.feature.theme
+      Oni2.feature.language_support
+      Oni2.feature.notification
       isolinear
       base
       Revery
