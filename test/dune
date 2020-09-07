@@ -1,159 +1,93 @@
 (executable
-    (name OniUnitTestRunner)
-    (public_name OniUnitTestRunner)
-    (modules OniUnitTestRunner)
-    (package OniUnitTestRunner)
-    (libraries
-        yojson
-        Oni_Cli_Test
-        Oni_Core_Test
-        Oni_Input_Test
-        Oni_Model_Test
-        Oni_UI_Test
-        Oni_Syntax_Test
-        Feature_Editor_Test
-        Feature_LanguageSupport_Test
-        Service_Extensions_Test
-        Service_Net_Test
-        Service_OS_Test
-        EditorCoreTypes_Test
-        EditorInput_Test
-        Exthost_Transport_Test
-        Exthost_Test
-        Libvim_Test
-        Oniguruma_Test
-        Textmate_Test
-        TreeSitter_Test
-        reason-native-crash-utils.asan
-            ))
+ (name OniUnitTestRunner)
+ (public_name OniUnitTestRunner)
+ (modules OniUnitTestRunner)
+ (package OniUnitTestRunner)
+ (libraries yojson Oni_Cli_Test Oni_Core_Test Oni_Input_Test Oni_Model_Test
+   Oni_UI_Test Oni_Syntax_Test Feature_Editor_Test
+   Feature_LanguageSupport_Test Service_Extensions_Test Service_Net_Test
+   Service_OS_Test EditorCoreTypes_Test EditorInput_Test
+   Exthost_Transport_Test Exthost_Test Libvim_Test Oniguruma_Test
+   Textmate_Test TreeSitter_Test reason-native-crash-utils.asan))
 
 (executable
-    (name OniUnitTestRunnerServiceExtensions)
-    (public_name OniUnitTestRunnerServiceExtensions)
-    (modules OniUnitTestRunnerServiceExtensions)
-    (package OniUnitTestRunner)
-    (libraries
-        yojson
-        Service_Extensions_Test)
-            )
-    
-(executable
-    (name OniUnitTestRunnerServiceNet)
-    (public_name OniUnitTestRunnerServiceNet)
-    (modules OniUnitTestRunnerServiceNet)
-    (package OniUnitTestRunner)
-    (libraries
-        yojson
-        Service_Net_Test
-            ))
+ (name OniUnitTestRunnerServiceExtensions)
+ (public_name OniUnitTestRunnerServiceExtensions)
+ (modules OniUnitTestRunnerServiceExtensions)
+ (package OniUnitTestRunner)
+ (libraries yojson Service_Extensions_Test))
 
 (executable
-    (name OniUnitTestRunnerCLI)
-    (public_name OniUnitTestRunnerCLI)
-    (modules OniUnitTestRunnerCLI)
-    (package OniUnitTestRunner)
-    (libraries
-        yojson
-        Oni_Cli_Test
-            ))
+ (name OniUnitTestRunnerServiceNet)
+ (public_name OniUnitTestRunnerServiceNet)
+ (modules OniUnitTestRunnerServiceNet)
+ (package OniUnitTestRunner)
+ (libraries yojson Service_Net_Test))
 
 (executable
-    (name OniUnitTestRunnerCore)
-    (public_name OniUnitTestRunnerCore)
-    (modules OniUnitTestRunnerCore)
-    (package OniUnitTestRunner)
-    (libraries
-        yojson
-        Oni_Core_Test
-            ))
+ (name OniUnitTestRunnerCLI)
+ (public_name OniUnitTestRunnerCLI)
+ (modules OniUnitTestRunnerCLI)
+ (package OniUnitTestRunner)
+ (libraries yojson Oni_Cli_Test))
 
 (executable
-    (name OniUnitTestRunnerInput)
-    (public_name OniUnitTestRunnerInput)
-    (modules OniUnitTestRunnerInput)
-    (package OniUnitTestRunner)
-    (libraries
-        yojson
-        Oni_Core_Test
-        Oni_Input_Test
-            ))
+ (name OniUnitTestRunnerCore)
+ (public_name OniUnitTestRunnerCore)
+ (modules OniUnitTestRunnerCore)
+ (package OniUnitTestRunner)
+ (libraries yojson Oni_Core_Test))
 
 (executable
-    (name OniUnitTestRunnerModel)
-    (public_name OniUnitTestRunnerModel)
-    (modules OniUnitTestRunnerModel)
-    (package OniUnitTestRunner)
-    (libraries
-        yojson
-        Oni_Core_Test
-        Oni_Model_Test
-            ))
+ (name OniUnitTestRunnerInput)
+ (public_name OniUnitTestRunnerInput)
+ (modules OniUnitTestRunnerInput)
+ (package OniUnitTestRunner)
+ (libraries yojson Oni_Core_Test Oni_Input_Test))
 
 (executable
-    (name OniUnitTestRunnerUI)
-    (public_name OniUnitTestRunnerUI)
-    (modules OniUnitTestRunnerUI)
-    (package OniUnitTestRunner)
-    (libraries 
-        Oni_Core_Test
-        Oni_UI_Test))
+ (name OniUnitTestRunnerModel)
+ (public_name OniUnitTestRunnerModel)
+ (modules OniUnitTestRunnerModel)
+ (package OniUnitTestRunner)
+ (libraries yojson Oni_Core_Test Oni_Model_Test))
 
 (executable
-    (name OniUnitTestRunnerExtHost)
-    (public_name OniUnitTestRunnerExtHost)
-    (modules OniUnitTestRunnerExtHost)
-    (package OniUnitTestRunner)
-    (libraries 
-        Oni_Core_Test
-        Exthost_Transport_Test
-        Exthost_Test))
+ (name OniUnitTestRunnerUI)
+ (public_name OniUnitTestRunnerUI)
+ (modules OniUnitTestRunnerUI)
+ (package OniUnitTestRunner)
+ (libraries Oni_Core_Test Oni_UI_Test))
 
 (executable
-    (name OniUnitTestRunnerLibvim)
-    (public_name OniUnitTestRunnerLibvim)
-    (modules OniUnitTestRunnerLibvim)
-    (package OniUnitTestRunner)
-    (libraries 
-        Oni_Core_Test
-        Libvim_Test
-        reason-native-crash-utils.asan
-        ))
+ (name OniUnitTestRunnerExtHost)
+ (public_name OniUnitTestRunnerExtHost)
+ (modules OniUnitTestRunnerExtHost)
+ (package OniUnitTestRunner)
+ (libraries Oni_Core_Test Exthost_Transport_Test Exthost_Test))
 
 (executable
-    (name OniUnitTestRunnerTextmate)
-    (public_name OniUnitTestRunnerTextmate)
-    (modules OniUnitTestRunnerTextmate)
-    (package OniUnitTestRunner)
-    (libraries 
-        Oni_Core_Test
-        Textmate_Test
-        reason-native-crash-utils.asan
-        ))
+ (name OniUnitTestRunnerLibvim)
+ (public_name OniUnitTestRunnerLibvim)
+ (modules OniUnitTestRunnerLibvim)
+ (package OniUnitTestRunner)
+ (libraries Oni_Core_Test Libvim_Test reason-native-crash-utils.asan))
 
 (executable
-    (name OniUnitTestRunnerCI)
-    (public_name OniUnitTestRunnerCI)
-    (modules OniUnitTestRunnerCI)
-    (package OniUnitTestRunner)
-    (libraries
-        yojson
-        Oni_Cli_Test
-        Oni_Core_Test
-        Oni_Input_Test
-        Oni_Syntax_Test
-        Oni_Model_Test
-        Feature_Editor_Test
-        Feature_LanguageSupport_Test
-        Service_Extensions_Test
-        Service_Net_Test
-        Service_OS_Test
-        EditorCoreTypes_Test
-        EditorInput_Test
-        Exthost_Transport_Test
-        Exthost_Test
-        Libvim_Test
-        Oniguruma_Test
-        Textmate_Test
-        TreeSitter_Test
-        reason-native-crash-utils.asan
-            ))
+ (name OniUnitTestRunnerTextmate)
+ (public_name OniUnitTestRunnerTextmate)
+ (modules OniUnitTestRunnerTextmate)
+ (package OniUnitTestRunner)
+ (libraries Oni_Core_Test Textmate_Test reason-native-crash-utils.asan))
+
+(executable
+ (name OniUnitTestRunnerCI)
+ (public_name OniUnitTestRunnerCI)
+ (modules OniUnitTestRunnerCI)
+ (package OniUnitTestRunner)
+ (libraries yojson Oni_Cli_Test Oni_Core_Test Oni_Input_Test Oni_Syntax_Test
+   Oni_Model_Test Feature_Editor_Test Feature_LanguageSupport_Test
+   Service_Extensions_Test Service_Net_Test Service_OS_Test
+   EditorCoreTypes_Test EditorInput_Test Exthost_Transport_Test Exthost_Test
+   Libvim_Test Oniguruma_Test Textmate_Test TreeSitter_Test
+   reason-native-crash-utils.asan))

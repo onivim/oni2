@@ -1,4 +1,5 @@
 (library
-    (name EditorCoreTypes)
-    (public_name Oni2.editor-core-types)
-    (preprocess (pps ppx_deriving.show)))
+ (name EditorCoreTypes)
+ (public_name Oni2.editor-core-types)
+ (preprocess
+  (pps ppx_deriving.show)))

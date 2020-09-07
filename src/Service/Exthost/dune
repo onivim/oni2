@@ -1,10 +1,6 @@
 (library
-    (name Service_Exthost)
-    (public_name Oni2.service.exthost)
-    (libraries 
-      Oni2.editor-core-types
-      Oni2.core
-      Oni2.exthost
-      isolinear
-    )
-    (preprocess (pps ppx_let ppx_deriving.show)))
+ (name Service_Exthost)
+ (public_name Oni2.service.exthost)
+ (libraries Oni2.editor-core-types Oni2.core Oni2.exthost isolinear)
+ (preprocess
+  (pps ppx_let ppx_deriving.show)))
