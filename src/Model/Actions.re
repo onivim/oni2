@@ -9,7 +9,6 @@ open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
 
-module ContextMenu = Oni_Components.ContextMenu;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
@@ -46,7 +45,6 @@ type t =
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
-  | ContextMenuOverlayClicked
   | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
