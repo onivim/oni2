@@ -72,7 +72,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
-- `explorer.autoReveal` __( bool default: true )__ - When `true`, the file explorer will jump to highlight the file currently focused. When `false` the file explorer will remain static.
+- `explorer.autoReveal` __(_string|bool_ default: `true`)__  - When ``true`, the file explorer will jump to highlight the file current focused. When `false` the file explorer will remain static. If a string is entered it must be `focusNoScroll` which will still highlight the currently focused file in the file explorer but the file explorer will not scroll to it.
 
 - `editor.scrollShadow` __(_bool_ default: `true`)__ - When `true`, show a drop-shadow effect at the borders when there is additional content past the visible area.
 
