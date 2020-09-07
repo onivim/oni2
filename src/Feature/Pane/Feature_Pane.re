@@ -16,6 +16,10 @@ module Constants = {
 };
 
 [@deriving show({with_path: false})]
+type command =
+  | ToggleProblems;
+
+[@deriving show({with_path: false})]
 type msg =
   | TabClicked(pane)
   | CloseButtonClicked
@@ -23,6 +27,7 @@ type msg =
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
     })
+  | Command(command)
   | ResizeHandleDragged(int)
   | ResizeCommitted;
 
@@ -56,14 +61,29 @@ let height = ({height, resizeDelta, _}) => {
   };
 };
 
+let show = (~pane, model) => {...model, isOpen: true, selected: pane};
+let close = model => {...model, isOpen: false};
+
 let update = (msg, model) =>
   switch (msg) {
+
   | DiagnosticItemClicked({filePath, position}) => (
       model,
       OpenFile({filePath, position}),
     )
   | CloseButtonClicked => ({...model, isOpen: false}, Nothing)
+
   | TabClicked(pane) => ({...model, selected: pane}, Nothing)
+  
+  | Command(ToggleProblems) =>
+    if (!model.isOpen) {
+      (show(~pane=Diagnostics, model), Nothing);
+    } else if (model.selected == Diagnostics) {
+      (close(model), Nothing)
+    } else {
+      (show(~pane=Diagnostics, model), Nothing);
+    }
+
   | ResizeHandleDragged(delta) => (
       {...model, resizeDelta: (-1) * delta},
       Nothing,
@@ -89,8 +109,6 @@ let selected = ({selected, _}) => selected;
 
 let isVisible = (pane, model) => model.isOpen && model.selected == pane;
 let isOpen = ({isOpen, _}) => isOpen;
-
-let show = (~pane, model) => {...model, isOpen: true, selected: pane};
 
 let toggle = (~pane, model) =>
   if (model.isOpen && model.selected == pane) {
@@ -304,4 +322,36 @@ module View = {
       </View>;
     };
   };
+};
+
+module Commands = {
+  open Feature_Commands.Schema;
+  let problems =
+    define(
+      ~category="View",
+      ~title="Toggle Problems (Errors, Warnings)",
+      "workbench.actions.view.problems",
+      Command(ToggleProblems),
+    );
+};
+
+module Keybindings = {
+  open Oni_Input.Keybindings;
+  let toggleProblems = {
+    key: "<S-C-M>",
+    command: Commands.problems.id,
+    condition: WhenExpr.Value(True),
+  };
+
+  let toggleProblemsOSX = {
+    key: "<D-S-M>",
+    command: Commands.problems.id,
+    condition: "isMac" |> WhenExpr.parse,
+  };
+};
+
+module Contributions = {
+  let commands = Commands.[problems];
+
+  let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];
 };
