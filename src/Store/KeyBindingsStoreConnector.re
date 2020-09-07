@@ -532,6 +532,11 @@ let start = maybeKeyBindingsFilePath => {
       }
     );
 
+  let executeExCommandEffect = command =>
+    Isolinear.Effect.create(~name="keybindings.executeExCommand", () =>
+      ignore(Vim.command(command): Vim.Context.t)
+    );
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Actions.Init => (state, loadKeyBindingsEffect(true))
@@ -545,14 +550,21 @@ let start = maybeKeyBindingsFilePath => {
       )
 
     | KeybindingInvoked({command}) =>
-      switch (Command.Lookup.get(command, State.commands(state))) {
-      | Some((command: Command.t(_))) => (
+      if (command |> Utility.StringEx.startsWith(~prefix=":")) {
+        (
           state,
-          executeCommandEffect(command.msg),
-        )
-      | None =>
-        Log.errorf(m => m("Unknown command: %s", command));
-        (state, Isolinear.Effect.none);
+          executeExCommandEffect(Base.String.drop_prefix(command, 1)),
+        );
+      } else {
+        switch (Command.Lookup.get(command, State.commands(state))) {
+        | Some((command: Command.t(_))) => (
+            state,
+            executeCommandEffect(command.msg),
+          )
+        | None =>
+          Log.errorf(m => m("Unknown command: %s", command));
+          (state, Isolinear.Effect.none);
+        };
       }
 
     | _ => (state, Isolinear.Effect.none)
