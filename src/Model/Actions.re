@@ -47,7 +47,6 @@ type t =
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
   | ContextMenuOverlayClicked
-  | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | DisableKeyDisplayer
@@ -134,7 +133,6 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | SCM(Feature_SCM.msg)
-  | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)

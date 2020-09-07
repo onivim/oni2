@@ -39,14 +39,12 @@ let initial = [];
 [@deriving show({with_path: false})]
 type msg =
   | Created(notification)
-  | Dismissed(notification)
-  | AllDismissed;
+  | Dismissed(notification);
 
 let update = (model, msg) => {
   switch (msg) {
   | Created(item) => [item, ...model]
   | Dismissed(item) => List.filter(it => it.id != item.id, model)
-  | AllDismissed => initial
   };
 };
 
@@ -68,12 +66,6 @@ module Effects = {
   let dismiss = notification =>
     Isolinear.Effect.createWithDispatch(~name="notification.dismiss", dispatch =>
       dispatch(Dismissed(notification))
-    );
-
-  let dismissAll =
-    Isolinear.Effect.createWithDispatch(
-      ~name="notification.dismissAll", dispatch =>
-      dispatch(AllDismissed)
     );
 };
 

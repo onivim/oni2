@@ -264,8 +264,11 @@ module View = {
         ~pane: model,
         (),
       ) => {
-    let onSelectFile = (~filePath as _, ~position as _) => {
-      failwith("nooo!");
+    let onSelectFile = (~filePath, ~position) => {
+      dispatch(DiagnosticItemClicked({
+        filePath,
+        position,
+      }))
     };
 
     let problemsTabClicked = () => {
