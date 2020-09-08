@@ -1,19 +1,5 @@
 (library
-    (name Oni_Syntax_Client)
-    (public_name Oni2.syntax_client)
-    (libraries 
-        str
-        bigarray
-        Revery.zed
-        luv
-        lwt
-        lwt.unix
-        yojson
-        Oni2.core
-        Oni2.syntax
-        Rench
-        Revery
-        textmate
-        treesitter
-        Oni2.exthost
-    ))
+ (name Oni_Syntax_Client)
+ (public_name Oni2.syntax_client)
+ (libraries str bigarray Revery.zed luv lwt lwt.unix yojson Oni2.core
+   Oni2.syntax Rench Revery textmate treesitter Oni2.exthost))

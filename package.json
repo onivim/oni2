@@ -222,6 +222,7 @@
     "@opam/lwt": "*",
     "@opam/markup": "^0.8.2",
     "@opam/ocamlbuild": "*",
+    "@opam/ocamlformat": "^0.15.0",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
     "@opam/ppx_inline_test": "v0.14.1",
