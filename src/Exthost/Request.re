@@ -281,13 +281,7 @@ module LanguageFeatures = {
   };
 
   let resolveCompletionItem =
-      (
-        ~handle: int,
-        ~resource: Uri.t,
-        ~position: OneBasedPosition.t,
-        ~chainedCacheId: ChainedCacheId.t,
-        client,
-      ) => {
+      (~handle: int, ~chainedCacheId: ChainedCacheId.t, client) => {
     Client.request(
       ~decoder=SuggestItem.Dto.decode,
       ~usesCancellationToken=true,
@@ -296,8 +290,6 @@ module LanguageFeatures = {
       ~args=
         `List([
           `Int(handle),
-          Uri.to_yojson(resource),
-          OneBasedPosition.to_yojson(position),
           chainedCacheId |> Json.Encode.encode_value(ChainedCacheId.encode),
         ]),
       client,

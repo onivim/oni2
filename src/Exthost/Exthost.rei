@@ -1724,13 +1724,7 @@ module Request: {
       Lwt.t(SuggestResult.t);
 
     let resolveCompletionItem:
-      (
-        ~handle: int,
-        ~resource: Uri.t,
-        ~position: OneBasedPosition.t,
-        ~chainedCacheId: ChainedCacheId.t,
-        Client.t
-      ) =>
+      (~handle: int, ~chainedCacheId: ChainedCacheId.t, Client.t) =>
       Lwt.t(SuggestItem.t);
 
     let provideDocumentHighlights:

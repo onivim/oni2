@@ -797,16 +797,13 @@ let sub = (~client, model) => {
 
          model.handleToSession
          |> IntMap.find_opt(handle)
-         |> OptionEx.flatMap(
-              ({supportsResolve, buffer, location, _}: Session.t) =>
+         |> OptionEx.flatMap(({supportsResolve, _}: Session.t) =>
               if (supportsResolve) {
                 focusedItem.item.chainedCacheId
                 |> Option.map(chainedCacheId => {
                      Service_Exthost.Sub.completionItem(
                        ~handle,
                        ~chainedCacheId,
-                       ~buffer,
-                       ~position=location,
                        ~toMsg=
                          fun
                          | Ok(suggestItem) =>
