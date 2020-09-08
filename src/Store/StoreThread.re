@@ -155,7 +155,6 @@ let start =
 
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
   let indentationUpdater = IndentationStoreConnector.start();
-  let windowUpdater = WindowsStoreConnector.start();
 
   //  let completionUpdater = CompletionStoreConnector.start();
 
@@ -177,7 +176,6 @@ let start =
       lifecycleUpdater,
       fileExplorerUpdater,
       indentationUpdater,
-      windowUpdater,
       themeUpdater,
       titleUpdater,
       Features.update(
