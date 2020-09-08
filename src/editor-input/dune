@@ -1,10 +1,11 @@
 (ocamllex
-    (modules Matcher_lexer))
+ (modules Matcher_lexer))
 
 (menhir
-    (modules Matcher_parser))
+ (modules Matcher_parser))
 
 (library
-    (name EditorInput)
-    (public_name Oni2.editor-input)
-    (preprocess (pps ppx_deriving.show)))
+ (name EditorInput)
+ (public_name Oni2.editor-input)
+ (preprocess
+  (pps ppx_deriving.show)))

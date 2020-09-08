@@ -63,7 +63,6 @@ module Styles = {
 let make = (~dispatch, ~state: State.t, ()) => {
   let State.{
         configuration,
-        contextMenu,
         uiFont as font,
         editorFont,
         sideBar,
@@ -103,7 +102,6 @@ let make = (~dispatch, ~state: State.t, ()) => {
           mode
           recordingMacro={state.vim |> Feature_Vim.recordingMacro}
           notifications={state.notifications}
-          contextMenu
           diagnostics={state.diagnostics}
           font={state.uiFont}
           scm={state.scm}
@@ -160,12 +158,6 @@ let make = (~dispatch, ~state: State.t, ()) => {
     };
   };
 
-  let contextMenuOverlay = () => {
-    let onClick = () => dispatch(ContextMenuOverlayClicked);
-
-    <ContextMenu.Overlay onClick />;
-  };
-
   let titleDispatch = msg => dispatch(Actions.TitleBar(msg));
 
   let mapDisplayMode =
@@ -220,7 +212,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       />
     </Overlay>
     <statusBar />
-    <contextMenuOverlay />
+    <ContextMenu.Overlay />
     <Tooltip.Overlay theme font=uiFont />
     <messages />
     <modals />
