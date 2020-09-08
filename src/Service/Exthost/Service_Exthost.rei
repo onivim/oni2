@@ -133,8 +133,6 @@ module Sub: {
     (
       ~handle: int,
       ~chainedCacheId: Exthost.ChainedCacheId.t,
-      ~buffer: Oni_Core.Buffer.t,
-      ~position: EditorCoreTypes.CharacterPosition.t,
       ~toMsg: result(Exthost.SuggestItem.t, string) => 'a,
       Exthost.Client.t
     ) =>

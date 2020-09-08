@@ -1223,6 +1223,7 @@ module StatusBar = {
           colorJson,
           alignmentJson,
           priorityJson,
+          _accessibilityInfoJson,
         ]),
       ) =>
       open Base.Result.Let_syntax;
