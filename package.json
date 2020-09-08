@@ -5,7 +5,10 @@
   "license": "SEE LICENSE IN Outrun-Labs-EULA-v1.1.md",
   "esy": {
     "build": "refmterr dune build -p libvim,textmate,treesitter,Oni2 -j4",
-    "buildEnv": { "MACOSX_DEPLOYMENT_TARGET": "10.12" },
+    "buildEnv": {
+      "MACOSX_DEPLOYMENT_TARGET": "10.12",
+      "ONI2_ROOT": "${self.root}"
+    },
     "install": [
       "esy-installer Oni2.install",
       "bash -c \"#{os == 'windows' ? 'cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll \\'$cur__bin\\'': 'echo'}\"",

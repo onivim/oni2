@@ -8,3 +8,8 @@
    fp dir.lib)
  (preprocess
   (pps lwt_ppx brisk-reconciler.ppx)))
+
+(rule
+ (targets c_flags.sexp flags.sexp)
+ (action
+  (run ./config/discover.exe)))

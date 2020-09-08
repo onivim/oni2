@@ -21,6 +21,7 @@ const extensionsSourceDirectory = path.join(process.cwd(), "extensions")
 
 const eulaFile = path.join(process.cwd(), "Outrun-Labs-EULA-v1.1.md")
 const thirdPartyFile = path.join(process.cwd(), "ThirdPartyLicenses.txt")
+const sparkleFramework = path.join(rootDirectory, "vendor", "Sparkle-1.23.0", "Sparkle.framework");
 
 const copy = (source, dest) => {
     console.log(`Copying from ${source} to ${dest}`)
@@ -196,6 +197,8 @@ if (process.platform == "linux") {
     // Copy icon
     copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"))
 
+    fs.copySync(sparkleFramework, path.join(frameworksDirectory, "Sparkle.framework"));
+    
     shell(
         `dylibbundler -b -x "${path.join(
             binaryDirectory,
@@ -208,7 +211,7 @@ if (process.platform == "linux") {
     // Make sure these are codesigned as well in codesign.sh
     // Must be kept in sync with:
     // src/scripts/osx/codesign.sh
-    const frameworksWhiteList = ["libcrypto.1.1.dylib", "libssl.1.1.dylib"]
+    const frameworksWhiteList = ["libcrypto.1.1.dylib", "libssl.1.1.dylib", "Sparkle.framework"]
 
     const disallowedFrameworks = frameworks.filter(
         (framework) =>
