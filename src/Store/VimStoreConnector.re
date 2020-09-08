@@ -908,9 +908,7 @@ let start =
         };
 
       // Ensure that the editor is focused, as well
-      let state'' =
-        state'
-        |> Oni_Model.FocusManager.push(Editor);
+      let state'' = state' |> Oni_Model.FocusManager.push(Editor);
 
       (
         state'',
