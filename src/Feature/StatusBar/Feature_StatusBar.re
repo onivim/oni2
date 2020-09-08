@@ -96,17 +96,14 @@ let update = (model, msg) => {
 
   | ContextMenuNotificationOpenClicked => (
       {...model, contextMenuVisible: false},
-      Nothing,
+      ToggleNotifications,
     )
 
   | ContextMenuClosed => ({...model, contextMenuVisible: false}, Nothing)
 
   | FileTypeClicked => (model, ShowFileTypePicker)
 
-  | ContextMenuNotificationOpenClicked
   | NotificationCountClicked => (model, ToggleNotifications)
-
-  | ContextMenuNotificationClearAllClicked => (model, ClearNotifications)
 
   | DiagnosticsClicked => (model, ToggleProblems)
 

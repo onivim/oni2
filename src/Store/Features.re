@@ -588,10 +588,10 @@ let update =
       | Editor
       | Terminal(_) => Some(Center)
 
+      | Extensions
       | FileExplorer
-      | SCM => Some(Left)
-
-      | Search => Some(Bottom)
+      | SCM
+      | Search => Some(Left)
 
       | _ => None
       };

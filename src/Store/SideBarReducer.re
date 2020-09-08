@@ -11,7 +11,8 @@ let focus = (state: State.t) =>
     switch (state.sideBar |> Feature_SideBar.selected) {
     | FileExplorer => FocusManager.push(FileExplorer, state)
     | SCM => FocusManager.push(SCM, state)
-    | _ => state
+    | Extensions => FocusManager.push(Extensions, state)
+    | Search => FocusManager.push(Search, state)
     };
   } else {
     state;
