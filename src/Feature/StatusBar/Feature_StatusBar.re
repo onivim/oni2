@@ -45,6 +45,7 @@ type msg =
   | ItemDisposed(string)
   | DiagnosticsClicked
   | FileTypeClicked
+  | ContextMenuClosed
   | ContextMenuNotificationClearAllClicked
   | ContextMenuNotificationOpenClicked
   | NotificationCountClicked
@@ -59,9 +60,12 @@ type outmsg =
   | ToggleNotifications
   | ShowFileTypePicker;
 
-type model = {items: list(Item.t)};
+type model = {
+  items: list(Item.t),
+  contextMenuVisible: bool,
+};
 
-let initial = {items: []};
+let initial = {items: [], contextMenuVisible: false};
 
 // UPDATE
 
@@ -73,9 +77,29 @@ let update = (model, msg) => {
   | ItemAdded(item) =>
     /* Replace the old item with the new one */
     let newItems = removeItemById(model.items, item.id);
-    ({items: [item, ...newItems]}, Nothing);
+    ({...model, items: [item, ...newItems]}, Nothing);
 
-  | ItemDisposed(id) => ({items: removeItemById(model.items, id)}, Nothing)
+  | ItemDisposed(id) => (
+      {...model, items: removeItemById(model.items, id)},
+      Nothing,
+    )
+
+  | NotificationsCountRightClicked => (
+      {...model, contextMenuVisible: true},
+      Nothing,
+    )
+
+  | ContextMenuNotificationClearAllClicked => (
+      {...model, contextMenuVisible: false},
+      Nothing,
+    )
+
+  | ContextMenuNotificationOpenClicked => (
+      {...model, contextMenuVisible: false},
+      Nothing,
+    )
+
+  | ContextMenuClosed => ({...model, contextMenuVisible: false}, Nothing)
 
   | FileTypeClicked => (model, ShowFileTypePicker)
 
@@ -203,7 +227,7 @@ let notificationCount =
       ~font: UiFont.t,
       ~foreground as color,
       ~notifications: Feature_Notification.model,
-      ~contextMenu,
+      ~contextMenuVisible,
       ~dispatch,
       (),
     ) => {
@@ -236,13 +260,13 @@ let notificationCount =
       items
       theme
       font // correct for item padding
+      onCancel={() => dispatch(ContextMenuClosed)}
       onItemSelect={({data, _}: ContextMenu.item(msg)) => dispatch(data)}
     />;
   };
 
   <item onClick onRightClick>
-    {contextMenu == Feature_ContextMenu.NotificationStatusBarItem
-       ? <menu /> : React.empty}
+    {contextMenuVisible ? <menu /> : React.empty}
     <View
       style=Style.[
         flexDirection(`Row),
@@ -332,7 +356,6 @@ module View = {
                   ~recordingMacro: option(char),
                   ~diagnostics: Diagnostics.t,
                   ~font: UiFont.t,
-                  ~contextMenu: Feature_ContextMenu.model,
                   ~activeBuffer: option(Oni_Core.Buffer.t),
                   ~activeEditor: option(Feature_Editor.Editor.t),
                   ~indentationSettings: IndentationSettings.t,
@@ -525,7 +548,7 @@ module View = {
           font
           foreground
           notifications
-          contextMenu
+          contextMenuVisible={statusBar.contextMenuVisible}
         />
       </section>
       <sectionGroup>

@@ -1,26 +1,15 @@
 (rule
-    (targets BuildInfo.re)
-    (deps (:generator ../gen_buildinfo/generator.exe))
-    (action (run %{generator}))
-)
+ (targets BuildInfo.re)
+ (deps
+  (:generator ../gen_buildinfo/generator.exe))
+ (action
+  (run %{generator})))
 
 (library
-    (name Oni_Core)
-    (public_name Oni2.core)
-    (libraries 
-        Oni2.core.kernel
-        Oni2.core.utility
-        Oni2.core.whenExpr
-        isolinear
-        Rench
-        Revery
-        yojson
-        ppx_deriving.runtime
-        ppx_deriving_yojson.runtime
-        Oni2.editor-core-types
-        timber
-        ReasonFuzz
-        decoders-yojson
-        angstrom
-    )
-    (preprocess (pps ppx_let ppx_deriving_yojson ppx_deriving.show)))
+ (name Oni_Core)
+ (public_name Oni2.core)
+ (libraries Oni2.core.kernel Oni2.core.utility Oni2.core.whenExpr isolinear
+   Rench Revery yojson ppx_deriving.runtime ppx_deriving_yojson.runtime
+   Oni2.editor-core-types timber ReasonFuzz decoders-yojson angstrom)
+ (preprocess
+  (pps ppx_let ppx_deriving_yojson ppx_deriving.show)))

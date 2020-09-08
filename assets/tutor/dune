@@ -1,4 +1,4 @@
 (install
-    (section bin)
-    (package Oni2)
-    (files tutor))
+ (section bin)
+ (package Oni2)
+ (files tutor))

@@ -164,7 +164,6 @@ let start =
 
   let titleUpdater =
     TitleStoreConnector.start(setTitle, maximize, minimize, restore, close);
-  let contextMenuUpdater = ContextMenuStore.start();
   let updater =
     Isolinear.Updater.combine([
       Isolinear.Updater.ofReducer(Reducer.reduce),
@@ -180,7 +179,6 @@ let start =
       indentationUpdater,
       windowUpdater,
       themeUpdater,
-      //      completionUpdater,
       titleUpdater,
       Features.update(
         ~grammarRepository,
@@ -188,7 +186,6 @@ let start =
         ~getUserSettings,
         ~setup,
       ),
-      contextMenuUpdater,
     ]);
 
   let subscriptions = (state: Model.State.t) => {

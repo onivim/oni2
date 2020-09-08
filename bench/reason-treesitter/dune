@@ -1,11 +1,10 @@
 (library
-    (name TreeSitterBenchLib)
-    (public_name OniBench.treesitter)
-    (ocamlopt_flags -linkall)
-    (libraries treesitter reperf.lib)
-)
+ (name TreeSitterBenchLib)
+ (public_name OniBench.treesitter)
+ (ocamlopt_flags -linkall)
+ (libraries treesitter reperf.lib))
 
 (install
-    (section bin)
-    (package OniBench)
-    (files canada.json sqlite3.c))
+ (section bin)
+ (package OniBench)
+ (files canada.json sqlite3.c))
