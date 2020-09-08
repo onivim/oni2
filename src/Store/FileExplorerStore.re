@@ -100,7 +100,6 @@ let revealFocus =
       | Some(index) => {...state, scrollOffset: `Reveal(index)}
       | None => state
       }
-
     | _ => state
     }
   });
@@ -135,6 +134,7 @@ let start = () => {
               node.path,
               state.languageInfo,
               state.iconTheme,
+
               state.configuration,
               ~onComplete=newNode =>
               Actions.FileExplorer(NodeLoaded(newNode))
@@ -149,7 +149,17 @@ let start = () => {
       | {active, _} when active != maybeFilePath =>
         let state = setActive(maybeFilePath, state);
         switch (maybeFilePath) {
-        | Some(path) => revealAndFocusPath(path, state)
+        | Some(path) =>
+          let autoReveal =
+            Oni_Core.Configuration.getValue(
+              c => c.explorerAutoReveal,
+              state.configuration,
+            )
+            switch (autoReveal) {
+            | `HighlightAndScroll => revealAndFocusPath(path, state)
+            | `HighlightOnly => (setFocus(Some(path), state), Isolinear.Effect.none)
+            | `NoReveal => (state, Isolinear.Effect.none)
+            }
         | None => (state, Isolinear.Effect.none)
         };
       | _ => (state, Isolinear.Effect.none)
