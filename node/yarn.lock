@@ -2,16 +2,16 @@
 # yarn lockfile v1
 
 
-"@onivim/vscode-exthost@1.45.6":
-  version "1.45.6"
-  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.45.6.tgz#686a8200217615e457a96453276dafe72c38778d"
-  integrity sha512-9IKvY6lO9GVIlPNsXk+JxYDjbZB1sSuZzVmQFGSDuqmu+NopdoQhedpwPR9qOiqIgUEiDRAWRZwqjX3WuVld+g==
+"@onivim/vscode-exthost@1.46.0":
+  version "1.46.0"
+  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.46.0.tgz#37500b8b14210173ea7829e898399472c5f39fa6"
+  integrity sha512-8zabMYbG0NgjEMMGvP4QrjjkbjulZOe8x6WgkY4gUGOGq1lPYO+yQhxdjcIptXmOOLWhMw2Nu5k9Mt7uDY1itw==
   dependencies:
     graceful-fs "4.2.3"
     iconv-lite "0.5.0"
-    minimist "^1.2.5"
+    minimist "^1.2.0"
     native-watchdog "1.3.0"
-    node-pty "^0.10.0-beta2"
+    node-pty "^0.10.0-beta8"
     semver-umd "^5.5.5"
     spdlog "^0.11.1"
     vscode-proxy-agent "^0.5.2"
@@ -115,7 +115,7 @@ jsonfile@^4.0.0:
   optionalDependencies:
     graceful-fs "^4.1.6"
 
-minimist@^1.2.5:
+minimist@^1.2.0, minimist@^1.2.5:
   version "1.2.5"
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.5.tgz#67d66014b66a6a8aaa0c083c5fd58df4e4e97602"
   integrity sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==
@@ -142,7 +142,7 @@ native-watchdog@1.3.0:
   resolved "https://registry.yarnpkg.com/native-watchdog/-/native-watchdog-1.3.0.tgz#88cee94c9dc766b85c8506eda14c8bd8c9618e27"
   integrity sha512-WOjGRNGkYZ5MXsntcvCYrKtSYMaewlbCFplbcUVo9bE80LPVt8TAVFHYWB8+a6fWCGYheq21+Wtt6CJrUaCJhw==
 
-node-pty@^0.10.0-beta2:
+node-pty@^0.10.0-beta8:
   version "0.10.0-beta9"
   resolved "https://registry.yarnpkg.com/node-pty/-/node-pty-0.10.0-beta9.tgz#e5a795f9b53948346803cb71bac4ffc02e7909f0"
   integrity sha512-Qm6uSH30FUcAhJ9s76C+lgvTsOW2cHUbkIGjCdOVCL0c7S4DxsmKBRgjcr+guUK9d9KwfuZHeSjXYWjpJFPe4w==
