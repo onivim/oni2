@@ -65,6 +65,7 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
     | FileExplorer => "Explorer"
     | SCM => "Source Control"
     | Extensions => "Extensions"
+    | Search => "Search"
     };
 
   let elem =
@@ -90,6 +91,24 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
         theme
         font
         dispatch={msg => dispatch(Actions.SCM(msg))}
+      />;
+
+    | Search =>
+      let onSelectResult = (file, location) =>
+        GlobalContext.current().dispatch(
+          Actions.OpenFileByPath(file, None, Some(location)),
+        );
+      let dispatch = msg =>
+        GlobalContext.current().dispatch(Actions.Search(msg));
+
+      <Feature_Search
+        isFocused={FocusManager.current(state) == Focus.Search}
+        theme
+        uiFont={state.uiFont}
+        editorFont={state.editorFont}
+        model={state.searchPane}
+        onSelectResult
+        dispatch
       />;
 
     | Extensions =>

@@ -8,33 +8,34 @@ let waitForProcessExit =
   | _ => false;
 
 describe("TerminalServiceTest", ({test, _}) => {
-  test("noop process should give process exited", _ => {
-    Test.startWithExtensions([])
-    |> Test.waitForReady
-    |> Test.withClient(
-         Request.TerminalService.spawnExtHostProcess(
-           ~id=0,
-           ~shellLaunchConfig=
-             ShellLaunchConfig.{
-               executable: "noop",
-               arguments: [],
-               name: "noop",
-             },
-           ~activeWorkspaceRoot=Uri.fromPath(Sys.getcwd()),
-           ~cols=10,
-           ~rows=10,
-           ~isWorkspaceShellAllowed=true,
-         ),
-       )
-    |> Test.waitForMessage(
-         ~name="TerminalService.SendProcessExit",
-         waitForProcessExit,
-       )
-    |> Test.terminate
-    |> Test.waitForProcessClosed
-  });
-
+  // With 1.47.1, our no-op process isn't even started, so there is no exit for it.
+  //  test("noop process should give process exited", _ => {
+  //    Test.startWithExtensions([])
+  //    |> Test.waitForReady
+  //    |> Test.withClient(
+  //         Request.TerminalService.spawnExtHostProcess(
+  //           ~id=0,
+  //           ~shellLaunchConfig=
+  //             ShellLaunchConfig.{
+  //               executable: "noop",
+  //               arguments: [],
+  //               name: "noop",
+  //             },
+  //           ~activeWorkspaceRoot=Uri.fromPath(Sys.getcwd()),
+  //           ~cols=10,
+  //           ~rows=10,
+  //           ~isWorkspaceShellAllowed=true,
+  //         ),
+  //       )
+  //    |> Test.waitForMessage(
+  //         ~name="TerminalService.SendProcessExit",
+  //         waitForProcessExit,
+  //       )
+  //    |> Test.terminate
+  //  });
   test("valid process should send data and title", _ => {
+    //    |> Test.waitForProcessClosed
+
     let shellLaunchConfig =
       Sys.win32
         ? ShellLaunchConfig.{
@@ -83,5 +84,5 @@ describe("TerminalServiceTest", ({test, _}) => {
        )
     |> Test.terminate
     |> Test.waitForProcessClosed;
-  });
+  })
 });

@@ -45,7 +45,6 @@ type t =
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
-  | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | DisableKeyDisplayer
@@ -132,7 +131,6 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | SCM(Feature_SCM.msg)
-  | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)
@@ -140,8 +138,6 @@ type t =
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
-  | PaneTabClicked(Feature_Pane.pane)
-  | PaneCloseButtonClicked
   | DirectoryChanged(string)
   | VimExecuteCommand(string)
   | VimMessageReceived({

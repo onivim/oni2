@@ -144,6 +144,17 @@ let start = maybeKeyBindingsFilePath => {
           command: Commands.List.select.id,
           condition: "listFocus || textInputFocus" |> WhenExpr.parse,
         },
+        // Search commands
+        {
+          key: "<S-D-F>",
+          command: Commands.Workbench.Action.findInFiles.id,
+          condition: "isMac" |> WhenExpr.parse,
+        },
+        {
+          key: "<S-C-F>",
+          command: Commands.Workbench.Action.findInFiles.id,
+          condition: "!isMac" |> WhenExpr.parse,
+        },
         {
           key: "<S-C-B>",
           command: Commands.Oni.Explorer.toggle.id,

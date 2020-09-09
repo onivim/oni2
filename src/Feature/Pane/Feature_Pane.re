@@ -2,9 +2,10 @@
  * Feature_Pane.re
  */
 
+open Oni_Core;
+
 [@deriving show({with_path: false})]
 type pane =
-  | Search
   | Diagnostics
   | Notifications;
 
@@ -20,6 +21,12 @@ type command =
 
 [@deriving show({with_path: false})]
 type msg =
+  | TabClicked(pane)
+  | CloseButtonClicked
+  | DiagnosticItemClicked({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
   | Command(command)
   | ResizeHandleDragged(int)
   | ResizeCommitted;
@@ -31,7 +38,10 @@ module Msg = {
 
 type outmsg =
   | Nothing
-  | PopFocus(pane);
+  | OpenFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    });
 
 type model = {
   selected: pane,
@@ -56,14 +66,23 @@ let close = model => {...model, isOpen: false};
 
 let update = (msg, model) =>
   switch (msg) {
+  | DiagnosticItemClicked({filePath, position}) => (
+      model,
+      OpenFile({filePath, position}),
+    )
+  | CloseButtonClicked => ({...model, isOpen: false}, Nothing)
+
+  | TabClicked(pane) => ({...model, selected: pane}, Nothing)
+
   | Command(ToggleProblems) =>
     if (!model.isOpen) {
       (show(~pane=Diagnostics, model), Nothing);
     } else if (model.selected == Diagnostics) {
-      (close(model), PopFocus(model.selected));
+      (close(model), Nothing);
     } else {
       (show(~pane=Diagnostics, model), Nothing);
     }
+
   | ResizeHandleDragged(delta) => (
       {...model, resizeDelta: (-1) * delta},
       Nothing,
@@ -72,7 +91,7 @@ let update = (msg, model) =>
     let height = model |> height;
 
     if (height <= 0) {
-      ({...model, isOpen: false, resizeDelta: 0}, PopFocus(model.selected));
+      ({...model, isOpen: false, resizeDelta: 0}, Nothing);
     } else {
       ({...model, height, resizeDelta: 0}, Nothing);
     };
@@ -81,7 +100,7 @@ let update = (msg, model) =>
 let initial = {
   height: Constants.defaultHeight,
   resizeDelta: 0,
-  selected: Search,
+  selected: Notifications,
   isOpen: false,
 };
 
@@ -90,9 +109,222 @@ let selected = ({selected, _}) => selected;
 let isVisible = (pane, model) => model.isOpen && model.selected == pane;
 let isOpen = ({isOpen, _}) => isOpen;
 
+let toggle = (~pane, model) =>
+  if (model.isOpen && model.selected == pane) {
+    {...model, isOpen: false};
+  } else {
+    {...model, isOpen: true, selected: pane};
+  };
+
+let close = model => {...model, isOpen: false};
+
+module View = {
+  open Revery.UI;
+  open Revery.UI.Components;
+  open Oni_Components;
+
+  module FontIcon = Oni_Components.FontIcon;
+  module FontAwesome = Oni_Components.FontAwesome;
+  module Sneakable = Feature_Sneak.View.Sneakable;
+
+  module Colors = Feature_Theme.Colors;
+  module PaneTab = {
+    module Constants = {
+      let minWidth = 100;
+    };
+
+    module Styles = {
+      open Style;
+
+      let container = (~isActive, ~theme) => {
+        let borderColor =
+          isActive ? Colors.PanelTitle.activeBorder : Colors.Panel.background;
+
+        [
+          overflow(`Hidden),
+          paddingHorizontal(5),
+          backgroundColor(Colors.Panel.background.from(theme)),
+          borderBottom(~color=borderColor.from(theme), ~width=2),
+          height(30),
+          minWidth(Constants.minWidth),
+          flexDirection(`Row),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ];
+      };
+
+      let clickable = [
+        flexGrow(1),
+        flexDirection(`Row),
+        alignItems(`Center),
+        justifyContent(`Center),
+      ];
+
+      let text = (~isActive, ~theme) => [
+        textOverflow(`Ellipsis),
+        isActive
+          ? color(Colors.PanelTitle.activeForeground.from(theme))
+          : color(Colors.PanelTitle.inactiveForeground.from(theme)),
+        justifyContent(`Center),
+        alignItems(`Center),
+      ];
+    };
+
+    let make = (~uiFont: UiFont.t, ~theme, ~title, ~onClick, ~isActive, ()) => {
+      <View style={Styles.container(~isActive, ~theme)}>
+        <Clickable onClick style=Styles.clickable>
+          <Text
+            style={Styles.text(~isActive, ~theme)}
+            fontFamily={uiFont.family}
+            fontWeight={isActive ? Medium : Normal}
+            fontSize={uiFont.size}
+            text=title
+          />
+        </Clickable>
+      </View>;
+    };
+  };
+
+  module Styles = {
+    open Style;
+
+    let pane = (~theme, ~height) => [
+      flexDirection(`Column),
+      Style.height(height),
+      borderTop(~color=Colors.Panel.border.from(theme), ~width=1),
+      backgroundColor(Colors.Panel.background.from(theme)),
+    ];
+
+    let header = [flexDirection(`Row), justifyContent(`SpaceBetween)];
+
+    let tabs = [flexDirection(`Row)];
+
+    let closeButton = [
+      width(32),
+      alignItems(`Center),
+      justifyContent(`Center),
+    ];
+
+    let resizer = [height(4), position(`Relative), flexGrow(0)];
+
+    let content = [flexDirection(`Column), flexGrow(1)];
+  };
+  let content =
+      (
+        ~selected,
+        ~theme,
+        ~uiFont,
+        ~editorFont,
+        ~onSelectFile,
+        ~notificationDispatch,
+        ~diagnostics: Feature_LanguageSupport.Diagnostics.t,
+        ~notifications: Feature_Notification.model,
+        (),
+      ) =>
+    switch (selected) {
+    | Diagnostics =>
+      <Feature_LanguageSupport.Diagnostics.View
+        diagnostics
+        theme
+        uiFont
+        editorFont
+        onSelectFile
+      />
+    | Notifications =>
+      <Feature_Notification.View.List
+        model=notifications
+        theme
+        font=uiFont
+        dispatch=notificationDispatch
+      />
+    };
+
+  let closeButton = (~theme, ~dispatch, ()) => {
+    <Sneakable
+      sneakId="close"
+      onClick={() => dispatch(CloseButtonClicked)}
+      style=Styles.closeButton>
+      <FontIcon
+        icon=FontAwesome.times
+        color={Colors.Tab.activeForeground.from(theme)}
+        fontSize=12.
+      />
+    </Sneakable>;
+  };
+  let make =
+      (
+        ~theme,
+        ~uiFont,
+        ~editorFont,
+        ~diagnostics: Feature_LanguageSupport.Diagnostics.t,
+        ~notifications: Feature_Notification.model,
+        ~dispatch: msg => unit,
+        ~notificationDispatch: Feature_Notification.msg => unit,
+        ~pane: model,
+        (),
+      ) => {
+    let onSelectFile = (~filePath, ~position) => {
+      dispatch(DiagnosticItemClicked({filePath, position}));
+    };
+
+    let problemsTabClicked = () => {
+      dispatch(TabClicked(Diagnostics));
+    };
+    let notificationsTabClicked = () => {
+      dispatch(TabClicked(Notifications));
+    };
+
+    if (!isOpen(pane)) {
+      <View />;
+    } else {
+      let height = height(pane);
+      <View style={Styles.pane(~theme, ~height)}>
+        <View style=Styles.resizer>
+          <ResizeHandle.Horizontal
+            onDrag={delta =>
+              dispatch(Msg.resizeHandleDragged(int_of_float(delta)))
+            }
+            onDragComplete={() => dispatch(Msg.resizeCommitted)}
+          />
+        </View>
+        <View style=Styles.header>
+          <View style=Styles.tabs>
+            <PaneTab
+              uiFont
+              theme
+              title="Problems"
+              onClick=problemsTabClicked
+              isActive={isVisible(Diagnostics, pane)}
+            />
+            <PaneTab
+              uiFont
+              theme
+              title="Notifications"
+              onClick=notificationsTabClicked
+              isActive={isVisible(Notifications, pane)}
+            />
+          </View>
+          <closeButton dispatch theme />
+        </View>
+        <View style=Styles.content>
+          <content
+            selected={selected(pane)}
+            theme
+            uiFont
+            editorFont
+            diagnostics
+            notifications
+            notificationDispatch
+            onSelectFile
+          />
+        </View>
+      </View>;
+    };
+  };
+};
+
 module Commands = {
   open Feature_Commands.Schema;
-
   let problems =
     define(
       ~category="View",

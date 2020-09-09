@@ -40,3 +40,20 @@ let getDiagnosticsAtPosition:
 let getDiagnosticsMap: (t, Buffer.t) => IntMap.t(list(Diagnostic.t));
 
 let getAllDiagnostics: t => list((Uri.t, Diagnostic.t));
+
+module View: {
+  let make:
+    (
+      ~onSelectFile: (
+                       ~filePath: string,
+                       ~position: EditorCoreTypes.CharacterPosition.t
+                     ) =>
+                     unit,
+      ~diagnostics: t,
+      ~theme: ColorTheme.Colors.t,
+      ~uiFont: UiFont.t,
+      ~editorFont: Service_Font.font,
+      unit
+    ) =>
+    Revery.UI.element;
+};

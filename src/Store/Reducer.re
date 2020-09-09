@@ -42,6 +42,7 @@ let reduce: (State.t, Actions.t) => State.t =
       | ActivityBar(ActivityBar.FileExplorerClick) => {...s, zenMode: false}
       | ActivityBar(ActivityBar.SCMClick) => {...s, zenMode: false}
       | ActivityBar(ActivityBar.ExtensionsClick) => {...s, zenMode: false}
+      | ActivityBar(ActivityBar.SearchClick) => {...s, zenMode: false}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
       | ReallyQuitting => {...s, isQuitting: true}

@@ -906,8 +906,12 @@ let start =
             layout: Feature_Layout.split(direction, state.layout),
           }
         };
+
+      // Ensure that the editor is focused, as well
+      let state'' = state' |> Oni_Model.FocusManager.push(Editor);
+
       (
-        state',
+        state'',
         openBufferEffect(
           ~onComplete=bufferId => BufferOpened(path, maybeLocation, bufferId),
           path,
