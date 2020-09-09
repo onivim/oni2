@@ -73,6 +73,7 @@ let getMediumFriendlyName =
   maybeFilePath
   |> Option.map(filePath =>
        switch (BufferPath.parse(filePath)) {
+       | DebugInput => "Input Debugger"
        | ExtensionDetails => "Extension Details"
        | Welcome => "Welcome"
        | Version => "Version"
@@ -99,6 +100,7 @@ let getLongFriendlyName = ({filePath: maybeFilePath, _}) => {
   maybeFilePath
   |> Option.map(filePath => {
        switch (BufferPath.parse(filePath)) {
+       | DebugInput => "Input Debugger"
        | ExtensionDetails => "Extension Details"
        | Welcome => "Welcome"
        | Version => "Version"
