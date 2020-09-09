@@ -33,6 +33,7 @@ type t =
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
   | EditorFont(Service_Font.msg)
+  | Input(Feature_Input.msg)
   | TerminalFont(Service_Font.msg)
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})

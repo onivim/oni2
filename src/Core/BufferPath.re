@@ -8,6 +8,7 @@ module OptionEx = Utility.OptionEx;
 
 type t =
   | Changelog
+  | DebugInput
   | Image
   | FilePath(string)
   | Terminal({
@@ -20,6 +21,7 @@ type t =
   | ExtensionDetails;
 
 let changelog = "oni://Changelog";
+let debugInput = "oni://DebugInput";
 let updateChangelog = "oni://UpdateChangelog";
 let welcome = "oni://Welcome";
 let version = "oni://Version";
@@ -31,6 +33,7 @@ let isImageExtension = ext =>
   List.exists(imageExt => imageExt == ext, imageExtensions);
 
 let parse = bufferPath => {
+  prerr_endline("!! PARSE: " ++ bufferPath);
   let extension = bufferPath |> Utility.Path.getExtension;
   if (isImageExtension(extension)) {
     Image;
@@ -44,6 +47,8 @@ let parse = bufferPath => {
     UpdateChangelog;
   } else if (String.equal(bufferPath, extensionDetails)) {
     ExtensionDetails;
+  } else if (String.equal(bufferPath, debugInput)) {
+    DebugInput;
   } else {
     terminalRegex
     |> Result.to_option

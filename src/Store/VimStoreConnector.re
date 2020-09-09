@@ -936,6 +936,7 @@ let start =
         | Welcome => Some(BufferRenderer.Welcome)
         | Changelog => Some(BufferRenderer.FullChangelog)
         | FilePath(_) => None
+        | DebugInput => Some(BufferRenderer.DebugInput)
         };
 
       let editor = Feature_Layout.activeEditor(state.layout);
