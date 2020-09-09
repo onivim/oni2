@@ -136,7 +136,6 @@ let start = () => {
               node.path,
               state.languageInfo,
               state.iconTheme,
-
               state.configuration,
               ~onComplete=newNode =>
               Actions.FileExplorer(NodeLoaded(newNode))
@@ -155,18 +154,18 @@ let start = () => {
             Oni_Core.Configuration.getValue(
               c => c.explorerAutoReveal,
               state.configuration,
-            )
-            switch (autoReveal) {
-            | `HighlightAndScroll =>
-              let state = setActive(Some(path), state);
-              revealAndFocusPath(path, state);
-            | `HighlightOnly =>
-              let state = setActive(Some(path), state);
-              (setFocus(Some(path), state), Isolinear.Effect.none);
-            | `NoReveal => (state, Isolinear.Effect.none)
-            }
+            );
+          switch (autoReveal) {
+          | `HighlightAndScroll =>
+            let state = setActive(Some(path), state);
+            revealAndFocusPath(path, state);
+          | `HighlightOnly =>
+            let state = setActive(Some(path), state);
+            (setFocus(Some(path), state), Isolinear.Effect.none);
+          | `NoReveal => (state, Isolinear.Effect.none)
+          };
         | None => (state, Isolinear.Effect.none)
-        };
+        }
       | _ => (state, Isolinear.Effect.none)
       }
     | TreeLoaded(tree) => (setTree(tree, state), Isolinear.Effect.none)

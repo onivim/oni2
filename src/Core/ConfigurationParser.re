@@ -254,7 +254,10 @@ let configurationParsers: list(configurationTuple) = [
   ),
   (
     "explorer.autoReveal",
-    (config, json) => {...config, explorerAutoReveal: parseAutoReveal(json)},
+    (config, json) => {
+      ...config,
+      explorerAutoReveal: parseAutoReveal(json),
+    },
   ),
   (
     "files.exclude",
