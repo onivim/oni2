@@ -227,6 +227,7 @@
     "@opam/ppx_deriving_yojson": "*",
     "@opam/ppx_inline_test": "v0.14.1",
     "@opam/ppx_let": "v0.14.0",
+    "@opam/ppx_optcomp": "v0.14.0",
     "@opam/ppxlib": ">=0.10.0",
     "@opam/re": "*",
     "@opam/reason": "^3.6.0",
