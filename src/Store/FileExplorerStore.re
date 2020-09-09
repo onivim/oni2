@@ -25,6 +25,8 @@ module Effects = {
   };
 };
 
+/* module Log = (val Log.withNamespace("Oni2.Core.Config")); */
+
 let updateFileExplorer = (updater, state) =>
   State.{...state, fileExplorer: updater(state.fileExplorer)};
 let setTree = (tree, state) =>
@@ -147,7 +149,6 @@ let start = () => {
     | ActiveFilePathChanged(maybeFilePath) =>
       switch (state.fileExplorer) {
       | {active, _} when active != maybeFilePath =>
-        let state = setActive(maybeFilePath, state);
         switch (maybeFilePath) {
         | Some(path) =>
           let autoReveal =
@@ -156,8 +157,12 @@ let start = () => {
               state.configuration,
             )
             switch (autoReveal) {
-            | `HighlightAndScroll => revealAndFocusPath(path, state)
-            | `HighlightOnly => (setFocus(Some(path), state), Isolinear.Effect.none)
+            | `HighlightAndScroll =>
+              let state = setActive(Some(path), state);
+              revealAndFocusPath(path, state);
+            | `HighlightOnly =>
+              let state = setActive(Some(path), state);
+              (setFocus(Some(path), state), Isolinear.Effect.none);
             | `NoReveal => (state, Isolinear.Effect.none)
             }
         | None => (state, Isolinear.Effect.none)
