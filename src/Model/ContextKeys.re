@@ -90,6 +90,7 @@ let other =
 let all = (focus: Focus.focusable) => {
   let sideBarContext =
     Feature_SideBar.Contributions.contextKeys(
+      // TODO: Replace with Focus.SideBar once state has moved
       ~isFocused=
         focus == Focus.Extensions
         || focus == Focus.FileExplorer

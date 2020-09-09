@@ -33,7 +33,6 @@ let isImageExtension = ext =>
   List.exists(imageExt => imageExt == ext, imageExtensions);
 
 let parse = bufferPath => {
-  prerr_endline("!! PARSE: " ++ bufferPath);
   let extension = bufferPath |> Utility.Path.getExtension;
   if (isImageExtension(extension)) {
     Image;
