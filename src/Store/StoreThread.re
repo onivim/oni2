@@ -186,7 +186,6 @@ let start =
         ~getUserSettings,
         ~setup,
       ),
-      PaneStore.update,
     ]);
 
   let subscriptions = (state: Model.State.t) => {

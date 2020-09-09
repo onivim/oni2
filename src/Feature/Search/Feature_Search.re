@@ -105,10 +105,9 @@ module Colors = Feature_Theme.Colors;
 module Styles = {
   open Style;
 
-  let pane = [flexGrow(1), flexDirection(`Row)];
+  let pane = [flexGrow(1), flexDirection(`Column)];
 
   let queryPane = (~theme) => [
-    width(300),
     borderRight(~color=Colors.Panel.border.from(theme), ~width=1),
   ];
 
@@ -127,6 +126,8 @@ module Styles = {
   ];
 
   let input = [flexGrow(1)];
+
+  let inputContainer = [width(150), flexShrink(0), flexGrow(1)];
 };
 
 let matchToLocListItem = (hit: Ripgrep.Match.t) =>
@@ -173,15 +174,17 @@ let make =
         />
       </View>
       <View style=Styles.row>
-        <Feature_InputText.View
-          style=Styles.input
-          model={model.findInput}
-          isFocused
-          fontFamily={uiFont.family}
-          fontSize={uiFont.size}
-          dispatch={msg => dispatch(FindInput(msg))}
-          theme
-        />
+        <View style=Styles.inputContainer>
+          <Feature_InputText.View
+            style=Styles.input
+            model={model.findInput}
+            isFocused
+            fontFamily={uiFont.family}
+            fontSize={uiFont.size}
+            dispatch={msg => dispatch(FindInput(msg))}
+            theme
+          />
+        </View>
       </View>
     </View>
     <View style=Styles.resultsPane>

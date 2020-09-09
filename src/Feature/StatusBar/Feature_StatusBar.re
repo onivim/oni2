@@ -55,6 +55,9 @@ type msg =
 // TODO: Wire these up to Pane / ContextMenu
 type outmsg =
   | Nothing
+  | ClearNotifications
+  | ToggleProblems
+  | ToggleNotifications
   | ShowFileTypePicker;
 
 type model = {
@@ -75,6 +78,7 @@ let update = (model, msg) => {
     /* Replace the old item with the new one */
     let newItems = removeItemById(model.items, item.id);
     ({...model, items: [item, ...newItems]}, Nothing);
+
   | ItemDisposed(id) => (
       {...model, items: removeItemById(model.items, id)},
       Nothing,
@@ -92,12 +96,17 @@ let update = (model, msg) => {
 
   | ContextMenuNotificationOpenClicked => (
       {...model, contextMenuVisible: false},
-      Nothing,
+      ToggleNotifications,
     )
 
   | ContextMenuClosed => ({...model, contextMenuVisible: false}, Nothing)
 
   | FileTypeClicked => (model, ShowFileTypePicker)
+
+  | NotificationCountClicked => (model, ToggleNotifications)
+
+  | DiagnosticsClicked => (model, ToggleProblems)
+
   | _ => (model, Nothing)
   };
 };

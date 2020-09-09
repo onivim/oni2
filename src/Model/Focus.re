@@ -1,12 +1,13 @@
 [@deriving show({with_path: false})]
 type focusable =
   | Editor
-  | Extensions
   | Wildmenu
   | Quickmenu
-  | Search
+  // Sidebar
+  | Extensions
   | FileExplorer
   | SCM
+  | Search
   | Sneak
   | Modal
   | InsertRegister

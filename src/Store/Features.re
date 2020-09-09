@@ -10,6 +10,13 @@ module Internal = {
     |> Isolinear.Effect.map(msg => Actions.Notification(msg));
   };
 
+  let openFileEffect = (~position=None, filePath) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="features.openFileByPath", dispatch =>
+      dispatch(OpenFileByPath(filePath, None, position))
+    );
+  };
+
   let setThemesEffect =
       (~themes: list(Exthost.Extension.Contributions.Theme.t)) => {
     switch (themes) {
@@ -170,13 +177,7 @@ let update =
           )
 
         | OpenExtensionDetails =>
-          let eff =
-            Isolinear.Effect.createWithDispatch(
-              ~name="feature.extensions.openDetails", dispatch => {
-              dispatch(
-                Actions.OpenFileByPath("oni://ExtensionDetails", None, None),
-              )
-            });
+          let eff = Internal.openFileEffect("oni://ExtensionDetails");
           (state, eff);
 
         | SelectTheme({themes}) =>
@@ -263,10 +264,7 @@ let update =
             })
           );
         | OpenFile({filePath, location}) =>
-          Isolinear.Effect.createWithDispatch(
-            ~name="feature.languageSupport.openFileByPath", dispatch =>
-            dispatch(OpenFileByPath(filePath, None, location))
-          )
+          Internal.openFileEffect(~position=location, filePath)
         | NotifySuccess(msg) => Internal.notificationEffect(~kind=Info, msg)
         | NotifyFailure(msg) => Internal.notificationEffect(~kind=Error, msg)
         | Effect(eff) =>
@@ -297,12 +295,13 @@ let update =
 
     let state = {...state, pane: model};
 
-    let state =
-      switch (outmsg) {
-      | Nothing => state
-      | PopFocus(_pane) => FocusManager.pop(Focus.Search, state)
-      };
-    (state, Effect.none);
+    switch (outmsg) {
+    | Nothing => (state, Isolinear.Effect.none)
+    | OpenFile({filePath, position}) => (
+        state,
+        Internal.openFileEffect(~position=Some(position), filePath),
+      )
+    };
 
   | Registers(msg) =>
     let (model, outmsg) = Feature_Registers.update(msg, state.registers);
@@ -374,15 +373,43 @@ let update =
     (state, eff);
 
   | StatusBar(msg) =>
+    open Feature_StatusBar;
     let (statusBar', maybeOutmsg) =
       Feature_StatusBar.update(state.statusBar, msg);
 
     let state' = {...state, statusBar: statusBar'};
 
-    let eff =
+    let (state'', eff) =
       switch ((maybeOutmsg: Feature_StatusBar.outmsg)) {
-      | Nothing => Effect.none
-      | Feature_StatusBar.ShowFileTypePicker =>
+      | Nothing => (state', Effect.none)
+      | ToggleProblems => (
+          {
+            ...state',
+            pane:
+              Feature_Pane.toggle(
+                ~pane=Feature_Pane.Diagnostics,
+                state'.pane,
+              ),
+          },
+          Effect.none,
+        )
+
+      | ClearNotifications => (
+          {...state', notifications: Feature_Notification.initial},
+          Effect.none,
+        )
+      | ToggleNotifications => (
+          {
+            ...state',
+            pane:
+              Feature_Pane.toggle(
+                ~pane=Feature_Pane.Notifications,
+                state'.pane,
+              ),
+          },
+          Effect.none,
+        )
+      | ShowFileTypePicker =>
         let bufferId =
           state.layout
           |> Feature_Layout.activeEditor
@@ -400,15 +427,18 @@ let update =
                  ),
                )
              );
-        Isolinear.Effect.createWithDispatch(
-          ~name="statusBar.fileTypePicker", dispatch => {
-          dispatch(
-            Actions.QuickmenuShow(FileTypesPicker({bufferId, languages})),
-          )
-        });
+        (
+          state',
+          Isolinear.Effect.createWithDispatch(
+            ~name="statusBar.fileTypePicker", dispatch => {
+            dispatch(
+              Actions.QuickmenuShow(FileTypesPicker({bufferId, languages})),
+            )
+          }),
+        );
       };
 
-    (state', eff);
+    (state'', eff);
 
   | Buffers(Feature_Buffers.Update({update, newBuffer, _}) as msg) =>
     let buffers = Feature_Buffers.update(msg, state.buffers);
@@ -558,10 +588,10 @@ let update =
       | Editor
       | Terminal(_) => Some(Center)
 
+      | Extensions
       | FileExplorer
-      | SCM => Some(Left)
-
-      | Search => Some(Bottom)
+      | SCM
+      | Search => Some(Left)
 
       | _ => None
       };
@@ -577,10 +607,9 @@ let update =
         Effect.none,
       )
 
-    | Focus(Bottom) => (
-        Feature_Pane.isOpen(state.pane) ? PaneStore.focus(state) : state,
-        Effect.none,
-      )
+    | Focus(Bottom) =>
+      let pane = state.pane |> Feature_Pane.selected;
+      ({...state, pane: Feature_Pane.show(~pane, state.pane)}, Effect.none);
 
     | SplitAdded => ({...state, zenMode: false}, Effect.none)
 
