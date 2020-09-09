@@ -4,6 +4,9 @@
  * This is the entry point for launching the editor.
  */
 
+%import
+"config.h";
+
 open Revery;
 
 open Oni_CLI;
@@ -19,6 +22,34 @@ module ReveryLog = (val Core.Log.withNamespace("Revery"));
 
 module LwtEx = Core.Utility.LwtEx;
 module OptionEx = Core.Utility.OptionEx;
+
+%ifdef
+USE_SPARKLE;
+module Sparkle = {
+  module Debug = {
+    // WARNING: These have open type declarations, meaning you can pass
+    // anything into them. They should only be used with NSObjects.
+    external toString: _ => string = "oni2_SparkleDebugToString";
+    external log: _ => unit = "oni2_SparkleDebugLog";
+  };
+  module Updater = {
+    type t;
+
+    external getInstance: unit => t = "oni2_SparkleGetSharedInstance";
+
+    let checkForUpdates = () => {
+      let instance = getInstance();
+      ();
+    };
+  };
+};
+[%%else];
+module Sparkle = {
+  module Updater = {
+    let checkForUpdates = () => ();
+  };
+};
+[%%endif];
 
 let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
   let setup = Core.Setup.init();
@@ -247,6 +278,8 @@ switch (eff) {
       Core.BuildInfo.commitId,
     )
   );
+
+  Sparkle.Updater.checkForUpdates();
 
   /* The 'main' function for our app */
   let init = app => {

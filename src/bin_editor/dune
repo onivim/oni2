@@ -6,10 +6,20 @@
    Oni2.model Oni2.service.extensions Oni2.service.net Oni2.store
    Oni2.syntax_client Oni2.syntax_server Oni2.ui reason-sdl2 reason-harfbuzz
    fp dir.lib)
+ (preprocessor_deps config.h)
+ (foreign_stubs
+  (language c)
+  (names utils sparkle)
+  (flags
+   (:include c_flags.sexp)))
+ (flags
+  (:include flags.sexp))
  (preprocess
-  (pps lwt_ppx brisk-reconciler.ppx)))
+  (pps lwt_ppx brisk-reconciler.ppx ppx_optcomp)))
+
+(copy_files stubs/*)
 
 (rule
- (targets c_flags.sexp flags.sexp)
+ (targets config.h c_flags.sexp flags.sexp)
  (action
   (run ./config/discover.exe)))
