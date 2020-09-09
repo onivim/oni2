@@ -222,7 +222,7 @@ let start = maybeKeyBindingsFilePath => {
         },
       ]
     @ Feature_Pane.Contributions.keybindings
-    @ [
+    @ Keybindings.[
       {
         key: "<D-W>",
         command: Feature_Layout.Commands.closeActiveEditor.id,
@@ -277,53 +277,10 @@ let start = maybeKeyBindingsFilePath => {
         key: "<C-0>",
         command: "workbench.action.zoomReset",
         condition: WhenExpr.Value(True),
-      },
-      // TERMINAL
-      // Binding to open normal mode
-      {
-        key: "<C-\\><C-N>",
-        command: Feature_Terminal.Commands.Oni.normalMode.id,
-        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
-      },
-      // Bindings to go from normal / visual mode -> insert mode
-      {
-        key: "o",
-        command: Feature_Terminal.Commands.Oni.insertMode.id,
-        condition:
-          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-O>",
-        command: Feature_Terminal.Commands.Oni.insertMode.id,
-        condition:
-          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "Shift+a",
-        command: Feature_Terminal.Commands.Oni.insertMode.id,
-        condition:
-          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "a",
-        command: Feature_Terminal.Commands.Oni.insertMode.id,
-        condition:
-          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "i",
-        command: Feature_Terminal.Commands.Oni.insertMode.id,
-        condition:
-          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "Shift+i",
-        command: Feature_Terminal.Commands.Oni.insertMode.id,
-        condition:
-          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-      },
+      }]
+      @ Feature_Terminal.Contributions.keybindings @
       //LAYOUT
-      {
+      Keybindings.[{
         key: "<C-W>H",
         command: Feature_Layout.Commands.moveLeft.id,
         condition: windowCommandCondition,
