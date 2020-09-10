@@ -16,7 +16,7 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 type t =
   | Init
   | ActivityBar(ActivityBar.action)
-  | AutoUpdate(Service_AutoUpdate.msg)
+  | AutoUpdate(Feature_AutoUpdate.msg)
   | Buffers(Feature_Buffers.msg)
   | BufferRenderer(BufferRenderer.action)
   | Clipboard(Feature_Clipboard.msg)

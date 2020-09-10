@@ -48,6 +48,9 @@ CAMLprim value oni2_SparkleSetFeedURL(value vUpdater, value vUrlStr) {
   
   SUUpdater *updater = oni2_unwrapPointer(vUpdater);
   NSString *nsUrlStr = [NSString stringWithUTF8String:String_val(vUrlStr)];
+
+  NSLog(@"Setting Updater feed URL: %@", nsUrlStr);
+
   NSURL *nsUrl = [NSURL URLWithString:nsUrlStr];
 
   [updater setFeedURL:nsUrl];
@@ -71,6 +74,9 @@ CAMLprim value oni2_SparkleSetAutomaticallyChecksForUpdates(value vUpdater, valu
   CAMLparam2(vUpdater, vChecks);
 
   SUUpdater *updater = oni2_unwrapPointer(vUpdater);
+
+  NSLog(@"Setting Updater automatic checks: %d", Bool_val(vChecks));
+
   [updater setAutomaticallyChecksForUpdates:Bool_val(vChecks)];
 
   CAMLreturn(Val_unit);
@@ -90,6 +96,8 @@ CAMLprim value oni2_SparkleCheckForUpdates(value vUpdater) {
 
   SUUpdater *updater = oni2_unwrapPointer(vUpdater);
   [updater checkForUpdates:NULL];
+
+  NSLog(@"Checking for updates");
 
   CAMLreturn(Val_unit);
 }

@@ -356,7 +356,9 @@ let start =
         ~licenseKey,
         ~automaticallyChecksForUpdates,
       )
-      |> Isolinear.Sub.map(msg => Model.Actions.AutoUpdate(msg));
+      |> Isolinear.Sub.map(msg =>
+           Model.Actions.AutoUpdate(Feature_AutoUpdate.Subscription(msg))
+         );
 
     [
       languageSupportSub,
@@ -452,6 +454,8 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Pane(msg))),
     Feature_Input.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Input(msg))),
+    Feature_AutoUpdate.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.AutoUpdate(msg))),
   ]
   |> List.flatten
   |> registerCommands(~dispatch);

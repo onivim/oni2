@@ -81,4 +81,9 @@ module Effect = {
     Isolinear.Effect.create(~name="autoupdate.setFeedUrl", () => {
       Oni2_Sparkle.Updater.setFeedURL(updater, url)
     });
+
+  let checkForUpdates = (~updater) =>
+    Isolinear.Effect.create(~name="autoupdate.checkForUpdates", () => {
+      Oni2_Sparkle.Updater.checkForUpdates(updater)
+    });
 };
