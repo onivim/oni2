@@ -29,7 +29,6 @@ let bufferLineEndingsChanged: ref(list(bufferLineEndingsChangedListener)) =
 let bufferModifiedChanged: ref(list(bufferModifiedChangedListener)) =
   ref([]);
 let bufferUpdate: ref(list(bufferUpdateListener)) = ref([]);
-let bufferLeave: ref(list(bufferListener)) = ref([]);
 let bufferWrite: ref(list(bufferWriteListener)) = ref([]);
 let commandLineEnter: ref(list(commandLineUpdateListener)) = ref([]);
 let commandLineUpdate: ref(list(commandLineUpdateListener)) = ref([]);

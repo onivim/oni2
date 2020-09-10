@@ -51,7 +51,6 @@ let checkBufferForUpdate = buffer => {
     switch (currentBuffer^) {
     | Some(v) =>
       if (v != buffer) {
-        Event.dispatch(v, Listeners.bufferLeave);
         Event.dispatch(buffer, Listeners.bufferEnter);
         currentBuffer := Some(buffer);
         lastFilename := Native.vimBufferGetFilename(buffer);
