@@ -2,6 +2,7 @@ open WhenExpr.ContextKeys.Schema;
 
 let menus =
   fromList(
+    // TODO: This should be factored to a feature...
     Quickmenu.[
       bool("listFocus", model => model != None),
       bool("inQuickOpen", model => model != None),
@@ -10,6 +11,12 @@ let menus =
         fun
         | Some({variant: EditorsPicker, _}) => true
         | _ => false,
+      ),
+      bool(
+        "textInputFocus",
+        fun
+        | Some({variant: EditorsPicker, _}) => false
+        | _ => true,
       ),
       bool(
         "quickmenuCursorEnd",
@@ -98,11 +105,30 @@ let all = (focus: Focus.focusable) => {
         || focus == Focus.Search,
     );
 
+  // TODO: These sidebar-specific UI pieces should be encapsulated
+  // by Feature_SideBar.contextKeys.
+  let scmContextKeys =
+    Feature_SCM.Contributions.contextKeys(~isFocused=focus == Focus.SCM);
+
+  let extensionContextKeys =
+    Feature_Extensions.Contributions.contextKeys(
+      ~isFocused=focus == Focus.Extensions,
+    );
+
+  let searchContextKeys =
+    Feature_Search.Contributions.contextKeys(
+      ~isFocused=focus == Focus.Search,
+    );
+
   unionMany([
-    Feature_Registers.Contributions.contextKeys
-    |> fromList
+    Feature_Registers.Contributions.contextKeys(
+      ~isFocused=focus == Focus.InsertRegister,
+    )
     |> map(({registers, _}: State.t) => registers),
     sideBarContext |> fromList |> map(({sideBar, _}: State.t) => sideBar),
+    scmContextKeys |> map(({scm, _}: State.t) => scm),
+    extensionContextKeys |> map(({extensions, _}: State.t) => extensions),
+    searchContextKeys |> map(({searchPane, _}: State.t) => searchPane),
     Feature_LanguageSupport.Contributions.contextKeys
     |> map(({languageSupport, _}: State.t) => languageSupport),
     menus |> map((state: State.t) => state.quickmenu),

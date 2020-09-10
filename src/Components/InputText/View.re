@@ -82,37 +82,21 @@ module Colors = {
 
 module Styles = {
   open Style;
-  let focusStyles = focused =>
-    focused
-      ? []  // Workaround for box-shadow bug
-      //backgroundColor(Revery.Colors.transparentWhite),
-      //      boxShadow(
-      //        ~xOffset=4.,
-      //        ~yOffset=4.,
-      //        ~blurRadius=12.,
-      //        ~spreadRadius=0.,
-      //        ~color=Color.rgba(0., 0., 0., 0.75)
-      //      ),
-      : [];
   let default = (~theme, ~focused) =>
-    focusStyles(focused)
-    @ Style.[
-        color(Colors.foreground(theme)),
-        paddingVertical(8),
-        paddingHorizontal(12),
-        border(~width=focused ? 2 : 1, ~color=Colors.border(theme)),
-        backgroundColor(Colors.background(theme)),
-        boxShadow(
-          ~xOffset=4.,
-          ~yOffset=4.,
-          ~blurRadius=focused ? 8. : 0.,
-          ~spreadRadius=0.,
-          ~color=Color.rgba(0., 0., 0., 0.5),
-        ),
-      ];
-
-  let textColor = (~style, ~theme) =>
-    Selector.select(style, Color, Colors.foreground(theme));
+    Style.[
+      color(Colors.foreground(theme)),
+      paddingVertical(8),
+      paddingHorizontal(12),
+      border(~width=focused ? 2 : 1, ~color=Colors.border(theme)),
+      backgroundColor(Colors.background(theme)),
+      boxShadow(
+        ~xOffset=4.,
+        ~yOffset=4.,
+        ~blurRadius=focused ? 8. : 0.,
+        ~spreadRadius=0.,
+        ~color=Color.rgba(0., 0., 0., 0.5),
+      ),
+    ];
 
   let _all = (~theme, focused) => [
     flexDirection(`Row),
@@ -338,7 +322,7 @@ let%component make =
       </View>;
     };
 
-  let textColor = Styles.textColor(~theme, ~style);
+  let textColor = Colors.foreground(theme);
 
   let text = () =>
     <Text

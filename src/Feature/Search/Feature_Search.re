@@ -201,3 +201,14 @@ let make =
     </View>
   </View>;
 };
+
+module Contributions = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let contextKeys = (~isFocused) => {
+    let keys = isFocused ? Component_InputText.Contributions.contextKeys : [];
+
+    [keys |> fromList |> map(({findInput, _}: model) => findInput)]
+    |> unionMany;
+  };
+};

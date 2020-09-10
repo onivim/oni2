@@ -792,3 +792,14 @@ module Pane = {
     </View>;
   };
 };
+
+module Contributions = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let contextKeys = (~isFocused) => {
+    let keys = isFocused ? Component_InputText.Contributions.contextKeys : [];
+
+    [keys |> fromList |> map(({inputBox, _}: model) => inputBox)]
+    |> unionMany;
+  };
+};

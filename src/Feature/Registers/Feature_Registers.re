@@ -190,9 +190,28 @@ module Keybindings = {
 };
 
 module Contributions = {
+  open WhenExpr.ContextKeys.Schema;
+
   let commands = [Commands.insert, Commands.cancel, Commands.commit];
 
-  let contextKeys = [ContextKeys.registerEvaluationFocus];
+  let contextKeys = (~isFocused) => {
+    let inputTextKeys =
+      isFocused ? Component_InputText.Contributions.contextKeys : [];
+
+    ContextKeys.[
+      inputTextKeys
+      |> fromList
+      |> map(({mode}: model) => {
+           switch (mode) {
+           | ExpressionRegister({inputText, _}) => inputText
+           | NotActive => Component_InputText.empty
+           | WaitingForRegister => Component_InputText.empty
+           }
+         }),
+      [registerEvaluationFocus] |> fromList,
+    ]
+    |> unionMany;
+  };
 
   let keybindings = [
     Keybindings.cancel,

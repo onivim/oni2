@@ -35,3 +35,7 @@ let make:
     unit
   ) =>
   React.element(React.node);
+
+module Contributions: {
+  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
+};
