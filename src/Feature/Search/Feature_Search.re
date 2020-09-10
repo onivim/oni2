@@ -6,13 +6,13 @@ open Oni_Components;
 // MODEL
 
 type model = {
-  findInput: Feature_InputText.model,
+  findInput: Component_InputText.model,
   query: string,
   hits: list(Ripgrep.Match.t),
 };
 
 let initial = {
-  findInput: Feature_InputText.create(~placeholder="Search"),
+  findInput: Component_InputText.create(~placeholder="Search"),
   query: "",
   hits: [],
 };
@@ -26,7 +26,7 @@ type msg =
   | Update([@opaque] list(Ripgrep.Match.t))
   | Complete
   | SearchError(string)
-  | FindInput(Feature_InputText.msg);
+  | FindInput(Component_InputText.msg);
 
 type outmsg =
   | Focus;
@@ -37,7 +37,7 @@ let update = (model, msg) => {
     let model =
       switch (key) {
       | "<CR>" =>
-        let findInputValue = model.findInput |> Feature_InputText.value;
+        let findInputValue = model.findInput |> Component_InputText.value;
         if (model.query == findInputValue) {
           model; // Do nothing if the query hasn't changed
         } else {
@@ -45,18 +45,18 @@ let update = (model, msg) => {
         };
 
       | _ =>
-        let findInput = Feature_InputText.handleInput(~key, model.findInput);
+        let findInput = Component_InputText.handleInput(~key, model.findInput);
         {...model, findInput};
       };
 
     (model, None);
 
   | Pasted(text) =>
-    let findInput = Feature_InputText.paste(~text, model.findInput);
+    let findInput = Component_InputText.paste(~text, model.findInput);
     ({...model, findInput}, None);
 
   | FindInput(msg) => (
-      {...model, findInput: Feature_InputText.update(msg, model.findInput)},
+      {...model, findInput: Component_InputText.update(msg, model.findInput)},
       Some(Focus),
     )
 
@@ -175,7 +175,7 @@ let make =
       </View>
       <View style=Styles.row>
         <View style=Styles.inputContainer>
-          <Feature_InputText.View
+          <Component_InputText.View
             style=Styles.input
             model={model.findInput}
             isFocused

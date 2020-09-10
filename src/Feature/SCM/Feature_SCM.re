@@ -56,14 +56,14 @@ module Provider = {
 [@deriving show({with_path: false})]
 type model = {
   providers: list(Provider.t),
-  inputBox: Feature_InputText.model,
+  inputBox: Component_InputText.model,
   textContentProviders: list((int, string)),
   originalLines: [@opaque] IntMap.t(array(string)),
 };
 
 let initial = {
   providers: [],
-  inputBox: Feature_InputText.create(~placeholder="Do the commit thing!"),
+  inputBox: Component_InputText.create(~placeholder="Do the commit thing!"),
   textContentProviders: [],
   originalLines: IntMap.empty,
 };
@@ -167,7 +167,7 @@ type msg =
   | KeyPressed({key: string})
   | Pasted({text: string})
   | DocumentContentProvider(Exthost.Msg.DocumentContentProvider.msg)
-  | InputBox(Feature_InputText.msg);
+  | InputBox(Component_InputText.msg);
 
 module Msg = {
   let paste = text => Pasted({text: text});
@@ -329,7 +329,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
   //      {
   //        ...model,
   //        inputBox:
-  //          Feature_InputText.setPlaceholder(~placeholder, model.inputBox),
+  //          Component_InputText.setPlaceholder(~placeholder, model.inputBox),
   //      },
   //      Nothing,
   //    )
@@ -466,7 +466,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     )
 
   | KeyPressed({key}) =>
-    let inputBox = Feature_InputText.handleInput(~key, model.inputBox);
+    let inputBox = Component_InputText.handleInput(~key, model.inputBox);
     (
       {...model, inputBox},
       EffectAndFocus(
@@ -475,7 +475,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
           |> List.map((provider: Provider.t) =>
                Service_Exthost.Effects.SCM.onInputBoxValueChange(
                  ~handle=provider.handle,
-                 ~value=inputBox |> Feature_InputText.value,
+                 ~value=inputBox |> Component_InputText.value,
                  extHostClient,
                )
              ),
@@ -484,7 +484,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     );
 
   | Pasted({text}) =>
-    let inputBox = Feature_InputText.paste(~text, model.inputBox);
+    let inputBox = Component_InputText.paste(~text, model.inputBox);
     (
       {...model, inputBox},
       EffectAndFocus(
@@ -493,7 +493,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
           |> List.map((provider: Provider.t) =>
                Service_Exthost.Effects.SCM.onInputBoxValueChange(
                  ~handle=provider.handle,
-                 ~value=inputBox |> Feature_InputText.value,
+                 ~value=inputBox |> Component_InputText.value,
                  extHostClient,
                )
              ),
@@ -502,7 +502,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     );
 
   | InputBox(msg) => (
-      {...model, inputBox: Feature_InputText.update(msg, model.inputBox)},
+      {...model, inputBox: Component_InputText.update(msg, model.inputBox)},
       Focus,
     )
   };
@@ -749,7 +749,7 @@ module Pane = {
       });
 
     <View style=Styles.container>
-      <Feature_InputText.View
+      <Component_InputText.View
         style=Styles.input
         model={model.inputBox}
         isFocused

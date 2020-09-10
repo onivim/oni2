@@ -46,3 +46,7 @@ module View: {
     ) =>
     Revery.UI.element;
 };
+
+module Contributions: {
+  let contextKeys: list(WhenExpr.ContextKeys.Schema.entry(model));
+};

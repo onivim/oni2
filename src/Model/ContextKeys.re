@@ -15,7 +15,7 @@ let menus =
         "quickmenuCursorEnd",
         fun
         | Some({inputText, _})
-            when Feature_InputText.isCursorAtEnd(inputText) =>
+            when Component_InputText.isCursorAtEnd(inputText) =>
           true
         | _ => false,
       ),

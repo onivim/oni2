@@ -2,7 +2,7 @@
  (name Feature_Extensions)
  (public_name Oni2.feature.extensions)
  (inline_tests)
- (libraries Oni2.core Oni2.components Oni2.exthost Oni2.feature.inputText
+ (libraries Oni2.core Oni2.components Oni2.exthost Oni2.component.inputText
    Oni2.service.extensions Oni2.service.exthost Oni2.feature.sneak Revery
    isolinear)
  (preprocess

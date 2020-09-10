@@ -143,7 +143,7 @@ let%component make =
   let userExtensions =
     Model.getExtensions(~category=Scanner.User, model) |> Array.of_list;
   let contents =
-    if (Feature_InputText.isEmpty(model.searchText)) {
+    if (Component_InputText.isEmpty(model.searchText)) {
       [
         <Accordion
           title="Installed"
@@ -224,7 +224,7 @@ let%component make =
       localDispatch(WidthChanged(width))
     }>
     <BusyBar theme visible=isBusy />
-    <Feature_InputText.View
+    <Component_InputText.View
       style=Styles.input
       model={model.searchText}
       isFocused
