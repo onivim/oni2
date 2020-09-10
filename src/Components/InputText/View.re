@@ -109,6 +109,20 @@ let%component make =
   let%hook textRef = Hooks.ref(None);
   let%hook scrollOffset = Hooks.ref(0);
 
+  prerr_endline ("input Text: ISFOCUSED: " ++ string_of_bool(isFocused));
+  let%hook () = Hooks.effect(
+    OnMountAndIf((!=), isFocused), () => {
+
+      if (isFocused) {
+        dispatch(Model.GainedFocus)
+      } else {
+        dispatch(LostFocus)
+      };
+      
+      Some(() => dispatch(LostFocus));
+    }
+  );
+
   let {placeholder, value, selection}: Model.t = model;
   let displayValue = prefix ++ value;
   let showPlaceholder = displayValue == "";
@@ -119,13 +133,24 @@ let%component make =
 
     let textColor = Selector.select(style, Color, Colors.foreground(theme));
 
+    let focusStyles = model.isFocused ? [
+      // Workaround for box-shadow bug
+      backgroundColor(Revery.Colors.transparentWhite),
+      boxShadow(
+        ~xOffset=4.,
+        ~yOffset=4.,
+        ~blurRadius=12.,
+        ~spreadRadius=0.,
+        ~color=Color.rgba(0., 0., 0., 0.75)
+      ),
+    ] : [];
+
     let _all =
       merge(
-        ~source=[
+        ~source=focusStyles @ [
           flexDirection(`Row),
           alignItems(`Center),
           justifyContent(`FlexStart),
-          overflow(`Hidden),
           cursor(MouseCursors.text),
           ...default(~theme),
         ],
@@ -139,6 +164,7 @@ let%component make =
       alignItems(`Center),
       justifyContent(`FlexStart),
       flexGrow(1),
+      overflow(`Hidden),
     ];
 
     let cursor = offset => [

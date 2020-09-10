@@ -2,17 +2,21 @@ open Oni_Core;
 
 [@deriving show]
 type msg =
+  | GainedFocus
+  | LostFocus
   | Sneaked
   | Clicked({selection: Selection.t});
 
 [@deriving show]
 type t = {
+  isFocused: bool,
   value: string,
   selection: Selection.t,
   placeholder: string,
 };
 
 let create = (~placeholder) => {
+  isFocused: false,
   value: "",
   selection: Selection.initial,
   placeholder,
@@ -26,6 +30,8 @@ let value = ({value, _}) => value;
 
 let update = (msg, model) =>
   switch (msg) {
+  | GainedFocus => {...model, isFocused: true}
+  | LostFocus => {...model, isFocused: false}
   | Sneaked => model
   | Clicked({selection}) => {...model, selection}
   };

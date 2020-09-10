@@ -160,6 +160,8 @@ let make =
   let items =
     model.hits |> ListEx.safeMap(matchToLocListItem) |> Array.of_list;
 
+  prerr_endline ("Search - focused: " ++ string_of_bool(isFocused));
+
   let onSelectItem = (item: LocationList.item) =>
     onSelectResult(item.file, item.location);
 
