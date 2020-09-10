@@ -8,7 +8,8 @@
     "buildEnv": {
       "MACOSX_DEPLOYMENT_TARGET": "10.12",
       "ONI2_ROOT": "#{self.root}",
-      "ONI2_BUILD_MODE": "Debug"
+      "ONI2_BUILD_MODE": "Debug",
+      "ONI2_APPCAST_BASEURL": "http://localhost:8080/"
     },
     "install": [
       "esy-installer Oni2.install",

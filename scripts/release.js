@@ -14,8 +14,6 @@ let codesignIdx = scriptArgs.indexOf("--codesign")
 let codesign = (codesignIdx != -1)
 let certName = codesign ? scriptArgs[codesignIdx + 1] : ""
 
-let disableATS = scriptArgs.indexOf("--disable-ats") != -1
-
 const rootDirectory = process.cwd()
 const vendorDirectory = path.join(rootDirectory, "vendor")
 const releaseDirectory = path.join(rootDirectory, "_release")
@@ -124,11 +122,8 @@ if (process.platform == "linux") {
 
     const plistFile = path.join(contentsDirectory, "Info.plist")
 
-    const firstCommitDate = Date.parse("2019-01-02");
-    const today = Date.now();
-
-    const daysSinceFirstCommit = Math.floor((today - firstCommitDate) / 86400000)
-    const cfBundleVersion = package.version.split("-")[0] + "." + daysSinceFirstCommit
+    const numCommits = shell("git rev-list --count master")
+    const cfBundleVersion = package.version.split("-")[0] + "." + numCommits
 
 
     const plistContents = {
@@ -154,9 +149,9 @@ if (process.platform == "linux") {
         LSEnvironment: {
             ONI2_BUNDLED: "1",
         },
-        SUFeedURL: "http://127.0.0.1:8080/_publish/this_is_fake",
+        SUFeedURL: process.env.ONI2_APPCAST_BASEURL,
         NSAppTransportSecurity: {
-            NSAllowsArbitraryLoads: disableATS
+            NSAllowsLocalNetworking: true
         }
     }
 
