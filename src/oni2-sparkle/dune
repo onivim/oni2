@@ -1,0 +1,20 @@
+(library
+ (name Oni2_Sparkle)
+ (public_name Oni2.sparkle)
+ (preprocessor_deps config.h)
+ (preprocess
+  (pps ppx_optcomp))
+ (foreign_stubs
+  (language c)
+  (names utils sparkle)
+  (flags
+   (:include c_flags.sexp)))
+ (library_flags
+  (:include flags.sexp)))
+
+(copy_files stubs/*)
+
+(rule
+ (targets config.h c_flags.sexp flags.sexp)
+ (action
+  (run ./config/discover.exe)))
