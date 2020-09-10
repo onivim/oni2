@@ -350,10 +350,14 @@ let start =
         config,
       );
     let licenseKey = Feature_AutoUpdate.Configuration.licenseKey.get(config);
+    let releaseChannel =
+      Feature_AutoUpdate.Configuration.releaseChannel.get(config);
+
     let autoUpdateSub =
       Service_AutoUpdate.Sub.autoUpdate(
         ~uniqueId="autoUpdate",
         ~licenseKey,
+        ~releaseChannel,
         ~automaticallyChecksForUpdates,
       )
       |> Isolinear.Sub.map(msg =>

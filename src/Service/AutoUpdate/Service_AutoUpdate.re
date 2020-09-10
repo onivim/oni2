@@ -7,12 +7,14 @@ type t = {
 [@deriving show({with_path: false})]
 type msg =
   | AutoCheckChanged(bool)
+  | ReleaseChannelChanged([ | `Nightly | `Stable])
   | LicenseKeyChanged(string);
 
 module Sub = {
   type params = {
     automaticallyChecksForUpdates: bool,
     licenseKey: string,
+    releaseChannel: [ | `Nightly | `Stable],
     uniqueId: string,
   };
 
@@ -21,6 +23,7 @@ module Sub = {
       type state = {
         automaticallyChecksForUpdates: bool,
         licenseKey: string,
+        releaseChannel: [ | `Nightly | `Stable],
       };
       type nonrec msg = msg;
       type nonrec params = params;
@@ -32,10 +35,12 @@ module Sub = {
       let init = (~params: params, ~dispatch: msg => unit) => {
         dispatch(AutoCheckChanged(params.automaticallyChecksForUpdates));
         dispatch(LicenseKeyChanged(params.licenseKey));
+        dispatch(ReleaseChannelChanged(params.releaseChannel));
 
         {
           automaticallyChecksForUpdates: params.automaticallyChecksForUpdates,
           licenseKey: params.licenseKey,
+          releaseChannel: params.releaseChannel,
         };
       };
 
@@ -49,20 +54,32 @@ module Sub = {
           dispatch(LicenseKeyChanged(params.licenseKey));
         };
 
+        if (params.releaseChannel != state.releaseChannel) {
+          dispatch(ReleaseChannelChanged(params.releaseChannel));
+        };
+
         {
           licenseKey: params.licenseKey,
           automaticallyChecksForUpdates: params.automaticallyChecksForUpdates,
+          releaseChannel: params.releaseChannel,
         };
       };
 
       let dispose = (~params as _, ~state as _) => ();
     });
 
-  let autoUpdate = (~uniqueId, ~automaticallyChecksForUpdates, ~licenseKey) =>
+  let autoUpdate =
+      (
+        ~uniqueId,
+        ~automaticallyChecksForUpdates,
+        ~licenseKey,
+        ~releaseChannel,
+      ) =>
     AutoUpdateSubscription.create({
       uniqueId,
       automaticallyChecksForUpdates,
       licenseKey,
+      releaseChannel,
     });
 };
 
