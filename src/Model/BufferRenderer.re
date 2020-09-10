@@ -12,6 +12,7 @@
 
 [@deriving show({with_path: false})]
 type t =
+  | DebugInput
   | Editor
   | Welcome
   | Version

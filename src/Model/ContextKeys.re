@@ -87,14 +87,26 @@ let other =
     ],
   );
 
-let all =
+let all = (focus: Focus.focusable) => {
+  let sideBarContext =
+    Feature_SideBar.Contributions.contextKeys(
+      // TODO: Replace with Focus.SideBar once state has moved
+      ~isFocused=
+        focus == Focus.Extensions
+        || focus == Focus.FileExplorer
+        || focus == Focus.SCM
+        || focus == Focus.Search,
+    );
+
   unionMany([
     Feature_Registers.Contributions.contextKeys
     |> fromList
     |> map(({registers, _}: State.t) => registers),
+    sideBarContext |> fromList |> map(({sideBar, _}: State.t) => sideBar),
     Feature_LanguageSupport.Contributions.contextKeys
     |> map(({languageSupport, _}: State.t) => languageSupport),
     menus |> map((state: State.t) => state.quickmenu),
     editors,
     other,
   ]);
+};

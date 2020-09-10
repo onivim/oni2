@@ -175,6 +175,8 @@ module Parts = {
           dispatch={msg => dispatch(Actions.Extensions(msg))}
         />
 
+      | DebugInput => <DebugInputView state />
+
       | UpdateChangelog({since}) =>
         <Feature_Changelog.View.Update since theme uiFont />
       };

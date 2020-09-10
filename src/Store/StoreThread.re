@@ -436,6 +436,8 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.LanguageSupport(msg))),
     Feature_Pane.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Pane(msg))),
+    Feature_Input.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Input(msg))),
   ]
   |> List.flatten
   |> registerCommands(~dispatch);
