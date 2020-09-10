@@ -225,7 +225,6 @@ let%component make =
     }>
     <BusyBar theme visible=isBusy />
     <Component_InputText.View
-      style=Styles.input
       model={model.searchText}
       isFocused
       fontFamily={font.family}

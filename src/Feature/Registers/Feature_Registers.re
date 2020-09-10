@@ -1,6 +1,7 @@
 open Oni_Core;
 
-let initialText = Component_InputText.create(~placeholder="Type expression...");
+let initialText =
+  Component_InputText.create(~placeholder="Type expression...");
 
 type mode =
   | NotActive
@@ -116,7 +117,8 @@ let update = (msg, model) => {
     let model' =
       switch (model.mode) {
       | ExpressionRegister(expression) =>
-        let inputText' = Component_InputText.update(msg, expression.inputText);
+        let (inputText', _msg) =
+          Component_InputText.update(msg, expression.inputText);
         {mode: ExpressionRegister({...expression, inputText: inputText'})};
       | NotActive => model
       | WaitingForRegister => model

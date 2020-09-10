@@ -45,7 +45,8 @@ let update = (model, msg) => {
         };
 
       | _ =>
-        let findInput = Component_InputText.handleInput(~key, model.findInput);
+        let findInput =
+          Component_InputText.handleInput(~key, model.findInput);
         {...model, findInput};
       };
 
@@ -55,10 +56,15 @@ let update = (model, msg) => {
     let findInput = Component_InputText.paste(~text, model.findInput);
     ({...model, findInput}, None);
 
-  | FindInput(msg) => (
-      {...model, findInput: Component_InputText.update(msg, model.findInput)},
-      Some(Focus),
-    )
+  | FindInput(msg) =>
+    let (findInput', inputOutmsg) =
+      Component_InputText.update(msg, model.findInput);
+    let outmsg =
+      switch (inputOutmsg) {
+      | Component_InputText.Nothing => None
+      | Component_InputText.Focus => Some(Focus)
+      };
+    ({...model, findInput: findInput'}, outmsg);
 
   | Update(items) => ({...model, hits: model.hits @ items}, None)
 
@@ -125,8 +131,6 @@ module Styles = {
     marginHorizontal(8),
   ];
 
-  let input = [flexGrow(1)];
-
   let inputContainer = [width(150), flexShrink(0), flexGrow(1)];
 };
 
@@ -160,8 +164,6 @@ let make =
   let items =
     model.hits |> ListEx.safeMap(matchToLocListItem) |> Array.of_list;
 
-  prerr_endline ("Search - focused: " ++ string_of_bool(isFocused));
-
   let onSelectItem = (item: LocationList.item) =>
     onSelectResult(item.file, item.location);
 
@@ -178,7 +180,6 @@ let make =
       <View style=Styles.row>
         <View style=Styles.inputContainer>
           <Component_InputText.View
-            style=Styles.input
             model={model.findInput}
             isFocused
             fontFamily={uiFont.family}

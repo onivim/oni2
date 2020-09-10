@@ -501,10 +501,16 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       ),
     );
 
-  | InputBox(msg) => (
-      {...model, inputBox: Component_InputText.update(msg, model.inputBox)},
-      Focus,
-    )
+  | InputBox(msg) =>
+    let (inputBox', inputOutmsg) =
+      Component_InputText.update(msg, model.inputBox);
+    let outmsg =
+      switch (inputOutmsg) {
+      | Component_InputText.Nothing => Nothing
+      | Component_InputText.Focus => Focus
+      };
+
+    ({...model, inputBox: inputBox'}, outmsg);
   };
 
 let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
@@ -631,8 +637,6 @@ module Pane = {
       textOverflow(`Ellipsis),
     ];
 
-    let input = [flexGrow(1), margin(12)];
-
     let item = (~isHovered, ~theme) => [
       isHovered
         ? backgroundColor(Colors.List.hoverBackground.from(theme))
@@ -750,7 +754,6 @@ module Pane = {
 
     <View style=Styles.container>
       <Component_InputText.View
-        style=Styles.input
         model={model.inputBox}
         isFocused
         fontFamily={font.family}

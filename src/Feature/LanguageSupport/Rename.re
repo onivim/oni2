@@ -66,7 +66,7 @@ let update = (msg, model) => {
   | InputText(inputMsg) =>
     switch (model.sessionState) {
     | Resolved({inputText, _} as resolved) =>
-      let inputText' = Component_InputText.update(inputMsg, inputText);
+      let (inputText', _) = Component_InputText.update(inputMsg, inputText);
       (
         {
           ...model,

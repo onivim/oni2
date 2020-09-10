@@ -400,7 +400,13 @@ let update = (~extHostClient, msg, model) => {
     ({...model, searchText: searchText', latestQuery}, Nothing);
   | SearchText(msg) =>
     let previousText = model.searchText |> Component_InputText.value;
-    let searchText' = Component_InputText.update(msg, model.searchText);
+    let (searchText', inputOutmsg) =
+      Component_InputText.update(msg, model.searchText);
+    let outmsg =
+      switch (inputOutmsg) {
+      | Component_InputText.Nothing => Nothing
+      | Component_InputText.Focus => Focus
+      };
     let newText = searchText' |> Component_InputText.value;
     let latestQuery =
       checkAndUpdateSearchText(
@@ -408,7 +414,7 @@ let update = (~extHostClient, msg, model) => {
         ~newText,
         ~query=model.latestQuery,
       );
-    ({...model, searchText: searchText', latestQuery}, Focus);
+    ({...model, searchText: searchText', latestQuery}, outmsg);
   | SearchQueryResults(queryResults) =>
     queryResults
     |> Service_Extensions.Query.searchText

@@ -12,7 +12,5 @@ module ContextKeys = {
 };
 
 module Contributions = {
-    let contextKeys = ContextKeys.[
-        textInputFocus
-    ];
+  let contextKeys = ContextKeys.[textInputFocus];
 };

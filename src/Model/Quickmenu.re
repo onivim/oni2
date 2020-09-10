@@ -40,7 +40,8 @@ let placeholderText =
 let defaults = variant => {
   variant,
   prefix: None,
-  inputText: Component_InputText.create(~placeholder=placeholderText(variant)),
+  inputText:
+    Component_InputText.create(~placeholder=placeholderText(variant)),
   focused: None,
   items: [||],
   filterProgress: Complete,

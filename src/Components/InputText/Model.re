@@ -7,6 +7,10 @@ type msg =
   | Sneaked
   | Clicked({selection: Selection.t});
 
+type outmsg =
+  | Nothing
+  | Focus;
+
 [@deriving show]
 type t = {
   isFocused: bool,
@@ -30,10 +34,10 @@ let value = ({value, _}) => value;
 
 let update = (msg, model) =>
   switch (msg) {
-  | GainedFocus => {...model, isFocused: true}
-  | LostFocus => {...model, isFocused: false}
-  | Sneaked => model
-  | Clicked({selection}) => {...model, selection}
+  | GainedFocus => ({...model, isFocused: true}, Nothing)
+  | LostFocus => ({...model, isFocused: false}, Nothing)
+  | Sneaked => (model, Focus)
+  | Clicked({selection}) => ({...model, selection}, Focus)
   };
 
 module Internal = {

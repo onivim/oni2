@@ -289,10 +289,13 @@ let start = () => {
           (Quickmenu.{variant, inputText, _} as state) => {
             switch (variant) {
             | Wildmenu(_) =>
-              let oldPosition = inputText |> Component_InputText.cursorPosition;
+              let oldPosition =
+                inputText |> Component_InputText.cursorPosition;
 
-              let inputText = Component_InputText.update(msg, inputText);
-              let newPosition = inputText |> Component_InputText.cursorPosition;
+              let (inputText, _) =
+                Component_InputText.update(msg, inputText);
+              let newPosition =
+                inputText |> Component_InputText.cursorPosition;
               let transition = newPosition - oldPosition;
 
               if (transition > 0) {
