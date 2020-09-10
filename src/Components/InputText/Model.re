@@ -29,6 +29,7 @@ let create = (~placeholder) => {
 let empty = create(~placeholder="");
 
 let isEmpty = ({value, _}) => value == "";
+let isFocused = ({isFocused, _}) => isFocused;
 
 let value = ({value, _}) => value;
 
@@ -280,12 +281,14 @@ let%test_module "Model" =
        value: text,
        selection: Selection.create(~text, ~anchor=position, ~focus=position),
        placeholder: "",
+       isFocused: false,
      };
 
      let notCollapsed = (~text=testString, ~anchor, ~focus, ()) => {
        value: text,
        selection: Selection.create(~text, ~anchor, ~focus),
        placeholder: "",
+       isFocused: false,
      };
 
      let uTestString = "😊↪Вім is Cool";

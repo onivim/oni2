@@ -631,6 +631,8 @@ module Pane = {
 
     let container = [flexGrow(1)];
 
+    let inputContainer = [margin(12)];
+
     let text = (~theme) => [
       color(Colors.SideBar.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
@@ -753,14 +755,16 @@ module Pane = {
       });
 
     <View style=Styles.container>
-      <Component_InputText.View
-        model={model.inputBox}
-        isFocused
-        fontFamily={font.family}
-        fontSize={font.size}
-        dispatch={msg => dispatch(InputBox(msg))}
-        theme
-      />
+      <View style=Styles.inputContainer>
+        <Component_InputText.View
+          model={model.inputBox}
+          isFocused
+          fontFamily={font.family}
+          fontSize={font.size}
+          dispatch={msg => dispatch(InputBox(msg))}
+          theme
+        />
+      </View>
       {groups
        |> List.filter_map(((provider, group: ResourceGroup.t)) => {
             let expanded =

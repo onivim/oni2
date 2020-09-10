@@ -8,7 +8,7 @@ module View = View;
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
 
-  let textInputFocus = bool("textInputFocus", _ => true);
+  let textInputFocus = bool("textInputFocus", isFocused);
 };
 
 module Contributions = {

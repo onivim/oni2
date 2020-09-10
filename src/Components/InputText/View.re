@@ -84,16 +84,15 @@ module Styles = {
   open Style;
   let focusStyles = focused =>
     focused
-      ? []// Workaround for box-shadow bug
-          //backgroundColor(Revery.Colors.transparentWhite),
-          //      boxShadow(
-          //        ~xOffset=4.,
-          //        ~yOffset=4.,
-          //        ~blurRadius=12.,
-          //        ~spreadRadius=0.,
-          //        ~color=Color.rgba(0., 0., 0., 0.75)
-
-          //      ),
+      ? []  // Workaround for box-shadow bug
+      //backgroundColor(Revery.Colors.transparentWhite),
+      //      boxShadow(
+      //        ~xOffset=4.,
+      //        ~yOffset=4.,
+      //        ~blurRadius=12.,
+      //        ~spreadRadius=0.,
+      //        ~color=Color.rgba(0., 0., 0., 0.75)
+      //      ),
       : [];
   let default = (~theme, ~focused) =>
     focusStyles(focused)
@@ -192,7 +191,7 @@ let%component make =
       },
     );
 
-  let {placeholder, value, selection}: Model.t = model;
+  let {placeholder, value, selection, _}: Model.t = model;
   let displayValue = prefix ++ value;
   let showPlaceholder = displayValue == "";
 
