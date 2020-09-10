@@ -499,28 +499,6 @@ let update =
       eff,
     );
 
-  // TEMPORARY: Needs https://github.com/onivim/oni2/pull/1627 to remove
-  | Buffers(Feature_Buffers.Entered({buffer, _}) as msg) =>
-  prerr_endline ("-- ENTERED");
-    let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
-
-    let buffers = Feature_Buffers.update(msg, state.buffers);
-
-    let config = Feature_Configuration.resolver(state.config, state.vim);
-    (
-      {
-        ...state,
-        buffers,
-        layout:
-          Feature_Layout.openEditor(
-            ~config,
-            Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ()),
-            state.layout,
-          ),
-      },
-      Effect.none,
-    );
-
   | Buffers(msg) =>
     let buffers = Feature_Buffers.update(msg, state.buffers);
     ({...state, buffers}, Effect.none);

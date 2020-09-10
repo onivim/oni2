@@ -918,6 +918,26 @@ let start =
         ),
       );
     | BufferOpened(path, maybeLocation, bufferId) =>
+      let config = Feature_Configuration.resolver(state.config, state.vim);
+
+      let layout' =
+        Feature_Buffers.get(bufferId, state.buffers)
+        |> Option.map(Feature_Editor.EditorBuffer.ofBuffer)
+        |> Option.map(editorBuffer => {
+             state.layout
+             |> Feature_Layout.openEditor(
+                  ~config,
+                  Feature_Editor.Editor.create(
+                    ~config,
+                    ~buffer=editorBuffer,
+                    (),
+                  ),
+                )
+           })
+        |> Option.value(~default=state.layout);
+
+      let state = {...state, layout: layout'};
+
       let maybeRenderer =
         switch (Core.BufferPath.parse(path)) {
         | ExtensionDetails => Some(BufferRenderer.ExtensionDetails)
@@ -942,7 +962,6 @@ let start =
         | FilePath(_) => None
         | DebugInput => Some(BufferRenderer.DebugInput)
         };
-
       let editor = Feature_Layout.activeEditor(state.layout);
       let editorId = editor |> Editor.getId;
 
