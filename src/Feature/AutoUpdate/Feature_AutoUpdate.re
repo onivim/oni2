@@ -10,8 +10,6 @@ type model = {
   licenseKey: string,
 };
 
-let sparkleUpdater = Oni2_Sparkle.Updater.getInstance();
-
 let initial = {automaticallyChecksForUpdates: true, licenseKey: ""};
 
 [@deriving show({with_path: false})]
@@ -44,7 +42,7 @@ let update = (model, msg) =>
       {...model, automaticallyChecksForUpdates},
       Effect(
         Service_AutoUpdate.Effect.setAutomaticallyChecksForUpdates(
-          ~updater=sparkleUpdater,
+          ~updater=Oni2_Sparkle.Updater.getInstance(),
           ~automaticallyChecksForUpdates,
         ),
       ),
@@ -53,7 +51,7 @@ let update = (model, msg) =>
       {...model, licenseKey},
       Effect(
         Service_AutoUpdate.Effect.setFeedUrl(
-          ~updater=sparkleUpdater,
+          ~updater=Oni2_Sparkle.Updater.getInstance(),
           ~url=Constants.baseUrl ++ licenseKey,
         ),
       ),

@@ -19,8 +19,6 @@ CAMLprim value oni2_SparkleGetSharedInstance() {
 
   vUpdater = oni2_wrapPointer(updater);
 
-  NSLog(@"NSBundle: %@", [NSBundle mainBundle]);
-
   CAMLreturn(vUpdater);
 }
 

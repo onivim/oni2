@@ -5,19 +5,12 @@
 #include <caml/alloc.h>
 
 
-CAMLprim value oni2_wrapPointer(void *data) {
-  CAMLparam0();
-  CAMLlocal1(result);
-
-  result = caml_alloc(1, Abstract_tag);
-  Store_field(data, 0, (value)data);
-
-  CAMLreturn(result);
+value oni2_wrapPointer(void *p) {
+  value v = caml_alloc(1, Abstract_tag);
+  *((void **) Data_abstract_val(v)) = p;
+  return v;
 }
 
-CAMLprim value oni2_unwrapPointer(value vData) {
-  CAMLparam1(vData);
-  CAMLlocal1(vPointer);
-  vPointer = Field(vData, 0);
-  CAMLreturn(vPointer);
+void *oni2_unwrapPointer(value v) {
+  return *((void **) Data_abstract_val(v));
 }
