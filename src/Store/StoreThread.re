@@ -345,6 +345,19 @@ let start =
          })
       |> Option.value(~default=Isolinear.Sub.none);
 
+    let automaticallyChecksForUpdates =
+      Feature_AutoUpdate.Configuration.automaticallyChecksForUpdates.get(
+        config,
+      );
+    let licenseKey = Feature_AutoUpdate.Configuration.licenseKey.get(config);
+    let autoUpdateSub =
+      Service_AutoUpdate.Sub.autoUpdate(
+        ~uniqueId="autoUpdate",
+        ~licenseKey,
+        ~automaticallyChecksForUpdates,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.AutoUpdate(msg));
+
     [
       languageSupportSub,
       syntaxSubscription,
@@ -358,6 +371,7 @@ let start =
       extensionsSub,
       registersSub,
       scmSub,
+      autoUpdateSub,
     ]
     |> Isolinear.Sub.batch;
   };
