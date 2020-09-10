@@ -7,6 +7,15 @@ let curBin = process.env["cur__bin"]
 console.log("Bin folder: " + curBin)
 console.log("Working directory: " + process.cwd())
 
+let scriptArgs = process.argv.slice(2)
+console.log("Arguments: " + scriptArgs)
+
+let codesignIdx = scriptArgs.indexOf("--codesign")
+let codesign = (codesignIdx != -1)
+let certName = codesign ? scriptArgs[codesignIdx + 1] : ""
+
+let disableATS = scriptArgs.indexOf("--disable-ats") != -1
+
 const rootDirectory = process.cwd()
 const vendorDirectory = path.join(rootDirectory, "vendor")
 const releaseDirectory = path.join(rootDirectory, "_release")
@@ -115,12 +124,20 @@ if (process.platform == "linux") {
 
     const plistFile = path.join(contentsDirectory, "Info.plist")
 
+    const firstCommitDate = Date.parse("2019-01-02");
+    const today = Date.now();
+
+    const daysSinceFirstCommit = Math.floor((today - firstCommitDate) / 86400000)
+    const cfBundleVersion = package.version.split("-")[0] + "." + daysSinceFirstCommit
+
+
     const plistContents = {
         CFBundleName: "Onivim2",
         CFBundleDisplayName: "Onivim 2",
         CFBundleIdentifier: "com.outrunlabs.onivim2",
         CFBundleIconFile: "Onivim2",
-        CFBundleVersion: `${package.version}`,
+        CFBundleVersion: cfBundleVersion,
+        CFBundleShortVersionString: `${package.version}`,
         CFBundlePackageType: "APPL",
         CFBundleSignature: "????",
         CFBundleExecutable: "Oni2_editor",
@@ -137,7 +154,10 @@ if (process.platform == "linux") {
         LSEnvironment: {
             ONI2_BUNDLED: "1",
         },
-        SUFeedURL: "https://onivim.io/this_is_fake"
+        SUFeedURL: "http://127.0.0.1:8080/_publish/this_is_fake",
+        NSAppTransportSecurity: {
+            NSAllowsArbitraryLoads: disableATS
+        }
     }
 
     fs.mkdirpSync(frameworksDirectory)
@@ -198,8 +218,10 @@ if (process.platform == "linux") {
     // Copy icon
     copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"))
 
-    fs.copySync(sparkleFramework, path.join(frameworksDirectory, "Sparkle.framework"));
+    // fs.copySync(sparkleFramework, path.join(frameworksDirectory, "Sparkle.framework"));
     
+    shell(`cp -R "${sparkleFramework}" "${path.join(frameworksDirectory, "Sparkle.framework")}"`);
+
     shell(
         `dylibbundler -b -x "${path.join(
             binaryDirectory,
@@ -239,6 +261,10 @@ if (process.platform == "linux") {
         "com.apple.security.cs.allow-dyld-environment-variables": true,
     }
     fs.writeFileSync(entitlementsPath, require("plist").build(entitlementsContents))
+
+    if (codesign) {
+        shell(`codesign -fs "${certName}" --deep ${appDirectory}`);
+    }
 
     const dmgPath = path.join(releaseDirectory, "Onivim2.dmg")
     const dmgJsonPath = path.join(releaseDirectory, "appdmg.json")
