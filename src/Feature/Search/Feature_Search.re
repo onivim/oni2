@@ -119,7 +119,9 @@ let update = (model, msg) => {
       }
     };
 
-  | _ => (model, None)
+  | Complete => (model, None)
+
+  | SearchError(_) => (model, None)
   };
 };
 

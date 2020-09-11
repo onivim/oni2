@@ -8,12 +8,6 @@ let initial: model;
 
 [@deriving show]
 type msg;
-//  | Input(string)
-//  | Pasted(string)
-//  | Update([@opaque] list(Ripgrep.Match.t))
-//  | Complete
-//  | SearchError(string)
-//  | FindInput(Component_InputText.msg);
 
 module Msg: {
   let input: string => msg;
