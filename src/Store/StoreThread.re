@@ -345,23 +345,10 @@ let start =
          })
       |> Option.value(~default=Isolinear.Sub.none);
 
-    let automaticallyChecksForUpdates =
-      Feature_AutoUpdate.Configuration.automaticallyChecksForUpdates.get(
-        config,
-      );
-    let licenseKey = Feature_AutoUpdate.Configuration.licenseKey.get(config);
-    let releaseChannel =
-      Feature_AutoUpdate.Configuration.releaseChannel.get(config);
-
     let autoUpdateSub =
-      Service_AutoUpdate.Sub.autoUpdate(
-        ~uniqueId="autoUpdate",
-        ~licenseKey,
-        ~releaseChannel,
-        ~automaticallyChecksForUpdates,
-      )
+      Feature_AutoUpdate.sub(~config)
       |> Isolinear.Sub.map(msg =>
-           Model.Actions.AutoUpdate(Feature_AutoUpdate.Subscription(msg))
+           Model.Actions.AutoUpdate(msg)
          );
 
     [

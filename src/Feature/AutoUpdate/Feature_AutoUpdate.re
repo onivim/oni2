@@ -98,6 +98,21 @@ module Contributions = {
   let commands = Commands.[checkForUpdates];
 };
 
+let sub = (~config) => {
+  let automaticallyChecksForUpdates =
+    Configuration.automaticallyChecksForUpdates.get(config);
+  let licenseKey = Configuration.licenseKey.get(config);
+  let releaseChannel = Configuration.releaseChannel.get(config);
+
+  Service_AutoUpdate.Sub.autoUpdate(
+    ~uniqueId="autoUpdate",
+    ~licenseKey,
+    ~releaseChannel,
+    ~automaticallyChecksForUpdates,
+  )
+  |> Isolinear.Sub.map(msg => Subscription(msg));
+};
+
 let update = (model, msg) =>
   switch (msg) {
   | Subscription(AutoCheckChanged(automaticallyChecksForUpdates)) => (
