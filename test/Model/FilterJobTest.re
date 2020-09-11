@@ -35,28 +35,6 @@ describe("FilterJob", ({describe, _}) => {
       expect.int(rankedLength).toBe(1);
     });
 
-    test("updating query should not reset items", ({expect, _}) => {
-      let job =
-        FilterJob.create()
-        |> Job.map(FilterJob.updateQuery("abc"))
-        // Add 4 items, separately
-        |> Job.map(FilterJob.addItems([createItem("a")]))
-        |> Job.map(FilterJob.addItems([createItem("abcd")]))
-        |> Job.map(FilterJob.addItems([createItem("b")]))
-        |> Job.map(FilterJob.addItems([createItem("abcde")]))
-        // Tick 4 times
-        |> Job.doWork
-        |> Job.doWork
-        |> Job.doWork
-        |> Job.doWork
-        |> Job.map(FilterJob.updateQuery("abce"));
-
-      // We should have results without needing to do another iteration of work
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
-      expect.list(names).toEqual(["abcde"]);
-    });
-
     test("items batched separately get filtered", ({expect, _}) => {
       let job =
         FilterJob.create()
