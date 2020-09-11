@@ -480,7 +480,10 @@ let start = () => {
         state.iconTheme,
         State.commands(state),
         State.menus(state),
-        WhenExpr.ContextKeys.fromSchema(ContextKeys.all, state),
+        WhenExpr.ContextKeys.fromSchema(
+          ContextKeys.all(FocusManager.current(state)),
+          state,
+        ),
       );
 
     ({...state, quickmenu: menuState}, menuEffect);

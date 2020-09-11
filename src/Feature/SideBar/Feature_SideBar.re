@@ -120,3 +120,27 @@ let setDefaults = (state, settings) => {
   let state = setDefaultLocation(state, sideBarLocation);
   setDefaultVisibility(state, sideBarVisibility);
 };
+
+module ContextKeys = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let sideBarVisible = bool("sideBarVisible", isOpen);
+
+  module Focused = {
+    let sideBarFocus = bool("sideBarFocus", _ => true);
+  };
+};
+
+module Contributions = {
+  let contextKeys = (~isFocused) => {
+    let common = ContextKeys.[sideBarVisible];
+
+    let focused = ContextKeys.Focused.[sideBarFocus];
+
+    if (isFocused) {
+      common @ focused;
+    } else {
+      common;
+    };
+  };
+};

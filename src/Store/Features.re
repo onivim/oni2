@@ -207,6 +207,17 @@ let update =
       );
     (state', effect);
 
+  | Input(msg) =>
+    let (model, outmsg) = Feature_Input.update(msg, state.input);
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | DebugInputShown => Internal.openFileEffect("oni://DebugInput")
+      };
+
+    ({...state, input: model}, eff);
+
   | LanguageSupport(msg) =>
     let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
     let editor = state.layout |> Feature_Layout.activeEditor;
