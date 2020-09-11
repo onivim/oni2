@@ -589,4 +589,51 @@ module Contributions = {
       ShellArgs.linux.spec,
       ShellArgs.osx.spec,
     ];
+
+  let keybindings = {
+    Oni_Input.Keybindings.[
+      // Insert mode -> normal mdoe
+      {
+        key: "<C-\\><C-N>",
+        command: Commands.Oni.normalMode.id,
+        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<C-\\>n",
+        command: Commands.Oni.normalMode.id,
+        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
+      },
+      // Normal mode -> insert mode
+      {
+        key: "o",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<S-O>",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "Shift+a",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "a",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "i",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "Shift+i",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+    ];
+  };
 };

@@ -17,7 +17,7 @@ type msg =
   | Pasted(string)
   | SearchQueryResults(Service_Extensions.Query.t)
   | SearchQueryError(string)
-  | SearchText(Feature_InputText.msg)
+  | SearchText(Component_InputText.msg)
   | UninstallExtensionClicked({extensionId: string})
   | UninstallExtensionSuccess({extensionId: string})
   | UninstallExtensionFailed({
@@ -119,7 +119,7 @@ type model = {
   selected: option(Selected.t),
   activatedIds: list(string),
   extensions: list(Scanner.ScanResult.t),
-  searchText: Feature_InputText.model,
+  searchText: Component_InputText.model,
   latestQuery: option(Service_Extensions.Query.t),
   extensionsFolder: option(string),
   pendingInstalls: list(string),
@@ -143,7 +143,7 @@ let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => 
   activatedIds: [],
   selected: None,
   extensions: [],
-  searchText: Feature_InputText.create(~placeholder="Type to search..."),
+  searchText: Component_InputText.create(~placeholder="Type to search..."),
   latestQuery: None,
   extensionsFolder,
   pendingInstalls: [],
@@ -377,9 +377,9 @@ let update = (~extHostClient, msg, model) => {
     )
 
   | KeyPressed(key) =>
-    let previousText = model.searchText |> Feature_InputText.value;
-    let searchText' = Feature_InputText.handleInput(~key, model.searchText);
-    let newText = searchText' |> Feature_InputText.value;
+    let previousText = model.searchText |> Component_InputText.value;
+    let searchText' = Component_InputText.handleInput(~key, model.searchText);
+    let newText = searchText' |> Component_InputText.value;
     let latestQuery =
       checkAndUpdateSearchText(
         ~previousText,
@@ -388,9 +388,9 @@ let update = (~extHostClient, msg, model) => {
       );
     ({...model, searchText: searchText', latestQuery}, Nothing);
   | Pasted(text) =>
-    let previousText = model.searchText |> Feature_InputText.value;
-    let searchText' = Feature_InputText.paste(~text, model.searchText);
-    let newText = searchText' |> Feature_InputText.value;
+    let previousText = model.searchText |> Component_InputText.value;
+    let searchText' = Component_InputText.paste(~text, model.searchText);
+    let newText = searchText' |> Component_InputText.value;
     let latestQuery =
       checkAndUpdateSearchText(
         ~previousText,
@@ -399,20 +399,26 @@ let update = (~extHostClient, msg, model) => {
       );
     ({...model, searchText: searchText', latestQuery}, Nothing);
   | SearchText(msg) =>
-    let previousText = model.searchText |> Feature_InputText.value;
-    let searchText' = Feature_InputText.update(msg, model.searchText);
-    let newText = searchText' |> Feature_InputText.value;
+    let previousText = model.searchText |> Component_InputText.value;
+    let (searchText', inputOutmsg) =
+      Component_InputText.update(msg, model.searchText);
+    let outmsg =
+      switch (inputOutmsg) {
+      | Component_InputText.Nothing => Nothing
+      | Component_InputText.Focus => Focus
+      };
+    let newText = searchText' |> Component_InputText.value;
     let latestQuery =
       checkAndUpdateSearchText(
         ~previousText,
         ~newText,
         ~query=model.latestQuery,
       );
-    ({...model, searchText: searchText', latestQuery}, Focus);
+    ({...model, searchText: searchText', latestQuery}, outmsg);
   | SearchQueryResults(queryResults) =>
     queryResults
     |> Service_Extensions.Query.searchText
-    == (model.searchText |> Feature_InputText.value)
+    == (model.searchText |> Component_InputText.value)
       ? ({...model, latestQuery: Some(queryResults)}, Nothing)
       : (model, Nothing)
   | SearchQueryError(_queryResults) =>

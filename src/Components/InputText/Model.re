@@ -2,17 +2,25 @@ open Oni_Core;
 
 [@deriving show]
 type msg =
+  | GainedFocus
+  | LostFocus
   | Sneaked
   | Clicked({selection: Selection.t});
 
+type outmsg =
+  | Nothing
+  | Focus;
+
 [@deriving show]
 type t = {
+  isFocused: bool,
   value: string,
   selection: Selection.t,
   placeholder: string,
 };
 
 let create = (~placeholder) => {
+  isFocused: false,
   value: "",
   selection: Selection.initial,
   placeholder,
@@ -21,13 +29,16 @@ let create = (~placeholder) => {
 let empty = create(~placeholder="");
 
 let isEmpty = ({value, _}) => value == "";
+let isFocused = ({isFocused, _}) => isFocused;
 
 let value = ({value, _}) => value;
 
 let update = (msg, model) =>
   switch (msg) {
-  | Sneaked => model
-  | Clicked({selection}) => {...model, selection}
+  | GainedFocus => ({...model, isFocused: true}, Nothing)
+  | LostFocus => ({...model, isFocused: false}, Nothing)
+  | Sneaked => (model, Focus)
+  | Clicked({selection}) => ({...model, selection}, Focus)
   };
 
 module Internal = {
@@ -270,12 +281,14 @@ let%test_module "Model" =
        value: text,
        selection: Selection.create(~text, ~anchor=position, ~focus=position),
        placeholder: "",
+       isFocused: false,
      };
 
      let notCollapsed = (~text=testString, ~anchor, ~focus, ()) => {
        value: text,
        selection: Selection.create(~text, ~anchor, ~focus),
        placeholder: "",
+       isFocused: false,
      };
 
      let uTestString = "😊↪Вім is Cool";

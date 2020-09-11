@@ -34,6 +34,23 @@ module Internal = {
     };
   };
 
+  let unhandledWindowMotionEffect = (windowMsg: Component_VimWindows.outmsg) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="features.unhandledWindowMotion", dispatch => {
+      Component_VimWindows.(
+        (
+          switch (windowMsg) {
+          | Nothing => Actions.Noop
+          | FocusLeft => Actions.Layout(Feature_Layout.Msg.moveLeft)
+          | FocusRight => Actions.Layout(Feature_Layout.Msg.moveRight)
+          | FocusUp => Actions.Layout(Feature_Layout.Msg.moveUp)
+          | FocusDown => Actions.Layout(Feature_Layout.Msg.moveDown)
+          }
+        )
+        |> dispatch
+      )
+    });
+
   let getScopeForBuffer = (~languageInfo, buffer: Oni_Core.Buffer.t) => {
     buffer
     |> Oni_Core.Buffer.getFileType
@@ -345,13 +362,17 @@ let update =
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};
 
-    let state =
-      switch (maybeOutmsg) {
-      | Some(Feature_Search.Focus) => FocusManager.push(Focus.Search, state)
-      | None => state
-      };
-
-    (state, Effect.none);
+    switch (maybeOutmsg) {
+    | Some(Feature_Search.Focus) => (
+        FocusManager.push(Focus.Search, state),
+        Effect.none,
+      )
+    | Some(UnhandledWindowMovement(windowMovement)) => (
+        state,
+        Internal.unhandledWindowMotionEffect(windowMovement),
+      )
+    | None => (state, Effect.none)
+    };
 
   | SCM(msg) =>
     let (model, maybeOutmsg) =

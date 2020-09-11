@@ -177,18 +177,3 @@ let initial =
     autoUpdate: Feature_AutoUpdate.initial,
   };
 };
-
-let commands = state =>
-  Command.Lookup.unionMany([
-    Feature_Commands.all(state.commands),
-    Feature_Extensions.commands(state.extensions)
-    |> Command.Lookup.fromList
-    |> Command.Lookup.map(msg => Actions.Extensions(msg)),
-  ]);
-
-let menus = state => {
-  let commands = commands(state);
-
-  Feature_Extensions.menus(state.extensions)
-  |> Menu.Lookup.fromSchema(commands);
-};

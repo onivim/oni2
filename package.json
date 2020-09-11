@@ -256,7 +256,7 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#11d4fb4",
+    "revery": "revery-ui/revery#d2e614a",
     "esy-skia": "revery-ui/esy-skia#a3785f9",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
@@ -266,7 +266,8 @@
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
     "@opam/conf-pkg-config": "1.2",
-    "@opam/yojson": "onivim/yojson:yojson.opam#f480aef"
+    "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
+    "flex": "bryphe/flex#5e19b05"
   },
   "devDependencies": {
     "ocaml": "~4.10",

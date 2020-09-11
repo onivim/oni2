@@ -1,12 +1,13 @@
 open Oni_Core;
 
-let initialText = Feature_InputText.create(~placeholder="Type expression...");
+let initialText =
+  Component_InputText.create(~placeholder="Type expression...");
 
 type mode =
   | NotActive
   | WaitingForRegister
   | ExpressionRegister({
-      inputText: Feature_InputText.model,
+      inputText: Component_InputText.model,
       evaluation: result(string, string),
     });
 
@@ -33,7 +34,7 @@ type msg =
   | KeyPressed(string)
   | ExpressionEvaluated(string)
   | ExpressionError(string)
-  | InputText(Feature_InputText.msg);
+  | InputText(Component_InputText.msg);
 
 module Msg = {
   let keyPressed = key => KeyPressed(key);
@@ -85,7 +86,7 @@ let handleTextInput = (model, key) =>
     }
   | ExpressionRegister(expression) =>
     let inputText' =
-      Feature_InputText.handleInput(~key, expression.inputText);
+      Component_InputText.handleInput(~key, expression.inputText);
     (
       {mode: ExpressionRegister({...expression, inputText: inputText'})},
       Nothing,
@@ -116,7 +117,8 @@ let update = (msg, model) => {
     let model' =
       switch (model.mode) {
       | ExpressionRegister(expression) =>
-        let inputText' = Feature_InputText.update(msg, expression.inputText);
+        let (inputText', _msg) =
+          Component_InputText.update(msg, expression.inputText);
         {mode: ExpressionRegister({...expression, inputText: inputText'})};
       | NotActive => model
       | WaitingForRegister => model
@@ -188,9 +190,28 @@ module Keybindings = {
 };
 
 module Contributions = {
+  open WhenExpr.ContextKeys.Schema;
+
   let commands = [Commands.insert, Commands.cancel, Commands.commit];
 
-  let contextKeys = [ContextKeys.registerEvaluationFocus];
+  let contextKeys = (~isFocused) => {
+    let inputTextKeys =
+      isFocused ? Component_InputText.Contributions.contextKeys : [];
+
+    ContextKeys.[
+      inputTextKeys
+      |> fromList
+      |> map(({mode}: model) => {
+           switch (mode) {
+           | ExpressionRegister({inputText, _}) => inputText
+           | NotActive => Component_InputText.empty
+           | WaitingForRegister => Component_InputText.empty
+           }
+         }),
+      [registerEvaluationFocus] |> fromList,
+    ]
+    |> unionMany;
+  };
 
   let keybindings = [
     Keybindings.cancel,
@@ -242,7 +263,7 @@ module View = {
             color(Colors.Menu.foreground.from(theme)),
           ]>
           <View style=Style.[padding(5)]>
-            <Feature_InputText.View
+            <Component_InputText.View
               prefix="="
               model=inputText
               theme
@@ -284,6 +305,6 @@ let sub = registers => {
       | Ok(str) => ExpressionEvaluated(str)
       | Error(err) => ExpressionError(err)
     );
-    Service_Vim.Sub.eval(~toMsg, inputText |> Feature_InputText.value);
+    Service_Vim.Sub.eval(~toMsg, inputText |> Component_InputText.value);
   };
 };
