@@ -101,7 +101,7 @@ We use auto formatting tool, you might want to run it before you commit changes
 To create a release build, run:
 
 - `esy x Oni2 -f --checkhealth`
-- `esy create-release`
+- `esy @release create`
 
 This will create a `_release` folder at the root with the application bundle inside.
 
