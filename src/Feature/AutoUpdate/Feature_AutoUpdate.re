@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 
 module Constants = {
   let baseUrl = "https://onivim.io/appCast";
