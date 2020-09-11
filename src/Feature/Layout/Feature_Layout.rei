@@ -42,6 +42,13 @@ let fold: (('acc, Editor.t) => 'acc, 'acc, model) => 'acc;
 [@deriving show]
 type msg;
 
+module Msg: {
+  let moveLeft: msg;
+  let moveRight: msg;
+  let moveUp: msg;
+  let moveDown: msg;
+};
+
 type outmsg =
   | Nothing
   | SplitAdded

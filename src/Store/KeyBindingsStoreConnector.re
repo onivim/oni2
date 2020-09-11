@@ -432,7 +432,8 @@ let start = maybeKeyBindingsFilePath => {
           condition:
             "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
         },
-      ];
+      ]
+    @ Component_VimWindows.Contributions.keybindings;
 
   let getKeybindingsFile = () => {
     Filesystem.getOrCreateConfigFile(
@@ -526,7 +527,7 @@ let start = maybeKeyBindingsFilePath => {
           executeExCommandEffect(Base.String.drop_prefix(command, 1)),
         );
       } else {
-        switch (Command.Lookup.get(command, State.commands(state))) {
+        switch (Command.Lookup.get(command, CommandManager.current(state))) {
         | Some((command: Command.t(_))) => (
             state,
             executeCommandEffect(command.msg),
