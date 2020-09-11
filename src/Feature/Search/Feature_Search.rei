@@ -7,16 +7,16 @@ type model;
 let initial: model;
 
 [@deriving show]
-type msg =
-  | Input(string)
-  | Pasted(string)
-  | Update([@opaque] list(Ripgrep.Match.t))
-  | Complete
-  | SearchError(string)
-  | FindInput(Component_InputText.msg);
+type msg;
+
+module Msg: {
+  let input: string => msg;
+  let pasted: string => msg;
+};
 
 type outmsg =
-  | Focus;
+  | Focus
+  | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 let update: (model, msg) => (model, option(outmsg));
 
@@ -37,5 +37,6 @@ let make:
   React.element(React.node);
 
 module Contributions: {
+  let commands: (~isFocused: bool) => list(Command.t(msg));
   let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
 };

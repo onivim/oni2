@@ -5,16 +5,25 @@ open Oni_Components;
 
 // MODEL
 
+type focus =
+  | FindInput
+  | ResultsPane;
+
 type model = {
   findInput: Component_InputText.model,
   query: string,
   hits: list(Ripgrep.Match.t),
+  focus,
+  vimWindowNavigation: Component_VimWindows.model,
 };
 
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
   query: "",
   hits: [],
+  focus: FindInput,
+
+  vimWindowNavigation: Component_VimWindows.initial,
 };
 
 // UPDATE
@@ -26,35 +35,54 @@ type msg =
   | Update([@opaque] list(Ripgrep.Match.t))
   | Complete
   | SearchError(string)
-  | FindInput(Component_InputText.msg);
+  | FindInput(Component_InputText.msg)
+  | VimWindowNav(Component_VimWindows.msg);
+
+module Msg = {
+  let input = str => Input(str);
+  let pasted = str => Pasted(str);
+};
 
 type outmsg =
-  | Focus;
+  | Focus
+  | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 let update = (model, msg) => {
   switch (msg) {
   | Input(key) =>
-    let model =
-      switch (key) {
-      | "<CR>" =>
-        let findInputValue = model.findInput |> Component_InputText.value;
-        if (model.query == findInputValue) {
-          model; // Do nothing if the query hasn't changed
-        } else {
-          {...model, query: findInputValue, hits: []};
+    switch (model.focus) {
+    | FindInput =>
+      let model =
+        switch (key) {
+        | "<CR>" =>
+          let findInputValue = model.findInput |> Component_InputText.value;
+          if (model.query == findInputValue) {
+            model; // Do nothing if the query hasn't changed
+          } else {
+            {...model, query: findInputValue, hits: []};
+          };
+
+        | _ =>
+          let findInput =
+            Component_InputText.handleInput(~key, model.findInput);
+          {...model, findInput};
         };
 
-      | _ =>
-        let findInput =
-          Component_InputText.handleInput(~key, model.findInput);
-        {...model, findInput};
-      };
-
-    (model, None);
+      (model, None);
+    | ResultsPane =>
+      // TODO: Vim Navigable List!
+      (model, None)
+    }
 
   | Pasted(text) =>
-    let findInput = Component_InputText.paste(~text, model.findInput);
-    ({...model, findInput}, None);
+    switch (model.focus) {
+    | FindInput =>
+      let findInput = Component_InputText.paste(~text, model.findInput);
+      ({...model, findInput}, None);
+    | ResultsPane =>
+      // Paste is a no-op in search pane
+      (model, None)
+    }
 
   | FindInput(msg) =>
     let (findInput', inputOutmsg) =
@@ -68,7 +96,32 @@ let update = (model, msg) => {
 
   | Update(items) => ({...model, hits: model.hits @ items}, None)
 
-  | _ => (model, None)
+  | VimWindowNav(navMsg) =>
+    let (windowNav, outmsg) =
+      Component_VimWindows.update(navMsg, model.vimWindowNavigation);
+
+    let model' = {...model, vimWindowNavigation: windowNav};
+    switch (outmsg) {
+    | Nothing => (model', None)
+    | FocusLeft => (model', Some(UnhandledWindowMovement(outmsg)))
+    | FocusRight => (model', Some(UnhandledWindowMovement(outmsg)))
+    | FocusDown =>
+      if (model'.focus == FindInput) {
+        ({...model', focus: ResultsPane}, None);
+      } else {
+        (model', Some(UnhandledWindowMovement(outmsg)));
+      }
+    | FocusUp =>
+      if (model'.focus == ResultsPane) {
+        ({...model', focus: FindInput}, None);
+      } else {
+        (model', Some(UnhandledWindowMovement(outmsg)));
+      }
+    };
+
+  | Complete => (model, None)
+
+  | SearchError(_) => (model, None)
   };
 };
 
@@ -117,7 +170,13 @@ module Styles = {
     borderRight(~color=Colors.Panel.border.from(theme), ~width=1),
   ];
 
-  let resultsPane = [flexGrow(1)];
+  let resultsPane = (~isFocused, ~theme) => {
+    let common = [flexGrow(1)];
+
+    let focused = [border(~color=Colors.focusBorder.from(theme), ~width=1)];
+
+    isFocused ? common @ focused : common;
+  };
 
   let row = [
     flexDirection(`Row),
@@ -181,7 +240,7 @@ let make =
         <View style=Styles.inputContainer>
           <Component_InputText.View
             model={model.findInput}
-            isFocused
+            isFocused={isFocused && model.focus == FindInput}
             fontFamily={uiFont.family}
             fontSize={uiFont.size}
             dispatch={msg => dispatch(FindInput(msg))}
@@ -190,7 +249,11 @@ let make =
         </View>
       </View>
     </View>
-    <View style=Styles.resultsPane>
+    <View
+      style={Styles.resultsPane(
+        ~isFocused={isFocused && model.focus == ResultsPane},
+        ~theme,
+      )}>
       <Text
         style={Styles.title(~theme)}
         fontFamily={uiFont.family}
@@ -205,10 +268,25 @@ let make =
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
 
-  let contextKeys = (~isFocused) => {
-    let keys = isFocused ? Component_InputText.Contributions.contextKeys : [];
+  let commands = (~isFocused) => {
+    !isFocused
+      ? []
+      : Component_VimWindows.Contributions.commands
+        |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)));
+  };
 
-    [keys |> fromList |> map(({findInput, _}: model) => findInput)]
+  let contextKeys = (~isFocused) => {
+    let inputTextKeys =
+      isFocused ? Component_InputText.Contributions.contextKeys : [];
+    let vimNavKeys =
+      isFocused ? Component_VimWindows.Contributions.contextKeys : [];
+
+    [
+      inputTextKeys |> fromList |> map(({findInput, _}: model) => findInput),
+      vimNavKeys
+      |> fromList
+      |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),
+    ]
     |> unionMany;
   };
 };

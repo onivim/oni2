@@ -481,8 +481,8 @@ let start = () => {
         state.buffers,
         state.languageInfo,
         state.iconTheme,
-        State.commands(state),
-        State.menus(state),
+        CommandManager.current(state),
+        MenuManager.current(state),
         WhenExpr.ContextKeys.fromSchema(
           ContextKeys.all(FocusManager.current(state)),
           state,
