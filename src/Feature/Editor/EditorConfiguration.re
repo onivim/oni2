@@ -31,7 +31,7 @@ module CustomDecoders: {
           color => {
             // TODO: This should be moved to the Color module in Revery proper
             let toHex = floatVal => {
-              floatVal *. 255. |> int_of_float |> Printf.sprintf("U+%02x");
+              floatVal *. 255. |> int_of_float |> Printf.sprintf("%02x");
             };
             let (r, g, b, a) = Revery.Color.toRgba(color);
             "#" ++ toHex(r) ++ toHex(g) ++ toHex(b) ++ toHex(a) |> string;
@@ -234,10 +234,10 @@ let yankHighlightColor =
   setting(
     "vim.highlightedyank.color",
     color,
-    ~default=Revery.Color.rgba_int(250, 240, 170, 128),
+    ~default=Revery.Color.rgba_int(250, 240, 170, 16),
   );
 let yankHighlightDuration =
-  setting("vim.highlightedyank.duration", int, ~default=300);
+  setting("vim.highlightedyank.duration", int, ~default=200);
 
 module Hover = {
   let enabled = setting("editor.hover.enabled", bool, ~default=true);
