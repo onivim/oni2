@@ -108,3 +108,14 @@ let sub = (~setup, model) => {
   | None => Isolinear.Sub.none
   };
 };
+
+module Contributions = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let contextKeys = (~isFocused) => {
+    let keys = isFocused ? Component_InputText.Contributions.contextKeys : [];
+
+    [keys |> fromList |> map(({searchText, _}: model) => searchText)]
+    |> unionMany;
+  };
+};

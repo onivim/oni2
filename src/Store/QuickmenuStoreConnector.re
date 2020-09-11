@@ -143,7 +143,7 @@ let start = () => {
   };
 
   let typeToSearchInput =
-    Feature_InputText.create(~placeholder="type to search...");
+    Component_InputText.create(~placeholder="type to search...");
 
   let menuUpdater =
       (
@@ -264,7 +264,7 @@ let start = () => {
     | QuickmenuPaste(text) => (
         Option.map(
           (Quickmenu.{inputText, _} as state) => {
-            let inputText = Feature_InputText.paste(~text, inputText);
+            let inputText = Component_InputText.paste(~text, inputText);
 
             Quickmenu.{...state, inputText, focused: Some(0)};
           },
@@ -275,7 +275,7 @@ let start = () => {
     | QuickmenuInput(key) => (
         Option.map(
           (Quickmenu.{inputText, _} as state) => {
-            let inputText = Feature_InputText.handleInput(~key, inputText);
+            let inputText = Component_InputText.handleInput(~key, inputText);
 
             Quickmenu.{...state, inputText, focused: Some(0)};
           },
@@ -289,10 +289,13 @@ let start = () => {
           (Quickmenu.{variant, inputText, _} as state) => {
             switch (variant) {
             | Wildmenu(_) =>
-              let oldPosition = inputText |> Feature_InputText.cursorPosition;
+              let oldPosition =
+                inputText |> Component_InputText.cursorPosition;
 
-              let inputText = Feature_InputText.update(msg, inputText);
-              let newPosition = inputText |> Feature_InputText.cursorPosition;
+              let (inputText, _) =
+                Component_InputText.update(msg, inputText);
+              let newPosition =
+                inputText |> Component_InputText.cursorPosition;
               let transition = newPosition - oldPosition;
 
               if (transition > 0) {
@@ -324,7 +327,7 @@ let start = () => {
             Quickmenu.{
               ...state,
               inputText:
-                Feature_InputText.set(~text, ~cursor, state.inputText),
+                Component_InputText.set(~text, ~cursor, state.inputText),
             },
           state,
         ),
@@ -565,7 +568,7 @@ let subscriptions = (ripgrep, dispatch) => {
   let updater = (state: State.t) => {
     switch (state.quickmenu) {
     | Some(quickmenu) =>
-      let query = quickmenu.inputText |> Feature_InputText.value;
+      let query = quickmenu.inputText |> Component_InputText.value;
       switch (quickmenu.variant) {
       | CommandPalette
       | EditorsPicker

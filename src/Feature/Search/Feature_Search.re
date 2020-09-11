@@ -6,13 +6,13 @@ open Oni_Components;
 // MODEL
 
 type model = {
-  findInput: Feature_InputText.model,
+  findInput: Component_InputText.model,
   query: string,
   hits: list(Ripgrep.Match.t),
 };
 
 let initial = {
-  findInput: Feature_InputText.create(~placeholder="Search"),
+  findInput: Component_InputText.create(~placeholder="Search"),
   query: "",
   hits: [],
 };
@@ -26,7 +26,7 @@ type msg =
   | Update([@opaque] list(Ripgrep.Match.t))
   | Complete
   | SearchError(string)
-  | FindInput(Feature_InputText.msg);
+  | FindInput(Component_InputText.msg);
 
 type outmsg =
   | Focus;
@@ -37,7 +37,7 @@ let update = (model, msg) => {
     let model =
       switch (key) {
       | "<CR>" =>
-        let findInputValue = model.findInput |> Feature_InputText.value;
+        let findInputValue = model.findInput |> Component_InputText.value;
         if (model.query == findInputValue) {
           model; // Do nothing if the query hasn't changed
         } else {
@@ -45,20 +45,26 @@ let update = (model, msg) => {
         };
 
       | _ =>
-        let findInput = Feature_InputText.handleInput(~key, model.findInput);
+        let findInput =
+          Component_InputText.handleInput(~key, model.findInput);
         {...model, findInput};
       };
 
     (model, None);
 
   | Pasted(text) =>
-    let findInput = Feature_InputText.paste(~text, model.findInput);
+    let findInput = Component_InputText.paste(~text, model.findInput);
     ({...model, findInput}, None);
 
-  | FindInput(msg) => (
-      {...model, findInput: Feature_InputText.update(msg, model.findInput)},
-      Some(Focus),
-    )
+  | FindInput(msg) =>
+    let (findInput', inputOutmsg) =
+      Component_InputText.update(msg, model.findInput);
+    let outmsg =
+      switch (inputOutmsg) {
+      | Component_InputText.Nothing => None
+      | Component_InputText.Focus => Some(Focus)
+      };
+    ({...model, findInput: findInput'}, outmsg);
 
   | Update(items) => ({...model, hits: model.hits @ items}, None)
 
@@ -125,8 +131,6 @@ module Styles = {
     marginHorizontal(8),
   ];
 
-  let input = [flexGrow(1)];
-
   let inputContainer = [width(150), flexShrink(0), flexGrow(1)];
 };
 
@@ -175,8 +179,7 @@ let make =
       </View>
       <View style=Styles.row>
         <View style=Styles.inputContainer>
-          <Feature_InputText.View
-            style=Styles.input
+          <Component_InputText.View
             model={model.findInput}
             isFocused
             fontFamily={uiFont.family}
@@ -197,4 +200,15 @@ let make =
       <LocationList theme uiFont editorFont items onSelectItem />
     </View>
   </View>;
+};
+
+module Contributions = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let contextKeys = (~isFocused) => {
+    let keys = isFocused ? Component_InputText.Contributions.contextKeys : [];
+
+    [keys |> fromList |> map(({findInput, _}: model) => findInput)]
+    |> unionMany;
+  };
 };

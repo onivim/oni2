@@ -13,7 +13,7 @@ type msg =
   | Update([@opaque] list(Ripgrep.Match.t))
   | Complete
   | SearchError(string)
-  | FindInput(Feature_InputText.msg);
+  | FindInput(Component_InputText.msg);
 
 type outmsg =
   | Focus;
@@ -35,3 +35,7 @@ let make:
     unit
   ) =>
   React.element(React.node);
+
+module Contributions: {
+  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
+};

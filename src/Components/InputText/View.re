@@ -81,21 +81,71 @@ module Colors = {
 };
 
 module Styles = {
-  let default = (~theme) =>
+  open Style;
+  let default = (~theme, ~focused) =>
     Style.[
       color(Colors.foreground(theme)),
       paddingVertical(8),
       paddingHorizontal(12),
-      border(~width=1, ~color=Colors.border(theme)),
+      border(~width=focused ? 2 : 1, ~color=Colors.border(theme)),
       backgroundColor(Colors.background(theme)),
+      boxShadow(
+        ~xOffset=4.,
+        ~yOffset=4.,
+        ~blurRadius=focused ? 8. : 0.,
+        ~spreadRadius=0.,
+        ~color=Color.rgba(0., 0., 0., 0.5),
+      ),
     ];
+
+  let _all = (~theme, focused) => [
+    flexDirection(`Row),
+    alignItems(`Center),
+    justifyContent(`FlexStart),
+    cursor(MouseCursors.text),
+    ...default(~theme, ~focused),
+  ];
+
+  let box = (~style: list(Revery.UI.Style.viewStyleProps), ~theme, ~focused) => {
+    ignore(style);
+    _all(~theme, focused);
+  };
+
+  let marginContainer = [
+    flexDirection(`Row),
+    alignItems(`Center),
+    justifyContent(`FlexStart),
+    flexGrow(1),
+    overflow(`Hidden),
+  ];
+
+  let cursor = offset => [
+    position(`Absolute),
+    marginTop(2),
+    transform(Transform.[TranslateX(float(offset))]),
+  ];
+
+  let selection = offset => [
+    position(`Absolute),
+    marginTop(2),
+    transform(Transform.[TranslateX(float(offset))]),
+  ];
+
+  let textContainer = [flexGrow(1), overflow(`Hidden)];
+
+  let text = (~showPlaceholder, ~placeholderColor, ~textColor, ~scrollOffset) => [
+    color(showPlaceholder ? placeholderColor : textColor),
+    alignItems(`Center),
+    justifyContent(`FlexStart),
+    textWrap(TextWrapping.NoWrap),
+    transform(Transform.[TranslateX(float(- scrollOffset^))]),
+  ];
 };
 
 let%component make =
               (
-                ~model,
+                ~model: Model.t,
                 ~theme,
-                ~style=Styles.default(~theme),
                 ~fontSize=18.,
                 ~fontFamily=Revery.Font.Family.fromFile("Roboto-Regular.ttf"),
                 ~placeholderColor=Colors.placeholderForeground(theme),
@@ -109,60 +159,25 @@ let%component make =
   let%hook textRef = Hooks.ref(None);
   let%hook scrollOffset = Hooks.ref(0);
 
-  let {placeholder, value, selection}: Model.t = model;
+  let style = Styles.default(~theme, ~focused=isFocused);
+
+  let%hook () =
+    Hooks.effect(
+      OnMountAndIf((!=), isFocused),
+      () => {
+        if (isFocused) {
+          dispatch(Model.GainedFocus);
+        } else {
+          dispatch(LostFocus);
+        };
+
+        Some(() => dispatch(LostFocus));
+      },
+    );
+
+  let {placeholder, value, selection, _}: Model.t = model;
   let displayValue = prefix ++ value;
   let showPlaceholder = displayValue == "";
-
-  module Styles = {
-    open Style;
-    include Styles;
-
-    let textColor = Selector.select(style, Color, Colors.foreground(theme));
-
-    let _all =
-      merge(
-        ~source=[
-          flexDirection(`Row),
-          alignItems(`Center),
-          justifyContent(`FlexStart),
-          overflow(`Hidden),
-          cursor(MouseCursors.text),
-          ...default(~theme),
-        ],
-        ~target=style,
-      );
-
-    let box = extractViewStyles(_all);
-
-    let marginContainer = [
-      flexDirection(`Row),
-      alignItems(`Center),
-      justifyContent(`FlexStart),
-      flexGrow(1),
-    ];
-
-    let cursor = offset => [
-      position(`Absolute),
-      marginTop(2),
-      transform(Transform.[TranslateX(float(offset))]),
-    ];
-
-    let selection = offset => [
-      position(`Absolute),
-      marginTop(2),
-      transform(Transform.[TranslateX(float(offset))]),
-    ];
-
-    let textContainer = [flexGrow(1), overflow(`Hidden)];
-
-    let text = [
-      color(showPlaceholder ? placeholderColor : textColor),
-      alignItems(`Center),
-      justifyContent(`FlexStart),
-      textWrap(TextWrapping.NoWrap),
-      transform(Transform.[TranslateX(float(- scrollOffset^))]),
-    ];
-  };
 
   let measureTextWidth = text => {
     let dimensions =
@@ -307,17 +322,24 @@ let%component make =
       </View>;
     };
 
+  let textColor = Colors.foreground(theme);
+
   let text = () =>
     <Text
       ref={node => textRef := Some(node)}
       text={showPlaceholder ? placeholder : displayValue}
-      style=Styles.text
+      style={Styles.text(
+        ~showPlaceholder,
+        ~placeholderColor,
+        ~textColor,
+        ~scrollOffset,
+      )}
       fontFamily
       fontSize
     />;
 
   <Sneakable sneakId="text" onAnyClick=handleClick onSneak>
-    <View style=Styles.box>
+    <View style={Styles.box(~style, ~theme, ~focused=model.isFocused)}>
       <View style=Styles.marginContainer>
         <selectionView />
         <cursor />
