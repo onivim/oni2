@@ -91,32 +91,32 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<C-N>",
         command: Commands.List.focusDown.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "listFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-P>",
         command: Commands.List.focusUp.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "listFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-N>",
         command: Commands.List.focusDown.id,
-        condition: "isMac && listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "isMac && listFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-P>",
         command: Commands.List.focusUp.id,
-        condition: "isMac && listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "isMac && listFocus" |> WhenExpr.parse,
       },
       {
         key: "<TAB>",
         command: Commands.List.focusDown.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "listFocus" |> WhenExpr.parse,
       },
       {
         key: "<S-TAB>",
         command: Commands.List.focusUp.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "listFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-TAB>",
@@ -142,7 +142,7 @@ let start = maybeKeyBindingsFilePath => {
         {
           key: "<CR>",
           command: Commands.List.select.id,
-          condition: "listFocus || textInputFocus" |> WhenExpr.parse,
+          condition: "listFocus" |> WhenExpr.parse,
         },
         // Search commands
         {
@@ -432,7 +432,8 @@ let start = maybeKeyBindingsFilePath => {
           condition:
             "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
         },
-      ];
+      ]
+    @ Component_VimWindows.Contributions.keybindings;
 
   let getKeybindingsFile = () => {
     Filesystem.getOrCreateConfigFile(
@@ -526,7 +527,7 @@ let start = maybeKeyBindingsFilePath => {
           executeExCommandEffect(Base.String.drop_prefix(command, 1)),
         );
       } else {
-        switch (Command.Lookup.get(command, State.commands(state))) {
+        switch (Command.Lookup.get(command, CommandManager.current(state))) {
         | Some((command: Command.t(_))) => (
             state,
             executeCommandEffect(command.msg),

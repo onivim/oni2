@@ -69,7 +69,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k})),
       ]
 
-    | Search => [Actions.Search(Feature_Search.Input(k))]
+    | Search => [Actions.Search(Feature_Search.Msg.input(k))]
     | Extensions => [
         Actions.Extensions(Feature_Extensions.Msg.keyPressed(k)),
       ]
@@ -95,7 +95,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         | Extensions =>
           Actions.Extensions(Feature_Extensions.Msg.pasted(firstLine))
         | SCM => Actions.SCM(Feature_SCM.Msg.paste(firstLine))
-        | Search => Actions.Search(Feature_Search.Pasted(firstLine))
+        | Search => Actions.Search(Feature_Search.Msg.pasted(firstLine))
         | LanguageSupport =>
           Actions.LanguageSupport(
             Feature_LanguageSupport.Msg.pasted(firstLine),

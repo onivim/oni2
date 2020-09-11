@@ -25,7 +25,7 @@ runTest(
     wait(~name="Mode switches to command line", (state: State.t) =>
       switch (state.quickmenu) {
       | Some(quickmenu) =>
-        quickmenu.inputText |> Feature_InputText.value == "e"
+        quickmenu.inputText |> Component_InputText.value == "e"
       | None => false
       }
     );
@@ -35,7 +35,7 @@ runTest(
     wait(~name="Mode switches to command line", (state: State.t) =>
       switch (state.quickmenu) {
       | Some(quickmenu) =>
-        quickmenu.inputText |> Feature_InputText.value == "eh"
+        quickmenu.inputText |> Component_InputText.value == "eh"
       | None => false
       }
     );

@@ -162,7 +162,7 @@ let make =
 
   let input = () =>
     <View style=Styles.inputContainer>
-      <Feature_InputText.View
+      <Component_InputText.View
         ?prefix
         fontFamily={font.family}
         fontSize=14.

@@ -81,7 +81,7 @@ type t =
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
-  | QuickmenuInputMessage(Feature_InputText.msg)
+  | QuickmenuInputMessage(Component_InputText.msg)
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)

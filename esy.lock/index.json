@@ -1,5 +1,5 @@
 {
-  "checksum": "e77e22f99ed9e9a0a930e9ed15400c83",
+  "checksum": "292ec1cefdfbf010326612a2a0aee562",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -118,7 +118,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#11d4fb4@d41d8cd9",
+        "revery@github:revery-ui/revery#d2e614a@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
         "@revery/esy-libvterm@1.0.3@d41d8cd9",
         "@onivim/reason-native-crash-utils@1.0.1@d41d8cd9",
@@ -126,13 +126,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#11d4fb4@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#11d4fb4@d41d8cd9",
+    "revery@github:revery-ui/revery#d2e614a@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#d2e614a@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#11d4fb4",
+      "version": "github:revery-ui/revery#d2e614a",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#11d4fb4" ]
+        "source": [ "github:revery-ui/revery#d2e614a" ]
       },
       "overrides": [],
       "dependencies": [
@@ -209,7 +209,7 @@
         "@reason-native/console@0.0.3@d41d8cd9",
         "@opam/lwt@opam:4.5.0@542100aa",
         "@opam/lambda-term@opam:3.1.0@8adc2660",
-        "@opam/fpath@opam:0.7.2@3fd2da53", "@opam/dune@opam:2.5.0@e0bac278",
+        "@opam/fpath@opam:0.7.3@674d8125", "@opam/dune@opam:2.5.0@e0bac278",
         "@esy-ocaml/reason@3.6.2@d41d8cd9"
       ],
       "devDependencies": [ "@opam/dune@opam:2.5.0@e0bac278" ]
@@ -938,7 +938,7 @@
       "overrides": [],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#37e19a3@d41d8cd9",
-        "revery@github:revery-ui/revery#11d4fb4@d41d8cd9",
+        "revery@github:revery-ui/revery#d2e614a@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
@@ -2359,7 +2359,7 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/tyxml@opam:4.4.0@1dca5713",
-        "@opam/result@opam:1.5@6b753c82", "@opam/fpath@opam:0.7.2@3fd2da53",
+        "@opam/result@opam:1.5@6b753c82", "@opam/fpath@opam:0.7.3@674d8125",
         "@opam/dune@opam:2.5.0@e0bac278", "@opam/cppo@opam:1.6.6@f4f83858",
         "@opam/cmdliner@opam:1.0.4@93208aac",
         "@opam/astring@opam:0.8.5@1300cee8",
@@ -2367,7 +2367,7 @@
       ],
       "devDependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/tyxml@opam:4.4.0@1dca5713",
-        "@opam/result@opam:1.5@6b753c82", "@opam/fpath@opam:0.7.2@3fd2da53",
+        "@opam/result@opam:1.5@6b753c82", "@opam/fpath@opam:0.7.3@674d8125",
         "@opam/dune@opam:2.5.0@e0bac278",
         "@opam/cmdliner@opam:1.0.4@93208aac",
         "@opam/astring@opam:0.8.5@1300cee8"
@@ -2450,7 +2450,7 @@
         "@opam/odoc@opam:1.5.1@52a58c0b",
         "@opam/ocaml-migrate-parsetree@opam:1.7.3@dbcf3b47",
         "@opam/menhir@opam:20200624@8629ff13",
-        "@opam/fpath@opam:0.7.2@3fd2da53",
+        "@opam/fpath@opam:0.7.3@674d8125",
         "@opam/fix@opam:20200131@0ecd2f01", "@opam/dune@opam:2.5.0@e0bac278",
         "@opam/cmdliner@opam:1.0.4@93208aac",
         "@opam/base-unix@opam:base@87d0b2eb",
@@ -2464,7 +2464,7 @@
         "@opam/odoc@opam:1.5.1@52a58c0b",
         "@opam/ocaml-migrate-parsetree@opam:1.7.3@dbcf3b47",
         "@opam/menhir@opam:20200624@8629ff13",
-        "@opam/fpath@opam:0.7.2@3fd2da53",
+        "@opam/fpath@opam:0.7.3@674d8125",
         "@opam/fix@opam:20200131@0ecd2f01", "@opam/dune@opam:2.5.0@e0bac278",
         "@opam/cmdliner@opam:1.0.4@93208aac",
         "@opam/base-unix@opam:base@87d0b2eb",
@@ -3172,34 +3172,32 @@
         "@opam/dune@opam:2.5.0@e0bac278"
       ]
     },
-    "@opam/fpath@opam:0.7.2@3fd2da53": {
-      "id": "@opam/fpath@opam:0.7.2@3fd2da53",
+    "@opam/fpath@opam:0.7.3@674d8125": {
+      "id": "@opam/fpath@opam:0.7.3@674d8125",
       "name": "@opam/fpath",
-      "version": "opam:0.7.2",
+      "version": "opam:0.7.3",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/md5/52/52c7ecb0bf180088336f3c645875fa41#md5:52c7ecb0bf180088336f3c645875fa41",
-          "archive:http://erratique.ch/software/fpath/releases/fpath-0.7.2.tbz#md5:52c7ecb0bf180088336f3c645875fa41"
+          "archive:https://opam.ocaml.org/cache/md5/07/0740b530e8fed5b0adc5eee8463cfc2f#md5:0740b530e8fed5b0adc5eee8463cfc2f",
+          "archive:https://erratique.ch/software/fpath/releases/fpath-0.7.3.tbz#md5:0740b530e8fed5b0adc5eee8463cfc2f"
         ],
         "opam": {
           "name": "fpath",
-          "version": "0.7.2",
-          "path": "esy.lock/opam/fpath.0.7.2"
+          "version": "0.7.3",
+          "path": "esy.lock/opam/fpath.0.7.3"
         }
       },
       "overrides": [],
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/topkg@opam:1.0.2@3c5942ad",
-        "@opam/result@opam:1.5@6b753c82",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
         "@opam/astring@opam:0.8.5@1300cee8",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
-        "@opam/astring@opam:0.8.5@1300cee8"
+        "ocaml@4.10.0@d41d8cd9", "@opam/astring@opam:0.8.5@1300cee8"
       ]
     },
     "@opam/fp@github:bryphe/reason-native:fp.opam#fd0225c@d41d8cd9": {
@@ -3704,7 +3702,7 @@
         "@opam/rresult@opam:0.6.0@4b185e72",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
-        "@opam/logs@opam:0.7.0@1d03143e", "@opam/fpath@opam:0.7.2@3fd2da53",
+        "@opam/logs@opam:0.7.0@1d03143e", "@opam/fpath@opam:0.7.3@674d8125",
         "@opam/fmt@opam:0.8.8@01c3a23c",
         "@opam/base-unix@opam:base@87d0b2eb",
         "@opam/astring@opam:0.8.5@1300cee8",
@@ -3712,7 +3710,7 @@
       ],
       "devDependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/rresult@opam:0.6.0@4b185e72",
-        "@opam/logs@opam:0.7.0@1d03143e", "@opam/fpath@opam:0.7.2@3fd2da53",
+        "@opam/logs@opam:0.7.0@1d03143e", "@opam/fpath@opam:0.7.3@674d8125",
         "@opam/fmt@opam:0.8.8@01c3a23c",
         "@opam/base-unix@opam:base@87d0b2eb",
         "@opam/astring@opam:0.8.5@1300cee8"

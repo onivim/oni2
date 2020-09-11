@@ -3,7 +3,7 @@ open Actions;
 type t = {
   variant,
   prefix: option(string),
-  inputText: Feature_InputText.model,
+  inputText: Component_InputText.model,
   items: array(menuItem),
   filterProgress: progress,
   ripgrepProgress: progress,
@@ -40,7 +40,8 @@ let placeholderText =
 let defaults = variant => {
   variant,
   prefix: None,
-  inputText: Feature_InputText.create(~placeholder=placeholderText(variant)),
+  inputText:
+    Component_InputText.create(~placeholder=placeholderText(variant)),
   focused: None,
   items: [||],
   filterProgress: Complete,

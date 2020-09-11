@@ -6,13 +6,17 @@ type msg;
 [@deriving show]
 type model;
 
+type outmsg =
+  | Nothing
+  | Focus;
+
 let value: model => string;
 
 let create: (~placeholder: string) => model;
 
 let empty: model;
 
-let update: (msg, model) => model;
+let update: (msg, model) => (model, outmsg);
 
 let handleInput: (~key: string, model) => model;
 
@@ -33,7 +37,6 @@ module View: {
       ~key: Brisk_reconciler.Key.t=?,
       ~model: model,
       ~theme: ColorTheme.Colors.t,
-      ~style: list(Revery.UI.Style.allProps)=?,
       ~fontSize: float=?,
       ~fontFamily: Revery.Font.Family.t=?,
       ~placeholderColor: Revery.Color.t=?,
@@ -45,4 +48,8 @@ module View: {
       unit
     ) =>
     Revery.UI.element;
+};
+
+module Contributions: {
+  let contextKeys: list(WhenExpr.ContextKeys.Schema.entry(model));
 };
