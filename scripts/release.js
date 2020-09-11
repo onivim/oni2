@@ -258,7 +258,7 @@ if (process.platform == "linux") {
     fs.writeFileSync(entitlementsPath, require("plist").build(entitlementsContents))
 
     if (codesign) {
-        shell(`codesign -fs "${certName}" --deep ${appDirectory}`);
+        shell(`./scripts/osx/codesign.sh "${certName}"`);
     }
 
     const dmgPath = path.join(releaseDirectory, "Onivim2.dmg")

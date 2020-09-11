@@ -1,7 +1,15 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+   CERTIFICATE_NAME="Outrun Labs, LLC"
+else
+   CERTIFICATE_NAME="$1"
+fi
+
 SHORT_COMMIT_ID=$(git rev-parse --short HEAD)
 
 manual-codesign() {
-    codesign --force --verbose --sign "Outrun Labs, LLC" _release/Onivim2.app/$1 --options runtime --entitlements _release/entitlements.plist
+    codesign --force --verbose --sign "$CERTIFICATE_NAME" _release/Onivim2.app/$1 --options runtime --entitlements _release/entitlements.plist
 }
 
 if [ -z "$OSX_P12_CERTIFICATE" ]      
@@ -35,6 +43,7 @@ else
    manual-codesign Contents/MacOS/Oni2
    manual-codesign Contents/Frameworks/libssl.1.1.dylib
    manual-codesign Contents/Frameworks/libcrypto.1.1.dylib
+   manual-codesign Contents/Frameworks/Sparkle.framework
    manual-codesign Contents/Resources/node/node_modules/node-pty/build/Release/pty.node
    manual-codesign Contents/Resources/node/node_modules/spdlog/build/Release/spdlog.node
    manual-codesign Contents/Resources/node/node_modules/native-watchdog/build/Release/watchdog.node
