@@ -287,7 +287,7 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     | Error(_) => expect.bool(false).toBe(true)
     };
   });
- 
+
   test("autoReveal bool(false) setting", ({expect, _}) => {
     let configuration = {|
     { "explorer.autoReveal": false }
