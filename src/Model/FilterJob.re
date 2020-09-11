@@ -76,18 +76,43 @@ module Make = (Config: Config) => {
     // However, there are several ways we could improve this:
     // - If the query is just a stricter version... we could add the filter items back to completed
     // - If the query is broader, we could keep our current filtered items anyway
+    let oldExplodedFilter = pending.explodedFilter;
     let explodedFilter = Zed_utf8.explode(filter);
     let shouldLower = filter == String.lowercase_ascii(filter);
 
-    let newPendingWork = {
-      ...pending,
-      filter,
-      explodedFilter,
-      queue: pending.allItems, // Reset items to filter
-      shouldLower,
-    };
+    let currentMatches = ListEx.firstk(Constants.maxItemsToFilter, filtered);
 
-    (false, newPendingWork, CompletedWork.initial);
+    // If the new query matches the old one, the next round of filtering only need consider
+    // the selected subset. Still reset all completed work to ensure highlights and scores
+    // are updated and relevant.
+    if (pending.filter != ""
+        && Filter.fuzzyMatches(oldExplodedFilter, filter)
+        && List.length(currentMatches) < Constants.maxItemsToFilter) {
+      let itemsToFilter =
+        Queue.pushReversedChunk(
+          filtered @ Queue.toList(pending.queue),
+          Queue.empty,
+        );
+      let newPendingWork = {
+        ...pending,
+        filter,
+        explodedFilter,
+        shouldLower,
+        queue: itemsToFilter,
+      };
+
+      (false, newPendingWork, CompletedWork.initial);
+    } else {
+      let newPendingWork = {
+        ...pending,
+        filter,
+        explodedFilter,
+        queue: pending.allItems, // Reset items to filter
+        shouldLower,
+      };
+
+      (false, newPendingWork, CompletedWork.initial);
+    };
   };
 
   /* [addItems] is a helper for `Job.map` that updates the job when items have been added */
@@ -107,17 +132,15 @@ module Make = (Config: Config) => {
   let doActualWork =
       (
         {queue, filter, _} as pendingWork: PendingWork.t,
-        {ranked, _}: CompletedWork.t,
+        {filtered, ranked}: CompletedWork.t,
       ) => {
     // Take out the items to process this frame
     let (items, queue) = Queue.take(Constants.itemsPerFrame, queue);
 
-    // TODO: Understand why this is needed.
-    let filtered = items;
+    // Store all the items that have been looked at so far.
+    let filtered = filtered @ items;
 
     // Rank a limited nuumber of filtered items
-    // TODO: Should the mergeSortedList include a limit? Faster to quick return
-    // rather than merge then stop.
     let ranked =
       items
       |> Filter.rank(filter, format)
