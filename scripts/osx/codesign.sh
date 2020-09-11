@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
-if [ -z "$1" ]; then
+if [ -z "$CERTIFICATE_NAME" ]; then
    CERTIFICATE_NAME="Outrun Labs, LLC"
-else
-   CERTIFICATE_NAME="$1"
 fi
 
 SHORT_COMMIT_ID=$(git rev-parse --short HEAD)
@@ -16,7 +14,7 @@ if [ -z "$OSX_P12_CERTIFICATE" ]
 then   
    echo "No code signing certificate specified."   
 else   
-   echo "Code signing certificate specified"       
+   echo "Code signing certificate specified: $OSX_P12_CERTIFICATE, $CERTIFICATE_NAME"       
 
    # Load cert     
    echo $OSX_P12_CERTIFICATE | base64 --decode > certificate.p12   

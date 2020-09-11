@@ -77,3 +77,5 @@ setup.json
 
 # JUnit test output for CI
 *junit\.xml
+
+certificate.p12

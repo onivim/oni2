@@ -10,9 +10,7 @@ console.log("Working directory: " + process.cwd())
 let scriptArgs = process.argv.slice(2)
 console.log("Arguments: " + scriptArgs)
 
-let codesignIdx = scriptArgs.indexOf("--codesign")
-let codesign = (codesignIdx != -1)
-let certName = codesign ? scriptArgs[codesignIdx + 1] : ""
+let codesign = scriptArgs.indexOf("--codesign") != -1
 
 const rootDirectory = process.cwd()
 const vendorDirectory = path.join(rootDirectory, "vendor")
@@ -258,7 +256,11 @@ if (process.platform == "linux") {
     fs.writeFileSync(entitlementsPath, require("plist").build(entitlementsContents))
 
     if (codesign) {
-        shell(`./scripts/osx/codesign.sh "${certName}"`);
+        const cert = fs.readFileSync("./scripts/osx/test-certificate.p12", {encoding: 'base64'})
+
+        shell(
+            `OSX_P12_CERTIFICATE="${cert}" CODESIGN_PASSWORD="OutrunLabs" CERTIFICATE_NAME="Oni2" ./scripts/osx/codesign.sh`
+        );
     }
 
     const dmgPath = path.join(releaseDirectory, "Onivim2.dmg")
