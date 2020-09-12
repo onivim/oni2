@@ -58,6 +58,7 @@ let minimap =
       ~bufferHighlights,
       ~cursorPosition: CharacterPosition.t,
       ~colors,
+      ~config,
       ~dispatch,
       ~matchingPairs,
       ~maybeYankHighlights,
@@ -92,6 +93,7 @@ let minimap =
   <View style onMouseWheel>
     <Minimap
       editor
+      config
       cursorPosition
       dispatch
       width=minimapPixelWidth
@@ -181,7 +183,7 @@ let%component make =
     onEditorSizeChanged(editorId, width, height);
   };
 
-  let showYankHighlightAnimation = Config.yankHighlightAnimation.get(config);
+  let showYankHighlightAnimation = Config.yankHighlightEnabled.get(config);
   let maybeYankHighlights =
     showYankHighlightAnimation ? editor |> Editor.yankHighlight : None;
 
@@ -355,6 +357,7 @@ let%component make =
            bufferHighlights
            cursorPosition
            colors
+           config
            dispatch
            matchingPairs
            maybeYankHighlights
