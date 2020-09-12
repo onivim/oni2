@@ -26,7 +26,7 @@ const extensionsSourceDirectory = path.join(process.cwd(), "extensions")
 
 const eulaFile = path.join(process.cwd(), "Outrun-Labs-EULA-v1.1.md")
 const thirdPartyFile = path.join(process.cwd(), "ThirdPartyLicenses.txt")
-const sparkleFramework = path.join(rootDirectory, "vendor", "Sparkle-1.23.0", "Sparkle.framework");
+const sparkleFramework = path.join(rootDirectory, "vendor", "Sparkle-1.23.0", "Sparkle.framework")
 
 const copy = (source, dest) => {
     console.log(`Copying from ${source} to ${dest}`)
@@ -120,10 +120,9 @@ if (process.platform == "linux") {
 
     const plistFile = path.join(contentsDirectory, "Info.plist")
 
-    const numCommits = shell("git rev-list --count master").replace(/(\r\n|\n|\r)/gm,"")
+    const numCommits = shell("git rev-list --count master").replace(/(\r\n|\n|\r)/gm, "")
     const semvers = package.version.split(".")
     const cfBundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
-
 
     const plistContents = {
         CFBundleName: "Onivim2",
@@ -150,8 +149,8 @@ if (process.platform == "linux") {
         },
         SUFeedURL: process.env.ONI2_APPCAST_BASEURL,
         NSAppTransportSecurity: {
-            NSAllowsLocalNetworking: true
-        }
+            NSAllowsLocalNetworking: true,
+        },
     }
 
     fs.mkdirpSync(frameworksDirectory)
@@ -213,8 +212,8 @@ if (process.platform == "linux") {
     copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"))
 
     // fs.copySync(sparkleFramework, path.join(frameworksDirectory, "Sparkle.framework"));
-    
-    shell(`cp -R "${sparkleFramework}" "${path.join(frameworksDirectory, "Sparkle.framework")}"`);
+
+    shell(`cp -R "${sparkleFramework}" "${path.join(frameworksDirectory, "Sparkle.framework")}"`)
 
     shell(
         `dylibbundler -b -x "${path.join(
@@ -257,11 +256,11 @@ if (process.platform == "linux") {
     fs.writeFileSync(entitlementsPath, require("plist").build(entitlementsContents))
 
     if (codesign) {
-        const cert = fs.readFileSync("./scripts/osx/test-certificate.p12", {encoding: 'base64'})
+        const cert = fs.readFileSync("./scripts/osx/test-certificate.p12", { encoding: "base64" })
 
         shell(
-            `OSX_P12_CERTIFICATE="${cert}" CODESIGN_PASSWORD="OutrunLabs" CERTIFICATE_NAME="Oni2" ./scripts/osx/codesign.sh`
-        );
+            `OSX_P12_CERTIFICATE="${cert}" CODESIGN_PASSWORD="OutrunLabs" CERTIFICATE_NAME="Oni2" ./scripts/osx/codesign.sh`,
+        )
     }
 
     const dmgPath = path.join(releaseDirectory, "Onivim2.dmg")
