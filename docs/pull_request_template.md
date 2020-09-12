@@ -1,6 +1,6 @@
 ## Submitting a Pull Request
 
-Before we can accept a pull request from you, you'll need to sign a [Contributor License Agreement (CLA)](https://gist.github.com/bryphe/bf98297731dd69b9b580ca1d7fd2b90e). It is an automate process and you'll be guided through it the first time you open a PR.
+Before we can accept a pull request from you, you'll need to sign a [Contributor License Agreement (CLA)](https://gist.github.com/bryphe/bf98297731dd69b9b580ca1d7fd2b90e). It is an automated process and you'll be guided through it the first time you open a PR.
 
 To enable us to quickly review and accept your pull requests, follow these guidelines:
 
