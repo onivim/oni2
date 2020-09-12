@@ -17,6 +17,8 @@ steps:
     displayName: "esy x Oni2_editor -f --version"
   - script: esy x Oni2 -f --checkhealth 
     displayName: "esy x Oni2 -f --checkhealth"
+  - script: 'esy @release install'
+    displayName: 'Release: install'
   - script: esy @release create
     displayName: "esy @release create"
   - script: esy build-env

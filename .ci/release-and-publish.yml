@@ -1,7 +1,7 @@
 # Cross-platform set of build steps for building esy projects
 
 steps:
-  - script: esy x Oni2 --help
+  - script: esy @release x Oni2 --help
     displayName: "esy x Oni2 --help"
   - script: esy @release create
     displayName: "esy @release create"
