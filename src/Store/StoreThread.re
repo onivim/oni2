@@ -244,6 +244,7 @@ let start =
         c => c.editorFontSmoothing,
         state.configuration,
       );
+
     let editorFontSubscription =
       Service_Font.Sub.font(
         ~uniqueId="editorFont",
