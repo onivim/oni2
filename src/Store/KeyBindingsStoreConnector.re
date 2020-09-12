@@ -38,12 +38,12 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<S-C-F>",
         command: Commands.Workbench.Action.findInFiles.id,
-        condition: "editorTextFocus" |> WhenExpr.parse,
+        condition: "!isMac" |> WhenExpr.parse,
       },
       {
         key: "<D-S-F>",
         command: Commands.Workbench.Action.findInFiles.id,
-        condition: "isMac && editorTextFocus" |> WhenExpr.parse,
+        condition: "isMac" |> WhenExpr.parse,
       },
       {
         key: "<C-TAB>",
@@ -59,19 +59,17 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<D-P>",
         command: Commands.Workbench.Action.quickOpen.id,
-        condition:
-          "isMac && editorTextFocus || terminalFocus" |> WhenExpr.parse,
+        condition: "isMac" |> WhenExpr.parse,
       },
       {
         key: "<S-C-P>",
         command: Commands.Workbench.Action.showCommands.id,
-        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
+        condition: "!isMac" |> WhenExpr.parse,
       },
       {
         key: "<D-S-P>",
         command: Commands.Workbench.Action.showCommands.id,
-        condition:
-          "isMac && editorTextFocus || terminalFocus" |> WhenExpr.parse,
+        condition: "isMac" |> WhenExpr.parse,
       },
       {
         key: "<C-V>",

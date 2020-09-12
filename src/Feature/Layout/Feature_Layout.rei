@@ -78,6 +78,7 @@ module View: {
     (
       ~children: (module ContentModel),
       ~model: model,
+      ~isFocused: bool,
       ~isZenMode: bool,
       ~showTabs: bool,
       ~config: Config.resolver,
