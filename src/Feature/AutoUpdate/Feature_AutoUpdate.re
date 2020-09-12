@@ -1,19 +1,19 @@
 open Oni_Core;
 
 module Constants = {
-  let baseUrl = "https://onivim.io/appCast";
+  let baseUrl = "https://v2.onivim.io/appcast";
 };
 
 type model = {
   automaticallyChecksForUpdates: bool,
   licenseKey: string,
-  releaseChannel: [ | `Nightly | `Stable],
+  releaseChannel: [ | `Nightly | `Master],
 };
 
 let initial = {
   automaticallyChecksForUpdates: true,
   licenseKey: "",
-  releaseChannel: `Stable,
+  releaseChannel: `Master,
 };
 
 [@deriving show({with_path: false})]
@@ -32,14 +32,24 @@ type outmsg =
 let releaseChannelToString =
   fun
   | `Nightly => "nightly"
-  | `Stable => "stable";
+  | `Master => "master";
+
+let platformStr =
+  switch (Revery.Environment.os) {
+  | Mac => "macos"
+  | Linux => "linux"
+  | Windows => "windows"
+  | _ => ""
+  };
 
 let urlOfState = state =>
   Constants.baseUrl
-  ++ "?releaseChannel="
+  ++ "?channel="
   ++ releaseChannelToString(state.releaseChannel)
   ++ "&licenseKey="
-  ++ state.licenseKey;
+  ++ state.licenseKey
+  ++ "&platform="
+  ++ platformStr;
 
 module Configuration = {
   open Config.Schema;
@@ -56,15 +66,15 @@ module Configuration = {
           |> map(
                fun
                | "nightly" => `Nightly
-               | "stable"
-               | _ => `Stable,
+               | "master"
+               | _ => `Master,
              )
         ),
       ~encode=
         Json.Encode.(
           fun
           | `Nightly => string("nightly")
-          | `Stable => string("stable")
+          | `Master => string("master")
         ),
     );
 
@@ -72,7 +82,7 @@ module Configuration = {
     setting(
       "oni.app.updateReleaseChannel",
       releaseChannelCodec,
-      ~default=`Stable,
+      ~default=`Master,
     );
 };
 

@@ -10,7 +10,7 @@
       "MACOSX_DEPLOYMENT_TARGET": "10.12",
       "ONI2_ROOT": "#{self.root}",
       "ONI2_BUILD_MODE": "Release",
-      "ONI2_APPCAST_BASEURL": "https://onivim.io/appCast"
+      "ONI2_APPCAST_BASEURL": "https://v2.onivim.io/appcast"
     }
   }
 }

@@ -347,9 +347,7 @@ let start =
 
     let autoUpdateSub =
       Feature_AutoUpdate.sub(~config)
-      |> Isolinear.Sub.map(msg =>
-           Model.Actions.AutoUpdate(msg)
-         );
+      |> Isolinear.Sub.map(msg => Model.Actions.AutoUpdate(msg));
 
     [
       languageSupportSub,

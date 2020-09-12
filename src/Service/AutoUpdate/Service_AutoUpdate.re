@@ -7,14 +7,14 @@ type t = {
 [@deriving show({with_path: false})]
 type msg =
   | AutoCheckChanged(bool)
-  | ReleaseChannelChanged([ | `Nightly | `Stable])
+  | ReleaseChannelChanged([ | `Nightly | `Master])
   | LicenseKeyChanged(string);
 
 module Sub = {
   type params = {
     automaticallyChecksForUpdates: bool,
     licenseKey: string,
-    releaseChannel: [ | `Nightly | `Stable],
+    releaseChannel: [ | `Nightly | `Master],
     uniqueId: string,
   };
 
@@ -23,7 +23,7 @@ module Sub = {
       type state = {
         automaticallyChecksForUpdates: bool,
         licenseKey: string,
-        releaseChannel: [ | `Nightly | `Stable],
+        releaseChannel: [ | `Nightly | `Master],
       };
       type nonrec msg = msg;
       type nonrec params = params;
