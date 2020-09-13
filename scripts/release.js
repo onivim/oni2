@@ -120,7 +120,7 @@ if (process.platform == "linux") {
 
     const plistFile = path.join(contentsDirectory, "Info.plist")
 
-    const numCommits = shell("git rev-list --count master").replace(/(\r\n|\n|\r)/gm, "")
+    const numCommits = shell("git rev-list --count origin/master").replace(/(\r\n|\n|\r)/gm, "")
     const semvers = package.version.split(".")
     const cfBundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
 
