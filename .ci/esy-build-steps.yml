@@ -23,6 +23,7 @@ steps:
     displayName: 'esy @release build'
   - script: 'esy @release run -f --version'
     displayName: 'esy @release run -f --version'
+    continueOnError: true
   - script: esy @release create
     displayName: "esy @release create"
   - script: esy build-env
