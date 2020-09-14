@@ -172,57 +172,14 @@ let make = (~dispatch, ~state: State.t, ()) => {
     | Feature_SideBar.Right => List.rev(defaultSurfaceComponents)
     };
 
-  <View style={Styles.root(theme, state.windowDisplayMode)}>
-    <Feature_TitleBar.View
-      isFocused={state.windowIsFocused}
-      windowDisplayMode={state.windowDisplayMode |> mapDisplayMode}
-      font={state.uiFont}
-      title={state.windowTitle}
-      theme
-      dispatch=titleDispatch
-    />
-    <View style=Styles.workspace>
-      <View style=Styles.surface>
-        {React.listToElement(surfaceComponents)}
-      </View>
-      <Feature_Pane.View
-        theme
-        uiFont
-        editorFont
-        diagnostics={state.diagnostics}
-        notifications={state.notifications}
-        dispatch={msg => dispatch(Actions.Pane(msg))}
-        notificationDispatch={msg => dispatch(Actions.Notification(msg))}
-        pane={state.pane}
-      />
-    </View>
-    <Overlay>
-      {switch (state.quickmenu) {
-       | None => React.empty
-       | Some(quickmenu) =>
-         <QuickmenuView theme configuration state=quickmenu font />
-       }}
-      {switch (state.keyDisplayer) {
-       | Some(model) => <KeyDisplayer model uiFont bottom=50 right=50 />
-       | None => React.empty
-       }}
-      <Feature_Registers.View
-        theme
-        registers={state.registers}
-        font
-        dispatch={msg => dispatch(Actions.Registers(msg))}
-      />
-    </Overlay>
-    <statusBar />
-    <ContextMenu.Overlay />
-    <Tooltip.Overlay theme font=uiFont />
-    <messages />
-    <modals />
-    <Overlay>
-      <Feature_Sneak.View.Overlay model={state.sneak} theme font />
-    </Overlay>
-    {Revery.Environment.os == Windows
-     && state.windowDisplayMode != State.Maximized
-       ? <WindowResizers /> : React.empty}
-  </View>;
+
+  <View style=Style.[
+    backgroundColor(Revery.Colors.cornflowerBlue),
+    flexGrow(1),
+    flexDirection(`Row),
+    alignItems(`Center),
+    justifyContent(`Center)
+  ]>
+    <Text text="SUCCESSFULLY UPDATED!" />
+  </View>
 };
