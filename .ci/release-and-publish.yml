@@ -3,8 +3,8 @@
 steps:
   - script: esy @release x Oni2 --help
     displayName: "esy x Oni2 --help"
-  - script: esy @release create
-    displayName: "esy @release create"
+  - script: esy @release create --codesign
+    displayName: "esy @release create --codesign"
   - task: PublishBuildArtifacts@1
     displayName: "Release Artifact: ${{ parameters.platform }}"
     inputs:
