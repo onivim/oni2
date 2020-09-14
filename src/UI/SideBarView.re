@@ -72,7 +72,7 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
     switch (sideBar |> selected) {
     | FileExplorer =>
       let dispatch = msg => dispatch(Actions.FileExplorer(msg));
-      <Feature_Explorer.View model={state.fileExplorer} theme font dispatch />
+      <Feature_Explorer.View model={state.fileExplorer} theme font dispatch />;
 
     | SCM =>
       let onItemClick = (resource: Feature_SCM.Resource.t) =>

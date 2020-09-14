@@ -5,9 +5,7 @@ open Oni_Core;
 [@deriving show]
 type msg;
 
-module Msg: {
-    let keyPressed: string => msg;
-};
+module Msg: {let keyPressed: string => msg;};
 
 type model;
 
@@ -25,23 +23,29 @@ let initial: model;
 // UPDATE
 
 type outmsg =
-| Nothing
-| Effect(Isolinear.Effect.t(msg))
-| OpenFile(string)
-| GrabFocus;
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg))
+  | OpenFile(string)
+  | GrabFocus;
 
-let update: (
-    ~configuration: Oni_Core.Configuration.t, 
+let update:
+  (
+    ~configuration: Oni_Core.Configuration.t,
     ~languageInfo: Exthost.LanguageInfo.t,
     ~iconTheme: Oni_Core.IconTheme.t,
-msg, model) => (model, outmsg);
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 module View: {
-    let make: (
-        ~model: model,
-        ~theme: ColorTheme.Colors.t,
-        ~font: UiFont.t,
-        ~dispatch: msg => unit,
-        unit,
-    ) => Revery.UI.element;
-}
+  let make:
+    (
+      ~model: model,
+      ~theme: ColorTheme.Colors.t,
+      ~font: UiFont.t,
+      ~dispatch: msg => unit,
+      unit
+    ) =>
+    Revery.UI.element;
+};

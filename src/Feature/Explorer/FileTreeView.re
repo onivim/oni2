@@ -160,10 +160,7 @@ let make =
       ~dispatch: Model.msg => unit,
       (),
     ) => {
-  let onScrollOffsetChange = offset =>
-    dispatch(
-      ScrollOffsetChanged(offset),
-    );
+  let onScrollOffsetChange = offset => dispatch(ScrollOffsetChanged(offset));
 
   <View style=Styles.container>
     <FsTreeView

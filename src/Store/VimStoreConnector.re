@@ -1070,19 +1070,20 @@ let start =
         },
       };
       (
-        newState, Isolinear.Effect.none
-  // TODO: Refactor to subscription
-//        Isolinear.Effect.batch([
-//          FileExplorerStore.Effects.load(
-//            workingDirectory,
-//            state.languageInfo,
-//            state.iconTheme,
-//            state.configuration,
-//            ~onComplete=tree =>
-//            Actions.FileExplorer(TreeLoaded(tree))
-//          ),
-//          TitleStoreConnector.Effects.updateTitle(newState),
-//        ]),
+        newState,
+        Isolinear.Effect.none,
+        // TODO: Refactor to subscription
+        //        Isolinear.Effect.batch([
+        //          FileExplorerStore.Effects.load(
+        //            workingDirectory,
+        //            state.languageInfo,
+        //            state.iconTheme,
+        //            state.configuration,
+        //            ~onComplete=tree =>
+        //            Actions.FileExplorer(TreeLoaded(tree))
+        //          ),
+        //          TitleStoreConnector.Effects.updateTitle(newState),
+        //        ]),
       );
 
     | VimMessageReceived({priority, message, _}) =>

@@ -3,10 +3,7 @@ open Revery.UI;
 let make = (~model, ~theme, ~font, ~dispatch: Model.msg => unit, ()) => {
   switch ((model: Model.model)) {
   | {tree: Some(tree), active, focus, scrollOffset, decorations, _} =>
-    let onNodeClick = node =>
-      dispatch(
-        (NodeClicked(node))
-      );
+    let onNodeClick = node => dispatch(NodeClicked(node));
 
     <FileTreeView
       scrollOffset
