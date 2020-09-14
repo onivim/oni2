@@ -407,7 +407,7 @@ let update =
   | StatusBar(msg) =>
     open Feature_StatusBar;
     let (statusBar', maybeOutmsg) =
-      Feature_StatusBar.update(state.statusBar, msg);
+      Feature_StatusBar.update(~client=extHostClient, state.statusBar, msg);
 
     let state' = {...state, statusBar: statusBar'};
 
@@ -468,6 +468,11 @@ let update =
             )
           }),
         );
+
+      | Effect(eff) => (
+          state',
+          eff |> Isolinear.Effect.map(msg => Actions.StatusBar(msg)),
+        )
       };
 
     (state'', eff);

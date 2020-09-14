@@ -126,15 +126,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
 
       (state, effect);
 
-    | StatusBar(ContributedItemClicked({command, _})) => (
-        state,
-        Service_Exthost.Effects.Commands.executeContributedCommand(
-          ~command,
-          ~arguments=[],
-          extHostClient,
-        ),
-      )
-
     | DirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
     | NewDecorationProvider({handle, label}) => (
