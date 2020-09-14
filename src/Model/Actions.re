@@ -160,20 +160,6 @@ type t =
   | Modals(Feature_Modals.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
-  //  | NewDecorationProvider({
-  //      handle: int,
-  //      label: string,
-  //    })
-  //  | LostDecorationProvider({handle: int})
-  //  | DecorationsChanged({
-  //      handle: int,
-  //      uris: list(Uri.t),
-  //    })
-  //  | GotDecorations({
-  //      handle: int,
-  //      uri: Uri.t,
-  //      decorations: list(Decoration.t),
-  //    })
   | Vim(Feature_Vim.msg)
   | TabPage(Vim.TabPage.effect)
   | Yank({range: [@opaque] VisualRange.t})
