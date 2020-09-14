@@ -16,6 +16,17 @@ module Effects = {
         )
       });
   };
+  module Decorations = {
+    let provideDecorations = (~requests, ~toMsg, client) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="exthost.provideDecorations", dispatch => {
+        let promise =
+          Exthost.Request.Decorations.provideDecorations(~requests, client);
+
+        Lwt.on_success(promise, decorations => dispatch(toMsg(decorations)));
+      });
+    };
+  };
   module Documents = {
     let modelChanged =
         (

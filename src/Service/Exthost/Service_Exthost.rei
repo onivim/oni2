@@ -11,6 +11,17 @@ module Effects: {
       Isolinear.Effect.t(_);
   };
 
+  module Decorations: {
+    let provideDecorations:
+      (
+        ~requests: list(Exthost.Request.Decorations.request),
+        ~toMsg: Oni_Core.IntMap.t(Exthost.Request.Decorations.decoration) =>
+                'msg,
+        Exthost.Client.t
+      ) =>
+      Isolinear.Effect.t('msg);
+  };
+
   module Documents: {
     let modelChanged:
       (
