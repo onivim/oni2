@@ -61,7 +61,7 @@ type t = {
   syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
   layout: Feature_Layout.model,
-  fileExplorer: FileExplorer.t,
+  fileExplorer: Feature_Explorer.model,
   signatureHelp: Feature_SignatureHelp.model,
   // [windowTitle] is the title of the window
   windowTitle: string,
@@ -162,7 +162,7 @@ let initial =
     windowIsFocused: true,
     windowDisplayMode: Windowed,
     workspace: Workspace.initial(workingDirectory),
-    fileExplorer: FileExplorer.initial,
+    fileExplorer: Feature_Explorer.initial,
     signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
     pane: Feature_Pane.initial,

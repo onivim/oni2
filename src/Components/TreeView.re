@@ -5,8 +5,6 @@ open Revery.UI.Components;
 open Oni_Core;
 open Utility;
 
-module FontAwesome = Oni_Components.FontAwesome;
-module Codicon = Oni_Components.Codicon;
 module Sneakable = Feature_Sneak.View.Sneakable;
 
 module Log = (val Log.withNamespace("Oni2.UI.TreeView"));
