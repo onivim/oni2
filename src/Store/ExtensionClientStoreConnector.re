@@ -48,11 +48,12 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
     (handle, uri) =>
       Isolinear.Effect.createWithDispatch(
         ~name="exthost.provideDecorations", dispatch => {
-        let requests = [{id: nextRequestId^, handle, uri}];
+        let requests = [{id: nextRequestId^, uri}];
         incr(nextRequestId);
 
         let promise =
           Exthost.Request.Decorations.provideDecorations(
+            ~handle,
             ~requests,
             extHostClient,
           );
