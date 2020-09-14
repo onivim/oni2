@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-if [ -z "$CERTIFICATE_NAME" ]; then
+if [ -z "$CERTIFICATE_NAME" ]
+then
    CERTIFICATE_NAME="Outrun Labs, LLC"
 fi
 
@@ -41,6 +42,9 @@ else
    manual-codesign Contents/MacOS/Oni2
    manual-codesign Contents/Frameworks/libssl.1.1.dylib
    manual-codesign Contents/Frameworks/libcrypto.1.1.dylib
+   manual-codesign Contents/Frameworks/Sparkle.framework/Versions/A/Resources/AutoUpdate.app/Contents/MacOS/fileop
+   manual-codesign Contents/Frameworks/Sparkle.framework/Versions/A/Resources/AutoUpdate.app
+   manual-codesign Contents/Frameworks/Sparkle.framework/Versions/A
    manual-codesign Contents/Frameworks/Sparkle.framework
    manual-codesign Contents/Resources/node/node_modules/node-pty/build/Release/pty.node
    manual-codesign Contents/Resources/node/node_modules/spdlog/build/Release/spdlog.node
