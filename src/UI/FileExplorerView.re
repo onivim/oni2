@@ -15,7 +15,6 @@ let make = (~model, ~theme, ~font, ~decorations, ()) => {
       active
       focus
       onNodeClick
-      decorations
       tree
       theme
       font

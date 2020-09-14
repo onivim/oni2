@@ -12,14 +12,6 @@ module Decoration = {
   };
 };
 
-// Decoration provider
-
-//[@deriving show({with_path: false})]
-//type t = {
-//  handle: int,
-//  label: string,
-//};
-
 [@deriving show]
 type msg =
   | Exthost(Exthost.Msg.Decorations.msg)
@@ -54,9 +46,7 @@ let getDecorations = (~path: string, model) => {
 
 module Effects = {
   let provideDecorations = (~handle, ~uri, ~id, client) => {
-    let requests: list(Exthost.Request.Decorations.request) = [
-      {id, handle, uri},
-    ];
+    let requests: list(Exthost.Request.Decorations.request) = [{id, uri}];
 
     let toDecoration: Exthost.Request.Decorations.decoration => Decoration.t =
       decoration => {
@@ -79,6 +69,7 @@ module Effects = {
     };
 
     Service_Exthost.Effects.Decorations.provideDecorations(
+      ~handle,
       ~requests,
       ~toMsg,
       client,

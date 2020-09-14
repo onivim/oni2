@@ -149,7 +149,6 @@ module TreeView = TreeView.Make(FsTreeNode.Model);
 let make =
     (
       ~scrollOffset,
-      ~decorations,
       ~tree: FsTreeNode.t,
       ~active: option(string),
       ~focus: option(string),

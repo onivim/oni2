@@ -17,11 +17,15 @@ module Effects = {
       });
   };
   module Decorations = {
-    let provideDecorations = (~requests, ~toMsg, client) => {
+    let provideDecorations = (~handle, ~requests, ~toMsg, client) => {
       Isolinear.Effect.createWithDispatch(
         ~name="exthost.provideDecorations", dispatch => {
         let promise =
-          Exthost.Request.Decorations.provideDecorations(~requests, client);
+          Exthost.Request.Decorations.provideDecorations(
+            ~handle,
+            ~requests,
+            client,
+          );
 
         Lwt.on_success(promise, decorations => dispatch(toMsg(decorations)));
       });

@@ -1,5 +1,3 @@
-open Oni_Core;
-
 // MODEL
 
 module Decoration: {

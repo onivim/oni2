@@ -31,18 +31,13 @@ module Configuration = {
 module Decorations = {
   type request = {
     id: int,
-    handle: int,
     uri: Uri.t,
   };
 
   module Encode = {
     let request = request =>
       Json.Encode.(
-        obj([
-          ("id", request.id |> int),
-          ("handle", request.handle |> int),
-          ("uri", request.uri |> Uri.encode),
-        ])
+        obj([("id", request.id |> int), ("uri", request.uri |> Uri.encode)])
       );
   };
 
@@ -87,7 +82,7 @@ module Decorations = {
 
   type reply = IntMap.t(decoration);
 
-  let provideDecorations = (~requests, client) => {
+  let provideDecorations = (~handle, ~requests, client) => {
     let requestItems =
       requests |> List.map(Json.Encode.encode_value(Encode.request));
 
@@ -96,7 +91,7 @@ module Decorations = {
       ~usesCancellationToken=true,
       ~rpcName="ExtHostDecorations",
       ~method="$provideDecorations",
-      ~args=`List([`List(requestItems)]),
+      ~args=`List([`Int(handle), `List(requestItems)]),
       client,
     );
   };

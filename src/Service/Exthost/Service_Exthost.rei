@@ -14,6 +14,7 @@ module Effects: {
   module Decorations: {
     let provideDecorations:
       (
+        ~handle: int,
         ~requests: list(Exthost.Request.Decorations.request),
         ~toMsg: Oni_Core.IntMap.t(Exthost.Request.Decorations.decoration) =>
                 'msg,
