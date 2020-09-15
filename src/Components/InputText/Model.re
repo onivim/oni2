@@ -548,9 +548,14 @@ let%test_module "Model" =
                );
           };
           let%test "Removes selection when more than one word selected" = {
-             notCollapsed(~anchor=5, ~focus=23, ())
+            notCollapsed(~anchor=5, ~focus=23, ())
             |> handleInput(~key)
-            == notCollapsed(~anchor=5, ~focus=5, ~text="Some  String. Isn't it? Maybe", ());
+            == notCollapsed(
+                 ~anchor=5,
+                 ~focus=5,
+                 ~text="Some  String. Isn't it? Maybe",
+                 (),
+               );
           };
           let%test "Removes selection when unicode character" = {
             notCollapsed(~text=uTestString, ~anchor=0, ~focus=7, ())
