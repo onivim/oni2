@@ -299,10 +299,13 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Exthost(msg));
 
+    // TODO: Move sub inside Explorer feature
     let fileExplorerActiveFileSub =
       Model.Sub.activeFile(
         ~id="activeFile.fileExplorer", ~state, ~toMsg=maybeFilePath =>
-        Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
+        Model.Actions.FileExplorer(
+          Feature_Explorer.Msg.activeFileChanged(maybeFilePath),
+        )
       );
 
     let languageSupportSub =

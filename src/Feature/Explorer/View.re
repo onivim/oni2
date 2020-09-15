@@ -1,8 +1,9 @@
 open Revery.UI;
 
-let make = (~model, ~theme, ~font, ~dispatch: Model.msg => unit, ()) => {
+let make =
+    (~model, ~decorations, ~theme, ~font, ~dispatch: Model.msg => unit, ()) => {
   switch ((model: Model.model)) {
-  | {tree: Some(tree), active, focus, scrollOffset, decorations, _} =>
+  | {tree: Some(tree), active, focus, scrollOffset, _} =>
     let onNodeClick = node => dispatch(NodeClicked(node));
 
     <FileTreeView

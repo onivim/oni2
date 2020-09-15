@@ -5,20 +5,14 @@ open Oni_Core;
 [@deriving show]
 type msg;
 
-module Msg: {let keyPressed: string => msg;};
+module Msg: {
+  let keyPressed: string => msg;
+  let activeFileChanged: option(string) => msg;
+};
 
 type model;
 
 let initial: model;
-
-//let getFileIcon: (
-//    Exthost.LanguageInfo.t,
-//    IconTheme.t,
-//    string
-//) => option(IconTheme.IconDefinition.t)
-//
-//let getDirectoryTree:
-//    (string, Exthost.LanguageInfo.t, IconTheme.t, list(string)) => FsTreeNode.t;
 
 // UPDATE
 
@@ -42,6 +36,7 @@ module View: {
   let make:
     (
       ~model: model,
+      ~decorations: Feature_Decorations.model,
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~dispatch: msg => unit,

@@ -139,8 +139,6 @@ type outmsg =
 
 let setTree = (tree, model) => {...model, tree: Some(tree)};
 
-let setOpen = (isOpen, model) => {...model, isOpen};
-
 let setActive = (maybePath, model) => {...model, active: maybePath};
 
 let setFocus = (maybePath, model) =>

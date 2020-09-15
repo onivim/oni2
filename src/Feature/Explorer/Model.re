@@ -1,5 +1,3 @@
-open Oni_Core;
-
 // MODEL
 
 [@deriving show]
@@ -14,6 +12,7 @@ type msg =
 
 module Msg = {
   let keyPressed = key => KeyboardInput(key);
+  let activeFileChanged = maybePath => ActiveFilePathChanged(maybePath);
 };
 
 type model = {
@@ -21,8 +20,7 @@ type model = {
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(string), // path
-  focus: option(string), // path
-  decorations: StringMap.t(list(Decoration.t)),
+  focus: option(string) // path
 };
 
 let initial = {
@@ -31,5 +29,4 @@ let initial = {
   scrollOffset: `Start(0.),
   active: None,
   focus: None,
-  decorations: StringMap.empty,
 };
