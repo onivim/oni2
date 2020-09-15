@@ -211,5 +211,5 @@ Examples:
 
 ```
   {"key": "kk", "command": ":split", "when": "editorTextFocus"},
-  {"key": "C-D", "command": ":d 2", "when": "insertMode"}
+  {"key": "<C-D>", "command": ":d 2", "when": "insertMode"}
 ```
