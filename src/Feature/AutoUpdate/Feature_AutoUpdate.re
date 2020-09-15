@@ -7,7 +7,7 @@ module Constants = {
 type model = {
   automaticallyChecksForUpdates: bool,
   licenseKey: string,
-  releaseChannel: [ | `Nightly | `Master],
+  releaseChannel: [ | `Nightly | `Master | `Test],
 };
 
 let initial = {
@@ -32,7 +32,8 @@ type outmsg =
 let releaseChannelToString =
   fun
   | `Nightly => "nightly"
-  | `Master => "master";
+  | `Master => "master"
+  | `Test => "test-update";
 
 let platformStr =
   switch (Revery.Environment.os) {
@@ -66,6 +67,8 @@ module Configuration = {
           |> map(
                fun
                | "nightly" => `Nightly
+               | "test-update"
+               | "test" => `Test
                | "master"
                | _ => `Master,
              )
@@ -75,6 +78,7 @@ module Configuration = {
           fun
           | `Nightly => string("nightly")
           | `Master => string("master")
+          | `Test => string("test-update")
         ),
     );
 
