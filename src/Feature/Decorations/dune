@@ -1,0 +1,6 @@
+(library
+ (name Feature_Decorations)
+ (public_name Oni2.feature.decorations)
+ (libraries Oni2.core Oni2.exthost Oni2.service.exthost Revery isolinear)
+ (preprocess
+  (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))

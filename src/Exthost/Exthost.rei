@@ -1638,7 +1638,6 @@ module Request: {
   module Decorations: {
     type request = {
       id: int,
-      handle: int,
       uri: Uri.t,
     };
 
@@ -1653,7 +1652,7 @@ module Request: {
     type reply = IntMap.t(decoration);
 
     let provideDecorations:
-      (~requests: list(request), Client.t) => Lwt.t(reply);
+      (~handle: int, ~requests: list(request), Client.t) => Lwt.t(reply);
   };
 
   module DocumentContentProvider: {
