@@ -115,7 +115,7 @@ Common contexts with VSCode:
 
 | Context Name | True When | 
 | --- | --- |
-| `editorFocus` | An editor has focus |
+| `editorTextFocus` | An editor has focus |
 | `textInputFocus` | A text input area has focus |
 | `terminalFocus` | A terminal has focus |
 | `suggestWidgetVisible` | The suggest widget (auto-completion) is visible |

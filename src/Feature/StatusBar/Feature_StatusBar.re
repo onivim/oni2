@@ -58,7 +58,8 @@ type outmsg =
   | ClearNotifications
   | ToggleProblems
   | ToggleNotifications
-  | ShowFileTypePicker;
+  | ShowFileTypePicker
+  | Effect(Isolinear.Effect.t(msg));
 
 type model = {
   items: list(Item.t),
@@ -69,7 +70,7 @@ let initial = {items: [], contextMenuVisible: false};
 
 // UPDATE
 
-let update = (model, msg) => {
+let update = (~client, model, msg) => {
   let removeItemById = (items: list(Item.t), id) =>
     List.filter(si => Item.(si.id) != id, items);
 
@@ -107,7 +108,16 @@ let update = (model, msg) => {
 
   | DiagnosticsClicked => (model, ToggleProblems)
 
-  | _ => (model, Nothing)
+  | ContributedItemClicked({command, _}) => (
+      model,
+      Effect(
+        Service_Exthost.Effects.Commands.executeContributedCommand(
+          ~command,
+          ~arguments=[],
+          client,
+        ),
+      ),
+    )
   };
 };
 
