@@ -252,6 +252,7 @@
     "revery-terminal": "*"
   },
   "resolutions": {
+    "flex": "jordwalke/flex#6ff12fe",
     "revery": "revery-ui/revery#d2e614a",
     "esy-skia": "revery-ui/esy-skia#a3785f9",
     "rench": "bryphe/rench#a976fe5",
