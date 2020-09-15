@@ -41,88 +41,9 @@ module Internal = {
   };
 };
 
-let withTag = (tag: string, value: option(string)) =>
-  Option.map(v => (tag, v), value);
-
-let getTemplateVariables: State.t => StringMap.t(string) =
-  state => {
-    let maybeBuffer = Selectors.getActiveBuffer(state);
-    let maybeFilePath = Option.bind(maybeBuffer, Buffer.getFilePath);
-
-    let appName = Option.some("Onivim 2") |> withTag("appName");
-
-    let dirty =
-      Option.map(Buffer.isModified, maybeBuffer)
-      |> (
-        fun
-        | Some(true) => Some("*")
-        | _ => None
-      )
-      |> withTag("dirty");
-
-    let activeEditorShort =
-      Option.bind(maybeBuffer, Buffer.getShortFriendlyName)
-      |> withTag("activeEditorShort");
-
-    let activeEditorMedium =
-      Option.bind(maybeBuffer, buf =>
-        Buffer.getMediumFriendlyName(
-          ~workingDirectory=state.workspace.workingDirectory,
-          buf,
-        )
-      )
-      |> withTag("activeEditorMedium");
-
-    let activeEditorLong =
-      Option.bind(maybeBuffer, Buffer.getLongFriendlyName)
-      |> withTag("activeEditorLong");
-
-    let activeFolderShort =
-      Option.(
-        maybeFilePath |> map(Filename.dirname) |> map(Filename.basename)
-      )
-      |> withTag("activeFolderShort");
-
-    let activeFolderMedium =
-      maybeFilePath
-      |> Option.map(Filename.dirname)
-      |> OptionEx.flatMap(fp =>
-           Some(Path.toRelative(~base=state.workspace.workingDirectory, fp))
-         )
-      |> withTag("activeFolderMedium");
-
-    let activeFolderLong =
-      maybeFilePath
-      |> Option.map(Filename.dirname)
-      |> withTag("activeFolderLong");
-
-    [
-      appName,
-      dirty,
-      activeEditorShort,
-      activeEditorMedium,
-      activeEditorLong,
-      activeFolderShort,
-      activeFolderMedium,
-      activeFolderLong,
-      Some(("rootName", state.workspace.rootName)),
-      Some(("rootPath", state.workspace.workingDirectory)),
-    ]
-    |> OptionEx.values
-    |> List.to_seq
-    |> StringMap.of_seq;
-  };
-
 module Effects = {
   let updateTitle = state =>
     Isolinear.Effect.createWithDispatch(~name="title.update", dispatch => {
-      let templateVariables = getTemplateVariables(state);
-      let titleTemplate =
-        Configuration.getValue(c => c.windowTitle, state.configuration);
-
-      let titleModel = Title.ofString(titleTemplate);
-      let _title = Title.toString(titleModel, templateVariables);
-
       let activeBuffer = Selectors.getActiveBuffer(state);
       let workspaceRoot = state.workspace.rootName;
       let workspaceDirectory = state.workspace.workingDirectory;

@@ -1,3 +1,6 @@
+open Oni_Core;
+open Utility;
+
 type windowDisplayMode =
   | Minimized
   | Windowed
@@ -11,13 +14,82 @@ type msg =
   | WindowRestoreClicked
   | WindowCloseClicked
   | TitleDoubleClicked;
-
-let title = (
-  ~activeBuffer,
+ 
+module Internal = {
+let withTag = (tag: string, value: option(string)) =>
+  Option.map(v => (tag, v), value);
+let getTemplateVariables =
+  (~activeBuffer,
   ~workspaceRoot,
-  ~workspaceDirectory,
-  ~config,
-) => "hi";
+  ~workspaceDirectory)
+  => {
+    let maybeBuffer = activeBuffer;
+    let maybeFilePath = Option.bind(maybeBuffer, Buffer.getFilePath);
+
+    let appName = Option.some("Onivim 2") |> withTag("appName");
+
+    let dirty =
+      Option.map(Buffer.isModified, maybeBuffer)
+      |> (
+        fun
+        | Some(true) => Some("*")
+        | _ => None
+      )
+      |> withTag("dirty");
+
+    let activeEditorShort =
+      Option.bind(maybeBuffer, Buffer.getShortFriendlyName)
+      |> withTag("activeEditorShort");
+
+    let activeEditorMedium =
+      Option.bind(maybeBuffer, buf =>
+        Buffer.getMediumFriendlyName(
+          ~workingDirectory=workspaceDirectory,
+          buf,
+        )
+      )
+      |> withTag("activeEditorMedium");
+
+    let activeEditorLong =
+      Option.bind(maybeBuffer, Buffer.getLongFriendlyName)
+      |> withTag("activeEditorLong");
+
+    let activeFolderShort =
+      Option.(
+        maybeFilePath |> map(Filename.dirname) |> map(Filename.basename)
+      )
+      |> withTag("activeFolderShort");
+
+    let activeFolderMedium =
+      maybeFilePath
+      |> Option.map(Filename.dirname)
+      |> OptionEx.flatMap(fp =>
+           Some(Path.toRelative(~base=workspaceDirectory, fp))
+         )
+      |> withTag("activeFolderMedium");
+
+    let activeFolderLong =
+      maybeFilePath
+      |> Option.map(Filename.dirname)
+      |> withTag("activeFolderLong");
+
+    [
+      appName,
+      dirty,
+      activeEditorShort,
+      activeEditorMedium,
+      activeEditorLong,
+      activeFolderShort,
+      activeFolderMedium,
+      activeFolderLong,
+      Some(("rootName", workspaceRoot)),
+      Some(("rootPath", workspaceDirectory)),
+    ]
+    |> OptionEx.values
+    |> List.to_seq
+    |> StringMap.of_seq;
+  };
+};
 
 // CONFIGURATION
 
@@ -28,6 +100,27 @@ module Configuration = {
   let windowTitle = setting("window.title", string, 
   ~default="${dirty}${activeEditorShort}${separator}${rootName}${separator}${appName}");
 
+};
+
+
+let title = (
+  ~activeBuffer,
+  ~workspaceRoot,
+  ~workspaceDirectory,
+  ~config,
+) => {
+
+  let templateVariables = Internal.getTemplateVariables(
+    ~activeBuffer,
+    ~workspaceRoot,
+    ~workspaceDirectory
+  );
+  
+  let titleTemplate = Configuration.windowTitle.get(config);
+  let titleModel = titleTemplate
+  |> Title.ofString;
+
+  Title.toString(titleModel, templateVariables);
 };
 
 // CONTRIBUTIONS
