@@ -1,9 +1,9 @@
 open Oni_Model;
 open Revery.UI;
 
-let make = (~model, ~theme, ~font, ()) => {
+let make = (~model, ~theme, ~font, ~decorations, ()) => {
   switch ((model: FileExplorer.t)) {
-  | {tree: Some(tree), active, focus, scrollOffset, decorations, _} =>
+  | {tree: Some(tree), active, focus, scrollOffset, _} =>
     let onNodeClick = node =>
       GlobalContext.current().dispatch(
         FileExplorer(FileExplorer.NodeClicked(node)),

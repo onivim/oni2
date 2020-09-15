@@ -32,6 +32,7 @@ type t =
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
+  | Decorations(Feature_Decorations.msg)
   | EditorFont(Service_Font.msg)
   | Input(Feature_Input.msg)
   | TerminalFont(Service_Font.msg)
@@ -159,20 +160,6 @@ type t =
   | Modals(Feature_Modals.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
-  | NewDecorationProvider({
-      handle: int,
-      label: string,
-    })
-  | LostDecorationProvider({handle: int})
-  | DecorationsChanged({
-      handle: int,
-      uris: list(Uri.t),
-    })
-  | GotDecorations({
-      handle: int,
-      uri: Uri.t,
-      decorations: list(Decoration.t),
-    })
   | Vim(Feature_Vim.msg)
   | TabPage(Vim.TabPage.effect)
   | Yank({range: [@opaque] VisualRange.t})
