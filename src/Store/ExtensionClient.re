@@ -140,14 +140,10 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
 
         Lwt.return(Reply.okEmpty);
 
-      | Decorations(RegisterDecorationProvider({handle, label})) =>
-        dispatch(NewDecorationProvider({handle, label}));
-        Lwt.return(Reply.okEmpty);
-      | Decorations(UnregisterDecorationProvider({handle})) =>
-        dispatch(LostDecorationProvider({handle: handle}));
-        Lwt.return(Reply.okEmpty);
-      | Decorations(DecorationsDidChange({handle, uris})) =>
-        dispatch(DecorationsChanged({handle, uris}));
+      | Decorations(decorationsMsg) =>
+        dispatch(
+          Decorations(Feature_Decorations.Msg.exthost(decorationsMsg)),
+        );
         Lwt.return(Reply.okEmpty);
 
       | Documents(documentsMsg) =>

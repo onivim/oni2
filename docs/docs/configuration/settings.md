@@ -72,11 +72,11 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
+- `explorer.autoReveal` __(_string|bool_ default: `true`)__  - When `true`, the file explorer will jump to highlight the file current focused. When `false` the file explorer will remain static. If a string is entered it must be `"focusNoScroll"` which will still highlight the currently focused file in the file explorer but the file explorer will not scroll to it. Any other string supplied will be treated as if `false` was entered and the file explorer will remain static and not highlight the currently focused file. 
+
 - `editor.scrollShadow` __(_bool_ default: `true`)__ - When `true`, show a drop-shadow effect at the borders when there is additional content past the visible area.
 
 - `editor.smoothScroll` __(_bool_ default: `true`)__ - When `true`, smoothly scroll the editor when the viewport is adjusted due to a cursor motion.
-
-- `editor.yankHighlightAnimation` __(_bool_ default: `true`)__ - When `true`, briefly highlight yanks on the editor surface.
 
 - `editor.zenMode.singleFile` __(_bool_ default: `true`)__ - When `true`, the Onivim will automatically enter zen mode when started up with a single file. Zen mode hides most of the UI until disabled via the command pallette.
 
@@ -87,6 +87,12 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `workbench.iconTheme` __(_string_ default: `"vs-seti"`)__ - Icon theme to use.
 
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
+
+- `vim.highlightedyank.enable` __(_bool_ default: `true`)__ - When `true`, briefly highlight yanks on the editor surface.
+
+- `vim.highlightedyank.color` __(_string_)__ - Hex string defining a color, ie `#FF00FFFF`.
+
+- `vim.highlightedyank.duration` __(_int_ default: `300`)__ - The time, in milliseconds, the yank highlight is visible.
 
 ## Layout
 

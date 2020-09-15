@@ -159,6 +159,23 @@ let update =
 
     ({...state, clipboard: model}, eff);
 
+  | Decorations(msg) =>
+    let (model, outMsg) =
+      Feature_Decorations.update(
+        ~client=extHostClient,
+        msg,
+        state.decorations,
+      );
+
+    let state = {...state, decorations: model};
+    let eff =
+      switch (outMsg) {
+      | Feature_Decorations.Nothing => Isolinear.Effect.none
+      | Feature_Decorations.Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Decorations(msg))
+      };
+    (state, eff);
+
   | Exthost(msg) =>
     let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
 
@@ -407,7 +424,7 @@ let update =
   | StatusBar(msg) =>
     open Feature_StatusBar;
     let (statusBar', maybeOutmsg) =
-      Feature_StatusBar.update(state.statusBar, msg);
+      Feature_StatusBar.update(~client=extHostClient, state.statusBar, msg);
 
     let state' = {...state, statusBar: statusBar'};
 
@@ -468,6 +485,11 @@ let update =
             )
           }),
         );
+
+      | Effect(eff) => (
+          state',
+          eff |> Isolinear.Effect.map(msg => Actions.StatusBar(msg)),
+        )
       };
 
     (state'', eff);
