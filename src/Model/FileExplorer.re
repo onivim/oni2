@@ -91,16 +91,20 @@ let getFilesAndFolders = (~ignored, cwd, getIcon) => {
            |> List.filter(({name, _}) =>
                 name != ".." && name != "." && !List.mem(name, ignored)
               )
-           |> List.map(({name, kind}) => {
+           |> List.filter_map(({name, kind}) => {
                 let path = Filename.concat(cwd, name);
-                if (kind == `FILE) {
-                  FsTreeNode.file(path, ~icon=getIcon(path));
-                } else {
-                  FsTreeNode.directory(
-                    path,
-                    ~icon=getIcon(path),
-                    ~children=[],
+                if (kind == `FILE || kind == `LINK) {
+                  Some(FsTreeNode.file(path, ~icon=getIcon(path)));
+                } else if (kind == `DIR) {
+                  Some(
+                    FsTreeNode.directory(
+                      path,
+                      ~icon=getIcon(path),
+                      ~children=[],
+                    ),
                   );
+                } else {
+                  None;
                 };
               })
            |> List.sort(sortByLoweredDisplayName)
