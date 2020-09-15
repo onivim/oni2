@@ -75,6 +75,8 @@ let make = (~dispatch, ~state: State.t, ()) => {
 
   let mode = ModeManager.current(state);
 
+  let config = Feature_Configuration.resolver(state.config, state.vim);
+
   let maybeActiveBuffer = Oni_Model.Selectors.getActiveBuffer(state);
   let activeEditor = Feature_Layout.activeEditor(state.layout);
   let indentationSettings = Oni_Model.Indentation.getForActiveBuffer(state);
@@ -174,10 +176,13 @@ let make = (~dispatch, ~state: State.t, ()) => {
 
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
+      activeBuffer=maybeActiveBuffer
+      workspaceRoot={state.workspace.rootName}
+      workspaceDirectory={state.workspace.workingDirectory}
+      config
       isFocused={state.windowIsFocused}
       windowDisplayMode={state.windowDisplayMode |> mapDisplayMode}
       font={state.uiFont}
-      title={state.windowTitle}
       theme
       dispatch=titleDispatch
     />

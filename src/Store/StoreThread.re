@@ -82,7 +82,6 @@ let start =
       ~getZoom,
       ~setZoom,
       ~quit,
-      ~setTitle,
       ~setVsync,
       ~maximize,
       ~minimize,
@@ -162,7 +161,7 @@ let start =
     InputStoreConnector.start(window, runRunEffects);
 
   let titleUpdater =
-    TitleStoreConnector.start(setTitle, maximize, minimize, restore, close);
+    TitleStoreConnector.start(maximize, minimize, restore, close);
   let updater =
     Isolinear.Updater.combine([
       Isolinear.Updater.ofReducer(Reducer.reduce),

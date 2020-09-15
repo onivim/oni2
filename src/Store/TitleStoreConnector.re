@@ -41,36 +41,8 @@ module Internal = {
   };
 };
 
-module Effects = {
-  let updateTitle = state =>
-    Isolinear.Effect.createWithDispatch(~name="title.update", dispatch => {
-      let activeBuffer = Selectors.getActiveBuffer(state);
-      let workspaceRoot = state.workspace.rootName;
-      let workspaceDirectory = state.workspace.workingDirectory;
-        let config=Feature_Configuration.resolver(state.config, state.vim);
-
-      let title = Feature_TitleBar.title(
-        ~activeBuffer,
-        ~workspaceRoot,
-        ~workspaceDirectory,
-        ~config
-      );
-
-      dispatch(Actions.SetTitle(title));
-    });
-};
-
-let start = (setTitle, maximize, minimize, restore, close) => {
+let start = (maximize, minimize, restore, close) => {
   let _lastTitle = ref("");
-
-  let internalSetTitleEffect = title =>
-    Isolinear.Effect.createWithDispatch(~name="title.set", _dispatch =>
-      if (!String.equal(_lastTitle^, title)) {
-        _lastTitle := title;
-
-        setTitle(title);
-      }
-    );
 
   let internalDoubleClickEffect =
     Isolinear.Effect.create(~name="maximize", () =>
@@ -91,18 +63,6 @@ let start = (setTitle, maximize, minimize, restore, close) => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Init => (state, Effects.updateTitle(state))
-    | Buffers(_) => (state, Effects.updateTitle(state))
-
-    // TODO: This shouldn't exist, but needs to  be here because it depends on
-    // `setTitle` being passed in. It would however be better to have a more
-    // general mechanism, like "Effect actions" handled by an injected dependency
-    // or have effects parameterized by an "environment" passed in along with
-    // `dispatch`
-    | SetTitle(title) => (
-        {...state, windowTitle: title},
-        internalSetTitleEffect(title),
-      )
     | TitleBar(Feature_TitleBar.TitleDoubleClicked) => (
         state,
         internalDoubleClickEffect,

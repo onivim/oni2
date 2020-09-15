@@ -14,15 +14,12 @@ type msg =
   | WindowRestoreClicked
   | WindowCloseClicked
   | TitleDoubleClicked;
- 
+
 module Internal = {
-let withTag = (tag: string, value: option(string)) =>
-  Option.map(v => (tag, v), value);
-let getTemplateVariables =
-  (~activeBuffer,
-  ~workspaceRoot,
-  ~workspaceDirectory)
-  => {
+  let withTag = (tag: string, value: option(string)) =>
+    Option.map(v => (tag, v), value);
+  let getTemplateVariables =
+      (~activeBuffer, ~workspaceRoot, ~workspaceDirectory) => {
     let maybeBuffer = activeBuffer;
     let maybeFilePath = Option.bind(maybeBuffer, Buffer.getFilePath);
 
@@ -97,28 +94,25 @@ module Configuration = {
   open Oni_Core;
   open Config.Schema;
 
-  let windowTitle = setting("window.title", string, 
-  ~default="${dirty}${activeEditorShort}${separator}${rootName}${separator}${appName}");
-
+  let windowTitle =
+    setting(
+      "window.title",
+      string,
+      ~default=
+        "${dirty}${activeEditorShort}${separator}${rootName}${separator}${appName}",
+    );
 };
 
+let title = (~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config) => {
+  let templateVariables =
+    Internal.getTemplateVariables(
+      ~activeBuffer,
+      ~workspaceRoot,
+      ~workspaceDirectory,
+    );
 
-let title = (
-  ~activeBuffer,
-  ~workspaceRoot,
-  ~workspaceDirectory,
-  ~config,
-) => {
-
-  let templateVariables = Internal.getTemplateVariables(
-    ~activeBuffer,
-    ~workspaceRoot,
-    ~workspaceDirectory
-  );
-  
   let titleTemplate = Configuration.windowTitle.get(config);
-  let titleModel = titleTemplate
-  |> Title.ofString;
+  let titleModel = titleTemplate |> Title.ofString;
 
   Title.toString(titleModel, templateVariables);
 };
@@ -126,11 +120,7 @@ let title = (
 // CONTRIBUTIONS
 
 module Contributions = {
-
-  let configuration =
-    Configuration.[
-      windowTitle.spec
-    ];
+  let configuration = Configuration.[windowTitle.spec];
 };
 
 // VIEW
@@ -387,14 +377,19 @@ module View = {
 
   let make =
       (
+        ~activeBuffer,
+        ~workspaceRoot,
+        ~workspaceDirectory,
+        ~config,
         ~dispatch,
         ~isFocused,
         ~windowDisplayMode,
-        ~title,
         ~theme,
         ~font: UiFont.t,
         (),
       ) => {
+    let title =
+      title(~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config);
     switch (Revery.Environment.os) {
     | Mac => <Mac isFocused windowDisplayMode font title theme dispatch />
     | Windows =>
