@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Model.FileExplorer"));
 
@@ -81,51 +82,77 @@ let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
    not recurse too far.
  */
 let getFilesAndFolders = (~ignored, cwd, getIcon) => {
-  let rec getDirContent = (~loadChildren=false, cwd) => {
-    let toFsTreeNode = file => {
-      let path = Filename.concat(cwd, file);
-
-      if (isDirectory(path)) {
-        let%lwt children =
-          if (loadChildren) {
-            /**
-               If resolving children for a particular directory fails
-                log the error but carry on processing other directories
-              */
-            attempt(() => getDirContent(path), ~defaultValue=[])
-            |> Lwt.map(List.sort(sortByLoweredDisplayName));
-          } else {
-            Lwt.return([]);
-          };
-
-        Lwt.return(
-          FsTreeNode.directory(path, ~icon=getIcon(path), ~children),
-        );
-      } else {
-        FsTreeNode.file(path, ~icon=getIcon(path)) |> Lwt.return;
-      };
-    };
-
-    let%lwt files =
-      Lwt_unix.files_of_directory(cwd)
-      /* Filter out the relative name for current and parent directory*/
-      |> Lwt_stream.filter(name => name != ".." && name != ".")
-      /* Remove ignored files from search */
-      |> Lwt_stream.filter(name => !List.mem(name, ignored))
-      |> Lwt_stream.to_list;
-
-    Lwt_list.map_p(toFsTreeNode, files);
-  };
-
-  attempt(() => getDirContent(cwd, ~loadChildren=true), ~defaultValue=[]);
+  Luv.File.Dirent.
+    (
+      cwd
+      |> Service_OS.Api.readdir
+      |> Lwt.map((dirents: list(Luv.File.Dirent.t)) => {
+           dirents
+           |> List.filter(({name, _}) =>
+                name != ".." && name != "." && !List.mem(name, ignored)
+              )
+           |> List.map(({name, kind}) => {
+                let path = Filename.concat(cwd, name);
+                if (kind == `FILE) {
+                  FsTreeNode.file(path, ~icon=getIcon(path));
+                } else {
+                  FsTreeNode.directory(
+                    path,
+                    ~icon=getIcon(path),
+                    ~children=[],
+                  );
+                };
+              })
+           |> List.sort(sortByLoweredDisplayName)
+         })
+    );
+    //  let rec getDirContent = (~loadChildren=false, cwd) => {
+    //    let toFsTreeNode = file => {
+    //      let path = Filename.concat(cwd, file);
+    //
+    //      if (isDirectory(path)) {
+    //        let%lwt children =
+    //          if (loadChildren) {
+    //            /**
+    //               If resolving children for a particular directory fails
+    //                log the error but carry on processing other directories
+    //              */
+    //            attempt(() => getDirContent(path), ~defaultValue=[])
+    //            |> Lwt.map(List.sort(sortByLoweredDisplayName));
+    //          } else {
+    //            Lwt.return([]);
+    //          };
+    //
+    //        Lwt.return(
+    //          FsTreeNode.directory(path, ~icon=getIcon(path), ~children),
+    //        );
+    //      } else {
+    //        FsTreeNode.file(path, ~icon=getIcon(path)) |> Lwt.return;
+    //      };
+    //    };
+    //
+    //    let%lwt files =
+    //      Lwt_unix.files_of_directory(cwd)
+    //      /* Filter out the relative name for current and parent directory*/
+    //      |> Lwt_stream.filter(name => name != ".." && name != ".")
+    //      /* Remove ignored files from search */
+    //      |> Lwt_stream.filter(name => !List.mem(name, ignored))
+    //      |> Lwt_stream.to_list;
+    //
+    //    Lwt_list.map_p(toFsTreeNode, files);
 };
+
+//  attempt(() => getDirContent(cwd, ~loadChildren=false), ~defaultValue=[]);
+//};
 
 let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   let getIcon = getFileIcon(languageInfo, iconTheme);
-  let children =
-    getFilesAndFolders(~ignored, cwd, getIcon)
-    |> Lwt_main.run
-    |> List.sort(sortByLoweredDisplayName);
+  let childrenPromise = getFilesAndFolders(~ignored, cwd, getIcon);
+  //    |> Lwt_main.run
+  //    |> List.sort(sortByLoweredDisplayName);
 
-  FsTreeNode.directory(cwd, ~icon=getIcon(cwd), ~children, ~isOpen=true);
+  childrenPromise
+  |> Lwt.map(children => {
+       FsTreeNode.directory(cwd, ~icon=getIcon(cwd), ~children, ~isOpen=true)
+     });
 };

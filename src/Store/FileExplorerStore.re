@@ -12,7 +12,7 @@ module Effects = {
     Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
       let ignored =
         Configuration.getValue(c => c.filesExclude, configuration);
-      let tree =
+      let promise =
         FileExplorer.getDirectoryTree(
           directory,
           languageInfo,
@@ -20,7 +20,7 @@ module Effects = {
           ignored,
         );
 
-      dispatch(onComplete(tree));
+      Lwt.on_success(promise, tree => {dispatch(onComplete(tree))});
     });
   };
 };
