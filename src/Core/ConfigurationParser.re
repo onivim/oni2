@@ -264,10 +264,6 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, filesExclude: parseStringList(json)},
   ),
   (
-    "window.title",
-    (config, json) => {...config, windowTitle: parseString(json)},
-  ),
-  (
     "terminal.integrated.fontFamily",
     (config, json) => {
       ...config,

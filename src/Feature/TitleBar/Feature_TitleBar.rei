@@ -1,5 +1,7 @@
 open Oni_Core;
 
+// MODEL
+
 type windowDisplayMode =
   | Minimized
   | Windowed
@@ -14,6 +16,17 @@ type msg =
   | WindowCloseClicked
   | TitleDoubleClicked;
 
+
+let title: (
+  ~activeBuffer: option(Oni_Core.Buffer.t),
+  ~workspaceRoot: string,
+  ~workspaceDirectory: string,
+  ~config: Oni_Core.Config.resolver,
+) => string;
+
+
+// VIEW
+
 module View: {
   let make: (
     ~dispatch: msg => unit,
@@ -25,3 +38,9 @@ module View: {
     unit
   ) => Revery.UI.element;
 };
+
+// CONTRIBUTIONS
+
+module Contributions: {
+  let configuration: list(Config.Schema.spec);
+}

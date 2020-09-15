@@ -97,6 +97,7 @@ let initial =
         Feature_Terminal.Contributions.configuration,
         Feature_LanguageSupport.Contributions.configuration,
         Feature_Layout.Contributions.configuration,
+        Feature_TitleBar.Contribtuions.configuration,
       ],
     );
   let initialEditor = {

@@ -121,7 +121,19 @@ module Effects = {
         Configuration.getValue(c => c.windowTitle, state.configuration);
 
       let titleModel = Title.ofString(titleTemplate);
-      let title = Title.toString(titleModel, templateVariables);
+      let _title = Title.toString(titleModel, templateVariables);
+
+      let activeBuffer = Selectors.getActiveBuffer(state);
+      let workspaceRoot = state.workspace.rootName;
+      let workspaceDirectory = state.workspace.workingDirectory;
+        let config=Feature_Configuration.resolver(state.config, state.vim);
+
+      let title = Feature_TitleBar.title(
+        ~activeBuffer,
+        ~workspaceRoot,
+        ~workspaceDirectory,
+        ~config
+      );
 
       dispatch(Actions.SetTitle(title));
     });

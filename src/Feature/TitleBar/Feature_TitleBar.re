@@ -12,6 +12,34 @@ type msg =
   | WindowCloseClicked
   | TitleDoubleClicked;
 
+let title = (
+  ~activeBuffer,
+  ~workspaceRoot,
+  ~workspaceDirectory,
+  ~config,
+) => "hi";
+
+// CONFIGURATION
+
+module Configuration = {
+  open Oni_Core;
+  open Config.Schema;
+
+  let windowTitle = setting("window.title", string, 
+  ~default="${dirty}${activeEditorShort}${separator}${rootName}${separator}${appName}");
+
+};
+
+// CONTRIBUTIONS
+
+module Contributions = {
+
+  let configuration =
+    Configuration.[
+      windowTitle.spec
+    ];
+};
+
 // VIEW
 open Revery;
 open Revery.UI;
