@@ -36,3 +36,13 @@ module Effect: {
   let statMultiple:
     (list(string), (string, Unix.stats) => 'msg) => Isolinear.Effect.t('msg);
 };
+
+module Sub: {
+  let dir:
+    (
+      ~uniqueId: string,
+      ~toMsg: result(list(Luv.File.Dirent.t), string) => 'msg,
+      string
+    ) =>
+    Isolinear.Sub.t('msg);
+};
