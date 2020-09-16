@@ -160,7 +160,7 @@ let initial =
     windowIsFocused: true,
     windowDisplayMode: Windowed,
     workspace: Workspace.initial(workingDirectory),
-    fileExplorer: Feature_Explorer.initial,
+    fileExplorer: Feature_Explorer.initial(~rootPath=workingDirectory),
     signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
     pane: Feature_Pane.initial,

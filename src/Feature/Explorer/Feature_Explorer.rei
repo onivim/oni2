@@ -12,7 +12,9 @@ module Msg: {
 
 type model;
 
-let initial: model;
+let initial: (~rootPath: string) => model;
+
+let setRoot: (~rootPath: string, model) => model;
 
 // UPDATE
 
@@ -31,6 +33,19 @@ let update:
     model
   ) =>
   (model, outmsg);
+
+// SUBSCRIPTION
+
+let sub:
+  (
+    ~configuration: Oni_Core.Configuration.t,
+    ~languageInfo: Exthost.LanguageInfo.t,
+    ~iconTheme: Oni_Core.IconTheme.t,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
+
+// VIEW
 
 module View: {
   let make:

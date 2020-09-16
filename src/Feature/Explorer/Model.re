@@ -4,6 +4,7 @@
 type msg =
   | ActiveFilePathChanged(option(string))
   | TreeLoaded(FsTreeNode.t)
+  | TreeLoadError(string)
   | NodeLoaded(FsTreeNode.t)
   | FocusNodeLoaded(FsTreeNode.t)
   | NodeClicked(FsTreeNode.t)
@@ -16,6 +17,7 @@ module Msg = {
 };
 
 type model = {
+  rootPath: string,
   tree: option(FsTreeNode.t),
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
@@ -23,10 +25,19 @@ type model = {
   focus: option(string) // path
 };
 
-let initial = {
+let initial = (~rootPath) => {
+  rootPath,
   tree: None,
   isOpen: true,
   scrollOffset: `Start(0.),
+  active: None,
+  focus: None,
+};
+
+let setRoot = (~rootPath, model) => {
+  ...model,
+  rootPath,
+  tree: None,
   active: None,
   focus: None,
 };

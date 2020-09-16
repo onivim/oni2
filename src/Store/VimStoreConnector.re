@@ -1064,6 +1064,11 @@ let start =
     | DirectoryChanged(workingDirectory) =>
       let newState = {
         ...state,
+        fileExplorer:
+          Feature_Explorer.setRoot(
+            ~rootPath=workingDirectory,
+            state.fileExplorer,
+          ),
         workspace: {
           workingDirectory,
           rootName: Filename.basename(workingDirectory),

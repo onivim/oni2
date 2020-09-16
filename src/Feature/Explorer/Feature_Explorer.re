@@ -50,64 +50,57 @@ module Internal = {
     };
   };
 
-  /**
-      getFilesAndFolders
-
-       This function uses Lwt to get all the files and folders in a directory
-       then for each we check if it is a file or folder.
-       if it is a directory we recursively call getFilesAndFolders on it
-       to resolves its subfolders and files. We do this concurrently using
-       Lwt_list.map_p. The recursion is gated by the depth value so it does
-       not recurse too far.
-     */
-  let getFilesAndFolders = (~ignored, cwd, getIcon) => {
-    let rec getDirContent = (~loadChildren=false, cwd) => {
-      let toFsTreeNode = file => {
-        let path = Filename.concat(cwd, file);
-
-        if (isDirectory(path)) {
-          let%lwt children =
-            if (loadChildren) {
-              /**
-                   If resolving children for a particular directory fails
-                    log the error but carry on processing other directories
-                  */
-              attempt(() => getDirContent(path), ~defaultValue=[])
-              |> Lwt.map(List.sort(sortByLoweredDisplayName));
-            } else {
-              Lwt.return([]);
-            };
-
-          Lwt.return(
-            FsTreeNode.directory(path, ~icon=getIcon(path), ~children),
-          );
-        } else {
-          FsTreeNode.file(path, ~icon=getIcon(path)) |> Lwt.return;
-        };
-      };
-
-      let%lwt files =
-        Lwt_unix.files_of_directory(cwd)
-        /* Filter out the relative name for current and parent directory*/
-        |> Lwt_stream.filter(name => name != ".." && name != ".")
-        /* Remove ignored files from search */
-        |> Lwt_stream.filter(name => !List.mem(name, ignored))
-        |> Lwt_stream.to_list;
-
-      Lwt_list.map_p(toFsTreeNode, files);
+  let luvDirentToFsTree = (~getIcon, ~cwd, {name, kind}: Luv.File.Dirent.t) => {
+    let path = Filename.concat(cwd, name);
+    if (kind == `FILE || kind == `LINK) {
+      Some(FsTreeNode.file(path, ~icon=getIcon(path)));
+    } else if (kind == `DIR) {
+      Some(FsTreeNode.directory(path, ~icon=getIcon(path), ~children=[]));
+    } else {
+      None;
     };
+  };
 
-    attempt(() => getDirContent(cwd, ~loadChildren=true), ~defaultValue=[]);
+  let luvDirentsToFsTree = (~getIcon, ~cwd, ~ignored, dirents) => {
+    dirents
+    |> List.filter(({name, _}: Luv.File.Dirent.t) =>
+         name != ".." && name != "." && !List.mem(name, ignored)
+       )
+    |> List.filter_map(luvDirentToFsTree(~getIcon, ~cwd))
+    |> List.sort(sortByLoweredDisplayName);
+  };
+
+  /**
+    getFilesAndFolders
+
+     This function uses Lwt to get all the files and folders in a directory
+     then for each we check if it is a file or folder.
+     if it is a directory we recursively call getFilesAndFolders on it
+     to resolves its subfolders and files. We do this concurrently using
+     Lwt_list.map_p. The recursion is gated by the depth value so it does
+     not recurse too far.
+   */
+  let getFilesAndFolders = (~ignored, cwd, getIcon) => {
+    Luv.File.Dirent.(
+      cwd
+      |> Service_OS.Api.readdir
+      |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd, ~getIcon))
+    );
   };
 
   let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
     let getIcon = getFileIcon(languageInfo, iconTheme);
-    let children =
-      getFilesAndFolders(~ignored, cwd, getIcon)
-      |> Lwt_main.run
-      |> List.sort(sortByLoweredDisplayName);
+    let childrenPromise = getFilesAndFolders(~ignored, cwd, getIcon);
 
-    FsTreeNode.directory(cwd, ~icon=getIcon(cwd), ~children, ~isOpen=true);
+    childrenPromise
+    |> Lwt.map(children => {
+         FsTreeNode.directory(
+           cwd,
+           ~icon=getIcon(cwd),
+           ~children,
+           ~isOpen=true,
+         )
+       });
   };
 };
 
@@ -116,7 +109,7 @@ module Effects = {
     Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
       let ignored =
         Configuration.getValue(c => c.filesExclude, configuration);
-      let tree =
+      let promise =
         Internal.getDirectoryTree(
           directory,
           languageInfo,
@@ -124,7 +117,7 @@ module Effects = {
           ignored,
         );
 
-      dispatch(onComplete(tree));
+      Lwt.on_success(promise, tree => {dispatch(onComplete(tree))});
     });
   };
 };
@@ -274,6 +267,8 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
 
   | TreeLoaded(tree) => (setTree(tree, model), Nothing)
 
+  | TreeLoadError(msg) => (model, Nothing)
+
   | NodeLoaded(node) => (replaceNode(node, model), Nothing)
 
   | FocusNodeLoaded(node) =>
@@ -335,3 +330,28 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
 };
 
 module View = View;
+
+let sub = (~configuration, ~languageInfo, ~iconTheme, {rootPath, _}) => {
+  // TODO: Ignored
+  let getIcon = getFileIcon(languageInfo, iconTheme);
+  let ignored = Configuration.getValue(c => c.filesExclude, configuration);
+
+  let toMsg =
+    fun
+    | Ok(dirents) => {
+        let children =
+          dirents
+          |> Internal.luvDirentsToFsTree(~ignored, ~getIcon, ~cwd=rootPath);
+        TreeLoaded(
+          FsTreeNode.directory(
+            rootPath,
+            ~icon=getIcon(rootPath),
+            ~children,
+            ~isOpen=true,
+          ),
+        );
+      }
+    | Error(msg) => TreeLoadError(msg);
+
+  Service_OS.Sub.dir(~uniqueId="FileExplorerSideBar", ~toMsg, rootPath);
+};

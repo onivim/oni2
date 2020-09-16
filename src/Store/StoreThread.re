@@ -308,6 +308,15 @@ let start =
         )
       );
 
+    let fileExplorerSub =
+      Feature_Explorer.sub(
+        ~configuration=state.configuration,
+        ~languageInfo=state.languageInfo,
+        ~iconTheme=state.iconTheme,
+        state.fileExplorer,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.FileExplorer(msg));
+
     let languageSupportSub =
       maybeActiveBuffer
       |> Option.map(activeBuffer => {
@@ -358,6 +367,7 @@ let start =
       extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
+      fileExplorerSub,
       editorGlobalSub,
       extensionsSub,
       registersSub,
