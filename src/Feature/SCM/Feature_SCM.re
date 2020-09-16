@@ -59,6 +59,7 @@ type model = {
   inputBox: Component_InputText.model,
   textContentProviders: list((int, string)),
   originalLines: [@opaque] IntMap.t(array(string)),
+  vimWindowNavigation: Component_VimWindows.model,
 };
 
 let initial = {
@@ -66,6 +67,7 @@ let initial = {
   inputBox: Component_InputText.create(~placeholder="Do the commit thing!"),
   textContentProviders: [],
   originalLines: IntMap.empty,
+  vimWindowNavigation: Component_VimWindows.initial,
 };
 
 let statusBarCommands = ({providers, _}: model) => {
@@ -167,7 +169,8 @@ type msg =
   | KeyPressed({key: string})
   | Pasted({text: string})
   | DocumentContentProvider(Exthost.Msg.DocumentContentProvider.msg)
-  | InputBox(Component_InputText.msg);
+  | InputBox(Component_InputText.msg)
+  | VimWindowNav(Component_VimWindows.msg);
 
 module Msg = {
   let paste = text => Pasted({text: text});
@@ -511,6 +514,8 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       };
 
     ({...model, inputBox: inputBox'}, outmsg);
+
+  | VimWindowNav(msg) => failwith("Unhandled")
   };
 
 let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
@@ -796,10 +801,25 @@ module Pane = {
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
 
+  let commands = (~isFocused) => {
+    !isFocused
+      ? []
+      : Component_VimWindows.Contributions.commands
+        |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)));
+  };
+
   let contextKeys = (~isFocused) => {
     let keys = isFocused ? Component_InputText.Contributions.contextKeys : [];
 
-    [keys |> fromList |> map(({inputBox, _}: model) => inputBox)]
+    let vimNavKeys =
+      isFocused ? Component_VimWindows.Contributions.contextKeys : [];
+
+    [
+      keys |> fromList |> map(({inputBox, _}: model) => inputBox),
+      vimNavKeys
+      |> fromList
+      |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),
+    ]
     |> unionMany;
   };
 };
