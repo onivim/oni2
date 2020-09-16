@@ -7,7 +7,7 @@ module LineNumber = EditorCoreTypes.LineNumber;
 
 Vim.init();
 
-let config = _ => None;
+let config = (~vimSetting as _, _) => Config.NotSet;
 
 /* Create a state with some editor size */
 let simpleState = {

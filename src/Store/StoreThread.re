@@ -155,7 +155,6 @@ let start =
 
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
   let indentationUpdater = IndentationStoreConnector.start();
-  let windowUpdater = WindowsStoreConnector.start();
 
   //  let completionUpdater = CompletionStoreConnector.start();
 
@@ -164,7 +163,6 @@ let start =
 
   let titleUpdater =
     TitleStoreConnector.start(setTitle, maximize, minimize, restore, close);
-  let contextMenuUpdater = ContextMenuStore.start();
   let updater =
     Isolinear.Updater.combine([
       Isolinear.Updater.ofReducer(Reducer.reduce),
@@ -178,9 +176,7 @@ let start =
       lifecycleUpdater,
       fileExplorerUpdater,
       indentationUpdater,
-      windowUpdater,
       themeUpdater,
-      //      completionUpdater,
       titleUpdater,
       Features.update(
         ~grammarRepository,
@@ -188,16 +184,14 @@ let start =
         ~getUserSettings,
         ~setup,
       ),
-      PaneStore.update,
-      contextMenuUpdater,
     ]);
 
   let subscriptions = (state: Model.State.t) => {
-    let config = Feature_Configuration.resolver(state.config);
+    let config = Feature_Configuration.resolver(state.config, state.vim);
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
 
-    let isInsertMode = Feature_Vim.mode(state.vim) == Vim.Types.Insert;
+    let isInsertMode = Feature_Vim.mode(state.vim) == Vim.Mode.Insert;
 
     let visibleRanges =
       visibleBuffersAndRanges
@@ -236,26 +230,21 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Terminal(msg));
 
-    let fontFamily =
-      Oni_Core.Configuration.getValue(
-        c => c.editorFontFile,
-        state.configuration,
-      );
-    let fontSize =
-      Oni_Core.Configuration.getValue(
-        c => c.editorFontSize,
-        state.configuration,
-      );
-    let fontSmoothing =
-      Oni_Core.Configuration.getValue(
-        c => c.editorFontSmoothing,
-        state.configuration,
-      );
+    let fontFamily = Feature_Editor.Configuration.fontFamily.get(config);
+    let fontSize = Feature_Editor.Configuration.fontSize.get(config);
+
     let fontLigatures =
       Oni_Core.Configuration.getValue(
         c => c.editorFontLigatures,
         state.configuration,
       );
+
+    let fontSmoothing =
+      Oni_Core.Configuration.getValue(
+        c => c.editorFontSmoothing,
+        state.configuration,
+      );
+
     let editorFontSubscription =
       Service_Font.Sub.font(
         ~uniqueId="editorFont",
@@ -446,6 +435,10 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
     Feature_LanguageSupport.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.LanguageSupport(msg))),
+    Feature_Pane.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Pane(msg))),
+    Feature_Input.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Input(msg))),
   ]
   |> List.flatten
   |> registerCommands(~dispatch);

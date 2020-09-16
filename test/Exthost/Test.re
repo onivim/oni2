@@ -3,6 +3,7 @@ open Exthost_Extension;
 open Exthost;
 open Exthost_TestLib;
 open Oni_Core;
+open Oni_Core.Utility;
 
 module Log = (val Timber.Log.withNamespace("Test"));
 
@@ -92,7 +93,7 @@ let startWithExtensions =
       ~onError=errorHandler,
       (),
     )
-    |> ResultEx.tap_error(msg => prerr_endline(msg))
+    |> ResultEx.tapError(msg => prerr_endline(msg))
     |> Result.get_ok;
 
   let processHasExited = ref(false);

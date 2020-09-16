@@ -1,11 +1,7 @@
 (library
-    (name Service_Syntax)
-    (public_name Oni2.service.syntax)
-    (libraries 
-      Oni2.editor-core-types
-      Oni2.core
-      Oni2.syntax
-      Oni2.syntax_client
-      Revery
-    )
-    (preprocess (pps ppx_let ppx_deriving.show)))
+ (name Service_Syntax)
+ (public_name Oni2.service.syntax)
+ (libraries Oni2.editor-core-types Oni2.core Oni2.syntax Oni2.syntax_client
+   Revery)
+ (preprocess
+  (pps ppx_let ppx_deriving.show)))

@@ -11,7 +11,8 @@ let focus = (state: State.t) =>
     switch (state.sideBar |> Feature_SideBar.selected) {
     | FileExplorer => FocusManager.push(FileExplorer, state)
     | SCM => FocusManager.push(SCM, state)
-    | _ => state
+    | Extensions => FocusManager.push(Extensions, state)
+    | Search => FocusManager.push(Search, state)
     };
   } else {
     state;
@@ -26,6 +27,10 @@ let reduce = (~zenMode, state: Feature_SideBar.model, action: Actions.t) => {
     Feature_SideBar.toggle(Feature_SideBar.SCM, state)
   | ActivityBar(ActivityBar.ExtensionsClick) when !zenMode =>
     Feature_SideBar.toggle(Feature_SideBar.Extensions, state)
+  | SearchHotkey when !zenMode =>
+    Feature_SideBar.toggle(Feature_SideBar.Search, state)
+  | ActivityBar(ActivityBar.SearchClick) when !zenMode =>
+    Feature_SideBar.toggle(Feature_SideBar.Search, state)
   | ConfigurationSet(newConfig) =>
     let sideBarLocation =
       Configuration.getValue(c => c.workbenchSideBarLocation, newConfig);

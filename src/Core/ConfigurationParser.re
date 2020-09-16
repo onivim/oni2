@@ -5,7 +5,6 @@
  */
 open Kernel;
 open ConfigurationValues;
-open LineNumber;
 open Utility;
 
 let parseBool = json =>
@@ -69,18 +68,6 @@ let parseIntList = json => {
   };
 };
 
-let parseLineNumberSetting = json =>
-  switch (json) {
-  | `String(v) =>
-    switch (v) {
-    | "on" => On
-    | "off" => Off
-    | "relative" => Relative
-    | _ => On
-    }
-  | _ => On
-  };
-
 let parseVimUseSystemClipboardSetting = json => {
   let parseItems = items =>
     List.fold_left(
@@ -106,18 +93,6 @@ let parseVimUseSystemClipboardSetting = json => {
   | _ => {yank: true, delete: false, paste: false}
   };
 };
-
-let parseRenderWhitespace = json =>
-  switch (json) {
-  | `String(v) =>
-    switch (v) {
-    | "all" => All
-    | "boundary" => Boundary
-    | "none" => None
-    | _ => All
-    }
-  | _ => All
-  };
 
 let parseEditorFontSize = (~default=Constants.defaultFontSize, json) =>
   json
@@ -193,6 +168,14 @@ let parseFontLigatures = json =>
   | _ => `Bool(true)
   };
 
+let parseAutoReveal = json =>
+  switch (json) {
+  | `Bool(true) => `HighlightAndScroll
+  | `Bool(false) => `NoReveal
+  | `String("focusNoScroll") => `HighlightOnly
+  | _ => `NoReveal
+  };
+
 type parseFunction =
   (ConfigurationValues.t, Yojson.Safe.t) => ConfigurationValues.t;
 
@@ -204,27 +187,6 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {
       ...config,
       editorAutoClosingBrackets: parseAutoClosingBrackets(json),
-    },
-  ),
-  (
-    "editor.fontFamily",
-    (config, json) => {
-      ...config,
-      editorFontFile: parseString(~default=Constants.defaultFontFile, json),
-    },
-  ),
-  (
-    "editor.fontLigatures",
-    (config, json) => {
-      ...config,
-      editorFontLigatures: parseFontLigatures(json),
-    },
-  ),
-  (
-    "editor.fontSize",
-    (config, json) => {
-      ...config,
-      editorFontSize: parseEditorFontSize(json),
     },
   ),
   (
@@ -243,48 +205,15 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, editorHoverEnabled: parseBool(json)},
   ),
   (
-    "editor.lineNumbers",
-    (config, json) => {
-      ...config,
-      editorLineNumbers: parseLineNumberSetting(json),
-    },
-  ),
-  (
-    "editor.matchBrackets",
-    (config, json) => {...config, editorMatchBrackets: parseBool(json)},
-  ),
-  (
-    "editor.acceptSuggestionOnEnter",
-    (config, json) => {
-      ...config,
-      editorAcceptSuggestionOnEnter:
-        switch (json) {
-        | `String("on") => `on
-        | `String("off") => `off
-        | `String("smart") => `smart
-        | _ => `on
-        },
-    },
-  ),
-  (
-    "editor.minimap.enabled",
-    (config, json) => {...config, editorMinimapEnabled: parseBool(json)},
-  ),
-  (
-    "editor.minimap.showSlider",
-    (config, json) => {...config, editorMinimapShowSlider: parseBool(json)},
-  ),
-  (
-    "editor.minimap.maxColumn",
-    (config, json) => {...config, editorMinimapMaxColumn: parseInt(json)},
-  ),
-  (
-    "editor.minimap.showSlider",
-    (config, json) => {...config, editorMinimapShowSlider: parseBool(json)},
-  ),
-  (
     "editor.detectIndentation",
     (config, json) => {...config, editorDetectIndentation: parseBool(json)},
+  ),
+  (
+    "editor.fontLigatures",
+    (config, json) => {
+      ...config,
+      editorFontLigatures: parseFontLigatures(json),
+    },
   ),
   (
     "editor.insertSpaces",
@@ -320,15 +249,15 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.renderWhitespace",
-    (config, json) => {
-      ...config,
-      editorRenderWhitespace: parseRenderWhitespace(json),
-    },
-  ),
-  (
     "editor.rulers",
     (config, json) => {...config, editorRulers: parseIntList(json)},
+  ),
+  (
+    "explorer.autoReveal",
+    (config, json) => {
+      ...config,
+      explorerAutoReveal: parseAutoReveal(json),
+    },
   ),
   (
     "files.exclude",

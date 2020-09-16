@@ -272,6 +272,8 @@ module Popup = {
       ) =>
     if (model.editorID != editorId) {
       None;
+    } else if (model.contents == []) {
+      None;
     } else {
       let maybeLocation: option(EditorCoreTypes.CharacterPosition.t) =
         switch (model.triggeredFrom, model.shown) {

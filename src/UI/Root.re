@@ -63,12 +63,10 @@ module Styles = {
 let make = (~dispatch, ~state: State.t, ()) => {
   let State.{
         configuration,
-        contextMenu,
         uiFont as font,
         editorFont,
         sideBar,
         zenMode,
-        pane,
         buffers,
         _,
       } = state;
@@ -101,8 +99,8 @@ let make = (~dispatch, ~state: State.t, ()) => {
       <View style=Styles.statusBar>
         <Feature_StatusBar.View
           mode
+          recordingMacro={state.vim |> Feature_Vim.recordingMacro}
           notifications={state.notifications}
-          contextMenu
           diagnostics={state.diagnostics}
           font={state.uiFont}
           scm={state.scm}
@@ -123,13 +121,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
           c.workbenchActivityBarVisible
         )
         && !zenMode) {
-      <Dock
-        font={state.uiFont}
-        theme
-        sideBar
-        pane
-        extensions={state.extensions}
-      />;
+      <Dock font={state.uiFont} theme sideBar extensions={state.extensions} />;
     } else {
       React.empty;
     };
@@ -157,12 +149,6 @@ let make = (~dispatch, ~state: State.t, ()) => {
 
     | None => React.empty
     };
-  };
-
-  let contextMenuOverlay = () => {
-    let onClick = () => dispatch(ContextMenuOverlayClicked);
-
-    <ContextMenu.Overlay onClick />;
   };
 
   let titleDispatch = msg => dispatch(Actions.TitleBar(msg));
@@ -199,7 +185,16 @@ let make = (~dispatch, ~state: State.t, ()) => {
       <View style=Styles.surface>
         {React.listToElement(surfaceComponents)}
       </View>
-      <PaneView theme uiFont editorFont state />
+      <Feature_Pane.View
+        theme
+        uiFont
+        editorFont
+        diagnostics={state.diagnostics}
+        notifications={state.notifications}
+        dispatch={msg => dispatch(Actions.Pane(msg))}
+        notificationDispatch={msg => dispatch(Actions.Notification(msg))}
+        pane={state.pane}
+      />
     </View>
     <Overlay>
       {switch (state.quickmenu) {
@@ -219,7 +214,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       />
     </Overlay>
     <statusBar />
-    <contextMenuOverlay />
+    <ContextMenu.Overlay />
     <Tooltip.Overlay theme font=uiFont />
     <messages />
     <modals />

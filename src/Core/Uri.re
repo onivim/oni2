@@ -70,30 +70,6 @@ type t = {
   authority: [@default None] option(string),
 };
 
-let encode = uri =>
-  Json.Encode.(
-    obj([
-      ("$mid", Json.Encode.int(1)), // Magic marshaling id for Uri
-      ("scheme", uri.scheme |> Scheme.encode),
-      ("path", uri.path |> string),
-      ("query", uri.query |> nullable(string)),
-      ("authority", uri.authority |> nullable(string)),
-    ])
-  );
-
-let decode = {
-  Json.Decode.(
-    obj(({field, _}) =>
-      {
-        scheme: field.required("scheme", Scheme.decode),
-        path: field.required("path", string),
-        query: field.optional("query", string),
-        authority: field.optional("authority", string),
-      }
-    )
-  );
-};
-
 module Internal = {
   let isDriveLetter = (candidate: Char.t) => {
     let aCode = Char.code('A');
@@ -157,7 +133,15 @@ let fromScheme = (~scheme: Scheme.t, ~authority=?, ~query=?, path: string) => {
 };
 
 let fromMemory = path => fromScheme(~scheme=Scheme.Memory, path);
-let fromPath = path => fromScheme(~scheme=Scheme.File, path);
+let fromPath = path => {
+  // On Windows - we need to normalize backward slashes to forward slashes,
+  // to be in sync with the logic from vscode:
+  // https://github.com/onivim/vscode-exthost/blob/c7df89c1cf0087ca5decaf8f6d4c0fd0257a8b7a/src/vs/base/common/uri.ts#L306
+  // Also see: https://github.com/onivim/oni2/issues/2282
+  let path = Sys.win32 ? Utility.Path.normalizeBackSlashes(path) : path;
+
+  fromScheme(~scheme=Scheme.File, path);
+};
 
 let toString = ({scheme, authority, path, query}: t) => {
   let schemeStr = Scheme.toString(scheme);
@@ -195,3 +179,27 @@ let toFileSystemPath = (uri: t) => {
 };
 
 let getScheme = (uri: t) => uri.scheme;
+
+let encode = uri =>
+  Json.Encode.(
+    obj([
+      ("$mid", Json.Encode.int(1)), // Magic marshaling id for Uri
+      ("scheme", uri.scheme |> Scheme.encode),
+      ("path", uri.path |> string),
+      ("query", uri.query |> nullable(string)),
+      ("authority", uri.authority |> nullable(string)),
+    ])
+  );
+
+let decode = {
+  Json.Decode.(
+    obj(({field, _}) =>
+      {
+        scheme: field.required("scheme", Scheme.decode),
+        path: field.required("path", string),
+        query: field.optional("query", string),
+        authority: field.optional("authority", string),
+      }
+    )
+  );
+};

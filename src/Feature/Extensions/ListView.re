@@ -9,7 +9,7 @@ module Colors = Feature_Theme.Colors;
 module Styles = {
   open Style;
   let container = [flexDirection(`Column), flexGrow(1), overflow(`Hidden)];
-  let input = [flexGrow(1), margin(12)];
+  let inputContainer = [margin(12)];
 };
 
 type state = {
@@ -143,7 +143,7 @@ let%component make =
   let userExtensions =
     Model.getExtensions(~category=Scanner.User, model) |> Array.of_list;
   let contents =
-    if (Feature_InputText.isEmpty(model.searchText)) {
+    if (Component_InputText.isEmpty(model.searchText)) {
       [
         <Accordion
           title="Installed"
@@ -224,15 +224,16 @@ let%component make =
       localDispatch(WidthChanged(width))
     }>
     <BusyBar theme visible=isBusy />
-    <Feature_InputText.View
-      style=Styles.input
-      model={model.searchText}
-      isFocused
-      fontFamily={font.family}
-      fontSize={font.size}
-      dispatch={msg => dispatch(Model.SearchText(msg))}
-      theme
-    />
+    <View style=Styles.inputContainer>
+      <Component_InputText.View
+        model={model.searchText}
+        isFocused
+        fontFamily={font.family}
+        fontSize={font.size}
+        dispatch={msg => dispatch(Model.SearchText(msg))}
+        theme
+      />
+    </View>
     contents
   </View>;
 };

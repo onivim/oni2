@@ -49,15 +49,27 @@ let removeExpired = (time, model) => {
   {...model, groups};
 };
 
-let keysToIgnore =
-  ["LEFT SHIFT", "RIGHT SHIFT", "Ctrl + Left Ctrl", "Ctrl + LEFT SHIFT"]
-  |> List.map(key => (key, true))
-  |> List.to_seq
-  |> Hashtbl.of_seq;
+let keysToIgnore = [
+  "Left Shift",
+  "Right Shift",
+  "Right Option",
+  "Left Option",
+  "Right Command",
+  "Left Command",
+  "Left Ctrl",
+  "Right Ctrl",
+];
+
+let shouldIgnore = key => {
+  keysToIgnore
+  |> List.exists(filterKey =>
+       Utility.StringEx.endsWith(~postfix=filterKey, key)
+     );
+};
 
 let add = (~time, key, model) => {
   let str = keyEventToString(key);
-  if (Hashtbl.mem(keysToIgnore, str)) {
+  if (shouldIgnore(str)) {
     model;
   } else {
     let groups =

@@ -16,6 +16,21 @@ module Effects = {
         )
       });
   };
+  module Decorations = {
+    let provideDecorations = (~handle, ~requests, ~toMsg, client) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="exthost.provideDecorations", dispatch => {
+        let promise =
+          Exthost.Request.Decorations.provideDecorations(
+            ~handle,
+            ~requests,
+            client,
+          );
+
+        Lwt.on_success(promise, decorations => dispatch(toMsg(decorations)));
+      });
+    };
+  };
   module Documents = {
     let modelChanged =
         (
@@ -51,6 +66,16 @@ module Effects = {
         })
       );
   };
+  module FileSystemEventService = {
+    let onFileEvent = (~events, extHostClient) =>
+      Isolinear.Effect.create(~name="fileSystemEventService.onFileEvent", () => {
+        Exthost.Request.FileSystemEventService.onFileEvent(
+          ~events,
+          extHostClient,
+        )
+      });
+  };
+
   module SCM = {
     let getOriginalContent = (~handle, ~uri, ~toMsg, client) =>
       Isolinear.Effect.createWithDispatch(
@@ -742,8 +767,6 @@ module Sub = {
     handle: int,
     chainedCacheId: Exthost.ChainedCacheId.t,
     client: Exthost.Client.t,
-    buffer: Oni_Core.Buffer.t,
-    position: Exthost.OneBasedPosition.t,
   };
 
   module CompletionItemSubscription =
@@ -754,20 +777,13 @@ module Sub = {
       type state = {latch: Latch.t};
 
       let name = "Service_Exthost.CompletionItemSubscription";
-      let id = ({handle, buffer, position, chainedCacheId, _}: params) =>
-        idFromBufferPosition(
-          ~handle,
-          ~buffer,
-          ~position,
-          chainedCacheId |> Exthost.ChainedCacheId.show,
-        );
+      let id = ({handle, chainedCacheId, _}: params) =>
+        string_of_int(handle) ++ Exthost.ChainedCacheId.show(chainedCacheId);
 
       let init = (~params, ~dispatch) => {
         let promise =
           Exthost.Request.LanguageFeatures.resolveCompletionItem(
             ~handle=params.handle,
-            ~resource=Oni_Core.Buffer.getUri(params.buffer),
-            ~position=params.position,
             ~chainedCacheId=params.chainedCacheId,
             params.client,
           );
@@ -795,11 +811,9 @@ module Sub = {
         Latch.close(state.latch);
       };
     });
-  let completionItem =
-      (~handle, ~chainedCacheId, ~buffer, ~position, ~toMsg, client) => {
-    let position = position |> Exthost.OneBasedPosition.ofPosition;
+  let completionItem = (~handle, ~chainedCacheId, ~toMsg, client) => {
     CompletionItemSubscription.create(
-      {handle, chainedCacheId, buffer, position, client}: completionItemParams,
+      {handle, chainedCacheId, client}: completionItemParams,
     )
     |> Isolinear.Sub.map(toMsg);
   };

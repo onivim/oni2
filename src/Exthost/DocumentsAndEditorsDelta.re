@@ -35,12 +35,32 @@ let encode =
         newActiveEditor,
       },
     ) =>
-  Json.Encode.(
-    obj([
-      ("removedDocuments", removedDocuments |> list(Uri.encode)),
-      ("addedDocuments", addedDocuments |> list(ModelAddedDelta.encode)),
-      ("removedEditors", removedEditors |> list(string)),
-      ("addedEditors", addedEditors |> list(TextEditor.AddData.encode)),
-      ("newActiveEditor", newActiveEditor |> nullable(string)),
-    ])
-  );
+  Json.Encode.
+    // Differentation between `null` and `undefined` is important for the `newActiveEditor` field:
+    // https://github.com/onivim/vscode-exthost/blob/c7df89c1cf0087ca5decaf8f6d4c0fd0257a8b7a/src/vs/workbench/api/common/extHostDocumentsAndEditors.ts#L129
+    (
+      {
+        let maybeNewActiveEditor =
+          if (newActiveEditor == None) {
+            [];
+          } else {
+            [("newActiveEditor", newActiveEditor |> nullable(string))];
+          };
+
+        obj(
+          [
+            ("removedDocuments", removedDocuments |> list(Uri.encode)),
+            (
+              "addedDocuments",
+              addedDocuments |> list(ModelAddedDelta.encode),
+            ),
+            ("removedEditors", removedEditors |> list(string)),
+            (
+              "addedEditors",
+              addedEditors |> list(TextEditor.AddData.encode),
+            ),
+          ]
+          @ maybeNewActiveEditor,
+        );
+      }
+    );

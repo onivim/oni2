@@ -45,7 +45,8 @@ module Styles = {
   let text = (~isFocus, ~isActive, ~decoration, ~theme) => [
     color(
       switch (
-        Option.bind(decoration, (decoration: Decoration.t) =>
+        Option.bind(
+          decoration, (decoration: Feature_Decorations.Decoration.t) =>
           ColorTheme.(Colors.get(key(decoration.color), theme))
         )
       ) {
@@ -127,7 +128,7 @@ let nodeView =
 
   let tooltipText =
     switch (decoration) {
-    | Some((decoration: Decoration.t)) =>
+    | Some((decoration: Feature_Decorations.Decoration.t)) =>
       node.path ++ " • " ++ decoration.tooltip
     | None => node.path
     };
@@ -148,12 +149,12 @@ module TreeView = TreeView.Make(FsTreeNode.Model);
 let make =
     (
       ~scrollOffset,
-      ~decorations,
       ~tree: FsTreeNode.t,
       ~active: option(string),
       ~focus: option(string),
       ~onNodeClick,
       ~theme,
+      ~decorations: Feature_Decorations.model,
       ~font,
       (),
     ) => {
@@ -171,7 +172,8 @@ let make =
       onClick=onNodeClick
       arrowColor={Colors.SideBar.foreground.from(theme)}>
       ...{node => {
-        let decorations = StringMap.find_opt(node.path, decorations);
+        let decorations =
+          Feature_Decorations.getDecorations(~path=node.path, decorations);
 
         <nodeView
           isFocus={Some(node.path) == focus}
@@ -179,7 +181,7 @@ let make =
           font
           theme
           node
-          ?decorations
+          decorations
         />;
       }}
     </TreeView>

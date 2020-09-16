@@ -140,14 +140,10 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
 
         Lwt.return(Reply.okEmpty);
 
-      | Decorations(RegisterDecorationProvider({handle, label})) =>
-        dispatch(NewDecorationProvider({handle, label}));
-        Lwt.return(Reply.okEmpty);
-      | Decorations(UnregisterDecorationProvider({handle})) =>
-        dispatch(LostDecorationProvider({handle: handle}));
-        Lwt.return(Reply.okEmpty);
-      | Decorations(DecorationsDidChange({handle, uris})) =>
-        dispatch(DecorationsChanged({handle, uris}));
+      | Decorations(decorationsMsg) =>
+        dispatch(
+          Decorations(Feature_Decorations.Msg.exthost(decorationsMsg)),
+        );
         Lwt.return(Reply.okEmpty);
 
       | Documents(documentsMsg) =>
@@ -307,7 +303,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
 
   let initData =
     InitData.create(
-      ~version="1.44.5", // TODO: How to keep in sync with bundled version?
+      ~version="1.46.0", // TODO: How to keep in sync with bundled version?
       ~parentPid,
       ~logsLocation,
       ~logFile,

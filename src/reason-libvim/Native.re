@@ -1,6 +1,56 @@
 type buffer = Types.buffer;
 type lineEnding = Types.lineEnding;
 
+// Must be kept in sync with:
+// https://github.com/onivim/libvim/blob/9d3b7fb8c73850a28526caf38beea50901a322f4/src/vim.h#L1364
+type operation =
+  | NoPending
+  | Delete
+  | Yank
+  | Change
+  | LeftShift
+  | RightShift
+  | Filter
+  | SwitchCase
+  | Indent
+  | Format
+  | Colon
+  | MakeUpperCase
+  | MakeLowerCase
+  | Join
+  | JoinNS
+  | Rot13
+  | Replace
+  | Insert
+  | Append
+  | Fold
+  | FoldOpen
+  | FoldOpenRecursive
+  | FoldClose
+  | FoldCloseRecursive
+  | FoldDelete
+  | FoldDeleteRecursive
+  | Format2
+  | Function
+  | NumberAdd
+  | NumberSubtract
+  | Comment;
+
+type operatorPendingInfo = {
+  operation,
+  register: int,
+  count: int,
+};
+
+type mode =
+  | Normal
+  | Insert
+  | CommandLine
+  | Replace
+  | Visual
+  | Operator
+  | Select;
+
 type formatType =
   | Indentation
   | Formatting;
@@ -19,7 +69,7 @@ external vimInput: string => unit = "libvim_vimInput";
 external vimKey: string => unit = "libvim_vimKey";
 external vimCommand: string => unit = "libvim_vimCommand";
 
-external vimGetMode: unit => Types.mode = "libvim_vimGetMode";
+external vimGetMode: unit => mode = "libvim_vimGetMode";
 
 external vimBufferOpen: string => buffer = "libvim_vimBufferOpen";
 external vimBufferGetId: buffer => int = "libvim_vimBufferGetId";
@@ -66,6 +116,9 @@ external vimCursorSetPosition: (int, int) => unit =
   "libvim_vimCursorSetPosition";
 
 external vimEval: string => option(string) = "libvim_vimEval";
+
+external vimOperatorGetPending: unit => option(operatorPendingInfo) =
+  "libvim_vimGetPendingOperator";
 
 external vimOptionSetTabSize: int => unit = "libvim_vimOptionSetTabSize";
 external vimOptionSetInsertSpaces: bool => unit =

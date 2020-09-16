@@ -1,5 +1,7 @@
 (library
-    (name Service_OS_Test)
-    (library_flags (-linkall -g))
-    (modules (:standard))
-    (libraries Oni2.core Oni2.service.os Oni_Core_Test rely.lib Oni2.editor-core-types))
+ (name Service_OS_Test)
+ (library_flags
+  (-linkall -g))
+ (modules (:standard))
+ (libraries Oni2.core Oni2.service.os Oni_Core_Test rely.lib
+   Oni2.editor-core-types))

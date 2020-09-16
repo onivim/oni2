@@ -80,6 +80,18 @@ let themeByName = (~name, model) => {
      );
 };
 
+let themesByName = (~filter: string, model) => {
+  model
+  |> pick((manifest: Exthost.Extension.Manifest.t) => {
+       Exthost.Extension.Contributions.(manifest.contributes.themes)
+     })
+  |> List.flatten
+  |> List.map(({label, _}: Exthost.Extension.Contributions.Theme.t) =>
+       label
+     )
+  |> List.filter(label => Utility.StringEx.contains(filter, label));
+};
+
 module ListView = ListView;
 module DetailsView = DetailsView;
 
@@ -94,5 +106,16 @@ let sub = (~setup, model) => {
     Service_Extensions.Sub.search(~setup, ~query, ~toMsg)
   | Some(_)
   | None => Isolinear.Sub.none
+  };
+};
+
+module Contributions = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let contextKeys = (~isFocused) => {
+    let keys = isFocused ? Component_InputText.Contributions.contextKeys : [];
+
+    [keys |> fromList |> map(({searchText, _}: model) => searchText)]
+    |> unionMany;
   };
 };

@@ -161,3 +161,74 @@ let getDiagnosticsAtPosition = (instance, buffer, position) => {
 let getDiagnosticsMap = (instance, buffer) => {
   getDiagnostics(instance, buffer) |> _explodeDiagnostics(buffer);
 };
+
+module View = {
+  open Revery.UI;
+  open Oni_Components;
+
+  module Colors = Feature_Theme.Colors;
+
+  module Styles = {
+    open Style;
+
+    let pane = [flexGrow(1), flexDirection(`Row)];
+
+    let noResultsContainer = [
+      flexGrow(1),
+      alignItems(`Center),
+      justifyContent(`Center),
+    ];
+
+    let title = (~theme) => [
+      color(Colors.PanelTitle.activeForeground.from(theme)),
+      margin(8),
+    ];
+  };
+
+  let toLocListItem = (diagWithUri: (Uri.t, Diagnostic.t)) => {
+    let (uri, diag) = diagWithUri;
+    let file = Uri.toFileSystemPath(uri);
+    let location = Diagnostic.(diag.range.start);
+    LocationList.{file, location, text: diag.message, highlight: None};
+  };
+  let make =
+      (
+        ~onSelectFile:
+           (
+             ~filePath: string,
+             ~position: EditorCoreTypes.CharacterPosition.t
+           ) =>
+           unit,
+        ~diagnostics,
+        ~theme,
+        ~uiFont: UiFont.t,
+        ~editorFont,
+        (),
+      ) => {
+    let items =
+      diagnostics
+      |> getAllDiagnostics
+      |> List.map(toLocListItem)
+      |> Array.of_list;
+
+    let onSelectItem = (item: LocationList.item) => {
+      onSelectFile(~filePath=item.file, ~position=item.location);
+    };
+
+    let innerElement =
+      if (Array.length(items) == 0) {
+        <View style=Styles.noResultsContainer>
+          <Text
+            style={Styles.title(~theme)}
+            fontFamily={uiFont.family}
+            fontSize={uiFont.size}
+            text="No problems, yet!"
+          />
+        </View>;
+      } else {
+        <LocationList theme uiFont editorFont items onSelectItem />;
+      };
+
+    <View style=Styles.pane> innerElement </View>;
+  };
+};

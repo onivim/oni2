@@ -15,17 +15,6 @@ module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 let start = (extensions, extHostClient: Exthost.Client.t) => {
-  let gitRefreshEffect = (scm: Feature_SCM.model, uri) =>
-    if (scm == Feature_SCM.initial) {
-      Isolinear.Effect.none;
-    } else {
-      Service_Exthost.Effects.Commands.executeContributedCommand(
-        ~command="git.refresh",
-        ~arguments=[`String(uri |> Oni_Core.Uri.toFileSystemPath)],
-        extHostClient,
-      );
-    };
-
   let discoveredExtensionsEffect = extensions =>
     Isolinear.Effect.createWithDispatch(
       ~name="exthost.discoverExtensions", dispatch =>
@@ -51,48 +40,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         extHostClient,
       )
     });
-
-  let provideDecorationsEffect = {
-    open Exthost.Request.Decorations;
-    let nextRequestId = ref(0);
-
-    (handle, uri) =>
-      Isolinear.Effect.createWithDispatch(
-        ~name="exthost.provideDecorations", dispatch => {
-        let requests = [{id: nextRequestId^, handle, uri}];
-        incr(nextRequestId);
-
-        let promise =
-          Exthost.Request.Decorations.provideDecorations(
-            ~requests,
-            extHostClient,
-          );
-
-        let toCoreDecoration:
-          Exthost.Request.Decorations.decoration => Oni_Core.Decoration.t =
-          decoration => {
-            handle,
-            tooltip: decoration.title,
-            letter: decoration.letter,
-            color: decoration.color.id,
-          };
-
-        Lwt.on_success(
-          promise,
-          decorations => {
-            let decorations =
-              decorations
-              |> IntMap.bindings
-              |> List.to_seq
-              |> Seq.map(snd)
-              |> Seq.map(toCoreDecoration)
-              |> List.of_seq;
-
-            dispatch(Actions.GotDecorations({handle, uri, decorations}));
-          },
-        );
-      });
-  };
 
   let updater = (state: State.t, action: Actions.t) =>
     switch (action) {
@@ -123,77 +70,21 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         state.buffers
         |> Feature_Buffers.get(bufferId)
         |> Option.map(buffer => {
-             gitRefreshEffect(state.scm, buffer |> Oni_Core.Buffer.getUri)
+             Service_Exthost.Effects.FileSystemEventService.onFileEvent(
+               ~events=
+                 Exthost.Files.FileSystemEvents.{
+                   created: [],
+                   deleted: [],
+                   changed: [buffer |> Oni_Core.Buffer.getUri],
+                 },
+               extHostClient,
+             )
            })
         |> Option.value(~default=Isolinear.Effect.none);
 
       (state, effect);
 
-    | StatusBar(ContributedItemClicked({command, _})) => (
-        state,
-        Service_Exthost.Effects.Commands.executeContributedCommand(
-          ~command,
-          ~arguments=[],
-          extHostClient,
-        ),
-      )
-
     | DirectoryChanged(path) => (state, changeWorkspaceEffect(path))
-
-    | NewDecorationProvider({handle, label}) => (
-        {
-          ...state,
-          decorationProviders: [
-            DecorationProvider.{handle, label},
-            ...state.decorationProviders,
-          ],
-        },
-        Isolinear.Effect.none,
-      )
-
-    | LostDecorationProvider({handle}) => (
-        {
-          ...state,
-          decorationProviders:
-            List.filter(
-              (it: DecorationProvider.t) => it.handle != handle,
-              state.decorationProviders,
-            ),
-        },
-        Isolinear.Effect.none,
-      )
-
-    | DecorationsChanged({handle, uris}) => (
-        state,
-        Isolinear.Effect.batch(
-          uris |> List.map(provideDecorationsEffect(handle)),
-        ),
-      )
-
-    | GotDecorations({handle, uri, decorations}) => (
-        {
-          ...state,
-          fileExplorer: {
-            ...state.fileExplorer,
-            decorations:
-              StringMap.update(
-                Uri.toFileSystemPath(uri),
-                fun
-                | Some(existing) => {
-                    let existing =
-                      List.filter(
-                        (it: Decoration.t) => it.handle != handle,
-                        existing,
-                      );
-                    Some(decorations @ existing);
-                  }
-                | None => Some(decorations),
-                state.fileExplorer.decorations,
-              ),
-          },
-        },
-        Isolinear.Effect.none,
-      )
 
     | _ => (state, Isolinear.Effect.none)
     };

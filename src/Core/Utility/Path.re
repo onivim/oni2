@@ -14,6 +14,11 @@ let hasTrailingSeparator = path => {
   };
 };
 
+let normalizeBackSlashes = {
+  let backSlashRegex = Str.regexp("\\\\");
+  path => Str.global_replace(backSlashRegex, "/", path);
+};
+
 let toRelative = (~base, path) => {
   let base = hasTrailingSeparator(base) ? base : base ++ Filename.dir_sep;
   Str.replace_first(Str.regexp_string(base), "", path);

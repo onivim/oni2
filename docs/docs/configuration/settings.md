@@ -64,7 +64,15 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
    This allows enabling code-completions based on the current syntax scope.
 
+- `editor.renderWhitespace` __(_"all"|"boundary"|"selection"|"none"_ default: `"selection"`)__ - Controls how whitespace (tabs/spaces) are rendered:
+    - _"all"_ - Render all whitespace
+    - _"boundary"_ - Render whitespace except for single characters between text
+    - _"selection"_ - Render whitespace characters in visual mode selected text
+    - _"none"_ - Don't render whitespace at all
+
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
+
+- `explorer.autoReveal` __(_string|bool_ default: `true`)__  - When `true`, the file explorer will jump to highlight the file current focused. When `false` the file explorer will remain static. If a string is entered it must be `"focusNoScroll"` which will still highlight the currently focused file in the file explorer but the file explorer will not scroll to it. Any other string supplied will be treated as if `false` was entered and the file explorer will remain static and not highlight the currently focused file. 
 
 - `editor.scrollShadow` __(_bool_ default: `true`)__ - When `true`, show a drop-shadow effect at the borders when there is additional content past the visible area.
 
@@ -79,6 +87,12 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `workbench.iconTheme` __(_string_ default: `"vs-seti"`)__ - Icon theme to use.
 
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
+
+- `vim.highlightedyank.enable` __(_bool_ default: `true`)__ - When `true`, briefly highlight yanks on the editor surface.
+
+- `vim.highlightedyank.color` __(_string_)__ - Hex string defining a color, ie `#FF00FFFF`.
+
+- `vim.highlightedyank.duration` __(_int_ default: `300`)__ - The time, in milliseconds, the yank highlight is visible.
 
 ## Layout
 

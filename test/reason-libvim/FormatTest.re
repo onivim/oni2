@@ -19,9 +19,16 @@ describe("Format", ({test, _}) => {
     input("gg");
     input("=");
     input("G");
-    let formatEffect = List.hd(effects^);
+    let formatEffects =
+      effects^
+      |> List.filter(
+           fun
+           | Effect.Format(_) => true
+           | _ => false,
+         );
+    let formatEffect = List.hd(formatEffects);
 
-    expect.int(List.length(effects^)).toBe(1);
+    expect.int(List.length(formatEffects)).toBe(1);
     expect.equal(
       formatEffect,
       Effect.Format(
@@ -47,7 +54,14 @@ describe("Format", ({test, _}) => {
     input("==");
     let formatEffect = List.hd(effects^);
 
-    expect.int(List.length(effects^)).toBe(1);
+    let formatEffects =
+      effects^
+      |> List.filter(
+           fun
+           | Effect.Format(_) => true
+           | _ => false,
+         );
+    expect.int(List.length(formatEffects)).toBe(1);
     expect.equal(
       formatEffect,
       Effect.Format(
@@ -75,9 +89,16 @@ describe("Format", ({test, _}) => {
     input("gg");
     input("gq");
     input("G");
-    let formatEffect = List.hd(effects^);
+    let formatEffects =
+      effects^
+      |> List.filter(
+           fun
+           | Effect.Format(_) => true
+           | _ => false,
+         );
+    let formatEffect = List.hd(formatEffects);
 
-    expect.int(List.length(effects^)).toBe(1);
+    expect.int(List.length(formatEffects)).toBe(1);
     expect.equal(
       formatEffect,
       Effect.Format(
@@ -103,9 +124,16 @@ describe("Format", ({test, _}) => {
     input("gg");
     input("gw");
     input("G");
-    let formatEffect = List.hd(effects^);
+    let formatEffects =
+      effects^
+      |> List.filter(
+           fun
+           | Effect.Format(_) => true
+           | _ => false,
+         );
+    let formatEffect = List.hd(formatEffects);
 
-    expect.int(List.length(effects^)).toBe(1);
+    expect.int(List.length(formatEffects)).toBe(1);
     expect.equal(
       formatEffect,
       Effect.Format(

@@ -35,7 +35,6 @@ module ContextKeys: {
   let unionMany: list(t) => t;
 
   let getValue: (t, string) => Value.t;
-
   let values: t => list((string, Value.t));
 };
 

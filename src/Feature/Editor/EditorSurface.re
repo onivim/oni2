@@ -58,8 +58,10 @@ let minimap =
       ~bufferHighlights,
       ~cursorPosition: CharacterPosition.t,
       ~colors,
+      ~config,
       ~dispatch,
       ~matchingPairs,
+      ~maybeYankHighlights,
       ~bufferSyntaxHighlights,
       ~selectionRanges,
       ~showMinimapSlider,
@@ -91,10 +93,12 @@ let minimap =
   <View style onMouseWheel>
     <Minimap
       editor
+      config
       cursorPosition
       dispatch
       width=minimapPixelWidth
       height=pixelHeight
+      maybeYankHighlights
       count
       diagnostics=diagnosticsMap
       getTokensForLine={getTokensForLine(
@@ -179,6 +183,10 @@ let%component make =
     onEditorSizeChanged(editorId, width, height);
   };
 
+  let showYankHighlightAnimation = Config.yankHighlightEnabled.get(config);
+  let maybeYankHighlights =
+    showYankHighlightAnimation ? editor |> Editor.yankHighlight : None;
+
   let colors =
     backgroundColor
     |> Option.map(editorBackground =>
@@ -208,7 +216,7 @@ let%component make =
     );
 
   let matchingPairCheckPosition =
-    mode == Vim.Types.Insert
+    mode == Vim.Mode.Insert
       ? CharacterPosition.{
           line: cursorPosition.line,
           character: CharacterIndex.(cursorPosition.character - 1),
@@ -226,7 +234,11 @@ let%component make =
 
   let diagnosticsMap = Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =
-    Selection.getRanges(Editor.selection(editor), buffer) |> ByteRange.toHash;
+    editor
+    |> Editor.selection
+    |> Option.map(selection => Selection.getRanges(selection, buffer))
+    |> Option.map(ByteRange.toHash)
+    |> Option.value(~default=Hashtbl.create(1));
 
   let diffMarkers =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
@@ -287,7 +299,7 @@ let%component make =
 
     maybeHover
     |> Option.map(((position: CharacterPosition.t, sections)) => {
-         let ({pixelX, pixelY}: Editor.pixelPosition, _) =
+         let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
            Editor.bufferCharacterPositionToPixel(~position, editor);
          let popupX = pixelX +. gutterWidth |> int_of_float;
          let popupTopY = pixelY |> int_of_float;
@@ -325,6 +337,7 @@ let%component make =
       diagnosticsMap
       selectionRanges
       matchingPairs
+      maybeYankHighlights
       bufferHighlights
       languageSupport
       bufferSyntaxHighlights
@@ -344,8 +357,10 @@ let%component make =
            bufferHighlights
            cursorPosition
            colors
+           config
            dispatch
            matchingPairs
+           maybeYankHighlights
            bufferSyntaxHighlights
            selectionRanges
            showMinimapSlider={Config.Minimap.showSlider.get(config)}

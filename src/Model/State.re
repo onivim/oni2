@@ -27,12 +27,12 @@ type t = {
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   contextMenu: Feature_ContextMenu.model,
-  //completions: Completions.t,
   config: Feature_Configuration.model,
   configuration: Configuration.t,
-  decorationProviders: list(DecorationProvider.t),
+  decorations: Feature_Decorations.model,
   diagnostics: Diagnostics.t,
   editorFont: Service_Font.font,
+  input: Feature_Input.model,
   messages: Feature_Messages.model,
   terminalFont: Service_Font.font,
   uiFont: UiFont.t,
@@ -102,7 +102,7 @@ let initial =
   let initialEditor = {
     open Feature_Editor;
     let editorBuffer = initialBuffer |> EditorBuffer.ofBuffer;
-    let config = Feature_Configuration.resolver(config);
+    let config = Feature_Configuration.resolver(config, Feature_Vim.initial);
     Editor.create(~config, ~buffer=editorBuffer, ());
   };
 
@@ -120,11 +120,11 @@ let initial =
       ]),
     commands: Feature_Commands.initial(contributedCommands),
     contextMenu: Feature_ContextMenu.initial,
-    //completions: Completions.initial,
     config,
     configuration: Configuration.default,
-    decorationProviders: [],
+    decorations: Feature_Decorations.initial,
     diagnostics: Diagnostics.create(),
+    input: Feature_Input.initial,
     quickmenu: None,
     editorFont: Service_Font.default,
     terminalFont: Service_Font.default,
@@ -171,19 +171,4 @@ let initial =
     textContentProviders: [],
     vim: Feature_Vim.initial,
   };
-};
-
-let commands = state =>
-  Command.Lookup.unionMany([
-    Feature_Commands.all(state.commands),
-    Feature_Extensions.commands(state.extensions)
-    |> Command.Lookup.fromList
-    |> Command.Lookup.map(msg => Actions.Extensions(msg)),
-  ]);
-
-let menus = state => {
-  let commands = commands(state);
-
-  Feature_Extensions.menus(state.extensions)
-  |> Menu.Lookup.fromSchema(commands);
 };

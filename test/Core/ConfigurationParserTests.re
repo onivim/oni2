@@ -100,55 +100,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
-  test("bool value", ({expect, _}) => {
-    let configuration = {|
-      { "editor.minimap.enabled": false }
-      |};
-
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(v) =>
-      expect.bool(Configuration.getValue(c => c.editorMinimapEnabled, v)).
-        toBe(
-        false,
-      )
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
-  let getExpectedValue = (valueGetter, configuration) => {
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(parsedConfig) => Configuration.getValue(valueGetter, parsedConfig)
-    | Error(_) => failwith("Unable to parse configuration: " ++ configuration)
-    };
-  };
-
-  describe("editor.fontSize", ({test, _}) => {
-    let getFontSize = getExpectedValue(c => c.editorFontSize);
-    test("parses string if possible", ({expect, _}) => {
-      let fontSize =
-        getFontSize({|
-        { "editor.fontSize": "12" }
-      |});
-      expect.float(fontSize).toBeCloseTo(12.);
-    });
-
-    test("uses default size if unable to parse", ({expect, _}) => {
-      let fontSize =
-        getFontSize({|
-        { "editor.fontSize": "true" }
-      |});
-      expect.float(fontSize).toBeCloseTo(Constants.defaultFontSize);
-    });
-
-    test("does not allow value lower than minimum size", ({expect, _}) => {
-      let fontSize =
-        getFontSize({|
-        { "editor.fontSize": 1 }
-      |});
-      expect.float(fontSize).toBeCloseTo(Constants.minimumFontSize);
-    });
-  });
-
   test("vimUseSystemClipboard value", ({expect, _}) => {
     let configuration = {|
       { "vim.useSystemClipboard": [] }
@@ -319,5 +270,69 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       },
       cases,
     );
+  });
+
+  test("autoReveal bool(true) setting", ({expect, _}) => {
+    let configuration = {|
+    { "explorer.autoReveal": true }
+    |};
+    let expected = `HighlightAndScroll;
+
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.equal(
+        expected,
+        Configuration.getValue(c => c.explorerAutoReveal, v),
+      )
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
+
+  test("autoReveal bool(false) setting", ({expect, _}) => {
+    let configuration = {|
+    { "explorer.autoReveal": false }
+    |};
+    let expected = `NoReveal;
+
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.equal(
+        expected,
+        Configuration.getValue(c => c.explorerAutoReveal, v),
+      )
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
+
+  test("autoReveal focusNoScroll string setting", ({expect, _}) => {
+    let configuration = {|
+    { "explorer.autoReveal": "focusNoScroll" }
+    |};
+    let expected = `HighlightOnly;
+
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.equal(
+        expected,
+        Configuration.getValue(c => c.explorerAutoReveal, v),
+      )
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
+
+  test("autoReveal 'bad string' setting", ({expect, _}) => {
+    let configuration = {|
+    { "explorer.autoReveal": "rocinante" }
+    |};
+    let expected = `NoReveal;
+
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.equal(
+        expected,
+        Configuration.getValue(c => c.explorerAutoReveal, v),
+      )
+    | Error(_) => expect.bool(false).toBe(true)
+    };
   });
 });

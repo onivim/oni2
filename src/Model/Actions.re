@@ -9,7 +9,6 @@ open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
 
-module ContextMenu = Oni_Components.ContextMenu;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
@@ -33,7 +32,9 @@ type t =
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
+  | Decorations(Feature_Decorations.msg)
   | EditorFont(Service_Font.msg)
+  | Input(Feature_Input.msg)
   | TerminalFont(Service_Font.msg)
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
@@ -49,8 +50,6 @@ type t =
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
-  | ContextMenuOverlayClicked
-  | DiagnosticsHotKey
   | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
   | DiagnosticsClear(string)
   | DisableKeyDisplayer
@@ -86,7 +85,7 @@ type t =
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
-  | QuickmenuInputMessage(Feature_InputText.msg)
+  | QuickmenuInputMessage(Component_InputText.msg)
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
@@ -137,7 +136,6 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | SCM(Feature_SCM.msg)
-  | SearchStart
   | SearchHotkey
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)
@@ -145,8 +143,6 @@ type t =
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
-  | PaneTabClicked(Feature_Pane.pane)
-  | PaneCloseButtonClicked
   | DirectoryChanged(string)
   | VimExecuteCommand(string)
   | VimMessageReceived({
@@ -167,22 +163,9 @@ type t =
   | Modals(Feature_Modals.msg)
   // "Internal" effect action, see TitleStoreConnector
   | SetTitle(string)
-  | NewDecorationProvider({
-      handle: int,
-      label: string,
-    })
-  | LostDecorationProvider({handle: int})
-  | DecorationsChanged({
-      handle: int,
-      uris: list(Uri.t),
-    })
-  | GotDecorations({
-      handle: int,
-      uri: Uri.t,
-      decorations: list(Decoration.t),
-    })
   | Vim(Feature_Vim.msg)
   | TabPage(Vim.TabPage.effect)
+  | Yank({range: [@opaque] VisualRange.t})
   | Noop
 and command = {
   commandCategory: option(string),

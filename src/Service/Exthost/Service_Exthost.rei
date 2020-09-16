@@ -11,6 +11,18 @@ module Effects: {
       Isolinear.Effect.t(_);
   };
 
+  module Decorations: {
+    let provideDecorations:
+      (
+        ~handle: int,
+        ~requests: list(Exthost.Request.Decorations.request),
+        ~toMsg: Oni_Core.IntMap.t(Exthost.Request.Decorations.decoration) =>
+                'msg,
+        Exthost.Client.t
+      ) =>
+      Isolinear.Effect.t('msg);
+  };
+
   module Documents: {
     let modelChanged:
       (
@@ -21,6 +33,12 @@ module Effects: {
         unit => 'msg
       ) =>
       Isolinear.Effect.t('msg);
+  };
+
+  module FileSystemEventService: {
+    let onFileEvent:
+      (~events: Exthost.Files.FileSystemEvents.t, Exthost.Client.t) =>
+      Isolinear.Effect.t(_);
   };
 
   module SCM: {
@@ -127,8 +145,6 @@ module Sub: {
     (
       ~handle: int,
       ~chainedCacheId: Exthost.ChainedCacheId.t,
-      ~buffer: Oni_Core.Buffer.t,
-      ~position: EditorCoreTypes.CharacterPosition.t,
       ~toMsg: result(Exthost.SuggestItem.t, string) => 'a,
       Exthost.Client.t
     ) =>

@@ -45,6 +45,7 @@ type msg =
   | ItemDisposed(string)
   | DiagnosticsClicked
   | FileTypeClicked
+  | ContextMenuClosed
   | ContextMenuNotificationClearAllClicked
   | ContextMenuNotificationOpenClicked
   | NotificationCountClicked
@@ -54,15 +55,22 @@ type msg =
 // TODO: Wire these up to Pane / ContextMenu
 type outmsg =
   | Nothing
-  | ShowFileTypePicker;
+  | ClearNotifications
+  | ToggleProblems
+  | ToggleNotifications
+  | ShowFileTypePicker
+  | Effect(Isolinear.Effect.t(msg));
 
-type model = {items: list(Item.t)};
+type model = {
+  items: list(Item.t),
+  contextMenuVisible: bool,
+};
 
-let initial = {items: []};
+let initial = {items: [], contextMenuVisible: false};
 
 // UPDATE
 
-let update = (model, msg) => {
+let update = (~client, model, msg) => {
   let removeItemById = (items: list(Item.t), id) =>
     List.filter(si => Item.(si.id) != id, items);
 
@@ -70,10 +78,46 @@ let update = (model, msg) => {
   | ItemAdded(item) =>
     /* Replace the old item with the new one */
     let newItems = removeItemById(model.items, item.id);
-    ({items: [item, ...newItems]}, Nothing);
-  | ItemDisposed(id) => ({items: removeItemById(model.items, id)}, Nothing)
+    ({...model, items: [item, ...newItems]}, Nothing);
+
+  | ItemDisposed(id) => (
+      {...model, items: removeItemById(model.items, id)},
+      Nothing,
+    )
+
+  | NotificationsCountRightClicked => (
+      {...model, contextMenuVisible: true},
+      Nothing,
+    )
+
+  | ContextMenuNotificationClearAllClicked => (
+      {...model, contextMenuVisible: false},
+      Nothing,
+    )
+
+  | ContextMenuNotificationOpenClicked => (
+      {...model, contextMenuVisible: false},
+      ToggleNotifications,
+    )
+
+  | ContextMenuClosed => ({...model, contextMenuVisible: false}, Nothing)
+
   | FileTypeClicked => (model, ShowFileTypePicker)
-  | _ => (model, Nothing)
+
+  | NotificationCountClicked => (model, ToggleNotifications)
+
+  | DiagnosticsClicked => (model, ToggleProblems)
+
+  | ContributedItemClicked({command, _}) => (
+      model,
+      Effect(
+        Service_Exthost.Effects.Commands.executeContributedCommand(
+          ~command,
+          ~arguments=[],
+          client,
+        ),
+      ),
+    )
   };
 };
 
@@ -128,15 +172,15 @@ module Styles = {
   let item = bg => [
     flexDirection(`Column),
     justifyContent(`Center),
+    alignItems(`Center),
     backgroundColor(bg),
     paddingHorizontal(10),
     minWidth(50),
   ];
 
-  let text = (~color, ~background) => [
+  let text = (~color) => [
     textWrap(TextWrapping.NoWrap),
     Style.color(color),
-    backgroundColor(background),
   ];
 };
 
@@ -174,13 +218,10 @@ let item =
   };
 };
 
-let textItem = (~onClick=?, ~background, ~font: UiFont.t, ~theme, ~text, ()) =>
+let textItem = (~onClick=?, ~font: UiFont.t, ~theme, ~text, ()) =>
   <item ?onClick>
     <Text
-      style={Styles.text(
-        ~color=Colors.StatusBar.foreground.from(theme),
-        ~background,
-      )}
+      style={Styles.text(~color=Colors.StatusBar.foreground.from(theme))}
       fontFamily={font.family}
       fontSize=11.
       text
@@ -192,9 +233,8 @@ let notificationCount =
       ~theme,
       ~font: UiFont.t,
       ~foreground as color,
-      ~background,
       ~notifications: Feature_Notification.model,
-      ~contextMenu,
+      ~contextMenuVisible,
       ~dispatch,
       (),
     ) => {
@@ -227,13 +267,13 @@ let notificationCount =
       items
       theme
       font // correct for item padding
+      onCancel={() => dispatch(ContextMenuClosed)}
       onItemSelect={({data, _}: ContextMenu.item(msg)) => dispatch(data)}
     />;
   };
 
   <item onClick onRightClick>
-    {contextMenu == Feature_ContextMenu.NotificationStatusBarItem
-       ? <menu /> : React.empty}
+    {contextMenuVisible ? <menu /> : React.empty}
     <View
       style=Style.[
         flexDirection(`Row),
@@ -244,7 +284,7 @@ let notificationCount =
         <FontIcon icon=FontAwesome.bell color />
       </View>
       <Text
-        style={Styles.text(~color, ~background)}
+        style={Styles.text(~color)}
         text
         fontFamily={font.family}
         fontSize=11.
@@ -253,8 +293,7 @@ let notificationCount =
   </item>;
 };
 
-let diagnosticCount =
-    (~font: UiFont.t, ~background, ~theme, ~diagnostics, ~dispatch, ()) => {
+let diagnosticCount = (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => {
   let color = Colors.StatusBar.foreground.from(theme);
   let text = diagnostics |> Diagnostics.count |> string_of_int;
 
@@ -271,7 +310,7 @@ let diagnosticCount =
         <FontIcon icon=FontAwesome.timesCircle color />
       </View>
       <Text
-        style={Styles.text(~color, ~background)}
+        style={Styles.text(~color)}
         text
         fontFamily={font.family}
         fontSize=11.
@@ -280,19 +319,28 @@ let diagnosticCount =
   </item>;
 };
 
-let modeIndicator = (~font: UiFont.t, ~theme, ~mode, ()) => {
-  let background = Colors.Oni.backgroundFor(mode).from(theme);
-  let foreground = Colors.Oni.foregroundFor(mode).from(theme);
+module ModeIndicator = {
+  let transitionDuration = Revery.Time.milliseconds(300);
 
-  <item backgroundColor=background>
-    <Text
-      style={Styles.text(~color=foreground, ~background)}
-      text={Mode.toString(mode)}
-      fontFamily={font.family}
-      fontWeight=Medium
-      fontSize=11.
-    />
-  </item>;
+  let%component make = (~font: UiFont.t, ~theme, ~mode, ()) => {
+    let background = Colors.Oni.backgroundFor(mode).from(theme);
+    let foreground = Colors.Oni.foregroundFor(mode).from(theme);
+
+    let%hook background =
+      CustomHooks.colorTransition(~duration=transitionDuration, background);
+    let%hook foreground =
+      CustomHooks.colorTransition(~duration=transitionDuration, foreground);
+
+    <item backgroundColor=background>
+      <Text
+        style={Styles.text(~color=foreground)}
+        text={Mode.toString(mode)}
+        fontFamily={font.family}
+        fontWeight=Medium
+        fontSize=11.
+      />
+    </item>;
+  };
 };
 
 let transitionAnimation =
@@ -310,11 +358,11 @@ let indentationToString = (indentation: IndentationSettings.t) => {
 module View = {
   let%component make =
                 (
-                  ~mode: Oni_Core.Mode.t,
+                  ~mode,
                   ~notifications: Feature_Notification.model,
+                  ~recordingMacro: option(char),
                   ~diagnostics: Diagnostics.t,
                   ~font: UiFont.t,
-                  ~contextMenu: Feature_ContextMenu.model,
                   ~activeBuffer: option(Oni_Core.Buffer.t),
                   ~activeEditor: option(Feature_Editor.Editor.t),
                   ~indentationSettings: IndentationSettings.t,
@@ -418,7 +466,7 @@ module View = {
     let indentation = () => {
       let text = indentationSettings |> indentationToString;
 
-      <textItem font background theme text />;
+      <textItem font theme text />;
     };
 
     let fileType = () => {
@@ -430,7 +478,6 @@ module View = {
 
       <textItem
         font
-        background
         theme
         text
         onClick={() => {dispatch(FileTypeClicked)}}
@@ -447,7 +494,7 @@ module View = {
       activeBuffer
       |> OptionEx.flatMap(Buffer.getLineEndings)
       |> Option.map(toString)
-      |> Option.map(text => {<textItem font background theme text />})
+      |> Option.map(text => {<textItem font theme text />})
       |> Option.value(~default=React.empty);
     };
 
@@ -458,7 +505,33 @@ module View = {
         |> positionToString;
       };
 
-      <textItem font background theme text />;
+      <textItem font theme text />;
+    };
+
+    let macro = (~register, ()) => {
+      Oni_Components.(
+        <item>
+          <View
+            style=Style.[
+              flexDirection(`Row),
+              justifyContent(`Center),
+              alignItems(`Center),
+            ]>
+            <View style=Style.[margin(4)]>
+              <Codicon icon=Codicon.circleFilled color=Revery.Colors.red />
+            </View>
+            <Text
+              text={String.make(1, register)}
+              style={Styles.text(
+                ~color=Colors.StatusBar.foreground.from(theme),
+              )}
+              fontFamily={font.family}
+              fontWeight=Revery.Font.Weight.Bold
+              fontSize=11.
+            />
+          </View>
+        </item>
+      );
     };
 
     let notificationPopups = () =>
@@ -469,6 +542,11 @@ module View = {
          )
       |> React.listToElement;
 
+    let macroElement =
+      recordingMacro
+      |> Option.map(register => <macro register />)
+      |> Option.value(~default=React.empty);
+
     <View style={Styles.view(background, yOffset)}>
       <section align=`FlexStart>
         <notificationCount
@@ -476,15 +554,15 @@ module View = {
           theme
           font
           foreground
-          background
           notifications
-          contextMenu
+          contextMenuVisible={statusBar.contextMenuVisible}
         />
       </section>
       <sectionGroup>
+        <section align=`FlexStart> macroElement </section>
         <section align=`FlexStart> leftItems </section>
         <section align=`FlexStart>
-          <diagnosticCount font background theme diagnostics dispatch />
+          <diagnosticCount font theme diagnostics dispatch />
           scmItems
         </section>
         <section align=`Center />
@@ -497,7 +575,7 @@ module View = {
         </section>
         <notificationPopups />
       </sectionGroup>
-      <section align=`FlexEnd> <modeIndicator font theme mode /> </section>
+      <section align=`FlexEnd> <ModeIndicator font theme mode /> </section>
     </View>;
   };
 };

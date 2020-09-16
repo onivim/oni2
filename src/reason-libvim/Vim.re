@@ -9,6 +9,7 @@ module Buffer = Buffer;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
 module Clipboard = Clipboard;
+module ColorScheme = ColorScheme;
 module CommandLine = CommandLine;
 module Context = Context;
 module Cursor = Cursor;
@@ -17,10 +18,12 @@ module Effect = Effect;
 module Event = Event;
 module Format = Format;
 module Goto = Goto;
+module Operator = Operator;
 module TabPage = TabPage;
 module Mode = Mode;
 module Options = Options;
 module Search = Search;
+module Setting = Setting;
 module Types = Types;
 module Testing = {
   module Undo = Undo;
@@ -29,22 +32,6 @@ module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;
 module Yank = Yank;
-
-module GlobalState = {
-  let autoIndent:
-    ref(
-      option(
-        (~previousLine: string, ~beforePreviousLine: option(string)) =>
-        AutoIndent.action,
-      ),
-    ) =
-    ref(None);
-  let queuedFunctions: ref(list(unit => unit)) = ref([]);
-
-  let overriddenMessageHandler:
-    ref(option((Types.msgPriority, string, string) => unit)) =
-    ref(None);
-};
 
 module Internal = {
   let nativeFormatRequestToEffect: Native.formatRequest => Format.effect =
@@ -173,35 +160,27 @@ let runWith = (~context: Context.t, f) => {
   context.lineComment |> Option.iter(Options.setLineComment);
 
   let oldBuf = Buffer.getCurrent();
-  let prevMode = Mode.getCurrent();
-  //  let prevLocation = Cursor.get();
-  let prevRange = Visual.getRange();
-  //  let prevTopLine = Window.getTopLine();
-  //  let prevLeftColumn = Window.getLeftColumn();
-  let prevVisualMode = Visual.getType();
+  let prevMode = Mode.current();
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
   GlobalState.autoIndent := Some(context.autoIndent);
+  GlobalState.colorSchemeProvider := context.colorSchemeProvider;
 
   let cursors = f();
 
   GlobalState.autoIndent := None;
+  GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
 
   let newBuf = Buffer.getCurrent();
-  //  let newLocation = Cursor.get();
-  let newMode = Mode.getCurrent();
-  let newRange = Visual.getRange();
-  //  let newLeftColumn = Window.getLeftColumn();
-  //  let newTopLine = Window.getTopLine();
-  let newVisualMode = Visual.getType();
+  let newMode = Mode.current();
   let newModified = Buffer.isModified(newBuf);
   let newLineEndings = Buffer.getLineEndings(newBuf);
 
   BufferInternal.checkCurrentBufferForUpdate();
 
   if (newMode != prevMode) {
-    Event.dispatch(newMode, Listeners.modeChanged);
+    Event.dispatch(Effect.ModeChanged(newMode), Listeners.effect);
 
     if (newMode == CommandLine) {
       Event.dispatch(
@@ -216,27 +195,6 @@ let runWith = (~context: Context.t, f) => {
       CommandLineInternal.getState(),
       Listeners.commandLineUpdate,
     );
-  };
-
-  //  if (BytePosition.(prevLocation == newLocation)) {
-  //    Event.dispatch(newLocation, Listeners.cursorMoved);
-  //  };
-  //
-  //  if (prevTopLine != newTopLine) {
-  //    Event.dispatch(newTopLine, Listeners.topLineChanged);
-  //  };
-  //
-  //  if (prevLeftColumn != newLeftColumn) {
-  //    Event.dispatch(newLeftColumn, Listeners.leftColumnChanged);
-  //  };
-
-  if (!ByteRange.equals(prevRange, newRange)
-      || newMode == Visual
-      && prevMode != Visual
-      || prevVisualMode != newVisualMode) {
-    let vr =
-      VisualRange.create(~range=newRange, ~visualType=newVisualMode, ());
-    Event.dispatch(vr, Listeners.visualRangeChanged);
   };
 
   let id = Buffer.getId(newBuf);
@@ -442,17 +400,56 @@ let _onVersion = () => {
   queue(() => Event.dispatch((), Listeners.version));
 };
 
+let _onSettingChanged = (setting: Setting.t) => {
+  queue(() =>
+    Event.dispatch(Effect.SettingChanged(setting), Listeners.effect)
+  );
+};
+
+let _onColorSchemeChanged = (maybeScheme: option(string)) => {
+  queue(() => {
+    Event.dispatch(Effect.ColorSchemeChanged(maybeScheme), Listeners.effect)
+  });
+};
+
+let _colorSchemesGet = pattern => {
+  GlobalState.colorSchemeProvider^(pattern);
+};
+
+let _onMacroStartRecording = (register: char) => {
+  queue(() => {
+    Event.dispatch(
+      Effect.MacroRecordingStarted({register: register}),
+      Listeners.effect,
+    )
+  });
+};
+
+let _onMacroStopRecording = (register: char, value: option(string)) => {
+  queue(() => {
+    Event.dispatch(
+      Effect.MacroRecordingStopped({register, value}),
+      Listeners.effect,
+    )
+  });
+};
+
 let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);
   Callback.register("lv_onBufferChanged", _onBufferChanged);
   Callback.register("lv_onAutocommand", _onAutocommand);
   Callback.register("lv_onAutoIndent", _onAutoIndent);
+  Callback.register("lv_getColorSchemesCallback", _colorSchemesGet);
+  Callback.register("lv_onColorSchemeChanged", _onColorSchemeChanged);
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
   Callback.register("lv_onFormat", _onFormat);
   Callback.register("lv_onGoto", _onGoto);
   Callback.register("lv_onTabPage", _onTabPage);
   Callback.register("lv_onIntro", _onIntro);
   Callback.register("lv_onMessage", _onMessage);
+  Callback.register("lv_onMacroStartRecording", _onMacroStartRecording);
+  Callback.register("lv_onMacroStopRecording", _onMacroStopRecording);
+  Callback.register("lv_onSettingChanged", _onSettingChanged);
   Callback.register("lv_onQuit", _onQuit);
   Callback.register("lv_onUnhandledEscape", _onUnhandledEscape);
   Callback.register("lv_onStopSearch", _onStopSearch);
@@ -465,7 +462,7 @@ let init = () => {
 
   Native.vimInit();
 
-  Event.dispatch(Mode.getCurrent(), Listeners.modeChanged);
+  Event.dispatch(Effect.ModeChanged(Mode.current()), Listeners.effect);
   BufferInternal.checkCurrentBufferForUpdate();
 };
 
@@ -478,7 +475,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
 
       let runCursor = cursor => {
         Cursor.set(cursor);
-        if (Mode.getCurrent() == Types.Insert) {
+        if (Mode.current() == Mode.Insert) {
           let position: BytePosition.t = Cursor.get();
           let line = Buffer.getLine(Buffer.getCurrent(), position.line);
 
@@ -540,19 +537,19 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         Cursor.get();
       };
 
-      let mode = Mode.getCurrent();
+      let mode = Mode.current();
       let cursors = Internal.getDefaultCursors(cursors);
-      if (mode == Types.Insert) {
+      if (mode == Mode.Insert) {
         // Run first command, verify we don't go back to normal mode
         switch (cursors) {
         | [hd, ...tail] =>
           let newHead = runCursor(hd);
 
-          let newMode = Mode.getCurrent();
+          let newMode = Mode.current();
           // If we're still in insert mode, run the command for all the rest of the characters too
           let remainingCursors =
             switch (newMode) {
-            | Types.Insert => List.map(runCursor, tail)
+            | Mode.Insert => List.map(runCursor, tail)
             | _ => tail
             };
 

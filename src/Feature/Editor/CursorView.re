@@ -22,7 +22,7 @@ let%component make =
               ) => {
   let%hook () = React.Hooks.effect(Always, () => None);
 
-  let ({pixelX, pixelY}: Editor.pixelPosition, characterWidth) =
+  let ({x: pixelX, y: pixelY}: PixelPosition.t, characterWidth) =
     Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
 
   let originalX = pixelX;

@@ -111,11 +111,13 @@ let%component make =
               (
                 ~dispatch: Msg.t => unit,
                 ~editor: Editor.t,
+                ~config: Config.resolver,
                 ~cursorPosition: CharacterPosition.t,
                 ~width: int,
                 ~height: int,
                 ~count,
                 ~diagnostics,
+                ~maybeYankHighlights: option(Editor.yankHighlight),
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
                 ~selection:
                    Hashtbl.t(
@@ -231,6 +233,33 @@ let%component make =
   let sliderBackground =
     isHovering
       ? colors.minimapSliderHoverBackground : colors.minimapSliderBackground;
+
+  // Convert an editor surface pixel range (post-scroll) to a
+  // minimap pixel range. For now, this just has per-line fidelity.
+  let mapPixelRange = ({start, stop}: PixelRange.t) => {
+    let editorPixelYToMinimapPixelY = pixelY => {
+      let scaleFactor = rowHeight /. Editor.lineHeightInPixels(editor);
+      pixelY *. scaleFactor +. thumbTop;
+    };
+
+    PixelRange.{
+      start: PixelPosition.{x: 0., y: editorPixelYToMinimapPixelY(start.y)},
+      stop:
+        PixelPosition.{
+          x: float(width),
+          y: editorPixelYToMinimapPixelY(stop.y),
+        },
+    };
+  };
+
+  let yankHighlightElement =
+    maybeYankHighlights
+    |> Option.map(({key, pixelRanges}: Editor.yankHighlight) => {
+         let pixelRanges = pixelRanges |> List.map(mapPixelRange);
+
+         <YankHighlights config key pixelRanges />;
+       })
+    |> Option.value(~default=React.empty);
 
   <View
     style={Styles.container(backgroundColor)}
@@ -456,5 +485,6 @@ let%component make =
         );
       }}
     />
+    yankHighlightElement
   </View>;
 };

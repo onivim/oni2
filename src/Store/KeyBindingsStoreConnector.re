@@ -91,32 +91,32 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<C-N>",
         command: Commands.List.focusDown.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "listFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-P>",
         command: Commands.List.focusUp.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "listFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-N>",
         command: Commands.List.focusDown.id,
-        condition: "isMac && listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "isMac && listFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-P>",
         command: Commands.List.focusUp.id,
-        condition: "isMac && listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "isMac && listFocus" |> WhenExpr.parse,
       },
       {
         key: "<TAB>",
         command: Commands.List.focusDown.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "listFocus" |> WhenExpr.parse,
       },
       {
         key: "<S-TAB>",
         command: Commands.List.focusUp.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
+        condition: "listFocus" |> WhenExpr.parse,
       },
       {
         key: "<C-TAB>",
@@ -142,7 +142,18 @@ let start = maybeKeyBindingsFilePath => {
         {
           key: "<CR>",
           command: Commands.List.select.id,
-          condition: "listFocus || textInputFocus" |> WhenExpr.parse,
+          condition: "listFocus" |> WhenExpr.parse,
+        },
+        // Search commands
+        {
+          key: "<S-D-F>",
+          command: Commands.Workbench.Action.findInFiles.id,
+          condition: "isMac" |> WhenExpr.parse,
+        },
+        {
+          key: "<S-C-F>",
+          command: Commands.Workbench.Action.findInFiles.id,
+          condition: "!isMac" |> WhenExpr.parse,
         },
         {
           key: "<S-C-B>",
@@ -209,16 +220,9 @@ let start = maybeKeyBindingsFilePath => {
           command: Feature_Sneak.Commands.stop.id,
           condition: "sneakMode" |> WhenExpr.parse,
         },
-        {
-          key: "<S-C-M>",
-          command: Commands.Workbench.Actions.View.problems.id,
-          condition: WhenExpr.Value(True),
-        },
-        {
-          key: "<D-S-M>",
-          command: Commands.Workbench.Actions.View.problems.id,
-          condition: isMacCondition,
-        },
+      ]
+    @ Feature_Pane.Contributions.keybindings
+    @ Keybindings.[
         {
           key: "<D-W>",
           command: Feature_Layout.Commands.closeActiveEditor.id,
@@ -274,51 +278,10 @@ let start = maybeKeyBindingsFilePath => {
           command: "workbench.action.zoomReset",
           condition: WhenExpr.Value(True),
         },
-        // TERMINAL
-        // Binding to open normal mode
-        {
-          key: "<C-\\><C-N>",
-          command: Feature_Terminal.Commands.Oni.normalMode.id,
-          condition: "terminalFocus && insertMode" |> WhenExpr.parse,
-        },
-        // Bindings to go from normal / visual mode -> insert mode
-        {
-          key: "o",
-          command: Feature_Terminal.Commands.Oni.insertMode.id,
-          condition:
-            "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-        },
-        {
-          key: "<S-O>",
-          command: Feature_Terminal.Commands.Oni.insertMode.id,
-          condition:
-            "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-        },
-        {
-          key: "Shift+a",
-          command: Feature_Terminal.Commands.Oni.insertMode.id,
-          condition:
-            "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-        },
-        {
-          key: "a",
-          command: Feature_Terminal.Commands.Oni.insertMode.id,
-          condition:
-            "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-        },
-        {
-          key: "i",
-          command: Feature_Terminal.Commands.Oni.insertMode.id,
-          condition:
-            "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-        },
-        {
-          key: "Shift+i",
-          command: Feature_Terminal.Commands.Oni.insertMode.id,
-          condition:
-            "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-        },
-        //LAYOUT
+      ]
+    @ Feature_Terminal.Contributions.keybindings
+    //LAYOUT
+    @ Keybindings.[
         {
           key: "<C-W>H",
           command: Feature_Layout.Commands.moveLeft.id,
@@ -469,7 +432,8 @@ let start = maybeKeyBindingsFilePath => {
           condition:
             "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
         },
-      ];
+      ]
+    @ Component_VimWindows.Contributions.keybindings;
 
   let getKeybindingsFile = () => {
     Filesystem.getOrCreateConfigFile(
@@ -539,6 +503,11 @@ let start = maybeKeyBindingsFilePath => {
       }
     );
 
+  let executeExCommandEffect = command =>
+    Isolinear.Effect.create(~name="keybindings.executeExCommand", () =>
+      ignore(Vim.command(command): Vim.Context.t)
+    );
+
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Actions.Init => (state, loadKeyBindingsEffect(true))
@@ -552,14 +521,21 @@ let start = maybeKeyBindingsFilePath => {
       )
 
     | KeybindingInvoked({command}) =>
-      switch (Command.Lookup.get(command, State.commands(state))) {
-      | Some((command: Command.t(_))) => (
+      if (command |> Utility.StringEx.startsWith(~prefix=":")) {
+        (
           state,
-          executeCommandEffect(command.msg),
-        )
-      | None =>
-        Log.errorf(m => m("Unknown command: %s", command));
-        (state, Isolinear.Effect.none);
+          executeExCommandEffect(Base.String.drop_prefix(command, 1)),
+        );
+      } else {
+        switch (Command.Lookup.get(command, CommandManager.current(state))) {
+        | Some((command: Command.t(_))) => (
+            state,
+            executeCommandEffect(command.msg),
+          )
+        | None =>
+          Log.errorf(m => m("Unknown command: %s", command));
+          (state, Isolinear.Effect.none);
+        };
       }
 
     | _ => (state, Isolinear.Effect.none)

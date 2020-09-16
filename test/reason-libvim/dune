@@ -1,9 +1,10 @@
 (library
-    (name Libvim_Test)
-    (flags (:standard (-w -39)))
-    (ocamlopt_flags -linkall -g)
-    (libraries rely.lib libvim)
-)
+ (name Libvim_Test)
+ (flags
+  (:standard
+   (-w -39)))
+ (ocamlopt_flags -linkall -g)
+ (libraries rely.lib libvim))
 
 (install
  (section bin)

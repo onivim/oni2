@@ -21,15 +21,6 @@ let copyFilePath =
     CopyActiveFilepathToClipboard,
   );
 
-let acceptSelectedSuggestion =
-  register("acceptSelectedSuggestion", Command("acceptSelectedSuggestion"));
-
-let selectPrevSuggestion =
-  register("selectPrevSuggestion", Command("selectPrevSuggestion"));
-
-let selectNextSuggestion =
-  register("selectNextSuggestion", Command("selectNextSuggestion"));
-
 let undo = register("undo", Command("undo"));
 let redo = register("redo", Command("redo"));
 
@@ -272,17 +263,6 @@ module Workbench = {
         register(
           "workbench.action.files.save",
           Command("workbench.action.files.save"),
-        );
-    };
-  };
-  module Actions = {
-    module View = {
-      let problems =
-        register(
-          ~category="View",
-          ~title="Toggle Problems (Errors, Warnings)",
-          "workbench.actions.view.problems",
-          Command("workbench.actions.view.problems"),
         );
     };
   };

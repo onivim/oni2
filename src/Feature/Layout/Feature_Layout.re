@@ -18,6 +18,14 @@ open Msg;
 [@deriving show({with_path: false})]
 type msg = Msg.t;
 
+module ShadowedMsg = Msg;
+module Msg = {
+  let moveLeft = ShadowedMsg.Command(MoveLeft);
+  let moveUp = ShadowedMsg.Command(MoveUp);
+  let moveDown = ShadowedMsg.Command(MoveDown);
+  let moveRight = ShadowedMsg.Command(MoveRight);
+};
+
 type outmsg =
   | Nothing
   | SplitAdded

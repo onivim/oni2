@@ -101,3 +101,7 @@ module Pane: {
     ) =>
     Revery.UI.element;
 };
+
+module Contributions: {
+  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
+};

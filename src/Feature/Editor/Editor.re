@@ -11,15 +11,16 @@ module GlobalState = {
   };
 };
 
-type pixelPosition = {
-  pixelX: float,
-  pixelY: float,
-};
-
 type viewLine = {
   contents: BufferLine.t,
   byteOffset: int,
   characterOffset: int,
+};
+
+[@deriving show]
+type yankHighlight = {
+  key: [@opaque] Brisk_reconciler.Key.t,
+  pixelRanges: list(PixelRange.t),
 };
 
 [@deriving show]
@@ -41,15 +42,20 @@ type t = {
   maxLineLength: int,
   viewLines: int,
   cursors: [@opaque] list(BytePosition.t),
-  selection: [@opaque] VisualRange.t,
+  selection: [@opaque] option(VisualRange.t),
   pixelWidth: int,
   pixelHeight: int,
+  yankHighlight: option(yankHighlight),
 };
 
 let key = ({key, _}) => key;
 let totalViewLines = ({viewLines, _}) => viewLines;
 let selection = ({selection, _}) => selection;
-let setSelection = (~selection, editor) => {...editor, selection};
+let setSelection = (~selection, editor) => {
+  ...editor,
+  selection: Some(selection),
+};
+let clearSelection = editor => {...editor, selection: None};
 let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
 let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
 let scrollY = ({scrollY, _}) => scrollY;
@@ -81,7 +87,7 @@ let bufferBytePositionToPixel =
   let lineCount = EditorBuffer.numberOfLines(buffer);
   let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
   if (line < 0 || line >= lineCount) {
-    ({pixelX: 0., pixelY: 0.}, 0.);
+    ({x: 0., y: 0.}: PixelPosition.t, 0.);
   } else {
     let bufferLine = buffer |> EditorBuffer.line(line);
 
@@ -93,8 +99,14 @@ let bufferBytePositionToPixel =
 
     let pixelY = lineHeightInPixels(editor) *. float(line) -. scrollY +. 0.5;
 
-    ({pixelX, pixelY}, width);
+    ({x: pixelX, y: pixelY}: PixelPosition.t, width);
   };
+};
+
+let yankHighlight = ({yankHighlight, _}) => yankHighlight;
+let setYankHighlight = (~yankHighlight, editor) => {
+  ...editor,
+  yankHighlight: Some(yankHighlight),
 };
 
 let viewLine = (editor, lineNumber) => {
@@ -108,7 +120,7 @@ let bufferCharacterPositionToPixel =
   let lineCount = EditorBuffer.numberOfLines(buffer);
   let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
   if (line < 0 || line >= lineCount) {
-    ({pixelX: 0., pixelY: 0.}, 0.);
+    ({x: 0., y: 0.}: PixelPosition.t, 0.);
   } else {
     let (cursorOffset, width) =
       buffer
@@ -119,7 +131,7 @@ let bufferCharacterPositionToPixel =
 
     let pixelY = lineHeightInPixels(editor) *. float(line) -. scrollY +. 0.5;
 
-    ({pixelX, pixelY}, width);
+    ({x: pixelX, y: pixelY}: PixelPosition.t, width);
   };
 };
 
@@ -148,18 +160,10 @@ let create = (~config, ~buffer, ()) => {
      * if a buffer loads prior to our first render.
      */
     cursors: [{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}],
-    selection:
-      VisualRange.create(
-        ~mode=Vim.Types.None,
-        EditorCoreTypes.(
-          ByteRange.{
-            start: BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
-            stop: BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
-          }
-        ),
-      ),
+    selection: None,
     pixelWidth: 1,
     pixelHeight: 1,
+    yankHighlight: None,
   };
 };
 
@@ -340,7 +344,7 @@ let getPrimaryCursorByte = editor =>
     BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}
   };
 let selectionOrCursorRange = editor => {
-  switch (editor.selection.mode) {
+  switch (editor.selection) {
   | None =>
     let pos = getPrimaryCursorByte(editor);
     ByteRange.{
@@ -351,9 +355,7 @@ let selectionOrCursorRange = editor => {
           byte: ByteIndex.zero,
         },
     };
-  | Line
-  | Block
-  | Character => editor.selection.range
+  | Some(selection) => selection.range
   };
 };
 
@@ -441,7 +443,7 @@ let exposePrimaryCursor = editor => {
     let {pixelHeight, scrollX, scrollY, _} = editor;
     let pixelHeight = float(pixelHeight);
 
-    let ({pixelX, pixelY}, _width) =
+    let ({x: pixelX, y: pixelY}: PixelPosition.t, _width) =
       bufferBytePositionToPixel(~position=primaryCursor, editor);
 
     let scrollOffX = getCharacterWidth(editor) *. 2.;

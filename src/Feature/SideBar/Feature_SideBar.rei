@@ -1,7 +1,8 @@
 type pane =
   | FileExplorer
   | SCM
-  | Extensions;
+  | Extensions
+  | Search;
 
 type location =
   | Left
@@ -34,3 +35,8 @@ type settings = {
 };
 
 let setDefaults: (model, settings) => model;
+
+module Contributions: {
+  let contextKeys:
+    (~isFocused: bool) => list(WhenExpr.ContextKeys.Schema.entry(model));
+};

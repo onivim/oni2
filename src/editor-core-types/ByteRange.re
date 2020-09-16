@@ -4,6 +4,8 @@ type t = {
   stop: BytePosition.t,
 };
 
+let zero = {start: BytePosition.zero, stop: BytePosition.zero};
+
 let contains = (position: BytePosition.t, range) => {
   (
     LineNumber.(position.line == range.start.line)

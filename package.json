@@ -222,10 +222,11 @@
     "@opam/lwt": "*",
     "@opam/markup": "^0.8.2",
     "@opam/ocamlbuild": "*",
+    "@opam/ocamlformat": "^0.15.0",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
-    "@opam/ppx_inline_test": "v0.13.1",
-    "@opam/ppx_let": "v0.13.0",
+    "@opam/ppx_inline_test": "v0.14.1",
+    "@opam/ppx_let": "v0.14.0",
     "@opam/ppxlib": ">=0.10.0",
     "@opam/re": "*",
     "@opam/reason": "^3.6.0",
@@ -241,8 +242,8 @@
     "esy-skia": "*",
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.55",
-    "ocaml": "~4.7.0",
+    "libvim": "8.10869.59",
+    "ocaml": "4.10.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
     "reasonFuzz": "*",
     "refmterr": "*",
@@ -251,8 +252,7 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
-    "revery": "revery-ui/revery#e646df2",
+    "revery": "revery-ui/revery#d2e614a",
     "esy-skia": "revery-ui/esy-skia#a3785f9",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
@@ -261,10 +261,11 @@
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
-    "@opam/conf-pkg-config": "1.2"
+    "@opam/conf-pkg-config": "1.2",
+    "@opam/yojson": "onivim/yojson:yojson.opam#f480aef"
   },
   "devDependencies": {
-    "ocaml": "~4.10",
+    "ocaml": "4.10.0",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",

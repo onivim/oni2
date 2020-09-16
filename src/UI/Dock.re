@@ -175,7 +175,6 @@ let%component make =
               (
                 ~theme: ColorTheme.Colors.t,
                 ~sideBar: Feature_SideBar.model,
-                ~pane: Feature_Pane.model,
                 ~extensions: Feature_Extensions.model,
                 ~font: UiFont.t,
                 (),
@@ -183,7 +182,6 @@ let%component make =
   let%hook (offsetX, _animationState, _reset) = Hooks.animation(animation);
 
   let isSidebarVisible = it => Feature_SideBar.isVisible(it, sideBar);
-  let isPaneVisible = it => Feature_Pane.isVisible(it, pane);
 
   let extensionNotification =
     Feature_Extensions.isBusy(extensions) ? Some(InProgress) : None;
@@ -203,7 +201,7 @@ let%component make =
       onClick=onSearchClick
       sideBar
       theme
-      isActive={isPaneVisible(Search)}
+      isActive={isSidebarVisible(Search)}
       icon=FontAwesome.search
     />
     <item

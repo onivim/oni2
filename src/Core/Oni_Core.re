@@ -56,6 +56,7 @@ module Uri = Uri;
 module Utility = Utility;
 module Views = Views;
 module VimEx = VimEx;
+module VimSetting = VimSetting;
 module VisualRange = VisualRange;
 module WordWrap = WordWrap;
 module ZedBundled = Zed_utf8;
