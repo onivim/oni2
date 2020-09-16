@@ -84,7 +84,7 @@ const updateIcon = (rcedit, exe, iconFile) => {
     process.env = {
         PATH: process.env.PATH,
     }
-    fs.chmodSync(exe, 0755);
+    fs.chmodSync(exe, 0755)
     rcedit(exe, {
         icon: iconFile,
     })
