@@ -76,3 +76,44 @@ let toString = (v: t, items: StringMap.t(string)) => {
 
   f(resolvedItems, false);
 };
+
+// TEST
+
+let%test_module "parse" =
+  (module
+   {
+     let%test "plain string" = {
+       ofString("abc") == [Text("abc", false)];
+     };
+
+     let%test "string with separator" = {
+       ofString("abc${separator}def")
+       == [Text("abc", false), Separator, Text("def", false)];
+     };
+
+     let%test "string with variables" = {
+       ofString("${variable1}${separator}${variable2}")
+       == [Variable("variable1"), Separator, Variable("variable2")];
+     };
+   });
+let%test_module "toString" =
+  (module
+   {
+     let simpleMap =
+       [("variable1", "rv1"), ("variable2", "rv2")]
+       |> List.to_seq
+       |> StringMap.of_seq;
+
+     let%test "basic case" = {
+       let title =
+         ofString("prefix${variable1}${separator}${variable2}postfix");
+       toString(title, simpleMap) == "prefixrv1 - rv2postfix";
+     };
+     let%test "nested variable missing case" = {
+       let title =
+         ofString(
+           "prefix${variable1}${separator}${missingVariable}${separator}${variable2}postfix",
+         );
+       toString(title, simpleMap) == "prefixrv1 - rv2postfix";
+     };
+   });
