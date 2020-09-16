@@ -152,6 +152,7 @@ let%component make =
           renderItem={renderInstalled(userExtensions)}
           rowHeight=ItemView.Constants.itemHeight
           count={Array.length(userExtensions)}
+          isFocused=false
           focused=None
           theme
           onClick={_ => localDispatch(InstalledTitleClicked)}
@@ -163,6 +164,7 @@ let%component make =
           renderItem={renderBundled(bundledExtensions)}
           rowHeight=ItemView.Constants.itemHeight
           count={Array.length(bundledExtensions)}
+          isFocused=false
           focused=None
           theme
           onClick={_ => localDispatch(BundledTitleClicked)}
