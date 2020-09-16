@@ -230,17 +230,14 @@ let start = () => {
     // TODO: Should be handled by a more general init mechanism
     | Init => (
         state,
-        Isolinear.Effect.batch([
-          Effects.load(
-            state.workspace.workingDirectory,
-            state.languageInfo,
-            state.iconTheme,
-            state.configuration,
-            ~onComplete=tree =>
-            Actions.FileExplorer(TreeLoaded(tree))
-          ),
-          TitleStoreConnector.Effects.updateTitle(state),
-        ]),
+        Effects.load(
+          state.workspace.workingDirectory,
+          state.languageInfo,
+          state.iconTheme,
+          state.configuration,
+          ~onComplete=tree =>
+          Actions.FileExplorer(TreeLoaded(tree))
+        ),
       )
 
     | FileExplorer(action) => updater(state, action)

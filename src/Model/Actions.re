@@ -158,8 +158,6 @@ type t =
   | Layout(Feature_Layout.msg)
   | WriteFailure
   | Modals(Feature_Modals.msg)
-  // "Internal" effect action, see TitleStoreConnector
-  | SetTitle(string)
   | Vim(Feature_Vim.msg)
   | TabPage(Vim.TabPage.effect)
   | Yank({range: [@opaque] VisualRange.t})

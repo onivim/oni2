@@ -139,6 +139,10 @@ let update =
       ~extHostClient: Exthost.Client.t,
       ~getUserSettings,
       ~setup,
+      ~maximize,
+      ~minimize,
+      ~close,
+      ~restore,
       state: State.t,
       action: Actions.t,
     ) =>
@@ -883,6 +887,23 @@ let update =
       state,
       Internal.notificationEffect(~kind=Error, message),
     )
+
+  | TitleBar(titleBarMsg) =>
+    let eff =
+      switch (
+        Feature_TitleBar.update(
+          ~maximize,
+          ~minimize,
+          ~close,
+          ~restore,
+          titleBarMsg,
+        )
+      ) {
+      | Feature_TitleBar.Effect(effect) => effect
+      | Feature_TitleBar.Nothing => Isolinear.Effect.none
+      };
+
+    (state, eff |> Isolinear.Effect.map(msg => TitleBar(msg)));
 
   | SignatureHelp(msg) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);

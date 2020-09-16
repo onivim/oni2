@@ -27,9 +27,6 @@ Service_Clipboard.Testing.setClipboardProvider(~get=() => _currentClipboard^);
 
 let setTime = v => _currentTime := v;
 
-let setTitle = title => _currentTitle := title;
-let getTitle = () => _currentTitle^;
-
 let setZoom = v => _currentZoom := v;
 let getZoom = () => _currentZoom^;
 
@@ -211,7 +208,6 @@ let runTest =
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
-      ~setTitle,
       ~getZoom,
       ~setZoom,
       ~setVsync,
