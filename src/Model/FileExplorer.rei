@@ -5,8 +5,7 @@ type t = {
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(string), // path
-  focus: option(string), // path
-  decorations: StringMap.t(list(Decoration.t)),
+  focus: option(string) // path
 };
 
 [@deriving show]
@@ -25,4 +24,5 @@ let getFileIcon:
   (Exthost.LanguageInfo.t, IconTheme.t, string) =>
   option(IconTheme.IconDefinition.t);
 let getDirectoryTree:
-  (string, Exthost.LanguageInfo.t, IconTheme.t, list(string)) => FsTreeNode.t;
+  (string, Exthost.LanguageInfo.t, IconTheme.t, list(string)) =>
+  Lwt.t(FsTreeNode.t);

@@ -25,6 +25,8 @@ type fontSmoothing =
 
 type fontLigatures = [ | `Bool(bool) | `List(list(string))];
 
+type autoReveal = [ | `HighlightAndScroll | `HighlightOnly | `NoReveal];
+
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
   editorDetectIndentation: bool,
@@ -39,6 +41,7 @@ type t = {
   editorHighlightActiveIndentGuide: bool,
   editorRenderIndentGuides: bool,
   editorRulers: list(int),
+  explorerAutoReveal: autoReveal,
   terminalIntegratedFontFile: string,
   terminalIntegratedFontSize: float,
   terminalIntegratedFontSmoothing: fontSmoothing,
@@ -56,7 +59,6 @@ type t = {
   vimUseSystemClipboard,
   uiShadows: bool,
   uiZoom: float,
-  windowTitle: string,
   zenModeHideTabs: bool,
   zenModeSingleFile: bool,
   // Experimental feature flags
@@ -80,6 +82,7 @@ let default = {
   editorRenderIndentGuides: true,
   editorHighlightActiveIndentGuide: true,
   editorRulers: [],
+  explorerAutoReveal: `HighlightAndScroll,
   terminalIntegratedFontFile: Constants.defaultFontFile,
   terminalIntegratedFontSize: Constants.defaultTerminalFontSize,
   terminalIntegratedFontSmoothing: Default,
@@ -100,7 +103,6 @@ let default = {
     paste: false,
   },
   vsync: Revery.Vsync.Immediate,
-  windowTitle: "${dirty}${activeEditorShort}${separator}${rootName}${separator}${appName}",
   zenModeHideTabs: true,
   zenModeSingleFile: true,
   experimentalVimL: [],

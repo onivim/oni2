@@ -7,8 +7,7 @@ type t = {
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(string), // path
-  focus: option(string), // path
-  decorations: StringMap.t(list(Decoration.t)),
+  focus: option(string) // path
 };
 
 [@deriving show({with_path: false})]
@@ -27,7 +26,6 @@ let initial = {
   scrollOffset: `Start(0.),
   active: None,
   focus: None,
-  decorations: StringMap.empty,
 };
 
 let getFileIcon = (languageInfo, iconTheme, filePath) => {
@@ -38,25 +36,6 @@ let getFileIcon = (languageInfo, iconTheme, filePath) => {
   switch (fileIcon) {
   | Some(_) as x => x
   | None => None
-  };
-};
-
-let isDirectory = path => Sys.file_exists(path) && Sys.is_directory(path);
-
-let logUnixError = (error, fn, arg) =>
-  Log.errorf(m => {
-    let msg = Unix.error_message(error);
-    m("%s encountered in %s called with %s", msg, fn, arg);
-  });
-
-let attempt = (~defaultValue, func) => {
-  try%lwt(func()) {
-  | Unix.Unix_error(error, fn, arg) =>
-    logUnixError(error, fn, arg);
-    Lwt.return(defaultValue);
-  | Failure(e) =>
-    Log.error(e);
-    Lwt.return(defaultValue);
   };
 };
 
@@ -83,51 +62,41 @@ let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
    not recurse too far.
  */
 let getFilesAndFolders = (~ignored, cwd, getIcon) => {
-  let rec getDirContent = (~loadChildren=false, cwd) => {
-    let toFsTreeNode = file => {
-      let path = Filename.concat(cwd, file);
-
-      if (isDirectory(path)) {
-        let%lwt children =
-          if (loadChildren) {
-            /**
-               If resolving children for a particular directory fails
-                log the error but carry on processing other directories
-              */
-            attempt(() => getDirContent(path), ~defaultValue=[])
-            |> Lwt.map(List.sort(sortByLoweredDisplayName));
-          } else {
-            Lwt.return([]);
-          };
-
-        Lwt.return(
-          FsTreeNode.directory(path, ~icon=getIcon(path), ~children),
-        );
-      } else {
-        FsTreeNode.file(path, ~icon=getIcon(path)) |> Lwt.return;
-      };
-    };
-
-    let%lwt files =
-      Lwt_unix.files_of_directory(cwd)
-      /* Filter out the relative name for current and parent directory*/
-      |> Lwt_stream.filter(name => name != ".." && name != ".")
-      /* Remove ignored files from search */
-      |> Lwt_stream.filter(name => !List.mem(name, ignored))
-      |> Lwt_stream.to_list;
-
-    Lwt_list.map_p(toFsTreeNode, files);
-  };
-
-  attempt(() => getDirContent(cwd, ~loadChildren=true), ~defaultValue=[]);
+  Luv.File.Dirent.(
+    cwd
+    |> Service_OS.Api.readdir
+    |> Lwt.map((dirents: list(Luv.File.Dirent.t)) => {
+         dirents
+         |> List.filter(({name, _}) =>
+              name != ".." && name != "." && !List.mem(name, ignored)
+            )
+         |> List.filter_map(({name, kind}) => {
+              let path = Filename.concat(cwd, name);
+              if (kind == `FILE || kind == `LINK) {
+                Some(FsTreeNode.file(path, ~icon=getIcon(path)));
+              } else if (kind == `DIR) {
+                Some(
+                  FsTreeNode.directory(
+                    path,
+                    ~icon=getIcon(path),
+                    ~children=[],
+                  ),
+                );
+              } else {
+                None;
+              };
+            })
+         |> List.sort(sortByLoweredDisplayName)
+       })
+  );
 };
 
 let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
   let getIcon = getFileIcon(languageInfo, iconTheme);
-  let children =
-    getFilesAndFolders(~ignored, cwd, getIcon)
-    |> Lwt_main.run
-    |> List.sort(sortByLoweredDisplayName);
+  let childrenPromise = getFilesAndFolders(~ignored, cwd, getIcon);
 
-  FsTreeNode.directory(cwd, ~icon=getIcon(cwd), ~children, ~isOpen=true);
+  childrenPromise
+  |> Lwt.map(children => {
+       FsTreeNode.directory(cwd, ~icon=getIcon(cwd), ~children, ~isOpen=true)
+     });
 };

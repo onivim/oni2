@@ -12,7 +12,7 @@ module Effects = {
     Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
       let ignored =
         Configuration.getValue(c => c.filesExclude, configuration);
-      let tree =
+      let promise =
         FileExplorer.getDirectoryTree(
           directory,
           languageInfo,
@@ -20,10 +20,12 @@ module Effects = {
           ignored,
         );
 
-      dispatch(onComplete(tree));
+      Lwt.on_success(promise, tree => {dispatch(onComplete(tree))});
     });
   };
 };
+
+/* module Log = (val Log.withNamespace("Oni2.Core.Config")); */
 
 let updateFileExplorer = (updater, state) =>
   State.{...state, fileExplorer: updater(state.fileExplorer)};
@@ -100,7 +102,6 @@ let revealFocus =
       | Some(index) => {...state, scrollOffset: `Reveal(index)}
       | None => state
       }
-
     | _ => state
     }
   });
@@ -147,11 +148,24 @@ let start = () => {
     | ActiveFilePathChanged(maybeFilePath) =>
       switch (state.fileExplorer) {
       | {active, _} when active != maybeFilePath =>
-        let state = setActive(maybeFilePath, state);
         switch (maybeFilePath) {
-        | Some(path) => revealAndFocusPath(path, state)
+        | Some(path) =>
+          let autoReveal =
+            Oni_Core.Configuration.getValue(
+              c => c.explorerAutoReveal,
+              state.configuration,
+            );
+          switch (autoReveal) {
+          | `HighlightAndScroll =>
+            let state = setActive(Some(path), state);
+            revealAndFocusPath(path, state);
+          | `HighlightOnly =>
+            let state = setActive(Some(path), state);
+            (setFocus(Some(path), state), Isolinear.Effect.none);
+          | `NoReveal => (state, Isolinear.Effect.none)
+          };
         | None => (state, Isolinear.Effect.none)
-        };
+        }
       | _ => (state, Isolinear.Effect.none)
       }
     | TreeLoaded(tree) => (setTree(tree, state), Isolinear.Effect.none)
@@ -216,17 +230,14 @@ let start = () => {
     // TODO: Should be handled by a more general init mechanism
     | Init => (
         state,
-        Isolinear.Effect.batch([
-          Effects.load(
-            state.workspace.workingDirectory,
-            state.languageInfo,
-            state.iconTheme,
-            state.configuration,
-            ~onComplete=tree =>
-            Actions.FileExplorer(TreeLoaded(tree))
-          ),
-          TitleStoreConnector.Effects.updateTitle(state),
-        ]),
+        Effects.load(
+          state.workspace.workingDirectory,
+          state.languageInfo,
+          state.iconTheme,
+          state.configuration,
+          ~onComplete=tree =>
+          Actions.FileExplorer(TreeLoaded(tree))
+        ),
       )
 
     | FileExplorer(action) => updater(state, action)
