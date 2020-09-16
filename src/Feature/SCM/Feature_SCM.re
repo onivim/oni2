@@ -54,6 +54,14 @@ module Provider = {
 };
 
 [@deriving show({with_path: false})]
+type focus =
+  | CommitText
+  | Group({
+      handle: int,
+      id: int,
+    });
+
+[@deriving show({with_path: false})]
 type model = {
   providers: list(Provider.t),
   inputBox: Component_InputText.model,
@@ -183,6 +191,7 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | Nothing;
 
 module Effects = {
