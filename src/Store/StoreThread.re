@@ -151,8 +151,6 @@ let start =
   let keyBindingsUpdater =
     KeyBindingsStoreConnector.start(keybindingsFilePath);
 
-  let fileExplorerUpdater = FileExplorerStore.start();
-
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
   let indentationUpdater = IndentationStoreConnector.start();
 
@@ -174,7 +172,6 @@ let start =
       keyBindingsUpdater,
       commandUpdater,
       lifecycleUpdater,
-      fileExplorerUpdater,
       indentationUpdater,
       themeUpdater,
       titleUpdater,

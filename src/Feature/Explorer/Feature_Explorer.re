@@ -7,37 +7,12 @@ module Log = (val Log.withNamespace("Oni2.Feature.Explorer"));
 
 include Model;
 
-let getFileIcon = (languageInfo, iconTheme, filePath) => {
-  let fileIcon =
-    Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, filePath)
-    |> IconTheme.getIconForFile(iconTheme, filePath);
-
-  switch (fileIcon) {
-  | Some(_) as x => x
-  | None => None
-  };
+let getFileIcon = (~languageInfo, ~iconTheme, filePath) => {
+  Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, filePath)
+  |> IconTheme.getIconForFile(iconTheme, filePath);
 };
 
 module Internal = {
-  let isDirectory = path => Sys.file_exists(path) && Sys.is_directory(path);
-
-  let logUnixError = (error, fn, arg) =>
-    Log.errorf(m => {
-      let msg = Unix.error_message(error);
-      m("%s encountered in %s called with %s", msg, fn, arg);
-    });
-
-  let attempt = (~defaultValue, func) => {
-    try%lwt(func()) {
-    | Unix.Unix_error(error, fn, arg) =>
-      logUnixError(error, fn, arg);
-      Lwt.return(defaultValue);
-    | Failure(e) =>
-      Log.error(e);
-      Lwt.return(defaultValue);
-    };
-  };
-
   let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
     switch (a.kind, b.kind) {
     | (Directory(_), File) => (-1)
@@ -81,15 +56,13 @@ module Internal = {
      not recurse too far.
    */
   let getFilesAndFolders = (~ignored, cwd, getIcon) => {
-    Luv.File.Dirent.(
-      cwd
-      |> Service_OS.Api.readdir
-      |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd, ~getIcon))
-    );
+    cwd
+    |> Service_OS.Api.readdir
+    |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd, ~getIcon));
   };
 
   let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
-    let getIcon = getFileIcon(languageInfo, iconTheme);
+    let getIcon = getFileIcon(~languageInfo, ~iconTheme);
     let childrenPromise = getFilesAndFolders(~ignored, cwd, getIcon);
 
     childrenPromise
@@ -267,7 +240,7 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
 
   | TreeLoaded(tree) => (setTree(tree, model), Nothing)
 
-  | TreeLoadError(msg) => (model, Nothing)
+  | TreeLoadError(_msg) => (model, Nothing)
 
   | NodeLoaded(node) => (replaceNode(node, model), Nothing)
 
@@ -332,8 +305,7 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
 module View = View;
 
 let sub = (~configuration, ~languageInfo, ~iconTheme, {rootPath, _}) => {
-  // TODO: Ignored
-  let getIcon = getFileIcon(languageInfo, iconTheme);
+  let getIcon = getFileIcon(~languageInfo, ~iconTheme);
   let ignored = Configuration.getValue(c => c.filesExclude, configuration);
 
   let toMsg =

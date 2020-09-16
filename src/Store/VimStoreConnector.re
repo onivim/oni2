@@ -1074,22 +1074,7 @@ let start =
           rootName: Filename.basename(workingDirectory),
         },
       };
-      (
-        newState,
-        Isolinear.Effect.none,
-        // TODO: Refactor to subscription
-        //        Isolinear.Effect.batch([
-        //          FileExplorerStore.Effects.load(
-        //            workingDirectory,
-        //            state.languageInfo,
-        //            state.iconTheme,
-        //            state.configuration,
-        //            ~onComplete=tree =>
-        //            Actions.FileExplorer(TreeLoaded(tree))
-        //          ),
-        //          TitleStoreConnector.Effects.updateTitle(newState),
-        //        ]),
-      );
+      (newState, Isolinear.Effect.none);
 
     | VimMessageReceived({priority, message, _}) =>
       let kind =
