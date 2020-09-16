@@ -9,12 +9,7 @@ type windowDisplayMode =
   | Fullscreen;
 
 [@deriving show]
-type msg =
-  | WindowMinimizeClicked
-  | WindowMaximizeClicked
-  | WindowRestoreClicked
-  | WindowCloseClicked
-  | TitleDoubleClicked;
+type msg;
 
 let title:
   (
@@ -24,6 +19,22 @@ let title:
     ~config: Oni_Core.Config.resolver
   ) =>
   string;
+
+// UPDATE
+
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg));
+
+let update:
+  (
+    ~maximize: unit => unit,
+    ~minimize: unit => unit,
+    ~restore: unit => unit,
+    ~close: unit => unit,
+    msg
+  ) =>
+  outmsg;
 
 // VIEW
 

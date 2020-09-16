@@ -13,7 +13,10 @@ type msg =
   | WindowMaximizeClicked
   | WindowRestoreClicked
   | WindowCloseClicked
-  | TitleDoubleClicked;
+  | TitleDoubleClicked
+  | Noop;
+
+module Log = (val Log.withNamespace("Oni2.Feature.TitleBar"));
 
 module Internal = {
   let withTag = (tag: string, value: option(string)) =>
@@ -86,6 +89,36 @@ module Internal = {
     |> List.to_seq
     |> StringMap.of_seq;
   };
+
+  type titleClickBehavior =
+    | Maximize
+    | Minimize;
+
+  let getTitleDoubleClickBehavior = () => {
+    switch (Revery.Environment.os) {
+    | Mac =>
+      try({
+        let ic =
+          Unix.open_process_in(
+            "defaults read 'Apple Global Domain' AppleActionOnDoubleClick",
+          );
+        let operation = input_line(ic);
+        switch (operation) {
+        | "Maximize" => Maximize
+        | "Minimize" => Minimize
+        | _ => Maximize
+        };
+      }) {
+      | _exn =>
+        Log.warn(
+          "
+          Unable to read default behavior for AppleActionOnDoubleClick",
+        );
+        Maximize;
+      }
+    | _ => Maximize
+    };
+  };
 };
 
 // CONFIGURATION
@@ -115,6 +148,42 @@ let title = (~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config) => {
   let titleModel = titleTemplate |> Title.ofString;
 
   Title.toString(titleModel, templateVariables);
+};
+
+// UPDATE
+
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg));
+
+let mapEffect = eff => Effect(eff |> Isolinear.Effect.map(_ => Noop));
+
+let update = (~maximize, ~minimize, ~restore, ~close, msg) => {
+  let internalDoubleClickEffect =
+    Isolinear.Effect.create(~name="window.doubleClick", () => {
+      switch (Internal.getTitleDoubleClickBehavior()) {
+      | Maximize => maximize()
+      | Minimize => minimize()
+      }
+    });
+
+  let internalWindowCloseEffect =
+    Isolinear.Effect.create(~name="window.close", () => close());
+  let internalWindowMaximizeEffect =
+    Isolinear.Effect.create(~name="window.maximize", () => maximize());
+  let internalWindowMinimizeEffect =
+    Isolinear.Effect.create(~name="window.minimize", () => minimize());
+  let internalWindowRestoreEffect =
+    Isolinear.Effect.create(~name="window.restore", () => restore());
+
+  switch (msg) {
+  | TitleDoubleClicked => Effect(internalDoubleClickEffect)
+  | WindowCloseClicked => Effect(internalWindowCloseEffect)
+  | WindowMaximizeClicked => Effect(internalWindowMaximizeEffect)
+  | WindowRestoreClicked => Effect(internalWindowRestoreEffect)
+  | WindowMinimizeClicked => Effect(internalWindowMinimizeEffect)
+  | Noop => Nothing
+  };
 };
 
 // CONTRIBUTIONS

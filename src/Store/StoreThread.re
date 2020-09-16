@@ -155,13 +155,9 @@ let start =
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
   let indentationUpdater = IndentationStoreConnector.start();
 
-  //  let completionUpdater = CompletionStoreConnector.start();
-
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
 
-  let titleUpdater =
-    TitleStoreConnector.start(maximize, minimize, restore, close);
   let updater =
     Isolinear.Updater.combine([
       Isolinear.Updater.ofReducer(Reducer.reduce),
@@ -176,12 +172,15 @@ let start =
       fileExplorerUpdater,
       indentationUpdater,
       themeUpdater,
-      titleUpdater,
       Features.update(
         ~grammarRepository,
         ~extHostClient,
         ~getUserSettings,
         ~setup,
+        ~maximize,
+        ~minimize,
+        ~close,
+        ~restore,
       ),
     ]);
 
