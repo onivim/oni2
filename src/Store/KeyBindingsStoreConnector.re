@@ -74,7 +74,8 @@ let start = maybeKeyBindingsFilePath => {
       {
         key: "<C-V>",
         command: Feature_Clipboard.Commands.paste.id,
-        condition: "insertMode || textInputFocus || commandLineFocus" |> WhenExpr.parse,
+        condition:
+          "insertMode || textInputFocus || commandLineFocus" |> WhenExpr.parse,
       },
       {
         key: "<D-V>",
