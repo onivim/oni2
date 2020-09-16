@@ -24,4 +24,5 @@ let getFileIcon:
   (Exthost.LanguageInfo.t, IconTheme.t, string) =>
   option(IconTheme.IconDefinition.t);
 let getDirectoryTree:
-  (string, Exthost.LanguageInfo.t, IconTheme.t, list(string)) => FsTreeNode.t;
+  (string, Exthost.LanguageInfo.t, IconTheme.t, list(string)) =>
+  Lwt.t(FsTreeNode.t);
