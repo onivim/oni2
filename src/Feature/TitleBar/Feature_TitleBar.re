@@ -13,8 +13,7 @@ type msg =
   | WindowMaximizeClicked
   | WindowRestoreClicked
   | WindowCloseClicked
-  | TitleDoubleClicked
-  | Noop;
+  | TitleDoubleClicked;
 
 module Log = (val Log.withNamespace("Oni2.Feature.TitleBar"));
 
@@ -156,8 +155,6 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg));
 
-let mapEffect = eff => Effect(eff |> Isolinear.Effect.map(_ => Noop));
-
 let update = (~maximize, ~minimize, ~restore, ~close, msg) => {
   let internalDoubleClickEffect =
     Isolinear.Effect.create(~name="window.doubleClick", () => {
@@ -182,7 +179,6 @@ let update = (~maximize, ~minimize, ~restore, ~close, msg) => {
   | WindowMaximizeClicked => Effect(internalWindowMaximizeEffect)
   | WindowRestoreClicked => Effect(internalWindowRestoreEffect)
   | WindowMinimizeClicked => Effect(internalWindowMinimizeEffect)
-  | Noop => Nothing
   };
 };
 

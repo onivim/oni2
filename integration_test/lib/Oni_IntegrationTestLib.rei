@@ -30,7 +30,6 @@ let setUserSettings: Core.Config.Settings.t => unit;
 let setClipboard: option(string) => unit;
 let getClipboard: unit => option(string);
 let setTime: float => unit;
-let getTitle: unit => string;
 
 /* [getAssetPath(path)] returns the path for a bundled asset for testing.
       This path is different on developer machines vs CI environments
