@@ -71,12 +71,14 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
   let elem =
     switch (sideBar |> selected) {
     | FileExplorer =>
-      <FileExplorerView
+      let dispatch = msg => dispatch(Actions.FileExplorer(msg));
+      <Feature_Explorer.View
         decorations={state.decorations}
         model={state.fileExplorer}
         theme
         font
-      />
+        dispatch
+      />;
 
     | SCM =>
       let onItemClick = (resource: Feature_SCM.Resource.t) =>
