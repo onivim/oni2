@@ -4,14 +4,14 @@
 type model('item) = {
   scrollY: float,
   rowHeight: int,
-  items: list('item),
+  items: array('item),
   focused: option(int),
 };
 
-let create = (~rowHeight: int, items) => {
+let create = (~rowHeight) => {
   scrollY: 0.,
   rowHeight,
-  items: items,
+  items: [||],
   focused: None,
 };
 
@@ -20,10 +20,10 @@ type command =
   | CursorToTop //gg
   | CursorToBottom // G
   | CursorDown // j
-  | CursorUp // k
-  | ScrollCursorCenter // zz
-  | ScrollCursorBottom // zb
-  | ScrollCursorTop; // zt
+  | CursorUp; // k
+//  | ScrollCursorCenter // zz
+//  | ScrollCursorBottom // zb
+//  | ScrollCursorTop; // zt
 
 [@deriving show]
 type msg =
@@ -52,9 +52,9 @@ module Commands = {
   let g = define("vim.list.G", Command(CursorToBottom));
   let j = define("vim.list.j", Command(CursorDown));
   let k = define("vim.list.k", Command(CursorUp));
-  let zz = define("vim.list.zz", Command(ScrollCursorCenter));
-  let zb = define("vim.list.zb", Command(ScrollCursorBottom));
-  let zt = define("vim.list.zt", Command(ScrollCursorTop));
+//  let zz = define("vim.list.zz", Command(ScrollCursorCenter));
+//  let zb = define("vim.list.zb", Command(ScrollCursorBottom));
+//  let zt = define("vim.list.zt", Command(ScrollCursorTop));
 };
 
 module ContextKeys = {
@@ -66,7 +66,7 @@ module ContextKeys = {
 module Keybindings = {
   open Oni_Input;
 
-  let commandCondition = "vimListNavigation" |> WhenExpr.parse;
+  let commandCondition = "!textInputFocus && vimListNavigation" |> WhenExpr.parse;
 
   let keybindings =
     Keybindings.[
@@ -90,21 +90,21 @@ module Keybindings = {
         command: Commands.k.id,
         condition: commandCondition,
       },
-      {
-        key: "zz",
-        command: Commands.zz.id,
-        condition: commandCondition,
-      },
-      {
-        key: "zb",
-        command: Commands.zb.id,
-        condition: commandCondition,
-      },
-      {
-        key: "zt",
-        command: Commands.zt.id,
-        condition: commandCondition,
-      },
+//      {
+//        key: "zz",
+//        command: Commands.zz.id,
+//        condition: commandCondition,
+//      },
+//      {
+//        key: "zb",
+//        command: Commands.zb.id,
+//        condition: commandCondition,
+//      },
+//      {
+//        key: "zt",
+//        command: Commands.zt.id,
+//        condition: commandCondition,
+//      },
     ];
 };
 
@@ -118,21 +118,22 @@ module Contributions = {
     g,
     j,
     k,
-    zz,
-    zb,
-    zt
+//    zz,
+//    zb,
+//    zt
   ];
 };
 
 module View = {
+  open Revery;
+  open Revery.UI;
+  
   let make = (
-    ~items,
-    ~uniqueId,
-    ~focused,
-    ~scrollY,
+    ~model,
     ~dispatch,
-    ~rowHeight,
     ~render, 
     ()
-  ) => Revery.UI.React.empty;
+  ) => <View>
+    <Text text={Array.length(model.items) |> string_of_int} />
+  </View>
 }

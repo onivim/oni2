@@ -15,6 +15,7 @@ type model = {
   hits: list(Ripgrep.Match.t),
   focus,
   vimWindowNavigation: Component_VimWindows.model,
+  resultsList: Component_VimList.model(Ripgrep.Match.t),
 };
 
 let initial = {
@@ -24,6 +25,13 @@ let initial = {
   focus: FindInput,
 
   vimWindowNavigation: Component_VimWindows.initial,
+  resultsList: Component_VimList.create(~rowHeight=20),
+};
+
+let setHits = (hits, model) => {
+  ...model,
+  hits,
+  resultsList: Component_VimList.set(hits |> Array.of_list, model.resultsList),
 };
 
 // UPDATE
@@ -36,7 +44,8 @@ type msg =
   | Complete
   | SearchError(string)
   | FindInput(Component_InputText.msg)
-  | VimWindowNav(Component_VimWindows.msg);
+  | VimWindowNav(Component_VimWindows.msg)
+  | ResultsList(Component_VimList.msg);
 
 module Msg = {
   let input = str => Input(str);
@@ -59,7 +68,7 @@ let update = (model, msg) => {
           if (model.query == findInputValue) {
             model; // Do nothing if the query hasn't changed
           } else {
-            {...model, query: findInputValue, hits: []};
+            {...model, query: findInputValue} |> setHits([])
           };
 
         | _ =>
@@ -94,7 +103,8 @@ let update = (model, msg) => {
       };
     ({...model, findInput: findInput'}, outmsg);
 
-  | Update(items) => ({...model, hits: model.hits @ items}, None)
+  | Update(items) => (
+    model |> setHits(model.hits @ items), None)
 
   | VimWindowNav(navMsg) =>
     let (windowNav, outmsg) =
@@ -118,6 +128,12 @@ let update = (model, msg) => {
         (model', Some(UnhandledWindowMovement(outmsg)));
       }
     };
+
+  | ResultsList(listMsg) =>
+    let (resultsList, _outmsg) =
+      Component_VimList.update(listMsg, model.resultsList);
+
+    ({...model, resultsList}, None)
 
   | Complete => (model, None)
 
@@ -248,6 +264,13 @@ let make =
           />
         </View>
       </View>
+    </View>
+    <View style=Styles.row>
+      <Component_VimList.View
+        model={model.resultsList}
+        dispatch={msg => dispatch(ResultsList(msg))}
+        render={(~availableWidth as _, ~index as _, ~focused as _, _) => React.empty}
+        />
     </View>
     <View
       style={Styles.resultsPane(

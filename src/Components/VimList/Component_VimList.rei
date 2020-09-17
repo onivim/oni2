@@ -14,7 +14,7 @@ type msg;
 [@deriving show]
 type model('item);
 
-let create: (~rowHeight: int, list('item)) => model('item);
+let create: (~rowHeight: int) => model('item);
 
 type outmsg =
   | Nothing;
@@ -23,7 +23,7 @@ type outmsg =
 
 let update: (msg, model('item)) => (model('item), outmsg);
 
-let set: (list('item), model('item)) => model('item);
+let set: (array('item), model('item)) => model('item);
 
 // CONTRIBUTIONS
 
@@ -38,14 +38,14 @@ module Contributions: {
 module View: {
 
   let make: (
-    ~items: array('item),
-    ~uniqueId: 'item => 'key,
-    ~focused: 'key,
+    ~model: model('item'),
+//    ~uniqueId: 'item => 'key,
+//    ~focused: 'key,
     //~searchText: option('item => string),
-    ~scrollY: float,
+//    ~scrollY: float,
     ~dispatch: msg => unit,
-    ~rowHeight: float,
-    ~render: (~width: int=?, 'item) => Revery.UI.element,
+//    ~rowHeight: float,
+    ~render: (~availableWidth: int, ~index: int, ~focused:bool, 'item) => Revery.UI.element,
     unit,
   ) => Revery.UI.element;
 }
