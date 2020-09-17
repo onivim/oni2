@@ -643,6 +643,8 @@ let update =
 
     let focus =
       switch (FocusManager.current(state)) {
+      | Pane => Some(Bottom)
+
       | Editor
       | Terminal(_) => Some(Center)
 
@@ -667,7 +669,11 @@ let update =
 
     | Focus(Bottom) =>
       let pane = state.pane |> Feature_Pane.selected;
-      ({...state, pane: Feature_Pane.show(~pane, state.pane)}, Effect.none);
+      (
+        {...state, pane: Feature_Pane.show(~pane, state.pane)}
+        |> FocusManager.push(Pane),
+        Effect.none,
+      );
 
     | SplitAdded => ({...state, zenMode: false}, Effect.none)
 

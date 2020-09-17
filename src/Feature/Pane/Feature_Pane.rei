@@ -21,6 +21,7 @@ type outmsg =
     });
 
 module Msg: {
+  let keyPressed: string => msg;
   let resizeHandleDragged: int => msg;
   let resizeCommitted: msg;
 };
@@ -48,6 +49,7 @@ let close: model => model;
 module View: {
   let make:
     (
+      ~isFocused: bool,
       ~theme: Oni_Core.ColorTheme.Colors.t,
       ~uiFont: Oni_Core.UiFont.t,
       ~editorFont: Service_Font.font,

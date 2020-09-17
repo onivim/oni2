@@ -10,7 +10,9 @@ type command =
   | MoveLeft
   | MoveRight
   | MoveUp
-  | MoveDown;
+  | MoveDown
+  | PreviousTab
+  | NextTab;
 
 [@deriving show]
 type msg =
@@ -21,7 +23,9 @@ type outmsg =
   | FocusLeft
   | FocusRight
   | FocusUp
-  | FocusDown;
+  | FocusDown
+  | PreviousTab
+  | NextTab;
 
 // UPDATE
 
@@ -46,6 +50,8 @@ module Commands = {
   let moveRight = define("vim.window.moveRight", Command(MoveRight));
   let moveUp = define("vim.window.moveUp", Command(MoveUp));
   let moveDown = define("vim.window.moveDown", Command(MoveDown));
+  let previousTab = define("vim.window.previousTab", Command(PreviousTab));
+  let nextTab = define("vim.window.previousTab", Command(NextTab));
 };
 
 module ContextKeys = {
@@ -58,6 +64,8 @@ module Keybindings = {
   open Oni_Input;
 
   let commandCondition = "vimWindowNavigation" |> WhenExpr.parse;
+
+  let noTextInput = "!textInputFocus && vimWindowNavigation" |> WhenExpr.parse;
 
   let keybindings =
     Keybindings.[
@@ -121,6 +129,16 @@ module Keybindings = {
         command: Commands.moveDown.id,
         condition: commandCondition,
       },
+      {
+        key: "gt",
+        command: Commands.nextTab.id,
+        condition: noTextInputCondition,
+      },
+      {
+        key: "gT",
+        command: Commands.previousTab.id,
+        condition: noTextInputCondition,
+      }
     ];
 };
 

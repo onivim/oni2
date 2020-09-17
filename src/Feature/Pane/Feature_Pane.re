@@ -29,9 +29,11 @@ type msg =
     })
   | Command(command)
   | ResizeHandleDragged(int)
-  | ResizeCommitted;
+  | ResizeCommitted
+  | KeyPressed(string);
 
 module Msg = {
+  let keyPressed = key => KeyPressed(key);
   let resizeHandleDragged = v => ResizeHandleDragged(v);
   let resizeCommitted = ResizeCommitted;
 };
@@ -95,6 +97,8 @@ let update = (msg, model) =>
     } else {
       ({...model, height, resizeDelta: 0}, Nothing);
     };
+
+  | KeyPressed(_) => (model, Nothing)
   };
 
 let initial = {
@@ -188,10 +192,14 @@ module View = {
   module Styles = {
     open Style;
 
-    let pane = (~theme, ~height) => [
+    let pane = (~isFocused, ~theme, ~height) => [
       flexDirection(`Column),
       Style.height(height),
-      borderTop(~color=Colors.Panel.border.from(theme), ~width=1),
+      borderTop(
+        ~color=
+          isFocused ? Revery.Colors.red : Colors.Panel.border.from(theme),
+        ~width=1,
+      ),
       backgroundColor(Colors.Panel.background.from(theme)),
     ];
 
@@ -253,6 +261,7 @@ module View = {
   };
   let make =
       (
+        ~isFocused,
         ~theme,
         ~uiFont,
         ~editorFont,
@@ -278,7 +287,7 @@ module View = {
       <View />;
     } else {
       let height = height(pane);
-      <View style={Styles.pane(~theme, ~height)}>
+      <View style={Styles.pane(~isFocused, ~theme, ~height)}>
         <View style=Styles.resizer>
           <ResizeHandle.Horizontal
             onDrag={delta =>
