@@ -11,4 +11,5 @@ steps:
   # https://github.com/actions/virtual-environments/blob/main/images/win/scripts/Installers/Install-Julia.ps1
   - script: rd /s /q "C:\Julia"
     displayName: "Remove Julia"
-  
+  - script: dir "C:/Program Files/"
+    displayName: "List Program Files"
