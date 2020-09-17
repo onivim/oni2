@@ -84,6 +84,7 @@ const updateIcon = (rcedit, exe, iconFile) => {
     process.env = {
         PATH: process.env.PATH,
     }
+    fs.chmodSync(exe, 0755)
     rcedit(exe, {
         icon: iconFile,
     })
@@ -290,9 +291,9 @@ if (process.platform == "linux") {
     fs.copySync(iconFile, path.join(platformReleaseDirectory, "oni2.ico"))
     fs.copySync(eulaFile, path.join(platformReleaseDirectory, "EULA.md"))
     fs.copySync(thirdPartyFile, path.join(platformReleaseDirectory, "ThirdPartyLicenses.txt"))
-    fs.copySync(curBin, platformReleaseDirectory, { deference: true })
-    fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, { deference: true })
-    fs.copySync(nodeScriptSourceDirectory, nodeScriptDestDirectory, { deference: true })
+    fs.copySync(curBin, platformReleaseDirectory, { dereference: true })
+    fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, { dereference: true })
+    fs.copySync(nodeScriptSourceDirectory, nodeScriptDestDirectory, { dereference: true })
     fs.removeSync(path.join(platformReleaseDirectory, "setup.json"))
 
     // Now that we've copied set the app icon up correctly.

@@ -10,7 +10,35 @@ module CustomDecoders: {
     Config.Schema.codec([ | `On | `Relative | `RelativeOnly | `Off]);
   let time: Config.Schema.codec(Time.t);
   let fontSize: Config.Schema.codec(float);
+  let color: Config.Schema.codec(Revery.Color.t);
 } = {
+  let color =
+    custom(
+      ~decode=
+        Json.Decode.(
+          string
+          |> and_then(colorString
+               // TODO: This should return an option in Revery.
+               // We should have a more general parse method that handles rgb, rgba, etc.
+               =>
+                 try(succeed(Revery.Color.hex(colorString))) {
+                 | _exn => fail("Unable to parse color: " ++ colorString)
+                 }
+               )
+        ),
+      ~encode=
+        Json.Encode.(
+          color => {
+            // TODO: This should be moved to the Color module in Revery proper
+            let toHex = floatVal => {
+              floatVal *. 255. |> int_of_float |> Printf.sprintf("%02x");
+            };
+            let (r, g, b, a) = Revery.Color.toRgba(color);
+            "#" ++ toHex(r) ++ toHex(g) ++ toHex(b) ++ toHex(a) |> string;
+          }
+        ),
+    );
+
   let whitespace =
     custom(
       ~decode=
@@ -199,8 +227,17 @@ let smoothScroll =
   );
 
 let tabSize = setting("editor.tabSize", int, ~default=4);
-let yankHighlightAnimation =
-  setting("editor.yankHighlightAnimation", bool, ~default=true);
+
+let yankHighlightEnabled =
+  setting("vim.highlightedyank.enable", bool, ~default=true);
+let yankHighlightColor =
+  setting(
+    "vim.highlightedyank.color",
+    color,
+    ~default=Revery.Color.rgba_int(250, 240, 170, 16),
+  );
+let yankHighlightDuration =
+  setting("vim.highlightedyank.duration", int, ~default=200);
 
 module Hover = {
   let enabled = setting("editor.hover.enabled", bool, ~default=true);
@@ -251,7 +288,9 @@ let contributions = [
   scrollShadow.spec,
   smoothScroll.spec,
   tabSize.spec,
-  yankHighlightAnimation.spec,
+  yankHighlightColor.spec,
+  yankHighlightDuration.spec,
+  yankHighlightEnabled.spec,
   Hover.enabled.spec,
   Hover.delay.spec,
   Minimap.enabled.spec,

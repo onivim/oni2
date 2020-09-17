@@ -82,7 +82,6 @@ let start =
       ~getZoom,
       ~setZoom,
       ~quit,
-      ~setTitle,
       ~setVsync,
       ~maximize,
       ~minimize,
@@ -151,18 +150,12 @@ let start =
   let keyBindingsUpdater =
     KeyBindingsStoreConnector.start(keybindingsFilePath);
 
-  let fileExplorerUpdater = FileExplorerStore.start();
-
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
   let indentationUpdater = IndentationStoreConnector.start();
-
-  //  let completionUpdater = CompletionStoreConnector.start();
 
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
 
-  let titleUpdater =
-    TitleStoreConnector.start(setTitle, maximize, minimize, restore, close);
   let updater =
     Isolinear.Updater.combine([
       Isolinear.Updater.ofReducer(Reducer.reduce),
@@ -174,15 +167,17 @@ let start =
       keyBindingsUpdater,
       commandUpdater,
       lifecycleUpdater,
-      fileExplorerUpdater,
       indentationUpdater,
       themeUpdater,
-      titleUpdater,
       Features.update(
         ~grammarRepository,
         ~extHostClient,
         ~getUserSettings,
         ~setup,
+        ~maximize,
+        ~minimize,
+        ~close,
+        ~restore,
       ),
     ]);
 
@@ -244,6 +239,7 @@ let start =
         c => c.editorFontSmoothing,
         state.configuration,
       );
+
     let editorFontSubscription =
       Service_Font.Sub.font(
         ~uniqueId="editorFont",
@@ -298,11 +294,23 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Exthost(msg));
 
+    // TODO: Move sub inside Explorer feature
     let fileExplorerActiveFileSub =
       Model.Sub.activeFile(
         ~id="activeFile.fileExplorer", ~state, ~toMsg=maybeFilePath =>
-        Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
+        Model.Actions.FileExplorer(
+          Feature_Explorer.Msg.activeFileChanged(maybeFilePath),
+        )
       );
+
+    let fileExplorerSub =
+      Feature_Explorer.sub(
+        ~configuration=state.configuration,
+        ~languageInfo=state.languageInfo,
+        ~iconTheme=state.iconTheme,
+        state.fileExplorer,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.FileExplorer(msg));
 
     let languageSupportSub =
       maybeActiveBuffer
@@ -354,6 +362,7 @@ let start =
       extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
+      fileExplorerSub,
       editorGlobalSub,
       extensionsSub,
       registersSub,

@@ -243,7 +243,7 @@
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
     "libvim": "8.10869.59",
-    "ocaml": "~4.7.0",
+    "ocaml": "4.10.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
     "reasonFuzz": "*",
     "refmterr": "*",
@@ -265,7 +265,7 @@
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef"
   },
   "devDependencies": {
-    "ocaml": "~4.10",
+    "ocaml": "4.10.0",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",

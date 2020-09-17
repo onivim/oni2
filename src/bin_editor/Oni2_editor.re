@@ -325,6 +325,11 @@ switch (eff) {
     let update =
       UI.start(window, <Root state=currentState^ dispatch=uiDispatch^ />);
 
+    let setTitle = title => {
+      Window.setTitle(window, title);
+    };
+
+    let lastTitle = ref("");
     let isDirty = ref(false);
     let onStateChanged = state => {
       currentState := state;
@@ -342,6 +347,18 @@ switch (eff) {
       };
     };
 
+    let title = (state: Model.State.t) => {
+      let activeBuffer = Model.Selectors.getActiveBuffer(state);
+      let config = Feature_Configuration.resolver(state.config, state.vim);
+
+      Feature_TitleBar.title(
+        ~activeBuffer,
+        ~config,
+        ~workspaceRoot=state.workspace.rootName,
+        ~workspaceDirectory=state.workspace.workingDirectory,
+      );
+    };
+
     let tick = _dt => {
       runEventLoop();
 
@@ -349,6 +366,13 @@ switch (eff) {
         update(<Root state=currentState^ dispatch=uiDispatch^ />);
         isDirty := false;
         persistGlobal();
+      };
+
+      let currentTitle = title(currentState^);
+      if (lastTitle^ != currentTitle) {
+        Log.infof(m => m("Setting title: %s", currentTitle));
+        lastTitle := currentTitle;
+        setTitle(currentTitle);
       };
     };
     let _: unit => unit = Tick.interval(tick, Time.zero);
@@ -358,10 +382,6 @@ switch (eff) {
     };
 
     let setZoom = zoomFactor => Window.setZoom(window, zoomFactor);
-
-    let setTitle = title => {
-      Window.setTitle(window, title);
-    };
 
     let maximize = () => {
       Window.maximize(window);
@@ -402,7 +422,6 @@ switch (eff) {
         ~onStateChanged,
         ~getZoom,
         ~setZoom,
-        ~setTitle,
         ~setVsync,
         ~maximize,
         ~minimize,

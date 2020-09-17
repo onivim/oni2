@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Model;
 
 open Revery;
 open Revery.UI;
@@ -9,6 +8,9 @@ module FontIcon = Oni_Components.FontIcon;
 module Tooltip = Oni_Components.Tooltip;
 
 module Colors = Feature_Theme.Colors;
+
+module View = Revery.UI.View;
+module TreeView = Oni_Components.TreeView;
 
 module Styles = {
   open Style;
@@ -45,7 +47,8 @@ module Styles = {
   let text = (~isFocus, ~isActive, ~decoration, ~theme) => [
     color(
       switch (
-        Option.bind(decoration, (decoration: Decoration.t) =>
+        Option.bind(
+          decoration, (decoration: Feature_Decorations.Decoration.t) =>
           ColorTheme.(Colors.get(key(decoration.color), theme))
         )
       ) {
@@ -127,7 +130,7 @@ let nodeView =
 
   let tooltipText =
     switch (decoration) {
-    | Some((decoration: Decoration.t)) =>
+    | Some((decoration: Feature_Decorations.Decoration.t)) =>
       node.path ++ " • " ++ decoration.tooltip
     | None => node.path
     };
@@ -143,27 +146,25 @@ let nodeView =
   </Tooltip>;
 };
 
-module TreeView = TreeView.Make(FsTreeNode.Model);
+module FsTreeView = TreeView.Make(FsTreeNode.Model);
 
 let make =
     (
       ~scrollOffset,
-      ~decorations,
       ~tree: FsTreeNode.t,
       ~active: option(string),
       ~focus: option(string),
       ~onNodeClick,
       ~theme,
+      ~decorations: Feature_Decorations.model,
       ~font,
+      ~dispatch: Model.msg => unit,
       (),
     ) => {
-  let onScrollOffsetChange = offset =>
-    GlobalContext.current().dispatch(
-      FileExplorer(ScrollOffsetChanged(offset)),
-    );
+  let onScrollOffsetChange = offset => dispatch(ScrollOffsetChanged(offset));
 
   <View style=Styles.container>
-    <TreeView
+    <FsTreeView
       scrollOffset
       onScrollOffsetChange
       tree
@@ -171,7 +172,8 @@ let make =
       onClick=onNodeClick
       arrowColor={Colors.SideBar.foreground.from(theme)}>
       ...{node => {
-        let decorations = StringMap.find_opt(node.path, decorations);
+        let decorations =
+          Feature_Decorations.getDecorations(~path=node.path, decorations);
 
         <nodeView
           isFocus={Some(node.path) == focus}
@@ -179,9 +181,9 @@ let make =
           font
           theme
           node
-          ?decorations
+          decorations
         />;
       }}
-    </TreeView>
+    </FsTreeView>
   </View>;
 };

@@ -115,7 +115,7 @@ Common contexts with VSCode:
 
 | Context Name | True When | 
 | --- | --- |
-| `editorFocus` | An editor has focus |
+| `editorTextFocus` | An editor has focus |
 | `textInputFocus` | A text input area has focus |
 | `terminalFocus` | A terminal has focus |
 | `suggestWidgetVisible` | The suggest widget (auto-completion) is visible |
@@ -202,3 +202,14 @@ Onivim-specific contexts:
 | --- | --- | ---
 | n/a | Enable KeyDisplayer | `keyDisplayer.enable` |
 | n/a | Disable KeyDisplayer | `keyDisplayer.disable` |
+
+### Ex Commands
+
+Commands that start with a `:` (colon) will be interpreted as vim ex commands. These can also carry arguments.
+
+Examples:
+
+```
+  {"key": "kk", "command": ":split", "when": "editorTextFocus"},
+  {"key": "<C-D>", "command": ":d 2", "when": "insertMode"}
+```

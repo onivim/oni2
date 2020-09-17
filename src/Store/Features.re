@@ -139,6 +139,10 @@ let update =
       ~extHostClient: Exthost.Client.t,
       ~getUserSettings,
       ~setup,
+      ~maximize,
+      ~minimize,
+      ~close,
+      ~restore,
       state: State.t,
       action: Actions.t,
     ) =>
@@ -158,6 +162,23 @@ let update =
       };
 
     ({...state, clipboard: model}, eff);
+
+  | Decorations(msg) =>
+    let (model, outMsg) =
+      Feature_Decorations.update(
+        ~client=extHostClient,
+        msg,
+        state.decorations,
+      );
+
+    let state = {...state, decorations: model};
+    let eff =
+      switch (outMsg) {
+      | Feature_Decorations.Nothing => Isolinear.Effect.none
+      | Feature_Decorations.Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Decorations(msg))
+      };
+    (state, eff);
 
   | Exthost(msg) =>
     let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
@@ -223,6 +244,33 @@ let update =
         }
       );
     (state', effect);
+
+  | FileExplorer(msg) =>
+    let (model, outmsg) =
+      Feature_Explorer.update(
+        ~configuration=state.configuration,
+        ~languageInfo=state.languageInfo,
+        ~iconTheme=state.iconTheme,
+        msg,
+        state.fileExplorer,
+      );
+
+    let state = {...state, fileExplorer: model};
+
+    Feature_Explorer.(
+      switch (outmsg) {
+      | Nothing => (state, Isolinear.Effect.none)
+      | Effect(effect) => (
+          state,
+          effect |> Isolinear.Effect.map(msg => FileExplorer(msg)),
+        )
+      | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
+      | GrabFocus => (
+          FocusManager.push(Focus.FileExplorer, state),
+          Isolinear.Effect.none,
+        )
+      }
+    );
 
   | Input(msg) =>
     let (model, outmsg) = Feature_Input.update(msg, state.input);
@@ -407,7 +455,7 @@ let update =
   | StatusBar(msg) =>
     open Feature_StatusBar;
     let (statusBar', maybeOutmsg) =
-      Feature_StatusBar.update(state.statusBar, msg);
+      Feature_StatusBar.update(~client=extHostClient, state.statusBar, msg);
 
     let state' = {...state, statusBar: statusBar'};
 
@@ -468,6 +516,11 @@ let update =
             )
           }),
         );
+
+      | Effect(eff) => (
+          state',
+          eff |> Isolinear.Effect.map(msg => Actions.StatusBar(msg)),
+        )
       };
 
     (state'', eff);
@@ -861,6 +914,23 @@ let update =
       state,
       Internal.notificationEffect(~kind=Error, message),
     )
+
+  | TitleBar(titleBarMsg) =>
+    let eff =
+      switch (
+        Feature_TitleBar.update(
+          ~maximize,
+          ~minimize,
+          ~close,
+          ~restore,
+          titleBarMsg,
+        )
+      ) {
+      | Feature_TitleBar.Effect(effect) => effect
+      | Feature_TitleBar.Nothing => Isolinear.Effect.none
+      };
+
+    (state, eff |> Isolinear.Effect.map(msg => TitleBar(msg)));
 
   | SignatureHelp(msg) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
