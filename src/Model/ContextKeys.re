@@ -121,9 +121,7 @@ let all = (focus: Focus.focusable) => {
     );
 
   let paneContextKeys =
-    Feature_Pane.Contributions.contextKeys(
-      ~isFocused=focus == Focus.Pane
-    );
+    Feature_Pane.Contributions.contextKeys(~isFocused=focus == Focus.Pane);
 
   unionMany([
     Feature_Registers.Contributions.contextKeys(

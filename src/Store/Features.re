@@ -45,6 +45,8 @@ module Internal = {
           | FocusRight => Actions.Layout(Feature_Layout.Msg.moveRight)
           | FocusUp => Actions.Layout(Feature_Layout.Msg.moveUp)
           | FocusDown => Actions.Layout(Feature_Layout.Msg.moveDown)
+          | PreviousTab => Actions.Noop
+          | NextTab => Actions.Noop
           }
         )
         |> dispatch
@@ -376,6 +378,10 @@ let update =
     | OpenFile({filePath, position}) => (
         state,
         Internal.openFileEffect(~position=Some(position), filePath),
+      )
+    | UnhandledWindowMovement(windowMovement) => (
+        state,
+        Internal.unhandledWindowMotionEffect(windowMovement),
       )
     };
 

@@ -37,6 +37,8 @@ let update = (msg, model) => {
     | MoveRight => (model, FocusRight)
     | MoveUp => (model, FocusUp)
     | MoveDown => (model, FocusDown)
+    | PreviousTab => (model, PreviousTab)
+    | NextTab => (model, NextTab)
     }
   };
 };
@@ -147,5 +149,6 @@ module Contributions = {
 
   let keybindings = Keybindings.keybindings;
 
-  let commands = Commands.[moveLeft, moveDown, moveUp, moveRight];
+  let commands =
+    Commands.[moveLeft, moveDown, moveUp, moveRight, previousTab, nextTab];
 };
