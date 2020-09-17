@@ -138,7 +138,7 @@ module Keybindings = {
         key: "gT",
         command: Commands.previousTab.id,
         condition: noTextInputCondition,
-      }
+      },
     ];
 };
 
