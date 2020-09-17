@@ -9,6 +9,8 @@ type result('a) = {
   highlight: list((int, int)),
 };
 
+let result: 'a => result('a);
+
 let map: ('a => 'b, result('a)) => result('b);
 
 let rank:

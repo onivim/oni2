@@ -68,6 +68,7 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | Nothing;
 
 let update: (Exthost.Client.t, model, msg) => (model, outmsg);
@@ -103,5 +104,6 @@ module Pane: {
 };
 
 module Contributions: {
+  let commands: (~isFocused: bool) => list(Command.t(msg));
   let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
 };

@@ -171,11 +171,10 @@ module Styles = {
   ];
 
   let resultsPane = (~isFocused, ~theme) => {
-    let common = [flexGrow(1)];
-
-    let focused = [border(~color=Colors.focusBorder.from(theme), ~width=1)];
-
-    isFocused ? common @ focused : common;
+    let focusColor =
+      isFocused
+        ? Colors.focusBorder.from(theme) : Revery.Colors.transparentWhite;
+    [flexGrow(1), border(~color=focusColor, ~width=1)];
   };
 
   let row = [

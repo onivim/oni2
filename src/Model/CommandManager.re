@@ -20,5 +20,12 @@ let current = state => {
     )
     |> Command.Lookup.fromList
     |> Command.Lookup.map(msg => Actions.Search(msg)),
+    Feature_SCM.Contributions.commands(
+      ~isFocused={
+        focus == Focus.SCM;
+      },
+    )
+    |> Command.Lookup.fromList
+    |> Command.Lookup.map(msg => Actions.SCM(msg)),
   ]);
 };
