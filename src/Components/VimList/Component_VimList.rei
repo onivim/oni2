@@ -32,3 +32,20 @@ module Contributions: {
   let contextKeys: list(WhenExpr.ContextKeys.Schema.entry(unit));
   let keybindings: list(Oni_Input.Keybindings.keybinding);
 };
+
+// VIEW
+
+module View: {
+
+  let make: (
+    ~items: array('item),
+    ~uniqueId: 'item => 'key,
+    ~focused: 'key,
+    //~searchText: option('item => string),
+    ~scrollY: float,
+    ~dispatch: msg => unit,
+    ~rowHeight: float,
+    ~render: (~width: int=?, 'item) => Revery.UI.element,
+    unit,
+  ) => Revery.UI.element;
+}

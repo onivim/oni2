@@ -123,3 +123,16 @@ module Contributions = {
     zt
   ];
 };
+
+module View = {
+  let make = (
+    ~items,
+    ~uniqueId,
+    ~focused,
+    ~scrollY,
+    ~dispatch,
+    ~rowHeight,
+    ~render, 
+    ()
+  ) => Revery.UI.React.empty;
+}
