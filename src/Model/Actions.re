@@ -76,7 +76,7 @@ type t =
       msg: Feature_Editor.msg,
     })
   | FilesDropped({paths: list(string)})
-  | FileExplorer(FileExplorer.action)
+  | FileExplorer(Feature_Explorer.msg)
   | LanguageFeature(LanguageFeatures.action)
   | LanguageSupport(Feature_LanguageSupport.msg)
   | QuickmenuPaste(string)

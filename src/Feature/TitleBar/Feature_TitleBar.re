@@ -250,7 +250,10 @@ module Styles = {
       marginHorizontal(16),
     ];
 
+    let icon = [pointerEvents(`Ignore)];
+
     let title = (~isFocused, ~theme) => [
+      pointerEvents(`Ignore),
       flexGrow(0),
       marginLeft(16),
       marginTop(2),
@@ -424,7 +427,12 @@ module View = {
         mouseBehavior=Draggable
         style={Styles.Windows.container(~isFocused, ~theme)}>
         <View mouseBehavior=Draggable style=Styles.Windows.iconAndTitle>
-          <Image src={`File("./logo-titlebar.png")} width=18 height=18 />
+          <Image
+            style=Styles.Windows.icon
+            src={`File("./logo-titlebar.png")}
+            width=18
+            height=18
+          />
           <Text
             style={Styles.Windows.title(~isFocused, ~theme)}
             fontFamily={font.family}
