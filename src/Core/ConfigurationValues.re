@@ -59,7 +59,6 @@ type t = {
   vimUseSystemClipboard,
   uiShadows: bool,
   uiZoom: float,
-  windowTitle: string,
   zenModeHideTabs: bool,
   zenModeSingleFile: bool,
   // Experimental feature flags
@@ -104,7 +103,6 @@ let default = {
     paste: false,
   },
   vsync: Revery.Vsync.Immediate,
-  windowTitle: "${dirty}${activeEditorShort}${separator}${rootName}${separator}${appName}",
   zenModeHideTabs: true,
   zenModeSingleFile: true,
   experimentalVimL: [],

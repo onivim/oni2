@@ -1,3 +1,6 @@
+open Oni_Core;
+open Utility;
+
 type windowDisplayMode =
   | Minimized
   | Windowed
@@ -11,6 +14,179 @@ type msg =
   | WindowRestoreClicked
   | WindowCloseClicked
   | TitleDoubleClicked;
+
+module Log = (val Log.withNamespace("Oni2.Feature.TitleBar"));
+
+module Internal = {
+  let withTag = (tag: string, value: option(string)) =>
+    Option.map(v => (tag, v), value);
+  let getTemplateVariables =
+      (~activeBuffer, ~workspaceRoot, ~workspaceDirectory) => {
+    let maybeBuffer = activeBuffer;
+    let maybeFilePath = Option.bind(maybeBuffer, Buffer.getFilePath);
+
+    let appName = Option.some("Onivim 2") |> withTag("appName");
+
+    let dirty =
+      Option.map(Buffer.isModified, maybeBuffer)
+      |> (
+        fun
+        | Some(true) => Some("*")
+        | _ => None
+      )
+      |> withTag("dirty");
+
+    let activeEditorShort =
+      Option.bind(maybeBuffer, Buffer.getShortFriendlyName)
+      |> withTag("activeEditorShort");
+
+    let activeEditorMedium =
+      Option.bind(maybeBuffer, buf =>
+        Buffer.getMediumFriendlyName(
+          ~workingDirectory=workspaceDirectory,
+          buf,
+        )
+      )
+      |> withTag("activeEditorMedium");
+
+    let activeEditorLong =
+      Option.bind(maybeBuffer, Buffer.getLongFriendlyName)
+      |> withTag("activeEditorLong");
+
+    let activeFolderShort =
+      Option.(
+        maybeFilePath |> map(Filename.dirname) |> map(Filename.basename)
+      )
+      |> withTag("activeFolderShort");
+
+    let activeFolderMedium =
+      maybeFilePath
+      |> Option.map(Filename.dirname)
+      |> OptionEx.flatMap(fp =>
+           Some(Path.toRelative(~base=workspaceDirectory, fp))
+         )
+      |> withTag("activeFolderMedium");
+
+    let activeFolderLong =
+      maybeFilePath
+      |> Option.map(Filename.dirname)
+      |> withTag("activeFolderLong");
+
+    [
+      appName,
+      dirty,
+      activeEditorShort,
+      activeEditorMedium,
+      activeEditorLong,
+      activeFolderShort,
+      activeFolderMedium,
+      activeFolderLong,
+      Some(("rootName", workspaceRoot)),
+      Some(("rootPath", workspaceDirectory)),
+    ]
+    |> OptionEx.values
+    |> List.to_seq
+    |> StringMap.of_seq;
+  };
+
+  type titleClickBehavior =
+    | Maximize
+    | Minimize;
+
+  let getTitleDoubleClickBehavior = () => {
+    switch (Revery.Environment.os) {
+    | Mac =>
+      try({
+        let ic =
+          Unix.open_process_in(
+            "defaults read 'Apple Global Domain' AppleActionOnDoubleClick",
+          );
+        let operation = input_line(ic);
+        switch (operation) {
+        | "Maximize" => Maximize
+        | "Minimize" => Minimize
+        | _ => Maximize
+        };
+      }) {
+      | _exn =>
+        Log.warn(
+          "
+          Unable to read default behavior for AppleActionOnDoubleClick",
+        );
+        Maximize;
+      }
+    | _ => Maximize
+    };
+  };
+};
+
+// CONFIGURATION
+
+module Configuration = {
+  open Oni_Core;
+  open Config.Schema;
+
+  let windowTitle =
+    setting(
+      "window.title",
+      string,
+      ~default=
+        "${dirty}${activeEditorShort}${separator}${rootName}${separator}${appName}",
+    );
+};
+
+let title = (~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config) => {
+  let templateVariables =
+    Internal.getTemplateVariables(
+      ~activeBuffer,
+      ~workspaceRoot,
+      ~workspaceDirectory,
+    );
+
+  let titleTemplate = Configuration.windowTitle.get(config);
+  let titleModel = titleTemplate |> Title.ofString;
+
+  Title.toString(titleModel, templateVariables);
+};
+
+// UPDATE
+
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg));
+
+let update = (~maximize, ~minimize, ~restore, ~close, msg) => {
+  let internalDoubleClickEffect =
+    Isolinear.Effect.create(~name="window.doubleClick", () => {
+      switch (Internal.getTitleDoubleClickBehavior()) {
+      | Maximize => maximize()
+      | Minimize => minimize()
+      }
+    });
+
+  let internalWindowCloseEffect =
+    Isolinear.Effect.create(~name="window.close", () => close());
+  let internalWindowMaximizeEffect =
+    Isolinear.Effect.create(~name="window.maximize", () => maximize());
+  let internalWindowMinimizeEffect =
+    Isolinear.Effect.create(~name="window.minimize", () => minimize());
+  let internalWindowRestoreEffect =
+    Isolinear.Effect.create(~name="window.restore", () => restore());
+
+  switch (msg) {
+  | TitleDoubleClicked => Effect(internalDoubleClickEffect)
+  | WindowCloseClicked => Effect(internalWindowCloseEffect)
+  | WindowMaximizeClicked => Effect(internalWindowMaximizeEffect)
+  | WindowRestoreClicked => Effect(internalWindowRestoreEffect)
+  | WindowMinimizeClicked => Effect(internalWindowMinimizeEffect)
+  };
+};
+
+// CONTRIBUTIONS
+
+module Contributions = {
+  let configuration = Configuration.[windowTitle.spec];
+};
 
 // VIEW
 open Revery;
@@ -266,14 +442,19 @@ module View = {
 
   let make =
       (
+        ~activeBuffer,
+        ~workspaceRoot,
+        ~workspaceDirectory,
+        ~config,
         ~dispatch,
         ~isFocused,
         ~windowDisplayMode,
-        ~title,
         ~theme,
         ~font: UiFont.t,
         (),
       ) => {
+    let title =
+      title(~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config);
     switch (Revery.Environment.os) {
     | Mac => <Mac isFocused windowDisplayMode font title theme dispatch />
     | Windows =>

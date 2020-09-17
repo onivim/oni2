@@ -1071,17 +1071,14 @@ let start =
       };
       (
         newState,
-        Isolinear.Effect.batch([
-          FileExplorerStore.Effects.load(
-            workingDirectory,
-            state.languageInfo,
-            state.iconTheme,
-            state.configuration,
-            ~onComplete=tree =>
-            Actions.FileExplorer(TreeLoaded(tree))
-          ),
-          TitleStoreConnector.Effects.updateTitle(newState),
-        ]),
+        FileExplorerStore.Effects.load(
+          workingDirectory,
+          state.languageInfo,
+          state.iconTheme,
+          state.configuration,
+          ~onComplete=tree =>
+          Actions.FileExplorer(TreeLoaded(tree))
+        ),
       );
 
     | VimMessageReceived({priority, message, _}) =>
