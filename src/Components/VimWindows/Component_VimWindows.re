@@ -65,7 +65,7 @@ module Keybindings = {
 
   let commandCondition = "vimWindowNavigation" |> WhenExpr.parse;
 
-  let noTextInput = "!textInputFocus && vimWindowNavigation" |> WhenExpr.parse;
+  let noTextInputCondition = "!textInputFocus && vimWindowNavigation" |> WhenExpr.parse;
 
   let keybindings =
     Keybindings.[

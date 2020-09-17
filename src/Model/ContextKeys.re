@@ -120,6 +120,11 @@ let all = (focus: Focus.focusable) => {
       ~isFocused=focus == Focus.Search,
     );
 
+  let paneContextKeys =
+    Feature_Pane.Contributions.contextKeys(
+      ~isFocused=focus == Focus.Pane
+    );
+
   unionMany([
     Feature_Registers.Contributions.contextKeys(
       ~isFocused=focus == Focus.InsertRegister,
@@ -129,6 +134,7 @@ let all = (focus: Focus.focusable) => {
     scmContextKeys |> map(({scm, _}: State.t) => scm),
     extensionContextKeys |> map(({extensions, _}: State.t) => extensions),
     searchContextKeys |> map(({searchPane, _}: State.t) => searchPane),
+    paneContextKeys |> map(({pane, _}: State.t) => pane),
     Feature_LanguageSupport.Contributions.contextKeys
     |> map(({languageSupport, _}: State.t) => languageSupport),
     menus |> map((state: State.t) => state.quickmenu),
