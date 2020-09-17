@@ -1,6 +1,8 @@
 # Cross-platform set of build steps for building esy projects
 
 steps:
+  - powershell: rm -rf _esy
+    displayName: "Remove _esy"
   - powershell: scripts/windows/publish.ps1
     displayName: "Publish: scripts/windows/publish.ps1"
   - task: PublishBuildArtifacts@1
