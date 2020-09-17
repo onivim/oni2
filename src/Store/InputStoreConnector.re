@@ -136,6 +136,13 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     // TODO: Should we filter out repeat keys from key binding processing?
     ignore(repeat);
 
+    let name = Sdl2.Scancode.ofInt(scancode)
+    |> Sdl2.Scancode.getName;
+
+    if (name == "Left Shift" || name == "Right Shift") {
+      None
+    } else {
+
     let shift = Revery.Key.Keymod.isShiftDown(keymod);
     let control = Revery.Key.Keymod.isControlDown(keymod);
     let alt = Revery.Key.Keymod.isAltDown(keymod);
@@ -159,7 +166,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       | _ => (altGr, control, alt)
       };
 
-    EditorInput.KeyPress.{
+    Some(EditorInput.KeyPress.{
       scancode,
       keycode,
       modifiers: {
@@ -169,6 +176,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         meta,
         altGr,
       },
+    });
     };
   };
 
@@ -279,7 +287,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
-          dispatch(Actions.KeyDown(event |> reveryKeyToEditorKey, time));
+          event
+          |> reveryKeyToEditorKey
+          |> Option.iter(key => {
+            dispatch(Actions.KeyDown(key, time));
+          })
         },
       );
 
@@ -288,7 +300,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
-          dispatch(Actions.KeyUp(event |> reveryKeyToEditorKey, time));
+          event
+          |> reveryKeyToEditorKey
+          |> Option.iter(key => {
+            dispatch(Actions.KeyUp(key, time));
+          });
         },
       );
 
