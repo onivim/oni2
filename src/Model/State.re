@@ -62,8 +62,6 @@ type t = {
   layout: Feature_Layout.model,
   fileExplorer: FileExplorer.t,
   signatureHelp: Feature_SignatureHelp.model,
-  // [windowTitle] is the title of the window
-  windowTitle: string,
   windowIsFocused: bool,
   windowDisplayMode,
   workspace: Workspace.t,
@@ -93,12 +91,13 @@ let initial =
     Feature_Configuration.initial(
       ~getUserSettings,
       [
+        Feature_AutoUpdate.Contributions.configuration,
         Feature_Editor.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
         Feature_LanguageSupport.Contributions.configuration,
         Feature_Layout.Contributions.configuration,
-        Feature_AutoUpdate.Contributions.configuration,
+        Feature_TitleBar.Contributions.configuration,
       ],
     );
   let initialEditor = {
@@ -158,7 +157,6 @@ let initial =
     statusBar: Feature_StatusBar.initial,
     syntaxHighlights: Feature_Syntax.empty,
     layout: Feature_Layout.initial([initialEditor]),
-    windowTitle: "",
     windowIsFocused: true,
     windowDisplayMode: Windowed,
     workspace: Workspace.initial(workingDirectory),
