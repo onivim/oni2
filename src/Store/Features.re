@@ -245,6 +245,33 @@ let update =
       );
     (state', effect);
 
+  | FileExplorer(msg) =>
+    let (model, outmsg) =
+      Feature_Explorer.update(
+        ~configuration=state.configuration,
+        ~languageInfo=state.languageInfo,
+        ~iconTheme=state.iconTheme,
+        msg,
+        state.fileExplorer,
+      );
+
+    let state = {...state, fileExplorer: model};
+
+    Feature_Explorer.(
+      switch (outmsg) {
+      | Nothing => (state, Isolinear.Effect.none)
+      | Effect(effect) => (
+          state,
+          effect |> Isolinear.Effect.map(msg => FileExplorer(msg)),
+        )
+      | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
+      | GrabFocus => (
+          FocusManager.push(Focus.FileExplorer, state),
+          Isolinear.Effect.none,
+        )
+      }
+    );
+
   | Input(msg) =>
     let (model, outmsg) = Feature_Input.update(msg, state.input);
 

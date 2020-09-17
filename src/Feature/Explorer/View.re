@@ -1,13 +1,10 @@
-open Oni_Model;
 open Revery.UI;
 
-let make = (~model, ~theme, ~font, ~decorations, ()) => {
-  switch ((model: FileExplorer.t)) {
+let make =
+    (~model, ~decorations, ~theme, ~font, ~dispatch: Model.msg => unit, ()) => {
+  switch ((model: Model.model)) {
   | {tree: Some(tree), active, focus, scrollOffset, _} =>
-    let onNodeClick = node =>
-      GlobalContext.current().dispatch(
-        FileExplorer(FileExplorer.NodeClicked(node)),
-      );
+    let onNodeClick = node => dispatch(NodeClicked(node));
 
     <FileTreeView
       scrollOffset
@@ -18,6 +15,7 @@ let make = (~model, ~theme, ~font, ~decorations, ()) => {
       tree
       theme
       font
+      dispatch
     />;
   | _ => React.empty
   };

@@ -60,7 +60,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Sneak => [Actions.Sneak(Feature_Sneak.KeyboardInput(k))]
 
     | FileExplorer => [
-        Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
+        Actions.FileExplorer(Feature_Explorer.Msg.keyPressed(k)),
       ]
 
     | Pane => [Actions.Pane(Feature_Pane.Msg.keyPressed(k))]
