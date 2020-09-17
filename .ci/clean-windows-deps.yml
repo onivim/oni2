@@ -7,8 +7,8 @@ steps:
   # https://github.com/actions/virtual-environments/blob/main/images/win/scripts/Installers/Install-R.ps1
   - script: rd /s /q "C:\Program Files\R"
     displayName: 'Remove R'
-  # Remove Chrome
-  # https://github.com/actions/virtual-environments/blob/main/images/win/scripts/Installers/Install-Chrome.ps1
-  - script: rd /s /q "C:\Program Files (x86)\Google\Chrome\"
-    displayName: "Remove Chrome"
+  # Remove Julia
+  # https://github.com/actions/virtual-environments/blob/main/images/win/scripts/Installers/Install-Julia.ps1
+  - script: rd /s /q "C:\Julia"
+    displayName: "Remove Julia"
   
