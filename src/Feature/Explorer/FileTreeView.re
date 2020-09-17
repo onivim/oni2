@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Model;
 
 open Revery;
 open Revery.UI;
@@ -9,6 +8,9 @@ module FontIcon = Oni_Components.FontIcon;
 module Tooltip = Oni_Components.Tooltip;
 
 module Colors = Feature_Theme.Colors;
+
+module View = Revery.UI.View;
+module TreeView = Oni_Components.TreeView;
 
 module Styles = {
   open Style;
@@ -144,7 +146,7 @@ let nodeView =
   </Tooltip>;
 };
 
-module TreeView = TreeView.Make(FsTreeNode.Model);
+module FsTreeView = TreeView.Make(FsTreeNode.Model);
 
 let make =
     (
@@ -156,15 +158,13 @@ let make =
       ~theme,
       ~decorations: Feature_Decorations.model,
       ~font,
+      ~dispatch: Model.msg => unit,
       (),
     ) => {
-  let onScrollOffsetChange = offset =>
-    GlobalContext.current().dispatch(
-      FileExplorer(ScrollOffsetChanged(offset)),
-    );
+  let onScrollOffsetChange = offset => dispatch(ScrollOffsetChanged(offset));
 
   <View style=Styles.container>
-    <TreeView
+    <FsTreeView
       scrollOffset
       onScrollOffsetChange
       tree
@@ -184,6 +184,6 @@ let make =
           decorations
         />;
       }}
-    </TreeView>
+    </FsTreeView>
   </View>;
 };
