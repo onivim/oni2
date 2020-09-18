@@ -14,6 +14,7 @@ type model('item) = {
   focused: int,
   viewportHeight: int,
   viewportWidth: int,
+  multiplier: int,
   initialRowsToRender: int,
   // For mouse gestures, we don't want the scroll to be animated - it feels laggy
   // But for keyboarding gestures, like 'zz', the animation is helpful.
@@ -26,6 +27,7 @@ let create = (~rowHeight) => {
   items: [||],
   hovered: None,
   focused: 0,
+  multiplier: 0,
   viewportHeight: 1,
   viewportWidth: 1,
   initialRowsToRender: 10,
@@ -33,6 +35,17 @@ let create = (~rowHeight) => {
 };
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
+
+let resetMultiplier = model => {...model, multiplier: 0};
+
+let applyMultiplierDigit = (digit, model) => {
+  ...model,
+  multiplier: model.multiplier * 10 + digit,
+};
+
+let getMultiplier = ({multiplier, _}) => {
+  max(multiplier, 1);
+};
 
 let get = (index, {items, _}) => {
   let count = Array.length(items);
@@ -50,6 +63,7 @@ type command =
   | CursorToBottom // G
   | CursorDown // j
   | CursorUp // k
+  | Digit(int)
   | Select
   | ScrollCursorCenter // zz
   | ScrollCursorBottom // zb
@@ -130,31 +144,45 @@ let disableScrollAnimation = model => {...model, isScrollAnimated: false};
 let update = (msg, model) => {
   switch (msg) {
   | Command(CursorToTop) => (
-      model |> setFocus(~focus=0) |> enableScrollAnimation,
+      model |> setFocus(~focus=0) |> enableScrollAnimation |> resetMultiplier,
       Nothing,
     )
 
-  | Command(CursorToBottom) => (
-      model
-      |> setFocus(~focus=Array.length(model.items) - 1)
-      |> enableScrollAnimation,
+  | Command(CursorToBottom) =>
+    let focus =
+      model.multiplier == 0
+        ? Array.length(model.items) - 1 : model.multiplier;
+    (
+      model |> setFocus(~focus) |> enableScrollAnimation |> resetMultiplier,
       Nothing,
-    )
+    );
 
   | Command(CursorUp) => (
-      model |> setFocus(~focus=model.focused - 1) |> enableScrollAnimation,
+      model
+      |> setFocus(~focus=model.focused - getMultiplier(model))
+      |> enableScrollAnimation
+      |> resetMultiplier,
       Nothing,
     )
 
   | Command(CursorDown) => (
-      model |> setFocus(~focus=model.focused + 1) |> enableScrollAnimation,
+      model
+      |> setFocus(~focus=model.focused + getMultiplier(model))
+      |> enableScrollAnimation
+      |> resetMultiplier,
+      Nothing,
+    )
+
+  | Command(Digit(digit)) => (
+      model |> applyMultiplierDigit(digit),
       Nothing,
     )
 
   | Command(ScrollCursorTop) => (
       model
       |> setScrollY(~scrollY=float(model.focused * model.rowHeight))
-      |> enableScrollAnimation,
+      |> enableScrollAnimation
+      |> resetMultiplier,
       Nothing,
     )
 
@@ -168,7 +196,8 @@ let update = (msg, model) => {
                - (model.viewportHeight - model.rowHeight),
              ),
          )
-      |> enableScrollAnimation,
+      |> enableScrollAnimation
+      |> resetMultiplier,
       Nothing,
     )
 
@@ -183,7 +212,8 @@ let update = (msg, model) => {
                / 2,
              ),
          )
-      |> enableScrollAnimation,
+      |> enableScrollAnimation
+      |> resetMultiplier,
       Nothing,
     )
 
@@ -253,6 +283,17 @@ module Commands = {
   let zz = define("vim.list.zz", Command(ScrollCursorCenter));
   let zb = define("vim.list.zb", Command(ScrollCursorBottom));
   let zt = define("vim.list.zt", Command(ScrollCursorTop));
+
+  let digit0 = define("vim.list.0", Command(Digit(0)));
+  let digit1 = define("vim.list.1", Command(Digit(1)));
+  let digit2 = define("vim.list.2", Command(Digit(2)));
+  let digit3 = define("vim.list.3", Command(Digit(3)));
+  let digit4 = define("vim.list.4", Command(Digit(4)));
+  let digit5 = define("vim.list.5", Command(Digit(5)));
+  let digit6 = define("vim.list.6", Command(Digit(6)));
+  let digit7 = define("vim.list.7", Command(Digit(7)));
+  let digit8 = define("vim.list.8", Command(Digit(8)));
+  let digit9 = define("vim.list.9", Command(Digit(9)));
 };
 
 module ContextKeys = {
@@ -277,6 +318,16 @@ module Keybindings = {
       {key: "zz", command: Commands.zz.id, condition: commandCondition},
       {key: "zb", command: Commands.zb.id, condition: commandCondition},
       {key: "zt", command: Commands.zt.id, condition: commandCondition},
+      {key: "0", command: Commands.digit0.id, condition: commandCondition},
+      {key: "1", command: Commands.digit1.id, condition: commandCondition},
+      {key: "2", command: Commands.digit2.id, condition: commandCondition},
+      {key: "3", command: Commands.digit3.id, condition: commandCondition},
+      {key: "4", command: Commands.digit4.id, condition: commandCondition},
+      {key: "5", command: Commands.digit5.id, condition: commandCondition},
+      {key: "6", command: Commands.digit6.id, condition: commandCondition},
+      {key: "7", command: Commands.digit7.id, condition: commandCondition},
+      {key: "8", command: Commands.digit8.id, condition: commandCondition},
+      {key: "9", command: Commands.digit9.id, condition: commandCondition},
     ];
 };
 
@@ -285,7 +336,27 @@ module Contributions = {
 
   let keybindings = Keybindings.keybindings;
 
-  let commands = Commands.[gg, g, j, k, enter, zz, zb, zt];
+  let commands =
+    Commands.[
+      gg,
+      g,
+      j,
+      k,
+      enter,
+      zz,
+      zb,
+      zt,
+      digit0,
+      digit1,
+      digit2,
+      digit3,
+      digit4,
+      digit5,
+      digit6,
+      digit7,
+      digit8,
+      digit9,
+    ];
 };
 
 // VIEW
