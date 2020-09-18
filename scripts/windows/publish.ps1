@@ -54,7 +54,7 @@ Compress-Archive -Path _release/win32 -DestinationPath _publish/Onivim2-$SHORT_C
 
 
 
-esy @release create-win-setup
+esy "@release" create-win-setup
 
 
 
