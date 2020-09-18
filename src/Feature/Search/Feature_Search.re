@@ -15,7 +15,7 @@ type model = {
   hits: list(Ripgrep.Match.t),
   focus,
   vimWindowNavigation: Component_VimWindows.model,
-  resultsList: Component_VimList.model(Ripgrep.Match.t),
+  resultsList: Component_VimList.model(LocationListItem.t),
 };
 
 let initial = {
@@ -28,11 +28,29 @@ let initial = {
   resultsList: Component_VimList.create(~rowHeight=20),
 };
 
+let matchToLocListItem = (hit: Ripgrep.Match.t) =>
+  LocationListItem.{
+    file: hit.file,
+    location:
+      CharacterPosition.{
+        line: EditorCoreTypes.LineNumber.ofOneBased(hit.lineNumber),
+        character: CharacterIndex.ofInt(hit.charStart),
+      },
+    text: hit.text,
+    highlight:
+      Some((
+        Index.fromZeroBased(hit.charStart),
+        Index.fromZeroBased(hit.charEnd),
+      )),
+  };
+
 let setHits = (hits, model) => {
   ...model,
   hits,
   resultsList:
-    Component_VimList.set(hits |> Array.of_list, model.resultsList),
+    Component_VimList.set(hits 
+    |> ListEx.safeMap(matchToLocListItem)
+    |> Array.of_list, model.resultsList),
 };
 
 // UPDATE
@@ -208,22 +226,6 @@ module Styles = {
   let inputContainer = [width(150), flexShrink(0), flexGrow(1)];
 };
 
-let matchToLocListItem = (hit: Ripgrep.Match.t) =>
-  LocationListItem.{
-    file: hit.file,
-    location:
-      CharacterPosition.{
-        line: EditorCoreTypes.LineNumber.ofOneBased(hit.lineNumber),
-        character: CharacterIndex.ofInt(hit.charStart),
-      },
-    text: hit.text,
-    highlight:
-      Some((
-        Index.fromZeroBased(hit.charStart),
-        Index.fromZeroBased(hit.charEnd),
-      )),
-  };
-
 let make =
     (
       ~theme,
@@ -265,15 +267,28 @@ let make =
         </View>
       </View>
     </View>
-    <View style=Styles.row>
+    <View style=Styles.resultsPane(~isFocused=false, ~theme)>
+      <Text text="TOP" />
       <Component_VimList.View
         theme
         model={model.resultsList}
         dispatch={msg => dispatch(ResultsList(msg))}
-        render={(~availableWidth as _, ~index as _, ~focused as _, _) =>
-          React.empty
+        render={(~availableWidth, ~index as _, ~focused as _, item) =>
+          <LocationListItem.View
+            width=availableWidth
+            theme
+            uiFont
+            editorFont
+            onMouseOver={(_)  => ()}
+            onMouseOut={(_)  => ()}
+            isHovered={false}
+            item
+            onSelect={(_) => ()}
+            workingDirectory
+          />
         }
       />
+      <Text text="BOT" />
     </View>
     <View
       style={Styles.resultsPane(

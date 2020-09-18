@@ -43,8 +43,22 @@ let set = (items, model) => {...model, items};
 
 // UPDATE
 
+let setScrollY = (~scrollY, model) => {
+  // Allow for overscroll such that the very last item is visible
+  let countMinusOne = max(0, Array.length(model.items) - 1);
+  let maxScroll = float(countMinusOne * model.rowHeight)
+  let minScroll = 0.;
+
+  let newScrollY = FloatEx.clamp(scrollY, ~hi=maxScroll, ~lo=minScroll);
+  {...model, scrollY: newScrollY}
+}
+
 let update = (msg, model) => {
-  (model, Nothing);
+  switch (msg) {
+  | Command(_) => (model, Nothing)
+  | MouseWheelScrolled({ delta }) => (model |> setScrollY(~scrollY=model.scrollY +. delta), Nothing)
+  | ScrollbarMoved({ scrollY }) => (model |> setScrollY(~scrollY), Nothing)
+  }
 };
 
 // CONTRIBUTIONS
