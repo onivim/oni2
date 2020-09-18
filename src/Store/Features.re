@@ -415,6 +415,11 @@ let update =
         FocusManager.push(Focus.Search, state),
         Effect.none,
       )
+
+    | Some(OpenFile({filePath, location})) => (
+        state,
+        Internal.openFileEffect(~position=Some(location), filePath),
+      )
     | Some(UnhandledWindowMovement(windowMovement)) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),

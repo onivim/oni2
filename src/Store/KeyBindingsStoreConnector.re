@@ -432,7 +432,8 @@ let start = maybeKeyBindingsFilePath => {
             "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
         },
       ]
-    @ Component_VimWindows.Contributions.keybindings;
+    @ Component_VimWindows.Contributions.keybindings
+    @ Component_VimList.Contributions.keybindings;
 
   let getKeybindingsFile = () => {
     Filesystem.getOrCreateConfigFile(

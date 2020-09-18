@@ -16,8 +16,11 @@ type model('item);
 
 let create: (~rowHeight: int) => model('item);
 
+let get: (int, model('item)) => option('item);
+
 type outmsg =
-  | Nothing;
+  | Nothing
+  | Selected({index: int});
 
 // UPDATE
 

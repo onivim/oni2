@@ -9,7 +9,7 @@ type model('item) = {
   rowHeight: int,
   items: array('item),
   hovered: option(int),
-  focused: option(int),
+  focused: int,
   initialRowsToRender: int,
 };
 
@@ -18,8 +18,18 @@ let create = (~rowHeight) => {
   rowHeight,
   items: [||],
   hovered: None,
-  focused: None,
+  focused: 0,
   initialRowsToRender: 10,
+};
+
+let get = (index, {items, _}) => {
+  let count = Array.length(items);
+
+  if (index < 0 || index >= count) {
+    None;
+  } else {
+    Some(items[index]);
+  };
 };
 
 [@deriving show]
@@ -27,7 +37,8 @@ type command =
   | CursorToTop //gg
   | CursorToBottom // G
   | CursorDown // j
-  | CursorUp; // k
+  | CursorUp // k
+  | Select;
 //  | ScrollCursorCenter // zz
 //  | ScrollCursorBottom // zb
 //  | ScrollCursorTop; // zt
@@ -41,11 +52,26 @@ type msg =
   | MouseOut({index: int});
 
 type outmsg =
-  | Nothing;
+  | Nothing
+  | Selected({index: int});
 
 let set = (items, model) => {...model, items};
 
 // UPDATE
+
+let setFocus = (~focus, model) => {
+  let count = model.items |> Array.length;
+  let focus' =
+    if (focus < 0) {
+      0;
+    } else if (focus >= count) {
+      count - 1;
+    } else {
+      focus;
+    };
+
+  {...model, focused: focus'};
+};
 
 let setScrollY = (~scrollY, model) => {
   // Allow for overscroll such that the very last item is visible
@@ -59,7 +85,32 @@ let setScrollY = (~scrollY, model) => {
 
 let update = (msg, model) => {
   switch (msg) {
-  | Command(_) => (model, Nothing)
+  | Command(CursorToTop) => (model |> setFocus(~focus=0), Nothing)
+
+  | Command(CursorToBottom) => (
+      model |> setFocus(~focus=Array.length(model.items) - 1),
+      Nothing,
+    )
+
+  | Command(CursorUp) => (
+      model |> setFocus(~focus=model.focused - 1),
+      Nothing,
+    )
+
+  | Command(CursorDown) => (
+      model |> setFocus(~focus=model.focused + 1),
+      Nothing,
+    )
+
+  | Command(Select) =>
+    let isValidFocus =
+      model.focused >= 0 && model.focused < Array.length(model.items);
+
+    if (isValidFocus) {
+      (model, Selected({index: model.focused}));
+    } else {
+      (model, Nothing);
+    };
 
   | MouseWheelScrolled({delta}) => (
       model |> setScrollY(~scrollY=model.scrollY +. delta),
@@ -90,6 +141,7 @@ module Commands = {
   let g = define("vim.list.G", Command(CursorToBottom));
   let j = define("vim.list.j", Command(CursorDown));
   let k = define("vim.list.k", Command(CursorUp));
+  let enter = define("vim.list.enter", Command(Select));
   //  let zz = define("vim.list.zz", Command(ScrollCursorCenter));
   //  let zb = define("vim.list.zb", Command(ScrollCursorBottom));
   //  let zt = define("vim.list.zt", Command(ScrollCursorTop));
@@ -110,9 +162,10 @@ module Keybindings = {
   let keybindings =
     Keybindings.[
       {key: "gg", command: Commands.gg.id, condition: commandCondition},
-      {key: "G", command: Commands.g.id, condition: commandCondition},
+      {key: "<S-G>", command: Commands.g.id, condition: commandCondition},
       {key: "j", command: Commands.j.id, condition: commandCondition},
       {key: "k", command: Commands.k.id, condition: commandCondition},
+      {key: "<CR>", command: Commands.enter.id, condition: commandCondition},
     ];
   //      {
   //        key: "zz",
@@ -136,7 +189,7 @@ module Contributions = {
 
   let keybindings = Keybindings.keybindings;
 
-  let commands = Commands.[gg, g, j, k];
+  let commands = Commands.[gg, g, j, k, enter];
   //    zz,
   //    zb,
   //    zt
@@ -200,6 +253,7 @@ module View = {
       (
         ~items,
         ~hovered,
+        ~focused,
         ~onMouseOver,
         ~onMouseOut,
         ~viewportWidth,
@@ -233,7 +287,7 @@ module View = {
              ~availableWidth=viewportWidth,
              ~index=i,
              ~hovered=hovered == Some(i),
-             ~focused=false,
+             ~focused=focused == i,
              items[i],
            )}
         </View>;
@@ -322,6 +376,7 @@ module View = {
         };
         let items =
           renderHelper(
+            ~focused=model.focused,
             ~hovered=model.hovered,
             ~items=model.items,
             ~onMouseOver,

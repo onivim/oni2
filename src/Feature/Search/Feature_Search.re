@@ -73,6 +73,10 @@ module Msg = {
 };
 
 type outmsg =
+  | OpenFile({
+      filePath: string,
+      location: CharacterPosition.t,
+    })
   | Focus
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
@@ -149,10 +153,22 @@ let update = (model, msg) => {
     };
 
   | ResultsList(listMsg) =>
-    let (resultsList, _outmsg) =
+    let (resultsList, outmsg) =
       Component_VimList.update(listMsg, model.resultsList);
 
-    ({...model, resultsList}, None);
+    let eff =
+      Component_VimList.(
+        switch (outmsg) {
+        | Nothing => None
+        | Selected({index}) =>
+          Component_VimList.get(index, resultsList)
+          |> Option.map((item: LocationListItem.t) =>
+               OpenFile({filePath: item.file, location: item.location})
+             )
+        }
+      );
+
+    ({...model, resultsList}, eff);
 
   | Complete => (model, None)
 
@@ -239,9 +255,6 @@ let make =
       ~workingDirectory,
       (),
     ) => {
-  let items =
-    model.hits |> ListEx.safeMap(matchToLocListItem) |> Array.of_list;
-
   let onSelectItem = (item: LocationListItem.t) =>
     onSelectResult(item.file, item.location);
 
@@ -268,32 +281,9 @@ let make =
         </View>
       </View>
     </View>
-    <View style={Styles.resultsPane(~isFocused=false, ~theme)}>
-      <Text text="TOP" />
-      <Component_VimList.View
-        theme
-        model={model.resultsList}
-        dispatch={msg => dispatch(ResultsList(msg))}
-        render={(~availableWidth, ~index as _, ~hovered, ~focused as _, item) =>
-          <LocationListItem.View
-            width=availableWidth
-            theme
-            uiFont
-            editorFont
-            onMouseOver={_ => ()}
-            onMouseOut={_ => ()}
-            isHovered=hovered
-            item
-            onSelect={_ => ()}
-            workingDirectory
-          />
-        }
-      />
-      <Text text="BOT" />
-    </View>
     <View
       style={Styles.resultsPane(
-        ~isFocused={isFocused && model.focus == ResultsPane},
+        ~isFocused=isFocused && model.focus == ResultsPane,
         ~theme,
       )}>
       <Text
@@ -302,13 +292,24 @@ let make =
         fontSize={uiFont.size}
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
-      <LocationList
+      <Component_VimList.View
         theme
-        uiFont
-        editorFont
-        items
-        onSelectItem
-        workingDirectory
+        model={model.resultsList}
+        dispatch={msg => dispatch(ResultsList(msg))}
+        render={(~availableWidth, ~index as _, ~hovered, ~focused, item) =>
+          <LocationListItem.View
+            width=availableWidth
+            theme
+            uiFont
+            editorFont
+            onMouseOver={_ => ()}
+            onMouseOut={_ => ()}
+            isHovered={hovered || focused}
+            item
+            onSelect={_ => ()}
+            workingDirectory
+          />
+        }
       />
     </View>
   </View>;
@@ -320,8 +321,14 @@ module Contributions = {
   let commands = (~isFocused) => {
     !isFocused
       ? []
-      : Component_VimWindows.Contributions.commands
-        |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)));
+      : (
+          Component_VimWindows.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
+        )
+        @ (
+          Component_VimList.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => ResultsList(msg)))
+        );
   };
 
   let contextKeys = (~isFocused) => {
@@ -330,11 +337,15 @@ module Contributions = {
     let vimNavKeys =
       isFocused ? Component_VimWindows.Contributions.contextKeys : [];
 
+    let vimListKeys =
+      isFocused ? Component_VimList.Contributions.contextKeys : [];
+
     [
       inputTextKeys |> fromList |> map(({findInput, _}: model) => findInput),
       vimNavKeys
       |> fromList
       |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),
+      vimListKeys |> fromList |> map(_ => ()),
     ]
     |> unionMany;
   };

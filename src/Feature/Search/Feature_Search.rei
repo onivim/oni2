@@ -15,6 +15,10 @@ module Msg: {
 };
 
 type outmsg =
+  | OpenFile({
+      filePath: string,
+      location: CharacterPosition.t,
+    })
   | Focus
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
