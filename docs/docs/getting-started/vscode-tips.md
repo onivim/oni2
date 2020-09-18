@@ -36,4 +36,13 @@ Note: If closing the last open file, this will also close the editor.
 
 ### How do I search the current file?
 
-In Normal mode, type `/` then the pattern 
+In Normal mode, type `/` to search forwards from the cursor, or `?` to search
+backwards, followed by the pattern to search for.
+
+Vim uses a peculiar regex-like syntax for patterns. See
+[the documentation](http://vimdoc.sourceforge.net/htmldoc/pattern.html) for
+details.
+
+### How do I clear the search highlights?
+
+In Normal mode, type `:nohlsearch`, or the short form `:noh`.
