@@ -32,10 +32,7 @@ type msg =
 type outmsg =
   | Nothing;
 
-let set = (items, model) => {
-  ...model,
-  items
-};
+let set = (items, model) => {...model, items};
 
 // UPDATE
 
@@ -52,9 +49,9 @@ module Commands = {
   let g = define("vim.list.G", Command(CursorToBottom));
   let j = define("vim.list.j", Command(CursorDown));
   let k = define("vim.list.k", Command(CursorUp));
-//  let zz = define("vim.list.zz", Command(ScrollCursorCenter));
-//  let zb = define("vim.list.zb", Command(ScrollCursorBottom));
-//  let zt = define("vim.list.zt", Command(ScrollCursorTop));
+  //  let zz = define("vim.list.zz", Command(ScrollCursorCenter));
+  //  let zb = define("vim.list.zb", Command(ScrollCursorBottom));
+  //  let zt = define("vim.list.zt", Command(ScrollCursorTop));
 };
 
 module ContextKeys = {
@@ -66,46 +63,32 @@ module ContextKeys = {
 module Keybindings = {
   open Oni_Input;
 
-  let commandCondition = "!textInputFocus && vimListNavigation" |> WhenExpr.parse;
+  let commandCondition =
+    "!textInputFocus && vimListNavigation" |> WhenExpr.parse;
 
   let keybindings =
-    Keybindings.[
-      {
-        key: "gg",
-        command: Commands.gg.id,
-        condition: commandCondition,
-      },
-      {
-        key: "G",
-        command: Commands.g.id,
-        condition: commandCondition,
-      },
-      {
-        key: "j",
-        command: Commands.j.id,
-        condition: commandCondition,
-      },
-      {
-        key: "k",
-        command: Commands.k.id,
-        condition: commandCondition,
-      },
-//      {
-//        key: "zz",
-//        command: Commands.zz.id,
-//        condition: commandCondition,
-//      },
-//      {
-//        key: "zb",
-//        command: Commands.zb.id,
-//        condition: commandCondition,
-//      },
-//      {
-//        key: "zt",
-//        command: Commands.zt.id,
-//        condition: commandCondition,
-//      },
-    ];
+    Keybindings.
+      [
+        {key: "gg", command: Commands.gg.id, condition: commandCondition},
+        {key: "G", command: Commands.g.id, condition: commandCondition},
+        {key: "j", command: Commands.j.id, condition: commandCondition},
+        {key: "k", command: Commands.k.id, condition: commandCondition},
+      ];
+      //      {
+      //        key: "zz",
+      //        command: Commands.zz.id,
+      //        condition: commandCondition,
+      //      },
+      //      {
+      //        key: "zb",
+      //        command: Commands.zb.id,
+      //        condition: commandCondition,
+      //      },
+      //      {
+      //        key: "zt",
+      //        command: Commands.zt.id,
+      //        condition: commandCondition,
+      //      },
 };
 
 module Contributions = {
@@ -113,27 +96,18 @@ module Contributions = {
 
   let keybindings = Keybindings.keybindings;
 
-  let commands = Commands.[
-    gg,
-    g,
-    j,
-    k,
-//    zz,
-//    zb,
-//    zt
-  ];
+  let commands =
+    Commands.
+      [gg, g, j, k];
+      //    zz,
+      //    zb,
+      //    zt
 };
 
 module View = {
   open Revery;
   open Revery.UI;
-  
-  let make = (
-    ~model,
-    ~dispatch,
-    ~render, 
-    ()
-  ) => <View>
-    <Text text={Array.length(model.items) |> string_of_int} />
-  </View>
-}
+
+  let make = (~model, ~dispatch, ~render, ()) =>
+    <View> <Text text={Array.length(model.items) |> string_of_int} /> </View>;
+};

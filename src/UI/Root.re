@@ -199,6 +199,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
         dispatch={msg => dispatch(Actions.Pane(msg))}
         notificationDispatch={msg => dispatch(Actions.Notification(msg))}
         pane={state.pane}
+        workingDirectory={state.workspace.workingDirectory}
       />
     </View>
     <Overlay>

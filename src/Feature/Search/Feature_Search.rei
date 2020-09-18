@@ -32,6 +32,7 @@ let make:
     ~model: model,
     ~onSelectResult: (string, CharacterPosition.t) => unit,
     ~dispatch: msg => unit,
+    ~workingDirectory: string,
     unit
   ) =>
   React.element(React.node);

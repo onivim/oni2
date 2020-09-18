@@ -56,6 +56,7 @@ module View: {
       ~dispatch: msg => unit,
       ~notificationDispatch: Feature_Notification.msg => unit,
       ~pane: model,
+      ~workingDirectory: string,
       unit
     ) =>
     Revery.UI.element;

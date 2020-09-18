@@ -31,7 +31,8 @@ let initial = {
 let setHits = (hits, model) => {
   ...model,
   hits,
-  resultsList: Component_VimList.set(hits |> Array.of_list, model.resultsList),
+  resultsList:
+    Component_VimList.set(hits |> Array.of_list, model.resultsList),
 };
 
 // UPDATE
@@ -68,7 +69,7 @@ let update = (model, msg) => {
           if (model.query == findInputValue) {
             model; // Do nothing if the query hasn't changed
           } else {
-            {...model, query: findInputValue} |> setHits([])
+            {...model, query: findInputValue} |> setHits([]);
           };
 
         | _ =>
@@ -103,8 +104,7 @@ let update = (model, msg) => {
       };
     ({...model, findInput: findInput'}, outmsg);
 
-  | Update(items) => (
-    model |> setHits(model.hits @ items), None)
+  | Update(items) => (model |> setHits(model.hits @ items), None)
 
   | VimWindowNav(navMsg) =>
     let (windowNav, outmsg) =
@@ -133,7 +133,7 @@ let update = (model, msg) => {
     let (resultsList, _outmsg) =
       Component_VimList.update(listMsg, model.resultsList);
 
-    ({...model, resultsList}, None)
+    ({...model, resultsList}, None);
 
   | Complete => (model, None)
 
@@ -209,7 +209,7 @@ module Styles = {
 };
 
 let matchToLocListItem = (hit: Ripgrep.Match.t) =>
-  LocationList.{
+  LocationListItem.{
     file: hit.file,
     location:
       CharacterPosition.{
@@ -233,12 +233,13 @@ let make =
       ~model,
       ~onSelectResult,
       ~dispatch,
+      ~workingDirectory,
       (),
     ) => {
   let items =
     model.hits |> ListEx.safeMap(matchToLocListItem) |> Array.of_list;
 
-  let onSelectItem = (item: LocationList.item) =>
+  let onSelectItem = (item: LocationListItem.t) =>
     onSelectResult(item.file, item.location);
 
   <View style=Styles.pane>
@@ -268,8 +269,10 @@ let make =
       <Component_VimList.View
         model={model.resultsList}
         dispatch={msg => dispatch(ResultsList(msg))}
-        render={(~availableWidth as _, ~index as _, ~focused as _, _) => React.empty}
-        />
+        render={(~availableWidth as _, ~index as _, ~focused as _, _) =>
+          React.empty
+        }
+      />
     </View>
     <View
       style={Styles.resultsPane(
@@ -282,7 +285,14 @@ let make =
         fontSize={uiFont.size}
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
-      <LocationList theme uiFont editorFont items onSelectItem />
+      <LocationList
+        theme
+        uiFont
+        editorFont
+        items
+        onSelectItem
+        workingDirectory
+      />
     </View>
   </View>;
 };

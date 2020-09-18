@@ -116,6 +116,7 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
         model={state.searchPane}
         onSelectResult
         dispatch
+        workingDirectory={state.workspace.workingDirectory}
       />;
 
     | Extensions =>

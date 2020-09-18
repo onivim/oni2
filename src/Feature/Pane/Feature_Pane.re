@@ -219,6 +219,7 @@ module View = {
         ~notificationDispatch,
         ~diagnostics: Feature_LanguageSupport.Diagnostics.t,
         ~notifications: Feature_Notification.model,
+        ~workingDirectory,
         (),
       ) =>
     switch (selected) {
@@ -229,6 +230,7 @@ module View = {
         uiFont
         editorFont
         onSelectFile
+        workingDirectory
       />
     | Notifications =>
       <Feature_Notification.View.List
@@ -261,6 +263,7 @@ module View = {
         ~dispatch: msg => unit,
         ~notificationDispatch: Feature_Notification.msg => unit,
         ~pane: model,
+        ~workingDirectory: string,
         (),
       ) => {
     let onSelectFile = (~filePath, ~position) => {
@@ -316,6 +319,7 @@ module View = {
             notifications
             notificationDispatch
             onSelectFile
+            workingDirectory
           />
         </View>
       </View>;

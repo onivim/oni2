@@ -36,16 +36,18 @@ module Contributions: {
 // VIEW
 
 module View: {
-
-  let make: (
-    ~model: model('item'),
-//    ~uniqueId: 'item => 'key,
-//    ~focused: 'key,
-    //~searchText: option('item => string),
-//    ~scrollY: float,
-    ~dispatch: msg => unit,
-//    ~rowHeight: float,
-    ~render: (~availableWidth: int, ~index: int, ~focused:bool, 'item) => Revery.UI.element,
-    unit,
-  ) => Revery.UI.element;
-}
+  let make:
+    (
+      ~model: model('item'),
+      //    ~uniqueId: 'item => 'key,
+      //    ~focused: 'key,
+      //~searchText: option('item => string),
+      //    ~scrollY: float,
+      ~dispatch: msg => unit,
+      //    ~rowHeight: float,
+      ~render: (~availableWidth: int, ~index: int, ~focused: bool, 'item) =>
+               Revery.UI.element,
+      unit
+    ) =>
+    Revery.UI.element;
+};

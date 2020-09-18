@@ -189,7 +189,7 @@ module View = {
     let (uri, diag) = diagWithUri;
     let file = Uri.toFileSystemPath(uri);
     let location = Diagnostic.(diag.range.start);
-    LocationList.{file, location, text: diag.message, highlight: None};
+    LocationListItem.{file, location, text: diag.message, highlight: None};
   };
   let make =
       (
@@ -203,6 +203,7 @@ module View = {
         ~theme,
         ~uiFont: UiFont.t,
         ~editorFont,
+        ~workingDirectory,
         (),
       ) => {
     let items =
@@ -211,7 +212,7 @@ module View = {
       |> List.map(toLocListItem)
       |> Array.of_list;
 
-    let onSelectItem = (item: LocationList.item) => {
+    let onSelectItem = (item: LocationListItem.t) => {
       onSelectFile(~filePath=item.file, ~position=item.location);
     };
 
@@ -226,7 +227,14 @@ module View = {
           />
         </View>;
       } else {
-        <LocationList theme uiFont editorFont items onSelectItem />;
+        <LocationList
+          theme
+          uiFont
+          editorFont
+          items
+          onSelectItem
+          workingDirectory
+        />;
       };
 
     <View style=Styles.pane> innerElement </View>;
