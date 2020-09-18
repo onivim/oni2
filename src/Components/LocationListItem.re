@@ -54,18 +54,13 @@ module View = {
         ~theme,
         ~uiFont: UiFont.t,
         ~editorFont: Service_Font.font,
-        ~onMouseOver,
-        ~onMouseOut,
         ~width,
         ~isHovered,
         ~item,
-        ~onSelect,
         ~workingDirectory,
         (),
       ) => {
     //  let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
-
-    let onClick = () => onSelect(item);
 
     let locationText =
       Printf.sprintf(
@@ -147,11 +142,11 @@ module View = {
       };
     };
 
-    <Clickable style=Styles.clickable onClick>
-      <View style={Styles.result(~theme, ~isHovered)} onMouseOver onMouseOut>
+    <View style=Styles.clickable>
+      <View style={Styles.result(~theme, ~isHovered)} >
         <location />
         <content />
       </View>
-    </Clickable>;
+    </View>;
   };
 };

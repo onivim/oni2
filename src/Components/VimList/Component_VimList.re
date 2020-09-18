@@ -49,7 +49,8 @@ type msg =
   | MouseWheelScrolled({delta: float})
   | ScrollbarMoved({scrollY: float})
   | MouseOver({index: int})
-  | MouseOut({index: int});
+  | MouseOut({index: int})
+  | MouseClicked({index: int});
 
 type outmsg =
   | Nothing
@@ -108,6 +109,15 @@ let update = (msg, model) => {
 
     if (isValidFocus) {
       (model, Selected({index: model.focused}));
+    } else {
+      (model, Nothing);
+    };
+
+  | MouseClicked({index}) =>
+    let isValidIndex = index >= 0 && index < Array.length(model.items);
+
+    if (isValidIndex) {
+      (model |> setFocus(~focus=index), Selected({index: index}));
     } else {
       (model, Nothing);
     };
@@ -254,6 +264,7 @@ module View = {
         ~items,
         ~hovered,
         ~focused,
+        ~onMouseClick,
         ~onMouseOver,
         ~onMouseOut,
         ~viewportWidth,
@@ -279,9 +290,10 @@ module View = {
         let rowY = (i - startRow) * rowHeight;
         let offset = rowY - startY;
 
-        <View
-          onMouseOver={_ => onMouseOver(i)}
-          onMouseOut={_ => onMouseOut(i)}
+        <Clickable
+          onMouseEnter={_ => onMouseOver(i)}
+          onMouseLeave={_ => onMouseOut(i)}
+          onClick={_ => onMouseClick(i)}
           style={Styles.item(~offset, ~rowHeight)}>
           {render(
              ~availableWidth=viewportWidth,
@@ -290,7 +302,7 @@ module View = {
              ~focused=focused == i,
              items[i],
            )}
-        </View>;
+        </Clickable>;
       };
 
       indicesToRender |> List.map(itemView) |> List.rev;
@@ -344,6 +356,10 @@ module View = {
           dispatch(MouseOut({index: idx}));
         };
 
+        let onMouseClick = idx => {
+          dispatch(MouseClicked({index: idx}));
+        };
+
         let scrollbar = {
           let maxHeight = count * rowHeight - viewportHeight;
           let thumbHeight =
@@ -381,6 +397,7 @@ module View = {
             ~items=model.items,
             ~onMouseOver,
             ~onMouseOut,
+            ~onMouseClick,
             ~viewportWidth,
             ~viewportHeight,
             ~rowHeight,

@@ -302,11 +302,8 @@ let make =
             theme
             uiFont
             editorFont
-            onMouseOver={_ => ()}
-            onMouseOut={_ => ()}
             isHovered={hovered || focused}
             item
-            onSelect={_ => ()}
             workingDirectory
           />
         }
