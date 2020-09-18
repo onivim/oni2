@@ -1,5 +1,5 @@
 {
-  "checksum": "fb86fb62e2437ac50cab96f9c50ef0d3",
+  "checksum": "e5a399a81887c1f8c862431c2388f492",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -119,7 +119,7 @@
       "overrides": [],
       "dependencies": [
         "revery@github:revery-ui/revery#d2e614a@d41d8cd9",
-        "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
+        "isolinear@github:revery-ui/isolinear#bb0822c@d41d8cd9",
         "@revery/esy-libvterm@1.0.3@d41d8cd9",
         "@onivim/reason-native-crash-utils@1.0.1@d41d8cd9",
         "@glennsl/timber@1.2.0@d41d8cd9"
@@ -453,13 +453,13 @@
       "dependencies": [ "graceful-fs@4.2.4@d41d8cd9" ],
       "devDependencies": []
     },
-    "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9": {
-      "id": "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
+    "isolinear@github:revery-ui/isolinear#bb0822c@d41d8cd9": {
+      "id": "isolinear@github:revery-ui/isolinear#bb0822c@d41d8cd9",
       "name": "isolinear",
-      "version": "github:revery-ui/isolinear#8cad3b0",
+      "version": "github:revery-ui/isolinear#bb0822c",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/isolinear#8cad3b0" ]
+        "source": [ "github:revery-ui/isolinear#bb0822c" ]
       },
       "overrides": [],
       "dependencies": [
@@ -945,7 +945,7 @@
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
         "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.59@d41d8cd9",
-        "isolinear@github:revery-ui/isolinear#8cad3b0@d41d8cd9",
+        "isolinear@github:revery-ui/isolinear#bb0822c@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#a3785f9@d41d8cd9",
         "esy-sdl2@2.0.10008@d41d8cd9",
