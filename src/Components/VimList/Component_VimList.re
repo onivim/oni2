@@ -1,6 +1,8 @@
 open Oni_Core;
 open Utility;
 
+open Oni_Components;
+
 // MODEL
 
 [@deriving show]
@@ -13,7 +15,6 @@ type model('item) = {
   viewportHeight: int,
   viewportWidth: int,
   initialRowsToRender: int,
-
   // For mouse gestures, we don't want the scroll to be animated - it feels laggy
   // But for keyboarding gestures, like 'zz', the animation is helpful.
   isScrollAnimated: bool,
@@ -73,6 +74,12 @@ type outmsg =
 
 let set = (items, model) => {...model, items};
 
+let showTopScrollShadow = ({scrollY, _}) => scrollY > 0.1;
+let showBottomScrollShadow = ({items, scrollY, rowHeight, viewportHeight, _}) => {
+  let totalHeight = float(Array.length(items) * rowHeight);
+  scrollY < totalHeight -. float(viewportHeight);
+};
+
 // UPDATE
 
 let ensureFocusedVisible = model => {
@@ -123,10 +130,14 @@ let disableScrollAnimation = model => {...model, isScrollAnimated: false};
 let update = (msg, model) => {
   switch (msg) {
   | Command(CursorToTop) => (
-  model |> setFocus(~focus=0) |> enableScrollAnimation, Nothing)
+      model |> setFocus(~focus=0) |> enableScrollAnimation,
+      Nothing,
+    )
 
   | Command(CursorToBottom) => (
-      model |> setFocus(~focus=Array.length(model.items) - 1) |> enableScrollAnimation,
+      model
+      |> setFocus(~focus=Array.length(model.items) - 1)
+      |> enableScrollAnimation,
       Nothing,
     )
 
@@ -141,7 +152,9 @@ let update = (msg, model) => {
     )
 
   | Command(ScrollCursorTop) => (
-      model |> setScrollY(~scrollY=float(model.focused * model.rowHeight)) |> enableScrollAnimation,
+      model
+      |> setScrollY(~scrollY=float(model.focused * model.rowHeight))
+      |> enableScrollAnimation,
       Nothing,
     )
 
@@ -194,10 +207,15 @@ let update = (msg, model) => {
     };
 
   | MouseWheelScrolled({delta}) => (
-      model |> setScrollY(~scrollY=model.scrollY +. delta) |> disableScrollAnimation,
+      model
+      |> setScrollY(~scrollY=model.scrollY +. delta)
+      |> disableScrollAnimation,
       Nothing,
     )
-  | ScrollbarMoved({scrollY}) => (model |> setScrollY(~scrollY) |> disableScrollAnimation, Nothing)
+  | ScrollbarMoved({scrollY}) => (
+      model |> setScrollY(~scrollY) |> disableScrollAnimation,
+      Nothing,
+    )
 
   | MouseOver({index}) => ({...model, hovered: Some(index)}, Nothing)
 
@@ -289,7 +307,7 @@ module View = {
   module Animation = {
     let scrollSpring =
       Spring.Options.create(~stiffness=310., ~damping=30., ());
-  }
+  };
 
   module Styles = {
     open Style;
@@ -406,16 +424,16 @@ module View = {
         let count = Array.length(model.items);
         let contentHeight = count * rowHeight;
 
-  let isScrollAnimated = isScrollAnimated(model);
+        let isScrollAnimated = isScrollAnimated(model);
 
-    let ((scrollY, _setScrollYImmediately), hooks) =
-      Hooks.spring(
-        ~target=model.scrollY,
-        ~restThreshold=10.,
-        ~enabled=isScrollAnimated,
-        Animation.scrollSpring,
-        hooks
-      );
+        let ((scrollY, _setScrollYImmediately), hooks) =
+          Hooks.spring(
+            ~target=model.scrollY,
+            ~restThreshold=10.,
+            ~enabled=isScrollAnimated,
+            Animation.scrollSpring,
+            hooks,
+          );
         let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
           let delta =
             wheelEvent.deltaY *. float(- Constants.scrollWheelMultiplier);
@@ -452,7 +470,7 @@ module View = {
                 maximumValue={float_of_int(maxHeight)}
                 sliderLength=viewportHeight
                 thumbLength=thumbHeight
-                value={scrollY}
+                value=scrollY
                 trackThickness=Constants.scrollBarThickness
                 thumbThickness=Constants.scrollBarThickness
                 minimumTrackColor=Revery.Colors.transparentBlack
@@ -482,9 +500,17 @@ module View = {
           )
           |> React.listToElement;
 
+        let topShadow =
+          model |> showTopScrollShadow
+            ? <Oni_Components.ScrollShadow.Top /> : React.empty;
+
+        let bottomShadow =
+          model |> showBottomScrollShadow
+            ? <Oni_Components.ScrollShadow.Bottom /> : React.empty;
+
         (
           <View
-            style=Style.[flexGrow(1)]
+            style=Style.[flexGrow(1), position(`Relative)]
             onDimensionsChanged={({height, width}) => {
               dispatch(
                 ViewDimensionsChanged({
@@ -506,6 +532,8 @@ module View = {
                 )}>
                 items
               </View>
+              topShadow
+              bottomShadow
               scrollbar
             </View>
           </View>,
