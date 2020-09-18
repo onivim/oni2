@@ -267,6 +267,7 @@ let make =
     </View>
     <View style=Styles.row>
       <Component_VimList.View
+        theme
         model={model.resultsList}
         dispatch={msg => dispatch(ResultsList(msg))}
         render={(~availableWidth as _, ~index as _, ~focused as _, _) =>

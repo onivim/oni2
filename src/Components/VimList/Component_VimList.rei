@@ -37,14 +37,17 @@ module Contributions: {
 
 module View: {
   let make:
+    //      ~key: Brisk_reconciler.Key.t=?,
     (
-      ~model: model('item'),
+      ~theme: ColorTheme.Colors.t,
+      ~model: model('item),
       //    ~uniqueId: 'item => 'key,
       //    ~focused: 'key,
       //~searchText: option('item => string),
       //    ~scrollY: float,
       ~dispatch: msg => unit,
       //    ~rowHeight: float,
+      //      ~render: 'item => Revery.UI.element,
       ~render: (~availableWidth: int, ~index: int, ~focused: bool, 'item) =>
                Revery.UI.element,
       unit
