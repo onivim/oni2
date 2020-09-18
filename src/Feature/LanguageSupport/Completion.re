@@ -128,41 +128,6 @@ module Configuration = {
     );
 };
 
-module CompletionItem = {
-  [@deriving show]
-  type t = {
-    chainedCacheId: option(Exthost.ChainedCacheId.t),
-    handle: int,
-    label: string,
-    kind: Exthost.CompletionKind.t,
-    detail: option(string),
-    documentation: option(Exthost.MarkdownString.t),
-    insertText: string,
-    insertTextRules: Exthost.SuggestItem.InsertTextRules.t,
-    sortText: string,
-    suggestRange: option(Exthost.SuggestItem.SuggestRange.t),
-    commitCharacters: list(string),
-    additionalTextEdits: list(Exthost.Edit.SingleEditOperation.t),
-    command: option(Exthost.Command.t),
-  };
-
-  let create = (~handle, item: Exthost.SuggestItem.t) => {
-    chainedCacheId: item.chainedCacheId,
-    handle,
-    label: item.label,
-    kind: item.kind,
-    detail: item.detail,
-    documentation: item.documentation,
-    insertText: item |> Exthost.SuggestItem.insertText,
-    insertTextRules: item.insertTextRules,
-    sortText: item |> Exthost.SuggestItem.sortText,
-    suggestRange: item.suggestRange,
-    commitCharacters: item.commitCharacters,
-    additionalTextEdits: item.additionalTextEdits,
-    command: item.command,
-  };
-};
-
 module Session = {
   [@deriving show]
   type state =
@@ -360,19 +325,6 @@ let getMeetLocation = (~handle, model) => {
 };
 
 let recomputeAllItems = (sessions: IntMap.t(Session.t)) => {
-  let compare =
-      (
-        a: Filter.result(CompletionItem.t),
-        b: Filter.result(CompletionItem.t),
-      ) => {
-    let sortValue = String.compare(a.item.sortText, b.item.sortText);
-    if (sortValue == 0) {
-      String.compare(a.item.label, b.item.label);
-    } else {
-      sortValue;
-    };
-  };
-
   sessions
   |> IntMap.bindings
   |> List.map(((handle, session)) => {
@@ -381,7 +333,7 @@ let recomputeAllItems = (sessions: IntMap.t(Session.t)) => {
        |> List.map(Filter.map(CompletionItem.create(~handle)))
      })
   |> List.flatten
-  |> List.fast_sort(compare)
+  |> List.fast_sort(CompletionItemSorter.compare)
   |> Array.of_list;
 };
 

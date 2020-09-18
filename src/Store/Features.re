@@ -427,15 +427,19 @@ let update =
       Feature_SCM.update(extHostClient, state.scm, msg);
     let state = {...state, scm: model};
 
-    let (state, eff) =
-      switch ((maybeOutmsg: Feature_SCM.outmsg)) {
-      | Focus => (FocusManager.push(Focus.SCM, state), Effect.none)
-      | Effect(eff) => (state, eff)
-      | EffectAndFocus(eff) => (FocusManager.push(Focus.SCM, state), eff)
-      | Nothing => (state, Effect.none)
-      };
-
-    (state, eff |> Effect.map(msg => Actions.SCM(msg)));
+    switch ((maybeOutmsg: Feature_SCM.outmsg)) {
+    | Focus => (FocusManager.push(Focus.SCM, state), Effect.none)
+    | Effect(eff) => (state, eff |> Effect.map(msg => Actions.SCM(msg)))
+    | EffectAndFocus(eff) => (
+        FocusManager.push(Focus.SCM, state),
+        eff |> Effect.map(msg => Actions.SCM(msg)),
+      )
+    | UnhandledWindowMovement(windowMovement) => (
+        state,
+        Internal.unhandledWindowMotionEffect(windowMovement),
+      )
+    | Nothing => (state, Effect.none)
+    };
 
   | SideBar(msg) =>
     let sideBar' = Feature_SideBar.update(msg, state.sideBar);

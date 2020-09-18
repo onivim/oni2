@@ -270,6 +270,8 @@ module SuggestItem: {
     [@deriving show]
     type t;
 
+    let none: t;
+
     let matches: (~rule: rule, t) => bool;
   };
   module SuggestRange: {
