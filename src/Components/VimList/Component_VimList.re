@@ -13,6 +13,10 @@ type model('item) = {
   viewportHeight: int,
   viewportWidth: int,
   initialRowsToRender: int,
+
+  // For mouse gestures, we don't want the scroll to be animated - it feels laggy
+  // But for keyboarding gestures, like 'zz', the animation is helpful.
+  isScrollAnimated: bool,
 };
 
 let create = (~rowHeight) => {
@@ -24,7 +28,10 @@ let create = (~rowHeight) => {
   viewportHeight: 1,
   viewportWidth: 1,
   initialRowsToRender: 10,
+  isScrollAnimated: false,
 };
+
+let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
 let get = (index, {items, _}) => {
   let count = Array.length(items);
@@ -110,27 +117,31 @@ let setScrollY = (~scrollY, model) => {
   {...model, scrollY: newScrollY};
 };
 
+let enableScrollAnimation = model => {...model, isScrollAnimated: true};
+let disableScrollAnimation = model => {...model, isScrollAnimated: false};
+
 let update = (msg, model) => {
   switch (msg) {
-  | Command(CursorToTop) => (model |> setFocus(~focus=0), Nothing)
+  | Command(CursorToTop) => (
+  model |> setFocus(~focus=0) |> enableScrollAnimation, Nothing)
 
   | Command(CursorToBottom) => (
-      model |> setFocus(~focus=Array.length(model.items) - 1),
+      model |> setFocus(~focus=Array.length(model.items) - 1) |> enableScrollAnimation,
       Nothing,
     )
 
   | Command(CursorUp) => (
-      model |> setFocus(~focus=model.focused - 1),
+      model |> setFocus(~focus=model.focused - 1) |> enableScrollAnimation,
       Nothing,
     )
 
   | Command(CursorDown) => (
-      model |> setFocus(~focus=model.focused + 1),
+      model |> setFocus(~focus=model.focused + 1) |> enableScrollAnimation,
       Nothing,
     )
 
   | Command(ScrollCursorTop) => (
-      model |> setScrollY(~scrollY=float(model.focused * model.rowHeight)),
+      model |> setScrollY(~scrollY=float(model.focused * model.rowHeight)) |> enableScrollAnimation,
       Nothing,
     )
 
@@ -143,7 +154,8 @@ let update = (msg, model) => {
                * model.rowHeight
                - (model.viewportHeight - model.rowHeight),
              ),
-         ),
+         )
+      |> enableScrollAnimation,
       Nothing,
     )
 
@@ -157,7 +169,8 @@ let update = (msg, model) => {
                - (model.viewportHeight - model.rowHeight)
                / 2,
              ),
-         ),
+         )
+      |> enableScrollAnimation,
       Nothing,
     )
 
@@ -181,10 +194,10 @@ let update = (msg, model) => {
     };
 
   | MouseWheelScrolled({delta}) => (
-      model |> setScrollY(~scrollY=model.scrollY +. delta),
+      model |> setScrollY(~scrollY=model.scrollY +. delta) |> disableScrollAnimation,
       Nothing,
     )
-  | ScrollbarMoved({scrollY}) => (model |> setScrollY(~scrollY), Nothing)
+  | ScrollbarMoved({scrollY}) => (model |> setScrollY(~scrollY) |> disableScrollAnimation, Nothing)
 
   | MouseOver({index}) => ({...model, hovered: Some(index)}, Nothing)
 
@@ -272,6 +285,11 @@ module View = {
     let scrollBarThickness = 6;
     let minimumThumbSize = 4;
   };
+
+  module Animation = {
+    let scrollSpring =
+      Spring.Options.create(~stiffness=310., ~damping=30., ());
+  }
 
   module Styles = {
     open Style;
@@ -388,6 +406,16 @@ module View = {
         let count = Array.length(model.items);
         let contentHeight = count * rowHeight;
 
+  let isScrollAnimated = isScrollAnimated(model);
+
+    let ((scrollY, _setScrollYImmediately), hooks) =
+      Hooks.spring(
+        ~target=model.scrollY,
+        ~restThreshold=10.,
+        ~enabled=isScrollAnimated,
+        Animation.scrollSpring,
+        hooks
+      );
         let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
           let delta =
             wheelEvent.deltaY *. float(- Constants.scrollWheelMultiplier);
@@ -424,7 +452,7 @@ module View = {
                 maximumValue={float_of_int(maxHeight)}
                 sliderLength=viewportHeight
                 thumbLength=thumbHeight
-                value={model.scrollY}
+                value={scrollY}
                 trackThickness=Constants.scrollBarThickness
                 thumbThickness=Constants.scrollBarThickness
                 minimumTrackColor=Revery.Colors.transparentBlack
@@ -449,7 +477,7 @@ module View = {
             ~viewportHeight,
             ~rowHeight,
             ~count,
-            ~scrollTop=int_of_float(model.scrollY),
+            ~scrollTop=int_of_float(scrollY),
             ~render,
           )
           |> React.listToElement;
