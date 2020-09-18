@@ -48,9 +48,10 @@ let setHits = (hits, model) => {
   ...model,
   hits,
   resultsList:
-    Component_VimList.set(hits 
-    |> ListEx.safeMap(matchToLocListItem)
-    |> Array.of_list, model.resultsList),
+    Component_VimList.set(
+      hits |> ListEx.safeMap(matchToLocListItem) |> Array.of_list,
+      model.resultsList,
+    ),
 };
 
 // UPDATE
@@ -267,7 +268,7 @@ let make =
         </View>
       </View>
     </View>
-    <View style=Styles.resultsPane(~isFocused=false, ~theme)>
+    <View style={Styles.resultsPane(~isFocused=false, ~theme)}>
       <Text text="TOP" />
       <Component_VimList.View
         theme
@@ -279,11 +280,11 @@ let make =
             theme
             uiFont
             editorFont
-            onMouseOver={(_)  => ()}
-            onMouseOut={(_)  => ()}
-            isHovered={false}
+            onMouseOver={_ => ()}
+            onMouseOut={_ => ()}
+            isHovered=false
             item
-            onSelect={(_) => ()}
+            onSelect={_ => ()}
             workingDirectory
           />
         }

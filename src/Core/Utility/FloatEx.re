@@ -9,4 +9,3 @@
  * Assumes `hi` is larger than `lo`
  */
 let clamp = (n, ~hi, ~lo) => max(lo, min(hi, n));
-
