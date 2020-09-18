@@ -644,6 +644,9 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
         | None => (model'.focus, UnhandledWindowMovement(outmsg))
         | Some(focus) => (focus, Nothing)
         }
+
+      | PreviousTab
+      | NextTab => (model'.focus, Nothing)
       };
     ({...model', focus}, outmsg);
   };

@@ -8,6 +8,7 @@ type focusable =
   | FileExplorer
   | SCM
   | Search
+  | Pane
   | Sneak
   | Modal
   | InsertRegister
