@@ -4,6 +4,8 @@
       "getting-started/why-onivim",
       "getting-started/installation",
       "getting-started/vim-differences",
+      "getting-started/vim-tips",
+      "getting-started/vscode-tips",
       "getting-started/modal-editing-101"
     ],
     "Basic Usage": [
