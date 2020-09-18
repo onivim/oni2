@@ -8,6 +8,7 @@ type model('item) = {
   scrollY: float,
   rowHeight: int,
   items: array('item),
+  hovered: option(int),
   focused: option(int),
   initialRowsToRender: int,
 };
@@ -16,6 +17,7 @@ let create = (~rowHeight) => {
   scrollY: 0.,
   rowHeight,
   items: [||],
+  hovered: None,
   focused: None,
   initialRowsToRender: 10,
 };
@@ -34,7 +36,9 @@ type command =
 type msg =
   | Command(command)
   | MouseWheelScrolled({delta: float})
-  | ScrollbarMoved({scrollY: float});
+  | ScrollbarMoved({scrollY: float})
+  | MouseOver({index: int})
+  | MouseOut({index: int});
 
 type outmsg =
   | Nothing;
@@ -56,11 +60,24 @@ let setScrollY = (~scrollY, model) => {
 let update = (msg, model) => {
   switch (msg) {
   | Command(_) => (model, Nothing)
+
   | MouseWheelScrolled({delta}) => (
       model |> setScrollY(~scrollY=model.scrollY +. delta),
       Nothing,
     )
   | ScrollbarMoved({scrollY}) => (model |> setScrollY(~scrollY), Nothing)
+
+  | MouseOver({index}) => ({...model, hovered: Some(index)}, Nothing)
+
+  | MouseOut({index}) =>
+    let model' =
+      if (Some(index) == model.hovered) {
+        {...model, hovered: None};
+      } else {
+        model;
+      };
+
+    (model', Nothing);
   };
 };
 
@@ -182,6 +199,9 @@ module View = {
   let renderHelper =
       (
         ~items,
+        ~hovered,
+        ~onMouseOver,
+        ~onMouseOut,
         ~viewportWidth,
         ~viewportHeight,
         ~rowHeight,
@@ -205,10 +225,14 @@ module View = {
         let rowY = (i - startRow) * rowHeight;
         let offset = rowY - startY;
 
-        <View style={Styles.item(~offset, ~rowHeight)}>
+        <View
+          onMouseOver={_ => onMouseOver(i)}
+          onMouseOut={_ => onMouseOut(i)}
+          style={Styles.item(~offset, ~rowHeight)}>
           {render(
              ~availableWidth=viewportWidth,
              ~index=i,
+             ~hovered=hovered == Some(i),
              ~focused=false,
              items[i],
            )}
@@ -228,7 +252,13 @@ module View = {
       //    ~scrollY: float,
       ~dispatch: msg => unit,
       //    ~rowHeight: float,
-      ~render: (~availableWidth: int, ~index: int, ~focused: bool, 'item) =>
+      ~render: (
+                 ~availableWidth: int,
+                 ~index: int,
+                 ~hovered: bool,
+                 ~focused: bool,
+                 'item
+               ) =>
                Revery.UI.element,
       unit
     ) =>
@@ -250,6 +280,14 @@ module View = {
             wheelEvent.deltaY *. float(- Constants.scrollWheelMultiplier);
 
           dispatch(MouseWheelScrolled({delta: delta}));
+        };
+
+        let onMouseOver = idx => {
+          dispatch(MouseOver({index: idx}));
+        };
+
+        let onMouseOut = idx => {
+          dispatch(MouseOut({index: idx}));
         };
 
         let scrollbar = {
@@ -284,7 +322,10 @@ module View = {
         };
         let items =
           renderHelper(
+            ~hovered=model.hovered,
             ~items=model.items,
+            ~onMouseOver,
+            ~onMouseOut,
             ~viewportWidth,
             ~viewportHeight,
             ~rowHeight,

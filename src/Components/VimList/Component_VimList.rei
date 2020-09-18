@@ -48,7 +48,13 @@ module View: {
       ~dispatch: msg => unit,
       //    ~rowHeight: float,
       //      ~render: 'item => Revery.UI.element,
-      ~render: (~availableWidth: int, ~index: int, ~focused: bool, 'item) =>
+      ~render: (
+                 ~availableWidth: int,
+                 ~index: int,
+                 ~hovered: bool,
+                 ~focused: bool,
+                 'item
+               ) =>
                Revery.UI.element,
       unit
     ) =>

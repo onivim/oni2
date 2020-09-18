@@ -274,7 +274,7 @@ let make =
         theme
         model={model.resultsList}
         dispatch={msg => dispatch(ResultsList(msg))}
-        render={(~availableWidth, ~index as _, ~focused as _, item) =>
+        render={(~availableWidth, ~index as _, ~hovered, ~focused as _, item) =>
           <LocationListItem.View
             width=availableWidth
             theme
@@ -282,7 +282,7 @@ let make =
             editorFont
             onMouseOver={_ => ()}
             onMouseOut={_ => ()}
-            isHovered=false
+            isHovered=hovered
             item
             onSelect={_ => ()}
             workingDirectory
