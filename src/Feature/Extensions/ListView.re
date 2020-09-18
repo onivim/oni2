@@ -10,6 +10,17 @@ module Styles = {
   open Style;
   let container = [flexDirection(`Column), flexGrow(1), overflow(`Hidden)];
   let inputContainer = [margin(12)];
+
+  let resultsContainer = (~isFocused, theme) => {
+    let focusColor =
+      isFocused
+        ? Colors.focusBorder.from(theme) : Revery.Colors.transparentWhite;
+    [
+      flexDirection(`Column),
+      flexGrow(1),
+      border(~color=focusColor, ~width=1),
+    ];
+  };
 };
 
 type state = {
@@ -142,29 +153,31 @@ let%component make =
 
   let userExtensions =
     Model.getExtensions(~category=Scanner.User, model) |> Array.of_list;
+  let isInstalledFocused = isFocused && model.focusedWindow == Installed;
+  let isBundledFocused = isFocused && model.focusedWindow == Bundled;
   let contents =
     if (Component_InputText.isEmpty(model.searchText)) {
       [
         <Accordion
           title="Installed"
-          expanded=installedExpanded
+          expanded={installedExpanded || isInstalledFocused}
           uiFont=font
           renderItem={renderInstalled(userExtensions)}
           rowHeight=ItemView.Constants.itemHeight
           count={Array.length(userExtensions)}
-          isFocused=false
+          isFocused=isInstalledFocused
           focused=None
           theme
           onClick={_ => localDispatch(InstalledTitleClicked)}
         />,
         <Accordion
           title="Bundled"
-          expanded=bundledExpanded
+          expanded={bundledExpanded || isBundledFocused}
           uiFont=font
           renderItem={renderBundled(bundledExtensions)}
           rowHeight=ItemView.Constants.itemHeight
           count={Array.length(bundledExtensions)}
-          isFocused=false
+          isFocused=isBundledFocused
           focused=None
           theme
           onClick={_ => localDispatch(BundledTitleClicked)}
@@ -209,13 +222,19 @@ let%component make =
            })
         |> Array.of_list;
 
-      <FlatList
-        rowHeight=ItemView.Constants.itemHeight
-        theme
-        focused=None
-        count={Array.length(results)}>
-        ...{idx => results[idx]}
-      </FlatList>;
+      <View
+        style={Styles.resultsContainer(
+          ~isFocused={isFocused && model.focusedWindow != SearchText},
+          theme,
+        )}>
+        <FlatList
+          rowHeight=ItemView.Constants.itemHeight
+          theme
+          focused=None
+          count={Array.length(results)}>
+          ...{idx => results[idx]}
+        </FlatList>
+      </View>;
     };
 
   let isBusy = Model.isSearchInProgress(model) || Model.isBusy(model);
@@ -229,7 +248,7 @@ let%component make =
     <View style=Styles.inputContainer>
       <Component_InputText.View
         model={model.searchText}
-        isFocused
+        isFocused={isFocused && model.focusedWindow == SearchText}
         fontFamily={font.family}
         fontSize={font.size}
         dispatch={msg => dispatch(Model.SearchText(msg))}
