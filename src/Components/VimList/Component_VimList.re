@@ -10,6 +10,8 @@ type model('item) = {
   items: array('item),
   hovered: option(int),
   focused: int,
+  viewportHeight: int,
+  viewportWidth: int,
   initialRowsToRender: int,
 };
 
@@ -19,6 +21,8 @@ let create = (~rowHeight) => {
   items: [||],
   hovered: None,
   focused: 0,
+  viewportHeight: 1,
+  viewportWidth: 1,
   initialRowsToRender: 10,
 };
 
@@ -38,10 +42,10 @@ type command =
   | CursorToBottom // G
   | CursorDown // j
   | CursorUp // k
-  | Select;
-//  | ScrollCursorCenter // zz
-//  | ScrollCursorBottom // zb
-//  | ScrollCursorTop; // zt
+  | Select
+  | ScrollCursorCenter // zz
+  | ScrollCursorBottom // zb
+  | ScrollCursorTop; // zt
 
 [@deriving show]
 type msg =
@@ -50,7 +54,11 @@ type msg =
   | ScrollbarMoved({scrollY: float})
   | MouseOver({index: int})
   | MouseOut({index: int})
-  | MouseClicked({index: int});
+  | MouseClicked({index: int})
+  | ViewDimensionsChanged({
+      heightInPixels: int,
+      widthInPixels: int,
+    });
 
 type outmsg =
   | Nothing
@@ -59,6 +67,24 @@ type outmsg =
 let set = (items, model) => {...model, items};
 
 // UPDATE
+
+let ensureFocusedVisible = model => {
+  let yPosition = float(model.focused * model.rowHeight);
+
+  let rowHeightF = float(model.rowHeight);
+  let viewportHeightF = float(model.viewportHeight);
+
+  let scrollY' =
+    if (yPosition < model.scrollY) {
+      yPosition;
+    } else if (yPosition +. rowHeightF > model.scrollY +. viewportHeightF) {
+      yPosition -. (viewportHeightF -. rowHeightF);
+    } else {
+      model.scrollY;
+    };
+
+  {...model, scrollY: scrollY'};
+};
 
 let setFocus = (~focus, model) => {
   let count = model.items |> Array.length;
@@ -71,7 +97,7 @@ let setFocus = (~focus, model) => {
       focus;
     };
 
-  {...model, focused: focus'};
+  {...model, focused: focus'} |> ensureFocusedVisible;
 };
 
 let setScrollY = (~scrollY, model) => {
@@ -100,6 +126,38 @@ let update = (msg, model) => {
 
   | Command(CursorDown) => (
       model |> setFocus(~focus=model.focused + 1),
+      Nothing,
+    )
+
+  | Command(ScrollCursorTop) => (
+      model |> setScrollY(~scrollY=float(model.focused * model.rowHeight)),
+      Nothing,
+    )
+
+  | Command(ScrollCursorBottom) => (
+      model
+      |> setScrollY(
+           ~scrollY=
+             float(
+               model.focused
+               * model.rowHeight
+               - (model.viewportHeight - model.rowHeight),
+             ),
+         ),
+      Nothing,
+    )
+
+  | Command(ScrollCursorCenter) => (
+      model
+      |> setScrollY(
+           ~scrollY=
+             float(
+               model.focused
+               * model.rowHeight
+               - (model.viewportHeight - model.rowHeight)
+               / 2,
+             ),
+         ),
       Nothing,
     )
 
@@ -139,6 +197,15 @@ let update = (msg, model) => {
       };
 
     (model', Nothing);
+
+  | ViewDimensionsChanged({heightInPixels, widthInPixels}) => (
+      {
+        ...model,
+        viewportWidth: widthInPixels,
+        viewportHeight: heightInPixels,
+      },
+      Nothing,
+    )
   };
 };
 
@@ -152,9 +219,9 @@ module Commands = {
   let j = define("vim.list.j", Command(CursorDown));
   let k = define("vim.list.k", Command(CursorUp));
   let enter = define("vim.list.enter", Command(Select));
-  //  let zz = define("vim.list.zz", Command(ScrollCursorCenter));
-  //  let zb = define("vim.list.zb", Command(ScrollCursorBottom));
-  //  let zt = define("vim.list.zt", Command(ScrollCursorTop));
+  let zz = define("vim.list.zz", Command(ScrollCursorCenter));
+  let zb = define("vim.list.zb", Command(ScrollCursorBottom));
+  let zt = define("vim.list.zt", Command(ScrollCursorTop));
 };
 
 module ContextKeys = {
@@ -176,22 +243,10 @@ module Keybindings = {
       {key: "j", command: Commands.j.id, condition: commandCondition},
       {key: "k", command: Commands.k.id, condition: commandCondition},
       {key: "<CR>", command: Commands.enter.id, condition: commandCondition},
+      {key: "zz", command: Commands.zz.id, condition: commandCondition},
+      {key: "zb", command: Commands.zb.id, condition: commandCondition},
+      {key: "zt", command: Commands.zt.id, condition: commandCondition},
     ];
-  //      {
-  //        key: "zz",
-  //        command: Commands.zz.id,
-  //        condition: commandCondition,
-  //      },
-  //      {
-  //        key: "zb",
-  //        command: Commands.zb.id,
-  //        condition: commandCondition,
-  //      },
-  //      {
-  //        key: "zt",
-  //        command: Commands.zt.id,
-  //        condition: commandCondition,
-  //      },
 };
 
 module Contributions = {
@@ -199,10 +254,7 @@ module Contributions = {
 
   let keybindings = Keybindings.keybindings;
 
-  let commands = Commands.[gg, g, j, k, enter];
-  //    zz,
-  //    zb,
-  //    zt
+  let commands = Commands.[gg, g, j, k, enter, zz, zb, zt];
 };
 
 // VIEW
@@ -331,15 +383,10 @@ module View = {
     _ =
     (~theme, ~model, ~dispatch, ~render, ()) => {
       component(hooks => {
-        let rowHeight = model.rowHeight;
-        let (
-          ((viewportWidth, viewportHeight), setViewportDimensions),
-          hooks,
-        ) =
-          Hooks.state((100, rowHeight * model.initialRowsToRender), hooks);
+        let {rowHeight, viewportWidth, viewportHeight, _} = model;
 
         let count = Array.length(model.items);
-        let contentHeight = count * model.rowHeight;
+        let contentHeight = count * rowHeight;
 
         let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
           let delta =
@@ -411,7 +458,12 @@ module View = {
           <View
             style=Style.[flexGrow(1)]
             onDimensionsChanged={({height, width}) => {
-              setViewportDimensions(_ => (width, height))
+              dispatch(
+                ViewDimensionsChanged({
+                  widthInPixels: width,
+                  heightInPixels: height,
+                }),
+              )
             }}>
             <View
               style={Styles.container(

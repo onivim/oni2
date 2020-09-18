@@ -143,7 +143,7 @@ module View = {
     };
 
     <View style=Styles.clickable>
-      <View style={Styles.result(~theme, ~isHovered)} >
+      <View style={Styles.result(~theme, ~isHovered)}>
         <location />
         <content />
       </View>

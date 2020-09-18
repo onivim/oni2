@@ -88,20 +88,19 @@ let%component make =
        );
 
   let renderItem = i => {
-//    let onMouseOver = _ => setHovered(_ => i);
-//    let onMouseOut = _ => setHovered(hovered => i == hovered ? (-1) : hovered);
-
     <LocationListItem.View
       theme
       uiFont
       editorFont
-//      onMouseOver
-//      onMouseOut
       width
+      //    let onMouseOver = _ => setHovered(_ => i);
+      //    let onMouseOut = _ => setHovered(hovered => i == hovered ? (-1) : hovered);
+      //      onMouseOver
+      //      onMouseOut
       isHovered={hovered == i}
       item={Array.get(items, i)}
-//      onSelect=onSelectItem
       workingDirectory
+      //      onSelect=onSelectItem
     />;
   };
 
