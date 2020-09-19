@@ -52,3 +52,5 @@ Vim is an amazing modal editor, but it lacks a modern UI, and requires significa
 Sublime shows that you can have a modern, beautiful UI without sacrificing performance - but limited extensibility and modal editing capability.
 
 Each of these editors embodies some of the core principles we value, but none embody them all - and that's why we're building Onivim: a beautiful, fast, and modern modal editor.
+
+See something in the docs you want to change [edit](https://github.com/onivim/oni2/edit/master/docs/docs/getting-started/why-onivim.md)
