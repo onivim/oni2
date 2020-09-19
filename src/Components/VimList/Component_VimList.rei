@@ -18,6 +18,8 @@ let create: (~rowHeight: int) => model('item);
 
 let get: (int, model('item)) => option('item);
 
+let count: model('item) => int;
+
 type outmsg =
   | Nothing
   | Selected({index: int});

@@ -34,7 +34,6 @@ let make:
     ~editorFont: Service_Font.font,
     ~isFocused: bool,
     ~model: model,
-    ~onSelectResult: (string, CharacterPosition.t) => unit,
     ~dispatch: msg => unit,
     ~workingDirectory: string,
     unit

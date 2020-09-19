@@ -253,14 +253,10 @@ let make =
       ~editorFont,
       ~isFocused,
       ~model,
-      ~onSelectResult,
       ~dispatch,
       ~workingDirectory,
       (),
     ) => {
-  let onSelectItem = (item: LocationListItem.t) =>
-    onSelectResult(item.file, item.location);
-
   <View style=Styles.pane>
     <View style={Styles.queryPane(~theme)}>
       <View style=Styles.row>

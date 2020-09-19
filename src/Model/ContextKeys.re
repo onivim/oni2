@@ -100,7 +100,8 @@ let other =
     ],
   );
 
-let all = (focus: Focus.focusable) => {
+let all = (state: State.t) => {
+  let focus = FocusManager.current(state);
   let sideBarContext =
     Feature_SideBar.Contributions.contextKeys(
       // TODO: Replace with Focus.SideBar once state has moved
@@ -127,7 +128,10 @@ let all = (focus: Focus.focusable) => {
     );
 
   let paneContextKeys =
-    Feature_Pane.Contributions.contextKeys(~isFocused=focus == Focus.Pane);
+    Feature_Pane.Contributions.contextKeys(
+      ~isFocused=focus == Focus.Pane,
+      state.pane,
+    );
 
   unionMany([
     Feature_Registers.Contributions.contextKeys(

@@ -1,8 +1,6 @@
 open Oni_Core;
 open Utility;
 
-open Oni_Components;
-
 // MODEL
 
 [@deriving show]
@@ -56,6 +54,8 @@ let get = (index, {items, _}) => {
     Some(items[index]);
   };
 };
+
+let count = ({items, _}) => Array.length(items);
 
 [@deriving show]
 type command =
@@ -362,7 +362,6 @@ module Contributions = {
 // VIEW
 
 module View = {
-  open Revery;
   open Revery.UI;
   open Revery.UI.Components;
 
