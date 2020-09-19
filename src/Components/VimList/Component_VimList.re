@@ -470,12 +470,7 @@ module View = {
     (
       ~theme: ColorTheme.Colors.t,
       ~model: model('item),
-      //    ~uniqueId: 'item => 'key,
-      //    ~focused: 'key,
-      //~searchText: option('item => string),
-      //    ~scrollY: float,
       ~dispatch: msg => unit,
-      //    ~rowHeight: float,
       ~render: (
                  ~availableWidth: int,
                  ~index: int,
