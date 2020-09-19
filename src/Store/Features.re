@@ -45,6 +45,8 @@ module Internal = {
           | FocusRight => Actions.Layout(Feature_Layout.Msg.moveRight)
           | FocusUp => Actions.Layout(Feature_Layout.Msg.moveUp)
           | FocusDown => Actions.Layout(Feature_Layout.Msg.moveDown)
+          | PreviousTab => Actions.Noop
+          | NextTab => Actions.Noop
           }
         )
         |> dispatch
@@ -377,6 +379,10 @@ let update =
         state,
         Internal.openFileEffect(~position=Some(position), filePath),
       )
+    | UnhandledWindowMovement(windowMovement) => (
+        state,
+        Internal.unhandledWindowMotionEffect(windowMovement),
+      )
     };
 
   | Registers(msg) =>
@@ -674,6 +680,8 @@ let update =
 
     let focus =
       switch (FocusManager.current(state)) {
+      | Pane => Some(Bottom)
+
       | Editor
       | Terminal(_) => Some(Center)
 
@@ -698,7 +706,11 @@ let update =
 
     | Focus(Bottom) =>
       let pane = state.pane |> Feature_Pane.selected;
-      ({...state, pane: Feature_Pane.show(~pane, state.pane)}, Effect.none);
+      (
+        {...state, pane: Feature_Pane.show(~pane, state.pane)}
+        |> FocusManager.push(Pane),
+        Effect.none,
+      );
 
     | SplitAdded => ({...state, zenMode: false}, Effect.none)
 

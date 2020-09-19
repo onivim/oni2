@@ -29,9 +29,12 @@ type msg =
     })
   | Command(command)
   | ResizeHandleDragged(int)
-  | ResizeCommitted;
+  | ResizeCommitted
+  | KeyPressed(string)
+  | VimWindowNav(Component_VimWindows.msg);
 
 module Msg = {
+  let keyPressed = key => KeyPressed(key);
   let resizeHandleDragged = v => ResizeHandleDragged(v);
   let resizeCommitted = ResizeCommitted;
 };
@@ -41,13 +44,15 @@ type outmsg =
   | OpenFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
-    });
+    })
+  | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 type model = {
   selected: pane,
   isOpen: bool,
   height: int,
   resizeDelta: int,
+  vimWindowNavigation: Component_VimWindows.model,
 };
 
 let height = ({height, resizeDelta, _}) => {
@@ -63,6 +68,17 @@ let height = ({height, resizeDelta, _}) => {
 
 let show = (~pane, model) => {...model, isOpen: true, selected: pane};
 let close = model => {...model, isOpen: false};
+
+module Focus = {
+  let toggleTab = model => {
+    let pane =
+      switch (model.selected) {
+      | Diagnostics => Notifications
+      | Notifications => Diagnostics
+      };
+    {...model, selected: pane};
+  };
+};
 
 let update = (msg, model) =>
   switch (msg) {
@@ -95,6 +111,24 @@ let update = (msg, model) =>
     } else {
       ({...model, height, resizeDelta: 0}, Nothing);
     };
+
+  | KeyPressed(_) => (model, Nothing)
+
+  | VimWindowNav(navMsg) =>
+    let (vimWindowNavigation, outmsg) =
+      Component_VimWindows.update(navMsg, model.vimWindowNavigation);
+
+    let model' = {...model, vimWindowNavigation};
+
+    switch (outmsg) {
+    | Nothing => (model', Nothing)
+    | FocusLeft
+    | FocusRight
+    | FocusDown
+    | FocusUp => (model', UnhandledWindowMovement(outmsg))
+    | NextTab => (model' |> Focus.toggleTab, Nothing)
+    | PreviousTab => (model' |> Focus.toggleTab, Nothing)
+    };
   };
 
 let initial = {
@@ -102,6 +136,8 @@ let initial = {
   resizeDelta: 0,
   selected: Notifications,
   isOpen: false,
+
+  vimWindowNavigation: Component_VimWindows.initial,
 };
 
 let selected = ({selected, _}) => selected;
@@ -188,12 +224,35 @@ module View = {
   module Styles = {
     open Style;
 
-    let pane = (~theme, ~height) => [
-      flexDirection(`Column),
-      Style.height(height),
-      borderTop(~color=Colors.Panel.border.from(theme), ~width=1),
-      backgroundColor(Colors.Panel.background.from(theme)),
-    ];
+    let pane = (~isFocused, ~theme, ~height) => {
+      let common = [
+        flexDirection(`Column),
+        Style.height(height),
+        borderTop(
+          ~color=
+            isFocused
+              ? Colors.focusBorder.from(theme)
+              : Colors.Panel.border.from(theme),
+          ~width=1,
+        ),
+        backgroundColor(Colors.Panel.background.from(theme)),
+      ];
+
+      if (isFocused) {
+        [
+          boxShadow(
+            ~xOffset=0.,
+            ~yOffset=-4.,
+            ~blurRadius=isFocused ? 8. : 0.,
+            ~spreadRadius=0.,
+            ~color=Revery.Color.rgba(0., 0., 0., 0.5),
+          ),
+          ...common,
+        ];
+      } else {
+        common;
+      };
+    };
 
     let header = [flexDirection(`Row), justifyContent(`SpaceBetween)];
 
@@ -253,6 +312,7 @@ module View = {
   };
   let make =
       (
+        ~isFocused,
         ~theme,
         ~uiFont,
         ~editorFont,
@@ -278,7 +338,7 @@ module View = {
       <View />;
     } else {
       let height = height(pane);
-      <View style={Styles.pane(~theme, ~height)}>
+      <View style={Styles.pane(~isFocused, ~theme, ~height)}>
         <View style=Styles.resizer>
           <ResizeHandle.Horizontal
             onDrag={delta =>
@@ -350,7 +410,26 @@ module Keybindings = {
 };
 
 module Contributions = {
-  let commands = Commands.[problems];
+  let commands = (~isFocused) => {
+    let common = Commands.[problems];
+    let vimWindowCommands =
+      Component_VimWindows.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)));
+    isFocused ? common @ vimWindowCommands : common;
+  };
+
+  open WhenExpr.ContextKeys.Schema;
+  let contextKeys = (~isFocused) => {
+    let vimNavKeys =
+      isFocused ? Component_VimWindows.Contributions.contextKeys : [];
+
+    [
+      vimNavKeys
+      |> fromList
+      |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),
+    ]
+    |> unionMany;
+  };
 
   let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];
 };

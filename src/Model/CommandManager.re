@@ -20,6 +20,13 @@ let current = state => {
     )
     |> Command.Lookup.fromList
     |> Command.Lookup.map(msg => Actions.Search(msg)),
+    Feature_Pane.Contributions.commands(
+      ~isFocused={
+        focus == Focus.Pane;
+      },
+    )
+    |> Command.Lookup.fromList
+    |> Command.Lookup.map(msg => Actions.Pane(msg)),
     Feature_SCM.Contributions.commands(
       ~isFocused={
         focus == Focus.SCM;

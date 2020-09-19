@@ -18,9 +18,11 @@ type outmsg =
   | OpenFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
-    });
+    })
+  | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 module Msg: {
+  let keyPressed: string => msg;
   let resizeHandleDragged: int => msg;
   let resizeCommitted: msg;
 };
@@ -30,7 +32,8 @@ type model;
 let update: (msg, model) => (model, outmsg);
 
 module Contributions: {
-  let commands: list(Command.t(msg));
+  let commands: (~isFocused: bool) => list(Command.t(msg));
+  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
   let keybindings: list(Oni_Input.Keybindings.keybinding);
 };
 
@@ -48,6 +51,7 @@ let close: model => model;
 module View: {
   let make:
     (
+      ~isFocused: bool,
       ~theme: Oni_Core.ColorTheme.Colors.t,
       ~uiFont: Oni_Core.UiFont.t,
       ~editorFont: Service_Font.font,
