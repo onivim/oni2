@@ -191,6 +191,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
         {React.listToElement(surfaceComponents)}
       </View>
       <Feature_Pane.View
+        isFocused={FocusManager.current(state) == Focus.Pane}
         theme
         uiFont
         editorFont

@@ -150,6 +150,9 @@ let update = (model, msg) => {
       } else {
         (model', Some(UnhandledWindowMovement(outmsg)));
       }
+    // TODO: What should tabs do for search? Toggle sidebar panes?
+    | PreviousTab
+    | NextTab => (model', None)
     };
 
   | ResultsList(listMsg) =>

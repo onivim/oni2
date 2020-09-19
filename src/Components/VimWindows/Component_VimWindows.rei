@@ -21,7 +21,9 @@ type outmsg =
   | FocusLeft
   | FocusRight
   | FocusUp
-  | FocusDown;
+  | FocusDown
+  | PreviousTab
+  | NextTab;
 
 // UPDATE
 
