@@ -55,7 +55,7 @@ module View: {
       ~theme: Oni_Core.ColorTheme.Colors.t,
       ~uiFont: Oni_Core.UiFont.t,
       ~editorFont: Service_Font.font,
-      ~diagnostics: Feature_LanguageSupport.Diagnostics.t,
+      ~diagnostics: Feature_Diagnostics.model,
       ~notifications: Feature_Notification.model,
       ~dispatch: msg => unit,
       ~notificationDispatch: Feature_Notification.msg => unit,

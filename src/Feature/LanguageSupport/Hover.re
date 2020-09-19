@@ -288,7 +288,8 @@ module Popup = {
       let defaultLanguage =
         buffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
-      let hoverDiagnostic = (~diagnostic: Diagnostic.t, ()) => {
+      let hoverDiagnostic =
+          (~diagnostic: Feature_Diagnostics.Diagnostic.t, ()) => {
         <Text
           text={diagnostic.message}
           fontFamily={editorFont.fontFamily}
@@ -325,7 +326,7 @@ module Popup = {
            };
 
            let diagnostics =
-             Diagnostics.getDiagnosticsAtPosition(
+             Feature_Diagnostics.getDiagnosticsAtPosition(
                diagnostics,
                buffer,
                location,

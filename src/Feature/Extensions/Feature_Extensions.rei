@@ -28,7 +28,8 @@ type outmsg =
   | NotifySuccess(string)
   | NotifyFailure(string)
   | OpenExtensionDetails
-  | SelectTheme({themes: list(Exthost.Extension.Contributions.Theme.t)});
+  | SelectTheme({themes: list(Exthost.Extension.Contributions.Theme.t)})
+  | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 let pick: (Exthost.Extension.Manifest.t => 'a, model) => list('a);
 
@@ -47,8 +48,6 @@ let all: model => list(Scanner.ScanResult.t);
 let activatedIds: model => list(string);
 
 let menus: model => list(Menu.Schema.definition);
-let commands: model => list(Command.t(msg));
-
 let sub: (~setup: Oni_Core.Setup.t, model) => Isolinear.Sub.t(msg);
 
 module Persistence: {
@@ -96,5 +95,6 @@ module DetailsView: {
 };
 
 module Contributions: {
+  let commands: (~isFocused: bool, model) => list(Command.t(msg));
   let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
 };

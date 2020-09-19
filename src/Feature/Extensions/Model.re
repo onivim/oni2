@@ -39,7 +39,8 @@ type msg =
   | RemoteExtensionSelected({
       extensionInfo: Service_Extensions.Catalog.Details.t,
     })
-  | RemoteExtensionUnableToFetchDetails({errorMsg: string});
+  | RemoteExtensionUnableToFetchDetails({errorMsg: string})
+  | VimWindowNav(Component_VimWindows.msg);
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -59,7 +60,8 @@ type outmsg =
   | NotifySuccess(string)
   | NotifyFailure(string)
   | OpenExtensionDetails
-  | SelectTheme({themes: list(Exthost.Extension.Contributions.Theme.t)});
+  | SelectTheme({themes: list(Exthost.Extension.Contributions.Theme.t)})
+  | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 module Selected = {
   open Exthost_Extension;
@@ -115,6 +117,33 @@ module Effect = {
 
 type extensionState = {isRestartRequired: bool};
 
+module Focus = {
+  type t =
+    | SearchText
+    | Installed
+    | Bundled;
+
+  let initial = SearchText;
+
+  let moveDown = (~isSearching, focus) => {
+    switch (focus) {
+    | SearchText => Some(Installed)
+    | Installed when isSearching => None
+    | Installed => Some(Bundled)
+    | Bundled => None
+    };
+  };
+
+  let moveUp = (~isSearching, focus) => {
+    switch (focus) {
+    | SearchText => None
+    | Installed => Some(SearchText)
+    | Bundled when isSearching => None
+    | Bundled => Some(Installed)
+    };
+  };
+};
+
 type model = {
   selected: option(Selected.t),
   activatedIds: list(string),
@@ -127,6 +156,8 @@ type model = {
   globalValues: Yojson.Safe.t,
   localValues: Yojson.Safe.t,
   extensionState: StringMap.t(extensionState),
+  focusedWindow: Focus.t,
+  vimWindowNavigation: Component_VimWindows.model,
 };
 
 module Persistence = {
@@ -151,6 +182,9 @@ let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => 
   globalValues: globalPersistence,
   localValues: workspacePersistence,
   extensionState: StringMap.empty,
+
+  focusedWindow: Focus.initial,
+  vimWindowNavigation: Component_VimWindows.initial,
 };
 
 let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
@@ -524,5 +558,31 @@ let update = (~extHostClient, msg, model) => {
            ),
          ),
        )
+
+  | VimWindowNav(navMsg) =>
+    let (windowNav, outmsg) =
+      Component_VimWindows.update(navMsg, model.vimWindowNavigation);
+
+    let model' = {...model, vimWindowNavigation: windowNav};
+    let isSearching = !Component_InputText.isEmpty(model.searchText);
+    let focusedWindow = model'.focusedWindow;
+
+    let (focus, outmsg) =
+      switch (outmsg) {
+      | Nothing => (focusedWindow, Nothing)
+      | FocusLeft => (focusedWindow, UnhandledWindowMovement(outmsg))
+      | FocusRight => (focusedWindow, UnhandledWindowMovement(outmsg))
+      | FocusDown =>
+        switch (Focus.moveDown(~isSearching, focusedWindow)) {
+        | None => (focusedWindow, UnhandledWindowMovement(outmsg))
+        | Some(focus) => (focus, Nothing)
+        }
+      | FocusUp =>
+        switch (Focus.moveUp(~isSearching, focusedWindow)) {
+        | None => (focusedWindow, UnhandledWindowMovement(outmsg))
+        | Some(focus) => (focus, Nothing)
+        }
+      };
+    ({...model', focusedWindow: focus}, outmsg);
   };
 };

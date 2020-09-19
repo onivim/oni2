@@ -182,6 +182,10 @@ let update =
       };
     (state, eff);
 
+  | Diagnostics(msg) =>
+    let diagnostics = Feature_Diagnostics.update(msg, state.diagnostics);
+    ({...state, diagnostics}, Isolinear.Effect.none);
+
   | Exthost(msg) =>
     let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
 
@@ -223,6 +227,11 @@ let update =
         | SelectTheme({themes}) =>
           let eff = Internal.setThemesEffect(~themes);
           (state, eff);
+
+        | UnhandledWindowMovement(movement) => (
+            state,
+            Internal.unhandledWindowMotionEffect(movement),
+          )
 
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =
