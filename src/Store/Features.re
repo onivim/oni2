@@ -228,6 +228,11 @@ let update =
           let eff = Internal.setThemesEffect(~themes);
           (state, eff);
 
+        | UnhandledWindowMovement(movement) => (
+            state,
+            Internal.unhandledWindowMotionEffect(movement),
+          )
+
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =
             Internal.notificationEffect(
