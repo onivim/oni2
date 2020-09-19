@@ -178,7 +178,7 @@ let update = (msg, model) =>
     entries
     |> List.fold_left(
          (acc, curr: DiagnosticEntry.t) => {
-           change(model, curr.uri, curr.owner, curr.diagnostics)
+           change(acc, curr.uri, curr.owner, curr.diagnostics)
          },
          model,
        )
