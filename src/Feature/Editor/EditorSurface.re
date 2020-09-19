@@ -17,8 +17,8 @@ module Config = EditorConfiguration;
 
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Diagnostics = Feature_Diagnostics;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Constants = {
   include Constants;
@@ -232,7 +232,8 @@ let%component make =
           editor,
         );
 
-  let diagnosticsMap = Diagnostics.getDiagnosticsMap(diagnostics, buffer);
+  let diagnosticsMap =
+    Feature_Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =
     editor
     |> Editor.selection

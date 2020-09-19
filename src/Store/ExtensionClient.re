@@ -4,7 +4,6 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 module ExtensionDocumentSymbolProvider = {
@@ -45,24 +44,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         ),
       ),
     );
-  };
-
-  let onDiagnosticsChangeMany =
-      (owner: string, entries: list(Exthost.Msg.Diagnostics.entry)) => {
-    let protocolDiagToDiag: Exthost.Diagnostic.t => Diagnostic.t =
-      d => {
-        let range = Exthost.OneBasedRange.toRange(d.range);
-        let message = d.message;
-        Diagnostic.create(~range, ~message, ());
-      };
-
-    let f = (d: Exthost.Msg.Diagnostics.entry) => {
-      let diagnostics = List.map(protocolDiagToDiag, snd(d));
-      let uri = fst(d);
-      Actions.DiagnosticsSet(uri, owner, diagnostics);
-    };
-
-    entries |> List.map(f) |> List.iter(a => dispatch(a));
   };
   open Exthost;
   open Exthost.Extension;
@@ -122,11 +103,12 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
-      | Diagnostics(Clear({owner})) =>
-        dispatch(Actions.DiagnosticsClear(owner));
-        Lwt.return(Reply.okEmpty);
-      | Diagnostics(ChangeMany({owner, entries})) =>
-        onDiagnosticsChangeMany(owner, entries);
+      | Diagnostics(diagnosticMsg) =>
+        dispatch(
+          Actions.Diagnostics(
+            Feature_Diagnostics.Msg.exthost(diagnosticMsg),
+          ),
+        );
         Lwt.return(Reply.okEmpty);
 
       | DocumentContentProvider(documentContentProviderMsg) =>

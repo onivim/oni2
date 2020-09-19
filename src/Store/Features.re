@@ -182,6 +182,10 @@ let update =
       };
     (state, eff);
 
+  | Diagnostics(msg) =>
+    let diagnostics = Feature_Diagnostics.update(msg, state.diagnostics);
+    ({...state, diagnostics}, Isolinear.Effect.none);
+
   | Exthost(msg) =>
     let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
 

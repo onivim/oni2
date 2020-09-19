@@ -9,7 +9,6 @@ open Oni_Input;
 open Oni_Syntax;
 
 module KeyDisplayer = Oni_Components.KeyDisplayer;
-module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 type windowDisplayMode =
@@ -30,7 +29,7 @@ type t = {
   config: Feature_Configuration.model,
   configuration: Configuration.t,
   decorations: Feature_Decorations.model,
-  diagnostics: Diagnostics.t,
+  diagnostics: Feature_Diagnostics.model,
   editorFont: Service_Font.font,
   input: Feature_Input.model,
   messages: Feature_Messages.model,
@@ -122,7 +121,7 @@ let initial =
     config,
     configuration: Configuration.default,
     decorations: Feature_Decorations.initial,
-    diagnostics: Diagnostics.create(),
+    diagnostics: Feature_Diagnostics.initial,
     input: Feature_Input.initial,
     quickmenu: None,
     editorFont: Service_Font.default,
