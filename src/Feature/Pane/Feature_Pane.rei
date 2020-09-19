@@ -32,8 +32,9 @@ type model;
 let update: (msg, model) => (model, outmsg);
 
 module Contributions: {
-  let commands: (~isFocused: bool) => list(Command.t(msg));
-  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
+  let commands: (~isFocused: bool, model) => list(Command.t(msg));
+  let contextKeys:
+    (~isFocused: bool, model) => WhenExpr.ContextKeys.Schema.t(model);
   let keybindings: list(Oni_Input.Keybindings.keybinding);
 };
 
@@ -48,6 +49,8 @@ let show: (~pane: pane, model) => model;
 let toggle: (~pane: pane, model) => model;
 let close: model => model;
 
+let setDiagnostics: (Feature_Diagnostics.model, model) => model;
+
 module View: {
   let make:
     (
@@ -55,11 +58,11 @@ module View: {
       ~theme: Oni_Core.ColorTheme.Colors.t,
       ~uiFont: Oni_Core.UiFont.t,
       ~editorFont: Service_Font.font,
-      ~diagnostics: Feature_Diagnostics.model,
       ~notifications: Feature_Notification.model,
       ~dispatch: msg => unit,
       ~notificationDispatch: Feature_Notification.msg => unit,
       ~pane: model,
+      ~workingDirectory: string,
       unit
     ) =>
     Revery.UI.element;

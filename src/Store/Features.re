@@ -184,7 +184,14 @@ let update =
 
   | Diagnostics(msg) =>
     let diagnostics = Feature_Diagnostics.update(msg, state.diagnostics);
-    ({...state, diagnostics}, Isolinear.Effect.none);
+    (
+      {
+        ...state,
+        diagnostics,
+        pane: Feature_Pane.setDiagnostics(diagnostics, state.pane),
+      },
+      Isolinear.Effect.none,
+    );
 
   | Exthost(msg) =>
     let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
@@ -429,6 +436,11 @@ let update =
     | Some(Feature_Search.Focus) => (
         FocusManager.push(Focus.Search, state),
         Effect.none,
+      )
+
+    | Some(OpenFile({filePath, location})) => (
+        state,
+        Internal.openFileEffect(~position=Some(location), filePath),
       )
     | Some(UnhandledWindowMovement(windowMovement)) => (
         state,

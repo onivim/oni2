@@ -29,6 +29,7 @@ let current = state => {
       ~isFocused={
         focus == Focus.Pane;
       },
+      state.pane,
     )
     |> Command.Lookup.fromList
     |> Command.Lookup.map(msg => Actions.Pane(msg)),
