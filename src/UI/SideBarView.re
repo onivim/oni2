@@ -101,10 +101,6 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
       />;
 
     | Search =>
-      let onSelectResult = (file, location) =>
-        GlobalContext.current().dispatch(
-          Actions.OpenFileByPath(file, None, Some(location)),
-        );
       let dispatch = msg =>
         GlobalContext.current().dispatch(Actions.Search(msg));
 
@@ -114,8 +110,8 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
         uiFont={state.uiFont}
         editorFont={state.editorFont}
         model={state.searchPane}
-        onSelectResult
         dispatch
+        workingDirectory={state.workspace.workingDirectory}
       />;
 
     | Extensions =>

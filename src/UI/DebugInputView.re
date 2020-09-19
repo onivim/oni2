@@ -19,10 +19,8 @@ module Styles = {
 };
 
 let make = (~state: Model.State.t, ()) => {
-  let focused = Model.FocusManager.current(state);
-
   let contextKeys =
-    WhenExpr.ContextKeys.fromSchema(Model.ContextKeys.all(focused), state)
+    WhenExpr.ContextKeys.fromSchema(Model.ContextKeys.all(state), state)
     |> WhenExpr.ContextKeys.values
     |> List.map(((keyName, value)) => {
          Printf.sprintf("%s: %s", keyName, WhenExpr.Value.asString(value))
