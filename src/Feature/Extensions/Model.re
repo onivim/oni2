@@ -582,6 +582,9 @@ let update = (~extHostClient, msg, model) => {
         | None => (focusedWindow, UnhandledWindowMovement(outmsg))
         | Some(focus) => (focus, Nothing)
         }
+
+      | PreviousTab
+      | NextTab => (focusedWindow, Nothing)
       };
     ({...model', focusedWindow: focus}, outmsg);
   };
