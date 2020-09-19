@@ -6,8 +6,6 @@
 
 open Oni_Model;
 
-module Diagnostics = Feature_LanguageSupport.Diagnostics;
-
 let reduce: (State.t, Actions.t) => State.t =
   (s, a) =>
     switch (a) {
@@ -26,14 +24,6 @@ let reduce: (State.t, Actions.t) => State.t =
       switch (a) {
       // Turn off zenMode with :vsp/:sp
       | OpenFileByPath(_, Some(_), _) => {...s, zenMode: false}
-      | DiagnosticsSet(buffer, key, diags) => {
-          ...s,
-          diagnostics: Diagnostics.change(s.diagnostics, buffer, key, diags),
-        }
-      | DiagnosticsClear(key) => {
-          ...s,
-          diagnostics: Diagnostics.clear(s.diagnostics, key),
-        }
       | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetGrammarRepository(grammarRepository) => {...s, grammarRepository}

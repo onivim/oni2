@@ -276,13 +276,13 @@ module View = {
         ~editorFont,
         ~onSelectFile,
         ~notificationDispatch,
-        ~diagnostics: Feature_LanguageSupport.Diagnostics.t,
+        ~diagnostics: Feature_Diagnostics.model,
         ~notifications: Feature_Notification.model,
         (),
       ) =>
     switch (selected) {
     | Diagnostics =>
-      <Feature_LanguageSupport.Diagnostics.View
+      <Feature_Diagnostics.View
         diagnostics
         theme
         uiFont
@@ -316,7 +316,7 @@ module View = {
         ~theme,
         ~uiFont,
         ~editorFont,
-        ~diagnostics: Feature_LanguageSupport.Diagnostics.t,
+        ~diagnostics: Feature_Diagnostics.model,
         ~notifications: Feature_Notification.model,
         ~dispatch: msg => unit,
         ~notificationDispatch: Feature_Notification.msg => unit,
