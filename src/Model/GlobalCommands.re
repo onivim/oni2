@@ -69,16 +69,6 @@ module Oni = {
       Command("oni.changelog"),
     );
 
-  module Explorer = {
-    let toggle =
-      register(
-        ~category="View",
-        ~title="Toggle File Explorer visibility",
-        "explorer.toggle", // use workbench.action.toggleSidebarVisibility instead?
-        Actions.ActivityBar(ActivityBar.FileExplorerClick),
-      );
-  };
-
   module KeyDisplayer = {
     let disable =
       register(

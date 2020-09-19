@@ -474,19 +474,27 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Effect.none)
+    | PopFocus => (state |> FocusManager.push(Editor), Effect.none)
     | Focus =>
       let state' =
         Feature_SideBar.(
           switch (sideBar' |> Feature_SideBar.selected) {
           | FileExplorer => state |> FocusManager.push(Focus.FileExplorer)
-          | SCM => state |> FocusManager.push(Focus.SCM)
+          | SCM =>
+            {...state, scm: Feature_SCM.resetFocus(state.scm)}
+            |> FocusManager.push(Focus.SCM)
           | Search =>
             {
               ...state,
               searchPane: Feature_Search.resetFocus(state.searchPane),
             }
             |> FocusManager.push(Focus.Search)
-          | Extensions => state |> FocusManager.push(Focus.Extensions)
+          | Extensions =>
+            {
+              ...state,
+              extensions: Feature_Extensions.resetFocus(state.extensions),
+            }
+            |> FocusManager.push(Focus.Extensions)
           }
         );
       (

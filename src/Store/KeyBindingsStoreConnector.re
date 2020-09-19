@@ -138,12 +138,6 @@ let start = maybeKeyBindingsFilePath => {
           command: Commands.List.select.id,
           condition: "listFocus" |> WhenExpr.parse,
         },
-        // Search commands
-        {
-          key: "<S-C-B>",
-          command: Commands.Oni.Explorer.toggle.id,
-          condition: "editorTextFocus" |> WhenExpr.parse,
-        },
         {
           key: "<D-Z>",
           command: Commands.undo.id,

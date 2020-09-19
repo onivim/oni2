@@ -160,6 +160,8 @@ type model = {
   vimWindowNavigation: Component_VimWindows.model,
 };
 
+let resetFocus = model => {...model, focusedWindow: Focus.initial};
+
 module Persistence = {
   type t = Yojson.Safe.t;
   let initial = `Assoc([]);

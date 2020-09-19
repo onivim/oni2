@@ -10,7 +10,11 @@ type location =
 
 [@deriving show]
 type command =
-  | OpenSearch;
+  | OpenExplorerPane
+  | OpenSearchPane
+  | OpenSCMPane
+  | OpenExtensionsPane
+  | ToggleVisibility;
 
 [@deriving show]
 type msg =
@@ -38,7 +42,8 @@ type model = {
 
 type outmsg =
   | Nothing
-  | Focus;
+  | Focus
+  | PopFocus;
 
 let selected = ({selected, _}) => selected;
 let isOpen = ({isOpen, _}) => isOpen;
@@ -101,10 +106,28 @@ let update = (msg, model) =>
       };
     (model', Nothing);
 
-  | Command(OpenSearch) => (
+  | Command(OpenExplorerPane) => (
+      {...model, isOpen: true, selected: FileExplorer},
+      Focus,
+    )
+
+  | Command(OpenSCMPane) => ({...model, isOpen: true, selected: SCM}, Focus)
+
+  | Command(OpenExtensionsPane) => (
+      {...model, isOpen: true, selected: Extensions},
+      Focus,
+    )
+
+  | Command(OpenSearchPane) => (
       {...model, isOpen: true, selected: Search},
       Focus,
     )
+
+  | Command(ToggleVisibility) =>
+    // If we were open, and we are going to close, we should pop focus...
+    // Otherwise, if we are opening, we need to acquire focus.
+    let eff = model.isOpen ? PopFocus : Focus;
+    ({...model, shouldSnapShut: true, isOpen: !model.isOpen}, eff);
   };
 
 let isVisible = (pane, model) => {
@@ -144,12 +167,44 @@ let setDefaults = (state, settings) => {
 module Commands = {
   open Feature_Commands.Schema;
 
-  let findInFiles =
+  let openSearchPane =
     define(
       ~category="Search",
       ~title="Find in Files",
       "workbench.action.findInFiles",
-      Command(OpenSearch),
+      Command(OpenSearchPane),
+    );
+
+  let openExtensionsPane =
+    define(
+      ~category="Extensions",
+      ~title="Open Extensions Pane",
+      "workbench.view.extensions",
+      Command(OpenExtensionsPane),
+    );
+
+  let openExplorerPane =
+    define(
+      ~category="Explorer",
+      ~title="Open File Explorer Pane",
+      "workbench.view.explorer",
+      Command(OpenExplorerPane),
+    );
+
+  let openSCMPane =
+    define(
+      ~category="Source Control",
+      ~title="Open Source Control Pane",
+      "workbench.view.scm",
+      Command(OpenSCMPane),
+    );
+
+  let toggleSidebar =
+    define(
+      ~category="View",
+      ~title="Toggle Sidebar Visibility",
+      "workbench.action.toggleSidebarVisibility",
+      Command(ToggleVisibility),
     );
 };
 
@@ -158,13 +213,56 @@ module Keybindings = {
 
   let findInFiles = {
     key: "<S-C-F>",
-    command: Commands.findInFiles.id,
+    command: Commands.openSearchPane.id,
     condition: "!isMac" |> WhenExpr.parse,
   };
 
   let findInFilesMac = {
     key: "<D-S-F>",
-    command: Commands.findInFiles.id,
+    command: Commands.openSearchPane.id,
+    condition: "isMac" |> WhenExpr.parse,
+  };
+
+  let openExtensions = {
+    key: "<S-C-X>",
+    command: Commands.openExtensionsPane.id,
+    condition: "!isMac" |> WhenExpr.parse,
+  };
+
+  let openExtensionsMac = {
+    key: "<D-S-X>",
+    command: Commands.openExtensionsPane.id,
+    condition: "isMac" |> WhenExpr.parse,
+  };
+
+  let openExplorer = {
+    key: "<S-C-E>",
+    command: Commands.openExplorerPane.id,
+    condition: "!isMac" |> WhenExpr.parse,
+  };
+
+  let openExplorerMac = {
+    key: "<D-S-E>",
+    command: Commands.openExplorerPane.id,
+    condition: "isMac" |> WhenExpr.parse,
+  };
+
+  // This keybinding is used in both MacOS & Windows
+  let openSCM = {
+    key: "<S-C-G>",
+    command: Commands.openSCMPane.id,
+    condition: WhenExpr.Value(True),
+  };
+
+  let toggleSidebar = {
+    key: "<C-B>",
+    command: Commands.toggleSidebar.id,
+    condition: "!isMac" |> WhenExpr.parse,
+  };
+
+  let toggleSidebarMac = {
+    key: "<D-B>",
+    command: Commands.toggleSidebar.id,
     condition: "isMac" |> WhenExpr.parse,
   };
 };
@@ -180,9 +278,27 @@ module ContextKeys = {
 };
 
 module Contributions = {
-  let commands = Commands.[findInFiles];
+  let commands =
+    Commands.[
+      openSearchPane,
+      openExplorerPane,
+      openExtensionsPane,
+      openSCMPane,
+      toggleSidebar,
+    ];
 
-  let keybindings = Keybindings.[findInFiles, findInFilesMac];
+  let keybindings =
+    Keybindings.[
+      findInFiles,
+      findInFilesMac,
+      openExtensions,
+      openExtensionsMac,
+      openExplorer,
+      openExplorerMac,
+      toggleSidebar,
+      toggleSidebarMac,
+      openSCM,
+    ];
 
   let contextKeys = (~isFocused) => {
     let common = ContextKeys.[sideBarVisible];

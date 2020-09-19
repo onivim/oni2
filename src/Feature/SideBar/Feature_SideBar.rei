@@ -18,7 +18,11 @@ type model;
 
 [@deriving show]
 type command =
-  | OpenSearch;
+  | OpenExplorerPane
+  | OpenSearchPane
+  | OpenSCMPane
+  | OpenExtensionsPane
+  | ToggleVisibility;
 
 [@deriving show]
 type msg =
@@ -28,7 +32,8 @@ type msg =
 
 type outmsg =
   | Nothing
-  | Focus;
+  | Focus
+  | PopFocus;
 
 let update: (msg, model) => (model, outmsg);
 
