@@ -9,9 +9,14 @@ type location =
   | Right;
 
 [@deriving show]
+type command =
+  | OpenSearch;
+
+[@deriving show]
 type msg =
   | ResizeInProgress(int)
-  | ResizeCommitted;
+  | ResizeCommitted
+  | Command(command);
 
 module Constants = {
   let defaultWidth = 225;
@@ -30,6 +35,10 @@ type model = {
   shouldSnapShut: bool,
   location,
 };
+
+type outmsg =
+  | Nothing
+  | Focus;
 
 let selected = ({selected, _}) => selected;
 let isOpen = ({isOpen, _}) => isOpen;
@@ -67,24 +76,35 @@ let width = ({width, resizeDelta, isOpen, location, shouldSnapShut, _}) =>
 let update = (msg, model) =>
   switch (msg) {
   | ResizeInProgress(delta) =>
-    if (model.isOpen) {
-      {...model, resizeDelta: delta};
-    } else {
-      {
-        ...model,
-        width: 0,
-        resizeDelta: delta,
-        isOpen: true,
-        shouldSnapShut: false,
+    let model' =
+      if (model.isOpen) {
+        {...model, resizeDelta: delta};
+      } else {
+        {
+          ...model,
+          width: 0,
+          resizeDelta: delta,
+          isOpen: true,
+          shouldSnapShut: false,
+        };
       };
-    }
+
+    (model', Nothing);
+
   | ResizeCommitted =>
     let newWidth = width(model);
-    if (newWidth == 0) {
-      {...model, isOpen: false, shouldSnapShut: true, resizeDelta: 0};
-    } else {
-      {...model, width: newWidth, shouldSnapShut: true, resizeDelta: 0};
-    };
+    let model' =
+      if (newWidth == 0) {
+        {...model, isOpen: false, shouldSnapShut: true, resizeDelta: 0};
+      } else {
+        {...model, width: newWidth, shouldSnapShut: true, resizeDelta: 0};
+      };
+    (model', Nothing);
+
+  | Command(OpenSearch) => (
+      {...model, isOpen: true, selected: Search},
+      Focus,
+    )
   };
 
 let isVisible = (pane, model) => {
@@ -121,6 +141,34 @@ let setDefaults = (state, settings) => {
   setDefaultVisibility(state, sideBarVisibility);
 };
 
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let findInFiles =
+    define(
+      ~category="Search",
+      ~title="Find in Files",
+      "workbench.action.findInFiles",
+      Command(OpenSearch),
+    );
+};
+
+module Keybindings = {
+  open Oni_Input.Keybindings;
+
+  let findInFiles = {
+    key: "<S-C-F>",
+    command: Commands.findInFiles.id,
+    condition: "!isMac" |> WhenExpr.parse,
+  };
+
+  let findInFilesMac = {
+    key: "<D-S-F>",
+    command: Commands.findInFiles.id,
+    condition: "isMac" |> WhenExpr.parse,
+  };
+};
+
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
 
@@ -132,6 +180,10 @@ module ContextKeys = {
 };
 
 module Contributions = {
+  let commands = Commands.[findInFiles];
+
+  let keybindings = Keybindings.[findInFiles, findInFilesMac];
+
   let contextKeys = (~isFocused) => {
     let common = ContextKeys.[sideBarVisible];
 

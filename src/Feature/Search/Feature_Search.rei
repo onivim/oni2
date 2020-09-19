@@ -24,6 +24,8 @@ type outmsg =
 
 let update: (model, msg) => (model, option(outmsg));
 
+let resetFocus: model => model;
+
 let subscriptions:
   (Ripgrep.t, msg => unit, model) => list(Subscription.t(msg));
 

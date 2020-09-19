@@ -226,14 +226,6 @@ module Workbench = {
     let closeQuickOpen =
       register("workbench.action.closeQuickOpen", QuickmenuClose);
 
-    let findInFiles =
-      register(
-        ~category="Search",
-        ~title="Find in Files",
-        "workbench.action.findInFiles",
-        SearchHotkey,
-      );
-
     let zoomIn =
       register(
         ~category="View",

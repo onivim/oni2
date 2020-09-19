@@ -469,8 +469,36 @@ let update =
     };
 
   | SideBar(msg) =>
-    let sideBar' = Feature_SideBar.update(msg, state.sideBar);
-    ({...state, sideBar: sideBar'}, Effect.none);
+    let (sideBar', outmsg) = Feature_SideBar.update(msg, state.sideBar);
+    let state = {...state, sideBar: sideBar'};
+
+    switch (outmsg) {
+    | Nothing => (state, Effect.none)
+    | Focus =>
+      let state' =
+        Feature_SideBar.(
+          switch (sideBar' |> Feature_SideBar.selected) {
+          | FileExplorer => state |> FocusManager.push(Focus.FileExplorer)
+          | SCM => state |> FocusManager.push(Focus.SCM)
+          | Search =>
+            {
+              ...state,
+              searchPane: Feature_Search.resetFocus(state.searchPane),
+            }
+            |> FocusManager.push(Focus.Search)
+          | Extensions => state |> FocusManager.push(Focus.Extensions)
+          }
+        );
+      (
+        {
+          ...state',
+          // When the sidebar acquires focus, zen-mode should be disabled
+          zenMode: false,
+        },
+        Effect.none,
+      );
+    };
+
   | Sneak(msg) =>
     let (model, maybeOutmsg) = Feature_Sneak.update(state.sneak, msg);
 

@@ -18,6 +18,8 @@ type model = {
   resultsList: Component_VimList.model(LocationListItem.t),
 };
 
+let resetFocus = model => {...model, focus: FindInput};
+
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
   query: "",

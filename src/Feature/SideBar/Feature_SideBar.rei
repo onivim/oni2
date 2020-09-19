@@ -1,3 +1,5 @@
+open Oni_Core;
+
 type pane =
   | FileExplorer
   | SCM
@@ -8,14 +10,27 @@ type location =
   | Left
   | Right;
 
+// MODEL
+
 type model;
+
+// UPDATE
+
+[@deriving show]
+type command =
+  | OpenSearch;
 
 [@deriving show]
 type msg =
   | ResizeInProgress(int)
-  | ResizeCommitted;
+  | ResizeCommitted
+  | Command(command);
 
-let update: (msg, model) => model;
+type outmsg =
+  | Nothing
+  | Focus;
+
+let update: (msg, model) => (model, outmsg);
 
 let initial: model;
 
@@ -37,6 +52,8 @@ type settings = {
 let setDefaults: (model, settings) => model;
 
 module Contributions: {
+  let commands: list(Command.t(msg));
+  let keybindings: list(Oni_Input.Keybindings.keybinding);
   let contextKeys:
     (~isFocused: bool) => list(WhenExpr.ContextKeys.Schema.entry(model));
 };
