@@ -297,7 +297,7 @@ module Sub = {
         state;
       };
 
-      let dispose = (~params as _, ~state) => {
+      let dispose = (~params as _, ~state as _) => {
         ();
       };
     });
