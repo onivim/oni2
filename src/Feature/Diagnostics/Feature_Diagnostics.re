@@ -10,6 +10,56 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
+module Diagnostic = Diagnostic;
+
+// MODEL
+
+module DiagnosticEntry = {
+  type t = {
+    uri: Uri.t,
+    owner: string,
+    diagnostics: list(Diagnostic.t),
+  };
+
+  let ofExthost =
+      (owner: string, entries: list(Exthost.Msg.Diagnostics.entry)) => {
+    let exthostDiagToDiag: Exthost.Diagnostic.t => Diagnostic.t =
+      extDiag => {
+        let range = Exthost.OneBasedRange.toRange(extDiag.range);
+        let message = extDiag.message;
+        Diagnostic.create(~range, ~message, ());
+      };
+
+    let exthostEntryToEntry: Exthost.Msg.Diagnostics.entry => t =
+      entry => {
+        let diagnostics = List.map(exthostDiagToDiag, snd(entry));
+        let uri = fst(entry);
+        {owner, uri, diagnostics};
+      };
+
+    entries |> List.map(exthostEntryToEntry);
+  };
+};
+
+[@deriving show]
+type msg =
+  | Set([@opaque] list(DiagnosticEntry.t))
+  | Clear({owner: string});
+
+module Msg = {
+  let exthost =
+    fun
+    | Exthost.Msg.Diagnostics.Clear({owner}) => Clear({owner: owner})
+    | Exthost.Msg.Diagnostics.ChangeMany({owner, entries}) =>
+      Set(DiagnosticEntry.ofExthost(owner, entries));
+
+  let diagnostics = (uri, owner, diagnostics) => {
+    Set([DiagnosticEntry.{uri, owner, diagnostics}]);
+  };
+
+  let clear = (~owner) => Clear({owner: owner});
+};
+
 /*
  * The type for diagnostics is a nested map:
  * - First level: URI
@@ -17,7 +67,7 @@ open Oni_Core.Utility;
  *   For example - TypeScript might have keys for both compiler errors and lint warnings
  * - Diagnostic list corresponding to the buffer, key pair
  */
-type t = {
+type model = {
   keyToUri: StringMap.t(Uri.t),
   diagnosticsMap: StringMap.t(StringMap.t(list(Diagnostic.t))),
   // Keep a cached count so we don't have to recalculate when
@@ -25,13 +75,15 @@ type t = {
   count: int,
 };
 
-let create = () => {
+let initial = {
   keyToUri: StringMap.empty,
   diagnosticsMap: StringMap.empty,
   count: 0,
 };
 
-let count = (diags: t) => diags.count;
+// UPDATE
+
+let count = (diags: model) => diags.count;
 
 let getKeyForUri = (uri: Uri.t) => {
   uri |> Uri.toString;
@@ -119,6 +171,19 @@ let change = (instance, uri, diagKey, diagnostics) => {
   |> _recalculateCount;
 };
 
+let update = (msg, model) =>
+  switch (msg) {
+  | Clear({owner}) => clear(model, owner)
+  | Set(entries) =>
+    entries
+    |> List.fold_left(
+         (acc, curr: DiagnosticEntry.t) => {
+           change(acc, curr.uri, curr.owner, curr.diagnostics)
+         },
+         model,
+       )
+  };
+
 let getDiagnostics = ({diagnosticsMap, _}, buffer) => {
   let f = ((_key, v)) => v;
   let bufferKey = getKeyForBuffer(buffer);
@@ -130,7 +195,7 @@ let getDiagnostics = ({diagnosticsMap, _}, buffer) => {
 
 let _value = ((_key, v)) => v;
 
-let getAllDiagnostics = (diagnostics: t) => {
+let getAllDiagnostics = (diagnostics: model) => {
   let extractBindings = map => {
     StringMap.bindings(map) |> List.map(_value) |> List.flatten;
   };

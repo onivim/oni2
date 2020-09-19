@@ -10,7 +10,12 @@ let current = state => {
   let focus = FocusManager.current(state);
   Command.Lookup.unionMany([
     Feature_Commands.all(state.commands),
-    Feature_Extensions.commands(state.extensions)
+    Feature_Extensions.Contributions.commands(
+      ~isFocused={
+        focus == Focus.Extensions;
+      },
+      state.extensions,
+    )
     |> Command.Lookup.fromList
     |> Command.Lookup.map(msg => Actions.Extensions(msg)),
     Feature_Search.Contributions.commands(

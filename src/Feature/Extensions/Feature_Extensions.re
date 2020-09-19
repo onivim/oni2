@@ -17,29 +17,6 @@ module Msg = {
 let all = ({extensions, _}) => extensions;
 let activatedIds = ({activatedIds, _}) => activatedIds;
 
-// TODO: Should be stored as proper commands instead of converting every time
-let commands = model => {
-  model.extensions
-  |> List.map((ext: Scanner.ScanResult.t) =>
-       ext.manifest.contributes.commands
-     )
-  |> List.flatten
-  |> List.map((extcmd: Contributions.Command.t) =>
-       Command.{
-         id: extcmd.command,
-         category: extcmd.category,
-         title: Some(extcmd.title |> LocalizedToken.toString),
-         icon: None,
-         isEnabledWhen: extcmd.condition,
-         msg:
-           `Arg1(
-             arg =>
-               ExecuteCommand({command: extcmd.command, arguments: [arg]}),
-           ),
-       }
-     );
-};
-
 let menus = model =>
   // Combine menu items contributed to common menus from different extensions
   List.fold_left(
@@ -111,11 +88,52 @@ let sub = (~setup, model) => {
 
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
+  // TODO: Should be stored as proper commands instead of converting every time
+  let extensionCommands = model => {
+    model.extensions
+    |> List.map((ext: Scanner.ScanResult.t) =>
+         ext.manifest.contributes.commands
+       )
+    |> List.flatten
+    |> List.map((extcmd: Contributions.Command.t) =>
+         Command.{
+           id: extcmd.command,
+           category: extcmd.category,
+           title: Some(extcmd.title |> LocalizedToken.toString),
+           icon: None,
+           isEnabledWhen: extcmd.condition,
+           msg:
+             `Arg1(
+               arg =>
+                 ExecuteCommand({command: extcmd.command, arguments: [arg]}),
+             ),
+         }
+       );
+  };
+
+  let commands = (~isFocused, model) => {
+    let extensionCommands = extensionCommands(model);
+    !isFocused
+      ? extensionCommands
+      : extensionCommands
+        @ (
+          Component_VimWindows.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
+        );
+  };
 
   let contextKeys = (~isFocused) => {
     let keys = isFocused ? Component_InputText.Contributions.contextKeys : [];
 
-    [keys |> fromList |> map(({searchText, _}: model) => searchText)]
+    let vimNavKeys =
+      isFocused ? Component_VimWindows.Contributions.contextKeys : [];
+
+    [
+      keys |> fromList |> map(({searchText, _}: model) => searchText),
+      vimNavKeys
+      |> fromList
+      |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),
+    ]
     |> unionMany;
   };
 };

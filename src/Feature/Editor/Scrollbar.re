@@ -8,7 +8,7 @@ open Revery.UI;
 open Oni_Core;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Styles = {
   open Style;

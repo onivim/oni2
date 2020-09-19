@@ -3,7 +3,7 @@
  (public_name Oni2.feature.editor)
  (inline_tests)
  (libraries Oni2.editor-core-types Oni2.core Oni2.components Oni2.exthost
-   Oni2.syntax Oni2.feature.scm Oni2.feature.theme
+   Oni2.syntax Oni2.feature.diagnostics Oni2.feature.scm Oni2.feature.theme
    Oni2.feature.language_support Oni2.feature.syntax Oni2.service.font
    Oni2.service.os Revery libvim)
  (preprocess

@@ -118,7 +118,7 @@ module Hover: {
   module Popup: {
     let make:
       (
-        ~diagnostics: Diagnostics.t,
+        ~diagnostics: Feature_Diagnostics.model,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~languageInfo: Exthost.LanguageInfo.t,
@@ -160,6 +160,4 @@ module DocumentHighlights: {
 
 // TODO: Remove
 module CompletionMeet = CompletionMeet;
-module Diagnostic = Diagnostic;
-module Diagnostics = Diagnostics;
 module LanguageFeatures = LanguageFeatures;

@@ -1,7 +1,7 @@
 open EditorCoreTypes;
 open Oni_Core;
 open TestFramework;
-open Feature_LanguageSupport;
+open Feature_Diagnostics;
 module LineNumber = EditorCoreTypes.LineNumber;
 
 describe("Diagnostics", ({describe, _}) => {
