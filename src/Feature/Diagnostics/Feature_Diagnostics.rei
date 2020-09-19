@@ -81,6 +81,7 @@ module View: {
       ~theme: ColorTheme.Colors.t,
       ~uiFont: UiFont.t,
       ~editorFont: Service_Font.font,
+      ~workingDirectory: string,
       unit
     ) =>
     Revery.UI.element;
