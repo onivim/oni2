@@ -195,11 +195,11 @@ let make = (~dispatch, ~state: State.t, ()) => {
         theme
         uiFont
         editorFont
-        diagnostics={state.diagnostics}
         notifications={state.notifications}
         dispatch={msg => dispatch(Actions.Pane(msg))}
         notificationDispatch={msg => dispatch(Actions.Notification(msg))}
         pane={state.pane}
+        workingDirectory={state.workspace.workingDirectory}
       />
     </View>
     <Overlay>

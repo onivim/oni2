@@ -68,20 +68,3 @@ let getDiagnosticsAtPosition:
 let getDiagnosticsMap: (model, Buffer.t) => IntMap.t(list(Diagnostic.t));
 
 let getAllDiagnostics: model => list((Uri.t, Diagnostic.t));
-
-module View: {
-  let make:
-    (
-      ~onSelectFile: (
-                       ~filePath: string,
-                       ~position: EditorCoreTypes.CharacterPosition.t
-                     ) =>
-                     unit,
-      ~diagnostics: model,
-      ~theme: ColorTheme.Colors.t,
-      ~uiFont: UiFont.t,
-      ~editorFont: Service_Font.font,
-      unit
-    ) =>
-    Revery.UI.element;
-};

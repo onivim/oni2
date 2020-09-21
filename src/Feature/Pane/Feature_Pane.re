@@ -23,15 +23,12 @@ type command =
 type msg =
   | TabClicked(pane)
   | CloseButtonClicked
-  | DiagnosticItemClicked({
-      filePath: string,
-      position: EditorCoreTypes.CharacterPosition.t,
-    })
   | Command(command)
   | ResizeHandleDragged(int)
   | ResizeCommitted
   | KeyPressed(string)
-  | VimWindowNav(Component_VimWindows.msg);
+  | VimWindowNav(Component_VimWindows.msg)
+  | DiagnosticsList(Component_VimList.msg);
 
 module Msg = {
   let keyPressed = key => KeyPressed(key);
@@ -53,6 +50,32 @@ type model = {
   height: int,
   resizeDelta: int,
   vimWindowNavigation: Component_VimWindows.model,
+  diagnosticsView: Component_VimList.model(Oni_Components.LocationListItem.t),
+};
+
+let diagnosticToLocList =
+    (diagWithUri: (Uri.t, Feature_Diagnostics.Diagnostic.t)) => {
+  let (uri, diag) = diagWithUri;
+  let file = Uri.toFileSystemPath(uri);
+  let location = Feature_Diagnostics.Diagnostic.(diag.range.start);
+  Oni_Components.LocationListItem.{
+    file,
+    location,
+    text: diag.message,
+    highlight: None,
+  };
+};
+
+let setDiagnostics = (diagnostics, model) => {
+  let diagLocList =
+    diagnostics
+    |> Feature_Diagnostics.getAllDiagnostics
+    |> List.map(diagnosticToLocList)
+    |> Array.of_list;
+
+  let diagnosticsView' =
+    Component_VimList.set(diagLocList, model.diagnosticsView);
+  {...model, diagnosticsView: diagnosticsView'};
 };
 
 let height = ({height, resizeDelta, _}) => {
@@ -82,10 +105,6 @@ module Focus = {
 
 let update = (msg, model) =>
   switch (msg) {
-  | DiagnosticItemClicked({filePath, position}) => (
-      model,
-      OpenFile({filePath, position}),
-    )
   | CloseButtonClicked => ({...model, isOpen: false}, Nothing)
 
   | TabClicked(pane) => ({...model, selected: pane}, Nothing)
@@ -129,6 +148,23 @@ let update = (msg, model) =>
     | NextTab => (model' |> Focus.toggleTab, Nothing)
     | PreviousTab => (model' |> Focus.toggleTab, Nothing)
     };
+
+  | DiagnosticsList(listMsg) =>
+    let (diagnosticsView, outmsg) =
+      Component_VimList.update(listMsg, model.diagnosticsView);
+
+    let eff =
+      switch (outmsg) {
+      | Component_VimList.Nothing => Nothing
+      | Component_VimList.Selected({index}) =>
+        Component_VimList.get(index, diagnosticsView)
+        |> Option.map((item: Oni_Components.LocationListItem.t) =>
+             OpenFile({filePath: item.file, position: item.location})
+           )
+        |> Option.value(~default=Nothing)
+      };
+
+    ({...model, diagnosticsView}, eff);
   };
 
 let initial = {
@@ -138,6 +174,7 @@ let initial = {
   isOpen: false,
 
   vimWindowNavigation: Component_VimWindows.initial,
+  diagnosticsView: Component_VimList.create(~rowHeight=20),
 };
 
 let selected = ({selected, _}) => selected;
@@ -274,20 +311,22 @@ module View = {
         ~theme,
         ~uiFont,
         ~editorFont,
-        ~onSelectFile,
         ~notificationDispatch,
-        ~diagnostics: Feature_Diagnostics.model,
+        ~diagnosticDispatch: Component_VimList.msg => unit,
+        ~diagnosticsList: Component_VimList.model(LocationListItem.t),
         ~notifications: Feature_Notification.model,
+        ~workingDirectory,
         (),
       ) =>
     switch (selected) {
     | Diagnostics =>
-      <Feature_Diagnostics.View
-        diagnostics
+      <DiagnosticsPaneView
+        diagnosticsList
         theme
         uiFont
         editorFont
-        onSelectFile
+        workingDirectory
+        dispatch=diagnosticDispatch
       />
     | Notifications =>
       <Feature_Notification.View.List
@@ -316,17 +355,13 @@ module View = {
         ~theme,
         ~uiFont,
         ~editorFont,
-        ~diagnostics: Feature_Diagnostics.model,
         ~notifications: Feature_Notification.model,
         ~dispatch: msg => unit,
         ~notificationDispatch: Feature_Notification.msg => unit,
         ~pane: model,
+        ~workingDirectory: string,
         (),
       ) => {
-    let onSelectFile = (~filePath, ~position) => {
-      dispatch(DiagnosticItemClicked({filePath, position}));
-    };
-
     let problemsTabClicked = () => {
       dispatch(TabClicked(Diagnostics));
     };
@@ -368,14 +403,15 @@ module View = {
         </View>
         <View style=Styles.content>
           <content
+            diagnosticsList={pane.diagnosticsView}
             selected={selected(pane)}
             theme
             uiFont
             editorFont
-            diagnostics
             notifications
             notificationDispatch
-            onSelectFile
+            diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
+            workingDirectory
           />
         </View>
       </View>;
@@ -410,23 +446,35 @@ module Keybindings = {
 };
 
 module Contributions = {
-  let commands = (~isFocused) => {
+  let commands = (~isFocused, model) => {
     let common = Commands.[problems];
     let vimWindowCommands =
       Component_VimWindows.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)));
-    isFocused ? common @ vimWindowCommands : common;
+
+    let diagnosticsCommands =
+      (
+        isFocused && model.selected == Diagnostics
+          ? Component_VimList.Contributions.commands : []
+      )
+      |> List.map(Oni_Core.Command.map(msg => DiagnosticsList(msg)));
+    isFocused ? common @ vimWindowCommands @ diagnosticsCommands : common;
   };
 
   open WhenExpr.ContextKeys.Schema;
-  let contextKeys = (~isFocused) => {
+  let contextKeys = (~isFocused, model) => {
     let vimNavKeys =
       isFocused ? Component_VimWindows.Contributions.contextKeys : [];
+
+    let vimListKeys =
+      isFocused && model.selected == Diagnostics
+        ? Component_VimList.Contributions.contextKeys : [];
 
     [
       vimNavKeys
       |> fromList
       |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),
+      vimListKeys |> fromList |> map(_ => ()),
     ]
     |> unionMany;
   };
