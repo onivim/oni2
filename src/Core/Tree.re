@@ -7,6 +7,16 @@ type t('node, 'leaf) =
     children: list(t('node, 'leaf))
 });
 
+let leaf = data => Leaf(data);
+
+let node = (~expanded=true, ~children=[], data) => {
+ Node({
+  expanded,
+  children,
+  data
+ }) 
+};
+
 [@deriving show]
 type listView('node, 'leaf) =
 | ViewLeaf({ indentationLevel: int, data: 'leaf })

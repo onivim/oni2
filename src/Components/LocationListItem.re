@@ -15,6 +15,26 @@ type t = {
   highlight: option((Index.t, Index.t)),
 };
 
+let toTrees: list(t) => list(Tree.t(string, t)) = (items: list(t)) => {
+  let fileToHits = items
+  |> List.fold_left((acc, curr) => {
+    acc
+    |> StringMap.update(curr.file, fun
+    | None => Some([curr])
+    | Some(existingList) => Some([curr, ...existingList])
+    );
+  }, StringMap.empty);
+
+  StringMap.fold((filePath, hits, acc) => {
+
+    let children = hits
+    |> List.map(Tree.leaf);
+
+    let node = Tree.node(~expanded=true, ~children, filePath);
+    [node, ...acc];
+  }, fileToHits, []);
+};
+
 module Styles = {
   open Style;
 
