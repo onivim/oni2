@@ -34,6 +34,8 @@ let create = (~rowHeight) => {
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
+let focusedIndex = ({focused, _}) => focused;
+
 let resetMultiplier = model => {...model, multiplier: 0};
 
 let applyMultiplierDigit = (digit, model) => {

@@ -477,6 +477,18 @@ module List = {
       {dark: hex("#0097fb"), light: hex("#0066BF"), hc: ref(focusBorder)},
     );
 
+  let deemphasizedForeground =
+    define("list.deemphasizedForeground", all(ref(foreground)));
+
+  let activeIndentGuide =
+    define("tree.indentGuidesStroke", all(ref(foreground)));
+
+  let inactiveIndentGuide =
+    define(
+      "tree.inactive.indentGuidesStroke",
+      all(ref(activeIndentGuide) |> transparent(0.4)),
+    );
+
   let defaults = [
     focusBackground,
     focusForeground,
@@ -485,6 +497,9 @@ module List = {
     hoverBackground,
     hoverForeground,
     highlightForeground,
+    deemphasizedForeground,
+    activeIndentGuide,
+    inactiveIndentGuide,
   ];
 };
 

@@ -15,25 +15,34 @@ type t = {
   highlight: option((Index.t, Index.t)),
 };
 
-let toTrees: list(t) => list(Tree.t(string, t)) = (items: list(t)) => {
-  let fileToHits = items
-  |> List.fold_left((acc, curr) => {
-    acc
-    |> StringMap.update(curr.file, fun
-    | None => Some([curr])
-    | Some(existingList) => Some([curr, ...existingList])
+let toTrees: list(t) => list(Tree.t(string, t)) =
+  (items: list(t)) => {
+    let fileToHits =
+      items
+      |> List.fold_left(
+           (acc, curr) => {
+             acc
+             |> StringMap.update(
+                  curr.file,
+                  fun
+                  | None => Some([curr])
+                  | Some(existingList) => Some([curr, ...existingList]),
+                )
+           },
+           StringMap.empty,
+         );
+
+    StringMap.fold(
+      (filePath, hits, acc) => {
+        let children = hits |> List.map(Tree.leaf) |> List.rev;
+
+        let node = Tree.node(~expanded=true, ~children, filePath);
+        [node, ...acc];
+      },
+      fileToHits,
+      [],
     );
-  }, StringMap.empty);
-
-  StringMap.fold((filePath, hits, acc) => {
-
-    let children = hits
-    |> List.map(Tree.leaf);
-
-    let node = Tree.node(~expanded=true, ~children, filePath);
-    [node, ...acc];
-  }, fileToHits, []);
-};
+  };
 
 module Styles = {
   open Style;
@@ -52,10 +61,10 @@ module Styles = {
     ),
   ];
 
-  let locationText = (~theme) => [
-    color(Colors.EditorLineNumber.activeForeground.from(theme)),
-    textWrap(TextWrapping.NoWrap),
-  ];
+  //  let locationText = (~theme) => [
+  //    color(Colors.EditorLineNumber.activeForeground.from(theme)),
+  //    textWrap(TextWrapping.NoWrap),
+  //  ];
 
   let snippet = (~theme, ~isHighlighted) => [
     color(
@@ -81,31 +90,26 @@ module View = {
       ) => {
     //  let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
-    let locationText =
-      Printf.sprintf(
-        "%s:%n - ",
-        Path.toRelative(~base=workingDirectory, item.file),
-        EditorCoreTypes.LineNumber.toOneBased(item.location.line),
-      );
+    //    let locationWidth = {
+    //      Revery.Draw.Text.dimensions(
+    //        ~smoothing=Revery.Font.Smoothing.default,
+    //        ~fontSize=uiFont.size,
+    //        ~fontFamily=uiFont.family,
+    //        ~fontWeight=Normal,
+    //        locationText,
+    //      ).
+    //        width;
+    //    };
 
-    let locationWidth = {
-      Revery.Draw.Text.dimensions(
-        ~smoothing=Revery.Font.Smoothing.default,
-        ~fontSize=uiFont.size,
-        ~fontFamily=uiFont.family,
-        ~fontWeight=Normal,
-        locationText,
-      ).
-        width;
-    };
+    let locationWidth = 0.;
 
-    let location = () =>
-      <Text
-        style={Styles.locationText(~theme)}
-        fontFamily={uiFont.family}
-        fontSize={uiFont.size}
-        text=locationText
-      />;
+    //    let location = () =>
+    //      <Text
+    //        style={Styles.locationText(~theme)}
+    //        fontFamily={uiFont.family}
+    //        fontSize={uiFont.size}
+    //        text=locationText
+    //      />;
 
     let content = () => {
       let unstyled = (~text, ()) =>
@@ -162,10 +166,7 @@ module View = {
     };
 
     <View style=Styles.clickable>
-      <View style={Styles.result(~theme, ~isHovered)}>
-        <location />
-        <content />
-      </View>
+      <View style={Styles.result(~theme, ~isHovered)}> <content /> </View>
     </View>;
   };
 };

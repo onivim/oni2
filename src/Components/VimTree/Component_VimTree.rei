@@ -17,8 +17,15 @@ type model('node, 'leaf);
 let create: (~rowHeight: int) => model('node, 'leaf);
 
 type nodeOrLeaf('node, 'leaf) =
-| Node({ expanded: bool, indentation: int, data: 'node })
-| Leaf({ indentation: int, data: 'leaf });
+  | Node({
+      expanded: bool,
+      indentation: int,
+      data: 'node,
+    })
+  | Leaf({
+      indentation: int,
+      data: 'leaf,
+    });
 
 // UPDATE
 
@@ -28,10 +35,11 @@ type outmsg('node, 'leaf) =
   | Collapsed('node)
   | Selected('leaf);
 
+let update:
+  (msg, model('node, 'leaf)) => (model('node, 'leaf), outmsg('node, 'leaf));
 
-let update: (msg, model('node, 'leaf)) => (model('node, 'leaf), outmsg('node, 'leaf));
-
-let set: (list(Tree.t('node, 'leaf)), model('node, 'leaf)) => model('node, 'leaf);
+let set:
+  (list(Tree.t('node, 'leaf)), model('node, 'leaf)) => model('node, 'leaf);
 
 // CONTRIBUTIONS
 
