@@ -1,7 +1,6 @@
 open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
-open Feature_LanguageSupport;
 
 // This test validates:
 // - The 'oni-dev' extension gets activated
@@ -60,7 +59,8 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags =
+          Feature_Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) > 0;
       | _ => false
       };
@@ -90,7 +90,8 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags =
+          Feature_Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) == 0;
       | _ => false
       };

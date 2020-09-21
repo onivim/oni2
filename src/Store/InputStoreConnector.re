@@ -63,6 +63,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         Actions.FileExplorer(Feature_Explorer.Msg.keyPressed(k)),
       ]
 
+    | Pane => [Actions.Pane(Feature_Pane.Msg.keyPressed(k))]
+
     | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
 
     | Terminal(id) => [
@@ -102,6 +104,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           )
 
         // No paste handling in these UIs, currently...
+        | Pane => Actions.Noop
         | Terminal(_) => Actions.Noop
         | InsertRegister
         | Sneak
@@ -184,10 +187,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
    */
   let handleKeyPress = (state: State.t, key) => {
     let context =
-      WhenExpr.ContextKeys.fromSchema(
-        Model.ContextKeys.all(Model.FocusManager.current(state)),
-        state,
-      );
+      WhenExpr.ContextKeys.fromSchema(Model.ContextKeys.all(state), state);
 
     let (keyBindings, effects) =
       Keybindings.keyDown(~context, ~key, state.keyBindings);
@@ -213,10 +213,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let handleKeyUp = (state: State.t, key) => {
     let context =
-      WhenExpr.ContextKeys.fromSchema(
-        Model.ContextKeys.all(Model.FocusManager.current(state)),
-        state,
-      );
+      WhenExpr.ContextKeys.fromSchema(Model.ContextKeys.all(state), state);
 
     //let inputKey = reveryKeyToEditorKey(key);
     let (keyBindings, effects) =

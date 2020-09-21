@@ -12,6 +12,8 @@ type result('a) = {
   highlight: list((int, int)),
 };
 
+let result = item => {item, highlight: []};
+
 let map = (f, result) => {
   item: f(result.item),
   highlight: result.highlight,

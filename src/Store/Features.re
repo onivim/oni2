@@ -45,6 +45,8 @@ module Internal = {
           | FocusRight => Actions.Layout(Feature_Layout.Msg.moveRight)
           | FocusUp => Actions.Layout(Feature_Layout.Msg.moveUp)
           | FocusDown => Actions.Layout(Feature_Layout.Msg.moveDown)
+          | PreviousTab => Actions.Noop
+          | NextTab => Actions.Noop
           }
         )
         |> dispatch
@@ -180,6 +182,17 @@ let update =
       };
     (state, eff);
 
+  | Diagnostics(msg) =>
+    let diagnostics = Feature_Diagnostics.update(msg, state.diagnostics);
+    (
+      {
+        ...state,
+        diagnostics,
+        pane: Feature_Pane.setDiagnostics(diagnostics, state.pane),
+      },
+      Isolinear.Effect.none,
+    );
+
   | Exthost(msg) =>
     let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
 
@@ -221,6 +234,11 @@ let update =
         | SelectTheme({themes}) =>
           let eff = Internal.setThemesEffect(~themes);
           (state, eff);
+
+        | UnhandledWindowMovement(movement) => (
+            state,
+            Internal.unhandledWindowMotionEffect(movement),
+          )
 
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =
@@ -377,6 +395,10 @@ let update =
         state,
         Internal.openFileEffect(~position=Some(position), filePath),
       )
+    | UnhandledWindowMovement(windowMovement) => (
+        state,
+        Internal.unhandledWindowMotionEffect(windowMovement),
+      )
     };
 
   | Registers(msg) =>
@@ -415,6 +437,11 @@ let update =
         FocusManager.push(Focus.Search, state),
         Effect.none,
       )
+
+    | Some(OpenFile({filePath, location})) => (
+        state,
+        Internal.openFileEffect(~position=Some(location), filePath),
+      )
     | Some(UnhandledWindowMovement(windowMovement)) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -427,15 +454,19 @@ let update =
       Feature_SCM.update(extHostClient, state.scm, msg);
     let state = {...state, scm: model};
 
-    let (state, eff) =
-      switch ((maybeOutmsg: Feature_SCM.outmsg)) {
-      | Focus => (FocusManager.push(Focus.SCM, state), Effect.none)
-      | Effect(eff) => (state, eff)
-      | EffectAndFocus(eff) => (FocusManager.push(Focus.SCM, state), eff)
-      | Nothing => (state, Effect.none)
-      };
-
-    (state, eff |> Effect.map(msg => Actions.SCM(msg)));
+    switch ((maybeOutmsg: Feature_SCM.outmsg)) {
+    | Focus => (FocusManager.push(Focus.SCM, state), Effect.none)
+    | Effect(eff) => (state, eff |> Effect.map(msg => Actions.SCM(msg)))
+    | EffectAndFocus(eff) => (
+        FocusManager.push(Focus.SCM, state),
+        eff |> Effect.map(msg => Actions.SCM(msg)),
+      )
+    | UnhandledWindowMovement(windowMovement) => (
+        state,
+        Internal.unhandledWindowMotionEffect(windowMovement),
+      )
+    | Nothing => (state, Effect.none)
+    };
 
   | SideBar(msg) =>
     let sideBar' = Feature_SideBar.update(msg, state.sideBar);
@@ -670,6 +701,8 @@ let update =
 
     let focus =
       switch (FocusManager.current(state)) {
+      | Pane => Some(Bottom)
+
       | Editor
       | Terminal(_) => Some(Center)
 
@@ -694,7 +727,11 @@ let update =
 
     | Focus(Bottom) =>
       let pane = state.pane |> Feature_Pane.selected;
-      ({...state, pane: Feature_Pane.show(~pane, state.pane)}, Effect.none);
+      (
+        {...state, pane: Feature_Pane.show(~pane, state.pane)}
+        |> FocusManager.push(Pane),
+        Effect.none,
+      );
 
     | SplitAdded => ({...state, zenMode: false}, Effect.none)
 

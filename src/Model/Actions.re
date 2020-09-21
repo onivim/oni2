@@ -10,7 +10,6 @@ open Oni_Input;
 open Oni_Syntax;
 
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 [@deriving show({with_path: false})]
 type t =
@@ -34,6 +33,7 @@ type t =
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
   | Decorations(Feature_Decorations.msg)
+  | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)
   | Input(Feature_Input.msg)
   | TerminalFont(Service_Font.msg)
@@ -48,8 +48,6 @@ type t =
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
-  | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
-  | DiagnosticsClear(string)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   // TODO: This should be a function call - wired up from an input feature

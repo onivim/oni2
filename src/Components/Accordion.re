@@ -16,10 +16,16 @@ module Constants = {
 module Styles = {
   open Style;
 
-  let container = expanded => [
-    flexGrow(expanded ? 1 : 0),
-    flexDirection(`Column),
-  ];
+  let container = (~isFocused, ~theme, expanded) => {
+    let focusColor =
+      isFocused
+        ? Colors.focusBorder.from(theme) : Revery.Colors.transparentWhite;
+    [
+      flexGrow(expanded ? 1 : 0),
+      flexDirection(`Column),
+      border(~color=focusColor, ~width=1),
+    ];
+  };
 
   let chevronContainer = [padding(4), flexGrow(0)];
 
@@ -68,6 +74,7 @@ let make =
       ~expanded,
       ~count,
       ~renderItem,
+      ~isFocused,
       ~focused,
       ~theme,
       ~uiFont: UiFont.t,
@@ -83,7 +90,7 @@ let make =
 
   let countForeground = Colors.ActivityBarBadge.foreground.from(theme);
 
-  <View style={Styles.container(expanded)}>
+  <View style={Styles.container(~isFocused, ~theme, expanded)}>
     <Clickable style={Styles.titleBar(theme)} onClick>
       <View style=Styles.chevronContainer>
         <Codicon

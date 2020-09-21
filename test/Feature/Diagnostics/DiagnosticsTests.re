@@ -1,7 +1,8 @@
 open EditorCoreTypes;
 open Oni_Core;
 open TestFramework;
-open Feature_LanguageSupport;
+open Feature_Diagnostics;
+module Diagnostics = Feature_Diagnostics;
 
 module LineNumber = EditorCoreTypes.LineNumber;
 
@@ -32,7 +33,7 @@ let uri2 = Buffer.getUri(buffer2);
 describe("Diagnostics", ({describe, _}) => {
   describe("count", ({test, _}) => {
     test("change single buffer, multiple keys", ({expect, _}) => {
-      let v = Diagnostics.create();
+      let v = Diagnostics.initial;
       let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
 
       expect.int(Diagnostics.count(v)).toBe(1);
@@ -45,7 +46,7 @@ describe("Diagnostics", ({describe, _}) => {
     });
 
     test("change multiple buffers, multiple keys", ({expect, _}) => {
-      let v = Diagnostics.create();
+      let v = Diagnostics.initial;
 
       let v = Diagnostics.change(v, uri1, "test_key1", singleDiagnostic);
       let v = Diagnostics.change(v, uri2, "test_key1", doubleDiagnostic);
@@ -60,7 +61,7 @@ describe("Diagnostics", ({describe, _}) => {
   describe("getDiagnostics", ({test, _}) =>
     test("no diagnostics", ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
-      let v = Diagnostics.create();
+      let v = Diagnostics.initial;
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
 
@@ -90,7 +91,7 @@ describe("Diagnostics", ({describe, _}) => {
         ),
       ];
 
-      let v = Diagnostics.create();
+      let v = Diagnostics.initial;
 
       let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
 
@@ -165,7 +166,7 @@ describe("Diagnostics", ({describe, _}) => {
     test("single diagnostic", ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
 
-      let v = Diagnostics.create();
+      let v = Diagnostics.initial;
       let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
       let v = Diagnostics.clear(v, "test_key1");
 
@@ -176,7 +177,7 @@ describe("Diagnostics", ({describe, _}) => {
     test("doesn't remove other keys", ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
 
-      let v = Diagnostics.create();
+      let v = Diagnostics.initial;
       let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
       let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
       let v = Diagnostics.clear(v, "test_key1");
@@ -190,7 +191,7 @@ describe("Diagnostics", ({describe, _}) => {
   describe("change", ({test, _}) => {
     test("simple diagnostic add", ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
-      let v = Diagnostics.create();
+      let v = Diagnostics.initial;
 
       let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
 
@@ -201,7 +202,7 @@ describe("Diagnostics", ({describe, _}) => {
 
     test("diagnostics from multiple sources", ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
-      let v = Diagnostics.create();
+      let v = Diagnostics.initial;
 
       let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
       let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);
@@ -215,7 +216,7 @@ describe("Diagnostics", ({describe, _}) => {
       "clearing diagnostic from one source doesn't clear the other source",
       ({expect, _}) => {
       let buffer = Buffer.ofLines([||]);
-      let v = Diagnostics.create();
+      let v = Diagnostics.initial;
 
       let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
       let v = Diagnostics.change(v, uri, "test_key2", doubleDiagnostic);

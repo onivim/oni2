@@ -76,7 +76,11 @@ let start =
   };
 
   let clearDiagnostics = (~dispatch) => {
-    dispatch(Actions.DiagnosticsClear(Constants.diagnosticsKey));
+    dispatch(
+      Actions.Diagnostics(
+        Feature_Diagnostics.Msg.clear(~owner=Constants.diagnosticsKey),
+      ),
+    );
   };
 
   let onError = (~dispatch, err: string) => {
@@ -91,16 +95,18 @@ let start =
          |> Result.iter(configPath => {
               let uri = Uri.fromPath(configPath);
               dispatch(
-                Actions.DiagnosticsSet(
-                  uri,
-                  Constants.diagnosticsKey,
-                  [
-                    Feature_LanguageSupport.Diagnostic.create(
-                      ~range,
-                      ~message,
-                      (),
-                    ),
-                  ],
+                Actions.Diagnostics(
+                  Feature_Diagnostics.Msg.diagnostics(
+                    uri,
+                    Constants.diagnosticsKey,
+                    [
+                      Feature_Diagnostics.Diagnostic.create(
+                        ~range,
+                        ~message,
+                        (),
+                      ),
+                    ],
+                  ),
                 ),
               );
             })

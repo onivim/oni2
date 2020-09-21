@@ -191,14 +191,15 @@ let make = (~dispatch, ~state: State.t, ()) => {
         {React.listToElement(surfaceComponents)}
       </View>
       <Feature_Pane.View
+        isFocused={FocusManager.current(state) == Focus.Pane}
         theme
         uiFont
         editorFont
-        diagnostics={state.diagnostics}
         notifications={state.notifications}
         dispatch={msg => dispatch(Actions.Pane(msg))}
         notificationDispatch={msg => dispatch(Actions.Notification(msg))}
         pane={state.pane}
+        workingDirectory={state.workspace.workingDirectory}
       />
     </View>
     <Overlay>

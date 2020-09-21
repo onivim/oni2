@@ -15,6 +15,10 @@ module Msg: {
 };
 
 type outmsg =
+  | OpenFile({
+      filePath: string,
+      location: CharacterPosition.t,
+    })
   | Focus
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
@@ -30,8 +34,8 @@ let make:
     ~editorFont: Service_Font.font,
     ~isFocused: bool,
     ~model: model,
-    ~onSelectResult: (string, CharacterPosition.t) => unit,
     ~dispatch: msg => unit,
+    ~workingDirectory: string,
     unit
   ) =>
   React.element(React.node);
