@@ -757,7 +757,13 @@ let update =
 
     | Focus(Left) => (
         Feature_SideBar.isOpen(state.sideBar)
-          ? SideBarReducer.focus(state) : state,
+          ? switch (state.sideBar |> Feature_SideBar.selected) {
+            | FileExplorer => FocusManager.push(FileExplorer, state)
+            | SCM => FocusManager.push(SCM, state)
+            | Extensions => FocusManager.push(Extensions, state)
+            | Search => FocusManager.push(Search, state)
+            }
+          : state,
         Effect.none,
       )
 

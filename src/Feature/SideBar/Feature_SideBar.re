@@ -20,7 +20,11 @@ type command =
 type msg =
   | ResizeInProgress(int)
   | ResizeCommitted
-  | Command(command);
+  | Command(command)
+  | FileExplorerClicked
+  | SearchClicked
+  | SCMClicked
+  | ExtensionsClicked;
 
 module Constants = {
   let defaultWidth = 225;
@@ -106,18 +110,22 @@ let update = (msg, model) =>
       };
     (model', Nothing);
 
+  | FileExplorerClicked
   | Command(OpenExplorerPane) => (
       {...model, isOpen: true, selected: FileExplorer},
       Focus,
     )
 
+  | SCMClicked
   | Command(OpenSCMPane) => ({...model, isOpen: true, selected: SCM}, Focus)
 
+  | ExtensionsClicked
   | Command(OpenExtensionsPane) => (
       {...model, isOpen: true, selected: Extensions},
       Focus,
     )
 
+  | SearchClicked
   | Command(OpenSearchPane) => (
       {...model, isOpen: true, selected: Search},
       Focus,

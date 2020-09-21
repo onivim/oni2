@@ -28,7 +28,11 @@ type command =
 type msg =
   | ResizeInProgress(int)
   | ResizeCommitted
-  | Command(command);
+  | Command(command)
+  | FileExplorerClicked
+  | SearchClicked
+  | SCMClicked
+  | ExtensionsClicked;
 
 type outmsg =
   | Nothing
