@@ -192,6 +192,8 @@ let make = (~dispatch, ~state: State.t, ()) => {
       </View>
       <Feature_Pane.View
         isFocused={FocusManager.current(state) == Focus.Pane}
+        iconTheme={state.iconTheme}
+        languageInfo={state.languageInfo}
         theme
         uiFont
         editorFont

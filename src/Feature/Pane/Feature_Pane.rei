@@ -56,6 +56,8 @@ module View: {
     (
       ~isFocused: bool,
       ~theme: Oni_Core.ColorTheme.Colors.t,
+      ~iconTheme: Oni_Core.IconTheme.t,
+      ~languageInfo: Exthost.LanguageInfo.t,
       ~uiFont: Oni_Core.UiFont.t,
       ~editorFont: Service_Font.font,
       ~notifications: Feature_Notification.model,

@@ -481,12 +481,15 @@ module List = {
     define("list.deemphasizedForeground", all(ref(foreground)));
 
   let activeIndentGuide =
-    define("tree.indentGuidesStroke", all(ref(foreground)));
+    define(
+      "tree.indentGuidesStroke",
+      all(ref(foreground) |> transparent(0.5)),
+    );
 
   let inactiveIndentGuide =
     define(
       "tree.inactive.indentGuidesStroke",
-      all(ref(activeIndentGuide) |> transparent(0.4)),
+      all(ref(activeIndentGuide) |> transparent(0.5)),
     );
 
   let defaults = [

@@ -322,7 +322,6 @@ let make =
               editorFont
               isHovered={hovered || focused}
               item=data
-              workingDirectory
             />
           }
         }

@@ -16,6 +16,8 @@ type model('node, 'leaf);
 
 let create: (~rowHeight: int) => model('node, 'leaf);
 
+let count: model('node, 'leaf) => int;
+
 type nodeOrLeaf('node, 'leaf) =
   | Node({
       expanded: bool,

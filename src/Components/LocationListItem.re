@@ -85,7 +85,6 @@ module View = {
         ~width,
         ~isHovered,
         ~item,
-        ~workingDirectory,
         (),
       ) => {
     //  let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
@@ -115,23 +114,35 @@ module View = {
       let unstyled = (~text, ()) =>
         <Text
           style={Styles.snippet(~theme, ~isHighlighted=false)}
-          fontFamily={editorFont.fontFamily}
-          fontSize={editorFont.fontSize}
+          fontFamily={uiFont.family}
+          fontSize={uiFont.size}
           text
         />;
 
       let highlighted = (~text, ()) =>
         <Text
           style={Styles.snippet(~theme, ~isHighlighted=true)}
-          fontFamily={editorFont.fontFamily}
-          fontSize={editorFont.fontSize}
+          fontFamily={uiFont.family}
+          fontSize={uiFont.size}
           text
         />;
 
       switch (item.highlight) {
       | Some((indexStart, indexEnd)) =>
+
+        let textWidth = 
+          Revery.Draw.Text.dimensions(
+            ~smoothing=Revery.Font.Smoothing.default,
+            ~fontSize=uiFont.size,
+            ~fontFamily=uiFont.family,
+            ~fontWeight=Normal,
+            item.text,
+          ).width;
+
+        let averageCharacterWidth = textWidth /. float(String.length(item.text));
+
         let availableWidth = float(width) -. locationWidth;
-        let maxLength = int_of_float(availableWidth /. editorFont.spaceWidth);
+        let maxLength = int_of_float(availableWidth /. averageCharacterWidth);
         let charStart = Index.toZeroBased(indexStart);
         let charEnd = Index.toZeroBased(indexEnd);
 

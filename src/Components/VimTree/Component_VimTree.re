@@ -29,6 +29,8 @@ type model('node, 'leaf) = {
   treeAsList: Component_VimList.model(Tree.listView('node, 'leaf)),
 };
 
+let count = ({treeAsList, _}) => Component_VimList.count(treeAsList);
+
 let create = (~rowHeight) => {
   activeIndentRange: None,
   rowHeight,
@@ -58,7 +60,7 @@ let calculateIndentGuides = model => {
 
   let count = model.treeAsList |> Component_VimList.count;
   let rec travel = (~direction, ~iteration, idx) =>
-    if (idx + direction <= 0 || idx + direction >= count - 1 || iteration > 250) {
+    if (idx + direction <= 0 || idx + direction >= count || iteration > 250) {
       idx;
     } else {
       switch (Component_VimList.get(idx + direction, model.treeAsList)) {
