@@ -1,12 +1,14 @@
-type tree('node, 'leaf) =
+[@deriving show]
+type t('node, 'leaf) =
 | Leaf('leaf)
 | Node({
     expanded: bool,
     data: 'node,
-    children: list(tree('node, 'leaf))
+    children: list(t('node, 'leaf))
 });
 
-type treeView('node, 'leaf) =
+[@deriving show]
+type listView('node, 'leaf) =
 | ViewLeaf({ indentationLevel: int, data: 'leaf })
 | ViewNode({
     expanded: bool,
@@ -14,7 +16,7 @@ type treeView('node, 'leaf) =
     data: 'node,
 });
 
-let toList: tree('node, 'leaf') => list(treeView('node, 'leaf)) = tree => {
+let toList: t('node, 'leaf') => list(listView('node, 'leaf)) = tree => {
     let rec loop = (acc,node, indentationLevel) => {
         switch (node) {
         | Leaf(data) => [ViewLeaf({indentationLevel, data}), ...acc]

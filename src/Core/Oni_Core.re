@@ -48,6 +48,7 @@ module Subscription = Subscription;
 module SyntaxScope = SyntaxScope;
 module ColorTheme = ColorTheme;
 module ThreadHelper = Kernel.ThreadHelper;
+module Tree = Tree;
 module Tokenizer = Tokenizer;
 module TrustedDomains = TrustedDomains;
 module UiFont = UiFont;
