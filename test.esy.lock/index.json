@@ -1,5 +1,5 @@
 {
-  "checksum": "e6f349b2f5eb1c4686df81bdc2108bdd",
+  "checksum": "3d5d661b3b6b2c335973a06de15c607e",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -140,7 +140,7 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "rebez@github:jchavarri/rebez#03fa3b7@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
-        "flex@1.2.3@d41d8cd9",
+        "flex@github:bryphe/flex#5e19b05@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#a3785f9@d41d8cd9",
         "esy-sdl2@2.0.10008@d41d8cd9", "esy-freetype2@2.9.1008@d41d8cd9",
         "esy-angle-prebuilt@1.0.0@d41d8cd9",
@@ -601,22 +601,20 @@
       "dependencies": [ "debug@3.1.0@d41d8cd9" ],
       "devDependencies": []
     },
-    "flex@1.2.3@d41d8cd9": {
-      "id": "flex@1.2.3@d41d8cd9",
+    "flex@github:bryphe/flex#5e19b05@d41d8cd9": {
+      "id": "flex@github:bryphe/flex#5e19b05@d41d8cd9",
       "name": "flex",
-      "version": "1.2.3",
+      "version": "github:bryphe/flex#5e19b05",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/flex/-/flex-1.2.3.tgz#sha1:d7c7e4c5ed9077ed85129757dc63a3c53e1a191b"
-        ]
+        "source": [ "github:bryphe/flex#5e19b05" ]
       },
       "overrides": [],
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/dune@opam:2.5.0@e0bac278",
         "@esy-ocaml/reason@3.6.2@d41d8cd9"
       ],
-      "devDependencies": []
+      "devDependencies": [ "ocaml@4.10.0@d41d8cd9" ]
     },
     "esy-tree-sitter@1.4.1@d41d8cd9": {
       "id": "esy-tree-sitter@1.4.1@d41d8cd9",
@@ -957,6 +955,7 @@
         "@opam/uutf@opam:1.0.2@4440868f", "@opam/uucp@opam:13.0.0@e9b515e0",
         "@opam/reason@opam:3.6.0@58adb39a", "@opam/re@opam:1.9.0@d4d5e13d",
         "@opam/ppxlib@opam:0.15.0@6a9d8126",
+        "@opam/ppx_optcomp@opam:v0.14.0@d77a04c2",
         "@opam/ppx_let@opam:v0.14.0@eb9b93e0",
         "@opam/ppx_inline_test@opam:v0.14.1@2e4fdd8d",
         "@opam/ppx_deriving_yojson@opam:3.5.3@253e094d",

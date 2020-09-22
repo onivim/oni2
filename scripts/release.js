@@ -7,6 +7,11 @@ let curBin = process.env["cur__bin"]
 console.log("Bin folder: " + curBin)
 console.log("Working directory: " + process.cwd())
 
+let scriptArgs = process.argv.slice(2)
+console.log("Arguments: " + scriptArgs)
+
+let codesign = scriptArgs.indexOf("--codesign") != -1
+
 const rootDirectory = process.cwd()
 const vendorDirectory = path.join(rootDirectory, "vendor")
 const releaseDirectory = path.join(rootDirectory, "_release")
@@ -21,6 +26,7 @@ const extensionsSourceDirectory = path.join(process.cwd(), "extensions")
 
 const eulaFile = path.join(process.cwd(), "Outrun-Labs-EULA-v1.1.md")
 const thirdPartyFile = path.join(process.cwd(), "ThirdPartyLicenses.txt")
+const sparkleFramework = path.join(rootDirectory, "vendor", "Sparkle-1.23.0", "Sparkle.framework")
 
 const copy = (source, dest) => {
     console.log(`Copying from ${source} to ${dest}`)
@@ -115,12 +121,17 @@ if (process.platform == "linux") {
 
     const plistFile = path.join(contentsDirectory, "Info.plist")
 
+    const numCommits = shell("git rev-list --count origin/master").replace(/(\r\n|\n|\r)/gm, "")
+    const semvers = package.version.split(".")
+    const cfBundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
+
     const plistContents = {
         CFBundleName: "Onivim2",
         CFBundleDisplayName: "Onivim 2",
         CFBundleIdentifier: "com.outrunlabs.onivim2",
         CFBundleIconFile: "Onivim2",
-        CFBundleVersion: `${package.version}`,
+        CFBundleVersion: cfBundleVersion,
+        CFBundleShortVersionString: `${package.version}`,
         CFBundlePackageType: "APPL",
         CFBundleSignature: "????",
         CFBundleExecutable: "Oni2_editor",
@@ -136,6 +147,10 @@ if (process.platform == "linux") {
         }),
         LSEnvironment: {
             ONI2_BUNDLED: "1",
+        },
+        SUFeedURL: process.env.ONI2_APPCAST_BASEURL,
+        NSAppTransportSecurity: {
+            NSAllowsLocalNetworking: true,
         },
     }
 
@@ -197,6 +212,10 @@ if (process.platform == "linux") {
     // Copy icon
     copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"))
 
+    // fs.copySync(sparkleFramework, path.join(frameworksDirectory, "Sparkle.framework"));
+
+    shell(`cp -R "${sparkleFramework}" "${path.join(frameworksDirectory, "Sparkle.framework")}"`)
+
     shell(
         `dylibbundler -b -x "${path.join(
             binaryDirectory,
@@ -209,7 +228,7 @@ if (process.platform == "linux") {
     // Make sure these are codesigned as well in codesign.sh
     // Must be kept in sync with:
     // src/scripts/osx/codesign.sh
-    const frameworksWhiteList = ["libcrypto.1.1.dylib", "libssl.1.1.dylib"]
+    const frameworksWhiteList = ["libcrypto.1.1.dylib", "libssl.1.1.dylib", "Sparkle.framework"]
 
     const disallowedFrameworks = frameworks.filter(
         (framework) =>
@@ -236,6 +255,14 @@ if (process.platform == "linux") {
         "com.apple.security.cs.allow-dyld-environment-variables": true,
     }
     fs.writeFileSync(entitlementsPath, require("plist").build(entitlementsContents))
+
+    if (codesign) {
+        const cert = fs.readFileSync("./scripts/osx/test-certificate.p12", { encoding: "base64" })
+
+        shell(
+            `OSX_P12_CERTIFICATE="${cert}" CODESIGN_PASSWORD="OutrunLabs" CERTIFICATE_NAME="Oni2" ./scripts/osx/codesign.sh`,
+        )
+    }
 
     const dmgPath = path.join(releaseDirectory, "Onivim2.dmg")
     const dmgJsonPath = path.join(releaseDirectory, "appdmg.json")
