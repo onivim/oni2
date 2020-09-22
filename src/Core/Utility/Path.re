@@ -54,6 +54,13 @@ let filename = path =>
     "";
   };
 
+let dirname = path =>
+  try(Rench.Path.dirname(path)) {
+  | Invalid_argument(_) =>
+    Log.warnf(m => m("getExtension - invalid basename: %s", path));
+    "";
+  };
+
 let getExtension = path => {
   let fileName =
     try(Rench.Path.filename(path)) {
