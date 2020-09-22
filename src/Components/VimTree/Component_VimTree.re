@@ -26,7 +26,7 @@ type activeIndentRange = {
 type model('node, 'leaf) = {
   rowHeight: int,
   activeIndentRange: option(activeIndentRange),
-  treeAsList: Component_VimList.model(Tree.listView('node, 'leaf)),
+  treeAsList: Component_VimList.model(TreeList.t('node, 'leaf)),
 };
 
 let count = ({treeAsList, _}) => Component_VimList.count(treeAsList);
@@ -76,8 +76,8 @@ let calculateIndentGuides = model => {
     |> Component_VimList.get(focusedIndex)
     |> OptionEx.flatMap(item => {
          switch (item) {
-         | Tree.ViewNode(_) => None
-         | Tree.ViewLeaf(_) =>
+         | TreeList.ViewNode(_) => None
+         | TreeList.ViewLeaf(_) =>
            let start = travel(~direction=-1, ~iteration=0, focusedIndex);
            let stop = travel(~direction=1, ~iteration=0, focusedIndex);
            Some({start, stop});
@@ -117,7 +117,7 @@ let update = (msg, model) => {
 
 let set = (trees: list(Tree.t('node, 'leaf)), model: model('node, 'leaf)) => {
   let treeAsList =
-    trees |> List.map(Tree.toList) |> List.flatten |> Array.of_list;
+    trees |> List.map(TreeList.ofTree) |> List.flatten |> Array.of_list;
 
   {
     ...model,
@@ -201,7 +201,7 @@ module View = {
         // Render actual item
         let innerView =
           switch (item) {
-          | Tree.ViewLeaf({indentationLevel, data}) => [
+          | TreeList.ViewLeaf({indentationLevel, data}) => [
               makeIndent(
                 ~isActive=isActiveIndent(index, model),
                 indentationLevel,
@@ -215,7 +215,7 @@ module View = {
               ),
             ]
 
-          | Tree.ViewNode({expanded, indentationLevel, data}) =>
+          | TreeList.ViewNode({expanded, indentationLevel, data}) =>
             let icon =
               arrow(
                 ~isOpen=expanded,
