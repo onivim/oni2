@@ -67,6 +67,64 @@ let numberToString = num => {
   num >= 10 ? "9+" : string_of_int(num);
 };
 
+module Common = {
+    
+  let make =
+      (
+        ~title,
+        //~rowHeight,
+        ~expanded,
+        ~count,
+        //~renderItem,
+        ~isFocused,
+        //~focused,
+        ~theme,
+        ~uiFont: UiFont.t,
+        ~onClick,
+        ~contents,
+        (),
+      ) => {
+    let list = expanded ? contents : React.empty;
+
+    let fgColor = Colors.SideBarSectionHeader.foreground.from(theme);
+
+    let countForeground = Colors.ActivityBarBadge.foreground.from(theme);
+
+    <View style={Styles.container(~isFocused, ~theme, expanded)}>
+      <Clickable style={Styles.titleBar(theme)} onClick>
+        <View style=Styles.chevronContainer>
+          <Codicon
+            fontSize=Constants.arrowSize
+            color=fgColor
+            icon={expanded ? Codicon.chevronDown : Codicon.chevronRight}
+          />
+        </View>
+        <View style=Style.[paddingTop(2), flexGrow(1)]>
+          <Text
+            style={Styles.title(~theme)}
+            fontFamily={uiFont.family}
+            fontSize=13.
+            fontWeight=Revery.Font.Weight.Bold
+            text=title
+          />
+        </View>
+        <View style={Styles.countContainer(~theme)}>
+          <View style=Styles.countInner>
+            <Text
+              style=Style.[color(countForeground)]
+              fontFamily={uiFont.family}
+              fontSize=10.
+              fontWeight=Revery.Font.Weight.Bold
+              text={numberToString(count)}
+            />
+          </View>
+        </View>
+      </Clickable>
+      list
+    </View>;
+  };
+}
+
 let make =
     (
       ~title,
@@ -81,45 +139,15 @@ let make =
       ~onClick,
       (),
     ) => {
-  let list =
+  let contents =
+      <FlatList rowHeight count focused theme> ...renderItem </FlatList>;
+
+  <Common
+    title
     expanded
-      ? <FlatList rowHeight count focused theme> ...renderItem </FlatList>
-      : React.empty;
-
-  let fgColor = Colors.SideBarSectionHeader.foreground.from(theme);
-
-  let countForeground = Colors.ActivityBarBadge.foreground.from(theme);
-
-  <View style={Styles.container(~isFocused, ~theme, expanded)}>
-    <Clickable style={Styles.titleBar(theme)} onClick>
-      <View style=Styles.chevronContainer>
-        <Codicon
-          fontSize=Constants.arrowSize
-          color=fgColor
-          icon={expanded ? Codicon.chevronDown : Codicon.chevronRight}
-        />
-      </View>
-      <View style=Style.[paddingTop(2), flexGrow(1)]>
-        <Text
-          style={Styles.title(~theme)}
-          fontFamily={uiFont.family}
-          fontSize=13.
-          fontWeight=Revery.Font.Weight.Bold
-          text=title
-        />
-      </View>
-      <View style={Styles.countContainer(~theme)}>
-        <View style=Styles.countInner>
-          <Text
-            style=Style.[color(countForeground)]
-            fontFamily={uiFont.family}
-            fontSize=10.
-            fontWeight=Revery.Font.Weight.Bold
-            text={numberToString(count)}
-          />
-        </View>
-      </View>
-    </Clickable>
-    list
-  </View>;
+    count
+    isFocused
+    uiFont
+    onClick 
+    contents />
 };
