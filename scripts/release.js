@@ -27,6 +27,7 @@ const extensionsSourceDirectory = path.join(process.cwd(), "extensions")
 const eulaFile = path.join(process.cwd(), "Outrun-Labs-EULA-v1.1.md")
 const thirdPartyFile = path.join(process.cwd(), "ThirdPartyLicenses.txt")
 const sparkleFramework = path.join(rootDirectory, "vendor", "Sparkle-1.23.0", "Sparkle.framework")
+const winSparkleDLL = path.join(rootDirectory, "vendor", "WinSparkle-0.7.0", "x64", "Release", "WinSparkle.dll")
 
 const copy = (source, dest) => {
     console.log(`Copying from ${source} to ${dest}`)
@@ -313,6 +314,9 @@ if (process.platform == "linux") {
         getRlsPath(),
         path.join(platformReleaseDirectory, process.platform == "win32" ? "rls.exe" : "rls"),
     )
+    if (process.platform == "win32") {
+        copy(winSparkleDLL, path.join(platformReleaseDirectory, "WinSparkle.dll"))
+    }
     const imageSourceDirectory = path.join(rootDirectory, "assets", "images")
     const iconFile = path.join(imageSourceDirectory, "oni2.ico")
     fs.copySync(iconFile, path.join(platformReleaseDirectory, "oni2.ico"))

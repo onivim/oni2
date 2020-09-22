@@ -1,12 +1,12 @@
 #include "config.h"
 
-#ifdef USE_SPARKLE
 #include <caml/alloc.h>
 #include <caml/callback.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
 #include <string.h>
 
+#ifdef USE_SPARKLE
 #import <Sparkle/Sparkle.h>
 
 #include "utils.h"
@@ -98,6 +98,77 @@ CAMLprim value oni2_SparkleCheckForUpdates(value vUpdater) {
   [updater checkForUpdates:NULL];
 
   NSLog(@"Checking for updates");
+
+  CAMLreturn(Val_unit);
+}
+
+#elif USE_WIN_SPARKLE
+
+#include "winsparkle.h"
+
+// On WinSparkle, there is no instance -- the library just uses global variables.
+// So here we just return a basic `unit`
+CAMLprim value oni2_SparkleGetSharedInstance() {
+  CAMLparam0();
+
+  CAMLreturn(Val_unit);
+}
+
+// This function doesn't make too much sense since we lose the OOP aspect on
+// Windows, so it's basically a noop.
+CAMLprim value oni2_SparkleDebugToString(value vData) {
+  CAMLparam1(vData);
+  CAMLlocal1(vStr);
+
+  vStr = caml_copy_string("Unimplemented");
+
+  CAMLreturn(vStr);
+}
+
+// Again, this function doesn't make much sense on Windows, so it's a noop.
+CAMLprim value oni2_SparkleDebugLog(value vData) {
+  CAMLparam1(vData);
+  
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value oni2_SparkleSetFeedURL(value vUpdater, value vUrlStr) {
+  CAMLparam2(vUpdater, vUrlStr);
+
+  win_sparkle_set_appcast_url(String_val(vUrlStr));
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value oni2_SparkleGetFeedURL(value vUpdater) {
+  CAMLparam1(vUpdater);
+  CAMLlocal1(vStr);
+  
+  vStr = caml_copy_string("Unimplemented");
+
+  CAMLreturn(vStr);
+}
+
+CAMLprim value oni2_SparkleSetAutomaticallyChecksForUpdates(value vUpdater, value vChecks) {
+  CAMLparam2(vUpdater, vChecks);
+
+  win_sparkle_set_automatic_check_for_updates(Bool_val(vChecks));
+
+  CAMLreturn(Val_unit);
+}
+
+CAMLprim value oni2_SparkleGetAutomaticallyChecksForUpdates(value vUpdater) {
+  CAMLparam1(vUpdater);
+
+  int checks = win_sparkle_get_automatic_check_for_updates();
+
+  CAMLreturn(Val_bool(checks));
+}
+
+CAMLprim value oni2_SparkleCheckForUpdates(value vUpdater) {
+  CAMLparam1(vUpdater);
+
+  win_sparkle_check_update_with_ui();
 
   CAMLreturn(Val_unit);
 }

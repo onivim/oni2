@@ -2,7 +2,7 @@
 "config.h";
 
 %ifdef
-USE_SPARKLE;
+ENABLE_AUTOUPDATE;
 
 module Updater = {
   type t;
