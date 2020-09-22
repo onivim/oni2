@@ -28,7 +28,7 @@ type msg =
   | ResizeCommitted
   | KeyPressed(string)
   | VimWindowNav(Component_VimWindows.msg)
-  | DiagnosticsList(Component_VimList.msg);
+  | DiagnosticsList(Component_VimTree.msg);
 
 module Msg = {
   let keyPressed = key => KeyPressed(key);
@@ -50,7 +50,8 @@ type model = {
   height: int,
   resizeDelta: int,
   vimWindowNavigation: Component_VimWindows.model,
-  diagnosticsView: Component_VimList.model(Oni_Components.LocationListItem.t),
+  diagnosticsView:
+    Component_VimTree.model(string, Oni_Components.LocationListItem.t),
 };
 
 let diagnosticToLocList =
@@ -71,10 +72,14 @@ let setDiagnostics = (diagnostics, model) => {
     diagnostics
     |> Feature_Diagnostics.getAllDiagnostics
     |> List.map(diagnosticToLocList)
-    |> Array.of_list;
+    |> Oni_Components.LocationListItem.toTrees;
 
   let diagnosticsView' =
-    Component_VimList.set(diagLocList, model.diagnosticsView);
+    Component_VimTree.set(
+      ~uniqueId=path => path,
+      diagLocList,
+      model.diagnosticsView,
+    );
   {...model, diagnosticsView: diagnosticsView'};
 };
 
@@ -151,17 +156,15 @@ let update = (msg, model) =>
 
   | DiagnosticsList(listMsg) =>
     let (diagnosticsView, outmsg) =
-      Component_VimList.update(listMsg, model.diagnosticsView);
+      Component_VimTree.update(listMsg, model.diagnosticsView);
 
     let eff =
       switch (outmsg) {
-      | Component_VimList.Nothing => Nothing
-      | Component_VimList.Selected({index}) =>
-        Component_VimList.get(index, diagnosticsView)
-        |> Option.map((item: Oni_Components.LocationListItem.t) =>
-             OpenFile({filePath: item.file, position: item.location})
-           )
-        |> Option.value(~default=Nothing)
+      | Component_VimTree.Nothing => Nothing
+      | Component_VimTree.Selected(item) =>
+        OpenFile({filePath: item.file, position: item.location})
+      | Component_VimTree.Collapsed(_) => Nothing
+      | Component_VimTree.Expanded(_) => Nothing
       };
 
     ({...model, diagnosticsView}, eff);
@@ -174,7 +177,7 @@ let initial = {
   isOpen: false,
 
   vimWindowNavigation: Component_VimWindows.initial,
-  diagnosticsView: Component_VimList.create(~rowHeight=20),
+  diagnosticsView: Component_VimTree.create(~rowHeight=20),
 };
 
 let selected = ({selected, _}) => selected;
@@ -307,13 +310,15 @@ module View = {
   };
   let content =
       (
+        ~isFocused,
         ~selected,
         ~theme,
+        ~iconTheme,
+        ~languageInfo,
         ~uiFont,
-        ~editorFont,
         ~notificationDispatch,
-        ~diagnosticDispatch: Component_VimList.msg => unit,
-        ~diagnosticsList: Component_VimList.model(LocationListItem.t),
+        ~diagnosticDispatch: Component_VimTree.msg => unit,
+        ~diagnosticsList: Component_VimTree.model(string, LocationListItem.t),
         ~notifications: Feature_Notification.model,
         ~workingDirectory,
         (),
@@ -321,10 +326,12 @@ module View = {
     switch (selected) {
     | Diagnostics =>
       <DiagnosticsPaneView
+        isFocused
         diagnosticsList
+        iconTheme
+        languageInfo
         theme
         uiFont
-        editorFont
         workingDirectory
         dispatch=diagnosticDispatch
       />
@@ -353,8 +360,9 @@ module View = {
       (
         ~isFocused,
         ~theme,
+        ~iconTheme,
+        ~languageInfo,
         ~uiFont,
-        ~editorFont,
         ~notifications: Feature_Notification.model,
         ~dispatch: msg => unit,
         ~notificationDispatch: Feature_Notification.msg => unit,
@@ -403,11 +411,13 @@ module View = {
         </View>
         <View style=Styles.content>
           <content
+            isFocused
+            iconTheme
+            languageInfo
             diagnosticsList={pane.diagnosticsView}
             selected={selected(pane)}
             theme
             uiFont
-            editorFont
             notifications
             notificationDispatch
             diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
@@ -455,7 +465,7 @@ module Contributions = {
     let diagnosticsCommands =
       (
         isFocused && model.selected == Diagnostics
-          ? Component_VimList.Contributions.commands : []
+          ? Component_VimTree.Contributions.commands : []
       )
       |> List.map(Oni_Core.Command.map(msg => DiagnosticsList(msg)));
     isFocused ? common @ vimWindowCommands @ diagnosticsCommands : common;
@@ -468,7 +478,7 @@ module Contributions = {
 
     let vimListKeys =
       isFocused && model.selected == Diagnostics
-        ? Component_VimList.Contributions.contextKeys : [];
+        ? Component_VimTree.Contributions.contextKeys : [];
 
     [
       vimNavKeys

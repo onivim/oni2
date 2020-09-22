@@ -34,6 +34,8 @@ let create = (~rowHeight) => {
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
+let focusedIndex = ({focused, _}) => focused;
+
 let resetMultiplier = model => {...model, multiplier: 0};
 
 let applyMultiplierDigit = (digit, model) => {
@@ -409,8 +411,9 @@ module View = {
       right(isScrollbarVisible ? 0 : Constants.scrollBarThickness),
     ];
 
-    let item = (~offset, ~rowHeight) => [
+    let item = (~offset, ~rowHeight, ~bg) => [
       position(`Absolute),
+      backgroundColor(bg),
       top(offset),
       left(0),
       right(0),
@@ -422,6 +425,8 @@ module View = {
         ~items,
         ~hovered,
         ~focused,
+        ~hoverBg,
+        ~focusBg,
         ~onMouseClick,
         ~onMouseOver,
         ~onMouseOut,
@@ -447,12 +452,23 @@ module View = {
       let itemView = i => {
         let rowY = (i - startRow) * rowHeight;
         let offset = rowY - startY;
+        let isHovered = hovered == Some(i);
+        let isFocused = focused == i;
+
+        let bg =
+          if (isFocused) {
+            focusBg;
+          } else if (isHovered) {
+            hoverBg;
+          } else {
+            Revery.Colors.transparentWhite;
+          };
 
         <Clickable
           onMouseEnter={_ => onMouseOver(i)}
           onMouseLeave={_ => onMouseOut(i)}
           onClick={_ => onMouseClick(i)}
-          style={Styles.item(~offset, ~rowHeight)}>
+          style={Styles.item(~offset, ~rowHeight, ~bg)}>
           {render(
              ~availableWidth=viewportWidth,
              ~index=i,
@@ -468,6 +484,7 @@ module View = {
   let component = React.Expert.component("Component_VimList");
   let make:
     (
+      ~isActive: bool,
       ~theme: ColorTheme.Colors.t,
       ~model: model('item),
       ~dispatch: msg => unit,
@@ -482,7 +499,7 @@ module View = {
       unit
     ) =>
     _ =
-    (~theme, ~model, ~dispatch, ~render, ()) => {
+    (~isActive, ~theme, ~model, ~dispatch, ~render, ()) => {
       component(hooks => {
         let {rowHeight, viewportWidth, viewportHeight, _} = model;
 
@@ -548,11 +565,18 @@ module View = {
             React.empty;
           };
         };
+        let hoverBg = Colors.List.hoverBackground.from(theme);
+        let focusBg =
+          isActive
+            ? Colors.List.focusBackground.from(theme)
+            : Colors.List.inactiveFocusBackground.from(theme);
         let items =
           renderHelper(
             ~focused=model.focused,
             ~hovered=model.hovered,
             ~items=model.items,
+            ~hoverBg,
+            ~focusBg,
             ~onMouseOver,
             ~onMouseOut,
             ~onMouseClick,

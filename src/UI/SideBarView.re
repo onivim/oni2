@@ -107,8 +107,9 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
       <Feature_Search
         isFocused={FocusManager.current(state) == Focus.Search}
         theme
+        languageInfo={state.languageInfo}
+        iconTheme={state.iconTheme}
         uiFont={state.uiFont}
-        editorFont={state.editorFont}
         model={state.searchPane}
         dispatch
         workingDirectory={state.workspace.workingDirectory}

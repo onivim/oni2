@@ -31,7 +31,8 @@ let make:
   (
     ~theme: ColorTheme.Colors.t,
     ~uiFont: UiFont.t,
-    ~editorFont: Service_Font.font,
+    ~iconTheme: IconTheme.t,
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~isFocused: bool,
     ~model: model,
     ~dispatch: msg => unit,

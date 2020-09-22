@@ -1,6 +1,5 @@
 open EditorCoreTypes;
 open Oni_Core;
-open Utility;
 open Oni_Components;
 
 // MODEL
@@ -15,7 +14,7 @@ type model = {
   hits: list(Ripgrep.Match.t),
   focus,
   vimWindowNavigation: Component_VimWindows.model,
-  resultsList: Component_VimList.model(LocationListItem.t),
+  resultsTree: Component_VimTree.model(string, LocationListItem.t),
 };
 
 let initial = {
@@ -25,7 +24,7 @@ let initial = {
   focus: FindInput,
 
   vimWindowNavigation: Component_VimWindows.initial,
-  resultsList: Component_VimList.create(~rowHeight=20),
+  resultsTree: Component_VimTree.create(~rowHeight=25),
 };
 
 let matchToLocListItem = (hit: Ripgrep.Match.t) =>
@@ -47,10 +46,11 @@ let matchToLocListItem = (hit: Ripgrep.Match.t) =>
 let setHits = (hits, model) => {
   ...model,
   hits,
-  resultsList:
-    Component_VimList.set(
-      hits |> ListEx.safeMap(matchToLocListItem) |> Array.of_list,
-      model.resultsList,
+  resultsTree:
+    Component_VimTree.set(
+      ~uniqueId=path => path,
+      hits |> List.map(matchToLocListItem) |> LocationListItem.toTrees,
+      model.resultsTree,
     ),
 };
 
@@ -65,7 +65,7 @@ type msg =
   | SearchError(string)
   | FindInput(Component_InputText.msg)
   | VimWindowNav(Component_VimWindows.msg)
-  | ResultsList(Component_VimList.msg);
+  | ResultsList(Component_VimTree.msg);
 
 module Msg = {
   let input = str => Input(str);
@@ -156,22 +156,22 @@ let update = (model, msg) => {
     };
 
   | ResultsList(listMsg) =>
-    let (resultsList, outmsg) =
-      Component_VimList.update(listMsg, model.resultsList);
+    let (resultsTree, outmsg) =
+      Component_VimTree.update(listMsg, model.resultsTree);
 
     let eff =
-      Component_VimList.(
+      Component_VimTree.(
         switch (outmsg) {
         | Nothing => None
-        | Selected({index}) =>
-          Component_VimList.get(index, resultsList)
-          |> Option.map((item: LocationListItem.t) =>
-               OpenFile({filePath: item.file, location: item.location})
-             )
+        | Selected(item) =>
+          Some(OpenFile({filePath: item.file, location: item.location}))
+        // TODO
+        | Collapsed(_) => None
+        | Expanded(_) => None
         }
       );
 
-    ({...model, resultsList}, eff);
+    ({...model, resultsTree}, eff);
 
   | Complete => (model, None)
 
@@ -250,7 +250,8 @@ let make =
     (
       ~theme,
       ~uiFont: UiFont.t,
-      ~editorFont,
+      ~iconTheme,
+      ~languageInfo,
       ~isFocused,
       ~model,
       ~dispatch,
@@ -291,20 +292,36 @@ let make =
         fontSize={uiFont.size}
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
-      <Component_VimList.View
+      <Component_VimTree.View
+        isActive={isFocused && model.focus == ResultsPane}
         theme
-        model={model.resultsList}
+        model={model.resultsTree}
         dispatch={msg => dispatch(ResultsList(msg))}
-        render={(~availableWidth, ~index as _, ~hovered, ~focused, item) =>
-          <LocationListItem.View
-            width=availableWidth
-            theme
-            uiFont
-            editorFont
-            isHovered={hovered || focused}
-            item
-            workingDirectory
-          />
+        render={(
+          ~availableWidth,
+          ~index as _,
+          ~hovered as _,
+          ~focused as _,
+          item,
+        ) =>
+          switch (item) {
+          | Component_VimTree.Node({data, _}) =>
+            <FileItemView.View
+              theme
+              uiFont
+              iconTheme
+              languageInfo
+              item=data
+              workingDirectory
+            />
+          | Component_VimTree.Leaf({data, _}) =>
+            <LocationListItem.View
+              width=availableWidth
+              theme
+              uiFont
+              item=data
+            />
+          }
         }
       />
     </View>
@@ -322,7 +339,7 @@ module Contributions = {
           |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
         )
         @ (
-          Component_VimList.Contributions.commands
+          Component_VimTree.Contributions.commands
           |> List.map(Oni_Core.Command.map(msg => ResultsList(msg)))
         );
   };
