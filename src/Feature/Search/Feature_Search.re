@@ -163,13 +163,8 @@ let update = (model, msg) => {
       Component_VimTree.(
         switch (outmsg) {
         | Nothing => None
+        | Selected(item) => Some(OpenFile({filePath: item.file, location: item.location}));
         // TODO
-        | Selected(_) => None
-        //        | Selected({index}) =>
-        //          Component_VimList.get(index, resultsTree)
-        //          |> Option.map((item: LocationListItem.t) =>
-        //               OpenFile({filePath: item.file, location: item.location})
-        //             )
         | Collapsed(_) => None
         | Expanded(_) => None
         }
