@@ -1,6 +1,6 @@
 ---
 id: vscode-tips
-title: Tips for users coming from Visual Studo Code
+title: Tips for users coming from Visual Studio Code
 sidebar_label: Tips for VSCode Users
 ---
 
