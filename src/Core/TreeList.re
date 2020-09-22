@@ -1,4 +1,3 @@
-
 [@deriving show]
 type t('node, 'leaf) =
   | ViewLeaf({

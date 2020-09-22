@@ -41,7 +41,12 @@ let update:
   (msg, model('node, 'leaf)) => (model('node, 'leaf), outmsg('node, 'leaf));
 
 let set:
-  (list(Tree.t('node, 'leaf)), model('node, 'leaf)) => model('node, 'leaf);
+  (
+    ~uniqueId: 'node => string,
+    list(Tree.t('node, 'leaf)),
+    model('node, 'leaf)
+  ) =>
+  model('node, 'leaf);
 
 // CONTRIBUTIONS
 

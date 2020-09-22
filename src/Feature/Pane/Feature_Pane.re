@@ -75,7 +75,11 @@ let setDiagnostics = (diagnostics, model) => {
     |> Oni_Components.LocationListItem.toTrees;
 
   let diagnosticsView' =
-    Component_VimTree.set(diagLocList, model.diagnosticsView);
+    Component_VimTree.set(
+      ~uniqueId=path => path,
+      diagLocList,
+      model.diagnosticsView,
+    );
   {...model, diagnosticsView: diagnosticsView'};
 };
 
@@ -157,7 +161,8 @@ let update = (msg, model) =>
     let eff =
       switch (outmsg) {
       | Component_VimTree.Nothing => Nothing
-      | Component_VimTree.Selected(item) => OpenFile({filePath: item.file, position: item.location})
+      | Component_VimTree.Selected(item) =>
+        OpenFile({filePath: item.file, position: item.location})
       | Component_VimTree.Collapsed(_) => Nothing
       | Component_VimTree.Expanded(_) => Nothing
       };

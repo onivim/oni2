@@ -129,17 +129,18 @@ module View = {
 
       switch (item.highlight) {
       | Some((indexStart, indexEnd)) =>
-
-        let textWidth = 
+        let textWidth =
           Revery.Draw.Text.dimensions(
             ~smoothing=Revery.Font.Smoothing.default,
             ~fontSize=uiFont.size,
             ~fontFamily=uiFont.family,
             ~fontWeight=Normal,
             item.text,
-          ).width;
+          ).
+            width;
 
-        let averageCharacterWidth = textWidth /. float(String.length(item.text));
+        let averageCharacterWidth =
+          textWidth /. float(String.length(item.text));
 
         let availableWidth = float(width) -. locationWidth;
         let maxLength = int_of_float(availableWidth /. averageCharacterWidth);

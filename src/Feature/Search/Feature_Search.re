@@ -49,6 +49,7 @@ let setHits = (hits, model) => {
   hits,
   resultsTree:
     Component_VimTree.set(
+      ~uniqueId=path => path,
       hits |> List.map(matchToLocListItem) |> LocationListItem.toTrees,
       model.resultsTree,
     ),
@@ -163,7 +164,8 @@ let update = (model, msg) => {
       Component_VimTree.(
         switch (outmsg) {
         | Nothing => None
-        | Selected(item) => Some(OpenFile({filePath: item.file, location: item.location}));
+        | Selected(item) =>
+          Some(OpenFile({filePath: item.file, location: item.location}))
         // TODO
         | Collapsed(_) => None
         | Expanded(_) => None

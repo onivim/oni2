@@ -17,6 +17,80 @@ type nodeOrLeaf('node, 'leaf) =
     });
 
 [@deriving show]
+type withUniqueId('a) = {
+  uniqueId: string,
+  inner: 'a,
+};
+
+module ExpansionContext = {
+  type expansion = {
+    originalExpanded: bool,
+    expanded: bool,
+  };
+
+  type t = StringMap.t(expansion);
+
+  let initial = StringMap.empty;
+
+  let overrideExpansions = (expansionContext: t, tree) => {
+    tree
+    |> Tree.setExpanded((~current, node) => {
+         StringMap.find_opt(node.uniqueId, expansionContext)
+         |> Option.map(({expanded, _}) => expanded)
+         |> Option.value(~default=current)
+       });
+  };
+
+  let expand = (uniqueId, expansionContext) => {
+    StringMap.update(
+      uniqueId,
+      Option.map(expansion => {...expansion, expanded: true}),
+      expansionContext,
+    );
+  };
+
+  let collapse = (uniqueId, expansionContext) => {
+    StringMap.update(
+      uniqueId,
+      Option.map(expansion => {...expansion, expanded: false}),
+      expansionContext,
+    );
+  };
+
+  // Update our expansion context - if any expansions have changed,
+  // remove them.
+  let update = (expansionContext: t, tree) => {
+    tree
+    |> Tree.fold(
+         (acc, curr) => {
+           switch (curr) {
+           | Tree.Leaf(_) => acc
+           | Tree.Node(node) =>
+             StringMap.update(
+               node.data.uniqueId,
+               fun
+               | None =>
+                 Some({
+                   originalExpanded: node.expanded,
+                   expanded: node.expanded,
+                 })
+               | Some(info) when info.originalExpanded == node.expanded =>
+                 Some(info)
+               | Some(_) =>
+                 Some({
+                   originalExpanded: node.expanded,
+                   expanded: node.expanded,
+                 }),
+               acc,
+             )
+           }
+         },
+         expansionContext,
+       );
+  };
+};
+
+[@deriving show]
 type activeIndentRange = {
   start: int,
   stop: int,
@@ -24,16 +98,22 @@ type activeIndentRange = {
 
 [@deriving show]
 type model('node, 'leaf) = {
+  expansionContext: [@opaque] ExpansionContext.t,
+  [@deriving show]
   rowHeight: int,
   activeIndentRange: option(activeIndentRange),
-  treeAsList: Component_VimList.model(TreeList.t('node, 'leaf)),
+  trees: list(Tree.t(withUniqueId('node), 'leaf)),
+  treeAsList:
+    Component_VimList.model(TreeList.t(withUniqueId('node), 'leaf)),
 };
 
 let count = ({treeAsList, _}) => Component_VimList.count(treeAsList);
 
 let create = (~rowHeight) => {
+  expansionContext: ExpansionContext.initial,
   activeIndentRange: None,
   rowHeight,
+  trees: [],
   treeAsList: Component_VimList.create(~rowHeight),
 };
 
@@ -92,6 +172,21 @@ let isActiveIndent = (index, model) => {
   |> Option.value(~default=false);
 };
 
+let updateTreeList = (treesWithId, expansionContext, model) => {
+  let trees =
+    treesWithId
+    |> List.map(ExpansionContext.overrideExpansions(expansionContext))
+    |> List.map(TreeList.ofTree)
+    |> List.flatten
+    |> Array.of_list;
+
+  {
+    ...model,
+    expansionContext,
+    treeAsList: Component_VimList.set(trees, model.treeAsList),
+  };
+};
+
 let update = (msg, model) => {
   switch (msg) {
   | List(listMsg) =>
@@ -101,27 +196,58 @@ let update = (msg, model) => {
     let model = {...model, treeAsList} |> calculateIndentGuides;
 
     switch (outmsg) {
-    | Component_VimList.Nothing  => (model, Nothing);
+    | Component_VimList.Nothing => (model, Nothing)
     | Component_VimList.Selected({index}) =>
       switch (Component_VimList.get(index, treeAsList)) {
-      
       | Some(ViewLeaf({data, _})) => (model, Selected(data))
       // TODO: Expand / collapse
-      | Some(ViewNode(_)) 
+      | Some(ViewNode({data, expanded, _})) =>
+        let expansionContext =
+          expanded
+            ? model.expansionContext
+              |> ExpansionContext.collapse(data.uniqueId)
+            : model.expansionContext |> ExpansionContext.expand(data.uniqueId);
+
+        (
+          updateTreeList(model.trees, expansionContext, model),
+          expanded ? Collapsed(data.inner) : Expanded(data.inner),
+        );
+
       | None => (model, Nothing)
       }
-    }
-
+    };
   };
 };
 
-let set = (trees: list(Tree.t('node, 'leaf)), model: model('node, 'leaf)) => {
-  let treeAsList =
-    trees |> List.map(TreeList.ofTree) |> List.flatten |> Array.of_list;
+let set =
+    (
+      ~uniqueId,
+      trees: list(Tree.t('node, 'leaf)),
+      model: model('node, 'leaf),
+    ) => {
+  // Tag the trees with an ID
+  let treesWithId =
+    trees
+    |> List.map(
+         Tree.map(
+           ~leaf=v => v,
+           ~node=data => {uniqueId: uniqueId(data), inner: data},
+         ),
+       );
+
+  // Clear out any expansions that have changed
+  let expansionContext =
+    treesWithId
+    |> List.fold_left(
+         (acc: ExpansionContext.t, curr) => {
+           ExpansionContext.update(acc, curr)
+         },
+         model.expansionContext,
+       );
 
   {
-    ...model,
-    treeAsList: Component_VimList.set(treeAsList, model.treeAsList),
+    ...updateTreeList(treesWithId, expansionContext, model),
+    trees: treesWithId,
   };
 };
 
@@ -231,7 +357,11 @@ module View = {
                 ~index,
                 ~hovered,
                 ~focused,
-                Node({expanded, indentation: indentationLevel, data}),
+                Node({
+                  expanded,
+                  indentation: indentationLevel,
+                  data: data.inner,
+                }),
               ),
             ];
           };
