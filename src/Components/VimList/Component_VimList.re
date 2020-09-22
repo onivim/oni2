@@ -575,7 +575,9 @@ module View = {
 
         (
           <View
-            style=Style.[flexGrow(1), position(`Relative)]
+            style=Style.[flexGrow(1), position(`Relative), backgroundColor(
+              Revery.Colors.red
+            )]
             onDimensionsChanged={({height, width}) => {
               dispatch(
                 ViewDimensionsChanged({

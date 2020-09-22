@@ -1,5 +1,5 @@
 /*
- * Accordion.re
+ * Component_Accordion.re
  */
 
 open Revery.UI;
@@ -125,6 +125,42 @@ module Common = {
   };
 }
 
+module VimList = {
+let make =
+    (
+      ~title,
+      ~expanded,
+      ~model,
+      ~dispatch,
+      ~render,
+      ~isFocused,
+      ~focused,
+      ~theme,
+      ~uiFont: UiFont.t,
+      ~onClick,
+      (),
+    ) => {
+  let count = Component_VimList.count(model);
+  let contents =
+      <Component_VimList.View
+        theme
+        model
+        dispatch
+        render />;
+
+  <Common
+    theme
+    title
+    expanded
+    count
+    isFocused
+    uiFont
+    onClick 
+    contents />
+};
+  
+};
+
 let make =
     (
       ~title,
@@ -139,8 +175,8 @@ let make =
       ~onClick,
       (),
     ) => {
-  let contents =
-      <FlatList rowHeight count focused theme> ...renderItem </FlatList>;
+  let contents = failwith("Replace-all-accordions!");
+//      <FlatList rowHeight count focused theme> ...renderItem </FlatList>;
 
   <Common
     theme

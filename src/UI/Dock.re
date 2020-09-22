@@ -87,8 +87,8 @@ module Notification = {
         );
       | InProgress => (
           3,
-          <Oni_Components.Codicon
-            icon=Oni_Components.Codicon.clock
+          <Codicon
+            icon=Codicon.clock
             fontSize=10.
             color=foregroundColor
           />,

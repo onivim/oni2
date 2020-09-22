@@ -158,7 +158,7 @@ let%component make =
   let contents =
     if (Component_InputText.isEmpty(model.searchText)) {
       [
-        <Accordion
+        <Component_Accordion
           title="Installed"
           expanded={installedExpanded || isInstalledFocused}
           uiFont=font
@@ -170,7 +170,7 @@ let%component make =
           theme
           onClick={_ => localDispatch(InstalledTitleClicked)}
         />,
-        <Accordion
+        <Component_Accordion
           title="Bundled"
           expanded={bundledExpanded || isBundledFocused}
           uiFont=font

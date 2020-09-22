@@ -279,7 +279,8 @@ type msg =
   | Pasted({text: string})
   | DocumentContentProvider(Exthost.Msg.DocumentContentProvider.msg)
   | InputBox(Component_InputText.msg)
-  | VimWindowNav(Component_VimWindows.msg);
+  | VimWindowNav(Component_VimWindows.msg)
+  | List({ provider: int, group: int, msg: Component_VimList.msg });
 
 module Msg = {
   let paste = text => Pasted({text: text});
@@ -654,6 +655,26 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       | NextTab => (model'.focus, Nothing)
       };
     ({...model', focus}, outmsg);
+
+  | List({provider, group, msg }) => 
+    
+      // DIRTY IMPURE HACK: Capture the outmsg during the update
+      // This assumes that there is a unique (provider, group).
+      let capturedOutmsg = ref(None);
+
+      let model = model
+      |> Internal.updateResourceGroup(~provider, ~group, g => {
+
+          let (viewModel, outmsg) = Component_VimList.update(
+            msg, g.viewModel);
+            capturedOutmsg := Some(outmsg);
+            {
+              ...g,
+              viewModel
+            };
+         });
+
+    (model, Nothing);
   };
 
 let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
@@ -834,6 +855,7 @@ module Pane = {
         ~theme,
         ~isFocused: bool,
         ~font: UiFont.t,
+        ~dispatch,
         ~workingDirectory,
         ~onItemClick,
         ~onTitleClick,
@@ -841,26 +863,25 @@ module Pane = {
         (),
       ) => {
     let label = group.label;
-    let items = Array.of_list(group.resources);
-    let renderItem = (items, idx) => {
-      let resource = items[idx];
+    let renderItem = (~availableWidth as _, ~index, ~hovered as _, ~focused as _,
+      item) => {
       <itemView
         provider
-        resource
+        resource={item}
         theme
         font
         workingDirectory
-        onClick={() => onItemClick(resource)}
+        onClick={() => onItemClick(item)}
       />;
     };
-    <Accordion
+    <Component_Accordion.VimList
       title=label
       expanded
       uiFont=font
-      rowHeight=20
-      count={Array.length(items)}
+      model={group.viewModel}
+      dispatch={msg => dispatch(List({provider: provider.handle, group: group.handle, msg})) }
       isFocused
-      renderItem={renderItem(items)}
+      render={renderItem}
       focused=None
       theme
       onClick=onTitleClick
@@ -913,6 +934,7 @@ module Pane = {
               provider
               expanded
               group
+              dispatch
               isFocused={isFocused && isGroupFocused(group, model.focus)}
               theme
               font
@@ -929,21 +951,25 @@ module Pane = {
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
 
-  let commands = (~isFocused) => {
+  let commands = (~isFocused, _model) => {
     !isFocused
       ? []
-      : Component_VimWindows.Contributions.commands
-        |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)));
+      : (Component_VimWindows.Contributions.commands
+        |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg))));
   };
 
-  let contextKeys = (~isFocused) => {
-    let keys = isFocused ? Component_InputText.Contributions.contextKeys : [];
+  let contextKeys = (~isFocused, model) => {
+    let inputKeys = isFocused && model.focus == CommitText ? Component_InputText.Contributions.contextKeys : [];
+
+    let listKeys = isFocused && model.focus != CommitText ? 
+    Component_VimList.Contributions.contextKeys : [];
 
     let vimNavKeys =
       isFocused ? Component_VimWindows.Contributions.contextKeys : [];
 
     [
-      keys |> fromList |> map(({inputBox, _}: model) => inputBox),
+      inputKeys |> fromList |> map(({inputBox, _}: model) => inputBox),
+      listKeys |> fromList |> map(_ => ()),
       vimNavKeys
       |> fromList
       |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),

@@ -105,6 +105,6 @@ module Pane: {
 };
 
 module Contributions: {
-  let commands: (~isFocused: bool) => list(Command.t(msg));
-  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
+  let commands: (~isFocused: bool, model) => list(Command.t(msg));
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.Schema.t(model);
 };
