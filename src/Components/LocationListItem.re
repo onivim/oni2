@@ -68,14 +68,7 @@ module Styles = {
 
 module View = {
   let make =
-      (
-        ~showPosition=false,
-        ~theme,
-        ~uiFont: UiFont.t,
-        ~width,
-        ~item,
-        (),
-      ) => {
+      (~showPosition=false, ~theme, ~uiFont: UiFont.t, ~width, ~item, ()) => {
     let unstyled = (~text, ()) =>
       <Text
         style={Styles.snippet(~theme, ~isHighlighted=false)}

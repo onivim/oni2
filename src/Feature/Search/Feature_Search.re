@@ -297,7 +297,13 @@ let make =
         theme
         model={model.resultsTree}
         dispatch={msg => dispatch(ResultsList(msg))}
-        render={(~availableWidth, ~index as _, ~hovered as _, ~focused as _, item) =>
+        render={(
+          ~availableWidth,
+          ~index as _,
+          ~hovered as _,
+          ~focused as _,
+          item,
+        ) =>
           switch (item) {
           | Component_VimTree.Node({data, _}) =>
             <FileItemView.View

@@ -95,7 +95,7 @@ module View = {
          })
       |> Option.value(~default=React.empty);
 
-    <View style={Styles.result}>
+    <View style=Styles.result>
       iconElement
       <View style=Style.[flexGrow(1), flexShrink(0), marginHorizontal(8)]>
         <Text
