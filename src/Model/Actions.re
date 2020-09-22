@@ -15,6 +15,7 @@ module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 type t =
   | Init
   | ActivityBar(ActivityBar.action)
+  | AutoUpdate(Feature_AutoUpdate.msg)
   | Buffers(Feature_Buffers.msg)
   | BufferRenderer(BufferRenderer.action)
   | Clipboard(Feature_Clipboard.msg)
