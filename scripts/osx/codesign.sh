@@ -1,14 +1,21 @@
+#!/usr/bin/env bash
+
+if [ -z "$CERTIFICATE_NAME" ]
+then
+   CERTIFICATE_NAME="Outrun Labs, LLC"
+fi
+
 SHORT_COMMIT_ID=$(git rev-parse --short HEAD)
 
 manual-codesign() {
-    codesign --force --verbose --sign "Outrun Labs, LLC" _release/Onivim2.app/$1 --options runtime --entitlements _release/entitlements.plist
+    codesign --force --verbose --sign "$CERTIFICATE_NAME" _release/Onivim2.app/$1 --options runtime --entitlements _release/entitlements.plist
 }
 
 if [ -z "$OSX_P12_CERTIFICATE" ]      
 then   
    echo "No code signing certificate specified."   
 else   
-   echo "Code signing certificate specified"       
+   echo "Code signing certificate specified: $OSX_P12_CERTIFICATE, $CERTIFICATE_NAME"       
 
    # Load cert     
    echo $OSX_P12_CERTIFICATE | base64 --decode > certificate.p12   
@@ -35,6 +42,10 @@ else
    manual-codesign Contents/MacOS/Oni2
    manual-codesign Contents/Frameworks/libssl.1.1.dylib
    manual-codesign Contents/Frameworks/libcrypto.1.1.dylib
+   manual-codesign Contents/Frameworks/Sparkle.framework/Versions/A/Resources/AutoUpdate.app/Contents/MacOS/fileop
+   manual-codesign Contents/Frameworks/Sparkle.framework/Versions/A/Resources/AutoUpdate.app
+   manual-codesign Contents/Frameworks/Sparkle.framework/Versions/A
+   manual-codesign Contents/Frameworks/Sparkle.framework
    manual-codesign Contents/Resources/node/node_modules/node-pty/build/Release/pty.node
    manual-codesign Contents/Resources/node/node_modules/spdlog/build/Release/spdlog.node
    manual-codesign Contents/Resources/node/node_modules/native-watchdog/build/Release/watchdog.node

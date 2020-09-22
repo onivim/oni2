@@ -1,8 +1,6 @@
 # Cross-platform set of build steps for building esy projects
 
 steps:
-  - script: npm install -g esy@0.6.6
-    displayName: 'Install Esy: npm install -g esy@0.6.6'
   - script: esy install
     displayName: 'Install Dependencies: esy install'
   - script: esy bootstrap
@@ -17,8 +15,15 @@ steps:
     displayName: "esy x Oni2_editor -f --version"
   - script: esy x Oni2 -f --checkhealth 
     displayName: "esy x Oni2 -f --checkhealth"
-  - script: esy create-release
-    displayName: "esy create-release"
+  - script: 'esy @release install'
+    displayName: 'Release: install'
+  - script: 'esy @release build'
+    displayName: 'esy @release build'
+  - script: 'esy @release run -f --version'
+    displayName: 'esy @release run -f --version'
+    continueOnError: true
+  - script: esy @release create --codesign
+    displayName: "esy @release create --codesign"
   - script: esy build-env
     displayName: "Esy: show build env"
   - script: esy @test install
@@ -31,17 +36,6 @@ steps:
     env:
       ASAN_OPTIONS: use_sigaltstack=0
       LSAN_OPTIONS: suppressions=integration_test/lsan.supp
-#  - script: esy @test run-ci
-#    displayName: 'Unit Tests: esy test-ci (round 2)'
-#  - script: esy @test run-ci
-#    displayName: 'Unit Tests: esy test-ci (round 3)'
-  - script: esy @integrationtest install
-    displayName: 'Integration Tests: install'
-  - script: esy @integrationtest run
-    displayName: 'Integration Tests: run'
-    env:
-      ASAN_OPTIONS: use_sigaltstack=0
-      LSAN_OPTIONS: suppressions=lsan.supp
   # TODO: Stabilize and bring back!
   # - script: esy x OniUnitTestRunner
   #  displayName: 'Unit Tests: esy x OniUnitTestRunner (round 2)'

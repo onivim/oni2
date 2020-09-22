@@ -353,6 +353,10 @@ let start =
          })
       |> Option.value(~default=Isolinear.Sub.none);
 
+    let autoUpdateSub =
+      Feature_AutoUpdate.sub(~config)
+      |> Isolinear.Sub.map(msg => Model.Actions.AutoUpdate(msg));
+
     [
       languageSupportSub,
       syntaxSubscription,
@@ -367,6 +371,7 @@ let start =
       extensionsSub,
       registersSub,
       scmSub,
+      autoUpdateSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -445,6 +450,8 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.LanguageSupport(msg))),
     Feature_Input.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Input(msg))),
+    Feature_AutoUpdate.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.AutoUpdate(msg))),
   ]
   |> List.flatten
   |> registerCommands(~dispatch);
