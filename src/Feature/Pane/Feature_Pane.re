@@ -157,14 +157,9 @@ let update = (msg, model) =>
     let eff =
       switch (outmsg) {
       | Component_VimTree.Nothing => Nothing
-      | Component_VimTree.Selected(_) => Nothing
+      | Component_VimTree.Selected(item) => OpenFile({filePath: item.file, position: item.location})
       | Component_VimTree.Collapsed(_) => Nothing
       | Component_VimTree.Expanded(_) => Nothing
-      //        Component_VimList.get(index, diagnosticsView)
-      //        |> Option.map((item: Oni_Components.LocationListItem.t) =>
-      //             OpenFile({filePath: item.file, position: item.location})
-      //           )
-      //        |> Option.value(~default=Nothing)
       };
 
     ({...model, diagnosticsView}, eff);
