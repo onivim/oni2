@@ -124,14 +124,14 @@ if (process.platform == "linux") {
 
     const numCommits = shell("git rev-list --count origin/master").replace(/(\r\n|\n|\r)/gm, "")
     const semvers = package.version.split(".")
-    const cfBundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
+    const bundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
 
     const plistContents = {
         CFBundleName: "Onivim2",
         CFBundleDisplayName: "Onivim 2",
         CFBundleIdentifier: "com.outrunlabs.onivim2",
         CFBundleIconFile: "Onivim2",
-        CFBundleVersion: cfBundleVersion,
+        CFBundleVersion: bundleVersion,
         CFBundleShortVersionString: `${package.version}`,
         CFBundlePackageType: "APPL",
         CFBundleSignature: "????",
@@ -315,6 +315,15 @@ if (process.platform == "linux") {
         path.join(platformReleaseDirectory, process.platform == "win32" ? "rls.exe" : "rls"),
     )
     if (process.platform == "win32") {
+        const numCommits = shell("\"C:\\Program Files\\Git\\cmd\\git.exe\" rev-list --count origin/master").replace(/(\r\n|\n|\r)/gm, "")
+        const semvers = package.version.split(".")
+        const bundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
+
+        const oni2Ini = `
+        [Application]
+        Version = ${bundleVersion}
+        `
+        fs.writeFileSync(path.join(platformReleaseDirectory, "Oni2.ini"), oni2Ini)
         copy(winSparkleDLL, path.join(platformReleaseDirectory, "WinSparkle.dll"))
     }
     const imageSourceDirectory = path.join(rootDirectory, "assets", "images")

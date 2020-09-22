@@ -5,11 +5,19 @@
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifdef USE_SPARKLE
 #import <Sparkle/Sparkle.h>
 
 #include "utils.h"
+
+CAMLprim value oni2_SparkleInit() {
+  CAMLparam0();
+
+  CAMLreturn(Val_unit);
+}
 
 CAMLprim value oni2_SparkleGetSharedInstance() {
   CAMLparam0();
@@ -104,7 +112,35 @@ CAMLprim value oni2_SparkleCheckForUpdates(value vUpdater) {
 
 #elif USE_WIN_SPARKLE
 
+#include <windows.h>
+#include <shlwapi.h>
+
 #include "winsparkle.h"
+
+CAMLprim value oni2_SparkleInit() {
+  CAMLparam0();
+
+  char iniPath[MAX_PATH];
+
+  GetModuleFileName(NULL, iniPath, MAX_PATH);
+  PathRemoveFileSpec(iniPath);
+
+  strcat(iniPath, "\\Oni2.ini");
+  char version[16];
+  wchar_t versionWide[16];
+  
+
+  GetPrivateProfileString("Application", "Version", "", version, 16, iniPath);
+
+  printf("Got version=%s\n", version);
+
+  mbstowcs(versionWide, version, 16);
+
+  win_sparkle_set_app_details(L"Outrun Labs LLC", L"Onivim 2", versionWide);
+  win_sparkle_init();
+
+  CAMLreturn(Val_unit);
+}
 
 // On WinSparkle, there is no instance -- the library just uses global variables.
 // So here we just return a basic `unit`
@@ -134,9 +170,11 @@ CAMLprim value oni2_SparkleDebugLog(value vData) {
 
 CAMLprim value oni2_SparkleSetFeedURL(value vUpdater, value vUrlStr) {
   CAMLparam2(vUpdater, vUrlStr);
+  static int initialized = 0;
+
 
   win_sparkle_set_appcast_url(String_val(vUrlStr));
-
+  
   CAMLreturn(Val_unit);
 }
 

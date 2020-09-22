@@ -253,6 +253,7 @@ switch (eff) {
     Log.debug("Init");
 
     Vim.init();
+    Oni2_Sparkle.init();
 
     let initialWorkingDirectory = initWorkingDirectory();
     let window =

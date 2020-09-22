@@ -69,7 +69,9 @@ let flags =
       useWinSparkle
         ? []
           @ ccopt("-L " ++ winSparkleDir ++ "/x64/Release/")
-          @ cclib("-llibWinSparkle")
+          @ cclib("-lwinsparkle")
+          @ cclib("-lkernel32")
+          @ cclib("-lshlwapi")
         : []
     )
   | _ => []
@@ -78,10 +80,7 @@ let flags =
 let cFlags =
   switch (os) {
   | Mac => ["-F", sparkleDir, "-x", "objective-c"]
-  | Windows => [
-      "-I",
-      winSparkleDir ++ "/include/"
-    ]
+  | Windows => ["-I", winSparkleDir ++ "/include/"]
   | _ => []
   };
 
