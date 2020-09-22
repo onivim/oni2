@@ -1,7 +1,11 @@
-### Tips for users coming from Visual Studio Code
+---
+id: vscode-tips
+title: Tips for users coming from Visual Studio Code
+sidebar_label: Tips for VSCode Users
+---
 
 If you come from Visual Studio Code, Onivim's appearance will hopefully have you
-feeling right at home. It's behaviour might be a bit unfamiliar though, so here's
+feeling right at home. Its behaviour might be a bit unfamiliar though, so here's
 a few tips tips to help you along:
 
 ### How do I change the working directory?
@@ -12,8 +16,8 @@ In Normal mode, type `:cd <dir>`.
 
 In Normal mode, type `:e <filename>`.
 
-Note that this will eventually be possible to accomplish interactively using the
-file explorer with either the keyboard or mouse.
+Note that it will eventually be possible to accomplish this interactively using
+the file explorer with either the keyboard or mouse.
 
 ### How do I create a new directory?
 
@@ -45,4 +49,4 @@ details.
 
 ### How do I clear the search highlights?
 
-In Normal mode, type `:nohlsearch`, or the short form `:noh`.
+In Normal mode, type `:nohlsearch`, or its short form `:noh`.
