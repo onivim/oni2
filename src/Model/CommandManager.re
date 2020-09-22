@@ -37,7 +37,7 @@ let current = state => {
       ~isFocused={
         focus == Focus.SCM;
       },
-      state.scm
+      state.scm,
     )
     |> Command.Lookup.fromList
     |> Command.Lookup.map(msg => Actions.SCM(msg)),

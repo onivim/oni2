@@ -87,11 +87,7 @@ module Notification = {
         );
       | InProgress => (
           3,
-          <Codicon
-            icon=Codicon.clock
-            fontSize=10.
-            color=foregroundColor
-          />,
+          <Codicon icon=Codicon.clock fontSize=10. color=foregroundColor />,
         )
       };
 
