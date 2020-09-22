@@ -5,6 +5,12 @@ let menus = (~isFocused) => {
     // TODO: This should be factored to a feature...
     isFocused
       ? Quickmenu.[
+          bool(
+            "commandLineFocus",
+            fun
+            | Some({variant: Wildmenu(_), _}) => true
+            | _ => false,
+          ),
           bool("listFocus", model => model != None),
           bool("inQuickOpen", model => model != None),
           bool(
@@ -145,7 +151,7 @@ let all = (state: State.t) => {
     paneContextKeys |> map(({pane, _}: State.t) => pane),
     Feature_LanguageSupport.Contributions.contextKeys
     |> map(({languageSupport, _}: State.t) => languageSupport),
-    menus(~isFocused=focus == Focus.Quickmenu)
+    menus(~isFocused=focus == Focus.Quickmenu || focus == Focus.Wildmenu)
     |> map((state: State.t) => state.quickmenu),
     editors(~isFocused=focus == Focus.Editor),
     other,
