@@ -70,6 +70,7 @@ let make =
             />
           | Component_VimTree.Leaf({data, _}) =>
             <LocationListItem.View
+              showPosition=true
               width=availableWidth
               theme
               uiFont

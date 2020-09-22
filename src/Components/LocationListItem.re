@@ -72,16 +72,38 @@ module Styles = {
 };
 
 module View = {
-  let make = (~theme, ~uiFont: UiFont.t, ~width, ~isHovered, ~item, ()) => {
-    let content = () => {
-      let unstyled = (~text, ()) =>
-        <Text
-          style={Styles.snippet(~theme, ~isHighlighted=false)}
-          fontFamily={uiFont.family}
-          fontSize={uiFont.size}
-          text
-        />;
+  let make =
+      (
+        ~showPosition=false,
+        ~theme,
+        ~uiFont: UiFont.t,
+        ~width,
+        ~isHovered,
+        ~item,
+        (),
+      ) => {
+    let unstyled = (~text, ()) =>
+      <Text
+        style={Styles.snippet(~theme, ~isHighlighted=false)}
+        fontFamily={uiFont.family}
+        fontSize={uiFont.size}
+        text
+      />;
 
+    let position =
+      showPosition
+        ? <Opacity opacity=0.75>
+            <unstyled
+              text={Printf.sprintf(
+                " [%d, %d]",
+                item.location.line |> EditorCoreTypes.LineNumber.toZeroBased,
+                item.location.character |> CharacterIndex.toInt,
+              )}
+            />
+          </Opacity>
+        : React.empty;
+
+    let content = () => {
       let highlighted = (~text, ()) =>
         <Text
           style={Styles.snippet(~theme, ~isHighlighted=true)}
@@ -141,7 +163,10 @@ module View = {
     };
 
     <View style=Styles.clickable>
-      <View style={Styles.result(~theme, ~isHovered)}> <content /> </View>
+      <View style={Styles.result(~theme, ~isHovered)}>
+        <content />
+        position
+      </View>
     </View>;
   };
 };
