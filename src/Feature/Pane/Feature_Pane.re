@@ -315,7 +315,6 @@ module View = {
         ~iconTheme,
         ~languageInfo,
         ~uiFont,
-        ~editorFont,
         ~notificationDispatch,
         ~diagnosticDispatch: Component_VimTree.msg => unit,
         ~diagnosticsList: Component_VimTree.model(string, LocationListItem.t),
@@ -331,7 +330,6 @@ module View = {
         languageInfo
         theme
         uiFont
-        editorFont
         workingDirectory
         dispatch=diagnosticDispatch
       />
@@ -363,7 +361,6 @@ module View = {
         ~iconTheme,
         ~languageInfo,
         ~uiFont,
-        ~editorFont,
         ~notifications: Feature_Notification.model,
         ~dispatch: msg => unit,
         ~notificationDispatch: Feature_Notification.msg => unit,
@@ -418,7 +415,6 @@ module View = {
             selected={selected(pane)}
             theme
             uiFont
-            editorFont
             notifications
             notificationDispatch
             diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}

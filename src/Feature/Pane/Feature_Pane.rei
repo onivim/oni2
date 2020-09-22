@@ -59,7 +59,6 @@ module View: {
       ~iconTheme: Oni_Core.IconTheme.t,
       ~languageInfo: Exthost.LanguageInfo.t,
       ~uiFont: Oni_Core.UiFont.t,
-      ~editorFont: Service_Font.font,
       ~notifications: Feature_Notification.model,
       ~dispatch: msg => unit,
       ~notificationDispatch: Feature_Notification.msg => unit,

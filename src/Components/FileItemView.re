@@ -1,4 +1,3 @@
-open EditorCoreTypes;
 open Revery;
 open Revery.UI;
 open Oni_Core;
@@ -87,7 +86,6 @@ module View = {
         ~uiFont: UiFont.t,
         ~iconTheme,
         ~languageInfo,
-        ~width,
         ~isHovered,
         ~item: string,
         ~workingDirectory,

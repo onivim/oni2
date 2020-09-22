@@ -61,15 +61,7 @@ module Styles = {
 };
 
 let make = (~dispatch, ~state: State.t, ()) => {
-  let State.{
-        configuration,
-        uiFont as font,
-        editorFont,
-        sideBar,
-        zenMode,
-        buffers,
-        _,
-      } = state;
+  let State.{configuration, uiFont as font, sideBar, zenMode, buffers, _} = state;
 
   let theme = Feature_Theme.colors(state.colorTheme);
 
@@ -196,7 +188,6 @@ let make = (~dispatch, ~state: State.t, ()) => {
         languageInfo={state.languageInfo}
         theme
         uiFont
-        editorFont
         notifications={state.notifications}
         dispatch={msg => dispatch(Actions.Pane(msg))}
         notificationDispatch={msg => dispatch(Actions.Notification(msg))}

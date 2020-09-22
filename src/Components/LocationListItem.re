@@ -61,11 +61,6 @@ module Styles = {
     ),
   ];
 
-  //  let locationText = (~theme) => [
-  //    color(Colors.EditorLineNumber.activeForeground.from(theme)),
-  //    textWrap(TextWrapping.NoWrap),
-  //  ];
-
   let snippet = (~theme, ~isHighlighted) => [
     color(
       isHighlighted
@@ -77,39 +72,7 @@ module Styles = {
 };
 
 module View = {
-  let make =
-      (
-        ~theme,
-        ~uiFont: UiFont.t,
-        ~editorFont: Service_Font.font,
-        ~width,
-        ~isHovered,
-        ~item,
-        (),
-      ) => {
-    //  let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
-
-    //    let locationWidth = {
-    //      Revery.Draw.Text.dimensions(
-    //        ~smoothing=Revery.Font.Smoothing.default,
-    //        ~fontSize=uiFont.size,
-    //        ~fontFamily=uiFont.family,
-    //        ~fontWeight=Normal,
-    //        locationText,
-    //      ).
-    //        width;
-    //    };
-
-    let locationWidth = 0.;
-
-    //    let location = () =>
-    //      <Text
-    //        style={Styles.locationText(~theme)}
-    //        fontFamily={uiFont.family}
-    //        fontSize={uiFont.size}
-    //        text=locationText
-    //      />;
-
+  let make = (~theme, ~uiFont: UiFont.t, ~width, ~isHovered, ~item, ()) => {
     let content = () => {
       let unstyled = (~text, ()) =>
         <Text
@@ -142,7 +105,7 @@ module View = {
         let averageCharacterWidth =
           textWidth /. float(String.length(item.text));
 
-        let availableWidth = float(width) -. locationWidth;
+        let availableWidth = float(width);
         let maxLength = int_of_float(availableWidth /. averageCharacterWidth);
         let charStart = Index.toZeroBased(indexStart);
         let charEnd = Index.toZeroBased(indexEnd);

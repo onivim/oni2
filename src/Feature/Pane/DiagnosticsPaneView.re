@@ -37,7 +37,6 @@ let make =
       ~iconTheme,
       ~languageInfo,
       ~uiFont: UiFont.t,
-      ~editorFont,
       ~workingDirectory,
       ~dispatch: Component_VimTree.msg => unit,
       (),
@@ -66,7 +65,6 @@ let make =
               iconTheme
               languageInfo
               isHovered={hovered || focused}
-              width=availableWidth
               item=data
               workingDirectory
             />
@@ -75,7 +73,6 @@ let make =
               width=availableWidth
               theme
               uiFont
-              editorFont
               isHovered={hovered || focused}
               item=data
             />

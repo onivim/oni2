@@ -18,7 +18,7 @@ let fold = (f, acc, tree) => {
     let newAcc = f(current, node);
     switch (node) {
     | Leaf(_) => newAcc
-    | Node({children, _}) => children |> List.fold_left(f, newAcc)
+    | Node({children, _}) => children |> List.fold_left(loop, newAcc)
     };
   };
 

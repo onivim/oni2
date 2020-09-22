@@ -110,7 +110,6 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
         languageInfo={state.languageInfo}
         iconTheme={state.iconTheme}
         uiFont={state.uiFont}
-        editorFont={state.editorFont}
         model={state.searchPane}
         dispatch
         workingDirectory={state.workspace.workingDirectory}

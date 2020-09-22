@@ -119,12 +119,7 @@ let create = (~rowHeight) => {
 
 module Constants = {
   let arrowSize = 15.;
-  let arrowSizeI = 15;
   let indentSize = 12;
-  let scrollWheelMultiplier = 25;
-  let scrollBarThickness = 6;
-  //  let scrollTrackColor = Color.rgba(0.0, 0.0, 0.0, 0.4);
-  //  let scrollThumbColor = Color.rgba(0.5, 0.5, 0.5, 0.4);
 };
 
 // UPDATE
@@ -303,7 +298,7 @@ module View = {
         fontSize=Constants.arrowSize
       />
     </View>;
-  let make = (~theme, ~model, ~dispatch, ~render, unit) => {
+  let make = (~theme, ~model, ~dispatch, ~render, ()) => {
     let indentHeight = model.rowHeight;
     let indentWidth = Constants.indentSize;
     let activeIndentColor = Colors.List.activeIndentGuide.from(theme);

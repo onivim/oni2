@@ -1,6 +1,5 @@
 open EditorCoreTypes;
 open Oni_Core;
-open Utility;
 open Oni_Components;
 
 // MODEL
@@ -251,7 +250,6 @@ let make =
     (
       ~theme,
       ~uiFont: UiFont.t,
-      ~editorFont,
       ~iconTheme,
       ~languageInfo,
       ~isFocused,
@@ -307,7 +305,6 @@ let make =
               iconTheme
               languageInfo
               isHovered={hovered || focused}
-              width=availableWidth
               item=data
               workingDirectory
             />
@@ -316,7 +313,6 @@ let make =
               width=availableWidth
               theme
               uiFont
-              editorFont
               isHovered={hovered || focused}
               item=data
             />
