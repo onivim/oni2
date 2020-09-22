@@ -27,13 +27,6 @@ let menus = (~isFocused) => {
             | None => false,
           ),
           bool(
-            "textInputFocus",
-            fun
-            | Some({variant: EditorsPicker, _}) => false
-            | Some(_) => true
-            | None => false,
-          ),
-          bool(
             "quickmenuCursorEnd",
             fun
             | Some({inputText, _})
