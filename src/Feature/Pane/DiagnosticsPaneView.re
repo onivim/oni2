@@ -32,16 +32,18 @@ module Styles = {
 
 let make =
     (
-      ~diagnosticsList: Component_VimList.model(LocationListItem.t),
+      ~isFocused: bool,
+      ~diagnosticsList: Component_VimTree.model(string, LocationListItem.t),
       ~theme,
+      ~iconTheme,
+      ~languageInfo,
       ~uiFont: UiFont.t,
-      ~editorFont,
       ~workingDirectory,
-      ~dispatch: Component_VimList.msg => unit,
+      ~dispatch: Component_VimTree.msg => unit,
       (),
     ) => {
   let innerElement =
-    if (Component_VimList.count(diagnosticsList) == 0) {
+    if (Component_VimTree.count(diagnosticsList) == 0) {
       <View style=Styles.noResultsContainer>
         <Text
           style={Styles.title(~theme)}
@@ -51,20 +53,37 @@ let make =
         />
       </View>;
     } else {
-      <Component_VimList.View
+      <Component_VimTree.View
+        isActive=isFocused
         theme
         model=diagnosticsList
         dispatch
-        render={(~availableWidth, ~index as _, ~hovered, ~focused, item) =>
-          <LocationListItem.View
-            width=availableWidth
-            theme
-            uiFont
-            editorFont
-            isHovered={hovered || focused}
-            item
-            workingDirectory
-          />
+        render={(
+          ~availableWidth,
+          ~index as _,
+          ~hovered as _,
+          ~focused as _,
+          item,
+        ) =>
+          switch (item) {
+          | Component_VimTree.Node({data, _}) =>
+            <FileItemView.View
+              theme
+              uiFont
+              iconTheme
+              languageInfo
+              item=data
+              workingDirectory
+            />
+          | Component_VimTree.Leaf({data, _}) =>
+            <LocationListItem.View
+              showPosition=true
+              width=availableWidth
+              theme
+              uiFont
+              item=data
+            />
+          }
         }
       />;
     };

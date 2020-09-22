@@ -17,6 +17,7 @@ type model('item);
 let create: (~rowHeight: int) => model('item);
 
 let get: (int, model('item)) => option('item);
+let focusedIndex: model('item) => int;
 
 let count: model('item) => int;
 
@@ -43,6 +44,7 @@ module Contributions: {
 module View: {
   let make:
     (
+      ~isActive: bool,
       ~theme: ColorTheme.Colors.t,
       ~model: model('item),
       ~dispatch: msg => unit,

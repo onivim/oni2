@@ -16,3 +16,13 @@ let default = {
     ),
   size: 12.,
 };
+
+let averageCharacterWidth = ({family, size}) => {
+  family
+  |> Revery.Font.Family.resolve(~italic=false, Revery.Font.Weight.Normal)
+  |> Result.map((font: Revery.Font.t) => {
+       let fontMetrics = Revery.Font.getMetrics(font, size);
+       fontMetrics.avgCharWidth;
+     })
+  |> Result.value(~default=size);
+};
