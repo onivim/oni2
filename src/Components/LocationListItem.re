@@ -49,16 +49,11 @@ module Styles = {
 
   let clickable = [cursor(Revery.MouseCursors.pointer)];
 
-  let result = (~theme, ~isHovered) => [
+  let result = [
     flexDirection(`Row),
     overflow(`Hidden),
     paddingVertical(4),
     paddingHorizontal(8),
-    backgroundColor(
-      isHovered
-        ? Colors.Menu.selectionBackground.from(theme)
-        : Revery.Colors.transparentWhite,
-    ),
   ];
 
   let snippet = (~theme, ~isHighlighted) => [
@@ -78,7 +73,6 @@ module View = {
         ~theme,
         ~uiFont: UiFont.t,
         ~width,
-        ~isHovered,
         ~item,
         (),
       ) => {
@@ -163,10 +157,7 @@ module View = {
     };
 
     <View style=Styles.clickable>
-      <View style={Styles.result(~theme, ~isHovered)}>
-        <content />
-        position
-      </View>
+      <View style=Styles.result> <content /> position </View>
     </View>;
   };
 };

@@ -453,6 +453,13 @@ module List = {
       "list.focusBackground",
       {dark: hex("#062F4A"), light: hex("#D6EBFF"), hc: unspecified},
     );
+
+  let inactiveFocusBackground =
+    define(
+      "list.inactiveFocusBackground",
+      all(ref(focusBackground) |> transparent(0.75)),
+    );
+
   let focusForeground =
     define("list.focusForeground", all(ref(foreground))); // actually: unspecified
   let activeSelectionBackground =

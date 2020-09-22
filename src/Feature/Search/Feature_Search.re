@@ -293,10 +293,11 @@ let make =
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
       <Component_VimTree.View
+        isActive={isFocused && model.focus == ResultsPane}
         theme
         model={model.resultsTree}
         dispatch={msg => dispatch(ResultsList(msg))}
-        render={(~availableWidth, ~index as _, ~hovered, ~focused, item) =>
+        render={(~availableWidth, ~index as _, ~hovered as _, ~focused as _, item) =>
           switch (item) {
           | Component_VimTree.Node({data, _}) =>
             <FileItemView.View
@@ -304,7 +305,6 @@ let make =
               uiFont
               iconTheme
               languageInfo
-              isHovered={hovered || focused}
               item=data
               workingDirectory
             />
@@ -313,7 +313,6 @@ let make =
               width=availableWidth
               theme
               uiFont
-              isHovered={hovered || focused}
               item=data
             />
           }

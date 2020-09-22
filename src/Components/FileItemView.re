@@ -12,7 +12,7 @@ module Styles = {
 
   let clickable = [cursor(Revery.MouseCursors.pointer)];
 
-  let result = (~theme, ~isHovered) => [
+  let result = [
     height(25),
     flexGrow(1),
     flexDirection(`Row),
@@ -20,17 +20,7 @@ module Styles = {
     justifyContent(`Center),
     alignItems(`Center),
     paddingHorizontal(8),
-    backgroundColor(
-      isHovered
-        ? Colors.Menu.selectionBackground.from(theme)
-        : Revery.Colors.transparentWhite,
-    ),
   ];
-
-  //  let locationText = (~theme) => [
-  //    color(Colors.EditorLineNumber.activeForeground.from(theme)),
-  //    textWrap(TextWrapping.NoWrap),
-  //  ];
 
   let snippet = (~theme, ~isHighlighted) => [
     color(
@@ -86,7 +76,6 @@ module View = {
         ~uiFont: UiFont.t,
         ~iconTheme,
         ~languageInfo,
-        ~isHovered,
         ~item: string,
         ~workingDirectory,
         (),
@@ -106,7 +95,7 @@ module View = {
          })
       |> Option.value(~default=React.empty);
 
-    <View style={Styles.result(~theme, ~isHovered)}>
+    <View style={Styles.result}>
       iconElement
       <View style=Style.[flexGrow(1), flexShrink(0), marginHorizontal(8)]>
         <Text

@@ -298,7 +298,7 @@ module View = {
         fontSize=Constants.arrowSize
       />
     </View>;
-  let make = (~theme, ~model, ~dispatch, ~render, ()) => {
+  let make = (~isActive, ~theme, ~model, ~dispatch, ~render, ()) => {
     let indentHeight = model.rowHeight;
     let indentWidth = Constants.indentSize;
     let activeIndentColor = Colors.List.activeIndentGuide.from(theme);
@@ -315,6 +315,7 @@ module View = {
     };
 
     <Component_VimList.View
+      isActive
       theme
       model={model.treeAsList}
       dispatch={msg => dispatch(List(msg))}

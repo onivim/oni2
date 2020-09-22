@@ -60,6 +60,7 @@ module Contributions: {
 module View: {
   let make:
     (
+      ~isActive: bool,
       ~theme: ColorTheme.Colors.t,
       ~model: model('node, 'leaf),
       ~dispatch: msg => unit,

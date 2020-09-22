@@ -44,6 +44,7 @@ module Contributions: {
 module View: {
   let make:
     (
+      ~isActive: bool,
       ~theme: ColorTheme.Colors.t,
       ~model: model('item),
       ~dispatch: msg => unit,

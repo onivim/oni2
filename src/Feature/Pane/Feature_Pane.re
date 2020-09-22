@@ -310,6 +310,7 @@ module View = {
   };
   let content =
       (
+        ~isFocused,
         ~selected,
         ~theme,
         ~iconTheme,
@@ -325,6 +326,7 @@ module View = {
     switch (selected) {
     | Diagnostics =>
       <DiagnosticsPaneView
+        isFocused
         diagnosticsList
         iconTheme
         languageInfo
@@ -409,6 +411,7 @@ module View = {
         </View>
         <View style=Styles.content>
           <content
+            isFocused
             iconTheme
             languageInfo
             diagnosticsList={pane.diagnosticsView}

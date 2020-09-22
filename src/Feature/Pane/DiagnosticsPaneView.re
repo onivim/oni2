@@ -32,6 +32,7 @@ module Styles = {
 
 let make =
     (
+      ~isFocused: bool,
       ~diagnosticsList: Component_VimTree.model(string, LocationListItem.t),
       ~theme,
       ~iconTheme,
@@ -53,10 +54,11 @@ let make =
       </View>;
     } else {
       <Component_VimTree.View
+        isActive=isFocused
         theme
         model=diagnosticsList
         dispatch
-        render={(~availableWidth, ~index as _, ~hovered, ~focused, item) =>
+        render={(~availableWidth, ~index as _, ~hovered as _, ~focused as _, item) =>
           switch (item) {
           | Component_VimTree.Node({data, _}) =>
             <FileItemView.View
@@ -64,7 +66,6 @@ let make =
               uiFont
               iconTheme
               languageInfo
-              isHovered={hovered || focused}
               item=data
               workingDirectory
             />
@@ -74,7 +75,6 @@ let make =
               width=availableWidth
               theme
               uiFont
-              isHovered={hovered || focused}
               item=data
             />
           }
