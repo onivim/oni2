@@ -143,6 +143,7 @@ let make =
       <FlatList rowHeight count focused theme> ...renderItem </FlatList>;
 
   <Common
+    theme
     title
     expanded
     count

@@ -19,13 +19,14 @@ module Resource: {
 
 module ResourceGroup: {
   [@deriving show]
-  type t = {
-    handle: int,
-    id: string,
-    label: string,
-    hideWhenEmpty: bool,
-    resources: list(Resource.t),
-  };
+  type t;
+//  type t = {
+//    handle: int,
+//    id: string,
+//    label: string,
+//    hideWhenEmpty: bool,
+//    resources: list(Resource.t),
+//  };
 };
 
 module Provider: {

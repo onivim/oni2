@@ -14,6 +14,7 @@ module ResourceGroup = {
     label: string,
     hideWhenEmpty: bool,
     resources: list(Resource.t),
+    viewModel: Component_VimList.model(Resource.t),
   };
 };
 
@@ -493,6 +494,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
                  label,
                  hideWhenEmpty: false,
                  resources: [],
+                 viewModel: Component_VimList.create(~rowHeight=20),
                },
                ...p.resourceGroups,
              ],
@@ -540,18 +542,21 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       additions,
     }) => (
       model
-      |> Internal.updateResourceGroup(~provider, ~group, g =>
-           {
-             ...g,
-             resources:
-               ListEx.splice(
+      |> Internal.updateResourceGroup(~provider, ~group, g => {
+           let resources = ListEx.splice(
                  ~start=spliceStart,
                  ~deleteCount,
                  ~additions,
                  g.resources,
-               ),
+               );
+
+          let viewModel = Component_VimList.set(resources |> Array.of_list, g.viewModel);
+           {
+             ...g,
+             resources,
+             viewModel,
            }
-         ),
+         }),
       Nothing,
     )
 
