@@ -78,7 +78,7 @@ node install-node-deps.js
 
 ### Inline Unit Tests
 
-- `esy @test inline`
+- `esy '@test' inline`
 
 ### Check build
 
@@ -100,8 +100,8 @@ We use auto formatting tool, you might want to run it before you commit changes
 
 To create a release build, run:
 
-- `esy x Oni2 -f --checkhealth`
-- `esy @release create`
+- `esy '@release' run -f --checkhealth`
+- `esy '@release' create`
 
 This will create a `_release` folder at the root with the application bundle inside.
 

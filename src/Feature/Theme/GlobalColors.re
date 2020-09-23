@@ -453,6 +453,13 @@ module List = {
       "list.focusBackground",
       {dark: hex("#062F4A"), light: hex("#D6EBFF"), hc: unspecified},
     );
+
+  let inactiveFocusBackground =
+    define(
+      "list.inactiveFocusBackground",
+      all(ref(focusBackground) |> transparent(0.75)),
+    );
+
   let focusForeground =
     define("list.focusForeground", all(ref(foreground))); // actually: unspecified
   let activeSelectionBackground =
@@ -477,6 +484,21 @@ module List = {
       {dark: hex("#0097fb"), light: hex("#0066BF"), hc: ref(focusBorder)},
     );
 
+  let deemphasizedForeground =
+    define("list.deemphasizedForeground", all(ref(foreground)));
+
+  let activeIndentGuide =
+    define(
+      "tree.indentGuidesStroke",
+      all(ref(foreground) |> transparent(0.5)),
+    );
+
+  let inactiveIndentGuide =
+    define(
+      "tree.inactive.indentGuidesStroke",
+      all(ref(activeIndentGuide) |> transparent(0.5)),
+    );
+
   let defaults = [
     focusBackground,
     focusForeground,
@@ -485,6 +507,9 @@ module List = {
     hoverBackground,
     hoverForeground,
     highlightForeground,
+    deemphasizedForeground,
+    activeIndentGuide,
+    inactiveIndentGuide,
   ];
 };
 

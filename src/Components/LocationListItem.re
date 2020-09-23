@@ -15,26 +15,45 @@ type t = {
   highlight: option((Index.t, Index.t)),
 };
 
+let toTrees: list(t) => list(Tree.t(string, t)) =
+  (items: list(t)) => {
+    let fileToHits =
+      items
+      |> List.fold_left(
+           (acc, curr) => {
+             acc
+             |> StringMap.update(
+                  curr.file,
+                  fun
+                  | None => Some([curr])
+                  | Some(existingList) => Some([curr, ...existingList]),
+                )
+           },
+           StringMap.empty,
+         );
+
+    StringMap.fold(
+      (filePath, hits, acc) => {
+        let children = hits |> List.map(Tree.leaf) |> List.rev;
+
+        let node = Tree.node(~expanded=true, ~children, filePath);
+        [node, ...acc];
+      },
+      fileToHits,
+      [],
+    );
+  };
+
 module Styles = {
   open Style;
 
   let clickable = [cursor(Revery.MouseCursors.pointer)];
 
-  let result = (~theme, ~isHovered) => [
+  let result = [
     flexDirection(`Row),
     overflow(`Hidden),
     paddingVertical(4),
     paddingHorizontal(8),
-    backgroundColor(
-      isHovered
-        ? Colors.Menu.selectionBackground.from(theme)
-        : Revery.Colors.transparentWhite,
-    ),
-  ];
-
-  let locationText = (~theme) => [
-    color(Colors.EditorLineNumber.activeForeground.from(theme)),
-    textWrap(TextWrapping.NoWrap),
   ];
 
   let snippet = (~theme, ~isHighlighted) => [
@@ -49,65 +68,54 @@ module Styles = {
 
 module View = {
   let make =
-      (
-        ~theme,
-        ~uiFont: UiFont.t,
-        ~editorFont: Service_Font.font,
-        ~width,
-        ~isHovered,
-        ~item,
-        ~workingDirectory,
-        (),
-      ) => {
-    //  let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
-
-    let locationText =
-      Printf.sprintf(
-        "%s:%n - ",
-        Path.toRelative(~base=workingDirectory, item.file),
-        EditorCoreTypes.LineNumber.toOneBased(item.location.line),
-      );
-
-    let locationWidth = {
-      Revery.Draw.Text.dimensions(
-        ~smoothing=Revery.Font.Smoothing.default,
-        ~fontSize=uiFont.size,
-        ~fontFamily=uiFont.family,
-        ~fontWeight=Normal,
-        locationText,
-      ).
-        width;
-    };
-
-    let location = () =>
+      (~showPosition=false, ~theme, ~uiFont: UiFont.t, ~width, ~item, ()) => {
+    let unstyled = (~text, ()) =>
       <Text
-        style={Styles.locationText(~theme)}
+        style={Styles.snippet(~theme, ~isHighlighted=false)}
         fontFamily={uiFont.family}
         fontSize={uiFont.size}
-        text=locationText
+        text
       />;
 
-    let content = () => {
-      let unstyled = (~text, ()) =>
-        <Text
-          style={Styles.snippet(~theme, ~isHighlighted=false)}
-          fontFamily={editorFont.fontFamily}
-          fontSize={editorFont.fontSize}
-          text
-        />;
+    let position =
+      showPosition
+        ? <Opacity opacity=0.75>
+            <unstyled
+              text={Printf.sprintf(
+                " [%d, %d]",
+                item.location.line |> EditorCoreTypes.LineNumber.toZeroBased,
+                item.location.character |> CharacterIndex.toInt,
+              )}
+            />
+          </Opacity>
+        : React.empty;
 
+    let content = () => {
       let highlighted = (~text, ()) =>
         <Text
           style={Styles.snippet(~theme, ~isHighlighted=true)}
-          fontFamily={editorFont.fontFamily}
-          fontSize={editorFont.fontSize}
+          fontFamily={uiFont.family}
+          fontSize={uiFont.size}
           text
         />;
 
       switch (item.highlight) {
       | Some((indexStart, indexEnd)) =>
-        let availableWidth = float(width) -. locationWidth;
-        let maxLength = int_of_float(availableWidth /. editorFont.spaceWidth);
+        let textWidth =
+          Revery.Draw.Text.dimensions(
+            ~smoothing=Revery.Font.Smoothing.default,
+            ~fontSize=uiFont.size,
+            ~fontFamily=uiFont.family,
+            ~fontWeight=Normal,
+            item.text,
+          ).
+            width;
+
+        let averageCharacterWidth =
+          textWidth /. float(String.length(item.text));
+
+        let availableWidth = float(width);
+        let maxLength = int_of_float(availableWidth /. averageCharacterWidth);
         let charStart = Index.toZeroBased(indexStart);
         let charEnd = Index.toZeroBased(indexEnd);
 
@@ -142,10 +150,7 @@ module View = {
     };
 
     <View style=Styles.clickable>
-      <View style={Styles.result(~theme, ~isHovered)}>
-        <location />
-        <content />
-      </View>
+      <View style=Styles.result> <content /> position </View>
     </View>;
   };
 };
