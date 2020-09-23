@@ -166,7 +166,7 @@ let make =
       ~onClick,
       (),
     ) => {
-  let contents = failwith("Replace-all-accordions!");
+  let contents = <Text text="No more accordions" />;
 
   <Common theme title expanded count isFocused uiFont onClick contents />;
 };

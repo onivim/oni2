@@ -13,9 +13,12 @@ module ViewModel = {
   };
 
   let initial = {
-    bundled: Component_VimList.create(~rowHeight=20),
-    installed: Component_VimList.create(~rowHeight=20),
+    bundled: Component_VimList.create(~rowHeight=72),
+    installed: Component_VimList.create(~rowHeight=72),
   };
+
+  let installed = ({installed, _}) => installed;
+  let bundled = ({bundled, _}) => bundled;
 
   let setBundled = (newBundled, viewModel) => {
     ...viewModel,
@@ -306,9 +309,36 @@ module Internal = {
     activatedIds: [id, ...model.activatedIds],
   };
 
+
+let getExtensions = (~category, model) => {
+  let results =
+    model.extensions
+    |> List.filter((ext: Scanner.ScanResult.t) => ext.category == category);
+
+  switch (category) {
+  | Scanner.Bundled => List.filter(filterBundled, results)
+  | _ => results
+  };
+};
+  let syncViewModel = (model) => {
+    let bundled = getExtensions(~category=Scanner.Bundled, model);
+    let installed = getExtensions(~category=Scanner.User, model);
+    let viewModel = model.viewModel
+    |> ViewModel.setBundled(bundled |> Array.of_list)
+    |> ViewModel.setInstalled(installed |> Array.of_list);
+    
+    {
+      ...model,
+      viewModel
+    };
+  }
+
   let add = (extensions, model) => {
+    {
     ...model,
     extensions: extensions @ model.extensions,
+    }
+    |> syncViewModel;
   };
 
   let addPendingInstall = (~extensionId, model) => {
@@ -367,17 +397,6 @@ module Internal = {
   };
 };
 
-let getExtensions = (~category, model) => {
-  let results =
-    model.extensions
-    |> List.filter((ext: Scanner.ScanResult.t) => ext.category == category);
-
-  switch (category) {
-  | Scanner.Bundled => List.filter(Internal.filterBundled, results)
-  | _ => results
-  };
-};
-
 let getPersistedValue = (~shared, ~key, model) => {
   let store = shared ? model.globalValues : model.localValues;
   [store]
@@ -395,6 +414,8 @@ let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
   } else {
     query;
   };
+
+let getExtensions = Internal.getExtensions;
 
 let update = (~extHostClient, msg, model) => {
   switch (msg) {

@@ -115,8 +115,8 @@ let%component make =
     />;
   };
 
-  let renderInstalled = (extensions: array(Scanner.ScanResult.t), idx) => {
-    let extension = extensions[idx];
+  let renderInstalled = (~availableWidth as _, ~index as _, ~hovered as _, ~focused as _,
+    extension: Scanner.ScanResult.t) => {
 
     let iconPath = extension.manifest.icon;
     let displayName = Manifest.getDisplayName(extension.manifest);
@@ -158,16 +158,15 @@ let%component make =
   let contents =
     if (Component_InputText.isEmpty(model.searchText)) {
       [
-        <Component_Accordion
+        <Component_Accordion.VimList
           title="Installed"
           expanded={installedExpanded || isInstalledFocused}
+          model={Model.ViewModel.installed(model.viewModel)}
           uiFont=font
-          renderItem={renderInstalled(userExtensions)}
-          rowHeight=ItemView.Constants.itemHeight
-          count={Array.length(userExtensions)}
+          render={renderInstalled}
           isFocused=isInstalledFocused
-          focused=None
           theme
+          dispatch={msg => dispatch(ViewModel(Model.ViewModel.Installed(msg)))}
           onClick={_ => localDispatch(InstalledTitleClicked)}
         />,
         <Component_Accordion
