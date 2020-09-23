@@ -109,6 +109,20 @@ type model('node, 'leaf) = {
 
 let count = ({treeAsList, _}) => Component_VimList.count(treeAsList);
 
+let findIndex = (f, {treeAsList, _}) => {
+  let pred = fun
+  | Node({ expanded, indentation, data}) => f(
+    Node({expanded, indentation, data: data.inner})
+  )
+  | Leaf(_) as leaf => f(leaf);
+
+  Component_VimList.findIndex(pred, treeAsList);
+};
+
+let scrollTo = (~index, ~alignment, ({treeAsList, _}) => {
+  Component_VimList.scrollTo(~index, ~alignment, treeAsList);
+};
+
 let create = (~rowHeight) => {
   expansionContext: ExpansionContext.initial,
   activeIndentRange: None,

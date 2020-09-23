@@ -48,6 +48,10 @@ let set:
   ) =>
   model('node, 'leaf);
 
+let findIndex: (nodeOrLeaf('node, 'leaf) => bool, model('node, 'leaf)) => option(int);
+
+let scrollTo: (~index: int, ~alignment: [> | `Top | `Bottom | `Center | `Reveal], model('node, 'leaf)) => model('node, 'leaf);
+
 // CONTRIBUTIONS
 
 module Contributions: {

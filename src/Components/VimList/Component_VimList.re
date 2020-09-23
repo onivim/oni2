@@ -34,6 +34,22 @@ let create = (~rowHeight) => {
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
+let findIndex = (f, {items, _}) => {
+  let len = Array.length(items);
+  let rec loop = (idx) => {
+    if (idx >= len) {
+      None
+    } else {
+      if (f(items[idx])) {
+        Some(idx)
+      } else {
+        loop(idx + 1);
+      }
+    }
+  };
+  loop(0);
+};
+
 let focusedIndex = ({focused, _}) => focused;
 
 let resetMultiplier = model => {...model, multiplier: 0};
@@ -143,6 +159,49 @@ let setScrollY = (~scrollY, model) => {
 let enableScrollAnimation = model => {...model, isScrollAnimated: true};
 let disableScrollAnimation = model => {...model, isScrollAnimated: false};
 
+let scrollFocusToTop = (model) => {
+   model
+   |> setScrollY(~scrollY=float(model.focused * model.rowHeight))
+   |> enableScrollAnimation;
+};
+
+let scrollFocusToBottom = (model) => {
+      model
+      |> setScrollY(
+           ~scrollY=
+             float(
+               model.focused
+               * model.rowHeight
+               - (model.viewportHeight - model.rowHeight),
+             ),
+         )
+      |> enableScrollAnimation;
+};
+
+let scrollFocusToCenter = (model) => {
+      model
+      |> setScrollY(
+           ~scrollY=
+             float(
+               model.focused
+               * model.rowHeight
+               - (model.viewportHeight - model.rowHeight)
+               / 2,
+             ),
+         )
+      |> enableScrollAnimation;
+};
+
+let scrollTo = (~index, ~alignment, model) => {
+  let model' = model |> setFocus(~focus=index);
+  switch (alignment) {
+  | `Top => model' |> scrollFocusToTop
+  | `Bottom => model' |> scrollFocusToBottom
+  | `Center => model' |> scrollFocusToCenter
+  | `Reveal => model' |> ensureFocusedVisible
+  }
+};
+
 let update = (msg, model) => {
   switch (msg) {
   | Command(CursorToTop) => (
@@ -182,39 +241,21 @@ let update = (msg, model) => {
 
   | Command(ScrollCursorTop) => (
       model
-      |> setScrollY(~scrollY=float(model.focused * model.rowHeight))
-      |> enableScrollAnimation
+      |> scrollFocusToTop
       |> resetMultiplier,
       Nothing,
     )
 
   | Command(ScrollCursorBottom) => (
       model
-      |> setScrollY(
-           ~scrollY=
-             float(
-               model.focused
-               * model.rowHeight
-               - (model.viewportHeight - model.rowHeight),
-             ),
-         )
-      |> enableScrollAnimation
+      |> scrollFocusToBottom
       |> resetMultiplier,
       Nothing,
     )
 
   | Command(ScrollCursorCenter) => (
       model
-      |> setScrollY(
-           ~scrollY=
-             float(
-               model.focused
-               * model.rowHeight
-               - (model.viewportHeight - model.rowHeight)
-               / 2,
-             ),
-         )
-      |> enableScrollAnimation
+      |> scrollFocusToCenter
       |> resetMultiplier,
       Nothing,
     )

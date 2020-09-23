@@ -31,6 +31,10 @@ let update: (msg, model('item)) => (model('item), outmsg);
 
 let set: (array('item), model('item)) => model('item);
 
+let findIndex: ('item => bool, model('item)) => option(int);
+
+let scrollTo: (~index: int, ~alignment: [> | `Top | `Bottom | `Center | `Reveal], model('item)) => model('item);
+
 // CONTRIBUTIONS
 
 module Contributions: {
