@@ -288,10 +288,25 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
   | ScrollOffsetChanged(offset) => (setScrollOffset(offset, model), Nothing)
 
   | Tree(treeMsg) =>
-    let (treeView, _outmsg) =
+    let (treeView, outmsg) =
       Component_VimTree.update(treeMsg, model.treeView);
 
-    ({...model, treeView}, Nothing);
+    let eff = switch (outmsg) {
+    | Expanded(node) =>
+        Effect(
+            Effects.load(
+              node.path,
+              languageInfo,
+              iconTheme,
+              configuration,
+              ~onComplete=newNode =>
+              NodeLoaded(newNode)
+            ),
+          );
+    | Collapsed(_) => Nothing
+    | _ => Nothing
+    };
+    ({...model, treeView}, eff);
   };
 };
 
