@@ -53,6 +53,15 @@ const shell = (cmd) => {
     return out.toString("utf8")
 }
 
+const winShell = (cmd) => {
+    let oldEnv = process.env
+    process.env = {
+        PATH: process.env.PATH,
+    }
+    shell(cmd)
+    process.env = oldEnv
+}
+
 const getRipgrepPath = () => {
     const rg = "ripgrep-v0.10.0"
 
@@ -322,7 +331,7 @@ if (process.platform == "linux") {
         path.join(platformReleaseDirectory, process.platform == "win32" ? "rls.exe" : "rls"),
     )
     if (process.platform == "win32") {
-        const numCommits = shell(
+        const numCommits = winShell(
             '"C:\\Program Files\\Git\\cmd\\git.exe" rev-list --count origin/master',
         ).replace(/(\r\n|\n|\r)/gm, "")
         const semvers = package.version.split(".")
