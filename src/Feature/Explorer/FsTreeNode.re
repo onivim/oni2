@@ -136,7 +136,7 @@ let updateNodesInPath =
     switch (pathHashes) {
     | [hash, ...rest] when hash == getHash(node) =>
       switch (node) {
-      | Tree.Node({children, data, _}) as cur =>
+      | Tree.Node({children, _}) as cur =>
         let newChildren = List.map(loop(rest), children);
         switch (updater(cur)) {
         | Tree.Node(data) => Tree.Node({...data, children: newChildren})
@@ -154,7 +154,7 @@ let updateNodesInPath =
 
 let toggleOpen =
   fun
-  | Tree.Node({expanded as prev, _} as node) =>
+  | Tree.Node({expanded: prev, _} as node) =>
     Tree.Node({...node, expanded: !prev})
   | leaf => leaf;
 

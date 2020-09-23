@@ -105,13 +105,10 @@ type outmsg =
   | GrabFocus;
 
 let setTree = (tree, model) => {
-
   let uniqueId = (data: FsTreeNode.metadata) => data.path;
   let treeView = Component_VimTree.set(~uniqueId, [tree], model.treeView);
 
-{...model, tree: Some(tree), 
-treeView,
-};
+  {...model, tree: Some(tree), treeView};
 };
 
 let setActive = (maybePath, model) => {...model, active: maybePath};
@@ -291,22 +288,27 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
     let (treeView, outmsg) =
       Component_VimTree.update(treeMsg, model.treeView);
 
-    let eff = switch (outmsg) {
-    | Expanded(node) =>
+    let model = {...model, treeView};
+    switch (outmsg) {
+    | Expanded(node) => (
+        model,
         Effect(
-            Effects.load(
-              node.path,
-              languageInfo,
-              iconTheme,
-              configuration,
-              ~onComplete=newNode =>
-              NodeLoaded(newNode)
-            ),
-          );
-    | Collapsed(_) => Nothing
-    | _ => Nothing
+          Effects.load(
+            node.path,
+            languageInfo,
+            iconTheme,
+            configuration,
+            ~onComplete=newNode =>
+            NodeLoaded(newNode)
+          ),
+        ),
+      )
+    | Collapsed(_) => (model, Nothing)
+    | Selected(node) =>
+      // Set active here to avoid scrolling in BufferEnter
+      (model |> setActive(Some(node.path)), OpenFile(node.path))
+    | Nothing => (model, Nothing)
     };
-    ({...model, treeView}, eff);
   };
 };
 
@@ -342,20 +344,14 @@ module Contributions = {
   let commands = (~isFocused) => {
     !isFocused
       ? []
-      : 
-        (
-          Component_VimTree.Contributions.commands
-          |> List.map(Oni_Core.Command.map(msg => Tree(msg)))
-        );
+      : Component_VimTree.Contributions.commands
+        |> List.map(Oni_Core.Command.map(msg => Tree(msg)));
   };
 
   let contextKeys = (~isFocused) => {
     let vimTreeKeys =
       isFocused ? Component_VimTree.Contributions.contextKeys : [];
 
-    [
-      vimTreeKeys |> fromList |> map(_ => ()),
-    ]
-    |> unionMany;
+    [vimTreeKeys |> fromList |> map(_ => ())] |> unionMany;
   };
 };

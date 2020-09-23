@@ -122,7 +122,7 @@ let all = (state: State.t) => {
   // by Feature_SideBar.contextKeys.
   let scmContextKeys =
     Feature_SCM.Contributions.contextKeys(~isFocused=focus == Focus.SCM);
-    
+
   let explorerContextKeys =
     Feature_Explorer.Contributions.contextKeys(
       ~isFocused=focus == Focus.FileExplorer,

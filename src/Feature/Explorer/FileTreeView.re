@@ -112,13 +112,9 @@ let nodeView =
 let make =
     (
       ~isFocused,
-      ~scrollOffset,
-      ~tree: FsTreeNode.t,
       ~treeView:
          Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
       ~active: option(string),
-      ~focus: option(string),
-      ~onNodeClick,
       ~theme,
       ~decorations: Feature_Decorations.model,
       ~font: UiFont.t,
@@ -132,7 +128,7 @@ let make =
       theme
       model=treeView
       dispatch={msg => dispatch(Tree(msg))}
-      render={(~availableWidth, ~index as _, ~hovered as _, ~focused, item) => {
+      render={(~availableWidth as _, ~index as _, ~hovered as _, ~focused, item) => {
         open FsTreeNode;
         let (icon, data) =
           switch (item) {
