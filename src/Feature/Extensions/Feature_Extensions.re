@@ -113,23 +113,53 @@ module Contributions = {
 
   let commands = (~isFocused, model) => {
     let extensionCommands = extensionCommands(model);
-    !isFocused
-      ? extensionCommands
-      : extensionCommands
-        @ (
-          Component_VimWindows.Contributions.commands
+
+    let vimWindowCommands =
+      isFocused
+        ? Component_VimWindows.Contributions.commands
           |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
-        );
+        : [];
+
+    let installedCommands =
+      isFocused && model.focusedWindow == Focus.Installed
+        ? Component_VimList.Contributions.commands
+          |> List.map(
+               Oni_Core.Command.map(msg =>
+                 ViewModel(ViewModel.Installed(msg))
+               ),
+             )
+        : [];
+
+    let bundledCommands =
+      isFocused && model.focusedWindow == Focus.Bundled
+        ? Component_VimList.Contributions.commands
+          |> List.map(
+               Oni_Core.Command.map(msg =>
+                 ViewModel(ViewModel.Bundled(msg))
+               ),
+             )
+        : [];
+
+    extensionCommands @ vimWindowCommands @ installedCommands @ bundledCommands;
   };
 
-  let contextKeys = (~isFocused) => {
+  let contextKeys = (~isFocused, model) => {
     let keys = isFocused ? Component_InputText.Contributions.contextKeys : [];
 
     let vimNavKeys =
       isFocused ? Component_VimWindows.Contributions.contextKeys : [];
 
+    let vimListKeys =
+      (
+        isFocused && model.focusedWindow != Focus.SearchText
+          ? Component_VimList.Contributions.contextKeys : []
+      )
+      |> fromList
+      |> map(_ => ());
+
     [
       keys |> fromList |> map(({searchText, _}: model) => searchText),
+      vimListKeys,
       vimNavKeys
       |> fromList
       |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),

@@ -89,9 +89,14 @@ let%component make =
 
   let showIcon = width > 300;
 
-  let renderBundled = (extensions: array(Scanner.ScanResult.t), idx) => {
-    let extension = extensions[idx];
-
+  let renderBundled =
+      (
+        ~availableWidth as _,
+        ~index as _,
+        ~hovered as _,
+        ~focused as _,
+        extension: Scanner.ScanResult.t,
+      ) => {
     let iconPath = extension.manifest.icon;
     let displayName = Manifest.getDisplayName(extension.manifest);
     let author = extension.manifest.author;
@@ -176,16 +181,17 @@ let%component make =
           }
           onClick={_ => localDispatch(InstalledTitleClicked)}
         />,
-        <Component_Accordion
+        <Component_Accordion.VimList
           title="Bundled"
           expanded={bundledExpanded || isBundledFocused}
+          model={Model.ViewModel.bundled(model.viewModel)}
           uiFont=font
-          renderItem={renderBundled(bundledExtensions)}
-          rowHeight=ItemView.Constants.itemHeight
-          count={Array.length(bundledExtensions)}
+          render=renderBundled
           isFocused=isBundledFocused
-          focused=None
           theme
+          dispatch={msg =>
+            dispatch(ViewModel(Model.ViewModel.Bundled(msg)))
+          }
           onClick={_ => localDispatch(BundledTitleClicked)}
         />,
       ]

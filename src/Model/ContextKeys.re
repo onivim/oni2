@@ -129,6 +129,7 @@ let all = (state: State.t) => {
   let extensionContextKeys =
     Feature_Extensions.Contributions.contextKeys(
       ~isFocused=focus == Focus.Extensions,
+      state.extensions,
     );
 
   let searchContextKeys =
