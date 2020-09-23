@@ -58,8 +58,9 @@ const winShell = (cmd) => {
     process.env = {
         PATH: process.env.PATH,
     }
-    shell(cmd)
+    const res = shell(cmd)
     process.env = oldEnv
+    return res;
 }
 
 const getRipgrepPath = () => {
