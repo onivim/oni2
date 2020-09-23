@@ -14,10 +14,11 @@ let getFileIcon = (~languageInfo, ~iconTheme, filePath) => {
 
 module Internal = {
   let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
-    switch (a.kind, b.kind) {
-    | (Directory(_), File) => (-1)
-    | (File, Directory(_)) => 1
-    | _ =>
+    switch (a, b) {
+    | (Node(_), Leaf(_)) => (-1)
+    | (Leaf(_), Node(_)) => 1
+    | (Node({data: a, _}), Node({data: b, _}))
+    | (Leaf(a), Leaf(b)) =>
       compare(
         a.displayName |> String.lowercase_ascii,
         b.displayName |> String.lowercase_ascii,
@@ -103,9 +104,7 @@ type outmsg =
   | OpenFile(string)
   | GrabFocus;
 
-let setTree = (tree, model) => {
-...model, tree: Some(tree),
-};
+let setTree = (tree, model) => {...model, tree: Some(tree)};
 
 let setActive = (maybePath, model) => {...model, active: maybePath};
 
@@ -141,7 +140,7 @@ let revealAndFocusPath =
         model,
         Effect(
           Effects.load(
-            lastNode.path,
+            FsTreeNode.getPath(lastNode),
             languageInfo,
             iconTheme,
             configuration,
@@ -154,12 +153,14 @@ let revealAndFocusPath =
     // Open ALL the nodes (in the path)!
     | `Success(_) =>
       let tree = FsTreeNode.updateNodesInPath(FsTreeNode.setOpen, path, tree);
-      let offset =
-        switch (FsTreeNode.expandedIndex(path, tree)) {
-        | Some(offset) => `Middle(float(offset))
-        | None => model.scrollOffset
-        };
 
+      // TODO: Update scroll offset. We can use the view to find this!
+      //      let offset =
+      //        switch (FsTreeNode.expandedIndex(path, tree)) {
+      //        | Some(offset) => `Middle(float(offset))
+      //        | None => model.scrollOffset
+      //        };
+      let offset = `Start(0.);
       (
         model
         |> setFocus(Some(path))
@@ -174,39 +175,43 @@ let revealAndFocusPath =
 };
 
 let revealFocus = model => {
-  switch (model.focus, model.tree) {
-  | (Some(focus), Some(tree)) =>
-    switch (FsTreeNode.expandedIndex(focus, tree)) {
-    | Some(index) => {...model, scrollOffset: `Reveal(index)}
-    | None => model
-    }
-  | _ => model
-  };
+  // TODO:
+  model;
+  //  switch (model.focus, model.tree) {
+  //  | (Some(focus), Some(tree)) =>
+  //    switch (FsTreeNode.expandedIndex(focus, tree)) {
+  //    | Some(index) => {...model, scrollOffset: `Reveal(index)}
+  //    | None => model
+  //    }
+  //  | _ => model
+  //  };
 };
 
 let selectNode =
     (~languageInfo, ~iconTheme, ~configuration, node: FsTreeNode.t, model) =>
-  switch (node) {
-  | {kind: File, path, _} =>
-    // Set active here to avoid scrolling in BufferEnter
-    (model |> setActive(Some(node.path)), OpenFile(path))
-
-  | {kind: Directory({isOpen, _}), _} => (
-      replaceNode(FsTreeNode.toggleOpen(node), model),
-      isOpen
-        ? Nothing
-        : Effect(
-            Effects.load(
-              node.path,
-              languageInfo,
-              iconTheme,
-              configuration,
-              ~onComplete=newNode =>
-              NodeLoaded(newNode)
-            ),
-          ),
-    )
-  };
+  // TODO:
+  model;
+//  switch (node) {
+//  | {kind: File, path, _} =>
+//    // Set active here to avoid scrolling in BufferEnter
+//    (model |> setActive(Some(node.path)), OpenFile(path))
+//
+//  | {kind: Directory({isOpen, _}), _} => (
+//      replaceNode(FsTreeNode.toggleOpen(node), model),
+//      isOpen
+//        ? Nothing
+//        : Effect(
+//            Effects.load(
+//              node.path,
+//              languageInfo,
+//              iconTheme,
+//              configuration,
+//              ~onComplete=newNode =>
+//              NodeLoaded(newNode)
+//            ),
+//          ),
+//    )
+//  };
 
 let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
   switch (msg) {
@@ -261,52 +266,24 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
     | None => (model, Nothing)
     }
 
-  | NodeClicked(node) =>
-    model
-    |> setFocus(Some(node.path))
-    |> selectNode(~languageInfo, ~configuration, ~iconTheme, node)
+  | KeyboardInput(_) =>
+    // Anything to be brought back here?
+    (model, Nothing)
+
+  | NodeClicked(node) => (
+      model
+      |> setFocus(Some(FsTreeNode.getPath(node)))
+      |> selectNode(~languageInfo, ~configuration, ~iconTheme, node),
+      Nothing,
+    )
 
   | ScrollOffsetChanged(offset) => (setScrollOffset(offset, model), Nothing)
 
-  | KeyboardInput(key) =>
-    let handleKey = ((path, tree)) =>
-      switch (key) {
-      | "<CR>" =>
-        FsTreeNode.findByPath(path, tree)
-        |> Option.map(node =>
-             selectNode(
-               ~languageInfo,
-               ~configuration,
-               ~iconTheme,
-               node,
-               model,
-             )
-           )
+  | Tree(treeMsg) =>
+    let (treeView, _outmsg) =
+      Component_VimTree.update(treeMsg, model.treeView);
 
-      | "<UP>" =>
-        FsTreeNode.prevExpandedNode(path, tree)
-        |> Option.map((node: FsTreeNode.t) =>
-             (model |> setFocus(Some(node.path)) |> revealFocus, Nothing)
-           )
-
-      | "<DOWN>" =>
-        FsTreeNode.nextExpandedNode(path, tree)
-        |> Option.map((node: FsTreeNode.t) =>
-             (model |> setFocus(Some(node.path)) |> revealFocus, Nothing)
-           )
-
-      | _ => None
-      };
-
-    OptionEx.zip(model.focus, model.tree)
-    |> OptionEx.flatMap(handleKey)
-    |> Option.value(~default=(model, Nothing));
-
-    | Tree(treeMsg) =>
-      let (treeView, _outmsg) = Component_VimTree.update(treeMsg,
-      model.treeView);
-
-      ({...model, treeView}, Nothing)
+    ({...model, treeView}, Nothing);
   };
 };
 

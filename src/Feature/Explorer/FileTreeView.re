@@ -27,11 +27,7 @@ module Styles = {
   // Minor adjustment to align with text
   let folder = [marginTop(4)];
 
-  let item = [
-    flexDirection(`Row),
-    flexGrow(1),
-    alignItems(`Center),
-  ];
+  let item = [flexDirection(`Row), flexGrow(1), alignItems(`Center)];
 
   let text = (~isFocus, ~isActive, ~decoration, ~theme) => [
     color(
@@ -82,50 +78,28 @@ let nodeView =
       ~isActive,
       ~font: UiFont.t,
       ~theme,
-      ~node: FsTreeNode.t,
+      ~icon,
+      ~node: FsTreeNode.metadata,
       ~decorations=[],
       (),
     ) => {
-  let icon = () =>
-    switch (node.icon) {
-    | Some(icon) =>
-      <setiIcon
-        fontSize={font.size}
-        fg={icon.fontColor}
-        icon={icon.fontCharacter}
-      />
-    | None => React.empty
-    };
-
-  // TODO: Since the icon theme does not have a folder icon (yet), verride it
-  // here in order to use FontAwesome. Remove when a better icon theme has been found.
-  let icon = () =>
-    switch (node.kind) {
-    | Directory({isOpen, _}) =>
-      <View style=Styles.folder>
-        <FontIcon
-          color={Colors.SideBar.foreground.from(theme)}
-          icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
-        />
-      </View>
-    | _ => <icon />
-    };
-
   let decoration =
     switch (decorations) {
     | [last, ..._] => Some(last)
     | [] => None
     };
 
-  let tooltipText =
+  let tooltipText = {
+    let path = node.path;
     switch (decoration) {
     | Some((decoration: Feature_Decorations.Decoration.t)) =>
-      node.path ++ " • " ++ decoration.tooltip
-    | None => node.path
+      path ++ " • " ++ decoration.tooltip
+    | None => path
     };
+  };
 
-  <Tooltip text=tooltipText style={Styles.item}>
-    <icon />
+  <Tooltip text=tooltipText style=Styles.item>
+    icon
     <Text
       text={node.displayName}
       style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
@@ -139,46 +113,54 @@ let make =
     (
       ~scrollOffset,
       ~tree: FsTreeNode.t,
-      ~treeView: Component_VimTree.model(FsTreeNode.t, FsTreeNode.t),
+      ~treeView:
+         Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
       ~active: option(string),
       ~focus: option(string),
       ~onNodeClick,
       ~theme,
       ~decorations: Feature_Decorations.model,
-      ~font,
+      ~font: UiFont.t,
       ~dispatch: Model.msg => unit,
       (),
     ) => {
   //let onScrollOffsetChange = offset => dispatch(ScrollOffsetChanged(offset));
-
   <View style=Styles.container>
-      <Component_VimTree.View
-        isActive={true}
-        theme
-        model={treeView}
-        dispatch={msg => dispatch(Tree(msg))}
-        render={(
-          ~availableWidth,
-          ~index as _,
-          ~hovered as _,
-          ~focused,
-          item,
-        ) =>
+    <Component_VimTree.View
+      isActive=true
+      theme
+      model=treeView
+      dispatch={msg => dispatch(Tree(msg))}
+      render={(~availableWidth, ~index as _, ~hovered as _, ~focused, item) => {
+        open FsTreeNode;
+        let (icon, data) =
           switch (item) {
-          | Component_VimTree.Node({data, _})
-          | Component_VimTree.Leaf({data, _}) =>
-          let decorations =
-            Feature_Decorations.getDecorations(~path=data.path, decorations);
-              <nodeView
-                isFocus=focused
-                isActive={Some(data.path) == active}
-                font
-                theme
-                node=data
-                decorations
-              />;
-          }
-        }
-      />
+          | Component_VimTree.Node({data, _}) => (React.empty, data)
+          | Component_VimTree.Leaf({data, _}) => (
+              switch (data.icon) {
+              | None => React.empty
+              | Some((icon: IconTheme.IconDefinition.t)) =>
+                <setiIcon
+                  fontSize={font.size}
+                  fg={icon.fontColor}
+                  icon={icon.fontCharacter}
+                />
+              },
+              data,
+            )
+          };
+        let decorations =
+          Feature_Decorations.getDecorations(~path=data.path, decorations);
+        <nodeView
+          icon
+          isFocus=focused
+          isActive={Some(data.path) == active}
+          font
+          theme
+          node=data
+          decorations
+        />;
+      }}
+    />
   </View>;
 };

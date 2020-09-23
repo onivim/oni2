@@ -17,11 +17,10 @@ module Msg = {
   let activeFileChanged = maybePath => ActiveFilePathChanged(maybePath);
 };
 
-
 type model = {
   rootPath: string,
   tree: option(FsTreeNode.t),
-  treeView: Component_VimTree.model(FsTreeNode.t, FsTreeNode.t),
+  treeView: Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(string), // path
