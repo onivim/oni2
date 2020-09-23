@@ -3,7 +3,7 @@ open Revery.UI;
 let make =
     (~model, ~decorations, ~theme, ~font, ~dispatch: Model.msg => unit, ()) => {
   switch ((model: Model.model)) {
-  | {tree: Some(tree), active, focus, scrollOffset, _} =>
+  | {tree: Some(tree), treeView, active, focus, scrollOffset, _} =>
     let onNodeClick = node => dispatch(NodeClicked(node));
 
     <FileTreeView
@@ -13,6 +13,7 @@ let make =
       focus
       onNodeClick
       tree
+      treeView
       theme
       font
       dispatch

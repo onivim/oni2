@@ -10,7 +10,6 @@ module Tooltip = Oni_Components.Tooltip;
 module Colors = Feature_Theme.Colors;
 
 module View = Revery.UI.View;
-module TreeView = Oni_Components.TreeView;
 
 module Styles = {
   open Style;
@@ -28,20 +27,10 @@ module Styles = {
   // Minor adjustment to align with text
   let folder = [marginTop(4)];
 
-  let item = (~isFocus, ~isActive, ~theme) => [
+  let item = [
     flexDirection(`Row),
     flexGrow(1),
     alignItems(`Center),
-    backgroundColor(
-      if (isActive) {
-        Colors.List.activeSelectionBackground.from(theme);
-      } else if (isFocus) {
-        Colors.List.focusBackground.from(theme);
-      } else {
-        // NOTE: Could use, `Colors.SideBar.background.from(theme)`
-        Revery.Colors.transparentWhite;
-      },
-    ),
   ];
 
   let text = (~isFocus, ~isActive, ~decoration, ~theme) => [
@@ -135,7 +124,7 @@ let nodeView =
     | None => node.path
     };
 
-  <Tooltip text=tooltipText style={Styles.item(~isFocus, ~isActive, ~theme)}>
+  <Tooltip text=tooltipText style={Styles.item}>
     <icon />
     <Text
       text={node.displayName}
@@ -146,12 +135,11 @@ let nodeView =
   </Tooltip>;
 };
 
-module FsTreeView = TreeView.Make(FsTreeNode.Model);
-
 let make =
     (
       ~scrollOffset,
       ~tree: FsTreeNode.t,
+      ~treeView: Component_VimTree.model(FsTreeNode.t, FsTreeNode.t),
       ~active: option(string),
       ~focus: option(string),
       ~onNodeClick,
@@ -161,29 +149,36 @@ let make =
       ~dispatch: Model.msg => unit,
       (),
     ) => {
-  let onScrollOffsetChange = offset => dispatch(ScrollOffsetChanged(offset));
+  //let onScrollOffsetChange = offset => dispatch(ScrollOffsetChanged(offset));
 
   <View style=Styles.container>
-    <FsTreeView
-      scrollOffset
-      onScrollOffsetChange
-      tree
-      itemHeight=22
-      onClick=onNodeClick
-      arrowColor={Colors.SideBar.foreground.from(theme)}>
-      ...{node => {
-        let decorations =
-          Feature_Decorations.getDecorations(~path=node.path, decorations);
-
-        <nodeView
-          isFocus={Some(node.path) == focus}
-          isActive={Some(node.path) == active}
-          font
-          theme
-          node
-          decorations
-        />;
-      }}
-    </FsTreeView>
+      <Component_VimTree.View
+        isActive={true}
+        theme
+        model={treeView}
+        dispatch={msg => dispatch(Tree(msg))}
+        render={(
+          ~availableWidth,
+          ~index as _,
+          ~hovered as _,
+          ~focused,
+          item,
+        ) =>
+          switch (item) {
+          | Component_VimTree.Node({data, _})
+          | Component_VimTree.Leaf({data, _}) =>
+          let decorations =
+            Feature_Decorations.getDecorations(~path=data.path, decorations);
+              <nodeView
+                isFocus=focused
+                isActive={Some(data.path) == active}
+                font
+                theme
+                node=data
+                decorations
+              />;
+          }
+        }
+      />
   </View>;
 };

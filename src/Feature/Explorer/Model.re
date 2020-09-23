@@ -9,16 +9,19 @@ type msg =
   | FocusNodeLoaded(FsTreeNode.t)
   | NodeClicked(FsTreeNode.t)
   | ScrollOffsetChanged([ | `Start(float) | `Middle(float) | `Reveal(int)])
-  | KeyboardInput(string);
+  | KeyboardInput(string)
+  | Tree(Component_VimTree.msg);
 
 module Msg = {
   let keyPressed = key => KeyboardInput(key);
   let activeFileChanged = maybePath => ActiveFilePathChanged(maybePath);
 };
 
+
 type model = {
   rootPath: string,
   tree: option(FsTreeNode.t),
+  treeView: Component_VimTree.model(FsTreeNode.t, FsTreeNode.t),
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(string), // path
@@ -28,6 +31,7 @@ type model = {
 let initial = (~rootPath) => {
   rootPath,
   tree: None,
+  treeView: Component_VimTree.create(~rowHeight=20),
   isOpen: true,
   scrollOffset: `Start(0.),
   active: None,

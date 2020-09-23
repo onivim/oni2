@@ -103,7 +103,9 @@ type outmsg =
   | OpenFile(string)
   | GrabFocus;
 
-let setTree = (tree, model) => {...model, tree: Some(tree)};
+let setTree = (tree, model) => {
+...model, tree: Some(tree),
+};
 
 let setActive = (maybePath, model) => {...model, active: maybePath};
 
@@ -299,6 +301,12 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
     OptionEx.zip(model.focus, model.tree)
     |> OptionEx.flatMap(handleKey)
     |> Option.value(~default=(model, Nothing));
+
+    | Tree(treeMsg) =>
+      let (treeView, _outmsg) = Component_VimTree.update(treeMsg,
+      model.treeView);
+
+      ({...model, treeView}, Nothing)
   };
 };
 
