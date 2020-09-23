@@ -255,7 +255,6 @@ module Contributions = {
 
 module View = {
   open Revery.UI;
-  module Codicon = Oni_Components.Codicon;
   module Colors = Feature_Theme.Colors;
 
   module Styles = {

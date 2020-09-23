@@ -891,7 +891,7 @@ module Pane = {
       }
       isFocused
       render=renderItem
-      focused=None
+      //focused=None
       theme
       onClick=onTitleClick
     />;

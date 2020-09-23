@@ -139,7 +139,7 @@ module VimList = {
         (),
       ) => {
     let count = Component_VimList.count(model);
-    let contents = <Component_VimList.View theme model dispatch render />;
+    let contents = <Component_VimList.View isActive=isFocused theme model dispatch render />;
 
     <Common theme title expanded count isFocused uiFont onClick contents />;
   };
