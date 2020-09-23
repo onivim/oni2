@@ -7,8 +7,6 @@ type msg =
   | TreeLoadError(string)
   | NodeLoaded(FsTreeNode.t)
   | FocusNodeLoaded(FsTreeNode.t)
-  | NodeClicked(FsTreeNode.t)
-  | ScrollOffsetChanged([ | `Start(float) | `Middle(float) | `Reveal(int)])
   | KeyboardInput(string)
   | Tree(Component_VimTree.msg);
 

@@ -122,8 +122,7 @@ let setFocus = (maybePath, model) =>
     }
   | _ => {...model, focus: None}
   };
-let setScrollOffset = (scrollOffset, model) => {...model, scrollOffset};
-
+  
 let replaceNode = (node, model: model) =>
   switch (model.tree) {
   | Some(tree) =>
@@ -274,15 +273,6 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
   | KeyboardInput(_) =>
     // Anything to be brought back here?
     (model, Nothing)
-
-  | NodeClicked(node) => (
-      model
-      |> setFocus(Some(FsTreeNode.getPath(node)))
-      |> selectNode(~languageInfo, ~configuration, ~iconTheme, node),
-      Nothing,
-    )
-
-  | ScrollOffsetChanged(offset) => (setScrollOffset(offset, model), Nothing)
 
   | Tree(treeMsg) =>
     let (treeView, outmsg) =
