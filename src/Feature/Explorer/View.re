@@ -12,9 +12,10 @@ let make =
     ) => {
   switch ((model: Model.model)) {
   | {tree: Some(_), treeView, active, _} =>
-
+    let focusedIndex = Model.getFocusedIndex(model);
     <FileTreeView
       isFocused
+      focusedIndex
       decorations
       active
       treeView

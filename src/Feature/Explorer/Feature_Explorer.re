@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 
 module Log = (val Log.withNamespace("Oni2.Feature.Explorer"));
 
@@ -111,6 +110,13 @@ let setTree = (tree, model) => {
   {...model, tree: Some(tree), treeView};
 };
 
+let scrollTo = (~index, ~alignment, model) => {
+  {
+    ...model,
+    treeView: Component_VimTree.scrollTo(~index, ~alignment, model.treeView),
+  };
+};
+
 let setActive = (maybePath, model) => {...model, active: maybePath};
 
 let setFocus = (maybePath, model) =>
@@ -122,7 +128,7 @@ let setFocus = (maybePath, model) =>
     }
   | _ => {...model, focus: None}
   };
-  
+
 let replaceNode = (node, model: model) =>
   switch (model.tree) {
   | Some(tree) =>
@@ -158,64 +164,21 @@ let revealAndFocusPath =
     | `Success(_) =>
       let tree = FsTreeNode.updateNodesInPath(FsTreeNode.setOpen, path, tree);
 
-      // TODO: Update scroll offset. We can use the view to find this!
-      //      let offset =
-      //        switch (FsTreeNode.expandedIndex(path, tree)) {
-      //        | Some(offset) => `Middle(float(offset))
-      //        | None => model.scrollOffset
-      //        };
-      let offset = `Start(0.);
-      (
-        model
-        |> setFocus(Some(path))
-        |> setTree(tree)
-        |> setScrollOffset(offset),
-        Nothing,
-      );
+      let maybePathIndex = getIndex(path, model);
+
+      let model = model |> setFocus(Some(path)) |> setTree(tree);
+
+      let scrolledModel =
+        maybePathIndex
+        |> Option.map(index => scrollTo(~index, ~alignment=`Center, model))
+        |> Option.value(~default=model);
+
+      (scrolledModel, Nothing);
     }
 
   | None => (model, Nothing)
   };
 };
-
-let revealFocus = model => {
-  // TODO:
-  model;
-  //  switch (model.focus, model.tree) {
-  //  | (Some(focus), Some(tree)) =>
-  //    switch (FsTreeNode.expandedIndex(focus, tree)) {
-  //    | Some(index) => {...model, scrollOffset: `Reveal(index)}
-  //    | None => model
-  //    }
-  //  | _ => model
-  //  };
-};
-
-let selectNode =
-    (~languageInfo, ~iconTheme, ~configuration, node: FsTreeNode.t, model) =>
-  // TODO:
-  model;
-//  switch (node) {
-//  | {kind: File, path, _} =>
-//    // Set active here to avoid scrolling in BufferEnter
-//    (model |> setActive(Some(node.path)), OpenFile(path))
-//
-//  | {kind: Directory({isOpen, _}), _} => (
-//      replaceNode(FsTreeNode.toggleOpen(node), model),
-//      isOpen
-//        ? Nothing
-//        : Effect(
-//            Effects.load(
-//              node.path,
-//              languageInfo,
-//              iconTheme,
-//              configuration,
-//              ~onComplete=newNode =>
-//              NodeLoaded(newNode)
-//            ),
-//          ),
-//    )
-//  };
 
 let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
   switch (msg) {

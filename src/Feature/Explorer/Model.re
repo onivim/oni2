@@ -42,3 +42,19 @@ let setRoot = (~rootPath, model) => {
   active: None,
   focus: None,
 };
+
+let getIndex = (path, model) => {
+  Component_VimTree.(
+    findIndex(
+      fun
+      | Node({data, _})
+      | Leaf({data, _}) => FsTreeNode.(data.path) == path,
+      model.treeView,
+    )
+  );
+};
+
+let getFocusedIndex = model => {
+  model.active
+  |> Oni_Core.Utility.OptionEx.flatMap(path => getIndex(path, model));
+};

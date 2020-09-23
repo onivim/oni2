@@ -110,17 +110,21 @@ type model('node, 'leaf) = {
 let count = ({treeAsList, _}) => Component_VimList.count(treeAsList);
 
 let findIndex = (f, {treeAsList, _}) => {
-  let pred = fun
-  | Node({ expanded, indentation, data}) => f(
-    Node({expanded, indentation, data: data.inner})
-  )
-  | Leaf(_) as leaf => f(leaf);
+  let pred =
+    fun
+    | TreeList.ViewNode({expanded, indentationLevel, data}) =>
+      f(Node({expanded, indentation: indentationLevel, data: data.inner}))
+    | TreeList.ViewLeaf({indentationLevel, data}) =>
+      f(Leaf({indentation: indentationLevel, data}));
 
   Component_VimList.findIndex(pred, treeAsList);
 };
 
-let scrollTo = (~index, ~alignment, ({treeAsList, _}) => {
-  Component_VimList.scrollTo(~index, ~alignment, treeAsList);
+let scrollTo = (~index, ~alignment, {treeAsList, _} as model) => {
+  {
+    ...model,
+    treeAsList: Component_VimList.scrollTo(~index, ~alignment, treeAsList),
+  };
 };
 
 let create = (~rowHeight) => {
@@ -145,7 +149,7 @@ type outmsg('node, 'leaf) =
   | Selected('leaf);
 
 let calculateIndentGuides = model => {
-  let focusedIndex = model.treeAsList |> Component_VimList.focusedIndex;
+  let selectedIndex = model.treeAsList |> Component_VimList.selectedIndex;
 
   let count = model.treeAsList |> Component_VimList.count;
   let rec travel = (~direction, ~iteration, idx) =>
@@ -162,13 +166,13 @@ let calculateIndentGuides = model => {
 
   let activeIndentRange =
     model.treeAsList
-    |> Component_VimList.get(focusedIndex)
+    |> Component_VimList.get(selectedIndex)
     |> OptionEx.flatMap(item => {
          switch (item) {
          | TreeList.ViewNode(_) => None
          | TreeList.ViewLeaf(_) =>
-           let start = travel(~direction=-1, ~iteration=0, focusedIndex);
-           let stop = travel(~direction=1, ~iteration=0, focusedIndex);
+           let start = travel(~direction=-1, ~iteration=0, selectedIndex);
+           let stop = travel(~direction=1, ~iteration=0, selectedIndex);
            Some({start, stop});
          }
        });
@@ -312,7 +316,8 @@ module View = {
         fontSize=Constants.arrowSize
       />
     </View>;
-  let make = (~isActive, ~theme, ~model, ~dispatch, ~render, ()) => {
+  let make =
+      (~isActive, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
     let indentHeight = model.rowHeight;
     let indentWidth = Constants.indentSize;
     let activeIndentColor = Colors.List.activeIndentGuide.from(theme);
@@ -330,10 +335,11 @@ module View = {
 
     <Component_VimList.View
       isActive
+      focusedIndex
       theme
       model={model.treeAsList}
       dispatch={msg => dispatch(List(msg))}
-      render={(~availableWidth, ~index, ~hovered, ~focused, item) => {
+      render={(~availableWidth, ~index, ~hovered, ~selected, item) => {
         // Render actual item
         let innerView =
           switch (item) {
@@ -346,7 +352,7 @@ module View = {
                 ~availableWidth,
                 ~index,
                 ~hovered,
-                ~focused,
+                ~selected,
                 Leaf({indentation: indentationLevel, data}),
               ),
             ]
@@ -366,7 +372,7 @@ module View = {
                 ~availableWidth,
                 ~index,
                 ~hovered,
-                ~focused,
+                ~selected,
                 Node({
                   expanded,
                   indentation: indentationLevel,

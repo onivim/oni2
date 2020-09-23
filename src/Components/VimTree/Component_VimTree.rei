@@ -48,9 +48,16 @@ let set:
   ) =>
   model('node, 'leaf);
 
-let findIndex: (nodeOrLeaf('node, 'leaf) => bool, model('node, 'leaf)) => option(int);
+let findIndex:
+  (nodeOrLeaf('node, 'leaf) => bool, model('node, 'leaf)) => option(int);
 
-let scrollTo: (~index: int, ~alignment: [> | `Top | `Bottom | `Center | `Reveal], model('node, 'leaf)) => model('node, 'leaf);
+let scrollTo:
+  (
+    ~index: int,
+    ~alignment: [< | `Top | `Bottom | `Center | `Reveal],
+    model('node, 'leaf)
+  ) =>
+  model('node, 'leaf);
 
 // CONTRIBUTIONS
 
@@ -65,6 +72,7 @@ module View: {
   let make:
     (
       ~isActive: bool,
+      ~focusedIndex: option(int),
       ~theme: ColorTheme.Colors.t,
       ~model: model('node, 'leaf),
       ~dispatch: msg => unit,
@@ -72,7 +80,7 @@ module View: {
                  ~availableWidth: int,
                  ~index: int,
                  ~hovered: bool,
-                 ~focused: bool,
+                 ~selected: bool,
                  nodeOrLeaf('node, 'leaf)
                ) =>
                Revery.UI.element,

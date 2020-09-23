@@ -48,7 +48,6 @@ module Styles = {
         }
       },
     ),
-    marginLeft(10),
     // Minor adjustment to align with seti-icon
     marginTop(4),
     textWrap(TextWrapping.NoWrap),
@@ -66,6 +65,7 @@ let setiIcon = (~icon, ~fontSize, ~fg, ()) => {
       // Minor adjustment to center vertically
       marginTop(-2),
       marginLeft(-4),
+      marginRight(10),
     ]
     fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
     fontSize={fontSize *. 2.}
@@ -112,6 +112,7 @@ let nodeView =
 let make =
     (
       ~isFocused,
+      ~focusedIndex,
       ~treeView:
          Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
       ~active: option(string),
@@ -125,10 +126,17 @@ let make =
   <View style=Styles.container>
     <Component_VimTree.View
       isActive=isFocused
+      focusedIndex
       theme
       model=treeView
       dispatch={msg => dispatch(Tree(msg))}
-      render={(~availableWidth as _, ~index as _, ~hovered as _, ~focused, item) => {
+      render={(
+        ~availableWidth as _,
+        ~index as _,
+        ~hovered as _,
+        ~selected,
+        item,
+      ) => {
         open FsTreeNode;
         let (icon, data) =
           switch (item) {
@@ -150,7 +158,7 @@ let make =
           Feature_Decorations.getDecorations(~path=data.path, decorations);
         <nodeView
           icon
-          isFocus=focused
+          isFocus=selected
           isActive={Some(data.path) == active}
           font
           theme
