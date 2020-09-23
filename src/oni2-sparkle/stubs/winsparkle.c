@@ -1,8 +1,3 @@
-#include <windows.h>
-#include <shlwapi.h>
-
-#include "winsparkle.h"
-
 #include "config.h"
 
 #include <caml/alloc.h>
@@ -15,6 +10,11 @@
 #include <stdlib.h>
 
 #ifdef USE_WIN_SPARKLE
+
+#include <windows.h>
+#include <shlwapi.h>
+
+#include "winsparkle.h"
 
 void oni2_WinSparkleCloseCallback() {
   static const value *closeCallback;
