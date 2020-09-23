@@ -891,8 +891,8 @@ module Pane = {
       }
       isFocused
       render=renderItem
-      //focused=None
       theme
+      //focused=None
       onClick=onTitleClick
     />;
   };

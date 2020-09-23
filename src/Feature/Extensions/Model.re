@@ -3,13 +3,13 @@ open Exthost.Extension;
 
 module ViewModel = {
   [@deriving show]
-  type msg = 
-  | Bundled(Component_VimList.msg)
-  | Installed(Component_VimList.msg);
+  type msg =
+    | Bundled(Component_VimList.msg)
+    | Installed(Component_VimList.msg);
 
   type t = {
     bundled: Component_VimList.model(Scanner.ScanResult.t),
-    installed: Component_VimList.model(Scanner.ScanResult.t)
+    installed: Component_VimList.model(Scanner.ScanResult.t),
   };
 
   let initial = {
@@ -19,26 +19,27 @@ module ViewModel = {
 
   let setBundled = (newBundled, viewModel) => {
     ...viewModel,
-    bundled: Component_VimList.set(newBundled, viewModel.bundled)
+    bundled: Component_VimList.set(newBundled, viewModel.bundled),
   };
 
   let setInstalled = (newInstalled, viewModel) => {
     ...viewModel,
-    installed: Component_VimList.set(newInstalled, viewModel.installed)
-  }
+    installed: Component_VimList.set(newInstalled, viewModel.installed),
+  };
 
-  let update = (msg, viewModel) => { 
+  let update = (msg, viewModel) => {
     switch (msg) {
-    | Bundled(msg) => 
-      let (bundled, _outmsg) = Component_VimList.update(msg, viewModel.bundled);
+    | Bundled(msg) =>
+      let (bundled, _outmsg) =
+        Component_VimList.update(msg, viewModel.bundled);
       {...viewModel, bundled};
     | Installed(msg) =>
-      let (installed, _outmsg) = Component_VimList.update(msg, viewModel.installed);
+      let (installed, _outmsg) =
+        Component_VimList.update(msg, viewModel.installed);
       {...viewModel, installed};
-    }
-  }
-}
-
+    };
+  };
+};
 
 [@deriving show({with_path: false})]
 type msg =
@@ -198,7 +199,6 @@ type model = {
   extensionState: StringMap.t(extensionState),
   focusedWindow: Focus.t,
   vimWindowNavigation: Component_VimWindows.model,
-  
   viewModel: ViewModel.t,
 };
 
@@ -346,27 +346,24 @@ module Internal = {
   };
 
   let installed = (~extensionId, ~scanResult, model) => {
-      model
-      |> clearPendingInstall(~extensionId)
-      |> markRestartNeeded(~extensionId)
-      |> add([scanResult]);
+    model
+    |> clearPendingInstall(~extensionId)
+    |> markRestartNeeded(~extensionId)
+    |> add([scanResult]);
   };
 
   let uninstalled = (~extensionId, model) => {
     let model' = model |> clearPendingUninstall(~extensionId);
-      let extensions = 
-        List.filter(
-          (scanResult: Exthost.Extension.Scanner.ScanResult.t) => {
-            scanResult.manifest
-            |> Exthost.Extension.Manifest.identifier != extensionId
-          },
-          model'.extensions,
-        );
+    let extensions =
+      List.filter(
+        (scanResult: Exthost.Extension.Scanner.ScanResult.t) => {
+          scanResult.manifest
+          |> Exthost.Extension.Manifest.identifier != extensionId
+        },
+        model'.extensions,
+      );
 
-    {
-      ...model',
-      extensions,
-    };
+    {...model', extensions};
   };
 };
 
@@ -602,8 +599,10 @@ let update = (~extHostClient, msg, model) => {
          ),
        )
 
-  | ViewModel(viewModelMsg) =>
-    ({ ...model, viewModel: ViewModel.update(viewModelMsg, model.viewModel)}, Nothing);
+  | ViewModel(viewModelMsg) => (
+      {...model, viewModel: ViewModel.update(viewModelMsg, model.viewModel)},
+      Nothing,
+    )
 
   | VimWindowNav(navMsg) =>
     let (windowNav, outmsg) =

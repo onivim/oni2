@@ -97,10 +97,10 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
         font
         dispatch={msg => dispatch(Actions.SCM(msg))}
       />
-      //          ),
-      //            None,
-      //          Actions.OpenFileByPath(
-      //      let onItemClick = (resource: Feature_SCM.Resource.t) =>
+    //          ),
+    //            None,
+    //          Actions.OpenFileByPath(
+    //      let onItemClick = (resource: Feature_SCM.Resource.t) =>
 
     | Search =>
       let dispatch = msg =>
