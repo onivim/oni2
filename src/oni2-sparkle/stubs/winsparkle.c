@@ -9,11 +9,26 @@
 #include <caml/callback.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
+#include <caml/threads.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #ifdef USE_WIN_SPARKLE
+
+void oni2_WinSparkleCloseCallback() {
+  static const value *closeCallback;
+  if (closeCallback == NULL) {
+    closeCallback = caml_named_value("oni2_close");
+  }
+
+  if (closeCallback != NULL) {
+    caml_c_thread_register();
+    caml_acquire_runtime_system();
+    caml_callback(*closeCallback, Val_unit);
+    caml_release_runtime_system();
+  }
+}
 
 CAMLprim value oni2_SparkleInit() {
   CAMLparam0();
@@ -33,6 +48,7 @@ CAMLprim value oni2_SparkleInit() {
   mbstowcs(versionWide, version, 16);
 
   win_sparkle_set_app_details(L"Outrun Labs LLC", L"Onivim 2", versionWide);
+  win_sparkle_set_shutdown_request_callback(oni2_WinSparkleCloseCallback);
   win_sparkle_init();
 
   CAMLreturn(Val_unit);

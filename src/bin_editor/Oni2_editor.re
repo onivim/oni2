@@ -396,6 +396,8 @@ switch (eff) {
       App.quit(~askNicely=true, app);
     };
 
+    Callback.register("oni2_close", close);
+
     let restore = () => {
       Window.restore(window);
     };
