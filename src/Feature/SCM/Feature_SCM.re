@@ -1,6 +1,5 @@
 open Oni_Core;
 open Utility;
-open Oni_Components;
 
 // MODEL
 
@@ -99,7 +98,7 @@ module Focus = {
     switch (focus) {
     | CommitText => None
 
-    | Group({handle, id}) =>
+    | Group({handle, id, _}) =>
       let maybeIdx = idx(~handle, ~id, visibleGroups);
 
       switch (maybeIdx) {
@@ -122,7 +121,7 @@ module Focus = {
 
     | CommitText => None
 
-    | Group({handle, id}) =>
+    | Group({handle, id, _}) =>
       let maybeIdx = idx(~handle, ~id, visibleGroups);
 
       switch (maybeIdx) {
@@ -878,7 +877,13 @@ module Pane = {
       ) => {
     let label = group.label;
     let renderItem =
-        (~availableWidth as _, ~index, ~hovered as _, ~focused, item) => {
+        (
+          ~availableWidth as _,
+          ~index as _,
+          ~hovered as _,
+          ~focused as _,
+          item,
+        ) => {
       <itemView provider resource=item theme font workingDirectory />;
     };
     <Component_Accordion.VimList

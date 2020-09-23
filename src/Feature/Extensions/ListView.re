@@ -158,11 +158,6 @@ let%component make =
     />;
   };
 
-  let bundledExtensions =
-    Model.getExtensions(~category=Scanner.Bundled, model) |> Array.of_list;
-
-  let userExtensions =
-    Model.getExtensions(~category=Scanner.User, model) |> Array.of_list;
   let isInstalledFocused = isFocused && model.focusedWindow == Installed;
   let isBundledFocused = isFocused && model.focusedWindow == Bundled;
   let contents =
@@ -197,55 +192,57 @@ let%component make =
       ]
       |> React.listToElement;
     } else {
-      let results =
-        Model.searchResults(model)
-        |> List.map((summary: Service_Extensions.Catalog.Summary.t) => {
-             let displayName =
-               summary |> Service_Extensions.Catalog.Summary.name;
-             let extensionId =
-               summary |> Service_Extensions.Catalog.Summary.id;
-             let {namespace, version, iconUrl, _}: Service_Extensions.Catalog.Summary.t = summary;
-             let author = namespace;
-
-             let isRestartRequired =
-               Model.isRestartRequired(~extensionId, model);
-
-             let actionButton =
-               Model.isInstalling(~extensionId, model)
-                 ? <progressButton extensionId title="Installing" font />
-                 : <installButton extensionId dispatch font extensionId />;
-             <ItemView
-               actionButton
-               width
-               iconPath=iconUrl
-               theme
-               displayName
-               isRestartRequired
-               author
-               version
-               font
-               showIcon
-               onClick={_ =>
-                 dispatch(
-                   Model.RemoteExtensionClicked({extensionId: extensionId}),
-                 )
-               }
-             />;
-           })
-        |> Array.of_list;
-
       <View
         style={Styles.resultsContainer(
           ~isFocused={isFocused && model.focusedWindow != SearchText},
           theme,
         )}>
-        <FlatList
-          rowHeight=ItemView.Constants.itemHeight
+        <Component_VimList.View
+          isActive={isInstalledFocused || isBundledFocused}
           theme
-          focused=None
-          count={Array.length(results)}>
-          ...{idx => results[idx]}
-        </FlatList>
+          model={Model.ViewModel.searchResults(model.viewModel)}
+          dispatch={msg =>
+            dispatch(ViewModel(Model.ViewModel.SearchResults(msg)))
+          }
+          render={(
+            ~availableWidth as _,
+            ~index as _,
+            ~hovered as _,
+            ~focused as _,
+            summary: Service_Extensions.Catalog.Summary.t,
+          ) => {
+            let displayName =
+              summary |> Service_Extensions.Catalog.Summary.name;
+            let extensionId = summary |> Service_Extensions.Catalog.Summary.id;
+            let {namespace, version, iconUrl, _}: Service_Extensions.Catalog.Summary.t = summary;
+            let author = namespace;
+
+            let isRestartRequired =
+              Model.isRestartRequired(~extensionId, model);
+
+            let actionButton =
+              Model.isInstalling(~extensionId, model)
+                ? <progressButton extensionId title="Installing" font />
+                : <installButton extensionId dispatch font extensionId />;
+            <ItemView
+              actionButton
+              width
+              iconPath=iconUrl
+              theme
+              displayName
+              isRestartRequired
+              author
+              version
+              font
+              showIcon
+              onClick={_ =>
+                dispatch(
+                  Model.RemoteExtensionClicked({extensionId: extensionId}),
+                )
+              }
+            />;
+          }}
+        />
       </View>;
     };
 

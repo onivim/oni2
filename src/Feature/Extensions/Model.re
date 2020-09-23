@@ -5,20 +5,25 @@ module ViewModel = {
   [@deriving show]
   type msg =
     | Bundled(Component_VimList.msg)
-    | Installed(Component_VimList.msg);
+    | Installed(Component_VimList.msg)
+    | SearchResults(Component_VimList.msg);
 
   type t = {
     bundled: Component_VimList.model(Scanner.ScanResult.t),
     installed: Component_VimList.model(Scanner.ScanResult.t),
+    searchResults:
+      Component_VimList.model(Service_Extensions.Catalog.Summary.t),
   };
 
   let initial = {
     bundled: Component_VimList.create(~rowHeight=72),
     installed: Component_VimList.create(~rowHeight=72),
+    searchResults: Component_VimList.create(~rowHeight=72),
   };
 
   let installed = ({installed, _}) => installed;
   let bundled = ({bundled, _}) => bundled;
+  let searchResults = ({searchResults, _}) => searchResults;
 
   let setBundled = (newBundled, viewModel) => {
     ...viewModel,
@@ -28,6 +33,12 @@ module ViewModel = {
   let setInstalled = (newInstalled, viewModel) => {
     ...viewModel,
     installed: Component_VimList.set(newInstalled, viewModel.installed),
+  };
+
+  let setSearchResults = (newSearchResults, viewModel) => {
+    ...viewModel,
+    searchResults:
+      Component_VimList.set(newSearchResults, viewModel.searchResults),
   };
 
   let update = (msg, viewModel) => {
@@ -40,6 +51,10 @@ module ViewModel = {
       let (installed, _outmsg) =
         Component_VimList.update(msg, viewModel.installed);
       {...viewModel, installed};
+    | SearchResults(msg) =>
+      let (searchResults, _outmsg) =
+        Component_VimList.update(msg, viewModel.searchResults);
+      {...viewModel, searchResults};
     };
   };
 };
@@ -287,6 +302,18 @@ let searchResults = ({latestQuery, _}) =>
   | Some(query) => query |> Service_Extensions.Query.results
   };
 
+let updateViewModelSearchResults = model => {
+  let searchResults = searchResults(model);
+  {
+    ...model,
+    viewModel:
+      ViewModel.setSearchResults(
+        searchResults |> Array.of_list,
+        model.viewModel,
+      ),
+  };
+};
+
 let isSearchInProgress = ({latestQuery, _}) => {
   switch (latestQuery) {
   | None => false
@@ -474,7 +501,11 @@ let update = (~extHostClient, msg, model) => {
         ~newText,
         ~query=model.latestQuery,
       );
-    ({...model, searchText: searchText', latestQuery}, Nothing);
+    (
+      {...model, searchText: searchText', latestQuery}
+      |> updateViewModelSearchResults,
+      Nothing,
+    );
   | Pasted(text) =>
     let previousText = model.searchText |> Component_InputText.value;
     let searchText' = Component_InputText.paste(~text, model.searchText);
@@ -485,7 +516,11 @@ let update = (~extHostClient, msg, model) => {
         ~newText,
         ~query=model.latestQuery,
       );
-    ({...model, searchText: searchText', latestQuery}, Nothing);
+    (
+      {...model, searchText: searchText', latestQuery}
+      |> updateViewModelSearchResults,
+      Nothing,
+    );
   | SearchText(msg) =>
     let previousText = model.searchText |> Component_InputText.value;
     let (searchText', inputOutmsg) =
@@ -502,12 +537,20 @@ let update = (~extHostClient, msg, model) => {
         ~newText,
         ~query=model.latestQuery,
       );
-    ({...model, searchText: searchText', latestQuery}, outmsg);
+    (
+      {...model, searchText: searchText', latestQuery}
+      |> updateViewModelSearchResults,
+      outmsg,
+    );
   | SearchQueryResults(queryResults) =>
     queryResults
     |> Service_Extensions.Query.searchText
     == (model.searchText |> Component_InputText.value)
-      ? ({...model, latestQuery: Some(queryResults)}, Nothing)
+      ? (
+        {...model, latestQuery: Some(queryResults)}
+        |> updateViewModelSearchResults,
+        Nothing,
+      )
       : (model, Nothing)
   | SearchQueryError(_queryResults) =>
     // TODO: Error experience?

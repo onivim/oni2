@@ -120,8 +120,10 @@ module Contributions = {
           |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
         : [];
 
+    let isSearching = !Component_InputText.isEmpty(model.searchText);
+
     let installedCommands =
-      isFocused && model.focusedWindow == Focus.Installed
+      isFocused && model.focusedWindow == Focus.Installed && !isSearching
         ? Component_VimList.Contributions.commands
           |> List.map(
                Oni_Core.Command.map(msg =>
@@ -131,7 +133,7 @@ module Contributions = {
         : [];
 
     let bundledCommands =
-      isFocused && model.focusedWindow == Focus.Bundled
+      isFocused && model.focusedWindow == Focus.Bundled && !isSearching
         ? Component_VimList.Contributions.commands
           |> List.map(
                Oni_Core.Command.map(msg =>
@@ -140,11 +142,26 @@ module Contributions = {
              )
         : [];
 
-    extensionCommands @ vimWindowCommands @ installedCommands @ bundledCommands;
+    let searchResultCommands =
+      isFocused && model.focusedWindow != Focus.SearchText && isSearching
+        ? Component_VimList.Contributions.commands
+          |> List.map(
+               Oni_Core.Command.map(msg =>
+                 ViewModel(ViewModel.SearchResults(msg))
+               ),
+             )
+        : [];
+    extensionCommands
+    @ vimWindowCommands
+    @ installedCommands
+    @ bundledCommands
+    @ searchResultCommands;
   };
 
   let contextKeys = (~isFocused, model) => {
-    let keys = isFocused ? Component_InputText.Contributions.contextKeys : [];
+    let keys =
+      isFocused && model.focusedWindow == Focus.SearchText
+        ? Component_InputText.Contributions.contextKeys : [];
 
     let vimNavKeys =
       isFocused ? Component_VimWindows.Contributions.contextKeys : [];
