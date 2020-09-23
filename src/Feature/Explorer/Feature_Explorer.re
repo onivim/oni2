@@ -104,7 +104,15 @@ type outmsg =
   | OpenFile(string)
   | GrabFocus;
 
-let setTree = (tree, model) => {...model, tree: Some(tree)};
+let setTree = (tree, model) => {
+
+  let uniqueId = (data: FsTreeNode.metadata) => data.path;
+  let treeView = Component_VimTree.set(~uniqueId, [tree], model.treeView);
+
+{...model, tree: Some(tree), 
+treeView,
+};
+};
 
 let setActive = (maybePath, model) => {...model, active: maybePath};
 
