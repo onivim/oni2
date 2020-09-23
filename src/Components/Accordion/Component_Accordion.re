@@ -160,7 +160,6 @@ let make =
       (),
     ) => {
   let contents = failwith("Replace-all-accordions!");
-  //      <FlatList rowHeight count focused theme> ...renderItem </FlatList>;
 
   <Common theme title expanded count isFocused uiFont onClick contents />;
 };
