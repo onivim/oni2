@@ -111,6 +111,7 @@ let nodeView =
 
 let make =
     (
+      ~isFocused,
       ~scrollOffset,
       ~tree: FsTreeNode.t,
       ~treeView:
@@ -127,7 +128,7 @@ let make =
   //let onScrollOffsetChange = offset => dispatch(ScrollOffsetChanged(offset));
   <View style=Styles.container>
     <Component_VimTree.View
-      isActive=true
+      isActive=isFocused
       theme
       model=treeView
       dispatch={msg => dispatch(Tree(msg))}

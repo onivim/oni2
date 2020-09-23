@@ -320,3 +320,27 @@ let sub = (~configuration, ~languageInfo, ~iconTheme, {rootPath, _}) => {
 
   Service_OS.Sub.dir(~uniqueId="FileExplorerSideBar", ~toMsg, rootPath);
 };
+
+module Contributions = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let commands = (~isFocused) => {
+    !isFocused
+      ? []
+      : 
+        (
+          Component_VimTree.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => Tree(msg)))
+        );
+  };
+
+  let contextKeys = (~isFocused) => {
+    let vimTreeKeys =
+      isFocused ? Component_VimTree.Contributions.contextKeys : [];
+
+    [
+      vimTreeKeys |> fromList |> map(_ => ()),
+    ]
+    |> unionMany;
+  };
+};
