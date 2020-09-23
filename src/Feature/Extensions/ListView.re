@@ -115,9 +115,14 @@ let%component make =
     />;
   };
 
-  let renderInstalled = (~availableWidth as _, ~index as _, ~hovered as _, ~focused as _,
-    extension: Scanner.ScanResult.t) => {
-
+  let renderInstalled =
+      (
+        ~availableWidth as _,
+        ~index as _,
+        ~hovered as _,
+        ~focused as _,
+        extension: Scanner.ScanResult.t,
+      ) => {
     let iconPath = extension.manifest.icon;
     let displayName = Manifest.getDisplayName(extension.manifest);
     let author = extension.manifest.author;
@@ -163,10 +168,12 @@ let%component make =
           expanded={installedExpanded || isInstalledFocused}
           model={Model.ViewModel.installed(model.viewModel)}
           uiFont=font
-          render={renderInstalled}
+          render=renderInstalled
           isFocused=isInstalledFocused
           theme
-          dispatch={msg => dispatch(ViewModel(Model.ViewModel.Installed(msg)))}
+          dispatch={msg =>
+            dispatch(ViewModel(Model.ViewModel.Installed(msg)))
+          }
           onClick={_ => localDispatch(InstalledTitleClicked)}
         />,
         <Component_Accordion

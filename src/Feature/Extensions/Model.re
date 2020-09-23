@@ -309,36 +309,29 @@ module Internal = {
     activatedIds: [id, ...model.activatedIds],
   };
 
+  let getExtensions = (~category, model) => {
+    let results =
+      model.extensions
+      |> List.filter((ext: Scanner.ScanResult.t) => ext.category == category);
 
-let getExtensions = (~category, model) => {
-  let results =
-    model.extensions
-    |> List.filter((ext: Scanner.ScanResult.t) => ext.category == category);
-
-  switch (category) {
-  | Scanner.Bundled => List.filter(filterBundled, results)
-  | _ => results
+    switch (category) {
+    | Scanner.Bundled => List.filter(filterBundled, results)
+    | _ => results
+    };
   };
-};
-  let syncViewModel = (model) => {
+  let syncViewModel = model => {
     let bundled = getExtensions(~category=Scanner.Bundled, model);
     let installed = getExtensions(~category=Scanner.User, model);
-    let viewModel = model.viewModel
-    |> ViewModel.setBundled(bundled |> Array.of_list)
-    |> ViewModel.setInstalled(installed |> Array.of_list);
-    
-    {
-      ...model,
-      viewModel
-    };
-  }
+    let viewModel =
+      model.viewModel
+      |> ViewModel.setBundled(bundled |> Array.of_list)
+      |> ViewModel.setInstalled(installed |> Array.of_list);
+
+    {...model, viewModel};
+  };
 
   let add = (extensions, model) => {
-    {
-    ...model,
-    extensions: extensions @ model.extensions,
-    }
-    |> syncViewModel;
+    {...model, extensions: extensions @ model.extensions} |> syncViewModel;
   };
 
   let addPendingInstall = (~extensionId, model) => {
