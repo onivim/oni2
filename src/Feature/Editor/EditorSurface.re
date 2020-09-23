@@ -36,6 +36,17 @@ module Styles = {
     flexGrow(1),
   ];
 
+  let inactiveCover = (~colors: Colors.t) => [
+    backgroundColor(colors.editorBackground),
+    opacity(0.2),
+    pointerEvents(`Ignore),
+    position(`Absolute),
+    top(0),
+    left(0),
+    right(0),
+    bottom(0),
+  ];
+
   let verticalScrollBar = [
     position(`Absolute),
     top(0),
@@ -323,6 +334,10 @@ let%component make =
     |> Option.value(~default=React.empty);
   };
 
+  let opacityCover =
+    isActiveSplit
+      ? React.empty : <View style={Styles.inactiveCover(~colors)} />;
+
   <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
     <SurfaceView
@@ -409,5 +424,6 @@ let%component make =
         colors
       />
     </View>
+    opacityCover
   </View>;
 };

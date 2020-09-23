@@ -266,6 +266,7 @@ module View = {
 
     let pane = (~isFocused, ~theme, ~height) => {
       let common = [
+        opacity(isFocused ? 1.0 : 0.75),
         flexDirection(`Column),
         Style.height(height),
         borderTop(
