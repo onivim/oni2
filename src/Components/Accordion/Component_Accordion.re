@@ -151,22 +151,3 @@ module VimList = {
     <Common theme title expanded count isFocused uiFont onClick contents />;
   };
 };
-
-let make =
-    (
-      ~title,
-      ~rowHeight,
-      ~expanded,
-      ~count,
-      ~renderItem,
-      ~isFocused,
-      ~focused,
-      ~theme,
-      ~uiFont: UiFont.t,
-      ~onClick,
-      (),
-    ) => {
-  let contents = <Text text="No more accordions" />;
-
-  <Common theme title expanded count isFocused uiFont onClick contents />;
-};
