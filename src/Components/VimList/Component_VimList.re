@@ -18,7 +18,6 @@ type model('item) = {
   // But for keyboarding gestures, like 'zz', the animation is helpful.
   isScrollAnimated: bool,
 
-  searchText: Component_InputText.model,
   searchContext: [@opaque] SearchContext.t,
 };
 
@@ -33,11 +32,10 @@ let create = (~rowHeight) => {
   viewportWidth: 1,
   initialRowsToRender: 10,
   isScrollAnimated: false,
-  searchText: Component_InputText.create(
-    ~placeholder=""
-  ),
+  
   searchContext: SearchContext.initial,
 };
+
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
@@ -94,7 +92,7 @@ type msg =
       heightInPixels: int,
       widthInPixels: int,
     })
-  | SearchInputText(Component_InputText.msg);
+  | SearchContext(SearchContext.msg);
 
 type outmsg =
   | Nothing
@@ -287,10 +285,10 @@ let update = (msg, model) => {
   | Command(NextSearchResult)
   | Command(PreviousSearchResult) => failwith("not implemented");
 
-  | SearchInputText(inputMsg) => 
-    let (searchText, _outmsg) = Component_InputText.update(inputMsg,
-    model.searchText);
-    ({...model, searchText}, Nothing)
+  | SearchContext(inputMsg) => 
+    let (searchContext, _outmsg) = SearchContext.update(inputMsg,
+    model.searchContext);
+    ({...model, searchContext}, Nothing)
   };
 };
 

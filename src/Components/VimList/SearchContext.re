@@ -1,14 +1,23 @@
 open Oni_Core;
 open Utility;
 
+  [@deriving show]
+  type msg =
+  | SearchText(Component_InputText.msg);
+
   type query =
   | Forward(string)
   | Backward(string);
+
+  type outmsg =
+  | Nothing;
   
   type t = {
     maybeQuery: option(query),
     searchIds: array(string),
     matches: list(int),
+    searchText: Component_InputText.model,
+    isSearchTextInputVisible: bool,
   };
 
   let queryString = ({maybeQuery, _}) => {
@@ -64,6 +73,8 @@ open Utility;
     maybeQuery: None,
     searchIds: [||],
     matches: [],
+    searchText: Component_InputText.create(~placeholder=""),
+    isSearchTextInputVisible: false,
   };
 
   let setQuery = (query, model) => {
@@ -124,5 +135,17 @@ open Utility;
     | None => None
     | Some(Forward(_)) => lowerMatch(~index, model.matches)
     | Some(Backward(_)) => higherMatch(~index, model.matches)
+    }
+  };
+
+  let update = (msg, model) => {
+    switch (msg) {
+    | SearchText(msg) => 
+      let (searchText, _outmsg) = Component_InputText.update(
+        msg,
+        model.searchText
+      );
+      ({...model, searchText}, Nothing)
+      
     }
   };
