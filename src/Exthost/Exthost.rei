@@ -1316,6 +1316,16 @@ module Msg: {
       | Unregister({handle: int});
   };
 
+  module Languages: {
+    [@deriving show]
+    type msg =
+      | GetLanguages
+      | ChangeLanguage({ 
+        uri: Oni_Core.Uri.t,
+        languageId: string
+      });
+  };
+
   module MessageService: {
     [@deriving show]
     type msg =
@@ -1549,6 +1559,7 @@ module Msg: {
     | ExtensionService(ExtensionService.msg)
     | FileSystem(FileSystem.msg)
     | LanguageFeatures(LanguageFeatures.msg)
+    | Languages(Languages.msg)
     | MessageService(MessageService.msg)
     | OutputService(OutputService.msg)
     | Progress(Progress.msg)

@@ -157,6 +157,14 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           ),
         );
         Lwt.return(Reply.okEmpty);
+        
+      | Languages(msg) =>
+        let (promise, resolver) = Lwt.task();
+
+        let languagesMsg  = Feature_Extensions.Msg.languages(~resolver, msg);
+        dispatch(Extensions(languagesMsg));
+
+        promise;
 
       | LanguageFeatures(msg) =>
         dispatch(
@@ -337,7 +345,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   };
 
   let redirect =
-    if (Timber.App.isEnabled()) {
+//    if (Timber.App.isEnabled()) {
       [
         Luv.Process.inherit_fd(
           ~fd=Luv.Process.stdin,
@@ -355,9 +363,9 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           (),
         ),
       ];
-    } else {
-      [];
-    };
+//    } else {
+//      [];
+//    };
 
   let _process: Luv.Process.t =
     LuvEx.Process.spawn(
