@@ -18,7 +18,7 @@ type model('item) = {
   // But for keyboarding gestures, like 'zz', the animation is helpful.
   isScrollAnimated: bool,
 
-  searchContext: [@opaque] SearchContext.t,
+  searchContext: [@opaque] SearchContext.model,
 };
 
 let create = (~rowHeight) => {
@@ -280,8 +280,20 @@ let update = (msg, model) => {
       Nothing,
     )
 
-  | Command(SearchForward)
-  | Command(SearchBackward)
+  | Command(SearchForward) => (
+    {
+      ...model,
+      searchContext: SearchContext.(show(~direction=Forward, model.searchContext))
+    },
+    Nothing
+  )
+  | Command(SearchBackward) => (
+    {
+      ...model,
+      searchContext: SearchContext.(show(~direction=Backward, model.searchContext))
+    },
+    Nothing
+  )
   | Command(NextSearchResult)
   | Command(PreviousSearchResult) => failwith("not implemented");
 
@@ -326,7 +338,12 @@ module Commands = {
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
 
-  let vimListNavigation = bool("vimListNavigation", _ => true);
+  let vimListNavigation = bool("vimListNavigation", ({searchContext, _}) => {
+    !(searchContext |> SearchContext.isOpen)
+  });
+  let textInputFocus = bool("textInputFocus", ({searchContext, _}) => {
+    searchContext |> SearchContext.isOpen
+  });
 };
 
 module Keybindings = {
@@ -371,7 +388,12 @@ module Keybindings = {
 };
 
 module Contributions = {
-  let contextKeys = ContextKeys.[vimListNavigation];
+  let contextKeys = model =>  {
+  open WhenExpr.ContextKeys;
+  ContextKeys.[vimListNavigation, textInputFocus]
+  |> Schema.fromList
+  |> fromSchema(model)
+  };
 
   let keybindings = Keybindings.keybindings;
 
@@ -670,6 +692,11 @@ module View = {
                 }),
               )
             }}>
+            <SearchContext.View 
+              isFocused=isActive
+              model={model.searchContext}
+              dispatch={msg => dispatch(SearchContext(msg))}
+              theme />
             <View
               style={Styles.container(
                 // Set the height only to force it smaller, not bigger

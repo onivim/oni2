@@ -5,26 +5,29 @@ open Utility;
   type msg =
   | SearchText(Component_InputText.msg);
 
-  type query =
-  | Forward(string)
-  | Backward(string);
+  type direction =
+  | Forward
+  | Backward;
 
   type outmsg =
   | Nothing;
   
-  type t = {
-    maybeQuery: option(query),
+  type model = {
+    direction: direction,
     searchIds: array(string),
     matches: list(int),
     searchText: Component_InputText.model,
-    isSearchTextInputVisible: bool,
+    isSearchInputVisible: bool,
   };
 
-  let queryString = ({maybeQuery, _}) => {
-    maybeQuery
-    |> Option.map(fun
-    | Forward(query)
-    | Backward(query) => query);
+  let queryString = ({searchText, _}) => {
+    let text = Component_InputText.value(searchText);
+
+    if (text == "") {
+      None
+    } else {
+      Some(text);
+    }
   }
 
   let searchCount = ({matches, _}) => {
@@ -70,17 +73,17 @@ open Utility;
   }
 
   let initial = {
-    maybeQuery: None,
+    direction: Forward,
     searchIds: [||],
     matches: [],
     searchText: Component_InputText.create(~placeholder=""),
-    isSearchTextInputVisible: false,
+    isSearchInputVisible: false,
   };
 
   let setQuery = (query, model) => {
     {
       ...model,
-      maybeQuery: Some(query)
+      searchText: Component_InputText.set(~text=query, model.searchText),
     } |> updateMatches;
   };
 
@@ -123,18 +126,16 @@ open Utility;
   };
 
   let nextMatch = (~index, model) => {
-    switch (model.maybeQuery) {
-    | None => None
-    | Some(Forward(_)) => higherMatch(~index, model.matches)
-    | Some(Backward(_)) => lowerMatch(~index, model.matches)
+    switch (model.direction) {
+    | Forward => higherMatch(~index, model.matches)
+    | Backward => lowerMatch(~index, model.matches)
     }
   };
   
   let previousMatch = (~index, model) => {
-    switch (model.maybeQuery) {
-    | None => None
-    | Some(Forward(_)) => lowerMatch(~index, model.matches)
-    | Some(Backward(_)) => higherMatch(~index, model.matches)
+    switch (model.direction) {
+    | Forward => lowerMatch(~index, model.matches)
+    | Backward => higherMatch(~index, model.matches)
     }
   };
 
@@ -149,3 +150,39 @@ open Utility;
       
     }
   };
+
+  let isOpen = ({isSearchInputVisible, _}) => isSearchInputVisible;
+
+  let show = (~direction, model) => {
+    {...model, direction, isSearchInputVisible: true}
+  };
+
+  let close = (model) => {
+    {...model, isSearchInputVisible: false}
+  };
+
+module View = {
+  open Revery;
+  open Revery.UI;
+  
+  let make =
+    (
+      ~isFocused,
+      ~model: model,
+      ~theme: ColorTheme.Colors.t,
+      ~dispatch: msg => unit,
+      unit
+    ) => {
+      if (model.isSearchInputVisible) {
+        <Component_InputText.View
+        model=model.searchText
+        theme
+        isFocused
+        dispatch={msg => dispatch(SearchText(msg)) }
+        />
+        } else {
+        <Text text="Hello, world" />
+      }
+      
+    };
+};

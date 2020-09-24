@@ -35,7 +35,7 @@ let set: (array('item), model('item)) => model('item);
 
 module Contributions: {
   let commands: list(Command.t(msg));
-  let contextKeys: list(WhenExpr.ContextKeys.Schema.entry(unit));
+  let contextKeys: model('item) => WhenExpr.ContextKeys.t;
   let keybindings: list(Oni_Input.Keybindings.keybinding);
 };
 
