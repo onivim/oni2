@@ -17,6 +17,7 @@ type model('item) = {
   // For mouse gestures, we don't want the scroll to be animated - it feels laggy
   // But for keyboarding gestures, like 'zz', the animation is helpful.
   isScrollAnimated: bool,
+  searchContext: [@opaque] SearchContext.t,
 };
 
 let create = (~rowHeight) => {
@@ -30,6 +31,7 @@ let create = (~rowHeight) => {
   viewportWidth: 1,
   initialRowsToRender: 10,
   isScrollAnimated: false,
+  searchContext: SearchContext.initial,
 };
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
