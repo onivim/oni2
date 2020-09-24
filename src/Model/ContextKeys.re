@@ -121,7 +121,10 @@ let all = (state: State.t) => {
   // TODO: These sidebar-specific UI pieces should be encapsulated
   // by Feature_SideBar.contextKeys.
   let scmContextKeys =
-    Feature_SCM.Contributions.contextKeys(~isFocused=focus == Focus.SCM);
+    Feature_SCM.Contributions.contextKeys(
+      ~isFocused=focus == Focus.SCM,
+      state.scm,
+    );
 
   let explorerContextKeys =
     Feature_Explorer.Contributions.contextKeys(
@@ -131,6 +134,7 @@ let all = (state: State.t) => {
   let extensionContextKeys =
     Feature_Extensions.Contributions.contextKeys(
       ~isFocused=focus == Focus.Extensions,
+      state.extensions,
     );
 
   let searchContextKeys =

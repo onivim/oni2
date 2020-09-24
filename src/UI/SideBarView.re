@@ -82,24 +82,26 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
       />;
 
     | SCM =>
-      let onItemClick = (resource: Feature_SCM.Resource.t) =>
-        dispatch(
-          Actions.OpenFileByPath(
-            Oni_Core.Uri.toFileSystemPath(resource.uri),
-            None,
-            None,
-          ),
-        );
+      //        dispatch(
+
+      //            Oni_Core.Uri.toFileSystemPath(resource.uri),
+
+      //            None,
+
+      //        );
 
       <Feature_SCM.Pane
         model={state.scm}
         workingDirectory={state.workspace.workingDirectory}
-        onItemClick
         isFocused={FocusManager.current(state) == Focus.SCM}
         theme
         font
         dispatch={msg => dispatch(Actions.SCM(msg))}
-      />;
+      />
+    //          ),
+    //            None,
+    //          Actions.OpenFileByPath(
+    //      let onItemClick = (resource: Feature_SCM.Resource.t) =>
 
     | Search =>
       let dispatch = msg =>

@@ -193,8 +193,6 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
-open Oni_Components;
-
 module UiFont = Oni_Core.UiFont;
 module Colors = Feature_Theme.Colors.TitleBar;
 

@@ -13,4 +13,5 @@
    Oni2.editor-core-types timber ReasonFuzz decoders-yojson angstrom)
  (inline_tests)
  (preprocess
-  (pps ppx_let ppx_inline_test ppx_deriving_yojson ppx_deriving.show)))
+  (pps brisk-reconciler.ppx ppx_let ppx_inline_test ppx_deriving_yojson
+    ppx_deriving.show)))
