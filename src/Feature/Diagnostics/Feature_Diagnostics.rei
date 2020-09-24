@@ -17,7 +17,8 @@ module Diagnostic: {
     severity: Severity.t,
   };
 
-  let create: (~range: CharacterRange.t, ~message: string, ~severity: Severity.t) => t;
+  let create:
+    (~range: CharacterRange.t, ~message: string, ~severity: Severity.t) => t;
 
   /*
     [explode(buffer, diagnostic)] splits up a multi-line diagnostic into a diagnostic per-line
@@ -60,6 +61,8 @@ let clear: (model, string) => model;
  * [count(diagnostics)] gets the total count of all diagnostics across buffers
  */
 let count: model => int;
+
+let maxSeverity: list(Diagnostic.t) => Severity.t;
 
 /*
  * Get all diagnostics for a buffer

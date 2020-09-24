@@ -226,3 +226,18 @@ let getDiagnosticsAtPosition = (instance, buffer, position) => {
 let getDiagnosticsMap = (instance, buffer) => {
   getDiagnostics(instance, buffer) |> _explodeDiagnostics(buffer);
 };
+
+let maxSeverity = diagnostics => {
+  open Exthost.Diagnostic.Severity;
+  let rec loop = (currentSeverity, remaining: list(Diagnostic.t)) =>
+    if (currentSeverity == Error) {
+      Error;
+    } else {
+      switch (remaining) {
+      | [] => currentSeverity
+      | [hd, ...tail] => loop(max(currentSeverity, hd.severity), tail)
+      };
+    };
+
+  loop(Hint, diagnostics);
+};

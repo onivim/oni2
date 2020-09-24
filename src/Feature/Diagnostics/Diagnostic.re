@@ -34,5 +34,11 @@ let explode = (buffer, diagnostic) => {
 
   CharacterRange.explode(measure, diagnostic.range)
   |> ListEx.firstk(Constants.maxDiagnosticLines)
-  |> ListEx.safeMap(range => create(~range, ~message=diagnostic.message, ~severity=diagnostic.severity));
+  |> ListEx.safeMap(range =>
+       create(
+         ~range,
+         ~message=diagnostic.message,
+         ~severity=diagnostic.severity,
+       )
+     );
 };

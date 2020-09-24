@@ -709,17 +709,16 @@ module Configuration: {
 
 module Diagnostic: {
   module Severity: {
+    [@deriving show]
+    type t =
+      | Hint
+      | Info
+      | Warning
+      | Error;
 
-  [@deriving show]
-  type t =
-  | Hint
-  | Info
-  | Warning
-  | Error;
-
-  let toInt: t => int;
-  let ofInt: int => option(t);
-
+    let toInt: t => int;
+    let ofInt: int => option(t);
+    let max: (t, t) => t;
   };
   type t = {
     range: OneBasedRange.t,
