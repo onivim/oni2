@@ -294,6 +294,7 @@ let make =
       />
       <Component_VimTree.View
         isActive={isFocused && model.focus == ResultsPane}
+        focusedIndex=None
         theme
         model={model.resultsTree}
         dispatch={msg => dispatch(ResultsList(msg))}
@@ -301,7 +302,7 @@ let make =
           ~availableWidth,
           ~index as _,
           ~hovered as _,
-          ~focused as _,
+          ~selected as _,
           item,
         ) =>
           switch (item) {

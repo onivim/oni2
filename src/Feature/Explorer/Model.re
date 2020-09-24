@@ -7,9 +7,8 @@ type msg =
   | TreeLoadError(string)
   | NodeLoaded(FsTreeNode.t)
   | FocusNodeLoaded(FsTreeNode.t)
-  | NodeClicked(FsTreeNode.t)
-  | ScrollOffsetChanged([ | `Start(float) | `Middle(float) | `Reveal(int)])
-  | KeyboardInput(string);
+  | KeyboardInput(string)
+  | Tree(Component_VimTree.msg);
 
 module Msg = {
   let keyPressed = key => KeyboardInput(key);
@@ -19,6 +18,7 @@ module Msg = {
 type model = {
   rootPath: string,
   tree: option(FsTreeNode.t),
+  treeView: Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(string), // path
@@ -28,6 +28,7 @@ type model = {
 let initial = (~rootPath) => {
   rootPath,
   tree: None,
+  treeView: Component_VimTree.create(~rowHeight=20),
   isOpen: true,
   scrollOffset: `Start(0.),
   active: None,
@@ -40,4 +41,20 @@ let setRoot = (~rootPath, model) => {
   tree: None,
   active: None,
   focus: None,
+};
+
+let getIndex = (path, model) => {
+  Component_VimTree.(
+    findIndex(
+      fun
+      | Node({data, _})
+      | Leaf({data, _}) => FsTreeNode.(data.path) == path,
+      model.treeView,
+    )
+  );
+};
+
+let getFocusedIndex = model => {
+  model.active
+  |> Oni_Core.Utility.OptionEx.flatMap(path => getIndex(path, model));
 };

@@ -73,6 +73,7 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
     | FileExplorer =>
       let dispatch = msg => dispatch(Actions.FileExplorer(msg));
       <Feature_Explorer.View
+        isFocused={FocusManager.current(state) == Focus.FileExplorer}
         decorations={state.decorations}
         model={state.fileExplorer}
         theme
