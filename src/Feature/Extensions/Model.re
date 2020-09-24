@@ -342,12 +342,16 @@ let getExtensions = (~category, model) => {
   };
 };
 
-let getLanguageIds = model =>{
+let getLanguageIds = model => {
   model.extensions
-  |> List.map((ext: Scanner.ScanResult.t) => ext.manifest.contributes.languages)
+  |> List.map((ext: Scanner.ScanResult.t) =>
+       ext.manifest.contributes.languages
+     )
   |> List.flatten
-  |> List.map((language: Exthost.Extension.Contributions.Language.t)  => language.id);
-}
+  |> List.map((language: Exthost.Extension.Contributions.Language.t) =>
+       language.id
+     );
+};
 
 let getPersistedValue = (~shared, ~key, model) => {
   let store = shared ? model.globalValues : model.localValues;
@@ -385,18 +389,16 @@ let update = (~extHostClient, msg, model) => {
     )
 
   | Languages({resolver, msg}) =>
-    switch(msg) {
+    switch (msg) {
     | GetLanguages =>
-
-      let languages = getLanguageIds(model)
-      |> List.map(str => `String(str));
+      let languages = getLanguageIds(model) |> List.map(str => `String(str));
 
       let eff = Effect.replyJson(~resolver, `List(languages));
-      (model, Effect(eff))
+      (model, Effect(eff));
 
     // TODO: Handle change language API from extension host
     | ChangeLanguage(_) => (model, Nothing)
-    };
+    }
 
   | Storage({resolver, msg}) =>
     switch (msg) {

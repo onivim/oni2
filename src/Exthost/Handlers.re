@@ -133,8 +133,8 @@ let handlers =
     main(
       ~handler=Msg.Languages.handle,
       ~mapper=msg => Msg.Languages(msg),
-    "MainThreadLanguages"),
-
+      "MainThreadLanguages",
+    ),
     mainNotImplemented("MainThreadLog"),
     main(
       ~handler=Msg.MessageService.handle,

@@ -1320,10 +1320,10 @@ module Msg: {
     [@deriving show]
     type msg =
       | GetLanguages
-      | ChangeLanguage({ 
-        uri: Oni_Core.Uri.t,
-        languageId: string
-      });
+      | ChangeLanguage({
+          uri: Oni_Core.Uri.t,
+          languageId: string,
+        });
   };
 
   module MessageService: {

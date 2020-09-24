@@ -1089,35 +1089,26 @@ module LanguageFeatures = {
 };
 
 module Languages = {
-    [@deriving show]
-    type msg =
-      | GetLanguages
-      | ChangeLanguage({ 
+  [@deriving show]
+  type msg =
+    | GetLanguages
+    | ChangeLanguage({
         uri: Oni_Core.Uri.t,
-        languageId: string
+        languageId: string,
       });
 
   let handle = (method, args: Yojson.Safe.t) => {
     switch (method, args) {
-    | (
-        "$getLanguages",
-        _
-      ) =>
-      Ok(GetLanguages)
+    | ("$getLanguages", _) => Ok(GetLanguages)
 
-    | ("$changeLanguage",
-      `List([uriJson, `String(languageId)])) =>
+    | ("$changeLanguage", `List([uriJson, `String(languageId)])) =>
       open Base.Result.Let_syntax;
       open Json.Decode;
 
-      let%bind uri =
-        uriJson |> Internal.decode_value(Oni_Core.Uri.decode);
+      let%bind uri = uriJson |> Internal.decode_value(Oni_Core.Uri.decode);
 
-      Ok(ChangeLanguage({
-        uri,
-        languageId
-      }))
-    
+      Ok(ChangeLanguage({uri, languageId}));
+
     | _ =>
       Error(
         "Unable to parse method: "
