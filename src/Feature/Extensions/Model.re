@@ -685,7 +685,6 @@ let update = (~extHostClient, msg, model) => {
         | Some(focus) => (focus, Nothing)
         }
 
-      // TODO
       | PreviousTab
       | NextTab => (focusedWindow, Nothing)
       };
