@@ -176,13 +176,14 @@ module Vertical = {
     |> List.map(binding => {
          let (line, diagnostics) = binding;
 
-         let diagColor = switch(Feature_Diagnostics.maxSeverity(diagnostics)) {
-         | Error => colors.errorForeground
-         | Warning => colors.warningForeground
-         | Info => colors.infoForeground
-         | Hint => colors.hintForeground
-         };
-         
+         let diagColor =
+           switch (Feature_Diagnostics.maxSeverity(diagnostics)) {
+           | Error => colors.errorForeground
+           | Warning => colors.warningForeground
+           | Info => colors.infoForeground
+           | Hint => colors.hintForeground
+           };
+
          let diagTop =
            Editor.projectLine(
              ~line=EditorCoreTypes.LineNumber.ofZeroBased(line),

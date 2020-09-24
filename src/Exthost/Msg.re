@@ -1103,7 +1103,6 @@ module Languages = {
 
     | ("$changeLanguage", `List([uriJson, `String(languageId)])) =>
       open Base.Result.Let_syntax;
-      open Json.Decode;
 
       let%bind uri = uriJson |> Internal.decode_value(Oni_Core.Uri.decode);
 
