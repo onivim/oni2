@@ -260,7 +260,7 @@
     "esy-skia": "revery-ui/esy-skia#a3785f9",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
-    "isolinear": "revery-ui/isolinear#8cad3b0",
+    "isolinear": "revery-ui/isolinear#53fc4eb",
     "revery-terminal": "revery-ui/revery-terminal#37e19a3",
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
