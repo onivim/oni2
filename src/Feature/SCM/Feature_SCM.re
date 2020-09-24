@@ -51,6 +51,18 @@ module Provider = {
     validationEnabled: false,
     statusBarCommands: [],
   };
+
+  let appliesToPath = (~path: string, {rootUri, _}) => {
+    let normalizedPath =
+      path |> Oni_Core.Uri.fromPath |> Oni_Core.Uri.toFileSystemPath;
+
+    rootUri
+    |> Option.map(scmRoot => {
+         let scmPath = scmRoot |> Oni_Core.Uri.toFileSystemPath;
+         StringEx.contains(scmPath, normalizedPath);
+       })
+    |> Option.value(~default=false);
+  };
 };
 
 [@deriving show({with_path: false})]
@@ -178,8 +190,11 @@ let visibleGroups = ({providers, _}) => {
      });
 };
 
-let statusBarCommands = ({providers, _}: model) => {
+let statusBarCommands = (~workingDirectory, {providers, _}: model) => {
   providers
+  |> List.filter(provider => {
+       Provider.appliesToPath(~path=workingDirectory, provider)
+     })
   |> List.map(({statusBarCommands, _}: Provider.t) => statusBarCommands)
   |> List.flatten;
 };

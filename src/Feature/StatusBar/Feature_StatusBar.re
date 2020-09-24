@@ -370,6 +370,7 @@ module View = {
                   ~statusBar: model,
                   ~theme,
                   ~dispatch,
+                  ~workingDirectory: string,
                   (),
                 ) => {
     let%hook activeNotifications =
@@ -446,7 +447,7 @@ module View = {
 
     let scmItems =
       scm
-      |> Feature_SCM.statusBarCommands
+      |> Feature_SCM.statusBarCommands(~workingDirectory)
       |> List.filter_map((item: Exthost.Command.t) =>
            item.label
            |> Option.map(label => {

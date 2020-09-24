@@ -51,7 +51,8 @@ type model;
 
 let initial: model;
 
-let statusBarCommands: model => list(Exthost.Command.t);
+let statusBarCommands:
+  (~workingDirectory: string, model) => list(Exthost.Command.t);
 
 // UPDATE
 
