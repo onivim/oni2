@@ -54,6 +54,7 @@ let sub:
 module View: {
   let make:
     (
+      ~isFocused: bool,
       ~model: model,
       ~decorations: Feature_Decorations.model,
       ~theme: ColorTheme.Colors.t,
@@ -62,4 +63,9 @@ module View: {
       unit
     ) =>
     Revery.UI.element;
+};
+
+module Contributions: {
+  let commands: (~isFocused: bool) => list(Command.t(msg));
+  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
 };

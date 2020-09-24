@@ -472,6 +472,18 @@ module List = {
       "list.activeSelectionForeground",
       {dark: hex("#FFF"), light: hex("#FFF"), hc: unspecified},
     );
+
+  let inactiveSelectionBackground =
+    define(
+      "list.inactiveSelectionBackground",
+      all(ref(activeSelectionBackground) |> transparent(0.25)),
+    );
+  let inactiveSelectionForeground =
+    define(
+      "list.inactiveSelectionForeground",
+      all(ref(activeSelectionForeground)),
+    );
+
   let hoverBackground =
     define(
       "list.hoverBackground",

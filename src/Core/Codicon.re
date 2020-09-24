@@ -5,7 +5,6 @@
  */
 
 open Revery.UI;
-module ZedBundled = Oni_Core.ZedBundled;
 
 module Constants = {
   let fontFamily = Revery.Font.Family.fromFile("codicon.ttf");
