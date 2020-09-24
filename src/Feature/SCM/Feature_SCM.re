@@ -808,7 +808,6 @@ let sub = (~activeBuffer, ~client, model) => {
 
 open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 
 module Colors = Feature_Theme.Colors;
 
