@@ -18,6 +18,15 @@ open Utility;
     | Backward(query) => query);
   }
 
+  let searchCount = ({matches, _}) => {
+    List.length(matches)
+  };
+
+  let isMatch = (~index, ({matches, _})) => {
+    matches
+    |> List.exists(idx => idx == index)
+  };
+
   let computeMatches = (~query, items: array(string)) => {
     let match = StringEx.contains(query );
     let len = Array.length(items);

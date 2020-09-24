@@ -17,6 +17,8 @@ type model('item) = {
   // For mouse gestures, we don't want the scroll to be animated - it feels laggy
   // But for keyboarding gestures, like 'zz', the animation is helpful.
   isScrollAnimated: bool,
+
+  searchText: Component_InputText.model,
   searchContext: [@opaque] SearchContext.t,
 };
 
@@ -31,6 +33,9 @@ let create = (~rowHeight) => {
   viewportWidth: 1,
   initialRowsToRender: 10,
   isScrollAnimated: false,
+  searchText: Component_InputText.create(
+    ~placeholder=""
+  ),
   searchContext: SearchContext.initial,
 };
 
@@ -71,7 +76,11 @@ type command =
   | Select
   | ScrollCursorCenter // zz
   | ScrollCursorBottom // zb
-  | ScrollCursorTop; // zt
+  | ScrollCursorTop // zt
+  | SearchForward
+  | SearchBackward
+  | NextSearchResult
+  | PreviousSearchResult;
 
 [@deriving show]
 type msg =
@@ -84,7 +93,8 @@ type msg =
   | ViewDimensionsChanged({
       heightInPixels: int,
       widthInPixels: int,
-    });
+    })
+  | SearchInputText(Component_InputText.msg);
 
 type outmsg =
   | Nothing
@@ -271,6 +281,16 @@ let update = (msg, model) => {
       },
       Nothing,
     )
+
+  | Command(SearchForward)
+  | Command(SearchBackward)
+  | Command(NextSearchResult)
+  | Command(PreviousSearchResult) => failwith("not implemented");
+
+  | SearchInputText(inputMsg) => 
+    let (searchText, _outmsg) = Component_InputText.update(inputMsg,
+    model.searchText);
+    ({...model, searchText}, Nothing)
   };
 };
 
@@ -298,6 +318,11 @@ module Commands = {
   let digit7 = define("vim.list.7", Command(Digit(7)));
   let digit8 = define("vim.list.8", Command(Digit(8)));
   let digit9 = define("vim.list.9", Command(Digit(9)));
+
+  let searchForward = define("vim.list.searchForward", Command(SearchForward));
+  let searchBackward = define("vim.list.searchBackward", Command(SearchBackward));
+  let nextSearchResult = define("vim.list.nextSearchresult", Command(NextSearchResult));
+  let previousSearchResult = define("vim.list.previousSearchResult", Command(PreviousSearchResult));
 };
 
 module ContextKeys = {
@@ -314,6 +339,8 @@ module Keybindings = {
 
   let keybindings =
     Keybindings.[
+      // NORMAL MODE MOVEMENT
+      
       {key: "gg", command: Commands.gg.id, condition: commandCondition},
       {key: "<S-G>", command: Commands.g.id, condition: commandCondition},
       {key: "j", command: Commands.j.id, condition: commandCondition},
@@ -322,6 +349,9 @@ module Keybindings = {
       {key: "zz", command: Commands.zz.id, condition: commandCondition},
       {key: "zb", command: Commands.zb.id, condition: commandCondition},
       {key: "zt", command: Commands.zt.id, condition: commandCondition},
+
+      // MULTIPLIER
+      
       {key: "0", command: Commands.digit0.id, condition: commandCondition},
       {key: "1", command: Commands.digit1.id, condition: commandCondition},
       {key: "2", command: Commands.digit2.id, condition: commandCondition},
@@ -332,6 +362,13 @@ module Keybindings = {
       {key: "7", command: Commands.digit7.id, condition: commandCondition},
       {key: "8", command: Commands.digit8.id, condition: commandCondition},
       {key: "9", command: Commands.digit9.id, condition: commandCondition},
+
+      // SEARCH
+
+      {key: "/", command: Commands.searchForward.id, condition: commandCondition},
+      {key: "<S-/>", command: Commands.searchBackward.id, condition: commandCondition},
+      {key: "n", command: Commands.nextSearchResult.id, condition: commandCondition},
+      {key: "N", command: Commands.previousSearchResult.id, condition: commandCondition},
     ];
 };
 
@@ -360,6 +397,10 @@ module Contributions = {
       digit7,
       digit8,
       digit9,
+      previousSearchResult,
+      nextSearchResult,
+      searchForward,
+      searchBackward,
     ];
 };
 
@@ -421,6 +462,15 @@ module View = {
       right(0),
       height(rowHeight),
     ];
+
+    let searchBorder = (~color) => [
+      position(`Absolute),
+      backgroundColor(color),
+      top(0),
+      left(0),
+      width(2),
+      bottom(0)
+    ];
   };
   let renderHelper =
       (
@@ -437,6 +487,7 @@ module View = {
         ~rowHeight,
         ~count,
         ~scrollTop,
+        ~searchContext,
         ~render,
       ) =>
     if (rowHeight <= 0) {
@@ -466,6 +517,15 @@ module View = {
             Revery.Colors.transparentWhite;
           };
 
+        let isSearchMatch = SearchContext.isMatch(
+          ~index=i,
+          searchContext
+        );
+
+        let searchBorder = isSearchMatch ? <View style=Styles.searchBorder(
+          ~color=Revery.Colors.red
+        ) /> : React.empty;
+
         <Clickable
           onMouseEnter={_ => onMouseOver(i)}
           onMouseLeave={_ => onMouseOut(i)}
@@ -478,6 +538,7 @@ module View = {
              ~focused=focused == i,
              items[i],
            )}
+           {searchBorder}
         </Clickable>;
       };
 
@@ -587,6 +648,7 @@ module View = {
             ~rowHeight,
             ~count,
             ~scrollTop=int_of_float(scrollY),
+            ~searchContext=model.searchContext,
             ~render,
           )
           |> React.listToElement;
