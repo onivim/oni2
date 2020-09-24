@@ -8,14 +8,16 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Exthost.Diagnostic;
 
 module Diagnostic: {
   type t = {
     range: CharacterRange.t,
     message: string,
+    severity: Severity.t,
   };
 
-  let create: (~range: CharacterRange.t, ~message: string, unit) => t;
+  let create: (~range: CharacterRange.t, ~message: string, ~severity: Severity.t) => t;
 
   /*
     [explode(buffer, diagnostic)] splits up a multi-line diagnostic into a diagnostic per-line

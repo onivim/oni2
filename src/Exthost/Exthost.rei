@@ -708,10 +708,23 @@ module Configuration: {
 };
 
 module Diagnostic: {
+  module Severity: {
+
+  [@deriving show]
+  type t =
+  | Hint
+  | Info
+  | Warning
+  | Error;
+
+  let toInt: t => int;
+  let ofInt: int => option(t);
+
+  };
   type t = {
     range: OneBasedRange.t,
     message: string,
-    severity: int,
+    severity: Severity.t,
   };
 
   let decode: Json.decoder(t);
