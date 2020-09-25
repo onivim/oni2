@@ -51,5 +51,5 @@ module View: {
 };
 
 module Contributions: {
-  let contextKeys: list(WhenExpr.ContextKeys.Schema.entry(model));
+  let contextKeys: model => WhenExpr.ContextKeys.t;
 };
