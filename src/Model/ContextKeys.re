@@ -138,6 +138,11 @@ let all = (state: State.t) => {
       ~isFocused=focus == Focus.Pane,
       state.pane,
     );
+  let isEditorFocused = switch(focus) {
+  | Focus.Editor
+  | Focus.Terminal(_) => true
+  | _ => false;
+  };
 
   unionMany([
     Feature_Registers.Contributions.contextKeys(
@@ -153,7 +158,7 @@ let all = (state: State.t) => {
     |> map(({languageSupport, _}: State.t) => languageSupport),
     menus(~isFocused=focus == Focus.Quickmenu || focus == Focus.Wildmenu)
     |> map((state: State.t) => state.quickmenu),
-    editors(~isFocused=focus == Focus.Editor),
+    editors(~isFocused=isEditorFocused),
     other,
   ]);
 };
