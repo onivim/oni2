@@ -142,6 +142,7 @@ module VimList = {
     let contents =
       <Component_VimList.View
         isActive=isFocused
+        focusedIndex=None
         theme
         model
         dispatch

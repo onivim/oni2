@@ -94,7 +94,7 @@ let%component make =
         ~availableWidth as _,
         ~index as _,
         ~hovered as _,
-        ~focused as _,
+        ~selected as _,
         extension: Scanner.ScanResult.t,
       ) => {
     let iconPath = extension.manifest.icon;
@@ -125,7 +125,7 @@ let%component make =
         ~availableWidth as _,
         ~index as _,
         ~hovered as _,
-        ~focused as _,
+        ~selected as _,
         extension: Scanner.ScanResult.t,
       ) => {
     let iconPath = extension.manifest.icon;
@@ -199,6 +199,7 @@ let%component make =
         )}>
         <Component_VimList.View
           isActive={isInstalledFocused || isBundledFocused}
+          focusedIndex=None
           theme
           model={Model.ViewModel.searchResults(model.viewModel)}
           dispatch={msg =>
@@ -208,7 +209,7 @@ let%component make =
             ~availableWidth as _,
             ~index as _,
             ~hovered as _,
-            ~focused as _,
+            ~selected as _,
             summary: Service_Extensions.Catalog.Summary.t,
           ) => {
             let displayName =

@@ -880,7 +880,7 @@ module Pane = {
           ~availableWidth as _,
           ~index as _,
           ~hovered as _,
-          ~focused as _,
+          ~selected as _,
           item,
         ) => {
       <itemView provider resource=item theme font workingDirectory />;
