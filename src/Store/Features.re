@@ -399,6 +399,14 @@ let update =
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
       )
+    | GrabFocus => (
+        state |> FocusManager.push(Focus.Pane),
+        Isolinear.Effect.none,
+      )
+    | ReleaseFocus => (
+        state |> FocusManager.pop(Focus.Pane),
+        Isolinear.Effect.none,
+      )
     };
 
   | Registers(msg) =>
@@ -769,13 +777,7 @@ let update =
         Effect.none,
       )
 
-    | Focus(Bottom) =>
-      let pane = state.pane |> Feature_Pane.selected;
-      (
-        {...state, pane: Feature_Pane.show(~pane, state.pane)}
-        |> FocusManager.push(Pane),
-        Effect.none,
-      );
+    | Focus(Bottom) => (state |> FocusManager.push(Pane), Effect.none)
 
     | SplitAdded => ({...state, zenMode: false}, Effect.none)
 
