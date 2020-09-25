@@ -87,7 +87,6 @@ let sub = (~setup, model) => {
 };
 
 module Contributions = {
-  open WhenExpr.ContextKeys.Schema;
   // TODO: Should be stored as proper commands instead of converting every time
   let extensionCommands = model => {
     model.extensions

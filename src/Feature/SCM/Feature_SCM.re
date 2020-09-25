@@ -187,7 +187,7 @@ let visibleGroups = ({providers, _}) => {
 let selectedGroup = model => {
   switch (model.focus) {
   | CommitText => None
-  | Group({providerHandle, handle}) =>
+  | Group({providerHandle, handle, _}) =>
     visibleGroups(model)
     |> List.filter(((provider: Provider.t, group: ResourceGroup.t)) => {
          provider.handle == providerHandle && group.handle == handle
@@ -972,8 +972,6 @@ module Pane = {
 };
 
 module Contributions = {
-  open WhenExpr.ContextKeys.Schema;
-
   let commands = (~isFocused, model) => {
     let listCommands =
       switch (model.focus) {
@@ -1006,7 +1004,7 @@ module Contributions = {
     let listKeys =
       isFocused && model.focus != CommitText
         ? selectedGroup(model)
-          |> Option.map(((provider, group: ResourceGroup.t)) => {
+          |> Option.map(((_provider, group: ResourceGroup.t)) => {
                Component_VimList.Contributions.contextKeys(group.viewModel)
              })
           |> Option.value(~default=empty)
