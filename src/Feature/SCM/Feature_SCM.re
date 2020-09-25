@@ -985,9 +985,10 @@ module Contributions = {
   };
 
   let contextKeys = (~isFocused, model) => {
+    open WhenExpr.ContextKeys;
     let inputKeys =
       isFocused && model.focus == CommitText
-        ? Component_InputText.Contributions.contextKeys : [];
+        ? Component_InputText.Contributions.contextKeys(model.inputBox) : empty
 
     let listKeys =
       isFocused && model.focus != CommitText

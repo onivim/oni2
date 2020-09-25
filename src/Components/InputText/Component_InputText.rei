@@ -50,6 +50,4 @@ module View: {
     Revery.UI.element;
 };
 
-module Contributions: {
-  let contextKeys: model => WhenExpr.ContextKeys.t;
-};
+module Contributions: {let contextKeys: model => WhenExpr.ContextKeys.t;};
