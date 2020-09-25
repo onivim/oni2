@@ -28,7 +28,7 @@ module ContextKeys: {
 
   type t;
 
-  let initial: t;
+  let empty: t;
 
   let fromList: list((string, Value.t)) => t;
   let fromSchema: ('model, Schema.t('model)) => t;
