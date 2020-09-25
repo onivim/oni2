@@ -43,6 +43,11 @@ let setRoot = (~rootPath, model) => {
   focus: None,
 };
 
+let getFileIcon = (~languageInfo, ~iconTheme, filePath) => {
+  Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, filePath)
+  |> Oni_Core.IconTheme.getIconForFile(iconTheme, filePath);
+};
+
 let getIndex = (path, model) => {
   Component_VimTree.(
     findIndex(

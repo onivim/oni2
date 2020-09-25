@@ -96,6 +96,8 @@ module Pane: {
       ~model: model,
       ~workingDirectory: string,
       ~isFocused: bool,
+      ~iconTheme: Oni_Core.IconTheme.t,
+      ~languageInfo: Exthost.LanguageInfo.t,
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~dispatch: msg => unit,
