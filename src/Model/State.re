@@ -72,6 +72,7 @@ type t = {
   modal: option(Feature_Modals.model),
   textContentProviders: list((int, string)),
   vim: Feature_Vim.model,
+  autoUpdate: Feature_AutoUpdate.model,
 };
 
 let initial =
@@ -89,6 +90,7 @@ let initial =
     Feature_Configuration.initial(
       ~getUserSettings,
       [
+        Feature_AutoUpdate.Contributions.configuration,
         Feature_Editor.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
@@ -167,5 +169,6 @@ let initial =
     terminals: Feature_Terminal.initial,
     textContentProviders: [],
     vim: Feature_Vim.initial,
+    autoUpdate: Feature_AutoUpdate.initial,
   };
 };

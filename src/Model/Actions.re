@@ -14,6 +14,7 @@ module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 [@deriving show({with_path: false})]
 type t =
   | Init
+  | AutoUpdate(Feature_AutoUpdate.msg)
   | Buffers(Feature_Buffers.msg)
   | BufferRenderer(BufferRenderer.action)
   | Clipboard(Feature_Clipboard.msg)

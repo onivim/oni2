@@ -1,23 +1,15 @@
 open Oni_Core;
 
-[@deriving show]
-type t =
-  pri {
-    path: string,
-    displayName: string,
-    hash: int, // hash of basename, so only comparable locally
-    icon: option(IconTheme.IconDefinition.t),
-    kind,
-    expandedSubtreeSize: int,
-  }
+[@deriving show({with_path: false})]
+type metadata = {
+  path: string,
+  displayName: string,
+  hash: int, // hash of basename, so only comparable locally
+  icon: option([@opaque] IconTheme.IconDefinition.t),
+};
 
-and kind =
-  pri
-    | Directory({
-        isOpen: bool,
-        children: list(t),
-      })
-    | File;
+[@deriving show({with_path: false})]
+type t = Tree.t(metadata, metadata);
 
 let file: (string, ~icon: option(IconTheme.IconDefinition.t)) => t;
 let directory:
@@ -29,14 +21,13 @@ let directory:
   ) =>
   t;
 
+let icon: t => option(IconTheme.IconDefinition.t);
+let getPath: t => string;
+let displayName: t => string;
+
 let findNodesByPath:
   (string, t) => [ | `Success(list(t)) | `Partial(t) | `Failed];
 let findByPath: (string, t) => option(t);
-
-let prevExpandedNode: (string, t) => option(t);
-let nextExpandedNode: (string, t) => option(t);
-
-let expandedIndex: (string, t) => option(int);
 
 let replace: (~replacement: t, t) => t;
 let updateNodesInPath: (t => t, string, t) => t;
@@ -50,5 +41,4 @@ module Model: {
 
   let children: t => list(t);
   let kind: t => [ | `Node([ | `Open | `Closed]) | `Leaf];
-  let expandedSubtreeSize: t => int;
 };

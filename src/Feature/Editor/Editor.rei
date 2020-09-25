@@ -153,5 +153,15 @@ let updateBuffer: (~buffer: EditorBuffer.t, t) => t;
 
 module Slow: {
   let pixelPositionToBytePosition:
-    (~buffer: Buffer.t, ~pixelX: float, ~pixelY: float, t) => BytePosition.t;
+    // Allow the return value to exceed the byte position of the line
+    // This makes sense for cases like insert mode, where the cursor could be 'after'
+    // the end of the line.
+    (
+      ~allowPast: bool=?,
+      ~buffer: Buffer.t,
+      ~pixelX: float,
+      ~pixelY: float,
+      t
+    ) =>
+    BytePosition.t;
 };

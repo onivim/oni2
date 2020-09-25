@@ -2,65 +2,48 @@ open Oni_Core;
 open Utility;
 
 [@deriving show({with_path: false})]
-type t = {
+type metadata = {
   path: string,
   displayName: string,
   hash: int, // hash of basename, so only comparable locally
   icon: option([@opaque] IconTheme.IconDefinition.t),
-  kind,
-  expandedSubtreeSize: int,
-}
+};
 
-and kind =
-  | Directory({
-      isOpen: bool,
-      children: [@opaque] list(t),
-    })
-  | File;
+[@deriving show({with_path: false})]
+type t = Tree.t(metadata, metadata);
 
 let _hash = Hashtbl.hash;
 let _pathHashes = (~base, path) =>
   path |> Path.toRelative(~base) |> Path.explode |> List.map(_hash);
 
-let rec countExpandedSubtree =
-  fun
-  | Directory({isOpen: true, children}) =>
-    List.fold_left(
-      (acc, child) => acc + countExpandedSubtree(child.kind),
-      1,
-      children,
-    )
-
-  | _ => 1;
-
 let file = (path, ~icon) => {
   let basename = Filename.basename(path);
 
-  {
-    path,
-    hash: _hash(basename),
-    displayName: basename,
-    icon,
-    kind: File,
-    expandedSubtreeSize: 1,
-  };
+  Tree.leaf({path, hash: _hash(basename), displayName: basename, icon});
 };
 
 let directory = (~isOpen=false, path, ~icon, ~children) => {
-  let kind = Directory({isOpen, children});
   let basename = Filename.basename(path);
 
-  {
-    path,
-    hash: _hash(basename),
-    displayName: basename,
-    icon,
-    kind,
-    expandedSubtreeSize: countExpandedSubtree(kind),
-  };
+  Tree.node(
+    ~expanded=isOpen,
+    ~children,
+    {path, hash: _hash(basename), displayName: basename, icon},
+  );
 };
 
-let equals = (a, b) => a.hash == b.hash && a.path == b.path;
+let get = f =>
+  fun
+  | Tree.Node({data, _})
+  | Tree.Leaf(data) => f(data);
+
+let icon = get(({icon, _}) => icon);
+let getHash = get(({hash, _}) => hash);
+let getPath = get(({path, _}) => path);
+let displayName = get(({displayName, _}) => displayName);
+
+let equals = (a, b) =>
+  getHash(a) == getHash(b) && getPath(a) == getPath(b);
 
 let findNodesByPath = (path, tree) => {
   let rec loop = (focusedNodes, children, pathHashes) =>
@@ -77,12 +60,8 @@ let findNodesByPath = (path, tree) => {
         };
 
       | [node, ...children] =>
-        if (node.hash == hash) {
-          let children =
-            switch (node.kind) {
-            | Directory({children, _}) => children
-            | File => []
-            };
+        if (getHash(node) == hash) {
+          let children = Tree.children(node);
           loop([node, ...focusedNodes], children, rest);
         } else {
           loop(focusedNodes, children, pathHashes);
@@ -90,10 +69,10 @@ let findNodesByPath = (path, tree) => {
       }
     };
 
-  switch (tree.kind) {
-  | Directory({children, _}) =>
-    loop([tree], children, _pathHashes(~base=tree.path, path))
-  | File => `Failed
+  switch (tree) {
+  | Node({children, _}) =>
+    loop([tree], children, _pathHashes(~base=getPath(tree), path))
+  | Leaf(_) => `Failed
   };
 };
 
@@ -106,12 +85,8 @@ let findByPath = (path, tree) => {
       | [] => None
 
       | [node, ...children] =>
-        if (node.hash == hash) {
-          let children =
-            switch (node.kind) {
-            | Directory({children, _}) => children
-            | File => []
-            };
+        if (getHash(node) == hash) {
+          let children = Tree.children(node);
           loop(node, children, rest);
         } else {
           loop(node, children, pathHashes);
@@ -119,209 +94,88 @@ let findByPath = (path, tree) => {
       }
     };
 
-  switch (tree.kind) {
-  | Directory({children, _}) =>
-    loop(tree, children, _pathHashes(~base=tree.path, path))
-  | File => None
-  };
-};
-
-let prevExpandedNode = (path, tree) =>
-  switch (findNodesByPath(path, tree)) {
-  | `Success(nodePath) =>
-    switch (List.rev(nodePath)) {
-    // Has a parent, and therefore also siblings
-    | [focus, {kind: Directory({children, _}), _} as parent, ..._] =>
-      let children = children |> Array.of_list;
-      let index = children |> ArrayEx.findIndex(equals(focus));
-
-      switch (index) {
-      // is first child
-      | Some(index) when index == 0 => Some(parent)
-
-      | Some(index) =>
-        switch (children[index - 1]) {
-        // is open directory with at least one child
-        | {
-            kind: Directory({isOpen: true, children: [_, ..._] as children}),
-            _,
-          } =>
-          let children = children |> Array.of_list;
-          let lastChild = children[Array.length(children) - 1];
-          Some(lastChild);
-
-        | prev => Some(prev)
-        }
-
-      | None => None // is not a child of its parent (?!)
-      };
-    | _ => None // has neither parent or siblings
-    }
-  | `Partial(_)
-  | `Failed => None // path does not exist in this ree
-  };
-
-let nextExpandedNode = (path, tree) =>
-  switch (findNodesByPath(path, tree)) {
-  | `Success(nodePath) =>
-    let rec loop = revNodePath =>
-      switch (revNodePath) {
-      | [
-          focus,
-          ...[{kind: Directory({children, _}), _}, ..._] as ancestors,
-        ] =>
-        let children = children |> Array.of_list;
-        let index = children |> ArrayEx.findIndex(equals(focus));
-
-        switch (index) {
-        // is last child
-        | Some(index) when index == Array.length(children) - 1 =>
-          loop(ancestors)
-
-        | Some(index) =>
-          let next = children[index + 1];
-          Some(next);
-
-        | None => None // is not a child of its parent (?!)
-        };
-      | _ => None // has neither parent or siblings
-      };
-
-    switch (List.rev(nodePath)) {
-    // Focus is open directory with at least one child
-    | [
-        {kind: Directory({isOpen: true, children: [firstChild, ..._]}), _},
-        ..._,
-      ] =>
-      Some(firstChild)
-    | revNodePath => loop(revNodePath)
-    };
-
-  | `Partial(_)
-  | `Failed => None // path does not exist in this tree
-  };
-
-// Counts the number of expanded nodes before the node specified by the given path
-let expandedIndex = (path, tree) => {
-  let rec loop = (node, pathHashes) =>
-    switch (pathHashes) {
-    | [] => `Found(0)
-    | [hash, ...pathTail] =>
-      if (node.hash != hash) {
-        `NotFound(node.expandedSubtreeSize);
-      } else {
-        switch (node.kind) {
-        | Directory({isOpen: false, _})
-        | File => `Found(0)
-
-        | Directory({isOpen: true, children}) =>
-          let rec loopChildren = (count, children) =>
-            switch (children) {
-            | [] => `NotFound(count)
-            | [child, ...childTail] =>
-              switch (loop(child, pathTail)) {
-              | `Found(subtreeCount) => `Found(count + subtreeCount)
-              | `NotFound(subtreeCount) =>
-                loopChildren(count + subtreeCount, childTail)
-              }
-            };
-
-          loopChildren(1, children);
-        };
-      }
-    };
-
-  switch (loop(tree, _pathHashes(~base=Filename.dirname(tree.path), path))) {
-  | `Found(count) => Some(count)
-  | `NotFound(_) => None
+  switch (tree) {
+  | Tree.Node({children, _}) =>
+    loop(tree, children, _pathHashes(~base=getPath(tree), path))
+  | Tree.Leaf(_) => None
   };
 };
 
 let replace = (~replacement, tree) => {
   let rec loop = (pathHashes, node) =>
     switch (pathHashes) {
-    | [hash] when hash == node.hash => replacement
+    | [hash] when hash == getHash(node) => replacement
 
-    | [hash, ...rest] when hash == node.hash =>
-      switch (node.kind) {
-      | Directory({children, _} as dir) =>
+    | [hash, ...rest] when hash == getHash(node) =>
+      switch (node) {
+      | Tree.Node({children, _} as dir) =>
         let newChildren = List.map(loop(rest), children);
-        let kind = Directory({...dir, children: newChildren});
-
-        {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};
-
-      | File => node
+        Tree.Node({...dir, children: newChildren});
+      | Tree.Leaf(_) => node
       }
 
     | _ => node
     };
 
   loop(
-    _pathHashes(~base=Filename.dirname(tree.path), replacement.path),
+    _pathHashes(
+      ~base=Filename.dirname(getPath(tree)),
+      getPath(replacement),
+    ),
     tree,
   );
 };
 
-let updateNodesInPath = (updater, path, tree) => {
-  let rec loop = (pathHashes, node) =>
+let updateNodesInPath =
+    (
+      updater: Tree.t(metadata, metadata) => Tree.t(metadata, metadata),
+      path,
+      tree,
+    ) => {
+  let rec loop = (pathHashes, node: Tree.t(metadata, metadata)) =>
     switch (pathHashes) {
-    | [hash, ...rest] when hash == node.hash =>
-      switch (node.kind) {
-      | Directory({children, _} as dir) =>
+    | [hash, ...rest] when hash == getHash(node) =>
+      switch (node) {
+      | Tree.Node({children, _}) as cur =>
         let newChildren = List.map(loop(rest), children);
-        let newNode =
-          updater({
-            ...node,
-            kind: Directory({...dir, children: newChildren}),
-          });
-
-        {
-          ...newNode,
-          expandedSubtreeSize: countExpandedSubtree(newNode.kind),
+        switch (updater(cur)) {
+        | Tree.Node(data) => Tree.Node({...data, children: newChildren})
+        | Tree.Leaf(_) as leaf => leaf
         };
 
-      | File => updater(node)
+      | Tree.Leaf(_) as leaf => updater(leaf)
       }
 
     | _ => node
     };
 
-  loop(_pathHashes(~base=Filename.dirname(tree.path), path), tree);
+  loop(_pathHashes(~base=Filename.dirname(getPath(tree)), path), tree);
 };
 
 let toggleOpen =
   fun
-  | {kind: Directory({isOpen, children}), _} as node => {
-      let kind = Directory({isOpen: !isOpen, children});
-
-      {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};
-    }
-  | node => node;
+  | Tree.Node({expanded: prev, _} as node) =>
+    Tree.Node({...node, expanded: !prev})
+  | leaf => leaf;
 
 let setOpen =
   fun
-  | {kind: Directory({children, _}), _} as node => {
-      let kind = Directory({isOpen: true, children});
-
-      {...node, kind, expandedSubtreeSize: countExpandedSubtree(kind)};
-    }
-  | node => node;
+  | Tree.Node(node) => Tree.Node({...node, expanded: true})
+  | leaf => leaf;
 
 module Model = {
   type nonrec t = t;
 
   let children = node =>
-    switch (node.kind) {
-    | Directory({children, _}) => children
-    | File => []
+    switch (node) {
+    | Tree.Node({children, _}) => children
+    | Tree.Leaf(_) => []
     };
 
   let kind = node =>
-    switch (node.kind) {
-    | Directory({isOpen: true, _}) => `Node(`Open)
-    | Directory({isOpen: false, _}) => `Node(`Closed)
-    | File => `Leaf
+    switch (node) {
+    | Tree.Node({expanded: true, _}) => `Node(`Open)
+    | Tree.Node({expanded: false, _}) => `Node(`Closed)
+    | Tree.Leaf(_) => `Leaf
     };
-
-  let expandedSubtreeSize = node => node.expandedSubtreeSize;
 };

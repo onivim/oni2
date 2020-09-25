@@ -461,6 +461,8 @@ let update =
         FocusManager.push(Focus.SCM, state),
         eff |> Effect.map(msg => Actions.SCM(msg)),
       )
+
+    | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -1191,6 +1193,20 @@ let update =
       {...state', languageSupport},
       eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
     );
+
+  | AutoUpdate(msg) =>
+    let (state', outmsg) = Feature_AutoUpdate.update(state.autoUpdate, msg);
+
+    let eff =
+      (
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | Effect(eff) => eff
+        }
+      )
+      |> Isolinear.Effect.map(msg => Actions.AutoUpdate(msg));
+
+    ({...state, autoUpdate: state'}, eff);
 
   | _ => (state, Effect.none)
   };

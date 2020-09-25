@@ -17,6 +17,7 @@ type model('item);
 let create: (~rowHeight: int) => model('item);
 
 let get: (int, model('item)) => option('item);
+let selectedIndex: model('item) => int;
 
 let count: model('item) => int;
 
@@ -29,6 +30,16 @@ type outmsg =
 let update: (msg, model('item)) => (model('item), outmsg);
 
 let set: (array('item), model('item)) => model('item);
+
+let findIndex: ('item => bool, model('item)) => option(int);
+
+let scrollTo:
+  (
+    ~index: int,
+    ~alignment: [< | `Top | `Bottom | `Center | `Reveal],
+    model('item)
+  ) =>
+  model('item);
 
 // CONTRIBUTIONS
 
@@ -43,6 +54,8 @@ module Contributions: {
 module View: {
   let make:
     (
+      ~isActive: bool,
+      ~focusedIndex: option(int),
       ~theme: ColorTheme.Colors.t,
       ~model: model('item),
       ~dispatch: msg => unit,
@@ -50,7 +63,7 @@ module View: {
                  ~availableWidth: int,
                  ~index: int,
                  ~hovered: bool,
-                 ~focused: bool,
+                 ~selected: bool,
                  'item
                ) =>
                Revery.UI.element,

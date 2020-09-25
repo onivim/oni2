@@ -9,7 +9,7 @@ type model('item) = {
   rowHeight: int,
   items: array('item),
   hovered: option(int),
-  focused: int,
+  selected: int,
   viewportHeight: int,
   viewportWidth: int,
   multiplier: int,
@@ -24,7 +24,7 @@ let create = (~rowHeight) => {
   rowHeight,
   items: [||],
   hovered: None,
-  focused: 0,
+  selected: 0,
   multiplier: 0,
   viewportHeight: 1,
   viewportWidth: 1,
@@ -33,6 +33,21 @@ let create = (~rowHeight) => {
 };
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
+
+let findIndex = (f, {items, _}) => {
+  let len = Array.length(items);
+  let rec loop = idx =>
+    if (idx >= len) {
+      None;
+    } else if (f(items[idx])) {
+      Some(idx);
+    } else {
+      loop(idx + 1);
+    };
+  loop(0);
+};
+
+let selectedIndex = ({selected, _}) => selected;
 
 let resetMultiplier = model => {...model, multiplier: 0};
 
@@ -96,8 +111,8 @@ let showBottomScrollShadow = ({items, scrollY, rowHeight, viewportHeight, _}) =>
 
 // UPDATE
 
-let ensureFocusedVisible = model => {
-  let yPosition = float(model.focused * model.rowHeight);
+let ensureSelectedVisible = model => {
+  let yPosition = float(model.selected * model.rowHeight);
 
   let rowHeightF = float(model.rowHeight);
   let viewportHeightF = float(model.viewportHeight);
@@ -114,18 +129,18 @@ let ensureFocusedVisible = model => {
   {...model, scrollY: scrollY'};
 };
 
-let setFocus = (~focus, model) => {
+let setSelected = (~selected, model) => {
   let count = model.items |> Array.length;
-  let focus' =
-    if (focus < 0) {
+  let selected' =
+    if (selected < 0) {
       0;
-    } else if (focus >= count) {
+    } else if (selected >= count) {
       count - 1;
     } else {
-      focus;
+      selected;
     };
 
-  {...model, focused: focus'} |> ensureFocusedVisible;
+  {...model, selected: selected'} |> ensureSelectedVisible;
 };
 
 let setScrollY = (~scrollY, model) => {
@@ -141,25 +156,74 @@ let setScrollY = (~scrollY, model) => {
 let enableScrollAnimation = model => {...model, isScrollAnimated: true};
 let disableScrollAnimation = model => {...model, isScrollAnimated: false};
 
+let scrollSelectedToTop = model => {
+  model
+  |> setScrollY(~scrollY=float(model.selected * model.rowHeight))
+  |> enableScrollAnimation;
+};
+
+let scrollSelectedToBottom = model => {
+  model
+  |> setScrollY(
+       ~scrollY=
+         float(
+           model.selected
+           * model.rowHeight
+           - (model.viewportHeight - model.rowHeight),
+         ),
+     )
+  |> enableScrollAnimation;
+};
+
+let scrollSelectedToCenter = model => {
+  model
+  |> setScrollY(
+       ~scrollY=
+         float(
+           model.selected
+           * model.rowHeight
+           - (model.viewportHeight - model.rowHeight)
+           / 2,
+         ),
+     )
+  |> enableScrollAnimation;
+};
+
+let scrollTo = (~index, ~alignment, model) => {
+  let model' = model |> setSelected(~selected=index);
+  switch (alignment) {
+  | `Top => model' |> scrollSelectedToTop
+  | `Bottom => model' |> scrollSelectedToBottom
+  | `Center => model' |> scrollSelectedToCenter
+  | `Reveal => model' |> ensureSelectedVisible
+  };
+};
+
 let update = (msg, model) => {
   switch (msg) {
   | Command(CursorToTop) => (
-      model |> setFocus(~focus=0) |> enableScrollAnimation |> resetMultiplier,
+      model
+      |> setSelected(~selected=0)
+      |> enableScrollAnimation
+      |> resetMultiplier,
       Nothing,
     )
 
   | Command(CursorToBottom) =>
-    let focus =
+    let selected =
       model.multiplier == 0
         ? Array.length(model.items) - 1 : model.multiplier;
     (
-      model |> setFocus(~focus) |> enableScrollAnimation |> resetMultiplier,
+      model
+      |> setSelected(~selected)
+      |> enableScrollAnimation
+      |> resetMultiplier,
       Nothing,
     );
 
   | Command(CursorUp) => (
       model
-      |> setFocus(~focus=model.focused - getMultiplier(model))
+      |> setSelected(~selected=model.selected - getMultiplier(model))
       |> enableScrollAnimation
       |> resetMultiplier,
       Nothing,
@@ -167,7 +231,7 @@ let update = (msg, model) => {
 
   | Command(CursorDown) => (
       model
-      |> setFocus(~focus=model.focused + getMultiplier(model))
+      |> setSelected(~selected=model.selected + getMultiplier(model))
       |> enableScrollAnimation
       |> resetMultiplier,
       Nothing,
@@ -179,50 +243,26 @@ let update = (msg, model) => {
     )
 
   | Command(ScrollCursorTop) => (
-      model
-      |> setScrollY(~scrollY=float(model.focused * model.rowHeight))
-      |> enableScrollAnimation
-      |> resetMultiplier,
+      model |> scrollSelectedToTop |> resetMultiplier,
       Nothing,
     )
 
   | Command(ScrollCursorBottom) => (
-      model
-      |> setScrollY(
-           ~scrollY=
-             float(
-               model.focused
-               * model.rowHeight
-               - (model.viewportHeight - model.rowHeight),
-             ),
-         )
-      |> enableScrollAnimation
-      |> resetMultiplier,
+      model |> scrollSelectedToBottom |> resetMultiplier,
       Nothing,
     )
 
   | Command(ScrollCursorCenter) => (
-      model
-      |> setScrollY(
-           ~scrollY=
-             float(
-               model.focused
-               * model.rowHeight
-               - (model.viewportHeight - model.rowHeight)
-               / 2,
-             ),
-         )
-      |> enableScrollAnimation
-      |> resetMultiplier,
+      model |> scrollSelectedToCenter |> resetMultiplier,
       Nothing,
     )
 
   | Command(Select) =>
     let isValidFocus =
-      model.focused >= 0 && model.focused < Array.length(model.items);
+      model.selected >= 0 && model.selected < Array.length(model.items);
 
     if (isValidFocus) {
-      (model, Selected({index: model.focused}));
+      (model, Selected({index: model.selected}));
     } else {
       (model, Nothing);
     };
@@ -231,7 +271,7 @@ let update = (msg, model) => {
     let isValidIndex = index >= 0 && index < Array.length(model.items);
 
     if (isValidIndex) {
-      (model |> setFocus(~focus=index), Selected({index: index}));
+      (model |> setSelected(~selected=index), Selected({index: index}));
     } else {
       (model, Nothing);
     };
@@ -314,6 +354,8 @@ module Keybindings = {
       {key: "<S-G>", command: Commands.g.id, condition: commandCondition},
       {key: "j", command: Commands.j.id, condition: commandCondition},
       {key: "k", command: Commands.k.id, condition: commandCondition},
+      {key: "<DOWN>", command: Commands.j.id, condition: commandCondition},
+      {key: "<UP>", command: Commands.k.id, condition: commandCondition},
       {key: "<CR>", command: Commands.enter.id, condition: commandCondition},
       {key: "zz", command: Commands.zz.id, condition: commandCondition},
       {key: "zb", command: Commands.zb.id, condition: commandCondition},
@@ -409,8 +451,9 @@ module View = {
       right(isScrollbarVisible ? 0 : Constants.scrollBarThickness),
     ];
 
-    let item = (~offset, ~rowHeight) => [
+    let item = (~offset, ~rowHeight, ~bg) => [
       position(`Absolute),
+      backgroundColor(bg),
       top(offset),
       left(0),
       right(0),
@@ -420,8 +463,12 @@ module View = {
   let renderHelper =
       (
         ~items,
+        ~focusIndex,
         ~hovered,
-        ~focused,
+        ~selected,
+        ~hoverBg,
+        ~focusBg,
+        ~selectedBg,
         ~onMouseClick,
         ~onMouseOver,
         ~onMouseOut,
@@ -447,17 +494,30 @@ module View = {
       let itemView = i => {
         let rowY = (i - startRow) * rowHeight;
         let offset = rowY - startY;
+        let isHovered = hovered == Some(i);
+        let isSelected = selected == i;
+
+        let bg =
+          if (isSelected) {
+            selectedBg;
+          } else if (isHovered) {
+            hoverBg;
+          } else if (focusIndex == Some(i)) {
+            focusBg;
+          } else {
+            Revery.Colors.transparentWhite;
+          };
 
         <Clickable
           onMouseEnter={_ => onMouseOver(i)}
           onMouseLeave={_ => onMouseOut(i)}
           onClick={_ => onMouseClick(i)}
-          style={Styles.item(~offset, ~rowHeight)}>
+          style={Styles.item(~offset, ~rowHeight, ~bg)}>
           {render(
              ~availableWidth=viewportWidth,
              ~index=i,
              ~hovered=hovered == Some(i),
-             ~focused=focused == i,
+             ~selected=selected == i,
              items[i],
            )}
         </Clickable>;
@@ -468,6 +528,8 @@ module View = {
   let component = React.Expert.component("Component_VimList");
   let make:
     (
+      ~isActive: bool,
+      ~focusedIndex: option(int),
       ~theme: ColorTheme.Colors.t,
       ~model: model('item),
       ~dispatch: msg => unit,
@@ -475,14 +537,14 @@ module View = {
                  ~availableWidth: int,
                  ~index: int,
                  ~hovered: bool,
-                 ~focused: bool,
+                 ~selected: bool,
                  'item
                ) =>
                Revery.UI.element,
       unit
     ) =>
     _ =
-    (~theme, ~model, ~dispatch, ~render, ()) => {
+    (~isActive, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
       component(hooks => {
         let {rowHeight, viewportWidth, viewportHeight, _} = model;
 
@@ -548,11 +610,24 @@ module View = {
             React.empty;
           };
         };
+        let hoverBg = Colors.List.hoverBackground.from(theme);
+        let selectedBg =
+          isActive
+            ? Colors.List.activeSelectionBackground.from(theme)
+            : Colors.List.inactiveSelectionBackground.from(theme);
+        let focusBg =
+          isActive
+            ? Colors.List.focusBackground.from(theme)
+            : Colors.List.inactiveFocusBackground.from(theme);
         let items =
           renderHelper(
-            ~focused=model.focused,
+            ~focusIndex=focusedIndex,
+            ~selected=model.selected,
             ~hovered=model.hovered,
             ~items=model.items,
+            ~hoverBg,
+            ~selectedBg,
+            ~focusBg,
             ~onMouseOver,
             ~onMouseOut,
             ~onMouseClick,

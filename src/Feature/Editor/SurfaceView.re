@@ -95,6 +95,9 @@ let%component make =
          let relY = mouseY -. minY;
 
          Editor.Slow.pixelPositionToBytePosition(
+           // #2463: When we're in insert mode, clicking past the end of the line
+           // should move the cursor past the last byte.
+           ~allowPast=mode == Vim.Mode.Insert,
            ~buffer,
            ~pixelX=relX,
            ~pixelY=relY,

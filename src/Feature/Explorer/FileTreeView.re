@@ -10,7 +10,6 @@ module Tooltip = Oni_Components.Tooltip;
 module Colors = Feature_Theme.Colors;
 
 module View = Revery.UI.View;
-module TreeView = Oni_Components.TreeView;
 
 module Styles = {
   open Style;
@@ -28,21 +27,7 @@ module Styles = {
   // Minor adjustment to align with text
   let folder = [marginTop(4)];
 
-  let item = (~isFocus, ~isActive, ~theme) => [
-    flexDirection(`Row),
-    flexGrow(1),
-    alignItems(`Center),
-    backgroundColor(
-      if (isActive) {
-        Colors.List.activeSelectionBackground.from(theme);
-      } else if (isFocus) {
-        Colors.List.focusBackground.from(theme);
-      } else {
-        // NOTE: Could use, `Colors.SideBar.background.from(theme)`
-        Revery.Colors.transparentWhite;
-      },
-    ),
-  ];
+  let item = [flexDirection(`Row), flexGrow(1), alignItems(`Center)];
 
   let text = (~isFocus, ~isActive, ~decoration, ~theme) => [
     color(
@@ -63,7 +48,6 @@ module Styles = {
         }
       },
     ),
-    marginLeft(10),
     // Minor adjustment to align with seti-icon
     marginTop(4),
     textWrap(TextWrapping.NoWrap),
@@ -81,6 +65,7 @@ let setiIcon = (~icon, ~fontSize, ~fg, ()) => {
       // Minor adjustment to center vertically
       marginTop(-2),
       marginLeft(-4),
+      marginRight(10),
     ]
     fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
     fontSize={fontSize *. 2.}
@@ -93,50 +78,28 @@ let nodeView =
       ~isActive,
       ~font: UiFont.t,
       ~theme,
-      ~node: FsTreeNode.t,
+      ~icon,
+      ~node: FsTreeNode.metadata,
       ~decorations=[],
       (),
     ) => {
-  let icon = () =>
-    switch (node.icon) {
-    | Some(icon) =>
-      <setiIcon
-        fontSize={font.size}
-        fg={icon.fontColor}
-        icon={icon.fontCharacter}
-      />
-    | None => React.empty
-    };
-
-  // TODO: Since the icon theme does not have a folder icon (yet), verride it
-  // here in order to use FontAwesome. Remove when a better icon theme has been found.
-  let icon = () =>
-    switch (node.kind) {
-    | Directory({isOpen, _}) =>
-      <View style=Styles.folder>
-        <FontIcon
-          color={Colors.SideBar.foreground.from(theme)}
-          icon={isOpen ? FontAwesome.folderOpen : FontAwesome.folder}
-        />
-      </View>
-    | _ => <icon />
-    };
-
   let decoration =
     switch (decorations) {
     | [last, ..._] => Some(last)
     | [] => None
     };
 
-  let tooltipText =
+  let tooltipText = {
+    let path = node.path;
     switch (decoration) {
     | Some((decoration: Feature_Decorations.Decoration.t)) =>
-      node.path ++ " • " ++ decoration.tooltip
-    | None => node.path
+      path ++ " • " ++ decoration.tooltip
+    | None => path
     };
+  };
 
-  <Tooltip text=tooltipText style={Styles.item(~isFocus, ~isActive, ~theme)}>
-    <icon />
+  <Tooltip text=tooltipText style=Styles.item>
+    icon
     <Text
       text={node.displayName}
       style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
@@ -146,44 +109,63 @@ let nodeView =
   </Tooltip>;
 };
 
-module FsTreeView = TreeView.Make(FsTreeNode.Model);
-
 let make =
     (
-      ~scrollOffset,
-      ~tree: FsTreeNode.t,
+      ~isFocused,
+      ~focusedIndex,
+      ~treeView:
+         Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
       ~active: option(string),
-      ~focus: option(string),
-      ~onNodeClick,
       ~theme,
       ~decorations: Feature_Decorations.model,
-      ~font,
+      ~font: UiFont.t,
       ~dispatch: Model.msg => unit,
       (),
     ) => {
-  let onScrollOffsetChange = offset => dispatch(ScrollOffsetChanged(offset));
-
+  //let onScrollOffsetChange = offset => dispatch(ScrollOffsetChanged(offset));
   <View style=Styles.container>
-    <FsTreeView
-      scrollOffset
-      onScrollOffsetChange
-      tree
-      itemHeight=22
-      onClick=onNodeClick
-      arrowColor={Colors.SideBar.foreground.from(theme)}>
-      ...{node => {
+    <Component_VimTree.View
+      isActive=isFocused
+      focusedIndex
+      theme
+      model=treeView
+      dispatch={msg => dispatch(Tree(msg))}
+      render={(
+        ~availableWidth as _,
+        ~index as _,
+        ~hovered as _,
+        ~selected,
+        item,
+      ) => {
+        open FsTreeNode;
+        let (icon, data) =
+          switch (item) {
+          | Component_VimTree.Node({data, _}) => (React.empty, data)
+          | Component_VimTree.Leaf({data, _}) => (
+              switch (data.icon) {
+              | None => React.empty
+              | Some((icon: IconTheme.IconDefinition.t)) =>
+                <setiIcon
+                  fontSize={font.size}
+                  fg={icon.fontColor}
+                  icon={icon.fontCharacter}
+                />
+              },
+              data,
+            )
+          };
         let decorations =
-          Feature_Decorations.getDecorations(~path=node.path, decorations);
-
+          Feature_Decorations.getDecorations(~path=data.path, decorations);
         <nodeView
-          isFocus={Some(node.path) == focus}
-          isActive={Some(node.path) == active}
+          icon
+          isFocus=selected
+          isActive={Some(data.path) == active}
           font
           theme
-          node
+          node=data
           decorations
         />;
       }}
-    </FsTreeView>
+    />
   </View>;
 };
