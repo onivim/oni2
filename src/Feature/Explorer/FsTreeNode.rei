@@ -4,24 +4,15 @@ open Oni_Core;
 type metadata = {
   path: string,
   displayName: string,
-  hash: int, // hash of basename, so only comparable locally
-  icon: option([@opaque] IconTheme.IconDefinition.t),
+  hash: int // hash of basename, so only comparable locally
 };
 
 [@deriving show({with_path: false})]
 type t = Tree.t(metadata, metadata);
 
-let file: (string, ~icon: option(IconTheme.IconDefinition.t)) => t;
-let directory:
-  (
-    ~isOpen: bool=?,
-    string,
-    ~icon: option(IconTheme.IconDefinition.t),
-    ~children: list(t)
-  ) =>
-  t;
+let file: string => t;
+let directory: (~isOpen: bool=?, string, ~children: list(t)) => t;
 
-let icon: t => option(IconTheme.IconDefinition.t);
 let getPath: t => string;
 let displayName: t => string;
 

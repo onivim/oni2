@@ -5,8 +5,7 @@ open Utility;
 type metadata = {
   path: string,
   displayName: string,
-  hash: int, // hash of basename, so only comparable locally
-  icon: option([@opaque] IconTheme.IconDefinition.t),
+  hash: int // hash of basename, so only comparable locally
 };
 
 [@deriving show({with_path: false})]
@@ -16,19 +15,19 @@ let _hash = Hashtbl.hash;
 let _pathHashes = (~base, path) =>
   path |> Path.toRelative(~base) |> Path.explode |> List.map(_hash);
 
-let file = (path, ~icon) => {
+let file = path => {
   let basename = Filename.basename(path);
 
-  Tree.leaf({path, hash: _hash(basename), displayName: basename, icon});
+  Tree.leaf({path, hash: _hash(basename), displayName: basename});
 };
 
-let directory = (~isOpen=false, path, ~icon, ~children) => {
+let directory = (~isOpen=false, path, ~children) => {
   let basename = Filename.basename(path);
 
   Tree.node(
     ~expanded=isOpen,
     ~children,
-    {path, hash: _hash(basename), displayName: basename, icon},
+    {path, hash: _hash(basename), displayName: basename},
   );
 };
 
@@ -37,7 +36,6 @@ let get = f =>
   | Tree.Node({data, _})
   | Tree.Leaf(data) => f(data);
 
-let icon = get(({icon, _}) => icon);
 let getHash = get(({hash, _}) => hash);
 let getPath = get(({path, _}) => path);
 let displayName = get(({displayName, _}) => displayName);

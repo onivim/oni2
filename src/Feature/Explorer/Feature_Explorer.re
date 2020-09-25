@@ -6,11 +6,6 @@ module Log = (val Log.withNamespace("Oni2.Feature.Explorer"));
 
 include Model;
 
-let getFileIcon = (~languageInfo, ~iconTheme, filePath) => {
-  Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, filePath)
-  |> IconTheme.getIconForFile(iconTheme, filePath);
-};
-
 module Internal = {
   let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
     switch (a, b) {
@@ -25,23 +20,23 @@ module Internal = {
     };
   };
 
-  let luvDirentToFsTree = (~getIcon, ~cwd, {name, kind}: Luv.File.Dirent.t) => {
+  let luvDirentToFsTree = (~cwd, {name, kind}: Luv.File.Dirent.t) => {
     let path = Filename.concat(cwd, name);
     if (kind == `FILE || kind == `LINK) {
-      Some(FsTreeNode.file(path, ~icon=getIcon(path)));
+      Some(FsTreeNode.file(path));
     } else if (kind == `DIR) {
-      Some(FsTreeNode.directory(path, ~icon=getIcon(path), ~children=[]));
+      Some(FsTreeNode.directory(path, ~children=[]));
     } else {
       None;
     };
   };
 
-  let luvDirentsToFsTree = (~getIcon, ~cwd, ~ignored, dirents) => {
+  let luvDirentsToFsTree = (~cwd, ~ignored, dirents) => {
     dirents
     |> List.filter(({name, _}: Luv.File.Dirent.t) =>
          name != ".." && name != "." && !List.mem(name, ignored)
        )
-    |> List.filter_map(luvDirentToFsTree(~getIcon, ~cwd))
+    |> List.filter_map(luvDirentToFsTree(~cwd))
     |> List.sort(sortByLoweredDisplayName);
   };
 
@@ -55,40 +50,28 @@ module Internal = {
      Lwt_list.map_p. The recursion is gated by the depth value so it does
      not recurse too far.
    */
-  let getFilesAndFolders = (~ignored, cwd, getIcon) => {
+  let getFilesAndFolders = (~ignored, cwd) => {
     cwd
     |> Service_OS.Api.readdir
-    |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd, ~getIcon));
+    |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd));
   };
 
-  let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
-    let getIcon = getFileIcon(~languageInfo, ~iconTheme);
-    let childrenPromise = getFilesAndFolders(~ignored, cwd, getIcon);
+  let getDirectoryTree = (cwd, ignored) => {
+    let childrenPromise = getFilesAndFolders(~ignored, cwd);
 
     childrenPromise
     |> Lwt.map(children => {
-         FsTreeNode.directory(
-           cwd,
-           ~icon=getIcon(cwd),
-           ~children,
-           ~isOpen=true,
-         )
+         FsTreeNode.directory(cwd, ~children, ~isOpen=true)
        });
   };
 };
 
 module Effects = {
-  let load = (directory, languageInfo, iconTheme, configuration, ~onComplete) => {
+  let load = (directory, configuration, ~onComplete) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
       let ignored =
         Configuration.getValue(c => c.filesExclude, configuration);
-      let promise =
-        Internal.getDirectoryTree(
-          directory,
-          languageInfo,
-          iconTheme,
-          ignored,
-        );
+      let promise = Internal.getDirectoryTree(directory, ignored);
 
       Lwt.on_success(promise, tree => {dispatch(onComplete(tree))});
     });
@@ -136,8 +119,7 @@ let replaceNode = (node, model: model) =>
   | None => model
   };
 
-let revealAndFocusPath =
-    (~languageInfo, ~iconTheme, ~configuration, path, model: model) => {
+let revealAndFocusPath = (~configuration, path, model: model) => {
   switch (model.tree) {
   | Some(tree) =>
     switch (FsTreeNode.findNodesByPath(path, tree)) {
@@ -150,11 +132,7 @@ let revealAndFocusPath =
         model,
         Effect(
           Effects.load(
-            FsTreeNode.getPath(lastNode),
-            languageInfo,
-            iconTheme,
-            configuration,
-            ~onComplete=node =>
+            FsTreeNode.getPath(lastNode), configuration, ~onComplete=node =>
             FocusNodeLoaded(node)
           ),
         ),
@@ -180,7 +158,7 @@ let revealAndFocusPath =
   };
 };
 
-let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
+let update = (~configuration, msg, model) => {
   switch (msg) {
   | ActiveFilePathChanged(maybeFilePath) =>
     switch (model) {
@@ -195,13 +173,7 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
         switch (autoReveal) {
         | `HighlightAndScroll =>
           let model' = {...model, active: Some(path)};
-          revealAndFocusPath(
-            ~languageInfo,
-            ~configuration,
-            ~iconTheme,
-            path,
-            model',
-          );
+          revealAndFocusPath(~configuration, path, model');
         | `HighlightOnly =>
           let model = setActive(Some(path), model);
           (setFocus(Some(path), model), Nothing);
@@ -223,12 +195,7 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
     | Some(activePath) =>
       model
       |> replaceNode(node)
-      |> revealAndFocusPath(
-           ~languageInfo,
-           ~configuration,
-           ~iconTheme,
-           activePath,
-         )
+      |> revealAndFocusPath(~configuration, activePath)
 
     | None => (model, Nothing)
     }
@@ -246,12 +213,7 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
     | Expanded(node) => (
         model,
         Effect(
-          Effects.load(
-            node.path,
-            languageInfo,
-            iconTheme,
-            configuration,
-            ~onComplete=newNode =>
+          Effects.load(node.path, configuration, ~onComplete=newNode =>
             NodeLoaded(newNode)
           ),
         ),
@@ -267,24 +229,15 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
 
 module View = View;
 
-let sub = (~configuration, ~languageInfo, ~iconTheme, {rootPath, _}) => {
-  let getIcon = getFileIcon(~languageInfo, ~iconTheme);
+let sub = (~configuration, {rootPath, _}) => {
   let ignored = Configuration.getValue(c => c.filesExclude, configuration);
 
   let toMsg =
     fun
     | Ok(dirents) => {
         let children =
-          dirents
-          |> Internal.luvDirentsToFsTree(~ignored, ~getIcon, ~cwd=rootPath);
-        TreeLoaded(
-          FsTreeNode.directory(
-            rootPath,
-            ~icon=getIcon(rootPath),
-            ~children,
-            ~isOpen=true,
-          ),
-        );
+          dirents |> Internal.luvDirentsToFsTree(~ignored, ~cwd=rootPath);
+        TreeLoaded(FsTreeNode.directory(rootPath, ~children, ~isOpen=true));
       }
     | Error(msg) => TreeLoadError(msg);
 

@@ -109,9 +109,13 @@ let nodeView =
   </Tooltip>;
 };
 
+let getFileIcon = Model.getFileIcon;
+
 let make =
     (
       ~isFocused,
+      ~iconTheme,
+      ~languageInfo,
       ~focusedIndex,
       ~treeView:
          Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
@@ -122,7 +126,6 @@ let make =
       ~dispatch: Model.msg => unit,
       (),
     ) => {
-  //let onScrollOffsetChange = offset => dispatch(ScrollOffsetChanged(offset));
   <View style=Styles.container>
     <Component_VimTree.View
       isActive=isFocused
@@ -142,7 +145,7 @@ let make =
           switch (item) {
           | Component_VimTree.Node({data, _}) => (React.empty, data)
           | Component_VimTree.Leaf({data, _}) => (
-              switch (data.icon) {
+              switch (getFileIcon(~iconTheme, ~languageInfo, data.path)) {
               | None => React.empty
               | Some((icon: IconTheme.IconDefinition.t)) =>
                 <setiIcon
