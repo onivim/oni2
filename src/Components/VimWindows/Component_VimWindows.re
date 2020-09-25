@@ -146,7 +146,12 @@ module Keybindings = {
 };
 
 module Contributions = {
-  let contextKeys = ContextKeys.[vimWindowNavigation];
+  let contextKeys = model => {
+    open WhenExpr.ContextKeys;
+    ContextKeys.[vimWindowNavigation]
+    |> Schema.fromList
+    |> fromSchema(model);
+  };
 
   let keybindings = Keybindings.keybindings;
 

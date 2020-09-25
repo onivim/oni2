@@ -184,6 +184,18 @@ let visibleGroups = ({providers, _}) => {
      });
 };
 
+let selectedGroup = (model) => {
+  switch (model.focus) {
+  | CommitText => None
+  | Group({providerHandle, handle}) =>
+    visibleGroups(model)
+    |> List.filter(((provider: Provider.t, group: ResourceGroup.t)) => {
+      provider.handle == providerHandle && group.handle == handle
+    })
+    |> (list) => List.nth_opt(list, 0)
+  }
+};
+
 let statusBarCommands = ({providers, _}: model) => {
   providers
   |> List.map(({statusBarCommands, _}: Provider.t) => statusBarCommands)
@@ -992,17 +1004,21 @@ module Contributions = {
 
     let listKeys =
       isFocused && model.focus != CommitText
-        ? Component_VimList.Contributions.contextKeys : [];
+        ? 
+        selectedGroup(model)
+        |> Option.map(((provider, group: ResourceGroup.t)) => {
+          Component_VimList.Contributions.contextKeys(group.viewModel)
+        })
+        |> Option.value(~default=empty)
+        : empty;
 
     let vimNavKeys =
-      isFocused ? Component_VimWindows.Contributions.contextKeys : [];
+      isFocused ? Component_VimWindows.Contributions.contextKeys(model.vimWindowNavigation) : empty;
 
     [
-      inputKeys |> fromList |> map(({inputBox, _}: model) => inputBox),
-      listKeys |> fromList |> map(_ => ()),
-      vimNavKeys
-      |> fromList
-      |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),
+      inputKeys,
+      listKeys,
+      vimNavKeys,
     ]
     |> unionMany;
   };

@@ -187,7 +187,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
    */
   let handleKeyPress = (state: State.t, key) => {
     let context =
-      WhenExpr.ContextKeys.fromSchema(Model.ContextKeys.all(state), state);
+      WhenExpr.ContextKeys.fromSchema(state, Model.ContextKeys.all(state));
 
     let (keyBindings, effects) =
       Keybindings.keyDown(~context, ~key, state.keyBindings);
@@ -213,7 +213,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let handleKeyUp = (state: State.t, key) => {
     let context =
-      WhenExpr.ContextKeys.fromSchema(Model.ContextKeys.all(state), state);
+      WhenExpr.ContextKeys.fromSchema(state, Model.ContextKeys.all(state));
 
     //let inputKey = reveryKeyToEditorKey(key);
     let (keyBindings, effects) =
