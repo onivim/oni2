@@ -330,8 +330,6 @@ let make =
 };
 
 module Contributions = {
-  open WhenExpr.ContextKeys.Schema;
-
   let commands = (~isFocused) => {
     !isFocused
       ? []
@@ -345,22 +343,24 @@ module Contributions = {
         );
   };
 
-  let contextKeys = (~isFocused) => {
+  let contextKeys = (~isFocused, model) => {
+    open WhenExpr.ContextKeys;
     let inputTextKeys =
-      isFocused ? Component_InputText.Contributions.contextKeys : [];
+      isFocused
+        ? Component_InputText.Contributions.contextKeys(model.findInput)
+        : empty;
     let vimNavKeys =
-      isFocused ? Component_VimWindows.Contributions.contextKeys : [];
+      isFocused
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
 
-    let vimListKeys =
-      isFocused ? Component_VimList.Contributions.contextKeys : [];
+    let vimTreeKeys =
+      isFocused
+        ? Component_VimTree.Contributions.contextKeys(model.resultsTree)
+        : empty;
 
-    [
-      inputTextKeys |> fromList |> map(({findInput, _}: model) => findInput),
-      vimNavKeys
-      |> fromList
-      |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),
-      vimListKeys |> fromList |> map(_ => ()),
-    ]
-    |> unionMany;
+    [inputTextKeys, vimNavKeys, vimTreeKeys] |> unionMany;
   };
 };
