@@ -135,6 +135,7 @@ let all = (state: State.t) => {
   let explorerContextKeys =
     Feature_Explorer.Contributions.contextKeys(
       ~isFocused=focus == Focus.FileExplorer,
+      state.fileExplorer,
     );
 
   let extensionContextKeys =
@@ -159,7 +160,7 @@ let all = (state: State.t) => {
     Feature_Registers.Contributions.contextKeys(
       ~isFocused=focus == Focus.InsertRegister,
     )
-    |> map(({registers, _}: State.t) => registers),
+    |> Schema.map(({registers, _}: State.t) => registers),
     explorerContextKeys |> map(({fileExplorer, _}: State.t) => fileExplorer),
     sideBarContext |> fromList |> map(({sideBar, _}: State.t) => sideBar),
     scmContextKeys,
