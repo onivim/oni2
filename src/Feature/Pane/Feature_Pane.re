@@ -264,9 +264,9 @@ module View = {
   module Styles = {
     open Style;
 
-    let pane = (~isFocused, ~theme, ~height) => {
+    let pane = (~opacity, ~isFocused, ~theme, ~height) => {
       let common = [
-        opacity(isFocused ? 1.0 : 0.75),
+        Style.opacity(opacity),
         flexDirection(`Column),
         Style.height(height),
         borderTop(
@@ -359,6 +359,7 @@ module View = {
   };
   let make =
       (
+        ~config,
         ~isFocused,
         ~theme,
         ~iconTheme,
@@ -382,7 +383,13 @@ module View = {
       <View />;
     } else {
       let height = height(pane);
-      <View style={Styles.pane(~isFocused, ~theme, ~height)}>
+      let opacity =
+        isFocused
+          ? 1.0
+          : Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
+              config,
+            );
+      <View style={Styles.pane(~opacity, ~isFocused, ~theme, ~height)}>
         <View style=Styles.resizer>
           <ResizeHandle.Horizontal
             onDrag={delta =>

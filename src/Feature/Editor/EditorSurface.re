@@ -36,9 +36,9 @@ module Styles = {
     flexGrow(1),
   ];
 
-  let inactiveCover = (~colors: Colors.t) => [
+  let inactiveCover = (~colors: Colors.t, ~opacity) => [
     backgroundColor(colors.editorBackground),
-    opacity(0.2),
+    Style.opacity(opacity),
     pointerEvents(`Ignore),
     position(`Absolute),
     top(0),
@@ -334,9 +334,15 @@ let%component make =
     |> Option.value(~default=React.empty);
   };
 
+  let coverAmount =
+    1.0
+    -. Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
+         config,
+       );
   let opacityCover =
     isActiveSplit
-      ? React.empty : <View style={Styles.inactiveCover(~colors)} />;
+      ? React.empty
+      : <View style={Styles.inactiveCover(~colors, ~opacity=coverAmount)} />;
 
   <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView

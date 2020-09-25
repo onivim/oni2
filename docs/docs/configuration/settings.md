@@ -120,6 +120,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `ui.zoom` __(_float_ default: `1.0`)__ - Zoom setting for UI. Factor to scale UI elements. A value of `2.0` will scale the UI by 200%.
 
+- `oni.inactiveWindowOpacity` __(_float_ default: `0.75`)__ - The opacity value, from 0.0 to 1.0, of inactive windows.
+
 ### Vim
 
 - `vim.useSystemClipboard` __(_`true`_|_`false`_|_`["yank", "paste", "delete"]`_ default: `["yank"]`)__ - Whether or not deletes / yanks should integrate with the system clipboard:

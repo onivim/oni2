@@ -29,7 +29,8 @@ let initial = (~getUserSettings, contributions) =>
   merge({
     schema:
       Config.Schema.unionMany(
-        [GlobalConfiguration.contributions, ...contributions] |> List.map(Config.Schema.fromList)
+        [GlobalConfiguration.contributions, ...contributions]
+        |> List.map(Config.Schema.fromList),
       ),
     user: getUserSettings() |> Result.value(~default=Config.Settings.empty),
     merged: Config.Settings.empty,
