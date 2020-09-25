@@ -12,13 +12,13 @@ steps:
     env:
       ASAN_OPTIONS: use_sigaltstack=0
       LSAN_OPTIONS: suppressions=lsan.supp
-  - script: esy @integrationtest run
-    displayName: 'Integration Tests: run (round 2)'
-    env:
-      ASAN_OPTIONS: use_sigaltstack=0
-      LSAN_OPTIONS: suppressions=lsan.supp
-  - script: esy @integrationtest run
-    displayName: 'Integration Tests: run (round 3)'
-    env:
-      ASAN_OPTIONS: use_sigaltstack=0
-      LSAN_OPTIONS: suppressions=lsan.supp
+#  - script: esy @integrationtest run
+#    displayName: 'Integration Tests: run (round 2)'
+#    env:
+#      ASAN_OPTIONS: use_sigaltstack=0
+#      LSAN_OPTIONS: suppressions=lsan.supp
+#  - script: esy @integrationtest run
+#    displayName: 'Integration Tests: run (round 3)'
+#    env:
+#      ASAN_OPTIONS: use_sigaltstack=0
+#      LSAN_OPTIONS: suppressions=lsan.supp
