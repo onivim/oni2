@@ -80,6 +80,10 @@ type command =
   | CursorUp // k
   | Digit(int)
   | Select
+  | ScrollDownLine
+  | ScrollUpLine
+  | ScrollDownWindow
+  | ScrollUpWindow
   | ScrollCursorCenter // zz
   | ScrollCursorBottom // zb
   | ScrollCursorTop; // zt
@@ -155,6 +159,19 @@ let setScrollY = (~scrollY, model) => {
 
 let enableScrollAnimation = model => {...model, isScrollAnimated: true};
 let disableScrollAnimation = model => {...model, isScrollAnimated: false};
+
+let scrollLines = (~count: int, model) => {
+  setScrollY(~scrollY=model.scrollY +. float(count * model.rowHeight), model)
+  |> enableScrollAnimation;
+};
+
+let scrollWindows = (~count: int, model) => {
+  setScrollY(
+    ~scrollY=model.scrollY +. float(count * model.viewportHeight),
+    model,
+  )
+  |> enableScrollAnimation;
+};
 
 let scrollSelectedToTop = model => {
   model
@@ -257,6 +274,28 @@ let update = (msg, model) => {
       Nothing,
     )
 
+  | Command(ScrollDownLine) => (
+      model |> scrollLines(~count=getMultiplier(model)) |> resetMultiplier,
+      Nothing,
+    )
+
+  | Command(ScrollUpLine) => (
+      model |> scrollLines(~count=- getMultiplier(model)) |> resetMultiplier,
+      Nothing,
+    )
+
+  | Command(ScrollDownWindow) => (
+      model |> scrollWindows(~count=getMultiplier(model)) |> resetMultiplier,
+      Nothing,
+    )
+
+  | Command(ScrollUpWindow) => (
+      model
+      |> scrollWindows(~count=- getMultiplier(model))
+      |> resetMultiplier,
+      Nothing,
+    )
+
   | Command(Select) =>
     let isValidFocus =
       model.selected >= 0 && model.selected < Array.length(model.items);
@@ -324,6 +363,14 @@ module Commands = {
   let zb = define("vim.list.zb", Command(ScrollCursorBottom));
   let zt = define("vim.list.zt", Command(ScrollCursorTop));
 
+  let scrollDownLine =
+    define("vim.list.scrollDownLine", Command(ScrollDownLine));
+  let scrollUpLine = define("vim.list.scrollUpLine", Command(ScrollUpLine));
+  let scrollDownWindow =
+    define("vim.list.scrollDownWindow", Command(ScrollDownWindow));
+  let scrollUpWindow =
+    define("vim.list.scrollUpWindow", Command(ScrollUpWindow));
+
   let digit0 = define("vim.list.0", Command(Digit(0)));
   let digit1 = define("vim.list.1", Command(Digit(1)));
   let digit2 = define("vim.list.2", Command(Digit(2)));
@@ -351,9 +398,63 @@ module Keybindings = {
       {key: "<DOWN>", command: Commands.j.id, condition: commandCondition},
       {key: "<UP>", command: Commands.k.id, condition: commandCondition},
       {key: "<CR>", command: Commands.enter.id, condition: commandCondition},
+      // Scroll alignment
       {key: "zz", command: Commands.zz.id, condition: commandCondition},
       {key: "zb", command: Commands.zb.id, condition: commandCondition},
       {key: "zt", command: Commands.zt.id, condition: commandCondition},
+      // Scroll downwards
+      {
+        key: "<C-e>",
+        command: Commands.scrollDownLine.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<C-d>",
+        command: Commands.scrollDownWindow.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<S-DOWN>",
+        command: Commands.scrollDownWindow.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<PageDown>",
+        command: Commands.scrollDownWindow.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<C-f>",
+        command: Commands.scrollDownWindow.id,
+        condition: commandCondition,
+      },
+      // Scroll upwards
+      {
+        key: "<C-y>",
+        command: Commands.scrollUpLine.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<C-u>",
+        command: Commands.scrollUpWindow.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<S-UP>",
+        command: Commands.scrollUpWindow.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<PageUp>",
+        command: Commands.scrollUpWindow.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<C-b>",
+        command: Commands.scrollUpWindow.id,
+        condition: commandCondition,
+      },
+      // Multiplier
       {key: "0", command: Commands.digit0.id, condition: commandCondition},
       {key: "1", command: Commands.digit1.id, condition: commandCondition},
       {key: "2", command: Commands.digit2.id, condition: commandCondition},
@@ -397,6 +498,10 @@ module Contributions = {
       digit7,
       digit8,
       digit9,
+      scrollDownLine,
+      scrollDownWindow,
+      scrollUpLine,
+      scrollUpWindow,
     ];
 };
 
