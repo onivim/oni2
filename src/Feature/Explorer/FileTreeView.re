@@ -54,24 +54,6 @@ module Styles = {
   ];
 };
 
-let setiIcon = (~icon, ~fontSize, ~fg, ()) => {
-  <Text
-    text={FontIcon.codeToIcon(icon)}
-    style=Style.[
-      color(fg),
-      width(int_of_float(fontSize *. 1.5)),
-      height(int_of_float(fontSize *. 1.75)),
-      textWrap(TextWrapping.NoWrap),
-      // Minor adjustment to center vertically
-      marginTop(-2),
-      marginLeft(-4),
-      marginRight(10),
-    ]
-    fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
-    fontSize={fontSize *. 2.}
-  />;
-};
-
 let nodeView =
     (
       ~isFocus,
@@ -109,9 +91,13 @@ let nodeView =
   </Tooltip>;
 };
 
+let getFileIcon = Model.getFileIcon;
+
 let make =
     (
       ~isFocused,
+      ~iconTheme,
+      ~languageInfo,
       ~focusedIndex,
       ~treeView:
          Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
@@ -122,7 +108,6 @@ let make =
       ~dispatch: Model.msg => unit,
       (),
     ) => {
-  //let onScrollOffsetChange = offset => dispatch(ScrollOffsetChanged(offset));
   <View style=Styles.container>
     <Component_VimTree.View
       isActive=isFocused
@@ -142,15 +127,12 @@ let make =
           switch (item) {
           | Component_VimTree.Node({data, _}) => (React.empty, data)
           | Component_VimTree.Leaf({data, _}) => (
-              switch (data.icon) {
-              | None => React.empty
-              | Some((icon: IconTheme.IconDefinition.t)) =>
-                <setiIcon
-                  fontSize={font.size}
-                  fg={icon.fontColor}
-                  icon={icon.fontCharacter}
-                />
-              },
+              <Oni_Components.FileIcon
+                font
+                iconTheme
+                languageInfo
+                path={data.path}
+              />,
               data,
             )
           };

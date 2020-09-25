@@ -63,13 +63,15 @@ module Schema = {
 
 type t = Lookup.t(Value.t);
 
+let empty = Lookup.empty;
+
 let fromList = entries =>
   entries
   |> List.to_seq
   |> Seq.map(((key, value)) => (Lookup.key(key), value))
   |> Lookup.of_seq;
 
-let fromSchema = (schema, model) =>
+let fromSchema = (model, schema) =>
   Lookup.map(Schema.(entry => entry.get(model)), schema);
 
 let union = (xs, ys) =>

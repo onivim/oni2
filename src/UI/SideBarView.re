@@ -74,6 +74,8 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
       let dispatch = msg => dispatch(Actions.FileExplorer(msg));
       <Feature_Explorer.View
         isFocused={FocusManager.current(state) == Focus.FileExplorer}
+        languageInfo={state.languageInfo}
+        iconTheme={state.iconTheme}
         decorations={state.decorations}
         model={state.fileExplorer}
         theme
@@ -82,26 +84,16 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
       />;
 
     | SCM =>
-      //        dispatch(
-
-      //            Oni_Core.Uri.toFileSystemPath(resource.uri),
-
-      //            None,
-
-      //        );
-
       <Feature_SCM.Pane
         model={state.scm}
         workingDirectory={state.workspace.workingDirectory}
         isFocused={FocusManager.current(state) == Focus.SCM}
+        languageInfo={state.languageInfo}
+        iconTheme={state.iconTheme}
         theme
         font
         dispatch={msg => dispatch(Actions.SCM(msg))}
       />
-    //          ),
-    //            None,
-    //          Actions.OpenFileByPath(
-    //      let onItemClick = (resource: Feature_SCM.Resource.t) =>
 
     | Search =>
       let dispatch = msg =>

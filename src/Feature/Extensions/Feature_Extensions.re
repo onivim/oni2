@@ -87,7 +87,6 @@ let sub = (~setup, model) => {
 };
 
 module Contributions = {
-  open WhenExpr.ContextKeys.Schema;
   // TODO: Should be stored as proper commands instead of converting every time
   let extensionCommands = model => {
     model.extensions
@@ -159,28 +158,39 @@ module Contributions = {
   };
 
   let contextKeys = (~isFocused, model) => {
-    let keys =
+    open WhenExpr.ContextKeys;
+    let searchTextKeys =
       isFocused && model.focusedWindow == Focus.SearchText
-        ? Component_InputText.Contributions.contextKeys : [];
+        ? Component_InputText.Contributions.contextKeys(model.searchText)
+        : empty;
 
     let vimNavKeys =
-      isFocused ? Component_VimWindows.Contributions.contextKeys : [];
+      isFocused
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
 
+    let isSearching = Model.isSearching(model);
     let vimListKeys =
-      (
-        isFocused && model.focusedWindow != Focus.SearchText
-          ? Component_VimList.Contributions.contextKeys : []
-      )
-      |> fromList
-      |> map(_ => ());
+      isFocused
+        ? switch (model.focusedWindow) {
+          | SearchText => empty
+          | Installed when isSearching =>
+            model.viewModel.searchResults
+            |> Component_VimList.Contributions.contextKeys
+          | Bundled when isSearching =>
+            model.viewModel.searchResults
+            |> Component_VimList.Contributions.contextKeys
+          | Installed =>
+            model.viewModel.installed
+            |> Component_VimList.Contributions.contextKeys
+          | Bundled =>
+            model.viewModel.bundled
+            |> Component_VimList.Contributions.contextKeys
+          }
+        : empty;
 
-    [
-      keys |> fromList |> map(({searchText, _}: model) => searchText),
-      vimListKeys,
-      vimNavKeys
-      |> fromList
-      |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),
-    ]
-    |> unionMany;
+    [searchTextKeys, vimListKeys, vimNavKeys] |> unionMany;
   };
 };

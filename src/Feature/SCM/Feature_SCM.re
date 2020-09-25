@@ -186,6 +186,18 @@ let visibleGroups = ({providers, _}) => {
      });
 };
 
+let selectedGroup = model => {
+  switch (model.focus) {
+  | CommitText => None
+  | Group({providerHandle, handle, _}) =>
+    visibleGroups(model)
+    |> List.filter(((provider: Provider.t, group: ResourceGroup.t)) => {
+         provider.handle == providerHandle && group.handle == handle
+       })
+    |> (list => List.nth_opt(list, 0))
+  };
+};
+
 let statusBarCommands = ({providers, _}: model) => {
   providers
   |> List.map(({statusBarCommands, _}: Provider.t) => statusBarCommands)
@@ -828,6 +840,7 @@ module Pane = {
     ];
 
     let item = [
+      flexDirection(`Row),
       paddingVertical(2),
       marginLeft(6),
       cursor(MouseCursors.pointer),
@@ -839,6 +852,8 @@ module Pane = {
         ~provider: Provider.t,
         ~resource: Resource.t,
         ~theme,
+        ~iconTheme,
+        ~languageInfo,
         ~font: UiFont.t,
         ~workingDirectory,
         (),
@@ -854,6 +869,7 @@ module Pane = {
     let displayName = Path.toRelative(~base, path);
 
     <View style=Styles.item>
+      <Oni_Components.FileIcon font iconTheme languageInfo path />
       <Text
         style={Styles.text(~theme)}
         text=displayName
@@ -867,6 +883,8 @@ module Pane = {
       (
         ~provider,
         ~group: ResourceGroup.t,
+        ~iconTheme,
+        ~languageInfo,
         ~theme,
         ~isFocused: bool,
         ~font: UiFont.t,
@@ -885,7 +903,15 @@ module Pane = {
           ~selected as _,
           item,
         ) => {
-      <itemView provider resource=item theme font workingDirectory />;
+      <itemView
+        provider
+        resource=item
+        iconTheme
+        languageInfo
+        theme
+        font
+        workingDirectory
+      />;
     };
     <Component_Accordion.VimList
       title=label
@@ -908,6 +934,8 @@ module Pane = {
                   ~model,
                   ~workingDirectory,
                   ~isFocused,
+                  ~iconTheme,
+                  ~languageInfo,
                   ~theme,
                   ~font: UiFont.t,
                   ~dispatch,
@@ -950,6 +978,8 @@ module Pane = {
               group
               dispatch
               isFocused={isFocused && isGroupFocused(group, model.focus)}
+              iconTheme
+              languageInfo
               theme
               font
               workingDirectory
@@ -962,8 +992,6 @@ module Pane = {
 };
 
 module Contributions = {
-  open WhenExpr.ContextKeys.Schema;
-
   let commands = (~isFocused, model) => {
     let listCommands =
       switch (model.focus) {
@@ -987,24 +1015,28 @@ module Contributions = {
   };
 
   let contextKeys = (~isFocused, model) => {
+    open WhenExpr.ContextKeys;
     let inputKeys =
       isFocused && model.focus == CommitText
-        ? Component_InputText.Contributions.contextKeys : [];
+        ? Component_InputText.Contributions.contextKeys(model.inputBox)
+        : empty;
 
     let listKeys =
       isFocused && model.focus != CommitText
-        ? Component_VimList.Contributions.contextKeys : [];
+        ? selectedGroup(model)
+          |> Option.map(((_provider, group: ResourceGroup.t)) => {
+               Component_VimList.Contributions.contextKeys(group.viewModel)
+             })
+          |> Option.value(~default=empty)
+        : empty;
 
     let vimNavKeys =
-      isFocused ? Component_VimWindows.Contributions.contextKeys : [];
+      isFocused
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
 
-    [
-      inputKeys |> fromList |> map(({inputBox, _}: model) => inputBox),
-      listKeys |> fromList |> map(_ => ()),
-      vimNavKeys
-      |> fromList
-      |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),
-    ]
-    |> unionMany;
+    [inputKeys, listKeys, vimNavKeys] |> unionMany;
   };
 };

@@ -267,8 +267,6 @@ let update =
     let (model, outmsg) =
       Feature_Explorer.update(
         ~configuration=state.configuration,
-        ~languageInfo=state.languageInfo,
-        ~iconTheme=state.iconTheme,
         msg,
         state.fileExplorer,
       );
