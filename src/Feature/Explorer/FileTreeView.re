@@ -145,15 +145,12 @@ let make =
           switch (item) {
           | Component_VimTree.Node({data, _}) => (React.empty, data)
           | Component_VimTree.Leaf({data, _}) => (
-              switch (getFileIcon(~iconTheme, ~languageInfo, data.path)) {
-              | None => React.empty
-              | Some((icon: IconTheme.IconDefinition.t)) =>
-                <setiIcon
-                  fontSize={font.size}
-                  fg={icon.fontColor}
-                  icon={icon.fontCharacter}
-                />
-              },
+              <Oni_Components.FileIcon
+                font
+                iconTheme
+                languageInfo
+                path={data.path}
+              />,
               data,
             )
           };

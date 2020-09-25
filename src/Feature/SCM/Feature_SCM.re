@@ -826,6 +826,7 @@ module Pane = {
     ];
 
     let item = [
+      flexDirection(`Row),
       paddingVertical(2),
       marginLeft(6),
       cursor(MouseCursors.pointer),
@@ -837,6 +838,8 @@ module Pane = {
         ~provider: Provider.t,
         ~resource: Resource.t,
         ~theme,
+        ~iconTheme,
+        ~languageInfo,
         ~font: UiFont.t,
         ~workingDirectory,
         (),
@@ -852,6 +855,7 @@ module Pane = {
     let displayName = Path.toRelative(~base, path);
 
     <View style=Styles.item>
+      <Oni_Components.FileIcon font iconTheme languageInfo path />
       <Text
         style={Styles.text(~theme)}
         text=displayName
@@ -865,6 +869,8 @@ module Pane = {
       (
         ~provider,
         ~group: ResourceGroup.t,
+        ~iconTheme,
+        ~languageInfo,
         ~theme,
         ~isFocused: bool,
         ~font: UiFont.t,
@@ -883,7 +889,15 @@ module Pane = {
           ~selected as _,
           item,
         ) => {
-      <itemView provider resource=item theme font workingDirectory />;
+      <itemView
+        provider
+        resource=item
+        iconTheme
+        languageInfo
+        theme
+        font
+        workingDirectory
+      />;
     };
     <Component_Accordion.VimList
       title=label
@@ -906,6 +920,8 @@ module Pane = {
                   ~model,
                   ~workingDirectory,
                   ~isFocused,
+                  ~iconTheme,
+                  ~languageInfo,
                   ~theme,
                   ~font: UiFont.t,
                   ~dispatch,
@@ -948,6 +964,8 @@ module Pane = {
               group
               dispatch
               isFocused={isFocused && isGroupFocused(group, model.focus)}
+              iconTheme
+              languageInfo
               theme
               font
               workingDirectory

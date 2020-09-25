@@ -88,6 +88,8 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
         model={state.scm}
         workingDirectory={state.workspace.workingDirectory}
         isFocused={FocusManager.current(state) == Focus.SCM}
+        languageInfo={state.languageInfo}
+        iconTheme={state.iconTheme}
         theme
         font
         dispatch={msg => dispatch(Actions.SCM(msg))}
