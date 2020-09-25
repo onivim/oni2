@@ -292,7 +292,6 @@ let sub = (~configuration, ~languageInfo, ~iconTheme, {rootPath, _}) => {
 };
 
 module Contributions = {
-
   let commands = (~isFocused) => {
     !isFocused
       ? []
@@ -302,11 +301,11 @@ module Contributions = {
 
   let contextKeys = (~isFocused, model) => {
     open WhenExpr.ContextKeys;
-    
-    let vimTreeKeys =
-      isFocused ? Component_VimTree.Contributions.contextKeys(model.treeView) :
-      empty;
 
-    vimTreeKeys
+    let vimTreeKeys =
+      isFocused
+        ? Component_VimTree.Contributions.contextKeys(model.treeView) : empty;
+
+    vimTreeKeys;
   };
 };

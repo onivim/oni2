@@ -474,17 +474,18 @@ module Contributions = {
   let contextKeys = (~isFocused, model) => {
     open WhenExpr.ContextKeys;
     let vimNavKeys =
-      isFocused ? Component_VimWindows.Contributions.contextKeys(model.vimWindowNavigation) : empty;
+      isFocused
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
 
     let vimListKeys =
       isFocused && model.selected == Diagnostics
-        ? Component_VimTree.Contributions.contextKeys(model.diagnosticsView) : empty;
+        ? Component_VimTree.Contributions.contextKeys(model.diagnosticsView)
+        : empty;
 
-    [
-      vimNavKeys,
-      vimListKeys,
-    ]
-    |> unionMany;
+    [vimNavKeys, vimListKeys] |> unionMany;
   };
 
   let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];

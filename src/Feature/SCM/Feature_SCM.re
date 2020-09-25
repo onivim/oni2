@@ -184,16 +184,16 @@ let visibleGroups = ({providers, _}) => {
      });
 };
 
-let selectedGroup = (model) => {
+let selectedGroup = model => {
   switch (model.focus) {
   | CommitText => None
   | Group({providerHandle, handle}) =>
     visibleGroups(model)
     |> List.filter(((provider: Provider.t, group: ResourceGroup.t)) => {
-      provider.handle == providerHandle && group.handle == handle
-    })
-    |> (list) => List.nth_opt(list, 0)
-  }
+         provider.handle == providerHandle && group.handle == handle
+       })
+    |> (list => List.nth_opt(list, 0))
+  };
 };
 
 let statusBarCommands = ({providers, _}: model) => {
@@ -1000,26 +1000,25 @@ module Contributions = {
     open WhenExpr.ContextKeys;
     let inputKeys =
       isFocused && model.focus == CommitText
-        ? Component_InputText.Contributions.contextKeys(model.inputBox) : empty
+        ? Component_InputText.Contributions.contextKeys(model.inputBox)
+        : empty;
 
     let listKeys =
       isFocused && model.focus != CommitText
-        ? 
-        selectedGroup(model)
-        |> Option.map(((provider, group: ResourceGroup.t)) => {
-          Component_VimList.Contributions.contextKeys(group.viewModel)
-        })
-        |> Option.value(~default=empty)
+        ? selectedGroup(model)
+          |> Option.map(((provider, group: ResourceGroup.t)) => {
+               Component_VimList.Contributions.contextKeys(group.viewModel)
+             })
+          |> Option.value(~default=empty)
         : empty;
 
     let vimNavKeys =
-      isFocused ? Component_VimWindows.Contributions.contextKeys(model.vimWindowNavigation) : empty;
+      isFocused
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
 
-    [
-      inputKeys,
-      listKeys,
-      vimNavKeys,
-    ]
-    |> unionMany;
+    [inputKeys, listKeys, vimNavKeys] |> unionMany;
   };
 };

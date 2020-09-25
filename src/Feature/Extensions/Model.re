@@ -249,6 +249,9 @@ let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => 
   viewModel: ViewModel.initial,
 };
 
+let isSearching = ({searchText, _}) =>
+  !Component_InputText.isEmpty(searchText);
+
 let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
   pendingInstalls != [] || pendingUninstalls != [];
 };

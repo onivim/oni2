@@ -346,18 +346,21 @@ module Contributions = {
   let contextKeys = (~isFocused, model) => {
     open WhenExpr.ContextKeys;
     let inputTextKeys =
-      isFocused ? Component_InputText.Contributions.contextKeys(model.findInput) : empty;
+      isFocused
+        ? Component_InputText.Contributions.contextKeys(model.findInput)
+        : empty;
     let vimNavKeys =
-      isFocused ? Component_VimWindows.Contributions.contextKeys(model.vimWindowNavigation) : empty;
+      isFocused
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
 
     let vimTreeKeys =
-      isFocused ? Component_VimTree.Contributions.contextKeys(model.resultsTree) : empty;
+      isFocused
+        ? Component_VimTree.Contributions.contextKeys(model.resultsTree)
+        : empty;
 
-    [
-      inputTextKeys,
-      vimNavKeys,
-      vimTreeKeys,
-    ]
-    |> unionMany;
+    [inputTextKeys, vimNavKeys, vimTreeKeys] |> unionMany;
   };
 };
