@@ -34,7 +34,7 @@ let update: (msg, model) => (model, outmsg);
 module Contributions: {
   let commands: (~isFocused: bool, model) => list(Command.t(msg));
   let contextKeys:
-    (~isFocused: bool, model) => WhenExpr.ContextKeys.Schema.t(model);
+    (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
   let keybindings: list(Oni_Input.Keybindings.keybinding);
 };
 

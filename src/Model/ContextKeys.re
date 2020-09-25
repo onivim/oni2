@@ -146,7 +146,7 @@ let all = (state: State.t) => {
   let searchContextKeys =
     Feature_Search.Contributions.contextKeys(
       ~isFocused=focus == Focus.Search,
-      state.search,
+      state.searchPane,
     );
 
   let paneContextKeys =
