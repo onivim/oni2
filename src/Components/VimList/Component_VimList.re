@@ -336,12 +336,6 @@ module Commands = {
   let digit9 = define("vim.list.9", Command(Digit(9)));
 };
 
-module ContextKeys = {
-  open WhenExpr.ContextKeys.Schema;
-
-  let vimListNavigation = bool("vimListNavigation", _ => true);
-};
-
 module Keybindings = {
   open Oni_Input;
 
@@ -374,7 +368,12 @@ module Keybindings = {
 };
 
 module Contributions = {
-  let contextKeys = ContextKeys.[vimListNavigation];
+  open WhenExpr.ContextKeys;
+  let contextKeys = model => {
+    [Schema.bool("vimListNavigation", _model => true)]
+    |> Schema.fromList
+    |> fromSchema(model);
+  };
 
   let keybindings = Keybindings.keybindings;
 

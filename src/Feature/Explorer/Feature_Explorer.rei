@@ -56,5 +56,5 @@ module View: {
 
 module Contributions: {
   let commands: (~isFocused: bool) => list(Command.t(msg));
-  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
 };

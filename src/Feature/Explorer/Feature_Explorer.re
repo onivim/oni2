@@ -245,8 +245,6 @@ let sub = (~configuration, {rootPath, _}) => {
 };
 
 module Contributions = {
-  open WhenExpr.ContextKeys.Schema;
-
   let commands = (~isFocused) => {
     !isFocused
       ? []
@@ -254,10 +252,13 @@ module Contributions = {
         |> List.map(Oni_Core.Command.map(msg => Tree(msg)));
   };
 
-  let contextKeys = (~isFocused) => {
-    let vimTreeKeys =
-      isFocused ? Component_VimTree.Contributions.contextKeys : [];
+  let contextKeys = (~isFocused, model) => {
+    open WhenExpr.ContextKeys;
 
-    [vimTreeKeys |> fromList |> map(_ => ())] |> unionMany;
+    let vimTreeKeys =
+      isFocused
+        ? Component_VimTree.Contributions.contextKeys(model.treeView) : empty;
+
+    vimTreeKeys;
   };
 };
