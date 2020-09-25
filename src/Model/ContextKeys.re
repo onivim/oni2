@@ -1,6 +1,7 @@
-open WhenExpr.ContextKeys.Schema;
+open WhenExpr.ContextKeys;
 
 let menus = (~isFocused) => {
+  open Schema;
   fromList(
     // TODO: This should be factored to a feature...
     isFocused
@@ -39,7 +40,8 @@ let menus = (~isFocused) => {
   );
 };
 
-let editors = (~isFocused) =>
+let editors = (~isFocused) => {
+  open Schema;
   fromList(
     isFocused
       ? State.[
@@ -89,8 +91,11 @@ let editors = (~isFocused) =>
         ]
       : [],
   );
+};
 
-let other =
+let other = {
+  open Schema;
+
   fromList(
     State.[
       bool("isLinux", _state =>
@@ -105,6 +110,7 @@ let other =
       bool("keyDisplayerEnabled", state => state.keyDisplayer != None),
     ],
   );
+};
 
 let all = (state: State.t) => {
   let focus = FocusManager.current(state);
@@ -140,6 +146,7 @@ let all = (state: State.t) => {
   let searchContextKeys =
     Feature_Search.Contributions.contextKeys(
       ~isFocused=focus == Focus.Search,
+      state.search,
     );
 
   let paneContextKeys =
@@ -155,10 +162,10 @@ let all = (state: State.t) => {
     |> map(({registers, _}: State.t) => registers),
     explorerContextKeys |> map(({fileExplorer, _}: State.t) => fileExplorer),
     sideBarContext |> fromList |> map(({sideBar, _}: State.t) => sideBar),
-    scmContextKeys |> map(({scm, _}: State.t) => scm),
-    extensionContextKeys |> map(({extensions, _}: State.t) => extensions),
-    searchContextKeys |> map(({searchPane, _}: State.t) => searchPane),
-    paneContextKeys |> map(({pane, _}: State.t) => pane),
+    scmContextKeys,
+    extensionContextKeys,
+    searchContextKeys,
+    paneContextKeys,
     Feature_LanguageSupport.Contributions.contextKeys
     |> map(({languageSupport, _}: State.t) => languageSupport),
     menus(~isFocused=focus == Focus.Quickmenu || focus == Focus.Wildmenu)
