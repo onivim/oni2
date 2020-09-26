@@ -13,12 +13,24 @@ let zeroRange =
   };
 
 let singleDiagnostic = [
-  Diagnostic.create(~range=zeroRange, ~message="single error", ()),
+  Diagnostic.create(
+    ~range=zeroRange,
+    ~message="single error",
+    ~severity=Exthost.Diagnostic.Severity.Error,
+  ),
 ];
 
 let doubleDiagnostic = [
-  Diagnostic.create(~range=zeroRange, ~message="error 1", ()),
-  Diagnostic.create(~range=zeroRange, ~message="error 2", ()),
+  Diagnostic.create(
+    ~range=zeroRange,
+    ~message="error 1",
+    ~severity=Exthost.Diagnostic.Severity.Error,
+  ),
+  Diagnostic.create(
+    ~range=zeroRange,
+    ~message="error 2",
+    ~severity=Exthost.Diagnostic.Severity.Error,
+  ),
 ];
 
 let buffer = Buffer.ofLines(~id=0, [||]);
@@ -87,7 +99,7 @@ describe("Diagnostics", ({describe, _}) => {
                 },
             },
           ~message="single error",
-          (),
+          ~severity=Exthost.Diagnostic.Severity.Error,
         ),
       ];
 

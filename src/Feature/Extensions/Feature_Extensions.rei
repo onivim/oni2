@@ -10,6 +10,9 @@ module Msg: {
   let exthost: Exthost.Msg.ExtensionService.msg => msg;
   let storage:
     (~resolver: Lwt.u(Exthost.Reply.t), Exthost.Msg.Storage.msg) => msg;
+
+  let languages:
+    (~resolver: Lwt.u(Exthost.Reply.t), Exthost.Msg.Languages.msg) => msg;
   let discovered: list(Scanner.ScanResult.t) => msg;
   let keyPressed: string => msg;
   let pasted: string => msg;
