@@ -163,6 +163,13 @@ let all = (state: State.t) => {
       state.pane,
     );
 
+  let isEditorFocused =
+    switch (focus) {
+    | Focus.Editor
+    | Focus.Terminal(_) => true
+    | _ => false
+    };
+
   unionMany([
     Feature_Registers.Contributions.contextKeys(
       ~isFocused=focus == Focus.InsertRegister,
@@ -180,7 +187,7 @@ let all = (state: State.t) => {
     menus(~isFocused=focus == Focus.Quickmenu || focus == Focus.Wildmenu)
     |> Schema.map((state: State.t) => state.quickmenu)
     |> fromSchema(state),
-    editors(~isFocused=focus == Focus.Editor) |> fromSchema(state),
+    editors(~isFocused=isEditorFocused) |> fromSchema(state),
     other |> fromSchema(state),
   ]);
 };
