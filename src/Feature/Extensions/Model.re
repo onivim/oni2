@@ -62,6 +62,10 @@ module ViewModel = {
 [@deriving show({with_path: false})]
 type msg =
   | Exthost(Exthost.Msg.ExtensionService.msg)
+  | Languages({
+      resolver: [@opaque] Lwt.u(Exthost.Reply.t),
+      msg: Exthost.Msg.Languages.msg,
+    })
   | Storage({
       resolver: [@opaque] Lwt.u(Exthost.Reply.t),
       msg: Exthost.Msg.Storage.msg,
@@ -420,6 +424,17 @@ module Internal = {
   };
 };
 
+let getLanguageIds = model => {
+  model.extensions
+  |> List.map((ext: Scanner.ScanResult.t) =>
+       ext.manifest.contributes.languages
+     )
+  |> List.flatten
+  |> List.map((language: Exthost.Extension.Contributions.Language.t) =>
+       language.id
+     );
+};
+
 let getPersistedValue = (~shared, ~key, model) => {
   let store = shared ? model.globalValues : model.localValues;
   [store]
@@ -456,6 +471,18 @@ let update = (~extHostClient, msg, model) => {
       Internal.markActivated(extensionId, model),
       Nothing,
     )
+
+  | Languages({resolver, msg}) =>
+    switch (msg) {
+    | GetLanguages =>
+      let languages = getLanguageIds(model) |> List.map(str => `String(str));
+
+      let eff = Effect.replyJson(~resolver, `List(languages));
+      (model, Effect(eff));
+
+    // TODO: Handle change language API from extension host
+    | ChangeLanguage(_) => (model, Nothing)
+    }
 
   | Storage({resolver, msg}) =>
     switch (msg) {

@@ -5,6 +5,7 @@ include Model;
 
 module Msg = {
   let exthost = msg => Exthost(msg);
+  let languages = (~resolver, msg) => Languages({resolver, msg});
   let storage = (~resolver, msg) => Storage({resolver, msg});
   let discovered = extensions => Discovered(extensions);
   let keyPressed = key => KeyPressed(key);

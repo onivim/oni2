@@ -103,7 +103,7 @@ let start =
                       Feature_Diagnostics.Diagnostic.create(
                         ~range,
                         ~message,
-                        (),
+                        ~severity=Exthost.Diagnostic.Severity.Error,
                       ),
                     ],
                   ),
