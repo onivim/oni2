@@ -16,9 +16,10 @@ module Constants = {
 type t = {
   range: CharacterRange.t,
   message: string,
+  severity: Exthost.Diagnostic.Severity.t,
 };
 
-let create = (~range, ~message, ()) => {range, message};
+let create = (~range, ~message, ~severity) => {range, message, severity};
 
 let explode = (buffer, diagnostic) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
@@ -33,5 +34,11 @@ let explode = (buffer, diagnostic) => {
 
   CharacterRange.explode(measure, diagnostic.range)
   |> ListEx.firstk(Constants.maxDiagnosticLines)
-  |> ListEx.safeMap(range => create(~range, ~message=diagnostic.message, ()));
+  |> ListEx.safeMap(range =>
+       create(
+         ~range,
+         ~message=diagnostic.message,
+         ~severity=diagnostic.severity,
+       )
+     );
 };

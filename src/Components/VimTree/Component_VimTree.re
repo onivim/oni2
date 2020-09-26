@@ -268,7 +268,8 @@ module Contributions = {
   let commands =
     Component_VimList.Contributions.commands
     |> List.map(Oni_Core.Command.map(msg => List(msg)));
-  let contextKeys = Component_VimList.Contributions.contextKeys;
+  let contextKeys = model =>
+    Component_VimList.Contributions.contextKeys(model.treeAsList);
 };
 
 module View = {

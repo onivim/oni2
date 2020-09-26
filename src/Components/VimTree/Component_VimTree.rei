@@ -63,7 +63,7 @@ let scrollTo:
 
 module Contributions: {
   let commands: list(Command.t(msg));
-  let contextKeys: list(WhenExpr.ContextKeys.Schema.entry(unit));
+  let contextKeys: model('node, 'leaf) => WhenExpr.ContextKeys.t;
 };
 
 // VIEW
