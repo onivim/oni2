@@ -267,8 +267,6 @@ let update =
     let (model, outmsg) =
       Feature_Explorer.update(
         ~configuration=state.configuration,
-        ~languageInfo=state.languageInfo,
-        ~iconTheme=state.iconTheme,
         msg,
         state.fileExplorer,
       );
@@ -461,6 +459,8 @@ let update =
         FocusManager.push(Focus.SCM, state),
         eff |> Effect.map(msg => Actions.SCM(msg)),
       )
+
+    | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),

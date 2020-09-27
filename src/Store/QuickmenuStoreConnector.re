@@ -488,7 +488,7 @@ let start = () => {
         state.iconTheme,
         CommandManager.current(state),
         MenuManager.current(state),
-        WhenExpr.ContextKeys.fromSchema(ContextKeys.all(state), state),
+        ContextKeys.all(state),
       );
 
     ({...state, quickmenu: menuState}, menuEffect);

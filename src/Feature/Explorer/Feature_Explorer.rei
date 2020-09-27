@@ -29,31 +29,21 @@ type outmsg =
   | GrabFocus;
 
 let update:
-  (
-    ~configuration: Oni_Core.Configuration.t,
-    ~languageInfo: Exthost.LanguageInfo.t,
-    ~iconTheme: Oni_Core.IconTheme.t,
-    msg,
-    model
-  ) =>
-  (model, outmsg);
+  (~configuration: Oni_Core.Configuration.t, msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
 let sub:
-  (
-    ~configuration: Oni_Core.Configuration.t,
-    ~languageInfo: Exthost.LanguageInfo.t,
-    ~iconTheme: Oni_Core.IconTheme.t,
-    model
-  ) =>
-  Isolinear.Sub.t(msg);
+  (~configuration: Oni_Core.Configuration.t, model) => Isolinear.Sub.t(msg);
 
 // VIEW
 
 module View: {
   let make:
     (
+      ~isFocused: bool,
+      ~iconTheme: IconTheme.t,
+      ~languageInfo: Exthost.LanguageInfo.t,
       ~model: model,
       ~decorations: Feature_Decorations.model,
       ~theme: ColorTheme.Colors.t,
@@ -62,4 +52,9 @@ module View: {
       unit
     ) =>
     Revery.UI.element;
+};
+
+module Contributions: {
+  let commands: (~isFocused: bool) => list(Command.t(msg));
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
 };

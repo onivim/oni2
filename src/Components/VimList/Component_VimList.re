@@ -9,7 +9,7 @@ type model('item) = {
   rowHeight: int,
   items: array('item),
   hovered: option(int),
-  focused: int,
+  selected: int,
   viewportHeight: int,
   viewportWidth: int,
   multiplier: int,
@@ -26,7 +26,7 @@ let create = (~rowHeight) => {
   rowHeight,
   items: [||],
   hovered: None,
-  focused: 0,
+  selected: 0,
   multiplier: 0,
   viewportHeight: 1,
   viewportWidth: 1,
@@ -39,7 +39,20 @@ let create = (~rowHeight) => {
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
-let focusedIndex = ({focused, _}) => focused;
+let findIndex = (f, {items, _}) => {
+  let len = Array.length(items);
+  let rec loop = idx =>
+    if (idx >= len) {
+      None;
+    } else if (f(items[idx])) {
+      Some(idx);
+    } else {
+      loop(idx + 1);
+    };
+  loop(0);
+};
+
+let selectedIndex = ({selected, _}) => selected;
 
 let resetMultiplier = model => {...model, multiplier: 0};
 
@@ -72,6 +85,10 @@ type command =
   | CursorUp // k
   | Digit(int)
   | Select
+  | ScrollDownLine
+  | ScrollUpLine
+  | ScrollDownWindow
+  | ScrollUpWindow
   | ScrollCursorCenter // zz
   | ScrollCursorBottom // zb
   | ScrollCursorTop // zt
@@ -108,8 +125,8 @@ let showBottomScrollShadow = ({items, scrollY, rowHeight, viewportHeight, _}) =>
 
 // UPDATE
 
-let ensureFocusedVisible = model => {
-  let yPosition = float(model.focused * model.rowHeight);
+let ensureSelectedVisible = model => {
+  let yPosition = float(model.selected * model.rowHeight);
 
   let rowHeightF = float(model.rowHeight);
   let viewportHeightF = float(model.viewportHeight);
@@ -126,18 +143,18 @@ let ensureFocusedVisible = model => {
   {...model, scrollY: scrollY'};
 };
 
-let setFocus = (~focus, model) => {
+let setSelected = (~selected, model) => {
   let count = model.items |> Array.length;
-  let focus' =
-    if (focus < 0) {
+  let selected' =
+    if (selected < 0) {
       0;
-    } else if (focus >= count) {
+    } else if (selected >= count) {
       count - 1;
     } else {
-      focus;
+      selected;
     };
 
-  {...model, focused: focus'} |> ensureFocusedVisible;
+  {...model, selected: selected'} |> ensureSelectedVisible;
 };
 
 let setScrollY = (~scrollY, model) => {
@@ -153,25 +170,87 @@ let setScrollY = (~scrollY, model) => {
 let enableScrollAnimation = model => {...model, isScrollAnimated: true};
 let disableScrollAnimation = model => {...model, isScrollAnimated: false};
 
+let scrollLines = (~count: int, model) => {
+  setScrollY(~scrollY=model.scrollY +. float(count * model.rowHeight), model)
+  |> enableScrollAnimation;
+};
+
+let scrollWindows = (~count: int, model) => {
+  setScrollY(
+    ~scrollY=model.scrollY +. float(count * model.viewportHeight),
+    model,
+  )
+  |> enableScrollAnimation;
+};
+
+let scrollSelectedToTop = model => {
+  model
+  |> setScrollY(~scrollY=float(model.selected * model.rowHeight))
+  |> enableScrollAnimation;
+};
+
+let scrollSelectedToBottom = model => {
+  model
+  |> setScrollY(
+       ~scrollY=
+         float(
+           model.selected
+           * model.rowHeight
+           - (model.viewportHeight - model.rowHeight),
+         ),
+     )
+  |> enableScrollAnimation;
+};
+
+let scrollSelectedToCenter = model => {
+  model
+  |> setScrollY(
+       ~scrollY=
+         float(
+           model.selected
+           * model.rowHeight
+           - (model.viewportHeight - model.rowHeight)
+           / 2,
+         ),
+     )
+  |> enableScrollAnimation;
+};
+
+let scrollTo = (~index, ~alignment, model) => {
+  let model' = model |> setSelected(~selected=index);
+  switch (alignment) {
+  | `Top => model' |> scrollSelectedToTop
+  | `Bottom => model' |> scrollSelectedToBottom
+  | `Center => model' |> scrollSelectedToCenter
+  | `Reveal => model' |> ensureSelectedVisible
+  };
+};
+
 let update = (msg, model) => {
   switch (msg) {
   | Command(CursorToTop) => (
-      model |> setFocus(~focus=0) |> enableScrollAnimation |> resetMultiplier,
+      model
+      |> setSelected(~selected=0)
+      |> enableScrollAnimation
+      |> resetMultiplier,
       Nothing,
     )
 
   | Command(CursorToBottom) =>
-    let focus =
+    let selected =
       model.multiplier == 0
         ? Array.length(model.items) - 1 : model.multiplier;
     (
-      model |> setFocus(~focus) |> enableScrollAnimation |> resetMultiplier,
+      model
+      |> setSelected(~selected)
+      |> enableScrollAnimation
+      |> resetMultiplier,
       Nothing,
     );
 
   | Command(CursorUp) => (
       model
-      |> setFocus(~focus=model.focused - getMultiplier(model))
+      |> setSelected(~selected=model.selected - getMultiplier(model))
       |> enableScrollAnimation
       |> resetMultiplier,
       Nothing,
@@ -179,7 +258,7 @@ let update = (msg, model) => {
 
   | Command(CursorDown) => (
       model
-      |> setFocus(~focus=model.focused + getMultiplier(model))
+      |> setSelected(~selected=model.selected + getMultiplier(model))
       |> enableScrollAnimation
       |> resetMultiplier,
       Nothing,
@@ -191,50 +270,48 @@ let update = (msg, model) => {
     )
 
   | Command(ScrollCursorTop) => (
-      model
-      |> setScrollY(~scrollY=float(model.focused * model.rowHeight))
-      |> enableScrollAnimation
-      |> resetMultiplier,
+      model |> scrollSelectedToTop |> resetMultiplier,
       Nothing,
     )
 
   | Command(ScrollCursorBottom) => (
-      model
-      |> setScrollY(
-           ~scrollY=
-             float(
-               model.focused
-               * model.rowHeight
-               - (model.viewportHeight - model.rowHeight),
-             ),
-         )
-      |> enableScrollAnimation
-      |> resetMultiplier,
+      model |> scrollSelectedToBottom |> resetMultiplier,
       Nothing,
     )
 
   | Command(ScrollCursorCenter) => (
+      model |> scrollSelectedToCenter |> resetMultiplier,
+      Nothing,
+    )
+
+  | Command(ScrollDownLine) => (
+      model |> scrollLines(~count=getMultiplier(model)) |> resetMultiplier,
+      Nothing,
+    )
+
+  | Command(ScrollUpLine) => (
+      model |> scrollLines(~count=- getMultiplier(model)) |> resetMultiplier,
+      Nothing,
+    )
+
+  | Command(ScrollDownWindow) => (
+      model |> scrollWindows(~count=getMultiplier(model)) |> resetMultiplier,
+      Nothing,
+    )
+
+  | Command(ScrollUpWindow) => (
       model
-      |> setScrollY(
-           ~scrollY=
-             float(
-               model.focused
-               * model.rowHeight
-               - (model.viewportHeight - model.rowHeight)
-               / 2,
-             ),
-         )
-      |> enableScrollAnimation
+      |> scrollWindows(~count=- getMultiplier(model))
       |> resetMultiplier,
       Nothing,
     )
 
   | Command(Select) =>
     let isValidFocus =
-      model.focused >= 0 && model.focused < Array.length(model.items);
+      model.selected >= 0 && model.selected < Array.length(model.items);
 
     if (isValidFocus) {
-      (model, Selected({index: model.focused}));
+      (model, Selected({index: model.selected}));
     } else {
       (model, Nothing);
     };
@@ -243,7 +320,7 @@ let update = (msg, model) => {
     let isValidIndex = index >= 0 && index < Array.length(model.items);
 
     if (isValidIndex) {
-      (model |> setFocus(~focus=index), Selected({index: index}));
+      (model |> setSelected(~selected=index), Selected({index: index}));
     } else {
       (model, Nothing);
     };
@@ -318,6 +395,14 @@ module Commands = {
   let zb = define("vim.list.zb", Command(ScrollCursorBottom));
   let zt = define("vim.list.zt", Command(ScrollCursorTop));
 
+  let scrollDownLine =
+    define("vim.list.scrollDownLine", Command(ScrollDownLine));
+  let scrollUpLine = define("vim.list.scrollUpLine", Command(ScrollUpLine));
+  let scrollDownWindow =
+    define("vim.list.scrollDownWindow", Command(ScrollDownWindow));
+  let scrollUpWindow =
+    define("vim.list.scrollUpWindow", Command(ScrollUpWindow));
+
   let digit0 = define("vim.list.0", Command(Digit(0)));
   let digit1 = define("vim.list.1", Command(Digit(1)));
   let digit2 = define("vim.list.2", Command(Digit(2)));
@@ -335,6 +420,7 @@ module Commands = {
   let previousSearchResult = define("vim.list.previousSearchResult", Command(PreviousSearchResult));
 };
 
+<<<<<<< HEAD
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
 
@@ -346,6 +432,8 @@ module ContextKeys = {
   });
 };
 
+=======
+>>>>>>> master
 module Keybindings = {
   open Oni_Input;
 
@@ -360,11 +448,70 @@ module Keybindings = {
       {key: "<S-G>", command: Commands.g.id, condition: commandCondition},
       {key: "j", command: Commands.j.id, condition: commandCondition},
       {key: "k", command: Commands.k.id, condition: commandCondition},
+      {key: "<DOWN>", command: Commands.j.id, condition: commandCondition},
+      {key: "<UP>", command: Commands.k.id, condition: commandCondition},
       {key: "<CR>", command: Commands.enter.id, condition: commandCondition},
+
+      // Scroll alignment
+
       {key: "zz", command: Commands.zz.id, condition: commandCondition},
       {key: "zb", command: Commands.zb.id, condition: commandCondition},
       {key: "zt", command: Commands.zt.id, condition: commandCondition},
 
+      // Scroll downwards
+
+      {
+        key: "<C-e>",
+        command: Commands.scrollDownLine.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<C-d>",
+        command: Commands.scrollDownWindow.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<S-DOWN>",
+        command: Commands.scrollDownWindow.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<PageDown>",
+        command: Commands.scrollDownWindow.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<C-f>",
+        command: Commands.scrollDownWindow.id,
+        condition: commandCondition,
+      },
+      // Scroll upwards
+      {
+        key: "<C-y>",
+        command: Commands.scrollUpLine.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<C-u>",
+        command: Commands.scrollUpWindow.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<S-UP>",
+        command: Commands.scrollUpWindow.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<PageUp>",
+        command: Commands.scrollUpWindow.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<C-b>",
+        command: Commands.scrollUpWindow.id,
+        condition: commandCondition,
+      },
+      
       // MULTIPLIER
       
       {key: "0", command: Commands.digit0.id, condition: commandCondition},
@@ -388,11 +535,19 @@ module Keybindings = {
 };
 
 module Contributions = {
+<<<<<<< HEAD
   let contextKeys = model =>  {
   open WhenExpr.ContextKeys;
   ContextKeys.[vimListNavigation, textInputFocus]
   |> Schema.fromList
   |> fromSchema(model)
+=======
+  open WhenExpr.ContextKeys;
+  let contextKeys = model => {
+    [Schema.bool("vimListNavigation", _model => true)]
+    |> Schema.fromList
+    |> fromSchema(model);
+>>>>>>> master
   };
 
   let keybindings = Keybindings.keybindings;
@@ -417,10 +572,17 @@ module Contributions = {
       digit7,
       digit8,
       digit9,
+<<<<<<< HEAD
       previousSearchResult,
       nextSearchResult,
       searchForward,
       searchBackward,
+=======
+      scrollDownLine,
+      scrollDownWindow,
+      scrollUpLine,
+      scrollUpWindow,
+>>>>>>> master
     ];
 };
 
@@ -495,10 +657,12 @@ module View = {
   let renderHelper =
       (
         ~items,
+        ~focusIndex,
         ~hovered,
-        ~focused,
+        ~selected,
         ~hoverBg,
         ~focusBg,
+        ~selectedBg,
         ~onMouseClick,
         ~onMouseOver,
         ~onMouseOut,
@@ -526,13 +690,15 @@ module View = {
         let rowY = (i - startRow) * rowHeight;
         let offset = rowY - startY;
         let isHovered = hovered == Some(i);
-        let isFocused = focused == i;
+        let isSelected = selected == i;
 
         let bg =
-          if (isFocused) {
-            focusBg;
+          if (isSelected) {
+            selectedBg;
           } else if (isHovered) {
             hoverBg;
+          } else if (focusIndex == Some(i)) {
+            focusBg;
           } else {
             Revery.Colors.transparentWhite;
           };
@@ -555,7 +721,7 @@ module View = {
              ~availableWidth=viewportWidth,
              ~index=i,
              ~hovered=hovered == Some(i),
-             ~focused=focused == i,
+             ~selected=selected == i,
              items[i],
            )}
            {searchBorder}
@@ -568,6 +734,7 @@ module View = {
   let make:
     (
       ~isActive: bool,
+      ~focusedIndex: option(int),
       ~theme: ColorTheme.Colors.t,
       ~model: model('item),
       ~dispatch: msg => unit,
@@ -575,14 +742,14 @@ module View = {
                  ~availableWidth: int,
                  ~index: int,
                  ~hovered: bool,
-                 ~focused: bool,
+                 ~selected: bool,
                  'item
                ) =>
                Revery.UI.element,
       unit
     ) =>
     _ =
-    (~isActive, ~theme, ~model, ~dispatch, ~render, ()) => {
+    (~isActive, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
       component(hooks => {
         let {rowHeight, viewportWidth, viewportHeight, _} = model;
 
@@ -649,16 +816,22 @@ module View = {
           };
         };
         let hoverBg = Colors.List.hoverBackground.from(theme);
+        let selectedBg =
+          isActive
+            ? Colors.List.activeSelectionBackground.from(theme)
+            : Colors.List.inactiveSelectionBackground.from(theme);
         let focusBg =
           isActive
             ? Colors.List.focusBackground.from(theme)
             : Colors.List.inactiveFocusBackground.from(theme);
         let items =
           renderHelper(
-            ~focused=model.focused,
+            ~focusIndex=focusedIndex,
+            ~selected=model.selected,
             ~hovered=model.hovered,
             ~items=model.items,
             ~hoverBg,
+            ~selectedBg,
             ~focusBg,
             ~onMouseOver,
             ~onMouseOut,

@@ -12,10 +12,8 @@ module ContextKeys = {
 };
 
 module Contributions = {
-  let contextKeys = model => {
-    open WhenExpr.ContextKeys
-  let schema = ContextKeys.[textInputFocus]
-  |> Schema.fromList
-  fromSchema(schema, model);
+  open WhenExpr.ContextKeys;
+  let contextKeys = (model: Model.t) => {
+    ContextKeys.[textInputFocus] |> Schema.fromList |> fromSchema(model);
   };
 };

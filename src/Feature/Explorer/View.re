@@ -1,18 +1,28 @@
 open Revery.UI;
 
 let make =
-    (~model, ~decorations, ~theme, ~font, ~dispatch: Model.msg => unit, ()) => {
+    (
+      ~isFocused: bool,
+      ~iconTheme,
+      ~languageInfo,
+      ~model,
+      ~decorations,
+      ~theme,
+      ~font,
+      ~dispatch: Model.msg => unit,
+      (),
+    ) => {
   switch ((model: Model.model)) {
-  | {tree: Some(tree), active, focus, scrollOffset, _} =>
-    let onNodeClick = node => dispatch(NodeClicked(node));
-
+  | {tree: Some(_), treeView, active, _} =>
+    let focusedIndex = Model.getFocusedIndex(model);
     <FileTreeView
-      scrollOffset
+      isFocused
+      iconTheme
+      languageInfo
+      focusedIndex
       decorations
       active
-      focus
-      onNodeClick
-      tree
+      treeView
       theme
       font
       dispatch
