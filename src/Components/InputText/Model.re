@@ -256,17 +256,14 @@ let paste = (~text, model) => {
   {...model, value: value', selection: selection'};
 };
 
-let set = (~cursor=?,~text, model) => {
-  let idx = switch(cursor) {
-  | Some(idx) => idx
-  | None => Zed_utf8.length(text);
-  };
+let set = (~cursor=?, ~text, model) => {
+  let idx =
+    switch (cursor) {
+    | Some(idx) => idx
+    | None => Zed_utf8.length(text)
+    };
   let selection = Selection.collapsed(~text, idx);
-  {
-  ...model,
-  value: text,
-  selection,
-  };
+  {...model, value: text, selection};
 };
 
 let setPlaceholder = (~placeholder, model) => {...model, placeholder};

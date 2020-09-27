@@ -17,7 +17,6 @@ type model('item) = {
   // For mouse gestures, we don't want the scroll to be animated - it feels laggy
   // But for keyboarding gestures, like 'zz', the animation is helpful.
   isScrollAnimated: bool,
-
   searchContext: [@opaque] SearchContext.model,
 };
 
@@ -32,10 +31,9 @@ let create = (~rowHeight) => {
   viewportWidth: 1,
   initialRowsToRender: 10,
   isScrollAnimated: false,
-  
+
   searchContext: SearchContext.initial,
 };
-
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
@@ -358,26 +356,28 @@ let update = (msg, model) => {
     )
 
   | Command(SearchForward) => (
-    {
-      ...model,
-      searchContext: SearchContext.(show(~direction=Forward, model.searchContext))
-    },
-    Nothing
-  )
+      {
+        ...model,
+        searchContext:
+          SearchContext.(show(~direction=Forward, model.searchContext)),
+      },
+      Nothing,
+    )
   | Command(SearchBackward) => (
-    {
-      ...model,
-      searchContext: SearchContext.(show(~direction=Backward, model.searchContext))
-    },
-    Nothing
-  )
+      {
+        ...model,
+        searchContext:
+          SearchContext.(show(~direction=Backward, model.searchContext)),
+      },
+      Nothing,
+    )
   | Command(NextSearchResult)
-  | Command(PreviousSearchResult) => failwith("not implemented");
+  | Command(PreviousSearchResult) => failwith("not implemented")
 
-  | SearchContext(inputMsg) => 
-    let (searchContext, _outmsg) = SearchContext.update(inputMsg,
-    model.searchContext);
-    ({...model, searchContext}, Nothing)
+  | SearchContext(inputMsg) =>
+    let (searchContext, _outmsg) =
+      SearchContext.update(inputMsg, model.searchContext);
+    ({...model, searchContext}, Nothing);
   };
 };
 
@@ -414,26 +414,16 @@ module Commands = {
   let digit8 = define("vim.list.8", Command(Digit(8)));
   let digit9 = define("vim.list.9", Command(Digit(9)));
 
-  let searchForward = define("vim.list.searchForward", Command(SearchForward));
-  let searchBackward = define("vim.list.searchBackward", Command(SearchBackward));
-  let nextSearchResult = define("vim.list.nextSearchresult", Command(NextSearchResult));
-  let previousSearchResult = define("vim.list.previousSearchResult", Command(PreviousSearchResult));
+  let searchForward =
+    define("vim.list.searchForward", Command(SearchForward));
+  let searchBackward =
+    define("vim.list.searchBackward", Command(SearchBackward));
+  let nextSearchResult =
+    define("vim.list.nextSearchresult", Command(NextSearchResult));
+  let previousSearchResult =
+    define("vim.list.previousSearchResult", Command(PreviousSearchResult));
 };
 
-<<<<<<< HEAD
-module ContextKeys = {
-  open WhenExpr.ContextKeys.Schema;
-
-  let vimListNavigation = bool("vimListNavigation", ({searchContext, _}) => {
-    !(searchContext |> SearchContext.isOpen)
-  });
-  let textInputFocus = bool("textInputFocus", ({searchContext, _}) => {
-    searchContext |> SearchContext.isOpen
-  });
-};
-
-=======
->>>>>>> master
 module Keybindings = {
   open Oni_Input;
 
@@ -443,7 +433,6 @@ module Keybindings = {
   let keybindings =
     Keybindings.[
       // NORMAL MODE MOVEMENT
-      
       {key: "gg", command: Commands.gg.id, condition: commandCondition},
       {key: "<S-G>", command: Commands.g.id, condition: commandCondition},
       {key: "j", command: Commands.j.id, condition: commandCondition},
@@ -451,15 +440,11 @@ module Keybindings = {
       {key: "<DOWN>", command: Commands.j.id, condition: commandCondition},
       {key: "<UP>", command: Commands.k.id, condition: commandCondition},
       {key: "<CR>", command: Commands.enter.id, condition: commandCondition},
-
       // Scroll alignment
-
       {key: "zz", command: Commands.zz.id, condition: commandCondition},
       {key: "zb", command: Commands.zb.id, condition: commandCondition},
       {key: "zt", command: Commands.zt.id, condition: commandCondition},
-
       // Scroll downwards
-
       {
         key: "<C-e>",
         command: Commands.scrollDownLine.id,
@@ -511,9 +496,7 @@ module Keybindings = {
         command: Commands.scrollUpWindow.id,
         condition: commandCondition,
       },
-      
       // MULTIPLIER
-      
       {key: "0", command: Commands.digit0.id, condition: commandCondition},
       {key: "1", command: Commands.digit1.id, condition: commandCondition},
       {key: "2", command: Commands.digit2.id, condition: commandCondition},
@@ -524,30 +507,44 @@ module Keybindings = {
       {key: "7", command: Commands.digit7.id, condition: commandCondition},
       {key: "8", command: Commands.digit8.id, condition: commandCondition},
       {key: "9", command: Commands.digit9.id, condition: commandCondition},
-
       // SEARCH
-
-      {key: "/", command: Commands.searchForward.id, condition: commandCondition},
-      {key: "<S-/>", command: Commands.searchBackward.id, condition: commandCondition},
-      {key: "n", command: Commands.nextSearchResult.id, condition: commandCondition},
-      {key: "N", command: Commands.previousSearchResult.id, condition: commandCondition},
+      {
+        key: "/",
+        command: Commands.searchForward.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<S-/>",
+        command: Commands.searchBackward.id,
+        condition: commandCondition,
+      },
+      {
+        key: "n",
+        command: Commands.nextSearchResult.id,
+        condition: commandCondition,
+      },
+      {
+        key: "N",
+        command: Commands.previousSearchResult.id,
+        condition: commandCondition,
+      },
     ];
 };
 
 module Contributions = {
-<<<<<<< HEAD
-  let contextKeys = model =>  {
-  open WhenExpr.ContextKeys;
-  ContextKeys.[vimListNavigation, textInputFocus]
-  |> Schema.fromList
-  |> fromSchema(model)
-=======
-  open WhenExpr.ContextKeys;
   let contextKeys = model => {
-    [Schema.bool("vimListNavigation", _model => true)]
-    |> Schema.fromList
-    |> fromSchema(model);
->>>>>>> master
+    WhenExpr.ContextKeys.(
+      [
+        Schema.bool("vimListNavigation", ({searchContext, _}: model(_)) => {
+          !(searchContext |> SearchContext.isOpen)
+        }),
+        Schema.bool("textInputFocus", ({searchContext, _}: model(_)) => {
+          searchContext |> SearchContext.isOpen
+        }),
+      ]
+      |> Schema.fromList
+      |> fromSchema(model)
+    );
   };
 
   let keybindings = Keybindings.keybindings;
@@ -572,17 +569,14 @@ module Contributions = {
       digit7,
       digit8,
       digit9,
-<<<<<<< HEAD
-      previousSearchResult,
-      nextSearchResult,
-      searchForward,
-      searchBackward,
-=======
       scrollDownLine,
       scrollDownWindow,
       scrollUpLine,
       scrollUpWindow,
->>>>>>> master
+      previousSearchResult,
+      nextSearchResult,
+      searchForward,
+      searchBackward,
     ];
 };
 
@@ -651,7 +645,7 @@ module View = {
       top(0),
       left(0),
       width(2),
-      bottom(0)
+      bottom(0),
     ];
   };
   let renderHelper =
@@ -703,14 +697,12 @@ module View = {
             Revery.Colors.transparentWhite;
           };
 
-        let isSearchMatch = SearchContext.isMatch(
-          ~index=i,
-          searchContext
-        );
+        let isSearchMatch = SearchContext.isMatch(~index=i, searchContext);
 
-        let searchBorder = isSearchMatch ? <View style=Styles.searchBorder(
-          ~color=Revery.Colors.red
-        ) /> : React.empty;
+        let searchBorder =
+          isSearchMatch
+            ? <View style={Styles.searchBorder(~color=Revery.Colors.red)} />
+            : React.empty;
 
         <Clickable
           onMouseEnter={_ => onMouseOver(i)}
@@ -724,7 +716,7 @@ module View = {
              ~selected=selected == i,
              items[i],
            )}
-           {searchBorder}
+          searchBorder
         </Clickable>;
       };
 
@@ -865,11 +857,12 @@ module View = {
                 }),
               )
             }}>
-            <SearchContext.View 
+            <SearchContext.View
               isFocused=isActive
               model={model.searchContext}
               dispatch={msg => dispatch(SearchContext(msg))}
-              theme />
+              theme
+            />
             <View
               style={Styles.container(
                 // Set the height only to force it smaller, not bigger
