@@ -111,6 +111,7 @@ let make =
   <View style=Styles.container>
     <Component_VimTree.View
       isActive=isFocused
+      font
       focusedIndex
       theme
       model=treeView

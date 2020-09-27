@@ -294,6 +294,7 @@ let make =
       />
       <Component_VimTree.View
         isActive={isFocused && model.focus == ResultsPane}
+        font=uiFont
         focusedIndex=None
         theme
         model={model.resultsTree}

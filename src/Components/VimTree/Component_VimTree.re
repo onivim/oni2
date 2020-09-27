@@ -120,6 +120,11 @@ let findIndex = (f, {treeAsList, _}) => {
   Component_VimList.findIndex(pred, treeAsList);
 };
 
+let keyPress = (key, {treeAsList, _} as model) => {
+  ...model,
+  treeAsList: Component_VimList.keyPress(key, treeAsList),
+};
+
 let scrollTo = (~index, ~alignment, {treeAsList, _} as model) => {
   {
     ...model,
@@ -317,7 +322,16 @@ module View = {
       />
     </View>;
   let make =
-      (~isActive, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
+      (
+        ~isActive,
+        ~font,
+        ~focusedIndex,
+        ~theme,
+        ~model,
+        ~dispatch,
+        ~render,
+        (),
+      ) => {
     let indentHeight = model.rowHeight;
     let indentWidth = Constants.indentSize;
     let activeIndentColor = Colors.List.activeIndentGuide.from(theme);
@@ -335,6 +349,7 @@ module View = {
 
     <Component_VimList.View
       isActive
+      font
       focusedIndex
       theme
       model={model.treeAsList}

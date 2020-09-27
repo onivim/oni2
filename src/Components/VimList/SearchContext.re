@@ -148,6 +148,17 @@ let close = model => {
   {...model, isSearchInputVisible: false};
 };
 
+let keyPress = (key, model) =>
+  if (model.isSearchInputVisible) {
+    prerr_endline("KEYZ: " ++ key);
+    {
+      ...model,
+      searchText: Component_InputText.handleInput(~key, model.searchText),
+    };
+  } else {
+    model;
+  };
+
 module View = {
   open Revery;
   open Revery.UI;
@@ -155,6 +166,7 @@ module View = {
   let make =
       (
         ~isFocused,
+        ~font: UiFont.t,
         ~model: model,
         ~theme: ColorTheme.Colors.t,
         ~dispatch: msg => unit,
@@ -164,7 +176,9 @@ module View = {
       <Component_InputText.View
         model={model.searchText}
         theme
-        isFocused
+        fontFamily={font.family}
+        fontSize={font.size}
+        isFocused=true
         dispatch={msg => dispatch(SearchText(msg))}
       />;
     } else {

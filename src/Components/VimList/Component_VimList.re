@@ -123,6 +123,11 @@ let showBottomScrollShadow = ({items, scrollY, rowHeight, viewportHeight, _}) =>
 
 // UPDATE
 
+let keyPress = (key, model) => {
+  ...model,
+  searchContext: SearchContext.keyPress(key, model.searchContext),
+};
+
 let ensureSelectedVisible = model => {
   let yPosition = float(model.selected * model.rowHeight);
 
@@ -726,6 +731,7 @@ module View = {
   let make:
     (
       ~isActive: bool,
+      ~font: UiFont.t,
       ~focusedIndex: option(int),
       ~theme: ColorTheme.Colors.t,
       ~model: model('item),
@@ -741,7 +747,7 @@ module View = {
       unit
     ) =>
     _ =
-    (~isActive, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
+    (~isActive, ~font, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
       component(hooks => {
         let {rowHeight, viewportWidth, viewportHeight, _} = model;
 
@@ -858,6 +864,7 @@ module View = {
               )
             }}>
             <SearchContext.View
+              font
               isFocused=isActive
               model={model.searchContext}
               dispatch={msg => dispatch(SearchContext(msg))}
