@@ -63,6 +63,9 @@ module Internal = {
     let finalIndex = 0;
     let index = ref(max(focus - 1, finalIndex));
 
+    while (index^ > finalIndex && separatorOnIndexExn(index^, text)) {
+      index := index^ - 1;
+    };
     while (index^ > finalIndex && !separatorOnIndexExn(index^ - 1, text)) {
       index := index^ - 1;
     };
@@ -408,6 +411,10 @@ let%test_module "Model" =
                  ~text=" interesting. Test. String. Isn't it? Maybe",
                  0,
                );
+          };
+          let%test "Removes multiple spaces" = {
+            collapsed(~text="testing   three spaces", 10)
+            |> handleInput(~key) == collapsed(~text="three spaces", 0);
           };
           let%test "Removes word with unicode characters on the left of cursor" = {
             collapsed(~text=uTestString, 6)
