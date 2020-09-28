@@ -53,6 +53,7 @@ let setDiagnostics: (Feature_Diagnostics.model, model) => model;
 module View: {
   let make:
     (
+      ~config: Config.resolver,
       ~isFocused: bool,
       ~theme: Oni_Core.ColorTheme.Colors.t,
       ~iconTheme: Oni_Core.IconTheme.t,
