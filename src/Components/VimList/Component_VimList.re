@@ -93,7 +93,9 @@ type command =
   | SearchForward
   | SearchBackward
   | NextSearchResult
-  | PreviousSearchResult;
+  | PreviousSearchResult
+  | CommitSearch
+  | CancelSearch;
 
 [@deriving show]
 type msg =
@@ -386,8 +388,29 @@ let update = (msg, model) => {
       },
       Nothing,
     )
-  | Command(NextSearchResult)
-  | Command(PreviousSearchResult) => failwith("not implemented")
+  | Command(NextSearchResult) =>
+    let model =
+      SearchContext.nextMatch(~index=model.selected, model.searchContext)
+      |> Option.map(nextMatch => {model |> setSelected(~selected=nextMatch)})
+      |> Option.value(~default=model);
+    (model, Nothing);
+
+  | Command(PreviousSearchResult) =>
+    let model =
+      SearchContext.previousMatch(~index=model.selected, model.searchContext)
+      |> Option.map(nextMatch => {model |> setSelected(~selected=nextMatch)})
+      |> Option.value(~default=model);
+    (model, Nothing);
+
+  | Command(CommitSearch) => (
+      {...model, searchContext: SearchContext.(commit(model.searchContext))},
+      Nothing,
+    )
+
+  | Command(CancelSearch) => (
+      {...model, searchContext: SearchContext.(cancel(model.searchContext))},
+      Nothing,
+    )
 
   | SearchContext(inputMsg) =>
     let (searchContext, _outmsg) =
@@ -437,6 +460,9 @@ module Commands = {
     define("vim.list.nextSearchresult", Command(NextSearchResult));
   let previousSearchResult =
     define("vim.list.previousSearchResult", Command(PreviousSearchResult));
+
+  let commitSearch = define("vim.list.commitSearch", Command(CommitSearch));
+  let cancelSearch = define("vim.list.cancelSearch", Command(CommitSearch));
 };
 
 module Keybindings = {
@@ -444,6 +470,9 @@ module Keybindings = {
 
   let commandCondition =
     "!textInputFocus && vimListNavigation" |> WhenExpr.parse;
+
+  let searchActiveCommandCondition =
+    "vimListSearchOpen && textInputFocus" |> WhenExpr.parse;
 
   let keybindings =
     Keybindings.[
@@ -539,9 +568,19 @@ module Keybindings = {
         condition: commandCondition,
       },
       {
-        key: "N",
+        key: "<S-N>",
         command: Commands.previousSearchResult.id,
         condition: commandCondition,
+      },
+      {
+        key: "<CR>",
+        command: Commands.commitSearch.id,
+        condition: searchActiveCommandCondition,
+      },
+      {
+        key: "<ESC>",
+        command: Commands.cancelSearch.id,
+        condition: searchActiveCommandCondition,
       },
     ];
 };
@@ -550,6 +589,9 @@ module Contributions = {
   let contextKeys = model => {
     WhenExpr.ContextKeys.(
       [
+        Schema.bool("vimListSearchOpen", ({searchContext, _}: model(_)) => {
+          searchContext |> SearchContext.isOpen
+        }),
         Schema.bool("vimListNavigation", ({searchContext, _}: model(_)) => {
           !(searchContext |> SearchContext.isOpen)
         }),
@@ -592,6 +634,8 @@ module Contributions = {
       nextSearchResult,
       searchForward,
       searchBackward,
+      commitSearch,
+      cancelSearch,
     ];
 };
 
@@ -872,16 +916,36 @@ module View = {
             ? <Oni_Components.ScrollShadow.Bottom /> : React.empty;
 
         (
-          <View
-            style=Style.[flexGrow(1), position(`Relative)]
-            onDimensionsChanged={({height, width}) => {
-              dispatch(
-                ViewDimensionsChanged({
-                  widthInPixels: width,
-                  heightInPixels: height,
-                }),
-              )
-            }}>
+          <View style=Style.[flexGrow(1), flexDirection(`Column)]>
+            <View
+              style=Style.[flexGrow(1), position(`Relative)]
+              onDimensionsChanged={({height, width}) => {
+                dispatch(
+                  ViewDimensionsChanged({
+                    widthInPixels: width,
+                    heightInPixels: height,
+                  }),
+                )
+              }}>
+              <View
+                style={Styles.container(
+                  // Set the height only to force it smaller, not bigger
+                  ~height=
+                    contentHeight < viewportHeight
+                      ? Some(contentHeight) : None,
+                )}
+                onMouseWheel=scroll>
+                <View
+                  style={Styles.viewport(
+                    ~isScrollbarVisible=scrollbar == React.empty,
+                  )}>
+                  items
+                </View>
+                topShadow
+                bottomShadow
+                scrollbar
+              </View>
+            </View>
             <SearchContext.View
               font
               isFocused=isActive
@@ -889,23 +953,6 @@ module View = {
               dispatch={msg => dispatch(SearchContext(msg))}
               theme
             />
-            <View
-              style={Styles.container(
-                // Set the height only to force it smaller, not bigger
-                ~height=
-                  contentHeight < viewportHeight ? Some(contentHeight) : None,
-              )}
-              onMouseWheel=scroll>
-              <View
-                style={Styles.viewport(
-                  ~isScrollbarVisible=scrollbar == React.empty,
-                )}>
-                items
-              </View>
-              topShadow
-              bottomShadow
-              scrollbar
-            </View>
           </View>,
           hooks,
         );

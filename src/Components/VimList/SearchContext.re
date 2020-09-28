@@ -61,9 +61,6 @@ let updateMatches = model => {
     |> Option.map(query => {computeMatches(~query, model.searchIds)})
     |> Option.value(~default=[]);
 
-  prerr_endline("Matches:");
-  matches |> List.iter(i => string_of_int(i) |> prerr_endline);
-
   {...model, matches};
 };
 
@@ -81,6 +78,12 @@ let setQuery = (query, model) => {
     searchText: Component_InputText.set(~text=query, model.searchText),
   }
   |> updateMatches;
+};
+
+let commit = model => {...model, isSearchInputVisible: false};
+
+let cancel = model => {
+  model |> setQuery("") |> commit;
 };
 
 let setSearchIds = (searchIds, model) => {
@@ -143,9 +146,12 @@ let update = (msg, model) => {
 
 let isOpen = ({isSearchInputVisible, _}) => isSearchInputVisible;
 
-let show = (~direction, model) => {
-  {...model, direction, isSearchInputVisible: true};
-};
+let show = (~direction, model) =>
+  if (model.searchIds |> Array.length > 0) {
+    {...model |> setQuery(""), direction, isSearchInputVisible: true};
+  } else {
+    model;
+  };
 
 let close = model => {
   {...model, isSearchInputVisible: false};
@@ -153,7 +159,6 @@ let close = model => {
 
 let keyPress = (key, model) =>
   if (model.isSearchInputVisible) {
-    prerr_endline("KEYZ: " ++ key);
     {
       ...model,
       searchText: Component_InputText.handleInput(~key, model.searchText),
@@ -164,7 +169,6 @@ let keyPress = (key, model) =>
   };
 
 module View = {
-  open Revery;
   open Revery.UI;
 
   let make =
@@ -174,18 +178,71 @@ module View = {
         ~model: model,
         ~theme: ColorTheme.Colors.t,
         ~dispatch: msg => unit,
-        unit,
-      ) =>
+        (),
+      ) => {
+    let matchCount = searchCount(model);
+    let foregroundColor =
+      Feature_Theme.Colors.List.activeSelectionForeground.from(theme);
+    let inactiveBackgroundColor =
+      Feature_Theme.Colors.List.inactiveSelectionBackground.from(theme);
+
+    let activeBackgroundColor =
+      Feature_Theme.Colors.List.activeSelectionBackground.from(theme);
+
+    let maybeQueryString = queryString(model);
     if (model.isSearchInputVisible) {
-      <Component_InputText.View
-        model={model.searchText}
-        theme
-        fontFamily={font.family}
-        fontSize={font.size}
-        isFocused=true
-        dispatch={msg => dispatch(SearchText(msg))}
-      />;
+      <View
+        style=Style.[
+          flexDirection(`Row),
+          justifyContent(`Center),
+          alignItems(`Center),
+          backgroundColor(
+            isFocused ? activeBackgroundColor : inactiveBackgroundColor,
+          ),
+        ]>
+        <View style=Style.[flexGrow(0), margin(4), flexShrink(0)]>
+          <Codicon icon=Codicon.search color=foregroundColor />
+        </View>
+        <View style=Style.[flexGrow(1), flexShrink(1), margin(8)]>
+          <Component_InputText.View
+            model={model.searchText}
+            theme
+            fontFamily={font.family}
+            fontSize={font.size}
+            isFocused
+            dispatch={msg => dispatch(SearchText(msg))}
+          />
+        </View>
+        <View style=Style.[flexGrow(0), margin(4), flexShrink(0)]>
+          <Oni_Components.Count uiFont=font theme count=matchCount />
+        </View>
+      </View>;
     } else {
-      <Text text="Hello, world" />;
+      maybeQueryString
+      |> Option.map(queryString => {
+           <View
+             style=Style.[
+               flexDirection(`Row),
+               justifyContent(`Center),
+               alignItems(`Center),
+               backgroundColor(inactiveBackgroundColor),
+             ]>
+             <View style=Style.[flexGrow(0), margin(4), flexShrink(0)]>
+               <Codicon icon=Codicon.search color=foregroundColor />
+             </View>
+             <View style=Style.[flexGrow(1), flexShrink(1), margin(8)]>
+               <Text
+                 text=queryString
+                 fontFamily={font.family}
+                 fontSize={font.size}
+               />
+             </View>
+             <View style=Style.[flexGrow(0), margin(4), flexShrink(0)]>
+               <Oni_Components.Count uiFont=font theme count=matchCount />
+             </View>
+           </View>
+         })
+      |> Option.value(~default=React.empty);
     };
+  };
 };

@@ -77,6 +77,12 @@ let setDiagnostics = (diagnostics, model) => {
   let diagnosticsView' =
     Component_VimTree.set(
       ~uniqueId=path => path,
+      ~searchText=
+        Component_VimTree.(
+          fun
+          | Node({data, _}) => data
+          | Leaf({data, _}) => Oni_Components.LocationListItem.(data.text)
+        ),
       diagLocList,
       model.diagnosticsView,
     );
@@ -136,7 +142,18 @@ let update = (msg, model) =>
       ({...model, height, resizeDelta: 0}, Nothing);
     };
 
-  | KeyPressed(_) => (model, Nothing)
+  | KeyPressed(key) =>
+    switch (model.selected) {
+    | Notifications => (model, Nothing)
+    | Diagnostics => (
+        {
+          ...model,
+          diagnosticsView:
+            Component_VimTree.keyPress(key, model.diagnosticsView),
+        },
+        Nothing,
+      )
+    }
 
   | VimWindowNav(navMsg) =>
     let (vimWindowNavigation, outmsg) =
