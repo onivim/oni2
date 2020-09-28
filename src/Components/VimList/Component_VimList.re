@@ -113,7 +113,17 @@ type outmsg =
   | Nothing
   | Selected({index: int});
 
-let set = (items, model) => {...model, items};
+let set = (~searchText=?, items, model) => {
+  let searchContext =
+    switch (searchText) {
+    | None => model.searchContext
+    | Some(f) =>
+      let searchIds = Array.map(f, items);
+      SearchContext.setSearchIds(searchIds, model.searchContext);
+    };
+
+  {...model, searchContext, items};
+};
 
 let showTopScrollShadow = ({scrollY, _}) => scrollY > 0.1;
 let showBottomScrollShadow = ({items, scrollY, rowHeight, viewportHeight, _}) => {

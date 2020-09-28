@@ -42,6 +42,7 @@ let update:
 
 let set:
   (
+    ~searchText: nodeOrLeaf('node, 'leaf) => string=?,
     ~uniqueId: 'node => string,
     list(Tree.t('node, 'leaf)),
     model('node, 'leaf)

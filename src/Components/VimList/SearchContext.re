@@ -61,6 +61,9 @@ let updateMatches = model => {
     |> Option.map(query => {computeMatches(~query, model.searchIds)})
     |> Option.value(~default=[]);
 
+  prerr_endline("Matches:");
+  matches |> List.iter(i => string_of_int(i) |> prerr_endline);
+
   {...model, matches};
 };
 
@@ -154,7 +157,8 @@ let keyPress = (key, model) =>
     {
       ...model,
       searchText: Component_InputText.handleInput(~key, model.searchText),
-    };
+    }
+    |> updateMatches;
   } else {
     model;
   };

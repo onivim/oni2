@@ -88,7 +88,21 @@ type outmsg =
 
 let setTree = (tree, model) => {
   let uniqueId = (data: FsTreeNode.metadata) => data.path;
-  let treeView = Component_VimTree.set(~uniqueId, [tree], model.treeView);
+  let searchText =
+      (
+        node:
+          Component_VimTree.nodeOrLeaf(
+            FsTreeNode.metadata,
+            FsTreeNode.metadata,
+          ),
+      ) => {
+    switch (node) {
+    | Leaf({data, _}) => data.displayName
+    | Node({data, _}) => data.displayName
+    };
+  };
+  let treeView =
+    Component_VimTree.set(~searchText, ~uniqueId, [tree], model.treeView);
 
   {...model, tree: Some(tree), treeView};
 };
