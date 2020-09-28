@@ -48,5 +48,8 @@ let current = state => {
     )
     |> Command.Lookup.fromList
     |> Command.Lookup.map(msg => Actions.SCM(msg)),
+    Feature_SideBar.Contributions.commands
+    |> Command.Lookup.fromList
+    |> Command.Lookup.map(msg => Actions.SideBar(msg)),
   ]);
 };

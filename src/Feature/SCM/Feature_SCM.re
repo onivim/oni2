@@ -160,6 +160,8 @@ type model = {
   focus: Focus.t,
 };
 
+let resetFocus = model => {...model, focus: Focus.initial};
+
 let initial = {
   providers: [],
   inputBox: Component_InputText.create(~placeholder="Do the commit thing!"),

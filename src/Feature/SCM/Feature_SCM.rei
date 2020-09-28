@@ -50,6 +50,8 @@ module Provider: {
 [@deriving show]
 type model;
 
+let resetFocus: model => model;
+
 let initial: model;
 
 let statusBarCommands: model => list(Exthost.Command.t);

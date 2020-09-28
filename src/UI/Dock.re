@@ -9,6 +9,8 @@ module Colors = Feature_Theme.Colors.ActivityBar;
 module BadgeColors = Feature_Theme.Colors.ActivityBarBadge;
 module Sneakable = Feature_Sneak.View.Sneakable;
 
+open Feature_SideBar;
+
 type notification =
   | InProgress
   | Count(int);
@@ -144,19 +146,19 @@ let%component item =
 };
 
 let onExplorerClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(FileExplorerClick));
+  GlobalContext.current().dispatch(Actions.SideBar(FileExplorerClicked));
 };
 
 let onSearchClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(SearchClick));
+  GlobalContext.current().dispatch(Actions.SideBar(SearchClicked));
 };
 
 let onSCMClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(SCMClick));
+  GlobalContext.current().dispatch(Actions.SideBar(SCMClicked));
 };
 
 let onExtensionsClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(ExtensionsClick));
+  GlobalContext.current().dispatch(Actions.SideBar(ExtensionsClicked));
 };
 
 let animation =

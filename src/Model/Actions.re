@@ -14,7 +14,6 @@ module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 [@deriving show({with_path: false})]
 type t =
   | Init
-  | ActivityBar(ActivityBar.action)
   | AutoUpdate(Feature_AutoUpdate.msg)
   | Buffers(Feature_Buffers.msg)
   | BufferRenderer(BufferRenderer.action)
@@ -132,7 +131,6 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | SCM(Feature_SCM.msg)
-  | SearchHotkey
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
