@@ -672,6 +672,8 @@ module View = {
         ~hoverBg,
         ~focusBg,
         ~selectedBg,
+        ~searchBg,
+        ~searchBorder,
         ~onMouseClick,
         ~onMouseOver,
         ~onMouseOut,
@@ -708,6 +710,8 @@ module View = {
             hoverBg;
           } else if (focusIndex == Some(i)) {
             focusBg;
+          } else if (SearchContext.isMatch(~index=i, searchContext)) {
+            searchBg;
           } else {
             Revery.Colors.transparentWhite;
           };
@@ -716,7 +720,7 @@ module View = {
 
         let searchBorder =
           isSearchMatch
-            ? <View style={Styles.searchBorder(~color=Revery.Colors.red)} />
+            ? <View style={Styles.searchBorder(~color=searchBorder)} />
             : React.empty;
 
         <Clickable
@@ -832,6 +836,9 @@ module View = {
           isActive
             ? Colors.List.focusBackground.from(theme)
             : Colors.List.inactiveFocusBackground.from(theme);
+
+        let searchBg = Colors.List.filterMatchBackground.from(theme);
+        let searchBorder = Colors.List.filterMatchBorder.from(theme);
         let items =
           renderHelper(
             ~focusIndex=focusedIndex,
@@ -841,6 +848,8 @@ module View = {
             ~hoverBg,
             ~selectedBg,
             ~focusBg,
+            ~searchBg,
+            ~searchBorder,
             ~onMouseOver,
             ~onMouseOut,
             ~onMouseClick,
