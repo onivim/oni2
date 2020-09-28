@@ -7,7 +7,6 @@
  */
 
 module Actions = Actions;
-module ActivityBar = ActivityBar;
 module BufferRenderer = BufferRenderer;
 module BufferRenderers = BufferRenderers;
 module CommandManager = CommandManager;

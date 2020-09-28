@@ -122,7 +122,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
 
   let sideBar = () =>
     if (!zenMode) {
-      <SideBarView theme state dispatch />;
+      <SideBarView config theme state dispatch />;
     } else {
       React.empty;
     };
@@ -183,6 +183,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
         {React.listToElement(surfaceComponents)}
       </View>
       <Feature_Pane.View
+        config
         isFocused={FocusManager.current(state) == Focus.Pane}
         iconTheme={state.iconTheme}
         languageInfo={state.languageInfo}

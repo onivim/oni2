@@ -47,6 +47,8 @@ let isUninstalling: (~extensionId: string, model) => bool;
 
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 
+let resetFocus: model => model;
+
 let all: model => list(Scanner.ScanResult.t);
 let activatedIds: model => list(string);
 

@@ -17,6 +17,8 @@ type model = {
   resultsTree: Component_VimTree.model(string, LocationListItem.t),
 };
 
+let resetFocus = model => {...model, focus: FindInput};
+
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
   query: "",

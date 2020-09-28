@@ -31,6 +31,12 @@ let make = (~state: Model.State.t, ()) => {
 
   <View style=Styles.row>
     <View style=Styles.column>
+      <Text
+        text={
+          "Focus: "
+          ++ (Model.FocusManager.current(state) |> Model.Focus.show_focusable)
+        }
+      />
       <Text text="Context Keys:" />
       contextKeys
     </View>

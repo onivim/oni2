@@ -6,31 +6,9 @@ open Oni_Core;
 open Oni_Model;
 open Actions;
 
-let focus = (state: State.t) =>
-  if (state.sideBar |> Feature_SideBar.isOpen) {
-    switch (state.sideBar |> Feature_SideBar.selected) {
-    | FileExplorer => FocusManager.push(FileExplorer, state)
-    | SCM => FocusManager.push(SCM, state)
-    | Extensions => FocusManager.push(Extensions, state)
-    | Search => FocusManager.push(Search, state)
-    };
-  } else {
-    state;
-  };
-
-let reduce = (~zenMode, state: Feature_SideBar.model, action: Actions.t) => {
+let reduce = (state: Feature_SideBar.model, action: Actions.t) => {
   switch (action) {
   // When we're in Zen mode, we ignore toggling, and exit zen mode
-  | ActivityBar(ActivityBar.FileExplorerClick) when !zenMode =>
-    Feature_SideBar.toggle(Feature_SideBar.FileExplorer, state)
-  | ActivityBar(ActivityBar.SCMClick) when !zenMode =>
-    Feature_SideBar.toggle(Feature_SideBar.SCM, state)
-  | ActivityBar(ActivityBar.ExtensionsClick) when !zenMode =>
-    Feature_SideBar.toggle(Feature_SideBar.Extensions, state)
-  | SearchHotkey when !zenMode =>
-    Feature_SideBar.toggle(Feature_SideBar.Search, state)
-  | ActivityBar(ActivityBar.SearchClick) when !zenMode =>
-    Feature_SideBar.toggle(Feature_SideBar.Search, state)
   | ConfigurationSet(newConfig) =>
     let sideBarLocation =
       Configuration.getValue(c => c.workbenchSideBarLocation, newConfig);

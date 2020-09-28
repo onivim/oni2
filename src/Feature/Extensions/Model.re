@@ -224,6 +224,8 @@ type model = {
   viewModel: ViewModel.t,
 };
 
+let resetFocus = model => {...model, focusedWindow: Focus.initial};
+
 module Persistence = {
   type t = Yojson.Safe.t;
   let initial = `Assoc([]);

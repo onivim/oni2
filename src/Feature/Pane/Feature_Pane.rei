@@ -19,7 +19,9 @@ type outmsg =
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
     })
-  | UnhandledWindowMovement(Component_VimWindows.outmsg);
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | GrabFocus
+  | ReleaseFocus;
 
 module Msg: {
   let keyPressed: string => msg;
@@ -41,7 +43,6 @@ let initial: model;
 
 let height: model => int;
 let selected: model => pane;
-let isVisible: (pane, model) => bool;
 let isOpen: model => bool;
 
 let show: (~pane: pane, model) => model;
@@ -53,6 +54,7 @@ let setDiagnostics: (Feature_Diagnostics.model, model) => model;
 module View: {
   let make:
     (
+      ~config: Config.resolver,
       ~isFocused: bool,
       ~theme: Oni_Core.ColorTheme.Colors.t,
       ~iconTheme: Oni_Core.IconTheme.t,
