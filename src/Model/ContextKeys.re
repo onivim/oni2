@@ -169,6 +169,13 @@ let all = (state: State.t) => {
     | _ => false
     };
 
+  let isEditorFocused =
+    switch (focus) {
+    | Focus.Editor
+    | Focus.Terminal(_) => true
+    | _ => false
+    };
+
   unionMany([
     Feature_Registers.Contributions.contextKeys(
       ~isFocused=focus == Focus.InsertRegister,
