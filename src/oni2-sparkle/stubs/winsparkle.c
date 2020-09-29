@@ -83,7 +83,10 @@ CAMLprim value oni2_SparkleDebugLog(value vData) {
 CAMLprim value oni2_SparkleSetFeedURL(value vUpdater, value vUrlStr) {
   CAMLparam2(vUpdater, vUrlStr);
 
-  win_sparkle_set_appcast_url(String_val(vUrlStr));
+  char *urlStr = malloc(caml_string_length(vUrlStr) * sizeof(char));
+  strcpy(urlStr, String_val(vUrlStr));
+
+  win_sparkle_set_appcast_url(urlStr);
   
   CAMLreturn(Val_unit);
 }
