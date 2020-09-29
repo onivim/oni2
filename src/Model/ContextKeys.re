@@ -162,12 +162,6 @@ let all = (state: State.t) => {
       ~isFocused=focus == Focus.Pane,
       state.pane,
     );
-  let isEditorFocused =
-    switch (focus) {
-    | Focus.Editor
-    | Focus.Terminal(_) => true
-    | _ => false
-    };
 
   let isEditorFocused =
     switch (focus) {
