@@ -135,11 +135,6 @@ let showBottomScrollShadow = ({items, scrollY, rowHeight, viewportHeight, _}) =>
 
 // UPDATE
 
-let keyPress = (key, model) => {
-  ...model,
-  searchContext: SearchContext.keyPress(key, model.searchContext),
-};
-
 let ensureSelectedVisible = model => {
   let yPosition = float(model.selected * model.rowHeight);
 
@@ -156,6 +151,16 @@ let ensureSelectedVisible = model => {
     };
 
   {...model, scrollY: scrollY'};
+};
+let keyPress = (key, model) => {
+  let (searchContext, maybeSelected) =
+    SearchContext.keyPress(~index=model.selected, key, model.searchContext);
+
+  let model = {...model, searchContext};
+
+  maybeSelected
+  |> Option.map(selected => {{...model, selected} |> ensureSelectedVisible})
+  |> Option.value(~default=model);
 };
 
 let setSelected = (~selected, model) => {

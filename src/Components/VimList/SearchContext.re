@@ -128,6 +128,13 @@ let nextMatch = (~index, model) => {
   };
 };
 
+let currentOrNextMatch = (~index, model) => {
+  switch (model.direction) {
+  | Forward => higherMatch(~index=index - 1, model.matches)
+  | Backward => lowerMatch(~index=index + 1, model.matches)
+  };
+};
+
 let previousMatch = (~index, model) => {
   switch (model.direction) {
   | Forward => lowerMatch(~index, model.matches)
@@ -157,15 +164,18 @@ let close = model => {
   {...model, isSearchInputVisible: false};
 };
 
-let keyPress = (key, model) =>
+let keyPress = (~index, key, model) =>
   if (model.isSearchInputVisible) {
-    {
-      ...model,
-      searchText: Component_InputText.handleInput(~key, model.searchText),
-    }
-    |> updateMatches;
+    let model' =
+      {
+        ...model,
+        searchText: Component_InputText.handleInput(~key, model.searchText),
+      }
+      |> updateMatches;
+
+    (model', currentOrNextMatch(~index, model'));
   } else {
-    model;
+    (model, None);
   };
 
 module View = {
