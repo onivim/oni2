@@ -722,6 +722,7 @@ module View = {
         ~focusBg,
         ~selectedBg,
         ~searchBg,
+        ~focusBorder,
         ~searchBorder,
         ~onMouseClick,
         ~onMouseOver,
@@ -769,7 +770,11 @@ module View = {
 
         let searchBorder =
           isSearchMatch
-            ? <View style={Styles.searchBorder(~color=searchBorder)} />
+            ? <View
+                style={Styles.searchBorder(
+                  ~color=isSelected ? focusBorder : searchBorder,
+                )}
+              />
             : React.empty;
 
         <Clickable
@@ -886,6 +891,8 @@ module View = {
             ? Colors.List.focusBackground.from(theme)
             : Colors.List.inactiveFocusBackground.from(theme);
 
+        let focusBorder = Colors.focusBorder.from(theme);
+
         let searchBg = Colors.List.filterMatchBackground.from(theme);
         let searchBorder = Colors.List.filterMatchBorder.from(theme);
         let items =
@@ -899,6 +906,7 @@ module View = {
             ~focusBg,
             ~searchBg,
             ~searchBorder,
+            ~focusBorder,
             ~onMouseOver,
             ~onMouseOut,
             ~onMouseClick,

@@ -191,13 +191,8 @@ module View = {
         (),
       ) => {
     let matchCount = searchCount(model);
-    let foregroundColor =
-      Feature_Theme.Colors.List.activeSelectionForeground.from(theme);
-    let inactiveBackgroundColor =
-      Feature_Theme.Colors.List.inactiveSelectionBackground.from(theme);
-
-    let activeBackgroundColor =
-      Feature_Theme.Colors.List.activeSelectionBackground.from(theme);
+    let foregroundColor = Feature_Theme.Colors.Editor.foreground.from(theme);
+    let bgColor = Feature_Theme.Colors.Editor.background.from(theme);
 
     let maybeQueryString = queryString(model);
     if (model.isSearchInputVisible) {
@@ -206,17 +201,22 @@ module View = {
           flexDirection(`Row),
           justifyContent(`Center),
           alignItems(`Center),
-          backgroundColor(
-            isFocused ? activeBackgroundColor : inactiveBackgroundColor,
-          ),
+          backgroundColor(bgColor),
         ]>
-        <View style=Style.[flexGrow(0), margin(4), flexShrink(0)]>
+        <View
+          style=Style.[
+            flexGrow(0),
+            paddingLeft(4),
+            margin(4),
+            flexShrink(0),
+          ]>
           <Codicon icon=Codicon.search color=foregroundColor />
         </View>
         <View style=Style.[flexGrow(1), flexShrink(1), margin(8)]>
           <Component_InputText.View
             model={model.searchText}
             theme
+            prefix={model.direction == Forward ? "/" : "?"}
             fontFamily={font.family}
             fontSize={font.size}
             isFocused
@@ -235,13 +235,20 @@ module View = {
                flexDirection(`Row),
                justifyContent(`Center),
                alignItems(`Center),
-               backgroundColor(inactiveBackgroundColor),
+               backgroundColor(bgColor),
              ]>
              <View style=Style.[flexGrow(0), margin(4), flexShrink(0)]>
                <Codicon icon=Codicon.search color=foregroundColor />
              </View>
-             <View style=Style.[flexGrow(1), flexShrink(1), margin(8)]>
+             <View
+               style=Style.[
+                 flexGrow(1),
+                 flexShrink(1),
+                 padding(4),
+                 margin(8),
+               ]>
                <Text
+                 style=Style.[color(foregroundColor)]
                  text=queryString
                  fontFamily={font.family}
                  fontSize={font.size}
