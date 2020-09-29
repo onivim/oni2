@@ -11,6 +11,7 @@ type model = {
       Feature_LanguageSupport.DocumentSymbols.symbol,
       Feature_LanguageSupport.DocumentSymbols.symbol,
     ),
+  vimWindowNavigation: Component_VimWindows.model,
 };
 
 [@deriving show]
@@ -20,7 +21,8 @@ type msg =
   | SymbolOutline(Component_VimTree.msg)
   | SymbolsChanged(
       [@opaque] option(Feature_LanguageSupport.DocumentSymbols.t),
-    );
+    )
+  | VimWindowNav(Component_VimWindows.msg);
 
 module Msg = {
   let keyPressed = key => KeyboardInput(key);
@@ -31,6 +33,7 @@ module Msg = {
 let initial = (~rootPath) => {
   fileExplorer: Component_FileExplorer.initial(~rootPath),
   symbolOutline: Component_VimTree.create(~rowHeight=20),
+  vimWindowNavigation: Component_VimWindows.initial,
 };
 
 let setRoot = (~rootPath, {fileExplorer, _} as model) => {
@@ -42,7 +45,8 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
-  | GrabFocus;
+  | GrabFocus
+  | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 let update = (~configuration, msg, model) => {
   switch (msg) {
@@ -88,6 +92,12 @@ let update = (~configuration, msg, model) => {
       Component_VimTree.update(symbolMsg, model.symbolOutline);
 
     ({...model, symbolOutline}, Nothing);
+
+  | VimWindowNav(navMsg) =>
+    let (vimWindowNavigation, outmsg) =
+      Component_VimWindows.update(navMsg, model.vimWindowNavigation);
+
+    ({...model, vimWindowNavigation}, UnhandledWindowMovement(outmsg));
   };
 };
 
@@ -164,6 +174,7 @@ module View = {
         />
       </View>
       <Component_Accordion.VimTree
+        showCount=false
         title="Outline"
         expanded=true
         isFocused
@@ -193,6 +204,12 @@ module Contributions = {
 
   let contextKeys = (~isFocused, model) => {
     open WhenExpr.ContextKeys;
+    let vimNavKeys =
+      isFocused
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
 
     let fileExplorerKeys =
       isFocused
@@ -202,6 +219,6 @@ module Contributions = {
           )
         : empty;
 
-    fileExplorerKeys;
+    [fileExplorerKeys, vimNavKeys] |> unionMany;
   };
 };

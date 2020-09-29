@@ -285,6 +285,10 @@ let update =
           FocusManager.push(Focus.FileExplorer, state),
           Isolinear.Effect.none,
         )
+      | UnhandledWindowMovement(windowMovement) => (
+          state,
+          Internal.unhandledWindowMotionEffect(windowMovement),
+        )
       }
     );
 

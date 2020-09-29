@@ -22,7 +22,8 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
-  | GrabFocus;
+  | GrabFocus
+  | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 let update:
   (~configuration: Oni_Core.Configuration.t, msg, model) => (model, outmsg);

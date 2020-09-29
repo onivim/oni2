@@ -88,9 +88,18 @@ type outmsg =
 
 let setTree = (tree, model) => {
   let uniqueId = (data: FsTreeNode.metadata) => data.path;
-  let treeView = Component_VimTree.set(~uniqueId, [tree], model.treeView);
+  let (rootName, firstLevelChildren) =
+    switch (tree) {
+    | Tree.Leaf(_) => ("", [])
+    | Tree.Node({children, data, _}) => (
+        FsTreeNode.(data.displayName),
+        children,
+      )
+    };
+  let treeView =
+    Component_VimTree.set(~uniqueId, firstLevelChildren, model.treeView);
 
-  {...model, tree: Some(tree), treeView};
+  {...model, rootName, tree: Some(tree), treeView};
 };
 
 let scrollTo = (~index, ~alignment, model) => {
