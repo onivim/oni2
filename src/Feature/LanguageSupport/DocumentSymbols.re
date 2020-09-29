@@ -8,6 +8,7 @@ type provider = {
 };
 
 type symbol = {
+  uniqueId: string,
   name: string,
   detail: string,
   kind: Exthost.SymbolKind.t,
@@ -15,12 +16,16 @@ type symbol = {
   selectionRange: CharacterRange.t,
 };
 
+type t = list(Tree.t(symbol, symbol));
+
 let rec extHostSymbolToTree:
   Exthost.DocumentSymbol.t => Tree.t(symbol, symbol) =
   extSymbol => {
     let children = extSymbol.children |> List.map(extHostSymbolToTree);
 
     let symbol = {
+      // TODO:
+      uniqueId: extSymbol.name,
       name: extSymbol.name,
       detail: extSymbol.detail,
       kind: extSymbol.kind,
@@ -50,7 +55,17 @@ type msg =
     });
 
 let update = (msg, model) => {
-  model;
+  switch (msg) {
+  | DocumentSymbolsAvailable({bufferId, symbols}) =>
+    let symbolTrees = symbols |> List.map(extHostSymbolToTree);
+    let bufferToSymbols =
+      IntMap.add(bufferId, symbolTrees, model.bufferToSymbols);
+    {...model, bufferToSymbols};
+  };
+};
+
+let get = (~bufferId, model) => {
+  IntMap.find_opt(bufferId, model.bufferToSymbols);
 };
 
 let register = (~handle: int, ~selector, model) => {
@@ -65,14 +80,6 @@ let unregister = (~handle: int, model) => {
 
 let sub = (~buffer, ~client, model) => {
   let toMsg = symbols => {
-    //    let children = symbols
-    //    |> List.map(extHostSymbolToTree);
-
-    symbols
-    |> List.iter((symbol: Exthost.DocumentSymbol.t) => {
-         prerr_endline(Exthost.DocumentSymbol.show(symbol))
-       });
-
     DocumentSymbolsAvailable({
       bufferId: Oni_Core.Buffer.getId(buffer),
       symbols,

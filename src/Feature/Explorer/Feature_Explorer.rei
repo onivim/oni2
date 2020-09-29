@@ -37,11 +37,13 @@ let sub:
 module View: {
   let make:
     (
+      ~key: Brisk_reconciler.Key.t=?,
       ~isFocused: bool,
       ~iconTheme: IconTheme.t,
       ~languageInfo: Exthost.LanguageInfo.t,
       ~model: model,
       ~decorations: Feature_Decorations.model,
+      ~documentSymbols: option(Feature_LanguageSupport.DocumentSymbols.t),
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~dispatch: msg => unit,

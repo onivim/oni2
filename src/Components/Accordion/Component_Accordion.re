@@ -152,3 +152,32 @@ module VimList = {
     <Common theme title expanded count isFocused uiFont onClick contents />;
   };
 };
+
+module VimTree = {
+  let make =
+      (
+        ~title,
+        ~expanded,
+        ~model,
+        ~dispatch,
+        ~render,
+        ~isFocused,
+        ~theme,
+        ~uiFont: UiFont.t,
+        ~onClick,
+        (),
+      ) => {
+    let count = Component_VimTree.count(model);
+    let contents =
+      <Component_VimTree.View
+        isActive=isFocused
+        focusedIndex=None
+        theme
+        model
+        dispatch
+        render
+      />;
+
+    <Common theme title expanded count isFocused uiFont onClick contents />;
+  };
+};

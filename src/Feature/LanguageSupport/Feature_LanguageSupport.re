@@ -453,6 +453,16 @@ module DocumentHighlights = {
   };
 };
 
+module OriginalDocumentSymbols = DocumentSymbols;
+
+module DocumentSymbols = {
+  include OriginalDocumentSymbols;
+
+  let get = (~bufferId, {documentSymbols, _}) => {
+    OriginalDocumentSymbols.get(~bufferId, documentSymbols);
+  };
+};
+
 module OldHover = Hover;
 module Hover = {
   module Popup = {
