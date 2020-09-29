@@ -130,7 +130,7 @@ let update =
       );
     ({...model, documentHighlights: documentHighlights'}, Nothing);
 
-  | Exthost(RegisterDocumentSymbolProvider({handle, selector})) =>
+  | Exthost(RegisterDocumentSymbolProvider({handle, selector, _})) =>
     let documentSymbols' =
       DocumentSymbols.register(~handle, ~selector, model.documentSymbols);
     ({...model, documentSymbols: documentSymbols'}, Nothing);

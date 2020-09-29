@@ -1,6 +1,5 @@
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Core.Utility;
 
 type provider = {
   handle: int,
@@ -91,10 +90,7 @@ let sub = (~buffer, ~client, model) => {
        selector |> Exthost.DocumentSelector.matchesBuffer(~buffer)
      )
   |> List.map(({handle, _}) => {
-       prerr_endline(
-         "CALLING DOC SYMBOLS FOR HANDLE: " ++ string_of_int(handle),
-       );
-       Service_Exthost.Sub.documentSymbols(~handle, ~buffer, ~toMsg, client);
+       Service_Exthost.Sub.documentSymbols(~handle, ~buffer, ~toMsg, client)
      })
   |> Isolinear.Sub.batch;
 };

@@ -105,8 +105,6 @@ type outmsg =
   | Nothing
   | Selected({index: int});
 
-let set = (items, model) => {...model, items};
-
 let showTopScrollShadow = ({scrollY, _}) => scrollY > 0.1;
 let showBottomScrollShadow = ({items, scrollY, rowHeight, viewportHeight, _}) => {
   let totalHeight = float(Array.length(items) * rowHeight);
@@ -145,6 +143,12 @@ let setSelected = (~selected, model) => {
     };
 
   {...model, selected: selected'} |> ensureSelectedVisible;
+};
+
+let set = (items, model) => {
+  {...model, items}
+  // Ensure selected is in bounds
+  |> setSelected(~selected=model.selected);
 };
 
 let setScrollY = (~scrollY, model) => {
@@ -586,13 +590,14 @@ module View = {
     if (rowHeight <= 0) {
       [];
     } else {
+      let scrollTop = max(0, scrollTop);
       let startRow = scrollTop / rowHeight;
       let startY = scrollTop mod rowHeight;
       let rowsToRender =
         viewportHeight
         / rowHeight
         + Constants.additionalRowsToRender
-        |> IntEx.clamp(~lo=0, ~hi=count - startRow);
+        |> IntEx.clamp(~lo=0, ~hi=max(0, count - startRow));
       let indicesToRender = List.init(rowsToRender, i => i + startRow);
 
       let itemView = i => {

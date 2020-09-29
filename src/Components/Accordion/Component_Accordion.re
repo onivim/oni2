@@ -184,18 +184,21 @@ module VimTree = {
         ~theme,
         ~uiFont: UiFont.t,
         ~onClick,
+        ~empty=React.empty,
         (),
       ) => {
     let count = Component_VimTree.count(model);
     let contents =
-      <Component_VimTree.View
-        isActive=isFocused
-        focusedIndex
-        theme
-        model
-        dispatch
-        render
-      />;
+      count > 0
+        ? <Component_VimTree.View
+            isActive=isFocused
+            focusedIndex
+            theme
+            model
+            dispatch
+            render
+          />
+        : empty;
 
     <Common
       showCount

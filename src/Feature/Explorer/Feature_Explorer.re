@@ -4,7 +4,12 @@ module Log = (val Log.withNamespace("Oni2.Feature.Explorer"));
 
 // MODEL
 
+type focus =
+  | FileExplorer
+  | Outline;
+
 type model = {
+  focus,
   fileExplorer: Component_FileExplorer.model,
   symbolOutline:
     Component_VimTree.model(
@@ -31,6 +36,7 @@ module Msg = {
 };
 
 let initial = (~rootPath) => {
+  focus: FileExplorer,
   fileExplorer: Component_FileExplorer.initial(~rootPath),
   symbolOutline: Component_VimTree.create(~rowHeight=20),
   vimWindowNavigation: Component_VimWindows.initial,
@@ -97,13 +103,37 @@ let update = (~configuration, msg, model) => {
     let (vimWindowNavigation, outmsg) =
       Component_VimWindows.update(navMsg, model.vimWindowNavigation);
 
-    ({...model, vimWindowNavigation}, UnhandledWindowMovement(outmsg));
+    let model' = {...model, vimWindowNavigation};
+    switch (outmsg) {
+    | Component_VimWindows.Nothing => (model', Nothing)
+    | Component_VimWindows.FocusLeft => (
+        model',
+        UnhandledWindowMovement(outmsg),
+      )
+    | Component_VimWindows.FocusRight => (
+        model',
+        UnhandledWindowMovement(outmsg),
+      )
+    | Component_VimWindows.FocusDown =>
+      if (model'.focus == FileExplorer) {
+        ({...model', focus: Outline}, Nothing);
+      } else {
+        (model', UnhandledWindowMovement(outmsg));
+      }
+    | Component_VimWindows.FocusUp =>
+      if (model'.focus == Outline) {
+        ({...model', focus: FileExplorer}, Nothing);
+      } else {
+        (model', UnhandledWindowMovement(outmsg));
+      }
+    | Component_VimWindows.PreviousTab
+    | Component_VimWindows.NextTab => (model', Nothing)
+    };
   };
 };
 
 module View = {
   open Revery.UI;
-  open Revery.UI.Components;
   let%component make =
                 (
                   ~isFocused,
@@ -126,6 +156,8 @@ module View = {
           None;
         },
       );
+
+    let foregroundColor = Feature_Theme.Colors.foreground.from(theme);
 
     let renderSymbol =
         (
@@ -152,18 +184,29 @@ module View = {
             justifyContent(`Center),
             alignItems(`Center),
           ]>
-          <View style=Style.[padding(4)]>
+          <View style=Style.[paddingRight(4)]>
             <Oni_Components.SymbolIcon theme symbol={symbolData.kind} />
           </View>
-          <Text text={symbolData.name} />
+          <Text
+            text={symbolData.name}
+            style=Style.[color(foregroundColor)]
+          />
         </View>
       </Oni_Components.Tooltip>;
     };
 
+    let symbolsEmpty =
+      <View style=Style.[margin(16)]>
+        <Text
+          text="No symbols available for active buffer."
+          style=Style.[color(foregroundColor)]
+        />
+      </View>;
+
     <View style=Style.[flexDirection(`Column), flexGrow(1)]>
       <View style=Style.[flexGrow(2)]>
         <Component_FileExplorer.View
-          isFocused
+          isFocused={isFocused && model.focus == FileExplorer}
           iconTheme
           languageInfo
           decorations
@@ -176,14 +219,15 @@ module View = {
       <Component_Accordion.VimTree
         showCount=false
         title="Outline"
-        expanded=true
-        isFocused
+        expanded={model.focus == Outline}
+        isFocused={isFocused && model.focus == Outline}
         uiFont=font
         theme
         model={model.symbolOutline}
         render=renderSymbol
         onClick={() => ()}
         dispatch={msg => dispatch(SymbolOutline(msg))}
+        empty=symbolsEmpty
       />
     </View>;
   };
@@ -195,11 +239,26 @@ let sub = (~configuration, model) => {
 };
 
 module Contributions = {
-  let commands = (~isFocused) => {
-    !isFocused
-      ? []
-      : Component_FileExplorer.Contributions.commands(~isFocused)
-        |> List.map(Oni_Core.Command.map(msg => FileExplorer(msg)));
+  let commands = (~isFocused, model) => {
+    let explorerCommands =
+      isFocused && model.focus == FileExplorer
+        ? Component_FileExplorer.Contributions.commands(~isFocused)
+          |> List.map(Oni_Core.Command.map(msg => FileExplorer(msg)))
+        : [];
+
+    let outlineCommands =
+      isFocused && model.focus == Outline
+        ? Component_VimTree.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => SymbolOutline(msg)))
+        : [];
+
+    let vimNavCommands =
+      isFocused
+        ? Component_VimWindows.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
+        : [];
+
+    explorerCommands @ vimNavCommands @ outlineCommands;
   };
 
   let contextKeys = (~isFocused, model) => {
@@ -212,13 +271,18 @@ module Contributions = {
         : empty;
 
     let fileExplorerKeys =
-      isFocused
+      isFocused && model.focus == FileExplorer
         ? Component_FileExplorer.Contributions.contextKeys(
             ~isFocused,
             model.fileExplorer,
           )
         : empty;
 
-    [fileExplorerKeys, vimNavKeys] |> unionMany;
+    let symbolOutlineKeys =
+      isFocused && model.focus == Outline
+        ? Component_VimTree.Contributions.contextKeys(model.symbolOutline)
+        : empty;
+
+    [fileExplorerKeys, symbolOutlineKeys, vimNavKeys] |> unionMany;
   };
 };
