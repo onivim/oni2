@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 
 module Log = (val Log.withNamespace("Oni2.Feature.Explorer"));
 
@@ -7,17 +6,13 @@ module Log = (val Log.withNamespace("Oni2.Feature.Explorer"));
 
 include Model;
 
-let getFileIcon = (~languageInfo, ~iconTheme, filePath) => {
-  Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, filePath)
-  |> IconTheme.getIconForFile(iconTheme, filePath);
-};
-
 module Internal = {
   let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
-    switch (a.kind, b.kind) {
-    | (Directory(_), File) => (-1)
-    | (File, Directory(_)) => 1
-    | _ =>
+    switch (a, b) {
+    | (Node(_), Leaf(_)) => (-1)
+    | (Leaf(_), Node(_)) => 1
+    | (Node({data: a, _}), Node({data: b, _}))
+    | (Leaf(a), Leaf(b)) =>
       compare(
         a.displayName |> String.lowercase_ascii,
         b.displayName |> String.lowercase_ascii,
@@ -25,23 +20,23 @@ module Internal = {
     };
   };
 
-  let luvDirentToFsTree = (~getIcon, ~cwd, {name, kind}: Luv.File.Dirent.t) => {
+  let luvDirentToFsTree = (~cwd, {name, kind}: Luv.File.Dirent.t) => {
     let path = Filename.concat(cwd, name);
     if (kind == `FILE || kind == `LINK) {
-      Some(FsTreeNode.file(path, ~icon=getIcon(path)));
+      Some(FsTreeNode.file(path));
     } else if (kind == `DIR) {
-      Some(FsTreeNode.directory(path, ~icon=getIcon(path), ~children=[]));
+      Some(FsTreeNode.directory(path, ~children=[]));
     } else {
       None;
     };
   };
 
-  let luvDirentsToFsTree = (~getIcon, ~cwd, ~ignored, dirents) => {
+  let luvDirentsToFsTree = (~cwd, ~ignored, dirents) => {
     dirents
     |> List.filter(({name, _}: Luv.File.Dirent.t) =>
          name != ".." && name != "." && !List.mem(name, ignored)
        )
-    |> List.filter_map(luvDirentToFsTree(~getIcon, ~cwd))
+    |> List.filter_map(luvDirentToFsTree(~cwd))
     |> List.sort(sortByLoweredDisplayName);
   };
 
@@ -55,40 +50,28 @@ module Internal = {
      Lwt_list.map_p. The recursion is gated by the depth value so it does
      not recurse too far.
    */
-  let getFilesAndFolders = (~ignored, cwd, getIcon) => {
+  let getFilesAndFolders = (~ignored, cwd) => {
     cwd
     |> Service_OS.Api.readdir
-    |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd, ~getIcon));
+    |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd));
   };
 
-  let getDirectoryTree = (cwd, languageInfo, iconTheme, ignored) => {
-    let getIcon = getFileIcon(~languageInfo, ~iconTheme);
-    let childrenPromise = getFilesAndFolders(~ignored, cwd, getIcon);
+  let getDirectoryTree = (cwd, ignored) => {
+    let childrenPromise = getFilesAndFolders(~ignored, cwd);
 
     childrenPromise
     |> Lwt.map(children => {
-         FsTreeNode.directory(
-           cwd,
-           ~icon=getIcon(cwd),
-           ~children,
-           ~isOpen=true,
-         )
+         FsTreeNode.directory(cwd, ~children, ~isOpen=true)
        });
   };
 };
 
 module Effects = {
-  let load = (directory, languageInfo, iconTheme, configuration, ~onComplete) => {
+  let load = (directory, configuration, ~onComplete) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
       let ignored =
         Configuration.getValue(c => c.filesExclude, configuration);
-      let promise =
-        Internal.getDirectoryTree(
-          directory,
-          languageInfo,
-          iconTheme,
-          ignored,
-        );
+      let promise = Internal.getDirectoryTree(directory, ignored);
 
       Lwt.on_success(promise, tree => {dispatch(onComplete(tree))});
     });
@@ -103,7 +86,19 @@ type outmsg =
   | OpenFile(string)
   | GrabFocus;
 
-let setTree = (tree, model) => {...model, tree: Some(tree)};
+let setTree = (tree, model) => {
+  let uniqueId = (data: FsTreeNode.metadata) => data.path;
+  let treeView = Component_VimTree.set(~uniqueId, [tree], model.treeView);
+
+  {...model, tree: Some(tree), treeView};
+};
+
+let scrollTo = (~index, ~alignment, model) => {
+  {
+    ...model,
+    treeView: Component_VimTree.scrollTo(~index, ~alignment, model.treeView),
+  };
+};
 
 let setActive = (maybePath, model) => {...model, active: maybePath};
 
@@ -116,7 +111,6 @@ let setFocus = (maybePath, model) =>
     }
   | _ => {...model, focus: None}
   };
-let setScrollOffset = (scrollOffset, model) => {...model, scrollOffset};
 
 let replaceNode = (node, model: model) =>
   switch (model.tree) {
@@ -125,8 +119,7 @@ let replaceNode = (node, model: model) =>
   | None => model
   };
 
-let revealAndFocusPath =
-    (~languageInfo, ~iconTheme, ~configuration, path, model: model) => {
+let revealAndFocusPath = (~configuration, path, model: model) => {
   switch (model.tree) {
   | Some(tree) =>
     switch (FsTreeNode.findNodesByPath(path, tree)) {
@@ -139,11 +132,7 @@ let revealAndFocusPath =
         model,
         Effect(
           Effects.load(
-            lastNode.path,
-            languageInfo,
-            iconTheme,
-            configuration,
-            ~onComplete=node =>
+            FsTreeNode.getPath(lastNode), configuration, ~onComplete=node =>
             FocusNodeLoaded(node)
           ),
         ),
@@ -152,61 +141,24 @@ let revealAndFocusPath =
     // Open ALL the nodes (in the path)!
     | `Success(_) =>
       let tree = FsTreeNode.updateNodesInPath(FsTreeNode.setOpen, path, tree);
-      let offset =
-        switch (FsTreeNode.expandedIndex(path, tree)) {
-        | Some(offset) => `Middle(float(offset))
-        | None => model.scrollOffset
-        };
 
-      (
-        model
-        |> setFocus(Some(path))
-        |> setTree(tree)
-        |> setScrollOffset(offset),
-        Nothing,
-      );
+      let maybePathIndex = getIndex(path, model);
+
+      let model = model |> setFocus(Some(path)) |> setTree(tree);
+
+      let scrolledModel =
+        maybePathIndex
+        |> Option.map(index => scrollTo(~index, ~alignment=`Center, model))
+        |> Option.value(~default=model);
+
+      (scrolledModel, Nothing);
     }
 
   | None => (model, Nothing)
   };
 };
 
-let revealFocus = model => {
-  switch (model.focus, model.tree) {
-  | (Some(focus), Some(tree)) =>
-    switch (FsTreeNode.expandedIndex(focus, tree)) {
-    | Some(index) => {...model, scrollOffset: `Reveal(index)}
-    | None => model
-    }
-  | _ => model
-  };
-};
-
-let selectNode =
-    (~languageInfo, ~iconTheme, ~configuration, node: FsTreeNode.t, model) =>
-  switch (node) {
-  | {kind: File, path, _} =>
-    // Set active here to avoid scrolling in BufferEnter
-    (model |> setActive(Some(node.path)), OpenFile(path))
-
-  | {kind: Directory({isOpen, _}), _} => (
-      replaceNode(FsTreeNode.toggleOpen(node), model),
-      isOpen
-        ? Nothing
-        : Effect(
-            Effects.load(
-              node.path,
-              languageInfo,
-              iconTheme,
-              configuration,
-              ~onComplete=newNode =>
-              NodeLoaded(newNode)
-            ),
-          ),
-    )
-  };
-
-let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
+let update = (~configuration, msg, model) => {
   switch (msg) {
   | ActiveFilePathChanged(maybeFilePath) =>
     switch (model) {
@@ -221,13 +173,7 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
         switch (autoReveal) {
         | `HighlightAndScroll =>
           let model' = {...model, active: Some(path)};
-          revealAndFocusPath(
-            ~languageInfo,
-            ~configuration,
-            ~iconTheme,
-            path,
-            model',
-          );
+          revealAndFocusPath(~configuration, path, model');
         | `HighlightOnly =>
           let model = setActive(Some(path), model);
           (setFocus(Some(path), model), Nothing);
@@ -249,81 +195,70 @@ let update = (~configuration, ~languageInfo, ~iconTheme, msg, model) => {
     | Some(activePath) =>
       model
       |> replaceNode(node)
-      |> revealAndFocusPath(
-           ~languageInfo,
-           ~configuration,
-           ~iconTheme,
-           activePath,
-         )
+      |> revealAndFocusPath(~configuration, activePath)
 
     | None => (model, Nothing)
     }
 
-  | NodeClicked(node) =>
-    model
-    |> setFocus(Some(node.path))
-    |> selectNode(~languageInfo, ~configuration, ~iconTheme, node)
+  | KeyboardInput(_) =>
+    // Anything to be brought back here?
+    (model, Nothing)
 
-  | ScrollOffsetChanged(offset) => (setScrollOffset(offset, model), Nothing)
+  | Tree(treeMsg) =>
+    let (treeView, outmsg) =
+      Component_VimTree.update(treeMsg, model.treeView);
 
-  | KeyboardInput(key) =>
-    let handleKey = ((path, tree)) =>
-      switch (key) {
-      | "<CR>" =>
-        FsTreeNode.findByPath(path, tree)
-        |> Option.map(node =>
-             selectNode(
-               ~languageInfo,
-               ~configuration,
-               ~iconTheme,
-               node,
-               model,
-             )
-           )
-
-      | "<UP>" =>
-        FsTreeNode.prevExpandedNode(path, tree)
-        |> Option.map((node: FsTreeNode.t) =>
-             (model |> setFocus(Some(node.path)) |> revealFocus, Nothing)
-           )
-
-      | "<DOWN>" =>
-        FsTreeNode.nextExpandedNode(path, tree)
-        |> Option.map((node: FsTreeNode.t) =>
-             (model |> setFocus(Some(node.path)) |> revealFocus, Nothing)
-           )
-
-      | _ => None
-      };
-
-    OptionEx.zip(model.focus, model.tree)
-    |> OptionEx.flatMap(handleKey)
-    |> Option.value(~default=(model, Nothing));
+    let model = {...model, treeView};
+    switch (outmsg) {
+    | Expanded(node) => (
+        model,
+        Effect(
+          Effects.load(node.path, configuration, ~onComplete=newNode =>
+            NodeLoaded(newNode)
+          ),
+        ),
+      )
+    | Collapsed(_) => (model, Nothing)
+    | Selected(node) =>
+      // Set active here to avoid scrolling in BufferEnter
+      (model |> setActive(Some(node.path)), OpenFile(node.path))
+    | Nothing => (model, Nothing)
+    };
   };
 };
 
 module View = View;
 
-let sub = (~configuration, ~languageInfo, ~iconTheme, {rootPath, _}) => {
-  let getIcon = getFileIcon(~languageInfo, ~iconTheme);
+let sub = (~configuration, {rootPath, _}) => {
   let ignored = Configuration.getValue(c => c.filesExclude, configuration);
 
   let toMsg =
     fun
     | Ok(dirents) => {
         let children =
-          dirents
-          |> Internal.luvDirentsToFsTree(~ignored, ~getIcon, ~cwd=rootPath);
-        TreeLoaded(
-          FsTreeNode.directory(
-            rootPath,
-            ~icon=getIcon(rootPath),
-            ~children,
-            ~isOpen=true,
-          ),
-        );
+          dirents |> Internal.luvDirentsToFsTree(~ignored, ~cwd=rootPath);
+        TreeLoaded(FsTreeNode.directory(rootPath, ~children, ~isOpen=true));
       }
     | Error(msg) => TreeLoadError(msg);
 
   Service_OS.Sub.dir(~uniqueId="FileExplorerSideBar", ~toMsg, rootPath);
+};
+
+module Contributions = {
+  let commands = (~isFocused) => {
+    !isFocused
+      ? []
+      : Component_VimTree.Contributions.commands
+        |> List.map(Oni_Core.Command.map(msg => Tree(msg)));
+  };
+
+  let contextKeys = (~isFocused, model) => {
+    open WhenExpr.ContextKeys;
+
+    let vimTreeKeys =
+      isFocused
+        ? Component_VimTree.Contributions.contextKeys(model.treeView) : empty;
+
+    vimTreeKeys;
+  };
 };

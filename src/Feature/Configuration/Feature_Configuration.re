@@ -3,6 +3,8 @@ open Oni_Core.Utility;
 
 module Log = (val Oni_Core.Log.withNamespace("Oni2.Feature.Configuration"));
 
+module GlobalConfiguration = GlobalConfiguration;
+
 module UserSettingsProvider = {
   let defaultConfigurationFileName = "configuration.json";
 
@@ -27,7 +29,8 @@ let initial = (~getUserSettings, contributions) =>
   merge({
     schema:
       Config.Schema.unionMany(
-        contributions |> List.map(Config.Schema.fromList),
+        [GlobalConfiguration.contributions, ...contributions]
+        |> List.map(Config.Schema.fromList),
       ),
     user: getUserSettings() |> Result.value(~default=Config.Settings.empty),
     merged: Config.Settings.empty,

@@ -1,9 +1,71 @@
 open Oni_Core;
 open Exthost.Extension;
 
+module ViewModel = {
+  [@deriving show]
+  type msg =
+    | Bundled(Component_VimList.msg)
+    | Installed(Component_VimList.msg)
+    | SearchResults(Component_VimList.msg);
+
+  type t = {
+    bundled: Component_VimList.model(Scanner.ScanResult.t),
+    installed: Component_VimList.model(Scanner.ScanResult.t),
+    searchResults:
+      Component_VimList.model(Service_Extensions.Catalog.Summary.t),
+  };
+
+  let initial = {
+    bundled: Component_VimList.create(~rowHeight=72),
+    installed: Component_VimList.create(~rowHeight=72),
+    searchResults: Component_VimList.create(~rowHeight=72),
+  };
+
+  let installed = ({installed, _}) => installed;
+  let bundled = ({bundled, _}) => bundled;
+  let searchResults = ({searchResults, _}) => searchResults;
+
+  let setBundled = (newBundled, viewModel) => {
+    ...viewModel,
+    bundled: Component_VimList.set(newBundled, viewModel.bundled),
+  };
+
+  let setInstalled = (newInstalled, viewModel) => {
+    ...viewModel,
+    installed: Component_VimList.set(newInstalled, viewModel.installed),
+  };
+
+  let setSearchResults = (newSearchResults, viewModel) => {
+    ...viewModel,
+    searchResults:
+      Component_VimList.set(newSearchResults, viewModel.searchResults),
+  };
+
+  let update = (msg, viewModel) => {
+    switch (msg) {
+    | Bundled(msg) =>
+      let (bundled, _outmsg) =
+        Component_VimList.update(msg, viewModel.bundled);
+      {...viewModel, bundled};
+    | Installed(msg) =>
+      let (installed, _outmsg) =
+        Component_VimList.update(msg, viewModel.installed);
+      {...viewModel, installed};
+    | SearchResults(msg) =>
+      let (searchResults, _outmsg) =
+        Component_VimList.update(msg, viewModel.searchResults);
+      {...viewModel, searchResults};
+    };
+  };
+};
+
 [@deriving show({with_path: false})]
 type msg =
   | Exthost(Exthost.Msg.ExtensionService.msg)
+  | Languages({
+      resolver: [@opaque] Lwt.u(Exthost.Reply.t),
+      msg: Exthost.Msg.Languages.msg,
+    })
   | Storage({
       resolver: [@opaque] Lwt.u(Exthost.Reply.t),
       msg: Exthost.Msg.Storage.msg,
@@ -40,7 +102,8 @@ type msg =
       extensionInfo: Service_Extensions.Catalog.Details.t,
     })
   | RemoteExtensionUnableToFetchDetails({errorMsg: string})
-  | VimWindowNav(Component_VimWindows.msg);
+  | VimWindowNav(Component_VimWindows.msg)
+  | ViewModel(ViewModel.msg);
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -158,7 +221,10 @@ type model = {
   extensionState: StringMap.t(extensionState),
   focusedWindow: Focus.t,
   vimWindowNavigation: Component_VimWindows.model,
+  viewModel: ViewModel.t,
 };
+
+let resetFocus = model => {...model, focusedWindow: Focus.initial};
 
 module Persistence = {
   type t = Yojson.Safe.t;
@@ -185,7 +251,12 @@ let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => 
 
   focusedWindow: Focus.initial,
   vimWindowNavigation: Component_VimWindows.initial,
+
+  viewModel: ViewModel.initial,
 };
+
+let isSearching = ({searchText, _}) =>
+  !Component_InputText.isEmpty(searchText);
 
 let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
   pendingInstalls != [] || pendingUninstalls != [];
@@ -240,6 +311,18 @@ let searchResults = ({latestQuery, _}) =>
   | Some(query) => query |> Service_Extensions.Query.results
   };
 
+let updateViewModelSearchResults = model => {
+  let searchResults = searchResults(model);
+  {
+    ...model,
+    viewModel:
+      ViewModel.setSearchResults(
+        searchResults |> Array.of_list,
+        model.viewModel,
+      ),
+  };
+};
+
 let isSearchInProgress = ({latestQuery, _}) => {
   switch (latestQuery) {
   | None => false
@@ -262,9 +345,29 @@ module Internal = {
     activatedIds: [id, ...model.activatedIds],
   };
 
+  let getExtensions = (~category, model) => {
+    let results =
+      model.extensions
+      |> List.filter((ext: Scanner.ScanResult.t) => ext.category == category);
+
+    switch (category) {
+    | Scanner.Bundled => List.filter(filterBundled, results)
+    | _ => results
+    };
+  };
+  let syncViewModel = model => {
+    let bundled = getExtensions(~category=Scanner.Bundled, model);
+    let installed = getExtensions(~category=Scanner.User, model);
+    let viewModel =
+      model.viewModel
+      |> ViewModel.setBundled(bundled |> Array.of_list)
+      |> ViewModel.setInstalled(installed |> Array.of_list);
+
+    {...model, viewModel};
+  };
+
   let add = (extensions, model) => {
-    ...model,
-    extensions: extensions @ model.extensions,
+    {...model, extensions: extensions @ model.extensions} |> syncViewModel;
   };
 
   let addPendingInstall = (~extensionId, model) => {
@@ -302,40 +405,36 @@ module Internal = {
   };
 
   let installed = (~extensionId, ~scanResult, model) => {
-    let model' =
-      model
-      |> clearPendingInstall(~extensionId)
-      |> markRestartNeeded(~extensionId);
-
-    {...model', extensions: [scanResult, ...model'.extensions]};
+    model
+    |> clearPendingInstall(~extensionId)
+    |> markRestartNeeded(~extensionId)
+    |> add([scanResult]);
   };
 
   let uninstalled = (~extensionId, model) => {
     let model' = model |> clearPendingUninstall(~extensionId);
+    let extensions =
+      List.filter(
+        (scanResult: Exthost.Extension.Scanner.ScanResult.t) => {
+          scanResult.manifest
+          |> Exthost.Extension.Manifest.identifier != extensionId
+        },
+        model'.extensions,
+      );
 
-    {
-      ...model',
-      extensions:
-        List.filter(
-          (scanResult: Exthost.Extension.Scanner.ScanResult.t) => {
-            scanResult.manifest
-            |> Exthost.Extension.Manifest.identifier != extensionId
-          },
-          model'.extensions,
-        ),
-    };
+    {...model', extensions};
   };
 };
 
-let getExtensions = (~category, model) => {
-  let results =
-    model.extensions
-    |> List.filter((ext: Scanner.ScanResult.t) => ext.category == category);
-
-  switch (category) {
-  | Scanner.Bundled => List.filter(Internal.filterBundled, results)
-  | _ => results
-  };
+let getLanguageIds = model => {
+  model.extensions
+  |> List.map((ext: Scanner.ScanResult.t) =>
+       ext.manifest.contributes.languages
+     )
+  |> List.flatten
+  |> List.map((language: Exthost.Extension.Contributions.Language.t) =>
+       language.id
+     );
 };
 
 let getPersistedValue = (~shared, ~key, model) => {
@@ -356,6 +455,8 @@ let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
     query;
   };
 
+let getExtensions = Internal.getExtensions;
+
 let update = (~extHostClient, msg, model) => {
   switch (msg) {
   | Exthost(WillActivateExtension(_))
@@ -372,6 +473,18 @@ let update = (~extHostClient, msg, model) => {
       Internal.markActivated(extensionId, model),
       Nothing,
     )
+
+  | Languages({resolver, msg}) =>
+    switch (msg) {
+    | GetLanguages =>
+      let languages = getLanguageIds(model) |> List.map(str => `String(str));
+
+      let eff = Effect.replyJson(~resolver, `List(languages));
+      (model, Effect(eff));
+
+    // TODO: Handle change language API from extension host
+    | ChangeLanguage(_) => (model, Nothing)
+    }
 
   | Storage({resolver, msg}) =>
     switch (msg) {
@@ -420,7 +533,11 @@ let update = (~extHostClient, msg, model) => {
         ~newText,
         ~query=model.latestQuery,
       );
-    ({...model, searchText: searchText', latestQuery}, Nothing);
+    (
+      {...model, searchText: searchText', latestQuery}
+      |> updateViewModelSearchResults,
+      Nothing,
+    );
   | Pasted(text) =>
     let previousText = model.searchText |> Component_InputText.value;
     let searchText' = Component_InputText.paste(~text, model.searchText);
@@ -431,7 +548,11 @@ let update = (~extHostClient, msg, model) => {
         ~newText,
         ~query=model.latestQuery,
       );
-    ({...model, searchText: searchText', latestQuery}, Nothing);
+    (
+      {...model, searchText: searchText', latestQuery}
+      |> updateViewModelSearchResults,
+      Nothing,
+    );
   | SearchText(msg) =>
     let previousText = model.searchText |> Component_InputText.value;
     let (searchText', inputOutmsg) =
@@ -448,12 +569,20 @@ let update = (~extHostClient, msg, model) => {
         ~newText,
         ~query=model.latestQuery,
       );
-    ({...model, searchText: searchText', latestQuery}, outmsg);
+    (
+      {...model, searchText: searchText', latestQuery}
+      |> updateViewModelSearchResults,
+      outmsg,
+    );
   | SearchQueryResults(queryResults) =>
     queryResults
     |> Service_Extensions.Query.searchText
     == (model.searchText |> Component_InputText.value)
-      ? ({...model, latestQuery: Some(queryResults)}, Nothing)
+      ? (
+        {...model, latestQuery: Some(queryResults)}
+        |> updateViewModelSearchResults,
+        Nothing,
+      )
       : (model, Nothing)
   | SearchQueryError(_queryResults) =>
     // TODO: Error experience?
@@ -559,6 +688,11 @@ let update = (~extHostClient, msg, model) => {
          ),
        )
 
+  | ViewModel(viewModelMsg) => (
+      {...model, viewModel: ViewModel.update(viewModelMsg, model.viewModel)},
+      Nothing,
+    )
+
   | VimWindowNav(navMsg) =>
     let (windowNav, outmsg) =
       Component_VimWindows.update(navMsg, model.vimWindowNavigation);
@@ -583,7 +717,6 @@ let update = (~extHostClient, msg, model) => {
         | Some(focus) => (focus, Nothing)
         }
 
-      // TODO
       | PreviousTab
       | NextTab => (focusedWindow, Nothing)
       };
