@@ -768,15 +768,20 @@ module Sub = {
     |> Isolinear.Sub.map(toMsg);
   };
 
-  let idFromBufferHandle =(~handle, ~buffer) => Printf.sprintf("%d.%d",
-  handle, Oni_Core.Buffer.getId(buffer));
+  let idFromBufferHandle = (~handle, ~buffer) =>
+    Printf.sprintf(
+      "%d.%d.%d",
+      handle,
+      Oni_Core.Buffer.getVersion(buffer),
+      Oni_Core.Buffer.getId(buffer),
+    );
 
   type bufferHandleParams = {
     handle: int,
     buffer: Oni_Core.Buffer.t,
-    client: Exthost.Client.t
+    client: Exthost.Client.t,
   };
-  
+
   module DocumentSymbolsSub =
     Isolinear.Sub.Make({
       type nonrec msg = list(Exthost.DocumentSymbol.t);
@@ -786,10 +791,7 @@ module Sub = {
 
       let name = "Service_Exthost.DocumentSymbolSubscription";
       let id = ({handle, buffer, _}: params) =>
-        idFromBufferHandle(
-          ~handle,
-          ~buffer,
-        );
+        idFromBufferHandle(~handle, ~buffer);
 
       let init = (~params, ~dispatch) => {
         let promise =
@@ -799,9 +801,7 @@ module Sub = {
             params.client,
           );
 
-        Lwt.on_success(promise, documentSymbols =>
-          dispatch(documentSymbols)
-        );
+        Lwt.on_success(promise, documentSymbols => dispatch(documentSymbols));
 
         Lwt.on_failure(promise, _err => dispatch([]));
 

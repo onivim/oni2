@@ -132,7 +132,7 @@ let start = () => {
                  Actions.OpenFileByPath(path, None, None);
                },
                icon:
-                 Feature_Explorer.getFileIcon(
+                 Component_FileExplorer.getFileIcon(
                    ~languageInfo,
                    ~iconTheme,
                    path,
@@ -545,7 +545,11 @@ let subscriptions = (ripgrep, dispatch) => {
         name: Path.toRelative(~base=directory, fullPath),
         command: () => Actions.OpenFileByPath(fullPath, None, None),
         icon:
-          Feature_Explorer.getFileIcon(~languageInfo, ~iconTheme, fullPath),
+          Component_FileExplorer.getFileIcon(
+            ~languageInfo,
+            ~iconTheme,
+            fullPath,
+          ),
         highlight: [],
         handle: None,
       };

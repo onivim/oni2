@@ -10,34 +10,34 @@ type provider = {
 type symbol = {
   name: string,
   detail: string,
-  kind: SymbolKind.t,
+  kind: Exthost.SymbolKind.t,
   range: CharacterRange.t,
   selectionRange: CharacterRange.t,
 };
 
-let rec extHostSymbolToTree: Exthost.DocumentSymbol.t => Tree.t(symbol, symbol) = 
-    extSymbol => {
-  let children = extSymbol.children
-  |> List.map(extHostSymbolToTree);
+let rec extHostSymbolToTree:
+  Exthost.DocumentSymbol.t => Tree.t(symbol, symbol) =
+  extSymbol => {
+    let children = extSymbol.children |> List.map(extHostSymbolToTree);
 
-  let symbol  = {
-    name: extSymbol.name,
-    detail: extSymbol.detail,
-    kind: extSymbol.kind,
-    range: extSymbol.range |> OneBasedRange.toRange,
-    selectionRange: extSymbol.range |> OneBasedRange.toRange,
+    let symbol = {
+      name: extSymbol.name,
+      detail: extSymbol.detail,
+      kind: extSymbol.kind,
+      range: extSymbol.range |> Exthost.OneBasedRange.toRange,
+      selectionRange: extSymbol.range |> Exthost.OneBasedRange.toRange,
+    };
+
+    if (children == []) {
+      Tree.leaf(symbol);
+    } else {
+      Tree.node(~children, symbol);
+    };
   };
-
-  if (children.length == 0) {
-    Tree.leaf(symbol)
-  } else {
-    Tree.node(~children, symbol)
-  }
-};
 
 type model = {
   providers: list(provider),
-  bufferToSymbols: IntMap.t(list(Tree.t(symbol, symbol)));
+  bufferToSymbols: IntMap.t(list(Tree.t(symbol, symbol))),
 };
 
 let initial = {providers: [], bufferToSymbols: IntMap.empty};
@@ -50,7 +50,7 @@ type msg =
     });
 
 let update = (msg, model) => {
-  model
+  model;
 };
 
 let register = (~handle: int, ~selector, model) => {
@@ -63,30 +63,31 @@ let unregister = (~handle: int, model) => {
   providers: model.providers |> List.filter(prov => prov.handle != handle),
 };
 
-let sub = (~buffer, ~location, ~client, model) => {
-  Isolinear.Sub.none
-//  let toMsg = (highlights: list(Exthost.DocumentHighlight.t)) => {
-//    let ranges =
-//      highlights
-//      |> List.map(({range, _}: Exthost.DocumentHighlight.t) => {
-//           Exthost.OneBasedRange.toRange(range)
-//         });
-//
-//    DocumentHighlighted({bufferId: Oni_Core.Buffer.getId(buffer), ranges});
-//  };
-//
-//  model.providers
-//  |> List.filter(({selector, _}) =>
-//       selector |> Exthost.DocumentSelector.matchesBuffer(~buffer)
-//     )
-//  |> List.map(({handle, _}) => {
-//       Service_Exthost.Sub.documentHighlights(
-//         ~handle,
-//         ~buffer,
-//         ~position=location,
-//         ~toMsg,
-//         client,
-//       )
-//     })
-//  |> Isolinear.Sub.batch;
+let sub = (~buffer, ~client, model) => {
+  let toMsg = symbols => {
+    //    let children = symbols
+    //    |> List.map(extHostSymbolToTree);
+
+    symbols
+    |> List.iter((symbol: Exthost.DocumentSymbol.t) => {
+         prerr_endline(Exthost.DocumentSymbol.show(symbol))
+       });
+
+    DocumentSymbolsAvailable({
+      bufferId: Oni_Core.Buffer.getId(buffer),
+      symbols,
+    });
+  };
+  //
+  model.providers
+  |> List.filter(({selector, _}) =>
+       selector |> Exthost.DocumentSelector.matchesBuffer(~buffer)
+     )
+  |> List.map(({handle, _}) => {
+       prerr_endline(
+         "CALLING DOC SYMBOLS FOR HANDLE: " ++ string_of_int(handle),
+       );
+       Service_Exthost.Sub.documentSymbols(~handle, ~buffer, ~toMsg, client);
+     })
+  |> Isolinear.Sub.batch;
 };

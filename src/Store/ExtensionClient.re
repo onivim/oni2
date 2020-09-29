@@ -95,14 +95,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
-      | LanguageFeatures(
-          RegisterDocumentSymbolProvider({handle, selector, label}),
-        ) =>
-        withClient(
-          onRegisterDocumentSymbolProvider(handle, selector, label),
-        );
-        Lwt.return(Reply.okEmpty);
-
       | Diagnostics(diagnosticMsg) =>
         dispatch(
           Actions.Diagnostics(
