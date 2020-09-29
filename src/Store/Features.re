@@ -434,6 +434,21 @@ let update =
       };
     (state, eff);
 
+  | Registration(msg) =>
+    let (state', outmsg) =
+      Feature_Registration.update(state.registration, msg);
+
+    let effect =
+      (
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | Effect(eff) => eff
+        }
+      )
+      |> Isolinear.Effect.map(msg => Actions.Registration(msg));
+
+    ({...state, registration: state'}, effect);
+
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};
