@@ -82,7 +82,6 @@ let start =
       ~getZoom,
       ~setZoom,
       ~quit,
-      ~setTitle,
       ~setVsync,
       ~maximize,
       ~minimize,
@@ -151,18 +150,12 @@ let start =
   let keyBindingsUpdater =
     KeyBindingsStoreConnector.start(keybindingsFilePath);
 
-  let fileExplorerUpdater = FileExplorerStore.start();
-
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
   let indentationUpdater = IndentationStoreConnector.start();
-
-  //  let completionUpdater = CompletionStoreConnector.start();
 
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
 
-  let titleUpdater =
-    TitleStoreConnector.start(setTitle, maximize, minimize, restore, close);
   let updater =
     Isolinear.Updater.combine([
       Isolinear.Updater.ofReducer(Reducer.reduce),
@@ -174,15 +167,17 @@ let start =
       keyBindingsUpdater,
       commandUpdater,
       lifecycleUpdater,
-      fileExplorerUpdater,
       indentationUpdater,
       themeUpdater,
-      titleUpdater,
       Features.update(
         ~grammarRepository,
         ~extHostClient,
         ~getUserSettings,
         ~setup,
+        ~maximize,
+        ~minimize,
+        ~close,
+        ~restore,
       ),
     ]);
 
@@ -299,11 +294,21 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Exthost(msg));
 
+    // TODO: Move sub inside Explorer feature
     let fileExplorerActiveFileSub =
       Model.Sub.activeFile(
         ~id="activeFile.fileExplorer", ~state, ~toMsg=maybeFilePath =>
-        Model.Actions.FileExplorer(ActiveFilePathChanged(maybeFilePath))
+        Model.Actions.FileExplorer(
+          Feature_Explorer.Msg.activeFileChanged(maybeFilePath),
+        )
       );
+
+    let fileExplorerSub =
+      Feature_Explorer.sub(
+        ~configuration=state.configuration,
+        state.fileExplorer,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.FileExplorer(msg));
 
     let languageSupportSub =
       maybeActiveBuffer
@@ -346,6 +351,10 @@ let start =
          })
       |> Option.value(~default=Isolinear.Sub.none);
 
+    let autoUpdateSub =
+      Feature_AutoUpdate.sub(~config)
+      |> Isolinear.Sub.map(msg => Model.Actions.AutoUpdate(msg));
+
     [
       languageSupportSub,
       syntaxSubscription,
@@ -355,10 +364,12 @@ let start =
       extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
+      fileExplorerSub,
       editorGlobalSub,
       extensionsSub,
       registersSub,
       scmSub,
+      autoUpdateSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -435,10 +446,10 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
     Feature_LanguageSupport.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.LanguageSupport(msg))),
-    Feature_Pane.Contributions.commands
-    |> List.map(Core.Command.map(msg => Model.Actions.Pane(msg))),
     Feature_Input.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Input(msg))),
+    Feature_AutoUpdate.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.AutoUpdate(msg))),
   ]
   |> List.flatten
   |> registerCommands(~dispatch);

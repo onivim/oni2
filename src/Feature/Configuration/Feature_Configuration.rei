@@ -37,3 +37,5 @@ let update:
 let resolver:
   (model, Feature_Vim.model, ~vimSetting: option(string), Config.key) =>
   Config.rawValue;
+
+module GlobalConfiguration = GlobalConfiguration;

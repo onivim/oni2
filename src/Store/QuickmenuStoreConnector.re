@@ -131,7 +131,12 @@ let start = () => {
                command: () => {
                  Actions.OpenFileByPath(path, None, None);
                },
-               icon: FileExplorer.getFileIcon(languageInfo, iconTheme, path),
+               icon:
+                 Feature_Explorer.getFileIcon(
+                   ~languageInfo,
+                   ~iconTheme,
+                   path,
+                 ),
                highlight: [],
                handle: None,
              },
@@ -483,10 +488,7 @@ let start = () => {
         state.iconTheme,
         CommandManager.current(state),
         MenuManager.current(state),
-        WhenExpr.ContextKeys.fromSchema(
-          ContextKeys.all(FocusManager.current(state)),
-          state,
-        ),
+        ContextKeys.all(state),
       );
 
     ({...state, quickmenu: menuState}, menuEffect);
@@ -542,7 +544,8 @@ let subscriptions = (ripgrep, dispatch) => {
         category: None,
         name: Path.toRelative(~base=directory, fullPath),
         command: () => Actions.OpenFileByPath(fullPath, None, None),
-        icon: FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
+        icon:
+          Feature_Explorer.getFileIcon(~languageInfo, ~iconTheme, fullPath),
         highlight: [],
         handle: None,
       };

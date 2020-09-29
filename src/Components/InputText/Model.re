@@ -195,6 +195,8 @@ module Internal = {
       )
     | ("<BS>", true) => removeCharBefore(text, selection)
     | ("<BS>", false) => removeSelection(text, selection)
+    | ("<C-BS>", true) => removeWord(text, selection)
+    | ("<C-BS>", false) => removeSelection(text, selection)
     | ("<C-h>", true) => removeCharBefore(text, selection)
     | ("<C-h>", false) => removeSelection(text, selection)
     | ("<C-w>", true) => removeWord(text, selection)
@@ -491,6 +493,71 @@ let%test_module "Model" =
                );
           };
           let%test "Removes selection for unicode characters" = {
+            notCollapsed(~text=uTestString, ~anchor=0, ~focus=7, ())
+            |> handleInput(~key)
+            == notCollapsed(~anchor=0, ~focus=0, ~text="s Cool", ());
+          };
+        });
+     let%test_module "When <C-BS> with no selection" =
+       (module
+        {
+          let key = "<C-BS>";
+          let%test "Removes word on the left of cursor" = {
+            collapsed(16)
+            |> handleInput(~key)
+            == collapsed(~text="Some . Test. String. Isn't it? Maybe", 5);
+          };
+          let%test "Doesn't remove word if cursor at the beginning" = {
+            collapsed(0) |> handleInput(~key) == collapsed(0);
+          };
+          let%test "Don't do anything for blank string" = {
+            collapsed(~text="", -1)
+            |> handleInput(~key) == collapsed(~text="", 0);
+          };
+          let%test "Removes word with cyrilic character in it" = {
+            collapsed(~text=uTestString, 5)
+            |> handleInput(~key) == collapsed(~text=" is Cool", 0);
+          };
+          let%test "Removes word made of emojis" = {
+            collapsed(~text=uTestString, 2)
+            |> handleInput(~key) == collapsed(~text="Вім is Cool", 0);
+          };
+        });
+     let%test_module "When <C-BS> with selection" =
+       (module
+        {
+          let key = "<C-BS>";
+          let%test "Removes selection when cursor comes first" = {
+            notCollapsed(~anchor=4, ~focus=2, ())
+            |> handleInput(~key)
+            == notCollapsed(
+                 ~anchor=2,
+                 ~focus=2,
+                 ~text="So interesting. Test. String. Isn't it? Maybe",
+                 (),
+               );
+          };
+          let%test "Removes selection when cursor comes last" = {
+            notCollapsed(~anchor=2, ~focus=4, ())
+            |> handleInput(~key)
+            == notCollapsed(
+                 ~anchor=2,
+                 ~focus=2,
+                 ~text="So interesting. Test. String. Isn't it? Maybe",
+                 (),
+               );
+          };
+          let%test "Removes selection when more than one word selected" = {
+            notCollapsed(~anchor=5, ~focus=23, ())
+            |> handleInput(~key)
+            == notCollapsed(
+                 ~anchor=5,
+                 ~focus=5,
+                 ~text="Some  String. Isn't it? Maybe",
+                 (),
+               );
+          };
+          let%test "Removes selection when unicode character" = {
             notCollapsed(~text=uTestString, ~anchor=0, ~focus=7, ())
             |> handleInput(~key)
             == notCollapsed(~anchor=0, ~focus=0, ~text="s Cool", ());

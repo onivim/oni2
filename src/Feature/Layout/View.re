@@ -470,6 +470,7 @@ module Layout = {
         ~provider,
         ~model as layout,
         ~config,
+        ~isFocused,
         ~isZenMode,
         ~showTabs,
         ~uiFont,
@@ -505,7 +506,7 @@ module Layout = {
                 uiFont
                 config
                 showTabs
-                isActive={group.id == layout.activeGroupId}
+                isActive={group.id == layout.activeGroupId && isFocused}
                 theme
                 model=group
                 dispatch
@@ -551,6 +552,7 @@ let make =
     (
       ~children as provider,
       ~model,
+      ~isFocused,
       ~isZenMode,
       ~showTabs,
       ~config,
@@ -564,6 +566,7 @@ let make =
       provider
       model={activeLayout(model)}
       config
+      isFocused
       isZenMode
       showTabs
       uiFont

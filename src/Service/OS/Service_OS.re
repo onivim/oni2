@@ -241,6 +241,8 @@ module Api = {
     };
 };
 
+// EFFECTS
+
 module Effect = {
   let openURL = url =>
     Isolinear.Effect.create(~name="os.openurl", () =>
@@ -259,4 +261,47 @@ module Effect = {
         paths,
       )
     );
+};
+
+// SUBSCRIPTIONS
+
+module Sub = {
+  type dirParams = {
+    id: string,
+    cwd: string,
+  };
+  module DirSub =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(list(Luv.File.Dirent.t), string);
+
+      type nonrec params = dirParams;
+
+      type state = unit;
+
+      let name = "Service_OS.Sub.dir";
+      let id = ({id, cwd}) => id ++ cwd;
+
+      let init = (~params, ~dispatch) => {
+        let promise = Api.readdir(params.cwd);
+
+        Lwt.on_success(promise, dirItems => dispatch(Ok(dirItems)));
+
+        Lwt.on_failure(promise, exn =>
+          dispatch(Error(Printexc.to_string(exn)))
+        );
+
+        ();
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => {
+        state;
+      };
+
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+  let dir = (~uniqueId, ~toMsg, path) => {
+    DirSub.create({id: uniqueId, cwd: path}) |> Isolinear.Sub.map(toMsg);
+  };
 };

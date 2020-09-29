@@ -15,10 +15,16 @@ module Msg: {
 };
 
 type outmsg =
+  | OpenFile({
+      filePath: string,
+      location: CharacterPosition.t,
+    })
   | Focus
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 let update: (model, msg) => (model, option(outmsg));
+
+let resetFocus: model => model;
 
 let subscriptions:
   (Ripgrep.t, msg => unit, model) => list(Subscription.t(msg));
@@ -27,16 +33,17 @@ let make:
   (
     ~theme: ColorTheme.Colors.t,
     ~uiFont: UiFont.t,
-    ~editorFont: Service_Font.font,
+    ~iconTheme: IconTheme.t,
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~isFocused: bool,
     ~model: model,
-    ~onSelectResult: (string, CharacterPosition.t) => unit,
     ~dispatch: msg => unit,
+    ~workingDirectory: string,
     unit
   ) =>
   React.element(React.node);
 
 module Contributions: {
   let commands: (~isFocused: bool) => list(Command.t(msg));
-  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
 };

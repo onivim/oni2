@@ -270,6 +270,8 @@ module SuggestItem: {
     [@deriving show]
     type t;
 
+    let none: t;
+
     let matches: (~rule: rule, t) => bool;
   };
   module SuggestRange: {
@@ -706,10 +708,22 @@ module Configuration: {
 };
 
 module Diagnostic: {
+  module Severity: {
+    [@deriving show]
+    type t =
+      | Hint
+      | Info
+      | Warning
+      | Error;
+
+    let toInt: t => int;
+    let ofInt: int => option(t);
+    let max: (t, t) => t;
+  };
   type t = {
     range: OneBasedRange.t,
     message: string,
-    severity: int,
+    severity: Severity.t,
   };
 
   let decode: Json.decoder(t);
@@ -1314,6 +1328,16 @@ module Msg: {
       | Unregister({handle: int});
   };
 
+  module Languages: {
+    [@deriving show]
+    type msg =
+      | GetLanguages
+      | ChangeLanguage({
+          uri: Oni_Core.Uri.t,
+          languageId: string,
+        });
+  };
+
   module MessageService: {
     [@deriving show]
     type msg =
@@ -1547,6 +1571,7 @@ module Msg: {
     | ExtensionService(ExtensionService.msg)
     | FileSystem(FileSystem.msg)
     | LanguageFeatures(LanguageFeatures.msg)
+    | Languages(Languages.msg)
     | MessageService(MessageService.msg)
     | OutputService(OutputService.msg)
     | Progress(Progress.msg)
@@ -1638,7 +1663,6 @@ module Request: {
   module Decorations: {
     type request = {
       id: int,
-      handle: int,
       uri: Uri.t,
     };
 
@@ -1653,7 +1677,7 @@ module Request: {
     type reply = IntMap.t(decoration);
 
     let provideDecorations:
-      (~requests: list(request), Client.t) => Lwt.t(reply);
+      (~handle: int, ~requests: list(request), Client.t) => Lwt.t(reply);
   };
 
   module DocumentContentProvider: {

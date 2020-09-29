@@ -60,8 +60,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Sneak => [Actions.Sneak(Feature_Sneak.KeyboardInput(k))]
 
     | FileExplorer => [
-        Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
+        Actions.FileExplorer(Feature_Explorer.Msg.keyPressed(k)),
       ]
+
+    | Pane => [Actions.Pane(Feature_Pane.Msg.keyPressed(k))]
 
     | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
 
@@ -102,6 +104,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           )
 
         // No paste handling in these UIs, currently...
+        | Pane => Actions.Noop
         | Terminal(_) => Actions.Noop
         | InsertRegister
         | Sneak
@@ -183,11 +186,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
      a revery element is focused oni2 should defer to revery
    */
   let handleKeyPress = (state: State.t, key) => {
-    let context =
-      WhenExpr.ContextKeys.fromSchema(
-        Model.ContextKeys.all(Model.FocusManager.current(state)),
-        state,
-      );
+    let context = Model.ContextKeys.all(state);
 
     let (keyBindings, effects) =
       Keybindings.keyDown(~context, ~key, state.keyBindings);
@@ -212,11 +211,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   };
 
   let handleKeyUp = (state: State.t, key) => {
-    let context =
-      WhenExpr.ContextKeys.fromSchema(
-        Model.ContextKeys.all(Model.FocusManager.current(state)),
-        state,
-      );
+    let context = Model.ContextKeys.all(state);
 
     //let inputKey = reveryKeyToEditorKey(key);
     let (keyBindings, effects) =

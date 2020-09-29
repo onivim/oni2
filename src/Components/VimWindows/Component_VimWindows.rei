@@ -21,7 +21,9 @@ type outmsg =
   | FocusLeft
   | FocusRight
   | FocusUp
-  | FocusDown;
+  | FocusDown
+  | PreviousTab
+  | NextTab;
 
 // UPDATE
 
@@ -31,6 +33,6 @@ let update: (msg, model) => (model, outmsg);
 
 module Contributions: {
   let commands: list(Command.t(msg));
-  let contextKeys: list(WhenExpr.ContextKeys.Schema.entry(model));
+  let contextKeys: model => WhenExpr.ContextKeys.t;
   let keybindings: list(Oni_Input.Keybindings.keybinding);
 };

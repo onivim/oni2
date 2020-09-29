@@ -45,6 +45,8 @@ module Internal = {
           | FocusRight => Actions.Layout(Feature_Layout.Msg.moveRight)
           | FocusUp => Actions.Layout(Feature_Layout.Msg.moveUp)
           | FocusDown => Actions.Layout(Feature_Layout.Msg.moveDown)
+          | PreviousTab => Actions.Noop
+          | NextTab => Actions.Noop
           }
         )
         |> dispatch
@@ -139,6 +141,10 @@ let update =
       ~extHostClient: Exthost.Client.t,
       ~getUserSettings,
       ~setup,
+      ~maximize,
+      ~minimize,
+      ~close,
+      ~restore,
       state: State.t,
       action: Actions.t,
     ) =>
@@ -158,6 +164,34 @@ let update =
       };
 
     ({...state, clipboard: model}, eff);
+
+  | Decorations(msg) =>
+    let (model, outMsg) =
+      Feature_Decorations.update(
+        ~client=extHostClient,
+        msg,
+        state.decorations,
+      );
+
+    let state = {...state, decorations: model};
+    let eff =
+      switch (outMsg) {
+      | Feature_Decorations.Nothing => Isolinear.Effect.none
+      | Feature_Decorations.Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Decorations(msg))
+      };
+    (state, eff);
+
+  | Diagnostics(msg) =>
+    let diagnostics = Feature_Diagnostics.update(msg, state.diagnostics);
+    (
+      {
+        ...state,
+        diagnostics,
+        pane: Feature_Pane.setDiagnostics(diagnostics, state.pane),
+      },
+      Isolinear.Effect.none,
+    );
 
   | Exthost(msg) =>
     let (model, outMsg) = Feature_Exthost.update(msg, state.exthost);
@@ -201,6 +235,11 @@ let update =
           let eff = Internal.setThemesEffect(~themes);
           (state, eff);
 
+        | UnhandledWindowMovement(movement) => (
+            state,
+            Internal.unhandledWindowMotionEffect(movement),
+          )
+
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =
             Internal.notificationEffect(
@@ -223,6 +262,31 @@ let update =
         }
       );
     (state', effect);
+
+  | FileExplorer(msg) =>
+    let (model, outmsg) =
+      Feature_Explorer.update(
+        ~configuration=state.configuration,
+        msg,
+        state.fileExplorer,
+      );
+
+    let state = {...state, fileExplorer: model};
+
+    Feature_Explorer.(
+      switch (outmsg) {
+      | Nothing => (state, Isolinear.Effect.none)
+      | Effect(effect) => (
+          state,
+          effect |> Isolinear.Effect.map(msg => FileExplorer(msg)),
+        )
+      | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
+      | GrabFocus => (
+          FocusManager.push(Focus.FileExplorer, state),
+          Isolinear.Effect.none,
+        )
+      }
+    );
 
   | Input(msg) =>
     let (model, outmsg) = Feature_Input.update(msg, state.input);
@@ -329,6 +393,18 @@ let update =
         state,
         Internal.openFileEffect(~position=Some(position), filePath),
       )
+    | UnhandledWindowMovement(windowMovement) => (
+        state,
+        Internal.unhandledWindowMotionEffect(windowMovement),
+      )
+    | GrabFocus => (
+        state |> FocusManager.push(Focus.Pane),
+        Isolinear.Effect.none,
+      )
+    | ReleaseFocus => (
+        state |> FocusManager.pop(Focus.Pane),
+        Isolinear.Effect.none,
+      )
     };
 
   | Registers(msg) =>
@@ -367,6 +443,11 @@ let update =
         FocusManager.push(Focus.Search, state),
         Effect.none,
       )
+
+    | Some(OpenFile({filePath, location})) => (
+        state,
+        Internal.openFileEffect(~position=Some(location), filePath),
+      )
     | Some(UnhandledWindowMovement(windowMovement)) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -379,19 +460,61 @@ let update =
       Feature_SCM.update(extHostClient, state.scm, msg);
     let state = {...state, scm: model};
 
-    let (state, eff) =
-      switch ((maybeOutmsg: Feature_SCM.outmsg)) {
-      | Focus => (FocusManager.push(Focus.SCM, state), Effect.none)
-      | Effect(eff) => (state, eff)
-      | EffectAndFocus(eff) => (FocusManager.push(Focus.SCM, state), eff)
-      | Nothing => (state, Effect.none)
-      };
+    switch ((maybeOutmsg: Feature_SCM.outmsg)) {
+    | Focus => (FocusManager.push(Focus.SCM, state), Effect.none)
+    | Effect(eff) => (state, eff |> Effect.map(msg => Actions.SCM(msg)))
+    | EffectAndFocus(eff) => (
+        FocusManager.push(Focus.SCM, state),
+        eff |> Effect.map(msg => Actions.SCM(msg)),
+      )
 
-    (state, eff |> Effect.map(msg => Actions.SCM(msg)));
+    | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
+    | UnhandledWindowMovement(windowMovement) => (
+        state,
+        Internal.unhandledWindowMotionEffect(windowMovement),
+      )
+    | Nothing => (state, Effect.none)
+    };
 
   | SideBar(msg) =>
-    let sideBar' = Feature_SideBar.update(msg, state.sideBar);
-    ({...state, sideBar: sideBar'}, Effect.none);
+    let (sideBar', outmsg) = Feature_SideBar.update(msg, state.sideBar);
+    let state = {...state, sideBar: sideBar'};
+
+    switch (outmsg) {
+    | Nothing => (state, Effect.none)
+    | PopFocus => (state |> FocusManager.push(Editor), Effect.none)
+    | Focus =>
+      let state' =
+        Feature_SideBar.(
+          switch (sideBar' |> Feature_SideBar.selected) {
+          | FileExplorer => state |> FocusManager.push(Focus.FileExplorer)
+          | SCM =>
+            {...state, scm: Feature_SCM.resetFocus(state.scm)}
+            |> FocusManager.push(Focus.SCM)
+          | Search =>
+            {
+              ...state,
+              searchPane: Feature_Search.resetFocus(state.searchPane),
+            }
+            |> FocusManager.push(Focus.Search)
+          | Extensions =>
+            {
+              ...state,
+              extensions: Feature_Extensions.resetFocus(state.extensions),
+            }
+            |> FocusManager.push(Focus.Extensions)
+          }
+        );
+      (
+        {
+          ...state',
+          // When the sidebar acquires focus, zen-mode should be disabled
+          zenMode: false,
+        },
+        Effect.none,
+      );
+    };
+
   | Sneak(msg) =>
     let (model, maybeOutmsg) = Feature_Sneak.update(state.sneak, msg);
 
@@ -407,7 +530,7 @@ let update =
   | StatusBar(msg) =>
     open Feature_StatusBar;
     let (statusBar', maybeOutmsg) =
-      Feature_StatusBar.update(state.statusBar, msg);
+      Feature_StatusBar.update(~client=extHostClient, state.statusBar, msg);
 
     let state' = {...state, statusBar: statusBar'};
 
@@ -468,6 +591,11 @@ let update =
             )
           }),
         );
+
+      | Effect(eff) => (
+          state',
+          eff |> Isolinear.Effect.map(msg => Actions.StatusBar(msg)),
+        )
       };
 
     (state'', eff);
@@ -617,6 +745,8 @@ let update =
 
     let focus =
       switch (FocusManager.current(state)) {
+      | Pane => Some(Bottom)
+
       | Editor
       | Terminal(_) => Some(Center)
 
@@ -635,13 +765,17 @@ let update =
 
     | Focus(Left) => (
         Feature_SideBar.isOpen(state.sideBar)
-          ? SideBarReducer.focus(state) : state,
+          ? switch (state.sideBar |> Feature_SideBar.selected) {
+            | FileExplorer => FocusManager.push(FileExplorer, state)
+            | SCM => FocusManager.push(SCM, state)
+            | Extensions => FocusManager.push(Extensions, state)
+            | Search => FocusManager.push(Search, state)
+            }
+          : state,
         Effect.none,
       )
 
-    | Focus(Bottom) =>
-      let pane = state.pane |> Feature_Pane.selected;
-      ({...state, pane: Feature_Pane.show(~pane, state.pane)}, Effect.none);
+    | Focus(Bottom) => (state |> FocusManager.push(Pane), Effect.none)
 
     | SplitAdded => ({...state, zenMode: false}, Effect.none)
 
@@ -862,6 +996,23 @@ let update =
       Internal.notificationEffect(~kind=Error, message),
     )
 
+  | TitleBar(titleBarMsg) =>
+    let eff =
+      switch (
+        Feature_TitleBar.update(
+          ~maximize,
+          ~minimize,
+          ~close,
+          ~restore,
+          titleBarMsg,
+        )
+      ) {
+      | Feature_TitleBar.Effect(effect) => effect
+      | Feature_TitleBar.Nothing => Isolinear.Effect.none
+      };
+
+    (state, eff |> Isolinear.Effect.map(msg => TitleBar(msg)));
+
   | SignatureHelp(msg) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
@@ -1042,6 +1193,20 @@ let update =
       {...state', languageSupport},
       eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
     );
+
+  | AutoUpdate(msg) =>
+    let (state', outmsg) = Feature_AutoUpdate.update(state.autoUpdate, msg);
+
+    let eff =
+      (
+        switch (outmsg) {
+        | Nothing => Isolinear.Effect.none
+        | Effect(eff) => eff
+        }
+      )
+      |> Isolinear.Effect.map(msg => Actions.AutoUpdate(msg));
+
+    ({...state, autoUpdate: state'}, eff);
 
   | _ => (state, Effect.none)
   };

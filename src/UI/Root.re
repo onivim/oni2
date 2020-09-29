@@ -61,19 +61,13 @@ module Styles = {
 };
 
 let make = (~dispatch, ~state: State.t, ()) => {
-  let State.{
-        configuration,
-        uiFont as font,
-        editorFont,
-        sideBar,
-        zenMode,
-        buffers,
-        _,
-      } = state;
+  let State.{configuration, uiFont as font, sideBar, zenMode, buffers, _} = state;
 
   let theme = Feature_Theme.colors(state.colorTheme);
 
   let mode = ModeManager.current(state);
+
+  let config = Feature_Configuration.resolver(state.config, state.vim);
 
   let maybeActiveBuffer = Oni_Model.Selectors.getActiveBuffer(state);
   let activeEditor = Feature_Layout.activeEditor(state.layout);
@@ -128,7 +122,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
 
   let sideBar = () =>
     if (!zenMode) {
-      <SideBarView theme state dispatch />;
+      <SideBarView config theme state dispatch />;
     } else {
       React.empty;
     };
@@ -174,10 +168,13 @@ let make = (~dispatch, ~state: State.t, ()) => {
 
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
+      activeBuffer=maybeActiveBuffer
+      workspaceRoot={state.workspace.rootName}
+      workspaceDirectory={state.workspace.workingDirectory}
+      config
       isFocused={state.windowIsFocused}
       windowDisplayMode={state.windowDisplayMode |> mapDisplayMode}
       font={state.uiFont}
-      title={state.windowTitle}
       theme
       dispatch=titleDispatch
     />
@@ -186,14 +183,17 @@ let make = (~dispatch, ~state: State.t, ()) => {
         {React.listToElement(surfaceComponents)}
       </View>
       <Feature_Pane.View
+        config
+        isFocused={FocusManager.current(state) == Focus.Pane}
+        iconTheme={state.iconTheme}
+        languageInfo={state.languageInfo}
         theme
         uiFont
-        editorFont
-        diagnostics={state.diagnostics}
         notifications={state.notifications}
         dispatch={msg => dispatch(Actions.Pane(msg))}
         notificationDispatch={msg => dispatch(Actions.Notification(msg))}
         pane={state.pane}
+        workingDirectory={state.workspace.workingDirectory}
       />
     </View>
     <Overlay>

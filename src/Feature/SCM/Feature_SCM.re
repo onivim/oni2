@@ -1,6 +1,5 @@
 open Oni_Core;
 open Utility;
-open Oni_Components;
 
 // MODEL
 
@@ -14,6 +13,7 @@ module ResourceGroup = {
     label: string,
     hideWhenEmpty: bool,
     resources: list(Resource.t),
+    viewModel: Component_VimList.model(Resource.t),
   };
 };
 
@@ -54,18 +54,148 @@ module Provider = {
 };
 
 [@deriving show({with_path: false})]
+module Focus = {
+  [@deriving show]
+  type t =
+    | CommitText
+    | Group({
+        providerHandle: int,
+        handle: int,
+        id: string,
+      });
+
+  let initial = CommitText;
+
+  let idx = (~handle, ~id, visibleGroups) => {
+    let rec loop = (currentIndex, remainingGroups) => {
+      switch (remainingGroups) {
+      | [] => None
+      | [(_provider, group), ...tail] =>
+        ResourceGroup.(
+          if (group.handle == handle && group.id == id) {
+            Some(currentIndex);
+          } else {
+            loop(currentIndex + 1, tail);
+          }
+        )
+      };
+    };
+
+    loop(0, visibleGroups);
+  };
+
+  let group = (~idx, visibleGroups) => {
+    let (provider: Provider.t, group: ResourceGroup.t) =
+      List.nth(visibleGroups, idx);
+    Group({
+      providerHandle: provider.handle,
+      handle: group.handle,
+      id: group.id,
+    });
+  };
+
+  let focusUp = (visibleGroups, focus) => {
+    switch (focus) {
+    | CommitText => None
+
+    | Group({handle, id, _}) =>
+      let maybeIdx = idx(~handle, ~id, visibleGroups);
+
+      switch (maybeIdx) {
+      // Somehow, our group isn't visible.. focus commit text
+      | None => Some(CommitText)
+
+      // Below top - focus group up
+      | Some(idx) when idx >= 1 => Some(group(~idx=idx - 1, visibleGroups))
+
+      // At top, focus text now
+      | Some(_) => Some(CommitText)
+      };
+    };
+  };
+
+  let focusDown = (visibleGroups, focus) => {
+    let groupCount = List.length(visibleGroups);
+    switch (focus) {
+    | CommitText when groupCount >= 1 => Some(group(~idx=0, visibleGroups))
+
+    | CommitText => None
+
+    | Group({handle, id, _}) =>
+      let maybeIdx = idx(~handle, ~id, visibleGroups);
+
+      switch (maybeIdx) {
+      | None when groupCount >= 1 => Some(group(~idx=0, visibleGroups))
+
+      // No groups, unhandled
+      | None => None
+
+      // Not at bottom - focus downward
+      | Some(idx) when idx < groupCount - 1 =>
+        Some(group(~idx=idx + 1, visibleGroups))
+
+      // At bottom, unhandled
+      | Some(_) => None
+      };
+    };
+  };
+
+  let isGroupFocused = (group: ResourceGroup.t, focus) => {
+    switch (focus) {
+    | CommitText => false
+    | Group({handle, id, _}) => group.handle == handle && group.id == id
+    };
+  };
+};
+
+open Focus;
+
+[@deriving show({with_path: false})]
 type model = {
   providers: list(Provider.t),
   inputBox: Component_InputText.model,
   textContentProviders: list((int, string)),
   originalLines: [@opaque] IntMap.t(array(string)),
+  vimWindowNavigation: Component_VimWindows.model,
+  focus: Focus.t,
 };
+
+let resetFocus = model => {...model, focus: Focus.initial};
 
 let initial = {
   providers: [],
   inputBox: Component_InputText.create(~placeholder="Do the commit thing!"),
   textContentProviders: [],
   originalLines: IntMap.empty,
+  vimWindowNavigation: Component_VimWindows.initial,
+  focus: Focus.initial,
+};
+
+let visibleGroups = ({providers, _}) => {
+  let groups = {
+    open Base.List.Let_syntax;
+
+    let%bind provider = providers;
+    let%bind group = provider.resourceGroups;
+    return((provider, group));
+  };
+
+  groups
+  |> List.filter(((_provider, group: ResourceGroup.t)) => {
+       !(group.resources == [] && group.hideWhenEmpty)
+     });
+};
+
+let selectedGroup = model => {
+  switch (model.focus) {
+  | CommitText => None
+  | Group({providerHandle, handle, _}) =>
+    visibleGroups(model)
+    |> List.filter(((provider: Provider.t, group: ResourceGroup.t)) => {
+         provider.handle == providerHandle && group.handle == handle
+       })
+    |> (list => List.nth_opt(list, 0))
+  };
 };
 
 let statusBarCommands = ({providers, _}: model) => {
@@ -167,7 +297,13 @@ type msg =
   | KeyPressed({key: string})
   | Pasted({text: string})
   | DocumentContentProvider(Exthost.Msg.DocumentContentProvider.msg)
-  | InputBox(Component_InputText.msg);
+  | InputBox(Component_InputText.msg)
+  | VimWindowNav(Component_VimWindows.msg)
+  | List({
+      provider: int,
+      group: int,
+      msg: Component_VimList.msg,
+    });
 
 module Msg = {
   let paste = text => Pasted({text: text});
@@ -180,6 +316,8 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
+  | OpenFile(string)
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | Nothing;
 
 module Effects = {
@@ -381,6 +519,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
                  label,
                  hideWhenEmpty: false,
                  resources: [],
+                 viewModel: Component_VimList.create(~rowHeight=20),
                },
                ...p.resourceGroups,
              ],
@@ -428,17 +567,22 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       additions,
     }) => (
       model
-      |> Internal.updateResourceGroup(~provider, ~group, g =>
-           {
-             ...g,
-             resources:
+      |> Internal.updateResourceGroup(
+           ~provider,
+           ~group,
+           g => {
+             let resources =
                ListEx.splice(
                  ~start=spliceStart,
                  ~deleteCount,
                  ~additions,
                  g.resources,
-               ),
-           }
+               );
+
+             let viewModel =
+               Component_VimList.set(resources |> Array.of_list, g.viewModel);
+             {...g, resources, viewModel};
+           },
          ),
       Nothing,
     )
@@ -511,6 +655,63 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       };
 
     ({...model, inputBox: inputBox'}, outmsg);
+
+  | VimWindowNav(navMsg) =>
+    let (windowNav, outmsg) =
+      Component_VimWindows.update(navMsg, model.vimWindowNavigation);
+
+    let model' = {...model, vimWindowNavigation: windowNav};
+    let (focus, outmsg) =
+      switch (outmsg) {
+      | Nothing => (model'.focus, Nothing)
+      | FocusLeft => (model'.focus, UnhandledWindowMovement(outmsg))
+      | FocusRight => (model'.focus, UnhandledWindowMovement(outmsg))
+      | FocusDown =>
+        switch (Focus.focusDown(visibleGroups(model'), model'.focus)) {
+        | None => (model'.focus, UnhandledWindowMovement(outmsg))
+        | Some(focus) => (focus, Nothing)
+        }
+      | FocusUp =>
+        switch (Focus.focusUp(visibleGroups(model'), model'.focus)) {
+        | None => (model'.focus, UnhandledWindowMovement(outmsg))
+        | Some(focus) => (focus, Nothing)
+        }
+
+      | PreviousTab
+      | NextTab => (model'.focus, Nothing)
+      };
+    ({...model', focus}, outmsg);
+
+  | List({provider, group, msg}) =>
+    // DIRTY IMPURE HACK: Capture the outmsg during the update
+    // This assumes that there is a unique (provider, group).
+    let capturedOutmsg = ref(None);
+
+    let model =
+      model
+      |> Internal.updateResourceGroup(
+           ~provider,
+           ~group,
+           g => {
+             let (viewModel, outmsg) =
+               Component_VimList.update(msg, g.viewModel);
+
+             let outmsg =
+               switch (outmsg) {
+               | Component_VimList.Nothing => Some(Nothing)
+               | Component_VimList.Selected({index}) =>
+                 Component_VimList.get(index, viewModel)
+                 |> Option.map((item: Resource.t) =>
+                      OpenFile(item.uri |> Oni_Core.Uri.toFileSystemPath)
+                    )
+               };
+
+             capturedOutmsg := outmsg;
+             {...g, viewModel};
+           },
+         );
+
+    (model, capturedOutmsg^ |> Option.value(~default=Nothing));
   };
 
 let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
@@ -621,7 +822,6 @@ let sub = (~activeBuffer, ~client, model) => {
 
 open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 
 module Colors = Feature_Theme.Colors;
 
@@ -639,30 +839,26 @@ module Pane = {
       textOverflow(`Ellipsis),
     ];
 
-    let item = (~isHovered, ~theme) => [
-      isHovered
-        ? backgroundColor(Colors.List.hoverBackground.from(theme))
-        : backgroundColor(Colors.SideBar.background.from(theme)),
+    let item = [
+      flexDirection(`Row),
       paddingVertical(2),
       marginLeft(6),
       cursor(MouseCursors.pointer),
     ];
   };
 
-  let%component itemView =
-                (
-                  ~provider: Provider.t,
-                  ~resource: Resource.t,
-                  ~theme,
-                  ~font: UiFont.t,
-                  ~workingDirectory,
-                  ~onClick,
-                  (),
-                ) => {
+  let itemView =
+      (
+        ~provider: Provider.t,
+        ~resource: Resource.t,
+        ~theme,
+        ~iconTheme,
+        ~languageInfo,
+        ~font: UiFont.t,
+        ~workingDirectory,
+        (),
+      ) => {
     open Base;
-    let%hook (isHovered, setHovered) = Hooks.state(false);
-    let onMouseOver = _ => setHovered(_ => true);
-    let onMouseOut = _ => setHovered(_ => false);
 
     let base =
       provider.rootUri
@@ -672,15 +868,14 @@ module Pane = {
     let path = Uri.toFileSystemPath(resource.uri);
     let displayName = Path.toRelative(~base, path);
 
-    <View style={Styles.item(~isHovered, ~theme)} onMouseOver onMouseOut>
-      <Clickable onClick>
-        <Text
-          style={Styles.text(~theme)}
-          text=displayName
-          fontFamily={font.family}
-          fontSize={font.size}
-        />
-      </Clickable>
+    <View style=Styles.item>
+      <Oni_Components.FileIcon font iconTheme languageInfo path />
+      <Text
+        style={Styles.text(~theme)}
+        text=displayName
+        fontFamily={font.family}
+        fontSize={font.size}
+      />
     </View>;
   };
 
@@ -688,36 +883,48 @@ module Pane = {
       (
         ~provider,
         ~group: ResourceGroup.t,
+        ~iconTheme,
+        ~languageInfo,
         ~theme,
+        ~isFocused: bool,
         ~font: UiFont.t,
+        ~dispatch,
         ~workingDirectory,
-        ~onItemClick,
         ~onTitleClick,
         ~expanded,
         (),
       ) => {
     let label = group.label;
-    let items = Array.of_list(group.resources);
-    let renderItem = (items, idx) => {
-      let resource = items[idx];
+    let renderItem =
+        (
+          ~availableWidth as _,
+          ~index as _,
+          ~hovered as _,
+          ~selected as _,
+          item,
+        ) => {
       <itemView
         provider
-        resource
+        resource=item
+        iconTheme
+        languageInfo
         theme
         font
         workingDirectory
-        onClick={() => onItemClick(resource)}
       />;
     };
-    <Accordion
+    <Component_Accordion.VimList
       title=label
       expanded
       uiFont=font
-      rowHeight=20
-      count={Array.length(items)}
-      renderItem={renderItem(items)}
-      focused=None
+      model={group.viewModel}
+      dispatch={msg =>
+        dispatch(List({provider: provider.handle, group: group.handle, msg}))
+      }
+      isFocused
+      render=renderItem
       theme
+      //focused=None
       onClick=onTitleClick
     />;
   };
@@ -726,21 +933,15 @@ module Pane = {
                 (
                   ~model,
                   ~workingDirectory,
-                  ~onItemClick,
                   ~isFocused,
+                  ~iconTheme,
+                  ~languageInfo,
                   ~theme,
                   ~font: UiFont.t,
                   ~dispatch,
                   (),
                 ) => {
-    let groups = {
-      open Base.List.Let_syntax;
-
-      let%bind provider = model.providers;
-      let%bind group = provider.resourceGroups;
-
-      return((provider, group));
-    };
+    let groups = visibleGroups(model);
 
     let%hook (localState, localDispatch) =
       Hooks.reducer(~initialState=StringMap.empty, (msg, model) => {
@@ -758,7 +959,7 @@ module Pane = {
       <View style=Styles.inputContainer>
         <Component_InputText.View
           model={model.inputBox}
-          isFocused
+          isFocused={isFocused && model.focus == CommitText}
           fontFamily={font.family}
           fontSize={font.size}
           dispatch={msg => dispatch(InputBox(msg))}
@@ -766,27 +967,24 @@ module Pane = {
         />
       </View>
       {groups
-       |> List.filter_map(((provider, group: ResourceGroup.t)) => {
+       |> List.map(((provider, group: ResourceGroup.t)) => {
             let expanded =
               StringMap.find_opt(group.label, localState)
               |> Option.value(~default=true);
 
-            if (group.resources == [] && group.hideWhenEmpty) {
-              None;
-            } else {
-              Some(
-                <groupView
-                  provider
-                  expanded
-                  group
-                  theme
-                  font
-                  workingDirectory
-                  onItemClick
-                  onTitleClick={() => localDispatch(group.label)}
-                />,
-              );
-            };
+            <groupView
+              provider
+              expanded
+              group
+              dispatch
+              isFocused={isFocused && isGroupFocused(group, model.focus)}
+              iconTheme
+              languageInfo
+              theme
+              font
+              workingDirectory
+              onTitleClick={() => localDispatch(group.label)}
+            />;
           })
        |> React.listToElement}
     </View>;
@@ -794,12 +992,51 @@ module Pane = {
 };
 
 module Contributions = {
-  open WhenExpr.ContextKeys.Schema;
+  let commands = (~isFocused, model) => {
+    let listCommands =
+      switch (model.focus) {
+      | CommitText => []
+      | Group({providerHandle, handle, _}) =>
+        Component_VimList.Contributions.commands
+        |> List.map(
+             Oni_Core.Command.map(msg =>
+               List({provider: providerHandle, group: handle, msg})
+             ),
+           )
+      };
 
-  let contextKeys = (~isFocused) => {
-    let keys = isFocused ? Component_InputText.Contributions.contextKeys : [];
+    !isFocused
+      ? []
+      : (
+          Component_VimWindows.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
+        )
+        @ listCommands;
+  };
 
-    [keys |> fromList |> map(({inputBox, _}: model) => inputBox)]
-    |> unionMany;
+  let contextKeys = (~isFocused, model) => {
+    open WhenExpr.ContextKeys;
+    let inputKeys =
+      isFocused && model.focus == CommitText
+        ? Component_InputText.Contributions.contextKeys(model.inputBox)
+        : empty;
+
+    let listKeys =
+      isFocused && model.focus != CommitText
+        ? selectedGroup(model)
+          |> Option.map(((_provider, group: ResourceGroup.t)) => {
+               Component_VimList.Contributions.contextKeys(group.viewModel)
+             })
+          |> Option.value(~default=empty)
+        : empty;
+
+    let vimNavKeys =
+      isFocused
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
+
+    [inputKeys, listKeys, vimNavKeys] |> unionMany;
   };
 };
