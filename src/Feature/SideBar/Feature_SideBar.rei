@@ -62,6 +62,7 @@ let setDefaults: (model, settings) => model;
 
 module Contributions: {
   let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
   let keybindings: list(Oni_Input.Keybindings.keybinding);
   let contextKeys:
     (~isFocused: bool) => list(WhenExpr.ContextKeys.Schema.entry(model));

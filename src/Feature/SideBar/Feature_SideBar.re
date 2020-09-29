@@ -1,3 +1,5 @@
+open Oni_Core;
+
 type pane =
   | FileExplorer
   | SCM
@@ -285,6 +287,44 @@ module ContextKeys = {
   };
 };
 
+module Configuration = {
+  open Config.Schema;
+  module CustomDecoders: {
+    let location:
+      codec([ | `Left | `Right ]);
+  } = {
+    let location = custom(
+      ~decode=Json.Decode.(
+        string
+        |> and_then(fun
+        | "left" => succeed(`Left)
+        | "right" => succeed(`Right)
+        | other => fail("Unknown location: " ++ other)
+        )),
+      ~encode=Json.Encode.(
+        location => switch(location) {
+        | `Left => string("left")
+        | `Right => string("right")
+        }
+      )
+      )
+  };
+
+  let visible =
+    setting(
+      "workbench.sideBar.visible",
+      bool,
+      ~default=true,
+    );
+
+  let location = 
+    setting(
+      "workbench.sideBar.location",
+      CustomDecoders.location,
+      ~default=`Left
+    );
+};
+
 module Contributions = {
   let commands =
     Commands.[
@@ -294,6 +334,11 @@ module Contributions = {
       openSCMPane,
       toggleSidebar,
     ];
+
+  let configuration = Configuration.[
+    visible.spec,
+    location.spec,
+  ];
 
   let keybindings =
     Keybindings.[

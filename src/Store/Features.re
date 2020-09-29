@@ -700,7 +700,7 @@ let update =
       switch (outmsg) {
       | ConfigurationChanged({changed}) =>
         Isolinear.Effect.create(
-          ~name="featuers.configuration$acceptConfigurationChanged", () => {
+          ~name="features.configuration$acceptConfigurationChanged", () => {
           let configuration =
             Feature_Configuration.toExtensionConfiguration(
               config,
