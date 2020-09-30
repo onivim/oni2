@@ -72,6 +72,7 @@ external vimCommand: string => unit = "libvim_vimCommand";
 external vimGetMode: unit => mode = "libvim_vimGetMode";
 
 external vimBufferOpen: string => buffer = "libvim_vimBufferOpen";
+external vimBufferLoad: string => buffer = "libvim_vimBufferLoad";
 external vimBufferGetId: buffer => int = "libvim_vimBufferGetId";
 external vimBufferGetById: int => option(buffer) = "libvim_vimBufferGetById";
 external vimBufferGetCurrent: unit => buffer = "libvim_vimBufferGetCurrent";
