@@ -8,7 +8,8 @@ open Oni_Core;
 [@deriving show({with_path: false})]
 type pane =
   | Diagnostics
-  | Notifications;
+  | Notifications
+  | Locations;
 
 [@deriving show({with_path: false})]
 type msg;

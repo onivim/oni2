@@ -7,7 +7,8 @@ open Oni_Core;
 [@deriving show({with_path: false})]
 type pane =
   | Diagnostics
-  | Notifications;
+  | Notifications
+  | Locations;
 
 module Constants = {
   let defaultHeight = 225;
@@ -28,7 +29,8 @@ type msg =
   | ResizeCommitted
   | KeyPressed(string)
   | VimWindowNav(Component_VimWindows.msg)
-  | DiagnosticsList(Component_VimTree.msg);
+  | DiagnosticsList(Component_VimTree.msg)
+  | LocationsList(Component_VimTree.msg);
 
 module Msg = {
   let keyPressed = key => KeyPressed(key);
@@ -53,6 +55,8 @@ type model = {
   resizeDelta: int,
   vimWindowNavigation: Component_VimWindows.model,
   diagnosticsView:
+    Component_VimTree.model(string, Oni_Components.LocationListItem.t),
+  locationsView:
     Component_VimTree.model(string, Oni_Components.LocationListItem.t),
 };
 
@@ -110,7 +114,8 @@ module Focus = {
     let pane =
       switch (model.selected) {
       | Diagnostics => Notifications
-      | Notifications => Diagnostics
+      | Notifications => Locations
+      | Locations => Diagnostics
       };
     {...model, selected: pane};
   };
@@ -147,6 +152,7 @@ let update = (msg, model) =>
   | KeyPressed(key) =>
     switch (model.selected) {
     | Notifications => (model, Nothing)
+    | Locations => (model, Nothing)
     | Diagnostics => (
         {
           ...model,
@@ -187,6 +193,20 @@ let update = (msg, model) =>
       };
 
     ({...model, diagnosticsView}, eff);
+
+  | LocationsList(listMsg) =>
+    let (locationsView, outmsg) =
+      Component_VimTree.update(listMsg, model.locationsView);
+
+    let eff =
+      switch (outmsg) {
+      | Component_VimTree.Nothing => Nothing
+      | Component_VimTree.Selected(item) => Nothing
+      | Component_VimTree.Collapsed(_) => Nothing
+      | Component_VimTree.Expanded(_) => Nothing
+      };
+
+    ({...model, locationsView}, eff);
   };
 
 let initial = {
@@ -197,6 +217,7 @@ let initial = {
 
   vimWindowNavigation: Component_VimWindows.initial,
   diagnosticsView: Component_VimTree.create(~rowHeight=20),
+  locationsView: Component_VimTree.create(~rowHeight=20),
 };
 
 let selected = ({selected, _}) => selected;
@@ -344,6 +365,7 @@ module View = {
         (),
       ) =>
     switch (selected) {
+    | Locations => <Text text="Hello, world" />
     | Diagnostics =>
       <DiagnosticsPaneView
         isFocused
@@ -397,6 +419,9 @@ module View = {
     let notificationsTabClicked = () => {
       dispatch(TabClicked(Notifications));
     };
+    let locationsTabClicked = () => {
+      dispatch(TabClicked(Locations));
+    };
 
     if (!isOpen(pane) && !isFocused) {
       <View />;
@@ -432,6 +457,13 @@ module View = {
               title="Notifications"
               onClick=notificationsTabClicked
               isActive={isSelected(Notifications, pane)}
+            />
+            <PaneTab
+              uiFont
+              theme
+              title="Locations"
+              onClick=locationsTabClicked
+              isActive={isSelected(Locations, pane)}
             />
           </View>
           <closeButton dispatch theme />

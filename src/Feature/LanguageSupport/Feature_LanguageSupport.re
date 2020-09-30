@@ -379,8 +379,9 @@ module Contributions = {
 
   let keybindings =
     Rename.Contributions.keybindings
+    @ Completion.Contributions.keybindings
     @ Definition.Contributions.keybindings
-    @ Completion.Contributions.keybindings;
+    @ References.Contributions.keybindings;
 };
 
 module OldCompletion = Completion;

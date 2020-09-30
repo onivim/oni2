@@ -53,6 +53,7 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) => {
     ({...model, state: InProgress}, Outmsg.Effect(eff));
   | ReferencesNotAvailable => (model, Outmsg.Nothing)
   | ReferencesFound(locations) =>
+    prerr_endline ("FOUND REFERENCES: " ++ string_of_int(List.length(locations)));
     let state' =
       switch (model.state) {
       | Empty
@@ -80,11 +81,25 @@ module Commands = {
     define(
       ~category="References",
       ~title="Find All References",
-      "references-view.find",
+      "editor.action.goToReferences",
       Command(FindAll),
     );
 };
 
+module Keybindings = {
+  open Oni_Input.Keybindings;
+
+  let condition = "editorTextFocus && normalMode" |> WhenExpr.parse;
+
+  // TODO: Fix this
+  let shiftF12 = {
+    key: "<F10>",
+    command: Commands.findAll.id,
+    condition,
+  };
+};
+
 module Contributions = {
   let commands = Commands.[findAll];
+  let keybindings = Keybindings.[shiftF12];
 };
