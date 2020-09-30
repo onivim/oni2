@@ -92,6 +92,7 @@ module ExpansionContext = {
 
 [@deriving show]
 type activeIndentRange = {
+  level: int,
   start: int,
   stop: int,
 };
@@ -160,14 +161,27 @@ let calculateIndentGuides = model => {
   let selectedIndex = model.treeAsList |> Component_VimList.selectedIndex;
 
   let count = model.treeAsList |> Component_VimList.count;
-  let rec travel = (~direction, ~iteration, idx) =>
+  let rec travel = (~indentationLevel, ~direction, ~iteration, idx) =>
     if (idx + direction <= 0 || idx + direction >= count || iteration > 250) {
       idx;
     } else {
       switch (Component_VimList.get(idx + direction, model.treeAsList)) {
       | Some(ViewLeaf(_)) =>
-        travel(~direction, ~iteration=iteration + 1, idx + direction)
-      | Some(ViewNode(_)) => idx
+        travel(
+          ~indentationLevel,
+          ~direction,
+          ~iteration=iteration + 1,
+          idx + direction,
+        )
+      | Some(ViewNode({indentationLevel: indent, _}))
+          when indent < indentationLevel => idx
+      | Some(ViewNode(_)) =>
+        travel(
+          ~indentationLevel,
+          ~direction,
+          ~iteration=iteration + 1,
+          idx + direction,
+        )
       | None => idx
       };
     };
@@ -177,20 +191,37 @@ let calculateIndentGuides = model => {
     |> Component_VimList.get(selectedIndex)
     |> OptionEx.flatMap(item => {
          switch (item) {
-         | TreeList.ViewNode(_) => None
-         | TreeList.ViewLeaf(_) =>
-           let start = travel(~direction=-1, ~iteration=0, selectedIndex);
-           let stop = travel(~direction=1, ~iteration=0, selectedIndex);
-           Some({start, stop});
+         | TreeList.ViewNode({indentationLevel, _})
+         | TreeList.ViewLeaf({indentationLevel, _}) =>
+           let start =
+             travel(
+               ~indentationLevel,
+               ~direction=-1,
+               ~iteration=0,
+               selectedIndex,
+             );
+           let stop =
+             travel(
+               ~indentationLevel,
+               ~direction=1,
+               ~iteration=0,
+               selectedIndex,
+             );
+           Some({level: indentationLevel, start, stop});
          }
        });
   {...model, activeIndentRange};
 };
 
-let isActiveIndent = (index, model) => {
+let activeLevel = (index, model) => {
   model.activeIndentRange
-  |> Option.map(range => {index >= range.start && index <= range.stop})
-  |> Option.value(~default=false);
+  |> OptionEx.flatMap(range =>
+       if (index >= range.start && index <= range.stop) {
+         Some(range.level);
+       } else {
+         None;
+       }
+     );
 };
 
 let updateTreeList = (~searchText=?, treesWithId, expansionContext, model) => {
@@ -333,12 +364,13 @@ module View = {
     />;
   };
 
-  let indent = (~level, ~width, ~height, ~color) => {
-    List.init(level, _ =>
+  let indent =
+      (~activeLevel, ~level, ~width, ~height, ~inactiveColor, ~activeColor) => {
+    List.init(level, i =>
       indentGuide(
         ~horizontalSize=width,
         ~verticalSize=height,
-        ~strokeColor=color,
+        ~strokeColor=Some(i + 1) == activeLevel ? activeColor : inactiveColor,
       )
     );
   };
@@ -367,12 +399,14 @@ module View = {
     let activeIndentColor = Colors.List.activeIndentGuide.from(theme);
     let inactiveIndentColor = Colors.List.inactiveIndentGuide.from(theme);
 
-    let makeIndent = (~isActive, level) => {
+    let makeIndent = (~activeLevel, level) => {
       indent(
+        ~activeLevel,
         ~level,
         ~width=indentWidth,
         ~height=indentHeight,
-        ~color=isActive ? activeIndentColor : inactiveIndentColor,
+        ~inactiveColor=inactiveIndentColor,
+        ~activeColor=activeIndentColor,
       )
       |> React.listToElement;
     };
@@ -390,7 +424,7 @@ module View = {
           switch (item) {
           | TreeList.ViewLeaf({indentationLevel, data}) => [
               makeIndent(
-                ~isActive=isActiveIndent(index, model),
+                ~activeLevel=activeLevel(index, model),
                 indentationLevel,
               ),
               render(
@@ -411,7 +445,10 @@ module View = {
               );
 
             [
-              makeIndent(~isActive=false, indentationLevel),
+              makeIndent(
+                ~activeLevel=activeLevel(index, model),
+                indentationLevel,
+              ),
               icon,
               render(
                 ~availableWidth,
