@@ -102,6 +102,8 @@ type model('node, 'leaf) = {
   [@deriving show]
   rowHeight: int,
   activeIndentRange: option(activeIndentRange),
+  maybeSearchFunction:
+    [@opaque] option(TreeList.t(withUniqueId('node), 'leaf) => string),
   trees: list(Tree.t(withUniqueId('node), 'leaf)),
   treeAsList:
     Component_VimList.model(TreeList.t(withUniqueId('node), 'leaf)),
@@ -120,6 +122,11 @@ let findIndex = (f, {treeAsList, _}) => {
   Component_VimList.findIndex(pred, treeAsList);
 };
 
+let keyPress = (key, {treeAsList, _} as model) => {
+  ...model,
+  treeAsList: Component_VimList.keyPress(key, treeAsList),
+};
+
 let scrollTo = (~index, ~alignment, {treeAsList, _} as model) => {
   {
     ...model,
@@ -133,6 +140,7 @@ let create = (~rowHeight) => {
   rowHeight,
   trees: [],
   treeAsList: Component_VimList.create(~rowHeight),
+  maybeSearchFunction: None,
 };
 
 module Constants = {
@@ -185,7 +193,7 @@ let isActiveIndent = (index, model) => {
   |> Option.value(~default=false);
 };
 
-let updateTreeList = (treesWithId, expansionContext, model) => {
+let updateTreeList = (~searchText=?, treesWithId, expansionContext, model) => {
   let trees =
     treesWithId
     |> List.map(ExpansionContext.overrideExpansions(expansionContext))
@@ -196,7 +204,7 @@ let updateTreeList = (treesWithId, expansionContext, model) => {
   {
     ...model,
     expansionContext,
-    treeAsList: Component_VimList.set(trees, model.treeAsList),
+    treeAsList: Component_VimList.set(~searchText?, trees, model.treeAsList),
   };
 };
 
@@ -234,6 +242,7 @@ let update = (msg, model) => {
 
 let set =
     (
+      ~searchText=?,
       ~uniqueId,
       trees: list(Tree.t('node, 'leaf)),
       model: model('node, 'leaf),
@@ -258,8 +267,34 @@ let set =
          model.expansionContext,
        );
 
+  let maybeSearchFunction =
+    searchText
+    |> Option.map(search => {
+         let f = (nodeOrLeaf: TreeList.t(withUniqueId('node), 'leaf)) =>
+           switch (nodeOrLeaf) {
+           | ViewNode({expanded, indentationLevel, data}) =>
+             search(
+               Node({
+                 expanded,
+                 indentation: indentationLevel,
+                 data: data.inner,
+               }),
+             )
+           | ViewLeaf({indentationLevel, data}) =>
+             search(Leaf({indentation: indentationLevel, data}))
+           };
+         f;
+       });
+
   {
-    ...updateTreeList(treesWithId, expansionContext, model),
+    ...
+      updateTreeList(
+        ~searchText=?maybeSearchFunction,
+        treesWithId,
+        expansionContext,
+        model,
+      ),
+    maybeSearchFunction,
     trees: treesWithId,
   };
 };
@@ -317,7 +352,16 @@ module View = {
       />
     </View>;
   let make =
-      (~isActive, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
+      (
+        ~isActive,
+        ~font,
+        ~focusedIndex,
+        ~theme,
+        ~model,
+        ~dispatch,
+        ~render,
+        (),
+      ) => {
     let indentHeight = model.rowHeight;
     let indentWidth = Constants.indentSize;
     let activeIndentColor = Colors.List.activeIndentGuide.from(theme);
@@ -335,6 +379,7 @@ module View = {
 
     <Component_VimList.View
       isActive
+      font
       focusedIndex
       theme
       model={model.treeAsList}
