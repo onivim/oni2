@@ -968,35 +968,62 @@ module SymbolIcon = {
   let booleanForeground =
     define("symbolIcon.booleanForeground", all(ref(foreground)));
   let classForeground =
-    define("symbolIcon.classForeground", all(ref(foreground)));
+    define(
+      "symbolIcon.classForeground",
+      {dark: hex("#EE9D28"), light: hex("#D67E00"), hc: hex("#EE9D28")},
+    );
   let colorForeground =
     define("symbolIcon.colorForeground", all(ref(foreground)));
   let constantForeground =
     define("symbolIcon.constantForeground", all(ref(foreground)));
   let constructorForeground =
-    define("symbolIcon.constructorForeground", all(ref(foreground)));
+    define(
+      "symbolIcon.constructorForeground",
+      {dark: hex("#B180D7"), light: hex("#652D90"), hc: hex("#B180D7")},
+    );
   let enumeratorForeground =
-    define("symbolIcon.enumeratorForeground", all(ref(foreground)));
+    define(
+      "symbolIcon.enumeratorForeground",
+      {dark: hex("#EE9D28"), light: hex("#D67E00"), hc: hex("#EE9D28")},
+    );
   let enumeratorMemberForeground =
-    define("symbolIcon.enumeratorMemberForeground", all(ref(foreground)));
+    define(
+      "symbolIcon.enumeratorMemberForeground",
+      {dark: hex("#75BEFF"), light: hex("#007ACC"), hc: hex("#75BEFF")},
+    );
   let eventForeground =
-    define("symbolIcon.eventForeground", all(ref(foreground)));
+    define(
+      "symbolIcon.eventForeground",
+      {dark: hex("#EE9D28"), light: hex("#D67E00"), hc: hex("#EE9D28")},
+    );
   let fieldForeground =
-    define("symbolIcon.fieldForeground", all(ref(foreground)));
+    define(
+      "symbolIcon.fieldForeground",
+      {dark: hex("#75BEFF"), light: hex("#007ACC"), hc: hex("#75BEFF")},
+    );
   let fileForeground =
     define("symbolIcon.fileForeground", all(ref(foreground)));
   let folderForeground =
     define("symbolIcon.folderForeground", all(ref(foreground)));
   let functionForeground =
-    define("symbolIcon.functionForeground", all(ref(foreground)));
+    define(
+      "symbolIcon.functionForeground",
+      {dark: hex("#B180D7"), light: hex("#652D90"), hc: hex("#B180D7")},
+    );
   let interfaceForeground =
-    define("symbolIcon.interfaceForeground", all(ref(foreground)));
+    define(
+      "symbolIcon.interfaceForeground",
+      {dark: hex("#75BEFF"), light: hex("#007ACC"), hc: hex("#75BEFF")},
+    );
   let keyForeground =
     define("symbolIcon.keyForeground", all(ref(foreground)));
   let keywordForeground =
     define("symbolIcon.keywordForeground", all(ref(foreground)));
   let methodForeground =
-    define("symbolIcon.methodForeground", all(ref(foreground)));
+    define(
+      "symbolIcon.methodForeground",
+      {dark: hex("#B180D7"), light: hex("#652D90"), hc: hex("#B180D7")},
+    );
   let moduleForeground =
     define("symbolIcon.moduleForeground", all(ref(foreground)));
   let namespaceForeground =
@@ -1026,7 +1053,10 @@ module SymbolIcon = {
   let unitForeground =
     define("symbolIcon.unitForeground", all(ref(foreground)));
   let variableForeground =
-    define("symbolIcon.variableForeground", all(ref(foreground)));
+    define(
+      "symbolIcon.variableForeground",
+      {dark: hex("#75BEFF"), light: hex("#007ACC"), hc: hex("#75BEFF")},
+    );
 
   let defaults = [
     arrayForeground,

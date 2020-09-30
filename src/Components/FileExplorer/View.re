@@ -13,9 +13,10 @@ let make =
       (),
     ) => {
   switch ((model: Model.model)) {
-  | {tree: Some(_), treeView, active, _} =>
+  | {tree: Some(_), treeView, active, rootName, _} =>
     let focusedIndex = Model.getFocusedIndex(model);
     <FileTreeView
+      rootName
       isFocused
       iconTheme
       languageInfo

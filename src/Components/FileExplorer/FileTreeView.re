@@ -95,6 +95,7 @@ let getFileIcon = Model.getFileIcon;
 
 let make =
     (
+      ~rootName,
       ~isFocused,
       ~iconTheme,
       ~languageInfo,
@@ -109,13 +110,17 @@ let make =
       (),
     ) => {
   <View style=Styles.container>
-    <Component_VimTree.View
-      isActive=isFocused
-      font
+    <Component_Accordion.VimTree
+      title=rootName
+      showCount=false
+      isFocused
       focusedIndex
+      expanded=true
       theme
+      uiFont=font
       model=treeView
       dispatch={msg => dispatch(Tree(msg))}
+      onClick={() => ()}
       render={(
         ~availableWidth as _,
         ~index as _,

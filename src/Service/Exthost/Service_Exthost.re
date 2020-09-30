@@ -767,4 +767,56 @@ module Sub = {
     )
     |> Isolinear.Sub.map(toMsg);
   };
+
+  let idFromBufferHandle = (~handle, ~buffer) =>
+    Printf.sprintf(
+      "%d.%d.%d",
+      handle,
+      Oni_Core.Buffer.getVersion(buffer),
+      Oni_Core.Buffer.getId(buffer),
+    );
+
+  type bufferHandleParams = {
+    handle: int,
+    buffer: Oni_Core.Buffer.t,
+    client: Exthost.Client.t,
+  };
+
+  module DocumentSymbolsSub =
+    Isolinear.Sub.Make({
+      type nonrec msg = list(Exthost.DocumentSymbol.t);
+      type nonrec params = bufferHandleParams;
+
+      type state = unit;
+
+      let name = "Service_Exthost.DocumentSymbolSubscription";
+      let id = ({handle, buffer, _}: params) =>
+        idFromBufferHandle(~handle, ~buffer);
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideDocumentSymbols(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            params.client,
+          );
+
+        Lwt.on_success(promise, documentSymbols => dispatch(documentSymbols));
+
+        Lwt.on_failure(promise, _err => dispatch([]));
+
+        ();
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+
+  let documentSymbols = (~handle, ~buffer, ~toMsg, client) => {
+    DocumentSymbolsSub.create({handle, buffer, client})
+    |> Isolinear.Sub.map(toMsg);
+  };
 };

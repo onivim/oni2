@@ -4,276 +4,324 @@ module Log = (val Log.withNamespace("Oni2.Feature.Explorer"));
 
 // MODEL
 
-include Model;
+type focus =
+  | FileExplorer
+  | Outline;
 
-module Internal = {
-  let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
-    switch (a, b) {
-    | (Node(_), Leaf(_)) => (-1)
-    | (Leaf(_), Node(_)) => 1
-    | (Node({data: a, _}), Node({data: b, _}))
-    | (Leaf(a), Leaf(b)) =>
-      compare(
-        a.displayName |> String.lowercase_ascii,
-        b.displayName |> String.lowercase_ascii,
-      )
-    };
-  };
-
-  let luvDirentToFsTree = (~cwd, {name, kind}: Luv.File.Dirent.t) => {
-    let path = Filename.concat(cwd, name);
-    if (kind == `FILE || kind == `LINK) {
-      Some(FsTreeNode.file(path));
-    } else if (kind == `DIR) {
-      Some(FsTreeNode.directory(path, ~children=[]));
-    } else {
-      None;
-    };
-  };
-
-  let luvDirentsToFsTree = (~cwd, ~ignored, dirents) => {
-    dirents
-    |> List.filter(({name, _}: Luv.File.Dirent.t) =>
-         name != ".." && name != "." && !List.mem(name, ignored)
-       )
-    |> List.filter_map(luvDirentToFsTree(~cwd))
-    |> List.sort(sortByLoweredDisplayName);
-  };
-
-  /**
-    getFilesAndFolders
-
-     This function uses Lwt to get all the files and folders in a directory
-     then for each we check if it is a file or folder.
-     if it is a directory we recursively call getFilesAndFolders on it
-     to resolves its subfolders and files. We do this concurrently using
-     Lwt_list.map_p. The recursion is gated by the depth value so it does
-     not recurse too far.
-   */
-  let getFilesAndFolders = (~ignored, cwd) => {
-    cwd
-    |> Service_OS.Api.readdir
-    |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd));
-  };
-
-  let getDirectoryTree = (cwd, ignored) => {
-    let childrenPromise = getFilesAndFolders(~ignored, cwd);
-
-    childrenPromise
-    |> Lwt.map(children => {
-         FsTreeNode.directory(cwd, ~children, ~isOpen=true)
-       });
-  };
+type model = {
+  focus,
+  fileExplorer: Component_FileExplorer.model,
+  symbolOutline:
+    Component_VimTree.model(
+      Feature_LanguageSupport.DocumentSymbols.symbol,
+      Feature_LanguageSupport.DocumentSymbols.symbol,
+    ),
+  vimWindowNavigation: Component_VimWindows.model,
 };
 
-module Effects = {
-  let load = (directory, configuration, ~onComplete) => {
-    Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
-      let ignored =
-        Configuration.getValue(c => c.filesExclude, configuration);
-      let promise = Internal.getDirectoryTree(directory, ignored);
+[@deriving show]
+type msg =
+  | KeyboardInput(string)
+  | FileExplorer(Component_FileExplorer.msg)
+  | SymbolOutline(Component_VimTree.msg)
+  | SymbolsChanged(
+      [@opaque] option(Feature_LanguageSupport.DocumentSymbols.t),
+    )
+  | VimWindowNav(Component_VimWindows.msg);
 
-      Lwt.on_success(promise, tree => {dispatch(onComplete(tree))});
-    });
-  };
+module Msg = {
+  let keyPressed = key => KeyboardInput(key);
+  let activeFileChanged = path =>
+    FileExplorer(Component_FileExplorer.Msg.activeFileChanged(path));
 };
 
-// UPDATE
+let initial = (~rootPath) => {
+  focus: FileExplorer,
+  fileExplorer: Component_FileExplorer.initial(~rootPath),
+  symbolOutline: Component_VimTree.create(~rowHeight=20),
+  vimWindowNavigation: Component_VimWindows.initial,
+};
+
+let setRoot = (~rootPath, {fileExplorer, _} as model) => {
+  ...model,
+  fileExplorer: Component_FileExplorer.setRoot(~rootPath, fileExplorer),
+};
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
-  | GrabFocus;
-
-let setTree = (tree, model) => {
-  let uniqueId = (data: FsTreeNode.metadata) => data.path;
-  let searchText =
-      (
-        node:
-          Component_VimTree.nodeOrLeaf(
-            FsTreeNode.metadata,
-            FsTreeNode.metadata,
-          ),
-      ) => {
-    switch (node) {
-    | Leaf({data, _}) => data.displayName
-    | Node({data, _}) => data.displayName
-    };
-  };
-  let treeView =
-    Component_VimTree.set(~searchText, ~uniqueId, [tree], model.treeView);
-
-  {...model, tree: Some(tree), treeView};
-};
-
-let scrollTo = (~index, ~alignment, model) => {
-  {
-    ...model,
-    treeView: Component_VimTree.scrollTo(~index, ~alignment, model.treeView),
-  };
-};
-
-let setActive = (maybePath, model) => {...model, active: maybePath};
-
-let setFocus = (maybePath, model) =>
-  switch (maybePath, model.tree) {
-  | (Some(path), Some(tree)) =>
-    switch (FsTreeNode.findByPath(path, tree)) {
-    | Some(_) => {...model, focus: Some(path)}
-    | None => model
-    }
-  | _ => {...model, focus: None}
-  };
-
-let replaceNode = (node, model: model) =>
-  switch (model.tree) {
-  | Some(tree) =>
-    setTree(FsTreeNode.replace(~replacement=node, tree), model)
-  | None => model
-  };
-
-let revealAndFocusPath = (~configuration, path, model: model) => {
-  switch (model.tree) {
-  | Some(tree) =>
-    switch (FsTreeNode.findNodesByPath(path, tree)) {
-    // Nothing to do
-    | `Success([])
-    | `Failed => (model, Nothing)
-
-    // Load next unloaded node in path
-    | `Partial(lastNode) => (
-        model,
-        Effect(
-          Effects.load(
-            FsTreeNode.getPath(lastNode), configuration, ~onComplete=node =>
-            FocusNodeLoaded(node)
-          ),
-        ),
-      )
-
-    // Open ALL the nodes (in the path)!
-    | `Success(_) =>
-      let tree = FsTreeNode.updateNodesInPath(FsTreeNode.setOpen, path, tree);
-
-      let maybePathIndex = getIndex(path, model);
-
-      let model = model |> setFocus(Some(path)) |> setTree(tree);
-
-      let scrolledModel =
-        maybePathIndex
-        |> Option.map(index => scrollTo(~index, ~alignment=`Center, model))
-        |> Option.value(~default=model);
-
-      (scrolledModel, Nothing);
-    }
-
-  | None => (model, Nothing)
-  };
-};
+  | GrabFocus
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol);
 
 let update = (~configuration, msg, model) => {
   switch (msg) {
-  | ActiveFilePathChanged(maybeFilePath) =>
-    switch (model) {
-    | {active, _} when active != maybeFilePath =>
-      switch (maybeFilePath) {
-      | Some(path) =>
-        let autoReveal =
-          Oni_Core.Configuration.getValue(
-            c => c.explorerAutoReveal,
-            configuration,
-          );
-        switch (autoReveal) {
-        | `HighlightAndScroll =>
-          let model' = {...model, active: Some(path)};
-          revealAndFocusPath(~configuration, path, model');
-        | `HighlightOnly =>
-          let model = setActive(Some(path), model);
-          (setFocus(Some(path), model), Nothing);
-        | `NoReveal => (model, Nothing)
+  | KeyboardInput(key) =>
+    let model =
+      model.focus == FileExplorer
+        ? {
+          ...model,
+          fileExplorer:
+            Component_FileExplorer.keyPress(key, model.fileExplorer),
+        }
+        : {
+          ...model,
+          symbolOutline: Component_VimTree.keyPress(key, model.symbolOutline),
         };
-      | None => (model, Nothing)
-      }
-    | _ => (model, Nothing)
-    }
+    (model, Nothing);
 
-  | TreeLoaded(tree) => (setTree(tree, model), Nothing)
+  | FileExplorer(fileExplorerMsg) =>
+    let (fileExplorer, outmsg) =
+      Component_FileExplorer.update(
+        ~configuration,
+        fileExplorerMsg,
+        model.fileExplorer,
+      );
 
-  | TreeLoadError(_msg) => (model, Nothing)
+    let outmsg' =
+      switch (outmsg) {
+      | Component_FileExplorer.Nothing => Nothing
+      | Component_FileExplorer.Effect(eff) =>
+        Effect(eff |> Isolinear.Effect.map(msg => FileExplorer(msg)))
+      | Component_FileExplorer.OpenFile(path) => OpenFile(path)
+      | GrabFocus => GrabFocus
+      };
 
-  | NodeLoaded(node) => (replaceNode(node, model), Nothing)
+    ({...model, fileExplorer}, outmsg');
 
-  | FocusNodeLoaded(node) =>
-    switch (model.active) {
-    | Some(activePath) =>
-      model
-      |> replaceNode(node)
-      |> revealAndFocusPath(~configuration, activePath)
+  | SymbolsChanged(maybeSymbols) =>
+    let symbols = maybeSymbols |> Option.value(~default=[]);
 
-    | None => (model, Nothing)
-    }
-
-  | KeyboardInput(key) => (
-      {...model, treeView: Component_VimTree.keyPress(key, model.treeView)},
-      Nothing,
-    )
-
-  | Tree(treeMsg) =>
-    let (treeView, outmsg) =
-      Component_VimTree.update(treeMsg, model.treeView);
-
-    let model = {...model, treeView};
-    switch (outmsg) {
-    | Expanded(node) => (
-        model,
-        Effect(
-          Effects.load(node.path, configuration, ~onComplete=newNode =>
-            NodeLoaded(newNode)
+    let searchText =
+        (
+          node:
+            Component_VimTree.nodeOrLeaf(
+              Feature_LanguageSupport.DocumentSymbols.symbol,
+              Feature_LanguageSupport.DocumentSymbols.symbol,
+            ),
+        ) => {
+      switch (node) {
+      | Leaf({data, _})
+      | Node({data, _}) => data.name
+      };
+    };
+    // TODO
+    let uniqueId = (symbol: Feature_LanguageSupport.DocumentSymbols.symbol) =>
+      symbol.uniqueId;
+    (
+      {
+        ...model,
+        symbolOutline:
+          Component_VimTree.set(
+            ~searchText,
+            ~uniqueId,
+            symbols,
+            model.symbolOutline,
           ),
-        ),
+      },
+      Nothing,
+    );
+
+  | SymbolOutline(symbolMsg) =>
+    let (symbolOutline, outmsg) =
+      Component_VimTree.update(symbolMsg, model.symbolOutline);
+
+    let outmsg' =
+      switch (outmsg) {
+      | Component_VimTree.Nothing
+      | Component_VimTree.Expanded(_)
+      | Component_VimTree.Collapsed(_) => Nothing
+
+      | Component_VimTree.Selected(symbol) => SymbolSelected(symbol)
+      };
+
+    ({...model, symbolOutline}, outmsg');
+
+  | VimWindowNav(navMsg) =>
+    let (vimWindowNavigation, outmsg) =
+      Component_VimWindows.update(navMsg, model.vimWindowNavigation);
+
+    let model' = {...model, vimWindowNavigation};
+    switch (outmsg) {
+    | Component_VimWindows.Nothing => (model', Nothing)
+    | Component_VimWindows.FocusLeft => (
+        model',
+        UnhandledWindowMovement(outmsg),
       )
-    | Collapsed(_) => (model, Nothing)
-    | Selected(node) =>
-      // Set active here to avoid scrolling in BufferEnter
-      (model |> setActive(Some(node.path)), OpenFile(node.path))
-    | Nothing => (model, Nothing)
+    | Component_VimWindows.FocusRight => (
+        model',
+        UnhandledWindowMovement(outmsg),
+      )
+    | Component_VimWindows.FocusDown =>
+      if (model'.focus == FileExplorer) {
+        ({...model', focus: Outline}, Nothing);
+      } else {
+        (model', UnhandledWindowMovement(outmsg));
+      }
+    | Component_VimWindows.FocusUp =>
+      if (model'.focus == Outline) {
+        ({...model', focus: FileExplorer}, Nothing);
+      } else {
+        (model', UnhandledWindowMovement(outmsg));
+      }
+    | Component_VimWindows.PreviousTab
+    | Component_VimWindows.NextTab => (model', Nothing)
     };
   };
 };
 
-module View = View;
+module View = {
+  open Revery.UI;
+  let%component make =
+                (
+                  ~isFocused,
+                  ~iconTheme,
+                  ~languageInfo,
+                  ~model,
+                  ~decorations,
+                  ~documentSymbols:
+                     option(Feature_LanguageSupport.DocumentSymbols.t),
+                  ~theme,
+                  ~font,
+                  ~dispatch: msg => unit,
+                  (),
+                ) => {
+    let%hook () =
+      Hooks.effect(
+        OnMountAndIf((!=), documentSymbols),
+        () => {
+          dispatch(SymbolsChanged(documentSymbols));
+          None;
+        },
+      );
 
-let sub = (~configuration, {rootPath, _}) => {
-  let ignored = Configuration.getValue(c => c.filesExclude, configuration);
+    let foregroundColor = Feature_Theme.Colors.foreground.from(theme);
 
-  let toMsg =
-    fun
-    | Ok(dirents) => {
-        let children =
-          dirents |> Internal.luvDirentsToFsTree(~ignored, ~cwd=rootPath);
-        TreeLoaded(FsTreeNode.directory(rootPath, ~children, ~isOpen=true));
-      }
-    | Error(msg) => TreeLoadError(msg);
+    let renderSymbol =
+        (
+          ~availableWidth as _,
+          ~index as _,
+          ~hovered as _,
+          ~selected as _,
+          nodeOrLeaf:
+            Component_VimTree.nodeOrLeaf(
+              Feature_LanguageSupport.DocumentSymbols.symbol,
+              Feature_LanguageSupport.DocumentSymbols.symbol,
+            ),
+        ) => {
+      let symbolData =
+        switch (nodeOrLeaf) {
+        | Component_VimTree.Leaf({data, _})
+        | Component_VimTree.Node({data, _}) => data
+        };
 
-  Service_OS.Sub.dir(~uniqueId="FileExplorerSideBar", ~toMsg, rootPath);
+      <Oni_Components.Tooltip text={symbolData.detail}>
+        <View
+          style=Style.[
+            flexDirection(`Row),
+            justifyContent(`Center),
+            alignItems(`Center),
+          ]>
+          <View style=Style.[paddingRight(4)]>
+            <Oni_Components.SymbolIcon theme symbol={symbolData.kind} />
+          </View>
+          <Text
+            text={symbolData.name}
+            style=Style.[color(foregroundColor)]
+          />
+        </View>
+      </Oni_Components.Tooltip>;
+    };
+
+    let symbolsEmpty =
+      <View style=Style.[margin(16)]>
+        <Text
+          text="No symbols available for active buffer."
+          style=Style.[color(foregroundColor)]
+        />
+      </View>;
+
+    <View style=Style.[flexDirection(`Column), flexGrow(1)]>
+      <View style=Style.[flexGrow(2)]>
+        <Component_FileExplorer.View
+          isFocused={isFocused && model.focus == FileExplorer}
+          iconTheme
+          languageInfo
+          decorations
+          model={model.fileExplorer}
+          theme
+          font
+          dispatch={msg => dispatch(FileExplorer(msg))}
+        />
+      </View>
+      <Component_Accordion.VimTree
+        showCount=false
+        title="Outline"
+        expanded={model.focus == Outline}
+        isFocused={isFocused && model.focus == Outline}
+        uiFont=font
+        theme
+        model={model.symbolOutline}
+        render=renderSymbol
+        onClick={() => ()}
+        dispatch={msg => dispatch(SymbolOutline(msg))}
+        empty=symbolsEmpty
+      />
+    </View>;
+  };
+};
+
+let sub = (~configuration, model) => {
+  Component_FileExplorer.sub(~configuration, model.fileExplorer)
+  |> Isolinear.Sub.map(msg => FileExplorer(msg));
 };
 
 module Contributions = {
-  let commands = (~isFocused) => {
-    !isFocused
-      ? []
-      : Component_VimTree.Contributions.commands
-        |> List.map(Oni_Core.Command.map(msg => Tree(msg)));
+  let commands = (~isFocused, model) => {
+    let explorerCommands =
+      isFocused && model.focus == FileExplorer
+        ? Component_FileExplorer.Contributions.commands(~isFocused)
+          |> List.map(Oni_Core.Command.map(msg => FileExplorer(msg)))
+        : [];
+
+    let outlineCommands =
+      isFocused && model.focus == Outline
+        ? Component_VimTree.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => SymbolOutline(msg)))
+        : [];
+
+    let vimNavCommands =
+      isFocused
+        ? Component_VimWindows.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
+        : [];
+
+    explorerCommands @ vimNavCommands @ outlineCommands;
   };
 
   let contextKeys = (~isFocused, model) => {
     open WhenExpr.ContextKeys;
-
-    let vimTreeKeys =
+    let vimNavKeys =
       isFocused
-        ? Component_VimTree.Contributions.contextKeys(model.treeView) : empty;
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
 
-    vimTreeKeys;
+    let fileExplorerKeys =
+      isFocused && model.focus == FileExplorer
+        ? Component_FileExplorer.Contributions.contextKeys(
+            ~isFocused,
+            model.fileExplorer,
+          )
+        : empty;
+
+    let symbolOutlineKeys =
+      isFocused && model.focus == Outline
+        ? Component_VimTree.Contributions.contextKeys(model.symbolOutline)
+        : empty;
+
+    [fileExplorerKeys, symbolOutlineKeys, vimNavKeys] |> unionMany;
   };
 };

@@ -22,7 +22,6 @@ and variant =
         languages:
           list((string, option(Oni_Core.IconTheme.IconDefinition.t))),
       })
-    | DocumentSymbols
     | Extension({
         id: int,
         hasItems: bool,
@@ -33,8 +32,7 @@ let placeholderText =
   fun
   | FilesPicker
   | ThemesPicker(_)
-  | CommandPalette
-  | DocumentSymbols => "type to search..."
+  | CommandPalette => "type to search..."
   | _ => "";
 
 let defaults = variant => {

@@ -463,7 +463,7 @@ module View = {
               ),
             ];
           };
-        <View style=Style.[flexDirection(`Row)]>
+        <View style=Style.[flexDirection(`Row), marginLeft(4)]>
           {innerView |> React.listToElement}
         </View>;
       }}
