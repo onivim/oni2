@@ -212,6 +212,12 @@ let make = (~dispatch, ~state: State.t, ()) => {
         font
         dispatch={msg => dispatch(Actions.Registers(msg))}
       />
+      <Feature_Registration.View
+        theme
+        registration={state.registration}
+        font
+        dispatch={msg => dispatch(Actions.Registration(msg))}
+      />
     </Overlay>
     <statusBar />
     <ContextMenu.Overlay />
