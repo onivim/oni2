@@ -35,106 +35,101 @@ let start = maybeKeyBindingsFilePath => {
         command: Commands.List.selectBackground.id,
         condition: "quickmenuCursorEnd" |> WhenExpr.parse,
       },
-      {
-        key: "<S-C-F>",
-        command: Commands.Workbench.Action.findInFiles.id,
-        condition: "!isMac" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-S-F>",
-        command: Commands.Workbench.Action.findInFiles.id,
-        condition: "isMac" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-TAB>",
-        command:
-          Commands.Workbench.Action.openNextRecentlyUsedEditorInGroup.id,
-        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-P>",
-        command: Commands.Workbench.Action.quickOpen.id,
-        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-P>",
-        command: Commands.Workbench.Action.quickOpen.id,
-        condition: "isMac" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-C-P>",
-        command: Commands.Workbench.Action.showCommands.id,
-        condition: "!isMac" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-S-P>",
-        command: Commands.Workbench.Action.showCommands.id,
-        condition: "isMac" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-V>",
-        command: Feature_Clipboard.Commands.paste.id,
-        condition:
-          "insertMode || textInputFocus || commandLineFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-V>",
-        command: Feature_Clipboard.Commands.paste.id,
-        condition: isMacCondition,
-      },
-      {
-        key: "<ESC>",
-        command: Commands.Workbench.Action.closeQuickOpen.id,
-        condition: "inQuickOpen" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-N>",
-        command: Commands.List.focusDown.id,
-        condition: "listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-P>",
-        command: Commands.List.focusUp.id,
-        condition: "listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-N>",
-        command: Commands.List.focusDown.id,
-        condition: "isMac && listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-P>",
-        command: Commands.List.focusUp.id,
-        condition: "isMac && listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<TAB>",
-        command: Commands.List.focusDown.id,
-        condition: "listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-TAB>",
-        command: Commands.List.focusUp.id,
-        condition: "listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-TAB>",
-        command:
-          Commands.Workbench.Action.quickOpenNavigateNextInEditorPicker.id,
-        condition: "inEditorsPicker" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-C-TAB>",
-        command:
-          Commands.Workbench.Action.quickOpenNavigatePreviousInEditorPicker.id,
-        condition: "inEditorsPicker" |> WhenExpr.parse,
-      },
-      {
-        key: "<release>",
-        command: Commands.List.select.id,
-        condition: "inEditorsPicker" |> WhenExpr.parse,
-      },
     ]
+    @ Feature_SideBar.Contributions.keybindings
+    @ Keybindings.[
+        {
+          key: "<C-TAB>",
+          command:
+            Commands.Workbench.Action.openNextRecentlyUsedEditorInGroup.id,
+          condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
+        },
+        {
+          key: "<C-P>",
+          command: Commands.Workbench.Action.quickOpen.id,
+          condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
+        },
+        {
+          key: "<D-P>",
+          command: Commands.Workbench.Action.quickOpen.id,
+          condition: "isMac" |> WhenExpr.parse,
+        },
+        {
+          key: "<S-C-P>",
+          command: Commands.Workbench.Action.showCommands.id,
+          condition: "!isMac" |> WhenExpr.parse,
+        },
+        {
+          key: "<D-S-P>",
+          command: Commands.Workbench.Action.showCommands.id,
+          condition: "isMac" |> WhenExpr.parse,
+        },
+        {
+          key: "<C-V>",
+          command: Feature_Clipboard.Commands.paste.id,
+          condition:
+            "insertMode || textInputFocus || commandLineFocus"
+            |> WhenExpr.parse,
+        },
+        {
+          key: "<D-V>",
+          command: Feature_Clipboard.Commands.paste.id,
+          condition: isMacCondition,
+        },
+        {
+          key: "<ESC>",
+          command: Commands.Workbench.Action.closeQuickOpen.id,
+          condition: "inQuickOpen" |> WhenExpr.parse,
+        },
+        {
+          key: "<C-N>",
+          command: Commands.List.focusDown.id,
+          condition: "listFocus" |> WhenExpr.parse,
+        },
+        {
+          key: "<C-P>",
+          command: Commands.List.focusUp.id,
+          condition: "listFocus" |> WhenExpr.parse,
+        },
+        {
+          key: "<D-N>",
+          command: Commands.List.focusDown.id,
+          condition: "isMac && listFocus" |> WhenExpr.parse,
+        },
+        {
+          key: "<D-P>",
+          command: Commands.List.focusUp.id,
+          condition: "isMac && listFocus" |> WhenExpr.parse,
+        },
+        {
+          key: "<TAB>",
+          command: Commands.List.focusDown.id,
+          condition: "listFocus" |> WhenExpr.parse,
+        },
+        {
+          key: "<S-TAB>",
+          command: Commands.List.focusUp.id,
+          condition: "listFocus" |> WhenExpr.parse,
+        },
+        {
+          key: "<C-TAB>",
+          command:
+            Commands.Workbench.Action.quickOpenNavigateNextInEditorPicker.id,
+          condition: "inEditorsPicker" |> WhenExpr.parse,
+        },
+        {
+          key: "<S-C-TAB>",
+          command:
+            Commands.Workbench.Action.quickOpenNavigatePreviousInEditorPicker.
+              id,
+          condition: "inEditorsPicker" |> WhenExpr.parse,
+        },
+        {
+          key: "<release>",
+          command: Commands.List.select.id,
+          condition: "inEditorsPicker" |> WhenExpr.parse,
+        },
+      ]
     @ Feature_Registers.Contributions.keybindings
     @ Feature_LanguageSupport.Contributions.keybindings
     @ Keybindings.[
@@ -142,22 +137,6 @@ let start = maybeKeyBindingsFilePath => {
           key: "<CR>",
           command: Commands.List.select.id,
           condition: "listFocus" |> WhenExpr.parse,
-        },
-        // Search commands
-        {
-          key: "<S-D-F>",
-          command: Commands.Workbench.Action.findInFiles.id,
-          condition: "isMac" |> WhenExpr.parse,
-        },
-        {
-          key: "<S-C-F>",
-          command: Commands.Workbench.Action.findInFiles.id,
-          condition: "!isMac" |> WhenExpr.parse,
-        },
-        {
-          key: "<S-C-B>",
-          command: Commands.Oni.Explorer.toggle.id,
-          condition: "editorTextFocus" |> WhenExpr.parse,
         },
         {
           key: "<D-Z>",

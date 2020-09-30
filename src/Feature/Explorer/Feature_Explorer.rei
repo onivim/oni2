@@ -16,50 +16,45 @@ let initial: (~rootPath: string) => model;
 
 let setRoot: (~rootPath: string, model) => model;
 
-let getFileIcon:
-  (~languageInfo: Exthost.LanguageInfo.t, ~iconTheme: IconTheme.t, string) =>
-  option(IconTheme.IconDefinition.t);
-
 // UPDATE
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
-  | GrabFocus;
+  | GrabFocus
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol);
 
 let update:
-  (
-    ~configuration: Oni_Core.Configuration.t,
-    ~languageInfo: Exthost.LanguageInfo.t,
-    ~iconTheme: Oni_Core.IconTheme.t,
-    msg,
-    model
-  ) =>
-  (model, outmsg);
+  (~configuration: Oni_Core.Configuration.t, msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
 let sub:
-  (
-    ~configuration: Oni_Core.Configuration.t,
-    ~languageInfo: Exthost.LanguageInfo.t,
-    ~iconTheme: Oni_Core.IconTheme.t,
-    model
-  ) =>
-  Isolinear.Sub.t(msg);
+  (~configuration: Oni_Core.Configuration.t, model) => Isolinear.Sub.t(msg);
 
 // VIEW
 
 module View: {
   let make:
     (
+      ~key: Brisk_reconciler.Key.t=?,
+      ~isFocused: bool,
+      ~iconTheme: IconTheme.t,
+      ~languageInfo: Exthost.LanguageInfo.t,
       ~model: model,
       ~decorations: Feature_Decorations.model,
+      ~documentSymbols: option(Feature_LanguageSupport.DocumentSymbols.t),
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~dispatch: msg => unit,
       unit
     ) =>
     Revery.UI.element;
+};
+
+module Contributions: {
+  let commands: (~isFocused: bool, model) => list(Command.t(msg));
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
 };

@@ -54,7 +54,9 @@ let make =
       </View>;
     } else {
       <Component_VimTree.View
+        font=uiFont
         isActive=isFocused
+        focusedIndex=None
         theme
         model=diagnosticsList
         dispatch
@@ -62,7 +64,7 @@ let make =
           ~availableWidth,
           ~index as _,
           ~hovered as _,
-          ~focused as _,
+          ~selected as _,
           item,
         ) =>
           switch (item) {

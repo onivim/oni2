@@ -13,6 +13,11 @@ let node = (~expanded=true, ~children=[], data) => {
   Node({expanded, children, data});
 };
 
+let children =
+  fun
+  | Node({children, _}) => children
+  | Leaf(_) => [];
+
 let fold = (f, acc, tree) => {
   let rec loop = (current, node) => {
     let newAcc = f(current, node);

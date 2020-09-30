@@ -25,6 +25,14 @@ let current = state => {
     )
     |> Command.Lookup.fromList
     |> Command.Lookup.map(msg => Actions.Search(msg)),
+    Feature_Explorer.Contributions.commands(
+      ~isFocused={
+        focus == Focus.FileExplorer;
+      },
+      state.fileExplorer,
+    )
+    |> Command.Lookup.fromList
+    |> Command.Lookup.map(msg => Actions.FileExplorer(msg)),
     Feature_Pane.Contributions.commands(
       ~isFocused={
         focus == Focus.Pane;
@@ -37,8 +45,12 @@ let current = state => {
       ~isFocused={
         focus == Focus.SCM;
       },
+      state.scm,
     )
     |> Command.Lookup.fromList
     |> Command.Lookup.map(msg => Actions.SCM(msg)),
+    Feature_SideBar.Contributions.commands
+    |> Command.Lookup.fromList
+    |> Command.Lookup.map(msg => Actions.SideBar(msg)),
   ]);
 };

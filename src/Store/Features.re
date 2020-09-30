@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Isolinear;
 open Oni_Core;
 open Oni_Core.Utility;
@@ -267,8 +268,6 @@ let update =
     let (model, outmsg) =
       Feature_Explorer.update(
         ~configuration=state.configuration,
-        ~languageInfo=state.languageInfo,
-        ~iconTheme=state.iconTheme,
         msg,
         state.fileExplorer,
       );
@@ -287,6 +286,23 @@ let update =
           FocusManager.push(Focus.FileExplorer, state),
           Isolinear.Effect.none,
         )
+      | UnhandledWindowMovement(windowMovement) => (
+          state,
+          Internal.unhandledWindowMotionEffect(windowMovement),
+        )
+      | SymbolSelected(symbol) =>
+        let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+        let eff =
+          maybeBuffer
+          |> OptionEx.flatMap(Oni_Core.Buffer.getFilePath)
+          |> Option.map(filePath => {
+               let range: CharacterRange.t =
+                 Feature_LanguageSupport.DocumentSymbols.(symbol.range);
+               let position = range.start;
+               Internal.openFileEffect(~position=Some(position), filePath);
+             })
+          |> Option.value(~default=Isolinear.Effect.none);
+        (state, eff);
       }
     );
 
@@ -399,6 +415,14 @@ let update =
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
       )
+    | GrabFocus => (
+        state |> FocusManager.push(Focus.Pane),
+        Isolinear.Effect.none,
+      )
+    | ReleaseFocus => (
+        state |> FocusManager.pop(Focus.Pane),
+        Isolinear.Effect.none,
+      )
     };
 
   | Registers(msg) =>
@@ -461,6 +485,8 @@ let update =
         FocusManager.push(Focus.SCM, state),
         eff |> Effect.map(msg => Actions.SCM(msg)),
       )
+
+    | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -469,8 +495,44 @@ let update =
     };
 
   | SideBar(msg) =>
-    let sideBar' = Feature_SideBar.update(msg, state.sideBar);
-    ({...state, sideBar: sideBar'}, Effect.none);
+    let (sideBar', outmsg) = Feature_SideBar.update(msg, state.sideBar);
+    let state = {...state, sideBar: sideBar'};
+
+    switch (outmsg) {
+    | Nothing => (state, Effect.none)
+    | PopFocus => (state |> FocusManager.push(Editor), Effect.none)
+    | Focus =>
+      let state' =
+        Feature_SideBar.(
+          switch (sideBar' |> Feature_SideBar.selected) {
+          | FileExplorer => state |> FocusManager.push(Focus.FileExplorer)
+          | SCM =>
+            {...state, scm: Feature_SCM.resetFocus(state.scm)}
+            |> FocusManager.push(Focus.SCM)
+          | Search =>
+            {
+              ...state,
+              searchPane: Feature_Search.resetFocus(state.searchPane),
+            }
+            |> FocusManager.push(Focus.Search)
+          | Extensions =>
+            {
+              ...state,
+              extensions: Feature_Extensions.resetFocus(state.extensions),
+            }
+            |> FocusManager.push(Focus.Extensions)
+          }
+        );
+      (
+        {
+          ...state',
+          // When the sidebar acquires focus, zen-mode should be disabled
+          zenMode: false,
+        },
+        Effect.none,
+      );
+    };
+
   | Sneak(msg) =>
     let (model, maybeOutmsg) = Feature_Sneak.update(state.sneak, msg);
 
@@ -721,17 +783,17 @@ let update =
 
     | Focus(Left) => (
         Feature_SideBar.isOpen(state.sideBar)
-          ? SideBarReducer.focus(state) : state,
+          ? switch (state.sideBar |> Feature_SideBar.selected) {
+            | FileExplorer => FocusManager.push(FileExplorer, state)
+            | SCM => FocusManager.push(SCM, state)
+            | Extensions => FocusManager.push(Extensions, state)
+            | Search => FocusManager.push(Search, state)
+            }
+          : state,
         Effect.none,
       )
 
-    | Focus(Bottom) =>
-      let pane = state.pane |> Feature_Pane.selected;
-      (
-        {...state, pane: Feature_Pane.show(~pane, state.pane)}
-        |> FocusManager.push(Pane),
-        Effect.none,
-      );
+    | Focus(Bottom) => (state |> FocusManager.push(Pane), Effect.none)
 
     | SplitAdded => ({...state, zenMode: false}, Effect.none)
 

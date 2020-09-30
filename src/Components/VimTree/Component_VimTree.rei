@@ -42,8 +42,22 @@ let update:
 
 let set:
   (
+    ~searchText: nodeOrLeaf('node, 'leaf) => string=?,
     ~uniqueId: 'node => string,
     list(Tree.t('node, 'leaf)),
+    model('node, 'leaf)
+  ) =>
+  model('node, 'leaf);
+
+let keyPress: (string, model('node, 'leaf)) => model('node, 'leaf);
+
+let findIndex:
+  (nodeOrLeaf('node, 'leaf) => bool, model('node, 'leaf)) => option(int);
+
+let scrollTo:
+  (
+    ~index: int,
+    ~alignment: [< | `Top | `Bottom | `Center | `Reveal],
     model('node, 'leaf)
   ) =>
   model('node, 'leaf);
@@ -52,7 +66,7 @@ let set:
 
 module Contributions: {
   let commands: list(Command.t(msg));
-  let contextKeys: list(WhenExpr.ContextKeys.Schema.entry(unit));
+  let contextKeys: model('node, 'leaf) => WhenExpr.ContextKeys.t;
 };
 
 // VIEW
@@ -61,6 +75,8 @@ module View: {
   let make:
     (
       ~isActive: bool,
+      ~font: UiFont.t,
+      ~focusedIndex: option(int),
       ~theme: ColorTheme.Colors.t,
       ~model: model('node, 'leaf),
       ~dispatch: msg => unit,
@@ -68,7 +84,7 @@ module View: {
                  ~availableWidth: int,
                  ~index: int,
                  ~hovered: bool,
-                 ~focused: bool,
+                 ~selected: bool,
                  nodeOrLeaf('node, 'leaf)
                ) =>
                Revery.UI.element,

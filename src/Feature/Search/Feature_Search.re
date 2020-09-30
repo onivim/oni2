@@ -17,6 +17,8 @@ type model = {
   resultsTree: Component_VimTree.model(string, LocationListItem.t),
 };
 
+let resetFocus = model => {...model, focus: FindInput};
+
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
   query: "",
@@ -49,6 +51,12 @@ let setHits = (hits, model) => {
   resultsTree:
     Component_VimTree.set(
       ~uniqueId=path => path,
+      ~searchText=
+        Component_VimTree.(
+          fun
+          | Node({data, _}) => data
+          | Leaf({data, _}) => LocationListItem.(data.text)
+        ),
       hits |> List.map(matchToLocListItem) |> LocationListItem.toTrees,
       model.resultsTree,
     ),
@@ -102,9 +110,13 @@ let update = (model, msg) => {
         };
 
       (model, None);
-    | ResultsPane =>
-      // TODO: Vim Navigable List!
-      (model, None)
+    | ResultsPane => (
+        {
+          ...model,
+          resultsTree: Component_VimTree.keyPress(key, model.resultsTree),
+        },
+        None,
+      )
     }
 
   | Pasted(text) =>
@@ -294,6 +306,8 @@ let make =
       />
       <Component_VimTree.View
         isActive={isFocused && model.focus == ResultsPane}
+        font=uiFont
+        focusedIndex=None
         theme
         model={model.resultsTree}
         dispatch={msg => dispatch(ResultsList(msg))}
@@ -301,7 +315,7 @@ let make =
           ~availableWidth,
           ~index as _,
           ~hovered as _,
-          ~focused as _,
+          ~selected as _,
           item,
         ) =>
           switch (item) {
@@ -329,8 +343,6 @@ let make =
 };
 
 module Contributions = {
-  open WhenExpr.ContextKeys.Schema;
-
   let commands = (~isFocused) => {
     !isFocused
       ? []
@@ -344,22 +356,24 @@ module Contributions = {
         );
   };
 
-  let contextKeys = (~isFocused) => {
+  let contextKeys = (~isFocused, model) => {
+    open WhenExpr.ContextKeys;
     let inputTextKeys =
-      isFocused ? Component_InputText.Contributions.contextKeys : [];
+      isFocused && model.focus == FindInput
+        ? Component_InputText.Contributions.contextKeys(model.findInput)
+        : empty;
     let vimNavKeys =
-      isFocused ? Component_VimWindows.Contributions.contextKeys : [];
+      isFocused
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
 
-    let vimListKeys =
-      isFocused ? Component_VimList.Contributions.contextKeys : [];
+    let vimTreeKeys =
+      isFocused && model.focus == ResultsPane
+        ? Component_VimTree.Contributions.contextKeys(model.resultsTree)
+        : empty;
 
-    [
-      inputTextKeys |> fromList |> map(({findInput, _}: model) => findInput),
-      vimNavKeys
-      |> fromList
-      |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),
-      vimListKeys |> fromList |> map(_ => ()),
-    ]
-    |> unionMany;
+    [inputTextKeys, vimNavKeys, vimTreeKeys] |> unionMany;
   };
 };

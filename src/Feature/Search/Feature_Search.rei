@@ -24,6 +24,8 @@ type outmsg =
 
 let update: (model, msg) => (model, option(outmsg));
 
+let resetFocus: model => model;
+
 let subscriptions:
   (Ripgrep.t, msg => unit, model) => list(Subscription.t(msg));
 
@@ -43,5 +45,5 @@ let make:
 
 module Contributions: {
   let commands: (~isFocused: bool) => list(Command.t(msg));
-  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
 };

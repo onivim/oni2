@@ -42,7 +42,9 @@ type outmsg =
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
     })
-  | UnhandledWindowMovement(Component_VimWindows.outmsg);
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | GrabFocus
+  | ReleaseFocus;
 
 type model = {
   selected: pane,
@@ -77,6 +79,12 @@ let setDiagnostics = (diagnostics, model) => {
   let diagnosticsView' =
     Component_VimTree.set(
       ~uniqueId=path => path,
+      ~searchText=
+        Component_VimTree.(
+          fun
+          | Node({data, _}) => data
+          | Leaf({data, _}) => Oni_Components.LocationListItem.(data.text)
+        ),
       diagLocList,
       model.diagnosticsView,
     );
@@ -116,9 +124,9 @@ let update = (msg, model) =>
 
   | Command(ToggleProblems) =>
     if (!model.isOpen) {
-      (show(~pane=Diagnostics, model), Nothing);
+      (show(~pane=Diagnostics, model), GrabFocus);
     } else if (model.selected == Diagnostics) {
-      (close(model), Nothing);
+      (close(model), ReleaseFocus);
     } else {
       (show(~pane=Diagnostics, model), Nothing);
     }
@@ -136,7 +144,18 @@ let update = (msg, model) =>
       ({...model, height, resizeDelta: 0}, Nothing);
     };
 
-  | KeyPressed(_) => (model, Nothing)
+  | KeyPressed(key) =>
+    switch (model.selected) {
+    | Notifications => (model, Nothing)
+    | Diagnostics => (
+        {
+          ...model,
+          diagnosticsView:
+            Component_VimTree.keyPress(key, model.diagnosticsView),
+        },
+        Nothing,
+      )
+    }
 
   | VimWindowNav(navMsg) =>
     let (vimWindowNavigation, outmsg) =
@@ -182,7 +201,7 @@ let initial = {
 
 let selected = ({selected, _}) => selected;
 
-let isVisible = (pane, model) => model.isOpen && model.selected == pane;
+let isSelected = (pane, model) => model.selected == pane;
 let isOpen = ({isOpen, _}) => isOpen;
 
 let toggle = (~pane, model) =>
@@ -264,8 +283,9 @@ module View = {
   module Styles = {
     open Style;
 
-    let pane = (~isFocused, ~theme, ~height) => {
+    let pane = (~opacity, ~isFocused, ~theme, ~height) => {
       let common = [
+        Style.opacity(opacity),
         flexDirection(`Column),
         Style.height(height),
         borderTop(
@@ -358,6 +378,7 @@ module View = {
   };
   let make =
       (
+        ~config,
         ~isFocused,
         ~theme,
         ~iconTheme,
@@ -377,11 +398,17 @@ module View = {
       dispatch(TabClicked(Notifications));
     };
 
-    if (!isOpen(pane)) {
+    if (!isOpen(pane) && !isFocused) {
       <View />;
     } else {
       let height = height(pane);
-      <View style={Styles.pane(~isFocused, ~theme, ~height)}>
+      let opacity =
+        isFocused
+          ? 1.0
+          : Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
+              config,
+            );
+      <View style={Styles.pane(~opacity, ~isFocused, ~theme, ~height)}>
         <View style=Styles.resizer>
           <ResizeHandle.Horizontal
             onDrag={delta =>
@@ -397,14 +424,14 @@ module View = {
               theme
               title="Problems"
               onClick=problemsTabClicked
-              isActive={isVisible(Diagnostics, pane)}
+              isActive={isSelected(Diagnostics, pane)}
             />
             <PaneTab
               uiFont
               theme
               title="Notifications"
               onClick=notificationsTabClicked
-              isActive={isVisible(Notifications, pane)}
+              isActive={isSelected(Notifications, pane)}
             />
           </View>
           <closeButton dispatch theme />
@@ -471,22 +498,21 @@ module Contributions = {
     isFocused ? common @ vimWindowCommands @ diagnosticsCommands : common;
   };
 
-  open WhenExpr.ContextKeys.Schema;
   let contextKeys = (~isFocused, model) => {
+    open WhenExpr.ContextKeys;
     let vimNavKeys =
-      isFocused ? Component_VimWindows.Contributions.contextKeys : [];
+      isFocused
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
 
     let vimListKeys =
       isFocused && model.selected == Diagnostics
-        ? Component_VimTree.Contributions.contextKeys : [];
+        ? Component_VimTree.Contributions.contextKeys(model.diagnosticsView)
+        : empty;
 
-    [
-      vimNavKeys
-      |> fromList
-      |> map(({vimWindowNavigation, _}: model) => vimWindowNavigation),
-      vimListKeys |> fromList |> map(_ => ()),
-    ]
-    |> unionMany;
+    [vimNavKeys, vimListKeys] |> unionMany;
   };
 
   let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];

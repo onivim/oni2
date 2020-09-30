@@ -306,8 +306,6 @@ let start =
     let fileExplorerSub =
       Feature_Explorer.sub(
         ~configuration=state.configuration,
-        ~languageInfo=state.languageInfo,
-        ~iconTheme=state.iconTheme,
         state.fileExplorer,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.FileExplorer(msg));
@@ -358,12 +356,12 @@ let start =
       |> Isolinear.Sub.map(msg => Model.Actions.AutoUpdate(msg));
 
     [
+      extHostSubscription,
       languageSupportSub,
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,
       terminalFontSubscription,
-      extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
       fileExplorerSub,
