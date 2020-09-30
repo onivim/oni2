@@ -114,6 +114,21 @@ module Completion: {
   };
 };
 
+module DocumentSymbols: {
+  type symbol = {
+    uniqueId: string,
+    name: string,
+    detail: string,
+    kind: Exthost.SymbolKind.t,
+    range: CharacterRange.t,
+    selectionRange: CharacterRange.t,
+  };
+
+  type t = list(Tree.t(symbol, symbol));
+
+  let get: (~bufferId: int, model) => option(t);
+};
+
 module Hover: {
   module Popup: {
     let make:

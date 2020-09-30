@@ -199,6 +199,7 @@ let%component make =
         )}>
         <Component_VimList.View
           isActive={isInstalledFocused || isBundledFocused}
+          font
           focusedIndex=None
           theme
           model={Model.ViewModel.searchResults(model.viewModel)}

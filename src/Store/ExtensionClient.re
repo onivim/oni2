@@ -6,56 +6,16 @@ module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
-module ExtensionDocumentSymbolProvider = {
-  let create =
-      (
-        id,
-        selector,
-        _label, // TODO: What to do with label?
-        client,
-        buffer,
-      ) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideDocumentSymbols(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        client,
-      )
-    });
-  };
-};
-
 let create = (~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let extensionInfo =
     extensions |> List.map(Exthost.Extension.InitData.Extension.ofScanResult);
-
-  let onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let documentSymbolProvider =
-      ExtensionDocumentSymbolProvider.create(handle, selector, label, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.DocumentSymbolProviderAvailable(
-          id,
-          documentSymbolProvider,
-        ),
-      ),
-    );
-  };
   open Exthost;
   open Exthost.Extension;
   open Exthost.Msg;
 
   let maybeClientRef = ref(None);
-
-  let withClient = f =>
-    switch (maybeClientRef^) {
-    | None => Log.warn("Warning - withClient does not have a client")
-    | Some(client) => f(client)
-    };
 
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
@@ -92,14 +52,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
             "configuration.json",
             ConfigurationTransformer.setField(key, value),
           ),
-        );
-        Lwt.return(Reply.okEmpty);
-
-      | LanguageFeatures(
-          RegisterDocumentSymbolProvider({handle, selector, label}),
-        ) =>
-        withClient(
-          onRegisterDocumentSymbolProvider(handle, selector, label),
         );
         Lwt.return(Reply.okEmpty);
 

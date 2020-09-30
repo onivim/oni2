@@ -54,6 +54,7 @@ let make =
       </View>;
     } else {
       <Component_VimTree.View
+        font=uiFont
         isActive=isFocused
         focusedIndex=None
         theme

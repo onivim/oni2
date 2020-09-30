@@ -177,13 +177,6 @@ module Workbench = {
         QuickmenuShow(CommandPalette),
       );
 
-    let gotoSymbol =
-      register(
-        ~title="Goto symbol in file...",
-        "workbench.action.gotoSymbol",
-        QuickmenuShow(DocumentSymbols),
-      );
-
     let openNextRecentlyUsedEditorInGroup =
       register(
         ~category="View",

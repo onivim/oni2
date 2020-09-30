@@ -356,12 +356,12 @@ let start =
       |> Isolinear.Sub.map(msg => Model.Actions.AutoUpdate(msg));
 
     [
+      extHostSubscription,
       languageSupportSub,
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,
       terminalFontSubscription,
-      extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
       fileExplorerSub,

@@ -29,6 +29,7 @@ let current = state => {
       ~isFocused={
         focus == Focus.FileExplorer;
       },
+      state.fileExplorer,
     )
     |> Command.Lookup.fromList
     |> Command.Lookup.map(msg => Actions.FileExplorer(msg)),
