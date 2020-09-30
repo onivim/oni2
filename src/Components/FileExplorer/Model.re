@@ -17,6 +17,7 @@ module Msg = {
 
 type model = {
   rootPath: string,
+  rootName: string,
   tree: option(FsTreeNode.t),
   treeView: Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
   isOpen: bool,
@@ -27,6 +28,7 @@ type model = {
 
 let initial = (~rootPath) => {
   rootPath,
+  rootName: "",
   tree: None,
   treeView: Component_VimTree.create(~rowHeight=20),
   isOpen: true,

@@ -16,15 +16,19 @@ let initial: (~rootPath: string) => model;
 
 let setRoot: (~rootPath: string, model) => model;
 
+let keyPress: (string, model) => model;
+
+let getFileIcon:
+  (~languageInfo: Exthost.LanguageInfo.t, ~iconTheme: IconTheme.t, string) =>
+  option(IconTheme.IconDefinition.t);
+
 // UPDATE
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
-  | GrabFocus
-  | UnhandledWindowMovement(Component_VimWindows.outmsg)
-  | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol);
+  | GrabFocus;
 
 let update:
   (~configuration: Oni_Core.Configuration.t, msg, model) => (model, outmsg);
@@ -39,13 +43,11 @@ let sub:
 module View: {
   let make:
     (
-      ~key: Brisk_reconciler.Key.t=?,
       ~isFocused: bool,
       ~iconTheme: IconTheme.t,
       ~languageInfo: Exthost.LanguageInfo.t,
       ~model: model,
       ~decorations: Feature_Decorations.model,
-      ~documentSymbols: option(Feature_LanguageSupport.DocumentSymbols.t),
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~dispatch: msg => unit,
@@ -55,6 +57,6 @@ module View: {
 };
 
 module Contributions: {
-  let commands: (~isFocused: bool, model) => list(Command.t(msg));
+  let commands: (~isFocused: bool) => list(Command.t(msg));
   let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
 };
