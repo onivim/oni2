@@ -17,26 +17,30 @@ type symbol = {
 
 type t = list(Tree.t(symbol, symbol));
 
-let rec extHostSymbolToTree:
-  Exthost.DocumentSymbol.t => Tree.t(symbol, symbol) =
-  extSymbol => {
-    let children = extSymbol.children |> List.map(extHostSymbolToTree);
+let extHostSymbolToTree: Exthost.DocumentSymbol.t => Tree.t(symbol, symbol) =
+  symbol => {
+    let rec loop = (~uniqueIdPrefix, extSymbol: Exthost.DocumentSymbol.t) => {
+      let newUniqueId = uniqueIdPrefix ++ "." ++ extSymbol.name;
+      let children =
+        extSymbol.children |> List.map(loop(~uniqueIdPrefix=newUniqueId));
 
-    let symbol = {
-      // TODO:
-      uniqueId: extSymbol.name,
-      name: extSymbol.name,
-      detail: extSymbol.detail,
-      kind: extSymbol.kind,
-      range: extSymbol.range |> Exthost.OneBasedRange.toRange,
-      selectionRange: extSymbol.range |> Exthost.OneBasedRange.toRange,
+      let symbol = {
+        uniqueId: newUniqueId,
+        name: extSymbol.name,
+        detail: extSymbol.detail,
+        kind: extSymbol.kind,
+        range: extSymbol.range |> Exthost.OneBasedRange.toRange,
+        selectionRange: extSymbol.range |> Exthost.OneBasedRange.toRange,
+      };
+
+      if (children == []) {
+        Tree.leaf(symbol);
+      } else {
+        Tree.node(~children, symbol);
+      };
     };
 
-    if (children == []) {
-      Tree.leaf(symbol);
-    } else {
-      Tree.node(~children, symbol);
-    };
+    loop(~uniqueIdPrefix="symbol.", symbol);
   };
 
 type model = {

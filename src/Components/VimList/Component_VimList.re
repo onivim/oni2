@@ -115,18 +115,6 @@ type outmsg =
   | Nothing
   | Selected({index: int});
 
-let set = (~searchText=?, items, model) => {
-  let searchContext =
-    switch (searchText) {
-    | None => model.searchContext
-    | Some(f) =>
-      let searchIds = Array.map(f, items);
-      SearchContext.setSearchIds(searchIds, model.searchContext);
-    };
-
-  {...model, searchContext, items};
-};
-
 let showTopScrollShadow = ({scrollY, _}) => scrollY > 0.1;
 let showBottomScrollShadow = ({items, scrollY, rowHeight, viewportHeight, _}) => {
   let totalHeight = float(Array.length(items) * rowHeight);
@@ -177,10 +165,16 @@ let setSelected = (~selected, model) => {
   {...model, selected: selected'} |> ensureSelectedVisible;
 };
 
-let set = (items, model) => {
-  {...model, items}
-  // Ensure selected is in bounds
-  |> setSelected(~selected=model.selected);
+let set = (~searchText=?, items, model) => {
+  let searchContext =
+    switch (searchText) {
+    | None => model.searchContext
+    | Some(f) =>
+      let searchIds = Array.map(f, items);
+      SearchContext.setSearchIds(searchIds, model.searchContext);
+    };
+
+  {...model, searchContext, items} |> setSelected(~selected=model.selected);
 };
 
 let setScrollY = (~scrollY, model) => {

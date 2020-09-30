@@ -96,10 +96,33 @@ let setTree = (tree, model) => {
         children,
       )
     };
+  let searchText =
+      (
+        node:
+          Component_VimTree.nodeOrLeaf(
+            FsTreeNode.metadata,
+            FsTreeNode.metadata,
+          ),
+      ) => {
+    switch (node) {
+    | Leaf({data, _}) => data.displayName
+    | Node({data, _}) => data.displayName
+    };
+  };
   let treeView =
-    Component_VimTree.set(~uniqueId, firstLevelChildren, model.treeView);
+    Component_VimTree.set(
+      ~searchText,
+      ~uniqueId,
+      firstLevelChildren,
+      model.treeView,
+    );
 
   {...model, rootName, tree: Some(tree), treeView};
+};
+
+let keyPress = (key, model) => {
+  ...model,
+  treeView: Component_VimTree.keyPress(key, model.treeView),
 };
 
 let scrollTo = (~index, ~alignment, model) => {

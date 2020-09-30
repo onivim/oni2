@@ -193,6 +193,7 @@ module VimTree = {
       count > 0
         ? <Component_VimTree.View
             isActive=isFocused
+            font=uiFont
             focusedIndex
             theme
             model

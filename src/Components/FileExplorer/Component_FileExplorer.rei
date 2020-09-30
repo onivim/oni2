@@ -16,6 +16,8 @@ let initial: (~rootPath: string) => model;
 
 let setRoot: (~rootPath: string, model) => model;
 
+let keyPress: (string, model) => model;
+
 let getFileIcon:
   (~languageInfo: Exthost.LanguageInfo.t, ~iconTheme: IconTheme.t, string) =>
   option(IconTheme.IconDefinition.t);
