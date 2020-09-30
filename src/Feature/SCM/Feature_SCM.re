@@ -53,14 +53,18 @@ module Provider = {
   };
 
   let appliesToPath = (~path: string, {rootUri, _}) => {
-    let normalizedPath =
-      path |> Oni_Core.Uri.fromPath |> Oni_Core.Uri.toFileSystemPath;
+    let maybePath =
+      path |> Oni_Core.Uri.fromPath |> Oni_Core.Uri.toFileSystemPath
+      |> Fp.absolute;
 
-    rootUri
-    |> Option.map(scmRoot => {
-         let scmPath = scmRoot |> Oni_Core.Uri.toFileSystemPath;
-         StringEx.contains(scmPath, normalizedPath);
-       })
+    let maybeScmPath =
+      rootUri
+      |> Option.map(Oni_Core.Uri.toFileSystemPath)
+      |> OptionEx.flatmap(Fp.absolute);
+
+    OptionEx.map2((path, scmPath) => {
+         Fp.isDescendent(~ofPath=path, scmPath);
+       }, maybePath, maybeScmPath)
     |> Option.value(~default=false);
   };
 };
