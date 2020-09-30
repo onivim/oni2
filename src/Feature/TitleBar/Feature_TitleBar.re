@@ -272,7 +272,12 @@ module Styles = {
       textOverflow(`Ellipsis),
     ];
 
-    let buttons = [flexDirection(`Row), flexGrow(0), flexShrink(0), alignItems(`Center)];
+    let buttons = [
+      flexDirection(`Row),
+      flexGrow(0),
+      flexShrink(0),
+      alignItems(`Center),
+    ];
 
     module Button = {
       let container = [
