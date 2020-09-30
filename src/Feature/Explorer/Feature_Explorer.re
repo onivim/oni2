@@ -54,11 +54,138 @@ type outmsg =
   | GrabFocus
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
+let setTree = (tree, model) => {
+  let uniqueId = (data: FsTreeNode.metadata) => data.path;
+  let searchText =
+      (
+        node:
+          Component_VimTree.nodeOrLeaf(
+            FsTreeNode.metadata,
+            FsTreeNode.metadata,
+          ),
+      ) => {
+    switch (node) {
+    | Leaf({data, _}) => data.displayName
+    | Node({data, _}) => data.displayName
+    };
+  };
+  let treeView =
+    Component_VimTree.set(~searchText, ~uniqueId, [tree], model.treeView);
+
+  {...model, tree: Some(tree), treeView};
+};
+
+let scrollTo = (~index, ~alignment, model) => {
+  {
+    ...model,
+    treeView: Component_VimTree.scrollTo(~index, ~alignment, model.treeView),
+  };
+};
+
+let setActive = (maybePath, model) => {...model, active: maybePath};
+
+let setFocus = (maybePath, model) =>
+  switch (maybePath, model.tree) {
+  | (Some(path), Some(tree)) =>
+    switch (FsTreeNode.findByPath(path, tree)) {
+    | Some(_) => {...model, focus: Some(path)}
+    | None => model
+    }
+  | _ => {...model, focus: None}
+  };
+
+let replaceNode = (node, model: model) =>
+  switch (model.tree) {
+  | Some(tree) =>
+    setTree(FsTreeNode.replace(~replacement=node, tree), model)
+  | None => model
+  };
+
+let revealAndFocusPath = (~configuration, path, model: model) => {
+  switch (model.tree) {
+  | Some(tree) =>
+    switch (FsTreeNode.findNodesByPath(path, tree)) {
+    // Nothing to do
+    | `Success([])
+    | `Failed => (model, Nothing)
+
+    // Load next unloaded node in path
+    | `Partial(lastNode) => (
+        model,
+        Effect(
+          Effects.load(
+            FsTreeNode.getPath(lastNode), configuration, ~onComplete=node =>
+            FocusNodeLoaded(node)
+          ),
+        ),
+      )
+
+    // Open ALL the nodes (in the path)!
+    | `Success(_) =>
+      let tree = FsTreeNode.updateNodesInPath(FsTreeNode.setOpen, path, tree);
+
+      let maybePathIndex = getIndex(path, model);
+
+      let model = model |> setFocus(Some(path)) |> setTree(tree);
+
+      let scrolledModel =
+        maybePathIndex
+        |> Option.map(index => scrollTo(~index, ~alignment=`Center, model))
+        |> Option.value(~default=model);
+
+      (scrolledModel, Nothing);
+    }
+
+  | None => (model, Nothing)
+  };
+};
+
 let update = (~configuration, msg, model) => {
   switch (msg) {
-  | KeyboardInput(_) =>
-    // Anything to be brought back here?
-    (model, Nothing)
+  | ActiveFilePathChanged(maybeFilePath) =>
+    switch (model) {
+    | {active, _} when active != maybeFilePath =>
+      switch (maybeFilePath) {
+      | Some(path) =>
+        let autoReveal =
+          Oni_Core.Configuration.getValue(
+            c => c.explorerAutoReveal,
+            configuration,
+          );
+        switch (autoReveal) {
+        | `HighlightAndScroll =>
+          let model' = {...model, active: Some(path)};
+          revealAndFocusPath(~configuration, path, model');
+        | `HighlightOnly =>
+          let model = setActive(Some(path), model);
+          (setFocus(Some(path), model), Nothing);
+        | `NoReveal => (model, Nothing)
+        };
+      | None => (model, Nothing)
+      }
+    | _ => (model, Nothing)
+    }
+
+  | TreeLoaded(tree) => (setTree(tree, model), Nothing)
+
+  | TreeLoadError(_msg) => (model, Nothing)
+
+  | NodeLoaded(node) => (replaceNode(node, model), Nothing)
+
+  | FocusNodeLoaded(node) =>
+    switch (model.active) {
+    | Some(activePath) =>
+      model
+      |> replaceNode(node)
+      |> revealAndFocusPath(~configuration, activePath)
+
+    | None => (model, Nothing)
+    }
+
+  | KeyboardInput(key) => (
+      {...model, treeView: Component_VimTree.keyPress(key, model.treeView)},
+      Nothing,
+    )
 
   | FileExplorer(fileExplorerMsg) =>
     let (fileExplorer, outmsg) =

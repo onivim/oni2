@@ -511,6 +511,12 @@ module List = {
       all(ref(activeIndentGuide) |> transparent(0.5)),
     );
 
+  let filterMatchBackground =
+    define("list.filterMatchBackground", all(ref(hoverBackground)));
+
+  let filterMatchBorder =
+    define("list.filterMatchBorder", all(ref(hoverForeground)));
+
   let defaults = [
     focusBackground,
     focusForeground,
@@ -522,6 +528,8 @@ module List = {
     deemphasizedForeground,
     activeIndentGuide,
     inactiveIndentGuide,
+    filterMatchBackground,
+    filterMatchBorder,
   ];
 };
 
