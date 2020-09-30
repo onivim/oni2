@@ -95,6 +95,8 @@ let setDiagnostics = (diagnostics, model) => {
   {...model, diagnosticsView: diagnosticsView'};
 };
 
+let setLocations = (_locations, model) => model;
+
 let height = ({height, resizeDelta, _}) => {
   let candidateHeight = height + resizeDelta;
   if (candidateHeight < Constants.minHeight) {

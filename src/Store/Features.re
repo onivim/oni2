@@ -320,7 +320,7 @@ let update =
     let characterSelection =
       editor |> Feature_Editor.Editor.byteRangeToCharacterRange(selection);
 
-    let (model, outmsg) =
+    let (languageSupport, outmsg) =
       Feature_LanguageSupport.update(
         ~languageConfiguration,
         ~configuration=state.configuration,
@@ -333,38 +333,62 @@ let update =
         state.languageSupport,
       );
 
-    let eff =
-      Feature_LanguageSupport.(
-        switch (outmsg) {
-        | Nothing => Isolinear.Effect.none
-        | ApplyCompletion({insertText, meetColumn}) =>
-          Service_Vim.Effects.applyCompletion(
-            ~meetColumn, ~insertText, ~toMsg=cursors =>
-            Actions.Editor({
-              scope: EditorScope.Editor(editorId),
-              msg: CursorsChanged(cursors),
-            })
-          )
-        | InsertSnippet({meetColumn, snippet}) =>
-          // TODO: Full snippet integration!
-          let insertText = Feature_Snippets.snippetToInsert(~snippet);
-          Service_Vim.Effects.applyCompletion(
-            ~meetColumn, ~insertText, ~toMsg=cursors =>
-            Actions.Editor({
-              scope: EditorScope.Editor(editorId),
-              msg: CursorsChanged(cursors),
-            })
-          );
-        | OpenFile({filePath, location}) =>
-          Internal.openFileEffect(~position=location, filePath)
-        | NotifySuccess(msg) => Internal.notificationEffect(~kind=Info, msg)
-        | NotifyFailure(msg) => Internal.notificationEffect(~kind=Error, msg)
-        | Effect(eff) =>
-          eff |> Isolinear.Effect.map(msg => LanguageSupport(msg))
-        }
-      );
+    let state = {...state, languageSupport};
 
-    ({...state, languageSupport: model}, eff);
+    Feature_LanguageSupport.(
+      switch (outmsg) {
+      | Nothing => (state, Isolinear.Effect.none)
+      | ApplyCompletion({insertText, meetColumn}) => (
+          state,
+          Service_Vim.Effects.applyCompletion(
+            ~meetColumn, ~insertText, ~toMsg=cursors =>
+            Actions.Editor({
+              scope: EditorScope.Editor(editorId),
+              msg: CursorsChanged(cursors),
+            })
+          ),
+        )
+      | ReferencesAvailable =>
+        // TODO
+        let references =
+          Feature_LanguageSupport.References.get(languageSupport);
+        let pane =
+          state.pane
+          |> Feature_Pane.setLocations(references)
+          |> Feature_Pane.show(~pane=Locations);
+        let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
+        (state', Isolinear.Effect.none);
+      | InsertSnippet({meetColumn, snippet}) =>
+        // TODO: Full snippet integration!
+        let insertText = Feature_Snippets.snippetToInsert(~snippet);
+        (
+          state,
+          Service_Vim.Effects.applyCompletion(
+            ~meetColumn, ~insertText, ~toMsg=cursors =>
+            Actions.Editor({
+              scope: EditorScope.Editor(editorId),
+              msg: CursorsChanged(cursors),
+            })
+          ),
+        );
+      | OpenFile({filePath, location}) => (
+          state,
+          Internal.openFileEffect(~position=location, filePath),
+        )
+      | NotifySuccess(msg) => (
+          state,
+          Internal.notificationEffect(~kind=Info, msg),
+        )
+      | NotifyFailure(msg) => (
+          state,
+          Internal.notificationEffect(~kind=Error, msg),
+        )
+      | Effect(eff) => (
+          state,
+          eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
+        )
+      }
+    );
 
   | Messages(msg) =>
     let (model, outmsg) = Feature_Messages.update(msg, state.messages);

@@ -50,6 +50,7 @@ type outmsg =
       filePath: string,
       location: option(CharacterPosition.t),
     })
+  | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
   | Effect(Isolinear.Effect.t(msg));
@@ -64,6 +65,7 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     | Outmsg.Nothing => Nothing
     | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
     | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)
+    | Outmsg.ReferencesAvailable => ReferencesAvailable
     | Outmsg.OpenFile({filePath, location}) => OpenFile({filePath, location})
     | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f));
 
@@ -470,6 +472,11 @@ module Hover = {
       );
     };
   };
+};
+
+module OldReferences = References;
+module References = {
+  let get = ({references, _}) => OldReferences.get(references);
 };
 
 let sub =

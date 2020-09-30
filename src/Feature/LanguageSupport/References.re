@@ -25,6 +25,13 @@ type msg =
   | ReferencesNotAvailable
   | ReferencesFound([@opaque] list(Exthost.Location.t));
 
+let get = ({state, _}) =>
+  switch (state) {
+  | Empty
+  | InProgress => []
+  | Found(items) => items
+  };
+
 let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) => {
   switch (msg) {
   | Command(FindAll) =>
@@ -53,14 +60,13 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) => {
     ({...model, state: InProgress}, Outmsg.Effect(eff));
   | ReferencesNotAvailable => (model, Outmsg.Nothing)
   | ReferencesFound(locations) =>
-    prerr_endline ("FOUND REFERENCES: " ++ string_of_int(List.length(locations)));
     let state' =
       switch (model.state) {
       | Empty
       | InProgress => Found(locations)
       | Found(prevLocations) => Found(locations @ prevLocations)
       };
-    ({...model, state: state'}, Outmsg.Nothing);
+    ({...model, state: state'}, Outmsg.ReferencesAvailable);
   };
 };
 
@@ -92,11 +98,7 @@ module Keybindings = {
   let condition = "editorTextFocus && normalMode" |> WhenExpr.parse;
 
   // TODO: Fix this
-  let shiftF12 = {
-    key: "<F10>",
-    command: Commands.findAll.id,
-    condition,
-  };
+  let shiftF12 = {key: "<F10>", command: Commands.findAll.id, condition};
 };
 
 module Contributions = {
