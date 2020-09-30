@@ -42,11 +42,14 @@ let update:
 
 let set:
   (
+    ~searchText: nodeOrLeaf('node, 'leaf) => string=?,
     ~uniqueId: 'node => string,
     list(Tree.t('node, 'leaf)),
     model('node, 'leaf)
   ) =>
   model('node, 'leaf);
+
+let keyPress: (string, model('node, 'leaf)) => model('node, 'leaf);
 
 let findIndex:
   (nodeOrLeaf('node, 'leaf) => bool, model('node, 'leaf)) => option(int);
@@ -72,6 +75,7 @@ module View: {
   let make:
     (
       ~isActive: bool,
+      ~font: UiFont.t,
       ~focusedIndex: option(int),
       ~theme: ColorTheme.Colors.t,
       ~model: model('node, 'leaf),

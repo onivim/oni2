@@ -141,6 +141,7 @@ module VimList = {
     let count = Component_VimList.count(model);
     let contents =
       <Component_VimList.View
+        font=uiFont
         isActive=isFocused
         focusedIndex=None
         theme
