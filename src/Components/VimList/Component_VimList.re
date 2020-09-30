@@ -123,23 +123,26 @@ let showBottomScrollShadow = ({items, scrollY, rowHeight, viewportHeight, _}) =>
 
 // UPDATE
 
-let ensureSelectedVisible = model => {
-  let yPosition = float(model.selected * model.rowHeight);
+let ensureSelectedVisible = model =>
+  // If we haven't measured yet - don't move the viewport
+  if (model.viewportHeight <= 1) {
+    model;
+  } else {
+    let yPosition = float(model.selected * model.rowHeight);
 
-  let rowHeightF = float(model.rowHeight);
-  let viewportHeightF = float(model.viewportHeight);
+    let rowHeightF = float(model.rowHeight);
+    let viewportHeightF = float(model.viewportHeight);
 
-  let scrollY' =
-    if (yPosition < model.scrollY) {
-      yPosition;
-    } else if (yPosition +. rowHeightF > model.scrollY +. viewportHeightF) {
-      yPosition -. (viewportHeightF -. rowHeightF);
-    } else {
-      model.scrollY;
-    };
-
-  {...model, scrollY: scrollY'};
-};
+    let scrollY' =
+      if (yPosition < model.scrollY) {
+        yPosition;
+      } else if (yPosition +. rowHeightF > model.scrollY +. viewportHeightF) {
+        yPosition -. (viewportHeightF -. rowHeightF);
+      } else {
+        model.scrollY;
+      };
+    {...model, scrollY: scrollY'};
+  };
 let keyPress = (key, model) => {
   let (searchContext, maybeSelected) =
     SearchContext.keyPress(~index=model.selected, key, model.searchContext);

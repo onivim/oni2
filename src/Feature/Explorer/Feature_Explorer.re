@@ -52,7 +52,8 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
   | GrabFocus
-  | UnhandledWindowMovement(Component_VimWindows.outmsg);
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol);
 
 let update = (~configuration, msg, model) => {
   switch (msg) {
@@ -101,12 +102,13 @@ let update = (~configuration, msg, model) => {
             ),
         ) => {
       switch (node) {
-      | Leaf({data, _}) => data.name
+      | Leaf({data, _})
       | Node({data, _}) => data.name
       };
     };
     // TODO
-    let uniqueId = _ => "";
+    let uniqueId = (symbol: Feature_LanguageSupport.DocumentSymbols.symbol) =>
+      symbol.uniqueId;
     (
       {
         ...model,
@@ -122,10 +124,19 @@ let update = (~configuration, msg, model) => {
     );
 
   | SymbolOutline(symbolMsg) =>
-    let (symbolOutline, _outmsg) =
+    let (symbolOutline, outmsg) =
       Component_VimTree.update(symbolMsg, model.symbolOutline);
 
-    ({...model, symbolOutline}, Nothing);
+    let outmsg' =
+      switch (outmsg) {
+      | Component_VimTree.Nothing
+      | Component_VimTree.Expanded(_)
+      | Component_VimTree.Collapsed(_) => Nothing
+
+      | Component_VimTree.Selected(symbol) => SymbolSelected(symbol)
+      };
+
+    ({...model, symbolOutline}, outmsg');
 
   | VimWindowNav(navMsg) =>
     let (vimWindowNavigation, outmsg) =

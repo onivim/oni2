@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Isolinear;
 open Oni_Core;
 open Oni_Core.Utility;
@@ -289,6 +290,19 @@ let update =
           state,
           Internal.unhandledWindowMotionEffect(windowMovement),
         )
+      | SymbolSelected(symbol) =>
+        let maybeBuffer = Oni_Model.Selectors.getActiveBuffer(state);
+        let eff =
+          maybeBuffer
+          |> OptionEx.flatMap(Oni_Core.Buffer.getFilePath)
+          |> Option.map(filePath => {
+               let range: CharacterRange.t =
+                 Feature_LanguageSupport.DocumentSymbols.(symbol.range);
+               let position = range.start;
+               Internal.openFileEffect(~position=Some(position), filePath);
+             })
+          |> Option.value(~default=Isolinear.Effect.none);
+        (state, eff);
       }
     );
 

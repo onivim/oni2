@@ -23,7 +23,8 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
   | GrabFocus
-  | UnhandledWindowMovement(Component_VimWindows.outmsg);
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol);
 
 let update:
   (~configuration: Oni_Core.Configuration.t, msg, model) => (model, outmsg);
