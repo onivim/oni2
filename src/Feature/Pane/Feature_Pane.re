@@ -2,6 +2,7 @@
  * Feature_Pane.re
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 [@deriving show({with_path: false})]
@@ -57,7 +58,10 @@ type model = {
   diagnosticsView:
     Component_VimTree.model(string, Oni_Components.LocationListItem.t),
   locationsView:
-    Component_VimTree.model(string, Oni_Components.LocationListItem.t),
+    Component_VimTree.model(
+      LocationsPaneView.location,
+      Oni_Components.LocationListItem.t,
+    ),
 };
 
 let diagnosticToLocList =
@@ -95,7 +99,60 @@ let setDiagnostics = (diagnostics, model) => {
   {...model, diagnosticsView: diagnosticsView'};
 };
 
-let setLocations = (_locations, model) => model;
+let locationsToReferences = (locations: list(Exthost.Location.t)) => {
+  let map =
+    List.fold_left(
+      (acc, curr: Exthost.Location.t) => {
+        let {range, uri}: Exthost.Location.t = curr;
+
+        let position =
+          range
+          |> Exthost.OneBasedRange.toRange
+          |> (characterRange => CharacterRange.(characterRange.start));
+
+        let path = Oni_Core.Uri.toFileSystemPath(uri);
+
+        acc
+        |> StringMap.update(
+             path,
+             fun
+             | None => Some([position])
+             | Some(positions) => Some([position, ...positions]),
+           );
+      },
+      StringMap.empty,
+      locations,
+    );
+
+  map
+  |> StringMap.bindings
+  |> List.map(((path, positions)) => LocationsPaneView.{path, positions});
+};
+
+let setLocations = (locations, model) => {
+  let references = locationsToReferences(locations);
+
+  let nodes =
+    references
+    |> List.map(reference =>
+         Tree.node(~children=[], ~expanded=false, reference)
+       );
+
+  let locationsView' =
+    Component_VimTree.set(
+      ~uniqueId=(LocationsPaneView.{path, _}) => path,
+      ~searchText=
+        Component_VimTree.(
+          fun
+          | Node({data, _}) => LocationsPaneView.(data.path)
+          | Leaf({data, _}) => Oni_Components.LocationListItem.(data.text)
+        ),
+      nodes,
+      model.locationsView,
+    );
+
+  {...model, locationsView: locationsView'};
+};
 
 let height = ({height, resizeDelta, _}) => {
   let candidateHeight = height + resizeDelta;
@@ -154,7 +211,13 @@ let update = (msg, model) =>
   | KeyPressed(key) =>
     switch (model.selected) {
     | Notifications => (model, Nothing)
-    | Locations => (model, Nothing)
+    | Locations => (
+        {
+          ...model,
+          locationsView: Component_VimTree.keyPress(key, model.locationsView),
+        },
+        Nothing,
+      )
     | Diagnostics => (
         {
           ...model,
@@ -360,6 +423,8 @@ module View = {
         ~languageInfo,
         ~uiFont,
         ~notificationDispatch,
+        ~locationsList,
+        ~locationsDispatch: Component_VimTree.msg => unit,
         ~diagnosticDispatch: Component_VimTree.msg => unit,
         ~diagnosticsList: Component_VimTree.model(string, LocationListItem.t),
         ~notifications: Feature_Notification.model,
@@ -367,7 +432,17 @@ module View = {
         (),
       ) =>
     switch (selected) {
-    | Locations => <Text text="Hello, world" />
+    | Locations =>
+      <LocationsPaneView
+        isFocused
+        locationsList
+        iconTheme
+        languageInfo
+        theme
+        uiFont
+        workingDirectory
+        dispatch=locationsDispatch
+      />
     | Diagnostics =>
       <DiagnosticsPaneView
         isFocused
@@ -476,12 +551,14 @@ module View = {
             iconTheme
             languageInfo
             diagnosticsList={pane.diagnosticsView}
+            locationsList={pane.locationsView}
             selected={selected(pane)}
             theme
             uiFont
             notifications
             notificationDispatch
             diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
+            locationsDispatch={msg => dispatch(LocationsList(msg))}
             workingDirectory
           />
         </View>
@@ -529,7 +606,16 @@ module Contributions = {
           ? Component_VimTree.Contributions.commands : []
       )
       |> List.map(Oni_Core.Command.map(msg => DiagnosticsList(msg)));
-    isFocused ? common @ vimWindowCommands @ diagnosticsCommands : common;
+
+    let locationsCommands =
+      (
+        isFocused && model.selected == Locations
+          ? Component_VimTree.Contributions.commands : []
+      )
+      |> List.map(Oni_Core.Command.map(msg => LocationsList(msg)));
+    isFocused
+      ? common @ vimWindowCommands @ diagnosticsCommands @ locationsCommands
+      : common;
   };
 
   let contextKeys = (~isFocused, model) => {
@@ -541,12 +627,17 @@ module Contributions = {
           )
         : empty;
 
-    let vimListKeys =
+    let diagnosticsKeys =
       isFocused && model.selected == Diagnostics
         ? Component_VimTree.Contributions.contextKeys(model.diagnosticsView)
         : empty;
 
-    [vimNavKeys, vimListKeys] |> unionMany;
+    let locationsKeys =
+      isFocused && model.selected == Locations
+        ? Component_VimTree.Contributions.contextKeys(model.locationsView)
+        : empty;
+
+    [vimNavKeys, diagnosticsKeys, locationsKeys] |> unionMany;
   };
 
   let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];
