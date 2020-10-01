@@ -68,10 +68,11 @@ let update = (editor, msg) => {
       Editor.scrollToPixelY(~pixelY=newPixelScrollY, editor),
       Nothing,
     )
-  | EditorMouseWheel({deltaX, deltaY}) => (
+  | EditorMouseWheel({deltaX, deltaY, shiftKey}) => (
       Editor.scrollDeltaPixelXY(
-        ~pixelX=deltaX *. Constants.editorWheelMultiplier,
-        ~pixelY=deltaY *. Constants.editorWheelMultiplier,
+        ~pixelX=
+          (shiftKey ? deltaY : deltaX) *. Constants.editorWheelMultiplier,
+        ~pixelY=(shiftKey ? 0. : deltaY) *. Constants.editorWheelMultiplier,
         editor,
       ),
       Nothing,
