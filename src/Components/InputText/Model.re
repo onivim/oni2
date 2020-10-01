@@ -63,6 +63,9 @@ module Internal = {
     let finalIndex = 0;
     let index = ref(max(focus - 1, finalIndex));
 
+    while (index^ > finalIndex && separatorOnIndexExn(index^, text)) {
+      index := index^ - 1;
+    };
     while (index^ > finalIndex && !separatorOnIndexExn(index^ - 1, text)) {
       index := index^ - 1;
     };
@@ -105,6 +108,33 @@ module Internal = {
     let count = index - lastWordStart;
 
     let (textSlice, idx) = removeBefore(~count, index, text);
+
+    (textSlice, Selection.collapsed(~text=textSlice, idx));
+  };
+
+  let removeLineBefore = (text, selection: Selection.t) => {
+    let index = selection.focus;
+    let count = index;
+
+    let (textSlice, idx) = removeBefore(~count, index, text);
+
+    (textSlice, Selection.collapsed(~text=textSlice, idx));
+  };
+
+  let removeLineAfter = (text, selection: Selection.t) => {
+    let index = selection.focus;
+    let count = Zed_utf8.length(text) - index;
+
+    let (textSlice, idx) = removeAfter(~count, index, text);
+
+    (textSlice, Selection.collapsed(~text=textSlice, idx));
+  };
+
+  let removeLine = text => {
+    let index = 0;
+    let count = Zed_utf8.length(text);
+
+    let (textSlice, idx) = removeAfter(~count, index, text);
 
     (textSlice, Selection.collapsed(~text=textSlice, idx));
   };
@@ -201,6 +231,11 @@ module Internal = {
     | ("<C-h>", false) => removeSelection(text, selection)
     | ("<C-w>", true) => removeWord(text, selection)
     | ("<C-w>", false) => removeSelection(text, selection)
+    | ("<C-u>", true) => removeLineBefore(text, selection)
+    | ("<C-u>", false) => removeSelection(text, selection)
+    | ("<C-k>", true) => removeLineAfter(text, selection)
+    | ("<C-k>", false) => removeSelection(text, selection)
+    | ("<C-c>", _) => removeLine(text)
     | ("<DEL>", true) => removeCharAfter(text, selection)
     | ("<DEL>", false) => removeSelection(text, selection)
     | ("<HOME>", _) => (text, Selection.collapsed(~text, 0))
@@ -413,6 +448,10 @@ let%test_module "Model" =
                  0,
                );
           };
+          let%test "Removes multiple spaces" = {
+            collapsed(~text="testing   three spaces", 10)
+            |> handleInput(~key) == collapsed(~text="three spaces", 0);
+          };
           let%test "Removes word with unicode characters on the left of cursor" = {
             collapsed(~text=uTestString, 6)
             |> handleInput(~key) == collapsed(~text="is Cool", 0);
@@ -420,6 +459,70 @@ let%test_module "Model" =
 
           let%test "Doesn't remove anything if cursor at the beginning" = {
             collapsed(0) |> handleInput(~key) == collapsed(0);
+          };
+
+          let%test "Don't do anything for blank string" = {
+            collapsed(~text="", -1)
+            |> handleInput(~key) == collapsed(~text="", 0);
+          };
+        });
+     let%test_module "When <C-u> with no selection" =
+       (module
+        {
+          let key = "<C-u>";
+          let%test "Removes all characters on the left of cursor" = {
+            collapsed(10)
+            |> handleInput(~key)
+            == collapsed(~text="esting. Test. String. Isn't it? Maybe", 0);
+          };
+          let%test "Removes all characters including Unicode on the left of cursor" = {
+            collapsed(~text=uTestString, 9)
+            |> handleInput(~key) == collapsed(~text="Cool", 0);
+          };
+
+          let%test "Doesn't remove anything if cursor at the beginning" = {
+            collapsed(0) |> handleInput(~key) == collapsed(0);
+          };
+
+          let%test "Don't do anything for blank string" = {
+            collapsed(~text="", -1)
+            |> handleInput(~key) == collapsed(~text="", 0);
+          };
+        });
+     let%test_module "When <C-k> with no selection" =
+       (module
+        {
+          let key = "<C-k>";
+          let%test "Removes all characters on the right of cursor" = {
+            collapsed(10)
+            |> handleInput(~key) == collapsed(~text="Some inter", 10);
+          };
+          let%test "Removes all characters including Unicode on the right of cursor" = {
+            collapsed(~text=uTestString, 0)
+            |> handleInput(~key) == collapsed(~text="", 0);
+          };
+
+          let%test "Doesn't remove anything if cursor at the end" = {
+            collapsed(testStringLength)
+            |> handleInput(~key) == collapsed(testStringLength);
+          };
+
+          let%test "Don't do anything for blank string" = {
+            collapsed(~text="", -1)
+            |> handleInput(~key) == collapsed(~text="", 0);
+          };
+        });
+     let%test_module "When <C-c>" =
+       (module
+        {
+          let key = "<C-c>";
+          let%test "Removes all characters" = {
+            collapsed(10) |> handleInput(~key) == collapsed(~text="", 0);
+          };
+
+          let%test "Removes all characters including Unicode" = {
+            collapsed(~text=uTestString, 2)
+            |> handleInput(~key) == collapsed(~text="", 0);
           };
 
           let%test "Don't do anything for blank string" = {

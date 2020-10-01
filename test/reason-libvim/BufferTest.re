@@ -8,6 +8,25 @@ let input = s => ignore(Vim.input(s));
 let key = s => ignore(Vim.key(s));
 
 describe("Buffer", ({describe, _}) => {
+  describe("load", ({test, _}) => {
+    test("loaded buffer does not change current buffer", ({expect, _}) => {
+      let originalBuffer = resetBuffer();
+
+      let loadedBuffer = Buffer.loadFile("test/reason-libvim/lines_100.txt");
+
+      expect.equal(Buffer.getCurrent(), originalBuffer);
+      expect.bool(loadedBuffer != originalBuffer).toBe(true);
+    });
+
+    test("can read lines of loaded buffer", ({expect, _}) => {
+      let originalBuffer = resetBuffer();
+
+      let loadedBuffer = Buffer.loadFile("test/reason-libvim/lines_100.txt");
+
+      expect.int(Buffer.getLineCount(loadedBuffer)).toBe(100);
+      expect.equal(Buffer.getCurrent(), originalBuffer);
+    });
+  });
   describe("fileformats", ({test, _}) => {
     test("get / set", ({expect, _}) => {
       let buffer = resetBuffer();

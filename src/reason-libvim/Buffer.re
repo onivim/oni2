@@ -9,6 +9,10 @@ let openFile = (filePath: string) => {
   ret;
 };
 
+let loadFile = (filePath: string) => {
+  Native.vimBufferLoad(filePath);
+};
+
 let getFilename = (buffer: t) => {
   Native.vimBufferGetFilename(buffer);
 };
