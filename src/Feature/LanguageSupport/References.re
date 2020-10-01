@@ -98,7 +98,7 @@ module Keybindings = {
   let condition = "editorTextFocus && normalMode" |> WhenExpr.parse;
 
   // TODO: Fix this
-  let shiftF12 = {key: "<F10>", command: Commands.findAll.id, condition};
+  let shiftF12 = {key: "<S-F12>", command: Commands.findAll.id, condition};
 };
 
 module Contributions = {
