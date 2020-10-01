@@ -191,7 +191,6 @@ and quickmenuVariant =
       languages:
         list((string, option(Oni_Core.IconTheme.IconDefinition.t))),
     })
-  | DocumentSymbols
   | Extension({
       id: int,
       hasItems: bool,

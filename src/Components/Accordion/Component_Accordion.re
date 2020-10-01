@@ -74,6 +74,7 @@ module Common = {
         //~rowHeight,
         ~expanded,
         ~count,
+        ~showCount,
         //~renderItem,
         ~isFocused,
         //~focused,
@@ -88,6 +89,21 @@ module Common = {
     let fgColor = Colors.SideBarSectionHeader.foreground.from(theme);
 
     let countForeground = Colors.ActivityBarBadge.foreground.from(theme);
+
+    let countElement =
+      showCount
+        ? <View style={Styles.countContainer(~theme)}>
+            <View style=Styles.countInner>
+              <Text
+                style=Style.[color(countForeground)]
+                fontFamily={uiFont.family}
+                fontSize=10.
+                fontWeight=Revery.Font.Weight.Bold
+                text={numberToString(count)}
+              />
+            </View>
+          </View>
+        : React.empty;
 
     <View style={Styles.container(~isFocused, ~theme, expanded)}>
       <Clickable style={Styles.titleBar(theme)} onClick>
@@ -107,17 +123,7 @@ module Common = {
             text=title
           />
         </View>
-        <View style={Styles.countContainer(~theme)}>
-          <View style=Styles.countInner>
-            <Text
-              style=Style.[color(countForeground)]
-              fontFamily={uiFont.family}
-              fontSize=10.
-              fontWeight=Revery.Font.Weight.Bold
-              text={numberToString(count)}
-            />
-          </View>
-        </View>
+        countElement
       </Clickable>
       list
     </View>;
@@ -127,6 +133,7 @@ module Common = {
 module VimList = {
   let make =
       (
+        ~showCount=true,
         ~title,
         ~expanded,
         ~model,
@@ -150,6 +157,61 @@ module VimList = {
         render
       />;
 
-    <Common theme title expanded count isFocused uiFont onClick contents />;
+    <Common
+      showCount
+      theme
+      title
+      expanded
+      count
+      isFocused
+      uiFont
+      onClick
+      contents
+    />;
+  };
+};
+
+module VimTree = {
+  let make =
+      (
+        ~showCount=true,
+        ~focusedIndex=None,
+        ~title,
+        ~expanded,
+        ~model,
+        ~dispatch,
+        ~render,
+        ~isFocused,
+        ~theme,
+        ~uiFont: UiFont.t,
+        ~onClick,
+        ~empty=React.empty,
+        (),
+      ) => {
+    let count = Component_VimTree.count(model);
+    let contents =
+      count > 0
+        ? <Component_VimTree.View
+            isActive=isFocused
+            font=uiFont
+            focusedIndex
+            theme
+            model
+            dispatch
+            render
+          />
+        : empty;
+
+    <Common
+      showCount
+      theme
+      title
+      expanded
+      count
+      isFocused
+      uiFont
+      onClick
+      contents
+    />;
   };
 };

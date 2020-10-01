@@ -5,6 +5,7 @@ type model = {
   completion: Completion.model,
   definition: Definition.model,
   documentHighlights: DocumentHighlights.model,
+  documentSymbols: DocumentSymbols.model,
   formatting: Formatting.model,
   hover: Hover.model,
   rename: Rename.model,
@@ -16,6 +17,7 @@ let initial = {
   completion: Completion.initial,
   definition: Definition.initial,
   documentHighlights: DocumentHighlights.initial,
+  documentSymbols: DocumentSymbols.initial,
   formatting: Formatting.initial,
   hover: Hover.initial,
   rename: Rename.initial,
@@ -28,6 +30,7 @@ type msg =
   | Completion(Completion.msg)
   | Definition(Definition.msg)
   | DocumentHighlights(DocumentHighlights.msg)
+  | DocumentSymbols(DocumentSymbols.msg)
   | Formatting(Formatting.msg)
   | Hover(Hover.msg)
   | References(References.msg)
@@ -129,6 +132,11 @@ let update =
       );
     ({...model, documentHighlights: documentHighlights'}, Nothing);
 
+  | Exthost(RegisterDocumentSymbolProvider({handle, selector, _})) =>
+    let documentSymbols' =
+      DocumentSymbols.register(~handle, ~selector, model.documentSymbols);
+    ({...model, documentSymbols: documentSymbols'}, Nothing);
+
   | Exthost(RegisterReferenceSupport({handle, selector})) =>
     let references' =
       References.register(~handle, ~selector, model.references);
@@ -190,6 +198,8 @@ let update =
         definition: Definition.unregister(~handle, model.definition),
         documentHighlights:
           DocumentHighlights.unregister(~handle, model.documentHighlights),
+        documentSymbols:
+          DocumentSymbols.unregister(~handle, model.documentSymbols),
         formatting: Formatting.unregister(~handle, model.formatting),
         hover: Hover.unregister(~handle, model.hover),
         references: References.unregister(~handle, model.references),
@@ -235,6 +245,11 @@ let update =
         model.documentHighlights,
       );
     ({...model, documentHighlights: documentHighlights'}, Nothing);
+
+  | DocumentSymbols(documentSymbolsMsg) =>
+    let documentSymbols' =
+      DocumentSymbols.update(documentSymbolsMsg, model.documentSymbols);
+    ({...model, documentSymbols: documentSymbols'}, Nothing);
 
   | References(referencesMsg) =>
     let (references', outmsg) =
@@ -441,6 +456,16 @@ module DocumentHighlights = {
   };
 };
 
+module OriginalDocumentSymbols = DocumentSymbols;
+
+module DocumentSymbols = {
+  include OriginalDocumentSymbols;
+
+  let get = (~bufferId, {documentSymbols, _}) => {
+    OriginalDocumentSymbols.get(~bufferId, documentSymbols);
+  };
+};
+
 module OldHover = Hover;
 module Hover = {
   module Popup = {
@@ -486,7 +511,7 @@ let sub =
       ~activePosition,
       ~visibleBuffers,
       ~client,
-      {definition, completion, documentHighlights, _},
+      {definition, completion, documentHighlights, documentSymbols, _},
     ) => {
   let codeLensSub =
     CodeLens.sub(~visibleBuffers, ~client)
@@ -509,6 +534,10 @@ let sub =
       : OldCompletion.sub(~client, completion)
         |> Isolinear.Sub.map(msg => Completion(msg));
 
+  let documentSymbolsSub =
+    DocumentSymbols.sub(~buffer=activeBuffer, ~client, documentSymbols)
+    |> Isolinear.Sub.map(msg => DocumentSymbols(msg));
+
   let documentHighlightsSub =
     OldHighlights.sub(
       ~buffer=activeBuffer,
@@ -518,7 +547,13 @@ let sub =
     )
     |> Isolinear.Sub.map(msg => DocumentHighlights(msg));
 
-  [codeLensSub, completionSub, definitionSub, documentHighlightsSub]
+  [
+    codeLensSub,
+    completionSub,
+    definitionSub,
+    documentHighlightsSub,
+    documentSymbolsSub,
+  ]
   |> Isolinear.Sub.batch;
 };
 
