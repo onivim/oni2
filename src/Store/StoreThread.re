@@ -306,8 +306,6 @@ let start =
     let fileExplorerSub =
       Feature_Explorer.sub(
         ~configuration=state.configuration,
-        ~languageInfo=state.languageInfo,
-        ~iconTheme=state.iconTheme,
         state.fileExplorer,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.FileExplorer(msg));
@@ -353,13 +351,17 @@ let start =
          })
       |> Option.value(~default=Isolinear.Sub.none);
 
+    let autoUpdateSub =
+      Feature_AutoUpdate.sub(~config)
+      |> Isolinear.Sub.map(msg => Model.Actions.AutoUpdate(msg));
+
     [
+      extHostSubscription,
       languageSupportSub,
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,
       terminalFontSubscription,
-      extHostSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
       fileExplorerSub,
@@ -367,6 +369,7 @@ let start =
       extensionsSub,
       registersSub,
       scmSub,
+      autoUpdateSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -443,10 +446,10 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
     Feature_LanguageSupport.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.LanguageSupport(msg))),
-    Feature_Pane.Contributions.commands
-    |> List.map(Core.Command.map(msg => Model.Actions.Pane(msg))),
     Feature_Input.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Input(msg))),
+    Feature_AutoUpdate.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.AutoUpdate(msg))),
   ]
   |> List.flatten
   |> registerCommands(~dispatch);

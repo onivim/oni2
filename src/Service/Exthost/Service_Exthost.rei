@@ -170,6 +170,15 @@ module Sub: {
     ) =>
     Isolinear.Sub.t('a);
 
+  let documentSymbols:
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~toMsg: list(Exthost.DocumentSymbol.t) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
+
   module SCM: {
     let originalUri:
       (

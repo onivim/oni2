@@ -11,7 +11,7 @@ open Revery.Draw;
 open Revery.UI;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Constants = {
   include Constants;
@@ -425,8 +425,18 @@ let%component make =
 
               // Draw error highlight
               switch (IntMap.find_opt(item, diagnostics)) {
-              | Some(_) =>
-                let color = Revery.Color.rgba(1.0, 0.0, 0.0, 0.3);
+              | Some(diags) =>
+                let severity = Feature_Diagnostics.maxSeverity(diags);
+                let color =
+                  (
+                    switch (severity) {
+                    | Error => colors.errorForeground
+                    | Warning => colors.warningForeground
+                    | Info => colors.infoForeground
+                    | Hint => colors.hintForeground
+                    }
+                  )
+                  |> Revery.Color.multiplyAlpha(0.3);
                 Skia.Paint.setColor(
                   minimapPaint,
                   Revery.Color.toSkia(color),

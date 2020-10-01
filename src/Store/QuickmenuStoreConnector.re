@@ -132,7 +132,7 @@ let start = () => {
                  Actions.OpenFileByPath(path, None, None);
                },
                icon:
-                 Feature_Explorer.getFileIcon(
+                 Component_FileExplorer.getFileIcon(
                    ~languageInfo,
                    ~iconTheme,
                    path,
@@ -184,11 +184,6 @@ let start = () => {
         }),
         Isolinear.Effect.none,
       );
-
-    | QuickmenuShow(DocumentSymbols) => (
-        Some({...Quickmenu.defaults(DocumentSymbols), focused: Some(0)}),
-        Isolinear.Effect.none,
-      )
 
     | QuickmenuShow(Extension({id, hasItems, resolver})) => (
         Some({
@@ -488,10 +483,7 @@ let start = () => {
         state.iconTheme,
         CommandManager.current(state),
         MenuManager.current(state),
-        WhenExpr.ContextKeys.fromSchema(
-          ContextKeys.all(FocusManager.current(state)),
-          state,
-        ),
+        ContextKeys.all(state),
       );
 
     ({...state, quickmenu: menuState}, menuEffect);
@@ -530,13 +522,6 @@ let subscriptions = (ripgrep, dispatch) => {
     );
   };
 
-  let documentSymbols = (languageFeatures, buffer) => {
-    DocumentSymbolSubscription.create(
-      ~id="document-symbols", ~buffer, ~languageFeatures, ~onUpdate=items => {
-      addItems(items)
-    });
-  };
-
   let ripgrep = (languageInfo, iconTheme, configuration) => {
     let filesExclude =
       Configuration.getValue(c => c.filesExclude, configuration);
@@ -548,7 +533,11 @@ let subscriptions = (ripgrep, dispatch) => {
         name: Path.toRelative(~base=directory, fullPath),
         command: () => Actions.OpenFileByPath(fullPath, None, None),
         icon:
-          Feature_Explorer.getFileIcon(~languageInfo, ~iconTheme, fullPath),
+          Component_FileExplorer.getFileIcon(
+            ~languageInfo,
+            ~iconTheme,
+            fullPath,
+          ),
         highlight: [],
         handle: None,
       };
@@ -591,14 +580,6 @@ let subscriptions = (ripgrep, dispatch) => {
       | FileTypesPicker(_) => [filter(query, quickmenu.items)]
 
       | Wildmenu(_) => []
-      | DocumentSymbols =>
-        switch (Selectors.getActiveBuffer(state)) {
-        | Some(buffer) => [
-            filter(query, quickmenu.items),
-            documentSymbols(state.languageFeatures, buffer),
-          ]
-        | None => []
-        }
       };
 
     | None => []

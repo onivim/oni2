@@ -133,8 +133,8 @@ module CustomHooks = Oni_Components.CustomHooks;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 module Label = Oni_Components.Label;
-module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Diagnostics = Feature_Diagnostics;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 module Editor = Feature_Editor.Editor;
 
 module Colors = Feature_Theme.Colors;
@@ -295,7 +295,7 @@ let notificationCount =
 
 let diagnosticCount = (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => {
   let color = Colors.StatusBar.foreground.from(theme);
-  let text = diagnostics |> Diagnostics.count |> string_of_int;
+  let text = diagnostics |> Feature_Diagnostics.count |> string_of_int;
 
   let onClick = () => dispatch(DiagnosticsClicked);
 
@@ -361,7 +361,7 @@ module View = {
                   ~mode,
                   ~notifications: Feature_Notification.model,
                   ~recordingMacro: option(char),
-                  ~diagnostics: Diagnostics.t,
+                  ~diagnostics: Diagnostics.model,
                   ~font: UiFont.t,
                   ~activeBuffer: option(Oni_Core.Buffer.t),
                   ~activeEditor: option(Feature_Editor.Editor.t),
@@ -509,29 +509,27 @@ module View = {
     };
 
     let macro = (~register, ()) => {
-      Oni_Components.(
-        <item>
-          <View
-            style=Style.[
-              flexDirection(`Row),
-              justifyContent(`Center),
-              alignItems(`Center),
-            ]>
-            <View style=Style.[margin(4)]>
-              <Codicon icon=Codicon.circleFilled color=Revery.Colors.red />
-            </View>
-            <Text
-              text={String.make(1, register)}
-              style={Styles.text(
-                ~color=Colors.StatusBar.foreground.from(theme),
-              )}
-              fontFamily={font.family}
-              fontWeight=Revery.Font.Weight.Bold
-              fontSize=11.
-            />
+      <item>
+        <View
+          style=Style.[
+            flexDirection(`Row),
+            justifyContent(`Center),
+            alignItems(`Center),
+          ]>
+          <View style=Style.[margin(4)]>
+            <Codicon icon=Codicon.circleFilled color=Revery.Colors.red />
           </View>
-        </item>
-      );
+          <Text
+            text={String.make(1, register)}
+            style={Styles.text(
+              ~color=Colors.StatusBar.foreground.from(theme),
+            )}
+            fontFamily={font.family}
+            fontWeight=Revery.Font.Weight.Bold
+            fontSize=11.
+          />
+        </View>
+      </item>;
     };
 
     let notificationPopups = () =>

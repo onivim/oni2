@@ -4,7 +4,7 @@ open Oni_Core;
 
 open Helpers;
 
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 let renderLine =
     (
@@ -20,8 +20,18 @@ let renderLine =
       _offset,
     ) => {
   let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
-  let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) =>
-    Draw.underline(~context, ~color=colors.errorForeground, diagnostic.range);
+  let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) => {
+    let color =
+      Exthost.Diagnostic.Severity.(
+        switch (diagnostic.severity) {
+        | Error => colors.errorForeground
+        | Warning => colors.warningForeground
+        | Hint => colors.hintForeground
+        | Info => colors.infoForeground
+        }
+      );
+    Draw.underline(~context, ~color, diagnostic.range);
+  };
 
   /* Draw error markers */
   switch (IntMap.find_opt(item, diagnosticsMap)) {

@@ -8,7 +8,7 @@ open Revery.UI;
 open Oni_Core;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Styles = {
   open Style;
@@ -174,10 +174,16 @@ module Vertical = {
       (~diagnostics, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
     IntMap.bindings(diagnostics)
     |> List.map(binding => {
-         let (key, _) = binding;
-         key;
-       })
-    |> List.map(line => {
+         let (line, diagnostics) = binding;
+
+         let diagColor =
+           switch (Feature_Diagnostics.maxSeverity(diagnostics)) {
+           | Error => colors.errorForeground
+           | Warning => colors.warningForeground
+           | Info => colors.infoForeground
+           | Hint => colors.hintForeground
+           };
+
          let diagTop =
            Editor.projectLine(
              ~line=EditorCoreTypes.LineNumber.ofZeroBased(line),
@@ -193,7 +199,7 @@ module Vertical = {
              right(0),
              width(Constants.scrollBarThickness / 3),
              height(Constants.scrollBarCursorSize),
-             backgroundColor(colors.errorForeground),
+             backgroundColor(diagColor),
            ];
          <View style=diagnosticStyle />;
        })

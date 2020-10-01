@@ -10,12 +10,11 @@ open Oni_Input;
 open Oni_Syntax;
 
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 [@deriving show({with_path: false})]
 type t =
   | Init
-  | ActivityBar(ActivityBar.action)
+  | AutoUpdate(Feature_AutoUpdate.msg)
   | Buffers(Feature_Buffers.msg)
   | BufferRenderer(BufferRenderer.action)
   | Clipboard(Feature_Clipboard.msg)
@@ -33,6 +32,7 @@ type t =
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
   | Decorations(Feature_Decorations.msg)
+  | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)
   | Input(Feature_Input.msg)
   | TerminalFont(Service_Font.msg)
@@ -47,8 +47,6 @@ type t =
   | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | TextInput([@opaque] string, [@opaque] Revery.Time.t)
-  | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
-  | DiagnosticsClear(string)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   // TODO: This should be a function call - wired up from an input feature
@@ -133,7 +131,6 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | SCM(Feature_SCM.msg)
-  | SearchHotkey
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
@@ -194,7 +191,6 @@ and quickmenuVariant =
       languages:
         list((string, option(Oni_Core.IconTheme.IconDefinition.t))),
     })
-  | DocumentSymbols
   | Extension({
       id: int,
       hasItems: bool,

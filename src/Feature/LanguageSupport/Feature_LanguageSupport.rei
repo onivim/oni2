@@ -114,11 +114,26 @@ module Completion: {
   };
 };
 
+module DocumentSymbols: {
+  type symbol = {
+    uniqueId: string,
+    name: string,
+    detail: string,
+    kind: Exthost.SymbolKind.t,
+    range: CharacterRange.t,
+    selectionRange: CharacterRange.t,
+  };
+
+  type t = list(Tree.t(symbol, symbol));
+
+  let get: (~bufferId: int, model) => option(t);
+};
+
 module Hover: {
   module Popup: {
     let make:
       (
-        ~diagnostics: Diagnostics.t,
+        ~diagnostics: Feature_Diagnostics.model,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~languageInfo: Exthost.LanguageInfo.t,
@@ -160,6 +175,4 @@ module DocumentHighlights: {
 
 // TODO: Remove
 module CompletionMeet = CompletionMeet;
-module Diagnostic = Diagnostic;
-module Diagnostics = Diagnostics;
 module LanguageFeatures = LanguageFeatures;
