@@ -183,7 +183,7 @@ module View = {
                   ~documentSymbols:
                      option(Feature_LanguageSupport.DocumentSymbols.t),
                   ~theme,
-                  ~font,
+                  ~font: UiFont.t,
                   ~dispatch: msg => unit,
                   (),
                 ) => {
@@ -229,6 +229,8 @@ module View = {
           <Text
             text={symbolData.name}
             style=Style.[color(foregroundColor)]
+            fontFamily={font.family}
+            fontSize={font.size}
           />
         </View>
       </Oni_Components.Tooltip>;
@@ -239,6 +241,8 @@ module View = {
         <Text
           text="No symbols available for active buffer."
           style=Style.[color(foregroundColor)]
+          fontFamily={font.family}
+          fontSize={font.size}
         />
       </View>;
 
