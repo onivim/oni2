@@ -22,7 +22,8 @@ type outmsg =
     })
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
-  | ReleaseFocus;
+  | ReleaseFocus
+  | Effect(Isolinear.Effect.t(msg));
 
 module Msg: {
   let keyPressed: string => msg;

@@ -31,12 +31,24 @@ type msg =
   | KeyPressed(string)
   | VimWindowNav(Component_VimWindows.msg)
   | DiagnosticsList(Component_VimTree.msg)
-  | LocationsList(Component_VimTree.msg);
+  | LocationsList(Component_VimTree.msg)
+  | LocationFileLoaded({ filePath: string, lines: array(string)});
 
 module Msg = {
   let keyPressed = key => KeyPressed(key);
   let resizeHandleDragged = v => ResizeHandleDragged(v);
   let resizeCommitted = ResizeCommitted;
+};
+
+module Effects = {
+  let expandLocationPath = (~filePath) => {
+    Service_Vim.Effects.loadBuffer(
+      ~filePath,
+      (~bufferId, ~lines) => {
+        LocationFileLoaded({filePath, lines});
+      }
+    )
+  };
 };
 
 type outmsg =
@@ -47,7 +59,8 @@ type outmsg =
     })
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
-  | ReleaseFocus;
+  | ReleaseFocus
+  | Effect(Isolinear.Effect.t(msg));
 
 type model = {
   selected: pane,
@@ -268,10 +281,13 @@ let update = (msg, model) =>
       | Component_VimTree.Nothing => Nothing
       | Component_VimTree.Selected(item) => Nothing
       | Component_VimTree.Collapsed(_) => Nothing
-      | Component_VimTree.Expanded(_) => Nothing
+      | Component_VimTree.Expanded({path, _}) => 
+        Effect(Effects.expandLocationPath(~filePath=path))
       };
 
     ({...model, locationsView}, eff);
+
+    | LocationFileLoaded(_) => (model, Nothing);
   };
 
 let initial = {
