@@ -140,6 +140,11 @@ module Buffer: {
   let openFile: string => t;
 
   /**
+  [loadFile(path)] opens a file and returns a handle to the buffer.
+  */
+  let loadFile: string => t;
+
+  /**
   [getFileName(buffer)] returns the full file path of the buffer [buffer]
   */
   let getFilename: t => option(string);

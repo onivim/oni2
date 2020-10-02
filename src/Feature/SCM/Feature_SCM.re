@@ -51,6 +51,66 @@ module Provider = {
     validationEnabled: false,
     statusBarCommands: [],
   };
+
+  let appliesToPath = (~path: string, {rootUri, _}) => {
+    let maybePath =
+      path
+      |> Oni_Core.Uri.fromPath
+      |> Oni_Core.Uri.toFileSystemPath
+      |> Fp.absolute;
+
+    let maybeScmPath =
+      rootUri
+      |> Option.map(Oni_Core.Uri.toFileSystemPath)
+      |> OptionEx.flatMap(Fp.absolute);
+
+    OptionEx.map2(
+      (path, scmPath) => {Fp.isDescendent(~ofPath=scmPath, path)},
+      maybePath,
+      maybeScmPath,
+    )
+    |> Option.value(~default=false);
+  };
+
+  let%test_module "Provider" =
+    (module
+     {
+       let make = (~rootUri) => {
+         initial(~handle=0, ~id="test-id", ~label="test", ~rootUri);
+       };
+       module Uri = Oni_Core.Uri;
+       let%test "appliesToPath -no path should be false" = {
+         let provider = make(~rootUri=None);
+         appliesToPath(~path="/test", provider) == false;
+       };
+
+       let%test "appliesToPath - same path should be true" =
+         if (Sys.win32) {
+           let provider = make(~rootUri=Some("D:/test" |> Uri.fromPath));
+           appliesToPath(~path="D:/test", provider) == true;
+         } else {
+           let provider = make(~rootUri=Some("/test" |> Uri.fromPath));
+           appliesToPath(~path="/test", provider) == true;
+         };
+       let%test "appliesToPath - nested path should be true" =
+         if (Sys.win32) {
+           let provider = make(~rootUri=Some("D:/test" |> Uri.fromPath));
+           appliesToPath(~path="D:/test/dir", provider) == true;
+         } else {
+           let provider = make(~rootUri=Some("/test" |> Uri.fromPath));
+           appliesToPath(~path="/test/dir", provider) == true;
+         };
+       let%test "appliesToPath - root path should be false" =
+         if (Sys.win32) {
+           let provider =
+             make(~rootUri=Some("D:/test/project" |> Uri.fromPath));
+           appliesToPath(~path="D:/test/", provider) == false;
+         } else {
+           let provider =
+             make(~rootUri=Some("/test/project" |> Uri.fromPath));
+           appliesToPath(~path="/test", provider) == false;
+         };
+     });
 };
 
 [@deriving show({with_path: false})]
@@ -198,8 +258,11 @@ let selectedGroup = model => {
   };
 };
 
-let statusBarCommands = ({providers, _}: model) => {
+let statusBarCommands = (~workingDirectory, {providers, _}: model) => {
   providers
+  |> List.filter(provider => {
+       Provider.appliesToPath(~path=workingDirectory, provider)
+     })
   |> List.map(({statusBarCommands, _}: Provider.t) => statusBarCommands)
   |> List.flatten;
 };

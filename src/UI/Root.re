@@ -104,6 +104,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
           indentationSettings
           theme
           dispatch=statusBarDispatch
+          workingDirectory={state.workspace.workingDirectory}
         />
       </View>;
     } else {

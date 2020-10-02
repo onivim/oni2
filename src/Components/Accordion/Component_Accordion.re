@@ -39,6 +39,8 @@ module Styles = {
 
   let title = (~theme) => [
     color(Colors.SideBarSectionHeader.foreground.from(theme)),
+    textWrap(Revery.TextWrapping.NoWrap),
+    overflow(`Hidden),
   ];
 
   let countContainer = (~theme) => [
