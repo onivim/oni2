@@ -37,4 +37,6 @@ let inactiveWindowOpacity =
     ~default=0.75,
   );
 
-let contributions = [inactiveWindowOpacity.spec];
+let animation = setting("ui.animation", bool, ~default=true);
+
+let contributions = [inactiveWindowOpacity.spec, animation.spec];
