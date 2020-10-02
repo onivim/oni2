@@ -14,8 +14,6 @@ module View = Revery.UI.View;
 module Styles = {
   open Style;
 
-  let container = [flexGrow(1)];
-
   let heading = theme => [
     flexDirection(`Row),
     justifyContent(`Center),
@@ -106,54 +104,54 @@ let make =
       ~theme,
       ~decorations: Feature_Decorations.model,
       ~font: UiFont.t,
+      ~expanded,
+      ~onRootClicked: unit => unit,
       ~dispatch: Model.msg => unit,
       (),
     ) => {
-  <View style=Styles.container>
-    <Component_Accordion.VimTree
-      title=rootName
-      showCount=false
-      isFocused
-      focusedIndex
-      expanded=true
-      theme
-      uiFont=font
-      model=treeView
-      dispatch={msg => dispatch(Tree(msg))}
-      onClick={() => ()}
-      render={(
-        ~availableWidth as _,
-        ~index as _,
-        ~hovered as _,
-        ~selected,
-        item,
-      ) => {
-        open FsTreeNode;
-        let (icon, data) =
-          switch (item) {
-          | Component_VimTree.Node({data, _}) => (React.empty, data)
-          | Component_VimTree.Leaf({data, _}) => (
-              <Oni_Components.FileIcon
-                font
-                iconTheme
-                languageInfo
-                path={data.path}
-              />,
-              data,
-            )
-          };
-        let decorations =
-          Feature_Decorations.getDecorations(~path=data.path, decorations);
-        <nodeView
-          icon
-          isFocus=selected
-          isActive={Some(data.path) == active}
-          font
-          theme
-          node=data
-          decorations
-        />;
-      }}
-    />
-  </View>;
+  <Component_Accordion.VimTree
+    title=rootName
+    showCount=false
+    isFocused
+    focusedIndex
+    expanded
+    theme
+    uiFont=font
+    model=treeView
+    dispatch={msg => dispatch(Tree(msg))}
+    onClick=onRootClicked
+    render={(
+      ~availableWidth as _,
+      ~index as _,
+      ~hovered as _,
+      ~selected,
+      item,
+    ) => {
+      open FsTreeNode;
+      let (icon, data) =
+        switch (item) {
+        | Component_VimTree.Node({data, _}) => (React.empty, data)
+        | Component_VimTree.Leaf({data, _}) => (
+            <Oni_Components.FileIcon
+              font
+              iconTheme
+              languageInfo
+              path={data.path}
+            />,
+            data,
+          )
+        };
+      let decorations =
+        Feature_Decorations.getDecorations(~path=data.path, decorations);
+      <nodeView
+        icon
+        isFocus=selected
+        isActive={Some(data.path) == active}
+        font
+        theme
+        node=data
+        decorations
+      />;
+    }}
+  />;
 };
