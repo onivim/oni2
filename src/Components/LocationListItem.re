@@ -12,6 +12,7 @@ type t = {
   file: string,
   location: CharacterPosition.t,
   text: string,
+  // TODO: Change Index.t -> ByteIndex. to properly type this
   highlight: option((Index.t, Index.t)),
 };
 

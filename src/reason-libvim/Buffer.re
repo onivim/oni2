@@ -46,9 +46,8 @@ let getLine = (buffer: t, line: LineNumber.t) => {
 let getLines = (buffer: t) => {
   let count = getLineCount(buffer);
 
-  Array.init(count, 
-    i => Native.vimBufferGetLine(buffer, i +1));
-}
+  Array.init(count, i => Native.vimBufferGetLine(buffer, i + 1));
+};
 
 let getId = (buffer: t) => {
   Native.vimBufferGetId(buffer);

@@ -32,7 +32,10 @@ type msg =
   | VimWindowNav(Component_VimWindows.msg)
   | DiagnosticsList(Component_VimTree.msg)
   | LocationsList(Component_VimTree.msg)
-  | LocationFileLoaded({ filePath: string, lines: array(string)});
+  | LocationFileLoaded({
+      filePath: string,
+      lines: array(string),
+    });
 
 module Msg = {
   let keyPressed = key => KeyPressed(key);
@@ -42,12 +45,9 @@ module Msg = {
 
 module Effects = {
   let expandLocationPath = (~filePath) => {
-    Service_Vim.Effects.loadBuffer(
-      ~filePath,
-      (~bufferId, ~lines) => {
-        LocationFileLoaded({filePath, lines});
-      }
-    )
+    Service_Vim.Effects.loadBuffer(~filePath, (~bufferId as _, ~lines) => {
+      LocationFileLoaded({filePath, lines})
+    });
   };
 };
 
@@ -70,6 +70,10 @@ type model = {
   vimWindowNavigation: Component_VimWindows.model,
   diagnosticsView:
     Component_VimTree.model(string, Oni_Components.LocationListItem.t),
+  locationNodes:
+    list(
+      Tree.t(LocationsPaneView.location, Oni_Components.LocationListItem.t),
+    ),
   locationsView:
     Component_VimTree.model(
       LocationsPaneView.location,
@@ -118,10 +122,7 @@ let locationsToReferences = (locations: list(Exthost.Location.t)) => {
       (acc, curr: Exthost.Location.t) => {
         let {range, uri}: Exthost.Location.t = curr;
 
-        let position =
-          range
-          |> Exthost.OneBasedRange.toRange
-          |> (characterRange => CharacterRange.(characterRange.start));
+        let range = range |> Exthost.OneBasedRange.toRange;
 
         let path = Oni_Core.Uri.toFileSystemPath(uri);
 
@@ -129,8 +130,8 @@ let locationsToReferences = (locations: list(Exthost.Location.t)) => {
         |> StringMap.update(
              path,
              fun
-             | None => Some([position])
-             | Some(positions) => Some([position, ...positions]),
+             | None => Some([range])
+             | Some(ranges) => Some([range, ...ranges]),
            );
       },
       StringMap.empty,
@@ -139,18 +140,10 @@ let locationsToReferences = (locations: list(Exthost.Location.t)) => {
 
   map
   |> StringMap.bindings
-  |> List.map(((path, positions)) => LocationsPaneView.{path, positions});
+  |> List.map(((path, ranges)) => LocationsPaneView.{path, ranges});
 };
 
-let setLocations = (locations, model) => {
-  let references = locationsToReferences(locations);
-
-  let nodes =
-    references
-    |> List.map(reference =>
-         Tree.node(~children=[], ~expanded=false, reference)
-       );
-
+let updateLocationTree = (nodes, model) => {
   let locationsView' =
     Component_VimTree.set(
       ~uniqueId=(LocationsPaneView.{path, _}) => path,
@@ -164,7 +157,74 @@ let setLocations = (locations, model) => {
       model.locationsView,
     );
 
-  {...model, locationsView: locationsView'};
+  {...model, locationNodes: nodes, locationsView: locationsView'};
+};
+
+let expandLocation = (~filePath, ~lines, model) => {
+  let characterIndexToIndex = (idx: CharacterIndex.t) => {
+    idx |> CharacterIndex.toInt |> Index.fromZeroBased;
+  };
+
+  let expandChildren = (location: LocationsPaneView.location) => {
+    let lineCount = Array.length(lines);
+    location.ranges
+    |> List.filter_map((range: CharacterRange.t) => {
+         let line = range.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
+         if (line >= 0 && line < lineCount) {
+           let highlight =
+             if (range.start.line == range.stop.line) {
+               Some((
+                 range.start.character |> characterIndexToIndex,
+                 range.stop.character |> characterIndexToIndex,
+               ));
+             } else {
+               None;
+             };
+           Some(
+             Oni_Components.LocationListItem.{
+               file: filePath,
+               location: range.start,
+               text: lines[line],
+               highlight,
+             },
+           );
+         } else {
+           None;
+         };
+       })
+    |> List.sort((a: Oni_Components.LocationListItem.t, b: Oni_Components.LocationListItem.t) => {
+      (a.location.line |> EditorCoreTypes.LineNumber.toZeroBased) - (b.location.line |> EditorCoreTypes.LineNumber.toZeroBased)
+    })
+  };
+
+  let locationNodes' =
+    model.locationNodes
+    |> List.map(
+         fun
+         | Tree.Leaf(_) as leaf => leaf
+         | Tree.Node({data, _} as prev) =>
+           if (LocationsPaneView.(data.path) == filePath) {
+             let children = data |> expandChildren |> List.map(Tree.leaf);
+
+             Node({...prev, data, children});
+           } else {
+             Node(prev);
+           },
+       );
+
+  model |> updateLocationTree(locationNodes');
+};
+
+let setLocations = (locations, model) => {
+  let references = locationsToReferences(locations);
+
+  let nodes =
+    references
+    |> List.map(reference =>
+         Tree.node(~children=[], ~expanded=false, reference)
+       );
+
+  model |> updateLocationTree(nodes);
 };
 
 let height = ({height, resizeDelta, _}) => {
@@ -279,15 +339,19 @@ let update = (msg, model) =>
     let eff =
       switch (outmsg) {
       | Component_VimTree.Nothing => Nothing
-      | Component_VimTree.Selected(item) => Nothing
+      | Component_VimTree.Selected(item) => 
+        OpenFile({filePath: item.file, position: item.location})
       | Component_VimTree.Collapsed(_) => Nothing
-      | Component_VimTree.Expanded({path, _}) => 
+      | Component_VimTree.Expanded({path, _}) =>
         Effect(Effects.expandLocationPath(~filePath=path))
       };
 
     ({...model, locationsView}, eff);
 
-    | LocationFileLoaded(_) => (model, Nothing);
+  | LocationFileLoaded({filePath, lines}) => (
+      model |> expandLocation(~filePath, ~lines),
+      Nothing,
+    )
   };
 
 let initial = {
@@ -298,6 +362,8 @@ let initial = {
 
   vimWindowNavigation: Component_VimWindows.initial,
   diagnosticsView: Component_VimTree.create(~rowHeight=20),
+
+  locationNodes: [],
   locationsView: Component_VimTree.create(~rowHeight=20),
 };
 

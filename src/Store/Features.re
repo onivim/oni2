@@ -448,10 +448,7 @@ let update =
         Isolinear.Effect.none,
       )
 
-    | Effect(eff) => (
-      state,
-      eff |> Isolinear.Effect.map(msg => Pane(msg))
-    )
+    | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
     };
 
   | Registers(msg) =>

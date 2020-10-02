@@ -16,7 +16,7 @@ module Colors = Feature_Theme.Colors;
 
 type location = {
   path: string,
-  positions: list(CharacterPosition.t),
+  ranges: list(CharacterRange.t),
 };
 
 module Styles = {
