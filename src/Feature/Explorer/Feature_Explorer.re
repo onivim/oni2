@@ -8,9 +8,47 @@ type focus =
   | FileExplorer
   | Outline;
 
+module ExpandedState = {
+  type t =
+    | ExplicitlyClosed
+    | ExplicitlyOpened
+    | ImplicitlyClosed
+    | ImplicitlyOpened;
+
+  let explicitToggle =
+    fun
+    | ExplicitlyClosed => ExplicitlyOpened
+    | ExplicitlyOpened => ExplicitlyClosed
+    | ImplicitlyClosed => ExplicitlyOpened
+    | ImplicitlyOpened => ExplicitlyClosed;
+
+  let implicitlyOpen =
+    fun
+    | ExplicitlyClosed => ExplicitlyClosed
+    | ExplicitlyOpened => ExplicitlyOpened
+    | ImplicitlyClosed => ImplicitlyOpened
+    | ImplicitlyOpened => ImplicitlyOpened;
+
+  let implicitlyClose =
+    fun
+    | ExplicitlyClosed => ExplicitlyClosed
+    | ExplicitlyOpened => ExplicitlyOpened
+    | ImplicitlyClosed => ImplicitlyClosed
+    | ImplicitlyOpened => ImplicitlyClosed;
+
+  let isOpen =
+    fun
+    | ExplicitlyClosed => false
+    | ExplicitlyOpened => true
+    | ImplicitlyClosed => false
+    | ImplicitlyOpened => true;
+};
+
 type model = {
   focus,
+  isFileExplorerExpanded: ExpandedState.t,
   fileExplorer: Component_FileExplorer.model,
+  isSymbolOutlineExpanded: ExpandedState.t,
   symbolOutline:
     Component_VimTree.model(
       Feature_LanguageSupport.DocumentSymbols.symbol,
@@ -27,7 +65,9 @@ type msg =
   | SymbolsChanged(
       [@opaque] option(Feature_LanguageSupport.DocumentSymbols.t),
     )
-  | VimWindowNav(Component_VimWindows.msg);
+  | VimWindowNav(Component_VimWindows.msg)
+  | FileExplorerAccordionClicked
+  | SymbolOutlineAccordionClicked;
 
 module Msg = {
   let keyPressed = key => KeyboardInput(key);
@@ -37,6 +77,8 @@ module Msg = {
 
 let initial = (~rootPath) => {
   focus: FileExplorer,
+  isFileExplorerExpanded: ExpandedState.ImplicitlyOpened,
+  isSymbolOutlineExpanded: ExpandedState.ImplicitlyClosed,
   fileExplorer: Component_FileExplorer.initial(~rootPath),
   symbolOutline: Component_VimTree.create(~rowHeight=20),
   vimWindowNavigation: Component_VimWindows.initial,
@@ -155,19 +197,55 @@ let update = (~configuration, msg, model) => {
       )
     | Component_VimWindows.FocusDown =>
       if (model'.focus == FileExplorer) {
-        ({...model', focus: Outline}, Nothing);
+        (
+          {
+            ...model',
+            focus: Outline,
+            isSymbolOutlineExpanded:
+              ExpandedState.implicitlyOpen(model.isSymbolOutlineExpanded),
+          },
+          Nothing,
+        );
       } else {
         (model', UnhandledWindowMovement(outmsg));
       }
     | Component_VimWindows.FocusUp =>
       if (model'.focus == Outline) {
-        ({...model', focus: FileExplorer}, Nothing);
+        (
+          {
+            ...model',
+            focus: FileExplorer,
+            isSymbolOutlineExpanded:
+              ExpandedState.implicitlyClose(model.isSymbolOutlineExpanded),
+            isFileExplorerExpanded:
+              ExpandedState.implicitlyOpen(model.isFileExplorerExpanded),
+          },
+          Nothing,
+        );
       } else {
         (model', UnhandledWindowMovement(outmsg));
       }
     | Component_VimWindows.PreviousTab
     | Component_VimWindows.NextTab => (model', Nothing)
     };
+
+  | FileExplorerAccordionClicked => (
+      {
+        ...model,
+        isFileExplorerExpanded:
+          ExpandedState.explicitToggle(model.isFileExplorerExpanded),
+      },
+      Nothing,
+    )
+
+  | SymbolOutlineAccordionClicked => (
+      {
+        ...model,
+        isSymbolOutlineExpanded:
+          ExpandedState.explicitToggle(model.isSymbolOutlineExpanded),
+      },
+      Nothing,
+    )
   };
 };
 
@@ -247,28 +325,28 @@ module View = {
       </View>;
 
     <View style=Style.[flexDirection(`Column), flexGrow(1)]>
-      <View style=Style.[flexGrow(2)]>
-        <Component_FileExplorer.View
-          isFocused={isFocused && model.focus == FileExplorer}
-          iconTheme
-          languageInfo
-          decorations
-          model={model.fileExplorer}
-          theme
-          font
-          dispatch={msg => dispatch(FileExplorer(msg))}
-        />
-      </View>
+      <Component_FileExplorer.View
+        isFocused={isFocused && model.focus == FileExplorer}
+        expanded={ExpandedState.isOpen(model.isFileExplorerExpanded)}
+        iconTheme
+        languageInfo
+        decorations
+        model={model.fileExplorer}
+        theme
+        font
+        onRootClicked={() => dispatch(FileExplorerAccordionClicked)}
+        dispatch={msg => dispatch(FileExplorer(msg))}
+      />
       <Component_Accordion.VimTree
         showCount=false
         title="Outline"
-        expanded={model.focus == Outline}
+        expanded={ExpandedState.isOpen(model.isSymbolOutlineExpanded)}
         isFocused={isFocused && model.focus == Outline}
         uiFont=font
         theme
         model={model.symbolOutline}
         render=renderSymbol
-        onClick={() => ()}
+        onClick={() => dispatch(SymbolOutlineAccordionClicked)}
         dispatch={msg => dispatch(SymbolOutline(msg))}
         empty=symbolsEmpty
       />
