@@ -21,6 +21,7 @@ type t =
   | EditorMouseWheel({
       deltaX: float,
       deltaY: float,
+      shiftKey: bool,
     })
   | MouseHovered({bytePosition: BytePosition.t})
   | MouseMoved({bytePosition: BytePosition.t})
