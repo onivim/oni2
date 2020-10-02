@@ -192,9 +192,14 @@ let expandLocation = (~filePath, ~lines, model) => {
            None;
          };
        })
-    |> List.sort((a: Oni_Components.LocationListItem.t, b: Oni_Components.LocationListItem.t) => {
-      (a.location.line |> EditorCoreTypes.LineNumber.toZeroBased) - (b.location.line |> EditorCoreTypes.LineNumber.toZeroBased)
-    })
+    |> List.sort(
+         (
+           a: Oni_Components.LocationListItem.t,
+           b: Oni_Components.LocationListItem.t,
+         ) => {
+         (a.location.line |> EditorCoreTypes.LineNumber.toZeroBased)
+         - (b.location.line |> EditorCoreTypes.LineNumber.toZeroBased)
+       });
   };
 
   let locationNodes' =
@@ -206,7 +211,7 @@ let expandLocation = (~filePath, ~lines, model) => {
            if (LocationsPaneView.(data.path) == filePath) {
              let children = data |> expandChildren |> List.map(Tree.leaf);
 
-             Node({...prev, data, children});
+             Node({expanded: true, data, children});
            } else {
              Node(prev);
            },
@@ -215,7 +220,12 @@ let expandLocation = (~filePath, ~lines, model) => {
   model |> updateLocationTree(locationNodes');
 };
 
-let setLocations = (locations, model) => {
+let collapseLocations = model => {
+  ...model,
+  locationsView: Component_VimTree.collapse(model.locationsView),
+};
+
+let setLocations = (~maybeActiveBuffer, ~locations, model) => {
   let references = locationsToReferences(locations);
 
   let nodes =
@@ -224,7 +234,23 @@ let setLocations = (locations, model) => {
          Tree.node(~children=[], ~expanded=false, reference)
        );
 
-  model |> updateLocationTree(nodes);
+  let model' =
+    model
+    // Un-expand all the nodes
+    |> collapseLocations
+    |> updateLocationTree(nodes);
+
+  // Try to expand the current buffer, if it's available
+  maybeActiveBuffer
+  |> Utility.OptionEx.flatMap(buffer => {
+       switch (Buffer.getFilePath(buffer)) {
+       | None => None
+       | Some(filePath) =>
+         let lines = Buffer.getLines(buffer);
+         Some(model' |> expandLocation(~filePath, ~lines));
+       }
+     })
+  |> Option.value(~default=model');
 };
 
 let height = ({height, resizeDelta, _}) => {
@@ -339,7 +365,7 @@ let update = (msg, model) =>
     let eff =
       switch (outmsg) {
       | Component_VimTree.Nothing => Nothing
-      | Component_VimTree.Selected(item) => 
+      | Component_VimTree.Selected(item) =>
         OpenFile({filePath: item.file, position: item.location})
       | Component_VimTree.Collapsed(_) => Nothing
       | Component_VimTree.Expanded({path, _}) =>

@@ -52,7 +52,13 @@ let toggle: (~pane: pane, model) => model;
 let close: model => model;
 
 let setDiagnostics: (Feature_Diagnostics.model, model) => model;
-let setLocations: (list(Exthost.Location.t), model) => model;
+let setLocations:
+  (
+    ~maybeActiveBuffer: option(Oni_Core.Buffer.t),
+    ~locations: list(Exthost.Location.t),
+    model
+  ) =>
+  model;
 
 module View: {
   let make:

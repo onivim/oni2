@@ -367,12 +367,14 @@ let update =
           ),
         )
       | ReferencesAvailable =>
-        // TODO
         let references =
           Feature_LanguageSupport.References.get(languageSupport);
         let pane =
           state.pane
-          |> Feature_Pane.setLocations(references)
+          |> Feature_Pane.setLocations(
+               ~maybeActiveBuffer=maybeBuffer,
+               ~locations=references,
+             )
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
