@@ -198,14 +198,12 @@ module SearchSubscription =
     type action = msg;
   });
 
-let subscriptions = (ripgrep, dispatch) => {
+let subscriptions = (~workingDirectory, ripgrep, dispatch) => {
   let search = query => {
-    let directory = Rench.Environment.getWorkingDirectory();
-
     SearchSubscription.create(
       ~id="workspace-search",
       ~query,
-      ~directory,
+      ~directory=workingDirectory,
       ~ripgrep,
       ~onUpdate=items => dispatch(Update(items)),
       ~onCompleted=() => Complete,

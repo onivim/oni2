@@ -5,6 +5,7 @@
  */
 
 open Kernel;
+module CoreUtility = Utility;
 open Revery;
 
 module FontSource = {
@@ -88,7 +89,7 @@ let getIconForFile: (t, string, string) => option(IconDefinition.t) =
       | None =>
         switch (
           StringMap.find_opt(
-            normalizeExtension(Rench.Path.extname(fileName)),
+            normalizeExtension(CoreUtility.Path.getExtension(fileName)),
             iconTheme.fileExtensions,
           )
         ) {
