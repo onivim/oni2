@@ -1251,11 +1251,12 @@ let updateSubscriptions = (setup: Setup.t) => {
   let searchSubscriptions = Feature_Search.subscriptions(ripgrep);
 
   (state: State.t, dispatch) => {
+    let workingDirectory = state.workspace.workingDirectory;
     quickmenuSubscriptions(dispatch, state)
     |> QuickmenuSubscriptionRunner.run(~dispatch);
 
     let searchDispatch = msg => dispatch(Search(msg));
-    searchSubscriptions(searchDispatch, state.searchPane)
+    searchSubscriptions(~workingDirectory, searchDispatch, state.searchPane)
     |> SearchSubscriptionRunner.run(~dispatch=searchDispatch);
   };
 };
