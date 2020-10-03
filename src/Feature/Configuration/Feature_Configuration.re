@@ -99,8 +99,22 @@ let resolver = (~fileType: string, model, vimModel, ~vimSetting, key) => {
   |> Option.map(setting => Config.Vim(vimToCoreSetting(setting)))
   // If the vim setting isn't set, fall back to our JSON config.
   |> OptionEx.or_lazy(() => {
-       Config.Settings.get(key, model.merged)
+       // Try to get the value from a per-filetype config first..
+       let fileTypeKey = Config.key("[" ++ fileType ++ "]");
+
+       // Fetch the filetype section...
+       Config.Settings.get(fileTypeKey, model.merged)
+       |> Option.map(Config.Settings.fromJson)
+       |> OptionEx.flatMap(fileTypeModel =>
+            Config.Settings.get(key, fileTypeModel)
+          )
        |> Option.map(json => Config.Json(json))
+       // And if this failed...
+       |> OptionEx.or_lazy(() => {
+            // ...fall back to getting original config
+            Config.Settings.get(key, model.merged)
+            |> Option.map(json => Config.Json(json))
+          });
      })
   |> Option.value(~default=Config.NotSet);
 };

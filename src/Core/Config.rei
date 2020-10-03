@@ -8,7 +8,7 @@ type rawValue =
 
 type resolver = (~vimSetting: option(string), key) => rawValue;
 
-//let key: string => key;
+let key: string => key;
 let keyAsString: key => string;
 
 // SETTINGS
