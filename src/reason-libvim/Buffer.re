@@ -170,10 +170,6 @@ let applyEdits = (~edits, buffer) => {
   ret;
 };
 
-let onEnter = (f: Listeners.bufferListener) => {
-  Event.add(f, Listeners.bufferEnter);
-};
-
 let onModifiedChanged = (f: Listeners.bufferModifiedChangedListener) => {
   Event.add2(f, Listeners.bufferModifiedChanged);
 };

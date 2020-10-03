@@ -391,63 +391,6 @@ let start =
     });
 
   let _: unit => unit =
-    Vim.Buffer.onEnter(buf => {
-      Log.info(
-        "Buffer entered",
-        //      let metadata = Vim.BufferMetadata.ofBuffer(buf);
-        //
-        //      if (metadata.id == 1 && ! libvimHasInitialized^) {
-        //        Log.info("Ignoring initial buffer");
-        //      } else {
-        //        let fileType =
-        //          switch (metadata.filePath) {
-        //          | Some(v) =>
-        //            Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v)
-        //            |> Oni_Core.Buffer.FileType.inferred
-        //          | None => Oni_Core.Buffer.FileType.none
-        //          };
-        //
-        //        let lineEndings: option(Vim.lineEnding) =
-        //          Vim.Buffer.getLineEndings(buf);
-        //
-        //        let state = getState();
-        //
-        //        let buffer =
-        //          (
-        //            switch (Selectors.getBufferById(state, metadata.id)) {
-        //            | Some(buf) => buf
-        //            | None =>
-        //              Oni_Core.Buffer.ofMetadata(
-        //                ~id=metadata.id,
-        //                ~font=state.editorFont,
-        //                ~version=- metadata.version,
-        //                ~filePath=metadata.filePath,
-        //                ~modified=metadata.modified,
-        //              )
-        //            }
-        //          )
-        //          |> Oni_Core.Buffer.setFileType(fileType);
-        //
-        //        dispatch(
-        //          Actions.Buffers(
-        //            Feature_Buffers.Entered({
-        //              id: metadata.id,
-        //              buffer,
-        //              fileType,
-        //              lineEndings,
-        //              // Version must be 0 so that a buffer update will be processed
-        //              version: 0,
-        //              isModified: metadata.modified,
-        //              filePath: metadata.filePath,
-        //              font: Oni_Core.Buffer.getFont(buffer),
-        //            }),
-        //          ),
-        //        );
-        //      };
-      )
-    });
-
-  let _: unit => unit =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
       Log.debugf(m => m("Buffer update: %n", update.id));

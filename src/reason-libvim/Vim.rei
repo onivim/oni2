@@ -228,16 +228,6 @@ module Buffer: {
 
   let applyEdits: (~edits: list(Edit.t), t) => result(unit, string);
 
-  /**
-  [onEnter(f)] adds a listener [f] that is called whenever a new buffer is entered.
-
-  This is more reliable than autocommands, as it will dispatch in any case the buffer
-  is changed, even in cases where [BufEnter] would not be dispatched.
-
-  Returns a function that can be called to unsubscribe.
-  */
-  let onEnter: Listeners.bufferListener => Event.unsubscribe;
-
   let onLineEndingsChanged:
     Listeners.bufferLineEndingsChangedListener => Event.unsubscribe;
 
