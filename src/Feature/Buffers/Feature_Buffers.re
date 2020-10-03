@@ -256,7 +256,6 @@ module Effects = {
         ~filePath,
         model,
       ) => {
-    //let currentBuffer = Vim.Buffer.getCurrent();
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Buffers.openInEditor", dispatch => {
       let newBuffer = Vim.Buffer.openFile(filePath);
