@@ -242,16 +242,12 @@ module Internal = {
       if (lines == []) {
         [""];
       } else {
-        lines;
+        // There needs to be an empty line at the end of the buffer to sync changes at the end
+        lines @ [""];
       };
-
 
     maybeFilePath
     |> Option.map(filePath => {
-
-    prerr_endline (
-    Printf.sprintf("-- BUFFER METADATA: %s | %d -- ", filePath, version));
-    List.iter(prerr_endline, lines);
          Log.tracef(m => m("Creating model for filetype: %s", modeId));
          Exthost.ModelAddedDelta.create(
            ~versionId=version,

@@ -705,7 +705,7 @@ let update =
       let editor' =
         position
         |> Option.map(cursorPosition => {
-             Feature_Editor.Editor.setCursors([cursorPosition], editor)
+             Feature_Editor.Editor.setCursors(~cursors=[cursorPosition], editor)
            })
         |> Option.value(~default=editor);
 
@@ -720,7 +720,43 @@ let update =
         )
         |> Feature_Layout.openEditor(~config, editor');
 
-      let state' = {...state, layout};
+        let bufferRenderers = buffer
+        |> Oni_Core.Buffer.getFilePath
+        |> OptionEx.flatMap(path => {
+          switch (Oni_Core.BufferPath.parse(path)) {
+          | ExtensionDetails => Some(BufferRenderer.ExtensionDetails)
+          | Terminal({bufferId, _}) =>
+            Some(
+              BufferRenderer.Terminal({
+                title: "Terminal",
+                id: bufferId,
+                insertMode: true,
+              }),
+            )
+          | Version => Some(BufferRenderer.Version)
+          | UpdateChangelog => None;
+//            Some(
+//              BufferRenderer.UpdateChangelog({
+//                since: Persistence.Global.version(),
+//              }),
+//            )
+          | Image => Some(BufferRenderer.Image)
+          | Welcome => Some(BufferRenderer.Welcome)
+          | Changelog => Some(BufferRenderer.FullChangelog)
+          | FilePath(_) => None
+          | DebugInput => Some(BufferRenderer.DebugInput)
+          }
+      })
+      |> Option.map(renderer => {
+        BufferRenderers.setById(
+          buffer |> Oni_Core.Buffer.getId,
+          renderer,
+          state.bufferRenderers
+        )
+      })
+      |> Option.value(~default=state.bufferRenderers);
+
+      let state' = {...state, bufferRenderers, layout};
 
       let state'' =
         if (grabFocus) {
@@ -745,7 +781,6 @@ let update =
       (state, eff);
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
-      prerr_endline("--UPDATE: " ++ Oni_Core.BufferUpdate.show(update));
       let syntaxHighlights =
         Feature_Syntax.handleUpdate(
           ~scope=
@@ -760,7 +795,12 @@ let update =
           state.syntaxHighlights,
         );
 
-      let state' = {...state, syntaxHighlights};
+      let bufferRenderers = BufferRenderers.handleBufferUpdate(
+        update,
+        state.bufferRenderers
+      );
+
+      let state' = {...state, bufferRenderers, syntaxHighlights};
 
       let syntaxEffect =
         Feature_Syntax.Effect.bufferUpdate(

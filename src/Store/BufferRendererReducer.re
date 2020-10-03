@@ -9,21 +9,15 @@ let reduce = (state: BufferRenderers.t, action) => {
   | Actions.BufferRenderer(BufferRenderer.RendererAvailable(id, renderer)) =>
     BufferRenderers.setById(id, renderer, state)
   | action =>
-    let reduceForBuffer = (id, renderer) => {
+    let reduceForBuffer = renderer => {
       BufferRenderer.(
         switch (renderer, action) {
-        // TODO: Include renderers in buffers, for now?
-        //        | (Welcome, Buffers(Feature_Buffers.Update(bu)))
-        //            when bu.update.id == id =>
-        //Editor
-        | (Version, _) => Version
-        | (Editor, _) => Editor
         | (Terminal(state), Terminal(msg)) =>
           Terminal(Feature_Terminal.bufferRendererReducer(state, msg))
         | _ => renderer
         }
       );
     };
-    BufferRenderers.mapi(reduceForBuffer, state);
+    BufferRenderers.map(reduceForBuffer, state);
   };
 };

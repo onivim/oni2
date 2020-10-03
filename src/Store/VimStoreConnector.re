@@ -659,20 +659,6 @@ let start =
       }
     );
 
-  let gotoLocationEffect = (editorId, location: BytePosition.t) =>
-    Isolinear.Effect.create(~name="vim.gotoLocation", () => {
-      updateActiveEditorCursors([location]);
-
-      let topLine: int = max(LineNumber.toZeroBased(location.line) - 10, 0);
-
-      dispatch(
-        Actions.Editor({
-          scope: EditorScope.Editor(editorId),
-          msg: ScrollToLine(topLine),
-        }),
-      );
-    });
-
   let addBufferRendererEffect = (bufferId, renderer) =>
     Isolinear.Effect.create(~name="vim.addBufferRenderer", () => {
       dispatch(
