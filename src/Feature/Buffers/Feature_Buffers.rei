@@ -67,7 +67,7 @@ type outmsg =
   | CreateEditor({
       buffer: Oni_Core.Buffer.t,
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
-      position: option(CharacterPosition.t),
+      position: option(BytePosition.t),
       grabFocus: bool,
     });
 
@@ -81,6 +81,7 @@ module Effects: {
   let openInEditor:
     (
       ~font: Service_Font.font,
+      ~languageInfo: Exthost.LanguageInfo.t,
       ~split: [ | `Current | `Horizontal | `Vertical | `NewTab]=?,
       ~position: option(CharacterPosition.t)=?,
       ~grabFocus: bool=?,

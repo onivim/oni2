@@ -82,7 +82,7 @@ type outmsg =
   | CreateEditor({
       buffer: Oni_Core.Buffer.t,
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
-      position: option(CharacterPosition.t),
+      position: option(BytePosition.t),
       grabFocus: bool,
     });
 
@@ -167,12 +167,30 @@ let update = (msg: msg, model: model) => {
   switch (msg) {
   | EditorRequested({buffer, split, position, grabFocus}) => (
       model,
-      CreateEditor({buffer, split, position, grabFocus}),
+      CreateEditor({
+        buffer,
+        split,
+        position:
+          position
+          |> Utility.OptionEx.flatMap(pos =>
+               Buffer.characterToBytePosition(pos, buffer)
+             ),
+        grabFocus,
+      }),
     )
 
   | NewBufferAndEditorRequested({buffer, split, position, grabFocus}) => (
       IntMap.add(Buffer.getId(buffer), buffer, model),
-      CreateEditor({buffer, split, position, grabFocus}),
+      CreateEditor({
+        buffer,
+        split,
+        position:
+          position
+          |> Utility.OptionEx.flatMap(pos =>
+               Buffer.characterToBytePosition(pos, buffer)
+             ),
+        grabFocus,
+      }),
     )
 
   //  | Entered({
@@ -265,6 +283,7 @@ module Effects = {
   let openInEditor =
       (
         ~font: Service_Font.font,
+        ~languageInfo: Exthost.LanguageInfo.t,
         ~split=`Current,
         ~position=None,
         ~grabFocus=true,
@@ -297,10 +316,14 @@ module Effects = {
           |> Buffer.setModified(metadata.modified)
           |> Buffer.stampLastUsed;
 
+        let fileType =
+          Exthost.LanguageInfo.getLanguageFromBuffer(languageInfo, buffer);
+
         let buffer =
           maybeLineEndings
           |> Option.map(le => Buffer.setLineEndings(le, buffer))
-          |> Option.value(~default=buffer);
+          |> Option.value(~default=buffer)
+          |> Buffer.setFileType(Buffer.FileType.inferred(fileType));
 
         dispatch(
           NewBufferAndEditorRequested({buffer, split, position, grabFocus}),

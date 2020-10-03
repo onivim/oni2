@@ -385,7 +385,8 @@ let start =
           Actions.OpenFileByPath(buf, Some(`Vertical), None)
         | Vim.Types.Horizontal =>
           Actions.OpenFileByPath(buf, Some(`Horizontal), None)
-        | Vim.Types.TabPage => Actions.OpenFileInNewLayout(buf)
+        | Vim.Types.TabPage =>
+          Actions.OpenFileByPath(buf, Some(`NewTab), None)
         };
       dispatch(command);
     });
@@ -658,14 +659,6 @@ let start =
       }
     );
 
-  let openBufferEffect = (~onComplete, filePath) =>
-    Isolinear.Effect.create(~name="vim.openBuffer", () => {
-      let buffer = Vim.Buffer.openFile(filePath);
-      let bufferId = Vim.Buffer.getId(buffer);
-
-      dispatch(onComplete(bufferId));
-    });
-
   let gotoLocationEffect = (editorId, location: BytePosition.t) =>
     Isolinear.Effect.create(~name="vim.gotoLocation", () => {
       updateActiveEditorCursors([location]);
@@ -884,63 +877,49 @@ let start =
     //          path,
     //        ),
     //      );
-    | BufferOpened(path, maybeLocation, bufferId) =>
-      let maybeRenderer =
-        switch (Core.BufferPath.parse(path)) {
-        | ExtensionDetails => Some(BufferRenderer.ExtensionDetails)
-        | Terminal({bufferId, _}) =>
-          Some(
-            BufferRenderer.Terminal({
-              title: "Terminal",
-              id: bufferId,
-              insertMode: true,
-            }),
-          )
-        | Version => Some(BufferRenderer.Version)
-        | UpdateChangelog =>
-          Some(
-            BufferRenderer.UpdateChangelog({
-              since: Persistence.Global.version(),
-            }),
-          )
-        | Image => Some(BufferRenderer.Image)
-        | Welcome => Some(BufferRenderer.Welcome)
-        | Changelog => Some(BufferRenderer.FullChangelog)
-        | FilePath(_) => None
-        | DebugInput => Some(BufferRenderer.DebugInput)
-        };
-
-      let editor = Feature_Layout.activeEditor(state.layout);
-      let editorId = editor |> Editor.getId;
-
-      (
-        state,
-        Isolinear.Effect.batch([
-          maybeRenderer
-          |> Option.map(addBufferRendererEffect(bufferId))
-          |> Option.value(~default=Isolinear.Effect.none),
-          maybeLocation
-          |> OptionEx.flatMap(loc =>
-               Feature_Editor.Editor.characterToByte(loc, editor)
-             )
-          |> Option.map(gotoLocationEffect(editorId))
-          |> Option.value(~default=Isolinear.Effect.none),
-        ]),
-      );
-
-    | OpenFileInNewLayout(path) =>
-      let state = {
-        ...state,
-        layout: Feature_Layout.addLayoutTab(state.layout),
-      };
-      (
-        state,
-        openBufferEffect(
-          ~onComplete=bufferId => BufferOpenedForLayout(bufferId),
-          path,
-        ),
-      );
-    | BufferOpenedForLayout(_bufferId) => (state, Isolinear.Effect.none)
+    //    | BufferOpened(path, maybeLocation, bufferId) =>
+    //      let maybeRenderer =
+    //        switch (Core.BufferPath.parse(path)) {
+    //        | ExtensionDetails => Some(BufferRenderer.ExtensionDetails)
+    //        | Terminal({bufferId, _}) =>
+    //          Some(
+    //            BufferRenderer.Terminal({
+    //              title: "Terminal",
+    //              id: bufferId,
+    //              insertMode: true,
+    //            }),
+    //          )
+    //        | Version => Some(BufferRenderer.Version)
+    //        | UpdateChangelog =>
+    //          Some(
+    //            BufferRenderer.UpdateChangelog({
+    //              since: Persistence.Global.version(),
+    //            }),
+    //          )
+    //        | Image => Some(BufferRenderer.Image)
+    //        | Welcome => Some(BufferRenderer.Welcome)
+    //        | Changelog => Some(BufferRenderer.FullChangelog)
+    //        | FilePath(_) => None
+    //        | DebugInput => Some(BufferRenderer.DebugInput)
+    //        };
+    //
+    //      let editor = Feature_Layout.activeEditor(state.layout);
+    //      let editorId = editor |> Editor.getId;
+    //
+    //      (
+    //        state,
+    //        Isolinear.Effect.batch([
+    //          maybeRenderer
+    //          |> Option.map(addBufferRendererEffect(bufferId))
+    //          |> Option.value(~default=Isolinear.Effect.none),
+    //          maybeLocation
+    //          |> OptionEx.flatMap(loc =>
+    //               Feature_Editor.Editor.characterToByte(loc, editor)
+    //             )
+    //          |> Option.map(gotoLocationEffect(editorId))
+    //          |> Option.value(~default=Isolinear.Effect.none),
+    //        ]),
+    //      );
 
     | Terminal(Command(NormalMode)) =>
       let maybeBufferId =

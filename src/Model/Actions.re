@@ -97,12 +97,9 @@ type t =
   | ListSelectBackground
   | OpenFileByPath(
       string,
-      option([ | `Horizontal | `Vertical]),
+      option([ | `Horizontal | `Vertical | `NewTab]),
       option(CharacterPosition.t),
     )
-  | OpenFileInNewLayout(string)
-  | BufferOpened(string, option(CharacterPosition.t), int)
-  | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
   | Pasted({
       rawText: string,

@@ -7,6 +7,8 @@ module ArrayEx = Utility.ArrayEx;
 module OptionEx = Utility.OptionEx;
 module Path = Utility.Path;
 
+open EditorCoreTypes;
+
 module FileType = {
   let default = "plaintext";
 
@@ -217,6 +219,24 @@ let getEstimatedMaxLineLength = buffer => {
   };
 
   currentMax^;
+};
+
+let characterToBytePosition = (position: CharacterPosition.t, buffer) => {
+  let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
+
+  let bufferLineCount = getNumberOfLines(buffer);
+
+  if (line < bufferLineCount) {
+    let bufferLine = getLine(line, buffer);
+    let byteIndex =
+      BufferLine.getByteFromIndex(~index=position.character, bufferLine);
+
+    Some(
+      EditorCoreTypes.(BytePosition.{line: position.line, byte: byteIndex}),
+    );
+  } else {
+    None;
+  };
 };
 
 let applyUpdate =

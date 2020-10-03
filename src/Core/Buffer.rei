@@ -4,6 +4,8 @@
  * In-memory text buffer representation
  */
 
+open EditorCoreTypes;
+
 type t;
 
 module FileType: {
@@ -36,6 +38,9 @@ let ofMetadata:
     ~modified: bool
   ) =>
   t;
+
+let characterToBytePosition:
+  (CharacterPosition.t, t) => option(BytePosition.t);
 
 let getId: t => int;
 let getUri: t => Uri.t;

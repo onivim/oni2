@@ -299,6 +299,7 @@ let update =
                let range: CharacterRange.t =
                  Feature_LanguageSupport.DocumentSymbols.(symbol.range);
                let position = range.start;
+
                Internal.openFileEffect(~position=Some(position), filePath);
              })
           |> Option.value(~default=Isolinear.Effect.none);
@@ -698,6 +699,16 @@ let update =
     | CreateEditor({buffer, split, position, grabFocus}) =>
       let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
       let config = Feature_Configuration.resolver(state.config, state.vim);
+      let editor =
+        Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ());
+
+      let editor' =
+        position
+        |> Option.map(cursorPosition => {
+             Feature_Editor.Editor.setCursors([cursorPosition], editor)
+           })
+        |> Option.value(~default=editor);
+
       let layout =
         (
           switch (split) {
@@ -707,10 +718,7 @@ let update =
           | `NewTab => Feature_Layout.addLayoutTab(state.layout)
           }
         )
-        |> Feature_Layout.openEditor(
-             ~config,
-             Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ()),
-           );
+        |> Feature_Layout.openEditor(~config, editor');
 
       let state' = {...state, layout};
 
@@ -934,10 +942,11 @@ let update =
       | None => `Current
       | Some(`Horizontal) => `Horizontal
       | Some(`Vertical) => `Vertical
-      // TAB: TODO
+      | Some(`NewTab) => `NewTab
       };
     let effect =
       Feature_Buffers.Effects.openInEditor(
+        ~languageInfo=state.languageInfo,
         ~font=state.editorFont,
         ~split,
         ~position,
