@@ -102,7 +102,12 @@ let initial =
   let initialEditor = {
     open Feature_Editor;
     let editorBuffer = initialBuffer |> EditorBuffer.ofBuffer;
-    let config = Feature_Configuration.resolver(config, Feature_Vim.initial);
+    let config =
+      Feature_Configuration.resolver(
+        ~fileType="plaintext",
+        config,
+        Feature_Vim.initial,
+      );
     Editor.create(~config, ~buffer=editorBuffer, ());
   };
 

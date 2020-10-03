@@ -91,7 +91,7 @@ let vimToCoreSetting =
   | Vim.Setting.String(str) => VimSetting.String(str)
   | Vim.Setting.Int(i) => VimSetting.Int(i);
 
-let resolver = (model, vimModel, ~vimSetting, key) => {
+let resolver = (~fileType: string, model, vimModel, ~vimSetting, key) => {
   // Try to get the vim setting, first...
   let vimResolver = Feature_Vim.Configuration.resolver(vimModel);
   vimSetting
