@@ -74,7 +74,12 @@ let simpleEditor =
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {
   let newBuffer = Buffer.update(oldBuffer, update);
   Actions.Buffers(
-    Feature_Buffers.Update({update, oldBuffer, newBuffer, triggerKey: None}),
+    Feature_Buffers.Msg.updated(
+      ~update,
+      ~oldBuffer,
+      ~newBuffer,
+      ~triggerKey=None,
+    ),
   );
 };
 

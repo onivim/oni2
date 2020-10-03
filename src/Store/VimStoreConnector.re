@@ -659,13 +659,6 @@ let start =
       }
     );
 
-  let addBufferRendererEffect = (bufferId, renderer) =>
-    Isolinear.Effect.create(~name="vim.addBufferRenderer", () => {
-      dispatch(
-        Actions.BufferRenderer(RendererAvailable(bufferId, renderer)),
-      )
-    });
-
   let openTutorEffect =
     Isolinear.Effect.create(~name="vim.tutor", () => {
       let filename = Filename.temp_file("tutor", "");
@@ -840,72 +833,6 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
-
-    //    | OpenFileByPath(path, maybeDirection, maybeLocation) =>
-    /* If a split was requested, create that first! */
-    //      (state, Isolinear.Effect.none)
-    //      let state' =
-    //        switch (maybeDirection) {
-    //        | None => state
-    //        | Some(direction) => {
-    //            ...state,
-    //            layout: Feature_Layout.split(direction, state.layout),
-    //          }
-    //        };
-    //
-    //      // Ensure that the editor is focused, as well
-    //      let state'' = state' |> Oni_Model.FocusManager.push(Editor);
-    //
-    //      (
-    //        state'',
-    //        openBufferEffect(
-    //          ~onComplete=bufferId => BufferOpened(path, maybeLocation, bufferId),
-    //          path,
-    //        ),
-    //      );
-    //    | BufferOpened(path, maybeLocation, bufferId) =>
-    //      let maybeRenderer =
-    //        switch (Core.BufferPath.parse(path)) {
-    //        | ExtensionDetails => Some(BufferRenderer.ExtensionDetails)
-    //        | Terminal({bufferId, _}) =>
-    //          Some(
-    //            BufferRenderer.Terminal({
-    //              title: "Terminal",
-    //              id: bufferId,
-    //              insertMode: true,
-    //            }),
-    //          )
-    //        | Version => Some(BufferRenderer.Version)
-    //        | UpdateChangelog =>
-    //          Some(
-    //            BufferRenderer.UpdateChangelog({
-    //              since: Persistence.Global.version(),
-    //            }),
-    //          )
-    //        | Image => Some(BufferRenderer.Image)
-    //        | Welcome => Some(BufferRenderer.Welcome)
-    //        | Changelog => Some(BufferRenderer.FullChangelog)
-    //        | FilePath(_) => None
-    //        | DebugInput => Some(BufferRenderer.DebugInput)
-    //        };
-    //
-    //      let editor = Feature_Layout.activeEditor(state.layout);
-    //      let editorId = editor |> Editor.getId;
-    //
-    //      (
-    //        state,
-    //        Isolinear.Effect.batch([
-    //          maybeRenderer
-    //          |> Option.map(addBufferRendererEffect(bufferId))
-    //          |> Option.value(~default=Isolinear.Effect.none),
-    //          maybeLocation
-    //          |> OptionEx.flatMap(loc =>
-    //               Feature_Editor.Editor.characterToByte(loc, editor)
-    //             )
-    //          |> Option.map(gotoLocationEffect(editorId))
-    //          |> Option.value(~default=Isolinear.Effect.none),
-    //        ]),
-    //      );
 
     | Terminal(Command(NormalMode)) =>
       let maybeBufferId =

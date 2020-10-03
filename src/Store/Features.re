@@ -705,7 +705,10 @@ let update =
       let editor' =
         position
         |> Option.map(cursorPosition => {
-             Feature_Editor.Editor.setCursors(~cursors=[cursorPosition], editor)
+             Feature_Editor.Editor.setCursors(
+               ~cursors=[cursorPosition],
+               editor,
+             )
            })
         |> Option.value(~default=editor);
 
@@ -720,41 +723,37 @@ let update =
         )
         |> Feature_Layout.openEditor(~config, editor');
 
-        let bufferRenderers = buffer
+      let bufferRenderers =
+        buffer
         |> Oni_Core.Buffer.getFilePath
         |> OptionEx.flatMap(path => {
-          switch (Oni_Core.BufferPath.parse(path)) {
-          | ExtensionDetails => Some(BufferRenderer.ExtensionDetails)
-          | Terminal({bufferId, _}) =>
-            Some(
-              BufferRenderer.Terminal({
-                title: "Terminal",
-                id: bufferId,
-                insertMode: true,
-              }),
-            )
-          | Version => Some(BufferRenderer.Version)
-          | UpdateChangelog => None;
-//            Some(
-//              BufferRenderer.UpdateChangelog({
-//                since: Persistence.Global.version(),
-//              }),
-//            )
-          | Image => Some(BufferRenderer.Image)
-          | Welcome => Some(BufferRenderer.Welcome)
-          | Changelog => Some(BufferRenderer.FullChangelog)
-          | FilePath(_) => None
-          | DebugInput => Some(BufferRenderer.DebugInput)
-          }
-      })
-      |> Option.map(renderer => {
-        BufferRenderers.setById(
-          buffer |> Oni_Core.Buffer.getId,
-          renderer,
-          state.bufferRenderers
-        )
-      })
-      |> Option.value(~default=state.bufferRenderers);
+             switch (Oni_Core.BufferPath.parse(path)) {
+             | ExtensionDetails => Some(BufferRenderer.ExtensionDetails)
+             | Terminal({bufferId, _}) =>
+               Some(
+                 BufferRenderer.Terminal({
+                   title: "Terminal",
+                   id: bufferId,
+                   insertMode: true,
+                 }),
+               )
+             | Version => Some(BufferRenderer.Version)
+             | UpdateChangelog => None
+             | Image => Some(BufferRenderer.Image)
+             | Welcome => Some(BufferRenderer.Welcome)
+             | Changelog => Some(BufferRenderer.FullChangelog)
+             | FilePath(_) => None
+             | DebugInput => Some(BufferRenderer.DebugInput)
+             }
+           })
+        |> Option.map(renderer => {
+             BufferRenderers.setById(
+               buffer |> Oni_Core.Buffer.getId,
+               renderer,
+               state.bufferRenderers,
+             )
+           })
+        |> Option.value(~default=state.bufferRenderers);
 
       let state' = {...state, bufferRenderers, layout};
 
@@ -795,10 +794,8 @@ let update =
           state.syntaxHighlights,
         );
 
-      let bufferRenderers = BufferRenderers.handleBufferUpdate(
-        update,
-        state.bufferRenderers
-      );
+      let bufferRenderers =
+        BufferRenderers.handleBufferUpdate(update, state.bufferRenderers);
 
       let state' = {...state, bufferRenderers, syntaxHighlights};
 
