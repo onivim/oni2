@@ -196,48 +196,6 @@ let update = (msg: msg, model: model) => {
       }),
     )
 
-  //  | Entered({
-  //      id,
-  //      fileType,
-  //      lineEndings,
-  //      isModified,
-  //      filePath,
-  //      version,
-  //      font,
-  //      _,
-  //    }) =>
-  //    let maybeSetLineEndings = (maybeLineEndings, buf) => {
-  //      switch (maybeLineEndings) {
-  //      | Some(le) => Buffer.setLineEndings(le, buf)
-  //      | None => buf
-  //      };
-  //    };
-  //
-  //    let updater = (
-  //      fun
-  //      | Some(buffer) =>
-  //        buffer
-  //        |> Buffer.setModified(isModified)
-  //        |> Buffer.setFilePath(filePath)
-  //        |> Buffer.setVersion(version)
-  //        |> Buffer.stampLastUsed
-  //        |> maybeSetLineEndings(lineEndings)
-  //        |> Option.some
-  //      | None =>
-  //        Buffer.ofMetadata(
-  //          ~id,
-  //          ~version,
-  //          ~font,
-  //          ~filePath,
-  //          ~modified=isModified,
-  //        )
-  //        |> Buffer.setFileType(fileType)
-  //        |> Buffer.stampLastUsed
-  //        |> maybeSetLineEndings(lineEndings)
-  //        |> Option.some
-  //    );
-  //    (IntMap.update(id, updater, model), Nothing);
-
   | FilenameChanged({id, newFileType, newFilePath, version, isModified}) =>
     let updater = (
       fun
@@ -252,7 +210,7 @@ let update = (msg: msg, model: model) => {
       | None => None
     );
     (IntMap.update(id, updater, model), Nothing);
-  /* | BufferDelete(bd) => IntMap.remove(bd, state) */
+
   | ModifiedSet(id, isModified) => (
       IntMap.update(id, setModified(isModified), model),
       Nothing,

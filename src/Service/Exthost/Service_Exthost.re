@@ -245,8 +245,13 @@ module Internal = {
         lines;
       };
 
+
     maybeFilePath
     |> Option.map(filePath => {
+
+    prerr_endline (
+    Printf.sprintf("-- BUFFER METADATA: %s | %d -- ", filePath, version));
+    List.iter(prerr_endline, lines);
          Log.tracef(m => m("Creating model for filetype: %s", modeId));
          Exthost.ModelAddedDelta.create(
            ~versionId=version,

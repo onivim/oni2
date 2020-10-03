@@ -745,6 +745,7 @@ let update =
       (state, eff);
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
+      prerr_endline("--UPDATE: " ++ Oni_Core.BufferUpdate.show(update));
       let syntaxHighlights =
         Feature_Syntax.handleUpdate(
           ~scope=
@@ -795,7 +796,7 @@ let update =
               state'.layout,
             ),
         },
-        Isolinear.Effect.batch([syntaxEffect, exthostEffect]),
+        Isolinear.Effect.batch([exthostEffect, syntaxEffect]),
       );
     };
 
