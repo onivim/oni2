@@ -49,21 +49,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
           discoveredExtensionsEffect(extensions),
         ]),
       )
-    // TODO: Bring back!
-
-    //    | Buffers(
-    //        Feature_Buffers.Update({update, newBuffer, triggerKey, oldBuffer}),
-    //      ) => (
-    //        state,
-    //        Service_Exthost.Effects.Documents.modelChanged(
-    //          ~previousBuffer=oldBuffer,
-    //          ~buffer=newBuffer,
-    //          ~update,
-    //          extHostClient,
-    //          () =>
-    //          Actions.ExtensionBufferUpdateQueued({triggerKey: triggerKey})
-    //        ),
-    //      )
     //
     //    | Buffers(Feature_Buffers.Saved(bufferId)) =>
     //      let effect =

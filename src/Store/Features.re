@@ -731,7 +731,7 @@ let update =
 
       (state'', Effect.none);
 
-    | BufferUpdated({update, newBuffer}) =>
+    | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
       let syntaxHighlights =
         Feature_Syntax.handleUpdate(
           ~scope=
@@ -754,6 +754,16 @@ let update =
           state.syntaxHighlights,
         )
         |> Isolinear.Effect.map(() => Actions.Noop);
+        
+      let exthostEffect = 
+        Service_Exthost.Effects.Documents.modelChanged(
+          ~previousBuffer=oldBuffer,
+          ~buffer=newBuffer,
+          ~update,
+          extHostClient,
+          () =>
+          Actions.ExtensionBufferUpdateQueued({triggerKey: triggerKey})
+        );
       open Feature_Editor; // update editor
 
       let buffer = EditorBuffer.ofBuffer(newBuffer);
@@ -772,7 +782,7 @@ let update =
               state'.layout,
             ),
         },
-        syntaxEffect,
+        Isolinear.Effect.batch([syntaxEffect, exthostEffect])
       );
     };
 

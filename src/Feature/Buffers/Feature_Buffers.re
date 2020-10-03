@@ -78,6 +78,8 @@ type outmsg =
   | BufferUpdated({
       update: Oni_Core.BufferUpdate.t,
       newBuffer: Oni_Core.Buffer.t,
+      oldBuffer: Oni_Core.Buffer.t,
+      triggerKey: option(string),
     })
   | CreateEditor({
       buffer: Oni_Core.Buffer.t,
@@ -265,9 +267,9 @@ let update = (msg: msg, model: model) => {
       Nothing,
     )
 
-  | Update({update, newBuffer, _}) => (
+  | Update({update, newBuffer, oldBuffer, triggerKey }) => (
       IntMap.add(update.id, newBuffer, model),
-      BufferUpdated({update, newBuffer}),
+      BufferUpdated({update, newBuffer, oldBuffer, triggerKey}),
     )
 
   | FileTypeChanged({id, fileType}) => (
