@@ -210,12 +210,7 @@ let runWith = (~context: Context.t, f) => {
   };
 
   flushQueue();
-  let outContext = {
-    ...Context.current(),
-    cursors,
-    autoClosingPairs: context.autoClosingPairs,
-  };
-  outContext;
+  {...Context.current(), cursors, autoClosingPairs: context.autoClosingPairs};
 };
 
 let _onAutocommand = (autoCommand: Types.autocmd, buffer: Buffer.t) => {

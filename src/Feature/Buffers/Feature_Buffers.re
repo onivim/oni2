@@ -4,6 +4,7 @@
  * A collection of buffers
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 module Log = (val Log.withNamespace("Oni2.Model.Buffers"));
@@ -36,11 +37,8 @@ let filter = (f, model) => {
 };
 
 let all = model => {
-  model
-  |> IntMap.to_seq
-  |> Seq.map(snd)
-  |> List.of_seq;
-}
+  model |> IntMap.to_seq |> Seq.map(snd) |> List.of_seq;
+};
 
 let isModifiedByPath = (buffers: model, filePath: string) => {
   IntMap.exists(
@@ -69,35 +67,42 @@ let setModified = modified =>
 let setLineEndings = le =>
   Option.map(buffer => Buffer.setLineEndings(le, buffer));
 
-
-let modified = (model) => {
-      model
-      |> IntMap.to_seq
-      |> Seq.map(snd)
-      |> Seq.filter(Buffer.isModified)
-      |> List.of_seq;
-      //|> Seq.map(Buffer.getFilePath)
-      //|> Utility.OptionEx.values
-      //|> List.map(Utility.Path.toRelative(~base=workingDirectory));
+let modified = model => {
+  model
+  |> IntMap.to_seq
+  |> Seq.map(snd)
+  |> Seq.filter(Buffer.isModified)
+  |> List.of_seq;
 };
 
-type outmsg;
+type outmsg =
+  | Nothing
+  | BufferUpdated({
+      update: Oni_Core.BufferUpdate.t,
+      newBuffer: Oni_Core.Buffer.t,
+    })
+  | CreateEditor({
+      buffer: Oni_Core.Buffer.t,
+      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      position: option(CharacterPosition.t),
+      grabFocus: bool,
+    });
 
 [@deriving show({with_path: false})]
 type msg =
-  | SyntaxHighlightingDisabled(int)
-  | Entered({
-      id: int,
-      fileType: Oni_Core.Buffer.FileType.t,
-      lineEndings: [@opaque] option(Vim.lineEnding),
-      filePath: option(string),
-      isModified: bool,
-      version: int,
-      font: Font.t,
-      // TODO: This duplication-of-truth is really awkward,
-      // but I want to remove it shortly
-      buffer: [@opaque] Buffer.t,
+  | EditorRequested({
+      buffer: [@opaque] Oni_Core.Buffer.t,
+      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      position: option(CharacterPosition.t),
+      grabFocus: bool,
     })
+  | NewBufferAndEditorRequested({
+      buffer: [@opaque] Oni_Core.Buffer.t,
+      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      position: option(CharacterPosition.t),
+      grabFocus: bool,
+    })
+  | SyntaxHighlightingDisabled(int)
   | FileTypeChanged({
       id: int,
       fileType: Oni_Core.Buffer.FileType.t,
@@ -123,52 +128,101 @@ type msg =
   | IndentationSet(int, [@opaque] IndentationSettings.t)
   | ModifiedSet(int, bool);
 
+module Msg = {
+  let fileTypeChanged = (~bufferId, ~fileType) => {
+    FileTypeChanged({id: bufferId, fileType});
+  };
+
+  let lineEndingsChanged = (~bufferId, ~lineEndings) => {
+    LineEndingsChanged({id: bufferId, lineEndings});
+  };
+
+  let indentationSet = (~bufferId, ~indentation) => {
+    IndentationSet(bufferId, indentation);
+  };
+
+  let saved = (~bufferId) => {
+    Saved(bufferId);
+  };
+
+  let fileNameChanged =
+      (~bufferId, ~newFilePath, ~newFileType, ~version, ~isModified) => {
+    FilenameChanged({
+      id: bufferId,
+      newFilePath,
+      newFileType,
+      version,
+      isModified,
+    });
+  };
+
+  let modified = (~bufferId, ~isModified) => {
+    ModifiedSet(bufferId, isModified);
+  };
+
+  let updated = (~update, ~newBuffer, ~oldBuffer, ~triggerKey) => {
+    Update({update, oldBuffer, newBuffer, triggerKey});
+  };
+};
+
 let update = (msg: msg, model: model) => {
   switch (msg) {
-  | SyntaxHighlightingDisabled(id) =>
-    IntMap.update(id, disableSyntaxHighlighting, model)
+  | SyntaxHighlightingDisabled(id) => (
+      IntMap.update(id, disableSyntaxHighlighting, model),
+      Nothing,
+    )
 
-  | Entered({
-      id,
-      fileType,
-      lineEndings,
-      isModified,
-      filePath,
-      version,
-      font,
-      _,
-    }) =>
-    let maybeSetLineEndings = (maybeLineEndings, buf) => {
-      switch (maybeLineEndings) {
-      | Some(le) => Buffer.setLineEndings(le, buf)
-      | None => buf
-      };
-    };
+  | EditorRequested({buffer, split, position, grabFocus}) => (
+      model,
+      CreateEditor({buffer, split, position, grabFocus}),
+    )
 
-    let updater = (
-      fun
-      | Some(buffer) =>
-        buffer
-        |> Buffer.setModified(isModified)
-        |> Buffer.setFilePath(filePath)
-        |> Buffer.setVersion(version)
-        |> Buffer.stampLastUsed
-        |> maybeSetLineEndings(lineEndings)
-        |> Option.some
-      | None =>
-        Buffer.ofMetadata(
-          ~id,
-          ~version,
-          ~font,
-          ~filePath,
-          ~modified=isModified,
-        )
-        |> Buffer.setFileType(fileType)
-        |> Buffer.stampLastUsed
-        |> maybeSetLineEndings(lineEndings)
-        |> Option.some
-    );
-    IntMap.update(id, updater, model);
+  | NewBufferAndEditorRequested({buffer, split, position, grabFocus}) => (
+      IntMap.add(Buffer.getId(buffer), buffer, model),
+      CreateEditor({buffer, split, position, grabFocus}),
+    )
+
+  //  | Entered({
+  //      id,
+  //      fileType,
+  //      lineEndings,
+  //      isModified,
+  //      filePath,
+  //      version,
+  //      font,
+  //      _,
+  //    }) =>
+  //    let maybeSetLineEndings = (maybeLineEndings, buf) => {
+  //      switch (maybeLineEndings) {
+  //      | Some(le) => Buffer.setLineEndings(le, buf)
+  //      | None => buf
+  //      };
+  //    };
+  //
+  //    let updater = (
+  //      fun
+  //      | Some(buffer) =>
+  //        buffer
+  //        |> Buffer.setModified(isModified)
+  //        |> Buffer.setFilePath(filePath)
+  //        |> Buffer.setVersion(version)
+  //        |> Buffer.stampLastUsed
+  //        |> maybeSetLineEndings(lineEndings)
+  //        |> Option.some
+  //      | None =>
+  //        Buffer.ofMetadata(
+  //          ~id,
+  //          ~version,
+  //          ~font,
+  //          ~filePath,
+  //          ~modified=isModified,
+  //        )
+  //        |> Buffer.setFileType(fileType)
+  //        |> Buffer.stampLastUsed
+  //        |> maybeSetLineEndings(lineEndings)
+  //        |> Option.some
+  //    );
+  //    (IntMap.update(id, updater, model), Nothing);
 
   | FilenameChanged({id, newFileType, newFilePath, version, isModified}) =>
     let updater = (
@@ -183,35 +237,91 @@ let update = (msg: msg, model: model) => {
         |> Option.some
       | None => None
     );
-    IntMap.update(id, updater, model);
+    (IntMap.update(id, updater, model), Nothing);
   /* | BufferDelete(bd) => IntMap.remove(bd, state) */
-  | ModifiedSet(id, isModified) =>
-    IntMap.update(id, setModified(isModified), model)
+  | ModifiedSet(id, isModified) => (
+      IntMap.update(id, setModified(isModified), model),
+      Nothing,
+    )
 
-  | IndentationSet(id, indent) =>
-    IntMap.update(id, setIndentation(indent), model)
+  | IndentationSet(id, indent) => (
+      IntMap.update(id, setIndentation(indent), model),
+      Nothing,
+    )
 
-  | LineEndingsChanged({id, lineEndings}) =>
-    IntMap.update(id, setLineEndings(lineEndings), model)
+  | LineEndingsChanged({id, lineEndings}) => (
+      IntMap.update(id, setLineEndings(lineEndings), model),
+      Nothing,
+    )
 
-  | Update({update, newBuffer, _}) => IntMap.add(update.id, newBuffer, model)
+  | Update({update, newBuffer, _}) => (
+      IntMap.add(update.id, newBuffer, model),
+      BufferUpdated({update, newBuffer}),
+    )
 
-  | FileTypeChanged({id, fileType}) =>
-    IntMap.update(id, Option.map(Buffer.setFileType(fileType)), model)
+  | FileTypeChanged({id, fileType}) => (
+      IntMap.update(id, Option.map(Buffer.setFileType(fileType)), model),
+      Nothing,
+    )
 
-  | Saved(_) => model
+  | Saved(_) => (model, Nothing)
   };
 };
 
 module Effects = {
-  let openInEditor = (
-    ~split=`Current,
-    ~position=None,
-    ~grabFocus=true,
-    filePath
-  ) => Isolinear.Effect.none;
+  let openInEditor =
+      (
+        ~font: Service_Font.font,
+        ~split=`Current,
+        ~position=None,
+        ~grabFocus=true,
+        ~filePath,
+        model,
+      ) => {
+    //let currentBuffer = Vim.Buffer.getCurrent();
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Buffers.openInEditor", dispatch => {
+      let newBuffer = Vim.Buffer.openFile(filePath);
 
-  let load = (
-    filePath
-  ) => Isolinear.Effect.none;
+      // Revert to previous buffer
+      //Vim.Buffer.setCurrent(currentBuffer);
+
+      let bufferId = Vim.Buffer.getId(newBuffer);
+
+      switch (IntMap.find_opt(bufferId, model)) {
+      // We already have this buffer loaded - so just ask for an editor!
+      | Some(buffer) =>
+        dispatch(EditorRequested({buffer, split, position, grabFocus}))
+
+      | None =>
+        // No buffer yet, so we need to create one _and_ ask for an editor.
+        let metadata = Vim.BufferMetadata.ofBuffer(newBuffer);
+        let maybeLineEndings: option(Vim.lineEnding) =
+          Vim.Buffer.getLineEndings(newBuffer);
+
+        let lines = Vim.Buffer.getLines(newBuffer);
+        let buffer =
+          Oni_Core.Buffer.ofLines(~id=metadata.id, ~font, lines)
+          |> Buffer.setVersion(metadata.version)
+          |> Buffer.setFilePath(metadata.filePath)
+          |> Buffer.setModified(metadata.modified)
+          |> Buffer.stampLastUsed;
+
+        let buffer =
+          maybeLineEndings
+          |> Option.map(le => Buffer.setLineEndings(le, buffer))
+          |> Option.value(~default=buffer);
+
+        dispatch(
+          NewBufferAndEditorRequested({buffer, split, position, grabFocus}),
+        );
+      };
+      // Do we already know about this editor
+      //
+      //      dispatch(toMsg(~bufferId=Vim.Buffer.getId(newBuffer)));
+      //failwith("still fail");
+    });
+  };
+
+  let load = (~filePath, model) => Isolinear.Effect.none;
 };

@@ -180,6 +180,8 @@ module Buffer: {
   */
   let getLine: (t, LineNumber.t) => string;
 
+  let getLines: t => array(string);
+
   /**
   [getId(buffer)] returns the id of buffer [buffer];
   */

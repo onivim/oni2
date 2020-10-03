@@ -239,10 +239,10 @@ let start = () => {
                name: fileType,
                command: () =>
                  Buffers(
-                   Feature_Buffers.FileTypeChanged({
-                     id: bufferId,
-                     fileType: Oni_Core.Buffer.FileType.explicit(fileType),
-                   }),
+                   Feature_Buffers.Msg.fileTypeChanged(
+                     ~bufferId,
+                     ~fileType=Oni_Core.Buffer.FileType.explicit(fileType),
+                   ),
                  ),
                icon: maybeIcon,
                highlight: [],

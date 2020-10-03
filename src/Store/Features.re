@@ -618,78 +618,155 @@ let update =
 
     (state'', eff);
 
-  | Buffers(Feature_Buffers.Update({update, newBuffer, _}) as msg) =>
-    let buffers = Feature_Buffers.update(msg, state.buffers);
-
-    let syntaxHighlights =
-      Feature_Syntax.handleUpdate(
-        ~scope=
-          Internal.getScopeForBuffer(
-            ~languageInfo=state.languageInfo,
-            newBuffer,
-          ),
-        ~grammars=grammarRepository,
-        ~config=Feature_Configuration.resolver(state.config, state.vim),
-        ~theme=state.tokenTheme,
-        update,
-        state.syntaxHighlights,
-      );
-
-    let state = {...state, buffers, syntaxHighlights};
-
-    let (state, eff) = (
-      state,
-      Feature_Syntax.Effect.bufferUpdate(
-        ~bufferUpdate=update,
-        state.syntaxHighlights,
-      )
-      |> Isolinear.Effect.map(() => Actions.Noop),
-    );
-    open Feature_Editor; // update editor
-
-    let buffer = EditorBuffer.ofBuffer(newBuffer);
-    let bufferId = Buffer.getId(newBuffer);
-    (
-      {
-        ...state,
-        layout:
-          Feature_Layout.map(
-            editor =>
-              if (Editor.getBufferId(editor) == bufferId) {
-                Editor.updateBuffer(~buffer, editor);
-              } else {
-                editor;
-              },
-            state.layout,
-          ),
-      },
-      eff,
-    );
+  //  | Buffers(Feature_Buffers.Update({update, newBuffer, _}) as msg) =>
+  //    let buffers = Feature_Buffers.update(msg, state.buffers);
+  //
+  //    let syntaxHighlights =
+  //      Feature_Syntax.handleUpdate(
+  //        ~scope=
+  //          Internal.getScopeForBuffer(
+  //            ~languageInfo=state.languageInfo,
+  //            newBuffer,
+  //          ),
+  //        ~grammars=grammarRepository,
+  //        ~config=Feature_Configuration.resolver(state.config, state.vim),
+  //        ~theme=state.tokenTheme,
+  //        update,
+  //        state.syntaxHighlights,
+  //      );
+  //
+  //    let state = {...state, buffers, syntaxHighlights};
+  //
+  //    let (state, eff) = (
+  //      state,
+  //      Feature_Syntax.Effect.bufferUpdate(
+  //        ~bufferUpdate=update,
+  //        state.syntaxHighlights,
+  //      )
+  //      |> Isolinear.Effect.map(() => Actions.Noop),
+  //    );
+  //    open Feature_Editor; // update editor
+  //
+  //    let buffer = EditorBuffer.ofBuffer(newBuffer);
+  //    let bufferId = Buffer.getId(newBuffer);
+  //    (
+  //      {
+  //        ...state,
+  //        layout:
+  //          Feature_Layout.map(
+  //            editor =>
+  //              if (Editor.getBufferId(editor) == bufferId) {
+  //                Editor.updateBuffer(~buffer, editor);
+  //              } else {
+  //                editor;
+  //              },
+  //            state.layout,
+  //          ),
+  //      },
+  //      eff,
+  //    );
 
   // TEMPORARY: Needs https://github.com/onivim/oni2/pull/1627 to remove
-//  | Buffers(Feature_Buffers.Entered({buffer, _}) as msg) =>
-//    let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
-//
-//    let buffers = Feature_Buffers.update(msg, state.buffers);
-//
-//    let config = Feature_Configuration.resolver(state.config, state.vim);
-//    (
-//      {
-//        ...state,
-//        buffers,
-//        layout:
-//          Feature_Layout.openEditor(
-//            ~config,
-//            Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ()),
-//            state.layout,
-//          ),
-//      },
-//      Effect.none,
-//    );
+  //  | Buffers(Feature_Buffers.Entered({buffer, _}) as msg) =>
+  //    let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
+  //
+  //    let buffers = Feature_Buffers.update(msg, state.buffers);
+  //
+  //    let config = Feature_Configuration.resolver(state.config, state.vim);
+  //    (
+  //      {
+  //        ...state,
+  //        buffers,
+  //        layout:
+  //          Feature_Layout.openEditor(
+  //            ~config,
+  //            Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ()),
+  //            state.layout,
+  //          ),
+  //      },
+  //      Effect.none,
+  //    );
 
   | Buffers(msg) =>
-    let buffers = Feature_Buffers.update(msg, state.buffers);
-    ({...state, buffers}, Effect.none);
+    let (buffers, outmsg) = Feature_Buffers.update(msg, state.buffers);
+
+    let state = {...state, buffers};
+
+    switch (outmsg) {
+    | Nothing => (state, Effect.none)
+
+    | CreateEditor({buffer, split, position, grabFocus}) =>
+      let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
+      let config = Feature_Configuration.resolver(state.config, state.vim);
+      let layout =
+        (
+          switch (split) {
+          | `Current => state.layout
+          | `Horizontal => Feature_Layout.split(`Horizontal, state.layout)
+          | `Vertical => Feature_Layout.split(`Vertical, state.layout)
+          | `NewTab => Feature_Layout.addLayoutTab(state.layout)
+          }
+        )
+        |> Feature_Layout.openEditor(
+             ~config,
+             Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ()),
+           );
+
+      let state' = {...state, layout};
+
+      let state'' =
+        if (grabFocus) {
+          state' |> FocusManager.push(Editor);
+        } else {
+          state';
+        };
+
+      (state'', Effect.none);
+
+    | BufferUpdated({update, newBuffer}) =>
+      let syntaxHighlights =
+        Feature_Syntax.handleUpdate(
+          ~scope=
+            Internal.getScopeForBuffer(
+              ~languageInfo=state.languageInfo,
+              newBuffer,
+            ),
+          ~grammars=grammarRepository,
+          ~config=Feature_Configuration.resolver(state.config, state.vim),
+          ~theme=state.tokenTheme,
+          update,
+          state.syntaxHighlights,
+        );
+
+      let state' = {...state, syntaxHighlights};
+
+      let syntaxEffect =
+        Feature_Syntax.Effect.bufferUpdate(
+          ~bufferUpdate=update,
+          state.syntaxHighlights,
+        )
+        |> Isolinear.Effect.map(() => Actions.Noop);
+      open Feature_Editor; // update editor
+
+      let buffer = EditorBuffer.ofBuffer(newBuffer);
+      let bufferId = Buffer.getId(newBuffer);
+      (
+        {
+          ...state',
+          layout:
+            Feature_Layout.map(
+              editor =>
+                if (Editor.getBufferId(editor) == bufferId) {
+                  Editor.updateBuffer(~buffer, editor);
+                } else {
+                  editor;
+                },
+              state'.layout,
+            ),
+        },
+        syntaxEffect,
+      );
+    };
 
   | EditorSizeChanged({id, pixelWidth, pixelHeight}) => (
       {
@@ -849,6 +926,26 @@ let update =
       | TerminalExit(_) => (state, Effect.none)
       };
 
+    (state, effect);
+
+  | OpenFileByPath(filePath, direction, position) =>
+    let split =
+      switch (direction) {
+      | None => `Current
+      | Some(`Horizontal) => `Horizontal
+      | Some(`Vertical) => `Vertical
+      // TAB: TODO
+      };
+    let effect =
+      Feature_Buffers.Effects.openInEditor(
+        ~font=state.editorFont,
+        ~split,
+        ~position,
+        ~grabFocus=true,
+        ~filePath,
+        state.buffers,
+      )
+      |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
     (state, effect);
 
   | Theme(msg) =>
