@@ -4,7 +4,7 @@
  * This implements an updater (reducer + side effects) for managing indentation
  */
 
-open Oni_Core;
+//open Oni_Core;
 open Oni_Model;
 
 let start = () => {

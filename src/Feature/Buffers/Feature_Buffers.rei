@@ -88,6 +88,4 @@ module Effects: {
       model
     ) =>
     Isolinear.Effect.t(msg);
-
-  let load: (~filePath: string, model) => Isolinear.Effect.t(msg);
 };

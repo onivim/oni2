@@ -862,9 +862,9 @@ let start =
 
     | Init => (state, initEffect)
 
-    | OpenFileByPath(path, maybeDirection, maybeLocation) =>
-      /* If a split was requested, create that first! */
-      (state, Isolinear.Effect.none)
+    //    | OpenFileByPath(path, maybeDirection, maybeLocation) =>
+    /* If a split was requested, create that first! */
+    //      (state, Isolinear.Effect.none)
     //      let state' =
     //        switch (maybeDirection) {
     //        | None => state

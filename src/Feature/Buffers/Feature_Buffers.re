@@ -13,10 +13,7 @@ type model = IntMap.t(Buffer.t);
 
 let empty = IntMap.empty;
 
-type mapFunction = Buffer.t => Buffer.t;
-
 let map = IntMap.map;
-let remove = IntMap.remove;
 
 let get = (id, model) => IntMap.find_opt(id, model);
 
@@ -58,8 +55,9 @@ let isModifiedByPath = (buffers: model, filePath: string) => {
 let setIndentation = indent =>
   Option.map(buffer => Buffer.setIndentation(indent, buffer));
 
-let disableSyntaxHighlighting =
-  Option.map(buffer => Buffer.disableSyntaxHighlighting(buffer));
+// TODO: When do we use this?
+//let disableSyntaxHighlighting =
+//  Option.map(buffer => Buffer.disableSyntaxHighlighting(buffer));
 
 let setModified = modified =>
   Option.map(buffer => Buffer.setModified(modified, buffer));
@@ -102,7 +100,7 @@ type msg =
       position: option(CharacterPosition.t),
       grabFocus: bool,
     })
-  | SyntaxHighlightingDisabled(int)
+  //  | SyntaxHighlightingDisabled(int)
   | FileTypeChanged({
       id: int,
       fileType: Oni_Core.Buffer.FileType.t,
@@ -167,11 +165,6 @@ module Msg = {
 
 let update = (msg: msg, model: model) => {
   switch (msg) {
-  | SyntaxHighlightingDisabled(id) => (
-      IntMap.update(id, disableSyntaxHighlighting, model),
-      Nothing,
-    )
-
   | EditorRequested({buffer, split, position, grabFocus}) => (
       model,
       CreateEditor({buffer, split, position, grabFocus}),
@@ -283,9 +276,6 @@ module Effects = {
       ~name="Feature_Buffers.openInEditor", dispatch => {
       let newBuffer = Vim.Buffer.openFile(filePath);
 
-      // Revert to previous buffer
-      //Vim.Buffer.setCurrent(currentBuffer);
-
       let bufferId = Vim.Buffer.getId(newBuffer);
 
       switch (IntMap.find_opt(bufferId, model)) {
@@ -316,12 +306,6 @@ module Effects = {
           NewBufferAndEditorRequested({buffer, split, position, grabFocus}),
         );
       };
-      // Do we already know about this editor
-      //
-      //      dispatch(toMsg(~bufferId=Vim.Buffer.getId(newBuffer)));
-      //failwith("still fail");
     });
   };
-
-  let load = (~filePath, model) => Isolinear.Effect.none;
 };

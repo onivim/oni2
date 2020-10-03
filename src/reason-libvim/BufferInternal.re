@@ -75,8 +75,7 @@ let checkBufferForUpdate = buffer => {
           );
         };
       }
-    | None =>
-      currentBuffer := Some(buffer);
+    | None => currentBuffer := Some(buffer)
     };
     let newVersion = Native.vimBufferGetChangedTick(buffer);
 
