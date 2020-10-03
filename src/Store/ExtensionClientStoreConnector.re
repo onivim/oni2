@@ -49,25 +49,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
           discoveredExtensionsEffect(extensions),
         ]),
       )
-    //
-    //    | Buffers(Feature_Buffers.Saved(bufferId)) =>
-    //      let effect =
-    //        state.buffers
-    //        |> Feature_Buffers.get(bufferId)
-    //        |> Option.map(buffer => {
-    //             Service_Exthost.Effects.FileSystemEventService.onFileEvent(
-    //               ~events=
-    //                 Exthost.Files.FileSystemEvents.{
-    //                   created: [],
-    //                   deleted: [],
-    //                   changed: [buffer |> Oni_Core.Buffer.getUri],
-    //                 },
-    //               extHostClient,
-    //             )
-    //           })
-    //        |> Option.value(~default=Isolinear.Effect.none);
-    //
-    //      (state, effect);
 
     | DirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 

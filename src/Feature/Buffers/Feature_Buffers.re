@@ -81,6 +81,7 @@ type outmsg =
       oldBuffer: Oni_Core.Buffer.t,
       triggerKey: option(string),
     })
+  | BufferSaved(Oni_Core.Buffer.t)
   | CreateEditor({
       buffer: Oni_Core.Buffer.t,
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
@@ -267,7 +268,7 @@ let update = (msg: msg, model: model) => {
       Nothing,
     )
 
-  | Update({update, newBuffer, oldBuffer, triggerKey }) => (
+  | Update({update, newBuffer, oldBuffer, triggerKey}) => (
       IntMap.add(update.id, newBuffer, model),
       BufferUpdated({update, newBuffer, oldBuffer, triggerKey}),
     )
@@ -277,7 +278,12 @@ let update = (msg: msg, model: model) => {
       Nothing,
     )
 
-  | Saved(_) => (model, Nothing)
+  | Saved(bufferId) =>
+    let eff =
+      IntMap.find_opt(bufferId, model)
+      |> Option.map(buffer => BufferSaved(buffer))
+      |> Option.value(~default=Nothing);
+    (model, eff);
   };
 };
 

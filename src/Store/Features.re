@@ -731,6 +731,19 @@ let update =
 
       (state'', Effect.none);
 
+    | BufferSaved(buffer) =>
+      let eff =
+        Service_Exthost.Effects.FileSystemEventService.onFileEvent(
+          ~events=
+            Exthost.Files.FileSystemEvents.{
+              created: [],
+              deleted: [],
+              changed: [buffer |> Oni_Core.Buffer.getUri],
+            },
+          extHostClient,
+        );
+      (state, eff);
+
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
       let syntaxHighlights =
         Feature_Syntax.handleUpdate(
@@ -754,8 +767,8 @@ let update =
           state.syntaxHighlights,
         )
         |> Isolinear.Effect.map(() => Actions.Noop);
-        
-      let exthostEffect = 
+
+      let exthostEffect =
         Service_Exthost.Effects.Documents.modelChanged(
           ~previousBuffer=oldBuffer,
           ~buffer=newBuffer,
@@ -782,7 +795,7 @@ let update =
               state'.layout,
             ),
         },
-        Isolinear.Effect.batch([syntaxEffect, exthostEffect])
+        Isolinear.Effect.batch([syntaxEffect, exthostEffect]),
       );
     };
 

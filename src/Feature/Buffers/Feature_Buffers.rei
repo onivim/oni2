@@ -66,7 +66,7 @@ type outmsg =
       oldBuffer: Oni_Core.Buffer.t,
       triggerKey: option(string),
     })
-  //| BufferSaved()
+  | BufferSaved(Oni_Core.Buffer.t)
   | CreateEditor({
       buffer: Oni_Core.Buffer.t,
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
