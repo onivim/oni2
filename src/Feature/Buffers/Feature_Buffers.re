@@ -32,8 +32,15 @@ let add = (buffer, model) => {
 };
 
 let filter = (f, model) => {
-  model |> IntMap.bindings |> List.map(snd) |> List.filter(f);
+  model |> IntMap.to_seq |> Seq.map(snd) |> Seq.filter(f) |> List.of_seq;
 };
+
+let all = model => {
+  model
+  |> IntMap.to_seq
+  |> Seq.map(snd)
+  |> List.of_seq;
+}
 
 let isModifiedByPath = (buffers: model, filePath: string) => {
   IntMap.exists(
@@ -61,6 +68,20 @@ let setModified = modified =>
 
 let setLineEndings = le =>
   Option.map(buffer => Buffer.setLineEndings(le, buffer));
+
+
+let modified = (model) => {
+      model
+      |> IntMap.to_seq
+      |> Seq.map(snd)
+      |> Seq.filter(Buffer.isModified)
+      |> List.of_seq;
+      //|> Seq.map(Buffer.getFilePath)
+      //|> Utility.OptionEx.values
+      //|> List.map(Utility.Path.toRelative(~base=workingDirectory));
+};
+
+type outmsg;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -180,4 +201,17 @@ let update = (msg: msg, model: model) => {
 
   | Saved(_) => model
   };
+};
+
+module Effects = {
+  let openInEditor = (
+    ~split=`Current,
+    ~position=None,
+    ~grabFocus=true,
+    filePath
+  ) => Isolinear.Effect.none;
+
+  let load = (
+    filePath
+  ) => Isolinear.Effect.none;
 };

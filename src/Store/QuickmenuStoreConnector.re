@@ -111,9 +111,7 @@ let start = () => {
     let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
     buffers
-    |> IntMap.to_seq
-    |> Seq.map(snd)
-    |> List.of_seq
+    |> Feature_Buffers.all
     // Sort by most recerntly used
     |> List.fast_sort((a, b) =>
          - Float.compare(Buffer.getLastUsed(a), Buffer.getLastUsed(b))

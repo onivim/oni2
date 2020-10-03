@@ -667,25 +667,25 @@ let update =
     );
 
   // TEMPORARY: Needs https://github.com/onivim/oni2/pull/1627 to remove
-  | Buffers(Feature_Buffers.Entered({buffer, _}) as msg) =>
-    let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
-
-    let buffers = Feature_Buffers.update(msg, state.buffers);
-
-    let config = Feature_Configuration.resolver(state.config, state.vim);
-    (
-      {
-        ...state,
-        buffers,
-        layout:
-          Feature_Layout.openEditor(
-            ~config,
-            Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ()),
-            state.layout,
-          ),
-      },
-      Effect.none,
-    );
+//  | Buffers(Feature_Buffers.Entered({buffer, _}) as msg) =>
+//    let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
+//
+//    let buffers = Feature_Buffers.update(msg, state.buffers);
+//
+//    let config = Feature_Configuration.resolver(state.config, state.vim);
+//    (
+//      {
+//        ...state,
+//        buffers,
+//        layout:
+//          Feature_Layout.openEditor(
+//            ~config,
+//            Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ()),
+//            state.layout,
+//          ),
+//      },
+//      Effect.none,
+//    );
 
   | Buffers(msg) =>
     let buffers = Feature_Buffers.update(msg, state.buffers);
@@ -972,7 +972,7 @@ let update =
   // TODO: This should live in the editor feature project
   | EditorFont(Service_Font.FontLoaded(font)) =>
     let buffers' =
-      state.buffers |> IntMap.map(Oni_Core.Buffer.setFont(font));
+      state.buffers |> Feature_Buffers.map(Oni_Core.Buffer.setFont(font));
     (
       {
         ...state,
