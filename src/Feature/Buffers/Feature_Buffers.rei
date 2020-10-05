@@ -45,9 +45,6 @@ module Msg: {
   let lineEndingsChanged:
     (~bufferId: int, ~lineEndings: Vim.Types.lineEnding) => msg;
 
-  //  let indentationSet:
-  //    (~bufferId: int, ~indentation: IndentationSettings.t) => msg;
-
   let updated:
     (
       ~update: BufferUpdate.t,
