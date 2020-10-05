@@ -9,6 +9,8 @@ open Oni_Core;
 let current = state => {
   let focus = FocusManager.current(state);
   Command.Lookup.unionMany([
+    Feature_Buffers.Contributions.commands
+    |> Command.Lookup.map(msg => Actions.Buffers(msg)),
     Feature_Commands.all(state.commands),
     Feature_Extensions.Contributions.commands(
       ~isFocused={

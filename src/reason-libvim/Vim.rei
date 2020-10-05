@@ -180,6 +180,8 @@ module Buffer: {
   */
   let getLine: (t, LineNumber.t) => string;
 
+  let getLines: t => array(string);
+
   /**
   [getId(buffer)] returns the id of buffer [buffer];
   */
@@ -225,16 +227,6 @@ module Buffer: {
     unit;
 
   let applyEdits: (~edits: list(Edit.t), t) => result(unit, string);
-
-  /**
-  [onEnter(f)] adds a listener [f] that is called whenever a new buffer is entered.
-
-  This is more reliable than autocommands, as it will dispatch in any case the buffer
-  is changed, even in cases where [BufEnter] would not be dispatched.
-
-  Returns a function that can be called to unsubscribe.
-  */
-  let onEnter: Listeners.bufferListener => Event.unsubscribe;
 
   let onLineEndingsChanged:
     Listeners.bufferLineEndingsChangedListener => Event.unsubscribe;
@@ -406,7 +398,7 @@ You may use any valid Ex command, although you must omit the leading semicolon.
 
 The command [cmd] is processed synchronously.
 */
-let command: string => Context.t;
+let command: (~context: Context.t=?, string) => Context.t;
 
 /**
 [onDirectoryChanged(f)] registers a directory changed listener [f].

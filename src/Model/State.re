@@ -91,6 +91,7 @@ let initial =
       ~getUserSettings,
       [
         Feature_AutoUpdate.Contributions.configuration,
+        Feature_Buffers.Contributions.configuration,
         Feature_Editor.Contributions.configuration,
         Feature_SideBar.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
