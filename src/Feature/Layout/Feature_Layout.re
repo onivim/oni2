@@ -186,6 +186,17 @@ let update = (~focus, model, msg) => {
         );
       };
 
+    | Some(Right) =>
+      let model =
+        updateActiveLayout(
+          layout => {
+            let newActiveGroupId = layout |> activeTree |> Layout.rightmost;
+            {...layout, activeGroupId: newActiveGroupId};
+          },
+          model,
+        );
+      (model, Focus(Center));
+
     | Some(Left)
     | Some(Bottom)
     | None => (model, Nothing)
@@ -222,6 +233,7 @@ let update = (~focus, model, msg) => {
       (model, Focus(Center));
 
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -251,6 +263,7 @@ let update = (~focus, model, msg) => {
       (model, Focus(Center));
 
     | Some(Left)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -274,6 +287,7 @@ let update = (~focus, model, msg) => {
       };
 
     | Some(Left) => (model, Focus(Bottom))
+    | Some(Right) => (model, Focus(Bottom))
 
     | Some(Bottom)
     | None => (model, Nothing)
@@ -285,6 +299,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -294,6 +309,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -308,6 +324,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -322,6 +339,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -334,6 +352,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -346,6 +365,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -358,6 +378,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -370,6 +391,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -382,6 +404,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -394,6 +417,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -403,6 +427,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -412,6 +437,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -421,6 +447,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -439,6 +466,7 @@ let update = (~focus, model, msg) => {
 
         | Some(Left)
         | Some(Bottom)
+        | Some(Right)
         | None => model
         }
       };

@@ -159,19 +159,8 @@ let toggle = (pane, state) =>
   };
 
 let setDefaultLocation = (state, setting) => {
-  let location = setting == "right" ? Right : Left;
+  let location = setting == `Right ? Right : Left;
   {...state, location};
-};
-
-type settings = {
-  sideBarLocation: string,
-  sideBarVisibility: bool,
-};
-
-let setDefaults = (state, settings) => {
-  let {sideBarVisibility, sideBarLocation} = settings;
-  let state = setDefaultLocation(state, sideBarLocation);
-  setDefaultVisibility(state, sideBarVisibility);
 };
 
 module Commands = {
@@ -322,6 +311,11 @@ module Configuration = {
       CustomDecoders.location,
       ~default=`Left,
     );
+};
+
+let configurationChanged = (~config, model) => {
+  let model' = setDefaultLocation(model, Configuration.location.get(config));
+  setDefaultVisibility(model', Configuration.visible.get(config));
 };
 
 module Contributions = {

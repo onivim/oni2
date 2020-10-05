@@ -714,9 +714,14 @@ let update =
     let (config, outmsg) =
       Feature_Configuration.update(~getUserSettings, state.config, msg);
     let state = {...state, config};
-    let eff =
-      switch (outmsg) {
-      | ConfigurationChanged({changed}) =>
+    switch (outmsg) {
+    | ConfigurationChanged({changed}) =>
+      let resolver = Feature_Configuration.resolver(config, state.vim);
+      let sideBar =
+        state.sideBar
+        |> Feature_SideBar.configurationChanged(~config=resolver);
+
+      let eff =
         Isolinear.Effect.create(
           ~name="features.configuration$acceptConfigurationChanged", () => {
           let configuration =
@@ -731,11 +736,10 @@ let update =
             ~changed,
             extHostClient,
           );
-        })
-      | Nothing => Effect.none
-      };
-
-    (state, eff);
+        });
+      ({...state, sideBar}, eff);
+    | Nothing => (state, Effect.none)
+    };
 
   | Commands(msg) =>
     let commands = Feature_Commands.update(state.commands, msg);
@@ -773,12 +777,12 @@ let update =
       | Extensions
       | FileExplorer
       | SCM
-      | Search when sideBarLocation == Feature_Sidebar.Left => Some(Left)
-      
+      | Search when sideBarLocation == Feature_SideBar.Left => Some(Left)
+
       | Extensions
       | FileExplorer
       | SCM
-      | Search when sideBarLocation == Feature_Sidebar.Right => Some(Right)
+      | Search when sideBarLocation == Feature_SideBar.Right => Some(Right)
 
       | _ => None
       };
@@ -788,7 +792,7 @@ let update =
     switch (outmsg) {
     | Focus(Center) => (FocusManager.push(Editor, state), Effect.none)
 
-    | Focus(Left) when sideBarLocation == Feature_Sidebar.Left => (
+    | Focus(Left) when sideBarLocation == Feature_SideBar.Left => (
         Feature_SideBar.isOpen(state.sideBar)
           ? switch (state.sideBar |> Feature_SideBar.selected) {
             | FileExplorer => FocusManager.push(FileExplorer, state)
@@ -800,7 +804,7 @@ let update =
         Effect.none,
       )
 
-    | Focus(Right) when sideBarLocation == Feature_Sidebar.Right => (
+    | Focus(Right) when sideBarLocation == Feature_SideBar.Right => (
         Feature_SideBar.isOpen(state.sideBar)
           ? switch (state.sideBar |> Feature_SideBar.selected) {
             | FileExplorer => FocusManager.push(FileExplorer, state)
