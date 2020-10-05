@@ -76,7 +76,7 @@ type outmsg =
 
 // UPDATE
 
-let update: (msg, model) => (model, outmsg);
+let update: (~activeBufferId: int, ~config: Config.resolver, msg, model) => (model, outmsg);
 
 // EFFECTS
 

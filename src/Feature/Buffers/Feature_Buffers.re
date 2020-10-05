@@ -171,7 +171,16 @@ module Msg = {
   };
 };
 
-let update = (msg: msg, model: model) => {
+module Configuration = {
+  open Config.Schema;
+  
+  let detectIndentation = setting("editor.detectIndentation", bool, ~default=true);
+  let insertSpaces = setting("editor.insertSpaces", bool, ~default=true);
+  let indentSize = setting("editor.indentSize", int, ~default=4);
+  let tabSize = setting("editor.tabSize", int, ~default=4);
+};
+
+let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   switch (msg) {
   | EditorRequested({buffer, split, position, grabFocus}) => (
       model,
@@ -187,7 +196,38 @@ let update = (msg: msg, model: model) => {
       }),
     )
 
-  | NewBufferAndEditorRequested({buffer, split, position, grabFocus}) => (
+  | NewBufferAndEditorRequested({buffer: originalBuffer, split, position, grabFocus}) => 
+
+    let buffer = if (Configuration.detectIndentation.get(config)
+    && !Buffer.isIndentationSet(originalBuffer)) {
+      let defaultTabSize = Configuration.tabSize.get(config);
+      let defaultInsertSpaces = Configuration.insertSpaces.get(config);
+      
+      let guess: IndentationGuesser.t = IndentationGuesser.guessIndentationArray(
+        originalBuffer |> Buffer.getLines,
+        defaultTabSize,
+        defaultInsertSpaces,
+      );
+
+      let size = switch (guess.mode) {
+      | Tabs => Configuration.tabSize.get(config)
+      | Spaces => guess.size
+      };
+
+      let indentation = IndentationSettings.create(
+        ~mode=guess.mode,
+        ~size,
+        ~tabSize=size,
+        (),
+      );
+
+      // TODO: If indeterminate, we should set implicitly instead of epxlicitly.
+      Buffer.setIndentation(Inferred.explicit(indentation), originalBuffer);
+    } else {
+      originalBuffer
+    };
+    
+    (
       IntMap.add(Buffer.getId(buffer), buffer, model),
       CreateEditor({
         buffer,
@@ -315,15 +355,6 @@ module Commands = {
       "editor.action.detectIndentation",
       Command(DetectIndentation),
     );
-};
-
-module Configuration = {
-  open Config.Schema;
-  
-  let detectIndentation = setting("editor.detectIndentation", bool, ~default=true);
-  let insertSpaces = setting("editor.insertSpaces", bool, ~default=true);
-  let indentSize = setting("editor.indentSize", int, ~default=4);
-  let tabSize = setting("editor.tabSize", int, ~default=4);
 };
 
 module Contributions = {

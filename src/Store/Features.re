@@ -620,7 +620,16 @@ let update =
     (state'', eff);
 
   | Buffers(msg) =>
-    let (buffers, outmsg) = Feature_Buffers.update(msg, state.buffers);
+    let activeBufferId =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getBufferId;
+    let config = Feature_Configuration.resolver(state.config, state.vim);
+    
+    let (buffers, outmsg) = Feature_Buffers.update(
+    ~activeBufferId, 
+    ~config,
+    msg, state.buffers);
 
     let state = {...state, buffers};
 
@@ -629,7 +638,6 @@ let update =
 
     | CreateEditor({buffer, split, position, grabFocus}) =>
       let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
-      let config = Feature_Configuration.resolver(state.config, state.vim);
       let editor =
         Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ());
 

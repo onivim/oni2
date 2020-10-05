@@ -27,6 +27,7 @@ module Font = Font;
 module IconTheme = IconTheme;
 module Indentation = Indentation;
 module IndentationSettings = IndentationSettings;
+module Inferred = Inferred;
 module IntMap = Kernel.IntMap;
 module Json = Json;
 module Job = Job;
