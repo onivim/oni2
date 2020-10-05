@@ -151,7 +151,7 @@ let ofMetadata = (~font=Font.default, ~id, ~version, ~filePath, ~modified) => {
   lines: [||],
   originalUri: None,
   originalLines: None,
-  indentation: None,
+  indentation: Inferred.implicit(IndentationSettings.default),
   syntaxHighlightingEnabled: true,
   lastUsed: 0.,
   font,
@@ -267,7 +267,7 @@ let setIndentation = (indentation, buf) => {
     |> Array.map(line => {
          let raw = BufferLine.raw(line);
          let font = BufferLine.font(line);
-         BufferLine.make(~font, ~indentation, raw);
+         BufferLine.make(~font, ~indentation=newIndentationValue, raw);
        });
   } else {
     buf.lines
@@ -282,8 +282,7 @@ let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
 };
 
 let update = (buf: t, update: BufferUpdate.t) => {
-  let indentation =
-    Option.value(~default=IndentationSettings.default, buf.indentation);
+  let indentation = buf.indentation |> Inferred.value;
   if (shouldApplyUpdate(update, buf)) {
     /***
      If it's a full update, just apply the lines in the entire update

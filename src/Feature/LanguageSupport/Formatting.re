@@ -174,7 +174,7 @@ module Internal = {
     let sessionId = model.nextSessionId;
 
     let indentation =
-      Oni_Core.Indentation.getForBuffer(~buffer=buf, configuration);
+      Buffer.getIndentation(buf);
 
     if (matchingFormatters == []) {
       (

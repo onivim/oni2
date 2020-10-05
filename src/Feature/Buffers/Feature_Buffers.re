@@ -131,7 +131,7 @@ type msg =
       lineEndings: [@opaque] Vim.lineEnding,
     })
   | Saved(int)
-  | IndentationSet(int, [@opaque] IndentationSettings.t)
+//  | IndentationSet(int, [@opaque] IndentationSettings.t)
   | ModifiedSet(int, bool);
 
 module Msg = {
@@ -143,9 +143,9 @@ module Msg = {
     LineEndingsChanged({id: bufferId, lineEndings});
   };
 
-  let indentationSet = (~bufferId, ~indentation) => {
-    IndentationSet(bufferId, indentation);
-  };
+//  let indentationSet = (~bufferId, ~indentation) => {
+//    IndentationSet(bufferId, indentation);
+//  };
 
   let saved = (~bufferId) => {
     Saved(bufferId);
@@ -221,10 +221,10 @@ let update = (msg: msg, model: model) => {
       Nothing,
     )
 
-  | IndentationSet(id, indent) => (
-      IntMap.update(id, setIndentation(indent), model),
-      Nothing,
-    )
+//  | IndentationSet(id, indent) => (
+//      IntMap.update(id, setIndentation(indent), model),
+//      Nothing,
+//    )
 
   | LineEndingsChanged({id, lineEndings}) => (
       IntMap.update(id, setLineEndings(lineEndings), model),

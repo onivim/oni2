@@ -22,7 +22,7 @@ let update = (~new_, original) => {
     switch ((new_, original)) {
     | ((Explicit(_) as newExplicit), _) => newExplicit
     | (_, Explicit(_) as originalExplicit) => originalExplicit
-    | (Inferred(_) as newInferred, Inferred(_) as oldInferred) => newInferred
+    | (Implicit(_) as newInferred, Implicit(_)) => newInferred
     }
 };
 

@@ -15,6 +15,6 @@ let isExplicit: t('a) => bool;
 let map: ('a => 'b, t('a)) => t('b);
 let flatMap: ('a => t('b), t('a)) => t('b);
 
-let update: (~new: t('a), t('a)) => t('a);
+let update: (~new_: t('a), t('a)) => t('a);
 
 let value: t('a) => 'a;
