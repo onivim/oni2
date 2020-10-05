@@ -75,6 +75,17 @@ let%component make = (~config, ~theme, ~state: State.t, ~dispatch, ()) => {
     | Search => "Search"
     };
 
+  let maybeBuffer = Selectors.getActiveBuffer(state);
+  let maybeSymbols =
+    maybeBuffer
+    |> Option.map(buffer => Oni_Core.Buffer.getId(buffer))
+    |> Utility.OptionEx.flatMap(bufferId =>
+         Feature_LanguageSupport.DocumentSymbols.get(
+           ~bufferId,
+           state.languageSupport,
+         )
+       );
+
   let elem =
     switch (sideBar |> selected) {
     | FileExplorer =>
@@ -84,6 +95,7 @@ let%component make = (~config, ~theme, ~state: State.t, ~dispatch, ()) => {
         languageInfo={state.languageInfo}
         iconTheme={state.iconTheme}
         decorations={state.decorations}
+        documentSymbols=maybeSymbols
         model={state.fileExplorer}
         theme
         font

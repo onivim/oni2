@@ -83,6 +83,7 @@ let%component make =
       Msg.EditorMouseWheel({
         deltaY: wheelEvent.deltaY *. (-1.),
         deltaX: wheelEvent.deltaX,
+        shiftKey: wheelEvent.shiftKey,
       }),
     );
 

@@ -17,6 +17,7 @@ type model('item) = {
   // For mouse gestures, we don't want the scroll to be animated - it feels laggy
   // But for keyboarding gestures, like 'zz', the animation is helpful.
   isScrollAnimated: bool,
+  searchContext: [@opaque] SearchContext.model,
 };
 
 let create = (~rowHeight) => {
@@ -30,6 +31,8 @@ let create = (~rowHeight) => {
   viewportWidth: 1,
   initialRowsToRender: 10,
   isScrollAnimated: false,
+
+  searchContext: SearchContext.initial,
 };
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
@@ -86,7 +89,13 @@ type command =
   | ScrollUpWindow
   | ScrollCursorCenter // zz
   | ScrollCursorBottom // zb
-  | ScrollCursorTop; // zt
+  | ScrollCursorTop // zt
+  | SearchForward
+  | SearchBackward
+  | NextSearchResult
+  | PreviousSearchResult
+  | CommitSearch
+  | CancelSearch;
 
 [@deriving show]
 type msg =
@@ -99,13 +108,12 @@ type msg =
   | ViewDimensionsChanged({
       heightInPixels: int,
       widthInPixels: int,
-    });
+    })
+  | SearchContext(SearchContext.msg);
 
 type outmsg =
   | Nothing
   | Selected({index: int});
-
-let set = (items, model) => {...model, items};
 
 let showTopScrollShadow = ({scrollY, _}) => scrollY > 0.1;
 let showBottomScrollShadow = ({items, scrollY, rowHeight, viewportHeight, _}) => {
@@ -115,22 +123,35 @@ let showBottomScrollShadow = ({items, scrollY, rowHeight, viewportHeight, _}) =>
 
 // UPDATE
 
-let ensureSelectedVisible = model => {
-  let yPosition = float(model.selected * model.rowHeight);
+let ensureSelectedVisible = model =>
+  // If we haven't measured yet - don't move the viewport
+  if (model.viewportHeight <= 1) {
+    model;
+  } else {
+    let yPosition = float(model.selected * model.rowHeight);
 
-  let rowHeightF = float(model.rowHeight);
-  let viewportHeightF = float(model.viewportHeight);
+    let rowHeightF = float(model.rowHeight);
+    let viewportHeightF = float(model.viewportHeight);
 
-  let scrollY' =
-    if (yPosition < model.scrollY) {
-      yPosition;
-    } else if (yPosition +. rowHeightF > model.scrollY +. viewportHeightF) {
-      yPosition -. (viewportHeightF -. rowHeightF);
-    } else {
-      model.scrollY;
-    };
+    let scrollY' =
+      if (yPosition < model.scrollY) {
+        yPosition;
+      } else if (yPosition +. rowHeightF > model.scrollY +. viewportHeightF) {
+        yPosition -. (viewportHeightF -. rowHeightF);
+      } else {
+        model.scrollY;
+      };
+    {...model, scrollY: scrollY'};
+  };
+let keyPress = (key, model) => {
+  let (searchContext, maybeSelected) =
+    SearchContext.keyPress(~index=model.selected, key, model.searchContext);
 
-  {...model, scrollY: scrollY'};
+  let model = {...model, searchContext};
+
+  maybeSelected
+  |> Option.map(selected => {{...model, selected} |> ensureSelectedVisible})
+  |> Option.value(~default=model);
 };
 
 let setSelected = (~selected, model) => {
@@ -145,6 +166,18 @@ let setSelected = (~selected, model) => {
     };
 
   {...model, selected: selected'} |> ensureSelectedVisible;
+};
+
+let set = (~searchText=?, items, model) => {
+  let searchContext =
+    switch (searchText) {
+    | None => model.searchContext
+    | Some(f) =>
+      let searchIds = Array.map(f, items);
+      SearchContext.setSearchIds(searchIds, model.searchContext);
+    };
+
+  {...model, searchContext, items} |> setSelected(~selected=model.selected);
 };
 
 let setScrollY = (~scrollY, model) => {
@@ -346,6 +379,51 @@ let update = (msg, model) => {
       },
       Nothing,
     )
+
+  | Command(SearchForward) => (
+      {
+        ...model,
+        searchContext:
+          SearchContext.(show(~direction=Forward, model.searchContext)),
+      },
+      Nothing,
+    )
+  | Command(SearchBackward) => (
+      {
+        ...model,
+        searchContext:
+          SearchContext.(show(~direction=Backward, model.searchContext)),
+      },
+      Nothing,
+    )
+  | Command(NextSearchResult) =>
+    let model =
+      SearchContext.nextMatch(~index=model.selected, model.searchContext)
+      |> Option.map(nextMatch => {model |> setSelected(~selected=nextMatch)})
+      |> Option.value(~default=model);
+    (model, Nothing);
+
+  | Command(PreviousSearchResult) =>
+    let model =
+      SearchContext.previousMatch(~index=model.selected, model.searchContext)
+      |> Option.map(nextMatch => {model |> setSelected(~selected=nextMatch)})
+      |> Option.value(~default=model);
+    (model, Nothing);
+
+  | Command(CommitSearch) => (
+      {...model, searchContext: SearchContext.(commit(model.searchContext))},
+      Nothing,
+    )
+
+  | Command(CancelSearch) => (
+      {...model, searchContext: SearchContext.(cancel(model.searchContext))},
+      Nothing,
+    )
+
+  | SearchContext(inputMsg) =>
+    let (searchContext, _outmsg) =
+      SearchContext.update(inputMsg, model.searchContext);
+    ({...model, searchContext}, Nothing);
   };
 };
 
@@ -381,6 +459,18 @@ module Commands = {
   let digit7 = define("vim.list.7", Command(Digit(7)));
   let digit8 = define("vim.list.8", Command(Digit(8)));
   let digit9 = define("vim.list.9", Command(Digit(9)));
+
+  let searchForward =
+    define("vim.list.searchForward", Command(SearchForward));
+  let searchBackward =
+    define("vim.list.searchBackward", Command(SearchBackward));
+  let nextSearchResult =
+    define("vim.list.nextSearchresult", Command(NextSearchResult));
+  let previousSearchResult =
+    define("vim.list.previousSearchResult", Command(PreviousSearchResult));
+
+  let commitSearch = define("vim.list.commitSearch", Command(CommitSearch));
+  let cancelSearch = define("vim.list.cancelSearch", Command(CommitSearch));
 };
 
 module Keybindings = {
@@ -389,8 +479,12 @@ module Keybindings = {
   let commandCondition =
     "!textInputFocus && vimListNavigation" |> WhenExpr.parse;
 
+  let searchActiveCommandCondition =
+    "vimListSearchOpen && textInputFocus" |> WhenExpr.parse;
+
   let keybindings =
     Keybindings.[
+      // NORMAL MODE MOVEMENT
       {key: "gg", command: Commands.gg.id, condition: commandCondition},
       {key: "<S-G>", command: Commands.g.id, condition: commandCondition},
       {key: "j", command: Commands.j.id, condition: commandCondition},
@@ -454,7 +548,7 @@ module Keybindings = {
         command: Commands.scrollUpWindow.id,
         condition: commandCondition,
       },
-      // Multiplier
+      // MULTIPLIER
       {key: "0", command: Commands.digit0.id, condition: commandCondition},
       {key: "1", command: Commands.digit1.id, condition: commandCondition},
       {key: "2", command: Commands.digit2.id, condition: commandCondition},
@@ -465,15 +559,57 @@ module Keybindings = {
       {key: "7", command: Commands.digit7.id, condition: commandCondition},
       {key: "8", command: Commands.digit8.id, condition: commandCondition},
       {key: "9", command: Commands.digit9.id, condition: commandCondition},
+      // SEARCH
+      {
+        key: "/",
+        command: Commands.searchForward.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<S-/>",
+        command: Commands.searchBackward.id,
+        condition: commandCondition,
+      },
+      {
+        key: "n",
+        command: Commands.nextSearchResult.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<S-N>",
+        command: Commands.previousSearchResult.id,
+        condition: commandCondition,
+      },
+      {
+        key: "<CR>",
+        command: Commands.commitSearch.id,
+        condition: searchActiveCommandCondition,
+      },
+      {
+        key: "<ESC>",
+        command: Commands.cancelSearch.id,
+        condition: searchActiveCommandCondition,
+      },
     ];
 };
 
 module Contributions = {
-  open WhenExpr.ContextKeys;
   let contextKeys = model => {
-    [Schema.bool("vimListNavigation", _model => true)]
-    |> Schema.fromList
-    |> fromSchema(model);
+    WhenExpr.ContextKeys.(
+      [
+        Schema.bool("vimListSearchOpen", ({searchContext, _}: model(_)) => {
+          searchContext |> SearchContext.isOpen
+        }),
+        Schema.bool("vimListNavigation", ({searchContext, _}: model(_)) => {
+          !(searchContext |> SearchContext.isOpen)
+        }),
+        Schema.bool("textInputFocus", ({searchContext, _}: model(_)) => {
+          searchContext |> SearchContext.isOpen
+        }),
+      ]
+      |> Schema.fromList
+      |> fromSchema(model)
+    );
   };
 
   let keybindings = Keybindings.keybindings;
@@ -502,6 +638,12 @@ module Contributions = {
       scrollDownWindow,
       scrollUpLine,
       scrollUpWindow,
+      previousSearchResult,
+      nextSearchResult,
+      searchForward,
+      searchBackward,
+      commitSearch,
+      cancelSearch,
     ];
 };
 
@@ -563,6 +705,15 @@ module View = {
       right(0),
       height(rowHeight),
     ];
+
+    let searchBorder = (~color) => [
+      position(`Absolute),
+      backgroundColor(color),
+      top(0),
+      left(0),
+      width(2),
+      bottom(0),
+    ];
   };
   let renderHelper =
       (
@@ -573,6 +724,9 @@ module View = {
         ~hoverBg,
         ~focusBg,
         ~selectedBg,
+        ~searchBg,
+        ~focusBorder,
+        ~searchBorder,
         ~onMouseClick,
         ~onMouseOver,
         ~onMouseOut,
@@ -581,18 +735,20 @@ module View = {
         ~rowHeight,
         ~count,
         ~scrollTop,
+        ~searchContext,
         ~render,
       ) =>
     if (rowHeight <= 0) {
       [];
     } else {
+      let scrollTop = max(0, scrollTop);
       let startRow = scrollTop / rowHeight;
       let startY = scrollTop mod rowHeight;
       let rowsToRender =
         viewportHeight
         / rowHeight
         + Constants.additionalRowsToRender
-        |> IntEx.clamp(~lo=0, ~hi=count - startRow);
+        |> IntEx.clamp(~lo=0, ~hi=max(0, count - startRow));
       let indicesToRender = List.init(rowsToRender, i => i + startRow);
 
       let itemView = i => {
@@ -608,9 +764,22 @@ module View = {
             hoverBg;
           } else if (focusIndex == Some(i)) {
             focusBg;
+          } else if (SearchContext.isMatch(~index=i, searchContext)) {
+            searchBg;
           } else {
             Revery.Colors.transparentWhite;
           };
+
+        let isSearchMatch = SearchContext.isMatch(~index=i, searchContext);
+
+        let searchBorder =
+          isSearchMatch
+            ? <View
+                style={Styles.searchBorder(
+                  ~color=isSelected ? focusBorder : searchBorder,
+                )}
+              />
+            : React.empty;
 
         <Clickable
           onMouseEnter={_ => onMouseOver(i)}
@@ -624,6 +793,7 @@ module View = {
              ~selected=selected == i,
              items[i],
            )}
+          searchBorder
         </Clickable>;
       };
 
@@ -633,6 +803,7 @@ module View = {
   let make:
     (
       ~isActive: bool,
+      ~font: UiFont.t,
       ~focusedIndex: option(int),
       ~theme: ColorTheme.Colors.t,
       ~model: model('item),
@@ -648,7 +819,7 @@ module View = {
       unit
     ) =>
     _ =
-    (~isActive, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
+    (~isActive, ~font, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
       component(hooks => {
         let {rowHeight, viewportWidth, viewportHeight, _} = model;
 
@@ -723,6 +894,11 @@ module View = {
           isActive
             ? Colors.List.focusBackground.from(theme)
             : Colors.List.inactiveFocusBackground.from(theme);
+
+        let focusBorder = Colors.focusBorder.from(theme);
+
+        let searchBg = Colors.List.filterMatchBackground.from(theme);
+        let searchBorder = Colors.List.filterMatchBorder.from(theme);
         let items =
           renderHelper(
             ~focusIndex=focusedIndex,
@@ -732,6 +908,9 @@ module View = {
             ~hoverBg,
             ~selectedBg,
             ~focusBg,
+            ~searchBg,
+            ~searchBorder,
+            ~focusBorder,
             ~onMouseOver,
             ~onMouseOut,
             ~onMouseClick,
@@ -740,6 +919,7 @@ module View = {
             ~rowHeight,
             ~count,
             ~scrollTop=int_of_float(scrollY),
+            ~searchContext=model.searchContext,
             ~render,
           )
           |> React.listToElement;
@@ -753,33 +933,43 @@ module View = {
             ? <Oni_Components.ScrollShadow.Bottom /> : React.empty;
 
         (
-          <View
-            style=Style.[flexGrow(1), position(`Relative)]
-            onDimensionsChanged={({height, width}) => {
-              dispatch(
-                ViewDimensionsChanged({
-                  widthInPixels: width,
-                  heightInPixels: height,
-                }),
-              )
-            }}>
+          <View style=Style.[flexGrow(1), flexDirection(`Column)]>
             <View
-              style={Styles.container(
-                // Set the height only to force it smaller, not bigger
-                ~height=
-                  contentHeight < viewportHeight ? Some(contentHeight) : None,
-              )}
-              onMouseWheel=scroll>
+              style=Style.[flexGrow(1), position(`Relative)]
+              onDimensionsChanged={({height, width}) => {
+                dispatch(
+                  ViewDimensionsChanged({
+                    widthInPixels: width,
+                    heightInPixels: height,
+                  }),
+                )
+              }}>
               <View
-                style={Styles.viewport(
-                  ~isScrollbarVisible=scrollbar == React.empty,
-                )}>
-                items
+                style={Styles.container(
+                  // Set the height only to force it smaller, not bigger
+                  ~height=
+                    contentHeight < viewportHeight
+                      ? Some(contentHeight) : None,
+                )}
+                onMouseWheel=scroll>
+                <View
+                  style={Styles.viewport(
+                    ~isScrollbarVisible=scrollbar == React.empty,
+                  )}>
+                  items
+                </View>
+                topShadow
+                bottomShadow
+                scrollbar
               </View>
-              topShadow
-              bottomShadow
-              scrollbar
             </View>
+            <SearchContext.View
+              font
+              isFocused=isActive
+              model={model.searchContext}
+              dispatch={msg => dispatch(SearchContext(msg))}
+              theme
+            />
           </View>,
           hooks,
         );

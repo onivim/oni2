@@ -51,6 +51,12 @@ let setHits = (hits, model) => {
   resultsTree:
     Component_VimTree.set(
       ~uniqueId=path => path,
+      ~searchText=
+        Component_VimTree.(
+          fun
+          | Node({data, _}) => data
+          | Leaf({data, _}) => LocationListItem.(data.text)
+        ),
       hits |> List.map(matchToLocListItem) |> LocationListItem.toTrees,
       model.resultsTree,
     ),
@@ -104,9 +110,13 @@ let update = (model, msg) => {
         };
 
       (model, None);
-    | ResultsPane =>
-      // TODO: Vim Navigable List!
-      (model, None)
+    | ResultsPane => (
+        {
+          ...model,
+          resultsTree: Component_VimTree.keyPress(key, model.resultsTree),
+        },
+        None,
+      )
     }
 
   | Pasted(text) =>
@@ -188,14 +198,12 @@ module SearchSubscription =
     type action = msg;
   });
 
-let subscriptions = (ripgrep, dispatch) => {
+let subscriptions = (~workingDirectory, ripgrep, dispatch) => {
   let search = query => {
-    let directory = Rench.Environment.getWorkingDirectory();
-
     SearchSubscription.create(
       ~id="workspace-search",
       ~query,
-      ~directory,
+      ~directory=workingDirectory,
       ~ripgrep,
       ~onUpdate=items => dispatch(Update(items)),
       ~onCompleted=() => Complete,
@@ -296,6 +304,7 @@ let make =
       />
       <Component_VimTree.View
         isActive={isFocused && model.focus == ResultsPane}
+        font=uiFont
         focusedIndex=None
         theme
         model={model.resultsTree}
@@ -348,7 +357,7 @@ module Contributions = {
   let contextKeys = (~isFocused, model) => {
     open WhenExpr.ContextKeys;
     let inputTextKeys =
-      isFocused
+      isFocused && model.focus == FindInput
         ? Component_InputText.Contributions.contextKeys(model.findInput)
         : empty;
     let vimNavKeys =
@@ -359,7 +368,7 @@ module Contributions = {
         : empty;
 
     let vimTreeKeys =
-      isFocused
+      isFocused && model.focus == ResultsPane
         ? Component_VimTree.Contributions.contextKeys(model.resultsTree)
         : empty;
 

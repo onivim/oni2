@@ -246,6 +246,9 @@ module Styles = {
       flexDirection(`Row),
       alignItems(`Center),
       marginHorizontal(16),
+      flexGrow(1),
+      flexShrink(1),
+      overflow(`Hidden),
     ];
 
     let icon = [pointerEvents(`Ignore)];
@@ -266,9 +269,15 @@ module Styles = {
           : Colors.inactiveForeground.from(theme),
       ),
       textWrap(TextWrapping.NoWrap),
+      textOverflow(`Ellipsis),
     ];
 
-    let buttons = [flexDirection(`Row), alignItems(`Center)];
+    let buttons = [
+      flexDirection(`Row),
+      flexGrow(0),
+      flexShrink(0),
+      alignItems(`Center),
+    ];
 
     module Button = {
       let container = [
