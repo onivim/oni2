@@ -165,7 +165,7 @@ module Internal = {
         ~languageConfiguration,
         ~formatFn,
         ~model,
-        ~configuration,
+        ~configuration as _,
         ~matchingFormatters,
         ~buf,
         ~extHostClient,
@@ -173,8 +173,7 @@ module Internal = {
       ) => {
     let sessionId = model.nextSessionId;
 
-    let indentation =
-      Oni_Core.Indentation.getForBuffer(~buffer=buf, configuration);
+    let indentation = Buffer.getIndentation(buf);
 
     if (matchingFormatters == []) {
       (

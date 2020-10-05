@@ -7,6 +7,8 @@ module ArrayEx = Utility.ArrayEx;
 module OptionEx = Utility.OptionEx;
 module Path = Utility.Path;
 
+open EditorCoreTypes;
+
 module FileType = {
   let default = "plaintext";
 
@@ -56,7 +58,7 @@ type t = {
   lines: array(BufferLine.t),
   originalUri: option(Uri.t),
   originalLines: option(array(string)),
-  indentation: option(IndentationSettings.t),
+  indentation: Inferred.t(IndentationSettings.t),
   syntaxHighlightingEnabled: bool,
   lastUsed: float,
   font: Font.t,
@@ -130,7 +132,7 @@ let ofLines = (~id=0, ~font=Font.default, rawLines: array(string)) => {
     lineEndings: None,
     originalUri: None,
     originalLines: None,
-    indentation: None,
+    indentation: Inferred.implicit(IndentationSettings.default),
     syntaxHighlightingEnabled: true,
     lastUsed: 0.,
     font,
@@ -149,7 +151,7 @@ let ofMetadata = (~font=Font.default, ~id, ~version, ~filePath, ~modified) => {
   lines: [||],
   originalUri: None,
   originalLines: None,
-  indentation: None,
+  indentation: Inferred.implicit(IndentationSettings.default),
   syntaxHighlightingEnabled: true,
   lastUsed: 0.,
   font,
@@ -219,6 +221,24 @@ let getEstimatedMaxLineLength = buffer => {
   currentMax^;
 };
 
+let characterToBytePosition = (position: CharacterPosition.t, buffer) => {
+  let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
+
+  let bufferLineCount = getNumberOfLines(buffer);
+
+  if (line < bufferLineCount) {
+    let bufferLine = getLine(line, buffer);
+    let byteIndex =
+      BufferLine.getByteFromIndex(~index=position.character, bufferLine);
+
+    Some(
+      EditorCoreTypes.(BytePosition.{line: position.line, byte: byteIndex}),
+    );
+  } else {
+    None;
+  };
+};
+
 let applyUpdate =
     (~indentation, ~font, lines: array(BufferLine.t), update: BufferUpdate.t) => {
   let updateLines =
@@ -234,31 +254,36 @@ let applyUpdate =
 };
 
 let isIndentationSet = buf => {
-  switch (buf.indentation) {
-  | Some(_) => true
-  | None => false
-  };
-};
-let setIndentation = (indentation, buf) => {
-  let lines =
-    buf.lines
-    |> Array.map(line => {
-         let raw = BufferLine.raw(line);
-         let font = BufferLine.font(line);
-         BufferLine.make(~font, ~indentation, raw);
-       });
-  {...buf, lines, indentation: Some(indentation)};
+  buf.indentation |> Inferred.isExplicit;
 };
 
-let getIndentation = buf => buf.indentation;
+let setIndentation = (indentation, buf) => {
+  let originalIndentationValue = buf.indentation |> Inferred.value;
+  let indentation = Inferred.update(~new_=indentation, buf.indentation);
+  let newIndentationValue = indentation |> Inferred.value;
+
+  let lines =
+    if (originalIndentationValue != newIndentationValue) {
+      buf.lines
+      |> Array.map(line => {
+           let raw = BufferLine.raw(line);
+           let font = BufferLine.font(line);
+           BufferLine.make(~font, ~indentation=newIndentationValue, raw);
+         });
+    } else {
+      buf.lines;
+    };
+  {...buf, lines, indentation};
+};
+
+let getIndentation = buf => buf.indentation |> Inferred.value;
 
 let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
   update.version > getVersion(buf);
 };
 
 let update = (buf: t, update: BufferUpdate.t) => {
-  let indentation =
-    Option.value(~default=IndentationSettings.default, buf.indentation);
+  let indentation = buf.indentation |> Inferred.value;
   if (shouldApplyUpdate(update, buf)) {
     /***
      If it's a full update, just apply the lines in the entire update

@@ -16,7 +16,6 @@ type t =
   | Init
   | AutoUpdate(Feature_AutoUpdate.msg)
   | Buffers(Feature_Buffers.msg)
-  | BufferRenderer(BufferRenderer.action)
   | Clipboard(Feature_Clipboard.msg)
   | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
@@ -95,14 +94,12 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
+  | OpenBufferById({bufferId: int})
   | OpenFileByPath(
       string,
-      option([ | `Horizontal | `Vertical]),
+      option([ | `Horizontal | `Vertical | `NewTab]),
       option(CharacterPosition.t),
     )
-  | OpenFileInNewLayout(string)
-  | BufferOpened(string, option(CharacterPosition.t), int)
-  | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
   | Pasted({
       rawText: string,

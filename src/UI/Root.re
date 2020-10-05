@@ -71,7 +71,10 @@ let make = (~dispatch, ~state: State.t, ()) => {
 
   let maybeActiveBuffer = Oni_Model.Selectors.getActiveBuffer(state);
   let activeEditor = Feature_Layout.activeEditor(state.layout);
-  let indentationSettings = Oni_Model.Indentation.getForActiveBuffer(state);
+  let indentationSettings =
+    maybeActiveBuffer
+    |> Option.map(Oni_Core.Buffer.getIndentation)
+    |> Option.value(~default=Oni_Core.IndentationSettings.default);
 
   let statusBarDispatch = msg => dispatch(Actions.StatusBar(msg));
   let messagesDispatch = msg => dispatch(Actions.Messages(msg));
