@@ -35,12 +35,6 @@ module Styles = {
     alignItems(`Center),
     backgroundColor(Colors.SideBar.background.from(theme)),
     height(Core.Constants.tabHeight),
-    borderBottom(
-      ~width=1,
-      ~color=
-        isFocused
-          ? Colors.focusBorder.from(theme) : Revery.Colors.transparentWhite,
-    ),
   ];
 
   let separator = [
