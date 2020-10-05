@@ -26,7 +26,6 @@ module Filter = Filter;
 module Font = Font;
 module IconTheme = IconTheme;
 module Indentation = Indentation;
-module IndentationGuesser = IndentationGuesser;
 module IndentationSettings = IndentationSettings;
 module IntMap = Kernel.IntMap;
 module Json = Json;

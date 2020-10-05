@@ -93,3 +93,8 @@ module Effects: {
     ) =>
     Isolinear.Effect.t(msg);
 };
+
+module Contributions: {
+  let commands: Command.Lookup.t(msg);
+  let configuration: list(Config.Schema.spec);
+};

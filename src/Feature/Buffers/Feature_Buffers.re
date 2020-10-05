@@ -89,8 +89,13 @@ type outmsg =
       grabFocus: bool,
     });
 
+[@deriving show]
+type command =
+  | DetectIndentation;
+
 [@deriving show({with_path: false})]
 type msg =
+  | Command(command)
   | EditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
@@ -242,6 +247,8 @@ let update = (msg: msg, model: model) => {
       |> Option.map(buffer => BufferSaved(buffer))
       |> Option.value(~default=Nothing);
     (model, eff);
+
+  | Command(_command) => failwith("no!")
   };
 };
 
@@ -296,4 +303,22 @@ module Effects = {
       };
     });
   };
+};
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let detectIndentation =
+    define(
+      ~category="Editor",
+      ~title="Detect Indentation from Content",
+      "editor.action.detectIndentation",
+      Command(DetectIndentation),
+    );
+};
+
+module Contributions = {
+  let configuration = [];
+
+  let commands = Commands.[detectIndentation] |> Command.Lookup.fromList;
 };
