@@ -324,7 +324,54 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
 };
 
 module Effects = {
-  let openInEditor =
+  let openCommon =
+      (
+        ~vimBuffer,
+        ~font,
+        ~languageInfo,
+        ~split,
+        ~position,
+        ~grabFocus,
+        ~dispatch,
+        model,
+      ) => {
+    let bufferId = Vim.Buffer.getId(vimBuffer);
+
+    switch (IntMap.find_opt(bufferId, model)) {
+    // We already have this buffer loaded - so just ask for an editor!
+    | Some(buffer) =>
+      dispatch(EditorRequested({buffer, split, position, grabFocus}))
+
+    | None =>
+      // No buffer yet, so we need to create one _and_ ask for an editor.
+      let metadata = Vim.BufferMetadata.ofBuffer(vimBuffer);
+      let maybeLineEndings: option(Vim.lineEnding) =
+        Vim.Buffer.getLineEndings(vimBuffer);
+
+      let lines = Vim.Buffer.getLines(vimBuffer);
+      let buffer =
+        Oni_Core.Buffer.ofLines(~id=metadata.id, ~font, lines)
+        |> Buffer.setVersion(metadata.version)
+        |> Buffer.setFilePath(metadata.filePath)
+        |> Buffer.setModified(metadata.modified)
+        |> Buffer.stampLastUsed;
+
+      let fileType =
+        Exthost.LanguageInfo.getLanguageFromBuffer(languageInfo, buffer);
+
+      let buffer =
+        maybeLineEndings
+        |> Option.map(le => Buffer.setLineEndings(le, buffer))
+        |> Option.value(~default=buffer)
+        |> Buffer.setFileType(Buffer.FileType.inferred(fileType));
+
+      dispatch(
+        NewBufferAndEditorRequested({buffer, split, position, grabFocus}),
+      );
+    };
+  };
+
+  let openFileInEditor =
       (
         ~font: Service_Font.font,
         ~languageInfo: Exthost.LanguageInfo.t,
@@ -335,43 +382,39 @@ module Effects = {
         model,
       ) => {
     Isolinear.Effect.createWithDispatch(
-      ~name="Feature_Buffers.openInEditor", dispatch => {
+      ~name="Feature_Buffers.openFileInEditor", dispatch => {
       let newBuffer = Vim.Buffer.openFile(filePath);
 
-      let bufferId = Vim.Buffer.getId(newBuffer);
+      openCommon(
+        ~vimBuffer=newBuffer,
+        ~dispatch,
+        ~grabFocus,
+        ~position,
+        ~split,
+        ~languageInfo,
+        ~font,
+        model,
+      );
+    });
+  };
 
-      switch (IntMap.find_opt(bufferId, model)) {
-      // We already have this buffer loaded - so just ask for an editor!
-      | Some(buffer) =>
-        dispatch(EditorRequested({buffer, split, position, grabFocus}))
-
-      | None =>
-        // No buffer yet, so we need to create one _and_ ask for an editor.
-        let metadata = Vim.BufferMetadata.ofBuffer(newBuffer);
-        let maybeLineEndings: option(Vim.lineEnding) =
-          Vim.Buffer.getLineEndings(newBuffer);
-
-        let lines = Vim.Buffer.getLines(newBuffer);
-        let buffer =
-          Oni_Core.Buffer.ofLines(~id=metadata.id, ~font, lines)
-          |> Buffer.setVersion(metadata.version)
-          |> Buffer.setFilePath(metadata.filePath)
-          |> Buffer.setModified(metadata.modified)
-          |> Buffer.stampLastUsed;
-
-        let fileType =
-          Exthost.LanguageInfo.getLanguageFromBuffer(languageInfo, buffer);
-
-        let buffer =
-          maybeLineEndings
-          |> Option.map(le => Buffer.setLineEndings(le, buffer))
-          |> Option.value(~default=buffer)
-          |> Buffer.setFileType(Buffer.FileType.inferred(fileType));
-
-        dispatch(
-          NewBufferAndEditorRequested({buffer, split, position, grabFocus}),
-        );
-      };
+  let openBufferInEditor = (~font, ~languageInfo, ~bufferId, model) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Buffers.openBufferInEditor", dispatch => {
+      switch (Vim.Buffer.getById(bufferId)) {
+      | None => Log.warnf(m => m("Unable to open buffer: %d", bufferId))
+      | Some(vimBuffer) =>
+        openCommon(
+          ~vimBuffer,
+          ~dispatch,
+          ~grabFocus=false,
+          ~position=None,
+          ~split=`Current,
+          ~languageInfo,
+          ~font,
+          model,
+        )
+      }
     });
   };
 };

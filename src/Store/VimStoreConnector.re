@@ -592,8 +592,13 @@ let start =
 
   let commandEffect = cmd => {
     Isolinear.Effect.create(~name="vim.command", () => {
-      // TODO: Hook up effect handler
-      ignore(Vim.command(cmd): Vim.Context.t)
+      let state = getState();
+      let prevContext = Oni_Model.VimContext.current(state);
+      let newContext = Vim.command(~context=prevContext, cmd);
+
+      if (newContext.bufferId != prevContext.bufferId) {
+        dispatch(Actions.OpenBufferById({bufferId: newContext.bufferId}));
+      };
     });
   };
 
@@ -606,7 +611,7 @@ let start =
           Feature_Layout.activeEditor(state.layout) |> Editor.getId;
 
         let context = Oni_Model.VimContext.current(state);
-        let currentBufferId = context.bufferId;
+        let previousBufferId = context.bufferId;
 
         currentTriggerKey := Some(key);
         let {
@@ -620,12 +625,8 @@ let start =
         currentTriggerKey := None;
 
         // If we switched buffer, open it in current editor
-        if (currentBufferId != bufferId) {
-          Vim.Buffer.getCurrent()
-          |> Vim.Buffer.getFilename
-          |> Option.iter(filePath => {
-               dispatch(Actions.OpenFileByPath(filePath, None, None))
-             });
+        if (previousBufferId != bufferId) {
+          dispatch(Actions.OpenBufferById({bufferId: bufferId}));
         };
 
         // TODO: This has a sensitive timing dependency - the scroll actions need to happen first,

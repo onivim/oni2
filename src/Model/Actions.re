@@ -94,6 +94,7 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
+  | OpenBufferById({bufferId: int})
   | OpenFileByPath(
       string,
       option([ | `Horizontal | `Vertical | `NewTab]),

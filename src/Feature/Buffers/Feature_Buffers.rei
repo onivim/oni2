@@ -80,7 +80,7 @@ let update:
 // EFFECTS
 
 module Effects: {
-  let openInEditor:
+  let openFileInEditor:
     (
       ~font: Service_Font.font,
       ~languageInfo: Exthost.LanguageInfo.t,
@@ -88,6 +88,15 @@ module Effects: {
       ~position: option(CharacterPosition.t)=?,
       ~grabFocus: bool=?,
       ~filePath: string,
+      model
+    ) =>
+    Isolinear.Effect.t(msg);
+
+  let openBufferInEditor:
+    (
+      ~font: Service_Font.font,
+      ~languageInfo: Exthost.LanguageInfo.t,
+      ~bufferId: int,
       model
     ) =>
     Isolinear.Effect.t(msg);

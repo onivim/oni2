@@ -571,9 +571,9 @@ module Registers = {
   let get = (~register) => Native.vimRegisterGet(int_of_char(register));
 };
 
-let command = v => {
+let command = (~context=Context.current(), v) => {
   runWith(
-    ~context=Context.current(),
+    ~context,
     () => {
       Native.vimCommand(v);
       [];

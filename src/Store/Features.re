@@ -934,6 +934,17 @@ let update =
 
     (state, effect);
 
+  | OpenBufferById({bufferId}) =>
+    let effect =
+      Feature_Buffers.Effects.openBufferInEditor(
+        ~languageInfo=state.languageInfo,
+        ~font=state.editorFont,
+        ~bufferId,
+        state.buffers,
+      )
+      |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
+    (state, effect);
+
   | OpenFileByPath(filePath, direction, position) =>
     let split =
       switch (direction) {
@@ -943,7 +954,7 @@ let update =
       | Some(`NewTab) => `NewTab
       };
     let effect =
-      Feature_Buffers.Effects.openInEditor(
+      Feature_Buffers.Effects.openFileInEditor(
         ~languageInfo=state.languageInfo,
         ~font=state.editorFont,
         ~split,

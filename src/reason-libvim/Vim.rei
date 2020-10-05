@@ -398,7 +398,7 @@ You may use any valid Ex command, although you must omit the leading semicolon.
 
 The command [cmd] is processed synchronously.
 */
-let command: string => Context.t;
+let command: (~context: Context.t=?, string) => Context.t;
 
 /**
 [onDirectoryChanged(f)] registers a directory changed listener [f].
