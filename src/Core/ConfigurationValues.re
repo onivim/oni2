@@ -29,15 +29,11 @@ type autoReveal = [ | `HighlightAndScroll | `HighlightOnly | `NoReveal];
 
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
-  editorDetectIndentation: bool,
   editorFontLigatures: fontLigatures,
   editorFontSmoothing: fontSmoothing,
   editorHoverDelay: int,
   editorHoverEnabled: bool,
   editorLargeFileOptimizations: bool,
-  editorInsertSpaces: bool,
-  editorIndentSize: int,
-  editorTabSize: int,
   editorHighlightActiveIndentGuide: bool,
   editorRenderIndentGuides: bool,
   editorRulers: list(int),
@@ -70,15 +66,11 @@ type t = {
 
 let default = {
   editorAutoClosingBrackets: LanguageDefined,
-  editorDetectIndentation: true,
   editorFontSmoothing: Default,
   editorFontLigatures: `Bool(true),
   editorHoverDelay: 1000,
   editorHoverEnabled: true,
   editorLargeFileOptimizations: true,
-  editorInsertSpaces: true,
-  editorIndentSize: 4,
-  editorTabSize: 4,
   editorRenderIndentGuides: true,
   editorHighlightActiveIndentGuide: true,
   editorRulers: [],

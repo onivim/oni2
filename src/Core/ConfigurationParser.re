@@ -205,10 +205,6 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, editorHoverEnabled: parseBool(json)},
   ),
   (
-    "editor.detectIndentation",
-    (config, json) => {...config, editorDetectIndentation: parseBool(json)},
-  ),
-  (
     "editor.fontLigatures",
     (config, json) => {
       ...config,
@@ -216,23 +212,11 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.insertSpaces",
-    (config, json) => {...config, editorInsertSpaces: parseBool(json)},
-  ),
-  (
-    "editor.indentSize",
-    (config, json) => {...config, editorIndentSize: parseInt(json)},
-  ),
-  (
     "editor.largeFileOptimizations",
     (config, json) => {
       ...config,
       editorLargeFileOptimizations: parseBool(json),
     },
-  ),
-  (
-    "editor.tabSize",
-    (config, json) => {...config, editorTabSize: parseInt(json)},
   ),
   (
     "editor.highlightActiveIndentGuide",
