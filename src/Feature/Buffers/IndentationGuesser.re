@@ -245,7 +245,6 @@ let%test_module "guessIndentation" =
      };
 
      let%test "single-space block comment" = {
-       guessIndentationArray(singleSpaceBlockComment, 4, false)
-       == Some(IndentationSettings.{mode: Tabs, size: 4});
+       guessIndentationArray(singleSpaceBlockComment, 4, false) == None;
      };
    });
