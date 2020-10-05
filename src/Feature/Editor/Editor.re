@@ -11,10 +11,50 @@ module GlobalState = {
   };
 };
 
-type viewLine = {
-  contents: BufferLine.t,
+type viewTokens = {
+  tokens: list(BufferViewTokenizer.t),
   byteOffset: int,
   characterOffset: int,
+};
+
+module WrapState = {
+  [@deriving show]
+  type t =
+  | NoWrap({
+    [@opaque] wrapping: Wrapping.t,
+  })
+  | Viewport({
+    lastWrapColumn: int,
+    [@opaque] wrapping: Wrapping.t,
+  })
+  | WrapColumn({
+    wrapColumn: int,
+    [@opaque] wrapping: Wrapping.t,
+  })
+  | Bounded({
+    wrapColumn: int,
+    lastWrapColumn: int,
+    [@opaque] wrapping: Wrapping.t
+  })
+
+  let make = (~wrapMode: WrapMode.t, ~buffer) => {
+    let initialWrapping = Wrapping.make(~wrap=WordWrap.none, ~buffer);
+    switch (wrapMode) {
+    | NoWrap => NoWrap({wrapping: initialWrapping})
+    | Viewport => Viewport({lastWrapColumn: 999,
+    wrapping: initialWrapping})
+    | WrapColumn(wrapColumn) => WrapColumn({
+      wrapColumn,
+      wrapping: Wrapping.make(~wrap=WordWrap.fixed(~columns=wrapColumn, ~buffer))
+    })
+    | Bounded(wrapColumn) =>
+      Bounded({
+        wrapColumn,
+        lastWrapColumn: wrapColumn,
+        wrapping: Wrapping.make(~wrap=WordWrap.fixed(~columns=wrapColumn, ~buffer))
+      })
+    }
+  };
 };
 
 [@deriving show]

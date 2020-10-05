@@ -210,14 +210,20 @@ let renderText =
         };
       let bufferLine = Editor.viewLine(editor, item).contents;
       let startPixel = Editor.scrollX(editor);
-      let startCharacter =
-        BufferLine.Slow.getIndexFromPixel(~pixel=startPixel, bufferLine)
+      let startByte =
+        BufferLine.Slow.getByteFromPixelPosition(~pixel=startPixel, bufferLine);
+        
+      let startCharacter = bufferLine
+        |> BufferLine.getIndex(~byte=startByte)
         |> CharacterIndex.toInt;
-      let endCharacter =
-        BufferLine.Slow.getIndexFromPixel(
-          ~pixel=startPixel +. float(bufferWidthInPixels),
-          bufferLine,
-        )
+        
+      let endByte =
+        BufferLine.Slow.getByteFromPixelPosition(~pixel=
+          startPixel +. float(bufferWidthInPixels),
+          bufferLine
+        );
+      let endCharacter = bufferLine
+        |> BufferLine.getIndex(~byte=endByte)
         |> CharacterIndex.toInt;
 
       let tokens =

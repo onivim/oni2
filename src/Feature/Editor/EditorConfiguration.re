@@ -8,6 +8,10 @@ module CustomDecoders: {
     Config.Schema.codec([ | `All | `Boundary | `Selection | `None]);
   let lineNumbers:
     Config.Schema.codec([ | `On | `Relative | `RelativeOnly | `Off]);
+
+  let wordWrap:
+    Config.Schema.codec([| `WordWrapColumn | `Bounded | `Off | `On]);
+    
   let time: Config.Schema.codec(Time.t);
   let fontSize: Config.Schema.codec(float);
   let color: Config.Schema.codec(Revery.Color.t);
@@ -96,6 +100,30 @@ module CustomDecoders: {
           | `Off => string("off")
           | `Relative => string("relative")
           | `RelativeOnly => string("relative-only")
+          | `On => string("on")
+        ),
+    );
+
+  let wordWrap =
+    custom(
+      ~decode=
+        Json.Decode.(
+          string
+          |> map(
+               fun
+               | "wordWrapColumn" => `WordWrapColumn
+               | "bounded" => `Bounded
+               | "off" => `Off
+               | "on"
+               | _ => `On,
+             )
+        ),
+      ~encode=
+        Json.Encode.(
+          fun
+          | `Off => string("off")
+          | `Bounded => string("bounded")
+          | `WordWrapColumn => string("wordWrapColumn")
           | `On => string("on")
         ),
     );
@@ -262,6 +290,11 @@ module ZenMode = {
 };
 
 module Experimental = {
+  let wordWrap =
+    setting("experimental.editor.wordWrap", wordWrap, ~default=`Off);
+  let wordWrapColumn =
+    setting("experimental.editor.wordWrapColumn", int, ~default=80);
+
   let cursorSmoothCaretAnimation =
     setting(
       "experimental.editor.cursorSmoothCaretAnimation",
@@ -299,4 +332,6 @@ let contributions = [
   ZenMode.hideTabs.spec,
   ZenMode.singleFile.spec,
   Experimental.cursorSmoothCaretAnimation.spec,
+  Experimental.wordWrap.spec,
+  Experimental.wordWrapColumn.spec,
 ];

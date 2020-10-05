@@ -399,29 +399,31 @@ let getPixelPositionAndWidth = (~index: CharacterIndex.t, bufferLine: t) => {
 };
 
 module Slow = {
-  let getIndexFromPixel = (~pixel, bufferLine) => {
-    let characterLength = lengthSlow(bufferLine);
-    let rec loop = (low, high) =>
-      if (high == low) {
-        high;
-      } else if (high < low) {
-        characterLength - 1;
+  let getByteFromPixelPosition = (~startByte=0, ~pixel, bufferLine) => {
+    let startByteIndex = ByteIndex.ofInt(startByte);
+    let startIndex = getIndex(~byte=startByteIndex, bufferLine);
+    let (startPosition, _) =
+      getPixelPositionAndWidth(~index=startIndex, bufferLine);
+    let position = startPosition +. pixel;
+
+    let length = lengthInBytes(bufferLine);
+    let rec loop = byteIndex =>
+      if (ByteIndex.toInt(byteIndex) >= length) {
+        ByteIndex.ofInt(length - 1);
       } else {
-        let mid = (low + high) / 2;
-        let (midPixel, midPixelWidth) =
-          getPixelPositionAndWidth(
-            ~index=CharacterIndex.ofInt(mid),
-            bufferLine,
-          );
-        if (pixel < midPixel) {
-          loop(low, mid - 1);
-        } else if (pixel > midPixel +. midPixelWidth) {
-          loop(mid + 1, high);
+        let index = getIndex(~byte=byteIndex, bufferLine);
+        let (characterPosition, width) =
+          getPixelPositionAndWidth(~index, bufferLine);
+
+        if (position >= characterPosition
+            && position < characterPosition
+            +. width) {
+          byteIndex
         } else {
-          mid;
+          loop(ByteIndex.(byteIndex + 1));
         };
       };
 
-    loop(0, characterLength - 1) |> CharacterIndex.ofInt;
+    loop(startByteIndex);
   };
 };

@@ -58,11 +58,8 @@ let subExn: (~index: CharacterIndex.t, ~length: int, t) => string;
 let getPixelPositionAndWidth: (~index: CharacterIndex.t, t) => (float, float);
 
 module Slow: {
-  /*
-   * [getIndexFromPixel(~position, str)] returns the character index at pixel position [position].
-   * The position of a character is dependent on indentation settings, multi-width characters, etc.
-   *
-   * _slow_ because requires traversal of the string, currently.
-   */
-  let getIndexFromPixel: (~pixel: float, t) => CharacterIndex.t;
+  let getByteFromPixelPosition: (
+  ~startByte: ByteIndex.t =?,
+  ~pixel: float,
+  t) => ByteIndex.t;
 };
