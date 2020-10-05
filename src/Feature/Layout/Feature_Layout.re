@@ -194,16 +194,21 @@ let update = (~focus, model, msg) => {
   | Command(MoveRight) =>
     switch (focus) {
     | Some(Center) =>
-      let model =
-        updateActiveLayout(
-          layout => {
-            let newActiveGroupId =
-              layout |> activeTree |> moveRight(layout.activeGroupId);
-            {...layout, activeGroupId: newActiveGroupId};
-          },
-          model,
+      let layout = model |> activeLayout;
+      let newActiveGroupId =
+        layout |> activeTree |> moveRight(layout.activeGroupId);
+
+      if (newActiveGroupId == layout.activeGroupId) {
+        (model, Focus(Right));
+      } else {
+        (
+          updateActiveLayout(
+            layout => {...layout, activeGroupId: newActiveGroupId},
+            model,
+          ),
+          Nothing,
         );
-      (model, Nothing);
+      };
 
     | Some(Left) =>
       let model =

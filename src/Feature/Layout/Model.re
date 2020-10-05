@@ -133,6 +133,7 @@ module Group: {
 
 type panel =
   | Left
+  | Right
   | Center
   | Bottom;
 

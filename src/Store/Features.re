@@ -761,6 +761,8 @@ let update =
   | Layout(msg) =>
     open Feature_Layout;
 
+    let sideBarLocation = Feature_SideBar.location(state.sideBar);
+
     let focus =
       switch (FocusManager.current(state)) {
       | Pane => Some(Bottom)
@@ -771,7 +773,12 @@ let update =
       | Extensions
       | FileExplorer
       | SCM
-      | Search => Some(Left)
+      | Search when sideBarLocation == Feature_Sidebar.Left => Some(Left)
+      
+      | Extensions
+      | FileExplorer
+      | SCM
+      | Search when sideBarLocation == Feature_Sidebar.Right => Some(Right)
 
       | _ => None
       };
@@ -781,7 +788,7 @@ let update =
     switch (outmsg) {
     | Focus(Center) => (FocusManager.push(Editor, state), Effect.none)
 
-    | Focus(Left) => (
+    | Focus(Left) when sideBarLocation == Feature_Sidebar.Left => (
         Feature_SideBar.isOpen(state.sideBar)
           ? switch (state.sideBar |> Feature_SideBar.selected) {
             | FileExplorer => FocusManager.push(FileExplorer, state)
@@ -792,6 +799,21 @@ let update =
           : state,
         Effect.none,
       )
+
+    | Focus(Right) when sideBarLocation == Feature_Sidebar.Right => (
+        Feature_SideBar.isOpen(state.sideBar)
+          ? switch (state.sideBar |> Feature_SideBar.selected) {
+            | FileExplorer => FocusManager.push(FileExplorer, state)
+            | SCM => FocusManager.push(SCM, state)
+            | Extensions => FocusManager.push(Extensions, state)
+            | Search => FocusManager.push(Search, state)
+            }
+          : state,
+        Effect.none,
+      )
+
+    | Focus(Right)
+    | Focus(Left) => (state, Effect.none)
 
     | Focus(Bottom) => (state |> FocusManager.push(Pane), Effect.none)
 
