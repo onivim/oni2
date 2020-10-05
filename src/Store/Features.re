@@ -636,12 +636,14 @@ let update =
 
     | CreateEditor({buffer, split, position, grabFocus}) =>
       let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
-      let fileType = buffer
-      |> Buffer.getFileType
-      |> Buffer.FileType.toString;
-      
+      let fileType = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
+
       let editor =
-        Feature_Editor.Editor.create(~config=config(~fileType), ~buffer=editorBuffer, ());
+        Feature_Editor.Editor.create(
+          ~config=config(~fileType),
+          ~buffer=editorBuffer,
+          (),
+        );
 
       let editor' =
         position
@@ -721,10 +723,9 @@ let update =
       (state, eff);
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
-      let fileType = newBuffer
-      |> Buffer.getFileType
-      |> Buffer.FileType.toString;
-      
+      let fileType =
+        newBuffer |> Buffer.getFileType |> Buffer.FileType.toString;
+
       let syntaxHighlights =
         Feature_Syntax.handleUpdate(
           ~scope=
@@ -733,7 +734,12 @@ let update =
               newBuffer,
             ),
           ~grammars=grammarRepository,
-          ~config=Feature_Configuration.resolver(~fileType, state.config, state.vim),
+          ~config=
+            Feature_Configuration.resolver(
+              ~fileType,
+              state.config,
+              state.vim,
+            ),
           ~theme=state.tokenTheme,
           update,
           state.syntaxHighlights,
