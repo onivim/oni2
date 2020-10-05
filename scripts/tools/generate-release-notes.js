@@ -162,8 +162,8 @@ const run = async () => {
     //dayReleaseNotes = "- #abcdef - fix blah (@bryphe)\n- #abcde2 - fix blah2(@bryphe)";
     //const weekReleaseNotes = "- #abcdef - fix blah (@bryphe)\n- #abcde2 - fix blah2(@bryphe)";
 
-    console.log("Writing release notes to release.json...");
-    fs.writeFileSync("release.json", JSON.stringify({
+    console.log("Writing release notes to release-notes.json...");
+    fs.writeFileSync("release-notes.json", JSON.stringify({
         commitId,
         dayReleaseNotes,
         weekReleaseNotes,
