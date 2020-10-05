@@ -69,8 +69,8 @@ let isModified: t => bool;
 let setModified: (bool, t) => t;
 
 let isIndentationSet: t => bool;
-let setIndentation: (IndentationSettings.t, t) => t;
-let getIndentation: t => option(IndentationSettings.t);
+let setIndentation: (Inferred.t(IndentationSettings.t), t) => t;
+let getIndentation: t => IndentationSettings.t;
 
 let isSyntaxHighlightingEnabled: t => bool;
 let disableSyntaxHighlighting: t => t;

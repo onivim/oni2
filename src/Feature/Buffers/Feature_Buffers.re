@@ -317,6 +317,15 @@ module Commands = {
     );
 };
 
+module Configuration = {
+  open Config.Schema;
+  
+  let detectIndentation = setting("editor.detectIndentation", bool, ~default=true);
+  let insertSpaces = setting("editor.insertSpaces", bool, ~default=true);
+  let indentSize = setting("editor.indentSize", int, ~default=4);
+  let tabSize = setting("editor.tabSize", int, ~default=4);
+};
+
 module Contributions = {
   let configuration = [];
 

@@ -58,7 +58,7 @@ type t = {
   lines: array(BufferLine.t),
   originalUri: option(Uri.t),
   originalLines: option(array(string)),
-  indentation: option(IndentationSettings.t),
+  indentation: Inferred.t(IndentationSettings.t),
   syntaxHighlightingEnabled: bool,
   lastUsed: float,
   font: Font.t,
@@ -132,7 +132,7 @@ let ofLines = (~id=0, ~font=Font.default, rawLines: array(string)) => {
     lineEndings: None,
     originalUri: None,
     originalLines: None,
-    indentation: None,
+    indentation: Inferred.implicit(IndentationSettings.default),
     syntaxHighlightingEnabled: true,
     lastUsed: 0.,
     font,
@@ -254,23 +254,28 @@ let applyUpdate =
 };
 
 let isIndentationSet = buf => {
-  switch (buf.indentation) {
-  | Some(_) => true
-  | None => false
-  };
+  buf.indentation |> Inferred.isExplicit
 };
+
 let setIndentation = (indentation, buf) => {
-  let lines =
+  let originalIndentationValue = buf.indentation |> Inferred.value;
+  let indentation = Inferred.update(~new_=indentation, buf.indentation);
+  let newIndentationValue = indentation |> Inferred.value;
+
+  let lines = if (originalIndentationValue != newIndentationValue) {
     buf.lines
     |> Array.map(line => {
          let raw = BufferLine.raw(line);
          let font = BufferLine.font(line);
          BufferLine.make(~font, ~indentation, raw);
        });
-  {...buf, lines, indentation: Some(indentation)};
+  } else {
+    buf.lines
+  };
+  {...buf, lines, indentation};
 };
 
-let getIndentation = buf => buf.indentation;
+let getIndentation = buf => buf.indentation |> Inferred.value;
 
 let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
   update.version > getVersion(buf);
