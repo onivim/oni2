@@ -80,29 +80,34 @@ let guessIndentation =
     };
   };
 
-  let shouldInsertSpaces =
-    if (linesWithLeadingSpaces^ == linesWithLeadingTabs^) {
-      defaultInsertSpaces;
-    } else {
-      linesWithLeadingSpaces^ > linesWithLeadingTabs^;
-    };
+  if (linesWithLeadingSpaces^ == 0 && linesWithLeadingTabs^ == 0) {
+    None;
+  } else {
+    let shouldInsertSpaces =
+      if (linesWithLeadingSpaces^ == linesWithLeadingTabs^) {
+        defaultInsertSpaces;
+      } else {
+        linesWithLeadingSpaces^ > linesWithLeadingTabs^;
+      };
 
-  let mode =
-    shouldInsertSpaces ? IndentationSettings.Spaces : IndentationSettings.Tabs;
+    let mode =
+      shouldInsertSpaces
+        ? IndentationSettings.Spaces : IndentationSettings.Tabs;
 
-  let size =
-    if (shouldInsertSpaces) {
-      let max = getMaxKey(spaceDelta^);
-      if (max >= Constants.minSpaces) {
-        max;
+    let size =
+      if (shouldInsertSpaces) {
+        let max = getMaxKey(spaceDelta^);
+        if (max >= Constants.minSpaces) {
+          max;
+        } else {
+          defaultTabSize;
+        };
       } else {
         defaultTabSize;
       };
-    } else {
-      defaultTabSize;
-    };
 
-  {mode, size};
+    Some({mode, size});
+  };
 };
 
 let guessIndentationArray =
@@ -199,50 +204,48 @@ let%test_module "guessIndentation" =
        " */",
      |];
 
-     let%test "indeterminate uses passed in settings" = {
-       guessIndentationArray(indeterminateLines, 4, true)
-       == IndentationSettings.{mode: Spaces, size: 4}
-       && guessIndentationArray(indeterminateLines, 3, false)
-       == IndentationSettings.{mode: Tabs, size: 3};
+     let%test "indeterminate should be None" = {
+       guessIndentationArray(indeterminateLines, 4, true) == None
+       && guessIndentationArray(indeterminateLines, 3, false) == None;
      };
 
      let%test "more tabs than spaces" = {
        guessIndentationArray(moreTabsThanSpaces, 4, true)
-       == IndentationSettings.{mode: Tabs, size: 4};
+       == Some(IndentationSettings.{mode: Tabs, size: 4});
      };
 
      let%test "more spaces than tabs" = {
        guessIndentationArray(moreSpacesThanTabs, 4, false)
-       == IndentationSettings.{mode: Spaces, size: 4};
+       == Some(IndentationSettings.{mode: Spaces, size: 4});
      };
 
      let%test "ignores empty lines" = {
        guessIndentationArray(someEmptyLines, 4, false)
-       == IndentationSettings.{mode: Tabs, size: 4};
+       == Some(IndentationSettings.{mode: Tabs, size: 4});
      };
 
      let%test "mostly single spaced" = {
        guessIndentationArray(mostlySingleSpaced, 4, false)
-       == IndentationSettings.{mode: Spaces, size: 2};
+       == Some(IndentationSettings.{mode: Spaces, size: 2});
      };
 
      let%test "mostly double spaced" = {
        guessIndentationArray(mostlyDoubleSpaced, 4, false)
-       == IndentationSettings.{mode: Spaces, size: 2};
+       == Some(IndentationSettings.{mode: Spaces, size: 2});
      };
 
      let%test "mostly triple spaced" = {
        guessIndentationArray(mostlyTripleSpaced, 4, false)
-       == IndentationSettings.{mode: Spaces, size: 3};
+       == Some(IndentationSettings.{mode: Spaces, size: 3});
      };
 
      let%test "larger example" = {
        guessIndentationArray(largerExample, 4, false)
-       == IndentationSettings.{mode: Spaces, size: 2};
+       == Some(IndentationSettings.{mode: Spaces, size: 2});
      };
 
      let%test "single-space block comment" = {
        guessIndentationArray(singleSpaceBlockComment, 4, false)
-       == IndentationSettings.{mode: Tabs, size: 4};
+       == Some(IndentationSettings.{mode: Tabs, size: 4});
      };
    });

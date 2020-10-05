@@ -254,7 +254,7 @@ let applyUpdate =
 };
 
 let isIndentationSet = buf => {
-  buf.indentation |> Inferred.isExplicit
+  buf.indentation |> Inferred.isExplicit;
 };
 
 let setIndentation = (indentation, buf) => {
@@ -262,16 +262,17 @@ let setIndentation = (indentation, buf) => {
   let indentation = Inferred.update(~new_=indentation, buf.indentation);
   let newIndentationValue = indentation |> Inferred.value;
 
-  let lines = if (originalIndentationValue != newIndentationValue) {
-    buf.lines
-    |> Array.map(line => {
-         let raw = BufferLine.raw(line);
-         let font = BufferLine.font(line);
-         BufferLine.make(~font, ~indentation=newIndentationValue, raw);
-       });
-  } else {
-    buf.lines
-  };
+  let lines =
+    if (originalIndentationValue != newIndentationValue) {
+      buf.lines
+      |> Array.map(line => {
+           let raw = BufferLine.raw(line);
+           let font = BufferLine.font(line);
+           BufferLine.make(~font, ~indentation=newIndentationValue, raw);
+         });
+    } else {
+      buf.lines;
+    };
   {...buf, lines, indentation};
 };
 

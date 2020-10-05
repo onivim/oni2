@@ -52,9 +52,6 @@ let isModifiedByPath = (buffers: model, filePath: string) => {
   );
 };
 
-let setIndentation = indent =>
-  Option.map(buffer => Buffer.setIndentation(indent, buffer));
-
 // TODO: When do we use this?
 //let disableSyntaxHighlighting =
 //  Option.map(buffer => Buffer.disableSyntaxHighlighting(buffer));
@@ -131,7 +128,6 @@ type msg =
       lineEndings: [@opaque] Vim.lineEnding,
     })
   | Saved(int)
-//  | IndentationSet(int, [@opaque] IndentationSettings.t)
   | ModifiedSet(int, bool);
 
 module Msg = {
@@ -142,10 +138,6 @@ module Msg = {
   let lineEndingsChanged = (~bufferId, ~lineEndings) => {
     LineEndingsChanged({id: bufferId, lineEndings});
   };
-
-//  let indentationSet = (~bufferId, ~indentation) => {
-//    IndentationSet(bufferId, indentation);
-//  };
 
   let saved = (~bufferId) => {
     Saved(bufferId);
@@ -173,11 +165,49 @@ module Msg = {
 
 module Configuration = {
   open Config.Schema;
-  
-  let detectIndentation = setting("editor.detectIndentation", bool, ~default=true);
+
+  let detectIndentation =
+    setting("editor.detectIndentation", bool, ~default=true);
   let insertSpaces = setting("editor.insertSpaces", bool, ~default=true);
   let indentSize = setting("editor.indentSize", int, ~default=4);
   let tabSize = setting("editor.tabSize", int, ~default=4);
+};
+
+let defaultIndentation = (~config) => {
+  let insertSpaces = Configuration.insertSpaces.get(config);
+  let indentSize = Configuration.indentSize.get(config);
+  let tabSize = Configuration.tabSize.get(config);
+
+  IndentationSettings.{
+    mode: insertSpaces ? Spaces : Tabs,
+    size: indentSize,
+    tabSize,
+  };
+};
+
+let guessIndentation = (~config, buffer) => {
+  let defaultTabSize = Configuration.tabSize.get(config);
+  let defaultInsertSpaces = Configuration.insertSpaces.get(config);
+
+  let maybeGuess: option(IndentationGuesser.t) =
+    IndentationGuesser.guessIndentationArray(
+      buffer |> Buffer.getLines,
+      defaultTabSize,
+      defaultInsertSpaces,
+    );
+
+  maybeGuess
+  |> Option.map((guess: IndentationGuesser.t) => {
+       let size =
+         switch (guess.mode) {
+         | Tabs => Configuration.tabSize.get(config)
+         | Spaces => guess.size
+         };
+
+       IndentationSettings.create(~mode=guess.mode, ~size, ~tabSize=size, ())
+       |> Inferred.explicit;
+     })
+  |> Option.value(~default=Inferred.implicit(defaultIndentation(~config)));
 };
 
 let update = (~activeBufferId, ~config, msg: msg, model: model) => {
@@ -196,37 +226,21 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       }),
     )
 
-  | NewBufferAndEditorRequested({buffer: originalBuffer, split, position, grabFocus}) => 
-
-    let buffer = if (Configuration.detectIndentation.get(config)
-    && !Buffer.isIndentationSet(originalBuffer)) {
-      let defaultTabSize = Configuration.tabSize.get(config);
-      let defaultInsertSpaces = Configuration.insertSpaces.get(config);
-      
-      let guess: IndentationGuesser.t = IndentationGuesser.guessIndentationArray(
-        originalBuffer |> Buffer.getLines,
-        defaultTabSize,
-        defaultInsertSpaces,
-      );
-
-      let size = switch (guess.mode) {
-      | Tabs => Configuration.tabSize.get(config)
-      | Spaces => guess.size
+  | NewBufferAndEditorRequested({
+      buffer: originalBuffer,
+      split,
+      position,
+      grabFocus,
+    }) =>
+    let buffer =
+      if (Configuration.detectIndentation.get(config)
+          && !Buffer.isIndentationSet(originalBuffer)) {
+        let indentation = guessIndentation(~config, originalBuffer);
+        Buffer.setIndentation(indentation, originalBuffer);
+      } else {
+        originalBuffer;
       };
 
-      let indentation = IndentationSettings.create(
-        ~mode=guess.mode,
-        ~size,
-        ~tabSize=size,
-        (),
-      );
-
-      // TODO: If indeterminate, we should set implicitly instead of epxlicitly.
-      Buffer.setIndentation(Inferred.explicit(indentation), originalBuffer);
-    } else {
-      originalBuffer
-    };
-    
     (
       IntMap.add(Buffer.getId(buffer), buffer, model),
       CreateEditor({
@@ -239,7 +253,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
              ),
         grabFocus,
       }),
-    )
+    );
 
   | FilenameChanged({id, newFileType, newFilePath, version, isModified}) =>
     let updater = (
@@ -261,20 +275,24 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       Nothing,
     )
 
-//  | IndentationSet(id, indent) => (
-//      IntMap.update(id, setIndentation(indent), model),
-//      Nothing,
-//    )
-
   | LineEndingsChanged({id, lineEndings}) => (
       IntMap.update(id, setLineEndings(lineEndings), model),
       Nothing,
     )
 
-  | Update({update, newBuffer, oldBuffer, triggerKey}) => (
-      IntMap.add(update.id, newBuffer, model),
-      BufferUpdated({update, newBuffer, oldBuffer, triggerKey}),
-    )
+  | Update({update, newBuffer, oldBuffer, triggerKey}) =>
+    let buffer =
+      if (!Buffer.isIndentationSet(newBuffer)
+          && Configuration.detectIndentation.get(config)) {
+        let indentation = guessIndentation(~config, newBuffer);
+        Buffer.setIndentation(indentation, newBuffer);
+      } else {
+        newBuffer;
+      };
+    (
+      IntMap.add(update.id, buffer, model),
+      BufferUpdated({update, newBuffer: buffer, oldBuffer, triggerKey}),
+    );
 
   | FileTypeChanged({id, fileType}) => (
       IntMap.update(id, Option.map(Buffer.setFileType(fileType)), model),
@@ -288,7 +306,20 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       |> Option.value(~default=Nothing);
     (model, eff);
 
-  | Command(_command) => failwith("no!")
+  | Command(command) =>
+    switch (command) {
+    | DetectIndentation =>
+      let maybeBuffer = IntMap.find_opt(activeBufferId, model);
+
+      switch (maybeBuffer) {
+      // This shouldn't happen...
+      | None => (model, Nothing)
+      | Some(buffer) =>
+        let indentation = guessIndentation(~config, buffer);
+        let updatedBuffer = Buffer.setIndentation(indentation, buffer);
+        (IntMap.add(activeBufferId, updatedBuffer, model), Nothing);
+      };
+    }
   };
 };
 
@@ -358,7 +389,13 @@ module Commands = {
 };
 
 module Contributions = {
-  let configuration = [];
+  let configuration =
+    Configuration.[
+      detectIndentation.spec,
+      insertSpaces.spec,
+      tabSize.spec,
+      indentSize.spec,
+    ];
 
   let commands = Commands.[detectIndentation] |> Command.Lookup.fromList;
 };

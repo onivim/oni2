@@ -625,11 +625,9 @@ let update =
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.getBufferId;
     let config = Feature_Configuration.resolver(state.config, state.vim);
-    
-    let (buffers, outmsg) = Feature_Buffers.update(
-    ~activeBufferId, 
-    ~config,
-    msg, state.buffers);
+
+    let (buffers, outmsg) =
+      Feature_Buffers.update(~activeBufferId, ~config, msg, state.buffers);
 
     let state = {...state, buffers};
 

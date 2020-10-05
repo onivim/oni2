@@ -45,8 +45,8 @@ module Msg: {
   let lineEndingsChanged:
     (~bufferId: int, ~lineEndings: Vim.Types.lineEnding) => msg;
 
-//  let indentationSet:
-//    (~bufferId: int, ~indentation: IndentationSettings.t) => msg;
+  //  let indentationSet:
+  //    (~bufferId: int, ~indentation: IndentationSettings.t) => msg;
 
   let updated:
     (
@@ -76,7 +76,9 @@ type outmsg =
 
 // UPDATE
 
-let update: (~activeBufferId: int, ~config: Config.resolver, msg, model) => (model, outmsg);
+let update:
+  (~activeBufferId: int, ~config: Config.resolver, msg, model) =>
+  (model, outmsg);
 
 // EFFECTS
 
