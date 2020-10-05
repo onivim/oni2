@@ -241,7 +241,8 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         let indentation = guessIndentation(~config, originalBuffer);
         Buffer.setIndentation(indentation, originalBuffer);
       } else {
-        originalBuffer;
+        let indentation = defaultIndentation(~config);
+        Buffer.setIndentation(Inferred.implicit(indentation), originalBuffer);
       };
 
     (
