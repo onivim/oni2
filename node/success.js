@@ -1,1 +1,1 @@
-process.stdout.write("Successful node task!");
+process.stdout.write("Successful node task!")
