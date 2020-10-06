@@ -55,6 +55,7 @@ let height: model => int;
 let selected: model => pane;
 let isOpen: model => bool;
 
+let setPane: (~pane: pane, model) => model;
 let show: (~pane: pane, model) => model;
 let toggle: (~pane: pane, model) => model;
 let close: model => model;

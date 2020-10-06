@@ -269,6 +269,8 @@ let height = ({height, resizeDelta, _}) => {
   };
 };
 
+let setPane = (~pane, model) => {...model, selected: pane};
+
 let show = (~pane, model) => {
   ...model,
   allowAnimation: true,
