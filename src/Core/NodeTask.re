@@ -11,7 +11,7 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
   let (promise, resolver) = Lwt.task();
 
   let scriptPath = Setup.getNodeScriptPath(~script, setup);
-  Log.info("Using node path: " ++ scriptPath);
+  prerr_endline("Using node path: " ++ scriptPath);
 
   let result = {
     open Base.Result.Let_syntax;
@@ -53,6 +53,7 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
         stdoutPipe,
         fun
         | Error(`EOF) => {
+            prerr_endline ("Got EOF");
             Log.info("Got EOF on stdout");
             Luv.Handle.close(stdoutPipe, ignore);
             let allOutput =
