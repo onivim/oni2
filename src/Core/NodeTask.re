@@ -11,7 +11,7 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
   let (promise, resolver) = Lwt.task();
 
   let scriptPath = Setup.getNodeScriptPath(~script, setup);
-  prerr_endline("Using node path: " ++ scriptPath);
+  Log.info("Using node path: " ++ scriptPath);
 
   let result = {
     open Base.Result.Let_syntax;
@@ -19,12 +19,39 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
     let%bind stdoutPipe = Luv.Pipe.init();
     let%bind stderrPipe = Luv.Pipe.init();
 
-    let on_exit = (_, ~exit_status, ~term_signal as _) =>
+    let buffers = ref([]);
+    let hasClosedStdout = ref(false);
+    let hasExited = ref(false);
+
+    let success = () => {
+      let allOutput =
+        buffers^
+        |> List.rev
+        |> List.map(Luv.Buffer.to_string)
+        |> String.concat("");
+      Log.debugf(m => m("Got output: %s", allOutput));
+      Lwt.wakeup(resolver, allOutput);
+    };
+
+    let tryToFinish = () =>
+      if (hasExited^ && hasClosedStdout^) {
+        success();
+      } else if (! hasExited^) {
+        Log.info("Trying to finish, but process hasn't exited yet.");
+      } else if (! hasClosedStdout^) {
+        Log.info("Trying to finish, but have not received EOF yet.");
+      };
+
+    let on_exit = (_, ~exit_status, ~term_signal as _) => {
+      Log.infof(m => m("on_exit called with exit_status: %Ld", exit_status));
       if (exit_status == 0L) {
+        hasExited := true;
+        tryToFinish();
         Log.info("Task completed successfully: " ++ name);
       } else {
         Lwt.wakeup_exn(resolver, TaskFailed);
       };
+    };
 
     let%bind _: Luv.Process.t =
       LuvEx.Process.spawn(
@@ -45,24 +72,15 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
         [setup.nodePath, scriptPath, ...args],
       );
 
-    let buffers = ref([]);
-
     // If process was created successfully, we'll read from stdout
     let () =
       Luv.Stream.read_start(
         stdoutPipe,
         fun
         | Error(`EOF) => {
-            prerr_endline ("Got EOF");
+            hasClosedStdout := true;
             Log.info("Got EOF on stdout");
             Luv.Handle.close(stdoutPipe, ignore);
-            let allOutput =
-              buffers^
-              |> List.rev
-              |> List.map(Luv.Buffer.to_string)
-              |> String.concat("");
-            Log.debugf(m => m("Got output: %s", allOutput));
-            Lwt.wakeup(resolver, allOutput);
           }
         | Error(msg) => Log.error(Luv.Error.strerror(msg))
         | Ok(buffer) => buffers := [buffer, ...buffers^],
