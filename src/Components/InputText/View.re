@@ -76,6 +76,7 @@ module Colors = {
   let foreground = color("input.foreground");
   let background = color("input.background");
   let border = color("input.border");
+  let focusBorder = color("focusBorder");
   let placeholderForeground = color("input.placeholderForeground");
   let selection = color("selection.background");
 };
@@ -87,7 +88,10 @@ module Styles = {
       color(Colors.foreground(theme)),
       paddingVertical(8),
       paddingHorizontal(12),
-      border(~width=focused ? 2 : 1, ~color=Colors.border(theme)),
+      border(
+        ~width=1,
+        ~color=focused ? Colors.focusBorder(theme) : Colors.border(theme),
+      ),
       backgroundColor(Colors.background(theme)),
       boxShadow(
         ~xOffset=4.,

@@ -70,11 +70,3 @@ let applyLevel =
      })
   |> Option.value(~default=str);
 };
-
-let getForBuffer = (~buffer, configuration: Configuration.t) => {
-  let bufferIndentation = Buffer.getIndentation(buffer);
-  switch (bufferIndentation) {
-  | None => IndentationSettings.ofConfiguration(configuration)
-  | Some(indentation) => indentation
-  };
-};

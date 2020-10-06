@@ -72,7 +72,9 @@ let start =
 
   let _: unit => unit =
     Vim.Buffer.onLineEndingsChanged((id, lineEndings) => {
-      Actions.Buffers(Feature_Buffers.LineEndingsChanged({id, lineEndings}))
+      Actions.Buffers(
+        Feature_Buffers.Msg.lineEndingsChanged(~bufferId=id, ~lineEndings),
+      )
       |> dispatch
     });
 
@@ -86,10 +88,10 @@ let start =
         Log.infof(m => m("Setting filetype %s for buffer %d", fileType, id));
         dispatch(
           Actions.Buffers(
-            Feature_Buffers.FileTypeChanged({
-              id,
-              fileType: Oni_Core.Buffer.FileType.explicit(fileType),
-            }),
+            Feature_Buffers.Msg.fileTypeChanged(
+              ~bufferId=id,
+              ~fileType=Oni_Core.Buffer.FileType.explicit(fileType),
+            ),
           ),
         );
       };
@@ -305,13 +307,13 @@ let start =
 
       dispatch(
         Actions.Buffers(
-          Feature_Buffers.FilenameChanged({
-            id: meta.id,
-            newFileType: fileType,
-            newFilePath: meta.filePath,
-            isModified: meta.modified,
-            version: meta.version,
-          }),
+          Feature_Buffers.Msg.fileNameChanged(
+            ~bufferId=meta.id,
+            ~newFileType=fileType,
+            ~newFilePath=meta.filePath,
+            ~isModified=meta.modified,
+            ~version=meta.version,
+          ),
         ),
       );
     });
@@ -320,13 +322,15 @@ let start =
     Vim.Buffer.onModifiedChanged((id, isModified) => {
       Log.debugf(m => m("Buffer metadata changed: %n | %b", id, isModified));
       dispatch(
-        Actions.Buffers(Feature_Buffers.ModifiedSet(id, isModified)),
+        Actions.Buffers(
+          Feature_Buffers.Msg.modified(~bufferId=id, ~isModified),
+        ),
       );
     });
 
   let _: unit => unit =
     Vim.Buffer.onWrite(id => {
-      dispatch(Actions.Buffers(Feature_Buffers.Saved(id)))
+      dispatch(Actions.Buffers(Feature_Buffers.Msg.saved(~bufferId=id)))
     });
 
   let _: unit => unit =
@@ -381,63 +385,10 @@ let start =
           Actions.OpenFileByPath(buf, Some(`Vertical), None)
         | Vim.Types.Horizontal =>
           Actions.OpenFileByPath(buf, Some(`Horizontal), None)
-        | Vim.Types.TabPage => Actions.OpenFileInNewLayout(buf)
+        | Vim.Types.TabPage =>
+          Actions.OpenFileByPath(buf, Some(`NewTab), None)
         };
       dispatch(command);
-    });
-
-  let _: unit => unit =
-    Vim.Buffer.onEnter(buf => {
-      let metadata = Vim.BufferMetadata.ofBuffer(buf);
-
-      if (metadata.id == 1 && ! libvimHasInitialized^) {
-        Log.info("Ignoring initial buffer");
-      } else {
-        let fileType =
-          switch (metadata.filePath) {
-          | Some(v) =>
-            Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v)
-            |> Oni_Core.Buffer.FileType.inferred
-          | None => Oni_Core.Buffer.FileType.none
-          };
-
-        let lineEndings: option(Vim.lineEnding) =
-          Vim.Buffer.getLineEndings(buf);
-
-        let state = getState();
-
-        let buffer =
-          (
-            switch (Selectors.getBufferById(state, metadata.id)) {
-            | Some(buf) => buf
-            | None =>
-              Oni_Core.Buffer.ofMetadata(
-                ~id=metadata.id,
-                ~font=state.editorFont,
-                ~version=- metadata.version,
-                ~filePath=metadata.filePath,
-                ~modified=metadata.modified,
-              )
-            }
-          )
-          |> Oni_Core.Buffer.setFileType(fileType);
-
-        dispatch(
-          Actions.Buffers(
-            Feature_Buffers.Entered({
-              id: metadata.id,
-              buffer,
-              fileType,
-              lineEndings,
-              // Version must be 0 so that a buffer update will be processed
-              version: 0,
-              isModified: metadata.modified,
-              filePath: metadata.filePath,
-              font: Oni_Core.Buffer.getFont(buffer),
-            }),
-          ),
-        );
-      };
     });
 
   let _: unit => unit =
@@ -512,12 +463,12 @@ let start =
 
              dispatch(
                Actions.Buffers(
-                 Feature_Buffers.Update({
-                   update: bu,
-                   newBuffer,
-                   oldBuffer,
-                   triggerKey: currentTriggerKey^,
-                 }),
+                 Feature_Buffers.Msg.updated(
+                   ~update=bu,
+                   ~newBuffer,
+                   ~oldBuffer,
+                   ~triggerKey=currentTriggerKey^,
+                 ),
                ),
              );
            });
@@ -641,8 +592,13 @@ let start =
 
   let commandEffect = cmd => {
     Isolinear.Effect.create(~name="vim.command", () => {
-      // TODO: Hook up effect handler
-      ignore(Vim.command(cmd): Vim.Context.t)
+      let state = getState();
+      let prevContext = Oni_Model.VimContext.current(state);
+      let newContext = Vim.command(~context=prevContext, cmd);
+
+      if (newContext.bufferId != prevContext.bufferId) {
+        dispatch(Actions.OpenBufferById({bufferId: newContext.bufferId}));
+      };
     });
   };
 
@@ -655,11 +611,23 @@ let start =
           Feature_Layout.activeEditor(state.layout) |> Editor.getId;
 
         let context = Oni_Model.VimContext.current(state);
+        let previousBufferId = context.bufferId;
 
         currentTriggerKey := Some(key);
-        let {cursors, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t =
+        let {
+          cursors,
+          topLine: newTopLine,
+          leftColumn: newLeftColumn,
+          bufferId,
+          _,
+        }: Vim.Context.t =
           isText ? Vim.input(~context, key) : Vim.key(~context, key);
         currentTriggerKey := None;
+
+        // If we switched buffer, open it in current editor
+        if (previousBufferId != bufferId) {
+          dispatch(Actions.OpenBufferById({bufferId: bufferId}));
+        };
 
         // TODO: This has a sensitive timing dependency - the scroll actions need to happen first,
         // and then the cursor changed. This is because the cursor changed may impact the scroll
@@ -691,35 +659,6 @@ let start =
         Log.debug("handled key: " ++ key);
       }
     );
-
-  let openBufferEffect = (~onComplete, filePath) =>
-    Isolinear.Effect.create(~name="vim.openBuffer", () => {
-      let buffer = Vim.Buffer.openFile(filePath);
-      let bufferId = Vim.Buffer.getId(buffer);
-
-      dispatch(onComplete(bufferId));
-    });
-
-  let gotoLocationEffect = (editorId, location: BytePosition.t) =>
-    Isolinear.Effect.create(~name="vim.gotoLocation", () => {
-      updateActiveEditorCursors([location]);
-
-      let topLine: int = max(LineNumber.toZeroBased(location.line) - 10, 0);
-
-      dispatch(
-        Actions.Editor({
-          scope: EditorScope.Editor(editorId),
-          msg: ScrollToLine(topLine),
-        }),
-      );
-    });
-
-  let addBufferRendererEffect = (bufferId, renderer) =>
-    Isolinear.Effect.create(~name="vim.addBufferRenderer", () => {
-      dispatch(
-        Actions.BufferRenderer(RendererAvailable(bufferId, renderer)),
-      )
-    });
 
   let openTutorEffect =
     Isolinear.Effect.create(~name="vim.tutor", () => {
@@ -895,85 +834,6 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
-
-    | OpenFileByPath(path, maybeDirection, maybeLocation) =>
-      /* If a split was requested, create that first! */
-      let state' =
-        switch (maybeDirection) {
-        | None => state
-        | Some(direction) => {
-            ...state,
-            layout: Feature_Layout.split(direction, state.layout),
-          }
-        };
-
-      // Ensure that the editor is focused, as well
-      let state'' = state' |> Oni_Model.FocusManager.push(Editor);
-
-      (
-        state'',
-        openBufferEffect(
-          ~onComplete=bufferId => BufferOpened(path, maybeLocation, bufferId),
-          path,
-        ),
-      );
-    | BufferOpened(path, maybeLocation, bufferId) =>
-      let maybeRenderer =
-        switch (Core.BufferPath.parse(path)) {
-        | ExtensionDetails => Some(BufferRenderer.ExtensionDetails)
-        | Terminal({bufferId, _}) =>
-          Some(
-            BufferRenderer.Terminal({
-              title: "Terminal",
-              id: bufferId,
-              insertMode: true,
-            }),
-          )
-        | Version => Some(BufferRenderer.Version)
-        | UpdateChangelog =>
-          Some(
-            BufferRenderer.UpdateChangelog({
-              since: Persistence.Global.version(),
-            }),
-          )
-        | Image => Some(BufferRenderer.Image)
-        | Welcome => Some(BufferRenderer.Welcome)
-        | Changelog => Some(BufferRenderer.FullChangelog)
-        | FilePath(_) => None
-        | DebugInput => Some(BufferRenderer.DebugInput)
-        };
-
-      let editor = Feature_Layout.activeEditor(state.layout);
-      let editorId = editor |> Editor.getId;
-
-      (
-        state,
-        Isolinear.Effect.batch([
-          maybeRenderer
-          |> Option.map(addBufferRendererEffect(bufferId))
-          |> Option.value(~default=Isolinear.Effect.none),
-          maybeLocation
-          |> OptionEx.flatMap(loc =>
-               Feature_Editor.Editor.characterToByte(loc, editor)
-             )
-          |> Option.map(gotoLocationEffect(editorId))
-          |> Option.value(~default=Isolinear.Effect.none),
-        ]),
-      );
-
-    | OpenFileInNewLayout(path) =>
-      let state = {
-        ...state,
-        layout: Feature_Layout.addLayoutTab(state.layout),
-      };
-      (
-        state,
-        openBufferEffect(
-          ~onComplete=bufferId => BufferOpenedForLayout(bufferId),
-          path,
-        ),
-      );
-    | BufferOpenedForLayout(_bufferId) => (state, Isolinear.Effect.none)
 
     | Terminal(Command(NormalMode)) =>
       let maybeBufferId =
@@ -1206,8 +1066,8 @@ let start =
 
 let subscriptions = (state: State.t) => {
   state.buffers
-  |> Core.IntMap.bindings
-  |> List.filter_map(((_key, buffer)) =>
+  |> Feature_Buffers.all
+  |> List.filter_map(buffer =>
        buffer
        |> Core.Buffer.getFilePath
        |> Option.map(path =>

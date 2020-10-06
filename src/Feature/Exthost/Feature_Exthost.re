@@ -18,7 +18,7 @@ module Internal = {
 
       let indentationSettings: IndentationSettings.t =
         maybeBuffer
-        |> OptionEx.flatMap(Buffer.getIndentation)
+        |> Option.map(Buffer.getIndentation)
         |> Option.value(~default=IndentationSettings.default);
 
       maybeBuffer

@@ -101,6 +101,7 @@ module View = {
         <Text
           style={Styles.fileText(~theme)}
           text=filename
+          fontFamily={uiFont.family}
           fontSize={uiFont.size}
           fontWeight=Revery.Font.Weight.SemiBold
         />
@@ -110,6 +111,7 @@ module View = {
           <Text
             style={Styles.directoryText(~theme)}
             text=dirname
+            fontFamily={uiFont.family}
             fontSize={uiFont.size}
             fontWeight=Revery.Font.Weight.Light
           />

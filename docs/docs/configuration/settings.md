@@ -94,7 +94,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `vim.highlightedyank.duration` __(_int_ default: `300`)__ - The time, in milliseconds, the yank highlight is visible.
 
-## Layout
+### Layout
 
 - `workbench.editor.showTabs` __(_bool_ default: `true`)__ - When `false`, hides the editor tabs.
 
@@ -110,7 +110,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `oni.layout.singleTabMode` __(_bool_ default: `false`)__ - When `true`, groups will only hold a single editor, and closing this editor will always close the group. It will also hide the editor tabs, and therefore essentially hide the concept of editor groups.
 
-## Rendering
+### Rendering
 
 - `vsync` __(_bool_ default: `false`)__ - Whether rendering should sync with vertical retrace of the monitor. VSync adds input latency, as rendering must sync with the refresh rate of the monitor, but it reduces screen tearing.
 
@@ -129,7 +129,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
     - _`["yank", "paste", "delete"]`_ - An array of strings. Each specified operation will always use the system clipboard. For example, `["yank"]` will send all yanks to the system clipboard, but deletes and pastes will require using the `+` or `*` registers. `["delete", "paste"]` means that all deletes will be sent to the system clipboard, and pastes using the unnamed register will come from the system clipboard, but only yanks with register `+` and `*` would be sent to the clipboard.
     - _`false`_ - only deletes / yanks using the `+` or `*` registers will be pushed to the system clipboard. Equivalent to `[]`.
 
-## High-DPI / UI Scaling
+### High-DPI / UI Scaling
 
 Onivim 2 should automatically pick up your scaling settings via the following per-platform strategies:
 
@@ -156,3 +156,19 @@ Experimental features are features that we are working to stabilize and turn on-
 - `experimental.viml` - __(_string|list of string_ default: `[]`)__ - Execute some VimL upon load. Example: `"experimental.viml": ["nnoremap ; :"]`
 
 > __NOTE:__ The full set and scope of VimL compatibility is not currently tested. We are still working to enable test cases in [`libvim`](https://github.com/onivim/libvim/pull/6). Use at your own risk, in the meantime!
+
+## Language-specific configuration
+
+Configuration can be specified per-filetype, by specifying a filetype in the `configuration.json`, ie:
+
+```
+{
+    "editor.insertSpaces": true,
+    "[reason]": {
+        "editor.detectIndentation": false,
+        "editor.insertSpaces": false,
+    }
+}
+```
+
+In the above example, the `editor.insertSpaces` value of `false` in the `reason` section overrides the default of `true` - this configures the editor to use tabs in reason files for indentation, and spaces elsewhere.

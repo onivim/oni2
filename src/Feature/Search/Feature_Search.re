@@ -198,14 +198,12 @@ module SearchSubscription =
     type action = msg;
   });
 
-let subscriptions = (ripgrep, dispatch) => {
+let subscriptions = (~workingDirectory, ripgrep, dispatch) => {
   let search = query => {
-    let directory = Rench.Environment.getWorkingDirectory();
-
     SearchSubscription.create(
       ~id="workspace-search",
       ~query,
-      ~directory,
+      ~directory=workingDirectory,
       ~ripgrep,
       ~onUpdate=items => dispatch(Update(items)),
       ~onCompleted=() => Complete,
@@ -231,10 +229,6 @@ module Styles = {
   open Style;
 
   let pane = [flexGrow(1), flexDirection(`Column)];
-
-  let queryPane = (~theme) => [
-    borderRight(~color=Colors.Panel.border.from(theme), ~width=1),
-  ];
 
   let resultsPane = (~isFocused, ~theme) => {
     let focusColor =
@@ -271,7 +265,7 @@ let make =
       (),
     ) => {
   <View style=Styles.pane>
-    <View style={Styles.queryPane(~theme)}>
+    <View>
       <View style=Styles.row>
         <Text
           style={Styles.title(~theme)}
