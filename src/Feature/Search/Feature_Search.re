@@ -230,10 +230,6 @@ module Styles = {
 
   let pane = [flexGrow(1), flexDirection(`Column)];
 
-  let queryPane = (~theme) => [
-    borderRight(~color=Colors.Panel.border.from(theme), ~width=1),
-  ];
-
   let resultsPane = (~isFocused, ~theme) => {
     let focusColor =
       isFocused
@@ -269,7 +265,7 @@ let make =
       (),
     ) => {
   <View style=Styles.pane>
-    <View style={Styles.queryPane(~theme)}>
+    <View>
       <View style=Styles.row>
         <Text
           style={Styles.title(~theme)}

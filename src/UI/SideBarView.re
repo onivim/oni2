@@ -30,17 +30,11 @@ module Styles = {
 
   let titleContainer = [paddingLeft(23)];
 
-  let heading = (~isFocused, theme) => [
+  let heading = theme => [
     flexDirection(`Row),
     alignItems(`Center),
     backgroundColor(Colors.SideBar.background.from(theme)),
     height(Core.Constants.tabHeight),
-    borderBottom(
-      ~width=1,
-      ~color=
-        isFocused
-          ? Colors.focusBorder.from(theme) : Revery.Colors.transparentWhite,
-    ),
   ];
 
   let separator = [
@@ -154,7 +148,7 @@ let%component make = (~config, ~theme, ~state: State.t, ~dispatch, ()) => {
 
   let content =
     <View style={Styles.contents(~width)}>
-      <View style={Styles.heading(~isFocused, theme)}>
+      <View style={Styles.heading(theme)}>
         <View style=Styles.titleContainer>
           <Text
             text=title
