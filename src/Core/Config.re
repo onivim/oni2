@@ -11,8 +11,9 @@ type rawValue =
 
 type key = Lookup.path;
 type resolver = (~vimSetting: option(string), key) => rawValue;
+type fileTypeResolver = (~fileType: string) => resolver;
 
-//let key = Lookup.path;
+let key = Lookup.path;
 let keyAsString = Lookup.key;
 
 // SETTINGS

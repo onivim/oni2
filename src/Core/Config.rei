@@ -7,8 +7,9 @@ type rawValue =
   | NotSet;
 
 type resolver = (~vimSetting: option(string), key) => rawValue;
+type fileTypeResolver = (~fileType: string) => resolver;
 
-//let key: string => key;
+let key: string => key;
 let keyAsString: key => string;
 
 // SETTINGS

@@ -2,10 +2,12 @@
  * IndentationSettings.re
  */
 
+[@deriving show]
 type mode =
   | Tabs
   | Spaces;
 
+[@deriving show]
 type t = {
   mode,
   size: int,

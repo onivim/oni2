@@ -35,7 +35,13 @@ let update:
   (model, outmsg);
 
 let resolver:
-  (model, Feature_Vim.model, ~vimSetting: option(string), Config.key) =>
+  (
+    ~fileType: string,
+    model,
+    Feature_Vim.model,
+    ~vimSetting: option(string),
+    Config.key
+  ) =>
   Config.rawValue;
 
 module GlobalConfiguration = GlobalConfiguration;

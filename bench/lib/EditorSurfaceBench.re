@@ -13,7 +13,8 @@ let setup = () => {
   hwnd;
 };
 
-let configResolver = (settings, _vimModel, ~vimSetting as _, key) =>
+let configResolver =
+    (~fileType as _, settings, _vimModel, ~vimSetting as _, key) =>
   Config.Settings.get(key, settings)
   |> Option.map(configJson => Config.Json(configJson))
   |> Option.value(~default=Config.NotSet);
@@ -36,7 +37,10 @@ let editor = (editor, buffer, state: State.t) => {
     theme={Feature_Theme.colors(state.colorTheme)}
     windowIsFocused=true
     scm=Feature_SCM.initial
-    config={configResolver(Config.Settings.empty, Feature_Vim.initial)}
+    perFileTypeConfig={configResolver(
+      Config.Settings.empty,
+      Feature_Vim.initial,
+    )}
     languageInfo=Exthost.LanguageInfo.initial
     grammarRepository=Oni_Syntax.GrammarRepository.empty
     uiFont=Oni_Core.UiFont.default

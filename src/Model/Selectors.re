@@ -86,3 +86,14 @@ let getActiveTerminalId = (state: State.t) => {
 
 let terminalIsActive = (state: State.t) =>
   getActiveTerminalId(state) != None;
+
+let configResolver = (state: State.t) => {
+  let maybeActiveBuffer = getActiveBuffer(state);
+  let fileType =
+    maybeActiveBuffer
+    |> Option.map(Buffer.getFileType)
+    |> Option.map(Buffer.FileType.toString)
+    |> Option.value(~default=Buffer.FileType.default);
+
+  Feature_Configuration.resolver(~fileType, state.config, state.vim);
+};

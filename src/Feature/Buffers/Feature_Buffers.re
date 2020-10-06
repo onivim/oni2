@@ -232,13 +232,20 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       position,
       grabFocus,
     }) =>
+    let fileType =
+      Buffer.getFileType(originalBuffer) |> Oni_Core.Buffer.FileType.toString;
+    let config = config(~fileType);
     let buffer =
       if (Configuration.detectIndentation.get(config)
           && !Buffer.isIndentationSet(originalBuffer)) {
         let indentation = guessIndentation(~config, originalBuffer);
         Buffer.setIndentation(indentation, originalBuffer);
       } else {
-        originalBuffer;
+        let indentation = defaultIndentation(~config);
+        Buffer.setIndentation(
+          Inferred.implicit(indentation),
+          originalBuffer,
+        );
       };
 
     (
@@ -281,6 +288,9 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
     )
 
   | Update({update, newBuffer, oldBuffer, triggerKey}) =>
+    let fileType =
+      Buffer.getFileType(newBuffer) |> Oni_Core.Buffer.FileType.toString;
+    let config = config(~fileType);
     let buffer =
       if (!Buffer.isIndentationSet(newBuffer)
           && Configuration.detectIndentation.get(config)) {
@@ -315,6 +325,9 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       // This shouldn't happen...
       | None => (model, Nothing)
       | Some(buffer) =>
+        let fileType =
+          Buffer.getFileType(buffer) |> Oni_Core.Buffer.FileType.toString;
+        let config = config(~fileType);
         let indentation = guessIndentation(~config, buffer);
         let updatedBuffer = Buffer.setIndentation(indentation, buffer);
         (IntMap.add(activeBufferId, updatedBuffer, model), Nothing);

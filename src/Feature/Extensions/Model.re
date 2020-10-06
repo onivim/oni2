@@ -222,6 +222,7 @@ type model = {
   focusedWindow: Focus.t,
   vimWindowNavigation: Component_VimWindows.model,
   viewModel: ViewModel.t,
+  lastSearchHadError: bool,
 };
 
 let resetFocus = model => {...model, focusedWindow: Focus.initial};
@@ -253,6 +254,7 @@ let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => 
   vimWindowNavigation: Component_VimWindows.initial,
 
   viewModel: ViewModel.initial,
+  lastSearchHadError: false,
 };
 
 let isSearching = ({searchText, _}) =>
@@ -444,15 +446,15 @@ let getPersistedValue = (~shared, ~key, model) => {
   |> (l => List.nth_opt(l, 0));
 };
 
-let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
+let checkAndUpdateSearchText = (~hasError, ~previousText, ~newText, ~query) =>
   if (previousText != newText) {
     if (String.length(newText) == 0) {
-      None;
+      (false, None);
     } else {
-      Some(Service_Extensions.Query.create(~searchText=newText));
+      (false, Some(Service_Extensions.Query.create(~searchText=newText)));
     };
   } else {
-    query;
+    (hasError, query);
   };
 
 let getExtensions = Internal.getExtensions;
@@ -527,14 +529,20 @@ let update = (~extHostClient, msg, model) => {
     let previousText = model.searchText |> Component_InputText.value;
     let searchText' = Component_InputText.handleInput(~key, model.searchText);
     let newText = searchText' |> Component_InputText.value;
-    let latestQuery =
+    let (hasError, latestQuery) =
       checkAndUpdateSearchText(
+        ~hasError=model.lastSearchHadError,
         ~previousText,
         ~newText,
         ~query=model.latestQuery,
       );
     (
-      {...model, searchText: searchText', latestQuery}
+      {
+        ...model,
+        lastSearchHadError: hasError,
+        searchText: searchText',
+        latestQuery,
+      }
       |> updateViewModelSearchResults,
       Nothing,
     );
@@ -542,14 +550,20 @@ let update = (~extHostClient, msg, model) => {
     let previousText = model.searchText |> Component_InputText.value;
     let searchText' = Component_InputText.paste(~text, model.searchText);
     let newText = searchText' |> Component_InputText.value;
-    let latestQuery =
+    let (hasError, latestQuery) =
       checkAndUpdateSearchText(
+        ~hasError=model.lastSearchHadError,
         ~previousText,
         ~newText,
         ~query=model.latestQuery,
       );
     (
-      {...model, searchText: searchText', latestQuery}
+      {
+        ...model,
+        lastSearchHadError: hasError,
+        searchText: searchText',
+        latestQuery,
+      }
       |> updateViewModelSearchResults,
       Nothing,
     );
@@ -563,14 +577,21 @@ let update = (~extHostClient, msg, model) => {
       | Component_InputText.Focus => Focus
       };
     let newText = searchText' |> Component_InputText.value;
-    let latestQuery =
+    let (hasError, latestQuery) =
       checkAndUpdateSearchText(
+        ~hasError=model.lastSearchHadError,
         ~previousText,
         ~newText,
         ~query=model.latestQuery,
       );
+
     (
-      {...model, searchText: searchText', latestQuery}
+      {
+        ...model,
+        lastSearchHadError: hasError,
+        searchText: searchText',
+        latestQuery,
+      }
       |> updateViewModelSearchResults,
       outmsg,
     );
@@ -586,7 +607,7 @@ let update = (~extHostClient, msg, model) => {
       : (model, Nothing)
   | SearchQueryError(_queryResults) =>
     // TODO: Error experience?
-    ({...model, latestQuery: None}, Nothing)
+    ({...model, lastSearchHadError: true, latestQuery: None}, Nothing)
   | UninstallExtensionClicked({extensionId}) =>
     let toMsg = (
       fun
