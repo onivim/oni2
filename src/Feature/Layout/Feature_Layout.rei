@@ -5,6 +5,7 @@ open Feature_Editor;
 
 type panel =
   | Left
+  | Right
   | Center
   | Bottom;
 
