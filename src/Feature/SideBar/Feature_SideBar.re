@@ -1,3 +1,5 @@
+open Oni_Core;
+
 type pane =
   | FileExplorer
   | SCM
@@ -157,19 +159,8 @@ let toggle = (pane, state) =>
   };
 
 let setDefaultLocation = (state, setting) => {
-  let location = setting == "right" ? Right : Left;
+  let location = setting == `Right ? Right : Left;
   {...state, location};
-};
-
-type settings = {
-  sideBarLocation: string,
-  sideBarVisibility: bool,
-};
-
-let setDefaults = (state, settings) => {
-  let {sideBarVisibility, sideBarLocation} = settings;
-  let state = setDefaultLocation(state, sideBarLocation);
-  setDefaultVisibility(state, sideBarVisibility);
 };
 
 module Commands = {
@@ -285,6 +276,48 @@ module ContextKeys = {
   };
 };
 
+module Configuration = {
+  open Config.Schema;
+  module CustomDecoders: {let location: codec([ | `Left | `Right]);} = {
+    let location =
+      custom(
+        ~decode=
+          Json.Decode.(
+            string
+            |> and_then(
+                 fun
+                 | "left" => succeed(`Left)
+                 | "right" => succeed(`Right)
+                 | other => fail("Unknown location: " ++ other),
+               )
+          ),
+        ~encode=
+          Json.Encode.(
+            location =>
+              switch (location) {
+              | `Left => string("left")
+              | `Right => string("right")
+              }
+          ),
+      );
+  };
+
+  /* Onivim2 specific setting */
+  let visible = setting("workbench.sideBar.visible", bool, ~default=true);
+
+  let location =
+    setting(
+      "workbench.sideBar.location",
+      CustomDecoders.location,
+      ~default=`Left,
+    );
+};
+
+let configurationChanged = (~config, model) => {
+  let model' = setDefaultLocation(model, Configuration.location.get(config));
+  setDefaultVisibility(model', Configuration.visible.get(config));
+};
+
 module Contributions = {
   let commands =
     Commands.[
@@ -294,6 +327,8 @@ module Contributions = {
       openSCMPane,
       toggleSidebar,
     ];
+
+  let configuration = Configuration.[visible.spec, location.spec];
 
   let keybindings =
     Keybindings.[
