@@ -161,7 +161,7 @@ let%component make =
                 ~languageSupport,
                 ~scm,
                 ~windowIsFocused,
-                ~config,
+                ~perFileTypeConfig: Oni_Core.Config.fileTypeResolver,
                 ~renderOverlays,
                 (),
               ) => {
@@ -170,6 +170,10 @@ let%component make =
   let%hook lastDimensions = Hooks.ref(None);
 
   let editorId = Editor.getId(editor);
+
+  let fileType =
+    buffer |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
+  let config = perFileTypeConfig(~fileType);
 
   // When the editor id changes, we need to make sure we're dispatching the resized
   // event, too. The ideal fix would be to have this component 'keyed' on the `editor.editorId`

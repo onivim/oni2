@@ -813,7 +813,7 @@ let update =
     let state = {...state, config};
     switch (outmsg) {
     | ConfigurationChanged({changed}) =>
-      let resolver = Feature_Configuration.resolver(config, state.vim);
+      let resolver = Selectors.configResolver(state);
       let sideBar =
         state.sideBar
         |> Feature_SideBar.configurationChanged(~config=resolver);

@@ -71,7 +71,10 @@ module Parts = {
         tokenTheme={state.tokenTheme}
         languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
-        config={Selectors.configResolver(state)}
+        perFileTypeConfig={Feature_Configuration.resolver(
+          state.config,
+          state.vim,
+        )}
         renderOverlays
       />;
     };
