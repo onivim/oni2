@@ -80,6 +80,10 @@ let update:
 // EFFECTS
 
 module Effects: {
+  let loadFile:
+    (~filePath: string, ~toMsg: array(string) => 'msg, model) =>
+    Isolinear.Effect.t('msg);
+
   let openFileInEditor:
     (
       ~font: Service_Font.font,

@@ -371,6 +371,8 @@ module Effects = {
     };
   };
 
+  let loadFile = (~filePath, ~toMsg, model) => Isolinear.Effect.none;
+
   let openFileInEditor =
       (
         ~font: Service_Font.font,

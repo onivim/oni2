@@ -33,7 +33,7 @@ module Msg: {
 
 type model;
 
-let update: (msg, model) => (model, outmsg);
+let update: (~buffers: Feature_Buffers.model, msg, model) => (model, outmsg);
 
 module Contributions: {
   let commands: (~isFocused: bool, model) => list(Command.t(msg));

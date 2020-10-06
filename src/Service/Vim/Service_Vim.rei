@@ -25,8 +25,7 @@ module Effects: {
     Isolinear.Effect.t('msg);
 
   let loadBuffer:
-    (~filePath: string, (~bufferId: int, ~lines: array(string)) => 'msg) =>
-    Isolinear.Effect.t('msg);
+    (~filePath: string, (~bufferId: int) => 'msg) => Isolinear.Effect.t('msg);
 
   let applyCompletion:
     (

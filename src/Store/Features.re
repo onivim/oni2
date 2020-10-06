@@ -428,7 +428,8 @@ let update =
     (state, eff);
 
   | Pane(msg) =>
-    let (model, outmsg) = Feature_Pane.update(msg, state.pane);
+    let (model, outmsg) =
+      Feature_Pane.update(~buffers=state.buffers, msg, state.pane);
 
     let state = {...state, pane: model};
 

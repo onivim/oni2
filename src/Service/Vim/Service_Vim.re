@@ -102,11 +102,14 @@ module Effects = {
 
   let loadBuffer = (~filePath: string, toMsg) => {
     Isolinear.Effect.createWithDispatch(~name="loadBuffer", dispatch => {
-      let buffer = Vim.Buffer.openFile(filePath);
-      let bufferId = buffer |> Vim.Buffer.getId;
-      let lines = buffer |> Vim.Buffer.getLines;
+      let currentBuffer = Vim.Buffer.getCurrent();
 
-      dispatch(toMsg(~bufferId, ~lines));
+      let newBuffer = Vim.Buffer.openFile(filePath);
+
+      // Revert to previous buffer
+      Vim.Buffer.setCurrent(currentBuffer);
+
+      dispatch(toMsg(~bufferId=Vim.Buffer.getId(newBuffer)));
     });
   };
 };
