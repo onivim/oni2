@@ -222,6 +222,7 @@ type model = {
   focusedWindow: Focus.t,
   vimWindowNavigation: Component_VimWindows.model,
   viewModel: ViewModel.t,
+  lastSearchHadError: bool,
 };
 
 let resetFocus = model => {...model, focusedWindow: Focus.initial};
@@ -253,6 +254,7 @@ let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => 
   vimWindowNavigation: Component_VimWindows.initial,
 
   viewModel: ViewModel.initial,
+  lastSearchHadError: false,
 };
 
 let isSearching = ({searchText, _}) =>
@@ -569,8 +571,17 @@ let update = (~extHostClient, msg, model) => {
         ~newText,
         ~query=model.latestQuery,
       );
+
+    let lastSearchHadError =
+      if (newText != previousText) {
+        prerr_endline("-- UPDATING lastSearchHadError");
+        false;
+      } else {
+        model.lastSearchHadError;
+      };
+
     (
-      {...model, searchText: searchText', latestQuery}
+      {...model, lastSearchHadError, searchText: searchText', latestQuery}
       |> updateViewModelSearchResults,
       outmsg,
     );
@@ -586,7 +597,7 @@ let update = (~extHostClient, msg, model) => {
       : (model, Nothing)
   | SearchQueryError(_queryResults) =>
     // TODO: Error experience?
-    ({...model, latestQuery: None}, Nothing)
+    ({...model, lastSearchHadError: true, latestQuery: None}, Nothing)
   | UninstallExtensionClicked({extensionId}) =>
     let toMsg = (
       fun
