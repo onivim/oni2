@@ -375,8 +375,7 @@ let update =
           |> Feature_Pane.setLocations(
                ~maybeActiveBuffer=maybeBuffer,
                ~locations=references,
-             )
-          |> Feature_Pane.show(~pane=Locations);
+             );
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
       | InsertSnippet({meetColumn, snippet}) =>
