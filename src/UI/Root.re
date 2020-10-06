@@ -67,7 +67,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
 
   let mode = ModeManager.current(state);
 
-  let config = Feature_Configuration.resolver(state.config, state.vim);
+  let config = Selectors.configResolver(state);
 
   let maybeActiveBuffer = Oni_Model.Selectors.getActiveBuffer(state);
   let activeEditor = Feature_Layout.activeEditor(state.layout);

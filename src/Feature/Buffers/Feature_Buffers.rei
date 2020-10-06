@@ -74,7 +74,7 @@ type outmsg =
 // UPDATE
 
 let update:
-  (~activeBufferId: int, ~config: Config.resolver, msg, model) =>
+  (~activeBufferId: int, ~config: Config.fileTypeResolver, msg, model) =>
   (model, outmsg);
 
 // EFFECTS

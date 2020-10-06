@@ -349,7 +349,7 @@ switch (eff) {
 
     let title = (state: Model.State.t) => {
       let activeBuffer = Model.Selectors.getActiveBuffer(state);
-      let config = Feature_Configuration.resolver(state.config, state.vim);
+      let config = Model.Selectors.configResolver(state);
 
       Feature_TitleBar.title(
         ~activeBuffer,

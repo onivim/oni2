@@ -180,7 +180,7 @@ let start =
     ]);
 
   let subscriptions = (state: Model.State.t) => {
-    let config = Feature_Configuration.resolver(state.config, state.vim);
+    let config = Model.Selectors.configResolver(state);
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
 

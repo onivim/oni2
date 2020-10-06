@@ -636,8 +636,14 @@ let update =
 
     | CreateEditor({buffer, split, position, grabFocus}) =>
       let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
+      let fileType = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
+
       let editor =
-        Feature_Editor.Editor.create(~config, ~buffer=editorBuffer, ());
+        Feature_Editor.Editor.create(
+          ~config=config(~fileType),
+          ~buffer=editorBuffer,
+          (),
+        );
 
       let editor' =
         position
@@ -658,7 +664,7 @@ let update =
           | `NewTab => Feature_Layout.addLayoutTab(state.layout)
           }
         )
-        |> Feature_Layout.openEditor(~config, editor');
+        |> Feature_Layout.openEditor(~config=config(~fileType), editor');
 
       let bufferRenderers =
         buffer
@@ -717,6 +723,9 @@ let update =
       (state, eff);
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
+      let fileType =
+        newBuffer |> Buffer.getFileType |> Buffer.FileType.toString;
+
       let syntaxHighlights =
         Feature_Syntax.handleUpdate(
           ~scope=
@@ -725,7 +734,12 @@ let update =
               newBuffer,
             ),
           ~grammars=grammarRepository,
-          ~config=Feature_Configuration.resolver(state.config, state.vim),
+          ~config=
+            Feature_Configuration.resolver(
+              ~fileType,
+              state.config,
+              state.vim,
+            ),
           ~theme=state.tokenTheme,
           update,
           state.syntaxHighlights,
@@ -799,7 +813,7 @@ let update =
     let state = {...state, config};
     switch (outmsg) {
     | ConfigurationChanged({changed}) =>
-      let resolver = Feature_Configuration.resolver(config, state.vim);
+      let resolver = Selectors.configResolver(state);
       let sideBar =
         state.sideBar
         |> Feature_SideBar.configurationChanged(~config=resolver);
@@ -914,7 +928,7 @@ let update =
   | Terminal(msg) =>
     let (model, eff) =
       Feature_Terminal.update(
-        ~config=Feature_Configuration.resolver(state.config, state.vim),
+        ~config=Selectors.configResolver(state),
         state.terminals,
         msg,
       );
@@ -1225,8 +1239,7 @@ let update =
                ~bytePosition=activeCursorByte,
                state.syntaxHighlights,
              );
-           let config =
-             Feature_Configuration.resolver(state.config, state.vim);
+           let config = Selectors.configResolver(state);
            Feature_LanguageSupport.bufferUpdated(
              ~buffer,
              ~config,
