@@ -25,10 +25,7 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
 
     let success = () => {
       let allOutput =
-        buffers^
-        |> List.rev
-        |> List.map(Luv.Buffer.to_string)
-        |> String.concat("");
+        buffers^ |> List.rev_map(Luv.Buffer.to_string) |> String.concat("");
       Log.debugf(m => m("Got output: %s", allOutput));
       Lwt.wakeup(resolver, allOutput);
     };

@@ -446,15 +446,15 @@ let getPersistedValue = (~shared, ~key, model) => {
   |> (l => List.nth_opt(l, 0));
 };
 
-let checkAndUpdateSearchText = (~previousText, ~newText, ~query) =>
+let checkAndUpdateSearchText = (~hasError, ~previousText, ~newText, ~query) =>
   if (previousText != newText) {
     if (String.length(newText) == 0) {
-      None;
+      (false, None);
     } else {
-      Some(Service_Extensions.Query.create(~searchText=newText));
+      (false, Some(Service_Extensions.Query.create(~searchText=newText)));
     };
   } else {
-    query;
+    (hasError, query);
   };
 
 let getExtensions = Internal.getExtensions;
@@ -529,14 +529,20 @@ let update = (~extHostClient, msg, model) => {
     let previousText = model.searchText |> Component_InputText.value;
     let searchText' = Component_InputText.handleInput(~key, model.searchText);
     let newText = searchText' |> Component_InputText.value;
-    let latestQuery =
+    let (hasError, latestQuery) =
       checkAndUpdateSearchText(
+        ~hasError=model.lastSearchHadError,
         ~previousText,
         ~newText,
         ~query=model.latestQuery,
       );
     (
-      {...model, searchText: searchText', latestQuery}
+      {
+        ...model,
+        lastSearchHadError: hasError,
+        searchText: searchText',
+        latestQuery,
+      }
       |> updateViewModelSearchResults,
       Nothing,
     );
@@ -544,14 +550,20 @@ let update = (~extHostClient, msg, model) => {
     let previousText = model.searchText |> Component_InputText.value;
     let searchText' = Component_InputText.paste(~text, model.searchText);
     let newText = searchText' |> Component_InputText.value;
-    let latestQuery =
+    let (hasError, latestQuery) =
       checkAndUpdateSearchText(
+        ~hasError=model.lastSearchHadError,
         ~previousText,
         ~newText,
         ~query=model.latestQuery,
       );
     (
-      {...model, searchText: searchText', latestQuery}
+      {
+        ...model,
+        lastSearchHadError: hasError,
+        searchText: searchText',
+        latestQuery,
+      }
       |> updateViewModelSearchResults,
       Nothing,
     );
@@ -565,23 +577,21 @@ let update = (~extHostClient, msg, model) => {
       | Component_InputText.Focus => Focus
       };
     let newText = searchText' |> Component_InputText.value;
-    let latestQuery =
+    let (hasError, latestQuery) =
       checkAndUpdateSearchText(
+        ~hasError=model.lastSearchHadError,
         ~previousText,
         ~newText,
         ~query=model.latestQuery,
       );
 
-    let lastSearchHadError =
-      if (newText != previousText) {
-        prerr_endline("-- UPDATING lastSearchHadError");
-        false;
-      } else {
-        model.lastSearchHadError;
-      };
-
     (
-      {...model, lastSearchHadError, searchText: searchText', latestQuery}
+      {
+        ...model,
+        lastSearchHadError: hasError,
+        searchText: searchText',
+        latestQuery,
+      }
       |> updateViewModelSearchResults,
       outmsg,
     );
