@@ -135,6 +135,32 @@ module Styles = {
     backgroundColor(Colors.Menu.background.from(theme)),
     Style.color(Colors.Menu.foreground.from(theme)),
   ];
+
+  module Windows = {
+    let container = (~theme, ~isHovered) => [
+      flexDirection(`Row),
+      height(30),
+      justifyContent(`Center),
+      alignItems(`Center),
+      backgroundColor(
+        isHovered
+          ? Colors.TitleBar.hoverBackground.from(theme)
+          : Revery.Colors.transparentWhite,
+      ),
+      marginLeft(8),
+      paddingHorizontal(4),
+    ];
+
+    let registrationText = (~theme, ~isFocused) => [
+      Style.color(
+        isFocused
+          ? Colors.TitleBar.activeForeground.from(theme)
+          : Colors.TitleBar.inactiveForeground.from(theme),
+      ),
+      marginTop(2),
+      marginLeft(2),
+    ];
+  };
 };
 
 module View = {
@@ -221,6 +247,50 @@ module View = {
             </View>
           </View>
         </View>
+      };
+    };
+  };
+
+  module TitleBar = {
+    module Windows = {
+      let%component make =
+                    (
+                      ~theme: ColorTheme.Colors.t,
+                      ~registration as model: model,
+                      ~font: UiFont.t,
+                      ~dispatch: msg => unit,
+                      ~isFocused: bool,
+                      (),
+                    ) => {
+        let%hook (isHovered, setHovered) = Hooks.state(false);
+
+        let onMouseUp = _ => dispatch(Command(EnterLicenseKey));
+
+        switch (model.licenseKey) {
+        | Some(_) => React.empty
+        | None =>
+          <View
+            onMouseUp
+            onMouseEnter={_ => setHovered(_ => true)}
+            onMouseLeave={_ => setHovered(_ => false)}
+            style={Styles.Windows.container(~isHovered, ~theme)}>
+            <Codicon
+              icon=Codicon.unlock
+              color={
+                isFocused
+                  ? Colors.TitleBar.activeForeground.from(theme)
+                  : Colors.TitleBar.inactiveForeground.from(theme)
+              }
+              fontSize=10.
+            />
+            <Text
+              text="Unregistered"
+              style={Styles.Windows.registrationText(~theme, ~isFocused)}
+              fontSize=12.
+              fontFamily={font.family}
+            />
+          </View>
+        };
       };
     };
   };

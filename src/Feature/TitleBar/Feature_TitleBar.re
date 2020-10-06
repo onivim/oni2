@@ -414,6 +414,8 @@ module View = {
     let make =
         (
           ~dispatch,
+          ~registrationDispatch,
+          ~registration,
           ~isFocused,
           ~windowDisplayMode,
           ~title,
@@ -437,6 +439,13 @@ module View = {
             fontSize=12.
             text=title
           />
+          <Feature_Registration.View.TitleBar.Windows
+            theme
+            registration
+            dispatch=registrationDispatch
+            font
+            isFocused
+          />
         </View>
         <View style=Styles.Windows.buttons>
           <Buttons.Minimize theme dispatch />
@@ -451,8 +460,10 @@ module View = {
         ~activeBuffer,
         ~workspaceRoot,
         ~workspaceDirectory,
+        ~registration,
         ~config,
         ~dispatch,
+        ~registrationDispatch,
         ~isFocused,
         ~windowDisplayMode,
         ~theme,
@@ -462,9 +473,18 @@ module View = {
     let title =
       title(~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config);
     switch (Revery.Environment.os) {
-    | Mac => <Mac isFocused windowDisplayMode font title theme dispatch />
+    | Mac //=> <Mac isFocused windowDisplayMode font title theme dispatch />
     | Windows =>
-      <Windows isFocused windowDisplayMode font title theme dispatch />
+      <Windows
+        isFocused
+        windowDisplayMode
+        font
+        title
+        theme
+        dispatch
+        registrationDispatch
+        registration
+      />
     | _ => React.empty
     };
   };
