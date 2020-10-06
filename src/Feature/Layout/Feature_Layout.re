@@ -186,6 +186,17 @@ let update = (~focus, model, msg) => {
         );
       };
 
+    | Some(Right) =>
+      let model =
+        updateActiveLayout(
+          layout => {
+            let newActiveGroupId = layout |> activeTree |> Layout.rightmost;
+            {...layout, activeGroupId: newActiveGroupId};
+          },
+          model,
+        );
+      (model, Focus(Center));
+
     | Some(Left)
     | Some(Bottom)
     | None => (model, Nothing)
@@ -194,16 +205,21 @@ let update = (~focus, model, msg) => {
   | Command(MoveRight) =>
     switch (focus) {
     | Some(Center) =>
-      let model =
-        updateActiveLayout(
-          layout => {
-            let newActiveGroupId =
-              layout |> activeTree |> moveRight(layout.activeGroupId);
-            {...layout, activeGroupId: newActiveGroupId};
-          },
-          model,
+      let layout = model |> activeLayout;
+      let newActiveGroupId =
+        layout |> activeTree |> moveRight(layout.activeGroupId);
+
+      if (newActiveGroupId == layout.activeGroupId) {
+        (model, Focus(Right));
+      } else {
+        (
+          updateActiveLayout(
+            layout => {...layout, activeGroupId: newActiveGroupId},
+            model,
+          ),
+          Nothing,
         );
-      (model, Nothing);
+      };
 
     | Some(Left) =>
       let model =
@@ -217,6 +233,7 @@ let update = (~focus, model, msg) => {
       (model, Focus(Center));
 
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -246,6 +263,7 @@ let update = (~focus, model, msg) => {
       (model, Focus(Center));
 
     | Some(Left)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -269,6 +287,7 @@ let update = (~focus, model, msg) => {
       };
 
     | Some(Left) => (model, Focus(Bottom))
+    | Some(Right) => (model, Focus(Bottom))
 
     | Some(Bottom)
     | None => (model, Nothing)
@@ -280,6 +299,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -289,6 +309,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -303,6 +324,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -317,6 +339,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -329,6 +352,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -341,6 +365,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -353,6 +378,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -365,6 +391,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -377,6 +404,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -389,6 +417,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -398,6 +427,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -407,6 +437,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -416,6 +447,7 @@ let update = (~focus, model, msg) => {
 
     | Some(Left)
     | Some(Bottom)
+    | Some(Right)
     | None => (model, Nothing)
     }
 
@@ -434,6 +466,7 @@ let update = (~focus, model, msg) => {
 
         | Some(Left)
         | Some(Bottom)
+        | Some(Right)
         | None => model
         }
       };

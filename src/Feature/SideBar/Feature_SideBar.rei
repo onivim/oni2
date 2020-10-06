@@ -50,18 +50,12 @@ let location: model => location;
 
 let isVisible: (pane, model) => bool;
 let toggle: (pane, model) => model;
-let setDefaultVisibility: (model, bool) => model;
-let setDefaultLocation: (model, string) => model;
 
-type settings = {
-  sideBarLocation: string,
-  sideBarVisibility: bool,
-};
-
-let setDefaults: (model, settings) => model;
+let configurationChanged: (~config: Oni_Core.Config.resolver, model) => model;
 
 module Contributions: {
   let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
   let keybindings: list(Oni_Input.Keybindings.keybinding);
   let contextKeys:
     (~isFocused: bool) => list(WhenExpr.ContextKeys.Schema.entry(model));

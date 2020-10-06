@@ -88,19 +88,23 @@ function activate(context) {
     output2.append("Hello output channel!")
 
     const collection = vscode.languages.createDiagnosticCollection("test")
+    
+    let latestText = ""
 
     cleanup(
-        vscode.workspace.onDidOpenTextDocument((e) => {
+        vscode.workspace.onDidOpenTextDocument((document) => {
             // TODO:
             // Add command / option to toggle this
             // showData({
             //     type: "workspace.onDidOpenTextDocument",
             //     filename: e.fileName,
             // });
+
+            if (document) {
+                latestText = document.getText().split(os.EOL).join("|")
+            }
         }),
     )
-
-    let latestText = ""
 
     cleanup(
         vscode.workspace.onDidChangeTextDocument((e) => {

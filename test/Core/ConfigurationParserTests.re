@@ -7,66 +7,6 @@ module ConfigurationParser = Oni_Core.ConfigurationParser;
 module Constants = Oni_Core.Constants;
 
 describe("ConfigurationParser", ({test, describe, _}) => {
-  describe("per-filetype handling", ({test, _}) => {
-    test("simple filetype case", ({expect, _}) => {
-      let fileTypeConfiguration = {|
-		{
-      	"editor.insertSpaces": false,
-		  "[reason]": {
-		  	"editor.insertSpaces": true
-		  }
-	  }
-      |};
-
-      switch (ConfigurationParser.ofString(fileTypeConfiguration)) {
-      | Error(_) => expect.bool(true).toBe(false)
-      | Ok(v) =>
-        let insertSpaces =
-          Configuration.getValue(
-            ~fileType="reason",
-            c => c.editorInsertSpaces,
-            v,
-          );
-        expect.bool(insertSpaces).toBe(true);
-
-        let insertSpaces =
-          Configuration.getValue(
-            ~fileType="someotherlang",
-            c => c.editorInsertSpaces,
-            v,
-          );
-        expect.bool(insertSpaces).toBe(false);
-      };
-    });
-
-    test("ignores doubly-nested languages", ({expect, _}) => {
-      let fileTypeConfiguration = {|
-	  {
-      	"editor.insertSpaces": false,
-		  "[reason]": {
-		  	"editor.insertSpaces": true,
-			  "[ocaml]": {
-			  	"editor.insertSpaces": false
-			  }
-		  },
-		  "[ocaml]": {
-		  	"editor.insertSpaces": true
-		  }
-	  }
-      |};
-      switch (ConfigurationParser.ofString(fileTypeConfiguration)) {
-      | Error(_) => expect.int(1).toBe(2)
-      | Ok(v) =>
-        let ocamlInsertSpaces =
-          Configuration.getValue(
-            ~fileType="ocaml",
-            c => c.editorInsertSpaces,
-            v,
-          );
-        expect.bool(ocamlInsertSpaces).toBe(true);
-      };
-    });
-  });
   describe("error handling", ({test, _}) => {
     test("invalid json returns error", ({expect, _}) => {
       let invalidConfiguration = "{]";

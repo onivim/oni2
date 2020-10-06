@@ -9,6 +9,8 @@ let make =
       ~decorations,
       ~theme,
       ~font,
+      ~expanded,
+      ~onRootClicked: unit => unit,
       ~dispatch: Model.msg => unit,
       (),
     ) => {
@@ -26,6 +28,8 @@ let make =
       treeView
       theme
       font
+      expanded
+      onRootClicked
       dispatch
     />;
   | _ => React.empty

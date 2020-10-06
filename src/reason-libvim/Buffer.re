@@ -46,7 +46,7 @@ let getLine = (buffer: t, line: LineNumber.t) => {
 let getLines = (buffer: t) => {
   let count = getLineCount(buffer);
 
-  Array.init(count, i => Native.vimBufferGetLine(buffer, i + 1));
+  Array.init(count, idx => {Native.vimBufferGetLine(buffer, idx + 1)});
 };
 
 let getId = (buffer: t) => {
@@ -168,10 +168,6 @@ let applyEdits = (~edits, buffer) => {
     setCurrent(previousBuffer);
   };
   ret;
-};
-
-let onEnter = (f: Listeners.bufferListener) => {
-  Event.add(f, Listeners.bufferEnter);
 };
 
 let onModifiedChanged = (f: Listeners.bufferModifiedChangedListener) => {

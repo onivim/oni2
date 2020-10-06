@@ -63,6 +63,7 @@ let setLocations:
 module View: {
   let make:
     (
+      ~key: Brisk_reconciler.Key.t=?,
       ~config: Config.resolver,
       ~isFocused: bool,
       ~theme: Oni_Core.ColorTheme.Colors.t,

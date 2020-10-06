@@ -242,7 +242,8 @@ module Internal = {
       if (lines == []) {
         [""];
       } else {
-        lines;
+        // There needs to be an empty line at the end of the buffer to sync changes at the end
+        lines @ [""];
       };
 
     maybeFilePath

@@ -50,6 +50,8 @@ module View: {
       ~decorations: Feature_Decorations.model,
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
+      ~expanded: bool,
+      ~onRootClicked: unit => unit,
       ~dispatch: msg => unit,
       unit
     ) =>

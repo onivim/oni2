@@ -7,7 +7,6 @@
  */
 
 open Revery.UI;
-open Rench;
 open Oni_Core;
 open Oni_Model;
 module OptionEx = Oni_Core.Utility.OptionEx;
@@ -236,7 +235,7 @@ let make =
       switch (renderer) {
       | Welcome => "Welcome"
       | Terminal({title, _}) => title
-      | _ => Path.filename(title)
+      | _ => Utility.Path.filename(title)
       };
     };
 

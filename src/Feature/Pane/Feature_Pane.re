@@ -2,14 +2,12 @@
  * Feature_Pane.re
  */
 
-open EditorCoreTypes;
 open Oni_Core;
 
 [@deriving show({with_path: false})]
 type pane =
   | Diagnostics
-  | Notifications
-  | Locations;
+  | Notifications;
 
 module Constants = {
   let defaultHeight = 225;
@@ -30,25 +28,12 @@ type msg =
   | ResizeCommitted
   | KeyPressed(string)
   | VimWindowNav(Component_VimWindows.msg)
-  | DiagnosticsList(Component_VimTree.msg)
-  | LocationsList(Component_VimTree.msg)
-  | LocationFileLoaded({
-      filePath: string,
-      lines: array(string),
-    });
+  | DiagnosticsList(Component_VimTree.msg);
 
 module Msg = {
   let keyPressed = key => KeyPressed(key);
   let resizeHandleDragged = v => ResizeHandleDragged(v);
   let resizeCommitted = ResizeCommitted;
-};
-
-module Effects = {
-  let expandLocationPath = (~filePath) => {
-    Service_Vim.Effects.loadBuffer(~filePath, (~bufferId as _, ~lines) => {
-      LocationFileLoaded({filePath, lines})
-    });
-  };
 };
 
 type outmsg =
@@ -59,26 +44,17 @@ type outmsg =
     })
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
-  | ReleaseFocus
-  | Effect(Isolinear.Effect.t(msg));
+  | ReleaseFocus;
 
 type model = {
   selected: pane,
+  allowAnimation: bool,
   isOpen: bool,
   height: int,
   resizeDelta: int,
   vimWindowNavigation: Component_VimWindows.model,
   diagnosticsView:
     Component_VimTree.model(string, Oni_Components.LocationListItem.t),
-  locationNodes:
-    list(
-      Tree.t(LocationsPaneView.location, Oni_Components.LocationListItem.t),
-    ),
-  locationsView:
-    Component_VimTree.model(
-      LocationsPaneView.location,
-      Oni_Components.LocationListItem.t,
-    ),
 };
 
 let diagnosticToLocList =
@@ -116,143 +92,6 @@ let setDiagnostics = (diagnostics, model) => {
   {...model, diagnosticsView: diagnosticsView'};
 };
 
-let locationsToReferences = (locations: list(Exthost.Location.t)) => {
-  let map =
-    List.fold_left(
-      (acc, curr: Exthost.Location.t) => {
-        let {range, uri}: Exthost.Location.t = curr;
-
-        let range = range |> Exthost.OneBasedRange.toRange;
-
-        let path = Oni_Core.Uri.toFileSystemPath(uri);
-
-        acc
-        |> StringMap.update(
-             path,
-             fun
-             | None => Some([range])
-             | Some(ranges) => Some([range, ...ranges]),
-           );
-      },
-      StringMap.empty,
-      locations,
-    );
-
-  map
-  |> StringMap.bindings
-  |> List.map(((path, ranges)) => LocationsPaneView.{path, ranges});
-};
-
-let updateLocationTree = (nodes, model) => {
-  let locationsView' =
-    Component_VimTree.set(
-      ~uniqueId=(LocationsPaneView.{path, _}) => path,
-      ~searchText=
-        Component_VimTree.(
-          fun
-          | Node({data, _}) => LocationsPaneView.(data.path)
-          | Leaf({data, _}) => Oni_Components.LocationListItem.(data.text)
-        ),
-      nodes,
-      model.locationsView,
-    );
-
-  {...model, locationNodes: nodes, locationsView: locationsView'};
-};
-
-let expandLocation = (~filePath, ~lines, model) => {
-  let characterIndexToIndex = (idx: CharacterIndex.t) => {
-    idx |> CharacterIndex.toInt |> Index.fromZeroBased;
-  };
-
-  let expandChildren = (location: LocationsPaneView.location) => {
-    let lineCount = Array.length(lines);
-    location.ranges
-    |> List.filter_map((range: CharacterRange.t) => {
-         let line = range.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
-         if (line >= 0 && line < lineCount) {
-           let highlight =
-             if (range.start.line == range.stop.line) {
-               Some((
-                 range.start.character |> characterIndexToIndex,
-                 range.stop.character |> characterIndexToIndex,
-               ));
-             } else {
-               None;
-             };
-           Some(
-             Oni_Components.LocationListItem.{
-               file: filePath,
-               location: range.start,
-               text: lines[line],
-               highlight,
-             },
-           );
-         } else {
-           None;
-         };
-       })
-    |> List.sort(
-         (
-           a: Oni_Components.LocationListItem.t,
-           b: Oni_Components.LocationListItem.t,
-         ) => {
-         (a.location.line |> EditorCoreTypes.LineNumber.toZeroBased)
-         - (b.location.line |> EditorCoreTypes.LineNumber.toZeroBased)
-       });
-  };
-
-  let locationNodes' =
-    model.locationNodes
-    |> List.map(
-         fun
-         | Tree.Leaf(_) as leaf => leaf
-         | Tree.Node({data, _} as prev) =>
-           if (LocationsPaneView.(data.path) == filePath) {
-             let children = data |> expandChildren |> List.map(Tree.leaf);
-
-             Node({expanded: true, data, children});
-           } else {
-             Node(prev);
-           },
-       );
-
-  model |> updateLocationTree(locationNodes');
-};
-
-let collapseLocations = model => {
-  ...model,
-  locationsView: Component_VimTree.collapse(model.locationsView),
-};
-
-let setLocations = (~maybeActiveBuffer, ~locations, model) => {
-  let references = locationsToReferences(locations);
-
-  let nodes =
-    references
-    |> List.map(reference =>
-         Tree.node(~children=[], ~expanded=false, reference)
-       );
-
-  let model' =
-    model
-    // Un-expand all the nodes
-    |> collapseLocations
-    |> updateLocationTree(nodes);
-
-  // Try to expand the current buffer, if it's available
-  maybeActiveBuffer
-  |> Utility.OptionEx.flatMap(buffer => {
-       switch (Buffer.getFilePath(buffer)) {
-       | None => None
-       | Some(filePath) =>
-         let lines = Buffer.getLines(buffer);
-         Some(model' |> expandLocation(~filePath, ~lines));
-       }
-     })
-  |> Option.value(~default=model');
-};
-
 let height = ({height, resizeDelta, _}) => {
   let candidateHeight = height + resizeDelta;
   if (candidateHeight < Constants.minHeight) {
@@ -264,16 +103,20 @@ let height = ({height, resizeDelta, _}) => {
   };
 };
 
-let show = (~pane, model) => {...model, isOpen: true, selected: pane};
-let close = model => {...model, isOpen: false};
+let show = (~pane, model) => {
+  ...model,
+  allowAnimation: true,
+  isOpen: true,
+  selected: pane,
+};
+let close = model => {...model, allowAnimation: false, isOpen: false};
 
 module Focus = {
   let toggleTab = model => {
     let pane =
       switch (model.selected) {
       | Diagnostics => Notifications
-      | Notifications => Locations
-      | Locations => Diagnostics
+      | Notifications => Diagnostics
       };
     {...model, selected: pane};
   };
@@ -281,7 +124,7 @@ module Focus = {
 
 let update = (msg, model) =>
   switch (msg) {
-  | CloseButtonClicked => ({...model, isOpen: false}, Nothing)
+  | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
 
   | TabClicked(pane) => ({...model, selected: pane}, Nothing)
 
@@ -295,7 +138,7 @@ let update = (msg, model) =>
     }
 
   | ResizeHandleDragged(delta) => (
-      {...model, resizeDelta: (-1) * delta},
+      {...model, allowAnimation: false, resizeDelta: (-1) * delta},
       Nothing,
     )
   | ResizeCommitted =>
@@ -310,13 +153,6 @@ let update = (msg, model) =>
   | KeyPressed(key) =>
     switch (model.selected) {
     | Notifications => (model, Nothing)
-    | Locations => (
-        {
-          ...model,
-          locationsView: Component_VimTree.keyPress(key, model.locationsView),
-        },
-        Nothing,
-      )
     | Diagnostics => (
         {
           ...model,
@@ -357,40 +193,17 @@ let update = (msg, model) =>
       };
 
     ({...model, diagnosticsView}, eff);
-
-  | LocationsList(listMsg) =>
-    let (locationsView, outmsg) =
-      Component_VimTree.update(listMsg, model.locationsView);
-
-    let eff =
-      switch (outmsg) {
-      | Component_VimTree.Nothing => Nothing
-      | Component_VimTree.Selected(item) =>
-        OpenFile({filePath: item.file, position: item.location})
-      | Component_VimTree.Collapsed(_) => Nothing
-      | Component_VimTree.Expanded({path, _}) =>
-        Effect(Effects.expandLocationPath(~filePath=path))
-      };
-
-    ({...model, locationsView}, eff);
-
-  | LocationFileLoaded({filePath, lines}) => (
-      model |> expandLocation(~filePath, ~lines),
-      Nothing,
-    )
   };
 
 let initial = {
   height: Constants.defaultHeight,
   resizeDelta: 0,
-  selected: Notifications,
+  allowAnimation: true,
+  selected: Diagnostics,
   isOpen: false,
 
   vimWindowNavigation: Component_VimWindows.initial,
   diagnosticsView: Component_VimTree.create(~rowHeight=20),
-
-  locationNodes: [],
-  locationsView: Component_VimTree.create(~rowHeight=20),
 };
 
 let selected = ({selected, _}) => selected;
@@ -531,8 +344,6 @@ module View = {
         ~languageInfo,
         ~uiFont,
         ~notificationDispatch,
-        ~locationsList,
-        ~locationsDispatch: Component_VimTree.msg => unit,
         ~diagnosticDispatch: Component_VimTree.msg => unit,
         ~diagnosticsList: Component_VimTree.model(string, LocationListItem.t),
         ~notifications: Feature_Notification.model,
@@ -540,17 +351,6 @@ module View = {
         (),
       ) =>
     switch (selected) {
-    | Locations =>
-      <LocationsPaneView
-        isFocused
-        locationsList
-        iconTheme
-        languageInfo
-        theme
-        uiFont
-        workingDirectory
-        dispatch=locationsDispatch
-      />
     | Diagnostics =>
       <DiagnosticsPaneView
         isFocused
@@ -571,6 +371,10 @@ module View = {
       />
     };
 
+  module Animation = {
+    let openSpring = Spring.Options.create(~stiffness=500., ~damping=30., ());
+  };
+
   let closeButton = (~theme, ~dispatch, ()) => {
     <Sneakable
       sneakId="close"
@@ -583,95 +387,94 @@ module View = {
       />
     </Sneakable>;
   };
-  let make =
-      (
-        ~config,
-        ~isFocused,
-        ~theme,
-        ~iconTheme,
-        ~languageInfo,
-        ~uiFont,
-        ~notifications: Feature_Notification.model,
-        ~dispatch: msg => unit,
-        ~notificationDispatch: Feature_Notification.msg => unit,
-        ~pane: model,
-        ~workingDirectory: string,
-        (),
-      ) => {
+  let%component make =
+                (
+                  ~config,
+                  ~isFocused,
+                  ~theme,
+                  ~iconTheme,
+                  ~languageInfo,
+                  ~uiFont,
+                  ~notifications: Feature_Notification.model,
+                  ~dispatch: msg => unit,
+                  ~notificationDispatch: Feature_Notification.msg => unit,
+                  ~pane: model,
+                  ~workingDirectory: string,
+                  (),
+                ) => {
     let problemsTabClicked = () => {
       dispatch(TabClicked(Diagnostics));
     };
     let notificationsTabClicked = () => {
       dispatch(TabClicked(Notifications));
     };
-    let locationsTabClicked = () => {
-      dispatch(TabClicked(Locations));
-    };
 
-    if (!isOpen(pane) && !isFocused) {
-      <View />;
-    } else {
-      let height = height(pane);
-      let opacity =
-        isFocused
-          ? 1.0
-          : Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
-              config,
-            );
-      <View style={Styles.pane(~opacity, ~isFocused, ~theme, ~height)}>
-        <View style=Styles.resizer>
-          <ResizeHandle.Horizontal
-            onDrag={delta =>
-              dispatch(Msg.resizeHandleDragged(int_of_float(delta)))
-            }
-            onDragComplete={() => dispatch(Msg.resizeCommitted)}
-          />
-        </View>
-        <View style=Styles.header>
-          <View style=Styles.tabs>
-            <PaneTab
-              uiFont
-              theme
-              title="Problems"
-              onClick=problemsTabClicked
-              isActive={isSelected(Diagnostics, pane)}
-            />
-            <PaneTab
-              uiFont
-              theme
-              title="Notifications"
-              onClick=notificationsTabClicked
-              isActive={isSelected(Notifications, pane)}
-            />
-            <PaneTab
-              uiFont
-              theme
-              title="Locations"
-              onClick=locationsTabClicked
-              isActive={isSelected(Locations, pane)}
-            />
-          </View>
-          <closeButton dispatch theme />
-        </View>
-        <View style=Styles.content>
-          <content
-            isFocused
-            iconTheme
-            languageInfo
-            diagnosticsList={pane.diagnosticsView}
-            locationsList={pane.locationsView}
-            selected={selected(pane)}
-            theme
+    let desiredHeight = height(pane);
+    let targetHeight = !isOpen(pane) && !isFocused ? 0 : desiredHeight;
+
+    let animationEnabled =
+      pane.allowAnimation
+      && Feature_Configuration.GlobalConfiguration.animation.get(config);
+    let%hook (springHeight, _setHeightImmediately) =
+      Hooks.spring(
+        ~target=float(targetHeight),
+        ~restThreshold=10.,
+        ~enabled=animationEnabled,
+        Animation.openSpring,
+      );
+
+    let height = springHeight < 20. ? 0 : int_of_float(springHeight);
+
+    let opacity =
+      isFocused
+        ? 1.0
+        : Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
+            config,
+          );
+    <View style={Styles.pane(~opacity, ~isFocused, ~theme, ~height)}>
+      <View style=Styles.resizer>
+        <ResizeHandle.Horizontal
+          onDrag={delta =>
+            dispatch(Msg.resizeHandleDragged(int_of_float(delta)))
+          }
+          onDragComplete={() => dispatch(Msg.resizeCommitted)}
+        />
+      </View>
+      <View style=Styles.header>
+        <View style=Styles.tabs>
+          <PaneTab
             uiFont
-            notifications
-            notificationDispatch
-            diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
-            locationsDispatch={msg => dispatch(LocationsList(msg))}
-            workingDirectory
+            theme
+            title="Problems"
+            onClick=problemsTabClicked
+            isActive={isSelected(Diagnostics, pane)}
+          />
+          <PaneTab
+            uiFont
+            theme
+            title="Notifications"
+            onClick=notificationsTabClicked
+            isActive={isSelected(Notifications, pane)}
           />
         </View>
-      </View>;
-    };
+        <closeButton dispatch theme />
+      </View>
+      <View style=Styles.content>
+        <content
+          isFocused
+          iconTheme
+          languageInfo
+          diagnosticsList={pane.diagnosticsView}
+          selected={selected(pane)}
+          theme
+          uiFont
+          notifications
+          notificationDispatch
+          diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
+          workingDirectory
+        />
+      </View>
+    </View>;
   };
 };
 
@@ -714,16 +517,7 @@ module Contributions = {
           ? Component_VimTree.Contributions.commands : []
       )
       |> List.map(Oni_Core.Command.map(msg => DiagnosticsList(msg)));
-
-    let locationsCommands =
-      (
-        isFocused && model.selected == Locations
-          ? Component_VimTree.Contributions.commands : []
-      )
-      |> List.map(Oni_Core.Command.map(msg => LocationsList(msg)));
-    isFocused
-      ? common @ vimWindowCommands @ diagnosticsCommands @ locationsCommands
-      : common;
+    isFocused ? common @ vimWindowCommands @ diagnosticsCommands : common;
   };
 
   let contextKeys = (~isFocused, model) => {
@@ -735,17 +529,12 @@ module Contributions = {
           )
         : empty;
 
-    let diagnosticsKeys =
+    let vimListKeys =
       isFocused && model.selected == Diagnostics
         ? Component_VimTree.Contributions.contextKeys(model.diagnosticsView)
         : empty;
 
-    let locationsKeys =
-      isFocused && model.selected == Locations
-        ? Component_VimTree.Contributions.contextKeys(model.locationsView)
-        : empty;
-
-    [vimNavKeys, diagnosticsKeys, locationsKeys] |> unionMany;
+    [vimNavKeys, vimListKeys] |> unionMany;
   };
 
   let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];
