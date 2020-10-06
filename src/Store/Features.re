@@ -429,7 +429,13 @@ let update =
 
   | Pane(msg) =>
     let (model, outmsg) =
-      Feature_Pane.update(~buffers=state.buffers, msg, state.pane);
+      Feature_Pane.update(
+        ~font=state.editorFont,
+        ~languageInfo=state.languageInfo,
+        ~buffers=state.buffers,
+        msg,
+        state.pane,
+      );
 
     let state = {...state, pane: model};
 

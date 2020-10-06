@@ -81,7 +81,13 @@ let update:
 
 module Effects: {
   let loadFile:
-    (~filePath: string, ~toMsg: array(string) => 'msg, model) =>
+    (
+      ~font: Service_Font.font,
+      ~languageInfo: Exthost.LanguageInfo.t,
+      ~filePath: string,
+      ~toMsg: array(string) => 'msg,
+      model
+    ) =>
     Isolinear.Effect.t('msg);
 
   let openFileInEditor:

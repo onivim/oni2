@@ -324,23 +324,12 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
 };
 
 module Effects = {
-  let openCommon =
-      (
-        ~vimBuffer,
-        ~font,
-        ~languageInfo,
-        ~split,
-        ~position,
-        ~grabFocus,
-        ~dispatch,
-        model,
-      ) => {
+  let openCommon = (~vimBuffer, ~font, ~languageInfo, ~model, f) => {
     let bufferId = Vim.Buffer.getId(vimBuffer);
 
     switch (IntMap.find_opt(bufferId, model)) {
     // We already have this buffer loaded - so just ask for an editor!
-    | Some(buffer) =>
-      dispatch(EditorRequested({buffer, split, position, grabFocus}))
+    | Some(buffer) => f(~alreadyLoaded=true, buffer)
 
     | None =>
       // No buffer yet, so we need to create one _and_ ask for an editor.
@@ -365,13 +354,23 @@ module Effects = {
         |> Option.value(~default=buffer)
         |> Buffer.setFileType(Buffer.FileType.inferred(fileType));
 
-      dispatch(
-        NewBufferAndEditorRequested({buffer, split, position, grabFocus}),
-      );
+      f(~alreadyLoaded=false, buffer);
     };
   };
 
-  let loadFile = (~filePath, ~toMsg, model) => Isolinear.Effect.none;
+  let loadFile = (~font, ~languageInfo, ~filePath, ~toMsg, model) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Buffers.loadFile", dispatch => {
+      let handler = (~alreadyLoaded as _, buffer) => {
+        let lines = Oni_Core.Buffer.getLines(buffer);
+        dispatch(toMsg(lines));
+      };
+
+      let newBuffer = Vim.Buffer.openFile(filePath);
+
+      openCommon(~vimBuffer=newBuffer, ~languageInfo, ~font, ~model, handler);
+    });
+  };
 
   let openFileInEditor =
       (
@@ -387,16 +386,16 @@ module Effects = {
       ~name="Feature_Buffers.openFileInEditor", dispatch => {
       let newBuffer = Vim.Buffer.openFile(filePath);
 
-      openCommon(
-        ~vimBuffer=newBuffer,
-        ~dispatch,
-        ~grabFocus,
-        ~position,
-        ~split,
-        ~languageInfo,
-        ~font,
-        model,
-      );
+      let handler = (~alreadyLoaded, buffer) =>
+        if (alreadyLoaded) {
+          dispatch(EditorRequested({buffer, split, position, grabFocus}));
+        } else {
+          dispatch(
+            NewBufferAndEditorRequested({buffer, split, position, grabFocus}),
+          );
+        };
+
+      openCommon(~vimBuffer=newBuffer, ~languageInfo, ~font, ~model, handler);
     });
   };
 
@@ -406,16 +405,26 @@ module Effects = {
       switch (Vim.Buffer.getById(bufferId)) {
       | None => Log.warnf(m => m("Unable to open buffer: %d", bufferId))
       | Some(vimBuffer) =>
-        openCommon(
-          ~vimBuffer,
-          ~dispatch,
-          ~grabFocus=false,
-          ~position=None,
-          ~split=`Current,
-          ~languageInfo,
-          ~font,
-          model,
-        )
+        let handler = (~alreadyLoaded, buffer) => {
+          let split = `Current;
+          let position = None;
+          let grabFocus = true;
+
+          if (alreadyLoaded) {
+            dispatch(EditorRequested({buffer, split, position, grabFocus}));
+          } else {
+            dispatch(
+              NewBufferAndEditorRequested({
+                buffer,
+                split,
+                position,
+                grabFocus,
+              }),
+            );
+          };
+        };
+
+        openCommon(~vimBuffer, ~languageInfo, ~font, ~model, handler);
       }
     });
   };

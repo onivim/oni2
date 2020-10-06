@@ -33,9 +33,9 @@ type msg =
   | DiagnosticsList(Component_VimTree.msg)
   | LocationsList(Component_VimTree.msg)
   | LocationFileLoaded({
-    filePath: string,
-    lines: array(string)
-  });
+      filePath: string,
+      lines: array(string),
+    });
 
 module Msg = {
   let keyPressed = key => KeyPressed(key);
@@ -44,17 +44,16 @@ module Msg = {
 };
 
 module Effects = {
-    let expandLocationPath = (~buffers, ~filePath) => {
-        let toMsg = (lines) => LocationFileLoaded({
-            filePath,
-            lines
-        });
-        Feature_Buffers.Effects.loadFile(
-            ~filePath,
-            ~toMsg,
-            buffers
-        );
-    };
+  let expandLocationPath = (~font, ~languageInfo, ~buffers, ~filePath) => {
+    let toMsg = lines => LocationFileLoaded({filePath, lines});
+    Feature_Buffers.Effects.loadFile(
+      ~font,
+      ~languageInfo,
+      ~filePath,
+      ~toMsg,
+      buffers,
+    );
+  };
 };
 
 type outmsg =
@@ -77,14 +76,15 @@ type model = {
   vimWindowNavigation: Component_VimWindows.model,
   diagnosticsView:
     Component_VimTree.model(string, Oni_Components.LocationListItem.t),
-  locationNodes: list(
-    Tree.t(LocationsPaneView.location, Oni_Components.LocationListItem.t)
-  ),
-  locationsView: 
+  locationNodes:
+    list(
+      Tree.t(LocationsPaneView.location, Oni_Components.LocationListItem.t),
+    ),
+  locationsView:
     Component_VimTree.model(
-        LocationsPaneView.location,
-        Oni_Components.LocationListItem.t,
-    )
+      LocationsPaneView.location,
+      Oni_Components.LocationListItem.t,
+    ),
 };
 
 let locationsToReferences = (locations: list(Exthost.Location.t)) => {
@@ -287,7 +287,7 @@ module Focus = {
       };
     {...model, selected: pane};
   };
-  
+
   let cycleBackward = model => {
     let pane =
       switch (model.selected) {
@@ -299,7 +299,7 @@ module Focus = {
   };
 };
 
-let update = (~buffers, msg, model) =>
+let update = (~buffers, ~font, ~languageInfo, msg, model) =>
   switch (msg) {
   | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
 
@@ -338,10 +338,13 @@ let update = (~buffers, msg, model) =>
         },
         Nothing,
       )
-    | Locations => ({
-        ...model,
-        locationsView: Component_VimTree.keyPress(key, model.locationsView),
-    }, Nothing)
+    | Locations => (
+        {
+          ...model,
+          locationsView: Component_VimTree.keyPress(key, model.locationsView),
+        },
+        Nothing,
+      )
     }
 
   | VimWindowNav(navMsg) =>
@@ -359,7 +362,7 @@ let update = (~buffers, msg, model) =>
     | NextTab => (model' |> Focus.cycleForward, Nothing)
     | PreviousTab => (model' |> Focus.cycleBackward, Nothing)
     };
-      
+
   | LocationsList(listMsg) =>
     let (locationsView, outmsg) =
       Component_VimTree.update(listMsg, model.locationsView);
@@ -371,7 +374,14 @@ let update = (~buffers, msg, model) =>
         OpenFile({filePath: item.file, position: item.location})
       | Component_VimTree.Collapsed(_) => Nothing
       | Component_VimTree.Expanded({path, _}) =>
-        Effect(Effects.expandLocationPath(~buffers, ~filePath=path))
+        Effect(
+          Effects.expandLocationPath(
+            ~font,
+            ~languageInfo,
+            ~buffers,
+            ~filePath=path,
+          ),
+        )
       };
 
     ({...model, locationsView}, eff);
@@ -628,7 +638,7 @@ module View = {
       dispatch(TabClicked(Notifications));
     };
     let locationsTabClicked = () => {
-        dispatch(TabClicked(Locations));
+      dispatch(TabClicked(Locations));
     };
 
     let desiredHeight = height(pane);
@@ -678,13 +688,13 @@ module View = {
             onClick=notificationsTabClicked
             isActive={isSelected(Notifications, pane)}
           />
-            <PaneTab
-              uiFont
-              theme
-              title="Locations"
-              onClick=locationsTabClicked
-              isActive={isSelected(Locations, pane)}
-            />
+          <PaneTab
+            uiFont
+            theme
+            title="Locations"
+            onClick=locationsTabClicked
+            isActive={isSelected(Locations, pane)}
+          />
         </View>
         <closeButton dispatch theme />
       </View>
@@ -748,7 +758,7 @@ module Contributions = {
           ? Component_VimTree.Contributions.commands : []
       )
       |> List.map(Oni_Core.Command.map(msg => DiagnosticsList(msg)));
-        
+
     let locationsCommands =
       (
         isFocused && model.selected == Locations

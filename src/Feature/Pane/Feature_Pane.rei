@@ -33,7 +33,15 @@ module Msg: {
 
 type model;
 
-let update: (~buffers: Feature_Buffers.model, msg, model) => (model, outmsg);
+let update:
+  (
+    ~buffers: Feature_Buffers.model,
+    ~font: Service_Font.font,
+    ~languageInfo: Exthost.LanguageInfo.t,
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 module Contributions: {
   let commands: (~isFocused: bool, model) => list(Command.t(msg));
