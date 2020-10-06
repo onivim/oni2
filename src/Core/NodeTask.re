@@ -19,10 +19,20 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
     let%bind stdoutPipe = Luv.Pipe.init();
     let%bind stderrPipe = Luv.Pipe.init();
 
+    let outputBuffers = ref([]);
+
     let on_exit = (_, ~exit_status, ~term_signal as _) =>
       if (exit_status == 0L) {
+            let allOutput =
+              outputBuffers^
+              |> List.rev_map(Luv.Buffer.to_string)
+              |> String.concat("");
+            Log.debugf(m => m("Got output: %s", allOutput));
+            prerr_endline ("Complete wakeup!");
+            Lwt.wakeup(resolver, allOutput);
         Log.info("Task completed successfully: " ++ name);
       } else {
+        prerr_endline ("on_exit wakeup!");
         Lwt.wakeup_exn(resolver, TaskFailed);
       };
 
@@ -45,8 +55,6 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
         [setup.nodePath, scriptPath, ...args],
       );
 
-    let buffers = ref([]);
-
     // If process was created successfully, we'll read from stdout
     let () =
       Luv.Stream.read_start(
@@ -55,16 +63,9 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
         | Error(`EOF) => {
             Log.info("Got EOF on stdout");
             Luv.Handle.close(stdoutPipe, ignore);
-            let allOutput =
-              buffers^
-              |> List.rev
-              |> List.map(Luv.Buffer.to_string)
-              |> String.concat("");
-            Log.debugf(m => m("Got output: %s", allOutput));
-            Lwt.wakeup(resolver, allOutput);
           }
         | Error(msg) => Log.error(Luv.Error.strerror(msg))
-        | Ok(buffer) => buffers := [buffer, ...buffers^],
+        | Ok(buffer) => outputBuffers := [buffer, ...outputBuffers^],
       );
 
     let () =
@@ -85,6 +86,7 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
   | Ok(_) => ()
   | Error(err) =>
     Log.error(Luv.Error.strerror(err));
+    prerr_endline ("Start wakeup error");
     Lwt.wakeup_exn(resolver, TaskFailed);
   };
   promise;
