@@ -27,6 +27,8 @@ let current = (state: State.t) =>
     Focus.LanguageSupport;
   } else if (Feature_Registers.isActive(state.registers)) {
     Focus.InsertRegister;
+  } else if (Feature_Registration.isActive(state.registration)) {
+    Focus.LicenseKey;
   } else if (state.modal != None) {
     Focus.Modal;
   } else {

@@ -1,16 +1,26 @@
 open Oni_Core;
 
+type viewState =
+  | Hidden
+  | EnteringKey
+  | Waiting
+  | KeySuccess
+  | KeyFailure
+  | RequestFailure;
+
 type model = {
   licenseKey: option(string),
-  shown: bool,
+  viewState,
   inputModel: Component_InputText.model,
 };
 
 let initial = {
   licenseKey: None,
-  shown: false,
+  viewState: Hidden,
   inputModel: Component_InputText.empty,
 };
+
+let isActive = m => m.viewState != Hidden;
 
 [@deriving show]
 type command =
@@ -19,7 +29,10 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
-  | InputText(Component_InputText.msg);
+  | Response(Service_Registration.response)
+  | InputText(Component_InputText.msg)
+  | KeyPressed(string)
+  | Pasted(string);
 
 type outmsg =
   | Nothing
@@ -43,10 +56,60 @@ module Contributions = {
 
 let update = (model, msg) =>
   switch (msg) {
-  | Command(EnterLicenseKey) => ({...model, shown: true}, Nothing)
+  | Command(EnterLicenseKey) => (
+      {
+        ...model,
+        viewState: EnteringKey,
+        inputModel: Component_InputText.empty,
+      },
+      Nothing,
+    )
+  | Response(LicenseValid(key, true)) => (
+      {...model, licenseKey: Some(key), viewState: KeySuccess},
+      Nothing,
+    )
+  | Response(LicenseValid(_, false)) => (
+      {...model, viewState: KeyFailure},
+      Nothing,
+    )
+  | Response(RequestFailed) => (
+      {...model, viewState: RequestFailure},
+      Nothing,
+    )
   | InputText(msg) =>
     let (inputModel', _) = Component_InputText.update(msg, model.inputModel);
     ({...model, inputModel: inputModel'}, Nothing);
+  | KeyPressed(key) =>
+    let model' =
+      switch (key) {
+      | "<CR>" when model.viewState == EnteringKey => {
+          ...model,
+          viewState: Waiting,
+        }
+      | "<ESC>" => {...model, viewState: Hidden}
+      | _ when model.viewState == EnteringKey =>
+        let inputModel =
+          Component_InputText.handleInput(~key, model.inputModel);
+        {...model, inputModel};
+      | _ => model
+      };
+
+    let outmsg =
+      switch (key) {
+      | "<CR>" when model.viewState == EnteringKey =>
+        let licenseKey = Component_InputText.value(model.inputModel);
+        let wrapEvent = evt => Response(evt);
+        Effect(
+          Service_Registration.Effect.checkLicenseKeyValidity(licenseKey)
+          |> Isolinear.Effect.map(wrapEvent),
+        );
+      | _ => Nothing
+      };
+
+    (model', outmsg);
+  | Pasted(text) =>
+    let inputModel = Component_InputText.paste(~text, model.inputModel);
+    ({...model, inputModel}, Nothing);
   };
 
 module Styles = {
@@ -76,36 +139,89 @@ module Styles = {
 
 module View = {
   open Revery.UI;
+  open Revery.UI.Components;
 
   module Colors = Feature_Theme.Colors;
+  module FontIcon = Oni_Components.FontIcon;
+  module FontAwesome = Oni_Components.FontAwesome;
 
-  let%component make =
-                (
-                  ~theme: ColorTheme.Colors.t,
-                  ~registration as model: model,
-                  ~font: UiFont.t,
-                  ~dispatch: msg => unit,
-                  (),
-                ) => {
-    let%hook () = Hooks.effect(OnMount, () => None);
+  module Modal = {
+    let%component make =
+                  (
+                    ~theme: ColorTheme.Colors.t,
+                    ~registration as model: model,
+                    ~font: UiFont.t,
+                    ~dispatch: msg => unit,
+                    (),
+                  ) => {
+      let%hook () = Hooks.effect(OnMount, () => None);
 
-    switch (model.shown) {
-    | false => React.empty
-    | true =>
-      <View style=Styles.boxShadow>
-        <View style={Styles.container(~theme)}>
-          <View style=Style.[padding(5)]>
-            <Component_InputText.View
-              model={model.inputModel}
-              theme
-              isFocused=true
-              fontFamily={font.family}
-              fontSize=14.
-              dispatch={msg => dispatch(InputText(msg))}
-            />
+      switch (model.viewState) {
+      | Hidden => React.empty
+      | EnteringKey =>
+        <View style=Styles.boxShadow>
+          <View style={Styles.container(~theme)}>
+            <View style=Style.[padding(5)]>
+              <Component_InputText.View
+                model={model.inputModel}
+                theme
+                isFocused=true
+                fontFamily={font.family}
+                fontSize=14.
+                dispatch={msg => dispatch(InputText(msg))}
+              />
+            </View>
           </View>
         </View>
-      </View>
+      | Waiting =>
+        <View style=Styles.boxShadow>
+          <View style={Styles.container(~theme)}>
+            <View style=Style.[padding(5)]>
+              <Text
+                fontFamily={font.family}
+                fontSize=14.
+                text="Validating license key..."
+              />
+            </View>
+          </View>
+        </View>
+      | KeySuccess =>
+        <View style=Styles.boxShadow>
+          <View style={Styles.container(~theme)}>
+            <View style=Style.[padding(5)]>
+              <Text
+                fontFamily={font.family}
+                fontSize=14.
+                text="License key valid."
+              />
+            </View>
+          </View>
+        </View>
+      | KeyFailure =>
+        <View style=Styles.boxShadow>
+          <View style={Styles.container(~theme)}>
+            <View style=Style.[padding(5)]>
+              <Text
+                fontFamily={font.family}
+                fontSize=14.
+                text="License key invalid."
+              />
+            </View>
+          </View>
+        </View>
+      | RequestFailure =>
+        <View style=Styles.boxShadow>
+          <View style={Styles.container(~theme)}>
+            <View style=Style.[padding(5)]>
+              <Text
+                fontFamily={font.family}
+                fontSize=14.
+                text="Validation failed. Please check your internet connection."
+              />
+            </View>
+          </View>
+        </View>
+      };
     };
   };
 };

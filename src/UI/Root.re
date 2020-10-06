@@ -212,7 +212,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
         font
         dispatch={msg => dispatch(Actions.Registers(msg))}
       />
-      <Feature_Registration.View
+      <Feature_Registration.View.Modal
         theme
         registration={state.registration}
         font
