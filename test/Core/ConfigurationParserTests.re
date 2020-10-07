@@ -106,21 +106,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
-  test("list of numbers", ({expect, _}) => {
-    let configuration = {|
-      { "editor.rulers": [120, 80] }
-    |};
-
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(v) =>
-      expect.list(Configuration.getValue(c => c.editorRulers, v)).toEqual([
-        80,
-        120,
-      ])
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
   test("list of strings", ({expect, _}) => {
     let configuration = {|
      { "experimental.viml": ["first thing", "second thing", "third thing"] }
@@ -167,49 +152,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       )
     | Error(_) => expect.bool(false).toBe(true)
     };
-  });
-
-  test("resiliency tests", ({expect, _}) => {
-    let trailingCommaInObject = {|
-      { "editor.rulers": [120, 80], }
-    |};
-
-    let trailingCommaInArray = {|
-      { "editor.rulers": [120, 80,] }
-    |};
-
-    let commentBeforeEverything = {|
-      // This is my configuration
-      { "editor.rulers": [120, 80] }
-    |};
-
-    let commentInObject = {|
-      {
-        // This is a setting
-        "editor.rulers": [120, 80]
-      }
-    |};
-
-    let cases = [
-      trailingCommaInObject,
-      trailingCommaInArray,
-      commentBeforeEverything,
-      commentInObject,
-    ];
-
-    List.iter(
-      case => {
-        switch (ConfigurationParser.ofString(case)) {
-        | Ok(v) =>
-          expect.list(Configuration.getValue(c => c.editorRulers, v)).toEqual([
-            80,
-            120,
-          ])
-        | Error(_) => expect.bool(false).toBe(true)
-        }
-      },
-      cases,
-    );
   });
 
   test("autoReveal bool(true) setting", ({expect, _}) => {
