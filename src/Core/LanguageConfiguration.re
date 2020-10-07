@@ -193,7 +193,7 @@ let default: t = {
   decreaseIndentPattern: None,
   wordPattern:
     OnigRegExp.create(
-      "(-?\\\\d*\\\\.\\\\d\\\\w*)|([^\\\\`\\\\~\\\\!\\\\@\\\\#\\\\%\\\\^\\\\&\\\\*\\\\(\\\\)\\\\-\\\\=\\\\+\\\\[\\\\{\\\\]\\\\}\\\\\\\\\\\\|\\\\;\\\\:\\\\'\\\\\"\\\\,\\\\.\\\\<\\\\>\\\\/\\\\?\\\\s]+)",
+      "(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\@\\#\\%\\^\\&\\*\\(\\)\\-\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\?\\s]+)",
     )
     |> Result.to_option,
 };
@@ -428,6 +428,9 @@ let%test_module "LanguageConfiguration" =
      };
      let%test "default word pattern: isWordCharacter true for 'a'" = {
        isWordCharacter(Uchar.of_char('a'), defaultConfig) == true;
+     };
+     let%test "default word pattern: isWordCharacter false for ' '" = {
+       isWordCharacter(Uchar.of_char(' '), defaultConfig) == false;
      };
      let%test "default word pattern: isWordCharacter false for '('" = {
        isWordCharacter(Uchar.of_char('('), defaultConfig) == false;
