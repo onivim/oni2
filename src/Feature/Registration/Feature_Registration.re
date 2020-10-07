@@ -1,5 +1,9 @@
 open Oni_Core;
 
+module Constants = {
+  let macWidth = 108;
+};
+
 type viewState =
   | Hidden
   | EnteringKey
@@ -14,13 +18,17 @@ type model = {
   inputModel: Component_InputText.model,
 };
 
+let initialInputModel =
+  Component_InputText.create(~placeholder="Enter your license key");
+
 let initial = {
   licenseKey: None,
   viewState: Hidden,
-  inputModel: Component_InputText.empty,
+  inputModel: initialInputModel,
 };
 
 let isActive = m => m.viewState != Hidden;
+let isRegistered = m => !(m.licenseKey == None);
 
 [@deriving show]
 type command =
@@ -57,11 +65,7 @@ module Contributions = {
 let update = (model, msg) =>
   switch (msg) {
   | Command(EnterLicenseKey) => (
-      {
-        ...model,
-        viewState: EnteringKey,
-        inputModel: Component_InputText.empty,
-      },
+      {...model, viewState: EnteringKey, inputModel: initialInputModel},
       Nothing,
     )
   | Response(LicenseValid(key, true)) => (
@@ -136,6 +140,26 @@ module Styles = {
     Style.color(Colors.Menu.foreground.from(theme)),
   ];
 
+  let message = [
+    flexDirection(`Row),
+    alignItems(`Center),
+    justifyContent(`Center),
+    marginVertical(8),
+  ];
+
+  let registrationText = (~theme, ~isFocused) => [
+    Style.color(
+      isFocused
+        ? Colors.TitleBar.activeForeground.from(theme)
+        : Colors.TitleBar.inactiveForeground.from(theme),
+    ),
+    marginTop(2),
+    marginLeft(4),
+  ];
+
+  let messageIcon = [width(14), height(14), marginRight(8)];
+  let messageText = [marginTop(2)];
+
   module Windows = {
     let container = (~theme, ~isHovered) => [
       flexDirection(`Row),
@@ -150,20 +174,23 @@ module Styles = {
       marginLeft(8),
       paddingHorizontal(4),
     ];
+  };
 
-    let registrationText = (~theme, ~isFocused) => [
-      Style.color(
-        isFocused
-          ? Colors.TitleBar.activeForeground.from(theme)
-          : Colors.TitleBar.inactiveForeground.from(theme),
-      ),
-      marginTop(2),
-      marginLeft(2),
+  module Mac = {
+    let container = (~theme) => [
+      flexDirection(`Row),
+      height(25),
+      width(Constants.macWidth),
+      justifyContent(`Center),
+      alignItems(`Center),
+      flexGrow(0),
+      paddingHorizontal(8),
     ];
   };
 };
 
 module View = {
+  open Revery;
   open Revery.UI;
   open Revery.UI.Components;
 
@@ -172,6 +199,16 @@ module View = {
   module FontAwesome = Oni_Components.FontAwesome;
 
   module Modal = {
+    let modal = (~children, ~theme, ()) =>
+      <View style=Styles.boxShadow>
+        <View style={Styles.container(~theme)}>
+          <View style=Style.[padding(5)]> children </View>
+        </View>
+      </View>;
+
+    let loadingAnimation =
+      Animation.(animate(Time.seconds(1)) |> tween(0., 6.28) |> repeat);
+
     let%component make =
                   (
                     ~theme: ColorTheme.Colors.t,
@@ -182,71 +219,104 @@ module View = {
                   ) => {
       let%hook () = Hooks.effect(OnMount, () => None);
 
+      let%hook (loadingRotation, _animationState, _resetRotation) =
+        Hooks.animation(loadingAnimation, ~active=model.viewState == Waiting);
+
       switch (model.viewState) {
       | Hidden => React.empty
       | EnteringKey =>
-        <View style=Styles.boxShadow>
-          <View style={Styles.container(~theme)}>
-            <View style=Style.[padding(5)]>
-              <Component_InputText.View
-                model={model.inputModel}
-                theme
-                isFocused=true
-                fontFamily={font.family}
-                fontSize=14.
-                dispatch={msg => dispatch(InputText(msg))}
-              />
-            </View>
-          </View>
-        </View>
+        <modal theme>
+          <Component_InputText.View
+            model={model.inputModel}
+            theme
+            isFocused=true
+            fontFamily={font.family}
+            fontSize=14.
+            dispatch={msg => dispatch(InputText(msg))}
+          />
+        </modal>
       | Waiting =>
-        <View style=Styles.boxShadow>
-          <View style={Styles.container(~theme)}>
-            <View style=Style.[padding(5)]>
-              <Text
-                fontFamily={font.family}
+        <modal theme>
+          <View style=Styles.message>
+            <View
+              style=Style.[
+                width(14),
+                height(14),
+                transform([
+                  Transform.Rotate(Math.Angle.from_radians(loadingRotation)),
+                ]),
+                alignItems(`Center),
+                justifyContent(`Center),
+                marginRight(8),
+              ]>
+              <FontIcon
+                icon=FontAwesome.spinner
+                color={Colors.foreground.from(theme)}
                 fontSize=14.
-                text="Validating license key..."
               />
             </View>
+            <Text
+              fontFamily={font.family}
+              fontSize=14.
+              style=Styles.messageText
+              text="Validating license key..."
+            />
           </View>
-        </View>
+        </modal>
       | KeySuccess =>
-        <View style=Styles.boxShadow>
-          <View style={Styles.container(~theme)}>
-            <View style=Style.[padding(5)]>
-              <Text
-                fontFamily={font.family}
+        <modal theme>
+          <View style=Styles.message>
+            <View style=Styles.messageIcon>
+              <FontIcon
+                icon=FontAwesome.checkCircle
                 fontSize=14.
-                text="License key valid."
+                color={Colors.foreground.from(theme)}
               />
             </View>
+            <Text
+              fontFamily={font.family}
+              fontSize=14.
+              style=Styles.messageText
+              text="Thank you for purchasing Onivim!"
+            />
           </View>
-        </View>
+        </modal>
       | KeyFailure =>
-        <View style=Styles.boxShadow>
-          <View style={Styles.container(~theme)}>
-            <View style=Style.[padding(5)]>
-              <Text
-                fontFamily={font.family}
+        <modal theme>
+          <View style=Styles.message>
+            <View style=Styles.messageIcon>
+              <FontIcon
+                icon=FontAwesome.timesCircle
                 fontSize=14.
-                text="License key invalid."
+                color={Colors.foreground.from(theme)}
               />
             </View>
+            <Text
+              fontFamily={font.family}
+              fontSize=14.
+              style=Styles.messageText
+              text="License key invalid."
+            />
           </View>
-        </View>
+        </modal>
       | RequestFailure =>
-        <View style=Styles.boxShadow>
-          <View style={Styles.container(~theme)}>
-            <View style=Style.[padding(5)]>
-              <Text
-                fontFamily={font.family}
+        <modal theme>
+          <View style=Styles.message>
+            <View style=Styles.messageIcon>
+              <FontIcon
+                icon=FontAwesome.timesCircle
                 fontSize=14.
-                text="Validation failed. Please check your internet connection."
+                color={Colors.foreground.from(theme)}
               />
             </View>
+            <Text
+              fontFamily={font.family}
+              fontSize=14.
+              style=Styles.messageText
+              text="Validation failed. Please check your internet connection."
+            />
           </View>
-        </View>
+        </modal>
       };
     };
   };
@@ -285,7 +355,45 @@ module View = {
             />
             <Text
               text="Unregistered"
-              style={Styles.Windows.registrationText(~theme, ~isFocused)}
+              style={Styles.registrationText(~theme, ~isFocused)}
+              fontSize=12.
+              fontFamily={font.family}
+            />
+          </View>
+        };
+      };
+    };
+
+    module Mac = {
+      let%component make =
+                    (
+                      ~theme: ColorTheme.Colors.t,
+                      ~registration as model: model,
+                      ~font: UiFont.t,
+                      ~dispatch: msg => unit,
+                      ~isFocused: bool,
+                      (),
+                    ) => {
+        let%hook (isHovered, setHovered) = Hooks.state(false);
+
+        let onMouseUp = _ => dispatch(Command(EnterLicenseKey));
+
+        switch (model.licenseKey) {
+        | Some(_) => React.empty
+        | None =>
+          <View
+            onMouseUp
+            onMouseEnter={_ => setHovered(_ => true)}
+            onMouseLeave={_ => setHovered(_ => false)}
+            style={Styles.Mac.container(~theme)}>
+            <FontIcon
+              icon=FontAwesome.lockOpen
+              color={Colors.TitleBar.inactiveForeground.from(theme)}
+              fontSize=10.
+            />
+            <Text
+              text="Unregistered"
+              style={Styles.registrationText(~theme, ~isFocused=false)}
               fontSize=12.
               fontFamily={font.family}
             />
