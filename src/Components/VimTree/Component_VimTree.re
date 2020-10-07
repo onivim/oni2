@@ -269,7 +269,6 @@ let update = (msg, model) => {
     | Component_VimList.Selected({index}) =>
       switch (Component_VimList.get(index, treeAsList)) {
       | Some(ViewLeaf({data, _})) => (model, Selected(data))
-      // TODO: Expand / collapse
       | Some(ViewNode({data, expanded, _})) =>
         toggleExpanded(~expanded, ~data, model)
 
