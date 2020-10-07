@@ -207,6 +207,7 @@ module Internal = {
 
   let handleInput = (~text, ~selection: Selection.t, key) => {
     switch (key, Selection.isCollapsed(selection)) {
+    // Arrow keys
     | ("<LEFT>", true) => (
         text,
         Selection.offsetLeft(selection) - 1 |> Selection.collapsed(~text),
@@ -223,10 +224,20 @@ module Internal = {
         text,
         Selection.offsetRight(selection) |> Selection.collapsed(~text),
       )
+
+    // Deletions
     | ("<BS>", true) => removeCharBefore(text, selection)
     | ("<BS>", false) => removeSelection(text, selection)
     | ("<C-BS>", true) => removeWord(text, selection)
     | ("<C-BS>", false) => removeSelection(text, selection)
+    | ("<A-BS>", true) => removeWord(text, selection)
+    | ("<A-BS>", false) => removeSelection(text, selection)
+    | ("<D-BS>", false) => removeSelection(text, selection)
+    | ("<D-BS>", true) =>
+      removeSelection(
+        text,
+        Selection.create(~text, ~anchor=0, ~focus=selection.focus),
+      )
     | ("<C-h>", true) => removeCharBefore(text, selection)
     | ("<C-h>", false) => removeSelection(text, selection)
     | ("<C-w>", true) => removeWord(text, selection)
@@ -238,11 +249,20 @@ module Internal = {
     | ("<C-c>", _) => removeLine(text)
     | ("<DEL>", true) => removeCharAfter(text, selection)
     | ("<DEL>", false) => removeSelection(text, selection)
+
+    // Move focus to start/end of line
     | ("<HOME>", _) => (text, Selection.collapsed(~text, 0))
     | ("<END>", _) => (
         text,
         Selection.collapsed(~text, Zed_utf8.length(text)),
       )
+    | ("<D-LEFT>", _) => (text, Selection.collapsed(~text, 0))
+    | ("<D-RIGHT>", _) => (
+        text,
+        Selection.collapsed(~text, Zed_utf8.length(text)),
+      )
+
+    // Extend selection one character to left/right
     | ("<S-LEFT>", _) => (
         text,
         selection.focus - 1 |> Selection.extend(~text, ~selection),
@@ -251,19 +271,42 @@ module Internal = {
         text,
         selection.focus + 1 |> Selection.extend(~text, ~selection),
       )
+
+    // Move focus one word to left/right
     | ("<C-LEFT>", _) => collapsePrevWord(text, selection)
     | ("<C-RIGHT>", _) => collapseNextWord(text, selection)
+    | ("<A-LEFT>", _) => collapsePrevWord(text, selection)
+    | ("<A-RIGHT>", _) => collapseNextWord(text, selection)
+
+    // Extend selection to start/end of line
     | ("<S-HOME>", _) => (text, Selection.extend(~text, ~selection, 0))
     | ("<S-END>", _) => (
         text,
         Selection.extend(~text, ~selection, Zed_utf8.length(text)),
       )
+    | ("<D-S-LEFT>", _) => (text, Selection.extend(~text, ~selection, 0))
+    | ("<D-S-RIGHT>", _) => (
+        text,
+        Selection.extend(~text, ~selection, Zed_utf8.length(text)),
+      )
+
+    // Extend selection one word to left/right
     | ("<S-C-LEFT>", _) => extendPrevWord(text, selection)
     | ("<S-C-RIGHT>", _) => extendNextWord(text, selection)
+    | ("<A-S-LEFT>", _) => extendPrevWord(text, selection)
+    | ("<A-S-RIGHT>", _) => extendNextWord(text, selection)
+
+    // Select all
     | ("<C-a>", _) => (
         text,
         Selection.create(~text, ~anchor=0, ~focus=Zed_utf8.length(text)),
       )
+    | ("<D-a>", _) => (
+        text,
+        Selection.create(~text, ~anchor=0, ~focus=Zed_utf8.length(text)),
+      )
+
+    // Insert character / replace selection with character
     | (key, true) when Zed_utf8.length(key) == 1 =>
       addCharacter(key, text, selection)
     | (key, false) when Zed_utf8.length(key) == 1 =>
@@ -605,35 +648,120 @@ let%test_module "Model" =
             == notCollapsed(~anchor=0, ~focus=0, ~text="s Cool", ());
           };
         });
-     let%test_module "When <C-BS> with no selection" =
+     let%test_module "When <C-BS> or <A-BS> with no selection" =
        (module
         {
-          let key = "<C-BS>";
+          let keys = ["<C-BS>", "<A-BS>"];
           let%test "Removes word on the left of cursor" = {
-            collapsed(16)
-            |> handleInput(~key)
-            == collapsed(~text="Some . Test. String. Isn't it? Maybe", 5);
+            keys
+            |> List.for_all(key => {
+                 collapsed(16)
+                 |> handleInput(~key)
+                 == collapsed(~text="Some . Test. String. Isn't it? Maybe", 5)
+               });
           };
           let%test "Doesn't remove word if cursor at the beginning" = {
-            collapsed(0) |> handleInput(~key) == collapsed(0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(0) |> handleInput(~key) == collapsed(0)
+               });
           };
           let%test "Don't do anything for blank string" = {
-            collapsed(~text="", -1)
-            |> handleInput(~key) == collapsed(~text="", 0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text="", -1)
+                 |> handleInput(~key) == collapsed(~text="", 0)
+               });
           };
           let%test "Removes word with cyrilic character in it" = {
-            collapsed(~text=uTestString, 5)
-            |> handleInput(~key) == collapsed(~text=" is Cool", 0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text=uTestString, 5)
+                 |> handleInput(~key) == collapsed(~text=" is Cool", 0)
+               });
           };
           let%test "Removes word made of emojis" = {
-            collapsed(~text=uTestString, 2)
-            |> handleInput(~key) == collapsed(~text="Вім is Cool", 0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text=uTestString, 2)
+                 |> handleInput(~key) == collapsed(~text="Вім is Cool", 0)
+               });
           };
         });
-     let%test_module "When <C-BS> with selection" =
+     let%test_module "When <C-BS> or <A-BS> with selection" =
        (module
         {
-          let key = "<C-BS>";
+          let keys = ["<C-BS>", "<A-BS>"];
+          let%test "Removes selection when cursor comes first" = {
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=4, ~focus=2, ())
+                 |> handleInput(~key)
+                 == notCollapsed(
+                      ~anchor=2,
+                      ~focus=2,
+                      ~text="So interesting. Test. String. Isn't it? Maybe",
+                      (),
+                    )
+               });
+          };
+          let%test "Removes selection when cursor comes last" = {
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=2, ~focus=4, ())
+                 |> handleInput(~key)
+                 == notCollapsed(
+                      ~anchor=2,
+                      ~focus=2,
+                      ~text="So interesting. Test. String. Isn't it? Maybe",
+                      (),
+                    )
+               });
+          };
+          let%test "Removes selection when more than one word selected" = {
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=5, ~focus=23, ())
+                 |> handleInput(~key)
+                 == notCollapsed(
+                      ~anchor=5,
+                      ~focus=5,
+                      ~text="Some  String. Isn't it? Maybe",
+                      (),
+                    )
+               });
+          };
+          let%test "Removes selection when unicode character" = {
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~text=uTestString, ~anchor=0, ~focus=7, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=0, ~focus=0, ~text="s Cool", ())
+               });
+          };
+        });
+     let%test_module "When <D-BS> with no selection" =
+       (module
+        {
+          let key = "<D-BS>";
+          let%test "Removes all text when focus on last char" = {
+            collapsed(testStringLength)
+            |> handleInput(~key) == collapsed(~text="", 0);
+          };
+          let%test "Removes all text to the left from focus" = {
+            collapsed(20)
+            |> handleInput(~key)
+            == collapsed(~text="st. String. Isn't it? Maybe", 0);
+          };
+          let%test "Removes text with cyrilic and emojis" = {
+            collapsed(~text=uTestString, 14)
+            |> handleInput(~key) == collapsed(~text="", 0);
+          };
+        });
+     let%test_module "When <D-BS> with selection" =
+       (module
+        {
+          let key = "<D-BS>";
           let%test "Removes selection when cursor comes first" = {
             notCollapsed(~anchor=4, ~focus=2, ())
             |> handleInput(~key)
@@ -729,71 +857,103 @@ let%test_module "Model" =
             == notCollapsed(~anchor=0, ~focus=0, ~text="s Cool", ());
           };
         });
-     let%test_module "When <HOME> with no selection" =
+     let%test_module "When <HOME> or <D-LEFT> with no selection" =
        (module
         {
-          let key = "<HOME>";
+          let keys = ["<HOME>", "<D-LEFT>"];
           let%test "Moves cursor to the beginning" = {
-            collapsed(4) |> handleInput(~key) == collapsed(0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(4) |> handleInput(~key) == collapsed(0)
+               });
           };
           let%test "Doesn't move cursor if it's at the beginning" = {
-            collapsed(0) |> handleInput(~key) == collapsed(0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(0) |> handleInput(~key) == collapsed(0)
+               });
           };
           let%test "Doesn't move cursor position for blank string" = {
-            collapsed(~text="", 0)
-            |> handleInput(~key) == collapsed(~text="", 0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text="", 0)
+                 |> handleInput(~key) == collapsed(~text="", 0)
+               });
           };
         });
-     let%test_module "When <HOME> with selection" =
+     let%test_module "When <HOME> or <D-LEFT> with selection" =
        (module
         {
-          let key = "<HOME>";
+          let keys = ["<HOME>", "<D-LEFT>"];
           let%test "Moves cursor to the beginning and discards selection" = {
-            notCollapsed(~anchor=12, ~focus=5, ())
-            |> handleInput(~key) == collapsed(0);
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=12, ~focus=5, ())
+                 |> handleInput(~key) == collapsed(0)
+               });
           };
           let%test "Doesn't move cursor if it's at the beginning and discard selection" = {
-            notCollapsed(~anchor=8, ~focus=0, ())
-            |> handleInput(~key) == collapsed(0);
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=8, ~focus=0, ())
+                 |> handleInput(~key) == collapsed(0)
+               });
           };
         });
-     let%test_module "When <END> with no selection" =
+     let%test_module "When <END> or <D-RIGHT> with no selection" =
        (module
         {
-          let key = "<END>";
+          let keys = ["<END>", "<D-RIGHT>"];
           let%test "Moves cursor to the end" = {
-            collapsed(4) |> handleInput(~key) == collapsed(testStringLength);
+            keys
+            |> List.for_all(key => {
+                 collapsed(4)
+                 |> handleInput(~key) == collapsed(testStringLength)
+               });
           };
           let%test "Doesn't move cursor if its at the end" = {
-            collapsed(testStringLength)
-            |> handleInput(~key) == collapsed(testStringLength);
+            keys
+            |> List.for_all(key => {
+                 collapsed(testStringLength)
+                 |> handleInput(~key) == collapsed(testStringLength)
+               });
           };
           let%test "Doesn't move cursor for blank string" = {
-            collapsed(~text="", testStringLength)
-            |> handleInput(~key) == collapsed(~text="", testStringLength);
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text="", testStringLength)
+                 |> handleInput(~key)
+                 == collapsed(~text="", testStringLength)
+               });
           };
         });
-     let%test_module "When <END> with selection" =
+     let%test_module "When <END> or <D-RIGHT> with selection" =
        (module
         {
-          let key = "<END>";
+          let keys = ["<END>", "<D-RIGHT>"];
           let%test "Moves cursor to the end" = {
-            notCollapsed(~anchor=11, ~focus=5, ())
-            |> handleInput(~key)
-            == notCollapsed(
-                 ~anchor=testStringLength,
-                 ~focus=testStringLength,
-                 (),
-               );
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=11, ~focus=5, ())
+                 |> handleInput(~key)
+                 == notCollapsed(
+                      ~anchor=testStringLength,
+                      ~focus=testStringLength,
+                      (),
+                    )
+               });
           };
           let%test "Doesn't move cursor if it's at the end and discard selection" = {
-            notCollapsed(~anchor=testStringLength, ~focus=4, ())
-            |> handleInput(~key)
-            == notCollapsed(
-                 ~anchor=testStringLength,
-                 ~focus=testStringLength,
-                 (),
-               );
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=testStringLength, ~focus=4, ())
+                 |> handleInput(~key)
+                 == notCollapsed(
+                      ~anchor=testStringLength,
+                      ~focus=testStringLength,
+                      (),
+                    )
+               });
           };
         });
      let%test_module "When <S-LEFT>" =
@@ -862,206 +1022,343 @@ let%test_module "Model" =
             |> handleInput(~key) == notCollapsed(~anchor=8, ~focus=4, ());
           };
         });
-     let%test_module "When <S-HOME>" =
+     let%test_module "When <S-HOME> or <D-S-LEFT>" =
        (module
         {
-          let key = "<S-HOME>";
+          let keys = ["<S-HOME>", "<D-S-LEFT>"];
           let%test "Moves cursor to the beginning and add selection" = {
-            collapsed(4)
-            |> handleInput(~key) == notCollapsed(~anchor=4, ~focus=0, ());
+            keys
+            |> List.for_all(key => {
+                 collapsed(4)
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=4, ~focus=0, ())
+               });
           };
           let%test "Moves cursor to the beginning and increase selection" = {
-            notCollapsed(~anchor=7, ~focus=4, ())
-            |> handleInput(~key) == notCollapsed(~anchor=7, ~focus=0, ());
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=7, ~focus=4, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=7, ~focus=0, ())
+               });
           };
           let%test "Doesn't move cursor position when at the beginning" = {
-            notCollapsed(~anchor=5, ~focus=0, ())
-            |> handleInput(~key) == notCollapsed(~anchor=5, ~focus=0, ());
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=5, ~focus=0, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=5, ~focus=0, ())
+               });
           };
           let%test "Doesn't move cursor position when at beginning and no selection" = {
-            collapsed(0) |> handleInput(~key) == collapsed(0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(0) |> handleInput(~key) == collapsed(0)
+               });
           };
           let%test "Doesn't move cursor position for blank string" = {
-            collapsed(~text="", 0)
-            |> handleInput(~key) == collapsed(~text="", 0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text="", 0)
+                 |> handleInput(~key) == collapsed(~text="", 0)
+               });
           };
           let%test "Moves cursor to the beginning and undo selection" = {
-            notCollapsed(~anchor=0, ~focus=6, ())
-            |> handleInput(~key) == collapsed(0);
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=0, ~focus=6, ())
+                 |> handleInput(~key) == collapsed(0)
+               });
           };
           let%test "Moves cursor to the beginning and decrease selection" = {
-            notCollapsed(~anchor=3, ~focus=8, ())
-            |> handleInput(~key) == notCollapsed(~anchor=3, ~focus=0, ());
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=3, ~focus=8, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=3, ~focus=0, ())
+               });
           };
         });
-     let%test_module "When <S-END>" =
+     let%test_module "When <S-END> or <D-S-RIGHT>" =
        (module
         {
-          let key = "<S-END>";
+          let keys = ["<S-END>", "<D-S-RIGHT>"];
           let%test "Moves cursor to the end and add selection" = {
-            collapsed(4)
-            |> handleInput(~key)
-            == notCollapsed(~anchor=4, ~focus=testStringLength, ());
+            keys
+            |> List.for_all(key => {
+                 collapsed(4)
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=4, ~focus=testStringLength, ())
+               });
           };
           let%test "Moves cursor to the end and increase selection" = {
-            notCollapsed(~anchor=4, ~focus=8, ())
-            |> handleInput(~key)
-            == notCollapsed(~anchor=4, ~focus=testStringLength, ());
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=4, ~focus=8, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=4, ~focus=testStringLength, ())
+               });
           };
           let%test "Doesn't move cursor position when it is at the end" = {
-            notCollapsed(~anchor=5, ~focus=testStringLength, ())
-            |> handleInput(~key)
-            == notCollapsed(~anchor=5, ~focus=testStringLength, ());
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=5, ~focus=testStringLength, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=5, ~focus=testStringLength, ())
+               });
           };
           let%test "Doesn't move cursor position when it is at the end and no selection" = {
-            collapsed(testStringLength)
-            |> handleInput(~key) == collapsed(testStringLength);
+            keys
+            |> List.for_all(key => {
+                 collapsed(testStringLength)
+                 |> handleInput(~key) == collapsed(testStringLength)
+               });
           };
           let%test "Doesn't move cursor position for blank string" = {
-            collapsed(~text="", 0)
-            |> handleInput(~key) == collapsed(~text="", 0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text="", 0)
+                 |> handleInput(~key) == collapsed(~text="", 0)
+               });
           };
           let%test "Moves cursor to the end and undo selection" = {
-            notCollapsed(~anchor=testStringLength, ~focus=6, ())
-            |> handleInput(~key) == collapsed(testStringLength);
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=testStringLength, ~focus=6, ())
+                 |> handleInput(~key) == collapsed(testStringLength)
+               });
           };
           let%test "Moves cursor to the end and decrease selection" = {
-            notCollapsed(~anchor=7, ~focus=3, ())
-            |> handleInput(~key)
-            == notCollapsed(~anchor=7, ~focus=testStringLength, ());
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=7, ~focus=3, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=7, ~focus=testStringLength, ())
+               });
           };
         });
-     let%test_module "When <S-C-LEFT>" =
+     let%test_module "When <S-C-LEFT> or <A-S-LEFT>" =
        (module
         {
-          let key = "<S-C-LEFT>";
+          let keys = ["<S-C-LEFT>", "<A-S-LEFT>"];
           let%test "Moves cursor to previous word boundary" = {
-            collapsed(10)
-            |> handleInput(~key) == notCollapsed(~anchor=10, ~focus=5, ());
+            keys
+            |> List.for_all(key => {
+                 collapsed(10)
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=10, ~focus=5, ())
+               });
           };
           let%test "Moves cursor to beginning" = {
-            collapsed(3)
-            |> handleInput(~key) == notCollapsed(~anchor=3, ~focus=0, ());
+            keys
+            |> List.for_all(key => {
+                 collapsed(3)
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=3, ~focus=0, ())
+               });
           };
           let%test "Doesn't move cursor position when at beginning" = {
-            notCollapsed(~anchor=10, ~focus=0, ())
-            |> handleInput(~key) == notCollapsed(~anchor=10, ~focus=0, ());
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=10, ~focus=0, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=10, ~focus=0, ())
+               });
           };
           let%test "Doesn't move cursor position when at beginning and no selection" = {
-            collapsed(0) |> handleInput(~key) == collapsed(0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(0) |> handleInput(~key) == collapsed(0)
+               });
           };
           let%test "Doesn't move cursor position for blank string" = {
-            collapsed(~text="", 0)
-            |> handleInput(~key) == collapsed(~text="", 0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text="", 0)
+                 |> handleInput(~key) == collapsed(~text="", 0)
+               });
           };
           let%test "Moves cursor to the previous word boundary and undo selection" = {
-            notCollapsed(~anchor=5, ~focus=16, ())
-            |> handleInput(~key) == notCollapsed(~anchor=5, ~focus=5, ());
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=5, ~focus=16, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=5, ~focus=5, ())
+               });
           };
 
           let%test "Moves cursor to the previous word boundary and decrease selesction" = {
-            notCollapsed(~anchor=11, ~focus=16, ())
-            |> handleInput(~key) == notCollapsed(~anchor=11, ~focus=5, ());
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=11, ~focus=16, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=11, ~focus=5, ())
+               });
           };
         });
-     let%test_module "When <C-LEFT>" =
+     let%test_module "When <C-LEFT> or <A-LEFT>" =
        (module
         {
-          let key = "<C-LEFT>";
+          let keys = ["<C-LEFT>", "<A-LEFT>"];
           let%test "Moves cursor to previous word boundary" = {
-            collapsed(10) |> handleInput(~key) == collapsed(5);
+            keys
+            |> List.for_all(key => {
+                 collapsed(10) |> handleInput(~key) == collapsed(5)
+               });
           };
           let%test "Moves cursor to beginning" = {
-            collapsed(3) |> handleInput(~key) == collapsed(0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(3) |> handleInput(~key) == collapsed(0)
+               });
           };
           let%test "Doesn't move cursor position when at beginning" = {
-            notCollapsed(~anchor=10, ~focus=0, ())
-            |> handleInput(~key) == collapsed(0);
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=10, ~focus=0, ())
+                 |> handleInput(~key) == collapsed(0)
+               });
           };
           let%test "Doesn't move cursor position when at beginning and no selection" = {
-            collapsed(0) |> handleInput(~key) == collapsed(0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(0) |> handleInput(~key) == collapsed(0)
+               });
           };
           let%test "Doesn't move cursor position for blank string" = {
-            collapsed(~text="", 0)
-            |> handleInput(~key) == collapsed(~text="", 0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text="", 0)
+                 |> handleInput(~key) == collapsed(~text="", 0)
+               });
           };
           let%test "Moves cursor to the previous word boundary and undo selection" = {
-            notCollapsed(~anchor=5, ~focus=16, ())
-            |> handleInput(~key) == collapsed(5);
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=5, ~focus=16, ())
+                 |> handleInput(~key) == collapsed(5)
+               });
           };
 
           let%test "Moves cursor to the previous word boundary and decrease selesction" = {
-            notCollapsed(~anchor=11, ~focus=16, ())
-            |> handleInput(~key) == collapsed(5);
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=11, ~focus=16, ())
+                 |> handleInput(~key) == collapsed(5)
+               });
           };
         });
-     let%test_module "When <S-C-RIGHT>" =
+     let%test_module "When <S-C-RIGHT> or <A-S-RIGHT>" =
        (module
         {
-          let key = "<S-C-RIGHT>";
+          let keys = ["<S-C-RIGHT>", "<A-S-RIGHT>"];
           let%test "Moves cursor to next word boundary" = {
-            collapsed(10)
-            |> handleInput(~key) == notCollapsed(~anchor=10, ~focus=16, ());
+            keys
+            |> List.for_all(key => {
+                 collapsed(10)
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=10, ~focus=16, ())
+               });
           };
           let%test "Moves cursor to end" = {
-            collapsed(44)
-            |> handleInput(~key)
-            == notCollapsed(~anchor=44, ~focus=testStringLength, ());
+            keys
+            |> List.for_all(key => {
+                 collapsed(44)
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=44, ~focus=testStringLength, ())
+               });
           };
           let%test "Doesn't move cursor position when at the end" = {
-            notCollapsed(~anchor=10, ~focus=testStringLength, ())
-            |> handleInput(~key)
-            == notCollapsed(~anchor=10, ~focus=testStringLength, ());
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=10, ~focus=testStringLength, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=10, ~focus=testStringLength, ())
+               });
           };
           let%test "Doesn't move cursor position when at the end and no selection" = {
-            collapsed(testStringLength)
-            |> handleInput(~key) == collapsed(testStringLength);
+            keys
+            |> List.for_all(key => {
+                 collapsed(testStringLength)
+                 |> handleInput(~key) == collapsed(testStringLength)
+               });
           };
           let%test "Doesn't move cursor position for blank string" = {
-            collapsed(~text="", 0)
-            |> handleInput(~key) == collapsed(~text="", 0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text="", 0)
+                 |> handleInput(~key) == collapsed(~text="", 0)
+               });
           };
           let%test "Moves cursor to the next word boundary and undo selection" = {
-            notCollapsed(~anchor=16, ~focus=5, ())
-            |> handleInput(~key) == collapsed(16);
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=16, ~focus=5, ())
+                 |> handleInput(~key) == collapsed(16)
+               });
           };
 
           let%test "Moves cursor to the next word boundary and decrease selesction" = {
-            notCollapsed(~anchor=10, ~focus=6, ())
-            |> handleInput(~key) == notCollapsed(~anchor=10, ~focus=16, ());
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=10, ~focus=6, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=10, ~focus=16, ())
+               });
           };
         });
-     let%test_module "When <C-RIGHT>" =
+     let%test_module "When <C-RIGHT> or <A-RIGHT>" =
        (module
         {
-          let key = "<C-RIGHT>";
+          let keys = ["<C-RIGHT>", "<A-RIGHT>"];
           let%test "Moves cursor to next word boundary" = {
-            collapsed(10) |> handleInput(~key) == collapsed(16);
+            keys
+            |> List.for_all(key => {
+                 collapsed(10) |> handleInput(~key) == collapsed(16)
+               });
           };
           let%test "Moves cursor to end" = {
-            collapsed(44)
-            |> handleInput(~key) == collapsed(testStringLength);
+            keys
+            |> List.for_all(key => {
+                 collapsed(44)
+                 |> handleInput(~key) == collapsed(testStringLength)
+               });
           };
           let%test "Doesn't move cursor position when at the end" = {
-            notCollapsed(~anchor=10, ~focus=testStringLength, ())
-            |> handleInput(~key) == collapsed(testStringLength);
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=10, ~focus=testStringLength, ())
+                 |> handleInput(~key) == collapsed(testStringLength)
+               });
           };
           let%test "Doesn't move cursor position when at the end and no selection" = {
-            collapsed(testStringLength)
-            |> handleInput(~key) == collapsed(testStringLength);
+            keys
+            |> List.for_all(key => {
+                 collapsed(testStringLength)
+                 |> handleInput(~key) == collapsed(testStringLength)
+               });
           };
           let%test "Doesn't move cursor position for blank string" = {
-            collapsed(~text="", 0)
-            |> handleInput(~key) == collapsed(~text="", 0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text="", 0)
+                 |> handleInput(~key) == collapsed(~text="", 0)
+               });
           };
           let%test "Moves cursor to the next word boundary and undo selection" = {
-            notCollapsed(~anchor=16, ~focus=5, ())
-            |> handleInput(~key) == collapsed(16);
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=16, ~focus=5, ())
+                 |> handleInput(~key) == collapsed(16)
+               });
           };
 
           let%test "Moves cursor to the next word boundary and decrease selesction" = {
-            notCollapsed(~anchor=10, ~focus=6, ())
-            |> handleInput(~key) == collapsed(16);
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=10, ~focus=6, ())
+                 |> handleInput(~key) == collapsed(16)
+               });
           };
         });
      let%test_module "ASCII letter with no selection" =
@@ -1217,23 +1514,32 @@ let%test_module "Model" =
             |> handleInput(~key) == collapsed(~text="Ї", 1);
           };
         });
-     let%test_module "When <C-a>" =
+     let%test_module "When <C-a> or <D-a>" =
        (module
         {
-          let key = "<C-a>";
+          let keys = ["<C-a>", "<D-a>"];
           let%test "Select all when no selection" = {
-            collapsed(3)
-            |> handleInput(~key)
-            == notCollapsed(~anchor=0, ~focus=testStringLength, ());
+            keys
+            |> List.for_all(key => {
+                 collapsed(3)
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=0, ~focus=testStringLength, ())
+               });
           };
           let%test "Select all when is selection" = {
-            notCollapsed(~anchor=5, ~focus=24, ())
-            |> handleInput(~key)
-            == notCollapsed(~anchor=0, ~focus=testStringLength, ());
+            keys
+            |> List.for_all(key => {
+                 notCollapsed(~anchor=5, ~focus=24, ())
+                 |> handleInput(~key)
+                 == notCollapsed(~anchor=0, ~focus=testStringLength, ())
+               });
           };
           let%test "Selects nothing with empty string" = {
-            collapsed(~text="", 0)
-            |> handleInput(~key) == collapsed(~text="", 0);
+            keys
+            |> List.for_all(key => {
+                 collapsed(~text="", 0)
+                 |> handleInput(~key) == collapsed(~text="", 0)
+               });
           };
         });
    });
