@@ -79,14 +79,13 @@ let insertInMiddleOfLargeBuffer = () => {
 
 let options = Reperf.Options.create(~iterations=1000, ());
 
-// TODO: Bring back
-//bench(
-//  ~name="Buffer: Add lines to empty buffer",
-//  ~options,
-//  ~setup,
-//  ~f=addLinesToEmptyBuffer,
-//  (),
-//);
+bench(
+  ~name="Buffer: Add lines to empty buffer",
+  ~options,
+  ~setup,
+  ~f=addLinesToEmptyBuffer,
+  (),
+);
 bench(
   ~name="Buffer: Insert line in middle of small buffer",
   ~options,

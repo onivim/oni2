@@ -7,7 +7,7 @@ let setup = () =>
   longBufferLine |> BufferLine.make(~indentation=IndentationSettings.default);
 
 bench(
-  ~name="WordWrap: 100,000 character line (single character)",
+  ~name="WordWrap: 1,000 character line (single character)",
   ~setup,
   ~f=
     longBufferLine => {
