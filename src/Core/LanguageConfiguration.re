@@ -164,6 +164,7 @@ type t = {
   blockComment: option((string, string)),
   increaseIndentPattern: option(OnigRegExp.t),
   decreaseIndentPattern: option(OnigRegExp.t),
+  wordPattern: option(OnigRegExp.t),
 };
 
 let brackets = ({brackets, _}) => brackets;
@@ -190,6 +191,11 @@ let default: t = {
   blockComment: None,
   increaseIndentPattern: None,
   decreaseIndentPattern: None,
+  wordPattern:
+    OnigRegExp.create(
+      "(-?\\\\d*\\\\.\\\\d\\\\w*)|([^\\\\`\\\\~\\\\!\\\\@\\\\#\\\\%\\\\^\\\\&\\\\*\\\\(\\\\)\\\\-\\\\=\\\\+\\\\[\\\\{\\\\]\\\\}\\\\\\\\\\\\|\\\\;\\\\:\\\\'\\\\\"\\\\,\\\\.\\\\<\\\\>\\\\/\\\\?\\\\s]+)",
+    )
+    |> Result.to_option,
 };
 
 module CustomDecoders = {
@@ -270,6 +276,13 @@ module Decode = {
           at.withDefault(
             ["indentationRules", "decreaseIndentPattern"],
             None,
+            regexp,
+          ),
+
+        wordPattern:
+          field.withDefault(
+            "wordPattern",
+            _defaultConfig.wordPattern,
             regexp,
           ),
       }
@@ -362,11 +375,18 @@ let toAutoIndent = (languageConfig, ~previousLine, ~beforePreviousLine) => {
   };
 };
 
-let isWordCharacter = (_char, _config) => true;
+let isWordCharacter = (char, {wordPattern, _}) => {
+  wordPattern
+  |> Option.map(regexp =>
+       OnigRegExp.Fast.test(Zed_utf8.make(1, char), regexp)
+     )
+  |> Option.value(~default=false);
+};
 
 let%test_module "LanguageConfiguration" =
   (module
    {
+     let defaultConfig = default;
      open Json.Decode;
 
      let%test "increase / decrease indent" = {
@@ -405,5 +425,11 @@ let%test_module "LanguageConfiguration" =
          ~beforePreviousLine=None,
        )
        == Vim.AutoIndent.IncreaseIndent;
+     };
+     let%test "default word pattern: isWordCharacter true for 'a'" = {
+       isWordCharacter(Uchar.of_char('a'), defaultConfig) == true;
+     };
+     let%test "default word pattern: isWordCharacter false for '('" = {
+       isWordCharacter(Uchar.of_char('('), defaultConfig) == false;
      };
    });
