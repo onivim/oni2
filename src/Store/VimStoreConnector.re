@@ -893,7 +893,7 @@ let start =
                            buffer
                            |> Oni_Core.Buffer.setFont(state.terminalFont)
                            |> Feature_Editor.EditorBuffer.ofBuffer;
-                         Editor.updateBuffer(~buffer=updatedBuffer, editor);
+                         Editor.setBuffer(~buffer=updatedBuffer, editor);
                        })
                     |> Option.value(~default=editor);
                   } else {
