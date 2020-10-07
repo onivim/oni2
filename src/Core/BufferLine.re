@@ -334,6 +334,20 @@ let getIndex = (~byte, bufferLine) => {
   };
 };
 
+let getUchar = (~index, bufferLine) => {
+  Internal.resolveTo(~index, bufferLine);
+  let characters = bufferLine.characters;
+  let idx = CharacterIndex.toInt(index);
+  if (idx >= Array.length(characters) || idx < 0) {
+    None;
+  } else {
+    switch (characters[CharacterIndex.toInt(index)]) {
+    | Some({uchar, _}) => Some(uchar)
+    | None => None
+    };
+  };
+};
+
 let getUcharExn = (~index, bufferLine) => {
   Internal.resolveTo(~index, bufferLine);
   let characters = bufferLine.characters;
@@ -396,6 +410,30 @@ let getPixelPositionAndWidth = (~index: CharacterIndex.t, bufferLine: t) => {
       }
     };
   };
+};
+
+let traverse = (~maxDistance=250, ~f, ~direction, ~index, bufferLine) => {
+  let rec loop = (currentIndex, previousIndex, travel) =>
+    if (travel < maxDistance) {
+      switch (getUchar(~index=currentIndex, bufferLine)) {
+      | None => previousIndex
+      | Some(uchar) =>
+        if (f(uchar)) {
+          switch (direction) {
+          | `Backwards =>
+            loop(CharacterIndex.(currentIndex - 1), currentIndex, travel + 1)
+          | `Forwards =>
+            loop(CharacterIndex.(currentIndex + 1), currentIndex, travel + 1)
+          };
+        } else {
+          previousIndex;
+        }
+      };
+    } else {
+      previousIndex;
+    };
+
+  loop(index, index, 0);
 };
 
 module Slow = {

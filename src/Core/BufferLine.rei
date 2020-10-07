@@ -57,6 +57,16 @@ let subExn: (~index: CharacterIndex.t, ~length: int, t) => string;
 
 let getPixelPositionAndWidth: (~index: CharacterIndex.t, t) => (float, float);
 
+let traverse:
+  (
+    ~maxDistance: int=?,
+    ~f: Uchar.t => bool,
+    ~direction: [ | `Backwards | `Forwards],
+    ~index: CharacterIndex.t,
+    t
+  ) =>
+  CharacterIndex.t;
+
 module Slow: {
   /*
    * [getIndexFromPixel(~position, str)] returns the character index at pixel position [position].
