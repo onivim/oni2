@@ -52,22 +52,6 @@ let parseStringList = json => {
   };
 };
 
-let parseIntList = json => {
-  switch (json) {
-  | `List(items) =>
-    List.fold_left(
-      (accum, item) =>
-        switch (item) {
-        | `Int(v) => [v, ...accum]
-        | _ => accum
-        },
-      [],
-      items,
-    )
-  | _ => []
-  };
-};
-
 let parseVimUseSystemClipboardSetting = json => {
   let parseItems = items =>
     List.fold_left(
@@ -217,24 +201,6 @@ let configurationParsers: list(configurationTuple) = [
       ...config,
       editorLargeFileOptimizations: parseBool(json),
     },
-  ),
-  (
-    "editor.highlightActiveIndentGuide",
-    (config, json) => {
-      ...config,
-      editorHighlightActiveIndentGuide: parseBool(json),
-    },
-  ),
-  (
-    "editor.renderIndentGuides",
-    (config, json) => {
-      ...config,
-      editorRenderIndentGuides: parseBool(json),
-    },
-  ),
-  (
-    "editor.rulers",
-    (config, json) => {...config, editorRulers: parseIntList(json)},
   ),
   (
     "explorer.autoReveal",
