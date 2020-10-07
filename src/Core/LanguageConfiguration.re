@@ -72,6 +72,13 @@ module AutoClosingPair = {
   };
 
   let decode = Decode.decode;
+
+  let%test_module "LanguageConfiguration.AutoClosingPairs" =
+  (module {
+     let%test "fails" = {
+	     true == false
+     };
+  });
 };
 
 module BracketPair = {
@@ -138,6 +145,9 @@ type t = {
   increaseIndentPattern: option(OnigRegExp.t),
   decreaseIndentPattern: option(OnigRegExp.t),
 };
+
+let brackets = ({brackets, _}) => brackets;
+let lineComment = ({lineComment, _}) => lineComment;
 
 let default: t = {
   autoCloseBefore: [
@@ -296,3 +306,5 @@ let toAutoIndent = (languageConfig, ~previousLine, ~beforePreviousLine) => {
     Vim.AutoIndent.KeepIndent
   };
 };
+
+let isWordCharacter = (_char, _config) => true;

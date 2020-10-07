@@ -243,7 +243,7 @@ let%component make =
       ? None
       : Editor.getNearestMatchingPair(
           ~characterPosition=matchingPairCheckPosition,
-          ~pairs=LanguageConfiguration.(languageConfiguration.brackets),
+          ~pairs=LanguageConfiguration.brackets(languageConfiguration),
           editor,
         );
 

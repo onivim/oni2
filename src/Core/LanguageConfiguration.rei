@@ -2,8 +2,6 @@
  * LanguageConfiguration.rei
  */
 
-open Oniguruma;
-
 module AutoClosingPair: {
   type scopes =
     | String
@@ -15,8 +13,6 @@ module AutoClosingPair: {
     closePair: string,
     notIn: list(scopes),
   };
-
-  let decode: Json.decoder(t);
 };
 
 module BracketPair: {
@@ -24,21 +20,16 @@ module BracketPair: {
     openPair: string,
     closePair: string,
   };
-
-  let decode: Json.decoder(t);
 };
 
-type t = {
-  autoCloseBefore: list(string),
-  autoClosingPairs: list(AutoClosingPair.t),
-  brackets: list(BracketPair.t),
-  lineComment: option(string),
-  blockComment: option((string, string)),
-  increaseIndentPattern: option(OnigRegExp.t),
-  decreaseIndentPattern: option(OnigRegExp.t),
-};
+type t;
 
 let default: t;
+
+let brackets: t => list(BracketPair.t);
+let lineComment: t => option(string);
+
+let isWordCharacter: (Uchar.t, t) => bool;
 
 let shouldIncreaseIndent:
   (~previousLine: string, ~beforePreviousLine: option(string), t) => bool;
