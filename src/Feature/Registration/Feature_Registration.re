@@ -29,6 +29,11 @@ let initial = {
 
 let isActive = m => m.viewState != Hidden;
 let isRegistered = m => !(m.licenseKey == None);
+let getLicenseKey = m =>
+  switch (m.licenseKey) {
+  | Some(s) => s
+  | None => ""
+  };
 
 [@deriving show]
 type command =
@@ -44,6 +49,7 @@ type msg =
 
 type outmsg =
   | Nothing
+  | LicenseKeyChanged(string)
   | Effect(Isolinear.Effect.t(msg));
 
 module Commands = {
@@ -70,7 +76,7 @@ let update = (model, msg) =>
     )
   | Response(LicenseValid(key, true)) => (
       {...model, licenseKey: Some(key), viewState: KeySuccess},
-      Nothing,
+      LicenseKeyChanged(key),
     )
   | Response(LicenseValid(_, false)) => (
       {...model, viewState: KeyFailure},
@@ -177,7 +183,7 @@ module Styles = {
   };
 
   module Mac = {
-    let container = (~theme) => [
+    let container = [
       flexDirection(`Row),
       height(25),
       width(Constants.macWidth),
@@ -192,7 +198,6 @@ module Styles = {
 module View = {
   open Revery;
   open Revery.UI;
-  open Revery.UI.Components;
 
   module Colors = Feature_Theme.Colors;
   module FontIcon = Oni_Components.FontIcon;
@@ -371,21 +376,17 @@ module View = {
                       ~registration as model: model,
                       ~font: UiFont.t,
                       ~dispatch: msg => unit,
-                      ~isFocused: bool,
                       (),
                     ) => {
-        let%hook (isHovered, setHovered) = Hooks.state(false);
-
-        let onMouseUp = _ => dispatch(Command(EnterLicenseKey));
+        let%hook () = Hooks.effect(OnMount, () => None);
+        let onClick = _ => dispatch(Command(EnterLicenseKey));
 
         switch (model.licenseKey) {
         | Some(_) => React.empty
         | None =>
-          <View
-            onMouseUp
-            onMouseEnter={_ => setHovered(_ => true)}
-            onMouseLeave={_ => setHovered(_ => false)}
-            style={Styles.Mac.container(~theme)}>
+          <Components.Clickable
+            onClick
+            style={Styles.Mac.container}>
             <FontIcon
               icon=FontAwesome.lockOpen
               color={Colors.TitleBar.inactiveForeground.from(theme)}
@@ -397,7 +398,7 @@ module View = {
               fontSize=12.
               fontFamily={font.family}
             />
-          </View>
+          </Components.Clickable>
         };
       };
     };

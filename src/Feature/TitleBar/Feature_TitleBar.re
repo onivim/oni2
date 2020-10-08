@@ -341,7 +341,6 @@ module View = {
             registration
             dispatch=registrationDispatch
             font
-            isFocused
           />
         </Clickable>;
       };
