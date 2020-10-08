@@ -34,23 +34,6 @@ module Internal = {
 
     loop(default, tokens);
   };
-
-  let getTokenAtByte = (~default, ~byteIndex, tokens) => {
-    let rec loop = (lastToken, tokens: list(ThemeToken.t)) => {
-      switch (tokens) {
-      | [] => lastToken
-      | [token] => token.index <= byteIndex ? token : lastToken
-      | [token, ...tail] =>
-        if (token.index > byteIndex) {
-          lastToken;
-        } else {
-          loop(token, tail);
-        }
-      };
-    };
-
-    loop(default, tokens);
-  };
 };
 
 let create =
@@ -96,7 +79,8 @@ let create =
   (byteIndex: ByteIndex.t) => {
     let i = ByteIndex.toInt(byteIndex);
     let colorIndex =
-      Internal.getTokenAtByte(~byteIndex=i, ~default=defaultToken, tokens);
+      Feature_Syntax.Tokens.getAt(~byteIndex, tokens)
+      |> Option.value(~default=defaultToken);
 
     let matchingPair =
       switch (matchingPair) {

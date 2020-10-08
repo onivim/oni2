@@ -1,6 +1,7 @@
 open EditorCoreTypes;
 
 open Oni_Core;
+open Utility;
 
 open Helpers;
 
@@ -125,53 +126,52 @@ let renderDefinition =
     (
       ~context,
       ~bufferId,
+      ~languageConfiguration,
       ~languageSupport,
-      ~leftVisibleColumn,
       ~cursorPosition: CharacterPosition.t,
       ~editor,
-      ~bufferHighlights,
-      ~colors,
-      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
+      ~colors: Colors.t,
       ~bufferSyntaxHighlights,
-      ~bufferWidthInCharacters,
-    ) =>
-  getTokenAtPosition(
-    ~editor,
-    ~bufferHighlights,
-    ~cursorLine=EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
-    ~colors,
-    ~matchingPairs,
-    ~bufferSyntaxHighlights,
-    ~startIndex=leftVisibleColumn,
-    ~endIndex=leftVisibleColumn + bufferWidthInCharacters,
-    cursorPosition,
-  )
-  |> Option.iter((token: BufferViewTokenizer.t) => {
-       let range =
-         CharacterRange.{
-           start:
-             CharacterPosition.{
-               line: cursorPosition.line,
-               character: token.startIndex,
-             },
-           stop:
-             CharacterPosition.{
-               line: cursorPosition.line,
-               character: token.endIndex,
-             },
-         };
-
-       // Double-check that the range of the token falls into our definition position
-
+    ) => {
+  Editor.getTokenAt(~languageConfiguration, cursorPosition, editor)
+  |> Option.iter((range: CharacterRange.t) => {
        Feature_LanguageSupport.Definition.getAt(
          ~bufferId,
          ~range,
          languageSupport,
        )
        |> Option.iter(_ => {
-            Draw.underline(~context, ~color=token.color, range)
-          });
+            let color =
+              Editor.characterToByte(range.start, editor)
+              |> OptionEx.flatMap(bytePosition => {
+                   Feature_Syntax.getAt(
+                     ~bufferId,
+                     ~bytePosition,
+                     bufferSyntaxHighlights,
+                   )
+                 })
+              |> Option.map((themeToken: Oni_Core.ThemeToken.t) =>
+                   themeToken.foregroundColor
+                 )
+              |> Option.value(~default=colors.editorForeground);
+
+            // Extend range by one character - the range
+            // returned by getTokenAt is inclusive, but the
+            // range underline uses is exclusive.
+
+            let drawRange =
+              CharacterRange.{
+                start: range.start,
+                stop: {
+                  line: range.stop.line,
+                  character: CharacterIndex.(range.stop.character + 1),
+                },
+              };
+
+            Draw.underline(~context, ~color, drawRange);
+          })
      });
+};
 
 let renderTokens =
     (~selection, ~context, ~line, ~colors, ~tokens, ~shouldRenderWhitespace) => {
@@ -251,7 +251,6 @@ let render =
       ~count,
       ~buffer,
       ~editor,
-      ~leftVisibleColumn,
       ~colors,
       ~diagnosticsMap,
       ~selectionRanges,
@@ -259,9 +258,9 @@ let render =
       ~bufferHighlights,
       ~cursorPosition: CharacterPosition.t,
       ~languageSupport,
+      ~languageConfiguration,
       ~bufferSyntaxHighlights,
       ~shouldRenderWhitespace,
-      ~bufferWidthInCharacters,
       ~bufferWidthInPixels,
     ) => {
   renderEmbellishments(
@@ -284,15 +283,12 @@ let render =
     renderDefinition(
       ~bufferId,
       ~languageSupport,
+      ~languageConfiguration,
       ~context,
       ~editor,
-      ~leftVisibleColumn,
       ~cursorPosition,
-      ~bufferHighlights,
       ~colors,
-      ~matchingPairs,
       ~bufferSyntaxHighlights,
-      ~bufferWidthInCharacters,
     );
   };
 

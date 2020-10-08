@@ -46,6 +46,10 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setCursors: (~cursors: list(BytePosition.t), t) => t;
 
+let getTokenAt:
+  (~languageConfiguration: LanguageConfiguration.t, CharacterPosition.t, t) =>
+  option(CharacterRange.t);
+
 let yankHighlight: t => option(yankHighlight);
 let setYankHighlight: (~yankHighlight: yankHighlight, t) => t;
 

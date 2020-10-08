@@ -496,6 +496,40 @@ let getBottomVisibleLine = view => {
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
 
+let getTokenAt =
+    (~languageConfiguration, {line, character}: CharacterPosition.t, editor) => {
+  let lineNumber = line |> EditorCoreTypes.LineNumber.toZeroBased;
+
+  if (lineNumber < 0
+      || lineNumber >= EditorBuffer.numberOfLines(editor.buffer)) {
+    None;
+  } else {
+    let bufferLine = EditorBuffer.line(lineNumber, editor.buffer);
+    let f = uchar =>
+      LanguageConfiguration.isWordCharacter(uchar, languageConfiguration);
+    let startIndex =
+      BufferLine.traverse(
+        ~f,
+        ~direction=`Backwards,
+        ~index=character,
+        bufferLine,
+      );
+    let stopIndex =
+      BufferLine.traverse(
+        ~f,
+        ~direction=`Forwards,
+        ~index=character,
+        bufferLine,
+      );
+    Some(
+      CharacterRange.{
+        start: CharacterPosition.{line, character: startIndex},
+        stop: CharacterPosition.{line, character: stopIndex},
+      },
+    );
+  };
+};
+
 let setSize = (~pixelWidth, ~pixelHeight, editor) => {
   ...editor,
   pixelWidth,
