@@ -54,7 +54,7 @@ module Internal = {
 
   let indentation = (~buffer) =>
     buffer
-    |> OptionEx.flatMap(Buffer.getIndentation)
+    |> Option.map(Buffer.getIndentation)
     |> Option.value(~default=IndentationSettings.default);
 };
 

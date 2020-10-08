@@ -7,7 +7,6 @@
  */
 
 open Revery.UI;
-open Rench;
 open Oni_Core;
 open Oni_Model;
 module OptionEx = Oni_Core.Utility.OptionEx;
@@ -72,7 +71,10 @@ module Parts = {
         tokenTheme={state.tokenTheme}
         languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
-        config={Feature_Configuration.resolver(state.config, state.vim)}
+        perFileTypeConfig={Feature_Configuration.resolver(
+          state.config,
+          state.vim,
+        )}
         renderOverlays
       />;
     };
@@ -236,7 +238,7 @@ let make =
       switch (renderer) {
       | Welcome => "Welcome"
       | Terminal({title, _}) => title
-      | _ => Path.filename(title)
+      | _ => Utility.Path.filename(title)
       };
     };
 
@@ -306,7 +308,7 @@ let make =
       isZenMode={state.zenMode}
       showTabs
       model={state.layout}
-      config={Feature_Configuration.resolver(state.config, state.vim)}
+      config={Selectors.configResolver(state)}
       dispatch={msg => dispatch(Actions.Layout(msg))}>
       ...(module ContentProvider)
     </Feature_Layout.View>

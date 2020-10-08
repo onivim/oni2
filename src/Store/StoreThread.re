@@ -151,7 +151,6 @@ let start =
     KeyBindingsStoreConnector.start(keybindingsFilePath);
 
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
-  let indentationUpdater = IndentationStoreConnector.start();
 
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
@@ -167,7 +166,6 @@ let start =
       keyBindingsUpdater,
       commandUpdater,
       lifecycleUpdater,
-      indentationUpdater,
       themeUpdater,
       Features.update(
         ~grammarRepository,
@@ -182,7 +180,7 @@ let start =
     ]);
 
   let subscriptions = (state: Model.State.t) => {
-    let config = Feature_Configuration.resolver(state.config, state.vim);
+    let config = Model.Selectors.configResolver(state);
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
 

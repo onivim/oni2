@@ -92,7 +92,9 @@ let initial =
       ~getUserSettings,
       [
         Feature_AutoUpdate.Contributions.configuration,
+        Feature_Buffers.Contributions.configuration,
         Feature_Editor.Contributions.configuration,
+        Feature_SideBar.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
         Feature_LanguageSupport.Contributions.configuration,
@@ -103,7 +105,12 @@ let initial =
   let initialEditor = {
     open Feature_Editor;
     let editorBuffer = initialBuffer |> EditorBuffer.ofBuffer;
-    let config = Feature_Configuration.resolver(config, Feature_Vim.initial);
+    let config =
+      Feature_Configuration.resolver(
+        ~fileType="plaintext",
+        config,
+        Feature_Vim.initial,
+      );
     Editor.create(~config, ~buffer=editorBuffer, ());
   };
 

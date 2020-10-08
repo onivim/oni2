@@ -113,7 +113,7 @@ module View = {
       (
         ~model,
         ~workingDirectory,
-        ~buffers,
+        ~buffers: Feature_Buffers.model,
         ~theme,
         ~font: UiFont.t,
         ~dispatch,
@@ -121,11 +121,8 @@ module View = {
       ) => {
     let modifiedFiles =
       buffers
-      |> IntMap.to_seq
-      |> Seq.map(snd)
-      |> Seq.filter(Buffer.isModified)
-      |> Seq.map(Buffer.getFilePath)
-      |> List.of_seq
+      |> Feature_Buffers.modified
+      |> List.map(Buffer.getFilePath)
       |> OptionEx.values
       |> List.map(Path.toRelative(~base=workingDirectory));
 

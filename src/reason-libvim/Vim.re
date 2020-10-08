@@ -210,12 +210,7 @@ let runWith = (~context: Context.t, f) => {
   };
 
   flushQueue();
-  let outContext = {
-    ...Context.current(),
-    cursors,
-    autoClosingPairs: context.autoClosingPairs,
-  };
-  outContext;
+  {...Context.current(), cursors, autoClosingPairs: context.autoClosingPairs};
 };
 
 let _onAutocommand = (autoCommand: Types.autocmd, buffer: Buffer.t) => {
@@ -576,9 +571,9 @@ module Registers = {
   let get = (~register) => Native.vimRegisterGet(int_of_char(register));
 };
 
-let command = v => {
+let command = (~context=Context.current(), v) => {
   runWith(
-    ~context=Context.current(),
+    ~context,
     () => {
       Native.vimCommand(v);
       [];

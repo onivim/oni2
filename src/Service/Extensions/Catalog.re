@@ -109,9 +109,11 @@ module Details = {
     open Json.Decode;
 
     let files = (name, decoder) => field("files", field(name, decoder));
+    let filesOpt = (name, decoder) =>
+      field("files", field_opt(name, decoder));
     let downloadUrl = files("download", string);
     let manifestUrl = files("manifest", string);
-    let iconUrl = files("icon", nullable(string));
+    let iconUrl = filesOpt("icon", string);
     let readmeUrl = files("readme", nullable(string));
     let homepageUrl = field("publishedBy", field("homepage", string));
 
@@ -167,7 +169,7 @@ module Summary = {
     open Json.Decode;
 
     let downloadUrl = field("files", field("download", string));
-    let iconUrl = field("files", field("icon", nullable(string)));
+    let iconUrl = field("files", field_opt("icon", string));
 
     obj(({field, whatever, _}) =>
       {

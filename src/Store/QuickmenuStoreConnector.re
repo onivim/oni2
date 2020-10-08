@@ -111,9 +111,7 @@ let start = () => {
     let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
     buffers
-    |> IntMap.to_seq
-    |> Seq.map(snd)
-    |> List.of_seq
+    |> Feature_Buffers.all
     // Sort by most recerntly used
     |> List.fast_sort((a, b) =>
          - Float.compare(Buffer.getLastUsed(a), Buffer.getLastUsed(b))
@@ -241,10 +239,10 @@ let start = () => {
                name: fileType,
                command: () =>
                  Buffers(
-                   Feature_Buffers.FileTypeChanged({
-                     id: bufferId,
-                     fileType: Oni_Core.Buffer.FileType.explicit(fileType),
-                   }),
+                   Feature_Buffers.Msg.fileTypeChanged(
+                     ~bufferId,
+                     ~fileType=Oni_Core.Buffer.FileType.explicit(fileType),
+                   ),
                  ),
                icon: maybeIcon,
                highlight: [],

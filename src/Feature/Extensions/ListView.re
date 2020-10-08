@@ -192,11 +192,7 @@ let%component make =
       ]
       |> React.listToElement;
     } else {
-      <View
-        style={Styles.resultsContainer(
-          ~isFocused={isFocused && model.focusedWindow != SearchText},
-          theme,
-        )}>
+      let resultsList =
         <Component_VimList.View
           isActive={isInstalledFocused || isBundledFocused}
           font
@@ -244,7 +240,23 @@ let%component make =
               }
             />;
           }}
-        />
+        />;
+
+      let error =
+        <View style=Style.[padding(8)]>
+          <Text
+            fontFamily={font.family}
+            fontSize={font.size}
+            text="There was an error searching for extensions. Please check your network connection and try again."
+            style=Style.[color(Colors.EditorError.foreground.from(theme))]
+          />
+        </View>;
+      <View
+        style={Styles.resultsContainer(
+          ~isFocused={isFocused && model.focusedWindow != SearchText},
+          theme,
+        )}>
+        {model.lastSearchHadError ? error : resultsList}
       </View>;
     };
 

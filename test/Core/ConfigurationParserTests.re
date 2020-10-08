@@ -7,66 +7,6 @@ module ConfigurationParser = Oni_Core.ConfigurationParser;
 module Constants = Oni_Core.Constants;
 
 describe("ConfigurationParser", ({test, describe, _}) => {
-  describe("per-filetype handling", ({test, _}) => {
-    test("simple filetype case", ({expect, _}) => {
-      let fileTypeConfiguration = {|
-		{
-      	"editor.insertSpaces": false,
-		  "[reason]": {
-		  	"editor.insertSpaces": true
-		  }
-	  }
-      |};
-
-      switch (ConfigurationParser.ofString(fileTypeConfiguration)) {
-      | Error(_) => expect.bool(true).toBe(false)
-      | Ok(v) =>
-        let insertSpaces =
-          Configuration.getValue(
-            ~fileType="reason",
-            c => c.editorInsertSpaces,
-            v,
-          );
-        expect.bool(insertSpaces).toBe(true);
-
-        let insertSpaces =
-          Configuration.getValue(
-            ~fileType="someotherlang",
-            c => c.editorInsertSpaces,
-            v,
-          );
-        expect.bool(insertSpaces).toBe(false);
-      };
-    });
-
-    test("ignores doubly-nested languages", ({expect, _}) => {
-      let fileTypeConfiguration = {|
-	  {
-      	"editor.insertSpaces": false,
-		  "[reason]": {
-		  	"editor.insertSpaces": true,
-			  "[ocaml]": {
-			  	"editor.insertSpaces": false
-			  }
-		  },
-		  "[ocaml]": {
-		  	"editor.insertSpaces": true
-		  }
-	  }
-      |};
-      switch (ConfigurationParser.ofString(fileTypeConfiguration)) {
-      | Error(_) => expect.int(1).toBe(2)
-      | Ok(v) =>
-        let ocamlInsertSpaces =
-          Configuration.getValue(
-            ~fileType="ocaml",
-            c => c.editorInsertSpaces,
-            v,
-          );
-        expect.bool(ocamlInsertSpaces).toBe(true);
-      };
-    });
-  });
   describe("error handling", ({test, _}) => {
     test("invalid json returns error", ({expect, _}) => {
       let invalidConfiguration = "{]";
@@ -166,21 +106,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
-  test("list of numbers", ({expect, _}) => {
-    let configuration = {|
-      { "editor.rulers": [120, 80] }
-    |};
-
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(v) =>
-      expect.list(Configuration.getValue(c => c.editorRulers, v)).toEqual([
-        80,
-        120,
-      ])
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
   test("list of strings", ({expect, _}) => {
     let configuration = {|
      { "experimental.viml": ["first thing", "second thing", "third thing"] }
@@ -227,49 +152,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       )
     | Error(_) => expect.bool(false).toBe(true)
     };
-  });
-
-  test("resiliency tests", ({expect, _}) => {
-    let trailingCommaInObject = {|
-      { "editor.rulers": [120, 80], }
-    |};
-
-    let trailingCommaInArray = {|
-      { "editor.rulers": [120, 80,] }
-    |};
-
-    let commentBeforeEverything = {|
-      // This is my configuration
-      { "editor.rulers": [120, 80] }
-    |};
-
-    let commentInObject = {|
-      {
-        // This is a setting
-        "editor.rulers": [120, 80]
-      }
-    |};
-
-    let cases = [
-      trailingCommaInObject,
-      trailingCommaInArray,
-      commentBeforeEverything,
-      commentInObject,
-    ];
-
-    List.iter(
-      case => {
-        switch (ConfigurationParser.ofString(case)) {
-        | Ok(v) =>
-          expect.list(Configuration.getValue(c => c.editorRulers, v)).toEqual([
-            80,
-            120,
-          ])
-        | Error(_) => expect.bool(false).toBe(true)
-        }
-      },
-      cases,
-    );
   });
 
   test("autoReveal bool(true) setting", ({expect, _}) => {

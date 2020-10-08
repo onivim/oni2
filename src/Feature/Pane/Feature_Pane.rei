@@ -54,6 +54,7 @@ let setDiagnostics: (Feature_Diagnostics.model, model) => model;
 module View: {
   let make:
     (
+      ~key: Brisk_reconciler.Key.t=?,
       ~config: Config.resolver,
       ~isFocused: bool,
       ~theme: Oni_Core.ColorTheme.Colors.t,

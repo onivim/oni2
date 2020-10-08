@@ -29,14 +29,6 @@ let outdent = register("outdent", Command("outdent"));
 
 module Editor = {
   module Action = {
-    let detectIndentation =
-      register(
-        ~category="Editor",
-        ~title="Detect Indentation from Content",
-        "editor.action.detectIndentation",
-        Command("editor.action.detectIndentation"),
-      );
-
     let indentLines =
       register(
         "editor.action.indentLines",

@@ -9,6 +9,10 @@ let openFile = (filePath: string) => {
   ret;
 };
 
+let loadFile = (filePath: string) => {
+  Native.vimBufferLoad(filePath);
+};
+
 let getFilename = (buffer: t) => {
   Native.vimBufferGetFilename(buffer);
 };
@@ -37,6 +41,12 @@ let getLineCount = (buffer: t) => {
 
 let getLine = (buffer: t, line: LineNumber.t) => {
   Native.vimBufferGetLine(buffer, LineNumber.toOneBased(line));
+};
+
+let getLines = (buffer: t) => {
+  let count = getLineCount(buffer);
+
+  Array.init(count, idx => {Native.vimBufferGetLine(buffer, idx + 1)});
 };
 
 let getId = (buffer: t) => {
@@ -158,10 +168,6 @@ let applyEdits = (~edits, buffer) => {
     setCurrent(previousBuffer);
   };
   ret;
-};
-
-let onEnter = (f: Listeners.bufferListener) => {
-  Event.add(f, Listeners.bufferEnter);
 };
 
 let onModifiedChanged = (f: Listeners.bufferModifiedChangedListener) => {

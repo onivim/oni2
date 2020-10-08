@@ -48,6 +48,7 @@ type outmsg =
 
 type model = {
   selected: pane,
+  allowAnimation: bool,
   isOpen: bool,
   height: int,
   resizeDelta: int,
@@ -102,8 +103,13 @@ let height = ({height, resizeDelta, _}) => {
   };
 };
 
-let show = (~pane, model) => {...model, isOpen: true, selected: pane};
-let close = model => {...model, isOpen: false};
+let show = (~pane, model) => {
+  ...model,
+  allowAnimation: true,
+  isOpen: true,
+  selected: pane,
+};
+let close = model => {...model, allowAnimation: false, isOpen: false};
 
 module Focus = {
   let toggleTab = model => {
@@ -118,7 +124,7 @@ module Focus = {
 
 let update = (msg, model) =>
   switch (msg) {
-  | CloseButtonClicked => ({...model, isOpen: false}, Nothing)
+  | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
 
   | TabClicked(pane) => ({...model, selected: pane}, Nothing)
 
@@ -132,7 +138,7 @@ let update = (msg, model) =>
     }
 
   | ResizeHandleDragged(delta) => (
-      {...model, resizeDelta: (-1) * delta},
+      {...model, allowAnimation: false, resizeDelta: (-1) * delta},
       Nothing,
     )
   | ResizeCommitted =>
@@ -192,7 +198,8 @@ let update = (msg, model) =>
 let initial = {
   height: Constants.defaultHeight,
   resizeDelta: 0,
-  selected: Notifications,
+  allowAnimation: true,
+  selected: Diagnostics,
   isOpen: false,
 
   vimWindowNavigation: Component_VimWindows.initial,
@@ -364,6 +371,10 @@ module View = {
       />
     };
 
+  module Animation = {
+    let openSpring = Spring.Options.create(~stiffness=500., ~damping=30., ());
+  };
+
   let closeButton = (~theme, ~dispatch, ()) => {
     <Sneakable
       sneakId="close"
@@ -376,21 +387,21 @@ module View = {
       />
     </Sneakable>;
   };
-  let make =
-      (
-        ~config,
-        ~isFocused,
-        ~theme,
-        ~iconTheme,
-        ~languageInfo,
-        ~uiFont,
-        ~notifications: Feature_Notification.model,
-        ~dispatch: msg => unit,
-        ~notificationDispatch: Feature_Notification.msg => unit,
-        ~pane: model,
-        ~workingDirectory: string,
-        (),
-      ) => {
+  let%component make =
+                (
+                  ~config,
+                  ~isFocused,
+                  ~theme,
+                  ~iconTheme,
+                  ~languageInfo,
+                  ~uiFont,
+                  ~notifications: Feature_Notification.model,
+                  ~dispatch: msg => unit,
+                  ~notificationDispatch: Feature_Notification.msg => unit,
+                  ~pane: model,
+                  ~workingDirectory: string,
+                  (),
+                ) => {
     let problemsTabClicked = () => {
       dispatch(TabClicked(Diagnostics));
     };
@@ -398,61 +409,72 @@ module View = {
       dispatch(TabClicked(Notifications));
     };
 
-    if (!isOpen(pane) && !isFocused) {
-      <View />;
-    } else {
-      let height = height(pane);
-      let opacity =
-        isFocused
-          ? 1.0
-          : Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
-              config,
-            );
-      <View style={Styles.pane(~opacity, ~isFocused, ~theme, ~height)}>
-        <View style=Styles.resizer>
-          <ResizeHandle.Horizontal
-            onDrag={delta =>
-              dispatch(Msg.resizeHandleDragged(int_of_float(delta)))
-            }
-            onDragComplete={() => dispatch(Msg.resizeCommitted)}
-          />
-        </View>
-        <View style=Styles.header>
-          <View style=Styles.tabs>
-            <PaneTab
-              uiFont
-              theme
-              title="Problems"
-              onClick=problemsTabClicked
-              isActive={isSelected(Diagnostics, pane)}
-            />
-            <PaneTab
-              uiFont
-              theme
-              title="Notifications"
-              onClick=notificationsTabClicked
-              isActive={isSelected(Notifications, pane)}
-            />
-          </View>
-          <closeButton dispatch theme />
-        </View>
-        <View style=Styles.content>
-          <content
-            isFocused
-            iconTheme
-            languageInfo
-            diagnosticsList={pane.diagnosticsView}
-            selected={selected(pane)}
-            theme
+    let desiredHeight = height(pane);
+    let targetHeight = !isOpen(pane) && !isFocused ? 0 : desiredHeight;
+
+    let animationEnabled =
+      pane.allowAnimation
+      && Feature_Configuration.GlobalConfiguration.animation.get(config);
+    let%hook (springHeight, _setHeightImmediately) =
+      Hooks.spring(
+        ~target=float(targetHeight),
+        ~restThreshold=10.,
+        ~enabled=animationEnabled,
+        Animation.openSpring,
+      );
+
+    let height = springHeight < 20. ? 0 : int_of_float(springHeight);
+
+    let opacity =
+      isFocused
+        ? 1.0
+        : Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
+            config,
+          );
+    <View style={Styles.pane(~opacity, ~isFocused, ~theme, ~height)}>
+      <View style=Styles.resizer>
+        <ResizeHandle.Horizontal
+          onDrag={delta =>
+            dispatch(Msg.resizeHandleDragged(int_of_float(delta)))
+          }
+          onDragComplete={() => dispatch(Msg.resizeCommitted)}
+        />
+      </View>
+      <View style=Styles.header>
+        <View style=Styles.tabs>
+          <PaneTab
             uiFont
-            notifications
-            notificationDispatch
-            diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
-            workingDirectory
+            theme
+            title="Problems"
+            onClick=problemsTabClicked
+            isActive={isSelected(Diagnostics, pane)}
+          />
+          <PaneTab
+            uiFont
+            theme
+            title="Notifications"
+            onClick=notificationsTabClicked
+            isActive={isSelected(Notifications, pane)}
           />
         </View>
-      </View>;
-    };
+        <closeButton dispatch theme />
+      </View>
+      <View style=Styles.content>
+        <content
+          isFocused
+          iconTheme
+          languageInfo
+          diagnosticsList={pane.diagnosticsView}
+          selected={selected(pane)}
+          theme
+          uiFont
+          notifications
+          notificationDispatch
+          diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
+          workingDirectory
+        />
+      </View>
+    </View>;
   };
 };
 

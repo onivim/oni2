@@ -72,17 +72,14 @@ let%component make =
     Hooks.timer(~active=hoverTimerActive^, ());
 
   let lineCount = editor |> Editor.totalViewLines;
-  let indentation =
-    switch (Buffer.getIndentation(buffer)) {
-    | Some(v) => v
-    | None => IndentationSettings.default
-    };
+  let indentation = Buffer.getIndentation(buffer);
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
     dispatch(
       Msg.EditorMouseWheel({
         deltaY: wheelEvent.deltaY *. (-1.),
         deltaX: wheelEvent.deltaX,
+        shiftKey: wheelEvent.shiftKey,
       }),
     );
 
