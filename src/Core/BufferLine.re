@@ -10,6 +10,8 @@ open Utility;
 
 module Log = (val Timber.Log.withNamespace("Oni2.Core.BufferLine"));
 
+type measure = Uchar.t => float;
+
 let _space = Uchar.of_char(' ');
 let tab = Uchar.of_char('\t');
 let _cr = Uchar.of_char('\r');
@@ -35,15 +37,10 @@ let emptyCharacterMap: array(option(characterCacheInfo)) = [||];
 let emptyByteIndexMap: array(option(int)) = [||];
 
 type t = {
-  indentation: IndentationSettings.t,
   // [raw] is the raw string (byte array)
   raw: string,
-  // [font] is the main font to render the line with
-  font: Font.t,
   // [skiaTypeface] is the Skia typeface associated with the font
-  skiaTypeface: Skia.Typeface.t,
-  // [glyphStrings] is a list of typefaces and strings from shaping
-  mutable glyphStrings: list((Skia.Typeface.t, string)),
+  measure: Uchar.t => float,
   // [characters] is a cache of discovered characters we've found in the string so far
   mutable characters: array(option(characterCacheInfo)),
   // [byteIndexMap] is a cache of byte -> index
@@ -97,54 +94,54 @@ module Internal = {
   Skia.Paint.setTextEncoding(paint, GlyphId);
   Skia.Paint.setLcdRenderText(paint, true);
 
-  let measure = (~typeface: Skia.Typeface.t, ~cache: t, substr, uchar) =>
-    switch (
-      MeasurementsCache.find(
-        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
-        measurementsCache,
-      )
-    ) {
-    | Some(pixelWidth) =>
-      MeasurementsCache.promote(
-        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
-        measurementsCache,
-      );
-      Log.tracef(m =>
-        m(
-          "MeasurementCache : Hit! Typeface : %s, Font Size: %f, Uchar: %s (%d)",
-          Skia.Typeface.getFamilyName(typeface),
-          cache.font.fontSize,
-          Zed_utf8.singleton(uchar),
-          Uchar.to_int(uchar),
-        )
-      );
-      pixelWidth;
-    | None =>
-      Log.tracef(m =>
-        m(
-          "MeasurementCache : Miss! Typeface : %s, Uchar: %s (%d)",
-          Skia.Typeface.getFamilyName(typeface),
-          Zed_utf8.singleton(uchar),
-          Uchar.to_int(uchar),
-        )
-      );
-      Skia.Paint.setTypeface(paint, typeface);
-      // When the character is a tab, we have to make sure
-      // we offset the correct amount.
-      let pixelWidth =
-        if (Uchar.equal(uchar, tab)) {
-          float(cache.indentation.tabSize) *. cache.font.spaceWidth;
-        } else {
-          Skia.Paint.measureText(paint, substr, None);
-        };
-      MeasurementsCache.add(
-        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
-        pixelWidth,
-        measurementsCache,
-      );
-      MeasurementsCache.trim(measurementsCache);
-      pixelWidth;
-    };
+//  let measure = (~typeface: Skia.Typeface.t, ~cache: t, uchar) =>
+//    switch (
+//      MeasurementsCache.find(
+//        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
+//        measurementsCache,
+//      )
+//    ) {
+//    | Some(pixelWidth) =>
+//      MeasurementsCache.promote(
+//        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
+//        measurementsCache,
+//      );
+//      Log.tracef(m =>
+//        m(
+//          "MeasurementCache : Hit! Typeface : %s, Font Size: %f, Uchar: %s (%d)",
+//          Skia.Typeface.getFamilyName(typeface),
+//          cache.font.fontSize,
+//          Zed_utf8.singleton(uchar),
+//          Uchar.to_int(uchar),
+//        )
+//      );
+//      pixelWidth;
+//    | None =>
+//      Log.tracef(m =>
+//        m(
+//          "MeasurementCache : Miss! Typeface : %s, Uchar: %s (%d)",
+//          Skia.Typeface.getFamilyName(typeface),
+//          Zed_utf8.singleton(uchar),
+//          Uchar.to_int(uchar),
+//        )
+//      );
+//      Skia.Paint.setTypeface(paint, typeface);
+//      // When the character is a tab, we have to make sure
+//      // we offset the correct amount.
+//      let pixelWidth =
+//        if (Uchar.equal(uchar, tab)) {
+//          float(cache.indentation.tabSize) *. cache.font.spaceWidth;
+//        } else {
+//          cache.measure(uchar);
+//        };
+//      MeasurementsCache.add(
+//        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
+//        pixelWidth,
+//        measurementsCache,
+//      );
+//      MeasurementsCache.trim(measurementsCache);
+//      pixelWidth;
+//    };
 
   let resolveTo = (~index: CharacterIndex.t, cache: t) => {
     // First, allocate our cache, if necessary
@@ -170,38 +167,25 @@ module Internal = {
       let byte: ref(int) = ref(cache.nextByte);
       let pixelPosition: ref(float) = ref(cache.nextPixelPosition);
 
-      let glyphStrings: ref(list((Skia.Typeface.t, string))) =
-        ref(cache.glyphStrings);
-      let glyphStringByte: ref(int) = ref(cache.nextGlyphStringByte);
+//      let glyphStrings: ref(list((Skia.Typeface.t, string))) =
+//        ref(cache.glyphStrings);
+//      let glyphStringByte: ref(int) = ref(cache.nextGlyphStringByte);
 
-      Skia.Paint.setTextSize(paint, cache.font.fontSize);
-      Revery.Font.Smoothing.setPaint(~smoothing=cache.font.smoothing, paint);
+//      Skia.Paint.setTextSize(paint, cache.font.fontSize);
+//      Revery.Font.Smoothing.setPaint(~smoothing=cache.font.smoothing, paint);
 
-      while (i^ <= characterIndexInt && byte^ < len && glyphStrings^ != []) {
+      while (i^ <= characterIndexInt && byte^ < len) {
         let (uchar, offset) =
           ZedBundled.unsafe_extract_next(cache.raw, byte^);
 
-        let (skiaFace, glyphStr) = List.hd(glyphStrings^);
-
-        // All glyphs are 16bits and encoded into this string
-        let glyphSubstr = String.sub(glyphStr, glyphStringByte^, 2);
-
-        let getGlyphNumber = () => {
-          let lowBit = glyphSubstr.[0] |> Char.code;
-          let highBit = glyphSubstr.[1] |> Char.code;
-          highBit lsl 8 lor lowBit;
-        };
-
-        let pixelWidth =
-          measure(~typeface=skiaFace, ~cache, glyphSubstr, uchar);
+        let pixelWidth = cache.measure(uchar);
+          //measure(~typeface=cache.skiaTypeface, ~cache, uchar);
 
         Log.tracef(m =>
           m(
-            "resolveTo loop: uchar : %s, glyphStringByte : %d, pixelPosition : %f, glyphNumber : %d",
+            "resolveTo loop: uchar : %s, pixelPosition : %f",
             Zed_utf8.singleton(uchar),
-            glyphStringByte^,
             pixelPosition^,
-            getGlyphNumber(),
           )
         );
 
@@ -219,61 +203,24 @@ module Internal = {
 
         pixelPosition := pixelPosition^ +. pixelWidth;
         byte := offset;
-        // Since all OCaml strings are 8bits/1byte, if the next position would
-        // overshoot the length of the string, we go to the next glyph string
-        if (glyphStringByte^ + 2 >= String.length(glyphStr)) {
-          Log.trace("Reached end of current glyphString");
-          glyphStringByte := 0;
-          glyphStrings := List.tl(glyphStrings^);
-        } else {
-          // Otherwise we go to the next two bytes
-          Log.trace("Continuing on current glyphString");
-          glyphStringByte := glyphStringByte^ + 2;
-        };
         incr(i);
       };
 
       cache.nextIndex = i^;
       cache.nextByte = byte^;
       cache.nextPixelPosition = pixelPosition^;
-      cache.glyphStrings = glyphStrings^;
-      cache.nextGlyphStringByte = glyphStringByte^;
     };
   };
 };
 
-let make = (~indentation, ~font: Font.t=Font.default, raw: string) => {
-  let Font.{fontFamily, features, _} = font;
-
-  // We assume that the whoever is requesting the buffer has verified
-  // that the font is resolvable.
-  // TODO (maybe): we will probably eventually support having a different
-  // default weight. This will probably be part of the font record, so
-  // this will need to be updated if/when this is added.
-  let loadedFont =
-    fontFamily
-    |> Revery.Font.Family.toSkia(Revery.Font.Weight.Normal)
-    |> Revery.Font.load
-    |> Result.to_option
-    |> OptionEx.lazyDefault(() => {
-         Font.default.fontFamily
-         |> Revery.Font.Family.toSkia(Revery.Font.Weight.Normal)
-         |> Revery.Font.load
-         |> Result.get_ok
-       });
-
-  let glyphStrings =
-    Revery.Font.shape(~features, loadedFont, raw).glyphStrings;
+let make = (~measure, raw: string) => {
 
   {
     // Create a cache the size of the string - this would be the max length
     // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
 
-    indentation,
+    measure,
     raw,
-    glyphStrings,
-    font,
-    skiaTypeface: Revery.Font.getSkiaTypeface(loadedFont),
     characters: emptyCharacterMap,
     byteIndexMap: emptyByteIndexMap,
     nextByte: 0,
@@ -283,18 +230,14 @@ let make = (~indentation, ~font: Font.t=Font.default, raw: string) => {
   };
 };
 
-let empty = (~font=Font.default, ()) =>
-  make(~indentation=IndentationSettings.default, ~font, "");
+let empty = (~measure, ()) =>
+  make(~measure, "");
 
 let lengthInBytes = ({raw, _}) => String.length(raw);
 
 let lengthSlow = ({raw, _}) => ZedBundled.length(raw);
 
 let raw = ({raw, _}) => raw;
-
-let font = ({font, _}) => font;
-
-let indentation = ({indentation, _}) => indentation;
 
 let lengthBounded = (~max, bufferLine) => {
   Internal.resolveTo(~index=max, bufferLine);
@@ -378,8 +321,10 @@ let getPixelPositionAndWidth = (~index: CharacterIndex.t, bufferLine: t) => {
 
   let characterIdx = CharacterIndex.toInt(index);
 
+  let spaceWidth = bufferLine.measure(Uchar.of_char(' '));
+
   if (characterIdx < 0 || characterIdx >= len || len == 0) {
-    (bufferLine.nextPixelPosition, bufferLine.font.spaceWidth);
+    (bufferLine.nextPixelPosition, spaceWidth);
   } else {
     switch (characters[characterIdx]) {
     | Some({positionPixelOffset, pixelWidth, _}) => (
@@ -390,9 +335,9 @@ let getPixelPositionAndWidth = (~index: CharacterIndex.t, bufferLine: t) => {
       switch (characters[bufferLine.nextIndex - 1]) {
       | Some({positionPixelOffset, pixelWidth, _}) => (
           positionPixelOffset +. pixelWidth,
-          bufferLine.font.spaceWidth,
+          spaceWidth,
         )
-      | None => (0., bufferLine.font.spaceWidth)
+      | None => (0., spaceWidth)
       }
     };
   };

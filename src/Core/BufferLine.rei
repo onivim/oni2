@@ -10,17 +10,15 @@ exception OutOfBounds;
 
 type t;
 
-let make: (~indentation: IndentationSettings.t, ~font: Font.t=?, string) => t;
+type measure = Uchar.t => float;
 
-let empty: (~font: Font.t=?, unit) => t;
+let make: (~measure: measure, string) => t;
+
+let empty: (~measure: measure, unit) => t;
 
 let lengthInBytes: t => int;
 
 let raw: t => string;
-
-let font: t => Font.t;
-
-let indentation: t => IndentationSettings.t;
 
 /*
  * [lengthSlow(bufferLine)] returns the UTF-8 length of the buffer line.
