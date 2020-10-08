@@ -94,54 +94,54 @@ module Internal = {
   Skia.Paint.setTextEncoding(paint, GlyphId);
   Skia.Paint.setLcdRenderText(paint, true);
 
-//  let measure = (~typeface: Skia.Typeface.t, ~cache: t, uchar) =>
-//    switch (
-//      MeasurementsCache.find(
-//        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
-//        measurementsCache,
-//      )
-//    ) {
-//    | Some(pixelWidth) =>
-//      MeasurementsCache.promote(
-//        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
-//        measurementsCache,
-//      );
-//      Log.tracef(m =>
-//        m(
-//          "MeasurementCache : Hit! Typeface : %s, Font Size: %f, Uchar: %s (%d)",
-//          Skia.Typeface.getFamilyName(typeface),
-//          cache.font.fontSize,
-//          Zed_utf8.singleton(uchar),
-//          Uchar.to_int(uchar),
-//        )
-//      );
-//      pixelWidth;
-//    | None =>
-//      Log.tracef(m =>
-//        m(
-//          "MeasurementCache : Miss! Typeface : %s, Uchar: %s (%d)",
-//          Skia.Typeface.getFamilyName(typeface),
-//          Zed_utf8.singleton(uchar),
-//          Uchar.to_int(uchar),
-//        )
-//      );
-//      Skia.Paint.setTypeface(paint, typeface);
-//      // When the character is a tab, we have to make sure
-//      // we offset the correct amount.
-//      let pixelWidth =
-//        if (Uchar.equal(uchar, tab)) {
-//          float(cache.indentation.tabSize) *. cache.font.spaceWidth;
-//        } else {
-//          cache.measure(uchar);
-//        };
-//      MeasurementsCache.add(
-//        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
-//        pixelWidth,
-//        measurementsCache,
-//      );
-//      MeasurementsCache.trim(measurementsCache);
-//      pixelWidth;
-//    };
+  //  let measure = (~typeface: Skia.Typeface.t, ~cache: t, uchar) =>
+  //    switch (
+  //      MeasurementsCache.find(
+  //        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
+  //        measurementsCache,
+  //      )
+  //    ) {
+  //    | Some(pixelWidth) =>
+  //      MeasurementsCache.promote(
+  //        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
+  //        measurementsCache,
+  //      );
+  //      Log.tracef(m =>
+  //        m(
+  //          "MeasurementCache : Hit! Typeface : %s, Font Size: %f, Uchar: %s (%d)",
+  //          Skia.Typeface.getFamilyName(typeface),
+  //          cache.font.fontSize,
+  //          Zed_utf8.singleton(uchar),
+  //          Uchar.to_int(uchar),
+  //        )
+  //      );
+  //      pixelWidth;
+  //    | None =>
+  //      Log.tracef(m =>
+  //        m(
+  //          "MeasurementCache : Miss! Typeface : %s, Uchar: %s (%d)",
+  //          Skia.Typeface.getFamilyName(typeface),
+  //          Zed_utf8.singleton(uchar),
+  //          Uchar.to_int(uchar),
+  //        )
+  //      );
+  //      Skia.Paint.setTypeface(paint, typeface);
+  //      // When the character is a tab, we have to make sure
+  //      // we offset the correct amount.
+  //      let pixelWidth =
+  //        if (Uchar.equal(uchar, tab)) {
+  //          float(cache.indentation.tabSize) *. cache.font.spaceWidth;
+  //        } else {
+  //          cache.measure(uchar);
+  //        };
+  //      MeasurementsCache.add(
+  //        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
+  //        pixelWidth,
+  //        measurementsCache,
+  //      );
+  //      MeasurementsCache.trim(measurementsCache);
+  //      pixelWidth;
+  //    };
 
   let resolveTo = (~index: CharacterIndex.t, cache: t) => {
     // First, allocate our cache, if necessary
@@ -167,19 +167,19 @@ module Internal = {
       let byte: ref(int) = ref(cache.nextByte);
       let pixelPosition: ref(float) = ref(cache.nextPixelPosition);
 
-//      let glyphStrings: ref(list((Skia.Typeface.t, string))) =
-//        ref(cache.glyphStrings);
-//      let glyphStringByte: ref(int) = ref(cache.nextGlyphStringByte);
+      //      let glyphStrings: ref(list((Skia.Typeface.t, string))) =
+      //        ref(cache.glyphStrings);
+      //      let glyphStringByte: ref(int) = ref(cache.nextGlyphStringByte);
 
-//      Skia.Paint.setTextSize(paint, cache.font.fontSize);
-//      Revery.Font.Smoothing.setPaint(~smoothing=cache.font.smoothing, paint);
+      //      Skia.Paint.setTextSize(paint, cache.font.fontSize);
+      //      Revery.Font.Smoothing.setPaint(~smoothing=cache.font.smoothing, paint);
 
       while (i^ <= characterIndexInt && byte^ < len) {
         let (uchar, offset) =
           ZedBundled.unsafe_extract_next(cache.raw, byte^);
 
         let pixelWidth = cache.measure(uchar);
-          //measure(~typeface=cache.skiaTypeface, ~cache, uchar);
+        //measure(~typeface=cache.skiaTypeface, ~cache, uchar);
 
         Log.tracef(m =>
           m(
@@ -214,7 +214,6 @@ module Internal = {
 };
 
 let make = (~measure, raw: string) => {
-
   {
     // Create a cache the size of the string - this would be the max length
     // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
@@ -230,8 +229,7 @@ let make = (~measure, raw: string) => {
   };
 };
 
-let empty = (~measure, ()) =>
-  make(~measure, "");
+let empty = (~measure, ()) => make(~measure, "");
 
 let lengthInBytes = ({raw, _}) => String.length(raw);
 
