@@ -66,6 +66,7 @@ let scrollTo:
 
 module Contributions: {
   let commands: list(Command.t(msg));
+  let keybindings: list(Oni_Input.Keybindings.keybinding);
   let contextKeys: model('node, 'leaf) => WhenExpr.ContextKeys.t;
 };
 
