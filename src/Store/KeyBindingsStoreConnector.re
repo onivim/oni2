@@ -351,7 +351,7 @@ let start = maybeKeyBindingsFilePath => {
           condition: windowCommandCondition,
         },
         {
-          key: "<C-W><C-S-R>", // TODO: Does not work, blocked by bug in editor-input
+          key: "<C-W><C-S-R>",
           command: Feature_Layout.Commands.rotateBackward.id,
           condition: windowCommandCondition,
         },
@@ -412,7 +412,8 @@ let start = maybeKeyBindingsFilePath => {
         },
       ]
     @ Component_VimWindows.Contributions.keybindings
-    @ Component_VimList.Contributions.keybindings;
+    @ Component_VimList.Contributions.keybindings
+    @ Component_VimTree.Contributions.keybindings;
 
   let getKeybindingsFile = () => {
     Filesystem.getOrCreateConfigFile(

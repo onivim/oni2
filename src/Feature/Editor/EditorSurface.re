@@ -217,7 +217,6 @@ let%component make =
 
   let editorFont = Editor.font(editor);
 
-  let leftVisibleColumn = Editor.getLeftVisibleColumn(editor);
   let topVisibleLine = Editor.getTopVisibleLine(editor);
   let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
 
@@ -243,7 +242,7 @@ let%component make =
       ? None
       : Editor.getNearestMatchingPair(
           ~characterPosition=matchingPairCheckPosition,
-          ~pairs=LanguageConfiguration.(languageConfiguration.brackets),
+          ~pairs=LanguageConfiguration.brackets(languageConfiguration),
           editor,
         );
 
@@ -359,20 +358,19 @@ let%component make =
       onCursorChange
       cursorPosition
       editorFont
-      leftVisibleColumn
       diagnosticsMap
       selectionRanges
       matchingPairs
       maybeYankHighlights
       bufferHighlights
       languageSupport
+      languageConfiguration
       bufferSyntaxHighlights
       bottomVisibleLine
       mode
       isActiveSplit
       gutterWidth
       bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
-      bufferWidthInCharacters={layout.bufferWidthInCharacters}
       windowIsFocused
       config
     />

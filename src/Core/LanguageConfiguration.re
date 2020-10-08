@@ -8,6 +8,8 @@ open Utility;
 
 module Log = (val Kernel.Log.withNamespace("Oni2.LanguageConfiguration"));
 
+let json = Yojson.Safe.from_string;
+
 module AutoClosingPair = {
   type scopes =
     | String
@@ -68,6 +70,31 @@ module AutoClosingPair = {
 
     let decode = {
       one_of([("tuple", tuple), ("object", obj)]);
+    };
+    let%test "decode tuple" = {
+      let acp = json({|["a", "b"]|}) |> decode_value(decode);
+
+      acp == Ok({openPair: "a", closePair: "b", notIn: []});
+    };
+    let%test "decode simple object" = {
+      let acp =
+        json({|{"open": "c", "close": "d"}|}) |> decode_value(decode);
+
+      acp == Ok({openPair: "c", closePair: "d", notIn: []});
+    };
+    let%test "decode object with notIn list" = {
+      let acp =
+        json({|{"open": "c", "close": "d", "notIn": ["string"]}|})
+        |> decode_value(decode);
+
+      acp == Ok({openPair: "c", closePair: "d", notIn: [String]});
+    };
+    let%test "decode object with notIn string" = {
+      let acp =
+        json({|{"open": "c", "close": "d", "notIn": "comment"}|})
+        |> decode_value(decode);
+
+      acp == Ok({openPair: "c", closePair: "d", notIn: [Comment]});
     };
   };
 
@@ -137,7 +164,11 @@ type t = {
   blockComment: option((string, string)),
   increaseIndentPattern: option(OnigRegExp.t),
   decreaseIndentPattern: option(OnigRegExp.t),
+  wordPattern: option(OnigRegExp.t),
 };
+
+let brackets = ({brackets, _}) => brackets;
+let lineComment = ({lineComment, _}) => lineComment;
 
 let default: t = {
   autoCloseBefore: [
@@ -160,12 +191,15 @@ let default: t = {
   blockComment: None,
   increaseIndentPattern: None,
   decreaseIndentPattern: None,
+  wordPattern:
+    OnigRegExp.create(
+      "(-?\\d*\\.\\d\\w*)|([^\\`\\~\\!\\@\\#\\%\\^\\&\\*\\(\\)\\-\\=\\+\\[\\{\\]\\}\\\\\\|\\;\\:\\'\\\"\\,\\.\\<\\>\\/\\?\\s]+)",
+    )
+    |> Result.to_option,
 };
 
-module Decode = {
-  let _defaultConfig = default;
+module CustomDecoders = {
   open Json.Decode;
-
   let autoCloseBeforeDecode = string |> map(StringEx.explode);
 
   let regexp =
@@ -179,6 +213,26 @@ module Decode = {
              succeed(None);
            },
        );
+
+  let%test "decode valid regexp" = {
+    json({|"abc"|})
+    |> decode_value(regexp)
+    |> Result.get_ok
+    |> Option.is_some;
+  };
+
+  let%test "decode invalid regexp" = {
+    json({|"(invalid"|})
+    |> decode_value(regexp)
+    |> Result.get_ok
+    |> Option.is_none;
+  };
+};
+
+module Decode = {
+  let _defaultConfig = default;
+  open Json.Decode;
+  open CustomDecoders;
 
   let configuration =
     obj(({field, at, _}) =>
@@ -224,8 +278,32 @@ module Decode = {
             None,
             regexp,
           ),
+
+        wordPattern:
+          field.withDefault(
+            "wordPattern",
+            _defaultConfig.wordPattern,
+            regexp,
+          ),
       }
     );
+
+  let%test "decode autoCloseBefore" = {
+    let languageConfig =
+      json({|{"autoCloseBefore": "abc"}|})
+      |> decode_value(configuration)
+      |> Result.get_ok;
+
+    languageConfig.autoCloseBefore == ["a", "b", "c"];
+  };
+  let%test "decode brackets" = {
+    let languageConfig =
+      json({|{"brackets": [["{", "}"]]}|})
+      |> decode_value(configuration)
+      |> Result.get_ok;
+
+    languageConfig.brackets == [{openPair: "{", closePair: "}"}];
+  };
 };
 
 let decode = Decode.configuration;
@@ -296,3 +374,65 @@ let toAutoIndent = (languageConfig, ~previousLine, ~beforePreviousLine) => {
     Vim.AutoIndent.KeepIndent
   };
 };
+
+let isWordCharacter = (char, {wordPattern, _}) => {
+  wordPattern
+  |> Option.map(regexp =>
+       OnigRegExp.Fast.test(Zed_utf8.make(1, char), regexp)
+     )
+  |> Option.value(~default=false);
+};
+
+let%test_module "LanguageConfiguration" =
+  (module
+   {
+     let defaultConfig = default;
+     open Json.Decode;
+
+     let%test "increase / decrease indent" = {
+       let languageConfig =
+         json(
+           {|
+        {"indentationRules":
+          {
+          "increaseIndentPattern":"abc",
+          "decreaseIndentPattern":"def"
+          }
+        }|},
+         )
+         |> decode_value(decode)
+         |> Result.get_ok;
+
+       toAutoIndent(
+         languageConfig,
+         ~previousLine="abc",
+         ~beforePreviousLine=None,
+       )
+       == Vim.AutoIndent.IncreaseIndent;
+     };
+     let%test "falls back to brackets" = {
+       let languageConfig =
+         json({|
+        {"brackets":
+		  [["{", "}"]]
+        }|})
+         |> decode_value(decode)
+         |> Result.get_ok;
+
+       toAutoIndent(
+         languageConfig,
+         ~previousLine="   {",
+         ~beforePreviousLine=None,
+       )
+       == Vim.AutoIndent.IncreaseIndent;
+     };
+     let%test "default word pattern: isWordCharacter true for 'a'" = {
+       isWordCharacter(Uchar.of_char('a'), defaultConfig) == true;
+     };
+     let%test "default word pattern: isWordCharacter false for ' '" = {
+       isWordCharacter(Uchar.of_char(' '), defaultConfig) == false;
+     };
+     let%test "default word pattern: isWordCharacter false for '('" = {
+       isWordCharacter(Uchar.of_char('('), defaultConfig) == false;
+     };
+   });

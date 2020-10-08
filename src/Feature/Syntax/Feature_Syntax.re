@@ -33,6 +33,26 @@ let highlight = (~scope, ~theme, ~grammars, lines) => {
   result;
 };
 
+module Tokens = {
+  let getAt = (~byteIndex as orig, tokens) => {
+    let byteIndex = ByteIndex.toInt(orig);
+    let rec loop = (lastToken, tokens: list(ThemeToken.t)) => {
+      switch (tokens) {
+      | [] => lastToken
+      | [token] => token.index <= byteIndex ? Some(token) : lastToken
+      | [token, ...tail] =>
+        if (token.index > byteIndex) {
+          lastToken;
+        } else {
+          loop(Some(token), tail);
+        }
+      };
+    };
+
+    loop(None, tokens);
+  };
+};
+
 module Configuration = {
   open Oni_Core;
   open Config.Schema;
@@ -125,6 +145,12 @@ let getTokens =
        LineMap.find_opt(line |> EditorCoreTypes.LineNumber.toZeroBased),
      )
   |> Option.value(~default=noTokens);
+};
+
+let getAt =
+    (~bufferId, ~bytePosition: EditorCoreTypes.BytePosition.t, highlights) => {
+  let tokens = getTokens(~bufferId, ~line=bytePosition.line, highlights);
+  Tokens.getAt(~byteIndex=bytePosition.byte, tokens);
 };
 
 let getSyntaxScope =
