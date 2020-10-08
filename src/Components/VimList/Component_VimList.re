@@ -697,7 +697,8 @@ module View = {
       right(isScrollbarVisible ? 0 : Constants.scrollBarThickness),
     ];
 
-    let item = (~offset, ~rowHeight, ~bg) => [
+    let item = (~isSelected, ~offset, ~rowHeight, ~bg) =>  {
+        let common = [
       position(`Absolute),
       backgroundColor(bg),
       top(offset),
@@ -705,6 +706,19 @@ module View = {
       right(0),
       height(rowHeight),
     ];
+
+    isSelected ? [
+        
+      boxShadow(
+        ~xOffset=3.,
+        ~yOffset=3.,
+        ~blurRadius=5.,
+        ~spreadRadius=0.,
+        ~color=Revery.Color.rgba(0., 0., 0., 0.2),
+      ),
+      ...common
+    ] : common
+    };
 
     let searchBorder = (~color) => [
       position(`Absolute),
@@ -781,11 +795,13 @@ module View = {
               />
             : React.empty;
 
+        let isSelected = selected == i;
+        
         <Clickable
           onMouseEnter={_ => onMouseOver(i)}
           onMouseLeave={_ => onMouseOut(i)}
           onClick={_ => onMouseClick(i)}
-          style={Styles.item(~offset, ~rowHeight, ~bg)}>
+          style={Styles.item(~isSelected, ~offset, ~rowHeight, ~bg)}>
           {render(
              ~availableWidth=viewportWidth,
              ~index=i,
@@ -897,8 +913,8 @@ module View = {
 
         let focusBorder = Colors.focusBorder.from(theme);
 
-        let searchBg = Colors.List.filterMatchBackground.from(theme);
-        let searchBorder = Colors.List.filterMatchBorder.from(theme);
+        let searchBg = Colors.Editor.findMatchBackground.from(theme);
+        let searchBorder = Colors.Editor.findMatchBorder.from(theme);
         let items =
           renderHelper(
             ~focusIndex=focusedIndex,
