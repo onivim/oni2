@@ -92,8 +92,7 @@ module Internal = {
 
     uchar =>
       if (Uchar.equal(uchar, tab)) {
-        float(IndentationSettings.(indentation.tabSize))
-        *. Skia.Typeface.(spaceWidth);
+        float(IndentationSettings.(indentation.tabSize)) *. spaceWidth;
       } else {
         let glyphStrings =
           Revery.Font.shape(~features, loadedFont, Zed_utf8.make(1, uchar)).

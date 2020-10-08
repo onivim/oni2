@@ -4,8 +4,7 @@ open BenchFramework;
 open Feature_Editor;
 
 let giantString =
-  String.make(1000, 'a')
-  |> BufferLine.make(~indentation=IndentationSettings.default);
+  String.make(1000, 'a') |> BufferLine.make(~measure=_ => 1.0);
 
 let options = Reperf.Options.create(~iterations=1000, ());
 

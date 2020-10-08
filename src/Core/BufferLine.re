@@ -6,16 +6,15 @@
 exception OutOfBounds;
 
 open EditorCoreTypes;
-open Utility;
 
 module Log = (val Timber.Log.withNamespace("Oni2.Core.BufferLine"));
 
 type measure = Uchar.t => float;
 
-let _space = Uchar.of_char(' ');
-let tab = Uchar.of_char('\t');
-let _cr = Uchar.of_char('\r');
-let _lf = Uchar.of_char('\n');
+//let _space = Uchar.of_char(' ');
+//let tab = Uchar.of_char('\t');
+//let _cr = Uchar.of_char('\r');
+//let _lf = Uchar.of_char('\n');
 
 type characterCacheInfo = {
   byteOffset: int,
@@ -86,8 +85,8 @@ module Internal = {
   module MeasurementsCache =
     Lru.M.Make(SkiaTypefaceUcharHashable, MeasureResult);
 
-  let measurementsCache =
-    MeasurementsCache.create(~initialSize=1024, 128 * 1024);
+  //  let measurementsCache =
+  //    MeasurementsCache.create(~initialSize=1024, 128 * 1024);
 
   // Create a paint to measure the character with
   let paint = Skia.Paint.make();

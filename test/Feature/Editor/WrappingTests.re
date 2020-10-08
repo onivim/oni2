@@ -58,7 +58,7 @@ describe("Wrapping", ({describe, _}) => {
   describe("fixed=3", ({test, _}) => {
     let characterWidth = {
       let (_, width) =
-        BufferLine.make(~indentation=IndentationSettings.default, "a")
+        BufferLine.make(~measure=_ => 1.0, "a")
         |> BufferLine.getPixelPositionAndWidth(~index=CharacterIndex.zero);
       width;
     };

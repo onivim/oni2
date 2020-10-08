@@ -11,7 +11,7 @@ module Data = {
     );
 
   let randomBufferLine = () =>
-    BufferLine.make(~indentation=IndentationSettings.default, randomString());
+    BufferLine.make(~measure=_ => 1.0, randomString());
 
   let lines_10k_a = Array.init(10000, _ => randomString());
   let lines_10k_b = Array.init(10000, _ => randomString());
