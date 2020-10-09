@@ -185,7 +185,7 @@ let ofLines = (~id=0, ~font=Font.default, rawLines: array(string)) => {
   };
 };
 
-let initial = ofLines([||]);
+let empty = (~font) => ofLines(~font, [||]);
 
 let ofMetadata = (~font=Font.default, ~id, ~version, ~filePath, ~modified) => {
   ...ofLines(~font, [||]),

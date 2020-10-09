@@ -24,7 +24,7 @@ module FileType: {
   let toOption: t => option(string);
 };
 
-let initial: t;
+let empty: (~font: Font.t) => t;
 
 let show: t => string;
 
