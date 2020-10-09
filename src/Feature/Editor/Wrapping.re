@@ -1,8 +1,9 @@
 open EditorCoreTypes;
 open Oni_Core;
+module LineNumber = EditorCoreTypes.LineNumber;
 
 type bufferPosition = {
-  line: EditorCoreTypes.LineNumber.t,
+  line: LineNumber.t,
   byteOffset: ByteIndex.t,
   characterOffset: CharacterIndex.t,
 };
@@ -10,7 +11,9 @@ type bufferPosition = {
 type t = {
   wrap: WordWrap.t,
   buffer: EditorBuffer.t,
+  // Per-buffer-line array of wrap points
   wraps: array(list(WordWrap.lineWrap)),
+  wrapsMutationCount: int,
   // Map of buffer line index -> view line index
   bufferLineToViewLineCache: IntMap.t(int),
   // Map of view line index -> buffer index
@@ -77,6 +80,7 @@ let make = (~wrap: Oni_Core.WordWrap.t, ~buffer) => {
     Internal.recalculateCaches(~wraps);
   {
     wrap,
+    wrapsMutationCount: 0,
     buffer,
     wraps,
     bufferLineToViewLineCache,
@@ -85,17 +89,65 @@ let make = (~wrap: Oni_Core.WordWrap.t, ~buffer) => {
   };
 };
 
-let update = (~update as _: Oni_Core.BufferUpdate.t, ~newBuffer, {wrap, _}) => {
-  let wraps = Internal.bufferToWraps(~wrap, newBuffer);
-  let (bufferLineToViewLineCache, viewLineToBufferCache, totalViewLines) =
-    Internal.recalculateCaches(~wraps);
-  {
-    wrap,
-    buffer: newBuffer,
-    wraps,
-    bufferLineToViewLineCache,
-    viewLineToBufferCache,
-    totalViewLines,
+let update =
+    (
+      ~update: Oni_Core.BufferUpdate.t,
+      ~newBuffer,
+      {wrap, wraps, _} as wrapping: t,
+    ) => {
+  let startLine = update.startLine |> LineNumber.toZeroBased;
+  let endLine = update.endLine |> LineNumber.toZeroBased;
+  // Special case - the number of lines haven't changed. We can streamline this.
+  if (!update.isFull && endLine - startLine == Array.length(update.lines)) {
+    // Update lines in update
+    let isRecalculationNeeded = ref(false);
+    for (idx in startLine to endLine - 1) {
+      // Check previous wrap count
+      let wrapCount = wraps[idx] |> List.length;
+
+      let line = EditorBuffer.line(idx, newBuffer);
+
+      // HACK: Mutation
+      let newWraps = wrap(line);
+      let newWrapCount = newWraps |> List.length;
+      wraps[idx] = newWraps;
+
+      if (newWrapCount != wrapCount) {
+        isRecalculationNeeded := true;
+      };
+    };
+
+    let (bufferLineToViewLineCache, viewLineToBufferCache, totalViewLines) =
+      if (isRecalculationNeeded^) {
+        (
+          wrapping.bufferLineToViewLineCache,
+          wrapping.viewLineToBufferCache,
+          wrapping.totalViewLines,
+        );
+      } else {
+        Internal.recalculateCaches(~wraps);
+      };
+
+    {
+      ...wrapping,
+      wrapsMutationCount: wrapping.wrapsMutationCount + 1,
+      bufferLineToViewLineCache,
+      viewLineToBufferCache,
+      totalViewLines,
+    };
+  } else {
+    let wraps = Internal.bufferToWraps(~wrap, newBuffer);
+    let (bufferLineToViewLineCache, viewLineToBufferCache, totalViewLines) =
+      Internal.recalculateCaches(~wraps);
+    {
+      wrap,
+      wrapsMutationCount: 0,
+      buffer: newBuffer,
+      wraps,
+      bufferLineToViewLineCache,
+      viewLineToBufferCache,
+      totalViewLines,
+    };
   };
 };
 
