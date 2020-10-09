@@ -13,7 +13,7 @@ type t = {
   measurementCache: [@opaque] FontMeasurementCache.t,
 };
 
-let default = {
+let default = () => {
   let fontFamily = Revery.Font.Family.fromFile(Constants.defaultFontFile);
   let fontSize = Constants.defaultFontSize;
   let smoothing = Revery.Font.Smoothing.default;

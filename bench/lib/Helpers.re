@@ -15,7 +15,7 @@ let simpleState = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
       Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
     Buffer.ofMetadata(
-      ~font=Font.default,
+      ~font=Font.default(),
       ~id,
       ~version,
       ~filePath,

@@ -133,7 +133,7 @@ let getLongFriendlyName = ({filePath: maybeFilePath, _}) => {
      });
 };
 
-let ofLines = (~id=0, ~font=Font.default, rawLines: array(string)) => {
+let ofLines = (~id=0, ~font, rawLines: array(string)) => {
   let indentation = Inferred.implicit(IndentationSettings.default);
   let measure = Internal.createMeasureFunction(~font, ~indentation);
 
@@ -159,7 +159,7 @@ let ofLines = (~id=0, ~font=Font.default, rawLines: array(string)) => {
 
 let empty = (~font) => ofLines(~font, [||]);
 
-let ofMetadata = (~font=Font.default, ~id, ~version, ~filePath, ~modified) => {
+let ofMetadata = (~font, ~id, ~version, ~filePath, ~modified) => {
   ...ofLines(~font, [||]),
   id,
   version,

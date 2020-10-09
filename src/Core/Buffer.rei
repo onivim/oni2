@@ -28,10 +28,10 @@ let empty: (~font: Font.t) => t;
 
 let show: t => string;
 
-let ofLines: (~id: int=?, ~font: Font.t=?, array(string)) => t;
+let ofLines: (~id: int=?, ~font: Font.t, array(string)) => t;
 let ofMetadata:
   (
-    ~font: Font.t=?,
+    ~font: Font.t,
     ~id: int,
     ~version: int,
     ~filePath: option(string),

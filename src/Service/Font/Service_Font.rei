@@ -18,7 +18,7 @@ type font =
 
 let toString: font => string;
 
-let default: font;
+let default: unit => font;
 
 let resolveWithFallback:
   (~italic: bool=?, Revery_Font.Weight.t, Revery_Font.Family.t) =>
