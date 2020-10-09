@@ -20,9 +20,7 @@ runTestWithInput(~name="EditorUtf8Test", (input, dispatch, wait, _) => {
     |> Option.map(name => String.equal(name, "utf8.txt"))
     |> Option.value(~default=false)
   });
-  let str =
-    "κόσμε"
-    |> Oni_Core.BufferLine.make(~indentation=IndentationSettings.default);
+  let str = "κόσμε" |> Oni_Core.BufferLine.make(~measure=_ => 1.0);
 
   let c0 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(0), str);
   let c1 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(1), str);

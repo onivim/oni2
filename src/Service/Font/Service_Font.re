@@ -16,6 +16,7 @@ type font =
     descenderHeight: float,
     smoothing: [@opaque] Revery.Font.Smoothing.t,
     features: [@opaque] list(Revery.Font.Feature.t),
+    measurementCache: [@opaque] FontMeasurementCache.t,
   };
 
 let toString = show_font;
@@ -143,6 +144,13 @@ let setFont =
               descenderHeight,
               smoothing,
               features,
+              measurementCache:
+                FontMeasurementCache.create(
+                  ~fontFamily,
+                  ~fontSize,
+                  ~features,
+                  ~smoothing,
+                ),
             }),
           );
         }

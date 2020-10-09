@@ -5,10 +5,13 @@ module LineNumber = EditorCoreTypes.LineNumber;
 open TestFramework;
 open Helpers;
 
+let makeBuffer = lines =>
+  Buffer.ofLines(~font=Oni_Core.Font.default(), lines);
+
 describe("Buffer", ({describe, _}) =>
   describe("update", ({test, _}) => {
     test("empty buffer w/ update", ({expect, _}) => {
-      let buffer = Buffer.ofLines([||]);
+      let buffer = makeBuffer([||]);
       let update =
         BufferUpdate.create(
           ~startLine=LineNumber.zero,
@@ -22,7 +25,7 @@ describe("Buffer", ({describe, _}) =>
     });
 
     test("BufEnter update does not duplicate content", ({expect, _}) => {
-      let buffer = Buffer.ofLines([|"a", "d", "e", "f", "c"|]);
+      let buffer = makeBuffer([|"a", "d", "e", "f", "c"|]);
       let update =
         BufferUpdate.create(
           ~isFull=true,
@@ -39,7 +42,7 @@ describe("Buffer", ({describe, _}) =>
     test(
       "BufEnter update does not duplicate content, 1-based indices",
       ({expect, _}) => {
-      let buffer = Buffer.ofLines([|"a", "d", "e", "f", "c"|]);
+      let buffer = makeBuffer([|"a", "d", "e", "f", "c"|]);
       let update =
         BufferUpdate.create(
           ~isFull=true,
@@ -54,7 +57,7 @@ describe("Buffer", ({describe, _}) =>
     });
 
     test("update single line", ({expect, _}) => {
-      let buffer = Buffer.ofLines([|"a"|]);
+      let buffer = makeBuffer([|"a"|]);
       let update =
         BufferUpdate.create(
           ~startLine=LineNumber.zero,
@@ -68,7 +71,7 @@ describe("Buffer", ({describe, _}) =>
     });
 
     test("delete line", ({expect, _}) => {
-      let buffer = Buffer.ofLines([|"a"|]);
+      let buffer = makeBuffer([|"a"|]);
       let update =
         BufferUpdate.create(
           ~startLine=LineNumber.zero,
@@ -82,7 +85,7 @@ describe("Buffer", ({describe, _}) =>
     });
 
     test("update single line", ({expect, _}) => {
-      let buffer = Buffer.ofLines([|"a", "b", "c"|]);
+      let buffer = makeBuffer([|"a", "b", "c"|]);
       let update =
         BufferUpdate.create(
           ~startLine=LineNumber.ofZeroBased(1),
@@ -96,7 +99,7 @@ describe("Buffer", ({describe, _}) =>
     });
 
     test("add new line after buffer", ({expect, _}) => {
-      let buffer = Buffer.ofLines([|"a", "b", "c"|]);
+      let buffer = makeBuffer([|"a", "b", "c"|]);
       let update =
         BufferUpdate.create(
           ~startLine=LineNumber.ofZeroBased(3),
@@ -110,7 +113,7 @@ describe("Buffer", ({describe, _}) =>
     });
 
     test("version gets updated with buffer update", ({expect, _}) => {
-      let buffer = Buffer.ofLines([|"a", "b", "c"|]);
+      let buffer = makeBuffer([|"a", "b", "c"|]);
       let update =
         BufferUpdate.create(
           ~startLine=LineNumber.ofZeroBased(3),
@@ -125,7 +128,7 @@ describe("Buffer", ({describe, _}) =>
     });
 
     test("buffer update with lower version gets rejected", ({expect, _}) => {
-      let buffer = Buffer.ofLines([||]);
+      let buffer = makeBuffer([||]);
       let update =
         BufferUpdate.create(
           ~startLine=LineNumber.ofZeroBased(3),

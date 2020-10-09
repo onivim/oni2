@@ -34,11 +34,7 @@ let thickB = c =>
   | _ => 1
   };
 
-let makeLine =
-  BufferLine.make(
-    ~indentation=
-      IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=2, ()),
-  );
+let makeLine = BufferLine.make(~measure=_ => 1.0);
 
 let validateToken =
     (

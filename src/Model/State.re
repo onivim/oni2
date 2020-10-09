@@ -113,6 +113,8 @@ let initial =
     Editor.create(~config, ~buffer=editorBuffer, ());
   };
 
+  let defaultEditorFont = Service_Font.default();
+
   {
     buffers: Feature_Buffers.empty |> Feature_Buffers.add(initialBuffer),
     bufferHighlights: BufferHighlights.initial,
@@ -133,8 +135,8 @@ let initial =
     diagnostics: Feature_Diagnostics.initial,
     input: Feature_Input.initial,
     quickmenu: None,
-    editorFont: Service_Font.default,
-    terminalFont: Service_Font.default,
+    editorFont: defaultEditorFont,
+    terminalFont: defaultEditorFont,
     extensions:
       Feature_Extensions.initial(
         ~globalPersistence=extensionGlobalPersistence,
