@@ -158,6 +158,8 @@ jobs:
   - script: brew install ragel
   - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
+  - script: xcode-select -s /Applications/Xcode_12.2.app
+  - script: xcodebuild -version
   - template: .ci/js-build-steps.yml
   - template: .ci/use-esy.yml
   - template: .ci/esy-build-steps.yml
