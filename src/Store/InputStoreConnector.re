@@ -139,39 +139,47 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     // TODO: Should we filter out repeat keys from key binding processing?
     ignore(repeat);
 
-    let shift = Revery.Key.Keymod.isShiftDown(keymod);
-    let control = Revery.Key.Keymod.isControlDown(keymod);
-    let alt = Revery.Key.Keymod.isAltDown(keymod);
-    let meta = Revery.Key.Keymod.isGuiDown(keymod);
-    let altGr = Revery.Key.Keymod.isAltGrKeyDown(keymod);
+    let name = Sdl2.Scancode.ofInt(scancode) |> Sdl2.Scancode.getName;
 
-    let (altGr, control, alt) =
-      switch (Revery.Environment.os) {
-      // On Windows, we need to do some special handling here
-      // Windows has this funky behavior where pressing AltGr registers as RAlt+LControl down - more info here:
-      // https://devblogs.microsoft.com/oldnewthing/?p=40003
-      | Revery.Environment.Windows =>
-        let altGr =
-          altGr
-          || Revery.Key.Keymod.isRightAltDown(keymod)
-          && Revery.Key.Keymod.isControlDown(keymod);
-        // If altGr is active, disregard control / alt key
-        let ctrlKey = altGr ? false : control;
-        let altKey = altGr ? false : alt;
-        (altGr, ctrlKey, altKey);
-      | _ => (altGr, control, alt)
-      };
+    if (name == "Left Shift" || name == "Right Shift") {
+      None;
+    } else {
+      let shift = Revery.Key.Keymod.isShiftDown(keymod);
+      let control = Revery.Key.Keymod.isControlDown(keymod);
+      let alt = Revery.Key.Keymod.isAltDown(keymod);
+      let meta = Revery.Key.Keymod.isGuiDown(keymod);
+      let altGr = Revery.Key.Keymod.isAltGrKeyDown(keymod);
 
-    EditorInput.KeyPress.{
-      scancode,
-      keycode,
-      modifiers: {
-        shift,
-        control,
-        alt,
-        meta,
-        altGr,
-      },
+      let (altGr, control, alt) =
+        switch (Revery.Environment.os) {
+        // On Windows, we need to do some special handling here
+        // Windows has this funky behavior where pressing AltGr registers as RAlt+LControl down - more info here:
+        // https://devblogs.microsoft.com/oldnewthing/?p=40003
+        | Revery.Environment.Windows =>
+          let altGr =
+            altGr
+            || Revery.Key.Keymod.isRightAltDown(keymod)
+            && Revery.Key.Keymod.isControlDown(keymod);
+          // If altGr is active, disregard control / alt key
+          let ctrlKey = altGr ? false : control;
+          let altKey = altGr ? false : alt;
+          (altGr, ctrlKey, altKey);
+        | _ => (altGr, control, alt)
+        };
+
+      Some(
+        EditorInput.KeyPress.{
+          scancode,
+          keycode,
+          modifiers: {
+            shift,
+            control,
+            alt,
+            meta,
+            altGr,
+          },
+        },
+      );
     };
   };
 
@@ -274,7 +282,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
-          dispatch(Actions.KeyDown(event |> reveryKeyToEditorKey, time));
+          event
+          |> reveryKeyToEditorKey
+          |> Option.iter(key => {dispatch(Actions.KeyDown(key, time))});
         },
       );
 
@@ -283,7 +293,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
-          dispatch(Actions.KeyUp(event |> reveryKeyToEditorKey, time));
+          event
+          |> reveryKeyToEditorKey
+          |> Option.iter(key => {dispatch(Actions.KeyUp(key, time))});
         },
       );
 

@@ -192,4 +192,83 @@ describe("BufferLine", ({describe, _}) => {
       expect.int(characterIndex |> CharacterIndex.toInt).toBe(1);
     })
   });
+  describe("traverse", ({test, _}) => {
+    let alwaysTrue = _ => true;
+    let onlyA = char => Uchar.to_char(char) == 'A';
+    let characterIndex = CharacterIndex.ofInt;
+    let traverse = BufferLine.traverse;
+    test("empty bufferline", ({expect, _}) => {
+      expect.equal(
+        makeLine("")
+        |> traverse(
+             ~f=alwaysTrue,
+             ~direction=`Forwards,
+             ~index=CharacterIndex.zero,
+           ),
+        characterIndex(0),
+      )
+    });
+    test("out-of-bounds is pass-through", ({expect, _}) => {
+      expect.equal(
+        makeLine("")
+        |> traverse(
+             ~f=alwaysTrue,
+             ~direction=`Forwards,
+             ~index=characterIndex(99),
+           ),
+        characterIndex(99),
+      )
+    });
+    test("travel forwards to end", ({expect, _}) => {
+      expect.equal(
+        makeLine("AAA")
+        |> traverse(
+             ~f=alwaysTrue,
+             ~direction=`Forwards,
+             ~index=characterIndex(1),
+           ),
+        characterIndex(2),
+      )
+    });
+    test("travel backwards to beginning", ({expect, _}) => {
+      expect.equal(
+        makeLine("AAA")
+        |> traverse(
+             ~f=alwaysTrue,
+             ~direction=`Backwards,
+             ~index=characterIndex(1),
+           ),
+        characterIndex(0),
+      )
+    });
+    test("travel backwards to beginning", ({expect, _}) => {
+      expect.equal(
+        makeLine("AAA")
+        |> traverse(
+             ~f=alwaysTrue,
+             ~direction=`Backwards,
+             ~index=characterIndex(1),
+           ),
+        characterIndex(0),
+      )
+    });
+    test("travel backwards to word boundary", ({expect, _}) => {
+      expect.equal(
+        makeLine("bAAAb")
+        |> traverse(
+             ~f=onlyA,
+             ~direction=`Backwards,
+             ~index=characterIndex(2),
+           ),
+        characterIndex(1),
+      )
+    });
+    test("travel forwards to word boundary", ({expect, _}) => {
+      expect.equal(
+        makeLine("bAAAb")
+        |> traverse(~f=onlyA, ~direction=`Forwards, ~index=characterIndex(2)),
+        characterIndex(3),
+      )
+    });
+  });
 });

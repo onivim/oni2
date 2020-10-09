@@ -2,7 +2,12 @@ open Oni_Core;
 open Utility;
 
 [@deriving show]
+type command =
+  | ToggleExpanded;
+
+[@deriving show]
 type msg =
+  | Command(command)
   | List(Component_VimList.msg);
 
 type nodeOrLeaf('node, 'leaf) =
@@ -239,6 +244,18 @@ let updateTreeList = (~searchText=?, treesWithId, expansionContext, model) => {
   };
 };
 
+let toggleExpanded = (~expanded, ~data: withUniqueId('a), model) => {
+  let expansionContext =
+    expanded
+      ? model.expansionContext |> ExpansionContext.collapse(data.uniqueId)
+      : model.expansionContext |> ExpansionContext.expand(data.uniqueId);
+
+  (
+    updateTreeList(model.trees, expansionContext, model),
+    expanded ? Collapsed(data.inner) : Expanded(data.inner),
+  );
+};
+
 let update = (msg, model) => {
   switch (msg) {
   | List(listMsg) =>
@@ -252,21 +269,20 @@ let update = (msg, model) => {
     | Component_VimList.Selected({index}) =>
       switch (Component_VimList.get(index, treeAsList)) {
       | Some(ViewLeaf({data, _})) => (model, Selected(data))
-      // TODO: Expand / collapse
       | Some(ViewNode({data, expanded, _})) =>
-        let expansionContext =
-          expanded
-            ? model.expansionContext
-              |> ExpansionContext.collapse(data.uniqueId)
-            : model.expansionContext |> ExpansionContext.expand(data.uniqueId);
-
-        (
-          updateTreeList(model.trees, expansionContext, model),
-          expanded ? Collapsed(data.inner) : Expanded(data.inner),
-        );
+        toggleExpanded(~expanded, ~data, model)
 
       | None => (model, Nothing)
       }
+    };
+
+  | Command(ToggleExpanded) =>
+    let selectedIndex = Component_VimList.selectedIndex(model.treeAsList);
+    switch (Component_VimList.get(selectedIndex, model.treeAsList)) {
+    | None => (model, Nothing)
+    | Some(ViewLeaf(_)) => (model, Nothing)
+    | Some(ViewNode({data, expanded, _})) =>
+      toggleExpanded(~expanded, ~data, model)
     };
   };
 };
@@ -330,12 +346,60 @@ let set =
   };
 };
 
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let toggleExpanded =
+    define("vim.tree.toggleExpanded", Command(ToggleExpanded));
+};
+
+module Keybindings = {
+  open Oni_Input;
+
+  let commandCondition =
+    "!textInputFocus && vimListNavigation" |> WhenExpr.parse;
+
+  let keybindings =
+    Keybindings.[
+      {
+        key: "h",
+        command: Commands.toggleExpanded.id,
+        condition: commandCondition,
+      },
+      {
+        key: "l",
+        command: Commands.toggleExpanded.id,
+        condition: commandCondition,
+      },
+    ];
+};
+
 module Contributions = {
+  let keybindings = Keybindings.keybindings;
+
   let commands =
-    Component_VimList.Contributions.commands
-    |> List.map(Oni_Core.Command.map(msg => List(msg)));
-  let contextKeys = model =>
-    Component_VimList.Contributions.contextKeys(model.treeAsList);
+    (
+      Component_VimList.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => List(msg)))
+    )
+    @ Commands.[toggleExpanded];
+
+  let contextKeys = model => {
+    open WhenExpr.ContextKeys;
+
+    let vimListKeys =
+      Component_VimList.Contributions.contextKeys(model.treeAsList);
+    let vimTreeKeys =
+      [
+        Schema.bool("vimTreeNavigation", ({treeAsList, _}) => {
+          !(treeAsList |> Component_VimList.isSearchOpen)
+        }),
+      ]
+      |> Schema.fromList
+      |> fromSchema(model);
+
+    [vimListKeys, vimTreeKeys] |> unionMany;
+  };
 };
 
 module View = {
