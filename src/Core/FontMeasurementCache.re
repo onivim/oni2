@@ -1,6 +1,5 @@
 open Utility;
 open Revery;
-open Revery.Font;
 
 type t = {
   paint: Skia.Paint.t,

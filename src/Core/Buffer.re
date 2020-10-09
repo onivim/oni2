@@ -71,37 +71,13 @@ module Internal = {
   let createMeasureFunction = (~font, ~indentation) => {
     let indentation = Inferred.value(indentation);
 
-    let Font.{fontFamily, features, spaceWidth, _} = font;
-    let measurementCache =
-      FontMeasurementCache.create(
-        ~fontFamily,
-        ~fontSize=font.fontSize,
-        ~features,
-        ~smoothing=font.smoothing,
-      );
-    //    let loadedFont =
-    //      fontFamily
-    //      |> Revery.Font.Family.toSkia(Revery.Font.Weight.Normal)
-    //      |> Revery.Font.load
-    //      |> Result.to_option
-    //      |> OptionEx.lazyDefault(() => {
-    //           Font.default.fontFamily
-    //           |> Revery.Font.Family.toSkia(Revery.Font.Weight.Normal)
-    //           |> Revery.Font.load
-    //           |> Result.get_ok
-    //         });
-    //
-    //    let paint = Skia.Paint.make();
-    //    Skia.Paint.setTextSize(paint, font.fontSize);
-    //    Skia.Paint.setTextEncoding(paint, GlyphId);
-    //    Skia.Paint.setLcdRenderText(paint, true);
-    //    Revery.Font.Smoothing.setPaint(~smoothing=font.smoothing, paint);
+    let Font.{spaceWidth, _} = font;
 
     uchar =>
       if (Uchar.equal(uchar, tab)) {
         float(IndentationSettings.(indentation.tabSize)) *. spaceWidth;
       } else {
-        FontMeasurementCache.measure(uchar, measurementCache);
+        Font.measure(uchar, font);
       };
   };
 };

@@ -13,6 +13,7 @@ type font =
     descenderHeight: float,
     smoothing: [@opaque] Revery.Font.Smoothing.t,
     features: [@opaque] list(Revery.Font.Feature.t),
+    measurementCache: [@opaque] FontMeasurementCache.t,
   };
 
 let toString: font => string;

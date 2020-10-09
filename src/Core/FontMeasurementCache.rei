@@ -1,6 +1,3 @@
-open Revery;
-open Revery.Font;
-
 type t;
 
 let create:
