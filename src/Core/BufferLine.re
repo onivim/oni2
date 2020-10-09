@@ -85,7 +85,6 @@ module Internal = {
           ZedBundled.unsafe_extract_next(cache.raw, byte^);
 
         let pixelWidth = cache.measure(uchar);
-        //measure(~typeface=cache.skiaTypeface, ~cache, uchar);
 
         Log.tracef(m =>
           m(
