@@ -26,7 +26,11 @@ describe("Diagnostics", ({describe, _}) => {
           ~message="test diagnostic",
           ~severity=Exthost.Diagnostic.Severity.Error,
         );
-      let diags = Diagnostic.explode(Buffer.ofLines([||]), hugeDiagnostic);
+      let diags =
+        Diagnostic.explode(
+          Buffer.ofLines(~font=Font.default(), [||]),
+          hugeDiagnostic,
+        );
 
       expect.int(List.length(diags)).toBe(1000);
     })

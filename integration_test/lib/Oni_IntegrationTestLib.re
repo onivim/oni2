@@ -130,7 +130,7 @@ let runTest =
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
       Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
     Core.Buffer.ofMetadata(
-      ~font=Oni_Core.Font.default,
+      ~font=Oni_Core.Font.default(),
       ~id,
       ~version,
       ~filePath,

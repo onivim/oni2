@@ -12,7 +12,7 @@ describe("Editor", ({describe, _}) => {
   let config = (~vimSetting as _, _key) => Config.NotSet;
 
   let create = lines => {
-    let buffer = lines |> Buffer.ofLines;
+    let buffer = lines |> Buffer.ofLines(~font=Font.default());
 
     let editorBuffer = buffer |> EditorBuffer.ofBuffer;
 

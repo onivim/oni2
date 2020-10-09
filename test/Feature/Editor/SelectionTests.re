@@ -9,7 +9,8 @@ open Oni_Core_Test.Helpers;
 
 describe("Selection", ({test, _}) =>
   test("linewise: clamps range to buffer lines", ({expect, _}) => {
-    let buffer = Buffer.ofLines([|"abc", "defg"|]);
+    let buffer =
+      Buffer.ofLines(~font=Oni_Core.Font.default(), [|"abc", "defg"|]);
 
     /* Visual range is one-based */
     let vr =
