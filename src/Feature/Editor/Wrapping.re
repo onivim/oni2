@@ -118,7 +118,7 @@ let update =
     };
 
     let (bufferLineToViewLineCache, viewLineToBufferCache, totalViewLines) =
-      if (isRecalculationNeeded^) {
+      if (isRecalculationNeeded^ == false) {
         (
           wrapping.bufferLineToViewLineCache,
           wrapping.viewLineToBufferCache,

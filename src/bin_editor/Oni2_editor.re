@@ -272,7 +272,7 @@ switch (eff) {
         Vim.Buffer.openFile(Core.BufferPath.welcome)
         |> Vim.BufferMetadata.ofBuffer;
       Core.Buffer.ofMetadata(
-        ~font=Core.Font.default,
+        ~font=Service_Font.default(),
         ~id,
         ~version,
         ~filePath,

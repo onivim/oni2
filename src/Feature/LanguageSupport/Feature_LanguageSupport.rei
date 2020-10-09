@@ -45,6 +45,7 @@ type outmsg =
       filePath: string,
       location: option(CharacterPosition.t),
     })
+  | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
   | Effect(Isolinear.Effect.t(msg));
@@ -165,6 +166,8 @@ module Definition: {
 
   let isAvailable: (~bufferId: int, model) => bool;
 };
+
+module References: {let get: model => list(Exthost.Location.t);};
 
 module DocumentHighlights: {
   let getByLine:

@@ -62,6 +62,8 @@ let scrollTo:
   ) =>
   model('node, 'leaf);
 
+let collapse: model('node, 'leaf) => model('node, 'leaf);
+
 // CONTRIBUTIONS
 
 module Contributions: {

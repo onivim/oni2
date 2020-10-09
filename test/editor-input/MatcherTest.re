@@ -36,6 +36,7 @@ let getKeycode =
   | Key.CapsLock => Some(113)
   | Key.Insert => Some(114)
   | Key.Function(0) => Some(115)
+  | Key.Function(12) => Some(133)
   | Key.Function(19) => Some(134)
   | Key.NumpadDigit(0) => Some(135)
   | Key.NumpadDigit(9) => Some(144)
@@ -165,6 +166,12 @@ describe("Matcher", ({describe, _}) => {
       expect.equal(
         result,
         Ok(Sequence([Keydown(Keycode(1, modifiersShift))])),
+      );
+
+      let result = defaultParse("<S-F12>");
+      expect.equal(
+        result,
+        Ok(Sequence([Keydown(Keycode(133, modifiersShift))])),
       );
     });
     test("vscode bindings", ({expect, _}) => {

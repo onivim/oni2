@@ -3,7 +3,17 @@ open Oni_Core;
 
 open TestFramework;
 
-let makeLine = BufferLine.make(~indentation=IndentationSettings.default);
+let makeLine = BufferLine.make(~measure=_ => 1.0);
+
+let tab = Uchar.of_char('\t');
+
+let makeLineWithTabWidth = tabWidth =>
+  BufferLine.make(
+    ~measure=
+      fun
+      | uchar when uchar == tab => tabWidth
+      | _ => 1.0,
+  );
 
 let character = idx => CharacterIndex.ofInt(idx);
 
@@ -113,13 +123,13 @@ describe("BufferLine", ({describe, _}) => {
         BufferLine.getPixelPositionAndWidth(~index=character(0), bufferLine);
 
       expect.float(position).toBeCloseTo(0.);
-      expect.float(width).toBeCloseTo(14.);
+      expect.float(width).toBeCloseTo(1.);
 
       let (position, width) =
         BufferLine.getPixelPositionAndWidth(~index=character(1), bufferLine);
 
-      expect.float(position).toBeCloseTo(14.);
-      expect.float(width).toBeCloseTo(22.4 -. 14.);
+      expect.float(position).toBeCloseTo(1.);
+      expect.float(width).toBeCloseTo(1.);
     });
     test("negative index should not throw", ({expect, _}) => {
       let bufferLine = makeLine("abc");
@@ -130,7 +140,7 @@ describe("BufferLine", ({describe, _}) => {
         );
 
       expect.float(position).toBeCloseTo(0.);
-      expect.float(width).toBeCloseTo(8.4);
+      expect.float(width).toBeCloseTo(1.);
     });
     test("empty line", ({expect, _}) => {
       let bufferLine = makeLine("");
@@ -138,43 +148,35 @@ describe("BufferLine", ({describe, _}) => {
         BufferLine.getPixelPositionAndWidth(~index=character(0), bufferLine);
 
       expect.float(position).toBeCloseTo(0.);
-      expect.float(width).toBeCloseTo(8.4);
+      expect.float(width).toBeCloseTo(1.0);
     });
     test("position past end of string", ({expect, _}) => {
       let bufferLine = makeLine("abc");
       let (position, width) =
         BufferLine.getPixelPositionAndWidth(~index=character(4), bufferLine);
 
-      expect.float(position).toBeCloseTo(25.2);
-      expect.float(width).toBeCloseTo(8.4);
+      expect.float(position).toBeCloseTo(3.0);
+      expect.float(width).toBeCloseTo(1.0);
     });
     test("tab settings are respected for width", ({expect, _}) => {
-      let indentation =
-        IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=3, ());
-
-      let bufferLine = BufferLine.make(~indentation, "\t");
+      let bufferLine = makeLineWithTabWidth(9., "\t");
       let (_position, width) =
         BufferLine.getPixelPositionAndWidth(~index=character(0), bufferLine);
-      expect.float(width).toBeCloseTo(3. *. 8.4);
+      expect.float(width).toBeCloseTo(9.);
     });
     test("tab settings impact position", ({expect, _}) => {
-      let indentation =
-        IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=3, ());
-
-      let bufferLine = BufferLine.make(~indentation, "\ta");
+      let bufferLine = makeLineWithTabWidth(9., "\ta");
       let (position, width) =
         BufferLine.getPixelPositionAndWidth(~index=character(1), bufferLine);
-      expect.float(width).toBeCloseTo(8.4);
-      expect.float(position).toBeCloseTo(3. *. 8.4);
+      expect.float(width).toBeCloseTo(1.);
+      expect.float(position).toBeCloseTo(9.);
     });
   });
+
   describe("getIndexFromPixel", ({test, _}) => {
     test("position mapped to pixel", ({expect, _}) => {
-      let indentation =
-        IndentationSettings.create(~mode=Tabs, ~size=8, ~tabSize=8, ());
+      let bufferLine = makeLineWithTabWidth(9., "\ta");
 
-      let bufferLine = BufferLine.make(~indentation, "\ta");
-      print_endline(bufferLine |> BufferLine.raw);
       let characterIndex =
         BufferLine.Slow.getIndexFromPixel(~pixel=0., bufferLine);
       expect.int(characterIndex |> CharacterIndex.toInt).toBe(0);
@@ -184,7 +186,11 @@ describe("BufferLine", ({describe, _}) => {
       expect.int(characterIndex |> CharacterIndex.toInt).toBe(0);
 
       let characterIndex =
-        BufferLine.Slow.getIndexFromPixel(~pixel=8. *. 8.4, bufferLine);
+        BufferLine.Slow.getIndexFromPixel(~pixel=8.9, bufferLine);
+      expect.int(characterIndex |> CharacterIndex.toInt).toBe(0);
+
+      let characterIndex =
+        BufferLine.Slow.getIndexFromPixel(~pixel=9.1, bufferLine);
       expect.int(characterIndex |> CharacterIndex.toInt).toBe(1);
 
       let characterIndex =
@@ -192,6 +198,7 @@ describe("BufferLine", ({describe, _}) => {
       expect.int(characterIndex |> CharacterIndex.toInt).toBe(1);
     })
   });
+
   describe("traverse", ({test, _}) => {
     let alwaysTrue = _ => true;
     let onlyA = char => Uchar.to_char(char) == 'A';

@@ -4,8 +4,7 @@ open Oni_Core;
 open Feature_LanguageSupport;
 module LineNumber = EditorCoreTypes.LineNumber;
 
-let makeLine = str =>
-  BufferLine.make(~indentation=IndentationSettings.default, str);
+let makeLine = str => BufferLine.make(~measure=_ => 1.0, str);
 
 describe("CompletionMeet", ({describe, _}) => {
   describe("createFromLine", ({test, _}) => {

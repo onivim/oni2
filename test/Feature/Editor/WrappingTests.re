@@ -4,7 +4,8 @@ open Feature_Editor;
 open TestFramework;
 module LineNumber = EditorCoreTypes.LineNumber;
 
-let makeBuffer = lines => Oni_Core.Buffer.ofLines(lines);
+let makeBuffer = lines =>
+  Oni_Core.Buffer.ofLines(~font=Font.default(), lines);
 
 let simpleAsciiBuffer =
   [|"abcdef", "ghijkl"|] |> makeBuffer |> EditorBuffer.ofBuffer;
@@ -21,6 +22,12 @@ let wrapResult = (~line, ~byte, ~character) =>
     byteOffset: byte |> ByteIndex.ofInt,
     characterOffset: character |> CharacterIndex.ofInt,
   };
+
+let (_, aWidth) =
+  [|"a"|]
+  |> makeBuffer
+  |> Oni_Core.Buffer.getLine(0)
+  |> BufferLine.getPixelPositionAndWidth(~index=CharacterIndex.zero);
 
 describe("Wrapping", ({describe, _}) => {
   describe("nowrap", ({test, _}) => {
@@ -62,13 +69,9 @@ describe("Wrapping", ({describe, _}) => {
       expect.int(Wrapping.numberOfLines(wrapping)).toBe(2)
     });
   });
+
   describe("fixed pixel width (3 characters)", ({test, _}) => {
-    let characterWidth = {
-      let (_, width) =
-        BufferLine.make(~indentation=IndentationSettings.default, "a")
-        |> BufferLine.getPixelPositionAndWidth(~index=CharacterIndex.zero);
-      width;
-    };
+    let characterWidth = aWidth;
     let threeCharacterWidth = 3. *. characterWidth;
     let wrap = WordWrap.fixed(~pixels=threeCharacterWidth);
     let wrapping = Wrapping.make(~wrap, ~buffer=simpleAsciiBuffer);

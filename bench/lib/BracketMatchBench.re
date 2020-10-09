@@ -6,7 +6,7 @@ open BenchFramework;
 let createLargeEditorBuffer = () =>
   String.make(1000, 'a')
   |> Array.make(10000)
-  |> Oni_Core.Buffer.ofLines
+  |> Oni_Core.Buffer.ofLines(~font=Oni_Core.Font.default())
   |> Feature_Editor.EditorBuffer.ofBuffer;
 
 let setup = () => createLargeEditorBuffer();

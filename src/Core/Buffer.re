@@ -9,6 +9,8 @@ module Path = Utility.Path;
 
 open EditorCoreTypes;
 
+let tab = Uchar.of_char('\t');
+
 module FileType = {
   let default = "plaintext";
 
@@ -62,6 +64,22 @@ type t = {
   syntaxHighlightingEnabled: bool,
   lastUsed: float,
   font: Font.t,
+  measure: Uchar.t => float,
+};
+
+module Internal = {
+  let createMeasureFunction = (~font, ~indentation) => {
+    let indentation = Inferred.value(indentation);
+
+    let Font.{spaceWidth, _} = font;
+
+    uchar =>
+      if (Uchar.equal(uchar, tab)) {
+        float(IndentationSettings.(indentation.tabSize)) *. spaceWidth;
+      } else {
+        Font.measure(uchar, font);
+      };
+  };
 };
 
 let show = _ => "TODO";
@@ -115,12 +133,11 @@ let getLongFriendlyName = ({filePath: maybeFilePath, _}) => {
      });
 };
 
-let ofLines = (~id=0, ~font=Font.default, rawLines: array(string)) => {
-  let lines =
-    rawLines
-    |> Array.map(
-         BufferLine.make(~font, ~indentation=IndentationSettings.default),
-       );
+let ofLines = (~id=0, ~font, rawLines: array(string)) => {
+  let indentation = Inferred.implicit(IndentationSettings.default);
+  let measure = Internal.createMeasureFunction(~font, ~indentation);
+
+  let lines = rawLines |> Array.map(BufferLine.make(~measure));
 
   {
     id,
@@ -132,29 +149,22 @@ let ofLines = (~id=0, ~font=Font.default, rawLines: array(string)) => {
     lineEndings: None,
     originalUri: None,
     originalLines: None,
-    indentation: Inferred.implicit(IndentationSettings.default),
+    indentation,
     syntaxHighlightingEnabled: true,
     lastUsed: 0.,
     font,
+    measure,
   };
 };
 
-let initial = ofLines([||]);
+let empty = (~font) => ofLines(~font, [||]);
 
-let ofMetadata = (~font=Font.default, ~id, ~version, ~filePath, ~modified) => {
+let ofMetadata = (~font, ~id, ~version, ~filePath, ~modified) => {
+  ...ofLines(~font, [||]),
   id,
   version,
   filePath,
-  lineEndings: None,
   modified,
-  fileType: FileType.NotSet,
-  lines: [||],
-  originalUri: None,
-  originalLines: None,
-  indentation: Inferred.implicit(IndentationSettings.default),
-  syntaxHighlightingEnabled: true,
-  lastUsed: 0.,
-  font,
 };
 
 let getFilePath = (buffer: t) => buffer.filePath;
@@ -240,9 +250,8 @@ let characterToBytePosition = (position: CharacterPosition.t, buffer) => {
 };
 
 let applyUpdate =
-    (~indentation, ~font, lines: array(BufferLine.t), update: BufferUpdate.t) => {
-  let updateLines =
-    update.lines |> Array.map(BufferLine.make(~font, ~indentation));
+    (~measure, lines: array(BufferLine.t), update: BufferUpdate.t) => {
+  let updateLines = update.lines |> Array.map(BufferLine.make(~measure));
   let startLine = update.startLine |> EditorCoreTypes.LineNumber.toZeroBased;
   let endLine = update.endLine |> EditorCoreTypes.LineNumber.toZeroBased;
   ArrayEx.replace(
@@ -262,13 +271,14 @@ let setIndentation = (indentation, buf) => {
   let indentation = Inferred.update(~new_=indentation, buf.indentation);
   let newIndentationValue = indentation |> Inferred.value;
 
+  let measure = Internal.createMeasureFunction(~font=buf.font, ~indentation);
+
   let lines =
     if (originalIndentationValue != newIndentationValue) {
       buf.lines
       |> Array.map(line => {
            let raw = BufferLine.raw(line);
-           let font = BufferLine.font(line);
-           BufferLine.make(~font, ~indentation=newIndentationValue, raw);
+           BufferLine.make(~measure, raw);
          });
     } else {
       buf.lines;
@@ -282,8 +292,7 @@ let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
   update.version > getVersion(buf);
 };
 
-let update = (buf: t, update: BufferUpdate.t) => {
-  let indentation = buf.indentation |> Inferred.value;
+let update = (buf: t, update: BufferUpdate.t) =>
   if (shouldApplyUpdate(update, buf)) {
     /***
      If it's a full update, just apply the lines in the entire update
@@ -293,30 +302,30 @@ let update = (buf: t, update: BufferUpdate.t) => {
         ...buf,
         version: update.version,
         lines:
-          update.lines
-          |> Array.map(BufferLine.make(~font=buf.font, ~indentation)),
+          update.lines |> Array.map(BufferLine.make(~measure=buf.measure)),
       };
     } else {
       {
         ...buf,
         version: update.version,
-        lines: applyUpdate(~indentation, ~font=buf.font, buf.lines, update),
+        lines: applyUpdate(~measure=buf.measure, buf.lines, update),
       };
     };
   } else {
     buf;
   };
-};
 
 let getFont = buf => buf.font;
 
 let setFont = (font, buf) => {
+  let measure =
+    Internal.createMeasureFunction(~font, ~indentation=buf.indentation);
+
   let lines =
     buf.lines
     |> Array.map(line => {
          let raw = BufferLine.raw(line);
-         let indentation = BufferLine.indentation(line);
-         BufferLine.make(~font, ~indentation, raw);
+         BufferLine.make(~measure, raw);
        });
-  {...buf, font, lines};
+  {...buf, measure, font, lines};
 };

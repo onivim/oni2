@@ -140,6 +140,11 @@ let scrollTo = (~index, ~alignment, {treeAsList, _} as model) => {
   };
 };
 
+let collapse = model => {
+  ...model,
+  expansionContext: ExpansionContext.initial,
+};
+
 let create = (~rowHeight) => {
   expansionContext: ExpansionContext.initial,
   activeIndentRange: None,
