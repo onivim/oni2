@@ -11,11 +11,6 @@ module Log = (val Timber.Log.withNamespace("Oni2.Core.BufferLine"));
 
 type measure = Uchar.t => float;
 
-//let _space = Uchar.of_char(' ');
-//let tab = Uchar.of_char('\t');
-//let _cr = Uchar.of_char('\r');
-//let _lf = Uchar.of_char('\n');
-
 type characterCacheInfo = {
   byteOffset: int,
   positionPixelOffset: float,
@@ -38,8 +33,11 @@ let emptyByteIndexMap: array(option(int)) = [||];
 type t = {
   // [raw] is the raw string (byte array)
   raw: string,
-  // [skiaTypeface] is the Skia typeface associated with the font
+  // [measure] gives the pixel width of a unicode character
   measure: Uchar.t => float,
+  // [spaceWidth] is the cached width of the space character
+  spaceWidth: float,
+  lazyCharacterLength: Lazy.t(int),
   // [characters] is a cache of discovered characters we've found in the string so far
   mutable characters: array(option(characterCacheInfo)),
   // [byteIndexMap] is a cache of byte -> index
@@ -55,97 +53,13 @@ type t = {
 };
 
 module Internal = {
-  let skiaTypefaceEqual = (tf1, tf2) =>
-    Skia.Typeface.getUniqueID(tf1) == Skia.Typeface.getUniqueID(tf2);
-
-  // We want to cache measurements tied to typefaces and characters, since text measuring is expensive
-  module SkiaTypefaceUcharHashable = {
-    // This is of the form typeface, size, uchar
-    type t = (Skia.Typeface.t, float, Revery.Font.Smoothing.t, Uchar.t);
-
-    let equal = ((tf1, sz1, sm1, uc1), (tf2, sz2, sm2, uc2)) =>
-      skiaTypefaceEqual(tf1, tf2)
-      && Float.equal(sz1, sz2)
-      && sm1 == sm2
-      && Uchar.equal(uc1, uc2);
-
-    let hash = ((tf, sz, sm, uc)) =>
-      Int32.to_int(Skia.Typeface.getUniqueID(tf))
-      + Uchar.hash(uc)
-      + Hashtbl.hash(sz)
-      + Hashtbl.hash(sm);
-  };
-
-  module MeasureResult = {
-    type t = float;
-
-    let weight = _ => 1;
-  };
-
-  module MeasurementsCache =
-    Lru.M.Make(SkiaTypefaceUcharHashable, MeasureResult);
-
-  //  let measurementsCache =
-  //    MeasurementsCache.create(~initialSize=1024, 128 * 1024);
-
-  // Create a paint to measure the character with
-  let paint = Skia.Paint.make();
-  Skia.Paint.setTextEncoding(paint, GlyphId);
-  Skia.Paint.setLcdRenderText(paint, true);
-
-  //  let measure = (~typeface: Skia.Typeface.t, ~cache: t, uchar) =>
-  //    switch (
-  //      MeasurementsCache.find(
-  //        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
-  //        measurementsCache,
-  //      )
-  //    ) {
-  //    | Some(pixelWidth) =>
-  //      MeasurementsCache.promote(
-  //        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
-  //        measurementsCache,
-  //      );
-  //      Log.tracef(m =>
-  //        m(
-  //          "MeasurementCache : Hit! Typeface : %s, Font Size: %f, Uchar: %s (%d)",
-  //          Skia.Typeface.getFamilyName(typeface),
-  //          cache.font.fontSize,
-  //          Zed_utf8.singleton(uchar),
-  //          Uchar.to_int(uchar),
-  //        )
-  //      );
-  //      pixelWidth;
-  //    | None =>
-  //      Log.tracef(m =>
-  //        m(
-  //          "MeasurementCache : Miss! Typeface : %s, Uchar: %s (%d)",
-  //          Skia.Typeface.getFamilyName(typeface),
-  //          Zed_utf8.singleton(uchar),
-  //          Uchar.to_int(uchar),
-  //        )
-  //      );
-  //      Skia.Paint.setTypeface(paint, typeface);
-  //      // When the character is a tab, we have to make sure
-  //      // we offset the correct amount.
-  //      let pixelWidth =
-  //        if (Uchar.equal(uchar, tab)) {
-  //          float(cache.indentation.tabSize) *. cache.font.spaceWidth;
-  //        } else {
-  //          cache.measure(uchar);
-  //        };
-  //      MeasurementsCache.add(
-  //        (typeface, cache.font.fontSize, cache.font.smoothing, uchar),
-  //        pixelWidth,
-  //        measurementsCache,
-  //      );
-  //      MeasurementsCache.trim(measurementsCache);
-  //      pixelWidth;
-  //    };
-
   let resolveTo = (~index: CharacterIndex.t, cache: t) => {
     // First, allocate our cache, if necessary
     if (cache.characters === emptyCharacterMap) {
-      cache.characters = Array.make(String.length(cache.raw), None);
+      // Create a cache the size of the string - this would be the max length
+      // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
+      cache.characters =
+        Array.make(String.length(cache.raw), None);
     };
 
     if (cache.byteIndexMap === emptyByteIndexMap) {
@@ -165,13 +79,6 @@ module Internal = {
       let i: ref(int) = ref(cache.nextIndex);
       let byte: ref(int) = ref(cache.nextByte);
       let pixelPosition: ref(float) = ref(cache.nextPixelPosition);
-
-      //      let glyphStrings: ref(list((Skia.Typeface.t, string))) =
-      //        ref(cache.glyphStrings);
-      //      let glyphStringByte: ref(int) = ref(cache.nextGlyphStringByte);
-
-      //      Skia.Paint.setTextSize(paint, cache.font.fontSize);
-      //      Revery.Font.Smoothing.setPaint(~smoothing=cache.font.smoothing, paint);
 
       while (i^ <= characterIndexInt && byte^ < len) {
         let (uchar, offset) =
@@ -213,12 +120,12 @@ module Internal = {
 };
 
 let make = (~measure, raw: string) => {
+  let lazyCharacterLength = Lazy.from_fun(() => ZedBundled.length(raw));
   {
-    // Create a cache the size of the string - this would be the max length
-    // of the UTF8 string, if it was all 1-byte unicode characters (ie, an ASCII string).
-
-    measure,
     raw,
+    measure,
+    lazyCharacterLength,
+    spaceWidth: measure(Uchar.of_char(' ')),
     characters: emptyCharacterMap,
     byteIndexMap: emptyByteIndexMap,
     nextByte: 0,
@@ -232,7 +139,8 @@ let empty = (~measure, ()) => make(~measure, "");
 
 let lengthInBytes = ({raw, _}) => String.length(raw);
 
-let lengthSlow = ({raw, _}) => ZedBundled.length(raw);
+let lengthSlow = ({lazyCharacterLength, _}) =>
+  Lazy.force(lazyCharacterLength);
 
 let raw = ({raw, _}) => raw;
 
@@ -332,7 +240,7 @@ let getPixelPositionAndWidth = (~index: CharacterIndex.t, bufferLine: t) => {
 
   let characterIdx = CharacterIndex.toInt(index);
 
-  let spaceWidth = bufferLine.measure(Uchar.of_char(' '));
+  let spaceWidth = bufferLine.spaceWidth;
 
   if (characterIdx < 0 || characterIdx >= len || len == 0) {
     (bufferLine.nextPixelPosition, spaceWidth);
