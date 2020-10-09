@@ -2,7 +2,7 @@
  (name Feature_Pane)
  (public_name Oni2.feature.pane)
  (libraries Oni2.core Oni2.components Oni2.component.vimTree
-   Oni2.component.vimWindows Oni2.feature.configuration
+   Oni2.component.vimWindows Oni2.feature.buffers Oni2.feature.configuration
    Oni2.feature.language_support Oni2.feature.notification Oni2.feature.theme
    isolinear base Revery)
  (preprocess

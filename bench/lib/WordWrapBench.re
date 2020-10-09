@@ -3,8 +3,7 @@ open BenchFramework;
 
 let longBufferLine = String.make(1000, 'A');
 
-let setup = () =>
-  longBufferLine |> BufferLine.make(~indentation=IndentationSettings.default);
+let setup = () => longBufferLine |> BufferLine.make(~measure=_ => 1.0);
 
 bench(
   ~name="WordWrap: 1,000 character line (single character)",

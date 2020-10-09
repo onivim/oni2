@@ -2,12 +2,14 @@
  * Feature_Pane.re
  */
 
+open EditorCoreTypes;
 open Oni_Core;
 
 [@deriving show({with_path: false})]
 type pane =
   | Diagnostics
-  | Notifications;
+  | Notifications
+  | Locations;
 
 module Constants = {
   let defaultHeight = 225;
@@ -28,12 +30,30 @@ type msg =
   | ResizeCommitted
   | KeyPressed(string)
   | VimWindowNav(Component_VimWindows.msg)
-  | DiagnosticsList(Component_VimTree.msg);
+  | DiagnosticsList(Component_VimTree.msg)
+  | LocationsList(Component_VimTree.msg)
+  | LocationFileLoaded({
+      filePath: string,
+      lines: array(string),
+    });
 
 module Msg = {
   let keyPressed = key => KeyPressed(key);
   let resizeHandleDragged = v => ResizeHandleDragged(v);
   let resizeCommitted = ResizeCommitted;
+};
+
+module Effects = {
+  let expandLocationPath = (~font, ~languageInfo, ~buffers, ~filePath) => {
+    let toMsg = lines => LocationFileLoaded({filePath, lines});
+    Feature_Buffers.Effects.loadFile(
+      ~font,
+      ~languageInfo,
+      ~filePath,
+      ~toMsg,
+      buffers,
+    );
+  };
 };
 
 type outmsg =
@@ -44,7 +64,8 @@ type outmsg =
     })
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
-  | ReleaseFocus;
+  | ReleaseFocus
+  | Effect(Isolinear.Effect.t(msg));
 
 type model = {
   selected: pane,
@@ -55,8 +76,153 @@ type model = {
   vimWindowNavigation: Component_VimWindows.model,
   diagnosticsView:
     Component_VimTree.model(string, Oni_Components.LocationListItem.t),
+  locationNodes:
+    list(
+      Tree.t(LocationsPaneView.location, Oni_Components.LocationListItem.t),
+    ),
+  locationsView:
+    Component_VimTree.model(
+      LocationsPaneView.location,
+      Oni_Components.LocationListItem.t,
+    ),
 };
 
+let locationsToReferences = (locations: list(Exthost.Location.t)) => {
+  let map =
+    List.fold_left(
+      (acc, curr: Exthost.Location.t) => {
+        let {range, uri}: Exthost.Location.t = curr;
+
+        let range = range |> Exthost.OneBasedRange.toRange;
+
+        let path = Oni_Core.Uri.toFileSystemPath(uri);
+
+        acc
+        |> StringMap.update(
+             path,
+             fun
+             | None => Some([range])
+             | Some(ranges) => Some([range, ...ranges]),
+           );
+      },
+      StringMap.empty,
+      locations,
+    );
+
+  map
+  |> StringMap.bindings
+  |> List.map(((path, ranges)) => LocationsPaneView.{path, ranges});
+};
+
+let updateLocationTree = (nodes, model) => {
+  let locationsView' =
+    Component_VimTree.set(
+      ~uniqueId=(LocationsPaneView.{path, _}) => path,
+      ~searchText=
+        Component_VimTree.(
+          fun
+          | Node({data, _}) => LocationsPaneView.(data.path)
+          | Leaf({data, _}) => Oni_Components.LocationListItem.(data.text)
+        ),
+      nodes,
+      model.locationsView,
+    );
+
+  {...model, locationNodes: nodes, locationsView: locationsView'};
+};
+
+let expandLocation = (~filePath, ~lines, model) => {
+  let characterIndexToIndex = (idx: CharacterIndex.t) => {
+    idx |> CharacterIndex.toInt |> Index.fromZeroBased;
+  };
+
+  let expandChildren = (location: LocationsPaneView.location) => {
+    let lineCount = Array.length(lines);
+    location.ranges
+    |> List.filter_map((range: CharacterRange.t) => {
+         let line = range.start.line |> EditorCoreTypes.LineNumber.toZeroBased;
+         if (line >= 0 && line < lineCount) {
+           let highlight =
+             if (range.start.line == range.stop.line) {
+               Some((
+                 range.start.character |> characterIndexToIndex,
+                 range.stop.character |> characterIndexToIndex,
+               ));
+             } else {
+               None;
+             };
+           Some(
+             Oni_Components.LocationListItem.{
+               file: filePath,
+               location: range.start,
+               text: lines[line],
+               highlight,
+             },
+           );
+         } else {
+           None;
+         };
+       })
+    |> List.sort(
+         (
+           a: Oni_Components.LocationListItem.t,
+           b: Oni_Components.LocationListItem.t,
+         ) => {
+         (a.location.line |> EditorCoreTypes.LineNumber.toZeroBased)
+         - (b.location.line |> EditorCoreTypes.LineNumber.toZeroBased)
+       });
+  };
+
+  let locationNodes' =
+    model.locationNodes
+    |> List.map(
+         fun
+         | Tree.Leaf(_) as leaf => leaf
+         | Tree.Node({data, _} as prev) =>
+           if (LocationsPaneView.(data.path) == filePath) {
+             let children = data |> expandChildren |> List.map(Tree.leaf);
+
+             Node({expanded: true, data, children});
+           } else {
+             Node(prev);
+           },
+       );
+
+  model |> updateLocationTree(locationNodes');
+};
+
+let collapseLocations = model => {
+  ...model,
+  locationsView: Component_VimTree.collapse(model.locationsView),
+};
+
+let setLocations = (~maybeActiveBuffer, ~locations, model) => {
+  let references = locationsToReferences(locations);
+
+  let nodes =
+    references
+    |> List.map(reference =>
+         Tree.node(~children=[], ~expanded=false, reference)
+       );
+
+  let model' =
+    model
+    // Un-expand all the nodes
+    |> collapseLocations
+    |> updateLocationTree(nodes);
+
+  // Try to expand the current buffer, if it's available
+  maybeActiveBuffer
+  |> Utility.OptionEx.flatMap(buffer => {
+       switch (Buffer.getFilePath(buffer)) {
+       | None => None
+       | Some(filePath) =>
+         let lines = Buffer.getLines(buffer);
+         Some(model' |> expandLocation(~filePath, ~lines));
+       }
+     })
+  |> Option.value(~default=model');
+};
 let diagnosticToLocList =
     (diagWithUri: (Uri.t, Feature_Diagnostics.Diagnostic.t)) => {
   let (uri, diag) = diagWithUri;
@@ -103,6 +269,8 @@ let height = ({height, resizeDelta, _}) => {
   };
 };
 
+let setPane = (~pane, model) => {...model, selected: pane};
+
 let show = (~pane, model) => {
   ...model,
   allowAnimation: true,
@@ -112,17 +280,28 @@ let show = (~pane, model) => {
 let close = model => {...model, allowAnimation: false, isOpen: false};
 
 module Focus = {
-  let toggleTab = model => {
+  let cycleForward = model => {
     let pane =
       switch (model.selected) {
       | Diagnostics => Notifications
+      | Notifications => Locations
+      | Locations => Diagnostics
+      };
+    {...model, selected: pane};
+  };
+
+  let cycleBackward = model => {
+    let pane =
+      switch (model.selected) {
       | Notifications => Diagnostics
+      | Locations => Notifications
+      | Diagnostics => Locations
       };
     {...model, selected: pane};
   };
 };
 
-let update = (msg, model) =>
+let update = (~buffers, ~font, ~languageInfo, msg, model) =>
   switch (msg) {
   | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
 
@@ -161,6 +340,13 @@ let update = (msg, model) =>
         },
         Nothing,
       )
+    | Locations => (
+        {
+          ...model,
+          locationsView: Component_VimTree.keyPress(key, model.locationsView),
+        },
+        Nothing,
+      )
     }
 
   | VimWindowNav(navMsg) =>
@@ -175,9 +361,37 @@ let update = (msg, model) =>
     | FocusRight
     | FocusDown
     | FocusUp => (model', UnhandledWindowMovement(outmsg))
-    | NextTab => (model' |> Focus.toggleTab, Nothing)
-    | PreviousTab => (model' |> Focus.toggleTab, Nothing)
+    | NextTab => (model' |> Focus.cycleForward, Nothing)
+    | PreviousTab => (model' |> Focus.cycleBackward, Nothing)
     };
+
+  | LocationsList(listMsg) =>
+    let (locationsView, outmsg) =
+      Component_VimTree.update(listMsg, model.locationsView);
+
+    let eff =
+      switch (outmsg) {
+      | Component_VimTree.Nothing => Nothing
+      | Component_VimTree.Selected(item) =>
+        OpenFile({filePath: item.file, position: item.location})
+      | Component_VimTree.Collapsed(_) => Nothing
+      | Component_VimTree.Expanded({path, _}) =>
+        Effect(
+          Effects.expandLocationPath(
+            ~font,
+            ~languageInfo,
+            ~buffers,
+            ~filePath=path,
+          ),
+        )
+      };
+
+    ({...model, locationsView}, eff);
+
+  | LocationFileLoaded({filePath, lines}) => (
+      model |> expandLocation(~filePath, ~lines),
+      Nothing,
+    )
 
   | DiagnosticsList(listMsg) =>
     let (diagnosticsView, outmsg) =
@@ -204,6 +418,9 @@ let initial = {
 
   vimWindowNavigation: Component_VimWindows.initial,
   diagnosticsView: Component_VimTree.create(~rowHeight=20),
+
+  locationNodes: [],
+  locationsView: Component_VimTree.create(~rowHeight=20),
 };
 
 let selected = ({selected, _}) => selected;
@@ -344,6 +561,8 @@ module View = {
         ~languageInfo,
         ~uiFont,
         ~notificationDispatch,
+        ~locationsList,
+        ~locationsDispatch: Component_VimTree.msg => unit,
         ~diagnosticDispatch: Component_VimTree.msg => unit,
         ~diagnosticsList: Component_VimTree.model(string, LocationListItem.t),
         ~notifications: Feature_Notification.model,
@@ -351,6 +570,18 @@ module View = {
         (),
       ) =>
     switch (selected) {
+    | Locations =>
+      <LocationsPaneView
+        isFocused
+        locationsList
+        iconTheme
+        languageInfo
+        theme
+        uiFont
+        workingDirectory
+        dispatch=locationsDispatch
+      />
+
     | Diagnostics =>
       <DiagnosticsPaneView
         isFocused
@@ -408,6 +639,9 @@ module View = {
     let notificationsTabClicked = () => {
       dispatch(TabClicked(Notifications));
     };
+    let locationsTabClicked = () => {
+      dispatch(TabClicked(Locations));
+    };
 
     let desiredHeight = height(pane);
     let targetHeight = !isOpen(pane) && !isFocused ? 0 : desiredHeight;
@@ -456,6 +690,13 @@ module View = {
             onClick=notificationsTabClicked
             isActive={isSelected(Notifications, pane)}
           />
+          <PaneTab
+            uiFont
+            theme
+            title="Locations"
+            onClick=locationsTabClicked
+            isActive={isSelected(Locations, pane)}
+          />
         </View>
         <closeButton dispatch theme />
       </View>
@@ -465,12 +706,14 @@ module View = {
           iconTheme
           languageInfo
           diagnosticsList={pane.diagnosticsView}
+          locationsList={pane.locationsView}
           selected={selected(pane)}
           theme
           uiFont
           notifications
           notificationDispatch
           diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
+          locationsDispatch={msg => dispatch(LocationsList(msg))}
           workingDirectory
         />
       </View>
@@ -517,7 +760,17 @@ module Contributions = {
           ? Component_VimTree.Contributions.commands : []
       )
       |> List.map(Oni_Core.Command.map(msg => DiagnosticsList(msg)));
-    isFocused ? common @ vimWindowCommands @ diagnosticsCommands : common;
+
+    let locationsCommands =
+      (
+        isFocused && model.selected == Locations
+          ? Component_VimTree.Contributions.commands : []
+      )
+      |> List.map(Oni_Core.Command.map(msg => LocationsList(msg)));
+
+    isFocused
+      ? common @ vimWindowCommands @ diagnosticsCommands @ locationsCommands
+      : common;
   };
 
   let contextKeys = (~isFocused, model) => {
@@ -529,12 +782,17 @@ module Contributions = {
           )
         : empty;
 
-    let vimListKeys =
+    let diagnosticsKeys =
       isFocused && model.selected == Diagnostics
         ? Component_VimTree.Contributions.contextKeys(model.diagnosticsView)
         : empty;
 
-    [vimNavKeys, vimListKeys] |> unionMany;
+    let locationsKeys =
+      isFocused && model.selected == Locations
+        ? Component_VimTree.Contributions.contextKeys(model.locationsView)
+        : empty;
+
+    [vimNavKeys, diagnosticsKeys, locationsKeys] |> unionMany;
   };
 
   let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];

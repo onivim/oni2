@@ -102,7 +102,7 @@ module Parts = {
 
       let buffer =
         Selectors.getBufferForEditor(state.buffers, editor)
-        |> Option.value(~default=Buffer.initial);
+        |> OptionEx.value_or_lazy(() => Buffer.empty(~font=state.editorFont));
       let renderOverlays = (~gutterWidth) =>
         [
           <Feature_SignatureHelp.View

@@ -33,13 +33,13 @@ let doubleDiagnostic = [
   ),
 ];
 
-let buffer = Buffer.ofLines(~id=0, [||]);
+let buffer = Buffer.ofLines(~font=Font.default(), ~id=0, [||]);
 let uri = Buffer.getUri(buffer);
 
-let buffer1 = Buffer.ofLines(~id=1, [||]);
+let buffer1 = Buffer.ofLines(~font=Font.default(), ~id=1, [||]);
 let uri1 = Buffer.getUri(buffer1);
 
-let buffer2 = Buffer.ofLines(~id=2, [||]);
+let buffer2 = Buffer.ofLines(~font=Font.default(), ~id=2, [||]);
 let uri2 = Buffer.getUri(buffer2);
 
 describe("Diagnostics", ({describe, _}) => {
@@ -72,7 +72,7 @@ describe("Diagnostics", ({describe, _}) => {
 
   describe("getDiagnostics", ({test, _}) =>
     test("no diagnostics", ({expect, _}) => {
-      let buffer = Buffer.ofLines([||]);
+      let buffer = Buffer.ofLines(~font=Font.default(), [||]);
       let v = Diagnostics.initial;
 
       let diagnostics = Diagnostics.getDiagnostics(v, buffer);
@@ -176,7 +176,7 @@ describe("Diagnostics", ({describe, _}) => {
   );
   describe("clear", ({test, _}) => {
     test("single diagnostic", ({expect, _}) => {
-      let buffer = Buffer.ofLines([||]);
+      let buffer = Buffer.ofLines(~font=Font.default(), [||]);
 
       let v = Diagnostics.initial;
       let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
@@ -187,7 +187,7 @@ describe("Diagnostics", ({describe, _}) => {
       expect.int(List.length(diagnostics)).toBe(0);
     });
     test("doesn't remove other keys", ({expect, _}) => {
-      let buffer = Buffer.ofLines([||]);
+      let buffer = Buffer.ofLines(~font=Font.default(), [||]);
 
       let v = Diagnostics.initial;
       let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
@@ -202,7 +202,7 @@ describe("Diagnostics", ({describe, _}) => {
 
   describe("change", ({test, _}) => {
     test("simple diagnostic add", ({expect, _}) => {
-      let buffer = Buffer.ofLines([||]);
+      let buffer = Buffer.ofLines(~font=Font.default(), [||]);
       let v = Diagnostics.initial;
 
       let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
@@ -213,7 +213,7 @@ describe("Diagnostics", ({describe, _}) => {
     });
 
     test("diagnostics from multiple sources", ({expect, _}) => {
-      let buffer = Buffer.ofLines([||]);
+      let buffer = Buffer.ofLines(~font=Font.default(), [||]);
       let v = Diagnostics.initial;
 
       let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);
@@ -227,7 +227,7 @@ describe("Diagnostics", ({describe, _}) => {
     test(
       "clearing diagnostic from one source doesn't clear the other source",
       ({expect, _}) => {
-      let buffer = Buffer.ofLines([||]);
+      let buffer = Buffer.ofLines(~font=Font.default(), [||]);
       let v = Diagnostics.initial;
 
       let v = Diagnostics.change(v, uri, "test_key1", singleDiagnostic);

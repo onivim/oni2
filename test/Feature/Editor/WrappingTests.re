@@ -5,7 +5,17 @@ open TestFramework;
 module LineNumber = EditorCoreTypes.LineNumber;
 
 let simpleAsciiBuffer =
-  [|"abcdef", "ghijkl"|] |> Oni_Core.Buffer.ofLines |> EditorBuffer.ofBuffer;
+  [|"abcdef", "ghijkl"|]
+  |> Oni_Core.Buffer.ofLines(~font=Font.default())
+  |> EditorBuffer.ofBuffer;
+
+let (_, aWidth) =
+  [|"a"|]
+  |> Oni_Core.Buffer.ofLines(~font=Font.default())
+  |> Oni_Core.Buffer.getLine(0)
+  |> BufferLine.getPixelPositionAndWidth(~index=CharacterIndex.zero);
+
+prerr_endline("'a' width: " ++ string_of_float(aWidth));
 
 describe("Wrapping", ({describe, _}) => {
   describe("nowrap", ({test, _}) => {
@@ -56,12 +66,7 @@ describe("Wrapping", ({describe, _}) => {
     });
   });
   describe("fixed=3", ({test, _}) => {
-    let characterWidth = {
-      let (_, width) =
-        BufferLine.make(~indentation=IndentationSettings.default, "a")
-        |> BufferLine.getPixelPositionAndWidth(~index=CharacterIndex.zero);
-      width;
-    };
+    let characterWidth = aWidth;
     let threeCharacterWidth = 3. *. characterWidth;
     let wrap = WordWrap.fixed(~pixels=threeCharacterWidth);
     let wrapping = Wrapping.make(~wrap, ~buffer=simpleAsciiBuffer);
