@@ -138,6 +138,45 @@ jobs:
   - template: .ci/publish-osx.yml
   - template: .ci/publish-build-cache.yml
 
+- job: MacOS15
+  displayName: "MacOS 10.15"
+  timeoutInMinutes: 0
+  pool:
+    vmImage: 'macOS-10.15'
+
+  variables:
+    STAGING_DIRECTORY: $(Build.StagingDirectory)
+    ESY__CACHE_INSTALL_PATH: /Users/runner/.esy/3__________________________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /Users/runner/.esy/3__________________________________________________________________/b
+    ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
+    MACOSX_DEPLOYMENT_TARGET: 10.12
+    # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
+
+  steps:
+  - template: .ci/use-node.yml
+  - script: brew update
+  - script: brew install ragel
+  - template: .ci/restore-build-cache.yml
+  - template: .ci/swap-xcode.yml
+  - template: .ci/js-build-steps.yml
+  - template: .ci/use-esy.yml
+  - template: .ci/esy-build-steps.yml
+    parameters:
+      platform: darwin
+  - template: .ci/run-integration-tests.yml
+    parameters:
+      platform: darwin
+  - script: _release/Onivim2.App/Contents/MacOS/Oni2 -f --checkhealth
+    displayName: 'Release: --checkhealth'
+  - template: .ci/publish-osx.yml
+  - template: .ci/publish-build-cache.yml
+  - script: scripts/osx/package.sh
+  - task: PublishBuildArtifacts@1
+    displayName: "Release Artifact: Darwin"
+    inputs:
+      PathToPublish: "_publish"
+      ArtifactName: "Release_Darwin_Test"
+
 - job: Windows
   timeoutInMinutes: 150
   displayName: "Windows - Build & Package"
@@ -288,7 +327,7 @@ jobs:
     inputs: 
       buildType: 'current'
       downloadType: 'single'
-      artifactName: 'Release_Darwin'
+      artifactName: 'Release_Darwin_Test'
       downloadPath: '$(System.ArtifactsDirectory)'
   - script: ./scripts/osx/validate-release.sh
     env:
