@@ -83,7 +83,7 @@ module WrapState = {
       let wrapping =
         Wrapping.make(~wrap=WordWrap.fixed(~pixels=pixelWidth), ~buffer);
       Viewport({lastWrapPixels: pixelWidth, wrapping});
-    | Bounded({wrapColumn, lastWrapColumn, _}) =>
+    | Bounded({wrapColumn, _}) =>
       let wrapping =
         Wrapping.make(~wrap=WordWrap.fixed(~pixels=pixelWidth), ~buffer);
       Bounded({wrapColumn, lastWrapColumn: wrapColumn, wrapping});
@@ -263,7 +263,7 @@ let viewTokens = (~line, ~scrollX, ~colorizer, editor) => {
 
   BufferViewTokenizer.tokenize(
     ~start=viewStartIndex,
-    ~stop=CharacterIndex.(viewEndIndex),
+    ~stop=viewEndIndex,
     bufferLine,
     colorizer(~startByte=viewStartByte),
   );
