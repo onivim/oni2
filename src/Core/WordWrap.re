@@ -29,13 +29,9 @@ let fixed = (~pixels, bufferLine) => {
 
       // We haven't exceeded column size yet, so continue traversing
       if (width +. currWidth <= columnsInPixels) {
-        loop(
-          curr,
-          currWidth +. width,
-          nextCharacterIndex,
-          // We have hit the column width, so drop a new line break
-        );
+        loop(curr, currWidth +. width, nextCharacterIndex);
       } else {
+        // We have hit the column width, so drop a new line break
         let newWraps = [
           {byte: byteIndex, character: characterIndex},
           ...curr,

@@ -246,7 +246,7 @@
     "esy-skia": "*",
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.60",
+    "libvim": "8.10869.61",
     "ocaml": "4.10.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
     "reasonFuzz": "*",
@@ -256,7 +256,7 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#a757edb",
+    "revery": "revery-ui/revery#18eb60e",
     "esy-skia": "revery-ui/esy-skia#a3785f9",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",

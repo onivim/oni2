@@ -46,10 +46,7 @@ module Internal = {
   };
 
   let lineComment = (~maybeLanguageConfig) => {
-    maybeLanguageConfig
-    |> OptionEx.flatMap((config: LanguageConfiguration.t) =>
-         config.lineComment
-       );
+    maybeLanguageConfig |> OptionEx.flatMap(LanguageConfiguration.lineComment);
   };
 
   let indentation = (~buffer) =>

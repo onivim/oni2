@@ -25,6 +25,13 @@ type msg =
   | ReferencesNotAvailable
   | ReferencesFound([@opaque] list(Exthost.Location.t));
 
+let get = ({state, _}) =>
+  switch (state) {
+  | Empty
+  | InProgress => []
+  | Found(items) => items
+  };
+
 let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) => {
   switch (msg) {
   | Command(FindAll) =>
@@ -59,7 +66,7 @@ let update = (~maybeBuffer, ~cursorLocation, ~client, msg, model) => {
       | InProgress => Found(locations)
       | Found(prevLocations) => Found(locations @ prevLocations)
       };
-    ({...model, state: state'}, Outmsg.Nothing);
+    ({...model, state: state'}, Outmsg.ReferencesAvailable);
   };
 };
 
@@ -80,11 +87,21 @@ module Commands = {
     define(
       ~category="References",
       ~title="Find All References",
-      "references-view.find",
+      "editor.action.goToReferences",
       Command(FindAll),
     );
 };
 
+module Keybindings = {
+  open Oni_Input.Keybindings;
+
+  let condition = "editorTextFocus && normalMode" |> WhenExpr.parse;
+
+  // TODO: Fix this
+  let shiftF12 = {key: "<S-F12>", command: Commands.findAll.id, condition};
+};
+
 module Contributions = {
   let commands = Commands.[findAll];
+  let keybindings = Keybindings.[shiftF12];
 };

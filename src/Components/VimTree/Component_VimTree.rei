@@ -62,10 +62,13 @@ let scrollTo:
   ) =>
   model('node, 'leaf);
 
+let collapse: model('node, 'leaf) => model('node, 'leaf);
+
 // CONTRIBUTIONS
 
 module Contributions: {
   let commands: list(Command.t(msg));
+  let keybindings: list(Oni_Input.Keybindings.keybinding);
   let contextKeys: model('node, 'leaf) => WhenExpr.ContextKeys.t;
 };
 

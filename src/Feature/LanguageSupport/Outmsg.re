@@ -14,6 +14,7 @@ type internalMsg('a) =
       filePath: string,
       location: option(CharacterPosition.t),
     })
+  | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
   | Effect(Isolinear.Effect.t('a));

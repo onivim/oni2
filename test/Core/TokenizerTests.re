@@ -34,11 +34,7 @@ let thickB = c =>
   | _ => 1
   };
 
-let makeLine =
-  BufferLine.make(
-    ~indentation=
-      IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=2, ()),
-  );
+let makeLine = BufferLine.make(~measure=_ => 1.0);
 
 let validateToken =
     (
@@ -59,6 +55,7 @@ let validateToken =
   expect.int(actualToken.endIndex |> CharacterIndex.toInt).toBe(
     CharacterIndex.toInt(expectedToken.endIndex),
   );
+  expect.float(actualToken.startPixel).toBeCloseTo(expectedToken.startPixel);
 };
 
 let validateTokens =
@@ -122,6 +119,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=ByteIndex.ofInt(3),
           ~startIndex=CharacterIndex.ofInt(1),
           ~endIndex=CharacterIndex.ofInt(3),
+          ~startPixel=1.0,
           (),
         ),
       ];
@@ -145,6 +143,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=ByteIndex.ofInt(5),
           ~startIndex=CharacterIndex.ofInt(3),
           ~endIndex=CharacterIndex.ofInt(5),
+          ~startPixel=3.0,
           (),
         ),
       ];
@@ -170,6 +169,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=ByteIndex.ofInt(1),
           ~startIndex=CharacterIndex.zero,
           ~endIndex=CharacterIndex.ofInt(1),
+          ~startPixel=0.,
           (),
         ),
         TextRun.create(
@@ -178,6 +178,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=ByteIndex.ofInt(2),
           ~startIndex=CharacterIndex.ofInt(1),
           ~endIndex=CharacterIndex.ofInt(2),
+          ~startPixel=1.,
           (),
         ),
         TextRun.create(
@@ -186,6 +187,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=ByteIndex.ofInt(3),
           ~startIndex=CharacterIndex.ofInt(2),
           ~endIndex=CharacterIndex.ofInt(3),
+          ~startPixel=2.,
           (),
         ),
         TextRun.create(
@@ -194,6 +196,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=ByteIndex.ofInt(4),
           ~startIndex=CharacterIndex.ofInt(3),
           ~endIndex=CharacterIndex.ofInt(4),
+          ~startPixel=3.,
           (),
         ),
       ];
@@ -228,6 +231,7 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=ByteIndex.ofInt(1),
         ~startIndex=CharacterIndex.zero,
         ~endIndex=CharacterIndex.ofInt(1),
+        ~startPixel=0.,
         (),
       ),
       TextRun.create(
@@ -236,6 +240,7 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=ByteIndex.ofInt(2),
         ~startIndex=CharacterIndex.ofInt(1),
         ~endIndex=CharacterIndex.ofInt(2),
+        ~startPixel=1.,
         (),
       ),
       TextRun.create(
@@ -244,6 +249,7 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=ByteIndex.ofInt(3),
         ~startIndex=CharacterIndex.ofInt(2),
         ~endIndex=CharacterIndex.ofInt(3),
+        ~startPixel=2.,
         (),
       ),
       TextRun.create(
@@ -252,6 +258,7 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=ByteIndex.ofInt(4),
         ~startIndex=CharacterIndex.ofInt(3),
         ~endIndex=CharacterIndex.ofInt(4),
+        ~startPixel=3.,
         (),
       ),
     ];
@@ -274,6 +281,7 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=ByteIndex.ofInt(11),
         ~startIndex=CharacterIndex.zero,
         ~endIndex=CharacterIndex.ofInt(5),
+        ~startPixel=0.,
         (),
       ),
     ];
@@ -297,6 +305,7 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=ByteIndex.ofInt(2),
         ~startIndex=CharacterIndex.zero,
         ~endIndex=CharacterIndex.ofInt(2),
+        ~startPixel=0.,
         (),
       ),
       TextRun.create(
@@ -305,6 +314,7 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=ByteIndex.ofInt(6),
         ~startIndex=CharacterIndex.ofInt(2),
         ~endIndex=CharacterIndex.ofInt(6),
+        ~startPixel=2.,
         (),
       ),
       TextRun.create(
@@ -313,6 +323,7 @@ describe("Tokenizer", ({test, describe, _}) => {
         ~endByte=ByteIndex.ofInt(8),
         ~startIndex=CharacterIndex.ofInt(6),
         ~endIndex=CharacterIndex.ofInt(8),
+        ~startPixel=6.,
         (),
       ),
     ];

@@ -2,7 +2,7 @@ open EditorCoreTypes;
 open Oni_Core;
 open TestFramework;
 
-let makeLine = BufferLine.make(~indentation=IndentationSettings.default);
+let makeLine = BufferLine.make(~measure=_ => 1.0);
 
 let characterWidth = {
   let (_, width) =

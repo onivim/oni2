@@ -37,6 +37,10 @@ let create = (~rowHeight) => {
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
+let isSearchOpen = ({searchContext, _}) => {
+  searchContext |> SearchContext.isOpen;
+};
+
 let findIndex = (f, {items, _}) => {
   let len = Array.length(items);
   let rec loop = idx =>

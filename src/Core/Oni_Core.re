@@ -24,6 +24,7 @@ module EnvironmentVariables = Kernel.EnvironmentVariables;
 module Filesystem = Filesystem;
 module Filter = Filter;
 module Font = Font;
+module FontMeasurementCache = FontMeasurementCache;
 module IconTheme = IconTheme;
 module Indentation = Indentation;
 module IndentationSettings = IndentationSettings;
