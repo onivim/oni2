@@ -250,12 +250,12 @@ let viewTokens = (~line, ~scrollX, ~colorizer, editor) => {
   let viewStartIndex = BufferLine.getIndex(~byte=viewStartByte, bufferLine);
   let viewEndIndex = BufferLine.getIndex(~byte=viewEndByte, bufferLine);
 
-  BufferViewTokenizer.tokenize(
-    ~start=viewStartIndex,
-    ~stop=CharacterIndex.(viewEndIndex + 1),
-    bufferLine,
-    colorizer(~startByte=viewStartByte),
-  );
+    BufferViewTokenizer.tokenize(
+      ~start=viewStartIndex,
+      ~stop=CharacterIndex.(viewEndIndex + 1),
+      bufferLine,
+      colorizer(~startByte=viewStartByte),
+    );
 };
 
 let bufferCharacterPositionToPixel =
