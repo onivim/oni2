@@ -79,7 +79,6 @@ let minimap =
       ~editor,
       ~diffMarkers,
       ~diagnosticsMap,
-      ~bufferWidthInCharacters,
       ~minimapWidthInPixels,
       ~languageSupport,
       (),
@@ -120,8 +119,7 @@ let minimap =
         ~colors,
         ~matchingPairs,
         ~bufferSyntaxHighlights,
-        0,
-        bufferWidthInCharacters,
+        ~scrollX=0.,
       )}
       selection=selectionRanges
       showSlider=showMinimapSlider
@@ -389,7 +387,6 @@ let%component make =
            selectionRanges
            showMinimapSlider={Config.Minimap.showSlider.get(config)}
            diffMarkers
-           bufferWidthInCharacters={layout.bufferWidthInCharacters}
            minimapWidthInPixels={layout.minimapWidthInPixels}
            languageSupport
          />
