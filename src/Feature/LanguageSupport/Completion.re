@@ -327,10 +327,13 @@ let getMeetLocation = (~handle, model) => {
 let recomputeAllItems = (sessions: IntMap.t(Session.t)) => {
   sessions
   |> IntMap.bindings
-  |> List.map(((handle, session)) => {
+  |> List.map(((handle, session: Session.t)) => {
+       let isFuzzyMatching = session.base != "";
        session
        |> Session.filteredItems
-       |> List.map(Filter.map(CompletionItem.create(~handle)))
+       |> List.map(
+            Filter.map(CompletionItem.create(~isFuzzyMatching, ~handle)),
+          );
      })
   |> List.flatten
   |> List.fast_sort(CompletionItemSorter.compare)

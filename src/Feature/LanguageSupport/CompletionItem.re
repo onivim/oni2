@@ -15,9 +15,10 @@ type t = {
   commitCharacters: list(string),
   additionalTextEdits: list(Edit.SingleEditOperation.t),
   command: option(Command.t),
+  isFuzzyMatching: bool,
 };
 
-let create = (~handle, item: SuggestItem.t) => {
+let create = (~isFuzzyMatching: bool, ~handle, item: SuggestItem.t) => {
   chainedCacheId: item.chainedCacheId,
   handle,
   label: item.label,
@@ -31,4 +32,5 @@ let create = (~handle, item: SuggestItem.t) => {
   commitCharacters: item.commitCharacters,
   additionalTextEdits: item.additionalTextEdits,
   command: item.command,
+  isFuzzyMatching,
 };
