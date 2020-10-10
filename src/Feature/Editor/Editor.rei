@@ -21,7 +21,23 @@ type yankHighlight = {
   pixelRanges: list(PixelRange.t),
 };
 
-let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
+module WrapMode: {
+  [@deriving show]
+  type t =
+    | NoWrap
+    | Viewport
+    | WrapColumn(int)
+    | Bounded(int);
+};
+
+let create:
+  (
+    ~wrapMode: WrapMode.t=?,
+    ~config: Config.resolver,
+    ~buffer: EditorBuffer.t,
+    unit
+  ) =>
+  t;
 let copy: t => t;
 
 let key: t => Brisk_reconciler.Key.t;
@@ -153,7 +169,9 @@ let unprojectToPixel:
 
 let setSize: (~pixelWidth: int, ~pixelHeight: int, t) => t;
 
-let updateBuffer: (~buffer: EditorBuffer.t, t) => t;
+let updateBuffer:
+  (~update: Oni_Core.BufferUpdate.t, ~buffer: EditorBuffer.t, t) => t;
+let setBuffer: (~buffer: EditorBuffer.t, t) => t;
 
 module Slow: {
   let pixelPositionToBytePosition:

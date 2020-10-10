@@ -761,6 +761,8 @@ let update =
       let fileType =
         newBuffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
+      let bufferUpdate = update;
+
       let syntaxHighlights =
         Feature_Syntax.handleUpdate(
           ~scope=
@@ -812,7 +814,7 @@ let update =
             Feature_Layout.map(
               editor =>
                 if (Editor.getBufferId(editor) == bufferId) {
-                  Editor.updateBuffer(~buffer, editor);
+                  Editor.updateBuffer(~update=bufferUpdate, ~buffer, editor);
                 } else {
                   editor;
                 },
@@ -1177,7 +1179,7 @@ let update =
               |> Option.map(buffer => {
                    let updatedBuffer =
                      buffer |> Feature_Editor.EditorBuffer.ofBuffer;
-                   Feature_Editor.Editor.updateBuffer(
+                   Feature_Editor.Editor.setBuffer(
                      ~buffer=updatedBuffer,
                      editor,
                    );

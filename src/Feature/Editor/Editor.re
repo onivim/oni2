@@ -17,6 +17,115 @@ type viewLine = {
   characterOffset: int,
 };
 
+module WrapMode = {
+  [@deriving show]
+  type t =
+    | NoWrap
+    | Viewport
+    | WrapColumn(int)
+    | Bounded(int);
+};
+
+module WrapState = {
+  [@deriving show]
+  type t =
+    | NoWrap({
+        [@opaque]
+        wrapping: Wrapping.t,
+      })
+    | Viewport({
+        lastWrapColumn: int,
+        [@opaque]
+        wrapping: Wrapping.t,
+      })
+    | WrapColumn({
+        wrapColumn: int,
+        [@opaque]
+        wrapping: Wrapping.t,
+      })
+    | Bounded({
+        wrapColumn: int,
+        lastWrapColumn: int,
+        [@opaque]
+        wrapping: Wrapping.t,
+      });
+
+  let make = (~wrapMode: WrapMode.t, ~buffer) => {
+    let initialWrapping = Wrapping.make(~wrap=WordWrap.none, ~buffer);
+    switch (wrapMode) {
+    | NoWrap => NoWrap({wrapping: initialWrapping})
+    | Viewport => Viewport({lastWrapColumn: 999, wrapping: initialWrapping})
+    | WrapColumn(wrapColumn) =>
+      WrapColumn({
+        wrapColumn,
+        wrapping: initialWrapping,
+        // TODO:
+        //Wrapping.make(~wrap=WordWrap.fixed(~columns=wrapColumn), ~buffer),
+      })
+    | Bounded(wrapColumn) =>
+      Bounded({
+        wrapColumn,
+        lastWrapColumn: wrapColumn,
+        wrapping: initialWrapping,
+        // TODO:
+        //Wrapping.make(~wrap=WordWrap.fixed(~columns=wrapColumn), ~buffer),
+      })
+    };
+  };
+
+  let wrapping =
+    fun
+    | NoWrap({wrapping}) => wrapping
+    | Viewport({wrapping, _}) => wrapping
+    | WrapColumn({wrapping, _}) => wrapping
+    | Bounded({wrapping, _}) => wrapping;
+
+  // TODO: Bring back when wrapping strategy is hooked up!
+  //  let _resize = (~columns: int, ~buffer, wrapState) => {
+  //    switch (wrapState) {
+  //    // All the cases where we don't need to update wrapping...
+  //    | NoWrap(_) as nowrap => nowrap
+  //    | WrapColumn(_) as wrapcolumn => wrapcolumn
+  //    | Viewport({lastWrapColumn, _}) as viewport when lastWrapColumn == columns => viewport
+  //    | Bounded({lastWrapColumn, _}) as bounded when lastWrapColumn == columns => bounded
+  //    // And the cases where we may need to update wrapping
+  //    | Viewport(_) =>
+  //      // TODO:
+  //      //let wrapping = Wrapping.make(~wrap=WordWrap.fixed(~columns), ~buffer);
+  //      let wrapping = Wrapping.make(~wrap=WordWrap.none, ~buffer);
+  //      Viewport({lastWrapColumn: columns, wrapping});
+  //    | Bounded({wrapColumn, lastWrapColumn, _}) as bounded =>
+  //      let newWrapColumn = min(wrapColumn, columns);
+  //      if (newWrapColumn == lastWrapColumn) {
+  //        bounded;
+  //      } else {
+  //        // TODO:
+  //        //        let wrapping =
+  //        //          Wrapping.make(
+  //        //            ~wrap=WordWrap.fixed(~columns=newWrapColumn),
+  //        //            ~buffer,
+  //        //          );
+  //        let wrapping = Wrapping.make(~wrap=WordWrap.none, ~buffer);
+  //        Bounded({wrapColumn, lastWrapColumn: newWrapColumn, wrapping});
+  //      };
+  //    };
+  //  };
+
+  let map = f =>
+    fun
+    | NoWrap({wrapping}) => NoWrap({wrapping: f(wrapping)})
+    | Viewport({wrapping, lastWrapColumn}) =>
+      Viewport({wrapping: f(wrapping), lastWrapColumn})
+    | WrapColumn({wrapping, wrapColumn}) =>
+      WrapColumn({wrapping: f(wrapping), wrapColumn})
+    | Bounded({wrapping, wrapColumn, lastWrapColumn}) =>
+      Bounded({wrapping: f(wrapping), wrapColumn, lastWrapColumn});
+
+  let update = (~update, ~buffer, wrapState) => {
+    wrapState |> map(Wrapping.update(~update, ~newBuffer=buffer));
+  };
+};
+
 [@deriving show]
 type yankHighlight = {
   key: [@opaque] Brisk_reconciler.Key.t,
@@ -35,21 +144,16 @@ type t = {
   isMinimapEnabled: bool,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
-  /*
-   * The maximum line visible in the view.
-   * TODO: This will be dependent on line-wrap settings.
-   */
-  maxLineLength: int,
-  viewLines: int,
   cursors: [@opaque] list(BytePosition.t),
   selection: [@opaque] option(VisualRange.t),
   pixelWidth: int,
   pixelHeight: int,
   yankHighlight: option(yankHighlight),
+  wrapMode: WrapMode.t,
+  wrapState: WrapState.t,
 };
 
 let key = ({key, _}) => key;
-let totalViewLines = ({viewLines, _}) => viewLines;
 let selection = ({selection, _}) => selection;
 let setSelection = (~selection, editor) => {
   ...editor,
@@ -83,21 +187,34 @@ let isMinimapEnabled = ({isMinimapEnabled, _}) => isMinimapEnabled;
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 
 let bufferBytePositionToPixel =
-    (~position: BytePosition.t, {scrollX, scrollY, buffer, _} as editor) => {
+    (
+      ~position: BytePosition.t,
+      {scrollX, scrollY, buffer, wrapState, _} as editor,
+    ) => {
   let lineCount = EditorBuffer.numberOfLines(buffer);
   let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
   if (line < 0 || line >= lineCount) {
     ({x: 0., y: 0.}: PixelPosition.t, 0.);
   } else {
+    let wrapping = wrapState |> WrapState.wrapping;
     let bufferLine = buffer |> EditorBuffer.line(line);
 
+    let viewLine =
+      Wrapping.bufferBytePositionToViewLine(~bytePosition=position, wrapping);
+
+    let {characterOffset: viewStartIndex, _}: Wrapping.bufferPosition =
+      Wrapping.viewLineToBufferPosition(~line=viewLine, wrapping);
+
+    let (startPixel, _width) =
+      BufferLine.getPixelPositionAndWidth(~index=viewStartIndex, bufferLine);
+
     let index = BufferLine.getIndex(~byte=position.byte, bufferLine);
-    let (cursorOffset, width) =
+    let (actualPixel, width) =
       BufferLine.getPixelPositionAndWidth(~index, bufferLine);
 
-    let pixelX = cursorOffset -. scrollX +. 0.5;
-
-    let pixelY = lineHeightInPixels(editor) *. float(line) -. scrollY +. 0.5;
+    let pixelX = actualPixel -. startPixel -. scrollX +. 0.5;
+    let pixelY =
+      lineHeightInPixels(editor) *. float(viewLine) -. scrollY +. 0.5;
 
     ({x: pixelX, y: pixelY}: PixelPosition.t, width);
   };
@@ -116,31 +233,32 @@ let viewLine = (editor, lineNumber) => {
 };
 
 let bufferCharacterPositionToPixel =
-    (~position: CharacterPosition.t, {scrollX, scrollY, buffer, _} as editor) => {
+    (~position: CharacterPosition.t, {buffer, _} as editor) => {
   let lineCount = EditorBuffer.numberOfLines(buffer);
   let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
   if (line < 0 || line >= lineCount) {
     ({x: 0., y: 0.}: PixelPosition.t, 0.);
   } else {
-    let (cursorOffset, width) =
+    let byteIndex =
       buffer
       |> EditorBuffer.line(line)
-      |> BufferLine.getPixelPositionAndWidth(~index=position.character);
+      |> BufferLine.getByteFromIndex(~index=position.character);
 
-    let pixelX = cursorOffset -. scrollX +. 0.5;
-
-    let pixelY = lineHeightInPixels(editor) *. float(line) -. scrollY +. 0.5;
-
-    ({x: pixelX, y: pixelY}: PixelPosition.t, width);
+    bufferBytePositionToPixel(
+      ~position=BytePosition.{line: position.line, byte: byteIndex},
+      editor,
+    );
   };
 };
 
-let create = (~config, ~buffer, ()) => {
+let create = (~wrapMode=WrapMode.NoWrap, ~config, ~buffer, ()) => {
   let id = GlobalState.generateId();
   let key = Brisk_reconciler.Key.create();
 
   let isMinimapEnabled = EditorConfiguration.Minimap.enabled.get(config);
   let lineHeight = EditorConfiguration.lineHeight.get(config);
+
+  let wrapState = WrapState.make(~wrapMode, ~buffer);
 
   {
     editorId: id,
@@ -153,8 +271,6 @@ let create = (~config, ~buffer, ()) => {
     scrollY: 0.,
     minimapMaxColumnWidth: Constants.minimapMaxColumn,
     minimapScrollY: 0.,
-    viewLines: EditorBuffer.numberOfLines(buffer),
-    maxLineLength: EditorBuffer.getEstimatedMaxLineLength(buffer),
     /*
      * We need an initial editor size, otherwise we'll immediately scroll the view
      * if a buffer loads prior to our first render.
@@ -164,8 +280,15 @@ let create = (~config, ~buffer, ()) => {
     pixelWidth: 1,
     pixelHeight: 1,
     yankHighlight: None,
+    wrapState,
+    wrapMode,
   };
 };
+
+let totalViewLines = ({wrapState, _}) =>
+  wrapState |> WrapState.wrapping |> Wrapping.numberOfLines;
+let maxLineLength = ({wrapState, _}) =>
+  wrapState |> WrapState.wrapping |> Wrapping.maxLineLength;
 
 let copy = editor => {
   let id = GlobalState.generateId();
@@ -371,15 +494,15 @@ let getVisibleView = editor => {
   int_of_float(float_of_int(pixelHeight) /. lineHeightInPixels(editor));
 };
 
-let getTotalHeightInPixels = editor =>
-  int_of_float(
-    float_of_int(editor.viewLines) *. lineHeightInPixels(editor),
-  );
+let getTotalHeightInPixels = editor => {
+  let totalViewLines = editor |> totalViewLines;
+  int_of_float(float_of_int(totalViewLines) *. lineHeightInPixels(editor));
+};
 
-let getTotalWidthInPixels = editor =>
-  int_of_float(
-    float_of_int(editor.maxLineLength) *. getCharacterWidth(editor),
-  );
+let getTotalWidthInPixels = editor => {
+  let maxLineLength = editor |> maxLineLength;
+  int_of_float(float_of_int(maxLineLength) *. getCharacterWidth(editor));
+};
 
 let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
   let {pixelHeight, _} = view;
@@ -395,10 +518,11 @@ let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
   {thumbSize, thumbOffset, visible: true};
 };
 
-let getHorizontalScrollbarMetrics = (view, availableWidth) => {
+let getHorizontalScrollbarMetrics = (editor, availableWidth) => {
+  let maxLineLength = editor |> maxLineLength;
   let availableWidthF = float_of_int(availableWidth);
   let totalViewWidthInPixels =
-    float_of_int(view.maxLineLength + 1) *. getCharacterWidth(view);
+    float_of_int(maxLineLength + 1) *. getCharacterWidth(editor);
   //+. availableWidthF;
 
   totalViewWidthInPixels <= availableWidthF
@@ -407,7 +531,7 @@ let getHorizontalScrollbarMetrics = (view, availableWidth) => {
       let thumbPercentage = availableWidthF /. totalViewWidthInPixels;
       let thumbSize = int_of_float(thumbPercentage *. availableWidthF);
 
-      let topF = view.scrollX /. totalViewWidthInPixels;
+      let topF = editor.scrollX /. totalViewWidthInPixels;
       let thumbOffset = int_of_float(topF *. availableWidthF);
 
       {thumbSize, thumbOffset, visible: true};
@@ -425,7 +549,7 @@ let getLayout = (~showLineNumbers, ~maxMinimapCharacters, view) => {
       ~pixelHeight=float_of_int(pixelHeight),
       ~characterWidth=getCharacterWidth(view),
       ~characterHeight=lineHeightInPixels(view),
-      ~bufferLineCount=view.viewLines,
+      ~bufferLineCount=view |> totalViewLines,
       (),
     );
 
@@ -493,7 +617,9 @@ let getBottomVisibleLine = view => {
       /. lineHeightInPixels(view),
     );
 
-  absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
+  let viewLines = view |> totalViewLines;
+
+  absoluteBottomLine > viewLines ? viewLines : absoluteBottomLine;
 };
 
 let getTokenAt =
@@ -536,11 +662,12 @@ let setSize = (~pixelWidth, ~pixelHeight, editor) => {
   pixelHeight,
 };
 
-let scrollToPixelY = (~pixelY as newScrollY, view) => {
-  let {pixelHeight, _} = view;
+let scrollToPixelY = (~pixelY as newScrollY, editor) => {
+  let {pixelHeight, _} = editor;
+  let viewLines = editor |> totalViewLines;
   let newScrollY = max(0., newScrollY);
   let availableScroll =
-    max(float_of_int(view.viewLines - 1), 0.) *. lineHeightInPixels(view);
+    max(float_of_int(viewLines - 1), 0.) *. lineHeightInPixels(editor);
   let newScrollY = min(newScrollY, availableScroll);
 
   let scrollPercentage =
@@ -549,12 +676,12 @@ let scrollToPixelY = (~pixelY as newScrollY, view) => {
     Constants.minimapCharacterWidth + Constants.minimapCharacterHeight;
   let linesInMinimap = pixelHeight / minimapLineSize;
   let availableMinimapScroll =
-    max(view.viewLines - linesInMinimap, 0) * minimapLineSize;
+    max(viewLines - linesInMinimap, 0) * minimapLineSize;
   let newMinimapScroll =
     scrollPercentage *. float_of_int(availableMinimapScroll);
 
   {
-    ...view,
+    ...editor,
     isScrollAnimated: false,
     minimapScrollY: newMinimapScroll,
     scrollY: newScrollY,
@@ -566,14 +693,15 @@ let scrollToLine = (~line, view) => {
   {...scrollToPixelY(~pixelY, view), isScrollAnimated: true};
 };
 
-let scrollToPixelX = (~pixelX as newScrollX, view) => {
+let scrollToPixelX = (~pixelX as newScrollX, editor) => {
+  let maxLineLength = editor |> maxLineLength;
   let newScrollX = max(0., newScrollX);
 
   let availableScroll =
-    max(0., float_of_int(view.maxLineLength) *. getCharacterWidth(view));
+    max(0., float_of_int(maxLineLength) *. getCharacterWidth(editor));
   let scrollX = min(newScrollX, availableScroll);
 
-  {...view, isScrollAnimated: false, scrollX};
+  {...editor, isScrollAnimated: false, scrollX};
 };
 
 let scrollDeltaPixelX = (~pixelX, editor) => {
@@ -643,13 +771,19 @@ let unprojectToPixel =
 
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
 
-let updateBuffer = (~buffer, editor) => {
+let updateBuffer = (~update, ~buffer, editor) => {
   {
     ...editor,
     buffer,
-    // TODO: These will both change with word wrap
-    viewLines: EditorBuffer.numberOfLines(buffer),
-    maxLineLength: EditorBuffer.getEstimatedMaxLineLength(buffer),
+    wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
+  };
+};
+
+let setBuffer = (~buffer, editor) => {
+  {
+    ...editor,
+    buffer,
+    wrapState: WrapState.make(~wrapMode=editor.wrapMode, ~buffer),
   };
 };
 

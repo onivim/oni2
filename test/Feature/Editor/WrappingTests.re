@@ -4,18 +4,30 @@ open Feature_Editor;
 open TestFramework;
 module LineNumber = EditorCoreTypes.LineNumber;
 
+let makeBuffer = lines =>
+  Oni_Core.Buffer.ofLines(~font=Font.default(), lines);
+
 let simpleAsciiBuffer =
-  [|"abcdef", "ghijkl"|]
-  |> Oni_Core.Buffer.ofLines(~font=Font.default())
-  |> EditorBuffer.ofBuffer;
+  [|"abcdef", "ghijkl"|] |> makeBuffer |> EditorBuffer.ofBuffer;
+
+let bytePosition = (lnum, byteNum) =>
+  BytePosition.{
+    line: LineNumber.ofZeroBased(lnum),
+    byte: ByteIndex.ofInt(byteNum),
+  };
+
+let wrapResult = (~line, ~byte, ~character) =>
+  Wrapping.{
+    line: line |> LineNumber.ofZeroBased,
+    byteOffset: byte |> ByteIndex.ofInt,
+    characterOffset: character |> CharacterIndex.ofInt,
+  };
 
 let (_, aWidth) =
   [|"a"|]
-  |> Oni_Core.Buffer.ofLines(~font=Font.default())
+  |> makeBuffer
   |> Oni_Core.Buffer.getLine(0)
   |> BufferLine.getPixelPositionAndWidth(~index=CharacterIndex.zero);
-
-prerr_endline("'a' width: " ++ string_of_float(aWidth));
 
 describe("Wrapping", ({describe, _}) => {
   describe("nowrap", ({test, _}) => {
@@ -46,35 +58,118 @@ describe("Wrapping", ({describe, _}) => {
     test("viewLineToBufferPosition", ({expect, _}) => {
       expect.equal(
         Wrapping.viewLineToBufferPosition(~line=0, wrapping),
-        Wrapping.{
-          line: 0 |> LineNumber.ofZeroBased,
-          byteOffset: 0 |> ByteIndex.ofInt,
-          characterOffset: 0 |> CharacterIndex.ofInt,
-        },
+        wrapResult(~line=0, ~byte=0, ~character=0),
       );
       expect.equal(
         Wrapping.viewLineToBufferPosition(~line=1, wrapping),
-        Wrapping.{
-          line: 1 |> LineNumber.ofZeroBased,
-          byteOffset: 0 |> ByteIndex.ofInt,
-          characterOffset: 0 |> CharacterIndex.ofInt,
-        },
+        wrapResult(~line=1, ~byte=0, ~character=0),
       );
     });
     test("numberOfLines", ({expect, _}) => {
       expect.int(Wrapping.numberOfLines(wrapping)).toBe(2)
     });
   });
-  describe("fixed=3", ({test, _}) => {
+
+  describe("fixed pixel width (3 characters)", ({test, _}) => {
     let characterWidth = aWidth;
     let threeCharacterWidth = 3. *. characterWidth;
     let wrap = WordWrap.fixed(~pixels=threeCharacterWidth);
     let wrapping = Wrapping.make(~wrap, ~buffer=simpleAsciiBuffer);
+    test("update: number of wraps stay the same", ({expect, _}) => {
+      let startBuffer = makeBuffer([|"aaa"|]);
+
+      let wrapping =
+        Wrapping.make(~wrap, ~buffer=startBuffer |> EditorBuffer.ofBuffer);
+
+      let update =
+        BufferUpdate.{
+          id: 0,
+          startLine: LineNumber.ofZeroBased(0),
+          endLine: LineNumber.ofZeroBased(1),
+          lines: [|"aaa"|],
+          isFull: false,
+          version: 999,
+        };
+
+      let newBuffer =
+        Buffer.update(startBuffer, update) |> EditorBuffer.ofBuffer;
+
+      let wrapping' = Wrapping.update(~update, ~newBuffer, wrapping);
+
+      expect.int(Wrapping.numberOfLines(wrapping')).toBe(1);
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=0, wrapping'),
+        wrapResult(~line=0, ~byte=0, ~character=0),
+      );
+    });
+    test("update: add line to empty buffer", ({expect, _}) => {
+      let startBuffer = makeBuffer([||]);
+
+      let wrapping =
+        Wrapping.make(~wrap, ~buffer=startBuffer |> EditorBuffer.ofBuffer);
+
+      let update =
+        BufferUpdate.{
+          id: 0,
+          startLine: LineNumber.ofZeroBased(0),
+          endLine: LineNumber.ofZeroBased(1),
+          lines: [|"aaaa"|],
+          isFull: false,
+          version: 999,
+        };
+
+      let newBuffer =
+        Buffer.update(startBuffer, update) |> EditorBuffer.ofBuffer;
+
+      let wrapping' = Wrapping.update(~update, ~newBuffer, wrapping);
+
+      expect.int(Wrapping.numberOfLines(wrapping')).toBe(2);
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=0, wrapping'),
+        wrapResult(~line=0, ~byte=0, ~character=0),
+      );
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=1, wrapping'),
+        wrapResult(~line=0, ~byte=3, ~character=3),
+      );
+    });
+
+    test("update: increase number of wraps in single line", ({expect, _}) => {
+      let startBuffer = makeBuffer([|"aaa"|]);
+
+      let wrapping =
+        Wrapping.make(~wrap, ~buffer=startBuffer |> EditorBuffer.ofBuffer);
+
+      let update =
+        BufferUpdate.{
+          id: 0,
+          startLine: LineNumber.ofZeroBased(0),
+          endLine: LineNumber.ofZeroBased(1),
+          lines: [|"aaaa"|],
+          isFull: false,
+          version: 999,
+        };
+
+      let newBuffer =
+        Buffer.update(startBuffer, update) |> EditorBuffer.ofBuffer;
+
+      let wrapping' = Wrapping.update(~update, ~newBuffer, wrapping);
+
+      expect.int(Wrapping.numberOfLines(wrapping')).toBe(2);
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=0, wrapping'),
+        wrapResult(~line=0, ~byte=0, ~character=0),
+      );
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=1, wrapping'),
+        wrapResult(~line=0, ~byte=3, ~character=3),
+      );
+    });
+
     test("bufferLineByteToViewLine", ({expect, _}) => {
       expect.int(
         Wrapping.bufferBytePositionToViewLine(
-          ~bytePosition=
-            BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+          ~bytePosition=bytePosition(0, 0),
           wrapping,
         ),
       ).
@@ -83,8 +178,7 @@ describe("Wrapping", ({describe, _}) => {
       );
       expect.int(
         Wrapping.bufferBytePositionToViewLine(
-          ~bytePosition=
-            BytePosition.{line: LineNumber.zero, byte: ByteIndex.(zero + 3)},
+          ~bytePosition=bytePosition(0, 3),
           wrapping,
         ),
       ).
@@ -93,11 +187,7 @@ describe("Wrapping", ({describe, _}) => {
       );
       expect.int(
         Wrapping.bufferBytePositionToViewLine(
-          ~bytePosition=
-            BytePosition.{
-              line: LineNumber.(zero + 1),
-              byte: ByteIndex.(zero),
-            },
+          ~bytePosition=bytePosition(1, 0),
           wrapping,
         ),
       ).
