@@ -218,23 +218,24 @@ Skia.Paint.setAntiAlias(tabPaint, true);
 Skia.Paint.setTextSize(tabPaint, 10.);
 Skia.Paint.setTextEncoding(tabPaint, Utf8);
 
-let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) => {
+let token =
+    (
+      ~context,
+      ~offsetY,
+      ~colors: Colors.t,
+      token: BufferViewTokenizer.t,
+    ) => {
   let font =
     Service_Font.resolveWithFallback(
       ~italic=token.italic,
       token.bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
       context.fontFamily,
     );
+
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
-
-  let ({y: pixelY, x: pixelX}: PixelPosition.t, _) =
-    Editor.bufferCharacterPositionToPixel(
-      ~position=CharacterPosition.{line, character: token.startIndex},
-      context.editor,
-    );
-
+  let pixelY = offsetY;
+  let pixelX = token.startPixel;
   let paddingY = context.editor |> Editor.linePaddingInPixels;
-
   let y = paddingY +. pixelY -. fontMetrics.ascent;
   let x = pixelX;
 

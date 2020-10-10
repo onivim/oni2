@@ -123,6 +123,10 @@ let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
 
 let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
 
+// VIEW-SPACE CONVERSION
+
+let viewLineToBufferLine: (int, t) => EditorCoreTypes.LineNumber.t;
+
 // PIXEL-SPACE CONVERSION
 
 // These methods convert a buffer (line, byte) or (line, utf8 character index)

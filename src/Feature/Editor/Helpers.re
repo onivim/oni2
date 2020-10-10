@@ -24,10 +24,11 @@ let getTokensForLine =
     let defaultBackground =
       isActiveLine ? colors.lineHighlightBackground : colors.editorBackground;
 
+    let bufferLine = Editor.viewLineToBufferLine(i, editor);
     let tokenColors =
       Feature_Syntax.getTokens(
         ~bufferId,
-        ~line=EditorCoreTypes.LineNumber.ofZeroBased(i),
+        ~line=bufferLine,
         bufferSyntaxHighlights,
       );
 

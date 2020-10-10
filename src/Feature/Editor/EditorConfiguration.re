@@ -11,6 +11,8 @@ module CustomDecoders: {
   let time: Config.Schema.codec(Time.t);
   let fontSize: Config.Schema.codec(float);
   let color: Config.Schema.codec(Revery.Color.t);
+  let wordWrap:
+    Config.Schema.codec([ | `WordWrapColumn | `Bounded | `Off | `On]);
 } = {
   let color =
     custom(
@@ -36,6 +38,30 @@ module CustomDecoders: {
             let (r, g, b, a) = Revery.Color.toRgba(color);
             "#" ++ toHex(r) ++ toHex(g) ++ toHex(b) ++ toHex(a) |> string;
           }
+        ),
+    );
+
+  let wordWrap =
+    custom(
+      ~decode=
+        Json.Decode.(
+          string
+          |> map(
+               fun
+               | "wordWrapColumn" => `WordWrapColumn
+               | "bounded" => `Bounded
+               | "on" => `On
+               | "off"
+               | _ => `Off,
+             )
+        ),
+      ~encode=
+        Json.Encode.(
+          fun
+          | `Off => string("off")
+          | `Bounded => string("bounded")
+          | `WordWrapColumn => string("wordWrapColumn")
+          | `On => string("on")
         ),
     );
 
@@ -268,6 +294,12 @@ module Experimental = {
       bool,
       ~default=false,
     );
+
+  let wordWrap =
+    setting("experimental.editor.wordWrap", wordWrap, ~default=`Off);
+
+  let wordWrapColumn =
+    setting("experimental.editor.wordWrapColumn", int, ~default=80);
 };
 
 let contributions = [
@@ -299,4 +331,6 @@ let contributions = [
   ZenMode.hideTabs.spec,
   ZenMode.singleFile.spec,
   Experimental.cursorSmoothCaretAnimation.spec,
+  Experimental.wordWrap.spec,
+  Experimental.wordWrapColumn.spec,
 ];

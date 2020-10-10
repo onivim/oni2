@@ -28,7 +28,7 @@ module WrapState = {
         wrapping: Wrapping.t,
       })
     | Viewport({
-        lastWrapColumn: int,
+        lastWrapPixels: float,
         [@opaque]
         wrapping: Wrapping.t,
       })
@@ -45,24 +45,21 @@ module WrapState = {
       });
 
   let make = (~wrapMode: WrapMode.t, ~buffer) => {
-    let initialWrapping = Wrapping.make(~wrap=WordWrap.none, ~buffer);
+    let initialWrapping =
+      Wrapping.make(~wrap=WordWrap.fixed(~pixels=100.), ~buffer);
     switch (wrapMode) {
     | NoWrap => NoWrap({wrapping: initialWrapping})
-    | Viewport => Viewport({lastWrapColumn: 999, wrapping: initialWrapping})
+    | Viewport => Viewport({lastWrapPixels: 100., wrapping: initialWrapping})
     | WrapColumn(wrapColumn) =>
       WrapColumn({
         wrapColumn,
-        wrapping: initialWrapping,
-        // TODO:
-        //Wrapping.make(~wrap=WordWrap.fixed(~columns=wrapColumn), ~buffer),
+        wrapping: Wrapping.make(~wrap=WordWrap.fixed(~pixels=100.), ~buffer),
       })
     | Bounded(wrapColumn) =>
       Bounded({
         wrapColumn,
         lastWrapColumn: wrapColumn,
-        wrapping: initialWrapping,
-        // TODO:
-        //Wrapping.make(~wrap=WordWrap.fixed(~columns=wrapColumn), ~buffer),
+        wrapping: Wrapping.make(~wrap=WordWrap.fixed(~pixels=100.), ~buffer),
       })
     };
   };
@@ -74,42 +71,30 @@ module WrapState = {
     | WrapColumn({wrapping, _}) => wrapping
     | Bounded({wrapping, _}) => wrapping;
 
-  // TODO: Bring back when wrapping strategy is hooked up!
-  //  let _resize = (~columns: int, ~buffer, wrapState) => {
-  //    switch (wrapState) {
-  //    // All the cases where we don't need to update wrapping...
-  //    | NoWrap(_) as nowrap => nowrap
-  //    | WrapColumn(_) as wrapcolumn => wrapcolumn
-  //    | Viewport({lastWrapColumn, _}) as viewport when lastWrapColumn == columns => viewport
-  //    | Bounded({lastWrapColumn, _}) as bounded when lastWrapColumn == columns => bounded
-  //    // And the cases where we may need to update wrapping
-  //    | Viewport(_) =>
-  //      // TODO:
-  //      //let wrapping = Wrapping.make(~wrap=WordWrap.fixed(~columns), ~buffer);
-  //      let wrapping = Wrapping.make(~wrap=WordWrap.none, ~buffer);
-  //      Viewport({lastWrapColumn: columns, wrapping});
-  //    | Bounded({wrapColumn, lastWrapColumn, _}) as bounded =>
-  //      let newWrapColumn = min(wrapColumn, columns);
-  //      if (newWrapColumn == lastWrapColumn) {
-  //        bounded;
-  //      } else {
-  //        // TODO:
-  //        //        let wrapping =
-  //        //          Wrapping.make(
-  //        //            ~wrap=WordWrap.fixed(~columns=newWrapColumn),
-  //        //            ~buffer,
-  //        //          );
-  //        let wrapping = Wrapping.make(~wrap=WordWrap.none, ~buffer);
-  //        Bounded({wrapColumn, lastWrapColumn: newWrapColumn, wrapping});
-  //      };
-  //    };
-  //  };
+  let resize = (~pixelWidth: float, ~buffer, wrapState) => {
+    switch (wrapState) {
+    // All the cases where we don't need to update wrapping...
+    | NoWrap(_) as nowrap => nowrap
+    | WrapColumn(_) as wrapcolumn => wrapcolumn
+    //     | Viewport({lastWrapColumn, _}) as viewport when lastWrapColumn == columns => viewport
+    //     | Bounded({lastWrapColumn, _}) as bounded when lastWrapColumn == columns => bounded
+    // And the cases where we may need to update wrapping
+    | Viewport(_) =>
+      let wrapping =
+        Wrapping.make(~wrap=WordWrap.fixed(~pixels=pixelWidth), ~buffer);
+      Viewport({lastWrapPixels: pixelWidth, wrapping});
+    | Bounded({wrapColumn, lastWrapColumn, _}) =>
+      let wrapping =
+        Wrapping.make(~wrap=WordWrap.fixed(~pixels=pixelWidth), ~buffer);
+      Bounded({wrapColumn, lastWrapColumn: wrapColumn, wrapping});
+    };
+  };
 
   let map = f =>
     fun
     | NoWrap({wrapping}) => NoWrap({wrapping: f(wrapping)})
-    | Viewport({wrapping, lastWrapColumn}) =>
-      Viewport({wrapping: f(wrapping), lastWrapColumn})
+    | Viewport({wrapping, lastWrapPixels}) =>
+      Viewport({wrapping: f(wrapping), lastWrapPixels})
     | WrapColumn({wrapping, wrapColumn}) =>
       WrapColumn({wrapping: f(wrapping), wrapColumn})
     | Bounded({wrapping, wrapColumn, lastWrapColumn}) =>
@@ -220,6 +205,14 @@ let setYankHighlight = (~yankHighlight, editor) => {
   yankHighlight: Some(yankHighlight),
 };
 
+let viewLineToBufferLine = (viewLine, editor) => {
+  let wrapping = editor.wrapState |> WrapState.wrapping;
+  let bufferPosition: Wrapping.bufferPosition =
+    Wrapping.viewLineToBufferPosition(~line=viewLine, wrapping);
+
+  bufferPosition.line;
+};
+
 let viewTokens = (~line, ~scrollX, ~colorizer, editor) => {
   let wrapping = editor.wrapState |> WrapState.wrapping;
   let bufferPosition: Wrapping.bufferPosition =
@@ -240,22 +233,32 @@ let viewTokens = (~line, ~scrollX, ~colorizer, editor) => {
       bufferLine,
     );
 
+  let totalViewLines = Wrapping.numberOfLines(wrapping);
+
   let viewEndByte =
-    BufferLine.Slow.getByteFromPixel(
-      ~relativeToByte=viewStartByte,
-      ~pixelX=float(editor.pixelWidth),
-      bufferLine,
-    );
+    if (line < totalViewLines - 1) {
+      let nextLineBufferPosition =
+        Wrapping.viewLineToBufferPosition(~line=line + 1, wrapping);
+
+      if (nextLineBufferPosition.line == bufferPosition.line
+          && nextLineBufferPosition.byteOffset > bufferPosition.byteOffset) {
+        nextLineBufferPosition.byteOffset;
+      } else {
+        ByteIndex.ofInt(BufferLine.lengthInBytes(bufferLine));
+      };
+    } else {
+      ByteIndex.ofInt(BufferLine.lengthInBytes(bufferLine));
+    };
 
   let viewStartIndex = BufferLine.getIndex(~byte=viewStartByte, bufferLine);
   let viewEndIndex = BufferLine.getIndex(~byte=viewEndByte, bufferLine);
 
-    BufferViewTokenizer.tokenize(
-      ~start=viewStartIndex,
-      ~stop=CharacterIndex.(viewEndIndex + 1),
-      bufferLine,
-      colorizer(~startByte=viewStartByte),
-    );
+  BufferViewTokenizer.tokenize(
+    ~start=viewStartIndex,
+    ~stop=CharacterIndex.(viewEndIndex),
+    bufferLine,
+    colorizer(~startByte=viewStartByte),
+  );
 };
 
 let bufferCharacterPositionToPixel =
@@ -683,9 +686,14 @@ let getTokenAt =
 };
 
 let setSize = (~pixelWidth, ~pixelHeight, editor) => {
-  ...editor,
-  pixelWidth,
-  pixelHeight,
+  let wrapState =
+    WrapState.resize(
+      ~pixelWidth=float(pixelWidth),
+      ~buffer=editor.buffer,
+      editor.wrapState,
+    );
+
+  {...editor, wrapState, pixelWidth, pixelHeight};
 };
 
 let scrollToPixelY = (~pixelY as newScrollY, editor) => {

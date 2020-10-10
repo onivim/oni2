@@ -91,6 +91,8 @@ let tokenize =
     let idx = ref(startIndex);
     let tokens: ref(list(TextRun.t)) = ref([]);
 
+    let (initialPixel, _) =
+      BufferLine.getPixelPositionAndWidth(~index=start, bufferLine);
     while (idx^ < maxIndex) {
       let startToken = idx^;
       let endToken =
@@ -117,7 +119,7 @@ let tokenize =
       let startIndex = CharacterIndex.ofInt(startToken);
       let endIndex = CharacterIndex.ofInt(endToken);
 
-      let (startPixel, _) =
+      let (tokenPixelX, _) =
         BufferLine.getPixelPositionAndWidth(~index=startIndex, bufferLine);
 
       let textRun =
@@ -127,7 +129,7 @@ let tokenize =
           ~endByte,
           ~startIndex,
           ~endIndex,
-          ~startPixel,
+          ~startPixel=tokenPixelX -. initialPixel,
           (),
         );
 
