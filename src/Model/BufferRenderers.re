@@ -36,3 +36,13 @@ let setById = (bufferId, renderer, renderers: t) => {
 
 let setByFiletype = (filetype, renderer, {rendererByFiletype, _}: t) =>
   StringMap.add(filetype, renderer, rendererByFiletype);
+
+let handleBufferUpdate = (bufferUpdate: BufferUpdate.t, model) => {
+  model
+  |> mapi((id, renderer) =>
+       switch (renderer) {
+       | Welcome when bufferUpdate.id == id => Editor
+       | renderer => renderer
+       }
+     );
+};

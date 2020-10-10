@@ -4,6 +4,8 @@
  * In-memory text buffer representation
  */
 
+open EditorCoreTypes;
+
 type t;
 
 module FileType: {
@@ -22,20 +24,23 @@ module FileType: {
   let toOption: t => option(string);
 };
 
-let initial: t;
+let empty: (~font: Font.t) => t;
 
 let show: t => string;
 
-let ofLines: (~id: int=?, ~font: Font.t=?, array(string)) => t;
+let ofLines: (~id: int=?, ~font: Font.t, array(string)) => t;
 let ofMetadata:
   (
-    ~font: Font.t=?,
+    ~font: Font.t,
     ~id: int,
     ~version: int,
     ~filePath: option(string),
     ~modified: bool
   ) =>
   t;
+
+let characterToBytePosition:
+  (CharacterPosition.t, t) => option(BytePosition.t);
 
 let getId: t => int;
 let getUri: t => Uri.t;
@@ -64,8 +69,8 @@ let isModified: t => bool;
 let setModified: (bool, t) => t;
 
 let isIndentationSet: t => bool;
-let setIndentation: (IndentationSettings.t, t) => t;
-let getIndentation: t => option(IndentationSettings.t);
+let setIndentation: (Inferred.t(IndentationSettings.t), t) => t;
+let getIndentation: t => IndentationSettings.t;
 
 let isSyntaxHighlightingEnabled: t => bool;
 let disableSyntaxHighlighting: t => t;

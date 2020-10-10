@@ -10,7 +10,7 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
-  | InputText(Feature_InputText.msg);
+  | InputText(Component_InputText.msg);
 
 type provider = {
   handle: int,
@@ -23,7 +23,7 @@ type sessionState =
   | Resolving({sessionId: int})
   | Resolved({
       sessionId: int, //location: RenameLocation.t,
-      inputText: Feature_InputText.model,
+      inputText: Component_InputText.model,
     })
   | Applying({
       sessionId: int,
@@ -66,7 +66,7 @@ let update = (msg, model) => {
   | InputText(inputMsg) =>
     switch (model.sessionState) {
     | Resolved({inputText, _} as resolved) =>
-      let inputText' = Feature_InputText.update(inputMsg, inputText);
+      let (inputText', _) = Component_InputText.update(inputMsg, inputText);
       (
         {
           ...model,
@@ -87,7 +87,7 @@ let update = (msg, model) => {
         sessionState:
           Resolved({
             sessionId,
-            inputText: Feature_InputText.create(~placeholder="hi"),
+            inputText: Component_InputText.create(~placeholder="hi"),
           }),
       },
       Outmsg.Nothing,
@@ -187,7 +187,7 @@ module View = {
             color(Colors.Menu.foreground.from(theme)),
           ]>
           <View style=Style.[padding(5)]>
-            <Feature_InputText.View
+            <Component_InputText.View
               prefix="="
               model=inputText
               theme

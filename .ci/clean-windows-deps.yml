@@ -1,0 +1,46 @@
+steps:
+  # Remove Rust:
+  # https://github.com/actions/virtual-environments/blob/main/images/win/scripts/Installers/Install-Rust.ps1
+  - script: rd /s /q "C:\Rust"
+    displayName: 'Remove Rust'
+  # Remove R
+  # https://github.com/actions/virtual-environments/blob/main/images/win/scripts/Installers/Install-R.ps1
+  - script: rd /s /q "C:\Program Files\R"
+    displayName: 'Remove R'
+  # Remove Julia
+  # https://github.com/actions/virtual-environments/blob/main/images/win/scripts/Installers/Install-Julia.ps1
+  - script: rd /s /q "C:\Julia"
+    displayName: "Remove Julia"
+  - script: rd /s /q "C:\Program Files\PostgreSQL"
+    displayName: "Remove PostgreSQL"
+  - script: rd /s /q "C:\Program Files\Mozilla Firefox"
+    displayName: "Remove Firefox"
+  - script: rd /s /q "C:\Program Files\Google\Chrome"
+    displayName: "Remove Google Chrome"
+  - script: rd /s /q "C:\Program Files\TortoiseSVN"
+    displayName: "Remove TortoiseSVN"
+  - script: rd /s /q "C:\Program Files\Internet Explorer"
+    displayName: "Remove Internet Explorer"
+  - script: rd /s /q "C:\Program Files\Unity"
+    displayName: "Remove Unity"
+  - script: rd /s /q "C:\Program Files\Android"
+    displayName: "Remove Android SDK"
+  - script: rd /s /q "C:\Program Files\MongoDB"
+    displayName: "Remove MongoDB"
+  - script: rd /s /q "C:\Program Files\Java"
+    displayName: "Remove Java"
+  - script: rd /s /q "C:\Program Files\Internet Explorer"
+    displayName: "Remove Internet Explorer"
+  - script: rd /s /q "C:\Strawberry"
+    displayName: "Remove Strawberry"
+  - script: rd /s /q "C:\selenium"
+    displayName: "Remove Selenium"
+  - script: rd /s /q "C:\SeleniumWebDrivers"
+    displayName: "Remove Selenium Web Drivers"
+  - script: rd /s /q "C:\mysql-5.7.21-winx64"
+    displayName: "Remove MySQL"
+
+  - script: dir "C:/Program Files/"
+    displayName: "List Program Files"
+  - script: dir "C:/"
+    displayName: "List C:/"

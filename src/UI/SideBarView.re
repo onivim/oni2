@@ -11,7 +11,8 @@ module Colors = Feature_Theme.Colors;
 module Styles = {
   open Style;
 
-  let sidebar = (~theme, ~transition) => [
+  let sidebar = (~opacity, ~theme, ~transition) => [
+    Style.opacity(opacity),
     flexDirection(`Row),
     backgroundColor(Colors.SideBar.background.from(theme)),
     transform(Transform.[TranslateX(transition)]),
@@ -54,7 +55,7 @@ let animation =
     |> delay(Revery.Time.milliseconds(0))
   );
 
-let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
+let%component make = (~config, ~theme, ~state: State.t, ~dispatch, ()) => {
   let State.{sideBar, uiFont: font, _} = state;
 
   let%hook (transition, _animationState, _reset) =
@@ -65,31 +66,61 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
     | FileExplorer => "Explorer"
     | SCM => "Source Control"
     | Extensions => "Extensions"
+    | Search => "Search"
     };
+
+  let maybeBuffer = Selectors.getActiveBuffer(state);
+  let maybeSymbols =
+    maybeBuffer
+    |> Option.map(buffer => Oni_Core.Buffer.getId(buffer))
+    |> Utility.OptionEx.flatMap(bufferId =>
+         Feature_LanguageSupport.DocumentSymbols.get(
+           ~bufferId,
+           state.languageSupport,
+         )
+       );
 
   let elem =
     switch (sideBar |> selected) {
     | FileExplorer =>
-      <FileExplorerView model={state.fileExplorer} theme font />
+      let dispatch = msg => dispatch(Actions.FileExplorer(msg));
+      <Feature_Explorer.View
+        isFocused={FocusManager.current(state) == Focus.FileExplorer}
+        languageInfo={state.languageInfo}
+        iconTheme={state.iconTheme}
+        decorations={state.decorations}
+        documentSymbols=maybeSymbols
+        model={state.fileExplorer}
+        theme
+        font
+        dispatch
+      />;
 
     | SCM =>
-      let onItemClick = (resource: Feature_SCM.Resource.t) =>
-        dispatch(
-          Actions.OpenFileByPath(
-            Oni_Core.Uri.toFileSystemPath(resource.uri),
-            None,
-            None,
-          ),
-        );
-
       <Feature_SCM.Pane
         model={state.scm}
         workingDirectory={state.workspace.workingDirectory}
-        onItemClick
         isFocused={FocusManager.current(state) == Focus.SCM}
+        languageInfo={state.languageInfo}
+        iconTheme={state.iconTheme}
         theme
         font
         dispatch={msg => dispatch(Actions.SCM(msg))}
+      />
+
+    | Search =>
+      let dispatch = msg =>
+        GlobalContext.current().dispatch(Actions.Search(msg));
+
+      <Feature_Search
+        isFocused={FocusManager.current(state) == Focus.Search}
+        theme
+        languageInfo={state.languageInfo}
+        iconTheme={state.iconTheme}
+        uiFont={state.uiFont}
+        model={state.searchPane}
+        dispatch
+        workingDirectory={state.workspace.workingDirectory}
       />;
 
     | Extensions =>
@@ -108,6 +139,13 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
     Feature_SideBar.isOpen(state.sideBar) && width > 4
       ? <separator /> : React.empty;
 
+  let focus = FocusManager.current(state);
+  let isFocused =
+    focus == Focus.FileExplorer
+    || focus == Focus.SCM
+    || focus == Focus.Extensions
+    || focus == Focus.Search;
+
   let content =
     <View style={Styles.contents(~width)}>
       <View style={Styles.heading(theme)}>
@@ -118,6 +156,7 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
             fontFamily={font.family}
             fontWeight=Revery.Font.Weight.SemiBold
             fontSize=13.
+            italic=isFocused
           />
         </View>
       </View>
@@ -147,7 +186,13 @@ let%component make = (~theme, ~state: State.t, ~dispatch, ()) => {
     | Feature_SideBar.Right => List.rev(defaultOrder)
     };
 
-  <View style={Styles.sidebar(~theme, ~transition)}>
+  let opacity =
+    isFocused
+      ? 1.0
+      : Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
+          config,
+        );
+  <View style={Styles.sidebar(~opacity, ~theme, ~transition)}>
     separator
     {React.listToElement(items)}
   </View>;

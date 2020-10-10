@@ -72,11 +72,11 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
+- `explorer.autoReveal` __(_string|bool_ default: `true`)__  - When `true`, the file explorer will jump to highlight the file current focused. When `false` the file explorer will remain static. If a string is entered it must be `"focusNoScroll"` which will still highlight the currently focused file in the file explorer but the file explorer will not scroll to it. Any other string supplied will be treated as if `false` was entered and the file explorer will remain static and not highlight the currently focused file. 
+
 - `editor.scrollShadow` __(_bool_ default: `true`)__ - When `true`, show a drop-shadow effect at the borders when there is additional content past the visible area.
 
 - `editor.smoothScroll` __(_bool_ default: `true`)__ - When `true`, smoothly scroll the editor when the viewport is adjusted due to a cursor motion.
-
-- `editor.yankHighlightAnimation` __(_bool_ default: `true`)__ - When `true`, briefly highlight yanks on the editor surface.
 
 - `editor.zenMode.singleFile` __(_bool_ default: `true`)__ - When `true`, the Onivim will automatically enter zen mode when started up with a single file. Zen mode hides most of the UI until disabled via the command pallette.
 
@@ -88,7 +88,13 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
 
-## Layout
+- `vim.highlightedyank.enable` __(_bool_ default: `true`)__ - When `true`, briefly highlight yanks on the editor surface.
+
+- `vim.highlightedyank.color` __(_string_)__ - Hex string defining a color, ie `#FF00FFFF`.
+
+- `vim.highlightedyank.duration` __(_int_ default: `300`)__ - The time, in milliseconds, the yank highlight is visible.
+
+### Layout
 
 - `workbench.editor.showTabs` __(_bool_ default: `true`)__ - When `false`, hides the editor tabs.
 
@@ -104,7 +110,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `oni.layout.singleTabMode` __(_bool_ default: `false`)__ - When `true`, groups will only hold a single editor, and closing this editor will always close the group. It will also hide the editor tabs, and therefore essentially hide the concept of editor groups.
 
-## Rendering
+### Rendering
 
 - `vsync` __(_bool_ default: `false`)__ - Whether rendering should sync with vertical retrace of the monitor. VSync adds input latency, as rendering must sync with the refresh rate of the monitor, but it reduces screen tearing.
 
@@ -114,6 +120,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `ui.zoom` __(_float_ default: `1.0`)__ - Zoom setting for UI. Factor to scale UI elements. A value of `2.0` will scale the UI by 200%.
 
+- `oni.inactiveWindowOpacity` __(_float_ default: `0.75`)__ - The opacity value, from 0.0 to 1.0, of inactive windows.
+
 ### Vim
 
 - `vim.useSystemClipboard` __(_`true`_|_`false`_|_`["yank", "paste", "delete"]`_ default: `["yank"]`)__ - Whether or not deletes / yanks should integrate with the system clipboard:
@@ -121,7 +129,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
     - _`["yank", "paste", "delete"]`_ - An array of strings. Each specified operation will always use the system clipboard. For example, `["yank"]` will send all yanks to the system clipboard, but deletes and pastes will require using the `+` or `*` registers. `["delete", "paste"]` means that all deletes will be sent to the system clipboard, and pastes using the unnamed register will come from the system clipboard, but only yanks with register `+` and `*` would be sent to the clipboard.
     - _`false`_ - only deletes / yanks using the `+` or `*` registers will be pushed to the system clipboard. Equivalent to `[]`.
 
-## High-DPI / UI Scaling
+### High-DPI / UI Scaling
 
 Onivim 2 should automatically pick up your scaling settings via the following per-platform strategies:
 
@@ -148,3 +156,19 @@ Experimental features are features that we are working to stabilize and turn on-
 - `experimental.viml` - __(_string|list of string_ default: `[]`)__ - Execute some VimL upon load. Example: `"experimental.viml": ["nnoremap ; :"]`
 
 > __NOTE:__ The full set and scope of VimL compatibility is not currently tested. We are still working to enable test cases in [`libvim`](https://github.com/onivim/libvim/pull/6). Use at your own risk, in the meantime!
+
+## Language-specific configuration
+
+Configuration can be specified per-filetype, by specifying a filetype in the `configuration.json`, ie:
+
+```
+{
+    "editor.insertSpaces": true,
+    "[reason]": {
+        "editor.detectIndentation": false,
+        "editor.insertSpaces": false,
+    }
+}
+```
+
+In the above example, the `editor.insertSpaces` value of `false` in the `reason` section overrides the default of `true` - this configures the editor to use tabs in reason files for indentation, and spaces elsewhere.

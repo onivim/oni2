@@ -1,13 +1,7 @@
 (library
-    (name Service_Font)
-    (public_name Oni2.service.font)
-    (libraries 
-      Oni2.editor-core-types
-      Oni2.core
-      Revery
-      isolinear
-      base
-      lru
-      reason-skia
-    )
-    (preprocess (pps ppx_let ppx_deriving.show)))
+ (name Service_Font)
+ (public_name Oni2.service.font)
+ (libraries Oni2.editor-core-types Oni2.core Revery isolinear base lru
+   reason-skia)
+ (preprocess
+  (pps ppx_let ppx_deriving.show)))

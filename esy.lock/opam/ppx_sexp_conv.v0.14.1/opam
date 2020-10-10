@@ -14,7 +14,7 @@ depends: [
   "base"     {>= "v0.14" & < "v0.15"}
   "sexplib0" {>= "v0.14" & < "v0.15"}
   "dune"     {>= "2.0.0"}
-  "ppxlib"   {>= "0.15.0"}
+  "ppxlib"   {>= "0.15.0" & < "0.18.0"}
 ]
 synopsis: "[@@deriving] plugin to generate S-expression conversion functions"
 description: "

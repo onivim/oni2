@@ -18,6 +18,8 @@ let makeResult = ((item, match: Fzy.Result.t)) => {
   score: match.score,
 };
 
+let result = item => {item, highlight: [], score: 0.0};
+
 let map = (f, result) => {
   item: f(result.item),
   highlight: result.highlight,

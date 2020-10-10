@@ -111,9 +111,7 @@ let start = () => {
     let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
     buffers
-    |> IntMap.to_seq
-    |> Seq.map(snd)
-    |> List.of_seq
+    |> Feature_Buffers.all
     // Sort by most recerntly used
     |> List.fast_sort((a, b) =>
          - Float.compare(Buffer.getLastUsed(a), Buffer.getLastUsed(b))
@@ -131,7 +129,12 @@ let start = () => {
                command: () => {
                  Actions.OpenFileByPath(path, None, None);
                },
-               icon: FileExplorer.getFileIcon(languageInfo, iconTheme, path),
+               icon:
+                 Component_FileExplorer.getFileIcon(
+                   ~languageInfo,
+                   ~iconTheme,
+                   path,
+                 ),
                highlight: [],
                handle: None,
              },
@@ -143,7 +146,7 @@ let start = () => {
   };
 
   let typeToSearchInput =
-    Feature_InputText.create(~placeholder="type to search...");
+    Component_InputText.create(~placeholder="type to search...");
 
   let menuUpdater =
       (
@@ -179,11 +182,6 @@ let start = () => {
         }),
         Isolinear.Effect.none,
       );
-
-    | QuickmenuShow(DocumentSymbols) => (
-        Some({...Quickmenu.defaults(DocumentSymbols), focused: Some(0)}),
-        Isolinear.Effect.none,
-      )
 
     | QuickmenuShow(Extension({id, hasItems, resolver})) => (
         Some({
@@ -241,10 +239,10 @@ let start = () => {
                name: fileType,
                command: () =>
                  Buffers(
-                   Feature_Buffers.FileTypeChanged({
-                     id: bufferId,
-                     fileType: Oni_Core.Buffer.FileType.explicit(fileType),
-                   }),
+                   Feature_Buffers.Msg.fileTypeChanged(
+                     ~bufferId,
+                     ~fileType=Oni_Core.Buffer.FileType.explicit(fileType),
+                   ),
                  ),
                icon: maybeIcon,
                highlight: [],
@@ -264,7 +262,7 @@ let start = () => {
     | QuickmenuPaste(text) => (
         Option.map(
           (Quickmenu.{inputText, _} as state) => {
-            let inputText = Feature_InputText.paste(~text, inputText);
+            let inputText = Component_InputText.paste(~text, inputText);
 
             Quickmenu.{...state, inputText, focused: Some(0)};
           },
@@ -275,7 +273,7 @@ let start = () => {
     | QuickmenuInput(key) => (
         Option.map(
           (Quickmenu.{inputText, _} as state) => {
-            let inputText = Feature_InputText.handleInput(~key, inputText);
+            let inputText = Component_InputText.handleInput(~key, inputText);
 
             Quickmenu.{...state, inputText, focused: Some(0)};
           },
@@ -289,10 +287,13 @@ let start = () => {
           (Quickmenu.{variant, inputText, _} as state) => {
             switch (variant) {
             | Wildmenu(_) =>
-              let oldPosition = inputText |> Feature_InputText.cursorPosition;
+              let oldPosition =
+                inputText |> Component_InputText.cursorPosition;
 
-              let inputText = Feature_InputText.update(msg, inputText);
-              let newPosition = inputText |> Feature_InputText.cursorPosition;
+              let (inputText, _) =
+                Component_InputText.update(msg, inputText);
+              let newPosition =
+                inputText |> Component_InputText.cursorPosition;
               let transition = newPosition - oldPosition;
 
               if (transition > 0) {
@@ -324,7 +325,7 @@ let start = () => {
             Quickmenu.{
               ...state,
               inputText:
-                Feature_InputText.set(~text, ~cursor, state.inputText),
+                Component_InputText.set(~text, ~cursor, state.inputText),
             },
           state,
         ),
@@ -478,9 +479,9 @@ let start = () => {
         state.buffers,
         state.languageInfo,
         state.iconTheme,
-        State.commands(state),
-        State.menus(state),
-        WhenExpr.ContextKeys.fromSchema(ContextKeys.all, state),
+        CommandManager.current(state),
+        MenuManager.current(state),
+        ContextKeys.all(state),
       );
 
     ({...state, quickmenu: menuState}, menuEffect);
@@ -519,13 +520,6 @@ let subscriptions = (ripgrep, dispatch) => {
     );
   };
 
-  let documentSymbols = (languageFeatures, buffer) => {
-    DocumentSymbolSubscription.create(
-      ~id="document-symbols", ~buffer, ~languageFeatures, ~onUpdate=items => {
-      addItems(items)
-    });
-  };
-
   let ripgrep = (languageInfo, iconTheme, configuration) => {
     let filesExclude =
       Configuration.getValue(c => c.filesExclude, configuration);
@@ -536,7 +530,12 @@ let subscriptions = (ripgrep, dispatch) => {
         category: None,
         name: Path.toRelative(~base=directory, fullPath),
         command: () => Actions.OpenFileByPath(fullPath, None, None),
-        icon: FileExplorer.getFileIcon(languageInfo, iconTheme, fullPath),
+        icon:
+          Component_FileExplorer.getFileIcon(
+            ~languageInfo,
+            ~iconTheme,
+            fullPath,
+          ),
         highlight: [],
         handle: None,
       };
@@ -562,7 +561,7 @@ let subscriptions = (ripgrep, dispatch) => {
   let updater = (state: State.t) => {
     switch (state.quickmenu) {
     | Some(quickmenu) =>
-      let query = quickmenu.inputText |> Feature_InputText.value;
+      let query = quickmenu.inputText |> Component_InputText.value;
       switch (quickmenu.variant) {
       | CommandPalette
       | EditorsPicker
@@ -579,14 +578,6 @@ let subscriptions = (ripgrep, dispatch) => {
       | FileTypesPicker(_) => [filter(query, quickmenu.items)]
 
       | Wildmenu(_) => []
-      | DocumentSymbols =>
-        switch (Selectors.getActiveBuffer(state)) {
-        | Some(buffer) => [
-            filter(query, quickmenu.items),
-            documentSymbols(state.languageFeatures, buffer),
-          ]
-        | None => []
-        }
       };
 
     | None => []

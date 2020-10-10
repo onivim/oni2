@@ -52,22 +52,6 @@ let parseStringList = json => {
   };
 };
 
-let parseIntList = json => {
-  switch (json) {
-  | `List(items) =>
-    List.fold_left(
-      (accum, item) =>
-        switch (item) {
-        | `Int(v) => [v, ...accum]
-        | _ => accum
-        },
-      [],
-      items,
-    )
-  | _ => []
-  };
-};
-
 let parseVimUseSystemClipboardSetting = json => {
   let parseItems = items =>
     List.fold_left(
@@ -168,6 +152,14 @@ let parseFontLigatures = json =>
   | _ => `Bool(true)
   };
 
+let parseAutoReveal = json =>
+  switch (json) {
+  | `Bool(true) => `HighlightAndScroll
+  | `Bool(false) => `NoReveal
+  | `String("focusNoScroll") => `HighlightOnly
+  | _ => `NoReveal
+  };
+
 type parseFunction =
   (ConfigurationValues.t, Yojson.Safe.t) => ConfigurationValues.t;
 
@@ -197,23 +189,11 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, editorHoverEnabled: parseBool(json)},
   ),
   (
-    "editor.detectIndentation",
-    (config, json) => {...config, editorDetectIndentation: parseBool(json)},
-  ),
-  (
     "editor.fontLigatures",
     (config, json) => {
       ...config,
       editorFontLigatures: parseFontLigatures(json),
     },
-  ),
-  (
-    "editor.insertSpaces",
-    (config, json) => {...config, editorInsertSpaces: parseBool(json)},
-  ),
-  (
-    "editor.indentSize",
-    (config, json) => {...config, editorIndentSize: parseInt(json)},
   ),
   (
     "editor.largeFileOptimizations",
@@ -223,34 +203,15 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.tabSize",
-    (config, json) => {...config, editorTabSize: parseInt(json)},
-  ),
-  (
-    "editor.highlightActiveIndentGuide",
+    "explorer.autoReveal",
     (config, json) => {
       ...config,
-      editorHighlightActiveIndentGuide: parseBool(json),
+      explorerAutoReveal: parseAutoReveal(json),
     },
-  ),
-  (
-    "editor.renderIndentGuides",
-    (config, json) => {
-      ...config,
-      editorRenderIndentGuides: parseBool(json),
-    },
-  ),
-  (
-    "editor.rulers",
-    (config, json) => {...config, editorRulers: parseIntList(json)},
   ),
   (
     "files.exclude",
     (config, json) => {...config, filesExclude: parseStringList(json)},
-  ),
-  (
-    "window.title",
-    (config, json) => {...config, windowTitle: parseString(json)},
   ),
   (
     "terminal.integrated.fontFamily",
@@ -293,17 +254,6 @@ let configurationParsers: list(configurationTuple) = [
   (
     "workbench.editor.showTabs",
     (config, json) => {...config, workbenchEditorShowTabs: parseBool(json)},
-  ),
-  (
-    "workbench.sideBar.location",
-    (config, json) => {
-      ...config,
-      workbenchSideBarLocation: parseString(json),
-    },
-  ),
-  (
-    "workbench.sideBar.visible",
-    (config, json) => {...config, workbenchSideBarVisible: parseBool(json)},
   ),
   (
     "workbench.statusBar.visible",

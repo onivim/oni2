@@ -94,38 +94,3 @@ let getTokensForLine =
       );
     };
   };
-
-let getTokenAtPosition =
-    (
-      ~editor,
-      ~bufferHighlights,
-      ~cursorLine,
-      ~colors,
-      ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
-      ~bufferSyntaxHighlights,
-      ~startIndex,
-      ~endIndex,
-      position: CharacterPosition.t,
-    ) => {
-  let lineNumber = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
-  let index = position.character |> CharacterIndex.toInt;
-
-  getTokensForLine(
-    ~editor,
-    ~bufferHighlights,
-    ~cursorLine,
-    ~colors,
-    ~matchingPairs,
-    ~bufferSyntaxHighlights,
-    ~ignoreMatchingPairs=true,
-    startIndex,
-    endIndex,
-    lineNumber,
-  )
-  |> List.filter((token: BufferViewTokenizer.t) => {
-       let tokenStart = token.startIndex |> CharacterIndex.toInt;
-       let tokenEnd = token.endIndex |> CharacterIndex.toInt;
-       index >= tokenStart && index < tokenEnd;
-     })
-  |> Utility.OptionEx.of_list;
-};

@@ -47,12 +47,12 @@ let%component make =
                 ~onCursorChange,
                 ~cursorPosition: CharacterPosition.t,
                 ~editorFont: Service_Font.font,
-                ~leftVisibleColumn,
                 ~diagnosticsMap,
                 ~selectionRanges,
                 ~matchingPairs,
                 ~bufferHighlights,
                 ~languageSupport,
+                ~languageConfiguration,
                 ~bufferSyntaxHighlights,
                 ~bottomVisibleLine,
                 ~maybeYankHighlights,
@@ -60,7 +60,6 @@ let%component make =
                 ~isActiveSplit,
                 ~gutterWidth,
                 ~bufferPixelWidth,
-                ~bufferWidthInCharacters,
                 ~windowIsFocused,
                 ~config,
                 (),
@@ -72,17 +71,14 @@ let%component make =
     Hooks.timer(~active=hoverTimerActive^, ());
 
   let lineCount = editor |> Editor.totalViewLines;
-  let indentation =
-    switch (Buffer.getIndentation(buffer)) {
-    | Some(v) => v
-    | None => IndentationSettings.default
-    };
+  let indentation = Buffer.getIndentation(buffer);
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
     dispatch(
       Msg.EditorMouseWheel({
         deltaY: wheelEvent.deltaY *. (-1.),
         deltaX: wheelEvent.deltaX,
+        shiftKey: wheelEvent.shiftKey,
       }),
     );
 
@@ -95,6 +91,9 @@ let%component make =
          let relY = mouseY -. minY;
 
          Editor.Slow.pixelPositionToBytePosition(
+           // #2463: When we're in insert mode, clicking past the end of the line
+           // should move the cursor past the last byte.
+           ~allowPast=mode == Vim.Mode.Insert,
            ~buffer,
            ~pixelX=relX,
            ~pixelY=relY,
@@ -162,8 +161,8 @@ let%component make =
     maybeYankHighlights
     |> Option.map((highlights: Editor.yankHighlight) =>
          <YankHighlights
+           config
            key={highlights.key}
-           colors
            pixelRanges={highlights.pixelRanges}
          />
        )
@@ -213,7 +212,6 @@ let%component make =
           ~count=lineCount,
           ~buffer,
           ~editor,
-          ~leftVisibleColumn,
           ~colors,
           ~diagnosticsMap,
           ~selectionRanges,
@@ -221,9 +219,9 @@ let%component make =
           ~bufferHighlights,
           ~cursorPosition,
           ~languageSupport,
+          ~languageConfiguration,
           ~bufferSyntaxHighlights,
           ~shouldRenderWhitespace=Config.renderWhitespace.get(config),
-          ~bufferWidthInCharacters,
           ~bufferWidthInPixels=bufferPixelWidth,
         );
 

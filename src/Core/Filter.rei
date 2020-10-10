@@ -10,6 +10,8 @@ type result('a) = {
   score: float,
 };
 
+let result: 'a => result('a);
+
 let map: ('a => 'b, result('a)) => result('b);
 
 let rank:

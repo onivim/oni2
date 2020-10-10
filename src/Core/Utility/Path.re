@@ -54,6 +54,13 @@ let filename = path =>
     "";
   };
 
+let dirname = path =>
+  try(Rench.Path.dirname(path)) {
+  | Invalid_argument(_) =>
+    Log.warnf(m => m("getExtension - invalid basename: %s", path));
+    "";
+  };
+
 let getExtension = path => {
   let fileName =
     try(Rench.Path.filename(path)) {
@@ -75,6 +82,8 @@ let%test_module "getExtension" =
   (module
    {
      let%test "Simple file" = getExtension("/home/oni/test.md") == ".md";
+     let%test "Simple file, no extension" =
+       getExtension("/home/oni/test") == "";
      let%test "No file name, only extension" =
        getExtension("/home/oni/.bashrc") == ".bashrc";
      let%test "No path" = getExtension("") == "";

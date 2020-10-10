@@ -11,6 +11,18 @@ module Effects: {
       Isolinear.Effect.t(_);
   };
 
+  module Decorations: {
+    let provideDecorations:
+      (
+        ~handle: int,
+        ~requests: list(Exthost.Request.Decorations.request),
+        ~toMsg: Oni_Core.IntMap.t(Exthost.Request.Decorations.decoration) =>
+                'msg,
+        Exthost.Client.t
+      ) =>
+      Isolinear.Effect.t('msg);
+  };
+
   module Documents: {
     let modelChanged:
       (
@@ -133,8 +145,6 @@ module Sub: {
     (
       ~handle: int,
       ~chainedCacheId: Exthost.ChainedCacheId.t,
-      ~buffer: Oni_Core.Buffer.t,
-      ~position: EditorCoreTypes.CharacterPosition.t,
       ~toMsg: result(Exthost.SuggestItem.t, string) => 'a,
       Exthost.Client.t
     ) =>
@@ -156,6 +166,15 @@ module Sub: {
       ~buffer: Oni_Core.Buffer.t,
       ~position: EditorCoreTypes.CharacterPosition.t,
       ~toMsg: list(Exthost.DocumentHighlight.t) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
+
+  let documentSymbols:
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~toMsg: list(Exthost.DocumentSymbol.t) => 'a,
       Exthost.Client.t
     ) =>
     Isolinear.Sub.t('a);

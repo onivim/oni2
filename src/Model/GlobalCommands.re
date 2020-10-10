@@ -21,15 +21,6 @@ let copyFilePath =
     CopyActiveFilepathToClipboard,
   );
 
-let acceptSelectedSuggestion =
-  register("acceptSelectedSuggestion", Command("acceptSelectedSuggestion"));
-
-let selectPrevSuggestion =
-  register("selectPrevSuggestion", Command("selectPrevSuggestion"));
-
-let selectNextSuggestion =
-  register("selectNextSuggestion", Command("selectNextSuggestion"));
-
 let undo = register("undo", Command("undo"));
 let redo = register("redo", Command("redo"));
 
@@ -38,14 +29,6 @@ let outdent = register("outdent", Command("outdent"));
 
 module Editor = {
   module Action = {
-    let detectIndentation =
-      register(
-        ~category="Editor",
-        ~title="Detect Indentation from Content",
-        "editor.action.detectIndentation",
-        Command("editor.action.detectIndentation"),
-      );
-
     let indentLines =
       register(
         "editor.action.indentLines",
@@ -77,16 +60,6 @@ module Oni = {
       "oni.changelog",
       Command("oni.changelog"),
     );
-
-  module Explorer = {
-    let toggle =
-      register(
-        ~category="View",
-        ~title="Toggle File Explorer visibility",
-        "explorer.toggle", // use workbench.action.toggleSidebarVisibility instead?
-        Actions.ActivityBar(ActivityBar.FileExplorerClick),
-      );
-  };
 
   module KeyDisplayer = {
     let disable =
@@ -196,13 +169,6 @@ module Workbench = {
         QuickmenuShow(CommandPalette),
       );
 
-    let gotoSymbol =
-      register(
-        ~title="Goto symbol in file...",
-        "workbench.action.gotoSymbol",
-        QuickmenuShow(DocumentSymbols),
-      );
-
     let openNextRecentlyUsedEditorInGroup =
       register(
         ~category="View",
@@ -235,14 +201,6 @@ module Workbench = {
     let closeQuickOpen =
       register("workbench.action.closeQuickOpen", QuickmenuClose);
 
-    let findInFiles =
-      register(
-        ~category="Search",
-        ~title="Find in Files",
-        "workbench.action.findInFiles",
-        SearchHotkey,
-      );
-
     let zoomIn =
       register(
         ~category="View",
@@ -272,17 +230,6 @@ module Workbench = {
         register(
           "workbench.action.files.save",
           Command("workbench.action.files.save"),
-        );
-    };
-  };
-  module Actions = {
-    module View = {
-      let problems =
-        register(
-          ~category="View",
-          ~title="Toggle Problems (Errors, Warnings)",
-          "workbench.actions.view.problems",
-          Command("workbench.actions.view.problems"),
         );
     };
   };

@@ -8,15 +8,21 @@ let rootNode = (new node)();
 
 let setup = () => ();
 
-let emptyBuffer = Buffer.ofLines([||]);
+let emptyBuffer = Buffer.ofLines(~font=Font.default(), [||]);
 let emptyBufferId = Buffer.getId(emptyBuffer);
 
 let hundredThousandLineBuffer =
-  Buffer.ofLines(Array.make(100000, "This buffer is pretty big"));
+  Buffer.ofLines(
+    ~font=Font.default(),
+    Array.make(100000, "This buffer is pretty big"),
+  );
 let hundredThousandLineBufferId = Buffer.getId(hundredThousandLineBuffer);
 
 let smallBuffer =
-  Buffer.ofLines(Array.make(100, "This buffer is a bit smaller"));
+  Buffer.ofLines(
+    ~font=Font.default(),
+    Array.make(100, "This buffer is a bit smaller"),
+  );
 let smallBufferId = Buffer.getId(smallBuffer);
 
 let hundredThousandLines = Array.make(100000, "Another big buffer update");

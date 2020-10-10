@@ -27,9 +27,6 @@ Service_Clipboard.Testing.setClipboardProvider(~get=() => _currentClipboard^);
 
 let setTime = v => _currentTime := v;
 
-let setTitle = title => _currentTitle := title;
-let getTitle = () => _currentTitle^;
-
 let setZoom = v => _currentZoom := v;
 let getZoom = () => _currentZoom^;
 
@@ -133,7 +130,7 @@ let runTest =
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
       Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
     Core.Buffer.ofMetadata(
-      ~font=Oni_Core.Font.default,
+      ~font=Oni_Core.Font.default(),
       ~id,
       ~version,
       ~filePath,
@@ -211,7 +208,6 @@ let runTest =
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
-      ~setTitle,
       ~getZoom,
       ~setZoom,
       ~setVsync,

@@ -7,7 +7,6 @@
  */
 
 open Revery.UI;
-open Rench;
 open Oni_Core;
 open Oni_Model;
 module OptionEx = Oni_Core.Utility.OptionEx;
@@ -72,7 +71,10 @@ module Parts = {
         tokenTheme={state.tokenTheme}
         languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
-        config={Feature_Configuration.resolver(state.config, state.vim)}
+        perFileTypeConfig={Feature_Configuration.resolver(
+          state.config,
+          state.vim,
+        )}
         renderOverlays
       />;
     };
@@ -100,7 +102,7 @@ module Parts = {
 
       let buffer =
         Selectors.getBufferForEditor(state.buffers, editor)
-        |> Option.value(~default=Buffer.initial);
+        |> OptionEx.value_or_lazy(() => Buffer.empty(~font=state.editorFont));
       let renderOverlays = (~gutterWidth) =>
         [
           <Feature_SignatureHelp.View
@@ -175,6 +177,8 @@ module Parts = {
           dispatch={msg => dispatch(Actions.Extensions(msg))}
         />
 
+      | DebugInput => <DebugInputView state />
+
       | UpdateChangelog({since}) =>
         <Feature_Changelog.View.Update since theme uiFont />
       };
@@ -234,7 +238,7 @@ let make =
       switch (renderer) {
       | Welcome => "Welcome"
       | Terminal({title, _}) => title
-      | _ => Path.filename(title)
+      | _ => Utility.Path.filename(title)
       };
     };
 
@@ -294,14 +298,17 @@ let make =
 
   let showTabs = editorShowTabs && (!state.zenMode || !hideZenModeTabs);
 
+  let focus = FocusManager.current(state);
+
   <View onFileDropped style={Styles.container(theme)}>
     <Feature_Layout.View
       uiFont={state.uiFont}
       theme
+      isFocused={focus == Focus.Editor}
       isZenMode={state.zenMode}
       showTabs
       model={state.layout}
-      config={Feature_Configuration.resolver(state.config, state.vim)}
+      config={Selectors.configResolver(state)}
       dispatch={msg => dispatch(Actions.Layout(msg))}>
       ...(module ContentProvider)
     </Feature_Layout.View>

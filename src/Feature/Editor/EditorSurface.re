@@ -17,8 +17,8 @@ module Config = EditorConfiguration;
 
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Diagnostics = Feature_Diagnostics;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Constants = {
   include Constants;
@@ -34,6 +34,17 @@ module Styles = {
     backgroundColor(colors.editorBackground),
     color(colors.editorForeground),
     flexGrow(1),
+  ];
+
+  let inactiveCover = (~colors: Colors.t, ~opacity) => [
+    backgroundColor(colors.editorBackground),
+    Style.opacity(opacity),
+    pointerEvents(`Ignore),
+    position(`Absolute),
+    top(0),
+    left(0),
+    right(0),
+    bottom(0),
   ];
 
   let verticalScrollBar = [
@@ -58,6 +69,7 @@ let minimap =
       ~bufferHighlights,
       ~cursorPosition: CharacterPosition.t,
       ~colors,
+      ~config,
       ~dispatch,
       ~matchingPairs,
       ~maybeYankHighlights,
@@ -92,6 +104,7 @@ let minimap =
   <View style onMouseWheel>
     <Minimap
       editor
+      config
       cursorPosition
       dispatch
       width=minimapPixelWidth
@@ -148,7 +161,7 @@ let%component make =
                 ~languageSupport,
                 ~scm,
                 ~windowIsFocused,
-                ~config,
+                ~perFileTypeConfig: Oni_Core.Config.fileTypeResolver,
                 ~renderOverlays,
                 (),
               ) => {
@@ -157,6 +170,10 @@ let%component make =
   let%hook lastDimensions = Hooks.ref(None);
 
   let editorId = Editor.getId(editor);
+
+  let fileType =
+    buffer |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
+  let config = perFileTypeConfig(~fileType);
 
   // When the editor id changes, we need to make sure we're dispatching the resized
   // event, too. The ideal fix would be to have this component 'keyed' on the `editor.editorId`
@@ -181,7 +198,7 @@ let%component make =
     onEditorSizeChanged(editorId, width, height);
   };
 
-  let showYankHighlightAnimation = Config.yankHighlightAnimation.get(config);
+  let showYankHighlightAnimation = Config.yankHighlightEnabled.get(config);
   let maybeYankHighlights =
     showYankHighlightAnimation ? editor |> Editor.yankHighlight : None;
 
@@ -200,7 +217,6 @@ let%component make =
 
   let editorFont = Editor.font(editor);
 
-  let leftVisibleColumn = Editor.getLeftVisibleColumn(editor);
   let topVisibleLine = Editor.getTopVisibleLine(editor);
   let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
 
@@ -226,11 +242,12 @@ let%component make =
       ? None
       : Editor.getNearestMatchingPair(
           ~characterPosition=matchingPairCheckPosition,
-          ~pairs=LanguageConfiguration.(languageConfiguration.brackets),
+          ~pairs=LanguageConfiguration.brackets(languageConfiguration),
           editor,
         );
 
-  let diagnosticsMap = Diagnostics.getDiagnosticsMap(diagnostics, buffer);
+  let diagnosticsMap =
+    Feature_Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =
     editor
     |> Editor.selection
@@ -320,6 +337,16 @@ let%component make =
     |> Option.value(~default=React.empty);
   };
 
+  let coverAmount =
+    1.0
+    -. Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
+         config,
+       );
+  let opacityCover =
+    isActiveSplit
+      ? React.empty
+      : <View style={Styles.inactiveCover(~colors, ~opacity=coverAmount)} />;
+
   <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
     <SurfaceView
@@ -331,20 +358,19 @@ let%component make =
       onCursorChange
       cursorPosition
       editorFont
-      leftVisibleColumn
       diagnosticsMap
       selectionRanges
       matchingPairs
       maybeYankHighlights
       bufferHighlights
       languageSupport
+      languageConfiguration
       bufferSyntaxHighlights
       bottomVisibleLine
       mode
       isActiveSplit
       gutterWidth
       bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
-      bufferWidthInCharacters={layout.bufferWidthInCharacters}
       windowIsFocused
       config
     />
@@ -355,6 +381,7 @@ let%component make =
            bufferHighlights
            cursorPosition
            colors
+           config
            dispatch
            matchingPairs
            maybeYankHighlights
@@ -405,5 +432,6 @@ let%component make =
         colors
       />
     </View>
+    opacityCover
   </View>;
 };

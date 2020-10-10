@@ -73,6 +73,7 @@ jobs:
   - script: sudo apt-get update
   - script: sudo apt-get install -y libncurses5-dev libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev nasm
   - template: .ci/js-build-steps.yml
+  - template: .ci/use-esy.yml
   - template: .ci/esy-build-steps.yml
   - template: .ci/run-integration-tests.yml
   - template: .ci/publish-build-cache.yml
@@ -125,7 +126,11 @@ jobs:
   - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
+  - template: .ci/use-esy.yml
   - template: .ci/esy-build-steps.yml
+    parameters:
+      platform: darwin
+  - template: .ci/run-integration-tests.yml
     parameters:
       platform: darwin
   - script: _release/Onivim2.App/Contents/MacOS/Oni2 -f --checkhealth
@@ -135,6 +140,7 @@ jobs:
 
 - job: Windows
   timeoutInMinutes: 150
+  displayName: "Windows - Build & Package"
   pool:
     vmImage: 'vs2017-win2016'
 
@@ -146,11 +152,13 @@ jobs:
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
+  - template: .ci/clean-windows-deps.yml
   - template: .ci/use-node.yml
   - powershell: ./scripts/windows/verify-signtool.ps1
     displayName: 'Validate signtool path'
   - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
+  - template: .ci/use-esy.yml
   - template: .ci/esy-build-steps.yml
     parameters:
       platform: windows
@@ -162,6 +170,29 @@ jobs:
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-win.yml
   - template: .ci/publish-build-cache.yml
+
+- job: WindowsTest
+  timeoutInMinutes: 150
+  displayName: "Windows - Integration Test"
+  pool:
+    vmImage: 'vs2017-win2016'
+
+  variables:
+    STAGING_DIRECTORY: $(Build.StagingDirectory)
+    ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/b
+    ESY__CACHE_SOURCE_TARBALL_PATH: /C/Users/VssAdministrator/.esy/source/i
+    # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
+
+  steps:
+  - template: .ci/clean-windows-deps.yml
+  - template: .ci/use-node.yml
+  - template: .ci/restore-build-cache.yml
+  - template: .ci/js-build-steps.yml
+  - template: .ci/use-esy.yml
+  - template: .ci/run-integration-tests.yml
+    parameters:
+      platform: windows
 
 - job: ValidateLinuxReleaseUbuntu16
   displayName: "Linux: Validate Release (Ubuntu 16.04)"

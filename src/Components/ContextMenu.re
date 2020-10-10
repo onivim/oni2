@@ -173,11 +173,17 @@ module Menu = {
 };
 
 // OVERLAY
+type menuInfo = {
+  menu: Revery.UI.element,
+  onCancel: unit => unit,
+};
 
 module Overlay = {
   let internalSetMenus = ref(_ => ());
 
-  let setMenu = (id, menu) => internalSetMenus^(IntMap.add(id, menu));
+  let setMenu = (id, menu, onCancel) =>
+    internalSetMenus^(IntMap.add(id, {menu, onCancel}));
+
   let clearMenu = id => internalSetMenus^(IntMap.remove(id));
 
   module Styles = {
@@ -194,15 +200,23 @@ module Overlay = {
     ];
   };
 
-  let%component make = (~onClick, ()) => {
-    let%hook (menus, setMenus) = Hooks.state(IntMap.empty);
+  let%component make = () => {
+    let%hook (menus: IntMap.t(menuInfo), setMenus) =
+      Hooks.state(IntMap.empty);
     internalSetMenus := setMenus;
+
+    let onOverlayClick = () => {
+      IntMap.iter((_key, {onCancel, _}) => {onCancel()}, menus);
+    };
 
     if (IntMap.is_empty(menus)) {
       React.empty;
     } else {
-      <Clickable onClick style=Styles.backdrop>
-        {IntMap.bindings(menus) |> List.map(snd) |> React.listToElement}
+      <Clickable onClick=onOverlayClick style=Styles.backdrop>
+        {IntMap.bindings(menus)
+         |> List.map(snd)
+         |> List.map(({menu, _}) => menu)
+         |> React.listToElement}
       </Clickable>;
     };
   };
@@ -228,6 +242,7 @@ module Anchor = {
         ~offsetX=0,
         ~offsetY=0,
         ~onItemSelect,
+        ~onCancel,
         ~theme,
         ~font,
         (),
@@ -260,6 +275,7 @@ module Anchor = {
         Overlay.setMenu(
           id,
           <Menu items x y orientation theme font onItemSelect />,
+          onCancel,
         );
 
       | None => ()

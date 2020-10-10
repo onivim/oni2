@@ -9,6 +9,8 @@ module Colors = Feature_Theme.Colors.ActivityBar;
 module BadgeColors = Feature_Theme.Colors.ActivityBarBadge;
 module Sneakable = Feature_Sneak.View.Sneakable;
 
+open Feature_SideBar;
+
 type notification =
   | InProgress
   | Count(int);
@@ -87,11 +89,7 @@ module Notification = {
         );
       | InProgress => (
           3,
-          <Oni_Components.Codicon
-            icon=Oni_Components.Codicon.clock
-            fontSize=10.
-            color=foregroundColor
-          />,
+          <Codicon icon=Codicon.clock fontSize=10. color=foregroundColor />,
         )
       };
 
@@ -148,19 +146,19 @@ let%component item =
 };
 
 let onExplorerClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(FileExplorerClick));
+  GlobalContext.current().dispatch(Actions.SideBar(FileExplorerClicked));
 };
 
 let onSearchClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(SearchClick));
+  GlobalContext.current().dispatch(Actions.SideBar(SearchClicked));
 };
 
 let onSCMClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(SCMClick));
+  GlobalContext.current().dispatch(Actions.SideBar(SCMClicked));
 };
 
 let onExtensionsClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(ExtensionsClick));
+  GlobalContext.current().dispatch(Actions.SideBar(ExtensionsClicked));
 };
 
 let animation =
@@ -175,7 +173,6 @@ let%component make =
               (
                 ~theme: ColorTheme.Colors.t,
                 ~sideBar: Feature_SideBar.model,
-                ~pane: Feature_Pane.model,
                 ~extensions: Feature_Extensions.model,
                 ~font: UiFont.t,
                 (),
@@ -183,7 +180,6 @@ let%component make =
   let%hook (offsetX, _animationState, _reset) = Hooks.animation(animation);
 
   let isSidebarVisible = it => Feature_SideBar.isVisible(it, sideBar);
-  let isPaneVisible = it => Feature_Pane.isVisible(it, pane);
 
   let extensionNotification =
     Feature_Extensions.isBusy(extensions) ? Some(InProgress) : None;
@@ -203,7 +199,7 @@ let%component make =
       onClick=onSearchClick
       sideBar
       theme
-      isActive={isPaneVisible(Search)}
+      isActive={isSidebarVisible(Search)}
       icon=FontAwesome.search
     />
     <item

@@ -496,6 +496,40 @@ let getBottomVisibleLine = view => {
   absoluteBottomLine > view.viewLines ? view.viewLines : absoluteBottomLine;
 };
 
+let getTokenAt =
+    (~languageConfiguration, {line, character}: CharacterPosition.t, editor) => {
+  let lineNumber = line |> EditorCoreTypes.LineNumber.toZeroBased;
+
+  if (lineNumber < 0
+      || lineNumber >= EditorBuffer.numberOfLines(editor.buffer)) {
+    None;
+  } else {
+    let bufferLine = EditorBuffer.line(lineNumber, editor.buffer);
+    let f = uchar =>
+      LanguageConfiguration.isWordCharacter(uchar, languageConfiguration);
+    let startIndex =
+      BufferLine.traverse(
+        ~f,
+        ~direction=`Backwards,
+        ~index=character,
+        bufferLine,
+      );
+    let stopIndex =
+      BufferLine.traverse(
+        ~f,
+        ~direction=`Forwards,
+        ~index=character,
+        bufferLine,
+      );
+    Some(
+      CharacterRange.{
+        start: CharacterPosition.{line, character: startIndex},
+        stop: CharacterPosition.{line, character: stopIndex},
+      },
+    );
+  };
+};
+
 let setSize = (~pixelWidth, ~pixelHeight, editor) => {
   ...editor,
   pixelWidth,
@@ -621,7 +655,7 @@ let updateBuffer = (~buffer, editor) => {
 
 module Slow = {
   let pixelPositionToBytePosition =
-      (~buffer, ~pixelX: float, ~pixelY: float, view) => {
+      (~allowPast=false, ~buffer, ~pixelX: float, ~pixelY: float, view) => {
     let rawLine =
       int_of_float((pixelY +. view.scrollY) /. lineHeightInPixels(view));
 
@@ -644,9 +678,31 @@ module Slow = {
 
       let byteIndex = BufferLine.getByteFromIndex(~index, bufferLine);
 
-      BytePosition.{
-        line: EditorCoreTypes.LineNumber.ofZeroBased(lineIdx),
-        byte: byteIndex,
+      let bytePositionInBounds =
+        BytePosition.{
+          line: EditorCoreTypes.LineNumber.ofZeroBased(lineIdx),
+          byte: byteIndex,
+        };
+      if (allowPast
+          && ByteIndex.toInt(byteIndex)
+          == BufferLine.lengthInBytes(bufferLine)
+          - 1) {
+        // If we're allowed to return a byte index _after_ the length of the line - like for insert mode
+        // Check if we actually exceeded the bounds
+
+        let (cursorOffset, width) =
+          BufferLine.getPixelPositionAndWidth(~index, bufferLine);
+
+        if (cursorOffset +. width < pixelX) {
+          BytePosition.{
+            line: bytePositionInBounds.line,
+            byte: ByteIndex.(byteIndex + 1),
+          };
+        } else {
+          bytePositionInBounds;
+        };
+      } else {
+        bytePositionInBounds;
       };
     } else {
       BytePosition.{

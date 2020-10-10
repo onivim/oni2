@@ -1,20 +1,65 @@
 open EditorCoreTypes;
 open Oni_Core;
-open Utility;
 open Oni_Components;
 
 // MODEL
 
+type focus =
+  | FindInput
+  | ResultsPane;
+
 type model = {
-  findInput: Feature_InputText.model,
+  findInput: Component_InputText.model,
   query: string,
   hits: list(Ripgrep.Match.t),
+  focus,
+  vimWindowNavigation: Component_VimWindows.model,
+  resultsTree: Component_VimTree.model(string, LocationListItem.t),
 };
 
+let resetFocus = model => {...model, focus: FindInput};
+
 let initial = {
-  findInput: Feature_InputText.create(~placeholder="Search"),
+  findInput: Component_InputText.create(~placeholder="Search"),
   query: "",
   hits: [],
+  focus: FindInput,
+
+  vimWindowNavigation: Component_VimWindows.initial,
+  resultsTree: Component_VimTree.create(~rowHeight=25),
+};
+
+let matchToLocListItem = (hit: Ripgrep.Match.t) =>
+  LocationListItem.{
+    file: hit.file,
+    location:
+      CharacterPosition.{
+        line: EditorCoreTypes.LineNumber.ofOneBased(hit.lineNumber),
+        character: CharacterIndex.ofInt(hit.charStart),
+      },
+    text: hit.text,
+    highlight:
+      Some((
+        Index.fromZeroBased(hit.charStart),
+        Index.fromZeroBased(hit.charEnd),
+      )),
+  };
+
+let setHits = (hits, model) => {
+  ...model,
+  hits,
+  resultsTree:
+    Component_VimTree.set(
+      ~uniqueId=path => path,
+      ~searchText=
+        Component_VimTree.(
+          fun
+          | Node({data, _}) => data
+          | Leaf({data, _}) => LocationListItem.(data.text)
+        ),
+      hits |> List.map(matchToLocListItem) |> LocationListItem.toTrees,
+      model.resultsTree,
+    ),
 };
 
 // UPDATE
@@ -26,43 +71,123 @@ type msg =
   | Update([@opaque] list(Ripgrep.Match.t))
   | Complete
   | SearchError(string)
-  | FindInput(Feature_InputText.msg);
+  | FindInput(Component_InputText.msg)
+  | VimWindowNav(Component_VimWindows.msg)
+  | ResultsList(Component_VimTree.msg);
+
+module Msg = {
+  let input = str => Input(str);
+  let pasted = str => Pasted(str);
+};
 
 type outmsg =
-  | Focus;
+  | OpenFile({
+      filePath: string,
+      location: CharacterPosition.t,
+    })
+  | Focus
+  | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 let update = (model, msg) => {
   switch (msg) {
   | Input(key) =>
-    let model =
-      switch (key) {
-      | "<CR>" =>
-        let findInputValue = model.findInput |> Feature_InputText.value;
-        if (model.query == findInputValue) {
-          model; // Do nothing if the query hasn't changed
-        } else {
-          {...model, query: findInputValue, hits: []};
+    switch (model.focus) {
+    | FindInput =>
+      let model =
+        switch (key) {
+        | "<CR>" =>
+          let findInputValue = model.findInput |> Component_InputText.value;
+          if (model.query == findInputValue) {
+            model; // Do nothing if the query hasn't changed
+          } else {
+            {...model, query: findInputValue} |> setHits([]);
+          };
+
+        | _ =>
+          let findInput =
+            Component_InputText.handleInput(~key, model.findInput);
+          {...model, findInput};
         };
 
-      | _ =>
-        let findInput = Feature_InputText.handleInput(~key, model.findInput);
-        {...model, findInput};
-      };
-
-    (model, None);
+      (model, None);
+    | ResultsPane => (
+        {
+          ...model,
+          resultsTree: Component_VimTree.keyPress(key, model.resultsTree),
+        },
+        None,
+      )
+    }
 
   | Pasted(text) =>
-    let findInput = Feature_InputText.paste(~text, model.findInput);
-    ({...model, findInput}, None);
+    switch (model.focus) {
+    | FindInput =>
+      let findInput = Component_InputText.paste(~text, model.findInput);
+      ({...model, findInput}, None);
+    | ResultsPane =>
+      // Paste is a no-op in search pane
+      (model, None)
+    }
 
-  | FindInput(msg) => (
-      {...model, findInput: Feature_InputText.update(msg, model.findInput)},
-      Some(Focus),
-    )
+  | FindInput(msg) =>
+    let (findInput', inputOutmsg) =
+      Component_InputText.update(msg, model.findInput);
+    let outmsg =
+      switch (inputOutmsg) {
+      | Component_InputText.Nothing => None
+      | Component_InputText.Focus => Some(Focus)
+      };
+    ({...model, findInput: findInput'}, outmsg);
 
-  | Update(items) => ({...model, hits: model.hits @ items}, None)
+  | Update(items) => (model |> setHits(model.hits @ items), None)
 
-  | _ => (model, None)
+  | VimWindowNav(navMsg) =>
+    let (windowNav, outmsg) =
+      Component_VimWindows.update(navMsg, model.vimWindowNavigation);
+
+    let model' = {...model, vimWindowNavigation: windowNav};
+    switch (outmsg) {
+    | Nothing => (model', None)
+    | FocusLeft => (model', Some(UnhandledWindowMovement(outmsg)))
+    | FocusRight => (model', Some(UnhandledWindowMovement(outmsg)))
+    | FocusDown =>
+      if (model'.focus == FindInput) {
+        ({...model', focus: ResultsPane}, None);
+      } else {
+        (model', Some(UnhandledWindowMovement(outmsg)));
+      }
+    | FocusUp =>
+      if (model'.focus == ResultsPane) {
+        ({...model', focus: FindInput}, None);
+      } else {
+        (model', Some(UnhandledWindowMovement(outmsg)));
+      }
+    // TODO: What should tabs do for search? Toggle sidebar panes?
+    | PreviousTab
+    | NextTab => (model', None)
+    };
+
+  | ResultsList(listMsg) =>
+    let (resultsTree, outmsg) =
+      Component_VimTree.update(listMsg, model.resultsTree);
+
+    let eff =
+      Component_VimTree.(
+        switch (outmsg) {
+        | Nothing => None
+        | Selected(item) =>
+          Some(OpenFile({filePath: item.file, location: item.location}))
+        // TODO
+        | Collapsed(_) => None
+        | Expanded(_) => None
+        }
+      );
+
+    ({...model, resultsTree}, eff);
+
+  | Complete => (model, None)
+
+  | SearchError(_) => (model, None)
   };
 };
 
@@ -73,14 +198,12 @@ module SearchSubscription =
     type action = msg;
   });
 
-let subscriptions = (ripgrep, dispatch) => {
+let subscriptions = (~workingDirectory, ripgrep, dispatch) => {
   let search = query => {
-    let directory = Rench.Environment.getWorkingDirectory();
-
     SearchSubscription.create(
       ~id="workspace-search",
       ~query,
-      ~directory,
+      ~directory=workingDirectory,
       ~ripgrep,
       ~onUpdate=items => dispatch(Update(items)),
       ~onCompleted=() => Complete,
@@ -105,14 +228,14 @@ module Colors = Feature_Theme.Colors;
 module Styles = {
   open Style;
 
-  let pane = [flexGrow(1), flexDirection(`Row)];
+  let pane = [flexGrow(1), flexDirection(`Column)];
 
-  let queryPane = (~theme) => [
-    width(300),
-    borderRight(~color=Colors.Panel.border.from(theme), ~width=1),
-  ];
-
-  let resultsPane = [flexGrow(1)];
+  let resultsPane = (~isFocused, ~theme) => {
+    let focusColor =
+      isFocused
+        ? Colors.focusBorder.from(theme) : Revery.Colors.transparentWhite;
+    [flexGrow(1), border(~color=focusColor, ~width=1)];
+  };
 
   let row = [
     flexDirection(`Row),
@@ -126,44 +249,23 @@ module Styles = {
     marginHorizontal(8),
   ];
 
-  let input = [flexGrow(1)];
+  let inputContainer = [width(150), flexShrink(0), flexGrow(1)];
 };
-
-let matchToLocListItem = (hit: Ripgrep.Match.t) =>
-  LocationList.{
-    file: hit.file,
-    location:
-      CharacterPosition.{
-        line: EditorCoreTypes.LineNumber.ofOneBased(hit.lineNumber),
-        character: CharacterIndex.ofInt(hit.charStart),
-      },
-    text: hit.text,
-    highlight:
-      Some((
-        Index.fromZeroBased(hit.charStart),
-        Index.fromZeroBased(hit.charEnd),
-      )),
-  };
 
 let make =
     (
       ~theme,
       ~uiFont: UiFont.t,
-      ~editorFont,
+      ~iconTheme,
+      ~languageInfo,
       ~isFocused,
       ~model,
-      ~onSelectResult,
       ~dispatch,
+      ~workingDirectory,
       (),
     ) => {
-  let items =
-    model.hits |> ListEx.safeMap(matchToLocListItem) |> Array.of_list;
-
-  let onSelectItem = (item: LocationList.item) =>
-    onSelectResult(item.file, item.location);
-
   <View style=Styles.pane>
-    <View style={Styles.queryPane(~theme)}>
+    <View>
       <View style=Styles.row>
         <Text
           style={Styles.title(~theme)}
@@ -173,25 +275,99 @@ let make =
         />
       </View>
       <View style=Styles.row>
-        <Feature_InputText.View
-          style=Styles.input
-          model={model.findInput}
-          isFocused
-          fontFamily={uiFont.family}
-          fontSize={uiFont.size}
-          dispatch={msg => dispatch(FindInput(msg))}
-          theme
-        />
+        <View style=Styles.inputContainer>
+          <Component_InputText.View
+            model={model.findInput}
+            isFocused={isFocused && model.focus == FindInput}
+            fontFamily={uiFont.family}
+            fontSize={uiFont.size}
+            dispatch={msg => dispatch(FindInput(msg))}
+            theme
+          />
+        </View>
       </View>
     </View>
-    <View style=Styles.resultsPane>
+    <View
+      style={Styles.resultsPane(
+        ~isFocused=isFocused && model.focus == ResultsPane,
+        ~theme,
+      )}>
       <Text
         style={Styles.title(~theme)}
         fontFamily={uiFont.family}
         fontSize={uiFont.size}
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
-      <LocationList theme uiFont editorFont items onSelectItem />
+      <Component_VimTree.View
+        isActive={isFocused && model.focus == ResultsPane}
+        font=uiFont
+        focusedIndex=None
+        theme
+        model={model.resultsTree}
+        dispatch={msg => dispatch(ResultsList(msg))}
+        render={(
+          ~availableWidth,
+          ~index as _,
+          ~hovered as _,
+          ~selected as _,
+          item,
+        ) =>
+          switch (item) {
+          | Component_VimTree.Node({data, _}) =>
+            <FileItemView.View
+              theme
+              uiFont
+              iconTheme
+              languageInfo
+              item=data
+              workingDirectory
+            />
+          | Component_VimTree.Leaf({data, _}) =>
+            <LocationListItem.View
+              width=availableWidth
+              theme
+              uiFont
+              item=data
+            />
+          }
+        }
+      />
     </View>
   </View>;
+};
+
+module Contributions = {
+  let commands = (~isFocused) => {
+    !isFocused
+      ? []
+      : (
+          Component_VimWindows.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
+        )
+        @ (
+          Component_VimTree.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => ResultsList(msg)))
+        );
+  };
+
+  let contextKeys = (~isFocused, model) => {
+    open WhenExpr.ContextKeys;
+    let inputTextKeys =
+      isFocused && model.focus == FindInput
+        ? Component_InputText.Contributions.contextKeys(model.findInput)
+        : empty;
+    let vimNavKeys =
+      isFocused
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
+
+    let vimTreeKeys =
+      isFocused && model.focus == ResultsPane
+        ? Component_VimTree.Contributions.contextKeys(model.resultsTree)
+        : empty;
+
+    [inputTextKeys, vimNavKeys, vimTreeKeys] |> unionMany;
+  };
 };

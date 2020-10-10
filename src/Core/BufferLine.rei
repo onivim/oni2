@@ -10,17 +10,15 @@ exception OutOfBounds;
 
 type t;
 
-let make: (~indentation: IndentationSettings.t, ~font: Font.t=?, string) => t;
+type measure = Uchar.t => float;
 
-let empty: (~font: Font.t=?, unit) => t;
+let make: (~measure: measure, string) => t;
+
+let empty: (~measure: measure, unit) => t;
 
 let lengthInBytes: t => int;
 
 let raw: t => string;
-
-let font: t => Font.t;
-
-let indentation: t => IndentationSettings.t;
 
 /*
  * [lengthSlow(bufferLine)] returns the UTF-8 length of the buffer line.
@@ -56,6 +54,16 @@ let getUcharExn: (~index: CharacterIndex.t, t) => Uchar.t;
 let subExn: (~index: CharacterIndex.t, ~length: int, t) => string;
 
 let getPixelPositionAndWidth: (~index: CharacterIndex.t, t) => (float, float);
+
+let traverse:
+  (
+    ~maxDistance: int=?,
+    ~f: Uchar.t => bool,
+    ~direction: [ | `Backwards | `Forwards],
+    ~index: CharacterIndex.t,
+    t
+  ) =>
+  CharacterIndex.t;
 
 module Slow: {
   /*

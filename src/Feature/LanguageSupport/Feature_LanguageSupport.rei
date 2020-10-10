@@ -45,6 +45,7 @@ type outmsg =
       filePath: string,
       location: option(CharacterPosition.t),
     })
+  | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
   | Effect(Isolinear.Effect.t(msg));
@@ -114,11 +115,26 @@ module Completion: {
   };
 };
 
+module DocumentSymbols: {
+  type symbol = {
+    uniqueId: string,
+    name: string,
+    detail: string,
+    kind: Exthost.SymbolKind.t,
+    range: CharacterRange.t,
+    selectionRange: CharacterRange.t,
+  };
+
+  type t = list(Tree.t(symbol, symbol));
+
+  let get: (~bufferId: int, model) => option(t);
+};
+
 module Hover: {
   module Popup: {
     let make:
       (
-        ~diagnostics: Diagnostics.t,
+        ~diagnostics: Feature_Diagnostics.model,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~languageInfo: Exthost.LanguageInfo.t,
@@ -151,6 +167,8 @@ module Definition: {
   let isAvailable: (~bufferId: int, model) => bool;
 };
 
+module References: {let get: model => list(Exthost.Location.t);};
+
 module DocumentHighlights: {
   let getByLine:
     (~bufferId: int, ~line: int, model) => list(CharacterRange.t);
@@ -160,6 +178,4 @@ module DocumentHighlights: {
 
 // TODO: Remove
 module CompletionMeet = CompletionMeet;
-module Diagnostic = Diagnostic;
-module Diagnostics = Diagnostics;
 module LanguageFeatures = LanguageFeatures;

@@ -9,7 +9,6 @@ open Oni_Input;
 open Oni_Syntax;
 
 module KeyDisplayer = Oni_Components.KeyDisplayer;
-module Diagnostics = Feature_LanguageSupport.Diagnostics;
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 type windowDisplayMode =
@@ -27,12 +26,12 @@ type t = {
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   contextMenu: Feature_ContextMenu.model,
-  //completions: Completions.t,
   config: Feature_Configuration.model,
   configuration: Configuration.t,
-  decorationProviders: list(DecorationProvider.t),
-  diagnostics: Diagnostics.t,
+  decorations: Feature_Decorations.model,
+  diagnostics: Feature_Diagnostics.model,
   editorFont: Service_Font.font,
+  input: Feature_Input.model,
   messages: Feature_Messages.model,
   terminalFont: Service_Font.font,
   uiFont: UiFont.t,
@@ -60,10 +59,8 @@ type t = {
   syntaxHighlights: Feature_Syntax.t,
   terminals: Feature_Terminal.t,
   layout: Feature_Layout.model,
-  fileExplorer: FileExplorer.t,
+  fileExplorer: Feature_Explorer.model,
   signatureHelp: Feature_SignatureHelp.model,
-  // [windowTitle] is the title of the window
-  windowTitle: string,
   windowIsFocused: bool,
   windowDisplayMode,
   workspace: Workspace.t,
@@ -75,6 +72,7 @@ type t = {
   modal: option(Feature_Modals.model),
   textContentProviders: list((int, string)),
   vim: Feature_Vim.model,
+  autoUpdate: Feature_AutoUpdate.model,
 };
 
 let initial =
@@ -92,19 +90,30 @@ let initial =
     Feature_Configuration.initial(
       ~getUserSettings,
       [
+        Feature_AutoUpdate.Contributions.configuration,
+        Feature_Buffers.Contributions.configuration,
         Feature_Editor.Contributions.configuration,
+        Feature_SideBar.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
         Feature_LanguageSupport.Contributions.configuration,
         Feature_Layout.Contributions.configuration,
+        Feature_TitleBar.Contributions.configuration,
       ],
     );
   let initialEditor = {
     open Feature_Editor;
     let editorBuffer = initialBuffer |> EditorBuffer.ofBuffer;
-    let config = Feature_Configuration.resolver(config, Feature_Vim.initial);
+    let config =
+      Feature_Configuration.resolver(
+        ~fileType="plaintext",
+        config,
+        Feature_Vim.initial,
+      );
     Editor.create(~config, ~buffer=editorBuffer, ());
   };
+
+  let defaultEditorFont = Service_Font.default();
 
   {
     buffers: Feature_Buffers.empty |> Feature_Buffers.add(initialBuffer),
@@ -120,14 +129,14 @@ let initial =
       ]),
     commands: Feature_Commands.initial(contributedCommands),
     contextMenu: Feature_ContextMenu.initial,
-    //completions: Completions.initial,
     config,
     configuration: Configuration.default,
-    decorationProviders: [],
-    diagnostics: Diagnostics.create(),
+    decorations: Feature_Decorations.initial,
+    diagnostics: Feature_Diagnostics.initial,
+    input: Feature_Input.initial,
     quickmenu: None,
-    editorFont: Service_Font.default,
-    terminalFont: Service_Font.default,
+    editorFont: defaultEditorFont,
+    terminalFont: defaultEditorFont,
     extensions:
       Feature_Extensions.initial(
         ~globalPersistence=extensionGlobalPersistence,
@@ -156,11 +165,10 @@ let initial =
     statusBar: Feature_StatusBar.initial,
     syntaxHighlights: Feature_Syntax.empty,
     layout: Feature_Layout.initial([initialEditor]),
-    windowTitle: "",
     windowIsFocused: true,
     windowDisplayMode: Windowed,
     workspace: Workspace.initial(workingDirectory),
-    fileExplorer: FileExplorer.initial,
+    fileExplorer: Feature_Explorer.initial(~rootPath=workingDirectory),
     signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
     pane: Feature_Pane.initial,
@@ -170,20 +178,6 @@ let initial =
     terminals: Feature_Terminal.initial,
     textContentProviders: [],
     vim: Feature_Vim.initial,
+    autoUpdate: Feature_AutoUpdate.initial,
   };
-};
-
-let commands = state =>
-  Command.Lookup.unionMany([
-    Feature_Commands.all(state.commands),
-    Feature_Extensions.commands(state.extensions)
-    |> Command.Lookup.fromList
-    |> Command.Lookup.map(msg => Actions.Extensions(msg)),
-  ]);
-
-let menus = state => {
-  let commands = commands(state);
-
-  Feature_Extensions.menus(state.extensions)
-  |> Menu.Lookup.fromSchema(commands);
 };

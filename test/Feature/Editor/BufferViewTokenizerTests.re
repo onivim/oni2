@@ -37,7 +37,7 @@ let splitColorizer = (split, idx) => {
   };
 };
 
-let makeLine = str => BufferLine.make(~indentation, str);
+let makeLine = str => BufferLine.make(~measure=_ => 1.0, str);
 
 describe("BufferViewTokenizer", ({describe, test, _}) => {
   test("empty string", ({expect, _}) => {
@@ -54,7 +54,7 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
     let result =
       BufferViewTokenizer.tokenize(
         ~stop=CharacterIndex.ofInt(9),
-        "κόσμε abc" |> BufferLine.make(~indentation),
+        "κόσμε abc" |> makeLine,
         // Split at byte 11 - after the multi-byte characters
         splitColorizer(11),
       );
@@ -102,12 +102,12 @@ describe("BufferViewTokenizer", ({describe, test, _}) => {
 
   describe("indentation settings", ({test, _}) =>
     test("accounts for tab size", ({expect, _}) => {
-      let indentation =
-        IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=4, ());
+      //      let indentation =
+      //        IndentationSettings.create(~mode=Tabs, ~size=2, ~tabSize=4, ());
       let result =
         BufferViewTokenizer.tokenize(
           ~stop=CharacterIndex.ofInt(4),
-          "\tabc" |> BufferLine.make(~indentation),
+          "\tabc" |> makeLine,
           basicColorizer,
         );
 

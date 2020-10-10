@@ -5,7 +5,12 @@
   "license": "SEE LICENSE IN Outrun-Labs-EULA-v1.1.md",
   "esy": {
     "build": "refmterr dune build -p libvim,textmate,treesitter,Oni2 -j4",
-    "buildEnv": { "MACOSX_DEPLOYMENT_TARGET": "10.12" },
+    "buildEnv": {
+      "MACOSX_DEPLOYMENT_TARGET": "10.12",
+      "ONI2_ROOT": "#{self.root}",
+      "ONI2_BUILD_MODE": "Debug",
+      "ONI2_APPCAST_BASEURL": "http://localhost:8080/"
+    },
     "install": [
       "esy-installer Oni2.install",
       "bash -c \"#{os == 'windows' ? 'cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll \\'$cur__bin\\'': 'echo'}\"",
@@ -199,8 +204,6 @@
     "lint": "esy b bash ./scripts/lint.sh",
     "run": "esy x Oni2",
     "watch": "dune build --watch -p libvim,textmate,Oni2 -j4",
-    "create-release": "esy node ./scripts/release.js",
-    "create-win-setup": "esy node ./scripts/windows/BuildSetupTemplate.js",
     "test": "esy @test run",
     "clean-extensions": "esy b bash ./scripts/clean-extensions.sh"
   },
@@ -222,10 +225,12 @@
     "@opam/lwt": "*",
     "@opam/markup": "^0.8.2",
     "@opam/ocamlbuild": "*",
+    "@opam/ocamlformat": "^0.15.0",
     "@opam/ppx_deriving": "*",
     "@opam/ppx_deriving_yojson": "*",
     "@opam/ppx_inline_test": "v0.14.1",
     "@opam/ppx_let": "v0.14.0",
+    "@opam/ppx_optcomp": "v0.14.0",
     "@opam/ppxlib": ">=0.10.0",
     "@opam/re": "*",
     "@opam/reason": "^3.6.0",
@@ -241,8 +246,8 @@
     "esy-skia": "*",
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.59",
-    "ocaml": "~4.7.0",
+    "libvim": "8.10869.60",
+    "ocaml": "4.10.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
     "reason-fzy": "CrossR/reason-fzy#ce245df",
     "refmterr": "*",
@@ -251,19 +256,20 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#11d4fb4",
+    "revery": "revery-ui/revery#a757edb",
     "esy-skia": "revery-ui/esy-skia#a3785f9",
     "rench": "bryphe/rench#a976fe5",
-    "isolinear": "revery-ui/isolinear#8cad3b0",
+    "isolinear": "revery-ui/isolinear#53fc4eb",
     "revery-terminal": "revery-ui/revery-terminal#37e19a3",
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
     "@opam/conf-pkg-config": "1.2",
-    "@opam/yojson": "onivim/yojson:yojson.opam#f480aef"
+    "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
+    "flex": "bryphe/flex#5e19b05"
   },
   "devDependencies": {
-    "ocaml": "~4.10",
+    "ocaml": "4.10.0",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",

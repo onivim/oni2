@@ -1088,6 +1088,37 @@ module LanguageFeatures = {
   };
 };
 
+module Languages = {
+  [@deriving show]
+  type msg =
+    | GetLanguages
+    | ChangeLanguage({
+        uri: Oni_Core.Uri.t,
+        languageId: string,
+      });
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method, args) {
+    | ("$getLanguages", _) => Ok(GetLanguages)
+
+    | ("$changeLanguage", `List([uriJson, `String(languageId)])) =>
+      open Base.Result.Let_syntax;
+
+      let%bind uri = uriJson |> Internal.decode_value(Oni_Core.Uri.decode);
+
+      Ok(ChangeLanguage({uri, languageId}));
+
+    | _ =>
+      Error(
+        "Unable to parse method: "
+        ++ method
+        ++ " with args: "
+        ++ Yojson.Safe.to_string(args),
+      )
+    };
+  };
+};
+
 module MessageService = {
   [@deriving show]
   type msg =
@@ -1223,6 +1254,7 @@ module StatusBar = {
           colorJson,
           alignmentJson,
           priorityJson,
+          _accessibilityInfoJson,
         ]),
       ) =>
       open Base.Result.Let_syntax;
@@ -1702,6 +1734,7 @@ type t =
   | ExtensionService(ExtensionService.msg)
   | FileSystem(FileSystem.msg)
   | LanguageFeatures(LanguageFeatures.msg)
+  | Languages(Languages.msg)
   | MessageService(MessageService.msg)
   | OutputService(OutputService.msg)
   | Progress(Progress.msg)

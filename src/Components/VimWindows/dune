@@ -1,0 +1,8 @@
+(library
+ (name Component_VimWindows)
+ (public_name Oni2.component.vimWindows)
+ (inline_tests)
+ (libraries Oni2.core Oni2.components Revery isolinear Oni2.feature.commands
+   Oni2.feature.sneak)
+ (preprocess
+  (pps ppx_inline_test ppx_let ppx_deriving.show brisk-reconciler.ppx)))

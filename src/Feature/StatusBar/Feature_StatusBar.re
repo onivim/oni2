@@ -45,6 +45,7 @@ type msg =
   | ItemDisposed(string)
   | DiagnosticsClicked
   | FileTypeClicked
+  | ContextMenuClosed
   | ContextMenuNotificationClearAllClicked
   | ContextMenuNotificationOpenClicked
   | NotificationCountClicked
@@ -54,15 +55,22 @@ type msg =
 // TODO: Wire these up to Pane / ContextMenu
 type outmsg =
   | Nothing
-  | ShowFileTypePicker;
+  | ClearNotifications
+  | ToggleProblems
+  | ToggleNotifications
+  | ShowFileTypePicker
+  | Effect(Isolinear.Effect.t(msg));
 
-type model = {items: list(Item.t)};
+type model = {
+  items: list(Item.t),
+  contextMenuVisible: bool,
+};
 
-let initial = {items: []};
+let initial = {items: [], contextMenuVisible: false};
 
 // UPDATE
 
-let update = (model, msg) => {
+let update = (~client, model, msg) => {
   let removeItemById = (items: list(Item.t), id) =>
     List.filter(si => Item.(si.id) != id, items);
 
@@ -70,10 +78,46 @@ let update = (model, msg) => {
   | ItemAdded(item) =>
     /* Replace the old item with the new one */
     let newItems = removeItemById(model.items, item.id);
-    ({items: [item, ...newItems]}, Nothing);
-  | ItemDisposed(id) => ({items: removeItemById(model.items, id)}, Nothing)
+    ({...model, items: [item, ...newItems]}, Nothing);
+
+  | ItemDisposed(id) => (
+      {...model, items: removeItemById(model.items, id)},
+      Nothing,
+    )
+
+  | NotificationsCountRightClicked => (
+      {...model, contextMenuVisible: true},
+      Nothing,
+    )
+
+  | ContextMenuNotificationClearAllClicked => (
+      {...model, contextMenuVisible: false},
+      Nothing,
+    )
+
+  | ContextMenuNotificationOpenClicked => (
+      {...model, contextMenuVisible: false},
+      ToggleNotifications,
+    )
+
+  | ContextMenuClosed => ({...model, contextMenuVisible: false}, Nothing)
+
   | FileTypeClicked => (model, ShowFileTypePicker)
-  | _ => (model, Nothing)
+
+  | NotificationCountClicked => (model, ToggleNotifications)
+
+  | DiagnosticsClicked => (model, ToggleProblems)
+
+  | ContributedItemClicked({command, _}) => (
+      model,
+      Effect(
+        Service_Exthost.Effects.Commands.executeContributedCommand(
+          ~command,
+          ~arguments=[],
+          client,
+        ),
+      ),
+    )
   };
 };
 
@@ -89,8 +133,8 @@ module CustomHooks = Oni_Components.CustomHooks;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 module Label = Oni_Components.Label;
-module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Diagnostics = Feature_Diagnostics;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 module Editor = Feature_Editor.Editor;
 
 module Colors = Feature_Theme.Colors;
@@ -190,7 +234,7 @@ let notificationCount =
       ~font: UiFont.t,
       ~foreground as color,
       ~notifications: Feature_Notification.model,
-      ~contextMenu,
+      ~contextMenuVisible,
       ~dispatch,
       (),
     ) => {
@@ -223,13 +267,13 @@ let notificationCount =
       items
       theme
       font // correct for item padding
+      onCancel={() => dispatch(ContextMenuClosed)}
       onItemSelect={({data, _}: ContextMenu.item(msg)) => dispatch(data)}
     />;
   };
 
   <item onClick onRightClick>
-    {contextMenu == Feature_ContextMenu.NotificationStatusBarItem
-       ? <menu /> : React.empty}
+    {contextMenuVisible ? <menu /> : React.empty}
     <View
       style=Style.[
         flexDirection(`Row),
@@ -251,7 +295,7 @@ let notificationCount =
 
 let diagnosticCount = (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => {
   let color = Colors.StatusBar.foreground.from(theme);
-  let text = diagnostics |> Diagnostics.count |> string_of_int;
+  let text = diagnostics |> Feature_Diagnostics.count |> string_of_int;
 
   let onClick = () => dispatch(DiagnosticsClicked);
 
@@ -317,9 +361,8 @@ module View = {
                   ~mode,
                   ~notifications: Feature_Notification.model,
                   ~recordingMacro: option(char),
-                  ~diagnostics: Diagnostics.t,
+                  ~diagnostics: Diagnostics.model,
                   ~font: UiFont.t,
-                  ~contextMenu: Feature_ContextMenu.model,
                   ~activeBuffer: option(Oni_Core.Buffer.t),
                   ~activeEditor: option(Feature_Editor.Editor.t),
                   ~indentationSettings: IndentationSettings.t,
@@ -327,6 +370,7 @@ module View = {
                   ~statusBar: model,
                   ~theme,
                   ~dispatch,
+                  ~workingDirectory: string,
                   (),
                 ) => {
     let%hook activeNotifications =
@@ -403,7 +447,7 @@ module View = {
 
     let scmItems =
       scm
-      |> Feature_SCM.statusBarCommands
+      |> Feature_SCM.statusBarCommands(~workingDirectory)
       |> List.filter_map((item: Exthost.Command.t) =>
            item.label
            |> Option.map(label => {
@@ -466,29 +510,27 @@ module View = {
     };
 
     let macro = (~register, ()) => {
-      Oni_Components.(
-        <item>
-          <View
-            style=Style.[
-              flexDirection(`Row),
-              justifyContent(`Center),
-              alignItems(`Center),
-            ]>
-            <View style=Style.[margin(4)]>
-              <Codicon icon=Codicon.circleFilled color=Revery.Colors.red />
-            </View>
-            <Text
-              text={String.make(1, register)}
-              style={Styles.text(
-                ~color=Colors.StatusBar.foreground.from(theme),
-              )}
-              fontFamily={font.family}
-              fontWeight=Revery.Font.Weight.Bold
-              fontSize=11.
-            />
+      <item>
+        <View
+          style=Style.[
+            flexDirection(`Row),
+            justifyContent(`Center),
+            alignItems(`Center),
+          ]>
+          <View style=Style.[margin(4)]>
+            <Codicon icon=Codicon.circleFilled color=Revery.Colors.red />
           </View>
-        </item>
-      );
+          <Text
+            text={String.make(1, register)}
+            style={Styles.text(
+              ~color=Colors.StatusBar.foreground.from(theme),
+            )}
+            fontFamily={font.family}
+            fontWeight=Revery.Font.Weight.Bold
+            fontSize=11.
+          />
+        </View>
+      </item>;
     };
 
     let notificationPopups = () =>
@@ -512,7 +554,7 @@ module View = {
           font
           foreground
           notifications
-          contextMenu
+          contextMenuVisible={statusBar.contextMenuVisible}
         />
       </section>
       <sectionGroup>

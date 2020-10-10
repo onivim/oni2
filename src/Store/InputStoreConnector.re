@@ -60,8 +60,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Sneak => [Actions.Sneak(Feature_Sneak.KeyboardInput(k))]
 
     | FileExplorer => [
-        Actions.FileExplorer(Model.FileExplorer.KeyboardInput(k)),
+        Actions.FileExplorer(Feature_Explorer.Msg.keyPressed(k)),
       ]
+
+    | Pane => [Actions.Pane(Feature_Pane.Msg.keyPressed(k))]
 
     | SCM => [Actions.SCM(Feature_SCM.Msg.keyPressed(k))]
 
@@ -69,7 +71,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         Actions.Terminal(Feature_Terminal.KeyPressed({id, key: k})),
       ]
 
-    | Search => [Actions.Search(Feature_Search.Input(k))]
+    | Search => [Actions.Search(Feature_Search.Msg.input(k))]
     | Extensions => [
         Actions.Extensions(Feature_Extensions.Msg.keyPressed(k)),
       ]
@@ -95,13 +97,14 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         | Extensions =>
           Actions.Extensions(Feature_Extensions.Msg.pasted(firstLine))
         | SCM => Actions.SCM(Feature_SCM.Msg.paste(firstLine))
-        | Search => Actions.Search(Feature_Search.Pasted(firstLine))
+        | Search => Actions.Search(Feature_Search.Msg.pasted(firstLine))
         | LanguageSupport =>
           Actions.LanguageSupport(
             Feature_LanguageSupport.Msg.pasted(firstLine),
           )
 
         // No paste handling in these UIs, currently...
+        | Pane => Actions.Noop
         | Terminal(_) => Actions.Noop
         | InsertRegister
         | Sneak
@@ -136,39 +139,47 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     // TODO: Should we filter out repeat keys from key binding processing?
     ignore(repeat);
 
-    let shift = Revery.Key.Keymod.isShiftDown(keymod);
-    let control = Revery.Key.Keymod.isControlDown(keymod);
-    let alt = Revery.Key.Keymod.isAltDown(keymod);
-    let meta = Revery.Key.Keymod.isGuiDown(keymod);
-    let altGr = Revery.Key.Keymod.isAltGrKeyDown(keymod);
+    let name = Sdl2.Scancode.ofInt(scancode) |> Sdl2.Scancode.getName;
 
-    let (altGr, control, alt) =
-      switch (Revery.Environment.os) {
-      // On Windows, we need to do some special handling here
-      // Windows has this funky behavior where pressing AltGr registers as RAlt+LControl down - more info here:
-      // https://devblogs.microsoft.com/oldnewthing/?p=40003
-      | Revery.Environment.Windows =>
-        let altGr =
-          altGr
-          || Revery.Key.Keymod.isRightAltDown(keymod)
-          && Revery.Key.Keymod.isControlDown(keymod);
-        // If altGr is active, disregard control / alt key
-        let ctrlKey = altGr ? false : control;
-        let altKey = altGr ? false : alt;
-        (altGr, ctrlKey, altKey);
-      | _ => (altGr, control, alt)
-      };
+    if (name == "Left Shift" || name == "Right Shift") {
+      None;
+    } else {
+      let shift = Revery.Key.Keymod.isShiftDown(keymod);
+      let control = Revery.Key.Keymod.isControlDown(keymod);
+      let alt = Revery.Key.Keymod.isAltDown(keymod);
+      let meta = Revery.Key.Keymod.isGuiDown(keymod);
+      let altGr = Revery.Key.Keymod.isAltGrKeyDown(keymod);
 
-    EditorInput.KeyPress.{
-      scancode,
-      keycode,
-      modifiers: {
-        shift,
-        control,
-        alt,
-        meta,
-        altGr,
-      },
+      let (altGr, control, alt) =
+        switch (Revery.Environment.os) {
+        // On Windows, we need to do some special handling here
+        // Windows has this funky behavior where pressing AltGr registers as RAlt+LControl down - more info here:
+        // https://devblogs.microsoft.com/oldnewthing/?p=40003
+        | Revery.Environment.Windows =>
+          let altGr =
+            altGr
+            || Revery.Key.Keymod.isRightAltDown(keymod)
+            && Revery.Key.Keymod.isControlDown(keymod);
+          // If altGr is active, disregard control / alt key
+          let ctrlKey = altGr ? false : control;
+          let altKey = altGr ? false : alt;
+          (altGr, ctrlKey, altKey);
+        | _ => (altGr, control, alt)
+        };
+
+      Some(
+        EditorInput.KeyPress.{
+          scancode,
+          keycode,
+          modifiers: {
+            shift,
+            control,
+            alt,
+            meta,
+            altGr,
+          },
+        },
+      );
     };
   };
 
@@ -183,8 +194,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
      a revery element is focused oni2 should defer to revery
    */
   let handleKeyPress = (state: State.t, key) => {
-    let context =
-      WhenExpr.ContextKeys.fromSchema(Model.ContextKeys.all, state);
+    let context = Model.ContextKeys.all(state);
 
     let (keyBindings, effects) =
       Keybindings.keyDown(~context, ~key, state.keyBindings);
@@ -209,8 +219,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   };
 
   let handleKeyUp = (state: State.t, key) => {
-    let context =
-      WhenExpr.ContextKeys.fromSchema(Model.ContextKeys.all, state);
+    let context = Model.ContextKeys.all(state);
 
     //let inputKey = reveryKeyToEditorKey(key);
     let (keyBindings, effects) =
@@ -273,7 +282,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
-          dispatch(Actions.KeyDown(event |> reveryKeyToEditorKey, time));
+          event
+          |> reveryKeyToEditorKey
+          |> Option.iter(key => {dispatch(Actions.KeyDown(key, time))});
         },
       );
 
@@ -282,7 +293,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
-          dispatch(Actions.KeyUp(event |> reveryKeyToEditorKey, time));
+          event
+          |> reveryKeyToEditorKey
+          |> Option.iter(key => {dispatch(Actions.KeyUp(key, time))});
         },
       );
 

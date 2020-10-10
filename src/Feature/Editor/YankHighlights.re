@@ -20,23 +20,24 @@ module Styles = {
 };
 
 module Animations = {
-  let fadeIn =
+  let fadeIn = (~duration) =>
     Revery.UI.Animation.(
-      animate(Revery.Time.milliseconds(250))
+      animate(Revery.Time.milliseconds(duration))
       |> ease(Easing.easeIn)
       |> tween(0.6, 0.0)
       |> delay(Revery.Time.milliseconds(0))
     );
 };
 
-let%component make =
-              (~colors: EditorColors.t, ~pixelRanges: list(PixelRange.t), ()) => {
+let%component make = (~config, ~pixelRanges: list(PixelRange.t), ()) => {
   let ranges = pixelRanges;
 
-  let%hook (opacity, _animationState, _reset) =
-    Hooks.animation(Animations.fadeIn, ~active=true);
+  let duration = EditorConfiguration.yankHighlightDuration.get(config);
 
-  let bg = colors.selectionBackground;
+  let%hook (opacity, _animationState, _reset) =
+    Hooks.animation(Animations.fadeIn(~duration), ~active=true);
+
+  let bg = EditorConfiguration.yankHighlightColor.get(config);
 
   let elements =
     ranges
