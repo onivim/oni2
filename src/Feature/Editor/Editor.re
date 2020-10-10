@@ -213,6 +213,14 @@ let viewLineToBufferLine = (viewLine, editor) => {
   bufferPosition.line;
 };
 
+let viewLineIsPrimary = (viewLine, editor) => {
+  let wrapping = editor.wrapState |> WrapState.wrapping;
+  let bufferPosition: Wrapping.bufferPosition =
+    Wrapping.viewLineToBufferPosition(~line=viewLine, wrapping);
+
+  bufferPosition.byteOffset == ByteIndex.zero;
+};
+
 let viewTokens = (~line, ~scrollX, ~colorizer, editor) => {
   let wrapping = editor.wrapState |> WrapState.wrapping;
   let bufferPosition: Wrapping.bufferPosition =

@@ -125,6 +125,9 @@ let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
 
 // VIEW-SPACE CONVERSION
 
+// [viewLineIsPrimary(viewLine, editor)] returns [true] if the viewline is
+// the first view line for a buffer line (ie, its [byteOffset] is [0])
+let viewLineIsPrimary: (int, t) => bool;
 let viewLineToBufferLine: (int, t) => EditorCoreTypes.LineNumber.t;
 
 // PIXEL-SPACE CONVERSION

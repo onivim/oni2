@@ -219,12 +219,7 @@ Skia.Paint.setTextSize(tabPaint, 10.);
 Skia.Paint.setTextEncoding(tabPaint, Utf8);
 
 let token =
-    (
-      ~context,
-      ~offsetY,
-      ~colors: Colors.t,
-      token: BufferViewTokenizer.t,
-    ) => {
+    (~context, ~offsetY, ~colors: Colors.t, token: BufferViewTokenizer.t) => {
   let font =
     Service_Font.resolveWithFallback(
       ~italic=token.italic,
