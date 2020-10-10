@@ -98,7 +98,10 @@ let update =
   let startLine = update.startLine |> LineNumber.toZeroBased;
   let endLine = update.endLine |> LineNumber.toZeroBased;
   // Special case - the number of lines haven't changed. We can streamline this.
-  if (!update.isFull && endLine - startLine == Array.length(update.lines)) {
+  if (!update.isFull
+      && endLine
+      - startLine == Array.length(update.lines)
+      && Array.length(wraps) >= endLine) {
     // Update lines in update
     let isRecalculationNeeded = ref(false);
     for (idx in startLine to endLine - 1) {

@@ -102,6 +102,37 @@ describe("Wrapping", ({describe, _}) => {
         wrapResult(~line=0, ~byte=0, ~character=0),
       );
     });
+    test("update: add line to empty buffer", ({expect, _}) => {
+      let startBuffer = makeBuffer([||]);
+
+      let wrapping =
+        Wrapping.make(~wrap, ~buffer=startBuffer |> EditorBuffer.ofBuffer);
+
+      let update =
+        BufferUpdate.{
+          id: 0,
+          startLine: LineNumber.ofZeroBased(0),
+          endLine: LineNumber.ofZeroBased(1),
+          lines: [|"aaaa"|],
+          isFull: false,
+          version: 999,
+        };
+
+      let newBuffer =
+        Buffer.update(startBuffer, update) |> EditorBuffer.ofBuffer;
+
+      let wrapping' = Wrapping.update(~update, ~newBuffer, wrapping);
+
+      expect.int(Wrapping.numberOfLines(wrapping')).toBe(2);
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=0, wrapping'),
+        wrapResult(~line=0, ~byte=0, ~character=0),
+      );
+      expect.equal(
+        Wrapping.viewLineToBufferPosition(~line=1, wrapping'),
+        wrapResult(~line=0, ~byte=3, ~character=3),
+      );
+    });
 
     test("update: increase number of wraps in single line", ({expect, _}) => {
       let startBuffer = makeBuffer([|"aaa"|]);
