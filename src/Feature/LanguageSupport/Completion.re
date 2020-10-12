@@ -13,7 +13,8 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
-  | ExtensionProviderMsg(CompletionProvider.exthostMsg);
+  | ExtensionProviderMsg(CompletionProvider.exthostMsg)
+  | KeywordProviderMsg(CompletionProvider.keywordMsg);
 //  | CompletionResultAvailable({
 //      handle: int,
 //      suggestResult: Exthost.SuggestResult.t,
@@ -142,8 +143,8 @@ module Session = {
   type state =
     | Waiting
     | Completed({
-        allItems: list(Exthost.SuggestItem.t),
-        filteredItems: [@opaque] list(Filter.result(Exthost.SuggestItem.t)),
+        allItems: list(CompletionItem.t),
+        filteredItems: [@opaque] list(Filter.result(CompletionItem.t)),
       })
     // TODO
     //| Incomplete(list(Exthost.SuggestItem.t))
@@ -155,6 +156,7 @@ module Session = {
     state,
     base: string,
     trigger: [@opaque] Exthost.CompletionContext.t,
+    triggerCharacters: [@opaque] list(Uchar.t),
     buffer: [@opaque] Oni_Core.Buffer.t,
     location: EditorCoreTypes.CharacterPosition.t,
     provider: [@opaque] CompletionProvider.provider('model, 'msg),
@@ -179,23 +181,22 @@ module Session = {
     | Session(session) => Session({...session, state: Accepted});
 
   let filter:
-    (~query: string, list(Exthost.SuggestItem.t)) =>
-    list(Filter.result(Exthost.SuggestItem.t)) =
+    (~query: string, list(CompletionItem.t)) =>
+    list(Filter.result(CompletionItem.t)) =
     (~query, items) => {
-      let toString = (item: Exthost.SuggestItem.t, ~shouldLower) =>
+      let toString = (item: CompletionItem.t, ~shouldLower) =>
         shouldLower ? String.lowercase_ascii(item.label) : item.label;
 
       let explodedQuery = Zed_utf8.explode(query);
 
       items
-      |> List.filter((item: Exthost.SuggestItem.t) => {
-           let filterText = Exthost.SuggestItem.filterText(item);
-           if (String.length(filterText) < String.length(query)) {
+      |> List.filter((item: CompletionItem.t) =>
+           if (String.length(item.filterText) < String.length(query)) {
              false;
            } else {
-             Filter.fuzzyMatches(explodedQuery, filterText);
-           };
-         })
+             Filter.fuzzyMatches(explodedQuery, item.filterText);
+           }
+         )
       |> Filter.rank(query, toString);
     };
 
@@ -222,28 +223,6 @@ module Session = {
         |> Option.value(~default=Isolinear.Sub.none);
       };
 
-  // Move to exthost-specific provider
-  let updateItem = (~item: Exthost.SuggestItem.t, {state, _} as model) => {
-    switch (state) {
-    | Waiting
-    | Failure(_)
-    | Accepted => model
-    | Completed({allItems, _}) =>
-      let allItems =
-        allItems
-        |> List.map((previousItem: Exthost.SuggestItem.t) =>
-             if (previousItem.chainedCacheId == item.chainedCacheId) {
-               item;
-             } else {
-               previousItem;
-             }
-           );
-
-      let filteredItems = filter(~query=model.base, allItems);
-      {...model, state: Completed({filteredItems, allItems})};
-    };
-  };
-
   let isActive =
     fun
     | Session({state, _}) => {
@@ -257,25 +236,52 @@ module Session = {
 
   let create =
       (
-        ~provider,
-        ~mapper,
+        ~provider: CompletionProvider.provider('model, 'msg),
+        ~mapper: 'msg => msg,
+        ~triggerCharacters,
         ~trigger,
         ~buffer,
         ~base,
         ~location,
         ~supportsResolve,
-      ) =>
-    Session({
-      trigger,
-      state: Waiting,
-      buffer,
-      base,
-      location,
-      supportsResolve,
-      provider,
-      providerModel: None,
-      providerMapper: mapper,
-    });
+      ) => {
+    let candidate =
+      Session({
+        trigger,
+        triggerCharacters,
+        state: Waiting,
+        buffer,
+        base,
+        location,
+        supportsResolve,
+        provider,
+        providerModel: None,
+        providerMapper: mapper,
+      });
+
+    switch (candidate) {
+    | Session({provider, _} as session) =>
+      let (module ProviderImpl) = provider;
+      let maybeModel =
+        ProviderImpl.create(~base, ~trigger, ~buffer, ~location);
+      maybeModel
+      |> Option.map(model => {
+           let items = ProviderImpl.items(model);
+           let state =
+             switch (items) {
+             | Ok([]) => Waiting
+             | Ok(items) =>
+               Completed({
+                 allItems: items,
+                 filteredItems: filter(~query=base, items),
+               })
+             | Error(msg) => Failure(msg)
+             };
+
+           Session({...session, state, providerModel: Some(model)});
+         });
+    };
+  };
 
   let refine = (~base) =>
     fun
@@ -295,50 +301,41 @@ module Session = {
         Session({...current, base, state: state'});
       };
 
-  let receivedItems = (items: list(Exthost.SuggestItem.t), model) =>
-    if (model.state == Accepted) {
-      model;
-    } else {
-      {
-        ...model,
-        state:
-          Completed({
-            allItems: items,
-            filteredItems: filter(~query=model.base, items),
-          }),
-      };
-    };
-
-  let error = (~errorMsg: string, model) => {
-    ...model,
-    state: Failure(errorMsg),
-  };
-
-  let update = (~createNew, ~buffer, ~base, ~location) =>
+  let reinvoke = (~createNew, ~buffer, ~activeCursor) =>
     fun
-    | Session(previous) =>
-      // If different buffer or location... start over!
-      if (Oni_Core.Buffer.getId(buffer)
-          != Oni_Core.Buffer.getId(previous.buffer)
-          || location != previous.location) {
-        if (createNew) {
-          Some(
-            create(
-              ~trigger=previous.trigger,
-              ~buffer,
-              ~base,
-              ~location,
-              ~supportsResolve=previous.supportsResolve,
-              ~provider=previous.provider,
-              ~mapper=previous.providerMapper,
-            ),
+    | Session(previous) => {
+        let maybeMeet =
+          CompletionMeet.fromBufferPosition(
+            ~triggerCharacters=previous.triggerCharacters,
+            ~position=activeCursor,
+            buffer,
           );
-        } else {
-          None;
-        };
-      } else {
-        // Refine results
-        Some(refine(~base, Session(previous)));
+
+        maybeMeet
+        |> OptionEx.flatMap(({base, location, _}: CompletionMeet.t) =>
+             // If different buffer or location... start over!
+             if (Oni_Core.Buffer.getId(buffer)
+                 != Oni_Core.Buffer.getId(previous.buffer)
+                 || location != previous.location) {
+               if (createNew) {
+                 create(
+                   ~trigger=previous.trigger,
+                   ~triggerCharacters=previous.triggerCharacters,
+                   ~buffer,
+                   ~base,
+                   ~location,
+                   ~supportsResolve=previous.supportsResolve,
+                   ~provider=previous.provider,
+                   ~mapper=previous.providerMapper,
+                 );
+               } else {
+                 None;
+               };
+             } else {
+               // Refine results
+               Some(refine(~base, Session(previous)));
+             }
+           );
       };
 };
 
@@ -367,14 +364,14 @@ module Selection = {
 };
 
 type model = {
-  handleToSession: IntMap.t(Session.t),
+  sessions: list(Session.t),
   providers: list(provider),
-  allItems: array(Filter.result(CompletionItem.t)),
+  allItems: array((CharacterPosition.t, Filter.result(CompletionItem.t))),
   selection: Selection.t,
 };
 
 let initial = {
-  handleToSession: IntMap.empty,
+  sessions: [],
   providers: [],
   allItems: [||],
   selection: Selection.initial,
@@ -383,24 +380,18 @@ let initial = {
 let providerCount = ({providers, _}) => List.length(providers);
 let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
 
-let getMeetLocation = (~handle, model) => {
-  IntMap.find_opt(handle, model.handleToSession)
-  |> Option.map(Session.location);
-};
-
-let recomputeAllItems = (sessions: IntMap.t(Session.t)) => {
+let recomputeAllItems = (sessions: list(Session.t)) => {
   sessions
-  |> IntMap.bindings
-  |> List.map(((handle, session: Session.t)) => {
-       let isFuzzyMatching = Session.base(session) != "";
+  |> List.map(session => {
+       let meetLocation = Session.location(session);
        session
        |> Session.filteredItems
-       |> List.map(
-            Filter.map(CompletionItem.create(~isFuzzyMatching, ~handle)),
-          );
+       |> List.map(item => (meetLocation, item));
      })
   |> List.flatten
-  |> List.fast_sort(CompletionItemSorter.compare)
+  |> List.fast_sort(((_loc, a), (_loc, b)) =>
+       CompletionItemSorter.compare(a, b)
+     )
   |> Array.of_list;
 };
 
@@ -423,7 +414,7 @@ let isActive = (model: model) => {
 
 let stopInsertMode = model => {
   ...model,
-  handleToSession: IntMap.empty,
+  sessions: [],
   allItems: [||],
   selection: None,
 };
@@ -446,21 +437,21 @@ let cursorMoved =
     <= CharacterIndex.toInt(current.character);
   };
 
-  let handleToSession =
-    IntMap.filter(
-      (_key, session: Session.t) => {
+  let sessions =
+    List.filter(
+      (session: Session.t) => {
         isCompletionMeetStillValid(Session.location(session))
       },
-      model.handleToSession,
+      model.sessions,
     );
 
-  let allItems = recomputeAllItems(handleToSession);
+  let allItems = recomputeAllItems(sessions);
 
   let count = Array.length(allItems);
 
   {
     ...model,
-    handleToSession,
+    sessions,
     allItems,
     selection: Selection.ensureValidFocus(~count, model.selection),
   };
@@ -495,124 +486,151 @@ let unregister = (~handle, model) => {
 };
 
 let invokeCompletion = (~buffer, ~activeCursor, model) => {
-  let candidateProviders =
-    model.providers
-    |> List.filter(prov =>
-         Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
-       );
+  //  let candidateProviders =
+  //    model.providers
+  //    |> List.filter(prov =>
+  //         Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
+  //       );
 
   let location = activeCursor;
 
-  let handleToSession =
-    List.fold_left(
-      (acc: IntMap.t(Session.t), curr: provider) => {
-        acc
-        |> IntMap.add(
-             curr.handle,
-             Session.create(
-               ~trigger=
-                 Exthost.CompletionContext.{
-                   triggerKind: Invoke,
-                   triggerCharacter: None,
-                 },
-               ~buffer,
-               ~base="",
-               ~location,
-               ~supportsResolve=curr.supportsResolveDetails,
-               ~provider=CompletionProvider.exthost(~handle=curr.handle),
-               ~mapper=msg =>
-               ExtensionProviderMsg(msg)
-             ),
-           )
-      },
-      IntMap.empty,
-      candidateProviders,
-    );
+  let sessions =
+    model.providers
+    |> List.filter_map((curr: provider) => {
+         Session.create(
+           ~trigger=
+             Exthost.CompletionContext.{
+               triggerKind: Invoke,
+               triggerCharacter: None,
+             },
+           ~triggerCharacters=curr.triggerCharacters,
+           ~buffer,
+           ~base="",
+           ~location,
+           ~supportsResolve=curr.supportsResolveDetails,
+           ~provider=CompletionProvider.exthost(~handle=curr.handle),
+           ~mapper=msg =>
+           ExtensionProviderMsg(msg)
+         )
+       });
 
-  let allItems = recomputeAllItems(handleToSession);
+  let keywordSession =
+    Session.create(
+      ~trigger=
+        Exthost.CompletionContext.{
+          triggerKind: Invoke,
+          triggerCharacter: None,
+        },
+      ~triggerCharacters=[],
+      ~buffer,
+      ~base="",
+      ~location,
+      // Remove from command
+      ~supportsResolve=false,
+      ~provider=CompletionProvider.keyword,
+      ~mapper=msg =>
+      KeywordProviderMsg(msg)
+    )
+    |> Option.map(v => [v])
+    |> Option.value(~default=[]);
+
+  let sessions = keywordSession @ sessions;
+
+  let allItems = recomputeAllItems(sessions);
   let selection =
     Selection.ensureValidFocus(
       ~count=Array.length(allItems),
       model.selection,
     );
 
-  {...model, handleToSession, allItems, selection};
+  {...model, sessions, allItems, selection};
 };
 
 let startCompletion =
     (~startNewSession, ~trigger, ~buffer, ~activeCursor, model) => {
-  let candidateProviders =
-    model.providers
-    |> List.filter(prov =>
-         Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
-       );
+  //invokeCompletion(~buffer, ~activeCursor, model);
+  //model;
 
-  let handleToSession =
-    List.fold_left(
-      (acc: IntMap.t(Session.t), curr: provider) => {
-        let maybeMeet =
-          CompletionMeet.fromBufferPosition(
-            ~triggerCharacters=curr.triggerCharacters,
-            ~position=activeCursor,
-            buffer,
-          );
-
-        switch (maybeMeet) {
-        | None => acc |> IntMap.remove(curr.handle)
-        | Some({base, location, _}) =>
-          acc
-          |> IntMap.update(
-               curr.handle,
-               fun
-               | None => {
-                   startNewSession
-                     ? Some(
-                         Session.create(
-                           ~buffer,
-                           ~trigger,
-                           ~base,
-                           ~location,
-                           ~supportsResolve=curr.supportsResolveDetails,
-                           ~provider=curr.implementation,
-                           ~mapper=msg =>
-                           ExtensionProviderMsg(msg)
-                         ),
-                       )
-                     : None;
-                 }
-               | Some(previous) => {
-                   Session.update(
-                     ~createNew=startNewSession,
-                     ~buffer,
-                     ~base,
-                     ~location,
-                     previous,
-                   );
-                 },
-             )
-        };
-      },
-      model.handleToSession,
-      candidateProviders,
-    );
-
-  let allItems = recomputeAllItems(handleToSession);
+  let sessions =
+    model.sessions
+    |> List.filter_map(previous => {
+         Session.reinvoke(
+           ~createNew=startNewSession,
+           ~buffer,
+           ~activeCursor,
+           previous,
+         )
+       });
+  // TODO: Revisit why this is needed?
+  //  let candidateProviders =
+  //    model.providers
+  //    |> List.filter(prov =>
+  //         Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
+  //       );
+  //
+  //  let handleToSession =
+  //    List.fold_left(
+  //      (acc: IntMap.t(Session.t), curr: provider) => {
+  //        let maybeMeet =
+  //          CompletionMeet.fromBufferPosition(
+  //            ~triggerCharacters=curr.triggerCharacters,
+  //            ~position=activeCursor,
+  //            buffer,
+  //          );
+  //
+  //        switch (maybeMeet) {
+  //        | None => acc |> IntMap.remove(curr.handle)
+  //        | Some({base, location, _}) =>
+  //          acc
+  //          |> IntMap.update(
+  //               curr.handle,
+  //               fun
+  //               | None => {
+  //                   startNewSession
+  //                     ?
+  //                         Session.create(
+  //                           ~buffer,
+  //                           ~trigger,
+  //                           ~base,
+  //                           ~location,
+  //                           ~supportsResolve=curr.supportsResolveDetails,
+  //                           ~provider=curr.implementation,
+  //                           ~mapper=msg =>
+  //                           ExtensionProviderMsg(msg)
+  //                         )
+  //                         : None
+  //                 }
+  //               | Some(previous) => {
+  //                   Session.update(
+  //                     ~createNew=startNewSession,
+  //                     ~buffer,
+  //                     ~base,
+  //                     ~location,
+  //                     previous,
+  //                   );
+  //                 },
+  //             )
+  //        };
+  //      },
+  //      model.handleToSession,
+  //      candidateProviders,
+  //    );
+  //
+  let allItems = recomputeAllItems(sessions);
   let selection =
     Selection.ensureValidFocus(
       ~count=Array.length(allItems),
       model.selection,
     );
-
-  {...model, handleToSession, allItems, selection};
+  //
+  {...model, sessions, allItems, selection};
 };
 
 let bufferUpdated =
     (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
   let quickSuggestionsSetting = Configuration.quickSuggestions.get(config);
 
-  let anySessionsActive =
-    model.handleToSession
-    |> IntMap.exists((_key, session) => session |> Session.isActive);
+  let anySessionsActive = model.sessions |> List.exists(Session.isActive);
 
   let trigger =
     Exthost.CompletionContext.{
@@ -668,53 +686,50 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
       switch (model.selection) {
       | None => default
       | Some(focusedIndex) =>
-        let result: Filter.result(CompletionItem.t) = allItems[focusedIndex];
+        let (
+          location: CharacterPosition.t,
+          result: Filter.result(CompletionItem.t),
+        ) = allItems[focusedIndex];
 
-        let handle = result.item.handle;
+        let meetColumn =
+          Exthost.SuggestItem.(
+            switch (result.item.suggestRange) {
+            | Some(SuggestRange.Single({startColumn, _})) =>
+              startColumn - 1 |> CharacterIndex.ofInt
+            | Some(SuggestRange.Combo({insert, _})) =>
+              Exthost.OneBasedRange.(
+                insert.startColumn - 1 |> CharacterIndex.ofInt
+              )
+            | None => location.character
+            }
+          );
 
-        getMeetLocation(~handle, model)
-        |> Option.map((location: EditorCoreTypes.CharacterPosition.t) => {
-             let meetColumn =
-               Exthost.SuggestItem.(
-                 switch (result.item.suggestRange) {
-                 | Some(SuggestRange.Single({startColumn, _})) =>
-                   startColumn - 1 |> CharacterIndex.ofInt
-                 | Some(SuggestRange.Combo({insert, _})) =>
-                   Exthost.OneBasedRange.(
-                     insert.startColumn - 1 |> CharacterIndex.ofInt
-                   )
-                 | None => location.character
-                 }
-               );
+        let effect =
+          Exthost.SuggestItem.InsertTextRules.(
+            matches(~rule=InsertAsSnippet, result.item.insertTextRules)
+          )
+            ? Outmsg.InsertSnippet({
+                meetColumn,
+                snippet: result.item.insertText,
+              })
+            : Outmsg.ApplyCompletion({
+                meetColumn,
+                insertText: result.item.insertText,
+              });
 
-             let effect =
-               Exthost.SuggestItem.InsertTextRules.(
-                 matches(~rule=InsertAsSnippet, result.item.insertTextRules)
-               )
-                 ? Outmsg.InsertSnippet({
-                     meetColumn,
-                     snippet: result.item.insertText,
-                   })
-                 : Outmsg.ApplyCompletion({
-                     meetColumn,
-                     insertText: result.item.insertText,
-                   });
-
-             (
-               {
-                 ...model,
-                 handleToSession:
-                   IntMap.map(
-                     session => {session |> Session.complete},
-                     model.handleToSession,
-                   ),
-                 allItems: [||],
-                 selection: None,
-               },
-               effect,
-             );
-           })
-        |> Option.value(~default);
+        (
+          {
+            ...model,
+            sessions:
+              List.map(
+                session => {session |> Session.complete},
+                model.sessions,
+              ),
+            allItems: [||],
+            selection: None,
+          },
+          effect,
+        );
       };
     };
 
@@ -731,6 +746,8 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
       {...model, selection: Selection.focusPrevious(~count, model.selection)},
       Nothing,
     );
+
+  | KeywordProviderMsg(_) => (model, Nothing)
 
   | ExtensionProviderMsg(_) => (model, Nothing)
   //  | CompletionResultAvailable({handle, suggestResult}) =>
@@ -789,14 +806,12 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
 
 let sub = (~client, model) => {
   // Subs for each pending handle..
-  model.handleToSession
-  |> IntMap.bindings
-  |> List.map(((_handle: int, meet: Session.t)) => {
+  model.sessions
+  |> List.map((meet: Session.t) => {
        // TODO: Selected item for sub
        Session.sub(~selectedItem=None, meet)
      })
-  |> Isolinear.Sub.batch//         Service_Exthost.Sub.completionItems(
-                        //           // TODO: proper trigger kind
+  |> Isolinear.Sub.batch//           // TODO: proper trigger kind
                         //           ~context=
                         //             Exthost.CompletionContext.{
                         //               triggerKind: Invoke,
@@ -849,7 +864,7 @@ let sub = (~client, model) => {
                         //       })
                         //    |> Option.value(~default=Isolinear.Sub.none);
                         //
-                        ;
+                        ; //         Service_Exthost.Sub.completionItems(
                         //  [resolveSub, ...handleSubs] |> Isolinear.Sub.batch;
 };
 
@@ -1239,7 +1254,7 @@ module View = {
     let maxWidth =
       items
       |> Array.fold_left(
-           (maxWidth, this: Filter.result(CompletionItem.t)) => {
+           (maxWidth, (_loc, this: Filter.result(CompletionItem.t))) => {
              let textWidth =
                Service_Font.measure(~text=this.item.label, editorFont);
              let thisWidth =
@@ -1256,7 +1271,7 @@ module View = {
     let detail =
       switch (focused) {
       | Some(index) =>
-        let focused: Filter.result(CompletionItem.t) = items[index];
+        let focused: Filter.result(CompletionItem.t) = items[index] |> snd;
         switch (focused.item.detail) {
         | Some(text) =>
           <detailView text width lineHeight colors tokenTheme editorFont />
@@ -1276,7 +1291,7 @@ module View = {
             theme
             focused>
             ...{index => {
-              let Filter.{highlight, item} = items[index];
+              let Filter.{highlight, item} = items[index] |> snd;
               let CompletionItem.{label: text, kind, _} = item;
               <itemView
                 isFocused={Some(index) == focused}
