@@ -18,7 +18,14 @@ module type S = {
   let items: model => result(list(CompletionItem.t), string);
 
   let sub:
-    (~selectedItem: option(CompletionItem.t), model) => Isolinear.Sub.t(msg);
+    (
+      ~client: Exthost.Client.t,
+      ~position: CharacterPosition.t,
+      ~buffer: Oni_Core.Buffer.t,
+      ~selectedItem: option(CompletionItem.t),
+      model
+    ) =>
+    Isolinear.Sub.t(msg);
 };
 
 type provider('model, 'msg) = (module S with
@@ -38,6 +45,10 @@ type exthostMsg =
   | DetailsError({
       handle: int,
       errorMsg: string,
+    })
+  | ResultError({
+      handle: int,
+      errorMsg: string,
     });
 
 module ExthostCompletionProvider =
@@ -49,8 +60,10 @@ module ExthostCompletionProvider =
   type msg = exthostMsg;
   type model = exthostModel;
 
-  let create = (~trigger as _, ~buffer as _, ~base as _, ~location as _) =>
-    None;
+  let create = (~trigger as _, ~buffer as _, ~base as _, ~location as _) => {
+    // TODO: Check if meet is valid?
+    Some(Ok([]));
+  };
 
   let update = (~isFuzzyMatching, msg, model) =>
     switch (msg) {
@@ -80,12 +93,38 @@ module ExthostCompletionProvider =
          })
     | DetailsError({handle, errorMsg}) when handle == providerHandle =>
       Error(errorMsg)
+    | ResultError({handle, errorMsg}) when handle == providerHandle =>
+      Error(errorMsg)
     | _ => model
     };
 
   let items = model => model;
 
-  let sub = (~selectedItem as _, _model) => Isolinear.Sub.none;
+  let sub = (~client, ~position, ~buffer, ~selectedItem as _, model) => {
+    prerr_endline("SUB!");
+    Service_Exthost.Sub.completionItems(
+      // TODO: proper trigger kind
+      ~context=
+        Exthost.CompletionContext.{
+          triggerKind: Invoke,
+          triggerCharacter: None,
+        },
+      ~handle=providerHandle,
+      ~buffer,
+      ~position,
+      ~toMsg=
+        suggestResult => {
+          switch (suggestResult) {
+          | Ok(v) =>
+            prerr_endline("RESULT: " ++ Exthost.SuggestResult.show(v));
+            ResultAvailable({handle: providerHandle, result: v});
+          | Error(errorMsg) =>
+            ResultError({handle: providerHandle, errorMsg})
+          }
+        },
+      client,
+    );
+  };
 };
 let exthost: (~handle: int) => provider(exthostModel, exthostMsg) =
   (~handle: int) => {
@@ -124,7 +163,7 @@ module KeywordCompletionProvider =
         ~languageConfiguration=Oni_Core.LanguageConfiguration.default,
         ~buffer,
       );
-    keywords |> List.iter(key => prerr_endline("KEYWORD: " ++ key));
+    //    keywords |> List.iter(key => prerr_endline("KEYWORD: " ++ key));
 
     let keywords =
       keywords
@@ -139,7 +178,8 @@ module KeywordCompletionProvider =
 
   let items = model => Ok(model);
 
-  let sub = (~selectedItem as _, _model) => Isolinear.Sub.none;
+  let sub =
+      (~client as _, ~position as _, ~buffer as _, ~selectedItem as _, _model) => Isolinear.Sub.none;
 };
 
 let keyword: provider(keywordModel, keywordMsg) = {

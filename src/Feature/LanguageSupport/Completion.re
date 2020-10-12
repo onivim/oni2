@@ -11,10 +11,14 @@ type command =
   | TriggerSuggest;
 
 [@deriving show]
+type providerMsg =
+  | Exthost(CompletionProvider.exthostMsg)
+  | Keyword(CompletionProvider.keywordMsg);
+
+[@deriving show]
 type msg =
   | Command(command)
-  | ExtensionProviderMsg(CompletionProvider.exthostMsg)
-  | KeywordProviderMsg(CompletionProvider.keywordMsg);
+  | Provider(providerMsg);
 //  | CompletionResultAvailable({
 //      handle: int,
 //      suggestResult: Exthost.SuggestResult.t,
@@ -161,7 +165,8 @@ module Session = {
     location: EditorCoreTypes.CharacterPosition.t,
     provider: [@opaque] CompletionProvider.provider('model, 'msg),
     providerModel: option('model),
-    providerMapper: 'msg => msg,
+    providerMapper: 'msg => providerMsg,
+    revMapper: providerMsg => option('msg),
     supportsResolve: bool,
   };
 
@@ -211,14 +216,57 @@ module Session = {
         };
       };
 
-  let sub = (~selectedItem) =>
+  let update = msg =>
     fun
-    | Session({providerModel, provider, providerMapper, _}) => {
+    | Session(
+        {provider, providerModel, revMapper, base, state, _} as session,
+      ) => {
+        revMapper(msg)
+        |> Option.map(internalMsg => {
+             let (module ProviderImpl) = provider;
+             let isFuzzyMatching = base != "";
+             let providerModel' =
+               providerModel
+               |> Option.map(
+                    ProviderImpl.update(~isFuzzyMatching, internalMsg),
+                  );
+
+             let state' =
+               providerModel'
+               |> Option.map(model => {
+                    switch (model |> ProviderImpl.items) {
+                    | Error(msg) => Failure(msg)
+                    | Ok([]) => state
+                    | Ok(items) =>
+                      let filteredItems = filter(~query=base, items);
+                      Completed({filteredItems, allItems: items});
+                    }
+                  })
+               |> Option.value(~default=state);
+
+             Session({
+               ...session,
+               state: state',
+               providerModel: providerModel',
+             });
+           })
+        |> Option.value(~default=Session(session));
+      };
+
+  let sub = (~selectedItem, ~client) =>
+    fun
+    | Session({providerModel, provider, providerMapper, location, buffer, _}) => {
         let (module ProviderImpl) = provider;
         providerModel
         |> Option.map(model => {
-             ProviderImpl.sub(~selectedItem, model)
-             |> Isolinear.Sub.map(providerMapper)
+             ProviderImpl.sub(
+               ~client,
+               ~buffer,
+               ~position=location,
+               ~selectedItem,
+               model,
+             )
+             |> Isolinear.Sub.map(msg => Provider(providerMapper(msg)))
            })
         |> Option.value(~default=Isolinear.Sub.none);
       };
@@ -237,7 +285,8 @@ module Session = {
   let create =
       (
         ~provider: CompletionProvider.provider('model, 'msg),
-        ~mapper: 'msg => msg,
+        ~mapper: 'msg => providerMsg,
+        ~revMapper: providerMsg => option('msg),
         ~triggerCharacters,
         ~trigger,
         ~buffer,
@@ -257,6 +306,7 @@ module Session = {
         provider,
         providerModel: None,
         providerMapper: mapper,
+        revMapper,
       });
 
     switch (candidate) {
@@ -312,30 +362,32 @@ module Session = {
           );
 
         maybeMeet
-        |> OptionEx.flatMap(({base, location, _}: CompletionMeet.t) =>
+        |> OptionEx.flatMap(({base, location, _}: CompletionMeet.t)
              // If different buffer or location... start over!
-             if (Oni_Core.Buffer.getId(buffer)
-                 != Oni_Core.Buffer.getId(previous.buffer)
-                 || location != previous.location) {
-               if (createNew) {
-                 create(
-                   ~trigger=previous.trigger,
-                   ~triggerCharacters=previous.triggerCharacters,
-                   ~buffer,
-                   ~base,
-                   ~location,
-                   ~supportsResolve=previous.supportsResolve,
-                   ~provider=previous.provider,
-                   ~mapper=previous.providerMapper,
-                 );
+             =>
+               if (Oni_Core.Buffer.getId(buffer)
+                   != Oni_Core.Buffer.getId(previous.buffer)
+                   || location != previous.location) {
+                 if (createNew) {
+                   create(
+                     ~trigger=previous.trigger,
+                     ~triggerCharacters=previous.triggerCharacters,
+                     ~buffer,
+                     ~base,
+                     ~location,
+                     ~supportsResolve=previous.supportsResolve,
+                     ~provider=previous.provider,
+                     ~mapper=previous.providerMapper,
+                     ~revMapper=previous.revMapper,
+                   );
+                 } else {
+                   None;
+                 };
                } else {
-                 None;
-               };
-             } else {
-               // Refine results
-               Some(refine(~base, Session(previous)));
-             }
-           );
+                 // Refine results
+                 Some(refine(~base, Session(previous)));
+               }
+             );
       };
 };
 
@@ -509,12 +561,15 @@ let invokeCompletion = (~buffer, ~activeCursor, model) => {
            ~location,
            ~supportsResolve=curr.supportsResolveDetails,
            ~provider=CompletionProvider.exthost(~handle=curr.handle),
-           ~mapper=msg =>
-           ExtensionProviderMsg(msg)
+           ~mapper=msg => Exthost(msg),
+           ~revMapper=
+             fun
+             | Exthost(msg) => Some(msg)
+             | _ => None,
          )
        });
 
-  let keywordSession =
+  let _keywordSession =
     Session.create(
       ~trigger=
         Exthost.CompletionContext.{
@@ -528,13 +583,16 @@ let invokeCompletion = (~buffer, ~activeCursor, model) => {
       // Remove from command
       ~supportsResolve=false,
       ~provider=CompletionProvider.keyword,
-      ~mapper=msg =>
-      KeywordProviderMsg(msg)
+      ~mapper=msg => Keyword(msg),
+      ~revMapper=
+        fun
+        | Keyword(msg) => Some(msg)
+        | _ => None,
     )
     |> Option.map(v => [v])
     |> Option.value(~default=[]);
 
-  let sessions = keywordSession @ sessions;
+  //let sessions = keywordSession @ sessions;
 
   let allItems = recomputeAllItems(sessions);
   let selection =
@@ -668,6 +726,7 @@ let bufferUpdated =
 };
 
 let update = (~maybeBuffer, ~activeCursor, msg, model) => {
+  prerr_endline("MSG: " ++ show_msg(msg));
   let default = (model, Outmsg.Nothing);
   switch (msg) {
   | Command(TriggerSuggest) =>
@@ -747,9 +806,16 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
       Nothing,
     );
 
-  | KeywordProviderMsg(_) => (model, Nothing)
-
-  | ExtensionProviderMsg(_) => (model, Nothing)
+  | Provider(msg) =>
+    let sessions =
+      model.sessions |> List.map(session => Session.update(msg, session));
+    let allItems = recomputeAllItems(sessions);
+    let selection =
+      Selection.ensureValidFocus(
+        ~count=Array.length(allItems),
+        model.selection,
+      );
+    ({...model, sessions, allItems, selection}, Nothing);
   //  | CompletionResultAvailable({handle, suggestResult}) =>
   //    let handleToSession =
   //      IntMap.update(
@@ -806,13 +872,14 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
 
 let sub = (~client, model) => {
   // Subs for each pending handle..
+  prerr_endline(" -- sub");
   model.sessions
   |> List.map((meet: Session.t) => {
        // TODO: Selected item for sub
-       Session.sub(~selectedItem=None, meet)
+       prerr_endline(" --- running a sub!");
+       Session.sub(~client, ~selectedItem=None, meet);
      })
-  |> Isolinear.Sub.batch//           // TODO: proper trigger kind
-                        //           ~context=
+  |> Isolinear.Sub.batch//           ~context=
                         //             Exthost.CompletionContext.{
                         //               triggerKind: Invoke,
                         //               triggerCharacter: None,
@@ -862,10 +929,11 @@ let sub = (~client, model) => {
                         //              }
                         //            );
                         //       })
+                        ; //           // TODO: proper trigger kind
                         //    |> Option.value(~default=Isolinear.Sub.none);
-                        //
-                        ; //         Service_Exthost.Sub.completionItems(
-                        //  [resolveSub, ...handleSubs] |> Isolinear.Sub.batch;
+ //         Service_Exthost.Sub.completionItems(
+  //
+  //  [resolveSub, ...handleSubs] |> Isolinear.Sub.batch;
 };
 
 // COMMANDS
