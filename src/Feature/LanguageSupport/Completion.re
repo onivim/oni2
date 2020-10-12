@@ -147,6 +147,8 @@ module Session = {
   type state =
     | Waiting
     | Completed({
+        base: string,
+        location: CharacterPosition.t,
         allItems: list(CompletionItem.t),
         filteredItems: [@opaque] list(Filter.result(CompletionItem.t)),
       })
@@ -175,11 +177,20 @@ module Session = {
 
   let location =
     fun
-    | Session({location, _}) => location;
+    | Session({state, _}) =>switch (state) {
+    | Completed({location, _}) => Some(location)
+    | _ => None
+    };
 
-  let base =
-    fun
-    | Session({base, _}) => base;
+  let handle = fun
+  | Session({provider, _}) => {
+    let (module ProviderImpl) = provider;
+    ProviderImpl.handle
+  };
+
+//  let base =
+//    fun
+//    | Session({base, _}) => base;
 
   let complete =
     fun
@@ -212,7 +223,8 @@ module Session = {
         | Accepted => []
         | Waiting => []
         | Failure(_) => []
-        | Completed({filteredItems, _}) => filteredItems
+        | Completed({filteredItems, location, _}) => filteredItems
+        |> List.map(item => (location, item));
         };
       };
 
@@ -239,7 +251,7 @@ module Session = {
                     | Ok([]) => state
                     | Ok(items) =>
                       let filteredItems = filter(~query=base, items);
-                      Completed({filteredItems, allItems: items});
+                      Completed({base, location, filteredItems, allItems: items});
                     }
                   })
                |> Option.value(~default=state);
@@ -273,8 +285,8 @@ module Session = {
 
   let isActive =
     fun
-    | Session({state, _}) => {
-        switch (state) {
+    | Session({state, providerModel, _}) => {
+        Option.is_some(providerModel) && switch (state) {
         | Accepted => false
         | Waiting => true
         | Failure(_) => false
@@ -288,29 +300,82 @@ module Session = {
         ~mapper: 'msg => providerMsg,
         ~revMapper: providerMsg => option('msg),
         ~triggerCharacters,
-        ~trigger,
-        ~buffer,
-        ~base,
-        ~location,
-        ~supportsResolve,
+//        ~trigger,
+//        ~buffer,
+//        ~base,
+//        ~location,
+//        ~supportsResolve,
       ) => {
-    let candidate =
       Session({
-        trigger,
+//        trigger,
         triggerCharacters,
         state: Waiting,
-        buffer,
-        base,
-        location,
-        supportsResolve,
+//        buffer,
+//        base,
+//        location,
+//        supportsResolve,
         provider,
         providerModel: None,
         providerMapper: mapper,
         revMapper,
       });
+    };
 
-    switch (candidate) {
-    | Session({provider, _} as session) =>
+//    switch (candidate) {
+//    | Session({provider, _} as session) =>
+//      let (module ProviderImpl) = provider;
+//      let maybeModel =
+//        ProviderImpl.create(~base, ~trigger, ~buffer, ~location);
+//      maybeModel
+//      |> Option.map(model => {
+//           let items = ProviderImpl.items(model);
+//           let state =
+//             switch (items) {
+//             | Ok([]) => Waiting
+//             | Ok(items) =>
+//               Completed({
+//                 allItems: items,
+//                 filteredItems: filter(~query=base, items),
+//               })
+//             | Error(msg) => Failure(msg)
+//             };
+//
+//           Session({...session, state, providerModel: Some(model)});
+//         })
+//       |> Option.value(~default=candidate);
+//    };
+//  };
+
+  let refine = (~base) =>
+    fun
+    | Session(current) => {
+        let state' =
+          switch (current.state) {
+          | Accepted => Accepted
+          | Waiting => Waiting
+          | Failure(_) as failure => failure
+          | Completed({allItems, _} as prev) =>
+            Completed({
+              ...prev,
+              filteredItems: filter(~query=base, allItems),
+            })
+          };
+
+        Session({...current, base, state: state'});
+      };
+
+     let refine2 = (~buffer, ~position) => {
+        
+        let maybeMeet =
+          CompletionMeet.fromBufferPosition(
+            ~triggerCharacters=previous.triggerCharacters,
+            ~position=activeCursor,
+            buffer,
+          );
+     };
+
+    let tryInvoke = (~base, ~trigger, ~buffer, ~location) => fun
+    | Session({provider, _} as session) as original => {
       let (module ProviderImpl) = provider;
       let maybeModel =
         ProviderImpl.create(~base, ~trigger, ~buffer, ~location);
@@ -322,6 +387,8 @@ module Session = {
              | Ok([]) => Waiting
              | Ok(items) =>
                Completed({
+                 base,
+                 location,
                  allItems: items,
                  filteredItems: filter(~query=base, items),
                })
@@ -329,31 +396,13 @@ module Session = {
              };
 
            Session({...session, state, providerModel: Some(model)});
-         });
-    };
-  };
+         })
+       |> Option.value(~default=original);
+        };
 
-  let refine = (~base) =>
+  let reinvoke = (~buffer, ~activeCursor) =>
     fun
-    | Session(current) => {
-        let state' =
-          switch (current.state) {
-          | Accepted => Accepted
-          | Waiting => Waiting
-          | Failure(_) as failure => failure
-          | Completed({allItems, _}) =>
-            Completed({
-              allItems,
-              filteredItems: filter(~query=base, allItems),
-            })
-          };
-
-        Session({...current, base, state: state'});
-      };
-
-  let reinvoke = (~createNew, ~buffer, ~activeCursor) =>
-    fun
-    | Session(previous) => {
+    | Session(previous) as model => {
         let maybeMeet =
           CompletionMeet.fromBufferPosition(
             ~triggerCharacters=previous.triggerCharacters,
@@ -365,29 +414,22 @@ module Session = {
         |> OptionEx.flatMap(({base, location, _}: CompletionMeet.t)
              // If different buffer or location... start over!
              =>
-               if (Oni_Core.Buffer.getId(buffer)
-                   != Oni_Core.Buffer.getId(previous.buffer)
-                   || location != previous.location) {
-                 if (createNew) {
-                   create(
-                     ~trigger=previous.trigger,
-                     ~triggerCharacters=previous.triggerCharacters,
-                     ~buffer,
-                     ~base,
-                     ~location,
-                     ~supportsResolve=previous.supportsResolve,
-                     ~provider=previous.provider,
-                     ~mapper=previous.providerMapper,
-                     ~revMapper=previous.revMapper,
-                   );
-                 } else {
-                   None;
-                 };
-               } else {
-                 // Refine results
-                 Some(refine(~base, Session(previous)));
-               }
-             );
+                switch (previous.state) {
+                | Completed({location, buffer, _}) => {
+                   if (Oni_Core.Buffer.getId(buffer)
+                       != Oni_Core.Buffer.getId(previous.buffer)
+                       || location != previous.location) {
+                        // try to complete
+                        tryInvoke(~base, ~location, model);
+                    } else {
+                        // The base and location are the same
+                        // Just refine existing query
+                        refine(~base, model);
+                    }
+                }
+                | _incomplete => tryInvoke(model)
+                })
+        |> Option.value(~default=model)
       };
 };
 
@@ -423,7 +465,18 @@ type model = {
 };
 
 let initial = {
-  sessions: [],
+  sessions: [
+    Session.create(
+      ~triggerCharacters=[],
+      // Remove from command
+      ~provider=CompletionProvider.keyword,
+      ~mapper=msg => Keyword(msg),
+      ~revMapper=
+        fun
+        | Keyword(msg) => Some(msg)
+        | _ => None,
+    )
+  ],
   providers: [],
   allItems: [||],
   selection: Selection.initial,
@@ -435,10 +488,8 @@ let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
 let recomputeAllItems = (sessions: list(Session.t)) => {
   sessions
   |> List.map(session => {
-       let meetLocation = Session.location(session);
        session
        |> Session.filteredItems
-       |> List.map(item => (meetLocation, item));
      })
   |> List.flatten
   |> List.fast_sort(((_loc, a), (_loc, b)) =>
@@ -526,16 +577,39 @@ let register =
       triggerCharacters: Internal.stringsToUchars(triggerCharacters),
       supportsResolveDetails,
       extensionId,
-      implementation: CompletionProvider.exthost(~handle),
+      implementation: CompletionProvider.exthost(~handle, ~selector),
     },
     ...model.providers,
-  ],
+   ],
+   sessions: [
+         Session.create(
+           ~triggerCharacters=triggerCharacters,
+           ~provider=CompletionProvider.exthost(~selector, ~handle),
+           ~mapper=msg => Exthost(msg),
+           ~revMapper=
+             fun
+             | Exthost(msg) => Some(msg)
+             | _ => None,
+         ),
+         ...model.sessions,
+   ],
 };
 
 let unregister = (~handle, model) => {
   ...model,
   providers: List.filter(prov => prov.handle != handle, model.providers),
+  sessions: List.filter(session => Session.handle(session) != Some(handle), model.sessions),
 };
+
+let updateSessions = (sessions, model) => {
+  let allItems = recomputeAllItems(sessions);
+  let selection =
+    Selection.ensureValidFocus(
+      ~count=Array.length(allItems),
+      model.selection,
+    );
+    {...model, sessions, allItems, selection};
+}
 
 let invokeCompletion = (~buffer, ~activeCursor, model) => {
   //  let candidateProviders =
@@ -548,19 +622,19 @@ let invokeCompletion = (~buffer, ~activeCursor, model) => {
 
   let sessions =
     model.providers
-    |> List.filter_map((curr: provider) => {
+    |> List.map((curr: provider) => {
          Session.create(
-           ~trigger=
-             Exthost.CompletionContext.{
-               triggerKind: Invoke,
-               triggerCharacter: None,
-             },
+//           ~trigger=
+//             Exthost.CompletionContext.{
+//               triggerKind: Invoke,
+//               triggerCharacter: None,
+//             },
            ~triggerCharacters=curr.triggerCharacters,
-           ~buffer,
-           ~base="",
-           ~location,
-           ~supportsResolve=curr.supportsResolveDetails,
-           ~provider=CompletionProvider.exthost(~handle=curr.handle),
+//           ~buffer,
+//           ~base="",
+//           ~location,
+//           ~supportsResolve=curr.supportsResolveDetails,
+           ~provider=CompletionProvider.exthost(~selector=curr.selector, ~handle=curr.handle),
            ~mapper=msg => Exthost(msg),
            ~revMapper=
              fun
@@ -571,28 +645,26 @@ let invokeCompletion = (~buffer, ~activeCursor, model) => {
 
   let _keywordSession =
     Session.create(
-      ~trigger=
-        Exthost.CompletionContext.{
-          triggerKind: Invoke,
-          triggerCharacter: None,
-        },
+//      ~trigger=
+//        Exthost.CompletionContext.{
+//          triggerKind: Invoke,
+//          triggerCharacter: None,
+//        },
       ~triggerCharacters=[],
-      ~buffer,
-      ~base="",
-      ~location,
+//      ~buffer,
+//      ~base="",
+//      ~location,
       // Remove from command
-      ~supportsResolve=false,
+//      ~supportsResolve=false,
       ~provider=CompletionProvider.keyword,
       ~mapper=msg => Keyword(msg),
       ~revMapper=
         fun
         | Keyword(msg) => Some(msg)
         | _ => None,
-    )
-    |> Option.map(v => [v])
-    |> Option.value(~default=[]);
-
-  //let sessions = keywordSession @ sessions;
+    );
+//    |> Option.map(v => [v])
+//    |> Option.value(~default=[]);
 
   let allItems = recomputeAllItems(sessions);
   let selection =
@@ -609,16 +681,15 @@ let startCompletion =
   //invokeCompletion(~buffer, ~activeCursor, model);
   //model;
 
-  let sessions =
     model.sessions
-    |> List.filter_map(previous => {
+    |> List.map(previous => {
          Session.reinvoke(
-           ~createNew=startNewSession,
            ~buffer,
            ~activeCursor,
            previous,
          )
-       });
+       })
+    |> updateSessions;
   // TODO: Revisit why this is needed?
   //  let candidateProviders =
   //    model.providers
@@ -684,6 +755,12 @@ let startCompletion =
   {...model, sessions, allItems, selection};
 };
 
+let refine = (~buffer, ~position, model) => {
+    model.sessions
+    List.map(Session.refine(~buffer, ~position))
+    |> updateSessions;
+}
+
 let bufferUpdated =
     (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
   let quickSuggestionsSetting = Configuration.quickSuggestions.get(config);
@@ -704,9 +781,8 @@ let bufferUpdated =
     // If we already had started a session (ie, manually triggered) -
     // make sure to continue, even if suggestions are off
     if (anySessionsActive) {
-      startCompletion(
+      refine(
         ~trigger,
-        ~startNewSession=false,
         ~buffer,
         ~activeCursor,
         model,
@@ -715,9 +791,7 @@ let bufferUpdated =
       model;
     };
   } else {
-    startCompletion(
-      ~trigger,
-      ~startNewSession=true,
+    invokeCompletion(
       ~buffer,
       ~activeCursor,
       model,
@@ -875,13 +949,10 @@ let sub = (~client, model) => {
   prerr_endline(" -- sub");
   model.sessions
   |> List.map((meet: Session.t) => {
-       // TODO: Selected item for sub
-       prerr_endline(" --- running a sub!");
        Session.sub(~client, ~selectedItem=None, meet);
      })
-  |> Isolinear.Sub.batch//           ~context=
-                        //             Exthost.CompletionContext.{
-                        //               triggerKind: Invoke,
+  |> Isolinear.Sub.batch
+
                         //               triggerCharacter: None,
                         //             },
                         //           ~handle,
@@ -927,11 +998,13 @@ let sub = (~client, model) => {
                         //              } else {
                         //                None;
                         //              }
+                        ; //             Exthost.CompletionContext.{
                         //            );
-                        //       })
-                        ; //           // TODO: proper trigger kind
-                        //    |> Option.value(~default=Isolinear.Sub.none);
- //         Service_Exthost.Sub.completionItems(
+ //           ~context=
+  //       })
+  //           // TODO: proper trigger kind
+  //    |> Option.value(~default=Isolinear.Sub.none);
+  //         Service_Exthost.Sub.completionItems(
   //
   //  [resolveSub, ...handleSubs] |> Isolinear.Sub.batch;
 };

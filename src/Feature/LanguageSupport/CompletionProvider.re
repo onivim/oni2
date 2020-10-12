@@ -17,6 +17,8 @@ module type S = {
 
   let items: model => result(list(CompletionItem.t), string);
 
+  let handle: unit => option(int);
+
   let sub:
     (
       ~client: Exthost.Client.t,
@@ -52,7 +54,10 @@ type exthostMsg =
     });
 
 module ExthostCompletionProvider =
-       (Config: {let handle: int;})
+       (Config: {
+       let handle: int;
+       let selector: Exthost.DocumentSelector.t;
+       })
        : (S with type model = exthostModel and type msg = exthostMsg) => {
   // Functor-supplied details
   let providerHandle = Config.handle;
@@ -60,10 +65,16 @@ module ExthostCompletionProvider =
   type msg = exthostMsg;
   type model = exthostModel;
 
-  let create = (~trigger as _, ~buffer as _, ~base as _, ~location as _) => {
+  let create = (~trigger as _, ~buffer, ~base as _, ~location as _) => {
     // TODO: Check if meet is valid?
-    Some(Ok([]));
+    if (Exthost.DocumentSelector.matchesBuffer(~buffer, Config.selector)) {
+        None
+    } else {
+        Some(Ok([]));
+    }
   };
+
+  let handle = () => Some(providerHandle);
 
   let update = (~isFuzzyMatching, msg, model) =>
     switch (msg) {
@@ -126,13 +137,14 @@ module ExthostCompletionProvider =
     );
   };
 };
-let exthost: (~handle: int) => provider(exthostModel, exthostMsg) =
-  (~handle: int) => {
+let exthost: (~selector: Exthost.DocumentSelector.t, ~handle: int) => provider(exthostModel, exthostMsg) =
+  (~selector, ~handle) => {
     let provider:
       module S with type model = exthostModel and type msg = exthostMsg =
       (module
        ExthostCompletionProvider({
          let handle = handle;
+         let selector = selector;
        }));
     provider;
   };
@@ -146,6 +158,8 @@ module KeywordCompletionProvider =
        : (S with type msg = keywordMsg and type model = keywordModel) => {
   type msg = keywordMsg;
   type model = keywordModel;
+
+  let handle = () => None;
 
   let create =
       (
