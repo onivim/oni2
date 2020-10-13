@@ -5,19 +5,64 @@ open TestFramework;
 module Buffer = Oni_Core.Buffer;
 module Editor = Feature_Editor.Editor;
 module EditorBuffer = Feature_Editor.EditorBuffer;
+module WrapMode = Editor.WrapMode;
 
 open Oni_Core_Test.Helpers;
 
 describe("Editor", ({describe, _}) => {
   let config = (~vimSetting as _, _key) => Config.NotSet;
 
-  let create = lines => {
+  let create = (~wrapMode=WrapMode.NoWrap, lines) => {
     let buffer = lines |> Buffer.ofLines(~font=Font.default());
 
     let editorBuffer = buffer |> EditorBuffer.ofBuffer;
 
-    (Editor.create(~config, ~buffer=editorBuffer, ()), buffer);
+    (Editor.create(~wrapMode, ~config, ~buffer=editorBuffer, ()), buffer);
   };
+
+  let bytePos = (lnum, byteNum) =>
+    BytePosition.{
+      line: LineNumber.ofZeroBased(lnum),
+      byte: ByteIndex.ofInt(byteNum),
+    };
+
+  describe("bufferLineByteToPixel", ({test, _}) => {
+    let (_editor, measureBuffer) = create([||]);
+    let aWidth = Buffer.measure(Uchar.of_char('a'), measureBuffer);
+    test("first line, byte should be at position (nowrap)", ({expect, _}) => {
+      let (editor, _buffer) = create([|"aaaaaa"|]);
+      let ({x, y}: PixelPosition.t, _) =
+        Editor.bufferBytePositionToPixel(~position=bytePos(0, 0), editor);
+      expect.float(x).toBeCloseTo(0.5);
+      expect.float(y).toBeCloseTo(0.5);
+
+      let ({x, y}: PixelPosition.t, _) =
+        Editor.bufferBytePositionToPixel(~position=bytePos(0, 5), editor);
+      expect.float(x).toBeCloseTo(aWidth *. 5. +. 0.5);
+      expect.float(y).toBeCloseTo(0.5);
+    });
+
+    test("line wraps halfway (fixed: pixels=3a)", ({expect, _}) => {
+      let (editor, _buffer) =
+        create(~wrapMode=WrapMode.Viewport, [|"aaaaaa"|]);
+      let editor =
+        Editor.setSize(
+          ~pixelWidth=int_of_float(3. *. aWidth +. 1.0),
+          ~pixelHeight=500,
+          editor,
+        );
+      let lineHeight = Editor.lineHeightInPixels(editor);
+      let ({x, y}: PixelPosition.t, _) =
+        Editor.bufferBytePositionToPixel(~position=bytePos(0, 0), editor);
+      expect.float(x).toBeCloseTo(0.5);
+      expect.float(y).toBeCloseTo(0.5);
+
+      let ({x, y}: PixelPosition.t, _) =
+        Editor.bufferBytePositionToPixel(~position=bytePos(0, 3), editor);
+      expect.float(x).toBeCloseTo(0.5);
+      expect.float(y).toBeCloseTo(lineHeight +. 0.5);
+    });
+  });
 
   describe("pixelPositionToBytePosition", ({test, _}) => {
     test("~allowPast boundary cases", ({expect, _}) => {

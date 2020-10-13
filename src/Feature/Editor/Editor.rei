@@ -19,9 +19,7 @@ module WrapMode: {
   [@deriving show]
   type t =
     | NoWrap
-    | Viewport
-    | WrapColumn(int)
-    | Bounded(int);
+    | Viewport;
 };
 
 let create:

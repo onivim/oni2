@@ -15,9 +15,7 @@ module WrapMode = {
   [@deriving show]
   type t =
     | NoWrap
-    | Viewport
-    | WrapColumn(int)
-    | Bounded(int);
+    | Viewport;
 };
 
 module WrapState = {
@@ -31,35 +29,17 @@ module WrapState = {
         lastWrapPixels: float,
         [@opaque]
         wrapping: Wrapping.t,
-      })
-    | WrapColumn({
-        wrapColumn: int,
-        [@opaque]
-        wrapping: Wrapping.t,
-      })
-    | Bounded({
-        wrapColumn: int,
-        lastWrapColumn: int,
-        [@opaque]
-        wrapping: Wrapping.t,
       });
 
   let make = (~wrapMode: WrapMode.t, ~buffer) => {
-    let initialWrapping =
-      Wrapping.make(~wrap=WordWrap.fixed(~pixels=100.), ~buffer);
     switch (wrapMode) {
-    | NoWrap => NoWrap({wrapping: initialWrapping})
-    | Viewport => Viewport({lastWrapPixels: 100., wrapping: initialWrapping})
-    | WrapColumn(wrapColumn) =>
-      WrapColumn({
-        wrapColumn,
-        wrapping: Wrapping.make(~wrap=WordWrap.fixed(~pixels=100.), ~buffer),
-      })
-    | Bounded(wrapColumn) =>
-      Bounded({
-        wrapColumn,
-        lastWrapColumn: wrapColumn,
-        wrapping: Wrapping.make(~wrap=WordWrap.fixed(~pixels=100.), ~buffer),
+    | NoWrap =>
+      NoWrap({wrapping: Wrapping.make(~wrap=WordWrap.none, ~buffer)})
+    | Viewport =>
+      Viewport({
+        lastWrapPixels: 1000.,
+        wrapping:
+          Wrapping.make(~wrap=WordWrap.fixed(~pixels=1000.), ~buffer),
       })
     };
   };
@@ -67,26 +47,17 @@ module WrapState = {
   let wrapping =
     fun
     | NoWrap({wrapping}) => wrapping
-    | Viewport({wrapping, _}) => wrapping
-    | WrapColumn({wrapping, _}) => wrapping
-    | Bounded({wrapping, _}) => wrapping;
+    | Viewport({wrapping, _}) => wrapping;
 
   let resize = (~pixelWidth: float, ~buffer, wrapState) => {
     switch (wrapState) {
     // All the cases where we don't need to update wrapping...
     | NoWrap(_) as nowrap => nowrap
-    | WrapColumn(_) as wrapcolumn => wrapcolumn
-    //     | Viewport({lastWrapColumn, _}) as viewport when lastWrapColumn == columns => viewport
-    //     | Bounded({lastWrapColumn, _}) as bounded when lastWrapColumn == columns => bounded
-    // And the cases where we may need to update wrapping
-    | Viewport(_) =>
+    | Viewport({lastWrapPixels, _}) when lastWrapPixels != pixelWidth =>
       let wrapping =
         Wrapping.make(~wrap=WordWrap.fixed(~pixels=pixelWidth), ~buffer);
       Viewport({lastWrapPixels: pixelWidth, wrapping});
-    | Bounded({wrapColumn, _}) =>
-      let wrapping =
-        Wrapping.make(~wrap=WordWrap.fixed(~pixels=pixelWidth), ~buffer);
-      Bounded({wrapColumn, lastWrapColumn: wrapColumn, wrapping});
+    | Viewport(_) as viewport => viewport
     };
   };
 
@@ -94,11 +65,7 @@ module WrapState = {
     fun
     | NoWrap({wrapping}) => NoWrap({wrapping: f(wrapping)})
     | Viewport({wrapping, lastWrapPixels}) =>
-      Viewport({wrapping: f(wrapping), lastWrapPixels})
-    | WrapColumn({wrapping, wrapColumn}) =>
-      WrapColumn({wrapping: f(wrapping), wrapColumn})
-    | Bounded({wrapping, wrapColumn, lastWrapColumn}) =>
-      Bounded({wrapping: f(wrapping), wrapColumn, lastWrapColumn});
+      Viewport({wrapping: f(wrapping), lastWrapPixels});
 
   let update = (~update, ~buffer, wrapState) => {
     wrapState |> map(Wrapping.update(~update, ~newBuffer=buffer));
@@ -288,7 +255,7 @@ let bufferCharacterPositionToPixel =
   };
 };
 
-let create = (~wrapMode=WrapMode.NoWrap, ~config, ~buffer, ()) => {
+let create = (~wrapMode=WrapMode.Viewport, ~config, ~buffer, ()) => {
   let id = GlobalState.generateId();
   let key = Brisk_reconciler.Key.create();
 
