@@ -245,13 +245,15 @@ module Session = {
     fun
     | Session({state, _}) => {
         switch (state) {
-        | NotStarted => []
-        | Accepted(_) => []
-        | Pending(_) => []
-        | Failure(_) => []
+        | NotStarted => StringMap.empty
+        | Accepted(_) => StringMap.empty
+        | Pending(_) => StringMap.empty
+        | Failure(_) => StringMap.empty
         | Completed({filteredItems, meet, _}) =>
           filteredItems
-          |> List.map(item => (CompletionMeet.(meet.location), item))
+          |> List.fold_left((acc, item: Filter.result(CompletionItem.t)) => {
+            StringMap.add(item.item.label, (meet.location, item), acc);
+          }, StringMap.empty);
         };
       };
 
@@ -517,8 +519,20 @@ let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
 
 let recomputeAllItems = (sessions: list(Session.t)) => {
   sessions
-  |> List.map(session => {session |> Session.filteredItems})
-  |> List.flatten
+  |> List.fold_left((acc, session) =>
+  {
+      let itemMap = session |> Session.filteredItems;
+      // When we have the same key coming from different providers, need to decide between them
+      StringMap.union((_key, (locA, itemA: Filter.result(CompletionItem.t)), (locB, itemB: Filter.result(CompletionItem.t))) => {
+        if (CompletionItem.prefer(itemA.item, itemB.item) < 0) {
+            Some((locA, itemA))
+        } else {
+            Some((locB, itemB))
+        }
+      }, acc, itemMap);
+  }, StringMap.empty)
+  |> StringMap.bindings
+  |> List.map(snd)
   |> List.fast_sort(((_loc, a), (_loc, b)) =>
        CompletionItemSorter.compare(a, b)
      )
