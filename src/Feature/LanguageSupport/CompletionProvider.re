@@ -10,6 +10,7 @@ module type S = {
 
   let create:
     (
+      ~config: Oni_Core.Config.resolver,
       ~languageConfiguration: LanguageConfiguration.t,
       ~trigger: Exthost.CompletionContext.t,
       ~buffer: Oni_Core.Buffer.t,
@@ -73,6 +74,7 @@ module ExthostCompletionProvider =
 
   let create =
       (
+        ~config as _,
         ~languageConfiguration as _,
         ~trigger as _,
         ~buffer,
@@ -212,6 +214,7 @@ module KeywordCompletionProvider =
 
   let create =
       (
+        ~config,
         ~languageConfiguration: LanguageConfiguration.t,
         ~trigger: Exthost.CompletionContext.t,
         ~buffer,
@@ -222,19 +225,24 @@ module KeywordCompletionProvider =
     ignore(base);
     ignore(location);
 
-    let keywords = Feature_Keywords.keywords(~languageConfiguration, ~buffer);
+    if (!CompletionConfig.wordBasedSuggestions.get(config)) {
+      None;
+    } else {
+      let keywords =
+        Feature_Keywords.keywords(~languageConfiguration, ~buffer);
 
-    let keywords =
-      keywords
-      |> List.mapi((idx, keyword) => {
-           CompletionItem.keyword(
-             ~sortOrder=idx,
-             ~isFuzzyMatching=base != "",
-             keyword,
-           )
-         });
+      let keywords =
+        keywords
+        |> List.mapi((idx, keyword) => {
+             CompletionItem.keyword(
+               ~sortOrder=idx,
+               ~isFuzzyMatching=base != "",
+               keyword,
+             )
+           });
 
-    Some(keywords);
+      Some(keywords);
+    };
   };
 
   let update = (~isFuzzyMatching as _, _msg: msg, model: model) => model;

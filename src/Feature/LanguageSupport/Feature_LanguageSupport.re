@@ -97,6 +97,7 @@ module Msg = {
 
 let update =
     (
+      ~config,
       ~configuration,
       ~languageConfiguration,
       ~maybeSelection,
@@ -219,6 +220,7 @@ let update =
   | Completion(completionMsg) =>
     let (completion', outmsg) =
       Completion.update(
+        ~config,
         ~languageConfiguration,
         ~maybeBuffer,
         ~activeCursor=cursorLocation,

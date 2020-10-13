@@ -339,8 +339,11 @@ let update =
     let characterSelection =
       editor |> Feature_Editor.Editor.byteRangeToCharacterRange(selection);
 
+    let config = Selectors.configResolver(state);
+
     let (languageSupport, outmsg) =
       Feature_LanguageSupport.update(
+        ~config,
         ~languageConfiguration,
         ~configuration=state.configuration,
         ~maybeBuffer,
