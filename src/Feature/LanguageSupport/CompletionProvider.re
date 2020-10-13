@@ -10,6 +10,7 @@ module type S = {
 
   let create:
     (
+      ~languageConfiguration: LanguageConfiguration.t,
       ~trigger: Exthost.CompletionContext.t,
       ~buffer: Oni_Core.Buffer.t,
       ~base: string,
@@ -70,7 +71,14 @@ module ExthostCompletionProvider =
   type msg = exthostMsg;
   type model = exthostModel;
 
-  let create = (~trigger as _, ~buffer, ~base as _, ~location as _) =>
+  let create =
+      (
+        ~languageConfiguration as _,
+        ~trigger as _,
+        ~buffer,
+        ~base as _,
+        ~location as _,
+      ) =>
     if (!Exthost.DocumentSelector.matchesBuffer(~buffer, Config.selector)) {
       None;
     } else {
@@ -204,6 +212,7 @@ module KeywordCompletionProvider =
 
   let create =
       (
+        ~languageConfiguration: LanguageConfiguration.t,
         ~trigger: Exthost.CompletionContext.t,
         ~buffer,
         ~base: string,
@@ -213,11 +222,7 @@ module KeywordCompletionProvider =
     ignore(base);
     ignore(location);
 
-    let keywords =
-      Feature_Keywords.keywords(
-        ~languageConfiguration=Oni_Core.LanguageConfiguration.default,
-        ~buffer,
-      );
+    let keywords = Feature_Keywords.keywords(~languageConfiguration, ~buffer);
 
     let keywords =
       keywords

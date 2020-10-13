@@ -173,10 +173,6 @@ module Session = {
         ProviderImpl.handle;
       };
 
-  //  let base =
-  //    fun
-  //    | Session({base, _}) => base;
-
   let complete =
     fun
     | Session({state, _} as session) => {
@@ -382,6 +378,7 @@ module Session = {
         maybeMeet
         |> OptionEx.flatMap((meet: CompletionMeet.t) => {
              ProviderImpl.create(
+               ~languageConfiguration,
                ~base=meet.base,
                ~trigger,
                ~buffer,

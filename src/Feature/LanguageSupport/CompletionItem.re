@@ -1,3 +1,5 @@
+open Oni_Core;
+open Utility;
 open Exthost;
 
 [@deriving show]
@@ -38,21 +40,26 @@ let create = (~isFuzzyMatching: bool, ~handle, item: SuggestItem.t) => {
 };
 
 let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
-  chainedCacheId: None,
-  handle: None,
-  label: keyword,
-  kind: Exthost.CompletionKind.Keyword,
-  detail: None,
-  documentation: None,
-  insertText: keyword,
-  insertTextRules: Exthost.SuggestItem.InsertTextRules.none,
-  filterText: keyword,
-  // Keywords should always be last, vs other completions...
-  // But still sort them relative to each other
-  sortText: "ZZZZZZ" ++ string_of_int(sortOrder),
-  suggestRange: None,
-  commitCharacters: [],
-  additionalTextEdits: [],
-  command: None,
-  isFuzzyMatching,
+  let sortText =
+    "ZZZZ"
+    ++ (string_of_int(sortOrder) |> StringEx.padFront(~totalLength=8, '0'));
+  {
+    chainedCacheId: None,
+    handle: None,
+    label: keyword,
+    kind: Exthost.CompletionKind.Keyword,
+    detail: None,
+    documentation: None,
+    insertText: keyword,
+    insertTextRules: Exthost.SuggestItem.InsertTextRules.none,
+    filterText: keyword,
+    // Keywords should always be last, vs other completions...
+    // But still sort them relative to each other
+    sortText,
+    suggestRange: None,
+    commitCharacters: [],
+    additionalTextEdits: [],
+    command: None,
+    isFuzzyMatching,
+  };
 };

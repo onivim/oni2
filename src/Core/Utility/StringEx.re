@@ -21,6 +21,17 @@ let contains = (query, str) => {
 let explode = str =>
   str |> String.to_seq |> List.of_seq |> List.map(c => String.make(1, c));
 
+let padFront = (~totalLength, char, str) => {
+  let originalLength = String.length(str);
+  let padLength = totalLength - originalLength;
+
+  if (padLength <= 0) {
+    str;
+  } else {
+    String.make(padLength, char) ++ str;
+  };
+};
+
 exception NoMatchException;
 
 /**
