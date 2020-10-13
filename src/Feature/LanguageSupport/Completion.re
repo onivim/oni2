@@ -35,81 +35,6 @@ module Internal = {
     };
 };
 
-// CONFIGURATION
-
-module QuickSuggestionsSetting = {
-  [@deriving show]
-  type t = {
-    comments: bool,
-    strings: bool,
-    other: bool,
-  };
-
-  let initial = {comments: false, strings: false, other: true};
-
-  let enabledFor = (~syntaxScope: SyntaxScope.t, {comments, strings, other}) => {
-    let isCommentAndAllowed = syntaxScope.isComment && comments;
-
-    let isStringAndAllowed = syntaxScope.isString && strings;
-
-    let isOtherAndAllowed =
-      !syntaxScope.isComment && !syntaxScope.isString && other;
-
-    isCommentAndAllowed || isStringAndAllowed || isOtherAndAllowed;
-  };
-
-  module Decode = {
-    open Json.Decode;
-    let decodeBool =
-      bool
-      |> map(
-           fun
-           | false => {comments: false, strings: false, other: false}
-           | true => {comments: true, strings: true, other: true},
-         );
-
-    let decodeObj =
-      obj(({field, _}) =>
-        {
-          comments: field.withDefault("comments", initial.comments, bool),
-          strings: field.withDefault("strings", initial.strings, bool),
-          other: field.withDefault("other", initial.other, bool),
-        }
-      );
-
-    let decode = one_of([("bool", decodeBool), ("obj", decodeObj)]);
-  };
-
-  let decode = Decode.decode;
-
-  let encode = setting =>
-    Json.Encode.(
-      {
-        obj([
-          ("comments", setting.comments |> bool),
-          ("strings", setting.strings |> bool),
-          ("other", setting.other |> bool),
-        ]);
-      }
-    );
-};
-
-// CONFIGURATION
-
-module Configuration = {
-  open Config.Schema;
-
-  let quickSuggestions =
-    setting(
-      "editor.quickSuggestions",
-      custom(
-        ~decode=QuickSuggestionsSetting.decode,
-        ~encode=QuickSuggestionsSetting.encode,
-      ),
-      ~default=QuickSuggestionsSetting.initial,
-    );
-};
-
 module Session = {
   [@deriving show]
   type state('model) =
@@ -503,7 +428,7 @@ let initial = {
 let providerCount = ({providers, _}) => List.length(providers) - 1;
 let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
 
-let recomputeAllItems = (providers: list(Session.t)) => {
+let recomputeAllItems = (~pinnedLabel=None, providers: list(Session.t)) => {
   providers
   |> List.fold_left(
        (acc, session) => {
@@ -529,7 +454,7 @@ let recomputeAllItems = (providers: list(Session.t)) => {
   |> StringMap.bindings
   |> List.map(snd)
   |> List.fast_sort(((_loc, a), (_loc, b)) =>
-       CompletionItemSorter.compare(a, b)
+       CompletionItemSorter.compare(~pinnedLabel, a, b)
      )
   |> Array.of_list;
 };
@@ -670,7 +595,7 @@ let bufferUpdated =
       ~triggerKey,
       model,
     ) => {
-  let quickSuggestionsSetting = Configuration.quickSuggestions.get(config);
+  let quickSuggestionsSetting = CompletionConfig.quickSuggestions.get(config);
 
   let trigger =
     Exthost.CompletionContext.{
@@ -679,7 +604,7 @@ let bufferUpdated =
     };
 
   if (!
-        QuickSuggestionsSetting.enabledFor(
+        CompletionConfig.QuickSuggestionsSetting.enabledFor(
           ~syntaxScope,
           quickSuggestionsSetting,
         )) {
@@ -802,13 +727,20 @@ let update = (~languageConfiguration, ~maybeBuffer, ~activeCursor, msg, model) =
     );
 
   | Provider(msg) =>
+    // Before updating any items, check to see if there is already
+    // a selected item. We don't want to surprise the user
+    // and change the selected underneath them when populating!
+    let pinnedLabel: option(string) =
+      selected(model) |> Option.map((item: CompletionItem.t) => item.label);
+
     let providers =
       model.providers |> List.map(provider => Session.update(msg, provider));
-    let allItems = recomputeAllItems(providers);
+    let allItems = recomputeAllItems(~pinnedLabel, providers);
     let selection =
       Selection.ensureValidFocus(
         ~count=Array.length(allItems),
-        model.selection,
+        // If we 'pinned' an item, make sure it's selected
+        Option.is_some(pinnedLabel) ? Some(0) : model.selection,
       );
     ({...model, providers, allItems, selection}, Nothing);
   };
@@ -934,7 +866,8 @@ module KeyBindings = {
 module Contributions = {
   let colors = [];
 
-  let configuration = Configuration.[quickSuggestions.spec];
+  let configuration =
+    CompletionConfig.[quickSuggestions.spec, wordBasedSuggestions.spec];
 
   let commands =
     Commands.[
