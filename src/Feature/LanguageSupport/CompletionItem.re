@@ -37,7 +37,7 @@ let create = (~isFuzzyMatching: bool, ~handle, item: SuggestItem.t) => {
   isFuzzyMatching,
 };
 
-let keyword = (~isFuzzyMatching, keyword) => {
+let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
   chainedCacheId: None,
   handle: None,
   label: keyword,
@@ -47,7 +47,9 @@ let keyword = (~isFuzzyMatching, keyword) => {
   insertText: keyword,
   insertTextRules: Exthost.SuggestItem.InsertTextRules.none,
   filterText: keyword,
-  sortText: keyword,
+  // Keywords should always be last, vs other completions...
+  // But still sort them relative to each other
+  sortText: "ZZZZZZ" ++ string_of_int(sortOrder),
   suggestRange: None,
   commitCharacters: [],
   additionalTextEdits: [],

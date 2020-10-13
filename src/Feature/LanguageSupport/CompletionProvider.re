@@ -221,8 +221,12 @@ module KeywordCompletionProvider =
 
     let keywords =
       keywords
-      |> List.map(keyword => {
-           CompletionItem.keyword(~isFuzzyMatching=base != "", keyword)
+      |> List.mapi((idx, keyword) => {
+           CompletionItem.keyword(
+             ~sortOrder=idx,
+             ~isFuzzyMatching=base != "",
+             keyword,
+           )
          });
 
     Some(keywords);

@@ -37,6 +37,7 @@ let%test_module "compare" =
          documentation: None,
          insertText: label,
          insertTextRules: Exthost.SuggestItem.InsertTextRules.none,
+         filterText: label,
          sortText,
          suggestRange: None,
          commitCharacters: [],

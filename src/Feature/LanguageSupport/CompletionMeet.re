@@ -44,15 +44,12 @@ let fromLine =
   let cursorIdx = CharacterIndex.toInt(index);
   let idx =
     Stdlib.min(
-      BufferLine.lengthBounded(
-        ~max=CharacterIndex.ofInt(cursorIdx + 1),
-        line,
-      )
-      - 1,
-      cursorIdx,
+      BufferLine.lengthSlow(line) - 1,
+      // Rewind the cursor back a character,
+      // because in insert mode the position is actually 'after'
+      // the last character.
+      cursorIdx - 1,
     );
-
-  //  let idx = max(0, idx - 1);
 
   let matchesTriggerCharacters = c => {
     List.exists(tc => Uchar.equal(c, tc), triggerCharacters);
@@ -67,20 +64,28 @@ let fromLine =
           ~index=CharacterIndex.ofInt(currentPos),
           line,
         );
-      if (currentPos == 0) {
-        let all = [uchar, ...acc];
-        (List.length(all) >= 1, all, currentPos);
-      } else if (matchesTriggerCharacters(uchar)
-                 || !
-                      LanguageConfiguration.isWordCharacter(
-                        uchar,
-                        languageConfiguration,
-                      )) {
+      let matchesTrigger = matchesTriggerCharacters(uchar);
+      let isWordCharacter =
+        LanguageConfiguration.isWordCharacter(uchar, languageConfiguration);
+      prerr_endline(
+        Printf.sprintf(
+          "--Checking character: |%s| at pos: %d trigger: %b word: %b",
+          Zed_utf8.make(1, uchar),
+          currentPos,
+          matchesTrigger,
+          isWordCharacter,
+        ),
+      );
+      if (matchesTrigger || !isWordCharacter) {
+        prerr_endline("hit !wordCharacter case");
         // If the cursor is after a trigger character, like console.|,
         // an empty string is valid. However, if it's just a non-word character,
         // we require at least a single character for a meet.
         let validLength = matchesTriggerCharacters(uchar) ? 0 : 1;
         (List.length(acc) >= validLength, acc, currentPos + 1);
+      } else if (currentPos == 0) {
+        let all = [uchar, ...acc];
+        (List.length(all) >= 1, all, currentPos);
       } else {
         loop([uchar, ...acc], currentPos - 1);
       };

@@ -421,7 +421,7 @@ module Session = {
           );
 
         maybeMeet
-        |> Option.map(({base, location, _}: CompletionMeet.t)
+        |> Option.map(({location, _}: CompletionMeet.t)
              // If different buffer or location... start over!
              =>
                switch (previous.state) {
@@ -436,7 +436,7 @@ module Session = {
                      ~languageConfiguration,
                      ~trigger,
                      ~buffer,
-                     ~location,
+                     ~location=activeCursor,
                      model,
                    );
                  } else {
@@ -456,7 +456,7 @@ module Session = {
                    ~languageConfiguration,
                    ~trigger,
                    ~buffer,
-                   ~location,
+                   ~location=activeCursor,
                    model,
                  );
                }
