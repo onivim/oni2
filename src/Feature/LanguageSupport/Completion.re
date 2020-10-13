@@ -188,6 +188,10 @@ module Session = {
         Session({...session, state: state'});
       };
 
+  let start =
+    fun
+    | Session(session) => Session({...session, state: NotStarted});
+
   let stop =
     fun
     | Session(session) => Session({...session, state: NotStarted});
@@ -251,9 +255,12 @@ module Session = {
         | Failure(_) => StringMap.empty
         | Completed({filteredItems, meet, _}) =>
           filteredItems
-          |> List.fold_left((acc, item: Filter.result(CompletionItem.t)) => {
-            StringMap.add(item.item.label, (meet.location, item), acc);
-          }, StringMap.empty);
+          |> List.fold_left(
+               (acc, item: Filter.result(CompletionItem.t)) => {
+                 StringMap.add(item.item.label, (meet.location, item), acc)
+               },
+               StringMap.empty,
+             )
         };
       };
 
@@ -489,15 +496,15 @@ module Selection = {
 };
 
 type model = {
-  sessions: list(Session.t),
-  providers: list(provider),
+  providers: list(Session.t),
   allItems: array((CharacterPosition.t, Filter.result(CompletionItem.t))),
   selection: Selection.t,
+  isInsertMode: bool,
 };
 
 let initial = {
-  //    sessions: [],
-  sessions: [
+  isInsertMode: false,
+  providers: [
     Session.create(
       ~triggerCharacters=[],
       // Remove from command
@@ -509,28 +516,36 @@ let initial = {
         | _ => None,
     ),
   ],
-  providers: [],
   allItems: [||],
   selection: Selection.initial,
 };
 
-let providerCount = ({providers, _}) => List.length(providers);
+let providerCount = ({providers, _}) => List.length(providers) - 1;
 let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
 
-let recomputeAllItems = (sessions: list(Session.t)) => {
-  sessions
-  |> List.fold_left((acc, session) =>
-  {
-      let itemMap = session |> Session.filteredItems;
-      // When we have the same key coming from different providers, need to decide between them
-      StringMap.union((_key, (locA, itemA: Filter.result(CompletionItem.t)), (locB, itemB: Filter.result(CompletionItem.t))) => {
-        if (CompletionItem.prefer(itemA.item, itemB.item) < 0) {
-            Some((locA, itemA))
-        } else {
-            Some((locB, itemB))
-        }
-      }, acc, itemMap);
-  }, StringMap.empty)
+let recomputeAllItems = (providers: list(Session.t)) => {
+  providers
+  |> List.fold_left(
+       (acc, session) => {
+         let itemMap = session |> Session.filteredItems;
+         // When we have the same key coming from different providers, need to decide between them
+         StringMap.union(
+           (
+             _key,
+             (locA, itemA: Filter.result(CompletionItem.t)),
+             (locB, itemB: Filter.result(CompletionItem.t)),
+           ) =>
+             if (CompletionItem.prefer(itemA.item, itemB.item) < 0) {
+               Some((locA, itemA));
+             } else {
+               Some((locB, itemB));
+             },
+           acc,
+           itemMap,
+         );
+       },
+       StringMap.empty,
+     )
   |> StringMap.bindings
   |> List.map(snd)
   |> List.fast_sort(((_loc, a), (_loc, b)) =>
@@ -553,12 +568,21 @@ let focused = ({allItems, selection, _}) => {
 };
 
 let isActive = (model: model) => {
-  model.allItems |> Array.length > 0;
+  model.isInsertMode && model.allItems |> Array.length > 0;
+};
+
+let startInsertMode = model => {
+  {
+    isInsertMode: true,
+    providers: model.providers |> List.map(Session.start),
+    allItems: [||],
+    selection: None,
+  };
 };
 
 let stopInsertMode = model => {
-  ...model,
-  sessions: model.sessions |> List.map(Session.stop),
+  isInsertMode: false,
+  providers: model.providers |> List.map(Session.stop),
   allItems: [||],
   selection: None,
 };
@@ -577,22 +601,6 @@ let register =
   {
     ...model,
     providers: [
-      {
-        handle,
-        selector,
-        triggerCharacters,
-        supportsResolveDetails,
-        extensionId,
-        implementation:
-          CompletionProvider.exthost(
-            ~handle,
-            ~selector,
-            ~supportsResolve=supportsResolveDetails,
-          ),
-      },
-      ...model.providers,
-    ],
-    sessions: [
       Session.create(
         ~triggerCharacters,
         ~provider=
@@ -607,29 +615,28 @@ let register =
           | Exthost(msg) => Some(msg)
           | _ => None,
       ),
-      ...model.sessions,
+      ...model.providers,
     ],
   };
 };
 
 let unregister = (~handle, model) => {
   ...model,
-  providers: List.filter(prov => prov.handle != handle, model.providers),
-  sessions:
+  providers:
     List.filter(
       session => Session.handle(session, ()) != Some(handle),
-      model.sessions,
+      model.providers,
     ),
 };
 
-let updateSessions = (sessions, model) => {
-  let allItems = recomputeAllItems(sessions);
+let updateSessions = (providers, model) => {
+  let allItems = recomputeAllItems(providers);
   let selection =
     Selection.ensureValidFocus(
       ~count=Array.length(allItems),
       model.selection,
     );
-  {...model, sessions, allItems, selection};
+  {...model, providers, allItems, selection};
 };
 
 let cursorMoved =
@@ -637,16 +644,16 @@ let cursorMoved =
   // Filter providers, such that the completion meets are still
   // valid in the context of the new cursor position
 
-  let sessions' =
-    model.sessions |> List.map(Session.cursorMoved(~position=current));
+  let providers' =
+    model.providers |> List.map(Session.cursorMoved(~position=current));
 
-  model |> updateSessions(sessions');
+  model |> updateSessions(providers');
 };
 
 let invokeCompletion =
     (~languageConfiguration, ~trigger, ~buffer, ~activeCursor, model) => {
-  let sessions' =
-    model.sessions
+  let providers' =
+    model.providers
     |> List.map(
          Session.reinvoke(
            ~languageConfiguration,
@@ -656,12 +663,12 @@ let invokeCompletion =
          ),
        );
 
-  model |> updateSessions(sessions');
+  model |> updateSessions(providers');
 };
 
 let refine = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
-  let sessions' =
-    model.sessions
+  let providers' =
+    model.providers
     |> List.map(
          Session.refine(
            ~languageConfiguration,
@@ -670,7 +677,7 @@ let refine = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
          ),
        );
 
-  model |> updateSessions(sessions');
+  model |> updateSessions(providers');
 };
 
 let bufferUpdated =
@@ -787,10 +794,10 @@ let update = (~languageConfiguration, ~maybeBuffer, ~activeCursor, msg, model) =
         (
           {
             ...model,
-            sessions:
+            providers:
               List.map(
-                session => {session |> Session.complete},
-                model.sessions,
+                provider => {provider |> Session.complete},
+                model.providers,
               ),
             allItems: [||],
             selection: None,
@@ -815,28 +822,30 @@ let update = (~languageConfiguration, ~maybeBuffer, ~activeCursor, msg, model) =
     );
 
   | Provider(msg) =>
-    let sessions =
-      model.sessions |> List.map(session => Session.update(msg, session));
-    let allItems = recomputeAllItems(sessions);
+    let providers =
+      model.providers |> List.map(provider => Session.update(msg, provider));
+    let allItems = recomputeAllItems(providers);
     let selection =
       Selection.ensureValidFocus(
         ~count=Array.length(allItems),
         model.selection,
       );
-    ({...model, sessions, allItems, selection}, Nothing);
+    ({...model, providers, allItems, selection}, Nothing);
   };
 };
 
-let sub = (~activeBuffer, ~client, model) => {
+let sub = (~activeBuffer, ~client, model) =>
   // Subs for each pending handle..
-  prerr_endline(" -- sub");
-  let selectedItem = selected(model);
-  model.sessions
-  |> List.map((meet: Session.t) => {
-       Session.sub(~activeBuffer, ~client, ~selectedItem, meet)
-     })
-  |> Isolinear.Sub.batch;
-};
+  if (model.isInsertMode) {
+    let selectedItem = selected(model);
+    model.providers
+    |> List.map((meet: Session.t) => {
+         Session.sub(~activeBuffer, ~client, ~selectedItem, meet)
+       })
+    |> Isolinear.Sub.batch;
+  } else {
+    Isolinear.Sub.none;
+  };
 
 // COMMANDS
 

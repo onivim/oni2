@@ -65,17 +65,17 @@ let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
 };
 
 let prefer = (itemA, itemB) => {
-  switch ((itemA.handle, itemB.handle)) {
+  switch (itemA.handle, itemB.handle) {
   // Prefer items with a handle - in other words, items that come from the extension host
-  | (Some(_), None) => -1
+  | (Some(_), None) => (-1)
   | (None, Some(_)) => 1
   // They both have a handle, or neither does... use sort text to break the tie
   | (Some(_), Some(_))
-  | (None, None) => 
+  | (None, None) =>
     if (String.compare(itemA.sortText, itemB.sortText) <= 0) {
-        -1
+      (-1);
     } else {
-        1
+      1;
     }
-  }  
+  };
 };

@@ -352,7 +352,11 @@ let cursorMoved = (~previous, ~current, model) => {
   {...model, completion};
 };
 
-let startInsertMode = model => model;
+let startInsertMode = model => {
+  ...model,
+  completion: Completion.startInsertMode(model.completion),
+};
+
 let stopInsertMode = model => {
   ...model,
   completion: Completion.stopInsertMode(model.completion),
