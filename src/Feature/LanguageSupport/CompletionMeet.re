@@ -67,17 +67,7 @@ let fromLine =
       let matchesTrigger = matchesTriggerCharacters(uchar);
       let isWordCharacter =
         LanguageConfiguration.isWordCharacter(uchar, languageConfiguration);
-      prerr_endline(
-        Printf.sprintf(
-          "--Checking character: |%s| at pos: %d trigger: %b word: %b",
-          Zed_utf8.make(1, uchar),
-          currentPos,
-          matchesTrigger,
-          isWordCharacter,
-        ),
-      );
       if (matchesTrigger || !isWordCharacter) {
-        prerr_endline("hit !wordCharacter case");
         // If the cursor is after a trigger character, like console.|,
         // an empty string is valid. However, if it's just a non-word character,
         // we require at least a single character for a meet.
@@ -104,12 +94,8 @@ let fromLine =
         },
       base,
     };
-    prerr_endline("VALID MEET: " ++ show(meet));
     Some(meet);
   } else {
-    prerr_endline(
-      Printf.sprintf("!!! NOT VALID: base: |%s| pos: |%d|", base, pos),
-    );
     None;
   };
 };

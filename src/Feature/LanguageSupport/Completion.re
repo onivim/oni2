@@ -1,7 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Utility;
-open Exthost;
 
 [@deriving show]
 type command =
@@ -21,21 +20,6 @@ type msg =
   | Provider(providerMsg);
 
 type exthostMsg;
-
-[@deriving show]
-type provider = {
-  handle: int,
-  selector: DocumentSelector.t,
-  triggerCharacters: [@opaque] list(Uchar.t),
-  supportsResolveDetails: bool,
-  extensionId: string,
-  implementation:
-    [@opaque]
-    CompletionProvider.provider(
-      CompletionProvider.exthostModel,
-      CompletionProvider.exthostMsg,
-    ),
-};
 
 module Internal = {
   let stringsToUchars: list(string) => list(Uchar.t) =
@@ -376,7 +360,6 @@ module Session = {
     fun
     | Session({provider, _} as session) as original => {
         let (module ProviderImpl) = provider;
-        prerr_endline("Session.tryInvoke");
         let maybeMeet =
           CompletionMeet.fromBufferPosition(
             ~languageConfiguration,
@@ -437,7 +420,6 @@ module Session = {
                      != CompletionMeet.(meet.bufferId)
                      || location != CompletionMeet.(meet.location)) {
                    // try to complete
-                   prerr_endline("Session.reinvoke - calling tryInvoke (1)");
                    tryInvoke(
                      ~languageConfiguration,
                      ~trigger,
@@ -448,7 +430,6 @@ module Session = {
                  } else {
                    // The base and location are the same
                    // Just refine existing query
-                   prerr_endline("Session.reinvoke - calling refine (1)");
                    refine(
                      ~languageConfiguration,
                      ~buffer,
@@ -457,14 +438,13 @@ module Session = {
                    );
                  }
                | _incomplete =>
-                 prerr_endline("Session.reinvoke - calling tryInvoke (2)");
                  tryInvoke(
                    ~languageConfiguration,
                    ~trigger,
                    ~buffer,
                    ~location=activeCursor,
                    model,
-                 );
+                 )
                }
              )
         |> Option.value(~default=model |> stop);
@@ -593,7 +573,7 @@ let register =
       ~selector,
       ~triggerCharacters,
       ~supportsResolveDetails,
-      ~extensionId,
+      ~extensionId as _,
       model,
     ) => {
   let triggerCharacters = Internal.stringsToUchars(triggerCharacters);
