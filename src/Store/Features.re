@@ -1277,7 +1277,18 @@ let update =
                state.syntaxHighlights,
              );
            let config = Selectors.configResolver(state);
+
+           let languageConfiguration =
+             buffer
+             |> Oni_Core.Buffer.getFileType
+             |> Oni_Core.Buffer.FileType.toString
+             |> Exthost.LanguageInfo.getLanguageConfiguration(
+                  state.languageInfo,
+                )
+             |> Option.value(~default=LanguageConfiguration.default);
+
            Feature_LanguageSupport.bufferUpdated(
+             ~languageConfiguration,
              ~buffer,
              ~config,
              ~activeCursor,

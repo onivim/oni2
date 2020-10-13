@@ -219,6 +219,7 @@ let update =
   | Completion(completionMsg) =>
     let (completion', outmsg) =
       Completion.update(
+        ~languageConfiguration,
         ~maybeBuffer,
         ~activeCursor=cursorLocation,
         completionMsg,
@@ -323,9 +324,18 @@ let update =
   };
 
 let bufferUpdated =
-    (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
+    (
+      ~languageConfiguration,
+      ~buffer,
+      ~config,
+      ~activeCursor,
+      ~syntaxScope,
+      ~triggerKey,
+      model,
+    ) => {
   let completion =
     Completion.bufferUpdated(
+      ~languageConfiguration,
       ~buffer,
       ~config,
       ~activeCursor,
@@ -531,7 +541,7 @@ let sub =
   let completionSub =
     !isInsertMode
       ? Isolinear.Sub.none
-      : OldCompletion.sub(~client, completion)
+      : OldCompletion.sub(~activeBuffer, ~client, completion)
         |> Isolinear.Sub.map(msg => Completion(msg));
 
   let documentSymbolsSub =

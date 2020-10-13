@@ -19,22 +19,6 @@ type providerMsg =
 type msg =
   | Command(command)
   | Provider(providerMsg);
-//  | CompletionResultAvailable({
-//      handle: int,
-//      suggestResult: Exthost.SuggestResult.t,
-//    })
-//  | CompletionError({
-//      handle: int,
-//      errorMsg: string,
-//    })
-//  | CompletionDetailsAvailable({
-//      handle: int,
-//      suggestItem: Exthost.SuggestItem.t,
-//    })
-//  | CompletionDetailsError({
-//      handle: int,
-//      errorMsg: string,
-//    });
 
 type exthostMsg;
 
@@ -144,32 +128,30 @@ module Configuration = {
 
 module Session = {
   [@deriving show]
-  type state =
-    | Waiting
+  type state('model) =
+    | NotStarted
+    | Pending({
+        providerModel: [@opaque] 'model,
+        meet: CompletionMeet.t,
+      })
     | Completed({
-        base: string,
-        location: CharacterPosition.t,
+        providerModel: [@opaque] 'model,
+        meet: CompletionMeet.t,
         allItems: list(CompletionItem.t),
         filteredItems: [@opaque] list(Filter.result(CompletionItem.t)),
       })
     // TODO
     //| Incomplete(list(Exthost.SuggestItem.t))
     | Failure(string)
-    | Accepted;
+    | Accepted({meet: CompletionMeet.t});
 
   [@deriving show]
   type session('model, 'msg) = {
-    state,
-    base: string,
-    trigger: [@opaque] Exthost.CompletionContext.t,
+    state: state('model),
     triggerCharacters: [@opaque] list(Uchar.t),
-    buffer: [@opaque] Oni_Core.Buffer.t,
-    location: EditorCoreTypes.CharacterPosition.t,
     provider: [@opaque] CompletionProvider.provider('model, 'msg),
-    providerModel: option('model),
     providerMapper: 'msg => providerMsg,
     revMapper: providerMsg => option('msg),
-    supportsResolve: bool,
   };
 
   type t =
@@ -177,24 +159,71 @@ module Session = {
 
   let location =
     fun
-    | Session({state, _}) =>switch (state) {
-    | Completed({location, _}) => Some(location)
-    | _ => None
-    };
+    | Session({state, _}) =>
+      switch (state) {
+      | Pending({meet, _}) => Some(CompletionMeet.(meet.location))
+      | Completed({meet, _}) => Some(CompletionMeet.(meet.location))
+      | _ => None
+      };
 
-  let handle = fun
-  | Session({provider, _}) => {
-    let (module ProviderImpl) = provider;
-    ProviderImpl.handle
-  };
+  let handle =
+    fun
+    | Session({provider, _}) => {
+        let (module ProviderImpl) = provider;
+        ProviderImpl.handle;
+      };
 
-//  let base =
-//    fun
-//    | Session({base, _}) => base;
+  //  let base =
+  //    fun
+  //    | Session({base, _}) => base;
 
   let complete =
     fun
-    | Session(session) => Session({...session, state: Accepted});
+    | Session({state, _} as session) => {
+        let state' =
+          switch (state) {
+          | NotStarted => NotStarted
+          | Pending({meet, _})
+          | Completed({meet, _})
+          | Accepted({meet}) => Accepted({meet: meet})
+          | Failure(_) as failure => failure
+          };
+
+        Session({...session, state: state'});
+      };
+
+  let stop =
+    fun
+    | Session(session) => Session({...session, state: NotStarted});
+
+  let cursorMoved = (~position: CharacterPosition.t) =>
+    fun
+    | Session({state, _} as prevState) => {
+        let isCompletionMeetStillValid = (meet: CompletionMeet.t) => {
+          // If the line changed, the meet is no longer valid
+          meet.location.line == position.line
+          // If the cursor moved before the meet, on the same line,
+          // it is no longer valid. The after case is a bit trickier -
+          // the cursor moves first, before we get the buffer update,
+          // so the meet may not be valid until the buffer update comes through.
+          // We'll allow cursor moves after the meet, for now.
+          && CharacterIndex.toInt(meet.location.character)
+          <= CharacterIndex.toInt(position.character);
+        };
+        let state' =
+          switch (state) {
+          | Pending({meet, _}) as prev when isCompletionMeetStillValid(meet) => prev
+          | Pending(_) => NotStarted
+          | Completed({meet, _}) as prev
+              when isCompletionMeetStillValid(meet) => prev
+          | Completed(_) => NotStarted
+          | Accepted({meet, _}) as prev when isCompletionMeetStillValid(meet) => prev
+          | Accepted(_) => NotStarted
+          | prev => prev
+          };
+
+        Session({...prevState, state: state'});
+      };
 
   let filter:
     (~query: string, list(CompletionItem.t)) =>
@@ -220,77 +249,69 @@ module Session = {
     fun
     | Session({state, _}) => {
         switch (state) {
-        | Accepted => []
-        | Waiting => []
+        | NotStarted => []
+        | Accepted(_) => []
+        | Pending(_) => []
         | Failure(_) => []
-        | Completed({filteredItems, location, _}) => filteredItems
-        |> List.map(item => (location, item));
+        | Completed({filteredItems, meet, _}) =>
+          filteredItems
+          |> List.map(item => (CompletionMeet.(meet.location), item))
         };
       };
 
   let update = msg =>
     fun
-    | Session(
-        {provider, providerModel, revMapper, base, state, _} as session,
-      ) => {
+    | Session({provider, revMapper, state, _} as session) => {
         revMapper(msg)
         |> Option.map(internalMsg => {
              let (module ProviderImpl) = provider;
-             let isFuzzyMatching = base != "";
-             let providerModel' =
-               providerModel
-               |> Option.map(
-                    ProviderImpl.update(~isFuzzyMatching, internalMsg),
-                  );
 
              let state' =
-               providerModel'
-               |> Option.map(model => {
-                    switch (model |> ProviderImpl.items) {
-                    | Error(msg) => Failure(msg)
-                    | Ok([]) => state
-                    | Ok(items) =>
-                      let filteredItems = filter(~query=base, items);
-                      Completed({base, location, filteredItems, allItems: items});
-                    }
-                  })
-               |> Option.value(~default=state);
+               switch (state) {
+               | Completed({providerModel, meet, _})
+               | Pending({providerModel, meet, _}) =>
+                 open CompletionMeet;
+                 let providerModel' =
+                   ProviderImpl.update(
+                     ~isFuzzyMatching=meet.base != "",
+                     internalMsg,
+                     providerModel,
+                   );
+                 switch (ProviderImpl.items(providerModel')) {
+                 | Ok([]) => Pending({meet, providerModel: providerModel'})
+                 | Ok(items) =>
+                   Completed({
+                     meet,
+                     allItems: items,
+                     filteredItems: filter(~query=meet.base, items),
+                     providerModel: providerModel',
+                   })
+                 | Error(msg) => Failure(msg)
+                 };
+               | _ => state
+               };
 
-             Session({
-               ...session,
-               state: state',
-               providerModel: providerModel',
-             });
+             Session({...session, state: state'});
            })
         |> Option.value(~default=Session(session));
       };
 
-  let sub = (~selectedItem, ~client) =>
+  let sub = (~activeBuffer, ~selectedItem, ~client) =>
     fun
-    | Session({providerModel, provider, providerMapper, location, buffer, _}) => {
-        let (module ProviderImpl) = provider;
-        providerModel
-        |> Option.map(model => {
-             ProviderImpl.sub(
-               ~client,
-               ~buffer,
-               ~position=location,
-               ~selectedItem,
-               model,
-             )
-             |> Isolinear.Sub.map(msg => Provider(providerMapper(msg)))
-           })
-        |> Option.value(~default=Isolinear.Sub.none);
-      };
-
-  let isActive =
-    fun
-    | Session({state, providerModel, _}) => {
-        Option.is_some(providerModel) && switch (state) {
-        | Accepted => false
-        | Waiting => true
-        | Failure(_) => false
-        | Completed(_) => true
+    | Session({state, provider, providerMapper, _}) => {
+        switch (state) {
+        | Pending({providerModel, meet, _})
+        | Completed({providerModel, meet, _}) =>
+          let (module ProviderImpl) = provider;
+          ProviderImpl.sub(
+            ~client,
+            ~buffer=activeBuffer,
+            ~position=CompletionMeet.(meet.location),
+            ~selectedItem,
+            providerModel,
+          )
+          |> Isolinear.Sub.map(msg => Provider(providerMapper(msg)));
+        | _ => Isolinear.Sub.none
         };
       };
 
@@ -300,136 +321,147 @@ module Session = {
         ~mapper: 'msg => providerMsg,
         ~revMapper: providerMsg => option('msg),
         ~triggerCharacters,
-//        ~trigger,
-//        ~buffer,
-//        ~base,
-//        ~location,
-//        ~supportsResolve,
       ) => {
-      Session({
-//        trigger,
-        triggerCharacters,
-        state: Waiting,
-//        buffer,
-//        base,
-//        location,
-//        supportsResolve,
-        provider,
-        providerModel: None,
-        providerMapper: mapper,
-        revMapper,
-      });
-    };
+    Session({
+      triggerCharacters,
+      state: NotStarted,
+      provider,
+      providerMapper: mapper,
+      revMapper,
+    });
+  };
 
-//    switch (candidate) {
-//    | Session({provider, _} as session) =>
-//      let (module ProviderImpl) = provider;
-//      let maybeModel =
-//        ProviderImpl.create(~base, ~trigger, ~buffer, ~location);
-//      maybeModel
-//      |> Option.map(model => {
-//           let items = ProviderImpl.items(model);
-//           let state =
-//             switch (items) {
-//             | Ok([]) => Waiting
-//             | Ok(items) =>
-//               Completed({
-//                 allItems: items,
-//                 filteredItems: filter(~query=base, items),
-//               })
-//             | Error(msg) => Failure(msg)
-//             };
-//
-//           Session({...session, state, providerModel: Some(model)});
-//         })
-//       |> Option.value(~default=candidate);
-//    };
-//  };
-
-  let refine = (~base) =>
+  let refine = (~languageConfiguration, ~buffer, ~position) =>
     fun
     | Session(current) => {
-        let state' =
-          switch (current.state) {
-          | Accepted => Accepted
-          | Waiting => Waiting
-          | Failure(_) as failure => failure
-          | Completed({allItems, _} as prev) =>
-            Completed({
-              ...prev,
-              filteredItems: filter(~query=base, allItems),
-            })
-          };
-
-        Session({...current, base, state: state'});
-      };
-
-     let refine2 = (~buffer, ~position) => {
-        
         let maybeMeet =
           CompletionMeet.fromBufferPosition(
-            ~triggerCharacters=previous.triggerCharacters,
-            ~position=activeCursor,
+            ~languageConfiguration,
+            ~triggerCharacters=current.triggerCharacters,
+            ~position,
             buffer,
           );
-     };
 
-    let tryInvoke = (~base, ~trigger, ~buffer, ~location) => fun
+        let state' =
+          maybeMeet
+          |> Option.map(newMeet => {
+               switch (current.state) {
+               | NotStarted => NotStarted
+               | Accepted(_) as accepted => accepted
+               | Pending(_) as pending => pending
+               | Failure(_) as failure => failure
+               | Completed({allItems, meet, _} as prev)
+                   when CompletionMeet.matches(meet, newMeet) =>
+                 Completed({
+                   ...prev,
+                   meet: newMeet,
+                   filteredItems:
+                     filter(~query=CompletionMeet.(newMeet.base), allItems),
+                 })
+               // The meet changed on us - reset
+               | Completed(_) => NotStarted
+               }
+             })
+          |> Option.value(~default=NotStarted);
+
+        Session({...current, state: state'});
+      };
+
+  let tryInvoke = (~languageConfiguration, ~trigger, ~buffer, ~location) =>
+    fun
     | Session({provider, _} as session) as original => {
-      let (module ProviderImpl) = provider;
-      let maybeModel =
-        ProviderImpl.create(~base, ~trigger, ~buffer, ~location);
-      maybeModel
-      |> Option.map(model => {
-           let items = ProviderImpl.items(model);
-           let state =
-             switch (items) {
-             | Ok([]) => Waiting
-             | Ok(items) =>
-               Completed({
-                 base,
-                 location,
-                 allItems: items,
-                 filteredItems: filter(~query=base, items),
-               })
-             | Error(msg) => Failure(msg)
-             };
+        let (module ProviderImpl) = provider;
+        prerr_endline("Session.tryInvoke");
+        let maybeMeet =
+          CompletionMeet.fromBufferPosition(
+            ~languageConfiguration,
+            ~triggerCharacters=session.triggerCharacters,
+            ~position=location,
+            buffer,
+          );
+        maybeMeet
+        |> OptionEx.flatMap((meet: CompletionMeet.t) => {
+             ProviderImpl.create(
+               ~base=meet.base,
+               ~trigger,
+               ~buffer,
+               ~location=meet.location,
+             )
+             |> Option.map(model => (meet, model))
+           })
+        |> Option.map(((meet, model)) => {
+             let items = ProviderImpl.items(model);
+             let state =
+               switch (items) {
+               | Ok([]) => Pending({meet, providerModel: model})
+               | Ok(items) =>
+                 Completed({
+                   meet,
+                   allItems: items,
+                   filteredItems: filter(~query=meet.base, items),
+                   providerModel: model,
+                 })
+               | Error(msg) => Failure(msg)
+               };
 
-           Session({...session, state, providerModel: Some(model)});
-         })
-       |> Option.value(~default=original);
-        };
+             Session({...session, state});
+           })
+        |> Option.value(~default=original);
+      };
 
-  let reinvoke = (~buffer, ~activeCursor) =>
+  let reinvoke = (~languageConfiguration, ~trigger, ~buffer, ~activeCursor) =>
     fun
     | Session(previous) as model => {
         let maybeMeet =
           CompletionMeet.fromBufferPosition(
+            ~languageConfiguration,
             ~triggerCharacters=previous.triggerCharacters,
             ~position=activeCursor,
             buffer,
           );
 
         maybeMeet
-        |> OptionEx.flatMap(({base, location, _}: CompletionMeet.t)
+        |> Option.map(({base, location, _}: CompletionMeet.t)
              // If different buffer or location... start over!
              =>
-                switch (previous.state) {
-                | Completed({location, buffer, _}) => {
-                   if (Oni_Core.Buffer.getId(buffer)
-                       != Oni_Core.Buffer.getId(previous.buffer)
-                       || location != previous.location) {
-                        // try to complete
-                        tryInvoke(~base, ~location, model);
-                    } else {
-                        // The base and location are the same
-                        // Just refine existing query
-                        refine(~base, model);
-                    }
-                }
-                | _incomplete => tryInvoke(model)
-                })
-        |> Option.value(~default=model)
+               switch (previous.state) {
+               | Accepted({meet})
+               | Completed({meet, _}) =>
+                 if (Oni_Core.Buffer.getId(buffer)
+                     != CompletionMeet.(meet.bufferId)
+                     || location != CompletionMeet.(meet.location)) {
+                   // try to complete
+                   prerr_endline("Session.reinvoke - calling tryInvoke (1)");
+                   tryInvoke(
+                     ~languageConfiguration,
+                     ~trigger,
+                     ~buffer,
+                     ~location,
+                     model,
+                   );
+                 } else {
+                   // The base and location are the same
+                   // Just refine existing query
+                   prerr_endline("Session.reinvoke - calling refine (1)");
+                   refine(
+                     ~languageConfiguration,
+                     ~buffer,
+                     ~position=activeCursor,
+                     model,
+                   );
+                 }
+               | _incomplete =>
+                 prerr_endline("Session.reinvoke - calling tryInvoke (2)");
+                 tryInvoke(
+                   ~languageConfiguration,
+                   ~trigger,
+                   ~buffer,
+                   ~location,
+                   model,
+                 );
+               }
+             )
+        |> Option.value(~default=model |> stop);
       };
 };
 
@@ -465,6 +497,7 @@ type model = {
 };
 
 let initial = {
+  //    sessions: [],
   sessions: [
     Session.create(
       ~triggerCharacters=[],
@@ -475,7 +508,7 @@ let initial = {
         fun
         | Keyword(msg) => Some(msg)
         | _ => None,
-    )
+    ),
   ],
   providers: [],
   allItems: [||],
@@ -487,10 +520,7 @@ let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
 
 let recomputeAllItems = (sessions: list(Session.t)) => {
   sessions
-  |> List.map(session => {
-       session
-       |> Session.filteredItems
-     })
+  |> List.map(session => {session |> Session.filteredItems})
   |> List.flatten
   |> List.fast_sort(((_loc, a), (_loc, b)) =>
        CompletionItemSorter.compare(a, b)
@@ -517,47 +547,9 @@ let isActive = (model: model) => {
 
 let stopInsertMode = model => {
   ...model,
-  sessions: [],
+  sessions: model.sessions |> List.map(Session.stop),
   allItems: [||],
   selection: None,
-};
-
-let cursorMoved =
-    (~previous as _, ~current: EditorCoreTypes.CharacterPosition.t, model) => {
-  // Filter providers, such that the completion meets are still
-  // valid in the context of the new cursor position
-
-  let isCompletionMeetStillValid =
-      (meetLocation: EditorCoreTypes.CharacterPosition.t) => {
-    // If the line changed, the meet is no longer valid
-    meetLocation.line == current.line
-    // If the cursor moved before the meet, on the same line,
-    // it is no longer valid. The after case is a bit trickier -
-    // the cursor moves first, before we get the buffer update,
-    // so the meet may not be valid until the buffer update comes through.
-    // We'll allow cursor moves after the meet, for now.
-    && CharacterIndex.toInt(meetLocation.character)
-    <= CharacterIndex.toInt(current.character);
-  };
-
-  let sessions =
-    List.filter(
-      (session: Session.t) => {
-        isCompletionMeetStillValid(Session.location(session))
-      },
-      model.sessions,
-    );
-
-  let allItems = recomputeAllItems(sessions);
-
-  let count = Array.length(allItems);
-
-  {
-    ...model,
-    sessions,
-    allItems,
-    selection: Selection.ensureValidFocus(~count, model.selection),
-  };
 };
 
 let register =
@@ -569,36 +561,54 @@ let register =
       ~extensionId,
       model,
     ) => {
-  ...model,
-  providers: [
-    {
-      handle,
-      selector,
-      triggerCharacters: Internal.stringsToUchars(triggerCharacters),
-      supportsResolveDetails,
-      extensionId,
-      implementation: CompletionProvider.exthost(~handle, ~selector),
-    },
-    ...model.providers,
-   ],
-   sessions: [
-         Session.create(
-           ~triggerCharacters=triggerCharacters,
-           ~provider=CompletionProvider.exthost(~selector, ~handle),
-           ~mapper=msg => Exthost(msg),
-           ~revMapper=
-             fun
-             | Exthost(msg) => Some(msg)
-             | _ => None,
-         ),
-         ...model.sessions,
-   ],
+  let triggerCharacters = Internal.stringsToUchars(triggerCharacters);
+
+  {
+    ...model,
+    providers: [
+      {
+        handle,
+        selector,
+        triggerCharacters,
+        supportsResolveDetails,
+        extensionId,
+        implementation:
+          CompletionProvider.exthost(
+            ~handle,
+            ~selector,
+            ~supportsResolve=supportsResolveDetails,
+          ),
+      },
+      ...model.providers,
+    ],
+    sessions: [
+      Session.create(
+        ~triggerCharacters,
+        ~provider=
+          CompletionProvider.exthost(
+            ~selector,
+            ~handle,
+            ~supportsResolve=supportsResolveDetails,
+          ),
+        ~mapper=msg => Exthost(msg),
+        ~revMapper=
+          fun
+          | Exthost(msg) => Some(msg)
+          | _ => None,
+      ),
+      ...model.sessions,
+    ],
+  };
 };
 
 let unregister = (~handle, model) => {
   ...model,
   providers: List.filter(prov => prov.handle != handle, model.providers),
-  sessions: List.filter(session => Session.handle(session) != Some(handle), model.sessions),
+  sessions:
+    List.filter(
+      session => Session.handle(session, ()) != Some(handle),
+      model.sessions,
+    ),
 };
 
 let updateSessions = (sessions, model) => {
@@ -608,164 +618,61 @@ let updateSessions = (sessions, model) => {
       ~count=Array.length(allItems),
       model.selection,
     );
-    {...model, sessions, allItems, selection};
-}
-
-let invokeCompletion = (~buffer, ~activeCursor, model) => {
-  //  let candidateProviders =
-  //    model.providers
-  //    |> List.filter(prov =>
-  //         Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
-  //       );
-
-  let location = activeCursor;
-
-  let sessions =
-    model.providers
-    |> List.map((curr: provider) => {
-         Session.create(
-//           ~trigger=
-//             Exthost.CompletionContext.{
-//               triggerKind: Invoke,
-//               triggerCharacter: None,
-//             },
-           ~triggerCharacters=curr.triggerCharacters,
-//           ~buffer,
-//           ~base="",
-//           ~location,
-//           ~supportsResolve=curr.supportsResolveDetails,
-           ~provider=CompletionProvider.exthost(~selector=curr.selector, ~handle=curr.handle),
-           ~mapper=msg => Exthost(msg),
-           ~revMapper=
-             fun
-             | Exthost(msg) => Some(msg)
-             | _ => None,
-         )
-       });
-
-  let _keywordSession =
-    Session.create(
-//      ~trigger=
-//        Exthost.CompletionContext.{
-//          triggerKind: Invoke,
-//          triggerCharacter: None,
-//        },
-      ~triggerCharacters=[],
-//      ~buffer,
-//      ~base="",
-//      ~location,
-      // Remove from command
-//      ~supportsResolve=false,
-      ~provider=CompletionProvider.keyword,
-      ~mapper=msg => Keyword(msg),
-      ~revMapper=
-        fun
-        | Keyword(msg) => Some(msg)
-        | _ => None,
-    );
-//    |> Option.map(v => [v])
-//    |> Option.value(~default=[]);
-
-  let allItems = recomputeAllItems(sessions);
-  let selection =
-    Selection.ensureValidFocus(
-      ~count=Array.length(allItems),
-      model.selection,
-    );
-
   {...model, sessions, allItems, selection};
 };
 
-let startCompletion =
-    (~startNewSession, ~trigger, ~buffer, ~activeCursor, model) => {
-  //invokeCompletion(~buffer, ~activeCursor, model);
-  //model;
+let cursorMoved =
+    (~previous as _, ~current: EditorCoreTypes.CharacterPosition.t, model) => {
+  // Filter providers, such that the completion meets are still
+  // valid in the context of the new cursor position
 
+  let sessions' =
+    model.sessions |> List.map(Session.cursorMoved(~position=current));
+
+  model |> updateSessions(sessions');
+};
+
+let invokeCompletion =
+    (~languageConfiguration, ~trigger, ~buffer, ~activeCursor, model) => {
+  let sessions' =
     model.sessions
-    |> List.map(previous => {
+    |> List.map(
          Session.reinvoke(
+           ~languageConfiguration,
+           ~trigger,
            ~buffer,
            ~activeCursor,
-           previous,
-         )
-       })
-    |> updateSessions;
-  // TODO: Revisit why this is needed?
-  //  let candidateProviders =
-  //    model.providers
-  //    |> List.filter(prov =>
-  //         Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
-  //       );
-  //
-  //  let handleToSession =
-  //    List.fold_left(
-  //      (acc: IntMap.t(Session.t), curr: provider) => {
-  //        let maybeMeet =
-  //          CompletionMeet.fromBufferPosition(
-  //            ~triggerCharacters=curr.triggerCharacters,
-  //            ~position=activeCursor,
-  //            buffer,
-  //          );
-  //
-  //        switch (maybeMeet) {
-  //        | None => acc |> IntMap.remove(curr.handle)
-  //        | Some({base, location, _}) =>
-  //          acc
-  //          |> IntMap.update(
-  //               curr.handle,
-  //               fun
-  //               | None => {
-  //                   startNewSession
-  //                     ?
-  //                         Session.create(
-  //                           ~buffer,
-  //                           ~trigger,
-  //                           ~base,
-  //                           ~location,
-  //                           ~supportsResolve=curr.supportsResolveDetails,
-  //                           ~provider=curr.implementation,
-  //                           ~mapper=msg =>
-  //                           ExtensionProviderMsg(msg)
-  //                         )
-  //                         : None
-  //                 }
-  //               | Some(previous) => {
-  //                   Session.update(
-  //                     ~createNew=startNewSession,
-  //                     ~buffer,
-  //                     ~base,
-  //                     ~location,
-  //                     previous,
-  //                   );
-  //                 },
-  //             )
-  //        };
-  //      },
-  //      model.handleToSession,
-  //      candidateProviders,
-  //    );
-  //
-  let allItems = recomputeAllItems(sessions);
-  let selection =
-    Selection.ensureValidFocus(
-      ~count=Array.length(allItems),
-      model.selection,
-    );
-  //
-  {...model, sessions, allItems, selection};
+         ),
+       );
+
+  model |> updateSessions(sessions');
 };
 
-let refine = (~buffer, ~position, model) => {
+let refine = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
+  let sessions' =
     model.sessions
-    List.map(Session.refine(~buffer, ~position))
-    |> updateSessions;
-}
+    |> List.map(
+         Session.refine(
+           ~languageConfiguration,
+           ~buffer,
+           ~position=activeCursor,
+         ),
+       );
+
+  model |> updateSessions(sessions');
+};
 
 let bufferUpdated =
-    (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
+    (
+      ~languageConfiguration,
+      ~buffer,
+      ~config,
+      ~activeCursor,
+      ~syntaxScope,
+      ~triggerKey,
+      model,
+    ) => {
   let quickSuggestionsSetting = Configuration.quickSuggestions.get(config);
-
-  let anySessionsActive = model.sessions |> List.exists(Session.isActive);
 
   let trigger =
     Exthost.CompletionContext.{
@@ -780,33 +687,49 @@ let bufferUpdated =
         )) {
     // If we already had started a session (ie, manually triggered) -
     // make sure to continue, even if suggestions are off
-    if (anySessionsActive) {
-      refine(
-        ~trigger,
-        ~buffer,
-        ~activeCursor,
-        model,
-      );
-    } else {
-      model;
-    };
+    model |> refine(~languageConfiguration, ~buffer, ~activeCursor);
   } else {
-    invokeCompletion(
-      ~buffer,
-      ~activeCursor,
-      model,
-    );
+    model
+    |> invokeCompletion(
+         ~languageConfiguration,
+         ~trigger,
+         ~buffer,
+         ~activeCursor,
+       );
   };
 };
 
-let update = (~maybeBuffer, ~activeCursor, msg, model) => {
-  prerr_endline("MSG: " ++ show_msg(msg));
+let selected = model => {
+  switch (model.selection) {
+  | None => None
+  | Some(focusedIndex) =>
+    let (_: CharacterPosition.t, result: Filter.result(CompletionItem.t)) = model.
+                                                                    allItems[focusedIndex];
+    Some(result.item);
+  };
+};
+
+let update = (~languageConfiguration, ~maybeBuffer, ~activeCursor, msg, model) => {
   let default = (model, Outmsg.Nothing);
   switch (msg) {
   | Command(TriggerSuggest) =>
     maybeBuffer
     |> Option.map(buffer => {
-         (invokeCompletion(~buffer, ~activeCursor, model), Outmsg.Nothing)
+         let trigger =
+           Exthost.CompletionContext.{
+             triggerKind: Invoke,
+             triggerCharacter: None,
+           };
+         (
+           invokeCompletion(
+             ~languageConfiguration,
+             ~trigger,
+             ~buffer,
+             ~activeCursor,
+             model,
+           ),
+           Outmsg.Nothing,
+         );
        })
     |> Option.value(~default)
 
@@ -890,123 +813,18 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
         model.selection,
       );
     ({...model, sessions, allItems, selection}, Nothing);
-  //  | CompletionResultAvailable({handle, suggestResult}) =>
-  //    let handleToSession =
-  //      IntMap.update(
-  //        handle,
-  //        Option.map(prev =>
-  //          Session.receivedItems(
-  //            Exthost.SuggestResult.(suggestResult.completions),
-  //            prev,
-  //          )
-  //        ),
-  //        model.handleToSession,
-  //      );
-  //    let allItems = recomputeAllItems(handleToSession);
-  //    (
-  //      {
-  //        ...model,
-  //        handleToSession,
-  //        allItems,
-  //        selection:
-  //          Selection.ensureValidFocus(
-  //            ~count=Array.length(allItems) - 1,
-  //            model.selection,
-  //          ),
-  //      },
-  //      Outmsg.Nothing,
-  //    );
-  //  | CompletionError({handle, errorMsg}) => (
-  //      {
-  //        ...model,
-  //        handleToSession:
-  //          IntMap.update(
-  //            handle,
-  //            Option.map(prev => Session.error(~errorMsg, prev)),
-  //            model.handleToSession,
-  //          ),
-  //      },
-  //      Outmsg.Nothing,
-  //    )
-  //
-  //  | CompletionDetailsAvailable({handle, suggestItem}) =>
-  //    let handleToSession =
-  //      model.handleToSession
-  //      |> IntMap.update(
-  //           handle,
-  //           Option.map(prev => Session.updateItem(~item=suggestItem, prev)),
-  //         );
-  //
-  //    let allItems = recomputeAllItems(handleToSession);
-  //    ({...model, handleToSession, allItems}, Outmsg.Nothing);
-  //
-  //  | CompletionDetailsError(_) => (model, Outmsg.Nothing)
   };
 };
 
-let sub = (~client, model) => {
+let sub = (~activeBuffer, ~client, model) => {
   // Subs for each pending handle..
   prerr_endline(" -- sub");
+  let selectedItem = selected(model);
   model.sessions
   |> List.map((meet: Session.t) => {
-       Session.sub(~client, ~selectedItem=None, meet);
+       Session.sub(~activeBuffer, ~client, ~selectedItem, meet)
      })
-  |> Isolinear.Sub.batch
-
-                        //               triggerCharacter: None,
-                        //             },
-                        //           ~handle,
-                        //           ~buffer=meet.buffer,
-                        //           ~position=meet.location,
-                        //           ~toMsg=
-                        //             suggestResult => {
-                        //               switch (suggestResult) {
-                        //               | Ok(v) =>
-                        //                 CompletionResultAvailable({handle, suggestResult: v})
-                        //               | Error(errorMsg) => CompletionError({handle, errorMsg})
-                        //               }
-                        //             },
-                        //           client,
-                        //         )
-                        //       });
-                        //
-                        //  // And subs for the current item, if the handle supports resolution
-                        //  let resolveSub =
-                        //    model
-                        //    |> focused
-                        //    |> OptionEx.flatMap((focusedItem: Filter.result(CompletionItem.t)) => {
-                        //         let handle = focusedItem.item.handle;
-                        //
-                        //         model.handleToSession
-                        //         |> IntMap.find_opt(handle)
-                        //         |> OptionEx.flatMap(({supportsResolve, _}: Session.t) =>
-                        //              if (supportsResolve) {
-                        //                focusedItem.item.chainedCacheId
-                        //                |> Option.map(chainedCacheId => {
-                        //                     Service_Exthost.Sub.completionItem(
-                        //                       ~handle,
-                        //                       ~chainedCacheId,
-                        //                       ~toMsg=
-                        //                         fun
-                        //                         | Ok(suggestItem) =>
-                        //                           CompletionDetailsAvailable({handle, suggestItem})
-                        //                         | Error(errorMsg) =>
-                        //                           CompletionDetailsError({handle, errorMsg}),
-                        //                       client,
-                        //                     )
-                        //                   });
-                        //              } else {
-                        //                None;
-                        //              }
-                        ; //             Exthost.CompletionContext.{
-                        //            );
- //           ~context=
-  //       })
-  //           // TODO: proper trigger kind
-  //    |> Option.value(~default=Isolinear.Sub.none);
-  //         Service_Exthost.Sub.completionItems(
-  //
-  //  [resolveSub, ...handleSubs] |> Isolinear.Sub.batch;
+  |> Isolinear.Sub.batch;
 };
 
 // COMMANDS
