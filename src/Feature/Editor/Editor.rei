@@ -10,12 +10,6 @@ type scrollbarMetrics = {
   thumbOffset: int,
 };
 
-type viewLine = {
-  contents: BufferLine.t,
-  byteOffset: int,
-  characterOffset: int,
-};
-
 type yankHighlight = {
   key: Brisk_reconciler.Key.t,
   pixelRanges: list(PixelRange.t),
@@ -88,7 +82,9 @@ let visiblePixelHeight: t => int;
 
 let font: t => Service_Font.font;
 
-let viewLine: (t, int) => viewLine;
+let viewTokens:
+  (~line: int, ~scrollX: float, ~colorizer: BufferLineColorizer.t, t) =>
+  list(BufferViewTokenizer.t);
 
 let scrollX: t => float;
 let scrollY: t => float;
