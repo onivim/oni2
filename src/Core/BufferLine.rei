@@ -73,4 +73,7 @@ module Slow: {
    * _slow_ because requires traversal of the string, currently.
    */
   let getIndexFromPixel: (~pixel: float, t) => CharacterIndex.t;
+
+  let getByteFromPixel:
+    (~relativeToByte: ByteIndex.t=?, ~pixelX: float, t) => ByteIndex.t;
 };

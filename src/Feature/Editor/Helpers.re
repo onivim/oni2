@@ -1,5 +1,4 @@
 open EditorCoreTypes;
-open Oni_Core;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 
@@ -13,84 +12,61 @@ let getTokensForLine =
       ~bufferSyntaxHighlights,
       ~ignoreMatchingPairs=false,
       ~selection=None,
-      startIndex,
-      endIndex,
+      ~scrollX,
       i,
     ) =>
   if (i >= Editor.totalViewLines(editor)) {
     [];
   } else {
-    let viewLine = Editor.viewLine(editor, i);
-    let line = viewLine.contents;
-    let length = BufferLine.lengthInBytes(line);
-    let startIndex = max(0, startIndex);
-    let endIndex = max(0, endIndex);
     let bufferId = Editor.getBufferId(editor);
 
-    if (length == 0) {
-      [];
-    } else {
-      let idx = EditorCoreTypes.LineNumber.ofZeroBased(i);
-      let searchHighlights =
-        BufferHighlights.getHighlightsByLine(
-          ~bufferId,
-          ~line=idx,
-          bufferHighlights,
-        );
+    let isActiveLine = i == cursorLine;
+    let defaultBackground =
+      isActiveLine ? colors.lineHighlightBackground : colors.editorBackground;
 
-      let isActiveLine = i == cursorLine;
-      let defaultBackground =
-        isActiveLine
-          ? colors.lineHighlightBackground : colors.editorBackground;
-
-      let matchingPairIndex =
-        switch (matchingPairs) {
-        | None => None
-        | Some((startPos: CharacterPosition.t, endPos: CharacterPosition.t))
-            when !ignoreMatchingPairs =>
-          let maybeStartPosByte = Editor.characterToByte(startPos, editor);
-          let maybeEndPosByte = Editor.characterToByte(endPos, editor);
-          if (EditorCoreTypes.LineNumber.toZeroBased(startPos.line) == i) {
-            maybeStartPosByte |> Option.map(BytePosition.byte);
-          } else if (EditorCoreTypes.LineNumber.toZeroBased(endPos.line) == i) {
-            maybeEndPosByte |> Option.map(BytePosition.byte);
-          } else {
-            None;
-          };
-        | _ => None
-        };
-
-      let tokenColors =
-        Feature_Syntax.getTokens(
-          ~bufferId,
-          ~line=EditorCoreTypes.LineNumber.ofZeroBased(i),
-          bufferSyntaxHighlights,
-        );
-
-      let startByte =
-        BufferLine.getByteFromIndex(
-          ~index=startIndex |> CharacterIndex.ofInt,
-          line,
-        );
-
-      let colorizer =
-        BufferLineColorizer.create(
-          ~startByte,
-          ~defaultBackgroundColor=defaultBackground,
-          ~defaultForegroundColor=colors.editorForeground,
-          ~selectionHighlights=selection,
-          ~selectionColor=colors.selectionBackground,
-          ~matchingPair=matchingPairIndex,
-          ~searchHighlights,
-          ~searchHighlightColor=colors.findMatchBackground,
-          tokenColors,
-        );
-
-      BufferViewTokenizer.tokenize(
-        ~start=CharacterIndex.ofInt(startIndex),
-        ~stop=CharacterIndex.ofInt(endIndex),
-        line,
-        colorizer,
+    let tokenColors =
+      Feature_Syntax.getTokens(
+        ~bufferId,
+        ~line=EditorCoreTypes.LineNumber.ofZeroBased(i),
+        bufferSyntaxHighlights,
       );
-    };
+
+    let idx = EditorCoreTypes.LineNumber.ofZeroBased(i);
+    let searchHighlights =
+      BufferHighlights.getHighlightsByLine(
+        ~bufferId,
+        ~line=idx,
+        bufferHighlights,
+      );
+
+    let matchingPairIndex =
+      switch (matchingPairs) {
+      | None => None
+      | Some((startPos: CharacterPosition.t, endPos: CharacterPosition.t))
+          when !ignoreMatchingPairs =>
+        let maybeStartPosByte = Editor.characterToByte(startPos, editor);
+        let maybeEndPosByte = Editor.characterToByte(endPos, editor);
+        if (EditorCoreTypes.LineNumber.toZeroBased(startPos.line) == i) {
+          maybeStartPosByte |> Option.map(BytePosition.byte);
+        } else if (EditorCoreTypes.LineNumber.toZeroBased(endPos.line) == i) {
+          maybeEndPosByte |> Option.map(BytePosition.byte);
+        } else {
+          None;
+        };
+      | _ => None
+      };
+
+    let colorizer =
+      BufferLineColorizer.create(
+        ~defaultBackgroundColor=defaultBackground,
+        ~defaultForegroundColor=colors.editorForeground,
+        ~selectionHighlights=selection,
+        ~selectionColor=colors.selectionBackground,
+        ~matchingPair=matchingPairIndex,
+        ~searchHighlights,
+        ~searchHighlightColor=colors.findMatchBackground,
+        tokenColors,
+      );
+
+    Editor.viewTokens(~colorizer, ~scrollX, ~line=i, editor);
   };

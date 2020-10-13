@@ -11,12 +11,6 @@ module GlobalState = {
   };
 };
 
-type viewLine = {
-  contents: BufferLine.t,
-  byteOffset: int,
-  characterOffset: int,
-};
-
 module WrapMode = {
   [@deriving show]
   type t =
@@ -226,10 +220,42 @@ let setYankHighlight = (~yankHighlight, editor) => {
   yankHighlight: Some(yankHighlight),
 };
 
-let viewLine = (editor, lineNumber) => {
-  let contents = editor.buffer |> EditorBuffer.line(lineNumber);
+let viewTokens = (~line, ~scrollX, ~colorizer, editor) => {
+  let wrapping = editor.wrapState |> WrapState.wrapping;
+  let bufferPosition: Wrapping.bufferPosition =
+    Wrapping.viewLineToBufferPosition(~line, wrapping);
 
-  {contents, byteOffset: 0, characterOffset: 0};
+  let startByte = bufferPosition.byteOffset;
+
+  let bufferLine =
+    EditorBuffer.line(
+      bufferPosition.line |> EditorCoreTypes.LineNumber.toZeroBased,
+      editor.buffer,
+    );
+
+  let viewStartByte =
+    BufferLine.Slow.getByteFromPixel(
+      ~relativeToByte=startByte,
+      ~pixelX=scrollX,
+      bufferLine,
+    );
+
+  let viewEndByte =
+    BufferLine.Slow.getByteFromPixel(
+      ~relativeToByte=viewStartByte,
+      ~pixelX=float(editor.pixelWidth),
+      bufferLine,
+    );
+
+  let viewStartIndex = BufferLine.getIndex(~byte=viewStartByte, bufferLine);
+  let viewEndIndex = BufferLine.getIndex(~byte=viewEndByte, bufferLine);
+
+  BufferViewTokenizer.tokenize(
+    ~start=viewStartIndex,
+    ~stop=CharacterIndex.(viewEndIndex + 1),
+    bufferLine,
+    colorizer(~startByte=viewStartByte),
+  );
 };
 
 let bufferCharacterPositionToPixel =

@@ -222,7 +222,6 @@ let%component make =
           ~languageConfiguration,
           ~bufferSyntaxHighlights,
           ~shouldRenderWhitespace=Config.renderWhitespace.get(config),
-          ~bufferWidthInPixels=bufferPixelWidth,
         );
 
         if (Config.scrollShadow.get(config)) {

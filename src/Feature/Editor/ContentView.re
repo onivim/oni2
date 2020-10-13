@@ -192,7 +192,6 @@ let renderText =
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~shouldRenderWhitespace,
-      ~bufferWidthInPixels,
     ) =>
   Draw.renderImmediate(
     ~context,
@@ -208,17 +207,6 @@ let renderText =
           | _ => Some(List.hd(v))
           }
         };
-      let bufferLine = Editor.viewLine(editor, item).contents;
-      let startPixel = Editor.scrollX(editor);
-      let startCharacter =
-        BufferLine.Slow.getIndexFromPixel(~pixel=startPixel, bufferLine)
-        |> CharacterIndex.toInt;
-      let endCharacter =
-        BufferLine.Slow.getIndexFromPixel(
-          ~pixel=startPixel +. float(bufferWidthInPixels),
-          bufferLine,
-        )
-        |> CharacterIndex.toInt;
 
       let tokens =
         getTokensForLine(
@@ -229,8 +217,7 @@ let renderText =
           ~matchingPairs,
           ~bufferSyntaxHighlights,
           ~selection=selectionRange,
-          startCharacter,
-          endCharacter + 1,
+          ~scrollX=Editor.scrollX(editor),
           item,
         );
 
@@ -261,7 +248,6 @@ let render =
       ~languageConfiguration,
       ~bufferSyntaxHighlights,
       ~shouldRenderWhitespace,
-      ~bufferWidthInPixels,
     ) => {
   renderEmbellishments(
     ~context,
@@ -303,6 +289,5 @@ let render =
     ~matchingPairs,
     ~bufferSyntaxHighlights,
     ~shouldRenderWhitespace,
-    ~bufferWidthInPixels,
   );
 };

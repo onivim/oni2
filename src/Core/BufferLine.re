@@ -311,4 +311,32 @@ module Slow = {
 
     loop(0, characterLength - 1) |> CharacterIndex.ofInt;
   };
+
+  let getByteFromPixel = (~relativeToByte=ByteIndex.zero, ~pixelX, bufferLine) => {
+    let startIndex = getIndex(~byte=relativeToByte, bufferLine);
+    let (startPixel, _) =
+      getPixelPositionAndWidth(~index=startIndex, bufferLine);
+
+    let destPixelX = startPixel +. pixelX;
+    let length = lengthInBytes(bufferLine);
+
+    let rec loop = byteIndex =>
+      if (byteIndex >= length) {
+        length - 1;
+      } else {
+        let index = getIndex(~byte=ByteIndex.ofInt(byteIndex), bufferLine);
+        let (characterPixel, width) =
+          getPixelPositionAndWidth(~index, bufferLine);
+
+        if (destPixelX >= characterPixel
+            && destPixelX < characterPixel
+            +. width) {
+          byteIndex;
+        } else {
+          loop(byteIndex + 1);
+        };
+      };
+
+    loop(ByteIndex.toInt(relativeToByte)) |> ByteIndex.ofInt;
+  };
 };
