@@ -174,6 +174,9 @@ let updateBuffer:
   (~update: Oni_Core.BufferUpdate.t, ~buffer: EditorBuffer.t, t) => t;
 let setBuffer: (~buffer: EditorBuffer.t, t) => t;
 
+let configurationChanged:
+  (~perFileTypeConfig: Oni_Core.Config.fileTypeResolver, t) => t;
+
 module Slow: {
   let pixelPositionToBytePosition:
     // Allow the return value to exceed the byte position of the line

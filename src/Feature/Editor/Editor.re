@@ -31,15 +31,15 @@ module WrapState = {
         wrapping: Wrapping.t,
       });
 
-  let make = (~wrapMode: WrapMode.t, ~buffer) => {
+  let make = (~pixelWidth: float, ~wrapMode: WrapMode.t, ~buffer) => {
     switch (wrapMode) {
     | NoWrap =>
       NoWrap({wrapping: Wrapping.make(~wrap=WordWrap.none, ~buffer)})
     | Viewport =>
       Viewport({
-        lastWrapPixels: 1000.,
+        lastWrapPixels: pixelWidth,
         wrapping:
-          Wrapping.make(~wrap=WordWrap.fixed(~pixels=1000.), ~buffer),
+          Wrapping.make(~wrap=WordWrap.fixed(~pixels=pixelWidth), ~buffer),
       })
     };
   };
@@ -83,6 +83,7 @@ type t = {
   key: [@opaque] Brisk_reconciler.Key.t,
   buffer: [@opaque] EditorBuffer.t,
   editorId: EditorId.t,
+  lineNumbers: [ | `Off | `On | `Relative | `RelativeOnly],
   lineHeight: LineHeight.t,
   scrollX: float,
   scrollY: float,
@@ -262,12 +263,13 @@ let create = (~wrapMode=WrapMode.Viewport, ~config, ~buffer, ()) => {
   let isMinimapEnabled = EditorConfiguration.Minimap.enabled.get(config);
   let lineHeight = EditorConfiguration.lineHeight.get(config);
 
-  let wrapState = WrapState.make(~wrapMode, ~buffer);
+  let wrapState = WrapState.make(~pixelWidth=1000., ~wrapMode, ~buffer);
 
   {
     editorId: id,
     key,
     lineHeight,
+    lineNumbers: `On,
     isMinimapEnabled,
     isScrollAnimated: false,
     buffer,
@@ -659,16 +661,25 @@ let getTokenAt =
     );
   };
 };
+let getContextPixelWidth = editor => {
+  let layout: EditorLayout.t =
+    getLayout(~showLineNumbers=true, ~maxMinimapCharacters=999, editor);
+  layout.bufferWidthInPixels;
+};
 
 let setSize = (~pixelWidth, ~pixelHeight, editor) => {
+  let editor' = {...editor, pixelWidth, pixelHeight};
+
+  let contextPixelWidth = getContextPixelWidth(editor');
+
   let wrapState =
     WrapState.resize(
-      ~pixelWidth=float(pixelWidth),
-      ~buffer=editor.buffer,
-      editor.wrapState,
+      ~pixelWidth=contextPixelWidth,
+      ~buffer=editor'.buffer,
+      editor'.wrapState,
     );
 
-  {...editor, wrapState, pixelWidth, pixelHeight};
+  {...editor', wrapState};
 };
 
 let scrollToPixelY = (~pixelY as newScrollY, editor) => {
@@ -792,8 +803,39 @@ let setBuffer = (~buffer, editor) => {
   {
     ...editor,
     buffer,
-    wrapState: WrapState.make(~wrapMode=editor.wrapMode, ~buffer),
+    wrapState:
+      WrapState.make(
+        ~pixelWidth=getContextPixelWidth(editor),
+        ~wrapMode=editor.wrapMode,
+        ~buffer,
+      ),
   };
+};
+
+let setWrapMode = (~wrapMode, editor) => {
+  {
+    ...editor,
+    wrapMode,
+    wrapState:
+      WrapState.make(
+        ~pixelWidth=getContextPixelWidth(editor),
+        ~wrapMode,
+        ~buffer=editor.buffer,
+      ),
+  };
+};
+
+let configurationChanged = (~perFileTypeConfig, editor) => {
+  let fileType =
+    editor.buffer |> EditorBuffer.fileType |> Oni_Core.Buffer.FileType.toString;
+
+  let config = perFileTypeConfig(~fileType);
+
+  editor
+  |> setMinimapEnabled(
+       ~enabled=EditorConfiguration.Minimap.enabled.get(config),
+     )
+  |> setLineHeight(~lineHeight=EditorConfiguration.lineHeight.get(config));
 };
 
 module Slow = {

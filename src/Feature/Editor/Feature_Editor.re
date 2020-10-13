@@ -145,35 +145,3 @@ let update = (editor, msg) => {
     )
   };
 };
-
-module Sub = {
-  module MinimapEnabledSub =
-    Oni_Core.Config.Sub.Make({
-      type configValue = bool;
-      let schema = EditorConfiguration.Minimap.enabled;
-      type msg = Msg.t;
-    });
-  module LineHeightSub =
-    Oni_Core.Config.Sub.Make({
-      type configValue = LineHeight.t;
-      let schema = EditorConfiguration.lineHeight;
-      type msg = Msg.t;
-    });
-  let global = (~config) => {
-    let minimapEnabledConfig =
-      MinimapEnabledSub.create(
-        ~config, ~name="Feature_Editor.Config.minimapEnabled", ~toMsg=enabled =>
-        MinimapEnabledConfigChanged(enabled)
-      );
-
-    let lineHeightConfig =
-      LineHeightSub.create(
-        ~config,
-        ~name="Feature_Editor.Config.lineHeightEnabled",
-        ~toMsg=lineHeight =>
-        LineHeightConfigChanged(lineHeight)
-      );
-
-    [minimapEnabledConfig, lineHeightConfig] |> Isolinear.Sub.batch;
-  };
-};

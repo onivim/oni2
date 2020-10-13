@@ -855,6 +855,20 @@ let update =
         state.sideBar
         |> Feature_SideBar.configurationChanged(~config=resolver);
 
+      let perFileTypeConfig =
+        Feature_Configuration.resolver(state.config, state.vim);
+
+      let layout =
+        Feature_Layout.map(
+          editor => {
+            Feature_Editor.Editor.configurationChanged(
+              ~perFileTypeConfig,
+              editor,
+            )
+          },
+          state.layout,
+        );
+
       let eff =
         Isolinear.Effect.create(
           ~name="features.configuration$acceptConfigurationChanged", () => {
@@ -871,7 +885,7 @@ let update =
             extHostClient,
           );
         });
-      ({...state, sideBar}, eff);
+      ({...state, sideBar, layout}, eff);
     | Nothing => (state, Effect.none)
     };
 
