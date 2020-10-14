@@ -310,6 +310,26 @@ let totalViewLines = ({wrapState, _}) =>
 let maxLineLength = ({wrapState, _}) =>
   wrapState |> WrapState.wrapping |> Wrapping.maxLineLength;
 
+let getTopVisibleBufferLine = editor => {
+  let topViewLine =
+    int_of_float(editor.scrollY /. lineHeightInPixels(editor));
+  viewLineToBufferLine(topViewLine, editor);
+};
+
+let getBottomVisibleBufferLine = editor => {
+  let absoluteBottomLine =
+    int_of_float(
+      (editor.scrollY +. float_of_int(editor.pixelHeight))
+      /. lineHeightInPixels(editor),
+    );
+
+  let viewLines = editor |> totalViewLines;
+
+  let viewBottomLine =
+    absoluteBottomLine >= viewLines ? viewLines - 1 : absoluteBottomLine;
+  viewLineToBufferLine(viewBottomLine, editor);
+};
+
 let copy = editor => {
   let id = GlobalState.generateId();
   let key = Brisk_reconciler.Key.create();
@@ -636,21 +656,6 @@ let getLeftVisibleColumn = view => {
   int_of_float(view.scrollX /. getCharacterWidth(view));
 };
 
-let getTopVisibleLine = view =>
-  int_of_float(view.scrollY /. lineHeightInPixels(view)) + 1;
-
-let getBottomVisibleLine = view => {
-  let absoluteBottomLine =
-    int_of_float(
-      (view.scrollY +. float_of_int(view.pixelHeight))
-      /. lineHeightInPixels(view),
-    );
-
-  let viewLines = view |> totalViewLines;
-
-  absoluteBottomLine > viewLines ? viewLines : absoluteBottomLine;
-};
-
 let getTokenAt =
     (~languageConfiguration, {line, character}: CharacterPosition.t, editor) => {
   let lineNumber = line |> EditorCoreTypes.LineNumber.toZeroBased;
@@ -684,7 +689,7 @@ let getTokenAt =
     );
   };
 };
-let getContextPixelWidth = editor => {
+let getContentPixelWidth = editor => {
   let layout: EditorLayout.t = getLayout(editor);
   layout.bufferWidthInPixels;
 };
@@ -692,11 +697,11 @@ let getContextPixelWidth = editor => {
 let setSize = (~pixelWidth, ~pixelHeight, editor) => {
   let editor' = {...editor, pixelWidth, pixelHeight};
 
-  let contextPixelWidth = getContextPixelWidth(editor');
+  let contentPixelWidth = getContentPixelWidth(editor');
 
   let wrapState =
     WrapState.resize(
-      ~pixelWidth=contextPixelWidth,
+      ~pixelWidth=contentPixelWidth,
       ~buffer=editor'.buffer,
       editor'.wrapState,
     );
@@ -827,7 +832,7 @@ let setBuffer = (~buffer, editor) => {
     buffer,
     wrapState:
       WrapState.make(
-        ~pixelWidth=getContextPixelWidth(editor),
+        ~pixelWidth=getContentPixelWidth(editor),
         ~wrapMode=editor.wrapMode,
         ~buffer,
       ),
@@ -835,15 +840,11 @@ let setBuffer = (~buffer, editor) => {
 };
 
 let setWrapMode = (~wrapMode, editor) => {
+  let pixelWidth = getContentPixelWidth(editor);
   {
     ...editor,
     wrapMode,
-    wrapState:
-      WrapState.make(
-        ~pixelWidth=getContextPixelWidth(editor),
-        ~wrapMode,
-        ~buffer=editor.buffer,
-      ),
+    wrapState: WrapState.make(~pixelWidth, ~wrapMode, ~buffer=editor.buffer),
   };
 };
 

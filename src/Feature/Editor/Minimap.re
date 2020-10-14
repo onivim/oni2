@@ -136,8 +136,9 @@ let%component make =
 
   let scrollY = Editor.minimapScrollY(editor);
 
-  let thumbTop =
-    rowHeight *. float(Editor.getTopVisibleLine(editor) - 1) -. scrollY;
+  let editorScrollY = Editor.scrollY(editor);
+  let topViewLine = editorScrollY /. Editor.lineHeightInPixels(editor);
+  let thumbTop = rowHeight *. topViewLine -. scrollY;
   let thumbSize = rowHeight *. float(getMinimapSize(editor));
 
   let%hook (maybeBbox, setBbox) = Hooks.state(None);
@@ -482,6 +483,7 @@ let%component make =
 
         Option.iter(
           EditorDiffMarkers.render(
+            ~editor,
             ~scrollY,
             ~rowHeight,
             ~x=Constants.leftMargin,

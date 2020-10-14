@@ -46,11 +46,16 @@ describe("Editor", ({describe, _}) => {
     test("line wraps halfway (fixed: pixels=3a)", ({expect, _}) => {
       let (editor, _buffer) = create([|"aaaaaa"|]);
       let editor =
-        Editor.setSize(
-          ~pixelWidth=int_of_float(3. *. aWidth +. 1.0),
-          ~pixelHeight=500,
-          editor,
-        )
+        editor
+        |> Editor.setMinimap(~enabled=false, ~maxColumn=0)
+        |> Editor.setLineNumbers(~lineNumbers=`Off)
+        |> Editor.setSize(
+             ~pixelWidth=
+               int_of_float(
+                 3. *. aWidth +. 1.0 +. float(Constants.scrollBarThickness),
+               ),
+             ~pixelHeight=500,
+           )
         |> Editor.setWrapMode(~wrapMode=WrapMode.Viewport);
       let lineHeight = Editor.lineHeightInPixels(editor);
       let ({x, y}: PixelPosition.t, _) =

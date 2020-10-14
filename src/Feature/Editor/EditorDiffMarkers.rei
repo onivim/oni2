@@ -14,6 +14,7 @@ let generate: (~scm: Feature_SCM.model, Buffer.t) => option(t);
 
 let render:
   (
+    ~editor: Editor.t,
     ~scrollY: float,
     ~rowHeight: float,
     ~x: float,

@@ -43,7 +43,6 @@ let%component make =
                 ~editor,
                 ~colors,
                 ~dispatch,
-                ~topVisibleLine,
                 ~onCursorChange,
                 ~cursorPosition: CharacterPosition.t,
                 ~editorFont: Service_Font.font,
@@ -54,7 +53,6 @@ let%component make =
                 ~languageSupport,
                 ~languageConfiguration,
                 ~bufferSyntaxHighlights,
-                ~bottomVisibleLine,
                 ~maybeYankHighlights,
                 ~mode,
                 ~isActiveSplit,
@@ -146,7 +144,6 @@ let%component make =
 
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
     |> Option.iter(bytePosition => {
-         Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
          Log.tracef(m =>
            m("  setPosition (%s)", BytePosition.show(bytePosition))
          );
@@ -198,8 +195,8 @@ let%component make =
           IndentLineRenderer.render(
             ~context,
             ~buffer,
-            ~startLine=topVisibleLine - 1,
-            ~endLine=bottomVisibleLine + 1,
+            ~startLine=Editor.getTopVisibleBufferLine(editor),
+            ~endLine=Editor.getBottomVisibleBufferLine(editor),
             ~cursorPosition,
             ~colors,
             ~showActive=Config.highlightActiveIndentGuide.get(config),

@@ -190,21 +190,30 @@ let viewLineToBufferPosition = (~line: int, wrapping) => {
   let bufferLineIdx = Internal.viewLineToBufferLine(line, wrapping);
   let startViewLine = Internal.bufferLineToViewLine(bufferLineIdx, wrapping);
 
-  let wraps = wrapping.wraps[bufferLineIdx];
-
-  let idx = line - startViewLine;
-  let len = Array.length(wraps);
-  let lineWrap =
-    if (idx < len) {
-      wraps[idx];
-    } else {
-      WordWrap.{byte: ByteIndex.zero, character: CharacterIndex.zero};
+  let len = Array.length(wrapping.wraps);
+  if (len == 0) {
+    {
+      line: LineNumber.zero,
+      byteOffset: ByteIndex.zero,
+      characterOffset: CharacterIndex.zero,
     };
+  } else {
+    let wraps = wrapping.wraps[bufferLineIdx];
 
-  {
-    line: EditorCoreTypes.LineNumber.ofZeroBased(bufferLineIdx),
-    byteOffset: lineWrap.byte,
-    characterOffset: lineWrap.character,
+    let idx = line - startViewLine;
+    let len = Array.length(wraps);
+    let lineWrap =
+      if (idx < len) {
+        wraps[idx];
+      } else {
+        WordWrap.{byte: ByteIndex.zero, character: CharacterIndex.zero};
+      };
+
+    {
+      line: EditorCoreTypes.LineNumber.ofZeroBased(bufferLineIdx),
+      byteOffset: lineWrap.byte,
+      characterOffset: lineWrap.character,
+    };
   };
 };
 

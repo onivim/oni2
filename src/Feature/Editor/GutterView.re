@@ -140,6 +140,7 @@ let render =
 
   Option.iter(
     EditorDiffMarkers.render(
+      ~editor,
       ~scrollY=Editor.scrollY(editor),
       ~rowHeight=Editor.lineHeightInPixels(editor),
       ~x=lineNumberWidth,

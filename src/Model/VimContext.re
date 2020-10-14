@@ -88,15 +88,16 @@ let current = (state: State.t) => {
   let autoClosingPairs =
     Internal.autoClosingPairs(~syntaxScope, ~maybeLanguageConfig, state);
 
-  let Feature_Editor.EditorLayout.{
-        bufferHeightInCharacters: height,
-        bufferWidthInCharacters: width,
-        _,
-      } =
+  let Feature_Editor.EditorLayout.{bufferWidthInCharacters: width, _} =
     Editor.getLayout(editor);
 
   let leftColumn = Editor.getLeftVisibleColumn(editor);
-  let topLine = Editor.getTopVisibleLine(editor);
+  let topLine =
+    Editor.getTopVisibleBufferLine(editor)
+    |> EditorCoreTypes.LineNumber.toOneBased;
+  let bottomLine =
+    Editor.getBottomVisibleBufferLine(editor)
+    |> EditorCoreTypes.LineNumber.toOneBased;
 
   // Set configured line comment
   let lineComment = Internal.lineComment(~maybeLanguageConfig);
@@ -118,7 +119,7 @@ let current = (state: State.t) => {
     leftColumn,
     topLine,
     width,
-    height,
+    height: bottomLine - topLine,
     cursors,
     autoClosingPairs,
     lineComment,

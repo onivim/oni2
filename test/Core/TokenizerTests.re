@@ -119,7 +119,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=ByteIndex.ofInt(3),
           ~startIndex=CharacterIndex.ofInt(1),
           ~endIndex=CharacterIndex.ofInt(3),
-          ~startPixel=1.0,
+          ~startPixel=0.,
           (),
         ),
       ];
@@ -143,7 +143,7 @@ describe("Tokenizer", ({test, describe, _}) => {
           ~endByte=ByteIndex.ofInt(5),
           ~startIndex=CharacterIndex.ofInt(3),
           ~endIndex=CharacterIndex.ofInt(5),
-          ~startPixel=3.0,
+          ~startPixel=0.,
           (),
         ),
       ];

@@ -215,9 +215,6 @@ let%component make =
 
   let editorFont = Editor.font(editor);
 
-  let topVisibleLine = Editor.getTopVisibleLine(editor);
-  let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
-
   let cursorPosition = Editor.getPrimaryCursor(editor);
 
   let layout = Editor.getLayout(editor);
@@ -347,7 +344,6 @@ let%component make =
       editor
       colors
       dispatch
-      topVisibleLine
       onCursorChange
       cursorPosition
       editorFont
@@ -359,7 +355,6 @@ let%component make =
       languageSupport
       languageConfiguration
       bufferSyntaxHighlights
-      bottomVisibleLine
       mode
       isActiveSplit
       gutterWidth

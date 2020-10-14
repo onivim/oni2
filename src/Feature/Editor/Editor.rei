@@ -28,8 +28,8 @@ let copy: t => t;
 let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;
 let getBufferId: t => int;
-let getTopVisibleLine: t => int;
-let getBottomVisibleLine: t => int;
+let getTopVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
+let getBottomVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
 let getLeftVisibleColumn: t => int;
 let getLayout: t => EditorLayout.t;
 let getCharacterUnderCursor: t => option(Uchar.t);
@@ -54,7 +54,11 @@ let getTokenAt:
 let yankHighlight: t => option(yankHighlight);
 let setYankHighlight: (~yankHighlight: yankHighlight, t) => t;
 
+let setMinimap: (~enabled: bool, ~maxColumn: int, t) => t;
 let isMinimapEnabled: t => bool;
+
+let setLineNumbers:
+  (~lineNumbers: [ | `Off | `On | `Relative | `RelativeOnly], t) => t;
 let lineNumbers: t => [ | `Off | `On | `Relative | `RelativeOnly];
 
 // [exposePrimaryCursor(editor)] ensures the primary cursor is visible - adjusting the scroll if it isnot.
