@@ -222,8 +222,6 @@ let%component make =
 
   let layout =
     Editor.getLayout(
-      ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
-      ~maxMinimapCharacters=Config.Minimap.maxColumn.get(config),
       editor,
     );
 
@@ -286,7 +284,7 @@ let%component make =
     <GutterView
       editor
       showScrollShadow={Config.scrollShadow.get(config)}
-      showLineNumbers={Config.lineNumbers.get(config)}
+      showLineNumbers={Editor.lineNumbers(editor)}
       height=pixelHeight
       colors
       count=lineCount

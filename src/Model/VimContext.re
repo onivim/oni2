@@ -93,8 +93,7 @@ let current = (state: State.t) => {
         bufferWidthInCharacters: width,
         _,
       } =
-    // TODO: Fix this
-    Editor.getLayout(~showLineNumbers=true, ~maxMinimapCharacters=0, editor);
+    Editor.getLayout(editor);
 
   let leftColumn = Editor.getLeftVisibleColumn(editor);
   let topLine = Editor.getTopVisibleLine(editor);

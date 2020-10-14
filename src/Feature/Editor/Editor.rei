@@ -38,8 +38,7 @@ let getBufferId: t => int;
 let getTopVisibleLine: t => int;
 let getBottomVisibleLine: t => int;
 let getLeftVisibleColumn: t => int;
-let getLayout:
-  (~showLineNumbers: bool, ~maxMinimapCharacters: int, t) => EditorLayout.t;
+let getLayout: t => EditorLayout.t;
 let getCharacterUnderCursor: t => option(Uchar.t);
 let getCharacterBehindCursor: t => option(Uchar.t);
 let getCharacterAtPosition:
@@ -62,7 +61,7 @@ let yankHighlight: t => option(yankHighlight);
 let setYankHighlight: (~yankHighlight: yankHighlight, t) => t;
 
 let isMinimapEnabled: t => bool;
-let setMinimapEnabled: (~enabled: bool, t) => t;
+let lineNumbers: t => [ | `Off | `On | `Relative | `RelativeOnly];
 
 // [exposePrimaryCursor(editor)] ensures the primary cursor is visible - adjusting the scroll if it isnot.
 let exposePrimaryCursor: t => t;

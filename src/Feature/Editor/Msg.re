@@ -29,6 +29,4 @@ type t =
   | SelectionCleared
   | CursorsChanged([@opaque] list(BytePosition.t))
   | ScrollToLine(int)
-  | ScrollToColumn(int)
-  | MinimapEnabledConfigChanged(bool)
-  | LineHeightConfigChanged(LineHeight.t);
+  | ScrollToColumn(int);

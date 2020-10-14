@@ -125,9 +125,10 @@ let characterWidthInPixels = ({buffer, _}) =>
   EditorBuffer.font(buffer).spaceWidth;
 let font = ({buffer, _}) => EditorBuffer.font(buffer);
 
-let setMinimapEnabled = (~enabled, editor) => {
+let setMinimap = (~enabled, ~maxColumn, editor) => {
   ...editor,
   isMinimapEnabled: enabled,
+  minimapMaxColumnWidth: maxColumn,
 };
 
 let isMinimapEnabled = ({isMinimapEnabled, _}) => isMinimapEnabled;
@@ -261,6 +262,8 @@ let create = (~wrapMode=WrapMode.Viewport, ~config, ~buffer, ()) => {
   let key = Brisk_reconciler.Key.create();
 
   let isMinimapEnabled = EditorConfiguration.Minimap.enabled.get(config);
+  let minimapMaxColumnWidth = EditorConfiguration.Minimap.maxColumn.get(config);
+  let lineNumbers = EditorConfiguration.lineNumbers.get(config);
   let lineHeight = EditorConfiguration.lineHeight.get(config);
 
   let wrapState = WrapState.make(~pixelWidth=1000., ~wrapMode, ~buffer);
@@ -269,13 +272,13 @@ let create = (~wrapMode=WrapMode.Viewport, ~config, ~buffer, ()) => {
     editorId: id,
     key,
     lineHeight,
-    lineNumbers: `On,
+    lineNumbers,
     isMinimapEnabled,
     isScrollAnimated: false,
     buffer,
     scrollX: 0.,
     scrollY: 0.,
-    minimapMaxColumnWidth: Constants.minimapMaxColumn,
+    minimapMaxColumnWidth,
     minimapScrollY: 0.,
     /*
      * We need an initial editor size, otherwise we'll immediately scroll the view
@@ -490,6 +493,9 @@ let selectionOrCursorRange = editor => {
 
 let setLineHeight = (~lineHeight, editor) => {...editor, lineHeight};
 
+let setLineNumbers = (~lineNumbers, editor) => {...editor, lineNumbers};
+let lineNumbers = ({lineNumbers, _}) => lineNumbers;
+
 let getId = model => model.editorId;
 
 let getCharacterWidth = ({buffer, _}) =>
@@ -544,18 +550,18 @@ let getHorizontalScrollbarMetrics = (editor, availableWidth) => {
     };
 };
 
-let getLayout = (~showLineNumbers, ~maxMinimapCharacters, view) => {
-  let {pixelWidth, pixelHeight, isMinimapEnabled, _} = view;
+let getLayout = (editor) => {
+  let {pixelWidth, pixelHeight, isMinimapEnabled, lineNumbers, minimapMaxColumnWidth, _} = editor;
   let layout: EditorLayout.t =
     EditorLayout.getLayout(
-      ~showLineNumbers,
+      ~showLineNumbers=lineNumbers != `Off,
       ~isMinimapShown=isMinimapEnabled,
-      ~maxMinimapCharacters,
+      ~maxMinimapCharacters=minimapMaxColumnWidth,
       ~pixelWidth=float_of_int(pixelWidth),
       ~pixelHeight=float_of_int(pixelHeight),
-      ~characterWidth=getCharacterWidth(view),
-      ~characterHeight=lineHeightInPixels(view),
-      ~bufferLineCount=view |> totalViewLines,
+      ~characterWidth=getCharacterWidth(editor),
+      ~characterHeight=lineHeightInPixels(editor),
+      ~bufferLineCount=editor |> totalViewLines,
       (),
     );
 
@@ -566,7 +572,7 @@ let exposePrimaryCursor = editor => {
   switch (editor.cursors) {
   | [primaryCursor, ..._tail] =>
     let {bufferWidthInPixels, _}: EditorLayout.t =
-      getLayout(~showLineNumbers=true, ~maxMinimapCharacters=999, editor);
+      getLayout(editor);
 
     let pixelWidth = bufferWidthInPixels;
 
@@ -663,7 +669,7 @@ let getTokenAt =
 };
 let getContextPixelWidth = editor => {
   let layout: EditorLayout.t =
-    getLayout(~showLineNumbers=true, ~maxMinimapCharacters=999, editor);
+    getLayout(editor);
   layout.bufferWidthInPixels;
 };
 
@@ -832,10 +838,12 @@ let configurationChanged = (~perFileTypeConfig, editor) => {
   let config = perFileTypeConfig(~fileType);
 
   editor
-  |> setMinimapEnabled(
+  |> setMinimap(
        ~enabled=EditorConfiguration.Minimap.enabled.get(config),
+       ~maxColumn=EditorConfiguration.Minimap.maxColumn.get(config),
      )
-  |> setLineHeight(~lineHeight=EditorConfiguration.lineHeight.get(config));
+  |> setLineHeight(~lineHeight=EditorConfiguration.lineHeight.get(config))
+  |> setLineNumbers(~lineNumbers=EditorConfiguration.lineNumbers.get(config));
 };
 
 module Slow = {

@@ -16,7 +16,7 @@ let getVisibleRangesForEditor = (editor: Editor.t) => {
   let leftVisibleColumn = Editor.getLeftVisibleColumn(editor);
 
   let {bufferWidthInCharacters, minimapWidthInCharacters, _}: EditorLayout.t =
-    Editor.getLayout(~showLineNumbers=false, ~maxMinimapCharacters=0, editor);
+    Editor.getLayout(editor);
 
   let i = ref(max(topVisibleLine - 1, 0));
   let eRanges = ref([]);

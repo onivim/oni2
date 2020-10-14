@@ -135,13 +135,5 @@ let update = (editor, msg) => {
       Editor.scrollToColumn(~column, editor),
       Nothing,
     )
-  | MinimapEnabledConfigChanged(enabled) => (
-      Editor.setMinimapEnabled(~enabled, editor),
-      Nothing,
-    )
-  | LineHeightConfigChanged(lineHeight) => (
-      Editor.setLineHeight(~lineHeight, editor),
-      Nothing,
-    )
   };
 };
