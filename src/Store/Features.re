@@ -132,6 +132,29 @@ module Internal = {
     | Editor(editorId) => updateEditor(~editorId, ~msg, layout)
     };
   };
+
+  let updateConfiguration: State.t => State.t =
+    state => {
+      let resolver = Selectors.configResolver(state);
+      let sideBar =
+        state.sideBar
+        |> Feature_SideBar.configurationChanged(~config=resolver);
+
+      let perFileTypeConfig =
+        Feature_Configuration.resolver(state.config, state.vim);
+
+      let layout =
+        Feature_Layout.map(
+          editor => {
+            Feature_Editor.Editor.configurationChanged(
+              ~perFileTypeConfig,
+              editor,
+            )
+          },
+          state.layout,
+        );
+      {...state, sideBar, layout};
+    };
 };
 
 // UPDATE
@@ -850,25 +873,6 @@ let update =
     let state = {...state, config};
     switch (outmsg) {
     | ConfigurationChanged({changed}) =>
-      let resolver = Selectors.configResolver(state);
-      let sideBar =
-        state.sideBar
-        |> Feature_SideBar.configurationChanged(~config=resolver);
-
-      let perFileTypeConfig =
-        Feature_Configuration.resolver(state.config, state.vim);
-
-      let layout =
-        Feature_Layout.map(
-          editor => {
-            Feature_Editor.Editor.configurationChanged(
-              ~perFileTypeConfig,
-              editor,
-            )
-          },
-          state.layout,
-        );
-
       let eff =
         Isolinear.Effect.create(
           ~name="features.configuration$acceptConfigurationChanged", () => {
@@ -885,7 +889,7 @@ let update =
             extHostClient,
           );
         });
-      ({...state, sideBar, layout}, eff);
+      (state |> Internal.updateConfiguration, eff);
     | Nothing => (state, Effect.none)
     };
 
@@ -1382,6 +1386,10 @@ let update =
       switch (outmsg) {
       | Nothing => (state, Isolinear.Effect.none)
       | Effect(e) => (state, e)
+      | SettingsChanged => (
+          state |> Internal.updateConfiguration,
+          Isolinear.Effect.none,
+        )
       | CursorsUpdated(cursors) =>
         open Feature_Editor;
         let activeEditorId =

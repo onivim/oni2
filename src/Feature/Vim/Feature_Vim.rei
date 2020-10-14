@@ -23,7 +23,8 @@ type msg =
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | CursorsUpdated(list(BytePosition.t));
+  | CursorsUpdated(list(BytePosition.t))
+  | SettingsChanged;
 
 // UPDATE
 

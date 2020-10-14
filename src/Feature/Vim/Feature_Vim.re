@@ -34,7 +34,8 @@ type msg =
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | CursorsUpdated(list(BytePosition.t));
+  | CursorsUpdated(list(BytePosition.t))
+  | SettingsChanged;
 
 let update = (msg, model: model) => {
   switch (msg) {
@@ -49,7 +50,7 @@ let update = (msg, model: model) => {
   | PasteCompleted({cursors}) => (model, CursorsUpdated(cursors))
   | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
-      Nothing,
+      SettingsChanged,
     )
   | MacroRecordingStarted({register}) => (
       {...model, recordingMacro: Some(register)},

@@ -262,7 +262,8 @@ let create = (~wrapMode=WrapMode.Viewport, ~config, ~buffer, ()) => {
   let key = Brisk_reconciler.Key.create();
 
   let isMinimapEnabled = EditorConfiguration.Minimap.enabled.get(config);
-  let minimapMaxColumnWidth = EditorConfiguration.Minimap.maxColumn.get(config);
+  let minimapMaxColumnWidth =
+    EditorConfiguration.Minimap.maxColumn.get(config);
   let lineNumbers = EditorConfiguration.lineNumbers.get(config);
   let lineHeight = EditorConfiguration.lineHeight.get(config);
 
@@ -550,8 +551,15 @@ let getHorizontalScrollbarMetrics = (editor, availableWidth) => {
     };
 };
 
-let getLayout = (editor) => {
-  let {pixelWidth, pixelHeight, isMinimapEnabled, lineNumbers, minimapMaxColumnWidth, _} = editor;
+let getLayout = editor => {
+  let {
+    pixelWidth,
+    pixelHeight,
+    isMinimapEnabled,
+    lineNumbers,
+    minimapMaxColumnWidth,
+    _,
+  } = editor;
   let layout: EditorLayout.t =
     EditorLayout.getLayout(
       ~showLineNumbers=lineNumbers != `Off,
@@ -571,8 +579,7 @@ let getLayout = (editor) => {
 let exposePrimaryCursor = editor => {
   switch (editor.cursors) {
   | [primaryCursor, ..._tail] =>
-    let {bufferWidthInPixels, _}: EditorLayout.t =
-      getLayout(editor);
+    let {bufferWidthInPixels, _}: EditorLayout.t = getLayout(editor);
 
     let pixelWidth = bufferWidthInPixels;
 
@@ -668,8 +675,7 @@ let getTokenAt =
   };
 };
 let getContextPixelWidth = editor => {
-  let layout: EditorLayout.t =
-    getLayout(editor);
+  let layout: EditorLayout.t = getLayout(editor);
   layout.bufferWidthInPixels;
 };
 

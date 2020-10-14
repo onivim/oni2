@@ -220,10 +220,7 @@ let%component make =
 
   let cursorPosition = Editor.getPrimaryCursor(editor);
 
-  let layout =
-    Editor.getLayout(
-      editor,
-    );
+  let layout = Editor.getLayout(editor);
 
   let matchingPairCheckPosition =
     mode == Vim.Mode.Insert
