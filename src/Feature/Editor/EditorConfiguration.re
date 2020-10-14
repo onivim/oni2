@@ -12,7 +12,7 @@ module CustomDecoders: {
   let fontSize: Config.Schema.codec(float);
   let color: Config.Schema.codec(Revery.Color.t);
   let wordWrap:
-    Config.Schema.codec([ | `WordWrapColumn | `Bounded | `Off | `On]);
+    Config.Schema.codec([ | `Off | `On]);
 } = {
   let color =
     custom(
@@ -41,26 +41,22 @@ module CustomDecoders: {
         ),
     );
 
+  let wordWrapDecode = Json.Decode.(one_of([
+    ("bool", bool |> map(fun
+    | true => `On
+    | false => `Off)),
+    ("string", string |> map(fun
+    | "on" => `On
+    | "off" => `Off
+    | _ => `Off))
+  ]));
   let wordWrap =
     custom(
-      ~decode=
-        Json.Decode.(
-          string
-          |> map(
-               fun
-               | "wordWrapColumn" => `WordWrapColumn
-               | "bounded" => `Bounded
-               | "on" => `On
-               | "off"
-               | _ => `Off,
-             )
-        ),
+      ~decode=wordWrapDecode,
       ~encode=
         Json.Encode.(
           fun
           | `Off => string("off")
-          | `Bounded => string("bounded")
-          | `WordWrapColumn => string("wordWrapColumn")
           | `On => string("on")
         ),
     );
