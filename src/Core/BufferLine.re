@@ -324,7 +324,7 @@ module Slow = {
 
     let rec loop = byteIndex =>
       if (byteIndex >= length) {
-        length - 1;
+        length;
       } else {
         let index = getIndex(~byte=ByteIndex.ofInt(byteIndex), bufferLine);
         let (characterPixel, width) =
