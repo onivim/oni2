@@ -22,14 +22,7 @@ module WrapMode: {
     | Viewport;
 };
 
-let create:
-  (
-    ~wrapMode: WrapMode.t=?,
-    ~config: Config.resolver,
-    ~buffer: EditorBuffer.t,
-    unit
-  ) =>
-  t;
+let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
 let copy: t => t;
 
 let key: t => Brisk_reconciler.Key.t;
@@ -52,6 +45,7 @@ let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setCursors: (~cursors: list(BytePosition.t), t) => t;
+let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
 
 let getTokenAt:
   (~languageConfiguration: LanguageConfiguration.t, CharacterPosition.t, t) =>

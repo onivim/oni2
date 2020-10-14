@@ -11,8 +11,7 @@ module CustomDecoders: {
   let time: Config.Schema.codec(Time.t);
   let fontSize: Config.Schema.codec(float);
   let color: Config.Schema.codec(Revery.Color.t);
-  let wordWrap:
-    Config.Schema.codec([ | `Off | `On]);
+  let wordWrap: Config.Schema.codec([ | `Off | `On]);
 } = {
   let color =
     custom(
@@ -41,15 +40,30 @@ module CustomDecoders: {
         ),
     );
 
-  let wordWrapDecode = Json.Decode.(one_of([
-    ("bool", bool |> map(fun
-    | true => `On
-    | false => `Off)),
-    ("string", string |> map(fun
-    | "on" => `On
-    | "off" => `Off
-    | _ => `Off))
-  ]));
+  let wordWrapDecode =
+    Json.Decode.(
+      one_of([
+        (
+          "bool",
+          bool
+          |> map(
+               fun
+               | true => `On
+               | false => `Off,
+             ),
+        ),
+        (
+          "string",
+          string
+          |> map(
+               fun
+               | "on" => `On
+               | "off" => `Off
+               | _ => `Off,
+             ),
+        ),
+      ])
+    );
   let wordWrap =
     custom(
       ~decode=wordWrapDecode,

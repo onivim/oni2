@@ -12,12 +12,12 @@ open Oni_Core_Test.Helpers;
 describe("Editor", ({describe, _}) => {
   let config = (~vimSetting as _, _key) => Config.NotSet;
 
-  let create = (~wrapMode=WrapMode.NoWrap, lines) => {
+  let create = lines => {
     let buffer = lines |> Buffer.ofLines(~font=Font.default());
 
     let editorBuffer = buffer |> EditorBuffer.ofBuffer;
 
-    (Editor.create(~wrapMode, ~config, ~buffer=editorBuffer, ()), buffer);
+    (Editor.create(~config, ~buffer=editorBuffer, ()), buffer);
   };
 
   let bytePos = (lnum, byteNum) =>
@@ -31,6 +31,7 @@ describe("Editor", ({describe, _}) => {
     let aWidth = Buffer.measure(Uchar.of_char('a'), measureBuffer);
     test("first line, byte should be at position (nowrap)", ({expect, _}) => {
       let (editor, _buffer) = create([|"aaaaaa"|]);
+      let editor = editor |> Editor.setWrapMode(~wrapMode=WrapMode.NoWrap);
       let ({x, y}: PixelPosition.t, _) =
         Editor.bufferBytePositionToPixel(~position=bytePos(0, 0), editor);
       expect.float(x).toBeCloseTo(0.5);
@@ -43,14 +44,14 @@ describe("Editor", ({describe, _}) => {
     });
 
     test("line wraps halfway (fixed: pixels=3a)", ({expect, _}) => {
-      let (editor, _buffer) =
-        create(~wrapMode=WrapMode.Viewport, [|"aaaaaa"|]);
+      let (editor, _buffer) = create([|"aaaaaa"|]);
       let editor =
         Editor.setSize(
           ~pixelWidth=int_of_float(3. *. aWidth +. 1.0),
           ~pixelHeight=500,
           editor,
-        );
+        )
+        |> Editor.setWrapMode(~wrapMode=WrapMode.Viewport);
       let lineHeight = Editor.lineHeightInPixels(editor);
       let ({x, y}: PixelPosition.t, _) =
         Editor.bufferBytePositionToPixel(~position=bytePos(0, 0), editor);

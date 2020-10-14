@@ -257,7 +257,7 @@ let bufferCharacterPositionToPixel =
   };
 };
 
-let create = (~wrapMode=WrapMode.Viewport, ~config, ~buffer, ()) => {
+let create = (~config, ~buffer, ()) => {
   let id = GlobalState.generateId();
   let key = Brisk_reconciler.Key.create();
 
@@ -266,6 +266,9 @@ let create = (~wrapMode=WrapMode.Viewport, ~config, ~buffer, ()) => {
     EditorConfiguration.Minimap.maxColumn.get(config);
   let lineNumbers = EditorConfiguration.lineNumbers.get(config);
   let lineHeight = EditorConfiguration.lineHeight.get(config);
+  let wrapMode =
+    EditorConfiguration.Experimental.wordWrap.get(config) == `On
+      ? WrapMode.Viewport : WrapMode.NoWrap;
 
   let wrapState = WrapState.make(~pixelWidth=1000., ~wrapMode, ~buffer);
 
@@ -843,13 +846,20 @@ let configurationChanged = (~perFileTypeConfig, editor) => {
 
   let config = perFileTypeConfig(~fileType);
 
+  let wrapMode =
+    EditorConfiguration.Experimental.wordWrap.get(config) == `On
+      ? WrapMode.Viewport : WrapMode.NoWrap;
+
   editor
   |> setMinimap(
        ~enabled=EditorConfiguration.Minimap.enabled.get(config),
        ~maxColumn=EditorConfiguration.Minimap.maxColumn.get(config),
      )
   |> setLineHeight(~lineHeight=EditorConfiguration.lineHeight.get(config))
-  |> setLineNumbers(~lineNumbers=EditorConfiguration.lineNumbers.get(config));
+  |> setLineNumbers(
+       ~lineNumbers=EditorConfiguration.lineNumbers.get(config),
+     )
+  |> setWrapMode(~wrapMode);
 };
 
 module Slow = {
