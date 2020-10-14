@@ -210,6 +210,13 @@ let viewTokens = (~line, ~scrollX, ~colorizer, editor) => {
       bufferLine,
     );
 
+  let maxEndByte =
+    BufferLine.Slow.getByteFromPixel(
+      ~relativeToByte=viewStartByte,
+      ~pixelX=float(editor.pixelWidth),
+      bufferLine,
+    );
+
   let totalViewLines = Wrapping.numberOfLines(wrapping);
 
   let viewEndByte =
@@ -221,10 +228,10 @@ let viewTokens = (~line, ~scrollX, ~colorizer, editor) => {
           && nextLineBufferPosition.byteOffset > bufferPosition.byteOffset) {
         nextLineBufferPosition.byteOffset;
       } else {
-        ByteIndex.ofInt(BufferLine.lengthInBytes(bufferLine));
+        maxEndByte;
       };
     } else {
-      ByteIndex.ofInt(BufferLine.lengthInBytes(bufferLine));
+      maxEndByte;
     };
 
   let viewStartIndex = BufferLine.getIndex(~byte=viewStartByte, bufferLine);

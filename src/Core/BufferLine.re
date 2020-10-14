@@ -118,6 +118,8 @@ module Internal = {
   };
 };
 
+let measure = ({measure, _}) => measure;
+
 let make = (~measure, raw: string) => {
   let lazyCharacterLength = Lazy.from_fun(() => ZedBundled.length(raw));
   {
