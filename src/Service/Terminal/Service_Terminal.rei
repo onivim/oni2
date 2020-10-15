@@ -17,9 +17,6 @@ type msg =
   | ScreenUpdated({
       id: int,
       screen: ReveryTerminal.Screen.t,
-    })
-  | CursorMoved({
-      id: int,
       cursor: ReveryTerminal.Cursor.t,
     });
 
