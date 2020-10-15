@@ -391,6 +391,14 @@ let _onCursorMoveScreenLine =
   |> Option.value(~default=line);
 };
 
+let _onCursorMoveScreenPosition =
+    (direction, count: int, line: int, byte: int) =>
+  if (direction == `Up) {
+    (line - count, (-1));
+  } else {
+    (line + count, 10000);
+  };
+
 let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
 };
@@ -467,6 +475,10 @@ let init = () => {
   Callback.register("lv_onYank", _onYank);
   Callback.register("lv_onWriteFailure", _onWriteFailure);
   Callback.register("lv_onCursorMoveScreenLine", _onCursorMoveScreenLine);
+  Callback.register(
+    "lv_onCursorMoveScreenPosition",
+    _onCursorMoveScreenPosition,
+  );
 
   Native.vimInit();
 

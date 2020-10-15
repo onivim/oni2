@@ -131,11 +131,28 @@ let current = (state: State.t) => {
     };
   };
 
+  let screenCursorMotion =
+      (~direction, ~count, ~line as lnum, ~byte as byteOffset) => {
+    switch (direction) {
+    | `Up =>
+      BytePosition.{
+        line: EditorCoreTypes.LineNumber.(lnum - count),
+        byte: byteOffset,
+      }
+    | `Down =>
+      BytePosition.{
+        line: EditorCoreTypes.LineNumber.(lnum + count),
+        byte: byteOffset,
+      }
+    };
+  };
+
   Vim.Context.{
     autoIndent,
     bufferId,
     colorSchemeProvider,
     viewLineMotion,
+    screenCursorMotion,
     leftColumn,
     topLine,
     width,

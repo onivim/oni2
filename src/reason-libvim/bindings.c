@@ -597,13 +597,40 @@ void onCursorMoveScreenLine(screenLineMotion_T motion, int count, linenr_T start
 
 void onCursorMoveScreenPosition(int dir, int count, linenr_T srcLine,
 colnr_T srcColumn, linenr_T *destLine, colnr_T *destColumn) {
+    CAMLparam0();
+    CAMLlocal2(vDirection, vResult);
+
     if (dir == BACKWARD) {
-        *destLine = srcLine;
-        *destColumn = srcColumn - 10;
+        vDirection = hash_variant("Up");
     } else {
-        *destLine = srcLine;
-        *destColumn = srcColumn + 10;
+        vDirection = hash_variant("Down");
     }
+
+   static const value *lv_onCursorMoveScreenPosition = NULL;
+   if (lv_onCursorMoveScreenPosition == NULL) {
+     lv_onCursorMoveScreenPosition = caml_named_value("lv_onCursorMoveScreenPosition");
+   }
+  value *pArgs = (value *)malloc(sizeof(value) * 4);
+  pArgs[0] = vDirection,
+  pArgs[1] = Val_int(count);
+  pArgs[2] = Val_int(srcLine);
+  pArgs[3] = Val_long(destLine);
+
+    vResult = caml_callbackN(*lv_onCursorMoveScreenPosition,
+    4,
+    pArgs
+    );
+    free(pArgs);
+
+  if (Is_block(vResult)) {
+    *destLine = Int_val(Field(vResult, 0));
+    *destColumn = Int_val(Field(vResult, 1));
+  } else {
+    *destLine = srcLine;
+    *destColumn = srcColumn;
+  }
+
+   CAMLreturn0;
 }
 
 CAMLprim value libvim_vimInit(value unit) {

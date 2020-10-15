@@ -58,6 +58,14 @@ module Context: {
     viewLineMotion:
       (~motion: ViewLineMotion.t, ~count: int, ~startLine: LineNumber.t) =>
       LineNumber.t,
+    screenCursorMotion:
+      (
+        ~direction: [ | `Up | `Down],
+        ~count: int,
+        ~line: LineNumber.t,
+        ~byte: ByteIndex.t
+      ) =>
+      BytePosition.t,
     bufferId: int,
     colorSchemeProvider: ColorScheme.Provider.t,
     width: int,
