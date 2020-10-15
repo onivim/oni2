@@ -56,6 +56,8 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setCursors: (~cursors: list(BytePosition.t), t) => t;
 
+let getBufferLineCount: t => int;
+
 let getTokenAt:
   (~languageConfiguration: LanguageConfiguration.t, CharacterPosition.t, t) =>
   option(CharacterRange.t);
