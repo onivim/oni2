@@ -5,18 +5,12 @@ type t =
   | Insert({cursors: list(BytePosition.t)})
   | CommandLine
   | Replace({cursor: BytePosition.t})
-  | Visual({
-      cursor: BytePosition.t,
-      range: VisualRange.t,
-    })
+  | Visual({range: VisualRange.t})
   | Operator({
       cursor: BytePosition.t,
       pending: Operator.pending,
     })
-  | Select({
-      cursor: BytePosition.t,
-      range: VisualRange.t,
-    });
+  | Select({range: VisualRange.t});
 
 let show = (mode: t) => {
   switch (mode) {
@@ -35,9 +29,9 @@ let cursors =
   | Normal({cursor}) => [cursor]
   | Insert({cursors}) => cursors
   | Replace({cursor}) => [cursor]
-  | Visual({cursor, _}) => [cursor]
+  | Visual({range}) => [range |> VisualRange.cursor]
   | Operator({cursor, _}) => [cursor]
-  | Select({cursor, _}) => [cursor]
+  | Select({range}) => [range |> VisualRange.cursor]
   | CommandLine => [];
 
 let current = () => {
@@ -46,16 +40,7 @@ let current = () => {
   let cursor = Cursor.get();
   switch (nativeMode) {
   | Native.Normal => Normal({cursor: cursor})
-  | Native.Visual =>
-    Visual({
-      cursor,
-      range:
-        VisualRange.create(
-          ~range=Visual.getRange(),
-          ~visualType=Visual.getType(),
-          (),
-        ),
-    })
+  | Native.Visual => Visual({range: VisualRange.current()})
   | Native.CommandLine => CommandLine
   | Native.Replace => Replace({cursor: cursor})
   | Native.Operator =>
@@ -64,16 +49,7 @@ let current = () => {
       pending: Operator.get() |> Option.value(~default=Operator.default),
     })
   | Native.Insert => Insert({cursors: [cursor]})
-  | Native.Select =>
-    Select({
-      cursor,
-      range:
-        VisualRange.create(
-          ~range=Visual.getRange(),
-          ~visualType=Visual.getType(),
-          (),
-        ),
-    })
+  | Native.Select => Select({range: VisualRange.current()})
   };
 };
 

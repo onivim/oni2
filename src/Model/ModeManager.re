@@ -29,10 +29,16 @@ let current: State.t => Oni_Core.Mode.t =
                },
              )
            | Vim.Mode.Normal({cursor}) => Mode.Normal({cursor: cursor})
-           | Vim.Mode.Visual({cursor, range}) =>
-             Mode.Visual({cursor, range: Oni_Core.VisualRange.ofVim(range)})
-           | Vim.Mode.Select({cursor, range}) =>
-             Mode.Select({cursor, range: Oni_Core.VisualRange.ofVim(range)})
+           | Vim.Mode.Visual({range}) =>
+             Mode.Visual({
+               cursor: Vim.VisualRange.cursor(range),
+               range: Oni_Core.VisualRange.ofVim(range),
+             })
+           | Vim.Mode.Select({range}) =>
+             Mode.Select({
+               cursor: Vim.VisualRange.cursor(range),
+               range: Oni_Core.VisualRange.ofVim(range),
+             })
            | Vim.Mode.Replace({cursor}) => Mode.Replace({cursor: cursor})
            | Vim.Mode.Operator({pending, _}) =>
              Mode.Operator({pending: pending})
