@@ -42,12 +42,22 @@ module ColorScheme: {
   };
 };
 
+module ViewLineMotion: {
+   type t =
+   | MotionH
+   | MotionM
+   | MotionL;
+};
+
 module Context: {
   type t = {
     autoClosingPairs: AutoClosingPairs.t,
     autoIndent:
       (~previousLine: string, ~beforePreviousLine: option(string)) =>
       AutoIndent.action,
+    viewLineMotion: (
+     ~motion: ViewLineMotion.t, ~count: int, ~startLine: LineNumber.t)
+     => LineNumber.t,
     bufferId: int,
     colorSchemeProvider: ColorScheme.Provider.t,
     width: int,

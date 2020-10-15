@@ -566,6 +566,31 @@ void onWriteFailure(writeFailureReason_T reason, buf_T *buf) {
   CAMLreturn0;
 }
 
+void onCursorMoveScreenLine(screenLineMotion_T motion, int count, linenr_T startLine, linenr_T *outLine) {
+    switch (motion) {
+    case MOTION_H:
+        *outLine = 1;
+        break;
+    case MOTION_M:
+        *outLine = 2;
+        break;
+    case MOTION_L:
+        *outLine = 3;
+        break;
+    }
+}
+
+void onCursorMoveScreenPosition(int dir, int count, linenr_T srcLine,
+colnr_T srcColumn, linenr_T *destLine, colnr_T *destColumn) {
+    if (dir == BACKWARD) {
+        *destLine = srcLine;
+        *destColumn = srcColumn - 10;
+    } else {
+        *destLine = srcLine;
+        *destColumn = srcColumn + 10;
+    }
+}
+
 CAMLprim value libvim_vimInit(value unit) {
   vimMacroSetStartRecordCallback(&onMacroStartRecord);
   vimMacroSetStopRecordCallback(&onMacroStopRecord);
@@ -591,6 +616,8 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetWindowSplitCallback(&onWindowSplit);
   vimSetYankCallback(&onYank);
   vimSetFileWriteFailureCallback(&onWriteFailure);
+  vimSetCursorMoveScreenLineCallback(&onCursorMoveScreenLine);
+  vimSetCursorMoveScreenPositionCallback(&onCursorMoveScreenPosition);
 
   char *args[0];
   vimInit(0, args);

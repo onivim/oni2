@@ -5,6 +5,9 @@ type t = {
   autoIndent:
     (~previousLine: string, ~beforePreviousLine: option(string)) =>
     AutoIndent.action,
+    viewLineMotion: (
+     ~motion: ViewLineMotion.t, ~count: int, ~startLine: LineNumber.t)
+     => LineNumber.t,
   bufferId: int,
   colorSchemeProvider: ColorScheme.Provider.t,
   width: int,
@@ -20,6 +23,7 @@ type t = {
 let current = () => {
   autoClosingPairs: AutoClosingPairs.empty,
   autoIndent: (~previousLine as _, ~beforePreviousLine as _) => AutoIndent.KeepIndent,
+  viewLineMotion: (~motion as _, ~count as _, ~startLine) => startLine,
   bufferId: Buffer.getCurrent() |> Buffer.getId,
   colorSchemeProvider: ColorScheme.Provider.default,
   width: Window.getWidth(),

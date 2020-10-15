@@ -112,10 +112,15 @@ let current = (state: State.t) => {
     |> Array.of_list;
   };
 
+  let viewLineMotion = (
+    ~motion as _, ~count as _, ~startLine
+  ) => startLine;
+
   Vim.Context.{
     autoIndent,
     bufferId,
     colorSchemeProvider,
+    viewLineMotion,
     leftColumn,
     topLine,
     width,

@@ -31,6 +31,7 @@ module Testing = {
 module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;
+module ViewLineMotion = ViewLineMotion;
 module Yank = Yank;
 
 module Internal = {
