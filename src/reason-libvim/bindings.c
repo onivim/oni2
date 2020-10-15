@@ -567,17 +567,32 @@ void onWriteFailure(writeFailureReason_T reason, buf_T *buf) {
 }
 
 void onCursorMoveScreenLine(screenLineMotion_T motion, int count, linenr_T startLine, linenr_T *outLine) {
+    CAMLparam0();
+    CAMLlocal1(valDestLine);
+
+    int iMotion = 0;
     switch (motion) {
-    case MOTION_H:
-        *outLine = 1;
-        break;
     case MOTION_M:
-        *outLine = 2;
+        iMotion = 1;
         break;
     case MOTION_L:
-        *outLine = 3;
+        iMotion = 2;
+        break;
+    case MOTION_H:
+    default:
+        iMotion = 0;
         break;
     }
+
+   static const value *lv_onCursorMoveScreenLine = NULL;
+   if (lv_onCursorMoveScreenLine == NULL) {
+     lv_onCursorMoveScreenLine = caml_named_value("lv_onCursorMoveScreenLine");
+   }
+
+   valDestLine = caml_callback3(*lv_onCursorMoveScreenLine, Val_int(iMotion),
+   Val_int(count), Val_int(startLine));
+   *outLine = Int_val(valDestLine);
+   CAMLreturn0;
 }
 
 void onCursorMoveScreenPosition(int dir, int count, linenr_T srcLine,

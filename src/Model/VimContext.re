@@ -112,9 +112,24 @@ let current = (state: State.t) => {
     |> Array.of_list;
   };
 
-  let viewLineMotion = (
-    ~motion as _, ~count as _, ~startLine
-  ) => startLine;
+  let viewLineMotion = (~motion, ~count, ~startLine) => {
+    switch (motion) {
+    | Vim.ViewLineMotion.MotionH =>
+      Editor.getTopVisibleLine(editor)
+      |> EditorCoreTypes.LineNumber.ofZeroBased
+    | Vim.ViewLineMotion.MotionM =>
+      Editor.getTopVisibleLine(editor)
+      + (
+        Editor.getBottomVisibleLine(editor)
+        - Editor.getTopVisibleLine(editor)
+      )
+      / 2
+      |> EditorCoreTypes.LineNumber.ofZeroBased
+    | Vim.ViewLineMotion.MotionL =>
+      Editor.getBottomVisibleLine(editor)
+      |> EditorCoreTypes.LineNumber.ofZeroBased
+    };
+  };
 
   Vim.Context.{
     autoIndent,

@@ -1,4 +1,4 @@
 type t =
-| MotionH
-| MotionM
-| MotionL;
+  | MotionH
+  | MotionM
+  | MotionL;

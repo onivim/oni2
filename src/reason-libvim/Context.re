@@ -5,9 +5,9 @@ type t = {
   autoIndent:
     (~previousLine: string, ~beforePreviousLine: option(string)) =>
     AutoIndent.action,
-    viewLineMotion: (
-     ~motion: ViewLineMotion.t, ~count: int, ~startLine: LineNumber.t)
-     => LineNumber.t,
+  viewLineMotion:
+    (~motion: ViewLineMotion.t, ~count: int, ~startLine: LineNumber.t) =>
+    LineNumber.t,
   bufferId: int,
   colorSchemeProvider: ColorScheme.Provider.t,
   width: int,
