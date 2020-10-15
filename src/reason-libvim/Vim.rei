@@ -42,6 +42,15 @@ module ColorScheme: {
   };
 };
 
+module ViewLineMotion: {
+  type t =
+    | MotionH
+    | MotionM
+    | MotionL;
+};
+
+module Registers: {let get: (~register: char) => option(array(string));};
+
 module Operator: {
   type operation =
     | NoPending
@@ -118,6 +127,18 @@ module Context: {
     autoIndent:
       (~previousLine: string, ~beforePreviousLine: option(string)) =>
       AutoIndent.action,
+    viewLineMotion:
+      (~motion: ViewLineMotion.t, ~count: int, ~startLine: LineNumber.t) =>
+      LineNumber.t,
+    screenCursorMotion:
+      (
+        ~direction: [ | `Up | `Down],
+        ~count: int,
+        ~line: LineNumber.t,
+        ~currentByte: ByteIndex.t,
+        ~wantByte: ByteIndex.t
+      ) =>
+      BytePosition.t,
     bufferId: int,
     colorSchemeProvider: ColorScheme.Provider.t,
     width: int,
@@ -132,8 +153,6 @@ module Context: {
 
   let current: unit => t;
 };
-
-module Registers: {let get: (~register: char) => option(array(string));};
 
 module Edit: {
   [@deriving show]

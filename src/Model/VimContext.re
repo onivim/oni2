@@ -112,10 +112,47 @@ let current = (state: State.t) => {
     |> Array.of_list;
   };
 
+  let viewLineMotion = (~motion, ~count as _, ~startLine as _) => {
+    switch (motion) {
+    | Vim.ViewLineMotion.MotionH =>
+      Editor.getTopVisibleLine(editor)
+      |> EditorCoreTypes.LineNumber.ofZeroBased
+    | Vim.ViewLineMotion.MotionM =>
+      Editor.getTopVisibleLine(editor)
+      + (
+        Editor.getBottomVisibleLine(editor)
+        - Editor.getTopVisibleLine(editor)
+      )
+      / 2
+      |> EditorCoreTypes.LineNumber.ofZeroBased
+    | Vim.ViewLineMotion.MotionL =>
+      Editor.getBottomVisibleLine(editor)
+      |> EditorCoreTypes.LineNumber.ofZeroBased
+    };
+  };
+
+  let screenCursorMotion =
+      (~direction, ~count, ~line as lnum, ~currentByte as _, ~wantByte) => {
+    let maxLines = Editor.getBufferLineCount(editor);
+    let lnum = EditorCoreTypes.LineNumber.toZeroBased(lnum);
+    let destLineIdx =
+      switch (direction) {
+      | `Up => lnum - count
+      | `Down => lnum + count
+      };
+
+    let destLine =
+      IntEx.clamp(~hi=maxLines - 1, ~lo=0, destLineIdx)
+      |> EditorCoreTypes.LineNumber.ofZeroBased;
+    BytePosition.{line: destLine, byte: wantByte};
+  };
+
   Vim.Context.{
     autoIndent,
     bufferId,
     colorSchemeProvider,
+    viewLineMotion,
+    screenCursorMotion,
     leftColumn,
     topLine,
     width,

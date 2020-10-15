@@ -58,6 +58,8 @@ let getCursors: t => list(BytePosition.t);
 let mode: t => Vim.Mode.t;
 let setMode: (Vim.Mode.t, t) => t;
 
+let getBufferLineCount: t => int;
+
 let getTokenAt:
   (~languageConfiguration: LanguageConfiguration.t, CharacterPosition.t, t) =>
   option(CharacterRange.t);

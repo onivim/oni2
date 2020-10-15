@@ -1,5 +1,5 @@
 {
-  "checksum": "6c75cff7f6f58bccf8419b7648733903",
+  "checksum": "e59edff4c92b62fc0716580a593f2abc",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -141,7 +141,7 @@
         "rebez@github:jchavarri/rebez#03fa3b7@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
         "flex@github:bryphe/flex#5e19b05@d41d8cd9",
-        "esy-skia@github:revery-ui/esy-skia#a3785f9@d41d8cd9",
+        "esy-skia@github:revery-ui/esy-skia#60e0260@d41d8cd9",
         "esy-sdl2@2.0.10008@d41d8cd9", "esy-freetype2@2.9.1008@d41d8cd9",
         "esy-angle-prebuilt@1.0.0@d41d8cd9",
         "@revery/esy-harfbuzz@2.6.8001@d41d8cd9",
@@ -425,14 +425,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.61@d41d8cd9": {
-      "id": "libvim@8.10869.61@d41d8cd9",
+    "libvim@8.10869.62@d41d8cd9": {
+      "id": "libvim@8.10869.62@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.61",
+      "version": "8.10869.62",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.61.tgz#sha1:11384ffe539a84eb715be32433c38e11899385cc"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.62.tgz#sha1:d34a780ebb7efd7adc5f846e6a60582ce2acdd6c"
         ]
       },
       "overrides": [],
@@ -630,13 +630,13 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-skia@github:revery-ui/esy-skia#a3785f9@d41d8cd9": {
-      "id": "esy-skia@github:revery-ui/esy-skia#a3785f9@d41d8cd9",
+    "esy-skia@github:revery-ui/esy-skia#60e0260@d41d8cd9": {
+      "id": "esy-skia@github:revery-ui/esy-skia#60e0260@d41d8cd9",
       "name": "esy-skia",
-      "version": "github:revery-ui/esy-skia#a3785f9",
+      "version": "github:revery-ui/esy-skia#60e0260",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/esy-skia#a3785f9" ]
+        "source": [ "github:revery-ui/esy-skia#60e0260" ]
       },
       "overrides": [],
       "dependencies": [
@@ -941,10 +941,10 @@
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
-        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.61@d41d8cd9",
+        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.62@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#53fc4eb@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
-        "esy-skia@github:revery-ui/esy-skia#a3785f9@d41d8cd9",
+        "esy-skia@github:revery-ui/esy-skia#60e0260@d41d8cd9",
         "esy-sdl2@2.0.10008@d41d8cd9",
         "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
