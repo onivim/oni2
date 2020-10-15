@@ -58,7 +58,7 @@ module Internal = {
 let current = (state: State.t) => {
   let editor = Feature_Layout.activeEditor(state.layout);
   let bufferId = Editor.getBufferId(editor);
-  let cursors = Editor.getCursors(editor);
+  let mode = Editor.mode(editor);
 
   let editorBuffer = Selectors.getActiveBuffer(state);
   let maybeLanguageConfig: option(LanguageConfiguration.t) =
@@ -120,7 +120,7 @@ let current = (state: State.t) => {
     topLine,
     width,
     height,
-    cursors,
+    mode,
     autoClosingPairs,
     lineComment,
     insertSpaces,

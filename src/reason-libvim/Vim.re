@@ -167,7 +167,7 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.autoIndent := Some(context.autoIndent);
   GlobalState.colorSchemeProvider := context.colorSchemeProvider;
 
-  let cursors = f();
+  let mode = f();
 
   GlobalState.autoIndent := None;
   GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
@@ -210,7 +210,7 @@ let runWith = (~context: Context.t, f) => {
   };
 
   flushQueue();
-  {...Context.current(), cursors, autoClosingPairs: context.autoClosingPairs};
+  {...Context.current(), mode, autoClosingPairs: context.autoClosingPairs};
 };
 
 let _onAutocommand = (autoCommand: Types.autocmd, buffer: Buffer.t) => {
@@ -462,7 +462,8 @@ let init = () => {
 };
 
 let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
-  let {autoClosingPairs, cursors, _}: Context.t = context;
+  let {autoClosingPairs, mode, _}: Context.t = context;
+  let cursors = Mode.cursors(mode);
   runWith(
     ~context,
     () => {
@@ -470,7 +471,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
 
       let runCursor = cursor => {
         Cursor.set(cursor);
-        if (Mode.current() == Mode.Insert) {
+        if (Mode.current() |> Mode.isInsert) {
           let position: BytePosition.t = Cursor.get();
           let line = Buffer.getLine(Buffer.getCurrent(), position.line);
 
@@ -534,7 +535,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
 
       let mode = Mode.current();
       let cursors = Internal.getDefaultCursors(cursors);
-      if (mode == Mode.Insert) {
+      if (Mode.isInsert(mode)) {
         // Run first command, verify we don't go back to normal mode
         switch (cursors) {
         | [hd, ...tail] =>
@@ -542,15 +543,15 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
 
           let newMode = Mode.current();
           // If we're still in insert mode, run the command for all the rest of the characters too
-          let remainingCursors =
-            switch (newMode) {
-            | Mode.Insert => List.map(runCursor, tail)
-            | _ => tail
-            };
+          if (Mode.isInsert(newMode)) {
+            let remainingCursors = List.map(runCursor, tail);
+            Insert({cursors: [newHead, ...remainingCursors]});
+          } else {
+            newMode;
+          };
 
-          [newHead, ...remainingCursors];
         // This should never happen...
-        | [] => cursors
+        | [] => Insert({cursors: cursors})
         };
       } else {
         switch (cursors) {
@@ -558,7 +559,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         | _ => ()
         };
         inputFn(v);
-        Internal.getDefaultCursors([]);
+        Mode.current();
       };
     },
   );
@@ -576,7 +577,7 @@ let command = (~context=Context.current(), v) => {
     ~context,
     () => {
       Native.vimCommand(v);
-      [];
+      Mode.current();
     },
   );
 };

@@ -42,29 +42,6 @@ module ColorScheme: {
   };
 };
 
-module Context: {
-  type t = {
-    autoClosingPairs: AutoClosingPairs.t,
-    autoIndent:
-      (~previousLine: string, ~beforePreviousLine: option(string)) =>
-      AutoIndent.action,
-    bufferId: int,
-    colorSchemeProvider: ColorScheme.Provider.t,
-    width: int,
-    height: int,
-    leftColumn: int,
-    topLine: int,
-    cursors: list(BytePosition.t),
-    lineComment: option(string),
-    tabSize: int,
-    insertSpaces: bool,
-  };
-
-  let current: unit => t;
-};
-
-module Registers: {let get: (~register: char) => option(array(string));};
-
 module Operator: {
   type operation =
     | NoPending
@@ -109,6 +86,58 @@ module Operator: {
 
   let toString: pending => string;
 };
+
+module Mode: {
+  type t =
+    | Normal({cursor: BytePosition.t})
+    | Insert({cursors: list(BytePosition.t)})
+    | CommandLine
+    | Replace({cursor: BytePosition.t})
+    | Visual({
+        cursor: BytePosition.t,
+        range: VisualRange.t,
+      })
+    | Operator({
+        cursor: BytePosition.t,
+        pending: Operator.pending,
+      })
+    | Select({
+        cursor: BytePosition.t,
+        range: VisualRange.t,
+      });
+
+  let current: unit => t;
+
+  let isInsert: t => bool;
+  let isNormal: t => bool;
+  let isVisual: t => bool;
+  let isSelect: t => bool;
+
+  let cursors: t => list(BytePosition.t);
+};
+
+module Context: {
+  type t = {
+    autoClosingPairs: AutoClosingPairs.t,
+    autoIndent:
+      (~previousLine: string, ~beforePreviousLine: option(string)) =>
+      AutoIndent.action,
+    bufferId: int,
+    colorSchemeProvider: ColorScheme.Provider.t,
+    width: int,
+    height: int,
+    leftColumn: int,
+    topLine: int,
+    mode: Mode.t,
+    lineComment: option(string),
+    tabSize: int,
+    insertSpaces: bool,
+  };
+
+  let current: unit => t;
+};
+
+module Registers: {let get: (~register: char) => option(array(string));};
 
 module Edit: {
   [@deriving show]
@@ -310,22 +339,6 @@ module Format: {
         endLine: LineNumber.t,
         adjustCursor: bool,
       });
-};
-
-module Mode: {
-  type t =
-    | Normal
-    | Insert
-    | CommandLine
-    | Replace
-    | Visual({range: VisualRange.t})
-    | Operator({pending: Operator.pending})
-    | Select({range: VisualRange.t});
-
-  let current: unit => t;
-
-  let isVisual: t => bool;
-  let isSelect: t => bool;
 };
 
 module Setting: {
