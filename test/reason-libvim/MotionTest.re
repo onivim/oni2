@@ -23,33 +23,39 @@ describe("MotionTest", ({describe, _}) => {
 
       let context = Vim.input(~context, "L");
       expect.equal(
-        context.cursors,
-        [
-          BytePosition.{
-            line: LineNumber.ofOneBased(100),
-            byte: ByteIndex.zero,
-          },
-        ],
+        context.mode,
+        Normal({
+          cursor:
+            BytePosition.{
+              line: LineNumber.ofOneBased(100),
+              byte: ByteIndex.zero,
+            },
+        }),
       );
 
       let context = Vim.input(~context={...context, viewLineMotion}, "M");
       expect.equal(
-        context.cursors,
-        [
-          BytePosition.{
-            line: LineNumber.ofOneBased(50),
-            byte: ByteIndex.zero,
-          },
-        ],
+        context.mode,
+        Normal({
+          cursor:
+            BytePosition.{
+              line: LineNumber.ofOneBased(50),
+              byte: ByteIndex.zero,
+            },
+        }),
       );
 
       let context: Vim.Context.t =
         Vim.input(~context={...context, viewLineMotion}, "H");
       expect.equal(
-        context.cursors,
-        [
-          BytePosition.{line: LineNumber.ofOneBased(1), byte: ByteIndex.zero},
-        ],
+        context.mode,
+        Normal({
+          cursor:
+            BytePosition.{
+              line: LineNumber.ofOneBased(1),
+              byte: ByteIndex.zero,
+            },
+        }),
       );
     });
     test("GC stress test", ({expect, _}) => {
@@ -79,13 +85,14 @@ describe("MotionTest", ({describe, _}) => {
 
       let latestContext = Vim.Context.current();
       expect.equal(
-        latestContext.cursors,
-        [
-          BytePosition.{
-            line: LineNumber.ofOneBased(50),
-            byte: ByteIndex.zero,
-          },
-        ],
+        latestContext.mode,
+        Normal({
+          cursor:
+            BytePosition.{
+              line: LineNumber.ofOneBased(50),
+              byte: ByteIndex.zero,
+            },
+        }),
       );
     });
   });
@@ -107,25 +114,27 @@ describe("MotionTest", ({describe, _}) => {
 
       let context = Vim.input(~context, "5gj");
       expect.equal(
-        context.cursors,
-        [
-          BytePosition.{
-            line: LineNumber.ofOneBased(1),
-            byte: ByteIndex.ofInt(5),
-          },
-        ],
+        context.mode,
+        Normal({
+          cursor:
+            BytePosition.{
+              line: LineNumber.ofOneBased(1),
+              byte: ByteIndex.ofInt(5),
+            },
+        }),
       );
 
       let context = {...Vim.Context.current(), screenCursorMotion};
       let context = Vim.input(~context, "gk");
       expect.equal(
-        context.cursors,
-        [
-          BytePosition.{
-            line: LineNumber.ofOneBased(1),
-            byte: ByteIndex.ofInt(4),
-          },
-        ],
+        context.mode,
+        Normal({
+          cursor:
+            BytePosition.{
+              line: LineNumber.ofOneBased(1),
+              byte: ByteIndex.ofInt(4),
+            },
+        }),
       );
     });
     test("gc stress test", ({expect, _}) => {
@@ -156,13 +165,14 @@ describe("MotionTest", ({describe, _}) => {
       };
       let context = {...Vim.Context.current(), screenCursorMotion};
       expect.equal(
-        context.cursors,
-        [
-          BytePosition.{
-            line: LineNumber.ofOneBased(1),
-            byte: ByteIndex.ofInt(0),
-          },
-        ],
+        context.mode,
+        Normal({
+          cursor:
+            BytePosition.{
+              line: LineNumber.ofOneBased(1),
+              byte: ByteIndex.ofInt(0),
+            },
+        }),
       );
     });
   });
