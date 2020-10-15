@@ -1,4 +1,3 @@
-open EditorCoreTypes;
 // MODEL
 
 type model;

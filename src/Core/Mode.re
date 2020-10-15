@@ -29,14 +29,14 @@ let toString =
   fun
   | Insert(_) => "Insert"
   | Normal(_) => "Normal"
-  | Visual({range}) =>
+  | Visual({range, _}) =>
     switch (range.mode) {
     | Character => "Visual Character"
     | Line => "Visual Line"
     | Block => "Visual Block"
     | None => "Visual"
     }
-  | Select({range}) =>
+  | Select({range, _}) =>
     switch (range.mode) {
     | Character => "Select Character"
     | Line => "Select Line"

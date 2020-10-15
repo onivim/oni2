@@ -168,8 +168,8 @@ let start =
             Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
 
           switch (newMode) {
-          | Visual({range})
-          | Select({range}) =>
+          | Visual({range, _})
+          | Select({range, _}) =>
             dispatch(
               Editor({
                 scope: Oni_Model.EditorScope.Editor(editorId),

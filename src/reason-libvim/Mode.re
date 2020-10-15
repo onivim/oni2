@@ -96,3 +96,13 @@ let isNormal =
   fun
   | Normal(_) => true
   | _ => false;
+
+let isReplace =
+  fun
+  | Replace(_) => true
+  | _ => false;
+
+let isOperatorPending =
+  fun
+  | Operator(_) => true
+  | _ => false;

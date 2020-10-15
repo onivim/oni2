@@ -112,6 +112,8 @@ module Mode: {
   let isNormal: t => bool;
   let isVisual: t => bool;
   let isSelect: t => bool;
+  let isReplace: t => bool;
+  let isOperatorPending: t => bool;
 
   let cursors: t => list(BytePosition.t);
 };

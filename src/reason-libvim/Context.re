@@ -1,5 +1,3 @@
-open EditorCoreTypes;
-
 type t = {
   autoClosingPairs: AutoClosingPairs.t,
   autoIndent:
