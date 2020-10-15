@@ -13,7 +13,8 @@ type t = {
       ~direction: [ | `Up | `Down],
       ~count: int,
       ~line: LineNumber.t,
-      ~byte: ByteIndex.t
+      ~currentByte: ByteIndex.t,
+      ~wantByte: ByteIndex.t
     ) =>
     BytePosition.t,
   bufferId: int,
@@ -32,9 +33,10 @@ let current = () => {
   autoClosingPairs: AutoClosingPairs.empty,
   autoIndent: (~previousLine as _, ~beforePreviousLine as _) => AutoIndent.KeepIndent,
   viewLineMotion: (~motion as _, ~count as _, ~startLine) => startLine,
-  screenCursorMotion: (~direction as _, ~count as _, ~line, ~byte) => {
+  screenCursorMotion:
+    (~direction as _, ~count as _, ~line, ~currentByte as _, ~wantByte) => {
     line,
-    byte,
+    byte: wantByte,
   },
   bufferId: Buffer.getCurrent() |> Buffer.getId,
   colorSchemeProvider: ColorScheme.Provider.default,

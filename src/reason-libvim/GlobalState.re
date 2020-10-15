@@ -25,3 +25,18 @@ let viewLineMotion:
     ),
   ) =
   ref(None);
+
+let screenPositionMotion:
+  ref(
+    option(
+      (
+        ~direction: [ | `Up | `Down],
+        ~count: int,
+        ~line: LineNumber.t,
+        ~currentByte: ByteIndex.t,
+        ~wantByte: ByteIndex.t
+      ) =>
+      BytePosition.t,
+    ),
+  ) =
+  ref(None);

@@ -168,12 +168,14 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.autoIndent := Some(context.autoIndent);
   GlobalState.colorSchemeProvider := context.colorSchemeProvider;
   GlobalState.viewLineMotion := Some(context.viewLineMotion);
+  GlobalState.screenPositionMotion := Some(context.screenCursorMotion);
 
   let cursors = f();
 
   GlobalState.autoIndent := None;
   GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
   GlobalState.viewLineMotion := None;
+  GlobalState.screenPositionMotion := None;
 
   let newBuf = Buffer.getCurrent();
   let newMode = Mode.current();
@@ -392,12 +394,27 @@ let _onCursorMoveScreenLine =
 };
 
 let _onCursorMoveScreenPosition =
-    (direction, count: int, line: int, byte: int) =>
-  if (direction == `Up) {
-    (line - count, (-1));
-  } else {
-    (line + count, 10000);
-  };
+    (direction, count: int, line: int, byte: int, wantByte: int) => {
+  let startLine = LineNumber.ofOneBased(line);
+  let startByte = ByteIndex.ofInt(byte);
+  GlobalState.screenPositionMotion^
+  |> Option.map(f =>
+       f(
+         ~direction,
+         ~count,
+         ~line=startLine,
+         ~currentByte=startByte,
+         ~wantByte=ByteIndex.ofInt(wantByte),
+       )
+     )
+  |> Option.map((bytePosition: BytePosition.t) => {
+       (
+         bytePosition.line |> LineNumber.toOneBased,
+         bytePosition.byte |> ByteIndex.toInt,
+       )
+     })
+  |> Option.value(~default=(line, wantByte));
+};
 
 let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));

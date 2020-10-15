@@ -177,6 +177,9 @@ let setMinimapEnabled = (~enabled, editor) => {
   isMinimapEnabled: enabled,
 };
 
+let getBufferLineCount = ({buffer, _}) =>
+  EditorBuffer.numberOfLines(buffer);
+
 let isMinimapEnabled = ({isMinimapEnabled, _}) => isMinimapEnabled;
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
 

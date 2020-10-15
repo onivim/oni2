@@ -63,7 +63,8 @@ module Context: {
         ~direction: [ | `Up | `Down],
         ~count: int,
         ~line: LineNumber.t,
-        ~byte: ByteIndex.t
+        ~currentByte: ByteIndex.t,
+        ~wantByte: ByteIndex.t
       ) =>
       BytePosition.t,
     bufferId: int,

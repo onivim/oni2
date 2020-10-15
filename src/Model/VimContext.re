@@ -112,7 +112,7 @@ let current = (state: State.t) => {
     |> Array.of_list;
   };
 
-  let viewLineMotion = (~motion, ~count, ~startLine) => {
+  let viewLineMotion = (~motion, ~count as _, ~startLine as _) => {
     switch (motion) {
     | Vim.ViewLineMotion.MotionH =>
       Editor.getTopVisibleLine(editor)
@@ -132,19 +132,19 @@ let current = (state: State.t) => {
   };
 
   let screenCursorMotion =
-      (~direction, ~count, ~line as lnum, ~byte as byteOffset) => {
-    switch (direction) {
-    | `Up =>
-      BytePosition.{
-        line: EditorCoreTypes.LineNumber.(lnum - count),
-        byte: byteOffset,
-      }
-    | `Down =>
-      BytePosition.{
-        line: EditorCoreTypes.LineNumber.(lnum + count),
-        byte: byteOffset,
-      }
-    };
+      (~direction, ~count, ~line as lnum, ~currentByte as _, ~wantByte) => {
+    let maxLines = Editor.getBufferLineCount(editor);
+    let lnum = EditorCoreTypes.LineNumber.toZeroBased(lnum);
+    let destLineIdx =
+      switch (direction) {
+      | `Up => lnum - count
+      | `Down => lnum + count
+      };
+
+    let destLine =
+      IntEx.clamp(~hi=maxLines - 1, ~lo=0, destLineIdx)
+      |> EditorCoreTypes.LineNumber.ofZeroBased;
+    BytePosition.{line: destLine, byte: wantByte};
   };
 
   Vim.Context.{

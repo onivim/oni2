@@ -596,7 +596,7 @@ void onCursorMoveScreenLine(screenLineMotion_T motion, int count, linenr_T start
 }
 
 void onCursorMoveScreenPosition(int dir, int count, linenr_T srcLine,
-colnr_T srcColumn, linenr_T *destLine, colnr_T *destColumn) {
+colnr_T srcColumn, colnr_T wantColumn, linenr_T *destLine, colnr_T *destColumn) {
     CAMLparam0();
     CAMLlocal2(vDirection, vResult);
 
@@ -610,14 +610,15 @@ colnr_T srcColumn, linenr_T *destLine, colnr_T *destColumn) {
    if (lv_onCursorMoveScreenPosition == NULL) {
      lv_onCursorMoveScreenPosition = caml_named_value("lv_onCursorMoveScreenPosition");
    }
-  value *pArgs = (value *)malloc(sizeof(value) * 4);
+  value *pArgs = (value *)malloc(sizeof(value) * 5);
   pArgs[0] = vDirection,
   pArgs[1] = Val_int(count);
   pArgs[2] = Val_int(srcLine);
-  pArgs[3] = Val_long(destLine);
+  pArgs[3] = Val_long(srcColumn);
+  pArgs[4] = Val_long(wantColumn);
 
     vResult = caml_callbackN(*lv_onCursorMoveScreenPosition,
-    4,
+    5,
     pArgs
     );
     free(pArgs);
