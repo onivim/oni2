@@ -257,7 +257,7 @@
   },
   "resolutions": {
     "revery": "revery-ui/revery#18eb60e",
-    "esy-skia": "revery-ui/esy-skia#a3785f9",
+    "esy-skia": "revery-ui/esy-skia#60e0260",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
     "isolinear": "revery-ui/isolinear#53fc4eb",
