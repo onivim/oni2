@@ -634,6 +634,59 @@ colnr_T srcColumn, colnr_T wantColumn, linenr_T *destLine, colnr_T *destColumn) 
    CAMLreturn0;
 }
 
+void onScrollCallback(scrollDirection_T dir, long count) {
+   CAMLparam0();
+
+   int outScroll = 0;
+   switch (dir) {
+    case SCROLL_CURSORCENTERH:
+        outScroll = 1;
+        break;
+    case SCROLL_CURSORTOP:
+        outScroll = 2;
+        break;
+    case SCROLL_CURSORBOTTOM:
+        outScroll = 3;
+        break;
+    case SCROLL_CURSORLEFT:
+        outScroll = 4;
+        break;
+    case SCROLL_CURSORRIGHT:
+        outScroll = 5;
+        break;
+    case SCROLL_LINE_UP:
+        outScroll = 6;
+        break;
+    case SCROLL_LINE_DOWN:
+        outScroll = 7;
+        break;
+    case SCROLL_HALFPAGE_DOWN:
+        outScroll = 8;
+        break;
+    case SCROLL_HALFPAGE_UP:
+        outScroll = 9;
+        break;
+    case SCROLL_PAGE_DOWN:
+        outScroll = 10;
+        break;
+    case SCROLL_PAGE_UP:
+        outScroll = 11;
+        break;
+    case SCROLL_CURSORCENTERV:
+    default:
+        outScroll = 0;
+        break;
+   }
+
+   static const value *lv_onScroll = NULL;
+   if (lv_onScroll == NULL) {
+     lv_onScroll = caml_named_value("lv_onScroll");
+   }
+
+   caml_callback2(*lv_onScroll, Val_int(outScroll), Val_int(count));
+   CAMLreturn0;
+}
+
 CAMLprim value libvim_vimInit(value unit) {
   vimMacroSetStartRecordCallback(&onMacroStartRecord);
   vimMacroSetStopRecordCallback(&onMacroStopRecord);
@@ -661,6 +714,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetFileWriteFailureCallback(&onWriteFailure);
   vimSetCursorMoveScreenLineCallback(&onCursorMoveScreenLine);
   vimSetCursorMoveScreenPositionCallback(&onCursorMoveScreenPosition);
+  vimSetScrollCallback(&onScrollCallback);
 
   char *args[0];
   vimInit(0, args);

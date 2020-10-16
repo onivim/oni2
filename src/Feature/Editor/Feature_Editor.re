@@ -121,12 +121,42 @@ let update = (editor, msg) => {
         |> Option.value(~default=Nothing);
       },
     )
-  | SelectionChanged(selection) => (
-      Editor.setSelection(~selection, editor),
-      Nothing,
-    )
-  | SelectionCleared => (Editor.clearSelection(editor), Nothing)
-  | ModeChanged(mode) => (Editor.setMode(mode, editor), Nothing)
+  | ModeChanged({mode, effects}) =>
+    //    | Scroll({count, direction}) => switch(direction) {
+
+    //    }
+
+    //    );
+
+    let handleScrollEffect = (~count, ~direction, editor) => {
+      Vim.Scroll.(
+        switch (direction) {
+        | CursorCenterVertically =>
+          Editor.scrollCenterCursorVertically(editor)
+        | CursorTop => Editor.scrollCursorTop(editor)
+        | CursorBottom => Editor.scrollCursorBottom(editor)
+        | _ => editor
+        }
+      );
+    };
+
+    let editor' = Editor.setMode(mode, editor);
+    let editor'' =
+      effects
+      |> List.fold_left(
+           (acc, effect) => {
+             switch (effect) {
+             | Vim.Effect.Scroll({count, direction}) =>
+               handleScrollEffect(~count, ~direction, acc)
+             | _ => acc
+             }
+           },
+           editor',
+         );
+    (editor'', Nothing);
+    //    | _ => Fun.identity
+    //
+    //    let effectHandler = (editor) => Vim.Effect.(fun
   | MinimapEnabledConfigChanged(enabled) => (
       Editor.setMinimapEnabled(~enabled, editor),
       Nothing,
@@ -135,10 +165,6 @@ let update = (editor, msg) => {
       Editor.setLineHeight(~lineHeight, editor),
       Nothing,
     )
-//  | Scroll({ count: int, direction: Vim.Scroll.direction}) => (
-  | Scroll(_) => (
-    editor |> Editor.scrollToLine(~line=1), Nothing
-  )
   };
 };
 

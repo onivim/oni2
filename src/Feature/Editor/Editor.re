@@ -139,7 +139,6 @@ type t = {
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   mode: [@opaque] Vim.Mode.t,
-  selection: [@opaque] option(VisualRange.t),
   pixelWidth: int,
   pixelHeight: int,
   yankHighlight: option(yankHighlight),
@@ -148,12 +147,12 @@ type t = {
 };
 
 let key = ({key, _}) => key;
-let selection = ({selection, _}) => selection;
-let setSelection = (~selection, editor) => {
-  ...editor,
-  selection: Some(selection),
-};
-let clearSelection = editor => {...editor, selection: None};
+let selection = ({mode, _}) =>
+  switch (mode) {
+  | Visual({range}) => Some(Oni_Core.VisualRange.ofVim(range))
+  | Select({range}) => Some(Oni_Core.VisualRange.ofVim(range))
+  | _ => None
+  };
 let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
 let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
 let scrollY = ({scrollY, _}) => scrollY;
@@ -312,7 +311,6 @@ let create = (~wrapMode=WrapMode.NoWrap, ~config, ~buffer, ()) => {
             byte: ByteIndex.zero,
           },
       }),
-    selection: None,
     pixelWidth: 1,
     pixelHeight: 1,
     yankHighlight: None,
@@ -505,7 +503,7 @@ let getPrimaryCursorByte = editor =>
     BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}
   };
 let selectionOrCursorRange = editor => {
-  switch (editor.selection) {
+  switch (selection(editor)) {
   | None =>
     let pos = getPrimaryCursorByte(editor);
     ByteRange.{
@@ -632,7 +630,12 @@ let exposePrimaryCursor = editor => {
         scrollY;
       };
 
-    {...editor, scrollX: adjustedScrollX, scrollY: adjustedScrollY, isScrollAnimated: true};
+    {
+      ...editor,
+      scrollX: adjustedScrollX,
+      scrollY: adjustedScrollY,
+      isScrollAnimated: true,
+    };
 
   | _ => editor
   };
@@ -729,6 +732,8 @@ let scrollToPixelY = (~pixelY as newScrollY, editor) => {
   };
 };
 
+let animateScroll = editor => {...editor, isScrollAnimated: true};
+
 let scrollToLine = (~line, view) => {
   let pixelY = float_of_int(line) *. lineHeightInPixels(view);
   {...scrollToPixelY(~pixelY, view), isScrollAnimated: true};
@@ -773,6 +778,38 @@ let scrollDeltaPixelXY = (~pixelX, ~pixelY, view) => {
   let {scrollY, minimapScrollY, _} = scrollDeltaPixelY(~pixelY, view);
 
   {...view, scrollX, scrollY, minimapScrollY};
+};
+
+let scrollCenterCursorVertically = editor => {
+  let cursor = getPrimaryCursorByte(editor);
+  let (pixelPosition: PixelPosition.t, _) =
+    bufferBytePositionToPixel(~position=cursor, editor);
+
+  let heightInPixels = float(editor.pixelHeight);
+  let pixelY = pixelPosition.y +. editor.scrollY -. heightInPixels /. 2.;
+  scrollToPixelY(~pixelY, editor) |> animateScroll;
+};
+
+let scrollCursorTop = editor => {
+  let cursor = getPrimaryCursorByte(editor);
+  let (pixelPosition: PixelPosition.t, _) =
+    bufferBytePositionToPixel(~position=cursor, editor);
+
+  let pixelY = pixelPosition.y +. editor.scrollY;
+  scrollToPixelY(~pixelY, editor) |> animateScroll;
+};
+
+let scrollCursorBottom = editor => {
+  let cursor = getPrimaryCursorByte(editor);
+  let (pixelPosition: PixelPosition.t, _) =
+    bufferBytePositionToPixel(~position=cursor, editor);
+
+  let heightInPixels = float(editor.pixelHeight);
+  let pixelY =
+    pixelPosition.y
+    +. editor.scrollY
+    -. (heightInPixels -. lineHeightInPixels(editor));
+  scrollToPixelY(~pixelY, editor) |> animateScroll;
 };
 
 // PROJECTION

@@ -10,4 +10,7 @@ type t =
       register: char,
       value: option(string),
     })
-  | Scroll({ count: int, direction: Scroll.direction})
+  | Scroll({
+      count: int,
+      direction: Scroll.direction,
+    });
