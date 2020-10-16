@@ -68,20 +68,20 @@ module Sub = {
 
         let isResizing = ref(false);
 
-
         let onEffect = eff =>
           switch (eff) {
           | ReveryTerminal.ScreenResized(_) => ()
           | ReveryTerminal.ScreenUpdated(screen) =>
-//            if (! isResizing^) {
-//              throttledScreenDispatch(
-//                ScreenUpdated({id: params.id, screen}),
-//              );
-//            }
-();
-          | ReveryTerminal.CursorMoved(cursor) =>
-//            throttledCursorDispatch(CursorMoved({id: params.id, cursor}))
-();
+            //              throttledScreenDispatch(
+
+            //              );
+
+            ()
+          //            }
+          //                ScreenUpdated({id: params.id, screen}),
+          //            if (! isResizing^) {
+          | ReveryTerminal.CursorMoved(cursor) => ()
+          //            throttledCursorDispatch(CursorMoved({id: params.id, cursor}))
           | ReveryTerminal.Output(output) =>
             Exthost.Request.TerminalService.acceptProcessInput(
               ~id=params.id,
@@ -136,7 +136,6 @@ module Sub = {
             | SendProcessData({terminalId, data}) =>
               if (terminalId == params.id) {
                 ReveryTerminal.write(~input=data, terminal);
-
                 let cursor = ReveryTerminal.cursor(terminal);
                 let screen = ReveryTerminal.screen(terminal);
                 dispatch(ScreenUpdated({id: params.id, screen, cursor}));

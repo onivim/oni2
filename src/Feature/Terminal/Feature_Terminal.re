@@ -162,7 +162,7 @@ let update = (~config: Config.resolver, model: t, msg) => {
           pid: None,
           title: None,
           screen: ReveryTerminal.Screen.initial,
-          cursor: ReveryTerminal.Cursor.{row: 0, column: 0, visible: false},
+          cursor: ReveryTerminal.Cursor.initial,
           closeOnExit,
         },
         model.idToTerminal,
