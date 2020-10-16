@@ -92,7 +92,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `vim.highlightedyank.enable` __(_bool_ default: `true`)__ - When `true`, briefly highlight yanks on the editor surface.
 
-- `vim.highlightedyank.color` __(_string_)__ - Hex string defining a color, ie `#FF00FFFF`.
+- `vim.highlightedyank.color` __(_string_)__ - Hex string defining a color, ie `#FF00FF`.
 
 - `vim.highlightedyank.duration` __(_int_ default: `300`)__ - The time, in milliseconds, the yank highlight is visible.
 
