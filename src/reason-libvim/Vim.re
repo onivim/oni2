@@ -161,7 +161,7 @@ let runWith = (~context: Context.t, f) => {
   context.lineComment |> Option.iter(Options.setLineComment);
 
   let oldBuf = Buffer.getCurrent();
-  let prevMode = Mode.current();
+  let prevMode = Mode.trySet(context.mode);
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 

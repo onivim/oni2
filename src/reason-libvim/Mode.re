@@ -82,3 +82,62 @@ let isOperatorPending =
   fun
   | Operator(_) => true
   | _ => false;
+
+module Internal = {
+    let ensureNormal = (prevMode) => {
+        if (!isNormal(current())) {
+            Native.vimKey("<ESC>");
+            Native.vimKey("<ESC>");
+        }
+    };
+
+    let ensureInsert = (prevMode) => {
+        if (!isInsert(current())) {
+            ensureNormal();
+            Native.vimKey("i");
+        }
+    };
+
+    let ensureVisual = () => {
+       if (!isVisual(current())) {
+         ensureNormal();
+         // Just switch to _a_ visual mode - the actual type and selection will be set elsewhere
+         Native.vimKey("V");
+       } 
+    }
+
+    let ensureSelect = () => {
+        if (!isSelect(current())) {
+            ensureVisual();
+            Native.vimKey("<c-g>");
+        }
+    };
+}
+
+let trySet = (newMode) => {
+    switch (newMode) {
+    | Normal({cursor}) =>
+        Internal.ensureNormal();
+        Cursor.set(cursor);
+    | Visual({ range }) =>
+        Internal.ensureVisual();
+        Visual.set(
+            ~visualType=range.visualType,
+            ~start=range.anchor,
+            ~cursor=range.cursor);
+    | Select({ range }) =>
+        Internal.ensureSelect();
+        Visual.set(
+            ~visualType=range.visualType,
+            ~start=range.anchor,
+            ~cursor=range.cursor);
+    | Insert(_) =>
+        Internal.ensureInsert();
+    // These modes cannot be explicitly transitioned to currently
+    | Operator(_) 
+    | Replace(_)
+    | CommandLine => ();
+    }
+
+    current();
+}
