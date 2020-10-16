@@ -40,5 +40,4 @@ let set =
     start.byte |> ByteIndex.toInt,
   );
   Cursor.set(cursor);
-  // TODO
 };
