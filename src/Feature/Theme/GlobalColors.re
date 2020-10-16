@@ -648,10 +648,10 @@ module Oni = {
     | CommandLine => commandlineModeBackground
     | Operator(_) => operatorModeBackground
     | TerminalInsert
-    | Insert => insertModeBackground
-    | Replace => replaceModeBackground
+    | Insert(_) => insertModeBackground
+    | Replace(_) => replaceModeBackground
     | TerminalNormal
-    | Normal => normalModeBackground
+    | Normal(_) => normalModeBackground
     };
 
   let foregroundFor = (mode: Mode.t) =>
@@ -662,10 +662,10 @@ module Oni = {
     | CommandLine => commandlineModeForeground
     | Operator(_) => operatorModeForeground
     | TerminalInsert
-    | Insert => insertModeForeground
-    | Replace => replaceModeForeground
+    | Insert(_) => insertModeForeground
+    | Replace(_) => replaceModeForeground
     | TerminalNormal
-    | Normal => normalModeForeground
+    | Normal(_) => normalModeForeground
     };
 
   let defaults = [

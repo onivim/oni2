@@ -49,39 +49,6 @@ module ViewLineMotion: {
     | MotionL;
 };
 
-module Context: {
-  type t = {
-    autoClosingPairs: AutoClosingPairs.t,
-    autoIndent:
-      (~previousLine: string, ~beforePreviousLine: option(string)) =>
-      AutoIndent.action,
-    viewLineMotion:
-      (~motion: ViewLineMotion.t, ~count: int, ~startLine: LineNumber.t) =>
-      LineNumber.t,
-    screenCursorMotion:
-      (
-        ~direction: [ | `Up | `Down],
-        ~count: int,
-        ~line: LineNumber.t,
-        ~currentByte: ByteIndex.t,
-        ~wantByte: ByteIndex.t
-      ) =>
-      BytePosition.t,
-    bufferId: int,
-    colorSchemeProvider: ColorScheme.Provider.t,
-    width: int,
-    height: int,
-    leftColumn: int,
-    topLine: int,
-    cursors: list(BytePosition.t),
-    lineComment: option(string),
-    tabSize: int,
-    insertSpaces: bool,
-  };
-
-  let current: unit => t;
-};
-
 module Registers: {let get: (~register: char) => option(array(string));};
 
 module Operator: {
@@ -127,6 +94,64 @@ module Operator: {
   let get: unit => option(pending);
 
   let toString: pending => string;
+};
+
+module Mode: {
+  type t =
+    | Normal({cursor: BytePosition.t})
+    | Insert({cursors: list(BytePosition.t)})
+    | CommandLine
+    | Replace({cursor: BytePosition.t})
+    | Visual({range: VisualRange.t})
+    | Operator({
+        cursor: BytePosition.t,
+        pending: Operator.pending,
+      })
+    | Select({range: VisualRange.t});
+
+  let current: unit => t;
+
+  let isInsert: t => bool;
+  let isNormal: t => bool;
+  let isVisual: t => bool;
+  let isSelect: t => bool;
+  let isReplace: t => bool;
+  let isOperatorPending: t => bool;
+
+  let cursors: t => list(BytePosition.t);
+};
+
+module Context: {
+  type t = {
+    autoClosingPairs: AutoClosingPairs.t,
+    autoIndent:
+      (~previousLine: string, ~beforePreviousLine: option(string)) =>
+      AutoIndent.action,
+    viewLineMotion:
+      (~motion: ViewLineMotion.t, ~count: int, ~startLine: LineNumber.t) =>
+      LineNumber.t,
+    screenCursorMotion:
+      (
+        ~direction: [ | `Up | `Down],
+        ~count: int,
+        ~line: LineNumber.t,
+        ~currentByte: ByteIndex.t,
+        ~wantByte: ByteIndex.t
+      ) =>
+      BytePosition.t,
+    bufferId: int,
+    colorSchemeProvider: ColorScheme.Provider.t,
+    width: int,
+    height: int,
+    leftColumn: int,
+    topLine: int,
+    mode: Mode.t,
+    lineComment: option(string),
+    tabSize: int,
+    insertSpaces: bool,
+  };
+
+  let current: unit => t;
 };
 
 module Edit: {
@@ -329,22 +354,6 @@ module Format: {
         endLine: LineNumber.t,
         adjustCursor: bool,
       });
-};
-
-module Mode: {
-  type t =
-    | Normal
-    | Insert
-    | CommandLine
-    | Replace
-    | Visual({range: VisualRange.t})
-    | Operator({pending: Operator.pending})
-    | Select({range: VisualRange.t});
-
-  let current: unit => t;
-
-  let isVisual: t => bool;
-  let isSelect: t => bool;
 };
 
 module Setting: {

@@ -54,7 +54,9 @@ let getTotalWidthInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
-let setCursors: (~cursors: list(BytePosition.t), t) => t;
+
+let mode: t => Vim.Mode.t;
+let setMode: (Vim.Mode.t, t) => t;
 
 let getBufferLineCount: t => int;
 

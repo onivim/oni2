@@ -168,8 +168,8 @@ let start =
             Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
 
           switch (newMode) {
-          | Visual({range})
-          | Select({range}) =>
+          | Visual({range, _})
+          | Select({range, _}) =>
             dispatch(
               Editor({
                 scope: Oni_Model.EditorScope.Editor(editorId),
@@ -565,14 +565,14 @@ let start =
       libvimHasInitialized := true
     });
 
-  let updateActiveEditorCursors = cursors => {
+  let updateActiveEditorMode = mode => {
     let editorId =
       Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
 
     dispatch(
       Actions.Editor({
         scope: EditorScope.Editor(editorId),
-        msg: CursorsChanged(cursors),
+        msg: ModeChanged(mode),
       }),
     );
   };
@@ -615,7 +615,7 @@ let start =
 
         currentTriggerKey := Some(key);
         let {
-          cursors,
+          mode,
           topLine: newTopLine,
           leftColumn: newLeftColumn,
           bufferId,
@@ -652,7 +652,7 @@ let start =
         dispatch(
           Actions.Editor({
             scope: EditorScope.Editor(editorId),
-            msg: CursorsChanged(cursors),
+            msg: ModeChanged(mode),
           }),
         );
 
@@ -689,7 +689,7 @@ let start =
 
         let completion = Path.trimTrailingSeparator(completion);
         let latestContext: Vim.Context.t = Core.VimEx.inputString(completion);
-        updateActiveEditorCursors(latestContext.cursors);
+        updateActiveEditorMode(latestContext.mode);
         isCompleting := false;
       }
     );
@@ -725,8 +725,8 @@ let start =
     Isolinear.Effect.create(~name="vim.undo", () => {
       let _: Vim.Context.t = Vim.key("<esc>");
       let _: Vim.Context.t = Vim.key("<esc>");
-      let {cursors, _}: Vim.Context.t = Vim.key("u");
-      updateActiveEditorCursors(cursors);
+      let {mode, _}: Vim.Context.t = Vim.key("u");
+      updateActiveEditorMode(mode);
       ();
     });
 
@@ -734,8 +734,8 @@ let start =
     Isolinear.Effect.create(~name="vim.redo", () => {
       let _: Vim.Context.t = Vim.key("<esc>");
       let _: Vim.Context.t = Vim.key("<esc>");
-      let {cursors, _}: Vim.Context.t = Vim.key("<c-r>");
-      updateActiveEditorCursors(cursors);
+      let {mode, _}: Vim.Context.t = Vim.key("<c-r>");
+      updateActiveEditorMode(mode);
       ();
     });
 
@@ -790,12 +790,13 @@ let start =
       let _: Vim.Context.t = Vim.input("g");
       let _: Vim.Context.t = Vim.input("g");
       let _: Vim.Context.t = Vim.input("G");
-      let {cursors, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t =
+      let {mode, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t =
         Vim.input("$");
 
       // Update the editor, which is the source of truth for cursor position
       let scope = EditorScope.Editor(editorId);
-      dispatch(Actions.Editor({scope, msg: CursorsChanged(cursors)}));
+      dispatch(Actions.Editor({scope, msg: ModeChanged(mode)}));
+      // TODO: Remove this
       dispatch(Actions.Editor({scope, msg: ScrollToLine(newTopLine - 1)}));
       dispatch(Actions.Editor({scope, msg: ScrollToColumn(newLeftColumn)}));
     });

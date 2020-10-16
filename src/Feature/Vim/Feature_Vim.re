@@ -11,7 +11,7 @@ type model = {
 };
 
 let initial = {
-  mode: Vim.Mode.Normal,
+  mode: Vim.Mode.Normal({cursor: BytePosition.zero}),
   settings: StringMap.empty,
   recordingMacro: None,
 };
@@ -25,7 +25,7 @@ let recordingMacro = ({recordingMacro, _}) => recordingMacro;
 [@deriving show]
 type msg =
   | ModeChanged([@opaque] Vim.Mode.t)
-  | PasteCompleted({cursors: [@opaque] list(BytePosition.t)})
+  | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
   | SettingChanged(Vim.Setting.t)
   | MacroRecordingStarted({register: char})
@@ -34,7 +34,7 @@ type msg =
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | CursorsUpdated(list(BytePosition.t));
+  | ModeUpdated(Vim.Mode.t);
 
 let update = (msg, model: model) => {
   switch (msg) {
@@ -42,11 +42,11 @@ let update = (msg, model: model) => {
   | Pasted(text) =>
     let eff =
       Service_Vim.Effects.paste(
-        ~toMsg=cursors => PasteCompleted({cursors: cursors}),
+        ~toMsg=mode => PasteCompleted({mode: mode}),
         text,
       );
     (model, Effect(eff));
-  | PasteCompleted({cursors}) => (model, CursorsUpdated(cursors))
+  | PasteCompleted({mode}) => (model, ModeUpdated(mode))
   | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
       Nothing,

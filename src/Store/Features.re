@@ -363,10 +363,10 @@ let update =
       | ApplyCompletion({insertText, meetColumn}) => (
           state,
           Service_Vim.Effects.applyCompletion(
-            ~meetColumn, ~insertText, ~toMsg=cursors =>
+            ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
-              msg: CursorsChanged(cursors),
+              msg: ModeChanged(mode),
             })
           ),
         )
@@ -388,10 +388,10 @@ let update =
         (
           state,
           Service_Vim.Effects.applyCompletion(
-            ~meetColumn, ~insertText, ~toMsg=cursors =>
+            ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
-              msg: CursorsChanged(cursors),
+              msg: ModeChanged(mode),
             })
           ),
         );
@@ -686,8 +686,8 @@ let update =
       let editor' =
         position
         |> Option.map(cursorPosition => {
-             Feature_Editor.Editor.setCursors(
-               ~cursors=[cursorPosition],
+             Feature_Editor.Editor.setMode(
+               Vim.Mode.Normal({cursor: cursorPosition}),
                editor,
              )
            })
@@ -1107,7 +1107,7 @@ let update =
     (state, eff);
 
   // TODO: Merge into Editor(...) update
-  | Editor({scope, msg: CursorsChanged(_) as msg}) =>
+  | Editor({scope, msg: ModeChanged(_) as msg}) =>
     let prevCursor =
       state.layout
       |> Feature_Layout.activeEditor
@@ -1374,7 +1374,7 @@ let update =
     };
 
   | Vim(msg) =>
-    let wasInInsertMode = Feature_Vim.mode(state.vim) == Vim.Mode.Insert;
+    let wasInInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state.vim));
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
     let state = {...state, vim};
 
@@ -1382,7 +1382,7 @@ let update =
       switch (outmsg) {
       | Nothing => (state, Isolinear.Effect.none)
       | Effect(e) => (state, e)
-      | CursorsUpdated(cursors) =>
+      | ModeUpdated(mode) =>
         open Feature_Editor;
         let activeEditorId =
           state.layout |> Feature_Layout.activeEditor |> Editor.getId;
@@ -1391,7 +1391,7 @@ let update =
           state.layout
           |> Feature_Layout.map(editor =>
                if (Editor.getId(editor) == activeEditorId) {
-                 Editor.setCursors(~cursors, editor);
+                 Editor.setMode(mode, editor);
                } else {
                  editor;
                }
@@ -1399,7 +1399,7 @@ let update =
         ({...state, layout: layout'}, Isolinear.Effect.none);
       };
 
-    let isInInsertMode = Feature_Vim.mode(state'.vim) == Vim.Mode.Insert;
+    let isInInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state'.vim));
 
     // Entered insert mode
     let languageSupport =

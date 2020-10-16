@@ -8,7 +8,7 @@ runTestWithInput(
   ~name="Regression1671 - Opening new buffer loses changes in previous buffer",
   (input, _dispatch, wait, _runEffects) => {
     wait(~name="Capture initial state", (state: State.t) =>
-      Feature_Vim.mode(state.vim) == Vim.Mode.Normal
+      Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
     );
 
     input(":e a-test-file");

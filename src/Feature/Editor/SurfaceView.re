@@ -44,7 +44,7 @@ let%component make =
                 ~colors,
                 ~dispatch,
                 ~topVisibleLine,
-                ~onCursorChange,
+                ~changeMode,
                 ~cursorPosition: CharacterPosition.t,
                 ~editorFont: Service_Font.font,
                 ~diagnosticsMap,
@@ -93,7 +93,7 @@ let%component make =
          Editor.Slow.pixelPositionToBytePosition(
            // #2463: When we're in insert mode, clicking past the end of the line
            // should move the cursor past the last byte.
-           ~allowPast=mode == Vim.Mode.Insert,
+           ~allowPast=Vim.Mode.isInsert(mode),
            ~buffer,
            ~pixelX=relX,
            ~pixelY=relY,
@@ -150,7 +150,13 @@ let%component make =
          Log.tracef(m =>
            m("  setPosition (%s)", BytePosition.show(bytePosition))
          );
-         onCursorChange(bytePosition);
+         let newMode =
+           if (Vim.Mode.isInsert(Editor.mode(editor))) {
+             Vim.Mode.Insert({cursors: [bytePosition]});
+           } else {
+             Vim.Mode.Normal({cursor: bytePosition});
+           };
+         changeMode(newMode);
        });
   };
 
