@@ -27,8 +27,12 @@ let getRange = () => {
 
 let getType = Native.vimVisualGetType;
 
-let set = (~visualType: Types.visualType, ~start: BytePosition.t, 
-~cursor: BytePosition.t) => {
-   // TODO
-   (); 
-}
+let set =
+    (
+      ~visualType: Types.visualType,
+      ~start: BytePosition.t,
+      ~cursor: BytePosition.t,
+    ) => {
+  ();
+    // TODO
+};

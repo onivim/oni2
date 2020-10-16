@@ -1129,6 +1129,17 @@ CAMLprim value libvim_vimOptionGetTabSize(value unit) {
   return Val_int(tabSize);
 }
 
+CAMLprim value libvim_vimVisualSetStart(value vLine, value vByte) {
+    CAMLparam2(vLine, vByte);
+
+    pos_T start;
+    start.lnum = Int_val(vLine);
+    start.col = Int_val(vByte);
+    vimVisualSetStart(start);
+
+    CAMLreturn(Val_unit);
+}
+
 CAMLprim value libvim_vimVisualGetRange(value unit) {
   CAMLparam0();
   CAMLlocal1(ret);
@@ -1229,6 +1240,31 @@ CAMLprim value libvim_vimUndoSaveRegion(value startLine, value endLine) {
   int success = vimUndoSaveRegion(start, end);
 
   CAMLreturn(Val_bool(success != FAIL));
+}
+
+CAMLprim value libvim_vimVisualSetType(value vType) {
+    CAMLparam1(vType);    
+
+    char visualType = 0;
+    switch(Int_val(vType)) {
+    // character
+    case 0:
+      visualType ='v';
+      break;
+        // line
+    case 1:
+      visualType = 'V';
+      break;
+    case 2:
+       visualType = Ctrl_V;
+       break;
+    }
+
+    if (visualType != 0) {
+        vimVisualSetType(visualType);
+    }
+
+    CAMLreturn(Val_unit);
 }
 
 CAMLprim value libvim_vimVisualGetType(value unit) {

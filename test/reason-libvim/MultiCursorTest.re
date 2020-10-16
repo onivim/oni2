@@ -56,12 +56,14 @@ describe("Multi-cursor", ({describe, _}) => {
         // set cursor, and move up
         let mode2 =
           input(
-            ~mode=Normal({
-                cursor: BytePosition.{
+            ~mode=
+              Normal({
+                cursor:
+                  BytePosition.{
                     line: LineNumber.ofZeroBased(2),
                     byte: ByteIndex.zero,
-                }
-            }),
+                  },
+              }),
             "k",
           );
 
