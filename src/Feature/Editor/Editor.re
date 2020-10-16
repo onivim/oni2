@@ -632,7 +632,7 @@ let exposePrimaryCursor = editor => {
         scrollY;
       };
 
-    {...editor, scrollX: adjustedScrollX, scrollY: adjustedScrollY};
+    {...editor, scrollX: adjustedScrollX, scrollY: adjustedScrollY, isScrollAnimated: true};
 
   | _ => editor
   };

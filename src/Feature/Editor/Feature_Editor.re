@@ -127,11 +127,6 @@ let update = (editor, msg) => {
     )
   | SelectionCleared => (Editor.clearSelection(editor), Nothing)
   | ModeChanged(mode) => (Editor.setMode(mode, editor), Nothing)
-  | ScrollToLine(line) => (Editor.scrollToLine(~line, editor), Nothing)
-  | ScrollToColumn(column) => (
-      Editor.scrollToColumn(~column, editor),
-      Nothing,
-    )
   | MinimapEnabledConfigChanged(enabled) => (
       Editor.setMinimapEnabled(~enabled, editor),
       Nothing,

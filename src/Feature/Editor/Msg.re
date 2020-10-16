@@ -28,7 +28,5 @@ type t =
   | SelectionChanged([@opaque] VisualRange.t)
   | SelectionCleared
   | ModeChanged([@opaque] Vim.Mode.t)
-  | ScrollToLine(int)
-  | ScrollToColumn(int)
   | MinimapEnabledConfigChanged(bool)
   | LineHeightConfigChanged(LineHeight.t);
