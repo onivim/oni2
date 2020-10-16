@@ -144,8 +144,11 @@ external vimUndoSync: int => unit = "libvim_vimUndoSync";
 
 external vimVisualGetRange: unit => (int, int, int, int) =
   "libvim_vimVisualGetRange";
+external vimVisualSetStart: (int, int) => unit = "libvim_vimVisualSetStart";
 
 external vimVisualGetType: unit => Types.visualType =
+  "libvim_vimVisualGetType";
+external vimVisualSetType: Types.visualType => unit =
   "libvim_vimVisualGetType";
 
 external vimWindowGetWidth: unit => int = "libvim_vimWindowGetWidth";

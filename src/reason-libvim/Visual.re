@@ -34,5 +34,11 @@ let set =
       ~cursor: BytePosition.t,
     ) => {
   ();
-    // TODO
+  Native.vimVisualSetType(visualType);
+  Native.vimVisualSetStart(
+    start.line |> LineNumber.toOneBased,
+    start.byte |> ByteIndex.toInt,
+  );
+  Cursor.set(cursor);
+  // TODO
 };
