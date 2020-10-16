@@ -370,6 +370,23 @@ module Setting: {
   };
 };
 
+module Scroll: {
+    [@deriving show]
+    type direction =
+    | CursorCenterVertically // zz
+    | CursorCenterHorizontally 
+    | CursorTop // zt
+    | CursorBottom // zb
+    | CursorLeft
+    | CursorRight
+    | LineUp
+    | LineDown
+    | HalfPageUp
+    | HalfPageDown
+    | PageDown
+    | PageUp;
+};
+
 module Effect: {
   type t =
     | Goto(Goto.effect)
@@ -382,7 +399,8 @@ module Effect: {
     | MacroRecordingStopped({
         register: char,
         value: option(string),
-      });
+      })
+    | Scroll({ count: int, direction: Scroll.direction })
 };
 
 /**

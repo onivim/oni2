@@ -203,7 +203,19 @@ let start =
         )
 
       | MacroRecordingStopped(_) =>
-        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped)),
+        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped))
+
+      | Scroll({count, direction}) => {
+          let editorId =
+            Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
+
+            dispatch(
+              Editor({
+                scope: Oni_Model.EditorScope.Editor(editorId),
+                msg: Scroll({ count: count, direction })
+              }),
+            )
+       },
     );
 
   let _: unit => unit =

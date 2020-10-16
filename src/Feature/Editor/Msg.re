@@ -25,6 +25,7 @@ type t =
     })
   | MouseHovered({bytePosition: BytePosition.t})
   | MouseMoved({bytePosition: BytePosition.t})
+  | Scroll({count: int, direction: Vim.Scroll.direction})
   | SelectionChanged([@opaque] VisualRange.t)
   | SelectionCleared
   | ModeChanged([@opaque] Vim.Mode.t)

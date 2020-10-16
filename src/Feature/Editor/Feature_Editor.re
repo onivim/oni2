@@ -135,6 +135,10 @@ let update = (editor, msg) => {
       Editor.setLineHeight(~lineHeight, editor),
       Nothing,
     )
+//  | Scroll({ count: int, direction: Vim.Scroll.direction}) => (
+  | Scroll(_) => (
+    editor |> Editor.scrollToLine(~line=1), Nothing
+  )
   };
 };
 
