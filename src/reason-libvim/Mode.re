@@ -84,13 +84,13 @@ let isOperatorPending =
   | _ => false;
 
 module Internal = {
-  let ensureNormal = prevMode =>
+  let ensureNormal = () =>
     if (!isNormal(current())) {
       Native.vimKey("<ESC>");
       Native.vimKey("<ESC>");
     };
 
-  let ensureInsert = prevMode =>
+  let ensureInsert = () =>
     if (!isInsert(current())) {
       ensureNormal();
       Native.vimKey("i");
