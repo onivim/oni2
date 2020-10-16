@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 
 module Time = Revery.Time;
 
@@ -71,17 +70,8 @@ module Sub = {
         let onEffect = eff =>
           switch (eff) {
           | ReveryTerminal.ScreenResized(_) => ()
-          | ReveryTerminal.ScreenUpdated(screen) =>
-            //              throttledScreenDispatch(
-
-            //              );
-
-            ()
-          //            }
-          //                ScreenUpdated({id: params.id, screen}),
-          //            if (! isResizing^) {
-          | ReveryTerminal.CursorMoved(cursor) => ()
-          //            throttledCursorDispatch(CursorMoved({id: params.id, cursor}))
+          | ReveryTerminal.ScreenUpdated(_) => ()
+          | ReveryTerminal.CursorMoved(_) => ()
           | ReveryTerminal.Output(output) =>
             Exthost.Request.TerminalService.acceptProcessInput(
               ~id=params.id,
