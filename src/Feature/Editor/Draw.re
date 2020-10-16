@@ -249,7 +249,7 @@ let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) =
       ~bold=token.bold,
       ~italic=token.italic,
       token.text,
-    );
+    )
 
   | Tab =>
     Skia.Paint.setColor(
