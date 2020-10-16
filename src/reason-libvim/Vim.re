@@ -31,6 +31,7 @@ module Testing = {
 module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;
+module ViewLineMotion = ViewLineMotion;
 module Yank = Yank;
 
 module Internal = {
@@ -166,11 +167,15 @@ let runWith = (~context: Context.t, f) => {
 
   GlobalState.autoIndent := Some(context.autoIndent);
   GlobalState.colorSchemeProvider := context.colorSchemeProvider;
+  GlobalState.viewLineMotion := Some(context.viewLineMotion);
+  GlobalState.screenPositionMotion := Some(context.screenCursorMotion);
 
-  let cursors = f();
+  let mode = f();
 
   GlobalState.autoIndent := None;
   GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
+  GlobalState.viewLineMotion := None;
+  GlobalState.screenPositionMotion := None;
 
   let newBuf = Buffer.getCurrent();
   let newMode = Mode.current();
@@ -210,7 +215,7 @@ let runWith = (~context: Context.t, f) => {
   };
 
   flushQueue();
-  {...Context.current(), cursors, autoClosingPairs: context.autoClosingPairs};
+  {...Context.current(), mode, autoClosingPairs: context.autoClosingPairs};
 };
 
 let _onAutocommand = (autoCommand: Types.autocmd, buffer: Buffer.t) => {
@@ -379,6 +384,38 @@ let _onAutoIndent = (lnum: int, sourceLine: string) => {
   };
 };
 
+let _onCursorMoveScreenLine =
+    (motion: ViewLineMotion.t, count: int, line: int) => {
+  let startLine = LineNumber.ofOneBased(line);
+  GlobalState.viewLineMotion^
+  |> Option.map(f => f(~motion, ~count, ~startLine))
+  |> Option.map(LineNumber.toOneBased)
+  |> Option.value(~default=line);
+};
+
+let _onCursorMoveScreenPosition =
+    (direction, count: int, line: int, byte: int, wantByte: int) => {
+  let startLine = LineNumber.ofOneBased(line);
+  let startByte = ByteIndex.ofInt(byte);
+  GlobalState.screenPositionMotion^
+  |> Option.map(f =>
+       f(
+         ~direction,
+         ~count,
+         ~line=startLine,
+         ~currentByte=startByte,
+         ~wantByte=ByteIndex.ofInt(wantByte),
+       )
+     )
+  |> Option.map((bytePosition: BytePosition.t) => {
+       (
+         bytePosition.line |> LineNumber.toOneBased,
+         bytePosition.byte |> ByteIndex.toInt,
+       )
+     })
+  |> Option.value(~default=(line, wantByte));
+};
+
 let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
 };
@@ -454,6 +491,11 @@ let init = () => {
   Callback.register("lv_onVersion", _onVersion);
   Callback.register("lv_onYank", _onYank);
   Callback.register("lv_onWriteFailure", _onWriteFailure);
+  Callback.register("lv_onCursorMoveScreenLine", _onCursorMoveScreenLine);
+  Callback.register(
+    "lv_onCursorMoveScreenPosition",
+    _onCursorMoveScreenPosition,
+  );
 
   Native.vimInit();
 
@@ -462,7 +504,8 @@ let init = () => {
 };
 
 let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
-  let {autoClosingPairs, cursors, _}: Context.t = context;
+  let {autoClosingPairs, mode, _}: Context.t = context;
+  let cursors = Mode.cursors(mode);
   runWith(
     ~context,
     () => {
@@ -470,7 +513,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
 
       let runCursor = cursor => {
         Cursor.set(cursor);
-        if (Mode.current() == Mode.Insert) {
+        if (Mode.current() |> Mode.isInsert) {
           let position: BytePosition.t = Cursor.get();
           let line = Buffer.getLine(Buffer.getCurrent(), position.line);
 
@@ -534,7 +577,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
 
       let mode = Mode.current();
       let cursors = Internal.getDefaultCursors(cursors);
-      if (mode == Mode.Insert) {
+      if (Mode.isInsert(mode)) {
         // Run first command, verify we don't go back to normal mode
         switch (cursors) {
         | [hd, ...tail] =>
@@ -542,15 +585,15 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
 
           let newMode = Mode.current();
           // If we're still in insert mode, run the command for all the rest of the characters too
-          let remainingCursors =
-            switch (newMode) {
-            | Mode.Insert => List.map(runCursor, tail)
-            | _ => tail
-            };
+          if (Mode.isInsert(newMode)) {
+            let remainingCursors = List.map(runCursor, tail);
+            Insert({cursors: [newHead, ...remainingCursors]});
+          } else {
+            newMode;
+          };
 
-          [newHead, ...remainingCursors];
         // This should never happen...
-        | [] => cursors
+        | [] => Insert({cursors: cursors})
         };
       } else {
         switch (cursors) {
@@ -558,7 +601,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         | _ => ()
         };
         inputFn(v);
-        Internal.getDefaultCursors([]);
+        Mode.current();
       };
     },
   );
@@ -576,7 +619,7 @@ let command = (~context=Context.current(), v) => {
     ~context,
     () => {
       Native.vimCommand(v);
-      [];
+      Mode.current();
     },
   );
 };

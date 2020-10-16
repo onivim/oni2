@@ -23,7 +23,7 @@ runTest(
   ~name="ConfigurationPerFileType",
   (dispatch, wait, _) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
-      Feature_Vim.mode(state.vim) == Vim.Mode.Normal
+      Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
     );
 
     let waitForBuffer = (~name, f) =>

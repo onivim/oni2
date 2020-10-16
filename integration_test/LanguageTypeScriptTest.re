@@ -5,7 +5,7 @@ open Oni_IntegrationTestLib;
 runTestWithInput(
   ~name="LanguageTypeScriptTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Mode.Normal
+    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
   );
 
   ExtensionHelpers.waitForExtensionToActivate(

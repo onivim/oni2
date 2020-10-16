@@ -3,9 +3,9 @@ open Oni_Core;
 module Internal = {
   let getTerminalNormalMode =
     fun
-    | Vim.Mode.Visual({range}) =>
+    | Vim.Mode.Visual({range, _}) =>
       Mode.TerminalVisual({range: Oni_Core.VisualRange.ofVim(range)})
-    | Vim.Mode.Operator({pending}) => Mode.Operator({pending: pending})
+    | Vim.Mode.Operator({pending, _}) => Mode.Operator({pending: pending})
     | Vim.Mode.CommandLine => Mode.CommandLine
     | _ => Mode.TerminalNormal;
 };
@@ -22,14 +22,25 @@ let current: State.t => Oni_Core.Mode.t =
     |> Option.value(
          ~default=
            switch (Feature_Vim.mode(state.vim)) {
-           | Vim.Mode.Insert => Mode.Insert
-           | Vim.Mode.Normal => Mode.Normal
+           | Vim.Mode.Insert({cursors}) =>
+             Mode.Insert(
+               {
+                 {cursors: cursors};
+               },
+             )
+           | Vim.Mode.Normal({cursor}) => Mode.Normal({cursor: cursor})
            | Vim.Mode.Visual({range}) =>
-             Mode.Visual({range: Oni_Core.VisualRange.ofVim(range)})
+             Mode.Visual({
+               cursor: Vim.VisualRange.cursor(range),
+               range: Oni_Core.VisualRange.ofVim(range),
+             })
            | Vim.Mode.Select({range}) =>
-             Mode.Select({range: Oni_Core.VisualRange.ofVim(range)})
-           | Vim.Mode.Replace => Mode.Replace
-           | Vim.Mode.Operator({pending}) =>
+             Mode.Select({
+               cursor: Vim.VisualRange.cursor(range),
+               range: Oni_Core.VisualRange.ofVim(range),
+             })
+           | Vim.Mode.Replace({cursor}) => Mode.Replace({cursor: cursor})
+           | Vim.Mode.Operator({pending, _}) =>
              Mode.Operator({pending: pending})
            | Vim.Mode.CommandLine => Mode.CommandLine
            },

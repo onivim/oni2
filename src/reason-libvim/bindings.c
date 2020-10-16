@@ -566,6 +566,74 @@ void onWriteFailure(writeFailureReason_T reason, buf_T *buf) {
   CAMLreturn0;
 }
 
+void onCursorMoveScreenLine(screenLineMotion_T motion, int count, linenr_T startLine, linenr_T *outLine) {
+    CAMLparam0();
+    CAMLlocal1(valDestLine);
+
+    int iMotion = 0;
+    switch (motion) {
+    case MOTION_M:
+        iMotion = 1;
+        break;
+    case MOTION_L:
+        iMotion = 2;
+        break;
+    case MOTION_H:
+    default:
+        iMotion = 0;
+        break;
+    }
+
+   static const value *lv_onCursorMoveScreenLine = NULL;
+   if (lv_onCursorMoveScreenLine == NULL) {
+     lv_onCursorMoveScreenLine = caml_named_value("lv_onCursorMoveScreenLine");
+   }
+
+   valDestLine = caml_callback3(*lv_onCursorMoveScreenLine, Val_int(iMotion),
+   Val_int(count), Val_int(startLine));
+   *outLine = Int_val(valDestLine);
+   CAMLreturn0;
+}
+
+void onCursorMoveScreenPosition(int dir, int count, linenr_T srcLine,
+colnr_T srcColumn, colnr_T wantColumn, linenr_T *destLine, colnr_T *destColumn) {
+    CAMLparam0();
+    CAMLlocal2(vDirection, vResult);
+
+    if (dir == BACKWARD) {
+        vDirection = hash_variant("Up");
+    } else {
+        vDirection = hash_variant("Down");
+    }
+
+   static const value *lv_onCursorMoveScreenPosition = NULL;
+   if (lv_onCursorMoveScreenPosition == NULL) {
+     lv_onCursorMoveScreenPosition = caml_named_value("lv_onCursorMoveScreenPosition");
+   }
+  value *pArgs = (value *)malloc(sizeof(value) * 5);
+  pArgs[0] = vDirection,
+  pArgs[1] = Val_int(count);
+  pArgs[2] = Val_int(srcLine);
+  pArgs[3] = Val_long(srcColumn);
+  pArgs[4] = Val_long(wantColumn);
+
+    vResult = caml_callbackN(*lv_onCursorMoveScreenPosition,
+    5,
+    pArgs
+    );
+    free(pArgs);
+
+  if (Is_block(vResult)) {
+    *destLine = Int_val(Field(vResult, 0));
+    *destColumn = Int_val(Field(vResult, 1));
+  } else {
+    *destLine = srcLine;
+    *destColumn = srcColumn;
+  }
+
+   CAMLreturn0;
+}
+
 CAMLprim value libvim_vimInit(value unit) {
   vimMacroSetStartRecordCallback(&onMacroStartRecord);
   vimMacroSetStopRecordCallback(&onMacroStopRecord);
@@ -591,6 +659,8 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetWindowSplitCallback(&onWindowSplit);
   vimSetYankCallback(&onYank);
   vimSetFileWriteFailureCallback(&onWriteFailure);
+  vimSetCursorMoveScreenLineCallback(&onCursorMoveScreenLine);
+  vimSetCursorMoveScreenPositionCallback(&onCursorMoveScreenPosition);
 
   char *args[0];
   vimInit(0, args);

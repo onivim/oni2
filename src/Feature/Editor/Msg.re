@@ -27,7 +27,7 @@ type t =
   | MouseMoved({bytePosition: BytePosition.t})
   | SelectionChanged([@opaque] VisualRange.t)
   | SelectionCleared
-  | CursorsChanged([@opaque] list(BytePosition.t))
+  | ModeChanged([@opaque] Vim.Mode.t)
   | ScrollToLine(int)
   | ScrollToColumn(int)
   | MinimapEnabledConfigChanged(bool)

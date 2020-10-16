@@ -1,6 +1,8 @@
+open EditorCoreTypes;
 open TestFramework;
 
-let resetBuffer = () => Helpers.resetBuffer("test/testfile.txt");
+let resetBuffer = () =>
+  Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 
 describe("Mode", ({describe, _}) => {
   describe("replace mode", ({test, _}) => {
@@ -10,7 +12,7 @@ describe("Mode", ({describe, _}) => {
       // Enter replace mode
       let _ = Vim.input("R");
 
-      expect.equal(Vim.Mode.current(), Vim.Mode.Replace);
+      expect.equal(Vim.Mode.isReplace(Vim.Mode.current()), true);
     })
   });
   describe("select mode", ({test, _}) => {
@@ -38,6 +40,25 @@ describe("Mode", ({describe, _}) => {
       expect.equal(
         mode,
         Vim.Mode.Operator({
+          cursor: BytePosition.zero,
+          pending: Vim.Operator.{operation: Delete, count: 0, register: 0},
+        }),
+      );
+    });
+    test("cursor position is reported correctly", ({expect, _}) => {
+      let _ = resetBuffer();
+
+      // delete pending op
+      let {mode, _}: Vim.Context.t = Vim.input("jjd");
+
+      expect.equal(
+        mode,
+        Vim.Mode.Operator({
+          cursor:
+            BytePosition.{
+              byte: ByteIndex.zero,
+              line: LineNumber.ofZeroBased(2),
+            },
           pending: Vim.Operator.{operation: Delete, count: 0, register: 0},
         }),
       );
@@ -52,6 +73,7 @@ describe("Mode", ({describe, _}) => {
       expect.equal(
         mode,
         Vim.Mode.Operator({
+          cursor: BytePosition.zero,
           pending: Vim.Operator.{operation: Delete, count: 5, register: 0},
         }),
       );
@@ -66,6 +88,7 @@ describe("Mode", ({describe, _}) => {
       expect.equal(
         mode,
         Vim.Mode.Operator({
+          cursor: BytePosition.zero,
           pending: Vim.Operator.{operation: Comment, count: 10, register: 0},
         }),
       );
@@ -80,6 +103,7 @@ describe("Mode", ({describe, _}) => {
       expect.equal(
         mode,
         Vim.Mode.Operator({
+          cursor: BytePosition.zero,
           pending:
             Vim.Operator.{
               operation: Yank,

@@ -31,7 +31,7 @@ module Effects = {
   let paste = (~toMsg, text) => {
     Isolinear.Effect.createWithDispatch(~name="vim.clipboardPaste", dispatch => {
       let isCmdLineMode = Vim.Mode.current() == Vim.Mode.CommandLine;
-      let isInsertMode = Vim.Mode.current() == Vim.Mode.Insert;
+      let isInsertMode = Vim.Mode.isInsert(Vim.Mode.current());
 
       if (isInsertMode || isCmdLineMode) {
         if (!isCmdLineMode) {
@@ -43,7 +43,7 @@ module Effects = {
 
         if (!isCmdLineMode) {
           Vim.command("set nopaste") |> ignore;
-          dispatch(toMsg(latestContext.cursors));
+          dispatch(toMsg(latestContext.mode));
         };
       };
     });
@@ -95,9 +95,9 @@ module Effects = {
         ByteIndex.toInt(cursor.byte) - CharacterIndex.toInt(meetColumn);
 
       let _: Vim.Context.t = VimEx.repeatKey(delta, "<BS>");
-      let {cursors, _}: Vim.Context.t = VimEx.inputString(insertText);
+      let {mode, _}: Vim.Context.t = VimEx.inputString(insertText);
 
-      dispatch(toMsg(cursors));
+      dispatch(toMsg(mode));
     });
 
   let loadBuffer = (~filePath: string, toMsg) => {
