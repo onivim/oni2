@@ -129,12 +129,19 @@ let update = (editor, msg) => {
     //    );
 
     let handleScrollEffect = (~count, ~direction, editor) => {
+      let count = min(count, 1);
       Vim.Scroll.(
         switch (direction) {
         | CursorCenterVertically =>
           Editor.scrollCenterCursorVertically(editor)
         | CursorTop => Editor.scrollCursorTop(editor)
         | CursorBottom => Editor.scrollCursorBottom(editor)
+        | LineUp => Editor.scrollLines(~count=count * -1, editor)
+        | LineDown => Editor.scrollLines(~count, editor)
+        | HalfPageUp => Editor.scrollHalfPage(~count=count * -1, editor)
+        | HalfPageDown => Editor.scrollHalfPage(~count=count, editor)
+        | PageUp => Editor.scrollPage(~count=count * -1, editor)
+        | PageDown => Editor.scrollPage(~count=count, editor)
         | _ => editor
         }
       );

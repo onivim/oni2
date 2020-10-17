@@ -120,6 +120,9 @@ let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 let scrollCenterCursorVertically: t => t;
 let scrollCursorTop: t => t;
 let scrollCursorBottom: t => t;
+let scrollLines: (~count: int, t) => t;
+let scrollHalfPage: (~count: int, t) => t;
+let scrollPage: (~count: int, t) => t;
 
 let getCharacterWidth: t => float;
 

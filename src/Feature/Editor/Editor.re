@@ -812,6 +812,24 @@ let scrollCursorBottom = editor => {
   scrollToPixelY(~pixelY, editor) |> animateScroll;
 };
 
+let scrollLines = (~count, editor) => {
+ let delta = float(count) *. lineHeightInPixels(editor);   
+ let pixelY = editor.scrollY +. delta;
+ scrollToPixelY(~pixelY, editor);
+};
+
+let scrollHalfPage = (~count, editor) => {
+ let delta = float(count) *. float(editor.pixelHeight) /. 2.;
+ let pixelY = editor.scrollY +. delta;
+ scrollToPixelY(~pixelY, editor);
+};
+
+let scrollPage = (~count, editor) => {
+ let delta = float(count) *. float(editor.pixelHeight);
+ let pixelY = editor.scrollY +. delta;
+ scrollToPixelY(~pixelY, editor);
+};
+
 // PROJECTION
 
 let project = (~line, ~column: int, ~pixelWidth: int, ~pixelHeight, editor) => {
