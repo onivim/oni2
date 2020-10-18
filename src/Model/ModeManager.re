@@ -3,7 +3,7 @@ open Oni_Core;
 module Internal = {
   let getTerminalNormalMode =
     fun
-    | Vim.Mode.Visual({range, _}) =>
+    | Vim.Mode.Visual(range) =>
       Mode.TerminalVisual({range: Oni_Core.VisualRange.ofVim(range)})
     | Vim.Mode.Operator({pending, _}) => Mode.Operator({pending: pending})
     | Vim.Mode.CommandLine => Mode.CommandLine
@@ -29,12 +29,12 @@ let current: State.t => Oni_Core.Mode.t =
                },
              )
            | Vim.Mode.Normal({cursor}) => Mode.Normal({cursor: cursor})
-           | Vim.Mode.Visual({range}) =>
+           | Vim.Mode.Visual(range) =>
              Mode.Visual({
                cursor: Vim.VisualRange.cursor(range),
                range: Oni_Core.VisualRange.ofVim(range),
              })
-           | Vim.Mode.Select({range}) =>
+           | Vim.Mode.Select(range) =>
              Mode.Select({
                cursor: Vim.VisualRange.cursor(range),
                range: Oni_Core.VisualRange.ofVim(range),

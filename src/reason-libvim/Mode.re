@@ -5,12 +5,12 @@ type t =
   | Insert({cursors: list(BytePosition.t)})
   | CommandLine
   | Replace({cursor: BytePosition.t})
-  | Visual({range: VisualRange.t})
+  | Visual(VisualRange.t)
   | Operator({
       cursor: BytePosition.t,
       pending: Operator.pending,
     })
-  | Select({range: VisualRange.t});
+  | Select(VisualRange.t);
 
 let show = (mode: t) => {
   switch (mode) {
@@ -29,9 +29,9 @@ let cursors =
   | Normal({cursor}) => [cursor]
   | Insert({cursors}) => cursors
   | Replace({cursor}) => [cursor]
-  | Visual({range}) => [range |> VisualRange.cursor]
+  | Visual(range) => [range |> VisualRange.cursor]
   | Operator({cursor, _}) => [cursor]
-  | Select({range}) => [range |> VisualRange.cursor]
+  | Select(range) => [range |> VisualRange.cursor]
   | CommandLine => [];
 
 let current = () => {
@@ -40,7 +40,7 @@ let current = () => {
   let cursor = Cursor.get();
   switch (nativeMode) {
   | Native.Normal => Normal({cursor: cursor})
-  | Native.Visual => Visual({range: VisualRange.current()})
+  | Native.Visual => Visual(VisualRange.current())
   | Native.CommandLine => CommandLine
   | Native.Replace => Replace({cursor: cursor})
   | Native.Operator =>
@@ -49,7 +49,7 @@ let current = () => {
       pending: Operator.get() |> Option.value(~default=Operator.default),
     })
   | Native.Insert => Insert({cursors: [cursor]})
-  | Native.Select => Select({range: VisualRange.current()})
+  | Native.Select => Select(VisualRange.current())
   };
 };
 
@@ -82,3 +82,65 @@ let isOperatorPending =
   fun
   | Operator(_) => true
   | _ => false;
+
+module Internal = {
+  let ensureNormal = () =>
+    if (!isNormal(current())) {
+      Native.vimKey("<ESC>");
+      Native.vimKey("<ESC>");
+    };
+
+  let ensureInsert = () =>
+    if (!isInsert(current())) {
+      ensureNormal();
+      Native.vimKey("i");
+    };
+
+  let ensureVisual = visualType =>
+    if (!isVisual(current())) {
+      ensureNormal();
+      Types.(
+        switch (visualType) {
+        | Block => Native.vimKey("<C-v>")
+        | Line => Native.vimKey("V")
+        | Character
+        | None => Native.vimKey("v")
+        }
+      );
+    };
+
+  let ensureSelect = visualType =>
+    if (!isSelect(current())) {
+      ensureVisual(visualType);
+      Native.vimKey("<c-g>");
+    };
+};
+
+let trySet = newMode => {
+  switch (newMode) {
+  | Normal({cursor}) =>
+    Internal.ensureNormal();
+    Cursor.set(cursor);
+  | Visual(range) =>
+    Internal.ensureVisual(range.visualType);
+    Visual.set(
+      ~visualType=range.visualType,
+      ~start=range.anchor,
+      ~cursor=range.cursor,
+    );
+  | Select(range) =>
+    Internal.ensureSelect(range.visualType);
+    Visual.set(
+      ~visualType=range.visualType,
+      ~start=range.anchor,
+      ~cursor=range.cursor,
+    );
+  | Insert(_) => Internal.ensureInsert()
+  // These modes cannot be explicitly transitioned to currently
+  | Operator(_)
+  | Replace(_)
+  | CommandLine => ()
+  };
+
+  current();
+};

@@ -8,7 +8,7 @@ let resetBuffer = () =>
 let input =
     (
       ~autoClosingPairs=AutoClosingPairs.empty,
-      ~mode=Mode.Insert({cursors: []}),
+      ~mode=Mode.Normal({cursor: BytePosition.zero}),
       key,
     ) => {
   let out =
@@ -57,13 +57,12 @@ describe("Multi-cursor", ({describe, _}) => {
         let mode2 =
           input(
             ~mode=
-              Insert({
-                cursors: [
+              Normal({
+                cursor:
                   BytePosition.{
-                    line: LineNumber.ofOneBased(3),
+                    line: LineNumber.ofZeroBased(2),
                     byte: ByteIndex.zero,
                   },
-                ],
               }),
             "k",
           );
@@ -89,7 +88,7 @@ describe("Multi-cursor", ({describe, _}) => {
     })
   });
   describe("insert mode", ({test, _}) => {
-    test("multi-cursor auto-closing paris", ({expect, _}) => {
+    test("multi-cursor auto-closing pairs", ({expect, _}) => {
       let buf = resetBuffer();
 
       let autoClosingPairs =
