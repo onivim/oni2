@@ -102,12 +102,12 @@ module Mode: {
     | Insert({cursors: list(BytePosition.t)})
     | CommandLine
     | Replace({cursor: BytePosition.t})
-    | Visual({range: VisualRange.t})
+    | Visual(VisualRange.t)
     | Operator({
         cursor: BytePosition.t,
         pending: Operator.pending,
       })
-    | Select({range: VisualRange.t});
+    | Select(VisualRange.t);
 
   let current: unit => t;
 
