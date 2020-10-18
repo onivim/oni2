@@ -227,7 +227,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
                Buffer.characterToBytePosition(pos, buffer)
              ),
         grabFocus,
-        preview: preview
+        preview,
       }),
     )
 
@@ -375,13 +375,11 @@ module Effects = {
         |> Buffer.setFileType(Buffer.FileType.inferred(fileType));
 
       f(~alreadyLoaded=false, buffer);
-    };
-  };
-
-  let loadFile = (~font, ~languageInfo, ~filePath, ~toMsg, model) => {
-    Isolinear.Effect.createWithDispatch(
-      ~name="Feature_Buffers.loadFile", dispatch => {
-      let handler = (~alreadyLoaded as _, buffer) => {
+      dispatch(
+        NewBufferAndEditorRequested({
+          buffer,
+          split,
+          grabFocus,
         let lines = Oni_Core.Buffer.getLines(buffer);
         dispatch(toMsg(lines));
       };

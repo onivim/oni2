@@ -692,26 +692,26 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Effect.none)
-    | BufferModifiedSet(id, isModified) => {
-       open Feature_Editor;
+    | BufferModifiedSet(id, isModified) =>
+      open Feature_Editor;
 
-       let bufferId = id;
+      let bufferId = id;
 
-      let newLayout = Feature_Layout.map(
-        (editor) => {
-          if (Editor.getBufferId(editor) == bufferId && Editor.getPreview(editor) == true) {
-            Editor.setPreview(~preview=false, editor);
-          } else {
-            editor;
-          };
-        },
-        state.layout,
-      );
+      let newLayout =
+        Feature_Layout.map(
+          editor =>
+            if (Editor.getBufferId(editor) == bufferId
+                && Editor.getPreview(editor) == true) {
+              Editor.setPreview(~preview=false, editor);
+            } else {
+              editor;
+            },
+          state.layout,
+        );
 
       ({...state, layout: newLayout}, Effect.none);
-    }
 
-    | CreateEditor({buffer, split, position, grabFocus, preview}) => {
+    | CreateEditor({buffer, split, position, grabFocus, preview}) =>
       open Feature_Editor;
 
       let editorBuffer = buffer |> EditorBuffer.ofBuffer;
@@ -719,29 +719,26 @@ let update =
 
       let bufferId = EditorBuffer.id(editorBuffer);
 
-      let existingEditor = Feature_Layout.activeGroupEditors(state.layout)
-        |> List.find_opt(editor => Editor.getBufferId(editor) == bufferId)
+      let existingEditor =
+        Feature_Layout.activeGroupEditors(state.layout)
+        |> List.find_opt(editor => Editor.getBufferId(editor) == bufferId);
 
-      let (isPreview, editor) = switch(existingEditor) {
-        | Some(ed) => {
+      let (isPreview, editor) =
+        switch (existingEditor) {
+        | Some(ed) =>
           let isPreview = Editor.getPreview(ed) && preview;
 
-          (
-            isPreview,
-            Editor.setPreview(~preview=isPreview, ed),
+          (isPreview, Editor.setPreview(~preview=isPreview, ed));
+        | None => (
+            preview,
+            Editor.create(
+              ~config=config(~fileType),
+              ~buffer=editorBuffer,
+              ~preview,
+              (),
+            ),
           )
         };
-        | None => (
-          preview,
-          Editor.create(
-            ~config=config(~fileType,),
-            ~buffer=editorBuffer,
-            ~preview,
-            (),
-          ),
-        )
-      };
-
 
       let editor' =
         position
@@ -764,22 +761,27 @@ let update =
         )
         |> Feature_Layout.openEditor(~config=config(~fileType), editor');
 
-      let cleanLayout = switch(isPreview) {
-        | true => {
-          Feature_Layout.activeGroupEditors(layout)
-          |>  List.filter((ed) => Editor.getPreview(ed) && Editor.getId(ed) != Editor.getId(editor'))
-          |>  List.fold_left(
-                (acc, ed) => {
-                  switch(Feature_Layout.removeEditor(Editor.getId(ed), acc)) {
-                    | Some(lay) => lay
-                    | None => acc;
-                  }
-                },
-                layout
-              );
-        }
-        | false => layout;
-      };
+      let cleanLayout =
+        isPreview
+          ? {
+            Feature_Layout.activeGroupEditors(layout)
+            |> List.filter(ed =>
+                 Editor.getPreview(ed)
+                 && Editor.getId(ed) != Editor.getId(editor')
+               )
+            |> List.fold_left(
+                 (acc, ed) => {
+                   switch (
+                     Feature_Layout.removeEditor(Editor.getId(ed), acc)
+                   ) {
+                   | Some(lay) => lay
+                   | None => acc
+                   }
+                 },
+                 layout,
+               );
+          }
+          : layout;
 
       let bufferRenderers =
         buffer
@@ -823,7 +825,6 @@ let update =
         };
 
       (state'', Effect.none);
-    }
     | BufferSaved(buffer) =>
       let eff =
         Service_Exthost.Effects.FileSystemEventService.onFileEvent(

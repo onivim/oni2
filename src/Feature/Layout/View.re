@@ -284,7 +284,6 @@ module EditorGroupView = {
         ~dispatch,
         (),
       ) => {
-
     let isSelected = item => ContentModel.id(item) == model.selectedId;
     let children = {
       let editorContainer =

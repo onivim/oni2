@@ -524,11 +524,10 @@ let selectionOrCursorRange = editor => {
 
 let setLineHeight = (~lineHeight, editor) => {...editor, lineHeight};
 
-
 let getId = model => model.editorId;
 
 let getPreview = model => model.preview;
-let setPreview = (~preview, editor) => {...editor, preview}
+let setPreview = (~preview, editor) => {...editor, preview};
 
 let getCharacterWidth = ({buffer, _}) =>
   EditorBuffer.font(buffer).spaceWidth;

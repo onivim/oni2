@@ -18,7 +18,7 @@ module Group: {
   let selected: t => Editor.t;
 
   let select: (int, t) => t;
-  let updateEditor: (int, (Editor.t) => Editor.t,  t) => t;
+  let updateEditor: (int, Editor.t => Editor.t, t) => t;
 
   let nextEditor: t => t;
   let previousEditor: t => t;
@@ -59,14 +59,13 @@ module Group: {
   };
 
   let updateEditor = (editorId, f, group) => {
-    let newEditors = List.map(e => {
-      Editor.getId(e) != editorId ? e : f(e)
-    },  group.editors);
+    let newEditors =
+      List.map(
+        e => {Editor.getId(e) != editorId ? e : f(e)},
+        group.editors,
+      );
 
-    {
-      ...group,
-      editors: newEditors,
-    };
+    {...group, editors: newEditors};
   };
 
   let nextEditor = group => {
@@ -461,8 +460,8 @@ let fold = (f, initial, model) => {
   );
 };
 
-let activeGroupEditors = (model) => {
+let activeGroupEditors = model => {
   let group = activeGroup(model);
 
   group.editors;
-}
+};

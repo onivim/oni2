@@ -140,7 +140,7 @@ let update = (editor, msg) => {
       Editor.setLineHeight(~lineHeight, editor),
       Nothing,
     )
-  | PreviewChanged(preview)  => (
+  | PreviewChanged(preview) => (
       Editor.setPreview(~preview, editor),
       Nothing,
     )
