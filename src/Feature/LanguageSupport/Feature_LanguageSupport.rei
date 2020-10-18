@@ -44,6 +44,7 @@ type outmsg =
   | OpenFile({
       filePath: string,
       location: option(CharacterPosition.t),
+      preview: bool,
     })
   | ReferencesAvailable
   | NotifySuccess(string)

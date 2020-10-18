@@ -223,6 +223,8 @@ let make =
            };
          };
 
+    let preview = editor => Editor.getPreview(editor);
+
     let title = editor => {
       let (_, title, _) =
         Feature_Buffers.get(Editor.getBufferId(editor), state.buffers)

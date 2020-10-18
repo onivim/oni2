@@ -69,7 +69,9 @@ type outmsg =
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       position: option(BytePosition.t),
       grabFocus: bool,
-    });
+      preview: bool,
+    })
+  | BufferModifiedSet(int, bool);
 
 // UPDATE
 
@@ -91,6 +93,18 @@ module Effects: {
     Isolinear.Effect.t('msg);
 
   let openFileInEditor:
+    (
+      ~font: Service_Font.font,
+      ~languageInfo: Exthost.LanguageInfo.t,
+      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab]=?,
+      ~position: option(CharacterPosition.t)=?,
+      ~grabFocus: bool=?,
+      ~filePath: string,
+      model
+    ) =>
+    Isolinear.Effect.t(msg);
+
+  let previewFileInEditor:
     (
       ~font: Service_Font.font,
       ~languageInfo: Exthost.LanguageInfo.t,

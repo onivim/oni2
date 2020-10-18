@@ -84,7 +84,9 @@ type outmsg =
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       position: option(BytePosition.t),
       grabFocus: bool,
-    });
+      preview: bool,
+    })
+  | BufferModifiedSet(int, bool);
 
 [@deriving show]
 type command =
@@ -98,12 +100,14 @@ type msg =
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       position: option(CharacterPosition.t),
       grabFocus: bool,
+      preview: bool,
     })
   | NewBufferAndEditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       position: option(CharacterPosition.t),
       grabFocus: bool,
+      preview: bool,
     })
   //  | SyntaxHighlightingDisabled(int)
   | FileTypeChanged({
@@ -212,7 +216,7 @@ let guessIndentation = (~config, buffer) => {
 
 let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   switch (msg) {
-  | EditorRequested({buffer, split, position, grabFocus}) => (
+  | EditorRequested({buffer, split, position, grabFocus, preview}) => (
       model,
       CreateEditor({
         buffer,
@@ -223,6 +227,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
                Buffer.characterToBytePosition(pos, buffer)
              ),
         grabFocus,
+        preview: preview
       }),
     )
 
@@ -231,6 +236,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       split,
       position,
       grabFocus,
+      preview,
     }) =>
     let fileType =
       Buffer.getFileType(originalBuffer) |> Oni_Core.Buffer.FileType.toString;
@@ -259,6 +265,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
                Buffer.characterToBytePosition(pos, buffer)
              ),
         grabFocus,
+        preview,
       }),
     );
 
@@ -279,7 +286,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
 
   | ModifiedSet(id, isModified) => (
       IntMap.update(id, setModified(isModified), model),
-      Nothing,
+      BufferModifiedSet(id, isModified),
     )
 
   | LineEndingsChanged({id, lineEndings}) => (
@@ -401,10 +408,10 @@ module Effects = {
 
       let handler = (~alreadyLoaded, buffer) =>
         if (alreadyLoaded) {
-          dispatch(EditorRequested({buffer, split, position, grabFocus}));
+          dispatch(EditorRequested({buffer, split, position, grabFocus, preview: false}));
         } else {
           dispatch(
-            NewBufferAndEditorRequested({buffer, split, position, grabFocus}),
+            NewBufferAndEditorRequested({buffer, split, position, grabFocus, preview: false}),
           );
         };
 
@@ -412,9 +419,36 @@ module Effects = {
     });
   };
 
-  let openBufferInEditor = (~font, ~languageInfo, ~bufferId, model) => {
+  let openFileInEditor =
+      (
+        ~font: Service_Font.font,
+        ~languageInfo: Exthost.LanguageInfo.t,
+        ~split=`Current,
+        ~position=None,
+        ~grabFocus=true,
+        ~filePath,
+        model,
+      ) => {
     Isolinear.Effect.createWithDispatch(
-      ~name="Feature_Buffers.openBufferInEditor", dispatch => {
+      ~name="Feature_Buffers.openFileInEditor", dispatch => {
+      let newBuffer = Vim.Buffer.openFile(filePath);
+
+      let handler = (~alreadyLoaded, buffer) =>
+        if (alreadyLoaded) {
+          dispatch(EditorRequested({buffer, split, position, grabFocus, preview: true}));
+        } else {
+          dispatch(
+            NewBufferAndEditorRequested({buffer, split, position, grabFocus, preview: true}),
+          );
+        };
+
+      openCommon(~vimBuffer=newBuffer, ~languageInfo, ~font, ~model, handler);
+    });
+  };
+
+  let previewFileInEditor = (~font, ~languageInfo, ~bufferId, model) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Buffers.previewBufferInEditor", dispatch => {
       switch (Vim.Buffer.getById(bufferId)) {
       | None => Log.warnf(m => m("Unable to open buffer: %d", bufferId))
       | Some(vimBuffer) =>
@@ -424,7 +458,7 @@ module Effects = {
           let grabFocus = true;
 
           if (alreadyLoaded) {
-            dispatch(EditorRequested({buffer, split, position, grabFocus}));
+            dispatch(EditorRequested({buffer, split, position, grabFocus, preview: false}));
           } else {
             dispatch(
               NewBufferAndEditorRequested({
@@ -432,6 +466,7 @@ module Effects = {
                 split,
                 position,
                 grabFocus,
+                preview: false,
               }),
             );
           };

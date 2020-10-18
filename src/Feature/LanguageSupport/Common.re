@@ -5,4 +5,5 @@ type outmsg =
   | OpenFile({
       filePath: string,
       location: option(Location.t),
+      preview: bool,
     });

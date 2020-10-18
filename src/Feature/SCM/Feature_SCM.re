@@ -379,7 +379,10 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
-  | OpenFile(string)
+  | OpenFile({
+      filePath: string,
+      preview: bool,
+    })
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | Nothing;
 
@@ -762,11 +765,15 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
              let outmsg =
                switch (outmsg) {
                | Component_VimList.Nothing => Some(Nothing)
-               | Component_VimList.Selected({index}) =>
+               | Component_VimList.Clicked({index}) =>
                  Component_VimList.get(index, viewModel)
                  |> Option.map((item: Resource.t) =>
-                      OpenFile(item.uri |> Oni_Core.Uri.toFileSystemPath)
+                      OpenFile({
+                        filePath: item.uri |> Oni_Core.Uri.toFileSystemPath,
+                        preview: false,
+                      })
                     )
+               | Component_VimList.DoubleClicked(_) => Some(Nothing)
                };
 
              capturedOutmsg := outmsg;

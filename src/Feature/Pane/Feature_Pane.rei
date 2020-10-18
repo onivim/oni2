@@ -19,6 +19,7 @@ type outmsg =
   | OpenFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
+      preview: bool,
     })
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus

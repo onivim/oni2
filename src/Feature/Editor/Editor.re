@@ -145,6 +145,7 @@ type t = {
   yankHighlight: option(yankHighlight),
   wrapMode: WrapMode.t,
   wrapState: WrapState.t,
+  preview: bool,
 };
 
 let key = ({key, _}) => key;
@@ -280,7 +281,7 @@ let bufferCharacterPositionToPixel =
   };
 };
 
-let create = (~wrapMode=WrapMode.NoWrap, ~config, ~buffer, ()) => {
+let create = (~wrapMode=WrapMode.NoWrap, ~config, ~buffer, ~preview: bool, ()) => {
   let id = GlobalState.generateId();
   let key = Brisk_reconciler.Key.create();
 
@@ -318,6 +319,7 @@ let create = (~wrapMode=WrapMode.NoWrap, ~config, ~buffer, ()) => {
     yankHighlight: None,
     wrapState,
     wrapMode,
+    preview,
   };
 };
 
@@ -522,7 +524,11 @@ let selectionOrCursorRange = editor => {
 
 let setLineHeight = (~lineHeight, editor) => {...editor, lineHeight};
 
+
 let getId = model => model.editorId;
+
+let getPreview = model => model.preview;
+let setPreview = (~preview, editor) => {...editor, preview}
 
 let getCharacterWidth = ({buffer, _}) =>
   EditorBuffer.font(buffer).spaceWidth;

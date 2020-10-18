@@ -21,7 +21,10 @@ let setRoot: (~rootPath: string, model) => model;
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | OpenFile(string)
+  | OpenFile({
+      filePath: string,
+      preview: bool,
+    })
   | GrabFocus
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol);

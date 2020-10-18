@@ -100,6 +100,11 @@ type t =
       option([ | `Horizontal | `Vertical | `NewTab]),
       option(CharacterPosition.t),
     )
+  | PreviewFileByPath(
+      string,
+      option([ | `Horizontal | `Vertical | `NewTab]),
+      option(CharacterPosition.t),
+    )
   | OpenConfigFile(string)
   | Pasted({
       rawText: string,

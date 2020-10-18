@@ -18,6 +18,8 @@ module Group: {
   let selected: t => Editor.t;
 
   let select: (int, t) => t;
+  let updateEditor: (int, (Editor.t) => Editor.t,  t) => t;
+
   let nextEditor: t => t;
   let previousEditor: t => t;
   let openEditor: (Editor.t, t) => t;
@@ -54,6 +56,17 @@ module Group: {
     assert(List.exists(item => Editor.getId(item) == id, group.editors));
 
     {...group, selectedId: id};
+  };
+
+  let updateEditor = (editorId, f, group) => {
+    let newEditors = List.map(e => {
+      Editor.getId(e) != editorId ? e : f(e)
+    },  group.editors);
+
+    {
+      ...group,
+      editors: newEditors,
+    };
   };
 
   let nextEditor = group => {
@@ -94,20 +107,11 @@ module Group: {
     switch (
       List.find_opt(e => Editor.getBufferId(e) == bufferId, group.editors)
     ) {
-    | Some(previousEditor) =>
-      let newCursors = Editor.getCursors(editor);
-      {...group, selectedId: Editor.getId(previousEditor)}
-      |> map(originalEditor
-           // Update cursors to match new editor, if they are specified
-           =>
-             if (Editor.getBufferId(editor)
-                 == Editor.getBufferId(originalEditor)
-                 && newCursors != [EditorCoreTypes.BytePosition.zero]) {
-               originalEditor |> Editor.setMode(Editor.mode(editor));
-             } else {
-               originalEditor;
-             }
-           );
+    | Some(existingEditor) =>
+      let editorId = Editor.getId(existingEditor);
+
+      {...group, selectedId: Editor.getId(editor)}
+      |> map(e => Editor.getId(e) != editorId ? e : editor);
     | None => {
         ...group,
         editors: [editor, ...group.editors],
@@ -456,3 +460,9 @@ let fold = (f, initial, model) => {
     model.layouts,
   );
 };
+
+let activeGroupEditors = (model) => {
+  let group = activeGroup(model);
+
+  group.editors;
+}

@@ -83,7 +83,10 @@ module Effects = {
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | OpenFile(string)
+  | OpenFile({
+      filePath: string,
+      preview: bool,
+    })
   | GrabFocus;
 
 let setTree = (tree, model) => {
@@ -242,7 +245,7 @@ let update = (~configuration, msg, model) => {
 
     let model = {...model, treeView};
     switch (outmsg) {
-    | Expanded(node) => (
+    | Component_VimTree.Expanded(node) => (
         model,
         Effect(
           Effects.load(node.path, configuration, ~onComplete=newNode =>
@@ -250,11 +253,20 @@ let update = (~configuration, msg, model) => {
           ),
         ),
       )
-    | Collapsed(_) => (model, Nothing)
-    | Selected(node) =>
+    | Component_VimTree.Collapsed(_) => (model, Nothing)
+    | Component_VimTree.Clicked(node) =>
       // Set active here to avoid scrolling in BufferEnter
-      (model |> setActive(Some(node.path)), OpenFile(node.path))
-    | Nothing => (model, Nothing)
+      (
+        model |> setActive(Some(node.path)),
+        OpenFile({filePath: node.path, preview: true}),
+      )
+    | Component_VimTree.DoubleClicked(node) =>
+      // Set active here to avoid scrolling in BufferEnter
+      (
+        model |> setActive(Some(node.path)),
+        OpenFile({filePath: node.path, preview: false}),
+      )
+    | Component_VimTree.Nothing => (model, Nothing)
     };
   };
 };

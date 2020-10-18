@@ -835,7 +835,6 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
-
     | Terminal(Command(NormalMode)) =>
       let maybeBufferId =
         state

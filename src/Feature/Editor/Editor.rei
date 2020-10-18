@@ -29,6 +29,7 @@ let create:
     ~wrapMode: WrapMode.t=?,
     ~config: Config.resolver,
     ~buffer: EditorBuffer.t,
+    ~preview: bool,
     unit
   ) =>
   t;
@@ -36,6 +37,8 @@ let copy: t => t;
 
 let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;
+let getPreview: t => bool;
+let setPreview: (~preview: bool, t) => t;
 let getBufferId: t => int;
 let getTopVisibleLine: t => int;
 let getBottomVisibleLine: t => int;

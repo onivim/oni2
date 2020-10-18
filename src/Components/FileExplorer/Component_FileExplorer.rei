@@ -27,7 +27,10 @@ let getFileIcon:
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | OpenFile(string)
+  | OpenFile({
+      filePath: string,
+      preview: bool,
+    })
   | GrabFocus;
 
 let update:

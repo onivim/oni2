@@ -61,6 +61,7 @@ type outmsg =
   | OpenFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
+      preview: bool,
     })
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
@@ -372,8 +373,10 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
     let eff =
       switch (outmsg) {
       | Component_VimTree.Nothing => Nothing
-      | Component_VimTree.Selected(item) =>
-        OpenFile({filePath: item.file, position: item.location})
+      | Component_VimTree.Clicked(item) =>
+        OpenFile({filePath: item.file, position: item.location, preview: true})
+      | Component_VimTree.DoubleClicked(item) =>
+        OpenFile({filePath: item.file, position: item.location, preview: false})
       | Component_VimTree.Collapsed(_) => Nothing
       | Component_VimTree.Expanded({path, _}) =>
         Effect(
@@ -400,8 +403,18 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
     let eff =
       switch (outmsg) {
       | Component_VimTree.Nothing => Nothing
-      | Component_VimTree.Selected(item) =>
-        OpenFile({filePath: item.file, position: item.location})
+      | Component_VimTree.Clicked(item) =>
+        OpenFile({
+          filePath: item.file,
+          position: item.location,
+          preview: true,
+        })
+      | Component_VimTree.DoubleClicked(item) =>
+        OpenFile({
+          filePath: item.file,
+          position: item.location,
+          preview: false,
+        })
       | Component_VimTree.Collapsed(_) => Nothing
       | Component_VimTree.Expanded(_) => Nothing
       };

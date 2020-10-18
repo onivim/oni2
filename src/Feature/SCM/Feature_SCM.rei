@@ -72,7 +72,10 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
-  | OpenFile(string)
+  | OpenFile({
+      filePath: string,
+      preview: bool,
+    })
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | Nothing;
 

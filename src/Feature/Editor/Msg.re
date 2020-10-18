@@ -31,4 +31,5 @@ type t =
   | ScrollToLine(int)
   | ScrollToColumn(int)
   | MinimapEnabledConfigChanged(bool)
-  | LineHeightConfigChanged(LineHeight.t);
+  | LineHeightConfigChanged(LineHeight.t)
+  | PreviewChanged(bool);
