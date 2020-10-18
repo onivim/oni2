@@ -149,8 +149,8 @@ type t = {
 let key = ({key, _}) => key;
 let selection = ({mode, _}) =>
   switch (mode) {
-  | Visual({range}) => Some(Oni_Core.VisualRange.ofVim(range))
-  | Select({range}) => Some(Oni_Core.VisualRange.ofVim(range))
+  | Visual(range) => Some(Oni_Core.VisualRange.ofVim(range))
+  | Select(range) => Some(Oni_Core.VisualRange.ofVim(range))
   | _ => None
   };
 let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;

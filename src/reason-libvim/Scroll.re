@@ -8,7 +8,7 @@ type direction =
   | CursorRight
   | LineUp
   | LineDown
-  | HalfPageUp
   | HalfPageDown
+  | HalfPageUp
   | PageDown
   | PageUp;

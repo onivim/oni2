@@ -381,8 +381,8 @@ module Scroll: {
     | CursorRight
     | LineUp
     | LineDown
-    | HalfPageUp
     | HalfPageDown
+    | HalfPageUp
     | PageDown
     | PageUp;
 };
