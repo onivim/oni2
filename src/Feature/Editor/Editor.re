@@ -144,6 +144,9 @@ type t = {
   yankHighlight: option(yankHighlight),
   wrapMode: WrapMode.t,
   wrapState: WrapState.t,
+  // Number of lines to preserve before or after the cursor, when scrolling.
+  // Like the `scrolloff` vim setting or the `editor.cursorSurroundingLines` VSCode setting.
+  verticalScrollMargin: int,
 };
 
 let key = ({key, _}) => key;
@@ -316,6 +319,7 @@ let create = (~wrapMode=WrapMode.NoWrap, ~config, ~buffer, ()) => {
     yankHighlight: None,
     wrapState,
     wrapMode,
+    verticalScrollMargin: 1,
   };
 };
 
@@ -607,7 +611,8 @@ let exposePrimaryCursor = editor => {
       bufferBytePositionToPixel(~position=primaryCursor, editor);
 
     let scrollOffX = getCharacterWidth(editor) *. 2.;
-    let scrollOffY = lineHeightInPixels(editor);
+    let scrollOffY =
+      lineHeightInPixels(editor) *. float(editor.verticalScrollMargin);
 
     let availableX = pixelWidth -. scrollOffX;
     let availableY = pixelHeight -. scrollOffY;
@@ -622,8 +627,8 @@ let exposePrimaryCursor = editor => {
       };
 
     let adjustedScrollY =
-      if (pixelY < 0.) {
-        scrollY +. pixelY;
+      if (pixelY < scrollOffY) {
+        scrollY -. scrollOffY +. pixelY;
       } else if (pixelY >= availableY) {
         scrollY +. (pixelY -. availableY);
       } else {
