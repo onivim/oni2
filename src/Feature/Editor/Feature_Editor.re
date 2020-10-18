@@ -129,7 +129,7 @@ let update = (editor, msg) => {
     //    );
 
     let handleScrollEffect = (~count, ~direction, editor) => {
-      let count = min(count, 1);
+      let count = max(count, 1);
       Vim.Scroll.(
         switch (direction) {
         | CursorCenterVertically =>
