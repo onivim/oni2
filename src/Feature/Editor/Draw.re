@@ -108,6 +108,7 @@ let drawShapedText = {
        });
   };
 };
+
 let shapedText = drawShapedText;
 
 let drawUtf8Text = {
