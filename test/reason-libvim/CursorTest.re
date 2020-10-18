@@ -34,46 +34,7 @@ describe("Cursor", ({describe, _}) => {
       expect.int(Cursor.get() |> BytePosition.byte |> ByteIndex.toInt).toBe(
         4,
       );
-    });
-
-    test(
-      "topline should be updated when moving outside the viewport",
-      ({expect, _}) => {
-      let _ = resetBuffer();
-
-      Window.setWidth(80);
-      Window.setHeight(40);
-      Window.setTopLeft(1, 1);
-
-      Cursor.set(
-        BytePosition.{line: LineNumber.zero, byte: ByteIndex.(zero + 1)},
-      );
-      Cursor.set(
-        BytePosition.{
-          line: LineNumber.ofOneBased(90),
-          byte: ByteIndex.(zero + 1),
-        },
-      );
-
-      expect.int(Window.getTopLine()).toBe(61);
-    });
-
-    test(
-      "topline should not be updated when moving inside the viewport",
-      ({expect, _}) => {
-      Window.setWidth(80);
-      Window.setHeight(40);
-
-      let _ = resetBuffer();
-
-      Window.setTopLeft(71, 4);
-      Cursor.set({
-        line: LineNumber.ofOneBased(90),
-        byte: ByteIndex.(zero + 1),
-      });
-
-      expect.int(Window.getTopLine()).toBe(71);
-    });
+    })
   });
   describe("normal mode", ({test, _}) => {
     test("j / k", ({expect, _}) => {
