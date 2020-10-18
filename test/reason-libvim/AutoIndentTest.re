@@ -13,7 +13,7 @@ let input = (~insertSpaces=false, ~tabSize=3, ~autoIndent, s) => {
     Vim.input(
       ~context={...Context.current(), insertSpaces, tabSize, autoIndent},
       s,
-    ): Context.t,
+    ): (Context.t, list(Effect.t)),
   );
 };
 
@@ -22,7 +22,7 @@ let key = (~insertSpaces=false, ~tabSize=3, ~autoIndent, s) => {
     Vim.key(
       ~context={...Context.current(), insertSpaces, tabSize, autoIndent},
       s,
-    ): Context.t,
+    ): (Context.t, list(Effect.t)),
   );
 };
 

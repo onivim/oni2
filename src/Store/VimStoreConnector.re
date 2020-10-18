@@ -144,6 +144,10 @@ let start =
   let _: unit => unit =
     Vim.onEffect(
       fun
+      // This is handled by the returned `effects` list -
+      // ideally, all the commands here could be factored to be handled in the same way
+      | Scroll(_) => ()
+
       | Goto(gotoType) => handleGoto(gotoType)
       | TabPage(msg) => dispatch(TabPage(msg))
       | Format(Buffer(_)) =>
@@ -182,19 +186,7 @@ let start =
         )
 
       | MacroRecordingStopped(_) =>
-        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped))
-
-      | Scroll({count, direction}) => (),
-      //          let editorId =
-      //            Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
-      //
-      //            dispatch(
-      //              Editor({
-      //                scope: Oni_Model.EditorScope.Editor(editorId),
-      //                msg: Scroll({ count: count, direction })
-      //              }),
-      //            )
-      //       },
+        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped)),
     );
 
   let _: unit => unit =
@@ -605,10 +597,7 @@ let start =
         let previousBufferId = context.bufferId;
 
         currentTriggerKey := Some(key);
-        let (
-          {mode, topLine: newTopLine, leftColumn: newLeftColumn, bufferId, _}: Vim.Context.t,
-          effects,
-        ) =
+        let ({mode, bufferId, _}: Vim.Context.t, effects) =
           isText ? Vim.input(~context, key) : Vim.key(~context, key);
         currentTriggerKey := None;
 
@@ -759,11 +748,7 @@ let start =
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.input("g");
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.input("g");
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.input("G");
-      let (
-        {mode, topLine: newTopLine, leftColumn: newLeftColumn, _}: Vim.Context.t,
-        effects,
-      ) =
-        Vim.input("$");
+      let ({mode, _}: Vim.Context.t, effects) = Vim.input("$");
 
       // Update the editor, which is the source of truth for cursor position
       let scope = EditorScope.Editor(editorId);
