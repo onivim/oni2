@@ -136,12 +136,12 @@ let update = (editor, msg) => {
           Editor.scrollCenterCursorVertically(editor)
         | CursorTop => Editor.scrollCursorTop(editor)
         | CursorBottom => Editor.scrollCursorBottom(editor)
-        | LineUp => Editor.scrollLines(~count=count * -1, editor)
+        | LineUp => Editor.scrollLines(~count=count * (-1), editor)
         | LineDown => Editor.scrollLines(~count, editor)
-        | HalfPageUp => Editor.scrollHalfPage(~count=count * -1, editor)
-        | HalfPageDown => Editor.scrollHalfPage(~count=count, editor)
-        | PageUp => Editor.scrollPage(~count=count * -1, editor)
-        | PageDown => Editor.scrollPage(~count=count, editor)
+        | HalfPageUp => Editor.scrollHalfPage(~count=count * (-1), editor)
+        | HalfPageDown => Editor.scrollHalfPage(~count, editor)
+        | PageUp => Editor.scrollPage(~count=count * (-1), editor)
+        | PageDown => Editor.scrollPage(~count, editor)
         | _ => editor
         }
       );
@@ -161,9 +161,9 @@ let update = (editor, msg) => {
            editor',
          );
     (editor'', Nothing);
-    //    | _ => Fun.identity
-    //
-    //    let effectHandler = (editor) => Vim.Effect.(fun
+  //    | _ => Fun.identity
+  //
+  //    let effectHandler = (editor) => Vim.Effect.(fun
   | MinimapEnabledConfigChanged(enabled) => (
       Editor.setMinimapEnabled(~enabled, editor),
       Nothing,

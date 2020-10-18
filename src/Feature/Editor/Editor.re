@@ -781,92 +781,57 @@ let scrollDeltaPixelXY = (~pixelX, ~pixelY, view) => {
 };
 
 let scrollAndMoveCursor = (~deltaViewLines, editor) => {
+  let wrapping = editor.wrapState |> WrapState.wrapping;
+  let totalViewLines = Wrapping.numberOfLines(wrapping);
 
-    let wrapping = editor.wrapState |> WrapState.wrapping;
-    let totalViewLines = Wrapping.numberOfLines(wrapping);
+  let oldCursor = getPrimaryCursorByte(editor);
 
-    let oldCursor = getPrimaryCursorByte(editor);
+  let adjustCursor = (cursor: BytePosition.t) => {
+    let currentViewLine =
+      Wrapping.bufferBytePositionToViewLine(~bytePosition=cursor, wrapping);
+    let newViewLine =
+      Utility.IntEx.clamp(
+        ~lo=0,
+        ~hi=totalViewLines - 1,
+        currentViewLine + deltaViewLines,
+      );
+    let {line as outLine, byteOffset, _}: Wrapping.bufferPosition =
+      Wrapping.viewLineToBufferPosition(~line=newViewLine, wrapping);
+    BytePosition.{line: outLine, byte: byteOffset};
+  };
 
-    let adjustCursor = (cursor: BytePosition.t) => {
-        let currentViewLine = Wrapping.bufferBytePositionToViewLine(~bytePosition=cursor, wrapping);
-        let newViewLine = Utility.IntEx.clamp(
-            ~lo=0,
-            ~hi=totalViewLines - 1,
-            currentViewLine + deltaViewLines,
-        );
-        let {line as outLine, byteOffset, _}: Wrapping.bufferPosition = Wrapping.viewLineToBufferPosition(
-            ~line=newViewLine,
-            wrapping
-        );
-        let newByte = BytePosition.{
-            line: outLine,
-            byte: byteOffset,
-        };
-        prerr_endline (Printf.sprintf(
-            "CVL: %d NVL: %d CURBYTE: %s NEWBYTE: %s",
-            currentViewLine,
-            newViewLine,
-            BytePosition.show(cursor),
-            BytePosition.show(newByte)
-        ));
-        (newByte, 0.);
-    };
-
-    let mode = switch (editor.mode) {
+  let mode =
+    switch (editor.mode) {
     // When scrolling in operator pending, cancel the pending operator
     | Operator({cursor, _}) => Vim.Mode.Normal({cursor: cursor})
     // Don't do anything for command line mode
     | CommandLine => CommandLine
-    | Normal({cursor}) => 
-        let (newCursor, scrollOffset) = adjustCursor(cursor);
-        Normal({
-        cursor: newCursor
-    })
-    | Visual(curr) => 
-        let (newCursor, scrollOffset) = adjustCursor(curr.cursor);
-        Visual(Vim.VisualRange.{
-        ...curr,
-        cursor: newCursor
-    })
-    | Select(curr) => 
-        let (newCursor, scrollOffset) = adjustCursor(curr.cursor);
-        Select(Vim.VisualRange.{
-        ...curr,
-        cursor: newCursor
-    })
-    | Replace({cursor}) => 
-        let (newCursor, scrollOffset) = adjustCursor(cursor);
-    Replace({
-        cursor: newCursor
-    })
-    | Insert({cursors}) => 
-    Insert({
-        cursors: List.map(curr => fst(adjustCursor(curr)), cursors)
-    })
+    | Normal({cursor}) =>
+      Normal({cursor: adjustCursor(cursor)});
+    | Visual(curr) =>
+      Visual(Vim.VisualRange.{...curr, cursor: adjustCursor(curr.cursor)});
+    | Select(curr) =>
+      Select(Vim.VisualRange.{...curr, cursor: adjustCursor(curr.cursor)});
+    | Replace({cursor}) =>
+      Replace({cursor: adjustCursor(cursor)});
+    | Insert({cursors}) =>
+      Insert({cursors: List.map(adjustCursor, cursors)})
     };
 
-    // Move the cursor...
-    let editor' = {
-        ...editor,
-        mode
-    };
+  // Move the cursor...
+  let editor' = {...editor, mode};
 
-    let newCursor = getPrimaryCursorByte(editor');
-    // Figure out the delta in scrollY
-    let ({y as oldY, _}: PixelPosition.t, _) = bufferBytePositionToPixel(
-        ~position=oldCursor,
-        editor
-    );
+  let newCursor = getPrimaryCursorByte(editor');
+  // Figure out the delta in scrollY
+  let ({y as oldY, _}: PixelPosition.t, _) =
+    bufferBytePositionToPixel(~position=oldCursor, editor);
 
-    let ({y as newY, _}: PixelPosition.t, _) = bufferBytePositionToPixel(
-        ~position=newCursor,
-        editor'
-    );
+  let ({y as newY, _}: PixelPosition.t, _) =
+    bufferBytePositionToPixel(~position=newCursor, editor');
 
-    // Adjust scroll to compensate cursor position
-    editor'
-    |> scrollDeltaPixelY(~pixelY=(newY -. oldY))
-    |> animateScroll;
+  // Adjust scroll to compensate cursor position - keeping the cursor in the same
+  // relative spot to scroll, after moving it.
+  editor' |> scrollDeltaPixelY(~pixelY=newY -. oldY) |> animateScroll;
 };
 
 let scrollCenterCursorVertically = editor => {
@@ -902,17 +867,23 @@ let scrollCursorBottom = editor => {
 };
 
 let scrollLines = (~count, editor) => {
-    scrollAndMoveCursor(~deltaViewLines=count, editor);
+  scrollAndMoveCursor(~deltaViewLines=count, editor);
 };
 
 let scrollHalfPage = (~count, editor) => {
- let lineDelta = count * int_of_float(float(editor.pixelHeight) /. lineHeightInPixels(editor) /. 2.);
-scrollAndMoveCursor(~deltaViewLines=lineDelta, editor);
+  let lineDelta =
+    count
+    * int_of_float(
+        float(editor.pixelHeight) /. lineHeightInPixels(editor) /. 2.,
+      );
+  scrollAndMoveCursor(~deltaViewLines=lineDelta, editor);
 };
 
 let scrollPage = (~count, editor) => {
- let lineDelta = count * int_of_float(float(editor.pixelHeight) /. lineHeightInPixels(editor));
-scrollAndMoveCursor(~deltaViewLines=lineDelta, editor);
+  let lineDelta =
+    count
+    * int_of_float(float(editor.pixelHeight) /. lineHeightInPixels(editor));
+  scrollAndMoveCursor(~deltaViewLines=lineDelta, editor);
 };
 
 // PROJECTION
