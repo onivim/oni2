@@ -637,7 +637,6 @@ colnr_T srcColumn, colnr_T wantColumn, linenr_T *destLine, colnr_T *destColumn) 
 void onScrollCallback(scrollDirection_T dir, long count) {
    CAMLparam0();
 
-   printf("-- ONSCROLLCALLBACK: %d\n", dir);
    int outScroll = 0;
    switch (dir) {
     case SCROLL_CURSORCENTERH:
