@@ -785,6 +785,8 @@ let scrollAndMoveCursor = (~deltaViewLines, editor) => {
     let wrapping = editor.wrapState |> WrapState.wrapping;
     let totalViewLines = Wrapping.numberOfLines(wrapping);
 
+    let oldCursor = getPrimaryCursorByte(editor);
+
     let adjustCursor = (cursor: BytePosition.t) => {
         let currentViewLine = Wrapping.bufferBytePositionToViewLine(~bytePosition=cursor, wrapping);
         let newViewLine = Utility.IntEx.clamp(
@@ -807,7 +809,7 @@ let scrollAndMoveCursor = (~deltaViewLines, editor) => {
             BytePosition.show(cursor),
             BytePosition.show(newByte)
         ));
-        newByte
+        (newByte, 0.);
     };
 
     let mode = switch (editor.mode) {
@@ -815,29 +817,56 @@ let scrollAndMoveCursor = (~deltaViewLines, editor) => {
     | Operator({cursor, _}) => Vim.Mode.Normal({cursor: cursor})
     // Don't do anything for command line mode
     | CommandLine => CommandLine
-    | Normal({cursor}) => Normal({
-        cursor: adjustCursor(cursor)
+    | Normal({cursor}) => 
+        let (newCursor, scrollOffset) = adjustCursor(cursor);
+        Normal({
+        cursor: newCursor
     })
-    | Visual(curr) => Visual(Vim.VisualRange.{
+    | Visual(curr) => 
+        let (newCursor, scrollOffset) = adjustCursor(curr.cursor);
+        Visual(Vim.VisualRange.{
         ...curr,
-        cursor: adjustCursor(curr.cursor)
+        cursor: newCursor
     })
-    | Select(curr) => Select(Vim.VisualRange.{
+    | Select(curr) => 
+        let (newCursor, scrollOffset) = adjustCursor(curr.cursor);
+        Select(Vim.VisualRange.{
         ...curr,
-        cursor: adjustCursor(curr.cursor)
+        cursor: newCursor
     })
-    | Replace({cursor}) => Replace({
-        cursor: adjustCursor(cursor)
+    | Replace({cursor}) => 
+        let (newCursor, scrollOffset) = adjustCursor(cursor);
+    Replace({
+        cursor: newCursor
     })
-    | Insert({cursors}) => Insert({
-        cursors: List.map(adjustCursor, cursors)
+    | Insert({cursors}) => 
+    Insert({
+        cursors: List.map(curr => fst(adjustCursor(curr)), cursors)
     })
     };
 
-    {
+    // Move the cursor...
+    let editor' = {
         ...editor,
         mode
-    }
+    };
+
+    let newCursor = getPrimaryCursorByte(editor');
+    // Figure out the delta in scrollY
+    let ({y as oldY, _}: PixelPosition.t, _) = bufferBytePositionToPixel(
+        ~position=oldCursor,
+        editor
+    );
+
+    let ({y as newY, _}: PixelPosition.t, _) = bufferBytePositionToPixel(
+        ~position=newCursor,
+        editor'
+    );
+
+    // Adjust scroll to compensate cursor position
+    editor'
+    |> scrollDeltaPixelY(~pixelY=(newY -. oldY))
+    |> animateScroll;
 };
 
 let scrollCenterCursorVertically = editor => {
