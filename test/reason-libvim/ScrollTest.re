@@ -1,4 +1,3 @@
-open EditorCoreTypes;
 open TestFramework;
 
 open Vim;
@@ -11,24 +10,22 @@ describe("Scroll", ({describe, _}) => {
     test("zh", ({expect, _}) => {
       let _ = resetBuffer();
 
-      let (_context: Context.t, effects: list(Effect.t)) =
-        input("zh");
+      let (_context: Context.t, effects: list(Effect.t)) = input("zh");
 
       expect.list(effects).toContainEqual(
-        Effect.Scroll({count: 1, direction: Scroll.ColumnRight})
+        Effect.Scroll({count: 1, direction: Scroll.ColumnRight}),
       );
-    });
-    });
+    })
+  });
   describe("vertical", ({test, _}) => {
     test("zz", ({expect, _}) => {
       let _ = resetBuffer();
 
-      let (_context: Context.t, effects: list(Effect.t)) =
-        input("zz");
+      let (_context: Context.t, effects: list(Effect.t)) = input("zz");
 
       expect.list(effects).toContainEqual(
-        Effect.Scroll({count: 1, direction: Scroll.CursorCenterVertically})
+        Effect.Scroll({count: 1, direction: Scroll.CursorCenterVertically}),
       );
-    });
-    });
+    })
+  });
 });

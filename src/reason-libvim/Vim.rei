@@ -385,10 +385,10 @@ module Scroll: {
     | HalfPageUp
     | PageDown
     | PageUp
-      | HalfPageLeft
-      | HalfPageRight
-      | ColumnLeft
-      | ColumnRight;
+    | HalfPageLeft
+    | HalfPageRight
+    | ColumnLeft
+    | ColumnRight;
 };
 
 module Effect: {
