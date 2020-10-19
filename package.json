@@ -261,7 +261,7 @@
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
     "isolinear": "revery-ui/isolinear#53fc4eb",
-    "revery-terminal": "revery-ui/revery-terminal#37e19a3",
+    "revery-terminal": "revery-ui/revery-terminal#bc0a670",
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
