@@ -12,10 +12,10 @@ type location =
 
 [@deriving show]
 type command =
-  | OpenExplorerPane
-  | OpenSearchPane
-  | OpenSCMPane
-  | OpenExtensionsPane
+  | ToggleExplorerPane
+  | ToggleSearchPane
+  | ToggleSCMPane
+  | ToggleExtensionsPane
   | ToggleVisibility;
 
 [@deriving show]
@@ -134,16 +134,16 @@ let update = (~isFocused, msg, model) => {
     (model', Nothing);
 
   | FileExplorerClicked
-  | Command(OpenExplorerPane) => togglePane(~pane=FileExplorer, model)
+  | Command(ToggleExplorerPane) => togglePane(~pane=FileExplorer, model)
 
   | SCMClicked
-  | Command(OpenSCMPane) => togglePane(~pane=SCM, model)
+  | Command(ToggleSCMPane) => togglePane(~pane=SCM, model)
 
   | ExtensionsClicked
-  | Command(OpenExtensionsPane) => togglePane(~pane=Extensions, model)
+  | Command(ToggleExtensionsPane) => togglePane(~pane=Extensions, model)
 
   | SearchClicked
-  | Command(OpenSearchPane) => togglePane(~pane=Search, model)
+  | Command(ToggleSearchPane) => togglePane(~pane=Search, model)
 
   | Command(ToggleVisibility) =>
     // If we were open, and we are going to close, we should pop focus...
@@ -184,7 +184,7 @@ module Commands = {
       ~category="Search",
       ~title="Find in Files",
       "workbench.action.findInFiles",
-      Command(OpenSearchPane),
+      Command(ToggleSearchPane),
     );
 
   let openExtensionsPane =
@@ -192,7 +192,7 @@ module Commands = {
       ~category="Extensions",
       ~title="Open Extensions Pane",
       "workbench.view.extensions",
-      Command(OpenExtensionsPane),
+      Command(ToggleExtensionsPane),
     );
 
   let openExplorerPane =
@@ -200,7 +200,7 @@ module Commands = {
       ~category="Explorer",
       ~title="Open File Explorer Pane",
       "workbench.view.explorer",
-      Command(OpenExplorerPane),
+      Command(ToggleExplorerPane),
     );
 
   let openSCMPane =
@@ -208,7 +208,7 @@ module Commands = {
       ~category="Source Control",
       ~title="Open Source Control Pane",
       "workbench.view.scm",
-      Command(OpenSCMPane),
+      Command(ToggleSCMPane),
     );
 
   let toggleSidebar =
@@ -368,3 +368,22 @@ module Contributions = {
     };
   };
 };
+
+// TEST
+
+let%test_module "SideBar" =
+  (module
+   {
+     let%test "#2594: explorer should toggle closed when not visible by default" = {
+       let sideBar = {
+         ...setDefaultVisibility(initial, false),
+         selected: FileExplorer,
+         isOpen: true,
+       };
+
+       let (sideBar', outmsg) =
+         update(~isFocused=true, Command(ToggleExplorerPane), sideBar);
+
+       sideBar'.isOpen == false && outmsg == PopFocus;
+     };
+   });

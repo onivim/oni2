@@ -18,10 +18,10 @@ type model;
 
 [@deriving show]
 type command =
-  | OpenExplorerPane
-  | OpenSearchPane
-  | OpenSCMPane
-  | OpenExtensionsPane
+  | ToggleExplorerPane
+  | ToggleSearchPane
+  | ToggleSCMPane
+  | ToggleExtensionsPane
   | ToggleVisibility;
 
 [@deriving show]
