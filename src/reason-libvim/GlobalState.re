@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 let autoIndent:
   ref(
     option(
@@ -13,4 +15,28 @@ let colorSchemeProvider: ref(ColorScheme.Provider.t) =
 
 let overriddenMessageHandler:
   ref(option((Types.msgPriority, string, string) => unit)) =
+  ref(None);
+
+let viewLineMotion:
+  ref(
+    option(
+      (~motion: ViewLineMotion.t, ~count: int, ~startLine: LineNumber.t) =>
+      LineNumber.t,
+    ),
+  ) =
+  ref(None);
+
+let screenPositionMotion:
+  ref(
+    option(
+      (
+        ~direction: [ | `Up | `Down],
+        ~count: int,
+        ~line: LineNumber.t,
+        ~currentByte: ByteIndex.t,
+        ~wantByte: ByteIndex.t
+      ) =>
+      BytePosition.t,
+    ),
+  ) =
   ref(None);

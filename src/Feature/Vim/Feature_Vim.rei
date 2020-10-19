@@ -1,4 +1,3 @@
-open EditorCoreTypes;
 // MODEL
 
 type model;
@@ -14,7 +13,7 @@ let recordingMacro: model => option(char);
 [@deriving show]
 type msg =
   | ModeChanged([@opaque] Vim.Mode.t)
-  | PasteCompleted({cursors: [@opaque] list(BytePosition.t)})
+  | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
   | SettingChanged(Vim.Setting.t)
   | MacroRecordingStarted({register: char})
@@ -23,8 +22,8 @@ type msg =
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | CursorsUpdated(list(BytePosition.t))
-  | SettingsChanged;
+  | SettingsChanged
+  | ModeUpdated(Vim.Mode.t);
 
 // UPDATE
 

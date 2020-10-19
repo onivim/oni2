@@ -10,7 +10,7 @@ runTest(
   ~name="Viml Configuration Block",
   (dispatch, wait, _) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
-      Feature_Vim.mode(state.vim) == Vim.Mode.Normal
+      Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
     );
 
     // Because of our 'experimental.viml' block, the ';' semicolon

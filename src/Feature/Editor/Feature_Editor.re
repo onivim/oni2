@@ -126,10 +126,7 @@ let update = (editor, msg) => {
       Nothing,
     )
   | SelectionCleared => (Editor.clearSelection(editor), Nothing)
-  | CursorsChanged(cursors) => (
-      Editor.setCursors(~cursors, editor),
-      Nothing,
-    )
+  | ModeChanged(mode) => (Editor.setMode(mode, editor), Nothing)
   | ScrollToLine(line) => (Editor.scrollToLine(~line, editor), Nothing)
   | ScrollToColumn(column) => (
       Editor.scrollToColumn(~column, editor),

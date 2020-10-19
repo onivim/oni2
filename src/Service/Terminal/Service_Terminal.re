@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 
 module Time = Revery.Time;
 
@@ -27,9 +26,6 @@ type msg =
   | ScreenUpdated({
       id: int,
       screen: [@opaque] ReveryTerminal.Screen.t,
-    })
-  | CursorMoved({
-      id: int,
       cursor: [@opaque] ReveryTerminal.Cursor.t,
     });
 
@@ -71,22 +67,11 @@ module Sub = {
 
         let isResizing = ref(false);
 
-        let throttledScreenDispatch =
-          FunEx.throttle(~time=Time.zero, dispatch);
-        let throttledCursorDispatch =
-          FunEx.throttle(~time=Time.zero, dispatch);
-
         let onEffect = eff =>
           switch (eff) {
           | ReveryTerminal.ScreenResized(_) => ()
-          | ReveryTerminal.ScreenUpdated(screen) =>
-            if (! isResizing^) {
-              throttledScreenDispatch(
-                ScreenUpdated({id: params.id, screen}),
-              );
-            }
-          | ReveryTerminal.CursorMoved(cursor) =>
-            throttledCursorDispatch(CursorMoved({id: params.id, cursor}))
+          | ReveryTerminal.ScreenUpdated(_) => ()
+          | ReveryTerminal.CursorMoved(_) => ()
           | ReveryTerminal.Output(output) =>
             Exthost.Request.TerminalService.acceptProcessInput(
               ~id=params.id,
@@ -141,6 +126,9 @@ module Sub = {
             | SendProcessData({terminalId, data}) =>
               if (terminalId == params.id) {
                 ReveryTerminal.write(~input=data, terminal);
+                let cursor = ReveryTerminal.cursor(terminal);
+                let screen = ReveryTerminal.screen(terminal);
+                dispatch(ScreenUpdated({id: params.id, screen, cursor}));
               }
             | SendProcessExit({terminalId, exitCode}) =>
               dispatchIfMatches(

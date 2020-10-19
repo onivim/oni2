@@ -8,7 +8,7 @@ open Oni_IntegrationTestLib;
 runTestWithInput(
   ~name="ExtHostCompletionTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Mode.Normal
+    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
   );
 
   // Wait until the extension is activated

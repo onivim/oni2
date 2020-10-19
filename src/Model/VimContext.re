@@ -58,7 +58,7 @@ module Internal = {
 let current = (state: State.t) => {
   let editor = Feature_Layout.activeEditor(state.layout);
   let bufferId = Editor.getBufferId(editor);
-  let cursors = Editor.getCursors(editor);
+  let mode = Editor.mode(editor);
 
   let editorBuffer = Selectors.getActiveBuffer(state);
   let maybeLanguageConfig: option(LanguageConfiguration.t) =
@@ -112,15 +112,48 @@ let current = (state: State.t) => {
     |> Array.of_list;
   };
 
+  let viewLineMotion = (~motion, ~count as _, ~startLine as _) => {
+    switch (motion) {
+    | Vim.ViewLineMotion.MotionH =>
+      Editor.getTopVisibleBufferLine(editor)
+    | Vim.ViewLineMotion.MotionM =>
+    EditorCoreTypes.({
+        let topLine = editor |> Editor.getTopVisibleBufferLine |> LineNumber.toZeroBased;
+        let bottomLine = editor |> Editor.getBottomVisibleBufferLine |> LineNumber.toZeroBased;
+      LineNumber.ofZeroBased(topLine + ((bottomLine - topLine) / 2));
+      });
+    | Vim.ViewLineMotion.MotionL =>
+      Editor.getBottomVisibleBufferLine(editor)
+    };
+  };
+
+  let screenCursorMotion =
+      (~direction, ~count, ~line as lnum, ~currentByte as _, ~wantByte) => {
+    let maxLines = Editor.getBufferLineCount(editor);
+    let lnum = EditorCoreTypes.LineNumber.toZeroBased(lnum);
+    let destLineIdx =
+      switch (direction) {
+      | `Up => lnum - count
+      | `Down => lnum + count
+      };
+
+    let destLine =
+      IntEx.clamp(~hi=maxLines - 1, ~lo=0, destLineIdx)
+      |> EditorCoreTypes.LineNumber.ofZeroBased;
+    BytePosition.{line: destLine, byte: wantByte};
+  };
+
   Vim.Context.{
     autoIndent,
     bufferId,
     colorSchemeProvider,
+    viewLineMotion,
+    screenCursorMotion,
     leftColumn,
     topLine,
     width,
     height: bottomLine - topLine,
-    cursors,
+    mode,
     autoClosingPairs,
     lineComment,
     insertSpaces,

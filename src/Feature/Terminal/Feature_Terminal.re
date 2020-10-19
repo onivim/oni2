@@ -162,7 +162,7 @@ let update = (~config: Config.resolver, model: t, msg) => {
           pid: None,
           title: None,
           screen: ReveryTerminal.Screen.initial,
-          cursor: ReveryTerminal.Cursor.{row: 0, column: 0, visible: false},
+          cursor: ReveryTerminal.Cursor.initial,
           closeOnExit,
         },
         model.idToTerminal,
@@ -195,12 +195,8 @@ let update = (~config: Config.resolver, model: t, msg) => {
       updateById(id, term => {...term, title: Some(title)}, model);
     (newModel, Nothing);
 
-  | Service(ScreenUpdated({id, screen})) =>
-    let newModel = updateById(id, term => {...term, screen}, model);
-    (newModel, Nothing);
-
-  | Service(CursorMoved({id, cursor})) =>
-    let newModel = updateById(id, term => {...term, cursor}, model);
+  | Service(ScreenUpdated({id, screen, cursor})) =>
+    let newModel = updateById(id, term => {...term, screen, cursor}, model);
     (newModel, Nothing);
 
   | Service(ProcessExit({id, exitCode})) => (

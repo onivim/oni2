@@ -184,7 +184,7 @@ let start =
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
 
-    let isInsertMode = Feature_Vim.mode(state.vim) == Vim.Mode.Insert;
+    let isInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state.vim));
 
     let visibleRanges =
       visibleBuffersAndRanges

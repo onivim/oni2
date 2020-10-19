@@ -91,7 +91,7 @@ type t = {
   isMinimapEnabled: bool,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
-  cursors: [@opaque] list(BytePosition.t),
+  mode: [@opaque] Vim.Mode.t,
   selection: [@opaque] option(VisualRange.t),
   pixelWidth: int,
   pixelHeight: int,
@@ -130,6 +130,9 @@ let setMinimap = (~enabled, ~maxColumn, editor) => {
   isMinimapEnabled: enabled,
   minimapMaxColumnWidth: maxColumn,
 };
+
+let getBufferLineCount = ({buffer, _}) =>
+  EditorBuffer.numberOfLines(buffer);
 
 let isMinimapEnabled = ({isMinimapEnabled, _}) => isMinimapEnabled;
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
@@ -295,7 +298,14 @@ let create = (~config, ~buffer, ()) => {
      * We need an initial editor size, otherwise we'll immediately scroll the view
      * if a buffer loads prior to our first render.
      */
-    cursors: [{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}],
+    mode:
+      Vim.Mode.Normal({
+        cursor:
+          BytePosition.{
+            line: EditorCoreTypes.LineNumber.zero,
+            byte: ByteIndex.zero,
+          },
+      }),
     selection: None,
     pixelWidth: 1,
     pixelHeight: 1,
@@ -304,6 +314,8 @@ let create = (~config, ~buffer, ()) => {
     wrapMode,
   };
 };
+
+let cursors = ({mode, _}) => Vim.Mode.cursors(mode);
 
 let totalViewLines = ({wrapState, _}) =>
   wrapState |> WrapState.wrapping |> Wrapping.numberOfLines;
@@ -343,7 +355,7 @@ type scrollbarMetrics = {
   thumbOffset: int,
 };
 
-let getCursors = ({cursors, _}) => cursors;
+let getCursors = ({mode, _}) => Vim.Mode.cursors(mode);
 
 let getNearestMatchingPair =
     (~characterPosition: CharacterPosition.t, ~pairs, {buffer, _}) => {
@@ -410,8 +422,8 @@ let getCharacterAtPosition = (~position: CharacterPosition.t, {buffer, _}) => {
   };
 };
 
-let getCharacterBehindCursor = ({cursors, buffer, _}) => {
-  switch (cursors) {
+let getCharacterBehindCursor = ({buffer, _} as editor) => {
+  switch (cursors(editor)) {
   | [] => None
   | [cursor, ..._] =>
     let line = cursor.line |> EditorCoreTypes.LineNumber.toZeroBased;
@@ -463,8 +475,8 @@ let getCharacterBehindCursor = ({cursors, buffer, _}) => {
 //    };
 //}
 
-let getCharacterUnderCursor = ({cursors, buffer, _}) => {
-  switch (cursors) {
+let getCharacterUnderCursor = ({buffer, _} as editor) => {
+  switch (cursors(editor)) {
   | [] => None
   | [cursor, ..._] =>
     let line = cursor.line |> EditorCoreTypes.LineNumber.toZeroBased;
@@ -485,7 +497,7 @@ let getCharacterUnderCursor = ({cursors, buffer, _}) => {
 
 let getPrimaryCursor = editor => {
   let maybeCharacterCursor =
-    switch (editor.cursors) {
+    switch (cursors(editor)) {
     | [cursor, ..._] => byteToCharacter(cursor, editor)
     | [] => None
     };
@@ -501,7 +513,7 @@ let getPrimaryCursor = editor => {
 };
 
 let getPrimaryCursorByte = editor =>
-  switch (editor.cursors) {
+  switch (cursors(editor)) {
   | [cursor, ..._] => cursor
   | [] =>
     BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}
@@ -607,7 +619,7 @@ let getLayout = editor => {
 };
 
 let exposePrimaryCursor = editor => {
-  switch (editor.cursors) {
+  switch (cursors(editor)) {
   | [primaryCursor, ..._tail] =>
     let {bufferWidthInPixels, _}: EditorLayout.t = getLayout(editor);
 
@@ -649,8 +661,11 @@ let exposePrimaryCursor = editor => {
   };
 };
 
-let setCursors = (~cursors, editor) =>
-  {...editor, cursors} |> exposePrimaryCursor;
+let mode = ({mode, _}) => mode;
+
+let setMode = (mode, editor) => {
+  {...editor, mode} |> exposePrimaryCursor;
+};
 
 let getLeftVisibleColumn = view => {
   int_of_float(view.scrollX /. getCharacterWidth(view));

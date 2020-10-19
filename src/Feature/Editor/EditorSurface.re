@@ -155,7 +155,7 @@ let%component make =
                 ~bufferSyntaxHighlights,
                 ~diagnostics,
                 ~tokenTheme,
-                ~onCursorChange,
+                ~changeMode,
                 ~languageSupport,
                 ~scm,
                 ~windowIsFocused,
@@ -220,7 +220,7 @@ let%component make =
   let layout = Editor.getLayout(editor);
 
   let matchingPairCheckPosition =
-    mode == Vim.Mode.Insert
+    Vim.Mode.isInsert(mode)
       ? CharacterPosition.{
           line: cursorPosition.line,
           character: CharacterIndex.(cursorPosition.character - 1),
@@ -344,7 +344,7 @@ let%component make =
       editor
       colors
       dispatch
-      onCursorChange
+      changeMode
       cursorPosition
       editorFont
       diagnosticsMap
