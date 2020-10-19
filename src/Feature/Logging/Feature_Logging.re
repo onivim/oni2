@@ -22,6 +22,7 @@ module Effects = {
   let traceToFile = (~toMsg) =>
     Isolinear.Effect.createWithDispatch(
       ~name="Feature.Logging.traceToFile", dispatch => {
+      Log.warn("Switching to trace file; further logging will be to file.");
       let logFileName = "onivim2-trace.log";
       Timber.App.enable(Timber.Reporter.file(logFileName));
       Timber.App.setLevel(Timber.Level.trace);

@@ -56,11 +56,12 @@ let enableQuiet = () => {
   Timber.App.setLevel(Timber.Level.error);
 };
 
-if (Timber.App.isLevelEnabled(Timber.Level.debug)) {
-  enableDebug();
-} else {
-  // Even if we're not debugging.... at least emit the exception
-  Printexc.set_uncaught_exception_handler((e, bt) => {
-    writeExceptionLog(e, bt)
-  });
-};
+let init = () =>
+  if (Timber.App.isLevelEnabled(Timber.Level.debug)) {
+    enableDebug();
+  } else {
+    // Even if we're not debugging.... at least emit the exception
+    Printexc.set_uncaught_exception_handler((e, bt) => {
+      writeExceptionLog(e, bt)
+    });
+  };

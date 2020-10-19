@@ -24,6 +24,7 @@ type t = {
   logFile: option(string),
   logFilter: option(string),
   logColorsEnabled: option(bool),
+  needsConsole: bool,
 };
 
 type eff =
@@ -75,7 +76,7 @@ let filterPsnArgument = args => {
   args |> Array.to_list |> List.filter(f) |> Array.of_list;
 };
 
-let parse = args => {
+let parse = (~getenv: string => option(string), args) => {
   let sysArgs = args |> filterPsnArgument;
 
   let additionalArgs: ref(list(string)) = ref([]);
@@ -119,6 +120,13 @@ let parse = args => {
     attachToForeground := true;
     logLevel := Some(Timber.Level.info);
   };
+
+  getenv("ONI2_LOG_FILE") |> Option.iter(v => logFile := Some(v));
+
+  getenv("ONI2_DEBUG")
+  |> Option.iter(_ => logLevel := Some(Timber.Level.debug));
+
+  getenv("ONI2_LOG_FILTER") |> Option.iter(v => logFilter := Some(v));
 
   Arg.parse_argv(
     ~current=ref(0),
@@ -178,6 +186,8 @@ let parse = args => {
   //    /* On Windows, we need to create a console instance if possible */
   //    Revery.App.initConsole();
   //  };
+
+  let needsConsole = Option.is_some(logLevel^) || eff^ != Run;
 
   let paths = additionalArgs^ |> List.rev;
 
@@ -259,6 +269,7 @@ let parse = args => {
     logFile: logFile^,
     logFilter: logFilter^,
     logColorsEnabled: logColorsEnabled^,
+    needsConsole,
   };
 
   (cli, eff^);

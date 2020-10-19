@@ -13,6 +13,7 @@ type t = {
   logFile: option(string),
   logFilter: option(string),
   logColorsEnabled: option(bool),
+  needsConsole: bool,
 };
 
 type eff =
@@ -28,4 +29,4 @@ type eff =
     })
   | Run;
 
-let parse: array(string) => (t, eff);
+let parse: (~getenv: string => option(string), array(string)) => (t, eff);
