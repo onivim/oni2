@@ -15,7 +15,7 @@ type t = {
   filesToOpen: list(string),
   forceScaleFactor: option(float),
   overriddenExtensionsDir: option(string),
-//  shouldClose: bool,
+  //  shouldClose: bool,
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,
   shouldSyntaxHighlight: bool,
@@ -82,7 +82,7 @@ let parse = args => {
 
   let scaleFactor = ref(None);
   let extensionsDir = ref(None);
-//  let shouldClose = ref(false);
+  //  let shouldClose = ref(false);
   let eff = ref(Run);
 
   let shouldLoadExtensions = ref(true);
@@ -116,8 +116,8 @@ let parse = args => {
   let disableSyntaxHighlight = () => shouldSyntaxHighlight := false;
 
   let setAttached = () => {
-    attachToForeground  := true;
-    logLevel := Some(Timber.Level.info)
+    attachToForeground := true;
+    logLevel := Some(Timber.Level.info);
   };
 
   Arg.parse_argv(
@@ -172,12 +172,12 @@ let parse = args => {
     "",
   );
 
-//  let needsConsole = eff^ != Run;
-    // TODO: Port
-//  if (Timber.App.isEnabled() || needsConsole) {
-//    /* On Windows, we need to create a console instance if possible */
-//    Revery.App.initConsole();
-//  };
+  //  let needsConsole = eff^ != Run;
+  // TODO: Port
+  //  if (Timber.App.isEnabled() || needsConsole) {
+  //    /* On Windows, we need to create a console instance if possible */
+  //    Revery.App.initConsole();
+  //  };
 
   let paths = additionalArgs^ |> List.rev;
 
@@ -250,7 +250,7 @@ let parse = args => {
     forceScaleFactor: scaleFactor^,
     gpuAcceleration: gpuAcceleration^,
     overriddenExtensionsDir: extensionsDir^,
-//    shouldClose: shouldClose^,
+    //    shouldClose: shouldClose^,
     shouldLoadExtensions: shouldLoadExtensions^,
     shouldLoadConfiguration: shouldLoadConfiguration^,
     shouldSyntaxHighlight: shouldSyntaxHighlight^,
