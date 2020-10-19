@@ -1,5 +1,5 @@
 {
-  "checksum": "60cf77b80faef4d46e59750dd719089d",
+  "checksum": "0f6ba09e29f1e84ab2b9f80e4202d169",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -118,7 +118,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#18eb60e@d41d8cd9",
+        "revery@github:revery-ui/revery#b43852b@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#53fc4eb@d41d8cd9",
         "@revery/esy-libvterm@1.0.3@d41d8cd9",
         "@onivim/reason-native-crash-utils@1.0.1@d41d8cd9",
@@ -126,13 +126,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#18eb60e@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#18eb60e@d41d8cd9",
+    "revery@github:revery-ui/revery#b43852b@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#b43852b@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#18eb60e",
+      "version": "github:revery-ui/revery#b43852b",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#18eb60e" ]
+        "source": [ "github:revery-ui/revery#b43852b" ]
       },
       "overrides": [],
       "dependencies": [
@@ -143,7 +143,7 @@
         "flex@github:bryphe/flex#5e19b05@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#60e0260@d41d8cd9",
         "esy-sdl2@2.0.10008@d41d8cd9", "esy-freetype2@2.9.1008@d41d8cd9",
-        "esy-angle-prebuilt@1.0.0@d41d8cd9",
+        "esy-angle-prebuilt@1.0.0@d41d8cd9", "@revery/timber@2.0.0@d41d8cd9",
         "@revery/esy-harfbuzz@2.6.8001@d41d8cd9",
         "@opam/uutf@opam:1.0.2@4440868f", "@opam/uucp@opam:13.0.0@e9b515e0",
         "@opam/ppx_optcomp@opam:v0.14.0@47cec200",
@@ -154,10 +154,9 @@
         "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.0@e0bac278",
-        "@opam/ctypes@opam:0.15.1@b0227b2f",
+        "@opam/ctypes@opam:0.15.1@9c7ab4ec",
         "@opam/charInfo_width@opam:1.1.0@4296bdfe",
-        "@opam/bos@opam:0.2.0@df49e63f", "@glennsl/timber@1.2.0@d41d8cd9",
-        "@esy-ocaml/reason@3.6.2@d41d8cd9",
+        "@opam/bos@opam:0.2.0@df49e63f", "@esy-ocaml/reason@3.6.2@d41d8cd9",
         "@brisk/brisk-reconciler@github:briskml/brisk-reconciler#10cab2d@d41d8cd9"
       ],
       "devDependencies": []
@@ -936,7 +935,7 @@
       "overrides": [ "bench.json" ],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#bc0a670@d41d8cd9",
-        "revery@github:revery-ui/revery#18eb60e@d41d8cd9",
+        "revery@github:revery-ui/revery#b43852b@d41d8cd9",
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
@@ -950,6 +949,7 @@
         "esy-oniguruma@github:onivim/esy-oniguruma#4698ce4@d41d8cd9",
         "esy-macdylibbundler@0.4.5@d41d8cd9",
         "esy-angle-prebuilt@1.0.0@d41d8cd9", "axios@0.19.2@d41d8cd9",
+        "@revery/timber@2.0.0@d41d8cd9",
         "@reason-native-web/esy-openssl@1.1.1007@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/uutf@opam:1.0.2@4440868f", "@opam/uucp@opam:13.0.0@e9b515e0",
@@ -975,8 +975,7 @@
         "@opam/dir@github:bryphe/reason-native:dir.opam#fd0225@d41d8cd9",
         "@opam/decoders-yojson@opam:0.4.0@cb39dea6",
         "@opam/charInfo_width@opam:1.1.0@4296bdfe",
-        "@opam/angstrom@opam:0.15.0@48ede9cb",
-        "@glennsl/timber@1.2.0@d41d8cd9"
+        "@opam/angstrom@opam:0.15.0@48ede9cb"
       ],
       "devDependencies": [
         "shelljs@0.8.4@d41d8cd9", "reperf@1.5.0@d41d8cd9",
@@ -985,6 +984,24 @@
         "innosetup-compiler@5.5.9@d41d8cd9", "fs-extra@7.0.1@d41d8cd9",
         "@opam/ocaml-lsp-server@github:ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a5@d41d8cd9"
       ]
+    },
+    "@revery/timber@2.0.0@d41d8cd9": {
+      "id": "@revery/timber@2.0.0@d41d8cd9",
+      "name": "@revery/timber",
+      "version": "2.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/@revery/timber/-/timber-2.0.0.tgz#sha1:37050c20a9d33a901c56688152e91683d0bfa539"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.0@d41d8cd9", "@opam/re@opam:1.9.0@d4d5e13d",
+        "@opam/logs@opam:0.7.0@1d03143e", "@opam/fmt@opam:0.8.9@e0843a5b",
+        "@opam/dune@opam:2.5.0@e0bac278", "@esy-ocaml/reason@3.6.2@d41d8cd9"
+      ],
+      "devDependencies": []
     },
     "@revery/esy-libvterm@1.0.3@d41d8cd9": {
       "id": "@revery/esy-libvterm@1.0.3@d41d8cd9",
@@ -2977,14 +2994,14 @@
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
         "@opam/dune@opam:2.5.0@e0bac278",
-        "@opam/ctypes@opam:0.15.1@b0227b2f",
+        "@opam/ctypes@opam:0.15.1@9c7ab4ec",
         "@opam/base-unix@opam:base@87d0b2eb",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
         "@opam/dune@opam:2.5.0@e0bac278",
-        "@opam/ctypes@opam:0.15.1@b0227b2f",
+        "@opam/ctypes@opam:0.15.1@9c7ab4ec",
         "@opam/base-unix@opam:base@87d0b2eb"
       ]
     },
@@ -3501,8 +3518,8 @@
         "ocaml@4.10.0@d41d8cd9", "@opam/dune@opam:2.5.0@e0bac278"
       ]
     },
-    "@opam/ctypes@opam:0.15.1@b0227b2f": {
-      "id": "@opam/ctypes@opam:0.15.1@b0227b2f",
+    "@opam/ctypes@opam:0.15.1@9c7ab4ec": {
+      "id": "@opam/ctypes@opam:0.15.1@9c7ab4ec",
       "name": "@opam/ctypes",
       "version": "opam:0.15.1",
       "source": {
