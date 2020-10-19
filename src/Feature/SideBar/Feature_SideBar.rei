@@ -39,7 +39,7 @@ type outmsg =
   | Focus
   | PopFocus;
 
-let update: (msg, model) => (model, outmsg);
+let update: (~isFocused: bool, msg, model) => (model, outmsg);
 
 let initial: model;
 

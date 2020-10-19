@@ -534,7 +534,13 @@ let update =
     };
 
   | SideBar(msg) =>
-    let (sideBar', outmsg) = Feature_SideBar.update(msg, state.sideBar);
+    let isFocused =
+      FocusManager.current(state) == Focus.SCM
+      || FocusManager.current(state) == Focus.Search
+      || FocusManager.current(state) == Focus.FileExplorer
+      || FocusManager.current(state) == Focus.Extensions;
+    let (sideBar', outmsg) =
+      Feature_SideBar.update(~isFocused, msg, state.sideBar);
     let state = {...state, sideBar: sideBar'};
 
     switch (outmsg) {
