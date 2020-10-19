@@ -8,13 +8,14 @@ module Env = {
   let filter = Sys.getenv_opt("ONI2_LOG_FILTER");
 };
 
-switch (Env.debug, Env.logFile) {
-| (None, None) => Logs.set_level(Some(Logs.Info))
-| _ => Logs.set_level(Some(Logs.Debug))
-};
+// TODO: Merge up with CLI
+//switch (Env.debug, Env.logFile) {
+//| (None, None) => Logs.set_level(Some(Logs.Info))
+//| _ => Logs.set_level(Some(Logs.Debug))
+//};
 
-Env.logFile |> Option.iter(Timber.App.setLogFile);
-Env.filter |> Option.iter(Timber.App.setNamespaceFilter);
+//Env.logFile |> Option.iter(Timber.App.setLogFile);
+//Env.filter |> Option.iter(Timber.App.setNamespaceFilter);
 
 let writeExceptionLog = (e, bt) => {
   let oc = Stdlib.open_out("onivim2-crash.log");
