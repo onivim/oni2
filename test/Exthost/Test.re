@@ -57,7 +57,8 @@ let startWithExtensions =
     handler(msg);
   };
 
-  Timber.App.enable();
+  Timber.App.enable(Timber.Reporter.console());
+  Oni_Core.Log.init();
 
   let extensions =
     extensions

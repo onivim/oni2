@@ -2,21 +2,6 @@ include Timber.Log;
 
 module type Logger = Timber.Logger;
 
-module Env = {
-  let logFile = Sys.getenv_opt("ONI2_LOG_FILE");
-  let debug = Sys.getenv_opt("ONI2_DEBUG");
-  let filter = Sys.getenv_opt("ONI2_LOG_FILTER");
-};
-
-// TODO: Merge up with CLI
-//switch (Env.debug, Env.logFile) {
-//| (None, None) => Logs.set_level(Some(Logs.Info))
-//| _ => Logs.set_level(Some(Logs.Debug))
-//};
-
-//Env.logFile |> Option.iter(Timber.App.setLogFile);
-//Env.filter |> Option.iter(Timber.App.setNamespaceFilter);
-
 let writeExceptionLog = (e, bt) => {
   let oc = Stdlib.open_out("onivim2-crash.log");
   Printf.fprintf(
