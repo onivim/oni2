@@ -274,3 +274,5 @@ let parse = (~getenv: string => option(string), args) => {
 
   (cli, eff^);
 };
+
+let default = fst(parse(~getenv=_ => None, [||]));

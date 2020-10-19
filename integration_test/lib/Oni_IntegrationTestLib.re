@@ -141,6 +141,7 @@ let runTest =
   let currentState =
     ref(
       Model.State.initial(
+        ~cli=Oni_CLI.default,
         ~initialBuffer,
         ~initialBufferRenderers=Model.BufferRenderers.initial,
         ~getUserSettings,

@@ -129,13 +129,21 @@ let start =
 
   let initialState = getState();
 
-  let attachStdio = Oni_CLI.({
-      initialState.cli.attachToForeground &&
-            Option.is_some(initialState.cli.logLevel);
-  });
+  let attachStdio =
+    Oni_CLI.(
+      {
+        initialState.cli.attachToForeground
+        && Option.is_some(initialState.cli.logLevel);
+      }
+    );
 
   let (extHostClientResult, extHostStream) =
-    ExtensionClient.create(~attachStdio, ~config=getState().config, ~extensions, ~setup);
+    ExtensionClient.create(
+      ~attachStdio,
+      ~config=getState().config,
+      ~extensions,
+      ~setup,
+    );
 
   // TODO: How to handle this correctly?
   let extHostClient = extHostClientResult |> Result.get_ok;

@@ -16,6 +16,8 @@ type t = {
   needsConsole: bool,
 };
 
+let default: t;
+
 type eff =
   | PrintVersion
   | CheckHealth

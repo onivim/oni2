@@ -296,7 +296,8 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
     );
   };
 
-  let redirect = if (attachStdio) {
+  let redirect =
+    if (attachStdio) {
       [
         Luv.Process.inherit_fd(
           ~fd=Luv.Process.stdin,
@@ -314,9 +315,9 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
           (),
         ),
       ];
-  } else {
-    [];
-  }
+    } else {
+      [];
+    };
 
   let _process: Luv.Process.t =
     LuvEx.Process.spawn(
