@@ -122,12 +122,6 @@ let update = (editor, msg) => {
       },
     )
   | ModeChanged({mode, effects}) =>
-    //    | Scroll({count, direction}) => switch(direction) {
-
-    //    }
-
-    //    );
-
     let handleScrollEffect = (~count, ~direction, editor) => {
       let count = max(count, 1);
       Vim.Scroll.(

@@ -106,7 +106,6 @@ let selectionOrCursorRange: t => ByteRange.t;
 let totalViewLines: t => int;
 
 let isScrollAnimated: t => bool;
-//let scrollToColumn: (~column: int, t) => t;
 let scrollToPixelX: (~pixelX: float, t) => t;
 let scrollDeltaPixelX: (~pixelX: float, t) => t;
 
