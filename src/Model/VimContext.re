@@ -114,16 +114,20 @@ let current = (state: State.t) => {
 
   let viewLineMotion = (~motion, ~count as _, ~startLine as _) => {
     switch (motion) {
-    | Vim.ViewLineMotion.MotionH =>
-      Editor.getTopVisibleBufferLine(editor)
+    | Vim.ViewLineMotion.MotionH => Editor.getTopVisibleBufferLine(editor)
     | Vim.ViewLineMotion.MotionM =>
-    EditorCoreTypes.({
-        let topLine = editor |> Editor.getTopVisibleBufferLine |> LineNumber.toZeroBased;
-        let bottomLine = editor |> Editor.getBottomVisibleBufferLine |> LineNumber.toZeroBased;
-      LineNumber.ofZeroBased(topLine + ((bottomLine - topLine) / 2));
-      });
-    | Vim.ViewLineMotion.MotionL =>
-      Editor.getBottomVisibleBufferLine(editor)
+      EditorCoreTypes.(
+        {
+          let topLine =
+            editor |> Editor.getTopVisibleBufferLine |> LineNumber.toZeroBased;
+          let bottomLine =
+            editor
+            |> Editor.getBottomVisibleBufferLine
+            |> LineNumber.toZeroBased;
+          LineNumber.ofZeroBased(topLine + (bottomLine - topLine) / 2);
+        }
+      )
+    | Vim.ViewLineMotion.MotionL => Editor.getBottomVisibleBufferLine(editor)
     };
   };
 
