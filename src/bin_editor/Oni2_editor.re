@@ -139,7 +139,6 @@ switch (eff) {
     HealthCheck.run(~checks=Common, cliOptions)
   )
 | Run =>
-  prerr_endline("RUNNING!");
   // Turn on logging, if necessary
   let loggingToConsole =
     cliOptions.attachToForeground && Option.is_some(cliOptions.logLevel);
