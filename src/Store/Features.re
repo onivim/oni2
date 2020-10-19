@@ -407,9 +407,11 @@ let update =
             })
           ),
         );
-      | OpenFile({filePath, location}) => (
+      | OpenFile({filePath, location, preview}) => (
           state,
-          Internal.openFileEffect(~position=location, filePath),
+          preview
+            ? Internal.previewFileEffect(~position=location, filePath)
+            : Internal.openFileEffect(~position=location, filePath),
         )
       | NotifySuccess(msg) => (
           state,

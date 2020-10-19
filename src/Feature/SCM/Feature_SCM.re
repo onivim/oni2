@@ -770,10 +770,17 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
                  |> Option.map((item: Resource.t) =>
                       OpenFile({
                         filePath: item.uri |> Oni_Core.Uri.toFileSystemPath,
+                        preview: true,
+                      })
+                    )
+               | Component_VimList.DoubleClicked({index}) =>
+                 Component_VimList.get(index, viewModel)
+                 |> Option.map((item: Resource.t) =>
+                      OpenFile({
+                        filePath: item.uri |> Oni_Core.Uri.toFileSystemPath,
                         preview: false,
                       })
                     )
-               | Component_VimList.DoubleClicked(_) => Some(Nothing)
                };
 
              capturedOutmsg := outmsg;
