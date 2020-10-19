@@ -452,13 +452,6 @@ let _onSettingChanged = (setting: Setting.t) => {
 };
 
 let _onScroll = (direction: Scroll.direction, count: int) => {
-  prerr_endline(
-    Printf.sprintf(
-      "SCROLL: %s count: %d",
-      direction |> Scroll.show_direction,
-      count,
-    ),
-  );
   queueEffect(Effect.Scroll({direction, count}));
 };
 

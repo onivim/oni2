@@ -11,4 +11,8 @@ type direction =
   | HalfPageDown
   | HalfPageUp
   | PageDown
-  | PageUp;
+  | PageUp
+  | HalfPageLeft
+  | HalfPageRight
+  | ColumnLeft
+  | ColumnRight;

@@ -639,19 +639,19 @@ void onScrollCallback(scrollDirection_T dir, long count) {
 
    int outScroll = 0;
    switch (dir) {
-    case SCROLL_CURSORCENTERH:
+    case SCROLL_CURSOR_CENTERH:
         outScroll = 1;
         break;
-    case SCROLL_CURSORTOP:
+    case SCROLL_CURSOR_TOP:
         outScroll = 2;
         break;
-    case SCROLL_CURSORBOTTOM:
+    case SCROLL_CURSOR_BOTTOM:
         outScroll = 3;
         break;
-    case SCROLL_CURSORLEFT:
+    case SCROLL_CURSOR_LEFT:
         outScroll = 4;
         break;
-    case SCROLL_CURSORRIGHT:
+    case SCROLL_CURSOR_RIGHT:
         outScroll = 5;
         break;
     case SCROLL_LINE_UP:
@@ -672,7 +672,19 @@ void onScrollCallback(scrollDirection_T dir, long count) {
     case SCROLL_PAGE_UP:
         outScroll = 11;
         break;
-    case SCROLL_CURSORCENTERV:
+    case SCROLL_HALFPAGE_LEFT:
+        outScroll = 12;
+        break;
+    case SCROLL_HALFPAGE_RIGHT:
+        outScroll = 13;
+        break;
+    case SCROLL_COLUMN_LEFT:
+        outScroll = 14;
+        break;
+    case SCROLL_COLUMN_RIGHT:
+        outScroll = 15;
+        break;
+    case SCROLL_CURSOR_CENTERV:
     default:
         outScroll = 0;
         break;
