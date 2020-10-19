@@ -374,9 +374,17 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
       switch (outmsg) {
       | Component_VimTree.Nothing => Nothing
       | Component_VimTree.Clicked(item) =>
-        OpenFile({filePath: item.file, position: item.location, preview: true})
+        OpenFile({
+          filePath: item.file,
+          position: item.location,
+          preview: true,
+        })
       | Component_VimTree.DoubleClicked(item) =>
-        OpenFile({filePath: item.file, position: item.location, preview: false})
+        OpenFile({
+          filePath: item.file,
+          position: item.location,
+          preview: false,
+        })
       | Component_VimTree.Collapsed(_) => Nothing
       | Component_VimTree.Expanded({path, _}) =>
         Effect(

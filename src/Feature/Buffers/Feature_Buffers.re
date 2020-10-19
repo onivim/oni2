@@ -408,10 +408,24 @@ module Effects = {
 
       let handler = (~alreadyLoaded, buffer) =>
         if (alreadyLoaded) {
-          dispatch(EditorRequested({buffer, split, position, grabFocus, preview: false}));
+          dispatch(
+            EditorRequested({
+              buffer,
+              split,
+              position,
+              grabFocus,
+              preview: false,
+            }),
+          );
         } else {
           dispatch(
-            NewBufferAndEditorRequested({buffer, split, position, grabFocus, preview: false}),
+            NewBufferAndEditorRequested({
+              buffer,
+              split,
+              position,
+              grabFocus,
+              preview: false,
+            }),
           );
         };
 
@@ -435,10 +449,24 @@ module Effects = {
 
       let handler = (~alreadyLoaded, buffer) =>
         if (alreadyLoaded) {
-          dispatch(EditorRequested({buffer, split, position, grabFocus, preview: false}));
+          dispatch(
+            EditorRequested({
+              buffer,
+              split,
+              position,
+              grabFocus,
+              preview: false,
+            }),
+          );
         } else {
           dispatch(
-            NewBufferAndEditorRequested({buffer, split, position, grabFocus, preview: false}),
+            NewBufferAndEditorRequested({
+              buffer,
+              split,
+              position,
+              grabFocus,
+              preview: false,
+            }),
           );
         };
 
@@ -458,7 +486,15 @@ module Effects = {
           let grabFocus = true;
 
           if (alreadyLoaded) {
-            dispatch(EditorRequested({buffer, split, position, grabFocus, preview: false}));
+            dispatch(
+              EditorRequested({
+                buffer,
+                split,
+                position,
+                grabFocus,
+                preview: false,
+              }),
+            );
           } else {
             dispatch(
               NewBufferAndEditorRequested({
@@ -493,10 +529,24 @@ module Effects = {
 
       let handler = (~alreadyLoaded, buffer) =>
         if (alreadyLoaded) {
-          dispatch(EditorRequested({buffer, split, position, grabFocus, preview: true}));
+          dispatch(
+            EditorRequested({
+              buffer,
+              split,
+              position,
+              grabFocus,
+              preview: true,
+            }),
+          );
         } else {
           dispatch(
-            NewBufferAndEditorRequested({buffer, split, position, grabFocus, preview: true}),
+            NewBufferAndEditorRequested({
+              buffer,
+              split,
+              position,
+              grabFocus,
+              preview: true,
+            }),
           );
         };
 
