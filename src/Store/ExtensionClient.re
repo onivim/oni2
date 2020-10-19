@@ -6,7 +6,7 @@ module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
-let create = (~config, ~extensions, ~setup: Setup.t) => {
+let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let extensionInfo =
@@ -296,27 +296,27 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
     );
   };
 
-  let redirect = [];
-  //    if (Timber.App.isEnabled()) {
-  //      [
-  //        Luv.Process.inherit_fd(
-  //          ~fd=Luv.Process.stdin,
-  //          ~from_parent_fd=Luv.Process.stdin,
-  //          (),
-  //        ),
-  //        Luv.Process.inherit_fd(
-  //          ~fd=Luv.Process.stdout,
-  //          ~from_parent_fd=Luv.Process.stderr,
-  //          (),
-  //        ),
-  //        Luv.Process.inherit_fd(
-  //          ~fd=Luv.Process.stderr,
-  //          ~from_parent_fd=Luv.Process.stderr,
-  //          (),
-  //        ),
-  //      ];
-  //    } else {
-  //    };
+  let redirect = if (attachStdio) {
+      [
+        Luv.Process.inherit_fd(
+          ~fd=Luv.Process.stdin,
+          ~from_parent_fd=Luv.Process.stdin,
+          (),
+        ),
+        Luv.Process.inherit_fd(
+          ~fd=Luv.Process.stdout,
+          ~from_parent_fd=Luv.Process.stderr,
+          (),
+        ),
+        Luv.Process.inherit_fd(
+          ~fd=Luv.Process.stderr,
+          ~from_parent_fd=Luv.Process.stderr,
+          (),
+        ),
+      ];
+  } else {
+    [];
+  }
 
   let _process: Luv.Process.t =
     LuvEx.Process.spawn(

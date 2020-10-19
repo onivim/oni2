@@ -331,6 +331,7 @@ switch (eff) {
     let currentState =
       ref(
         Model.State.initial(
+          ~cli=cliOptions,
           ~initialBuffer,
           ~initialBufferRenderers,
           ~getUserSettings,

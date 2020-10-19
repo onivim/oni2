@@ -3,6 +3,7 @@
  (public_name Oni2.model)
  (libraries str bigarray Revery.zed libvim lwt lwt.unix Rench Revery yojson
    ppx_deriving.runtime ppx_deriving_yojson.runtime isolinear Oni2.core
+   Oni2.cli
    Oni2.input Oni2.syntax Oni2.syntax_client Oni2.service.font
    Oni2.service.file-watcher Oni2.service.os Oni2.components
    Oni2.feature.buffers Oni2.feature.clipboard Oni2.feature.configuration

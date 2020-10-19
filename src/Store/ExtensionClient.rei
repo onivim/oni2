@@ -4,6 +4,7 @@ open Exthost.Extension;
 
 let create:
   (
+    ~attachStdio: bool,
     ~config: Feature_Configuration.model,
     ~extensions: list(Scanner.ScanResult.t),
     ~setup: Setup.t

@@ -22,6 +22,7 @@ type t = {
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
   changelog: Feature_Changelog.model,
+  cli: Oni_CLI.t,
   clipboard: Feature_Clipboard.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
@@ -78,6 +79,7 @@ type t = {
 
 let initial =
     (
+      ~cli,
       ~initialBuffer,
       ~initialBufferRenderers,
       ~extensionGlobalPersistence,
@@ -121,6 +123,7 @@ let initial =
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
+    cli,
     clipboard: Feature_Clipboard.initial,
     colorTheme:
       Feature_Theme.initial([
