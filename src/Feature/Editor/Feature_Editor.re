@@ -155,9 +155,6 @@ let update = (editor, msg) => {
            editor',
          );
     (editor'', Nothing);
-  //    | _ => Fun.identity
-  //
-  //    let effectHandler = (editor) => Vim.Effect.(fun
   | MinimapEnabledConfigChanged(enabled) => (
       Editor.setMinimapEnabled(~enabled, editor),
       Nothing,
