@@ -15,6 +15,8 @@ let fixed = (~simpleMeasurement=true, ~pixels, bufferLine) => {
   let byteLength = BufferLine.lengthInBytes(bufferLine);
   let raw = BufferLine.raw(bufferLine);
 
+  let columnsInPixels = pixels;
+
   let singleWidthCharacter =
     BufferLine.measure(bufferLine, Uchar.of_char('W'));
   let doubleWidthCharacter = singleWidthCharacter *. 2.;
@@ -29,9 +31,6 @@ let fixed = (~simpleMeasurement=true, ~pixels, bufferLine) => {
     } else {
       BufferLine.measure(bufferLine);
     };
-
-  // Add a little breathing room at the end
-  let columnsInPixels = pixels -. singleWidthCharacter;
 
   let rec loop = (acc, currentByte, currentCharacter, currentWidth) =>
     if (currentByte >= byteLength) {

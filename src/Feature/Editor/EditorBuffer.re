@@ -8,3 +8,4 @@ let line = Oni_Core.Buffer.getLine;
 let font = Oni_Core.Buffer.getFont;
 
 let fileType = Oni_Core.Buffer.getFileType;
+let measure = Oni_Core.Buffer.measure;

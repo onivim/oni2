@@ -208,7 +208,10 @@ let rangeByte =
   let characterWidth = Editor.characterWidthInPixels(context.editor);
 
   for (idx in startViewLine to stopViewLine) {
-    let y = (float(idx) *. Editor.lineHeightInPixels(context.editor)) -. Editor.scrollY(context.editor);
+    let y =
+      float(idx)
+      *. Editor.lineHeightInPixels(context.editor)
+      -. Editor.scrollY(context.editor);
     let startX =
       if (idx == startViewLine) {
         startPixelX;
@@ -319,7 +322,10 @@ let ruler = (~context, ~color, x) =>
   );
 
 let lineHighlight = (~context, ~color, viewLine) => {
-  let pixelY = (float(viewLine) *. Editor.lineHeightInPixels(context.editor)) -. Editor.scrollY(context.editor);
+  let pixelY =
+    float(viewLine)
+    *. Editor.lineHeightInPixels(context.editor)
+    -. Editor.scrollY(context.editor);
 
   drawRect(
     ~context,

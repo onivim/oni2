@@ -97,6 +97,7 @@ type t = {
   yankHighlight: option(yankHighlight),
   wrapMode: WrapMode.t,
   wrapState: WrapState.t,
+  wrapPadding: option(float),
   // Number of lines to preserve before or after the cursor, when scrolling.
   // Like the `scrolloff` vim setting or the `editor.cursorSurroundingLines` VSCode setting.
   verticalScrollMargin: int,
@@ -177,6 +178,11 @@ let yankHighlight = ({yankHighlight, _}) => yankHighlight;
 let setYankHighlight = (~yankHighlight, editor) => {
   ...editor,
   yankHighlight: Some(yankHighlight),
+};
+
+let setWrapPadding = (~padding, editor) => {
+    ...editor,
+    wrapPadding: Some(padding),
 };
 
 let viewLineToBufferLine = (viewLine, editor) => {
@@ -318,6 +324,7 @@ let create = (~config, ~buffer, ()) => {
     yankHighlight: None,
     wrapState,
     wrapMode,
+    wrapPadding: None,
     verticalScrollMargin: 1,
   };
 };
@@ -738,9 +745,15 @@ let setSize = (~pixelWidth, ~pixelHeight, editor) => {
 
   let contentPixelWidth = getContentPixelWidth(editor');
 
+  let wrapPadding = switch(editor.wrapPadding) {
+  | None => EditorBuffer.measure(Uchar.of_char('W'), editor.buffer)
+  | Some(padding) => padding
+  };
+
+  let wrapWidth = contentPixelWidth -. wrapPadding;
   let wrapState =
     WrapState.resize(
-      ~pixelWidth=contentPixelWidth,
+      ~pixelWidth=wrapWidth,
       ~buffer=editor'.buffer,
       editor'.wrapState,
     );
