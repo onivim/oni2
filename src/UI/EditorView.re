@@ -297,13 +297,18 @@ let make =
 
   let showTabs = editorShowTabs && (!state.zenMode || !hideZenModeTabs);
 
-  let focus = FocusManager.current(state);
+  let isFocused =
+    switch (FocusManager.current(state)) {
+    | Editor
+    | Terminal(_) => true
+    | _ => false
+    };
 
   <View onFileDropped style={Styles.container(theme)}>
     <Feature_Layout.View
       uiFont={state.uiFont}
       theme
-      isFocused={focus == Focus.Editor}
+      isFocused
       isZenMode={state.zenMode}
       showTabs
       model={state.layout}

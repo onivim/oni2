@@ -18,7 +18,7 @@ module Constants = {
 };
 
 module Styles = {
-  let container = Style.[position(`Relative), flexGrow(1)];
+  let container = Style.[position(`Relative), flexGrow(1), opacity(0.1)];
 };
 
 let%component make =
