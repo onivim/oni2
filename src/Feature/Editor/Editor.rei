@@ -100,15 +100,12 @@ let setLineHeight: (~lineHeight: LineHeight.t, t) => t;
 let characterWidthInPixels: t => float;
 
 let selection: t => option(VisualRange.t);
-let setSelection: (~selection: VisualRange.t, t) => t;
-let clearSelection: t => t;
 
 let selectionOrCursorRange: t => ByteRange.t;
 
 let totalViewLines: t => int;
 
 let isScrollAnimated: t => bool;
-let scrollToColumn: (~column: int, t) => t;
 let scrollToPixelX: (~pixelX: float, t) => t;
 let scrollDeltaPixelX: (~pixelX: float, t) => t;
 
@@ -118,6 +115,13 @@ let scrollDeltaPixelY: (~pixelY: float, t) => t;
 
 let scrollToPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
+
+let scrollCenterCursorVertically: t => t;
+let scrollCursorTop: t => t;
+let scrollCursorBottom: t => t;
+let scrollLines: (~count: int, t) => t;
+let scrollHalfPage: (~count: int, t) => t;
+let scrollPage: (~count: int, t) => t;
 
 let getCharacterWidth: t => float;
 

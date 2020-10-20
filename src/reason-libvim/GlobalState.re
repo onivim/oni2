@@ -1,5 +1,7 @@
 open EditorCoreTypes;
 
+let effects: ref(list(Effect.t)) = ref([]);
+
 let autoIndent:
   ref(
     option(
