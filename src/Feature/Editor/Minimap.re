@@ -308,21 +308,19 @@ let%component make =
           Revery.Color.toSkia(colors.lineHighlightBackground),
         );
         /* Draw cursor line */
-        CanvasContext.drawRectLtwh(
-          ~left=Constants.leftMargin,
-          ~top=
-            rowHeight
-            *. float(
-                 EditorCoreTypes.LineNumber.toZeroBased(
-                   CharacterPosition.(cursorPosition.line),
-                 ),
-               )
-            -. scrollY,
-          ~height=float(Constants.minimapCharacterHeight),
-          ~width=float(width),
-          ~paint=minimapPaint,
-          canvasContext,
-        );
+        Editor.characterToByte(cursorPosition, editor)
+        |> Option.iter(bytePosition => {
+             let viewLine =
+               Editor.bufferBytePositionToViewLine(bytePosition, editor);
+             CanvasContext.drawRectLtwh(
+               ~left=Constants.leftMargin,
+               ~top=rowHeight *. float(viewLine) -. scrollY,
+               ~height=float(Constants.minimapCharacterHeight),
+               ~width=float(width),
+               ~paint=minimapPaint,
+               canvasContext,
+             );
+           });
 
         let renderRange = (~color, ~offset, range: ByteRange.t) =>
           {let maybeCharacterStart =

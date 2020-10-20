@@ -160,34 +160,34 @@ let bufferBytePositionToViewLine = (~bytePosition: BytePosition.t, wrap) => {
   let byteIndex = bytePosition.byte;
 
   if (line >= Array.length(wrap.wraps)) {
-    startViewLine  
+    startViewLine;
   } else {
-      let viewLines = wrap.wraps[line];
+    let viewLines = wrap.wraps[line];
 
-      let len = Array.length(viewLines);
-      let rec loop = idx =>
-        if (idx == len - 1) {
+    let len = Array.length(viewLines);
+    let rec loop = idx =>
+      if (idx == len - 1) {
+        idx;
+      } else if (idx == len - 2) {
+        let lastElement = viewLines[idx + 1];
+        if (ByteIndex.(byteIndex < lastElement.byte)) {
           idx;
-        } else if (idx == len - 2) {
-          let lastElement = viewLines[idx + 1];
-          if (ByteIndex.(byteIndex < lastElement.byte)) {
-            idx;
-          } else {
-            idx + 1;
-          };
         } else {
-          let current = viewLines[idx].byte;
-          let next = viewLines[idx + 1].byte;
-          if (byteIndex >= current && byteIndex < next) {
-            idx;
-          } else {
-            loop(idx + 1);
-          };
+          idx + 1;
         };
+      } else {
+        let current = viewLines[idx].byte;
+        let next = viewLines[idx + 1].byte;
+        if (byteIndex >= current && byteIndex < next) {
+          idx;
+        } else {
+          loop(idx + 1);
+        };
+      };
 
-      let offset = loop(0);
-      startViewLine + offset;
-  }
+    let offset = loop(0);
+    startViewLine + offset;
+  };
 };
 
 let viewLineToBufferPosition = (~line: int, wrapping) => {

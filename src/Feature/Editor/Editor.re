@@ -187,6 +187,11 @@ let viewLineToBufferLine = (viewLine, editor) => {
   bufferPosition.line;
 };
 
+let bufferBytePositionToViewLine = (bytePosition, editor) => {
+  let wrapping = editor.wrapState |> WrapState.wrapping;
+  Wrapping.bufferBytePositionToViewLine(~bytePosition, wrapping);
+};
+
 let viewLineIsPrimary = (viewLine, editor) => {
   let wrapping = editor.wrapState |> WrapState.wrapping;
   let bufferPosition: Wrapping.bufferPosition =

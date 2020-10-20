@@ -296,12 +296,8 @@ let ruler = (~context, ~color, x) =>
     ~color,
   );
 
-let lineHighlight = (~context, ~color, lineIdx: EditorCoreTypes.LineNumber.t) => {
-  let ({y: pixelY, _}: PixelPosition.t, _) =
-    Editor.bufferBytePositionToPixel(
-      ~position=BytePosition.{line: lineIdx, byte: ByteIndex.zero},
-      context.editor,
-    );
+let lineHighlight = (~context, ~color, viewLine) => {
+  let pixelY = float(viewLine) *. Editor.lineHeightInPixels(context.editor);
 
   drawRect(
     ~context,
