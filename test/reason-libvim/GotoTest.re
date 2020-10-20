@@ -2,7 +2,7 @@ open TestFramework;
 open Vim;
 
 let resetBuffer = () => Helpers.resetBuffer("test/testfile.txt");
-let input = s => ignore(Vim.input(s): Context.t);
+let input = s => ignore(Vim.input(s): (Context.t, list(Effect.t)));
 
 describe("Goto", ({test, _}) => {
   test("gd", ({expect, _}) => {

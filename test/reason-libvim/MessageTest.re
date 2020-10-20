@@ -14,7 +14,7 @@ describe("Messages", ({test, _}) => {
         messages := [(priority, title, contents), ...messages^]
       );
 
-    let _: Context.t = command("echo 'hello'");
+    let (_: Context.t, _: list(Effect.t)) = command("echo 'hello'");
 
     expect.int(List.length(messages^)).toBe(1);
 
@@ -35,7 +35,7 @@ describe("Messages", ({test, _}) => {
         messages := [(priority, title, contents), ...messages^]
       );
 
-    let _: Context.t = command("echoerr 'aproblem'");
+    let (_: Context.t, _: list(Effect.t)) = command("echoerr 'aproblem'");
 
     /* TODO: Fix this! */
     /* expect.int(List.length(messages^)).toBe(1); */

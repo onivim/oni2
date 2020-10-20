@@ -485,7 +485,7 @@ let start = maybeKeyBindingsFilePath => {
 
   let executeExCommandEffect = command =>
     Isolinear.Effect.create(~name="keybindings.executeExCommand", () =>
-      ignore(Vim.command(command): Vim.Context.t)
+      ignore(Vim.command(command): (Vim.Context.t, list(Vim.Effect.t)))
     );
 
   let updater = (state: State.t, action: Actions.t) => {

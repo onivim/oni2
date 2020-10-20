@@ -1,5 +1,5 @@
 {
-  "checksum": "e29270586f34bdef1815b6e5dc76dba9",
+  "checksum": "0f691dffb7226d8b7042385c3af4fa88",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -154,7 +154,7 @@
         "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.0@e0bac278",
-        "@opam/ctypes@opam:0.15.1@b0227b2f",
+        "@opam/ctypes@opam:0.15.1@9c7ab4ec",
         "@opam/charInfo_width@opam:1.1.0@4296bdfe",
         "@opam/bos@opam:0.2.0@df49e63f", "@glennsl/timber@1.2.0@d41d8cd9",
         "@esy-ocaml/reason@3.6.2@d41d8cd9",
@@ -425,14 +425,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.63@d41d8cd9": {
-      "id": "libvim@8.10869.63@d41d8cd9",
+    "libvim@8.10869.64@d41d8cd9": {
+      "id": "libvim@8.10869.64@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.63",
+      "version": "8.10869.64",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.63.tgz#sha1:f9d83dbb54a82ea2368f388480f99923286cc1ee"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.64.tgz#sha1:c6edfd47c5a8924c95c7ba8c787f5fec89b87f42"
         ]
       },
       "overrides": [],
@@ -941,7 +941,7 @@
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
-        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.63@d41d8cd9",
+        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.64@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#53fc4eb@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#60e0260@d41d8cd9",
@@ -2977,14 +2977,14 @@
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
         "@opam/dune@opam:2.5.0@e0bac278",
-        "@opam/ctypes@opam:0.15.1@b0227b2f",
+        "@opam/ctypes@opam:0.15.1@9c7ab4ec",
         "@opam/base-unix@opam:base@87d0b2eb",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
         "@opam/dune@opam:2.5.0@e0bac278",
-        "@opam/ctypes@opam:0.15.1@b0227b2f",
+        "@opam/ctypes@opam:0.15.1@9c7ab4ec",
         "@opam/base-unix@opam:base@87d0b2eb"
       ]
     },
@@ -3501,8 +3501,8 @@
         "ocaml@4.10.0@d41d8cd9", "@opam/dune@opam:2.5.0@e0bac278"
       ]
     },
-    "@opam/ctypes@opam:0.15.1@b0227b2f": {
-      "id": "@opam/ctypes@opam:0.15.1@b0227b2f",
+    "@opam/ctypes@opam:0.15.1@9c7ab4ec": {
+      "id": "@opam/ctypes@opam:0.15.1@9c7ab4ec",
       "name": "@opam/ctypes",
       "version": "opam:0.15.1",
       "source": {

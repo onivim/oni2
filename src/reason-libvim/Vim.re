@@ -19,6 +19,7 @@ module Event = Event;
 module Format = Format;
 module Goto = Goto;
 module Operator = Operator;
+module Scroll = Scroll;
 module TabPage = TabPage;
 module Mode = Mode;
 module Options = Options;
@@ -132,6 +133,14 @@ let flushQueue = () => {
   GlobalState.queuedFunctions := [];
 };
 
+let queueEffect = eff => {
+  queue(() => {
+    Event.dispatch(eff, Listeners.effect);
+
+    GlobalState.effects := [eff, ...GlobalState.effects^];
+  });
+};
+
 let runWith = (~context: Context.t, f) => {
   let currentBufferId = Buffer.getCurrent() |> Buffer.getId;
 
@@ -169,6 +178,7 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.colorSchemeProvider := context.colorSchemeProvider;
   GlobalState.viewLineMotion := Some(context.viewLineMotion);
   GlobalState.screenPositionMotion := Some(context.screenCursorMotion);
+  GlobalState.effects := [];
 
   let mode = f();
 
@@ -215,7 +225,10 @@ let runWith = (~context: Context.t, f) => {
   };
 
   flushQueue();
-  {...Context.current(), mode, autoClosingPairs: context.autoClosingPairs};
+  (
+    {...Context.current(), mode, autoClosingPairs: context.autoClosingPairs},
+    GlobalState.effects^ |> List.rev,
+  );
 };
 
 let _onAutocommand = (autoCommand: Types.autocmd, buffer: Buffer.t) => {
@@ -438,6 +451,10 @@ let _onSettingChanged = (setting: Setting.t) => {
   );
 };
 
+let _onScroll = (direction: Scroll.direction, count: int) => {
+  queueEffect(Effect.Scroll({direction, count}));
+};
+
 let _onColorSchemeChanged = (maybeScheme: option(string)) => {
   queue(() => {
     Event.dispatch(Effect.ColorSchemeChanged(maybeScheme), Listeners.effect)
@@ -484,6 +501,7 @@ let init = () => {
   Callback.register("lv_onSettingChanged", _onSettingChanged);
   Callback.register("lv_onQuit", _onQuit);
   Callback.register("lv_onUnhandledEscape", _onUnhandledEscape);
+  Callback.register("lv_onScroll", _onScroll);
   Callback.register("lv_onStopSearch", _onStopSearch);
   Callback.register("lv_onTerminal", _onTerminal);
   Callback.register("lv_onWindowMovement", _onWindowMovement);

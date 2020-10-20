@@ -389,7 +389,7 @@ let update =
             ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
-              msg: ModeChanged(mode),
+              msg: ModeChanged({mode, effects: []}),
             })
           ),
         )
@@ -414,7 +414,7 @@ let update =
             ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
-              msg: ModeChanged(mode),
+              msg: ModeChanged({mode, effects: []}),
             })
           ),
         );

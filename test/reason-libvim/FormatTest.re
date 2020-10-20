@@ -4,7 +4,7 @@ open Vim;
 
 let resetBuffer = () =>
   Helpers.resetBuffer("test/reason-libvim/testfile.txt");
-let input = s => ignore(Vim.input(s): Context.t);
+let input = s => ignore(Vim.input(s): (Context.t, list(Effect.t)));
 
 describe("Format", ({test, _}) => {
   test("gg=G", ({expect, _}) => {
