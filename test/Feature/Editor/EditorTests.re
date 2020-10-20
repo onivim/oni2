@@ -72,7 +72,7 @@ describe("Editor", ({describe, _}) => {
 
   describe("pixelPositionToBytePosition", ({test, _}) => {
     test("~allowPast boundary cases", ({expect, _}) => {
-      let (editor, buffer) = create([|"abc"|]);
+      let (editor, _buffer) = create([|"abc"|]);
 
       let lineHeight = editor |> Editor.lineHeightInPixels;
 

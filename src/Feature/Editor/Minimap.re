@@ -59,7 +59,6 @@ let renderLine =
     switch (token.tokenType) {
     | Text =>
       let startPosition = CharacterIndex.toInt(token.startIndex);
-      let endPosition = CharacterIndex.toInt(token.endIndex);
 
       let x = token.startPixel *. scaleFactor;
       let endX = token.endPixel *. scaleFactor;

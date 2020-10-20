@@ -198,7 +198,7 @@ let rangeByte =
   let stopViewLine =
     Editor.bufferBytePositionToViewLine(r.stop, context.editor);
 
-  let ({y: startPixelY, x: startPixelX}: PixelPosition.t, _) =
+  let ({x: startPixelX, _}: PixelPosition.t, _) =
     Editor.bufferBytePositionToPixel(~position=r.start, context.editor);
 
   let ({x: stopPixelX, _}: PixelPosition.t, _) =
