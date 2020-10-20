@@ -193,6 +193,11 @@ let rangeByte =
     (~context, ~padding=0., ~color=Revery.Colors.black, r: ByteRange.t) => {
   let doublePadding = padding *. 2.;
 
+  let startViewLine =
+    Editor.bufferBytePositionToViewLine(r.start, context.editor);
+  let stopViewLine =
+    Editor.bufferBytePositionToViewLine(r.stop, context.editor);
+
   let ({y: startPixelY, x: startPixelX}: PixelPosition.t, _) =
     Editor.bufferBytePositionToPixel(~position=r.start, context.editor);
 
@@ -202,14 +207,31 @@ let rangeByte =
   let lineHeight = Editor.lineHeightInPixels(context.editor);
   let characterWidth = Editor.characterWidthInPixels(context.editor);
 
-  drawRect(
-    ~context,
-    ~x=startPixelX,
-    ~y=startPixelY,
-    ~height=lineHeight +. doublePadding,
-    ~width=max(stopPixelX -. startPixelX, characterWidth),
-    ~color,
-  );
+  for (idx in startViewLine to stopViewLine) {
+    let y = float(idx) *. Editor.lineHeightInPixels(context.editor);
+    let startX =
+      if (idx == startViewLine) {
+        startPixelX;
+      } else {
+        0.;
+      };
+
+    let stopX =
+      if (idx == stopViewLine) {
+        stopPixelX;
+      } else {
+        float(Editor.getTotalWidthInPixels(context.editor));
+      };
+
+    drawRect(
+      ~context,
+      ~x=startX,
+      ~y,
+      ~height=lineHeight +. doublePadding,
+      ~width=max(stopX -. startX, characterWidth),
+      ~color,
+    );
+  };
 };
 
 let tabPaint = Skia.Paint.make();
