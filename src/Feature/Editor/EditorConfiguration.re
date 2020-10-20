@@ -178,6 +178,14 @@ module VimSettings = {
       |> Option.value(~default=LineHeight.default)
     });
 
+  let wrap =
+    vim("wrap", wrapSetting => {
+      wrapSetting
+      |> VimSetting.decode_value_opt(bool)
+      |> Option.map(v => v ? `On : `Off)
+      |> Option.value(~default=`Off)
+    });
+
   let lineNumbers =
     vim2("relativenumber", "number", (maybeRelative, maybeNumber) => {
       let maybeRelativeBool =
@@ -306,7 +314,7 @@ module Experimental = {
     );
 
   let wordWrap =
-    setting("experimental.editor.wordWrap", wordWrap, ~default=`Off);
+    setting("experimental.editor.wordWrap", ~vim=VimSettings.wrap, wordWrap, ~default=`Off);
 
   let wordWrapColumn =
     setting("experimental.editor.wordWrapColumn", int, ~default=80);
