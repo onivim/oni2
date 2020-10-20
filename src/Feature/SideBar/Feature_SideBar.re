@@ -12,10 +12,10 @@ type location =
 
 [@deriving show]
 type command =
-  | OpenExplorerPane
-  | OpenSearchPane
-  | OpenSCMPane
-  | OpenExtensionsPane
+  | ToggleExplorerPane
+  | ToggleSearchPane
+  | ToggleSCMPane
+  | ToggleExtensionsPane
   | ToggleVisibility;
 
 [@deriving show]
@@ -84,7 +84,28 @@ let width = ({width, resizeDelta, isOpen, location, shouldSnapShut, _}) =>
     };
   };
 
-let update = (msg, model) =>
+let update = (~isFocused, msg, model) => {
+  let togglePane = (~pane: pane, model) =>
+    // Not open - open the sidebar, and focus
+    if (!model.isOpen || model.selected != pane) {
+      (
+        {...model, isOpen: true, selected: pane},
+        Focus,
+        // Sidebar is open, and with the selected pane...
+        // If not open by default, we should close.
+      );
+    } else if (!model.openByDefault && model.isOpen) {
+      (
+        {...model, isOpen: false, shouldSnapShut: true},
+        PopFocus,
+        // We should leave focus, but sidebar should stay open
+      );
+    } else if (isFocused) {
+      (model, PopFocus);
+    } else {
+      (model, Focus);
+    };
+
   switch (msg) {
   | ResizeInProgress(delta) =>
     let model' =
@@ -113,25 +134,16 @@ let update = (msg, model) =>
     (model', Nothing);
 
   | FileExplorerClicked
-  | Command(OpenExplorerPane) => (
-      {...model, isOpen: true, selected: FileExplorer},
-      Focus,
-    )
+  | Command(ToggleExplorerPane) => togglePane(~pane=FileExplorer, model)
 
   | SCMClicked
-  | Command(OpenSCMPane) => ({...model, isOpen: true, selected: SCM}, Focus)
+  | Command(ToggleSCMPane) => togglePane(~pane=SCM, model)
 
   | ExtensionsClicked
-  | Command(OpenExtensionsPane) => (
-      {...model, isOpen: true, selected: Extensions},
-      Focus,
-    )
+  | Command(ToggleExtensionsPane) => togglePane(~pane=Extensions, model)
 
   | SearchClicked
-  | Command(OpenSearchPane) => (
-      {...model, isOpen: true, selected: Search},
-      Focus,
-    )
+  | Command(ToggleSearchPane) => togglePane(~pane=Search, model)
 
   | Command(ToggleVisibility) =>
     // If we were open, and we are going to close, we should pop focus...
@@ -139,6 +151,7 @@ let update = (msg, model) =>
     let eff = model.isOpen ? PopFocus : Focus;
     ({...model, shouldSnapShut: true, isOpen: !model.isOpen}, eff);
   };
+};
 
 let isVisible = (pane, model) => {
   model.isOpen && model.selected == pane;
@@ -171,7 +184,7 @@ module Commands = {
       ~category="Search",
       ~title="Find in Files",
       "workbench.action.findInFiles",
-      Command(OpenSearchPane),
+      Command(ToggleSearchPane),
     );
 
   let openExtensionsPane =
@@ -179,7 +192,7 @@ module Commands = {
       ~category="Extensions",
       ~title="Open Extensions Pane",
       "workbench.view.extensions",
-      Command(OpenExtensionsPane),
+      Command(ToggleExtensionsPane),
     );
 
   let openExplorerPane =
@@ -187,7 +200,7 @@ module Commands = {
       ~category="Explorer",
       ~title="Open File Explorer Pane",
       "workbench.view.explorer",
-      Command(OpenExplorerPane),
+      Command(ToggleExplorerPane),
     );
 
   let openSCMPane =
@@ -195,7 +208,7 @@ module Commands = {
       ~category="Source Control",
       ~title="Open Source Control Pane",
       "workbench.view.scm",
-      Command(OpenSCMPane),
+      Command(ToggleSCMPane),
     );
 
   let toggleSidebar =
@@ -355,3 +368,22 @@ module Contributions = {
     };
   };
 };
+
+// TEST
+
+let%test_module "SideBar" =
+  (module
+   {
+     let%test "#2594: explorer should toggle closed when not visible by default" = {
+       let sideBar = {
+         ...setDefaultVisibility(initial, false),
+         selected: FileExplorer,
+         isOpen: true,
+       };
+
+       let (sideBar', outmsg) =
+         update(~isFocused=true, Command(ToggleExplorerPane), sideBar);
+
+       sideBar'.isOpen == false && outmsg == PopFocus;
+     };
+   });
