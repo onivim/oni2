@@ -92,7 +92,6 @@ let%component make =
            // #2463: When we're in insert mode, clicking past the end of the line
            // should move the cursor past the last byte.
            ~allowPast=Vim.Mode.isInsert(mode),
-           ~buffer,
            ~pixelX=relX,
            ~pixelY=relY,
            editor,

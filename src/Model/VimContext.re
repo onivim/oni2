@@ -127,24 +127,25 @@ let current = (state: State.t) => {
           LineNumber.ofZeroBased(topLine + (bottomLine - topLine) / 2);
         }
       )
-    | Vim.ViewLineMotion.MotionL => Editor.getBottomVisibleBufferLine(editor)
+    | Vim.ViewLineMotion.MotionL =>
+      EditorCoreTypes.LineNumber.(
+        Editor.getBottomVisibleBufferLine(editor) - 1
+      )
     };
   };
 
   let screenCursorMotion =
-      (~direction, ~count, ~line as lnum, ~currentByte as _, ~wantByte) => {
-    let maxLines = Editor.getBufferLineCount(editor);
-    let lnum = EditorCoreTypes.LineNumber.toZeroBased(lnum);
-    let destLineIdx =
+      (~direction, ~count, ~line as lnum, ~currentByte, ~wantByte as _) => {
+    let count =
       switch (direction) {
-      | `Up => lnum - count
-      | `Down => lnum + count
+      | `Up => count * (-1)
+      | `Down => count
       };
-
-    let destLine =
-      IntEx.clamp(~hi=maxLines - 1, ~lo=0, destLineIdx)
-      |> EditorCoreTypes.LineNumber.ofZeroBased;
-    BytePosition.{line: destLine, byte: wantByte};
+    Editor.moveScreenLines(
+      ~position=EditorCoreTypes.BytePosition.{line: lnum, byte: currentByte},
+      ~count,
+      editor,
+    );
   };
 
   Vim.Context.{

@@ -887,28 +887,37 @@ let configurationChanged = (~perFileTypeConfig, editor) => {
 
 module Slow = {
   let pixelPositionToBytePosition =
-      (~allowPast=false, ~buffer, ~pixelX: float, ~pixelY: float, view) => {
+      (~allowPast=false, ~pixelX: float, ~pixelY: float, view) => {
     let rawLine =
       int_of_float((pixelY +. view.scrollY) /. lineHeightInPixels(view));
 
-    let totalLinesInBuffer = Buffer.getNumberOfLines(buffer);
+    let wrapping = view.wrapState |> WrapState.wrapping;
+    let rawLine =
+      Utility.IntEx.clamp(
+        ~lo=0,
+        ~hi=Wrapping.numberOfLines(wrapping) - 1,
+        rawLine,
+      );
+    let {line, byteOffset, _}: Wrapping.bufferPosition =
+      Wrapping.viewLineToBufferPosition(~line=rawLine, wrapping);
+    let totalLinesInBuffer = EditorBuffer.numberOfLines(view.buffer);
 
-    let lineIdx =
-      if (rawLine >= totalLinesInBuffer) {
-        max(0, totalLinesInBuffer - 1);
-      } else {
-        rawLine;
-      };
+    let lineIdx = EditorCoreTypes.LineNumber.toZeroBased(line);
+    //      if (rawLine >= totalLinesInBuffer) {
+    //        max(0, totalLinesInBuffer - 1);
+    //      } else {
+    //        rawLine;
+    //      };
 
     if (lineIdx >= 0 && lineIdx < totalLinesInBuffer) {
-      let bufferLine = Buffer.getLine(lineIdx, buffer);
-      let index =
-        BufferLine.Slow.getIndexFromPixel(
-          ~pixel=pixelX +. view.scrollX,
+      let bufferLine = EditorBuffer.line(lineIdx, view.buffer);
+      let byteIndex =
+        BufferLine.Slow.getByteFromPixel(
+          ~relativeToByte=byteOffset,
+          ~pixelX=pixelX +. view.scrollX,
           bufferLine,
         );
-
-      let byteIndex = BufferLine.getByteFromIndex(~index, bufferLine);
+      let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
 
       let bytePositionInBounds =
         BytePosition.{
@@ -943,4 +952,17 @@ module Slow = {
       };
     };
   };
+};
+
+let moveScreenLines = (~position, ~count, editor) => {
+  let ({x, y}: PixelPosition.t, _: float) =
+    bufferBytePositionToPixel(~position, editor);
+
+  let deltaY = float(count) *. lineHeightInPixels(editor);
+  Slow.pixelPositionToBytePosition(
+    ~allowPast=true,
+    ~pixelX=x,
+    ~pixelY=y +. deltaY,
+    editor,
+  );
 };

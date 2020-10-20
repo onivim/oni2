@@ -116,6 +116,11 @@ let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 
 let getCharacterWidth: t => float;
 
+// Given a start position and a delta screen lines,
+// figure out a destination byte position.
+let moveScreenLines:
+  (~position: BytePosition.t, ~count: int, t) => BytePosition.t;
+
 // BYTE-CHARACTER CONVERSION
 let byteToCharacter: (BytePosition.t, t) => option(CharacterPosition.t);
 let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
@@ -183,12 +188,5 @@ module Slow: {
     // Allow the return value to exceed the byte position of the line
     // This makes sense for cases like insert mode, where the cursor could be 'after'
     // the end of the line.
-    (
-      ~allowPast: bool=?,
-      ~buffer: Buffer.t,
-      ~pixelX: float,
-      ~pixelY: float,
-      t
-    ) =>
-    BytePosition.t;
+    (~allowPast: bool=?, ~pixelX: float, ~pixelY: float, t) => BytePosition.t;
 };
