@@ -1,5 +1,5 @@
 {
-  "checksum": "0f691dffb7226d8b7042385c3af4fa88",
+  "checksum": "86567e77f89574740eb2662c25ac87c2",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -162,18 +162,20 @@
       ],
       "devDependencies": []
     },
-    "resolve@1.17.0@d41d8cd9": {
-      "id": "resolve@1.17.0@d41d8cd9",
+    "resolve@1.18.1@d41d8cd9": {
+      "id": "resolve@1.18.1@d41d8cd9",
       "name": "resolve",
-      "version": "1.17.0",
+      "version": "1.18.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/resolve/-/resolve-1.17.0.tgz#sha1:b25941b54968231cc2d1bb76a79cb7f2c0bf8444"
+          "archive:https://registry.npmjs.org/resolve/-/resolve-1.18.1.tgz#sha1:018fcb2c5b207d2a6424aee361c5a266da8f4130"
         ]
       },
       "overrides": [],
-      "dependencies": [ "path-parse@1.0.6@d41d8cd9" ],
+      "dependencies": [
+        "path-parse@1.0.6@d41d8cd9", "is-core-module@2.0.0@d41d8cd9"
+      ],
       "devDependencies": []
     },
     "reperf@1.5.0@d41d8cd9": {
@@ -245,7 +247,7 @@
         ]
       },
       "overrides": [],
-      "dependencies": [ "resolve@1.17.0@d41d8cd9" ],
+      "dependencies": [ "resolve@1.18.1@d41d8cd9" ],
       "devDependencies": []
     },
     "rebez@github:jchavarri/rebez#03fa3b7@d41d8cd9": {
@@ -425,14 +427,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.64@d41d8cd9": {
-      "id": "libvim@8.10869.64@d41d8cd9",
+    "libvim@8.10869.65@d41d8cd9": {
+      "id": "libvim@8.10869.65@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.64",
+      "version": "8.10869.65",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.64.tgz#sha1:c6edfd47c5a8924c95c7ba8c787f5fec89b87f42"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.65.tgz#sha1:ed5de3d39a857672badbf222018bbd9e9bffd086"
         ]
       },
       "overrides": [],
@@ -467,6 +469,20 @@
         "@opam/dune@opam:2.5.0@e0bac278", "@esy-ocaml/reason@3.6.2@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.10.0@d41d8cd9" ]
+    },
+    "is-core-module@2.0.0@d41d8cd9": {
+      "id": "is-core-module@2.0.0@d41d8cd9",
+      "name": "is-core-module",
+      "version": "2.0.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/is-core-module/-/is-core-module-2.0.0.tgz#sha1:58531b70aed1db7c0e8d4eb1a0a2d1ddd64bd12d"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "has@1.0.3@d41d8cd9" ],
+      "devDependencies": []
     },
     "interpret@1.4.0@d41d8cd9": {
       "id": "interpret@1.4.0@d41d8cd9",
@@ -524,6 +540,20 @@
       "dependencies": [ "wrappy@1.0.2@d41d8cd9", "once@1.4.0@d41d8cd9" ],
       "devDependencies": []
     },
+    "has@1.0.3@d41d8cd9": {
+      "id": "has@1.0.3@d41d8cd9",
+      "name": "has",
+      "version": "1.0.3",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/has/-/has-1.0.3.tgz#sha1:722d7cbfc1f6aa8241f16dd814e011e1f41e8796"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [ "function-bind@1.1.1@d41d8cd9" ],
+      "devDependencies": []
+    },
     "graceful-fs@4.2.4@d41d8cd9": {
       "id": "graceful-fs@4.2.4@d41d8cd9",
       "name": "graceful-fs",
@@ -554,6 +584,20 @@
         "minimatch@3.0.4@d41d8cd9", "inherits@2.0.4@d41d8cd9",
         "inflight@1.0.6@d41d8cd9", "fs.realpath@1.0.0@d41d8cd9"
       ],
+      "devDependencies": []
+    },
+    "function-bind@1.1.1@d41d8cd9": {
+      "id": "function-bind@1.1.1@d41d8cd9",
+      "name": "function-bind",
+      "version": "1.1.1",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://registry.npmjs.org/function-bind/-/function-bind-1.1.1.tgz#sha1:a56899d3ea3c9bab874bb9773b7c5ede92f4895d"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
       "devDependencies": []
     },
     "fs.realpath@1.0.0@d41d8cd9": {
@@ -941,7 +985,7 @@
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
-        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.64@d41d8cd9",
+        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.65@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#53fc4eb@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#60e0260@d41d8cd9",
