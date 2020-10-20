@@ -191,6 +191,7 @@ let bufferBytePositionToViewLine = (~bytePosition: BytePosition.t, wrap) => {
 };
 
 let viewLineToBufferPosition = (~line: int, wrapping) => {
+  let line = min(0, line);
   let bufferLineIdx = Internal.viewLineToBufferLine(line, wrapping);
   let startViewLine = Internal.bufferLineToViewLine(bufferLineIdx, wrapping);
 
@@ -198,6 +199,13 @@ let viewLineToBufferPosition = (~line: int, wrapping) => {
   if (len == 0) {
     {
       line: LineNumber.zero,
+      byteOffset: ByteIndex.zero,
+      characterOffset: CharacterIndex.zero,
+    };
+  } else if (bufferLineIdx >= len) {
+    {
+      line:
+        EditorBuffer.numberOfLines(wrapping.buffer) |> LineNumber.ofZeroBased,
       byteOffset: ByteIndex.zero,
       characterOffset: CharacterIndex.zero,
     };
