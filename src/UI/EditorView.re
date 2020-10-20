@@ -149,7 +149,7 @@ module Parts = {
         state.terminals
         |> Feature_Terminal.getTerminalOpt(id)
         |> Option.map(terminal => {
-             <TerminalView theme font={state.terminalFont} terminal />
+             <TerminalView opacity=0.1 theme font={state.terminalFont} terminal />
            })
         |> Option.value(~default=React.empty)
 

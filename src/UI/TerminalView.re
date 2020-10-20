@@ -23,6 +23,7 @@ module Styles = {
 
 let%component make =
               (
+                ~opacity: float,
                 ~terminal: Feature_Terminal.terminal,
                 ~font: Service_Font.font,
                 ~theme: Oni_Core.ColorTheme.Colors.t,
@@ -87,6 +88,7 @@ let%component make =
     let font =
       ReveryTerminal.Font.make(~smoothing, ~size=fontSize, resolvedFont);
     ReveryTerminal.render(
+      ~opacity,
       ~defaultBackground,
       ~defaultForeground,
       ~theme=terminalTheme,
