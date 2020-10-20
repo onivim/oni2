@@ -61,6 +61,9 @@ let setYankHighlight: (~yankHighlight: yankHighlight, t) => t;
 let setMinimap: (~enabled: bool, ~maxColumn: int, t) => t;
 let isMinimapEnabled: t => bool;
 
+// Scale factor between horizontal pixels on the editor surface vs minimap
+let getMinimapWidthScaleFactor: t => float;
+
 let setLineNumbers:
   (~lineNumbers: [ | `Off | `On | `Relative | `RelativeOnly], t) => t;
 let lineNumbers: t => [ | `Off | `On | `Relative | `RelativeOnly];

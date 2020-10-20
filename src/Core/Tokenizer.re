@@ -21,16 +21,27 @@ module TextRun = {
      * Pixel positions for the start / end of the token
      */
     startPixel: float,
+    endPixel: float,
   };
 
   let create =
-      (~text, ~startByte, ~endByte, ~startIndex, ~endIndex, ~startPixel, ()) => {
+      (
+        ~text,
+        ~startByte,
+        ~endByte,
+        ~startIndex,
+        ~endIndex,
+        ~startPixel,
+        ~endPixel,
+        (),
+      ) => {
     text,
     startByte,
     endByte,
     startIndex,
     endIndex,
     startPixel,
+    endPixel,
   };
 };
 
@@ -122,6 +133,9 @@ let tokenize =
       let (tokenPixelX, _) =
         BufferLine.getPixelPositionAndWidth(~index=startIndex, bufferLine);
 
+      let (tokenEndPixelX, endWidth) =
+        BufferLine.getPixelPositionAndWidth(~index=endIndex, bufferLine);
+
       let textRun =
         TextRun.create(
           ~text,
@@ -130,6 +144,7 @@ let tokenize =
           ~startIndex,
           ~endIndex,
           ~startPixel=tokenPixelX -. initialPixel,
+          ~endPixel=tokenEndPixelX +. endWidth -. initialPixel,
           (),
         );
 

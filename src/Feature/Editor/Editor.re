@@ -620,6 +620,17 @@ let getLayout = editor => {
   layout;
 };
 
+let getMinimapWidthScaleFactor = editor => {
+  let {bufferWidthInPixels, minimapWidthInPixels, _}: EditorLayout.t =
+    getLayout(editor);
+
+  if (bufferWidthInPixels != 0.) {
+    float(minimapWidthInPixels) /. bufferWidthInPixels;
+  } else {
+    1.0;
+  };
+};
+
 let exposePrimaryCursor = editor => {
   switch (cursors(editor)) {
   | [primaryCursor, ..._tail] =>

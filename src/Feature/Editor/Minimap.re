@@ -49,6 +49,7 @@ let minimapPaint = Skia.Paint.make();
 
 let renderLine =
     (
+      ~scaleFactor,
       shouldHighlight,
       canvasContext,
       yOffset,
@@ -59,11 +60,11 @@ let renderLine =
     | Text =>
       let startPosition = CharacterIndex.toInt(token.startIndex);
       let endPosition = CharacterIndex.toInt(token.endIndex);
-      let tokenWidth = endPosition - startPosition;
 
-      let x = float(Constants.minimapCharacterWidth * startPosition);
+      let x = token.startPixel *. scaleFactor;
+      let endX = token.endPixel *. scaleFactor;
       let height = float(Constants.minimapCharacterHeight);
-      let width = float(tokenWidth * Constants.minimapCharacterWidth);
+      let width = endX -. x;
 
       let emphasis = shouldHighlight(startPosition);
       let color =
@@ -378,6 +379,7 @@ let%component make =
              canvasContext,
            )};
 
+        let scaleFactor = Editor.getMinimapWidthScaleFactor(editor);
         ImmediateList.render(
           ~scrollY,
           ~rowHeight,
@@ -453,7 +455,13 @@ let%component make =
               | None => ()
               };
 
-              renderLine(shouldHighlight, canvasContext, offset, tokens);
+              renderLine(
+                ~scaleFactor,
+                shouldHighlight,
+                canvasContext,
+                offset,
+                tokens,
+              );
             },
           (),
         );
