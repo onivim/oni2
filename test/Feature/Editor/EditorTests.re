@@ -94,7 +94,6 @@ describe("Editor", ({describe, _}) => {
       let bytePosition =
         Editor.Slow.pixelPositionToBytePosition(
           ~allowPast=false,
-          ~buffer,
           ~pixelX,
           ~pixelY,
           editor,
@@ -112,7 +111,6 @@ describe("Editor", ({describe, _}) => {
       let bytePosition =
         Editor.Slow.pixelPositionToBytePosition(
           ~allowPast=true,
-          ~buffer,
           ~pixelX,
           ~pixelY,
           editor,

@@ -917,30 +917,20 @@ module Slow = {
           ~pixelX=pixelX +. view.scrollX,
           bufferLine,
         );
-      let index = BufferLine.getIndex(~byte=byteIndex, bufferLine);
 
       let bytePositionInBounds =
         BytePosition.{
           line: EditorCoreTypes.LineNumber.ofZeroBased(lineIdx),
           byte: byteIndex,
         };
-      if (allowPast
+
+      if (!allowPast
           && ByteIndex.toInt(byteIndex)
-          == BufferLine.lengthInBytes(bufferLine)
+          > BufferLine.lengthInBytes(bufferLine)
           - 1) {
-        // If we're allowed to return a byte index _after_ the length of the line - like for insert mode
-        // Check if we actually exceeded the bounds
-
-        let (cursorOffset, width) =
-          BufferLine.getPixelPositionAndWidth(~index, bufferLine);
-
-        if (cursorOffset +. width < pixelX) {
-          BytePosition.{
-            line: bytePositionInBounds.line,
-            byte: ByteIndex.(byteIndex + 1),
-          };
-        } else {
-          bytePositionInBounds;
+        BytePosition.{
+          line: bytePositionInBounds.line,
+          byte: ByteIndex.ofInt(BufferLine.lengthInBytes(bufferLine) - 1),
         };
       } else {
         bytePositionInBounds;
