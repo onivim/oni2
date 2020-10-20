@@ -181,8 +181,8 @@ let setYankHighlight = (~yankHighlight, editor) => {
 };
 
 let setWrapPadding = (~padding, editor) => {
-    ...editor,
-    wrapPadding: Some(padding),
+  ...editor,
+  wrapPadding: Some(padding),
 };
 
 let viewLineToBufferLine = (viewLine, editor) => {
@@ -745,10 +745,11 @@ let setSize = (~pixelWidth, ~pixelHeight, editor) => {
 
   let contentPixelWidth = getContentPixelWidth(editor');
 
-  let wrapPadding = switch(editor.wrapPadding) {
-  | None => EditorBuffer.measure(Uchar.of_char('W'), editor.buffer)
-  | Some(padding) => padding
-  };
+  let wrapPadding =
+    switch (editor.wrapPadding) {
+    | None => EditorBuffer.measure(Uchar.of_char('W'), editor.buffer)
+    | Some(padding) => padding
+    };
 
   let wrapWidth = contentPixelWidth -. wrapPadding;
   let wrapState =

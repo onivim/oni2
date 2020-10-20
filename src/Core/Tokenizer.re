@@ -133,7 +133,7 @@ let tokenize =
       let (tokenPixelX, _) =
         BufferLine.getPixelPositionAndWidth(~index=startIndex, bufferLine);
 
-      let (tokenEndPixelX, endWidth) =
+      let (tokenEndPixelX, _) =
         BufferLine.getPixelPositionAndWidth(~index=endIndex, bufferLine);
 
       let textRun =
@@ -144,7 +144,7 @@ let tokenize =
           ~startIndex,
           ~endIndex,
           ~startPixel=tokenPixelX -. initialPixel,
-          ~endPixel=tokenEndPixelX +. endWidth -. initialPixel,
+          ~endPixel=tokenEndPixelX -. initialPixel,
           (),
         );
 
