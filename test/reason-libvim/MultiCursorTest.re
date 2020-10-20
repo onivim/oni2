@@ -11,7 +11,7 @@ let input =
       ~mode=Mode.Normal({cursor: BytePosition.zero}),
       key,
     ) => {
-  let out =
+  let (out, _effects: list(Effect.t)) =
     Vim.input(~context={...Context.current(), autoClosingPairs, mode}, key);
 
   Context.(out.mode);
@@ -23,7 +23,7 @@ let key =
       ~mode=Mode.Insert({cursors: []}),
       key,
     ) => {
-  let out =
+  let (out, _effects: list(Effect.t)) =
     Vim.key(
       ~context=Context.{...Context.current(), autoClosingPairs, mode},
       key,
@@ -99,7 +99,7 @@ describe("Multi-cursor", ({describe, _}) => {
       let updates: ref(list(BufferUpdate.t)) = ref([]);
       let dispose = Buffer.onUpdate(upd => updates := [upd, ...updates^]);
 
-      let _context: Context.t = Vim.input("i");
+      let (_context: Context.t, _effects: list(Effect.t)) = Vim.input("i");
       expect.int(List.length(updates^)).toBe(0);
 
       let mode =
@@ -160,7 +160,7 @@ describe("Multi-cursor", ({describe, _}) => {
       let updates: ref(list(BufferUpdate.t)) = ref([]);
       let dispose = Buffer.onUpdate(upd => updates := [upd, ...updates^]);
 
-      let _: Context.t = Vim.input("i");
+      let (_: Context.t, _: list(Effect.t)) = Vim.input("i");
       expect.int(List.length(updates^)).toBe(0);
 
       let mode =

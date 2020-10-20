@@ -21,7 +21,7 @@ describe("MotionTest", ({describe, _}) => {
 
       let context = {...Vim.Context.current(), viewLineMotion};
 
-      let context = Vim.input(~context, "L");
+      let (context, _effects: list(Effect.t)) = Vim.input(~context, "L");
       expect.equal(
         context.mode,
         Normal({
@@ -33,7 +33,8 @@ describe("MotionTest", ({describe, _}) => {
         }),
       );
 
-      let context = Vim.input(~context={...context, viewLineMotion}, "M");
+      let (context, _effects: list(Effect.t)) =
+        Vim.input(~context={...context, viewLineMotion}, "M");
       expect.equal(
         context.mode,
         Normal({
@@ -45,7 +46,7 @@ describe("MotionTest", ({describe, _}) => {
         }),
       );
 
-      let context: Vim.Context.t =
+      let (context: Vim.Context.t, _effects: list(Effect.t)) =
         Vim.input(~context={...context, viewLineMotion}, "H");
       expect.equal(
         context.mode,
@@ -75,7 +76,7 @@ describe("MotionTest", ({describe, _}) => {
           Gc.compact();
           ret;
         };
-        let _context: Vim.Context.t =
+        let (_context: Vim.Context.t, _: list(Vim.Effect.t)) =
           Vim.input(
             ~context={...Vim.Context.current(), viewLineMotion},
             "M",
@@ -112,7 +113,7 @@ describe("MotionTest", ({describe, _}) => {
 
       let context = {...Vim.Context.current(), screenCursorMotion};
 
-      let context = Vim.input(~context, "5gj");
+      let (context, _: list(Vim.Effect.t)) = Vim.input(~context, "5gj");
       expect.equal(
         context.mode,
         Normal({
@@ -125,7 +126,7 @@ describe("MotionTest", ({describe, _}) => {
       );
 
       let context = {...Vim.Context.current(), screenCursorMotion};
-      let context = Vim.input(~context, "gk");
+      let (context, _: list(Effect.t)) = Vim.input(~context, "gk");
       expect.equal(
         context.mode,
         Normal({

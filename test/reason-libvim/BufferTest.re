@@ -371,7 +371,7 @@ describe("Buffer", ({describe, _}) => {
       let dispose =
         Buffer.onFilenameChanged(meta => updates := [meta, ...updates^]);
 
-      let _: Context.t = command("e! some-new-file.txt");
+      ignore(command("e! some-new-file.txt"): (Context.t, list(Effect.t)));
 
       /* A filename changed event should not have been triggered */
       expect.int(List.length(updates^)).toBe(0);
@@ -395,7 +395,9 @@ describe("Buffer", ({describe, _}) => {
 
       let previousFilename =
         Buffer.getCurrent() |> Buffer.getFilename |> string_opt;
-      let _: Context.t = command("sav! some-new-file-2.txt");
+      ignore(
+        command("sav! some-new-file-2.txt"): (Context.t, list(Effect.t)),
+      );
       let newFilename =
         Buffer.getCurrent() |> Buffer.getFilename |> string_opt;
 
@@ -416,7 +418,7 @@ describe("Buffer", ({describe, _}) => {
           updates := [meta.fileType, ...updates^]
         );
 
-      let _: Context.t = command("set filetype=derp");
+      ignore(command("set filetype=derp"): (Context.t, list(Effect.t)));
 
       /* A filename changed event should not have been triggered */
       expect.int(List.length(updates^)).toBe(1);
@@ -433,7 +435,12 @@ describe("Buffer", ({describe, _}) => {
       let writes = ref([]);
       let dispose = Buffer.onWrite(id => writes := [id, ...writes^]);
 
-      let _context: Context.t = command("w! some-new-file-again-write.txt");
+      ignore(
+        command("w! some-new-file-again-write.txt"): (
+                                                      Context.t,
+                                                      list(Effect.t),
+                                                    ),
+      );
 
       expect.int(List.length(writes^)).toBe(1);
 
