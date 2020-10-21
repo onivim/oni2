@@ -22,6 +22,7 @@ type t = {
   bufferRenderers: BufferRenderers.t,
   bufferHighlights: BufferHighlights.t,
   changelog: Feature_Changelog.model,
+  cli: Oni_CLI.t,
   clipboard: Feature_Clipboard.model,
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
@@ -32,6 +33,7 @@ type t = {
   diagnostics: Feature_Diagnostics.model,
   editorFont: Service_Font.font,
   input: Feature_Input.model,
+  logging: Feature_Logging.model,
   messages: Feature_Messages.model,
   terminalFont: Service_Font.font,
   uiFont: UiFont.t,
@@ -77,6 +79,7 @@ type t = {
 
 let initial =
     (
+      ~cli,
       ~initialBuffer,
       ~initialBufferRenderers,
       ~extensionGlobalPersistence,
@@ -120,6 +123,7 @@ let initial =
     bufferHighlights: BufferHighlights.initial,
     bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
+    cli,
     clipboard: Feature_Clipboard.initial,
     colorTheme:
       Feature_Theme.initial([
@@ -147,6 +151,7 @@ let initial =
     languageFeatures: LanguageFeatures.empty,
     languageSupport: Feature_LanguageSupport.initial,
     lifecycle: Lifecycle.create(),
+    logging: Feature_Logging.initial,
     messages: Feature_Messages.initial,
     uiFont: UiFont.default,
     sideBar: Feature_SideBar.initial,
