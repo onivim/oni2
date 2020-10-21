@@ -262,9 +262,9 @@
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
     "isolinear": "revery-ui/isolinear#53fc4eb",
     "revery-terminal": "revery-ui/revery-terminal#253ca69",
-    "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
-    "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
-    "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",
+    "@opam/fs": "bryphe/reason-native:fs.opam#5a7a756",
+    "@opam/fp": "bryphe/reason-native:fp.opam#5a7a756",
+    "@opam/dir": "bryphe/reason-native:dir.opam#5a7a756",
     "@opam/conf-pkg-config": "1.2",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
     "flex": "bryphe/flex#5e19b05"

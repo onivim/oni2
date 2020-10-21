@@ -23,7 +23,7 @@ let discoverExtensions =
       Core.Log.perf("Discover extensions", () => {
         let extensions =
           setup.bundledExtensionsPath
-          |> Fp.absolute
+          |> Fp.absoluteCurrentPlatform
           |> Option.map(
                Scanner.scan(
                  // The extension host assumes bundled extensions start with 'vscode.'
@@ -34,7 +34,7 @@ let discoverExtensions =
 
         let developmentExtensions =
           setup.developmentExtensionsPath
-          |> Core.Utility.OptionEx.flatMap(Fp.absolute)
+          |> Core.Utility.OptionEx.flatMap(Fp.absoluteCurrentPlatform)
           |> Option.map(Scanner.scan(~category=Development))
           |> Option.value(~default=[]);
 

@@ -20,11 +20,11 @@ module Internal = {
       switch (Environment.os) {
       | Environment.Windows =>
         Sys.getenv_opt("LOCALAPPDATA")
-        |> OptionEx.flatMap(Fp.absolute)
+        |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
         |> Option.get
       | _ =>
         switch (Sys.getenv_opt("HOME")) {
-        | Some(dir) => Fp.absolute(dir) |> Option.get
+        | Some(dir) => Fp.absoluteCurrentPlatform(dir) |> Option.get
         | None => failwith("Could not find user data directory")
         }
       }

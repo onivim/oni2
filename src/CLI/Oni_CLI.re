@@ -260,7 +260,7 @@ let parse = (~getenv: string => option(string), args) => {
     forceScaleFactor: scaleFactor^,
     gpuAcceleration: gpuAcceleration^,
     overriddenExtensionsDir:
-      extensionsDir^ |> Utility.OptionEx.flatMap(Fp.absolute),
+      extensionsDir^ |> Utility.OptionEx.flatMap(Fp.absoluteCurrentPlatform),
     //    shouldClose: shouldClose^,
     shouldLoadExtensions: shouldLoadExtensions^,
     shouldLoadConfiguration: shouldLoadConfiguration^,
