@@ -18,10 +18,10 @@ type model;
 
 [@deriving show]
 type command =
-  | OpenExplorerPane
-  | OpenSearchPane
-  | OpenSCMPane
-  | OpenExtensionsPane
+  | ToggleExplorerPane
+  | ToggleSearchPane
+  | ToggleSCMPane
+  | ToggleExtensionsPane
   | ToggleVisibility;
 
 [@deriving show]
@@ -39,7 +39,7 @@ type outmsg =
   | Focus
   | PopFocus;
 
-let update: (msg, model) => (model, outmsg);
+let update: (~isFocused: bool, msg, model) => (model, outmsg);
 
 let initial: model;
 

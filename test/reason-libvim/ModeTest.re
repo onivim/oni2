@@ -17,7 +17,7 @@ describe("Mode", ({describe, _}) => {
       expect.bool(Mode.isNormal(Mode.current())).toBe(true);
 
       // Force selection mode - and type 'a'
-      let outContext =
+      let (outContext, _: list(Effect.t)) =
         Vim.input(
           ~context={
             ...Vim.Context.current(),
@@ -62,7 +62,7 @@ describe("Mode", ({describe, _}) => {
       expect.bool(Mode.isNormal(Mode.current())).toBe(true);
 
       // Force visual mode - and delete with 'x'
-      let outContext =
+      let (outContext, _: list(Effect.t)) =
         Vim.input(
           ~context={
             ...Vim.Context.current(),
@@ -144,7 +144,7 @@ describe("Mode", ({describe, _}) => {
       let _ = resetBuffer();
 
       // delete pending op
-      let {mode, _}: Vim.Context.t = Vim.input("jjd");
+      let ({mode, _}: Vim.Context.t, _: list(Effect.t)) = Vim.input("jjd");
 
       expect.equal(
         mode,

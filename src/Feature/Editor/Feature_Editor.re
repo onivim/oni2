@@ -121,17 +121,40 @@ let update = (editor, msg) => {
         |> Option.value(~default=Nothing);
       },
     )
-  | SelectionChanged(selection) => (
-      Editor.setSelection(~selection, editor),
-      Nothing,
-    )
-  | SelectionCleared => (Editor.clearSelection(editor), Nothing)
-  | ModeChanged(mode) => (Editor.setMode(mode, editor), Nothing)
-  | ScrollToLine(line) => (Editor.scrollToLine(~line, editor), Nothing)
-  | ScrollToColumn(column) => (
-      Editor.scrollToColumn(~column, editor),
-      Nothing,
-    )
+  | ModeChanged({mode, effects}) =>
+    let handleScrollEffect = (~count, ~direction, editor) => {
+      let count = max(count, 1);
+      Vim.Scroll.(
+        switch (direction) {
+        | CursorCenterVertically =>
+          Editor.scrollCenterCursorVertically(editor)
+        | CursorTop => Editor.scrollCursorTop(editor)
+        | CursorBottom => Editor.scrollCursorBottom(editor)
+        | LineUp => Editor.scrollLines(~count=count * (-1), editor)
+        | LineDown => Editor.scrollLines(~count, editor)
+        | HalfPageUp => Editor.scrollHalfPage(~count=count * (-1), editor)
+        | HalfPageDown => Editor.scrollHalfPage(~count, editor)
+        | PageUp => Editor.scrollPage(~count=count * (-1), editor)
+        | PageDown => Editor.scrollPage(~count, editor)
+        | _ => editor
+        }
+      );
+    };
+
+    let editor' = Editor.setMode(mode, editor);
+    let editor'' =
+      effects
+      |> List.fold_left(
+           (acc, effect) => {
+             switch (effect) {
+             | Vim.Effect.Scroll({count, direction}) =>
+               handleScrollEffect(~count, ~direction, acc)
+             | _ => acc
+             }
+           },
+           editor',
+         );
+    (editor'', Nothing);
   | MinimapEnabledConfigChanged(enabled) => (
       Editor.setMinimapEnabled(~enabled, editor),
       Nothing,

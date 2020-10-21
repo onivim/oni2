@@ -5,13 +5,23 @@ open TestFramework;
 let resetBuffer = () => Helpers.resetBuffer("test/testfile.txt");
 let input = (~autoClosingPairs=AutoClosingPairs.empty, s) => {
   ignore(
-    Vim.input(~context={...Context.current(), autoClosingPairs}, s): Context.t,
+    Vim.input(~context={...Context.current(), autoClosingPairs}, s): (
+                                                                    Context.t,
+                                                                    list(
+                                                                    Effect.t,
+                                                                    ),
+                                                                    ),
   );
 };
 
 let key = (~autoClosingPairs=AutoClosingPairs.empty, s) => {
   ignore(
-    Vim.key(~context={...Context.current(), autoClosingPairs}, s): Context.t,
+    Vim.key(~context={...Context.current(), autoClosingPairs}, s): (
+                                                                    Context.t,
+                                                                    list(
+                                                                    Effect.t,
+                                                                    ),
+                                                                   ),
   );
 };
 

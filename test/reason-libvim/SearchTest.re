@@ -57,7 +57,8 @@ describe("Search", ({describe, _}) => {
       let unsubscribe =
         Vim.Search.onStopSearchHighlight(() => incr(callCount));
 
-      let _context: Context.t = Vim.command("nohlsearch");
+      let (_context: Context.t, _effects: list(Vim.Effect.t)) =
+        Vim.command("nohlsearch");
 
       expect.int(callCount^).toBe(1);
 

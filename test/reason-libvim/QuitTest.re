@@ -16,7 +16,7 @@ describe("Quit", ({test, _}) => {
         updates := [(quitType, forced), ...updates^]
       );
 
-    let _context: Context.t = command("q");
+    let (_context: Context.t, _effects: list(Vim.Effect.t)) = command("q");
     let (qt, forced) = List.hd(updates^);
 
     expect.int(List.length(updates^)).toBe(1);
@@ -66,7 +66,7 @@ describe("Quit", ({test, _}) => {
         updates := [(quitType, forced), ...updates^]
       );
 
-    let _context: Context.t = command("q!");
+    ignore(command("q!"): (Context.t, list(Effect.t)));
     let (qt, forced) = List.hd(updates^);
 
     expect.int(List.length(updates^)).toBe(1);
@@ -90,7 +90,7 @@ describe("Quit", ({test, _}) => {
         updates := [(quitType, forced), ...updates^]
       );
 
-    let _context: Context.t = command("qall");
+    ignore(command("qall"): (Context.t, list(Effect.t)));
     let (qt, forced) = List.hd(updates^);
 
     expect.int(List.length(updates^)).toBe(1);
