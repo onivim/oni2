@@ -208,7 +208,6 @@
     "clean-extensions": "esy b bash ./scripts/clean-extensions.sh"
   },
   "dependencies": {
-    "@glennsl/timber": "^1.2.0",
     "@opam/angstrom": "^0.14.1",
     "@opam/charInfo_width": "*",
     "@opam/decoders-yojson": "^0.4.0",
@@ -238,6 +237,7 @@
     "@opam/uutf": "*",
     "@opam/yojson": "1.7.0",
     "@reason-native-web/esy-openssl": "*",
+    "@revery/timber": "^2.0.0",
     "axios": "^0.19.0",
     "esy-angle-prebuilt": "^1.0.0",
     "esy-macdylibbundler": "*",
@@ -256,12 +256,12 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#18eb60e",
+    "revery": "revery-ui/revery#b43852b",
     "esy-skia": "revery-ui/esy-skia#60e0260",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
     "isolinear": "revery-ui/isolinear#53fc4eb",
-    "revery-terminal": "revery-ui/revery-terminal#bc0a670",
+    "revery-terminal": "revery-ui/revery-terminal#253ca69",
     "@opam/fs": "bryphe/reason-native:fs.opam#fd0225c",
     "@opam/fp": "bryphe/reason-native:fp.opam#fd0225c",
     "@opam/dir": "bryphe/reason-native:dir.opam#fd0225",

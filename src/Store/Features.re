@@ -414,6 +414,23 @@ let update =
       }
     );
 
+  | Logging(msg) =>
+    let (model, outmsg) = Feature_Logging.update(msg, state.logging);
+    let state' = {...state, logging: model};
+
+    let eff =
+      Feature_Logging.(
+        {
+          switch (outmsg) {
+          | Effect(eff) =>
+            eff |> Isolinear.Effect.map(msg => Actions.Logging(msg))
+          | ShowInfoNotification(msg) =>
+            Internal.notificationEffect(~kind=Info, msg)
+          };
+        }
+      );
+    (state', eff);
+
   | Messages(msg) =>
     let (model, outmsg) = Feature_Messages.update(msg, state.messages);
     let state = {...state, messages: model};
@@ -534,7 +551,13 @@ let update =
     };
 
   | SideBar(msg) =>
-    let (sideBar', outmsg) = Feature_SideBar.update(msg, state.sideBar);
+    let isFocused =
+      FocusManager.current(state) == Focus.SCM
+      || FocusManager.current(state) == Focus.Search
+      || FocusManager.current(state) == Focus.FileExplorer
+      || FocusManager.current(state) == Focus.Extensions;
+    let (sideBar', outmsg) =
+      Feature_SideBar.update(~isFocused, msg, state.sideBar);
     let state = {...state, sideBar: sideBar'};
 
     switch (outmsg) {

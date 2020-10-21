@@ -121,7 +121,11 @@ let listExtensions = ({overriddenExtensionsDir, _}) => {
 };
 
 Log.debug("Startup: Parsing CLI options");
-let (cliOptions, eff) = Oni_CLI.parse(Sys.argv);
+let (cliOptions, eff) = Oni_CLI.parse(~getenv=Sys.getenv_opt, Sys.argv);
+
+if (cliOptions.needsConsole) {
+  Revery.App.initConsole();
+};
 
 switch (eff) {
 | PrintVersion => printVersion() |> exit
@@ -135,6 +139,32 @@ switch (eff) {
     HealthCheck.run(~checks=Common, cliOptions)
   )
 | Run =>
+  // Turn on logging, if necessary
+  let loggingToConsole =
+    cliOptions.attachToForeground && Option.is_some(cliOptions.logLevel);
+  let loggingToFile = Option.is_some(cliOptions.logFile);
+
+  cliOptions.logLevel |> Option.iter(Timber.App.setLevel);
+
+  cliOptions.logFilter |> Option.iter(Timber.App.setNamespaceFilter);
+
+  if (loggingToConsole && loggingToFile) {
+    let consoleReporter =
+      Timber.Reporter.console(~enableColors=?cliOptions.logColorsEnabled, ());
+    let fileReporter = Option.get(cliOptions.logFile) |> Timber.Reporter.file;
+
+    let reporter = Timber.Reporter.combine(consoleReporter, fileReporter);
+    Timber.App.enable(reporter);
+  } else if (loggingToConsole) {
+    let consoleReporter =
+      Timber.Reporter.console(~enableColors=?cliOptions.logColorsEnabled, ());
+    Timber.App.enable(consoleReporter);
+  } else if (loggingToFile) {
+    let fileReporter = Option.get(cliOptions.logFile) |> Timber.Reporter.file;
+    Timber.App.enable(fileReporter);
+  };
+  Oni_Core.Log.init();
+
   let initWorkingDirectory = () => {
     let path =
       switch (Oni_CLI.(cliOptions.folder)) {
@@ -300,6 +330,7 @@ switch (eff) {
     let currentState =
       ref(
         Model.State.initial(
+          ~cli=cliOptions,
           ~initialBuffer,
           ~initialBufferRenderers,
           ~getUserSettings,
