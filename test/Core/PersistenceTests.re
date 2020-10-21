@@ -27,7 +27,7 @@ describe("Persistence", ({test, _}) => {
       storeFolderTemplate
       |> Luv.File.Sync.mkdtemp
       |> Result.to_option
-      |> OptionEx.flatMap(Fp.absolute)
+      |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
       |> Option.get;
     prerr_endline(
       "Persistence.setup - created storeFolder: " ++ Fp.toString(storeFolder),

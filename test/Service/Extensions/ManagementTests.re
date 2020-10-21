@@ -15,7 +15,7 @@ let createExtensionsFolder = () =>
   Service_OS.Api.mktempdir(~prefix="extensions-test", ())
   |> LwtEx.sync
   |> Result.to_option
-  |> OptionEx.flatMap(Fp.absolute)
+  |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
   |> Option.get;
 
 let setup = Setup.init();
