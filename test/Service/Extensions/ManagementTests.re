@@ -12,7 +12,9 @@ let testCollateralPath =
 let markdownExtension = testCollateralPath ++ "markdown-1.0.0.vsix";
 
 let createExtensionsFolder = () =>
-  Filesystem.mkTempDir(~prefix="extensions-test", ());
+  Service_OS.Api.mktempdir(~prefix="extensions-test", ())
+  |> LwtEx.sync
+  |> Result.get_ok;
 
 let setup = Setup.init();
 

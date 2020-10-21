@@ -100,64 +100,10 @@ let isDir = st =>
   | _ => error("not a directory")
   };
 
-let hasOwner = (uid, st) =>
-  if (st.Unix.st_uid == uid) {
-    return();
-  } else {
-    error("expected uid = %d, found %d", uid, st.Unix.st_uid);
-  };
-
-let hasGroup = (gid, st) =>
-  if (st.Unix.st_gid == gid) {
-    return();
-  } else {
-    error("expected gid = %d, found %d", gid, st.Unix.st_gid);
-  };
-
-let hasPerm = (perm, st) =>
-  if (st.Unix.st_perm == perm) {
-    return();
-  } else {
-    error("expected permissions 0o%o, found 0o%o", perm, st.Unix.st_perm);
-  };
-
-let getGroupId = () =>
-  Unix.(
-    try(getgid() |> return) {
-    | Not_found => error("No Group ID found")
-    }
-  );
-
-let getUserId = () =>
-  Unix.(
-    try(getuid() |> return) {
-    | Not_found => error("Cannot find user")
-    }
-  );
-
 let stat = path =>
   Unix.(
     try(Some(stat(path)) |> return) {
     | Unix_error(ENOENT, _, _) => return(None)
-    }
-  );
-
-let chmod = (path, ~perm=userReadWriteExecute, ()) =>
-  Unix.(
-    try(chmod(path, perm) |> return) {
-    | Unix_error(_, _, _) => error("can't set permissions for '%s'", path)
-    }
-  );
-
-let chown = (path, uid, gid) =>
-  Unix.(
-    try(chown(path, uid, gid) |> return) {
-    | Unix_error(err, _, _) =>
-      error(
-        "can't set uid/gid for '%s' because '%s",
-        path,
-        error_message(err),
-      )
     }
   );
 
@@ -182,51 +128,6 @@ let mkdir = (path, ~perm=userReadWriteExecute, ()) =>
     }
   );
 
-/**
- * Create a temporary directory
- * Adapted from: https://discuss.ocaml.org/t/how-to-create-a-temporary-directory-in-ocaml/1815/4
- */
-let rand_digits = () => {
-  let rand = Random.State.(bits(make_self_init()) land 0xFFFFFF);
-  Printf.sprintf("%06x", rand);
-};
-
-let mkTempDir = (~prefix="mktempdir", ()) => {
-  let tmp = Filename.get_temp_dir_name();
-
-  let raise_err = msg => raise(Sys_error(msg));
-  let rec loop = count =>
-    if (count < 0) {
-      raise_err("mkTempDir: Too many failing attempts");
-    } else {
-      let dir = Printf.sprintf("%s/%s%s", tmp, prefix, rand_digits());
-      try(
-        {
-          Unix.mkdir(dir, 0o700);
-          dir;
-        }
-      ) {
-      | Unix.Unix_error(Unix.EEXIST, _, _) => loop(count - 1)
-      | Unix.Unix_error(Unix.EINTR, _, _) => loop(count)
-      | Unix.Unix_error(e, _, _) =>
-        raise_err("mkTempDir: " ++ Unix.error_message(e))
-      };
-    };
-  loop(1000);
-};
-
-let rmdir = path =>
-  Unix.(
-    try(rmdir(path) |> return) {
-    | Unix_error(err, _, _) =>
-      error(
-        "can't remove directory '%s' because: '%s'",
-        path,
-        error_message(err),
-      )
-    }
-  );
-
 let getOniDirectory = dataDirectory =>
   Revery.(
     switch (Environment.os) {
@@ -241,58 +142,6 @@ let getUserDataDirectory = () =>
     | Unix_error(err, _, _) =>
       error("Cannot find data directory because: '%s'", error_message(err))
     | Failure(reason) => error("The OS could not be identified %s", reason)
-    }
-  );
-
-/**
-   CopyFile:
-
-   There is no native function to copy files (suprisingly)
-   The reference below explains how this function works
-   and why the seemingly arbitrary buffer size
-   TLDR: efficiency
-
-   NOTE: copyFile itself is not safe, copy (below, is safe)
-   wraps the call with an exception handler that returns a wrapped
-   value of Error or Ok
-
-   reference: https://ocaml.github.io/ocamlunix/ocamlunix.html#sec33
- */
-let copyFile = (source, dest) => {
-  let bufferSize = 8192;
-  let buffer = Bytes.create(bufferSize);
-
-  let sourceFile = Unix.openfile(source, [O_RDONLY], 0);
-  let destFile =
-    Unix.openfile(dest, [O_WRONLY, O_CREAT, O_TRUNC], userReadWriteExecute);
-  /**
-    In the copy_loop function we do the copy by blocks of buffer_size bytes.
-    We request buffer_size bytes to read. If read returns zero,
-    we have reached the end of file and the copy is over.
-    Otherwise we write the bytes we have read in the output file and start again.
-   */
-  let rec copy_loop = () =>
-    switch (Unix.read(sourceFile, buffer, 0, bufferSize)) {
-    | 0 => ()
-    | bytes => Unix.write(destFile, buffer, 0, bytes) |> ignore |> copy_loop
-    };
-  copy_loop();
-  Unix.close(sourceFile);
-  Unix.close(destFile);
-};
-
-let copy = (source, dest) =>
-  Unix.(
-    try(copyFile(source, dest) |> return) {
-    | Unix_error(err, funcName, argument) =>
-      error(
-        "Failed to copy from %s to %s, encountered %s, whilst calling %s with %s",
-        source,
-        dest,
-        error_message(err),
-        funcName,
-        argument,
-      )
     }
   );
 
