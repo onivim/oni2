@@ -194,7 +194,7 @@ let runTest =
       |> Printf.fprintf(oc, "%s\n");
 
     close_out(oc);
-    tempFilePath |> Fp.absolute |> Option.get;
+    tempFilePath |> Fp.absoluteCurrentPlatform |> Option.get;
   };
 
   let configurationFilePath =
