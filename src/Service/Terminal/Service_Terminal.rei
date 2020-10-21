@@ -25,6 +25,7 @@ module Sub: {
     (
       ~id: int,
       ~arguments: list(string),
+      ~launchConfig: Exthost.ShellLaunchConfig.t,
       ~cmd: string,
       ~columns: int,
       ~rows: int,
