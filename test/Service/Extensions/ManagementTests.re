@@ -14,7 +14,9 @@ let markdownExtension = testCollateralPath ++ "markdown-1.0.0.vsix";
 let createExtensionsFolder = () =>
   Service_OS.Api.mktempdir(~prefix="extensions-test", ())
   |> LwtEx.sync
-  |> Result.get_ok;
+  |> Result.to_option
+  |> OptionEx.flatMap(Fp.absolute)
+  |> Option.get;
 
 let setup = Setup.init();
 
