@@ -20,6 +20,68 @@ module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 module OptionEx = Core.Utility.OptionEx;
 
+let args = [
+  "-ilc",
+  "printf \"\n_SHELL_ENV_DELIMITER_\"; env; printf \"\n_SHELL_ENV_DELIMITER_\n\"; exit",
+];
+
+let test = () => {
+  prerr_endline("testing...");
+
+  let shell = Core.ShellUtility.getDefaultShell();
+  prerr_endline("Using shell: " ++ shell);
+  let (inp, out, err) =
+    Unix.open_process_args_full(
+      shell,
+      [shell, ...args] |> Array.of_list,
+      [||],
+    );
+  let lines = ref([]);
+
+  try(
+    {
+      while (true) {
+        lines := [input_line(inp), ...lines^];
+      };
+      lines^;
+    }
+  ) {
+  | End_of_file =>
+    close_in(inp);
+    List.rev(lines^);
+  };
+  close_out(out);
+  close_in(err);
+
+  lines^ |> List.iter(line => prerr_endline(" --| " ++ line));
+  let rec pruneLines = (hasEncounteredDelimiter, acc, lines) => {
+    switch (lines) {
+    | [] => acc
+    | [line, ...lines] =>
+      if (!hasEncounteredDelimiter) {
+        if (Core.Utility.StringEx.contains("_SHELL_ENV_DELIMITER_")) {
+          pruneLines(true, acc, lines);
+        } else {
+          pruneLines(false, acc, lines);
+        };
+      } else if (Core.Utility.StringEx.contains("_SHELL_ENV_DELIMITER_")) {
+        acc;
+      } else if (!Core.Utility.StringEx.isEmpty) {
+        pruneLines(true, [line, ...acc], lines);
+      } else {
+        pruneLines(true, acc, lines);
+      }
+    };
+  };
+  let outLines = pruneLines(false, [], lines^);
+
+  prerr_endline("Output lines: ");
+  outLines |> List.iter(line => prerr_endline(" --| " ++ line));
+
+  failwith("done");
+};
+test();
+
 let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
   let setup = Core.Setup.init();
   let result =
