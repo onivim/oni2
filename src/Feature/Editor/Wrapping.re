@@ -191,7 +191,7 @@ let bufferBytePositionToViewLine = (~bytePosition: BytePosition.t, wrap) => {
 };
 
 let viewLineToBufferPosition = (~line: int, wrapping) => {
-  let line = min(0, line);
+  let line = max(0, line);
   let bufferLineIdx = Internal.viewLineToBufferLine(line, wrapping);
   let startViewLine = Internal.bufferLineToViewLine(bufferLineIdx, wrapping);
 
