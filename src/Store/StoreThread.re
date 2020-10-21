@@ -22,17 +22,21 @@ let discoverExtensions =
     let extensions =
       Core.Log.perf("Discover extensions", () => {
         let extensions =
-          Scanner.scan(
-            // The extension host assumes bundled extensions start with 'vscode.'
-            ~category=Bundled,
-            setup.bundledExtensionsPath,
-          );
+          setup.bundledExtensionsPath
+          |> Fp.absolute
+          |> Option.map(
+               Scanner.scan(
+                 // The extension host assumes bundled extensions start with 'vscode.'
+                 ~category=Bundled,
+               ),
+             )
+          |> Option.value(~default=[]);
 
         let developmentExtensions =
-          switch (setup.developmentExtensionsPath) {
-          | Some(p) => Scanner.scan(~category=Development, p)
-          | None => []
-          };
+          setup.developmentExtensionsPath
+          |> Core.Utility.OptionEx.flatMap(Fp.absolute)
+          |> Option.map(Scanner.scan(~category=Development))
+          |> Option.value(~default=[]);
 
         let userExtensions =
           Service_Extensions.Management.get(

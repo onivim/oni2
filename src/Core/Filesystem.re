@@ -7,6 +7,8 @@
    reference (source of inspiration): https://medium.com/@huund/making-a-directory-in-ocaml-53ceca84979f
  */
 module Path = Utility.Path;
+module OptionEx = Utility.OptionEx;
+module ResultEx = Utility.ResultEx;
 open Kernel;
 module Log = (val Log.withNamespace("Oni2.Filesystem"));
 
@@ -16,10 +18,13 @@ module Internal = {
   let getUserDataDirectoryExn = () =>
     Revery.(
       switch (Environment.os) {
-      | Environment.Windows => Sys.getenv("LOCALAPPDATA")
+      | Environment.Windows =>
+        Sys.getenv_opt("LOCALAPPDATA")
+        |> OptionEx.flatMap(Fp.absolute)
+        |> Option.get
       | _ =>
         switch (Sys.getenv_opt("HOME")) {
-        | Some(dir) => dir
+        | Some(dir) => Fp.absolute(dir) |> Option.get
         | None => failwith("Could not find user data directory")
         }
       }
@@ -88,24 +93,34 @@ let userReadWriteExecute = 0o777;
    Safe Unix functions ==========================================
  */
 
-let isFile = st =>
-  switch (st.Unix.st_kind) {
-  | Unix.S_REG => return()
-  | _ => error("not a file")
-  };
-
-let isDir = st =>
-  switch (st.Unix.st_kind) {
-  | Unix.S_DIR => return()
-  | _ => error("not a directory")
-  };
-
 let stat = path =>
   Unix.(
-    try(Some(stat(path)) |> return) {
-    | Unix_error(ENOENT, _, _) => return(None)
+    try(Some(stat(path |> Fp.toString))) {
+    | Unix_error(ENOENT, _, _) => None
     }
   );
+
+let isFile = path =>
+  path
+  |> stat
+  |> Option.map(stats => {
+       switch (stats.Unix.st_kind) {
+       | Unix.S_REG => true
+       | _ => false
+       }
+     })
+  |> Option.value(~default=false);
+
+let isDir = path =>
+  path
+  |> stat
+  |> Option.map(stats => {
+       switch (stats.Unix.st_kind) {
+       | Unix.S_DIR => true
+       | _ => false
+       }
+     })
+  |> Option.value(~default=false);
 
 /**
   Permissions default to read/write permissions
@@ -118,21 +133,39 @@ let stat = path =>
 */
 let mkdir = (path, ~perm=userReadWriteExecute, ()) =>
   Unix.(
-    try(mkdir(path, perm) |> return) {
+    try(mkdir(path |> Fp.toString, perm) |> return) {
     | Unix_error(err, _, _) =>
       error(
         "can't create directory '%s' because '%s",
-        path,
+        path |> Fp.toString,
         error_message(err),
       )
     }
   );
 
+let mkdirp = path => {
+  let rec loop = curr =>
+    if (isDir(curr)) {
+      Ok();
+    } else if (isFile(curr)) {
+      Error(
+        "Can't create directory because file exists: " ++ Fp.toString(curr),
+      );
+    } else if (!Fp.hasParentDir(curr)) {
+      Ok();
+    } else {
+      // Create parent directory, if necesssary
+      loop(Fp.dirName(curr)) |> ResultEx.flatMap(mkdir(curr));
+    };
+
+  loop(path) |> Result.map(_ => path);
+};
+
 let getOniDirectory = dataDirectory =>
   Revery.(
     switch (Environment.os) {
-    | Environment.Windows => Path.join([dataDirectory, "Oni2"]) |> return
-    | _ => Path.join([dataDirectory, ".config", "oni2"]) |> return
+    | Environment.Windows => Fp.append(dataDirectory, "Oni2") |> return
+    | _ => Fp.At.(dataDirectory / ".config" / "oni2") |> return
     }
   );
 
@@ -145,130 +178,76 @@ let getUserDataDirectory = () =>
     }
   );
 
-let createOniConfiguration = (~configDir, ~file) => {
-  let userConfigPath = Path.join([configDir, file]);
+let getOrCreateOniConfiguration = (~configDir, ~file) => {
+  mkdirp(configDir)
+  |> ResultEx.flatMap(_ =>
+       if (isFile(Fp.append(configDir, file))) {
+         // Already created
+         Ok();
+       } else {
+         let userConfigPath = Fp.append(configDir, file) |> Fp.toString;
 
-  let configFile = open_out(userConfigPath);
-  let configString = ConfigurationDefaults.getDefaultConfigString(file);
+         let configFile = open_out(userConfigPath);
+         let configString =
+           ConfigurationDefaults.getDefaultConfigString(file);
 
-  switch (configString) {
-  | Some(c) => output_string(configFile, c)
-  | None => ()
-  };
+         switch (configString) {
+         | Some(c) => output_string(configFile, c)
+         | None => ()
+         };
 
-  switch (close_out(configFile)) {
-  | exception (Sys_error(msg)) =>
-    error("Failed whilst making config %s, due to %s", file, msg)
-  | v => return(v)
-  };
+         switch (close_out(configFile)) {
+         | exception (Sys_error(msg)) =>
+           error("Failed whilst making config %s, due to %s", file, msg)
+         | v => return(v)
+         };
+       }
+     );
 };
 
-let getPath = (dir, file) => return(Path.join([dir, file]));
-
-let createConfigIfNecessary = (configDir, file) =>
-  Path.join([configDir, file])
-  |> (
-    configPath =>
-      stat(configDir)
-      >>= (
-        fun
-        | Some(dirStats) =>
-          isDir(dirStats)
-          /\/= (
-            _ =>
-              mkdir(configDir, ())
-              >>= (() => createOniConfiguration(~file, ~configDir))
-          )
-          /* config directory already exists */
-          >>= (
-            () =>
-              createOniConfiguration(~configDir, ~file)
-              /\/= error("Error creating configuration files because: %s")
-              >>= (() => return(configPath))
-          )
-        | None =>
-          mkdir(configDir, ())
-          >>= (() => createOniConfiguration(~configDir, ~file))
-          >>= (() => return(configPath))
-      )
-  );
-
-let getOrCreateConfigFolder = configDir =>
-  stat(configDir)
-  >>= (
-    fun
-    | Some(dirStats) =>
-      /*
-        Check the stats, if its a folder we can stop.
-        If its not, we need to make a folder.
-       */
-      isDir(dirStats)
-      /\/= (_ => mkdir(configDir, ()))
-      >>= (() => return(configDir))
-    | None =>
-      /*
-       No folder was present, lets make one.
-       */
-      mkdir(configDir, ()) >>= (() => return(configDir))
-  );
+let getOrCreateConfigFolder = mkdirp;
 
 let getExtensionsFolder = () =>
   getUserDataDirectory()
-  >>= getOniDirectory
-  >>= getOrCreateConfigFolder
-  >>= (dir => getPath(dir, "extensions"))
-  >>= getOrCreateConfigFolder;
+  |> ResultEx.flatMap(getOniDirectory)
+  |> Result.map(dir => Fp.append(dir, "extensions"))
+  |> ResultEx.flatMap(mkdirp);
 
 let getStoreFolder = () =>
   getUserDataDirectory()
-  >>= getOniDirectory
-  >>= (dir => getPath(dir, "store"))
-  >>= getOrCreateConfigFolder;
+  |> ResultEx.flatMap(getOniDirectory)
+  |> Result.map(dir => Fp.append(dir, "store"))
+  |> ResultEx.flatMap(mkdirp);
 
 let getGlobalStorageFolder = () =>
   getUserDataDirectory()
-  >>= getOniDirectory
-  >>= (dir => getPath(dir, "global"))
-  >>= getOrCreateConfigFolder;
+  |> ResultEx.flatMap(getOniDirectory)
+  |> Result.map(dir => Fp.append(dir, "global"))
+  |> ResultEx.flatMap(mkdirp);
 
 let rec getOrCreateConfigFile = (~overridePath=?, filename) => {
   switch (overridePath) {
   | Some(path) =>
-    switch (Sys.file_exists(path)) {
+    let pathString = path |> Fp.toString;
+    switch (Sys.file_exists(pathString)) {
     | exception ex =>
-      Log.error("Error loading configuration file at: " ++ path);
+      Log.error("Error loading configuration file at: " ++ pathString);
       Log.error("  " ++ Printexc.to_string(ex));
       getOrCreateConfigFile(filename);
 
     | false =>
-      Log.error("Error loading configuration file at: " ++ path);
+      Log.error("Error loading configuration file at: " ++ pathString);
       getOrCreateConfigFile(filename);
 
     | true => Ok(path)
-    }
+    };
   | None =>
     /* Get Oni Directory */
     getUserDataDirectory()
-    >>= getOniDirectory
-    >>= (
-      configDir =>
-        getPath(configDir, filename)
-        /* Check whether the config file already exists */
-        >>= stat
-        >>= (
-          fun
-          | Some(existingFileStats) =>
-            /* is the the thing that exists a file */
-            isFile(existingFileStats)
-            >>= (
-              () =>
-                getPath(configDir, filename)
-                /* if it exists but is not a file attempt to create a file */
-                /\/= (_ => createConfigIfNecessary(configDir, filename))
-            )
-          /* if the file does not exist try and create it */
-          | None => createConfigIfNecessary(configDir, filename)
-        )
-    )
+    |> ResultEx.flatMap(getOniDirectory)
+    |> ResultEx.flatMap(configDir =>
+         getOrCreateOniConfiguration(~configDir, ~file=filename)
+         |> Result.map(() => Fp.append(configDir, filename))
+       )
   };
 };
