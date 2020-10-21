@@ -271,9 +271,17 @@ let update = (~focus, model, msg) => {
     switch (focus) {
     | Some(Center) =>
       let layout = model |> activeLayout;
+      prerr_endline("-- Command - MoveDown");
       let newActiveGroupId =
         layout |> activeTree |> moveDown(layout.activeGroupId);
 
+      prerr_endline(
+        Printf.sprintf(
+          "-- Old active group id: %d new active group id: %d",
+          layout.activeGroupId,
+          newActiveGroupId,
+        ),
+      );
       if (newActiveGroupId == layout.activeGroupId) {
         (model, Focus(Bottom));
       } else {

@@ -946,6 +946,11 @@ let update =
 
       | _ => None
       };
+
+    switch (focus) {
+    | None => "FOCUS: NONE" |> prerr_endline
+    | Some(f) => "FOCUS: " ++ Feature_Layout.show_panel(f) |> prerr_endline
+    };
     let (model, outmsg) = update(~focus, state.layout, msg);
     let state = {...state, layout: model};
 
