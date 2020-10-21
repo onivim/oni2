@@ -31,58 +31,10 @@ module Internal = {
     );
 };
 
-/** [on_success] executes [f] unless we already hit an error. In
-  that case the error is passed on. */
-let onSuccess = (t: t('a), f: 'a => t('b)) =>
-  switch (t) {
-  | Ok(x) => f(x)
-  | Error(str) => Error(str)
-  };
-
-/** [on_error] ignores the current error and executes [f]. If
-  there is no error, [f] is not executed and the result is
-  passed on. */
-let onError = (t, f) =>
-  switch (t) {
-  | Error(str) => f(str)
-  | Ok(x) => Ok(x)
-  };
-
-/**
-   Helper functions ============================================
- */
-let _always = (_t, f) => f();
-
 /* This informs of an error and passes the error string wrapped in an Error to the next function*/
 let error = fmt => Printf.ksprintf(msg => Error(msg), fmt);
 
-let _inform = fmt => Printf.ksprintf(msg => Ok(msg), fmt);
-
 let return = x => Ok(x);
-
-let _fail = msg => Error(msg);
-
-/**
-   Infix Operators: These are essentially aliases to the
-   onError and onSuccess functions.
-   This syntax allows us to use the monadic FS operators like
-   mkdir in a chainable fashion
-
-   mkdir
-    //= error("something went wrong")
-    >>= (_ => return())
-
-   in this example mkdir returns either an Ok(value) or an Error(value)
-   the result is passed to both functions sequentially if it is an error
-   the error handler is called if it is an OK this is ignored an the Ok
-   value is passed to the success handler
-
-   The advantage is that it allows for a concise way to describe a whole
-   range of error and OK scenarios
- */
-let (>>=) = onSuccess;
-let (/\/=) = onError;
-/* let ( *> ) = always; */
 
 /**
    Permissions ==================================================
