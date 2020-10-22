@@ -33,8 +33,8 @@ module Sub = {
   type params = {
     id: int,
     launchConfig: Exthost.ShellLaunchConfig.t,
-//    cmd: string,
-//    arguments: list(string),
+    //    cmd: string,
+    //    arguments: list(string),
     extHostClient: Exthost.Client.t,
     workspaceUri: Uri.t,
     rows: int,
@@ -60,12 +60,12 @@ module Sub = {
 
       let init = (~params, ~dispatch) => {
         let launchConfig = params.launchConfig;
-//          Exthost.ShellLaunchConfig.{
-//            name: "Terminal",
-//            executable: params.cmd,
-//            arguments: params.arguments,
-//            env: Strict(StringMap.add("abc2", "def2", StringMap.empty))
-//          };
+        //          Exthost.ShellLaunchConfig.{
+        //            name: "Terminal",
+        //            executable: params.cmd,
+        //            arguments: params.arguments,
+        //            env: Strict(StringMap.add("abc2", "def2", StringMap.empty))
+        //          };
 
         let isResizing = ref(false);
 

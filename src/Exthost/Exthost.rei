@@ -995,7 +995,7 @@ module ModelChangedEvent: {
 };
 
 module ShellLaunchConfig: {
-    type environment =
+  type environment =
     | Inherit
     | Additive(StringMap.t(string))
     | Strict(StringMap.t(string));
