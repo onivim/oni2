@@ -59,6 +59,7 @@ let yankHighlight: t => option(yankHighlight);
 let setYankHighlight: (~yankHighlight: yankHighlight, t) => t;
 
 let setWrapPadding: (~padding: float, t) => t;
+let setVerticalScrollMargin: (~lines: int, t) => t;
 
 let setMinimap: (~enabled: bool, ~maxColumn: int, t) => t;
 let isMinimapEnabled: t => bool;

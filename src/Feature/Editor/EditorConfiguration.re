@@ -186,6 +186,13 @@ module VimSettings = {
       |> Option.value(~default=`Off)
     });
 
+  let scrolloff =
+    vim("scrolloff", scrolloffSetting => {
+      scrolloffSetting
+      |> VimSetting.decode_value_opt(int)
+      |> Option.value(~default=1)
+    });
+
   let lineNumbers =
     vim2("relativenumber", "number", (maybeRelative, maybeNumber) => {
       let maybeRelativeBool =
@@ -261,6 +268,13 @@ let renderIndentGuides =
 let renderWhitespace =
   setting("editor.renderWhitespace", whitespace, ~default=`Selection);
 let rulers = setting("editor.rulers", list(int), ~default=[]);
+let scrolloff =
+  setting(
+    "editor.cursorSurroundingLines",
+    ~vim=VimSettings.scrolloff,
+    int,
+    ~default=1,
+  );
 let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
 let smoothScroll =
   setting(
@@ -341,6 +355,7 @@ let contributions = [
   renderWhitespace.spec,
   rulers.spec,
   scrollShadow.spec,
+  scrolloff.spec,
   smoothScroll.spec,
   tabSize.spec,
   yankHighlightColor.spec,
