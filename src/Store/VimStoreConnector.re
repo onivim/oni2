@@ -709,7 +709,8 @@ let start =
 
   let escapeEffect =
     Isolinear.Effect.create(~name="vim.esc", () => {
-      let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
+      let ({mode, _}: Vim.Context.t, effects) = Vim.key("<esc>");
+      updateActiveEditorMode(mode, effects);
       ();
     });
 

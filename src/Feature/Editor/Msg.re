@@ -27,6 +27,4 @@ type t =
   | ModeChanged({
       mode: [@opaque] Vim.Mode.t,
       effects: [@opaque] list(Vim.Effect.t),
-    })
-  | MinimapEnabledConfigChanged(bool)
-  | LineHeightConfigChanged(LineHeight.t);
+    });
