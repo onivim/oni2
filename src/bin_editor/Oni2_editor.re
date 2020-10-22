@@ -338,6 +338,7 @@ switch (eff) {
           ~extensionWorkspacePersistence,
           ~contributedCommands=[], // TODO
           ~workingDirectory=initialWorkingDirectory,
+          // TODO: Use `Fp.t` all the way down
           ~extensionsFolder=cliOptions.overriddenExtensionsDir,
         ),
       );

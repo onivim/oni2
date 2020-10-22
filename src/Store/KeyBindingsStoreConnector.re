@@ -440,38 +440,43 @@ let start = maybeKeyBindingsFilePath => {
 
   let loadKeyBindingsEffect = isFirstLoad =>
     Isolinear.Effect.createWithDispatch(~name="keyBindings.load", dispatch => {
-      let keyBindingsFile = getKeybindingsFile();
+      getKeybindingsFile()
+      |> Utility.ResultEx.tapError(err => {
+           Log.warnf(m => m("Error getting keybindings file: %s", err))
+         })
+      |> Result.iter(keyBindingsFile => {
+           let checkFirstLoad = keyBindingPath =>
+             if (isFirstLoad) {
+               reloadConfigOnWritePost(~configPath=keyBindingPath, dispatch);
+             };
 
-      let checkFirstLoad = keyBindingPath =>
-        if (isFirstLoad) {
-          reloadConfigOnWritePost(~configPath=keyBindingPath, dispatch);
-        };
+           let onError = msg => {
+             let errorMsg = "Error parsing keybindings: " ++ msg;
+             Log.error(errorMsg);
+             dispatch(Actions.KeyBindingsParseError(errorMsg));
+           };
 
-      let onError = msg => {
-        let errorMsg = "Error parsing keybindings: " ++ msg;
-        Log.error(errorMsg);
-        dispatch(Actions.KeyBindingsParseError(errorMsg));
-      };
+           let (keyBindings, individualErrors) =
+             keyBindingsFile
+             |> Fp.toString
+             |> Utility.FunEx.tap(checkFirstLoad)
+             |> Utility.JsonEx.from_file
+             |> Utility.ResultEx.flatMap(
+                  Keybindings.of_yojson_with_errors(~default),
+                )
+             // Handle error case when parsing entire JSON file
+             |> Utility.ResultEx.tapError(onError)
+             |> Stdlib.Result.value(~default=(Keybindings.empty, []));
 
-      let (keyBindings, individualErrors) =
-        keyBindingsFile
-        |> Utility.ResultEx.tap(checkFirstLoad)
-        |> Utility.ResultEx.flatMap(Utility.JsonEx.from_file)
-        |> Utility.ResultEx.flatMap(
-             Keybindings.of_yojson_with_errors(~default),
-           )
-        // Handle error case when parsing entire JSON file
-        |> Utility.ResultEx.tapError(onError)
-        |> Stdlib.Result.value(~default=(Keybindings.empty, []));
+           // Handle individual binding errors
+           individualErrors |> List.iter(onError);
 
-      // Handle individual binding errors
-      individualErrors |> List.iter(onError);
+           Log.infof(m =>
+             m("Loading %i keybindings", Keybindings.count(keyBindings))
+           );
 
-      Log.infof(m =>
-        m("Loading %i keybindings", Keybindings.count(keyBindings))
-      );
-
-      dispatch(Actions.KeyBindingsSet(keyBindings));
+           dispatch(Actions.KeyBindingsSet(keyBindings));
+         })
     });
 
   let executeCommandEffect = msg =>

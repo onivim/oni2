@@ -5,4 +5,5 @@
  (modules (:standard))
  (preprocess
   (pps ppx_deriving_yojson ppx_deriving.show))
- (libraries Oni2.exthost Oni2.service.extensions Oni_Core_Test rely.lib))
+ (libraries Oni2.exthost Oni2.service.extensions Oni2.service.os
+   Oni_Core_Test rely.lib))
