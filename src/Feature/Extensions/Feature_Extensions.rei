@@ -68,7 +68,7 @@ let initial:
   (
     ~workspacePersistence: Persistence.t,
     ~globalPersistence: Persistence.t,
-    ~extensionsFolder: option(string)
+    ~extensionsFolder: option(Fp.t(Fp.absolute))
   ) =>
   model;
 
