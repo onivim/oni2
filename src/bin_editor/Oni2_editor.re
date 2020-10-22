@@ -20,11 +20,6 @@ module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 module OptionEx = Core.Utility.OptionEx;
 
-let args = [
-  "-ilc",
-  "printf \"\n_SHELL_ENV_DELIMITER_\"; env; printf \"\n_SHELL_ENV_DELIMITER_\n\"; exit",
-];
-
 let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
   let setup = Core.Setup.init();
   let result =
