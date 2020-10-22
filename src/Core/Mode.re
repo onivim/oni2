@@ -3,14 +3,21 @@
  *
  * Onivim2 - specific modes (a superset of libvim modes)
  */
+open EditorCoreTypes;
 
 type t =
   // Vim modes
-  | Normal
-  | Insert
-  | Visual({range: VisualRange.t})
-  | Select({range: VisualRange.t})
-  | Replace
+  | Normal({cursor: BytePosition.t})
+  | Insert({cursors: list(BytePosition.t)})
+  | Visual({
+      cursor: BytePosition.t,
+      range: VisualRange.t,
+    })
+  | Select({
+      cursor: BytePosition.t,
+      range: VisualRange.t,
+    })
+  | Replace({cursor: BytePosition.t})
   | Operator({pending: Vim.Operator.pending})
   | CommandLine
   // Additional modes
@@ -20,23 +27,23 @@ type t =
 
 let toString =
   fun
-  | Insert => "Insert"
-  | Normal => "Normal"
-  | Visual({range}) =>
+  | Insert(_) => "Insert"
+  | Normal(_) => "Normal"
+  | Visual({range, _}) =>
     switch (range.mode) {
     | Character => "Visual Character"
     | Line => "Visual Line"
     | Block => "Visual Block"
     | None => "Visual"
     }
-  | Select({range}) =>
+  | Select({range, _}) =>
     switch (range.mode) {
     | Character => "Select Character"
     | Line => "Select Line"
     | Block => "Select Block"
     | None => "Select"
     }
-  | Replace => "Replace"
+  | Replace(_) => "Replace"
   | Operator({pending}) => Vim.Operator.toString(pending)
   | CommandLine => "Command Line"
   | TerminalInsert => "Terminal Insert"

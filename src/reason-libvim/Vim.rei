@@ -42,25 +42,11 @@ module ColorScheme: {
   };
 };
 
-module Context: {
-  type t = {
-    autoClosingPairs: AutoClosingPairs.t,
-    autoIndent:
-      (~previousLine: string, ~beforePreviousLine: option(string)) =>
-      AutoIndent.action,
-    bufferId: int,
-    colorSchemeProvider: ColorScheme.Provider.t,
-    width: int,
-    height: int,
-    leftColumn: int,
-    topLine: int,
-    cursors: list(BytePosition.t),
-    lineComment: option(string),
-    tabSize: int,
-    insertSpaces: bool,
-  };
-
-  let current: unit => t;
+module ViewLineMotion: {
+  type t =
+    | MotionH
+    | MotionM
+    | MotionL;
 };
 
 module Registers: {let get: (~register: char) => option(array(string));};
@@ -108,6 +94,64 @@ module Operator: {
   let get: unit => option(pending);
 
   let toString: pending => string;
+};
+
+module Mode: {
+  type t =
+    | Normal({cursor: BytePosition.t})
+    | Insert({cursors: list(BytePosition.t)})
+    | CommandLine
+    | Replace({cursor: BytePosition.t})
+    | Visual(VisualRange.t)
+    | Operator({
+        cursor: BytePosition.t,
+        pending: Operator.pending,
+      })
+    | Select(VisualRange.t);
+
+  let current: unit => t;
+
+  let isInsert: t => bool;
+  let isNormal: t => bool;
+  let isVisual: t => bool;
+  let isSelect: t => bool;
+  let isReplace: t => bool;
+  let isOperatorPending: t => bool;
+
+  let cursors: t => list(BytePosition.t);
+};
+
+module Context: {
+  type t = {
+    autoClosingPairs: AutoClosingPairs.t,
+    autoIndent:
+      (~previousLine: string, ~beforePreviousLine: option(string)) =>
+      AutoIndent.action,
+    viewLineMotion:
+      (~motion: ViewLineMotion.t, ~count: int, ~startLine: LineNumber.t) =>
+      LineNumber.t,
+    screenCursorMotion:
+      (
+        ~direction: [ | `Up | `Down],
+        ~count: int,
+        ~line: LineNumber.t,
+        ~currentByte: ByteIndex.t,
+        ~wantByte: ByteIndex.t
+      ) =>
+      BytePosition.t,
+    bufferId: int,
+    colorSchemeProvider: ColorScheme.Provider.t,
+    width: int,
+    height: int,
+    leftColumn: int,
+    topLine: int,
+    mode: Mode.t,
+    lineComment: option(string),
+    tabSize: int,
+    insertSpaces: bool,
+  };
+
+  let current: unit => t;
 };
 
 module Edit: {
@@ -312,22 +356,6 @@ module Format: {
       });
 };
 
-module Mode: {
-  type t =
-    | Normal
-    | Insert
-    | CommandLine
-    | Replace
-    | Visual({range: VisualRange.t})
-    | Operator({pending: Operator.pending})
-    | Select({range: VisualRange.t});
-
-  let current: unit => t;
-
-  let isVisual: t => bool;
-  let isSelect: t => bool;
-};
-
 module Setting: {
   [@deriving show]
   type value =
@@ -342,6 +370,27 @@ module Setting: {
   };
 };
 
+module Scroll: {
+  [@deriving show]
+  type direction =
+    | CursorCenterVertically // zz
+    | CursorCenterHorizontally
+    | CursorTop // zt
+    | CursorBottom // zb
+    | CursorLeft
+    | CursorRight
+    | LineUp
+    | LineDown
+    | HalfPageDown
+    | HalfPageUp
+    | PageDown
+    | PageUp
+    | HalfPageLeft
+    | HalfPageRight
+    | ColumnLeft
+    | ColumnRight;
+};
+
 module Effect: {
   type t =
     | Goto(Goto.effect)
@@ -354,6 +403,10 @@ module Effect: {
     | MacroRecordingStopped({
         register: char,
         value: option(string),
+      })
+    | Scroll({
+        count: int,
+        direction: Scroll.direction,
       });
 };
 
@@ -374,7 +427,7 @@ The value [s] must be a string of UTF-8 characters.
 
 The keystroke is processed synchronously.
 */
-let input: (~context: Context.t=?, string) => Context.t;
+let input: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
 /**
 [key(s)] sends a single keystroke.
@@ -385,7 +438,7 @@ The value [s] must be a valid Vim key, such as:
 */
 
 // TODO: Strongly type these keys...
-let key: (~context: Context.t=?, string) => Context.t;
+let key: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
 let eval: string => result(string, string);
 
@@ -398,7 +451,7 @@ You may use any valid Ex command, although you must omit the leading semicolon.
 
 The command [cmd] is processed synchronously.
 */
-let command: (~context: Context.t=?, string) => Context.t;
+let command: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
 /**
 [onDirectoryChanged(f)] registers a directory changed listener [f].

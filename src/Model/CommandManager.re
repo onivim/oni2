@@ -35,6 +35,9 @@ let current = state => {
     )
     |> Command.Lookup.fromList
     |> Command.Lookup.map(msg => Actions.FileExplorer(msg)),
+    Feature_Logging.Contributions.commands
+    |> Command.Lookup.fromList
+    |> Command.Lookup.map(msg => Actions.Logging(msg)),
     Feature_Pane.Contributions.commands(
       ~isFocused={
         focus == Focus.Pane;

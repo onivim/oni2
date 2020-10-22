@@ -1,5 +1,4 @@
 open EditorCoreTypes;
-open Oni_Core;
 
 [@deriving show({with_path: false})]
 type t =
@@ -25,10 +24,7 @@ type t =
     })
   | MouseHovered({bytePosition: BytePosition.t})
   | MouseMoved({bytePosition: BytePosition.t})
-  | SelectionChanged([@opaque] VisualRange.t)
-  | SelectionCleared
-  | CursorsChanged([@opaque] list(BytePosition.t))
-  | ScrollToLine(int)
-  | ScrollToColumn(int)
-  | MinimapEnabledConfigChanged(bool)
-  | LineHeightConfigChanged(LineHeight.t);
+  | ModeChanged({
+      mode: [@opaque] Vim.Mode.t,
+      effects: [@opaque] list(Vim.Effect.t),
+    });

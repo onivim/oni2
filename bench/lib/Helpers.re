@@ -25,6 +25,7 @@ let simpleState = {
 
   let state =
     State.initial(
+      ~cli=Oni_CLI.default,
       ~initialBuffer,
       ~initialBufferRenderers=BufferRenderers.initial,
       ~getUserSettings=() => Ok(Config.Settings.empty),

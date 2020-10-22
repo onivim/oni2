@@ -127,8 +127,23 @@ let start =
 
   let themeUpdater = ThemeStoreConnector.start();
 
+  let initialState = getState();
+
+  let attachStdio =
+    Oni_CLI.(
+      {
+        initialState.cli.attachToForeground
+        && Option.is_some(initialState.cli.logLevel);
+      }
+    );
+
   let (extHostClientResult, extHostStream) =
-    ExtensionClient.create(~config=getState().config, ~extensions, ~setup);
+    ExtensionClient.create(
+      ~attachStdio,
+      ~config=getState().config,
+      ~extensions,
+      ~setup,
+    );
 
   // TODO: How to handle this correctly?
   let extHostClient = extHostClientResult |> Result.get_ok;
@@ -184,7 +199,7 @@ let start =
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
 
-    let isInsertMode = Feature_Vim.mode(state.vim) == Vim.Mode.Insert;
+    let isInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state.vim));
 
     let visibleRanges =
       visibleBuffersAndRanges
@@ -323,12 +338,6 @@ let start =
          })
       |> Option.value(~default=Isolinear.Sub.none);
 
-    let editorGlobalSub =
-      Feature_Editor.Sub.global(~config)
-      |> Isolinear.Sub.map(msg =>
-           Model.Actions.Editor({scope: Model.EditorScope.All, msg})
-         );
-
     let extensionsSub =
       Feature_Extensions.sub(~setup, state.extensions)
       |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
@@ -363,7 +372,6 @@ let start =
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
       fileExplorerSub,
-      editorGlobalSub,
       extensionsSub,
       registersSub,
       scmSub,

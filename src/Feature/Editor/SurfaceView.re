@@ -25,9 +25,12 @@ module Constants = {
   let hoverTime = 1.0;
 };
 
-let drawCurrentLineHighlight =
-    (~context, ~colors: Colors.t, line: EditorCoreTypes.LineNumber.t) =>
-  Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
+let drawCurrentLineHighlight = (~context, ~colors: Colors.t, viewLine: int) =>
+  Draw.lineHighlight(
+    ~context,
+    ~color=colors.lineHighlightBackground,
+    viewLine,
+  );
 
 let renderRulers = (~context: Draw.context, ~colors: Colors.t, rulers) => {
   let characterWidth = Editor.characterWidthInPixels(context.editor);
@@ -43,8 +46,7 @@ let%component make =
                 ~editor,
                 ~colors,
                 ~dispatch,
-                ~topVisibleLine,
-                ~onCursorChange,
+                ~changeMode,
                 ~cursorPosition: CharacterPosition.t,
                 ~editorFont: Service_Font.font,
                 ~diagnosticsMap,
@@ -54,7 +56,6 @@ let%component make =
                 ~languageSupport,
                 ~languageConfiguration,
                 ~bufferSyntaxHighlights,
-                ~bottomVisibleLine,
                 ~maybeYankHighlights,
                 ~mode,
                 ~isActiveSplit,
@@ -93,8 +94,7 @@ let%component make =
          Editor.Slow.pixelPositionToBytePosition(
            // #2463: When we're in insert mode, clicking past the end of the line
            // should move the cursor past the last byte.
-           ~allowPast=mode == Vim.Mode.Insert,
-           ~buffer,
+           ~allowPast=Vim.Mode.isInsert(mode),
            ~pixelX=relX,
            ~pixelY=relY,
            editor,
@@ -146,11 +146,16 @@ let%component make =
 
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
     |> Option.iter(bytePosition => {
-         Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
          Log.tracef(m =>
            m("  setPosition (%s)", BytePosition.show(bytePosition))
          );
-         onCursorChange(bytePosition);
+         let newMode =
+           if (Vim.Mode.isInsert(Editor.mode(editor))) {
+             Vim.Mode.Insert({cursors: [bytePosition]});
+           } else {
+             Vim.Mode.Normal({cursor: bytePosition});
+           };
+         changeMode(newMode);
        });
   };
 
@@ -190,7 +195,14 @@ let%component make =
             ~editorFont,
           );
 
-        drawCurrentLineHighlight(~context, ~colors, cursorPosition.line);
+        let maybeCursorBytePosition =
+          Editor.characterToByte(cursorPosition, editor);
+        maybeCursorBytePosition
+        |> Option.iter(bytePosition => {
+             let viewLine =
+               Editor.bufferBytePositionToViewLine(bytePosition, editor);
+             drawCurrentLineHighlight(~context, ~colors, viewLine);
+           });
 
         renderRulers(~context, ~colors, Config.rulers.get(config));
 
@@ -198,8 +210,8 @@ let%component make =
           IndentLineRenderer.render(
             ~context,
             ~buffer,
-            ~startLine=topVisibleLine - 1,
-            ~endLine=bottomVisibleLine + 1,
+            ~startLine=Editor.getTopVisibleBufferLine(editor),
+            ~endLine=Editor.getBottomVisibleBufferLine(editor),
             ~cursorPosition,
             ~colors,
             ~showActive=Config.highlightActiveIndentGuide.get(config),
@@ -222,7 +234,6 @@ let%component make =
           ~languageConfiguration,
           ~bufferSyntaxHighlights,
           ~shouldRenderWhitespace=Config.renderWhitespace.get(config),
-          ~bufferWidthInPixels=bufferPixelWidth,
         );
 
         if (Config.scrollShadow.get(config)) {

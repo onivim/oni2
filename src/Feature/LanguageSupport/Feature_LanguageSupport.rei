@@ -52,6 +52,7 @@ type outmsg =
 
 let update:
   (
+    ~config: Oni_Core.Config.resolver,
     ~configuration: Oni_Core.Configuration.t,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~maybeSelection: option(CharacterRange.t),
@@ -66,6 +67,7 @@ let update:
 
 let bufferUpdated:
   (
+    ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~buffer: Oni_Core.Buffer.t,
     ~config: Oni_Core.Config.resolver,
     ~activeCursor: CharacterPosition.t,

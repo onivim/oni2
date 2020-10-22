@@ -6,7 +6,7 @@ module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
 module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
-let create = (~config, ~extensions, ~setup: Setup.t) => {
+let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   let extensionInfo =
@@ -297,7 +297,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   };
 
   let redirect =
-    if (Timber.App.isEnabled()) {
+    if (attachStdio) {
       [
         Luv.Process.inherit_fd(
           ~fd=Luv.Process.stdin,

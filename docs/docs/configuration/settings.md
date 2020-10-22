@@ -70,6 +70,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
     - _"selection"_ - Render whitespace characters in visual mode selected text
     - _"none"_ - Don't render whitespace at all
 
+- `editor.wordBasedSuggestions` __(_bool_ default: `true`)__ When `true`, keywords are provided as completion suggestions.
+
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
 - `explorer.autoReveal` __(_string|bool_ default: `true`)__  - When `true`, the file explorer will jump to highlight the file current focused. When `false` the file explorer will remain static. If a string is entered it must be `"focusNoScroll"` which will still highlight the currently focused file in the file explorer but the file explorer will not scroll to it. Any other string supplied will be treated as if `false` was entered and the file explorer will remain static and not highlight the currently focused file. 

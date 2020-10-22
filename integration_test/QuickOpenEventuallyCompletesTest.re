@@ -3,11 +3,11 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Mode.Normal
+    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
   );
 
   /* Switch to root directory */
-  let _: Vim.Context.t =
+  let (_: Vim.Context.t, _: list(Vim.Effect.t)) =
     if (Revery.Environment.os == Revery.Environment.Mac) {
       // CI machines timeout with '/' - so we'll use home (which also reproduces the crash)
       Vim.command(

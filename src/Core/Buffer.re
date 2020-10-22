@@ -157,6 +157,8 @@ let ofLines = (~id=0, ~font, rawLines: array(string)) => {
   };
 };
 
+let measure = (uchar, {measure, _}) => measure(uchar);
+
 let empty = (~font) => ofLines(~font, [||]);
 
 let ofMetadata = (~font, ~id, ~version, ~filePath, ~modified) => {
