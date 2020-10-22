@@ -193,7 +193,12 @@ let rangeByte =
     (~context, ~padding=0., ~color=Revery.Colors.black, r: ByteRange.t) => {
   let doublePadding = padding *. 2.;
 
-  let ({y: startPixelY, x: startPixelX}: PixelPosition.t, _) =
+  let startViewLine =
+    Editor.bufferBytePositionToViewLine(r.start, context.editor);
+  let stopViewLine =
+    Editor.bufferBytePositionToViewLine(r.stop, context.editor);
+
+  let ({x: startPixelX, _}: PixelPosition.t, _) =
     Editor.bufferBytePositionToPixel(~position=r.start, context.editor);
 
   let ({x: stopPixelX, _}: PixelPosition.t, _) =
@@ -202,14 +207,34 @@ let rangeByte =
   let lineHeight = Editor.lineHeightInPixels(context.editor);
   let characterWidth = Editor.characterWidthInPixels(context.editor);
 
-  drawRect(
-    ~context,
-    ~x=startPixelX,
-    ~y=startPixelY,
-    ~height=lineHeight +. doublePadding,
-    ~width=max(stopPixelX -. startPixelX, characterWidth),
-    ~color,
-  );
+  for (idx in startViewLine to stopViewLine) {
+    let y =
+      float(idx)
+      *. Editor.lineHeightInPixels(context.editor)
+      -. Editor.scrollY(context.editor);
+    let startX =
+      if (idx == startViewLine) {
+        startPixelX;
+      } else {
+        0.;
+      };
+
+    let stopX =
+      if (idx == stopViewLine) {
+        stopPixelX;
+      } else {
+        float(Editor.getTotalWidthInPixels(context.editor));
+      };
+
+    drawRect(
+      ~context,
+      ~x=startX,
+      ~y,
+      ~height=lineHeight +. doublePadding,
+      ~width=max(stopX -. startX, characterWidth),
+      ~color,
+    );
+  };
 };
 
 let tabPaint = Skia.Paint.make();
@@ -219,23 +244,19 @@ Skia.Paint.setAntiAlias(tabPaint, true);
 Skia.Paint.setTextSize(tabPaint, 10.);
 Skia.Paint.setTextEncoding(tabPaint, Utf8);
 
-let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) => {
+let token =
+    (~context, ~offsetY, ~colors: Colors.t, token: BufferViewTokenizer.t) => {
   let font =
     Service_Font.resolveWithFallback(
       ~italic=token.italic,
       token.bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
       context.fontFamily,
     );
+
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
-
-  let ({y: pixelY, x: pixelX}: PixelPosition.t, _) =
-    Editor.bufferCharacterPositionToPixel(
-      ~position=CharacterPosition.{line, character: token.startIndex},
-      context.editor,
-    );
-
+  let pixelY = offsetY;
+  let pixelX = token.startPixel;
   let paddingY = context.editor |> Editor.linePaddingInPixels;
-
   let y = paddingY +. pixelY -. fontMetrics.ascent;
   let x = pixelX;
 
@@ -300,12 +321,11 @@ let ruler = (~context, ~color, x) =>
     ~color,
   );
 
-let lineHighlight = (~context, ~color, lineIdx: EditorCoreTypes.LineNumber.t) => {
-  let ({y: pixelY, _}: PixelPosition.t, _) =
-    Editor.bufferBytePositionToPixel(
-      ~position=BytePosition.{line: lineIdx, byte: ByteIndex.zero},
-      context.editor,
-    );
+let lineHighlight = (~context, ~color, viewLine) => {
+  let pixelY =
+    float(viewLine)
+    *. Editor.lineHeightInPixels(context.editor)
+    -. Editor.scrollY(context.editor);
 
   drawRect(
     ~context,

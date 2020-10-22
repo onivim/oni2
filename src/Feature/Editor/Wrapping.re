@@ -12,7 +12,7 @@ type t = {
   wrap: WordWrap.t,
   buffer: EditorBuffer.t,
   // Per-buffer-line array of wrap points
-  wraps: array(list(WordWrap.lineWrap)),
+  wraps: array(array(WordWrap.lineWrap)),
   wrapsMutationCount: int,
   // Map of buffer line index -> view line index
   bufferLineToViewLineCache: IntMap.t(int),
@@ -24,7 +24,7 @@ type t = {
 module Internal = {
   let bufferToWraps = (~wrap, buffer) => {
     let bufferLineCount = EditorBuffer.numberOfLines(buffer);
-    let wraps = Array.make(bufferLineCount, []);
+    let wraps = Array.make(bufferLineCount, [||]);
 
     for (idx in 0 to bufferLineCount - 1) {
       let line = EditorBuffer.line(idx, buffer);
@@ -33,7 +33,7 @@ module Internal = {
     wraps;
   };
 
-  let recalculateCaches = (~wraps: array(list(WordWrap.lineWrap))) => {
+  let recalculateCaches = (~wraps: array(array(WordWrap.lineWrap))) => {
     let len = Array.length(wraps);
 
     let rec addViewLines = (map, bufferLine, currentViewLine, stopViewLine) =>
@@ -49,7 +49,7 @@ module Internal = {
         acc;
       } else {
         let (map, viewLineMap, count) = acc;
-        let wrapCount = wraps[idx] |> List.length;
+        let wrapCount = wraps[idx] |> Array.length;
         let map' = IntMap.add(idx, count, map);
         let count' = count + wrapCount;
 
@@ -106,13 +106,13 @@ let update =
     let isRecalculationNeeded = ref(false);
     for (idx in startLine to endLine - 1) {
       // Check previous wrap count
-      let wrapCount = wraps[idx] |> List.length;
+      let wrapCount = wraps[idx] |> Array.length;
 
       let line = EditorBuffer.line(idx, newBuffer);
 
       // HACK: Mutation
       let newWraps = wrap(line);
-      let newWrapCount = newWraps |> List.length;
+      let newWrapCount = newWraps |> Array.length;
       wraps[idx] = newWraps;
 
       if (newWrapCount != wrapCount) {
@@ -159,43 +159,73 @@ let bufferBytePositionToViewLine = (~bytePosition: BytePosition.t, wrap) => {
   let startViewLine = Internal.bufferLineToViewLine(line, wrap);
   let byteIndex = bytePosition.byte;
 
-  let viewLines = wrap.wraps[line];
+  if (line >= Array.length(wrap.wraps)) {
+    startViewLine;
+  } else {
+    let viewLines = wrap.wraps[line];
 
-  let rec loop = (idx, viewLines: list(WordWrap.lineWrap)) => {
-    switch (viewLines) {
-    | [] => idx
-    | [_] => idx
-    | [hd, next, ...tail] =>
-      if (ByteIndex.(byteIndex >= hd.byte && byteIndex < next.byte)) {
+    let len = Array.length(viewLines);
+    let rec loop = idx =>
+      if (idx == len - 1) {
         idx;
+      } else if (idx == len - 2) {
+        let lastElement = viewLines[idx + 1];
+        if (ByteIndex.(byteIndex < lastElement.byte)) {
+          idx;
+        } else {
+          idx + 1;
+        };
       } else {
-        loop(idx + 1, [next, ...tail]);
-      }
-    };
-  };
+        let current = viewLines[idx].byte;
+        let next = viewLines[idx + 1].byte;
+        if (byteIndex >= current && byteIndex < next) {
+          idx;
+        } else {
+          loop(idx + 1);
+        };
+      };
 
-  let offset = loop(0, viewLines);
-  startViewLine + offset;
+    let offset = loop(0);
+    startViewLine + offset;
+  };
 };
 
 let viewLineToBufferPosition = (~line: int, wrapping) => {
+  let line = max(0, line);
   let bufferLineIdx = Internal.viewLineToBufferLine(line, wrapping);
   let startViewLine = Internal.bufferLineToViewLine(bufferLineIdx, wrapping);
 
-  let wraps = wrapping.wraps[bufferLineIdx];
+  let len = Array.length(wrapping.wraps);
+  if (len == 0) {
+    {
+      line: LineNumber.zero,
+      byteOffset: ByteIndex.zero,
+      characterOffset: CharacterIndex.zero,
+    };
+  } else if (bufferLineIdx >= len) {
+    {
+      line:
+        EditorBuffer.numberOfLines(wrapping.buffer) |> LineNumber.ofZeroBased,
+      byteOffset: ByteIndex.zero,
+      characterOffset: CharacterIndex.zero,
+    };
+  } else {
+    let wraps = wrapping.wraps[bufferLineIdx];
 
-  let lineWrap =
-    List.nth_opt(wraps, line - startViewLine)
-    // This shouldn't ever happen, if our caches are correct.
-    |> Option.value(
-         ~default=
-           WordWrap.{byte: ByteIndex.zero, character: CharacterIndex.zero},
-       );
+    let idx = line - startViewLine;
+    let len = Array.length(wraps);
+    let lineWrap =
+      if (idx < len) {
+        wraps[idx];
+      } else {
+        WordWrap.{byte: ByteIndex.zero, character: CharacterIndex.zero};
+      };
 
-  {
-    line: EditorCoreTypes.LineNumber.ofZeroBased(bufferLineIdx),
-    byteOffset: lineWrap.byte,
-    characterOffset: lineWrap.character,
+    {
+      line: EditorCoreTypes.LineNumber.ofZeroBased(bufferLineIdx),
+      byteOffset: lineWrap.byte,
+      characterOffset: lineWrap.character,
+    };
   };
 };
 

@@ -22,6 +22,7 @@ type msg =
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | SettingsChanged
   | ModeUpdated(Vim.Mode.t);
 
 // UPDATE

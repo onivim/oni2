@@ -88,16 +88,16 @@ let current = (state: State.t) => {
   let autoClosingPairs =
     Internal.autoClosingPairs(~syntaxScope, ~maybeLanguageConfig, state);
 
-  let Feature_Editor.EditorLayout.{
-        bufferHeightInCharacters: height,
-        bufferWidthInCharacters: width,
-        _,
-      } =
-    // TODO: Fix this
-    Editor.getLayout(~showLineNumbers=true, ~maxMinimapCharacters=0, editor);
+  let Feature_Editor.EditorLayout.{bufferWidthInCharacters: width, _} =
+    Editor.getLayout(editor);
 
   let leftColumn = Editor.getLeftVisibleColumn(editor);
-  let topLine = Editor.getTopVisibleLine(editor);
+  let topLine =
+    Editor.getTopVisibleBufferLine(editor)
+    |> EditorCoreTypes.LineNumber.toOneBased;
+  let bottomLine =
+    Editor.getBottomVisibleBufferLine(editor)
+    |> EditorCoreTypes.LineNumber.toOneBased;
 
   // Set configured line comment
   let lineComment = Internal.lineComment(~maybeLanguageConfig);
@@ -114,37 +114,38 @@ let current = (state: State.t) => {
 
   let viewLineMotion = (~motion, ~count as _, ~startLine as _) => {
     switch (motion) {
-    | Vim.ViewLineMotion.MotionH =>
-      Editor.getTopVisibleLine(editor)
-      |> EditorCoreTypes.LineNumber.ofZeroBased
+    | Vim.ViewLineMotion.MotionH => Editor.getTopVisibleBufferLine(editor)
     | Vim.ViewLineMotion.MotionM =>
-      Editor.getTopVisibleLine(editor)
-      + (
-        Editor.getBottomVisibleLine(editor)
-        - Editor.getTopVisibleLine(editor)
+      EditorCoreTypes.(
+        {
+          let topLine =
+            editor |> Editor.getTopVisibleBufferLine |> LineNumber.toZeroBased;
+          let bottomLine =
+            editor
+            |> Editor.getBottomVisibleBufferLine
+            |> LineNumber.toZeroBased;
+          LineNumber.ofZeroBased(topLine + (bottomLine - topLine) / 2);
+        }
       )
-      / 2
-      |> EditorCoreTypes.LineNumber.ofZeroBased
     | Vim.ViewLineMotion.MotionL =>
-      Editor.getBottomVisibleLine(editor)
-      |> EditorCoreTypes.LineNumber.ofZeroBased
+      EditorCoreTypes.LineNumber.(
+        Editor.getBottomVisibleBufferLine(editor) - 1
+      )
     };
   };
 
   let screenCursorMotion =
-      (~direction, ~count, ~line as lnum, ~currentByte as _, ~wantByte) => {
-    let maxLines = Editor.getBufferLineCount(editor);
-    let lnum = EditorCoreTypes.LineNumber.toZeroBased(lnum);
-    let destLineIdx =
+      (~direction, ~count, ~line as lnum, ~currentByte, ~wantByte as _) => {
+    let count =
       switch (direction) {
-      | `Up => lnum - count
-      | `Down => lnum + count
+      | `Up => count * (-1)
+      | `Down => count
       };
-
-    let destLine =
-      IntEx.clamp(~hi=maxLines - 1, ~lo=0, destLineIdx)
-      |> EditorCoreTypes.LineNumber.ofZeroBased;
-    BytePosition.{line: destLine, byte: wantByte};
+    Editor.moveScreenLines(
+      ~position=EditorCoreTypes.BytePosition.{line: lnum, byte: currentByte},
+      ~count,
+      editor,
+    );
   };
 
   Vim.Context.{
@@ -156,7 +157,7 @@ let current = (state: State.t) => {
     leftColumn,
     topLine,
     width,
-    height,
+    height: bottomLine - topLine,
     mode,
     autoClosingPairs,
     lineComment,

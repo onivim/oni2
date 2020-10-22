@@ -5,11 +5,11 @@ type lineWrap = {
   character: CharacterIndex.t,
 };
 
-type t = BufferLine.t => list(lineWrap);
+type t = BufferLine.t => array(lineWrap);
 
 // A wrapping implementation that never wraps
 let none: t;
 
 // A wrapping implementation that clamps the characters
 // naively to a fixed pixel width
-let fixed: (~pixels: float) => t;
+let fixed: (~simpleMeasurement: bool=?, ~pixels: float) => t;
