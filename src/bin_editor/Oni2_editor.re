@@ -25,20 +25,6 @@ let args = [
   "printf \"\n_SHELL_ENV_DELIMITER_\"; env; printf \"\n_SHELL_ENV_DELIMITER_\n\"; exit",
 ];
 
-let test = () => {
-  prerr_endline("testing...");
-
-  let shellEnv = Core.ShellUtility.getDefaultShellEnvironment();
-
-  prerr_endline("env map:");
-  shellEnv
-  |> Core.StringMap.bindings
-  |> List.iter(((key, v)) => prerr_endline("Key: " ++ key ++ ": " ++ v));
-
-  failwith("done");
-};
-test();
-
 let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
   let setup = Core.Setup.init();
   let result =
