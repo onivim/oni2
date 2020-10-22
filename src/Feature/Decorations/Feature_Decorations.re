@@ -38,9 +38,8 @@ type model = {
 let initial = {nextRequestId: 0, providers: [], decorations: StringMap.empty};
 
 let getDecorations = (~path: string, model) => {
-  let path = path
-  |> Uri.fromPath
-  |> Uri.toFileSystemPath;
+  // Round-trip the PATH through a URI, so that it is normalized for Windows (lower-case drive letter, backslahes)
+  let path = path |> Uri.fromPath |> Uri.toFileSystemPath;
   model.decorations |> StringMap.find_opt(path) |> Option.value(~default=[]);
 };
 
