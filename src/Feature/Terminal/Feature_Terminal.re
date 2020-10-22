@@ -110,7 +110,11 @@ module Configuration = {
       setting(
         "terminal.integrated.shellArgs.osx",
         list(string),
-        ~default=[],
+        // ~/.[bash|zsh}_profile etc is not sourced when logging in on macOS.
+        // Instead, terminals on macOS should run as a login shell (which in turn
+        // sources these files).
+        // See more at http://unix.stackexchange.com/a/119675/115410.
+        ~default=["-l"],
       );
   };
 };

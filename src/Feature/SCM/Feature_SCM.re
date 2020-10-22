@@ -57,12 +57,12 @@ module Provider = {
       path
       |> Oni_Core.Uri.fromPath
       |> Oni_Core.Uri.toFileSystemPath
-      |> Fp.absolute;
+      |> Fp.absoluteCurrentPlatform;
 
     let maybeScmPath =
       rootUri
       |> Option.map(Oni_Core.Uri.toFileSystemPath)
-      |> OptionEx.flatMap(Fp.absolute);
+      |> OptionEx.flatMap(Fp.absoluteCurrentPlatform);
 
     OptionEx.map2(
       (path, scmPath) => {Fp.isDescendent(~ofPath=scmPath, path)},
