@@ -338,12 +338,6 @@ let start =
          })
       |> Option.value(~default=Isolinear.Sub.none);
 
-    let editorGlobalSub =
-      Feature_Editor.Sub.global(~config)
-      |> Isolinear.Sub.map(msg =>
-           Model.Actions.Editor({scope: Model.EditorScope.All, msg})
-         );
-
     let extensionsSub =
       Feature_Extensions.sub(~setup, state.extensions)
       |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
@@ -378,7 +372,6 @@ let start =
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
       fileExplorerActiveFileSub,
       fileExplorerSub,
-      editorGlobalSub,
       extensionsSub,
       registersSub,
       scmSub,

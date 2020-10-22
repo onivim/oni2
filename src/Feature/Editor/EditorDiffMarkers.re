@@ -108,6 +108,7 @@ let renderMarker =
 
 let render =
     (
+      ~editor,
       ~scrollY,
       ~rowHeight,
       ~x,
@@ -124,8 +125,11 @@ let render =
     ~height,
     ~count,
     ~render=
-      (i, y) =>
-        if (markers[i] != Unmodified) {
+      (i, y) => {
+        let bufferLine =
+          Editor.viewLineToBufferLine(i, editor)
+          |> EditorCoreTypes.LineNumber.toZeroBased;
+        if (markers[bufferLine] != Unmodified) {
           renderMarker(
             ~x,
             ~y,
@@ -133,8 +137,9 @@ let render =
             ~width,
             ~canvasContext,
             ~colors,
-            markers[i],
+            markers[bufferLine],
           );
-        },
+        };
+      },
     (),
   );

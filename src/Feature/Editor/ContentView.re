@@ -174,10 +174,17 @@ let renderDefinition =
 };
 
 let renderTokens =
-    (~selection, ~context, ~line, ~colors, ~tokens, ~shouldRenderWhitespace) => {
+    (
+      ~offsetY,
+      ~selection,
+      ~context,
+      ~colors,
+      ~tokens,
+      ~shouldRenderWhitespace,
+    ) => {
   tokens
   |> WhitespaceTokenFilter.filter(~selection, shouldRenderWhitespace)
-  |> List.iter(Draw.token(~context, ~line, ~colors));
+  |> List.iter(Draw.token(~offsetY, ~context, ~colors));
 };
 
 let renderText =
@@ -196,7 +203,7 @@ let renderText =
   Draw.renderImmediate(
     ~context,
     ~count,
-    (item, _offsetY) => {
+    (item, offsetY) => {
       let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
       let selectionRange =
         switch (Hashtbl.find_opt(selectionRanges, index)) {
@@ -224,10 +231,10 @@ let renderText =
       renderTokens(
         ~selection=selectionRange,
         ~context,
-        ~line=item |> EditorCoreTypes.LineNumber.ofZeroBased,
         ~colors,
         ~tokens,
         ~shouldRenderWhitespace,
+        ~offsetY,
       );
     },
   );

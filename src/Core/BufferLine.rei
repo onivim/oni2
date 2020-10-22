@@ -20,6 +20,8 @@ let lengthInBytes: t => int;
 
 let raw: t => string;
 
+let measure: (t, Uchar.t) => float;
+
 /*
  * [lengthSlow(bufferLine)] returns the UTF-8 length of the buffer line.
  *

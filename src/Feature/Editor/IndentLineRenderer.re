@@ -67,14 +67,17 @@ let render =
     (
       ~context: Draw.context,
       ~buffer: Buffer.t,
-      ~startLine: int,
-      ~endLine: int,
+      ~startLine,
+      ~endLine,
       ~cursorPosition: CharacterPosition.t,
       ~colors: Colors.t,
       ~showActive: bool,
       indentationSettings: IndentationSettings.t,
     ) => {
   /* First, render *all* indent guides */
+
+  let startLine = EditorCoreTypes.LineNumber.toZeroBased(startLine);
+  let endLine = EditorCoreTypes.LineNumber.toZeroBased(endLine) + 1;
   let bufferLineCount = Buffer.getNumberOfLines(buffer);
   let cursorLine =
     EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line);

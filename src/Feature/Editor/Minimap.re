@@ -49,6 +49,7 @@ let minimapPaint = Skia.Paint.make();
 
 let renderLine =
     (
+      ~scaleFactor,
       shouldHighlight,
       canvasContext,
       yOffset,
@@ -58,12 +59,11 @@ let renderLine =
     switch (token.tokenType) {
     | Text =>
       let startPosition = CharacterIndex.toInt(token.startIndex);
-      let endPosition = CharacterIndex.toInt(token.endIndex);
-      let tokenWidth = endPosition - startPosition;
 
-      let x = float(Constants.minimapCharacterWidth * startPosition);
+      let x = token.startPixel *. scaleFactor;
+      let endX = token.endPixel *. scaleFactor;
       let height = float(Constants.minimapCharacterHeight);
-      let width = float(tokenWidth * Constants.minimapCharacterWidth);
+      let width = endX -. x;
 
       let emphasis = shouldHighlight(startPosition);
       let color =
@@ -136,8 +136,9 @@ let%component make =
 
   let scrollY = Editor.minimapScrollY(editor);
 
-  let thumbTop =
-    rowHeight *. float(Editor.getTopVisibleLine(editor) - 1) -. scrollY;
+  let editorScrollY = Editor.scrollY(editor);
+  let topViewLine = editorScrollY /. Editor.lineHeightInPixels(editor);
+  let thumbTop = rowHeight *. topViewLine -. scrollY;
   let thumbSize = rowHeight *. float(getMinimapSize(editor));
 
   let%hook (maybeBbox, setBbox) = Hooks.state(None);
@@ -306,21 +307,19 @@ let%component make =
           Revery.Color.toSkia(colors.lineHighlightBackground),
         );
         /* Draw cursor line */
-        CanvasContext.drawRectLtwh(
-          ~left=Constants.leftMargin,
-          ~top=
-            rowHeight
-            *. float(
-                 EditorCoreTypes.LineNumber.toZeroBased(
-                   CharacterPosition.(cursorPosition.line),
-                 ),
-               )
-            -. scrollY,
-          ~height=float(Constants.minimapCharacterHeight),
-          ~width=float(width),
-          ~paint=minimapPaint,
-          canvasContext,
-        );
+        Editor.characterToByte(cursorPosition, editor)
+        |> Option.iter(bytePosition => {
+             let viewLine =
+               Editor.bufferBytePositionToViewLine(bytePosition, editor);
+             CanvasContext.drawRectLtwh(
+               ~left=Constants.leftMargin,
+               ~top=rowHeight *. float(viewLine) -. scrollY,
+               ~height=float(Constants.minimapCharacterHeight),
+               ~width=float(width),
+               ~paint=minimapPaint,
+               canvasContext,
+             );
+           });
 
         let renderRange = (~color, ~offset, range: ByteRange.t) =>
           {let maybeCharacterStart =
@@ -377,6 +376,7 @@ let%component make =
              canvasContext,
            )};
 
+        let scaleFactor = Editor.getMinimapWidthScaleFactor(editor);
         ImmediateList.render(
           ~scrollY,
           ~rowHeight,
@@ -452,7 +452,13 @@ let%component make =
               | None => ()
               };
 
-              renderLine(shouldHighlight, canvasContext, offset, tokens);
+              renderLine(
+                ~scaleFactor,
+                shouldHighlight,
+                canvasContext,
+                offset,
+                tokens,
+              );
             },
           (),
         );
@@ -482,6 +488,7 @@ let%component make =
 
         Option.iter(
           EditorDiffMarkers.render(
+            ~editor,
             ~scrollY,
             ~rowHeight,
             ~x=Constants.leftMargin,
