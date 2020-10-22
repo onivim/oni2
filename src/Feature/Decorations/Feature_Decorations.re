@@ -38,6 +38,9 @@ type model = {
 let initial = {nextRequestId: 0, providers: [], decorations: StringMap.empty};
 
 let getDecorations = (~path: string, model) => {
+  let path = path
+  |> Uri.fromPath
+  |> Uri.toFileSystemPath;
   model.decorations |> StringMap.find_opt(path) |> Option.value(~default=[]);
 };
 
@@ -58,9 +61,9 @@ module Effects = {
     let requests =
       requestMap
       |> IntMap.bindings
-      |> List.map(((id, uri)) =>
+      |> List.map(((id, uri)) => {
            ({id, uri}: Exthost.Request.Decorations.request)
-         );
+         });
 
     let toDecoration: Exthost.Request.Decorations.decoration => Decoration.t =
       decoration => {
