@@ -14,7 +14,7 @@ type t = {
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
-  overriddenExtensionsDir: option(string),
+  overriddenExtensionsDir: option(Fp.t(Fp.absolute)),
   //  shouldClose: bool,
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,
@@ -259,7 +259,8 @@ let parse = (~getenv: string => option(string), args) => {
     filesToOpen,
     forceScaleFactor: scaleFactor^,
     gpuAcceleration: gpuAcceleration^,
-    overriddenExtensionsDir: extensionsDir^,
+    overriddenExtensionsDir:
+      extensionsDir^ |> Utility.OptionEx.flatMap(Fp.absoluteCurrentPlatform),
     //    shouldClose: shouldClose^,
     shouldLoadExtensions: shouldLoadExtensions^,
     shouldLoadConfiguration: shouldLoadConfiguration^,

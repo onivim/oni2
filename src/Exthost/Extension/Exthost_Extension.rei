@@ -193,7 +193,7 @@ module Scanner: {
   };
 
   let load: (~category: category, string) => option(ScanResult.t);
-  let scan: (~category: category, string) => list(ScanResult.t);
+  let scan: (~category: category, Fp.t(Fp.absolute)) => list(ScanResult.t);
 };
 
 module InitData: {
