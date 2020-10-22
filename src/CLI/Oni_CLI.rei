@@ -3,7 +3,7 @@ type t = {
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
-  overriddenExtensionsDir: option(string),
+  overriddenExtensionsDir: option(Fp.t(Fp.absolute)),
   //  shouldClose: bool,
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,
