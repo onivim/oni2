@@ -1,5 +1,5 @@
 {
-  "checksum": "dbcad7c9d56b470c3e240dd0a8597fc8",
+  "checksum": "fe61eac859863e34abb069929d9a02f0",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -426,14 +426,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.64@d41d8cd9": {
-      "id": "libvim@8.10869.64@d41d8cd9",
+    "libvim@8.10869.65@d41d8cd9": {
+      "id": "libvim@8.10869.65@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.64",
+      "version": "8.10869.65",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.64.tgz#sha1:c6edfd47c5a8924c95c7ba8c787f5fec89b87f42"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.65.tgz#sha1:ed5de3d39a857672badbf222018bbd9e9bffd086"
         ]
       },
       "overrides": [],
@@ -740,6 +740,22 @@
       "dependencies": [ "esy-cmake@0.3.5@d41d8cd9" ],
       "devDependencies": []
     },
+    "esy-m4@github:esy-packages/esy-m4#f413a10d8992b7ebe4c33b14f3dbf828ef11caae@d41d8cd9": {
+      "id":
+        "esy-m4@github:esy-packages/esy-m4#f413a10d8992b7ebe4c33b14f3dbf828ef11caae@d41d8cd9",
+      "name": "esy-m4",
+      "version":
+        "github:esy-packages/esy-m4#f413a10d8992b7ebe4c33b14f3dbf828ef11caae",
+      "source": {
+        "type": "install",
+        "source": [
+          "github:esy-packages/esy-m4#f413a10d8992b7ebe4c33b14f3dbf828ef11caae"
+        ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
     "esy-libtools@github:revery-ui/esy-libtools#c9eb685@d41d8cd9": {
       "id": "esy-libtools@github:revery-ui/esy-libtools#c9eb685@d41d8cd9",
       "name": "esy-libtools",
@@ -984,7 +1000,7 @@
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
-        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.64@d41d8cd9",
+        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.65@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#53fc4eb@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#60e0260@d41d8cd9",
@@ -2555,7 +2571,7 @@
         }
       ],
       "dependencies": [
-        "ocaml@4.10.0@d41d8cd9", "@opam/conf-m4@opam:1@3b2b148a",
+        "ocaml@4.10.0@d41d8cd9", "@opam/conf-m4@opam:1@aaf8b40a",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.10.0@d41d8cd9" ]
@@ -3648,8 +3664,8 @@
       ],
       "devDependencies": []
     },
-    "@opam/conf-m4@opam:1@3b2b148a": {
-      "id": "@opam/conf-m4@opam:1@3b2b148a",
+    "@opam/conf-m4@opam:1@aaf8b40a": {
+      "id": "@opam/conf-m4@opam:1@aaf8b40a",
       "name": "@opam/conf-m4",
       "version": "opam:1",
       "source": {
@@ -3661,8 +3677,16 @@
           "path": "integrationtest.esy.lock/opam/conf-m4.1"
         }
       },
-      "overrides": [],
-      "dependencies": [ "@esy-ocaml/substs@0.0.1@d41d8cd9" ],
+      "overrides": [
+        {
+          "opamoverride":
+            "integrationtest.esy.lock/overrides/opam__s__conf_m4_opam__c__1_opam_override"
+        }
+      ],
+      "dependencies": [
+        "esy-m4@github:esy-packages/esy-m4#f413a10d8992b7ebe4c33b14f3dbf828ef11caae@d41d8cd9",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
       "devDependencies": []
     },
     "@opam/conf-autoconf@opam:0.1@27b3f7cf": {

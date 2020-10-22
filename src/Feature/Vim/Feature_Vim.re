@@ -34,6 +34,7 @@ type msg =
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
+  | SettingsChanged
   | ModeUpdated(Vim.Mode.t);
 
 let update = (msg, model: model) => {
@@ -49,7 +50,7 @@ let update = (msg, model: model) => {
   | PasteCompleted({mode}) => (model, ModeUpdated(mode))
   | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
-      Nothing,
+      SettingsChanged,
     )
   | MacroRecordingStarted({register}) => (
       {...model, recordingMacro: Some(register)},
