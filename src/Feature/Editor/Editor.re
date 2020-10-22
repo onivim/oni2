@@ -94,7 +94,6 @@ type t = {
   mode: [@opaque] Vim.Mode.t,
   pixelWidth: int,
   pixelHeight: int,
-  scrolloff: int,
   yankHighlight: option(yankHighlight),
   wrapMode: WrapMode.t,
   wrapState: WrapState.t,
@@ -378,7 +377,6 @@ let create = (~config, ~buffer, ()) => {
     scrollY: 0.,
     minimapMaxColumnWidth: 99,
     minimapScrollY: 0.,
-    scrolloff: 1,
     /*
      * We need an initial editor size, otherwise we'll immediately scroll the view
      * if a buffer loads prior to our first render.
