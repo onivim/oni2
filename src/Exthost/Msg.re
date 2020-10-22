@@ -1399,12 +1399,11 @@ module SCM = {
         features: SCM.ProviderFeatures.t,
       })
     // statusBarCommands: option(_),
-    | RegisterSCMResourceGroup({
-        provider: int,
-        handle: int,
-        id: string,
-        label: string,
-      })
+  | RegisterSCMResourceGroups({
+      provider: int,
+      groups: list(SCM.Group.t),
+      splices: list(SCM.Resource.Splices.t),
+    })
     | UnregisterSCMResourceGroup({
         provider: int,
         handle: int,
@@ -1476,15 +1475,17 @@ module SCM = {
         | _ => Error("Unexpected arguments for $updateSourceControl")
         }
 
-      | "$registerGroup" =>
+      | "$registerGroups" =>
         switch (args) {
         | `List([
             `Int(provider),
-            `Int(handle),
-            `String(id),
-            `String(label),
+             groupsJson,
+             splicesJson,
           ]) =>
-          Ok(RegisterSCMResourceGroup({provider, handle, id, label}))
+          open Json.Decode;
+          let%bind groups = groupsJson |> Internal.decode_value(list(SCM.Group.decode))
+          let%bind splices= splicesJson |> Internal.decode_value(list(SCM.Resource.Decode.splices));
+          Ok(RegisterSCMResourceGroups({provider, groups, splices}))
 
         | _ => Error("Unexpected arguments for $registerGroup")
         }

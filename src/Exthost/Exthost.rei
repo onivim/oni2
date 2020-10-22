@@ -501,7 +501,6 @@ module SCM: {
     };
 
     module Splices: {
-      [@deriving show({with_path: false})]
       type t = {
         handle: int,
         resourceSplices: [@opaque] list(Splice.t),
@@ -529,6 +528,18 @@ module SCM: {
 
     let decode: Json.decoder(t);
   };
+
+  module Group: {
+    [@deriving show({with_path: false})]
+    type t = {
+        handle: int,
+        id: string,
+        label: string,
+        features: GroupFeatures.t,
+    };
+
+    let decode: Json.decoder(t);
+  }
 };
 
 module SignatureHelp: {
@@ -1402,11 +1413,10 @@ module Msg: {
           features: SCM.ProviderFeatures.t,
         })
       // statusBarCommands: option(_),
-      | RegisterSCMResourceGroup({
+      | RegisterSCMResourceGroups({
           provider: int,
-          handle: int,
-          id: string,
-          label: string,
+          groups: list(SCM.Group.t),
+          splices: [@opaque] list(SCM.Resource.Splices.t),
         })
       | UnregisterSCMResourceGroup({
           provider: int,

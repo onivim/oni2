@@ -298,11 +298,10 @@ type msg =
       rootUri: option(Uri.t),
     })
   | LostProvider({handle: int})
-  | NewResourceGroup({
+  | NewResourceGroups({
       provider: int,
-      handle: int,
-      id: string,
-      label: string,
+      groups: list(Exthost.SCM.Group.t),
+      splices: [@opaque] list(Exthost.SCM.Resource.Splice.t),
     })
   | GroupHideWhenEmptyChanged({
       provider: int,
@@ -570,26 +569,49 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       Nothing,
     )
 
-  | NewResourceGroup({provider, handle, id, label}) => (
-      model
+//  | NewResourceGroup({provider, handle, id, label}) => (
+//      model
+//      |> Internal.updateProvider(~handle=provider, p =>
+//           {
+//             ...p,
+//             resourceGroups: [
+//               ResourceGroup.{
+//                 handle,
+//                 id,
+//                 label,
+//                 hideWhenEmpty: false,
+//                 resources: [],
+//                 viewModel: Component_VimList.create(~rowHeight=20),
+//               },
+//               ...p.resourceGroups,
+//             ],
+//           }
+//         ),
+//      Nothing,
+//    )
+
+  | NewResourceGroups({provider, groups, splices}) => 
+      let model' = groups
+      |> List.fold_left((acc, group: Exthost.SCM.Group.t) => {
+      acc
       |> Internal.updateProvider(~handle=provider, p =>
            {
              ...p,
              resourceGroups: [
                ResourceGroup.{
-                 handle,
-                 id,
-                 label,
-                 hideWhenEmpty: false,
+                 handle: group.handle,
+                 id: group.id,
+                 label: group.label,
+                 hideWhenEmpty: Exthost.SCM.GroupFeatures.(group.features.hideWhenEmpty),
                  resources: [],
                  viewModel: Component_VimList.create(~rowHeight=20),
                },
                ...p.resourceGroups,
              ],
            }
-         ),
-      Nothing,
-    )
+         )
+      }, model);
+    (model', Nothing);
 
   | LostResourceGroup({provider, handle}) => (
       model
@@ -785,8 +807,10 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
   | UnregisterSourceControl({handle}) =>
     dispatch(LostProvider({handle: handle}))
 
-  | RegisterSCMResourceGroup({provider, handle, id, label}) =>
-    dispatch(NewResourceGroup({provider, handle, id, label}))
+  | RegisterSCMResourceGroups({provider, groups, splices}) =>
+    // TODO: Bring back splices...
+    ignore(splices);
+    dispatch(NewResourceGroups({provider, groups, splices: []}))
 
   | UnregisterSCMResourceGroup({provider, handle}) =>
     dispatch(LostResourceGroup({provider, handle}))

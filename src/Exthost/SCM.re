@@ -109,6 +109,28 @@ module GroupFeatures = {
     );
 };
 
+module Group = {
+  [@deriving show({with_path: false})]
+    type t = {
+        handle: int,
+        id: string,
+        label: string,
+        features: GroupFeatures.t,
+    }
+
+    let decode = Json.Decode.(
+        Pipeline.(
+          decode((handle, id, label, features) =>
+            {handle, id, label, features}
+          )
+          |> custom(index(0, int))
+          |> custom(index(1, string))
+          |> custom(index(2, string))
+          |> custom(index(3, GroupFeatures.decode))
+        )
+    )
+};
+
 module Decode = {
   let command =
     Json.Decode.(
