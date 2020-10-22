@@ -28,55 +28,12 @@ let args = [
 let test = () => {
   prerr_endline("testing...");
 
-  let shell = Core.ShellUtility.getDefaultShell();
-  prerr_endline("Using shell: " ++ shell);
-  let (inp, out, err) =
-    Unix.open_process_args_full(
-      shell,
-      [shell, ...args] |> Array.of_list,
-      [||],
-    );
-  let lines = ref([]);
+  let shellEnv = Core.ShellUtility.getDefaultShellEnvironment();
 
-  try(
-    {
-      while (true) {
-        lines := [input_line(inp), ...lines^];
-      };
-      lines^;
-    }
-  ) {
-  | End_of_file =>
-    close_in(inp);
-    List.rev(lines^);
-  };
-  close_out(out);
-  close_in(err);
-
-  lines^ |> List.iter(line => prerr_endline(" --| " ++ line));
-  let rec pruneLines = (hasEncounteredDelimiter, acc, lines) => {
-    switch (lines) {
-    | [] => acc
-    | [line, ...lines] =>
-      if (!hasEncounteredDelimiter) {
-        if (Core.Utility.StringEx.contains("_SHELL_ENV_DELIMITER_")) {
-          pruneLines(true, acc, lines);
-        } else {
-          pruneLines(false, acc, lines);
-        };
-      } else if (Core.Utility.StringEx.contains("_SHELL_ENV_DELIMITER_")) {
-        acc;
-      } else if (!Core.Utility.StringEx.isEmpty) {
-        pruneLines(true, [line, ...acc], lines);
-      } else {
-        pruneLines(true, acc, lines);
-      }
-    };
-  };
-  let outLines = pruneLines(false, [], lines^);
-
-  prerr_endline("Output lines: ");
-  outLines |> List.iter(line => prerr_endline(" --| " ++ line));
+  prerr_endline("env map:");
+  shellEnv
+  |> Core.StringMap.bindings
+  |> List.iter(((key, v)) => prerr_endline("Key: " ++ key ++ ": " ++ v));
 
   failwith("done");
 };
@@ -226,6 +183,9 @@ switch (eff) {
     Timber.App.enable(fileReporter);
   };
   Oni_Core.Log.init();
+
+  // #1161 - OSX - Make sure we're using the terminal / shell PATH.
+  Core.ShellUtility.fixOSXPath();
 
   let initWorkingDirectory = () => {
     let path =
