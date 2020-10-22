@@ -143,6 +143,10 @@ let fromPath = path => {
   fromScheme(~scheme=Scheme.File, path);
 };
 
+let fromFilePath = fp => {
+  fp |> Fp.toString |> fromPath;
+};
+
 let toString = ({scheme, authority, path, query}: t) => {
   let schemeStr = Scheme.toString(scheme);
   switch (scheme) {
