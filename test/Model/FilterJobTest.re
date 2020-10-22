@@ -109,7 +109,7 @@ describe("FilterJob", ({describe, _}) => {
     });
 
     test(
-      "regresion test - already filterd items shouldn't get re-added",
+      "regression test - already filtered items shouldn't get re-added",
       ({expect, _}) => {
       let job =
         FilterJob.create()
@@ -120,8 +120,8 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.map(FilterJob.updateQuery("abc"))
         |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      let filtered = Job.getCompletedWork(job).ranked;
+      let names = List.map((result: Filter.result(Actions.menuItem)) => result.item.name, filtered);
       expect.list(names).toEqual(["abcd"]);
     });
   });
