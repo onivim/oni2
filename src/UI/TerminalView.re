@@ -18,11 +18,14 @@ module Constants = {
 };
 
 module Styles = {
-  let container = Style.[position(`Relative), flexGrow(1)];
+  let container = opac =>
+    Style.[position(`Relative), flexGrow(1), opacity(opac)];
 };
 
 let%component make =
               (
+                ~isActive,
+                ~config,
                 ~terminal: Feature_Terminal.terminal,
                 ~font: Service_Font.font,
                 ~theme: Oni_Core.ColorTheme.Colors.t,
@@ -33,6 +36,13 @@ let%component make =
       Revery.Font.Weight.Normal,
       font.fontFamily,
     );
+
+  let opacity =
+    isActive
+      ? 1.0
+      : Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
+          config,
+        );
 
   let%hook lastDimensions = Hooks.ref(None);
 
@@ -87,6 +97,7 @@ let%component make =
     let font =
       ReveryTerminal.Font.make(~smoothing, ~size=fontSize, resolvedFont);
     ReveryTerminal.render(
+      ~opacity,
       ~defaultBackground,
       ~defaultForeground,
       ~theme=terminalTheme,
@@ -98,5 +109,7 @@ let%component make =
       screen,
     );
   };
-  <View onDimensionsChanged style=Styles.container> element </View>;
+  <View onDimensionsChanged style={Styles.container(opacity)}>
+    element
+  </View>;
 };
