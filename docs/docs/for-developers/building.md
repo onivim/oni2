@@ -32,7 +32,7 @@ Requires `libtool` and `gettext` from homebrew: `brew install libtool gettext`.
 Some Linux distributions may need other packages:
 
  - Ubuntu : `libacl1-dev`, `libncurses-dev` for `libvim`.
- - Fedora/CentOS : `libXt-devel`, `libSM-devel`, `libICE-devel` for `libvim`
+ - Fedora/CentOS : `libXt-devel`, `libSM-devel`, `libICE-devel`, `libacl-devel` and `ncurses-devel ` for `libvim`
 
 ## Build and Run
 
@@ -45,8 +45,16 @@ Some Linux distributions may need other packages:
 ```sh
 git clone https://github.com/onivim/oni2
 cd oni2
+
+# Install dependencies in package.json
 esy install
+
+# Builds most pacakges and run Oni2 specific bootstrapping.
+# Will take upwards of 30 mins on a normal machine.
+# esy does intelligently cache to ~/.esy, subsequent builds are fast.
 esy bootstrap
+
+# Finish up remaining parts of building. Should be quick.
 esy build
 ```
 
