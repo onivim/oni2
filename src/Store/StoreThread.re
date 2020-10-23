@@ -331,6 +331,7 @@ let start =
       maybeActiveBuffer
       |> Option.map(activeBuffer => {
            Feature_LanguageSupport.sub(
+             ~config,
              ~isInsertMode,
              ~activeBuffer,
              ~activePosition,
