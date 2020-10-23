@@ -870,6 +870,7 @@ let sub = (~activeBuffer, ~client, model) => {
   let bufferId = activeBuffer |> Oni_Core.Buffer.getId;
 
   model.providers
+  |> List.filter(Provider.appliesToPath(~path=filePath))
   |> List.map((provider: Provider.t) =>
        Service_Exthost.Sub.SCM.originalUri(
          ~handle=provider.handle,
