@@ -10,7 +10,7 @@ sidebar_label: Building from Source
 
 - Install [Git](https://git-scm.com/)
 - Install [Node](https://nodejs.org/en)
-- Install [Esy](https://esy.sh) (__0.6.2__ or above is required, but the latest version is recommened: `npm install -g esy@latest`)
+- Install [Esy](https://esy.sh) (__0.6.2__ or above is required, but the latest version is recommended: `npm install -g esy@latest`)
 - __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
 - Install any other system packages required by Oni2 dependencies, as outlined below.
 
@@ -49,8 +49,8 @@ cd oni2
 # Install dependencies in package.json
 esy install
 
-# Builds most pacakges and run Oni2 specific bootstrapping.
-# Will take upwards of 30 mins on a normal machine.
+# Builds most dependencies and run Oni2 specific bootstrapping.
+# Takes upwards of 30 mins on a normal machine.
 # esy does intelligently cache to ~/.esy, subsequent builds are fast.
 esy bootstrap
 
@@ -141,7 +141,7 @@ There is a development extension in `src/development_extensions/oni-dev-extensio
 #### Resources
 - [VS Code API reference](https://code.visualstudio.com/api/references/vscode-api)
 
-### Intrumenting extensions
+### Instrumenting extensions
 
 To add logging, use `console.error` - messages on `stderr` will be shown in Onivim's log. (Make sure to turn debug logging on, via `ONI2_DEBUG=1` environment variable or the `--debug` command-line arg).
 

@@ -16,7 +16,7 @@ during the Installation process, if the option is selected during installation.
 ## macOS
 
 On macOS, `oni2` can be added manually with the "Add to System PATH" command in the
-command pallette, by pressing `Cmd-Shift-P` and searching for `System`.
+command palette, by pressing `Cmd-Shift-P` and searching for `System`.
 
 After selecting the option and giving admin permissions, the `oni2` executable
 should be accessible.
@@ -53,7 +53,7 @@ Passing `oni2` a file will open that file in Oni2, and set the open folder in On
 that file is in. That is, `oni2 ~/my_project/docs/cli.md` will open `cli.md` in Oni2, and set the folder
 to `~/my_project/docs/`. There is also a Zen mode configuration option around this single file mode, which
 is outlined over [here](./../configuration/settings.md). By default, when opening with 1 file, `oni2` will
-enter Zen mode, which can be disabled from the command pallette.
+enter Zen mode, which can be disabled from the command palette.
 
 You can also pass over multiple files to open at once, and the first folder will be used as the current
 working directory (unless over-ridden with the `--working-directory` flag.)
@@ -107,7 +107,7 @@ and provide logging output.
 There are a also few options that can be specified using either environment variables or command line arguments:
 - `ONI2_DEBUG` or `--debug` (e.g., `ONI2_DEBUG=1 oni2 -f` or `oni2 -f --debug`) - enable debug logging. This is very verbose but is helpful when logging issues!
 - `--trace` - enable trace logging. This is extremely verbose!
-- `--quiet` - print only error log messages. This can be sueful to quickly see if an extension failed to load, for example.
+- `--quiet` - print only error log messages. This can be useful to quickly see if an extension failed to load, for example.
 - `ONI2_LOG_FILE` or `--log-file` (e.g., `ONI2_LOG_FILE='oni.log' oni2` or `oni2 --log-file oni.log`) - enable logging to a file.
 - `ONI2_LOG_FILTER` or `--log-filter` (e.g.. `ONI2_LOG_FILTER=Oni2.* oni2 -f` or `oni2 -f --log-filter "Oni2.*"`) - filter log messages using a comma-separated list of glob patterns matched against each message's namespace. Prefix a pattern with `-` to exclude rather than include matches. E.g. `ONI2_LOG_FILTER="Oni2.*, -*Ext*"` will include everything that matches `Oni2.*`, but exclude messages that also match `*Ext*`.
 
