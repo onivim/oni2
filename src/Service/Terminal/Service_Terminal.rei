@@ -24,8 +24,7 @@ module Sub: {
   let terminal:
     (
       ~id: int,
-      ~arguments: list(string),
-      ~cmd: string,
+      ~launchConfig: Exthost.ShellLaunchConfig.t,
       ~columns: int,
       ~rows: int,
       ~workspaceUri: Uri.t,

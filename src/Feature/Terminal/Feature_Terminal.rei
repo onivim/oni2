@@ -5,8 +5,7 @@ open Oni_Core;
 type terminal =
   pri {
     id: int,
-    cmd: string,
-    arguments: list(string),
+    launchConfig: Exthost.ShellLaunchConfig.t,
     rows: int,
     columns: int,
     pid: option(int),
