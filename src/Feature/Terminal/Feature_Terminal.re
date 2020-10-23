@@ -4,8 +4,7 @@ open Oni_Core;
 
 type terminal = {
   id: int,
-  cmd: string,
-  arguments: list(string),
+  launchConfig: Exthost.ShellLaunchConfig.t,
   rows: int,
   columns: int,
   pid: option(int),
@@ -153,14 +152,54 @@ let update = (~config: Config.resolver, model: t, msg) => {
       | _ => []
       };
 
+    let env =
+      Exthost.ShellLaunchConfig.(
+        switch (Revery.Environment.os) {
+        // Windows - simply inherit from the running process
+        | Windows => Inherit
+
+        // Mac - inherit (we rely on the '-l' flag to pick up user config)
+        | Mac => Inherit
+
+        // For Linux, there's a few stray variables that may come in from the AppImage
+        // for example - LD_LIBRARY_PATH in issue #2040. We need to clear those out.
+        | Linux =>
+          switch (
+            Sys.getenv_opt("ONI2_ORIG_PATH"),
+            Sys.getenv_opt("ONI2_ORIG_LD_LIBRARY_PATH"),
+          ) {
+          // We're running from the AppImage, which tracks the original env.
+          | (Some(origPath), Some(origLdLibPath)) =>
+            let envVariables =
+              [("PATH", origPath), ("LD_LIBRARY_PATH", origLdLibPath)]
+              |> List.to_seq
+              |> StringMap.of_seq;
+
+            Additive(envVariables);
+
+          // All other cases - just inherit. Maybe not running from AppImage.
+          | _ => Inherit
+          }
+
+        | _ => Inherit
+        }
+      );
+
+    let launchConfig =
+      Exthost.ShellLaunchConfig.{
+        name: "Terminal",
+        arguments,
+        executable: cmdToUse,
+        env,
+      };
+
     let id = model.nextId;
     let idToTerminal =
       IntMap.add(
         id,
         {
           id,
-          arguments,
-          cmd: cmdToUse,
+          launchConfig,
           rows: 40,
           columns: 40,
           pid: None,
@@ -220,8 +259,7 @@ let subscription = (~workspaceUri, extHostClient, model: t) => {
   |> List.map((terminal: terminal) => {
        Service_Terminal.Sub.terminal(
          ~id=terminal.id,
-         ~arguments=terminal.arguments,
-         ~cmd=terminal.cmd,
+         ~launchConfig=terminal.launchConfig,
          ~rows=terminal.rows,
          ~columns=terminal.columns,
          ~workspaceUri,
