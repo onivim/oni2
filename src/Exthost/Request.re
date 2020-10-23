@@ -78,6 +78,7 @@ module Decorations = {
              )
            )
       );
+
   };
 
   type reply = IntMap.t(decoration);

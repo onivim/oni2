@@ -317,13 +317,7 @@ type msg =
       provider: int,
       handle: int,
     })
-  | ResourceStatesChanged({
-      provider: int,
-      group: int,
-      spliceStart: int,
-      deleteCount: int,
-      additions: list(Resource.t),
-    })
+  | SpliceResourceStates({handle: int, splices: [@opaque] list(Exthost.SCM.Resource.Splices.t)})
   | CountChanged({
       handle: int,
       count: int,
@@ -644,33 +638,36 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       Nothing,
     )
 
-  | ResourceStatesChanged({
-      provider,
-      group,
-      spliceStart,
-      deleteCount,
-      additions,
-    }) => (
-      model
-      |> Internal.updateResourceGroup(
-           ~provider,
-           ~group,
+  | SpliceResourceStates({handle, splices}) => {
+    let provider = handle;
+
+    open Exthost.SCM;
+    let model' = splices
+    |> List.fold_left((acc, {handle as group, resourceSplices}: Resource.Splices.t) => {
+        
+        resourceSplices
+        |> List.fold_left((innerAcc, {start, deleteCount, resources}: Resource.Splice.t) => {
+            innerAcc
+            |> Internal.updateResourceGroup(
+                ~provider,
+                ~group,
            g => {
              let resources =
                ListEx.splice(
-                 ~start=spliceStart,
+                 ~start,
                  ~deleteCount,
-                 ~additions,
+                 ~additions=resources,
                  g.resources,
                );
 
              let viewModel =
                Component_VimList.set(resources |> Array.of_list, g.viewModel);
              {...g, resources, viewModel};
-           },
-         ),
-      Nothing,
-    )
+            });
+        }, acc);
+    }, model);
+    (model', Nothing)
+  }
 
   | KeyPressed({key: "<CR>"}) => (
       model,
@@ -830,26 +827,10 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
     dispatch(GroupLabelChanged({provider, handle, label}))
 
   | SpliceSCMResourceStates({handle, splices}) =>
-    open Exthost.SCM;
+//prerr_endline("SpliceSCMResourceStates called!");
+//    dispatch(SpliceResourceStates({handle, splices}));
+();
 
-    let provider = handle;
-    splices
-    |> List.iter(({handle as group, resourceSplices}: Resource.Splices.t) => {
-         ignore(handle);
-
-         resourceSplices
-         |> List.iter(({start, deleteCount, resources}: Resource.Splice.t) => {
-              dispatch(
-                ResourceStatesChanged({
-                  provider,
-                  group,
-                  spliceStart: start,
-                  deleteCount,
-                  additions: resources,
-                }),
-              )
-            });
-       });
   | UpdateSourceControl({handle, features}) =>
     let {
       hasQuickDiffProvider,

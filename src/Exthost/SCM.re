@@ -58,16 +58,20 @@ module Resource = {
     let resource =
       Json.Decode.(
         Pipeline.(
-          decode((handle, uri, /*icons,*/ tooltip, strikeThrough, faded) =>
+          decode((handle, uri, /*icons,*/ tooltip, maybeStrikeThrough, maybeFaded) => {
+            let strikeThrough = maybeStrikeThrough |> Option.value(~default=false);
+            let faded = maybeFaded |> Option.value(~default=false);
+
             {handle, uri, /*icons,*/ tooltip, strikeThrough, faded}
-          )
+          })
           |> custom(index(0, int))
           |> custom(index(1, Uri.decode))
           // TODO: Bring back icons
           //|> custom(index(2, icons))
           |> custom(index(3, string))
-          |> custom(index(4, bool))
-          |> custom(index(5, bool))
+          |> custom(index(4, nullable(bool)))
+          |> custom(index(5, nullable(bool)))
+          // TODO: Context value?
         )
       );
 
