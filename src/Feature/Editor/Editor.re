@@ -931,7 +931,9 @@ let scrollCursorTop = editor => {
     bufferBytePositionToPixel(~position=cursor, editor);
 
   let pixelY = pixelPosition.y +. editor.scrollY;
-  scrollToPixelY(~pixelY, editor) |> animateScroll;
+  scrollToPixelY(~pixelY, editor)
+  |> exposePrimaryCursor  // account for scrolloff
+  |> animateScroll;
 };
 
 let scrollCursorBottom = editor => {
@@ -944,7 +946,9 @@ let scrollCursorBottom = editor => {
     pixelPosition.y
     +. editor.scrollY
     -. (heightInPixels -. lineHeightInPixels(editor));
-  scrollToPixelY(~pixelY, editor) |> animateScroll;
+  scrollToPixelY(~pixelY, editor)
+  |> exposePrimaryCursor  // account for scrolloff
+  |> animateScroll;
 };
 
 let scrollLines = (~count, editor) => {
