@@ -34,6 +34,7 @@ let current = (state: State.t) =>
     | Some({variant: Actions.Wildmenu(_), _}) => Focus.Wildmenu
     | Some(_) => Focus.Quickmenu
     | _ =>
+      let current = Focus.current(state.focus);
       state
       // See if terminal has focus
       |> Selectors.getActiveBuffer
@@ -41,13 +42,14 @@ let current = (state: State.t) =>
       |> Option.map(id => BufferRenderers.getById(id, state.bufferRenderers))
       |> OptionEx.flatMap(renderer =>
            switch (renderer) {
-           | BufferRenderer.Terminal({id, insertMode, _}) when insertMode =>
+           | BufferRenderer.Terminal({id, insertMode, _})
+               when insertMode && current == Some(Focus.Editor) =>
              Some(Focus.Terminal(id))
            | _ => None
            }
          )
       // Otherwise, get from assigned focus state
-      |> OptionEx.or_(Focus.current(state.focus))
-      |> Option.value(~default=Focus.Editor)
+      |> OptionEx.or_(current)
+      |> Option.value(~default=Focus.Editor);
     };
   };
