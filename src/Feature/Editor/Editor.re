@@ -643,54 +643,64 @@ let getMinimapWidthScaleFactor = editor => {
   };
 };
 
-let exposePrimaryCursor = editor => {
-  switch (cursors(editor)) {
-  | [primaryCursor, ..._tail] =>
-    let {bufferWidthInPixels, _}: EditorLayout.t = getLayout(editor);
-
-    let pixelWidth = bufferWidthInPixels;
-
-    let {pixelHeight, scrollX, scrollY, _} = editor;
-    let pixelHeight = float(pixelHeight);
-
-    let ({x: pixelX, y: pixelY}: PixelPosition.t, _width) =
-      bufferBytePositionToPixel(~position=primaryCursor, editor);
-
-    let scrollOffX = getCharacterWidth(editor) *. 2.;
-    let scrollOffY =
-      lineHeightInPixels(editor) *. float(editor.verticalScrollMargin);
-
-    let availableX = pixelWidth -. scrollOffX;
-    let availableY = pixelHeight -. scrollOffY;
-
-    let adjustedScrollX =
-      if (pixelX < 0.) {
-        scrollX +. pixelX;
-      } else if (pixelX >= availableX) {
-        scrollX +. (pixelX -. availableX);
-      } else {
-        scrollX;
-      };
-
-    let adjustedScrollY =
-      if (pixelY < scrollOffY) {
-        scrollY -. scrollOffY +. pixelY;
-      } else if (pixelY >= availableY) {
-        scrollY +. (pixelY -. availableY);
-      } else {
-        scrollY;
-      };
-
-    {
-      ...editor,
-      scrollX: adjustedScrollX,
-      scrollY: adjustedScrollY,
-      isScrollAnimated: true,
-    };
-
-  | _ => editor
-  };
+let hasSetSize = editor => {
+  editor.pixelWidth > 1 && editor.pixelHeight > 1;
 };
+
+let exposePrimaryCursor = editor =>
+  if (!hasSetSize(editor)) {
+    // If the size hasn't been set yet - don't try to expose the cursor.
+    // We don't know about the viewport to do a good job.
+    // See:
+    editor;
+  } else {
+    switch (cursors(editor)) {
+    | [primaryCursor, ..._tail] =>
+      let {bufferWidthInPixels, _}: EditorLayout.t = getLayout(editor);
+
+      let pixelWidth = bufferWidthInPixels;
+
+      let {pixelHeight, scrollX, scrollY, _} = editor;
+      let pixelHeight = float(pixelHeight);
+
+      let ({x: pixelX, y: pixelY}: PixelPosition.t, _width) =
+        bufferBytePositionToPixel(~position=primaryCursor, editor);
+
+      let scrollOffX = getCharacterWidth(editor) *. 2.;
+      let scrollOffY =
+        lineHeightInPixels(editor) *. float(editor.verticalScrollMargin);
+
+      let availableX = pixelWidth -. scrollOffX;
+      let availableY = pixelHeight -. scrollOffY;
+
+      let adjustedScrollX =
+        if (pixelX < 0.) {
+          scrollX +. pixelX;
+        } else if (pixelX >= availableX) {
+          scrollX +. (pixelX -. availableX);
+        } else {
+          scrollX;
+        };
+
+      let adjustedScrollY =
+        if (pixelY < scrollOffY) {
+          scrollY -. scrollOffY +. pixelY;
+        } else if (pixelY >= availableY) {
+          scrollY +. (pixelY -. availableY);
+        } else {
+          scrollY;
+        };
+
+      {
+        ...editor,
+        scrollX: adjustedScrollX,
+        scrollY: adjustedScrollY,
+        isScrollAnimated: true,
+      };
+
+    | _ => editor
+    };
+  };
 
 let mode = ({mode, _}) => mode;
 
@@ -738,28 +748,6 @@ let getTokenAt =
 let getContentPixelWidth = editor => {
   let layout: EditorLayout.t = getLayout(editor);
   layout.bufferWidthInPixels;
-};
-
-let setSize = (~pixelWidth, ~pixelHeight, editor) => {
-  let editor' = {...editor, pixelWidth, pixelHeight};
-
-  let contentPixelWidth = getContentPixelWidth(editor');
-
-  let wrapPadding =
-    switch (editor.wrapPadding) {
-    | None => EditorBuffer.measure(Uchar.of_char('W'), editor.buffer)
-    | Some(padding) => padding
-    };
-
-  let wrapWidth = contentPixelWidth -. wrapPadding;
-  let wrapState =
-    WrapState.resize(
-      ~pixelWidth=wrapWidth,
-      ~buffer=editor'.buffer,
-      editor'.wrapState,
-    );
-
-  {...editor', wrapState};
 };
 
 let scrollToPixelY = (~pixelY as newScrollY, editor) => {
@@ -933,6 +921,35 @@ let scrollPage = (~count, editor) => {
     count
     * int_of_float(float(editor.pixelHeight) /. lineHeightInPixels(editor));
   scrollAndMoveCursor(~deltaViewLines=lineDelta, editor);
+};
+
+let setSize = (~pixelWidth, ~pixelHeight, originalEditor) => {
+  let editor = {...originalEditor, pixelWidth, pixelHeight};
+
+  let contentPixelWidth = getContentPixelWidth(editor);
+
+  let wrapPadding =
+    switch (editor.wrapPadding) {
+    | None => EditorBuffer.measure(Uchar.of_char('W'), editor.buffer)
+    | Some(padding) => padding
+    };
+
+  let wrapWidth = contentPixelWidth -. wrapPadding;
+  let wrapState =
+    WrapState.resize(
+      ~pixelWidth=wrapWidth,
+      ~buffer=editor.buffer,
+      editor.wrapState,
+    );
+
+  let editor' = {...editor, wrapState};
+
+  // If we hadn't measured before, make sure the cursor is in view
+  if (!hasSetSize(originalEditor)) {
+    scrollCenterCursorVertically(editor');
+  } else {
+    editor';
+  };
 };
 
 // PROJECTION
