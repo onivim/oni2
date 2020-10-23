@@ -995,10 +995,16 @@ module ModelChangedEvent: {
 };
 
 module ShellLaunchConfig: {
+  type environment =
+    | Inherit
+    | Additive(StringMap.t(string))
+    | Strict(StringMap.t(string));
+
   type t = {
     name: string,
     executable: string,
     arguments: list(string),
+    env: environment,
   };
 
   let to_yojson: t => Yojson.Safe.t;

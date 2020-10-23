@@ -149,7 +149,14 @@ module Parts = {
         state.terminals
         |> Feature_Terminal.getTerminalOpt(id)
         |> Option.map(terminal => {
-             <TerminalView theme font={state.terminalFont} terminal />
+             let config = Selectors.configResolver(state);
+             <TerminalView
+               config
+               isActive
+               theme
+               font={state.terminalFont}
+               terminal
+             />;
            })
         |> Option.value(~default=React.empty)
 
@@ -298,13 +305,13 @@ let make =
 
   let showTabs = editorShowTabs && (!state.zenMode || !hideZenModeTabs);
 
-  let focus = FocusManager.current(state);
+  let isFocused = FocusManager.current(state) |> Focus.isLayoutFocused;
 
   <View onFileDropped style={Styles.container(theme)}>
     <Feature_Layout.View
       uiFont={state.uiFont}
       theme
-      isFocused={focus == Focus.Editor}
+      isFocused
       isZenMode={state.zenMode}
       showTabs
       model={state.layout}

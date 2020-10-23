@@ -23,3 +23,5 @@ let push: (focusable, stack) => stack;
 let pop: (focusable, stack) => stack;
 
 let current: stack => option(focusable);
+
+let isLayoutFocused: focusable => bool;
