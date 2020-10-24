@@ -71,7 +71,7 @@ module Make = (Config: Config) => {
 
   /* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
   let updateQuery =
-      (filter, pending: PendingWork.t, {filtered, ranked}: CompletedWork.t) => {
+      (filter, pending: PendingWork.t, {filtered, _}: CompletedWork.t) => {
     // TODO: Optimize - for now, if the query changes, just clear the completed work
     // However, there are several ways we could improve this:
     // - If the query is just a stricter version... we could add the filter items back to completed
