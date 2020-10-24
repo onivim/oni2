@@ -1,5 +1,4 @@
 open TestFramework;
-
 open Oni_Core;
 
 module Actions = Oni_Model.Actions;
@@ -23,8 +22,14 @@ describe("FilterJob", ({describe, _}) => {
   let rec runToCompletion = job =>
     Job.isComplete(job) ? job : job |> Job.tick |> runToCompletion;
 
-  describe("filtering", ({test, _}) => {
-    test("filtering should respect smart casing", ({expect, _}) => {
+  let getNames = ranked =>
+    List.map(
+      (result: Filter.result(Actions.menuItem)) => result.item.name,
+      ranked,
+    );
+
+  describe("ranking", ({test, _}) => {
+    test("ranking should respect smart casing", ({expect, _}) => {
       let job =
         FilterJob.create()
         |> Job.map(FilterJob.addItems([createItem("Preferences")]))
@@ -35,7 +40,7 @@ describe("FilterJob", ({describe, _}) => {
       expect.int(rankedLength).toBe(1);
     });
 
-    test("items batched separately get filtered", ({expect, _}) => {
+    test("items batched separately get ranked", ({expect, _}) => {
       let job =
         FilterJob.create()
         |> Job.map(FilterJob.updateQuery("abc"))
@@ -50,12 +55,12 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.doWork
         |> Job.doWork;
 
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
-      expect.list(names).toEqual(["abcde", "abcd"]);
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
+      expect.list(names).toEqual(["abcd", "abcde"]);
     });
 
-    test("items batched together get filtered", ({expect, _}) => {
+    test("items batched together get ranked", ({expect, _}) => {
       let job =
         FilterJob.create()
         |> Job.map(FilterJob.updateQuery("abc"))
@@ -74,9 +79,9 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.doWork
         |> Job.doWork;
 
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
-      expect.list(names).toEqual(["abcde", "abcd"]);
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
+      expect.list(names).toEqual(["abcd", "abcde"]);
     });
 
     test(
@@ -89,27 +94,27 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.map(FilterJob.updateQuery("abc"))
         |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
       expect.list(names).toEqual(["abc"]);
 
       let job =
         job |> Job.map(FilterJob.updateQuery("abd")) |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
       expect.list(names).toEqual(["abd"]);
 
       let job =
         job |> Job.map(FilterJob.updateQuery("ab")) |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
       expect.list(names).toEqual(["abd", "abc"]);
     });
 
     test(
-      "regression test - already filtered items shouldn't get re-added",
+      "regression test - already ranked items shouldn't get re-added",
       ({expect, _}) => {
       let job =
         FilterJob.create()
@@ -120,8 +125,8 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.map(FilterJob.updateQuery("abc"))
         |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).ranked;
-      let names = List.map((result: Filter.result(Actions.menuItem)) => result.item.name, filtered);
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
       expect.list(names).toEqual(["abcd"]);
     });
   });
