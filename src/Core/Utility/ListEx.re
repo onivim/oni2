@@ -80,7 +80,7 @@ let findIndex = (predicate, list) => {
 
 /**
    Given two sorted lists, merge them whilst keeping them sorted.
-   Pass a length to early stop.
+   Pass a length for early stopping.
  */
 let mergeSortedList = (~len=?, compareItems, primary, secondary) => {
   let len =

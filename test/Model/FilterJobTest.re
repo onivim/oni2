@@ -89,7 +89,7 @@ describe("FilterJob", ({describe, _}) => {
       let job =
         FilterJob.create()
         |> Job.map(
-             FilterJob.addItems([createItem("abc"), createItem("abd")]),
+             FilterJob.addItems([createItem("abc"), createItem("abde")]),
            )
         |> Job.map(FilterJob.updateQuery("abc"))
         |> runToCompletion;
@@ -103,14 +103,14 @@ describe("FilterJob", ({describe, _}) => {
 
       let ranked = Job.getCompletedWork(job).ranked;
       let names = getNames(ranked);
-      expect.list(names).toEqual(["abd"]);
+      expect.list(names).toEqual(["abde"]);
 
       let job =
         job |> Job.map(FilterJob.updateQuery("ab")) |> runToCompletion;
 
       let ranked = Job.getCompletedWork(job).ranked;
       let names = getNames(ranked);
-      expect.list(names).toEqual(["abd", "abc"]);
+      expect.list(names).toEqual(["abc", "abde"]);
     });
 
     test(
