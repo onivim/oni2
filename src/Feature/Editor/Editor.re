@@ -702,10 +702,10 @@ let exposePrimaryCursor = editor =>
       let ({x: pixelX, y: pixelY}: PixelPosition.t, _width) =
         bufferBytePositionToPixel(~position=primaryCursor, editor);
 
-        let scrollOffX = getCharacterWidth(editor) *. 2.;
-        let scrollOffY =
-          lineHeightInPixels(editor)
-          *. float(max(editor.verticalScrollMargin, 1));
+      let scrollOffX = getCharacterWidth(editor) *. 2.;
+      let scrollOffY =
+        lineHeightInPixels(editor)
+        *. float(max(editor.verticalScrollMargin, 1));
 
       let availableX = pixelWidth -. scrollOffX;
       let availableY = pixelHeight -. scrollOffY;
@@ -786,7 +786,7 @@ let getTokenAt =
 let getContentPixelWidth = editor => {
   let layout: EditorLayout.t = getLayout(editor);
   layout.bufferWidthInPixels;
-}
+};
 
 let setSize = (~pixelWidth, ~pixelHeight, editor) => {
   let editor' = {...editor, pixelWidth, pixelHeight};
