@@ -173,7 +173,8 @@ let%component make =
        )
     |> Option.value(~default=React.empty);
 
-  <View
+  <Layer
+    condition=RenderCondition.initial
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
     style={Styles.bufferViewClipped(
       gutterWidth,
@@ -264,5 +265,5 @@ let%component make =
       windowIsFocused
       colors
     />
-  </View>;
+  </Layer>;
 };
