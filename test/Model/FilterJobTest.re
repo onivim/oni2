@@ -64,7 +64,7 @@ describe("FilterJob", ({describe, _}) => {
       let job =
         FilterJob.create()
         |> Job.map(FilterJob.updateQuery("abc"))
-        // Add 4 items, separately
+        // Add 4 items, together
         |> Job.map(
              FilterJob.addItems([
                createItem("a"),
@@ -82,6 +82,27 @@ describe("FilterJob", ({describe, _}) => {
       let ranked = Job.getCompletedWork(job).ranked;
       let names = getNames(ranked);
       expect.list(names).toEqual(["abcd", "abcde"]);
+    });
+    
+    test("items returned are deterministic", ({expect, _}) => {
+      let job =
+        FilterJob.create()
+        |> Job.map(FilterJob.updateQuery("ab"))
+        // Add 4 items, together
+        |> Job.map(
+             FilterJob.addItems([
+               createItem("aba"),
+               createItem("abb"),
+               createItem("abc"),
+               createItem("abd"),
+             ]),
+           )
+        // Tick 4 times
+          |> runToCompletion;
+
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
+      expect.list(names).toEqual(["aba", "abb", "abc", "abd"]);
     });
 
     test(
