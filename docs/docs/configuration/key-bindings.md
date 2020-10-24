@@ -34,7 +34,7 @@ When a key is pressed:
 - If a rule is found and has a `command` set, the `command` is executed.
 - If no matching rules are found, we pass the input key through to `libvim` to be handled by Vim.
 
-There are a set of default rules provided by Onivim, but the customized rules are appended to the bottom - thus, user key bindings are esxecuted first.
+There are a set of default rules provided by Onivim, but the customized rules are appended to the bottom - thus, user key bindings are executed first.
 
 ### `key` format
 
