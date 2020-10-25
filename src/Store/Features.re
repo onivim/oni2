@@ -964,6 +964,7 @@ let update =
 
       | _ => None
       };
+
     let (model, outmsg) = update(~focus, state.layout, msg);
     let state = {...state, layout: model};
 
