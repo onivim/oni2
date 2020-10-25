@@ -117,6 +117,7 @@ module Internal = {
       ) => {
     switch (scope) {
     | All =>
+  prerr_endline ("Updating all: " ++ Feature_Editor.show_msg(msg));
       let (layout', effects) =
         Feature_Layout.fold(
           (prev, editor) => {

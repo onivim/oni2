@@ -101,6 +101,16 @@ type t = {
   // Number of lines to preserve before or after the cursor, when scrolling.
   // Like the `scrolloff` vim setting or the `editor.cursorSurroundingLines` VSCode setting.
   verticalScrollMargin: int,
+
+  renderNonce: int,
+};
+
+let shouldRender = (editorA, editorB) => {
+ editorA.key !== editorB.key
+ || editorA.renderNonce != editorB.renderNonce
+ || editorA.scrollX != editorB.scrollX
+ || editorA.scrollY != editorB.scrollY
+ || editorA.buffer !== editorB.buffer
 };
 
 let key = ({key, _}) => key;
@@ -326,6 +336,8 @@ let create = (~config, ~buffer, ()) => {
     wrapMode,
     wrapPadding: None,
     verticalScrollMargin: 1,
+
+    renderNonce: 0,
   };
 };
 
@@ -360,7 +372,7 @@ let copy = editor => {
   let id = GlobalState.generateId();
   let key = Brisk_reconciler.Key.create();
 
-  {...editor, key, editorId: id};
+  {...editor, renderNonce: 0, key, editorId: id};
 };
 
 type scrollbarMetrics = {

@@ -46,6 +46,8 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
 
+let shouldRender: (t, t) => bool;
+
 let mode: t => Vim.Mode.t;
 let setMode: (Vim.Mode.t, t) => t;
 

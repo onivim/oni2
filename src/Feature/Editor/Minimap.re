@@ -13,6 +13,14 @@ open Revery.UI;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
+let layerCondition = Revery.UI.Layer.Condition.make((previousEditor, newEditor) => {
+    if (Editor.shouldRender(previousEditor, newEditor)) {
+       true 
+    } else {
+       false 
+    }
+});
+
 module Constants = {
   include Constants;
 
@@ -262,7 +270,8 @@ let%component make =
        })
     |> Option.value(~default=React.empty);
 
-  <View
+  <Layer
+    condition=layerCondition(editor)
     style={Styles.container(backgroundColor)}
     onMouseDown
     onMouseMove
@@ -503,5 +512,5 @@ let%component make =
       }}
     />
     yankHighlightElement
-  </View>;
+  </Layer>;
 };
