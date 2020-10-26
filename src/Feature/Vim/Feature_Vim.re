@@ -67,7 +67,7 @@ module CommandLine = {
     if (len == 0) {
       None;
     } else {
-      String.index_opt(commandLine, ' ')
+      String.rindex_opt(commandLine, ' ')
       |> Option.map(idx => idx + 1)  // Advance past space
       |> OptionEx.or_(Some(0));
     };
@@ -91,6 +91,10 @@ module CommandLine = {
 
   let%test "meet with a path, spaces" = {
     getCompletionMeet("vsp /path with spaces/") == Some(4);
+  };
+
+  let%test "meet multiple paths" = {
+    getCompletionMeet("!cp /path1 /path2") == Some(11);
   };
 };
 
