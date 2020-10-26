@@ -711,22 +711,28 @@ let exposePrimaryCursor = editor =>
       let availableY = pixelHeight -. scrollOffY;
 
       let adjustedScrollX =
-        if (pixelX < 0.) {
-          scrollX +. pixelX;
-        } else if (pixelX >= availableX) {
-          scrollX +. (pixelX -. availableX);
-        } else {
-          scrollX;
-        };
+        max(
+          if (pixelX < 0.) {
+            scrollX +. pixelX;
+          } else if (pixelX >= availableX) {
+            scrollX +. (pixelX -. availableX);
+          } else {
+            scrollX;
+          },
+          0.,
+        );
 
       let adjustedScrollY =
-        if (pixelY < scrollOffY) {
-          scrollY -. scrollOffY +. pixelY;
-        } else if (pixelY >= availableY) {
-          scrollY +. (pixelY -. availableY);
-        } else {
-          scrollY;
-        };
+        max(
+          if (pixelY < scrollOffY) {
+            scrollY -. scrollOffY +. pixelY;
+          } else if (pixelY >= availableY) {
+            scrollY +. (pixelY -. availableY);
+          } else {
+            scrollY;
+          },
+          0.,
+        );
 
       {
         ...editor,
@@ -925,7 +931,8 @@ let scrollCursorTop = editor => {
     bufferBytePositionToPixel(~position=cursor, editor);
 
   let pixelY = pixelPosition.y +. editor.scrollY;
-  scrollToPixelY(~pixelY, editor)
+  editor
+  |> scrollToPixelY(~pixelY)
   |> exposePrimaryCursor  // account for scrolloff
   |> animateScroll;
 };
