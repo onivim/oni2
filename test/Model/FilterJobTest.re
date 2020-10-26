@@ -83,7 +83,7 @@ describe("FilterJob", ({describe, _}) => {
       let names = getNames(ranked);
       expect.list(names).toEqual(["abcd", "abcde"]);
     });
-    
+
     test("items returned are deterministic", ({expect, _}) => {
       let job =
         FilterJob.create()
@@ -98,7 +98,7 @@ describe("FilterJob", ({describe, _}) => {
              ]),
            )
         // Tick 4 times
-          |> runToCompletion;
+        |> runToCompletion;
 
       let ranked = Job.getCompletedWork(job).ranked;
       let names = getNames(ranked);
