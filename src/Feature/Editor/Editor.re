@@ -788,28 +788,6 @@ let getContentPixelWidth = editor => {
   layout.bufferWidthInPixels;
 };
 
-let setSize = (~pixelWidth, ~pixelHeight, editor) => {
-  let editor' = {...editor, pixelWidth, pixelHeight};
-
-  let contentPixelWidth = getContentPixelWidth(editor');
-
-  let wrapPadding =
-    switch (editor.wrapPadding) {
-    | None => EditorBuffer.measure(Uchar.of_char('W'), editor.buffer)
-    | Some(padding) => padding
-    };
-
-  let wrapWidth = contentPixelWidth -. wrapPadding;
-  let wrapState =
-    WrapState.resize(
-      ~pixelWidth=wrapWidth,
-      ~buffer=editor'.buffer,
-      editor'.wrapState,
-    );
-
-  {...editor', wrapState};
-};
-
 let scrollToPixelY = (~pixelY as newScrollY, editor) => {
   let {pixelHeight, _} = editor;
   let viewLines = editor |> totalViewLines;
@@ -1010,7 +988,7 @@ let setSize = (~pixelWidth, ~pixelHeight, originalEditor) => {
 
   // If we hadn't measured before, make sure the cursor is in view
   if (!hasSetSize(originalEditor)) {
-    scrollCenterCursorVertically(editor');
+    scrollCursorTop(editor');
   } else {
     editor';
   };
