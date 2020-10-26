@@ -256,7 +256,7 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#b43852b",
+    "revery": "revery-ui/revery#4d2dae6",
     "esy-skia": "revery-ui/esy-skia#60e0260",
     "rench": "bryphe/rench#a976fe5",
     "reasonFuzz": "CrossR/reasonFuzz#1ad6f5d",
