@@ -113,7 +113,7 @@ let cmdOrCtrl =
 
 let%component make = (~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
   let%hook (transition, _animationState, _reset) =
-    Hooks.animation(animation, ~active=true);
+    Hooks.animation(~name="WelcomeView transition", animation, ~active=true);
 
   <View style={Styles.container(~theme)}>
     <Opacity opacity=transition>

@@ -69,7 +69,7 @@ let%component make =
   let%hook hoverTimerActive = React.Hooks.ref(false);
   let%hook lastMousePosition = React.Hooks.ref(None);
   let%hook (hoverTimer, resetHoverTimer) =
-    Hooks.timer(~active=hoverTimerActive^, ());
+    Hooks.timer(~name="Mouse Hover Timer", ~active=hoverTimerActive^, ());
 
   let lineCount = editor |> Editor.totalViewLines;
   let indentation = Buffer.getIndentation(buffer);

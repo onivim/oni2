@@ -57,12 +57,14 @@ let%component make =
 
   let%hook background =
     CustomHooks.colorTransition(
+      ~name="Button Color Transition",
       ~duration=Animations.backgroundTransitionDuration,
       background,
     );
 
   let%hook yOffset =
     Hooks.transition(
+      ~name="Button Lift Transition",
       ~duration=Animations.liftTransitionDuration,
       isHovered ? (-2.0) : 0.0,
     );
