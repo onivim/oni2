@@ -183,6 +183,7 @@ let%component make =
 
   <Layer
     key=Editor.key(editor)
+    backgroundColor={Colors.(colors.editorBackground)}
     condition=layerCondition(editor)
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
     style={Styles.bufferViewClipped(

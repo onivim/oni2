@@ -271,6 +271,7 @@ let%component make =
     |> Option.value(~default=React.empty);
 
   <Layer
+    backgroundColor={backgroundColor}
     condition=layerCondition(editor)
     style={Styles.container(backgroundColor)}
     onMouseDown

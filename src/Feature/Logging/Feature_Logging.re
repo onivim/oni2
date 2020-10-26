@@ -9,7 +9,8 @@ let initial = ();
 
 [@deriving show]
 type command =
-  | LogToTraceFile;
+  | LogToTraceFile
+  | ToggleRenderPerformanceView;
 
 [@deriving show]
 type msg =
@@ -28,6 +29,14 @@ module Effects = {
       Timber.App.setLevel(Timber.Level.trace);
       dispatch(toMsg(logFileName));
     });
+
+  let toggleDebugDraw = Isolinear.Effect.create(~name="Feature.Logging.toggleDebugDraw", () => {
+    if (Revery.Debug.isEnabled()) {
+        Revery.Debug.disable()
+    } else {
+        Revery.Debug.enable()
+    };
+  })
 };
 
 // UPDATE
@@ -44,6 +53,10 @@ let update = (msg, _model) =>
         (),
         Effect(Effects.traceToFile(~toMsg=str => LogFileStarted(str))),
       )
+    | ToggleRenderPerformanceView => (
+        (),
+        Effect(Effects.toggleDebugDraw)
+    )
     }
   | LogFileStarted(filePath) => (
       (),
@@ -54,15 +67,23 @@ let update = (msg, _model) =>
 module Commands = {
   open Feature_Commands.Schema;
 
-  let nextEditor =
+  let logToTraceFile =
     define(
       ~category="Debug",
       ~title="Log to trace file",
       "oni.debug.startTraceLogging",
       Command(LogToTraceFile),
     );
+
+  let showDebugVisualization =
+    define(
+        ~category="Debug",
+        ~title="Render performance",
+        "oni.debug.toggleRenderPerformance",
+        Command(ToggleRenderPerformanceView)
+    )
 };
 
 module Contributions = {
-  let commands = Commands.[nextEditor];
+  let commands = Commands.[logToTraceFile, showDebugVisualization];
 };
