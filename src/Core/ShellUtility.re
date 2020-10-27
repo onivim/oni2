@@ -70,85 +70,6 @@ module Internal = {
       );
       None;
     };
-
-  let environmentLinesToMap = (hasDelimiter, lines) => {
-    let rec loop = (hasEncounteredDelimiter, acc, lines) => {
-      switch (lines) {
-      | [] => acc
-      | [line, ...lines] =>
-        if (!hasEncounteredDelimiter) {
-          if (StringEx.contains("_SHELL_ENV_DELIMITER_", line)) {
-            loop(true, acc, lines);
-          } else {
-            loop(false, acc, lines);
-          };
-        } else if (StringEx.contains("_SHELL_ENV_DELIMITER_", line)) {
-          acc;
-        } else if (!StringEx.isEmpty(line)) {
-          loop(true, [line, ...acc], lines);
-        } else {
-          loop(true, acc, lines);
-        }
-      };
-    };
-
-    let prunedLines = loop(!hasDelimiter, [], lines);
-    prunedLines
-    |> List.fold_left(
-         (acc, curr) => {
-           switch (String.split_on_char('=', curr)) {
-           | [] => acc
-           | [_] => acc
-           | [key, ...values] =>
-             let v = String.concat("=", values);
-             StringMap.add(key, v, acc);
-           }
-         },
-         StringMap.empty,
-       );
-  };
-
-  let getDefaultShellEnvironment = shellCmd => {
-    switch (Revery.Environment.os) {
-    // Linux and Mac - use `env` command, and parse using a strategy from shell-env:
-    // https://github.com/sindresorhus/shell-env/blob/a95fd441d3b7cc2c122899de72da30dae70936ec/index.js#L6
-    | Linux
-    | Mac =>
-      let args = [
-        "-ilc",
-        "printf \"\n_SHELL_ENV_DELIMITER_\"; env; printf \"\n_SHELL_ENV_DELIMITER_\n\"; exit",
-      ];
-      let (inp, out, err) =
-        Unix.open_process_args_full(
-          shellCmd,
-          [shellCmd, ...args] |> Array.of_list,
-          [||],
-        );
-      let lines = ref([]);
-
-      let outLines =
-        try(
-          {
-            while (true) {
-              lines := [input_line(inp), ...lines^];
-            };
-            lines^;
-          }
-        ) {
-        | End_of_file =>
-          close_in(inp);
-          lines^;
-        };
-
-      close_out(out);
-      close_in(err);
-      environmentLinesToMap(true, outLines);
-
-    // Windows - just use default environment.
-    | Windows
-    | _ => Unix.environment() |> Array.to_list |> environmentLinesToMap(false)
-    };
-  };
 };
 
 let getDefaultShell = () => {
@@ -176,28 +97,18 @@ let getDefaultShell = () => {
   |> Lazy.force;
 };
 
-let getDefaultShellEnvironment = () => {
-  (
-    lazy({
-      let shellCmd = getDefaultShell();
-      Internal.getDefaultShellEnvironment(shellCmd);
-    })
-  )
-  |> Lazy.force;
-};
-
 let getPathFromEnvironment = Internal.getPathFromEnvironment;
 
 let getPathFromShell = () => {
   let path =
     switch (Revery.Environment.os) {
     | Mac =>
-      let envMap = getDefaultShellEnvironment();
-      switch (StringMap.find_opt("PATH", envMap)) {
-      | None =>
-        Log.warn("Unable to retreive path from env command.");
+      let shell = getDefaultShell();
+      let shellCmd = Printf.sprintf("%s -lc 'echo $PATH'", shell);
+      try(Internal.runCommand(shellCmd)) {
+      | ex =>
+        Log.warn("Unable to retreive path: " ++ Printexc.to_string(ex));
         Internal.getPathFromEnvironment();
-      | Some(path) => path
       };
     | _ => Internal.getPathFromEnvironment()
     };
@@ -205,24 +116,3 @@ let getPathFromShell = () => {
   Log.debug("Path detected as: " ++ path);
   path;
 };
-
-let fixOSXPath = () =>
-  // #1161 - OSX - Make sure we're using the terminal / shell PATH.
-  // By default, if the application is opened via Finder, it won't get the shell $PATH.
-  // Use a strategy like the fix-path NPM module:
-  // https://github.com/sindresorhus/fix-path/blob/8f12bec72ee4319638a43758b40d61c25427404b/index.js#L5
-  if (Revery.Environment.os == Mac) {
-    let shellEnv = getDefaultShellEnvironment();
-    switch (StringMap.find_opt("PATH", shellEnv)) {
-    | Some(path) =>
-      Log.infof(m => m("OSX - setting path from shell: %s", path));
-      Luv.Env.setenv(~value=path, "PATH")
-      |> Utility.ResultEx.tapError(err => {
-           Log.errorf(m =>
-             m("Unable to set PATH: %s", Luv.Error.strerror(err))
-           )
-         })
-      |> Result.iter(() => Log.info("Set PATH successfully"));
-    | None => Log.warn("OSX - Unable to get shell path.")
-    };
-  };
