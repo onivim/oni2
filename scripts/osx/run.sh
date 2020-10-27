@@ -12,5 +12,6 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 
 export ONI2_BUNDLED=1
+export ONI2_OSX_RUN_FROM_TERMINAL=1
 
 "$DIR"/../MacOS/Oni2 --working-directory "$CWD" "$@"

@@ -67,7 +67,9 @@ switch (eff) {
   Oni_Core.Log.init();
 
   // #1161 - OSX - Make sure we're using the terminal / shell PATH.
-  Core.ShellUtility.fixOSXPath();
+  if (Sys.getenv_opt("ONI2_OSX_RUN_FROM_TERMINAL") == None) {
+    Core.ShellUtility.fixOSXPath();
+  };
 
   let initWorkingDirectory = () => {
     let path =
