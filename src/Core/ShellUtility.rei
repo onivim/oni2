@@ -6,8 +6,3 @@ let getPathFromShell: unit => string;
 
 // Get the path from the current process environment
 let getPathFromEnvironment: unit => string;
-
-// Get a key-value pair representing the default shell environment
-let getDefaultShellEnvironment: unit => Kernel.StringMap.t(string);
-
-let fixOSXPath: unit => unit;
