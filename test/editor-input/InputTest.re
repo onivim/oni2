@@ -321,6 +321,35 @@ describe("EditorInput", ({describe, _}) => {
         [Unhandled(bKeyNoModifiers), Execute("commandA")],
       );
     });
+    test("#1691: almost match gets unhandled", ({expect, _}) => {
+      // Add binding for 'aa'
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([
+               Keydown(Keycode(1, Modifiers.none)),
+               Keydown(Keycode(1, Modifiers.none)),
+             ]),
+             _ => true,
+             "commandAC",
+           );
+
+
+      // Press a... 
+      let (bindings, effects) =
+        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
+
+      expect.equal(effects, []);
+
+      // Press b...
+      let (_bindings, effects) =
+        Input.keyDown(~context=true, ~key=bKeyNoModifiers, bindings);
+
+      expect.equal(
+        effects,
+        [Unhandled(aKeyNoModifiers), Unhandled(bKeyNoModifiers)],
+      );
+    });
   });
   describe("enabled / disabled", ({test, _}) => {
     let identity = context => context;
