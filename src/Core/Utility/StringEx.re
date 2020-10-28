@@ -294,7 +294,7 @@ let splitLines: string => (bool, array(string)) =
 /** unescaped meaning not preceded directly by a backslash "\" */
 let findUnescapedFromEnd: string => char => option(int) =
   (str, chr) => {
-    let last_unescaped_index = ref(Some(0)); // default result
+    let last_unescaped_index = ref(None); // default result
     String.iteri(
       (i, c) =>
         if (i > 0 && str.[i - 1] != '\\' && c == chr) {
