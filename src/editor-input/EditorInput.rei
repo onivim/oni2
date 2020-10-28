@@ -31,6 +31,7 @@ module Key: {
 };
 
 module Modifiers: {
+  [@deriving show]
   type t = {
     control: bool,
     alt: bool,
@@ -67,6 +68,7 @@ module Matcher: {
 };
 
 module KeyPress: {
+  [@deriving show]
   type t = {
     scancode: int,
     keycode: int,
@@ -107,7 +109,6 @@ module type Input = {
   let keyDown: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
   let text: (~text: string, t) => (t, list(effect));
   let keyUp: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
-  let flush: (~context: context, t) => (t, list(effect));
 
   /**
   [isPending(bindings)] returns true if there is a potential

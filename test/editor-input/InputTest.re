@@ -17,37 +17,6 @@ module Input =
   });
 
 describe("EditorInput", ({describe, _}) => {
-  describe("flush", ({test, _}) => {
-    test("simple sequence", ({expect, _}) => {
-      let (bindings, _id) =
-        Input.empty
-        |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(2, Modifiers.none)),
-             ]),
-             _ => true,
-             "commandAB",
-           );
-
-      let (bindings, _id) =
-        bindings
-        |> Input.addBinding(
-             Sequence([Keydown(Keycode(1, Modifiers.none))]),
-             _ => true,
-             "commandA",
-           );
-
-      let (bindings, effects) =
-        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
-
-      expect.equal(effects, []);
-
-      let (_bindings, effects) = Input.flush(~context=true, bindings);
-
-      expect.equal(effects, [Execute("commandA")]);
-    })
-  });
   describe("allKeysReleased", ({test, _}) => {
     test("basic release case", ({expect, _}) => {
       let (bindings, _id) =
@@ -253,41 +222,41 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(effects, [Execute("commandA!A")]);
     });
-    test("partial match with another match", ({expect, _}) => {
-      let (bindings, _id) =
-        Input.empty
-        |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(3, Modifiers.none)),
-             ]),
-             _ => true,
-             "commandAC",
-           );
-
-      let (bindings, _id) =
-        bindings
-        |> Input.addBinding(
-             Sequence([Keydown(Keycode(1, Modifiers.none))]),
-             _ => true,
-             "commandA",
-           );
-
-      let (bindings, effects) =
-        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
-
-      expect.equal(effects, []);
-
-      let (bindings, effects) =
-        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
-
-      expect.equal(effects, [Execute("commandA")]);
-
-      let (_bindings, effects) =
-        Input.keyDown(~context=true, ~key=cKeyNoModifiers, bindings);
-
-      expect.equal(effects, [Execute("commandAC")]);
-    });
+    //    test("partial match with another match", ({expect, _}) => {
+    //      let (bindings, _id) =
+    //        Input.empty
+    //        |> Input.addBinding(
+    //             Sequence([
+    //               Keydown(Keycode(1, Modifiers.none)),
+    //               Keydown(Keycode(3, Modifiers.none)),
+    //             ]),
+    //             _ => true,
+    //             "commandAC",
+    //           );
+    //
+    //      let (bindings, _id) =
+    //        bindings
+    //        |> Input.addBinding(
+    //             Sequence([Keydown(Keycode(1, Modifiers.none))]),
+    //             _ => true,
+    //             "commandA",
+    //           );
+    //
+    //      let (bindings, effects) =
+    //        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
+    //
+    //      expect.equal(effects, []);
+    //
+    //      let (bindings, effects) =
+    //        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
+    //
+    //      expect.equal(effects, [Execute("commandA")]);
+    //
+    //      let (_bindings, effects) =
+    //        Input.keyDown(~context=true, ~key=cKeyNoModifiers, bindings);
+    //
+    //      expect.equal(effects, [Execute("commandAC")]);
+    //    });
     test("partial match with unhandled", ({expect, _}) => {
       let (bindings, _id) =
         Input.empty
@@ -318,7 +287,7 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(
         effects,
-        [Unhandled(bKeyNoModifiers), Execute("commandA")],
+        [Execute("commandA"), Unhandled(bKeyNoModifiers)],
       );
     });
     test("#1691: almost match gets unhandled", ({expect, _}) => {
@@ -334,8 +303,7 @@ describe("EditorInput", ({describe, _}) => {
              "commandAC",
            );
 
-
-      // Press a... 
+      // Press a...
       let (bindings, effects) =
         Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
 
