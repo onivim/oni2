@@ -106,11 +106,16 @@ type t = {
 };
 
 let shouldRender = (editorA, editorB) => {
+ // TODO: View lines different?
+ // TODO: Diagnostics different?
+ // TODO: Wrapping different?
+ // TODO: Move cursor rendering
+ // TODO: Move definition rendering
  editorA.key !== editorB.key
  || editorA.renderNonce != editorB.renderNonce
  || editorA.scrollX != editorB.scrollX
  || editorA.scrollY != editorB.scrollY
- || editorA.buffer !== editorB.buffer
+ || editorA.buffer !== editorB.buffer;
 };
 
 let key = ({key, _}) => key;
