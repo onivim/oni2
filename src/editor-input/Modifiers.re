@@ -1,3 +1,4 @@
+[@deriving show]
 type t = {
   control: bool,
   alt: bool,
