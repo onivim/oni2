@@ -27,9 +27,14 @@ module Animations = {
 };
 
 let%component make = (~visible: bool, ~theme, ()) => {
-  let%hook opacity = Hooks.transition(visible ? 1.0 : 0.0);
+  let%hook opacity =
+    Hooks.transition(~name="BusyBar Opacity Transition", visible ? 1.0 : 0.0);
   let%hook (time, _, _) =
-    Hooks.animation(~active=opacity >= 0.2, Animations.motion);
+    Hooks.animation(
+      ~name="BusyBar Animation",
+      ~active=opacity >= 0.2,
+      Animations.motion,
+    );
 
   let%hook (width, setWidth) = Hooks.state(0);
 

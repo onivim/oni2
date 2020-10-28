@@ -327,9 +327,17 @@ module ModeIndicator = {
     let foreground = Colors.Oni.foregroundFor(mode).from(theme);
 
     let%hook background =
-      CustomHooks.colorTransition(~duration=transitionDuration, background);
+      CustomHooks.colorTransition(
+        ~name="Mode Background Transition",
+        ~duration=transitionDuration,
+        background,
+      );
     let%hook foreground =
-      CustomHooks.colorTransition(~duration=transitionDuration, foreground);
+      CustomHooks.colorTransition(
+        ~name="Mode Foreground Transition",
+        ~duration=transitionDuration,
+        foreground,
+      );
 
     <item backgroundColor=background>
       <Text
@@ -375,6 +383,7 @@ module View = {
                 ) => {
     let%hook activeNotifications =
       CustomHooks.useExpiration(
+        ~name="StatusBar Notification Expirer",
         ~expireAfter=Feature_Notification.View.Popup.Animations.totalDuration,
         ~equals=(a, b) => Feature_Notification.(a.id == b.id),
         (notifications :> list(Feature_Notification.notification)),
@@ -393,17 +402,22 @@ module View = {
 
     let%hook background =
       CustomHooks.colorTransition(
+        ~name="StatusBar Background Color Transition",
         ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
         background,
       );
     let%hook foreground =
       CustomHooks.colorTransition(
+        ~name="StatusBar Foreground Color Transition",
         ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
         foreground,
       );
 
     let%hook (yOffset, _animationState, _reset) =
-      Hooks.animation(transitionAnimation);
+      Hooks.animation(
+        ~name="StatusBar Transition Animation",
+        transitionAnimation,
+      );
 
     let defaultForeground = Colors.StatusBar.foreground.from(theme);
 

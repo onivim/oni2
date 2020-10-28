@@ -94,7 +94,11 @@ module Notification = {
       };
 
     let%hook (scale, _state, _reset) =
-      Hooks.animation(Animations.appear, ~active=true);
+      Hooks.animation(
+        ~name="Notification Appear",
+        Animations.appear,
+        ~active=true,
+      );
     <View style={Styles.notification(~scale, ~theme, ~padding)}>
       inner
     </View>;
@@ -177,7 +181,8 @@ let%component make =
                 ~font: UiFont.t,
                 (),
               ) => {
-  let%hook (offsetX, _animationState, _reset) = Hooks.animation(animation);
+  let%hook (offsetX, _animationState, _reset) =
+    Hooks.animation(~name="Dock Notification Animation", animation);
 
   let isSidebarVisible = it => Feature_SideBar.isVisible(it, sideBar);
 

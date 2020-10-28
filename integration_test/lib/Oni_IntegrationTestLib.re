@@ -166,6 +166,7 @@ let runTest =
 
   let _: unit => unit =
     Revery.Tick.interval(
+      ~name="Integration Test Ticker",
       _ => {
         let state = currentState^;
         Revery.Utility.HeadlessWindow.render(

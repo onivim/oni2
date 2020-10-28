@@ -507,7 +507,11 @@ let start =
   setIconTheme("vs-seti");
 
   let _: unit => unit =
-    Revery.Tick.interval(_ => runEffects(), Revery.Time.zero);
+    Revery.Tick.interval(
+      ~name="Store: Run Effects",
+      _ => runEffects(),
+      Revery.Time.zero,
+    );
 
   (dispatch, runEffects);
 };
