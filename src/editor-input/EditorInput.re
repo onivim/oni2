@@ -108,7 +108,8 @@ module Make = (Config: {
     suppressText: bool,
     bindings: list(binding),
     text: list(textEntry),
-    keys: list(gesture),
+    // Keys stored in reverse order - most recent keys first
+    revKeys: list(gesture),
     pressedScancodes: IntSet.t,
   };
 
@@ -118,7 +119,7 @@ module Make = (Config: {
     suppressText: false,
     lastDownKey: None,
     bindings: first.bindings @ second.bindings,
-    keys: [],
+    revKeys: [],
     text: [],
     pressedScancodes: IntSet.empty,
   };
@@ -243,7 +244,7 @@ module Make = (Config: {
     ...bindings,
     lastDownKey: None,
     text,
-    keys,
+    revKeys: keys,
   };
 
   let getReadyBindings = bindings => {
@@ -267,6 +268,25 @@ module Make = (Config: {
     ret;
   };
 
+  let getTextFromKeyId = (keyId, {text, _}: t) => {
+    text
+    |> List.filter(textEntry => textEntry.keyDownId == keyId)
+    |> (l) => List.nth_opt(l, 0)
+    |> Option.map((textEntry: textEntry) => textEntry.text);
+  };
+
+  let getEffectFromGesture = (gesture, bindings) => {
+    switch (gesture) {
+    | Down(id, keyPress) => 
+      switch (getTextFromKeyId(id, bindings)) {
+      | None => Some(Unhandled(keyPress))
+      | Some(text) => Some(Text(text))
+      }
+    | Up(_)
+    | AllKeysReleased  => None
+    }
+  };
+
   let getTextMatchingKeys = (text, keys) => {
     let hash = keyIdsToHashtable(keys);
 
@@ -284,7 +304,7 @@ module Make = (Config: {
   };
 
   let flush = (~context, bindings) => {
-    let allKeys = bindings.keys;
+    let allKeys = bindings.revKeys;
 
     let rec loop =
             (
@@ -403,7 +423,7 @@ module Make = (Config: {
     text: [],
     lastDownKey: None,
     bindings: [],
-    keys: [],
+    revKeys: [],
     pressedScancodes: IntSet.empty,
   };
 
@@ -418,10 +438,10 @@ module Make = (Config: {
         };
       (empty, eff);
     } else {
-      let keys = [gesture, ...bindings.keys];
+      let revKeys = [gesture, ...bindings.revKeys];
 
       let candidateBindings =
-        applyKeysToBindings(~context, keys |> List.rev, bindings.bindings);
+        applyKeysToBindings(~context, revKeys |> List.rev, bindings.bindings);
 
       let readyBindings = getReadyBindings(candidateBindings);
       let readyBindingCount = List.length(readyBindings);
@@ -430,11 +450,11 @@ module Make = (Config: {
       let potentialBindingCount = candidateBindingCount - readyBindingCount;
 
       if (potentialBindingCount > 0) {
-        ({...bindings, keys}, []);
+        ({...bindings, revKeys}, []);
       } else {
         switch (List.nth_opt(readyBindings, 0)) {
         | Some(binding) =>
-          let text = getTextNotMatchingKeys(bindings.text, keys);
+          let text = getTextNotMatchingKeys(bindings.text, revKeys);
           switch (binding.action) {
           | Dispatch(command) => (
               reset({...bindings, suppressText: true, text}),
@@ -458,12 +478,12 @@ module Make = (Config: {
               remappedKeys,
             )
           };
-        | None => flush(~context, {...bindings, keys})
+        | None => flush(~context, {...bindings, revKeys})
         };
       };
     };
 
-  let isPending = ({keys, _}) => keys != [];
+  let isPending = ({revKeys, _}) => revKeys != [];
 
   let keyDown = (~context, ~key, bindings) => {
     let id = KeyDownId.get();
