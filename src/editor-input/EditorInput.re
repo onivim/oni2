@@ -103,6 +103,15 @@ module Make = (Config: {
   };
 
   type t = {
+    // The `suppressText` flag is used to handle the flow of input events:
+    // - KeyDown
+    // - Text (maybe)
+    // - KeyUp
+    // When a KeyDown is sent - there may or may not be a subsequent event.
+    // If a KeyDown did not participate in a binding, we dispatch the Text
+    // event preferably. However, if the KeyDown did participate in a binding,
+    // we set the suppressText flag to prevent dispatching a corresponding
+    // Text event in that case. Once there is a KeyUp - we reset that flag.
     suppressText: bool,
     bindings: list(binding),
     text: list(textEntry),
@@ -391,7 +400,11 @@ module Make = (Config: {
 
           | Remap(_) =>
             // Let flush handle the remap action
-            flush(~recursionDepth, ~context, {...bindings, revKeys})
+            flush(
+              ~recursionDepth,
+              ~context,
+              {...bindings, suppressText: true, revKeys},
+            )
           };
 
         | None => flush(~recursionDepth, ~context, {...bindings, revKeys})
@@ -448,7 +461,7 @@ module Make = (Config: {
               ~recursionDepth=recursionDepth + 1,
               ~context,
               ~keys,
-              rewindBindings,
+              {...rewindBindings, suppressText: true},
             );
           | Dispatch(command) =>
             let revEffects = [Execute(command), ...revEffects];
@@ -456,7 +469,7 @@ module Make = (Config: {
             let rewindBindings =
               useUpKeysForBinding(~context, ~bindingId=binding.id, bindings);
             // And then anything else past it - treat as unhandled
-            popAll(~revEffects, rewindBindings);
+            popAll(~revEffects, {...rewindBindings, suppressText: true});
           }
         };
       };
