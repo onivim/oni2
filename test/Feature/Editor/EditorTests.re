@@ -3,6 +3,8 @@ open EditorCoreTypes;
 open TestFramework;
 
 module Buffer = Oni_Core.Buffer;
+module BufferLineColorizer = Feature_Editor.BufferLineColorizer;
+module BufferViewTokenizer = Feature_Editor.BufferViewTokenizer;
 module Editor = Feature_Editor.Editor;
 module EditorBuffer = Feature_Editor.EditorBuffer;
 module WrapMode = Editor.WrapMode;
@@ -20,15 +22,62 @@ describe("Editor", ({describe, _}) => {
     (Editor.create(~config, ~buffer=editorBuffer, ()), buffer);
   };
 
+  let (_editor, measureBuffer) = create([||]);
+  let aWidth = Buffer.measure(Uchar.of_char('a'), measureBuffer);
+
   let bytePos = (lnum, byteNum) =>
     BytePosition.{
       line: LineNumber.ofZeroBased(lnum),
       byte: ByteIndex.ofInt(byteNum),
     };
+  describe("viewTokens", ({test, _}) => {
+    test("single token returned", ({expect, _}) => {
+      let (editor, _buffer) = create([|"aaa"|]);
+      let editor =
+        editor
+        |> Editor.setWrapMode(~wrapMode=WrapMode.NoWrap)
+        |> Editor.setSize(~pixelWidth=500, ~pixelHeight=500);
+
+      let colorizer = (~startByte as _, _) => {
+        BufferLineColorizer.{
+          color: Revery.Colors.black,
+          backgroundColor: Revery.Colors.white,
+          italic: false,
+          bold: false,
+        };
+      };
+      let viewTokens =
+        Editor.viewTokens(~line=0, ~scrollX=0., ~colorizer, editor);
+      expect.int(List.length(viewTokens)).toBe(1);
+
+      let item: BufferViewTokenizer.t = List.nth(viewTokens, 0);
+      expect.float(item.startPixel).toBeCloseTo(0.0);
+    });
+    test("single token returned, with a little bit of scroll", ({expect, _}) => {
+      let (editor, _buffer) = create([|"aaa"|]);
+      let editor =
+        editor
+        |> Editor.setWrapMode(~wrapMode=WrapMode.NoWrap)
+        |> Editor.setSize(~pixelWidth=500, ~pixelHeight=500);
+
+      let colorizer = (~startByte as _, _) => {
+        BufferLineColorizer.{
+          color: Revery.Colors.black,
+          backgroundColor: Revery.Colors.white,
+          italic: false,
+          bold: false,
+        };
+      };
+      let viewTokens =
+        Editor.viewTokens(~line=0, ~scrollX=1., ~colorizer, editor);
+      expect.int(List.length(viewTokens)).toBe(1);
+
+      let item: BufferViewTokenizer.t = List.nth(viewTokens, 0);
+      expect.float(item.startPixel).toBeCloseTo(-1.0);
+    });
+  });
 
   describe("bufferLineByteToPixel", ({test, _}) => {
-    let (_editor, measureBuffer) = create([||]);
-    let aWidth = Buffer.measure(Uchar.of_char('a'), measureBuffer);
     test("first line, byte should be at position (nowrap)", ({expect, _}) => {
       let (editor, _buffer) = create([|"aaaaaa"|]);
       let editor = editor |> Editor.setWrapMode(~wrapMode=WrapMode.NoWrap);
