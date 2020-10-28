@@ -63,14 +63,18 @@ let update = (msg, model: model) => {
 module CommandLine = {
   let getCompletionMeet = commandLine => {
     let len = String.length(commandLine);
-
     if (len == 0) {
       None;
     } else {
-      String.rindex_opt(commandLine, ' ')
-      |> Option.map(idx => idx + 1)  // Advance past space
-      |> OptionEx.or_(Some(0));
-    };
+      let last_unescaped_space_index = ref(Some(0)); // default result
+      String.iteri(
+        (i, c) => if (i > 0 && commandLine.[i-1] != '\\' && c == ' ') {
+          last_unescaped_space_index := Some(i+1); // Advance past space
+        },
+        commandLine
+      );
+      last_unescaped_space_index^;
+    }
   };
 
   let%test "empty command line returns None" = {
