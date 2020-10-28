@@ -291,7 +291,7 @@ let splitLines: string => (bool, array(string)) =
     (isMultipleLines(text), out);
   };
 
-/** unescaped meaning not preceded directly by a backslash "\" */
+/** unescaped meaning not preceded directly by a backslash (\) */
 let findUnescapedFromEnd: string => char => option(int) =
   (str, chr) => {
     let last_unescaped_index = ref(None); // default result
