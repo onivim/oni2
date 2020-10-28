@@ -122,13 +122,17 @@ void onSettingChanged(optionSet_T *options) {
   if (lv_onSettingChanged == NULL) {
     lv_onSettingChanged = caml_named_value("lv_onSettingChanged");
   }
+
+  printf("-- Setting changed: %s \n", options->fullname);
   
   if (options->type == 1 || options-> type == 0) {
     // String value
     if (options->type == 0) {
+    printf("-- Type 0\n");
       innerValue = caml_alloc(1, 0);
       Store_field(innerValue, 0, caml_copy_string((const char *)options->stringval));
     } else {
+    printf("-- Type 1\n");
       innerValue = caml_alloc(1, 1);
       Store_field(innerValue, 0, Val_int(options->numval));
     }

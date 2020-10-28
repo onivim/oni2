@@ -71,6 +71,28 @@ describe("Options", ({describe, _}) => {
 
       dispose();
     });
+    test(":set backspace=indent", ({expect, _}) => {
+      let _ = resetBuffer();
+
+      let effects = ref([]);
+      let dispose = onEffect(eff => effects := [eff, ...effects^]);
+
+      let (_: Context.t, _: list(Effect.t)) = Vim.command("set backspace=indent");
+      expect.equal(
+        effects^,
+        [
+          SettingChanged(
+            Setting.{
+              fullName: "backspace",
+              shortName: Some("rtp"),
+              value: Int(2),
+            },
+          ),
+        ],
+      );
+
+      dispose();
+    });
   });
   describe("tabs / spaces", ({test, _}) => {
     test("get / set tab options", ({expect, _}) => {
