@@ -81,11 +81,15 @@ module CommandLine = {
   };
 
   let%test "meet with a path, spaces" = {
-    getCompletionMeet("vsp /path with spaces/") == Some(4);
+    getCompletionMeet("vsp /path\\ with\\ spaces/") == Some(4);
   };
 
   let%test "meet multiple paths" = {
     getCompletionMeet("!cp /path1 /path2") == Some(11);
+  };
+
+  let%test "meet multiple paths with spaces" = {
+    getCompletionMeet("!cp /path\\ 1 /path\\ 2") == Some(11);
   };
 };
 

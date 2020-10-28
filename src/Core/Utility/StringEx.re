@@ -270,6 +270,7 @@ let removeWindowsNewLines = s =>
   |> List.filter(c => c != '\r')
   |> List.map(c => String.make(1, c))
   |> String.concat("");
+
 let splitNewLines = s => s |> String.split_on_char('\n') |> Array.of_list;
 
 let removeTrailingNewLine = s => {
@@ -292,7 +293,7 @@ let splitLines: string => (bool, array(string)) =
   };
 
 /** unescaped meaning not preceded directly by a backslash (\) */
-let findUnescapedFromEnd: string => char => option(int) =
+let findUnescapedFromEnd: (string, char) => option(int) =
   (str, chr) => {
     let last_unescaped_index = ref(None); // default result
     String.iteri(
@@ -304,3 +305,11 @@ let findUnescapedFromEnd: string => char => option(int) =
     );
     last_unescaped_index^;
   };
+
+// turns 'hello world' into 'hello\ world'
+// may be worth replacing/complementing with 'escapeFilePath' */
+let escapeSpaces: string => string =
+  s =>
+    List.init(String.length(s), String.get(s))
+    |> List.map(c => (c == ' ' ? "\\" : "") ++ String.make(1, c))
+    |> String.concat("");
