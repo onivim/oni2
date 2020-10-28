@@ -289,12 +289,27 @@ let viewTokens = (~line, ~scrollX, ~colorizer, editor) => {
   let viewStartIndex = BufferLine.getIndex(~byte=viewStartByte, bufferLine);
   let viewEndIndex = BufferLine.getIndex(~byte=viewEndByte, bufferLine);
 
-  BufferViewTokenizer.tokenize(
-    ~start=viewStartIndex,
-    ~stop=viewEndIndex,
-    bufferLine,
-    colorizer(~startByte=viewStartByte),
-  );
+  let tokens =
+    BufferViewTokenizer.tokenize(
+      ~start=viewStartIndex,
+      ~stop=viewEndIndex,
+      bufferLine,
+      colorizer(~startByte=viewStartByte),
+    );
+
+  // The tokens returned from tokenize start at a pixel position of 0.
+  // However, there may be a scroll applied, and we need to account for
+  // shifting the tokens if the scroll position is not exactly aligned to
+  // a character.
+  let (startIndexPixel, _width) =
+    BufferLine.getPixelPositionAndWidth(~index=viewStartIndex, bufferLine);
+
+  let pixelOffset = scrollX -. startIndexPixel;
+
+  tokens
+  |> List.map((token: BufferViewTokenizer.t) =>
+       {...token, startPixel: token.startPixel -. pixelOffset}
+     );
 };
 
 let bufferCharacterPositionToPixel =
