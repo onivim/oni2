@@ -24,7 +24,8 @@ module type Input = {
   type effect =
     | Execute(command)
     | Text(string)
-    | Unhandled(KeyPress.t);
+    | Unhandled(KeyPress.t)
+    | RemapRecursionLimitHit;
 
   let keyDown: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
   let text: (~text: string, t) => (t, list(effect));
@@ -70,7 +71,8 @@ module Make = (Config: {
   type effect =
     | Execute(command)
     | Text(string)
-    | Unhandled(KeyPress.t);
+    | Unhandled(KeyPress.t)
+    | RemapRecursionLimitHit;
 
   type action =
     | Dispatch(command)
@@ -277,12 +279,6 @@ module Make = (Config: {
     text |> List.filter(textEntry => !Hashtbl.mem(hash, textEntry.keyDownId));
   };
 
-  let isRemap = ({action, _}) =>
-    switch (action) {
-    | Dispatch(_) => false
-    | Remap(_) => true
-    };
-
   module Constants = {
     let maxRecursiveDepth = 10;
   };
@@ -301,14 +297,6 @@ module Make = (Config: {
             ) => {
       let candidateBindings =
         applyKeysToBindings(~context, revKeys |> List.rev, bindings.bindings);
-
-      // If we've hit the recursion limit for remaps... filter out remaps
-      let candidateBindings =
-        if (iterationCount > Constants.maxRecursiveDepth) {
-          candidateBindings |> List.filter(binding => !isRemap(binding));
-        } else {
-          candidateBindings;
-        };
 
       let readyBindings = getReadyBindings(candidateBindings);
       let readyBindingCount = List.length(readyBindings);
@@ -410,42 +398,70 @@ module Make = (Config: {
     (reset(~keys, ~text, bindings), textEffects @ effects);
   };
 
-  let handleKeyCore = (~context, gesture, bindings) => {
-    let originalKeys = bindings.keys;
-    let keys = [gesture, ...bindings.keys];
+  let empty = {
+    suppressText: false,
+    text: [],
+    lastDownKey: None,
+    bindings: [],
+    keys: [],
+    pressedScancodes: IntSet.empty,
+  };
 
-    let candidateBindings =
-      applyKeysToBindings(~context, keys |> List.rev, bindings.bindings);
-
-    let readyBindings = getReadyBindings(candidateBindings);
-    let readyBindingCount = List.length(readyBindings);
-    let candidateBindingCount = List.length(candidateBindings);
-
-    let potentialBindingCount = candidateBindingCount - readyBindingCount;
-
-    if (potentialBindingCount > 0) {
-      ({...bindings, keys}, []);
-    } else {
-      switch (List.nth_opt(readyBindings, 0)) {
-      | Some(binding) =>
-        let text = getTextNotMatchingKeys(bindings.text, keys);
-        switch (binding.action) {
-        | Dispatch(command) => (
-            reset({...bindings, suppressText: true, text}),
-            [Execute(command)],
-          )
-        | Remap(remappedKeys) =>
-          let keys =
-            List.append(
-              originalKeys,
-              List.map(k => Down(KeyDownId.get(), k), remappedKeys),
-            );
-          flush(~context, {...bindings, suppressText: true, text, keys});
+  let rec handleKeyCore = (~recursionDepth=0, ~context, gesture, bindings) =>
+    // Hit the maximum remap recursion depth - just bail on this key.
+    if (recursionDepth > Constants.maxRecursiveDepth) {
+      let eff =
+        switch (gesture) {
+        | Down(_id, key) => [RemapRecursionLimitHit, Unhandled(key)]
+        | Up(_) => [RemapRecursionLimitHit]
+        | AllKeysReleased => [RemapRecursionLimitHit]
         };
-      | None => flush(~context, {...bindings, keys})
+      (empty, eff);
+    } else {
+      let keys = [gesture, ...bindings.keys];
+
+      let candidateBindings =
+        applyKeysToBindings(~context, keys |> List.rev, bindings.bindings);
+
+      let readyBindings = getReadyBindings(candidateBindings);
+      let readyBindingCount = List.length(readyBindings);
+      let candidateBindingCount = List.length(candidateBindings);
+
+      let potentialBindingCount = candidateBindingCount - readyBindingCount;
+
+      if (potentialBindingCount > 0) {
+        ({...bindings, keys}, []);
+      } else {
+        switch (List.nth_opt(readyBindings, 0)) {
+        | Some(binding) =>
+          let text = getTextNotMatchingKeys(bindings.text, keys);
+          switch (binding.action) {
+          | Dispatch(command) => (
+              reset({...bindings, suppressText: true, text}),
+              [Execute(command)],
+            )
+          | Remap(remappedKeys) =>
+            List.fold_left(
+              (acc, key) => {
+                let (bindings, effects) = acc;
+                let gesture = Down(KeyDownId.get(), key);
+                let (bindings', effects') =
+                  handleKeyCore(
+                    ~recursionDepth=recursionDepth + 1,
+                    ~context,
+                    gesture,
+                    bindings,
+                  );
+                (bindings', effects @ effects');
+              },
+              (bindings, []),
+              remappedKeys,
+            )
+          };
+        | None => flush(~context, {...bindings, keys})
+        };
       };
     };
-  };
 
   let isPending = ({keys, _}) => keys != [];
 
@@ -514,14 +530,5 @@ module Make = (Config: {
     let (bindings, effects) = handleKeyCore(~context, Up(key), bindings);
 
     (bindings, effects @ initialEffects);
-  };
-
-  let empty = {
-    suppressText: false,
-    text: [],
-    lastDownKey: None,
-    bindings: [],
-    keys: [],
-    pressedScancodes: IntSet.empty,
   };
 };

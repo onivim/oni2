@@ -99,7 +99,10 @@ module type Input = {
     | Text(string)
     // The `Unhandled` effect occurs when an unhandled `keyDown` input event occurs.
     // This can happen if there is no binding associated with a key.
-    | Unhandled(KeyPress.t);
+    | Unhandled(KeyPress.t)
+    // RemapRecursionLimitHit is produced if there is a recursive loop
+    // in remappings such that we hit the max limit.
+    | RemapRecursionLimitHit;
 
   let keyDown: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
   let text: (~text: string, t) => (t, list(effect));

@@ -5,7 +5,8 @@ let empty: t;
 type effect =
   | Execute(string)
   | Text(string)
-  | Unhandled(EditorInput.KeyPress.t);
+  | Unhandled(EditorInput.KeyPress.t)
+  | RemapRecursionLimitHit;
 
 let count: t => int;
 
