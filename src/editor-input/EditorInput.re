@@ -371,10 +371,14 @@ module Make = (Config: {
 
       let potentialBindingCount = candidateBindingCount - readyBindingCount;
 
+      // We've got more than one potential binding, so let's wait
+      // and see what the user presses next.
       if (potentialBindingCount > 0) {
         ({...bindings, revKeys}, []);
       } else {
+        // No 'potential' bindings - but is there one ready?
         switch (List.nth_opt(readyBindings, 0)) {
+        // There is a matching, ready binding - let's run it.
         | Some(binding) =>
           let bindings' =
             useUpKeysForBinding(~context, ~bindingId=binding.id, bindings);
@@ -384,10 +388,12 @@ module Make = (Config: {
               {...bindings', text, suppressText: true},
               [Execute(command)],
             )
+
           | Remap(_) =>
             // Let flush handle the remap action
             flush(~recursionDepth, ~context, {...bindings, revKeys})
           };
+
         | None => flush(~recursionDepth, ~context, {...bindings, revKeys})
         };
       };
