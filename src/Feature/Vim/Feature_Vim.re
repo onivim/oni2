@@ -66,15 +66,8 @@ module CommandLine = {
     if (len == 0) {
       None;
     } else {
-      let last_unescaped_space_index = ref(Some(0)); // default result
-      String.iteri(
-        (i, c) => if (i > 0 && commandLine.[i-1] != '\\' && c == ' ') {
-          last_unescaped_space_index := Some(i+1); // Advance past space
-        },
-        commandLine
-      );
-      last_unescaped_space_index^;
-    }
+      StringEx.findUnescapedFromEnd(commandLine, ' ');
+    };
   };
 
   let%test "empty command line returns None" = {

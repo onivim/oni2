@@ -290,3 +290,17 @@ let splitLines: string => (bool, array(string)) =
 
     (isMultipleLines(text), out);
   };
+
+/** unescaped meaning not preceded directly by a backslash "\" */
+let findUnescapedFromEnd: string => char => option(int) =
+  (str, chr) => {
+    let last_unescaped_index = ref(Some(0)); // default result
+    String.iteri(
+      (i, c) =>
+        if (i > 0 && str.[i - 1] != '\\' && c == chr) {
+          last_unescaped_index := Some(i + 1); // Advance past space
+        },
+      str,
+    );
+    last_unescaped_index^;
+  };
