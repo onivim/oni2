@@ -122,24 +122,6 @@ let lineHeightInPixels = ({buffer, lineHeight, _}) =>
        ~measuredFontHeight=EditorBuffer.font(buffer).measuredHeight,
      );
 
-let addInlineElement = (~uniqueId, ~lineNumber, ~height, editor) => {
-  {
-    ...editor,
-    inlineElements:
-      InlineElements.add(
-        ~uniqueId,
-        ~line=lineNumber,
-        ~height=float(height),
-        editor.inlineElements,
-      ),
-  };
-};
-
-let removeInlineElement = (~uniqueId, editor) => {
-  ...editor,
-  inlineElements: InlineElements.remove(~uniqueId, editor.inlineElements),
-};
-
 let linePaddingInPixels = ({buffer, _} as editor) =>
   (lineHeightInPixels(editor) -. EditorBuffer.font(buffer).measuredHeight)
   /. 2.;
@@ -698,12 +680,57 @@ let getPrimaryCursor = editor => {
      );
 };
 
+
+
 let getPrimaryCursorByte = editor =>
   switch (cursors(editor)) {
   | [cursor, ..._] => cursor
   | [] =>
     BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}
   };
+
+let withSteadyCursor = (f, editor) => {
+  
+  let bytePosition = getPrimaryCursorByte(editor);
+
+  let calculateOffset = (bytePosition, editor) => {
+    let wrapping = editor.wrapState |> WrapState.wrapping;
+    let viewLine =
+      Wrapping.bufferBytePositionToViewLine(~bytePosition, wrapping);
+
+    viewLineToPixelY(viewLine, editor);
+  }
+
+  let originalOffset = calculateOffset(bytePosition, editor);
+  let editor' = f(editor);
+
+  let newOffset = calculateOffset(bytePosition, editor');
+  let scrollY = editor.scrollY +. (newOffset -. originalOffset);
+  {...editor', scrollY, isScrollAnimated: false};
+};
+
+let addInlineElement = (~uniqueId, ~lineNumber, ~height, editor) => {
+  editor
+  |> withSteadyCursor((e) => {
+    
+    ...e,
+    inlineElements:
+      InlineElements.add(
+        ~uniqueId,
+        ~line=lineNumber,
+        ~height=float(height),
+        editor.inlineElements,
+      ),
+      });
+};
+
+let removeInlineElement = (~uniqueId, editor) => {
+  editor
+  |> withSteadyCursor((e) => {
+  ...editor,
+  inlineElements: InlineElements.remove(~uniqueId, editor.inlineElements),
+  });
+};
 let selectionOrCursorRange = editor => {
   switch (selection(editor)) {
   | None =>
