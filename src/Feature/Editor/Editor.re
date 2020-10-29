@@ -723,7 +723,7 @@ let exposePrimaryCursor = editor =>
       let scrollOffX = getCharacterWidth(editor) *. 2.;
       let scrollOffY =
         lineHeightInPixels(editor)
-        *. float(max(editor.verticalScrollMargin, 1));
+        *. float(max(editor.verticalScrollMargin, 0));
 
       let availableX = pixelWidth -. scrollOffX;
       let availableY = pixelHeight -. scrollOffY;
@@ -745,7 +745,7 @@ let exposePrimaryCursor = editor =>
           if (pixelY < scrollOffY) {
             scrollY -. scrollOffY +. pixelY;
           } else if (pixelY >= availableY) {
-            scrollY +. (pixelY -. availableY);
+            scrollY +. (pixelY -. availableY +. lineHeightInPixels(editor));
           } else {
             scrollY;
           },
