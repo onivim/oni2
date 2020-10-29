@@ -363,6 +363,8 @@ let%component make =
       bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
       windowIsFocused
       config
+      uiFont
+      theme
     />
     {Editor.isMinimapEnabled(editor)
        ? <minimap
