@@ -43,10 +43,10 @@ type t =
   | KeyBindingsReload
   | KeyBindingsParseError(string)
   | KeybindingInvoked({command: string})
-  | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | KeyDown(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | KeyUp(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | Logging(Feature_Logging.msg)
-  | TextInput([@opaque] string, [@opaque] Revery.Time.t)
+  | TextInput(string, [@opaque] Revery.Time.t)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   // TODO: This should be a function call - wired up from an input feature

@@ -66,6 +66,13 @@ switch (eff) {
   };
   Oni_Core.Log.init();
 
+  // #1161 - OSX - Make sure we're using the terminal / shell PATH.
+  // Only fix path when launched from finder -
+  // it seems running `zsh -ilc` hangs when running from terminal.
+  if (Sys.getenv_opt("ONI2_LAUNCHED_FROM_FINDER") |> Option.is_some) {
+    Core.ShellUtility.fixOSXPath();
+  };
+
   let initWorkingDirectory = () => {
     let path =
       switch (Oni_CLI.(cliOptions.folder)) {
@@ -308,7 +315,8 @@ switch (eff) {
         setTitle(currentTitle);
       };
     };
-    let _: unit => unit = Tick.interval(tick, Time.zero);
+    let _: unit => unit =
+      Tick.interval(~name="Oni2_Editor Apploop", tick, Time.zero);
 
     let getZoom = () => {
       Window.getZoom(window);

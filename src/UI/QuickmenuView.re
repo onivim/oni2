@@ -76,7 +76,7 @@ let%component busyBar = (~theme, ()) => {
       |> ease(Easing.easeInOut)
       |> repeat
       |> tween(0., 1.)
-      |> Hooks.animation
+      |> Hooks.animation(~name="QuickMenu busyBar")
     );
 
   let indicator = () => {

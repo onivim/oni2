@@ -48,6 +48,7 @@ let%component make =
 
   let%hook y =
     Hooks.transitionf(
+      ~name="Cursor Y Transition",
       ~active=animatedCursor,
       ~duration=durationFunc,
       ~delay,
@@ -57,6 +58,7 @@ let%component make =
     );
   let%hook x =
     Hooks.transitionf(
+      ~name="Cursor X Transition",
       ~active=animatedCursor,
       ~delay,
       ~duration=durationFunc,
