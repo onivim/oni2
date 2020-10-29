@@ -420,13 +420,21 @@ let cursors = ({mode, _}) => Vim.Mode.cursors(mode);
 let maxLineLength = ({wrapState, _}) =>
   wrapState |> WrapState.wrapping |> Wrapping.maxLineLength;
 
-let getTopVisibleBufferLine = editor => {
-  let topViewLine =
+let viewLineToPixelY = (idx, editor) => {
+  lineHeightInPixels(editor) *. float(idx);
+};
+
+let getTopViewLine = editor => {
     int_of_float(editor.scrollY /. lineHeightInPixels(editor));
+};
+
+let getTopVisibleBufferLine = editor => {
+  let topViewLine = getTopViewLine(editor);
   viewLineToBufferLine(topViewLine, editor);
 };
 
-let getBottomVisibleBufferLine = editor => {
+let getBottomViewLine = editor => {
+  
   let absoluteBottomLine =
     int_of_float(
       (editor.scrollY +. float_of_int(editor.pixelHeight))
@@ -435,8 +443,11 @@ let getBottomVisibleBufferLine = editor => {
 
   let viewLines = editor |> totalViewLines;
 
-  let viewBottomLine =
     absoluteBottomLine >= viewLines ? viewLines - 1 : absoluteBottomLine;
+};
+
+let getBottomVisibleBufferLine = editor => {
+  let viewBottomLine = getBottomViewLine(editor);
   viewLineToBufferLine(viewBottomLine, editor);
 };
 

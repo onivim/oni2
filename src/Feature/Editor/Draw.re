@@ -40,15 +40,26 @@ let createContext =
 };
 
 let renderImmediate = (~context, ~count, render) => {
-  let scrollY = Editor.scrollY(context.editor);
-  ImmediateList.render(
-    ~scrollY,
-    ~rowHeight=Editor.lineHeightInPixels(context.editor),
-    ~height=float(context.height),
-    ~count,
-    ~render=(i, offsetY) => render(i, offsetY),
-    (),
-  );
+  let topLine = max(0, Editor.getTopViewLine(context.editor) - 1);
+  let bottomLine = min(
+    Editor.totalViewLines(context.editor) - 1,
+  Editor.getBottomViewLine(context.editor) + 1);
+
+  for (idx in topLine to bottomLine) {
+    let offsetY = 
+      Editor.viewLineToPixelY(idx, context.editor);
+
+    render(idx, offsetY -. Editor.scrollY(context.editor));
+  }
+//  let scrollY = Editor.scrollY(context.editor);
+//  ImmediateList.render(
+//    ~scrollY,
+//    ~rowHeight=Editor.lineHeightInPixels(context.editor),
+//    ~height=float(context.height),
+//    ~count,
+//    ~render=(i, offsetY) => render(i, offsetY),
+//    (),
+//  );
 };
 
 let drawRect = {

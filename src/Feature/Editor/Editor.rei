@@ -30,6 +30,8 @@ let getId: t => int;
 let getBufferId: t => int;
 let getTopVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
 let getBottomVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
+let getTopViewLine: t => int;
+let getBottomViewLine: t => int;
 let getLeftVisibleColumn: t => int;
 let getLayout: t => EditorLayout.t;
 let getCharacterUnderCursor: t => option(Uchar.t);
@@ -144,6 +146,7 @@ let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
 let viewLineIsPrimary: (int, t) => bool;
 let viewLineToBufferLine: (int, t) => EditorCoreTypes.LineNumber.t;
 let bufferBytePositionToViewLine: (BytePosition.t, t) => int;
+let viewLineToPixelY: (int, t) => float;
 
 // PIXEL-SPACE CONVERSION
 
