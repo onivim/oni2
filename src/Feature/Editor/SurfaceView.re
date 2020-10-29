@@ -73,7 +73,6 @@ let%component make =
   let%hook (hoverTimer, resetHoverTimer) =
     Hooks.timer(~name="Mouse Hover Timer", ~active=hoverTimerActive^, ());
 
-  let lineCount = editor |> Editor.totalViewLines;
   let indentation = Buffer.getIndentation(buffer);
 
   let bufferId = buffer |> Oni_Core.Buffer.getId;
@@ -239,7 +238,6 @@ let%component make =
 
         ContentView.render(
           ~context,
-          ~count=lineCount,
           ~buffer,
           ~editor,
           ~colors,

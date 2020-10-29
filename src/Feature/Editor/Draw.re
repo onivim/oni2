@@ -39,7 +39,7 @@ let createContext =
   };
 };
 
-let renderImmediate = (~context, ~count, render) => {
+let renderImmediate = (~context, render) => {
   let topLine = max(0, Editor.getTopViewLine(context.editor) - 1);
   let bottomLine =
     min(
@@ -52,18 +52,6 @@ let renderImmediate = (~context, ~count, render) => {
 
     render(idx, offsetY -. Editor.scrollY(context.editor));
   };
-
-  // TODO: Remove count
-  ignore(count);
-  //  let scrollY = Editor.scrollY(context.editor);
-  //  ImmediateList.render(
-  //    ~scrollY,
-  //    ~rowHeight=Editor.lineHeightInPixels(context.editor),
-  //    ~height=float(context.height),
-  //    ~count,
-  //    ~render=(i, offsetY) => render(i, offsetY),
-  //    (),
-  //  );
 };
 
 let drawRect = {
