@@ -182,7 +182,7 @@ module View = {
   let make = (~theme, ~uiFont: Oni_Core.UiFont.t, ~codeLens, ()) => {
     let foregroundColor = CodeLensColors.foreground.from(theme);
     let text = text(codeLens);
-    <View style=Style.[marginTop(4), marginBottom(-4)]>
+    <View style=Style.[marginTop(4), marginBottom(0)]>
       <Text
         text
         fontFamily={uiFont.family}

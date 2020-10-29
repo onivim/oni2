@@ -341,7 +341,7 @@ let lineHighlight = (~context, ~color, viewLine) => {
   drawRect(
     ~context,
     ~x=0.,
-    ~y=pixelY,
+    ~y=pixelY -. Editor.scrollY(context.editor),
     ~height=Editor.lineHeightInPixels(context.editor),
     ~width=float(context.width),
     ~color,
