@@ -87,6 +87,7 @@ type t = {
   lineHeight: LineHeight.t,
   scrollX: float,
   scrollY: float,
+  inlineElements: InlineElements.t,
   isScrollAnimated: bool,
   isMinimapEnabled: bool,
   minimapMaxColumnWidth: int,
@@ -122,17 +123,21 @@ let lineHeightInPixels = ({buffer, lineHeight, _}) =>
      );
 
 let addInlineElement = (~uniqueId, ~lineNumber, ~height, editor) => {
-  // TODO
-  ignore(uniqueId);
-  ignore(lineNumber);
-  ignore(height);
-  editor;
+  {
+    ...editor,
+    inlineElements:
+      InlineElements.add(
+        ~uniqueId,
+        ~line=lineNumber,
+        ~height=float(height),
+        editor.inlineElements,
+      ),
+  };
 };
 
 let removeInlineElement = (~uniqueId, editor) => {
-  // TODO
-  ignore(uniqueId);
-  editor;
+  ...editor,
+  inlineElements: InlineElements.remove(~uniqueId, editor.inlineElements),
 };
 
 let linePaddingInPixels = ({buffer, _} as editor) =>
@@ -170,7 +175,7 @@ let bufferBytePositionToPixel =
     let viewLine =
       Wrapping.bufferBytePositionToViewLine(~bytePosition=position, wrapping);
 
-    let {characterOffset: viewStartIndex, _}: Wrapping.bufferPosition =
+    let {line: bufferLineNum, characterOffset: viewStartIndex, _}: Wrapping.bufferPosition =
       Wrapping.viewLineToBufferPosition(~line=viewLine, wrapping);
 
     let (startPixel, _width) =
@@ -180,9 +185,17 @@ let bufferBytePositionToPixel =
     let (actualPixel, width) =
       BufferLine.getPixelPositionAndWidth(~index, bufferLine);
 
+    // Account for inline elements, like codelens
+    let inlineElementOffsetY =
+      InlineElements.getReservedSpace(bufferLineNum, editor.inlineElements);
+
     let pixelX = actualPixel -. startPixel -. scrollX +. 0.5;
     let pixelY =
-      lineHeightInPixels(editor) *. float(viewLine) -. scrollY +. 0.5;
+      inlineElementOffsetY
+      +. lineHeightInPixels(editor)
+      *. float(viewLine)
+      -. scrollY
+      +. 0.5;
 
     ({x: pixelX, y: pixelY}: PixelPosition.t, width);
   };
@@ -425,6 +438,7 @@ let create = (~config, ~buffer, ()) => {
     wrapMode,
     wrapPadding: None,
     verticalScrollMargin: 1,
+    inlineElements: InlineElements.initial,
   }
   |> configure(~config);
 };
@@ -435,11 +449,61 @@ let maxLineLength = ({wrapState, _}) =>
   wrapState |> WrapState.wrapping |> Wrapping.maxLineLength;
 
 let viewLineToPixelY = (idx, editor) => {
-  lineHeightInPixels(editor) *. float(idx);
+  let wrapping = editor.wrapState |> WrapState.wrapping;
+  let {line: bufferLine, _}: Wrapping.bufferPosition =
+    Wrapping.viewLineToBufferPosition(~line=idx, wrapping);
+  let inlineElementOffsetY =
+    InlineElements.getReservedSpace(bufferLine, editor.inlineElements);
+  inlineElementOffsetY +. lineHeightInPixels(editor) *. float(idx);
+};
+
+let getViewLineFromPixelY = (~pixelY, editor) => {
+  //int_of_float(view.scrollY /. lineHeightInPixels(view)) + 1;
+  let lineHeight = lineHeightInPixels(editor);
+  let wrapping = editor.wrapState |> WrapState.wrapping;
+  let rec loop =
+          (accumulatedLines, accumulatedPixels, remainingInlineElements) =>
+    if (pixelY < accumulatedPixels) {
+      accumulatedLines - 1;
+    } else {
+      switch ((remainingInlineElements: InlineElements.t)) {
+      | [] =>
+        let lineNumber =
+          int_of_float((pixelY -. accumulatedPixels) /. lineHeight);
+        lineNumber + accumulatedLines;
+      | [hd, ...tail] =>
+        let viewLine =
+          Wrapping.bufferBytePositionToViewLine(
+            ~bytePosition=BytePosition.{line: hd.line, byte: ByteIndex.zero},
+            wrapping,
+          );
+        let additionalRegion =
+          float(viewLine - accumulatedLines) *. lineHeight;
+        if (additionalRegion +. accumulatedPixels >= pixelY) {
+          // The line is prior to the next inline element!
+          let lineNumber =
+            int_of_float((pixelY -. accumulatedPixels) /. lineHeight);
+          lineNumber + accumulatedLines;
+        } else {
+          // We need to advance
+          loop(
+            viewLine + 1,
+            accumulatedPixels +. additionalRegion +. hd.height +. lineHeight,
+            tail,
+          );
+        };
+      };
+    };
+
+  loop(0, 0., editor.inlineElements);
 };
 
 let getTopViewLine = editor => {
-  int_of_float(editor.scrollY /. lineHeightInPixels(editor));
+  getViewLineFromPixelY(
+    ~pixelY=editor.scrollY,
+    editor,
+    //int_of_float(editor.scrollY /. lineHeightInPixels(editor));
+  );
 };
 
 let getTopVisibleBufferLine = editor => {
@@ -449,9 +513,9 @@ let getTopVisibleBufferLine = editor => {
 
 let getBottomViewLine = editor => {
   let absoluteBottomLine =
-    int_of_float(
-      (editor.scrollY +. float_of_int(editor.pixelHeight))
-      /. lineHeightInPixels(editor),
+    getViewLineFromPixelY(
+      ~pixelY=editor.scrollY +. float_of_int(editor.pixelHeight),
+      editor,
     );
 
   let viewLines = editor |> totalViewLines;
