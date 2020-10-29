@@ -16,6 +16,6 @@
    Oni2.feature.scm Oni2.feature.sneak Oni2.feature.statusbar
    Oni2.feature.terminal Oni2.feature.titlebar Oni2.feature.modals
    Oni2.feature.layout Oni2.feature.vim Oni2.feature.signature_help
-   Oni2.feature.autoupdate ReasonFuzz textmate Oni2.editor-core-types)
+   Oni2.feature.autoupdate Fzy textmate Oni2.editor-core-types)
  (preprocess
   (pps lwt_ppx ppx_deriving_yojson ppx_deriving.show)))
