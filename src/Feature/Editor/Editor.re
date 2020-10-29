@@ -680,8 +680,6 @@ let getPrimaryCursor = editor => {
      );
 };
 
-
-
 let getPrimaryCursorByte = editor =>
   switch (cursors(editor)) {
   | [cursor, ..._] => cursor
@@ -690,7 +688,6 @@ let getPrimaryCursorByte = editor =>
   };
 
 let withSteadyCursor = (f, editor) => {
-  
   let bytePosition = getPrimaryCursorByte(editor);
 
   let calculateOffset = (bytePosition, editor) => {
@@ -699,7 +696,7 @@ let withSteadyCursor = (f, editor) => {
       Wrapping.bufferBytePositionToViewLine(~bytePosition, wrapping);
 
     viewLineToPixelY(viewLine, editor);
-  }
+  };
 
   let originalOffset = calculateOffset(bytePosition, editor);
   let editor' = f(editor);
@@ -711,25 +708,28 @@ let withSteadyCursor = (f, editor) => {
 
 let addInlineElement = (~uniqueId, ~lineNumber, ~height, editor) => {
   editor
-  |> withSteadyCursor((e) => {
-    
-    ...e,
-    inlineElements:
-      InlineElements.add(
-        ~uniqueId,
-        ~line=lineNumber,
-        ~height=float(height),
-        editor.inlineElements,
-      ),
-      });
+  |> withSteadyCursor(e =>
+       {
+         ...e,
+         inlineElements:
+           InlineElements.add(
+             ~uniqueId,
+             ~line=lineNumber,
+             ~height=float(height),
+             e.inlineElements,
+           ),
+       }
+     );
 };
 
 let removeInlineElement = (~uniqueId, editor) => {
   editor
-  |> withSteadyCursor((e) => {
-  ...editor,
-  inlineElements: InlineElements.remove(~uniqueId, editor.inlineElements),
-  });
+  |> withSteadyCursor(e =>
+       {
+         ...e,
+         inlineElements: InlineElements.remove(~uniqueId, e.inlineElements),
+       }
+     );
 };
 let selectionOrCursorRange = editor => {
   switch (selection(editor)) {
