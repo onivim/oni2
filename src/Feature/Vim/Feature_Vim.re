@@ -61,14 +61,17 @@ let update = (msg, model: model) => {
 };
 
 module CommandLine = {
-  let getCompletionMeet = commandLine => {
-    if (StringEx.isEmpty(commandLine)) { None; }
-    else {
+  let getCompletionMeet = commandLine =>
+    if (StringEx.isEmpty(commandLine)) {
+      None;
+    } else {
       let meet = StringEx.findUnescapedFromEnd(commandLine, ' ');
-      if (meet == None) { Some(0); }
-      else meet;
-    }
-  };
+      if (meet == None) {
+        Some(0);
+      } else {
+        meet;
+      };
+    };
 
   let%test "empty command line returns None" = {
     getCompletionMeet("") == None;
