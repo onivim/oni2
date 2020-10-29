@@ -168,4 +168,69 @@ describe("Options", ({describe, _}) => {
       );
     })
   });
+
+  describe("all options - sanity test", ({test, _}) => {
+    let boolValues = ["0", "1"];
+    let cases = [
+      ("aleph", Some("al"), boolValues),
+      ("antialias", Some("anti"), boolValues),
+      ("ambiwidth", Some("ambw"), ["single", "double"]),
+      ("autochdir", Some("acd"), boolValues),
+      ("autoindent", Some("ai"), boolValues),
+      ("autoread", Some("ar"), boolValues),
+      ("autowrite", Some("aw"), boolValues),
+      ("autowriteall", Some("awa"), boolValues),
+      ("background", Some("bg"), ["dark", "light"]),
+      ("backspace", Some("bs"), ["indent", "eol", "indent,eol"]),
+      ("backup", Some("bk"), boolValues),
+      ("backupcopy", Some("bkc"), ["yes", "no", "auto"]),
+      ("backupdir", Some("bdir"), ["/some/path"]),
+      ("backupext", Some("bdir"), ["~backup~"]),
+      ("backupskip", Some("bsk"), ["/tmp/"]),
+      // Remove ballooneval
+      // Remove ballondelay
+      // Remove balloonevalterm
+      // Remove FEAT_BEVAL_TERM
+      // Remove beautify
+      ("belloff", Some("bo"), ["all", "cursor", "all, cursor"]),
+      // Set binary to 0 on completion!
+      ("binary", Some("bo"), boolValues @ ["0"]),
+      // Remove bioskey
+      ("bomb", None, boolValues),
+      ("breakat", Some("brk"), ["abc"]),
+      ("breakindent", Some("bri"), boolValues),
+      ("breakindentopt", Some("briopt"), ["min:10,shift:10,sbr"]),
+      ("browsedir", Some("bsdir"), ["last"]),
+      ("bufhidden", Some("bh"), ["hide", "wipe"]),
+      ("buflisted", Some("bl"), boolValues),
+      ("buftype", Some("bt"), ["", "acwrite", "quickfix", "terminal"]),
+      ("casemap", Some("cmp"), ["internal", "keepascii"]),
+      ("cdpath", Some("cd"), ["../", "/abc"]),
+      // NEXT: cedit
+    ];
+
+    cases
+    |> List.iter(((cmd, maybeShortCmd, _values)) => {
+         test(
+           "Read value: " ++ cmd,
+           ({expect, _}) => {
+             prerr_endline("Reading command: " ++ cmd);
+             let _ = Vim.command(":set " ++ cmd ++ "?");
+             expect.bool(true).toBe(true);
+           },
+         );
+
+         maybeShortCmd
+         |> Option.iter(shortCmd => {
+              test(
+                "Read value: " ++ shortCmd,
+                ({expect, _}) => {
+                  prerr_endline("Reading short command: " ++ shortCmd);
+                  let _ = Vim.command(":set " ++ cmd ++ "?");
+                  expect.bool(true).toBe(true);
+                },
+              )
+            });
+       });
+  });
 });
