@@ -51,7 +51,7 @@ describe("Editor", ({describe, _}) => {
       expect.int(List.length(viewTokens)).toBe(1);
 
       let item: BufferViewTokenizer.t = List.nth(viewTokens, 0);
-      expect.float(item.startPixel).toBeCloseTo(0.0);
+      expect.float(item.startPixel).toBeCloseTo(0.5);
     });
     test("single token returned, with a little bit of scroll", ({expect, _}) => {
       let (editor, _buffer) = create([|"aaa"|]);
@@ -69,11 +69,42 @@ describe("Editor", ({describe, _}) => {
         };
       };
       let viewTokens =
-        Editor.viewTokens(~line=0, ~scrollX=1., ~colorizer, editor);
+        Editor.viewTokens(~line=0, ~scrollX=5., ~colorizer, editor);
       expect.int(List.length(viewTokens)).toBe(1);
 
       let item: BufferViewTokenizer.t = List.nth(viewTokens, 0);
-      expect.float(item.startPixel).toBeCloseTo(-1.0);
+      expect.float(item.startPixel).toBeCloseTo(-4.5);
+    });
+    test(
+      "wrapped line, second viewline should not be scrolled", ({expect, _}) => {
+      let (editor, _buffer) = create([|"aaaaaa"|]);
+      let editor =
+        editor
+        |> Editor.setMinimap(~enabled=false, ~maxColumn=0)
+        |> Editor.setLineNumbers(~lineNumbers=`Off)
+        |> Editor.setSize(
+             ~pixelWidth=
+               int_of_float(
+                 3. *. aWidth +. 1.0 +. float(Constants.scrollBarThickness),
+               ),
+             ~pixelHeight=500,
+           )
+        |> Editor.setWrapMode(~wrapMode=WrapMode.Viewport);
+
+      let colorizer = (~startByte as _, _) => {
+        BufferLineColorizer.{
+          color: Revery.Colors.black,
+          backgroundColor: Revery.Colors.white,
+          italic: false,
+          bold: false,
+        };
+      };
+      let viewTokens =
+        Editor.viewTokens(~line=1, ~scrollX=0., ~colorizer, editor);
+      expect.int(List.length(viewTokens)).toBe(1);
+
+      let item: BufferViewTokenizer.t = List.nth(viewTokens, 0);
+      expect.float(item.startPixel).toBeCloseTo(0.5);
     });
   });
 

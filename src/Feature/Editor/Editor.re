@@ -301,14 +301,17 @@ let viewTokens = (~line, ~scrollX, ~colorizer, editor) => {
   // However, there may be a scroll applied, and we need to account for
   // shifting the tokens if the scroll position is not exactly aligned to
   // a character.
-  let (startIndexPixel, _width) =
-    BufferLine.getPixelPositionAndWidth(~index=viewStartIndex, bufferLine);
+  let ({x: startIndexPixel, _}: PixelPosition.t, _width) =
+    bufferBytePositionToPixel(
+      ~position=BytePosition.{line: bufferPosition.line, byte: viewStartByte},
+      {...editor, scrollX},
+    );
 
-  let pixelOffset = scrollX -. startIndexPixel;
+  let pixelOffset = startIndexPixel;
 
   tokens
   |> List.map((token: BufferViewTokenizer.t) =>
-       {...token, startPixel: token.startPixel -. pixelOffset}
+       {...token, startPixel: token.startPixel +. pixelOffset}
      );
 };
 
