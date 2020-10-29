@@ -94,7 +94,10 @@ module Internal = {
 
 type effect =
   Input.effect =
-    | Execute(string) | Text(string) | Unhandled(EditorInput.KeyPress.t);
+    | Execute(string)
+    | Text(string)
+    | Unhandled(EditorInput.KeyPress.t)
+    | RemapRecursionLimitHit;
 
 type t = Input.t;
 

@@ -369,7 +369,7 @@ let isFocused = ({rename, _}) => Rename.isFocused(rename);
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
 
-  let colors = Completion.Contributions.colors;
+  let colors = CodeLens.Contributions.colors @ Completion.Contributions.colors;
 
   let commands =
     (
@@ -397,7 +397,9 @@ module Contributions = {
       |> List.map(Oni_Core.Command.map(msg => Formatting(msg)))
     );
 
-  let configuration = Completion.Contributions.configuration;
+  let configuration =
+    CodeLens.Contributions.configuration
+    @ Completion.Contributions.configuration;
 
   let contextKeys =
     [
@@ -520,17 +522,39 @@ module References = {
   let get = ({references, _}) => OldReferences.get(references);
 };
 
+module ShadowedCodeLens = CodeLens;
+module CodeLens = {
+  type t = ShadowedCodeLens.codeLens;
+
+  let get = (~bufferId, model) => {
+    ShadowedCodeLens.get(~bufferId, model.codeLens);
+  };
+
+  let lineNumber = codeLens => ShadowedCodeLens.lineNumber(codeLens);
+  let uniqueId = codeLens => ShadowedCodeLens.uniqueId(codeLens);
+
+  module View = ShadowedCodeLens.View;
+};
+
 let sub =
     (
+      ~config,
       ~isInsertMode,
       ~activeBuffer,
       ~activePosition,
       ~visibleBuffers,
       ~client,
-      {definition, completion, documentHighlights, documentSymbols, _},
+      {
+        codeLens,
+        definition,
+        completion,
+        documentHighlights,
+        documentSymbols,
+        _,
+      },
     ) => {
   let codeLensSub =
-    CodeLens.sub(~visibleBuffers, ~client)
+    ShadowedCodeLens.sub(~config, ~visibleBuffers, ~client, codeLens)
     |> Isolinear.Sub.map(msg => CodeLens(msg));
 
   let definitionSub =

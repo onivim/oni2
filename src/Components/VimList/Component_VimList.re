@@ -834,6 +834,7 @@ module View = {
 
         let ((scrollY, _setScrollYImmediately), hooks) =
           Hooks.spring(
+            ~name="VimList Scroll Spring",
             ~target=model.scrollY,
             ~restThreshold=10.,
             ~enabled=isScrollAnimated,

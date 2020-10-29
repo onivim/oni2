@@ -315,7 +315,8 @@ switch (eff) {
         setTitle(currentTitle);
       };
     };
-    let _: unit => unit = Tick.interval(tick, Time.zero);
+    let _: unit => unit =
+      Tick.interval(~name="Oni2_Editor Apploop", tick, Time.zero);
 
     let getZoom = () => {
       Window.getZoom(window);

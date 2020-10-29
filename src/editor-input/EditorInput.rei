@@ -31,6 +31,7 @@ module Key: {
 };
 
 module Modifiers: {
+  [@deriving show]
   type t = {
     control: bool,
     alt: bool,
@@ -67,6 +68,7 @@ module Matcher: {
 };
 
 module KeyPress: {
+  [@deriving show]
   type t = {
     scancode: int,
     keycode: int,
@@ -99,12 +101,14 @@ module type Input = {
     | Text(string)
     // The `Unhandled` effect occurs when an unhandled `keyDown` input event occurs.
     // This can happen if there is no binding associated with a key.
-    | Unhandled(KeyPress.t);
+    | Unhandled(KeyPress.t)
+    // RemapRecursionLimitHit is produced if there is a recursive loop
+    // in remappings such that we hit the max limit.
+    | RemapRecursionLimitHit;
 
   let keyDown: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
   let text: (~text: string, t) => (t, list(effect));
   let keyUp: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
-  let flush: (~context: context, t) => (t, list(effect));
 
   /**
   [isPending(bindings)] returns true if there is a potential

@@ -651,6 +651,7 @@ module View = {
       && Feature_Configuration.GlobalConfiguration.animation.get(config);
     let%hook (springHeight, _setHeightImmediately) =
       Hooks.spring(
+        ~name="Pane Open Spring",
         ~target=float(targetHeight),
         ~restThreshold=10.,
         ~enabled=animationEnabled,

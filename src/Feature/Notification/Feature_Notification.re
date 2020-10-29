@@ -169,7 +169,11 @@ module View = {
     let%component make =
                   (~model, ~background, ~foreground, ~font: UiFont.t, ()) => {
       let%hook (yOffset, _animationState, _reset) =
-        Hooks.animation(Animations.sequence, ~active=true);
+        Hooks.animation(
+          ~name="Notification Animation",
+          Animations.sequence,
+          ~active=true,
+        );
 
       let icon = () =>
         <FontIcon icon={iconFor(model)} fontSize=16. color=foreground />;

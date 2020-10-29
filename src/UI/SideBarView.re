@@ -59,7 +59,11 @@ let%component make = (~config, ~theme, ~state: State.t, ~dispatch, ()) => {
   let State.{sideBar, uiFont: font, _} = state;
 
   let%hook (transition, _animationState, _reset) =
-    Hooks.animation(animation, ~active=true);
+    Hooks.animation(
+      ~name="SideBar transition animation",
+      animation,
+      ~active=true,
+    );
 
   let title =
     switch (sideBar |> selected) {
