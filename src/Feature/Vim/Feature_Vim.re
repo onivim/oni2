@@ -65,12 +65,8 @@ module CommandLine = {
     if (StringEx.isEmpty(commandLine)) {
       None;
     } else {
-      let meet = StringEx.findUnescapedFromEnd(commandLine, ' ');
-      if (meet == None) {
-        Some(0);
-      } else {
-        meet;
-      };
+      StringEx.findUnescapedFromEnd(commandLine, ' ')
+      |> OptionEx.or_(Some(0));
     };
 
   let%test "empty command line returns None" = {
