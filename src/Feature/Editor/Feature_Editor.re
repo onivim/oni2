@@ -122,11 +122,13 @@ let update = (editor, msg) => {
       },
     )
   | InlineElementUpdated({uniqueId, lineNumber, height}) => (
-    Editor.addInlineElement(~uniqueId, ~lineNumber, ~height, editor), Nothing
-  )
-  | InlineElementRemoved({uniqueId }) => (
-    Editor.removeInlineElement(~uniqueId, editor), Nothing
-  )
+      Editor.addInlineElement(~uniqueId, ~lineNumber, ~height, editor),
+      Nothing,
+    )
+  | InlineElementRemoved({uniqueId}) => (
+      Editor.removeInlineElement(~uniqueId, editor),
+      Nothing,
+    )
   | ModeChanged({mode, effects}) =>
     let handleScrollEffect = (~count, ~direction, editor) => {
       let count = max(count, 1);

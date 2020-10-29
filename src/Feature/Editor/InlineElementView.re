@@ -36,13 +36,21 @@ let%component make =
               ) => {
   // HOOKS
   let%hook (opacity, _animationState, _reset) =
-    Hooks.animation(~name="Inline Element Opacity", Animation.fadeIn, ~active=true);
+    Hooks.animation(
+      ~name="Inline Element Opacity",
+      Animation.fadeIn,
+      ~active=true,
+    );
 
   let%hook (measuredHeight, heightChangedDispatch) =
     Hooks.reducer(~initialState=0, (newHeight, _prev) => newHeight);
 
   let%hook (animatedHeight, _heightAnimationState, _resetHeight) =
-    Hooks.animation(~name="Inline Element Expand", Animation.expand, ~active=true);
+    Hooks.animation(
+      ~name="Inline Element Expand",
+      Animation.expand,
+      ~active=true,
+    );
 
   let%hook () =
     Hooks.effect(

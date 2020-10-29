@@ -44,4 +44,3 @@ let getReservedSpace = (line: LineNumber.t, elements: t) => {
 
   loop(0., elements);
 };
-

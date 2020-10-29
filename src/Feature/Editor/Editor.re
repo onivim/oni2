@@ -121,12 +121,7 @@ let lineHeightInPixels = ({buffer, lineHeight, _}) =>
        ~measuredFontHeight=EditorBuffer.font(buffer).measuredHeight,
      );
 
-let addInlineElement = (
-  ~uniqueId,
-  ~lineNumber,
-  ~height,
-  editor
-) => {
+let addInlineElement = (~uniqueId, ~lineNumber, ~height, editor) => {
   // TODO
   ignore(uniqueId);
   ignore(lineNumber);
@@ -134,10 +129,7 @@ let addInlineElement = (
   editor;
 };
 
-let removeInlineElement = (
-  ~uniqueId,
-  editor
-) => {
+let removeInlineElement = (~uniqueId, editor) => {
   // TODO
   ignore(uniqueId);
   editor;
@@ -447,7 +439,7 @@ let viewLineToPixelY = (idx, editor) => {
 };
 
 let getTopViewLine = editor => {
-    int_of_float(editor.scrollY /. lineHeightInPixels(editor));
+  int_of_float(editor.scrollY /. lineHeightInPixels(editor));
 };
 
 let getTopVisibleBufferLine = editor => {
@@ -456,7 +448,6 @@ let getTopVisibleBufferLine = editor => {
 };
 
 let getBottomViewLine = editor => {
-  
   let absoluteBottomLine =
     int_of_float(
       (editor.scrollY +. float_of_int(editor.pixelHeight))
@@ -465,7 +456,7 @@ let getBottomViewLine = editor => {
 
   let viewLines = editor |> totalViewLines;
 
-    absoluteBottomLine >= viewLines ? viewLines - 1 : absoluteBottomLine;
+  absoluteBottomLine >= viewLines ? viewLines - 1 : absoluteBottomLine;
 };
 
 let getBottomVisibleBufferLine = editor => {
