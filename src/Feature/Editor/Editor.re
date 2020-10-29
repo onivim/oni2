@@ -121,6 +121,28 @@ let lineHeightInPixels = ({buffer, lineHeight, _}) =>
        ~measuredFontHeight=EditorBuffer.font(buffer).measuredHeight,
      );
 
+let addInlineElement = (
+  ~uniqueId,
+  ~lineNumber,
+  ~height,
+  editor
+) => {
+  // TODO
+  ignore(uniqueId);
+  ignore(lineNumber);
+  ignore(height);
+  editor;
+};
+
+let removeInlineElement = (
+  ~uniqueId,
+  editor
+) => {
+  // TODO
+  ignore(uniqueId);
+  editor;
+};
+
 let linePaddingInPixels = ({buffer, _} as editor) =>
   (lineHeightInPixels(editor) -. EditorBuffer.font(buffer).measuredHeight)
   /. 2.;

@@ -25,6 +25,17 @@ module WrapMode: {
 let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
 let copy: t => t;
 
+let addInlineElement:
+  (
+    ~uniqueId: string,
+    ~lineNumber: EditorCoreTypes.LineNumber.t,
+    ~height: int,
+    t
+  ) =>
+  t;
+
+let removeInlineElement: (~uniqueId: string, t) => t;
+
 let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;
 let getBufferId: t => int;
