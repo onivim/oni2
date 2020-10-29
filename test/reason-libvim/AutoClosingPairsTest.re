@@ -33,6 +33,32 @@ let curlyBracketPair = AutoPair.{opening: "{", closing: "}"};
 let quotePair = AutoPair.{opening: quote, closing: quote};
 
 describe("AutoClosingPairs", ({test, describe, _}) => {
+  describe("undo", ({test, _}) => {
+    test("single undo undoes entire edit", ({expect, _}) => {
+      let b = resetBuffer();
+
+      let autoClosingPairs = AutoClosingPairs.create([squareBracketPair]);
+      let lineCount = Buffer.getLineCount(b);
+      expect.int(lineCount).toBe(1);
+
+      input(~autoClosingPairs, "o");
+      input(~autoClosingPairs,"A");
+      input(~autoClosingPairs, "[");
+      input(~autoClosingPairs, "]");
+      input(~autoClosingPairs,":");
+
+      let lineCount = Buffer.getLineCount(b);
+      expect.int(lineCount).toBe(2);
+
+      // #2635: 'u' should be sufficient to undo the entire line
+      key("<ESC>");
+      input("u");
+      input("u"); // BUG: Too many undoes
+      let lineCount = Buffer.getLineCount(b);
+      expect.int(lineCount).toBe(1);
+    });
+    
+  });
   test("no auto-closing pairs", ({expect, _}) => {
     let b = resetBuffer();
 

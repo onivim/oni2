@@ -582,8 +582,10 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
                      && canCloseBefore()) {
             let pair = AutoClosingPairs.getByOpeningPair(v, autoClosingPairs);
             Native.vimInput(v);
+            Native.vimKey("<C-^>");
             Native.vimInput(pair.closing);
-            Native.vimKey("<LEFT>");
+            Native.vimKey("<C-^>");
+            //Native.vimKey("<LEFT>");
           } else {
             inputFn(v);
           };
