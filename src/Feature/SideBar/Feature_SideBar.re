@@ -85,6 +85,16 @@ let width = ({width, resizeDelta, isOpen, location, shouldSnapShut, _}) =>
   };
 
 let update = (~isFocused, msg, model) => {
+  // Focus a pane if it is not open, or close it
+  let selectOrClosePane = (~pane, model) =>
+    if (!model.isOpen) {
+      ({...model, isOpen: true, selected: pane}, Focus);
+    } else if (model.selected == pane) {
+      ({...model, isOpen: false}, PopFocus);
+    } else {
+      ({...model, selected: pane}, Focus);
+    };
+
   let togglePane = (~pane: pane, model) =>
     // Not open - open the sidebar, and focus
     if (!model.isOpen || model.selected != pane) {
@@ -133,16 +143,16 @@ let update = (~isFocused, msg, model) => {
       };
     (model', Nothing);
 
-  | FileExplorerClicked
+  | FileExplorerClicked => selectOrClosePane(~pane=FileExplorer, model)
   | Command(ToggleExplorerPane) => togglePane(~pane=FileExplorer, model)
 
-  | SCMClicked
+  | SCMClicked => selectOrClosePane(~pane=SCM, model)
   | Command(ToggleSCMPane) => togglePane(~pane=SCM, model)
 
-  | ExtensionsClicked
+  | ExtensionsClicked => selectOrClosePane(~pane=Extensions, model)
   | Command(ToggleExtensionsPane) => togglePane(~pane=Extensions, model)
 
-  | SearchClicked
+  | SearchClicked => selectOrClosePane(~pane=Search, model)
   | Command(ToggleSearchPane) => togglePane(~pane=Search, model)
 
   | Command(ToggleVisibility) =>
