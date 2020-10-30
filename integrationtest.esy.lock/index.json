@@ -1,5 +1,5 @@
 {
-  "checksum": "8c03b53f14b1c0cfa49f91784aeb80b7",
+  "checksum": "1b60c71bb1208e5f50257f9cc5db9c4a",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -426,14 +426,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.67@d41d8cd9": {
-      "id": "libvim@8.10869.67@d41d8cd9",
+    "libvim@8.10869.68@d41d8cd9": {
+      "id": "libvim@8.10869.68@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.67",
+      "version": "8.10869.68",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.67.tgz#sha1:b36ccaf53be72a87fac18bcbffcbc0525e9a2bff"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.68.tgz#sha1:2ee21e9ebcb9b969fcbe6644316bc70512a05563"
         ]
       },
       "overrides": [],
@@ -1000,7 +1000,7 @@
         "refmterr@3.3.2@d41d8cd9",
         "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
-        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.67@d41d8cd9",
+        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.68@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#53fc4eb@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#60e0260@d41d8cd9",
@@ -1486,8 +1486,8 @@
         "@opam/dune@opam:2.5.0@e0bac278", "@opam/base@opam:v0.14.0@8bc55fce"
       ]
     },
-    "@opam/stdlib-shims@opam:0.1.0@8c116481": {
-      "id": "@opam/stdlib-shims@opam:0.1.0@8c116481",
+    "@opam/stdlib-shims@opam:0.1.0@148f22ac": {
+      "id": "@opam/stdlib-shims@opam:0.1.0@148f22ac",
       "name": "@opam/stdlib-shims",
       "version": "opam:0.1.0",
       "source": {
@@ -1821,7 +1821,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.10.0@d41d8cd9", "@opam/stdlib-shims@opam:0.1.0@8c116481",
+        "ocaml@4.10.0@d41d8cd9", "@opam/stdlib-shims@opam:0.1.0@148f22ac",
         "@opam/sexplib0@opam:v0.14.0@ddeb6438",
         "@opam/ppx_derivers@opam:1.2.1@ecf0aa45",
         "@opam/ocaml-migrate-parsetree@opam:1.8.0@305b6173",
@@ -1829,7 +1829,7 @@
         "@opam/dune@opam:2.5.0@e0bac278", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.10.0@d41d8cd9", "@opam/stdlib-shims@opam:0.1.0@8c116481",
+        "ocaml@4.10.0@d41d8cd9", "@opam/stdlib-shims@opam:0.1.0@148f22ac",
         "@opam/sexplib0@opam:v0.14.0@ddeb6438",
         "@opam/ppx_derivers@opam:1.2.1@ecf0aa45",
         "@opam/ocaml-migrate-parsetree@opam:1.8.0@305b6173",
@@ -2670,7 +2670,7 @@
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
-        "@opam/stdlib-shims@opam:0.1.0@8c116481",
+        "@opam/stdlib-shims@opam:0.1.0@148f22ac",
         "@opam/ppx_yojson_conv_lib@opam:v0.14.0@116b53d6",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/menhir@opam:20200624@8629ff13",
@@ -2680,7 +2680,7 @@
       "devDependencies": [
         "ocaml@4.10.0@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
-        "@opam/stdlib-shims@opam:0.1.0@8c116481",
+        "@opam/stdlib-shims@opam:0.1.0@148f22ac",
         "@opam/ppx_yojson_conv_lib@opam:v0.14.0@116b53d6",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/menhir@opam:20200624@8629ff13",
@@ -3339,7 +3339,7 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9", "@opam/topkg@opam:1.0.3@e4e10f1c",
-        "@opam/stdlib-shims@opam:0.1.0@8c116481",
+        "@opam/stdlib-shims@opam:0.1.0@148f22ac",
         "@opam/seq@opam:base@d8d7de1d",
         "@opam/ocamlfind@opam:1.8.1@ff07b0f9",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
@@ -3348,7 +3348,7 @@
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.10.0@d41d8cd9", "@opam/stdlib-shims@opam:0.1.0@8c116481",
+        "ocaml@4.10.0@d41d8cd9", "@opam/stdlib-shims@opam:0.1.0@148f22ac",
         "@opam/seq@opam:base@d8d7de1d"
       ]
     },
