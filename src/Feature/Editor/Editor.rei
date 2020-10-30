@@ -26,6 +26,8 @@ let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
 let copy: t => t;
 
 type inlineElement = {
+  reconcilerKey: Brisk_reconciler.Key.t,
+  hidden: bool,
   key: string,
   uniqueId: string,
   lineNumber: EditorCoreTypes.LineNumber.t,

@@ -3,10 +3,12 @@ open EditorCoreTypes;
 
 [@deriving show]
 type element = {
+  reconcilerKey: [@opaque] Brisk_reconciler.Key.t,
   key: string,
   uniqueId: string,
   line: LineNumber.t,
   height: float,
+  hidden: bool,
   view:
     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
     Revery.UI.element,
@@ -48,7 +50,11 @@ let set = (~key: string, ~elements, model) => {
   let merge = (_key, maybeCurrent, maybeIncoming) => {
     switch (maybeCurrent, maybeIncoming) {
     | (Some(current), Some(incoming)) =>
-      Some({...incoming, height: current.height})
+      Some({
+        ...incoming,
+        reconcilerKey: current.reconcilerKey,
+        height: current.height,
+      })
     | (None, Some(_) as incoming) => incoming
     | (Some(_), None) => None
     | (None, None) => None
@@ -94,7 +100,8 @@ let getReservedSpace = (line: LineNumber.t, elements: t) => {
     switch (remainingElements) {
     | [] => acc
     | [hd, ...tail] when LineNumber.toZeroBased(hd.line) <= lineNumber =>
-      loop(acc +. hd.height, tail)
+      let height = hd.hidden ? 0. : hd.height;
+      loop(acc +. height, tail);
     | _elementsPastLine => acc
     };
   };
@@ -129,7 +136,7 @@ let shift = (update: Oni_Core.BufferUpdate.t, model) => {
       if (lineIdx < startLineIdx) {
         Some(element);
       } else if (lineIdx >= startLineIdx && lineIdx < endLineIdx) {
-        None;
+        Some({...element, hidden: true});
       } else {
         Some({...element, line: LineNumber.ofZeroBased(lineIdx + delta)});
       };

@@ -84,8 +84,16 @@ let%component make =
          let uniqueId = inlineElement.uniqueId;
          let elem = inlineElement.view(~theme, ~uiFont);
          let inlineKey = inlineElement.key;
+         let hidden = inlineElement.hidden;
 
-         <InlineElementView inlineKey uniqueId dispatch lineNumber=line editor>
+         <InlineElementView
+           key={inlineElement.reconcilerKey}
+           inlineKey
+           uniqueId
+           dispatch
+           lineNumber=line
+           hidden
+           editor>
            <elem />
          </InlineElementView>;
        });

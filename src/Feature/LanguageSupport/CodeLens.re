@@ -82,7 +82,7 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
     |> List.sort((lensA, lensB) => {
          Exthost.CodeLens.(
            {
-             lensB.range.startLineNumber - lensA.range.startLineNumber;
+             lensA.range.startLineNumber - lensB.range.startLineNumber;
            }
          )
        })
@@ -210,7 +210,7 @@ module View = {
         flexShrink(0),
       ]>
       <Text
-        text
+        text={text ++ uniqueId(codeLens)}
         fontFamily={uiFont.family}
         fontSize={uiFont.size}
         style=Style.[

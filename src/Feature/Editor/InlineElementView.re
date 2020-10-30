@@ -35,6 +35,7 @@ module Animation = {
 
 let%component make =
               (
+                ~hidden: bool,
                 ~dispatch: Msg.t => unit,
                 ~inlineKey: string,
                 ~uniqueId: string,
@@ -44,34 +45,41 @@ let%component make =
                 (),
               ) => {
   // HOOKS
-
   // TODO: Graceful fade-in transition
   // Ensure that existing code-lenses don't get paved
-  let opacity = 1.0;
+  let%hook (opacity, _opacityAnimationState, _resetOpacity) =
+    Hooks.animation(
+      ~name="Inline Element Opacity",
+      Animation.fadeIn,
+      ~active=true,
+    );
+
+  let opacity = hidden ? 0. : opacity;
 
   let%hook (measuredHeight, heightChangedDispatch) =
     Hooks.reducer(~initialState=0, (newHeight, _prev) => newHeight);
 
   // TODO: Bring back expansion animation
-  //  let%hook (animatedHeight, _heightAnimationState, _resetHeight) =
-  //    Hooks.animation(
-  //      ~name="Inline Element Expand",
-  //      Animation.expand,
-  //      ~active=true,
-  //    );
+  let%hook (animatedHeight, _heightAnimationState, _resetHeight) =
+    Hooks.animation(
+      ~name="Inline Element Expand",
+      Animation.expand,
+      ~active=true,
+    );
 
-  let animatedHeight = 1.0;
+  let calculatedHeight =
+    int_of_float(float(measuredHeight) *. animatedHeight);
 
   let%hook () =
     Hooks.effect(
-      OnMountAndIf((!=), (measuredHeight, uniqueId)),
+      If((!=), (calculatedHeight, uniqueId)),
       () => {
         if (measuredHeight > 0) {
           dispatch(
             Msg.InlineElementSizeChanged({
               key: inlineKey,
               uniqueId,
-              height: int_of_float(float(measuredHeight) *. animatedHeight),
+              height: calculatedHeight,
             }),
           );
         };

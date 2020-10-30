@@ -444,6 +444,8 @@ let update =
                let view =
                  Feature_LanguageSupport.CodeLens.View.make(~codeLens=lens);
                Feature_Editor.Editor.{
+                 hidden: false,
+                 reconcilerKey: Brisk_reconciler.Key.create(),
                  key: "codelens",
                  uniqueId,
                  lineNumber:

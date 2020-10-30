@@ -12,6 +12,8 @@ module GlobalState = {
 };
 
 type inlineElement = {
+  reconcilerKey: Brisk_reconciler.Key.t,
+  hidden: bool,
   key: string,
   uniqueId: string,
   lineNumber: EditorCoreTypes.LineNumber.t,
@@ -739,11 +741,13 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
     elements
     |> List.map((inlineElement: inlineElement) =>
          InlineElements.{
+           reconcilerKey: Brisk_reconciler.Key.create(),
            key: inlineElement.key,
            uniqueId: inlineElement.uniqueId,
            line: inlineElement.lineNumber,
            height: 0.,
            view: inlineElement.view,
+           hidden: inlineElement.hidden,
          }
        );
 
@@ -762,10 +766,12 @@ let getInlineElements = ({inlineElements, _}) => {
   |> InlineElements.allElements
   |> List.map((elem: InlineElements.element) =>
        {
+         reconcilerKey: elem.reconcilerKey,
          key: elem.key,
          uniqueId: elem.uniqueId,
          lineNumber: elem.line,
          view: elem.view,
+         hidden: elem.hidden,
        }
      );
 };
