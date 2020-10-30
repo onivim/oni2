@@ -291,8 +291,6 @@ let splitLines: string => (bool, array(string)) =
     (isMultipleLines(text), out);
   };
 
-let pqr = 5;
-
-let vxyz = 7;
-
 let abc = 1;
+
+let def = 2;

@@ -35,6 +35,7 @@ module Animation = {
 
 let%component make =
               (
+                ~config,
                 ~hidden: bool,
                 ~dispatch: Msg.t => unit,
                 ~inlineKey: string,
@@ -44,6 +45,10 @@ let%component make =
                 ~children,
                 (),
               ) => {
+
+  let animationsActive = 
+  Feature_Configuration.GlobalConfiguration.animation.get(config);
+
   // HOOKS
   // TODO: Graceful fade-in transition
   // Ensure that existing code-lenses don't get paved
@@ -51,22 +56,23 @@ let%component make =
     Hooks.animation(
       ~name="Inline Element Opacity",
       Animation.fadeIn,
-      ~active=true,
+      ~active=animationsActive,
     );
 
+  let opacity = !animationsActive ? 1.0 : opacity;
   let opacity = hidden ? 0. : opacity;
 
   let%hook (measuredHeight, heightChangedDispatch) =
     Hooks.reducer(~initialState=0, (newHeight, _prev) => newHeight);
 
-  // TODO: Bring back expansion animation
   let%hook (animatedHeight, _heightAnimationState, _resetHeight) =
     Hooks.animation(
       ~name="Inline Element Expand",
       Animation.expand,
-      ~active=true,
+      ~active=animationsActive,
     );
 
+  let animatedHeight = !animationsActive ? 1.0 : animatedHeight;
   let calculatedHeight =
     int_of_float(float(measuredHeight) *. animatedHeight);
 

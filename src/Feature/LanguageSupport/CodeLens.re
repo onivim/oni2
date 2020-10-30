@@ -210,7 +210,7 @@ module View = {
         flexShrink(0),
       ]>
       <Text
-        text={text ++ uniqueId(codeLens)}
+        text
         fontFamily={uiFont.family}
         fontSize={uiFont.size}
         style=Style.[

@@ -87,6 +87,7 @@ let%component make =
          let hidden = inlineElement.hidden;
 
          <InlineElementView
+           config
            key={inlineElement.reconcilerKey}
            inlineKey
            uniqueId
