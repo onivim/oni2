@@ -1192,7 +1192,7 @@ module View = {
             theme
             focused>
             ...{index => {
-              let Filter.{highlight, item} = items[index] |> snd;
+              let Filter.{highlight, item, _} = items[index] |> snd;
               let CompletionItem.{label: text, kind, _} = item;
               <itemView
                 isFocused={Some(index) == focused}
