@@ -76,17 +76,11 @@ let unregister = (~handle: int, model) => {
 let addLenses = (handle, bufferId, lenses, handleToLenses) => {
   let internalLenses =
     lenses
-    |> List.map(lens =>
+    |> List.mapi((idx, lens) =>
          {
            lens,
            handle,
-           uniqueId:
-             Printf.sprintf(
-               "%d%d%d",
-               handle,
-               bufferId,
-               lens.range.startLineNumber,
-             ),
+           uniqueId: Printf.sprintf("%d%d%d", handle, bufferId, idx),
          }
        );
   IntMap.add(handle, internalLenses, handleToLenses);

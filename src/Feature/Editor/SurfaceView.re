@@ -75,7 +75,6 @@ let%component make =
 
   let indentation = Buffer.getIndentation(buffer);
 
-  let bufferId = buffer |> Oni_Core.Buffer.getId;
   let inlineElements = Editor.getInlineElements(editor);
 
   let lensElements =

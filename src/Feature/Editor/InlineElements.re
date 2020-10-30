@@ -112,3 +112,46 @@ let getAllReservedSpace = elements => {
 
   loop(0., elements.sortedElements);
 };
+
+// When there is a buffer update, shift elements as needed
+let shift = (update: Oni_Core.BufferUpdate.t, model) => {
+  let startLineIdx = update.startLine |> LineNumber.toZeroBased;
+  let endLineIdx = update.endLine |> LineNumber.toZeroBased;
+
+  let delta = Array.length(update.lines) - (endLineIdx - startLineIdx);
+
+  if (update.isFull || delta == 0) {
+    model;
+  } else {
+    let updateElement = element => {
+      let lineIdx = LineNumber.toZeroBased(element.line);
+
+      if (lineIdx < startLineIdx) {
+        Some(element);
+      } else if (lineIdx >= startLineIdx && lineIdx < endLineIdx) {
+        None;
+      } else {
+        Some({...element, line: LineNumber.ofZeroBased(lineIdx + delta)});
+      };
+    };
+
+    let updateElements = (idToElement: StringMap.t(element)) => {
+      StringMap.fold(
+        (key, v, acc) => {
+          let maybeElement = updateElement(v);
+          switch (maybeElement) {
+          | None => acc
+          | Some(element) => StringMap.add(key, element, acc)
+          };
+        },
+        idToElement,
+        StringMap.empty,
+      );
+    };
+
+    let keyToElements' = model.keyToElements |> StringMap.map(updateElements);
+
+    let sortedElements' = computeSortedElements(keyToElements');
+    {keyToElements: keyToElements', sortedElements: sortedElements'};
+  };
+};
