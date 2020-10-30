@@ -5,13 +5,21 @@ module LineNumber = EditorCoreTypes.LineNumber;
 
 module Styles = {
   open Style;
-  let container = (~pixelY) => {
-    [position(`Absolute), top(pixelY |> int_of_float), left(0), right(0)];
+  let container = (~opacity as opac, ~pixelY) => {
+    [
+      opacity(opac),
+      position(`Absolute),
+      top(pixelY |> int_of_float),
+      left(0),
+      right(0),
+    ];
   };
 
   let inner = [
     position(`Absolute),
     bottom(0),
+    left(0),
+    right(0),
     flexDirection(`Row),
     flexGrow(1),
   ];
@@ -28,6 +36,7 @@ module Animation = {
 let%component make =
               (
                 ~dispatch: Msg.t => unit,
+                ~inlineKey: string,
                 ~uniqueId: string,
                 ~editor,
                 ~lineNumber: LineNumber.t,
@@ -35,42 +44,40 @@ let%component make =
                 (),
               ) => {
   // HOOKS
-  let%hook (opacity, _animationState, _reset) =
-    Hooks.animation(
-      ~name="Inline Element Opacity",
-      Animation.fadeIn,
-      ~active=true,
-    );
+
+  // TODO: Graceful fade-in transition
+  // Ensure that existing code-lenses don't get paved
+  let opacity = 1.0;
 
   let%hook (measuredHeight, heightChangedDispatch) =
     Hooks.reducer(~initialState=0, (newHeight, _prev) => newHeight);
 
-  let%hook (animatedHeight, _heightAnimationState, _resetHeight) =
-    Hooks.animation(
-      ~name="Inline Element Expand",
-      Animation.expand,
-      ~active=true,
-    );
+  // TODO: Bring back expansion animation
+  //  let%hook (animatedHeight, _heightAnimationState, _resetHeight) =
+  //    Hooks.animation(
+  //      ~name="Inline Element Expand",
+  //      Animation.expand,
+  //      ~active=true,
+  //    );
+
+  let animatedHeight = 1.0;
 
   let%hook () =
     Hooks.effect(
-      OnMountAndIf((!=), animatedHeight),
+      OnMountAndIf((!=), measuredHeight),
       () => {
-        dispatch(
-          Msg.InlineElementUpdated({
-            uniqueId,
-            lineNumber,
-            height: int_of_float(float(measuredHeight) *. animatedHeight),
-          }),
-        );
+        if (measuredHeight > 0) {
+          dispatch(
+            Msg.InlineElementSizeChanged({
+              key: inlineKey,
+              uniqueId,
+              height: int_of_float(float(measuredHeight) *. animatedHeight),
+            }),
+          );
+        };
         None;
       },
     );
-
-  let%hook () =
-    Hooks.effect(OnMount, () => {
-      Some(() => {dispatch(Msg.InlineElementRemoved({uniqueId: uniqueId}))})
-    });
 
   // COMPONENT
 
@@ -80,11 +87,11 @@ let%component make =
       editor,
     );
 
-  <View style={Styles.container(~pixelY)}>
+  <View style={Styles.container(~opacity, ~pixelY)}>
     <View
       style=Styles.inner
       onDimensionsChanged={({height, _}) => {heightChangedDispatch(height)}}>
-      <Opacity opacity> children </Opacity>
+      children
     </View>
   </View>;
 };

@@ -121,12 +121,8 @@ let update = (editor, msg) => {
         |> Option.value(~default=Nothing);
       },
     )
-  | InlineElementUpdated({uniqueId, lineNumber, height}) => (
-      Editor.addInlineElement(~uniqueId, ~lineNumber, ~height, editor),
-      Nothing,
-    )
-  | InlineElementRemoved({uniqueId}) => (
-      Editor.removeInlineElement(~uniqueId, editor),
+  | InlineElementSizeChanged({key, uniqueId, height}) => (
+      Editor.setInlineElementSize(~key, ~uniqueId, ~height, editor),
       Nothing,
     )
   | ModeChanged({mode, effects}) =>

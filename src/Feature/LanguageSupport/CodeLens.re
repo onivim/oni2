@@ -34,6 +34,13 @@ type model = {
   bufferToLenses: IntMap.t(handleToLenses),
 };
 
+type outmsg =
+  | Nothing
+  | CodeLensesChanged({
+      bufferId: int,
+      lenses: list(codeLens),
+    });
+
 let get = (~bufferId, {bufferToLenses, _}) => {
   bufferToLenses
   |> IntMap.find_opt(bufferId)
@@ -87,7 +94,7 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
 
 let update = (msg, model) =>
   switch (msg) {
-  | CodeLensesError(_) => model
+  | CodeLensesError(_) => (model, Nothing)
   | CodeLensesReceived({handle, bufferId, lenses}) =>
     let bufferToLenses =
       model.bufferToLenses
@@ -101,7 +108,9 @@ let update = (msg, model) =>
            | Some(existing) =>
              existing |> addLenses(handle, bufferId, lenses) |> Option.some,
          );
-    {...model, bufferToLenses};
+    let model' = {...model, bufferToLenses};
+    let lenses = get(~bufferId, model');
+    (model', CodeLensesChanged({bufferId, lenses}));
   };
 
 // CONFIGURATION
@@ -182,7 +191,13 @@ module View = {
   let make = (~theme, ~uiFont: Oni_Core.UiFont.t, ~codeLens, ()) => {
     let foregroundColor = CodeLensColors.foreground.from(theme);
     let text = text(codeLens);
-    <View style=Style.[marginTop(4), marginBottom(0)]>
+    <View
+      style=Style.[
+        marginTop(4),
+        marginBottom(0),
+        flexGrow(1),
+        flexShrink(0),
+      ]>
       <Text
         text
         fontFamily={uiFont.family}

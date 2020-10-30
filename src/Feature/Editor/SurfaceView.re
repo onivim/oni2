@@ -76,18 +76,18 @@ let%component make =
   let indentation = Buffer.getIndentation(buffer);
 
   let bufferId = buffer |> Oni_Core.Buffer.getId;
-  let lenses =
-    Feature_LanguageSupport.CodeLens.get(~bufferId, languageSupport);
+  let inlineElements = Editor.getInlineElements(editor);
 
   let lensElements =
-    lenses
-    |> List.map(lens => {
-         let lineNumber = Feature_LanguageSupport.CodeLens.lineNumber(lens);
-         let line = EditorCoreTypes.LineNumber.ofZeroBased(lineNumber);
-         let uniqueId = Feature_LanguageSupport.CodeLens.uniqueId(lens);
+    inlineElements
+    |> List.map((inlineElement: Editor.inlineElement) => {
+         let line = inlineElement.lineNumber;
+         let uniqueId = inlineElement.uniqueId;
+         let elem = inlineElement.view(~theme, ~uiFont);
+         let inlineKey = inlineElement.key;
 
-         <InlineElementView uniqueId dispatch lineNumber=line editor>
-           <Feature_LanguageSupport.CodeLens.View codeLens=lens uiFont theme />
+         <InlineElementView inlineKey uniqueId dispatch lineNumber=line editor>
+           <elem />
          </InlineElementView>;
        });
 

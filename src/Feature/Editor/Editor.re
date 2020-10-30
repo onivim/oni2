@@ -11,6 +11,15 @@ module GlobalState = {
   };
 };
 
+type inlineElement = {
+  key: string,
+  uniqueId: string,
+  lineNumber: EditorCoreTypes.LineNumber.t,
+  view:
+    (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
+    Revery.UI.element,
+};
+
 module WrapMode = {
   [@deriving show]
   type t =
@@ -451,7 +460,7 @@ let getViewLineFromPixelY = (~pixelY, editor) => {
     if (pixelY < accumulatedPixels) {
       accumulatedLines - 1;
     } else {
-      switch ((remainingInlineElements: InlineElements.t)) {
+      switch ((remainingInlineElements: list(InlineElements.element))) {
       | [] =>
         let lineNumber =
           int_of_float((pixelY -. accumulatedPixels) /. lineHeight);
@@ -480,7 +489,7 @@ let getViewLineFromPixelY = (~pixelY, editor) => {
       };
     };
 
-  loop(0, 0., editor.inlineElements);
+  loop(0, 0., editor.inlineElements |> InlineElements.allElements);
 };
 
 let getTopViewLine = editor => {
@@ -709,15 +718,15 @@ let withSteadyCursor = (f, editor) => {
   {...editor', scrollY, isScrollAnimated: false};
 };
 
-let addInlineElement = (~uniqueId, ~lineNumber, ~height, editor) => {
+let setInlineElementSize = (~key, ~uniqueId, ~height, editor) => {
   editor
   |> withSteadyCursor(e =>
        {
          ...e,
          inlineElements:
-           InlineElements.add(
+           InlineElements.setSize(
+             ~key,
              ~uniqueId,
-             ~line=lineNumber,
              ~height=float(height),
              e.inlineElements,
            ),
@@ -725,15 +734,46 @@ let addInlineElement = (~uniqueId, ~lineNumber, ~height, editor) => {
      );
 };
 
-let removeInlineElement = (~uniqueId, editor) => {
+let getInlineElements = ({inlineElements, _}) => {
+  InlineElements.allElements(inlineElements);
+};
+
+let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
+  let elements': list(InlineElements.element) =
+    elements
+    |> List.map((inlineElement: inlineElement) =>
+         InlineElements.{
+           key: inlineElement.key,
+           uniqueId: inlineElement.uniqueId,
+           line: inlineElement.lineNumber,
+           height: 0.,
+           view: inlineElement.view,
+         }
+       );
+
   editor
   |> withSteadyCursor(e =>
        {
          ...e,
-         inlineElements: InlineElements.remove(~uniqueId, e.inlineElements),
+         inlineElements:
+           InlineElements.set(~key, ~elements=elements', e.inlineElements),
        }
      );
 };
+
+let getInlineElements = ({inlineElements, _}) => {
+  inlineElements
+  |> InlineElements.allElements
+  |> List.map((elem: InlineElements.element) =>
+       {
+         key: elem.key,
+         uniqueId: elem.uniqueId,
+         lineNumber: elem.line,
+         view: elem.view,
+       }
+     );
+};
+
 let selectionOrCursorRange = editor => {
   switch (selection(editor)) {
   | None =>
@@ -932,7 +972,9 @@ let scrollToPixelY = (~pixelY as newScrollY, editor) => {
   let viewLines = editor |> totalViewLines;
   let newScrollY = max(0., newScrollY);
   let availableScroll =
-    max(float_of_int(viewLines - 1), 0.) *. lineHeightInPixels(editor);
+    max(float_of_int(viewLines - 1), 0.)
+    *. lineHeightInPixels(editor)
+    +. InlineElements.getAllReservedSpace(editor.inlineElements);
   let newScrollY = min(newScrollY, availableScroll);
 
   let scrollPercentage =
@@ -1045,6 +1087,7 @@ let scrollAndMoveCursor = (~deltaViewLines, editor) => {
 
   // Adjust scroll to compensate cursor position - keeping the cursor in the same
   // relative spot to scroll, after moving it.
+  // TODO: Bring back
   editor' |> scrollDeltaPixelY(~pixelY=newY -. oldY) |> animateScroll;
 };
 

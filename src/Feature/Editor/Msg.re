@@ -28,9 +28,8 @@ type t =
       mode: [@opaque] Vim.Mode.t,
       effects: [@opaque] list(Vim.Effect.t),
     })
-  | InlineElementUpdated({
+  | InlineElementSizeChanged({
+      key: string,
       uniqueId: string,
-      lineNumber: EditorCoreTypes.LineNumber.t,
       height: int,
-    })
-  | InlineElementRemoved({uniqueId: string});
+    });

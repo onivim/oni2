@@ -1,33 +1,91 @@
+open Oni_Core;
 open EditorCoreTypes;
 
 [@deriving show]
 type element = {
+  key: string,
   uniqueId: string,
   line: LineNumber.t,
   height: float,
+  view:
+    (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
+    Revery.UI.element,
 };
 
 [@deriving show]
-type t = list(element);
+type t = {
+  keyToElements: [@opaque] StringMap.t(StringMap.t(element)),
+  sortedElements: list(element),
+};
 
-let initial = [];
+let initial = {keyToElements: StringMap.empty, sortedElements: []};
 
 let compare = (a, b) => {
   LineNumber.toZeroBased(a.line) - LineNumber.toZeroBased(b.line);
 };
 
-let remove = (~uniqueId: string, elements) => {
-  let idToRemove = uniqueId;
-  elements |> List.filter(({uniqueId, _}) => uniqueId != idToRemove);
+let computeSortedElements =
+    (keyToElements: StringMap.t(StringMap.t(element))) => {
+  keyToElements
+  |> StringMap.bindings
+  |> List.map(snd)
+  |> List.map(innerMap => {innerMap |> StringMap.bindings |> List.map(snd)})
+  |> List.flatten
+  |> List.sort(compare);
 };
 
-let add = (~uniqueId: string, ~line: LineNumber.t, ~height: float, elements) => {
-  elements
-  |> remove(~uniqueId)
-  |> (
-    filtered =>
-      [{uniqueId, line, height}, ...filtered] |> List.sort(compare)
-  );
+let set = (~key: string, ~elements, model) => {
+  // Create a map for new keys... and then union with our current map
+
+  let incomingMap =
+    elements
+    |> List.fold_left(
+         (acc, curr) => {StringMap.add(curr.uniqueId, curr, acc)},
+         StringMap.empty,
+       );
+
+  // When merging - use our current measured height, but bring in the new view.
+  let merge = (_key, maybeCurrent, maybeIncoming) => {
+    switch (maybeCurrent, maybeIncoming) {
+    | (Some(current), Some(incoming)) =>
+      Some({...incoming, height: current.height})
+    | (None, Some(_) as incoming) => incoming
+    | (Some(_), None) => None
+    | (None, None) => None
+    };
+  };
+
+  let currentMap =
+    model.keyToElements
+    |> StringMap.find_opt(key)
+    |> Option.value(~default=StringMap.empty);
+
+  let mergedMap = StringMap.merge(merge, currentMap, incomingMap);
+
+  let keyToElements' = StringMap.add(key, mergedMap, model.keyToElements);
+
+  let sortedElements' = computeSortedElements(keyToElements');
+  {keyToElements: keyToElements', sortedElements: sortedElements'};
+};
+
+let setSize = (~key, ~uniqueId, ~height, model) => {
+  let setHeight = Option.map((curr: element) => {...curr, height});
+
+  let keyToElements' =
+    model.keyToElements
+    |> StringMap.update(
+         key,
+         Option.map(innerMap => {
+           innerMap |> StringMap.update(uniqueId, setHeight)
+         }),
+       );
+
+  let sortedElements' = computeSortedElements(keyToElements');
+  {keyToElements: keyToElements', sortedElements: sortedElements'};
+};
+
+let allElements = ({sortedElements, _}) => {
+  sortedElements;
 };
 
 let getReservedSpace = (line: LineNumber.t, elements: t) => {
@@ -41,5 +99,16 @@ let getReservedSpace = (line: LineNumber.t, elements: t) => {
     };
   };
 
-  loop(0., elements);
+  loop(0., elements.sortedElements);
+};
+
+let getAllReservedSpace = elements => {
+  let rec loop = (acc, remainingElements) => {
+    switch (remainingElements) {
+    | [] => acc
+    | [hd, ...tail] => loop(acc +. hd.height, tail)
+    };
+  };
+
+  loop(0., elements.sortedElements);
 };
