@@ -56,6 +56,14 @@ module KeyPress: {
   let toString:
     // The name of the 'meta' key. Defaults to "Meta".
     (~meta: string=?, ~keyCodeToString: int => string, t) => string;
+
+  let parse:
+    (
+      ~getKeycode: Key.t => option(int),
+      ~getScancode: Key.t => option(int),
+      string
+    ) =>
+    result(list(t), string);
 };
 
 module Matcher: {

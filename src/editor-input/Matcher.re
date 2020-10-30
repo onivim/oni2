@@ -17,32 +17,17 @@ let parse = (~getKeycode, ~getScancode, str) => {
 
   let flatMap = (f, r) => Result.bind(r, f);
 
-  let internalModsToMods = modList => {
-    open Matcher_internal;
-    let rec loop = (mods, modList) =>
-      switch (modList) {
-      | [] => mods
-      | [Control, ...tail] => loop(Modifiers.{...mods, control: true}, tail)
-      | [Shift, ...tail] => loop(Modifiers.{...mods, shift: true}, tail)
-      | [Alt, ...tail] => loop(Modifiers.{...mods, alt: true}, tail)
-      | [Meta, ...tail] => loop(Modifiers.{...mods, meta: true}, tail)
-      };
-
-    loop(Modifiers.none, modList);
-  };
-
   let finish = r => {
-    let f = ((_activation, key, mods)) => {
+    let f = ((key, mods)) => {
       switch (getKeycode(key), getScancode(key)) {
       | (Some(keycode), Some(scancode)) =>
         Ok(
-          KeyPress.{modifiers: internalModsToMods(mods), scancode, keycode},
+          KeyPress.{
+            modifiers: Matcher_internal.Helpers.internalModsToMods(mods),
+            scancode,
+            keycode,
+          },
         )
-      //      | Some(code) =>
-      //        switch (activation) {
-      //        | Matcher_internal.Keydown =>
-      //          Ok(Keydown(Keycode(code, internalModsToMods(mods))))
-      //        }
       | _ => Error("Unrecognized key: " ++ Key.toString(key))
       };
     };
@@ -50,27 +35,10 @@ let parse = (~getKeycode, ~getScancode, str) => {
     switch (r) {
     | Matcher_internal.AllKeysReleased => Ok(AllKeysReleased)
     | Matcher_internal.Sequence(keys) =>
-      let bindings = keys |> List.map(f);
-
-      let errors = bindings |> List.filter(Result.is_error);
-
-      if (List.length(errors) > 0) {
-        let stringErrors =
-          errors
-          |> List.filter_map(
-               fun
-               | Error(msg) => Some(msg)
-               | Ok(_) => None,
-             );
-
-        let firstError: string = List.nth(stringErrors, 0);
-        Error(firstError);
-      } else {
-        bindings
-        |> List.map(Result.to_option)
-        |> List.filter_map(v => v)
-        |> (out => Ok(Sequence(out)));
-      };
+      keys
+      |> List.map(f)
+      |> Base.Result.all
+      |> Result.map(keys => Sequence(keys))
     };
   };
 
