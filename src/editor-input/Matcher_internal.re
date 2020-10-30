@@ -5,7 +5,6 @@ type modifier =
   | Meta;
 
 type activation =
-  | Keyup
   | Keydown;
 
 type keyMatcher = (activation, Key.t, list(modifier));

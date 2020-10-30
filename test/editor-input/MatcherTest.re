@@ -242,45 +242,45 @@ describe("Matcher", ({describe, _}) => {
         ),
       );
     });
-    test("keyup", ({expect, _}) => {
-      let result = defaultParse("!a");
-      expect.equal(
-        result,
-        Ok(Sequence([Keyup(Keycode(1, Modifiers.none))])),
-      );
-
-      let result = defaultParse("a!a");
-      expect.equal(
-        result,
-        Ok(
-          Sequence([
-            Keydown(Keycode(1, Modifiers.none)),
-            Keyup(Keycode(1, Modifiers.none)),
-          ]),
-        ),
-      );
-
-      let result = defaultParse("a !Ctrl+a");
-      expect.equal(
-        result,
-        Ok(
-          Sequence([
-            Keydown(Keycode(1, Modifiers.none)),
-            Keyup(Keycode(1, modifiersControl)),
-          ]),
-        ),
-      );
-
-      let result = defaultParse("a !<C-A>");
-      expect.equal(
-        result,
-        Ok(
-          Sequence([
-            Keydown(Keycode(1, Modifiers.none)),
-            Keyup(Keycode(1, modifiersControl)),
-          ]),
-        ),
-      );
-    });
+//    test("keyup", ({expect, _}) => {
+//      let result = defaultParse("!a");
+//      expect.equal(
+//        result,
+//        Ok(Sequence([Keyup(Keycode(1, Modifiers.none))])),
+//      );
+//
+//      let result = defaultParse("a!a");
+//      expect.equal(
+//        result,
+//        Ok(
+//          Sequence([
+//            Keydown(Keycode(1, Modifiers.none)),
+//            Keyup(Keycode(1, Modifiers.none)),
+//          ]),
+//        ),
+//      );
+//
+//      let result = defaultParse("a !Ctrl+a");
+//      expect.equal(
+//        result,
+//        Ok(
+//          Sequence([
+//            Keydown(Keycode(1, Modifiers.none)),
+//            Keyup(Keycode(1, modifiersControl)),
+//          ]),
+//        ),
+//      );
+//
+//      let result = defaultParse("a !<C-A>");
+//      expect.equal(
+//        result,
+//        Ok(
+//          Sequence([
+//            Keydown(Keycode(1, Modifiers.none)),
+//            Keyup(Keycode(1, modifiersControl)),
+//          ]),
+//        ),
+//      );
+//    });
   })
 });

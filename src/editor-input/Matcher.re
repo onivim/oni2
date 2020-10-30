@@ -2,8 +2,7 @@ type keyMatcher =
   | Keycode(int, Modifiers.t);
 
 type keyPress =
-  | Keydown(keyMatcher)
-  | Keyup(keyMatcher);
+  | Keydown(keyMatcher);
 
 type t =
   | Sequence(list(keyPress))
@@ -46,8 +45,6 @@ let parse = (~getKeycode, ~getScancode as _, str) => {
         switch (activation) {
         | Matcher_internal.Keydown =>
           Ok(Keydown(Keycode(code, internalModsToMods(mods))))
-        | Matcher_internal.Keyup =>
-          Ok(Keyup(Keycode(code, internalModsToMods(mods))))
         }
       };
     };

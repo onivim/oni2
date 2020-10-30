@@ -50,8 +50,7 @@ module Matcher: {
     | Keycode(int, Modifiers.t);
 
   type keyPress =
-    | Keydown(keyMatcher)
-    | Keyup(keyMatcher);
+    | Keydown(keyMatcher);
 
   type t =
     | Sequence(list(keyPress))

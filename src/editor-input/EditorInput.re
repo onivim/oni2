@@ -136,8 +136,6 @@ module Make = (Config: {
         switch (keyMatcher, key) {
         | (Keydown(Keycode(keycode, mods)), Down(_id, key)) =>
           key.keycode == keycode && Modifiers.equals(mods, key.modifiers)
-        | (Keyup(Keycode(keycode, mods)), Up(key)) =>
-          key.keycode == keycode && Modifiers.equals(mods, key.modifiers)
         | _ => false
         };
       }

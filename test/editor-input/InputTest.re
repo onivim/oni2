@@ -200,28 +200,28 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(effects, [Execute("commandAB")]);
     });
-    test("sequence with keyups", ({expect, _}) => {
-      let (bindings, _id) =
-        Input.empty
-        |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keyup(Keycode(1, Modifiers.none)),
-             ]),
-             _ => true,
-             "commandA!A",
-           );
-
-      let (bindings, effects) =
-        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
-
-      expect.equal(effects, []);
-
-      let (_bindings, effects) =
-        Input.keyUp(~context=true, ~key=aKeyNoModifiers, bindings);
-
-      expect.equal(effects, [Execute("commandA!A")]);
-    });
+//    test("sequence with keyups", ({expect, _}) => {
+//      let (bindings, _id) =
+//        Input.empty
+//        |> Input.addBinding(
+//             Sequence([
+//               Keydown(Keycode(1, Modifiers.none)),
+//               Keyup(Keycode(1, Modifiers.none)),
+//             ]),
+//             _ => true,
+//             "commandA!A",
+//           );
+//
+//      let (bindings, effects) =
+//        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
+//
+//      expect.equal(effects, []);
+//
+//      let (_bindings, effects) =
+//        Input.keyUp(~context=true, ~key=aKeyNoModifiers, bindings);
+//
+//      expect.equal(effects, [Execute("commandA!A")]);
+//    });
     test("partial match with unhandled", ({expect, _}) => {
       let (bindings, _id) =
         Input.empty
