@@ -36,11 +36,7 @@ let parse = (~getKeycode, ~getScancode, str) => {
       switch (getKeycode(key), getScancode(key)) {
       | (Some(keycode), Some(scancode)) =>
         Ok(
-              KeyPress.{
-                modifiers: internalModsToMods(mods),
-                scancode,
-                keycode,
-              },
+          KeyPress.{modifiers: internalModsToMods(mods), scancode, keycode},
         )
       //      | Some(code) =>
       //        switch (activation) {

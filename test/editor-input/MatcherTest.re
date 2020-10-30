@@ -126,25 +126,16 @@ describe("Matcher", ({describe, _}) => {
     });
     test("simple parsing", ({expect, _}) => {
       let result = defaultParse("a");
-      expect.equal(
-        result,
-        Ok(Sequence([keyPress(1)])),
-      );
+      expect.equal(result, Ok(Sequence([keyPress(1)])));
 
       let result = defaultParse("b");
-      expect.equal(
-        result,
-        Ok(Sequence([keyPress(2)])),
-      );
+      expect.equal(result, Ok(Sequence([keyPress(2)])));
 
       let result = defaultParse("c");
       expect.equal(Result.is_error(result), true);
 
       let result = defaultParse("esc");
-      expect.equal(
-        result,
-        Ok(Sequence([keyPress(99)])),
-      );
+      expect.equal(result, Ok(Sequence([keyPress(99)])));
     });
     test("all keys released", ({expect, _}) => {
       let result = defaultParse("<RELEASE>");
@@ -152,105 +143,50 @@ describe("Matcher", ({describe, _}) => {
     });
     test("vim bindings", ({expect, _}) => {
       let result = defaultParse("<a>");
-      expect.equal(
-        result,
-        Ok(Sequence([keyPress(1)])),
-      );
+      expect.equal(result, Ok(Sequence([keyPress(1)])));
 
       let result = defaultParse("<c-a>");
       expect.equal(
         result,
-        Ok(
-          Sequence([
-            keyPress(~modifiers=modifiersControl, 1),
-          ]),
-        ),
+        Ok(Sequence([keyPress(~modifiers=modifiersControl, 1)])),
       );
 
       let result = defaultParse("<S-a>");
       expect.equal(
         result,
-        Ok(
-          Sequence([
-            keyPress(~modifiers=modifiersShift, 1),
-          ]),
-        ),
+        Ok(Sequence([keyPress(~modifiers=modifiersShift, 1)])),
       );
 
       let result = defaultParse("<S-F12>");
       expect.equal(
         result,
-        Ok(
-          Sequence([
-            keyPress(~modifiers=modifiersShift, 133),
-          ]),
-        ),
+        Ok(Sequence([keyPress(~modifiers=modifiersShift, 133)])),
       );
     });
     test("vscode bindings", ({expect, _}) => {
       let result = defaultParse("Ctrl+a");
       expect.equal(
         result,
-        Ok(
-          Sequence([
-            keyPress(~modifiers=modifiersControl, 1),
-          ]),
-        ),
+        Ok(Sequence([keyPress(~modifiers=modifiersControl, 1)])),
       );
 
       let result = defaultParse("ctrl+a");
       expect.equal(
         result,
-        Ok(
-          Sequence([
-            keyPress(~modifiers=modifiersControl, 1),
-          ]),
-        ),
+        Ok(Sequence([keyPress(~modifiers=modifiersControl, 1)])),
       );
     });
     test("binding list", ({expect, _}) => {
       let result = defaultParse("ab");
-      expect.equal(
-        result,
-        Ok(
-          Sequence([
-            keyPress(1),
-            keyPress(2),
-          ]),
-        ),
-      );
+      expect.equal(result, Ok(Sequence([keyPress(1), keyPress(2)])));
 
       let result = defaultParse("a b");
-      expect.equal(
-        result,
-        Ok(
-          Sequence([
-            keyPress(1),
-            keyPress(2),
-          ]),
-        ),
-      );
+      expect.equal(result, Ok(Sequence([keyPress(1), keyPress(2)])));
 
       let result = defaultParse("<a>b");
-      expect.equal(
-        result,
-        Ok(
-          Sequence([
-            keyPress(1),
-            keyPress(2),
-          ]),
-        ),
-      );
+      expect.equal(result, Ok(Sequence([keyPress(1), keyPress(2)])));
       let result = defaultParse("<a><b>");
-      expect.equal(
-        result,
-        Ok(
-          Sequence([
-            keyPress(1),
-            keyPress(2),
-          ]),
-        ),
-      );
+      expect.equal(result, Ok(Sequence([keyPress(1), keyPress(2)])));
 
       let result = defaultParse("<c-a> Ctrl+b");
       expect.equal(

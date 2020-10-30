@@ -131,18 +131,11 @@ module Make = (Config: {
   };
 
   let keyMatches = (keyMatcher, key: gesture) => {
-    Matcher.(
-      {
-        switch (keyMatcher, key) {
-        | (
-            KeyPress.{keycode, modifiers, _},
-            Down(_id, key),
-          ) =>
-          key.keycode == keycode && Modifiers.equals(modifiers, key.modifiers)
-        | _ => false
-        };
-      }
-    );
+    switch (keyMatcher, key) {
+    | (KeyPress.{keycode, modifiers, _}, Down(_id, key)) =>
+      key.keycode == keycode && Modifiers.equals(modifiers, key.modifiers)
+    | _ => false
+    };
   };
 
   let applyKeyToBinding = (~context, key, binding) =>
