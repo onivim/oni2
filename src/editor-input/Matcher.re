@@ -1,11 +1,5 @@
-type keyMatcher =
-  | Keycode(KeyPress.t);
-
-type keyPress =
-  | Keydown(keyMatcher);
-
 type t =
-  | Sequence(list(keyPress))
+  | Sequence(list(KeyPress.t))
   | AllKeysReleased;
 
 type sequence = list(t);
@@ -42,15 +36,11 @@ let parse = (~getKeycode, ~getScancode, str) => {
       switch (getKeycode(key), getScancode(key)) {
       | (Some(keycode), Some(scancode)) =>
         Ok(
-          Keydown(
-            Keycode(
               KeyPress.{
                 modifiers: internalModsToMods(mods),
                 scancode,
                 keycode,
               },
-            ),
-          ),
         )
       //      | Some(code) =>
       //        switch (activation) {

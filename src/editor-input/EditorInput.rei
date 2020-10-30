@@ -59,14 +59,8 @@ module KeyPress: {
 };
 
 module Matcher: {
-  type keyMatcher =
-    | Keycode(KeyPress.t);
-
-  type keyPress =
-    | Keydown(keyMatcher);
-
   type t =
-    | Sequence(list(keyPress))
+    | Sequence(list(KeyPress.t))
     | AllKeysReleased;
 
   let parse:

@@ -66,52 +66,52 @@ describe("Matcher", ({describe, _}) => {
       // Exercise full set of keys described here:
       // https://code.visualstudio.com/docs/getstarted/keybindings#_accepted-keys
       let cases = [
-        ("a", Keydown(Keycode(keyPress(1)))),
-        ("A", Keydown(Keycode(keyPress(1)))),
-        ("0", Keydown(Keycode(keyPress(50)))),
-        ("9", Keydown(Keycode(keyPress(59)))),
-        ("`", Keydown(Keycode(keyPress(60)))),
-        ("-", Keydown(Keycode(keyPress(61)))),
-        ("=", Keydown(Keycode(keyPress(62)))),
-        ("[", Keydown(Keycode(keyPress(63)))),
-        ("]", Keydown(Keycode(keyPress(64)))),
-        ("\\", Keydown(Keycode(keyPress(65)))),
-        (";", Keydown(Keycode(keyPress(66)))),
-        ("'", Keydown(Keycode(keyPress(67)))),
-        (",", Keydown(Keycode(keyPress(68)))),
-        (".", Keydown(Keycode(keyPress(69)))),
-        ("/", Keydown(Keycode(keyPress(70)))),
-        ("tab", Keydown(Keycode(keyPress(98)))),
-        ("ESC", Keydown(Keycode(keyPress(99)))),
-        ("up", Keydown(Keycode(keyPress(100)))),
-        ("left", Keydown(Keycode(keyPress(101)))),
-        ("right", Keydown(Keycode(keyPress(102)))),
-        ("down", Keydown(Keycode(keyPress(103)))),
-        ("PageUp", Keydown(Keycode(keyPress(104)))),
-        ("pagedown", Keydown(Keycode(keyPress(105)))),
-        ("end", Keydown(Keycode(keyPress(106)))),
-        ("home", Keydown(Keycode(keyPress(107)))),
-        ("enter", Keydown(Keycode(keyPress(108)))),
-        ("cr", Keydown(Keycode(keyPress(108)))),
-        ("escape", Keydown(Keycode(keyPress(99)))),
-        ("space", Keydown(Keycode(keyPress(109)))),
-        ("bs", Keydown(Keycode(keyPress(110)))),
-        ("backspace", Keydown(Keycode(keyPress(110)))),
-        ("del", Keydown(Keycode(keyPress(111)))),
-        ("delete", Keydown(Keycode(keyPress(111)))),
-        ("pause", Keydown(Keycode(keyPress(112)))),
-        ("capslock", Keydown(Keycode(keyPress(113)))),
-        ("insert", Keydown(Keycode(keyPress(114)))),
-        ("f0", Keydown(Keycode(keyPress(115)))),
-        ("f19", Keydown(Keycode(keyPress(134)))),
-        ("numpad0", Keydown(Keycode(keyPress(135)))),
-        ("numpad9", Keydown(Keycode(keyPress(144)))),
-        ("numpad_multiply", Keydown(Keycode(keyPress(145)))),
-        ("numpad_add", Keydown(Keycode(keyPress(146)))),
-        ("numpad_separator", Keydown(Keycode(keyPress(147)))),
-        ("numpad_subtract", Keydown(Keycode(keyPress(148)))),
-        ("numpad_decimal", Keydown(Keycode(keyPress(149)))),
-        ("numpad_divide", Keydown(Keycode(keyPress(150)))),
+        ("a", keyPress(1)),
+        ("A", keyPress(1)),
+        ("0", keyPress(50)),
+        ("9", keyPress(59)),
+        ("`", keyPress(60)),
+        ("-", keyPress(61)),
+        ("=", keyPress(62)),
+        ("[", keyPress(63)),
+        ("]", keyPress(64)),
+        ("\\", keyPress(65)),
+        (";", keyPress(66)),
+        ("'", keyPress(67)),
+        (",", keyPress(68)),
+        (".", keyPress(69)),
+        ("/", keyPress(70)),
+        ("tab", keyPress(98)),
+        ("ESC", keyPress(99)),
+        ("up", keyPress(100)),
+        ("left", keyPress(101)),
+        ("right", keyPress(102)),
+        ("down", keyPress(103)),
+        ("PageUp", keyPress(104)),
+        ("pagedown", keyPress(105)),
+        ("end", keyPress(106)),
+        ("home", keyPress(107)),
+        ("enter", keyPress(108)),
+        ("cr", keyPress(108)),
+        ("escape", keyPress(99)),
+        ("space", keyPress(109)),
+        ("bs", keyPress(110)),
+        ("backspace", keyPress(110)),
+        ("del", keyPress(111)),
+        ("delete", keyPress(111)),
+        ("pause", keyPress(112)),
+        ("capslock", keyPress(113)),
+        ("insert", keyPress(114)),
+        ("f0", keyPress(115)),
+        ("f19", keyPress(134)),
+        ("numpad0", keyPress(135)),
+        ("numpad9", keyPress(144)),
+        ("numpad_multiply", keyPress(145)),
+        ("numpad_add", keyPress(146)),
+        ("numpad_separator", keyPress(147)),
+        ("numpad_subtract", keyPress(148)),
+        ("numpad_decimal", keyPress(149)),
+        ("numpad_divide", keyPress(150)),
       ];
 
       let runCase = case => {
@@ -128,13 +128,13 @@ describe("Matcher", ({describe, _}) => {
       let result = defaultParse("a");
       expect.equal(
         result,
-        Ok(Sequence([Keydown(Keycode(keyPress(1)))])),
+        Ok(Sequence([keyPress(1)])),
       );
 
       let result = defaultParse("b");
       expect.equal(
         result,
-        Ok(Sequence([Keydown(Keycode(keyPress(2)))])),
+        Ok(Sequence([keyPress(2)])),
       );
 
       let result = defaultParse("c");
@@ -143,7 +143,7 @@ describe("Matcher", ({describe, _}) => {
       let result = defaultParse("esc");
       expect.equal(
         result,
-        Ok(Sequence([Keydown(Keycode(keyPress(99)))])),
+        Ok(Sequence([keyPress(99)])),
       );
     });
     test("all keys released", ({expect, _}) => {
@@ -154,7 +154,7 @@ describe("Matcher", ({describe, _}) => {
       let result = defaultParse("<a>");
       expect.equal(
         result,
-        Ok(Sequence([Keydown(Keycode(keyPress(1)))])),
+        Ok(Sequence([keyPress(1)])),
       );
 
       let result = defaultParse("<c-a>");
@@ -162,7 +162,7 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            Keydown(Keycode(keyPress(~modifiers=modifiersControl, 1))),
+            keyPress(~modifiers=modifiersControl, 1),
           ]),
         ),
       );
@@ -172,7 +172,7 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            Keydown(Keycode(keyPress(~modifiers=modifiersShift, 1))),
+            keyPress(~modifiers=modifiersShift, 1),
           ]),
         ),
       );
@@ -182,7 +182,7 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            Keydown(Keycode(keyPress(~modifiers=modifiersShift, 133))),
+            keyPress(~modifiers=modifiersShift, 133),
           ]),
         ),
       );
@@ -193,7 +193,7 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            Keydown(Keycode(keyPress(~modifiers=modifiersControl, 1))),
+            keyPress(~modifiers=modifiersControl, 1),
           ]),
         ),
       );
@@ -203,7 +203,7 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            Keydown(Keycode(keyPress(~modifiers=modifiersControl, 1))),
+            keyPress(~modifiers=modifiersControl, 1),
           ]),
         ),
       );
@@ -214,8 +214,8 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            Keydown(Keycode(keyPress(1))),
-            Keydown(Keycode(keyPress(2))),
+            keyPress(1),
+            keyPress(2),
           ]),
         ),
       );
@@ -225,8 +225,8 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            Keydown(Keycode(keyPress(1))),
-            Keydown(Keycode(keyPress(2))),
+            keyPress(1),
+            keyPress(2),
           ]),
         ),
       );
@@ -236,8 +236,8 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            Keydown(Keycode(keyPress(1))),
-            Keydown(Keycode(keyPress(2))),
+            keyPress(1),
+            keyPress(2),
           ]),
         ),
       );
@@ -246,8 +246,8 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            Keydown(Keycode(keyPress(1))),
-            Keydown(Keycode(keyPress(2))),
+            keyPress(1),
+            keyPress(2),
           ]),
         ),
       );
@@ -257,8 +257,8 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            Keydown(Keycode(keyPress(~modifiers=modifiersControl, 1))),
-            Keydown(Keycode(keyPress(~modifiers=modifiersControl, 2))),
+            keyPress(~modifiers=modifiersControl, 1),
+            keyPress(~modifiers=modifiersControl, 2),
           ]),
         ),
       );
@@ -275,7 +275,7 @@ describe("Matcher", ({describe, _}) => {
     //        result,
     //        Ok(
     //          Sequence([
-    //            Keydown(Keycode(1, Modifiers.none)),
+    //            1, Modifiers.none)),
     //            Keyup(Keycode(1, Modifiers.none)),
     //          ]),
     //        ),
@@ -286,7 +286,7 @@ describe("Matcher", ({describe, _}) => {
     //        result,
     //        Ok(
     //          Sequence([
-    //            Keydown(Keycode(1, Modifiers.none)),
+    //            1, Modifiers.none)),
     //            Keyup(Keycode(1, modifiersControl)),
     //          ]),
     //        ),
@@ -297,7 +297,7 @@ describe("Matcher", ({describe, _}) => {
     //        result,
     //        Ok(
     //          Sequence([
-    //            Keydown(Keycode(1, Modifiers.none)),
+    //            1, Modifiers.none)),
     //            Keyup(Keycode(1, modifiersControl)),
     //          ]),
     //        ),
