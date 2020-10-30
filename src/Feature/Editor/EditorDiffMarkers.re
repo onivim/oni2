@@ -125,14 +125,16 @@ let render =
     ~height,
     ~count,
     ~render=
-      (i, y) => {
+      (i, _y) => {
         let bufferLine =
           Editor.viewLineToBufferLine(i, editor)
           |> EditorCoreTypes.LineNumber.toZeroBased;
+
+        let y = Editor.viewLineToPixelY(i, editor);
         if (markers[bufferLine] != Unmodified) {
           renderMarker(
             ~x,
-            ~y,
+            ~y=y -. scrollY,
             ~rowHeight,
             ~width,
             ~canvasContext,

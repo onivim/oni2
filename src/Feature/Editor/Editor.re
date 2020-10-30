@@ -1246,8 +1246,7 @@ let configurationChanged = (~perFileTypeConfig, editor) => {
 module Slow = {
   let pixelPositionToBytePosition =
       (~allowPast=false, ~pixelX: float, ~pixelY: float, view) => {
-    let rawLine =
-      int_of_float((pixelY +. view.scrollY) /. lineHeightInPixels(view));
+    let rawLine = getViewLineFromPixelY(~pixelY=pixelY +. view.scrollY, view);
 
     let wrapping = view.wrapState |> WrapState.wrapping;
     let rawLine =
