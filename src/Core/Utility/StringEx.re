@@ -290,7 +290,3 @@ let splitLines: string => (bool, array(string)) =
 
     (isMultipleLines(text), out);
   };
-
-let abc = 1;
-
-let def = 2;

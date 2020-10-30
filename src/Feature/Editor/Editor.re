@@ -720,6 +720,15 @@ let withSteadyCursor = (f, editor) => {
   {...editor', scrollY, isScrollAnimated: false};
 };
 
+let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
+  hidden: false,
+  reconcilerKey: Brisk_reconciler.Key.create(),
+  key,
+  uniqueId,
+  lineNumber,
+  view,
+};
+
 let setInlineElementSize = (~key, ~uniqueId, ~height, editor) => {
   editor
   |> withSteadyCursor(e =>
@@ -762,18 +771,7 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
 };
 
 let getInlineElements = ({inlineElements, _}) => {
-  inlineElements
-  |> InlineElements.allElements
-  |> List.map((elem: InlineElements.element) =>
-       {
-         reconcilerKey: elem.reconcilerKey,
-         key: elem.key,
-         uniqueId: elem.uniqueId,
-         lineNumber: elem.line,
-         view: elem.view,
-         hidden: elem.hidden,
-       }
-     );
+  inlineElements |> InlineElements.allElements;
 };
 
 let selectionOrCursorRange = editor => {

@@ -79,8 +79,8 @@ let%component make =
 
   let lensElements =
     inlineElements
-    |> List.map((inlineElement: Editor.inlineElement) => {
-         let line = inlineElement.lineNumber;
+    |> List.map((inlineElement: InlineElements.element) => {
+         let line = inlineElement.line;
          let uniqueId = inlineElement.uniqueId;
          let elem = inlineElement.view(~theme, ~uiFont);
          let inlineKey = inlineElement.key;

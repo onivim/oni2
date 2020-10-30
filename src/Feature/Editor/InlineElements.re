@@ -75,7 +75,14 @@ let set = (~key: string, ~elements, model) => {
 };
 
 let setSize = (~key, ~uniqueId, ~height, model) => {
-  let setHeight = Option.map((curr: element) => {...curr, height});
+  let setHeight =
+    Option.map((curr: element)
+      // Use the max of the current height or previous height,
+      // because we might've already measured this element - use
+      // the measured value if we have it. This will reserve space
+      // in the case where the editor is cloned, making the
+      // transition less jarring.
+      => {...curr, height: max(height, curr.height)});
 
   let keyToElements' =
     model.keyToElements

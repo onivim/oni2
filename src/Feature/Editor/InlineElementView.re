@@ -45,9 +45,8 @@ let%component make =
                 ~children,
                 (),
               ) => {
-
-  let animationsActive = 
-  Feature_Configuration.GlobalConfiguration.animation.get(config);
+  let animationsActive =
+    Feature_Configuration.GlobalConfiguration.animation.get(config);
 
   // HOOKS
   // TODO: Graceful fade-in transition

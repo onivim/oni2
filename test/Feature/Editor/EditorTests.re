@@ -41,13 +41,13 @@ describe("Editor", ({describe, _}) => {
   };
 
   let inlineElement = lineIdx =>
-    Editor.{
-      key: "test-inline-element",
-      uniqueId: string_of_int(lineIdx),
-      lineNumber: LineNumber.ofZeroBased(lineIdx),
-      view: (~theme as _, ~uiFont as _, ()) =>
-        Revery.UI.React.listToElement([]),
-    };
+    Editor.makeInlineElement(
+      ~key="test-inline-element",
+      ~uniqueId=string_of_int(lineIdx),
+      ~lineNumber=LineNumber.ofZeroBased(lineIdx),
+      ~view=(~theme as _, ~uiFont as _, ()) =>
+      Revery.UI.React.listToElement([])
+    );
 
   let colorizer = (~startByte as _, _) => {
     BufferLineColorizer.{
@@ -77,7 +77,7 @@ describe("Editor", ({describe, _}) => {
            )
         |> Editor.setInlineElementSize(
              ~key="test-inline-element",
-             ~uniqueId=inlineElement0.uniqueId,
+             ~uniqueId="0",
              ~height=25,
            );
 
@@ -97,7 +97,7 @@ describe("Editor", ({describe, _}) => {
            )
         |> Editor.setInlineElementSize(
              ~key="test-inline-element",
-             ~uniqueId=inlineElement1.uniqueId,
+             ~uniqueId="1",
              ~height=25,
            );
 

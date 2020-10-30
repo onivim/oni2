@@ -25,23 +25,24 @@ module WrapMode: {
 let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
 let copy: t => t;
 
-type inlineElement = {
-  reconcilerKey: Brisk_reconciler.Key.t,
-  hidden: bool,
-  key: string,
-  uniqueId: string,
-  lineNumber: EditorCoreTypes.LineNumber.t,
-  view:
-    (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
-    Revery.UI.element,
-};
+type inlineElement;
+
+let makeInlineElement:
+  (
+    ~key: string,
+    ~uniqueId: string,
+    ~lineNumber: EditorCoreTypes.LineNumber.t,
+    ~view: (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
+           Revery.UI.element
+  ) =>
+  inlineElement;
 
 let setInlineElements: (~key: string, ~elements: list(inlineElement), t) => t;
 
 let setInlineElementSize:
   (~key: string, ~uniqueId: string, ~height: int, t) => t;
 
-let getInlineElements: t => list(inlineElement);
+let getInlineElements: t => list(InlineElements.element);
 
 let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;

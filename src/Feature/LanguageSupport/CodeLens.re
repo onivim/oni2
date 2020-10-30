@@ -126,12 +126,29 @@ let update = (msg, model) =>
 
 // CONFIGURATION
 
+module VimSettings = {
+  open Config.Schema;
+  open VimSetting.Schema;
+
+  let codeLens =
+    vim("codelens", scrollSetting => {
+      scrollSetting
+      |> VimSetting.decode_value_opt(bool)
+      |> Option.value(~default=false)
+    });
+};
+
 module Configuration = {
   open Config.Schema;
 
   module Experimental = {
     let enabled =
-      setting("experimental.editor.codeLens", bool, ~default=false);
+      setting(
+        ~vim=VimSettings.codeLens,
+        "experimental.editor.codeLens",
+        bool,
+        ~default=false,
+      );
   };
 };
 

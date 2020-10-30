@@ -443,15 +443,13 @@ let update =
                let uniqueId = Feature_LanguageSupport.CodeLens.uniqueId(lens);
                let view =
                  Feature_LanguageSupport.CodeLens.View.make(~codeLens=lens);
-               Feature_Editor.Editor.{
-                 hidden: false,
-                 reconcilerKey: Brisk_reconciler.Key.create(),
-                 key: "codelens",
-                 uniqueId,
-                 lineNumber:
+               Feature_Editor.Editor.makeInlineElement(
+                 ~key="codelens",
+                 ~uniqueId,
+                 ~lineNumber=
                    EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
-                 view,
-               };
+                 ~view,
+               );
              });
         let layout' =
           state.layout
