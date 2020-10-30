@@ -134,8 +134,11 @@ module Make = (Config: {
     Matcher.(
       {
         switch (keyMatcher, key) {
-        | (Keydown(Keycode(keycode, mods)), Down(_id, key)) =>
-          key.keycode == keycode && Modifiers.equals(mods, key.modifiers)
+        | (
+            Keydown(Keycode(KeyPress.{keycode, modifiers, _})),
+            Down(_id, key),
+          ) =>
+          key.keycode == keycode && Modifiers.equals(modifiers, key.modifiers)
         | _ => false
         };
       }

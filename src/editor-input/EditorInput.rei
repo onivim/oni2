@@ -45,9 +45,22 @@ module Modifiers: {
   let equals: (t, t) => bool;
 };
 
+module KeyPress: {
+  [@deriving show]
+  type t = {
+    scancode: int,
+    keycode: int,
+    modifiers: Modifiers.t,
+  };
+
+  let toString:
+    // The name of the 'meta' key. Defaults to "Meta".
+    (~meta: string=?, ~keyCodeToString: int => string, t) => string;
+};
+
 module Matcher: {
   type keyMatcher =
-    | Keycode(int, Modifiers.t);
+    | Keycode(KeyPress.t);
 
   type keyPress =
     | Keydown(keyMatcher);
@@ -63,19 +76,6 @@ module Matcher: {
       string
     ) =>
     result(t, string);
-};
-
-module KeyPress: {
-  [@deriving show]
-  type t = {
-    scancode: int,
-    keycode: int,
-    modifiers: Modifiers.t,
-  };
-
-  let toString:
-    // The name of the 'meta' key. Defaults to "Meta".
-    (~meta: string=?, ~keyCodeToString: int => string, t) => string;
 };
 
 module type Input = {

@@ -1,5 +1,5 @@
 type keyMatcher =
-  | Keycode(int, Modifiers.t);
+  | Keycode(KeyPress.t);
 
 type keyPress =
   | Keydown(keyMatcher);
@@ -10,7 +10,7 @@ type t =
 
 type sequence = list(t);
 
-let parse = (~getKeycode, ~getScancode as _, str) => {
+let parse = (~getKeycode, ~getScancode, str) => {
   let parse = lexbuf =>
     switch (Matcher_parser.main(Matcher_lexer.token, lexbuf)) {
     | exception Matcher_lexer.Error => Error("Error parsing binding: " ++ str)
@@ -38,14 +38,26 @@ let parse = (~getKeycode, ~getScancode as _, str) => {
   };
 
   let finish = r => {
-    let f = ((activation, key, mods)) => {
-      switch (getKeycode(key)) {
-      | None => Error("Unrecognized key: " ++ Key.toString(key))
-      | Some(code) =>
-        switch (activation) {
-        | Matcher_internal.Keydown =>
-          Ok(Keydown(Keycode(code, internalModsToMods(mods))))
-        }
+    let f = ((_activation, key, mods)) => {
+      switch (getKeycode(key), getScancode(key)) {
+      | (Some(keycode), Some(scancode)) =>
+        Ok(
+          Keydown(
+            Keycode(
+              KeyPress.{
+                modifiers: internalModsToMods(mods),
+                scancode,
+                keycode,
+              },
+            ),
+          ),
+        )
+      //      | Some(code) =>
+      //        switch (activation) {
+      //        | Matcher_internal.Keydown =>
+      //          Ok(Keydown(Keycode(code, internalModsToMods(mods))))
+      //        }
+      | _ => Error("Unrecognized key: " ++ Key.toString(key))
       };
     };
 

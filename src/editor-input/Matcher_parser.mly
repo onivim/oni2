@@ -2,7 +2,6 @@
 %token <Key.t> BINDING
 %token ALLKEYSRELEASED
 %token LT GT
-%token EXCLAMATION
 %token EOF
 
 %start <Matcher_internal.t> main
