@@ -1,5 +1,4 @@
 type keyMatcher =
-  | Scancode(int, Modifiers.t)
   | Keycode(int, Modifiers.t);
 
 type keyPress =
