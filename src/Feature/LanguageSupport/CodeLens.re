@@ -14,13 +14,16 @@ let lineNumber = ({lens, _}) =>
 
 let uniqueId = ({uniqueId, _}) => uniqueId;
 
-let text = ({lens, _}: codeLens) =>
+let textFromExthost = (lens: Exthost.CodeLens.t) => {
   Exthost.Command.(
     lens.command
     |> OptionEx.flatMap(command => command.label)
     |> Option.map(Exthost.Label.toString)
     |> Option.value(~default="(null)")
   );
+};
+
+let text = ({lens, _}: codeLens) => textFromExthost(lens);
 
 type provider = {
   handle: int,
@@ -76,11 +79,25 @@ let unregister = (~handle: int, model) => {
 let addLenses = (handle, bufferId, lenses, handleToLenses) => {
   let internalLenses =
     lenses
+    |> List.sort((lensA, lensB) => {
+         Exthost.CodeLens.(
+           {
+             lensB.range.startLineNumber - lensA.range.startLineNumber;
+           }
+         )
+       })
     |> List.mapi((idx, lens) =>
          {
            lens,
            handle,
-           uniqueId: Printf.sprintf("%d%d%d", handle, bufferId, idx),
+           uniqueId:
+             Printf.sprintf(
+               "%d%d%d%d",
+               handle,
+               bufferId,
+               idx,
+               Hashtbl.hash(textFromExthost(lens)),
+             ),
          }
        );
   IntMap.add(handle, internalLenses, handleToLenses);

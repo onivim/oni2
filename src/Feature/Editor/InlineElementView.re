@@ -64,7 +64,7 @@ let%component make =
 
   let%hook () =
     Hooks.effect(
-      OnMountAndIf((!=), measuredHeight),
+      OnMountAndIf((!=), (measuredHeight, uniqueId)),
       () => {
         if (measuredHeight > 0) {
           dispatch(
