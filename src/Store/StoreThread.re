@@ -367,11 +367,21 @@ let start =
       Feature_AutoUpdate.sub(~config)
       |> Isolinear.Sub.map(msg => Model.Actions.AutoUpdate(msg));
 
-    let activeEditorSubscription =
-      Feature_Editor.Sub.editor(activeEditor)
-      |> Isolinear.Sub.map(msg => Model.Actions.Editor({
-        scope: Model.EditorScope.Editor(activeEditor |> Feature_Editor.Editor.getId),
-        msg: msg}));
+    let visibleEditorsSubscription =
+      visibleEditors
+      |> List.map(editor =>
+           Feature_Editor.Sub.editor(editor)
+           |> Isolinear.Sub.map(msg =>
+                Model.Actions.Editor({
+                  scope:
+                    Model.EditorScope.Editor(
+                      editor |> Feature_Editor.Editor.getId,
+                    ),
+                  msg,
+                })
+              )
+         )
+      |> Isolinear.Sub.batch;
     [
       extHostSubscription,
       languageSupportSub,
@@ -386,7 +396,7 @@ let start =
       registersSub,
       scmSub,
       autoUpdateSub,
-      activeEditorSubscription,
+      visibleEditorsSubscription,
     ]
     |> Isolinear.Sub.batch;
   };

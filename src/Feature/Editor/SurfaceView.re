@@ -102,12 +102,11 @@ let%component make =
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
     |> Option.iter(((pixelX, pixelY, time)) => {
          dispatch(Msg.EditorMouseMoved({time, pixelX, pixelY}))
-       })//    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-         //    |> Option.iter(bytePosition => {
+       })//    |> Option.iter(bytePosition => {
          //         dispatch(Msg.MouseMoved({bytePosition: bytePosition}))
          //       });
          //    hoverTimerActive := true;
-         ;
+         ; //    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
          //    lastMousePosition := Some((evt.mouseX, evt.mouseY));
   };
 
@@ -130,8 +129,7 @@ let%component make =
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
     |> Option.iter(((pixelX, pixelY, time)) => {
          dispatch(Msg.EditorMouseUp({time, pixelX, pixelY}))
-       })//    Log.trace("editorMouseUp");
-         //
+       })//
          //    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
          //    |> Option.iter(bytePosition => {
          //         Log.tracef(m =>
@@ -144,6 +142,7 @@ let%component make =
          //             Vim.Mode.Normal({cursor: bytePosition});
          //           };
          //         changeMode(newMode);
+         ; //    Log.trace("editorMouseUp");
          //       });
   };
 

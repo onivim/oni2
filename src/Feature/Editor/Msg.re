@@ -1,5 +1,3 @@
-open EditorCoreTypes;
-
 [@deriving show({with_path: false})]
 type t =
   | VerticalScrollbarBeforeTrackClicked({newPixelScrollY: float})
@@ -39,7 +37,7 @@ type t =
       pixelY: float,
     })
   | EditorMouseLeave
-  //  | MouseHovered({bytePosition: BytePosition.t})
+  | MouseHovered
   //  | MouseMoved({bytePosition: BytePosition.t})
   | ModeChanged({
       mode: [@opaque] Vim.Mode.t,

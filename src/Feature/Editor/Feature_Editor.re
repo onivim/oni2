@@ -115,17 +115,7 @@ let update = (editor, msg) => {
     )
   | EditorMouseLeave => (editor |> Editor.mouseLeave, Nothing)
   | EditorMouseEnter => (editor |> Editor.mouseEnter, Nothing)
-  //  | MouseHovered({bytePosition}) => (
-
-  //      editor,
-  //      {
-  //        Editor.byteToCharacter(bytePosition, editor)
-  //        |> Option.map(characterPosition => {
-  //             MouseHovered({bytePosition, characterPosition})
-  //           })
-  //        |> Option.value(~default=Nothing);
-  //      },
-  //    )
+  | MouseHovered => (editor, Nothing)
   //  | MouseMoved({bytePosition}) => (
   //      editor,
   //      {
@@ -173,8 +163,22 @@ let update = (editor, msg) => {
   };
 };
 
+Revery.Tick.timeout;
+
 module Sub = {
   let editor = (editor: Editor.t) => {
-      Isolinear.Sub.none
+    switch (Editor.lastMouseMoveTime(editor)) {
+    | Some(time) when !Editor.isMouseDown(editor) =>
+      Service_Time.Sub.once(
+        ~uniqueId={
+          string_of_int(Editor.getId(editor))
+          ++ string_of_float(Revery.Time.toFloatSeconds(time));
+        },
+        ~delay=Revery.Time.seconds(1),
+        ~msg=Msg.MouseHovered,
+      )
+    | Some(_) => Isolinear.Sub.none
+    | None => Isolinear.Sub.none
+    };
   };
-}
+};

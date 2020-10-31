@@ -101,10 +101,11 @@ type t = {
   // Number of lines to preserve before or after the cursor, when scrolling.
   // Like the `scrolloff` vim setting or the `editor.cursorSurroundingLines` VSCode setting.
   verticalScrollMargin: int,
-
   // Mouse state
   isMouseDown: bool,
   hasMouseEntered: bool,
+  // The last mouse position, in screen coordinates
+  lastMouseScreenPosition: option(PixelPosition.t),
   lastMouseMoveTime: [@opaque] option(Revery.Time.t),
 };
 
@@ -422,6 +423,7 @@ let create = (~config, ~buffer, ()) => {
     isMouseDown: false,
     hasMouseEntered: false,
     lastMouseMoveTime: None,
+    lastMouseScreenPosition: None,
   }
   |> configure(~config);
 };
@@ -1111,11 +1113,6 @@ module Slow = {
     let totalLinesInBuffer = EditorBuffer.numberOfLines(view.buffer);
 
     let lineIdx = EditorCoreTypes.LineNumber.toZeroBased(line);
-    //      if (rawLine >= totalLinesInBuffer) {
-    //        max(0, totalLinesInBuffer - 1);
-    //      } else {
-    //        rawLine;
-    //      };
 
     if (lineIdx >= 0 && lineIdx < totalLinesInBuffer) {
       let bufferLine = EditorBuffer.line(lineIdx, view.buffer);
@@ -1169,37 +1166,54 @@ let mouseDown = (~time, ~pixelX, ~pixelY, editor) => {
   ignore(time);
   ignore(pixelX);
   ignore(pixelY);
-  {...editor, isMouseDown: true };
+  {...editor, isMouseDown: true};
 };
 
 let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
   ignore(time);
 
   let isInsertMode = Vim.Mode.isInsert(editor.mode);
-  let bytePosition = Slow.pixelPositionToBytePosition(
-    // #2463: When we're insert mode, clicking past the end of the line
-    // should move the cursor past the last byte
-    ~allowPast=isInsertMode,
-    ~pixelX,
-    ~pixelY,
-    editor
-  );
-  let mode = if (Vim.Mode.isInsert(editor.mode)) {
-    Vim.Mode.Insert({cursors: [bytePosition]})
-  } else {
-    Vim.Mode.Normal({cursor: bytePosition})
-  };
-  {...editor, isMouseDown: false, mode}
+  let bytePosition =
+    Slow.pixelPositionToBytePosition(
+      // #2463: When we're insert mode, clicking past the end of the line
+      // should move the cursor past the last byte
+      ~allowPast=isInsertMode,
+      ~pixelX,
+      ~pixelY,
+      editor,
+    );
+  let mode =
+    if (Vim.Mode.isInsert(editor.mode)) {
+      Vim.Mode.Insert({cursors: [bytePosition]});
+    } else {
+      Vim.Mode.Normal({cursor: bytePosition});
+    };
+  {...editor, isMouseDown: false, mode};
 };
 
 let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
-  ignore(pixelX);
-  ignore(pixelY);
-  {...editor, lastMouseMoveTime: Some(time)};
+  {...editor, 
+  lastMouseMoveTime: Some(time),
+  lastMouseScreenPosition: Some(PixelPosition.{
+    x: pixelX,
+    y: pixelY
+  })
+  };
 };
 
-let mouseEnter = editor => {...editor, hasMouseEntered: true, lastMouseMoveTime: None};
-let mouseLeave = editor => {...editor, hasMouseEntered: false, isMouseDown: false, lastMouseMoveTime: None};
+let mouseEnter = editor => {
+  ...editor,
+  hasMouseEntered: true,
+  lastMouseMoveTime: None,
+  lastMouseScreenPosition: None,
+};
+let mouseLeave = editor => {
+  ...editor,
+  hasMouseEntered: false,
+  isMouseDown: false,
+  lastMouseMoveTime: None,
+  lastMouseScreenPosition: None,
+};
 
 let hasMouseEntered = ({hasMouseEntered, _}) => hasMouseEntered;
 
