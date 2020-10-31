@@ -85,6 +85,7 @@ let isFocused: model => bool;
 
 let sub:
   (
+    ~config: Oni_Core.Config.resolver,
     ~isInsertMode: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
     ~activePosition: CharacterPosition.t,
@@ -93,6 +94,26 @@ let sub:
     model
   ) =>
   Isolinear.Sub.t(msg);
+
+module CodeLens: {
+  type t;
+
+  let get: (~bufferId: int, model) => list(t);
+
+  let lineNumber: t => int;
+  let uniqueId: t => string;
+
+  module View: {
+    let make:
+      (
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~uiFont: UiFont.t,
+        ~codeLens: t,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
 
 module Completion: {
   let isActive: model => bool;

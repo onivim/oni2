@@ -3,54 +3,43 @@
  *
  * Module to filter & rank items using various strategies.
  */
-open ReasonFuzz;
 
 module IndexEx = Utility.IndexEx;
 
 type result('a) = {
   item: 'a,
   highlight: list((int, int)),
+  score: float,
 };
 
-let result = item => {item, highlight: []};
+let makeResult = ((item, match: Fzy.Result.t)) => {
+  item,
+  highlight: IndexEx.ranges(match.positions),
+  score: match.score,
+};
+
+let result = item => {item, highlight: [], score: 0.0};
 
 let map = (f, result) => {
   item: f(result.item),
   highlight: result.highlight,
+  score: result.score,
 };
-
-let makeResult = ((maybeMatch, item)) =>
-  switch (maybeMatch) {
-  | Some(match) => {
-      item,
-      highlight: IndexEx.ranges(match.IndexMatchResult.indicies),
-    }
-  | None => {item, highlight: []}
-  };
 
 let rank = (query, format, items) => {
   let shouldLower = query == String.lowercase_ascii(query);
   let format = item => format(item, ~shouldLower);
 
-  let compareScore = (x, y) => {
-    let scoreObject = ((match, item)) => (
-      Option.map(m => MatchResult.create(m.IndexMatchResult.score), match),
-      format(item),
-    );
-    compareScores(scoreObject(x), scoreObject(y));
+  let search = (query, format, items) => {
+    let searchStrings = List.map(item => format(item), items);
+    let results = Fzy.fzySearchList(searchStrings, query, ());
+    let lookup = (result: Fzy.Result.t) =>
+      makeResult((List.nth(items, result.original_index), result));
+
+    List.map(result => lookup(result), results);
   };
 
-  let processItem = (pattern, item) => {
-    let line = format(item);
-    let match = pathIndexMatch(~line, ~pattern);
-
-    (match, item);
-  };
-
-  items
-  |> List.map(processItem(query))
-  |> List.sort(compareScore)
-  |> List.map(makeResult);
+  items |> search(query, format);
 };
 
 // Check whether the query matches...

@@ -36,7 +36,11 @@ module Cursor = {
       Hooks.effect(OnMountAndIf((!=), isFocused), () =>
         if (isFocused) {
           let clear =
-            Tick.interval(time => dispatch(Tick(time)), Time.ms(16));
+            Tick.interval(
+              ~name="Input Text Cursor Interval",
+              time => dispatch(Tick(time)),
+              Time.ms(16),
+            );
           Some(() => {clear()});
         } else {
           None;

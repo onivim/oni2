@@ -6,8 +6,8 @@ open Oni_Core;
 open Utility;
 
 module Constants = {
-  let itemsPerFrame = 250;
-  let maxItemsToFilter = 250;
+  let itemsPerFrame = 1000;
+  let maxItemsToFilter = 1000;
 };
 
 module type Config = {
@@ -71,7 +71,7 @@ module Make = (Config: Config) => {
 
   /* [addItems] is a helper for `Job.map` that updates the job when the query has changed */
   let updateQuery =
-      (filter, pending: PendingWork.t, {filtered, ranked}: CompletedWork.t) => {
+      (filter, pending: PendingWork.t, {filtered, _}: CompletedWork.t) => {
     // TODO: Optimize - for now, if the query changes, just clear the completed work
     // However, there are several ways we could improve this:
     // - If the query is just a stricter version... we could add the filter items back to completed
@@ -82,35 +82,26 @@ module Make = (Config: Config) => {
 
     let currentMatches = ListEx.firstk(Constants.maxItemsToFilter, filtered);
 
-    // If the new query matches the old one... we can re-use results
+    // If the new query matches the old one, the next round of filtering only need consider
+    // the selected subset. Still reset all completed work to ensure highlights and scores
+    // are updated and relevant.
     if (pending.filter != ""
         && Filter.fuzzyMatches(oldExplodedFilter, filter)
         && List.length(currentMatches) < Constants.maxItemsToFilter) {
-      let newPendingWork = {...pending, filter, explodedFilter, shouldLower};
+      let itemsToFilter =
+        Queue.pushReversedChunk(
+          filtered @ Queue.toList(pending.queue),
+          Queue.empty,
+        );
+      let newPendingWork = {
+        ...pending,
+        filter,
+        explodedFilter,
+        shouldLower,
+        queue: itemsToFilter,
+      };
 
-      let newCompletedWork =
-        CompletedWork.{
-          filtered:
-            List.filter(
-              item =>
-                Filter.fuzzyMatches(
-                  explodedFilter,
-                  format(item, ~shouldLower),
-                ),
-              filtered,
-            ),
-          ranked:
-            List.filter(
-              (Filter.{item, _}) =>
-                Filter.fuzzyMatches(
-                  explodedFilter,
-                  format(item, ~shouldLower),
-                ),
-              ranked,
-            ),
-        };
-
-      (false, newPendingWork, newCompletedWork);
+      (false, newPendingWork, CompletedWork.initial);
     } else {
       let newPendingWork = {
         ...pending,
@@ -135,35 +126,29 @@ module Make = (Config: Config) => {
     (false, newPendingWork, completed);
   };
 
+  /* Compare two ranked items. */
+  let compareItems = (a, b) => compare(a.Filter.score, b.Filter.score);
+
   let doActualWork =
       (
-        {queue, shouldLower, filter, explodedFilter, _} as pendingWork: PendingWork.t,
-        {filtered, _}: CompletedWork.t,
+        {queue, filter, _} as pendingWork: PendingWork.t,
+        {filtered, ranked}: CompletedWork.t,
       ) => {
     // Take out the items to process this frame
     let (items, queue) = Queue.take(Constants.itemsPerFrame, queue);
 
-    // Do a first filter pass to check if the item satisifies the regex
-    let filtered =
-      List.fold_left(
-        (acc, item) => {
-          let name = format(item, ~shouldLower);
-
-          if (Filter.fuzzyMatches(explodedFilter, name)) {
-            [item, ...acc];
-          } else {
-            acc;
-          };
-        },
-        filtered,
-        items,
-      );
+    // Store all the items that have been looked at so far.
+    let filtered = filtered @ items;
 
     // Rank a limited nuumber of filtered items
     let ranked =
-      filtered
-      |> ListEx.firstk(Constants.maxItemsToFilter)
-      |> Filter.rank(filter, format);
+      items
+      |> Filter.rank(filter, format)
+      |> ListEx.mergeSortedList(
+           ~len=Constants.maxItemsToFilter,
+           compareItems,
+           ranked,
+         );
 
     (
       Queue.isEmpty(queue),
@@ -176,7 +161,8 @@ module Make = (Config: Config) => {
   let doWork = (pending: PendingWork.t, completed) =>
     if (pending.filter == "") {
       let filtered = pending.allItems |> Queue.toList;
-      let ranked = filtered |> List.map(item => Filter.{highlight: [], item});
+      let ranked =
+        filtered |> List.map(item => Filter.{highlight: [], item, score: 0.0});
       (true, pending, CompletedWork.{filtered, ranked});
     } else {
       doActualWork(pending, completed);

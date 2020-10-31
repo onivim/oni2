@@ -662,6 +662,68 @@ module Sub = {
     |> Isolinear.Sub.map(toMsg);
   };
 
+  type codeLensesParams = {
+    handle: int,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+  };
+
+  let idFromBufferVersion = (~handle, ~buffer, name) => {
+    Printf.sprintf(
+      "%d-%d-%d.%s",
+      handle,
+      Oni_Core.Buffer.getId(buffer),
+      Oni_Core.Buffer.getVersion(buffer),
+      name,
+    );
+  };
+
+  module CodeLensesSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(list(Exthost.CodeLens.t), string);
+      type nonrec params = codeLensesParams;
+
+      type state = unit;
+
+      let name = "Service_Exthost.CodeLensesSubscription";
+      let id = ({handle, buffer, _}: params) =>
+        idFromBufferVersion(~handle, ~buffer, "CodeLensSubscription");
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideCodeLenses(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            params.client,
+          );
+
+        Lwt.on_success(
+          promise,
+          maybeCodeLenses => {
+            let lenses =
+              maybeCodeLenses |> Option.value(~default=[]) |> Result.ok;
+            dispatch(lenses);
+          },
+        );
+
+        Lwt.on_failure(promise, exn => {
+          dispatch(Error(Printexc.to_string(exn)))
+        });
+        ();
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+
+  let codeLenses = (~handle, ~buffer, ~toMsg, client) => {
+    CodeLensesSubscription.create({handle, buffer, client}: codeLensesParams)
+    |> Isolinear.Sub.map(toMsg);
+  };
+
   type completionParams = {
     handle: int,
     context: Exthost.CompletionContext.t,
