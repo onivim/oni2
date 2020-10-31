@@ -135,33 +135,38 @@ let update =
     | _ => (model, Nothing)
     }
   | MouseHovered(maybeLocation) =>
+    let requestNewHover = (buffer, location) => {
+      let requestID = IDGenerator.get();
+      let effects =
+        getEffectsForLocation(
+          ~buffer,
+          ~location,
+          ~extHostClient,
+          ~model,
+          ~requestID,
+          ~editorId,
+        );
+      (
+        {
+          ...model,
+          shown: true,
+          triggeredFrom: Some(`Mouse(location)),
+          lastRequestID: Some(requestID),
+        },
+        Effect(effects),
+      );
+    };
     switch (maybeBuffer) {
     | Some(buffer) =>
-      switch (maybeLocation) {
-      | None => (model, Nothing)
-      | Some(location) =>
-        let requestID = IDGenerator.get();
-        let effects =
-          getEffectsForLocation(
-            ~buffer,
-            ~location,
-            ~extHostClient,
-            ~model,
-            ~requestID,
-            ~editorId,
-          );
-        (
-          {
-            ...model,
-            shown: true,
-            triggeredFrom: Some(`Mouse(location)),
-            lastRequestID: Some(requestID),
-          },
-          Effect(effects),
-        );
+      switch (maybeLocation, model.range) {
+      | (Some(location), None) => requestNewHover(buffer, location)
+      | (Some(location), Some(range))
+          when !EditorCoreTypes.CharacterRange.contains(location, range) =>
+        requestNewHover(buffer, location)
+      | _ => (model, Nothing)
       }
     | _ => (model, Nothing)
-    }
+    };
   | MouseMoved(maybeLocation) =>
     let newModel =
       switch (model.range, maybeLocation) {

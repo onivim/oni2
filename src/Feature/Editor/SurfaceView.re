@@ -102,11 +102,11 @@ let%component make =
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
     |> Option.iter(((pixelX, pixelY, time)) => {
          dispatch(Msg.EditorMouseMoved({time, pixelX, pixelY}))
-       })//         dispatch(Msg.MouseMoved({bytePosition: bytePosition}))
-         //       });
+       })//       });
          //    hoverTimerActive := true;
-         ; //    |> Option.iter(bytePosition => {
- //    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+         //    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+         ; //         dispatch(Msg.MouseMoved({bytePosition: bytePosition}))
+ //    |> Option.iter(bytePosition => {
          //    lastMousePosition := Some((evt.mouseX, evt.mouseY));
   };
 
@@ -129,8 +129,7 @@ let%component make =
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
     |> Option.iter(((pixelX, pixelY, time)) => {
          dispatch(Msg.EditorMouseUp({time, pixelX, pixelY}))
-       })//    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-         //    |> Option.iter(bytePosition => {
+       })//    |> Option.iter(bytePosition => {
          //         Log.tracef(m =>
          //           m("  setPosition (%s)", BytePosition.show(bytePosition))
          //         );
@@ -141,8 +140,9 @@ let%component make =
          //             Vim.Mode.Normal({cursor: bytePosition});
          //           };
          //         changeMode(newMode);
-         ; //
- //    Log.trace("editorMouseUp");
+         //    Log.trace("editorMouseUp");
+         ; //    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+ //
          //       });
   };
 
