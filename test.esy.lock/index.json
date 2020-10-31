@@ -1,5 +1,5 @@
 {
-  "checksum": "e69626e44ea569f3285fbcf5e18f8560",
+  "checksum": "18064b0f031e0eed7b08825dbf38580d",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -428,14 +428,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.67@d41d8cd9": {
-      "id": "libvim@8.10869.67@d41d8cd9",
+    "libvim@8.10869.69@d41d8cd9": {
+      "id": "libvim@8.10869.69@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.67",
+      "version": "8.10869.69",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.67.tgz#sha1:b36ccaf53be72a87fac18bcbffcbc0525e9a2bff"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.69.tgz#sha1:c139d39db660b14a52583e4490e1c1e349dbd131"
         ]
       },
       "overrides": [],
@@ -1014,7 +1014,7 @@
         "refmterr@3.3.2@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
         "reason-fzy@github:CrossR/reason-fzy#7339d4e@d41d8cd9",
-        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.67@d41d8cd9",
+        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.69@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#53fc4eb@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#60e0260@d41d8cd9",
@@ -3557,30 +3557,30 @@
         "ocaml@4.10.0@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/dune@opam:2.5.0@e0bac278",
-        "@opam/decoders@opam:0.4.0@b66e1fb4",
+        "@opam/decoders@opam:0.5.0@9df01185",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.10.0@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/dune@opam:2.5.0@e0bac278",
-        "@opam/decoders@opam:0.4.0@b66e1fb4"
+        "@opam/decoders@opam:0.5.0@9df01185"
       ]
     },
-    "@opam/decoders@opam:0.4.0@b66e1fb4": {
-      "id": "@opam/decoders@opam:0.4.0@b66e1fb4",
+    "@opam/decoders@opam:0.5.0@9df01185": {
+      "id": "@opam/decoders@opam:0.5.0@9df01185",
       "name": "@opam/decoders",
-      "version": "opam:0.4.0",
+      "version": "opam:0.5.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/18/18ebbd98901dff67c9944d465ed508df018c8ee8e13bfe037d5ad780584eebf7#sha256:18ebbd98901dff67c9944d465ed508df018c8ee8e13bfe037d5ad780584eebf7",
-          "archive:https://github.com/mattjbray/ocaml-decoders/releases/download/v0.4.0/decoders-v0.4.0.tbz#sha256:18ebbd98901dff67c9944d465ed508df018c8ee8e13bfe037d5ad780584eebf7"
+          "archive:https://opam.ocaml.org/cache/sha256/fc/fc0b672a2ebcb1cfb7575384c5033b14985b26fe90ab517749ba77ed7fc0f11a#sha256:fc0b672a2ebcb1cfb7575384c5033b14985b26fe90ab517749ba77ed7fc0f11a",
+          "archive:https://github.com/mattjbray/ocaml-decoders/releases/download/v0.5.0/decoders-v0.5.0.tbz#sha256:fc0b672a2ebcb1cfb7575384c5033b14985b26fe90ab517749ba77ed7fc0f11a"
         ],
         "opam": {
           "name": "decoders",
-          "version": "0.4.0",
-          "path": "test.esy.lock/opam/decoders.0.4.0"
+          "version": "0.5.0",
+          "path": "test.esy.lock/opam/decoders.0.5.0"
         }
       },
       "overrides": [],
