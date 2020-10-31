@@ -1085,47 +1085,6 @@ let configurationChanged = (~perFileTypeConfig, editor) => {
   configure(~config, editor);
 };
 
-let mouseDown = (~time, ~pixelX, ~pixelY, editor) => {
-  ignore(time);
-  ignore(pixelX);
-  ignore(pixelY);
-  editor;
-};
-
-let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
-  let isInsertMode = Vim.Mode.isInsert(editor.mode);
-  let bytePosition = Slow.pixelPositionToBytePosition(
-    // #2463: When we're insert mode, clicking past the end of the line
-    // should move the cursor past the last byte
-    ~allowPast=isInsertMode,
-    ~pixelX,
-    ~pixelY,
-    editor
-  );
-  let mode = if (Vim.Mode.isInsert(editor.mode)) {
-    Vim.Mode.Insert({cursors: [bytePosition]})
-  } else {
-    Vim.Mode.Normal({cursor: bytePosition})
-  };
-  {...editor, mode}
-};
-
-let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
-  ignore(time);
-  ignore(pixelX);
-  ignore(pixelY);
-  editor;
-};
-
-let mouseEnter = editor => editor;
-let mouseLeave = editor => editor;
-
-let hasMouseEntered = _editor => false;
-
-let isMouseDown = _editor => false;
-
-let lastMouseMoveTime = _editor => None;
-
 module Slow = {
   let pixelPositionToBytePosition =
       (~allowPast=false, ~pixelX: float, ~pixelY: float, view) => {
@@ -1197,3 +1156,44 @@ let moveScreenLines = (~position, ~count, editor) => {
     editor,
   );
 };
+
+let mouseDown = (~time, ~pixelX, ~pixelY, editor) => {
+  ignore(time);
+  ignore(pixelX);
+  ignore(pixelY);
+  editor;
+};
+
+let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
+  let isInsertMode = Vim.Mode.isInsert(editor.mode);
+  let bytePosition = Slow.pixelPositionToBytePosition(
+    // #2463: When we're insert mode, clicking past the end of the line
+    // should move the cursor past the last byte
+    ~allowPast=isInsertMode,
+    ~pixelX,
+    ~pixelY,
+    editor
+  );
+  let mode = if (Vim.Mode.isInsert(editor.mode)) {
+    Vim.Mode.Insert({cursors: [bytePosition]})
+  } else {
+    Vim.Mode.Normal({cursor: bytePosition})
+  };
+  {...editor, mode}
+};
+
+let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
+  ignore(time);
+  ignore(pixelX);
+  ignore(pixelY);
+  editor;
+};
+
+let mouseEnter = editor => editor;
+let mouseLeave = editor => editor;
+
+let hasMouseEntered = _editor => false;
+
+let isMouseDown = _editor => false;
+
+let lastMouseMoveTime = _editor => None;
