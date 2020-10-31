@@ -82,19 +82,10 @@ let%component make =
     maybeBbox^
     |> Option.map(bbox => {
          let (minX, minY, _, _) = bbox |> BoundingBox2d.getBounds;
-
          let relX = mouseX -. minX;
          let relY = mouseY -. minY;
          let time = Revery.Time.now();
          (relX, relY, time);
-         //         Editor.Slow.pixelPositionToBytePosition(
-         //           // #2463: When we're in insert mode, clicking past the end of the line
-         //           // should move the cursor past the last byte.
-         //           ~allowPast=Vim.Mode.isInsert(mode),
-         //           ~pixelX=relX,
-         //           ~pixelY=relY,
-         //           editor,
-         //         );
        });
   };
 
@@ -102,12 +93,7 @@ let%component make =
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
     |> Option.iter(((pixelX, pixelY, time)) => {
          dispatch(Msg.EditorMouseMoved({time, pixelX, pixelY}))
-       })//       });
-         //    hoverTimerActive := true;
-         //    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-         ; //         dispatch(Msg.MouseMoved({bytePosition: bytePosition}))
- //    |> Option.iter(bytePosition => {
-         //    lastMousePosition := Some((evt.mouseX, evt.mouseY));
+       });
   };
 
   let onMouseEnter = _evt => {
@@ -129,21 +115,7 @@ let%component make =
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
     |> Option.iter(((pixelX, pixelY, time)) => {
          dispatch(Msg.EditorMouseUp({time, pixelX, pixelY}))
-       })//    |> Option.iter(bytePosition => {
-         //         Log.tracef(m =>
-         //           m("  setPosition (%s)", BytePosition.show(bytePosition))
-         //         );
-         //         let newMode =
-         //           if (Vim.Mode.isInsert(Editor.mode(editor))) {
-         //             Vim.Mode.Insert({cursors: [bytePosition]});
-         //           } else {
-         //             Vim.Mode.Normal({cursor: bytePosition});
-         //           };
-         //         changeMode(newMode);
-         //    Log.trace("editorMouseUp");
-         ; //    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
- //
-         //       });
+       });
   };
 
   let pixelWidth = Editor.visiblePixelWidth(editor);
