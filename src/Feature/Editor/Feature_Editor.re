@@ -172,3 +172,9 @@ let update = (editor, msg) => {
     (editor'', Nothing);
   };
 };
+
+module Sub = {
+  let editor = (editor: Editor.t) => {
+      Isolinear.Sub.none
+  };
+}

@@ -101,6 +101,11 @@ type t = {
   // Number of lines to preserve before or after the cursor, when scrolling.
   // Like the `scrolloff` vim setting or the `editor.cursorSurroundingLines` VSCode setting.
   verticalScrollMargin: int,
+
+  // Mouse state
+  isMouseDown: bool,
+  hasMouseEntered: bool,
+  lastMouseMoveTime: [@opaque] option(Revery.Time.t),
 };
 
 let key = ({key, _}) => key;
@@ -414,6 +419,9 @@ let create = (~config, ~buffer, ()) => {
     wrapMode,
     wrapPadding: None,
     verticalScrollMargin: 1,
+    isMouseDown: false,
+    hasMouseEntered: false,
+    lastMouseMoveTime: None,
   }
   |> configure(~config);
 };
@@ -1161,10 +1169,12 @@ let mouseDown = (~time, ~pixelX, ~pixelY, editor) => {
   ignore(time);
   ignore(pixelX);
   ignore(pixelY);
-  editor;
+  {...editor, isMouseDown: true };
 };
 
 let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
+  ignore(time);
+
   let isInsertMode = Vim.Mode.isInsert(editor.mode);
   let bytePosition = Slow.pixelPositionToBytePosition(
     // #2463: When we're insert mode, clicking past the end of the line
@@ -1179,21 +1189,20 @@ let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
   } else {
     Vim.Mode.Normal({cursor: bytePosition})
   };
-  {...editor, mode}
+  {...editor, isMouseDown: false, mode}
 };
 
 let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
-  ignore(time);
   ignore(pixelX);
   ignore(pixelY);
-  editor;
+  {...editor, lastMouseMoveTime: Some(time)};
 };
 
-let mouseEnter = editor => editor;
-let mouseLeave = editor => editor;
+let mouseEnter = editor => {...editor, hasMouseEntered: true, lastMouseMoveTime: None};
+let mouseLeave = editor => {...editor, hasMouseEntered: false, isMouseDown: false, lastMouseMoveTime: None};
 
-let hasMouseEntered = _editor => false;
+let hasMouseEntered = ({hasMouseEntered, _}) => hasMouseEntered;
 
-let isMouseDown = _editor => false;
+let isMouseDown = ({isMouseDown, _}) => isMouseDown;
 
-let lastMouseMoveTime = _editor => None;
+let lastMouseMoveTime = ({lastMouseMoveTime, _}) => lastMouseMoveTime;
