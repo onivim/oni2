@@ -178,13 +178,17 @@ let parse = (~getenv: string => option(string), args) => {
     "",
   );
 
-  let shouldAlwaysAllocateConsole = switch(eff^) {
-  | Run => false
-  | StartSyntaxServer(_) => false
-  | _ => true
-  };
+  let shouldAlwaysAllocateConsole =
+    switch (eff^) {
+    | Run => false
+    | StartSyntaxServer(_) => false
+    | _ => true
+    };
 
-  let needsConsole = (Option.is_some(logLevel^) && attachToForeground^) || shouldAlwaysAllocateConsole;
+  let needsConsole =
+    Option.is_some(logLevel^)
+    && attachToForeground^
+    || shouldAlwaysAllocateConsole;
 
   let paths = additionalArgs^ |> List.rev;
 
