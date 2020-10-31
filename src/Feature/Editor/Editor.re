@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Utility;
 
 module GlobalState = {
   let lastId = ref(0);
@@ -1220,3 +1221,26 @@ let hasMouseEntered = ({hasMouseEntered, _}) => hasMouseEntered;
 let isMouseDown = ({isMouseDown, _}) => isMouseDown;
 
 let lastMouseMoveTime = ({lastMouseMoveTime, _}) => lastMouseMoveTime;
+
+let getCharacterUnderMouse = (editor) => {
+  editor.lastMouseScreenPosition
+  |> OptionEx.flatMap((mousePosition: PixelPosition.t) => {
+    let bytePosition: BytePosition.t = Slow.pixelPositionToBytePosition(
+      ~allowPast=true,
+      ~pixelX=mousePosition.x,
+      ~pixelY=mousePosition.y,
+      editor
+    );
+
+    let bufferLine = EditorBuffer.line(
+      EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line),
+      editor.buffer
+    );
+    if (BufferLine.lengthInBytes(bufferLine) >
+    ByteIndex.toInt(bytePosition.byte)) {
+      byteToCharacter(bytePosition, editor)
+    } else {
+      None
+    }
+  });
+};

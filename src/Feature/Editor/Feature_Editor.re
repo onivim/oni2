@@ -28,14 +28,8 @@ type msg = Msg.t;
 
 type outmsg =
   | Nothing
-  | MouseHovered({
-      bytePosition: BytePosition.t,
-      characterPosition: CharacterPosition.t,
-    })
-  | MouseMoved({
-      bytePosition: BytePosition.t,
-      characterPosition: CharacterPosition.t,
-    });
+  | MouseHovered(option(CharacterPosition.t))
+  | MouseMoved(option(CharacterPosition.t));
 
 type model = Editor.t;
 
@@ -109,13 +103,21 @@ let update = (editor, msg) => {
       editor |> Editor.mouseUp(~time, ~pixelX, ~pixelY),
       Nothing,
     )
-  | EditorMouseMoved({time, pixelX, pixelY}) => (
-      editor |> Editor.mouseMove(~time, ~pixelX, ~pixelY),
-      Nothing,
+  | EditorMouseMoved({time, pixelX, pixelY}) => 
+    let editor' = 
+      editor |> Editor.mouseMove(~time, ~pixelX, ~pixelY);
+
+  let maybeCharacter = Editor.getCharacterUnderMouse(editor');
+    let eff = MouseMoved(maybeCharacter);
+    (
+      editor',
+      eff,
     )
   | EditorMouseLeave => (editor |> Editor.mouseLeave, Nothing)
   | EditorMouseEnter => (editor |> Editor.mouseEnter, Nothing)
-  | MouseHovered => (editor, Nothing)
+  | MouseHovered =>
+  let maybeCharacter = Editor.getCharacterUnderMouse(editor);
+  (editor, MouseHovered(maybeCharacter));
   //  | MouseMoved({bytePosition}) => (
   //      editor,
   //      {
