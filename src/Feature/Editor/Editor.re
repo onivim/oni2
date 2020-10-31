@@ -454,7 +454,6 @@ let viewLineToPixelY = (idx, editor) => {
 };
 
 let getViewLineFromPixelY = (~pixelY, editor) => {
-  //int_of_float(view.scrollY /. lineHeightInPixels(view)) + 1;
   let lineHeight = lineHeightInPixels(editor);
   let wrapping = editor.wrapState |> WrapState.wrapping;
   let rec loop =
@@ -495,11 +494,7 @@ let getViewLineFromPixelY = (~pixelY, editor) => {
 };
 
 let getTopViewLine = editor => {
-  getViewLineFromPixelY(
-    ~pixelY=editor.scrollY,
-    editor,
-    //int_of_float(editor.scrollY /. lineHeightInPixels(editor));
-  );
+  getViewLineFromPixelY(~pixelY=editor.scrollY, editor);
 };
 
 let getTopVisibleBufferLine = editor => {
@@ -637,25 +632,6 @@ let getCharacterBehindCursor = ({buffer, _} as editor) => {
     };
   };
 };
-
-//let byteToCharacter = (cursor: BytePosition.t, {buffer, _}) => {
-//    let line = cursor.line |> EditorCoreTypes.LineNumber.toZeroBased;
-//    //let line = cursor.line |> EditorCoreTypes.LineNumber.toZeroBased;
-//    let bufferLineCount = EditorBuffer.numberOfLines(buffer);
-//    if (line < bufferLineCount) {
-//      let bufferLine = EditorBuffer.line(line, buffer);
-//      let index = BufferLine.getIndex(~byte=cursor.byte, bufferLine);
-//      Some(CharacterPosition.{
-//        line: cursor.line,
-//        character: index,
-//      });
-//      try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
-//      | _exn => None
-//      };
-//    } else {
-//      None;
-//    };
-//}
 
 let getCharacterUnderCursor = ({buffer, _} as editor) => {
   switch (cursors(editor)) {

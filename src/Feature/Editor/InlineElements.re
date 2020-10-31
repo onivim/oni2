@@ -120,7 +120,9 @@ let getAllReservedSpace = elements => {
   let rec loop = (acc, remainingElements) => {
     switch (remainingElements) {
     | [] => acc
-    | [hd, ...tail] => loop(acc +. hd.height, tail)
+    | [hd, ...tail] =>
+      let height = hd.hidden ? 0. : hd.height;
+      loop(acc +. height, tail);
     };
   };
 
