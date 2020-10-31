@@ -143,15 +143,32 @@ module Session = {
 
       let explodedQuery = Zed_utf8.explode(query);
 
-      items
-      |> List.filter((item: CompletionItem.t) =>
-           if (String.length(item.filterText) < String.length(query)) {
-             false;
-           } else {
-             Filter.fuzzyMatches(explodedQuery, item.filterText);
-           }
-         )
-      |> Filter.rank(query, toString);
+      let items' =
+        items
+        |> List.filter((item: CompletionItem.t) =>
+             if (String.length(item.filterText) < String.length(query)) {
+               false;
+             } else {
+               Filter.fuzzyMatches(explodedQuery, item.filterText);
+             }
+           )
+        |> Filter.rank(query, toString);
+
+      // Tag as fuzzy matched
+      if (explodedQuery != []) {
+        items'
+        |> List.map((filterItem: Filter.result(CompletionItem.t)) =>
+             {
+               ...filterItem,
+               item: {
+                 ...filterItem.item,
+                 isFuzzyMatching: true,
+               },
+             }
+           );
+      } else {
+        items';
+      };
     };
 
   let filteredItems =
@@ -433,7 +450,7 @@ let initial = {
 let providerCount = ({providers, _}) => List.length(providers) - 1;
 let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
 
-let recomputeAllItems = (~pinnedLabel=None, providers: list(Session.t)) => {
+let recomputeAllItems = (providers: list(Session.t)) => {
   providers
   |> List.fold_left(
        (acc, session) => {
@@ -459,7 +476,7 @@ let recomputeAllItems = (~pinnedLabel=None, providers: list(Session.t)) => {
   |> StringMap.bindings
   |> List.map(snd)
   |> List.fast_sort(((_loc, a), (_loc, b)) =>
-       CompletionItemSorter.compare(~pinnedLabel, a, b)
+       CompletionItemSorter.compare(a, b)
      )
   |> Array.of_list;
 };
@@ -639,6 +656,48 @@ let selected = model => {
   };
 };
 
+let tryToMaintainSelected = (~previousIndex, ~previousLabel, model) => {
+  let len = Array.length(model.allItems);
+  let idxToReplace = min(Array.length(model.allItems) - 1, previousIndex);
+
+  let getItemAtIndex = idx => {
+    let (_position, filterResult: Filter.result(CompletionItem.t)) = model.
+                                                                    allItems[idx];
+    filterResult.item;
+  };
+
+  // Sanity check - make sure there is a valid position.
+  // Completions list might be empty...
+  if (idxToReplace >= len) {
+    model;
+  } else if
+    // Nothing to do - still in a good spot!
+    (getItemAtIndex(idxToReplace).label == previousLabel) {
+    model;
+  } else {
+    let idx = ref(-1);
+    let foundCurrent = ref(None);
+    while (idx^ < len && foundCurrent^ == None) {
+      incr(idx);
+      if (getItemAtIndex(idx^).label == previousLabel) {
+        foundCurrent := Some(idx^);
+      };
+    };
+
+    switch (foundCurrent^) {
+    | Some(idx) when idx == idxToReplace => model
+    | Some(idx) =>
+      // Swap idx and idx to replace, to maintain selected
+      let a = model.allItems[idxToReplace];
+      let b = model.allItems[idx];
+      model.allItems[idx] = a;
+      model.allItems[idxToReplace] = b;
+      model;
+    | None => model
+    };
+  };
+};
+
 let update =
     (~config, ~languageConfiguration, ~maybeBuffer, ~activeCursor, msg, model) => {
   let default = (model, Outmsg.Nothing);
@@ -739,19 +798,37 @@ let update =
     // Before updating any items, check to see if there is already
     // a selected item. We don't want to surprise the user
     // and change the selected underneath them when populating!
-    let pinnedLabel: option(string) =
-      selected(model) |> Option.map((item: CompletionItem.t) => item.label);
+    let maybeCurrentSelection =
+      switch (model.selection) {
+      | None => None
+      | Some(idx) => selected(model) |> Option.map(item => (idx, item))
+      };
 
     let providers =
       model.providers |> List.map(provider => Session.update(msg, provider));
-    let allItems = recomputeAllItems(~pinnedLabel, providers);
+    let allItems = recomputeAllItems(providers);
     let selection =
       Selection.ensureValidFocus(
         ~count=Array.length(allItems),
         // If we 'pinned' an item, make sure it's selected
-        Option.is_some(pinnedLabel) ? Some(0) : model.selection,
+        model.selection,
       );
-    ({...model, providers, allItems, selection}, Nothing);
+
+    let model' = {...model, providers, allItems, selection};
+
+    let model'' =
+      switch (maybeCurrentSelection) {
+      | Some((previousIndex, previousItem)) =>
+        model'
+        |> tryToMaintainSelected(
+             ~previousIndex,
+             ~previousLabel=previousItem.label,
+           )
+      | None => model'
+      };
+
+    // If the current selection is different than the one we had before...
+    (model'', Nothing);
   };
 };
 
