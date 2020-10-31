@@ -1193,12 +1193,10 @@ let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
 };
 
 let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
-  {...editor, 
-  lastMouseMoveTime: Some(time),
-  lastMouseScreenPosition: Some(PixelPosition.{
-    x: pixelX,
-    y: pixelY
-  })
+  {
+    ...editor,
+    lastMouseMoveTime: Some(time),
+    lastMouseScreenPosition: Some(PixelPosition.{x: pixelX, y: pixelY}),
   };
 };
 
@@ -1222,25 +1220,27 @@ let isMouseDown = ({isMouseDown, _}) => isMouseDown;
 
 let lastMouseMoveTime = ({lastMouseMoveTime, _}) => lastMouseMoveTime;
 
-let getCharacterUnderMouse = (editor) => {
+let getCharacterUnderMouse = editor => {
   editor.lastMouseScreenPosition
   |> OptionEx.flatMap((mousePosition: PixelPosition.t) => {
-    let bytePosition: BytePosition.t = Slow.pixelPositionToBytePosition(
-      ~allowPast=true,
-      ~pixelX=mousePosition.x,
-      ~pixelY=mousePosition.y,
-      editor
-    );
+       let bytePosition: BytePosition.t =
+         Slow.pixelPositionToBytePosition(
+           ~allowPast=true,
+           ~pixelX=mousePosition.x,
+           ~pixelY=mousePosition.y,
+           editor,
+         );
 
-    let bufferLine = EditorBuffer.line(
-      EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line),
-      editor.buffer
-    );
-    if (BufferLine.lengthInBytes(bufferLine) >
-    ByteIndex.toInt(bytePosition.byte)) {
-      byteToCharacter(bytePosition, editor)
-    } else {
-      None
-    }
-  });
+       let bufferLine =
+         EditorBuffer.line(
+           EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line),
+           editor.buffer,
+         );
+       if (BufferLine.lengthInBytes(bufferLine)
+           > ByteIndex.toInt(bytePosition.byte)) {
+         byteToCharacter(bytePosition, editor);
+       } else {
+         None;
+       };
+     });
 };

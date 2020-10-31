@@ -103,21 +103,17 @@ let update = (editor, msg) => {
       editor |> Editor.mouseUp(~time, ~pixelX, ~pixelY),
       Nothing,
     )
-  | EditorMouseMoved({time, pixelX, pixelY}) => 
-    let editor' = 
-      editor |> Editor.mouseMove(~time, ~pixelX, ~pixelY);
+  | EditorMouseMoved({time, pixelX, pixelY}) =>
+    let editor' = editor |> Editor.mouseMove(~time, ~pixelX, ~pixelY);
 
-  let maybeCharacter = Editor.getCharacterUnderMouse(editor');
+    let maybeCharacter = Editor.getCharacterUnderMouse(editor');
     let eff = MouseMoved(maybeCharacter);
-    (
-      editor',
-      eff,
-    )
+    (editor', eff);
   | EditorMouseLeave => (editor |> Editor.mouseLeave, Nothing)
   | EditorMouseEnter => (editor |> Editor.mouseEnter, Nothing)
   | MouseHovered =>
-  let maybeCharacter = Editor.getCharacterUnderMouse(editor);
-  (editor, MouseHovered(maybeCharacter));
+    let maybeCharacter = Editor.getCharacterUnderMouse(editor);
+    (editor, MouseHovered(maybeCharacter));
   //  | MouseMoved({bytePosition}) => (
   //      editor,
   //      {
@@ -168,17 +164,19 @@ let update = (editor, msg) => {
 Revery.Tick.timeout;
 
 module Sub = {
-  let editor = (editor: Editor.t) => {
+  let editor = (~config, editor: Editor.t) => {
+    let hoverEnabled = EditorConfiguration.Hover.enabled.get(config);
     switch (Editor.lastMouseMoveTime(editor)) {
-    | Some(time) when !Editor.isMouseDown(editor) =>
+    | Some(time) when hoverEnabled && !Editor.isMouseDown(editor) =>
+      let delay = EditorConfiguration.Hover.delay.get(config);
       Service_Time.Sub.once(
         ~uniqueId={
           string_of_int(Editor.getId(editor))
           ++ string_of_float(Revery.Time.toFloatSeconds(time));
         },
-        ~delay=Revery.Time.seconds(1),
+        ~delay,
         ~msg=Msg.MouseHovered,
-      )
+      );
     | Some(_) => Isolinear.Sub.none
     | None => Isolinear.Sub.none
     };

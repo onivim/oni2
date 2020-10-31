@@ -370,7 +370,7 @@ let start =
     let visibleEditorsSubscription =
       visibleEditors
       |> List.map(editor =>
-           Feature_Editor.Sub.editor(editor)
+           Feature_Editor.Sub.editor(~config, editor)
            |> Isolinear.Sub.map(msg =>
                 Model.Actions.Editor({
                   scope:
