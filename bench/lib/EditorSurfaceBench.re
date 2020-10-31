@@ -27,7 +27,6 @@ let editor = (editor, buffer, state: State.t) => {
     editor
     buffer
     onEditorSizeChanged={(_, _, _) => ()}
-    changeMode={_ => ()}
     bufferHighlights={state.bufferHighlights}
     bufferSyntaxHighlights={state.syntaxHighlights}
     diagnostics={state.diagnostics}

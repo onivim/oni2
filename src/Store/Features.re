@@ -82,22 +82,22 @@ module Internal = {
       let effect =
         switch (outmsg) {
         | Nothing => Effect.none
-        | MouseHovered({characterPosition, _}) =>
+        | MouseHovered(maybeCharacterPosition) =>
           Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
             dispatch(
               LanguageSupport(
                 Feature_LanguageSupport.Msg.Hover.mouseHovered(
-                  characterPosition,
+                  maybeCharacterPosition,
                 ),
               ),
             )
           })
-        | MouseMoved({characterPosition, _}) =>
+        | MouseMoved(maybeCharacterPosition) =>
           Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
             dispatch(
               LanguageSupport(
                 Feature_LanguageSupport.Msg.Hover.mouseMoved(
-                  characterPosition,
+                  maybeCharacterPosition,
                 ),
               ),
             )
