@@ -101,26 +101,41 @@ let update = (editor, msg) => {
   | HorizontalScrollbarMouseRelease
   | VerticalScrollbarMouseRelease
   | VerticalScrollbarMouseDown => (editor, Nothing)
-  | MouseHovered({bytePosition}) => (
-      editor,
-      {
-        Editor.byteToCharacter(bytePosition, editor)
-        |> Option.map(characterPosition => {
-             MouseHovered({bytePosition, characterPosition})
-           })
-        |> Option.value(~default=Nothing);
-      },
+  | EditorMouseDown({time, pixelX, pixelY}) => (
+      editor |> Editor.mouseDown(~time, ~pixelX, ~pixelY),
+      Nothing,
     )
-  | MouseMoved({bytePosition}) => (
-      editor,
-      {
-        Editor.byteToCharacter(bytePosition, editor)
-        |> Option.map(characterPosition => {
-             MouseMoved({bytePosition, characterPosition})
-           })
-        |> Option.value(~default=Nothing);
-      },
+  | EditorMouseUp({time, pixelX, pixelY}) => (
+      editor |> Editor.mouseUp(~time, ~pixelX, ~pixelY),
+      Nothing,
     )
+  | EditorMouseMoved({time, pixelX, pixelY}) => (
+      editor |> Editor.mouseMove(~time, ~pixelX, ~pixelY),
+      Nothing,
+    )
+  | EditorMouseLeave => (editor |> Editor.mouseLeave, Nothing)
+  | EditorMouseEnter => (editor |> Editor.mouseEnter, Nothing)
+  //  | MouseHovered({bytePosition}) => (
+
+  //      editor,
+  //      {
+  //        Editor.byteToCharacter(bytePosition, editor)
+  //        |> Option.map(characterPosition => {
+  //             MouseHovered({bytePosition, characterPosition})
+  //           })
+  //        |> Option.value(~default=Nothing);
+  //      },
+  //    )
+  //  | MouseMoved({bytePosition}) => (
+  //      editor,
+  //      {
+  //        Editor.byteToCharacter(bytePosition, editor)
+  //        |> Option.map(characterPosition => {
+  //             MouseMoved({bytePosition, characterPosition})
+  //           })
+  //        |> Option.value(~default=Nothing);
+  //      },
+  //    )
   | ModeChanged({mode, effects}) =>
     let handleScrollEffect = (~count, ~direction, editor) => {
       let count = max(count, 1);
