@@ -149,9 +149,9 @@ let start =
       | Scroll(_) => ()
 
       // TODO: Wire up to input
-      | Map(mapping) => prerr_endline(Vim.Mapping.show(mapping))
+      | Map(mapping) => prerr_endline("TODO: " ++ Vim.Mapping.show(mapping))
       // TODO: Wire up to input
-      | Unmap(_) => prerr_endline("UNMAP")
+      | Unmap(_) => prerr_endline("TODO: UNMAP")
 
       | Goto(gotoType) => handleGoto(gotoType)
       | TabPage(msg) => dispatch(TabPage(msg))
