@@ -18,6 +18,7 @@ module Effect = Effect;
 module Event = Event;
 module Format = Format;
 module Goto = Goto;
+module Mapping = Mapping;
 module Operator = Operator;
 module Scroll = Scroll;
 module TabPage = TabPage;
