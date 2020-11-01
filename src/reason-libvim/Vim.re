@@ -484,6 +484,10 @@ let _onMacroStopRecording = (register: char, value: option(string)) => {
   });
 };
 
+let _onInputMapping = (mapping: Mapping.t) => {
+  prerr_endline ("--mapping: " ++ Mapping.show(mapping));
+};
+
 let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);
   Callback.register("lv_onBufferChanged", _onBufferChanged);
@@ -515,6 +519,7 @@ let init = () => {
     "lv_onCursorMoveScreenPosition",
     _onCursorMoveScreenPosition,
   );
+  Callback.register("lv_onInputMapping", _onInputMapping);
 
   Native.vimInit();
 

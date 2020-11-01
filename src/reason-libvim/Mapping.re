@@ -1,3 +1,4 @@
+[@deriving show]
 type mode =
   | Insert // imap, inoremap
   | Language // lmap
@@ -11,8 +12,10 @@ type mode =
   | InsertAndCommandLine // :map!
   | All; // :map;
 
+[@deriving show]
 type scriptId = int;
 
+[@deriving show]
 type t = {
   mode,
   fromKeys: string, // mapped from, lhs

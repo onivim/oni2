@@ -412,6 +412,7 @@ module Effect: {
 };
 
 module Mapping: {
+  [@deriving show]
   type mode =
     | Insert // imap, inoremap
     | Language // lmap
@@ -425,8 +426,10 @@ module Mapping: {
     | InsertAndCommandLine // :map!
     | All; // :map;
 
+  [@deriving show]
   type scriptId;
 
+  [@deriving show]
   type t = {
     mode,
     fromKeys: string, // mapped from, lhs
