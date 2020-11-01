@@ -15,6 +15,7 @@ type mode =
 [@deriving show]
 type scriptId = int;
 
+let defaultScriptId = 0;
 [@deriving show]
 type t = {
   mode,

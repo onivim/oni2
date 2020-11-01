@@ -485,18 +485,11 @@ let _onMacroStopRecording = (register: char, value: option(string)) => {
 };
 
 let _onInputMap = (mapping: Mapping.t) => {
-  // TODO
-  prerr_endline("--mapping: " ++ Mapping.show(mapping));
   queueEffect(Map(mapping));
 };
 
 let _onInputUnmap = (mode: Mapping.mode, keys: option(string)) => {
-  // TODO
   queueEffect(Unmap({mode, keys}));
-  let keystr = keys |> Option.value(~default="(null)");
-  prerr_endline(
-    "-- unmapping - mode: " ++ Mapping.show_mode(mode) ++ " | " ++ keystr,
-  );
 };
 
 let init = () => {

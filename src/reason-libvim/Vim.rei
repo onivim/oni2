@@ -409,6 +409,8 @@ module Mapping: {
   [@deriving show]
   type scriptId;
 
+  let defaultScriptId: scriptId;
+
   [@deriving show]
   type t = {
     mode,
