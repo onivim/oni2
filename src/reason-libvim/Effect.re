@@ -13,4 +13,5 @@ type t =
   | Scroll({
       count: int,
       direction: Scroll.direction,
-    });
+    })
+  | Map(Mapping.t);

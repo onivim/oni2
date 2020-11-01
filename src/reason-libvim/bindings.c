@@ -67,8 +67,30 @@ int onAutoIndent(int lnum, buf_T *buf, char_u *prevLine, char_u *newLine) {
 
 void onInputMapping(const mapblock_T* mapping) {
   CAMLparam0();
+  CAMLlocal4(vRet, vMode, vFromKeys, vToKeys);
 
-  printf ("MAPPED: %s to %s\n", mapping->m_keys, mapping->m_orig_str);
+  static const value *lv_onInputMapping = NULL;
+  if (lv_onInputMapping == NULL) {
+    lv_onInputMapping = caml_named_value("lv_onInputMapping");
+  }
+
+  vRet = caml_alloc(7, 0);
+  // TODO: Mode
+  vMode = Val_int(0);
+  vFromKeys = caml_copy_string((const char*)mapping->m_keys);
+  vToKeys = caml_copy_string((const char*)mapping->m_orig_str);
+
+  Store_field(vRet, 0, vMode);
+  Store_field(vRet, 1, vFromKeys);
+  Store_field(vRet, 2, vToKeys);
+  Store_field(vRet, 3, Val_bool(mapping->m_expr));
+  Store_field(vRet, 4, Val_bool(mapping->m_noremap != 0));
+  Store_field(vRet, 5, Val_bool(mapping->m_silent));
+  Store_field(vRet, 6, Val_int(mapping->m_script_ctx.sc_sid));
+
+  caml_callback(*lv_onInputMapping, vRet);
+
+  //printf ("MAPPED: %s to %s\n", mapping->m_keys, mapping->m_orig_str);
 
   CAMLreturn0;
 };

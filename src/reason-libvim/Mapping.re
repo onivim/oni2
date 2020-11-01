@@ -11,17 +11,14 @@ type mode =
   | InsertAndCommandLine // :map!
   | All; // :map;
 
-type rhs =
-  | Keys(string) // Mapped to a new sequence of keys
-  | Expression(string); // Mapped to an expression - <expr> was used;
-
-type scriptContext = {id: int};
+type scriptId = int;
 
 type t = {
   mode,
   fromKeys: string, // mapped from, lhs
-  toKeys: rhs, // mapped to, rhs
+  toValue: string, // mapped to, rhs
+  expression: bool,
   recursive: bool,
   silent: bool,
-  scriptContext,
+  scriptId: scriptId,
 };
