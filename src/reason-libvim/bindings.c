@@ -65,6 +65,14 @@ int onAutoIndent(int lnum, buf_T *buf, char_u *prevLine, char_u *newLine) {
   CAMLreturnT(int, ret);
 };
 
+void onInputMapping(const mapblock_T* mapping) {
+  CAMLparam0();
+
+  printf ("MAPPED: %s to %s\n", mapping->m_keys, mapping->m_orig_str);
+
+  CAMLreturn0;
+};
+
 int getColorSchemesCallback(char_u *pat, int *num_schemes, char_u ***schemes) {
   CAMLparam0();
   CAMLlocal2(vPat, vSchemes);
@@ -727,6 +735,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetCursorMoveScreenLineCallback(&onCursorMoveScreenLine);
   vimSetCursorMoveScreenPositionCallback(&onCursorMoveScreenPosition);
   vimSetScrollCallback(&onScrollCallback);
+  vimSetInputMapCallback(&onInputMapping);
 
   char *args[0];
   vimInit(0, args);
