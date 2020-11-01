@@ -644,7 +644,8 @@ let start =
           currentPos := Vim.CommandLine.getPosition();
         };
 
-        let completion = Path.trimTrailingSeparator(completion);
+        let completion =
+          completion |> Path.trimTrailingSeparator |> StringEx.escapeSpaces;
         let (latestContext: Vim.Context.t, effects) =
           Core.VimEx.inputString(completion);
         updateActiveEditorMode(latestContext.mode, effects);
