@@ -148,6 +148,11 @@ let start =
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
 
+      // TODO: Wire up to input
+      | Map(mapping) => prerr_endline(Vim.Mapping.show(mapping))
+      // TODO: Wire up to input
+      | Unmap(_) => prerr_endline("UNMAP")
+
       | Goto(gotoType) => handleGoto(gotoType)
       | TabPage(msg) => dispatch(TabPage(msg))
       | Format(Buffer(_)) =>

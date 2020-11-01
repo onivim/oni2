@@ -484,8 +484,19 @@ let _onMacroStopRecording = (register: char, value: option(string)) => {
   });
 };
 
-let _onInputMapping = (mapping: Mapping.t) => {
+let _onInputMap = (mapping: Mapping.t) => {
+  // TODO
   prerr_endline("--mapping: " ++ Mapping.show(mapping));
+  queueEffect(Map(mapping));
+};
+
+let _onInputUnmap = (mode: Mapping.mode, keys: option(string)) => {
+  // TODO
+  queueEffect(Unmap({mode, keys}));
+  let keystr = keys |> Option.value(~default="(null)");
+  prerr_endline(
+    "-- unmapping - mode: " ++ Mapping.show_mode(mode) ++ " | " ++ keystr,
+  );
 };
 
 let init = () => {
@@ -519,7 +530,8 @@ let init = () => {
     "lv_onCursorMoveScreenPosition",
     _onCursorMoveScreenPosition,
   );
-  Callback.register("lv_onInputMapping", _onInputMapping);
+  Callback.register("lv_onInputMap", _onInputMap);
+  Callback.register("lv_onInputUnmap", _onInputUnmap);
 
   Native.vimInit();
 

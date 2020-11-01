@@ -391,26 +391,6 @@ module Scroll: {
     | ColumnRight;
 };
 
-module Effect: {
-  type t =
-    | Goto(Goto.effect)
-    | TabPage(TabPage.effect)
-    | Format(Format.effect)
-    | ModeChanged(Mode.t)
-    | SettingChanged(Setting.t)
-    | ColorSchemeChanged(option(string))
-    | MacroRecordingStarted({register: char})
-    | MacroRecordingStopped({
-        register: char,
-        value: option(string),
-      })
-    | Scroll({
-        count: int,
-        direction: Scroll.direction,
-      })
-    | Map(Mapping.t);
-};
-
 module Mapping: {
   [@deriving show]
   type mode =
@@ -439,6 +419,30 @@ module Mapping: {
     silent: bool,
     scriptId,
   };
+};
+
+module Effect: {
+  type t =
+    | Goto(Goto.effect)
+    | TabPage(TabPage.effect)
+    | Format(Format.effect)
+    | ModeChanged(Mode.t)
+    | SettingChanged(Setting.t)
+    | ColorSchemeChanged(option(string))
+    | MacroRecordingStarted({register: char})
+    | MacroRecordingStopped({
+        register: char,
+        value: option(string),
+      })
+    | Scroll({
+        count: int,
+        direction: Scroll.direction,
+      })
+    | Map(Mapping.t)
+    | Unmap({
+        mode: Mapping.mode,
+        keys: option(string),
+      });
 };
 
 /**

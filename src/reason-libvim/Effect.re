@@ -14,4 +14,8 @@ type t =
       count: int,
       direction: Scroll.direction,
     })
-  | Map(Mapping.t);
+  | Map(Mapping.t)
+  | Unmap({
+      mode: Mapping.mode,
+      keys: option(string),
+    });

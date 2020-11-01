@@ -96,13 +96,13 @@ value Val_input_mode(int mode) {
   CAMLreturn(vRet);
 }
 
-void onInputMapping(const mapblock_T* mapping) {
+void onInputMap(const mapblock_T* mapping) {
   CAMLparam0();
   CAMLlocal4(vRet, vMode, vFromKeys, vToKeys);
 
-  static const value *lv_onInputMapping = NULL;
-  if (lv_onInputMapping == NULL) {
-    lv_onInputMapping = caml_named_value("lv_onInputMapping");
+  static const value *lv_onInputMap = NULL;
+  if (lv_onInputMap == NULL) {
+    lv_onInputMap = caml_named_value("lv_onInputMap");
   }
 
   vRet = caml_alloc(7, 0);
@@ -118,9 +118,28 @@ void onInputMapping(const mapblock_T* mapping) {
   Store_field(vRet, 5, Val_bool(mapping->m_silent));
   Store_field(vRet, 6, Val_int(mapping->m_script_ctx.sc_sid));
 
-  caml_callback(*lv_onInputMapping, vRet);
+  caml_callback(*lv_onInputMap, vRet);
 
-  //printf ("MAPPED: %s to %s\n", mapping->m_keys, mapping->m_orig_str);
+  CAMLreturn0;
+};
+
+void onInputUnmap(int mode, const char_u* maybeKeys) {
+  CAMLparam0();
+  CAMLlocal2(vKeyStr, vMaybeKeys);
+
+  static const value *lv_onInputUnmap = NULL;
+  if (lv_onInputUnmap == NULL) {
+    lv_onInputUnmap = caml_named_value("lv_onInputUnmap");
+  }
+
+  if (maybeKeys == NULL) {
+    vMaybeKeys = Val_none;
+  } else {
+    vKeyStr = caml_copy_string((const char*)maybeKeys);
+    vMaybeKeys = Val_some(vKeyStr);
+  }
+
+  caml_callback2(*lv_onInputUnmap, Val_input_mode(mode), vMaybeKeys);
 
   CAMLreturn0;
 };
@@ -787,7 +806,8 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetCursorMoveScreenLineCallback(&onCursorMoveScreenLine);
   vimSetCursorMoveScreenPositionCallback(&onCursorMoveScreenPosition);
   vimSetScrollCallback(&onScrollCallback);
-  vimSetInputMapCallback(&onInputMapping);
+  vimSetInputMapCallback(&onInputMap);
+  vimSetInputUnmapCallback(&onInputUnmap);
 
   char *args[0];
   vimInit(0, args);
