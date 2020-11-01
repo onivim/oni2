@@ -437,7 +437,7 @@ module Mapping: {
     expression: bool,
     recursive: bool,
     silent: bool,
-    scriptId: scriptId,
+    scriptId,
   };
 };
 

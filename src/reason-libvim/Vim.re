@@ -485,7 +485,7 @@ let _onMacroStopRecording = (register: char, value: option(string)) => {
 };
 
 let _onInputMapping = (mapping: Mapping.t) => {
-  prerr_endline ("--mapping: " ++ Mapping.show(mapping));
+  prerr_endline("--mapping: " ++ Mapping.show(mapping));
 };
 
 let init = () => {
