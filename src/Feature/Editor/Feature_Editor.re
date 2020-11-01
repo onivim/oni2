@@ -28,14 +28,8 @@ type msg = Msg.t;
 
 type outmsg =
   | Nothing
-  | MouseHovered({
-      bytePosition: BytePosition.t,
-      characterPosition: CharacterPosition.t,
-    })
-  | MouseMoved({
-      bytePosition: BytePosition.t,
-      characterPosition: CharacterPosition.t,
-    });
+  | MouseHovered(option(CharacterPosition.t))
+  | MouseMoved(option(CharacterPosition.t));
 
 type model = Editor.t;
 
@@ -101,26 +95,35 @@ let update = (editor, msg) => {
   | HorizontalScrollbarMouseRelease
   | VerticalScrollbarMouseRelease
   | VerticalScrollbarMouseDown => (editor, Nothing)
-  | MouseHovered({bytePosition}) => (
-      editor,
-      {
-        Editor.byteToCharacter(bytePosition, editor)
-        |> Option.map(characterPosition => {
-             MouseHovered({bytePosition, characterPosition})
-           })
-        |> Option.value(~default=Nothing);
-      },
+  | EditorMouseDown({time, pixelX, pixelY}) => (
+      editor |> Editor.mouseDown(~time, ~pixelX, ~pixelY),
+      Nothing,
     )
-  | MouseMoved({bytePosition}) => (
-      editor,
-      {
-        Editor.byteToCharacter(bytePosition, editor)
-        |> Option.map(characterPosition => {
-             MouseMoved({bytePosition, characterPosition})
-           })
-        |> Option.value(~default=Nothing);
-      },
+  | EditorMouseUp({time, pixelX, pixelY}) => (
+      editor |> Editor.mouseUp(~time, ~pixelX, ~pixelY),
+      Nothing,
     )
+  | EditorMouseMoved({time, pixelX, pixelY}) =>
+    let editor' = editor |> Editor.mouseMove(~time, ~pixelX, ~pixelY);
+
+    let maybeCharacter = Editor.getCharacterUnderMouse(editor');
+    let eff = MouseMoved(maybeCharacter);
+    (editor', eff);
+  | EditorMouseLeave => (editor |> Editor.mouseLeave, Nothing)
+  | EditorMouseEnter => (editor |> Editor.mouseEnter, Nothing)
+  | MouseHovered =>
+    let maybeCharacter = Editor.getCharacterUnderMouse(editor);
+    (editor, MouseHovered(maybeCharacter));
+  //  | MouseMoved({bytePosition}) => (
+  //      editor,
+  //      {
+  //        Editor.byteToCharacter(bytePosition, editor)
+  //        |> Option.map(characterPosition => {
+  //             MouseMoved({bytePosition, characterPosition})
+  //           })
+  //        |> Option.value(~default=Nothing);
+  //      },
+  //    )
   | ModeChanged({mode, effects}) =>
     let handleScrollEffect = (~count, ~direction, editor) => {
       let count = max(count, 1);
@@ -155,5 +158,27 @@ let update = (editor, msg) => {
            editor',
          );
     (editor'', Nothing);
+  };
+};
+
+Revery.Tick.timeout;
+
+module Sub = {
+  let editor = (~config, editor: Editor.t) => {
+    let hoverEnabled = EditorConfiguration.Hover.enabled.get(config);
+    switch (Editor.lastMouseMoveTime(editor)) {
+    | Some(time) when hoverEnabled && !Editor.isMouseDown(editor) =>
+      let delay = EditorConfiguration.Hover.delay.get(config);
+      Service_Time.Sub.once(
+        ~uniqueId={
+          string_of_int(Editor.getId(editor))
+          ++ string_of_float(Revery.Time.toFloatSeconds(time));
+        },
+        ~delay,
+        ~msg=Msg.MouseHovered,
+      );
+    | Some(_) => Isolinear.Sub.none
+    | None => Isolinear.Sub.none
+    };
   };
 };

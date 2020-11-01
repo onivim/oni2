@@ -44,8 +44,6 @@ module Parts = {
         );
       let onEditorSizeChanged = (editorId, pixelWidth, pixelHeight) =>
         dispatch(EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}));
-      let changeMode = mode =>
-        editorDispatch(ModeChanged({mode, effects: []}));
 
       <EditorSurface
         key={editor |> Feature_Editor.Editor.key}
@@ -60,7 +58,6 @@ module Parts = {
         languageConfiguration
         languageInfo={state.languageInfo}
         grammarRepository={state.grammarRepository}
-        changeMode
         onEditorSizeChanged
         theme
         mode={Feature_Vim.mode(state.vim)}
