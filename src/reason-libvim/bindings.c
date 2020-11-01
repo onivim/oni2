@@ -65,6 +65,37 @@ int onAutoIndent(int lnum, buf_T *buf, char_u *prevLine, char_u *newLine) {
   CAMLreturnT(int, ret);
 };
 
+value Val_input_mode(int mode) {
+  CAMLparam0();
+  CAMLlocal1(vRet);
+
+  if (mode == INSERT) {
+    vRet = Val_int(0);
+  } else if(mode == LANGMAP) {
+    vRet = Val_int(1);
+  } else if(mode == CMDLINE) {
+    vRet = Val_int(2);
+  } else if (mode == NORMAL) {
+    vRet = Val_int(3);
+  } else if (mode == VISUAL + SELECTMODE) {
+    vRet = Val_int(4);
+  } else if (mode == VISUAL) {
+    vRet = Val_int(5);
+  } else if (mode == SELECTMODE) {
+    vRet = Val_int(6);
+  } else if (mode == OP_PENDING) {
+    vRet = Val_int(7);
+  } else if (mode == TERMINAL) {
+    vRet = Val_int(8);
+  } else if (mode == INSERT + CMDLINE) {
+    vRet = Val_int(9);
+  } else {
+    vRet = Val_int(10);
+  }
+
+  CAMLreturn(vRet);
+}
+
 void onInputMapping(const mapblock_T* mapping) {
   CAMLparam0();
   CAMLlocal4(vRet, vMode, vFromKeys, vToKeys);
@@ -75,16 +106,15 @@ void onInputMapping(const mapblock_T* mapping) {
   }
 
   vRet = caml_alloc(7, 0);
-  // TODO: Mode
-  vMode = Val_int(0);
-  vFromKeys = caml_copy_string((const char*)mapping->m_keys);
+  vMode = Val_input_mode(mapping->m_mode);
+  vFromKeys = caml_copy_string((const char*)mapping->m_orig_keys);
   vToKeys = caml_copy_string((const char*)mapping->m_orig_str);
 
   Store_field(vRet, 0, vMode);
   Store_field(vRet, 1, vFromKeys);
   Store_field(vRet, 2, vToKeys);
   Store_field(vRet, 3, Val_bool(mapping->m_expr));
-  Store_field(vRet, 4, Val_bool(mapping->m_noremap != 0));
+  Store_field(vRet, 4, Val_bool(mapping->m_noremap == 0));
   Store_field(vRet, 5, Val_bool(mapping->m_silent));
   Store_field(vRet, 6, Val_int(mapping->m_script_ctx.sc_sid));
 
