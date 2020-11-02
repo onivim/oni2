@@ -241,11 +241,11 @@ let start = maybeKeyBindingsFilePath => {
           command: "workbench.action.zoomOut",
           condition: isMacCondition,
         },
-//        {
-//          key: "<C-->",
-//          command: "workbench.action.zoomOut",
-//          condition: WhenExpr.Value(True),
-//        },
+        {
+          key: "<C-->",
+          command: "workbench.action.zoomOut",
+          condition: WhenExpr.Value(True),
+        },
         {
           key: "<D-0>",
           command: "workbench.action.zoomReset",

@@ -42,10 +42,10 @@ describe("AutoClosingPairs", ({test, describe, _}) => {
       expect.int(lineCount).toBe(1);
 
       input(~autoClosingPairs, "o");
-      input(~autoClosingPairs,"A");
+      input(~autoClosingPairs, "A");
       input(~autoClosingPairs, "[");
       input(~autoClosingPairs, "]");
-      input(~autoClosingPairs,":");
+      input(~autoClosingPairs, ":");
 
       let lineCount = Buffer.getLineCount(b);
       expect.int(lineCount).toBe(2);
@@ -56,8 +56,7 @@ describe("AutoClosingPairs", ({test, describe, _}) => {
       input("u"); // BUG: Too many undoes
       let lineCount = Buffer.getLineCount(b);
       expect.int(lineCount).toBe(1);
-    });
-    
+    })
   });
   test("no auto-closing pairs", ({expect, _}) => {
     let b = resetBuffer();
