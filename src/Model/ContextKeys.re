@@ -68,14 +68,14 @@ let editors = (~isFocused) => {
             bool("insertMode", state =>
               switch (ModeManager.current(state)) {
               | TerminalInsert
-              | Insert => true
+              | Insert(_) => true
               | _ => false
               }
             ),
             bool("normalMode", state =>
               switch (ModeManager.current(state)) {
               | TerminalNormal
-              | Normal => true
+              | Normal(_) => true
               | _ => false
               }
             ),

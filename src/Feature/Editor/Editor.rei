@@ -10,12 +10,6 @@ type scrollbarMetrics = {
   thumbOffset: int,
 };
 
-type viewLine = {
-  contents: BufferLine.t,
-  byteOffset: int,
-  characterOffset: int,
-};
-
 type yankHighlight = {
   key: Brisk_reconciler.Key.t,
   pixelRanges: list(PixelRange.t),
@@ -25,29 +19,19 @@ module WrapMode: {
   [@deriving show]
   type t =
     | NoWrap
-    | Viewport
-    | WrapColumn(int)
-    | Bounded(int);
+    | Viewport;
 };
 
-let create:
-  (
-    ~wrapMode: WrapMode.t=?,
-    ~config: Config.resolver,
-    ~buffer: EditorBuffer.t,
-    unit
-  ) =>
-  t;
+let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
 let copy: t => t;
 
 let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;
 let getBufferId: t => int;
-let getTopVisibleLine: t => int;
-let getBottomVisibleLine: t => int;
+let getTopVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
+let getBottomVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
 let getLeftVisibleColumn: t => int;
-let getLayout:
-  (~showLineNumbers: bool, ~maxMinimapCharacters: int, t) => EditorLayout.t;
+let getLayout: t => EditorLayout.t;
 let getCharacterUnderCursor: t => option(Uchar.t);
 let getCharacterBehindCursor: t => option(Uchar.t);
 let getCharacterAtPosition:
@@ -60,7 +44,12 @@ let getTotalWidthInPixels: t => int;
 let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
-let setCursors: (~cursors: list(BytePosition.t), t) => t;
+let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
+
+let mode: t => Vim.Mode.t;
+let setMode: (Vim.Mode.t, t) => t;
+
+let getBufferLineCount: t => int;
 
 let getTokenAt:
   (~languageConfiguration: LanguageConfiguration.t, CharacterPosition.t, t) =>
@@ -69,8 +58,29 @@ let getTokenAt:
 let yankHighlight: t => option(yankHighlight);
 let setYankHighlight: (~yankHighlight: yankHighlight, t) => t;
 
+let setWrapPadding: (~padding: float, t) => t;
+let setVerticalScrollMargin: (~lines: int, t) => t;
+
+let setMinimap: (~enabled: bool, ~maxColumn: int, t) => t;
 let isMinimapEnabled: t => bool;
-let setMinimapEnabled: (~enabled: bool, t) => t;
+
+// Mouse interactions
+let mouseDown: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseUp: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseMove: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseEnter: t => t;
+let mouseLeave: t => t;
+let hasMouseEntered: t => bool;
+let isMouseDown: t => bool;
+let lastMouseMoveTime: t => option(Revery.Time.t);
+let getCharacterUnderMouse: t => option(CharacterPosition.t);
+
+// Scale factor between horizontal pixels on the editor surface vs minimap
+let getMinimapWidthScaleFactor: t => float;
+
+let setLineNumbers:
+  (~lineNumbers: [ | `Off | `On | `Relative | `RelativeOnly], t) => t;
+let lineNumbers: t => [ | `Off | `On | `Relative | `RelativeOnly];
 
 // [exposePrimaryCursor(editor)] ensures the primary cursor is visible - adjusting the scroll if it isnot.
 let exposePrimaryCursor: t => t;
@@ -88,7 +98,9 @@ let visiblePixelHeight: t => int;
 
 let font: t => Service_Font.font;
 
-let viewLine: (t, int) => viewLine;
+let viewTokens:
+  (~line: int, ~scrollX: float, ~colorizer: BufferLineColorizer.t, t) =>
+  list(BufferViewTokenizer.t);
 
 let scrollX: t => float;
 let scrollY: t => float;
@@ -100,15 +112,12 @@ let setLineHeight: (~lineHeight: LineHeight.t, t) => t;
 let characterWidthInPixels: t => float;
 
 let selection: t => option(VisualRange.t);
-let setSelection: (~selection: VisualRange.t, t) => t;
-let clearSelection: t => t;
 
 let selectionOrCursorRange: t => ByteRange.t;
 
 let totalViewLines: t => int;
 
 let isScrollAnimated: t => bool;
-let scrollToColumn: (~column: int, t) => t;
 let scrollToPixelX: (~pixelX: float, t) => t;
 let scrollDeltaPixelX: (~pixelX: float, t) => t;
 
@@ -119,13 +128,33 @@ let scrollDeltaPixelY: (~pixelY: float, t) => t;
 let scrollToPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
 
+let scrollCenterCursorVertically: t => t;
+let scrollCursorTop: t => t;
+let scrollCursorBottom: t => t;
+let scrollLines: (~count: int, t) => t;
+let scrollHalfPage: (~count: int, t) => t;
+let scrollPage: (~count: int, t) => t;
+
 let getCharacterWidth: t => float;
+
+// Given a start position and a delta screen lines,
+// figure out a destination byte position.
+let moveScreenLines:
+  (~position: BytePosition.t, ~count: int, t) => BytePosition.t;
 
 // BYTE-CHARACTER CONVERSION
 let byteToCharacter: (BytePosition.t, t) => option(CharacterPosition.t);
 let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
 
 let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
+
+// VIEW-SPACE CONVERSION
+
+// [viewLineIsPrimary(viewLine, editor)] returns [true] if the viewline is
+// the first view line for a buffer line (ie, its [byteOffset] is [0])
+let viewLineIsPrimary: (int, t) => bool;
+let viewLineToBufferLine: (int, t) => EditorCoreTypes.LineNumber.t;
+let bufferBytePositionToViewLine: (BytePosition.t, t) => int;
 
 // PIXEL-SPACE CONVERSION
 
@@ -173,17 +202,13 @@ let updateBuffer:
   (~update: Oni_Core.BufferUpdate.t, ~buffer: EditorBuffer.t, t) => t;
 let setBuffer: (~buffer: EditorBuffer.t, t) => t;
 
+let configurationChanged:
+  (~perFileTypeConfig: Oni_Core.Config.fileTypeResolver, t) => t;
+
 module Slow: {
   let pixelPositionToBytePosition:
     // Allow the return value to exceed the byte position of the line
     // This makes sense for cases like insert mode, where the cursor could be 'after'
     // the end of the line.
-    (
-      ~allowPast: bool=?,
-      ~buffer: Buffer.t,
-      ~pixelX: float,
-      ~pixelY: float,
-      t
-    ) =>
-    BytePosition.t;
+    (~allowPast: bool=?, ~pixelX: float, ~pixelY: float, t) => BytePosition.t;
 };

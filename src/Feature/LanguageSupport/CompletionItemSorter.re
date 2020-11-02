@@ -30,13 +30,14 @@ let%test_module "compare" =
      let create = (~isFuzzyMatching, ~label, ~sortText) => {
        CompletionItem.{
          chainedCacheId: None,
-         handle: 0,
+         handle: None,
          label,
          kind: Exthost.CompletionKind.Method,
          detail: None,
          documentation: None,
          insertText: label,
          insertTextRules: Exthost.SuggestItem.InsertTextRules.none,
+         filterText: label,
          sortText,
          suggestRange: None,
          commitCharacters: [],

@@ -25,9 +25,12 @@ module Constants = {
   let hoverTime = 1.0;
 };
 
-let drawCurrentLineHighlight =
-    (~context, ~colors: Colors.t, line: EditorCoreTypes.LineNumber.t) =>
-  Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
+let drawCurrentLineHighlight = (~context, ~colors: Colors.t, viewLine: int) =>
+  Draw.lineHighlight(
+    ~context,
+    ~color=colors.lineHighlightBackground,
+    viewLine,
+  );
 
 let renderRulers = (~context: Draw.context, ~colors: Colors.t, rulers) => {
   let characterWidth = Editor.characterWidthInPixels(context.editor);
@@ -43,8 +46,6 @@ let%component make =
                 ~editor,
                 ~colors,
                 ~dispatch,
-                ~topVisibleLine,
-                ~onCursorChange,
                 ~cursorPosition: CharacterPosition.t,
                 ~editorFont: Service_Font.font,
                 ~diagnosticsMap,
@@ -54,7 +55,6 @@ let%component make =
                 ~languageSupport,
                 ~languageConfiguration,
                 ~bufferSyntaxHighlights,
-                ~bottomVisibleLine,
                 ~maybeYankHighlights,
                 ~mode,
                 ~isActiveSplit,
@@ -65,10 +65,6 @@ let%component make =
                 (),
               ) => {
   let%hook maybeBbox = React.Hooks.ref(None);
-  let%hook hoverTimerActive = React.Hooks.ref(false);
-  let%hook lastMousePosition = React.Hooks.ref(None);
-  let%hook (hoverTimer, resetHoverTimer) =
-    Hooks.timer(~active=hoverTimerActive^, ());
 
   let lineCount = editor |> Editor.totalViewLines;
   let indentation = Buffer.getIndentation(buffer);
@@ -86,71 +82,39 @@ let%component make =
     maybeBbox^
     |> Option.map(bbox => {
          let (minX, minY, _, _) = bbox |> BoundingBox2d.getBounds;
-
          let relX = mouseX -. minX;
          let relY = mouseY -. minY;
-
-         Editor.Slow.pixelPositionToBytePosition(
-           // #2463: When we're in insert mode, clicking past the end of the line
-           // should move the cursor past the last byte.
-           ~allowPast=mode == Vim.Mode.Insert,
-           ~buffer,
-           ~pixelX=relX,
-           ~pixelY=relY,
-           editor,
-         );
+         let time = Revery.Time.now();
+         (relX, relY, time);
        });
   };
 
   let onMouseMove = (evt: NodeEvents.mouseMoveEventParams) => {
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-    |> Option.iter(bytePosition => {
-         dispatch(Msg.MouseMoved({bytePosition: bytePosition}))
+    |> Option.iter(((pixelX, pixelY, time)) => {
+         dispatch(Msg.EditorMouseMoved({time, pixelX, pixelY}))
        });
-    hoverTimerActive := true;
-    lastMousePosition := Some((evt.mouseX, evt.mouseY));
-    resetHoverTimer();
   };
 
-  let onMouseLeave = _ => {
-    hoverTimerActive := false;
-    lastMousePosition := None;
-    resetHoverTimer();
+  let onMouseEnter = _evt => {
+    dispatch(Msg.EditorMouseEnter);
   };
 
-  // Usually the If hook compares a value to a prior version of itself
-  // However, here we just want to compare it to a constant value,
-  // so we discard the second argument to the function.
-  let%hook () =
-    Hooks.effect(
-      If(
-        (t, _) => Revery.Time.toFloatSeconds(t) > Constants.hoverTime,
-        hoverTimer,
-      ),
-      () => {
-        lastMousePosition^
-        |> Utility.OptionEx.flatMap(((mouseX, mouseY)) =>
-             getMaybeLocationFromMousePosition(mouseX, mouseY)
-           )
-        |> Option.iter(bytePosition => {
-             dispatch(Msg.MouseHovered({bytePosition: bytePosition}))
-           });
-        hoverTimerActive := false;
-        resetHoverTimer();
-        None;
-      },
-    );
+  let onMouseLeave = _evt => {
+    dispatch(Msg.EditorMouseLeave);
+  };
+
+  let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
+    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+    |> Option.iter(((pixelX, pixelY, time)) => {
+         dispatch(Msg.EditorMouseDown({time, pixelX, pixelY}))
+       });
+  };
 
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
-    Log.trace("editorMouseUp");
-
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-    |> Option.iter(bytePosition => {
-         Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
-         Log.tracef(m =>
-           m("  setPosition (%s)", BytePosition.show(bytePosition))
-         );
-         onCursorChange(bytePosition);
+    |> Option.iter(((pixelX, pixelY, time)) => {
+         dispatch(Msg.EditorMouseUp({time, pixelX, pixelY}))
        });
   };
 
@@ -174,8 +138,10 @@ let%component make =
       gutterWidth,
       float(pixelWidth) -. gutterWidth,
     )}
+    onMouseDown
     onMouseUp
     onMouseMove
+    onMouseEnter
     onMouseLeave
     onMouseWheel>
     <Canvas
@@ -190,7 +156,14 @@ let%component make =
             ~editorFont,
           );
 
-        drawCurrentLineHighlight(~context, ~colors, cursorPosition.line);
+        let maybeCursorBytePosition =
+          Editor.characterToByte(cursorPosition, editor);
+        maybeCursorBytePosition
+        |> Option.iter(bytePosition => {
+             let viewLine =
+               Editor.bufferBytePositionToViewLine(bytePosition, editor);
+             drawCurrentLineHighlight(~context, ~colors, viewLine);
+           });
 
         renderRulers(~context, ~colors, Config.rulers.get(config));
 
@@ -198,8 +171,8 @@ let%component make =
           IndentLineRenderer.render(
             ~context,
             ~buffer,
-            ~startLine=topVisibleLine - 1,
-            ~endLine=bottomVisibleLine + 1,
+            ~startLine=Editor.getTopVisibleBufferLine(editor),
+            ~endLine=Editor.getBottomVisibleBufferLine(editor),
             ~cursorPosition,
             ~colors,
             ~showActive=Config.highlightActiveIndentGuide.get(config),
@@ -222,7 +195,6 @@ let%component make =
           ~languageConfiguration,
           ~bufferSyntaxHighlights,
           ~shouldRenderWhitespace=Config.renderWhitespace.get(config),
-          ~bufferWidthInPixels=bufferPixelWidth,
         );
 
         if (Config.scrollShadow.get(config)) {

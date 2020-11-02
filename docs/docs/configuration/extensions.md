@@ -49,7 +49,7 @@ If your favorite extension is missing - you can help us out by publishing it to 
 1) Register for an account using the [Open VSX GitHub OAuth](https://open-vsx.org/oauth2/authorization/github) provider
 2) Create a [personal access token](https://open-vsx.org/user-settings/tokens) 
 3) Install the `ovsx` tool - `npm install -g ovsx`
-4) Create a namespace corrresponding to your extension: `ovsx create-namespace <publisher> --pat <token>`
+4) Create a namespace corresponding to your extension: `ovsx create-namespace <publisher> --pat <token>`
 5) Run `ovsx publish --pat <token>` in the directory of the extension you want to publish.
 
 ## Vim Extensions

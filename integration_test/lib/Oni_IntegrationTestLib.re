@@ -92,21 +92,21 @@ let runTest =
       test: testCallback,
     ) => {
   // Disable colors on windows to prevent hanging on CI
-  if (Sys.win32) {
-    Timber.App.disableColors();
-  };
 
   Revery.App.initConsole();
 
   Core.Log.enableDebug();
-  Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
+  Oni_Core.Log.init();
 
   Internal.prepareEnvironment();
 
   switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
-  | None => ()
-  | Some(logFile) => Timber.App.setLogFile(logFile)
+  | None => Timber.App.enable(Timber.Reporter.console())
+  | Some(logFile) =>
+    let fileReporter = Timber.Reporter.file(logFile);
+    let reporters = Timber.Reporter.(combine(console(), fileReporter));
+    Timber.App.enable(reporters);
   };
 
   Log.info("Starting test... Working directory: " ++ Sys.getcwd());
@@ -141,6 +141,7 @@ let runTest =
   let currentState =
     ref(
       Model.State.initial(
+        ~cli=Oni_CLI.default,
         ~initialBuffer,
         ~initialBufferRenderers=Model.BufferRenderers.initial,
         ~getUserSettings,
@@ -165,6 +166,7 @@ let runTest =
 
   let _: unit => unit =
     Revery.Tick.interval(
+      ~name="Integration Test Ticker",
       _ => {
         let state = currentState^;
         Revery.Utility.HeadlessWindow.render(
@@ -193,7 +195,7 @@ let runTest =
       |> Printf.fprintf(oc, "%s\n");
 
     close_out(oc);
-    tempFilePath;
+    tempFilePath |> Fp.absoluteCurrentPlatform |> Option.get;
   };
 
   let configurationFilePath =

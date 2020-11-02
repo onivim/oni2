@@ -210,6 +210,7 @@ let process = (rgPath, args, onUpdate, onComplete, onError) => {
     disposeTick :=
       Some(
         Revery.Tick.interval(
+          ~name="Ripgrep - Processing Ticker",
           _ =>
             if (!Job.isComplete(job^)) {
               job := Job.tick(job^);

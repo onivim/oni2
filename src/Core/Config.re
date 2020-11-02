@@ -39,9 +39,11 @@ module Settings = {
   };
 
   let fromFile = path =>
-    try(path |> Yojson.Safe.from_file |> fromJson) {
+    try(path |> Fp.toString |> Yojson.Safe.from_file |> fromJson) {
     | Yojson.Json_error(message) =>
-      Log.errorf(m => m("Failed to read file %s: %s", path, message));
+      Log.errorf(m =>
+        m("Failed to read file %s: %s", path |> Fp.toString, message)
+      );
       empty;
     };
 

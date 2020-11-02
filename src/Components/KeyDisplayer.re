@@ -162,6 +162,7 @@ let%component make =
               (~model, ~uiFont, ~top=?, ~left=?, ~right=?, ~bottom=?, ()) => {
   let%hook activeGroups =
     CustomHooks.useExpiration(
+      ~name="KeyDisplayer Expirer",
       ~equals=(a, b) => a.id == b.id,
       ~expireAfter=Time.ms(int_of_float(Constants.duration *. 1000.)),
       model.groups,

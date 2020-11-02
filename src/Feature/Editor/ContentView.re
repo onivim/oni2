@@ -174,10 +174,17 @@ let renderDefinition =
 };
 
 let renderTokens =
-    (~selection, ~context, ~line, ~colors, ~tokens, ~shouldRenderWhitespace) => {
+    (
+      ~offsetY,
+      ~selection,
+      ~context,
+      ~colors,
+      ~tokens,
+      ~shouldRenderWhitespace,
+    ) => {
   tokens
   |> WhitespaceTokenFilter.filter(~selection, shouldRenderWhitespace)
-  |> List.iter(Draw.token(~context, ~line, ~colors));
+  |> List.iter(Draw.token(~offsetY, ~context, ~colors));
 };
 
 let renderText =
@@ -192,12 +199,11 @@ let renderText =
       ~matchingPairs,
       ~bufferSyntaxHighlights,
       ~shouldRenderWhitespace,
-      ~bufferWidthInPixels,
     ) =>
   Draw.renderImmediate(
     ~context,
     ~count,
-    (item, _offsetY) => {
+    (item, offsetY) => {
       let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
       let selectionRange =
         switch (Hashtbl.find_opt(selectionRanges, index)) {
@@ -208,17 +214,6 @@ let renderText =
           | _ => Some(List.hd(v))
           }
         };
-      let bufferLine = Editor.viewLine(editor, item).contents;
-      let startPixel = Editor.scrollX(editor);
-      let startCharacter =
-        BufferLine.Slow.getIndexFromPixel(~pixel=startPixel, bufferLine)
-        |> CharacterIndex.toInt;
-      let endCharacter =
-        BufferLine.Slow.getIndexFromPixel(
-          ~pixel=startPixel +. float(bufferWidthInPixels),
-          bufferLine,
-        )
-        |> CharacterIndex.toInt;
 
       let tokens =
         getTokensForLine(
@@ -229,18 +224,17 @@ let renderText =
           ~matchingPairs,
           ~bufferSyntaxHighlights,
           ~selection=selectionRange,
-          startCharacter,
-          endCharacter + 1,
+          ~scrollX=Editor.scrollX(editor),
           item,
         );
 
       renderTokens(
         ~selection=selectionRange,
         ~context,
-        ~line=item |> EditorCoreTypes.LineNumber.ofZeroBased,
         ~colors,
         ~tokens,
         ~shouldRenderWhitespace,
+        ~offsetY,
       );
     },
   );
@@ -261,7 +255,6 @@ let render =
       ~languageConfiguration,
       ~bufferSyntaxHighlights,
       ~shouldRenderWhitespace,
-      ~bufferWidthInPixels,
     ) => {
   renderEmbellishments(
     ~context,
@@ -303,6 +296,5 @@ let render =
     ~matchingPairs,
     ~bufferSyntaxHighlights,
     ~shouldRenderWhitespace,
-    ~bufferWidthInPixels,
   );
 };

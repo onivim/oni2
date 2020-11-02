@@ -35,7 +35,11 @@ let%component make = (~config, ~pixelRanges: list(PixelRange.t), ()) => {
   let duration = EditorConfiguration.yankHighlightDuration.get(config);
 
   let%hook (opacity, _animationState, _reset) =
-    Hooks.animation(Animations.fadeIn(~duration), ~active=true);
+    Hooks.animation(
+      ~name="Yank Highlights Animation",
+      Animations.fadeIn(~duration),
+      ~active=true,
+    );
 
   let bg = EditorConfiguration.yankHighlightColor.get(config);
 

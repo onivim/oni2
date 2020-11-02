@@ -566,6 +566,139 @@ void onWriteFailure(writeFailureReason_T reason, buf_T *buf) {
   CAMLreturn0;
 }
 
+void onCursorMoveScreenLine(screenLineMotion_T motion, int count, linenr_T startLine, linenr_T *outLine) {
+    CAMLparam0();
+    CAMLlocal1(valDestLine);
+
+    int iMotion = 0;
+    switch (motion) {
+    case MOTION_M:
+        iMotion = 1;
+        break;
+    case MOTION_L:
+        iMotion = 2;
+        break;
+    case MOTION_H:
+    default:
+        iMotion = 0;
+        break;
+    }
+
+   static const value *lv_onCursorMoveScreenLine = NULL;
+   if (lv_onCursorMoveScreenLine == NULL) {
+     lv_onCursorMoveScreenLine = caml_named_value("lv_onCursorMoveScreenLine");
+   }
+
+   valDestLine = caml_callback3(*lv_onCursorMoveScreenLine, Val_int(iMotion),
+   Val_int(count), Val_int(startLine));
+   *outLine = Int_val(valDestLine);
+   CAMLreturn0;
+}
+
+void onCursorMoveScreenPosition(int dir, int count, linenr_T srcLine,
+colnr_T srcColumn, colnr_T wantColumn, linenr_T *destLine, colnr_T *destColumn) {
+    CAMLparam0();
+    CAMLlocal2(vDirection, vResult);
+
+    if (dir == BACKWARD) {
+        vDirection = hash_variant("Up");
+    } else {
+        vDirection = hash_variant("Down");
+    }
+
+   static const value *lv_onCursorMoveScreenPosition = NULL;
+   if (lv_onCursorMoveScreenPosition == NULL) {
+     lv_onCursorMoveScreenPosition = caml_named_value("lv_onCursorMoveScreenPosition");
+   }
+  value *pArgs = (value *)malloc(sizeof(value) * 5);
+  pArgs[0] = vDirection,
+  pArgs[1] = Val_int(count);
+  pArgs[2] = Val_int(srcLine);
+  pArgs[3] = Val_long(srcColumn);
+  pArgs[4] = Val_long(wantColumn);
+
+    vResult = caml_callbackN(*lv_onCursorMoveScreenPosition,
+    5,
+    pArgs
+    );
+    free(pArgs);
+
+  if (Is_block(vResult)) {
+    *destLine = Int_val(Field(vResult, 0));
+    *destColumn = Int_val(Field(vResult, 1));
+  } else {
+    *destLine = srcLine;
+    *destColumn = srcColumn;
+  }
+
+   CAMLreturn0;
+}
+
+void onScrollCallback(scrollDirection_T dir, long count) {
+   CAMLparam0();
+
+   int outScroll = 0;
+   switch (dir) {
+    case SCROLL_CURSOR_CENTERH:
+        outScroll = 1;
+        break;
+    case SCROLL_CURSOR_TOP:
+        outScroll = 2;
+        break;
+    case SCROLL_CURSOR_BOTTOM:
+        outScroll = 3;
+        break;
+    case SCROLL_CURSOR_LEFT:
+        outScroll = 4;
+        break;
+    case SCROLL_CURSOR_RIGHT:
+        outScroll = 5;
+        break;
+    case SCROLL_LINE_UP:
+        outScroll = 6;
+        break;
+    case SCROLL_LINE_DOWN:
+        outScroll = 7;
+        break;
+    case SCROLL_HALFPAGE_DOWN:
+        outScroll = 8;
+        break;
+    case SCROLL_HALFPAGE_UP:
+        outScroll = 9;
+        break;
+    case SCROLL_PAGE_DOWN:
+        outScroll = 10;
+        break;
+    case SCROLL_PAGE_UP:
+        outScroll = 11;
+        break;
+    case SCROLL_HALFPAGE_LEFT:
+        outScroll = 12;
+        break;
+    case SCROLL_HALFPAGE_RIGHT:
+        outScroll = 13;
+        break;
+    case SCROLL_COLUMN_LEFT:
+        outScroll = 14;
+        break;
+    case SCROLL_COLUMN_RIGHT:
+        outScroll = 15;
+        break;
+    case SCROLL_CURSOR_CENTERV:
+    default:
+        outScroll = 0;
+        break;
+   }
+
+   static const value *lv_onScroll = NULL;
+   if (lv_onScroll == NULL) {
+     lv_onScroll = caml_named_value("lv_onScroll");
+   }
+
+   caml_callback2(*lv_onScroll, Val_int(outScroll), Val_int(count));
+   CAMLreturn0;
+}
+
 CAMLprim value libvim_vimInit(value unit) {
   vimMacroSetStartRecordCallback(&onMacroStartRecord);
   vimMacroSetStopRecordCallback(&onMacroStopRecord);
@@ -591,6 +724,9 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetWindowSplitCallback(&onWindowSplit);
   vimSetYankCallback(&onYank);
   vimSetFileWriteFailureCallback(&onWriteFailure);
+  vimSetCursorMoveScreenLineCallback(&onCursorMoveScreenLine);
+  vimSetCursorMoveScreenPositionCallback(&onCursorMoveScreenPosition);
+  vimSetScrollCallback(&onScrollCallback);
 
   char *args[0];
   vimInit(0, args);
@@ -1059,6 +1195,17 @@ CAMLprim value libvim_vimOptionGetTabSize(value unit) {
   return Val_int(tabSize);
 }
 
+CAMLprim value libvim_vimVisualSetStart(value vLine, value vByte) {
+    CAMLparam2(vLine, vByte);
+
+    pos_T start;
+    start.lnum = Int_val(vLine);
+    start.col = Int_val(vByte);
+    vimVisualSetStart(start);
+
+    CAMLreturn(Val_unit);
+}
+
 CAMLprim value libvim_vimVisualGetRange(value unit) {
   CAMLparam0();
   CAMLlocal1(ret);
@@ -1159,6 +1306,31 @@ CAMLprim value libvim_vimUndoSaveRegion(value startLine, value endLine) {
   int success = vimUndoSaveRegion(start, end);
 
   CAMLreturn(Val_bool(success != FAIL));
+}
+
+CAMLprim value libvim_vimVisualSetType(value vType) {
+    CAMLparam1(vType);    
+
+    char visualType = 0;
+    switch(Int_val(vType)) {
+    // character
+    case 0:
+      visualType ='v';
+      break;
+        // line
+    case 1:
+      visualType = 'V';
+      break;
+    case 2:
+       visualType = Ctrl_V;
+       break;
+    }
+
+    if (visualType != 0) {
+        vimVisualSetType(visualType);
+    }
+
+    CAMLreturn(Val_unit);
 }
 
 CAMLprim value libvim_vimVisualGetType(value unit) {

@@ -51,6 +51,7 @@ module Make = (JobConfig: Oni_Model.FilterJob.Config) => {
 
       let disposeTick =
         Revery.Tick.interval(
+          ~name="FilterSubscription Tick",
           _ =>
             switch (Hashtbl.find_opt(jobs, id)) {
             | Some({job, _} as state) when !Job.isComplete(job) =>

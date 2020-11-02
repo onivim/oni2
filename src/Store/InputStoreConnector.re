@@ -137,6 +137,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       | None => []
       | Some(k) => handleTextEffect(~isText=false, state, k)
       };
+
+    // TODO: Show a notification that recursion limit was hit
+    | Keybindings.RemapRecursionLimitHit => []
     };
 
   let reveryKeyToEditorKey =

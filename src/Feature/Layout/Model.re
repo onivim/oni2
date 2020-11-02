@@ -103,8 +103,7 @@ module Group: {
              if (Editor.getBufferId(editor)
                  == Editor.getBufferId(originalEditor)
                  && newCursors != [EditorCoreTypes.BytePosition.zero]) {
-               originalEditor
-               |> Editor.setCursors(~cursors=Editor.getCursors(editor));
+               originalEditor |> Editor.setMode(Editor.mode(editor));
              } else {
                originalEditor;
              }
@@ -145,6 +144,7 @@ module Group: {
   };
 };
 
+[@deriving show]
 type panel =
   | Left
   | Right

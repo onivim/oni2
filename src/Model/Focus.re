@@ -34,3 +34,9 @@ let current =
   fun
   | [head, ..._] => Some(head)
   | _ => None;
+
+let isLayoutFocused =
+  fun
+  | Editor
+  | Terminal(_) => true
+  | _ => false;

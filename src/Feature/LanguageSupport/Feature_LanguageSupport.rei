@@ -25,8 +25,8 @@ module Msg: {
 
   module Hover: {
     let show: msg;
-    let mouseHovered: CharacterPosition.t => msg;
-    let mouseMoved: CharacterPosition.t => msg;
+    let mouseHovered: option(CharacterPosition.t) => msg;
+    let mouseMoved: option(CharacterPosition.t) => msg;
     let keyPressed: string => msg;
   };
 };
@@ -52,6 +52,7 @@ type outmsg =
 
 let update:
   (
+    ~config: Oni_Core.Config.resolver,
     ~configuration: Oni_Core.Configuration.t,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~maybeSelection: option(CharacterRange.t),
@@ -66,6 +67,7 @@ let update:
 
 let bufferUpdated:
   (
+    ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~buffer: Oni_Core.Buffer.t,
     ~config: Oni_Core.Config.resolver,
     ~activeCursor: CharacterPosition.t,
@@ -83,6 +85,7 @@ let isFocused: model => bool;
 
 let sub:
   (
+    ~config: Oni_Core.Config.resolver,
     ~isInsertMode: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
     ~activePosition: CharacterPosition.t,
@@ -91,6 +94,26 @@ let sub:
     model
   ) =>
   Isolinear.Sub.t(msg);
+
+module CodeLens: {
+  type t;
+
+  let get: (~bufferId: int, model) => list(t);
+
+  let lineNumber: t => int;
+  let uniqueId: t => string;
+
+  module View: {
+    let make:
+      (
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~uiFont: UiFont.t,
+        ~codeLens: t,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
 
 module Completion: {
   let isActive: model => bool;

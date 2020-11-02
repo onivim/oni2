@@ -14,11 +14,16 @@ type t = {
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
-  overriddenExtensionsDir: option(string),
-  shouldClose: bool,
+  overriddenExtensionsDir: option(Fp.t(Fp.absolute)),
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,
   shouldSyntaxHighlight: bool,
+  attachToForeground: bool,
+  logLevel: option(Timber.Level.t),
+  logFile: option(string),
+  logFilter: option(string),
+  logColorsEnabled: option(bool),
+  needsConsole: bool,
 };
 
 type eff =
@@ -70,19 +75,24 @@ let filterPsnArgument = args => {
   args |> Array.to_list |> List.filter(f) |> Array.of_list;
 };
 
-let parse = args => {
+let parse = (~getenv: string => option(string), args) => {
   let sysArgs = args |> filterPsnArgument;
 
   let additionalArgs: ref(list(string)) = ref([]);
 
   let scaleFactor = ref(None);
   let extensionsDir = ref(None);
-  let shouldClose = ref(false);
   let eff = ref(Run);
 
   let shouldLoadExtensions = ref(true);
   let shouldLoadConfiguration = ref(true);
   let shouldSyntaxHighlight = ref(true);
+
+  let attachToForeground = ref(false);
+  let logLevel = ref(None);
+  let logFile = ref(None);
+  let logFilter = ref(None);
+  let logColorsEnabled = ref(None);
 
   let gpuAcceleration = ref(`Auto);
 
@@ -104,24 +114,36 @@ let parse = args => {
   let disableLoadConfiguration = () => shouldLoadConfiguration := false;
   let disableSyntaxHighlight = () => shouldSyntaxHighlight := false;
 
+  let setAttached = () => {
+    attachToForeground := true;
+    logLevel := Some(Timber.Level.info);
+  };
+
+  getenv("ONI2_LOG_FILE") |> Option.iter(v => logFile := Some(v));
+
+  getenv("ONI2_DEBUG")
+  |> Option.iter(_ => logLevel := Some(Timber.Level.debug));
+
+  getenv("ONI2_LOG_FILTER") |> Option.iter(v => logFilter := Some(v));
+
   Arg.parse_argv(
     ~current=ref(0),
     sysArgs,
     [
-      ("-f", Unit(Timber.App.enable), ""),
-      ("--nofork", Unit(Timber.App.enable), ""),
-      ("--debug", Unit(CoreLog.enableDebug), ""),
-      ("--trace", Unit(CoreLog.enableTrace), ""),
-      ("--quiet", Unit(CoreLog.enableQuiet), ""),
-      ("--silent", Unit(Timber.App.disable), ""),
+      ("-f", Unit(setAttached), ""),
+      ("--nofork", Unit(setAttached), ""),
+      ("--debug", Unit(() => logLevel := Some(Timber.Level.debug)), ""),
+      ("--trace", Unit(() => logLevel := Some(Timber.Level.trace)), ""),
+      ("--quiet", Unit(() => logLevel := Some(Timber.Level.warn)), ""),
+      ("--silent", Unit(() => logLevel := None), ""),
       ("--version", setEffect(PrintVersion), ""),
-      ("--no-log-colors", Unit(Timber.App.disableColors), ""),
+      ("--no-log-colors", Unit(() => logColorsEnabled := Some(false)), ""),
       ("--disable-extensions", Unit(disableExtensionLoading), ""),
       ("--disable-configuration", Unit(disableLoadConfiguration), ""),
       ("--disable-syntax-highlighting", Unit(disableSyntaxHighlight), ""),
       ("--gpu-acceleration", String(setGpuAcceleration), ""),
-      ("--log-file", String(Timber.App.setLogFile), ""),
-      ("--log-filter", String(Timber.App.setNamespaceFilter), ""),
+      ("--log-file", String(str => logFile := Some(str)), ""),
+      ("--log-filter", String(str => logFilter := Some(str)), ""),
       ("--checkhealth", setEffect(CheckHealth), ""),
       ("--list-extensions", setEffect(ListExtensions), ""),
       ("--install-extension", setStringEffect(s => InstallExtension(s)), ""),
@@ -156,11 +178,17 @@ let parse = args => {
     "",
   );
 
-  let needsConsole = eff^ != Run;
-  if (Timber.App.isEnabled() || needsConsole) {
-    /* On Windows, we need to create a console instance if possible */
-    Revery.App.initConsole();
-  };
+  let shouldAlwaysAllocateConsole =
+    switch (eff^) {
+    | Run => false
+    | StartSyntaxServer(_) => false
+    | _ => true
+    };
+
+  let needsConsole =
+    Option.is_some(logLevel^)
+    && attachToForeground^
+    || shouldAlwaysAllocateConsole;
 
   let paths = additionalArgs^ |> List.rev;
 
@@ -232,12 +260,20 @@ let parse = args => {
     filesToOpen,
     forceScaleFactor: scaleFactor^,
     gpuAcceleration: gpuAcceleration^,
-    overriddenExtensionsDir: extensionsDir^,
-    shouldClose: shouldClose^,
+    overriddenExtensionsDir:
+      extensionsDir^ |> Utility.OptionEx.flatMap(Fp.absoluteCurrentPlatform),
     shouldLoadExtensions: shouldLoadExtensions^,
     shouldLoadConfiguration: shouldLoadConfiguration^,
     shouldSyntaxHighlight: shouldSyntaxHighlight^,
+    attachToForeground: attachToForeground^,
+    logLevel: logLevel^,
+    logFile: logFile^,
+    logFilter: logFilter^,
+    logColorsEnabled: logColorsEnabled^,
+    needsConsole,
   };
 
   (cli, eff^);
 };
+
+let default = fst(parse(~getenv=_ => None, [||]));

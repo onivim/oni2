@@ -58,8 +58,8 @@ type msg =
       editorID: int,
     })
   | HoverRequestFailed(string)
-  | MouseHovered(EditorCoreTypes.CharacterPosition.t)
-  | MouseMoved(EditorCoreTypes.CharacterPosition.t);
+  | MouseHovered(option(EditorCoreTypes.CharacterPosition.t))
+  | MouseMoved(option(EditorCoreTypes.CharacterPosition.t));
 
 type outmsg =
   | Nothing
@@ -134,9 +134,8 @@ let update =
 
     | _ => (model, Nothing)
     }
-  | MouseHovered(location) =>
-    switch (maybeBuffer) {
-    | Some(buffer) =>
+  | MouseHovered(maybeLocation) =>
+    let requestNewHover = (buffer, location) => {
       let requestID = IDGenerator.get();
       let effects =
         getEffectsForLocation(
@@ -156,12 +155,22 @@ let update =
         },
         Effect(effects),
       );
+    };
+    switch (maybeBuffer) {
+    | Some(buffer) =>
+      switch (maybeLocation, model.range) {
+      | (Some(location), None) => requestNewHover(buffer, location)
+      | (Some(location), Some(range))
+          when !EditorCoreTypes.CharacterRange.contains(location, range) =>
+        requestNewHover(buffer, location)
+      | _ => (model, Nothing)
+      }
     | _ => (model, Nothing)
-    }
-  | MouseMoved(location) =>
+    };
+  | MouseMoved(maybeLocation) =>
     let newModel =
-      switch (model.range) {
-      | Some(range) =>
+      switch (model.range, maybeLocation) {
+      | (Some(range), Some(location)) =>
         if (EditorCoreTypes.CharacterRange.contains(location, range)) {
           model;
         } else {
@@ -174,7 +183,7 @@ let update =
           };
         }
 
-      | None => {
+      | _ => {
           ...model,
           shown: false,
           range: None,

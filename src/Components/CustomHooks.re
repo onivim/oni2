@@ -6,6 +6,7 @@ let colorTransition =
       ~duration=Time.seconds(1),
       ~delay as delayDuration=Time.zero,
       ~easing=Easing.linear,
+      ~name,
       target,
     ) => {
   let%hook ((start, stop), setTarget) = Hooks.state((target, target));
@@ -21,7 +22,8 @@ let colorTransition =
       |> map(gradient)
     );
 
-  let%hook (current, _animationState, resetTimer) = Hooks.animation(anim);
+  let%hook (current, _animationState, resetTimer) =
+    Hooks.animation(~name, anim);
 
   let%hook () =
     Hooks.effect(
@@ -36,10 +38,10 @@ let colorTransition =
   current;
 };
 
-let useExpiration = (~equals=(==), ~expireAfter, items) => {
+let useExpiration = (~name, ~equals=(==), ~expireAfter, items) => {
   let%hook (active, setActive) = Hooks.state([]);
   let%hook expired = Hooks.ref([]);
-  let%hook (time, _reset) = Hooks.timer(~active=active != [], ());
+  let%hook (time, _reset) = Hooks.timer(~name, ~active=active != [], ());
 
   let (stillActive, freshlyExpired) =
     List.partition(

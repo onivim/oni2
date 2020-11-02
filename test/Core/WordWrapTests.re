@@ -19,7 +19,7 @@ describe("WordWrap", ({describe, _}) =>
       let wrap = WordWrap.fixed(~pixels=threeCharacterWidth, line);
       expect.equal(
         wrap,
-        [{byte: ByteIndex.zero, character: CharacterIndex.zero}],
+        [|{byte: ByteIndex.zero, character: CharacterIndex.zero}|],
       );
     });
     test("ascii line exceeds wrap point", ({expect, _}) => {
@@ -27,10 +27,10 @@ describe("WordWrap", ({describe, _}) =>
       let wrap = WordWrap.fixed(~pixels=threeCharacterWidth, line);
       expect.equal(
         wrap,
-        [
+        [|
           {byte: ByteIndex.zero, character: CharacterIndex.zero},
           {byte: ByteIndex.(zero + 3), character: CharacterIndex.(zero + 3)},
-        ],
+        |],
       );
     });
   })

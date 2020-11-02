@@ -22,7 +22,7 @@ describe("ColorScheme", ({describe, _}) => {
           }),
         );
 
-      let _: Context.t = command("colorscheme");
+      ignore(command("colorscheme"): (Context.t, list(Effect.t)));
 
       expect.equal(colorSchemeSets^, [None]);
 
@@ -40,7 +40,7 @@ describe("ColorScheme", ({describe, _}) => {
           }),
         );
 
-      let _: Context.t = command("colorscheme abyss");
+      ignore(command("colorscheme abyss"): (Context.t, list(Effect.t)));
 
       expect.equal(colorSchemeSets^, [Some("abyss")]);
 
@@ -57,7 +57,12 @@ describe("ColorScheme", ({describe, _}) => {
           }),
         );
 
-      let _: Context.t = command("colorscheme Dark (with parentheses)");
+      ignore(
+        command("colorscheme Dark (with parentheses)"): (
+                                                         Context.t,
+                                                         list(Effect.t),
+                                                       ),
+      );
 
       expect.equal(colorSchemeSets^, [Some("Dark (with parentheses)")]);
 

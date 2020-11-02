@@ -225,7 +225,11 @@ module View = {
       let%hook () = Hooks.effect(OnMount, () => None);
 
       let%hook (loadingRotation, _animationState, _resetRotation) =
-        Hooks.animation(loadingAnimation, ~active=model.viewState == Waiting);
+        Hooks.animation(
+          ~name="Loading Animation",
+          loadingAnimation,
+          ~active=model.viewState == Waiting,
+        );
 
       switch (model.viewState) {
       | Hidden => React.empty
@@ -384,9 +388,7 @@ module View = {
         switch (model.licenseKey) {
         | Some(_) => React.empty
         | None =>
-          <Components.Clickable
-            onClick
-            style={Styles.Mac.container}>
+          <Components.Clickable onClick style=Styles.Mac.container>
             <FontIcon
               icon=FontAwesome.lockOpen
               color={Colors.TitleBar.inactiveForeground.from(theme)}

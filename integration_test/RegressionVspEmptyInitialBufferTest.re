@@ -27,7 +27,7 @@ runTest(~name="RegressionVspEmpty", (_, wait, _) => {
   });
 
   /* :vsp with no arguments should create a second split w/ same buffer */
-  ignore(Vim.command("vsp"): Vim.Context.t);
+  ignore(Vim.command("vsp"): (Vim.Context.t, list(Vim.Effect.t)));
 
   wait(~name="Wait for split to be created", (state: State.t) => {
     let splitCount =

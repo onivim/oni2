@@ -82,22 +82,22 @@ module Internal = {
       let effect =
         switch (outmsg) {
         | Nothing => Effect.none
-        | MouseHovered({characterPosition, _}) =>
+        | MouseHovered(maybeCharacterPosition) =>
           Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
             dispatch(
               LanguageSupport(
                 Feature_LanguageSupport.Msg.Hover.mouseHovered(
-                  characterPosition,
+                  maybeCharacterPosition,
                 ),
               ),
             )
           })
-        | MouseMoved({characterPosition, _}) =>
+        | MouseMoved(maybeCharacterPosition) =>
           Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
             dispatch(
               LanguageSupport(
                 Feature_LanguageSupport.Msg.Hover.mouseMoved(
-                  characterPosition,
+                  maybeCharacterPosition,
                 ),
               ),
             )
@@ -132,6 +132,29 @@ module Internal = {
     | Editor(editorId) => updateEditor(~editorId, ~msg, layout)
     };
   };
+
+  let updateConfiguration: State.t => State.t =
+    state => {
+      let resolver = Selectors.configResolver(state);
+      let sideBar =
+        state.sideBar
+        |> Feature_SideBar.configurationChanged(~config=resolver);
+
+      let perFileTypeConfig =
+        Feature_Configuration.resolver(state.config, state.vim);
+
+      let layout =
+        Feature_Layout.map(
+          editor => {
+            Feature_Editor.Editor.configurationChanged(
+              ~perFileTypeConfig,
+              editor,
+            )
+          },
+          state.layout,
+        );
+      {...state, sideBar, layout};
+    };
 };
 
 // UPDATE
@@ -339,8 +362,11 @@ let update =
     let characterSelection =
       editor |> Feature_Editor.Editor.byteRangeToCharacterRange(selection);
 
+    let config = Selectors.configResolver(state);
+
     let (languageSupport, outmsg) =
       Feature_LanguageSupport.update(
+        ~config,
         ~languageConfiguration,
         ~configuration=state.configuration,
         ~maybeBuffer,
@@ -360,10 +386,10 @@ let update =
       | ApplyCompletion({insertText, meetColumn}) => (
           state,
           Service_Vim.Effects.applyCompletion(
-            ~meetColumn, ~insertText, ~toMsg=cursors =>
+            ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
-              msg: CursorsChanged(cursors),
+              msg: ModeChanged({mode, effects: []}),
             })
           ),
         )
@@ -385,10 +411,10 @@ let update =
         (
           state,
           Service_Vim.Effects.applyCompletion(
-            ~meetColumn, ~insertText, ~toMsg=cursors =>
+            ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
-              msg: CursorsChanged(cursors),
+              msg: ModeChanged({mode, effects: []}),
             })
           ),
         );
@@ -410,6 +436,23 @@ let update =
         )
       }
     );
+
+  | Logging(msg) =>
+    let (model, outmsg) = Feature_Logging.update(msg, state.logging);
+    let state' = {...state, logging: model};
+
+    let eff =
+      Feature_Logging.(
+        {
+          switch (outmsg) {
+          | Effect(eff) =>
+            eff |> Isolinear.Effect.map(msg => Actions.Logging(msg))
+          | ShowInfoNotification(msg) =>
+            Internal.notificationEffect(~kind=Info, msg)
+          };
+        }
+      );
+    (state', eff);
 
   | Messages(msg) =>
     let (model, outmsg) = Feature_Messages.update(msg, state.messages);
@@ -548,7 +591,13 @@ let update =
     };
 
   | SideBar(msg) =>
-    let (sideBar', outmsg) = Feature_SideBar.update(msg, state.sideBar);
+    let isFocused =
+      FocusManager.current(state) == Focus.SCM
+      || FocusManager.current(state) == Focus.Search
+      || FocusManager.current(state) == Focus.FileExplorer
+      || FocusManager.current(state) == Focus.Extensions;
+    let (sideBar', outmsg) =
+      Feature_SideBar.update(~isFocused, msg, state.sideBar);
     let state = {...state, sideBar: sideBar'};
 
     switch (outmsg) {
@@ -700,8 +749,8 @@ let update =
       let editor' =
         position
         |> Option.map(cursorPosition => {
-             Feature_Editor.Editor.setCursors(
-               ~cursors=[cursorPosition],
+             Feature_Editor.Editor.setMode(
+               Vim.Mode.Normal({cursor: cursorPosition}),
                editor,
              )
            })
@@ -867,11 +916,6 @@ let update =
     let state = {...state, config};
     switch (outmsg) {
     | ConfigurationChanged({changed}) =>
-      let resolver = Selectors.configResolver(state);
-      let sideBar =
-        state.sideBar
-        |> Feature_SideBar.configurationChanged(~config=resolver);
-
       let eff =
         Isolinear.Effect.create(
           ~name="features.configuration$acceptConfigurationChanged", () => {
@@ -888,7 +932,7 @@ let update =
             extHostClient,
           );
         });
-      ({...state, sideBar}, eff);
+      (state |> Internal.updateConfiguration, eff);
     | Nothing => (state, Effect.none)
     };
 
@@ -937,6 +981,7 @@ let update =
 
       | _ => None
       };
+
     let (model, outmsg) = update(~focus, state.layout, msg);
     let state = {...state, layout: model};
 
@@ -1121,7 +1166,7 @@ let update =
     (state, eff);
 
   // TODO: Merge into Editor(...) update
-  | Editor({scope, msg: CursorsChanged(_) as msg}) =>
+  | Editor({scope, msg: ModeChanged(_) as msg}) =>
     let prevCursor =
       state.layout
       |> Feature_Layout.activeEditor
@@ -1294,7 +1339,18 @@ let update =
                state.syntaxHighlights,
              );
            let config = Selectors.configResolver(state);
+
+           let languageConfiguration =
+             buffer
+             |> Oni_Core.Buffer.getFileType
+             |> Oni_Core.Buffer.FileType.toString
+             |> Exthost.LanguageInfo.getLanguageConfiguration(
+                  state.languageInfo,
+                )
+             |> Option.value(~default=LanguageConfiguration.default);
+
            Feature_LanguageSupport.bufferUpdated(
+             ~languageConfiguration,
              ~buffer,
              ~config,
              ~activeCursor,
@@ -1377,7 +1433,7 @@ let update =
     };
 
   | Vim(msg) =>
-    let wasInInsertMode = Feature_Vim.mode(state.vim) == Vim.Mode.Insert;
+    let wasInInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state.vim));
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
     let state = {...state, vim};
 
@@ -1385,7 +1441,11 @@ let update =
       switch (outmsg) {
       | Nothing => (state, Isolinear.Effect.none)
       | Effect(e) => (state, e)
-      | CursorsUpdated(cursors) =>
+      | SettingsChanged => (
+          state |> Internal.updateConfiguration,
+          Isolinear.Effect.none,
+        )
+      | ModeUpdated(mode) =>
         open Feature_Editor;
         let activeEditorId =
           state.layout |> Feature_Layout.activeEditor |> Editor.getId;
@@ -1394,7 +1454,7 @@ let update =
           state.layout
           |> Feature_Layout.map(editor =>
                if (Editor.getId(editor) == activeEditorId) {
-                 Editor.setCursors(~cursors, editor);
+                 Editor.setMode(mode, editor);
                } else {
                  editor;
                }
@@ -1402,7 +1462,7 @@ let update =
         ({...state, layout: layout'}, Isolinear.Effect.none);
       };
 
-    let isInInsertMode = Feature_Vim.mode(state'.vim) == Vim.Mode.Insert;
+    let isInInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state'.vim));
 
     // Entered insert mode
     let languageSupport =

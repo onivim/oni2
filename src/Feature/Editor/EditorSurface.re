@@ -79,7 +79,6 @@ let minimap =
       ~editor,
       ~diffMarkers,
       ~diagnosticsMap,
-      ~bufferWidthInCharacters,
       ~minimapWidthInPixels,
       ~languageSupport,
       (),
@@ -120,8 +119,7 @@ let minimap =
         ~colors,
         ~matchingPairs,
         ~bufferSyntaxHighlights,
-        0,
-        bufferWidthInCharacters,
+        ~scrollX=0.,
       )}
       selection=selectionRanges
       showSlider=showMinimapSlider
@@ -157,7 +155,6 @@ let%component make =
                 ~bufferSyntaxHighlights,
                 ~diagnostics,
                 ~tokenTheme,
-                ~onCursorChange,
                 ~languageSupport,
                 ~scm,
                 ~windowIsFocused,
@@ -217,20 +214,12 @@ let%component make =
 
   let editorFont = Editor.font(editor);
 
-  let topVisibleLine = Editor.getTopVisibleLine(editor);
-  let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
-
   let cursorPosition = Editor.getPrimaryCursor(editor);
 
-  let layout =
-    Editor.getLayout(
-      ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
-      ~maxMinimapCharacters=Config.Minimap.maxColumn.get(config),
-      editor,
-    );
+  let layout = Editor.getLayout(editor);
 
   let matchingPairCheckPosition =
-    mode == Vim.Mode.Insert
+    Vim.Mode.isInsert(mode)
       ? CharacterPosition.{
           line: cursorPosition.line,
           character: CharacterIndex.(cursorPosition.character - 1),
@@ -264,6 +253,7 @@ let%component make =
 
   let%hook (scrollY, _setScrollYImmediately) =
     Hooks.spring(
+      ~name="Editor ScrollY Spring",
       ~target=Editor.scrollY(editor),
       ~restThreshold=10.,
       ~enabled=smoothScroll && isScrollAnimated,
@@ -271,6 +261,7 @@ let%component make =
     );
   let%hook (scrollX, _setScrollXImmediately) =
     Hooks.spring(
+      ~name="Editor ScrollX Spring",
       ~target=Editor.scrollX(editor),
       ~restThreshold=10.,
       ~enabled=smoothScroll && isScrollAnimated,
@@ -288,7 +279,7 @@ let%component make =
     <GutterView
       editor
       showScrollShadow={Config.scrollShadow.get(config)}
-      showLineNumbers={Config.lineNumbers.get(config)}
+      showLineNumbers={Editor.lineNumbers(editor)}
       height=pixelHeight
       colors
       count=lineCount
@@ -354,8 +345,6 @@ let%component make =
       editor
       colors
       dispatch
-      topVisibleLine
-      onCursorChange
       cursorPosition
       editorFont
       diagnosticsMap
@@ -366,7 +355,6 @@ let%component make =
       languageSupport
       languageConfiguration
       bufferSyntaxHighlights
-      bottomVisibleLine
       mode
       isActiveSplit
       gutterWidth
@@ -389,7 +377,6 @@ let%component make =
            selectionRanges
            showMinimapSlider={Config.Minimap.showSlider.get(config)}
            diffMarkers
-           bufferWidthInCharacters={layout.bufferWidthInCharacters}
            minimapWidthInPixels={layout.minimapWidthInPixels}
            languageSupport
          />
