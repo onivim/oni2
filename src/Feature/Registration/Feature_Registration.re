@@ -21,8 +21,8 @@ type model = {
 let initialInputModel =
   Component_InputText.create(~placeholder="Enter your license key");
 
-let initial = {
-  licenseKey: None,
+let initial = licenseKey => {
+  licenseKey,
   viewState: Hidden,
   inputModel: initialInputModel,
 };
@@ -222,8 +222,6 @@ module View = {
                     ~dispatch: msg => unit,
                     (),
                   ) => {
-      let%hook () = Hooks.effect(OnMount, () => None);
-
       let%hook (loadingRotation, _animationState, _resetRotation) =
         Hooks.animation(
           ~name="Loading Animation",

@@ -89,6 +89,7 @@ let initial =
       ~contributedCommands,
       ~workingDirectory,
       ~extensionsFolder,
+      ~licenseKeyPersistence,
     ) => {
   let config =
     Feature_Configuration.initial(
@@ -185,6 +186,6 @@ let initial =
     textContentProviders: [],
     vim: Feature_Vim.initial,
     autoUpdate: Feature_AutoUpdate.initial,
-    registration: Feature_Registration.initial,
+    registration: Feature_Registration.initial(licenseKeyPersistence),
   };
 };
