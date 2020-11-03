@@ -39,12 +39,12 @@ let shouldAddComment = (~lineComment, lines) => {
   );
 };
 
-let addComment = (~lineComment, line) =>
+let addComment = (~idxToAppend, ~lineComment, line) =>
   if (hasLeadingComment(~lineComment, line) || StringEx.isEmpty(line)) {
     line;
   } else {
-    let idxToAppend =
-      StringEx.findNonWhitespace(line) |> Option.value(~default=0);
+    //    let idxToAppend =
+    //      StringEx.findNonWhitespace(line) |> Option.value(~default=0);
 
     let (leadingWhitespace, after) =
       if (idxToAppend > 0) {
@@ -113,7 +113,26 @@ let%test_module "removeComment" =
 
 let toggle = (~lineComment, lines) =>
   if (shouldAddComment(~lineComment, lines)) {
-    Array.map(addComment(~lineComment=lineComment ++ " "), lines);
+    // Find the minimum index to add comments
+    let maybeIdx =
+      Array.fold_left(
+        (acc, cur) => {
+          let currIdx = StringEx.findNonWhitespace(cur);
+          switch (currIdx, acc) {
+          | (Some(v), None) => Some(v)
+          | (Some(v), Some(prev)) when v < prev => Some(v)
+          | (_, Some(_) as prev) => prev
+          | (None, None) => None
+          };
+        },
+        None,
+        lines,
+      );
+    let idxToAppend = maybeIdx |> Option.value(~default=0);
+    Array.map(
+      addComment(~idxToAppend, ~lineComment=lineComment ++ " "),
+      lines,
+    );
   } else {
     Array.map(removeComment(~lineComment=lineComment ++ " "), lines);
   };
@@ -129,5 +148,9 @@ let%test_module "toggle" =
      };
      let%test "mixed comments -> comments" = {
        toggle(~lineComment="#", [|"# a", "b"|]) == [|"# a", "# b"|];
+     };
+     let%test "varying whitespace" = {
+       toggle(~lineComment="#", [|"a", " b", "  c"|])
+       == [|"# a", "#  b", "#   c"|];
      };
    });
