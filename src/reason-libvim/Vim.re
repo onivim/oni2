@@ -483,14 +483,13 @@ let _onMacroStopRecording = (register: char, value: option(string)) => {
   });
 };
 
-let _onToggleComments = (buf: Buffer.t, 
-startLine: int, 
-endLine: int) => {
+let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
   // TODO
   let count = endLine - startLine + 1;
-  let currentLines = Array.init(count, i => {
-      Buffer.getLine(buf, LineNumber.ofOneBased(startLine + i));
-  });
+  let currentLines =
+    Array.init(count, i => {
+      Buffer.getLine(buf, LineNumber.ofOneBased(startLine + i))
+    });
 
   GlobalState.toggleComments^
   |> Option.map(f => f(currentLines))
@@ -528,10 +527,7 @@ let init = () => {
     "lv_onCursorMoveScreenPosition",
     _onCursorMoveScreenPosition,
   );
-  Callback.register(
-    "lv_onToggleComments",
-    _onToggleComments
-  );
+  Callback.register("lv_onToggleComments", _onToggleComments);
 
   Native.vimInit();
 

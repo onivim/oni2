@@ -102,10 +102,11 @@ let current = (state: State.t) => {
   // Set configured line comment
   let lineComment = Internal.lineComment(~maybeLanguageConfig);
 
-  let toggleComments = switch(lineComment) {
-  | None => lines => lines
-  | Some(lineComment) => Comments.toggle(~lineComment)
-  };
+  let toggleComments =
+    switch (lineComment) {
+    | None => (lines => lines)
+    | Some(lineComment) => Comments.toggle(~lineComment)
+    };
   let indentation = Internal.indentation(~buffer=editorBuffer);
 
   let insertSpaces = indentation.mode == Spaces;

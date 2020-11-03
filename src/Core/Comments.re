@@ -32,7 +32,11 @@ let%test_module "hasLeadingComment" =
    });
 
 let shouldAddComment = (~lineComment, lines) => {
-  Array.exists(line => !isEmpty(line) && !hasLeadingComment(~lineComment, line), lines);
+  Array.exists(
+    line =>
+      !StringEx.isEmpty(line) && !hasLeadingComment(~lineComment, line),
+    lines,
+  );
 };
 
 let addComment = (~lineComment, line) =>
@@ -45,13 +49,14 @@ let addComment = (~lineComment, line) =>
     let (leadingWhitespace, after) =
       if (idxToAppend > 0) {
         let whitespace = String.sub(line, 0, idxToAppend);
-        let after = String.sub(line, idxToAppend, String.length(line) - idxToAppend);
-        (whitespace, after)
+        let after =
+          String.sub(line, idxToAppend, String.length(line) - idxToAppend);
+        (whitespace, after);
       } else {
         ("", line);
       };
 
-      leadingWhitespace ++ lineComment ++ after
+    leadingWhitespace ++ lineComment ++ after;
   };
 
 let removeComment = (~lineComment, line) =>
