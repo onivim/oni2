@@ -9,8 +9,6 @@ open Oni_Core;
 open Oni_Input;
 open Oni_Syntax;
 
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-
 [@deriving show({with_path: false})]
 type t =
   | Init
@@ -75,7 +73,6 @@ type t =
     })
   | FilesDropped({paths: list(string)})
   | FileExplorer(Feature_Explorer.msg)
-  | LanguageFeature(LanguageFeatures.action)
   | LanguageSupport(Feature_LanguageSupport.msg)
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)

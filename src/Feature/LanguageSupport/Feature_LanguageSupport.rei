@@ -201,4 +201,3 @@ module DocumentHighlights: {
 
 // TODO: Remove
 module CompletionMeet = CompletionMeet;
-module LanguageFeatures = LanguageFeatures;
