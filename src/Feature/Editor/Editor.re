@@ -108,6 +108,7 @@ type t = {
   // The last mouse position, in screen coordinates
   lastMouseScreenPosition: option(PixelPosition.t),
   lastMouseMoveTime: [@opaque] option(Revery.Time.t),
+  lastMouseUpTime: [@opaque] option(Revery.Time.t),
 };
 
 let key = ({key, _}) => key;
@@ -425,6 +426,7 @@ let create = (~config, ~buffer, ()) => {
     hasMouseEntered: false,
     lastMouseMoveTime: None,
     lastMouseScreenPosition: None,
+    lastMouseUpTime: None,
   }
   |> configure(~config);
 };
@@ -1171,7 +1173,7 @@ let mouseDown = (~time, ~pixelX, ~pixelY, editor) => {
 };
 
 let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
-  ignore(time);
+  // ignore(time);
 
   let isInsertMode = Vim.Mode.isInsert(editor.mode);
   let bytePosition =
