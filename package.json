@@ -256,7 +256,6 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "libvim": "link:../libvim/src",
     "revery": "revery-ui/revery#4d2dae6",
     "esy-skia": "revery-ui/esy-skia#60e0260",
     "rench": "bryphe/rench#a976fe5",
