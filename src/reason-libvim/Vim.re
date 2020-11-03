@@ -577,12 +577,18 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
                        position.byte,
                        autoClosingPairs,
                      )) {
+            // Join undo
+            Native.vimKey("<C-g>");
+            Native.vimKey("U");
             Native.vimKey("<RIGHT>");
           } else if (AutoClosingPairs.isOpeningPair(v, autoClosingPairs)
                      && canCloseBefore()) {
             let pair = AutoClosingPairs.getByOpeningPair(v, autoClosingPairs);
             Native.vimInput(v);
             Native.vimInput(pair.closing);
+            // Join undo
+            Native.vimKey("<C-g>");
+            Native.vimKey("U");
             Native.vimKey("<LEFT>");
           } else {
             inputFn(v);
