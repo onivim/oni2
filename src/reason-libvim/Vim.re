@@ -484,7 +484,6 @@ let _onMacroStopRecording = (register: char, value: option(string)) => {
 };
 
 let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
-  // TODO
   let count = endLine - startLine + 1;
   let currentLines =
     Array.init(count, i => {

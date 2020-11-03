@@ -43,9 +43,6 @@ let addComment = (~idxToAppend, ~lineComment, line) =>
   if (hasLeadingComment(~lineComment, line) || StringEx.isEmpty(line)) {
     line;
   } else {
-    //    let idxToAppend =
-    //      StringEx.findNonWhitespace(line) |> Option.value(~default=0);
-
     let (leadingWhitespace, after) =
       if (idxToAppend > 0) {
         let whitespace = String.sub(line, 0, idxToAppend);
