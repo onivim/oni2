@@ -150,6 +150,7 @@ let runTest =
         ~extensionsFolder=None,
         ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
         ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
+        ~licenseKeyPersistence=None,
       ),
     );
 
