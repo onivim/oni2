@@ -177,6 +177,7 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.viewLineMotion := Some(context.viewLineMotion);
   GlobalState.screenPositionMotion := Some(context.screenCursorMotion);
   GlobalState.effects := [];
+  GlobalState.toggleComments := Some(context.toggleComments);
 
   let mode = f();
 
@@ -184,6 +185,7 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
   GlobalState.viewLineMotion := None;
   GlobalState.screenPositionMotion := None;
+  GlobalState.toggleComments := None;
 
   let newBuf = Buffer.getCurrent();
   let newMode = Mode.current();
@@ -490,8 +492,9 @@ endLine: int) => {
       Buffer.getLine(buf, LineNumber.ofOneBased(startLine + i));
   });
 
-  currentLines
-  |> Array.map(line => "### " ++ line);
+  GlobalState.toggleComments^
+  |> Option.map(f => f(currentLines))
+  |> Option.value(~default=currentLines);
 };
 
 let init = () => {

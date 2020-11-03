@@ -32,14 +32,26 @@ let%test_module "hasLeadingComment" =
    });
 
 let shouldAddComment = (~lineComment, lines) => {
-  !Array.exists(hasLeadingComment(~lineComment), lines);
+  Array.exists(line => !isEmpty(line) && !hasLeadingComment(~lineComment, line), lines);
 };
 
 let addComment = (~lineComment, line) =>
-  if (hasLeadingComment(~lineComment, line)) {
+  if (hasLeadingComment(~lineComment, line) || StringEx.isEmpty(line)) {
     line;
   } else {
-    lineComment ++ line;
+    let idxToAppend =
+      StringEx.findNonWhitespace(line) |> Option.value(~default=0);
+
+    let (leadingWhitespace, after) =
+      if (idxToAppend > 0) {
+        let whitespace = String.sub(line, 0, idxToAppend);
+        let after = String.sub(line, idxToAppend, String.length(line) - idxToAppend);
+        (whitespace, after)
+      } else {
+        ("", line);
+      };
+
+      leadingWhitespace ++ lineComment ++ after
   };
 
 let removeComment = (~lineComment, line) =>
@@ -96,21 +108,21 @@ let%test_module "removeComment" =
 
 let toggle = (~lineComment, lines) =>
   if (shouldAddComment(~lineComment, lines)) {
-    Array.map(addComment(~lineComment), lines);
+    Array.map(addComment(~lineComment=lineComment ++ " "), lines);
   } else {
-    Array.map(removeComment(~lineComment), lines);
+    Array.map(removeComment(~lineComment=lineComment ++ " "), lines);
   };
 
 let%test_module "toggle" =
   (module
    {
      let%test "comments -> no comments" = {
-       toggle(~lineComment="#", [|"#a", "#b"|]) == [|"a", "b"|];
+       toggle(~lineComment="#", [|"# a", "# b"|]) == [|"a", "b"|];
      };
      let%test "no comments -> comments" = {
-       toggle(~lineComment="#", [|"a", "b"|]) == [|"#a", "#b"|];
+       toggle(~lineComment="#", [|"a", "b"|]) == [|"# a", "# b"|];
      };
-     let%test "mixed comments -> no comments" = {
-       toggle(~lineComment="#", [|"#a", "b"|]) == [|"a", "b"|];
+     let%test "mixed comments -> comments" = {
+       toggle(~lineComment="#", [|"# a", "b"|]) == [|"# a", "# b"|];
      };
    });
