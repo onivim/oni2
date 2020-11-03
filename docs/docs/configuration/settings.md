@@ -155,8 +155,6 @@ Experimental features are features that we are working to stabilize and turn on-
 
 - `experimental.editor.cursorSmoothCaretAnimation` - __(_bool_ default: `false`)__ - Use an animation for moving the cursor caret.
 
-- `experimental.editor.smoothScroll` - __(_bool_ default: `false`)__ - Use an animation for scrolling the editor surface.
-
 - `experimental.viml` - __(_string|list of string_ default: `[]`)__ - Execute some VimL upon load. Example: `"experimental.viml": ["nnoremap ; :"]`
 
 > __NOTE:__ The full set and scope of VimL compatibility is not currently tested. We are still working to enable test cases in [`libvim`](https://github.com/onivim/libvim/pull/6). Use at your own risk, in the meantime!
