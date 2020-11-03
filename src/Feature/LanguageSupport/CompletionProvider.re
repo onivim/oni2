@@ -106,7 +106,7 @@ module ExthostCompletionProvider =
            |> List.map((previousItem: CompletionItem.t) =>
                 if (previousItem.chainedCacheId == item.chainedCacheId) {
                   CompletionItem.create(
-                    ~isFuzzyMatching,
+                    ~isFuzzyMatching=previousItem.isFuzzyMatching,
                     ~handle=providerHandle,
                     item,
                   );

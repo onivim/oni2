@@ -61,17 +61,13 @@ let update = (msg, model: model) => {
 };
 
 module CommandLine = {
-  let getCompletionMeet = commandLine => {
-    let len = String.length(commandLine);
-
-    if (len == 0) {
+  let getCompletionMeet = commandLine =>
+    if (StringEx.isEmpty(commandLine)) {
       None;
     } else {
-      String.index_opt(commandLine, ' ')
-      |> Option.map(idx => idx + 1)  // Advance past space
+      StringEx.findUnescapedFromEnd(commandLine, ' ')
       |> OptionEx.or_(Some(0));
     };
-  };
 
   let%test "empty command line returns None" = {
     getCompletionMeet("") == None;
@@ -90,7 +86,15 @@ module CommandLine = {
   };
 
   let%test "meet with a path, spaces" = {
-    getCompletionMeet("vsp /path with spaces/") == Some(4);
+    getCompletionMeet("vsp /path\\ with\\ spaces/") == Some(4);
+  };
+
+  let%test "meet multiple paths" = {
+    getCompletionMeet("!cp /path1 /path2") == Some(11);
+  };
+
+  let%test "meet multiple paths with spaces" = {
+    getCompletionMeet("!cp /path\\ 1 /path\\ 2") == Some(13);
   };
 };
 

@@ -1,5 +1,5 @@
 {
-  "checksum": "8c03b53f14b1c0cfa49f91784aeb80b7",
+  "checksum": "57439db1dbe17866bcd1a2b95a3aca47",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -207,7 +207,7 @@
       "overrides": [],
       "dependencies": [
         "refmterr@3.3.2@d41d8cd9", "@reason-native/rely@3.2.1@d41d8cd9",
-        "@reason-native/console@0.0.3@d41d8cd9",
+        "@reason-native/console@0.1.0@d41d8cd9",
         "@opam/lwt@opam:4.5.0@542100aa",
         "@opam/lambda-term@opam:3.1.0@8adc2660",
         "@opam/fpath@opam:0.7.3@674d8125", "@opam/dune@opam:2.5.0@e0bac278",
@@ -228,7 +228,7 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9", "@reason-native/pastel@0.1.0@d41d8cd9",
-        "@reason-native/console@0.0.3@d41d8cd9",
+        "@reason-native/console@0.1.0@d41d8cd9",
         "@opam/re@opam:1.9.0@d4d5e13d", "@opam/dune@opam:2.5.0@e0bac278",
         "@opam/atdgen@opam:2.2.1@d73fda11",
         "@esy-ocaml/reason@3.6.2@d41d8cd9"
@@ -264,22 +264,6 @@
       ],
       "devDependencies": []
     },
-    "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9": {
-      "id": "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
-      "name": "reasonFuzz",
-      "version": "github:CrossR/reasonFuzz#1ad6f5d",
-      "source": {
-        "type": "install",
-        "source": [ "github:CrossR/reasonFuzz#1ad6f5d" ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "reperf@1.5.0@d41d8cd9", "refmterr@3.3.2@d41d8cd9",
-        "ocaml@4.10.0@d41d8cd9", "@reason-native/console@0.0.3@d41d8cd9",
-        "@opam/dune@opam:2.5.0@e0bac278", "@esy-ocaml/reason@3.6.2@d41d8cd9"
-      ],
-      "devDependencies": [ "ocaml@4.10.0@d41d8cd9" ]
-    },
     "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9": {
       "id":
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
@@ -292,6 +276,24 @@
       "overrides": [],
       "dependencies": [
         "ocaml@4.10.0@d41d8cd9",
+        "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
+        "@opam/dune@opam:2.5.0@e0bac278"
+      ],
+      "devDependencies": [ "ocaml@4.10.0@d41d8cd9" ]
+    },
+    "reason-fzy@github:CrossR/reason-fzy#7339d4e@d41d8cd9": {
+      "id": "reason-fzy@github:CrossR/reason-fzy#7339d4e@d41d8cd9",
+      "name": "reason-fzy",
+      "version": "github:CrossR/reason-fzy#7339d4e",
+      "source": {
+        "type": "install",
+        "source": [ "github:CrossR/reason-fzy#7339d4e" ]
+      },
+      "overrides": [],
+      "dependencies": [
+        "refmterr@3.3.2@d41d8cd9", "ocaml@4.10.0@d41d8cd9",
+        "esy-fzy@github:CrossR/esy-fzy#8176cee@d41d8cd9",
+        "@opam/reason@opam:3.6.0@58adb39a",
         "@opam/dune-configurator@opam:2.5.1@aeb9d8d5",
         "@opam/dune@opam:2.5.0@e0bac278"
       ],
@@ -805,6 +807,18 @@
       "dependencies": [],
       "devDependencies": []
     },
+    "esy-fzy@github:CrossR/esy-fzy#8176cee@d41d8cd9": {
+      "id": "esy-fzy@github:CrossR/esy-fzy#8176cee@d41d8cd9",
+      "name": "esy-fzy",
+      "version": "github:CrossR/esy-fzy#8176cee",
+      "source": {
+        "type": "install",
+        "source": [ "github:CrossR/esy-fzy#8176cee" ]
+      },
+      "overrides": [],
+      "dependencies": [],
+      "devDependencies": []
+    },
     "esy-freetype2@2.9.1008@d41d8cd9": {
       "id": "esy-freetype2@2.9.1008@d41d8cd9",
       "name": "esy-freetype2",
@@ -998,8 +1012,8 @@
         "revery@github:revery-ui/revery#4d2dae6@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
-        "reasonFuzz@github:CrossR/reasonFuzz#1ad6f5d@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
+        "reason-fzy@github:CrossR/reason-fzy#7339d4e@d41d8cd9",
         "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.67@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#53fc4eb@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
@@ -1161,14 +1175,14 @@
       ],
       "devDependencies": []
     },
-    "@reason-native/console@0.0.3@d41d8cd9": {
-      "id": "@reason-native/console@0.0.3@d41d8cd9",
+    "@reason-native/console@0.1.0@d41d8cd9": {
+      "id": "@reason-native/console@0.1.0@d41d8cd9",
       "name": "@reason-native/console",
-      "version": "0.0.3",
+      "version": "0.1.0",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/@reason-native/console/-/console-0.0.3.tgz#sha1:b9b6bdf800e13361cfb4daccb540316c3a11ce38"
+          "archive:https://registry.npmjs.org/@reason-native/console/-/console-0.1.0.tgz#sha1:3b56f0e9e1be8464329793df29020aa90e71c22c"
         ]
       },
       "overrides": [],

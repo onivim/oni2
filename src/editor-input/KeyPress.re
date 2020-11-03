@@ -5,6 +5,44 @@ type t = {
   modifiers: Modifiers.t,
 };
 
+let parse = (~getKeycode, ~getScancode, str) => {
+  let parse = lexbuf =>
+    switch (Matcher_parser.keys(Matcher_lexer.token, lexbuf)) {
+    | exception Matcher_lexer.Error => Error("Error parsing binding: " ++ str)
+    | exception (Matcher_lexer.UnrecognizedModifier(m)) =>
+      Error("Unrecognized modifier:" ++ m ++ " in: " ++ str)
+    | exception Matcher_parser.Error =>
+      Error("Error parsing binding: " ++ str)
+    | v => Ok(v)
+    };
+
+  let flatMap = (f, r) => Result.bind(r, f);
+
+  let finish = r => {
+    let f = ((key, mods)) => {
+      switch (getKeycode(key), getScancode(key)) {
+      | (Some(keycode), Some(scancode)) =>
+        Ok({
+          modifiers: Matcher_internal.Helpers.internalModsToMods(mods),
+          scancode,
+          keycode,
+        })
+      | _ => Error("Unrecognized key: " ++ Key.toString(key))
+      };
+    };
+
+    let bindings = r |> List.map(f);
+
+    bindings |> Base.Result.all;
+  };
+
+  str
+  |> String.lowercase_ascii
+  |> Lexing.from_string
+  |> parse
+  |> flatMap(finish);
+};
+
 let toString = (~meta="Meta", ~keyCodeToString, {keycode, modifiers, _}) => {
   let buffer = Buffer.create(16);
   let separator = " + ";

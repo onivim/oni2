@@ -76,7 +76,25 @@ function activate(context) {
     cleanup(
         vscode.languages.registerCompletionItemProvider("oni-dev", {
             provideCompletionItems: (document, position, token, context) => {
-                return [vscode.CompletionItem("ReasonML"), vscode.CompletionItem("OCaml")]
+                return [vscode.CompletionItem("ReasonML1"), vscode.CompletionItem("OCaml1")]
+            },
+        }),
+    )
+
+    // SLOW completion provider
+    cleanup(
+        vscode.languages.registerCompletionItemProvider("oni-dev", {
+            provideCompletionItems: (document, position, token, context) => {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve([
+                        vscode.CompletionItem("ReasonML0"),
+                        vscode.CompletionItem("OCaml0"),
+                        vscode.CompletionItem("ReasonML2"),
+                        vscode.CompletionItem("OCaml2"),
+                        ])
+                    }, 500);
+                });
             },
         }),
     )

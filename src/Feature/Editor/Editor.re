@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Utility;
 
 module GlobalState = {
   let lastId = ref(0);
@@ -101,6 +102,12 @@ type t = {
   // Number of lines to preserve before or after the cursor, when scrolling.
   // Like the `scrolloff` vim setting or the `editor.cursorSurroundingLines` VSCode setting.
   verticalScrollMargin: int,
+  // Mouse state
+  isMouseDown: bool,
+  hasMouseEntered: bool,
+  // The last mouse position, in screen coordinates
+  lastMouseScreenPosition: option(PixelPosition.t),
+  lastMouseMoveTime: [@opaque] option(Revery.Time.t),
 };
 
 let key = ({key, _}) => key;
@@ -301,14 +308,17 @@ let viewTokens = (~line, ~scrollX, ~colorizer, editor) => {
   // However, there may be a scroll applied, and we need to account for
   // shifting the tokens if the scroll position is not exactly aligned to
   // a character.
-  let (startIndexPixel, _width) =
-    BufferLine.getPixelPositionAndWidth(~index=viewStartIndex, bufferLine);
+  let ({x: startIndexPixel, _}: PixelPosition.t, _width) =
+    bufferBytePositionToPixel(
+      ~position=BytePosition.{line: bufferPosition.line, byte: viewStartByte},
+      {...editor, scrollX},
+    );
 
-  let pixelOffset = scrollX -. startIndexPixel;
+  let pixelOffset = startIndexPixel;
 
   tokens
   |> List.map((token: BufferViewTokenizer.t) =>
-       {...token, startPixel: token.startPixel -. pixelOffset}
+       {...token, startPixel: token.startPixel +. pixelOffset}
      );
 };
 
@@ -411,6 +421,10 @@ let create = (~config, ~buffer, ()) => {
     wrapMode,
     wrapPadding: None,
     verticalScrollMargin: 1,
+    isMouseDown: false,
+    hasMouseEntered: false,
+    lastMouseMoveTime: None,
+    lastMouseScreenPosition: None,
   }
   |> configure(~config);
 };
@@ -720,7 +734,7 @@ let exposePrimaryCursor = editor =>
       let scrollOffX = getCharacterWidth(editor) *. 2.;
       let scrollOffY =
         lineHeightInPixels(editor)
-        *. float(max(editor.verticalScrollMargin, 1));
+        *. float(max(editor.verticalScrollMargin, 0));
 
       let availableX = pixelWidth -. scrollOffX;
       let availableY = pixelHeight -. scrollOffY;
@@ -742,7 +756,7 @@ let exposePrimaryCursor = editor =>
           if (pixelY < scrollOffY) {
             scrollY -. scrollOffY +. pixelY;
           } else if (pixelY >= availableY) {
-            scrollY +. (pixelY -. availableY);
+            scrollY +. (pixelY -. availableY +. lineHeightInPixels(editor));
           } else {
             scrollY;
           },
@@ -1100,11 +1114,6 @@ module Slow = {
     let totalLinesInBuffer = EditorBuffer.numberOfLines(view.buffer);
 
     let lineIdx = EditorCoreTypes.LineNumber.toZeroBased(line);
-    //      if (rawLine >= totalLinesInBuffer) {
-    //        max(0, totalLinesInBuffer - 1);
-    //      } else {
-    //        rawLine;
-    //      };
 
     if (lineIdx >= 0 && lineIdx < totalLinesInBuffer) {
       let bufferLine = EditorBuffer.line(lineIdx, view.buffer);
@@ -1152,4 +1161,86 @@ let moveScreenLines = (~position, ~count, editor) => {
     ~pixelY=y +. deltaY,
     editor,
   );
+};
+
+let mouseDown = (~time, ~pixelX, ~pixelY, editor) => {
+  ignore(time);
+  ignore(pixelX);
+  ignore(pixelY);
+  {...editor, isMouseDown: true};
+};
+
+let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
+  ignore(time);
+
+  let isInsertMode = Vim.Mode.isInsert(editor.mode);
+  let bytePosition =
+    Slow.pixelPositionToBytePosition(
+      // #2463: When we're insert mode, clicking past the end of the line
+      // should move the cursor past the last byte
+      ~allowPast=isInsertMode,
+      ~pixelX,
+      ~pixelY,
+      editor,
+    );
+  let mode =
+    if (Vim.Mode.isInsert(editor.mode)) {
+      Vim.Mode.Insert({cursors: [bytePosition]});
+    } else {
+      Vim.Mode.Normal({cursor: bytePosition});
+    };
+  {...editor, isMouseDown: false, mode};
+};
+
+let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
+  {
+    ...editor,
+    lastMouseMoveTime: Some(time),
+    lastMouseScreenPosition: Some(PixelPosition.{x: pixelX, y: pixelY}),
+  };
+};
+
+let mouseEnter = editor => {
+  ...editor,
+  hasMouseEntered: true,
+  lastMouseMoveTime: None,
+  lastMouseScreenPosition: None,
+};
+let mouseLeave = editor => {
+  ...editor,
+  hasMouseEntered: false,
+  isMouseDown: false,
+  lastMouseMoveTime: None,
+  lastMouseScreenPosition: None,
+};
+
+let hasMouseEntered = ({hasMouseEntered, _}) => hasMouseEntered;
+
+let isMouseDown = ({isMouseDown, _}) => isMouseDown;
+
+let lastMouseMoveTime = ({lastMouseMoveTime, _}) => lastMouseMoveTime;
+
+let getCharacterUnderMouse = editor => {
+  editor.lastMouseScreenPosition
+  |> OptionEx.flatMap((mousePosition: PixelPosition.t) => {
+       let bytePosition: BytePosition.t =
+         Slow.pixelPositionToBytePosition(
+           ~allowPast=true,
+           ~pixelX=mousePosition.x,
+           ~pixelY=mousePosition.y,
+           editor,
+         );
+
+       let bufferLine =
+         EditorBuffer.line(
+           EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line),
+           editor.buffer,
+         );
+       if (BufferLine.lengthInBytes(bufferLine)
+           > ByteIndex.toInt(bytePosition.byte)) {
+         byteToCharacter(bytePosition, editor);
+       } else {
+         None;
+       };
+     });
 };
