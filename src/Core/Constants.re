@@ -53,3 +53,5 @@ let notificationWidth = 300;
  * We'll switch to a native strategy, and bump this up.
  */
 let largeFileLineCountThreshold = 1000;
+
+let doubleClickTime = Revery.Time.milliseconds(500);
