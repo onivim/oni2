@@ -4,8 +4,6 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-
 let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
