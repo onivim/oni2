@@ -167,8 +167,6 @@ let runWith = (~context: Context.t, f) => {
   Options.setTabSize(context.tabSize);
   Options.setInsertSpaces(context.insertSpaces);
 
-  context.lineComment |> Option.iter(Options.setLineComment);
-
   let oldBuf = Buffer.getCurrent();
   let prevMode = Mode.trySet(context.mode);
   let prevModified = Buffer.isModified(oldBuf);
@@ -179,6 +177,7 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.viewLineMotion := Some(context.viewLineMotion);
   GlobalState.screenPositionMotion := Some(context.screenCursorMotion);
   GlobalState.effects := [];
+  GlobalState.toggleComments := Some(context.toggleComments);
 
   let mode = f();
 
@@ -186,6 +185,7 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
   GlobalState.viewLineMotion := None;
   GlobalState.screenPositionMotion := None;
+  GlobalState.toggleComments := None;
 
   let newBuf = Buffer.getCurrent();
   let newMode = Mode.current();
@@ -483,6 +483,18 @@ let _onMacroStopRecording = (register: char, value: option(string)) => {
   });
 };
 
+let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
+  let count = endLine - startLine + 1;
+  let currentLines =
+    Array.init(count, i => {
+      Buffer.getLine(buf, LineNumber.ofOneBased(startLine + i))
+    });
+
+  GlobalState.toggleComments^
+  |> Option.map(f => f(currentLines))
+  |> Option.value(~default=currentLines);
+};
+
 let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);
   Callback.register("lv_onBufferChanged", _onBufferChanged);
@@ -514,6 +526,7 @@ let init = () => {
     "lv_onCursorMoveScreenPosition",
     _onCursorMoveScreenPosition,
   );
+  Callback.register("lv_onToggleComments", _onToggleComments);
 
   Native.vimInit();
 
