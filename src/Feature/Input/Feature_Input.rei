@@ -19,7 +19,7 @@ module Schema: {
 
   type resolvedKeybinding;
 
-  let resolve: (keybinding) => result(resolvedKeybinding, string);
+  let resolve: keybinding => result(resolvedKeybinding, string);
 };
 
 [@deriving show]
@@ -30,18 +30,19 @@ type model;
 let initial: model;
 
 type effect =
-| Execute(string)
-| Text(string)
-| Unhandled(KeyPress.t)
-| RemapRecursionLimitHit;
+  | Execute(string)
+  | Text(string)
+  | Unhandled(KeyPress.t)
+  | RemapRecursionLimitHit;
 
-let keyDown: (
-~key: KeyPress.t, 
-~context: WhenExpr.ContextKeys.t,
-model) => (model, list(effect));
+let keyDown:
+  (~key: KeyPress.t, ~context: WhenExpr.ContextKeys.t, model) =>
+  (model, list(effect));
 
 let text: (~text: string, model) => (model, list(effect));
-let keyUp: (~key: KeyPress.t, ~context: WhenExpr.ContextKeys.t, model) => (model, list(effect));
+let keyUp:
+  (~key: KeyPress.t, ~context: WhenExpr.ContextKeys.t, model) =>
+  (model, list(effect));
 
 // UPDATE
 

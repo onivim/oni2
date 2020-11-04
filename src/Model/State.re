@@ -5,7 +5,6 @@
  */
 
 open Oni_Core;
-open Oni_Input;
 open Oni_Syntax;
 
 module KeyDisplayer = Oni_Components.KeyDisplayer;

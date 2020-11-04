@@ -1,4 +1,3 @@
-open Oni_Core;
 open KeyResolver;
 
 // MSG
@@ -32,59 +31,49 @@ module Schema = {
 
   let resolve = ({key, command, condition}) => {
     let evaluateCondition = (whenExpr, contextKeys) => {
-      WhenExpr.evaluate(whenExpr, WhenExpr.ContextKeys.getValue(contextKeys));
+      WhenExpr.evaluate(
+        whenExpr,
+        WhenExpr.ContextKeys.getValue(contextKeys),
+      );
     };
 
-    let maybeMatcher = EditorInput.Matcher.parse(~getKeycode, ~getScancode, key);
-  maybeMatcher
-  |> Stdlib.Result.map(matcher => {
-       {matcher, command, condition: evaluateCondition(condition)};
-     });
-  }
-}
-
-type keybinding = {
-  key: string,
-  command: string,
-  condition: WhenExpr.t,
+    let maybeMatcher =
+      EditorInput.Matcher.parse(~getKeycode, ~getScancode, key);
+    maybeMatcher
+    |> Stdlib.Result.map(matcher => {
+         {matcher, command, condition: evaluateCondition(condition)}
+       });
+  };
 };
 
-type model = {
-  inputStateMachine: InputStateMachine.t,
-};
+type model = {inputStateMachine: InputStateMachine.t};
 
-let initial = {
-  inputStateMachine: InputStateMachine.empty,
-};
+let initial = {inputStateMachine: InputStateMachine.empty};
 
-type effect = InputStateMachine.effect =
-| Execute(string)
-| Text(string)
-| Unhandled(EditorInput.KeyPress.t)
-| RemapRecursionLimitHit;
+type effect =
+  InputStateMachine.effect =
+    | Execute(string)
+    | Text(string)
+    | Unhandled(EditorInput.KeyPress.t)
+    | RemapRecursionLimitHit;
 
 let keyDown = (~key, ~context, {inputStateMachine, _}) => {
-  let (inputStateMachine', effects) = InputStateMachine.keyDown(
-    ~key,
-    ~context,
-  inputStateMachine);
+  let (inputStateMachine', effects) =
+    InputStateMachine.keyDown(~key, ~context, inputStateMachine);
   ({inputStateMachine: inputStateMachine'}, effects);
-}
+};
 
 let text = (~text, {inputStateMachine, _}) => {
-  let (inputStateMachine', effects) = InputStateMachine.text(
-    ~text,
-  inputStateMachine);
+  let (inputStateMachine', effects) =
+    InputStateMachine.text(~text, inputStateMachine);
   ({inputStateMachine: inputStateMachine'}, effects);
-}
+};
 
 let keyUp = (~key, ~context, {inputStateMachine, _}) => {
-  let (inputStateMachine', effects) = InputStateMachine.keyUp(
-    ~key,
-    ~context,
-  inputStateMachine);
+  let (inputStateMachine', effects) =
+    InputStateMachine.keyUp(~key, ~context, inputStateMachine);
   ({inputStateMachine: inputStateMachine'}, effects);
-}
+};
 
 // UPDATE
 

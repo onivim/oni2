@@ -1,5 +1,3 @@
-open Feature_Input;
-
 /*
    [of_yojson_with_errors] parses the keybindings,
    and returns the list of successfully parsed keybindings,
@@ -7,4 +5,7 @@ open Feature_Input;
  */
 let of_yojson_with_errors:
   (~default: list(Feature_Input.Schema.keybinding)=?, Yojson.Safe.t) =>
-  result((list(Feature_Input.Schema.resolvedKeybinding), list(string)), string);
+  result(
+    (list(Feature_Input.Schema.resolvedKeybinding), list(string)),
+    string,
+  );

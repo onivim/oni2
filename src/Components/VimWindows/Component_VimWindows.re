@@ -63,8 +63,6 @@ module ContextKeys = {
 };
 
 module Keybindings = {
-  open Oni_Input;
-
   let commandCondition = "vimWindowNavigation" |> WhenExpr.parse;
 
   let noTextInputCondition =

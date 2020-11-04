@@ -3,8 +3,6 @@ open Feature_Input.Schema;
 module Json = Oni_Core.Json;
 
 module Keybinding = {
-  type t = keybinding;
-
   let parseSimple =
     fun
     | `String(s) => WhenExpr.Defined(s)
@@ -49,7 +47,8 @@ module Keybinding = {
 
 module Internal = {
   let of_yojson_with_errors:
-    list(Yojson.Safe.t) => (list(Feature_Input.Schema.keybinding), list(string)) =
+    list(Yojson.Safe.t) =>
+    (list(Feature_Input.Schema.keybinding), list(string)) =
     bindingsJson => {
       let parsedBindings =
         bindingsJson
@@ -85,7 +84,9 @@ module Internal = {
 // Old version of keybindings - the legacy format:
 // { bindings: [ ..bindings. ] }
 module Legacy = {
-  let upgrade: list(Feature_Input.Schema.keybinding) => list(Feature_Input.Schema.keybinding) =
+  let upgrade:
+    list(Feature_Input.Schema.keybinding) =>
+    list(Feature_Input.Schema.keybinding) =
     keys => {
       let upgradeBinding = (binding: Feature_Input.Schema.keybinding) => {
         switch (binding.command) {
@@ -105,16 +106,13 @@ module Legacy = {
     };
 };
 
-let resolveBinding = (keybinding) => {
-  Feature_Input.Schema.resolve(keybinding);
-};
-
 let evaluateBindings = (bindings: list(keybinding), errors) => {
   let rec loop = (bindings, errors, currentBindings) => {
     switch (bindings) {
     | [hd, ...tail] =>
       switch (Feature_Input.Schema.resolve(hd)) {
-      | Ok(newBinding) => loop(tail, errors, [newBinding, ...currentBindings])
+      | Ok(newBinding) =>
+        loop(tail, errors, [newBinding, ...currentBindings])
       | Error(msg) => loop(tail, [msg, ...errors], currentBindings)
       }
     | [] => (currentBindings, errors)

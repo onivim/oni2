@@ -359,8 +359,6 @@ module Commands = {
 };
 
 module Keybindings = {
-  open Oni_Input;
-
   let commandCondition =
     "!textInputFocus && vimListNavigation" |> WhenExpr.parse;
 
