@@ -139,6 +139,7 @@ module Context: {
         ~wantByte: ByteIndex.t
       ) =>
       BytePosition.t,
+    toggleComments: array(string) => array(string),
     bufferId: int,
     colorSchemeProvider: ColorScheme.Provider.t,
     width: int,
@@ -146,7 +147,6 @@ module Context: {
     leftColumn: int,
     topLine: int,
     mode: Mode.t,
-    lineComment: option(string),
     tabSize: int,
     insertSpaces: bool,
   };
