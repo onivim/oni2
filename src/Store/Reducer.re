@@ -15,8 +15,6 @@ let reduce: (State.t, Actions.t) => State.t =
         bufferHighlights:
           BufferHighlightsReducer.reduce(s.bufferHighlights, a),
         bufferRenderers: BufferRendererReducer.reduce(s.bufferRenderers, a),
-        languageFeatures:
-          LanguageFeaturesReducer.reduce(a, s.languageFeatures),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
       };
 

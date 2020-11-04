@@ -609,6 +609,4 @@ let sub =
   |> Isolinear.Sub.batch;
 };
 
-// TODO: Remove
 module CompletionMeet = CompletionMeet;
-module LanguageFeatures = LanguageFeatures;

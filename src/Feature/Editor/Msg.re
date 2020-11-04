@@ -1,5 +1,3 @@
-open EditorCoreTypes;
-
 [@deriving show({with_path: false})]
 type t =
   | VerticalScrollbarBeforeTrackClicked({newPixelScrollY: float})
@@ -22,8 +20,25 @@ type t =
       deltaY: float,
       shiftKey: bool,
     })
-  | MouseHovered({bytePosition: BytePosition.t})
-  | MouseMoved({bytePosition: BytePosition.t})
+  | EditorMouseEnter
+  | EditorMouseDown({
+      time: [@opaque] Revery.Time.t,
+      pixelX: float,
+      pixelY: float,
+    })
+  | EditorMouseMoved({
+      time: [@opaque] Revery.Time.t,
+      pixelX: float,
+      pixelY: float,
+    })
+  | EditorMouseUp({
+      time: [@opaque] Revery.Time.t,
+      pixelX: float,
+      pixelY: float,
+    })
+  | EditorMouseLeave
+  | MouseHovered
+  //  | MouseMoved({bytePosition: BytePosition.t})
   | ModeChanged({
       mode: [@opaque] Vim.Mode.t,
       effects: [@opaque] list(Vim.Effect.t),

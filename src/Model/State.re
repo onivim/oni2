@@ -9,7 +9,6 @@ open Oni_Input;
 open Oni_Syntax;
 
 module KeyDisplayer = Oni_Components.KeyDisplayer;
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 type windowDisplayMode =
   | Minimized
@@ -47,7 +46,6 @@ type t = {
   isQuitting: bool,
   keyBindings: Keybindings.t,
   keyDisplayer: option(KeyDisplayer.t),
-  languageFeatures: LanguageFeatures.t,
   languageSupport: Feature_LanguageSupport.model,
   languageInfo: Exthost.LanguageInfo.t,
   grammarRepository: Oni_Syntax.GrammarRepository.t,
@@ -148,7 +146,6 @@ let initial =
         ~extensionsFolder,
       ),
     exthost: Feature_Exthost.initial,
-    languageFeatures: LanguageFeatures.empty,
     languageSupport: Feature_LanguageSupport.initial,
     lifecycle: Lifecycle.create(),
     logging: Feature_Logging.initial,

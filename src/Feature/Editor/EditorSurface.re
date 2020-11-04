@@ -155,7 +155,6 @@ let%component make =
                 ~bufferSyntaxHighlights,
                 ~diagnostics,
                 ~tokenTheme,
-                ~changeMode,
                 ~languageSupport,
                 ~scm,
                 ~windowIsFocused,
@@ -346,7 +345,6 @@ let%component make =
       editor
       colors
       dispatch
-      changeMode
       cursorPosition
       editorFont
       diagnosticsMap

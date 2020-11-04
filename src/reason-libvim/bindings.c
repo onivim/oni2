@@ -595,6 +595,42 @@ void onCursorMoveScreenLine(screenLineMotion_T motion, int count, linenr_T start
    CAMLreturn0;
 }
 
+int onToggleComments(buf_T *buf, linenr_T start, linenr_T end,
+linenr_T *outCount, char_u ***outLines
+) {
+  CAMLparam0();
+  CAMLlocal1(vArray);
+
+  int count = end - start + 1;
+
+  if (count <= 0) {
+    CAMLreturnT(int, FAIL);
+  } else {
+    
+    *outCount = count;
+   static const value *lv_onToggleComments = NULL;
+   if (lv_onToggleComments == NULL) {
+     lv_onToggleComments = caml_named_value("lv_onToggleComments");
+   }
+
+   vArray = caml_callback3(*lv_onToggleComments, 
+  // TODO: Naked pointer
+    (value)buf, Val_int(start), Val_int(end));
+
+    int count = Wosize_val(vArray);
+    *outCount = count;
+
+    char_u **newLines = malloc(sizeof(char_u *) * count);
+    for (int i = 0; i < count; i++) {
+      const char *sz = String_val(Field(vArray, i));
+      newLines[i] = malloc((sizeof(char) * strlen(sz)) + 1);
+      strcpy((char *)newLines[i], sz);
+    }
+    *outLines = newLines;
+    CAMLreturnT(int, OK);
+  }
+}
+
 void onCursorMoveScreenPosition(int dir, int count, linenr_T srcLine,
 colnr_T srcColumn, colnr_T wantColumn, linenr_T *destLine, colnr_T *destColumn) {
     CAMLparam0();
@@ -727,6 +763,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetCursorMoveScreenLineCallback(&onCursorMoveScreenLine);
   vimSetCursorMoveScreenPositionCallback(&onCursorMoveScreenPosition);
   vimSetScrollCallback(&onScrollCallback);
+  vimSetToggleCommentsCallback(&onToggleComments);
 
   char *args[0];
   vimInit(0, args);
@@ -1176,12 +1213,6 @@ CAMLprim value libvim_vimOptionSetTabSize(value ts) {
 CAMLprim value libvim_vimOptionSetInsertSpaces(value v) {
   int insertSpaces = Bool_val(v);
   vimOptionSetInsertSpaces(insertSpaces);
-  return Val_unit;
-}
-
-CAMLprim value libvim_vimOptionSetLineComment(value v) {
-  const char *str = String_val(v);
-  vimOptionSetLineComment((char_u *) str);
   return Val_unit;
 }
 

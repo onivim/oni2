@@ -299,7 +299,8 @@ let yankHighlightDuration =
 
 module Hover = {
   let enabled = setting("editor.hover.enabled", bool, ~default=true);
-  let delay = setting("editor.hover.delay", time, ~default=Time.zero);
+  let delay =
+    setting("editor.hover.delay", time, ~default=Time.milliseconds(300));
 };
 
 module Minimap = {
