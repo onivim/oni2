@@ -147,11 +147,10 @@ let start =
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
 
-      // TODO: Wire up to input
       | Map(mapping) =>
         dispatch(Actions.Input(Feature_Input.Msg.vimMap(mapping)))
-      // TODO: Wire up to input
-      | Unmap(_) => prerr_endline("TODO: UNMAP")
+      | Unmap({mode, keys}) =>
+        dispatch(Actions.Input(Feature_Input.Msg.vimUnmap(mode, keys)))
 
       | Goto(gotoType) => handleGoto(gotoType)
       | TabPage(msg) => dispatch(TabPage(msg))
