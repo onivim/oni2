@@ -124,6 +124,8 @@ module Internal = {
           [shellCmd, ...args] |> Array.of_list,
           [||],
         );
+      // #2659 - Close stdin before reading any data, so we don't get blocked.
+      close_out(out);
       let lines = ref([]);
 
       let outLines =
@@ -140,7 +142,6 @@ module Internal = {
           lines^;
         };
 
-      close_out(out);
       close_in(err);
       environmentLinesToMap(true, outLines);
 
