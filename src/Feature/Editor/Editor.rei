@@ -64,6 +64,17 @@ let setVerticalScrollMargin: (~lines: int, t) => t;
 let setMinimap: (~enabled: bool, ~maxColumn: int, t) => t;
 let isMinimapEnabled: t => bool;
 
+// Mouse interactions
+let mouseDown: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseUp: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseMove: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseEnter: t => t;
+let mouseLeave: t => t;
+let hasMouseEntered: t => bool;
+let isMouseDown: t => bool;
+let lastMouseMoveTime: t => option(Revery.Time.t);
+let getCharacterUnderMouse: t => option(CharacterPosition.t);
+
 // Scale factor between horizontal pixels on the editor surface vs minimap
 let getMinimapWidthScaleFactor: t => float;
 

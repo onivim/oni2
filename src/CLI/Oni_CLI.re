@@ -15,7 +15,6 @@ type t = {
   filesToOpen: list(string),
   forceScaleFactor: option(float),
   overriddenExtensionsDir: option(Fp.t(Fp.absolute)),
-  //  shouldClose: bool,
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,
   shouldSyntaxHighlight: bool,
@@ -83,7 +82,6 @@ let parse = (~getenv: string => option(string), args) => {
 
   let scaleFactor = ref(None);
   let extensionsDir = ref(None);
-  //  let shouldClose = ref(false);
   let eff = ref(Run);
 
   let shouldLoadExtensions = ref(true);
@@ -180,14 +178,17 @@ let parse = (~getenv: string => option(string), args) => {
     "",
   );
 
-  //  let needsConsole = eff^ != Run;
-  // TODO: Port
-  //  if (Timber.App.isEnabled() || needsConsole) {
-  //    /* On Windows, we need to create a console instance if possible */
-  //    Revery.App.initConsole();
-  //  };
+  let shouldAlwaysAllocateConsole =
+    switch (eff^) {
+    | Run => false
+    | StartSyntaxServer(_) => false
+    | _ => true
+    };
 
-  let needsConsole = Option.is_some(logLevel^) || eff^ != Run;
+  let needsConsole =
+    Option.is_some(logLevel^)
+    && attachToForeground^
+    || shouldAlwaysAllocateConsole;
 
   let paths = additionalArgs^ |> List.rev;
 
@@ -261,7 +262,6 @@ let parse = (~getenv: string => option(string), args) => {
     gpuAcceleration: gpuAcceleration^,
     overriddenExtensionsDir:
       extensionsDir^ |> Utility.OptionEx.flatMap(Fp.absoluteCurrentPlatform),
-    //    shouldClose: shouldClose^,
     shouldLoadExtensions: shouldLoadExtensions^,
     shouldLoadConfiguration: shouldLoadConfiguration^,
     shouldSyntaxHighlight: shouldSyntaxHighlight^,

@@ -25,8 +25,8 @@ module Msg: {
 
   module Hover: {
     let show: msg;
-    let mouseHovered: CharacterPosition.t => msg;
-    let mouseMoved: CharacterPosition.t => msg;
+    let mouseHovered: option(CharacterPosition.t) => msg;
+    let mouseMoved: option(CharacterPosition.t) => msg;
     let keyPressed: string => msg;
   };
 };
@@ -201,4 +201,3 @@ module DocumentHighlights: {
 
 // TODO: Remove
 module CompletionMeet = CompletionMeet;
-module LanguageFeatures = LanguageFeatures;
