@@ -45,17 +45,40 @@ module Modifiers: {
   let equals: (t, t) => bool;
 };
 
-module KeyPress: {
+module PhysicalKey: {
   [@deriving show]
   type t = {
-    scancode: int,
-    keycode: int,
-    modifiers: Modifiers.t,
+      scancode: int,
+      keycode: int,
+      modifiers: Modifiers.t,
   };
+};
+
+module SpecialKey:  {
+  [@deriving show]
+  type t =
+  | Leader
+  | Plug
+  | SNR;
+};
+
+module KeyPress: {
+  [@deriving show]
+  type t = 
+  | PhysicalKey(PhysicalKey.t)
+  | SpecialKey(SpecialKey.t);
 
   let toString:
     // The name of the 'meta' key. Defaults to "Meta".
     (~meta: string=?, ~keyCodeToString: int => string, t) => string;
+
+  let physicalKey: (
+    ~keycode: int,
+    ~scancode: int,
+    ~modifiers: Modifiers.t
+  ) => t;
+
+  let toPhysicalKey: t => option(PhysicalKey.t);
 
   let parse:
     (

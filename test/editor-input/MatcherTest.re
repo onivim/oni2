@@ -57,7 +57,7 @@ let modifiersControl = {...Modifiers.none, control: true};
 let modifiersShift = {...Modifiers.none, shift: true};
 
 let keyPress = (~modifiers=Modifiers.none, code) =>
-  KeyPress.{keycode: code, scancode: code, modifiers};
+  KeyPress.physicalKey(~keycode=code, ~scancode=code, ~modifiers);
 
 describe("Matcher", ({describe, _}) => {
   describe("parser", ({test, _}) => {

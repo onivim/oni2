@@ -48,11 +48,12 @@ bindings: [
 |}
   |> Yojson.Safe.from_string;
 
-let getKeyFromSDL: string => EditorInput.KeyPress.t =
-  key => {
+let getKeyFromSDL =
+  (~modifiers=EditorInput.Modifiers.none, key: string) => {
     let scancode = Sdl2.Scancode.ofName(key);
     let keycode = Sdl2.Keycode.ofName(key);
-    {keycode, scancode, modifiers: EditorInput.Modifiers.none};
+    EditorInput.KeyPress.physicalKey(
+    ~keycode, ~scancode, ~modifiers)
   };
 
 let contextWithEditorTextFocus =
@@ -143,7 +144,7 @@ describe("Keybindings", ({describe, _}) => {
       let validateKeyResultsInCommand = ((key, modifiers, cmd)) => {
         result
         |> Result.iter(((bindings, _)) => {
-             let key = {...getKeyFromSDL(key), modifiers};
+             let key = getKeyFromSDL(~modifiers, key);
              let (_bindings, effects) =
                keyDown(~context=contextWithEditorTextFocus, ~key, bindings);
              expect.equal(effects, [Execute(cmd)]);

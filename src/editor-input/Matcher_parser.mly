@@ -22,5 +22,5 @@ expr:
 | s = keydown_binding { s }
 
 keydown_binding:
-| modifiers = list(MODIFIER); binding = BINDING { (binding, modifiers) }
+| modifiers = list(MODIFIER); binding = BINDING { (Matcher_internal.Physical(binding), modifiers) }
 

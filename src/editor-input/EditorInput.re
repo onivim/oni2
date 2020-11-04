@@ -2,6 +2,8 @@ module Key = Key;
 module Modifiers = Modifiers;
 module Matcher = Matcher;
 module KeyPress = KeyPress;
+module PhysicalKey = PhysicalKey;
+module SpecialKey = SpecialKey;
 
 module IntSet =
   Set.Make({
@@ -132,8 +134,8 @@ module Make = (Config: {
 
   let keyMatches = (keyMatcher, key: gesture) => {
     switch (keyMatcher, key) {
-    | (KeyPress.{keycode, modifiers, _}, Down(_id, key)) =>
-      key.keycode == keycode && Modifiers.equals(modifiers, key.modifiers)
+    | (keyPress, Down(_id, key)) =>
+      KeyPress.equals(keyPress, key)
     | _ => false
     };
   };
@@ -479,12 +481,19 @@ module Make = (Config: {
 
   let keyDown = (~context, ~key, bindings) => {
     let id = KeyDownId.get();
+    let pressedScancodes = key
+    |> KeyPress.toPhysicalKey
+    |> Option.map((key: PhysicalKey.t) => {
+      IntSet.add(key.scancode, bindings.pressedScancodes)
+    })
+    |> Option.value(~default=bindings.pressedScancodes);
+
     handleKeyCore(
       ~context,
       Down(id, key),
       {
         ...bindings,
-        pressedScancodes: IntSet.add(key.scancode, bindings.pressedScancodes),
+        pressedScancodes,
       },
     );
   };
@@ -525,8 +534,13 @@ module Make = (Config: {
   };
 
   let keyUp = (~context, ~key, bindings) => {
-    let pressedScancodes =
+    let pressedScancodes = key
+    |> KeyPress.toPhysicalKey
+    |> Option.map((key: PhysicalKey.t) => {
       IntSet.remove(KeyPress.(key.scancode), bindings.pressedScancodes);
+    })
+    |> Option.value(~default=bindings.pressedScancodes);
+
     let bindings = {...bindings, suppressText: false, pressedScancodes};
 
     // If everything has been released, fire an [AllKeysReleased] event,
