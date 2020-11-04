@@ -116,7 +116,7 @@ module Internal = {
     | Mac =>
       let args = [
         "-ilc",
-        "printf \"_SHELL_ENV_DELIMITER_\n\"; env; printf \"\n_SHELL_ENV_DELIMITER_\n\"; exit",
+        "printf \"\n_SHELL_ENV_DELIMITER_\"; env; printf \"\n_SHELL_ENV_DELIMITER_\n\"; exit",
       ];
       let (inp, out, err) =
         Unix.open_process_args_full(
@@ -124,6 +124,7 @@ module Internal = {
           [shellCmd, ...args] |> Array.of_list,
           [||],
         );
+      // #2659 - Close stdin before reading any data, so we don't get blocked.
       close_out(out);
       let lines = ref([]);
 
@@ -131,8 +132,7 @@ module Internal = {
         try(
           {
             while (true) {
-              let line = input_line(inp);
-              lines := [line, ...lines^];
+              lines := [input_line(inp), ...lines^];
             };
             lines^;
           }
