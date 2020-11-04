@@ -138,6 +138,7 @@ let update = (msg, model) => {
     let (inputStateMachine', _mappingId) =
       InputStateMachine.addMapping(
         matcher,
+        // TODO: Convert mode to WhenExpr
         _ => true,
         keys,
         model.inputStateMachine,
