@@ -365,7 +365,7 @@ module Keybindings = {
     "!textInputFocus && vimListNavigation" |> WhenExpr.parse;
 
   let keybindings =
-    Keybindings.[
+    Feature_Input.Schema.[
       {
         key: "h",
         command: Commands.toggleExpanded.id,

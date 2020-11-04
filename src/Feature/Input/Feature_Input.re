@@ -1,3 +1,6 @@
+open Oni_Core;
+open KeyResolver;
+
 // MSG
 
 type outmsg =
@@ -13,6 +16,38 @@ type msg =
   | Command(command);
 
 // MODEL
+
+module Schema = {
+  type keybinding = {
+    key: string,
+    command: string,
+    condition: WhenExpr.t,
+  };
+
+  type resolvedKeybinding = {
+    matcher: EditorInput.Matcher.t,
+    command: string,
+    condition: WhenExpr.ContextKeys.t => bool,
+  };
+
+  let resolve = ({key, command, condition}) => {
+    let evaluateCondition = (whenExpr, contextKeys) => {
+      WhenExpr.evaluate(whenExpr, WhenExpr.ContextKeys.getValue(contextKeys));
+    };
+
+    let maybeMatcher = EditorInput.Matcher.parse(~getKeycode, ~getScancode, key);
+  maybeMatcher
+  |> Stdlib.Result.map(matcher => {
+       {matcher, command, condition: evaluateCondition(condition)};
+     });
+  }
+}
+
+type keybinding = {
+  key: string,
+  command: string,
+  condition: WhenExpr.t,
+};
 
 type model = {
   inputStateMachine: InputStateMachine.t,

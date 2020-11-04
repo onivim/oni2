@@ -629,7 +629,7 @@ module Contributions = {
     ];
 
   let keybindings = {
-    Oni_Input.Keybindings.[
+    Feature_Input.Schema.[
       // Insert mode -> normal mdoe
       {
         key: "<C-\\><C-N>",

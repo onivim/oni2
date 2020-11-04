@@ -10,6 +10,18 @@ type command;
 
 // MODEL
 
+module Schema: {
+  type keybinding = {
+    key: string,
+    command: string,
+    condition: WhenExpr.t,
+  };
+
+  type resolvedKeybinding;
+
+  let resolve: (keybinding) => result(resolvedKeybinding, string);
+};
+
 [@deriving show]
 type msg;
 

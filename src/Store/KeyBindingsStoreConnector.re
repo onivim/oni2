@@ -19,7 +19,7 @@ let start = maybeKeyBindingsFilePath => {
   let isMacCondition = "isMac" |> WhenExpr.parse;
 
   let default =
-    Keybindings.[
+    Feature_Input.Schema.[
       {
         key: "<UP>",
         command: Commands.List.focusUp.id,
@@ -37,7 +37,7 @@ let start = maybeKeyBindingsFilePath => {
       },
     ]
     @ Feature_SideBar.Contributions.keybindings
-    @ Keybindings.[
+    @ Feature_Input.Schema.[
         {
           key: "<C-TAB>",
           command:
@@ -132,7 +132,7 @@ let start = maybeKeyBindingsFilePath => {
       ]
     @ Feature_Registers.Contributions.keybindings
     @ Feature_LanguageSupport.Contributions.keybindings
-    @ Keybindings.[
+    @ Feature_Input.Schema.[
         {
           key: "<CR>",
           command: Commands.List.select.id,
@@ -200,7 +200,7 @@ let start = maybeKeyBindingsFilePath => {
         },
       ]
     @ Feature_Pane.Contributions.keybindings
-    @ Keybindings.[
+    @ Feature_Input.Schema.[
         {
           key: "<D-W>",
           command: Feature_Layout.Commands.closeActiveEditor.id,
@@ -259,7 +259,7 @@ let start = maybeKeyBindingsFilePath => {
       ]
     @ Feature_Terminal.Contributions.keybindings
     //LAYOUT
-    @ Keybindings.[
+    @ Feature_Input.Schema.[
         {
           key: "<C-W>H",
           command: Feature_Layout.Commands.moveLeft.id,
@@ -466,13 +466,13 @@ let start = maybeKeyBindingsFilePath => {
                 )
              // Handle error case when parsing entire JSON file
              |> Utility.ResultEx.tapError(onError)
-             |> Stdlib.Result.value(~default=(Keybindings.empty, []));
+             |> Stdlib.Result.value(~default=([], []));
 
            // Handle individual binding errors
            individualErrors |> List.iter(onError);
 
            Log.infof(m =>
-             m("Loading %i keybindings", Keybindings.count(keyBindings))
+             m("Loading %i keybindings", List.length(keyBindings))
            );
 
            dispatch(Actions.KeyBindingsSet(keyBindings));
