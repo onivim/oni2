@@ -3,7 +3,12 @@ open EditorInput;
 
 type outmsg =
   | Nothing
-  | DebugInputShown;
+  | DebugInputShown
+  | MapParseError({
+      fromKeys: string,
+      toKeys: string,
+      error: string,
+    });
 
 [@deriving show]
 type command;

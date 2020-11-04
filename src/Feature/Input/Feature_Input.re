@@ -1,13 +1,19 @@
 open KeyResolver;
 
 open Oni_Core;
+open Utility;
 module Log = (val Log.withNamespace("Oni2.Feature.Input"));
 
 // MSG
 
 type outmsg =
   | Nothing
-  | DebugInputShown;
+  | DebugInputShown
+  | MapParseError({
+      fromKeys: string,
+      toKeys: string,
+      error: string,
+    });
 
 [@deriving show]
 type command =
@@ -60,7 +66,10 @@ module Schema = {
   };
 };
 
-type model = {inputStateMachine: InputStateMachine.t};
+type model = {
+  userBindings: list(InputStateMachine.uniqueId),
+  inputStateMachine: InputStateMachine.t
+};
 
 let initial = keybindings => {
   open Schema;
@@ -72,8 +81,9 @@ let initial = keybindings => {
            | Error(err) =>
              Log.warnf(m =>
                m(
-                 "Unable to parse binding: %s",
+                 "Unable to parse binding %s: %s",
                  Schema.show_keybinding(keybinding),
+                 err,
                )
              );
              ism;
@@ -85,7 +95,7 @@ let initial = keybindings => {
          },
          InputStateMachine.empty,
        );
-  {inputStateMachine: inputStateMachine};
+  {inputStateMachine: inputStateMachine, userBindings: []};
 };
 
 type effect =
@@ -95,22 +105,22 @@ type effect =
     | Unhandled(EditorInput.KeyPress.t)
     | RemapRecursionLimitHit;
 
-let keyDown = (~key, ~context, {inputStateMachine, _}) => {
+let keyDown = (~key, ~context, {inputStateMachine, _} as model) => {
   let (inputStateMachine', effects) =
     InputStateMachine.keyDown(~key, ~context, inputStateMachine);
-  ({inputStateMachine: inputStateMachine'}, effects);
+  ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
-let text = (~text, {inputStateMachine, _}) => {
+let text = (~text, {inputStateMachine, _} as model) => {
   let (inputStateMachine', effects) =
     InputStateMachine.text(~text, inputStateMachine);
-  ({inputStateMachine: inputStateMachine'}, effects);
+  ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
-let keyUp = (~key, ~context, {inputStateMachine, _}) => {
+let keyUp = (~key, ~context, {inputStateMachine, _} as model) => {
   let (inputStateMachine', effects) =
     InputStateMachine.keyUp(~key, ~context, inputStateMachine);
-  ({inputStateMachine: inputStateMachine'}, effects);
+  ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
 // UPDATE
@@ -151,32 +161,44 @@ let update = (msg, model) => {
   switch (msg) {
   | Command(ShowDebugInput) => (model, DebugInputShown)
   | VimMap(mapping) =>
-    let matcher =
-      EditorInput.Matcher.parse(
-        ~getKeycode,
-        ~getScancode,
-        mapping.fromKeys,
-        // TODO: Fix this
-      )
-      |> Result.get_ok;
-    let keys =
-      EditorInput.KeyPress.parse(
-        ~getKeycode,
-        ~getScancode,
-        mapping.toValue,
-        // TODO: Fix this
-      )
-      |> Result.get_ok;
-    let (inputStateMachine', _mappingId) =
-      InputStateMachine.addMapping(
-        matcher,
-        // TODO: Convert mode to WhenExpr
-        Internal.vimMapModeToWhenExpr(mapping.mode),
-        keys,
-        model.inputStateMachine,
+    let maybeMatcher =
+      EditorInput.Matcher.parse(~getKeycode, ~getScancode, mapping.fromKeys);
+    let maybeKeys =
+      EditorInput.KeyPress.parse(~getKeycode, ~getScancode, mapping.toValue);
+
+    let maybeModel =
+      ResultEx.map2(
+        (matcher, keys) => {
+          let (inputStateMachine', _mappingId) =
+            InputStateMachine.addMapping(
+              matcher,
+              // TODO: Convert mode to WhenExpr
+              Internal.vimMapModeToWhenExpr(mapping.mode),
+              keys,
+              model.inputStateMachine,
+            );
+          {...model, inputStateMachine: inputStateMachine'};
+        },
+        maybeMatcher,
+        maybeKeys,
       );
-    ({inputStateMachine: inputStateMachine'}, Nothing);
-  | VimUnmap({mode, maybeKeys}) => (model, Nothing)
+
+    switch (maybeModel) {
+    | Ok(model') => (model', Nothing)
+    | Error(err) => (
+        model,
+        MapParseError({
+          fromKeys: mapping.fromKeys,
+          toKeys: mapping.toValue,
+          error: err,
+        }),
+      )
+    };
+
+
+  | VimUnmap(_) => (model, Nothing)
+  // TODO:
+  // | VimUnmap({mode, maybeKeys}) => (model, Nothing)
   };
 };
 
