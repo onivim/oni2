@@ -114,6 +114,38 @@ let keyUp = (~key, ~context, {inputStateMachine, _}) => {
 };
 
 // UPDATE
+module Internal = {
+  let vimMapModeToWhenExpr = mode => {
+    let parse = str => WhenExpr.parse(str);
+    let evaluateCondition = (whenExpr, contextKeys) => {
+      WhenExpr.evaluate(
+        whenExpr,
+        WhenExpr.ContextKeys.getValue(contextKeys),
+      );
+    };
+    let condition =
+      mode
+      |> Vim.Mapping.(
+           {
+             fun
+             | Insert => "insertMode" |> parse
+             | Language => WhenExpr.Value(False) // TODO
+             | CommandLine => "commandLineFocus" |> parse
+             | Normal => "normalMode" |> parse
+             | VisualAndSelect => "selectMode || visualMode" |> parse
+             | Visual => "visualMode" |> parse
+             | Select => "selectMode" |> parse
+             | Operator => "operatorPending" |> parse
+             | Terminal => "terminalFocus" |> parse
+             | InsertAndCommandLine =>
+               "insertMode || commandLineFocus" |> parse
+             | All => WhenExpr.Value(True);
+           }
+         );
+
+    evaluateCondition(condition);
+  };
+};
 
 let update = (msg, model) => {
   switch (msg) {
@@ -139,7 +171,7 @@ let update = (msg, model) => {
       InputStateMachine.addMapping(
         matcher,
         // TODO: Convert mode to WhenExpr
-        _ => true,
+        Internal.vimMapModeToWhenExpr(mapping.mode),
         keys,
         model.inputStateMachine,
       );
