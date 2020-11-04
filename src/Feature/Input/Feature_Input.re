@@ -1,5 +1,8 @@
 open KeyResolver;
 
+open Oni_Core;
+module Log = (val Log.withNamespace("Oni2.Feature.Input"));
+
 // MSG
 
 type outmsg =
@@ -17,6 +20,7 @@ type msg =
 // MODEL
 
 module Schema = {
+  [@deriving show]
   type keybinding = {
     key: string,
     command: string,
@@ -48,7 +52,31 @@ module Schema = {
 
 type model = {inputStateMachine: InputStateMachine.t};
 
-let initial = {inputStateMachine: InputStateMachine.empty};
+let initial = keybindings => {
+  open Schema;
+  let inputStateMachine =
+    keybindings
+    |> List.fold_left(
+         (ism, keybinding) => {
+           switch (Schema.resolve(keybinding)) {
+           | Error(err) =>
+             Log.warnf(m =>
+               m(
+                 "Unable to parse binding: %s",
+                 Schema.show_keybinding(keybinding),
+               )
+             );
+             ism;
+           | Ok({matcher, condition, command}) =>
+             let (ism, _bindingId) =
+               InputStateMachine.addBinding(matcher, condition, command, ism);
+             ism;
+           }
+         },
+         InputStateMachine.empty,
+       );
+  {inputStateMachine: inputStateMachine};
+};
 
 type effect =
   InputStateMachine.effect =

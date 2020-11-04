@@ -23,3 +23,6 @@ let count = Input.count;
 let keyDown = Input.keyDown;
 let text = Input.text;
 let keyUp = Input.keyUp;
+
+let addBinding = Input.addBinding;
+let addMapping = Input.addMapping;

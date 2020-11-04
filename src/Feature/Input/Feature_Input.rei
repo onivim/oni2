@@ -27,7 +27,7 @@ type msg;
 
 type model;
 
-let initial: model;
+let initial: list(Schema.keybinding) => model;
 
 type effect =
   | Execute(string)
