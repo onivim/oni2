@@ -4,7 +4,7 @@
    as well as a list of errors for unsuccessfully parsed keybindings.
  */
 let of_yojson_with_errors:
-  (~default: list(Feature_Input.Schema.keybinding)=?, Yojson.Safe.t) =>
+  Yojson.Safe.t =>
   result(
     (list(Feature_Input.Schema.resolvedKeybinding), list(string)),
     string,

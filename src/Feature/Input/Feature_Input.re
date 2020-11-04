@@ -15,26 +15,6 @@ type outmsg =
       error: string,
     });
 
-[@deriving show]
-type command =
-  | ShowDebugInput;
-
-[@deriving show]
-type msg =
-  | Command(command)
-  | VimMap(Vim.Mapping.t)
-  | VimUnmap({
-      mode: Vim.Mapping.mode,
-      maybeKeys: option(string),
-    });
-
-module Msg = {
-  let vimMap = mapping => VimMap(mapping);
-  let vimUnmap = (mode, maybeKeys) => VimUnmap({mode, maybeKeys});
-};
-
-// MODEL
-
 module Schema = {
   [@deriving show]
   type keybinding = {
@@ -66,9 +46,31 @@ module Schema = {
   };
 };
 
+[@deriving show]
+type command =
+  | ShowDebugInput;
+
+[@deriving show]
+type msg =
+  | Command(command)
+  | KeybindingsUpdated([@opaque] list(Schema.resolvedKeybinding))
+  | VimMap(Vim.Mapping.t)
+  | VimUnmap({
+      mode: Vim.Mapping.mode,
+      maybeKeys: option(string),
+    });
+
+module Msg = {
+  let keybindingsUpdated = keybindings => KeybindingsUpdated(keybindings);
+  let vimMap = mapping => VimMap(mapping);
+  let vimUnmap = (mode, maybeKeys) => VimUnmap({mode, maybeKeys});
+};
+
+// MODEL
+
 type model = {
   userBindings: list(InputStateMachine.uniqueId),
-  inputStateMachine: InputStateMachine.t
+  inputStateMachine: InputStateMachine.t,
 };
 
 let initial = keybindings => {
@@ -95,7 +97,7 @@ let initial = keybindings => {
          },
          InputStateMachine.empty,
        );
-  {inputStateMachine: inputStateMachine, userBindings: []};
+  {inputStateMachine, userBindings: []};
 };
 
 type effect =
@@ -155,6 +157,36 @@ module Internal = {
 
     evaluateCondition(condition);
   };
+
+  let updateKeybindings = (newBindings, model) => {
+    // First, clear all the old bindings...
+    let inputStateMachine' =
+      model.userBindings
+      |> List.fold_left(
+           (ism, bindingId) => {InputStateMachine.remove(bindingId, ism)},
+           model.inputStateMachine,
+         );
+
+    // Then, add all new bindings
+    let (inputStateMachine'', userBindingIds) =
+      newBindings
+      |> List.fold_left(
+           (acc, resolvedBinding: Schema.resolvedKeybinding) => {
+             let (ism, bindings) = acc;
+             let (ism', bindingId) =
+               InputStateMachine.addBinding(
+                 resolvedBinding.matcher,
+                 resolvedBinding.condition,
+                 resolvedBinding.command,
+                 ism,
+               );
+             (ism', [bindingId, ...bindings]);
+           },
+           (inputStateMachine', []),
+         );
+
+    {inputStateMachine: inputStateMachine'', userBindings: userBindingIds};
+  };
 };
 
 let update = (msg, model) => {
@@ -195,10 +227,14 @@ let update = (msg, model) => {
       )
     };
 
-
   | VimUnmap(_) => (model, Nothing)
   // TODO:
   // | VimUnmap({mode, maybeKeys}) => (model, Nothing)
+
+  | KeybindingsUpdated(bindings) => (
+      Internal.updateKeybindings(bindings, model),
+      Nothing,
+    )
   };
 };
 

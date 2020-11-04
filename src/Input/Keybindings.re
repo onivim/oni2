@@ -122,7 +122,7 @@ let evaluateBindings = (bindings: list(keybinding), errors) => {
   loop(bindings, errors, []);
 };
 
-let of_yojson_with_errors = (~default=[], json) => {
+let of_yojson_with_errors = json => {
   let previous =
     switch (json) {
     // Current format:
@@ -146,7 +146,6 @@ let of_yojson_with_errors = (~default=[], json) => {
 
   previous
   |> Stdlib.Result.map(((bindings, errors)) => {
-       let combinedBindings = default @ bindings;
-       evaluateBindings(combinedBindings, errors);
+       evaluateBindings(bindings, errors)
      });
 };
