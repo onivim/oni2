@@ -116,7 +116,7 @@ module Internal = {
     | Mac =>
       let args = [
         "-ilc",
-        "printf \"\n_SHELL_ENV_DELIMITER_\"; env; printf \"\n_SHELL_ENV_DELIMITER_\n\"; exit",
+        "printf \"_SHELL_ENV_DELIMITER_\n\"; env; printf \"\n_SHELL_ENV_DELIMITER_\n\"; exit",
       ];
       let (inp, out, err) =
         Unix.open_process_args_full(
@@ -124,13 +124,15 @@ module Internal = {
           [shellCmd, ...args] |> Array.of_list,
           [||],
         );
+      close_out(out);
       let lines = ref([]);
 
       let outLines =
         try(
           {
             while (true) {
-              lines := [input_line(inp), ...lines^];
+              let line = input_line(inp);
+              lines := [line, ...lines^];
             };
             lines^;
           }
@@ -140,7 +142,6 @@ module Internal = {
           lines^;
         };
 
-      close_out(out);
       close_in(err);
       environmentLinesToMap(true, outLines);
 
