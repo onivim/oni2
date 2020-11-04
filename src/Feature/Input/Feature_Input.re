@@ -15,7 +15,17 @@ type command =
 
 [@deriving show]
 type msg =
-  | Command(command);
+  | Command(command)
+  | VimMap(Vim.Mapping.t)
+  | VimUnmap({
+      mode: Vim.Mapping.mode,
+      maybeKeys: option(string),
+    });
+
+module Msg = {
+  let vimMap = mapping => VimMap(mapping);
+  let vimUnmap = (mode, maybeKeys) => VimUnmap({mode, maybeKeys});
+};
 
 // MODEL
 
@@ -108,6 +118,32 @@ let keyUp = (~key, ~context, {inputStateMachine, _}) => {
 let update = (msg, model) => {
   switch (msg) {
   | Command(ShowDebugInput) => (model, DebugInputShown)
+  | VimMap(mapping) =>
+    let matcher =
+      EditorInput.Matcher.parse(
+        ~getKeycode,
+        ~getScancode,
+        mapping.fromKeys,
+        // TODO: Fix this
+      )
+      |> Result.get_ok;
+    let keys =
+      EditorInput.KeyPress.parse(
+        ~getKeycode,
+        ~getScancode,
+        mapping.toValue,
+        // TODO: Fix this
+      )
+      |> Result.get_ok;
+    let (inputStateMachine', _mappingId) =
+      InputStateMachine.addMapping(
+        matcher,
+        _ => true,
+        keys,
+        model.inputStateMachine,
+      );
+    ({inputStateMachine: inputStateMachine'}, Nothing);
+  | VimUnmap({mode, maybeKeys}) => (model, Nothing)
   };
 };
 

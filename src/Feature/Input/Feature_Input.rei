@@ -25,6 +25,11 @@ module Schema: {
 [@deriving show]
 type msg;
 
+module Msg: {
+  let vimMap: Vim.Mapping.t => msg;
+  let vimUnmap: (Vim.Mapping.mode, option(string)) => msg;
+};
+
 type model;
 
 let initial: list(Schema.keybinding) => model;

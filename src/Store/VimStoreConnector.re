@@ -148,7 +148,8 @@ let start =
       | Scroll(_) => ()
 
       // TODO: Wire up to input
-      | Map(mapping) => prerr_endline("TODO: " ++ Vim.Mapping.show(mapping))
+      | Map(mapping) =>
+        dispatch(Actions.Input(Feature_Input.Msg.vimMap(mapping)))
       // TODO: Wire up to input
       | Unmap(_) => prerr_endline("TODO: UNMAP")
 
