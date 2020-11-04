@@ -1,5 +1,5 @@
 %token <Matcher_internal.modifier> MODIFIER
-%token <Key.t> BINDING
+%token <Matcher_internal.keyPress> BINDING
 %token ALLKEYSRELEASED
 %token LT GT
 %token EOF
@@ -22,5 +22,5 @@ expr:
 | s = keydown_binding { s }
 
 keydown_binding:
-| modifiers = list(MODIFIER); binding = BINDING { (Matcher_internal.Physical(binding), modifiers) }
+| modifiers = list(MODIFIER); binding = BINDING { (binding, modifiers) }
 
