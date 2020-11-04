@@ -535,12 +535,9 @@ let init = () => {
     "lv_onCursorMoveScreenPosition",
     _onCursorMoveScreenPosition,
   );
-<<<<<<< HEAD
   Callback.register("lv_onInputMap", _onInputMap);
   Callback.register("lv_onInputUnmap", _onInputUnmap);
-=======
   Callback.register("lv_onToggleComments", _onToggleComments);
->>>>>>> master
 
   Native.vimInit();
 
