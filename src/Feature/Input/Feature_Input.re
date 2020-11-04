@@ -14,15 +14,48 @@ type msg =
 
 // MODEL
 
-type model = unit;
+type model = {
+  inputStateMachine: InputStateMachine.t,
+};
 
-let initial = ();
+let initial = {
+  inputStateMachine: InputStateMachine.empty,
+};
+
+type effect = InputStateMachine.effect =
+| Execute(string)
+| Text(string)
+| Unhandled(EditorInput.KeyPress.t)
+| RemapRecursionLimitHit;
+
+let keyDown = (~key, ~context, {inputStateMachine, _}) => {
+  let (inputStateMachine', effects) = InputStateMachine.keyDown(
+    ~key,
+    ~context,
+  inputStateMachine);
+  ({inputStateMachine: inputStateMachine'}, effects);
+}
+
+let text = (~text, {inputStateMachine, _}) => {
+  let (inputStateMachine', effects) = InputStateMachine.text(
+    ~text,
+  inputStateMachine);
+  ({inputStateMachine: inputStateMachine'}, effects);
+}
+
+let keyUp = (~key, ~context, {inputStateMachine, _}) => {
+  let (inputStateMachine', effects) = InputStateMachine.keyUp(
+    ~key,
+    ~context,
+  inputStateMachine);
+  ({inputStateMachine: inputStateMachine'}, effects);
+}
 
 // UPDATE
 
-let update = (msg, _model) => {
+let update = (msg, model) => {
   switch (msg) {
-  | Command(ShowDebugInput) => ((), DebugInputShown)
+  | Command(ShowDebugInput) => (model, DebugInputShown)
   };
 };
 
