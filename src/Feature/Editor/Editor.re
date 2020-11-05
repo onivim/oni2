@@ -1176,7 +1176,8 @@ let moveScreenLines = (~position, ~count, editor) => {
   );
 };
 
-let mouseDown = (~time, ~pixelX, ~pixelY, editor) => {
+let mouseDown = (~altKey, ~time, ~pixelX, ~pixelY, editor) => {
+  ignore(altKey);
   ignore(time);
   ignore(pixelX);
   ignore(pixelY);
@@ -1208,7 +1209,7 @@ let getCharacterUnderMouse = editor => {
      });
 };
 
-let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
+let mouseUp = (~altKey, ~time, ~pixelX, ~pixelY, editor) => {
   let isDoubleClick =
     switch (editor.lastMouseUpTime) {
     | Some(lastMouseUpTime) =>
@@ -1263,7 +1264,11 @@ let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
       );
     let mode =
       if (Vim.Mode.isInsert(editor.mode)) {
-        Vim.Mode.Insert({cursors: [bytePosition, ...cursors(editor)]});
+        if (altKey || true) {
+          Vim.Mode.Insert({cursors: [bytePosition, ...cursors(editor)]});
+        } else {
+          Vim.Mode.Insert({cursors: [bytePosition]});
+        }
       } else {
         Vim.Mode.Normal({cursor: bytePosition});
       };

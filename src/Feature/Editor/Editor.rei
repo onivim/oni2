@@ -38,6 +38,7 @@ let getCharacterAtPosition:
   (~position: CharacterPosition.t, t) => option(Uchar.t);
 let getPrimaryCursor: t => CharacterPosition.t;
 let getPrimaryCursorByte: t => BytePosition.t;
+let cursors: t => list(BytePosition.t);
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
 let getTotalWidthInPixels: t => int;
@@ -65,8 +66,8 @@ let setMinimap: (~enabled: bool, ~maxColumn: int, t) => t;
 let isMinimapEnabled: t => bool;
 
 // Mouse interactions
-let mouseDown: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
-let mouseUp: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseDown: (~altKey: bool, ~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseUp: (~altKey: bool, ~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
 let mouseMove: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
 let mouseEnter: t => t;
 let mouseLeave: t => t;
