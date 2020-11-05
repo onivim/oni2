@@ -59,6 +59,8 @@ let modifiersShift = {...Modifiers.none, shift: true};
 let keyPress = (~modifiers=Modifiers.none, code) =>
   KeyPress.physicalKey(~keycode=code, ~scancode=code, ~modifiers);
 
+let specialKey = KeyPress.specialKey;
+
 describe("Matcher", ({describe, _}) => {
   describe("parser", ({test, _}) => {
     test("all keys", ({expect, _}) => {
@@ -112,6 +114,10 @@ describe("Matcher", ({describe, _}) => {
         ("numpad_subtract", keyPress(148)),
         ("numpad_decimal", keyPress(149)),
         ("numpad_divide", keyPress(150)),
+        ("<plug>", specialKey(SpecialKey.Plug)),
+        ("<Plug>", specialKey(SpecialKey.Plug)),
+        ("<leader>", specialKey(SpecialKey.Leader)),
+        ("<Leader>", specialKey(SpecialKey.Leader)),
       ];
 
       let runCase = case => {
