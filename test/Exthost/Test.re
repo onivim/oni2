@@ -74,12 +74,12 @@ let startWithExtensions =
   let logFile = Filename.temp_file("test", "log") |> Uri.fromPath;
   let logsLocation = Filename.get_temp_dir_name() |> Uri.fromPath;
 
-  print_endline(
-    Printf.sprintf(
+  Log.errorf(m =>
+    m(
       "Log location: %s Log file: %s",
       logFile |> Uri.toString,
       logsLocation |> Uri.toString,
-    ),
+    )
   );
 
   let parentPid = pid;
