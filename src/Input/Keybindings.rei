@@ -11,13 +11,23 @@ type effect =
 let count: t => int;
 
 let keyDown:
-  (~context: WhenExpr.ContextKeys.t, ~key: EditorInput.KeyPress.t, t) =>
+  (
+    ~leaderKey: option(EditorInput.PhysicalKey.t)=?,
+    ~context: WhenExpr.ContextKeys.t,
+    ~key: EditorInput.KeyPress.t,
+    t
+  ) =>
   (t, list(effect));
 
 let text: (~text: string, t) => (t, list(effect));
 
 let keyUp:
-  (~context: WhenExpr.ContextKeys.t, ~key: EditorInput.KeyPress.t, t) =>
+  (
+    ~leaderKey: option(EditorInput.PhysicalKey.t)=?,
+    ~context: WhenExpr.ContextKeys.t,
+    ~key: EditorInput.KeyPress.t,
+    t
+  ) =>
   (t, list(effect));
 
 type keybinding = {

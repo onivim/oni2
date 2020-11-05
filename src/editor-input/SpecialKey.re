@@ -1,5 +1,6 @@
 [@deriving show]
 type t =
-| Leader
-| Plug
-| SNR;
+  | Leader
+  | Plug;
+// TODO:
+// | SNR;

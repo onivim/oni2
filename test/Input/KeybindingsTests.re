@@ -48,13 +48,11 @@ bindings: [
 |}
   |> Yojson.Safe.from_string;
 
-let getKeyFromSDL =
-  (~modifiers=EditorInput.Modifiers.none, key: string) => {
-    let scancode = Sdl2.Scancode.ofName(key);
-    let keycode = Sdl2.Keycode.ofName(key);
-    EditorInput.KeyPress.physicalKey(
-    ~keycode, ~scancode, ~modifiers)
-  };
+let getKeyFromSDL = (~modifiers=EditorInput.Modifiers.none, key: string) => {
+  let scancode = Sdl2.Scancode.ofName(key);
+  let keycode = Sdl2.Keycode.ofName(key);
+  EditorInput.KeyPress.physicalKey(~keycode, ~scancode, ~modifiers);
+};
 
 let contextWithEditorTextFocus =
   WhenExpr.ContextKeys.(

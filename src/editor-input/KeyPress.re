@@ -1,49 +1,55 @@
 [@deriving show]
-type t = 
-| PhysicalKey(PhysicalKey.t)
-| SpecialKey(SpecialKey.t);
+type t =
+  | PhysicalKey(PhysicalKey.t)
+  | SpecialKey(SpecialKey.t);
 
-let physicalKey = (
-  ~keycode,
-  ~scancode,
-  ~modifiers
-) => PhysicalKey(PhysicalKey.{
-  scancode,
-  keycode,
-  modifiers
-});
+let physicalKey = (~keycode, ~scancode, ~modifiers) =>
+  PhysicalKey(PhysicalKey.{scancode, keycode, modifiers});
 
-let toPhysicalKey = fun
-| PhysicalKey(key) => Some(key)
-| SpecialKey(special) => None;
+let specialKey = special => SpecialKey(special);
+
+let toPhysicalKey =
+  fun
+  | PhysicalKey(key) => Some(key)
+  | SpecialKey(_) => None;
 
 let equals = (keyA, keyB) => {
-  switch ((keyA, keyB)) {
-  | (SpecialKey(specialKeyA), SpecialKey(specialKeyB)) => specialKeyA == specialKeyB
+  switch (keyA, keyB) {
+  | (SpecialKey(specialKeyA), SpecialKey(specialKeyB)) =>
+    specialKeyA == specialKeyB
   | (PhysicalKey(physicalKeyA), PhysicalKey(physicalKeyB)) =>
-    physicalKeyA.keycode == physicalKeyB.keycode && Modifiers.equals(
-      physicalKeyA.modifiers,
-      physicalKeyB.modifiers
-    )
+    physicalKeyA.keycode == physicalKeyB.keycode
+    && Modifiers.equals(physicalKeyA.modifiers, physicalKeyB.modifiers)
   | (SpecialKey(_), PhysicalKey(_))
   | (PhysicalKey(_), SpecialKey(_)) => false
-  }
+  };
 };
 
-let ofInternal = (~getKeycode, ~getScancode, (key: Matcher_internal.keyPress, mods: list(Matcher_internal.modifier))) => {
-      switch (key) {
-      | Matcher_internal.Special(special) => Ok(SpecialKey(special))
-      | Matcher_internal.Physical(key) => switch (getKeycode(key), getScancode(key)) {
-      | (Some(keycode), Some(scancode)) =>
-        Ok(PhysicalKey({
+let ofInternal =
+    (
+      ~getKeycode,
+      ~getScancode,
+      (
+        key: Matcher_internal.keyPress,
+        mods: list(Matcher_internal.modifier),
+      ),
+    ) => {
+  switch (key) {
+  | Matcher_internal.Special(special) => Ok(SpecialKey(special))
+  | Matcher_internal.Physical(key) =>
+    switch (getKeycode(key), getScancode(key)) {
+    | (Some(keycode), Some(scancode)) =>
+      Ok(
+        PhysicalKey({
           modifiers: Matcher_internal.Helpers.internalModsToMods(mods),
           scancode,
           keycode,
-        }))
-      | _ => Error("Unrecognized key: " ++ Key.toString(key))
-      };
-      }
-}
+        }),
+      )
+    | _ => Error("Unrecognized key: " ++ Key.toString(key))
+    }
+  };
+};
 
 let parse = (~getKeycode, ~getScancode, str) => {
   let parse = lexbuf =>
@@ -59,9 +65,7 @@ let parse = (~getKeycode, ~getScancode, str) => {
   let flatMap = (f, r) => Result.bind(r, f);
 
   let finish = r => {
-    r 
-    |> List.map(ofInternal(~getKeycode, ~getScancode))
-    |> Base.Result.all;
+    r |> List.map(ofInternal(~getKeycode, ~getScancode)) |> Base.Result.all;
   };
 
   str
@@ -73,7 +77,8 @@ let parse = (~getKeycode, ~getScancode, str) => {
 
 let toString = (~meta="Meta", ~keyCodeToString, key) => {
   switch (key) {
-  | SpecialKey(special) => Printf.sprintf("Special(%s)", SpecialKey.show(special));
+  | SpecialKey(special) =>
+    Printf.sprintf("Special(%s)", SpecialKey.show(special))
   | PhysicalKey({keycode, modifiers, _}) =>
     let buffer = Buffer.create(16);
     let separator = " + ";
@@ -81,7 +86,10 @@ let toString = (~meta="Meta", ~keyCodeToString, key) => {
     let keyString = keyCodeToString(keycode);
 
     let onlyShiftPressed =
-      modifiers.shift && !modifiers.control && !modifiers.meta && !modifiers.alt;
+      modifiers.shift
+      && !modifiers.control
+      && !modifiers.meta
+      && !modifiers.alt;
 
     let keyString =
       String.length(keyString) == 1 && !onlyShiftPressed
@@ -101,12 +109,13 @@ let toString = (~meta="Meta", ~keyCodeToString, key) => {
       Buffer.add_string(buffer, "Alt" ++ separator);
     };
 
-    if ((modifiers.meta || modifiers.control || modifiers.alt) && modifiers.shift) {
+    if ((modifiers.meta || modifiers.control || modifiers.alt)
+        && modifiers.shift) {
       Buffer.add_string(buffer, "Shift" ++ separator);
     };
 
     Buffer.add_string(buffer, keyString);
 
     Buffer.contents(buffer);
-  }
+  };
 };

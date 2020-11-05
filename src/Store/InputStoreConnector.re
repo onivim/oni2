@@ -174,14 +174,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         EditorInput.KeyPress.physicalKey(
           ~scancode,
           ~keycode,
-          ~modifiers={
-            shift,
-            control,
-            alt,
-            meta,
-            altGr,
-          },
-        )
+          ~modifiers={shift, control, alt, meta, altGr},
+        ),
       );
     };
   };

@@ -100,30 +100,28 @@ module Internal = {
   };
 };
 
-let keyPressToCommand =
-    (~isTextInputActive, key) => {
+let keyPressToCommand = (~isTextInputActive, key) => {
   let maybeKey = EditorInput.KeyPress.toPhysicalKey(key);
   maybeKey
   |> OptionEx.flatMap(({modifiers, keycode, _}: EditorInput.PhysicalKey.t) => {
-    let altGr = modifiers.altGr;
-    let shiftKey = modifiers.shift;
-    let altKey = modifiers.alt;
-    let ctrlKey = modifiers.control;
-    let superKey = modifiers.meta;
+       let altGr = modifiers.altGr;
+       let shiftKey = modifiers.shift;
+       let altKey = modifiers.alt;
+       let ctrlKey = modifiers.control;
+       let superKey = modifiers.meta;
 
-    if (altGr && isTextInputActive) {
-      None;
-          // If AltGr is pressed, and we're in text input mode, we'll assume the text input handled it
-    } else {
-      Internal.keyPressToString(
-        ~isTextInputActive,
-        ~shiftKey,
-        ~altKey,
-        ~ctrlKey,
-        ~superKey,
-        keycode,
-      );
-    };
-    
-  })
+       if (altGr && isTextInputActive) {
+         None;
+             // If AltGr is pressed, and we're in text input mode, we'll assume the text input handled it
+       } else {
+         Internal.keyPressToString(
+           ~isTextInputActive,
+           ~shiftKey,
+           ~altKey,
+           ~ctrlKey,
+           ~superKey,
+           keycode,
+         );
+       };
+     });
 };

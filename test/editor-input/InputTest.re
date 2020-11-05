@@ -10,6 +10,9 @@ let bKeyNoModifiers =
 let cKeyNoModifiers =
   KeyPress.physicalKey(~scancode=103, ~keycode=3, ~modifiers=Modifiers.none);
 
+let leaderKey = KeyPress.specialKey(SpecialKey.Leader);
+let plugKey = KeyPress.specialKey(SpecialKey.Plug);
+
 module Input =
   EditorInput.Make({
     type command = string;
@@ -17,6 +20,77 @@ module Input =
   });
 
 describe("EditorInput", ({describe, _}) => {
+  describe("special keys", ({test, _}) => {
+    test("special keys can participate in remap", ({expect, _}) => {
+      // Add a <Plug>a -> "commandA" mapping
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([plugKey, aKeyNoModifiers]),
+             _ => true,
+             "commandA",
+           );
+
+      // Remap b -> <Plug>a
+      let (bindings, _id) =
+        bindings
+        |> Input.addMapping(
+             Sequence([bKeyNoModifiers]),
+             _ => true,
+             [plugKey, aKeyNoModifiers],
+           );
+
+      // Pressing b should remap to <Plug>a, which should execute "commandA"
+      let (_bindings, effects) =
+        Input.keyDown(~context=true, ~key=bKeyNoModifiers, bindings);
+      expect.equal(effects, [Execute("commandA")]);
+    });
+
+    test("leader key defined as a", ({expect, _}) => {
+      let physicalKey =
+        PhysicalKey.{scancode: 101, keycode: 1, modifiers: Modifiers.none};
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(Sequence([leaderKey]), _ => true, "commandA");
+
+      let (_bindings, effects) =
+        Input.keyDown(
+          ~leaderKey=Some(physicalKey),
+          ~context=true,
+          ~key=aKeyNoModifiers,
+          bindings,
+        );
+      expect.equal(effects, [Execute("commandA")]);
+    });
+  });
+  describe("leader key", ({test, _}) => {
+    test("no leader key defined", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(Sequence([leaderKey]), _ => true, "commandA");
+
+      let (_bindings, effects) =
+        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
+      expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
+    });
+
+    test("leader key defined as a", ({expect, _}) => {
+      let physicalKey =
+        PhysicalKey.{scancode: 101, keycode: 1, modifiers: Modifiers.none};
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(Sequence([leaderKey]), _ => true, "commandA");
+
+      let (_bindings, effects) =
+        Input.keyDown(
+          ~leaderKey=Some(physicalKey),
+          ~context=true,
+          ~key=aKeyNoModifiers,
+          bindings,
+        );
+      expect.equal(effects, [Execute("commandA")]);
+    });
+  });
   describe("allKeysReleased", ({test, _}) => {
     test("basic release case", ({expect, _}) => {
       let (bindings, _id) =

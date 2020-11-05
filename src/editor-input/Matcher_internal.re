@@ -5,8 +5,8 @@ type modifier =
   | Meta;
 
 type keyPress =
-| Physical(Key.t)
-| Special(SpecialKey.t);
+  | Physical(Key.t)
+  | Special(SpecialKey.t);
 
 type keyMatcher = (keyPress, list(modifier));
 

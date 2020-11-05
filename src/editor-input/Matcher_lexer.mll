@@ -74,6 +74,7 @@ rule token = parse
 | "numpad_decimal" { BINDING(Physical(NumpadDecimal)) }
 | "numpad_divide" { BINDING(Physical(NumpadDivide)) }
 | "numpad" { numpad_digit lexbuf }
+| "leader" { BINDING(Special(Leader)) }
 | white { token lexbuf }
 | binding as i
  { BINDING (Physical(Character (i))) }
