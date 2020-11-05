@@ -87,7 +87,61 @@ describe("Multi-cursor", ({describe, _}) => {
       })
     })
   });
-  describe("insert mode", ({test, _}) => {
+  describe("insert mode", ({describe, test, _}) => {
+    describe("undo", ({test, _}) => {
+      test("undo multiple lines", ({expect, _}) => {
+        let buf = resetBuffer();
+        let mode =
+          input(
+            ~mode=
+              Vim.Mode.Insert({
+                cursors: [
+                  BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+                  BytePosition.{
+                    line: LineNumber.(zero + 1),
+                    byte: ByteIndex.zero,
+                  },
+                  BytePosition.{
+                    line: LineNumber.(zero + 2),
+                    byte: ByteIndex.zero,
+                  },
+                ],
+              }),
+            "a",
+          );
+
+        let line1 = Buffer.getLine(buf, LineNumber.zero);
+        let line2 = Buffer.getLine(buf, LineNumber.(zero + 1));
+        let line3 = Buffer.getLine(buf, LineNumber.(zero + 2));
+
+        expect.string(line1).toEqual(
+          "aThis is the first line of a test file",
+        );
+        expect.string(line2).toEqual(
+          "aThis is the second line of a test file",
+        );
+        expect.string(line3).toEqual(
+          "aThis is the third line of a test file",
+        );
+
+        let mode' = key(~mode, "<esc>");
+        let _mode'' = key(~mode=mode', "u");
+
+        let line1 = Buffer.getLine(buf, LineNumber.zero);
+        let line2 = Buffer.getLine(buf, LineNumber.(zero + 1));
+        let line3 = Buffer.getLine(buf, LineNumber.(zero + 2));
+
+        expect.string(line1).toEqual(
+          "This is the first line of a test file",
+        );
+        expect.string(line2).toEqual(
+          "This is the second line of a test file",
+        );
+        expect.string(line3).toEqual(
+          "This is the third line of a test file",
+        );
+      })
+    });
     test("multi-cursor auto-closing pairs", ({expect, _}) => {
       let buf = resetBuffer();
 

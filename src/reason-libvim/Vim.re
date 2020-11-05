@@ -542,7 +542,9 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
     () => {
       // Special auto-closing pairs handling...
 
-      let runCursor = cursor => {
+      let runCursor = (cursor: BytePosition.t) => {
+        let lineNumber = EditorCoreTypes.LineNumber.toOneBased(cursor.line);
+        Undo.saveRegion(lineNumber - 1, lineNumber + 1);
         Cursor.set(cursor);
         if (Mode.current() |> Mode.isInsert) {
           let position: BytePosition.t = Cursor.get();

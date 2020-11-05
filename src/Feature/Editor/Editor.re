@@ -1263,7 +1263,7 @@ let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
       );
     let mode =
       if (Vim.Mode.isInsert(editor.mode)) {
-        Vim.Mode.Insert({cursors: [bytePosition]});
+        Vim.Mode.Insert({cursors: [bytePosition, ...cursors(editor)]});
       } else {
         Vim.Mode.Normal({cursor: bytePosition});
       };
