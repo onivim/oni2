@@ -65,6 +65,13 @@ module Commands = {
 };
 
 module Contributions = {
+  let contextKeys = (~isFocused, model) => {
+    WhenExpr.ContextKeys.(
+      isFocused
+        ? Component_InputText.Contributions.contextKeys(model.inputModel)
+        : empty
+    );
+  };
   let commands = Commands.[enterLicenseKey];
 };
 
