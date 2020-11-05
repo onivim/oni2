@@ -670,6 +670,20 @@ colnr_T srcColumn, colnr_T wantColumn, linenr_T *destLine, colnr_T *destColumn) 
    CAMLreturn0;
 }
 
+void onCursorAdd(pos_T newCursorPosition) {
+   CAMLparam0();
+   static const value *lv_onCursorAdd = NULL;
+   if (lv_onCursorAdd == NULL) {
+     lv_onCursorAdd = caml_named_value("lv_onCursorAdd");
+   }
+    caml_callback2(*lv_onCursorAdd,
+    Val_int(newCursorPosition.lnum),
+    Val_int(newCursorPosition.col)
+    );
+  printf("NEW CURSOR: %ld, %d\n", newCursorPosition.lnum, newCursorPosition.col);
+  CAMLreturn0;
+}
+
 void onScrollCallback(scrollDirection_T dir, long count) {
    CAMLparam0();
 
@@ -764,6 +778,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetCursorMoveScreenPositionCallback(&onCursorMoveScreenPosition);
   vimSetScrollCallback(&onScrollCallback);
   vimSetToggleCommentsCallback(&onToggleComments);
+  vimSetCursorAddCallback(&onCursorAdd);
 
   char *args[0];
   vimInit(0, args);

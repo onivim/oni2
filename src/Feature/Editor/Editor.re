@@ -1268,7 +1268,7 @@ let mouseUp = (~altKey, ~time, ~pixelX, ~pixelY, editor) => {
           Vim.Mode.Insert({cursors: [bytePosition, ...cursors(editor)]});
         } else {
           Vim.Mode.Insert({cursors: [bytePosition]});
-        }
+        };
       } else {
         Vim.Mode.Normal({cursor: bytePosition});
       };

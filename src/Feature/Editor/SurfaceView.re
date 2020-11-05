@@ -107,14 +107,18 @@ let%component make =
   let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
     |> Option.iter(((pixelX, pixelY, time)) => {
-         dispatch(Msg.EditorMouseDown({altKey: evt.ctrlKey, time, pixelX, pixelY}))
+         dispatch(
+           Msg.EditorMouseDown({altKey: evt.ctrlKey, time, pixelX, pixelY}),
+         )
        });
   };
 
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
     |> Option.iter(((pixelX, pixelY, time)) => {
-         dispatch(Msg.EditorMouseUp({altKey: evt.ctrlKey, time, pixelX, pixelY}))
+         dispatch(
+           Msg.EditorMouseUp({altKey: evt.ctrlKey, time, pixelX, pixelY}),
+         )
        });
   };
 
@@ -132,21 +136,22 @@ let%component make =
        )
     |> Option.value(~default=React.empty);
 
-  let cursors = Editor.cursors(editor)
-  |> List.filter_map(pos => Editor.byteToCharacter(pos, editor))
-  |> List.map(cursorPosition => {
-    <CursorView
-      config
-      editor
-      editorFont
-      mode
-      cursorPosition
-      isActiveSplit
-      windowIsFocused
-      colors
-    />
-  })
-  |> React.listToElement;
+  let cursors =
+    Editor.cursors(editor)
+    |> List.filter_map(pos => Editor.byteToCharacter(pos, editor))
+    |> List.map(cursorPosition => {
+         <CursorView
+           config
+           editor
+           editorFont
+           mode
+           cursorPosition
+           isActiveSplit
+           windowIsFocused
+           colors
+         />
+       })
+    |> React.listToElement;
 
   <View
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
@@ -231,6 +236,6 @@ let%component make =
       }}
     />
     yankHighlightElement
-    {cursors}
+    cursors
   </View>;
 };
