@@ -7,13 +7,17 @@ module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
+  Log.infof(m =>
+    m("ExtensionClient.create called with attachStdio: %b", attachStdio)
+  );
+
+  let maybeClientRef = ref(None);
+
   let extensionInfo =
     extensions |> List.map(Exthost.Extension.InitData.Extension.ofScanResult);
   open Exthost;
   open Exthost.Extension;
   open Exthost.Msg;
-
-  let maybeClientRef = ref(None);
 
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
@@ -236,8 +240,8 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
 
   let tempDir = Filename.get_temp_dir_name();
 
-  let logsLocation = tempDir |> Uri.fromPath;
-  let logFile =
+  let logFile = tempDir |> Uri.fromPath;
+  let logsLocation =
     Filename.temp_file(~temp_dir=tempDir, "onivim2", "exthost.log")
     |> Uri.fromPath;
 
@@ -247,7 +251,6 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
       ~parentPid,
       ~logsLocation,
       ~logFile,
-      ~logLevel=0,
       extensionInfo,
     );
 
@@ -270,7 +273,26 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
       (),
     );
 
-  let env = Luv.Env.environ() |> Result.get_ok;
+  // INVESTIGATE: Why does using `Luv.Env.environ()` sometimes not work correctly when calling Process.spawn?
+  // In some cases - intermittently - the spawned process will not have the environment variables set.
+  // let env = Luv.Env.environ() |> Result.get_ok;
+  // ...in the meantime, fall-back to Unix.environment:
+  let env =
+    Unix.environment()
+    |> Array.to_list
+    |> List.fold_left(
+         (acc, curr) => {
+           switch (String.split_on_char('=', curr)) {
+           | [] => acc
+           | [_] => acc
+           | [key, ...values] =>
+             let v = String.concat("=", values);
+
+             [(key, v), ...acc];
+           }
+         },
+         [],
+       );
   let environment = [
     (
       "AMD_ENTRYPOINT",
