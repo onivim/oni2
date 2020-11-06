@@ -566,27 +566,6 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       Nothing,
     )
 
-  //  | NewResourceGroup({provider, handle, id, label}) => (
-  //      model
-  //      |> Internal.updateProvider(~handle=provider, p =>
-  //           {
-  //             ...p,
-  //             resourceGroups: [
-  //               ResourceGroup.{
-  //                 handle,
-  //                 id,
-  //                 label,
-  //                 hideWhenEmpty: false,
-  //                 resources: [],
-  //                 viewModel: Component_VimList.create(~rowHeight=20),
-  //               },
-  //               ...p.resourceGroups,
-  //             ],
-  //           }
-  //         ),
-  //      Nothing,
-  //    )
-
   | NewResourceGroups({provider, groups, splices}) =>
     let model' =
       groups
