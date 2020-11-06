@@ -11,8 +11,6 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStoreConnector"));
 
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-
 let start = (extensions, extHostClient: Exthost.Client.t) => {
   let discoveredExtensionsEffect = extensions =>
     Isolinear.Effect.createWithDispatch(

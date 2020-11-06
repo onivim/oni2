@@ -12,6 +12,7 @@ module BuildInfo = BuildInfo;
 module ThemeToken = ThemeToken;
 module Codicon = Codicon;
 module Command = Command;
+module Comments = Comments;
 module Config = Config;
 module Configuration = Configuration;
 module ConfigurationDefaults = ConfigurationDefaults;

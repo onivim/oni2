@@ -42,3 +42,6 @@ let screenPositionMotion:
     ),
   ) =
   ref(None);
+
+let toggleComments: ref(option(array(string) => array(string))) =
+  ref(None);

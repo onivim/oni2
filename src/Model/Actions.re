@@ -6,10 +6,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Input;
 open Oni_Syntax;
-
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 [@deriving show({with_path: false})]
 type t =
@@ -38,7 +35,7 @@ type t =
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
-  | KeyBindingsSet([@opaque] Keybindings.t)
+  | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
@@ -75,7 +72,6 @@ type t =
     })
   | FilesDropped({paths: list(string)})
   | FileExplorer(Feature_Explorer.msg)
-  | LanguageFeature(LanguageFeatures.action)
   | LanguageSupport(Feature_LanguageSupport.msg)
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)

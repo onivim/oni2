@@ -33,6 +33,62 @@ let curlyBracketPair = AutoPair.{opening: "{", closing: "}"};
 let quotePair = AutoPair.{opening: quote, closing: quote};
 
 describe("AutoClosingPairs", ({test, describe, _}) => {
+  describe("undo", ({test, _}) => {
+    test("single undo undoes entire edit", ({expect, _}) => {
+      let b = resetBuffer();
+
+      let autoClosingPairs = AutoClosingPairs.create([squareBracketPair]);
+      let lineCount = Buffer.getLineCount(b);
+      expect.int(lineCount).toBe(1);
+
+      input(~autoClosingPairs, "o");
+      input(~autoClosingPairs, "A");
+      input(~autoClosingPairs, "[");
+      input(~autoClosingPairs, "]");
+      input(~autoClosingPairs, ":");
+
+      let lineCount = Buffer.getLineCount(b);
+      expect.int(lineCount).toBe(2);
+
+      // #2635: 'u' should be sufficient to undo the entire line
+      key("<ESC>");
+      input("u");
+      let lineCount = Buffer.getLineCount(b);
+      expect.int(lineCount).toBe(1);
+    })
+  });
+  describe("redo", ({test, _}) => {
+    test("redo applies entire auto-closing pair", ({expect, _}) => {
+      let b = resetBuffer();
+
+      let autoClosingPairs = AutoClosingPairs.create([squareBracketPair]);
+      let lineCount = Buffer.getLineCount(b);
+      expect.int(lineCount).toBe(1);
+
+      input(~autoClosingPairs, "O");
+      input(~autoClosingPairs, "a");
+      input(~autoClosingPairs, "[");
+      input(~autoClosingPairs, "1");
+      input(~autoClosingPairs, "]");
+      input(~autoClosingPairs, "b");
+      key(~autoClosingPairs, "<esc>");
+
+      let lineCount = Buffer.getLineCount(b);
+      expect.int(lineCount).toBe(2);
+
+      let line0Initial = Buffer.getLine(b, LineNumber.zero);
+      expect.string(line0Initial).toEqual("a[1]b");
+
+      // #2635: '.' should repeat entire ACP edit
+      input(".");
+      let line0After = Buffer.getLine(b, LineNumber.zero);
+      let line1After = Buffer.getLine(b, LineNumber.(zero + 1));
+      expect.string(line0After).toEqual("a[1]b");
+      expect.string(line1After).toEqual("a[1]b");
+      let lineCount = Buffer.getLineCount(b);
+      expect.int(lineCount).toBe(3);
+    })
+  });
   test("no auto-closing pairs", ({expect, _}) => {
     let b = resetBuffer();
 

@@ -55,6 +55,8 @@ jobs:
 
 - job: Linux
   displayName: 'Linux - Ubuntu 18.04'
+  # Run if not master
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   timeoutInMinutes: 90
   pool:
     vmImage: 'ubuntu-18.04'
@@ -174,6 +176,8 @@ jobs:
 - job: WindowsTest
   timeoutInMinutes: 150
   displayName: "Windows - Integration Test"
+  # Run if not master
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   pool:
     vmImage: 'vs2017-win2016'
 

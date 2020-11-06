@@ -17,6 +17,7 @@ type t = {
       ~wantByte: ByteIndex.t
     ) =>
     BytePosition.t,
+  toggleComments: array(string) => array(string),
   bufferId: int,
   colorSchemeProvider: ColorScheme.Provider.t,
   width: int,
@@ -24,7 +25,6 @@ type t = {
   leftColumn: int,
   topLine: int,
   mode: Mode.t,
-  lineComment: option(string),
   tabSize: int,
   insertSpaces: bool,
 };
@@ -47,5 +47,5 @@ let current = () => {
   mode: Mode.current(),
   tabSize: Options.getTabSize(),
   insertSpaces: Options.getInsertSpaces(),
-  lineComment: None,
+  toggleComments: lines => lines,
 };
