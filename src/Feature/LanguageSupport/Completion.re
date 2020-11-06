@@ -874,7 +874,7 @@ module ContextKeys = {
 // KEYBINDINGS
 
 module KeyBindings = {
-  open Oni_Input.Keybindings;
+  open Feature_Input.Schema;
 
   let suggestWidgetVisible =
     "editorTextFocus && suggestWidgetVisible" |> WhenExpr.parse;

@@ -119,7 +119,7 @@ module ContextKeys = {
 };
 
 module Keybindings = {
-  open Oni_Input.Keybindings;
+  open Feature_Input.Schema;
 
   let condition = "normalMode" |> WhenExpr.parse;
 

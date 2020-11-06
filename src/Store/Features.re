@@ -337,6 +337,16 @@ let update =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
       | DebugInputShown => Internal.openFileEffect("oni://DebugInput")
+      | MapParseError({fromKeys, toKeys, error}) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          Printf.sprintf(
+            "Error mapping %s to %s: %s",
+            fromKeys,
+            toKeys,
+            error,
+          ),
+        )
       };
 
     ({...state, input: model}, eff);

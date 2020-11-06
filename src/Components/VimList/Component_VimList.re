@@ -478,8 +478,6 @@ module Commands = {
 };
 
 module Keybindings = {
-  open Oni_Input;
-
   let commandCondition =
     "!textInputFocus && vimListNavigation" |> WhenExpr.parse;
 
@@ -487,7 +485,7 @@ module Keybindings = {
     "vimListSearchOpen && textInputFocus" |> WhenExpr.parse;
 
   let keybindings =
-    Keybindings.[
+    Feature_Input.Schema.[
       // NORMAL MODE MOVEMENT
       {key: "gg", command: Commands.gg.id, condition: commandCondition},
       {key: "<S-G>", command: Commands.g.id, condition: commandCondition},

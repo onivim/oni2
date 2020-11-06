@@ -63,15 +63,13 @@ module ContextKeys = {
 };
 
 module Keybindings = {
-  open Oni_Input;
-
   let commandCondition = "vimWindowNavigation" |> WhenExpr.parse;
 
   let noTextInputCondition =
     "!textInputFocus && vimWindowNavigation" |> WhenExpr.parse;
 
   let keybindings =
-    Keybindings.[
+    Feature_Input.Schema.[
       {
         key: "<C-W>H",
         command: Commands.moveLeft.id,
