@@ -10,7 +10,7 @@ steps:
   - script: esy install
     displayName: 'Install Dependencies: esy install (final)'
   - script: esy bootstrap
-    displayName: 'Bootstrap Oni2 setup with system specific build variables (attempt 1)
+    displayName: 'Bootstrap Oni2 setup with system specific build variables (attempt 1)'
     continueOnError: true
   - script: esy bootstrap
     displayName: 'Bootstrap Oni2 setup with system specific build variables (attempt 2)'
