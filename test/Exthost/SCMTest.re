@@ -31,7 +31,7 @@ describe("SCM", ({test, _}) => {
     |> Test.waitForMessage(
          ~name="RegisterSCMResourceGroup",
          fun
-         | Msg.SCM(RegisterSCMResourceGroups({provider, groups, _})) =>
+         | Msg.SCM(RegisterSCMResourceGroups({groups, _})) =>
            groups
            |> List.exists(({id, label, _}: Exthost.SCM.Group.t) => {
                 id == "resourceGroup" && label == "resourceGroup"

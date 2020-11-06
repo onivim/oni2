@@ -619,7 +619,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     let model'' =
       splices
       |> List.fold_left(
-           (acc, {handle as group, resourceSplices}: Resource.Splices.t) => {
+           (acc, {handle: group, resourceSplices}: Resource.Splices.t) => {
              resourceSplices
              |> List.fold_left(
                   (
@@ -692,7 +692,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     let model' =
       splices
       |> List.fold_left(
-           (acc, {handle as group, resourceSplices}: Resource.Splices.t) => {
+           (acc, {handle: group, resourceSplices}: Resource.Splices.t) => {
              resourceSplices
              |> List.fold_left(
                   (
