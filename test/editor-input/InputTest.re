@@ -46,6 +46,36 @@ describe("EditorInput", ({describe, _}) => {
       expect.equal(effects, [Execute("commandA")]);
     });
 
+    test("leader key can participate in remap", ({expect, _}) => {
+      // Add a <Leader>a -> "commandLeaderA" mapping
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([leaderKey, aKeyNoModifiers]),
+             _ => true,
+             "commandLeaderA",
+           );
+
+      // Remap b -> <Leadeer>
+      let (bindings, _id) =
+        bindings
+        |> Input.addMapping(
+             Sequence([bKeyNoModifiers]),
+             _ => true,
+             [leaderKey],
+           );
+
+      // Pressing b, as the leader key...
+      let (bindings, effects) =
+        Input.keyDown(~context=true, ~key=bKeyNoModifiers, bindings);
+      expect.equal(effects, []);
+
+      // And then a to complete the binding
+      let (_bindings, effects) =
+        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
+      expect.equal(effects, [Execute("commandLeaderA")]);
+    });
+
     test("leader key defined as a", ({expect, _}) => {
       let physicalKey =
         PhysicalKey.{scancode: 101, keycode: 1, modifiers: Modifiers.none};

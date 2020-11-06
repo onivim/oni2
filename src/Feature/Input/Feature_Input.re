@@ -109,7 +109,8 @@ type effect =
     | Unhandled(EditorInput.KeyPress.t)
     | RemapRecursionLimitHit;
 
-let keyDown = (~leaderKey=None, ~key, ~context, {inputStateMachine, _} as model) => {
+let keyDown =
+    (~leaderKey=None, ~key, ~context, {inputStateMachine, _} as model) => {
   let (inputStateMachine', effects) =
     InputStateMachine.keyDown(~leaderKey, ~key, ~context, inputStateMachine);
   ({...model, inputStateMachine: inputStateMachine'}, effects);
@@ -121,7 +122,8 @@ let text = (~text, {inputStateMachine, _} as model) => {
   ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
-let keyUp = (~leaderKey=None, ~key, ~context, {inputStateMachine, _} as model) => {
+let keyUp =
+    (~leaderKey=None, ~key, ~context, {inputStateMachine, _} as model) => {
   let (inputStateMachine', effects) =
     InputStateMachine.keyUp(~leaderKey, ~key, ~context, inputStateMachine);
   ({...model, inputStateMachine: inputStateMachine'}, effects);
@@ -129,15 +131,21 @@ let keyUp = (~leaderKey=None, ~key, ~context, {inputStateMachine, _} as model) =
 
 let addKeyBinding = (~binding, {inputStateMachine, _} as model) => {
   open Schema;
-  let (inputStateMachine', uniqueId) = InputStateMachine.addBinding(binding.matcher, binding.condition, binding.command, inputStateMachine);
+  let (inputStateMachine', uniqueId) =
+    InputStateMachine.addBinding(
+      binding.matcher,
+      binding.condition,
+      binding.command,
+      inputStateMachine,
+    );
   ({...model, inputStateMachine: inputStateMachine'}, uniqueId);
-}
+};
 
 let remove = (uniqueId, {inputStateMachine, _} as model) => {
-  open Schema;
-  let inputStateMachine' = InputStateMachine.remove(uniqueId, inputStateMachine);
+  let inputStateMachine' =
+    InputStateMachine.remove(uniqueId, inputStateMachine);
   {...model, inputStateMachine: inputStateMachine'};
-}
+};
 
 // UPDATE
 module Internal = {

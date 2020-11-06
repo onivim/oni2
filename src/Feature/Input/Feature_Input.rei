@@ -47,20 +47,28 @@ type effect =
   | RemapRecursionLimitHit;
 
 let keyDown:
-  (~leaderKey: option(EditorInput.PhysicalKey.t)=?,
-  ~key: KeyPress.t, ~context: WhenExpr.ContextKeys.t, model) =>
+  (
+    ~leaderKey: option(EditorInput.PhysicalKey.t)=?,
+    ~key: KeyPress.t,
+    ~context: WhenExpr.ContextKeys.t,
+    model
+  ) =>
   (model, list(effect));
 
 let text: (~text: string, model) => (model, list(effect));
 let keyUp:
   (
-  ~leaderKey: option(EditorInput.PhysicalKey.t)=?,
-  ~key: KeyPress.t, ~context: WhenExpr.ContextKeys.t, model) =>
+    ~leaderKey: option(EditorInput.PhysicalKey.t)=?,
+    ~key: KeyPress.t,
+    ~context: WhenExpr.ContextKeys.t,
+    model
+  ) =>
   (model, list(effect));
 
 type uniqueId;
 
-let addKeyBinding: (~binding: Schema.resolvedKeybinding, model) => (model, uniqueId);
+let addKeyBinding:
+  (~binding: Schema.resolvedKeybinding, model) => (model, uniqueId);
 
 let remove: (uniqueId, model) => model;
 
