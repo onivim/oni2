@@ -82,22 +82,22 @@ module Internal = {
       let effect =
         switch (outmsg) {
         | Nothing => Effect.none
-        | MouseHovered({characterPosition, _}) =>
+        | MouseHovered(maybeCharacterPosition) =>
           Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
             dispatch(
               LanguageSupport(
                 Feature_LanguageSupport.Msg.Hover.mouseHovered(
-                  characterPosition,
+                  maybeCharacterPosition,
                 ),
               ),
             )
           })
-        | MouseMoved({characterPosition, _}) =>
+        | MouseMoved(maybeCharacterPosition) =>
           Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
             dispatch(
               LanguageSupport(
                 Feature_LanguageSupport.Msg.Hover.mouseMoved(
-                  characterPosition,
+                  maybeCharacterPosition,
                 ),
               ),
             )
@@ -337,6 +337,16 @@ let update =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
       | DebugInputShown => Internal.openFileEffect("oni://DebugInput")
+      | MapParseError({fromKeys, toKeys, error}) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          Printf.sprintf(
+            "Error mapping %s to %s: %s",
+            fromKeys,
+            toKeys,
+            error,
+          ),
+        )
       };
 
     ({...state, input: model}, eff);
@@ -964,6 +974,7 @@ let update =
 
       | _ => None
       };
+
     let (model, outmsg) = update(~focus, state.layout, msg);
     let state = {...state, layout: model};
 

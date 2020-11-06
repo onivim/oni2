@@ -75,7 +75,6 @@ rule token = parse
 | "numpad_divide" { BINDING(NumpadDivide) }
 | "numpad" { numpad_digit lexbuf }
 | white { token lexbuf }
-| '!' { EXCLAMATION }
 | binding as i
  { BINDING (Character (i)) }
 | '<' { LT }

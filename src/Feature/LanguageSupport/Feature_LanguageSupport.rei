@@ -25,8 +25,8 @@ module Msg: {
 
   module Hover: {
     let show: msg;
-    let mouseHovered: CharacterPosition.t => msg;
-    let mouseMoved: CharacterPosition.t => msg;
+    let mouseHovered: option(CharacterPosition.t) => msg;
+    let mouseMoved: option(CharacterPosition.t) => msg;
     let keyPressed: string => msg;
   };
 };
@@ -85,6 +85,7 @@ let isFocused: model => bool;
 
 let sub:
   (
+    ~config: Oni_Core.Config.resolver,
     ~isInsertMode: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
     ~activePosition: CharacterPosition.t,
@@ -93,6 +94,26 @@ let sub:
     model
   ) =>
   Isolinear.Sub.t(msg);
+
+module CodeLens: {
+  type t;
+
+  let get: (~bufferId: int, model) => list(t);
+
+  let lineNumber: t => int;
+  let uniqueId: t => string;
+
+  module View: {
+    let make:
+      (
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~uiFont: UiFont.t,
+        ~codeLens: t,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
 
 module Completion: {
   let isActive: model => bool;
@@ -156,7 +177,7 @@ module Contributions: {
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
   let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
-  let keybindings: list(Oni_Input.Keybindings.keybinding);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };
 
 module Definition: {
@@ -180,4 +201,3 @@ module DocumentHighlights: {
 
 // TODO: Remove
 module CompletionMeet = CompletionMeet;
-module LanguageFeatures = LanguageFeatures;

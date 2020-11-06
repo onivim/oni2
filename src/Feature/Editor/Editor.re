@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Utility;
 
 module GlobalState = {
   let lastId = ref(0);
@@ -101,6 +102,13 @@ type t = {
   // Number of lines to preserve before or after the cursor, when scrolling.
   // Like the `scrolloff` vim setting or the `editor.cursorSurroundingLines` VSCode setting.
   verticalScrollMargin: int,
+  // Mouse state
+  isMouseDown: bool,
+  hasMouseEntered: bool,
+  // The last mouse position, in screen coordinates
+  lastMouseScreenPosition: option(PixelPosition.t),
+  lastMouseMoveTime: [@opaque] option(Revery.Time.t),
+  lastMouseUpTime: [@opaque] option(Revery.Time.t),
 };
 
 let key = ({key, _}) => key;
@@ -185,6 +193,42 @@ let setWrapPadding = (~padding, editor) => {
   wrapPadding: Some(padding),
 };
 
+let setVerticalScrollMargin = (~lines, editor) => {
+  ...editor,
+  verticalScrollMargin: lines,
+};
+
+let totalViewLines = ({wrapState, _}) =>
+  wrapState |> WrapState.wrapping |> Wrapping.numberOfLines;
+
+let getCharacterWidth = ({buffer, _}) =>
+  EditorBuffer.font(buffer).spaceWidth;
+
+let getLayout = editor => {
+  let {
+    pixelWidth,
+    pixelHeight,
+    isMinimapEnabled,
+    lineNumbers,
+    minimapMaxColumnWidth,
+    _,
+  } = editor;
+  let layout: EditorLayout.t =
+    EditorLayout.getLayout(
+      ~showLineNumbers=lineNumbers != `Off,
+      ~isMinimapShown=isMinimapEnabled,
+      ~maxMinimapCharacters=minimapMaxColumnWidth,
+      ~pixelWidth=float_of_int(pixelWidth),
+      ~pixelHeight=float_of_int(pixelHeight),
+      ~characterWidth=getCharacterWidth(editor),
+      ~characterHeight=lineHeightInPixels(editor),
+      ~bufferLineCount=editor |> totalViewLines,
+      (),
+    );
+
+  layout;
+};
+
 let viewLineToBufferLine = (viewLine, editor) => {
   let wrapping = editor.wrapState |> WrapState.wrapping;
   let bufferPosition: Wrapping.bufferPosition =
@@ -253,12 +297,30 @@ let viewTokens = (~line, ~scrollX, ~colorizer, editor) => {
   let viewStartIndex = BufferLine.getIndex(~byte=viewStartByte, bufferLine);
   let viewEndIndex = BufferLine.getIndex(~byte=viewEndByte, bufferLine);
 
-  BufferViewTokenizer.tokenize(
-    ~start=viewStartIndex,
-    ~stop=viewEndIndex,
-    bufferLine,
-    colorizer(~startByte=viewStartByte),
-  );
+  let tokens =
+    BufferViewTokenizer.tokenize(
+      ~start=viewStartIndex,
+      ~stop=viewEndIndex,
+      bufferLine,
+      colorizer(~startByte=viewStartByte),
+    );
+
+  // The tokens returned from tokenize start at a pixel position of 0.
+  // However, there may be a scroll applied, and we need to account for
+  // shifting the tokens if the scroll position is not exactly aligned to
+  // a character.
+  let ({x: startIndexPixel, _}: PixelPosition.t, _width) =
+    bufferBytePositionToPixel(
+      ~position=BytePosition.{line: bufferPosition.line, byte: viewStartByte},
+      {...editor, scrollX},
+    );
+
+  let pixelOffset = startIndexPixel;
+
+  tokens
+  |> List.map((token: BufferViewTokenizer.t) =>
+       {...token, startPixel: token.startPixel +. pixelOffset}
+     );
 };
 
 let bufferCharacterPositionToPixel =
@@ -280,15 +342,49 @@ let bufferCharacterPositionToPixel =
   };
 };
 
+let getContentPixelWidth = editor => {
+  let layout: EditorLayout.t = getLayout(editor);
+  layout.bufferWidthInPixels;
+};
+
+let setLineHeight = (~lineHeight, editor) => {...editor, lineHeight};
+
+let setLineNumbers = (~lineNumbers, editor) => {...editor, lineNumbers};
+let lineNumbers = ({lineNumbers, _}) => lineNumbers;
+
+let setWrapMode = (~wrapMode, editor) => {
+  let pixelWidth = getContentPixelWidth(editor);
+  {
+    ...editor,
+    wrapMode,
+    wrapState: WrapState.make(~pixelWidth, ~wrapMode, ~buffer=editor.buffer),
+  };
+};
+
+let configure = (~config, editor) => {
+  let wrapMode =
+    EditorConfiguration.Experimental.wordWrap.get(config) == `On
+      ? WrapMode.Viewport : WrapMode.NoWrap;
+
+  let scrolloff = EditorConfiguration.scrolloff.get(config);
+
+  editor
+  |> setVerticalScrollMargin(~lines=scrolloff)
+  |> setMinimap(
+       ~enabled=EditorConfiguration.Minimap.enabled.get(config),
+       ~maxColumn=EditorConfiguration.Minimap.maxColumn.get(config),
+     )
+  |> setLineHeight(~lineHeight=EditorConfiguration.lineHeight.get(config))
+  |> setLineNumbers(
+       ~lineNumbers=EditorConfiguration.lineNumbers.get(config),
+     )
+  |> setWrapMode(~wrapMode);
+};
+
 let create = (~config, ~buffer, ()) => {
   let id = GlobalState.generateId();
   let key = Brisk_reconciler.Key.create();
 
-  let isMinimapEnabled = EditorConfiguration.Minimap.enabled.get(config);
-  let minimapMaxColumnWidth =
-    EditorConfiguration.Minimap.maxColumn.get(config);
-  let lineNumbers = EditorConfiguration.lineNumbers.get(config);
-  let lineHeight = EditorConfiguration.lineHeight.get(config);
   let wrapMode =
     EditorConfiguration.Experimental.wordWrap.get(config) == `On
       ? WrapMode.Viewport : WrapMode.NoWrap;
@@ -298,14 +394,14 @@ let create = (~config, ~buffer, ()) => {
   {
     editorId: id,
     key,
-    lineHeight,
-    lineNumbers,
-    isMinimapEnabled,
+    lineHeight: LineHeight.default,
+    lineNumbers: `On,
+    isMinimapEnabled: true,
     isScrollAnimated: false,
     buffer,
     scrollX: 0.,
     scrollY: 0.,
-    minimapMaxColumnWidth,
+    minimapMaxColumnWidth: 99,
     minimapScrollY: 0.,
     /*
      * We need an initial editor size, otherwise we'll immediately scroll the view
@@ -326,13 +422,17 @@ let create = (~config, ~buffer, ()) => {
     wrapMode,
     wrapPadding: None,
     verticalScrollMargin: 1,
-  };
+    isMouseDown: false,
+    hasMouseEntered: false,
+    lastMouseMoveTime: None,
+    lastMouseScreenPosition: None,
+    lastMouseUpTime: None,
+  }
+  |> configure(~config);
 };
 
 let cursors = ({mode, _}) => Vim.Mode.cursors(mode);
 
-let totalViewLines = ({wrapState, _}) =>
-  wrapState |> WrapState.wrapping |> Wrapping.numberOfLines;
 let maxLineLength = ({wrapState, _}) =>
   wrapState |> WrapState.wrapping |> Wrapping.maxLineLength;
 
@@ -421,6 +521,17 @@ let characterToByte = (position: CharacterPosition.t, editor) => {
   } else {
     None;
   };
+};
+
+let characterRangeToByteRange = ({start, stop}: CharacterRange.t, editor) => {
+  let maybeByteStart = characterToByte(start, editor);
+  let maybeByteStop = characterToByte(stop, editor);
+
+  Oni_Core.Utility.OptionEx.map2(
+    (start, stop) => {ByteRange.{start, stop}},
+    maybeByteStart,
+    maybeByteStop,
+  );
 };
 let getCharacterAtPosition = (~position: CharacterPosition.t, {buffer, _}) => {
   let line = EditorCoreTypes.LineNumber.toZeroBased(position.line);
@@ -548,15 +659,7 @@ let selectionOrCursorRange = editor => {
   };
 };
 
-let setLineHeight = (~lineHeight, editor) => {...editor, lineHeight};
-
-let setLineNumbers = (~lineNumbers, editor) => {...editor, lineNumbers};
-let lineNumbers = ({lineNumbers, _}) => lineNumbers;
-
 let getId = model => model.editorId;
-
-let getCharacterWidth = ({buffer, _}) =>
-  EditorBuffer.font(buffer).spaceWidth;
 
 let getVisibleView = editor => {
   let {pixelHeight, _} = editor;
@@ -607,31 +710,6 @@ let getHorizontalScrollbarMetrics = (editor, availableWidth) => {
     };
 };
 
-let getLayout = editor => {
-  let {
-    pixelWidth,
-    pixelHeight,
-    isMinimapEnabled,
-    lineNumbers,
-    minimapMaxColumnWidth,
-    _,
-  } = editor;
-  let layout: EditorLayout.t =
-    EditorLayout.getLayout(
-      ~showLineNumbers=lineNumbers != `Off,
-      ~isMinimapShown=isMinimapEnabled,
-      ~maxMinimapCharacters=minimapMaxColumnWidth,
-      ~pixelWidth=float_of_int(pixelWidth),
-      ~pixelHeight=float_of_int(pixelHeight),
-      ~characterWidth=getCharacterWidth(editor),
-      ~characterHeight=lineHeightInPixels(editor),
-      ~bufferLineCount=editor |> totalViewLines,
-      (),
-    );
-
-  layout;
-};
-
 let getMinimapWidthScaleFactor = editor => {
   let {bufferWidthInPixels, minimapWidthInPixels, _}: EditorLayout.t =
     getLayout(editor);
@@ -643,54 +721,71 @@ let getMinimapWidthScaleFactor = editor => {
   };
 };
 
-let exposePrimaryCursor = editor => {
-  switch (cursors(editor)) {
-  | [primaryCursor, ..._tail] =>
-    let {bufferWidthInPixels, _}: EditorLayout.t = getLayout(editor);
-
-    let pixelWidth = bufferWidthInPixels;
-
-    let {pixelHeight, scrollX, scrollY, _} = editor;
-    let pixelHeight = float(pixelHeight);
-
-    let ({x: pixelX, y: pixelY}: PixelPosition.t, _width) =
-      bufferBytePositionToPixel(~position=primaryCursor, editor);
-
-    let scrollOffX = getCharacterWidth(editor) *. 2.;
-    let scrollOffY =
-      lineHeightInPixels(editor) *. float(editor.verticalScrollMargin);
-
-    let availableX = pixelWidth -. scrollOffX;
-    let availableY = pixelHeight -. scrollOffY;
-
-    let adjustedScrollX =
-      if (pixelX < 0.) {
-        scrollX +. pixelX;
-      } else if (pixelX >= availableX) {
-        scrollX +. (pixelX -. availableX);
-      } else {
-        scrollX;
-      };
-
-    let adjustedScrollY =
-      if (pixelY < scrollOffY) {
-        scrollY -. scrollOffY +. pixelY;
-      } else if (pixelY >= availableY) {
-        scrollY +. (pixelY -. availableY);
-      } else {
-        scrollY;
-      };
-
-    {
-      ...editor,
-      scrollX: adjustedScrollX,
-      scrollY: adjustedScrollY,
-      isScrollAnimated: true,
-    };
-
-  | _ => editor
-  };
+let hasSetSize = editor => {
+  editor.pixelWidth > 1 && editor.pixelHeight > 1;
 };
+
+let exposePrimaryCursor = editor =>
+  if (!hasSetSize(editor)) {
+    // If the size hasn't been set yet - don't try to expose the cursor.
+    // We don't know about the viewport to do a good job.
+    // See:
+    editor;
+  } else {
+    switch (cursors(editor)) {
+    | [primaryCursor, ..._tail] =>
+      let {bufferWidthInPixels, _}: EditorLayout.t = getLayout(editor);
+
+      let pixelWidth = bufferWidthInPixels;
+
+      let {pixelHeight, scrollX, scrollY, _} = editor;
+      let pixelHeight = float(pixelHeight);
+
+      let ({x: pixelX, y: pixelY}: PixelPosition.t, _width) =
+        bufferBytePositionToPixel(~position=primaryCursor, editor);
+
+      let scrollOffX = getCharacterWidth(editor) *. 2.;
+      let scrollOffY =
+        lineHeightInPixels(editor)
+        *. float(max(editor.verticalScrollMargin, 0));
+
+      let availableX = pixelWidth -. scrollOffX;
+      let availableY = pixelHeight -. scrollOffY;
+
+      let adjustedScrollX =
+        max(
+          if (pixelX < 0.) {
+            scrollX +. pixelX;
+          } else if (pixelX >= availableX) {
+            scrollX +. (pixelX -. availableX);
+          } else {
+            scrollX;
+          },
+          0.,
+        );
+
+      let adjustedScrollY =
+        max(
+          if (pixelY < scrollOffY) {
+            scrollY -. scrollOffY +. pixelY;
+          } else if (pixelY >= availableY) {
+            scrollY +. (pixelY -. availableY +. lineHeightInPixels(editor));
+          } else {
+            scrollY;
+          },
+          0.,
+        );
+
+      {
+        ...editor,
+        scrollX: adjustedScrollX,
+        scrollY: adjustedScrollY,
+        isScrollAnimated: true,
+      };
+
+    | _ => editor
+    };
+  };
 
 let mode = ({mode, _}) => mode;
 
@@ -735,31 +830,10 @@ let getTokenAt =
     );
   };
 };
+
 let getContentPixelWidth = editor => {
   let layout: EditorLayout.t = getLayout(editor);
   layout.bufferWidthInPixels;
-};
-
-let setSize = (~pixelWidth, ~pixelHeight, editor) => {
-  let editor' = {...editor, pixelWidth, pixelHeight};
-
-  let contentPixelWidth = getContentPixelWidth(editor');
-
-  let wrapPadding =
-    switch (editor.wrapPadding) {
-    | None => EditorBuffer.measure(Uchar.of_char('W'), editor.buffer)
-    | Some(padding) => padding
-    };
-
-  let wrapWidth = contentPixelWidth -. wrapPadding;
-  let wrapState =
-    WrapState.resize(
-      ~pixelWidth=wrapWidth,
-      ~buffer=editor'.buffer,
-      editor'.wrapState,
-    );
-
-  {...editor', wrapState};
 };
 
 let scrollToPixelY = (~pixelY as newScrollY, editor) => {
@@ -899,7 +973,10 @@ let scrollCursorTop = editor => {
     bufferBytePositionToPixel(~position=cursor, editor);
 
   let pixelY = pixelPosition.y +. editor.scrollY;
-  scrollToPixelY(~pixelY, editor) |> animateScroll;
+  editor
+  |> scrollToPixelY(~pixelY)
+  |> exposePrimaryCursor  // account for scrolloff
+  |> animateScroll;
 };
 
 let scrollCursorBottom = editor => {
@@ -912,7 +989,9 @@ let scrollCursorBottom = editor => {
     pixelPosition.y
     +. editor.scrollY
     -. (heightInPixels -. lineHeightInPixels(editor));
-  scrollToPixelY(~pixelY, editor) |> animateScroll;
+  scrollToPixelY(~pixelY, editor)
+  |> exposePrimaryCursor  // account for scrolloff
+  |> animateScroll;
 };
 
 let scrollLines = (~count, editor) => {
@@ -933,6 +1012,35 @@ let scrollPage = (~count, editor) => {
     count
     * int_of_float(float(editor.pixelHeight) /. lineHeightInPixels(editor));
   scrollAndMoveCursor(~deltaViewLines=lineDelta, editor);
+};
+
+let setSize = (~pixelWidth, ~pixelHeight, originalEditor) => {
+  let editor = {...originalEditor, pixelWidth, pixelHeight};
+
+  let contentPixelWidth = getContentPixelWidth(editor);
+
+  let wrapPadding =
+    switch (editor.wrapPadding) {
+    | None => EditorBuffer.measure(Uchar.of_char('W'), editor.buffer)
+    | Some(padding) => padding
+    };
+
+  let wrapWidth = contentPixelWidth -. wrapPadding;
+  let wrapState =
+    WrapState.resize(
+      ~pixelWidth=wrapWidth,
+      ~buffer=editor.buffer,
+      editor.wrapState,
+    );
+
+  let editor' = {...editor, wrapState};
+
+  // If we hadn't measured before, make sure the cursor is in view
+  if (!hasSetSize(originalEditor)) {
+    scrollCursorTop(editor');
+  } else {
+    editor';
+  };
 };
 
 // PROJECTION
@@ -993,35 +1101,12 @@ let setBuffer = (~buffer, editor) => {
   };
 };
 
-let setWrapMode = (~wrapMode, editor) => {
-  let pixelWidth = getContentPixelWidth(editor);
-  {
-    ...editor,
-    wrapMode,
-    wrapState: WrapState.make(~pixelWidth, ~wrapMode, ~buffer=editor.buffer),
-  };
-};
-
 let configurationChanged = (~perFileTypeConfig, editor) => {
   let fileType =
     editor.buffer |> EditorBuffer.fileType |> Oni_Core.Buffer.FileType.toString;
 
   let config = perFileTypeConfig(~fileType);
-
-  let wrapMode =
-    EditorConfiguration.Experimental.wordWrap.get(config) == `On
-      ? WrapMode.Viewport : WrapMode.NoWrap;
-
-  editor
-  |> setMinimap(
-       ~enabled=EditorConfiguration.Minimap.enabled.get(config),
-       ~maxColumn=EditorConfiguration.Minimap.maxColumn.get(config),
-     )
-  |> setLineHeight(~lineHeight=EditorConfiguration.lineHeight.get(config))
-  |> setLineNumbers(
-       ~lineNumbers=EditorConfiguration.lineNumbers.get(config),
-     )
-  |> setWrapMode(~wrapMode);
+  configure(~config, editor);
 };
 
 module Slow = {
@@ -1042,11 +1127,6 @@ module Slow = {
     let totalLinesInBuffer = EditorBuffer.numberOfLines(view.buffer);
 
     let lineIdx = EditorCoreTypes.LineNumber.toZeroBased(line);
-    //      if (rawLine >= totalLinesInBuffer) {
-    //        max(0, totalLinesInBuffer - 1);
-    //      } else {
-    //        rawLine;
-    //      };
 
     if (lineIdx >= 0 && lineIdx < totalLinesInBuffer) {
       let bufferLine = EditorBuffer.line(lineIdx, view.buffer);
@@ -1095,3 +1175,126 @@ let moveScreenLines = (~position, ~count, editor) => {
     editor,
   );
 };
+
+let mouseDown = (~time, ~pixelX, ~pixelY, editor) => {
+  ignore(time);
+  ignore(pixelX);
+  ignore(pixelY);
+  {...editor, isMouseDown: true};
+};
+
+let getCharacterUnderMouse = editor => {
+  editor.lastMouseScreenPosition
+  |> OptionEx.flatMap((mousePosition: PixelPosition.t) => {
+       let bytePosition: BytePosition.t =
+         Slow.pixelPositionToBytePosition(
+           ~allowPast=true,
+           ~pixelX=mousePosition.x,
+           ~pixelY=mousePosition.y,
+           editor,
+         );
+
+       let bufferLine =
+         EditorBuffer.line(
+           EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line),
+           editor.buffer,
+         );
+       if (BufferLine.lengthInBytes(bufferLine)
+           > ByteIndex.toInt(bytePosition.byte)) {
+         byteToCharacter(bytePosition, editor);
+       } else {
+         None;
+       };
+     });
+};
+
+let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
+  let isDoubleClick =
+    switch (editor.lastMouseUpTime) {
+    | Some(lastMouseUpTime) =>
+      let lastTime = Revery.Time.toFloatSeconds(lastMouseUpTime);
+      let newTime = Revery.Time.toFloatSeconds(time);
+      let doubleClickTime =
+        Revery.Time.toFloatSeconds(Constants.doubleClickTime);
+      newTime -. lastTime < doubleClickTime;
+    | None => false
+    };
+
+  let isInsertMode = Vim.Mode.isInsert(editor.mode);
+  if (isDoubleClick) {
+    let mode =
+      getCharacterUnderMouse(editor)
+      |> OptionEx.flatMap(characterPosition => {
+           getTokenAt(
+             ~languageConfiguration=LanguageConfiguration.default,
+             characterPosition,
+             editor,
+           )
+         })
+      |> OptionEx.flatMap(characterRange =>
+           characterRangeToByteRange(characterRange, editor)
+         )
+      |> Option.map((byteRange: ByteRange.t) => {
+           let visualRange =
+             Vim.VisualRange.{
+               cursor: byteRange.start,
+               anchor: byteRange.stop,
+               visualType: Vim.Types.Character,
+             };
+
+           if (isInsertMode) {
+             Vim.Mode.Select(visualRange);
+           } else {
+             Vim.Mode.Visual(visualRange);
+           };
+         })
+      |> Option.value(~default=editor.mode);
+
+    {...editor, isMouseDown: false, mode, lastMouseUpTime: None};
+  } else {
+    let bytePosition =
+      Slow.pixelPositionToBytePosition(
+        // #2463: When we're insert mode, clicking past the end of the line
+        // should move the cursor past the last byte
+        ~allowPast=isInsertMode,
+        ~pixelX,
+        ~pixelY,
+        editor,
+      );
+    let mode =
+      if (Vim.Mode.isInsert(editor.mode)) {
+        Vim.Mode.Insert({cursors: [bytePosition]});
+      } else {
+        Vim.Mode.Normal({cursor: bytePosition});
+      };
+    {...editor, isMouseDown: false, mode, lastMouseUpTime: Some(time)};
+  };
+};
+
+let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
+  {
+    ...editor,
+    lastMouseMoveTime: Some(time),
+    lastMouseScreenPosition: Some(PixelPosition.{x: pixelX, y: pixelY}),
+  };
+};
+
+let mouseEnter = editor => {
+  ...editor,
+  hasMouseEntered: true,
+  lastMouseMoveTime: None,
+  lastMouseScreenPosition: None,
+};
+let mouseLeave = editor => {
+  ...editor,
+  hasMouseEntered: false,
+  isMouseDown: false,
+  lastMouseMoveTime: None,
+  lastMouseScreenPosition: None,
+};
+
+let hasMouseEntered = ({hasMouseEntered, _}) => hasMouseEntered;
+
+let isMouseDown = ({isMouseDown, _}) => isMouseDown;
+
+let lastMouseMoveTime = ({lastMouseMoveTime, _}) => lastMouseMoveTime;

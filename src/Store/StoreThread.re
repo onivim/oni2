@@ -22,17 +22,21 @@ let discoverExtensions =
     let extensions =
       Core.Log.perf("Discover extensions", () => {
         let extensions =
-          Scanner.scan(
-            // The extension host assumes bundled extensions start with 'vscode.'
-            ~category=Bundled,
-            setup.bundledExtensionsPath,
-          );
+          setup.bundledExtensionsPath
+          |> Fp.absoluteCurrentPlatform
+          |> Option.map(
+               Scanner.scan(
+                 // The extension host assumes bundled extensions start with 'vscode.'
+                 ~category=Bundled,
+               ),
+             )
+          |> Option.value(~default=[]);
 
         let developmentExtensions =
-          switch (setup.developmentExtensionsPath) {
-          | Some(p) => Scanner.scan(~category=Development, p)
-          | None => []
-          };
+          setup.developmentExtensionsPath
+          |> Core.Utility.OptionEx.flatMap(Fp.absoluteCurrentPlatform)
+          |> Option.map(Scanner.scan(~category=Development))
+          |> Option.value(~default=[]);
 
         let userExtensions =
           Service_Extensions.Management.get(
@@ -327,6 +331,7 @@ let start =
       maybeActiveBuffer
       |> Option.map(activeBuffer => {
            Feature_LanguageSupport.sub(
+             ~config,
              ~isInsertMode,
              ~activeBuffer,
              ~activePosition,
@@ -362,6 +367,21 @@ let start =
       Feature_AutoUpdate.sub(~config)
       |> Isolinear.Sub.map(msg => Model.Actions.AutoUpdate(msg));
 
+    let visibleEditorsSubscription =
+      visibleEditors
+      |> List.map(editor =>
+           Feature_Editor.Sub.editor(~config, editor)
+           |> Isolinear.Sub.map(msg =>
+                Model.Actions.Editor({
+                  scope:
+                    Model.EditorScope.Editor(
+                      editor |> Feature_Editor.Editor.getId,
+                    ),
+                  msg,
+                })
+              )
+         )
+      |> Isolinear.Sub.batch;
     [
       extHostSubscription,
       languageSupportSub,
@@ -376,6 +396,7 @@ let start =
       registersSub,
       scmSub,
       autoUpdateSub,
+      visibleEditorsSubscription,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -502,7 +523,11 @@ let start =
   setIconTheme("vs-seti");
 
   let _: unit => unit =
-    Revery.Tick.interval(_ => runEffects(), Revery.Time.zero);
+    Revery.Tick.interval(
+      ~name="Store: Run Effects",
+      _ => runEffects(),
+      Revery.Time.zero,
+    );
 
   (dispatch, runEffects);
 };

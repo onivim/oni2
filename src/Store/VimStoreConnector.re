@@ -13,7 +13,6 @@ module Core = Oni_Core;
 open Core.Utility;
 
 module Zed_utf8 = Core.ZedBundled;
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 module Editor = Feature_Editor.Editor;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
@@ -147,6 +146,11 @@ let start =
       // This is handled by the returned `effects` list -
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
+
+      | Map(mapping) =>
+        dispatch(Actions.Input(Feature_Input.Msg.vimMap(mapping)))
+      | Unmap({mode, keys}) =>
+        dispatch(Actions.Input(Feature_Input.Msg.vimUnmap(mode, keys)))
 
       | Goto(gotoType) => handleGoto(gotoType)
       | TabPage(msg) => dispatch(TabPage(msg))
@@ -644,7 +648,8 @@ let start =
           currentPos := Vim.CommandLine.getPosition();
         };
 
-        let completion = Path.trimTrailingSeparator(completion);
+        let completion =
+          completion |> Path.trimTrailingSeparator |> StringEx.escapeSpaces;
         let (latestContext: Vim.Context.t, effects) =
           Core.VimEx.inputString(completion);
         updateActiveEditorMode(latestContext.mode, effects);

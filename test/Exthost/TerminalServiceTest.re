@@ -42,11 +42,13 @@ describe("TerminalServiceTest", ({test, _}) => {
             executable: "cmd.exe",
             name: "Windows Terminal",
             arguments: ["/c", "echo", "hello"],
+            env: Inherit,
           }
         : ShellLaunchConfig.{
             executable: "bash",
             name: "Bash Terminal",
             arguments: ["-c", "echo hello"],
+            env: Inherit,
           };
     let waitForProcessData =
       fun

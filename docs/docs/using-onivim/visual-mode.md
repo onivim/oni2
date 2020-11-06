@@ -15,8 +15,5 @@ There are three variations of visual mode, and they can be entered from normal m
 
 When in visual mode, pressing a [motion] key - like <kbd>h</kbd>, <kdb>w</kbd>, etc - will extend the visual range.
 
-Visual mode is a great to learn Vim motions, because you get immediate visual feedback!o
-
-
-
+Visual mode is a great to learn Vim motions, because you get immediate visual feedback!
 

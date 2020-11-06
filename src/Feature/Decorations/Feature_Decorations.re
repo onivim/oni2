@@ -17,8 +17,7 @@ type msg =
   | Exthost(Exthost.Msg.Decorations.msg)
   | GotDecorations({
       handle: int,
-      uri: Uri.t,
-      decorations: list(Decoration.t),
+      decorations: [@opaque] StringMap.t(list(Decoration.t)),
     });
 
 module Msg = {
@@ -39,14 +38,31 @@ type model = {
 let initial = {nextRequestId: 0, providers: [], decorations: StringMap.empty};
 
 let getDecorations = (~path: string, model) => {
+  // Round-trip the PATH through a URI, so that it is normalized for Windows (lower-case drive letter, backslahes)
+  let path = path |> Uri.fromPath |> Uri.toFileSystemPath;
   model.decorations |> StringMap.find_opt(path) |> Option.value(~default=[]);
 };
 
 // EFFECTS
 
 module Effects = {
-  let provideDecorations = (~handle, ~uri, ~id, client) => {
-    let requests: list(Exthost.Request.Decorations.request) = [{id, uri}];
+  let provideDecorations = (~handle, ~uris, ~id, client) => {
+    let (nextId, requestMap: IntMap.t(Uri.t)) =
+      uris
+      |> List.fold_left(
+           (acc, curr) => {
+             let (lastId, uriMap) = acc;
+             (lastId + 1, IntMap.add(lastId + 1, curr, uriMap));
+           },
+           (id, IntMap.empty),
+         );
+
+    let requests =
+      requestMap
+      |> IntMap.bindings
+      |> List.map(((id, uri)) => {
+           ({id, uri}: Exthost.Request.Decorations.request)
+         });
 
     let toDecoration: Exthost.Request.Decorations.decoration => Decoration.t =
       decoration => {
@@ -60,19 +76,32 @@ module Effects = {
       let decorations =
         decorations
         |> IntMap.bindings
-        |> List.to_seq
-        |> Seq.map(snd)
-        |> Seq.map(toDecoration)
-        |> List.of_seq;
+        |> List.fold_left(
+             (acc, (requestId, decoration)) => {
+               switch (IntMap.find_opt(requestId, requestMap)) {
+               | None => acc
+               | Some(uri) =>
+                 StringMap.add(
+                   Uri.toFileSystemPath(uri),
+                   [toDecoration(decoration)],
+                   acc,
+                 )
+               }
+             },
+             StringMap.empty,
+           );
 
-      GotDecorations({handle, uri, decorations});
+      GotDecorations({handle, decorations});
     };
 
-    Service_Exthost.Effects.Decorations.provideDecorations(
-      ~handle,
-      ~requests,
-      ~toMsg,
-      client,
+    (
+      nextId,
+      Service_Exthost.Effects.Decorations.provideDecorations(
+        ~handle,
+        ~requests,
+        ~toMsg,
+        client,
+      ),
     );
   };
 };
@@ -105,49 +134,25 @@ let update = (~client: Exthost.Client.t, msg, model) => {
 
     | Exthost(DecorationsDidChange({handle, uris})) =>
       let requestId = model.nextRequestId;
-      let (lastRequestId, effects) =
-        uris
-        |> List.fold_left(
-             (acc, curr) => {
-               let (requestId, effects) = acc;
-               (
-                 requestId + 1,
-                 [
-                   Effects.provideDecorations(
-                     ~id=requestId,
-                     ~handle,
-                     ~uri=curr,
-                     client,
-                   ),
-                   ...effects,
-                 ],
-               );
-             },
-             (requestId, []),
-           );
+      let (nextRequestId, effect) =
+        Effects.provideDecorations(~id=requestId, ~handle, ~uris, client);
+      ({...model, nextRequestId}, Effect(effect));
 
-      (
-        {...model, nextRequestId: lastRequestId + 1},
-        Effect(effects |> Isolinear.Effect.batch),
-      );
-
-    | GotDecorations({handle, uri, decorations}) => (
+    | GotDecorations({handle, decorations}) => (
         {
           ...model,
           decorations:
-            StringMap.update(
-              Uri.toFileSystemPath(uri),
-              fun
-              | Some(existing) => {
-                  let existing =
-                    List.filter(
-                      (it: Decoration.t) => it.handle != handle,
-                      existing,
-                    );
-                  Some(decorations @ existing);
-                }
-              | None => Some(decorations),
+            StringMap.union(
+              (_key, existing, decorations) => {
+                let existing =
+                  List.filter(
+                    (it: Decoration.t) => it.handle != handle,
+                    existing,
+                  );
+                Some(decorations @ existing);
+              },
               model.decorations,
+              decorations,
             ),
         },
         Nothing,

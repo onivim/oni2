@@ -31,6 +31,7 @@ module Key: {
 };
 
 module Modifiers: {
+  [@deriving show]
   type t = {
     control: bool,
     alt: bool,
@@ -44,29 +45,8 @@ module Modifiers: {
   let equals: (t, t) => bool;
 };
 
-module Matcher: {
-  type keyMatcher =
-    | Scancode(int, Modifiers.t)
-    | Keycode(int, Modifiers.t);
-
-  type keyPress =
-    | Keydown(keyMatcher)
-    | Keyup(keyMatcher);
-
-  type t =
-    | Sequence(list(keyPress))
-    | AllKeysReleased;
-
-  let parse:
-    (
-      ~getKeycode: Key.t => option(int),
-      ~getScancode: Key.t => option(int),
-      string
-    ) =>
-    result(t, string);
-};
-
 module KeyPress: {
+  [@deriving show]
   type t = {
     scancode: int,
     keycode: int,
@@ -76,6 +56,28 @@ module KeyPress: {
   let toString:
     // The name of the 'meta' key. Defaults to "Meta".
     (~meta: string=?, ~keyCodeToString: int => string, t) => string;
+
+  let parse:
+    (
+      ~getKeycode: Key.t => option(int),
+      ~getScancode: Key.t => option(int),
+      string
+    ) =>
+    result(list(t), string);
+};
+
+module Matcher: {
+  type t =
+    | Sequence(list(KeyPress.t))
+    | AllKeysReleased;
+
+  let parse:
+    (
+      ~getKeycode: Key.t => option(int),
+      ~getScancode: Key.t => option(int),
+      string
+    ) =>
+    result(t, string);
 };
 
 module type Input = {
@@ -99,12 +101,16 @@ module type Input = {
     | Text(string)
     // The `Unhandled` effect occurs when an unhandled `keyDown` input event occurs.
     // This can happen if there is no binding associated with a key.
-    | Unhandled(KeyPress.t);
+    | Unhandled(KeyPress.t)
+    // RemapRecursionLimitHit is produced if there is a recursive loop
+    // in remappings such that we hit the max limit.
+    | RemapRecursionLimitHit;
 
   let keyDown: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
   let text: (~text: string, t) => (t, list(effect));
   let keyUp: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
-  let flush: (~context: context, t) => (t, list(effect));
+
+  let remove: (uniqueId, t) => t;
 
   /**
   [isPending(bindings)] returns true if there is a potential

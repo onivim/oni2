@@ -46,7 +46,7 @@ let update:
 module Contributions: {
   let commands: (~isFocused: bool, model) => list(Command.t(msg));
   let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
-  let keybindings: list(Oni_Input.Keybindings.keybinding);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };
 
 let initial: model;

@@ -57,12 +57,12 @@ module Provider = {
       path
       |> Oni_Core.Uri.fromPath
       |> Oni_Core.Uri.toFileSystemPath
-      |> Fp.absolute;
+      |> Fp.absoluteCurrentPlatform;
 
     let maybeScmPath =
       rootUri
       |> Option.map(Oni_Core.Uri.toFileSystemPath)
-      |> OptionEx.flatMap(Fp.absolute);
+      |> OptionEx.flatMap(Fp.absoluteCurrentPlatform);
 
     OptionEx.map2(
       (path, scmPath) => {Fp.isDescendent(~ofPath=scmPath, path)},
@@ -875,6 +875,7 @@ let sub = (~activeBuffer, ~client, model) => {
   let bufferId = activeBuffer |> Oni_Core.Buffer.getId;
 
   model.providers
+  |> List.filter(Provider.appliesToPath(~path=filePath))
   |> List.map((provider: Provider.t) =>
        Service_Exthost.Sub.SCM.originalUri(
          ~handle=provider.handle,
