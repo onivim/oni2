@@ -47,6 +47,8 @@ module type Input = {
     ) =>
     (t, list(effect));
 
+  let remove: (uniqueId, t) => t;
+
   let isPending: t => bool;
 
   let count: t => int;
@@ -148,15 +150,19 @@ module Make = (Config: {
 
   let keyMatches = (~leaderKey, keyMatcher, key: gesture) => {
     switch (keyMatcher, key) {
-    | (KeyPress.SpecialKey(Leader), Down(_id, key)) =>
+    | (KeyPress.SpecialKey(Leader), Down(_id, KeyPress.PhysicalKey(key))) =>
       switch (leaderKey) {
       | None => false
-      | Some(leaderKey) =>
-        KeyPress.equals(KeyPress.PhysicalKey(leaderKey), key)
+      | Some(leaderKey) => leaderKey == key
       }
     | (keyPress, Down(_id, key)) => KeyPress.equals(keyPress, key)
     | _ => false
     };
+  };
+
+  let remove = (uniqueId, model) => {
+    ...model,
+    bindings: model.bindings |> List.filter(binding => binding.id != uniqueId),
   };
 
   let applyKeyToBinding = (~leaderKey, ~context, key, binding) =>

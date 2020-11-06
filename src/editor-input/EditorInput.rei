@@ -150,6 +150,8 @@ module type Input = {
     ) =>
     (t, list(effect));
 
+  let remove: (uniqueId, t) => t;
+
   /**
   [isPending(bindings)] returns true if there is a potential
   keybinding pending, false otherwise

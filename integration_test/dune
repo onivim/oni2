@@ -19,7 +19,7 @@
    RegressionVspEmptyInitialBufferTest RegressionVspEmptyExistingBufferTest
    SCMGitTest SyntaxHighlightTextMateTest SyntaxHighlightTreesitterTest
    AddRemoveSplitTest TerminalSetPidTitleTest TerminalConfigurationTest
-   TypingBatchedTest TypingUnbatchedTest VimlConfigurationTest
+   TypingBatchedTest TypingUnbatchedTest VimSimpleRemapTest
    ZenModeSingleFileModeTest ZenModeSplitTest)
  (libraries Oni_CLI Oni_IntegrationTestLib reason-native-crash-utils.asan))
 
@@ -51,7 +51,7 @@
    SyntaxServerParentPidTest.exe SyntaxServerParentPidCorrectTest.exe
    SyntaxServerReadExceptionTest.exe TerminalSetPidTitleTest.exe
    TerminalConfigurationTest.exe AddRemoveSplitTest.exe TypingBatchedTest.exe
-   TypingUnbatchedTest.exe VimlConfigurationTest.exe
+   TypingUnbatchedTest.exe VimSimpleRemapTest.exe
    ZenModeSingleFileModeTest.exe ZenModeSplitTest.exe large-c-file.c
    lsan.supp some-test-file.json some-test-file.txt test.crlf test.lf
    utf8.txt utf8-test-file.htm))

@@ -70,7 +70,7 @@ let isOk = v =>
 
 let bindingCount = v =>
   switch (v) {
-  | Ok((bindings, _)) => count(bindings)
+  | Ok((bindings, _)) => List.length(bindings)
   | Error(_) => 0
   };
 
@@ -123,11 +123,16 @@ describe("Keybindings", ({describe, _}) => {
       result
       |> Utility.ResultEx.tapError(err => failwith(err))
       |> Result.iter(((bindings, _)) => {
+           let input = List.fold_left((acc, binding) => {
+            let (acc', _uniqueId) =
+            Feature_Input.addKeyBinding(~binding, acc);
+            acc'
+           }, Feature_Input.initial([]), bindings);
            let (_bindings, effects) =
-             keyDown(
+             Feature_Input.keyDown(
                ~context=contextWithEditorTextFocus,
                ~key=getKeyFromSDL("F2"),
-               bindings,
+               input,
              );
 
            expect.equal(effects, [Execute("explorer.toggle")]);
@@ -142,9 +147,14 @@ describe("Keybindings", ({describe, _}) => {
       let validateKeyResultsInCommand = ((key, modifiers, cmd)) => {
         result
         |> Result.iter(((bindings, _)) => {
+           let input = List.fold_left((acc, binding) => {
+            let (acc', _uniqueId) =
+            Feature_Input.addKeyBinding(~binding, acc);
+            acc'
+           }, Feature_Input.initial([]), bindings);
              let key = getKeyFromSDL(~modifiers, key);
              let (_bindings, effects) =
-               keyDown(~context=contextWithEditorTextFocus, ~key, bindings);
+               Feature_Input.keyDown(~context=contextWithEditorTextFocus, ~key, input);
              expect.equal(effects, [Execute(cmd)]);
            });
       };

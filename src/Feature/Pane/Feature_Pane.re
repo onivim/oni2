@@ -734,7 +734,7 @@ module Commands = {
 };
 
 module Keybindings = {
-  open Oni_Input.Keybindings;
+  open Feature_Input.Schema;
   let toggleProblems = {
     key: "<S-C-M>",
     command: Commands.problems.id,
