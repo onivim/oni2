@@ -565,6 +565,7 @@ let update =
   | SCM(msg) =>
     let (model, maybeOutmsg) =
       Feature_SCM.update(extHostClient, state.scm, msg);
+    prerr_endline("UPDATED MODEL: " ++ Feature_SCM.show_model(model));
     let state = {...state, scm: model};
 
     switch ((maybeOutmsg: Feature_SCM.outmsg)) {

@@ -317,27 +317,27 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   };
 
   let redirect =
-//    if (attachStdio) {
-      [
-        Luv.Process.inherit_fd(
-          ~fd=Luv.Process.stdin,
-          ~from_parent_fd=Luv.Process.stdin,
-          (),
-        ),
-        Luv.Process.inherit_fd(
-          ~fd=Luv.Process.stdout,
-          ~from_parent_fd=Luv.Process.stderr,
-          (),
-        ),
-        Luv.Process.inherit_fd(
-          ~fd=Luv.Process.stderr,
-          ~from_parent_fd=Luv.Process.stderr,
-          (),
-        ),
-      ];
-//    } else {
-//      [];
-//    };
+    //    if (attachStdio) {
+    [
+      Luv.Process.inherit_fd(
+        ~fd=Luv.Process.stdin,
+        ~from_parent_fd=Luv.Process.stdin,
+        (),
+      ),
+      Luv.Process.inherit_fd(
+        ~fd=Luv.Process.stdout,
+        ~from_parent_fd=Luv.Process.stderr,
+        (),
+      ),
+      Luv.Process.inherit_fd(
+        ~fd=Luv.Process.stderr,
+        ~from_parent_fd=Luv.Process.stderr,
+        (),
+      ),
+    ];
+  //    } else {
+  //      [];
+  //    };
 
   let _process: Luv.Process.t =
     LuvEx.Process.spawn(

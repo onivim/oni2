@@ -1399,11 +1399,11 @@ module SCM = {
         features: SCM.ProviderFeatures.t,
       })
     // statusBarCommands: option(_),
-  | RegisterSCMResourceGroups({
-      provider: int,
-      groups: list(SCM.Group.t),
-      splices: list(SCM.Resource.Splices.t),
-    })
+    | RegisterSCMResourceGroups({
+        provider: int,
+        groups: list(SCM.Group.t),
+        splices: list(SCM.Resource.Splices.t),
+      })
     | UnregisterSCMResourceGroup({
         provider: int,
         handle: int,
@@ -1477,15 +1477,17 @@ module SCM = {
 
       | "$registerGroups" =>
         switch (args) {
-        | `List([
-            `Int(provider),
-             groupsJson,
-             splicesJson,
-          ]) =>
+        | `List([`Int(provider), groupsJson, splicesJson]) =>
           open Json.Decode;
-          let%bind groups = groupsJson |> Internal.decode_value(list(SCM.Group.decode))
-          let%bind splices= splicesJson |> Internal.decode_value(list(SCM.Resource.Decode.splices));
-          Ok(RegisterSCMResourceGroups({provider, groups, splices}))
+          prerr_endline("$registerGroups - parse 1");
+          let%bind groups =
+            groupsJson |> Internal.decode_value(list(SCM.Group.decode));
+          prerr_endline("$registerGroups - parse 2");
+          let%bind splices =
+            splicesJson
+            |> Internal.decode_value(list(SCM.Resource.Decode.splices));
+          prerr_endline("$registerGroups - parse 3");
+          Ok(RegisterSCMResourceGroups({provider, groups, splices}));
 
         | _ => Error("Unexpected arguments for $registerGroup")
         }

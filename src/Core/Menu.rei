@@ -2,22 +2,21 @@
 
 module Schema: {
   [@deriving show]
-  type command = 
-{
+  type command = {
     isVisibleWhen: WhenExpr.t,
     group: option(string),
     index: option(int),
     command: string,
     alt: option(string) // currently unused
-    };
+  };
   [@deriving show]
-  type item = 
-  | Submenu({
-    submenu: string,
-    group: option(string),
-    isVisibleWhen: WhenExpr.t,
-  })
-  | Command(command);
+  type item =
+    | Submenu({
+        submenu: string,
+        group: option(string),
+        isVisibleWhen: WhenExpr.t,
+      })
+    | Command(command);
 
   type group;
 

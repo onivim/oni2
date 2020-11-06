@@ -73,37 +73,39 @@ module Menu = {
 
     let command =
       obj(({field, _}) =>
-        Menu.Schema.(Command({
-          command: field.required("command", string),
-          alt: field.optional("alt", string),
-          group: field.optional("group", string),
-          index: None,
-          isVisibleWhen:
-            field.withDefault(
-              "when",
-              WhenExpr.Value(True),
-              string |> map(WhenExpr.parse),
-            ),
-        })));
+        Menu.Schema.(
+          Command({
+            command: field.required("command", string),
+            alt: field.optional("alt", string),
+            group: field.optional("group", string),
+            index: None,
+            isVisibleWhen:
+              field.withDefault(
+                "when",
+                WhenExpr.Value(True),
+                string |> map(WhenExpr.parse),
+              ),
+          })
+        )
+      );
 
     let submenu =
       obj(({field, _}) =>
-        Menu.Schema.(Submenu({
-          submenu: field.required("submenu", string),
-          group: field.optional("group", string),
-          isVisibleWhen:
-            field.withDefault(
-              "when",
-              WhenExpr.Value(True),
-              string |> map(WhenExpr.parse),
-            ),
-        })));
+        Menu.Schema.(
+          Submenu({
+            submenu: field.required("submenu", string),
+            group: field.optional("group", string),
+            isVisibleWhen:
+              field.withDefault(
+                "when",
+                WhenExpr.Value(True),
+                string |> map(WhenExpr.parse),
+              ),
+          })
+        )
+      );
 
-
-    let item = one_of([
-      ("command", command),
-      ("submenu", submenu)
-    ]);
+    let item = one_of([("command", command), ("submenu", submenu)]);
 
     let menus =
       key_value_pairs(list(item))

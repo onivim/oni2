@@ -6,27 +6,27 @@ module Log = (val Log.withNamespace("Oni2.Core.Menu"));
 
 module Schema = {
   [@deriving show]
-  type command = 
-{
+  type command = {
     isVisibleWhen: WhenExpr.t,
     group: option(string),
     index: option(int),
     command: string,
     alt: option(string) // currently unused
-    };
+  };
 
   [@deriving show]
-  type item = 
-  | Submenu({
-    submenu: string,
-    group: option(string),
-    isVisibleWhen: WhenExpr.t,
-  })
-  | Command(command);
+  type item =
+    | Submenu({
+        submenu: string,
+        group: option(string),
+        isVisibleWhen: WhenExpr.t,
+      })
+    | Command(command);
 
-  let toCommand = fun
-  | Submenu(_) => None
-  | Command(command) => Some(command);
+  let toCommand =
+    fun
+    | Submenu(_) => None
+    | Command(command) => Some(command);
 
   type group = list(item);
 
@@ -38,21 +38,17 @@ module Schema = {
 
   let extend = (id, groups) => {id, items: List.concat(groups)};
 
-  let group = (id) =>
-    List.map(fun
-    | Submenu(submenu) => Submenu({...submenu, group: Some(id)})
-    | Command(command) => Command({...command, group: Some(id)})
+  let group = id =>
+    List.map(
+      fun
+      | Submenu(submenu) => Submenu({...submenu, group: Some(id)})
+      | Command(command) => Command({...command, group: Some(id)}),
     );
 
   let ungrouped = items => items;
 
-  let item = (~index=?, ~alt=?, ~isVisibleWhen=WhenExpr.Value(True), command) => Command({
-    isVisibleWhen,
-    index,
-    command,
-    alt,
-    group: None,
-  });
+  let item = (~index=?, ~alt=?, ~isVisibleWhen=WhenExpr.Value(True), command) =>
+    Command({isVisibleWhen, index, command, alt, group: None});
 };
 
 // MODEL
@@ -72,10 +68,10 @@ type item = {
 let fromSchemaItem = (commands, item: Schema.item) =>
   item
   |> Schema.toCommand
-  |> Utility.OptionEx.flatMap
-  ((cmd: Schema.command) => 
-  Command.Lookup.get(cmd.command, commands)
-  |> Option.map(command => (cmd, command)))
+  |> Utility.OptionEx.flatMap((cmd: Schema.command) =>
+       Command.Lookup.get(cmd.command, commands)
+       |> Option.map(command => (cmd, command))
+     )
   |> Option.map(((schemaCmd: Schema.command, command: Command.t(_))) =>
        {
          label: command.title |> Option.value(~default=command.id),
