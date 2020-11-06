@@ -871,7 +871,7 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
     dispatch(LostProvider({handle: handle}))
 
   | RegisterSCMResourceGroups({provider, groups, splices}) =>
-    dispatch(NewResourceGroups({provider, groups, splices }));
+    dispatch(NewResourceGroups({provider, groups, splices}))
 
   | UnregisterSCMResourceGroup({provider, handle}) =>
     dispatch(LostResourceGroup({provider, handle}))
@@ -891,7 +891,7 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
     dispatch(GroupLabelChanged({provider, handle, label}))
 
   | SpliceSCMResourceStates({handle, splices}) =>
-     dispatch(SpliceResourceStates({handle, splices}));
+    dispatch(SpliceResourceStates({handle, splices}))
 
   | UpdateSourceControl({handle, features}) =>
     prerr_endline(
