@@ -6,7 +6,6 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Input;
 open Oni_Syntax;
 
 [@deriving show({with_path: false})]
@@ -36,7 +35,7 @@ type t =
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
-  | KeyBindingsSet([@opaque] Keybindings.t)
+  | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)

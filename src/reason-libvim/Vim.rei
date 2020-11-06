@@ -391,6 +391,38 @@ module Scroll: {
     | ColumnRight;
 };
 
+module Mapping: {
+  [@deriving show]
+  type mode =
+    | Insert // imap, inoremap
+    | Language // lmap
+    | CommandLine // cmap
+    | Normal // nmap, nnoremap
+    | VisualAndSelect // vmap, vnoremap
+    | Visual // xmap, xnoremap
+    | Select // smap, snoremap
+    | Operator // omap, onoremap
+    | Terminal // tmap, tnoremap
+    | InsertAndCommandLine // :map!
+    | All; // :map;
+
+  [@deriving show]
+  type scriptId;
+
+  let defaultScriptId: scriptId;
+
+  [@deriving show]
+  type t = {
+    mode,
+    fromKeys: string, // mapped from, lhs
+    toValue: string, // mapped to, rhs
+    expression: bool,
+    recursive: bool,
+    silent: bool,
+    scriptId,
+  };
+};
+
 module Effect: {
   type t =
     | Goto(Goto.effect)
@@ -407,6 +439,11 @@ module Effect: {
     | Scroll({
         count: int,
         direction: Scroll.direction,
+      })
+    | Map(Mapping.t)
+    | Unmap({
+        mode: Mapping.mode,
+        keys: option(string),
       });
 };
 

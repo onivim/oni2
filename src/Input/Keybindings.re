@@ -1,14 +1,8 @@
-type keybinding = {
-  key: string,
-  command: string,
-  condition: WhenExpr.t,
-};
+open Feature_Input.Schema;
 
 module Json = Oni_Core.Json;
 
 module Keybinding = {
-  type t = keybinding;
-
   let parseSimple =
     fun
     | `String(s) => WhenExpr.Defined(s)
@@ -51,15 +45,10 @@ module Keybinding = {
   };
 };
 
-module Input =
-  EditorInput.Make({
-    type context = WhenExpr.ContextKeys.t;
-    type command = string;
-  });
-
 module Internal = {
   let of_yojson_with_errors:
-    list(Yojson.Safe.t) => (list(Keybinding.t), list(string)) =
+    list(Yojson.Safe.t) =>
+    (list(Feature_Input.Schema.keybinding), list(string)) =
     bindingsJson => {
       let parsedBindings =
         bindingsJson
@@ -92,27 +81,14 @@ module Internal = {
     };
 };
 
-type effect =
-  Input.effect =
-    | Execute(string)
-    | Text(string)
-    | Unhandled(EditorInput.KeyPress.t)
-    | RemapRecursionLimitHit;
-
-type t = Input.t;
-
-let empty = Input.empty;
-let count = Input.count;
-let keyDown = Input.keyDown;
-let text = Input.text;
-let keyUp = Input.keyUp;
-
 // Old version of keybindings - the legacy format:
 // { bindings: [ ..bindings. ] }
 module Legacy = {
-  let upgrade: list(Keybinding.t) => list(Keybinding.t) =
+  let upgrade:
+    list(Feature_Input.Schema.keybinding) =>
+    list(Feature_Input.Schema.keybinding) =
     keys => {
-      let upgradeBinding = (binding: Keybinding.t) => {
+      let upgradeBinding = (binding: Feature_Input.Schema.keybinding) => {
         switch (binding.command) {
         | "quickOpen.open" => {
             ...binding,
@@ -130,97 +106,23 @@ module Legacy = {
     };
 };
 
-let keyToSdlName =
-  EditorInput.Key.(
-    {
-      fun
-      | Escape => "Escape"
-      | Return => "Return"
-      | Up => "Up"
-      | Down => "Down"
-      | Left => "Left"
-      | Right => "Right"
-      | Tab => "Tab"
-      | PageUp => "PageUp"
-      | PageDown => "PageDown"
-      | Delete => "Delete"
-      | Pause => "Pause"
-      | Home => "Home"
-      | End => "End"
-      | Backspace => "Backspace"
-      | CapsLock => "CapsLock"
-      | Insert => "Insert"
-      | Function(digit) => "F" ++ string_of_int(digit)
-      | Space => "Space"
-      | NumpadDigit(digit) => "Keypad " ++ string_of_int(digit)
-      | NumpadMultiply => "Keypad *"
-      | NumpadAdd => "Keypad +"
-      | NumpadSeparator => "Keypad "
-      | NumpadSubtract => "Keypad -"
-      | NumpadDivide => "Keypad //"
-      | NumpadDecimal => "Keypad ."
-      | Character(c) => String.make(1, c) |> String.uppercase_ascii;
-    }
-  );
-
-let getKeycode = inputKey => {
-  inputKey
-  |> keyToSdlName
-  |> Sdl2.Keycode.ofName
-  |> (
-    fun
-    | 0 => None
-    | x => Some(x)
-  );
-};
-
-let getScancode = inputKey => {
-  inputKey
-  |> keyToSdlName
-  |> Sdl2.Scancode.ofName
-  |> (
-    fun
-    | 0 => None
-    | x => Some(x)
-  );
-};
-
-let addBinding = ({key, command, condition}, bindings) => {
-  let evaluateCondition = (whenExpr, contextKeys) => {
-    WhenExpr.evaluate(whenExpr, WhenExpr.ContextKeys.getValue(contextKeys));
-  };
-
-  let matchers = EditorInput.Matcher.parse(~getKeycode, ~getScancode, key);
-
-  matchers
-  |> Stdlib.Result.map(m => {
-       let (bindings, _id) =
-         Input.addBinding(
-           m,
-           evaluateCondition(condition),
-           command,
-           bindings,
-         );
-       bindings;
-     });
-};
-
 let evaluateBindings = (bindings: list(keybinding), errors) => {
   let rec loop = (bindings, errors, currentBindings) => {
     switch (bindings) {
     | [hd, ...tail] =>
-      switch (addBinding(hd, currentBindings)) {
-      | Ok(newBindings) => loop(tail, errors, newBindings)
+      switch (Feature_Input.Schema.resolve(hd)) {
+      | Ok(newBinding) =>
+        loop(tail, errors, [newBinding, ...currentBindings])
       | Error(msg) => loop(tail, [msg, ...errors], currentBindings)
       }
     | [] => (currentBindings, errors)
     };
   };
 
-  loop(bindings, errors, Input.empty);
+  loop(bindings, errors, []);
 };
 
-let of_yojson_with_errors = (~default=[], json) => {
+let of_yojson_with_errors = json => {
   let previous =
     switch (json) {
     // Current format:
@@ -244,7 +146,6 @@ let of_yojson_with_errors = (~default=[], json) => {
 
   previous
   |> Stdlib.Result.map(((bindings, errors)) => {
-       let combinedBindings = default @ bindings;
-       evaluateBindings(combinedBindings, errors);
+       evaluateBindings(bindings, errors)
      });
 };

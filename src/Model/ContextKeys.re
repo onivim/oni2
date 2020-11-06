@@ -86,6 +86,18 @@ let editors = (~isFocused) => {
               | _ => false
               }
             ),
+            bool("selectMode", state =>
+              switch (ModeManager.current(state)) {
+              | Select(_) => true
+              | _ => false
+              }
+            ),
+            bool("operatorPending", state =>
+              switch (ModeManager.current(state)) {
+              | Operator(_) => true
+              | _ => false
+              }
+            ),
             bool("parameterHintsVisible", state =>
               Feature_SignatureHelp.isShown(state.signatureHelp)
             ),

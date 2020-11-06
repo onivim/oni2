@@ -121,11 +121,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let effectToActions = (state, effect) =>
     switch (effect) {
-    | Keybindings.Execute(command) => [
+    | Feature_Input.Execute(command) => [
         Actions.KeybindingInvoked({command: command}),
       ]
-    | Keybindings.Text(text) => handleTextEffect(~isText=true, state, text)
-    | Keybindings.Unhandled(key) =>
+    | Feature_Input.Text(text) => handleTextEffect(~isText=true, state, text)
+    | Feature_Input.Unhandled(key) =>
       let isTextInputActive = isTextInputActive();
       let maybeKeyString = Handler.keyPressToCommand(~isTextInputActive, key);
       switch (maybeKeyString) {
@@ -134,7 +134,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       };
 
     // TODO: Show a notification that recursion limit was hit
-    | Keybindings.RemapRecursionLimitHit => []
+    | Feature_Input.RemapRecursionLimitHit => []
     };
 
   let reveryKeyToEditorKey =
@@ -199,10 +199,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let handleKeyPress = (state: State.t, key) => {
     let context = Model.ContextKeys.all(state);
 
-    let (keyBindings, effects) =
-      Keybindings.keyDown(~context, ~key, state.keyBindings);
+    let (input, effects) =
+      Feature_Input.keyDown(~context, ~key, state.input);
 
-    let newState = {...state, keyBindings};
+    let newState = {...state, input};
 
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
@@ -211,12 +211,12 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   };
 
   let handleTextInput = (state: State.t, text) => {
-    let (keyBindings, effects) = Keybindings.text(~text, state.keyBindings);
+    let (input, effects) = Feature_Input.text(~text, state.input);
 
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
 
-    let newState = {...state, keyBindings};
+    let newState = {...state, input};
 
     updateFromInput(newState, /*Some("Text: " ++ text),*/ actions);
   };
@@ -225,10 +225,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     let context = Model.ContextKeys.all(state);
 
     //let inputKey = reveryKeyToEditorKey(key);
-    let (keyBindings, effects) =
-      Keybindings.keyUp(~context, ~key, state.keyBindings);
+    let (input, effects) = Feature_Input.keyUp(~context, ~key, state.input);
 
-    let newState = {...state, keyBindings};
+    let newState = {...state, input};
 
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;

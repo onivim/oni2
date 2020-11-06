@@ -177,7 +177,7 @@ module Contributions: {
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
   let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
-  let keybindings: list(Oni_Input.Keybindings.keybinding);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };
 
 module Definition: {

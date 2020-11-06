@@ -31,6 +31,8 @@ module type Input = {
   let text: (~text: string, t) => (t, list(effect));
   let keyUp: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
 
+  let remove: (uniqueId, t) => t;
+
   let isPending: t => bool;
 
   let count: t => int;
@@ -136,6 +138,11 @@ module Make = (Config: {
       key.keycode == keycode && Modifiers.equals(modifiers, key.modifiers)
     | _ => false
     };
+  };
+
+  let remove = (uniqueId, model) => {
+    ...model,
+    bindings: model.bindings |> List.filter(binding => binding.id != uniqueId),
   };
 
   let applyKeyToBinding = (~context, key, binding) =>
