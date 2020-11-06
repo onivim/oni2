@@ -7,6 +7,9 @@ Printexc.set_uncaught_exception_handler((exn, bt) => {
   prerr_endline(Printexc.raw_backtrace_to_string(bt));
 });
 
+// For CI tests - set the log level low to avoid `Sys_blocked_io` calls on OSX when running.
+Timber.App.setLevel(Timber.Level.error);
+
 let initializeRunConfig = runFn => {
   let runConfig =
     Rely.RunConfig.initialize()
