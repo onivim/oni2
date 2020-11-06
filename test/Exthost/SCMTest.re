@@ -32,10 +32,10 @@ describe("SCM", ({test, _}) => {
          ~name="RegisterSCMResourceGroup",
          fun
          | Msg.SCM(RegisterSCMResourceGroups({provider, groups, _})) =>
-          groups
-          |> List.exists(({id, label, _}: Exthost.SCM.Group.t) =>  {
-           id == "resourceGroup" && label == "resourceGroup"
-           })
+           groups
+           |> List.exists(({id, label, _}: Exthost.SCM.Group.t) => {
+                id == "resourceGroup" && label == "resourceGroup"
+              })
          | _ => false,
        )
     |> Test.terminate
