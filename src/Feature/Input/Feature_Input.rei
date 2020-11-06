@@ -76,4 +76,7 @@ let remove: (uniqueId, model) => model;
 
 let update: (msg, model) => (model, outmsg);
 
-module Contributions: {let commands: list(Command.t(msg));};
+module Contributions: {
+  let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
+};
