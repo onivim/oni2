@@ -1683,7 +1683,6 @@ module Request: {
     };
 
     type decoration = {
-      priority: int,
       bubble: bool,
       title: string,
       letter: string,
