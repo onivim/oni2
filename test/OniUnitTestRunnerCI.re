@@ -1,3 +1,12 @@
+Printexc.record_backtrace(true);
+
+Printexc.set_uncaught_exception_handler((exn, bt) => {
+  prerr_endline(" == UNHANDLED EXCEPTION:");
+  prerr_endline(Printexc.to_string(exn));
+  prerr_endline(" -- Backtrace:");
+  prerr_endline(Printexc.raw_backtrace_to_string(bt));
+});
+
 let initializeRunConfig = runFn => {
   let runConfig =
     Rely.RunConfig.initialize()
