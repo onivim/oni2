@@ -48,7 +48,7 @@ type effect =
 
 let keyDown:
   (
-    ~leaderKey: option(EditorInput.PhysicalKey.t)=?,
+    ~config: Config.resolver,
     ~key: KeyPress.t,
     ~context: WhenExpr.ContextKeys.t,
     model
@@ -58,7 +58,7 @@ let keyDown:
 let text: (~text: string, model) => (model, list(effect));
 let keyUp:
   (
-    ~leaderKey: option(EditorInput.PhysicalKey.t)=?,
+    ~config: Config.resolver,
     ~key: KeyPress.t,
     ~context: WhenExpr.ContextKeys.t,
     model

@@ -170,8 +170,8 @@ type effect =
     | Unhandled(EditorInput.KeyPress.t)
     | RemapRecursionLimitHit;
 
-let keyDown =
-    (~leaderKey=None, ~key, ~context, {inputStateMachine, _} as model) => {
+let keyDown = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
+  let leaderKey = Configuration.leaderKey.get(config);
   let (inputStateMachine', effects) =
     InputStateMachine.keyDown(~leaderKey, ~key, ~context, inputStateMachine);
   ({...model, inputStateMachine: inputStateMachine'}, effects);
@@ -183,8 +183,8 @@ let text = (~text, {inputStateMachine, _} as model) => {
   ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
-let keyUp =
-    (~leaderKey=None, ~key, ~context, {inputStateMachine, _} as model) => {
+let keyUp = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
+  let leaderKey = Configuration.leaderKey.get(config);
   let (inputStateMachine', effects) =
     InputStateMachine.keyUp(~leaderKey, ~key, ~context, inputStateMachine);
   ({...model, inputStateMachine: inputStateMachine'}, effects);
