@@ -1418,7 +1418,6 @@ module Msg: {
           handle: int,
           features: SCM.ProviderFeatures.t,
         })
-      // statusBarCommands: option(_),
       | RegisterSCMResourceGroups({
           provider: int,
           groups: list(SCM.Group.t),

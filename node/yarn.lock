@@ -2,17 +2,17 @@
 # yarn lockfile v1
 
 
-"@onivim/vscode-exthost@1.47.1000":
-  version "1.47.1000"
-  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.47.1000.tgz#05eb8a07b6f0a4945b713d11609877992e7f9e0f"
-  integrity sha512-XY1uZtAPpPSFkG5JiKVIUc+8nOZYsX9DJ7zypKJqPaJb8elbhj0MRRjmV0pknUBT5OtFhRCgOMm+g5zaWleuRg==
+"@onivim/vscode-exthost@1.50.1000":
+  version "1.50.1000"
+  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.50.1000.tgz#4b883e6668020f0fa71ca611df46bdb313ec46c3"
+  integrity sha512-ud7CLJ179ypSzD2TPPWBI8wtLbj1KeCexDbjkmTlkRZb1iov1sqhql+bBt1TQwNF3m9H7qTLYGwpqtEjeE7bPw==
   dependencies:
     graceful-fs "4.2.3"
-    iconv-lite-umd "0.6.7"
-    minimist "^1.2.0"
+    iconv-lite-umd "0.6.8"
+    minimist "^1.2.5"
     native-watchdog "1.3.0"
-    node-pty "^0.10.0-beta8"
-    semver-umd "^5.5.7"
+    node-pty "^0.10.0-beta17"
+    semver-umd "^5.5.5"
     spdlog "^0.11.1"
     vscode-proxy-agent "^0.5.2"
 
@@ -96,10 +96,10 @@ https-proxy-agent@^2.2.3:
     agent-base "^4.3.0"
     debug "^3.1.0"
 
-iconv-lite-umd@0.6.7:
-  version "0.6.7"
-  resolved "https://registry.yarnpkg.com/iconv-lite-umd/-/iconv-lite-umd-0.6.7.tgz#ee437e34b30f15dc00ec93ea65065e672770777c"
-  integrity sha512-DT90zb7wL1B3I6DmYUMcfJeVdY19XigzDj5AtXbXEw9Jfi0+AVAxfn7ytvY7Xhr+GFn7nd7hPonapC37oo7iAQ==
+iconv-lite-umd@0.6.8:
+  version "0.6.8"
+  resolved "https://registry.yarnpkg.com/iconv-lite-umd/-/iconv-lite-umd-0.6.8.tgz#5ad310ec126b260621471a2d586f7f37b9958ec0"
+  integrity sha512-zvXJ5gSwMC9JD3wDzH8CoZGc1pbiJn12Tqjk8BXYCnYz3hYL5GRjHW8LEykjXhV9WgNGI4rgpgHcbIiBfrRq6A==
 
 ip@1.1.5:
   version "1.1.5"
@@ -113,7 +113,7 @@ jsonfile@^4.0.0:
   optionalDependencies:
     graceful-fs "^4.1.6"
 
-minimist@^1.2.0, minimist@^1.2.5:
+minimist@^1.2.5:
   version "1.2.5"
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.5.tgz#67d66014b66a6a8aaa0c083c5fd58df4e4e97602"
   integrity sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==
@@ -140,7 +140,7 @@ native-watchdog@1.3.0:
   resolved "https://registry.yarnpkg.com/native-watchdog/-/native-watchdog-1.3.0.tgz#88cee94c9dc766b85c8506eda14c8bd8c9618e27"
   integrity sha512-WOjGRNGkYZ5MXsntcvCYrKtSYMaewlbCFplbcUVo9bE80LPVt8TAVFHYWB8+a6fWCGYheq21+Wtt6CJrUaCJhw==
 
-node-pty@^0.10.0-beta8:
+node-pty@^0.10.0-beta17:
   version "0.10.0-beta9"
   resolved "https://registry.yarnpkg.com/node-pty/-/node-pty-0.10.0-beta9.tgz#e5a795f9b53948346803cb71bac4ffc02e7909f0"
   integrity sha512-Qm6uSH30FUcAhJ9s76C+lgvTsOW2cHUbkIGjCdOVCL0c7S4DxsmKBRgjcr+guUK9d9KwfuZHeSjXYWjpJFPe4w==
@@ -152,7 +152,7 @@ pend@~1.2.0:
   resolved "https://registry.yarnpkg.com/pend/-/pend-1.2.0.tgz#7a57eb550a6783f9115331fcf4663d5c8e007a50"
   integrity sha1-elfrVQpng/kRUzH89GY9XI4AelA=
 
-semver-umd@^5.5.7:
+semver-umd@^5.5.5:
   version "5.5.7"
   resolved "https://registry.yarnpkg.com/semver-umd/-/semver-umd-5.5.7.tgz#966beb5e96c7da6fbf09c3da14c2872d6836c528"
   integrity sha512-XgjPNlD0J6aIc8xoTN6GQGwWc2Xg0kq8NzrqMVuKG/4Arl6ab1F8+Am5Y/XKKCR+FceFr2yN/Uv5ZJBhRyRqKg==

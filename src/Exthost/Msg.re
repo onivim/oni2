@@ -1479,14 +1479,11 @@ module SCM = {
         switch (args) {
         | `List([`Int(provider), groupsJson, splicesJson]) =>
           open Json.Decode;
-          prerr_endline("$registerGroups - parse 1");
           let%bind groups =
             groupsJson |> Internal.decode_value(list(SCM.Group.decode));
-          prerr_endline("$registerGroups - parse 2");
           let%bind splices =
             splicesJson
             |> Internal.decode_value(list(SCM.Resource.Decode.splices));
-          prerr_endline("$registerGroups - parse 3");
           Ok(RegisterSCMResourceGroups({provider, groups, splices}));
 
         | _ => Error("Unexpected arguments for $registerGroup")

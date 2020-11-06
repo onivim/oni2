@@ -247,7 +247,7 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
 
   let initData =
     InitData.create(
-      ~version="1.46.0", // TODO: How to keep in sync with bundled version?
+      ~version="1.50.1", // TODO: How to keep in sync with bundled version?
       ~parentPid,
       ~logsLocation,
       ~logFile,

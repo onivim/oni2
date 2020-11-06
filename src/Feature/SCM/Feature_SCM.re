@@ -515,18 +515,11 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       Nothing,
     )
 
-  | StatusBarCommandsChanged({handle, statusBarCommands}) =>
-    prerr_endline(
-      Printf.sprintf(
-        "Processing action for StatusBarCommands: handle %d count %d",
-        handle,
-        List.length(statusBarCommands),
-      ),
-    );
-    (
-      model |> Internal.updateProvider(~handle, p => {...p, statusBarCommands}),
+  | StatusBarCommandsChanged({handle, statusBarCommands}) => (
+      model
+      |> Internal.updateProvider(~handle, p => {...p, statusBarCommands}),
       Nothing,
-    );
+    )
 
   // TODO: Handle replacing '{0}' character in placeholder text
   //  | InputBoxPlaceholderChanged({handle, placeholder}) => (
@@ -894,9 +887,6 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
     dispatch(SpliceResourceStates({handle, splices}))
 
   | UpdateSourceControl({handle, features}) =>
-    prerr_endline(
-      "-- UpdateSOurceControl for handle: " ++ string_of_int(handle),
-    );
     let {
       hasQuickDiffProvider,
       count,
