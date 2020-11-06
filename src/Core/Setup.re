@@ -67,7 +67,7 @@ let getNodeHealthCheckPath = (v: t) => {
 };
 
 let getNodeExtensionHostPath = (v: t) => {
-    "/Users/bryphe/vscode-exthost/_package/out/bootstrap-fork.js"
+    "/home/bryphe/vscode-exthost/_package/out/bootstrap-fork.js"
 //  switch (Sys.getenv_opt("ONI2_EXTHOST")) {
 //  | Some(extHostPath) =>
 //    Rench.Path.join(extHostPath, "out/bootstrap-fork.js")
