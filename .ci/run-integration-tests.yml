@@ -1,8 +1,20 @@
 steps:
   - script: esy install
-    displayName: 'Install Dependencies: esy install'
+    displayName: 'Install Dependencies: esy install (attempt 1)'
+    continueOnError: true
+  - script: esy install
+    displayName: 'Install Dependencies: esy install (attempt 2)'
+    continueOnError: true
+  - script: esy install
+    displayName: 'Install Dependencies: esy install (final)'
   - script: esy bootstrap
-    displayName: 'Bootstrap Oni2 setup with system specific build variables'
+    displayName: 'Bootstrap Oni2 setup with system specific build variables (attempt 1)'
+    continueOnError: true
+  - script: esy bootstrap
+    displayName: 'Bootstrap Oni2 setup with system specific build variables (attempt 2)'
+    continueOnError: true
+  - script: esy bootstrap
+    displayName: 'Bootstrap Oni2 setup with system specific build variables (final)'
   - script: esy @integrationtest install
     displayName: 'Integration Tests: install'
   - script: esy @integrationtest build
