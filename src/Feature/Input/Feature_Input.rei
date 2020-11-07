@@ -47,16 +47,36 @@ type effect =
   | RemapRecursionLimitHit;
 
 let keyDown:
-  (~key: KeyPress.t, ~context: WhenExpr.ContextKeys.t, model) =>
+  (
+    ~config: Config.resolver,
+    ~key: KeyPress.t,
+    ~context: WhenExpr.ContextKeys.t,
+    model
+  ) =>
   (model, list(effect));
 
 let text: (~text: string, model) => (model, list(effect));
 let keyUp:
-  (~key: KeyPress.t, ~context: WhenExpr.ContextKeys.t, model) =>
+  (
+    ~config: Config.resolver,
+    ~key: KeyPress.t,
+    ~context: WhenExpr.ContextKeys.t,
+    model
+  ) =>
   (model, list(effect));
+
+type uniqueId;
+
+let addKeyBinding:
+  (~binding: Schema.resolvedKeybinding, model) => (model, uniqueId);
+
+let remove: (uniqueId, model) => model;
 
 // UPDATE
 
 let update: (msg, model) => (model, outmsg);
 
-module Contributions: {let commands: list(Command.t(msg));};
+module Contributions: {
+  let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
+};

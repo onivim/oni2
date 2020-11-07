@@ -18,11 +18,11 @@ runTest(
   (dispatch, wait, _) => {
     let input = key => {
       let keyPress =
-        EditorInput.KeyPress.{
-          scancode: Sdl2.Scancode.ofName(key),
-          keycode: Sdl2.Keycode.ofName(key),
-          modifiers: EditorInput.Modifiers.none,
-        };
+        EditorInput.KeyPress.physicalKey(
+          ~scancode=Sdl2.Scancode.ofName(key),
+          ~keycode=Sdl2.Keycode.ofName(key),
+          ~modifiers=EditorInput.Modifiers.none,
+        );
       let time = Revery.Time.now();
 
       dispatch(KeyDown(keyPress, time));

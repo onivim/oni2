@@ -1,5 +1,5 @@
 %token <Matcher_internal.modifier> MODIFIER
-%token <Key.t> BINDING
+%token <Matcher_internal.keyPress> BINDING
 %token ALLKEYSRELEASED
 %token LT GT
 %token EOF
