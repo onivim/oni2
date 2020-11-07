@@ -14,13 +14,16 @@ let lineNumber = ({lens, _}) =>
 
 let uniqueId = ({uniqueId, _}) => uniqueId;
 
-let text = ({lens, _}: codeLens) =>
+let textFromExthost = (lens: Exthost.CodeLens.t) => {
   Exthost.Command.(
     lens.command
     |> OptionEx.flatMap(command => command.label)
     |> Option.map(Exthost.Label.toString)
     |> Option.value(~default="(null)")
   );
+};
+
+let text = ({lens, _}: codeLens) => textFromExthost(lens);
 
 type provider = {
   handle: int,
@@ -33,6 +36,13 @@ type model = {
   providers: list(provider),
   bufferToLenses: IntMap.t(handleToLenses),
 };
+
+type outmsg =
+  | Nothing
+  | CodeLensesChanged({
+      bufferId: int,
+      lenses: list(codeLens),
+    });
 
 let get = (~bufferId, {bufferToLenses, _}) => {
   bufferToLenses
@@ -69,16 +79,24 @@ let unregister = (~handle: int, model) => {
 let addLenses = (handle, bufferId, lenses, handleToLenses) => {
   let internalLenses =
     lenses
-    |> List.map(lens =>
+    |> List.sort((lensA, lensB) => {
+         Exthost.CodeLens.(
+           {
+             lensA.range.startLineNumber - lensB.range.startLineNumber;
+           }
+         )
+       })
+    |> List.mapi((idx, lens) =>
          {
            lens,
            handle,
            uniqueId:
              Printf.sprintf(
-               "%d%d%d",
+               "%d%d%d%d",
                handle,
                bufferId,
-               lens.range.startLineNumber,
+               idx,
+               Hashtbl.hash(textFromExthost(lens)),
              ),
          }
        );
@@ -87,7 +105,7 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
 
 let update = (msg, model) =>
   switch (msg) {
-  | CodeLensesError(_) => model
+  | CodeLensesError(_) => (model, Nothing)
   | CodeLensesReceived({handle, bufferId, lenses}) =>
     let bufferToLenses =
       model.bufferToLenses
@@ -101,17 +119,36 @@ let update = (msg, model) =>
            | Some(existing) =>
              existing |> addLenses(handle, bufferId, lenses) |> Option.some,
          );
-    {...model, bufferToLenses};
+    let model' = {...model, bufferToLenses};
+    let lenses = get(~bufferId, model');
+    (model', CodeLensesChanged({bufferId, lenses}));
   };
 
 // CONFIGURATION
+
+module VimSettings = {
+  open Config.Schema;
+  open VimSetting.Schema;
+
+  let codeLens =
+    vim("codelens", scrollSetting => {
+      scrollSetting
+      |> VimSetting.decode_value_opt(bool)
+      |> Option.value(~default=false)
+    });
+};
 
 module Configuration = {
   open Config.Schema;
 
   module Experimental = {
     let enabled =
-      setting("experimental.editor.codeLens", bool, ~default=false);
+      setting(
+        ~vim=VimSettings.codeLens,
+        "experimental.editor.codeLens",
+        bool,
+        ~default=false,
+      );
   };
 };
 
@@ -182,7 +219,13 @@ module View = {
   let make = (~theme, ~uiFont: Oni_Core.UiFont.t, ~codeLens, ()) => {
     let foregroundColor = CodeLensColors.foreground.from(theme);
     let text = text(codeLens);
-    <View style=Style.[marginTop(4), marginBottom(-4)]>
+    <View
+      style=Style.[
+        marginTop(4),
+        marginBottom(0),
+        flexGrow(1),
+        flexShrink(0),
+      ]>
       <Text
         text
         fontFamily={uiFont.family}

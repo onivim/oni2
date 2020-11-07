@@ -83,7 +83,6 @@ let renderLineNumbers =
       ~lineNumberWidth,
       ~height,
       ~colors: Colors.t,
-      ~count,
       ~showLineNumbers,
       ~cursorLine,
     ) => {
@@ -96,7 +95,7 @@ let renderLineNumbers =
     ~color=colors.gutterBackground,
   );
 
-  Draw.renderImmediate(~context, ~count, (item, _) =>
+  Draw.renderImmediate(~context, (item, _) =>
     renderLineNumber(
       ~context,
       item,
@@ -133,7 +132,6 @@ let render =
       ~lineNumberWidth,
       ~height,
       ~colors,
-      ~count,
       ~showLineNumbers,
       ~cursorLine,
     );

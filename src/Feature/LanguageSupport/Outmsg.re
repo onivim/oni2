@@ -17,6 +17,10 @@ type internalMsg('a) =
   | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
+  | CodeLensesChanged({
+      bufferId: int,
+      lenses: list(CodeLens.codeLens),
+    })
   | Effect(Isolinear.Effect.t('a));
 
 let map = f =>
