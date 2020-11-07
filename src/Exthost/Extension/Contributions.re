@@ -118,7 +118,7 @@ module Configuration = {
     module Decode = {
       open Json.Decode;
 
-      let list = list(string) |> map(_ => Unknown);
+      let list = list(nullable(string)) |> map(_ => Unknown);
 
       let single =
         string
