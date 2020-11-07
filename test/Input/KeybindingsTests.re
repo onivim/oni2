@@ -48,12 +48,11 @@ bindings: [
 |}
   |> Yojson.Safe.from_string;
 
-let getKeyFromSDL: string => EditorInput.KeyPress.t =
-  key => {
-    let scancode = Sdl2.Scancode.ofName(key);
-    let keycode = Sdl2.Keycode.ofName(key);
-    {keycode, scancode, modifiers: EditorInput.Modifiers.none};
-  };
+let getKeyFromSDL = (~modifiers=EditorInput.Modifiers.none, key: string) => {
+  let scancode = Sdl2.Scancode.ofName(key);
+  let keycode = Sdl2.Keycode.ofName(key);
+  EditorInput.KeyPress.physicalKey(~keycode, ~scancode, ~modifiers);
+};
 
 let contextWithEditorTextFocus =
   WhenExpr.ContextKeys.(
@@ -115,73 +114,98 @@ describe("Keybindings", ({describe, _}) => {
       expect.int(bindingCount(result)).toBe(1);
       expect.int(errorCount(result)).toBe(0);
     });
-    // TODO: Bring back these tests
-    //    test("regression test: #1152 (legacy expression)", ({expect, _}) => {
-    //      let result = of_yojson_with_errors(regressionTest1152);
-    //
-    //      expect.bool(isOk(result)).toBe(true);
-    //      expect.int(errorCount(result)).toBe(0);
-    //
-    //      result
-    //      |> Utility.ResultEx.tapError(err => failwith(err))
-    //      |> Result.iter(((bindings, _)) => {
-    //           let (_bindings, effects) =
-    //             keyDown(
-    //               ~context=contextWithEditorTextFocus,
-    //               ~key=getKeyFromSDL("F2"),
-    //               bindings,
-    //             );
-    //
-    //           expect.equal(effects, [Execute("explorer.toggle")]);
-    //         });
-    //    });
-    //    test("regression test: #1160 (legacy binding)", ({expect, _}) => {
-    //      let result = of_yojson_with_errors(regressionTest1160);
-    //      expect.bool(isOk(result)).toBe(true);
-    //      expect.int(bindingCount(result)).toBe(4);
-    //      expect.int(errorCount(result)).toBe(0);
-    //
-    //      let validateKeyResultsInCommand = ((key, modifiers, cmd)) => {
-    //        result
-    //        |> Result.iter(((bindings, _)) => {
-    //             let key = {...getKeyFromSDL(key), modifiers};
-    //             let (_bindings, effects) =
-    //               keyDown(~context=contextWithEditorTextFocus, ~key, bindings);
-    //             expect.equal(effects, [Execute(cmd)]);
-    //           });
-    //      };
-    //
-    //      let modifier = (~control, ~shift, ~meta) => {
-    //        ...EditorInput.Modifiers.none,
-    //        control,
-    //        shift,
-    //        meta,
-    //      };
-    //
-    //      let cases = [
-    //        (
-    //          "p",
-    //          modifier(~control=true, ~shift=false, ~meta=false),
-    //          "workbench.action.quickOpen",
-    //        ),
-    //        (
-    //          "p",
-    //          modifier(~control=false, ~shift=false, ~meta=true),
-    //          "workbench.action.quickOpen",
-    //        ),
-    //        (
-    //          "p",
-    //          modifier(~control=true, ~shift=true, ~meta=false),
-    //          "workbench.action.showCommands",
-    //        ),
-    //        (
-    //          "p",
-    //          modifier(~control=false, ~shift=true, ~meta=true),
-    //          "workbench.action.showCommands",
-    //        ),
-    //      ];
-    //
-    //      cases |> List.iter(validateKeyResultsInCommand);
-    //    });
+    test("regression test: #1152 (legacy expression)", ({expect, _}) => {
+      let result = of_yojson_with_errors(regressionTest1152);
+
+      expect.bool(isOk(result)).toBe(true);
+      expect.int(errorCount(result)).toBe(0);
+
+      result
+      |> Utility.ResultEx.tapError(err => failwith(err))
+      |> Result.iter(((bindings, _)) => {
+           let input =
+             List.fold_left(
+               (acc, binding) => {
+                 let (acc', _uniqueId) =
+                   Feature_Input.addKeyBinding(~binding, acc);
+                 acc';
+               },
+               Feature_Input.initial([]),
+               bindings,
+             );
+           let (_bindings, effects) =
+             Feature_Input.keyDown(
+               ~config=Oni_Core.Config.emptyResolver,
+               ~context=contextWithEditorTextFocus,
+               ~key=getKeyFromSDL("F2"),
+               input,
+             );
+
+           expect.equal(effects, [Execute("explorer.toggle")]);
+         });
+    });
+    test("regression test: #1160 (legacy binding)", ({expect, _}) => {
+      let result = of_yojson_with_errors(regressionTest1160);
+      expect.bool(isOk(result)).toBe(true);
+      expect.int(bindingCount(result)).toBe(4);
+      expect.int(errorCount(result)).toBe(0);
+
+      let validateKeyResultsInCommand = ((key, modifiers, cmd)) => {
+        result
+        |> Result.iter(((bindings, _)) => {
+             let input =
+               List.fold_left(
+                 (acc, binding) => {
+                   let (acc', _uniqueId) =
+                     Feature_Input.addKeyBinding(~binding, acc);
+                   acc';
+                 },
+                 Feature_Input.initial([]),
+                 bindings,
+               );
+             let key = getKeyFromSDL(~modifiers, key);
+             let (_bindings, effects) =
+               Feature_Input.keyDown(
+                 ~config=Oni_Core.Config.emptyResolver,
+                 ~context=contextWithEditorTextFocus,
+                 ~key,
+                 input,
+               );
+             expect.equal(effects, [Execute(cmd)]);
+           });
+      };
+
+      let modifier = (~control, ~shift, ~meta) => {
+        ...EditorInput.Modifiers.none,
+        control,
+        shift,
+        meta,
+      };
+
+      let cases = [
+        (
+          "p",
+          modifier(~control=true, ~shift=false, ~meta=false),
+          "workbench.action.quickOpen",
+        ),
+        (
+          "p",
+          modifier(~control=false, ~shift=false, ~meta=true),
+          "workbench.action.quickOpen",
+        ),
+        (
+          "p",
+          modifier(~control=true, ~shift=true, ~meta=false),
+          "workbench.action.showCommands",
+        ),
+        (
+          "p",
+          modifier(~control=false, ~shift=true, ~meta=true),
+          "workbench.action.showCommands",
+        ),
+      ];
+
+      cases |> List.iter(validateKeyResultsInCommand);
+    });
   })
 });

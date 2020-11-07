@@ -21,7 +21,8 @@ runTest(
       let keycode = Sdl2.Keycode.ofName(key);
       let modifiers = EditorInput.Modifiers.none;
 
-      let keyPress: EditorInput.KeyPress.t = {scancode, keycode, modifiers};
+      let keyPress: EditorInput.KeyPress.t =
+        EditorInput.KeyPress.physicalKey(~keycode, ~scancode, ~modifiers);
       let time = Revery.Time.now();
 
       dispatch(Model.Actions.KeyDown(keyPress, time));

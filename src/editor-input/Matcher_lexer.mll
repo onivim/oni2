@@ -40,47 +40,49 @@ rule token = parse
 		raise (UnrecognizedModifier m)
  }
 | "<release>" { ALLKEYSRELEASED }
-| 'f' (['0'-'9'] as m) { BINDING ( Function(int_of_string (String.make 1 m)) ) }
-| 'f' '1' (['0'-'9'] as m) { BINDING ( Function(int_of_string ("1" ^ (String.make 1 m))) ) }
-| 'f' '1' (['0'-'9'] as m) { BINDING ( Function(int_of_string ("1" ^ (String.make 1 m))) ) }
-| "esc" { BINDING (Escape) }
-| "escape" { BINDING (Escape) }
-| "up" { BINDING (Up) }
-| "down" { BINDING (Down) }
-| "left" { BINDING (Left) }
-| "right" { BINDING (Right) }
-| "tab" { BINDING (Tab) }
-| "pageup" { BINDING (PageUp) }
-| "pagedown" { BINDING (PageDown) }
-| "cr" { BINDING (Return) }
-| "enter" { BINDING (Return) }
-| "space" { BINDING (Space) }
-| "del" { BINDING (Delete) }
-| "delete" { BINDING (Delete) }
-| "pause" { BINDING (Pause) }
-| "pausebreak" { BINDING (Pause) }
-| "home" { BINDING (Home) }
-| "end" { BINDING (End) }
-| "del" { BINDING (Delete) }
-| "delete" { BINDING (Delete) }
-| "bs" { BINDING (Backspace) }
-| "backspace" { BINDING (Backspace) }
-| "capslock" { BINDING (CapsLock) }
-| "insert" { BINDING (Insert) }
-| "numpad_multiply" { BINDING(NumpadMultiply) }
-| "numpad_add" { BINDING(NumpadAdd) }
-| "numpad_separator" { BINDING(NumpadSeparator) }
-| "numpad_subtract" { BINDING(NumpadSubtract) }
-| "numpad_decimal" { BINDING(NumpadDecimal) }
-| "numpad_divide" { BINDING(NumpadDivide) }
+| 'f' (['0'-'9'] as m) { BINDING ( Physical(Function(int_of_string (String.make 1 m)) ) ) }
+| 'f' '1' (['0'-'9'] as m) { BINDING ( Physical(Function(int_of_string ("1" ^ (String.make 1 m))) ) ) }
+| 'f' '1' (['0'-'9'] as m) { BINDING ( Physical (Function(int_of_string ("1" ^ (String.make 1 m))) ) ) }
+| "esc" { BINDING (Physical(Escape)) }
+| "escape" { BINDING (Physical(Escape)) }
+| "up" { BINDING (Physical(Up)) }
+| "down" { BINDING (Physical(Down)) }
+| "left" { BINDING (Physical(Left)) }
+| "right" { BINDING (Physical(Right)) }
+| "tab" { BINDING (Physical(Tab)) }
+| "pageup" { BINDING (Physical(PageUp)) }
+| "pagedown" { BINDING (Physical(PageDown)) }
+| "cr" { BINDING (Physical(Return)) }
+| "enter" { BINDING (Physical(Return)) }
+| "space" { BINDING (Physical(Space)) }
+| "del" { BINDING (Physical(Delete)) }
+| "delete" { BINDING (Physical(Delete)) }
+| "pause" { BINDING (Physical(Pause)) }
+| "pausebreak" { BINDING (Physical(Pause)) }
+| "home" { BINDING (Physical(Home)) }
+| "end" { BINDING (Physical(End)) }
+| "del" { BINDING (Physical(Delete)) }
+| "delete" { BINDING (Physical(Delete)) }
+| "bs" { BINDING (Physical(Backspace)) }
+| "backspace" { BINDING (Physical(Backspace)) }
+| "capslock" { BINDING (Physical(CapsLock)) }
+| "insert" { BINDING (Physical(Insert)) }
+| "numpad_multiply" { BINDING(Physical(NumpadMultiply)) }
+| "numpad_add" { BINDING(Physical(NumpadAdd)) }
+| "numpad_separator" { BINDING(Physical(NumpadSeparator)) }
+| "numpad_subtract" { BINDING(Physical(NumpadSubtract)) }
+| "numpad_decimal" { BINDING(Physical(NumpadDecimal)) }
+| "numpad_divide" { BINDING(Physical(NumpadDivide)) }
 | "numpad" { numpad_digit lexbuf }
+| "leader" { BINDING(Special(Leader)) }
+| "plug" { BINDING(Special(Plug)) }
 | white { token lexbuf }
 | binding as i
- { BINDING (Character (i)) }
+ { BINDING (Physical(Character (i))) }
 | '<' { LT }
 | '>' { GT }
 | eof { EOF }
 | _ { raise Error }
 
 and numpad_digit = parse
-| ['0'-'9'] as digit { BINDING ( NumpadDigit(int_of_string (String.make 1 digit)) ) }
+| ['0'-'9'] as digit { BINDING (Physical( NumpadDigit(int_of_string (String.make 1 digit))) ) }

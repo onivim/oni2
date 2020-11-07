@@ -176,17 +176,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         };
 
       Some(
-        EditorInput.KeyPress.{
-          scancode,
-          keycode,
-          modifiers: {
-            shift,
-            control,
-            alt,
-            meta,
-            altGr,
-          },
-        },
+        EditorInput.KeyPress.physicalKey(
+          ~scancode,
+          ~keycode,
+          ~modifiers={shift, control, alt, meta, altGr},
+        ),
       );
     };
   };
@@ -204,8 +198,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let handleKeyPress = (state: State.t, key) => {
     let context = Model.ContextKeys.all(state);
 
+    let config = Model.Selectors.configResolver(state);
     let (input, effects) =
-      Feature_Input.keyDown(~context, ~key, state.input);
+      Feature_Input.keyDown(~config, ~context, ~key, state.input);
 
     let newState = {...state, input};
 
@@ -229,8 +224,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let handleKeyUp = (state: State.t, key) => {
     let context = Model.ContextKeys.all(state);
 
+    let config = Model.Selectors.configResolver(state);
     //let inputKey = reveryKeyToEditorKey(key);
-    let (input, effects) = Feature_Input.keyUp(~context, ~key, state.input);
+    let (input, effects) =
+      Feature_Input.keyUp(~config, ~context, ~key, state.input);
 
     let newState = {...state, input};
 

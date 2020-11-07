@@ -15,7 +15,8 @@ runTest(~name="VimSimpleRemapTest", (dispatch, wait, runEffects) => {
     let keycode = Sdl2.Keycode.ofName(key);
     let modifiers = EditorInput.Modifiers.none;
 
-    let keyPress: EditorInput.KeyPress.t = {scancode, keycode, modifiers};
+    let keyPress: EditorInput.KeyPress.t =
+      EditorInput.KeyPress.physicalKey(~scancode, ~keycode, ~modifiers);
     let time = Revery.Time.now();
 
     dispatch(Model.Actions.KeyDown(keyPress, time));
