@@ -193,6 +193,10 @@ let all = (state: State.t) => {
     extensionContextKeys,
     searchContextKeys,
     paneContextKeys,
+    Feature_Registration.Contributions.contextKeys(
+      ~isFocused=focus == Focus.LicenseKey,
+      state.registration,
+    ),
     Feature_LanguageSupport.Contributions.contextKeys
     |> Schema.map(({languageSupport, _}: State.t) => languageSupport)
     |> fromSchema(state),

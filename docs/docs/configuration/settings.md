@@ -98,6 +98,10 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `vim.highlightedyank.duration` __(_int_ default: `300`)__ - The time, in milliseconds, the yank highlight is visible.
 
+### Input
+
+- `vim.leader` __(_string_)__ - Specify a custom [leader key](./key-bindings#leader-key). 
+
 ### Layout
 
 - `workbench.editor.showTabs` __(_bool_ default: `true`)__ - When `false`, hides the editor tabs.
