@@ -310,11 +310,13 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
     )
 
   | Saved(bufferId) =>
+    let model' =
+      IntMap.update(bufferId, Option.map(Buffer.incrementSaveTick), model);
     let eff =
       IntMap.find_opt(bufferId, model)
       |> Option.map(buffer => BufferSaved(buffer))
       |> Option.value(~default=Nothing);
-    (model, eff);
+    (model', eff);
 
   | Command(command) =>
     switch (command) {
