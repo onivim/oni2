@@ -13,6 +13,7 @@ steps:
         downloadType: 'single'
         artifactName: 'cache-$(Agent.OS)-install'
         downloadPath: '$(STAGING_DIRECTORY)'
+        allowPartiallySucceededBuilds: true
     continueOnError: true
 
   - bash: 'mkdir -p $(ESY__CACHE_INSTALL_PATH)'
