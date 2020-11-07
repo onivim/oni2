@@ -103,6 +103,10 @@ let update = (editor, msg) => {
       editor |> Editor.mouseUp(~time, ~pixelX, ~pixelY),
       Nothing,
     )
+  | InlineElementSizeChanged({key, uniqueId, height}) => (
+      Editor.setInlineElementSize(~key, ~uniqueId, ~height, editor),
+      Nothing,
+    )
   | EditorMouseMoved({time, pixelX, pixelY}) =>
     let editor' = editor |> Editor.mouseMove(~time, ~pixelX, ~pixelY);
 

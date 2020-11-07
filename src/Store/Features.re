@@ -444,6 +444,37 @@ let update =
           state,
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
         )
+      | CodeLensesChanged({bufferId, lenses}) =>
+        let inlineElements =
+          lenses
+          |> List.map(lens => {
+               let lineNumber =
+                 Feature_LanguageSupport.CodeLens.lineNumber(lens);
+               let uniqueId = Feature_LanguageSupport.CodeLens.uniqueId(lens);
+               let view =
+                 Feature_LanguageSupport.CodeLens.View.make(~codeLens=lens);
+               Feature_Editor.Editor.makeInlineElement(
+                 ~key="codelens",
+                 ~uniqueId,
+                 ~lineNumber=
+                   EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+                 ~view,
+               );
+             });
+        let layout' =
+          state.layout
+          |> Feature_Layout.map(editor =>
+               if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
+                 Feature_Editor.Editor.setInlineElements(
+                   ~key="codelens",
+                   ~elements=inlineElements,
+                   editor,
+                 );
+               } else {
+                 editor;
+               }
+             );
+        ({...state, layout: layout'}, Isolinear.Effect.none);
       }
     );
 

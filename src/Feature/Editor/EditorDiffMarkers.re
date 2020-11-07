@@ -125,14 +125,55 @@ let render =
     ~height,
     ~count,
     ~render=
+      (i, _y) => {
+        let bufferLine =
+          Editor.viewLineToBufferLine(i, editor)
+          |> EditorCoreTypes.LineNumber.toZeroBased;
+
+        let y = Editor.viewLineToPixelY(i, editor);
+        if (markers[bufferLine] != Unmodified) {
+          renderMarker(
+            ~x,
+            ~y=y -. scrollY,
+            ~rowHeight,
+            ~width,
+            ~canvasContext,
+            ~colors,
+            markers[bufferLine],
+          );
+        };
+      },
+    (),
+  );
+
+let renderMinimap =
+    (
+      ~editor,
+      ~scrollY,
+      ~rowHeight,
+      ~x,
+      ~height,
+      ~width,
+      ~count,
+      ~canvasContext,
+      ~colors,
+      markers,
+    ) =>
+  ImmediateList.render(
+    ~scrollY,
+    ~rowHeight,
+    ~height,
+    ~count,
+    ~render=
       (i, y) => {
         let bufferLine =
           Editor.viewLineToBufferLine(i, editor)
           |> EditorCoreTypes.LineNumber.toZeroBased;
+
         if (markers[bufferLine] != Unmodified) {
           renderMarker(
             ~x,
-            ~y,
+            ~y=y -. scrollY,
             ~rowHeight,
             ~width,
             ~canvasContext,
