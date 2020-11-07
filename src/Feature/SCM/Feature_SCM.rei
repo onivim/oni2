@@ -19,13 +19,14 @@ module Resource: {
 
 module ResourceGroup: {
   [@deriving show]
-  type t = {
-    handle: int,
-    id: string,
-    label: string,
-    hideWhenEmpty: bool,
-    resources: list(Resource.t),
-  };
+  type t;
+  //  type t = {
+  //    handle: int,
+  //    id: string,
+  //    label: string,
+  //    hideWhenEmpty: bool,
+  //    resources: list(Resource.t),
+  //  };
 };
 
 module Provider: {
@@ -49,9 +50,12 @@ module Provider: {
 [@deriving show]
 type model;
 
+let resetFocus: model => model;
+
 let initial: model;
 
-let statusBarCommands: model => list(Exthost.Command.t);
+let statusBarCommands:
+  (~workingDirectory: string, model) => list(Exthost.Command.t);
 
 // UPDATE
 
@@ -68,6 +72,7 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
+  | OpenFile(string)
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | Nothing;
 
@@ -93,8 +98,9 @@ module Pane: {
       ~key: Brisk_reconciler.Key.t=?,
       ~model: model,
       ~workingDirectory: string,
-      ~onItemClick: Resource.t => unit,
       ~isFocused: bool,
+      ~iconTheme: Oni_Core.IconTheme.t,
+      ~languageInfo: Exthost.LanguageInfo.t,
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~dispatch: msg => unit,
@@ -104,6 +110,6 @@ module Pane: {
 };
 
 module Contributions: {
-  let commands: (~isFocused: bool) => list(Command.t(msg));
-  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
+  let commands: (~isFocused: bool, model) => list(Command.t(msg));
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
 };

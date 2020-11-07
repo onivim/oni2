@@ -1,6 +1,3 @@
-open EditorCoreTypes;
-open Oni_Core;
-
 [@deriving show({with_path: false})]
 type t =
   | VerticalScrollbarBeforeTrackClicked({newPixelScrollY: float})
@@ -21,13 +18,33 @@ type t =
   | EditorMouseWheel({
       deltaX: float,
       deltaY: float,
+      shiftKey: bool,
     })
-  | MouseHovered({bytePosition: BytePosition.t})
-  | MouseMoved({bytePosition: BytePosition.t})
-  | SelectionChanged([@opaque] VisualRange.t)
-  | SelectionCleared
-  | CursorsChanged([@opaque] list(BytePosition.t))
-  | ScrollToLine(int)
-  | ScrollToColumn(int)
-  | MinimapEnabledConfigChanged(bool)
-  | LineHeightConfigChanged(LineHeight.t);
+  | EditorMouseEnter
+  | EditorMouseDown({
+      time: [@opaque] Revery.Time.t,
+      pixelX: float,
+      pixelY: float,
+    })
+  | EditorMouseMoved({
+      time: [@opaque] Revery.Time.t,
+      pixelX: float,
+      pixelY: float,
+    })
+  | EditorMouseUp({
+      time: [@opaque] Revery.Time.t,
+      pixelX: float,
+      pixelY: float,
+    })
+  | EditorMouseLeave
+  | MouseHovered
+  //  | MouseMoved({bytePosition: BytePosition.t})
+  | ModeChanged({
+      mode: [@opaque] Vim.Mode.t,
+      effects: [@opaque] list(Vim.Effect.t),
+    })
+  | InlineElementSizeChanged({
+      key: string,
+      uniqueId: string,
+      height: int,
+    });

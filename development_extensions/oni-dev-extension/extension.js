@@ -76,7 +76,25 @@ function activate(context) {
     cleanup(
         vscode.languages.registerCompletionItemProvider("oni-dev", {
             provideCompletionItems: (document, position, token, context) => {
-                return [vscode.CompletionItem("ReasonML"), vscode.CompletionItem("OCaml")]
+                return [vscode.CompletionItem("ReasonML1"), vscode.CompletionItem("OCaml1")]
+            },
+        }),
+    )
+
+    // SLOW completion provider
+    cleanup(
+        vscode.languages.registerCompletionItemProvider("oni-dev", {
+            provideCompletionItems: (document, position, token, context) => {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve([
+                        vscode.CompletionItem("ReasonML0"),
+                        vscode.CompletionItem("OCaml0"),
+                        vscode.CompletionItem("ReasonML2"),
+                        vscode.CompletionItem("OCaml2"),
+                        ])
+                    }, 500);
+                });
             },
         }),
     )
@@ -88,19 +106,23 @@ function activate(context) {
     output2.append("Hello output channel!")
 
     const collection = vscode.languages.createDiagnosticCollection("test")
+    
+    let latestText = ""
 
     cleanup(
-        vscode.workspace.onDidOpenTextDocument((e) => {
+        vscode.workspace.onDidOpenTextDocument((document) => {
             // TODO:
             // Add command / option to toggle this
             // showData({
             //     type: "workspace.onDidOpenTextDocument",
             //     filename: e.fileName,
             // });
+
+            if (document) {
+                latestText = document.getText().split(os.EOL).join("|")
+            }
         }),
     )
-
-    let latestText = ""
 
     cleanup(
         vscode.workspace.onDidChangeTextDocument((e) => {

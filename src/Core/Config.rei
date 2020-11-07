@@ -7,8 +7,11 @@ type rawValue =
   | NotSet;
 
 type resolver = (~vimSetting: option(string), key) => rawValue;
+type fileTypeResolver = (~fileType: string) => resolver;
 
-//let key: string => key;
+let emptyResolver: resolver;
+
+let key: string => key;
 let keyAsString: key => string;
 
 // SETTINGS
@@ -20,7 +23,7 @@ module Settings: {
 
   let fromList: list((string, Json.t)) => t;
   let fromJson: Json.t => t;
-  let fromFile: string => t;
+  let fromFile: Fp.t(Fp.absolute) => t;
 
   let get: (key, t) => option(Json.t);
 

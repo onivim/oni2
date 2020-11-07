@@ -1,0 +1,8 @@
+(library
+ (name Component_FileExplorer)
+ (public_name Oni2.component.fileExplorer)
+ (libraries Oni2.component.vimTree Oni2.component.accordion Oni2.core
+   Oni2.exthost Oni2.feature.decorations Oni2.feature.theme Oni2.components
+   Revery isolinear)
+ (preprocess
+  (pps ppx_let lwt_ppx ppx_deriving.show brisk-reconciler.ppx)))

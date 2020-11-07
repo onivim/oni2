@@ -4,34 +4,34 @@ module Log = (val Log.withNamespace("Service_Vim"));
 
 let forceReload = () =>
   Isolinear.Effect.create(~name="vim.discardChanges", () =>
-    ignore(Vim.command("e!"): Vim.Context.t)
+    ignore(Vim.command("e!"): (Vim.Context.t, list(Vim.Effect.t)))
   );
 
 let forceOverwrite = () =>
   Isolinear.Effect.create(~name="vim.forceOverwrite", () =>
-    ignore(Vim.command("w!"): Vim.Context.t)
+    ignore(Vim.command("w!"): (Vim.Context.t, list(Vim.Effect.t)))
   );
 
 let reload = () =>
   Isolinear.Effect.create(~name="vim.reload", () => {
-    ignore(Vim.command("e"): Vim.Context.t)
+    ignore(Vim.command("e"): (Vim.Context.t, list(Vim.Effect.t)))
   });
 
 let saveAllAndQuit = () =>
   Isolinear.Effect.create(~name="lifecycle.saveAllAndQuit", () =>
-    ignore(Vim.command("xa"): Vim.Context.t)
+    ignore(Vim.command("xa"): (Vim.Context.t, list(Vim.Effect.t)))
   );
 
 let quitAll = () =>
   Isolinear.Effect.create(~name="lifecycle.saveAllAndQuit", () =>
-    ignore(Vim.command("qa!"): Vim.Context.t)
+    ignore(Vim.command("qa!"): (Vim.Context.t, list(Vim.Effect.t)))
   );
 
 module Effects = {
   let paste = (~toMsg, text) => {
     Isolinear.Effect.createWithDispatch(~name="vim.clipboardPaste", dispatch => {
       let isCmdLineMode = Vim.Mode.current() == Vim.Mode.CommandLine;
-      let isInsertMode = Vim.Mode.current() == Vim.Mode.Insert;
+      let isInsertMode = Vim.Mode.isInsert(Vim.Mode.current());
 
       if (isInsertMode || isCmdLineMode) {
         if (!isCmdLineMode) {
@@ -39,11 +39,12 @@ module Effects = {
         };
 
         Log.infof(m => m("Pasting: %s", text));
-        let latestContext: Vim.Context.t = Oni_Core.VimEx.inputString(text);
+        let (latestContext: Vim.Context.t, _effects) =
+          Oni_Core.VimEx.inputString(text);
 
         if (!isCmdLineMode) {
           Vim.command("set nopaste") |> ignore;
-          dispatch(toMsg(latestContext.cursors));
+          dispatch(toMsg(latestContext.mode));
         };
       };
     });
@@ -95,9 +96,10 @@ module Effects = {
         ByteIndex.toInt(cursor.byte) - CharacterIndex.toInt(meetColumn);
 
       let _: Vim.Context.t = VimEx.repeatKey(delta, "<BS>");
-      let {cursors, _}: Vim.Context.t = VimEx.inputString(insertText);
+      let ({mode, _}: Vim.Context.t, _effects) =
+        VimEx.inputString(insertText);
 
-      dispatch(toMsg(cursors));
+      dispatch(toMsg(mode));
     });
 
   let loadBuffer = (~filePath: string, toMsg) => {

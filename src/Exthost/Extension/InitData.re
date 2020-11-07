@@ -101,11 +101,11 @@ module Environment = {
     globalStorageHome:
       Oni_Core.Filesystem.getGlobalStorageFolder()
       |> Result.to_option
-      |> Option.map(Uri.fromPath),
+      |> Option.map(Uri.fromFilePath),
     userHome:
       Oni_Core.Filesystem.getUserDataDirectory()
       |> Result.to_option
-      |> Option.map(Uri.fromPath),
+      |> Option.map(Uri.fromFilePath),
   };
 };
 

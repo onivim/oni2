@@ -20,121 +20,59 @@ module ReveryLog = (val Core.Log.withNamespace("Revery"));
 module LwtEx = Core.Utility.LwtEx;
 module OptionEx = Core.Utility.OptionEx;
 
-let installExtension = (path, Oni_CLI.{overriddenExtensionsDir, _}) => {
-  let setup = Core.Setup.init();
-  let result =
-    ExtM.install(~setup, ~extensionsFolder=?overriddenExtensionsDir, path)
-    |> LwtEx.sync;
-
-  switch (result) {
-  | Ok(_) =>
-    Printf.printf("Successfully installed extension: %s\n", path);
-    0;
-
-  | Error(_) =>
-    Printf.printf("Failed to install extension: %s\n", path);
-    1;
-  };
-};
-
-let uninstallExtension = (extensionId, {overriddenExtensionsDir, _}) => {
-  let result =
-    ExtM.uninstall(~extensionsFolder=?overriddenExtensionsDir, extensionId)
-    |> LwtEx.sync;
-
-  switch (result) {
-  | Ok(_) =>
-    Printf.sprintf("Successfully uninstalled extension: %s\n", extensionId)
-    |> print_endline;
-    0;
-
-  | Error(msg) =>
-    Printf.sprintf(
-      "Failed to uninstall extension: %s\n%s",
-      extensionId,
-      Printexc.to_string(msg),
-    )
-    |> prerr_endline;
-    1;
-  };
-};
-
-let printVersion = () => {
-  print_endline("Onivim 2 (" ++ Core.BuildInfo.version ++ ")");
-  0;
-};
-
-let queryExtension = (extension, _cli) => {
-  let setup = Core.Setup.init();
-  Service_Extensions.
-    // Try to parse the extension id - either search, or
-    // get details
-    (
-      switch (Catalog.Identifier.fromString(extension)) {
-      | Some(identifier) =>
-        Catalog.details(~setup, identifier)
-        |> LwtEx.sync
-        |> (
-          fun
-          | Ok(ext) => {
-              ext |> Catalog.Details.toString |> print_endline;
-              0;
-            }
-          | Error(msg) => {
-              prerr_endline(Printexc.to_string(msg));
-              1;
-            }
-        )
-      | None =>
-        Catalog.search(~offset=0, ~setup, extension)
-        |> LwtEx.sync
-        |> (
-          fun
-          | Ok(response) => {
-              response |> Catalog.SearchResponse.toString |> print_endline;
-              0;
-            }
-          | Error(msg) => {
-              prerr_endline(Printexc.to_string(msg));
-              1;
-            }
-        )
-      }
-    );
-};
-
-let listExtensions = ({overriddenExtensionsDir, _}) => {
-  Exthost.Extension.(
-    {
-      let extensions =
-        ExtM.get(~extensionsFolder=?overriddenExtensionsDir, ())
-        |> LwtEx.sync
-        |> Result.value(~default=[]);
-
-      let printExtension = (ext: Scanner.ScanResult.t) => {
-        print_endline(ext.manifest |> Manifest.identifier);
-      };
-      List.iter(printExtension, extensions);
-      0;
-    }
-  );
-};
-
 Log.debug("Startup: Parsing CLI options");
-let (cliOptions, eff) = Oni_CLI.parse(Sys.argv);
+let (cliOptions, eff) = Oni_CLI.parse(~getenv=Sys.getenv_opt, Sys.argv);
+
+if (cliOptions.needsConsole) {
+  Revery.App.initConsole();
+};
 
 switch (eff) {
-| PrintVersion => printVersion() |> exit
-| InstallExtension(name) => installExtension(name, cliOptions) |> exit
-| QueryExtension(name) => queryExtension(name, cliOptions) |> exit
-| UninstallExtension(name) => uninstallExtension(name, cliOptions) |> exit
+| PrintVersion => Cli.printVersion() |> exit
+| InstallExtension(name) => Cli.installExtension(name, cliOptions) |> exit
+| QueryExtension(name) => Cli.queryExtension(name, cliOptions) |> exit
+| UninstallExtension(name) =>
+  Cli.uninstallExtension(name, cliOptions) |> exit
 | CheckHealth => HealthCheck.run(~checks=All, cliOptions) |> exit
-| ListExtensions => listExtensions(cliOptions) |> exit
+| ListExtensions => Cli.listExtensions(cliOptions) |> exit
 | StartSyntaxServer({parentPid, namedPipe}) =>
   Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>
     HealthCheck.run(~checks=Common, cliOptions)
   )
 | Run =>
+  // Turn on logging, if necessary
+  let loggingToConsole =
+    cliOptions.attachToForeground && Option.is_some(cliOptions.logLevel);
+  let loggingToFile = Option.is_some(cliOptions.logFile);
+
+  cliOptions.logLevel |> Option.iter(Timber.App.setLevel);
+
+  cliOptions.logFilter |> Option.iter(Timber.App.setNamespaceFilter);
+
+  if (loggingToConsole && loggingToFile) {
+    let consoleReporter =
+      Timber.Reporter.console(~enableColors=?cliOptions.logColorsEnabled, ());
+    let fileReporter = Option.get(cliOptions.logFile) |> Timber.Reporter.file;
+
+    let reporter = Timber.Reporter.combine(consoleReporter, fileReporter);
+    Timber.App.enable(reporter);
+  } else if (loggingToConsole) {
+    let consoleReporter =
+      Timber.Reporter.console(~enableColors=?cliOptions.logColorsEnabled, ());
+    Timber.App.enable(consoleReporter);
+  } else if (loggingToFile) {
+    let fileReporter = Option.get(cliOptions.logFile) |> Timber.Reporter.file;
+    Timber.App.enable(fileReporter);
+  };
+  Oni_Core.Log.init();
+
+  // #1161 - OSX - Make sure we're using the terminal / shell PATH.
+  // Only fix path when launched from finder -
+  // it seems running `zsh -ilc` hangs when running from terminal.
+  if (Sys.getenv_opt("ONI2_LAUNCHED_FROM_FINDER") |> Option.is_some) {
+    Core.ShellUtility.fixOSXPath();
+  };
+
   let initWorkingDirectory = () => {
     let path =
       switch (Oni_CLI.(cliOptions.folder)) {
@@ -273,7 +211,7 @@ switch (eff) {
         Vim.Buffer.openFile(Core.BufferPath.welcome)
         |> Vim.BufferMetadata.ofBuffer;
       Core.Buffer.ofMetadata(
-        ~font=Core.Font.default,
+        ~font=Service_Font.default(),
         ~id,
         ~version,
         ~filePath,
@@ -293,6 +231,8 @@ switch (eff) {
     let extensionGlobalPersistence =
       Store.Persistence.Global.extensionValues();
 
+    let licenseKeyPersistence = Store.Persistence.Global.licenseKey();
+
     let initialWorkspaceStore =
       Store.Persistence.Workspace.storeFor(initialWorkingDirectory);
     let extensionWorkspacePersistence =
@@ -301,6 +241,7 @@ switch (eff) {
     let currentState =
       ref(
         Model.State.initial(
+          ~cli=cliOptions,
           ~initialBuffer,
           ~initialBufferRenderers,
           ~getUserSettings,
@@ -308,7 +249,9 @@ switch (eff) {
           ~extensionWorkspacePersistence,
           ~contributedCommands=[], // TODO
           ~workingDirectory=initialWorkingDirectory,
+          // TODO: Use `Fp.t` all the way down
           ~extensionsFolder=cliOptions.overriddenExtensionsDir,
+          ~licenseKeyPersistence,
         ),
       );
 
@@ -350,7 +293,7 @@ switch (eff) {
 
     let title = (state: Model.State.t) => {
       let activeBuffer = Model.Selectors.getActiveBuffer(state);
-      let config = Feature_Configuration.resolver(state.config, state.vim);
+      let config = Model.Selectors.configResolver(state);
 
       Feature_TitleBar.title(
         ~activeBuffer,
@@ -376,7 +319,8 @@ switch (eff) {
         setTitle(currentTitle);
       };
     };
-    let _: unit => unit = Tick.interval(tick, Time.zero);
+    let _: unit => unit =
+      Tick.interval(~name="Oni2_Editor Apploop", tick, Time.zero);
 
     let getZoom = () => {
       Window.getZoom(window);

@@ -26,7 +26,7 @@ let changeEditorFont = () => {
 
   Reducer.reduce(
     state,
-    Actions.EditorFont(Service_Font.FontLoaded(Service_Font.default)),
+    Actions.EditorFont(Service_Font.FontLoaded(Service_Font.default())),
   );
 };
 

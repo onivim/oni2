@@ -11,24 +11,27 @@ module Data = {
     );
 
   let randomBufferLine = () =>
-    BufferLine.make(~indentation=IndentationSettings.default, randomString());
+    BufferLine.make(~measure=_ => 1.0, randomString());
 
   let lines_10k_a = Array.init(10000, _ => randomString());
   let lines_10k_b = Array.init(10000, _ => randomString());
   let lines_100k = Array.init(100000, _ => randomString());
 
-  let buffer_10k_nochanges = Buffer.ofLines(lines_10k_a);
+  let buffer_10k_nochanges =
+    Buffer.ofLines(~font=Font.default(), lines_10k_a);
   let scm_10k_nochanges =
     Feature_SCM.initial
     |> Feature_SCM.setOriginalLines(buffer_10k_nochanges, lines_10k_a);
 
-  let buffer_10k_randomchanges = Buffer.ofLines(lines_10k_a);
+  let buffer_10k_randomchanges =
+    Buffer.ofLines(~font=Font.default(), lines_10k_a);
 
   let scm_10k_randomchanges =
     Feature_SCM.initial
     |> Feature_SCM.setOriginalLines(buffer_10k_randomchanges, lines_10k_b);
 
-  let buffer_10k_onelineoriginal = Buffer.ofLines(lines_10k_a);
+  let buffer_10k_onelineoriginal =
+    Buffer.ofLines(~font=Font.default(), lines_10k_a);
 
   let scm_10k_onelineoriginal =
     Feature_SCM.initial
@@ -37,13 +40,15 @@ module Data = {
          [|randomString()|],
        );
 
-  let buffer_10k_onelinemodified = Buffer.ofLines([|randomString()|]);
+  let buffer_10k_onelinemodified =
+    Buffer.ofLines(~font=Font.default(), [|randomString()|]);
 
   let scm_10k_onelinemodified =
     Feature_SCM.initial
     |> Feature_SCM.setOriginalLines(buffer_10k_onelinemodified, lines_10k_a);
 
-  let buffer_100k_nochanges = Buffer.ofLines(lines_100k);
+  let buffer_100k_nochanges =
+    Buffer.ofLines(~font=Font.default(), lines_100k);
 
   let scm_100k_nochanges =
     Feature_SCM.initial

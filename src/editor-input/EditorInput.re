@@ -2,6 +2,8 @@ module Key = Key;
 module Modifiers = Modifiers;
 module Matcher = Matcher;
 module KeyPress = KeyPress;
+module PhysicalKey = PhysicalKey;
+module SpecialKey = SpecialKey;
 
 module IntSet =
   Set.Make({
@@ -24,12 +26,28 @@ module type Input = {
   type effect =
     | Execute(command)
     | Text(string)
-    | Unhandled(KeyPress.t);
+    | Unhandled(KeyPress.t)
+    | RemapRecursionLimitHit;
 
-  let keyDown: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
+  let keyDown:
+    (
+      ~leaderKey: option(PhysicalKey.t)=?,
+      ~context: context,
+      ~key: KeyPress.t,
+      t
+    ) =>
+    (t, list(effect));
   let text: (~text: string, t) => (t, list(effect));
-  let keyUp: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
-  let flush: (~context: context, t) => (t, list(effect));
+  let keyUp:
+    (
+      ~leaderKey: option(PhysicalKey.t)=?,
+      ~context: context,
+      ~key: KeyPress.t,
+      t
+    ) =>
+    (t, list(effect));
+
+  let remove: (uniqueId, t) => t;
 
   let isPending: t => bool;
 
@@ -70,7 +88,8 @@ module Make = (Config: {
   type effect =
     | Execute(command)
     | Text(string)
-    | Unhandled(KeyPress.t);
+    | Unhandled(KeyPress.t)
+    | RemapRecursionLimitHit;
 
   type action =
     | Dispatch(command)
@@ -102,11 +121,20 @@ module Make = (Config: {
   };
 
   type t = {
-    lastDownKey: option(keyDownId),
+    // The `suppressText` flag is used to handle the flow of input events:
+    // - KeyDown
+    // - Text (maybe)
+    // - KeyUp
+    // When a KeyDown is sent - there may or may not be a subsequent event.
+    // If a KeyDown did not participate in a binding, we dispatch the Text
+    // event preferably. However, if the KeyDown did participate in a binding,
+    // we set the suppressText flag to prevent dispatching a corresponding
+    // Text event in that case. Once there is a KeyUp - we reset that flag.
     suppressText: bool,
     bindings: list(binding),
     text: list(textEntry),
-    keys: list(gesture),
+    // Keys stored in reverse order - most recent keys first
+    revKeys: list(gesture),
     pressedScancodes: IntSet.t,
   };
 
@@ -114,39 +142,38 @@ module Make = (Config: {
 
   let concat = (first, second) => {
     suppressText: false,
-    lastDownKey: None,
     bindings: first.bindings @ second.bindings,
-    keys: [],
+    revKeys: [],
     text: [],
     pressedScancodes: IntSet.empty,
   };
 
-  let keyMatches = (keyMatcher, key: gesture) => {
-    Matcher.(
-      {
-        switch (keyMatcher, key) {
-        | (Keydown(Scancode(scancode, mods)), Down(_id, key)) =>
-          key.scancode == scancode && Modifiers.equals(mods, key.modifiers)
-        | (Keydown(Keycode(keycode, mods)), Down(_id, key)) =>
-          key.keycode == keycode && Modifiers.equals(mods, key.modifiers)
-        | (Keyup(Scancode(scancode, mods)), Up(key)) =>
-          key.scancode == scancode && Modifiers.equals(mods, key.modifiers)
-        | (Keyup(Keycode(keycode, mods)), Up(key)) =>
-          key.keycode == keycode && Modifiers.equals(mods, key.modifiers)
-        | _ => false
-        };
+  let keyMatches = (~leaderKey, keyMatcher, key: gesture) => {
+    switch (keyMatcher, key) {
+    | (KeyPress.SpecialKey(Leader), Down(_id, KeyPress.PhysicalKey(key))) =>
+      switch (leaderKey) {
+      | None => false
+      | Some(leaderKey) => leaderKey == key
       }
-    );
+    | (keyPress, Down(_id, key)) => KeyPress.equals(keyPress, key)
+    | _ => false
+    };
   };
 
-  let applyKeyToBinding = (~context, key, binding) =>
+  let remove = (uniqueId, model) => {
+    ...model,
+    bindings: model.bindings |> List.filter(binding => binding.id != uniqueId),
+  };
+
+  let applyKeyToBinding = (~leaderKey, ~context, key, binding) =>
     if (!binding.enabled(context)) {
       None;
     } else {
       switch (binding.matcher) {
       | Unmatched(Matcher.AllKeysReleased) when key == AllKeysReleased =>
         Some({...binding, matcher: Matched})
-      | Unmatched(Matcher.Sequence([hd, ...tail])) when keyMatches(hd, key) =>
+      | Unmatched(Matcher.Sequence([hd, ...tail]))
+          when keyMatches(~leaderKey, hd, key) =>
         if (tail == []) {
           // If the sequence is fully exercise, we're matched!
           Some({
@@ -164,15 +191,17 @@ module Make = (Config: {
       };
     };
 
-  let applyKeyToBindings = (~context, key, bindings) => {
-    List.filter_map(applyKeyToBinding(~context, key), bindings);
+  let applyKeyToBindings = (~leaderKey, ~context, key, bindings) => {
+    List.filter_map(applyKeyToBinding(~leaderKey, ~context, key), bindings);
   };
 
-  let applyKeysToBindings = (~context, keys, bindings) => {
+  let applyKeysToBindings = (~leaderKey, ~context, keys, bindings) => {
     let bindingsWithKeyUp =
       keys
       |> List.fold_left(
-           (acc, curr) => {applyKeyToBindings(~context, curr, acc)},
+           (acc, curr) => {
+             applyKeyToBindings(~leaderKey, ~context, curr, acc)
+           },
            bindings,
          );
 
@@ -206,7 +235,9 @@ module Make = (Config: {
     let bindingsWithoutUpKey =
       keysWithoutUps
       |> List.fold_left(
-           (acc, curr) => {applyKeyToBindings(~context, curr, acc)},
+           (acc, curr) => {
+             applyKeyToBindings(~leaderKey, ~context, curr, acc)
+           },
            unusedBindings,
          );
 
@@ -237,13 +268,6 @@ module Make = (Config: {
     (newBindings, id);
   };
 
-  let reset = (~keys=[], ~text=[], bindings) => {
-    ...bindings,
-    lastDownKey: None,
-    text,
-    keys,
-  };
-
   let getReadyBindings = bindings => {
     let filter = binding => binding.matcher == Matched;
 
@@ -265,10 +289,26 @@ module Make = (Config: {
     ret;
   };
 
-  let getTextMatchingKeys = (text, keys) => {
-    let hash = keyIdsToHashtable(keys);
+  let getTextFromKeyId = (keyId, {text, _}: t) => {
+    text
+    |> List.filter(textEntry => textEntry.keyDownId == keyId)
+    |> (
+      l =>
+        List.nth_opt(l, 0)
+        |> Option.map((textEntry: textEntry) => textEntry.text)
+    );
+  };
 
-    text |> List.filter(textEntry => Hashtbl.mem(hash, textEntry.keyDownId));
+  let getEffectFromGesture = (gesture, bindings) => {
+    switch (gesture) {
+    | Down(id, keyPress) =>
+      switch (getTextFromKeyId(id, bindings)) {
+      | None => Some(Unhandled(keyPress))
+      | Some(text) => Some(Text(text))
+      }
+    | Up(_)
+    | AllKeysReleased => None
+    };
   };
 
   let getTextNotMatchingKeys = (text, keys) => {
@@ -277,38 +317,92 @@ module Make = (Config: {
     text |> List.filter(textEntry => !Hashtbl.mem(hash, textEntry.keyDownId));
   };
 
-  let isRemap = ({action, _}) =>
-    switch (action) {
-    | Dispatch(_) => false
-    | Remap(_) => true
-    };
-
   module Constants = {
     let maxRecursiveDepth = 10;
   };
 
-  let flush = (~context, bindings) => {
-    let allKeys = bindings.keys;
+  // Pop the latest key, and return the bindings w/o the key, and any effect
+  let popKey = bindings => {
+    switch (bindings.revKeys) {
+    | [] => (bindings, None)
+    | [latestKey, ...prevKeys] =>
+      let eff = getEffectFromGesture(latestKey, bindings);
+      let text = getTextNotMatchingKeys(bindings.text, [latestKey]);
 
-    let rec loop =
-            (
-              ~flush,
-              revKeys,
-              remainingText: list(textEntry),
-              remainingKeys,
-              effects,
-              iterationCount,
-            ) => {
-      let candidateBindings =
-        applyKeysToBindings(~context, revKeys |> List.rev, bindings.bindings);
+      ({...bindings, revKeys: prevKeys, text}, eff);
+    };
+  };
 
-      // If we've hit the recursion limit for remaps... filter out remaps
-      let candidateBindings =
-        if (iterationCount > Constants.maxRecursiveDepth) {
-          candidateBindings |> List.filter(binding => !isRemap(binding));
+  // Pop keys for matcher, and ignore all effects
+  let useUpKeysForBinding =
+      (~leaderKey, ~context, ~bindingId, initialBindings) => {
+    let rec loop = bindings =>
+      // Popped all the way
+      if (bindings.revKeys == []) {
+        bindings;
+      } else {
+        let candidateBindings =
+          applyKeysToBindings(
+            ~leaderKey,
+            ~context,
+            bindings.revKeys |> List.rev,
+            bindings.bindings,
+          );
+
+        if (List.exists(
+              binding => {binding.id == bindingId},
+              candidateBindings,
+            )) {
+          let (bindings', _ignoredEffects) = popKey(bindings);
+          loop(bindings');
         } else {
-          candidateBindings;
+          bindings;
         };
+      };
+    loop(initialBindings);
+  };
+
+  let popAll = (~revEffects, initialBindings) => {
+    let rec loop = (~revEffects, bindings) =>
+      if (bindings.revKeys == []) {
+        (bindings, revEffects);
+      } else {
+        let (bindings', maybeEffect) = popKey(bindings);
+        let effs = Option.to_list(maybeEffect);
+        loop(~revEffects=effs @ revEffects, bindings');
+      };
+    loop(~revEffects, initialBindings);
+  };
+
+  let empty = {
+    suppressText: false,
+    text: [],
+    bindings: [],
+    revKeys: [],
+    pressedScancodes: IntSet.empty,
+  };
+
+  let rec handleKeyCore =
+          (~leaderKey, ~recursionDepth=0, ~context, gesture, bindings) =>
+    // Hit the maximum remap recursion depth - just bail on this key.
+    if (recursionDepth > Constants.maxRecursiveDepth) {
+      let eff =
+        switch (gesture) {
+        | Down(_id, key) => [Unhandled(key), RemapRecursionLimitHit]
+        | Up(_) => [RemapRecursionLimitHit]
+        | AllKeysReleased => [RemapRecursionLimitHit]
+        };
+      (empty, eff);
+    } else {
+      let revKeys = [gesture, ...bindings.revKeys];
+
+      let candidateBindings =
+        applyKeysToBindings(
+          ~leaderKey,
+          ~context,
+          revKeys |> List.rev,
+          bindings.bindings,
+        );
 
       let readyBindings = getReadyBindings(candidateBindings);
       let readyBindingCount = List.length(readyBindings);
@@ -316,149 +410,159 @@ module Make = (Config: {
 
       let potentialBindingCount = candidateBindingCount - readyBindingCount;
 
-      switch (List.nth_opt(readyBindings, 0)) {
-      | Some(binding) =>
-        if (flush || potentialBindingCount == 0) {
-          // Filter out any 'text' entries that are associated with the keys for this finding
-          let remainingText = getTextNotMatchingKeys(remainingText, revKeys);
-
+      // We've got more than one potential binding, so let's wait
+      // and see what the user presses next.
+      if (potentialBindingCount > 0) {
+        ({...bindings, revKeys}, []);
+      } else {
+        // No 'potential' bindings - but is there one ready?
+        switch (List.nth_opt(readyBindings, 0)) {
+        // There is a matching, ready binding - let's run it.
+        | Some(binding) =>
+          let bindings' =
+            useUpKeysForBinding(
+              ~leaderKey,
+              ~context,
+              ~bindingId=binding.id,
+              bindings,
+            );
+          let text = getTextNotMatchingKeys(bindings'.text, revKeys);
           switch (binding.action) {
           | Dispatch(command) => (
-              remainingKeys,
-              remainingText,
-              [Execute(command), ...effects],
+              {...bindings', text, suppressText: true},
+              [Execute(command)],
             )
-          | Remap(keys) =>
-            let newKeys =
-              keys |> List.map(k => Down(KeyDownId.get(), k)) |> List.rev;
-            loop(
-              ~flush,
-              newKeys,
-              remainingText,
-              remainingKeys,
-              effects,
-              iterationCount + 1,
-            );
+
+          | Remap(_) =>
+            // Let flush handle the remap action
+            flush(
+              ~leaderKey,
+              ~recursionDepth,
+              ~context,
+              {...bindings, suppressText: true, revKeys},
+            )
           };
-        } else {
-          (List.append(revKeys, remainingKeys), remainingText, effects);
-        }
-      // Queue keys -
-      | None when potentialBindingCount > 0 => (
-          // We have more bindings available, so just stash our keys and quit
-          List.append(revKeys, remainingKeys),
-          remainingText,
-          effects,
-        )
-      // No candidate bindings... try removing a key and processing bindings
-      | None =>
-        switch (revKeys) {
-        | [] =>
-          // No keys left, we're done here
-          (remainingKeys, remainingText, effects)
-        | [Down(keyDownId, latestKey)] =>
-          let textEffects =
-            remainingText
-            |> List.filter(textEntry => textEntry.keyDownId == keyDownId)
-            |> List.map((textEntry: textEntry) => Text(textEntry.text));
 
-          let remainingText =
-            remainingText
-            |> List.filter(textEntry => textEntry.keyDownId != keyDownId);
-
-          // At the last key... if we got here, we couldn't find any match for this key
-          (
-            [],
-            remainingText,
-            [Unhandled(latestKey)] @ textEffects @ effects,
-          );
-        | [Up(_latestKey)] =>
-          // At the last key... if we got here, we couldn't find any match for this key
-          ([], remainingText, effects)
-        | [latestKey, ...otherKeys] =>
-          // Try a subset of keys
-          loop(
-            ~flush,
-            otherKeys,
-            remainingText,
-            [latestKey, ...remainingKeys],
-            effects,
-            iterationCount,
+        | None =>
+          flush(
+            ~leaderKey,
+            ~recursionDepth,
+            ~context,
+            {...bindings, revKeys},
           )
-        }
-      };
-    };
-
-    let (remainingKeys, remainingText, effects) =
-      loop(~flush=true, allKeys, bindings.text, [], [], 0);
-
-    let (remainingKeys, remainingText, effects) =
-      loop(~flush=false, remainingKeys, remainingText, [], effects, 0);
-
-    let keys = remainingKeys;
-
-    // The text used for the commands was filtered out, so any now-unmatched
-    // text is unhandled
-    let unhandledText = getTextNotMatchingKeys(remainingText, keys);
-    let currentText = getTextMatchingKeys(remainingText, keys);
-
-    let textEffects =
-      unhandledText
-      |> List.map((textEntry: textEntry) => Text(textEntry.text));
-
-    let text = currentText;
-    (reset(~keys, ~text, bindings), textEffects @ effects);
-  };
-
-  let handleKeyCore = (~context, gesture, bindings) => {
-    let originalKeys = bindings.keys;
-    let keys = [gesture, ...bindings.keys];
-
-    let candidateBindings =
-      applyKeysToBindings(~context, keys |> List.rev, bindings.bindings);
-
-    let readyBindings = getReadyBindings(candidateBindings);
-    let readyBindingCount = List.length(readyBindings);
-    let candidateBindingCount = List.length(candidateBindings);
-
-    let potentialBindingCount = candidateBindingCount - readyBindingCount;
-
-    if (potentialBindingCount > 0) {
-      ({...bindings, keys}, []);
-    } else {
-      switch (List.nth_opt(readyBindings, 0)) {
-      | Some(binding) =>
-        let text = getTextNotMatchingKeys(bindings.text, keys);
-        switch (binding.action) {
-        | Dispatch(command) => (
-            reset({...bindings, suppressText: true, text}),
-            [Execute(command)],
-          )
-        | Remap(remappedKeys) =>
-          let keys =
-            List.append(
-              originalKeys,
-              List.map(k => Down(KeyDownId.get(), k), remappedKeys),
-            );
-          flush(~context, {...bindings, suppressText: true, text, keys});
         };
-      | None => flush(~context, {...bindings, keys})
       };
+    }
+
+  and runRemappedKeys =
+      (~leaderKey, ~recursionDepth, ~context, ~keys, bindings) => {
+    let (bindings', effects') =
+      keys
+      |> List.fold_left(
+           (acc, key) => {
+             let gesture = Down(KeyDownId.get(), key);
+             let (bindings, effs) = acc;
+             let (bindings', effects') =
+               handleKeyCore(
+                 ~leaderKey,
+                 ~recursionDepth,
+                 ~context,
+                 gesture,
+                 bindings,
+               );
+
+             (bindings', effects' @ effs);
+           },
+           (bindings, []),
+         );
+    (bindings', List.rev(effects'));
+  }
+
+  and flush = (~leaderKey, ~recursionDepth, ~context, initialBindings) => {
+    let rec loop = (~revEffects: list(effect), bindings) =>
+      if (bindings.revKeys == []) {
+        (bindings, revEffects);
+      } else {
+        let candidateBindings =
+          applyKeysToBindings(
+            ~leaderKey,
+            ~context,
+            bindings.revKeys |> List.rev,
+            bindings.bindings,
+          );
+
+        let readyBindings = getReadyBindings(candidateBindings);
+
+        switch (List.nth_opt(readyBindings, 0)) {
+        | None =>
+          // No binding ready... pop the key, see if anything else is ready.
+          let (bindings', maybeEff) = popKey(bindings);
+          let effs = Option.to_list(maybeEff);
+          loop(~revEffects=effs @ revEffects, bindings');
+        | Some(binding) =>
+          switch (binding.action) {
+          | Remap(keys) =>
+            // Use up keys for the bindings
+            let rewindBindings =
+              useUpKeysForBinding(
+                ~leaderKey,
+                ~context,
+                ~bindingId=binding.id,
+                bindings,
+              );
+
+            // Run all the new keys
+            runRemappedKeys(
+              ~leaderKey,
+              ~recursionDepth=recursionDepth + 1,
+              ~context,
+              ~keys,
+              {...rewindBindings, suppressText: true},
+            );
+          | Dispatch(command) =>
+            let revEffects = [Execute(command), ...revEffects];
+            // Use up keys related to this binding
+            let rewindBindings =
+              useUpKeysForBinding(
+                ~leaderKey,
+                ~context,
+                ~bindingId=binding.id,
+                bindings,
+              );
+            // And then anything else past it - treat as unhandled
+            popAll(~revEffects, {...rewindBindings, suppressText: true});
+          }
+        };
+      };
+
+    let (outBindings, outEffects) = loop(~revEffects=[], initialBindings);
+    (outBindings, outEffects);
+  };
+
+  let isPending = ({revKeys, _}) => revKeys != [];
+
+  let lastDownKey = ({revKeys, _}) => {
+    switch (revKeys) {
+    | [Down(keyDownId, _), ..._] => Some(keyDownId)
+    | _ => None
     };
   };
 
-  let isPending = ({keys, _}) => keys != [];
-
-  let keyDown = (~context, ~key, bindings) => {
+  let keyDown = (~leaderKey=None, ~context, ~key, bindings) => {
     let id = KeyDownId.get();
+    let pressedScancodes =
+      key
+      |> KeyPress.toPhysicalKey
+      |> Option.map((key: PhysicalKey.t) => {
+           IntSet.add(key.scancode, bindings.pressedScancodes)
+         })
+      |> Option.value(~default=bindings.pressedScancodes);
+
     handleKeyCore(
+      ~leaderKey,
       ~context,
       Down(id, key),
-      {
-        ...bindings,
-        pressedScancodes: IntSet.add(key.scancode, bindings.pressedScancodes),
-        lastDownKey: Some(id),
-      },
+      {...bindings, pressedScancodes},
     );
   };
 
@@ -468,7 +572,7 @@ module Make = (Config: {
     if (bindings.suppressText) {
       (bindings, []);
     } else {
-      switch (bindings.lastDownKey) {
+      switch (lastDownKey(bindings)) {
       // If there is a pending key, hold on to the text input
       // until the gesture is completed
       | Some(keyDownId) => (
@@ -480,10 +584,12 @@ module Make = (Config: {
       };
     };
 
-  let getEffectsForReleaseBindings = (~context, bindings) => {
+  let getEffectsForReleaseBindings = (~leaderKey, ~context, bindings) => {
     let releaseBindings =
       bindings.bindings
-      |> List.filter_map(applyKeyToBinding(~context, AllKeysReleased));
+      |> List.filter_map(
+           applyKeyToBinding(~leaderKey, ~context, AllKeysReleased),
+         );
 
     let rec loop = bindings =>
       switch (bindings) {
@@ -497,31 +603,29 @@ module Make = (Config: {
     loop(releaseBindings);
   };
 
-  let keyUp = (~context, ~key, bindings) => {
+  let keyUp = (~leaderKey=None, ~context, ~key, bindings) => {
     let pressedScancodes =
-      IntSet.remove(KeyPress.(key.scancode), bindings.pressedScancodes);
+      key
+      |> KeyPress.toPhysicalKey
+      |> Option.map((key: PhysicalKey.t) => {
+           IntSet.remove(key.scancode, bindings.pressedScancodes)
+         })
+      |> Option.value(~default=bindings.pressedScancodes);
+
     let bindings = {...bindings, suppressText: false, pressedScancodes};
 
     // If everything has been released, fire an [AllKeysReleased] event,
     // in case anything is listening for it.
     let initialEffects =
       if (IntSet.is_empty(pressedScancodes)) {
-        getEffectsForReleaseBindings(~context, bindings);
+        getEffectsForReleaseBindings(~leaderKey, ~context, bindings);
       } else {
         [];
       };
 
-    let (bindings, effects) = handleKeyCore(~context, Up(key), bindings);
+    let (bindings, effects) =
+      handleKeyCore(~leaderKey, ~context, Up(key), bindings);
 
     (bindings, effects @ initialEffects);
-  };
-
-  let empty = {
-    suppressText: false,
-    text: [],
-    lastDownKey: None,
-    bindings: [],
-    keys: [],
-    pressedScancodes: IntSet.empty,
   };
 };

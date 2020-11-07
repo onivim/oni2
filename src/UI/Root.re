@@ -61,25 +61,20 @@ module Styles = {
 };
 
 let make = (~dispatch, ~state: State.t, ()) => {
-  let State.{
-        configuration,
-        uiFont as font,
-        editorFont,
-        sideBar,
-        zenMode,
-        buffers,
-        _,
-      } = state;
+  let State.{configuration, uiFont as font, sideBar, zenMode, buffers, _} = state;
 
   let theme = Feature_Theme.colors(state.colorTheme);
 
   let mode = ModeManager.current(state);
 
-  let config = Feature_Configuration.resolver(state.config, state.vim);
+  let config = Selectors.configResolver(state);
 
   let maybeActiveBuffer = Oni_Model.Selectors.getActiveBuffer(state);
   let activeEditor = Feature_Layout.activeEditor(state.layout);
-  let indentationSettings = Oni_Model.Indentation.getForActiveBuffer(state);
+  let indentationSettings =
+    maybeActiveBuffer
+    |> Option.map(Oni_Core.Buffer.getIndentation)
+    |> Option.value(~default=Oni_Core.IndentationSettings.default);
 
   let statusBarDispatch = msg => dispatch(Actions.StatusBar(msg));
   let messagesDispatch = msg => dispatch(Actions.Messages(msg));
@@ -112,6 +107,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
           indentationSettings
           theme
           dispatch=statusBarDispatch
+          workingDirectory={state.workspace.workingDirectory}
         />
       </View>;
     } else {
@@ -130,7 +126,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
 
   let sideBar = () =>
     if (!zenMode) {
-      <SideBarView theme state dispatch />;
+      <SideBarView config theme state dispatch />;
     } else {
       React.empty;
     };
@@ -154,6 +150,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
   };
 
   let titleDispatch = msg => dispatch(Actions.TitleBar(msg));
+  let registrationDispatch = msg => dispatch(Actions.Registration(msg));
 
   let mapDisplayMode =
     fun
@@ -179,22 +176,26 @@ let make = (~dispatch, ~state: State.t, ()) => {
       activeBuffer=maybeActiveBuffer
       workspaceRoot={state.workspace.rootName}
       workspaceDirectory={state.workspace.workingDirectory}
+      registration={state.registration}
       config
       isFocused={state.windowIsFocused}
       windowDisplayMode={state.windowDisplayMode |> mapDisplayMode}
       font={state.uiFont}
       theme
       dispatch=titleDispatch
+      registrationDispatch
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
         {React.listToElement(surfaceComponents)}
       </View>
       <Feature_Pane.View
+        config
         isFocused={FocusManager.current(state) == Focus.Pane}
+        iconTheme={state.iconTheme}
+        languageInfo={state.languageInfo}
         theme
         uiFont
-        editorFont
         notifications={state.notifications}
         dispatch={msg => dispatch(Actions.Pane(msg))}
         notificationDispatch={msg => dispatch(Actions.Notification(msg))}
@@ -217,6 +218,12 @@ let make = (~dispatch, ~state: State.t, ()) => {
         registers={state.registers}
         font
         dispatch={msg => dispatch(Actions.Registers(msg))}
+      />
+      <Feature_Registration.View.Modal
+        theme
+        registration={state.registration}
+        font
+        dispatch={msg => dispatch(Actions.Registration(msg))}
       />
     </Overlay>
     <statusBar />

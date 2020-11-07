@@ -2,8 +2,8 @@
  (name Feature_Extensions)
  (public_name Oni2.feature.extensions)
  (inline_tests)
- (libraries Oni2.core Oni2.components Oni2.exthost Oni2.component.inputText
-   Oni2.component.vimWindows Oni2.service.extensions Oni2.service.exthost
-   Oni2.feature.sneak Revery isolinear)
+ (libraries Oni2.core Oni2.component.accordion Oni2.components Oni2.exthost
+   Oni2.component.inputText Oni2.component.vimWindows Oni2.service.extensions
+   Oni2.service.exthost Oni2.feature.sneak Revery isolinear)
  (preprocess
   (pps ppx_let ppx_deriving.show brisk-reconciler.ppx ppx_inline_test)))

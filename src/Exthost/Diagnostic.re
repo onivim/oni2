@@ -1,8 +1,57 @@
 open Oni_Core;
+module Severity = {
+  // Must be kept in-sync with:
+  // https://github.com/onivim/vscode-exthost/blob/ed480e2fbe01ad85b8d85a2ca2dbd1b85c29242b/src/vs/platform/markers/common/markers.ts#L45
+  [@deriving show]
+  type t =
+    | Hint // 1
+    | Info // 2
+    | Warning // 4
+    | Error; // 8
+
+  let toInt =
+    fun
+    | Hint => 1
+    | Info => 2
+    | Warning => 4
+    | Error => 8;
+
+  let max = (a, b) => {
+    switch (a, b) {
+    | (Error, _)
+    | (_, Error) => Error
+    | (Warning, _)
+    | (_, Warning) => Warning
+    | (Info, _)
+    | (_, Info) => Info
+    | _ => Hint
+    };
+  };
+
+  let ofInt =
+    fun
+    | 1 => Some(Hint)
+    | 2 => Some(Info)
+    | 4 => Some(Warning)
+    | 8 => Some(Error)
+    | _ => None;
+
+  let decode =
+    Json.Decode.(
+      int
+      |> and_then(v => {
+           switch (ofInt(v)) {
+           | None => fail("Unable to parse severity: " ++ string_of_int(v))
+           | Some(sev) => succeed(sev)
+           }
+         })
+    );
+};
+
 type t = {
   range: OneBasedRange.t,
   message: string,
-  severity: int,
+  severity: Severity.t,
   // TODO:
   // source: string,
   // code: string,
@@ -18,7 +67,7 @@ module Decode = {
       let endLineNumber = field.required("endLineNumber", int);
       let startColumn = field.required("startColumn", int);
       let endColumn = field.required("endColumn", int);
-      let severity = field.required("severity", int);
+      let severity = field.required("severity", Severity.decode);
       let message = field.required("message", string);
 
       let range =

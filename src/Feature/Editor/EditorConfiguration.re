@@ -11,6 +11,7 @@ module CustomDecoders: {
   let time: Config.Schema.codec(Time.t);
   let fontSize: Config.Schema.codec(float);
   let color: Config.Schema.codec(Revery.Color.t);
+  let wordWrap: Config.Schema.codec([ | `Off | `On]);
 } = {
   let color =
     custom(
@@ -36,6 +37,41 @@ module CustomDecoders: {
             let (r, g, b, a) = Revery.Color.toRgba(color);
             "#" ++ toHex(r) ++ toHex(g) ++ toHex(b) ++ toHex(a) |> string;
           }
+        ),
+    );
+
+  let wordWrapDecode =
+    Json.Decode.(
+      one_of([
+        (
+          "bool",
+          bool
+          |> map(
+               fun
+               | true => `On
+               | false => `Off,
+             ),
+        ),
+        (
+          "string",
+          string
+          |> map(
+               fun
+               | "on" => `On
+               | "off" => `Off
+               | _ => `Off,
+             ),
+        ),
+      ])
+    );
+  let wordWrap =
+    custom(
+      ~decode=wordWrapDecode,
+      ~encode=
+        Json.Encode.(
+          fun
+          | `Off => string("off")
+          | `On => string("on")
         ),
     );
 
@@ -142,6 +178,21 @@ module VimSettings = {
       |> Option.value(~default=LineHeight.default)
     });
 
+  let wrap =
+    vim("wrap", wrapSetting => {
+      wrapSetting
+      |> VimSetting.decode_value_opt(bool)
+      |> Option.map(v => v ? `On : `Off)
+      |> Option.value(~default=`Off)
+    });
+
+  let scrolloff =
+    vim("scrolloff", scrolloffSetting => {
+      scrolloffSetting
+      |> VimSetting.decode_value_opt(int)
+      |> Option.value(~default=1)
+    });
+
   let lineNumbers =
     vim2("relativenumber", "number", (maybeRelative, maybeNumber) => {
       let maybeRelativeBool =
@@ -217,6 +268,13 @@ let renderIndentGuides =
 let renderWhitespace =
   setting("editor.renderWhitespace", whitespace, ~default=`Selection);
 let rulers = setting("editor.rulers", list(int), ~default=[]);
+let scrolloff =
+  setting(
+    "editor.cursorSurroundingLines",
+    ~vim=VimSettings.scrolloff,
+    int,
+    ~default=1,
+  );
 let scrollShadow = setting("editor.scrollShadow", bool, ~default=true);
 let smoothScroll =
   setting(
@@ -241,7 +299,8 @@ let yankHighlightDuration =
 
 module Hover = {
   let enabled = setting("editor.hover.enabled", bool, ~default=true);
-  let delay = setting("editor.hover.delay", time, ~default=Time.zero);
+  let delay =
+    setting("editor.hover.delay", time, ~default=Time.milliseconds(300));
 };
 
 module Minimap = {
@@ -268,6 +327,17 @@ module Experimental = {
       bool,
       ~default=false,
     );
+
+  let wordWrap =
+    setting(
+      "experimental.editor.wordWrap",
+      ~vim=VimSettings.wrap,
+      wordWrap,
+      ~default=`Off,
+    );
+
+  let wordWrapColumn =
+    setting("experimental.editor.wordWrapColumn", int, ~default=80);
 };
 
 let contributions = [
@@ -286,6 +356,7 @@ let contributions = [
   renderWhitespace.spec,
   rulers.spec,
   scrollShadow.spec,
+  scrolloff.spec,
   smoothScroll.spec,
   tabSize.spec,
   yankHighlightColor.spec,
@@ -299,4 +370,6 @@ let contributions = [
   ZenMode.hideTabs.spec,
   ZenMode.singleFile.spec,
   Experimental.cursorSmoothCaretAnimation.spec,
+  Experimental.wordWrap.spec,
+  Experimental.wordWrapColumn.spec,
 ];

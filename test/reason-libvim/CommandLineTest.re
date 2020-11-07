@@ -207,7 +207,7 @@ describe("CommandLine", ({describe, _}) => {
       input("g");
       key("<cr>");
 
-      expect.bool(Mode.current() == Normal).toBe(true);
+      expect.bool(Vim.Mode.isNormal(Mode.current())).toBe(true);
 
       let line = Buffer.getLine(buffer, LineNumber.ofOneBased(3));
       expect.string(line).toEqual("Dhis is the third line of a test file");

@@ -25,9 +25,29 @@ module Msg: {
 
   module Hover: {
     let show: msg;
-    let mouseHovered: CharacterPosition.t => msg;
-    let mouseMoved: CharacterPosition.t => msg;
+    let mouseHovered: option(CharacterPosition.t) => msg;
+    let mouseMoved: option(CharacterPosition.t) => msg;
     let keyPressed: string => msg;
+  };
+};
+
+module CodeLens: {
+  type t;
+
+  let get: (~bufferId: int, model) => list(t);
+
+  let lineNumber: t => int;
+  let uniqueId: t => string;
+
+  module View: {
+    let make:
+      (
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~uiFont: UiFont.t,
+        ~codeLens: t,
+        unit
+      ) =>
+      Revery.UI.element;
   };
 };
 
@@ -45,12 +65,18 @@ type outmsg =
       filePath: string,
       location: option(CharacterPosition.t),
     })
+  | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | CodeLensesChanged({
+      bufferId: int,
+      lenses: list(CodeLens.t),
+    });
 
 let update:
   (
+    ~config: Oni_Core.Config.resolver,
     ~configuration: Oni_Core.Configuration.t,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~maybeSelection: option(CharacterRange.t),
@@ -65,6 +91,7 @@ let update:
 
 let bufferUpdated:
   (
+    ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~buffer: Oni_Core.Buffer.t,
     ~config: Oni_Core.Config.resolver,
     ~activeCursor: CharacterPosition.t,
@@ -82,6 +109,7 @@ let isFocused: model => bool;
 
 let sub:
   (
+    ~config: Oni_Core.Config.resolver,
     ~isInsertMode: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
     ~activePosition: CharacterPosition.t,
@@ -114,6 +142,21 @@ module Completion: {
   };
 };
 
+module DocumentSymbols: {
+  type symbol = {
+    uniqueId: string,
+    name: string,
+    detail: string,
+    kind: Exthost.SymbolKind.t,
+    range: CharacterRange.t,
+    selectionRange: CharacterRange.t,
+  };
+
+  type t = list(Tree.t(symbol, symbol));
+
+  let get: (~bufferId: int, model) => option(t);
+};
+
 module Hover: {
   module Popup: {
     let make:
@@ -138,7 +181,7 @@ module Contributions: {
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
   let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
-  let keybindings: list(Oni_Input.Keybindings.keybinding);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };
 
 module Definition: {
@@ -151,6 +194,8 @@ module Definition: {
   let isAvailable: (~bufferId: int, model) => bool;
 };
 
+module References: {let get: model => list(Exthost.Location.t);};
+
 module DocumentHighlights: {
   let getByLine:
     (~bufferId: int, ~line: int, model) => list(CharacterRange.t);
@@ -160,4 +205,3 @@ module DocumentHighlights: {
 
 // TODO: Remove
 module CompletionMeet = CompletionMeet;
-module LanguageFeatures = LanguageFeatures;

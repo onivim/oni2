@@ -24,14 +24,18 @@ type outmsg =
 
 let update: (model, msg) => (model, option(outmsg));
 
+let resetFocus: model => model;
+
 let subscriptions:
-  (Ripgrep.t, msg => unit, model) => list(Subscription.t(msg));
+  (~workingDirectory: string, Ripgrep.t, msg => unit, model) =>
+  list(Subscription.t(msg));
 
 let make:
   (
     ~theme: ColorTheme.Colors.t,
     ~uiFont: UiFont.t,
-    ~editorFont: Service_Font.font,
+    ~iconTheme: IconTheme.t,
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~isFocused: bool,
     ~model: model,
     ~dispatch: msg => unit,
@@ -42,5 +46,5 @@ let make:
 
 module Contributions: {
   let commands: (~isFocused: bool) => list(Command.t(msg));
-  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
 };

@@ -11,8 +11,6 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStoreConnector"));
 
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-
 let start = (extensions, extHostClient: Exthost.Client.t) => {
   let discoveredExtensionsEffect = extensions =>
     Isolinear.Effect.createWithDispatch(
@@ -49,39 +47,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
           discoveredExtensionsEffect(extensions),
         ]),
       )
-
-    | Buffers(
-        Feature_Buffers.Update({update, newBuffer, triggerKey, oldBuffer}),
-      ) => (
-        state,
-        Service_Exthost.Effects.Documents.modelChanged(
-          ~previousBuffer=oldBuffer,
-          ~buffer=newBuffer,
-          ~update,
-          extHostClient,
-          () =>
-          Actions.ExtensionBufferUpdateQueued({triggerKey: triggerKey})
-        ),
-      )
-
-    | Buffers(Feature_Buffers.Saved(bufferId)) =>
-      let effect =
-        state.buffers
-        |> Feature_Buffers.get(bufferId)
-        |> Option.map(buffer => {
-             Service_Exthost.Effects.FileSystemEventService.onFileEvent(
-               ~events=
-                 Exthost.Files.FileSystemEvents.{
-                   created: [],
-                   deleted: [],
-                   changed: [buffer |> Oni_Core.Buffer.getUri],
-                 },
-               extHostClient,
-             )
-           })
-        |> Option.value(~default=Isolinear.Effect.none);
-
-      (state, effect);
 
     | DirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 

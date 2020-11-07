@@ -42,25 +42,11 @@ module ColorScheme: {
   };
 };
 
-module Context: {
-  type t = {
-    autoClosingPairs: AutoClosingPairs.t,
-    autoIndent:
-      (~previousLine: string, ~beforePreviousLine: option(string)) =>
-      AutoIndent.action,
-    bufferId: int,
-    colorSchemeProvider: ColorScheme.Provider.t,
-    width: int,
-    height: int,
-    leftColumn: int,
-    topLine: int,
-    cursors: list(BytePosition.t),
-    lineComment: option(string),
-    tabSize: int,
-    insertSpaces: bool,
-  };
-
-  let current: unit => t;
+module ViewLineMotion: {
+  type t =
+    | MotionH
+    | MotionM
+    | MotionL;
 };
 
 module Registers: {let get: (~register: char) => option(array(string));};
@@ -110,6 +96,64 @@ module Operator: {
   let toString: pending => string;
 };
 
+module Mode: {
+  type t =
+    | Normal({cursor: BytePosition.t})
+    | Insert({cursors: list(BytePosition.t)})
+    | CommandLine
+    | Replace({cursor: BytePosition.t})
+    | Visual(VisualRange.t)
+    | Operator({
+        cursor: BytePosition.t,
+        pending: Operator.pending,
+      })
+    | Select(VisualRange.t);
+
+  let current: unit => t;
+
+  let isInsert: t => bool;
+  let isNormal: t => bool;
+  let isVisual: t => bool;
+  let isSelect: t => bool;
+  let isReplace: t => bool;
+  let isOperatorPending: t => bool;
+
+  let cursors: t => list(BytePosition.t);
+};
+
+module Context: {
+  type t = {
+    autoClosingPairs: AutoClosingPairs.t,
+    autoIndent:
+      (~previousLine: string, ~beforePreviousLine: option(string)) =>
+      AutoIndent.action,
+    viewLineMotion:
+      (~motion: ViewLineMotion.t, ~count: int, ~startLine: LineNumber.t) =>
+      LineNumber.t,
+    screenCursorMotion:
+      (
+        ~direction: [ | `Up | `Down],
+        ~count: int,
+        ~line: LineNumber.t,
+        ~currentByte: ByteIndex.t,
+        ~wantByte: ByteIndex.t
+      ) =>
+      BytePosition.t,
+    toggleComments: array(string) => array(string),
+    bufferId: int,
+    colorSchemeProvider: ColorScheme.Provider.t,
+    width: int,
+    height: int,
+    leftColumn: int,
+    topLine: int,
+    mode: Mode.t,
+    tabSize: int,
+    insertSpaces: bool,
+  };
+
+  let current: unit => t;
+};
+
 module Edit: {
   [@deriving show]
   type t = {
@@ -138,6 +182,11 @@ module Buffer: {
   [openFile(path)] opens a file, sets it as the active buffer, and returns a handle to the buffer.
   */
   let openFile: string => t;
+
+  /**
+  [loadFile(path)] opens a file and returns a handle to the buffer.
+  */
+  let loadFile: string => t;
 
   /**
   [getFileName(buffer)] returns the full file path of the buffer [buffer]
@@ -174,6 +223,8 @@ module Buffer: {
   [getline(buffer, line)] returns the text content at the one-based line number [line] for buffer [buffer].
   */
   let getLine: (t, LineNumber.t) => string;
+
+  let getLines: t => array(string);
 
   /**
   [getId(buffer)] returns the id of buffer [buffer];
@@ -220,16 +271,6 @@ module Buffer: {
     unit;
 
   let applyEdits: (~edits: list(Edit.t), t) => result(unit, string);
-
-  /**
-  [onEnter(f)] adds a listener [f] that is called whenever a new buffer is entered.
-
-  This is more reliable than autocommands, as it will dispatch in any case the buffer
-  is changed, even in cases where [BufEnter] would not be dispatched.
-
-  Returns a function that can be called to unsubscribe.
-  */
-  let onEnter: Listeners.bufferListener => Event.unsubscribe;
 
   let onLineEndingsChanged:
     Listeners.bufferLineEndingsChangedListener => Event.unsubscribe;
@@ -315,22 +356,6 @@ module Format: {
       });
 };
 
-module Mode: {
-  type t =
-    | Normal
-    | Insert
-    | CommandLine
-    | Replace
-    | Visual({range: VisualRange.t})
-    | Operator({pending: Operator.pending})
-    | Select({range: VisualRange.t});
-
-  let current: unit => t;
-
-  let isVisual: t => bool;
-  let isSelect: t => bool;
-};
-
 module Setting: {
   [@deriving show]
   type value =
@@ -342,6 +367,59 @@ module Setting: {
     fullName: string,
     shortName: option(string),
     value,
+  };
+};
+
+module Scroll: {
+  [@deriving show]
+  type direction =
+    | CursorCenterVertically // zz
+    | CursorCenterHorizontally
+    | CursorTop // zt
+    | CursorBottom // zb
+    | CursorLeft
+    | CursorRight
+    | LineUp
+    | LineDown
+    | HalfPageDown
+    | HalfPageUp
+    | PageDown
+    | PageUp
+    | HalfPageLeft
+    | HalfPageRight
+    | ColumnLeft
+    | ColumnRight;
+};
+
+module Mapping: {
+  [@deriving show]
+  type mode =
+    | Insert // imap, inoremap
+    | Language // lmap
+    | CommandLine // cmap
+    | Normal // nmap, nnoremap
+    | VisualAndSelect // vmap, vnoremap
+    | Visual // xmap, xnoremap
+    | Select // smap, snoremap
+    | Operator // omap, onoremap
+    | Terminal // tmap, tnoremap
+    | InsertAndCommandLine // :map!
+    | All; // :map;
+
+  [@deriving show]
+  type scriptId;
+
+  let defaultScriptId: scriptId;
+
+  [@deriving show]
+  type t = {
+    mode,
+    fromKeys: string, // mapped from, lhs
+    toValue: string, // mapped to, rhs
+    expression: bool,
+    recursive: bool,
+    silent: bool,
+    scriptId,
   };
 };
 
@@ -357,6 +435,15 @@ module Effect: {
     | MacroRecordingStopped({
         register: char,
         value: option(string),
+      })
+    | Scroll({
+        count: int,
+        direction: Scroll.direction,
+      })
+    | Map(Mapping.t)
+    | Unmap({
+        mode: Mapping.mode,
+        keys: option(string),
       });
 };
 
@@ -377,7 +464,7 @@ The value [s] must be a string of UTF-8 characters.
 
 The keystroke is processed synchronously.
 */
-let input: (~context: Context.t=?, string) => Context.t;
+let input: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
 /**
 [key(s)] sends a single keystroke.
@@ -388,7 +475,7 @@ The value [s] must be a valid Vim key, such as:
 */
 
 // TODO: Strongly type these keys...
-let key: (~context: Context.t=?, string) => Context.t;
+let key: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
 let eval: string => result(string, string);
 
@@ -401,7 +488,7 @@ You may use any valid Ex command, although you must omit the leading semicolon.
 
 The command [cmd] is processed synchronously.
 */
-let command: string => Context.t;
+let command: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
 /**
 [onDirectoryChanged(f)] registers a directory changed listener [f].

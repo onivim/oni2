@@ -72,6 +72,7 @@ external vimCommand: string => unit = "libvim_vimCommand";
 external vimGetMode: unit => mode = "libvim_vimGetMode";
 
 external vimBufferOpen: string => buffer = "libvim_vimBufferOpen";
+external vimBufferLoad: string => buffer = "libvim_vimBufferLoad";
 external vimBufferGetId: buffer => int = "libvim_vimBufferGetId";
 external vimBufferGetById: int => option(buffer) = "libvim_vimBufferGetById";
 external vimBufferGetCurrent: unit => buffer = "libvim_vimBufferGetCurrent";
@@ -123,8 +124,6 @@ external vimOperatorGetPending: unit => option(operatorPendingInfo) =
 external vimOptionSetTabSize: int => unit = "libvim_vimOptionSetTabSize";
 external vimOptionSetInsertSpaces: bool => unit =
   "libvim_vimOptionSetInsertSpaces";
-external vimOptionSetLineComment: string => unit =
-  "libvim_vimOptionSetLineComment";
 external vimOptionGetInsertSpaces: unit => bool =
   "libvim_vimOptionGetInsertSpaces";
 external vimOptionGetTabSize: unit => int = "libvim_vimOptionGetTabSize";
@@ -143,8 +142,11 @@ external vimUndoSync: int => unit = "libvim_vimUndoSync";
 
 external vimVisualGetRange: unit => (int, int, int, int) =
   "libvim_vimVisualGetRange";
+external vimVisualSetStart: (int, int) => unit = "libvim_vimVisualSetStart";
 
 external vimVisualGetType: unit => Types.visualType =
+  "libvim_vimVisualGetType";
+external vimVisualSetType: Types.visualType => unit =
   "libvim_vimVisualGetType";
 
 external vimWindowGetWidth: unit => int = "libvim_vimWindowGetWidth";

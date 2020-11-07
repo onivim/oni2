@@ -26,8 +26,8 @@ let isActive: model => bool;
 
 module Contributions: {
   let commands: list(Command.t(msg));
-  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
-  let keybindings: list(Oni_Input.Keybindings.keybinding);
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };
 
 module View: {

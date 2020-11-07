@@ -327,9 +327,17 @@ module ModeIndicator = {
     let foreground = Colors.Oni.foregroundFor(mode).from(theme);
 
     let%hook background =
-      CustomHooks.colorTransition(~duration=transitionDuration, background);
+      CustomHooks.colorTransition(
+        ~name="Mode Background Transition",
+        ~duration=transitionDuration,
+        background,
+      );
     let%hook foreground =
-      CustomHooks.colorTransition(~duration=transitionDuration, foreground);
+      CustomHooks.colorTransition(
+        ~name="Mode Foreground Transition",
+        ~duration=transitionDuration,
+        foreground,
+      );
 
     <item backgroundColor=background>
       <Text
@@ -370,10 +378,12 @@ module View = {
                   ~statusBar: model,
                   ~theme,
                   ~dispatch,
+                  ~workingDirectory: string,
                   (),
                 ) => {
     let%hook activeNotifications =
       CustomHooks.useExpiration(
+        ~name="StatusBar Notification Expirer",
         ~expireAfter=Feature_Notification.View.Popup.Animations.totalDuration,
         ~equals=(a, b) => Feature_Notification.(a.id == b.id),
         (notifications :> list(Feature_Notification.notification)),
@@ -392,17 +402,22 @@ module View = {
 
     let%hook background =
       CustomHooks.colorTransition(
+        ~name="StatusBar Background Color Transition",
         ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
         background,
       );
     let%hook foreground =
       CustomHooks.colorTransition(
+        ~name="StatusBar Foreground Color Transition",
         ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
         foreground,
       );
 
     let%hook (yOffset, _animationState, _reset) =
-      Hooks.animation(transitionAnimation);
+      Hooks.animation(
+        ~name="StatusBar Transition Animation",
+        transitionAnimation,
+      );
 
     let defaultForeground = Colors.StatusBar.foreground.from(theme);
 
@@ -446,7 +461,7 @@ module View = {
 
     let scmItems =
       scm
-      |> Feature_SCM.statusBarCommands
+      |> Feature_SCM.statusBarCommands(~workingDirectory)
       |> List.filter_map((item: Exthost.Command.t) =>
            item.label
            |> Option.map(label => {
@@ -509,29 +524,27 @@ module View = {
     };
 
     let macro = (~register, ()) => {
-      Oni_Components.(
-        <item>
-          <View
-            style=Style.[
-              flexDirection(`Row),
-              justifyContent(`Center),
-              alignItems(`Center),
-            ]>
-            <View style=Style.[margin(4)]>
-              <Codicon icon=Codicon.circleFilled color=Revery.Colors.red />
-            </View>
-            <Text
-              text={String.make(1, register)}
-              style={Styles.text(
-                ~color=Colors.StatusBar.foreground.from(theme),
-              )}
-              fontFamily={font.family}
-              fontWeight=Revery.Font.Weight.Bold
-              fontSize=11.
-            />
+      <item>
+        <View
+          style=Style.[
+            flexDirection(`Row),
+            justifyContent(`Center),
+            alignItems(`Center),
+          ]>
+          <View style=Style.[margin(4)]>
+            <Codicon icon=Codicon.circleFilled color=Revery.Colors.red />
           </View>
-        </item>
-      );
+          <Text
+            text={String.make(1, register)}
+            style={Styles.text(
+              ~color=Colors.StatusBar.foreground.from(theme),
+            )}
+            fontFamily={font.family}
+            fontWeight=Revery.Font.Weight.Bold
+            fontSize=11.
+          />
+        </View>
+      </item>;
     };
 
     let notificationPopups = () =>

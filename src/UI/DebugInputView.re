@@ -20,7 +20,7 @@ module Styles = {
 
 let make = (~state: Model.State.t, ()) => {
   let contextKeys =
-    WhenExpr.ContextKeys.fromSchema(Model.ContextKeys.all(state), state)
+    Model.ContextKeys.all(state)
     |> WhenExpr.ContextKeys.values
     |> List.map(((keyName, value)) => {
          Printf.sprintf("%s: %s", keyName, WhenExpr.Value.asString(value))
@@ -31,6 +31,12 @@ let make = (~state: Model.State.t, ()) => {
 
   <View style=Styles.row>
     <View style=Styles.column>
+      <Text
+        text={
+          "Focus: "
+          ++ (Model.FocusManager.current(state) |> Model.Focus.show_focusable)
+        }
+      />
       <Text text="Context Keys:" />
       contextKeys
     </View>

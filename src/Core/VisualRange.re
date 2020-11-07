@@ -25,7 +25,7 @@ module Internal = {
 
 let ofVim = (visualRange: Vim.VisualRange.t) => {
   {
-    range: Internal.normalizeRange(visualRange.range),
+    range: Internal.normalizeRange(visualRange |> Vim.VisualRange.range),
     mode: visualRange.visualType,
   };
 };

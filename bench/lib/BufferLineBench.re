@@ -3,8 +3,7 @@ open Oni_Core;
 open BenchFramework;
 
 let largeBufferLine =
-  String.make(10000, 'a')
-  |> BufferLine.make(~indentation=IndentationSettings.default);
+  String.make(10000, 'a') |> BufferLine.make(~measure=_ => 1.0);
 
 let lengthSlow = () => {
   let _ = largeBufferLine |> BufferLine.lengthSlow;

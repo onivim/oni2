@@ -22,7 +22,7 @@ let handleInput: (~key: string, model) => model;
 
 let paste: (~text: string, model) => model;
 
-let set: (~text: string, ~cursor: int, model) => model;
+let set: (~cursor: int=?, ~text: string, model) => model;
 let setPlaceholder: (~placeholder: string, model) => model;
 
 let isCursorAtEnd: model => bool;
@@ -50,6 +50,4 @@ module View: {
     Revery.UI.element;
 };
 
-module Contributions: {
-  let contextKeys: list(WhenExpr.ContextKeys.Schema.entry(model));
-};
+module Contributions: {let contextKeys: model => WhenExpr.ContextKeys.t;};

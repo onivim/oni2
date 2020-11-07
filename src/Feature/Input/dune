@@ -1,6 +1,6 @@
 (library
  (name Feature_Input)
  (public_name Oni2.feature.input)
- (libraries Oni2.core Oni2.feature.commands isolinear base)
+ (libraries Oni2.core Oni2.feature.commands EditorInput isolinear base)
  (preprocess
   (pps ppx_let ppx_deriving.show)))

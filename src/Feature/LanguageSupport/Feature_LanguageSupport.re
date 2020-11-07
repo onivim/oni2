@@ -5,6 +5,7 @@ type model = {
   completion: Completion.model,
   definition: Definition.model,
   documentHighlights: DocumentHighlights.model,
+  documentSymbols: DocumentSymbols.model,
   formatting: Formatting.model,
   hover: Hover.model,
   rename: Rename.model,
@@ -16,6 +17,7 @@ let initial = {
   completion: Completion.initial,
   definition: Definition.initial,
   documentHighlights: DocumentHighlights.initial,
+  documentSymbols: DocumentSymbols.initial,
   formatting: Formatting.initial,
   hover: Hover.initial,
   rename: Rename.initial,
@@ -28,6 +30,7 @@ type msg =
   | Completion(Completion.msg)
   | Definition(Definition.msg)
   | DocumentHighlights(DocumentHighlights.msg)
+  | DocumentSymbols(DocumentSymbols.msg)
   | Formatting(Formatting.msg)
   | Hover(Hover.msg)
   | References(References.msg)
@@ -50,9 +53,14 @@ type outmsg =
       filePath: string,
       location: option(CharacterPosition.t),
     })
+  | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | CodeLensesChanged({
+      bufferId: int,
+      lenses: list(CodeLens.codeLens),
+    });
 
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
@@ -64,8 +72,11 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     | Outmsg.Nothing => Nothing
     | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
     | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)
+    | Outmsg.ReferencesAvailable => ReferencesAvailable
     | Outmsg.OpenFile({filePath, location}) => OpenFile({filePath, location})
-    | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f));
+    | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
+    | Outmsg.CodeLensesChanged({bufferId, lenses}) =>
+      CodeLensesChanged({bufferId, lenses});
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -92,6 +103,7 @@ module Msg = {
 
 let update =
     (
+      ~config,
       ~configuration,
       ~languageConfiguration,
       ~maybeSelection,
@@ -126,6 +138,11 @@ let update =
         model.documentHighlights,
       );
     ({...model, documentHighlights: documentHighlights'}, Nothing);
+
+  | Exthost(RegisterDocumentSymbolProvider({handle, selector, _})) =>
+    let documentSymbols' =
+      DocumentSymbols.register(~handle, ~selector, model.documentSymbols);
+    ({...model, documentSymbols: documentSymbols'}, Nothing);
 
   | Exthost(RegisterReferenceSupport({handle, selector})) =>
     let references' =
@@ -188,6 +205,8 @@ let update =
         definition: Definition.unregister(~handle, model.definition),
         documentHighlights:
           DocumentHighlights.unregister(~handle, model.documentHighlights),
+        documentSymbols:
+          DocumentSymbols.unregister(~handle, model.documentSymbols),
         formatting: Formatting.unregister(~handle, model.formatting),
         hover: Hover.unregister(~handle, model.hover),
         references: References.unregister(~handle, model.references),
@@ -201,12 +220,20 @@ let update =
     (model, Nothing)
 
   | CodeLens(codeLensMsg) =>
-    let codeLens' = CodeLens.update(codeLensMsg, model.codeLens);
-    ({...model, codeLens: codeLens'}, Nothing);
+    let (codeLens', eff) = CodeLens.update(codeLensMsg, model.codeLens);
+    let outmsg =
+      switch (eff) {
+      | CodeLens.Nothing => Outmsg.Nothing
+      | CodeLens.CodeLensesChanged({bufferId, lenses}) =>
+        Outmsg.CodeLensesChanged({bufferId, lenses})
+      };
+    ({...model, codeLens: codeLens'}, outmsg |> map(msg => CodeLens(msg)));
 
   | Completion(completionMsg) =>
     let (completion', outmsg) =
       Completion.update(
+        ~config,
+        ~languageConfiguration,
         ~maybeBuffer,
         ~activeCursor=cursorLocation,
         completionMsg,
@@ -233,6 +260,11 @@ let update =
         model.documentHighlights,
       );
     ({...model, documentHighlights: documentHighlights'}, Nothing);
+
+  | DocumentSymbols(documentSymbolsMsg) =>
+    let documentSymbols' =
+      DocumentSymbols.update(documentSymbolsMsg, model.documentSymbols);
+    ({...model, documentSymbols: documentSymbols'}, Nothing);
 
   | References(referencesMsg) =>
     let (references', outmsg) =
@@ -306,9 +338,18 @@ let update =
   };
 
 let bufferUpdated =
-    (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
+    (
+      ~languageConfiguration,
+      ~buffer,
+      ~config,
+      ~activeCursor,
+      ~syntaxScope,
+      ~triggerKey,
+      model,
+    ) => {
   let completion =
     Completion.bufferUpdated(
+      ~languageConfiguration,
       ~buffer,
       ~config,
       ~activeCursor,
@@ -325,7 +366,11 @@ let cursorMoved = (~previous, ~current, model) => {
   {...model, completion};
 };
 
-let startInsertMode = model => model;
+let startInsertMode = model => {
+  ...model,
+  completion: Completion.startInsertMode(model.completion),
+};
+
 let stopInsertMode = model => {
   ...model,
   completion: Completion.stopInsertMode(model.completion),
@@ -336,7 +381,7 @@ let isFocused = ({rename, _}) => Rename.isFocused(rename);
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
 
-  let colors = Completion.Contributions.colors;
+  let colors = CodeLens.Contributions.colors @ Completion.Contributions.colors;
 
   let commands =
     (
@@ -364,7 +409,9 @@ module Contributions = {
       |> List.map(Oni_Core.Command.map(msg => Formatting(msg)))
     );
 
-  let configuration = Completion.Contributions.configuration;
+  let configuration =
+    CodeLens.Contributions.configuration
+    @ Completion.Contributions.configuration;
 
   let contextKeys =
     [
@@ -379,8 +426,9 @@ module Contributions = {
 
   let keybindings =
     Rename.Contributions.keybindings
+    @ Completion.Contributions.keybindings
     @ Definition.Contributions.keybindings
-    @ Completion.Contributions.keybindings;
+    @ References.Contributions.keybindings;
 };
 
 module OldCompletion = Completion;
@@ -438,6 +486,16 @@ module DocumentHighlights = {
   };
 };
 
+module OriginalDocumentSymbols = DocumentSymbols;
+
+module DocumentSymbols = {
+  include OriginalDocumentSymbols;
+
+  let get = (~bufferId, {documentSymbols, _}) => {
+    OriginalDocumentSymbols.get(~bufferId, documentSymbols);
+  };
+};
+
 module OldHover = Hover;
 module Hover = {
   module Popup = {
@@ -471,17 +529,44 @@ module Hover = {
   };
 };
 
+module OldReferences = References;
+module References = {
+  let get = ({references, _}) => OldReferences.get(references);
+};
+
+module ShadowedCodeLens = CodeLens;
+module CodeLens = {
+  type t = ShadowedCodeLens.codeLens;
+
+  let get = (~bufferId, model) => {
+    ShadowedCodeLens.get(~bufferId, model.codeLens);
+  };
+
+  let lineNumber = codeLens => ShadowedCodeLens.lineNumber(codeLens);
+  let uniqueId = codeLens => ShadowedCodeLens.uniqueId(codeLens);
+
+  module View = ShadowedCodeLens.View;
+};
+
 let sub =
     (
+      ~config,
       ~isInsertMode,
       ~activeBuffer,
       ~activePosition,
       ~visibleBuffers,
       ~client,
-      {definition, completion, documentHighlights, _},
+      {
+        codeLens,
+        definition,
+        completion,
+        documentHighlights,
+        documentSymbols,
+        _,
+      },
     ) => {
   let codeLensSub =
-    CodeLens.sub(~visibleBuffers, ~client)
+    ShadowedCodeLens.sub(~config, ~visibleBuffers, ~client, codeLens)
     |> Isolinear.Sub.map(msg => CodeLens(msg));
 
   let definitionSub =
@@ -498,8 +583,12 @@ let sub =
   let completionSub =
     !isInsertMode
       ? Isolinear.Sub.none
-      : OldCompletion.sub(~client, completion)
+      : OldCompletion.sub(~activeBuffer, ~client, completion)
         |> Isolinear.Sub.map(msg => Completion(msg));
+
+  let documentSymbolsSub =
+    DocumentSymbols.sub(~buffer=activeBuffer, ~client, documentSymbols)
+    |> Isolinear.Sub.map(msg => DocumentSymbols(msg));
 
   let documentHighlightsSub =
     OldHighlights.sub(
@@ -510,10 +599,14 @@ let sub =
     )
     |> Isolinear.Sub.map(msg => DocumentHighlights(msg));
 
-  [codeLensSub, completionSub, definitionSub, documentHighlightsSub]
+  [
+    codeLensSub,
+    completionSub,
+    definitionSub,
+    documentHighlightsSub,
+    documentSymbolsSub,
+  ]
   |> Isolinear.Sub.batch;
 };
 
-// TODO: Remove
 module CompletionMeet = CompletionMeet;
-module LanguageFeatures = LanguageFeatures;

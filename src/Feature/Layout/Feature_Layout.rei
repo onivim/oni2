@@ -3,8 +3,10 @@ open Feature_Editor;
 
 // MODEL
 
+[@deriving show]
 type panel =
   | Left
+  | Right
   | Center
   | Bottom;
 

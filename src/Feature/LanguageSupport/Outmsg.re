@@ -14,8 +14,13 @@ type internalMsg('a) =
       filePath: string,
       location: option(CharacterPosition.t),
     })
+  | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
+  | CodeLensesChanged({
+      bufferId: int,
+      lenses: list(CodeLens.codeLens),
+    })
   | Effect(Isolinear.Effect.t('a));
 
 let map = f =>

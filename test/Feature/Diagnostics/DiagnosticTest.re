@@ -21,8 +21,16 @@ describe("Diagnostics", ({describe, _}) => {
       let range = CharacterRange.{start, stop};
 
       let hugeDiagnostic =
-        Diagnostic.create(~range, ~message="test diagnostic", ());
-      let diags = Diagnostic.explode(Buffer.ofLines([||]), hugeDiagnostic);
+        Diagnostic.create(
+          ~range,
+          ~message="test diagnostic",
+          ~severity=Exthost.Diagnostic.Severity.Error,
+        );
+      let diags =
+        Diagnostic.explode(
+          Buffer.ofLines(~font=Font.default(), [||]),
+          hugeDiagnostic,
+        );
 
       expect.int(List.length(diags)).toBe(1000);
     })

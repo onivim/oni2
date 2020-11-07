@@ -1,4 +1,4 @@
-/* open Oni_Core; */
+open Oni_Core;
 open TestFramework;
 
 module Buffer = Oni_Core.Buffer;
@@ -8,13 +8,15 @@ let scm = (buffer, lines) => {
   Feature_SCM.initial |> Feature_SCM.setOriginalLines(buffer, lines);
 };
 
+let makeBuffer = lines => Buffer.ofLines(~font=Font.default(), lines);
+
 describe("EditorDiffMarkers", ({describe, _}) => {
   describe("generate", ({test, _}) => {
     test("single added", ({expect, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", ".", "c", "d"|];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);
@@ -33,7 +35,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", ".", ".", ".", "c", "d"|];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);
@@ -60,7 +62,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", "d"|];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);
@@ -77,7 +79,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"c", "d"|];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);
@@ -93,7 +95,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "b"|];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);
@@ -109,7 +111,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [||];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);
@@ -125,7 +127,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", "C", "d"|];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);
@@ -142,7 +144,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "B", "C", "d"|];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);
@@ -159,7 +161,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", ".", "B", "c", "d"|];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);
@@ -178,7 +180,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let was = [|"a", "b", "c", "d"|];
       let now = [|"a", "C", "d"|];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);
@@ -195,7 +197,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let was = [|"a", "b", "c", "d", "e", "f", "g"|];
       let now = [|"a", "c", ".", "d", "f", "g"|];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);
@@ -221,7 +223,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let was = [|"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"|];
       let now = [|"a", "d", ".", "e", "h", "i", "j"|];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);
@@ -250,7 +252,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let was = [|"a", "b", "c", "d", "e", "f", "g", "h"|];
       let now = [|"a", "c", ".", "d", "g", "h"|];
 
-      let buffer = Buffer.ofLines(now);
+      let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
       let actual = EditorDiffMarkers.generate(~scm, buffer);

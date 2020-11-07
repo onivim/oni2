@@ -4,58 +4,20 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-
-module ExtensionDocumentSymbolProvider = {
-  let create =
-      (
-        id,
-        selector,
-        _label, // TODO: What to do with label?
-        client,
-        buffer,
-      ) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideDocumentSymbols(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        client,
-      )
-    });
-  };
-};
-
-let create = (~config, ~extensions, ~setup: Setup.t) => {
+let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
-  let extensionInfo =
-    extensions |> List.map(Exthost.Extension.InitData.Extension.ofScanResult);
-
-  let onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let documentSymbolProvider =
-      ExtensionDocumentSymbolProvider.create(handle, selector, label, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.DocumentSymbolProviderAvailable(
-          id,
-          documentSymbolProvider,
-        ),
-      ),
-    );
-  };
-  open Exthost;
-  open Exthost.Extension;
-  open Exthost.Msg;
+  Log.infof(m =>
+    m("ExtensionClient.create called with attachStdio: %b", attachStdio)
+  );
 
   let maybeClientRef = ref(None);
 
-  let withClient = f =>
-    switch (maybeClientRef^) {
-    | None => Log.warn("Warning - withClient does not have a client")
-    | Some(client) => f(client)
-    };
+  let extensionInfo =
+    extensions |> List.map(Exthost.Extension.InitData.Extension.ofScanResult);
+  open Exthost;
+  open Exthost.Extension;
+  open Exthost.Msg;
 
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
@@ -92,14 +54,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
             "configuration.json",
             ConfigurationTransformer.setField(key, value),
           ),
-        );
-        Lwt.return(Reply.okEmpty);
-
-      | LanguageFeatures(
-          RegisterDocumentSymbolProvider({handle, selector, label}),
-        ) =>
-        withClient(
-          onRegisterDocumentSymbolProvider(handle, selector, label),
         );
         Lwt.return(Reply.okEmpty);
 
@@ -157,6 +111,14 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           ),
         );
         Lwt.return(Reply.okEmpty);
+
+      | Languages(msg) =>
+        let (promise, resolver) = Lwt.task();
+
+        let languagesMsg = Feature_Extensions.Msg.languages(~resolver, msg);
+        dispatch(Extensions(languagesMsg));
+
+        promise;
 
       | LanguageFeatures(msg) =>
         dispatch(
@@ -278,8 +240,8 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
 
   let tempDir = Filename.get_temp_dir_name();
 
-  let logsLocation = tempDir |> Uri.fromPath;
-  let logFile =
+  let logFile = tempDir |> Uri.fromPath;
+  let logsLocation =
     Filename.temp_file(~temp_dir=tempDir, "onivim2", "exthost.log")
     |> Uri.fromPath;
 
@@ -289,7 +251,6 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       ~parentPid,
       ~logsLocation,
       ~logFile,
-      ~logLevel=0,
       extensionInfo,
     );
 
@@ -312,7 +273,26 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       (),
     );
 
-  let env = Luv.Env.environ() |> Result.get_ok;
+  // INVESTIGATE: Why does using `Luv.Env.environ()` sometimes not work correctly when calling Process.spawn?
+  // In some cases - intermittently - the spawned process will not have the environment variables set.
+  // let env = Luv.Env.environ() |> Result.get_ok;
+  // ...in the meantime, fall-back to Unix.environment:
+  let env =
+    Unix.environment()
+    |> Array.to_list
+    |> List.fold_left(
+         (acc, curr) => {
+           switch (String.split_on_char('=', curr)) {
+           | [] => acc
+           | [_] => acc
+           | [key, ...values] =>
+             let v = String.concat("=", values);
+
+             [(key, v), ...acc];
+           }
+         },
+         [],
+       );
   let environment = [
     (
       "AMD_ENTRYPOINT",
@@ -337,7 +317,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   };
 
   let redirect =
-    if (Timber.App.isEnabled()) {
+    if (attachStdio) {
       [
         Luv.Process.inherit_fd(
           ~fd=Luv.Process.stdin,

@@ -7,7 +7,7 @@ open Feature_Editor;
 
 runTestWithInput(~name="EditorUtf8Test", (input, dispatch, wait, _) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Mode.Normal
+    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
   );
 
   let testFile = getAssetPath("utf8.txt");
@@ -20,9 +20,7 @@ runTestWithInput(~name="EditorUtf8Test", (input, dispatch, wait, _) => {
     |> Option.map(name => String.equal(name, "utf8.txt"))
     |> Option.value(~default=false)
   });
-  let str =
-    "κόσμε"
-    |> Oni_Core.BufferLine.make(~indentation=IndentationSettings.default);
+  let str = "κόσμε" |> Oni_Core.BufferLine.make(~measure=_ => 1.0);
 
   let c0 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(0), str);
   let c1 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(1), str);

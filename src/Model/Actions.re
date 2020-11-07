@@ -6,18 +6,13 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Input;
 open Oni_Syntax;
-
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 [@deriving show({with_path: false})]
 type t =
   | Init
-  | ActivityBar(ActivityBar.action)
   | AutoUpdate(Feature_AutoUpdate.msg)
   | Buffers(Feature_Buffers.msg)
-  | BufferRenderer(BufferRenderer.action)
   | Clipboard(Feature_Clipboard.msg)
   | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
@@ -40,14 +35,15 @@ type t =
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
-  | KeyBindingsSet([@opaque] Keybindings.t)
+  | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
   | KeybindingInvoked({command: string})
-  | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | TextInput([@opaque] string, [@opaque] Revery.Time.t)
+  | KeyDown(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | KeyUp(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | Logging(Feature_Logging.msg)
+  | TextInput(string, [@opaque] Revery.Time.t)
   | DisableKeyDisplayer
   | EnableKeyDisplayer
   // TODO: This should be a function call - wired up from an input feature
@@ -76,7 +72,6 @@ type t =
     })
   | FilesDropped({paths: list(string)})
   | FileExplorer(Feature_Explorer.msg)
-  | LanguageFeature(LanguageFeatures.action)
   | LanguageSupport(Feature_LanguageSupport.msg)
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
@@ -96,14 +91,12 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
+  | OpenBufferById({bufferId: int})
   | OpenFileByPath(
       string,
-      option([ | `Horizontal | `Vertical]),
+      option([ | `Horizontal | `Vertical | `NewTab]),
       option(CharacterPosition.t),
     )
-  | OpenFileInNewLayout(string)
-  | BufferOpened(string, option(CharacterPosition.t), int)
-  | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
   | Pasted({
       rawText: string,
@@ -111,6 +104,7 @@ type t =
       lines: array(string),
     })
   | Registers(Feature_Registers.msg)
+  | Registration(Feature_Registration.msg)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
   // ReallyQuitting is dispatched when we've decided _for sure_
@@ -132,7 +126,6 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | SCM(Feature_SCM.msg)
-  | SearchHotkey
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
@@ -193,7 +186,6 @@ and quickmenuVariant =
       languages:
         list((string, option(Oni_Core.IconTheme.IconDefinition.t))),
     })
-  | DocumentSymbols
   | Extension({
       id: int,
       hasItems: bool,

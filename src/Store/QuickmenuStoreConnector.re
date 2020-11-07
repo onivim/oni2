@@ -111,9 +111,7 @@ let start = () => {
     let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
     buffers
-    |> IntMap.to_seq
-    |> Seq.map(snd)
-    |> List.of_seq
+    |> Feature_Buffers.all
     // Sort by most recerntly used
     |> List.fast_sort((a, b) =>
          - Float.compare(Buffer.getLastUsed(a), Buffer.getLastUsed(b))
@@ -132,7 +130,7 @@ let start = () => {
                  Actions.OpenFileByPath(path, None, None);
                },
                icon:
-                 Feature_Explorer.getFileIcon(
+                 Component_FileExplorer.getFileIcon(
                    ~languageInfo,
                    ~iconTheme,
                    path,
@@ -184,11 +182,6 @@ let start = () => {
         }),
         Isolinear.Effect.none,
       );
-
-    | QuickmenuShow(DocumentSymbols) => (
-        Some({...Quickmenu.defaults(DocumentSymbols), focused: Some(0)}),
-        Isolinear.Effect.none,
-      )
 
     | QuickmenuShow(Extension({id, hasItems, resolver})) => (
         Some({
@@ -246,10 +239,10 @@ let start = () => {
                name: fileType,
                command: () =>
                  Buffers(
-                   Feature_Buffers.FileTypeChanged({
-                     id: bufferId,
-                     fileType: Oni_Core.Buffer.FileType.explicit(fileType),
-                   }),
+                   Feature_Buffers.Msg.fileTypeChanged(
+                     ~bufferId,
+                     ~fileType=Oni_Core.Buffer.FileType.explicit(fileType),
+                   ),
                  ),
                icon: maybeIcon,
                highlight: [],
@@ -488,7 +481,7 @@ let start = () => {
         state.iconTheme,
         CommandManager.current(state),
         MenuManager.current(state),
-        WhenExpr.ContextKeys.fromSchema(ContextKeys.all(state), state),
+        ContextKeys.all(state),
       );
 
     ({...state, quickmenu: menuState}, menuEffect);
@@ -515,7 +508,7 @@ let subscriptions = (ripgrep, dispatch) => {
       ~onUpdate=(items, ~progress) => {
         let items =
           items
-          |> List.map((Filter.{item, highlight}) =>
+          |> List.map((Filter.{item, highlight, _}) =>
                ({...item, highlight}: Actions.menuItem)
              )
           |> Array.of_list;
@@ -525,13 +518,6 @@ let subscriptions = (ripgrep, dispatch) => {
         );
       },
     );
-  };
-
-  let documentSymbols = (languageFeatures, buffer) => {
-    DocumentSymbolSubscription.create(
-      ~id="document-symbols", ~buffer, ~languageFeatures, ~onUpdate=items => {
-      addItems(items)
-    });
   };
 
   let ripgrep = (languageInfo, iconTheme, configuration) => {
@@ -545,7 +531,11 @@ let subscriptions = (ripgrep, dispatch) => {
         name: Path.toRelative(~base=directory, fullPath),
         command: () => Actions.OpenFileByPath(fullPath, None, None),
         icon:
-          Feature_Explorer.getFileIcon(~languageInfo, ~iconTheme, fullPath),
+          Component_FileExplorer.getFileIcon(
+            ~languageInfo,
+            ~iconTheme,
+            fullPath,
+          ),
         highlight: [],
         handle: None,
       };
@@ -588,14 +578,6 @@ let subscriptions = (ripgrep, dispatch) => {
       | FileTypesPicker(_) => [filter(query, quickmenu.items)]
 
       | Wildmenu(_) => []
-      | DocumentSymbols =>
-        switch (Selectors.getActiveBuffer(state)) {
-        | Some(buffer) => [
-            filter(query, quickmenu.items),
-            documentSymbols(state.languageFeatures, buffer),
-          ]
-        | None => []
-        }
       };
 
     | None => []

@@ -129,6 +129,15 @@ module Sub: {
     (~activeEditorId: string, ~client: Exthost.Client.t) =>
     Isolinear.Sub.t(unit);
 
+  let codeLenses:
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~toMsg: result(list(Exthost.CodeLens.t), string) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
+
   let completionItems:
     // TODO: ~base: option(string),
     (
@@ -166,6 +175,15 @@ module Sub: {
       ~buffer: Oni_Core.Buffer.t,
       ~position: EditorCoreTypes.CharacterPosition.t,
       ~toMsg: list(Exthost.DocumentHighlight.t) => 'a,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('a);
+
+  let documentSymbols:
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~toMsg: list(Exthost.DocumentSymbol.t) => 'a,
       Exthost.Client.t
     ) =>
     Isolinear.Sub.t('a);

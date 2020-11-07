@@ -193,8 +193,6 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 
-open Oni_Components;
-
 module UiFont = Oni_Core.UiFont;
 module Colors = Feature_Theme.Colors.TitleBar;
 
@@ -211,10 +209,10 @@ module Styles = {
           : Colors.inactiveBackground.from(theme),
       ),
       flexDirection(`Row),
-      justifyContent(`Center),
-      alignItems(`Center),
+      justifyContent(`SpaceBetween),
     ];
-    let text = (~isFocused, ~theme) => [
+
+    let text = (~isFocused, ~theme, ~isRegistered) => [
       flexGrow(0),
       backgroundColor(
         isFocused
@@ -226,7 +224,10 @@ module Styles = {
           ? Colors.activeForeground.from(theme)
           : Colors.inactiveForeground.from(theme),
       ),
+      flexDirection(`Row),
+      justifyContent(`Center),
       textWrap(TextWrapping.NoWrap),
+      marginLeft(!isRegistered ? Feature_Registration.Constants.macWidth : 0),
     ];
   };
 
@@ -248,6 +249,9 @@ module Styles = {
       flexDirection(`Row),
       alignItems(`Center),
       marginHorizontal(16),
+      flexGrow(1),
+      flexShrink(1),
+      overflow(`Hidden),
     ];
 
     let icon = [pointerEvents(`Ignore)];
@@ -268,9 +272,15 @@ module Styles = {
           : Colors.inactiveForeground.from(theme),
       ),
       textWrap(TextWrapping.NoWrap),
+      textOverflow(`Ellipsis),
     ];
 
-    let buttons = [flexDirection(`Row), alignItems(`Center)];
+    let buttons = [
+      flexDirection(`Row),
+      flexGrow(0),
+      flexShrink(0),
+      alignItems(`Center),
+    ];
 
     module Button = {
       let container = [
@@ -304,6 +314,8 @@ module View = {
     let make =
         (
           ~dispatch,
+          ~registration,
+          ~registrationDispatch,
           ~isFocused,
           ~windowDisplayMode,
           ~title,
@@ -314,15 +326,30 @@ module View = {
       if (windowDisplayMode == Fullscreen) {
         React.empty;
       } else {
+        let isRegistered = Feature_Registration.isRegistered(registration);
+
         <Clickable
           onDoubleClick={_ => dispatch(TitleDoubleClicked)}
           style={Styles.Mac.container(~isFocused, ~theme)}>
-          <Text
-            style={Styles.Mac.text(~isFocused, ~theme)}
-            fontFamily={font.family}
-            fontWeight=Medium
-            fontSize=12.
-            text=title
+          <View
+            style=Style.[
+              flexDirection(`Row),
+              justifyContent(`Center),
+              flexGrow(1),
+            ]>
+            <Text
+              style={Styles.Mac.text(~isFocused, ~theme, ~isRegistered)}
+              fontFamily={font.family}
+              fontWeight=Medium
+              fontSize=12.
+              text=title
+            />
+          </View>
+          <Feature_Registration.View.TitleBar.Mac
+            theme
+            registration
+            dispatch=registrationDispatch
+            font
           />
         </Clickable>;
       };
@@ -416,6 +443,8 @@ module View = {
     let make =
         (
           ~dispatch,
+          ~registrationDispatch,
+          ~registration,
           ~isFocused,
           ~windowDisplayMode,
           ~title,
@@ -439,6 +468,13 @@ module View = {
             fontSize=12.
             text=title
           />
+          <Feature_Registration.View.TitleBar.Windows
+            theme
+            registration
+            dispatch=registrationDispatch
+            font
+            isFocused
+          />
         </View>
         <View style=Styles.Windows.buttons>
           <Buttons.Minimize theme dispatch />
@@ -453,8 +489,10 @@ module View = {
         ~activeBuffer,
         ~workspaceRoot,
         ~workspaceDirectory,
+        ~registration,
         ~config,
         ~dispatch,
+        ~registrationDispatch,
         ~isFocused,
         ~windowDisplayMode,
         ~theme,
@@ -464,9 +502,28 @@ module View = {
     let title =
       title(~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config);
     switch (Revery.Environment.os) {
-    | Mac => <Mac isFocused windowDisplayMode font title theme dispatch />
+    | Mac =>
+      <Mac
+        isFocused
+        windowDisplayMode
+        font
+        title
+        theme
+        dispatch
+        registration
+        registrationDispatch
+      />
     | Windows =>
-      <Windows isFocused windowDisplayMode font title theme dispatch />
+      <Windows
+        isFocused
+        windowDisplayMode
+        font
+        title
+        theme
+        dispatch
+        registrationDispatch
+        registration
+      />
     | _ => React.empty
     };
   };

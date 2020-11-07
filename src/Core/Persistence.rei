@@ -33,7 +33,11 @@ module Store: {
   let entry: Schema.item('state, _) => entry('state);
 
   let instantiate:
-    (~storeFolder: string=?, string, unit => list(entry('state))) =>
+    (
+      ~storeFolder: Fp.t(Fp.absolute)=?,
+      string,
+      unit => list(entry('state))
+    ) =>
     t('state);
 
   let isDirty: ('state, t('state)) => bool;

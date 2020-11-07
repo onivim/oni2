@@ -266,24 +266,6 @@ module Effect = {
 // SUBSCRIPTIONS
 
 module Sub = {
-  // This is a temporary helper to avoid dispatching after a subscription is disposed
-  // Really, this needs to be baked into isolinear - we should not ignore dispatches that
-  // occur in the context of a disposed description. However - at this point in this release,
-  // it's risky, so we'll scope it to just some of the new subscriptions.
-  module Latch = {
-    type state =
-      | Open
-      | Closed;
-
-    type t = ref(state);
-
-    let create = () => ref(Open);
-
-    let isOpen = latch => latch^ == Open;
-
-    let close = latch => latch := Closed;
-  };
-
   type dirParams = {
     id: string,
     cwd: string,
@@ -294,7 +276,7 @@ module Sub = {
 
       type nonrec params = dirParams;
 
-      type state = Latch.t;
+      type state = unit;
 
       let name = "Service_OS.Sub.dir";
       let id = ({id, cwd}) => id ++ cwd;
@@ -302,29 +284,21 @@ module Sub = {
       let init = (~params, ~dispatch) => {
         let promise = Api.readdir(params.cwd);
 
-        let latch = Latch.create();
-
-        Lwt.on_success(promise, dirItems =>
-          if (Latch.isOpen(latch)) {
-            dispatch(Ok(dirItems));
-          }
-        );
+        Lwt.on_success(promise, dirItems => dispatch(Ok(dirItems)));
 
         Lwt.on_failure(promise, exn =>
-          if (Latch.isOpen(latch)) {
-            dispatch(Error(Printexc.to_string(exn)));
-          }
+          dispatch(Error(Printexc.to_string(exn)))
         );
 
-        latch;
+        ();
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => {
         state;
       };
 
-      let dispose = (~params as _, ~state) => {
-        Latch.close(state);
+      let dispose = (~params as _, ~state as _) => {
+        ();
       };
     });
   let dir = (~uniqueId, ~toMsg, path) => {

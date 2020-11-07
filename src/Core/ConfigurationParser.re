@@ -52,22 +52,6 @@ let parseStringList = json => {
   };
 };
 
-let parseIntList = json => {
-  switch (json) {
-  | `List(items) =>
-    List.fold_left(
-      (accum, item) =>
-        switch (item) {
-        | `Int(v) => [v, ...accum]
-        | _ => accum
-        },
-      [],
-      items,
-    )
-  | _ => []
-  };
-};
-
 let parseVimUseSystemClipboardSetting = json => {
   let parseItems = items =>
     List.fold_left(
@@ -197,18 +181,6 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.hover.delay",
-    (config, json) => {...config, editorHoverDelay: parseInt(json)},
-  ),
-  (
-    "editor.hover.enabled",
-    (config, json) => {...config, editorHoverEnabled: parseBool(json)},
-  ),
-  (
-    "editor.detectIndentation",
-    (config, json) => {...config, editorDetectIndentation: parseBool(json)},
-  ),
-  (
     "editor.fontLigatures",
     (config, json) => {
       ...config,
@@ -216,41 +188,11 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.insertSpaces",
-    (config, json) => {...config, editorInsertSpaces: parseBool(json)},
-  ),
-  (
-    "editor.indentSize",
-    (config, json) => {...config, editorIndentSize: parseInt(json)},
-  ),
-  (
     "editor.largeFileOptimizations",
     (config, json) => {
       ...config,
       editorLargeFileOptimizations: parseBool(json),
     },
-  ),
-  (
-    "editor.tabSize",
-    (config, json) => {...config, editorTabSize: parseInt(json)},
-  ),
-  (
-    "editor.highlightActiveIndentGuide",
-    (config, json) => {
-      ...config,
-      editorHighlightActiveIndentGuide: parseBool(json),
-    },
-  ),
-  (
-    "editor.renderIndentGuides",
-    (config, json) => {
-      ...config,
-      editorRenderIndentGuides: parseBool(json),
-    },
-  ),
-  (
-    "editor.rulers",
-    (config, json) => {...config, editorRulers: parseIntList(json)},
   ),
   (
     "explorer.autoReveal",
@@ -304,17 +246,6 @@ let configurationParsers: list(configurationTuple) = [
   (
     "workbench.editor.showTabs",
     (config, json) => {...config, workbenchEditorShowTabs: parseBool(json)},
-  ),
-  (
-    "workbench.sideBar.location",
-    (config, json) => {
-      ...config,
-      workbenchSideBarLocation: parseString(json),
-    },
-  ),
-  (
-    "workbench.sideBar.visible",
-    (config, json) => {...config, workbenchSideBarVisible: parseBool(json)},
   ),
   (
     "workbench.statusBar.visible",

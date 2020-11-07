@@ -34,7 +34,7 @@ When a key is pressed:
 - If a rule is found and has a `command` set, the `command` is executed.
 - If no matching rules are found, we pass the input key through to `libvim` to be handled by Vim.
 
-There are a set of default rules provided by Onivim, but the customized rules are appended to the bottom - thus, user key bindings are esxecuted first.
+There are a set of default rules provided by Onivim, but the customized rules are appended to the bottom - thus, user key bindings are executed first.
 
 ### `key` format
 
@@ -158,11 +158,21 @@ Onivim-specific contexts:
 | Up Arrow / Control+P | Move focus up | `list.focusUp` |
 | Down Arrow / Control+N | Move focus down | `list.focusDown` |
 
+### Sidebar
+
+| Default Key Binding | Description | Command |
+| --- | --- | --- |
+| Command+Shift+E / Control+Shift+E | Focus Explorer | `workbench.view.explorer` |
+| Command+Shift+F / Control+Shift+F | Focus Search | `workbench.action.findInFiles` |
+| Command+Shift+X / Control+Shift+X | Focus Extensions | `workbench.view.extensions` |
+| Control+Shift+G | Focus Source Control | `workbench.view.scm` |
+| Control+W, Control+J | Navigate down a section | `vim.window.moveDown` |
+| Control+W, Control+K | Navigate up a section | `vim.window.moveUp` |
+
 ### Window Management
 
 | Default Key Binding | Description | Command |
 | --- | --- | --- |
-| Control+Shift+B | Toggle Explorer | `explorer.toggle` |
 | Control+W, Control+V | Vertical Split | `view.splitVertical` |
 | Control+W, Control+S | Horizontal Split | `view.splitHorizontal` |
 | Control+W, Control+H | Move to left split | `window.moveLeft` |
@@ -212,4 +222,32 @@ Examples:
 ```
   {"key": "kk", "command": ":split", "when": "editorTextFocus"},
   {"key": "<C-D>", "command": ":d 2", "when": "insertMode"}
+```
+
+### Leader Key
+
+A leader key can be specified via the following configuration setting:
+
+```
+{ "vim.leader": "<space>" }
+```
+> NOTE: This setting is in `configuration.json`, not `keybindings.json`
+
+Alternatively, the leader key can be specified via an `Ex` command:
+```
+:nmap <space> <Leader>
+```
+
+Once the leader key is defined, it may be used in both `keybindings.json` and via VimL map commands:
+
+```
+[
+  { "key": "<Leader>p", "command": "workbench.action.quickOpen", "when": "editorTextFocus && normalMode" }
+]
+```
+
+or, alternatively, in VimL:
+
+```
+:nnoremap <Leader>p <C-S-P>
 ```

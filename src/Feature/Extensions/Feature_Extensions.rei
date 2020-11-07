@@ -10,6 +10,9 @@ module Msg: {
   let exthost: Exthost.Msg.ExtensionService.msg => msg;
   let storage:
     (~resolver: Lwt.u(Exthost.Reply.t), Exthost.Msg.Storage.msg) => msg;
+
+  let languages:
+    (~resolver: Lwt.u(Exthost.Reply.t), Exthost.Msg.Languages.msg) => msg;
   let discovered: list(Scanner.ScanResult.t) => msg;
   let keyPressed: string => msg;
   let pasted: string => msg;
@@ -44,6 +47,8 @@ let isUninstalling: (~extensionId: string, model) => bool;
 
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 
+let resetFocus: model => model;
+
 let all: model => list(Scanner.ScanResult.t);
 let activatedIds: model => list(string);
 
@@ -63,7 +68,7 @@ let initial:
   (
     ~workspacePersistence: Persistence.t,
     ~globalPersistence: Persistence.t,
-    ~extensionsFolder: option(string)
+    ~extensionsFolder: option(Fp.t(Fp.absolute))
   ) =>
   model;
 
@@ -96,5 +101,5 @@ module DetailsView: {
 
 module Contributions: {
   let commands: (~isFocused: bool, model) => list(Command.t(msg));
-  let contextKeys: (~isFocused: bool) => WhenExpr.ContextKeys.Schema.t(model);
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
 };

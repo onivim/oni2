@@ -36,6 +36,17 @@ module Styles = {
     flexGrow(1),
   ];
 
+  let inactiveCover = (~colors: Colors.t, ~opacity) => [
+    backgroundColor(colors.editorBackground),
+    Style.opacity(opacity),
+    pointerEvents(`Ignore),
+    position(`Absolute),
+    top(0),
+    left(0),
+    right(0),
+    bottom(0),
+  ];
+
   let verticalScrollBar = [
     position(`Absolute),
     top(0),
@@ -68,7 +79,6 @@ let minimap =
       ~editor,
       ~diffMarkers,
       ~diagnosticsMap,
-      ~bufferWidthInCharacters,
       ~minimapWidthInPixels,
       ~languageSupport,
       (),
@@ -109,8 +119,7 @@ let minimap =
         ~colors,
         ~matchingPairs,
         ~bufferSyntaxHighlights,
-        0,
-        bufferWidthInCharacters,
+        ~scrollX=0.,
       )}
       selection=selectionRanges
       showSlider=showMinimapSlider
@@ -146,11 +155,10 @@ let%component make =
                 ~bufferSyntaxHighlights,
                 ~diagnostics,
                 ~tokenTheme,
-                ~onCursorChange,
                 ~languageSupport,
                 ~scm,
                 ~windowIsFocused,
-                ~config,
+                ~perFileTypeConfig: Oni_Core.Config.fileTypeResolver,
                 ~renderOverlays,
                 (),
               ) => {
@@ -159,6 +167,10 @@ let%component make =
   let%hook lastDimensions = Hooks.ref(None);
 
   let editorId = Editor.getId(editor);
+
+  let fileType =
+    buffer |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
+  let config = perFileTypeConfig(~fileType);
 
   // When the editor id changes, we need to make sure we're dispatching the resized
   // event, too. The ideal fix would be to have this component 'keyed' on the `editor.editorId`
@@ -202,21 +214,12 @@ let%component make =
 
   let editorFont = Editor.font(editor);
 
-  let leftVisibleColumn = Editor.getLeftVisibleColumn(editor);
-  let topVisibleLine = Editor.getTopVisibleLine(editor);
-  let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
-
   let cursorPosition = Editor.getPrimaryCursor(editor);
 
-  let layout =
-    Editor.getLayout(
-      ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
-      ~maxMinimapCharacters=Config.Minimap.maxColumn.get(config),
-      editor,
-    );
+  let layout = Editor.getLayout(editor);
 
   let matchingPairCheckPosition =
-    mode == Vim.Mode.Insert
+    Vim.Mode.isInsert(mode)
       ? CharacterPosition.{
           line: cursorPosition.line,
           character: CharacterIndex.(cursorPosition.character - 1),
@@ -228,7 +231,7 @@ let%component make =
       ? None
       : Editor.getNearestMatchingPair(
           ~characterPosition=matchingPairCheckPosition,
-          ~pairs=LanguageConfiguration.(languageConfiguration.brackets),
+          ~pairs=LanguageConfiguration.brackets(languageConfiguration),
           editor,
         );
 
@@ -250,6 +253,7 @@ let%component make =
 
   let%hook (scrollY, _setScrollYImmediately) =
     Hooks.spring(
+      ~name="Editor ScrollY Spring",
       ~target=Editor.scrollY(editor),
       ~restThreshold=10.,
       ~enabled=smoothScroll && isScrollAnimated,
@@ -257,6 +261,7 @@ let%component make =
     );
   let%hook (scrollX, _setScrollXImmediately) =
     Hooks.spring(
+      ~name="Editor ScrollX Spring",
       ~target=Editor.scrollX(editor),
       ~restThreshold=10.,
       ~enabled=smoothScroll && isScrollAnimated,
@@ -274,7 +279,7 @@ let%component make =
     <GutterView
       editor
       showScrollShadow={Config.scrollShadow.get(config)}
-      showLineNumbers={Config.lineNumbers.get(config)}
+      showLineNumbers={Editor.lineNumbers(editor)}
       height=pixelHeight
       colors
       count=lineCount
@@ -323,6 +328,16 @@ let%component make =
     |> Option.value(~default=React.empty);
   };
 
+  let coverAmount =
+    1.0
+    -. Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
+         config,
+       );
+  let opacityCover =
+    isActiveSplit
+      ? React.empty
+      : <View style={Styles.inactiveCover(~colors, ~opacity=coverAmount)} />;
+
   <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
     <SurfaceView
@@ -330,26 +345,24 @@ let%component make =
       editor
       colors
       dispatch
-      topVisibleLine
-      onCursorChange
       cursorPosition
       editorFont
-      leftVisibleColumn
       diagnosticsMap
       selectionRanges
       matchingPairs
       maybeYankHighlights
       bufferHighlights
       languageSupport
+      languageConfiguration
       bufferSyntaxHighlights
-      bottomVisibleLine
       mode
       isActiveSplit
       gutterWidth
       bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
-      bufferWidthInCharacters={layout.bufferWidthInCharacters}
       windowIsFocused
       config
+      uiFont
+      theme
     />
     {Editor.isMinimapEnabled(editor)
        ? <minimap
@@ -366,7 +379,6 @@ let%component make =
            selectionRanges
            showMinimapSlider={Config.Minimap.showSlider.get(config)}
            diffMarkers
-           bufferWidthInCharacters={layout.bufferWidthInCharacters}
            minimapWidthInPixels={layout.minimapWidthInPixels}
            languageSupport
          />
@@ -409,5 +421,6 @@ let%component make =
         colors
       />
     </View>
+    opacityCover
   </View>;
 };
