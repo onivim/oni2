@@ -487,7 +487,7 @@ let%component make =
         );
 
         Option.iter(
-          EditorDiffMarkers.render(
+          EditorDiffMarkers.renderMinimap(
             ~editor,
             ~scrollY,
             ~rowHeight,

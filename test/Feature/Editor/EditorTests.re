@@ -40,6 +40,15 @@ describe("Editor", ({describe, _}) => {
     |> Editor.setWrapMode(~wrapMode=WrapMode.Viewport);
   };
 
+  let inlineElement = lineIdx =>
+    Editor.makeInlineElement(
+      ~key="test-inline-element",
+      ~uniqueId=string_of_int(lineIdx),
+      ~lineNumber=LineNumber.ofZeroBased(lineIdx),
+      ~view=(~theme as _, ~uiFont as _, ()) =>
+      Revery.UI.React.listToElement([])
+    );
+
   let colorizer = (~startByte as _, _) => {
     BufferLineColorizer.{
       color: Revery.Colors.black,
@@ -54,6 +63,60 @@ describe("Editor", ({describe, _}) => {
       line: LineNumber.ofZeroBased(lnum),
       byte: ByteIndex.ofInt(byteNum),
     };
+  describe("inline elements", ({test, _}) => {
+    test("inline element at top", ({expect, _}) => {
+      let (editor, _buffer) = create([|"aaa"|]);
+      let inlineElement0 = inlineElement(0);
+      let editor =
+        editor
+        |> Editor.setWrapMode(~wrapMode=WrapMode.NoWrap)
+        |> Editor.setSize(~pixelWidth=500, ~pixelHeight=500)
+        |> Editor.setInlineElements(
+             ~key="test-inline-element",
+             ~elements=[inlineElement0],
+           )
+        |> Editor.setInlineElementSize(
+             ~key="test-inline-element",
+             ~uniqueId="0",
+             ~height=25,
+           );
+
+      let pixelY = Editor.viewLineToPixelY(0, editor);
+
+      expect.float(pixelY).toBeCloseTo(25.);
+    });
+
+    test("inline element after wrapping", ({expect, _}) => {
+      let editor = createThreeWideWithWrapping([|"aaaaaa", "aaaaaa"|]);
+      let inlineElement1 = inlineElement(1);
+      let editor =
+        editor
+        |> Editor.setInlineElements(
+             ~key="test-inline-element",
+             ~elements=[inlineElement1],
+           )
+        |> Editor.setInlineElementSize(
+             ~key="test-inline-element",
+             ~uniqueId="1",
+             ~height=25,
+           );
+
+      let pixelYViewLine0 = Editor.viewLineToPixelY(0, editor);
+      let pixelYViewLine1 = Editor.viewLineToPixelY(1, editor);
+      let pixelYViewLine2 = Editor.viewLineToPixelY(2, editor);
+      let pixelYViewLine3 = Editor.viewLineToPixelY(3, editor);
+
+      // First two lines should not be impacted by inline element,
+      // because they are before it.
+      let lineHeight = Editor.lineHeightInPixels(editor);
+      expect.float(pixelYViewLine0).toBeCloseTo(lineHeight *. 0.);
+      expect.float(pixelYViewLine1).toBeCloseTo(lineHeight *. 1.);
+
+      // Second two viewlines should be impacted by it, though.
+      expect.float(pixelYViewLine2).toBeCloseTo(lineHeight *. 2. +. 25.);
+      expect.float(pixelYViewLine3).toBeCloseTo(lineHeight *. 3. +. 25.);
+    });
+  });
   describe("viewTokens", ({test, _}) => {
     test("single token returned", ({expect, _}) => {
       let (editor, _buffer) = create([|"aaa"|]);

@@ -668,12 +668,12 @@ module Sub = {
     buffer: Oni_Core.Buffer.t,
   };
 
-  let idFromBufferVersion = (~handle, ~buffer, name) => {
+  let idFromBufferSaveTick = (~handle, ~buffer, name) => {
     Printf.sprintf(
       "%d-%d-%d.%s",
       handle,
       Oni_Core.Buffer.getId(buffer),
-      Oni_Core.Buffer.getVersion(buffer),
+      Oni_Core.Buffer.getSaveTick(buffer),
       name,
     );
   };
@@ -687,7 +687,7 @@ module Sub = {
 
       let name = "Service_Exthost.CodeLensesSubscription";
       let id = ({handle, buffer, _}: params) =>
-        idFromBufferVersion(~handle, ~buffer, "CodeLensSubscription");
+        idFromBufferSaveTick(~handle, ~buffer, "CodeLensSubscription");
 
       let init = (~params, ~dispatch) => {
         let promise =
