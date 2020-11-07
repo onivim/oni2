@@ -25,11 +25,32 @@ module WrapMode: {
 let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
 let copy: t => t;
 
+type inlineElement;
+
+let makeInlineElement:
+  (
+    ~key: string,
+    ~uniqueId: string,
+    ~lineNumber: EditorCoreTypes.LineNumber.t,
+    ~view: (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
+           Revery.UI.element
+  ) =>
+  inlineElement;
+
+let setInlineElements: (~key: string, ~elements: list(inlineElement), t) => t;
+
+let setInlineElementSize:
+  (~key: string, ~uniqueId: string, ~height: int, t) => t;
+
+let getInlineElements: t => list(InlineElements.element);
+
 let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;
 let getBufferId: t => int;
 let getTopVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
 let getBottomVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
+let getTopViewLine: t => int;
+let getBottomViewLine: t => int;
 let getLeftVisibleColumn: t => int;
 let getLayout: t => EditorLayout.t;
 let getCharacterUnderCursor: t => option(Uchar.t);
@@ -155,6 +176,7 @@ let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
 let viewLineIsPrimary: (int, t) => bool;
 let viewLineToBufferLine: (int, t) => EditorCoreTypes.LineNumber.t;
 let bufferBytePositionToViewLine: (BytePosition.t, t) => int;
+let viewLineToPixelY: (int, t) => float;
 
 // PIXEL-SPACE CONVERSION
 

@@ -62,12 +62,37 @@ let%component make =
                 ~bufferPixelWidth,
                 ~windowIsFocused,
                 ~config,
+                ~uiFont,
+                ~theme,
                 (),
               ) => {
   let%hook maybeBbox = React.Hooks.ref(None);
 
-  let lineCount = editor |> Editor.totalViewLines;
   let indentation = Buffer.getIndentation(buffer);
+
+  let inlineElements = Editor.getInlineElements(editor);
+
+  let lensElements =
+    inlineElements
+    |> List.map((inlineElement: InlineElements.element) => {
+         let line = inlineElement.line;
+         let uniqueId = inlineElement.uniqueId;
+         let elem = inlineElement.view(~theme, ~uiFont);
+         let inlineKey = inlineElement.key;
+         let hidden = inlineElement.hidden;
+
+         <InlineElementView
+           config
+           key={inlineElement.reconcilerKey}
+           inlineKey
+           uniqueId
+           dispatch
+           lineNumber=line
+           hidden
+           editor>
+           <elem />
+         </InlineElementView>;
+       });
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
     dispatch(
@@ -182,7 +207,6 @@ let%component make =
 
         ContentView.render(
           ~context,
-          ~count=lineCount,
           ~buffer,
           ~editor,
           ~colors,
@@ -214,6 +238,7 @@ let%component make =
         };
       }}
     />
+    {lensElements |> React.listToElement}
     yankHighlightElement
     <CursorView
       config

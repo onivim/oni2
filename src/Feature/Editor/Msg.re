@@ -42,4 +42,9 @@ type t =
   | ModeChanged({
       mode: [@opaque] Vim.Mode.t,
       effects: [@opaque] list(Vim.Effect.t),
+    })
+  | InlineElementSizeChanged({
+      key: string,
+      uniqueId: string,
+      height: int,
     });

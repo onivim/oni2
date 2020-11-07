@@ -26,3 +26,18 @@ let render:
     t
   ) =>
   unit;
+
+let renderMinimap:
+  (
+    ~editor: Editor.t,
+    ~scrollY: float,
+    ~rowHeight: float,
+    ~x: float,
+    ~height: float,
+    ~width: float,
+    ~count: int,
+    ~canvasContext: Revery.Draw.CanvasContext.t,
+    ~colors: Colors.t,
+    t
+  ) =>
+  unit;

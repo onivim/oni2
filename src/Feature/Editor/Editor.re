@@ -12,6 +12,17 @@ module GlobalState = {
   };
 };
 
+type inlineElement = {
+  reconcilerKey: Brisk_reconciler.Key.t,
+  hidden: bool,
+  key: string,
+  uniqueId: string,
+  lineNumber: EditorCoreTypes.LineNumber.t,
+  view:
+    (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
+    Revery.UI.element,
+};
+
 module WrapMode = {
   [@deriving show]
   type t =
@@ -88,6 +99,7 @@ type t = {
   lineHeight: LineHeight.t,
   scrollX: float,
   scrollY: float,
+  inlineElements: InlineElements.t,
   isScrollAnimated: bool,
   isMinimapEnabled: bool,
   minimapMaxColumnWidth: int,
@@ -164,7 +176,7 @@ let bufferBytePositionToPixel =
     let viewLine =
       Wrapping.bufferBytePositionToViewLine(~bytePosition=position, wrapping);
 
-    let {characterOffset: viewStartIndex, _}: Wrapping.bufferPosition =
+    let {line: bufferLineNum, characterOffset: viewStartIndex, _}: Wrapping.bufferPosition =
       Wrapping.viewLineToBufferPosition(~line=viewLine, wrapping);
 
     let (startPixel, _width) =
@@ -174,9 +186,17 @@ let bufferBytePositionToPixel =
     let (actualPixel, width) =
       BufferLine.getPixelPositionAndWidth(~index, bufferLine);
 
+    // Account for inline elements, like codelens
+    let inlineElementOffsetY =
+      InlineElements.getReservedSpace(bufferLineNum, editor.inlineElements);
+
     let pixelX = actualPixel -. startPixel -. scrollX +. 0.5;
     let pixelY =
-      lineHeightInPixels(editor) *. float(viewLine) -. scrollY +. 0.5;
+      inlineElementOffsetY
+      +. lineHeightInPixels(editor)
+      *. float(viewLine)
+      -. scrollY
+      +. 0.5;
 
     ({x: pixelX, y: pixelY}: PixelPosition.t, width);
   };
@@ -422,6 +442,7 @@ let create = (~config, ~buffer, ()) => {
     wrapMode,
     wrapPadding: None,
     verticalScrollMargin: 1,
+    inlineElements: InlineElements.initial,
     isMouseDown: false,
     hasMouseEntered: false,
     lastMouseMoveTime: None,
@@ -436,23 +457,78 @@ let cursors = ({mode, _}) => Vim.Mode.cursors(mode);
 let maxLineLength = ({wrapState, _}) =>
   wrapState |> WrapState.wrapping |> Wrapping.maxLineLength;
 
+let viewLineToPixelY = (idx, editor) => {
+  let wrapping = editor.wrapState |> WrapState.wrapping;
+  let {line: bufferLine, _}: Wrapping.bufferPosition =
+    Wrapping.viewLineToBufferPosition(~line=idx, wrapping);
+  let inlineElementOffsetY =
+    InlineElements.getReservedSpace(bufferLine, editor.inlineElements);
+  inlineElementOffsetY +. lineHeightInPixels(editor) *. float(idx);
+};
+
+let getViewLineFromPixelY = (~pixelY, editor) => {
+  let lineHeight = lineHeightInPixels(editor);
+  let wrapping = editor.wrapState |> WrapState.wrapping;
+  let rec loop =
+          (accumulatedLines, accumulatedPixels, remainingInlineElements) =>
+    if (pixelY < accumulatedPixels) {
+      accumulatedLines - 1;
+    } else {
+      switch ((remainingInlineElements: list(InlineElements.element))) {
+      | [] =>
+        let lineNumber =
+          int_of_float((pixelY -. accumulatedPixels) /. lineHeight);
+        lineNumber + accumulatedLines;
+      | [hd, ...tail] =>
+        let viewLine =
+          Wrapping.bufferBytePositionToViewLine(
+            ~bytePosition=BytePosition.{line: hd.line, byte: ByteIndex.zero},
+            wrapping,
+          );
+        let additionalRegion =
+          float(viewLine - accumulatedLines) *. lineHeight;
+        if (additionalRegion +. accumulatedPixels >= pixelY) {
+          // The line is prior to the next inline element!
+          let lineNumber =
+            int_of_float((pixelY -. accumulatedPixels) /. lineHeight);
+          lineNumber + accumulatedLines;
+        } else {
+          // We need to advance
+          loop(
+            viewLine + 1,
+            accumulatedPixels +. additionalRegion +. hd.height +. lineHeight,
+            tail,
+          );
+        };
+      };
+    };
+
+  loop(0, 0., editor.inlineElements |> InlineElements.allElements);
+};
+
+let getTopViewLine = editor => {
+  getViewLineFromPixelY(~pixelY=editor.scrollY, editor);
+};
+
 let getTopVisibleBufferLine = editor => {
-  let topViewLine =
-    int_of_float(editor.scrollY /. lineHeightInPixels(editor));
+  let topViewLine = getTopViewLine(editor);
   viewLineToBufferLine(topViewLine, editor);
 };
 
-let getBottomVisibleBufferLine = editor => {
+let getBottomViewLine = editor => {
   let absoluteBottomLine =
-    int_of_float(
-      (editor.scrollY +. float_of_int(editor.pixelHeight))
-      /. lineHeightInPixels(editor),
+    getViewLineFromPixelY(
+      ~pixelY=editor.scrollY +. float_of_int(editor.pixelHeight),
+      editor,
     );
 
   let viewLines = editor |> totalViewLines;
 
-  let viewBottomLine =
-    absoluteBottomLine >= viewLines ? viewLines - 1 : absoluteBottomLine;
+  absoluteBottomLine >= viewLines ? viewLines - 1 : absoluteBottomLine;
+};
+
+let getBottomVisibleBufferLine = editor => {
+  let viewBottomLine = getBottomViewLine(editor);
   viewLineToBufferLine(viewBottomLine, editor);
 };
 
@@ -581,25 +657,6 @@ let getCharacterBehindCursor = ({buffer, _} as editor) => {
   };
 };
 
-//let byteToCharacter = (cursor: BytePosition.t, {buffer, _}) => {
-//    let line = cursor.line |> EditorCoreTypes.LineNumber.toZeroBased;
-//    //let line = cursor.line |> EditorCoreTypes.LineNumber.toZeroBased;
-//    let bufferLineCount = EditorBuffer.numberOfLines(buffer);
-//    if (line < bufferLineCount) {
-//      let bufferLine = EditorBuffer.line(line, buffer);
-//      let index = BufferLine.getIndex(~byte=cursor.byte, bufferLine);
-//      Some(CharacterPosition.{
-//        line: cursor.line,
-//        character: index,
-//      });
-//      try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
-//      | _exn => None
-//      };
-//    } else {
-//      None;
-//    };
-//}
-
 let getCharacterUnderCursor = ({buffer, _} as editor) => {
   switch (cursors(editor)) {
   | [] => None
@@ -643,6 +700,80 @@ let getPrimaryCursorByte = editor =>
   | [] =>
     BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}
   };
+
+let withSteadyCursor = (f, editor) => {
+  let bytePosition = getPrimaryCursorByte(editor);
+
+  let calculateOffset = (bytePosition, editor) => {
+    let wrapping = editor.wrapState |> WrapState.wrapping;
+    let viewLine =
+      Wrapping.bufferBytePositionToViewLine(~bytePosition, wrapping);
+
+    viewLineToPixelY(viewLine, editor);
+  };
+
+  let originalOffset = calculateOffset(bytePosition, editor);
+  let editor' = f(editor);
+
+  let newOffset = calculateOffset(bytePosition, editor');
+  let scrollY = editor.scrollY +. (newOffset -. originalOffset);
+  {...editor', scrollY, isScrollAnimated: false};
+};
+
+let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
+  hidden: false,
+  reconcilerKey: Brisk_reconciler.Key.create(),
+  key,
+  uniqueId,
+  lineNumber,
+  view,
+};
+
+let setInlineElementSize = (~key, ~uniqueId, ~height, editor) => {
+  editor
+  |> withSteadyCursor(e =>
+       {
+         ...e,
+         inlineElements:
+           InlineElements.setSize(
+             ~key,
+             ~uniqueId,
+             ~height=float(height),
+             e.inlineElements,
+           ),
+       }
+     );
+};
+
+let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
+  let elements': list(InlineElements.element) =
+    elements
+    |> List.map((inlineElement: inlineElement) =>
+         InlineElements.{
+           reconcilerKey: Brisk_reconciler.Key.create(),
+           key: inlineElement.key,
+           uniqueId: inlineElement.uniqueId,
+           line: inlineElement.lineNumber,
+           height: 0.,
+           view: inlineElement.view,
+           hidden: inlineElement.hidden,
+         }
+       );
+
+  editor
+  |> withSteadyCursor(e =>
+       {
+         ...e,
+         inlineElements:
+           InlineElements.set(~key, ~elements=elements', e.inlineElements),
+       }
+     );
+};
+
+let getInlineElements = ({inlineElements, _}) => {
+  inlineElements |> InlineElements.allElements;
+};
+
 let selectionOrCursorRange = editor => {
   switch (selection(editor)) {
   | None =>
@@ -841,7 +972,9 @@ let scrollToPixelY = (~pixelY as newScrollY, editor) => {
   let viewLines = editor |> totalViewLines;
   let newScrollY = max(0., newScrollY);
   let availableScroll =
-    max(float_of_int(viewLines - 1), 0.) *. lineHeightInPixels(editor);
+    max(float_of_int(viewLines - 1), 0.)
+    *. lineHeightInPixels(editor)
+    +. InlineElements.getAllReservedSpace(editor.inlineElements);
   let newScrollY = min(newScrollY, availableScroll);
 
   let scrollPercentage =
@@ -954,6 +1087,7 @@ let scrollAndMoveCursor = (~deltaViewLines, editor) => {
 
   // Adjust scroll to compensate cursor position - keeping the cursor in the same
   // relative spot to scroll, after moving it.
+  // TODO: Bring back
   editor' |> scrollDeltaPixelY(~pixelY=newY -. oldY) |> animateScroll;
 };
 
@@ -1081,11 +1215,15 @@ let unprojectToPixel =
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
 
 let updateBuffer = (~update, ~buffer, editor) => {
-  {
-    ...editor,
-    buffer,
-    wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
-  };
+  editor
+  |> withSteadyCursor(editor =>
+       {
+         ...editor,
+         buffer,
+         wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
+         inlineElements: InlineElements.shift(update, editor.inlineElements),
+       }
+     );
 };
 
 let setBuffer = (~buffer, editor) => {
@@ -1112,8 +1250,7 @@ let configurationChanged = (~perFileTypeConfig, editor) => {
 module Slow = {
   let pixelPositionToBytePosition =
       (~allowPast=false, ~pixelX: float, ~pixelY: float, view) => {
-    let rawLine =
-      int_of_float((pixelY +. view.scrollY) /. lineHeightInPixels(view));
+    let rawLine = getViewLineFromPixelY(~pixelY=pixelY +. view.scrollY, view);
 
     let wrapping = view.wrapState |> WrapState.wrapping;
     let rawLine =
