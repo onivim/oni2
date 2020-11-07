@@ -1,19 +1,12 @@
 [@deriving show({with_path: false})]
-type t = {
-  automaticallyChecksForUpdates: bool,
-  licenseKey: string,
-};
-
-[@deriving show({with_path: false})]
 type msg =
   | AutoCheckChanged(bool)
-  | ReleaseChannelChanged([ | `Nightly | `Master | `Test])
-  | LicenseKeyChanged(string);
+  | LicenseKeyChanged(string)
+  | ReleaseChannelChanged([ | `Nightly | `Master | `Test]);
 
 module Sub = {
   type params = {
     automaticallyChecksForUpdates: bool,
-    licenseKey: string,
     releaseChannel: [ | `Nightly | `Master | `Test],
     uniqueId: string,
   };
@@ -22,7 +15,6 @@ module Sub = {
     Isolinear.Sub.Make({
       type state = {
         automaticallyChecksForUpdates: bool,
-        licenseKey: string,
         releaseChannel: [ | `Nightly | `Master | `Test],
       };
       type nonrec msg = msg;
@@ -34,12 +26,10 @@ module Sub = {
 
       let init = (~params: params, ~dispatch: msg => unit) => {
         dispatch(AutoCheckChanged(params.automaticallyChecksForUpdates));
-        dispatch(LicenseKeyChanged(params.licenseKey));
         dispatch(ReleaseChannelChanged(params.releaseChannel));
 
         {
           automaticallyChecksForUpdates: params.automaticallyChecksForUpdates,
-          licenseKey: params.licenseKey,
           releaseChannel: params.releaseChannel,
         };
       };
@@ -50,16 +40,11 @@ module Sub = {
           dispatch(AutoCheckChanged(params.automaticallyChecksForUpdates));
         };
 
-        if (params.licenseKey != state.licenseKey) {
-          dispatch(LicenseKeyChanged(params.licenseKey));
-        };
-
         if (params.releaseChannel != state.releaseChannel) {
           dispatch(ReleaseChannelChanged(params.releaseChannel));
         };
 
         {
-          licenseKey: params.licenseKey,
           automaticallyChecksForUpdates: params.automaticallyChecksForUpdates,
           releaseChannel: params.releaseChannel,
         };
@@ -69,21 +54,29 @@ module Sub = {
     });
 
   let autoUpdate =
-      (
-        ~uniqueId,
-        ~automaticallyChecksForUpdates,
-        ~licenseKey,
-        ~releaseChannel,
-      ) =>
+      (~uniqueId, ~automaticallyChecksForUpdates, ~releaseChannel) =>
     AutoUpdateSubscription.create({
       uniqueId,
       automaticallyChecksForUpdates,
-      licenseKey,
       releaseChannel,
     });
 };
 
 module Effect = {
+  open {
+         module Constants = {
+           let baseUrl = "https://v2.onivim.io/appcast";
+         };
+
+         let urlOfAttrs = (~licenseKey, ~releaseChannel, ~platform) =>
+           Constants.baseUrl
+           ++ "?channel="
+           ++ releaseChannel
+           ++ "&licenseKey="
+           ++ licenseKey
+           ++ "&platform="
+           ++ platform;
+       };
   let setAutomaticallyChecksForUpdates =
       (~updater, ~automaticallyChecksForUpdates) =>
     Isolinear.Effect.create(
@@ -94,13 +87,20 @@ module Effect = {
       )
     });
 
-  let setFeedUrl = (~updater, ~url) =>
+  let setFeed = (~updater, ~licenseKey, ~releaseChannel, ~platform) =>
     Isolinear.Effect.create(~name="autoupdate.setFeedUrl", () => {
-      Oni2_Sparkle.Updater.setFeedURL(updater, url)
+      let url = urlOfAttrs(~licenseKey, ~releaseChannel, ~platform);
+      Oni2_Sparkle.Updater.setFeedURL(updater, url);
     });
 
   let checkForUpdates = (~updater) =>
     Isolinear.Effect.create(~name="autoupdate.checkForUpdates", () => {
       Oni2_Sparkle.Updater.checkForUpdates(updater)
+    });
+
+  let updateLicenseKey = (~licenseKey) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="autoupdate.updateLicenseKey", dispatch => {
+      dispatch(LicenseKeyChanged(licenseKey))
     });
 };

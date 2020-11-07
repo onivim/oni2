@@ -230,6 +230,8 @@ switch (eff) {
     let extensionGlobalPersistence =
       Store.Persistence.Global.extensionValues();
 
+    let licenseKeyPersistence = Store.Persistence.Global.licenseKey();
+
     let initialWorkspaceStore =
       Store.Persistence.Workspace.storeFor(initialWorkingDirectory);
     let extensionWorkspacePersistence =
@@ -248,6 +250,7 @@ switch (eff) {
           ~workingDirectory=initialWorkingDirectory,
           // TODO: Use `Fp.t` all the way down
           ~extensionsFolder=cliOptions.overriddenExtensionsDir,
+          ~licenseKeyPersistence,
         ),
       );
 

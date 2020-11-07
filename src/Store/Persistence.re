@@ -18,6 +18,10 @@ module Global = {
       define("workspace", option(string), None, state =>
         Some(state.workspace.workingDirectory)
       );
+    let licenseKey =
+      define("licenseKey", option(string), None, state =>
+        state.registration.licenseKey
+      );
   };
 
   open Persistence.Store;
@@ -26,7 +30,12 @@ module Global = {
     lazy(
       {
         instantiate("global", () =>
-          Schema.[entry(version), entry(workspace), entry(extensionValues)]
+          Schema.[
+            entry(version),
+            entry(workspace),
+            entry(extensionValues),
+            entry(licenseKey),
+          ]
         );
       }
     );
@@ -34,6 +43,7 @@ module Global = {
   let extensionValues = () => get(Schema.extensionValues, Lazy.force(store));
   let version = () => get(Schema.version, Lazy.force(store));
   let workspace = () => get(Schema.workspace, Lazy.force(store));
+  let licenseKey = () => get(Schema.licenseKey, Lazy.force(store));
 
   let persist = state => persist(state, Lazy.force(store));
 };

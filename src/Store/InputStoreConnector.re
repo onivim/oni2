@@ -80,6 +80,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | InsertRegister => [
         Actions.Registers(Feature_Registers.Msg.keyPressed(k)),
       ]
+    | LicenseKey => [
+        Actions.Registration(Feature_Registration.KeyPressed(k)),
+      ]
     | LanguageSupport => [
         Actions.LanguageSupport(Feature_LanguageSupport.Msg.keyPressed(k)),
       ]
@@ -102,6 +105,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           Actions.LanguageSupport(
             Feature_LanguageSupport.Msg.pasted(firstLine),
           )
+        | LicenseKey =>
+          Actions.Registration(Feature_Registration.Pasted(firstLine))
 
         // No paste handling in these UIs, currently...
         | Pane => Actions.Noop
