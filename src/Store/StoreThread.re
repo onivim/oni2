@@ -477,6 +477,8 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Input(msg))),
     Feature_AutoUpdate.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.AutoUpdate(msg))),
+    Feature_Registration.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Registration(msg))),
   ]
   |> List.flatten
   |> registerCommands(~dispatch);

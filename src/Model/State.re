@@ -470,6 +470,7 @@ type t = {
   textContentProviders: list((int, string)),
   vim: Feature_Vim.model,
   autoUpdate: Feature_AutoUpdate.model,
+  registration: Feature_Registration.model,
 };
 
 let initial =
@@ -483,6 +484,7 @@ let initial =
       ~contributedCommands,
       ~workingDirectory,
       ~extensionsFolder,
+      ~licenseKeyPersistence,
     ) => {
   let config =
     Feature_Configuration.initial(
@@ -491,6 +493,7 @@ let initial =
         Feature_AutoUpdate.Contributions.configuration,
         Feature_Buffers.Contributions.configuration,
         Feature_Editor.Contributions.configuration,
+        Feature_Input.Contributions.configuration,
         Feature_SideBar.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
@@ -577,5 +580,6 @@ let initial =
     textContentProviders: [],
     vim: Feature_Vim.initial,
     autoUpdate: Feature_AutoUpdate.initial,
+    registration: Feature_Registration.initial(licenseKeyPersistence),
   };
 };

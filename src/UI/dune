@@ -8,5 +8,5 @@
    Oni2.feature.search Oni2.feature.editor Oni2.feature.imagePreview
    Oni2.feature.sideBar Oni2.feature.scm Oni2.feature.modals
    Oni2.feature.layout Oni2.feature.changelog Oni2.feature.statusbar
-   Oni2.feature.titlebar Rench Revery Revery.zed revery-terminal.lib
-   Oni2.editor-core-types ppx_deriving.runtime))
+   Oni2.feature.titlebar Oni2.feature.registration Rench Revery Revery.zed
+   revery-terminal.lib Oni2.editor-core-types ppx_deriving.runtime))

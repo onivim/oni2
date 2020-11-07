@@ -572,6 +572,23 @@ let update =
       };
     (state, eff);
 
+  | Registration(msg) =>
+    let (state', outmsg) =
+      Feature_Registration.update(state.registration, msg);
+
+    let effect =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Registration(msg))
+      | LicenseKeyChanged(licenseKey) =>
+        Service_AutoUpdate.Effect.updateLicenseKey(~licenseKey)
+        |> Isolinear.Effect.map(msg =>
+             Actions.AutoUpdate(Feature_AutoUpdate.Service(msg))
+           )
+      };
+    ({...state, registration: state'}, effect);
+
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
     let state = {...state, searchPane: model};
@@ -1505,7 +1522,10 @@ let update =
     );
 
   | AutoUpdate(msg) =>
-    let (state', outmsg) = Feature_AutoUpdate.update(state.autoUpdate, msg);
+    let getLicenseKey = () =>
+      Feature_Registration.getLicenseKey(state.registration);
+    let (state', outmsg) =
+      Feature_AutoUpdate.update(~getLicenseKey, state.autoUpdate, msg);
 
     let eff =
       (

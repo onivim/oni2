@@ -34,6 +34,7 @@ let simpleState = {
       ~contributedCommands=[],
       ~workingDirectory=Sys.getcwd(),
       ~extensionsFolder=None,
+      ~licenseKeyPersistence=None,
     );
 
   Reducer.reduce(

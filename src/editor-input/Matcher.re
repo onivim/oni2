@@ -18,25 +18,11 @@ let parse = (~getKeycode, ~getScancode, str) => {
   let flatMap = (f, r) => Result.bind(r, f);
 
   let finish = r => {
-    let f = ((key, mods)) => {
-      switch (getKeycode(key), getScancode(key)) {
-      | (Some(keycode), Some(scancode)) =>
-        Ok(
-          KeyPress.{
-            modifiers: Matcher_internal.Helpers.internalModsToMods(mods),
-            scancode,
-            keycode,
-          },
-        )
-      | _ => Error("Unrecognized key: " ++ Key.toString(key))
-      };
-    };
-
     switch (r) {
     | Matcher_internal.AllKeysReleased => Ok(AllKeysReleased)
     | Matcher_internal.Sequence(keys) =>
       keys
-      |> List.map(f)
+      |> List.map(KeyPress.ofInternal(~getKeycode, ~getScancode))
       |> Base.Result.all
       |> Result.map(keys => Sequence(keys))
     };
