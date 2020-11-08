@@ -4,8 +4,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.PromiseSource = exports.Limiter = exports.splitInChunks = exports.pathEquals = exports.isDescendant = exports.detectUnicodeEncoding = exports.readBytes = exports.grep = exports.find = exports.uniqueFilter = exports.mkdirp = exports.groupBy = exports.uniqBy = exports.assign = exports.once = exports.eventToPromise = exports.debounceEvent = exports.onceEvent = exports.done = exports.anyEvent = exports.filterEvent = exports.mapEvent = exports.fireEvent = exports.EmptyDisposable = exports.combinedDisposable = exports.toDisposable = exports.dispose = exports.log = void 0;
+const vscode_1 = require("vscode");
 const path_1 = require("path");
-const fs = require("fs");
+const fs_1 = require("fs");
 const byline = require("byline");
 function log(...args) {
     console.log.apply(console, ['git:', ...args]);
@@ -26,30 +28,19 @@ function combinedDisposable(disposables) {
 exports.combinedDisposable = combinedDisposable;
 exports.EmptyDisposable = toDisposable(() => null);
 function fireEvent(event) {
-    return (listener, thisArgs = null, disposables) => event(_ => listener.call(thisArgs), null, disposables);
+    return (listener, thisArgs, disposables) => event(_ => listener.call(thisArgs), null, disposables);
 }
 exports.fireEvent = fireEvent;
 function mapEvent(event, map) {
-    return (listener, thisArgs = null, disposables) => event(i => listener.call(thisArgs, map(i)), null, disposables);
+    return (listener, thisArgs, disposables) => event(i => listener.call(thisArgs, map(i)), null, disposables);
 }
 exports.mapEvent = mapEvent;
 function filterEvent(event, filter) {
-    return (listener, thisArgs = null, disposables) => event(e => filter(e) && listener.call(thisArgs, e), null, disposables);
+    return (listener, thisArgs, disposables) => event(e => filter(e) && listener.call(thisArgs, e), null, disposables);
 }
 exports.filterEvent = filterEvent;
-function latchEvent(event) {
-    let firstCall = true;
-    let cache;
-    return filterEvent(event, value => {
-        let shouldEmit = firstCall || value !== cache;
-        firstCall = false;
-        cache = value;
-        return shouldEmit;
-    });
-}
-exports.latchEvent = latchEvent;
 function anyEvent(...events) {
-    return (listener, thisArgs = null, disposables) => {
+    return (listener, thisArgs, disposables) => {
         const result = combinedDisposable(events.map(event => event(i => listener.call(thisArgs, i))));
         if (disposables) {
             disposables.push(result);
@@ -63,7 +54,7 @@ function done(promise) {
 }
 exports.done = done;
 function onceEvent(event) {
-    return (listener, thisArgs = null, disposables) => {
+    return (listener, thisArgs, disposables) => {
         const result = event(e => {
             result.dispose();
             return listener.call(thisArgs, e);
@@ -73,7 +64,7 @@ function onceEvent(event) {
 }
 exports.onceEvent = onceEvent;
 function debounceEvent(event, delay) {
-    return (listener, thisArgs = null, disposables) => {
+    return (listener, thisArgs, disposables) => {
         let timer;
         return event(e => {
             clearTimeout(timer);
@@ -123,23 +114,15 @@ function groupBy(arr, fn) {
     }, Object.create(null));
 }
 exports.groupBy = groupBy;
-function denodeify(fn) {
-    return (...args) => new Promise((c, e) => fn(...args, (err, r) => err ? e(err) : c(r)));
-}
-exports.denodeify = denodeify;
-function nfcall(fn, ...args) {
-    return new Promise((c, e) => fn(...args, (err, r) => err ? e(err) : c(r)));
-}
-exports.nfcall = nfcall;
 async function mkdirp(path, mode) {
     const mkdir = async () => {
         try {
-            await nfcall(fs.mkdir, path, mode);
+            await fs_1.promises.mkdir(path, mode);
         }
         catch (err) {
             if (err.code === 'EEXIST') {
-                const stat = await nfcall(fs.stat, path);
-                if (stat.isDirectory) {
+                const stat = await fs_1.promises.stat(path);
+                if (stat.isDirectory()) {
                     return;
                 }
                 throw new Error(`'${path}' exists and is not a directory.`);
@@ -176,15 +159,6 @@ function uniqueFilter(keyFn) {
     };
 }
 exports.uniqueFilter = uniqueFilter;
-function firstIndex(array, fn) {
-    for (let i = 0; i < array.length; i++) {
-        if (fn(array[i])) {
-            return i;
-        }
-    }
-    return -1;
-}
-exports.firstIndex = firstIndex;
 function find(array, fn) {
     let result = undefined;
     array.some(e => {
@@ -199,7 +173,7 @@ function find(array, fn) {
 exports.find = find;
 async function grep(filename, pattern) {
     return new Promise((c, e) => {
-        const fileStream = fs.createReadStream(filename, { encoding: 'utf8' });
+        const fileStream = fs_1.createReadStream(filename, { encoding: 'utf8' });
         const stream = byline(fileStream);
         stream.on('data', (line) => {
             if (pattern.test(line)) {
@@ -289,4 +263,82 @@ function pathEquals(a, b) {
     return a === b;
 }
 exports.pathEquals = pathEquals;
+function* splitInChunks(array, maxChunkLength) {
+    let current = [];
+    let length = 0;
+    for (const value of array) {
+        let newLength = length + value.length;
+        if (newLength > maxChunkLength && current.length > 0) {
+            yield current;
+            current = [];
+            newLength = value.length;
+        }
+        current.push(value);
+        length = newLength;
+    }
+    if (current.length > 0) {
+        yield current;
+    }
+}
+exports.splitInChunks = splitInChunks;
+class Limiter {
+    constructor(maxDegreeOfParalellism) {
+        this.maxDegreeOfParalellism = maxDegreeOfParalellism;
+        this.outstandingPromises = [];
+        this.runningPromises = 0;
+    }
+    queue(factory) {
+        return new Promise((c, e) => {
+            this.outstandingPromises.push({ factory, c, e });
+            this.consume();
+        });
+    }
+    consume() {
+        while (this.outstandingPromises.length && this.runningPromises < this.maxDegreeOfParalellism) {
+            const iLimitedTask = this.outstandingPromises.shift();
+            this.runningPromises++;
+            const promise = iLimitedTask.factory();
+            promise.then(iLimitedTask.c, iLimitedTask.e);
+            promise.then(() => this.consumed(), () => this.consumed());
+        }
+    }
+    consumed() {
+        this.runningPromises--;
+        if (this.outstandingPromises.length > 0) {
+            this.consume();
+        }
+    }
+}
+exports.Limiter = Limiter;
+class PromiseSource {
+    constructor() {
+        this._onDidComplete = new vscode_1.EventEmitter();
+    }
+    get promise() {
+        if (this._promise) {
+            return this._promise;
+        }
+        return eventToPromise(this._onDidComplete.event).then(completion => {
+            if (completion.success) {
+                return completion.value;
+            }
+            else {
+                throw completion.err;
+            }
+        });
+    }
+    resolve(value) {
+        if (!this._promise) {
+            this._promise = Promise.resolve(value);
+            this._onDidComplete.fire({ success: true, value });
+        }
+    }
+    reject(err) {
+        if (!this._promise) {
+            this._promise = Promise.reject(err);
+            this._onDidComplete.fire({ success: false, err });
+        }
+    }
+}
+exports.PromiseSource = PromiseSource;
 //# sourceMappingURL=util.js.map

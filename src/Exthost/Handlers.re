@@ -64,6 +64,7 @@ let ext = name => {
 let handlers =
   [
     mainNotImplemented("MainThreadAuthentication"),
+    mainNotImplemented("MainThreadBulkEdits"),
     main(
       ~handler=Msg.Clipboard.handle,
       ~mapper=msg => Msg.Clipboard(msg),
@@ -177,6 +178,9 @@ let handlers =
       "MainThreadTerminalService",
     ),
     mainNotImplemented("MainThreadWebviews"),
+    mainNotImplemented("MainThreadWebviewPanels"),
+    mainNotImplemented("MainThreadWebviewViews"),
+    mainNotImplemented("MainThreadCustomEditors"),
     mainNotImplemented("MainThreadUrls"),
     main(
       ~handler=Msg.Workspace.handle,
@@ -222,6 +226,7 @@ let handlers =
     ext("ExtHostEditors"),
     ext("ExtHostTreeViews"),
     ext("ExtHostFileSystem"),
+    ext("ExtHostFileSystemInfo"),
     ext("ExtHostFileSystemEventService"),
     ext("ExtHostLanguageFeatures"),
     ext("ExtHostQuickOpen"),
@@ -234,6 +239,9 @@ let handlers =
     ext("ExtHostWorkspace"),
     ext("ExtHostWindow"),
     ext("ExtHostWebviews"),
+    ext("ExtHostWebviewPanels"),
+    ext("ExtHostCustomEditors"),
+    ext("ExtHostWebviewViews"),
     ext("ExtHostEditorInsets"),
     ext("ExtHostProgress"),
     ext("ExtHostComments"),

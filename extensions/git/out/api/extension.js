@@ -10,9 +10,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.GitExtensionImpl = exports.deprecated = void 0;
 const api1_1 = require("./api1");
 const vscode_1 = require("vscode");
-const util_1 = require("../util");
 function deprecated(_target, key, descriptor) {
     if (typeof descriptor.value !== 'function') {
         throw new Error('not supported');
@@ -28,7 +28,7 @@ class GitExtensionImpl {
     constructor(model) {
         this.enabled = false;
         this._onDidChangeEnablement = new vscode_1.EventEmitter();
-        this.onDidChangeEnablement = util_1.latchEvent(this._onDidChangeEnablement.event);
+        this.onDidChangeEnablement = this._onDidChangeEnablement.event;
         this._model = undefined;
         if (model) {
             this.enabled = true;
@@ -37,8 +37,15 @@ class GitExtensionImpl {
     }
     set model(model) {
         this._model = model;
-        this.enabled = !!model;
+        const enabled = !!model;
+        if (this.enabled === enabled) {
+            return;
+        }
+        this.enabled = enabled;
         this._onDidChangeEnablement.fire(this.enabled);
+    }
+    get model() {
+        return this._model;
     }
     async getGitPath() {
         if (!this._model) {

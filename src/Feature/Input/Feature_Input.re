@@ -4,6 +4,67 @@ open Oni_Core;
 open Utility;
 module Log = (val Log.withNamespace("Oni2.Feature.Input"));
 
+// CONFIGURATION
+module Configuration = {
+  open Oni_Core;
+  open Config.Schema;
+
+  module CustomDecoders = {
+    let physicalKey =
+      custom(
+        ~decode=
+          Json.Decode.(
+            string
+            |> and_then(keyString =>
+                 if (keyString == "(none)") {
+                   succeed(None);
+                 } else {
+                   switch (
+                     EditorInput.KeyPress.parse(
+                       ~getKeycode,
+                       ~getScancode,
+                       keyString,
+                     )
+                   ) {
+                   | Ok([]) =>
+                     fail("Unable to parse key sequence: " ++ keyString)
+                   | Ok([key]) =>
+                     switch (EditorInput.KeyPress.toPhysicalKey(key)) {
+                     | None => fail("Not a physical key: " ++ keyString)
+                     | Some(physicalKey) => succeed(Some(physicalKey))
+                     }
+                   | Ok(_keys) =>
+                     fail(
+                       "Unable to parse key sequence - too many keys: "
+                       ++ keyString,
+                     )
+                   | Error(msg) =>
+                     fail("Unable to parse key sequence: " ++ msg)
+                   };
+                 }
+               )
+          ),
+        ~encode=
+          Json.Encode.(
+            maybeKey => {
+              switch (maybeKey) {
+              | Some(key) =>
+                EditorInput.KeyPress.toString(
+                  ~keyCodeToString=Sdl2.Keycode.getName,
+                  EditorInput.KeyPress.PhysicalKey(key),
+                )
+                |> string
+              | None => "(none)" |> string
+              };
+            }
+          ),
+      );
+  };
+
+  let leaderKey =
+    setting("vim.leader", CustomDecoders.physicalKey, ~default=None);
+};
+
 // MSG
 
 type outmsg =
@@ -73,6 +134,8 @@ type model = {
   inputStateMachine: InputStateMachine.t,
 };
 
+type uniqueId = InputStateMachine.uniqueId;
+
 let initial = keybindings => {
   open Schema;
   let inputStateMachine =
@@ -107,9 +170,10 @@ type effect =
     | Unhandled(EditorInput.KeyPress.t)
     | RemapRecursionLimitHit;
 
-let keyDown = (~key, ~context, {inputStateMachine, _} as model) => {
+let keyDown = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
+  let leaderKey = Configuration.leaderKey.get(config);
   let (inputStateMachine', effects) =
-    InputStateMachine.keyDown(~key, ~context, inputStateMachine);
+    InputStateMachine.keyDown(~leaderKey, ~key, ~context, inputStateMachine);
   ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
@@ -119,10 +183,29 @@ let text = (~text, {inputStateMachine, _} as model) => {
   ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
-let keyUp = (~key, ~context, {inputStateMachine, _} as model) => {
+let keyUp = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
+  let leaderKey = Configuration.leaderKey.get(config);
   let (inputStateMachine', effects) =
-    InputStateMachine.keyUp(~key, ~context, inputStateMachine);
+    InputStateMachine.keyUp(~leaderKey, ~key, ~context, inputStateMachine);
   ({...model, inputStateMachine: inputStateMachine'}, effects);
+};
+
+let addKeyBinding = (~binding, {inputStateMachine, _} as model) => {
+  open Schema;
+  let (inputStateMachine', uniqueId) =
+    InputStateMachine.addBinding(
+      binding.matcher,
+      binding.condition,
+      binding.command,
+      inputStateMachine,
+    );
+  ({...model, inputStateMachine: inputStateMachine'}, uniqueId);
+};
+
+let remove = (uniqueId, {inputStateMachine, _} as model) => {
+  let inputStateMachine' =
+    InputStateMachine.remove(uniqueId, inputStateMachine);
+  {...model, inputStateMachine: inputStateMachine'};
 };
 
 // UPDATE
@@ -253,4 +336,5 @@ module Commands = {
 
 module Contributions = {
   let commands = Commands.[showInputState];
+  let configuration = Configuration.[leaderKey.spec];
 };

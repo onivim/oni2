@@ -223,3 +223,31 @@ Examples:
   {"key": "kk", "command": ":split", "when": "editorTextFocus"},
   {"key": "<C-D>", "command": ":d 2", "when": "insertMode"}
 ```
+
+### Leader Key
+
+A leader key can be specified via the following configuration setting:
+
+```
+{ "vim.leader": "<space>" }
+```
+> NOTE: This setting is in `configuration.json`, not `keybindings.json`
+
+Alternatively, the leader key can be specified via an `Ex` command:
+```
+:nmap <space> <Leader>
+```
+
+Once the leader key is defined, it may be used in both `keybindings.json` and via VimL map commands:
+
+```
+[
+  { "key": "<Leader>p", "command": "workbench.action.quickOpen", "when": "editorTextFocus && normalMode" }
+]
+```
+
+or, alternatively, in VimL:
+
+```
+:nnoremap <Leader>p <C-S-P>
+```

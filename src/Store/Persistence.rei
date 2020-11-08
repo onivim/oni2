@@ -4,6 +4,7 @@ open Oni_Core.Persistence;
 module Global: {
   let version: unit => string;
   let workspace: unit => option(string);
+  let licenseKey: unit => option(string);
 
   let extensionValues: unit => Feature_Extensions.Persistence.t;
 

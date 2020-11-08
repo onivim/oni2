@@ -34,7 +34,7 @@ module Provider = {
     acceptInputCommand: option(command),
     inputVisible: bool,
     validationEnabled: bool,
-    statusBarCommands: list(Exthost.Command.t),
+    statusBarCommands: list(command),
   };
 
   let initial = (~handle, ~id, ~label, ~rootUri) => {
@@ -298,11 +298,10 @@ type msg =
       rootUri: option(Uri.t),
     })
   | LostProvider({handle: int})
-  | NewResourceGroup({
+  | NewResourceGroups({
       provider: int,
-      handle: int,
-      id: string,
-      label: string,
+      groups: list(Exthost.SCM.Group.t),
+      splices: [@opaque] list(Exthost.SCM.Resource.Splices.t),
     })
   | GroupHideWhenEmptyChanged({
       provider: int,
@@ -318,12 +317,9 @@ type msg =
       provider: int,
       handle: int,
     })
-  | ResourceStatesChanged({
-      provider: int,
-      group: int,
-      spliceStart: int,
-      deleteCount: int,
-      additions: list(Resource.t),
+  | SpliceResourceStates({
+      handle: int,
+      splices: [@opaque] list(Exthost.SCM.Resource.Splices.t),
     })
   | CountChanged({
       handle: int,
@@ -335,7 +331,7 @@ type msg =
     })
   | StatusBarCommandsChanged({
       handle: int,
-      statusBarCommands: list(Exthost.Command.t),
+      statusBarCommands: list(Exthost.SCM.command),
     })
   | CommitTemplateChanged({
       handle: int,
@@ -570,26 +566,73 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       Nothing,
     )
 
-  | NewResourceGroup({provider, handle, id, label}) => (
-      model
-      |> Internal.updateProvider(~handle=provider, p =>
-           {
-             ...p,
-             resourceGroups: [
-               ResourceGroup.{
-                 handle,
-                 id,
-                 label,
-                 hideWhenEmpty: false,
-                 resources: [],
-                 viewModel: Component_VimList.create(~rowHeight=20),
-               },
-               ...p.resourceGroups,
-             ],
-           }
-         ),
-      Nothing,
-    )
+  | NewResourceGroups({provider, groups, splices}) =>
+    let model' =
+      groups
+      |> List.fold_left(
+           (acc, group: Exthost.SCM.Group.t) => {
+             acc
+             |> Internal.updateProvider(~handle=provider, p =>
+                  {
+                    ...p,
+                    resourceGroups: [
+                      ResourceGroup.{
+                        handle: group.handle,
+                        id: group.id,
+                        label: group.label,
+                        hideWhenEmpty:
+                          Exthost.SCM.GroupFeatures.(
+                            group.features.hideWhenEmpty
+                          ),
+                        resources: [],
+                        viewModel: Component_VimList.create(~rowHeight=20),
+                      },
+                      ...p.resourceGroups,
+                    ],
+                  }
+                )
+           },
+           model,
+         );
+
+    let model'' =
+      splices
+      |> List.fold_left(
+           (acc, {handle: group, resourceSplices}: Resource.Splices.t) => {
+             resourceSplices
+             |> List.fold_left(
+                  (
+                    innerAcc,
+                    {start, deleteCount, resources}: Resource.Splice.t,
+                  ) => {
+                    innerAcc
+                    |> Internal.updateResourceGroup(
+                         ~provider,
+                         ~group,
+                         g => {
+                           let resources =
+                             ListEx.splice(
+                               ~start,
+                               ~deleteCount,
+                               ~additions=resources,
+                               g.resources,
+                             );
+
+                           let viewModel =
+                             Component_VimList.set(
+                               resources |> Array.of_list,
+                               g.viewModel,
+                             );
+                           {...g, resources, viewModel};
+                         },
+                       )
+                  },
+                  acc,
+                )
+           },
+           model',
+         );
+    (model'', Nothing);
 
   | LostResourceGroup({provider, handle}) => (
       model
@@ -622,33 +665,47 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       Nothing,
     )
 
-  | ResourceStatesChanged({
-      provider,
-      group,
-      spliceStart,
-      deleteCount,
-      additions,
-    }) => (
-      model
-      |> Internal.updateResourceGroup(
-           ~provider,
-           ~group,
-           g => {
-             let resources =
-               ListEx.splice(
-                 ~start=spliceStart,
-                 ~deleteCount,
-                 ~additions,
-                 g.resources,
-               );
+  | SpliceResourceStates({handle, splices}) =>
+    let provider = handle;
+    open Exthost.SCM;
+    let model' =
+      splices
+      |> List.fold_left(
+           (acc, {handle: group, resourceSplices}: Resource.Splices.t) => {
+             resourceSplices
+             |> List.fold_left(
+                  (
+                    innerAcc,
+                    {start, deleteCount, resources}: Resource.Splice.t,
+                  ) => {
+                    innerAcc
+                    |> Internal.updateResourceGroup(
+                         ~provider,
+                         ~group,
+                         g => {
+                           let resources =
+                             ListEx.splice(
+                               ~start,
+                               ~deleteCount,
+                               ~additions=resources,
+                               g.resources,
+                             );
 
-             let viewModel =
-               Component_VimList.set(resources |> Array.of_list, g.viewModel);
-             {...g, resources, viewModel};
+                           let viewModel =
+                             Component_VimList.set(
+                               resources |> Array.of_list,
+                               g.viewModel,
+                             );
+                           {...g, resources, viewModel};
+                         },
+                       )
+                  },
+                  acc,
+                )
            },
-         ),
-      Nothing,
-    )
+           model,
+         );
+    (model', Nothing);
 
   | KeyPressed({key: "<CR>"}) => (
       model,
@@ -785,8 +842,8 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
   | UnregisterSourceControl({handle}) =>
     dispatch(LostProvider({handle: handle}))
 
-  | RegisterSCMResourceGroup({provider, handle, id, label}) =>
-    dispatch(NewResourceGroup({provider, handle, id, label}))
+  | RegisterSCMResourceGroups({provider, groups, splices}) =>
+    dispatch(NewResourceGroups({provider, groups, splices}))
 
   | UnregisterSCMResourceGroup({provider, handle}) =>
     dispatch(LostResourceGroup({provider, handle}))
@@ -806,26 +863,8 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
     dispatch(GroupLabelChanged({provider, handle, label}))
 
   | SpliceSCMResourceStates({handle, splices}) =>
-    open Exthost.SCM;
+    dispatch(SpliceResourceStates({handle, splices}))
 
-    let provider = handle;
-    splices
-    |> List.iter(({handle as group, resourceSplices}: Resource.Splices.t) => {
-         ignore(handle);
-
-         resourceSplices
-         |> List.iter(({start, deleteCount, resources}: Resource.Splice.t) => {
-              dispatch(
-                ResourceStatesChanged({
-                  provider,
-                  group,
-                  spliceStart: start,
-                  deleteCount,
-                  additions: resources,
-                }),
-              )
-            });
-       });
   | UpdateSourceControl({handle, features}) =>
     let {
       hasQuickDiffProvider,
@@ -847,7 +886,12 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       acceptInputCommand,
     );
 
-    dispatch(StatusBarCommandsChanged({handle, statusBarCommands}));
+    Option.iter(
+      statusBarCommands => {
+        dispatch(StatusBarCommandsChanged({handle, statusBarCommands}))
+      },
+      statusBarCommands,
+    );
 
   | SetInputBoxPlaceholder(_) =>
     // TODO: Set up replacement for '{0}'

@@ -150,6 +150,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
   };
 
   let titleDispatch = msg => dispatch(Actions.TitleBar(msg));
+  let registrationDispatch = msg => dispatch(Actions.Registration(msg));
 
   let mapDisplayMode =
     fun
@@ -175,12 +176,14 @@ let make = (~dispatch, ~state: State.t, ()) => {
       activeBuffer=maybeActiveBuffer
       workspaceRoot={state.workspace.rootName}
       workspaceDirectory={state.workspace.workingDirectory}
+      registration={state.registration}
       config
       isFocused={state.windowIsFocused}
       windowDisplayMode={state.windowDisplayMode |> mapDisplayMode}
       font={state.uiFont}
       theme
       dispatch=titleDispatch
+      registrationDispatch
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
@@ -215,6 +218,12 @@ let make = (~dispatch, ~state: State.t, ()) => {
         registers={state.registers}
         font
         dispatch={msg => dispatch(Actions.Registers(msg))}
+      />
+      <Feature_Registration.View.Modal
+        theme
+        registration={state.registration}
+        font
+        dispatch={msg => dispatch(Actions.Registration(msg))}
       />
     </Overlay>
     <statusBar />
