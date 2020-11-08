@@ -501,7 +501,6 @@ module SCM: {
     };
 
     module Splices: {
-      [@deriving show({with_path: false})]
       type t = {
         handle: int,
         resourceSplices: [@opaque] list(Splice.t),
@@ -517,7 +516,7 @@ module SCM: {
       count: option(int),
       commitTemplate: option(string),
       acceptInputCommand: option(command),
-      statusBarCommands: list(Command.t),
+      statusBarCommands: option(list(command)),
     };
 
     let decode: Json.decoder(t);
@@ -526,6 +525,18 @@ module SCM: {
   module GroupFeatures: {
     [@deriving show({with_path: false})]
     type t = {hideWhenEmpty: bool};
+
+    let decode: Json.decoder(t);
+  };
+
+  module Group: {
+    [@deriving show({with_path: false})]
+    type t = {
+      handle: int,
+      id: string,
+      label: string,
+      features: GroupFeatures.t,
+    };
 
     let decode: Json.decoder(t);
   };
@@ -1407,12 +1418,10 @@ module Msg: {
           handle: int,
           features: SCM.ProviderFeatures.t,
         })
-      // statusBarCommands: option(_),
-      | RegisterSCMResourceGroup({
+      | RegisterSCMResourceGroups({
           provider: int,
-          handle: int,
-          id: string,
-          label: string,
+          groups: list(SCM.Group.t),
+          splices: [@opaque] list(SCM.Resource.Splices.t),
         })
       | UnregisterSCMResourceGroup({
           provider: int,
@@ -1673,7 +1682,6 @@ module Request: {
     };
 
     type decoration = {
-      priority: int,
       bubble: bool,
       title: string,
       letter: string,

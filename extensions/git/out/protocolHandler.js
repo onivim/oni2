@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.GitProtocolHandler = void 0;
 const vscode_1 = require("vscode");
 const util_1 = require("./util");
 const querystring = require("querystring");
