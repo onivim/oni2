@@ -181,8 +181,8 @@ let start =
       | Incoming.Acknowledged({requestId}) =>
         Log.tracef(m => m("Received ack: %d", requestId))
       | _ =>
-        Log.warn(
-          "Unhandled message: " ++ Protocol.Message.Incoming.show(msg),
+        Log.warnf(m =>
+          m("Unhandled message: %s", Protocol.Message.Incoming.show(msg))
         )
       }
     );

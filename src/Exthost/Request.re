@@ -42,7 +42,6 @@ module Decorations = {
   };
 
   type decoration = {
-    priority: int,
     bubble: bool,
     title: string,
     letter: string,
@@ -53,14 +52,13 @@ module Decorations = {
     let decoration =
       Json.Decode.(
         Pipeline.(
-          decode((priority, bubble, title, letter, color) =>
-            {priority, bubble, title, letter, color}
+          decode((bubble, title, letter, color) =>
+            {bubble, title, letter, color}
           )
-          |> custom(index(0, int))
-          |> custom(index(1, bool))
+          |> custom(index(0, bool))
+          |> custom(index(1, string))
           |> custom(index(2, string))
-          |> custom(index(3, string))
-          |> custom(index(4, ThemeColor.decode))
+          |> custom(index(3, ThemeColor.decode))
         )
       );
 
