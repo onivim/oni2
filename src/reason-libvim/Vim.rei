@@ -320,7 +320,8 @@ module Goto: {
   type effect =
     | Definition
     | Declaration
-    | Hover;
+    | Hover
+    | Outline;
 };
 
 module TabPage: {
