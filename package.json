@@ -232,7 +232,7 @@
     "@opam/ppx_optcomp": "v0.14.0",
     "@opam/ppxlib": ">=0.10.0",
     "@opam/re": "*",
-    "@opam/reason": "^3.6.0",
+    "@opam/reason": "3.6.0",
     "@opam/uucp": "*",
     "@opam/uutf": "*",
     "@opam/yojson": "1.7.0",
