@@ -45,6 +45,8 @@ static void notificationHandler(
   const void *object, 
   CFDictionaryRef userInfo
 ) {
+  CAMLparam0();
+  CAMLlocal2(vLayout, vLanguage);
   // Maintain a reference to the callbacks from the OCcaml side
   // We let OCaml manage the list since they have better abstractions than we do
   static const value *callbackListRef = NULL;
@@ -61,8 +63,8 @@ static void notificationHandler(
   NSString *nsLayout = oni2_priv_GetCurrentKeyboardLayout();
   NSString *nsLanguage = oni2_priv_GetCurrentKeyboardLanguage();
 
-  value vLayout = caml_copy_string([nsLayout UTF8String]);
-  value vLanguage = caml_copy_string([nsLanguage UTF8String]);
+  vLayout = caml_copy_string([nsLayout UTF8String]);
+  vLanguage = caml_copy_string([nsLanguage UTF8String]);
   value args[] = {vLanguage, vLayout};
 
   value callbackList = UNWRAP_REF(*callbackListRef);
