@@ -191,6 +191,7 @@ switch (eff) {
     Log.debug("Init");
 
     Vim.init();
+    Oni2_KeyboardLayout.init();
 
     let initialWorkingDirectory = initWorkingDirectory();
     let window =
