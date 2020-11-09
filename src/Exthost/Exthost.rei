@@ -1776,7 +1776,7 @@ module Request: {
 
     let provideDocumentSymbols:
       (~handle: int, ~resource: Uri.t, Client.t) =>
-      Lwt.t(list(DocumentSymbol.t));
+      Lwt.t(option(list(DocumentSymbol.t)));
 
     let provideDefinition:
       (
