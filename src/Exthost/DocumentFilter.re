@@ -3,8 +3,23 @@ open Oni_Core;
 [@deriving show]
 type t = {
   language: option(string),
+  pattern: option(Re.re),
   scheme: option(string),
   exclusive: bool,
+};
+
+module CustomDecoders = {
+  let glob =
+    Json.Decode.(
+      string
+      |> and_then(str =>
+           try(
+             str |> Re.Glob.glob(~expand_braces=true) |> Re.compile |> succeed
+           ) {
+           | exn => fail(Printexc.to_string(exn))
+           }
+         )
+    );
 };
 
 let decode = {
@@ -14,13 +29,27 @@ let decode = {
         language: field.optional("language", string),
         scheme: field.optional("scheme", string),
         exclusive: field.withDefault("exclusive", true, bool),
+        pattern: field.optional("pattern", CustomDecoders.glob),
       }
     )
   );
 };
 
-let matches = (~filetype: string, filter) =>
-  filter.language == Some(filetype);
+let matches = (~filetype: string, ~filepath: string, filter) => {
+  let fileTypeMatches =
+    switch (filter.language) {
+    | None => true
+    | Some(language) => language == filetype
+    };
+
+  let patternMatches =
+    switch (filter.pattern) {
+    | None => true
+    | Some(glob) => Re.matches(glob, filepath) != []
+    };
+
+  fileTypeMatches && patternMatches;
+};
 
 let toString = filter =>
   Printf.sprintf(

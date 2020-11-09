@@ -11,7 +11,7 @@ module Log = (val Log.withNamespace("Oni.Feature.Hover"));
 [@deriving show({with_path: false})]
 type provider = {
   handle: int,
-  selector: list(Exthost.DocumentFilter.t),
+  selector: Exthost.DocumentSelector.t,
 };
 
 type model = {
@@ -67,13 +67,10 @@ type outmsg =
 
 let getEffectsForLocation =
     (~buffer, ~location, ~extHostClient, ~model, ~requestID, ~editorId) => {
-  let filetype =
-    buffer |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
-
   let matchingProviders =
     model.providers
     |> List.filter(({selector, _}) =>
-         Exthost.DocumentSelector.matches(~filetype, selector)
+         Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
        );
 
   matchingProviders
