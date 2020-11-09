@@ -325,7 +325,7 @@ module LanguageFeatures = {
 
   let provideDocumentSymbols = (~handle, ~resource, client) => {
     Client.request(
-      ~decoder=Json.Decode.(list(DocumentSymbol.decode)),
+      ~decoder=Json.Decode.(nullable(list(DocumentSymbol.decode))),
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideDocumentSymbols",

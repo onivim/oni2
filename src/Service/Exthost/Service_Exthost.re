@@ -864,7 +864,9 @@ module Sub = {
             params.client,
           );
 
-        Lwt.on_success(promise, documentSymbols => dispatch(documentSymbols));
+        Lwt.on_success(promise, maybeDocumentSymbols =>
+          maybeDocumentSymbols |> Option.value(~default=[]) |> dispatch
+        );
 
         Lwt.on_failure(promise, _err => dispatch([]));
 
