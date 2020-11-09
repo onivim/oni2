@@ -18,6 +18,7 @@ module Effect = Effect;
 module Event = Event;
 module Format = Format;
 module Goto = Goto;
+module Mapping = Mapping;
 module Operator = Operator;
 module Scroll = Scroll;
 module TabPage = TabPage;
@@ -483,6 +484,14 @@ let _onMacroStopRecording = (register: char, value: option(string)) => {
   });
 };
 
+let _onInputMap = (mapping: Mapping.t) => {
+  queueEffect(Map(mapping));
+};
+
+let _onInputUnmap = (mode: Mapping.mode, keys: option(string)) => {
+  queueEffect(Unmap({mode, keys}));
+};
+
 let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
   let count = endLine - startLine + 1;
   let currentLines =
@@ -526,6 +535,8 @@ let init = () => {
     "lv_onCursorMoveScreenPosition",
     _onCursorMoveScreenPosition,
   );
+  Callback.register("lv_onInputMap", _onInputMap);
+  Callback.register("lv_onInputUnmap", _onInputUnmap);
   Callback.register("lv_onToggleComments", _onToggleComments);
 
   Native.vimInit();

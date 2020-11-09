@@ -68,7 +68,7 @@ let collapse: model('node, 'leaf) => model('node, 'leaf);
 
 module Contributions: {
   let commands: list(Command.t(msg));
-  let keybindings: list(Oni_Input.Keybindings.keybinding);
+  let keybindings: list(Feature_Input.Schema.keybinding);
   let contextKeys: model('node, 'leaf) => WhenExpr.ContextKeys.t;
 };
 

@@ -48,12 +48,11 @@ bindings: [
 |}
   |> Yojson.Safe.from_string;
 
-let getKeyFromSDL: string => EditorInput.KeyPress.t =
-  key => {
-    let scancode = Sdl2.Scancode.ofName(key);
-    let keycode = Sdl2.Keycode.ofName(key);
-    {keycode, scancode, modifiers: EditorInput.Modifiers.none};
-  };
+let getKeyFromSDL = (~modifiers=EditorInput.Modifiers.none, key: string) => {
+  let scancode = Sdl2.Scancode.ofName(key);
+  let keycode = Sdl2.Keycode.ofName(key);
+  EditorInput.KeyPress.physicalKey(~keycode, ~scancode, ~modifiers);
+};
 
 let contextWithEditorTextFocus =
   WhenExpr.ContextKeys.(
@@ -71,7 +70,7 @@ let isOk = v =>
 
 let bindingCount = v =>
   switch (v) {
-  | Ok((bindings, _)) => count(bindings)
+  | Ok((bindings, _)) => List.length(bindings)
   | Error(_) => 0
   };
 
@@ -124,11 +123,22 @@ describe("Keybindings", ({describe, _}) => {
       result
       |> Utility.ResultEx.tapError(err => failwith(err))
       |> Result.iter(((bindings, _)) => {
+           let input =
+             List.fold_left(
+               (acc, binding) => {
+                 let (acc', _uniqueId) =
+                   Feature_Input.addKeyBinding(~binding, acc);
+                 acc';
+               },
+               Feature_Input.initial([]),
+               bindings,
+             );
            let (_bindings, effects) =
-             keyDown(
+             Feature_Input.keyDown(
+               ~config=Oni_Core.Config.emptyResolver,
                ~context=contextWithEditorTextFocus,
                ~key=getKeyFromSDL("F2"),
-               bindings,
+               input,
              );
 
            expect.equal(effects, [Execute("explorer.toggle")]);
@@ -143,9 +153,24 @@ describe("Keybindings", ({describe, _}) => {
       let validateKeyResultsInCommand = ((key, modifiers, cmd)) => {
         result
         |> Result.iter(((bindings, _)) => {
-             let key = {...getKeyFromSDL(key), modifiers};
+             let input =
+               List.fold_left(
+                 (acc, binding) => {
+                   let (acc', _uniqueId) =
+                     Feature_Input.addKeyBinding(~binding, acc);
+                   acc';
+                 },
+                 Feature_Input.initial([]),
+                 bindings,
+               );
+             let key = getKeyFromSDL(~modifiers, key);
              let (_bindings, effects) =
-               keyDown(~context=contextWithEditorTextFocus, ~key, bindings);
+               Feature_Input.keyDown(
+                 ~config=Oni_Core.Config.emptyResolver,
+                 ~context=contextWithEditorTextFocus,
+                 ~key,
+                 input,
+               );
              expect.equal(effects, [Execute(cmd)]);
            });
       };

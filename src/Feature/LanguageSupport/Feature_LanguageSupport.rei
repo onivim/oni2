@@ -31,6 +31,26 @@ module Msg: {
   };
 };
 
+module CodeLens: {
+  type t;
+
+  let get: (~bufferId: int, model) => list(t);
+
+  let lineNumber: t => int;
+  let uniqueId: t => string;
+
+  module View: {
+    let make:
+      (
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~uiFont: UiFont.t,
+        ~codeLens: t,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
+
 type outmsg =
   | Nothing
   | ApplyCompletion({
@@ -48,7 +68,11 @@ type outmsg =
   | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | CodeLensesChanged({
+      bufferId: int,
+      lenses: list(CodeLens.t),
+    });
 
 let update:
   (
@@ -94,26 +118,6 @@ let sub:
     model
   ) =>
   Isolinear.Sub.t(msg);
-
-module CodeLens: {
-  type t;
-
-  let get: (~bufferId: int, model) => list(t);
-
-  let lineNumber: t => int;
-  let uniqueId: t => string;
-
-  module View: {
-    let make:
-      (
-        ~theme: Oni_Core.ColorTheme.Colors.t,
-        ~uiFont: UiFont.t,
-        ~codeLens: t,
-        unit
-      ) =>
-      Revery.UI.element;
-  };
-};
 
 module Completion: {
   let isActive: model => bool;
@@ -177,7 +181,7 @@ module Contributions: {
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
   let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
-  let keybindings: list(Oni_Input.Keybindings.keybinding);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };
 
 module Definition: {

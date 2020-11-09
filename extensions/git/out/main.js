@@ -4,13 +4,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.activate = exports._activate = exports.deactivate = void 0;
 const nls = require("vscode-nls");
 const localize = nls.loadMessageBundle();
 const vscode_1 = require("vscode");
 const git_1 = require("./git");
 const model_1 = require("./model");
 const commands_1 = require("./commands");
-const contentProvider_1 = require("./contentProvider");
+const fileSystemProvider_1 = require("./fileSystemProvider");
 const decorationProvider_1 = require("./decorationProvider");
 const askpass_1 = require("./askpass");
 const util_1 = require("./util");
@@ -19,6 +20,9 @@ const protocolHandler_1 = require("./protocolHandler");
 const extension_1 = require("./api/extension");
 const path = require("path");
 const fs = require("fs");
+const timelineProvider_1 = require("./timelineProvider");
+const api1_1 = require("./api/api1");
+const terminal_1 = require("./terminal");
 const deactivateTasks = [];
 async function deactivate() {
     for (const task of deactivateTasks) {
@@ -29,11 +33,13 @@ exports.deactivate = deactivate;
 async function createModel(context, outputChannel, telemetryReporter, disposables) {
     const pathHint = vscode_1.workspace.getConfiguration('git').get('path');
     const info = await git_1.findGit(pathHint, path => outputChannel.appendLine(localize('looking', "Looking for git in: {0}", path)));
-    const askpass = new askpass_1.Askpass();
+    const askpass = await askpass_1.Askpass.create(outputChannel, context.storagePath);
     disposables.push(askpass);
-    const env = await askpass.getEnv();
+    const env = askpass.getEnv();
+    const terminalEnvironmentManager = new terminal_1.TerminalEnvironmentManager(context, env);
+    disposables.push(terminalEnvironmentManager);
     const git = new git_1.Git({ gitPath: info.path, version: info.version, env });
-    const model = new model_1.Model(git, context.globalState, outputChannel);
+    const model = new model_1.Model(git, askpass, context.globalState, outputChannel);
     disposables.push(model);
     const onRepository = () => vscode_1.commands.executeCommand('setContext', 'gitOpenRepositoryCount', `${model.repositories.length}`);
     model.onDidOpenRepository(onRepository, null, disposables);
@@ -49,8 +55,8 @@ async function createModel(context, outputChannel, telemetryReporter, disposable
     };
     git.onOutput.addListener('log', onOutput);
     disposables.push(util_1.toDisposable(() => git.onOutput.removeListener('log', onOutput)));
-    disposables.push(new commands_1.CommandCenter(git, model, outputChannel, telemetryReporter), new contentProvider_1.GitContentProvider(model), new decorationProvider_1.GitDecorations(model), new protocolHandler_1.GitProtocolHandler());
-    await checkGitVersion(info);
+    disposables.push(new commands_1.CommandCenter(git, model, outputChannel, telemetryReporter), new fileSystemProvider_1.GitFileSystemProvider(model), new decorationProvider_1.GitDecorations(model), new protocolHandler_1.GitProtocolHandler(), new timelineProvider_1.GitTimelineProvider(model));
+    checkGitVersion(info);
     return model;
 }
 async function isGitRepository(folder) {
@@ -89,7 +95,7 @@ async function warnAboutMissingGit() {
         await config.update('ignoreMissingGitWarning', true, true);
     }
 }
-async function activate(context) {
+async function _activate(context) {
     const disposables = [];
     context.subscriptions.push(new vscode_1.Disposable(() => vscode_1.Disposable.from(...disposables).dispose()));
     const outputChannel = vscode_1.window.createOutputChannel('Git');
@@ -117,12 +123,19 @@ async function activate(context) {
         }
         console.warn(err.message);
         outputChannel.appendLine(err.message);
+        vscode_1.commands.executeCommand('setContext', 'git.missing', true);
         warnAboutMissingGit();
         return new extension_1.GitExtensionImpl();
     }
 }
+exports._activate = _activate;
+async function activate(context) {
+    const result = await _activate(context);
+    context.subscriptions.push(api1_1.registerAPICommands(result));
+    return result;
+}
 exports.activate = activate;
-async function checkGitVersion(info) {
+async function checkGitv1(info) {
     const config = vscode_1.workspace.getConfiguration('git');
     const shouldIgnore = config.get('ignoreLegacyWarning') === true;
     if (shouldIgnore) {
@@ -139,6 +152,31 @@ async function checkGitVersion(info) {
     }
     else if (choice === neverShowAgain) {
         await config.update('ignoreLegacyWarning', true, true);
+    }
+}
+async function checkGitWindows(info) {
+    if (!/^2\.(25|26)\./.test(info.version)) {
+        return;
+    }
+    const config = vscode_1.workspace.getConfiguration('git');
+    const shouldIgnore = config.get('ignoreWindowsGit27Warning') === true;
+    if (shouldIgnore) {
+        return;
+    }
+    const update = localize('updateGit', "Update Git");
+    const neverShowAgain = localize('neverShowAgain', "Don't Show Again");
+    const choice = await vscode_1.window.showWarningMessage(localize('git2526', "There are known issues with the installed Git {0}. Please update to Git >= 2.27 for the git features to work correctly.", info.version), update, neverShowAgain);
+    if (choice === update) {
+        vscode_1.commands.executeCommand('vscode.open', vscode_1.Uri.parse('https://git-scm.com/'));
+    }
+    else if (choice === neverShowAgain) {
+        await config.update('ignoreWindowsGit27Warning', true, true);
+    }
+}
+async function checkGitVersion(info) {
+    await checkGitv1(info);
+    if (process.platform === 'win32') {
+        await checkGitWindows(info);
     }
 }
 //# sourceMappingURL=main.js.map

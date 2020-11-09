@@ -12,6 +12,7 @@ type focusable =
   | Sneak
   | Modal
   | InsertRegister
+  | LicenseKey
   | LanguageSupport
   | Terminal(int);
 

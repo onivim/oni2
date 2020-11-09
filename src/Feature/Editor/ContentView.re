@@ -98,7 +98,6 @@ let renderLine =
 let renderEmbellishments =
     (
       ~context,
-      ~count,
       ~buffer,
       ~colors,
       ~diagnosticsMap,
@@ -109,7 +108,6 @@ let renderEmbellishments =
     ) =>
   Draw.renderImmediate(
     ~context,
-    ~count,
     renderLine(
       ~context,
       ~buffer,
@@ -190,7 +188,6 @@ let renderTokens =
 let renderText =
     (
       ~context,
-      ~count,
       ~selectionRanges,
       ~editor,
       ~bufferHighlights,
@@ -202,7 +199,6 @@ let renderText =
     ) =>
   Draw.renderImmediate(
     ~context,
-    ~count,
     (item, offsetY) => {
       let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
       let selectionRange =
@@ -242,7 +238,6 @@ let renderText =
 let render =
     (
       ~context,
-      ~count,
       ~buffer,
       ~editor,
       ~colors,
@@ -258,7 +253,6 @@ let render =
     ) => {
   renderEmbellishments(
     ~context,
-    ~count,
     ~buffer,
     ~colors,
     ~diagnosticsMap,
@@ -287,7 +281,6 @@ let render =
 
   renderText(
     ~context,
-    ~count,
     ~selectionRanges,
     ~editor,
     ~bufferHighlights,

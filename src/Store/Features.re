@@ -337,6 +337,16 @@ let update =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
       | DebugInputShown => Internal.openFileEffect("oni://DebugInput")
+      | MapParseError({fromKeys, toKeys, error}) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          Printf.sprintf(
+            "Error mapping %s to %s: %s",
+            fromKeys,
+            toKeys,
+            error,
+          ),
+        )
       };
 
     ({...state, input: model}, eff);
@@ -434,6 +444,37 @@ let update =
           state,
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
         )
+      | CodeLensesChanged({bufferId, lenses}) =>
+        let inlineElements =
+          lenses
+          |> List.map(lens => {
+               let lineNumber =
+                 Feature_LanguageSupport.CodeLens.lineNumber(lens);
+               let uniqueId = Feature_LanguageSupport.CodeLens.uniqueId(lens);
+               let view =
+                 Feature_LanguageSupport.CodeLens.View.make(~codeLens=lens);
+               Feature_Editor.Editor.makeInlineElement(
+                 ~key="codelens",
+                 ~uniqueId,
+                 ~lineNumber=
+                   EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+                 ~view,
+               );
+             });
+        let layout' =
+          state.layout
+          |> Feature_Layout.map(editor =>
+               if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
+                 Feature_Editor.Editor.setInlineElements(
+                   ~key="codelens",
+                   ~elements=inlineElements,
+                   editor,
+                 );
+               } else {
+                 editor;
+               }
+             );
+        ({...state, layout: layout'}, Isolinear.Effect.none);
       }
     );
 
@@ -530,6 +571,23 @@ let update =
       | Nothing => Isolinear.Effect.none
       };
     (state, eff);
+
+  | Registration(msg) =>
+    let (state', outmsg) =
+      Feature_Registration.update(state.registration, msg);
+
+    let effect =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Registration(msg))
+      | LicenseKeyChanged(licenseKey) =>
+        Service_AutoUpdate.Effect.updateLicenseKey(~licenseKey)
+        |> Isolinear.Effect.map(msg =>
+             Actions.AutoUpdate(Feature_AutoUpdate.Service(msg))
+           )
+      };
+    ({...state, registration: state'}, effect);
 
   | Search(msg) =>
     let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
@@ -1469,7 +1527,10 @@ let update =
     );
 
   | AutoUpdate(msg) =>
-    let (state', outmsg) = Feature_AutoUpdate.update(state.autoUpdate, msg);
+    let getLicenseKey = () =>
+      Feature_Registration.getLicenseKey(state.registration);
+    let (state', outmsg) =
+      Feature_AutoUpdate.update(~getLicenseKey, state.autoUpdate, msg);
 
     let eff =
       (

@@ -21,7 +21,8 @@ let reduce: (State.t, Actions.t) => State.t =
       switch (a) {
       // Turn off zenMode with :vsp/:sp
       | OpenFileByPath(_, Some(_), _) => {...s, zenMode: false}
-      | KeyBindingsSet(keyBindings) => {...s, keyBindings}
+      // TODO:
+      // | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetGrammarRepository(grammarRepository) => {...s, grammarRepository}
       | SetIconTheme(iconTheme) => {...s, iconTheme}

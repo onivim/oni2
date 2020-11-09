@@ -1,20 +1,11 @@
 open Oni_Core;
 
-module Constants = {
-  let baseUrl = "https://v2.onivim.io/appcast";
-};
-
 type model = {
   automaticallyChecksForUpdates: bool,
-  licenseKey: string,
   releaseChannel: [ | `Nightly | `Master | `Test],
 };
 
-let initial = {
-  automaticallyChecksForUpdates: true,
-  licenseKey: "",
-  releaseChannel: `Master,
-};
+let initial = {automaticallyChecksForUpdates: true, releaseChannel: `Master};
 
 [@deriving show({with_path: false})]
 type command =
@@ -22,7 +13,7 @@ type command =
 
 [@deriving show({with_path: false})]
 type msg =
-  | Subscription(Service_AutoUpdate.msg)
+  | Service(Service_AutoUpdate.msg)
   | Command(command);
 
 type outmsg =
@@ -43,21 +34,11 @@ let platformStr =
   | _ => ""
   };
 
-let urlOfState = state =>
-  Constants.baseUrl
-  ++ "?channel="
-  ++ releaseChannelToString(state.releaseChannel)
-  ++ "&licenseKey="
-  ++ state.licenseKey
-  ++ "&platform="
-  ++ platformStr;
-
 module Configuration = {
   open Config.Schema;
 
   let automaticallyChecksForUpdates =
     setting("oni.app.automaticallyChecksForUpdates", bool, ~default=true);
-  let licenseKey = setting("oni.app.licenseKey", string, ~default="");
 
   let releaseChannelCodec =
     custom(
@@ -105,7 +86,6 @@ module Commands = {
 module Contributions = {
   let configuration = [
     Configuration.automaticallyChecksForUpdates.spec,
-    Configuration.licenseKey.spec,
     Configuration.releaseChannel.spec,
   ];
 
@@ -115,21 +95,19 @@ module Contributions = {
 let sub = (~config) => {
   let automaticallyChecksForUpdates =
     Configuration.automaticallyChecksForUpdates.get(config);
-  let licenseKey = Configuration.licenseKey.get(config);
   let releaseChannel = Configuration.releaseChannel.get(config);
 
   Service_AutoUpdate.Sub.autoUpdate(
     ~uniqueId="autoUpdate",
-    ~licenseKey,
     ~releaseChannel,
     ~automaticallyChecksForUpdates,
   )
-  |> Isolinear.Sub.map(msg => Subscription(msg));
+  |> Isolinear.Sub.map(msg => Service(msg));
 };
 
-let update = (model, msg) =>
+let update = (~getLicenseKey, model, msg) =>
   switch (msg) {
-  | Subscription(AutoCheckChanged(automaticallyChecksForUpdates)) => (
+  | Service(AutoCheckChanged(automaticallyChecksForUpdates)) => (
       {...model, automaticallyChecksForUpdates},
       Effect(
         Service_AutoUpdate.Effect.setAutomaticallyChecksForUpdates(
@@ -138,28 +116,30 @@ let update = (model, msg) =>
         ),
       ),
     )
-  | Subscription(LicenseKeyChanged(licenseKey)) =>
-    let newModel = {...model, licenseKey};
-    (
-      newModel,
-      Effect(
-        Service_AutoUpdate.Effect.setFeedUrl(
-          ~updater=Oni2_Sparkle.Updater.getInstance(),
-          ~url=urlOfState(newModel),
-        ),
-      ),
-    );
-  | Subscription(ReleaseChannelChanged(releaseChannel)) =>
+  | Service(ReleaseChannelChanged(releaseChannel)) =>
     let newModel = {...model, releaseChannel};
     (
       newModel,
       Effect(
-        Service_AutoUpdate.Effect.setFeedUrl(
+        Service_AutoUpdate.Effect.setFeed(
           ~updater=Oni2_Sparkle.Updater.getInstance(),
-          ~url=urlOfState(newModel),
+          ~licenseKey=getLicenseKey(),
+          ~releaseChannel=releaseChannelToString(newModel.releaseChannel),
+          ~platform=platformStr,
         ),
       ),
     );
+  | Service(LicenseKeyChanged(licenseKey)) => (
+      model,
+      Effect(
+        Service_AutoUpdate.Effect.setFeed(
+          ~updater=Oni2_Sparkle.Updater.getInstance(),
+          ~licenseKey,
+          ~releaseChannel=releaseChannelToString(model.releaseChannel),
+          ~platform=platformStr,
+        ),
+      ),
+    )
   | Command(CheckForUpdates) => (
       model,
       Effect(
