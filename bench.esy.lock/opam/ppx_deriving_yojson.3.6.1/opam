@@ -4,7 +4,7 @@ authors: [ "whitequark <whitequark@whitequark.org>" ]
 license: "MIT"
 homepage: "https://github.com/ocaml-ppx/ppx_deriving_yojson"
 bug-reports: "https://github.com/ocaml-ppx/ppx_deriving_yojson/issues"
-dev-repo: "git://github.com/ocaml-ppx/ppx_deriving_yojson.git"
+dev-repo: "git+https://github.com/ocaml-ppx/ppx_deriving_yojson.git"
 tags: [ "syntax" "json" ]
 build: [
   ["dune" "subst"] {dev}
@@ -12,14 +12,12 @@ build: [
   ["dune" "runtest" "-p" name "-j" jobs] {with-test}
 ]
 depends: [
-  "ocaml" {>= "4.04.0"}
+  "ocaml" {>= "4.05.0"}
+  "dune" {>= "1.0"}
   "yojson" {>= "1.6.0" & < "2.0.0"}
   "result"
-  "ppx_deriving" {>= "4.5" & < "5.0"}
-  "ppx_tools"
-  "ppxfind" {build}
-  "dune" {>= "1.0"}
-  "cppo" {build}
+  "ppx_deriving" {>= "5.1"}
+  "ppxlib" {>= "0.14.0"}
   "ounit" {with-test & >= "2.0.0"}
 ]
 synopsis:
@@ -30,9 +28,10 @@ a JSON codec generator.
 """
 url {
   src:
-    "https://github.com/ocaml-ppx/ppx_deriving_yojson/archive/v3.5.3.tar.gz"
+    "https://github.com/ocaml-ppx/ppx_deriving_yojson/releases/download/v3.6.1/ppx_deriving_yojson-v3.6.1.tbz"
   checksum: [
-    "md5=e5185e4ac9d149a332566139df55d408"
-    "sha512=550fe8c400fa57f3f33f4cec509df061db0d62353e0d05ffb64e02aaef74324369840297507553d9b8a8cba81f980c210d23177bf184dbe58b952a7df4aa2176"
+    "sha256=712ee9207c70dd144e72cd689bee2d2beb120b804e77c74ec6f7b843a88944e6"
+    "sha512=d8c828902b8441f73e08fc03e2173ce81a09cccfe091471fbcffe098b2272739b98a05e8308016da3efeb3d4d1abd7d941bfaac42c85961ea40915ddce526577"
   ]
 }
+x-commit-hash: "d0abe462de8bab52d763eeafd751e8ea1ba211ac"
