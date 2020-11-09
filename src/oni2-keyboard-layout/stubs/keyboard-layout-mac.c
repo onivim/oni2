@@ -9,8 +9,17 @@
 #include <caml/mlvalues.h>
 #include <caml/threads.h>
 
+typedef struct KeycodeMapEntry {
+  uint16_t virtualKeyCode;
+  const char *dom3Code;
+} KeycodeMapEntry;
+
+#define USB_KEYMAP_DECLARATION static const KeycodeMapEntry keyCodeMap[] =
+#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {mac, code}
 
 #define UNWRAP_REF(ref) (Field(ref, 0))
+
+#include "keycode_converter_data.h"
 
 NSString *oni2_priv_GetCurrentKeyboardLayout() {
   TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
@@ -81,6 +90,24 @@ CAMLprim value oni2_KeyboardLayoutInit() {
   );
 
   CAMLreturn(Val_unit);
+}
+
+CAMLprim value oni2_KeyboardLayoutGetCurrentLayout() {
+  CAMLparam0();
+  CAMLlocal1(vLayout);
+
+  vLayout = caml_copy_string([oni2_priv_GetCurrentKeyboardLayout() UTF8String]);
+
+  CAMLreturn(vLayout);
+}
+
+CAMLprim value oni2_KeyboardLayoutGetCurrentLanguage() {
+  CAMLparam0();
+  CAMLlocal1(vLanguage);
+
+  vLanguage = caml_copy_string([oni2_priv_GetCurrentKeyboardLanguage() UTF8String]);
+
+  CAMLreturn(vLanguage);
 }
 
 

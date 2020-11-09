@@ -6,9 +6,15 @@ let wrapCallback = (callback, language, layout) =>
   callback(~language, ~layout);
 
 let callbackListRef: ref(list(callbackPriv)) = ref([]);
-Callback.register("oni2_KeyboardLayoutCallbackListRef", callbackListRef);
 
 let subscribe = (callback: callback) =>
   callbackListRef := [wrapCallback(callback), ...callbackListRef^];
 
 external init: unit => unit = "oni2_KeyboardLayoutInit";
+
+external getCurrentLayout: unit => string =
+  "oni2_KeyboardLayoutGetCurrentLayout";
+external getCurrentLanguage: unit => string =
+  "oni2_KeyboardLayoutGetCurrentLanguage";
+
+Callback.register("oni2_KeyboardLayoutCallbackListRef", callbackListRef);
