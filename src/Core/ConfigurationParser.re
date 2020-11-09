@@ -132,9 +132,9 @@ let parseFontLigatures = json =>
 
     let isAlphaNumeric = (
       fun
-      | 'a'..'z'
-      | 'A'..'Z'
-      | '0'..'9' => true
+      | 'a' .. 'z'
+      | 'A' .. 'Z'
+      | '0' .. '9' => true
       | _ => false
     );
 
