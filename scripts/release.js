@@ -27,6 +27,14 @@ const extensionsSourceDirectory = path.join(process.cwd(), "extensions")
 const eulaFile = path.join(process.cwd(), "Outrun-Labs-EULA-v1.1.md")
 const thirdPartyFile = path.join(process.cwd(), "ThirdPartyLicenses.txt")
 const sparkleFramework = path.join(rootDirectory, "vendor", "Sparkle-1.23.0", "Sparkle.framework")
+const winSparkleDLL = path.join(
+    rootDirectory,
+    "vendor",
+    "WinSparkle-0.7.0",
+    "x64",
+    "Release",
+    "WinSparkle.dll",
+)
 
 const copy = (source, dest) => {
     console.log(`Copying from ${source} to ${dest}`)
@@ -43,6 +51,16 @@ const shell = (cmd) => {
     const out = cp.execSync(cmd)
     console.log(`[shell - output]: ${out.toString("utf8")}`)
     return out.toString("utf8")
+}
+
+const winShell = (cmd) => {
+    let oldEnv = process.env
+    process.env = {
+        PATH: process.env.PATH,
+    }
+    const res = shell(cmd)
+    process.env = oldEnv
+    return res
 }
 
 const getRipgrepPath = () => {
@@ -123,14 +141,14 @@ if (process.platform == "linux") {
 
     const numCommits = shell("git rev-list --count origin/master").replace(/(\r\n|\n|\r)/gm, "")
     const semvers = package.version.split(".")
-    const cfBundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
+    const bundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
 
     const plistContents = {
         CFBundleName: "Onivim2",
         CFBundleDisplayName: "Onivim 2",
         CFBundleIdentifier: "com.outrunlabs.onivim2",
         CFBundleIconFile: "Onivim2",
-        CFBundleVersion: cfBundleVersion,
+        CFBundleVersion: bundleVersion,
         CFBundleShortVersionString: `${package.version}`,
         CFBundlePackageType: "APPL",
         CFBundleSignature: "????",
@@ -314,6 +332,20 @@ if (process.platform == "linux") {
         getRlsPath(),
         path.join(platformReleaseDirectory, process.platform == "win32" ? "rls.exe" : "rls"),
     )
+    if (process.platform == "win32") {
+        const numCommits = winShell(
+            '"C:\\Program Files\\Git\\cmd\\git.exe" rev-list --count origin/master',
+        ).replace(/(\r\n|\n|\r)/gm, "")
+        const semvers = package.version.split(".")
+        const bundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
+
+        const oni2Ini = `
+        [Application]
+        Version = ${bundleVersion}
+        `
+        fs.writeFileSync(path.join(platformReleaseDirectory, "Oni2.ini"), oni2Ini)
+        copy(winSparkleDLL, path.join(platformReleaseDirectory, "WinSparkle.dll"))
+    }
     const imageSourceDirectory = path.join(rootDirectory, "assets", "images")
     const iconFile = path.join(imageSourceDirectory, "oni2.ico")
     fs.copySync(iconFile, path.join(platformReleaseDirectory, "oni2.ico"))
