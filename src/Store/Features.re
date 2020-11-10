@@ -823,7 +823,7 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Effect.none)
-    | BufferModifiedSet(id, isModified) =>
+    | BufferModifiedSet(id, _) =>
       open Feature_Editor;
 
       let bufferId = id;
