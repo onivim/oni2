@@ -7,10 +7,10 @@ let getCurrentLayout: unit => string;
 
 module Keymap: {
   type entry = {
-    unmodified: string,
-    withShift: string,
-    withAltGraph: string,
-    withAltGraphShift: string,
+    unmodified: option(string),
+    withShift: option(string),
+    withAltGraph: option(string),
+    withAltGraphShift: option(string),
   };
 
   type t;

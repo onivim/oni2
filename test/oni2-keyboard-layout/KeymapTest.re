@@ -16,7 +16,21 @@ describe("Keymap", ({test, _}) => {
 
     let entry = Option.get(entry);
 
-    expect.string(Keymap.(entry.unmodified)).toEqual("s");
-    expect.string(Keymap.(entry.withShift)).toEqual("S");
+    expect.option(entry.unmodified).toBeSome();
+    expect.option(entry.withShift).toBeSome();
+
+    expect.string(Option.get(entry.unmodified)).toEqual("s");
+    expect.string(Option.get(entry.withShift)).toEqual("S");
+  });
+
+  test("entryOfKey (no input)", ({expect, _}) => {
+    let keymap = Keymap.getCurrent();
+    let entry = Keymap.entryOfKey(keymap, "Home");
+
+    expect.option(entry).toBeSome();
+
+    let entry = Option.get(entry);
+
+    expect.option(entry.unmodified).toBeNone();
   });
 });

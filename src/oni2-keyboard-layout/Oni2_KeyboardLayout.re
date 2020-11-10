@@ -20,10 +20,10 @@ Callback.register("oni2_KeyboardLayoutCallbackListRef", callbackListRef);
 
 module Keymap = {
   type entry = {
-    unmodified: string,
-    withShift: string,
-    withAltGraph: string,
-    withAltGraphShift: string,
+    unmodified: option(string),
+    withShift: option(string),
+    withAltGraph: option(string),
+    withAltGraphShift: option(string),
   };
 
   type t = Hashtbl.t(string, entry);
