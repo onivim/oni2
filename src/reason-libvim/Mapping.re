@@ -19,7 +19,7 @@ module ScriptId = {
   let default = 0;
 
   let toInt: t => int = Fun.id;
-}
+};
 
 let defaultScriptId = 0;
 [@deriving show]
