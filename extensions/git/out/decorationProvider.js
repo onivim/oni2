@@ -10,6 +10,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.GitDecorations = void 0;
 const vscode_1 = require("vscode");
 const path = require("path");
 const decorators_1 = require("./decorators");
@@ -19,31 +20,26 @@ class GitIgnoreDecorationProvider {
         this.model = model;
         this.queue = new Map();
         this.disposables = [];
-        this.onDidChangeDecorations = util_1.fireEvent(util_1.anyEvent(util_1.filterEvent(vscode_1.workspace.onDidSaveTextDocument, e => e.fileName.endsWith('.gitignore')), model.onDidOpenRepository, model.onDidCloseRepository));
+        this.onDidChange = util_1.fireEvent(util_1.anyEvent(util_1.filterEvent(vscode_1.workspace.onDidSaveTextDocument, e => /\.gitignore$|\.git\/info\/exclude$/.test(e.uri.path)), model.onDidOpenRepository, model.onDidCloseRepository));
         this.disposables.push(vscode_1.window.registerDecorationProvider(this));
     }
-    provideDecoration(uri) {
+    async provideFileDecoration(uri) {
         const repository = this.model.getRepository(uri);
         if (!repository) {
-            return Promise.resolve(undefined);
+            return;
         }
         let queueItem = this.queue.get(repository.root);
         if (!queueItem) {
             queueItem = { repository, queue: new Map() };
             this.queue.set(repository.root, queueItem);
         }
-        return new Promise((resolve, reject) => {
-            queueItem.queue.set(uri.fsPath, { resolve, reject });
+        let promiseSource = queueItem.queue.get(uri.fsPath);
+        if (!promiseSource) {
+            promiseSource = new util_1.PromiseSource();
+            queueItem.queue.set(uri.fsPath, promiseSource);
             this.checkIgnoreSoon();
-        }).then(ignored => {
-            if (ignored) {
-                return {
-                    priority: 3,
-                    color: new vscode_1.ThemeColor('gitDecoration.ignoredResourceForeground')
-                };
-            }
-            return undefined;
-        });
+        }
+        return await promiseSource.promise;
     }
     checkIgnoreSoon() {
         const queue = new Map(this.queue.entries());
@@ -51,15 +47,15 @@ class GitIgnoreDecorationProvider {
         for (const [, item] of queue) {
             const paths = [...item.queue.keys()];
             item.repository.checkIgnore(paths).then(ignoreSet => {
-                for (const [key, value] of item.queue.entries()) {
-                    value.resolve(ignoreSet.has(key));
+                for (const [path, promiseSource] of item.queue.entries()) {
+                    promiseSource.resolve(ignoreSet.has(path) ? GitIgnoreDecorationProvider.Decoration : undefined);
                 }
             }, err => {
                 if (err.gitErrorCode !== "IsInSubmodule" /* IsInSubmodule */) {
                     console.error(err);
                 }
-                for (const [, value] of item.queue.entries()) {
-                    value.reject(err);
+                for (const [, promiseSource] of item.queue.entries()) {
+                    promiseSource.reject(err);
                 }
             });
         }
@@ -69,6 +65,7 @@ class GitIgnoreDecorationProvider {
         this.queue.clear();
     }
 }
+GitIgnoreDecorationProvider.Decoration = { color: new vscode_1.ThemeColor('gitDecoration.ignoredResourceForeground') };
 __decorate([
     decorators_1.debounce(500)
 ], GitIgnoreDecorationProvider.prototype, "checkIgnoreSoon", null);
@@ -76,7 +73,7 @@ class GitDecorationProvider {
     constructor(repository) {
         this.repository = repository;
         this._onDidChangeDecorations = new vscode_1.EventEmitter();
-        this.onDidChangeDecorations = this._onDidChangeDecorations.event;
+        this.onDidChange = this._onDidChangeDecorations.event;
         this.disposables = [];
         this.decorations = new Map();
         this.disposables.push(vscode_1.window.registerDecorationProvider(this), repository.onDidRunGitStatus(this.onDidRunGitStatus, this));
@@ -85,6 +82,7 @@ class GitDecorationProvider {
         let newDecorations = new Map();
         this.collectSubmoduleDecorationData(newDecorations);
         this.collectDecorationData(this.repository.indexGroup, newDecorations);
+        this.collectDecorationData(this.repository.untrackedGroup, newDecorations);
         this.collectDecorationData(this.repository.workingTreeGroup, newDecorations);
         this.collectDecorationData(this.repository.mergeGroup, newDecorations);
         const uris = new Set([...this.decorations.keys()].concat([...newDecorations.keys()]));
@@ -92,21 +90,23 @@ class GitDecorationProvider {
         this._onDidChangeDecorations.fire([...uris.values()].map(value => vscode_1.Uri.parse(value, true)));
     }
     collectDecorationData(group, bucket) {
-        group.resourceStates.forEach(r => {
-            if (r.resourceDecoration
-                && r.type !== 6 /* DELETED */
-                && r.type !== 2 /* INDEX_DELETED */) {
+        for (const r of group.resourceStates) {
+            const decoration = r.resourceDecoration;
+            if (decoration) {
                 // not deleted and has a decoration
-                bucket.set(r.original.toString(), r.resourceDecoration);
+                bucket.set(r.original.toString(), decoration);
+                if (r.type === 3 /* INDEX_RENAMED */) {
+                    bucket.set(r.resourceUri.toString(), decoration);
+                }
             }
-        });
+        }
     }
     collectSubmoduleDecorationData(bucket) {
         for (const submodule of this.repository.submodules) {
             bucket.set(vscode_1.Uri.file(path.join(this.repository.root, submodule.path)).toString(), GitDecorationProvider.SubmoduleDecorationData);
         }
     }
-    provideDecoration(uri) {
+    provideFileDecoration(uri) {
         return this.decorations.get(uri.toString());
     }
     dispose() {
@@ -114,8 +114,8 @@ class GitDecorationProvider {
     }
 }
 GitDecorationProvider.SubmoduleDecorationData = {
-    title: 'Submodule',
-    letter: 'S',
+    tooltip: 'Submodule',
+    badge: 'S',
     color: new vscode_1.ThemeColor('gitDecoration.submoduleResourceForeground')
 };
 class GitDecorations {
