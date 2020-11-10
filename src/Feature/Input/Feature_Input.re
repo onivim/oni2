@@ -286,7 +286,9 @@ let update = (msg, model) => {
     let maybeMatcher =
       EditorInput.Matcher.parse(~getKeycode, ~getScancode, mapping.fromKeys);
     let (model, eff) =
-      switch (VimCommandParser.parse(mapping.toValue)) {
+      switch (
+        VimCommandParser.parse(~scriptId=mapping.scriptId, mapping.toValue)
+      ) {
       | KeySequence(toValue) =>
         let maybeKeys =
           EditorInput.KeyPress.parse(~getKeycode, ~getScancode, toValue);
