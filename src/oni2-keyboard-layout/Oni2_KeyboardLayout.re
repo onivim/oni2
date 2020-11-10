@@ -29,7 +29,7 @@ module Keymap = {
 
   type t = Hashtbl.t(string, entry);
 
-  external populateCurrentKeymap: (t, (t, string, entry) => unit) => unit =
+  external populateCurrentKeymap: ('keymap, ('keymap, string, entry) => unit) => unit =
     "oni2_KeyboardLayoutPopulateCurrentKeymap";
 
   let getCurrent = () => {
