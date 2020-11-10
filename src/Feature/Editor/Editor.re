@@ -402,7 +402,7 @@ let configure = (~config, editor) => {
   |> setWrapMode(~wrapMode);
 };
 
-let create = (~wrapMode=WrapMode.NoWrap, ~config, ~buffer, ~preview: bool, ()) => {
+let create = (~config, ~buffer, ~preview: bool, ()) => {
   let id = GlobalState.generateId();
   let key = Brisk_reconciler.Key.create();
 
@@ -796,9 +796,6 @@ let getId = model => model.editorId;
 
 let getPreview = model => model.preview;
 let setPreview = (~preview, editor) => {...editor, preview};
-
-let getCharacterWidth = ({buffer, _}) =>
-  EditorBuffer.font(buffer).spaceWidth;
 
 let getVisibleView = editor => {
   let {pixelHeight, _} = editor;

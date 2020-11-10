@@ -20,7 +20,7 @@ type t =
       deltaY: float,
       shiftKey: bool,
     })
-  | PreviewChanged(bool);
+  | PreviewChanged(bool)
   | EditorMouseEnter
   | EditorMouseDown({
       time: [@opaque] Revery.Time.t,

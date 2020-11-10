@@ -22,18 +22,15 @@ module WrapMode: {
     | Viewport;
 };
 
-let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
+let create:
+  (~config: Config.resolver, ~buffer: EditorBuffer.t, ~preview: bool, unit) =>
+  t;
 let copy: t => t;
 
 type inlineElement;
 
 let makeInlineElement:
   (
-    ~wrapMode: WrapMode.t=?,
-    ~config: Config.resolver,
-    ~buffer: EditorBuffer.t,
-    ~preview: bool,
-    unit
     ~key: string,
     ~uniqueId: string,
     ~lineNumber: EditorCoreTypes.LineNumber.t,
