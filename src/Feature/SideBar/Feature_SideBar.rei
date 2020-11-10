@@ -36,7 +36,7 @@ type msg =
   | ExtensionsClicked;
 
 type subFocus =
-| Outline;
+  | Outline;
 
 type outmsg =
   | Nothing

@@ -84,10 +84,11 @@ let initial = (~rootPath) => {
   vimWindowNavigation: Component_VimWindows.initial,
 };
 
-let focusOutline = (model) => {
+let focusOutline = model => {
   ...model,
   focus: Outline,
-  isSymbolOutlineExpanded: ExpandedState.implicitlyOpen(model.isSymbolOutlineExpanded)
+  isSymbolOutlineExpanded:
+    ExpandedState.implicitlyOpen(model.isSymbolOutlineExpanded),
 };
 
 let setRoot = (~rootPath, {fileExplorer, _} as model) => {

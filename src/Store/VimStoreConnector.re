@@ -104,7 +104,7 @@ let start =
       )
 
     | Vim.Goto.Outline =>
-      dispatch(Actions.SideBar(Feature_SideBar.(Command(GotoOutline))));
+      dispatch(Actions.SideBar(Feature_SideBar.(Command(GotoOutline))))
 
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>

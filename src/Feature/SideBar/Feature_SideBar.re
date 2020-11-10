@@ -47,8 +47,8 @@ type model = {
   location,
 };
 
-type subFocus = 
-| Outline;
+type subFocus =
+  | Outline;
 
 type outmsg =
   | Nothing
@@ -159,8 +159,8 @@ let update = (~isFocused, msg, model) => {
   | SearchClicked => selectOrClosePane(~pane=Search, model)
   | Command(ToggleSearchPane) => togglePane(~pane=Search, model)
 
-  | Command(GotoOutline) => togglePane(~pane=FileExplorer, ~subFocus=Some(Outline), model)
-
+  | Command(GotoOutline) =>
+    togglePane(~pane=FileExplorer, ~subFocus=Some(Outline), model)
 
   | Command(ToggleVisibility) =>
     // If we were open, and we are going to close, we should pop focus...
@@ -225,7 +225,7 @@ module Commands = {
       ~category="Explorer",
       ~title="Go-to file outline",
       "workbench.action.gotoOutline",
-      Command(GotoOutline)
+      Command(GotoOutline),
     );
 
   let openSCMPane =

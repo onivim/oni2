@@ -648,12 +648,14 @@ let update =
       let state' =
         Feature_SideBar.(
           switch (sideBar' |> Feature_SideBar.selected) {
-          | FileExplorer => 
-            let fileExplorer = switch (maybeSubFocus) {
-            | Some(Outline) => state.fileExplorer |> Feature_Explorer.focusOutline
-            | None => state.fileExplorer
-            };
-             {...state, fileExplorer } |> FocusManager.push(Focus.FileExplorer)
+          | FileExplorer =>
+            let fileExplorer =
+              switch (maybeSubFocus) {
+              | Some(Outline) =>
+                state.fileExplorer |> Feature_Explorer.focusOutline
+              | None => state.fileExplorer
+              };
+            {...state, fileExplorer} |> FocusManager.push(Focus.FileExplorer);
           | SCM =>
             {...state, scm: Feature_SCM.resetFocus(state.scm)}
             |> FocusManager.push(Focus.SCM)
