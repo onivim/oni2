@@ -847,7 +847,11 @@ module Animation = {
 
 let%component make = (~spin=false, ~icon, ~fontSize=15., ~color, ()) => {
   let%hook (rotation, _animationState, _reset) =
-    Hooks.animation(Animation.rotation, ~active=spin);
+    Hooks.animation(
+      ~name="Codicon Spinner",
+      Animation.rotation,
+      ~active=spin,
+    );
   <View
     style=Style.[
       transform([

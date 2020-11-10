@@ -155,7 +155,6 @@ let%component make =
                 ~bufferSyntaxHighlights,
                 ~diagnostics,
                 ~tokenTheme,
-                ~changeMode,
                 ~languageSupport,
                 ~scm,
                 ~windowIsFocused,
@@ -215,17 +214,9 @@ let%component make =
 
   let editorFont = Editor.font(editor);
 
-  let topVisibleLine = Editor.getTopVisibleLine(editor);
-  let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
-
   let cursorPosition = Editor.getPrimaryCursor(editor);
 
-  let layout =
-    Editor.getLayout(
-      ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
-      ~maxMinimapCharacters=Config.Minimap.maxColumn.get(config),
-      editor,
-    );
+  let layout = Editor.getLayout(editor);
 
   let matchingPairCheckPosition =
     Vim.Mode.isInsert(mode)
@@ -262,6 +253,7 @@ let%component make =
 
   let%hook (scrollY, _setScrollYImmediately) =
     Hooks.spring(
+      ~name="Editor ScrollY Spring",
       ~target=Editor.scrollY(editor),
       ~restThreshold=10.,
       ~enabled=smoothScroll && isScrollAnimated,
@@ -269,6 +261,7 @@ let%component make =
     );
   let%hook (scrollX, _setScrollXImmediately) =
     Hooks.spring(
+      ~name="Editor ScrollX Spring",
       ~target=Editor.scrollX(editor),
       ~restThreshold=10.,
       ~enabled=smoothScroll && isScrollAnimated,
@@ -286,7 +279,7 @@ let%component make =
     <GutterView
       editor
       showScrollShadow={Config.scrollShadow.get(config)}
-      showLineNumbers={Config.lineNumbers.get(config)}
+      showLineNumbers={Editor.lineNumbers(editor)}
       height=pixelHeight
       colors
       count=lineCount
@@ -352,8 +345,6 @@ let%component make =
       editor
       colors
       dispatch
-      topVisibleLine
-      changeMode
       cursorPosition
       editorFont
       diagnosticsMap
@@ -364,13 +355,14 @@ let%component make =
       languageSupport
       languageConfiguration
       bufferSyntaxHighlights
-      bottomVisibleLine
       mode
       isActiveSplit
       gutterWidth
       bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
       windowIsFocused
       config
+      uiFont
+      theme
     />
     {Editor.isMinimapEnabled(editor)
        ? <minimap

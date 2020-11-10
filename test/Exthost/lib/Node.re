@@ -16,7 +16,7 @@ let spawn = (~env=[], ~onExit, args) => {
       ),
       Luv.Process.inherit_fd(
         ~fd=Luv.Process.stdout,
-        ~from_parent_fd=Luv.Process.stderr,
+        ~from_parent_fd=Luv.Process.stdout,
         (),
       ),
       Luv.Process.inherit_fd(

@@ -10,21 +10,21 @@ echo "prrerr_endline count: $PRERR_COUNT"
 echo "print_endline count: $PRINT_COUNT"
 echo "Printf.printf count: $PRINTF_COUNT"
 
-if [ "$PRERR_COUNT" -ne "6" ]; then
+if [ "$PRERR_COUNT" -ne "7" ]; then
     echo "New prerr_endline introduced; please remove and re-check:"
     echo "---"
     echo "Output: $(git grep prerr_endline)"
     exit 3
 fi
 
-if [ "$PRINT_COUNT" -ne "15" ]; then
+if [ "$PRINT_COUNT" -ne "16" ]; then
     echo "New print_endline introduced; please remove and re-check."
     echo "---"
     echo "Output: $(git grep print_endline)"
     exit 3
 fi
 
-if [ "$PRINTF_COUNT" -ne "2" ]; then
+if [ "$PRINTF_COUNT" -ne "3" ]; then
     echo "New Printf.printf introduced; please remove and re-check."
     echo "---"
     echo "Output: $(git grep Printf.printf)"

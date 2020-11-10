@@ -39,16 +39,19 @@ let createContext =
   };
 };
 
-let renderImmediate = (~context, ~count, render) => {
-  let scrollY = Editor.scrollY(context.editor);
-  ImmediateList.render(
-    ~scrollY,
-    ~rowHeight=Editor.lineHeightInPixels(context.editor),
-    ~height=float(context.height),
-    ~count,
-    ~render=(i, offsetY) => render(i, offsetY),
-    (),
-  );
+let renderImmediate = (~context, render) => {
+  let topLine = max(0, Editor.getTopViewLine(context.editor) - 1);
+  let bottomLine =
+    min(
+      Editor.totalViewLines(context.editor) - 1,
+      Editor.getBottomViewLine(context.editor) + 1,
+    );
+
+  for (idx in topLine to bottomLine) {
+    let offsetY = Editor.viewLineToPixelY(idx, context.editor);
+
+    render(idx, offsetY -. Editor.scrollY(context.editor));
+  };
 };
 
 let drawRect = {
@@ -193,7 +196,12 @@ let rangeByte =
     (~context, ~padding=0., ~color=Revery.Colors.black, r: ByteRange.t) => {
   let doublePadding = padding *. 2.;
 
-  let ({y: startPixelY, x: startPixelX}: PixelPosition.t, _) =
+  let startViewLine =
+    Editor.bufferBytePositionToViewLine(r.start, context.editor);
+  let stopViewLine =
+    Editor.bufferBytePositionToViewLine(r.stop, context.editor);
+
+  let ({x: startPixelX, _}: PixelPosition.t, _) =
     Editor.bufferBytePositionToPixel(~position=r.start, context.editor);
 
   let ({x: stopPixelX, _}: PixelPosition.t, _) =
@@ -202,14 +210,33 @@ let rangeByte =
   let lineHeight = Editor.lineHeightInPixels(context.editor);
   let characterWidth = Editor.characterWidthInPixels(context.editor);
 
-  drawRect(
-    ~context,
-    ~x=startPixelX,
-    ~y=startPixelY,
-    ~height=lineHeight +. doublePadding,
-    ~width=max(stopPixelX -. startPixelX, characterWidth),
-    ~color,
-  );
+  for (idx in startViewLine to stopViewLine) {
+    let y =
+      Editor.viewLineToPixelY(idx, context.editor)
+      -. Editor.scrollY(context.editor);
+    let startX =
+      if (idx == startViewLine) {
+        startPixelX;
+      } else {
+        0.;
+      };
+
+    let stopX =
+      if (idx == stopViewLine) {
+        stopPixelX;
+      } else {
+        float(Editor.getTotalWidthInPixels(context.editor));
+      };
+
+    drawRect(
+      ~context,
+      ~x=startX,
+      ~y,
+      ~height=lineHeight +. doublePadding,
+      ~width=max(stopX -. startX, characterWidth),
+      ~color,
+    );
+  };
 };
 
 let tabPaint = Skia.Paint.make();
@@ -219,23 +246,19 @@ Skia.Paint.setAntiAlias(tabPaint, true);
 Skia.Paint.setTextSize(tabPaint, 10.);
 Skia.Paint.setTextEncoding(tabPaint, Utf8);
 
-let token = (~context, ~line, ~colors: Colors.t, token: BufferViewTokenizer.t) => {
+let token =
+    (~context, ~offsetY, ~colors: Colors.t, token: BufferViewTokenizer.t) => {
   let font =
     Service_Font.resolveWithFallback(
       ~italic=token.italic,
       token.bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
       context.fontFamily,
     );
+
   let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
-
-  let ({y: pixelY, x: pixelX}: PixelPosition.t, _) =
-    Editor.bufferCharacterPositionToPixel(
-      ~position=CharacterPosition.{line, character: token.startIndex},
-      context.editor,
-    );
-
+  let pixelY = offsetY;
+  let pixelX = token.startPixel;
   let paddingY = context.editor |> Editor.linePaddingInPixels;
-
   let y = paddingY +. pixelY -. fontMetrics.ascent;
   let x = pixelX;
 
@@ -300,17 +323,13 @@ let ruler = (~context, ~color, x) =>
     ~color,
   );
 
-let lineHighlight = (~context, ~color, lineIdx: EditorCoreTypes.LineNumber.t) => {
-  let ({y: pixelY, _}: PixelPosition.t, _) =
-    Editor.bufferBytePositionToPixel(
-      ~position=BytePosition.{line: lineIdx, byte: ByteIndex.zero},
-      context.editor,
-    );
+let lineHighlight = (~context, ~color, viewLine) => {
+  let pixelY = Editor.viewLineToPixelY(viewLine, context.editor);
 
   drawRect(
     ~context,
     ~x=0.,
-    ~y=pixelY,
+    ~y=pixelY -. Editor.scrollY(context.editor),
     ~height=Editor.lineHeightInPixels(context.editor),
     ~width=float(context.width),
     ~color,

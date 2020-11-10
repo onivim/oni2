@@ -65,6 +65,7 @@ type t = {
   lastUsed: float,
   font: Font.t,
   measure: Uchar.t => float,
+  saveTick: int,
 };
 
 module Internal = {
@@ -154,8 +155,11 @@ let ofLines = (~id=0, ~font, rawLines: array(string)) => {
     lastUsed: 0.,
     font,
     measure,
+    saveTick: 0,
   };
 };
+
+let measure = (uchar, {measure, _}) => measure(uchar);
 
 let empty = (~font) => ofLines(~font, [||]);
 
@@ -329,3 +333,7 @@ let setFont = (font, buf) => {
        });
   {...buf, measure, font, lines};
 };
+
+let getSaveTick = ({saveTick, _}) => saveTick;
+
+let incrementSaveTick = buffer => {...buffer, saveTick: buffer.saveTick + 1};

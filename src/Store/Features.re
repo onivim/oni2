@@ -89,22 +89,22 @@ module Internal = {
       let effect =
         switch (outmsg) {
         | Nothing => Effect.none
-        | MouseHovered({characterPosition, _}) =>
+        | MouseHovered(maybeCharacterPosition) =>
           Effect.createWithDispatch(~name="editor.mousehovered", dispatch => {
             dispatch(
               LanguageSupport(
                 Feature_LanguageSupport.Msg.Hover.mouseHovered(
-                  characterPosition,
+                  maybeCharacterPosition,
                 ),
               ),
             )
           })
-        | MouseMoved({characterPosition, _}) =>
+        | MouseMoved(maybeCharacterPosition) =>
           Effect.createWithDispatch(~name="editor.mousemoved", dispatch => {
             dispatch(
               LanguageSupport(
                 Feature_LanguageSupport.Msg.Hover.mouseMoved(
-                  characterPosition,
+                  maybeCharacterPosition,
                 ),
               ),
             )
@@ -139,6 +139,29 @@ module Internal = {
     | Editor(editorId) => updateEditor(~editorId, ~msg, layout)
     };
   };
+
+  let updateConfiguration: State.t => State.t =
+    state => {
+      let resolver = Selectors.configResolver(state);
+      let sideBar =
+        state.sideBar
+        |> Feature_SideBar.configurationChanged(~config=resolver);
+
+      let perFileTypeConfig =
+        Feature_Configuration.resolver(state.config, state.vim);
+
+      let layout =
+        Feature_Layout.map(
+          editor => {
+            Feature_Editor.Editor.configurationChanged(
+              ~perFileTypeConfig,
+              editor,
+            )
+          },
+          state.layout,
+        );
+      {...state, sideBar, layout};
+    };
 };
 
 // UPDATE
@@ -325,6 +348,16 @@ let update =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
       | DebugInputShown => Internal.openFileEffect("oni://DebugInput")
+      | MapParseError({fromKeys, toKeys, error}) =>
+        Internal.notificationEffect(
+          ~kind=Error,
+          Printf.sprintf(
+            "Error mapping %s to %s: %s",
+            fromKeys,
+            toKeys,
+            error,
+          ),
+        )
       };
 
     ({...state, input: model}, eff);
@@ -377,7 +410,7 @@ let update =
             ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
-              msg: ModeChanged(mode),
+              msg: ModeChanged({mode, effects: []}),
             })
           ),
         )
@@ -402,7 +435,7 @@ let update =
             ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
-              msg: ModeChanged(mode),
+              msg: ModeChanged({mode, effects: []}),
             })
           ),
         );
@@ -426,8 +459,56 @@ let update =
           state,
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
         )
+      | CodeLensesChanged({bufferId, lenses}) =>
+        let inlineElements =
+          lenses
+          |> List.map(lens => {
+               let lineNumber =
+                 Feature_LanguageSupport.CodeLens.lineNumber(lens);
+               let uniqueId = Feature_LanguageSupport.CodeLens.uniqueId(lens);
+               let view =
+                 Feature_LanguageSupport.CodeLens.View.make(~codeLens=lens);
+               Feature_Editor.Editor.makeInlineElement(
+                 ~key="codelens",
+                 ~uniqueId,
+                 ~lineNumber=
+                   EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+                 ~view,
+               );
+             });
+        let layout' =
+          state.layout
+          |> Feature_Layout.map(editor =>
+               if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
+                 Feature_Editor.Editor.setInlineElements(
+                   ~key="codelens",
+                   ~elements=inlineElements,
+                   editor,
+                 );
+               } else {
+                 editor;
+               }
+             );
+        ({...state, layout: layout'}, Isolinear.Effect.none);
       }
     );
+
+  | Logging(msg) =>
+    let (model, outmsg) = Feature_Logging.update(msg, state.logging);
+    let state' = {...state, logging: model};
+
+    let eff =
+      Feature_Logging.(
+        {
+          switch (outmsg) {
+          | Effect(eff) =>
+            eff |> Isolinear.Effect.map(msg => Actions.Logging(msg))
+          | ShowInfoNotification(msg) =>
+            Internal.notificationEffect(~kind=Info, msg)
+          };
+        }
+      );
+    (state', eff);
 
   | Messages(msg) =>
     let (model, outmsg) = Feature_Messages.update(msg, state.messages);
@@ -515,6 +596,23 @@ let update =
       };
     (state, eff);
 
+  | Registration(msg) =>
+    let (state', outmsg) =
+      Feature_Registration.update(state.registration, msg);
+
+    let effect =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Registration(msg))
+      | LicenseKeyChanged(licenseKey) =>
+        Service_AutoUpdate.Effect.updateLicenseKey(~licenseKey)
+        |> Isolinear.Effect.map(msg =>
+             Actions.AutoUpdate(Feature_AutoUpdate.Service(msg))
+           )
+      };
+    ({...state, registration: state'}, effect);
+
   | Search(msg) =>
     let (model, maybeOutmsg) =
       Feature_Search.update(
@@ -582,7 +680,13 @@ let update =
     };
 
   | SideBar(msg) =>
-    let (sideBar', outmsg) = Feature_SideBar.update(msg, state.sideBar);
+    let isFocused =
+      FocusManager.current(state) == Focus.SCM
+      || FocusManager.current(state) == Focus.Search
+      || FocusManager.current(state) == Focus.FileExplorer
+      || FocusManager.current(state) == Focus.Extensions;
+    let (sideBar', outmsg) =
+      Feature_SideBar.update(~isFocused, msg, state.sideBar);
     let state = {...state, sideBar: sideBar'};
 
     switch (outmsg) {
@@ -958,11 +1062,6 @@ let update =
     let state = {...state, config};
     switch (outmsg) {
     | ConfigurationChanged({changed}) =>
-      let resolver = Selectors.configResolver(state);
-      let sideBar =
-        state.sideBar
-        |> Feature_SideBar.configurationChanged(~config=resolver);
-
       let eff =
         Isolinear.Effect.create(
           ~name="features.configuration$acceptConfigurationChanged", () => {
@@ -979,7 +1078,7 @@ let update =
             extHostClient,
           );
         });
-      ({...state, sideBar}, eff);
+      (state |> Internal.updateConfiguration, eff);
     | Nothing => (state, Effect.none)
     };
 
@@ -1028,6 +1127,7 @@ let update =
 
       | _ => None
       };
+
     let (model, outmsg) = update(~focus, state.layout, msg);
     let state = {...state, layout: model};
 
@@ -1508,6 +1608,10 @@ let update =
       switch (outmsg) {
       | Nothing => (state, Isolinear.Effect.none)
       | Effect(e) => (state, e)
+      | SettingsChanged => (
+          state |> Internal.updateConfiguration,
+          Isolinear.Effect.none,
+        )
       | ModeUpdated(mode) =>
         open Feature_Editor;
         let activeEditorId =
@@ -1544,7 +1648,10 @@ let update =
     );
 
   | AutoUpdate(msg) =>
-    let (state', outmsg) = Feature_AutoUpdate.update(state.autoUpdate, msg);
+    let getLicenseKey = () =>
+      Feature_Registration.getLicenseKey(state.registration);
+    let (state', outmsg) =
+      Feature_AutoUpdate.update(~getLicenseKey, state.autoUpdate, msg);
 
     let eff =
       (

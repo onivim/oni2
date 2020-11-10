@@ -118,6 +118,8 @@ module Internal = {
   };
 };
 
+let measure = ({measure, _}) => measure;
+
 let make = (~measure, raw: string) => {
   let lazyCharacterLength = Lazy.from_fun(() => ZedBundled.length(raw));
   {
@@ -322,7 +324,7 @@ module Slow = {
 
     let rec loop = byteIndex =>
       if (byteIndex >= length) {
-        length - 1;
+        length;
       } else {
         let index = getIndex(~byte=ByteIndex.ofInt(byteIndex), bufferLine);
         let (characterPixel, width) =

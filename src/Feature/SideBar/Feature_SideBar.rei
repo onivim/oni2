@@ -18,10 +18,10 @@ type model;
 
 [@deriving show]
 type command =
-  | OpenExplorerPane
-  | OpenSearchPane
-  | OpenSCMPane
-  | OpenExtensionsPane
+  | ToggleExplorerPane
+  | ToggleSearchPane
+  | ToggleSCMPane
+  | ToggleExtensionsPane
   | ToggleVisibility;
 
 [@deriving show]
@@ -39,7 +39,7 @@ type outmsg =
   | Focus
   | PopFocus;
 
-let update: (msg, model) => (model, outmsg);
+let update: (~isFocused: bool, msg, model) => (model, outmsg);
 
 let initial: model;
 
@@ -56,7 +56,7 @@ let configurationChanged: (~config: Oni_Core.Config.resolver, model) => model;
 module Contributions: {
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
-  let keybindings: list(Oni_Input.Keybindings.keybinding);
+  let keybindings: list(Feature_Input.Schema.keybinding);
   let contextKeys:
     (~isFocused: bool) => list(WhenExpr.ContextKeys.Schema.entry(model));
 };

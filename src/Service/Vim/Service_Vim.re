@@ -4,27 +4,27 @@ module Log = (val Log.withNamespace("Service_Vim"));
 
 let forceReload = () =>
   Isolinear.Effect.create(~name="vim.discardChanges", () =>
-    ignore(Vim.command("e!"): Vim.Context.t)
+    ignore(Vim.command("e!"): (Vim.Context.t, list(Vim.Effect.t)))
   );
 
 let forceOverwrite = () =>
   Isolinear.Effect.create(~name="vim.forceOverwrite", () =>
-    ignore(Vim.command("w!"): Vim.Context.t)
+    ignore(Vim.command("w!"): (Vim.Context.t, list(Vim.Effect.t)))
   );
 
 let reload = () =>
   Isolinear.Effect.create(~name="vim.reload", () => {
-    ignore(Vim.command("e"): Vim.Context.t)
+    ignore(Vim.command("e"): (Vim.Context.t, list(Vim.Effect.t)))
   });
 
 let saveAllAndQuit = () =>
   Isolinear.Effect.create(~name="lifecycle.saveAllAndQuit", () =>
-    ignore(Vim.command("xa"): Vim.Context.t)
+    ignore(Vim.command("xa"): (Vim.Context.t, list(Vim.Effect.t)))
   );
 
 let quitAll = () =>
   Isolinear.Effect.create(~name="lifecycle.saveAllAndQuit", () =>
-    ignore(Vim.command("qa!"): Vim.Context.t)
+    ignore(Vim.command("qa!"): (Vim.Context.t, list(Vim.Effect.t)))
   );
 
 module Effects = {
@@ -39,7 +39,8 @@ module Effects = {
         };
 
         Log.infof(m => m("Pasting: %s", text));
-        let latestContext: Vim.Context.t = Oni_Core.VimEx.inputString(text);
+        let (latestContext: Vim.Context.t, _effects) =
+          Oni_Core.VimEx.inputString(text);
 
         if (!isCmdLineMode) {
           Vim.command("set nopaste") |> ignore;
@@ -95,7 +96,8 @@ module Effects = {
         ByteIndex.toInt(cursor.byte) - CharacterIndex.toInt(meetColumn);
 
       let _: Vim.Context.t = VimEx.repeatKey(delta, "<BS>");
-      let {mode, _}: Vim.Context.t = VimEx.inputString(insertText);
+      let ({mode, _}: Vim.Context.t, _effects) =
+        VimEx.inputString(insertText);
 
       dispatch(toMsg(mode));
     });

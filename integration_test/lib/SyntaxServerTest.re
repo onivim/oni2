@@ -11,16 +11,13 @@ type testContext = {
 };
 
 let run = (~parentPid=?, ~name, f) => {
-  if (Sys.win32) {
-    Timber.App.disableColors();
-  };
-
   Oni_Core.Log.enableDebug();
   Revery.App.initConsole();
   module Log = (val Log.withNamespace(name));
 
-  Timber.App.enable();
+  Timber.App.enable(Timber.Reporter.console(~enableColors=false, ()));
   Timber.App.setLevel(Timber.Level.debug);
+  Oni_Core.Log.init();
   Log.info("Starting test: " ++ name);
   let connected = ref(false);
   let onConnected = () => {

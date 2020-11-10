@@ -71,10 +71,12 @@ let load = (~category, packageFile) => {
   };
 };
 
-let scan = (~category, directory: string) => {
-  Sys.readdir(directory)
+let scan = (~category, directory: Fp.t(Fp.absolute)) => {
+  let dirString = directory |> Fp.toString;
+  dirString
+  |> Sys.readdir
   |> Array.to_list
-  |> List.map(Path.join(directory))
+  |> List.map(Path.join(dirString))
   |> List.filter(Sys.is_directory)
   |> List.map(dir => Path.join(dir, "package.json"))
   |> List.filter(Sys.file_exists)

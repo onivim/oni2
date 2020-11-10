@@ -11,7 +11,7 @@ module IDGenerator =
 [@deriving show({with_path: false})]
 type provider = {
   handle: int,
-  selector: list(Exthost.DocumentFilter.t),
+  selector: Exthost.DocumentSelector.t,
   metadata: Exthost.SignatureHelp.ProviderMetadata.t,
 };
 
@@ -116,12 +116,10 @@ let getEffectsForLocation =
       ~requestID,
       ~editor,
     ) => {
-  let filetype = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
-
   let matchingProviders =
     model.providers
     |> List.filter(({selector, _}) =>
-         Exthost.DocumentSelector.matches(~filetype, selector)
+         Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
        );
 
   matchingProviders
@@ -237,11 +235,10 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
   | KeyPressed(maybeKey, before) =>
     switch (maybeBuffer, maybeEditor, maybeKey) {
     | (Some(buffer), Some(editor), Some(key)) =>
-      let filetype = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
       let matchingProviders =
         model.providers
         |> List.filter(({selector, _}) =>
-             Exthost.DocumentSelector.matches(~filetype, selector)
+             Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
            );
       let trigger =
         matchingProviders

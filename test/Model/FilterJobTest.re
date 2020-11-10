@@ -1,5 +1,4 @@
 open TestFramework;
-
 open Oni_Core;
 
 module Actions = Oni_Model.Actions;
@@ -23,8 +22,14 @@ describe("FilterJob", ({describe, _}) => {
   let rec runToCompletion = job =>
     Job.isComplete(job) ? job : job |> Job.tick |> runToCompletion;
 
-  describe("filtering", ({test, _}) => {
-    test("filtering should respect smart casing", ({expect, _}) => {
+  let getNames = ranked =>
+    List.map(
+      (result: Filter.result(Actions.menuItem)) => result.item.name,
+      ranked,
+    );
+
+  describe("ranking", ({test, _}) => {
+    test("ranking should respect smart casing", ({expect, _}) => {
       let job =
         FilterJob.create()
         |> Job.map(FilterJob.addItems([createItem("Preferences")]))
@@ -35,29 +40,7 @@ describe("FilterJob", ({describe, _}) => {
       expect.int(rankedLength).toBe(1);
     });
 
-    test("updating query should not reset items", ({expect, _}) => {
-      let job =
-        FilterJob.create()
-        |> Job.map(FilterJob.updateQuery("abc"))
-        // Add 4 items, separately
-        |> Job.map(FilterJob.addItems([createItem("a")]))
-        |> Job.map(FilterJob.addItems([createItem("abcd")]))
-        |> Job.map(FilterJob.addItems([createItem("b")]))
-        |> Job.map(FilterJob.addItems([createItem("abcde")]))
-        // Tick 4 times
-        |> Job.doWork
-        |> Job.doWork
-        |> Job.doWork
-        |> Job.doWork
-        |> Job.map(FilterJob.updateQuery("abce"));
-
-      // We should have results without needing to do another iteration of work
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
-      expect.list(names).toEqual(["abcde"]);
-    });
-
-    test("items batched separately get filtered", ({expect, _}) => {
+    test("items batched separately get ranked", ({expect, _}) => {
       let job =
         FilterJob.create()
         |> Job.map(FilterJob.updateQuery("abc"))
@@ -72,16 +55,16 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.doWork
         |> Job.doWork;
 
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
-      expect.list(names).toEqual(["abcde", "abcd"]);
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
+      expect.list(names).toEqual(["abcd", "abcde"]);
     });
 
-    test("items batched together get filtered", ({expect, _}) => {
+    test("items batched together get ranked", ({expect, _}) => {
       let job =
         FilterJob.create()
         |> Job.map(FilterJob.updateQuery("abc"))
-        // Add 4 items, separately
+        // Add 4 items, together
         |> Job.map(
              FilterJob.addItems([
                createItem("a"),
@@ -96,9 +79,30 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.doWork
         |> Job.doWork;
 
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
-      expect.list(names).toEqual(["abcde", "abcd"]);
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
+      expect.list(names).toEqual(["abcd", "abcde"]);
+    });
+
+    test("items returned are deterministic", ({expect, _}) => {
+      let job =
+        FilterJob.create()
+        |> Job.map(FilterJob.updateQuery("ab"))
+        // Add 4 items, together
+        |> Job.map(
+             FilterJob.addItems([
+               createItem("aba"),
+               createItem("abb"),
+               createItem("abc"),
+               createItem("abd"),
+             ]),
+           )
+        // Tick 4 times
+        |> runToCompletion;
+
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
+      expect.list(names).toEqual(["aba", "abb", "abc", "abd"]);
     });
 
     test(
@@ -106,32 +110,32 @@ describe("FilterJob", ({describe, _}) => {
       let job =
         FilterJob.create()
         |> Job.map(
-             FilterJob.addItems([createItem("abc"), createItem("abd")]),
+             FilterJob.addItems([createItem("abc"), createItem("abde")]),
            )
         |> Job.map(FilterJob.updateQuery("abc"))
         |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
       expect.list(names).toEqual(["abc"]);
 
       let job =
         job |> Job.map(FilterJob.updateQuery("abd")) |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
-      expect.list(names).toEqual(["abd"]);
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
+      expect.list(names).toEqual(["abde"]);
 
       let job =
         job |> Job.map(FilterJob.updateQuery("ab")) |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
-      expect.list(names).toEqual(["abd", "abc"]);
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
+      expect.list(names).toEqual(["abc", "abde"]);
     });
 
     test(
-      "regresion test - already filterd items shouldn't get re-added",
+      "regression test - already ranked items shouldn't get re-added",
       ({expect, _}) => {
       let job =
         FilterJob.create()
@@ -142,8 +146,8 @@ describe("FilterJob", ({describe, _}) => {
         |> Job.map(FilterJob.updateQuery("abc"))
         |> runToCompletion;
 
-      let filtered = Job.getCompletedWork(job).filtered;
-      let names = List.map((item: Actions.menuItem) => item.name, filtered);
+      let ranked = Job.getCompletedWork(job).ranked;
+      let names = getNames(ranked);
       expect.list(names).toEqual(["abcd"]);
     });
   });

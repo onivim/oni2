@@ -80,6 +80,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | InsertRegister => [
         Actions.Registers(Feature_Registers.Msg.keyPressed(k)),
       ]
+    | LicenseKey => [
+        Actions.Registration(Feature_Registration.KeyPressed(k)),
+      ]
     | LanguageSupport => [
         Actions.LanguageSupport(Feature_LanguageSupport.Msg.keyPressed(k)),
       ]
@@ -102,6 +105,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           Actions.LanguageSupport(
             Feature_LanguageSupport.Msg.pasted(firstLine),
           )
+        | LicenseKey =>
+          Actions.Registration(Feature_Registration.Pasted(firstLine))
 
         // No paste handling in these UIs, currently...
         | Pane => Actions.Noop
@@ -121,17 +126,20 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let effectToActions = (state, effect) =>
     switch (effect) {
-    | Keybindings.Execute(command) => [
+    | Feature_Input.Execute(command) => [
         Actions.KeybindingInvoked({command: command}),
       ]
-    | Keybindings.Text(text) => handleTextEffect(~isText=true, state, text)
-    | Keybindings.Unhandled(key) =>
+    | Feature_Input.Text(text) => handleTextEffect(~isText=true, state, text)
+    | Feature_Input.Unhandled(key) =>
       let isTextInputActive = isTextInputActive();
       let maybeKeyString = Handler.keyPressToCommand(~isTextInputActive, key);
       switch (maybeKeyString) {
       | None => []
       | Some(k) => handleTextEffect(~isText=false, state, k)
       };
+
+    // TODO: Show a notification that recursion limit was hit
+    | Feature_Input.RemapRecursionLimitHit => []
     };
 
   let reveryKeyToEditorKey =
@@ -168,17 +176,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         };
 
       Some(
-        EditorInput.KeyPress.{
-          scancode,
-          keycode,
-          modifiers: {
-            shift,
-            control,
-            alt,
-            meta,
-            altGr,
-          },
-        },
+        EditorInput.KeyPress.physicalKey(
+          ~scancode,
+          ~keycode,
+          ~modifiers={shift, control, alt, meta, altGr},
+        ),
       );
     };
   };
@@ -196,10 +198,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let handleKeyPress = (state: State.t, key) => {
     let context = Model.ContextKeys.all(state);
 
-    let (keyBindings, effects) =
-      Keybindings.keyDown(~context, ~key, state.keyBindings);
+    let config = Model.Selectors.configResolver(state);
+    let (input, effects) =
+      Feature_Input.keyDown(~config, ~context, ~key, state.input);
 
-    let newState = {...state, keyBindings};
+    let newState = {...state, input};
 
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
@@ -208,12 +211,12 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   };
 
   let handleTextInput = (state: State.t, text) => {
-    let (keyBindings, effects) = Keybindings.text(~text, state.keyBindings);
+    let (input, effects) = Feature_Input.text(~text, state.input);
 
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
 
-    let newState = {...state, keyBindings};
+    let newState = {...state, input};
 
     updateFromInput(newState, /*Some("Text: " ++ text),*/ actions);
   };
@@ -221,11 +224,12 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let handleKeyUp = (state: State.t, key) => {
     let context = Model.ContextKeys.all(state);
 
+    let config = Model.Selectors.configResolver(state);
     //let inputKey = reveryKeyToEditorKey(key);
-    let (keyBindings, effects) =
-      Keybindings.keyUp(~context, ~key, state.keyBindings);
+    let (input, effects) =
+      Feature_Input.keyUp(~config, ~context, ~key, state.input);
 
-    let newState = {...state, keyBindings};
+    let newState = {...state, input};
 
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;

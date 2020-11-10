@@ -18,7 +18,9 @@ module Effect = Effect;
 module Event = Event;
 module Format = Format;
 module Goto = Goto;
+module Mapping = Mapping;
 module Operator = Operator;
+module Scroll = Scroll;
 module TabPage = TabPage;
 module Mode = Mode;
 module Options = Options;
@@ -132,6 +134,14 @@ let flushQueue = () => {
   GlobalState.queuedFunctions := [];
 };
 
+let queueEffect = eff => {
+  queue(() => {
+    Event.dispatch(eff, Listeners.effect);
+
+    GlobalState.effects := [eff, ...GlobalState.effects^];
+  });
+};
+
 let runWith = (~context: Context.t, f) => {
   let currentBufferId = Buffer.getCurrent() |> Buffer.getId;
 
@@ -158,8 +168,6 @@ let runWith = (~context: Context.t, f) => {
   Options.setTabSize(context.tabSize);
   Options.setInsertSpaces(context.insertSpaces);
 
-  context.lineComment |> Option.iter(Options.setLineComment);
-
   let oldBuf = Buffer.getCurrent();
   let prevMode = Mode.trySet(context.mode);
   let prevModified = Buffer.isModified(oldBuf);
@@ -169,6 +177,8 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.colorSchemeProvider := context.colorSchemeProvider;
   GlobalState.viewLineMotion := Some(context.viewLineMotion);
   GlobalState.screenPositionMotion := Some(context.screenCursorMotion);
+  GlobalState.effects := [];
+  GlobalState.toggleComments := Some(context.toggleComments);
 
   let mode = f();
 
@@ -176,6 +186,7 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
   GlobalState.viewLineMotion := None;
   GlobalState.screenPositionMotion := None;
+  GlobalState.toggleComments := None;
 
   let newBuf = Buffer.getCurrent();
   let newMode = Mode.current();
@@ -215,7 +226,10 @@ let runWith = (~context: Context.t, f) => {
   };
 
   flushQueue();
-  {...Context.current(), mode, autoClosingPairs: context.autoClosingPairs};
+  (
+    {...Context.current(), mode, autoClosingPairs: context.autoClosingPairs},
+    GlobalState.effects^ |> List.rev,
+  );
 };
 
 let _onAutocommand = (autoCommand: Types.autocmd, buffer: Buffer.t) => {
@@ -438,6 +452,10 @@ let _onSettingChanged = (setting: Setting.t) => {
   );
 };
 
+let _onScroll = (direction: Scroll.direction, count: int) => {
+  queueEffect(Effect.Scroll({direction, count}));
+};
+
 let _onColorSchemeChanged = (maybeScheme: option(string)) => {
   queue(() => {
     Event.dispatch(Effect.ColorSchemeChanged(maybeScheme), Listeners.effect)
@@ -466,6 +484,26 @@ let _onMacroStopRecording = (register: char, value: option(string)) => {
   });
 };
 
+let _onInputMap = (mapping: Mapping.t) => {
+  queueEffect(Map(mapping));
+};
+
+let _onInputUnmap = (mode: Mapping.mode, keys: option(string)) => {
+  queueEffect(Unmap({mode, keys}));
+};
+
+let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
+  let count = endLine - startLine + 1;
+  let currentLines =
+    Array.init(count, i => {
+      Buffer.getLine(buf, LineNumber.ofOneBased(startLine + i))
+    });
+
+  GlobalState.toggleComments^
+  |> Option.map(f => f(currentLines))
+  |> Option.value(~default=currentLines);
+};
+
 let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);
   Callback.register("lv_onBufferChanged", _onBufferChanged);
@@ -484,6 +522,7 @@ let init = () => {
   Callback.register("lv_onSettingChanged", _onSettingChanged);
   Callback.register("lv_onQuit", _onQuit);
   Callback.register("lv_onUnhandledEscape", _onUnhandledEscape);
+  Callback.register("lv_onScroll", _onScroll);
   Callback.register("lv_onStopSearch", _onStopSearch);
   Callback.register("lv_onTerminal", _onTerminal);
   Callback.register("lv_onWindowMovement", _onWindowMovement);
@@ -496,6 +535,9 @@ let init = () => {
     "lv_onCursorMoveScreenPosition",
     _onCursorMoveScreenPosition,
   );
+  Callback.register("lv_onInputMap", _onInputMap);
+  Callback.register("lv_onInputUnmap", _onInputUnmap);
+  Callback.register("lv_onToggleComments", _onToggleComments);
 
   Native.vimInit();
 
@@ -559,12 +601,18 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
                        position.byte,
                        autoClosingPairs,
                      )) {
+            // Join undo
+            Native.vimKey("<C-g>");
+            Native.vimKey("U");
             Native.vimKey("<RIGHT>");
           } else if (AutoClosingPairs.isOpeningPair(v, autoClosingPairs)
                      && canCloseBefore()) {
             let pair = AutoClosingPairs.getByOpeningPair(v, autoClosingPairs);
             Native.vimInput(v);
             Native.vimInput(pair.closing);
+            // Join undo
+            Native.vimKey("<C-g>");
+            Native.vimKey("U");
             Native.vimKey("<LEFT>");
           } else {
             inputFn(v);

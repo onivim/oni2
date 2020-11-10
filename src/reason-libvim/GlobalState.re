@@ -1,5 +1,7 @@
 open EditorCoreTypes;
 
+let effects: ref(list(Effect.t)) = ref([]);
+
 let autoIndent:
   ref(
     option(
@@ -39,4 +41,7 @@ let screenPositionMotion:
       BytePosition.t,
     ),
   ) =
+  ref(None);
+
+let toggleComments: ref(option(array(string) => array(string))) =
   ref(None);

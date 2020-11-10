@@ -98,7 +98,6 @@ let renderLine =
 let renderEmbellishments =
     (
       ~context,
-      ~count,
       ~buffer,
       ~colors,
       ~diagnosticsMap,
@@ -109,7 +108,6 @@ let renderEmbellishments =
     ) =>
   Draw.renderImmediate(
     ~context,
-    ~count,
     renderLine(
       ~context,
       ~buffer,
@@ -174,16 +172,22 @@ let renderDefinition =
 };
 
 let renderTokens =
-    (~selection, ~context, ~line, ~colors, ~tokens, ~shouldRenderWhitespace) => {
+    (
+      ~offsetY,
+      ~selection,
+      ~context,
+      ~colors,
+      ~tokens,
+      ~shouldRenderWhitespace,
+    ) => {
   tokens
   |> WhitespaceTokenFilter.filter(~selection, shouldRenderWhitespace)
-  |> List.iter(Draw.token(~context, ~line, ~colors));
+  |> List.iter(Draw.token(~offsetY, ~context, ~colors));
 };
 
 let renderText =
     (
       ~context,
-      ~count,
       ~selectionRanges,
       ~editor,
       ~bufferHighlights,
@@ -195,8 +199,7 @@ let renderText =
     ) =>
   Draw.renderImmediate(
     ~context,
-    ~count,
-    (item, _offsetY) => {
+    (item, offsetY) => {
       let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
       let selectionRange =
         switch (Hashtbl.find_opt(selectionRanges, index)) {
@@ -224,10 +227,10 @@ let renderText =
       renderTokens(
         ~selection=selectionRange,
         ~context,
-        ~line=item |> EditorCoreTypes.LineNumber.ofZeroBased,
         ~colors,
         ~tokens,
         ~shouldRenderWhitespace,
+        ~offsetY,
       );
     },
   );
@@ -235,7 +238,6 @@ let renderText =
 let render =
     (
       ~context,
-      ~count,
       ~buffer,
       ~editor,
       ~colors,
@@ -251,7 +253,6 @@ let render =
     ) => {
   renderEmbellishments(
     ~context,
-    ~count,
     ~buffer,
     ~colors,
     ~diagnosticsMap,
@@ -280,7 +281,6 @@ let render =
 
   renderText(
     ~context,
-    ~count,
     ~selectionRanges,
     ~editor,
     ~bufferHighlights,

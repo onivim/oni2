@@ -66,8 +66,8 @@ runTest(
       state.terminals
       |> Feature_Terminal.toList
       |> List.exists((terminal: Feature_Terminal.terminal) => {
-           terminal.cmd == expectedShellCmd
-           && terminal.arguments == expectedShellArgs
+           terminal.launchConfig.executable == expectedShellCmd
+           && terminal.launchConfig.arguments == expectedShellArgs
          });
     };
 

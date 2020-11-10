@@ -49,6 +49,8 @@ let setFilePath: (option(string), t) => t;
 
 let getEstimatedMaxLineLength: t => int;
 
+let measure: (Uchar.t, t) => float;
+
 let getLineEndings: t => option(Vim.lineEnding);
 let setLineEndings: (Vim.lineEnding, t) => t;
 
@@ -83,3 +85,6 @@ let update: (t, BufferUpdate.t) => t;
 
 let getFont: t => Font.t;
 let setFont: (Font.t, t) => t;
+
+let getSaveTick: t => int;
+let incrementSaveTick: t => t;

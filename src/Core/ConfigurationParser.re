@@ -181,14 +181,6 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.hover.delay",
-    (config, json) => {...config, editorHoverDelay: parseInt(json)},
-  ),
-  (
-    "editor.hover.enabled",
-    (config, json) => {...config, editorHoverEnabled: parseBool(json)},
-  ),
-  (
     "editor.fontLigatures",
     (config, json) => {
       ...config,

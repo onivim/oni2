@@ -45,7 +45,7 @@ jobs:
 
   steps:
   - template: .ci/use-node.yml
-  - script: brew update
+  - script: brew update-reset
   - script: brew install ragel
   # - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
@@ -55,6 +55,8 @@ jobs:
 
 - job: Linux
   displayName: 'Linux - Ubuntu 18.04'
+  # Run if not master
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   timeoutInMinutes: 90
   pool:
     vmImage: 'ubuntu-18.04'
@@ -121,7 +123,7 @@ jobs:
 
   steps:
   - template: .ci/use-node.yml
-  - script: brew update
+  - script: brew update-reset
   - script: brew install ragel
   - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
@@ -174,6 +176,8 @@ jobs:
 - job: WindowsTest
   timeoutInMinutes: 150
   displayName: "Windows - Integration Test"
+  # Run if not master
+  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   pool:
     vmImage: 'vs2017-win2016'
 

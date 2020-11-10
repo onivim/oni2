@@ -139,6 +139,7 @@ module Context: {
         ~wantByte: ByteIndex.t
       ) =>
       BytePosition.t,
+    toggleComments: array(string) => array(string),
     bufferId: int,
     colorSchemeProvider: ColorScheme.Provider.t,
     width: int,
@@ -146,7 +147,6 @@ module Context: {
     leftColumn: int,
     topLine: int,
     mode: Mode.t,
-    lineComment: option(string),
     tabSize: int,
     insertSpaces: bool,
   };
@@ -370,6 +370,59 @@ module Setting: {
   };
 };
 
+module Scroll: {
+  [@deriving show]
+  type direction =
+    | CursorCenterVertically // zz
+    | CursorCenterHorizontally
+    | CursorTop // zt
+    | CursorBottom // zb
+    | CursorLeft
+    | CursorRight
+    | LineUp
+    | LineDown
+    | HalfPageDown
+    | HalfPageUp
+    | PageDown
+    | PageUp
+    | HalfPageLeft
+    | HalfPageRight
+    | ColumnLeft
+    | ColumnRight;
+};
+
+module Mapping: {
+  [@deriving show]
+  type mode =
+    | Insert // imap, inoremap
+    | Language // lmap
+    | CommandLine // cmap
+    | Normal // nmap, nnoremap
+    | VisualAndSelect // vmap, vnoremap
+    | Visual // xmap, xnoremap
+    | Select // smap, snoremap
+    | Operator // omap, onoremap
+    | Terminal // tmap, tnoremap
+    | InsertAndCommandLine // :map!
+    | All; // :map;
+
+  [@deriving show]
+  type scriptId;
+
+  let defaultScriptId: scriptId;
+
+  [@deriving show]
+  type t = {
+    mode,
+    fromKeys: string, // mapped from, lhs
+    toValue: string, // mapped to, rhs
+    expression: bool,
+    recursive: bool,
+    silent: bool,
+    scriptId,
+  };
+};
+
 module Effect: {
   type t =
     | Goto(Goto.effect)
@@ -382,6 +435,15 @@ module Effect: {
     | MacroRecordingStopped({
         register: char,
         value: option(string),
+      })
+    | Scroll({
+        count: int,
+        direction: Scroll.direction,
+      })
+    | Map(Mapping.t)
+    | Unmap({
+        mode: Mapping.mode,
+        keys: option(string),
       });
 };
 
@@ -402,7 +464,7 @@ The value [s] must be a string of UTF-8 characters.
 
 The keystroke is processed synchronously.
 */
-let input: (~context: Context.t=?, string) => Context.t;
+let input: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
 /**
 [key(s)] sends a single keystroke.
@@ -413,7 +475,7 @@ The value [s] must be a valid Vim key, such as:
 */
 
 // TODO: Strongly type these keys...
-let key: (~context: Context.t=?, string) => Context.t;
+let key: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
 let eval: string => result(string, string);
 
@@ -426,7 +488,7 @@ You may use any valid Ex command, although you must omit the leading semicolon.
 
 The command [cmd] is processed synchronously.
 */
-let command: (~context: Context.t=?, string) => Context.t;
+let command: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
 /**
 [onDirectoryChanged(f)] registers a directory changed listener [f].

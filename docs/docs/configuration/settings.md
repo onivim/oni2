@@ -25,6 +25,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.autoClosingBrackets` __(_"LanguageDefined"|"Never"_ default: `"LanguageDefined"`)__ - When set to `"LanguageDefined"`, Onivim will automatically close brackets and pairs, based on language configuration.
 
+- `editor.cursorSurroundingLines` __(_int_ default: `1`)__ - The number of view lines to keep visible above and below the cursor when scrolling. Equivalent to the Vim `scrolloff` setting.
+
 - `editor.detectIndentation` __(_bool_ default: `true`)__ - Allow Onivim to auto-detect indentation settings (tab vs space, indent size)
 
 - `editor.fontFamily` __(_string_)__ - The font family used by the editor surface. This must be a monospace font. The font may be specified by either the name of the font, or an absolute path to the font file.
@@ -98,6 +100,10 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `vim.highlightedyank.duration` __(_int_ default: `300`)__ - The time, in milliseconds, the yank highlight is visible.
 
+### Input
+
+- `vim.leader` __(_string_)__ - Specify a custom [leader key](./key-bindings#leader-key). 
+
 ### Layout
 
 - `workbench.editor.showTabs` __(_bool_ default: `true`)__ - When `false`, hides the editor tabs.
@@ -154,8 +160,6 @@ Experimental features are features that we are working to stabilize and turn on-
 > __NOTE:__ Experimental features may cause instability, like crashes. Use with caution!
 
 - `experimental.editor.cursorSmoothCaretAnimation` - __(_bool_ default: `false`)__ - Use an animation for moving the cursor caret.
-
-- `experimental.editor.smoothScroll` - __(_bool_ default: `false`)__ - Use an animation for scrolling the editor surface.
 
 - `experimental.viml` - __(_string|list of string_ default: `[]`)__ - Execute some VimL upon load. Example: `"experimental.viml": ["nnoremap ; :"]`
 

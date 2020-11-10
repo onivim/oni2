@@ -15,7 +15,7 @@ describe("Options", ({describe, _}) => {
       let effects = ref([]);
       let dispose = onEffect(eff => effects := [eff, ...effects^]);
 
-      let _: Context.t = Vim.command("set minimap");
+      let (_: Context.t, _: list(Effect.t)) = Vim.command("set minimap");
       expect.equal(
         effects^,
         [
@@ -33,7 +33,7 @@ describe("Options", ({describe, _}) => {
       let effects = ref([]);
       let dispose = onEffect(eff => effects := [eff, ...effects^]);
 
-      let _: Context.t = Vim.command("set rnu");
+      let (_: Context.t, _: list(Effect.t)) = Vim.command("set rnu");
       expect.equal(
         effects^,
         [
@@ -55,7 +55,7 @@ describe("Options", ({describe, _}) => {
       let effects = ref([]);
       let dispose = onEffect(eff => effects := [eff, ...effects^]);
 
-      let _: Context.t = Vim.command("set rtp=abc");
+      let (_: Context.t, _: list(Effect.t)) = Vim.command("set rtp=abc");
       expect.equal(
         effects^,
         [
@@ -133,39 +133,5 @@ describe("Options", ({describe, _}) => {
         "\tThis is the first line of a test file",
       );
     });
-  });
-
-  describe("line comment", ({test, _}) => {
-    test("toggle comment based on settings", ({expect, _}) => {
-      let b = resetBuffer();
-
-      Options.setLineComment("; ");
-
-      input("g");
-      input("c");
-      input("c");
-
-      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
-        "; This is the first line of a test file",
-      );
-
-      input("g");
-      input("c");
-      input("c");
-
-      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
-        "This is the first line of a test file",
-      );
-
-      Options.setLineComment("!!");
-
-      input("g");
-      input("c");
-      input("c");
-
-      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
-        "!!This is the first line of a test file",
-      );
-    })
   });
 });

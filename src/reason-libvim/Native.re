@@ -124,8 +124,6 @@ external vimOperatorGetPending: unit => option(operatorPendingInfo) =
 external vimOptionSetTabSize: int => unit = "libvim_vimOptionSetTabSize";
 external vimOptionSetInsertSpaces: bool => unit =
   "libvim_vimOptionSetInsertSpaces";
-external vimOptionSetLineComment: string => unit =
-  "libvim_vimOptionSetLineComment";
 external vimOptionGetInsertSpaces: unit => bool =
   "libvim_vimOptionGetInsertSpaces";
 external vimOptionGetTabSize: unit => int = "libvim_vimOptionGetTabSize";

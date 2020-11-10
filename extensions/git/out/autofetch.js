@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.AutoFetcher = void 0;
 const vscode_1 = require("vscode");
 const util_1 = require("./util");
 const nls = require("vscode-nls");
@@ -75,7 +76,7 @@ class AutoFetcher {
                 return;
             }
             try {
-                await this.repository.fetchDefault();
+                await this.repository.fetchDefault({ silent: true });
             }
             catch (err) {
                 if (err.gitErrorCode === "AuthenticationFailed" /* AuthenticationFailed */) {
@@ -96,6 +97,6 @@ class AutoFetcher {
         this.disposables.forEach(d => d.dispose());
     }
 }
-AutoFetcher.DidInformUser = 'autofetch.didInformUser';
 exports.AutoFetcher = AutoFetcher;
+AutoFetcher.DidInformUser = 'autofetch.didInformUser';
 //# sourceMappingURL=autofetch.js.map

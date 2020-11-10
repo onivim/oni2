@@ -86,6 +86,18 @@ let editors = (~isFocused) => {
               | _ => false
               }
             ),
+            bool("selectMode", state =>
+              switch (ModeManager.current(state)) {
+              | Select(_) => true
+              | _ => false
+              }
+            ),
+            bool("operatorPending", state =>
+              switch (ModeManager.current(state)) {
+              | Operator(_) => true
+              | _ => false
+              }
+            ),
             bool("parameterHintsVisible", state =>
               Feature_SignatureHelp.isShown(state.signatureHelp)
             ),
@@ -181,6 +193,10 @@ let all = (state: State.t) => {
     extensionContextKeys,
     searchContextKeys,
     paneContextKeys,
+    Feature_Registration.Contributions.contextKeys(
+      ~isFocused=focus == Focus.LicenseKey,
+      state.registration,
+    ),
     Feature_LanguageSupport.Contributions.contextKeys
     |> Schema.map(({languageSupport, _}: State.t) => languageSupport)
     |> fromSchema(state),

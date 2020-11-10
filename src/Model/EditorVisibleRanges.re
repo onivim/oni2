@@ -10,15 +10,19 @@ type individualRange = {
 };
 
 let getVisibleRangesForEditor = (editor: Editor.t) => {
-  let topVisibleLine = Editor.getTopVisibleLine(editor);
-  let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
+  let topVisibleLine =
+    Editor.getTopVisibleBufferLine(editor)
+    |> EditorCoreTypes.LineNumber.toZeroBased;
+  let bottomVisibleLine =
+    Editor.getBottomVisibleBufferLine(editor)
+    |> EditorCoreTypes.LineNumber.toZeroBased;
 
   let leftVisibleColumn = Editor.getLeftVisibleColumn(editor);
 
   let {bufferWidthInCharacters, minimapWidthInCharacters, _}: EditorLayout.t =
-    Editor.getLayout(~showLineNumbers=false, ~maxMinimapCharacters=0, editor);
+    Editor.getLayout(editor);
 
-  let i = ref(max(topVisibleLine - 1, 0));
+  let i = ref(max(topVisibleLine, 0));
   let eRanges = ref([]);
 
   while (i^ <= bottomVisibleLine) {

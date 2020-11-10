@@ -147,6 +147,7 @@ module Group: {
   };
 };
 
+[@deriving show]
 type panel =
   | Left
   | Right

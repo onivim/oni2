@@ -81,12 +81,14 @@ module Catalog: {
 
 module Management: {
   let install:
-    (~setup: Setup.t, ~extensionsFolder: string=?, string) => Lwt.t(unit);
+    (~setup: Setup.t, ~extensionsFolder: Fp.t(Fp.absolute)=?, string) =>
+    Lwt.t(unit);
 
-  let uninstall: (~extensionsFolder: string=?, string) => Lwt.t(unit);
+  let uninstall:
+    (~extensionsFolder: Fp.t(Fp.absolute)=?, string) => Lwt.t(unit);
 
   let get:
-    (~extensionsFolder: string=?, unit) =>
+    (~extensionsFolder: Fp.t(Fp.absolute)=?, unit) =>
     Lwt.t(list(Exthost.Extension.Scanner.ScanResult.t));
 };
 
@@ -104,7 +106,7 @@ module Query: {
 module Effects: {
   let uninstall:
     (
-      ~extensionsFolder: option(string),
+      ~extensionsFolder: option(Fp.t(Fp.absolute)),
       ~toMsg: result(unit, string) => 'a,
       string
     ) =>
@@ -112,7 +114,7 @@ module Effects: {
 
   let install:
     (
-      ~extensionsFolder: option(string),
+      ~extensionsFolder: option(Fp.t(Fp.absolute)),
       ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'a,
       string
     ) =>

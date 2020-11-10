@@ -424,7 +424,9 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get symbols",
            ~validate=
-             (symbols: list(Exthost.DocumentSymbol.t)) => {
+             (maybeSymbols: option(list(Exthost.DocumentSymbol.t))) => {
+               expect.equal(Option.is_some(maybeSymbols), true);
+               let symbols = Option.get(maybeSymbols);
                expect.int(List.length(symbols)).toBe(2);
                let symbol0: Exthost.DocumentSymbol.t = List.nth(symbols, 0);
                let symbol1: Exthost.DocumentSymbol.t = List.nth(symbols, 1);

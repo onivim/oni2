@@ -3,7 +3,7 @@ open Oni_Core;
 [@deriving show({with_path: false})]
 type provider = {
   handle: int,
-  selector: list(Exthost.DocumentFilter.t),
+  selector: Exthost.DocumentSelector.t,
   metadata: Exthost.SignatureHelp.ProviderMetadata.t,
 };
 

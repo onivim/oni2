@@ -13,6 +13,8 @@ type key = Lookup.path;
 type resolver = (~vimSetting: option(string), key) => rawValue;
 type fileTypeResolver = (~fileType: string) => resolver;
 
+let emptyResolver = (~vimSetting as _, _) => NotSet;
+
 let key = Lookup.path;
 let keyAsString = Lookup.key;
 
@@ -39,9 +41,11 @@ module Settings = {
   };
 
   let fromFile = path =>
-    try(path |> Yojson.Safe.from_file |> fromJson) {
+    try(path |> Fp.toString |> Yojson.Safe.from_file |> fromJson) {
     | Yojson.Json_error(message) =>
-      Log.errorf(m => m("Failed to read file %s: %s", path, message));
+      Log.errorf(m =>
+        m("Failed to read file %s: %s", path |> Fp.toString, message)
+      );
       empty;
     };
 

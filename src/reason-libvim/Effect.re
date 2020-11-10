@@ -9,4 +9,13 @@ type t =
   | MacroRecordingStopped({
       register: char,
       value: option(string),
+    })
+  | Scroll({
+      count: int,
+      direction: Scroll.direction,
+    })
+  | Map(Mapping.t)
+  | Unmap({
+      mode: Mapping.mode,
+      keys: option(string),
     });

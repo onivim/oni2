@@ -147,6 +147,7 @@ if (process.platform == "linux") {
         }),
         LSEnvironment: {
             ONI2_BUNDLED: "1",
+            ONI2_LAUNCHED_FROM_FINDER: "1",
         },
         SUFeedURL: process.env.ONI2_APPCAST_BASEURL,
         NSAppTransportSecurity: {
