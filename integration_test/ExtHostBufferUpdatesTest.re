@@ -11,7 +11,7 @@ module TS = TextSynchronization;
 runTestWithInput(
   ~name="ExtHostBufferUpdates", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   // Wait until the extension is activated

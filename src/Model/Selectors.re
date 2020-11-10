@@ -97,3 +97,7 @@ let configResolver = (state: State.t) => {
 
   Feature_Configuration.resolver(~fileType, state.config, state.vim);
 };
+
+let mode = (state: State.t) => {
+  state.layout |> Feature_Layout.activeEditor |> Feature_Editor.Editor.mode;
+};

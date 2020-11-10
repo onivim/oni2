@@ -1474,7 +1474,12 @@ let update =
     };
 
   | Vim(msg) =>
-    let wasInInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state.vim));
+    let wasInInsertMode =
+      Vim.Mode.isInsert(
+        state.layout
+        |> Feature_Layout.activeEditor
+        |> Feature_Editor.Editor.mode,
+      );
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
     let state = {...state, vim};
 
@@ -1503,8 +1508,12 @@ let update =
         ({...state, layout: layout'}, Isolinear.Effect.none);
       };
 
-    let isInInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state'.vim));
-
+    let isInInsertMode =
+      Vim.Mode.isInsert(
+        state.layout
+        |> Feature_Layout.activeEditor
+        |> Feature_Editor.Editor.mode,
+      );
     // Entered insert mode
     let languageSupport =
       if (isInInsertMode && !wasInInsertMode) {

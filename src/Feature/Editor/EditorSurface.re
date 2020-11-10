@@ -150,7 +150,6 @@ let%component make =
                 ~editor: Editor.t,
                 ~uiFont: Oni_Core.UiFont.t,
                 ~theme,
-                ~mode: Vim.Mode.t,
                 ~bufferHighlights,
                 ~bufferSyntaxHighlights,
                 ~diagnostics,
@@ -163,6 +162,8 @@ let%component make =
                 (),
               ) => {
   let colors = Colors.precompute(theme);
+
+  let mode = Editor.mode(editor);
 
   let%hook lastDimensions = Hooks.ref(None);
 

@@ -3,7 +3,7 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   let initialEditorId = ref(None);
