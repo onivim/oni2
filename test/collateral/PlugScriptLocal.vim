@@ -1,5 +1,3 @@
-
-
 function! s:hello1()
     echo "hello1"
 endfunction
