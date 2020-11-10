@@ -2,7 +2,9 @@
 "config.h";
 
 %ifdef
-USE_SPARKLE;
+ENABLE_AUTOUPDATE;
+
+external init: unit => unit = "oni2_SparkleInit";
 
 module Updater = {
   type t;
@@ -28,6 +30,8 @@ module Debug = {
 };
 
 [%%else];
+
+let init = () => ();
 
 module Updater = {
   type t = unit;
