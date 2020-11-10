@@ -13,6 +13,7 @@ steps:
         downloadType: 'single'
         artifactName: 'cache-$(Agent.OS)-install'
         downloadPath: '$(STAGING_DIRECTORY)'
+        allowPartiallySucceededBuilds: true
     continueOnError: true
 
   - bash: 'mkdir -p $(ESY__CACHE_INSTALL_PATH)'
@@ -31,8 +32,16 @@ steps:
       if [ "$AGENT_OS" == "Windows_NT" ]; then
         STDIR=$( cygpath --unix --absolute "$STAGING_DIRECTORY")
       fi
+      echo "ESY__CACHE_INSTALL_PATH: $ESY__CACHE_INSTALL_PATH"
       echo "STDIR: $STDIR"
       tar -xf "$STDIR/cache-$(Agent.OS)-install/esy-cache.tar" -C .
+
+      echo "TEMP - Deleting dependencies: $ESY__CACHE_INSTALL_PATH"
+      echo "ls before:"
+      ls *fzy*
+      rm -rf *fzy*
+      echo "ls after:"
+      ls
     continueOnError: true
     condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
     displayName: '[Cache][Restore] Untar esy cache directory'

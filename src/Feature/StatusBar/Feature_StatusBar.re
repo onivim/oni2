@@ -462,11 +462,12 @@ module View = {
     let scmItems =
       scm
       |> Feature_SCM.statusBarCommands(~workingDirectory)
-      |> List.filter_map((item: Exthost.Command.t) =>
-           item.label
-           |> Option.map(label => {
-                toStatusBarElement(~command=item.id, label)
-              })
+      |> List.map((command: Feature_SCM.command) =>
+           toStatusBarElement(
+             ~command=command.id,
+             ~tooltip=?command.tooltip,
+             command.title |> Exthost.Label.ofString,
+           )
          )
       |> React.listToElement;
 

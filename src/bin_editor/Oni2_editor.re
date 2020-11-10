@@ -192,6 +192,7 @@ switch (eff) {
 
     Vim.init();
     Oni2_KeyboardLayout.init();
+    Oni2_Sparkle.init();
 
     let initialWorkingDirectory = initWorkingDirectory();
     let window =
@@ -339,6 +340,8 @@ switch (eff) {
     let close = () => {
       App.quit(~askNicely=true, app);
     };
+
+    Callback.register("oni2_close", close);
 
     let restore = () => {
       Window.restore(window);
