@@ -5,6 +5,6 @@
  (libraries bigarray Revery.zed luv lwt lwt.unix oniguruma Oni2.cli Oni2.core
    Oni2.model Oni2.service.extensions Oni2.service.net Oni2.store
    Oni2.syntax_client Oni2.syntax_server Oni2.ui reason-sdl2 reason-harfbuzz
-   fp dir.lib)
+   Oni2.sparkle fp dir.lib)
  (preprocess
   (pps lwt_ppx brisk-reconciler.ppx)))
