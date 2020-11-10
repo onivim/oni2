@@ -1,7 +1,7 @@
 type callback = unit => unit;
 
 let init: unit => unit;
-let subscribe: callback => unit;
+let subscribe: (callback, unit) => unit;
 let getCurrentLanguage: unit => string;
 let getCurrentLayout: unit => string;
 

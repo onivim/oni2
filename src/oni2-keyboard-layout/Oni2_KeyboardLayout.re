@@ -2,8 +2,12 @@ type callback = unit => unit;
 
 let callbackListRef: ref(list(callback)) = ref([]);
 
-let subscribe = (callback: callback) =>
+let subscribe = (callback: callback) => {
   callbackListRef := [callback, ...callbackListRef^];
+
+  () =>
+    callbackListRef := List.filter(cb => cb !== callback, callbackListRef^);
+};
 
 external init: unit => unit = "oni2_KeyboardLayoutInit";
 
