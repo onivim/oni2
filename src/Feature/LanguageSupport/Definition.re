@@ -62,7 +62,6 @@ let update = (msg, model) =>
         Outmsg.OpenFile({
           filePath: definition.uri |> Oni_Core.Uri.toFileSystemPath,
           location: Some(position),
-          preview: true,
         });
       };
     (model, outmsg);

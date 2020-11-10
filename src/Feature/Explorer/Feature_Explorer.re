@@ -92,10 +92,8 @@ let setRoot = (~rootPath, {fileExplorer, _} as model) => {
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | OpenFile({
-      filePath: string,
-      preview: bool,
-    })
+  | OpenFile(string)
+  | PreviewFile(string)
   | GrabFocus
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol);
@@ -129,8 +127,8 @@ let update = (~configuration, msg, model) => {
       | Component_FileExplorer.Nothing => Nothing
       | Component_FileExplorer.Effect(eff) =>
         Effect(eff |> Isolinear.Effect.map(msg => FileExplorer(msg)))
-      | Component_FileExplorer.OpenFile({filePath, preview}) =>
-        OpenFile({filePath, preview})
+      | Component_FileExplorer.OpenFile(filePath) => OpenFile(filePath)
+      | Component_FileExplorer.PreviewFile(filePath) => PreviewFile(filePath)
       | GrabFocus => GrabFocus
       };
 
@@ -178,8 +176,8 @@ let update = (~configuration, msg, model) => {
       | Component_VimTree.Nothing
       | Component_VimTree.Expanded(_)
       | Component_VimTree.Collapsed(_) => Nothing
-      | Component_VimTree.Clicked(symbol) => SymbolSelected(symbol)
-      | Component_VimTree.DoubleClicked(_) => Nothing
+      | Component_VimTree.Touched(symbol) => SymbolSelected(symbol)
+      | Component_VimTree.Selected(_) => Nothing
       };
 
     ({...model, symbolOutline}, outmsg');

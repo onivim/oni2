@@ -288,11 +288,10 @@ let update =
           state,
           effect |> Isolinear.Effect.map(msg => FileExplorer(msg)),
         )
-      | OpenFile({filePath, preview}) => (
+      | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
+      | PreviewFile(filePath) => (
           state,
-          preview
-            ? Internal.previewFileEffect(filePath)
-            : Internal.openFileEffect(filePath),
+          Internal.previewFileEffect(filePath),
         )
       | GrabFocus => (
           FocusManager.push(Focus.FileExplorer, state),
@@ -407,11 +406,13 @@ let update =
             })
           ),
         );
-      | OpenFile({filePath, location, preview}) => (
+      | OpenFile({filePath, location}) => (
           state,
-          preview
-            ? Internal.previewFileEffect(~position=location, filePath)
-            : Internal.openFileEffect(~position=location, filePath),
+          Internal.openFileEffect(~position=location, filePath),
+        )
+      | PreviewFile({filePath, location}) => (
+          state,
+          Internal.previewFileEffect(~position=location, filePath),
         )
       | NotifySuccess(msg) => (
           state,
@@ -450,6 +451,11 @@ let update =
         ~font=state.editorFont,
         ~languageInfo=state.languageInfo,
         ~buffers=state.buffers,
+        ~previewEnabled=
+          Oni_Core.Configuration.getValue(
+            c => c.editorEnablePreview,
+            state.configuration,
+          ),
         msg,
         state.pane,
       );
@@ -458,11 +464,13 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Isolinear.Effect.none)
-    | OpenFile({filePath, position, preview}) => (
+    | OpenFile({filePath, position}) => (
         state,
-        preview
-          ? Internal.previewFileEffect(~position=Some(position), filePath)
-          : Internal.openFileEffect(~position=Some(position), filePath),
+        Internal.openFileEffect(~position=Some(position), filePath),
+      )
+    | PreviewFile({filePath, position}) => (
+        state,
+        Internal.previewFileEffect(~position=Some(position), filePath),
       )
     | UnhandledWindowMovement(windowMovement) => (
         state,
@@ -508,7 +516,16 @@ let update =
     (state, eff);
 
   | Search(msg) =>
-    let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
+    let (model, maybeOutmsg) =
+      Feature_Search.update(
+        ~previewEnabled=
+          Oni_Core.Configuration.getValue(
+            c => c.editorEnablePreview,
+            state.configuration,
+          ),
+        state.searchPane,
+        msg,
+      );
     let state = {...state, searchPane: model};
 
     switch (maybeOutmsg) {
@@ -517,11 +534,14 @@ let update =
         Effect.none,
       )
 
-    | Some(OpenFile({filePath, location, preview})) => (
+    | Some(OpenFile({filePath, location})) => (
         state,
-        preview
-          ? Internal.previewFileEffect(~position=Some(location), filePath)
-          : Internal.openFileEffect(~position=Some(location), filePath),
+        Internal.openFileEffect(~position=Some(location), filePath),
+      )
+
+    | Some(PreviewFile({filePath, location})) => (
+        state,
+        Internal.previewFileEffect(~position=Some(location), filePath),
       )
     | Some(UnhandledWindowMovement(windowMovement)) => (
         state,
@@ -532,7 +552,16 @@ let update =
 
   | SCM(msg) =>
     let (model, maybeOutmsg) =
-      Feature_SCM.update(extHostClient, state.scm, msg);
+      Feature_SCM.update(
+        ~previewEnabled=
+          Oni_Core.Configuration.getValue(
+            c => c.editorEnablePreview,
+            state.configuration,
+          ),
+        extHostClient,
+        state.scm,
+        msg,
+      );
     let state = {...state, scm: model};
 
     switch ((maybeOutmsg: Feature_SCM.outmsg)) {
@@ -543,12 +572,8 @@ let update =
         eff |> Effect.map(msg => Actions.SCM(msg)),
       )
 
-    | OpenFile({filePath, preview}) => (
-        state,
-        preview
-          ? Internal.previewFileEffect(filePath)
-          : Internal.openFileEffect(filePath),
-      )
+    | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
+    | PreviewFile(filePath) => (state, Internal.previewFileEffect(filePath))
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -1134,13 +1159,14 @@ let update =
       | Some(`NewTab) => `NewTab
       };
     let effect =
-      Feature_Buffers.Effects.previewFileInEditor(
+      Feature_Buffers.Effects.openFileInEditor(
         ~languageInfo=state.languageInfo,
         ~font=state.editorFont,
         ~split,
         ~position,
         ~grabFocus=true,
         ~filePath,
+        ~preview=true,
         state.buffers,
       )
       |> Isolinear.Effect.map(msg => Actions.Buffers(msg));

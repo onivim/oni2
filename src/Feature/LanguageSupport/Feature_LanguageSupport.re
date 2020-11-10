@@ -52,7 +52,10 @@ type outmsg =
   | OpenFile({
       filePath: string,
       location: option(CharacterPosition.t),
-      preview: bool,
+    })
+  | PreviewFile({
+      filePath: string,
+      location: option(CharacterPosition.t),
     })
   | ReferencesAvailable
   | NotifySuccess(string)
@@ -70,8 +73,9 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
     | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)
     | Outmsg.ReferencesAvailable => ReferencesAvailable
-    | Outmsg.OpenFile({filePath, location, preview}) =>
-      OpenFile({filePath, location, preview})
+    | Outmsg.OpenFile({filePath, location}) => OpenFile({filePath, location})
+    | Outmsg.PreviewFile({filePath, location}) =>
+      PreviewFile({filePath, location})
     | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f));
 
 module Msg = {

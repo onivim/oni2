@@ -83,10 +83,8 @@ module Effects = {
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | OpenFile({
-      filePath: string,
-      preview: bool,
-    })
+  | OpenFile(string)
+  | PreviewFile(string)
   | GrabFocus;
 
 let setTree = (tree, model) => {
@@ -254,18 +252,19 @@ let update = (~configuration, msg, model) => {
         ),
       )
     | Component_VimTree.Collapsed(_) => (model, Nothing)
-    | Component_VimTree.Clicked(node) =>
+    | Component_VimTree.Touched(node) =>
       // Set active here to avoid scrolling in BufferEnter
       (
         model |> setActive(Some(node.path)),
-        OpenFile({filePath: node.path, preview: true}),
+        Oni_Core.Configuration.getValue(
+          c => c.editorEnablePreview,
+          configuration,
+        )
+          ? PreviewFile(node.path) : OpenFile(node.path),
       )
-    | Component_VimTree.DoubleClicked(node) =>
+    | Component_VimTree.Selected(node) =>
       // Set active here to avoid scrolling in BufferEnter
-      (
-        model |> setActive(Some(node.path)),
-        OpenFile({filePath: node.path, preview: false}),
-      )
+      (model |> setActive(Some(node.path)), OpenFile(node.path))
     | Component_VimTree.Nothing => (model, Nothing)
     };
   };

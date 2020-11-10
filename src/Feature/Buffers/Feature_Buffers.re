@@ -400,6 +400,7 @@ module Effects = {
         ~position=None,
         ~grabFocus=true,
         ~filePath,
+        ~preview=false,
         model,
       ) => {
     Isolinear.Effect.createWithDispatch(
@@ -409,13 +410,7 @@ module Effects = {
       let handler = (~alreadyLoaded, buffer) =>
         if (alreadyLoaded) {
           dispatch(
-            EditorRequested({
-              buffer,
-              split,
-              position,
-              grabFocus,
-              preview: false,
-            }),
+            EditorRequested({buffer, split, position, grabFocus, preview}),
           );
         } else {
           dispatch(
@@ -424,48 +419,7 @@ module Effects = {
               split,
               position,
               grabFocus,
-              preview: false,
-            }),
-          );
-        };
-
-      openCommon(~vimBuffer=newBuffer, ~languageInfo, ~font, ~model, handler);
-    });
-  };
-
-  let openFileInEditor =
-      (
-        ~font: Service_Font.font,
-        ~languageInfo: Exthost.LanguageInfo.t,
-        ~split=`Current,
-        ~position=None,
-        ~grabFocus=true,
-        ~filePath,
-        model,
-      ) => {
-    Isolinear.Effect.createWithDispatch(
-      ~name="Feature_Buffers.openFileInEditor", dispatch => {
-      let newBuffer = Vim.Buffer.openFile(filePath);
-
-      let handler = (~alreadyLoaded, buffer) =>
-        if (alreadyLoaded) {
-          dispatch(
-            EditorRequested({
-              buffer,
-              split,
-              position,
-              grabFocus,
-              preview: false,
-            }),
-          );
-        } else {
-          dispatch(
-            NewBufferAndEditorRequested({
-              buffer,
-              split,
-              position,
-              grabFocus,
-              preview: false,
+              preview,
             }),
           );
         };
@@ -510,47 +464,6 @@ module Effects = {
 
         openCommon(~vimBuffer, ~languageInfo, ~font, ~model, handler);
       }
-    });
-  };
-
-  let previewFileInEditor =
-      (
-        ~font: Service_Font.font,
-        ~languageInfo: Exthost.LanguageInfo.t,
-        ~split=`Current,
-        ~position=None,
-        ~grabFocus=true,
-        ~filePath,
-        model,
-      ) => {
-    Isolinear.Effect.createWithDispatch(
-      ~name="Feature_Buffers.openFileInEditor", dispatch => {
-      let newBuffer = Vim.Buffer.openFile(filePath);
-
-      let handler = (~alreadyLoaded, buffer) =>
-        if (alreadyLoaded) {
-          dispatch(
-            EditorRequested({
-              buffer,
-              split,
-              position,
-              grabFocus,
-              preview: true,
-            }),
-          );
-        } else {
-          dispatch(
-            NewBufferAndEditorRequested({
-              buffer,
-              split,
-              position,
-              grabFocus,
-              preview: true,
-            }),
-          );
-        };
-
-      openCommon(~vimBuffer=newBuffer, ~languageInfo, ~font, ~model, handler);
     });
   };
 };

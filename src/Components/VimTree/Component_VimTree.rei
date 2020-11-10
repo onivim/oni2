@@ -35,8 +35,8 @@ type outmsg('node, 'leaf) =
   | Nothing
   | Expanded('node)
   | Collapsed('node)
-  | Clicked('leaf)
-  | DoubleClicked('leaf);
+  | Touched('leaf)
+  | Selected('leaf);
 
 let update:
   (msg, model('node, 'leaf)) => (model('node, 'leaf), outmsg('node, 'leaf));

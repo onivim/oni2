@@ -100,18 +100,7 @@ module Effects: {
       ~position: option(CharacterPosition.t)=?,
       ~grabFocus: bool=?,
       ~filePath: string,
-      model
-    ) =>
-    Isolinear.Effect.t(msg);
-
-  let previewFileInEditor:
-    (
-      ~font: Service_Font.font,
-      ~languageInfo: Exthost.LanguageInfo.t,
-      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab]=?,
-      ~position: option(CharacterPosition.t)=?,
-      ~grabFocus: bool=?,
-      ~filePath: string,
+      ~preview: bool=?,
       model
     ) =>
     Isolinear.Effect.t(msg);

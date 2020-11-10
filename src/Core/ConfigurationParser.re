@@ -203,6 +203,10 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
+    "editor.enablePreview",
+    (config, json) => {...config, editorEnablePreview: parseBool(json)},
+  ),
+  (
     "explorer.autoReveal",
     (config, json) => {
       ...config,

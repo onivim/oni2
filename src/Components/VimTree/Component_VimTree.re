@@ -165,8 +165,8 @@ type outmsg('node, 'leaf) =
   | Nothing
   | Expanded('node)
   | Collapsed('node)
-  | Clicked('leaf)
-  | DoubleClicked('leaf);
+  | Touched('leaf)
+  | Selected('leaf);
 
 let calculateIndentGuides = model => {
   let selectedIndex = model.treeAsList |> Component_VimList.selectedIndex;
@@ -272,9 +272,9 @@ let update = (msg, model) => {
 
     switch (outmsg) {
     | Component_VimList.Nothing => (model, Nothing)
-    | Component_VimList.Clicked({index}) =>
+    | Component_VimList.Touched({index}) =>
       switch (Component_VimList.get(index, treeAsList)) {
-      | Some(ViewLeaf({data, _})) => (model, Clicked(data))
+      | Some(ViewLeaf({data, _})) => (model, Touched(data))
       // TODO: Expand / collapse
       | Some(ViewNode({data, expanded, _})) =>
         let expansionContext =
@@ -290,9 +290,9 @@ let update = (msg, model) => {
 
       | None => (model, Nothing)
       }
-    | Component_VimList.DoubleClicked({index}) =>
+    | Component_VimList.Selected({index}) =>
       switch (Component_VimList.get(index, treeAsList)) {
-      | Some(ViewLeaf({data, _})) => (model, DoubleClicked(data))
+      | Some(ViewLeaf({data, _})) => (model, Selected(data))
       // TODO: Expand / collapse
       | Some(ViewNode({data, expanded, _})) =>
         toggleExpanded(~expanded, ~data, model)

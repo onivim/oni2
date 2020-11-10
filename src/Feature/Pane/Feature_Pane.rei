@@ -19,7 +19,10 @@ type outmsg =
   | OpenFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
-      preview: bool,
+    })
+  | PreviewFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
     })
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
@@ -39,6 +42,7 @@ let update:
     ~buffers: Feature_Buffers.model,
     ~font: Service_Font.font,
     ~languageInfo: Exthost.LanguageInfo.t,
+    ~previewEnabled: bool,
     msg,
     model
   ) =>

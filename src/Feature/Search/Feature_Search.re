@@ -84,12 +84,15 @@ type outmsg =
   | OpenFile({
       filePath: string,
       location: CharacterPosition.t,
-      preview: bool,
+    })
+  | PreviewFile({
+      filePath: string,
+      location: CharacterPosition.t,
     })
   | Focus
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
-let update = (model, msg) => {
+let update = (~previewEnabled, model, msg) => {
   switch (msg) {
   | Input(key) =>
     switch (model.focus) {
@@ -175,22 +178,14 @@ let update = (model, msg) => {
     let eff =
       switch (outmsg) {
       | Component_VimTree.Nothing => None
-      | Component_VimTree.Clicked(item) =>
+      | Component_VimTree.Touched(item) =>
         Some(
-          OpenFile({
-            filePath: item.file,
-            location: item.location,
-            preview: true,
-          }),
+          previewEnabled
+            ? PreviewFile({filePath: item.file, location: item.location})
+            : OpenFile({filePath: item.file, location: item.location}),
         )
-      | Component_VimTree.DoubleClicked(item) =>
-        Some(
-          OpenFile({
-            filePath: item.file,
-            location: item.location,
-            preview: false,
-          }),
-        )
+      | Component_VimTree.Selected(item) =>
+        Some(OpenFile({filePath: item.file, location: item.location}))
       // TODO
       | Component_VimTree.Collapsed(_) => None
       | Component_VimTree.Expanded(_) => None

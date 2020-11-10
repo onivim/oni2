@@ -14,6 +14,7 @@ let getDefaultConfigString = configName =>
   "editor.fontFamily": "JetBrainsMono-Regular.ttf",
   "editor.fontSize": 14,
   "editor.largeFileOptimizations": true,
+  "editor.enablePreview": true,
   "editor.highlightActiveIndentGuide": true,
   "editor.indentSize": 4,
   "editor.insertSpaces": true,

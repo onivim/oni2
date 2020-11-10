@@ -118,8 +118,8 @@ type msg =
 
 type outmsg =
   | Nothing
-  | Clicked({index: int})
-  | DoubleClicked({index: int});
+  | Touched({index: int})
+  | Selected({index: int});
 
 let showTopScrollShadow = ({scrollY, _}) => scrollY > 0.1;
 let showBottomScrollShadow = ({items, scrollY, rowHeight, viewportHeight, _}) => {
@@ -340,7 +340,7 @@ let update = (msg, model) => {
       model.selected >= 0 && model.selected < Array.length(model.items);
 
     if (isValidFocus) {
-      (model, Clicked({index: model.selected}));
+      (model, Selected({index: model.selected}));
     } else {
       (model, Nothing);
     };
@@ -349,7 +349,7 @@ let update = (msg, model) => {
     let isValidIndex = index >= 0 && index < Array.length(model.items);
 
     if (isValidIndex) {
-      (model |> setSelected(~selected=index), Clicked({index: index}));
+      (model |> setSelected(~selected=index), Touched({index: index}));
     } else {
       (model, Nothing);
     };
@@ -358,10 +358,7 @@ let update = (msg, model) => {
     let isValidIndex = index >= 0 && index < Array.length(model.items);
 
     if (isValidIndex) {
-      (
-        model |> setSelected(~selected=index),
-        DoubleClicked({index: index}),
-      );
+      (model |> setSelected(~selected=index), Selected({index: index}));
     } else {
       (model, Nothing);
     };

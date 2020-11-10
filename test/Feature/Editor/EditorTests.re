@@ -16,7 +16,10 @@ describe("Editor", ({describe, _}) => {
 
     let editorBuffer = buffer |> EditorBuffer.ofBuffer;
 
-    (Editor.create(~config, ~buffer=editorBuffer, ()), buffer);
+    (
+      Editor.create(~config, ~buffer=editorBuffer, ~preview=false, ()),
+      buffer,
+    );
   };
 
   describe("pixelPositionToBytePosition", ({test, _}) => {

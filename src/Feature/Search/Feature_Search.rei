@@ -18,12 +18,15 @@ type outmsg =
   | OpenFile({
       filePath: string,
       location: CharacterPosition.t,
-      preview: bool,
+    })
+  | PreviewFile({
+      filePath: string,
+      location: CharacterPosition.t,
     })
   | Focus
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
-let update: (model, msg) => (model, option(outmsg));
+let update: (~previewEnabled: bool, model, msg) => (model, option(outmsg));
 
 let resetFocus: model => model;
 

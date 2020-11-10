@@ -379,10 +379,8 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
-  | OpenFile({
-      filePath: string,
-      preview: bool,
-    })
+  | OpenFile(string)
+  | PreviewFile(string)
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | Nothing;
 
@@ -438,7 +436,7 @@ module Internal = {
   };
 };
 
-let update = (extHostClient: Exthost.Client.t, model, msg) =>
+let update = (~previewEnabled, extHostClient: Exthost.Client.t, model, msg) =>
   switch (msg) {
   | DocumentContentProvider(documentContentProviderMsg) =>
     Exthost.Msg.DocumentContentProvider.(
@@ -765,21 +763,19 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
              let outmsg =
                switch (outmsg) {
                | Component_VimList.Nothing => Some(Nothing)
-               | Component_VimList.Clicked({index}) =>
+               | Component_VimList.Touched({index}) =>
                  Component_VimList.get(index, viewModel)
                  |> Option.map((item: Resource.t) =>
-                      OpenFile({
-                        filePath: item.uri |> Oni_Core.Uri.toFileSystemPath,
-                        preview: true,
-                      })
+                      previewEnabled
+                        ? PreviewFile(
+                            item.uri |> Oni_Core.Uri.toFileSystemPath,
+                          )
+                        : OpenFile(item.uri |> Oni_Core.Uri.toFileSystemPath)
                     )
-               | Component_VimList.DoubleClicked({index}) =>
+               | Component_VimList.Selected({index}) =>
                  Component_VimList.get(index, viewModel)
                  |> Option.map((item: Resource.t) =>
-                      OpenFile({
-                        filePath: item.uri |> Oni_Core.Uri.toFileSystemPath,
-                        preview: false,
-                      })
+                      OpenFile(item.uri |> Oni_Core.Uri.toFileSystemPath)
                     )
                };
 
