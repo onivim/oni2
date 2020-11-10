@@ -1,14 +1,9 @@
-type callback = (~language: string, ~layout: string) => unit;
+type callback = unit => unit;
 
-type callbackPriv = (string, string) => unit;
-
-let wrapCallback = (callback, language, layout) =>
-  callback(~language, ~layout);
-
-let callbackListRef: ref(list(callbackPriv)) = ref([]);
+let callbackListRef: ref(list(callback)) = ref([]);
 
 let subscribe = (callback: callback) =>
-  callbackListRef := [wrapCallback(callback), ...callbackListRef^];
+  callbackListRef := [callback, ...callbackListRef^];
 
 external init: unit => unit = "oni2_KeyboardLayoutInit";
 
@@ -29,7 +24,8 @@ module Keymap = {
 
   type t = Hashtbl.t(string, entry);
 
-  external populateCurrentKeymap: ('keymap, ('keymap, string, entry) => unit) => unit =
+  external populateCurrentKeymap:
+    ('keymap, ('keymap, string, entry) => unit) => unit =
     "oni2_KeyboardLayoutPopulateCurrentKeymap";
 
   let getCurrent = () => {

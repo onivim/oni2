@@ -60,12 +60,7 @@ static void notificationHandler(
     }
   }
 
-  NSString *nsLayout = oni2_priv_GetCurrentKeyboardLayout();
-  NSString *nsLanguage = oni2_priv_GetCurrentKeyboardLanguage();
-
-  vLayout = caml_copy_string([nsLayout UTF8String]);
-  vLanguage = caml_copy_string([nsLanguage UTF8String]);
-  value args[] = {vLanguage, vLayout};
+  value args[] = {Val_unit};
 
   value callbackList = UNWRAP_REF(*callbackListRef);
 
@@ -75,7 +70,7 @@ static void notificationHandler(
   // Loop through the callback list and call all of them with the langusage and layout
   while (callbackList != Val_emptylist) {
     value callback = Field(callbackList, 0);
-    caml_callbackN(callback, 2, args);
+    caml_callbackN(callback, 1, args);
     callbackList = Field(callbackList, 1);
   }
 

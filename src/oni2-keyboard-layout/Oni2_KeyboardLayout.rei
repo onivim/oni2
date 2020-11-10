@@ -1,4 +1,4 @@
-type callback = (~language: string, ~layout: string) => unit;
+type callback = unit => unit;
 
 let init: unit => unit;
 let subscribe: callback => unit;
