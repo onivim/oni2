@@ -6,7 +6,9 @@ runTest(~name="VimScriptLocalFunctionTest", (dispatch, wait, runEffects) => {
     Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
   );
 
-  dispatch(VimExecuteCommand("source test/collateral/PlugScriptLocal.vim"));
+  let plugScript = getAssetPath("PlugScriptLocal.vim");
+
+  dispatch(VimExecuteCommand("source " ++ plugScript));
   runEffects();
 
   // set up a binding to the <Plug>Hello1 command provided by the script

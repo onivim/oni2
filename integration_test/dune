@@ -54,4 +54,4 @@
    TypingUnbatchedTest.exe VimScriptLocalFunctionTest.exe
    VimSimpleRemapTest.exe ZenModeSingleFileModeTest.exe ZenModeSplitTest.exe
    large-c-file.c lsan.supp some-test-file.json some-test-file.txt test.crlf
-   test.lf utf8.txt utf8-test-file.htm))
+   test.lf utf8.txt utf8-test-file.htm PlugScriptLocal.vim))
