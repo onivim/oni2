@@ -26,32 +26,33 @@ module Internal = {
 
   let functionGetChar = (mode: Vim.Functions.GetChar.mode) => {
     Vim.Functions.GetChar.(
-    switch (mode) {
-    | Immediate => Log.warn("getchar(0) not yet implemented");
-    char_of_int(0)
-    | Peek => Log.warn("getchar(1) not yet implemented");
-    char_of_int(0)
-    | Wait =>
-      let currentTime = Unix.gettimeofday();
-      let char = ref(None);
+      switch (mode) {
+      | Immediate =>
+        Log.warn("getchar(0) not yet implemented");
+        char_of_int(0);
+      | Peek =>
+        Log.warn("getchar(1) not yet implemented");
+        char_of_int(0);
+      | Wait =>
+        let currentTime = Unix.gettimeofday();
+        let char = ref(None);
 
-      while (/*currentTime +. 5000. < Unix.gettimeofday() &&*/ char^ == None) {
-        switch(Sdl2.Event.waitTimeout(100)) {
-        | None => ()
-        | Some(Sdl2.Event.TextInput({text, _})) => {
-          open Sdl2;
+        while (/*currentTime +. 5000. < Unix.gettimeofday() &&*/ char^ == None) {
+          switch (Sdl2.Event.waitTimeout(100)) {
+          | None => ()
+          | Some(Sdl2.Event.TextInput({text, _})) =>
+            Sdl2.(
+              if (String.length(text) == 1) {
+                char := Some(text.[0]);
+              }
+            )
+          | Some(_) => ()
+          };
+        };
 
-          if (String.length(text) == 1) {
-            char := Some(text.[0]);
-          }
-        }
-        | Some(_) => ()
-        }
+        char^ |> Option.value(~default=char_of_int(0));
       }
-
-      char^
-      |> Option.value(~default=char_of_int(0));
-    });
+    );
   };
 
   let autoClosingPairs = (~syntaxScope, ~maybeLanguageConfig, state: State.t) => {

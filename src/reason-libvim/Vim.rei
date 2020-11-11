@@ -126,12 +126,12 @@ module Mode: {
 module Functions: {
   module GetChar: {
     type mode =
-    | Wait // getchar()
-    | Immediate // getchar(0)
-    | Peek; // getchar(1)
+      | Wait // getchar()
+      | Immediate // getchar(0)
+      | Peek; // getchar(1)
 
     type t = mode => char;
-  }
+  };
 };
 
 module Context: {

@@ -468,7 +468,9 @@ let _onColorSchemeChanged = (maybeScheme: option(string)) => {
 
 let _colorSchemesGet = pattern => {
   GlobalState.context^
-  |> Option.map(({colorSchemeProvider, _}: Context.t) => colorSchemeProvider(pattern))
+  |> Option.map(({colorSchemeProvider, _}: Context.t) =>
+       colorSchemeProvider(pattern)
+     )
   |> Option.value(~default=[||]);
 };
 
@@ -510,16 +512,20 @@ let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
   |> Option.value(~default=currentLines);
 };
 
-let _onGetChar = (mode) => {
-  let mode'  = switch (mode) {
-  | 0 => Functions.GetChar.Immediate
-  | 1 => Functions.GetChar.Peek
-  | _ => Functions.GetChar.Wait;
-  };
+let _onGetChar = mode => {
+  let mode' =
+    switch (mode) {
+    | 0 => Functions.GetChar.Immediate
+    | 1 => Functions.GetChar.Peek
+    | _ => Functions.GetChar.Wait
+    };
 
-  let c = GlobalState.context^
-  |> Option.map(({functionGetChar, _}: Context.t) => functionGetChar(mode'))
-  |> Option.value(~default=char_of_int(0));
+  let c =
+    GlobalState.context^
+    |> Option.map(({functionGetChar, _}: Context.t) =>
+         functionGetChar(mode')
+       )
+    |> Option.value(~default=char_of_int(0));
   (int_of_char(c), 0);
 };
 

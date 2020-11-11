@@ -49,5 +49,5 @@ let current = () => {
   tabSize: Options.getTabSize(),
   insertSpaces: Options.getInsertSpaces(),
   toggleComments: lines => lines,
-  functionGetChar: (_) => char_of_int(0),
+  functionGetChar: _ => char_of_int(0),
 };
