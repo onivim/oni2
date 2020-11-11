@@ -507,7 +507,7 @@ The value [s] must be a valid Vim key, such as:
 // TODO: Strongly type these keys...
 let key: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
-let eval: string => result(string, string);
+let eval: (~context: Context.t=?, string) => result(string, string);
 
 /**
 [command(cmd)] executes [cmd] as an Ex command.

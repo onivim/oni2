@@ -698,7 +698,7 @@ let command = (~context=Context.current(), v) => {
   );
 };
 
-let eval = v =>
+let eval = (~context=Context.current(), v) =>
   // Error messages come through the message handler,
   // so we'll temporarily override it during the course of the eval
   if (v == "") {
@@ -708,9 +708,9 @@ let eval = v =>
 
     GlobalState.overriddenMessageHandler :=
       Some((_priority, _title, msg) => {lastMessage := Some(msg)});
-
+    GlobalState.context := Some(context);
     let maybeEval = Native.vimEval(v);
-
+    GlobalState.context := None;
     GlobalState.overriddenMessageHandler := None;
 
     switch (maybeEval, lastMessage^) {
