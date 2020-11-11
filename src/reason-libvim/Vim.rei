@@ -169,14 +169,16 @@ module Context: {
 };
 
 module CommandLine: {
+  type t = Types.cmdline;
+
   let getCompletions: (~context: Context.t, unit) => array(string);
   let getText: unit => option(string);
   let getPosition: unit => int;
   let getType: unit => Types.cmdlineType;
 
-  let onEnter: (Event.handler(Types.cmdline), unit) => unit;
+  let onEnter: (Event.handler(t), unit) => unit;
   let onLeave: (Event.handler(unit), unit) => unit;
-  let onUpdate: (Event.handler(Types.cmdline), unit) => unit;
+  let onUpdate: (Event.handler(t), unit) => unit;
 };
 
 module Edit: {

@@ -28,12 +28,6 @@ let start =
   let libvimHasInitialized = ref(false);
   let currentTriggerKey = ref(None);
 
-  let colorSchemeProvider = pattern => {
-    getState().extensions
-    |> Feature_Extensions.themesByName(~filter=pattern)
-    |> Array.of_list;
-  };
-
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
     let yankConfig =
