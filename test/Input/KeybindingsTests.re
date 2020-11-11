@@ -141,7 +141,10 @@ describe("Keybindings", ({describe, _}) => {
                input,
              );
 
-           expect.equal(effects, [Execute("explorer.toggle")]);
+           expect.equal(
+             effects,
+             [Execute(NamedCommand("explorer.toggle"))],
+           );
          });
     });
     test("regression test: #1160 (legacy binding)", ({expect, _}) => {
@@ -171,7 +174,7 @@ describe("Keybindings", ({describe, _}) => {
                  ~key,
                  input,
                );
-             expect.equal(effects, [Execute(cmd)]);
+             expect.equal(effects, [Execute(NamedCommand(cmd))]);
            });
       };
 

@@ -40,8 +40,12 @@ type model;
 
 let initial: list(Schema.keybinding) => model;
 
+type execute =
+  | NamedCommand(string)
+  | VimExCommand(string);
+
 type effect =
-  | Execute(string)
+  | Execute(execute)
   | Text(string)
   | Unhandled(KeyPress.t)
   | RemapRecursionLimitHit;

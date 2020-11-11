@@ -76,6 +76,9 @@ type outmsg =
       error: string,
     });
 
+type execute =
+  InputStateMachine.execute = | NamedCommand(string) | VimExCommand(string);
+
 module Schema = {
   [@deriving show]
   type keybinding = {
@@ -86,7 +89,7 @@ module Schema = {
 
   type resolvedKeybinding = {
     matcher: EditorInput.Matcher.t,
-    command: string,
+    command: InputStateMachine.execute,
     condition: WhenExpr.ContextKeys.t => bool,
   };
 
@@ -102,7 +105,11 @@ module Schema = {
       EditorInput.Matcher.parse(~getKeycode, ~getScancode, key);
     maybeMatcher
     |> Stdlib.Result.map(matcher => {
-         {matcher, command, condition: evaluateCondition(condition)}
+         {
+           matcher,
+           command: InputStateMachine.NamedCommand(command),
+           condition: evaluateCondition(condition),
+         }
        });
   };
 };
@@ -165,7 +172,7 @@ let initial = keybindings => {
 
 type effect =
   InputStateMachine.effect =
-    | Execute(string)
+    | Execute(InputStateMachine.command)
     | Text(string)
     | Unhandled(EditorInput.KeyPress.t)
     | RemapRecursionLimitHit;
@@ -278,36 +285,59 @@ let update = (msg, model) => {
   | VimMap(mapping) =>
     let maybeMatcher =
       EditorInput.Matcher.parse(~getKeycode, ~getScancode, mapping.fromKeys);
-    let maybeKeys =
-      EditorInput.KeyPress.parse(~getKeycode, ~getScancode, mapping.toValue);
+    let (model, eff) =
+      switch (
+        VimCommandParser.parse(~scriptId=mapping.scriptId, mapping.toValue)
+      ) {
+      | KeySequence(toValue) =>
+        let maybeKeys =
+          EditorInput.KeyPress.parse(~getKeycode, ~getScancode, toValue);
 
-    let maybeModel =
-      ResultEx.map2(
-        (matcher, keys) => {
-          let (inputStateMachine', _mappingId) =
-            InputStateMachine.addMapping(
-              matcher,
-              Internal.vimMapModeToWhenExpr(mapping.mode),
-              keys,
-              model.inputStateMachine,
-            );
-          {...model, inputStateMachine: inputStateMachine'};
-        },
-        maybeMatcher,
-        maybeKeys,
-      );
+        let maybeModel =
+          ResultEx.map2(
+            (matcher, keys) => {
+              let (inputStateMachine', _mappingId) =
+                InputStateMachine.addMapping(
+                  matcher,
+                  Internal.vimMapModeToWhenExpr(mapping.mode),
+                  keys,
+                  model.inputStateMachine,
+                );
+              {...model, inputStateMachine: inputStateMachine'};
+            },
+            maybeMatcher,
+            maybeKeys,
+          );
 
-    switch (maybeModel) {
-    | Ok(model') => (model', Nothing)
-    | Error(err) => (
-        model,
-        MapParseError({
-          fromKeys: mapping.fromKeys,
-          toKeys: mapping.toValue,
-          error: err,
-        }),
-      )
-    };
+        switch (maybeModel) {
+        | Ok(model') => (model', Nothing)
+        | Error(err) => (
+            model,
+            MapParseError({
+              fromKeys: mapping.fromKeys,
+              toKeys: mapping.toValue,
+              error: err,
+            }),
+          )
+        };
+
+      | ExCommand(exCmd) =>
+        let model' =
+          maybeMatcher
+          |> Result.map(matcher => {
+               let (inputStateMachine', _mappingId) =
+                 InputStateMachine.addBinding(
+                   matcher,
+                   Internal.vimMapModeToWhenExpr(mapping.mode),
+                   VimExCommand(exCmd),
+                   model.inputStateMachine,
+                 );
+               {...model, inputStateMachine: inputStateMachine'};
+             })
+          |> ResultEx.value(~default=model);
+        (model', Nothing);
+      };
+    (model, eff);
 
   | VimUnmap(_) => (model, Nothing)
   // TODO:
