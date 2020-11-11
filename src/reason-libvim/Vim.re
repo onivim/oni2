@@ -504,6 +504,10 @@ let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
   |> Option.value(~default=currentLines);
 };
 
+let _onGetChar = () => {
+  (int_of_char('"'), 0);
+};
+
 let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);
   Callback.register("lv_onBufferChanged", _onBufferChanged);
@@ -538,6 +542,7 @@ let init = () => {
   Callback.register("lv_onInputMap", _onInputMap);
   Callback.register("lv_onInputUnmap", _onInputUnmap);
   Callback.register("lv_onToggleComments", _onToggleComments);
+  Callback.register("lv_onGetChar", _onGetChar);
 
   Native.vimInit();
 
