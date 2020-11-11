@@ -193,6 +193,14 @@ int onColorSchemeChanged(char_u *colorscheme) {
   CAMLreturnT(int, OK);
 };
 
+int onGetChar(int mode, char* c, int *modMask) {
+  CAMLparam0();
+  *modMask = 0;
+  *c = '"';
+
+  CAMLreturnT(int, OK);
+}
+
 void onSettingChanged(optionSet_T *options) {
   CAMLparam0();
   CAMLlocal2(innerValue, settingValue);
@@ -848,6 +856,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetInputMapCallback(&onInputMap);
   vimSetInputUnmapCallback(&onInputUnmap);
   vimSetToggleCommentsCallback(&onToggleComments);
+  vimSetFunctionGetCharCallback(&onGetChar);
 
   char *args[0];
   vimInit(0, args);
