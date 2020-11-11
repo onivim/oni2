@@ -15,15 +15,15 @@ Service_Extensions_Test.TestFramework.cli();
 Service_Net_Test.TestFramework.cli();
 Service_OS_Test.TestFramework.cli();
 
-// Vim.init();
-// Libvim_Test.TestFramework.cli();
+Vim.init();
+Libvim_Test.TestFramework.cli();
 
-// EditorCoreTypes_Test.TestFramework.cli();
-// EditorInput_Test.TestFramework.cli();
-// Exthost_Transport_Test.TestFramework.cli();
-// Exthost_Test.TestFramework.cli();
+EditorCoreTypes_Test.TestFramework.cli();
+EditorInput_Test.TestFramework.cli();
+Exthost_Transport_Test.TestFramework.cli();
+Exthost_Test.TestFramework.cli();
 
-// Oniguruma_Test.TestFramework.cli();
-// Textmate_Test.TestFramework.cli();
-// TreeSitter_Test.TestFramework.cli();
-// Oni_Cli_Test.TestFramework.cli();
+Oniguruma_Test.TestFramework.cli();
+Textmate_Test.TestFramework.cli();
+TreeSitter_Test.TestFramework.cli();
+Oni_Cli_Test.TestFramework.cli();
