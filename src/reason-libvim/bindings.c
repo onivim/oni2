@@ -868,7 +868,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetInputMapCallback(&onInputMap);
   vimSetInputUnmapCallback(&onInputUnmap);
   vimSetToggleCommentsCallback(&onToggleComments);
-  vimSetFunctionGetCharCallback(&onGetChar);
+  //vimSetFunctionGetCharCallback(&onGetChar);
 
   char *args[0];
   vimInit(0, args);

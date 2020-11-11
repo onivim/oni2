@@ -9,18 +9,12 @@ describe("Eval", ({describe, test, _}) => {
   });
 
   describe("getchar", ({test, _}) => {
-    let eval = (functionGetChar) => {
-      let context = {
-        ...Vim.Context.current(),
-        functionGetChar
-      };
-      Vim.eval(~context)
-    }
+    let eval = functionGetChar => {
+      let context = {...Vim.Context.current(), functionGetChar};
+      Vim.eval(~context);
+    };
     test("Simple getchar case", ({expect, _}) => {
-
-      expect.equal(eval((_) => 'a', "getchar()"), Ok("a"))
+      expect.equal(eval(_ => 'a', "getchar()"), Ok("a"))
     });
-  })
-
-  
+  });
 });

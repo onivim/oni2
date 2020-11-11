@@ -175,8 +175,6 @@ let runWith = (~context: Context.t, f) => {
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
   GlobalState.context := Some(context);
-  // GlobalState.autoIndent := Some(context.autoIndent);
-  //GlobalState.colorSchemeProvider := context.colorSchemeProvider;
   GlobalState.viewLineMotion := Some(context.viewLineMotion);
   GlobalState.screenPositionMotion := Some(context.screenCursorMotion);
   GlobalState.effects := [];
@@ -185,8 +183,6 @@ let runWith = (~context: Context.t, f) => {
   let mode = f();
 
   GlobalState.context := None;
-  //GlobalState.autoIndent := None;
-  //GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
   GlobalState.viewLineMotion := None;
   GlobalState.screenPositionMotion := None;
   GlobalState.toggleComments := None;
