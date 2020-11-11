@@ -247,6 +247,9 @@ int onGoto(gotoRequest_T gotoInfo) {
   case HOVER:
     target = 2;
     break;
+  case OUTLINE:
+    target = 3;
+    break;
   default:
     target = 0;
   }
