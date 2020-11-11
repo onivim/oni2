@@ -38,6 +38,7 @@ module Internal = {
         let char = ref(None);
 
         // Implement a five-second timeout
+        // Perhaps could integrate a 'timeouttlen' configuration setting?
         while (currentTime +. 5. > Unix.gettimeofday() && char^ == None) {
           // Not an ideal implementation of getchar - this busy-waits
           // (and steals SDL events!)
