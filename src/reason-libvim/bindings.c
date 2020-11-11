@@ -198,7 +198,7 @@ int onGetChar(int mode, char* c, int *modMask) {
   CAMLparam0();
   CAMLlocal1(vRet);
   *modMask = 0;
-  *c = '"';
+  *c = 0;
 
   static const value *lv_onGetChar = NULL;
 
@@ -868,7 +868,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetInputMapCallback(&onInputMap);
   vimSetInputUnmapCallback(&onInputUnmap);
   vimSetToggleCommentsCallback(&onToggleComments);
-  //vimSetFunctionGetCharCallback(&onGetChar);
+  vimSetFunctionGetCharCallback(&onGetChar);
 
   char *args[0];
   vimInit(0, args);

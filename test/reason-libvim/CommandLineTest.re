@@ -6,15 +6,12 @@ let reset = () => Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 let input = s => ignore(Vim.input(s));
 let key = s => ignore(Vim.key(s));
 
-let context = colorSchemeProvider => {
-  ...Vim.Context.current(),
-  colorSchemeProvider,
-};
-
 describe("CommandLine", ({describe, _}) => {
-  let emptyColorSchemeProvider = _ => [||];
-  let getCompletions =
-    CommandLine.getCompletions(~context=context(emptyColorSchemeProvider));
+  let context = colorSchemeProvider => {
+    ...Vim.Context.current(),
+    colorSchemeProvider,
+  };
+  let getCompletions = CommandLine.getCompletions;
   describe("getType", ({test, _}) =>
     test("simple command line", ({expect, _}) => {
       let _ = reset();

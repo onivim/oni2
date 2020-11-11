@@ -171,7 +171,7 @@ module Context: {
 module CommandLine: {
   type t = Types.cmdline;
 
-  let getCompletions: (~context: Context.t, unit) => array(string);
+  let getCompletions: (~context: Context.t=?, unit) => array(string);
   let getText: unit => option(string);
   let getPosition: unit => int;
   let getType: unit => Types.cmdlineType;

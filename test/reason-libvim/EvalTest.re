@@ -14,7 +14,7 @@ describe("Eval", ({describe, test, _}) => {
       Vim.eval(~context);
     };
     test("Simple getchar case", ({expect, _}) => {
-      expect.equal(eval(_ => 'a', "getchar()"), Ok("a"))
+      expect.equal(eval(_ => 'a', "getchar()"), Ok("97"))
     });
   });
 });

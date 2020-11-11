@@ -1,6 +1,6 @@
 type t = Types.cmdline;
 
-let getCompletions = (~context: Context.t, ()) => {
+let getCompletions = (~context: Context.t=Context.current(), ()) => {
   GlobalState.context := Some(context);
   let completions = Native.vimCommandLineGetCompletions();
   GlobalState.context := None;
