@@ -1,15 +1,23 @@
 #include "config.h"
 
-#ifdef USE_SPARKLE
 #include <caml/alloc.h>
 #include <caml/callback.h>
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
+#ifdef USE_SPARKLE
 #import <Sparkle/Sparkle.h>
 
 #include "utils.h"
+
+CAMLprim value oni2_SparkleInit() {
+  CAMLparam0();
+
+  CAMLreturn(Val_unit);
+}
 
 CAMLprim value oni2_SparkleGetSharedInstance() {
   CAMLparam0();

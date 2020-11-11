@@ -1,3 +1,5 @@
+let init: unit => unit;
+
 module Updater: {
   type t;
 

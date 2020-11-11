@@ -126,7 +126,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let effectToActions = (state, effect) =>
     switch (effect) {
-    | Feature_Input.Execute(command) => [
+    | Feature_Input.(Execute(VimExCommand(command))) => [
+        Actions.VimExecuteCommand(command),
+      ]
+    | Feature_Input.(Execute(NamedCommand(command))) => [
         Actions.KeybindingInvoked({command: command}),
       ]
     | Feature_Input.Text(text) => handleTextEffect(~isText=true, state, text)

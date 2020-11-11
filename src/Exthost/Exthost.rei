@@ -169,26 +169,20 @@ module DefinitionLink: {
   let decode: Json.decoder(t);
 };
 
-module DocumentFilter: {
-  [@deriving show]
-  type t = {
-    language: option(string),
-    scheme: option(string),
-    exclusive: bool,
-  };
+// module DocumentFilter: {
+//   [@deriving show]
+//   type t;
 
-  let matches: (~filetype: string, t) => bool;
+//   let matches: (~filetype: string, t) => bool;
 
-  let decode: Json.decoder(t);
+//   let decode: Json.decoder(t);
 
-  let toString: t => string;
-};
+//   let toString: t => string;
+// };
 
 module DocumentSelector: {
   [@deriving show]
   type t = list(DocumentFilter.t);
-
-  let matches: (~filetype: string, t) => bool;
 
   let matchesBuffer: (~buffer: Oni_Core.Buffer.t, t) => bool;
 

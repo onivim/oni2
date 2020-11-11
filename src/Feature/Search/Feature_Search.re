@@ -132,12 +132,15 @@ let update = (model, msg) => {
   | FindInput(msg) =>
     let (findInput', inputOutmsg) =
       Component_InputText.update(msg, model.findInput);
-    let outmsg =
+    let (model', outmsg) =
       switch (inputOutmsg) {
-      | Component_InputText.Nothing => None
-      | Component_InputText.Focus => Some(Focus)
+      | Component_InputText.Nothing => (model, None)
+      | Component_InputText.Focus => (
+          {...model, focus: FindInput},
+          Some(Focus),
+        )
       };
-    ({...model, findInput: findInput'}, outmsg);
+    ({...model', findInput: findInput'}, outmsg);
 
   | Update(items) => (model |> setHits(model.hits @ items), None)
 
