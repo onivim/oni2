@@ -206,7 +206,7 @@ int onGetChar(int mode, char* c, int *modMask) {
     lv_onGetChar = caml_named_value("lv_onGetChar");
   }
 
-  vRet = caml_callback(*lv_onGetChar, Val_unit);
+  vRet = caml_callback(*lv_onGetChar, Val_int(mode));
   *c = Int_val(Field(vRet, 0));
   *modMask = Int_val(Field(vRet, 1));
 

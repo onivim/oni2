@@ -1,6 +1,8 @@
 open EditorCoreTypes;
 
 type lineEnding = Types.lineEnding;
+module Event = Event;
+module Types = Types;
 
 module AutoClosingPairs: {
   module AutoPair: {
@@ -121,6 +123,17 @@ module Mode: {
   let cursors: t => list(BytePosition.t);
 };
 
+module Functions: {
+  module GetChar: {
+    type mode =
+    | Wait // getchar()
+    | Immediate // getchar(0)
+    | Peek; // getchar(1)
+
+    type t = mode => char;
+  }
+};
+
 module Context: {
   type t = {
     autoClosingPairs: AutoClosingPairs.t,
@@ -149,9 +162,21 @@ module Context: {
     mode: Mode.t,
     tabSize: int,
     insertSpaces: bool,
+    functionGetChar: Functions.GetChar.t,
   };
 
   let current: unit => t;
+};
+
+module CommandLine: {
+  let getCompletions: (~context: Context.t, unit) => array(string);
+  let getText: unit => option(string);
+  let getPosition: unit => int;
+  let getType: unit => Types.cmdlineType;
+
+  let onEnter: (Event.handler(Types.cmdline), unit) => unit;
+  let onLeave: (Event.handler(unit), unit) => unit;
+  let onUpdate: (Event.handler(Types.cmdline), unit) => unit;
 };
 
 module Edit: {
@@ -562,12 +587,9 @@ module AutoCommands = AutoCommands;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
 module Clipboard = Clipboard;
-module CommandLine = CommandLine;
 module Cursor = Cursor;
-module Event = Event;
 module Options = Options;
 module Search = Search;
-module Types = Types;
 module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;

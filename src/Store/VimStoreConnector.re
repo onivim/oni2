@@ -482,8 +482,9 @@ let start =
     Vim.CommandLine.getText()
     |> Option.iter(commandStr =>
          if (position == String.length(commandStr)) {
+          let context = Oni_Model.VimContext.current(getState());
            let completions =
-             Vim.CommandLine.getCompletions(~colorSchemeProvider, ());
+             Vim.CommandLine.getCompletions(~context, ());
 
            Log.debugf(m =>
              m("  got %n completions.", Array.length(completions))

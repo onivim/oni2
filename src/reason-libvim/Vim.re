@@ -17,6 +17,7 @@ module Edit = Edit;
 module Effect = Effect;
 module Event = Event;
 module Format = Format;
+module Functions = Functions;
 module Goto = Goto;
 module Mapping = Mapping;
 module Operator = Operator;
@@ -173,8 +174,9 @@ let runWith = (~context: Context.t, f) => {
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
-  GlobalState.autoIndent := Some(context.autoIndent);
-  GlobalState.colorSchemeProvider := context.colorSchemeProvider;
+  GlobalState.context := Some(context);
+  // GlobalState.autoIndent := Some(context.autoIndent);
+  //GlobalState.colorSchemeProvider := context.colorSchemeProvider;
   GlobalState.viewLineMotion := Some(context.viewLineMotion);
   GlobalState.screenPositionMotion := Some(context.screenCursorMotion);
   GlobalState.effects := [];
@@ -182,8 +184,9 @@ let runWith = (~context: Context.t, f) => {
 
   let mode = f();
 
-  GlobalState.autoIndent := None;
-  GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
+  GlobalState.context := None;
+  //GlobalState.autoIndent := None;
+  //GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
   GlobalState.viewLineMotion := None;
   GlobalState.screenPositionMotion := None;
   GlobalState.toggleComments := None;
@@ -364,7 +367,8 @@ let _onAutoIndent = (lnum: int, sourceLine: string) => {
     };
 
   let indentAction =
-    GlobalState.autoIndent^
+    GlobalState.context^
+    |> Option.map(({autoIndent, _}: Context.t) => autoIndent)
     |> Option.map(fn => fn(~previousLine=beforeLine, ~beforePreviousLine))
     |> Option.value(~default=AutoIndent.KeepIndent);
 
@@ -463,7 +467,9 @@ let _onColorSchemeChanged = (maybeScheme: option(string)) => {
 };
 
 let _colorSchemesGet = pattern => {
-  GlobalState.colorSchemeProvider^(pattern);
+  GlobalState.context^
+  |> Option.map(({colorSchemeProvider, _}: Context.t) => colorSchemeProvider(pattern))
+  |> Option.value(~default=[||]);
 };
 
 let _onMacroStartRecording = (register: char) => {
@@ -504,8 +510,17 @@ let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
   |> Option.value(~default=currentLines);
 };
 
-let _onGetChar = () => {
-  (int_of_char('"'), 0);
+let _onGetChar = (mode) => {
+  let mode'  = switch (mode) {
+  | 0 => Functions.GetChar.Immediate
+  | 1 => Functions.GetChar.Peek
+  | _ => Functions.GetChar.Wait;
+  };
+
+  let c = GlobalState.context^
+  |> Option.map(({functionGetChar, _}: Context.t) => functionGetChar(mode'))
+  |> Option.value(~default=char_of_int(0));
+  (int_of_char(c), 0);
 };
 
 let init = () => {
