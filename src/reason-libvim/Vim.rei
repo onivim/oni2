@@ -320,7 +320,8 @@ module Goto: {
   type effect =
     | Definition
     | Declaration
-    | Hover;
+    | Hover
+    | Outline;
 };
 
 module TabPage: {
@@ -406,10 +407,12 @@ module Mapping: {
     | InsertAndCommandLine // :map!
     | All; // :map;
 
-  [@deriving show]
-  type scriptId;
-
-  let defaultScriptId: scriptId;
+  module ScriptId: {
+    [@deriving show]
+    type t;
+    let default: t;
+    let toInt: t => int;
+  };
 
   [@deriving show]
   type t = {
@@ -419,7 +422,7 @@ module Mapping: {
     expression: bool,
     recursive: bool,
     silent: bool,
-    scriptId,
+    scriptId: ScriptId.t,
   };
 };
 

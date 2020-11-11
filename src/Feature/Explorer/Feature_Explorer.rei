@@ -16,6 +16,8 @@ let initial: (~rootPath: string) => model;
 
 let setRoot: (~rootPath: string, model) => model;
 
+let focusOutline: model => model;
+
 // UPDATE
 
 type outmsg =

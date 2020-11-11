@@ -103,6 +103,9 @@ let start =
         Actions.LanguageSupport(Feature_LanguageSupport.Msg.Hover.show),
       )
 
+    | Vim.Goto.Outline =>
+      dispatch(Actions.SideBar(Feature_SideBar.(Command(GotoOutline))))
+
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
       Log.info("Goto definition requested");

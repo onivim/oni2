@@ -22,7 +22,8 @@ type command =
   | ToggleSearchPane
   | ToggleSCMPane
   | ToggleExtensionsPane
-  | ToggleVisibility;
+  | ToggleVisibility
+  | GotoOutline;
 
 [@deriving show]
 type msg =
@@ -34,9 +35,12 @@ type msg =
   | SCMClicked
   | ExtensionsClicked;
 
+type subFocus =
+  | Outline;
+
 type outmsg =
   | Nothing
-  | Focus
+  | Focus(option(subFocus))
   | PopFocus;
 
 let update: (~isFocused: bool, msg, model) => (model, outmsg);

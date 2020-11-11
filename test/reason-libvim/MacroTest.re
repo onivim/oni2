@@ -3,6 +3,7 @@ open Vim;
 
 let reset = () => Helpers.resetBuffer("test/testfile.txt");
 let input = s => ignore(Vim.input(s));
+let key = s => ignore(Vim.key(s));
 
 let isStartRecording =
   fun
@@ -93,5 +94,39 @@ describe("Macro", ({test, _}) => {
     );
 
     dispose();
+  });
+  test("regression test for #934: macro using global command", ({expect, _}) => {
+    let buf = reset();
+
+    Vim.Buffer.setLines(
+      ~lines=[|
+        {|<meta name="”robots”" content="”noindex,nofollow,noarchive,nosnippet,noodp”">|},
+        {|<meta name="apple-mobile-web-app-capable" content="yes">|},
+        {|<meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0,maximum-scale=1.0">|},
+        {|<meta name="format-detection" content="telephone=no">|},
+        {|<meta name="format-detection" content="address=no">|},
+        "",
+      |],
+      buf,
+    );
+
+    // Record macro
+    ["q", "q", "^", "w", "c", "i", "w", "test", "<Esc>", "q"]
+    |> List.iter(key);
+
+    let (_: Vim.Context.t, _: list(Vim.Effect.t)) =
+      Vim.command("g/meta/normal @q");
+
+    let actualLines = Vim.Buffer.getLines(buf);
+    let expectedLines = [|
+      {|<test name="”robots”" content="”noindex,nofollow,noarchive,nosnippet,noodp”">|},
+      {|<test name="apple-mobile-web-app-capable" content="yes">|},
+      {|<test name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0,maximum-scale=1.0">|},
+      {|<test name="format-detection" content="telephone=no">|},
+      {|<test name="format-detection" content="address=no">|},
+      "",
+    |];
+
+    expect.equal(actualLines, expectedLines);
   });
 });
