@@ -98,14 +98,17 @@ describe("Macro", ({test, _}) => {
   test("regression test for #934: macro using global command", ({expect, _}) => {
     let buf = reset();
 
-    Vim.Buffer.setLines(~lines=[|
-{|<meta name="”robots”" content="”noindex,nofollow,noarchive,nosnippet,noodp”">|},
-{|<meta name="apple-mobile-web-app-capable" content="yes">|},
-{|<meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0,maximum-scale=1.0">|},
-{|<meta name="format-detection" content="telephone=no">|},
-{|<meta name="format-detection" content="address=no">|},
-"",
-    |], buf);
+    Vim.Buffer.setLines(
+      ~lines=[|
+        {|<meta name="”robots”" content="”noindex,nofollow,noarchive,nosnippet,noodp”">|},
+        {|<meta name="apple-mobile-web-app-capable" content="yes">|},
+        {|<meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0,maximum-scale=1.0">|},
+        {|<meta name="format-detection" content="telephone=no">|},
+        {|<meta name="format-detection" content="address=no">|},
+        "",
+      |],
+      buf,
+    );
 
     // Record macro
     ["q", "q", "^", "w", "c", "i", "w", "test", "<Esc>", "q"]
