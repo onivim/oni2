@@ -309,7 +309,7 @@ module LanguageFeatures = {
   };
   let provideDocumentHighlights = (~handle, ~resource, ~position, client) => {
     Client.request(
-      ~decoder=Json.Decode.(list(DocumentHighlight.decode)),
+      ~decoder=Json.Decode.(nullable(list(DocumentHighlight.decode))),
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideDocumentHighlights",
