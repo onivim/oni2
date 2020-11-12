@@ -6,9 +6,6 @@
 @media only screen and (min-width: 1024px) {
 }
 
-@media only screen and (max-width: 1023px) {
-}
-
 @media only screen and (min-width: 1400px) {
 }
 
@@ -33,4 +30,75 @@
 
 .post a:hover {
     opacity: 1.0;
+}
+
+.tips {
+    display: flex;
+    flex-direction: column;
+}
+
+.tip {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.tip-inner {
+    width: 1080px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding: 3em;
+}
+
+.tip {
+    background-color:#27212e;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.tip:nth-of-type(2n) {
+    background-color: #242029;
+}
+
+
+.tip-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+    margin-right: 3em;
+}
+
+.tip-text h2 {
+    margin: 0;
+    padding: 0;
+    color: #b4dce7;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.tip-text h3 {
+    margin: 0;
+    padding: 0;
+    margin-bottom: 1em;
+    font-size: 0.9em;
+    font-weight: bold;
+    opacity: 0.75;
+}
+
+.tip-text .description {
+    margin-top: 1.5em;
+    margin-bottom: 1.5em;
+}
+
+.tip-video {
+    box-shadow: 6px 6px 10px 10px rgba(0, 0, 0, 0.2);
+}
+
+@media only screen and (max-width: 1023px) {
+    .tip-inner {
+        flex-direction: column;
+    }
 }

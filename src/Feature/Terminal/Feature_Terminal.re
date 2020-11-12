@@ -4,14 +4,14 @@ open Oni_Core;
 
 type terminal = {
   id: int,
-  cmd: string,
-  arguments: list(string),
+  launchConfig: Exthost.ShellLaunchConfig.t,
   rows: int,
   columns: int,
   pid: option(int),
   title: option(string),
   screen: ReveryTerminal.Screen.t,
   cursor: ReveryTerminal.Cursor.t,
+  closeOnExit: bool,
 };
 
 type t = {
@@ -43,6 +43,7 @@ type command =
   | NewTerminal({
       cmd: option(string),
       splitDirection,
+      closeOnExit: bool,
     })
   | NormalMode
   | InsertMode;
@@ -67,6 +68,11 @@ type outmsg =
   | TerminalCreated({
       name: string,
       splitDirection,
+    })
+  | TerminalExit({
+      terminalId: int,
+      exitCode: int,
+      shouldClose: bool,
     });
 
 let shellCmd = ShellUtility.getDefaultShell();
@@ -103,21 +109,19 @@ module Configuration = {
       setting(
         "terminal.integrated.shellArgs.osx",
         list(string),
-        ~default=[],
+        // ~/.[bash|zsh}_profile etc is not sourced when logging in on macOS.
+        // Instead, terminals on macOS should run as a login shell (which in turn
+        // sources these files).
+        // See more at http://unix.stackexchange.com/a/119675/115410.
+        ~default=["-l"],
       );
   };
 };
 
-let inputToIgnore = ["<C-w>", "<C-h>", "<C-j>", "<C-k>", "<C-l>"];
-
-let shouldHandleInput = str => {
-  !
-    List.exists(s => str == s, inputToIgnore);
-    // pick what keys should be ignored by the terminal.
-    // One option would be a configuration setting that lets us
-    // better, more customizable way to manage this, though.
-    // the user can get out of the terminal. We should have a
-    // HACK: Let the window motion keys pass through, so that
+let shouldClose = (~id, {idToTerminal, _}) => {
+  IntMap.find_opt(id, idToTerminal)
+  |> Option.map(({closeOnExit, _}) => closeOnExit)
+  |> Option.value(~default=true);
 };
 
 let updateById = (id, f, model) => {
@@ -127,7 +131,7 @@ let updateById = (id, f, model) => {
 
 let update = (~config: Config.resolver, model: t, msg) => {
   switch (msg) {
-  | Command(NewTerminal({cmd, splitDirection})) =>
+  | Command(NewTerminal({cmd, splitDirection, closeOnExit})) =>
     let cmdToUse =
       switch (cmd) {
       | None =>
@@ -148,20 +152,61 @@ let update = (~config: Config.resolver, model: t, msg) => {
       | _ => []
       };
 
+    let env =
+      Exthost.ShellLaunchConfig.(
+        switch (Revery.Environment.os) {
+        // Windows - simply inherit from the running process
+        | Windows => Inherit
+
+        // Mac - inherit (we rely on the '-l' flag to pick up user config)
+        | Mac => Inherit
+
+        // For Linux, there's a few stray variables that may come in from the AppImage
+        // for example - LD_LIBRARY_PATH in issue #2040. We need to clear those out.
+        | Linux =>
+          switch (
+            Sys.getenv_opt("ONI2_ORIG_PATH"),
+            Sys.getenv_opt("ONI2_ORIG_LD_LIBRARY_PATH"),
+          ) {
+          // We're running from the AppImage, which tracks the original env.
+          | (Some(origPath), Some(origLdLibPath)) =>
+            let envVariables =
+              [("PATH", origPath), ("LD_LIBRARY_PATH", origLdLibPath)]
+              |> List.to_seq
+              |> StringMap.of_seq;
+
+            Additive(envVariables);
+
+          // All other cases - just inherit. Maybe not running from AppImage.
+          | _ => Inherit
+          }
+
+        | _ => Inherit
+        }
+      );
+
+    let launchConfig =
+      Exthost.ShellLaunchConfig.{
+        name: "Terminal",
+        arguments,
+        executable: cmdToUse,
+        env,
+      };
+
     let id = model.nextId;
     let idToTerminal =
       IntMap.add(
         id,
         {
           id,
-          arguments,
-          cmd: cmdToUse,
+          launchConfig,
           rows: 40,
           columns: 40,
           pid: None,
           title: None,
           screen: ReveryTerminal.Screen.initial,
-          cursor: ReveryTerminal.Cursor.{row: 0, column: 0, visible: false},
+          cursor: ReveryTerminal.Cursor.initial,
+          closeOnExit,
         },
         model.idToTerminal,
       );
@@ -193,13 +238,18 @@ let update = (~config: Config.resolver, model: t, msg) => {
       updateById(id, term => {...term, title: Some(title)}, model);
     (newModel, Nothing);
 
-  | Service(ScreenUpdated({id, screen})) =>
-    let newModel = updateById(id, term => {...term, screen}, model);
+  | Service(ScreenUpdated({id, screen, cursor})) =>
+    let newModel = updateById(id, term => {...term, screen, cursor}, model);
     (newModel, Nothing);
 
-  | Service(CursorMoved({id, cursor})) =>
-    let newModel = updateById(id, term => {...term, cursor}, model);
-    (newModel, Nothing);
+  | Service(ProcessExit({id, exitCode})) => (
+      model,
+      TerminalExit({
+        terminalId: id,
+        exitCode,
+        shouldClose: shouldClose(~id, model),
+      }),
+    )
   };
 };
 
@@ -209,8 +259,7 @@ let subscription = (~workspaceUri, extHostClient, model: t) => {
   |> List.map((terminal: terminal) => {
        Service_Terminal.Sub.terminal(
          ~id=terminal.id,
-         ~arguments=terminal.arguments,
-         ~cmd=terminal.cmd,
+         ~launchConfig=terminal.launchConfig,
          ~rows=terminal.rows,
          ~columns=terminal.columns,
          ~workspaceUri,
@@ -349,7 +398,7 @@ let getFirstNonEmptyLineFromBottom = (lines: array(string)) => {
   getFirstNonEmptyLine(~start=Array.length(lines) - 1, ~direction=-1, lines);
 };
 
-type highlights = (int, list(ColorizedToken.t));
+type highlights = (int, list(ThemeToken.t));
 
 module TermScreen = ReveryTerminal.Screen;
 
@@ -370,16 +419,19 @@ let addHighlightForCell =
       cell,
     );
 
+  // TODO: Hook up the bold/italic in revery-terminal
   let newToken =
-    ColorizedToken.{
+    ThemeToken.{
       index: column,
       backgroundColor: bg,
       foregroundColor: fg,
       syntaxScope: SyntaxScope.none,
+      bold: false,
+      italic: false,
     };
 
   switch (tokens) {
-  | [ColorizedToken.{foregroundColor, backgroundColor, _} as ct, ...tail]
+  | [ThemeToken.{foregroundColor, backgroundColor, _} as ct, ...tail]
       when foregroundColor != fg && backgroundColor != bg => [
       newToken,
       ct,
@@ -490,21 +542,39 @@ module Commands = {
         ~category="Terminal",
         ~title="Open terminal in new horizontal split",
         "terminal.new.horizontal",
-        Command(NewTerminal({cmd: None, splitDirection: Horizontal})),
+        Command(
+          NewTerminal({
+            cmd: None,
+            splitDirection: Horizontal,
+            closeOnExit: true,
+          }),
+        ),
       );
     let vertical =
       define(
         ~category="Terminal",
         ~title="Open terminal in new vertical split",
         "terminal.new.vertical",
-        Command(NewTerminal({cmd: None, splitDirection: Vertical})),
+        Command(
+          NewTerminal({
+            cmd: None,
+            splitDirection: Vertical,
+            closeOnExit: true,
+          }),
+        ),
       );
     let current =
       define(
         ~category="Terminal",
         ~title="Open terminal in current window",
         "terminal.new.current",
-        Command(NewTerminal({cmd: None, splitDirection: Current})),
+        Command(
+          NewTerminal({
+            cmd: None,
+            splitDirection: Current,
+            closeOnExit: true,
+          }),
+        ),
       );
   };
 
@@ -557,4 +627,51 @@ module Contributions = {
       ShellArgs.linux.spec,
       ShellArgs.osx.spec,
     ];
+
+  let keybindings = {
+    Feature_Input.Schema.[
+      // Insert mode -> normal mdoe
+      {
+        key: "<C-\\><C-N>",
+        command: Commands.Oni.normalMode.id,
+        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<C-\\>n",
+        command: Commands.Oni.normalMode.id,
+        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
+      },
+      // Normal mode -> insert mode
+      {
+        key: "o",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<S-O>",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "Shift+a",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "a",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "i",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "Shift+i",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+    ];
+  };
 };

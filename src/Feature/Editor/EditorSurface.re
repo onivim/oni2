@@ -17,10 +17,8 @@ module Config = EditorConfiguration;
 
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Completions = Feature_LanguageSupport.Completions;
-module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
-module Definition = Feature_LanguageSupport.Definition;
+module Diagnostics = Feature_Diagnostics;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Constants = {
   include Constants;
@@ -32,78 +30,103 @@ module Constants = {
 
 module Styles = {
   open Style;
-
   let container = (~colors: Colors.t) => [
     backgroundColor(colors.editorBackground),
     color(colors.editorForeground),
     flexGrow(1),
   ];
 
-  let verticalScrollBar = (~colors: Colors.t) => [
+  let inactiveCover = (~colors: Colors.t, ~opacity) => [
+    backgroundColor(colors.editorBackground),
+    Style.opacity(opacity),
+    pointerEvents(`Ignore),
+    position(`Absolute),
+    top(0),
+    left(0),
+    right(0),
+    bottom(0),
+  ];
+
+  let verticalScrollBar = [
     position(`Absolute),
     top(0),
     right(0),
     width(Constants.scrollBarThickness),
-    backgroundColor(colors.scrollbarSliderBackground),
     bottom(0),
+  ];
+
+  let horizontalScrollBar = (gutterOffset, width) => [
+    position(`Absolute),
+    bottom(0),
+    left(gutterOffset),
+    Style.width(width),
+    height(Constants.editorHorizontalScrollBarThickness),
   ];
 };
 
 let minimap =
     (
-      ~buffer,
       ~bufferHighlights,
-      ~cursorPosition: Location.t,
+      ~cursorPosition: CharacterPosition.t,
       ~colors,
+      ~config,
+      ~dispatch,
       ~matchingPairs,
+      ~maybeYankHighlights,
       ~bufferSyntaxHighlights,
       ~selectionRanges,
       ~showMinimapSlider,
-      ~onScroll,
       ~editor,
       ~diffMarkers,
       ~diagnosticsMap,
-      ~bufferWidthInCharacters,
       ~minimapWidthInPixels,
+      ~languageSupport,
       (),
     ) => {
   let minimapPixelWidth = minimapWidthInPixels + Constants.minimapPadding * 2;
   let style =
     Style.[
       position(`Absolute),
-      overflow(`Hidden),
       top(0),
       right(Constants.scrollBarThickness),
       width(minimapPixelWidth),
       bottom(0),
     ];
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
-    onScroll(wheelEvent.deltaY *. (-150.));
+    dispatch(
+      Msg.MinimapMouseWheel({deltaWheel: wheelEvent.deltaY *. (-1.)}),
+    );
+
+  let pixelHeight = Editor.visiblePixelHeight(editor);
+  let count = Editor.totalViewLines(editor);
 
   <View style onMouseWheel>
     <Minimap
       editor
+      config
       cursorPosition
+      dispatch
       width=minimapPixelWidth
-      height={editor.pixelHeight}
-      count={Buffer.getNumberOfLines(buffer)}
+      height=pixelHeight
+      maybeYankHighlights
+      count
       diagnostics=diagnosticsMap
       getTokensForLine={getTokensForLine(
-        ~buffer,
+        ~editor,
         ~bufferHighlights,
-        ~cursorLine=Index.toZeroBased(cursorPosition.line),
+        ~cursorLine=
+          EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
         ~colors,
         ~matchingPairs,
         ~bufferSyntaxHighlights,
-        0,
-        bufferWidthInCharacters,
+        ~scrollX=0.,
       )}
       selection=selectionRanges
       showSlider=showMinimapSlider
-      onScroll
       colors
       bufferHighlights
       diffMarkers
+      languageSupport
     />
   </View>;
 };
@@ -114,6 +137,10 @@ let scrollSpringOptions =
 
 let%component make =
               (
+                ~dispatch,
+                ~languageConfiguration,
+                ~languageInfo,
+                ~grammarRepository,
                 ~showDiffMarkers=true,
                 ~backgroundColor: option(Revery.Color.t)=?,
                 ~foregroundColor: option(Revery.Color.t)=?,
@@ -121,33 +148,39 @@ let%component make =
                 ~onEditorSizeChanged,
                 ~isActiveSplit: bool,
                 ~editor: Editor.t,
+                ~uiFont: Oni_Core.UiFont.t,
                 ~theme,
                 ~mode: Vim.Mode.t,
                 ~bufferHighlights,
                 ~bufferSyntaxHighlights,
-                ~onScroll,
                 ~diagnostics,
-                ~completions,
                 ~tokenTheme,
-                ~onCursorChange,
-                ~definition,
+                ~languageSupport,
+                ~scm,
                 ~windowIsFocused,
-                ~config,
+                ~perFileTypeConfig: Oni_Core.Config.fileTypeResolver,
+                ~renderOverlays,
                 (),
               ) => {
   let colors = Colors.precompute(theme);
 
   let%hook lastDimensions = Hooks.ref(None);
 
+  let editorId = Editor.getId(editor);
+
+  let fileType =
+    buffer |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
+  let config = perFileTypeConfig(~fileType);
+
   // When the editor id changes, we need to make sure we're dispatching the resized
   // event, too. The ideal fix would be to have this component 'keyed' on the `editor.editorId`
   let%hook () =
     React.Hooks.effect(
-      If((!=), editor.editorId),
+      If((!=), editorId),
       () => {
         lastDimensions^
         |> Option.iter(((pixelWidth, pixelHeight)) => {
-             onEditorSizeChanged(editor.editorId, pixelWidth, pixelHeight)
+             onEditorSizeChanged(editorId, pixelWidth, pixelHeight)
            });
 
         None;
@@ -159,8 +192,12 @@ let%component make =
         {height, width, _}: Revery.UI.NodeEvents.DimensionsChangedEventParams.t,
       ) => {
     lastDimensions := Some((width, height));
-    onEditorSizeChanged(editor.editorId, width, height);
+    onEditorSizeChanged(editorId, width, height);
   };
+
+  let showYankHighlightAnimation = Config.yankHighlightEnabled.get(config);
+  let maybeYankHighlights =
+    showYankHighlightAnimation ? editor |> Editor.yankHighlight : None;
 
   let colors =
     backgroundColor
@@ -173,148 +210,217 @@ let%component make =
     |> Option.map(editorForeground => {...colors, editorForeground})
     |> Option.value(~default=colors);
 
-  let lineCount = Buffer.getNumberOfLines(buffer);
+  let lineCount = editor |> Editor.totalViewLines;
 
-  let editorFont = editor.font;
+  let editorFont = Editor.font(editor);
 
-  let leftVisibleColumn = Editor.getLeftVisibleColumn(editor);
-  let topVisibleLine = Editor.getTopVisibleLine(editor);
-  let bottomVisibleLine = Editor.getBottomVisibleLine(editor);
+  let cursorPosition = Editor.getPrimaryCursor(editor);
 
-  let cursorPosition = Editor.getPrimaryCursor(~buffer, editor);
+  let layout = Editor.getLayout(editor);
 
-  let layout =
-    EditorLayout.getLayout(
-      ~showLineNumbers=Config.lineNumbers.get(config) != `Off,
-      ~maxMinimapCharacters=Config.Minimap.maxColumn.get(config),
-      ~pixelWidth=float(editor.pixelWidth),
-      ~pixelHeight=float(editor.pixelHeight),
-      ~isMinimapShown=Config.Minimap.enabled.get(config),
-      ~characterWidth=editorFont.measuredWidth,
-      ~characterHeight=editorFont.measuredHeight,
-      ~bufferLineCount=lineCount,
-      (),
-    );
+  let matchingPairCheckPosition =
+    Vim.Mode.isInsert(mode)
+      ? CharacterPosition.{
+          line: cursorPosition.line,
+          character: CharacterIndex.(cursorPosition.character - 1),
+        }
+      : cursorPosition;
 
   let matchingPairs =
     !Config.matchBrackets.get(config)
       ? None
-      : BufferHighlights.getMatchingPair(
-          Buffer.getId(buffer),
-          bufferHighlights,
+      : Editor.getNearestMatchingPair(
+          ~characterPosition=matchingPairCheckPosition,
+          ~pairs=LanguageConfiguration.brackets(languageConfiguration),
+          editor,
         );
 
-  let diagnosticsMap = Diagnostics.getDiagnosticsMap(diagnostics, buffer);
+  let diagnosticsMap =
+    Feature_Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =
-    Selection.getRanges(editor.selection, buffer) |> Range.toHash;
+    editor
+    |> Editor.selection
+    |> Option.map(selection => Selection.getRanges(selection, buffer))
+    |> Option.map(ByteRange.toHash)
+    |> Option.value(~default=Hashtbl.create(1));
 
   let diffMarkers =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
-      ? EditorDiffMarkers.generate(buffer) : None;
+      ? EditorDiffMarkers.generate(~scm, buffer) : None;
 
-  let smoothScroll = Config.Experimental.smoothScroll.get(config);
+  let smoothScroll = Config.smoothScroll.get(config);
+  let isScrollAnimated = Editor.isScrollAnimated(editor);
 
   let%hook (scrollY, _setScrollYImmediately) =
     Hooks.spring(
-      ~target=editor.scrollY,
+      ~name="Editor ScrollY Spring",
+      ~target=Editor.scrollY(editor),
       ~restThreshold=10.,
-      ~enabled=smoothScroll,
+      ~enabled=smoothScroll && isScrollAnimated,
       scrollSpringOptions,
     );
   let%hook (scrollX, _setScrollXImmediately) =
     Hooks.spring(
-      ~target=editor.scrollX,
+      ~name="Editor ScrollX Spring",
+      ~target=Editor.scrollX(editor),
       ~restThreshold=10.,
-      ~enabled=smoothScroll,
+      ~enabled=smoothScroll && isScrollAnimated,
       scrollSpringOptions,
     );
 
-  let editor = {...editor, scrollX, scrollY};
+  let editor =
+    editor
+    |> Editor.scrollToPixelX(~pixelX=scrollX)
+    |> Editor.scrollToPixelY(~pixelY=scrollY);
+
+  let pixelHeight = Editor.getTotalHeightInPixels(editor);
 
   let (gutterWidth, gutterView) =
     <GutterView
-      showLineNumbers={Config.lineNumbers.get(config)}
-      height={editor.pixelHeight}
+      editor
+      showScrollShadow={Config.scrollShadow.get(config)}
+      showLineNumbers={Editor.lineNumbers(editor)}
+      height=pixelHeight
       colors
-      scrollY={editor.scrollY}
-      lineHeight={editorFont.measuredHeight}
       count=lineCount
       editorFont
-      cursorLine={Index.toZeroBased(cursorPosition.line)}
+      cursorLine={EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line)}
       diffMarkers
     />;
+
+  let hoverPopup = {
+    let maybeHover =
+      Feature_LanguageSupport.Hover.Popup.make(
+        ~theme,
+        ~uiFont,
+        ~editorFont,
+        ~model=languageSupport,
+        ~diagnostics,
+        ~tokenTheme,
+        ~grammars=grammarRepository,
+        ~buffer,
+        ~editorId=Some(editorId),
+        ~languageInfo,
+      );
+
+    maybeHover
+    |> Option.map(((position: CharacterPosition.t, sections)) => {
+         let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
+           Editor.bufferCharacterPositionToPixel(~position, editor);
+         let popupX = pixelX +. gutterWidth |> int_of_float;
+         let popupTopY = pixelY |> int_of_float;
+         let popupBottomY =
+           pixelY +. Editor.lineHeightInPixels(editor) |> int_of_float;
+
+         let popupAvailableWidth = layout.bufferWidthInPixels |> int_of_float;
+         let popupAvailableHeight = pixelHeight;
+
+         <Oni_Components.Popup
+           x=popupX
+           topY=popupTopY
+           bottomY=popupBottomY
+           availableWidth=popupAvailableWidth
+           availableHeight=popupAvailableHeight
+           sections
+           theme
+         />;
+       })
+    |> Option.value(~default=React.empty);
+  };
+
+  let coverAmount =
+    1.0
+    -. Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
+         config,
+       );
+  let opacityCover =
+    isActiveSplit
+      ? React.empty
+      : <View style={Styles.inactiveCover(~colors, ~opacity=coverAmount)} />;
 
   <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
     <SurfaceView
-      onScroll
       buffer
       editor
       colors
-      topVisibleLine
-      onCursorChange
+      dispatch
       cursorPosition
       editorFont
-      leftVisibleColumn
       diagnosticsMap
       selectionRanges
       matchingPairs
+      maybeYankHighlights
       bufferHighlights
-      definition
+      languageSupport
+      languageConfiguration
       bufferSyntaxHighlights
-      bottomVisibleLine
       mode
       isActiveSplit
       gutterWidth
-      bufferWidthInCharacters={layout.bufferWidthInCharacters}
+      bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
       windowIsFocused
       config
+      uiFont
+      theme
     />
-    {Config.Minimap.enabled.get(config)
+    {Editor.isMinimapEnabled(editor)
        ? <minimap
            editor
            diagnosticsMap
-           buffer
            bufferHighlights
            cursorPosition
            colors
+           config
+           dispatch
            matchingPairs
+           maybeYankHighlights
            bufferSyntaxHighlights
            selectionRanges
            showMinimapSlider={Config.Minimap.showSlider.get(config)}
            diffMarkers
-           onScroll
-           bufferWidthInCharacters={layout.bufferWidthInCharacters}
            minimapWidthInPixels={layout.minimapWidthInPixels}
+           languageSupport
          />
        : React.empty}
     <OverlaysView
-      buffer
       isActiveSplit
-      hoverDelay={Config.Hover.delay.get(config)}
-      isHoverEnabled={Config.Hover.enabled.get(config)}
-      diagnostics
-      mode
       cursorPosition
       editor
       gutterWidth
       editorFont
-      completions
-      colors
+      languageSupport
       theme
       tokenTheme
     />
-    <View style={Styles.verticalScrollBar(~colors)}>
-      <EditorVerticalScrollbar
+    {renderOverlays(~gutterWidth)}
+    hoverPopup
+    <View style=Styles.verticalScrollBar>
+      <Scrollbar.Vertical
+        dispatch
         editor
+        matchingPair=matchingPairs
         cursorPosition
         width=Constants.scrollBarThickness
-        height={editor.pixelHeight}
+        height=pixelHeight
         diagnostics=diagnosticsMap
         colors
-        editorFont
         bufferHighlights
+        languageSupport
       />
     </View>
+    <View
+      style={Styles.horizontalScrollBar(
+        int_of_float(gutterWidth),
+        int_of_float(layout.bufferWidthInPixels),
+      )}>
+      <Scrollbar.Horizontal
+        dispatch
+        editor
+        width={int_of_float(layout.bufferWidthInPixels)}
+        colors
+      />
+    </View>
+    opacityCover
   </View>;
 };

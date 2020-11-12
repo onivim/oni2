@@ -1,22 +1,37 @@
 open Oni_Core;
+open Utility;
 open TestFramework;
 
 module Store = Persistence.Store;
 open Persistence.Schema;
 
 type testContext = {
-  storeFolder: string,
+  storeFolder: Fp.t(Fp.absolute),
   store: Store.t(bool),
   testBool: item(bool, bool),
 };
 
 describe("Persistence", ({test, _}) => {
   let setup = () => {
+    let temp = Filename.get_temp_dir_name();
+
+    prerr_endline("Persistence.setup - creating temp folder: " ++ temp);
+    let _: result(unit, Luv.Error.t) = temp |> Luv.File.Sync.mkdir;
+
+    let storeFolderTemplate = Rench.Path.join(temp, "store-testXXXXXX");
+    prerr_endline(
+      "Persistence.setup - creating storeFolderTemplate: "
+      ++ storeFolderTemplate,
+    );
     let storeFolder =
-      Filename.get_temp_dir_name()
-      ++ "store-testXXXXXX"
+      storeFolderTemplate
       |> Luv.File.Sync.mkdtemp
-      |> Result.get_ok;
+      |> Result.to_option
+      |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
+      |> Option.get;
+    prerr_endline(
+      "Persistence.setup - created storeFolder: " ++ Fp.toString(storeFolder),
+    );
 
     let instantiate = Store.instantiate(~storeFolder);
 
@@ -36,7 +51,9 @@ describe("Persistence", ({test, _}) => {
     let {storeFolder, testBool, _} = setup();
 
     // We'll write out an empty file...
-    let oc = open_out(storeFolder ++ "/global/store.json");
+    let filePath =
+      Fp.At.(storeFolder / "global" / "store.json") |> Fp.toString;
+    let oc = open_out(filePath);
     Printf.fprintf(oc, "\n");
     close_out(oc);
 

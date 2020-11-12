@@ -18,14 +18,14 @@ let _currentTitle: ref(string) = ref("");
 let _currentVsync: ref(Revery.Vsync.t) = ref(Revery.Vsync.Immediate);
 let _currentMaximized: ref(bool) = ref(false);
 let _currentMinimized: ref(bool) = ref(false);
+let _currentRaised: ref(bool) = ref(false);
 
 let setClipboard = v => _currentClipboard := v;
 let getClipboard = () => _currentClipboard^;
 
-let setTime = v => _currentTime := v;
+Service_Clipboard.Testing.setClipboardProvider(~get=() => _currentClipboard^);
 
-let setTitle = title => _currentTitle := title;
-let getTitle = () => _currentTitle^;
+let setTime = v => _currentTime := v;
 
 let setZoom = v => _currentZoom := v;
 let getZoom = () => _currentZoom^;
@@ -34,8 +34,15 @@ let setVsync = vsync => _currentVsync := vsync;
 
 let maximize = () => _currentMaximized := true;
 let minimize = () => _currentMinimized := true;
+let restore = () => {
+  _currentMaximized := false;
+  _currentMinimized := false;
+};
+let raiseWindow = () => _currentRaised := true;
 
 let quit = code => exit(code);
+
+let close = () => quit(0) |> ignore;
 
 exception TestAssetNotFound(string);
 
@@ -55,6 +62,26 @@ let getAssetPath = path =>
 let currentUserSettings = ref(Core.Config.Settings.empty);
 let setUserSettings = settings => currentUserSettings := settings;
 
+module Internal = {
+  let prepareEnvironment = () => {
+    // On Windows, all the paths for build dependencies brought in by esy can easily cause us to
+    // exceed the environment limit (the limit of _all_ environment variables).
+    // When this occurs, we hit an assertion in nodejs:
+    // https://github.com/libuv/libuv/issues/2587
+
+    // To work around this, for the purpose of integration tests (which are run in the esy environment),
+    // we'll unset some environment variables that can take up a lot of space, but aren't needed.
+    ["CAML_LD_LIBRARY_PATH", "MAN_PATH", "PKG_CONFIG_PATH", "OCAMLPATH'"]
+    |> List.iter(p =>
+         ignore(Luv.Env.unsetenv(p): result(unit, Luv.Error.t))
+       );
+
+    Log.info("== Checking environment === ");
+    Unix.environment() |> Array.to_list |> List.iter(Log.info);
+    Log.info("== Environment check complete ===");
+  };
+};
+
 let runTest =
     (
       ~configuration=None,
@@ -65,19 +92,21 @@ let runTest =
       test: testCallback,
     ) => {
   // Disable colors on windows to prevent hanging on CI
-  if (Sys.win32) {
-    Timber.App.disableColors();
-  };
 
   Revery.App.initConsole();
 
   Core.Log.enableDebug();
-  Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
+  Oni_Core.Log.init();
+
+  Internal.prepareEnvironment();
 
   switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
-  | None => ()
-  | Some(logFile) => Timber.App.setLogFile(logFile)
+  | None => Timber.App.enable(Timber.Reporter.console())
+  | Some(logFile) =>
+    let fileReporter = Timber.Reporter.file(logFile);
+    let reporters = Timber.Reporter.(combine(console(), fileReporter));
+    Timber.App.enable(reporters);
   };
 
   Log.info("Starting test... Working directory: " ++ Sys.getcwd());
@@ -95,12 +124,33 @@ let runTest =
 
   let getUserSettings = () => Ok(currentUserSettings^);
 
+  Vim.init();
+
+  let initialBuffer = {
+    let Vim.BufferMetadata.{id, version, filePath, modified, _} =
+      Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
+    Core.Buffer.ofMetadata(
+      ~font=Oni_Core.Font.default(),
+      ~id,
+      ~version,
+      ~filePath,
+      ~modified,
+    );
+  };
+
   let currentState =
     ref(
       Model.State.initial(
+        ~cli=Oni_CLI.default,
+        ~initialBuffer,
+        ~initialBufferRenderers=Model.BufferRenderers.initial,
         ~getUserSettings,
         ~contributedCommands=[],
         ~workingDirectory=Sys.getcwd(),
+        ~extensionsFolder=None,
+        ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
+        ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
+        ~licenseKeyPersistence=None,
       ),
     );
 
@@ -113,19 +163,22 @@ let runTest =
     currentState := state;
   };
 
+  let uiDispatch = ref(_ => ());
+
   let _: unit => unit =
     Revery.Tick.interval(
+      ~name="Integration Test Ticker",
       _ => {
         let state = currentState^;
         Revery.Utility.HeadlessWindow.render(
           headlessWindow,
-          <Oni_UI.Root state />,
+          <Oni_UI.Root state dispatch=uiDispatch^ />,
         );
       },
-      //        Revery.Utility.HeadlessWindow.takeScreenshot(
-      //          headlessWindow,
-      //          "screenshot.png",
-      //        );
+      //      Revery.Utility.HeadlessWindow.takeScreenshot(
+      //        headlessWindow,
+      //        "screenshot.png",
+      //      );
       Revery.Time.zero,
     );
 
@@ -143,7 +196,7 @@ let runTest =
       |> Printf.fprintf(oc, "%s\n");
 
     close_out(oc);
-    tempFilePath;
+    tempFilePath |> Fp.absoluteCurrentPlatform |> Option.get;
   };
 
   let configurationFilePath =
@@ -153,18 +206,19 @@ let runTest =
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
-      ~showUpdateChangelog=false,
       ~getUserSettings,
       ~setup,
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
-      ~setTitle,
       ~getZoom,
       ~setZoom,
       ~setVsync,
       ~maximize,
       ~minimize,
+      ~restore,
+      ~raiseWindow,
+      ~close,
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~getState=() => currentState^,
       ~onStateChanged,
@@ -176,18 +230,13 @@ let runTest =
       (),
     );
 
+  uiDispatch := dispatch;
+
   InitLog.info("Store started!");
 
   InitLog.info("Sending init event");
 
-  Oni_UI.GlobalContext.set({
-    closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-    editorScrollDelta: (~editorId, ~deltaY, ()) =>
-      dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
-    editorSetScroll: (~editorId, ~scrollY, ()) =>
-      dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
-    dispatch,
-  });
+  Oni_UI.GlobalContext.set({dispatch: dispatch});
 
   dispatch(Model.Actions.Init);
 
@@ -253,7 +302,7 @@ let runTestWithInput =
     ~onAfterDispatch?,
     (dispatch, wait, runEffects) => {
       let input = key => {
-        dispatch(Model.Actions.KeyboardInput(key));
+        dispatch(Model.Actions.KeyboardInput({isText: false, input: key}));
         runEffects();
       };
 
@@ -261,3 +310,9 @@ let runTestWithInput =
     },
   );
 };
+
+let runCommand = (~dispatch, command: Core.Command.t(_)) =>
+  switch (command.msg) {
+  | `Arg0(msg) => dispatch(msg)
+  | `Arg1(_) => ()
+  };

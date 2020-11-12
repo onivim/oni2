@@ -30,7 +30,7 @@ type encoder('a) = Encode.encoder('a);
 
 module Error: {
   type t = {
-    range: Range.t,
+    range: CharacterRange.t,
     message: string,
   };
 

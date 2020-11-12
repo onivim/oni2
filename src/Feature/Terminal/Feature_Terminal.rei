@@ -5,14 +5,14 @@ open Oni_Core;
 type terminal =
   pri {
     id: int,
-    cmd: string,
-    arguments: list(string),
+    launchConfig: Exthost.ShellLaunchConfig.t,
     rows: int,
     columns: int,
     pid: option(int),
     title: option(string),
     screen: ReveryTerminal.Screen.t,
     cursor: ReveryTerminal.Cursor.t,
+    closeOnExit: bool,
   };
 
 type t;
@@ -35,6 +35,7 @@ type command =
   | NewTerminal({
       cmd: option(string),
       splitDirection,
+      closeOnExit: bool,
     })
   | NormalMode
   | InsertMode;
@@ -59,9 +60,12 @@ type outmsg =
   | TerminalCreated({
       name: string,
       splitDirection,
+    })
+  | TerminalExit({
+      terminalId: int,
+      exitCode: int,
+      shouldClose: bool,
     });
-
-let shouldHandleInput: string => bool;
 
 let update: (~config: Config.resolver, t, msg) => (t, outmsg);
 
@@ -97,7 +101,7 @@ let theme: ColorTheme.Colors.t => ReveryTerminal.Theme.t;
 let defaultBackground: ColorTheme.Colors.t => Revery.Color.t;
 let defaultForeground: ColorTheme.Colors.t => Revery.Color.t;
 
-type highlights = (int, list(ColorizedToken.t));
+type highlights = (int, list(ThemeToken.t));
 let getLinesAndHighlights:
   (~colorTheme: ColorTheme.Colors.t, ~terminalId: int) =>
   (array(string), list(highlights));
@@ -134,4 +138,5 @@ module Contributions: {
   let colors: list(ColorTheme.Schema.definition);
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };

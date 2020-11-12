@@ -1,5 +1,3 @@
-open EditorCoreTypes;
-
 open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
@@ -7,7 +5,7 @@ open Oni_IntegrationTestLib;
 // Validate that textmate highlight runs
 runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
   );
   wait(~name="Wait for syntax server", ~timeout=10.0, (state: State.t) => {
     Feature_Syntax.isSyntaxServerRunning(state.syntaxHighlights)
@@ -29,7 +27,7 @@ runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
            Feature_Syntax.getTokens(
              ~bufferId,
              // Verify we get highlighting at the end!
-             ~line=Index.(zero + 14110),
+             ~line=EditorCoreTypes.LineNumber.(zero + 14110),
              state.syntaxHighlights,
            );
 

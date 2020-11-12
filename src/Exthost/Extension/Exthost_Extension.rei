@@ -35,6 +35,11 @@ module LocalizedToken: {
 };
 
 module Contributions: {
+  module Breakpoint: {
+    [@deriving show]
+    type t;
+  };
+
   [@deriving show]
   module Command: {
     type t = {
@@ -45,6 +50,11 @@ module Contributions: {
     };
   };
 
+  module Debugger: {
+    [@deriving show]
+    type t;
+  };
+
   module Menu: {
     [@deriving show]
     type t = Oni_Core.Menu.Schema.definition
@@ -52,10 +62,22 @@ module Contributions: {
   };
 
   module Configuration: {
+    module PropertyType: {
+      type t =
+        | Array
+        | Boolean
+        | String
+        | Integer
+        | Number
+        | Object
+        | Unknown;
+    };
+
     type t = list(property)
     and property = {
       name: string,
       default: [@opaque] Oni_Core.Json.t,
+      propertyType: PropertyType.t,
     };
 
     let toSettings: t => Oni_Core.Config.Settings.t;
@@ -66,6 +88,9 @@ module Contributions: {
     type t = {
       id: string,
       extensions: list(string),
+      filenames: list(string),
+      filenamePatterns: list(string),
+      firstLine: option(string),
       aliases: list(string),
       configuration: option(string),
     };
@@ -101,7 +126,9 @@ module Contributions: {
 
   [@deriving show]
   type t = {
+    breakpoints: list(Breakpoint.t),
     commands: list(Command.t),
+    debuggers: list(Debugger.t),
     menus: list(Menu.t),
     languages: list(Language.t),
     grammars: list(Grammar.t),
@@ -114,6 +141,12 @@ module Contributions: {
 };
 
 module Manifest: {
+  module Kind: {
+    [@deriving show]
+    type t =
+      | Ui
+      | Workspace;
+  };
   [@deriving show]
   type t = {
     name: string,
@@ -122,6 +155,7 @@ module Manifest: {
     displayName: option(LocalizedToken.t),
     description: option(string),
     publisher: option(string),
+    defaults: Yojson.Safe.t,
     main: option(string),
     icon: option(string),
     categories: list(string),
@@ -129,21 +163,17 @@ module Manifest: {
     engines: string,
     activationEvents: list(string),
     extensionDependencies: list(string),
+    runtimeDependencies: Yojson.Safe.t,
     extensionPack: list(string),
-    extensionKind: kind,
+    extensionKind: list(Kind.t),
     contributes: Contributions.t,
     enableProposedApi: bool,
-  }
-
-  and kind =
-    | Ui
-    | Workspace;
+  };
 
   let decode: Oni_Core.Json.decoder(t);
 
+  let identifier: t => string;
   let getDisplayName: t => string;
-
-  module Encode: {let kind: Oni_Core.Json.encoder(kind);};
 };
 
 module Scanner: {
@@ -158,30 +188,26 @@ module Scanner: {
       category,
       manifest: Manifest.t,
       path: string,
+      rawPackageJson: Yojson.Safe.t,
     };
   };
 
   let load: (~category: category, string) => option(ScanResult.t);
-  let scan: (~category: category, string) => list(ScanResult.t);
+  let scan: (~category: category, Fp.t(Fp.absolute)) => list(ScanResult.t);
 };
 
 module InitData: {
+  module Identifier: {
+    type t;
+
+    let fromString: string => t;
+  };
+
   module Extension: {
     [@deriving (show, yojson({strict: false}))]
-    type t = {
-      identifier: string,
-      extensionLocation: Oni_Core.Uri.t,
-      name: string,
-      main: option(string),
-      version: string,
-      engines: string,
-      activationEvents: list(string),
-      extensionDependencies: list(string),
-      extensionKind: string,
-      enableProposedApi: bool,
-    };
+    type t;
 
-    let ofManifestAndPath: (Manifest.t, string) => t;
+    let ofScanResult: Scanner.ScanResult.t => t;
   };
 
   module Environment: {
@@ -190,21 +216,21 @@ module InitData: {
       isExtensionDevelopmentDebug: bool,
       appName: string,
       appLanguage: string,
+      appRoot: Oni_Core.Uri.t,
+      globalStorageHome: option(Oni_Core.Uri.t),
+      userHome: option(Oni_Core.Uri.t),
       // TODO
       /*
-       appRoot: option(Types.Uri.t),
        appLanguage: string,
        appUriScheme: string,
        appSettingsHome: option(Uri.t),
-       globalStorageHome: Uri.t,
-       userHome: Uri.t,
        webviewResourceRoot: string,
        webviewCspSource: string,
        useHostProxy: boolean,
        */
     };
 
-    let default: t;
+    let default: unit => t;
   };
 
   module Remote: {
@@ -222,9 +248,10 @@ module InitData: {
   module TelemetryInfo: {
     [@deriving (show, yojson({strict: false}))]
     type t = {
-      sessionId: int,
-      machineId: int,
-      instanceId: int,
+      sessionId: string,
+      machineId: string,
+      instanceId: string,
+      msftInternal: bool,
     };
 
     let default: t;

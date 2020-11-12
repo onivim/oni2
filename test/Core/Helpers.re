@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
+module LineNumber = EditorCoreTypes.LineNumber;
 
 let allocateConsoleIfNecessary = () =>
   // On Windows, because this is linked against the '-mwindows' flag (for a GUI app)
@@ -51,6 +52,45 @@ let validateRange =
   );
   expect.int(Index.toZeroBased(actualRange.stop.column)).toBe(
     Index.toZeroBased(expectedRange.stop.column),
+  );
+};
+let validateCharacterRange =
+    (
+      expect: Rely.matchers(unit),
+      actualRange: CharacterRange.t,
+      expectedRange: CharacterRange.t,
+    ) => {
+  expect.int(LineNumber.toZeroBased(actualRange.start.line)).toBe(
+    LineNumber.toZeroBased(expectedRange.start.line),
+  );
+  expect.int(LineNumber.toZeroBased(actualRange.stop.line)).toBe(
+    LineNumber.toZeroBased(expectedRange.stop.line),
+  );
+  expect.int(CharacterIndex.toInt(actualRange.start.character)).toBe(
+    CharacterIndex.toInt(expectedRange.start.character),
+  );
+  expect.int(CharacterIndex.toInt(actualRange.stop.character)).toBe(
+    CharacterIndex.toInt(expectedRange.stop.character),
+  );
+};
+
+let validateByteRange =
+    (
+      expect: Rely.matchers(unit),
+      actualRange: ByteRange.t,
+      expectedRange: ByteRange.t,
+    ) => {
+  expect.int(LineNumber.toZeroBased(actualRange.start.line)).toBe(
+    LineNumber.toZeroBased(expectedRange.start.line),
+  );
+  expect.int(LineNumber.toZeroBased(actualRange.stop.line)).toBe(
+    LineNumber.toZeroBased(expectedRange.stop.line),
+  );
+  expect.int(ByteIndex.toInt(actualRange.start.byte)).toBe(
+    ByteIndex.toInt(expectedRange.start.byte),
+  );
+  expect.int(ByteIndex.toInt(actualRange.stop.byte)).toBe(
+    ByteIndex.toInt(expectedRange.stop.byte),
   );
 };
 

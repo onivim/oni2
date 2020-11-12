@@ -49,15 +49,27 @@ let removeExpired = (time, model) => {
   {...model, groups};
 };
 
-let keysToIgnore =
-  ["LEFT SHIFT", "RIGHT SHIFT", "Ctrl + Left Ctrl", "Ctrl + LEFT SHIFT"]
-  |> List.map(key => (key, true))
-  |> List.to_seq
-  |> Hashtbl.of_seq;
+let keysToIgnore = [
+  "Left Shift",
+  "Right Shift",
+  "Right Option",
+  "Left Option",
+  "Right Command",
+  "Left Command",
+  "Left Ctrl",
+  "Right Ctrl",
+];
+
+let shouldIgnore = key => {
+  keysToIgnore
+  |> List.exists(filterKey =>
+       Utility.StringEx.endsWith(~postfix=filterKey, key)
+     );
+};
 
 let add = (~time, key, model) => {
   let str = keyEventToString(key);
-  if (Hashtbl.mem(keysToIgnore, str)) {
+  if (shouldIgnore(str)) {
     model;
   } else {
     let groups =
@@ -76,7 +88,7 @@ let add = (~time, key, model) => {
           groups;
         }
       | Key(keyString) =>
-        let isCharKey = String.length(keyString) == 1;
+        let isCharKey = Zed_utf8.length(keyString) == 1;
         let isExclusive = !isCharKey || keyString == " ";
         let isWithinGroupingInterval = group =>
           time -. group.time <= Constants.maxGroupingInterval;
@@ -126,9 +138,7 @@ module Styles = {
     flexGrow(0),
   ];
 
-  let text = (uiFont: UiFont.t) => [
-    fontFamily(uiFont.fontFile),
-    fontSize(24.),
+  let text = [
     textWrap(TextWrapping.NoWrap),
     Style.backgroundColor(backgroundColor),
     color(Colors.white),
@@ -138,13 +148,21 @@ module Styles = {
   ];
 };
 
-let keyGroupView = (~uiFont, ~text: string, ()) =>
-  <View style=Styles.group> <Text style={Styles.text(uiFont)} text /> </View>;
+let keyGroupView = (~uiFont: UiFont.t, ~text: string, ()) =>
+  <View style=Styles.group>
+    <Text
+      style=Styles.text
+      fontFamily={uiFont.family}
+      fontSize={uiFont.size}
+      text
+    />
+  </View>;
 
 let%component make =
               (~model, ~uiFont, ~top=?, ~left=?, ~right=?, ~bottom=?, ()) => {
   let%hook activeGroups =
     CustomHooks.useExpiration(
+      ~name="KeyDisplayer Expirer",
       ~equals=(a, b) => a.id == b.id,
       ~expireAfter=Time.ms(int_of_float(Constants.duration *. 1000.)),
       model.groups,

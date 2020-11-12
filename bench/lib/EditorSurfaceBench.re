@@ -1,4 +1,5 @@
 open Oni_Core;
+open Oni_Model;
 open BenchFramework;
 open Feature_Editor;
 
@@ -12,133 +13,72 @@ let setup = () => {
   hwnd;
 };
 
-let configResolver = (settings, key) => Config.Settings.get(key, settings);
+let configResolver =
+    (~fileType as _, settings, _vimModel, ~vimSetting as _, key) =>
+  Config.Settings.get(key, settings)
+  |> Option.map(configJson => Config.Json(configJson))
+  |> Option.value(~default=Config.NotSet);
+
+let editor = (editor, buffer, state: State.t) => {
+  <EditorSurface
+    isActiveSplit=true
+    languageConfiguration=LanguageConfiguration.default
+    dispatch={_ => ()}
+    editor
+    buffer
+    onEditorSizeChanged={(_, _, _) => ()}
+    bufferHighlights={state.bufferHighlights}
+    bufferSyntaxHighlights={state.syntaxHighlights}
+    diagnostics={state.diagnostics}
+    tokenTheme={state.tokenTheme}
+    languageSupport={state.languageSupport}
+    mode={Feature_Vim.mode(state.vim)}
+    theme={Feature_Theme.colors(state.colorTheme)}
+    windowIsFocused=true
+    scm=Feature_SCM.initial
+    perFileTypeConfig={configResolver(
+      Config.Settings.empty,
+      Feature_Vim.initial,
+    )}
+    languageInfo=Exthost.LanguageInfo.initial
+    grammarRepository=Oni_Syntax.GrammarRepository.empty
+    uiFont=Oni_Core.UiFont.default
+    renderOverlays={(~gutterWidth as _) => <Revery.UI.View />}
+  />;
+};
 
 let editorSurfaceMinimalState = hwnd => {
   Revery.Utility.HeadlessWindow.render(
     hwnd,
-    <EditorSurface
-      isActiveSplit=true
-      editor=simpleEditor
-      buffer=thousandLineBuffer
-      onScroll={_ => ()}
-      onEditorSizeChanged={(_, _, _) => ()}
-      onCursorChange={_ => ()}
-      bufferHighlights={thousandLineState.bufferHighlights}
-      bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
-      diagnostics={thousandLineState.diagnostics}
-      completions={thousandLineState.completions}
-      tokenTheme={thousandLineState.tokenTheme}
-      definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
-      theme={Feature_Theme.colors(thousandLineState.colorTheme)}
-      windowIsFocused=true
-      config={configResolver(Config.Settings.empty)}
-    />,
+    editor(simpleEditor, thousandLineBuffer, thousandLineState),
   );
 };
 
 let editorSurfaceThousandLineState = hwnd => {
   Revery.Utility.HeadlessWindow.render(
     hwnd,
-    <EditorSurface
-      isActiveSplit=true
-      editor=simpleEditor
-      buffer=thousandLineBuffer
-      onScroll={_ => ()}
-      onEditorSizeChanged={(_, _, _) => ()}
-      onCursorChange={_ => ()}
-      bufferHighlights={thousandLineState.bufferHighlights}
-      bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
-      diagnostics={thousandLineState.diagnostics}
-      completions={thousandLineState.completions}
-      tokenTheme={thousandLineState.tokenTheme}
-      definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
-      theme={Feature_Theme.colors(thousandLineState.colorTheme)}
-      windowIsFocused=true
-      config={configResolver(Config.Settings.empty)}
-    />,
+    editor(simpleEditor, thousandLineBuffer, thousandLineState),
   );
 };
 
 let editorSurfaceThousandLineStateWithIndents = hwnd => {
   Revery.Utility.HeadlessWindow.render(
     hwnd,
-    <EditorSurface
-      isActiveSplit=true
-      editor=simpleEditor
-      buffer=thousandLineBuffer
-      onScroll={_ => ()}
-      onEditorSizeChanged={(_, _, _) => ()}
-      onCursorChange={_ => ()}
-      bufferHighlights={thousandLineState.bufferHighlights}
-      bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
-      diagnostics={thousandLineState.diagnostics}
-      completions={thousandLineState.completions}
-      tokenTheme={thousandLineState.tokenTheme}
-      definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
-      theme={Feature_Theme.colors(thousandLineState.colorTheme)}
-      windowIsFocused=true
-      config={configResolver(
-        Config.Settings.fromList([
-          ("editor.renderIndentGuides", Json.Encode.bool(true)),
-        ]),
-      )}
-    />,
+    editor(simpleEditor, thousandLineBuffer, thousandLineState),
   );
   ();
 };
 let editorSurfaceHundredThousandLineStateNoMinimap = hwnd => {
   Revery.Utility.HeadlessWindow.render(
     hwnd,
-    <EditorSurface
-      isActiveSplit=true
-      editor=simpleEditor
-      buffer=thousandLineBuffer
-      onScroll={_ => ()}
-      onEditorSizeChanged={(_, _, _) => ()}
-      onCursorChange={_ => ()}
-      bufferHighlights={thousandLineState.bufferHighlights}
-      bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
-      diagnostics={thousandLineState.diagnostics}
-      completions={thousandLineState.completions}
-      tokenTheme={thousandLineState.tokenTheme}
-      definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
-      theme={Feature_Theme.colors(thousandLineState.colorTheme)}
-      windowIsFocused=true
-      config={configResolver(
-        Config.Settings.fromList([
-          ("editor.minimap.enabled", Json.Encode.bool(false)),
-        ]),
-      )}
-    />,
+    editor(simpleEditor, thousandLineBuffer, thousandLineState),
   );
 };
 
 let editorSurfaceHundredThousandLineState = hwnd => {
   Revery.Utility.HeadlessWindow.render(
     hwnd,
-    <EditorSurface
-      isActiveSplit=true
-      editor=simpleEditor
-      buffer=thousandLineBuffer
-      onScroll={_ => ()}
-      onEditorSizeChanged={(_, _, _) => ()}
-      onCursorChange={_ => ()}
-      bufferHighlights={thousandLineState.bufferHighlights}
-      bufferSyntaxHighlights={thousandLineState.syntaxHighlights}
-      diagnostics={thousandLineState.diagnostics}
-      completions={thousandLineState.completions}
-      tokenTheme={thousandLineState.tokenTheme}
-      definition={thousandLineState.definition}
-      mode={thousandLineState.vimMode}
-      theme={Feature_Theme.colors(thousandLineState.colorTheme)}
-      windowIsFocused=true
-      config={configResolver(Config.Settings.empty)}
-    />,
+    editor(simpleEditor, thousandLineBuffer, thousandLineState),
   );
 };
 

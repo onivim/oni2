@@ -13,333 +13,6 @@ module Log = (val Log.withNamespace("Oni2.Store.Keybindings"));
 module Commands = GlobalCommands;
 
 let start = maybeKeyBindingsFilePath => {
-  let default =
-    Keybindings.[
-      {
-        key: "<UP>",
-        command: Commands.List.focusUp.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<DOWN>",
-        command: Commands.List.focusDown.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<RIGHT>",
-        command: Commands.List.selectBackground.id,
-        condition: "quickmenuCursorEnd" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-C-F>",
-        command: Commands.Workbench.Action.findInFiles.id,
-        condition: "editorTextFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-S-F>",
-        command: Commands.Workbench.Action.findInFiles.id,
-        condition: "editorTextFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-TAB>",
-        command:
-          Commands.Workbench.Action.openNextRecentlyUsedEditorInGroup.id,
-        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-P>",
-        command: Commands.Workbench.Action.quickOpen.id,
-        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-P>",
-        command: Commands.Workbench.Action.quickOpen.id,
-        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-C-P>",
-        command: Commands.Workbench.Action.showCommands.id,
-        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-S-P>",
-        command: Commands.Workbench.Action.showCommands.id,
-        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-V>",
-        command: Commands.Editor.Action.clipboardPasteAction.id,
-        condition: "insertMode || commandLineFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-V>",
-        command: Commands.Editor.Action.clipboardPasteAction.id,
-        condition: "insertMode || commandLineFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<ESC>",
-        command: Commands.Workbench.Action.closeQuickOpen.id,
-        condition: "inQuickOpen" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-N>",
-        command: Commands.List.focusDown.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-P>",
-        command: Commands.List.focusUp.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-N>",
-        command: Commands.List.focusDown.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-P>",
-        command: Commands.List.focusUp.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<TAB>",
-        command: Commands.List.focusDown.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-TAB>",
-        command: Commands.List.focusUp.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-TAB>",
-        command:
-          Commands.Workbench.Action.quickOpenNavigateNextInEditorPicker.id,
-        condition: "inEditorsPicker" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-C-TAB>",
-        command:
-          Commands.Workbench.Action.quickOpenNavigatePreviousInEditorPicker.id,
-        condition: "inEditorsPicker" |> WhenExpr.parse,
-      },
-      {
-        key: "<release>",
-        command: Commands.List.select.id,
-        condition: "inEditorsPicker" |> WhenExpr.parse,
-      },
-      {
-        key: "<CR>",
-        command: Commands.List.select.id,
-        condition: "listFocus || textInputFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-C-B>",
-        command: Commands.Oni.Explorer.toggle.id,
-        condition: "editorTextFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-P>",
-        command: Commands.selectPrevSuggestion.id,
-        condition: "suggestWidgetVisible" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-N>",
-        command: Commands.selectNextSuggestion.id,
-        condition: "suggestWidgetVisible" |> WhenExpr.parse,
-      },
-      {
-        key: "<CR>",
-        command: Commands.acceptSelectedSuggestion.id,
-        condition:
-          "acceptSuggestionOnEnter && suggestWidgetVisible" |> WhenExpr.parse,
-      },
-      {
-        key: "<TAB>",
-        command: Commands.acceptSelectedSuggestion.id,
-        condition: "suggestWidgetVisible" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-TAB>",
-        command: Commands.acceptSelectedSuggestion.id,
-        condition: "suggestWidgetVisible" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-CR>",
-        command: Commands.acceptSelectedSuggestion.id,
-        condition: "suggestWidgetVisible" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-Z>",
-        command: Commands.undo.id,
-        condition: "editorTextFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-S-Z>",
-        command: Commands.redo.id,
-        condition: "editorTextFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-S>",
-        command: Commands.Workbench.Action.Files.save.id,
-        condition: "editorTextFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-S>",
-        command: Commands.Workbench.Action.Files.save.id,
-        condition: "editorTextFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-]>",
-        command: Commands.Editor.Action.indentLines.id,
-        condition: "visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-[>",
-        command: Commands.Editor.Action.outdentLines.id,
-        condition: "visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-]>",
-        command: Commands.Editor.Action.indentLines.id,
-        condition: "visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-[>",
-        command: Commands.Editor.Action.outdentLines.id,
-        condition: "visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<TAB>",
-        command: Commands.indent.id,
-        condition: "visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-TAB>",
-        command: Commands.outdent.id,
-        condition: "visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-G>",
-        command: Commands.Oni.Sneak.start.id,
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<ESC>",
-        command: Commands.Oni.Sneak.stop.id,
-        condition: "sneakMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-C-M>",
-        command: Commands.Workbench.Actions.View.problems.id,
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<D-S-M>",
-        command: Commands.Workbench.Actions.View.problems.id,
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<D-W>",
-        command: Commands.View.closeEditor.id,
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<C-PAGEDOWN>",
-        command: Commands.Workbench.Action.nextEditor.id,
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<D-S-]>",
-        command: Commands.Workbench.Action.nextEditor.id,
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<C-PAGEUP>",
-        command: Commands.Workbench.Action.previousEditor.id,
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<D-S-[>",
-        command: Commands.Workbench.Action.previousEditor.id,
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<D-=>",
-        command: "workbench.action.zoomIn",
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<C-=>",
-        command: "workbench.action.zoomIn",
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<D-->",
-        command: "workbench.action.zoomOut",
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<C-->",
-        command: "workbench.action.zoomOut",
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<D-0>",
-        command: "workbench.action.zoomReset",
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<C-0>",
-        command: "workbench.action.zoomReset",
-        condition: WhenExpr.Value(True),
-      },
-      // TERMINAL
-      // Binding to open normal mode
-      {
-        key: "<C-\\><C-N>",
-        command: Feature_Terminal.Commands.Oni.normalMode.id,
-        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
-      },
-      // Bindings to go from normal / visual mode -> insert mode
-      {
-        key: "o",
-        command: Feature_Terminal.Commands.Oni.insertMode.id,
-        condition:
-          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-O>",
-        command: Feature_Terminal.Commands.Oni.insertMode.id,
-        condition:
-          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "Shift+a",
-        command: Feature_Terminal.Commands.Oni.insertMode.id,
-        condition:
-          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "a",
-        command: Feature_Terminal.Commands.Oni.insertMode.id,
-        condition:
-          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "i",
-        command: Feature_Terminal.Commands.Oni.insertMode.id,
-        condition:
-          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "Shift+i",
-        command: Feature_Terminal.Commands.Oni.insertMode.id,
-        condition:
-          "terminalFocus && normalMode || visualMode" |> WhenExpr.parse,
-      },
-    ];
-
   let getKeybindingsFile = () => {
     Filesystem.getOrCreateConfigFile(
       ~overridePath=?maybeKeyBindingsFilePath,
@@ -365,38 +38,45 @@ let start = maybeKeyBindingsFilePath => {
 
   let loadKeyBindingsEffect = isFirstLoad =>
     Isolinear.Effect.createWithDispatch(~name="keyBindings.load", dispatch => {
-      let keyBindingsFile = getKeybindingsFile();
+      getKeybindingsFile()
+      |> Utility.ResultEx.tapError(err => {
+           Log.warnf(m => m("Error getting keybindings file: %s", err))
+         })
+      |> Result.iter(keyBindingsFile => {
+           let checkFirstLoad = keyBindingPath =>
+             if (isFirstLoad) {
+               reloadConfigOnWritePost(~configPath=keyBindingPath, dispatch);
+             };
 
-      let checkFirstLoad = keyBindingPath =>
-        if (isFirstLoad) {
-          reloadConfigOnWritePost(~configPath=keyBindingPath, dispatch);
-        };
+           let onError = msg => {
+             let errorMsg = "Error parsing keybindings: " ++ msg;
+             Log.error(errorMsg);
+             dispatch(Actions.KeyBindingsParseError(errorMsg));
+           };
 
-      let onError = msg => {
-        let errorMsg = "Error parsing keybindings: " ++ msg;
-        Log.error(errorMsg);
-        dispatch(Actions.KeyBindingsParseError(errorMsg));
-      };
+           let (keyBindings, individualErrors) =
+             keyBindingsFile
+             |> Fp.toString
+             |> Utility.FunEx.tap(checkFirstLoad)
+             |> Utility.JsonEx.from_file
+             |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors)
+             // Handle error case when parsing entire JSON file
+             |> Utility.ResultEx.tapError(onError)
+             |> Stdlib.Result.value(~default=([], []));
 
-      let (keyBindings, individualErrors) =
-        keyBindingsFile
-        |> Utility.ResultEx.tap(checkFirstLoad)
-        |> Utility.ResultEx.flatMap(Utility.JsonEx.from_file)
-        |> Utility.ResultEx.flatMap(
-             Keybindings.of_yojson_with_errors(~default),
-           )
-        // Handle error case when parsing entire JSON file
-        |> Utility.ResultEx.tapError(onError)
-        |> Stdlib.Result.value(~default=(Keybindings.empty, []));
+           // Handle individual binding errors
+           individualErrors |> List.iter(onError);
 
-      // Handle individual binding errors
-      individualErrors |> List.iter(onError);
+           Log.infof(m =>
+             m("Loading %i keybindings", List.length(keyBindings))
+           );
 
-      Log.infof(m =>
-        m("Loading %i keybindings", Keybindings.count(keyBindings))
-      );
-
-      dispatch(Actions.KeyBindingsSet(keyBindings));
+           dispatch(
+             Actions.Input(
+               Feature_Input.Msg.keybindingsUpdated(keyBindings),
+             ),
+           );
+         })
     });
 
   let executeCommandEffect = msg =>
@@ -406,6 +86,11 @@ let start = maybeKeyBindingsFilePath => {
       | `Arg0(msg) => dispatch(msg)
       | `Arg1(msgf) => dispatch(msgf(Json.Encode.null))
       }
+    );
+
+  let executeExCommandEffect = command =>
+    Isolinear.Effect.create(~name="keybindings.executeExCommand", () =>
+      ignore(Vim.command(command): (Vim.Context.t, list(Vim.Effect.t)))
     );
 
   let updater = (state: State.t, action: Actions.t) => {
@@ -421,14 +106,21 @@ let start = maybeKeyBindingsFilePath => {
       )
 
     | KeybindingInvoked({command}) =>
-      switch (Command.Lookup.get(command, State.commands(state))) {
-      | Some((command: Command.t(_))) => (
+      if (command |> Utility.StringEx.startsWith(~prefix=":")) {
+        (
           state,
-          executeCommandEffect(command.msg),
-        )
-      | None =>
-        Log.errorf(m => m("Unknown command: %s", command));
-        (state, Isolinear.Effect.none);
+          executeExCommandEffect(Base.String.drop_prefix(command, 1)),
+        );
+      } else {
+        switch (Command.Lookup.get(command, CommandManager.current(state))) {
+        | Some((command: Command.t(_))) => (
+            state,
+            executeCommandEffect(command.msg),
+          )
+        | None =>
+          Log.errorf(m => m("Unknown command: %s", command));
+          (state, Isolinear.Effect.none);
+        };
       }
 
     | _ => (state, Isolinear.Effect.none)

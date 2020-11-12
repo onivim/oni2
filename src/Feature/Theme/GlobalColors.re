@@ -73,6 +73,39 @@ module ActivityBar = {
   ];
 };
 
+module ActivityBarBadge = {
+  let background =
+    define(
+      "activityBarBadge.background",
+      {dark: hex("#333333"), light: hex("#2C2C2C"), hc: hex("#000000")},
+    );
+  let foreground = define("activityBarBadge.foreground", all(hex("#FFF")));
+
+  let defaults = [background, foreground];
+};
+
+module Button = {
+  let foreground =
+    define(
+      "button.foreground",
+      {dark: hex("#FFF"), light: hex("#FFF"), hc: hex("#FFF")},
+    );
+
+  let background =
+    define(
+      "button.background",
+      {dark: hex("#0E639C"), light: hex("#007ACC"), hc: unspecified},
+    );
+
+  let hoverBackground =
+    define(
+      "button.hoverBackground",
+      {dark: ref(background), light: ref(background), hc: unspecified},
+    );
+
+  let defaults = [background, foreground, hoverBackground];
+};
+
 module Dropdown = {
   let background =
     define(
@@ -283,6 +316,51 @@ module EditorWidget = {
   let defaults = [background, foreground, border];
 };
 
+module Notifications = {
+  let background =
+    define("notifications.background", all(ref(EditorWidget.background)));
+  let foreground =
+    define("notifications.foreground", all(ref(EditorWidget.foreground)));
+
+  let headerForeground =
+    define("notificationsCenterHeader.foreground", all(ref(foreground)));
+
+  let headerBackground =
+    define("notificationsCenterHeader.background", all(ref(background)));
+
+  let headerBorder =
+    define("notificationsCenterHeader.border", all(ref(headerBackground)));
+
+  let border = define("notifications.border", all(ref(headerBackground)));
+
+  let errorIcon =
+    define(
+      "notificationsErrorIcon.foreground",
+      all(ref(EditorError.foreground)),
+    );
+  let warningIcon =
+    define(
+      "notificationsWarningIcon.foreground",
+      all(ref(EditorWarning.foreground)),
+    );
+  let infoIcon =
+    define(
+      "notificationsWarningIcon.foreground",
+      all(ref(EditorInfo.foreground)),
+    );
+
+  let defaults = [
+    background,
+    foreground,
+    headerForeground,
+    headerBackground,
+    border,
+    errorIcon,
+    warningIcon,
+    infoIcon,
+  ];
+};
+
 module EditorHoverWidget = {
   let background =
     define(
@@ -375,6 +453,13 @@ module List = {
       "list.focusBackground",
       {dark: hex("#062F4A"), light: hex("#D6EBFF"), hc: unspecified},
     );
+
+  let inactiveFocusBackground =
+    define(
+      "list.inactiveFocusBackground",
+      all(ref(focusBackground) |> transparent(0.75)),
+    );
+
   let focusForeground =
     define("list.focusForeground", all(ref(foreground))); // actually: unspecified
   let activeSelectionBackground =
@@ -387,6 +472,18 @@ module List = {
       "list.activeSelectionForeground",
       {dark: hex("#FFF"), light: hex("#FFF"), hc: unspecified},
     );
+
+  let inactiveSelectionBackground =
+    define(
+      "list.inactiveSelectionBackground",
+      all(ref(activeSelectionBackground) |> transparent(0.25)),
+    );
+  let inactiveSelectionForeground =
+    define(
+      "list.inactiveSelectionForeground",
+      all(ref(activeSelectionForeground)),
+    );
+
   let hoverBackground =
     define(
       "list.hoverBackground",
@@ -399,6 +496,27 @@ module List = {
       {dark: hex("#0097fb"), light: hex("#0066BF"), hc: ref(focusBorder)},
     );
 
+  let deemphasizedForeground =
+    define("list.deemphasizedForeground", all(ref(foreground)));
+
+  let activeIndentGuide =
+    define(
+      "tree.indentGuidesStroke",
+      all(ref(foreground) |> transparent(0.5)),
+    );
+
+  let inactiveIndentGuide =
+    define(
+      "tree.inactive.indentGuidesStroke",
+      all(ref(activeIndentGuide) |> transparent(0.5)),
+    );
+
+  let filterMatchBackground =
+    define("list.filterMatchBackground", all(ref(hoverBackground)));
+
+  let filterMatchBorder =
+    define("list.filterMatchBorder", all(ref(hoverForeground)));
+
   let defaults = [
     focusBackground,
     focusForeground,
@@ -407,6 +525,11 @@ module List = {
     hoverBackground,
     hoverForeground,
     highlightForeground,
+    deemphasizedForeground,
+    activeIndentGuide,
+    inactiveIndentGuide,
+    filterMatchBackground,
+    filterMatchBorder,
   ];
 };
 
@@ -519,30 +642,30 @@ module Oni = {
 
   let backgroundFor = (mode: Mode.t) =>
     switch (mode) {
-    | Select
-    | TerminalVisual
-    | Visual => visualModeBackground
+    | Select(_)
+    | TerminalVisual(_)
+    | Visual(_) => visualModeBackground
     | CommandLine => commandlineModeBackground
-    | Operator => operatorModeBackground
+    | Operator(_) => operatorModeBackground
     | TerminalInsert
-    | Insert => insertModeBackground
-    | Replace => replaceModeBackground
+    | Insert(_) => insertModeBackground
+    | Replace(_) => replaceModeBackground
     | TerminalNormal
-    | Normal => normalModeBackground
+    | Normal(_) => normalModeBackground
     };
 
   let foregroundFor = (mode: Mode.t) =>
     switch (mode) {
-    | Select
-    | TerminalVisual
-    | Visual => visualModeForeground
+    | Select(_)
+    | TerminalVisual(_)
+    | Visual(_) => visualModeForeground
     | CommandLine => commandlineModeForeground
-    | Operator => operatorModeForeground
+    | Operator(_) => operatorModeForeground
     | TerminalInsert
-    | Insert => insertModeForeground
-    | Replace => replaceModeForeground
+    | Insert(_) => insertModeForeground
+    | Replace(_) => replaceModeForeground
     | TerminalNormal
-    | Normal => normalModeForeground
+    | Normal(_) => normalModeForeground
     };
 
   let defaults = [
@@ -563,8 +686,10 @@ module Oni = {
   module Modal = {
     let backdrop = define("oni.modal.backdrop", all(hex("#0004")));
     let background =
-      define("oni.modal.background", all(ref(Editor.background)));
-    let foreground = define("oni.modal.foreground", all(ref(foreground)));
+      define("oni.modal.background", all(ref(Notifications.background)));
+    let foreground =
+      define("oni.modal.foreground", all(ref(Notifications.foreground)));
+    let border = define("oni.modal.border", all(ref(Notifications.border)));
     let shortcutForeground =
       define(
         "oni.modal.shortcutForeground",
@@ -725,7 +850,8 @@ module Minimap = {
     );
   let warningHighlight =
     define("minimap.warningHighlight", all(ref(EditorWarning.foreground)));
-  let background = define("minimap.background", all(unspecified));
+  let background =
+    define("minimap.background", all(ref(Editor.background)));
 
   let defaults = [
     findMatchHighlight,
@@ -799,6 +925,32 @@ module SideBar = {
   let defaults = [background, foreground];
 };
 
+module SideBarSectionHeader = {
+  let background =
+    define(
+      "sideBarSectionHeader.background",
+      {
+        dark: hex("#808080") |> transparent(0.2),
+        light: hex("#808080") |> transparent(0.2),
+        hc: unspecified,
+      },
+    );
+
+  let foreground =
+    define(
+      "sideBarSectionHeader.foreground",
+      {
+        dark: ref(SideBar.foreground),
+        light: ref(SideBar.foreground),
+        hc: ref(SideBar.foreground),
+      },
+    );
+
+  let border = contrastBorder;
+
+  let defaults = [background, foreground, border];
+};
+
 module StatusBar = {
   let background =
     define(
@@ -808,6 +960,137 @@ module StatusBar = {
   let foreground = define("statusBar.foreground", all(hex("#FFF")));
 
   let defaults = [background, foreground];
+};
+
+module SymbolIcon = {
+  let arrayForeground =
+    define("symbolIcon.arrayForeground", all(ref(foreground)));
+  let booleanForeground =
+    define("symbolIcon.booleanForeground", all(ref(foreground)));
+  let classForeground =
+    define(
+      "symbolIcon.classForeground",
+      {dark: hex("#EE9D28"), light: hex("#D67E00"), hc: hex("#EE9D28")},
+    );
+  let colorForeground =
+    define("symbolIcon.colorForeground", all(ref(foreground)));
+  let constantForeground =
+    define("symbolIcon.constantForeground", all(ref(foreground)));
+  let constructorForeground =
+    define(
+      "symbolIcon.constructorForeground",
+      {dark: hex("#B180D7"), light: hex("#652D90"), hc: hex("#B180D7")},
+    );
+  let enumeratorForeground =
+    define(
+      "symbolIcon.enumeratorForeground",
+      {dark: hex("#EE9D28"), light: hex("#D67E00"), hc: hex("#EE9D28")},
+    );
+  let enumeratorMemberForeground =
+    define(
+      "symbolIcon.enumeratorMemberForeground",
+      {dark: hex("#75BEFF"), light: hex("#007ACC"), hc: hex("#75BEFF")},
+    );
+  let eventForeground =
+    define(
+      "symbolIcon.eventForeground",
+      {dark: hex("#EE9D28"), light: hex("#D67E00"), hc: hex("#EE9D28")},
+    );
+  let fieldForeground =
+    define(
+      "symbolIcon.fieldForeground",
+      {dark: hex("#75BEFF"), light: hex("#007ACC"), hc: hex("#75BEFF")},
+    );
+  let fileForeground =
+    define("symbolIcon.fileForeground", all(ref(foreground)));
+  let folderForeground =
+    define("symbolIcon.folderForeground", all(ref(foreground)));
+  let functionForeground =
+    define(
+      "symbolIcon.functionForeground",
+      {dark: hex("#B180D7"), light: hex("#652D90"), hc: hex("#B180D7")},
+    );
+  let interfaceForeground =
+    define(
+      "symbolIcon.interfaceForeground",
+      {dark: hex("#75BEFF"), light: hex("#007ACC"), hc: hex("#75BEFF")},
+    );
+  let keyForeground =
+    define("symbolIcon.keyForeground", all(ref(foreground)));
+  let keywordForeground =
+    define("symbolIcon.keywordForeground", all(ref(foreground)));
+  let methodForeground =
+    define(
+      "symbolIcon.methodForeground",
+      {dark: hex("#B180D7"), light: hex("#652D90"), hc: hex("#B180D7")},
+    );
+  let moduleForeground =
+    define("symbolIcon.moduleForeground", all(ref(foreground)));
+  let namespaceForeground =
+    define("symbolIcon.namespaceForeground", all(ref(foreground)));
+  let nullForeground =
+    define("symbolIcon.nullForeground", all(ref(foreground)));
+  let objectForeground =
+    define("symbolIcon.objectForeground", all(ref(foreground)));
+  let operatorForeground =
+    define("symbolIcon.operatorForeground", all(ref(foreground)));
+  let packageForeground =
+    define("symbolIcon.packageForeground", all(ref(foreground)));
+  let propertyForeground =
+    define("symbolIcon.propertyForeground", all(ref(foreground)));
+  let referenceForeground =
+    define("symbolIcon.referenceForeground", all(ref(foreground)));
+  let snippetForeground =
+    define("symbolIcon.snippetForeground", all(ref(foreground)));
+  let stringForeground =
+    define("symbolIcon.stringForeground", all(ref(foreground)));
+  let structForeground =
+    define("symbolIcon.structForeground", all(ref(foreground)));
+  let textForeground =
+    define("symbolIcon.textForeground", all(ref(foreground)));
+  let typeParameterForeground =
+    define("symbolIcon.typeParameterForeground", all(ref(foreground)));
+  let unitForeground =
+    define("symbolIcon.unitForeground", all(ref(foreground)));
+  let variableForeground =
+    define(
+      "symbolIcon.variableForeground",
+      {dark: hex("#75BEFF"), light: hex("#007ACC"), hc: hex("#75BEFF")},
+    );
+
+  let defaults = [
+    arrayForeground,
+    booleanForeground,
+    classForeground,
+    colorForeground,
+    constantForeground,
+    constructorForeground,
+    enumeratorForeground,
+    enumeratorMemberForeground,
+    eventForeground,
+    fieldForeground,
+    fileForeground,
+    folderForeground,
+    functionForeground,
+    interfaceForeground,
+    keyForeground,
+    keywordForeground,
+    methodForeground,
+    moduleForeground,
+    namespaceForeground,
+    nullForeground,
+    objectForeground,
+    packageForeground,
+    propertyForeground,
+    referenceForeground,
+    snippetForeground,
+    stringForeground,
+    structForeground,
+    textForeground,
+    typeParameterForeground,
+    unitForeground,
+    variableForeground,
+  ];
 };
 
 module Tab = {
@@ -1032,12 +1315,30 @@ module TitleBar = {
       {dark: unspecified, light: unspecified, hc: ref(contrastBorder)},
     );
 
+  let hoverBackground =
+    define(
+      "oni.titleBar.hoverBackground",
+      {
+        dark: hex("#FFFFFF") |> transparent(0.1),
+        light: hex("#000000") |> transparent(0.1),
+        hc: unspecified,
+      },
+    );
+
+  let hoverCloseBackground =
+    define(
+      "oni.titleBar.hoverCloseBackground",
+      hex("#E81123") |> transparent(0.9) |> all,
+    );
+
   let defaults = [
     activeForeground,
     inactiveForeground,
     activeBackground,
     inactiveBackground,
     border,
+    hoverBackground,
+    hoverCloseBackground,
   ];
 };
 

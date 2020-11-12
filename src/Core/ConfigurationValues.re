@@ -5,12 +5,6 @@
  */
 
 [@deriving show({with_path: false})]
-type editorRenderWhitespace =
-  | All
-  | Boundary
-  | None;
-
-[@deriving show({with_path: false})]
 type vimUseSystemClipboard = {
   yank: bool,
   delete: bool,
@@ -29,43 +23,22 @@ type fontSmoothing =
   | Antialiased
   | SubpixelAntialiased;
 
-type quickSuggestionsEnabled = {
-  other: bool,
-  comments: bool,
-  strings: bool,
-};
+type fontLigatures = [ | `Bool(bool) | `List(list(string))];
+
+type autoReveal = [ | `HighlightAndScroll | `HighlightOnly | `NoReveal];
 
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
-  editorDetectIndentation: bool,
-  editorFontFamily: string,
-  editorFontSize: float,
+  editorFontLigatures: fontLigatures,
   editorFontSmoothing: fontSmoothing,
-  editorHoverDelay: int,
-  editorHoverEnabled: bool,
   editorLargeFileOptimizations: bool,
-  editorLineNumbers: LineNumber.setting,
-  editorMatchBrackets: bool,
-  editorAcceptSuggestionOnEnter: [ | `on | `off | `smart],
-  editorMinimapEnabled: bool,
-  editorMinimapShowSlider: bool,
-  editorMinimapMaxColumn: int,
-  editorInsertSpaces: bool,
-  editorIndentSize: int,
-  editorQuickSuggestions: quickSuggestionsEnabled,
-  editorTabSize: int,
-  editorHighlightActiveIndentGuide: bool,
-  editorRenderIndentGuides: bool,
-  editorRenderWhitespace,
-  editorRulers: list(int),
-  terminalIntegratedFontFamily: string,
+  explorerAutoReveal: autoReveal,
+  terminalIntegratedFontFile: string,
   terminalIntegratedFontSize: float,
   terminalIntegratedFontSmoothing: fontSmoothing,
   workbenchActivityBarVisible: bool,
   workbenchColorTheme: string,
   workbenchIconTheme: string,
-  /* Onivim2 specific setting */
-  workbenchSideBarVisible: bool,
   workbenchEditorShowTabs: bool,
   workbenchStatusBarVisible: bool,
   workbenchTreeIndent: int,
@@ -74,7 +47,6 @@ type t = {
   vimUseSystemClipboard,
   uiShadows: bool,
   uiZoom: float,
-  windowTitle: string,
   zenModeHideTabs: bool,
   zenModeSingleFile: bool,
   // Experimental feature flags
@@ -86,38 +58,16 @@ type t = {
 
 let default = {
   editorAutoClosingBrackets: LanguageDefined,
-  editorDetectIndentation: true,
-  editorFontFamily: Constants.defaultFontFamily,
   editorFontSmoothing: Default,
-  editorFontSize: Constants.defaultFontSize,
-  editorHoverDelay: 1000,
-  editorHoverEnabled: true,
+  editorFontLigatures: `Bool(true),
   editorLargeFileOptimizations: true,
-  editorMatchBrackets: true,
-  editorAcceptSuggestionOnEnter: `on,
-  editorMinimapEnabled: true,
-  editorMinimapShowSlider: true,
-  editorMinimapMaxColumn: Constants.minimapMaxColumn,
-  editorLineNumbers: On,
-  editorInsertSpaces: false,
-  editorIndentSize: 4,
-  editorTabSize: 4,
-  editorRenderIndentGuides: true,
-  editorHighlightActiveIndentGuide: true,
-  editorQuickSuggestions: {
-    other: true,
-    comments: true,
-    strings: true,
-  },
-  editorRenderWhitespace: All,
-  editorRulers: [],
-  terminalIntegratedFontFamily: Constants.defaultFontFamily,
+  explorerAutoReveal: `HighlightAndScroll,
+  terminalIntegratedFontFile: Constants.defaultFontFile,
   terminalIntegratedFontSize: Constants.defaultTerminalFontSize,
   terminalIntegratedFontSmoothing: Default,
   workbenchActivityBarVisible: true,
-  workbenchColorTheme: "One Dark Pro",
+  workbenchColorTheme: "LaserWave Italic",
   workbenchEditorShowTabs: true,
-  workbenchSideBarVisible: false,
   workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
   workbenchTreeIndent: 2,
@@ -130,7 +80,6 @@ let default = {
     paste: false,
   },
   vsync: Revery.Vsync.Immediate,
-  windowTitle: "${dirty}${activeEditorShort}${separator}${rootName}${separator}${appName}",
   zenModeHideTabs: true,
   zenModeSingleFile: true,
   experimentalVimL: [],

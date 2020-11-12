@@ -4,10 +4,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = void 0;
 const vscode = require("vscode");
 const nls = require("vscode-nls");
 const PConst = require("../protocol.const");
-const api_1 = require("../utils/api");
 const dependentRegistration_1 = require("../utils/dependentRegistration");
 const baseCodeLensProvider_1 = require("./baseCodeLensProvider");
 const typeConverters = require("../utils/typeConverters");
@@ -16,7 +16,7 @@ class TypeScriptImplementationsCodeLensProvider extends baseCodeLensProvider_1.T
     async resolveCodeLens(inputCodeLens, token) {
         const codeLens = inputCodeLens;
         const args = typeConverters.Position.toFileLocationRequestArgs(codeLens.file, codeLens.range.start);
-        const response = await this.client.execute('implementation', args, token, /* lowPriority */ true);
+        const response = await this.client.execute('implementation', args, token, { lowPriority: true, cancelOnResourceChange: codeLens.document });
         if (response.type !== 'response' || !response.body) {
             codeLens.command = response.type === 'cancelled'
                 ? baseCodeLensProvider_1.TypeScriptBaseCodeLensProvider.cancelledCommand
@@ -53,7 +53,7 @@ class TypeScriptImplementationsCodeLensProvider extends baseCodeLensProvider_1.T
             case PConst.Kind.interface:
                 return baseCodeLensProvider_1.getSymbolRange(document, item);
             case PConst.Kind.class:
-            case PConst.Kind.memberFunction:
+            case PConst.Kind.method:
             case PConst.Kind.memberVariable:
             case PConst.Kind.memberGetAccessor:
             case PConst.Kind.memberSetAccessor:
@@ -67,9 +67,9 @@ class TypeScriptImplementationsCodeLensProvider extends baseCodeLensProvider_1.T
 }
 exports.default = TypeScriptImplementationsCodeLensProvider;
 function register(selector, modeId, client, cachedResponse) {
-    return new dependentRegistration_1.VersionDependentRegistration(client, api_1.default.v220, () => new dependentRegistration_1.ConfigurationDependentRegistration(modeId, 'implementationsCodeLens.enabled', () => {
+    return new dependentRegistration_1.ConfigurationDependentRegistration(modeId, 'implementationsCodeLens.enabled', () => {
         return vscode.languages.registerCodeLensProvider(selector, new TypeScriptImplementationsCodeLensProvider(client, cachedResponse));
-    }));
+    });
 }
 exports.register = register;
 //# sourceMappingURL=implementationsCodeLens.js.map

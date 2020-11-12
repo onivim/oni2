@@ -33,6 +33,26 @@ let highlight = (~scope, ~theme, ~grammars, lines) => {
   result;
 };
 
+module Tokens = {
+  let getAt = (~byteIndex as orig, tokens) => {
+    let byteIndex = ByteIndex.toInt(orig);
+    let rec loop = (lastToken, tokens: list(ThemeToken.t)) => {
+      switch (tokens) {
+      | [] => lastToken
+      | [token] => token.index <= byteIndex ? Some(token) : lastToken
+      | [token, ...tail] =>
+        if (token.index > byteIndex) {
+          lastToken;
+        } else {
+          loop(Some(token), tail);
+        }
+      };
+    };
+
+    loop(None, tokens);
+  };
+};
+
 module Configuration = {
   open Oni_Core;
   open Config.Schema;
@@ -79,8 +99,7 @@ module Internal = {
     if (numberOfLinesToHighlight == 0) {
       [||];
     } else {
-      let linesToHighlight =
-        Array.sub(lines, 0, numberOfLinesToHighlight - 1);
+      let linesToHighlight = Array.sub(lines, 0, numberOfLinesToHighlight);
       let highlights = highlight(~scope, ~theme, ~grammars, linesToHighlight);
       highlights;
     };
@@ -104,7 +123,7 @@ type outmsg =
 
 type t = {
   maybeSyntaxClient: option(Oni_Syntax_Client.t),
-  highlights: BufferMap.t(LineMap.t(list(ColorizedToken.t))),
+  highlights: BufferMap.t(LineMap.t(list(ThemeToken.t))),
   ignoredBuffers: BufferMap.t(bool),
 };
 
@@ -118,23 +137,34 @@ let noTokens = [];
 
 module ClientLog = (val Oni_Core.Log.withNamespace("Oni2.Feature.Syntax"));
 
-let getTokens = (~bufferId: int, ~line: Index.t, {highlights, _}) => {
+let getTokens =
+    (~bufferId: int, ~line: EditorCoreTypes.LineNumber.t, {highlights, _}) => {
   highlights
   |> BufferMap.find_opt(bufferId)
-  |> OptionEx.flatMap(LineMap.find_opt(line |> Index.toZeroBased))
+  |> OptionEx.flatMap(
+       LineMap.find_opt(line |> EditorCoreTypes.LineNumber.toZeroBased),
+     )
   |> Option.value(~default=noTokens);
 };
 
+let getAt =
+    (~bufferId, ~bytePosition: EditorCoreTypes.BytePosition.t, highlights) => {
+  let tokens = getTokens(~bufferId, ~line=bytePosition.line, highlights);
+  Tokens.getAt(~byteIndex=bytePosition.byte, tokens);
+};
+
 let getSyntaxScope =
-    (~bufferId: int, ~line: Index.t, ~bytePosition: int, bufferHighlights) => {
-  let tokens = getTokens(~bufferId, ~line, bufferHighlights);
+    (~bytePosition: BytePosition.t, ~bufferId: int, bufferHighlights) => {
+  let tokens =
+    getTokens(~bufferId, ~line=bytePosition.line, bufferHighlights);
+  let byte = ByteIndex.toInt(bytePosition.byte);
 
   let rec loop = (syntaxScope, currentTokens) => {
-    ColorizedToken.(
+    ThemeToken.(
       switch (currentTokens) {
       // Reached the end... return what we have
       | [] => syntaxScope
-      | [{index, syntaxScope, _}, ...rest] when index <= bytePosition =>
+      | [{index, syntaxScope, _}, ...rest] when index <= byte =>
         loop(syntaxScope, rest)
       // Gone past the relevant tokens, return
       // the scope we ended up with
@@ -154,10 +184,10 @@ let setTokensForLine =
     (
       ~bufferId: int,
       ~line: int,
-      ~tokens: list(ColorizedToken.t),
+      ~tokens: list(ThemeToken.t),
       {highlights, ignoredBuffers, _} as prev: t,
     ) => {
-  let updateLineMap = (lineMap: LineMap.t(list(ColorizedToken.t))) => {
+  let updateLineMap = (lineMap: LineMap.t(list(ThemeToken.t))) => {
     LineMap.update(line, _ => Some(tokens), lineMap);
   };
 
@@ -244,8 +274,10 @@ let handleUpdate =
         fun
         | None => None
         | Some(lineMap) => {
-            let startPos = bufferUpdate.startLine |> Index.toZeroBased;
-            let endPos = bufferUpdate.endLine |> Index.toZeroBased;
+            let startPos =
+              bufferUpdate.startLine |> EditorCoreTypes.LineNumber.toZeroBased;
+            let endPos =
+              bufferUpdate.endLine |> EditorCoreTypes.LineNumber.toZeroBased;
             Some(
               LineMap.shift(
                 ~default=v => v,
@@ -282,6 +314,7 @@ let update: (t, msg) => (t, outmsg) =
 let subscription =
     (
       ~config: Config.resolver,
+      ~grammarInfo,
       ~languageInfo,
       ~setup,
       ~tokenTheme,
@@ -294,7 +327,12 @@ let subscription =
          !BufferMap.mem(Oni_Core.Buffer.getId(buffer), ignoredBuffers)
        )
     |> List.map(((buffer, visibleRanges)) => {
-         Service_Syntax.Sub.buffer(~client, ~buffer, ~visibleRanges)
+         Service_Syntax.Sub.buffer(
+           ~client,
+           ~buffer,
+           ~languageInfo,
+           ~visibleRanges,
+         )
          |> Isolinear.Sub.map(
               fun
               | Service_Syntax.ReceivedHighlights(tokens) => {
@@ -313,7 +351,7 @@ let subscription =
   let serverSubscription =
     Service_Syntax.Sub.server(
       ~useTreeSitter=Configuration.Experimental.treeSitter.get(config),
-      ~languageInfo,
+      ~grammarInfo,
       ~setup,
       ~tokenTheme,
     )

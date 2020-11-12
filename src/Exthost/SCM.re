@@ -1,3 +1,4 @@
+module ExtCommand = Command;
 open Oni_Core;
 
 [@deriving show({with_path: false})]
@@ -56,18 +57,31 @@ module Resource = {
 
     let resource =
       Json.Decode.(
-        Pipeline.(
-          decode((handle, uri, /*icons,*/ tooltip, strikeThrough, faded) =>
-            {handle, uri, /*icons,*/ tooltip, strikeThrough, faded}
+        Pipeline.
+          (
+            decode(
+              (
+                handle,
+                uri,
+                /*icons,*/ tooltip,
+                maybeStrikeThrough,
+                maybeFaded,
+              ) => {
+              let strikeThrough =
+                maybeStrikeThrough |> Option.value(~default=false);
+              let faded = maybeFaded |> Option.value(~default=false);
+
+              {handle, uri, /*icons,*/ tooltip, strikeThrough, faded};
+            })
+            |> custom(index(0, int))
+            |> custom(index(1, Uri.decode))
+            // TODO: Bring back icons
+            //|> custom(index(2, icons))
+            |> custom(index(3, string))
+            |> custom(index(4, nullable(bool)))
+            |> custom(index(5, nullable(bool)))
           )
-          |> custom(index(0, int))
-          |> custom(index(1, Uri.decode))
-          // TODO: Bring back icons
-          //|> custom(index(2, icons))
-          |> custom(index(3, string))
-          |> custom(index(4, bool))
-          |> custom(index(5, bool))
-        )
+          // TODO: Context value?
       );
 
     let splice =
@@ -96,22 +110,78 @@ module Resource = {
   let decode = Decode.resource;
 };
 
+module GroupFeatures = {
+  [@deriving show({with_path: false})]
+  type t = {hideWhenEmpty: bool};
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {hideWhenEmpty: field.withDefault("hideWhenEmpty", false, bool)}
+      )
+    );
+};
+
+module Group = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    id: string,
+    label: string,
+    features: GroupFeatures.t,
+  };
+
+  let decode =
+    Json.Decode.(
+      Pipeline.(
+        decode((handle, id, label, features) =>
+          {handle, id, label, features}
+        )
+        |> custom(index(0, int))
+        |> custom(index(1, string))
+        |> custom(index(2, string))
+        |> custom(index(3, GroupFeatures.decode))
+      )
+    );
+};
+
 module Decode = {
-  open Yojson.Safe.Util;
-
-  let listOrEmpty =
-    fun
-    | `List(list) => list
-    | _ => [];
-
   let command =
-    fun
-    | `Assoc(_) as obj =>
-      Some({
-        id: obj |> member("id") |> to_string,
-        title: obj |> member("title") |> to_string,
-        tooltip: obj |> member("tooltip") |> to_string_option,
-        arguments: obj |> member("arguments") |> listOrEmpty,
-      })
-    | _ => None;
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          id: field.required("id", string),
+          title: field.required("title", string),
+          tooltip: field.optional("tooltip", string),
+          arguments: field.withDefault("arguments", [], list(value)),
+        }
+      )
+    );
+};
+
+module ProviderFeatures = {
+  [@deriving show({with_path: false})]
+  type t = {
+    hasQuickDiffProvider: bool,
+    count: option(int),
+    commitTemplate: option(string),
+    acceptInputCommand: option(command),
+    statusBarCommands: option(list(command)),
+  };
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          hasQuickDiffProvider:
+            field.withDefault("hasQuickDiffProvider", false, bool),
+          count: field.optional("count", int),
+          commitTemplate: field.optional("commitTemplate", string),
+          acceptInputCommand:
+            field.optional("acceptInputCommand", Decode.command),
+          statusBarCommands:
+            field.optional("statusBarCommands", list(Decode.command)),
+        }
+      )
+    );
 };

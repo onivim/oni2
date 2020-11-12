@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
@@ -9,7 +8,7 @@ open Oni_IntegrationTestLib;
 runTestWithInput(
   ~name="ExtHostCompletionTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
   );
 
   // Wait until the extension is activated
@@ -20,7 +19,7 @@ runTestWithInput(
     (state: State.t) =>
     List.exists(
       id => id == "oni-dev-extension",
-      state.extensions.activatedIds,
+      state.extensions |> Feature_Extensions.activatedIds,
     )
   );
 
@@ -34,12 +33,10 @@ runTestWithInput(
     (state: State.t) => {
       let fileType =
         Selectors.getActiveBuffer(state)
-        |> OptionEx.flatMap(Buffer.getFileType);
+        |> Option.map(Buffer.getFileType)
+        |> Option.map(Buffer.FileType.toString);
 
-      switch (fileType) {
-      | Some("oni-dev") => true
-      | _ => false
-      };
+      fileType == Some("oni-dev");
     },
   );
 
@@ -53,6 +50,7 @@ runTestWithInput(
     ~timeout=30.0,
     ~name="Validate we get some completions from the 'oni-dev' extension",
     (state: State.t) =>
-    Array.length(state.completions.filtered) > 0
+    state.languageSupport
+    |> Feature_LanguageSupport.Completion.availableCompletionCount > 0
   );
 });

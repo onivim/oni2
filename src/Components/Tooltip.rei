@@ -14,6 +14,8 @@ module Overlay: {
 
 let make:
   (
+    ~offsetX: int=?,
+    ~offsetY: int=?,
     ~children: element,
     ~text: string,
     ~style: list(Style.viewStyleProps)=?,

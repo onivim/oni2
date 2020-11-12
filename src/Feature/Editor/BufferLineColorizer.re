@@ -7,100 +7,109 @@ open Revery;
 
 open Oni_Core;
 
-type tokenColor = (Color.t, Color.t);
-type t = int => tokenColor;
+type themedToken = {
+  color: Color.t,
+  backgroundColor: Color.t,
+  italic: bool,
+  bold: bool,
+};
+type t = (~startByte: ByteIndex.t, ByteIndex.t) => themedToken;
+
+module Internal = {
+  let getFirstRelevantToken = (~default, ~startByte, tokens) => {
+    let rec loop = (default, tokens: list(ThemeToken.t)) => {
+      switch (tokens) {
+      | [] => (default, tokens)
+      | [_] => (default, tokens)
+      | [token, nextToken, ...tail] =>
+        if (token.index >= startByte) {
+          (default, tokens);
+        } else if (token.index < startByte && nextToken.index >= startByte) {
+          (token, [nextToken, ...tail]);
+        } else {
+          loop(token, [nextToken, ...tail]);
+        }
+      };
+    };
+
+    loop(default, tokens);
+  };
+};
 
 let create =
     (
-      ~startByte,
-      ~endByte,
       ~defaultBackgroundColor: Color.t,
       ~defaultForegroundColor: Color.t,
-      ~selectionHighlights: option(Range.t),
+      ~selectionHighlights: option(ByteRange.t),
       ~selectionColor: Color.t,
-      ~matchingPair: option(int),
-      ~searchHighlights: list(Range.t),
+      ~matchingPair: option(ByteIndex.t),
+      ~searchHighlights: list(ByteRange.t),
       ~searchHighlightColor: Color.t,
-      tokenColors: list(ColorizedToken.t),
+      themedTokens: list(ThemeToken.t),
     ) => {
-  let defaultToken2 =
-    ColorizedToken.create(
-      ~index=0,
-      ~backgroundColor=defaultBackgroundColor,
-      ~foregroundColor=defaultForegroundColor,
-      ~syntaxScope=SyntaxScope.none,
-      (),
-    );
-
-  let length = max(endByte - startByte, 1);
-
-  let tokenColorArray: array(ColorizedToken.t) =
-    Array.make(length, defaultToken2);
-
-  let rec f = (tokens: list(ColorizedToken.t), start) =>
-    switch (tokens) {
-    | [] => ()
-    | [hd, ...tail] =>
-      let adjIndex = hd.index - startByte;
-
-      let pos = ref(start);
-
-      while (pos^ >= adjIndex && pos^ >= 0 && pos^ < length) {
-        tokenColorArray[pos^] = hd;
-        decr(pos);
-      };
-      if (hd.index < startByte) {
-        ();
-      } else {
-        f(tail, pos^);
-      };
-    };
+  let matchingPair = matchingPair |> Option.map(ByteIndex.toInt);
 
   let (selectionStart, selectionEnd) =
     switch (selectionHighlights) {
     | Some(range) =>
-      let start = Index.toZeroBased(range.start.column);
-      let stop = Index.toZeroBased(range.stop.column);
+      let start = ByteIndex.toInt(range.start.byte);
+      let stop = ByteIndex.toInt(range.stop.byte);
       start < stop ? (start, stop) : (stop, start);
     | None => ((-1), (-1))
     };
 
-  let tokenColors = List.rev(tokenColors);
+  (~startByte: ByteIndex.t) => {
+    let initialDefaultToken =
+      ThemeToken.create(
+        ~index=0,
+        ~backgroundColor=defaultBackgroundColor,
+        ~foregroundColor=defaultForegroundColor,
+        ~syntaxScope=SyntaxScope.none,
+        (),
+      );
 
-  f(tokenColors, length - 1);
+    let startByteIdx = ByteIndex.toInt(startByte);
+    let (defaultToken, tokens) =
+      Internal.getFirstRelevantToken(
+        ~default=initialDefaultToken,
+        ~startByte=startByteIdx,
+        themedTokens,
+      );
 
-  i => {
-    let colorIndex =
-      if (i < startByte) {
-        tokenColorArray[0];
-      } else if (i >= endByte) {
-        tokenColorArray[Array.length(tokenColorArray) - 1];
-      } else {
-        tokenColorArray[i - startByte];
+    (byteIndex: ByteIndex.t) => {
+      let i = ByteIndex.toInt(byteIndex);
+      let colorIndex =
+        Feature_Syntax.Tokens.getAt(~byteIndex, tokens)
+        |> Option.value(~default=defaultToken);
+
+      let matchingPair =
+        switch (matchingPair) {
+        | None => (-1)
+        | Some(v) => v
+        };
+
+      let backgroundColor =
+        i >= selectionStart && i < selectionEnd || i == matchingPair
+          ? selectionColor : defaultBackgroundColor;
+
+      let doesSearchIntersect = (range: ByteRange.t) => {
+        ByteIndex.toInt(range.start.byte) <= i
+        && ByteIndex.toInt(range.stop.byte) > i;
       };
 
-    let matchingPair =
-      switch (matchingPair) {
-      | None => (-1)
-      | Some(v) => v
+      let isSearchHighlight =
+        List.exists(doesSearchIntersect, searchHighlights);
+
+      let backgroundColor =
+        isSearchHighlight ? searchHighlightColor : backgroundColor;
+
+      let color = colorIndex.foregroundColor;
+      {
+        backgroundColor,
+        color,
+        bold: colorIndex.bold,
+        italic: colorIndex.italic,
       };
-
-    let backgroundColor =
-      i >= selectionStart && i < selectionEnd || i == matchingPair
-        ? selectionColor : defaultBackgroundColor;
-
-    let doesSearchIntersect = (range: Range.t) => {
-      Index.toZeroBased(range.start.column) <= i
-      && Index.toZeroBased(range.stop.column) > i;
     };
-
-    let isSearchHighlight =
-      List.exists(doesSearchIntersect, searchHighlights);
-
-    let backgroundColor =
-      isSearchHighlight ? searchHighlightColor : backgroundColor;
-
-    let color = colorIndex.foregroundColor;
-    (backgroundColor, color);
   };
 };

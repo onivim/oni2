@@ -44,7 +44,7 @@ runTest(
       (state: State.t) =>
       List.exists(
         id => id == "oni-dev-extension",
-        state.extensions.activatedIds,
+        state.extensions |> Feature_Extensions.activatedIds,
       )
     );
 
@@ -53,7 +53,11 @@ runTest(
     dispatch(
       Actions.Terminal(
         Feature_Terminal.Command(
-          NewTerminal({cmd: None, splitDirection: Vertical}),
+          NewTerminal({
+            cmd: None,
+            splitDirection: Vertical,
+            closeOnExit: false,
+          }),
         ),
       ),
     );
@@ -62,8 +66,8 @@ runTest(
       state.terminals
       |> Feature_Terminal.toList
       |> List.exists((terminal: Feature_Terminal.terminal) => {
-           terminal.cmd == expectedShellCmd
-           && terminal.arguments == expectedShellArgs
+           terminal.launchConfig.executable == expectedShellCmd
+           && terminal.launchConfig.arguments == expectedShellArgs
          });
     };
 

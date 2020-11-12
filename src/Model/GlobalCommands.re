@@ -21,15 +21,6 @@ let copyFilePath =
     CopyActiveFilepathToClipboard,
   );
 
-let acceptSelectedSuggestion =
-  register("acceptSelectedSuggestion", Command("acceptSelectedSuggestion"));
-
-let selectPrevSuggestion =
-  register("selectPrevSuggestion", Command("selectPrevSuggestion"));
-
-let selectNextSuggestion =
-  register("selectNextSuggestion", Command("selectNextSuggestion"));
-
 let undo = register("undo", Command("undo"));
 let redo = register("redo", Command("redo"));
 
@@ -38,20 +29,6 @@ let outdent = register("outdent", Command("outdent"));
 
 module Editor = {
   module Action = {
-    let detectIndentation =
-      register(
-        ~category="Editor",
-        ~title="Detect Indentation from Content",
-        "editor.action.detectIndentation",
-        Command("editor.action.detectIndentation"),
-      );
-
-    let clipboardPasteAction =
-      register(
-        "editor.action.clipboardPasteAction",
-        Command("editor.action.clipboardPasteAction"),
-      );
-
     let indentLines =
       register(
         "editor.action.indentLines",
@@ -84,16 +61,6 @@ module Oni = {
       Command("oni.changelog"),
     );
 
-  module Explorer = {
-    let toggle =
-      register(
-        ~category="View",
-        ~title="Toggle File Explorer visibility",
-        "explorer.toggle", // use workbench.action.toggleSidebarVisibility instead?
-        Actions.ActivityBar(ActivityBar.FileExplorerClick),
-      );
-  };
-
   module KeyDisplayer = {
     let disable =
       register(
@@ -111,24 +78,6 @@ module Oni = {
         ~isEnabledWhen=WhenExpr.parse("!keyDisplayerEnabled"),
         "keyDisplayer.enable",
         EnableKeyDisplayer,
-      );
-  };
-
-  module Sneak = {
-    let start =
-      register(
-        ~category="Sneak",
-        ~title="Enter sneak mode (keyboard-accessible UI)",
-        "sneak.start",
-        Command("sneak.start"),
-      );
-
-    let stop =
-      register(
-        ~category="Sneak",
-        ~title="Exit sneak mode",
-        "sneak.stop",
-        Command("sneak.stop"),
       );
   };
 
@@ -152,24 +101,6 @@ module Oni = {
       );
   };
 
-  module View = {
-    let rotateForward =
-      register(
-        ~category="View",
-        ~title="Rotate Windows (Forwards)",
-        "view.rotateForward",
-        Command("view.rotateForward"),
-      );
-
-    let rotateBackward =
-      register(
-        ~category="View",
-        ~title="Rotate Windows (Backwards)",
-        "view.rotateBackward",
-        Command("view.rotateBackward"),
-      );
-  };
-
   module Vim = {
     let esc = register("vim.esc", Command("vim.esc"));
     let tutor =
@@ -178,38 +109,6 @@ module Oni = {
         ~title="Open Vim Tutor",
         "vim.tutor",
         Command("vim.tutor"),
-      );
-
-    let decreaseHorizontalWindowSize =
-      register(
-        ~category="View",
-        ~title="Decrease Horizontal Window Size",
-        "vim.decreaseHorizontalWindowSize",
-        Command("vim.decreaseHorizontalWindowSize"),
-      );
-
-    let increaseHorizontalWindowSize =
-      register(
-        ~category="View",
-        ~title="Increase Horizontal Window Size",
-        "vim.increaseHorizontalWindowSize",
-        Command("vim.increaseHorizontalWindowSize"),
-      );
-
-    let decreaseVerticalWindowSize =
-      register(
-        ~category="View",
-        ~title="Decrease Vertical Window Size",
-        "vim.decreaseVerticalWindowSize",
-        Command("vim.decreaseVerticalWindowSize"),
-      );
-
-    let increaseVerticalWindowSize =
-      register(
-        ~category="View",
-        ~title="Increase Vertical Window Size",
-        "vim.increaseVerticalWindowSize",
-        Command("vim.increaseVerticalWindowSize"),
       );
   };
 
@@ -245,42 +144,6 @@ module Oni = {
   };
 };
 
-module ReferencesView = {
-  let find =
-    register(
-      ~category="References",
-      ~title="Find all References",
-      "references-view.find",
-      References(References.Requested),
-    );
-};
-
-module View = {
-  let closeEditor =
-    register(
-      ~category="View",
-      ~title="Close Editor",
-      "view.closeEditor",
-      Command("view.closeEditor"),
-    );
-
-  let splitVertical =
-    register(
-      ~category="View",
-      ~title="Split Editor Vertically",
-      "view.splitVertical",
-      Command("view.splitVertical"),
-    );
-
-  let splitHorizontal =
-    register(
-      ~category="View",
-      ~title="Split Editor Horizontally",
-      "view.splitHorizontal",
-      Command("view.splitHorizontal"),
-    );
-};
-
 module Workbench = {
   module Action = {
     let openSettings =
@@ -299,26 +162,11 @@ module Workbench = {
         OpenConfigFile("keybindings.json"),
       );
 
-    let selectTheme =
-      register(
-        ~category="Preferences",
-        ~title="Theme Picker",
-        "workbench.action.selectTheme",
-        QuickmenuShow(ThemesPicker),
-      );
-
     let showCommands =
       register(
         ~title="Show All Commands",
         "workbench.action.showCommands",
         QuickmenuShow(CommandPalette),
-      );
-
-    let gotoSymbol =
-      register(
-        ~title="Goto symbol in file...",
-        "workbench.action.gotoSymbol",
-        QuickmenuShow(DocumentSymbols),
       );
 
     let openNextRecentlyUsedEditorInGroup =
@@ -334,22 +182,6 @@ module Workbench = {
         ~title="Go to File...",
         "workbench.action.quickOpen",
         QuickmenuShow(FilesPicker),
-      );
-
-    let nextEditor =
-      register(
-        ~category="View",
-        ~title="Open Next Editor",
-        "workbench.action.nextEditor",
-        Command("workbench.action.nextEditor"),
-      );
-
-    let previousEditor =
-      register(
-        ~category="View",
-        ~title="Open Previous Editor",
-        "workbench.action.previousEditor",
-        Command("workbench.action.previousEditor"),
       );
 
     let quickOpenNavigateNextInEditorPicker =
@@ -368,14 +200,6 @@ module Workbench = {
 
     let closeQuickOpen =
       register("workbench.action.closeQuickOpen", QuickmenuClose);
-
-    let findInFiles =
-      register(
-        ~category="Search",
-        ~title="Find in Files",
-        "workbench.action.findInFiles",
-        SearchHotkey,
-      );
 
     let zoomIn =
       register(
@@ -401,46 +225,11 @@ module Workbench = {
         Command("workbench.action.zoomReset"),
       );
 
-    let decreaseViewSize =
-      register(
-        ~category="View",
-        ~title="Decrease Current Window/View Size",
-        "workbench.action.decreaseViewSize",
-        Command("workbench.action.decreaseViewSize"),
-      );
-
-    let increaseViewSize =
-      register(
-        ~category="View",
-        ~title="Increase Current Window/View Size",
-        "workbench.action.increaseViewSize",
-        Command("workbench.action.increaseViewSize"),
-      );
-
-    let evenEditorWidths =
-      register(
-        ~category="View",
-        ~title="Reset Window Sizes",
-        "workbench.action.evenEditorWidths",
-        Command("workbench.action.evenEditorWidths"),
-      );
-
     module Files = {
       let save =
         register(
           "workbench.action.files.save",
           Command("workbench.action.files.save"),
-        );
-    };
-  };
-  module Actions = {
-    module View = {
-      let problems =
-        register(
-          ~category="View",
-          ~title="Toggle Problems (Errors, Warnings)",
-          "workbench.actions.view.problems",
-          Command("workbench.actions.view.problems"),
         );
     };
   };

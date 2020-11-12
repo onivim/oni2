@@ -4,15 +4,29 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.fork = exports.getTempFile = exports.getInstanceDir = void 0;
 const temp = require("./temp");
 const path = require("path");
 const fs = require("fs");
 const cp = require("child_process");
+const process = require("process");
 const getRootTempDir = (() => {
     let dir;
     return () => {
         if (!dir) {
-            dir = temp.getTempFile(`vscode-typescript`);
+            dir = temp.getTempFile(`vscode-typescript${process.platform !== 'win32' && process.getuid ? process.getuid() : ''}`);
+        }
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir);
+        }
+        return dir;
+    };
+})();
+exports.getInstanceDir = (() => {
+    let dir;
+    return () => {
+        if (!dir) {
+            dir = path.join(getRootTempDir(), temp.makeRandomHexString(20));
         }
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir);
@@ -21,7 +35,7 @@ const getRootTempDir = (() => {
     };
 })();
 function getTempFile(prefix) {
-    return path.join(getRootTempDir(), `${prefix}-${temp.makeRandomHexString(20)}.tmp`);
+    return path.join(exports.getInstanceDir(), `${prefix}-${temp.makeRandomHexString(20)}.tmp`);
 }
 exports.getTempFile = getTempFile;
 function generatePatchedEnv(env, modulePath) {

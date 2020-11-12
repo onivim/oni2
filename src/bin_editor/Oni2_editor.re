@@ -6,143 +6,178 @@
 
 open Revery;
 
+open Oni_CLI;
 open Oni_UI;
 
 module Core = Oni_Core;
-module Ext = Oni_Extensions;
 module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
-module ExtM = Oni_ExtensionManagement;
+module ExtM = Service_Extensions.Management;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
+
 module LwtEx = Core.Utility.LwtEx;
-
-let installExtension = (path, Cli.{overriddenExtensionsDir, _}) => {
-  switch (Store.Utility.getUserExtensionsDirectory(~overriddenExtensionsDir)) {
-  | Some(extensionsFolder) =>
-    let result = ExtM.install(~extensionsFolder, ~path) |> LwtEx.sync;
-
-    switch (result) {
-    | Ok(_) =>
-      Printf.printf("Successfully installed extension: %s\n", path);
-      0;
-
-    | Error(_) =>
-      Printf.printf("Failed to install extension: %s\n", path);
-      1;
-    };
-
-  | None =>
-    prerr_endline("Error locating user extension folder.");
-    1;
-  };
-};
-
-let uninstallExtension = (_extensionId, _cli) => {
-  prerr_endline("Not implemented yet.");
-  1;
-};
-
-let listExtensions = (Cli.{overriddenExtensionsDir, _}) => {
-  let extensions = Store.Utility.getUserExtensions(~overriddenExtensionsDir);
-  let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
-    print_endline(ext.manifest.name);
-  };
-  List.iter(printExtension, extensions);
-  0;
-};
-
-let printVersion = _cli => {
-  print_endline("Onivim 2 (" ++ Core.BuildInfo.version ++ ")");
-  0;
-};
+module OptionEx = Core.Utility.OptionEx;
 
 Log.debug("Startup: Parsing CLI options");
-let cliOptions =
-  Cli.parse(
-    ~installExtension,
-    ~uninstallExtension,
-    ~checkHealth=HealthCheck.run(~checks=All),
-    ~listExtensions=
-      ({overriddenExtensionsDir, _}) => {
-        let extensions =
-          Store.Utility.getUserExtensions(~overriddenExtensionsDir);
-        let printExtension = (ext: Exthost.Extension.Scanner.ScanResult.t) => {
-          print_endline(ext.manifest.name);
-        };
-        List.iter(printExtension, extensions);
-        0;
-      },
-    ~printVersion,
-  );
+let (cliOptions, eff) = Oni_CLI.parse(~getenv=Sys.getenv_opt, Sys.argv);
 
-let initWorkingDirectory = () => {
-  let path =
-    switch (cliOptions.folder) {
-    | Some(folder) => folder
-    | None =>
-      switch (Store.Persistence.Global.workspace()) {
-      | Some(path) => path
+if (cliOptions.needsConsole) {
+  Revery.App.initConsole();
+};
+
+switch (eff) {
+| PrintVersion => Cli.printVersion() |> exit
+| InstallExtension(name) => Cli.installExtension(name, cliOptions) |> exit
+| QueryExtension(name) => Cli.queryExtension(name, cliOptions) |> exit
+| UninstallExtension(name) =>
+  Cli.uninstallExtension(name, cliOptions) |> exit
+| CheckHealth => HealthCheck.run(~checks=All, cliOptions) |> exit
+| ListExtensions => Cli.listExtensions(cliOptions) |> exit
+| StartSyntaxServer({parentPid, namedPipe}) =>
+  Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>
+    HealthCheck.run(~checks=Common, cliOptions)
+  )
+| Run =>
+  // Turn on logging, if necessary
+  let loggingToConsole =
+    cliOptions.attachToForeground && Option.is_some(cliOptions.logLevel);
+  let loggingToFile = Option.is_some(cliOptions.logFile);
+
+  cliOptions.logLevel |> Option.iter(Timber.App.setLevel);
+
+  cliOptions.logFilter |> Option.iter(Timber.App.setNamespaceFilter);
+
+  if (loggingToConsole && loggingToFile) {
+    let consoleReporter =
+      Timber.Reporter.console(~enableColors=?cliOptions.logColorsEnabled, ());
+    let fileReporter = Option.get(cliOptions.logFile) |> Timber.Reporter.file;
+
+    let reporter = Timber.Reporter.combine(consoleReporter, fileReporter);
+    Timber.App.enable(reporter);
+  } else if (loggingToConsole) {
+    let consoleReporter =
+      Timber.Reporter.console(~enableColors=?cliOptions.logColorsEnabled, ());
+    Timber.App.enable(consoleReporter);
+  } else if (loggingToFile) {
+    let fileReporter = Option.get(cliOptions.logFile) |> Timber.Reporter.file;
+    Timber.App.enable(fileReporter);
+  };
+  Oni_Core.Log.init();
+
+  // #1161 - OSX - Make sure we're using the terminal / shell PATH.
+  // Only fix path when launched from finder -
+  // it seems running `zsh -ilc` hangs when running from terminal.
+  if (Sys.getenv_opt("ONI2_LAUNCHED_FROM_FINDER") |> Option.is_some) {
+    Core.ShellUtility.fixOSXPath();
+  };
+
+  let initWorkingDirectory = () => {
+    let path =
+      switch (Oni_CLI.(cliOptions.folder)) {
+      | Some(folder) => folder
       | None =>
-        Dir.User.document()
-        |> Option.value(~default=Dir.home())
-        |> Fp.toString
-      }
+        switch (Store.Persistence.Global.workspace()) {
+        | Some(path) => path
+        | None =>
+          Dir.User.document()
+          |> Option.value(~default=Dir.home())
+          |> Fp.toString
+        }
+      };
+
+    Log.info("Startup: Changing folder to: " ++ path);
+    try(Sys.chdir(path)) {
+    | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
     };
 
-  Log.info("Startup: Changing folder to: " ++ path);
-  try(Sys.chdir(path)) {
-  | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
+    path;
   };
 
-  path;
-};
+  // Fix for https://github.com/onivim/oni2/issues/2229
+  // Can we take the displays into account, to see if the negative position is actually valid?
+  // It's normal for positions to be negative, depending on display configuration - but this filters
+  // out the extreme case where we are persisting incorrect values (like -32000 in the case of #2229).
+  let isValidPosition = position => position > (-2000);
 
-let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
-  let (x, y, width, height, maximized) = {
-    open Store.Persistence.Workspace;
-    let store = storeFor(workingDirectory);
-
-    (
-      windowX(store) |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
-      windowY(store)
-      |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
-      windowWidth(store),
-      windowHeight(store),
-      windowMaximized(store),
-    );
-  };
-
-  let window =
-    App.createWindow(
-      ~createOptions=
-        WindowCreateOptions.create(
-          ~forceScaleFactor,
-          ~maximized,
-          ~vsync=Vsync.Immediate,
-          ~icon=Some("logo.png"),
-          ~width=640,
-          ~height=320,
-          ~titlebarStyle=WindowStyles.Transparent,
-          ~x,
-          ~y,
-          (),
-        ),
-      app,
-      "Oni2",
-    );
-
-  Window.setBackgroundColor(window, Colors.black);
-
-  window;
-};
-
-if (cliOptions.syntaxHighlightService) {
-  Oni_Syntax_Server.start(~healthCheck=() =>
-    HealthCheck.run(~checks=Common, cliOptions)
+  let positionToString = (
+    fun
+    | `Absolute(v) => Printf.sprintf("Absolute(%d)", v)
+    | `Centered => "Centered"
   );
-} else {
+
+  let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
+    let (x, y, width, height, maximized) = {
+      open Store.Persistence.Workspace;
+      let store = storeFor(workingDirectory);
+
+      (
+        windowX(store)
+        |> OptionEx.tap(x => Log.infof(m => m("Unsanitized x value: %d", x)))
+        |> OptionEx.filter(isValidPosition)
+        |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
+        windowY(store)
+        |> OptionEx.tap(y => Log.infof(m => m("Unsanitized x value: %d", y)))
+        |> OptionEx.filter(isValidPosition)
+        |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
+        windowWidth(store),
+        windowHeight(store),
+        windowMaximized(store),
+      );
+    };
+
+    Log.infof(m =>
+      m(
+        "Sanitized values from persistence - x: %s y: %s width: %d height: %d",
+        x |> positionToString,
+        y |> positionToString,
+        width,
+        height,
+      )
+    );
+
+    let decorated =
+      switch (Revery.Environment.os) {
+      | Windows => false
+      | _ => true
+      };
+
+    let icon =
+      switch (Revery.Environment.os) {
+      | Mac =>
+        switch (Sys.getenv_opt("ONI2_BUNDLED")) {
+        | Some(_) => None
+        | None => Some("logo.png")
+        }
+      | _ => Some("logo.png")
+      };
+
+    let window =
+      App.createWindow(
+        ~createOptions=
+          WindowCreateOptions.create(
+            ~forceScaleFactor,
+            ~acceleration=cliOptions.gpuAcceleration,
+            ~maximized,
+            ~width=640,
+            ~height=480,
+            ~vsync=Vsync.Immediate,
+            ~icon,
+            ~titlebarStyle=WindowStyles.Transparent,
+            ~x,
+            ~y,
+            ~decorated,
+            (),
+          ),
+        app,
+        "Oni2",
+      );
+
+    Window.setBackgroundColor(window, Colors.black);
+
+    window;
+  };
   Log.infof(m =>
     m(
       "Starting Onivim 2.%s (%s)",
@@ -155,6 +190,9 @@ if (cliOptions.syntaxHighlightService) {
   let init = app => {
     Log.debug("Init");
 
+    Vim.init();
+    Oni2_Sparkle.init();
+
     let initialWorkingDirectory = initWorkingDirectory();
     let window =
       createWindow(
@@ -166,16 +204,54 @@ if (cliOptions.syntaxHighlightService) {
     Log.debug("Initializing setup.");
     let setup = Core.Setup.init();
 
-    PreflightChecks.run();
-
     let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
+
+    let initialBuffer = {
+      let Vim.BufferMetadata.{id, version, filePath, modified, _} =
+        Vim.Buffer.openFile(Core.BufferPath.welcome)
+        |> Vim.BufferMetadata.ofBuffer;
+      Core.Buffer.ofMetadata(
+        ~font=Service_Font.default(),
+        ~id,
+        ~version,
+        ~filePath,
+        ~modified,
+      );
+    };
+
+    let initialBufferRenderers =
+      Model.BufferRenderers.(
+        initial
+        |> setById(
+             Core.Buffer.getId(initialBuffer),
+             Model.BufferRenderer.Welcome,
+           )
+      );
+
+    let extensionGlobalPersistence =
+      Store.Persistence.Global.extensionValues();
+
+    let licenseKeyPersistence = Store.Persistence.Global.licenseKey();
+
+    let initialWorkspaceStore =
+      Store.Persistence.Workspace.storeFor(initialWorkingDirectory);
+    let extensionWorkspacePersistence =
+      Store.Persistence.Workspace.extensionValues(initialWorkspaceStore);
 
     let currentState =
       ref(
         Model.State.initial(
+          ~cli=cliOptions,
+          ~initialBuffer,
+          ~initialBufferRenderers,
           ~getUserSettings,
+          ~extensionGlobalPersistence,
+          ~extensionWorkspacePersistence,
           ~contributedCommands=[], // TODO
           ~workingDirectory=initialWorkingDirectory,
+          // TODO: Use `Fp.t` all the way down
+          ~extensionsFolder=cliOptions.overriddenExtensionsDir,
+          ~licenseKeyPersistence,
         ),
       );
 
@@ -188,8 +264,16 @@ if (cliOptions.syntaxHighlightService) {
         )
       );
 
-    let update = UI.start(window, <Root state=currentState^ />);
+    let uiDispatch = ref(_ => ());
 
+    let update =
+      UI.start(window, <Root state=currentState^ dispatch=uiDispatch^ />);
+
+    let setTitle = title => {
+      Window.setTitle(window, title);
+    };
+
+    let lastTitle = ref("");
     let isDirty = ref(false);
     let onStateChanged = state => {
       currentState := state;
@@ -207,16 +291,36 @@ if (cliOptions.syntaxHighlightService) {
       };
     };
 
+    let title = (state: Model.State.t) => {
+      let activeBuffer = Model.Selectors.getActiveBuffer(state);
+      let config = Model.Selectors.configResolver(state);
+
+      Feature_TitleBar.title(
+        ~activeBuffer,
+        ~config,
+        ~workspaceRoot=state.workspace.rootName,
+        ~workspaceDirectory=state.workspace.workingDirectory,
+      );
+    };
+
     let tick = _dt => {
       runEventLoop();
 
       if (isDirty^) {
-        update(<Root state=currentState^ />);
+        update(<Root state=currentState^ dispatch=uiDispatch^ />);
         isDirty := false;
         persistGlobal();
       };
+
+      let currentTitle = title(currentState^);
+      if (lastTitle^ != currentTitle) {
+        Log.infof(m => m("Setting title: %s", currentTitle));
+        lastTitle := currentTitle;
+        setTitle(currentTitle);
+      };
     };
-    let _: unit => unit = Tick.interval(tick, Time.zero);
+    let _: unit => unit =
+      Tick.interval(~name="Oni2_Editor Apploop", tick, Time.zero);
 
     let getZoom = () => {
       Window.getZoom(window);
@@ -224,16 +328,27 @@ if (cliOptions.syntaxHighlightService) {
 
     let setZoom = zoomFactor => Window.setZoom(window, zoomFactor);
 
-    let setTitle = title => {
-      Window.setTitle(window, title);
-    };
-
     let maximize = () => {
       Window.maximize(window);
     };
 
     let minimize = () => {
       Window.minimize(window);
+    };
+
+    let close = () => {
+      App.quit(~askNicely=true, app);
+    };
+
+    Callback.register("oni2_close", close);
+
+    let restore = () => {
+      Window.restore(window);
+    };
+
+    // This is called raiseWIndow because if it were simply raise, it would shadow the exception raising function
+    let raiseWindow = () => {
+      Window.raise(window);
     };
 
     let setVsync = vsync => Window.setVsync(window, vsync);
@@ -254,10 +369,12 @@ if (cliOptions.syntaxHighlightService) {
         ~onStateChanged,
         ~getZoom,
         ~setZoom,
-        ~setTitle,
         ~setVsync,
         ~maximize,
         ~minimize,
+        ~restore,
+        ~raiseWindow,
+        ~close,
         ~window=Some(window),
         ~filesToOpen=cliOptions.filesToOpen,
         ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
@@ -267,8 +384,14 @@ if (cliOptions.syntaxHighlightService) {
         ~quit,
         (),
       );
+
+    uiDispatch := dispatch;
     Log.debug("Startup: StoreThread started!");
 
+    let _: App.unsubscribe =
+      App.onFileOpen(app, path => {
+        dispatch(Model.Actions.OpenFileByPath(path, None, None))
+      });
     let _: Window.unsubscribe =
       Window.onMaximized(window, () =>
         dispatch(Model.Actions.WindowMaximized)
@@ -296,14 +419,7 @@ if (cliOptions.syntaxHighlightService) {
     let _: Window.unsubscribe =
       Window.onMoved(window, _ => persistWorkspace());
 
-    GlobalContext.set({
-      closeEditorById: id => dispatch(Model.Actions.ViewCloseEditor(id)),
-      editorScrollDelta: (~editorId, ~deltaY, ()) =>
-        dispatch(Model.Actions.EditorScroll(editorId, deltaY)),
-      editorSetScroll: (~editorId, ~scrollY, ()) =>
-        dispatch(Model.Actions.EditorSetScroll(editorId, scrollY)),
-      dispatch,
-    });
+    GlobalContext.set({dispatch: dispatch});
 
     dispatch(Model.Actions.Init);
     runEffects();
@@ -325,5 +441,6 @@ if (cliOptions.syntaxHighlightService) {
 
   /* Let's get this party started! */
   Log.debug("Calling App.start");
-  App.start(init);
+  let () = App.start(init);
+  ();
 };

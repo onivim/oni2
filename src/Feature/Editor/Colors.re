@@ -10,6 +10,9 @@ type t = {
   findMatchBackground: Color.t,
   cursorBackground: Color.t,
   cursorForeground: Color.t,
+  hintForeground: Color.t,
+  infoForeground: Color.t,
+  warningForeground: Color.t,
   errorForeground: Color.t,
   gutterBackground: Color.t,
   gutterModifiedBackground: Color.t,
@@ -22,9 +25,6 @@ type t = {
   lineHighlightBackground: Color.t,
   overviewRulerBracketMatchForeground: Color.t,
   rulerForeground: Color.t,
-  suggestWidgetBorder: Color.t,
-  suggestWidgetBackground: Color.t,
-  suggestWidgetSelectedBackground: Color.t,
   hoverWidgetBackground: Color.t,
   hoverWidgetForeground: Color.t,
   hoverWidgetBorder: Color.t,
@@ -33,7 +33,9 @@ type t = {
   scrollbarSliderHoverBackground: Color.t,
   normalModeBackground: Color.t,
   // Minimap
+  minimapBackground: Color.t,
   minimapSliderBackground: Color.t,
+  minimapSliderHoverBackground: Color.t,
   minimapSelectionHighlight: Color.t,
 };
 
@@ -45,6 +47,9 @@ let precompute = theme => {
   lineHighlightBackground: Editor.lineHighlightBackground.from(theme),
   cursorBackground: EditorCursor.background.from(theme),
   cursorForeground: EditorCursor.foreground.from(theme),
+  hintForeground: EditorHint.foreground.from(theme),
+  infoForeground: EditorInfo.foreground.from(theme),
+  warningForeground: EditorWarning.foreground.from(theme),
   errorForeground: EditorError.foreground.from(theme),
   gutterBackground: EditorGutter.background.from(theme),
   indentGuideBackground: EditorIndentGuide.background.from(theme),
@@ -57,10 +62,6 @@ let precompute = theme => {
   gutterModifiedBackground: EditorGutter.modifiedBackground.from(theme),
   gutterAddedBackground: EditorGutter.addedBackground.from(theme),
   gutterDeletedBackground: EditorGutter.deletedBackground.from(theme),
-  suggestWidgetBorder: EditorSuggestWidget.border.from(theme),
-  suggestWidgetBackground: EditorSuggestWidget.background.from(theme),
-  suggestWidgetSelectedBackground:
-    EditorSuggestWidget.selectedBackground.from(theme),
   hoverWidgetBackground: EditorHoverWidget.background.from(theme),
   hoverWidgetForeground: EditorHoverWidget.foreground.from(theme),
   hoverWidgetBorder: EditorHoverWidget.border.from(theme),
@@ -70,5 +71,7 @@ let precompute = theme => {
   normalModeBackground: Oni.normalModeBackground.from(theme),
   // Minimap
   minimapSliderBackground: MinimapSlider.background.from(theme),
+  minimapSliderHoverBackground: MinimapSlider.hoverBackground.from(theme),
   minimapSelectionHighlight: Colors.Minimap.selectionHighlight.from(theme),
+  minimapBackground: Colors.Minimap.background.from(theme),
 };

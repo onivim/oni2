@@ -1,11 +1,9 @@
 open Actions;
-module Selection = Oni_Components.Selection;
 
 type t = {
   variant,
-  query: string,
   prefix: option(string),
-  selection: Selection.t,
+  inputText: Component_InputText.model,
   items: array(menuItem),
   filterProgress: progress,
   ripgrepProgress: progress,
@@ -18,14 +16,30 @@ and variant =
     | EditorsPicker
     | FilesPicker
     | Wildmenu(Vim.Types.cmdlineType)
-    | ThemesPicker
-    | DocumentSymbols;
+    | ThemesPicker(list(Feature_Theme.theme))
+    | FileTypesPicker({
+        bufferId: int,
+        languages:
+          list((string, option(Oni_Core.IconTheme.IconDefinition.t))),
+      })
+    | Extension({
+        id: int,
+        hasItems: bool,
+        resolver: Lwt.u(int),
+      });
+
+let placeholderText =
+  fun
+  | FilesPicker
+  | ThemesPicker(_)
+  | CommandPalette => "type to search..."
+  | _ => "";
 
 let defaults = variant => {
   variant,
-  query: "",
   prefix: None,
-  selection: Selection.initial,
+  inputText:
+    Component_InputText.create(~placeholder=placeholderText(variant)),
   focused: None,
   items: [||],
   filterProgress: Complete,

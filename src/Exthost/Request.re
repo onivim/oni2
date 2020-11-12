@@ -31,23 +31,17 @@ module Configuration = {
 module Decorations = {
   type request = {
     id: int,
-    handle: int,
     uri: Uri.t,
   };
 
   module Encode = {
     let request = request =>
       Json.Encode.(
-        obj([
-          ("id", request.id |> int),
-          ("handle", request.handle |> int),
-          ("uri", request.uri |> Uri.encode),
-        ])
+        obj([("id", request.id |> int), ("uri", request.uri |> Uri.encode)])
       );
   };
 
   type decoration = {
-    priority: int,
     bubble: bool,
     title: string,
     letter: string,
@@ -58,14 +52,13 @@ module Decorations = {
     let decoration =
       Json.Decode.(
         Pipeline.(
-          decode((priority, bubble, title, letter, color) =>
-            {priority, bubble, title, letter, color}
+          decode((bubble, title, letter, color) =>
+            {bubble, title, letter, color}
           )
-          |> custom(index(0, int))
-          |> custom(index(1, bool))
+          |> custom(index(0, bool))
+          |> custom(index(1, string))
           |> custom(index(2, string))
-          |> custom(index(3, string))
-          |> custom(index(4, ThemeColor.decode))
+          |> custom(index(3, ThemeColor.decode))
         )
       );
 
@@ -87,7 +80,7 @@ module Decorations = {
 
   type reply = IntMap.t(decoration);
 
-  let provideDecorations = (~requests, client) => {
+  let provideDecorations = (~handle, ~requests, client) => {
     let requestItems =
       requests |> List.map(Json.Encode.encode_value(Encode.request));
 
@@ -96,7 +89,7 @@ module Decorations = {
       ~usesCancellationToken=true,
       ~rpcName="ExtHostDecorations",
       ~method="$provideDecorations",
-      ~args=`List([`List(requestItems)]),
+      ~args=`List([`Int(handle), `List(requestItems)]),
       client,
     );
   };
@@ -164,17 +157,19 @@ module Documents = {
 };
 
 module DocumentsAndEditors = {
+  open Json.Encode;
   let acceptDocumentsAndEditorsDelta = (~delta, client) => {
     Client.notify(
       ~rpcName="ExtHostDocumentsAndEditors",
       ~method="$acceptDocumentsAndEditorsDelta",
-      ~args=`List([DocumentsAndEditorsDelta.to_yojson(delta)]),
+      ~args=`List([delta |> encode_value(DocumentsAndEditorsDelta.encode)]),
       client,
     );
   };
 };
 
 module ExtensionService = {
+  open Json.Encode;
   let activateByEvent = (~event, client) => {
     Client.notify(
       ~rpcName="ExtHostExtensionService",
@@ -183,9 +178,64 @@ module ExtensionService = {
       client,
     );
   };
+
+  let activate = (~extensionId, ~reason, client) => {
+    Client.request(
+      ~decoder=Json.Decode.bool,
+      ~rpcName="ExtHostExtensionService",
+      ~method="$activate",
+      ~args=
+        `List([
+          extensionId |> encode_value(string),
+          reason |> encode_value(ExtensionActivationReason.encode),
+        ]),
+      client,
+    );
+  };
+
+  let deltaExtensions = (~toAdd, ~toRemove, client) => {
+    Client.request(
+      ~decoder=Json.Decode.null,
+      ~rpcName="ExtHostExtensionService",
+      ~method="$deltaExtensions",
+      ~args=
+        `List([
+          `List(
+            toAdd |> List.map(Exthost_Extension.InitData.Extension.to_yojson),
+          ),
+          `List(toRemove |> List.map(encode_value(ExtensionId.encode))),
+        ]),
+      client,
+    );
+  };
+};
+
+module FileSystemEventService = {
+  open Json.Encode;
+
+  let onFileEvent = (~events, client) => {
+    Client.notify(
+      ~rpcName="ExtHostFileSystemEventService",
+      ~method="$onFileEvent",
+      ~args=`List([events |> encode_value(Files.FileSystemEvents.encode)]),
+      client,
+    );
+  };
 };
 
 module LanguageFeatures = {
+  let provideCodeLenses = (~handle: int, ~resource: Uri.t, client) => {
+    let decoder = Json.Decode.(nullable(CodeLens.List.decode));
+
+    Client.request(
+      ~decoder,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideCodeLenses",
+      ~args=`List([`Int(handle), Uri.to_yojson(resource)]),
+      client,
+    );
+  };
   let provideCompletionItems =
       (
         ~handle: int,
@@ -199,7 +249,7 @@ module LanguageFeatures = {
     // empty set of suggestions.
     let decoder =
       Json.Decode.(
-        nullable(SuggestResult.decode)
+        nullable(SuggestResult.Dto.decode)
         |> map(
              fun
              | Some(suggestResult) => suggestResult
@@ -218,6 +268,22 @@ module LanguageFeatures = {
           Uri.to_yojson(resource),
           OneBasedPosition.to_yojson(position),
           CompletionContext.to_yojson(context),
+        ]),
+      client,
+    );
+  };
+
+  let resolveCompletionItem =
+      (~handle: int, ~chainedCacheId: ChainedCacheId.t, client) => {
+    Client.request(
+      ~decoder=SuggestItem.Dto.decode,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$resolveCompletionItem",
+      ~args=
+        `List([
+          `Int(handle),
+          chainedCacheId |> Json.Encode.encode_value(ChainedCacheId.encode),
         ]),
       client,
     );
@@ -259,7 +325,7 @@ module LanguageFeatures = {
 
   let provideDocumentSymbols = (~handle, ~resource, client) => {
     Client.request(
-      ~decoder=Json.Decode.(list(DocumentSymbol.decode)),
+      ~decoder=Json.Decode.(nullable(list(DocumentSymbol.decode))),
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideDocumentSymbols",
@@ -284,6 +350,22 @@ module LanguageFeatures = {
       "$provideDeclaration",
       client,
     );
+
+  let provideHover = (~handle, ~resource, ~position, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(Hover.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideHover",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+        ]),
+      client,
+    );
+  };
   let provideImplementation = (~handle, ~resource, ~position, client) =>
     Internal.provideDefinitionLink(
       ~handle,
@@ -315,6 +397,122 @@ module LanguageFeatures = {
           context |> Json.Encode.encode_value(ReferenceContext.encode),
         ]),
       client,
+    );
+  };
+
+  let provideSignatureHelp = (~handle, ~resource, ~position, ~context, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(SignatureHelp.Response.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideSignatureHelp",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          context
+          |> Json.Encode.encode_value(SignatureHelp.RequestContext.encode),
+        ]),
+      client,
+    );
+  };
+
+  let releaseSignatureHelp = (~handle, ~id, client) =>
+    Client.notify(
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$releaseSignatureHelp",
+      ~args=
+        `List(
+          Json.Encode.[
+            handle |> encode_value(int),
+            id |> encode_value(int),
+          ],
+        ),
+      client,
+    );
+
+  let provideDocumentFormattingEdits = (~handle, ~resource, ~options, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(list(Edit.SingleEditOperation.decode))),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideDocumentFormattingEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          options |> Json.Encode.encode_value(FormattingOptions.encode),
+        ]),
+      client,
+    );
+  };
+
+  let provideDocumentRangeFormattingEdits =
+      (~handle, ~resource, ~range, ~options, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(list(Edit.SingleEditOperation.decode))),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideDocumentRangeFormattingEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedRange.to_yojson(range),
+          options |> Json.Encode.encode_value(FormattingOptions.encode),
+        ]),
+      client,
+    );
+  };
+
+  let provideOnTypeFormattingEdits =
+      (~handle, ~resource, ~position, ~character, ~options, client) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(list(Edit.SingleEditOperation.decode))),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideOnTypeFormattingEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          `String(character),
+          options |> Json.Encode.encode_value(FormattingOptions.encode),
+        ]),
+      client,
+    );
+  };
+
+  let provideRenameEdits = (~handle, ~resource, ~position, ~newName: string) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(WorkspaceEdit.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideRenameEdits",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+          `String(newName),
+        ]),
+    );
+  };
+
+  let resolveRenameLocation = (~handle, ~resource, ~position) => {
+    Client.request(
+      ~decoder=Json.Decode.(nullable(RenameLocation.decode)),
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$resolveRenameLocation",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          OneBasedPosition.to_yojson(position),
+        ]),
     );
   };
 };

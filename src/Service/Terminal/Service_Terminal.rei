@@ -2,6 +2,10 @@ open Oni_Core;
 
 [@deriving show({with_path: false})]
 type msg =
+  | ProcessExit({
+      id: int,
+      exitCode: int,
+    })
   | ProcessStarted({
       id: int,
       pid: int,
@@ -13,9 +17,6 @@ type msg =
   | ScreenUpdated({
       id: int,
       screen: ReveryTerminal.Screen.t,
-    })
-  | CursorMoved({
-      id: int,
       cursor: ReveryTerminal.Cursor.t,
     });
 
@@ -23,8 +24,7 @@ module Sub: {
   let terminal:
     (
       ~id: int,
-      ~arguments: list(string),
-      ~cmd: string,
+      ~launchConfig: Exthost.ShellLaunchConfig.t,
       ~columns: int,
       ~rows: int,
       ~workspaceUri: Uri.t,

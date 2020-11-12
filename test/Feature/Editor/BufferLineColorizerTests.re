@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open TestFramework;
 open Revery;
@@ -19,21 +20,21 @@ let basicColorizer =
 
 let backgroundColor = Colors.black;
 let basicTokens = [
-  ColorizedToken.create(
+  ThemeToken.create(
     ~index=1,
     ~backgroundColor,
     ~foregroundColor=Colors.green,
     ~syntaxScope=SyntaxScope.none,
     (),
   ),
-  ColorizedToken.create(
+  ThemeToken.create(
     ~index=5,
     ~backgroundColor,
     ~foregroundColor=Colors.red,
     ~syntaxScope=SyntaxScope.none,
     (),
   ),
-  ColorizedToken.create(
+  ThemeToken.create(
     ~index=10,
     ~backgroundColor,
     ~foregroundColor=Colors.blue,
@@ -44,12 +45,17 @@ let basicTokens = [
 
 describe("BufferLineColorizer", ({test, _}) => {
   test("base case - cover all tokens", ({expect, _}) => {
-    let colorize = basicColorizer(~startByte=0, ~endByte=11, basicTokens);
+    let colorize =
+      basicColorizer(~startByte=ByteIndex.ofInt(0), basicTokens);
 
-    let (_, color0) = colorize(0);
-    let (_, color2) = colorize(2);
-    let (_, color6) = colorize(6);
-    let (_, color11) = colorize(11);
+    let BufferLineColorizer.{color: color0, _} =
+      colorize(ByteIndex.ofInt(0));
+    let BufferLineColorizer.{color: color2, _} =
+      colorize(ByteIndex.ofInt(2));
+    let BufferLineColorizer.{color: color6, _} =
+      colorize(ByteIndex.ofInt(6));
+    let BufferLineColorizer.{color: color11, _} =
+      colorize(ByteIndex.ofInt(11));
 
     expect.equal(color0, Colors.white);
     expect.equal(color2, Colors.green);
@@ -58,12 +64,15 @@ describe("BufferLineColorizer", ({test, _}) => {
   });
 
   test("out of bounds", ({expect, _}) => {
-    let colorize = basicColorizer(~startByte=4, ~endByte=6, basicTokens);
+    let colorize =
+      basicColorizer(~startByte=ByteIndex.ofInt(4), basicTokens);
 
-    let (_, color0) = colorize(0);
-    let (_, color11) = colorize(11);
+    let BufferLineColorizer.{color: color0, _} =
+      colorize(ByteIndex.ofInt(0));
+    let BufferLineColorizer.{color: color11, _} =
+      colorize(ByteIndex.ofInt(11));
 
     expect.equal(color0, Colors.green);
-    expect.equal(color11, Colors.red);
+    expect.equal(color11, Colors.blue);
   });
 });

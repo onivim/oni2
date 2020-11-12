@@ -2,7 +2,6 @@
    TextmateTokenizerJob.re
  */
 
-open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
@@ -26,7 +25,7 @@ type pendingWork = {
 };
 
 type lineInfo = {
-  tokens: list(ColorizedToken.t),
+  tokens: list(ThemeToken.t),
   scopeStack: Textmate.ScopeStack.t,
   version: int,
 };
@@ -70,8 +69,9 @@ let onTheme = (theme: TokenTheme.t, v: t) => {
 };
 
 let onBufferUpdate = (bufferUpdate: BufferUpdate.t, lines, v: t) => {
-  let startPos = Index.toZeroBased(bufferUpdate.startLine);
-  let endPos = Index.toZeroBased(bufferUpdate.endLine);
+  let startPos =
+    EditorCoreTypes.LineNumber.toZeroBased(bufferUpdate.startLine);
+  let endPos = EditorCoreTypes.LineNumber.toZeroBased(bufferUpdate.endLine);
 
   let f = (p: pendingWork, c: completedWork) => {
     (
@@ -154,11 +154,13 @@ let doWork = (pending: pendingWork, completed: completedWork) => {
            let resolvedColor =
              TokenTheme.match(pending.theme, combinedScopes);
 
-           ColorizedToken.create(
+           ThemeToken.create(
              ~index=position,
              ~backgroundColor=Internal.hexToColor(resolvedColor.background),
              ~foregroundColor=Internal.hexToColor(resolvedColor.foreground),
              ~syntaxScope=SyntaxScope.ofScopes(scopes),
+             ~italic=resolvedColor.italic,
+             ~bold=resolvedColor.bold,
              (),
            );
          });

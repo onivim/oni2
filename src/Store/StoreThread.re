@@ -9,10 +9,8 @@
 
 module Core = Oni_Core;
 
-module Extensions = Oni_Extensions;
 module Model = Oni_Model;
 
-open Oni_Extensions;
 open Exthost.Extension;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.StoreThread"));
@@ -24,20 +22,30 @@ let discoverExtensions =
     let extensions =
       Core.Log.perf("Discover extensions", () => {
         let extensions =
-          Scanner.scan(
-            // The extension host assumes bundled extensions start with 'vscode.'
-            ~category=Bundled,
-            setup.bundledExtensionsPath,
-          );
+          setup.bundledExtensionsPath
+          |> Fp.absoluteCurrentPlatform
+          |> Option.map(
+               Scanner.scan(
+                 // The extension host assumes bundled extensions start with 'vscode.'
+                 ~category=Bundled,
+               ),
+             )
+          |> Option.value(~default=[]);
 
         let developmentExtensions =
-          switch (setup.developmentExtensionsPath) {
-          | Some(p) => Scanner.scan(~category=Development, p)
-          | None => []
-          };
+          setup.developmentExtensionsPath
+          |> Core.Utility.OptionEx.flatMap(Fp.absoluteCurrentPlatform)
+          |> Option.map(Scanner.scan(~category=Development))
+          |> Option.value(~default=[]);
 
         let userExtensions =
-          Utility.getUserExtensions(~overriddenExtensionsDir);
+          Service_Extensions.Management.get(
+            ~extensionsFolder=?overriddenExtensionsDir,
+            (),
+          )
+          // TODO: De-syncify!
+          |> Core.Utility.LwtEx.sync
+          |> Result.value(~default=[]);
 
         Log.infof(m =>
           m("Discovered %n user extensions.", List.length(userExtensions))
@@ -65,7 +73,6 @@ let registerCommands = (~dispatch, commands) => {
 
 let start =
     (
-      ~showUpdateChangelog=true,
       ~getUserSettings,
       ~configurationFilePath=None,
       ~keybindingsFilePath=None,
@@ -79,10 +86,12 @@ let start =
       ~getZoom,
       ~setZoom,
       ~quit,
-      ~setTitle,
       ~setVsync,
       ~maximize,
       ~minimize,
+      ~close,
+      ~restore,
+      ~raiseWindow,
       ~window: option(Revery.Window.t),
       ~filesToOpen=[],
       ~overriddenExtensionsDir=None,
@@ -107,24 +116,38 @@ let start =
       ~shouldLoadExtensions,
       ~overriddenExtensionsDir,
     );
-  let languageInfo = LanguageInfo.ofExtensions(extensions);
-  let themeInfo = Model.ThemeInfo.ofExtensions(extensions);
-  let grammarRepository = Oni_Syntax.GrammarRepository.create(languageInfo);
+  let languageInfo = Exthost.LanguageInfo.ofExtensions(extensions);
+  let grammarInfo = Exthost.GrammarInfo.ofExtensions(extensions);
+  let grammarRepository = Oni_Syntax.GrammarRepository.create(grammarInfo);
 
   let commandUpdater = CommandStoreConnector.start();
   let (vimUpdater, vimStream) =
     VimStoreConnector.start(
-      ~showUpdateChangelog,
       languageInfo,
       getState,
       getClipboardText,
       setClipboardText,
     );
 
-  let themeUpdater = ThemeStoreConnector.start(themeInfo);
+  let themeUpdater = ThemeStoreConnector.start();
+
+  let initialState = getState();
+
+  let attachStdio =
+    Oni_CLI.(
+      {
+        initialState.cli.attachToForeground
+        && Option.is_some(initialState.cli.logLevel);
+      }
+    );
 
   let (extHostClientResult, extHostStream) =
-    ExtensionClient.create(~config=getState().config, ~extensions, ~setup);
+    ExtensionClient.create(
+      ~attachStdio,
+      ~config=getState().config,
+      ~extensions,
+      ~setup,
+    );
 
   // TODO: How to handle this correctly?
   let extHostClient = extHostClientResult |> Result.get_ok;
@@ -132,7 +155,7 @@ let start =
   let extHostUpdater =
     ExtensionClientStoreConnector.start(extensions, extHostClient);
 
-  let quickmenuUpdater = QuickmenuStoreConnector.start(themeInfo);
+  let quickmenuUpdater = QuickmenuStoreConnector.start();
 
   let configurationUpdater =
     ConfigurationStoreConnector.start(
@@ -146,22 +169,11 @@ let start =
   let keyBindingsUpdater =
     KeyBindingsStoreConnector.start(keybindingsFilePath);
 
-  let fileExplorerUpdater = FileExplorerStore.start();
-
-  let lifecycleUpdater = LifecycleStoreConnector.start(quit);
-  let indentationUpdater = IndentationStoreConnector.start();
-  let windowUpdater = WindowsStoreConnector.start();
-
-  let completionUpdater = CompletionStoreConnector.start();
-
-  let languageFeatureUpdater = LanguageFeatureConnector.start();
+  let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
 
   let (inputUpdater, inputStream) =
     InputStoreConnector.start(window, runRunEffects);
 
-  let titleUpdater = TitleStoreConnector.start(setTitle, maximize, minimize);
-  let sneakUpdater = SneakStore.start();
-  let contextMenuUpdater = ContextMenuStore.start();
   let updater =
     Isolinear.Updater.combine([
       Isolinear.Updater.ofReducer(Reducer.reduce),
@@ -173,38 +185,46 @@ let start =
       keyBindingsUpdater,
       commandUpdater,
       lifecycleUpdater,
-      fileExplorerUpdater,
-      indentationUpdater,
-      windowUpdater,
       themeUpdater,
-      languageFeatureUpdater,
-      completionUpdater,
-      titleUpdater,
-      sneakUpdater,
       Features.update(
         ~grammarRepository,
         ~extHostClient,
         ~getUserSettings,
         ~setup,
+        ~maximize,
+        ~minimize,
+        ~close,
+        ~restore,
       ),
-      PaneStore.update,
-      contextMenuUpdater,
     ]);
 
   let subscriptions = (state: Model.State.t) => {
-    let config = Feature_Configuration.resolver(state.config);
+    let config = Model.Selectors.configResolver(state);
+    let visibleBuffersAndRanges =
+      state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
+
+    let isInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state.vim));
+
     let visibleRanges =
-      state
-      |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges
+      visibleBuffersAndRanges
       |> List.map(((bufferId, ranges)) => {
            Model.Selectors.getBufferById(state, bufferId)
            |> Option.map(buffer => {(buffer, ranges)})
          })
       |> Core.Utility.OptionEx.values;
+
+    let visibleBuffers =
+      visibleBuffersAndRanges
+      |> List.map(fst)
+      |> Base.List.dedup_and_sort(~compare)
+      |> List.map(bufferId => Model.Selectors.getBufferById(state, bufferId))
+      |> Core.Utility.OptionEx.values;
+
     let syntaxSubscription =
       shouldSyntaxHighlight && !state.isQuitting
         ? Feature_Syntax.subscription(
             ~config,
+            ~grammarInfo,
             ~languageInfo,
             ~setup,
             ~tokenTheme=state.tokenTheme,
@@ -222,33 +242,34 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.Terminal(msg));
 
-    let fontFamily =
+    let fontFamily = Feature_Editor.Configuration.fontFamily.get(config);
+    let fontSize = Feature_Editor.Configuration.fontSize.get(config);
+
+    let fontLigatures =
       Oni_Core.Configuration.getValue(
-        c => c.editorFontFamily,
+        c => c.editorFontLigatures,
         state.configuration,
       );
-    let fontSize =
-      Oni_Core.Configuration.getValue(
-        c => c.editorFontSize,
-        state.configuration,
-      );
+
     let fontSmoothing =
       Oni_Core.Configuration.getValue(
         c => c.editorFontSmoothing,
         state.configuration,
       );
+
     let editorFontSubscription =
       Service_Font.Sub.font(
         ~uniqueId="editorFont",
         ~fontFamily,
         ~fontSize,
         ~fontSmoothing,
+        ~fontLigatures,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.EditorFont(msg));
 
     let terminalFontFamily =
       Oni_Core.Configuration.getValue(
-        c => c.terminalIntegratedFontFamily,
+        c => c.terminalIntegratedFontFile,
         state.configuration,
       );
     let terminalFontSize =
@@ -267,15 +288,115 @@ let start =
         ~fontFamily=terminalFontFamily,
         ~fontSize=terminalFontSize,
         ~fontSmoothing=terminalFontSmoothing,
+        ~fontLigatures,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 
+    let visibleEditors = Feature_Layout.visibleEditors(state.layout);
+
+    let activeEditor = Feature_Layout.activeEditor(state.layout);
+    let activeEditorId = Feature_Editor.Editor.getId(activeEditor);
+    let activeBufferId = Feature_Editor.Editor.getBufferId(activeEditor);
+    let activePosition = Feature_Editor.Editor.getPrimaryCursor(activeEditor);
+    let maybeActiveBuffer =
+      Feature_Buffers.get(activeBufferId, state.buffers);
+
+    let extHostSubscription =
+      Feature_Exthost.subscription(
+        ~buffers=state.buffers,
+        ~editors=visibleEditors,
+        ~activeEditorId=Some(activeEditorId),
+        ~client=extHostClient,
+        state.exthost,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.Exthost(msg));
+
+    // TODO: Move sub inside Explorer feature
+    let fileExplorerActiveFileSub =
+      Model.Sub.activeFile(
+        ~id="activeFile.fileExplorer", ~state, ~toMsg=maybeFilePath =>
+        Model.Actions.FileExplorer(
+          Feature_Explorer.Msg.activeFileChanged(maybeFilePath),
+        )
+      );
+
+    let fileExplorerSub =
+      Feature_Explorer.sub(
+        ~configuration=state.configuration,
+        state.fileExplorer,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.FileExplorer(msg));
+
+    let languageSupportSub =
+      maybeActiveBuffer
+      |> Option.map(activeBuffer => {
+           Feature_LanguageSupport.sub(
+             ~config,
+             ~isInsertMode,
+             ~activeBuffer,
+             ~activePosition,
+             ~visibleBuffers,
+             ~client=extHostClient,
+             state.languageSupport,
+           )
+           |> Isolinear.Sub.map(msg => Model.Actions.LanguageSupport(msg))
+         })
+      |> Option.value(~default=Isolinear.Sub.none);
+
+    let extensionsSub =
+      Feature_Extensions.sub(~setup, state.extensions)
+      |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
+
+    let registersSub =
+      Feature_Registers.sub(state.registers)
+      |> Isolinear.Sub.map(msg => Model.Actions.Registers(msg));
+
+    let scmSub =
+      maybeActiveBuffer
+      |> Option.map(buffer => {
+           Feature_SCM.sub(
+             ~activeBuffer=buffer,
+             ~client=extHostClient,
+             state.scm,
+           )
+           |> Isolinear.Sub.map(msg => Model.Actions.SCM(msg))
+         })
+      |> Option.value(~default=Isolinear.Sub.none);
+
+    let autoUpdateSub =
+      Feature_AutoUpdate.sub(~config)
+      |> Isolinear.Sub.map(msg => Model.Actions.AutoUpdate(msg));
+
+    let visibleEditorsSubscription =
+      visibleEditors
+      |> List.map(editor =>
+           Feature_Editor.Sub.editor(~config, editor)
+           |> Isolinear.Sub.map(msg =>
+                Model.Actions.Editor({
+                  scope:
+                    Model.EditorScope.Editor(
+                      editor |> Feature_Editor.Editor.getId,
+                    ),
+                  msg,
+                })
+              )
+         )
+      |> Isolinear.Sub.batch;
     [
+      extHostSubscription,
+      languageSupportSub,
       syntaxSubscription,
       terminalSubscription,
       editorFontSubscription,
       terminalFontSubscription,
       Isolinear.Sub.batch(VimStoreConnector.subscriptions(state)),
+      fileExplorerActiveFileSub,
+      fileExplorerSub,
+      extensionsSub,
+      registersSub,
+      scmSub,
+      autoUpdateSub,
+      visibleEditorsSubscription,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -293,7 +414,9 @@ let start =
   let _unsubscribe: unit => unit = Store.onModelChanged(onStateChanged);
 
   let _unsubscribe: unit => unit =
-    Store.onBeforeMsg(msg => {DispatchLog.info(Model.Actions.show(msg))});
+    Store.onBeforeMsg(msg =>
+      DispatchLog.infof(m => m("dispatch: %s", Model.Actions.show(msg)))
+    );
 
   let dispatch = Store.dispatch;
 
@@ -319,7 +442,7 @@ let start =
   Option.iter(
     window =>
       Revery.Window.setCanQuitCallback(window, () =>
-        if (Model.Buffers.anyModified(getState().buffers)) {
+        if (Feature_Buffers.anyModified(getState().buffers)) {
           dispatch(Model.Actions.WindowCloseBlocked);
           false;
         } else {
@@ -329,12 +452,36 @@ let start =
     window,
   );
 
-  registerCommands(~dispatch, Model.GlobalCommands.registrations());
-  registerCommands(
-    ~dispatch,
+  // Commands
+  [
+    Model.GlobalCommands.registrations(),
+    Feature_Sneak.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
     Feature_Terminal.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Terminal(msg))),
-  );
+    Feature_Sneak.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
+    Feature_Layout.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Layout(msg))),
+    Feature_SignatureHelp.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.SignatureHelp(msg))),
+    Feature_Theme.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Theme(msg))),
+    Feature_Clipboard.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Clipboard(msg))),
+    Feature_Registers.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Registers(msg))),
+    Feature_LanguageSupport.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.LanguageSupport(msg))),
+    Feature_Input.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Input(msg))),
+    Feature_AutoUpdate.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.AutoUpdate(msg))),
+    Feature_Registration.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Registration(msg))),
+  ]
+  |> List.flatten
+  |> registerCommands(~dispatch);
 
   // TODO: These should all be replaced with isolinear subscriptions.
   let _: Isolinear.unsubscribe =
@@ -345,6 +492,7 @@ let start =
     Isolinear.Stream.connect(dispatch, extHostStream);
 
   dispatch(Model.Actions.SetLanguageInfo(languageInfo));
+  dispatch(Model.Actions.SetGrammarRepository(grammarRepository));
 
   /* Set icon theme */
 
@@ -377,7 +525,11 @@ let start =
   setIconTheme("vs-seti");
 
   let _: unit => unit =
-    Revery.Tick.interval(_ => runEffects(), Revery.Time.zero);
+    Revery.Tick.interval(
+      ~name="Store: Run Effects",
+      _ => runEffects(),
+      Revery.Time.zero,
+    );
 
   (dispatch, runEffects);
 };

@@ -16,6 +16,8 @@ type t = {
   text: string,
   x: float,
   y: float,
+  offsetX: int,
+  offsetY: int,
 };
 
 // TOOLTIP
@@ -24,10 +26,10 @@ module Tooltip = {
   module Styles = {
     open Style;
 
-    let tooltip = (~theme, ~x, ~y) => [
+    let tooltip = (~theme, ~x, ~y, ~offsetX, ~offsetY) => [
       position(`Absolute),
-      left(int_of_float(x) + Constants.offsetX),
-      top(int_of_float(y) + Constants.offsetY),
+      left(int_of_float(x) + offsetX),
+      top(int_of_float(y) + offsetY),
       backgroundColor(Colors.background.from(theme)),
       paddingVertical(3),
       paddingHorizontal(8),
@@ -40,17 +42,20 @@ module Tooltip = {
       ),
     ];
 
-    let tooltipText = (~theme, ~font: UiFont.t) => [
-      fontFamily(font.fontFile),
-      fontSize(font.fontSize),
+    let tooltipText = (~theme) => [
       color(Colors.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
     ];
   };
 
-  let make = (~text, ~x, ~y, ~theme, ~font, ()) =>
-    <View style={Styles.tooltip(~theme, ~x, ~y)}>
-      <Text style={Styles.tooltipText(~theme, ~font)} text />
+  let make = (~offsetX, ~offsetY, ~text, ~x, ~y, ~theme, ~font: UiFont.t, ()) =>
+    <View style={Styles.tooltip(~theme, ~x, ~y, ~offsetX, ~offsetY)}>
+      <Text
+        style={Styles.tooltipText(~theme)}
+        fontFamily={font.family}
+        fontSize={font.size}
+        text
+      />
     </View>;
 };
 
@@ -79,6 +84,7 @@ module Overlay: {
       | Some(tooltip) =>
         clearTimeout :=
           Tick.timeout(
+            ~name="Tooltip Timeout",
             () => internalSetTooltip^(_ => Some(tooltip)),
             Constants.delay,
           )
@@ -95,7 +101,8 @@ module Overlay: {
     internalSetTooltip := setCurrent;
 
     switch (current) {
-    | Some({text, x, y}) => <Tooltip text x y theme font />
+    | Some({text, x, y, offsetX, offsetY}) =>
+      <Tooltip text x y theme font offsetX offsetY />
     | None => React.empty
     };
   };
@@ -104,9 +111,23 @@ module Overlay: {
 // HOTSPOT
 
 module Trigger = {
-  let make = (~children, ~text, ~style=[], ()) => {
+  let make =
+      (
+        ~offsetX=Constants.offsetX,
+        ~offsetY=Constants.offsetY,
+        ~children,
+        ~text,
+        ~style=[],
+        (),
+      ) => {
     let onMouseOver = (evt: NodeEvents.mouseMoveEventParams) =>
-      Overlay.setTooltip({text, x: evt.mouseX, y: evt.mouseY});
+      Overlay.setTooltip({
+        text,
+        x: evt.mouseX,
+        y: evt.mouseY,
+        offsetX,
+        offsetY,
+      });
     let onMouseMove = onMouseOver;
     let onMouseOut = _ => Overlay.clearTooltip();
 

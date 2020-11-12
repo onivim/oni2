@@ -18,17 +18,31 @@ module Constants = {
 };
 
 module Styles = {
-  let container = Style.[position(`Relative), flexGrow(1)];
+  let container = opac =>
+    Style.[position(`Relative), flexGrow(1), opacity(opac)];
 };
 
 let%component make =
               (
+                ~isActive,
+                ~config,
                 ~terminal: Feature_Terminal.terminal,
                 ~font: Service_Font.font,
                 ~theme: Oni_Core.ColorTheme.Colors.t,
                 (),
               ) => {
-  let maybeFont = Revery.Font.load(font.fontFile) |> Stdlib.Result.to_option;
+  let resolvedFont =
+    Service_Font.resolveWithFallback(
+      Revery.Font.Weight.Normal,
+      font.fontFamily,
+    );
+
+  let opacity =
+    isActive
+      ? 1.0
+      : Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
+          config,
+        );
 
   let%hook lastDimensions = Hooks.ref(None);
 
@@ -53,30 +67,24 @@ let%component make =
       },
     );
 
-  let size = font.fontSize;
-  let smoothing = font.smoothing;
+  let Service_Font.{fontSize, smoothing, _} = font;
 
   let onDimensionsChanged =
       (
         {height, width, _}: Revery.UI.NodeEvents.DimensionsChangedEventParams.t,
       ) => {
     // If we have a loaded font, figure out how many columns and rows we can show
-    Option.iter(
-      font => {
-        let terminalFont = ReveryTerminal.Font.make(~size, font);
-        let rows =
-          float_of_int(height) /. terminalFont.lineHeight |> int_of_float;
-        let columns =
-          float_of_int(width) /. terminalFont.characterWidth |> int_of_float;
+    let terminalFont = ReveryTerminal.Font.make(~size=fontSize, resolvedFont);
+    let rows =
+      float_of_int(height) /. terminalFont.lineHeight |> int_of_float;
+    let columns =
+      float_of_int(width) /. terminalFont.characterWidth |> int_of_float;
 
-        lastDimensions := Some((rows, columns));
-        GlobalContext.current().dispatch(
-          Actions.Terminal(
-            Feature_Terminal.Resized({id: terminal.id, rows, columns}),
-          ),
-        );
-      },
-      maybeFont,
+    lastDimensions := Some((rows, columns));
+    GlobalContext.current().dispatch(
+      Actions.Terminal(
+        Feature_Terminal.Resized({id: terminal.id, rows, columns}),
+      ),
     );
   };
 
@@ -84,25 +92,24 @@ let%component make =
   let defaultBackground = Feature_Terminal.defaultBackground(theme);
   let defaultForeground = Feature_Terminal.defaultForeground(theme);
 
-  let element =
-    Option.map(
-      font => {
-        let {screen, cursor, _}: Feature_Terminal.terminal = terminal;
-        let font = ReveryTerminal.Font.make(~smoothing, ~size, font);
-        ReveryTerminal.render(
-          ~defaultBackground,
-          ~defaultForeground,
-          ~theme=terminalTheme,
-          ~cursor,
-          ~font,
-          ~scrollBarThickness=Constants.scrollBarThickness,
-          ~scrollBarThumb=Constants.scrollThumbColor,
-          ~scrollBarBackground=Constants.scrollTrackColor,
-          screen,
-        );
-      },
-      maybeFont,
-    )
-    |> Option.value(~default=React.empty);
-  <View onDimensionsChanged style=Styles.container> element </View>;
+  let element = {
+    let {screen, cursor, _}: Feature_Terminal.terminal = terminal;
+    let font =
+      ReveryTerminal.Font.make(~smoothing, ~size=fontSize, resolvedFont);
+    ReveryTerminal.render(
+      ~opacity,
+      ~defaultBackground,
+      ~defaultForeground,
+      ~theme=terminalTheme,
+      ~cursor,
+      ~font,
+      ~scrollBarThickness=Constants.scrollBarThickness,
+      ~scrollBarThumb=Constants.scrollThumbColor,
+      ~scrollBarBackground=Constants.scrollTrackColor,
+      screen,
+    );
+  };
+  <View onDimensionsChanged style={Styles.container(opacity)}>
+    element
+  </View>;
 };

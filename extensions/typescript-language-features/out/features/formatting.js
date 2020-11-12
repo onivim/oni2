@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.register = void 0;
 const vscode = require("vscode");
 const dependentRegistration_1 = require("../utils/dependentRegistration");
 const typeConverters = require("../utils/typeConverters");
@@ -31,17 +32,16 @@ class TypeScriptFormattingProvider {
             return [];
         }
         await this.formattingOptionsManager.ensureConfigurationOptions(document, options, token);
-        const args = Object.assign({}, typeConverters.Position.toFileLocationRequestArgs(file, position), { key: ch });
+        const args = {
+            ...typeConverters.Position.toFileLocationRequestArgs(file, position),
+            key: ch
+        };
         const response = await this.client.execute('formatonkey', args, token);
         if (response.type !== 'response' || !response.body) {
             return [];
         }
-        const edits = response.body;
         const result = [];
-        if (!edits) {
-            return result;
-        }
-        for (const edit of edits) {
+        for (const edit of response.body) {
             const textEdit = typeConverters.TextEdit.fromCodeEdit(edit);
             const range = textEdit.range;
             // Work around for https://github.com/Microsoft/TypeScript/issues/6700.

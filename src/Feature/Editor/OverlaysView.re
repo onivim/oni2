@@ -7,10 +7,8 @@ module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Completions = Feature_LanguageSupport.Completions;
-module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
-module Definition = Feature_LanguageSupport.Definition;
+module Diagnostics = Feature_Diagnostics;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Styles = {
   open Style;
@@ -27,99 +25,51 @@ module Styles = {
 
 let completionsView =
     (
-      ~completions,
+      ~languageSupport,
       ~cursorPixelX,
       ~cursorPixelY,
-      ~colors,
       ~theme,
       ~tokenTheme,
       ~editorFont: Service_Font.font,
       (),
     ) =>
-  Completions.isActive(completions)
-    ? <CompletionsView
+  Feature_LanguageSupport.Completion.isActive(languageSupport)
+    ? <Feature_LanguageSupport.Completion.View
         x=cursorPixelX
         y=cursorPixelY
         lineHeight={editorFont.measuredHeight}
-        colors
         theme
         tokenTheme
         editorFont
-        completions
+        //colors
+        model=languageSupport
       />
     : React.empty;
 
 let make =
     (
-      ~buffer,
       ~isActiveSplit,
-      ~hoverDelay,
-      ~isHoverEnabled,
-      ~diagnostics,
-      ~mode,
-      ~cursorPosition: Location.t,
+      ~cursorPosition: CharacterPosition.t,
       ~editor: Editor.t,
       ~gutterWidth,
-      ~completions,
-      ~colors,
       ~theme,
       ~tokenTheme,
+      ~languageSupport,
       ~editorFont: Service_Font.font,
       (),
     ) => {
-  let cursorLine = Index.toZeroBased(cursorPosition.line);
-  let lineCount = Buffer.getNumberOfLines(buffer);
+  let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
+    Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
 
-  let (cursorOffset, _cursorCharacterWidth) =
-    if (lineCount > 0 && cursorLine < lineCount) {
-      let cursorLine = Buffer.getLine(cursorLine, buffer);
-
-      let (cursorOffset, width) =
-        BufferViewTokenizer.getCharacterPositionAndWidth(
-          cursorLine,
-          Index.toZeroBased(cursorPosition.column),
-        );
-      (cursorOffset, width);
-    } else {
-      (0, 1);
-    };
-
-  let cursorPixelY =
-    int_of_float(
-      editorFont.measuredHeight
-      *. float(Index.toZeroBased(cursorPosition.line))
-      -. editor.scrollY
-      +. 0.5,
-    );
-
-  let cursorPixelX =
-    int_of_float(
-      gutterWidth
-      +. editorFont.measuredWidth
-      *. float(cursorOffset)
-      -. editor.scrollX
-      +. 0.5,
-    );
+  let cursorPixelY = pixelY |> int_of_float;
+  let cursorPixelX = pixelX +. gutterWidth |> int_of_float;
 
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
-        <HoverView
-          x=cursorPixelX
-          y=cursorPixelY
-          delay=hoverDelay
-          isEnabled=isHoverEnabled
-          colors
-          editorFont
-          diagnostics
-          editor
-          buffer
-          mode
-        />
         <completionsView
-          completions
+          languageSupport
           cursorPixelX
           cursorPixelY
-          colors
           theme
           tokenTheme
           editorFont

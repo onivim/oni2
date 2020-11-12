@@ -13,6 +13,10 @@
 	"contributes": {
 		"commands": [
 			{
+				"command": "developer.oni.showChoiceMessage",
+				"title": "Onivim - Developer: Show Choice Message"
+			},
+			{
 				"command": "developer.oni.showWarning",
 				"title": "Onivim - Developer: Show Warning"
 			},
@@ -25,12 +29,52 @@
 				"title": "Onivim - Developer: Buffer Text"
 			},
 			{
+				"command": "developer.oni.showActiveEditor",
+				"title": "Onivim - Developer: Show Active Editor"
+			},
+			{
+				"command": "developer.oni.showVisibleTextEditors",
+				"title": "Onivim - Developer: Show Visible Editors"
+			},
+			{
+				"command": "developer.oni.tryOpenDocument",
+				"title": "Onivim - Developer: Try Open Document (package.json)"
+			},
+			{
 				"command": "developer.oni.showWorkspaceRootPath",
 				"title": "Onivim - Developer: Show Workspace Root Path"
 			},
 			{
 				"command": "developer.oni.showWorkspaceFolders",
 				"title": "Onivim - Developer: Show Workspace Folders"
+			},
+			{
+				"command": "developer.oni.showQuickPick",
+				"title": "Onivim - Developer: Show Quick Pick"
+			},
+			{
+				"command": "developer.oni.showStatusBar",
+				"title": "Onivim - Developer: Show Status Bar Item"
+			},
+			{
+				"command": "developer.oni.hideStatusBar",
+				"title": "Onivim - Developer: Hide Status Bar Item"
+			},
+			{
+				"command": "developer.oni.setGlobalMemento",
+				"title": "Onivim - Developer: Set Global Memento"
+			},
+			{
+				"command": "developer.oni.getGlobalMemento",
+				"title": "Onivim - Developer: Get Global Memento"
+			},
+			{
+				"command": "developer.oni.getWorkspaceMemento",
+				"title": "Onivim - Developer: Get Workspace Memento"
+			},
+			{
+				"command": "developer.oni.setWorkspaceMemento",
+				"title": "Onivim - Developer: Set Workspace Memento"
 			}
 		],
 		"configuration": {

@@ -67,28 +67,7 @@ type t = {
   scheme: Scheme.t,
   path: string,
   query: [@default None] option(string),
-};
-
-let encode = uri =>
-  Json.Encode.(
-    obj([
-      ("$mid", Json.Encode.int(1)), // Magic marshaling id for Uri
-      ("scheme", uri.scheme |> Scheme.encode),
-      ("path", uri.path |> string),
-      ("query", uri.query |> nullable(string)),
-    ])
-  );
-
-let decode = {
-  Json.Decode.(
-    obj(({field, _}) =>
-      {
-        scheme: field.required("scheme", Scheme.decode),
-        path: field.required("path", string),
-        query: field.optional("query", string),
-      }
-    )
-  );
+  authority: [@default None] option(string),
 };
 
 module Internal = {
@@ -146,19 +125,40 @@ module Internal = {
     path |> normalizePath(scheme) |> addSlash(scheme);
 };
 
-let fromScheme = (~scheme: Scheme.t, ~query=?, path: string) => {
+let fromScheme = (~scheme: Scheme.t, ~authority=?, ~query=?, path: string) => {
   scheme,
   path: Internal.referenceResolution(scheme, path),
   query,
+  authority,
 };
 
 let fromMemory = path => fromScheme(~scheme=Scheme.Memory, path);
-let fromPath = path => fromScheme(~scheme=Scheme.File, path);
+let fromPath = path => {
+  // On Windows - we need to normalize backward slashes to forward slashes,
+  // to be in sync with the logic from vscode:
+  // https://github.com/onivim/vscode-exthost/blob/c7df89c1cf0087ca5decaf8f6d4c0fd0257a8b7a/src/vs/base/common/uri.ts#L306
+  // Also see: https://github.com/onivim/oni2/issues/2282
+  let path = Sys.win32 ? Utility.Path.normalizeBackSlashes(path) : path;
 
-let toString = (uri: t) => {
-  Scheme.toString(uri.scheme)
-  ++ "://"
-  ++ Internal.addSlash(uri.scheme, uri.path);
+  fromScheme(~scheme=Scheme.File, path);
+};
+
+let fromFilePath = fp => {
+  fp |> Fp.toString |> fromPath;
+};
+
+let toString = ({scheme, authority, path, query}: t) => {
+  let schemeStr = Scheme.toString(scheme);
+  switch (scheme) {
+  | Http
+  | Https =>
+    let authorityStr = Option.value(~default="", authority);
+    let queryStr =
+      query |> Option.map(q => "?" ++ q) |> Option.value(~default="");
+    Printf.sprintf("%s://%s%s%s", schemeStr, authorityStr, path, queryStr);
+  | _ =>
+    Printf.sprintf("%s://%s", schemeStr, Internal.addSlash(scheme, path))
+  };
 };
 
 let toFileSystemPath = (uri: t) => {
@@ -183,3 +183,27 @@ let toFileSystemPath = (uri: t) => {
 };
 
 let getScheme = (uri: t) => uri.scheme;
+
+let encode = uri =>
+  Json.Encode.(
+    obj([
+      ("$mid", Json.Encode.int(1)), // Magic marshaling id for Uri
+      ("scheme", uri.scheme |> Scheme.encode),
+      ("path", uri.path |> string),
+      ("query", uri.query |> nullable(string)),
+      ("authority", uri.authority |> nullable(string)),
+    ])
+  );
+
+let decode = {
+  Json.Decode.(
+    obj(({field, _}) =>
+      {
+        scheme: field.required("scheme", Scheme.decode),
+        path: field.required("path", string),
+        query: field.optional("query", string),
+        authority: field.optional("authority", string),
+      }
+    )
+  );
+};

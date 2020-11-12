@@ -4,9 +4,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.DiagnosticsManager = void 0;
 const vscode = require("vscode");
 const resourceMap_1 = require("../utils/resourceMap");
-const languageDescription_1 = require("../utils/languageDescription");
+const arrays = require("../utils/arrays");
+const dispose_1 = require("../utils/dispose");
+function diagnosticsEquals(a, b) {
+    if (a === b) {
+        return true;
+    }
+    return a.code === b.code
+        && a.message === b.message
+        && a.severity === b.severity
+        && a.source === b.source
+        && a.range.isEqual(b.range)
+        && arrays.equals(a.relatedInformation || arrays.empty, b.relatedInformation || arrays.empty, (a, b) => {
+            return a.message === b.message
+                && a.location.range.isEqual(b.location.range)
+                && a.location.uri.fsPath === b.location.uri.fsPath;
+        })
+        && arrays.equals(a.tags || arrays.empty, b.tags || arrays.empty);
+}
 class FileDiagnostics {
     constructor(file, language) {
         this.file = file;
@@ -18,12 +36,10 @@ class FileDiagnostics {
             this._diagnostics.clear();
             this.language = language;
         }
-        if (diagnostics.length === 0) {
-            const existing = this._diagnostics.get(kind);
-            if (!existing || existing && existing.length === 0) {
-                // No need to update
-                return false;
-            }
+        const existing = this._diagnostics.get(kind);
+        if (arrays.equals(existing || arrays.empty, diagnostics, diagnosticsEquals)) {
+            // No need to update
+            return false;
         }
         this._diagnostics.set(kind, diagnostics);
         return true;
@@ -43,7 +59,7 @@ class FileDiagnostics {
         return this.get(2 /* Suggestion */).filter(x => {
             if (!enableSuggestions) {
                 // Still show unused
-                return x.tags && x.tags.indexOf(vscode.DiagnosticTag.Unnecessary) !== -1;
+                return x.tags && x.tags.includes(vscode.DiagnosticTag.Unnecessary);
             }
             return true;
         });
@@ -52,56 +68,60 @@ class FileDiagnostics {
         return this._diagnostics.get(kind) || [];
     }
 }
-class DiagnosticSettings {
-    constructor() {
-        this._languageSettings = new Map();
-        for (const language of languageDescription_1.allDiagnosticLangauges) {
-            this._languageSettings.set(language, DiagnosticSettings.defaultSettings);
+function areLanguageDiagnosticSettingsEqual(currentSettings, newSettings) {
+    return currentSettings.validate === newSettings.validate
+        && currentSettings.enableSuggestions && currentSettings.enableSuggestions;
+}
+let DiagnosticSettings = /** @class */ (() => {
+    class DiagnosticSettings {
+        constructor() {
+            this._languageSettings = new Map();
+        }
+        getValidate(language) {
+            return this.get(language).validate;
+        }
+        setValidate(language, value) {
+            return this.update(language, settings => ({
+                validate: value,
+                enableSuggestions: settings.enableSuggestions,
+            }));
+        }
+        getEnableSuggestions(language) {
+            return this.get(language).enableSuggestions;
+        }
+        setEnableSuggestions(language, value) {
+            return this.update(language, settings => ({
+                validate: settings.validate,
+                enableSuggestions: value
+            }));
+        }
+        get(language) {
+            return this._languageSettings.get(language) || DiagnosticSettings.defaultSettings;
+        }
+        update(language, f) {
+            const currentSettings = this.get(language);
+            const newSettings = f(currentSettings);
+            this._languageSettings.set(language, newSettings);
+            return areLanguageDiagnosticSettingsEqual(currentSettings, newSettings);
         }
     }
-    getValidate(language) {
-        return this.get(language).validate;
-    }
-    setValidate(language, value) {
-        return this.update(language, settings => ({
-            validate: value,
-            enableSuggestions: settings.enableSuggestions,
-        }));
-    }
-    getEnableSuggestions(language) {
-        return this.get(language).enableSuggestions;
-    }
-    setEnableSuggestions(language, value) {
-        return this.update(language, settings => ({
-            validate: settings.validate,
-            enableSuggestions: value
-        }));
-    }
-    get(language) {
-        return this._languageSettings.get(language) || DiagnosticSettings.defaultSettings;
-    }
-    update(language, f) {
-        const currentSettings = this.get(language);
-        const newSettings = f(currentSettings);
-        this._languageSettings.set(language, newSettings);
-        return currentSettings.validate === newSettings.validate
-            && currentSettings.enableSuggestions && currentSettings.enableSuggestions;
-    }
-}
-DiagnosticSettings.defaultSettings = {
-    validate: true,
-    enableSuggestions: true
-};
-class DiagnosticsManager {
+    DiagnosticSettings.defaultSettings = {
+        validate: true,
+        enableSuggestions: true
+    };
+    return DiagnosticSettings;
+})();
+class DiagnosticsManager extends dispose_1.Disposable {
     constructor(owner) {
+        super();
         this._diagnostics = new resourceMap_1.ResourceMap();
         this._settings = new DiagnosticSettings();
         this._pendingUpdates = new resourceMap_1.ResourceMap();
         this._updateDelay = 50;
-        this._currentDiagnostics = vscode.languages.createDiagnosticCollection(owner);
+        this._currentDiagnostics = this._register(vscode.languages.createDiagnosticCollection(owner));
     }
     dispose() {
-        this._currentDiagnostics.dispose();
+        super.dispose();
         for (const value of this._pendingUpdates.values) {
             clearTimeout(value);
         }

@@ -1,5 +1,6 @@
 open Oni_Core;
 
+[@deriving show]
 type t = string;
 
 let decode =
@@ -12,3 +13,5 @@ let decode =
       one_of([("simple", simple), ("value", value)]);
     }
   );
+
+let encode = Json.Encode.string;

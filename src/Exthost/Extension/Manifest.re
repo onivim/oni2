@@ -7,6 +7,56 @@ open Rench;
 
 open Oni_Core;
 
+module Kind = {
+  [@deriving show]
+  type t =
+    | Ui
+    | Workspace;
+
+  let toString =
+    fun
+    | Ui => "ui"
+    | Workspace => "workspace";
+
+  module Decode = {
+    open Json.Decode;
+
+    let string =
+      string
+      |> map(
+           fun
+           | "ui" => Ui
+           | "workspace" => Workspace
+           | _ => Ui,
+         );
+  };
+
+  let decode =
+    Json.Decode.(
+      one_of([
+        ("single string", Decode.string |> map(kind => [kind])),
+        ("list", list(Decode.string)),
+      ])
+    );
+
+  let%test_module "json parsing" =
+    (module
+     {
+       let parse = str =>
+         str
+         |> Yojson.Safe.from_string
+         |> Json.Decode.decode_value(decode)
+         |> Result.get_ok;
+
+       let%test "json string" = {
+         parse({|"ui"|}) == [Ui];
+       };
+       let%test "json list" = {
+         parse({|["ui", "workspace"]|}) == [Ui, Workspace];
+       };
+     });
+};
+
 [@deriving show]
 type t = {
   name: string,
@@ -15,6 +65,7 @@ type t = {
   displayName: option(LocalizedToken.t),
   description: option(string),
   publisher: option(string),
+  defaults: Yojson.Safe.t,
   main: option(string),
   icon: option(string),
   categories: list(string),
@@ -22,15 +73,12 @@ type t = {
   engines: string,
   activationEvents: list(string),
   extensionDependencies: list(string),
+  runtimeDependencies: Yojson.Safe.t,
   extensionPack: list(string),
-  extensionKind: kind,
+  extensionKind: list(Kind.t),
   contributes: Contributions.t,
   enableProposedApi: bool,
-}
-
-and kind =
-  | Ui
-  | Workspace;
+};
 
 let identifier = manifest => {
   switch (manifest.publisher) {
@@ -39,17 +87,12 @@ let identifier = manifest => {
   };
 };
 
+let displayName = ({displayName, _}) => {
+  displayName |> Option.map(LocalizedToken.toString);
+};
+
 module Decode = {
   open Json.Decode;
-
-  let kind =
-    string
-    |> map(
-         fun
-         | "ui" => Ui
-         | "workspace" => Workspace
-         | _ => Ui,
-       );
 
   let author =
     one_of([("string", string), ("object", field("name", string))]);
@@ -78,13 +121,17 @@ module Decode = {
           categories: field.withDefault("categories", [], list(string)),
           keywords: field.withDefault("keywords", [], list(string)),
           engines: field.required("engines", engine),
+          defaults: field.withDefault("defaults", `Assoc([]), value),
           activationEvents:
             field.withDefault("activationEvents", [], list(string)),
           extensionDependencies:
             field.withDefault("extensionDependencies", [], list(string)),
+          runtimeDependencies:
+            field.withDefault("runtimeDependencies", `Null, value),
           extensionPack:
             field.withDefault("extensionPack", [], list(string)),
-          extensionKind: field.withDefault("extensionKind", Ui, kind),
+          extensionKind:
+            field.withDefault("extensionKind", [Kind.Ui], Kind.decode),
           contributes:
             field.withDefault(
               "contributes",
@@ -95,15 +142,6 @@ module Decode = {
             field.withDefault("enableProposedApi", false, bool),
         }
       )
-    );
-};
-
-module Encode = {
-  let kind =
-    Json.Encode.(
-      fun
-      | Ui => string("ui")
-      | Workspace => string("workspace")
     );
 };
 

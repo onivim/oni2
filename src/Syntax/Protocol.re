@@ -5,12 +5,20 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-module Ext = Oni_Extensions;
+
+let pidToNamedPipe = pid => {
+  Exthost.(
+    {
+      let name = Printf.sprintf("syntax-client-%s", pid);
+      name |> NamedPipe.create |> NamedPipe.toString;
+    }
+  );
+};
 
 module TokenUpdate = {
   type t = {
     line: int,
-    tokenColors: list(ColorizedToken.t),
+    tokenColors: list(ThemeToken.t),
   };
 
   let show = tokenUpdate => {
@@ -42,10 +50,12 @@ module ClientToServer = {
   [@deriving show({with_path: false})]
   type t =
     | Echo(string)
-    | Initialize([@opaque] Ext.LanguageInfo.t, Setup.t)
+    | Initialize([@opaque] Exthost.GrammarInfo.t, Setup.t)
     | BufferStartHighlighting({
         bufferId: int,
-        filetype: string,
+        // We send in the actual textmate scope, ie:
+        // 'source.js' vs 'javascript'
+        scope: string,
         lines: [@opaque] array(string),
         visibleRanges: [@opaque] list(Range.t),
       })

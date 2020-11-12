@@ -5,6 +5,7 @@
  */
 
 open Kernel;
+module CoreUtility = Utility;
 open Revery;
 
 module FontSource = {
@@ -39,10 +40,11 @@ module IconDefinition = {
     fontColor: string,
   };
 
+  [@deriving show({with_path: false})]
   type t = {
     /* id: string, */
     fontCharacter: int,
-    fontColor: Color.t,
+    fontColor: [@opaque] Color.t,
   };
 
   let parseId: string => int =
@@ -87,7 +89,7 @@ let getIconForFile: (t, string, string) => option(IconDefinition.t) =
       | None =>
         switch (
           StringMap.find_opt(
-            normalizeExtension(Rench.Path.extname(fileName)),
+            normalizeExtension(CoreUtility.Path.getExtension(fileName)),
             iconTheme.fileExtensions,
           )
         ) {
@@ -99,6 +101,16 @@ let getIconForFile: (t, string, string) => option(IconDefinition.t) =
           }
         }
       };
+
+    StringMap.find_opt(id, iconTheme.iconDefinitions);
+  };
+
+let getIconForLanguage: (t, string) => option(IconDefinition.t) =
+  (iconTheme: t, languageId: string) => {
+    let id =
+      iconTheme.languageIds
+      |> StringMap.find_opt(languageId)
+      |> Option.value(~default=iconTheme.file);
 
     StringMap.find_opt(id, iconTheme.iconDefinitions);
   };

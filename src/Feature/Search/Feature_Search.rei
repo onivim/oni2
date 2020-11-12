@@ -1,36 +1,50 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Revery.UI;
-open Oni_Components;
 
 type model;
 
 let initial: model;
 
 [@deriving show]
-type msg =
-  | Input(string)
-  | InputClicked(Selection.t)
-  | Update([@opaque] list(Ripgrep.Match.t))
-  | Complete;
+type msg;
+
+module Msg: {
+  let input: string => msg;
+  let pasted: string => msg;
+};
 
 type outmsg =
-  | Focus;
+  | OpenFile({
+      filePath: string,
+      location: CharacterPosition.t,
+    })
+  | Focus
+  | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 let update: (model, msg) => (model, option(outmsg));
 
+let resetFocus: model => model;
+
 let subscriptions:
-  (Ripgrep.t, msg => unit, model) => list(Subscription.t(msg));
+  (~workingDirectory: string, Ripgrep.t, msg => unit, model) =>
+  list(Subscription.t(msg));
 
 let make:
   (
     ~theme: ColorTheme.Colors.t,
     ~uiFont: UiFont.t,
-    ~editorFont: Service_Font.font,
+    ~iconTheme: IconTheme.t,
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~isFocused: bool,
     ~model: model,
-    ~onSelectResult: (string, Location.t) => unit,
     ~dispatch: msg => unit,
+    ~workingDirectory: string,
     unit
   ) =>
   React.element(React.node);
+
+module Contributions: {
+  let commands: (~isFocused: bool) => list(Command.t(msg));
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
+};

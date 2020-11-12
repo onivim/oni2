@@ -7,11 +7,11 @@
 
 open Oni_Model;
 
-let start = quit => {
+let start = (~quit, ~raiseWindow) => {
   let quitAllEffect = (state: State.t, force) => {
     let handlers = state.lifecycle.onQuitFunctions;
 
-    let anyModified = Buffers.anyModified(state.buffers);
+    let anyModified = Feature_Buffers.anyModified(state.buffers);
     let canClose = force || !anyModified;
 
     Isolinear.Effect.createWithDispatch(~name="lifecycle.quitAll", dispatch =>
@@ -23,34 +23,22 @@ let start = quit => {
     );
   };
 
-  let quitBufferEffect = (state: State.t, buffer: Vim.Buffer.t, force) => {
-    Isolinear.Effect.createWithDispatch(~name="lifecycle.quitBuffer", dispatch => {
-      let editorGroup = Selectors.getActiveEditorGroup(state);
-      switch (Selectors.getActiveEditor(editorGroup)) {
-      | None => ()
-      | Some(editor) =>
-        let bufferMeta = Vim.BufferMetadata.ofBuffer(buffer);
-        if (Feature_Editor.Editor.getBufferId(editor) == bufferMeta.id) {
-          if (force || !bufferMeta.modified) {
-            dispatch(Actions.ViewCloseEditor(editor.editorId));
-          };
-        };
-      };
-    });
-  };
+  let internalWindowRaiseEffect =
+    Isolinear.Effect.create(~name="window.raise", () => raiseWindow());
 
   let updater = (state: State.t, action) => {
     switch (action) {
-    | Actions.QuitBuffer(buffer, force) => (
-        state,
-        quitBufferEffect(state, buffer, force),
-      )
+    | Actions.QuitBuffer(buffer, force) =>
+      switch (Feature_Layout.closeBuffer(~force, buffer, state.layout)) {
+      | Some(layout) => ({...state, layout}, Isolinear.Effect.none)
+      | None => (state, quitAllEffect(state, force))
+      }
 
     | Actions.Quit(force) => (state, quitAllEffect(state, force))
 
     | WindowCloseBlocked => (
         {...state, modal: Some(Feature_Modals.unsavedBuffersWarning)},
-        Isolinear.Effect.none,
+        internalWindowRaiseEffect,
       )
 
     | _ => (state, Isolinear.Effect.none)

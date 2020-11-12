@@ -4,8 +4,6 @@ open Revery.Math;
 
 open Oni_Core;
 
-open Helpers;
-
 module Log = (val Log.withNamespace("Oni2.Editor.SurfaceView"));
 
 module Config = EditorConfiguration;
@@ -21,172 +19,236 @@ module Styles = {
     width(int_of_float(bufferPixelWidth)),
     bottom(0),
   ];
-
-  let horizontalScrollBar = [
-    position(`Absolute),
-    bottom(0),
-    left(0),
-    right(0),
-    height(Constants.scrollBarThickness),
-  ];
 };
 
-let drawCurrentLineHighlight = (~context, ~colors: Colors.t, line) =>
-  Draw.lineHighlight(~context, ~color=colors.lineHighlightBackground, line);
+module Constants = {
+  let hoverTime = 1.0;
+};
 
-let renderRulers = (~context, ~colors: Colors.t, rulers) =>
+let drawCurrentLineHighlight = (~context, ~colors: Colors.t, viewLine: int) =>
+  Draw.lineHighlight(
+    ~context,
+    ~color=colors.lineHighlightBackground,
+    viewLine,
+  );
+
+let renderRulers = (~context: Draw.context, ~colors: Colors.t, rulers) => {
+  let characterWidth = Editor.characterWidthInPixels(context.editor);
+  let scrollX = Editor.scrollX(context.editor);
   rulers
-  |> List.map(bufferPositionToPixel(~context, 0))
-  |> List.map(fst)
+  |> List.map(pos => characterWidth *. float(pos) -. scrollX)
   |> List.iter(Draw.ruler(~context, ~color=colors.rulerForeground));
+};
 
 let%component make =
               (
-                ~onScroll,
                 ~buffer,
                 ~editor,
                 ~colors,
-                ~topVisibleLine,
-                ~onCursorChange,
-                ~cursorPosition: Location.t,
+                ~dispatch,
+                ~cursorPosition: CharacterPosition.t,
                 ~editorFont: Service_Font.font,
-                ~leftVisibleColumn,
                 ~diagnosticsMap,
                 ~selectionRanges,
                 ~matchingPairs,
                 ~bufferHighlights,
-                ~definition,
+                ~languageSupport,
+                ~languageConfiguration,
                 ~bufferSyntaxHighlights,
-                ~bottomVisibleLine,
+                ~maybeYankHighlights,
                 ~mode,
                 ~isActiveSplit,
                 ~gutterWidth,
-                ~bufferWidthInCharacters,
+                ~bufferPixelWidth,
                 ~windowIsFocused,
                 ~config,
+                ~uiFont,
+                ~theme,
                 (),
               ) => {
-  let%hook elementRef = React.Hooks.ref(None);
+  let%hook maybeBbox = React.Hooks.ref(None);
 
-  let lineCount = Buffer.getNumberOfLines(buffer);
-  let indentation =
-    switch (Buffer.getIndentation(buffer)) {
-    | Some(v) => v
-    | None => IndentationSettings.default
-    };
+  let indentation = Buffer.getIndentation(buffer);
+
+  let inlineElements = Editor.getInlineElements(editor);
+
+  let lensElements =
+    inlineElements
+    |> List.map((inlineElement: InlineElements.element) => {
+         let line = inlineElement.line;
+         let uniqueId = inlineElement.uniqueId;
+         let elem = inlineElement.view(~theme, ~uiFont);
+         let inlineKey = inlineElement.key;
+         let hidden = inlineElement.hidden;
+
+         <InlineElementView
+           config
+           key={inlineElement.reconcilerKey}
+           inlineKey
+           uniqueId
+           dispatch
+           lineNumber=line
+           hidden
+           editor>
+           <elem />
+         </InlineElementView>;
+       });
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
-    onScroll(wheelEvent.deltaY *. (-50.));
+    dispatch(
+      Msg.EditorMouseWheel({
+        deltaY: wheelEvent.deltaY *. (-1.),
+        deltaX: wheelEvent.deltaX,
+        shiftKey: wheelEvent.shiftKey,
+      }),
+    );
 
-  let {scrollX, scrollY, _}: Editor.t = editor;
-
-  let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
-    Log.trace("editorMouseUp");
-
-    switch (elementRef^) {
-    | None => ()
-    | Some(r) =>
-      let (minX, minY, _, _) = r#getBoundingBox() |> BoundingBox2d.getBounds;
-
-      let relY = evt.mouseY -. minY;
-      let relX = evt.mouseX -. minX;
-
-      let (line, col) =
-        Editor.pixelPositionToBufferLineByte(
-          ~buffer,
-          ~pixelX=relX,
-          ~pixelY=relY,
-          editor,
-        );
-
-      Log.tracef(m => m("  topVisibleLine is %i", topVisibleLine));
-      Log.tracef(m => m("  setPosition (%i, %i)", line + 1, col));
-
-      let cursor =
-        Vim.Cursor.create(
-          ~line=Index.fromOneBased(line + 1),
-          ~column=Index.fromZeroBased(col),
-        );
-
-      onCursorChange(cursor);
-    };
+  let getMaybeLocationFromMousePosition = (mouseX, mouseY) => {
+    maybeBbox^
+    |> Option.map(bbox => {
+         let (minX, minY, _, _) = bbox |> BoundingBox2d.getBounds;
+         let relX = mouseX -. minX;
+         let relY = mouseY -. minY;
+         let time = Revery.Time.now();
+         (relX, relY, time);
+       });
   };
 
+  let onMouseMove = (evt: NodeEvents.mouseMoveEventParams) => {
+    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+    |> Option.iter(((pixelX, pixelY, time)) => {
+         dispatch(Msg.EditorMouseMoved({time, pixelX, pixelY}))
+       });
+  };
+
+  let onMouseEnter = _evt => {
+    dispatch(Msg.EditorMouseEnter);
+  };
+
+  let onMouseLeave = _evt => {
+    dispatch(Msg.EditorMouseLeave);
+  };
+
+  let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
+    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+    |> Option.iter(((pixelX, pixelY, time)) => {
+         dispatch(Msg.EditorMouseDown({time, pixelX, pixelY}))
+       });
+  };
+
+  let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
+    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+    |> Option.iter(((pixelX, pixelY, time)) => {
+         dispatch(Msg.EditorMouseUp({time, pixelX, pixelY}))
+       });
+  };
+
+  let pixelWidth = Editor.visiblePixelWidth(editor);
+  let pixelHeight = Editor.visiblePixelHeight(editor);
+
+  let yankHighlightElement =
+    maybeYankHighlights
+    |> Option.map((highlights: Editor.yankHighlight) =>
+         <YankHighlights
+           config
+           key={highlights.key}
+           pixelRanges={highlights.pixelRanges}
+         />
+       )
+    |> Option.value(~default=React.empty);
+
   <View
-    ref={node => elementRef := Some(node)}
+    onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
     style={Styles.bufferViewClipped(
       gutterWidth,
-      float(Editor.(editor.pixelWidth)) -. gutterWidth,
+      float(pixelWidth) -. gutterWidth,
     )}
+    onMouseDown
     onMouseUp
+    onMouseMove
+    onMouseEnter
+    onMouseLeave
     onMouseWheel>
     <Canvas
-      style={Styles.bufferViewClipped(
-        0.,
-        float(Editor.(editor.pixelWidth)) -. gutterWidth,
-      )}
-      render={canvasContext => {
+      style={Styles.bufferViewClipped(0., float(pixelWidth) -. gutterWidth)}
+      render={(canvasContext, _) => {
         let context =
           Draw.createContext(
             ~canvasContext,
-            ~width=editor.pixelWidth,
-            ~height=editor.pixelHeight,
-            ~scrollX,
-            ~scrollY,
-            ~lineHeight=editorFont.measuredHeight,
+            ~width=pixelWidth,
+            ~height=pixelHeight,
+            ~editor,
             ~editorFont,
           );
 
-        drawCurrentLineHighlight(~context, ~colors, cursorPosition.line);
+        let maybeCursorBytePosition =
+          Editor.characterToByte(cursorPosition, editor);
+        maybeCursorBytePosition
+        |> Option.iter(bytePosition => {
+             let viewLine =
+               Editor.bufferBytePositionToViewLine(bytePosition, editor);
+             drawCurrentLineHighlight(~context, ~colors, viewLine);
+           });
 
         renderRulers(~context, ~colors, Config.rulers.get(config));
-
-        ContentView.render(
-          ~context,
-          ~count=lineCount,
-          ~buffer,
-          ~leftVisibleColumn,
-          ~colors,
-          ~diagnosticsMap,
-          ~selectionRanges,
-          ~matchingPairs,
-          ~bufferHighlights,
-          ~cursorPosition,
-          ~definition,
-          ~bufferSyntaxHighlights,
-          ~shouldRenderWhitespace=Config.renderWhitespace.get(config),
-          ~bufferWidthInCharacters,
-        );
 
         if (Config.renderIndentGuides.get(config)) {
           IndentLineRenderer.render(
             ~context,
             ~buffer,
-            ~startLine=topVisibleLine - 1,
-            ~endLine=bottomVisibleLine + 1,
+            ~startLine=Editor.getTopVisibleBufferLine(editor),
+            ~endLine=Editor.getBottomVisibleBufferLine(editor),
             ~cursorPosition,
             ~colors,
             ~showActive=Config.highlightActiveIndentGuide.get(config),
             indentation,
           );
         };
+
+        ContentView.render(
+          ~context,
+          ~buffer,
+          ~editor,
+          ~colors,
+          ~diagnosticsMap,
+          ~selectionRanges,
+          ~matchingPairs,
+          ~bufferHighlights,
+          ~cursorPosition,
+          ~languageSupport,
+          ~languageConfiguration,
+          ~bufferSyntaxHighlights,
+          ~shouldRenderWhitespace=Config.renderWhitespace.get(config),
+        );
+
+        if (Config.scrollShadow.get(config)) {
+          let () =
+            ScrollShadow.renderVertical(
+              ~editor,
+              ~width=float(bufferPixelWidth),
+              ~context,
+            );
+          let () =
+            ScrollShadow.renderHorizontal(
+              ~editor,
+              ~width=float(bufferPixelWidth),
+              ~context,
+            );
+          ();
+        };
       }}
     />
+    {lensElements |> React.listToElement}
+    yankHighlightElement
     <CursorView
       config
       editor
-      scrollX
-      scrollY
       editorFont
-      buffer
       mode
       cursorPosition
       isActiveSplit
       windowIsFocused
       colors
     />
-    <View style=Styles.horizontalScrollBar>
-      <EditorHorizontalScrollbar editor width={editor.pixelWidth} colors />
-    </View>
   </View>;
 };

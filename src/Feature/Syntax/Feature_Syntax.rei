@@ -8,7 +8,7 @@ let highlight:
     ~grammars: Oni_Syntax.GrammarRepository.t,
     array(string)
   ) =>
-  array(list(ColorizedToken.t));
+  array(list(ThemeToken.t));
 
 [@deriving show({with_path: false})]
 type msg;
@@ -21,13 +21,19 @@ type t;
 
 let empty: t;
 
-let getTokens: (~bufferId: int, ~line: Index.t, t) => list(ColorizedToken.t);
+let getTokens:
+  (~bufferId: int, ~line: EditorCoreTypes.LineNumber.t, t) =>
+  list(ThemeToken.t);
 
 let getSyntaxScope:
-  (~bufferId: int, ~line: Index.t, ~bytePosition: int, t) => SyntaxScope.t;
+  (~bytePosition: BytePosition.t, ~bufferId: int, t) => SyntaxScope.t;
+
+let getAt:
+  (~bufferId: int, ~bytePosition: EditorCoreTypes.BytePosition.t, t) =>
+  option(ThemeToken.t);
 
 let setTokensForLine:
-  (~bufferId: int, ~line: int, ~tokens: list(ColorizedToken.t), t) => t;
+  (~bufferId: int, ~line: int, ~tokens: list(ThemeToken.t), t) => t;
 
 let handleUpdate:
   (
@@ -49,6 +55,11 @@ let isSyntaxServerRunning: t => bool;
 // calls to [setTokensForLine];
 let ignore: (~bufferId: int, t) => t;
 
+module Tokens: {
+  let getAt:
+    (~byteIndex: ByteIndex.t, list(ThemeToken.t)) => option(ThemeToken.t);
+};
+
 module Effect: {
   let bufferUpdate:
     (~bufferUpdate: BufferUpdate.t, t) => Isolinear.Effect.t(unit);
@@ -57,7 +68,8 @@ module Effect: {
 let subscription:
   (
     ~config: Config.resolver,
-    ~languageInfo: Oni_Extensions.LanguageInfo.t,
+    ~grammarInfo: Exthost.GrammarInfo.t,
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~setup: Setup.t,
     ~tokenTheme: Oni_Syntax.TokenTheme.t,
     ~bufferVisibility: list((Buffer.t, list(Range.t))),

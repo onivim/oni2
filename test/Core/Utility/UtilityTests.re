@@ -321,6 +321,36 @@ describe("StringEx", ({describe, _}) => {
     );
   });
 
+  describe("endsWith", ({test, _}) => {
+    test("empty strings", ({expect, _}) => {
+      expect.bool(endsWith(~postfix="", "str")).toBe(true);
+      expect.bool(endsWith(~postfix="", "")).toBe(true);
+      expect.bool(endsWith(~postfix="str", "")).toBe(false);
+    });
+
+    test("matching string", ({expect, _}) =>
+      expect.bool(endsWith(~postfix="str", "str")).toBe(true)
+    );
+
+    test("matching substring", ({expect, _}) =>
+      expect.bool(endsWith(~postfix="r", "str")).toBe(true)
+    );
+  });
+
+  describe("isEmpty", ({test, _}) => {
+    test("large empty string", ({expect, _}) => {
+      let isEmpty = String.make(100000, ' ') |> StringEx.isEmpty;
+
+      expect.bool(isEmpty).toBe(true);
+    });
+
+    test("large non-empty string", ({expect, _}) => {
+      let isEmpty = String.make(100000, 'a') |> StringEx.isEmpty;
+
+      expect.bool(isEmpty).toBe(false);
+    });
+  });
+
   describe("extractSnippet", ({test, _}) => {
     let text = " 123456789";
 

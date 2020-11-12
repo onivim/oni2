@@ -3,12 +3,12 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="InsertMode test", (dispatch, wait, _) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
   );
 
-  dispatch(KeyboardInput("i"));
+  dispatch(KeyboardInput({isText: true, input: "i"}));
 
   wait(~name="Mode switches to insert", (state: State.t) =>
-    state.vimMode == Vim.Types.Insert
+    Feature_Vim.mode(state.vim) |> Vim.Mode.isInsert
   );
 });

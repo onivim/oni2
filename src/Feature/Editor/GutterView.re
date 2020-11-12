@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Revery.UI;
 open Oni_Core;
 
@@ -17,35 +18,63 @@ let renderLineNumber =
       colors: Colors.t,
       lineSetting,
       cursorLine: int,
-      yOffset: float,
     ) => {
-  let isActiveLine = lineNumber == cursorLine;
-  let y = yOffset -. context.fontMetrics.ascent;
+  let isFirstBufferLine =
+    Editor.viewLineIsPrimary(lineNumber, context.editor);
 
-  let lineNumber =
-    string_of_int(
-      LineNumber.getLineNumber(
-        ~bufferLine=lineNumber + 1,
-        ~cursorLine=cursorLine + 1,
-        ~setting=lineSetting,
-        (),
-      ),
+  if (isFirstBufferLine) {
+    let bufferLine = Editor.viewLineToBufferLine(lineNumber, context.editor);
+    let font =
+      Service_Font.resolveWithFallback(
+        ~italic=false,
+        Revery.Font.Weight.Normal,
+        context.fontFamily,
+      );
+    let fontMetrics = Revery.Font.getMetrics(font, context.fontSize);
+    let isActiveLine =
+      EditorCoreTypes.LineNumber.toZeroBased(bufferLine) == cursorLine;
+    let ({y: yOffset, _}: PixelPosition.t, _) =
+      Editor.bufferBytePositionToPixel(
+        ~position=BytePosition.{line: bufferLine, byte: ByteIndex.zero},
+        context.editor,
+      );
+
+    let paddingY = context.editor |> Editor.linePaddingInPixels;
+    let y = paddingY +. yOffset -. fontMetrics.ascent;
+
+    let lineNumber =
+      string_of_int(
+        LineNumber.getLineNumber(
+          ~bufferLine=EditorCoreTypes.LineNumber.toOneBased(bufferLine),
+          ~cursorLine=cursorLine + 1,
+          ~setting=lineSetting,
+          (),
+        ),
+      );
+
+    let lineNumberXOffset =
+      isActiveLine && lineSetting == `Relative
+        ? 0.
+        : lineNumberWidth
+          /. 2.
+          -. float(String.length(lineNumber))
+          *. context.charWidth
+          /. 2.;
+
+    let color =
+      isActiveLine
+        ? colors.lineNumberActiveForeground : colors.lineNumberForeground;
+
+    Draw.utf8Text(
+      ~context,
+      ~x=lineNumberXOffset,
+      ~y,
+      ~color,
+      ~bold=false,
+      ~italic=false,
+      ~text=lineNumber,
     );
-
-  let lineNumberXOffset =
-    isActiveLine
-      ? 0.
-      : lineNumberWidth
-        /. 2.
-        -. float(String.length(lineNumber))
-        *. context.charWidth
-        /. 2.;
-
-  let color =
-    isActiveLine
-      ? colors.lineNumberActiveForeground : colors.lineNumberForeground;
-
-  Draw.utf8Text(~context, ~x=lineNumberXOffset, ~y, ~color, lineNumber);
+  };
 };
 
 let renderLineNumbers =
@@ -54,7 +83,6 @@ let renderLineNumbers =
       ~lineNumberWidth,
       ~height,
       ~colors: Colors.t,
-      ~count,
       ~showLineNumbers,
       ~cursorLine,
     ) => {
@@ -67,7 +95,7 @@ let renderLineNumbers =
     ~color=colors.gutterBackground,
   );
 
-  Draw.renderImmediate(~context, ~count, (item, offset) =>
+  Draw.renderImmediate(~context, (item, _) =>
     renderLineNumber(
       ~context,
       item,
@@ -75,36 +103,28 @@ let renderLineNumbers =
       colors,
       showLineNumbers,
       cursorLine,
-      offset,
     )
   );
 };
 
 let render =
     (
+      ~editor,
       ~showLineNumbers,
+      ~showScrollShadow,
       ~lineNumberWidth,
       ~width,
       ~height,
       ~colors,
       ~editorFont: Service_Font.font,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,
       canvasContext,
+      _,
     ) => {
   let context =
-    Draw.createContext(
-      ~canvasContext,
-      ~width,
-      ~height,
-      ~scrollX=0.,
-      ~scrollY,
-      ~lineHeight,
-      ~editorFont,
-    );
+    Draw.createContext(~canvasContext, ~width, ~height, ~editor, ~editorFont);
 
   if (showLineNumbers != `Off) {
     renderLineNumbers(
@@ -112,7 +132,6 @@ let render =
       ~lineNumberWidth,
       ~height,
       ~colors,
-      ~count,
       ~showLineNumbers,
       ~cursorLine,
     );
@@ -120,8 +139,9 @@ let render =
 
   Option.iter(
     EditorDiffMarkers.render(
-      ~scrollY=context.scrollY,
-      ~rowHeight=context.lineHeight,
+      ~editor,
+      ~scrollY=Editor.scrollY(editor),
+      ~rowHeight=Editor.lineHeightInPixels(editor),
       ~x=lineNumberWidth,
       ~height=float(height),
       ~width=Constants.diffMarkerWidth,
@@ -131,16 +151,20 @@ let render =
     ),
     diffMarkers,
   );
+
+  if (showScrollShadow) {
+    ScrollShadow.renderVertical(~editor, ~width=float(width), ~context);
+  };
 };
 
 let make =
     (
+      ~editor,
+      ~showScrollShadow,
       ~showLineNumbers,
       ~height,
       ~colors,
       ~editorFont: Service_Font.font,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,
@@ -150,7 +174,7 @@ let make =
     showLineNumbers != `Off
       ? LineNumber.getLineNumberPixelWidth(
           ~lines=count,
-          ~fontPixelWidth=editorFont.measuredWidth,
+          ~fontPixelWidth=editorFont.underscoreWidth,
           (),
         )
       : 0.0;
@@ -170,14 +194,14 @@ let make =
 
   let render =
     render(
+      ~editor,
+      ~showScrollShadow,
       ~showLineNumbers,
       ~lineNumberWidth,
       ~width=int_of_float(totalWidth),
       ~height,
       ~colors,
       ~editorFont,
-      ~scrollY,
-      ~lineHeight,
       ~count,
       ~cursorLine,
       ~diffMarkers,

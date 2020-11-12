@@ -1,0 +1,19 @@
+{
+	"name": "anchor-a",
+	"scopeName": "source.anchor-a",
+	"fileTypes": [
+		"world"
+	],
+	"patterns": [
+		{
+			"comment": "Handle A anchor correctly",
+			"match": "\\Ahello",
+			"name": "hello.first-line"
+		},
+		{
+			"comment": "Handle A anchor correctly",
+			"match": "hello",
+			"name": "hello.after-first-line"
+		}
+	]
+}

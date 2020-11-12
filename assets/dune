@@ -1,4 +1,4 @@
 (install
-    (section bin)
-    (package Oni2)
-    (files changelog.xml))
+ (section bin)
+ (package Oni2)
+ (files changelog.xml))

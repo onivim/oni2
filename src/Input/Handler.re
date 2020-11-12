@@ -7,6 +7,8 @@
 module Log = (val Oni_Core.Log.withNamespace("Oni2.Input.Handler"));
 module Zed_utf8 = Oni_Core.ZedBundled;
 
+open Oni_Core.Utility;
+
 module Internal = {
   let keyCodeToVimString = (keycode, keyString) => {
     let len = Zed_utf8.length(keyString);
@@ -98,25 +100,28 @@ module Internal = {
   };
 };
 
-let keyPressToCommand =
-    (~isTextInputActive, {modifiers, keycode, _}: EditorInput.KeyPress.t) => {
-  let altGr = modifiers.altGr;
-  let shiftKey = modifiers.shift;
-  let altKey = modifiers.alt;
-  let ctrlKey = modifiers.control;
-  let superKey = modifiers.meta;
+let keyPressToCommand = (~isTextInputActive, key) => {
+  let maybeKey = EditorInput.KeyPress.toPhysicalKey(key);
+  maybeKey
+  |> OptionEx.flatMap(({modifiers, keycode, _}: EditorInput.PhysicalKey.t) => {
+       let altGr = modifiers.altGr;
+       let shiftKey = modifiers.shift;
+       let altKey = modifiers.alt;
+       let ctrlKey = modifiers.control;
+       let superKey = modifiers.meta;
 
-  if (altGr && isTextInputActive) {
-    None;
-        // If AltGr is pressed, and we're in text input mode, we'll assume the text input handled it
-  } else {
-    Internal.keyPressToString(
-      ~isTextInputActive,
-      ~shiftKey,
-      ~altKey,
-      ~ctrlKey,
-      ~superKey,
-      keycode,
-    );
-  };
+       if (altGr && isTextInputActive) {
+         None;
+             // If AltGr is pressed, and we're in text input mode, we'll assume the text input handled it
+       } else {
+         Internal.keyPressToString(
+           ~isTextInputActive,
+           ~shiftKey,
+           ~altKey,
+           ~ctrlKey,
+           ~superKey,
+           keycode,
+         );
+       };
+     });
 };

@@ -1,4 +1,3 @@
-open EditorCoreTypes;
 open Feature_Editor;
 
 let validateToken =
@@ -8,12 +7,6 @@ let validateToken =
       expectedToken: BufferViewTokenizer.t,
     ) => {
   expect.string(actualToken.text).toEqual(expectedToken.text);
-  expect.int(Index.toZeroBased(actualToken.startPosition)).toBe(
-    Index.toZeroBased(expectedToken.startPosition),
-  );
-  expect.int(Index.toZeroBased(actualToken.endPosition)).toBe(
-    Index.toZeroBased(expectedToken.endPosition),
-  );
 };
 
 let validateTokens =

@@ -6,7 +6,7 @@ type t = {
   column: int,
 };
 
-let ofPosition = (p: Location.t) => {
-  lineNumber: p.line |> Index.toOneBased,
-  column: p.column |> Index.toOneBased,
+let ofPosition = (p: CharacterPosition.t) => {
+  lineNumber: p.line |> LineNumber.toOneBased,
+  column: (p.character |> CharacterIndex.toInt) + 1,
 };

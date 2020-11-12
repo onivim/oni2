@@ -18,7 +18,7 @@ describe("SCM", ({test, _}) => {
          ~name="RegisterSourceControl",
          fun
          | Msg.SCM(RegisterSourceControl({id, label, _})) =>
-           id == "\"test\"" && label == "\"Test\""
+           id == "test" && label == "Test"
          | _ => false,
        )
     |> Test.terminate
@@ -31,8 +31,11 @@ describe("SCM", ({test, _}) => {
     |> Test.waitForMessage(
          ~name="RegisterSCMResourceGroup",
          fun
-         | Msg.SCM(RegisterSCMResourceGroup({id, label, _})) =>
-           id == "resourceGroup" && label == "resourceGroup"
+         | Msg.SCM(RegisterSCMResourceGroups({groups, _})) =>
+           groups
+           |> List.exists(({id, label, _}: Exthost.SCM.Group.t) => {
+                id == "resourceGroup" && label == "resourceGroup"
+              })
          | _ => false,
        )
     |> Test.terminate

@@ -5,7 +5,6 @@
  */
 open Kernel;
 open ConfigurationValues;
-open LineNumber;
 open Utility;
 
 let parseBool = json =>
@@ -53,34 +52,6 @@ let parseStringList = json => {
   };
 };
 
-let parseIntList = json => {
-  switch (json) {
-  | `List(items) =>
-    List.fold_left(
-      (accum, item) =>
-        switch (item) {
-        | `Int(v) => [v, ...accum]
-        | _ => accum
-        },
-      [],
-      items,
-    )
-  | _ => []
-  };
-};
-
-let parseLineNumberSetting = json =>
-  switch (json) {
-  | `String(v) =>
-    switch (v) {
-    | "on" => On
-    | "off" => Off
-    | "relative" => Relative
-    | _ => On
-    }
-  | _ => On
-  };
-
 let parseVimUseSystemClipboardSetting = json => {
   let parseItems = items =>
     List.fold_left(
@@ -106,18 +77,6 @@ let parseVimUseSystemClipboardSetting = json => {
   | _ => {yank: true, delete: false, paste: false}
   };
 };
-
-let parseRenderWhitespace = json =>
-  switch (json) {
-  | `String(v) =>
-    switch (v) {
-    | "all" => All
-    | "boundary" => Boundary
-    | "none" => None
-    | _ => All
-    }
-  | _ => All
-  };
 
 let parseEditorFontSize = (~default=Constants.defaultFontSize, json) =>
   json
@@ -157,39 +116,48 @@ let parseAutoClosingBrackets:
     | _ => Never
     };
 
-let parseQuickSuggestions: Yojson.Safe.t => quickSuggestionsEnabled = {
-  let decode =
-    Json.Decode.(
-      field("other", bool)
-      >>= (
-        other =>
-          field("comments", bool)
-          >>= (
-            comments =>
-              field("strings", bool)
-              >>= (strings => succeed({other, comments, strings}))
-          )
-      )
-    )
-    |> Json.Decode.decode_value;
-  json =>
-    switch (json) {
-    | `Bool(enabled) => {other: enabled, comments: enabled, strings: enabled}
-    // TODO: Parse JS objects of the form:
-    // { "other": bool, "comments": bool, "strings": bool }
-    | _ =>
-      json
-      |> decode
-      |> Result.value(
-           ~default={other: false, comments: false, strings: false},
-         )
-    };
-};
-
 let parseString = (~default="", json) =>
   switch (json) {
   | `String(v) => v
   | _ => default
+  };
+
+let parseFontLigatures = json =>
+  switch (json) {
+  | `Bool(_) as bool => bool
+  | `String(str) =>
+    open Angstrom;
+
+    let quoted = p => char('\'') *> p <* char('\'');
+
+    let isAlphaNumeric = (
+      fun
+      | 'a'..'z'
+      | 'A'..'Z'
+      | '0'..'9' => true
+      | _ => false
+    );
+
+    let alphaString = take_while1(isAlphaNumeric);
+
+    let feature = quoted(alphaString);
+    let spaces = many(char(' '));
+
+    let parse = sep_by(char(',') <* spaces, feature);
+
+    switch (Angstrom.parse_string(~consume=All, parse, str)) {
+    | Ok(list) => `List(list)
+    | Error(_) => `Bool(true)
+    };
+  | _ => `Bool(true)
+  };
+
+let parseAutoReveal = json =>
+  switch (json) {
+  | `Bool(true) => `HighlightAndScroll
+  | `Bool(false) => `NoReveal
+  | `String("focusNoScroll") => `HighlightOnly
+  | _ => `NoReveal
   };
 
 type parseFunction =
@@ -206,21 +174,6 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.fontFamily",
-    (config, json) => {
-      ...config,
-      editorFontFamily:
-        parseString(~default=Constants.defaultFontFamily, json),
-    },
-  ),
-  (
-    "editor.fontSize",
-    (config, json) => {
-      ...config,
-      editorFontSize: parseEditorFontSize(json),
-    },
-  ),
-  (
     "editor.fontSmoothing",
     (config, json) => {
       ...config,
@@ -228,64 +181,11 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.hover.delay",
-    (config, json) => {...config, editorHoverDelay: parseInt(json)},
-  ),
-  (
-    "editor.hover.enabled",
-    (config, json) => {...config, editorHoverEnabled: parseBool(json)},
-  ),
-  (
-    "editor.lineNumbers",
+    "editor.fontLigatures",
     (config, json) => {
       ...config,
-      editorLineNumbers: parseLineNumberSetting(json),
+      editorFontLigatures: parseFontLigatures(json),
     },
-  ),
-  (
-    "editor.matchBrackets",
-    (config, json) => {...config, editorMatchBrackets: parseBool(json)},
-  ),
-  (
-    "editor.acceptSuggestionOnEnter",
-    (config, json) => {
-      ...config,
-      editorAcceptSuggestionOnEnter:
-        switch (json) {
-        | `String("on") => `on
-        | `String("off") => `off
-        | `String("smart") => `smart
-        | _ => `on
-        },
-    },
-  ),
-  (
-    "editor.minimap.enabled",
-    (config, json) => {...config, editorMinimapEnabled: parseBool(json)},
-  ),
-  (
-    "editor.minimap.showSlider",
-    (config, json) => {...config, editorMinimapShowSlider: parseBool(json)},
-  ),
-  (
-    "editor.minimap.maxColumn",
-    (config, json) => {...config, editorMinimapMaxColumn: parseInt(json)},
-  ),
-  (
-    "editor.minimap.showSlider",
-    (config, json) => {...config, editorMinimapShowSlider: parseBool(json)},
-  ),
-  (
-    "editor.detectIndentation",
-    (config, json) => {...config, editorDetectIndentation: parseBool(json)},
-  ),
-  (
-    "editor.insertSpaces",
-    (config, json) => {...config, editorInsertSpaces: parseBool(json)},
-  ),
-  (
-    "editor.indentSize",
-    (config, json) => {...config, editorIndentSize: parseInt(json)},
   ),
   (
     "editor.largeFileOptimizations",
@@ -295,55 +195,22 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.tabSize",
-    (config, json) => {...config, editorTabSize: parseInt(json)},
-  ),
-  (
-    "editor.highlightActiveIndentGuide",
+    "explorer.autoReveal",
     (config, json) => {
       ...config,
-      editorHighlightActiveIndentGuide: parseBool(json),
+      explorerAutoReveal: parseAutoReveal(json),
     },
-  ),
-  (
-    "editor.quickSuggestions",
-    (config, json) => {
-      ...config,
-      editorQuickSuggestions: parseQuickSuggestions(json),
-    },
-  ),
-  (
-    "editor.renderIndentGuides",
-    (config, json) => {
-      ...config,
-      editorRenderIndentGuides: parseBool(json),
-    },
-  ),
-  (
-    "editor.renderWhitespace",
-    (config, json) => {
-      ...config,
-      editorRenderWhitespace: parseRenderWhitespace(json),
-    },
-  ),
-  (
-    "editor.rulers",
-    (config, json) => {...config, editorRulers: parseIntList(json)},
   ),
   (
     "files.exclude",
     (config, json) => {...config, filesExclude: parseStringList(json)},
   ),
   (
-    "window.title",
-    (config, json) => {...config, windowTitle: parseString(json)},
-  ),
-  (
     "terminal.integrated.fontFamily",
     (config, json) => {
       ...config,
-      terminalIntegratedFontFamily:
-        parseString(~default=Constants.defaultFontFamily, json),
+      terminalIntegratedFontFile:
+        parseString(~default=Constants.defaultFontFile, json),
     },
   ),
   (
@@ -379,10 +246,6 @@ let configurationParsers: list(configurationTuple) = [
   (
     "workbench.editor.showTabs",
     (config, json) => {...config, workbenchEditorShowTabs: parseBool(json)},
-  ),
-  (
-    "workbench.sideBar.visible",
-    (config, json) => {...config, workbenchSideBarVisible: parseBool(json)},
   ),
   (
     "workbench.statusBar.visible",

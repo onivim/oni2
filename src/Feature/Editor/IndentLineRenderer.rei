@@ -8,9 +8,9 @@ let render:
   (
     ~context: Draw.context,
     ~buffer: Oni_Core.Buffer.t,
-    ~startLine: int,
-    ~endLine: int,
-    ~cursorPosition: EditorCoreTypes.Location.t,
+    ~startLine: EditorCoreTypes.LineNumber.t,
+    ~endLine: EditorCoreTypes.LineNumber.t,
+    ~cursorPosition: EditorCoreTypes.CharacterPosition.t,
     ~colors: Colors.t,
     ~showActive: bool,
     Oni_Core.IndentationSettings.t

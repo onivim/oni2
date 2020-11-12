@@ -1,5 +1,8 @@
 // Not very robust path-handling utilities.
-// TODO: Make good
+// TODO: Replace with a strongly-typed solution like `fp`:
+// https://github.com/facebookexperimental/reason-native/tree/master/src/fp
+
+module Log = (val Kernel.Log.withNamespace("Oni2.Core.Utility.Path"));
 
 let hasTrailingSeparator = path => {
   let len = String.length(path);
@@ -9,6 +12,11 @@ let hasTrailingSeparator = path => {
     let last = path.[len - 1];
     last == '\\' || last == '/';
   };
+};
+
+let normalizeBackSlashes = {
+  let backSlashRegex = Str.regexp("\\\\");
+  path => Str.global_replace(backSlashRegex, "/", path);
 };
 
 let toRelative = (~base, path) => {
@@ -38,3 +46,45 @@ let trimTrailingSeparator = path => {
     path;
   };
 };
+
+let filename = path =>
+  try(Rench.Path.filename(path)) {
+  | Invalid_argument(_) =>
+    Log.warnf(m => m("getExtension - invalid filename: %s", path));
+    "";
+  };
+
+let dirname = path =>
+  try(Rench.Path.dirname(path)) {
+  | Invalid_argument(_) =>
+    Log.warnf(m => m("getExtension - invalid basename: %s", path));
+    "";
+  };
+
+let getExtension = path => {
+  let fileName =
+    try(Rench.Path.filename(path)) {
+    | Invalid_argument(_) =>
+      Log.warnf(m => m("getExtension - invalid filename: %s", path));
+      "";
+    };
+
+  if (String.length(fileName) == 0) {
+    "";
+  } else if (fileName.[0] == '.') {
+    fileName;
+  } else {
+    Rench.Path.extname(fileName);
+  };
+};
+
+let%test_module "getExtension" =
+  (module
+   {
+     let%test "Simple file" = getExtension("/home/oni/test.md") == ".md";
+     let%test "Simple file, no extension" =
+       getExtension("/home/oni/test") == "";
+     let%test "No file name, only extension" =
+       getExtension("/home/oni/.bashrc") == ".bashrc";
+     let%test "No path" = getExtension("") == "";
+   });

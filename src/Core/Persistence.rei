@@ -16,6 +16,7 @@ module Schema: {
   let int: Codec.t(int);
   let string: Codec.t(Stdlib.String.t);
   let option: Codec.t('value) => Codec.t(option('value));
+  let value: Codec.t(Yojson.Safe.t);
 
   type item('state, 'value);
   let define:
@@ -32,7 +33,11 @@ module Store: {
   let entry: Schema.item('state, _) => entry('state);
 
   let instantiate:
-    (~storeFolder: string=?, string, unit => list(entry('state))) =>
+    (
+      ~storeFolder: Fp.t(Fp.absolute)=?,
+      string,
+      unit => list(entry('state))
+    ) =>
     t('state);
 
   let isDirty: ('state, t('state)) => bool;

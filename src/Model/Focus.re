@@ -3,11 +3,17 @@ type focusable =
   | Editor
   | Wildmenu
   | Quickmenu
-  | Search
+  // Sidebar
+  | Extensions
   | FileExplorer
   | SCM
+  | Search
+  | Pane
   | Sneak
   | Modal
+  | InsertRegister
+  | LicenseKey
+  | LanguageSupport
   | Terminal(int);
 
 type stack = list(focusable);
@@ -28,3 +34,9 @@ let current =
   fun
   | [head, ..._] => Some(head)
   | _ => None;
+
+let isLayoutFocused =
+  fun
+  | Editor
+  | Terminal(_) => true
+  | _ => false;

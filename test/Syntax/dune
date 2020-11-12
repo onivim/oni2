@@ -1,5 +1,6 @@
 (library
-    (name Oni_Syntax_Test)
-    (library_flags (-linkall -g))
-    (modules (:standard))
-    (libraries libvim Oni2.core Oni2.syntax Oni2.model Oni_Core_Test rely.lib))
+ (name Oni_Syntax_Test)
+ (library_flags
+  (-linkall -g))
+ (modules (:standard))
+ (libraries libvim Oni2.core Oni2.syntax Oni2.model Oni_Core_Test rely.lib))

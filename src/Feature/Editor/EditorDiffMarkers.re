@@ -12,9 +12,8 @@ and marker =
   | DeletedAfter
   | Unmodified;
 
-let generate = buffer =>
-  buffer
-  |> Buffer.getOriginalLines
+let generate = (~scm, buffer) =>
+  Feature_SCM.getOriginalLines(buffer, scm)
   |> Option.map(originalLines => {
        // `adds` is an array of bools the length of the current lines array where `true` indicates the line is added
        // `deletes` is an array of bools the length of the originall lines array where `true` indicates the line has been deleted
@@ -109,6 +108,7 @@ let renderMarker =
 
 let render =
     (
+      ~editor,
       ~scrollY,
       ~rowHeight,
       ~x,
@@ -125,17 +125,62 @@ let render =
     ~height,
     ~count,
     ~render=
-      (i, y) =>
-        if (markers[i] != Unmodified) {
+      (i, _y) => {
+        let bufferLine =
+          Editor.viewLineToBufferLine(i, editor)
+          |> EditorCoreTypes.LineNumber.toZeroBased;
+
+        let y = Editor.viewLineToPixelY(i, editor);
+        if (markers[bufferLine] != Unmodified) {
           renderMarker(
             ~x,
-            ~y,
+            ~y=y -. scrollY,
             ~rowHeight,
             ~width,
             ~canvasContext,
             ~colors,
-            markers[i],
+            markers[bufferLine],
           );
-        },
+        };
+      },
+    (),
+  );
+
+let renderMinimap =
+    (
+      ~editor,
+      ~scrollY,
+      ~rowHeight,
+      ~x,
+      ~height,
+      ~width,
+      ~count,
+      ~canvasContext,
+      ~colors,
+      markers,
+    ) =>
+  ImmediateList.render(
+    ~scrollY,
+    ~rowHeight,
+    ~height,
+    ~count,
+    ~render=
+      (i, y) => {
+        let bufferLine =
+          Editor.viewLineToBufferLine(i, editor)
+          |> EditorCoreTypes.LineNumber.toZeroBased;
+
+        if (markers[bufferLine] != Unmodified) {
+          renderMarker(
+            ~x,
+            ~y=y -. scrollY,
+            ~rowHeight,
+            ~width,
+            ~canvasContext,
+            ~colors,
+            markers[bufferLine],
+          );
+        };
+      },
     (),
   );

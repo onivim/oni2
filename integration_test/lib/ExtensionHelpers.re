@@ -7,7 +7,6 @@ module Log = (val Core.Log.withNamespace("IntegrationTest.ExtensionHelpers"));
 module Model = Oni_Model;
 
 module State = Model.State;
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 let waitForExtensionToActivate =
     (~extensionId, waitForState: Types.waitForState) => {
@@ -22,7 +21,10 @@ let waitForExtensionToActivate =
         ),
       ~timeout=30.0,
       (state: State.t) =>
-      List.exists(id => id == extensionId, state.extensions.activatedIds)
+      List.exists(
+        id => id == extensionId,
+        state.extensions |> Feature_Extensions.activatedIds,
+      )
     );
   ();
 };
@@ -36,13 +38,11 @@ let waitForNewCompletionProviders =
   waitForState(
     ~name=
       "Getting count of current suggest providers: " ++ originalDescription,
-    (State.{languageFeatures, _}) => {
-      let current = LanguageFeatures.getCompletionProviders(languageFeatures);
+    (State.{languageSupport, _}) => {
+      let current =
+        Feature_LanguageSupport.Completion.providerCount(languageSupport);
 
-      Log.info("Current suggest providers: ");
-      List.iter(id => Log.info("-- " ++ id), current);
-
-      existingCompletionCount := List.length(current);
+      existingCompletionCount := current;
       true;
     },
   );
@@ -52,13 +52,11 @@ let waitForNewCompletionProviders =
   waitForState(
     ~timeout=10.0,
     ~name="Waiting for new suggest providers: " ++ originalDescription,
-    (State.{languageFeatures, _}) => {
-      let current = LanguageFeatures.getCompletionProviders(languageFeatures);
+    (State.{languageSupport, _}) => {
+      let current =
+        Feature_LanguageSupport.Completion.providerCount(languageSupport);
 
-      Log.info("Current suggest providers: ");
-      List.iter(id => Log.info("-- " ++ id), current);
-
-      List.length(current) > existingCompletionCount^;
+      current > existingCompletionCount^;
     },
   );
 };

@@ -1,8 +1,6 @@
 open Oni_Core;
-open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
-open Feature_LanguageSupport;
 
 // This test validates:
 // - The 'oni-dev' extension gets activated
@@ -10,7 +8,7 @@ open Feature_LanguageSupport;
 runTestWithInput(
   ~name="LanguageCssTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.vimMode == Vim.Types.Normal
+    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
   );
 
   ExtensionHelpers.waitForExtensionToActivate(
@@ -31,12 +29,10 @@ runTestWithInput(
         (state: State.t) => {
           let fileType =
             Selectors.getActiveBuffer(state)
-            |> OptionEx.flatMap(Buffer.getFileType);
+            |> Option.map(Buffer.getFileType)
+            |> Option.map(Buffer.FileType.toString);
 
-          switch (fileType) {
-          | Some("css") => true
-          | _ => false
-          };
+          fileType == Some("css");
         },
       );
 
@@ -63,7 +59,8 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags =
+          Feature_Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) > 0;
       | _ => false
       };
@@ -75,7 +72,8 @@ runTestWithInput(
     ~timeout=30.0,
     ~name="Validate we also got some completions",
     (state: State.t) =>
-    Array.length(state.completions.filtered) > 0
+    state.languageSupport
+    |> Feature_LanguageSupport.Completion.availableCompletionCount > 0
   );
 
   // Finish input, clear diagnostics
@@ -92,7 +90,8 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags =
+          Feature_Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) == 0;
       | _ => false
       };

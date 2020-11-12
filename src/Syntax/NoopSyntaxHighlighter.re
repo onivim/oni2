@@ -10,7 +10,7 @@ type t = {
   lines: array(string),
   theme: TokenTheme.t,
   updatedLines: list(int),
-  tokenColors: IntMap.t(list(ColorizedToken.t)),
+  tokenColors: IntMap.t(list(ThemeToken.t)),
 };
 
 let hasPendingWork = _ => false;
@@ -24,39 +24,39 @@ let update = (~bufferUpdate: BufferUpdate.t, ~lines: array(string), v) => {
 
   let updatedLines = lines |> Array.to_list |> List.mapi((idx, _) => idx);
 
-  let tokenColors: IntMap.t(list(ColorizedToken.t)) =
+  let tokenColors: IntMap.t(list(ThemeToken.t)) =
     List.fold_left(
-      (acc: IntMap.t(list(ColorizedToken.t)), curr: int) => {
+      (acc: IntMap.t(list(ThemeToken.t)), curr: int) => {
         let tokens = [
-          ColorizedToken.create(
+          ThemeToken.create(
             ~index=0,
             ~backgroundColor=Colors.black,
             ~foregroundColor=Colors.red,
             ~syntaxScope=SyntaxScope.none,
             (),
           ),
-          ColorizedToken.create(
+          ThemeToken.create(
             ~index=2,
             ~backgroundColor=Colors.black,
             ~foregroundColor=Colors.green,
             ~syntaxScope=SyntaxScope.none,
             (),
           ),
-          ColorizedToken.create(
+          ThemeToken.create(
             ~index=3,
             ~backgroundColor=Colors.black,
             ~foregroundColor=TokenTheme.getEntityColor(v.theme),
             ~syntaxScope=SyntaxScope.none,
             (),
           ),
-          ColorizedToken.create(
+          ThemeToken.create(
             ~index=4,
             ~backgroundColor=Colors.black,
             ~foregroundColor=TokenTheme.getCommentColor(v.theme),
             ~syntaxScope=SyntaxScope.none,
             (),
           ),
-          ColorizedToken.create(
+          ThemeToken.create(
             ~index=5,
             ~backgroundColor=Colors.black,
             ~foregroundColor=TokenTheme.getKeywordColor(v.theme),

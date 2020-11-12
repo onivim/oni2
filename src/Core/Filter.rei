@@ -7,7 +7,12 @@
 type result('a) = {
   item: 'a,
   highlight: list((int, int)),
+  score: float,
 };
+
+let result: 'a => result('a);
+
+let map: ('a => 'b, result('a)) => result('b);
 
 let rank:
   (string, ('a, ~shouldLower: bool) => string, list('a)) => list(result('a));

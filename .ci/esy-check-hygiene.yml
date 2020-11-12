@@ -3,11 +3,15 @@
 steps:
   - task: NodeTool@0
     inputs:
-      versionSpec: '8.9'
-  - script: npm install -g esy@0.6.2
-    displayName: 'npm install -g esy@0.6.2'
+      versionSpec: "12.17.0"
+  - script: npm install -g esy@0.6.6
+    displayName: 'npm install -g esy@0.6.6'
   - script: npm install -g yarn
     displayName: 'npm install -g yarn'
+  - script: npm install -g prettier
+    displayName: 'npm install -g prettier'
+  - script: prettier --check **/*.js
+    displayName: 'prettier --check'
   - script: git diff --exit-code
     displayName: 'check that they are no .js.map/.ts files leftover in extensions. If this fails, run ./scripts/clean-extensions.sh and re-submit PR.'
   - script: esy install
@@ -36,9 +40,17 @@ steps:
     displayName: esy format
   - script: git diff --exit-code
     displayName: 'check that formatting is correct. If this fails, run `esy format` and re-submit PR.'
+  - script: esy lint
+    displayName: esy lint
   - script: yarn audit
     workingDirectory: node
     displayName: 'yarn audit: node'
   - script: yarn audit
     workingDirectory: extensions
     displayName: 'yarn audit: extensions'
+  - script: npm install
+    workingDirectory: docs/website
+    displayName: 'install website dependencies'
+  - script: npm run build
+    workingDirectory: docs/website
+    displayName: 'build website'

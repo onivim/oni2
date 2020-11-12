@@ -1,20 +1,26 @@
 /*
- * Buffer.rei
+ * BufferLine.rei
  *
  * In-memory text buffer representation
  */
+
+open EditorCoreTypes;
 
 exception OutOfBounds;
 
 type t;
 
-let empty: t;
+type measure = Uchar.t => float;
 
-let make: (~indentation: IndentationSettings.t, string) => t;
+let make: (~measure: measure, string) => t;
+
+let empty: (~measure: measure, unit) => t;
 
 let lengthInBytes: t => int;
 
 let raw: t => string;
+
+let measure: (t, Uchar.t) => float;
 
 /*
  * [lengthSlow(bufferLine)] returns the UTF-8 length of the buffer line.
@@ -29,21 +35,47 @@ let lengthSlow: t => int;
  *
  * This is faster than [lengthSlow] because it does not require traversing the entire string.
  */
-let lengthBounded: (~max: int, t) => int;
+let lengthBounded: (~max: CharacterIndex.t, t) => int;
 
 /*
  * [getIndex(~byte, str)] returns the character index at byte [byte]
  */
-let getIndex: (~byte: int, t) => int;
+let getIndex: (~byte: ByteIndex.t, t) => CharacterIndex.t;
 
-let getByte: (~index: int, t) => int;
+/*
+ * [getByteFromIndex(~index, str)] returns the byte index at character [index].
+ */
+let getByteFromIndex: (~index: CharacterIndex.t, t) => ByteIndex.t;
 
 /*
   * [getUcharExn(~index, str)] returns the [Uchar.t] at UTF-8 index [index].
   * Raises [OutOfBounds] if the index is not valid.
  */
-let getUcharExn: (~index: int, t) => Uchar.t;
+let getUcharExn: (~index: CharacterIndex.t, t) => Uchar.t;
 
-let subExn: (~index: int, ~length: int, t) => string;
+let subExn: (~index: CharacterIndex.t, ~length: int, t) => string;
 
-let getPositionAndWidth: (~index: int, t) => (int, int);
+let getPixelPositionAndWidth: (~index: CharacterIndex.t, t) => (float, float);
+
+let traverse:
+  (
+    ~maxDistance: int=?,
+    ~f: Uchar.t => bool,
+    ~direction: [ | `Backwards | `Forwards],
+    ~index: CharacterIndex.t,
+    t
+  ) =>
+  CharacterIndex.t;
+
+module Slow: {
+  /*
+   * [getIndexFromPixel(~position, str)] returns the character index at pixel position [position].
+   * The position of a character is dependent on indentation settings, multi-width characters, etc.
+   *
+   * _slow_ because requires traversal of the string, currently.
+   */
+  let getIndexFromPixel: (~pixel: float, t) => CharacterIndex.t;
+
+  let getByteFromPixel:
+    (~relativeToByte: ByteIndex.t=?, ~pixelX: float, t) => ByteIndex.t;
+};

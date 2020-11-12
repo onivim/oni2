@@ -54,6 +54,11 @@ module Schema = {
         encode: Json.Encode.nullable(codec.encode),
         decode: Json.Decode.maybe(codec.decode),
       };
+      let value = {
+        equal: Yojson.Safe.equal,
+        encode: Json.Encode.value,
+        decode: Json.Decode.value,
+      };
     };
   };
 
@@ -143,9 +148,10 @@ module Store = {
       };
     let maybeFilePath =
       storeFolderResult
-      |> Result.map(storeFolder => Filename.concat(storeFolder, hash))
+      |> Result.map(storeFolder => Fp.append(storeFolder, hash))
       |> ResultEx.flatMap(Filesystem.getOrCreateConfigFolder)
-      |> Result.map(folder => Filename.concat(folder, "store.json"))
+      |> Result.map(folder => Fp.append(folder, "store.json"))
+      |> Result.map(Fp.toString)
       |> Result.fold(
            ~ok=Option.some,
            ~error=message => {

@@ -10,22 +10,18 @@ module TextRun = {
     /*
      * Bytes refer to the byte position in the parent string
      */
-    startByte: int,
-    endByte: int,
+    startByte: ByteIndex.t,
+    endByte: ByteIndex.t,
     /*
-     * Indices refer to the UTF-8 position in the parent string
+     * Character indices refer to the UTF-8 position in the parent string
      */
-    startIndex: Index.t,
-    endIndex: Index.t,
+    startIndex: CharacterIndex.t,
+    endIndex: CharacterIndex.t,
     /*
-     * Positions refer to the 'visual' position of the string
-     *
-     * If there is a character, like `\t`, or characters
-     * with wcwidth > 1, then this would be different
-     * than startIndex / endIndex
+     * Pixel positions for the start / end of the token
      */
-    startPosition: Index.t,
-    endPosition: Index.t,
+    startPixel: float,
+    endPixel: float,
   };
 
   let create =
@@ -35,8 +31,8 @@ module TextRun = {
         ~endByte,
         ~startIndex,
         ~endIndex,
-        ~startPosition,
-        ~endPosition,
+        ~startPixel,
+        ~endPixel,
         (),
       ) => {
     text,
@@ -44,99 +40,116 @@ module TextRun = {
     endByte,
     startIndex,
     endIndex,
-    startPosition,
-    endPosition,
+    startPixel,
+    endPixel,
   };
 };
 
 type splitFunc =
   (
-    ~index0: int,
-    ~byte0: int,
+    ~index0: CharacterIndex.t,
+    ~byte0: ByteIndex.t,
     ~char0: Uchar.t,
-    ~index1: int,
-    ~byte1: int,
+    ~index1: CharacterIndex.t,
+    ~byte1: ByteIndex.t,
     ~char1: Uchar.t
   ) =>
   bool;
 
-//type splitFunc = (int, Uchar.t, int, Uchar.t) => bool;
+module Internal = {
+  let getNextBreak =
+      (bufferLine: BufferLine.t, start: int, max: int, f: splitFunc) => {
+    let pos = ref(start);
+    let found = ref(false);
 
-let _getNextBreak =
-    (bufferLine: BufferLine.t, start: int, max: int, f: splitFunc) => {
-  let pos = ref(start);
-  let found = ref(false);
+    while (pos^ < max - 1 && ! found^) {
+      let index0 = CharacterIndex.ofInt(pos^);
+      let index1 = CharacterIndex.ofInt(pos^ + 1);
+      let char0 = BufferLine.getUcharExn(~index=index0, bufferLine);
+      let char1 = BufferLine.getUcharExn(~index=index1, bufferLine);
+      let byte0 = BufferLine.getByteFromIndex(~index=index0, bufferLine);
+      let byte1 = BufferLine.getByteFromIndex(~index=index1, bufferLine);
 
-  while (pos^ < max - 1 && ! found^) {
-    let index0 = pos^;
-    let index1 = pos^ + 1;
-    let char0 = BufferLine.getUcharExn(~index=index0, bufferLine);
-    let char1 = BufferLine.getUcharExn(~index=index1, bufferLine);
-    let byte0 = BufferLine.getByte(~index=index0, bufferLine);
-    let byte1 = BufferLine.getByte(~index=index1, bufferLine);
+      if (f(~index0, ~index1, ~char0, ~char1, ~byte0, ~byte1)) {
+        found := true;
+      };
 
-    if (f(~index0, ~index1, ~char0, ~char1, ~byte0, ~byte1)) {
-      found := true;
+      if (! found^) {
+        incr(pos);
+      };
     };
 
-    if (! found^) {
-      incr(pos);
-    };
+    pos^;
   };
-
-  pos^;
 };
 
 let tokenize =
-    (~startIndex=0, ~endIndex, ~f: splitFunc, bufferLine: BufferLine.t) => {
-  let len = BufferLine.lengthBounded(~max=endIndex, bufferLine);
+    (
+      ~start=CharacterIndex.zero,
+      ~stop: CharacterIndex.t,
+      ~f: splitFunc,
+      bufferLine: BufferLine.t,
+    ) => {
+  let startIndex = CharacterIndex.toInt(start);
+  let endIndex = CharacterIndex.toInt(stop);
+  let len = BufferLine.lengthBounded(~max=stop, bufferLine);
 
   if (len == 0 || startIndex >= len) {
     [];
   } else {
     let maxIndex = endIndex < 0 || endIndex > len ? len : endIndex;
 
-    let (initialOffset, _) =
-      BufferLine.getPositionAndWidth(~index=startIndex, bufferLine);
-
     let idx = ref(startIndex);
     let tokens: ref(list(TextRun.t)) = ref([]);
 
-    let offset = ref(initialOffset);
-
+    let (initialPixel, _) =
+      BufferLine.getPixelPositionAndWidth(~index=start, bufferLine);
     while (idx^ < maxIndex) {
       let startToken = idx^;
-      let startOffset = offset^;
-      let endToken = _getNextBreak(bufferLine, startToken, maxIndex, f) + 1;
-
-      let (endOffset, _) =
-        BufferLine.getPositionAndWidth(~index=endToken, bufferLine);
+      let endToken =
+        Internal.getNextBreak(bufferLine, startToken, maxIndex, f) + 1;
 
       let text =
         BufferLine.subExn(
-          ~index=startToken,
+          ~index=CharacterIndex.ofInt(startToken),
           ~length=endToken - startToken,
           bufferLine,
         );
 
-      let startByte = BufferLine.getByte(~index=startToken, bufferLine);
-      let endByte = BufferLine.getByte(~index=endToken, bufferLine);
+      let startByte =
+        BufferLine.getByteFromIndex(
+          ~index=CharacterIndex.ofInt(startToken),
+          bufferLine,
+        );
+      let endByte =
+        BufferLine.getByteFromIndex(
+          ~index=CharacterIndex.ofInt(endToken),
+          bufferLine,
+        );
+
+      let startIndex = CharacterIndex.ofInt(startToken);
+      let endIndex = CharacterIndex.ofInt(endToken);
+
+      let (tokenPixelX, _) =
+        BufferLine.getPixelPositionAndWidth(~index=startIndex, bufferLine);
+
+      let (tokenEndPixelX, _) =
+        BufferLine.getPixelPositionAndWidth(~index=endIndex, bufferLine);
 
       let textRun =
         TextRun.create(
           ~text,
           ~startByte,
           ~endByte,
-          ~startIndex=Index.fromZeroBased(startToken),
-          ~endIndex=Index.fromZeroBased(endToken),
-          ~startPosition=Index.fromZeroBased(startOffset),
-          ~endPosition=Index.fromZeroBased(endOffset),
+          ~startIndex,
+          ~endIndex,
+          ~startPixel=tokenPixelX -. initialPixel,
+          ~endPixel=tokenEndPixelX -. initialPixel,
           (),
         );
 
       tokens := [textRun, ...tokens^];
       idx := endToken;
-      offset := endOffset;
     };
 
     tokens^ |> List.rev;

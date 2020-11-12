@@ -14,6 +14,7 @@ module Provider = {
     ripgrep: Ripgrep.t, // TODO: Necessary dependency?
     onUpdate: list(string) => unit, // TODO: Should return action
     onComplete: unit => action,
+    onError: string => action,
   };
 
   let jobs = Hashtbl.create(10);
@@ -21,7 +22,14 @@ module Provider = {
   let start =
       (
         ~id,
-        ~params as {filesExclude, directory, ripgrep, onUpdate, onComplete},
+        ~params as {
+          filesExclude,
+          directory,
+          ripgrep,
+          onUpdate,
+          onComplete,
+          onError,
+        },
         ~dispatch: _,
       ) => {
     Log.debug("Starting: " ++ id);
@@ -31,10 +39,12 @@ module Provider = {
         ~filesExclude,
         ~directory,
         ~onUpdate,
-        ~onComplete=() => {
-          Log.debug("Ripgrep completed.");
-          dispatch(onComplete());
-        },
+        ~onComplete=
+          () => {
+            Log.debug("Ripgrep completed.");
+            dispatch(onComplete());
+          },
+        ~onError=msg => dispatch(onError(msg)),
       );
 
     Hashtbl.add(jobs, id, dispose);
@@ -55,9 +65,17 @@ module Provider = {
 };
 
 let create =
-    (~id, ~filesExclude, ~directory, ~ripgrep, ~onUpdate, ~onComplete) =>
+    (
+      ~id,
+      ~filesExclude,
+      ~directory,
+      ~ripgrep,
+      ~onUpdate,
+      ~onComplete,
+      ~onError,
+    ) =>
   Subscription.create(
     id,
     (module Provider),
-    {filesExclude, directory, ripgrep, onUpdate, onComplete},
+    {filesExclude, directory, ripgrep, onUpdate, onComplete, onError},
   );

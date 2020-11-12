@@ -1,5 +1,3 @@
-open EditorCoreTypes;
-
 open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
@@ -14,7 +12,7 @@ runTest(
   ~name="SyntaxHighlightTreesitterTest",
   (dispatch, wait, _runEffects) => {
     wait(~name="Capture initial state", (state: State.t) =>
-      state.vimMode == Vim.Types.Normal
+      Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
     );
 
     wait(~name="Wait for syntax server", ~timeout=10.0, (state: State.t) => {
@@ -36,7 +34,7 @@ runTest(
            let tokens =
              Feature_Syntax.getTokens(
                ~bufferId,
-               ~line=Index.zero,
+               ~line=EditorCoreTypes.LineNumber.zero,
                state.syntaxHighlights,
              );
 

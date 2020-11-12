@@ -16,7 +16,7 @@ type message =
   | Message(ClientToServer.t)
   | Exception(string);
 
-let start = (~healthCheck) => {
+let start = (~parentPid, ~namedPipe, ~healthCheck) => {
   let transport = ref(None);
 
   let write = (msg: Protocol.ServerToClient.t) => {
@@ -34,9 +34,7 @@ let start = (~healthCheck) => {
       ),
     );
 
-  let parentPid = Unix.getenv("__ONI2_PARENT_PID__") |> int_of_string;
-  let namedPipe = Unix.getenv("__ONI2_NAMED_PIPE__");
-
+  let parentPid = int_of_string(parentPid);
   log("Starting up server. Parent PID is: " ++ string_of_int(parentPid));
 
   let state = ref(State.empty);
@@ -105,16 +103,16 @@ let start = (~healthCheck) => {
           let res = healthCheck();
           write(Protocol.ServerToClient.HealthCheckPass(res == 0));
         }
-      | BufferStartHighlighting({bufferId, filetype, lines, visibleRanges}) => {
+      | BufferStartHighlighting({bufferId, scope, lines, visibleRanges}) => {
           log(
             Printf.sprintf(
-              "Buffer enter - id: %d filetype: %s",
+              "Buffer enter - id: %d scope: %s",
               bufferId,
-              filetype,
+              scope,
             ),
           );
           updateAndRestartTimer(
-            State.bufferEnter(~bufferId, ~filetype, ~lines, ~visibleRanges),
+            State.bufferEnter(~bufferId, ~scope, ~lines, ~visibleRanges),
           );
         }
 
