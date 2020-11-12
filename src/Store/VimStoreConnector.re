@@ -253,7 +253,7 @@ let start =
         isClipboardRegister
         || operator == Vim.Yank.Yank
         && allYanks
-        || operator == Vim.Yank.Delete
+        || (operator == Vim.Yank.Delete || operator == Vim.Yank.Change)
         && allDeletes;
       if (shouldPropagateToClipboard) {
         let text =
