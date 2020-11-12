@@ -60,7 +60,7 @@ module Details = {
   [@deriving show]
   type t = {
     downloadUrl: string,
-    repositoryUrl: string,
+    repositoryUrl: option(string),
     homepageUrl: string,
     manifestUrl: string,
     iconUrl: option(string),
@@ -124,7 +124,7 @@ module Details = {
           manifestUrl: whatever(manifestUrl),
           iconUrl: whatever(iconUrl),
           readmeUrl: whatever(readmeUrl),
-          repositoryUrl: field.required("repository", string),
+          repositoryUrl: field.optional("repository", string),
           homepageUrl: whatever(homepageUrl),
           licenseName: field.optional("license", string),
           displayName: field.optional("displayName", string),

@@ -161,16 +161,21 @@ let getDefaultShell = () => {
         | Mac => Constants.defaultOSXShell
         | _ => Constants.defaultLinuxShell
         };
-      // We assume if the $SHELL environment variable is specified,
-      // that should be the default.
-      Internal.getShellFromEnvironment()
-      |> OptionEx.or_lazy(() => {
-           switch (Revery.Environment.os) {
-           | Mac => Internal.discoverOSXShell()
-           | Linux => Internal.discoverLinuxShell()
-           | _ => None
-           }
-         })
+
+      (
+        switch (Revery.Environment.os) {
+        | Mac =>
+          // On OSX, the 'SHELL' environment variable may not be accurate when starting from finder
+          // so try to resolve using the OSX-specific strategy
+          Internal.discoverOSXShell()
+          |> OptionEx.or_lazy(Internal.getShellFromEnvironment)
+        | Linux =>
+          Internal.getShellFromEnvironment()
+          |> OptionEx.or_lazy(Internal.discoverLinuxShell)
+        | Windows
+        | _ => None
+        }
+      )
       |> Option.value(~default);
     })
   )
