@@ -27,6 +27,7 @@ type t = {
   mode: Mode.t,
   tabSize: int,
   insertSpaces: bool,
+  functionGetChar: Functions.GetChar.t,
 };
 
 let current = () => {
@@ -48,4 +49,5 @@ let current = () => {
   tabSize: Options.getTabSize(),
   insertSpaces: Options.getInsertSpaces(),
   toggleComments: lines => lines,
+  functionGetChar: _ => char_of_int(0),
 };
