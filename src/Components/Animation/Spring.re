@@ -4,52 +4,95 @@ open Revery.UI;
 // MODEL
 
 type msg =
-| Tick;
+  | Tick(Revery.Time.t);
 
-module UniqueId = UniqueId.Make({});
+module UniqueId =
+  UniqueId.Make({});
 
 type t = {
-    options: Spring.Options.t,
-    spring: Spring.t,
-    target: float,
-    restThreshold: float,
-    uniqueId: string,
+  options: Spring.Options.t,
+  spring: Spring.t,
+  target: float,
+  restThreshold: float,
+  uniqueId: string,
+  startTime: option(Revery.Time.t),
+  tick: int,
 };
 
 let make = (~restThreshold=1.0, ~options=Spring.Options.default, position) => {
-    options,
-    target: position,
-    spring: Spring.create(position, Time.zero),
-    restThreshold,
-    uniqueId: "Service_Animation.spring" ++ string_of_int(UniqueId.getUniqueId()),
+  options,
+  target: position,
+  startTime: None,
+  spring: Spring.create(position, Time.now()),
+  restThreshold,
+  uniqueId:
+    "Service_Animation.spring" ++ string_of_int(UniqueId.getUniqueId()),
+  tick: 0,
 };
 
 // UPDATE
 
-let update = (~time, msg, model) => {
-    switch (msg) {
-    | Tick =>
-        let spring = Spring.tick(model.target, model.spring, model.options, time);
-        {...model, spring}
-    }
-}
-
-let get = ({spring, _}) => Spring.(spring.value);
-
-let set = (~position: float, model) => {
-    ({...model, target: position})
+let update = (msg, model) => {
+  switch (msg) {
+  | Tick(time) =>
+    let (timeSinceStart, startTime) =
+      switch (model.startTime) {
+      | None => (Revery.Time.zero, time)
+      | Some(start) => (Revery.Time.(time - start), start)
+      };
+    let spring =
+      Spring.tick(model.target, model.spring, model.options, timeSinceStart);
+    {...model, startTime: Some(startTime), spring, tick: model.tick + 1};
+  };
 };
 
-let isActive = ({spring, restThreshold, _}) => {
-    !Spring.isAtRest(~restThreshold, spring)
+let isActive = ({spring, restThreshold, target, _}) => {
+  Float.abs(spring.value -. target) > restThreshold;
+};
+
+let get = ({spring, target, _} as model) =>
+  if (isActive(model)) {
+    Spring.(spring.value);
+  } else {
+    target;
+  };
+
+let getTarget = ({target, _}) => target;
+
+let set = (~instant: bool, ~position: float, model) => {
+  // prerr_endline(
+  //     Printf.sprintf("Setting - instant: %b position: %f", instant, position)
+  // );
+  switch (model.startTime) {
+  | None => {
+      ...model,
+      target: position,
+      spring: Spring.create(position, Revery.Time.now()),
+    }
+  | Some(_) when instant => {
+      ...model,
+      target: position,
+      spring: Spring.create(position, Revery.Time.now()),
+    }
+
+  | Some(time) => {
+      ...model,
+      target: position,
+      spring: Spring.tick(model.target, model.spring, model.options, time),
+    }
+  };
 };
 
 // SUB
-let sub = (model) => {
-    if (isActive(model)) {
-        Service_Time.Sub.once(~uniqueId=model.uniqueId, ~delay=Revery.Time.zero, ~msg=Tick);
-    } else {
-        Isolinear.Sub.none
-    }
-};
-
+let sub = model =>
+  if (isActive(model) || model.startTime == None) {
+    Service_Time.Sub.once(
+      ~uniqueId=model.uniqueId ++ "." ++ string_of_int(model.tick),
+      ~delay=Revery.Time.zero,
+      ~msg=(~current) =>
+      Tick(current)
+    );
+  } else {
+    //prerr_endline ("--spring - not active!");
+    Isolinear.Sub.none;
+  };
