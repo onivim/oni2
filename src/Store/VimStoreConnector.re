@@ -890,6 +890,7 @@ let start =
         workspace: {
           workingDirectory,
           rootName: Filename.basename(workingDirectory),
+          openedFolder: Some(workingDirectory),
         },
       };
       (newState, Isolinear.Effect.none);

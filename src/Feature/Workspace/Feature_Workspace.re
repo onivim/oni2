@@ -8,12 +8,14 @@
  * - Per-workspace configuration
  */
 
-type t = {
+type model = {
   workingDirectory: string,
+  openedFolder: option(string),
   rootName: string,
 };
 
 let initial = workingDirectory => {
   workingDirectory,
+  openedFolder: None,
   rootName: Filename.basename(workingDirectory),
 };

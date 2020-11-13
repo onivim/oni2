@@ -25,5 +25,4 @@ module ModeManager = ModeManager;
 module Selectors = Selectors;
 module State = State;
 module Sub = Sub;
-module Workspace = Workspace;
 module VimContext = VimContext;

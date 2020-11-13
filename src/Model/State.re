@@ -460,7 +460,7 @@ type t = {
   signatureHelp: Feature_SignatureHelp.model,
   windowIsFocused: bool,
   windowDisplayMode,
-  workspace: Workspace.t,
+  workspace: Feature_Workspace.model,
   zenMode: bool,
   // State of the bottom pane
   pane: Feature_Pane.model,
@@ -568,7 +568,7 @@ let initial =
     layout: Feature_Layout.initial([initialEditor]),
     windowIsFocused: true,
     windowDisplayMode: Windowed,
-    workspace: Workspace.initial(workingDirectory),
+    workspace: Feature_Workspace.initial(workingDirectory),
     fileExplorer: Feature_Explorer.initial(~rootPath=workingDirectory),
     signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
