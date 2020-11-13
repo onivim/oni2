@@ -73,26 +73,29 @@ switch (eff) {
     Core.ShellUtility.fixOSXPath();
   };
 
-  let initWorkingDirectory = () => {
-    let path =
+  let initWorkspace = () => {
+    let maybePath =
       switch (Oni_CLI.(cliOptions.folder)) {
-      | Some(folder) => folder
-      | None =>
-        switch (Store.Persistence.Global.workspace()) {
-        | Some(path) => path
-        | None =>
-          Dir.User.document()
-          |> Option.value(~default=Dir.home())
-          |> Fp.toString
-        }
+      | Some(folder) => Some(folder)
+      | None => Store.Persistence.Global.workspace()
+      // switch (Store.Persistence.Global.workspace()) {
+      // | Some(path) => path
+      // | None => None
+      // Dir.User.document()
+      // |> Option.value(~default=Dir.home())
+      // |> Fp.toString
+      // }
       };
 
-    Log.info("Startup: Changing folder to: " ++ path);
-    try(Sys.chdir(path)) {
-    | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
-    };
+    maybePath
+    |> Option.iter(path => {
+         Log.info("Startup: Changing folder to: " ++ path);
+         try(Sys.chdir(path)) {
+         | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
+         };
+       });
 
-    path;
+    maybePath;
   };
 
   // Fix for https://github.com/onivim/oni2/issues/2229
@@ -107,23 +110,31 @@ switch (eff) {
     | `Centered => "Centered"
   );
 
-  let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
+  let createWindow = (~forceScaleFactor, ~maybeWorkspace, app) => {
     let (x, y, width, height, maximized) = {
-      open Store.Persistence.Workspace;
-      let store = storeFor(workingDirectory);
-
-      (
-        windowX(store)
-        |> OptionEx.tap(x => Log.infof(m => m("Unsanitized x value: %d", x)))
-        |> OptionEx.filter(isValidPosition)
-        |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
-        windowY(store)
-        |> OptionEx.tap(y => Log.infof(m => m("Unsanitized x value: %d", y)))
-        |> OptionEx.filter(isValidPosition)
-        |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
-        windowWidth(store),
-        windowHeight(store),
-        windowMaximized(store),
+      Store.Persistence.Workspace.(
+        maybeWorkspace
+        |> Option.map(workspace => {
+             let store = storeFor(workspace);
+             (
+               windowX(store)
+               |> OptionEx.tap(x =>
+                    Log.infof(m => m("Unsanitized x value: %d", x))
+                  )
+               |> OptionEx.filter(isValidPosition)
+               |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
+               windowY(store)
+               |> OptionEx.tap(y =>
+                    Log.infof(m => m("Unsanitized x value: %d", y))
+                  )
+               |> OptionEx.filter(isValidPosition)
+               |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
+               windowWidth(store),
+               windowHeight(store),
+               windowMaximized(store),
+             );
+           })
+        |> Option.value(~default=(`Centered, `Centered, 800, 600, false))
       );
     };
 
@@ -193,11 +204,14 @@ switch (eff) {
     Vim.init();
     Oni2_Sparkle.init();
 
-    let initialWorkingDirectory = initWorkingDirectory();
+    let maybeWorkspace = initWorkspace();
+    let workingDirectory =
+      maybeWorkspace |> Option.value(~default=Sys.getcwd());
+
     let window =
       createWindow(
         ~forceScaleFactor=cliOptions.forceScaleFactor,
-        ~workingDirectory=initialWorkingDirectory,
+        ~maybeWorkspace,
         app,
       );
 
@@ -234,7 +248,7 @@ switch (eff) {
     let licenseKeyPersistence = Store.Persistence.Global.licenseKey();
 
     let initialWorkspaceStore =
-      Store.Persistence.Workspace.storeFor(initialWorkingDirectory);
+      Store.Persistence.Workspace.storeFor(workingDirectory);
     let extensionWorkspacePersistence =
       Store.Persistence.Workspace.extensionValues(initialWorkspaceStore);
 
@@ -248,7 +262,8 @@ switch (eff) {
           ~extensionGlobalPersistence,
           ~extensionWorkspacePersistence,
           ~contributedCommands=[], // TODO
-          ~workingDirectory=initialWorkingDirectory,
+          ~workingDirectory,
+          ~maybeWorkspace,
           // TODO: Use `Fp.t` all the way down
           ~extensionsFolder=cliOptions.overriddenExtensionsDir,
           ~licenseKeyPersistence,

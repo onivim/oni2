@@ -483,6 +483,7 @@ let initial =
       ~getUserSettings,
       ~contributedCommands,
       ~workingDirectory,
+      ~maybeWorkspace,
       ~extensionsFolder,
       ~licenseKeyPersistence,
     ) => {
@@ -569,7 +570,7 @@ let initial =
     windowIsFocused: true,
     windowDisplayMode: Windowed,
     workspace: Feature_Workspace.initial(workingDirectory),
-    fileExplorer: Feature_Explorer.initial(~rootPath=None),
+    fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),
     signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
     pane: Feature_Pane.initial,
