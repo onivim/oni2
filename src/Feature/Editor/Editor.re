@@ -103,6 +103,7 @@ type t = {
   scrollX: [@opaque] Component_Animation.Spring.t,
   scrollY: [@opaque] Component_Animation.Spring.t,
   inlineElements: InlineElements.t,
+  isScrollAnimated: bool,
   isMinimapEnabled: bool,
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
@@ -404,7 +405,11 @@ let configure = (~config, editor) => {
 
   let scrolloff = EditorConfiguration.scrolloff.get(config);
 
-  editor
+  let isScrollAnimated =
+    Feature_Configuration.GlobalConfiguration.animation.get(config)
+    && EditorConfiguration.smoothScroll.get(config);
+
+  {...editor, isScrollAnimated}
   |> setVerticalScrollMargin(~lines=scrolloff)
   |> setMinimap(
        ~enabled=EditorConfiguration.Minimap.enabled.get(config),
@@ -427,12 +432,17 @@ let create = (~config, ~buffer, ()) => {
 
   let wrapState = WrapState.make(~pixelWidth=1000., ~wrapMode, ~buffer);
 
+  let isScrollAnimated =
+    Feature_Configuration.GlobalConfiguration.animation.get(config)
+    && EditorConfiguration.smoothScroll.get(config);
+
   {
     editorId: id,
     key,
     lineHeight: LineHeight.default,
     lineNumbers: `On,
     isMinimapEnabled: true,
+    isScrollAnimated,
     buffer,
     scrollX: Spring.make(~restThreshold=1., ~options=scrollSpringOptions, 0.),
     scrollY: Spring.make(~restThreshold=1., ~options=scrollSpringOptions, 0.),
@@ -931,17 +941,18 @@ let exposePrimaryCursor = editor =>
           0.,
         );
 
+      let animated = editor.isScrollAnimated;
       {
         ...editor,
         scrollX:
           Spring.set(
-            ~instant=false,
+            ~instant=!animated,
             ~position=adjustedScrollX,
             editor.scrollX,
           ),
         scrollY:
           Spring.set(
-            ~instant=false,
+            ~instant=!animated,
             ~position=adjustedScrollY,
             editor.scrollY,
           ),
@@ -1001,6 +1012,7 @@ let getContentPixelWidth = editor => {
 };
 
 let scrollToPixelY = (~animated, ~pixelY as newScrollY, editor) => {
+  let animated = editor.isScrollAnimated && animated;
   let {pixelHeight, _} = editor;
   let viewLines = editor |> totalViewLines;
   let newScrollY = max(0., newScrollY);
@@ -1036,6 +1048,7 @@ let scrollToLine = (~line, view) => {
 };
 
 let scrollToPixelX = (~animated, ~pixelX as newScrollX, editor) => {
+  let animated = editor.isScrollAnimated && animated;
   let maxLineLength = editor |> maxLineLength;
   let newScrollX = max(0., newScrollX);
 

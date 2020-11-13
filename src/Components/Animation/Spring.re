@@ -60,9 +60,6 @@ let get = ({spring, target, _} as model) =>
 let getTarget = ({target, _}) => target;
 
 let set = (~instant: bool, ~position: float, model) => {
-  // prerr_endline(
-  //     Printf.sprintf("Setting - instant: %b position: %f", instant, position)
-  // );
   switch (model.startTime) {
   | None => {
       ...model,
@@ -93,6 +90,5 @@ let sub = model =>
       Tick(current)
     );
   } else {
-    //prerr_endline ("--spring - not active!");
     Isolinear.Sub.none;
   };
