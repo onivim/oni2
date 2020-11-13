@@ -390,19 +390,37 @@ let update =
 
     let state = {...state, languageSupport};
 
+    let exthostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t = (
+      exthostEdit => {
+        let range = exthostEdit.range |> Exthost.OneBasedRange.toRange;
+
+        let text =
+          exthostEdit.text
+          |> Option.map(str => {
+               str |> String.split_on_char('\n') |> Array.of_list
+             })
+          |> Option.value(~default=[||]);
+
+        Vim.Edit.{range, text};
+      }
+    );
+
     Feature_LanguageSupport.(
       switch (outmsg) {
       | Nothing => (state, Isolinear.Effect.none)
-      | ApplyCompletion({insertText, meetColumn}) => (
+      | ApplyCompletion({insertText, meetColumn, additionalEdits}) =>
+        let additionalEdits =
+          additionalEdits |> List.map(exthostEditToVimEdit);
+        (
           state,
           Service_Vim.Effects.applyCompletion(
-            ~meetColumn, ~insertText, ~toMsg=mode =>
+            ~additionalEdits, ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
               msg: ModeChanged({mode, effects: []}),
             })
           ),
-        )
+        );
       | ReferencesAvailable =>
         let references =
           Feature_LanguageSupport.References.get(languageSupport);
@@ -415,13 +433,15 @@ let update =
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
-      | InsertSnippet({meetColumn, snippet}) =>
+      | InsertSnippet({meetColumn, snippet, additionalEdits}) =>
         // TODO: Full snippet integration!
+        let additionalEdits =
+          additionalEdits |> List.map(exthostEditToVimEdit);
         let insertText = Feature_Snippets.snippetToInsert(~snippet);
         (
           state,
           Service_Vim.Effects.applyCompletion(
-            ~meetColumn, ~insertText, ~toMsg=mode =>
+            ~additionalEdits, ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
               msg: ModeChanged({mode, effects: []}),

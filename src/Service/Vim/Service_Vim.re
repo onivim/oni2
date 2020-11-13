@@ -88,7 +88,7 @@ module Effects = {
       result |> toMsg |> dispatch;
     });
   };
-  let applyCompletion = (~meetColumn, ~insertText, ~toMsg) =>
+  let applyCompletion = (~meetColumn, ~insertText, ~toMsg, ~additionalEdits) =>
     Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
       let cursor = Vim.Cursor.get();
       // TODO: Does this logic correctly handle unicode characters?
@@ -100,14 +100,17 @@ module Effects = {
         VimEx.inputString(insertText);
 
       let buffer = Vim.Buffer.getCurrent();
-      let edit = Vim.Edit.{
-        range: CharacterRange.{
-          start: CharacterPosition.zero,
-          stop: CharacterPosition.zero,
-        },
-        text: [|"Hi!", ""|],
+      // let edit = Vim.Edit.{
+      //   range: CharacterRange.{
+      //     start: CharacterPosition.zero,
+      //     stop: CharacterPosition.zero,
+      //   },
+      //   text: [|"Hi!", ""|],
+      // };
+      if (additionalEdits != []) {
+        let _ = Vim.Buffer.applyEdits(~edits=additionalEdits, buffer);
+        ();
       };
-      let _ = Vim.Buffer.applyEdits(~edits=[edit], buffer);
 
       dispatch(toMsg(mode));
     });

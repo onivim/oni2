@@ -758,10 +758,12 @@ let update =
             ? Outmsg.InsertSnippet({
                 meetColumn,
                 snippet: result.item.insertText,
+                additionalEdits: result.item.additionalTextEdits,
               })
             : Outmsg.ApplyCompletion({
                 meetColumn,
                 insertText: result.item.insertText,
+                additionalEdits: result.item.additionalTextEdits,
               });
 
         (

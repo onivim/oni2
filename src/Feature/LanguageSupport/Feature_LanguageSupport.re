@@ -44,10 +44,12 @@ type outmsg =
   | ApplyCompletion({
       meetColumn: CharacterIndex.t,
       insertText: string,
+      additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | InsertSnippet({
       meetColumn: CharacterIndex.t,
       snippet: string,
+      additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | OpenFile({
       filePath: string,
@@ -65,10 +67,10 @@ type outmsg =
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
     fun
-    | Outmsg.ApplyCompletion({meetColumn, insertText}) =>
-      ApplyCompletion({meetColumn, insertText})
-    | Outmsg.InsertSnippet({meetColumn, snippet}) =>
-      InsertSnippet({meetColumn, snippet})
+    | Outmsg.ApplyCompletion({meetColumn, insertText, additionalEdits}) =>
+      ApplyCompletion({meetColumn, insertText, additionalEdits})
+    | Outmsg.InsertSnippet({meetColumn, snippet, additionalEdits}) =>
+      InsertSnippet({meetColumn, snippet, additionalEdits})
     | Outmsg.Nothing => Nothing
     | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
     | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)
