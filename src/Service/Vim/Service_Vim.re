@@ -99,6 +99,16 @@ module Effects = {
       let ({mode, _}: Vim.Context.t, _effects) =
         VimEx.inputString(insertText);
 
+      let buffer = Vim.Buffer.getCurrent();
+      let edit = Vim.Edit.{
+        range: CharacterRange.{
+          start: CharacterPosition.zero,
+          stop: CharacterPosition.zero,
+        },
+        text: [|"Hi!", ""|],
+      };
+      let _ = Vim.Buffer.applyEdits(~edits=[edit], buffer);
+
       dispatch(toMsg(mode));
     });
 
