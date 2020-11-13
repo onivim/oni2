@@ -138,16 +138,16 @@ let selectionOrCursorRange: t => ByteRange.t;
 
 let totalViewLines: t => int;
 
-let isScrollAnimated: t => bool;
-let scrollToPixelX: (~pixelX: float, t) => t;
-let scrollDeltaPixelX: (~pixelX: float, t) => t;
+let scrollToPixelX: (~animated: bool, ~pixelX: float, t) => t;
+let scrollDeltaPixelX: (~animated: bool, ~pixelX: float, t) => t;
 
 let scrollToLine: (~line: int, t) => t;
-let scrollToPixelY: (~pixelY: float, t) => t;
-let scrollDeltaPixelY: (~pixelY: float, t) => t;
+let scrollToPixelY: (~animated: bool, ~pixelY: float, t) => t;
+let scrollDeltaPixelY: (~animated: bool, ~pixelY: float, t) => t;
 
-let scrollToPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
-let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
+let scrollToPixelXY: (~animated: bool, ~pixelX: float, ~pixelY: float, t) => t;
+let scrollDeltaPixelXY:
+  (~animated: bool, ~pixelX: float, ~pixelY: float, t) => t;
 
 let scrollCenterCursorVertically: t => t;
 let scrollCursorTop: t => t;
@@ -234,3 +234,10 @@ module Slow: {
     // the end of the line.
     (~allowPast: bool=?, ~pixelX: float, ~pixelY: float, t) => BytePosition.t;
 };
+
+[@deriving show]
+type msg;
+
+let update: (msg, t) => t;
+
+let sub: t => Isolinear.Sub.t(msg);
