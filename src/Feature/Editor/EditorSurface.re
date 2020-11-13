@@ -248,30 +248,30 @@ let%component make =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
       ? EditorDiffMarkers.generate(~scm, buffer) : None;
 
-  let smoothScroll = Config.smoothScroll.get(config);
-  let isScrollAnimated = Editor.isScrollAnimated(editor);
+  // let smoothScroll = Config.smoothScroll.get(config);
+  // let isScrollAnimated = Editor.isScrollAnimated(editor);
 
-  let%hook (scrollY, _setScrollYImmediately) =
-    Hooks.spring(
-      ~name="Editor ScrollY Spring",
-      ~target=Editor.scrollY(editor),
-      ~restThreshold=10.,
-      ~enabled=smoothScroll && isScrollAnimated,
-      scrollSpringOptions,
-    );
-  let%hook (scrollX, _setScrollXImmediately) =
-    Hooks.spring(
-      ~name="Editor ScrollX Spring",
-      ~target=Editor.scrollX(editor),
-      ~restThreshold=10.,
-      ~enabled=smoothScroll && isScrollAnimated,
-      scrollSpringOptions,
-    );
+  // let%hook (scrollY, _setScrollYImmediately) =
+  //   Hooks.spring(
+  //     ~name="Editor ScrollY Spring",
+  //     ~target=Editor.scrollY(editor),
+  //     ~restThreshold=10.,
+  //     ~enabled=smoothScroll && isScrollAnimated,
+  //     scrollSpringOptions,
+  //   );
+  // let%hook (scrollX, _setScrollXImmediately) =
+  //   Hooks.spring(
+  //     ~name="Editor ScrollX Spring",
+  //     ~target=Editor.scrollX(editor),
+  //     ~restThreshold=10.,
+  //     ~enabled=smoothScroll && isScrollAnimated,
+  //     scrollSpringOptions,
+  //   );
 
-  let editor =
-    editor
-    |> Editor.scrollToPixelX(~pixelX=scrollX)
-    |> Editor.scrollToPixelY(~pixelY=scrollY);
+  // let editor =
+  //   editor
+  //   |> Editor.scrollToPixelX(~pixelX=scrollX)
+  //   |> Editor.scrollToPixelY(~pixelY=scrollY);
 
   let pixelHeight = Editor.getTotalHeightInPixels(editor);
 
