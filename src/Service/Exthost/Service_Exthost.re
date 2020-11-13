@@ -640,8 +640,8 @@ module Sub = {
             params.client,
           );
 
-        Lwt.on_success(promise, documentHighlights =>
-          dispatch(documentHighlights)
+        Lwt.on_success(promise, maybeDocumentHighlights =>
+          maybeDocumentHighlights |> Option.value(~default=[]) |> dispatch
         );
 
         Lwt.on_failure(promise, _ => dispatch([]));
