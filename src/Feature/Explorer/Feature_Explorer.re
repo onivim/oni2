@@ -47,7 +47,7 @@ module ExpandedState = {
 type model = {
   focus,
   isFileExplorerExpanded: ExpandedState.t,
-  fileExplorer: Component_FileExplorer.model,
+  fileExplorer: option(Component_FileExplorer.model),
   isSymbolOutlineExpanded: ExpandedState.t,
   symbolOutline:
     Component_VimTree.model(
@@ -79,7 +79,7 @@ let initial = (~rootPath) => {
   focus: FileExplorer,
   isFileExplorerExpanded: ExpandedState.ImplicitlyOpened,
   isSymbolOutlineExpanded: ExpandedState.ImplicitlyClosed,
-  fileExplorer: Component_FileExplorer.initial(~rootPath),
+  fileExplorer: Some(Component_FileExplorer.initial(~rootPath)),
   symbolOutline: Component_VimTree.create(~rowHeight=20),
   vimWindowNavigation: Component_VimWindows.initial,
 };
@@ -91,9 +91,9 @@ let focusOutline = model => {
     ExpandedState.implicitlyOpen(model.isSymbolOutlineExpanded),
 };
 
-let setRoot = (~rootPath, {fileExplorer, _} as model) => {
+let setRoot = (~rootPath, model) => {
   ...model,
-  fileExplorer: Component_FileExplorer.setRoot(~rootPath, fileExplorer),
+  fileExplorer: Some(Component_FileExplorer.initial(~rootPath)),
 };
 
 type outmsg =
@@ -112,7 +112,10 @@ let update = (~configuration, msg, model) => {
         ? {
           ...model,
           fileExplorer:
-            Component_FileExplorer.keyPress(key, model.fileExplorer),
+            model.fileExplorer
+            |> Option.map(explorer =>
+                 Component_FileExplorer.keyPress(key, explorer)
+               ),
         }
         : {
           ...model,
@@ -121,23 +124,27 @@ let update = (~configuration, msg, model) => {
     (model, Nothing);
 
   | FileExplorer(fileExplorerMsg) =>
-    let (fileExplorer, outmsg) =
-      Component_FileExplorer.update(
-        ~configuration,
-        fileExplorerMsg,
-        model.fileExplorer,
-      );
+    model.fileExplorer
+    |> Option.map(fileExplorer => {
+         let (fileExplorer, outmsg) =
+           Component_FileExplorer.update(
+             ~configuration,
+             fileExplorerMsg,
+             fileExplorer,
+           );
 
-    let outmsg' =
-      switch (outmsg) {
-      | Component_FileExplorer.Nothing => Nothing
-      | Component_FileExplorer.Effect(eff) =>
-        Effect(eff |> Isolinear.Effect.map(msg => FileExplorer(msg)))
-      | Component_FileExplorer.OpenFile(path) => OpenFile(path)
-      | GrabFocus => GrabFocus
-      };
+         let outmsg' =
+           switch (outmsg) {
+           | Component_FileExplorer.Nothing => Nothing
+           | Component_FileExplorer.Effect(eff) =>
+             Effect(eff |> Isolinear.Effect.map(msg => FileExplorer(msg)))
+           | Component_FileExplorer.OpenFile(path) => OpenFile(path)
+           | GrabFocus => GrabFocus
+           };
 
-    ({...model, fileExplorer}, outmsg');
+         ({...model, fileExplorer: Some(fileExplorer)}, outmsg');
+       })
+    |> Option.value(~default=(model, Nothing))
 
   | SymbolsChanged(maybeSymbols) =>
     let symbols = maybeSymbols |> Option.value(~default=[]);
@@ -331,19 +338,26 @@ module View = {
         />
       </View>;
 
+    let explorerComponent =
+      switch (model.fileExplorer) {
+      | None => <Text text="None!" />
+      | Some(explorer) =>
+        <Component_FileExplorer.View
+          isFocused={isFocused && model.focus == FileExplorer}
+          expanded={ExpandedState.isOpen(model.isFileExplorerExpanded)}
+          iconTheme
+          languageInfo
+          decorations
+          model=explorer
+          theme
+          font
+          onRootClicked={() => dispatch(FileExplorerAccordionClicked)}
+          dispatch={msg => dispatch(FileExplorer(msg))}
+        />
+      };
+
     <View style=Style.[flexDirection(`Column), flexGrow(1)]>
-      <Component_FileExplorer.View
-        isFocused={isFocused && model.focus == FileExplorer}
-        expanded={ExpandedState.isOpen(model.isFileExplorerExpanded)}
-        iconTheme
-        languageInfo
-        decorations
-        model={model.fileExplorer}
-        theme
-        font
-        onRootClicked={() => dispatch(FileExplorerAccordionClicked)}
-        dispatch={msg => dispatch(FileExplorer(msg))}
-      />
+      explorerComponent
       <Component_Accordion.VimTree
         showCount=false
         title="Outline"
@@ -362,8 +376,12 @@ module View = {
 };
 
 let sub = (~configuration, model) => {
-  Component_FileExplorer.sub(~configuration, model.fileExplorer)
-  |> Isolinear.Sub.map(msg => FileExplorer(msg));
+  model.fileExplorer
+  |> Option.map(explorer => {
+       Component_FileExplorer.sub(~configuration, explorer)
+       |> Isolinear.Sub.map(msg => FileExplorer(msg))
+     })
+  |> Option.value(~default=Isolinear.Sub.none);
 };
 
 module Contributions = {
@@ -400,10 +418,14 @@ module Contributions = {
 
     let fileExplorerKeys =
       isFocused && model.focus == FileExplorer
-        ? Component_FileExplorer.Contributions.contextKeys(
-            ~isFocused,
-            model.fileExplorer,
-          )
+        ? model.fileExplorer
+          |> Option.map(explorer =>
+               Component_FileExplorer.Contributions.contextKeys(
+                 ~isFocused,
+                 explorer,
+               )
+             )
+          |> Option.value(~default=empty)
         : empty;
 
     let symbolOutlineKeys =
