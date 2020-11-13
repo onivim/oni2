@@ -12,9 +12,9 @@ module Msg: {
 
 type model;
 
-let initial: (~rootPath: string) => model;
+let initial: (~rootPath: option(string)) => model;
 
-let setRoot: (~rootPath: string, model) => model;
+let setRoot: (~rootPath: option(string), model) => model;
 
 let focusOutline: model => model;
 

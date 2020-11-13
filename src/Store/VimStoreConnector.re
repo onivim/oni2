@@ -884,7 +884,7 @@ let start =
         ...state,
         fileExplorer:
           Feature_Explorer.setRoot(
-            ~rootPath=workingDirectory,
+            ~rootPath=Some(workingDirectory),
             state.fileExplorer,
           ),
         workspace: {

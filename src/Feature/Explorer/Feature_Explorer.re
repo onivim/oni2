@@ -79,7 +79,7 @@ let initial = (~rootPath) => {
   focus: FileExplorer,
   isFileExplorerExpanded: ExpandedState.ImplicitlyOpened,
   isSymbolOutlineExpanded: ExpandedState.ImplicitlyClosed,
-  fileExplorer: Some(Component_FileExplorer.initial(~rootPath)),
+  fileExplorer: rootPath |> Option.map(rootPath => Component_FileExplorer.initial(~rootPath)),
   symbolOutline: Component_VimTree.create(~rowHeight=20),
   vimWindowNavigation: Component_VimWindows.initial,
 };
@@ -93,7 +93,7 @@ let focusOutline = model => {
 
 let setRoot = (~rootPath, model) => {
   ...model,
-  fileExplorer: Some(Component_FileExplorer.initial(~rootPath)),
+  fileExplorer: rootPath |> Option.map(rootPath => Component_FileExplorer.initial(~rootPath)),
 };
 
 type outmsg =

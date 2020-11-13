@@ -569,7 +569,7 @@ let initial =
     windowIsFocused: true,
     windowDisplayMode: Windowed,
     workspace: Feature_Workspace.initial(workingDirectory),
-    fileExplorer: Feature_Explorer.initial(~rootPath=workingDirectory),
+    fileExplorer: Feature_Explorer.initial(~rootPath=None),
     signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
     pane: Feature_Pane.initial,
