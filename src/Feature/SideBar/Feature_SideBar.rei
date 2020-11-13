@@ -55,7 +55,8 @@ let location: model => location;
 let isVisible: (pane, model) => bool;
 let toggle: (pane, model) => model;
 
-let configurationChanged: (~config: Oni_Core.Config.resolver, model) => model;
+let configurationChanged:
+  (~hasWorkspace: bool, ~config: Oni_Core.Config.resolver, model) => model;
 
 module Contributions: {
   let commands: list(Command.t(msg));

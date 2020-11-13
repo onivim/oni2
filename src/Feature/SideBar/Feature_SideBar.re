@@ -351,9 +351,12 @@ module Configuration = {
     );
 };
 
-let configurationChanged = (~config, model) => {
+let configurationChanged = (~hasWorkspace, ~config, model) => {
   let model' = setDefaultLocation(model, Configuration.location.get(config));
-  setDefaultVisibility(model', Configuration.visible.get(config));
+  setDefaultVisibility(
+    model',
+    hasWorkspace && Configuration.visible.get(config),
+  );
 };
 
 module Contributions = {

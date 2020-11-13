@@ -136,9 +136,13 @@ module Internal = {
   let updateConfiguration: State.t => State.t =
     state => {
       let resolver = Selectors.configResolver(state);
+      let maybeRoot = Feature_Explorer.root(state.fileExplorer);
       let sideBar =
         state.sideBar
-        |> Feature_SideBar.configurationChanged(~config=resolver);
+        |> Feature_SideBar.configurationChanged(
+             ~hasWorkspace=maybeRoot != None,
+             ~config=resolver,
+           );
 
       let perFileTypeConfig =
         Feature_Configuration.resolver(state.config, state.vim);

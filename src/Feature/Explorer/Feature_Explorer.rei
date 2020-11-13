@@ -16,6 +16,8 @@ let initial: (~rootPath: option(string)) => model;
 
 let setRoot: (~rootPath: option(string), model) => model;
 
+let root: model => option(string);
+
 let focusOutline: model => model;
 
 // UPDATE

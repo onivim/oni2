@@ -101,6 +101,10 @@ let setRoot = (~rootPath, model) => {
     |> Option.map(rootPath => Component_FileExplorer.initial(~rootPath)),
 };
 
+let root = ({fileExplorer, _}) => {
+  fileExplorer |> Option.map(Component_FileExplorer.root);
+};
+
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
