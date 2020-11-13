@@ -340,7 +340,33 @@ module View = {
 
     let explorerComponent =
       switch (model.fileExplorer) {
-      | None => <Text text="None!" />
+      | None => 
+      <Component_Accordion.Common
+        title="No folder opened"
+        expanded=ExpandedState.isOpen(model.isFileExplorerExpanded)
+        count=0
+        showCount=false
+        isFocused={isFocused && model.focus == FileExplorer}
+        theme
+        uiFont=font
+        onClick={() => dispatch(FileExplorerAccordionClicked)}
+        contents={
+
+      <Oni_Components.Button label="Open Folder"
+      theme
+      font
+      onClick={() =>  {
+      let files = Revery.Native.Dialog.openFiles(
+        ~canChooseFiles=false,
+        ~canChooseDirectories=true,
+        (),
+      ) |> Option.get;
+      files
+      |> Array.iter(prerr_endline);
+      failwith ("no");
+      }} />
+      } />
+
       | Some(explorer) =>
         <Component_FileExplorer.View
           isFocused={isFocused && model.focus == FileExplorer}
