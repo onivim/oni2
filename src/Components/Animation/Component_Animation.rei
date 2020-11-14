@@ -20,8 +20,12 @@ module Spring: {
 type t('value);
 type msg;
 
+type outmsg =
+| Nothing
+| Completed;
+
 let get: t('value) => 'value;
 let isActive: t(_) => bool;
-let make: (Revery.UI.Animation.t('value)) => t('value);
-let update: (msg, t('value)) => t('value);
+let make: Revery.UI.Animation.t('value) => t('value);
+let update: (msg, t('value)) => (t('value), outmsg);
 let sub: t(_) => Isolinear.Sub.t(msg);
