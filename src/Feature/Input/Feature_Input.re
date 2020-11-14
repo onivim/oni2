@@ -128,7 +128,8 @@ type msg =
   | VimUnmap({
       mode: Vim.Mapping.mode,
       maybeKeys: option(string),
-    });
+    })
+  | KeyDisplayer([@opaque] KeyDisplayer.msg);
 
 module Msg = {
   let keybindingsUpdated = keybindings => KeybindingsUpdated(keybindings);
@@ -185,7 +186,13 @@ let keyCodeToString = Sdl2.Keycode.getName;
 let keyPressToString = EditorInput.KeyPress.toString(~keyCodeToString);
 
 let keyDown =
-    (~config, ~key, ~context, {inputStateMachine, keyDisplayer, _} as model) => {
+    (
+      ~config,
+      ~key,
+      ~context,
+      ~time,
+      {inputStateMachine, keyDisplayer, _} as model,
+    ) => {
   let leaderKey = Configuration.leaderKey.get(config);
   let (inputStateMachine', effects) =
     InputStateMachine.keyDown(~leaderKey, ~key, ~context, inputStateMachine);
@@ -194,8 +201,7 @@ let keyDown =
     keyDisplayer
     |> Option.map(kd => {
          KeyDisplayer.keyPress(
-           // TODO:
-           ~time=0.,
+           ~time=Revery.Time.toFloatSeconds(time),
            keyPressToString(key),
            kd,
          )
@@ -210,13 +216,19 @@ let keyDown =
   );
 };
 
-let text = (~text, {inputStateMachine, keyDisplayer, _} as model) => {
+let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
   let (inputStateMachine', effects) =
     InputStateMachine.text(~text, inputStateMachine);
 
   let keyDisplayer' =
     keyDisplayer
-    |> Option.map(kd => {KeyDisplayer.textInput(~time=0., text, kd)});
+    |> Option.map(kd => {
+         KeyDisplayer.textInput(
+           ~time=Revery.Time.toFloatSeconds(time),
+           text,
+           kd,
+         )
+       });
   (
     {
       ...model,
@@ -396,6 +408,11 @@ let update = (msg, model) => {
       Internal.updateKeybindings(bindings, model),
       Nothing,
     )
+
+  | KeyDisplayer(msg) =>
+    let keyDisplayer' =
+      model.keyDisplayer |> Option.map(KeyDisplayer.update(msg));
+    ({...model, keyDisplayer: keyDisplayer'}, Nothing);
   };
 };
 
@@ -433,7 +450,13 @@ module Commands = {
 
 // SUBSCRIPTION
 
-let sub = _model => Isolinear.Sub.none;
+let sub = ({keyDisplayer, _}) => {
+  switch (keyDisplayer) {
+  | None => Isolinear.Sub.none
+  | Some(kd) =>
+    KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
+  };
+};
 
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
@@ -460,9 +483,7 @@ module Contributions = {
 // VIEW
 
 module View = {
-  open Revery;
   open Revery.UI;
-  open Revery.UI.Components;
 
   module Overlay = {
     let make = (~input, ~uiFont, ~bottom, ~right, ()) => {

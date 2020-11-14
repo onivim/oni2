@@ -55,11 +55,14 @@ let keyDown:
     ~config: Config.resolver,
     ~key: KeyPress.t,
     ~context: WhenExpr.ContextKeys.t,
+    ~time: Revery.Time.t,
     model
   ) =>
   (model, list(effect));
 
-let text: (~text: string, model) => (model, list(effect));
+let text:
+  (~text: string, ~time: Revery.Time.t, model) => (model, list(effect));
+
 let keyUp:
   (
     ~config: Config.resolver,

@@ -194,12 +194,12 @@ let start = (window: option(Revery.Window.t), runEffects) => {
      /respond to commands otherwise if input is alphabetical AND
      a revery element is focused oni2 should defer to revery
    */
-  let handleKeyPress = (state: State.t, key) => {
+  let handleKeyPress = (state: State.t, time, key) => {
     let context = Model.ContextKeys.all(state);
 
     let config = Model.Selectors.configResolver(state);
     let (input, effects) =
-      Feature_Input.keyDown(~config, ~context, ~key, state.input);
+      Feature_Input.keyDown(~config, ~context, ~key, ~time, state.input);
 
     let newState = {...state, input};
 
@@ -209,8 +209,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     updateFromInput(newState, /*Some(keyPressToString(key)),*/ actions);
   };
 
-  let handleTextInput = (state: State.t, text) => {
-    let (input, effects) = Feature_Input.text(~text, state.input);
+  let handleTextInput = (state: State.t, time, text) => {
+    let (input, effects) = Feature_Input.text(~text, ~time, state.input);
 
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
@@ -224,7 +224,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     let context = Model.ContextKeys.all(state);
 
     let config = Model.Selectors.configResolver(state);
-    //let inputKey = reveryKeyToEditorKey(key);
     let (input, effects) =
       Feature_Input.keyUp(~config, ~context, ~key, state.input);
 
@@ -239,9 +238,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   // TODO: This should be moved to a Feature_Keybindings project
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | KeyDown(event, time) => handleKeyPress(state, event)
+    | KeyDown(event, time) => handleKeyPress(state, time, event)
     | KeyUp(event, _time) => handleKeyUp(state, event)
-    | TextInput(text, time) => handleTextInput(state, text)
+    | TextInput(text, time) => handleTextInput(state, time, text)
 
     | Pasted({rawText, isMultiLine, lines}) => (
         state,
