@@ -158,8 +158,7 @@ let keyGroupView = (~uiFont: UiFont.t, ~text: string, ()) =>
     />
   </View>;
 
-let make =
-              (~model, ~uiFont, ~top=?, ~left=?, ~right=?, ~bottom=?, ()) => {
+let make = (~model, ~uiFont, ~top=?, ~left=?, ~right=?, ~bottom=?, ()) => {
   // TODO: migrate
   // let%hook activeGroups =
   //   CustomHooks.useExpiration(
@@ -169,7 +168,7 @@ let make =
   //     model.groups,
   //   );
 
-  let activeGroups = [];
+  let activeGroups = model.groups;
 
   let groups =
     List.map(

@@ -278,21 +278,25 @@ module Internal = {
            (inputStateMachine', []),
          );
 
-    {...model, inputStateMachine: inputStateMachine'', userBindings: userBindingIds};
+    {
+      ...model,
+      inputStateMachine: inputStateMachine'',
+      userBindings: userBindingIds,
+    };
   };
 };
 
 let update = (msg, model) => {
   switch (msg) {
   | Command(ShowDebugInput) => (model, DebugInputShown)
-  | Command(DisableKeyDisplayer) => ({
-    ...model,
-    keyDisplayer: None
-  }, Nothing)
-  | Command(EnableKeyDisplayer) => ({
-    ...model,
-    keyDisplayer: Some(KeyDisplayer.initial)
-  }, Nothing)
+  | Command(DisableKeyDisplayer) => (
+      {...model, keyDisplayer: None},
+      Nothing,
+    )
+  | Command(EnableKeyDisplayer) => (
+      {...model, keyDisplayer: Some(KeyDisplayer.initial)},
+      Nothing,
+    )
   | VimMap(mapping) =>
     let maybeMatcher =
       EditorInput.Matcher.parse(~getKeycode, ~getScancode, mapping.fromKeys);
@@ -358,8 +362,6 @@ let update = (msg, model) => {
       Internal.updateKeybindings(bindings, model),
       Nothing,
     )
-
-
   };
 };
 
@@ -376,54 +378,48 @@ module Commands = {
       Command(ShowDebugInput),
     );
 
-    let disableKeyDisplayer =
-      define(
-        ~category="Input",
-        ~title="Disable Key Displayer",
-        ~isEnabledWhen=WhenExpr.parse("keyDisplayerEnabled"),
-        "keyDisplayer.disable",
-        Command(DisableKeyDisplayer),
-      );
+  let disableKeyDisplayer =
+    define(
+      ~category="Input",
+      ~title="Disable Key Displayer",
+      ~isEnabledWhen=WhenExpr.parse("keyDisplayerEnabled"),
+      "keyDisplayer.disable",
+      Command(DisableKeyDisplayer),
+    );
 
-    let enableKeyDisplayer =
-      define(
-        ~category="Input",
-        ~title="Enable Key Displayer",
-        ~isEnabledWhen=WhenExpr.parse("!keyDisplayerEnabled"),
-        "keyDisplayer.enable",
-        Command(EnableKeyDisplayer),
-      );
+  let enableKeyDisplayer =
+    define(
+      ~category="Input",
+      ~title="Enable Key Displayer",
+      ~isEnabledWhen=WhenExpr.parse("!keyDisplayerEnabled"),
+      "keyDisplayer.enable",
+      Command(EnableKeyDisplayer),
+    );
 };
 
 // SUBSCRIPTION
 
 let sub = _model => Isolinear.Sub.none;
 
+module ContextKeys = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let keyDisplayerEnabled =
+    bool("keyDisplayerEnabled", ({keyDisplayer, _}) => keyDisplayer != None);
+};
+
 module Contributions = {
-  let commands = Commands.[showInputState, 
-  enableKeyDisplayer,
-  disableKeyDisplayer];
+  let commands =
+    Commands.[showInputState, enableKeyDisplayer, disableKeyDisplayer];
 
   let configuration = Configuration.[leaderKey.spec];
 
   let contextKeys = model => {
-    WhenExpr.ContextKeys.
-      // TODO: keyDisplayerEnabled
-      // let vimNavKeys =
-      //   isFocused
-      //     ? Component_VimWindows.Contributions.contextKeys(
-      //         model.vimWindowNavigation,
-      //       )
-      //     : empty;
-      // let diagnosticsKeys =
-      //   isFocused && model.selected == Diagnostics
-      //     ? Component_VimTree.Contributions.contextKeys(model.diagnosticsView)
-      //     : empty;
-      // let locationsKeys =
-      //   isFocused && model.selected == Locations
-      //     ? Component_VimTree.Contributions.contextKeys(model.locationsView)
-      //     : empty;
-      ([] |> unionMany);
+    WhenExpr.ContextKeys.(
+      ContextKeys.[keyDisplayerEnabled]
+      |> Schema.fromList
+      |> fromSchema(model)
+    );
   };
 };
 
@@ -435,8 +431,12 @@ module View = {
   open Revery.UI.Components;
 
   module Overlay = {
-    let make = (~input as _, ~uiFont as _, ~bottom as _, ~right as _, ()) => {
-      <Text text="Hello, world!" />;
+    let make = (~input, ~uiFont, ~bottom, ~right, ()) => {
+      switch (input.keyDisplayer) {
+      | None => React.empty
+      | Some(keyDisplayer) =>
+        <KeyDisplayer model=keyDisplayer uiFont bottom right />
+      };
     };
   };
 };
