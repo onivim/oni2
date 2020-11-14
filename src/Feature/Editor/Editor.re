@@ -1509,6 +1509,10 @@ let isMouseDown = ({isMouseDown, _}) => isMouseDown;
 
 let lastMouseMoveTime = ({lastMouseMoveTime, _}) => lastMouseMoveTime;
 
+let getLeadingWhitespacePixels = (_lineNumber, _editor) => {
+  25.;
+};
+
 [@deriving show]
 type msg =
   | ScrollSpringX([@opaque] Spring.msg)
