@@ -67,6 +67,9 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
 
+// Get the horizontal width in pixels of the tab/space whitespace in front of a line.
+let getLeadingWhitespacePixels: (EditorCoreTypes.LineNumber.t, t) => float;
+
 let mode: t => Vim.Mode.t;
 let setMode: (Vim.Mode.t, t) => t;
 

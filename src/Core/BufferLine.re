@@ -287,6 +287,22 @@ let traverse = (~maxDistance=250, ~f, ~direction, ~index, bufferLine) => {
   loop(index, index, 0);
 };
 
+let getLeadingWhitespacePixels = bufferLine => {
+  let lastWhitespaceIdx =
+    traverse(
+      ~f=Uucp.White.is_white_space,
+      ~direction=`Forwards,
+      ~index=CharacterIndex.zero,
+      bufferLine,
+    );
+  let firstNonWhitespaceIdx =
+    lastWhitespaceIdx == CharacterIndex.zero
+      ? CharacterIndex.zero : CharacterIndex.(lastWhitespaceIdx + 1);
+  let (pos, _width) =
+    getPixelPositionAndWidth(~index=firstNonWhitespaceIdx, bufferLine);
+  pos;
+};
+
 module Slow = {
   let getIndexFromPixel = (~pixel, bufferLine) => {
     let characterLength = lengthSlow(bufferLine);

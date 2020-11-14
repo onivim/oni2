@@ -445,19 +445,28 @@ let update =
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
         )
       | CodeLensesChanged({bufferId, lenses}) =>
-        let inlineElements =
+        let inlineElements = editor =>
           lenses
           |> List.map(lens => {
                let lineNumber =
-                 Feature_LanguageSupport.CodeLens.lineNumber(lens);
+                 Feature_LanguageSupport.CodeLens.lineNumber(lens)
+                 |> EditorCoreTypes.LineNumber.ofZeroBased;
                let uniqueId = Feature_LanguageSupport.CodeLens.uniqueId(lens);
+               let leftMargin =
+                 Feature_Editor.Editor.getLeadingWhitespacePixels(
+                   lineNumber,
+                   editor,
+                 )
+                 |> int_of_float;
                let view =
-                 Feature_LanguageSupport.CodeLens.View.make(~codeLens=lens);
+                 Feature_LanguageSupport.CodeLens.View.make(
+                   ~leftMargin,
+                   ~codeLens=lens,
+                 );
                Feature_Editor.Editor.makeInlineElement(
                  ~key="codelens",
                  ~uniqueId,
-                 ~lineNumber=
-                   EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+                 ~lineNumber,
                  ~view,
                );
              });
@@ -467,7 +476,7 @@ let update =
                if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
                  Feature_Editor.Editor.setInlineElements(
                    ~key="codelens",
-                   ~elements=inlineElements,
+                   ~elements=inlineElements(editor),
                    editor,
                  );
                } else {
