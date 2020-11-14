@@ -35,6 +35,10 @@ module Effects: {
   let dismiss: notification => Isolinear.Effect.t(msg);
 };
 
+// SUBSCRIPTION
+
+let sub: (model) => Isolinear.Sub.t(msg);
+
 // COLORS
 
 module Colors: {

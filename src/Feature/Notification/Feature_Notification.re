@@ -69,6 +69,8 @@ module Effects = {
     );
 };
 
+let sub = (_model) => Isolinear.Sub.none;
+
 // COLORS
 
 module Colors = {
