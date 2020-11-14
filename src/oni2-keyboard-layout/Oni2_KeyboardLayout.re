@@ -9,6 +9,8 @@ let subscribe = (callback: callback) => {
     callbackListRef := List.filter(cb => cb !== callback, callbackListRef^);
 };
 
+let callKeyboardCallbacks = () => callbackListRef^ |> List.iter(cb => cb());
+
 external init: unit => unit = "oni2_KeyboardLayoutInit";
 
 external getCurrentLayout: unit => string =
@@ -16,7 +18,7 @@ external getCurrentLayout: unit => string =
 external getCurrentLanguage: unit => string =
   "oni2_KeyboardLayoutGetCurrentLanguage";
 
-Callback.register("oni2_KeyboardLayoutCallbackListRef", callbackListRef);
+Callback.register("oni2_CallKeyboardCallbacks", callKeyboardCallbacks);
 
 module Keymap = {
   type entry = {

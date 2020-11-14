@@ -49,32 +49,25 @@ static void notificationHandler(
   CAMLlocal2(vLayout, vLanguage);
   // Maintain a reference to the callbacks from the OCcaml side
   // We let OCaml manage the list since they have better abstractions than we do
-  static const value *callbackListRef = NULL;
+  static const value *callbackFunc = NULL;
   // If we haven't gotten the reference yet, get it.
-  if (callbackListRef == NULL) {
-    callbackListRef = caml_named_value("oni2_KeyboardLayoutCallbackListRef");
+  if (callbackFunc == NULL) {
+    callbackFunc = caml_named_value("oni2_CallKeyboardCallbacks");
     // If we didn't get anything back from the OCaml runtime, return early.
-    if (callbackListRef == NULL) {
-      NSLog(@"Unable to acquire callback list reference!");
-      return;
+    if (callbackFunc == NULL) {
+      CAMLreturn0;
     }
   }
-
-  value args[] = {Val_unit};
-
-  value callbackList = UNWRAP_REF(*callbackListRef);
 
   caml_c_thread_register();
   caml_acquire_runtime_system();
 
-  // Loop through the callback list and call all of them with the langusage and layout
-  while (callbackList != Val_emptylist) {
-    value callback = Field(callbackList, 0);
-    caml_callbackN(callback, 1, args);
-    callbackList = Field(callbackList, 1);
-  }
+  value args[] = {Val_unit};
+  caml_callbackN(*callbackFunc, 1, args);
 
   caml_release_runtime_system();
+  
+  CAMLreturn0;
 }
 
 CAMLprim value oni2_KeyboardLayoutInit() {
