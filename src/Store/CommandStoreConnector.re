@@ -3,8 +3,6 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Model.Actions;
 
-module KeyDisplayer = Oni_Components.KeyDisplayer;
-
 module Constants = {
   let zoomStep = 0.2;
   let defaultZoomValue = 1.0;

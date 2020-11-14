@@ -158,15 +158,18 @@ let keyGroupView = (~uiFont: UiFont.t, ~text: string, ()) =>
     />
   </View>;
 
-let%component make =
+let make =
               (~model, ~uiFont, ~top=?, ~left=?, ~right=?, ~bottom=?, ()) => {
-  let%hook activeGroups =
-    CustomHooks.useExpiration(
-      ~name="KeyDisplayer Expirer",
-      ~equals=(a, b) => a.id == b.id,
-      ~expireAfter=Time.ms(int_of_float(Constants.duration *. 1000.)),
-      model.groups,
-    );
+  // TODO: migrate
+  // let%hook activeGroups =
+  //   CustomHooks.useExpiration(
+  //     ~name="KeyDisplayer Expirer",
+  //     ~equals=(a, b) => a.id == b.id,
+  //     ~expireAfter=Time.ms(int_of_float(Constants.duration *. 1000.)),
+  //     model.groups,
+  //   );
+
+  let activeGroups = [];
 
   let groups =
     List.map(

@@ -7,8 +7,6 @@
 open Oni_Core;
 open Oni_Syntax;
 
-module KeyDisplayer = Oni_Components.KeyDisplayer;
-
 module Commands = GlobalCommands;
 let windowCommandCondition = "!insertMode || terminalFocus" |> WhenExpr.parse;
 

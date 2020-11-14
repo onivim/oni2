@@ -8,7 +8,6 @@ open Revery.UI;
 open Oni_Model;
 
 module ContextMenu = Oni_Components.ContextMenu;
-module KeyDisplayer = Oni_Components.KeyDisplayer;
 module ResizeHandle = Oni_Components.ResizeHandle;
 module Tooltip = Oni_Components.Tooltip;
 

@@ -139,6 +139,7 @@ module Msg = {
 type model = {
   userBindings: list(InputStateMachine.uniqueId),
   inputStateMachine: InputStateMachine.t,
+  keyDisplayer: option(KeyDisplayer.t),
 };
 
 type uniqueId = InputStateMachine.uniqueId;
@@ -167,7 +168,7 @@ let initial = keybindings => {
          },
          InputStateMachine.empty,
        );
-  {inputStateMachine, userBindings: []};
+  {inputStateMachine, userBindings: [], keyDisplayer: None};
 };
 
 type effect =
@@ -275,7 +276,7 @@ module Internal = {
            (inputStateMachine', []),
          );
 
-    {inputStateMachine: inputStateMachine'', userBindings: userBindingIds};
+    {...model, inputStateMachine: inputStateMachine'', userBindings: userBindingIds};
   };
 };
 
