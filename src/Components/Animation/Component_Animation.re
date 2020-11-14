@@ -7,6 +7,7 @@ type t('value) = {
   uniqueId: string,
   animation: Revery.UI.Animation.t('value),
   maybeStartTime: option(Revery.Time.t),
+  duration: Revery.Time.t,
   isComplete: bool,
   tick: int,
 };
@@ -19,6 +20,7 @@ let make = animation => {
     "Service_Animation.animation" ++ (UniqueId.getUniqueId() |> string_of_int),
   animation,
   maybeStartTime: None,
+  duration: Revery.Time.zero,
   isComplete: false,
   tick: 0,
 };
@@ -45,13 +47,13 @@ let update = (msg, model) =>
       ...model,
       maybeStartTime: Some(startTime),
       isComplete,
+      duration: deltaTime,
       tick: model.tick + 1,
     };
   };
 let isComplete = ({isComplete, _}) => isComplete;
-let get = ({animation, maybeStartTime, _}) => {
-  let time = maybeStartTime |> Option.value(~default=Time.zero);
-  Animation.valueAt(time, animation);
+let get = ({animation, duration, _}) => {
+  Animation.valueAt(duration, animation);
 };
 
 let sub = ({isComplete, uniqueId, tick, _}) =>
