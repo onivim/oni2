@@ -76,7 +76,15 @@ function activate(context) {
     cleanup(
         vscode.languages.registerCompletionItemProvider("oni-dev", {
             provideCompletionItems: (document, position, token, context) => {
-                return [vscode.CompletionItem("ReasonML1"), vscode.CompletionItem("OCaml1")]
+                const itemWithAdditionalEdit = vscode.CompletionItem("ReasonML1");
+                itemWithAdditionalEdit.detail = "(Inserts line at top too)";
+                const range = new vscode.Range(0, 0, 0, 0);
+                const edit = new vscode.TextEdit(range, "Insert line up top!\n");
+                itemWithAdditionalEdit.additionalTextEdits = [
+                    edit
+                ];
+                return [itemWithAdditionalEdit,
+                vscode.CompletionItem("OCaml1")]
             },
         }),
     )
