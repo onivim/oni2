@@ -382,6 +382,11 @@ let start =
               )
          )
       |> Isolinear.Sub.batch;
+
+    let inputSubscription =
+      state.input
+      |> Feature_Input.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Input(msg));
     [
       extHostSubscription,
       languageSupportSub,
@@ -397,6 +402,7 @@ let start =
       scmSub,
       autoUpdateSub,
       visibleEditorsSubscription,
+      inputSubscription,
     ]
     |> Isolinear.Sub.batch;
   };

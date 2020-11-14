@@ -364,7 +364,45 @@ module Commands = {
     );
 };
 
+// SUBSCRIPTION
+
+let sub = _model => Isolinear.Sub.none;
+
 module Contributions = {
   let commands = Commands.[showInputState];
   let configuration = Configuration.[leaderKey.spec];
+
+  let contextKeys = model => {
+    WhenExpr.ContextKeys.
+      // TODO: keyDisplayerEnabled
+      // let vimNavKeys =
+      //   isFocused
+      //     ? Component_VimWindows.Contributions.contextKeys(
+      //         model.vimWindowNavigation,
+      //       )
+      //     : empty;
+      // let diagnosticsKeys =
+      //   isFocused && model.selected == Diagnostics
+      //     ? Component_VimTree.Contributions.contextKeys(model.diagnosticsView)
+      //     : empty;
+      // let locationsKeys =
+      //   isFocused && model.selected == Locations
+      //     ? Component_VimTree.Contributions.contextKeys(model.locationsView)
+      //     : empty;
+      ([] |> unionMany);
+  };
+};
+
+// VIEW
+
+module View = {
+  open Revery;
+  open Revery.UI;
+  open Revery.UI.Components;
+
+  module Overlay = {
+    let make = (~input as _, ~uiFont as _, ~bottom as _, ~right as _, ()) => {
+      <Text text="Hello, world!" />;
+    };
+  };
 };

@@ -188,9 +188,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
   };
 
-  let keyCodeToString = Sdl2.Keycode.getName;
+  //let keyCodeToString = Sdl2.Keycode.getName;
 
-  let keyPressToString = EditorInput.KeyPress.toString(~keyCodeToString);
+  //let keyPressToString = EditorInput.KeyPress.toString(~keyCodeToString);
 
   /**
      The key handlers return (keyPressedString, shouldOniListen)
@@ -245,30 +245,30 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | KeyDown(event, time) =>
-      let keyDisplayer =
-        state.keyDisplayer
-        |> Option.map(keyDisplayer =>
-             Oni_Components.KeyDisplayer.keyPress(
-               ~time=Revery.Time.toFloatSeconds(time),
-               keyPressToString(event),
-               keyDisplayer,
-             )
-           );
+      // let keyDisplayer =
+      //   state.keyDisplayer
+      //   |> Option.map(keyDisplayer =>
+      //        Oni_Components.KeyDisplayer.keyPress(
+      //          ~time=Revery.Time.toFloatSeconds(time),
+      //          keyPressToString(event),
+      //          keyDisplayer,
+      //        )
+      //      );
 
-      handleKeyPress({...state, keyDisplayer}, event);
+      handleKeyPress(state, event)
     | KeyUp(event, _time) => handleKeyUp(state, event)
     | TextInput(text, time) =>
-      let keyDisplayer =
-        state.keyDisplayer
-        |> Option.map(keyDisplayer =>
-             Oni_Components.KeyDisplayer.textInput(
-               ~time=Revery.Time.toFloatSeconds(time),
-               text,
-               keyDisplayer,
-             )
-           );
+      // let keyDisplayer =
+      //   state.keyDisplayer
+      //   |> Option.map(keyDisplayer =>
+      //        Oni_Components.KeyDisplayer.textInput(
+      //          ~time=Revery.Time.toFloatSeconds(time),
+      //          text,
+      //          keyDisplayer,
+      //        )
+      //      );
 
-      handleTextInput({...state, keyDisplayer}, text);
+      handleTextInput(state, text)
 
     | Pasted({rawText, isMultiLine, lines}) => (
         state,

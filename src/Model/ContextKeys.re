@@ -110,20 +110,21 @@ let editors = (~isFocused) => {
 let other = {
   Schema.(
     fromList(
-      State.[
-        bool("isLinux", _state =>
-          Revery.Environment.os == Revery.Environment.Linux
-        ),
-        bool("isMac", _state =>
-          Revery.Environment.os == Revery.Environment.Mac
-        ),
-        bool("isWin", _state =>
-          Revery.Environment.os == Revery.Environment.Windows
-        ),
-        bool("sneakMode", state => Feature_Sneak.isActive(state.sneak)),
-        bool("zenMode", state => state.zenMode),
-        bool("keyDisplayerEnabled", state => state.keyDisplayer != None),
-      ],
+      State.
+        [
+          bool("isLinux", _state =>
+            Revery.Environment.os == Revery.Environment.Linux
+          ),
+          bool("isMac", _state =>
+            Revery.Environment.os == Revery.Environment.Mac
+          ),
+          bool("isWin", _state =>
+            Revery.Environment.os == Revery.Environment.Windows
+          ),
+          bool("sneakMode", state => Feature_Sneak.isActive(state.sneak)),
+          bool("zenMode", state => state.zenMode),
+        ],
+        // bool("keyDisplayerEnabled", state => state.keyDisplayer != None),
     )
   );
 };
@@ -182,11 +183,14 @@ let all = (state: State.t) => {
     | _ => false
     };
 
+  let inputContextKeys = Feature_Input.Contributions.contextKeys(state.input);
+
   unionMany([
     Feature_Registers.Contributions.contextKeys(
       ~isFocused=focus == Focus.InsertRegister,
       state.registers,
     ),
+    inputContextKeys,
     explorerContextKeys,
     sideBarContext,
     scmContextKeys,
