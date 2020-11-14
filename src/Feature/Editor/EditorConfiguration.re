@@ -85,7 +85,7 @@ module CustomDecoders: {
                | "none" => `None
                | "boundary" => `Boundary
                | "selection" => `Selection
-               | "all"
+               | "all" => `All
                | _ => `Selection,
              )
         ),
