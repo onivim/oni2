@@ -100,19 +100,16 @@ module Effects = {
         VimEx.inputString(insertText);
 
       let buffer = Vim.Buffer.getCurrent();
-      // let edit = Vim.Edit.{
-      //   range: CharacterRange.{
-      //     start: CharacterPosition.zero,
-      //     stop: CharacterPosition.zero,
-      //   },
-      //   text: [|"Hi!", ""|],
-      // };
-      if (additionalEdits != []) {
-        let _ = Vim.Buffer.applyEdits(~edits=additionalEdits, buffer);
-        ();
-      };
+      let mode' =
+        if (additionalEdits != []) {
+          let _ = Vim.Buffer.applyEdits(~edits=additionalEdits, buffer);
+          // TODO: Adjust cursor based on edit
+          mode;
+        } else {
+          mode;
+        };
 
-      dispatch(toMsg(mode));
+      dispatch(toMsg(mode'));
     });
 
   let loadBuffer = (~filePath: string, toMsg) => {
