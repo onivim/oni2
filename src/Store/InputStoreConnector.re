@@ -239,11 +239,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   // TODO: This should be moved to a Feature_Keybindings project
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | KeyDown(event, time) =>
-      handleKeyPress(state, event)
+    | KeyDown(event, time) => handleKeyPress(state, event)
     | KeyUp(event, _time) => handleKeyUp(state, event)
-    | TextInput(text, time) =>
-      handleTextInput(state, text)
+    | TextInput(text, time) => handleTextInput(state, text)
 
     | Pasted({rawText, isMultiLine, lines}) => (
         state,
