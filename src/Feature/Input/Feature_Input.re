@@ -116,7 +116,9 @@ module Schema = {
 
 [@deriving show]
 type command =
-  | ShowDebugInput;
+  | ShowDebugInput
+  | EnableKeyDisplayer
+  | DisableKeyDisplayer;
 
 [@deriving show]
 type msg =
@@ -283,6 +285,14 @@ module Internal = {
 let update = (msg, model) => {
   switch (msg) {
   | Command(ShowDebugInput) => (model, DebugInputShown)
+  | Command(DisableKeyDisplayer) => ({
+    ...model,
+    keyDisplayer: None
+  }, Nothing)
+  | Command(EnableKeyDisplayer) => ({
+    ...model,
+    keyDisplayer: Some(KeyDisplayer.initial)
+  }, Nothing)
   | VimMap(mapping) =>
     let maybeMatcher =
       EditorInput.Matcher.parse(~getKeycode, ~getScancode, mapping.fromKeys);
@@ -348,6 +358,8 @@ let update = (msg, model) => {
       Internal.updateKeybindings(bindings, model),
       Nothing,
     )
+
+
   };
 };
 
@@ -363,6 +375,24 @@ module Commands = {
       "oni2.debug.showInput",
       Command(ShowDebugInput),
     );
+
+    let disableKeyDisplayer =
+      define(
+        ~category="Input",
+        ~title="Disable Key Displayer",
+        ~isEnabledWhen=WhenExpr.parse("keyDisplayerEnabled"),
+        "keyDisplayer.disable",
+        Command(DisableKeyDisplayer),
+      );
+
+    let enableKeyDisplayer =
+      define(
+        ~category="Input",
+        ~title="Enable Key Displayer",
+        ~isEnabledWhen=WhenExpr.parse("!keyDisplayerEnabled"),
+        "keyDisplayer.enable",
+        Command(EnableKeyDisplayer),
+      );
 };
 
 // SUBSCRIPTION
@@ -370,7 +400,10 @@ module Commands = {
 let sub = _model => Isolinear.Sub.none;
 
 module Contributions = {
-  let commands = Commands.[showInputState];
+  let commands = Commands.[showInputState, 
+  enableKeyDisplayer,
+  disableKeyDisplayer];
+
   let configuration = Configuration.[leaderKey.spec];
 
   let contextKeys = model => {
