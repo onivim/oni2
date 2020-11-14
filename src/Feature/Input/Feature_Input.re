@@ -180,17 +180,51 @@ type effect =
     | Unhandled(EditorInput.KeyPress.t)
     | RemapRecursionLimitHit;
 
-let keyDown = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
+let keyCodeToString = Sdl2.Keycode.getName;
+
+let keyPressToString = EditorInput.KeyPress.toString(~keyCodeToString);
+
+let keyDown =
+    (~config, ~key, ~context, {inputStateMachine, keyDisplayer, _} as model) => {
   let leaderKey = Configuration.leaderKey.get(config);
   let (inputStateMachine', effects) =
     InputStateMachine.keyDown(~leaderKey, ~key, ~context, inputStateMachine);
-  ({...model, inputStateMachine: inputStateMachine'}, effects);
+
+  let keyDisplayer' =
+    keyDisplayer
+    |> Option.map(kd => {
+         KeyDisplayer.keyPress(
+           // TODO:
+           ~time=0.,
+           keyPressToString(key),
+           kd,
+         )
+       });
+  (
+    {
+      ...model,
+      inputStateMachine: inputStateMachine',
+      keyDisplayer: keyDisplayer',
+    },
+    effects,
+  );
 };
 
-let text = (~text, {inputStateMachine, _} as model) => {
+let text = (~text, {inputStateMachine, keyDisplayer, _} as model) => {
   let (inputStateMachine', effects) =
     InputStateMachine.text(~text, inputStateMachine);
-  ({...model, inputStateMachine: inputStateMachine'}, effects);
+
+  let keyDisplayer' =
+    keyDisplayer
+    |> Option.map(kd => {KeyDisplayer.textInput(~time=0., text, kd)});
+  (
+    {
+      ...model,
+      inputStateMachine: inputStateMachine',
+      keyDisplayer: keyDisplayer',
+    },
+    effects,
+  );
 };
 
 let keyUp = (~config, ~key, ~context, {inputStateMachine, _} as model) => {

@@ -188,10 +188,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
   };
 
-  //let keyCodeToString = Sdl2.Keycode.getName;
-
-  //let keyPressToString = EditorInput.KeyPress.toString(~keyCodeToString);
-
   /**
      The key handlers return (keyPressedString, shouldOniListen)
      i.e. if ctrl or alt or cmd were pressed then Oni2 should listen
@@ -241,33 +237,12 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   };
 
   // TODO: This should be moved to a Feature_Keybindings project
-  // (Including the KeyDisplayer too!)
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | KeyDown(event, time) =>
-      // let keyDisplayer =
-      //   state.keyDisplayer
-      //   |> Option.map(keyDisplayer =>
-      //        Oni_Components.KeyDisplayer.keyPress(
-      //          ~time=Revery.Time.toFloatSeconds(time),
-      //          keyPressToString(event),
-      //          keyDisplayer,
-      //        )
-      //      );
-
       handleKeyPress(state, event)
     | KeyUp(event, _time) => handleKeyUp(state, event)
     | TextInput(text, time) =>
-      // let keyDisplayer =
-      //   state.keyDisplayer
-      //   |> Option.map(keyDisplayer =>
-      //        Oni_Components.KeyDisplayer.textInput(
-      //          ~time=Revery.Time.toFloatSeconds(time),
-      //          text,
-      //          keyDisplayer,
-      //        )
-      //      );
-
       handleTextInput(state, text)
 
     | Pasted({rawText, isMultiLine, lines}) => (
