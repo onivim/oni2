@@ -19,20 +19,8 @@ module Styles = {
   ];
 };
 
-// module Animations = {
-//   let fadeIn = (~duration) =>
-//     Revery.UI.Animation.(
-//       animate(Revery.Time.milliseconds(duration))
-//       |> ease(Easing.easeIn)
-//       |> tween(0.6, 0.0)
-//       |> delay(Revery.Time.milliseconds(0))
-//     );
-// };
-
 let make = (~key, ~opacity, ~config, ~pixelRanges: list(PixelRange.t), ()) => {
   let ranges = pixelRanges;
-
-  //let duration = EditorConfiguration.yankHighlightDuration.get(config);
 
   let bg = EditorConfiguration.yankHighlightColor.get(config);
 
