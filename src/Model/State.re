@@ -440,7 +440,6 @@ type t = {
   exthost: Feature_Exthost.model,
   iconTheme: IconTheme.t,
   isQuitting: bool,
-  // keyDisplayer: option(KeyDisplayer.t),
   languageSupport: Feature_LanguageSupport.model,
   languageInfo: Exthost.LanguageInfo.t,
   grammarRepository: Oni_Syntax.GrammarRepository.t,

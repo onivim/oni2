@@ -86,17 +86,6 @@ let start = () => {
 
   let updater = (state: State.t, action) => {
     switch (action) {
-    // TODO: Migrate to Feature_Input
-    // | EnableKeyDisplayer => (
-    //     {...state, keyDisplayer: Some(KeyDisplayer.initial)},
-    //     Isolinear.Effect.none,
-    //   )
-
-    // | DisableKeyDisplayer => (
-    //     {...state, keyDisplayer: None},
-    //     Isolinear.Effect.none,
-    //   )
-
     | Command(cmd) =>
       switch (StringMap.find_opt(cmd, commandMap)) {
       | Some(v) => (state, v(state, cmd))
