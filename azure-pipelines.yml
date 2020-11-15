@@ -96,11 +96,11 @@ jobs:
   steps:
   - script: docker build --network=host -t centos scripts/docker/centos
     displayName: 'docker: build Dockerfile'
-  - script: docker run --network=host -it --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && git --version'
+  - script: docker run --network=host -i --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && git --version'
     displayName: 'docker: git version (after updating)'
-  - script: docker run --network=host -it --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
+  - script: docker run --network=host -i --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
     displayName: 'docker: build'
-  - script: docker run --network=host -it --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-test.sh'
+  - script: docker run --network=host -i --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-test.sh'
     displayName: 'docker: run tests'
   - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
     displayName: 'Release: --checkhealth'
