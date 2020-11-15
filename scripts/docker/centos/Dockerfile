@@ -28,6 +28,7 @@ RUN yum -y install https://repo.ius.io/ius-release-el7.rpm
 RUN yum -y remove git
 RUN yum -y install epel-release
 RUN yum -y install git222
+RUN yum -y install strace
 
 RUN node -v
 RUN npm -v
