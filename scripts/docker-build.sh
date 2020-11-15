@@ -1,7 +1,7 @@
 source /opt/rh/llvm-toolset-7.0/enable
 clang -v
 
-esy install
+esy install -vv
 esy build
 esy bootstrap
 node install-node-deps.js --production
