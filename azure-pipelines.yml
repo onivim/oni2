@@ -94,7 +94,7 @@ jobs:
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
   steps:
-  - script: docker build -t --network=host centos scripts/docker/centos
+  - script: docker build --network=host -t centos scripts/docker/centos
     displayName: 'docker: build Dockerfile'
   - script: docker run --network=host -itd --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && git --version'
     displayName: 'docker: git version (after updating)'
