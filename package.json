@@ -266,12 +266,17 @@
     "@opam/dir": "bryphe/reason-native:dir.opam#5a7a756",
     "@opam/conf-pkg-config": "1.2",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
-    "@revery/esy-cmake": "revery-ui/esy-cmake#c82a0c1",
     "flex": "bryphe/flex#5e19b05"
   },
   "devDependencies": {
     "ocaml": "4.10.0",
     "reperf": "^1.5.0",
+    "fs-extra": "7.0.1",
+    "lodash": "*",
+    "shelljs": "*",
+    "innosetup-compiler": "5.5.9",
+    "plist": "3.0.1",
+    "rcedit": "2.0.0",
     "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a5"
   }
 }

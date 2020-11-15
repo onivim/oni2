@@ -7,7 +7,7 @@ esy bootstrap --fetch-concurrency=1 --build-concurrency=1 -vv
 node install-node-deps.js --production
 esy x Oni2 -f --checkhealth
 
-# esy @release install
-# esy @release build
-# esy @release x Oni2 -f --checkhealth
-# esy @release create
+esy @release install --fetch-concurrency=1 --build-concurrency=1
+esy @release build --fetch-concurrency=1 --build-concurrency=1
+esy @release x Oni2 -f --checkhealth
+esy @release create
