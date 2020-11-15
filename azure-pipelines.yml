@@ -94,7 +94,6 @@ jobs:
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
   steps:
-  - template: .ci/clean-linux-deps.yml
   - script: docker build -t centos scripts/docker/centos
     displayName: 'docker: build Dockerfile'
   - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && git --version'
