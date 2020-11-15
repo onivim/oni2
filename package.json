@@ -266,6 +266,7 @@
     "@opam/dir": "bryphe/reason-native:dir.opam#5a7a756",
     "@opam/conf-pkg-config": "1.2",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
+    "@revery/esy-cmake": "revery-ui/esy-cmake#c82a0c1",
     "flex": "bryphe/flex#5e19b05"
   },
   "devDependencies": {

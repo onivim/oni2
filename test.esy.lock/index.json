@@ -1,5 +1,5 @@
 {
-  "checksum": "8e0946b5341d8e6519a829ffcdc670ae",
+  "checksum": "6d23944d4634dd88cba5bcea74aff85e",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -407,7 +407,7 @@
       "overrides": [],
       "dependencies": [
         "esy-nasm@github:revery-ui/esy-nasm#64a802b@d41d8cd9",
-        "@revery/esy-cmake@0.3.5001@d41d8cd9",
+        "@revery/esy-cmake@github:revery-ui/esy-cmake#c82a0c1@d41d8cd9",
         "@esy-cross/ninja-build@1.8.2001@d41d8cd9"
       ],
       "devDependencies": []
@@ -667,15 +667,13 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "@revery/esy-cmake@0.3.5001@d41d8cd9": {
-      "id": "@revery/esy-cmake@0.3.5001@d41d8cd9",
+    "@revery/esy-cmake@github:revery-ui/esy-cmake#c82a0c1@d41d8cd9": {
+      "id": "@revery/esy-cmake@github:revery-ui/esy-cmake#c82a0c1@d41d8cd9",
       "name": "@revery/esy-cmake",
-      "version": "0.3.5001",
+      "version": "github:revery-ui/esy-cmake#c82a0c1",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/@revery/esy-cmake/-/esy-cmake-0.3.5001.tgz#sha1:19d35421b8ec11c545a16071fc23c5ceb03a2bcb"
-        ]
+        "source": [ "github:revery-ui/esy-cmake#c82a0c1" ]
       },
       "overrides": [],
       "dependencies": [],
