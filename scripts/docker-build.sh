@@ -2,7 +2,7 @@ source /opt/rh/llvm-toolset-7.0/enable
 clang -v
 
 esy install --fetch-concurrency=1 --build-concurrency=1 -vv
-esy build
+esy build --fetch-concurrency=1 --build-concurrency=1 -vv
 esy bootstrap
 node install-node-deps.js --production
 esy x Oni2 -f --checkhealth
