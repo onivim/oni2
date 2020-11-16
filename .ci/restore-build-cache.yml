@@ -11,7 +11,7 @@ steps:
         branchName: 'refs/heads/master'
         buildVersionToDownload: 'latestFromBranch'
         downloadType: 'single'
-        artifactName: 'cache-$(Agent.OS)-install'
+        artifactName: '$(CACHE_ARTIFACT_NAME)'
         downloadPath: '$(STAGING_DIRECTORY)'
         allowPartiallySucceededBuilds: true
     continueOnError: true
@@ -20,7 +20,7 @@ steps:
     condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
     displayName: '[Cache][Restore] Create cache directory'
 
-  # - bash: 'cd $(ESY__NPM_ROOT) && tar -xf $(STAGING_DIRECTORY)/cache-$(Agent.OS)-install/npm-cache.tar -C .'
+  # - bash: 'cd $(ESY__NPM_ROOT) && tar -xf $(STAGING_DIRECTORY)/$(CACHE_ARTIFACT_NAME)/npm-cache.tar -C .'
   #   continueOnError: true
   #   condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   #   displayName: '[Cache][Restore] Untar npm cache directory'
@@ -34,7 +34,7 @@ steps:
       fi
       echo "ESY__CACHE_INSTALL_PATH: $ESY__CACHE_INSTALL_PATH"
       echo "STDIR: $STDIR"
-      tar -xf "$STDIR/cache-$(Agent.OS)-install/esy-cache.tar" -C .
+      tar -xf "$STDIR/$CACHE_ARTIFACT_NAME/esy-cache.tar" -C .
 
       echo "TEMP - Deleting dependencies: $ESY__CACHE_INSTALL_PATH"
       echo "ls before:"

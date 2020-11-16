@@ -41,6 +41,7 @@ jobs:
     ESY__CACHE_BUILD_PATH: /Users/runner/.esy/3__________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
     MACOSX_DEPLOYMENT_TARGET: 10.12
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
 
   steps:
@@ -66,6 +67,7 @@ jobs:
     ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
     ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_____________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
   steps:
@@ -78,6 +80,8 @@ jobs:
   - template: .ci/use-esy.yml
   - template: .ci/esy-build-steps.yml
   - template: .ci/run-integration-tests.yml
+  - script: rm -rf _esy
+    displayName: 'Delete Onivim 2 local _esy folder prior to cache'
   - template: .ci/publish-build-cache.yml
 
 - job: CentOS
@@ -91,6 +95,7 @@ jobs:
     ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
     ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_____________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
   steps:
@@ -117,6 +122,7 @@ jobs:
     ESY__CACHE_BUILD_PATH: /Users/runner/.esy/3__________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
     MACOSX_DEPLOYMENT_TARGET: 10.12
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
 
   steps:
@@ -149,6 +155,7 @@ jobs:
     ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/i
     ESY__CACHE_BUILD_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /C/Users/VssAdministrator/.esy/source/i
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
@@ -184,6 +191,7 @@ jobs:
     ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/i
     ESY__CACHE_BUILD_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /C/Users/VssAdministrator/.esy/source/i
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
