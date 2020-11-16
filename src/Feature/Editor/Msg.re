@@ -47,4 +47,5 @@ type t =
       key: string,
       uniqueId: string,
       height: int,
-    });
+    })
+  | Internal(Editor.msg);

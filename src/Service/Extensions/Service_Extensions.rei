@@ -24,7 +24,7 @@ module Catalog: {
     [@deriving show]
     type t = {
       downloadUrl: string,
-      repositoryUrl: string,
+      repositoryUrl: option(string),
       homepageUrl: string,
       manifestUrl: string,
       iconUrl: option(string),

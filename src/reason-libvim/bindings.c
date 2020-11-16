@@ -189,9 +189,29 @@ int onColorSchemeChanged(char_u *colorscheme) {
   }
   
   caml_callback(*lv_onColorSchemeChanged, vThemeOpt);
+
   
   CAMLreturnT(int, OK);
 };
+
+int onGetChar(int mode, char* c, int *modMask) {
+  CAMLparam0();
+  CAMLlocal1(vRet);
+  *modMask = 0;
+  *c = 0;
+
+  static const value *lv_onGetChar = NULL;
+
+  if (lv_onGetChar == NULL) {
+    lv_onGetChar = caml_named_value("lv_onGetChar");
+  }
+
+  vRet = caml_callback(*lv_onGetChar, Val_int(mode));
+  *c = Int_val(Field(vRet, 0));
+  *modMask = Int_val(Field(vRet, 1));
+
+  CAMLreturnT(int, OK);
+}
 
 void onSettingChanged(optionSet_T *options) {
   CAMLparam0();
@@ -848,6 +868,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetInputMapCallback(&onInputMap);
   vimSetInputUnmapCallback(&onInputUnmap);
   vimSetToggleCommentsCallback(&onToggleComments);
+  vimSetFunctionGetCharCallback(&onGetChar);
 
   char *args[0];
   vimInit(0, args);

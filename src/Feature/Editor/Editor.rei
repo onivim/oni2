@@ -13,6 +13,7 @@ type scrollbarMetrics = {
 type yankHighlight = {
   key: Brisk_reconciler.Key.t,
   pixelRanges: list(PixelRange.t),
+  opacity: Component_Animation.t(float),
 };
 
 module WrapMode: {
@@ -67,6 +68,9 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
 
+// Get the horizontal width in pixels of the tab/space whitespace in front of a line.
+let getLeadingWhitespacePixels: (EditorCoreTypes.LineNumber.t, t) => float;
+
 let mode: t => Vim.Mode.t;
 let setMode: (Vim.Mode.t, t) => t;
 
@@ -77,7 +81,7 @@ let getTokenAt:
   option(CharacterRange.t);
 
 let yankHighlight: t => option(yankHighlight);
-let setYankHighlight: (~yankHighlight: yankHighlight, t) => t;
+let startYankHighlight: (list(PixelRange.t), t) => t;
 
 let setWrapPadding: (~padding: float, t) => t;
 let setVerticalScrollMargin: (~lines: int, t) => t;
@@ -138,16 +142,16 @@ let selectionOrCursorRange: t => ByteRange.t;
 
 let totalViewLines: t => int;
 
-let isScrollAnimated: t => bool;
-let scrollToPixelX: (~pixelX: float, t) => t;
-let scrollDeltaPixelX: (~pixelX: float, t) => t;
+let scrollToPixelX: (~animated: bool, ~pixelX: float, t) => t;
+let scrollDeltaPixelX: (~animated: bool, ~pixelX: float, t) => t;
 
 let scrollToLine: (~line: int, t) => t;
-let scrollToPixelY: (~pixelY: float, t) => t;
-let scrollDeltaPixelY: (~pixelY: float, t) => t;
+let scrollToPixelY: (~animated: bool, ~pixelY: float, t) => t;
+let scrollDeltaPixelY: (~animated: bool, ~pixelY: float, t) => t;
 
-let scrollToPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
-let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
+let scrollToPixelXY: (~animated: bool, ~pixelX: float, ~pixelY: float, t) => t;
+let scrollDeltaPixelXY:
+  (~animated: bool, ~pixelX: float, ~pixelY: float, t) => t;
 
 let scrollCenterCursorVertically: t => t;
 let scrollCursorTop: t => t;
@@ -234,3 +238,10 @@ module Slow: {
     // the end of the line.
     (~allowPast: bool=?, ~pixelX: float, ~pixelY: float, t) => BytePosition.t;
 };
+
+[@deriving show]
+type msg;
+
+let update: (msg, t) => t;
+
+let sub: t => Isolinear.Sub.t(msg);

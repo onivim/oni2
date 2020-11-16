@@ -17,6 +17,7 @@ module Edit = Edit;
 module Effect = Effect;
 module Event = Event;
 module Format = Format;
+module Functions = Functions;
 module Goto = Goto;
 module Mapping = Mapping;
 module Operator = Operator;
@@ -173,8 +174,7 @@ let runWith = (~context: Context.t, f) => {
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
-  GlobalState.autoIndent := Some(context.autoIndent);
-  GlobalState.colorSchemeProvider := context.colorSchemeProvider;
+  GlobalState.context := Some(context);
   GlobalState.viewLineMotion := Some(context.viewLineMotion);
   GlobalState.screenPositionMotion := Some(context.screenCursorMotion);
   GlobalState.effects := [];
@@ -182,8 +182,7 @@ let runWith = (~context: Context.t, f) => {
 
   let mode = f();
 
-  GlobalState.autoIndent := None;
-  GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
+  GlobalState.context := None;
   GlobalState.viewLineMotion := None;
   GlobalState.screenPositionMotion := None;
   GlobalState.toggleComments := None;
@@ -364,7 +363,8 @@ let _onAutoIndent = (lnum: int, sourceLine: string) => {
     };
 
   let indentAction =
-    GlobalState.autoIndent^
+    GlobalState.context^
+    |> Option.map(({autoIndent, _}: Context.t) => autoIndent)
     |> Option.map(fn => fn(~previousLine=beforeLine, ~beforePreviousLine))
     |> Option.value(~default=AutoIndent.KeepIndent);
 
@@ -463,7 +463,11 @@ let _onColorSchemeChanged = (maybeScheme: option(string)) => {
 };
 
 let _colorSchemesGet = pattern => {
-  GlobalState.colorSchemeProvider^(pattern);
+  GlobalState.context^
+  |> Option.map(({colorSchemeProvider, _}: Context.t) =>
+       colorSchemeProvider(pattern)
+     )
+  |> Option.value(~default=[||]);
 };
 
 let _onMacroStartRecording = (register: char) => {
@@ -504,6 +508,23 @@ let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
   |> Option.value(~default=currentLines);
 };
 
+let _onGetChar = mode => {
+  let mode' =
+    switch (mode) {
+    | 0 => Functions.GetChar.Immediate
+    | 1 => Functions.GetChar.Peek
+    | _ => Functions.GetChar.Wait
+    };
+
+  let c =
+    GlobalState.context^
+    |> Option.map(({functionGetChar, _}: Context.t) =>
+         functionGetChar(mode')
+       )
+    |> Option.value(~default=char_of_int(0));
+  (int_of_char(c), 0);
+};
+
 let init = () => {
   Callback.register("lv_clipboardGet", _clipboardGet);
   Callback.register("lv_onBufferChanged", _onBufferChanged);
@@ -538,6 +559,7 @@ let init = () => {
   Callback.register("lv_onInputMap", _onInputMap);
   Callback.register("lv_onInputUnmap", _onInputUnmap);
   Callback.register("lv_onToggleComments", _onToggleComments);
+  Callback.register("lv_onGetChar", _onGetChar);
 
   Native.vimInit();
 
@@ -672,7 +694,7 @@ let command = (~context=Context.current(), v) => {
   );
 };
 
-let eval = v =>
+let eval = (~context=Context.current(), v) =>
   // Error messages come through the message handler,
   // so we'll temporarily override it during the course of the eval
   if (v == "") {
@@ -682,9 +704,9 @@ let eval = v =>
 
     GlobalState.overriddenMessageHandler :=
       Some((_priority, _title, msg) => {lastMessage := Some(msg)});
-
+    GlobalState.context := Some(context);
     let maybeEval = Native.vimEval(v);
-
+    GlobalState.context := None;
     GlobalState.overriddenMessageHandler := None;
 
     switch (maybeEval, lastMessage^) {

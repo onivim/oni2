@@ -6,7 +6,7 @@ module Sub = {
 
   module TimerOnceSubscription =
     Isolinear.Sub.Make({
-      type nonrec msg = unit;
+      type nonrec msg = Revery.Time.t;
       type nonrec params = timerOnceParams;
       type state = unit => unit;
 
@@ -16,7 +16,7 @@ module Sub = {
       let init = (~params, ~dispatch) => {
         Revery.Tick.timeout(
           ~name="Service_Time.once: " ++ params.uniqueId,
-          () => dispatch(),
+          () => {dispatch(Revery.Time.now())},
           params.delay,
         );
       };
@@ -32,6 +32,6 @@ module Sub = {
 
   let once = (~uniqueId: string, ~delay, ~msg) => {
     TimerOnceSubscription.create({delay, uniqueId})
-    |> Isolinear.Sub.map(() => msg);
+    |> Isolinear.Sub.map(current => msg(~current));
   };
 };

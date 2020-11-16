@@ -57,6 +57,8 @@ let subExn: (~index: CharacterIndex.t, ~length: int, t) => string;
 
 let getPixelPositionAndWidth: (~index: CharacterIndex.t, t) => (float, float);
 
+let getLeadingWhitespacePixels: t => float;
+
 let traverse:
   (
     ~maxDistance: int=?,
