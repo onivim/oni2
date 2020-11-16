@@ -30,21 +30,44 @@ type notification = {
   source: option(string),
 };
 
-type model = list(notification);
+type model = {
+  all: list(notification),
+  activeNotifications: IntSet.t,
+};
 
-let initial = [];
+let initial = {all: [], activeNotifications: IntSet.empty};
+
+let all = ({all, _}) => all;
+
+let active = ({all, activeNotifications}) => {
+  all
+  |> List.filter(notification =>
+       IntSet.mem(notification.id, activeNotifications)
+     );
+};
 
 // UPDATE
 
 [@deriving show({with_path: false})]
 type msg =
   | Created(notification)
-  | Dismissed(notification);
+  | Dismissed(notification)
+  | Expire({id: int});
 
 let update = (model, msg) => {
   switch (msg) {
-  | Created(item) => [item, ...model]
-  | Dismissed(item) => List.filter(it => it.id != item.id, model)
+  | Created(item) => {
+      all: [item, ...model.all],
+      activeNotifications: IntSet.add(item.id, model.activeNotifications),
+    }
+  | Dismissed(item) => {
+      all: List.filter(it => it.id != item.id, model.all),
+      activeNotifications: IntSet.remove(item.id, model.activeNotifications),
+    }
+  | Expire({id}) => {
+      ...model,
+      activeNotifications: IntSet.remove(id, model.activeNotifications),
+    }
   };
 };
 
@@ -67,6 +90,44 @@ module Effects = {
     Isolinear.Effect.createWithDispatch(~name="notification.dismiss", dispatch =>
       dispatch(Dismissed(notification))
     );
+};
+
+// ANIMATIONS
+module Constants = {
+  let popupDuration = Time.ms(3000);
+};
+
+module Animations = {
+  open Revery;
+  open Revery.UI;
+  open Revery.UI.Animation;
+
+  let transitionDuration = Time.ms(150);
+  let totalDuration =
+    Time.(Constants.popupDuration + transitionDuration *. 2.);
+
+  let enter =
+    animate(transitionDuration) |> ease(Easing.ease) |> tween(50., 0.);
+
+  let exit =
+    animate(transitionDuration) |> ease(Easing.ease) |> tween(0., 50.);
+
+  let sequence =
+    enter |> andThen(~next=exit |> delay(Constants.popupDuration));
+};
+
+let sub = model => {
+  model
+  |> active
+  |> List.map(notification => {
+       Service_Time.Sub.once(
+         ~uniqueId="Feature_Notification" ++ string_of_int(notification.id),
+         ~delay=Animations.totalDuration,
+         ~msg=(~current as _) =>
+         Expire({id: notification.id})
+       )
+     })
+  |> Isolinear.Sub.batch;
 };
 
 // COLORS
@@ -115,10 +176,6 @@ module View = {
   // POPUP
 
   module Popup = {
-    module Constants = {
-      let popupDuration = Time.ms(3000);
-    };
-
     module Styles = {
       open Style;
 
@@ -140,23 +197,6 @@ module View = {
         marginLeft(6),
         color(foreground),
       ];
-    };
-
-    module Animations = {
-      open Animation;
-
-      let transitionDuration = Time.ms(150);
-      let totalDuration =
-        Time.(Constants.popupDuration + transitionDuration *. 2.);
-
-      let enter =
-        animate(transitionDuration) |> ease(Easing.ease) |> tween(50., 0.);
-
-      let exit =
-        animate(transitionDuration) |> ease(Easing.ease) |> tween(0., 50.);
-
-      let sequence =
-        enter |> andThen(~next=exit |> delay(Constants.popupDuration));
     };
 
     let iconFor = item =>
@@ -314,7 +354,8 @@ module View = {
     };
 
     let make = (~model, ~theme, ~font: UiFont.t, ~dispatch, ()) => {
-      let items = model |> List.map(item => <Item item theme font dispatch />);
+      let items =
+        model.all |> List.map(item => <Item item theme font dispatch />);
 
       let innerElement =
         if (items == []) {

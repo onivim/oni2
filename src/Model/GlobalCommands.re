@@ -61,26 +61,6 @@ module Oni = {
       Command("oni.changelog"),
     );
 
-  module KeyDisplayer = {
-    let disable =
-      register(
-        ~category="Input",
-        ~title="Disable Key Displayer",
-        ~isEnabledWhen=WhenExpr.parse("keyDisplayerEnabled"),
-        "keyDisplayer.disable",
-        DisableKeyDisplayer,
-      );
-
-    let enable =
-      register(
-        ~category="Input",
-        ~title="Enable Key Displayer",
-        ~isEnabledWhen=WhenExpr.parse("!keyDisplayerEnabled"),
-        "keyDisplayer.enable",
-        EnableKeyDisplayer,
-      );
-  };
-
   module System = {
     let addToPath =
       register(

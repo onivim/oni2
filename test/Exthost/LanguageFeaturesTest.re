@@ -311,7 +311,8 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get highlights",
            ~validate=
-             (highlights: list(Exthost.DocumentHighlight.t)) => {
+             (maybeHighlights: option(list(Exthost.DocumentHighlight.t))) => {
+               let highlights = Option.get(maybeHighlights);
                expect.int(List.length(highlights)).toBe(2);
                let highlight0: Exthost.DocumentHighlight.t =
                  List.nth(highlights, 0);

@@ -15,7 +15,7 @@ runTest(
 
     let getErrorNotificationCount = (state: State.t) => {
       let notifications: list(Feature_Notification.notification) =
-        state.notifications;
+        Feature_Notification.all(state.notifications);
       notifications
       |> List.filter((n: Feature_Notification.notification) =>
            n.kind == Feature_Notification.Error

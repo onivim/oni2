@@ -41,6 +41,7 @@ jobs:
     ESY__CACHE_BUILD_PATH: /Users/runner/.esy/3__________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
     MACOSX_DEPLOYMENT_TARGET: 10.12
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
 
   steps:
@@ -55,8 +56,6 @@ jobs:
 
 - job: Linux
   displayName: 'Linux - Ubuntu 18.04'
-  # Run if not master
-  condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
   timeoutInMinutes: 90
   pool:
     vmImage: 'ubuntu-18.04'
@@ -66,6 +65,7 @@ jobs:
     ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
     ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_____________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
   steps:
@@ -78,31 +78,32 @@ jobs:
   - template: .ci/use-esy.yml
   - template: .ci/esy-build-steps.yml
   - template: .ci/run-integration-tests.yml
+  - script: rm -rf _esy
+    displayName: 'Delete Onivim 2 local _esy folder prior to cache'
   - template: .ci/publish-build-cache.yml
 
 - job: CentOS
   displayName: 'Linux - CentOS - Docker Image'
-  timeoutInMinutes: 0
+  timeoutInMinutes: 120
   pool:
-    vmImage: 'Ubuntu 16.04'
+    vmImage: 'ubuntu-16.04'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
     ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
     ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_____________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
   steps:
   - template: .ci/clean-linux-deps.yml
-  - script: docker build -t centos scripts/docker/centos
+  - script: docker build --network=host -t centos scripts/docker/centos
     displayName: 'docker: build Dockerfile'
-  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && git --version'
+  - script: docker container run --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && git --version'
     displayName: 'docker: git version (after updating)'
-  - script: docker run --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
-    displayName: 'docker: build'
-  - script: docker run --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-test.sh'
-    displayName: 'docker: run tests'
+  - script: docker container run --name centos --network=host --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
+    displayName: 'docker: build Onivim 2'
   - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-linux.yml
@@ -119,6 +120,7 @@ jobs:
     ESY__CACHE_BUILD_PATH: /Users/runner/.esy/3__________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /Users/runner/.esy/source/i
     MACOSX_DEPLOYMENT_TARGET: 10.12
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /usr/local/lib/node_modules/esy
 
   steps:
@@ -151,6 +153,7 @@ jobs:
     ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/i
     ESY__CACHE_BUILD_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /C/Users/VssAdministrator/.esy/source/i
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
@@ -186,6 +189,7 @@ jobs:
     ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/i
     ESY__CACHE_BUILD_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /C/Users/VssAdministrator/.esy/source/i
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:

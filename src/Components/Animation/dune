@@ -1,0 +1,8 @@
+(library
+ (name Component_Animation)
+ (public_name Oni2.component.animation)
+ (inline_tests)
+ (libraries Oni2.core Oni2.components Oni2.service.time Revery isolinear
+   Oni2.feature.commands)
+ (preprocess
+  (pps ppx_inline_test ppx_let ppx_deriving.show brisk-reconciler.ppx)))

@@ -116,7 +116,9 @@ module Schema = {
 
 [@deriving show]
 type command =
-  | ShowDebugInput;
+  | ShowDebugInput
+  | EnableKeyDisplayer
+  | DisableKeyDisplayer;
 
 [@deriving show]
 type msg =
@@ -126,7 +128,8 @@ type msg =
   | VimUnmap({
       mode: Vim.Mapping.mode,
       maybeKeys: option(string),
-    });
+    })
+  | KeyDisplayer([@opaque] KeyDisplayer.msg);
 
 module Msg = {
   let keybindingsUpdated = keybindings => KeybindingsUpdated(keybindings);
@@ -139,6 +142,7 @@ module Msg = {
 type model = {
   userBindings: list(InputStateMachine.uniqueId),
   inputStateMachine: InputStateMachine.t,
+  keyDisplayer: option(KeyDisplayer.t),
 };
 
 type uniqueId = InputStateMachine.uniqueId;
@@ -167,7 +171,7 @@ let initial = keybindings => {
          },
          InputStateMachine.empty,
        );
-  {inputStateMachine, userBindings: []};
+  {inputStateMachine, userBindings: [], keyDisplayer: None};
 };
 
 type effect =
@@ -177,17 +181,62 @@ type effect =
     | Unhandled(EditorInput.KeyPress.t)
     | RemapRecursionLimitHit;
 
-let keyDown = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
+let keyCodeToString = Sdl2.Keycode.getName;
+
+let keyPressToString = EditorInput.KeyPress.toString(~keyCodeToString);
+
+let keyDown =
+    (
+      ~config,
+      ~key,
+      ~context,
+      ~time,
+      {inputStateMachine, keyDisplayer, _} as model,
+    ) => {
   let leaderKey = Configuration.leaderKey.get(config);
   let (inputStateMachine', effects) =
     InputStateMachine.keyDown(~leaderKey, ~key, ~context, inputStateMachine);
-  ({...model, inputStateMachine: inputStateMachine'}, effects);
+
+  let keyDisplayer' =
+    keyDisplayer
+    |> Option.map(kd => {
+         KeyDisplayer.keyPress(
+           ~time=Revery.Time.toFloatSeconds(time),
+           keyPressToString(key),
+           kd,
+         )
+       });
+  (
+    {
+      ...model,
+      inputStateMachine: inputStateMachine',
+      keyDisplayer: keyDisplayer',
+    },
+    effects,
+  );
 };
 
-let text = (~text, {inputStateMachine, _} as model) => {
+let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
   let (inputStateMachine', effects) =
     InputStateMachine.text(~text, inputStateMachine);
-  ({...model, inputStateMachine: inputStateMachine'}, effects);
+
+  let keyDisplayer' =
+    keyDisplayer
+    |> Option.map(kd => {
+         KeyDisplayer.textInput(
+           ~time=Revery.Time.toFloatSeconds(time),
+           text,
+           kd,
+         )
+       });
+  (
+    {
+      ...model,
+      inputStateMachine: inputStateMachine',
+      keyDisplayer: keyDisplayer',
+    },
+    effects,
+  );
 };
 
 let keyUp = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
@@ -275,13 +324,25 @@ module Internal = {
            (inputStateMachine', []),
          );
 
-    {inputStateMachine: inputStateMachine'', userBindings: userBindingIds};
+    {
+      ...model,
+      inputStateMachine: inputStateMachine'',
+      userBindings: userBindingIds,
+    };
   };
 };
 
 let update = (msg, model) => {
   switch (msg) {
   | Command(ShowDebugInput) => (model, DebugInputShown)
+  | Command(DisableKeyDisplayer) => (
+      {...model, keyDisplayer: None},
+      Nothing,
+    )
+  | Command(EnableKeyDisplayer) => (
+      {...model, keyDisplayer: Some(KeyDisplayer.initial)},
+      Nothing,
+    )
   | VimMap(mapping) =>
     let maybeMatcher =
       EditorInput.Matcher.parse(~getKeycode, ~getScancode, mapping.fromKeys);
@@ -347,6 +408,11 @@ let update = (msg, model) => {
       Internal.updateKeybindings(bindings, model),
       Nothing,
     )
+
+  | KeyDisplayer(msg) =>
+    let keyDisplayer' =
+      model.keyDisplayer |> Option.map(KeyDisplayer.update(msg));
+    ({...model, keyDisplayer: keyDisplayer'}, Nothing);
   };
 };
 
@@ -362,9 +428,70 @@ module Commands = {
       "oni2.debug.showInput",
       Command(ShowDebugInput),
     );
+
+  let disableKeyDisplayer =
+    define(
+      ~category="Input",
+      ~title="Disable Key Displayer",
+      ~isEnabledWhen=WhenExpr.parse("keyDisplayerEnabled"),
+      "keyDisplayer.disable",
+      Command(DisableKeyDisplayer),
+    );
+
+  let enableKeyDisplayer =
+    define(
+      ~category="Input",
+      ~title="Enable Key Displayer",
+      ~isEnabledWhen=WhenExpr.parse("!keyDisplayerEnabled"),
+      "keyDisplayer.enable",
+      Command(EnableKeyDisplayer),
+    );
+};
+
+// SUBSCRIPTION
+
+let sub = ({keyDisplayer, _}) => {
+  switch (keyDisplayer) {
+  | None => Isolinear.Sub.none
+  | Some(kd) =>
+    KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
+  };
+};
+
+module ContextKeys = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let keyDisplayerEnabled =
+    bool("keyDisplayerEnabled", ({keyDisplayer, _}) => keyDisplayer != None);
 };
 
 module Contributions = {
-  let commands = Commands.[showInputState];
+  let commands =
+    Commands.[showInputState, enableKeyDisplayer, disableKeyDisplayer];
+
   let configuration = Configuration.[leaderKey.spec];
+
+  let contextKeys = model => {
+    WhenExpr.ContextKeys.(
+      ContextKeys.[keyDisplayerEnabled]
+      |> Schema.fromList
+      |> fromSchema(model)
+    );
+  };
+};
+
+// VIEW
+
+module View = {
+  open Revery.UI;
+
+  module Overlay = {
+    let make = (~input, ~uiFont, ~bottom, ~right, ()) => {
+      switch (input.keyDisplayer) {
+      | None => React.empty
+      | Some(keyDisplayer) =>
+        <KeyDisplayer model=keyDisplayer uiFont bottom right />
+      };
+    };
+  };
 };

@@ -12,7 +12,7 @@ authors: [
   "Anton Bachin <antonbachin@yahoo.com>"
   "Jon Ludlam <jon@recoil.org>"
 ]
-maintainer: "Jon Ludlam <jon@recoil.org>"
+maintainer: "Anton Bachin <antonbachin@yahoo.com>"
 dev-repo: "git+https://github.com/ocaml/odoc.git"
 
 synopsis: "OCaml documentation generator"
@@ -27,12 +27,12 @@ depends: [
   "cppo" {build}
   "dune"
   "fpath"
-  "ocaml" {>= "4.02.0" & < "4.12"}
+  "ocaml" {>= "4.02.0"}
   "result"
   "tyxml" {>= "4.3.0"}
 
   "alcotest" {dev & >= "0.8.3"}
-  "markup" {dev & >= "0.8.0"}
+  "markup" {dev & >= "1.0.0"}
   "ocamlfind" {dev}
   "sexplib" {dev & >= "113.33.00"}
 
@@ -43,10 +43,11 @@ build: [
   ["dune" "subst"] {pinned}
   ["dune" "build" "-p" name "-j" jobs]
 ]
+x-commit-hash: "c0df8ce2171fa9645a41f371429aa3ddc16de5c1"
 url {
-  src: "https://github.com/ocaml/odoc/releases/download/1.5.1/odoc-1.5.1.tbz"
+  src: "https://github.com/ocaml/odoc/releases/download/1.5.2/odoc-1.5.2.tbz"
   checksum: [
-    "sha256=ea14721344e2aab6b63f2884782d37e94a1ed8ab91147a1c08a29710d99d354f"
-    "sha512=b2d12277d61e1e52354128d459d2ad49bea24a4d46db89790769c2843c4b00beaee3ea7d0215211079174c0bd893de6bf52dcbb71e46622728be7491d91058b2"
+    "sha256=d24463f2660bc28c72cda001478360158e953721c9e23fb361ec4783113c4871"
+    "sha512=e6c83630325de422f31cda8f88c038d213969f8b98e989593c057658f3956c0855860c9bc38f61b6479929516ca95aee689ddfba3ad8c47d821c4fdf54524cf9"
   ]
 }

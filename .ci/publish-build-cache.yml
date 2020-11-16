@@ -40,6 +40,6 @@ steps:
     condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
     inputs:
         pathToPublish: '$(STAGING_DIRECTORY)'
-        artifactName: 'cache-$(Agent.OS)-install'
+        artifactName: '$(CACHE_ARTIFACT_NAME)'
         parallel: true
         parallelCount: 8

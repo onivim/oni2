@@ -22,14 +22,17 @@ let keyEventToString =
 type group = {
   id: float, // use time of first keypress as id
   isExclusive: bool,
-  mutable time: float,
-  mutable keys: list(keyEvent),
+  time: float,
+  keys: list(keyEvent),
 };
 
 type t = {
   isEnabled: bool,
   groups: list(group),
 };
+
+type msg =
+  | Tick({totalTime: Revery.Time.t});
 
 let initial: t = {groups: [], isEnabled: false};
 
@@ -77,15 +80,14 @@ let add = (~time, key, model) => {
       | Text(text) =>
         switch (model.groups) {
         | [] => [{id: time, time, isExclusive: false, keys: [Text(text)]}]
-        | [group, ..._] as groups =>
-          group.time = time;
-          let keys =
+        | [group, ...rest] =>
+          //time = time;
+          let keys' =
             switch (group.keys) {
             | [Key(_), ...tail] => [Text(text), ...tail]
             | list => [Text(text), ...list]
             };
-          group.keys = keys;
-          groups;
+          [{...group, keys: keys', time}, ...rest];
         }
       | Key(keyString) =>
         let isCharKey = Zed_utf8.length(keyString) == 1;
@@ -98,10 +100,9 @@ let add = (~time, key, model) => {
         switch (model.groups) {
         | [] => [{id: time, time, isExclusive, keys: [key]}]
 
-        | [group, ..._] as groups when canGroupWith(group) =>
-          group.time = time;
-          group.keys = [key, ...group.keys];
-          groups;
+        | [group, ...rest] when canGroupWith(group) =>
+          let keys' = [key, ...group.keys];
+          [{...group, time, keys: keys'}, ...rest];
 
         | groups => [
             {id: time, time, isExclusive: !isCharKey, keys: [key]},
@@ -117,6 +118,26 @@ let keyPress = (~time, key, model) => add(~time, Key(key), model);
 let textInput = (~time, text, model) => {
   let text = String.equal(text, " ") ? "Space" : text;
   add(~time, Text(text), model);
+};
+
+let update = (msg, model) => {
+  switch (msg) {
+  | Tick({totalTime}) =>
+    removeExpired(Revery.Time.toFloatSeconds(totalTime), model)
+  };
+};
+
+let sub = model => {
+  model.groups
+  |> List.map(group => {
+       Service_Time.Sub.once(
+         ~uniqueId="KeyDisplayer:" ++ string_of_float(group.time),
+         ~delay=Revery.Time.ofFloatSeconds(Constants.duration),
+         ~msg=(~current) =>
+         Tick({totalTime: current})
+       )
+     })
+  |> Isolinear.Sub.batch;
 };
 
 // VIEW
@@ -158,15 +179,8 @@ let keyGroupView = (~uiFont: UiFont.t, ~text: string, ()) =>
     />
   </View>;
 
-let%component make =
-              (~model, ~uiFont, ~top=?, ~left=?, ~right=?, ~bottom=?, ()) => {
-  let%hook activeGroups =
-    CustomHooks.useExpiration(
-      ~name="KeyDisplayer Expirer",
-      ~equals=(a, b) => a.id == b.id,
-      ~expireAfter=Time.ms(int_of_float(Constants.duration *. 1000.)),
-      model.groups,
-    );
+let make = (~model, ~uiFont, ~top=?, ~left=?, ~right=?, ~bottom=?, ()) => {
+  let activeGroups = model.groups;
 
   let groups =
     List.map(
