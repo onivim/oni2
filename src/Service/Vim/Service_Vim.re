@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core.Utility;
 module Log = (val Log.withNamespace("Service_Vim"));
 
 let forceReload = () =>
@@ -88,6 +89,43 @@ module Effects = {
       result |> toMsg |> dispatch;
     });
   };
+
+  let adjustBytePositionForEdit = (bytePosition: BytePosition.t, edit: Vim.Edit.t) => {
+    
+    let editStopLine = EditorCoreTypes.LineNumber.toZeroBased(edit.range.stop.line);
+    if (editStopLine <= EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line)) {
+      bytePosition
+    } else {
+      bytePosition
+    }
+  };
+
+  let adjustModeForEdit = (mode: Vim.Mode.t, edit: Vim.Edit.t) => {
+    Vim.Mode.(
+    switch (mode) {
+    | Normal({cursor}) => Normal({
+      cursor: adjustBytePositionForEdit(cursor, edit)
+    })
+    | Insert({cursors}) => Insert({
+      cursors: cursors |> List.map(cursor => adjustBytePositionForEdit(cursor, edit))
+    })
+    | Replace({cursor}) => Replace({
+      cursor: adjustBytePositionForEdit(cursor, edit)
+    })
+    | CommandLine => CommandLine
+    | Operator({ cursor, pending }) => Operator({
+      cursor: adjustBytePositionForEdit(cursor, edit),
+      pending,
+    })
+    | Visual(_) as vis => vis
+    | Select(_) as select => select
+    });
+  };
+
+  let adjustModeForEdits = (mode: Vim.Mode.t, edits: list(Vim.Edit.t)) => {
+    List.fold_left(adjustModeForEdit, mode, edits);
+  };
+
   let applyCompletion = (~meetColumn, ~insertText, ~toMsg, ~additionalEdits) =>
     Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
       let cursor = Vim.Cursor.get();
@@ -102,9 +140,11 @@ module Effects = {
       let buffer = Vim.Buffer.getCurrent();
       let mode' =
         if (additionalEdits != []) {
-          let _ = Vim.Buffer.applyEdits(~edits=additionalEdits, buffer);
-          // TODO: Adjust cursor based on edit
-          mode;
+          Vim.Buffer.applyEdits(~edits=additionalEdits, buffer)
+          |> Result.map(() => {
+            adjustModeForEdits(mode, additionalEdits)
+          })
+          |> ResultEx.value(~default=mode);
         } else {
           mode;
         };
