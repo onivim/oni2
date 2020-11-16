@@ -123,7 +123,7 @@ let sub = model => {
        Service_Time.Sub.once(
          ~uniqueId="Feature_Notification" ++ string_of_int(notification.id),
          ~delay=Animations.totalDuration,
-         ~msg=(~current) =>
+         ~msg=(~current as _) =>
          Expire({id: notification.id})
        )
      })
