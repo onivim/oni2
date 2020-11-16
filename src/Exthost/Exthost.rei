@@ -1633,7 +1633,7 @@ module Client: {
   let start:
     (
       ~initialConfiguration: Configuration.t=?,
-      ~initialWorkspace: WorkspaceData.t=?,
+      ~initialWorkspace: option(WorkspaceData.t)=?,
       ~namedPipe: NamedPipe.t,
       ~initData: Extension.InitData.t,
       // TODO:
