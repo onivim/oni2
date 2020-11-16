@@ -80,6 +80,8 @@ jobs:
   - template: .ci/use-esy.yml
   - template: .ci/esy-build-steps.yml
   - template: .ci/run-integration-tests.yml
+  - script: rm -rf _esy
+    displayName: 'Delete Onivim 2 local _esy folder prior to cache'
   - template: .ci/publish-build-cache.yml
 
 - job: CentOS
