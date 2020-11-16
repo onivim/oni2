@@ -9,6 +9,8 @@
 #include <caml/mlvalues.h>
 #include <caml/threads.h>
 
+#include <SDL2/SDL.h>
+
 #include "keyboard-layout.h"
 
 typedef struct KeycodeMapEntry {
@@ -17,7 +19,7 @@ typedef struct KeycodeMapEntry {
 } KeycodeMapEntry;
 
 #define USB_KEYMAP_DECLARATION static const KeycodeMapEntry keyCodeMap[] =
-#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id) {mac, code}
+#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id, sdl2_scancode, sdl2_keycode) {mac, code}
 
 #define UNWRAP_REF(ref) (Field(ref, 0))
 
