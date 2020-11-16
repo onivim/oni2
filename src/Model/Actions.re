@@ -44,8 +44,6 @@ type t =
   | KeyUp(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | Logging(Feature_Logging.msg)
   | TextInput(string, [@opaque] Revery.Time.t)
-  | DisableKeyDisplayer
-  | EnableKeyDisplayer
   // TODO: This should be a function call - wired up from an input feature
   // directly to the consumer of the keyboard action.
   // In addition, in the 'not-is-text' case, we should strongly type the keys.

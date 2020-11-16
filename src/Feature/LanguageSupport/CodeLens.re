@@ -216,13 +216,14 @@ module Contributions = {
 module View = {
   module CodeLensColors = Colors;
   open Revery.UI;
-  let make = (~theme, ~uiFont: Oni_Core.UiFont.t, ~codeLens, ()) => {
+  let make = (~leftMargin, ~theme, ~uiFont: Oni_Core.UiFont.t, ~codeLens, ()) => {
     let foregroundColor = CodeLensColors.foreground.from(theme);
     let text = text(codeLens);
     <View
       style=Style.[
         marginTop(4),
         marginBottom(0),
+        marginLeft(leftMargin),
         flexGrow(1),
         flexShrink(0),
       ]>

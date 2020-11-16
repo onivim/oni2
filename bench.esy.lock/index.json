@@ -326,7 +326,7 @@
       "overrides": [],
       "dependencies": [
         "xmldom@0.1.31@d41d8cd9", "xmlbuilder@9.0.7@d41d8cd9",
-        "base64-js@1.5.0@d41d8cd9"
+        "base64-js@1.5.1@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -919,14 +919,14 @@
       ],
       "devDependencies": []
     },
-    "base64-js@1.5.0@d41d8cd9": {
-      "id": "base64-js@1.5.0@d41d8cd9",
+    "base64-js@1.5.1@d41d8cd9": {
+      "id": "base64-js@1.5.1@d41d8cd9",
       "name": "base64-js",
-      "version": "1.5.0",
+      "version": "1.5.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/base64-js/-/base64-js-1.5.0.tgz#sha1:2d03045876d9e2b68a7a0f87d6bd163595e3b6af"
+          "archive:https://registry.npmjs.org/base64-js/-/base64-js-1.5.1.tgz#sha1:1b1b440160a5bf7ad40b650f095963481903930a"
         ]
       },
       "overrides": [],
@@ -2378,20 +2378,20 @@
         "@opam/base-bigarray@opam:base@b03491b0"
       ]
     },
-    "@opam/odoc@opam:1.5.1@52a58c0b": {
-      "id": "@opam/odoc@opam:1.5.1@52a58c0b",
+    "@opam/odoc@opam:1.5.2@236518eb": {
+      "id": "@opam/odoc@opam:1.5.2@236518eb",
       "name": "@opam/odoc",
-      "version": "opam:1.5.1",
+      "version": "opam:1.5.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/ea/ea14721344e2aab6b63f2884782d37e94a1ed8ab91147a1c08a29710d99d354f#sha256:ea14721344e2aab6b63f2884782d37e94a1ed8ab91147a1c08a29710d99d354f",
-          "archive:https://github.com/ocaml/odoc/releases/download/1.5.1/odoc-1.5.1.tbz#sha256:ea14721344e2aab6b63f2884782d37e94a1ed8ab91147a1c08a29710d99d354f"
+          "archive:https://opam.ocaml.org/cache/sha256/d2/d24463f2660bc28c72cda001478360158e953721c9e23fb361ec4783113c4871#sha256:d24463f2660bc28c72cda001478360158e953721c9e23fb361ec4783113c4871",
+          "archive:https://github.com/ocaml/odoc/releases/download/1.5.2/odoc-1.5.2.tbz#sha256:d24463f2660bc28c72cda001478360158e953721c9e23fb361ec4783113c4871"
         ],
         "opam": {
           "name": "odoc",
-          "version": "1.5.1",
-          "path": "bench.esy.lock/opam/odoc.1.5.1"
+          "version": "1.5.2",
+          "path": "bench.esy.lock/opam/odoc.1.5.2"
         }
       },
       "overrides": [],
@@ -2485,7 +2485,7 @@
         "ocaml@4.10.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
         "@opam/uuseg@opam:13.0.0@f60712a7",
         "@opam/stdio@opam:v0.14.0@a624e254", "@opam/re@opam:1.9.0@d4d5e13d",
-        "@opam/odoc@opam:1.5.1@52a58c0b",
+        "@opam/odoc@opam:1.5.2@236518eb",
         "@opam/ocaml-migrate-parsetree@opam:1.8.0@305b6173",
         "@opam/menhir@opam:20200624@8629ff13",
         "@opam/fpath@opam:0.7.3@674d8125",
@@ -2499,7 +2499,7 @@
         "ocaml@4.10.0@d41d8cd9", "@opam/uutf@opam:1.0.2@4440868f",
         "@opam/uuseg@opam:13.0.0@f60712a7",
         "@opam/stdio@opam:v0.14.0@a624e254", "@opam/re@opam:1.9.0@d4d5e13d",
-        "@opam/odoc@opam:1.5.1@52a58c0b",
+        "@opam/odoc@opam:1.5.2@236518eb",
         "@opam/ocaml-migrate-parsetree@opam:1.8.0@305b6173",
         "@opam/menhir@opam:20200624@8629ff13",
         "@opam/fpath@opam:0.7.3@674d8125",
