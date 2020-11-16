@@ -103,7 +103,7 @@ jobs:
     displayName: 'docker: build Dockerfile'
   - script: docker container run --rm --volume `pwd`:/oni2 centos /bin/bash -c 'cd oni2 && git --version'
     displayName: 'docker: git version (after updating)'
-  - script: docker container run --rm --volume `pwd`:/oni2 --volume ~/.esy/esy/store --name centos --network=host --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
+  - script: docker container run --rm --volume `pwd`:/oni2 --volume ~/.esy:/esy/store --name centos --network=host --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
     displayName: 'docker: build Onivim 2'
   - script: ls $(ESY__CACHE_INSTALL_PATH)
     displayName: 'Check esy cache install path after build'
