@@ -1475,13 +1475,7 @@ let update =
         state.layout
         |> Feature_Layout.map(editor =>
              if (Editor.getId(editor) == activeEditorId) {
-               Editor.setYankHighlight(
-                 ~yankHighlight={
-                   key: Brisk_reconciler.Key.create(),
-                   pixelRanges,
-                 },
-                 editor,
-               );
+               Editor.startYankHighlight(pixelRanges, editor);
              } else {
                editor;
              }
