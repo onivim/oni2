@@ -17,7 +17,7 @@ module Keymap: {
 
   let getCurrent: unit => t;
 
-  let entryOfKey: (t, string) => option(entry);
+  let entryOfScancode: (t, Sdl2.Scancode.t) => option(entry);
 
   let size: t => int;
 };

@@ -28,10 +28,10 @@ module Keymap = {
     withAltGraphShift: option(string),
   };
 
-  type t = Hashtbl.t(string, entry);
+  type t = Hashtbl.t(Sdl2.Scancode.t, entry);
 
   external populateCurrentKeymap:
-    ('keymap, ('keymap, string, entry) => unit) => unit =
+    ('keymap, ('keymap, Sdl2.Scancode.t, entry) => unit) => unit =
     "oni2_KeyboardLayoutPopulateCurrentKeymap";
 
   let getCurrent = () => {
@@ -41,7 +41,7 @@ module Keymap = {
     keymap;
   };
 
-  let entryOfKey = (keymap, key) => Hashtbl.find_opt(keymap, key);
+  let entryOfScancode = (keymap, key) => Hashtbl.find_opt(keymap, key);
 
   let size = Hashtbl.length;
 };

@@ -16,10 +16,12 @@
 typedef struct KeycodeMapEntry {
   uint16_t virtualKeyCode;
   const char *dom3Code;
+  SDL_Scancode sdlScancode;
+  SDL_Keycode sdlKeycode;
 } KeycodeMapEntry;
 
 #define USB_KEYMAP_DECLARATION static const KeycodeMapEntry keyCodeMap[] =
-#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id, sdl2_scancode, sdl2_keycode) {mac, code}
+#define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id, sdlScancode, sdlKeycode) {mac, code, sdlScancode, sdlKeycode}
 
 #define UNWRAP_REF(ref) (Field(ref, 0))
 
@@ -156,7 +158,7 @@ size_t characterForNativeCode(
 
 CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hashtbl_replace) {
   CAMLparam2(keymap, Hashtbl_replace);
-  CAMLlocal2(keymapEntry, vDom3Code);
+  CAMLlocal2(keymapEntry, vSDLScancode);
 
   // Allocate string pointers to be filled
   const char *unmodified;
@@ -181,10 +183,10 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
 
   size_t keyCodeMapSize = sizeof(keyCodeMap) / sizeof(keyCodeMap[0]);
   for (size_t i = 0; i < keyCodeMapSize; i++) {
-    const char *dom3Code = keyCodeMap[i].dom3Code;
+    SDL_Scancode sdlScancode = keyCodeMap[i].sdlScancode;
     int virtualKeyCode = keyCodeMap[i].virtualKeyCode;
 
-    if (dom3Code && virtualKeyCode < 0xffff) {
+    if (sdlScancode && virtualKeyCode < 0xffff) {
       int ccUnmodified = characterForNativeCode(
         keyboardLayout,
         virtualKeyCode,
@@ -220,9 +222,9 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
       }
       
       keymapEntry = createKeymapEntry(unmodified, withShift, withAltGraph, withAltGraphShift);
-      vDom3Code = caml_copy_string(dom3Code);
+      vSDLScancode = Val_int(sdlScancode);
 
-      value args[] = {keymap, vDom3Code, keymapEntry};
+      value args[] = {keymap, vSDLScancode, keymapEntry};
       caml_callbackN(Hashtbl_replace, 3, args);
     }
   }
