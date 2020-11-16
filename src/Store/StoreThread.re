@@ -382,6 +382,17 @@ let start =
               )
          )
       |> Isolinear.Sub.batch;
+
+    let inputSubscription =
+      state.input
+      |> Feature_Input.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Input(msg));
+
+    let notificationSub =
+      state.notifications
+      |> Feature_Notification.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Notification(msg));
+
     [
       extHostSubscription,
       languageSupportSub,
@@ -397,6 +408,8 @@ let start =
       scmSub,
       autoUpdateSub,
       visibleEditorsSubscription,
+      inputSubscription,
+      notificationSub,
     ]
     |> Isolinear.Sub.batch;
   };

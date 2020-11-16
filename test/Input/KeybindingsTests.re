@@ -135,6 +135,7 @@ describe("Keybindings", ({describe, _}) => {
              );
            let (_bindings, effects) =
              Feature_Input.keyDown(
+               ~time=Revery.Time.zero,
                ~config=Oni_Core.Config.emptyResolver,
                ~context=contextWithEditorTextFocus,
                ~key=getKeyFromSDL("F2"),
@@ -169,6 +170,7 @@ describe("Keybindings", ({describe, _}) => {
              let key = getKeyFromSDL(~modifiers, key);
              let (_bindings, effects) =
                Feature_Input.keyDown(
+                 ~time=Revery.Time.zero,
                  ~config=Oni_Core.Config.emptyResolver,
                  ~context=contextWithEditorTextFocus,
                  ~key,

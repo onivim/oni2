@@ -8,7 +8,6 @@ open Revery.UI;
 open Oni_Model;
 
 module ContextMenu = Oni_Components.ContextMenu;
-module KeyDisplayer = Oni_Components.KeyDisplayer;
 module ResizeHandle = Oni_Components.ResizeHandle;
 module Tooltip = Oni_Components.Tooltip;
 
@@ -209,10 +208,12 @@ let make = (~dispatch, ~state: State.t, ()) => {
        | Some(quickmenu) =>
          <QuickmenuView theme configuration state=quickmenu font />
        }}
-      {switch (state.keyDisplayer) {
-       | Some(model) => <KeyDisplayer model uiFont bottom=50 right=50 />
-       | None => React.empty
-       }}
+      <Feature_Input.View.Overlay
+        input={state.input}
+        uiFont
+        bottom=50
+        right=50
+      />
       <Feature_Registers.View
         theme
         registers={state.registers}

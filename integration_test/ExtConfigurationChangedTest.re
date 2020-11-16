@@ -9,7 +9,7 @@ open Oni_IntegrationTestLib;
 runTestWithInput(
   ~name="ExtConfigurationChangedTest", (_input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    state.notifications == []
+    Feature_Notification.all(state.notifications) == []
   );
 
   // Wait until the extension is activated
@@ -37,7 +37,7 @@ runTestWithInput(
     ~timeout=10.0,
     ~name="Validate we get message from the 'oni-dev' extension",
     (state: State.t) =>
-    switch (state.notifications) {
+    switch (Feature_Notification.all(state.notifications)) {
     | [{message, _}, _] => message == "Setting changed: 42"
     | _ => false
     }
