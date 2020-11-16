@@ -10,7 +10,9 @@ describe("Keymap", ({test, _}) => {
 
   test("entryOfKey", ({expect, _}) => {
     let keymap = Keymap.getCurrent();
-    let entry = Keymap.entryOfKey(keymap, "KeyS");
+
+    let scancode = Sdl2.Scancode.ofName("S");
+    let entry = Keymap.entryOfScancode(keymap, scancode);
 
     expect.option(entry).toBeSome();
 
@@ -25,7 +27,9 @@ describe("Keymap", ({test, _}) => {
 
   test("entryOfKey (no input)", ({expect, _}) => {
     let keymap = Keymap.getCurrent();
-    let entry = Keymap.entryOfKey(keymap, "Home");
+
+    let scancode = Sdl2.Scancode.ofName("Home");
+    let entry = Keymap.entryOfScancode(keymap, scancode);
 
     expect.option(entry).toBeSome();
 
