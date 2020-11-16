@@ -13,6 +13,7 @@ type scrollbarMetrics = {
 type yankHighlight = {
   key: Brisk_reconciler.Key.t,
   pixelRanges: list(PixelRange.t),
+  opacity: Component_Animation.t(float),
 };
 
 module WrapMode: {
@@ -80,7 +81,7 @@ let getTokenAt:
   option(CharacterRange.t);
 
 let yankHighlight: t => option(yankHighlight);
-let setYankHighlight: (~yankHighlight: yankHighlight, t) => t;
+let startYankHighlight: (list(PixelRange.t), t) => t;
 
 let setWrapPadding: (~padding: float, t) => t;
 let setVerticalScrollMargin: (~lines: int, t) => t;

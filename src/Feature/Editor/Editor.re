@@ -89,6 +89,7 @@ module WrapState = {
 type yankHighlight = {
   key: [@opaque] Brisk_reconciler.Key.t,
   pixelRanges: list(PixelRange.t),
+  opacity: [@opaque] Component_Animation.t(float),
 };
 
 let scrollSpringOptions =
@@ -111,6 +112,7 @@ type t = {
   pixelWidth: int,
   pixelHeight: int,
   yankHighlight: option(yankHighlight),
+  yankHighlightDuration: int,
   wrapMode: WrapMode.t,
   wrapState: WrapState.t,
   wrapPadding: option(float),
@@ -214,10 +216,29 @@ let bufferBytePositionToPixelInternal =
 let bufferBytePositionToPixel =
   bufferBytePositionToPixelInternal(~useAnimatedScrollPosition=true);
 
+module Animations = {
+  open Revery.UI;
+  let fadeIn = (~duration) =>
+    Revery.UI.Animation.(
+      animate(Revery.Time.milliseconds(duration))
+      |> ease(Easing.easeIn)
+      |> tween(0.6, 0.0)
+      |> delay(Revery.Time.milliseconds(0))
+    );
+};
+
 let yankHighlight = ({yankHighlight, _}) => yankHighlight;
-let setYankHighlight = (~yankHighlight, editor) => {
+let startYankHighlight = (pixelRanges, editor) => {
   ...editor,
-  yankHighlight: Some(yankHighlight),
+  yankHighlight:
+    Some({
+      pixelRanges,
+      key: Brisk_reconciler.Key.create(),
+      opacity:
+        Component_Animation.make(
+          Animations.fadeIn(~duration=editor.yankHighlightDuration),
+        ),
+    }),
 };
 
 let setWrapPadding = (~padding, editor) => {
@@ -409,7 +430,10 @@ let configure = (~config, editor) => {
     Feature_Configuration.GlobalConfiguration.animation.get(config)
     && EditorConfiguration.smoothScroll.get(config);
 
-  {...editor, isScrollAnimated}
+  let yankHighlightDuration =
+    EditorConfiguration.yankHighlightDuration.get(config);
+
+  {...editor, isScrollAnimated, yankHighlightDuration}
   |> setVerticalScrollMargin(~lines=scrolloff)
   |> setMinimap(
        ~enabled=EditorConfiguration.Minimap.enabled.get(config),
@@ -435,6 +459,9 @@ let create = (~config, ~buffer, ()) => {
   let isScrollAnimated =
     Feature_Configuration.GlobalConfiguration.animation.get(config)
     && EditorConfiguration.smoothScroll.get(config);
+
+  let yankHighlightDuration =
+    EditorConfiguration.yankHighlightDuration.get(config);
 
   {
     editorId: id,
@@ -463,6 +490,7 @@ let create = (~config, ~buffer, ()) => {
     pixelWidth: 1,
     pixelHeight: 1,
     yankHighlight: None,
+    yankHighlightDuration,
     wrapState,
     wrapMode,
     wrapPadding: None,
@@ -1524,10 +1552,25 @@ let getLeadingWhitespacePixels = (lineNumber, editor) => {
 [@deriving show]
 type msg =
   | ScrollSpringX([@opaque] Spring.msg)
-  | ScrollSpringY([@opaque] Spring.msg);
+  | ScrollSpringY([@opaque] Spring.msg)
+  | YankHighlight([@opaque] Component_Animation.msg);
 
 let update = (msg, editor) => {
   switch (msg) {
+  | YankHighlight(msg) =>
+    let yankHighlight' =
+      yankHighlight(editor)
+      |> OptionEx.flatMap(yankHighlight => {
+           let opacity' =
+             Component_Animation.update(msg, yankHighlight.opacity);
+
+           if (Component_Animation.isComplete(opacity')) {
+             None;
+           } else {
+             Some({...yankHighlight, opacity: opacity'});
+           };
+         });
+    {...editor, yankHighlight: yankHighlight'};
   | ScrollSpringX(msg) => {
       ...editor,
       scrollX: Spring.update(msg, editor.scrollX),
@@ -1540,10 +1583,19 @@ let update = (msg, editor) => {
 };
 
 let sub = editor => {
+  let yankHighlightAnimation =
+    yankHighlight(editor)
+    |> Option.map(({opacity, _}) => {
+         opacity
+         |> Component_Animation.sub
+         |> Isolinear.Sub.map(msg => YankHighlight(msg))
+       })
+    |> Option.value(~default=Isolinear.Sub.none);
   [
     Spring.sub(editor.scrollX) |> Isolinear.Sub.map(msg => ScrollSpringX(msg)),
     Spring.sub(editor.scrollY)
     |> Isolinear.Sub.map(msg => ScrollSpringY(msg)),
+    yankHighlightAnimation,
   ]
   |> Isolinear.Sub.batch;
 };
