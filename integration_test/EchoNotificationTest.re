@@ -9,9 +9,7 @@ runTest(~name="EchoNotificationTest", (dispatch, wait, _runEffects) => {
   dispatch(VimExecuteCommand("echo 'hi from test'"));
 
   wait(~name="notification shows up", (state: State.t) => {
-    let notifications = (
-      state.notifications :> list(Feature_Notification.notification)
-    );
+    let notifications = Feature_Notification.all(state.notifications);
     if (notifications != []) {
       let notification = List.hd(notifications);
       String.equal(notification.message, "hi from test");

@@ -7,8 +7,6 @@
 open Oni_Core;
 open Oni_Syntax;
 
-module KeyDisplayer = Oni_Components.KeyDisplayer;
-
 module Commands = GlobalCommands;
 let windowCommandCondition = "!insertMode || terminalFocus" |> WhenExpr.parse;
 
@@ -442,13 +440,11 @@ type t = {
   exthost: Feature_Exthost.model,
   iconTheme: IconTheme.t,
   isQuitting: bool,
-  keyDisplayer: option(KeyDisplayer.t),
   languageSupport: Feature_LanguageSupport.model,
   languageInfo: Exthost.LanguageInfo.t,
   grammarRepository: Oni_Syntax.GrammarRepository.t,
   lifecycle: Lifecycle.t,
   notifications: Feature_Notification.model,
-  //  references: References.t,
   registers: Feature_Registers.model,
   scm: Feature_SCM.model,
   sneak: Feature_Sneak.model,
@@ -555,11 +551,9 @@ let initial =
     tokenTheme: TokenTheme.empty,
     iconTheme: IconTheme.create(),
     isQuitting: false,
-    keyDisplayer: None,
     languageInfo: Exthost.LanguageInfo.initial,
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,
-    //    references: References.initial,
     registers: Feature_Registers.initial,
     scm: Feature_SCM.initial,
     sneak: Feature_Sneak.initial,

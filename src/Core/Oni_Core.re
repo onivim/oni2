@@ -31,6 +31,7 @@ module Indentation = Indentation;
 module IndentationSettings = IndentationSettings;
 module Inferred = Inferred;
 module IntMap = Kernel.IntMap;
+module IntSet = Kernel.IntSet;
 module Json = Json;
 module Job = Job;
 module LanguageConfiguration = LanguageConfiguration;

@@ -122,7 +122,6 @@ let other = {
         ),
         bool("sneakMode", state => Feature_Sneak.isActive(state.sneak)),
         bool("zenMode", state => state.zenMode),
-        bool("keyDisplayerEnabled", state => state.keyDisplayer != None),
       ],
     )
   );
@@ -182,11 +181,14 @@ let all = (state: State.t) => {
     | _ => false
     };
 
+  let inputContextKeys = Feature_Input.Contributions.contextKeys(state.input);
+
   unionMany([
     Feature_Registers.Contributions.contextKeys(
       ~isFocused=focus == Focus.InsertRegister,
       state.registers,
     ),
+    inputContextKeys,
     explorerContextKeys,
     sideBarContext,
     scmContextKeys,
