@@ -90,36 +90,46 @@ module Effects = {
     });
   };
 
-  let adjustBytePositionForEdit = (bytePosition: BytePosition.t, edit: Vim.Edit.t) => {
-    
-    let editStopLine = EditorCoreTypes.LineNumber.toZeroBased(edit.range.stop.line);
-    if (editStopLine <= EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line)) {
-      bytePosition
+  let adjustBytePositionForEdit =
+      (bytePosition: BytePosition.t, edit: Vim.Edit.t) => {
+    let editStartLine =
+      EditorCoreTypes.LineNumber.toZeroBased(edit.range.start.line);
+    let editStopLine =
+      EditorCoreTypes.LineNumber.toZeroBased(edit.range.stop.line);
+    if (editStopLine
+        <= EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line)) {
+      let originalLines = editStopLine - editStartLine + 1;
+      let newLines = Array.length(edit.text);
+      let deltaLines = newLines - originalLines;
+      BytePosition.{
+        line: EditorCoreTypes.LineNumber.(bytePosition.line + deltaLines),
+        byte: bytePosition.byte,
+      };
     } else {
-      bytePosition
-    }
+      bytePosition;
+    };
   };
 
   let adjustModeForEdit = (mode: Vim.Mode.t, edit: Vim.Edit.t) => {
     Vim.Mode.(
-    switch (mode) {
-    | Normal({cursor}) => Normal({
-      cursor: adjustBytePositionForEdit(cursor, edit)
-    })
-    | Insert({cursors}) => Insert({
-      cursors: cursors |> List.map(cursor => adjustBytePositionForEdit(cursor, edit))
-    })
-    | Replace({cursor}) => Replace({
-      cursor: adjustBytePositionForEdit(cursor, edit)
-    })
-    | CommandLine => CommandLine
-    | Operator({ cursor, pending }) => Operator({
-      cursor: adjustBytePositionForEdit(cursor, edit),
-      pending,
-    })
-    | Visual(_) as vis => vis
-    | Select(_) as select => select
-    });
+      switch (mode) {
+      | Normal({cursor}) =>
+        Normal({cursor: adjustBytePositionForEdit(cursor, edit)})
+      | Insert({cursors}) =>
+        Insert({
+          cursors:
+            cursors
+            |> List.map(cursor => adjustBytePositionForEdit(cursor, edit)),
+        })
+      | Replace({cursor}) =>
+        Replace({cursor: adjustBytePositionForEdit(cursor, edit)})
+      | CommandLine => CommandLine
+      | Operator({cursor, pending}) =>
+        Operator({cursor: adjustBytePositionForEdit(cursor, edit), pending})
+      | Visual(_) as vis => vis
+      | Select(_) as select => select
+      }
+    );
   };
 
   let adjustModeForEdits = (mode: Vim.Mode.t, edits: list(Vim.Edit.t)) => {
@@ -141,9 +151,7 @@ module Effects = {
       let mode' =
         if (additionalEdits != []) {
           Vim.Buffer.applyEdits(~edits=additionalEdits, buffer)
-          |> Result.map(() => {
-            adjustModeForEdits(mode, additionalEdits)
-          })
+          |> Result.map(() => {adjustModeForEdits(mode, additionalEdits)})
           |> ResultEx.value(~default=mode);
         } else {
           mode;

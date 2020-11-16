@@ -78,13 +78,20 @@ function activate(context) {
             provideCompletionItems: (document, position, token, context) => {
                 const itemWithAdditionalEdit = vscode.CompletionItem("ReasonML1");
                 itemWithAdditionalEdit.detail = "(Inserts line at top too)";
-                const range = new vscode.Range(0, 0, 0, 0);
-                const edit = new vscode.TextEdit(range, "Insert line up top!\n");
+                const range0 = new vscode.Range(0, 0, 0, 0);
+                const edit0 = new vscode.TextEdit(range0, "Insert line up top!\n");
                 itemWithAdditionalEdit.additionalTextEdits = [
-                    edit
+                    edit0
                 ];
-                return [itemWithAdditionalEdit,
-                vscode.CompletionItem("OCaml1")]
+
+                const itemWithAdditionalEditAfter = vscode.CompletionItem("OCaml");
+                itemWithAdditionalEditAfter.detail = "(Inserts line at line 10, too)";
+                const range1 = new vscode.Range(11, 0, 11, 0);
+                const edit1 = new vscode.TextEdit(range1, "Insert line at line 10\n");
+                itemWithAdditionalEditAfter.additionalTextEdits = [
+                    edit1
+                ];
+                return [itemWithAdditionalEdit, itemWithAdditionalEditAfter];
             },
         }),
     )
