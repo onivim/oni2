@@ -13,6 +13,7 @@ type scrollbarMetrics = {
 type yankHighlight = {
   key: Brisk_reconciler.Key.t,
   pixelRanges: list(PixelRange.t),
+  opacity: Component_Animation.t(float),
 };
 
 module WrapMode: {
@@ -67,6 +68,9 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
 
+// Get the horizontal width in pixels of the tab/space whitespace in front of a line.
+let getLeadingWhitespacePixels: (EditorCoreTypes.LineNumber.t, t) => float;
+
 let mode: t => Vim.Mode.t;
 let setMode: (Vim.Mode.t, t) => t;
 
@@ -77,7 +81,7 @@ let getTokenAt:
   option(CharacterRange.t);
 
 let yankHighlight: t => option(yankHighlight);
-let setYankHighlight: (~yankHighlight: yankHighlight, t) => t;
+let startYankHighlight: (list(PixelRange.t), t) => t;
 
 let setWrapPadding: (~padding: float, t) => t;
 let setVerticalScrollMargin: (~lines: int, t) => t;
