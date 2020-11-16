@@ -191,6 +191,7 @@ jobs:
     ESY__CACHE_INSTALL_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/i
     ESY__CACHE_BUILD_PATH: /C/Users/VssAdministrator/.esy/3______________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /C/Users/VssAdministrator/.esy/source/i
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
     # ESY__NPM_ROOT: /C/npm/prefix/node_modules/esy
 
   steps:
