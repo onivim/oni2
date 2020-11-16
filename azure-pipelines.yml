@@ -82,9 +82,9 @@ jobs:
 
 - job: CentOS
   displayName: 'Linux - CentOS - Docker Image'
-  timeoutInMinutes: 0
+  timeoutInMinutes: 120
   pool:
-    vmImage: 'Ubuntu 16.04'
+    vmImage: 'ubuntu-16.04'
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
@@ -95,14 +95,12 @@ jobs:
 
   steps:
   - template: .ci/clean-linux-deps.yml
-  - script: docker build -t centos scripts/docker/centos
+  - script: docker build --network=host -t centos scripts/docker/centos
     displayName: 'docker: build Dockerfile'
-  - script: docker run --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && git --version'
+  - script: docker container run --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && git --version'
     displayName: 'docker: git version (after updating)'
-  - script: docker run --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
-    displayName: 'docker: build'
-  - script: docker run --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-test.sh'
-    displayName: 'docker: run tests'
+  - script: docker container run --name centos --network=host --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
+    displayName: 'docker: build Onivim 2'
   - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-linux.yml
