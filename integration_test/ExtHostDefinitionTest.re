@@ -8,7 +8,7 @@ open Feature_Editor;
 // - We get a definition response
 runTestWithInput(
   ~name="ExtHostDefinitionTest", (input, dispatch, wait, _runEffects) => {
-  wait(~name="Exthost is initailized", (state: State.t) =>
+  wait(~timeout=30.0, ~name="Exthost is initialized", (state: State.t) =>
     Feature_Exthost.isInitialized(state.exthost)
   );
 

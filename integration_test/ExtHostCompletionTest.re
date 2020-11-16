@@ -7,7 +7,7 @@ open Oni_IntegrationTestLib;
 // - When typing in an 'oni-dev' buffer, we get some completion results
 runTestWithInput(
   ~name="ExtHostCompletionTest", (input, dispatch, wait, _runEffects) => {
-  wait(~name="Exthost is initailized", (state: State.t) =>
+  wait(~timeout=30.0, ~name="Exthost is initialized", (state: State.t) =>
     Feature_Exthost.isInitialized(state.exthost)
   );
 
