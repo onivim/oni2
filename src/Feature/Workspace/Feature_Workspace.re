@@ -14,8 +14,8 @@ type model = {
   rootName: string,
 };
 
-let initial = workingDirectory => {
+let initial = (~openedFolder: option(string), workingDirectory) => {
   workingDirectory,
-  openedFolder: None,
+  openedFolder,
   rootName: Filename.basename(workingDirectory),
 };

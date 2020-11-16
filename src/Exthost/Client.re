@@ -82,10 +82,15 @@ let start =
 
         incr(lastRequestId);
         let rpcId = "ExtHostWorkspace" |> Handlers.stringToId |> Option.get;
-        let initialWorkspaceListJson = switch (initialWorkspace) {
-        | None => `List([])
-        | Some(workspace) => `List([workspace |> Oni_Core.Json.Encode.encode_value(WorkspaceData.encode)])
-        };
+        let initialWorkspaceListJson =
+          switch (initialWorkspace) {
+          | None => `List([])
+          | Some(workspace) =>
+            `List([
+              workspace
+              |> Oni_Core.Json.Encode.encode_value(WorkspaceData.encode),
+            ])
+          };
         send(
           Outgoing.RequestJSONArgs({
             requestId: lastRequestId^,

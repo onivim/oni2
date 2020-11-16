@@ -141,8 +141,13 @@ let start =
       }
     );
 
+  let initialWorkspace =
+    initialState.workspace.openedFolder
+    |> Option.map(Exthost.WorkspaceData.fromPath);
+
   let (extHostClientResult, extHostStream) =
     ExtensionClient.create(
+      ~initialWorkspace,
       ~attachStdio,
       ~config=getState().config,
       ~extensions,

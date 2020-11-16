@@ -563,7 +563,11 @@ let initial =
     layout: Feature_Layout.initial([initialEditor]),
     windowIsFocused: true,
     windowDisplayMode: Windowed,
-    workspace: Feature_Workspace.initial(workingDirectory),
+    workspace:
+      Feature_Workspace.initial(
+        ~openedFolder=maybeWorkspace,
+        workingDirectory,
+      ),
     fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),
     signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
