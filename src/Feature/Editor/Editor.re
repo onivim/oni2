@@ -1147,7 +1147,6 @@ let movePositionIntoView = (~deltaViewLines=0, cursor: BytePosition.t, editor) =
   let wrapping = editor.wrapState |> WrapState.wrapping;
   let currentViewLine =
     Wrapping.bufferBytePositionToViewLine(~bytePosition=cursor, wrapping);
-  //let totalViewLines = Wrapping.numberOfLines(wrapping);
   let topViewLine = getTopViewLine(editor);
   let bottomViewLine = getBottomViewLine(editor);
   let newViewLine =
