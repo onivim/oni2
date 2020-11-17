@@ -129,7 +129,9 @@ Onivim-specific contexts:
 | `visualMode` |  The active editor is in `visual` mode |
 | `sneakMode` | Sneak mode is active |
 | `commandLineFocus` | The Vim commandline is open |
-| `menuFocus` | A pop-up menu has focus |
+| `listFocus` | A list of items (like a pop-up menu) is focused |
+| `vimListNavigation` | Inside a Vim-navigable list |
+| `vimTreeNavigation` | Inside the file explorer |
 
 ## Commands
 
