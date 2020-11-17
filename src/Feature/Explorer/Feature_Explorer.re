@@ -364,24 +364,41 @@ module View = {
           uiFont=font
           onClick={() => dispatch(FileExplorerAccordionClicked)}
           contents={
-            <Oni_Components.Button
-              label="Open Folder"
-              theme
-              font
-              onClick={() =>
-                dispatch(
-                  OpenFolderClicked,
-                  // let files = Revery.Native.Dialog.openFiles(
-                  //   ~canChooseFiles=false,
-                  //   ~canChooseDirectories=true,
-                  //   (),
-                  // ) |> Option.get;
-                  // files
-                  // |> Array.iter(prerr_endline);
-                  // failwith ("no");
-                )
-              }
-            />
+            <View style=[Style.flexDirection(`Column)]>
+              <View
+                style=[
+                  Style.padding(8),
+                  Style.marginLeft(8),
+                  Style.marginTop(8),
+                ]>
+                <Text
+                  style=Style.[color(foregroundColor)]
+                  text="You have not yet opened a folder."
+                  fontFamily={font.family}
+                  fontSize={font.size}
+                />
+              </View>
+              <View style=[Style.padding(8)]>
+                <Oni_Components.Button
+                  label="Open Folder"
+                  theme
+                  font
+                  onClick={() =>
+                    dispatch(
+                      OpenFolderClicked,
+                      // let files = Revery.Native.Dialog.openFiles(
+                      //   ~canChooseFiles=false,
+                      //   ~canChooseDirectories=true,
+                      //   (),
+                      // ) |> Option.get;
+                      // files
+                      // |> Array.iter(prerr_endline);
+                      // failwith ("no");
+                    )
+                  }
+                />
+              </View>
+            </View>
           }
         />
 

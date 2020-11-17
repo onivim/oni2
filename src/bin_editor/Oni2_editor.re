@@ -271,13 +271,14 @@ switch (eff) {
       );
 
     let persistGlobal = () => Store.Persistence.Global.persist(currentState^);
-    let persistWorkspace = () =>
-      Store.Persistence.Workspace.(
-        persist(
-          (currentState^, window),
-          storeFor(currentState^.workspace.workingDirectory),
-        )
-      );
+    let persistWorkspace = () => {
+      currentState^.workspace.openedFolder
+      |> Option.iter(workspace => {
+           Store.Persistence.Workspace.(
+             persist((currentState^, window), storeFor(workspace))
+           )
+         });
+    };
 
     let uiDispatch = ref(_ => ());
 
