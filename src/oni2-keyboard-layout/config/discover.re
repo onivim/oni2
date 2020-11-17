@@ -32,7 +32,7 @@ let flags =
 
 let cFlags =
   switch (os) {
-  | Mac => ["-x", "objective-c"]
+  | Mac => ["-I", Sys.getenv("SDL2_INCLUDE_PATH"), "-x", "objective-c"]
   | _ => []
   };
 
