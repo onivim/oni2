@@ -90,23 +90,29 @@ jobs:
 
   variables:
     STAGING_DIRECTORY: $(Build.StagingDirectory)
-    ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
-    ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_____________________________________________________________________/b
+    ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3__________________________________________________________________________/i
+    ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3__________________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
-    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-install
+    CACHE_ARTIFACT_NAME: cache-$(Agent.OS)-CentOS-docker-install
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
   steps:
   - template: .ci/clean-linux-deps.yml
+  - template: .ci/restore-build-cache.yml
   - script: docker build --network=host -t centos scripts/docker/centos
     displayName: 'docker: build Dockerfile'
-  - script: docker container run --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && git --version'
+  - script: docker container run --rm --volume `pwd`:/oni2 centos /bin/bash -c 'cd oni2 && git --version'
     displayName: 'docker: git version (after updating)'
-  - script: docker container run --name centos --network=host --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --mount src=`pwd`,target=/oni2,type=bind centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
+  - script: docker container run --rm --volume `pwd`:/oni2 --volume ~/.esy:/esy/store --name centos --network=host --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined centos /bin/bash -c 'cd oni2 && ./scripts/docker-build.sh'
     displayName: 'docker: build Onivim 2'
+  - script: ls ~/.esy
+    displayName: 'Check esy root path'
+  - script: ls $(ESY__CACHE_INSTALL_PATH)
+    displayName: 'Check esy cache install path after build'
   - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-linux.yml
+  - template: .ci/publish-build-cache.yml
 
 - job: MacOS
   displayName: "MacOS 10.14"
