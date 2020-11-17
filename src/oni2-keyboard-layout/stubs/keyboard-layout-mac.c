@@ -23,8 +23,6 @@ typedef struct KeycodeMapEntry {
 #define USB_KEYMAP_DECLARATION static const KeycodeMapEntry keyCodeMap[] =
 #define USB_KEYMAP(usb, evdev, xkb, win, mac, code, id, sdlScancode, sdlKeycode) {mac, code, sdlScancode, sdlKeycode}
 
-#define UNWRAP_REF(ref) (Field(ref, 0))
-
 #include "keycode_converter_data.h"
 
 NSString *oni2_priv_GetCurrentKeyboardLayout() {
