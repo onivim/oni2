@@ -202,6 +202,26 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     let (input, effects) =
       Feature_Input.keyDown(~config, ~context, ~key, state.input);
 
+    switch (key) {
+    | PhysicalKey(physicalKey) =>
+      let scancode = physicalKey.scancode;
+      let keyboard = Oni2_KeyboardLayout.Keymap.getCurrent();
+      let maybeKeymap =
+        Oni2_KeyboardLayout.Keymap.entryOfScancode(keyboard, scancode);
+
+      switch (maybeKeymap) {
+      | Some(keymap) =>
+        Log.infof(m =>
+          m(
+            "Key info: %s\n",
+            Oni2_KeyboardLayout.Keymap.entryToString(keymap),
+          )
+        )
+      | None => Log.info("No keymap for key.")
+      };
+
+    | _ => ()
+    };
     let newState = {...state, input};
 
     let actions =

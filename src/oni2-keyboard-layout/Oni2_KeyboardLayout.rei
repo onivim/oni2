@@ -19,5 +19,7 @@ module Keymap: {
 
   let entryOfScancode: (t, Sdl2.Scancode.t) => option(entry);
 
+  let entryToString: entry => string;
+
   let size: t => int;
 };

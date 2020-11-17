@@ -28,6 +28,22 @@ module Keymap = {
     withAltGraphShift: option(string),
   };
 
+  let entryToString =
+      ({unmodified, withShift, withAltGraph, withAltGraphShift}) => {
+    let optStr =
+      fun
+      | None => "(none)"
+      | Some(str) => str;
+
+    Printf.sprintf(
+      "Unmodified: %s\n WithShift: %s\n WithAltGr: %s\n WithAltGrShift: %s\n",
+      optStr(unmodified),
+      optStr(withShift),
+      optStr(withAltGraph),
+      optStr(withAltGraphShift),
+    );
+  };
+
   type t = Hashtbl.t(Sdl2.Scancode.t, entry);
 
   external populateCurrentKeymap:
