@@ -1143,10 +1143,6 @@ let scrollDeltaPixelXY = (~animated, ~pixelX, ~pixelY, view) => {
   {...view, scrollX, scrollY, minimapScrollY};
 };
 
-let visibleViewLines = editor => {
-  int_of_float(float(editor.pixelHeight) /. lineHeightInPixels(editor));
-};
-
 let movePositionIntoView = (~deltaViewLines=0, cursor: BytePosition.t, editor) => {
   let wrapping = editor.wrapState |> WrapState.wrapping;
   let currentViewLine =
