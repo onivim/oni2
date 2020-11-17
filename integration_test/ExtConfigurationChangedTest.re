@@ -9,7 +9,7 @@ open Oni_IntegrationTestLib;
 runTestWithInput(
   ~name="ExtConfigurationChangedTest", (_input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Notification.all(state.notifications) == []
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   // Wait until the extension is activated

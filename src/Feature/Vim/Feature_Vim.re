@@ -1,22 +1,14 @@
-open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
 // MODEL
 
 type model = {
-  mode: Vim.Mode.t,
   settings: StringMap.t(Vim.Setting.value),
   recordingMacro: option(char),
 };
 
-let initial = {
-  mode: Vim.Mode.Normal({cursor: BytePosition.zero}),
-  settings: StringMap.empty,
-  recordingMacro: None,
-};
-
-let mode = ({mode, _}) => mode;
+let initial = {settings: StringMap.empty, recordingMacro: None};
 
 let recordingMacro = ({recordingMacro, _}) => recordingMacro;
 
@@ -39,7 +31,7 @@ type outmsg =
 
 let update = (msg, model: model) => {
   switch (msg) {
-  | ModeChanged(mode) => ({...model, mode}, Nothing)
+  | ModeChanged(_mode) => (model, Nothing)
   | Pasted(text) =>
     let eff =
       Service_Vim.Effects.paste(

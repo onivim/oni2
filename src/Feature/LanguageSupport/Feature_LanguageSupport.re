@@ -367,13 +367,11 @@ let cursorMoved = (~previous, ~current, model) => {
 };
 
 let startInsertMode = model => {
-  ...model,
-  completion: Completion.startInsertMode(model.completion),
+  {...model, completion: Completion.startInsertMode(model.completion)};
 };
 
 let stopInsertMode = model => {
-  ...model,
-  completion: Completion.stopInsertMode(model.completion),
+  {...model, completion: Completion.stopInsertMode(model.completion)};
 };
 
 let isFocused = ({rename, _}) => Rename.isFocused(rename);
