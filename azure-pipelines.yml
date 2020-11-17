@@ -23,7 +23,7 @@ jobs:
 - job: Kickoff
   displayName: "Kickoff"
   pool:
-    vmImage: 'ubuntu-latest'
+    vmImage: 'ubuntu-18.04'
 
   steps:
   - script: ./scripts/set-short-commit-variable.sh
