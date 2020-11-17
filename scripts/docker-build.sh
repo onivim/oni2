@@ -1,7 +1,7 @@
 source /opt/rh/llvm-toolset-7.0/enable
 clang -v
 
-export ESY_PREFIX=/esy/store
+export ESY__PREFIX=/esy/store
 esy install --fetch-concurrency=1 --build-concurrency=1
 esy build --fetch-concurrency=1 --build-concurrency=1
 esy run-script bootstrap
