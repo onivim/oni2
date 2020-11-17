@@ -152,7 +152,7 @@ module Selected = {
   let description =
     fun
     | Local(scanResult) => scanResult.manifest.description
-    | Remote({description, _}) => Some(description);
+    | Remote({description, _}) => description;
 
   let readme =
     fun

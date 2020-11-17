@@ -35,7 +35,7 @@ module Catalog: {
       namespace: string,
       //      downloadCount: int,
       displayName: option(string),
-      description: string,
+      description: option(string),
       //      categories: list(string),
       version: string,
       versions: list(VersionInfo.t),
@@ -54,7 +54,7 @@ module Catalog: {
       name: string,
       namespace: string,
       displayName: option(string),
-      description: string,
+      description: option(string),
     };
 
     let name: t => string;
