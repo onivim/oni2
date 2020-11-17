@@ -1268,12 +1268,16 @@ let scrollCursorBottom = editor => {
 
 let scrollLines = (~count, editor) => {
   // Apply the scroll first - we might not need to move the cursor
+
   let scrollDelta = float(count) *. lineHeightInPixels(editor);
   let newScrollY = Spring.getTarget(editor.scrollY) +. scrollDelta;
   let editor' = scrollToPixelY(~animated=true, ~pixelY=newScrollY, editor);
 
-  // Then, if needed, bump the cursor position
-  if (!isCursorFullyVisible(editor')) {
+  let didScroll =
+    Spring.getTarget(editor'.scrollY) != Spring.getTarget(editor.scrollY);
+
+  // Then, if needed, bump the cursor position - only if we actually scrolled, and the cursor isn't fully in view.
+  if (!isCursorFullyVisible(editor') && didScroll) {
     let adjustCursor = cursor =>
       movePositionIntoView(~deltaViewLines=0, cursor, editor');
     mapCursor(~f=adjustCursor, editor');
