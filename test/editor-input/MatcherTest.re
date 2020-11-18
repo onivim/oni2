@@ -51,7 +51,11 @@ let getKeycode =
 
 let getScancode = getKeycode;
 
-let defaultParse = Matcher.parse(~explicitShiftKeyNeeded=true, ~getKeycode, ~getScancode);
+let defaultParse =
+  Matcher.parse(~explicitShiftKeyNeeded=true, ~getKeycode, ~getScancode);
+
+let defaultParseImplicitShiftKey =
+  Matcher.parse(~explicitShiftKeyNeeded=false, ~getKeycode, ~getScancode);
 
 let modifiersControl = {...Modifiers.none, control: true};
 
@@ -207,6 +211,21 @@ describe("Matcher", ({describe, _}) => {
             keyPress(~modifiers=modifiersControl, 1),
             keyPress(~modifiers=modifiersControl, 2),
           ]),
+        ),
+      );
+    });
+    test("explicitShiftKeyNeeded=false", ({expect, _}) => {
+      let result = defaultParseImplicitShiftKey("A");
+      expect.equal(
+        result,
+        Ok(Sequence([keyPress(~modifiers=modifiersShift, 1)])),
+      );
+
+      let result = defaultParseImplicitShiftKey("Ab");
+      expect.equal(
+        result,
+        Ok(
+          Sequence([keyPress(~modifiers=modifiersShift, 1), keyPress(2)]),
         ),
       );
     });

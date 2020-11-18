@@ -56,12 +56,14 @@ let ofInternal =
          if (Uchar.is_char(uchar)) {
            let char = Uchar.to_char(uchar);
            let lowercaseChar = Char.lowercase_ascii(char);
-           let isCapitalized = 
-           lowercaseChar != char;
+           let isCapitalized = lowercaseChar != char;
            if (isCapitalized && addShiftKeyToCapital) {
-            keyToKeyPress(~mods=[Shift, ...mods], Key.Character(lowercaseChar))
+             keyToKeyPress(
+               ~mods=[Shift, ...mods],
+               Key.Character(lowercaseChar),
+             );
            } else {
-            keyToKeyPress(Key.Character(lowercaseChar));
+             keyToKeyPress(Key.Character(lowercaseChar));
            };
          } else {
            Error(
@@ -92,15 +94,14 @@ let parse = (~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, str) => {
 
   let finish = r => {
     r
-    |> List.map(ofInternal(~addShiftKeyToCapital, ~getKeycode, ~getScancode))
+    |> List.map(
+         ofInternal(~addShiftKeyToCapital, ~getKeycode, ~getScancode),
+       )
     |> List.flatten
     |> Base.Result.all;
   };
 
-  str
-  |> Lexing.from_string
-  |> parse
-  |> flatMap(finish);
+  str |> Lexing.from_string |> parse |> flatMap(finish);
 };
 
 let toString = (~meta="Meta", ~keyCodeToString, key) => {

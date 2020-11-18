@@ -86,14 +86,14 @@ module KeyPress: {
   let toPhysicalKey: t => option(PhysicalKey.t);
 
   let parse:
+    // When [explicitShiftKeyNeeded] is [true]:
+    // - Both 's' and 'S' would get resolved as 's'
+    // In other words, 'S' requires a 'Shift+' modifier
+    // (VScode style parsing)
+    // When [explicitShiftKeyNeeded] is [false]:
+    // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
+    // (Vim style parsing)
     (
-      // When [explicitShiftKeyNeeded] is [true]:
-      // - Both 's' and 'S' would get resolved as 's'
-      // In other words, 'S' requires a 'Shift+' modifier
-      // (VScode style parsing)
-      // When [explicitShiftKeyNeeded] is [false]:
-      // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
-      // (Vim style parsing)
       ~explicitShiftKeyNeeded: bool,
       ~getKeycode: Key.t => option(int),
       ~getScancode: Key.t => option(int),
@@ -108,14 +108,14 @@ module Matcher: {
     | AllKeysReleased;
 
   let parse:
+    // When [explicitShiftKeyNeeded] is [true]:
+    // - Both 's' and 'S' would get resolved as 's'
+    // In other words, 'S' requires a 'Shift+' modifier
+    // (VScode style parsing)
+    // When [explicitShiftKeyNeeded] is [false]:
+    // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
+    // (Vim style parsing)
     (
-      // When [explicitShiftKeyNeeded] is [true]:
-      // - Both 's' and 'S' would get resolved as 's'
-      // In other words, 'S' requires a 'Shift+' modifier
-      // (VScode style parsing)
-      // When [explicitShiftKeyNeeded] is [false]:
-      // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
-      // (Vim style parsing)
       ~explicitShiftKeyNeeded: bool,
       ~getKeycode: Key.t => option(int),
       ~getScancode: Key.t => option(int),

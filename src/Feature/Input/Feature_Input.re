@@ -105,7 +105,12 @@ module Schema = {
     };
 
     let maybeMatcher =
-      EditorInput.Matcher.parse(~explicitShiftKeyNeeded=true, ~getKeycode, ~getScancode, key);
+      EditorInput.Matcher.parse(
+        ~explicitShiftKeyNeeded=true,
+        ~getKeycode,
+        ~getScancode,
+        key,
+      );
     maybeMatcher
     |> Stdlib.Result.map(matcher => {
          {
@@ -347,18 +352,28 @@ let update = (msg, model) => {
       Nothing,
     )
   | VimMap(mapping) =>
-  // When parsing Vim-style mappings, don't require a shift key.
-  // In other words - characters like 'J' should resolve to 'Shift+j'
+    // When parsing Vim-style mappings, don't require a shift key.
+    // In other words - characters like 'J' should resolve to 'Shift+j'
     let explicitShiftKeyNeeded = false;
     let maybeMatcher =
-      EditorInput.Matcher.parse(~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, mapping.fromKeys);
+      EditorInput.Matcher.parse(
+        ~explicitShiftKeyNeeded,
+        ~getKeycode,
+        ~getScancode,
+        mapping.fromKeys,
+      );
     let (model, eff) =
       switch (
         VimCommandParser.parse(~scriptId=mapping.scriptId, mapping.toValue)
       ) {
       | KeySequence(toValue) =>
         let maybeKeys =
-          EditorInput.KeyPress.parse(~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, toValue);
+          EditorInput.KeyPress.parse(
+            ~explicitShiftKeyNeeded,
+            ~getKeycode,
+            ~getScancode,
+            toValue,
+          );
 
         let maybeModel =
           ResultEx.map2(

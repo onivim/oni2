@@ -24,15 +24,18 @@ let parse = (~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, str) => {
     | Matcher_internal.AllKeysReleased => Ok(AllKeysReleased)
     | Matcher_internal.Sequence(keys) =>
       keys
-      |> List.map(KeyPress.ofInternal(~addShiftKeyToCapital, ~getKeycode, ~getScancode))
+      |> List.map(
+           KeyPress.ofInternal(
+             ~addShiftKeyToCapital,
+             ~getKeycode,
+             ~getScancode,
+           ),
+         )
       |> List.flatten
       |> Base.Result.all
       |> Result.map(keys => Sequence(keys))
     };
   };
 
-  str
-  |> Lexing.from_string
-  |> parse
-  |> flatMap(finish);
+  str |> Lexing.from_string |> parse |> flatMap(finish);
 };
