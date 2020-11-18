@@ -13,10 +13,17 @@
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
 #include <caml/threads.h>
+#include <caml/fail.h>
 
 #include <SDL2/SDL.h>
 
 #include "keyboard-layout.h"
+
+
+// We want to fail if we get null data anywhere, especially in initialization
+#define RAISE_NULL char message[64]; \
+sprintf(message, "NULL data at %s:%d", __FILE__, __LINE__); \
+caml_failwith(message)
 
 typedef struct KeycodeMapEntry {
   uint xkbKeycode;
@@ -41,11 +48,20 @@ CAMLprim value oni2_KeyboardLayoutInit() {
   CAMLparam0();
 
   xDisplay = XOpenDisplay("");
+  if (xDisplay == NULL) {
+    RAISE_NULL;
+  }
 
   xInputMethod = XOpenIM(xDisplay, 0, 0, 0);
+  if (xInputMethod == NULL) {
+    RAISE_NULL;
+  }
   
   XIMStyles *styles = NULL;
   XGetIMValues(xInputMethod, XNQueryInputStyle, &styles, NULL);
+  if (styles == NULL) {
+    RAISE_NULL;
+  }
 
   XIMStyle bestMatchStyle = 0;
   for (int i = 0; i < styles->count_styles; i++) {
@@ -57,6 +73,9 @@ CAMLprim value oni2_KeyboardLayoutInit() {
   }
 
   XFree(styles);
+  if (bestMatchStyle == 0) {
+    RAISE_NULL;
+  } 
   
   Window window;
   int revertTo;
