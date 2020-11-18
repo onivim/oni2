@@ -969,11 +969,6 @@ let exposePrimaryCursor = editor =>
           0.,
         );
 
-      let isSmallJump =
-        !Spring.isActive(editor.scrollY)
-        && Float.abs(adjustedScrollY -. scrollY) < lineHeightInPixels(editor)
-        *. 1.1;
-
       let animated = editor.isScrollAnimated;
       {
         ...editor,
@@ -985,7 +980,7 @@ let exposePrimaryCursor = editor =>
           ),
         scrollY:
           Spring.set(
-            ~instant=!animated || isSmallJump,
+            ~instant=!animated,
             ~position=adjustedScrollY,
             editor.scrollY,
           ),
@@ -994,19 +989,6 @@ let exposePrimaryCursor = editor =>
     | _ => editor
     };
   };
-
-// [isCursorFullyVisible] returns [true] if the cursor is
-// visible and within [scrolloff] bounds, [false] otherwise.
-let isCursorFullyVisible = editor => {
-  // HACK: We just run 'exposePrimaryCursor', and see if it changes anything.
-  let temporaryEditor = exposePrimaryCursor(editor);
-  let preScrollX = Spring.getTarget(editor.scrollX);
-  let preScrollY = Spring.getTarget(editor.scrollY);
-  let postScrollX = Spring.getTarget(temporaryEditor.scrollX);
-  let postScrollY = Spring.getTarget(temporaryEditor.scrollY);
-
-  preScrollX == postScrollX && preScrollY == postScrollY;
-};
 
 let mode = ({mode, _}) => mode;
 
@@ -1058,7 +1040,6 @@ let getContentPixelWidth = editor => {
 };
 
 let scrollToPixelY = (~animated, ~pixelY as newScrollY, editor) => {
-  let originalScrollY = Spring.getTarget(editor.scrollY);
   let animated = editor.isScrollAnimated && animated;
   let {pixelHeight, _} = editor;
   let viewLines = editor |> totalViewLines;
@@ -1079,23 +1060,15 @@ let scrollToPixelY = (~animated, ~pixelY as newScrollY, editor) => {
   let newMinimapScroll =
     scrollPercentage *. float_of_int(availableMinimapScroll);
 
-  // For small  jumps - ie, a single line, just teleport.
-  let isSmallJump =
-    !Spring.isActive(editor.scrollY)
-    && Float.abs(newScrollY -. originalScrollY) < lineHeightInPixels(editor)
-    *. 1.1;
-
   {
     ...editor,
     minimapScrollY: newMinimapScroll,
     scrollY:
-      Spring.set(
-        ~instant=!animated || isSmallJump,
-        ~position=newScrollY,
-        editor.scrollY,
-      ),
+      Spring.set(~instant=!animated, ~position=newScrollY, editor.scrollY),
   };
 };
+
+//let animateScroll = editor => {...editor, isScrollAnimated: true};
 
 let scrollToLine = (~line, view) => {
   let pixelY = float_of_int(line) *. lineHeightInPixels(view);
@@ -1143,58 +1116,44 @@ let scrollDeltaPixelXY = (~animated, ~pixelX, ~pixelY, view) => {
   {...view, scrollX, scrollY, minimapScrollY};
 };
 
-let movePositionIntoView = (~deltaViewLines=0, cursor: BytePosition.t, editor) => {
-  let wrapping = editor.wrapState |> WrapState.wrapping;
-  let currentViewLine =
-    Wrapping.bufferBytePositionToViewLine(~bytePosition=cursor, wrapping);
-  let topViewLine = getTopViewLine(editor);
-  let bottomViewLine = getBottomViewLine(editor);
-  let newViewLine =
-    Utility.IntEx.clamp(
-      ~lo=topViewLine + editor.verticalScrollMargin,
-      ~hi=bottomViewLine - editor.verticalScrollMargin - 1,
-      currentViewLine + deltaViewLines,
-    );
-  let {line: outLine, byteOffset, _}: Wrapping.bufferPosition =
-    Wrapping.viewLineToBufferPosition(~line=newViewLine, wrapping);
-  let line = EditorCoreTypes.LineNumber.toZeroBased(outLine);
-  let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
-  let line' =
-    Utility.IntEx.clamp(~lo=0, ~hi=bufferLineCount - 1, line)
-    |> EditorCoreTypes.LineNumber.ofZeroBased;
-  BytePosition.{line: line', byte: byteOffset};
-};
-
-let mapCursor = (~f, editor) => {
-  let mode =
-    switch (editor.mode) {
-    // When scrolling in operator pending, cancel the pending operator
-    | Operator({cursor, _}) => Vim.Mode.Normal({cursor: f(cursor)})
-    // Don't do anything for command line mode
-    | CommandLine => CommandLine
-    | Normal({cursor}) => Normal({cursor: f(cursor)})
-    | Visual(curr) =>
-      Visual(Vim.VisualRange.{...curr, cursor: f(curr.cursor)})
-    | Select(curr) =>
-      Select(Vim.VisualRange.{...curr, cursor: f(curr.cursor)})
-    | Replace({cursor}) => Replace({cursor: f(cursor)})
-    | Insert({cursors}) => Insert({cursors: List.map(f, cursors)})
-    };
-
-  {...editor, mode};
-};
-
 let scrollAndMoveCursor = (~deltaViewLines, editor) => {
-  // let wrapping = editor.wrapState |> WrapState.wrapping;
-  // let totalViewLines = Wrapping.numberOfLines(wrapping);
+  let wrapping = editor.wrapState |> WrapState.wrapping;
+  let totalViewLines = Wrapping.numberOfLines(wrapping);
 
   let oldCursor = getPrimaryCursorByte(editor);
 
-  let adjustCursor = cursor =>
-    movePositionIntoView(~deltaViewLines, cursor, editor);
+  let adjustCursor = (cursor: BytePosition.t) => {
+    let currentViewLine =
+      Wrapping.bufferBytePositionToViewLine(~bytePosition=cursor, wrapping);
+    let newViewLine =
+      Utility.IntEx.clamp(
+        ~lo=0,
+        ~hi=totalViewLines - 1,
+        currentViewLine + deltaViewLines,
+      );
+    let {line: outLine, byteOffset, _}: Wrapping.bufferPosition =
+      Wrapping.viewLineToBufferPosition(~line=newViewLine, wrapping);
+    BytePosition.{line: outLine, byte: byteOffset};
+  };
 
-  // Move the cursor
-  let editor' = mapCursor(~f=adjustCursor, editor);
+  let mode =
+    switch (editor.mode) {
+    // When scrolling in operator pending, cancel the pending operator
+    | Operator({cursor, _}) => Vim.Mode.Normal({cursor: cursor})
+    // Don't do anything for command line mode
+    | CommandLine => CommandLine
+    | Normal({cursor}) => Normal({cursor: adjustCursor(cursor)})
+    | Visual(curr) =>
+      Visual(Vim.VisualRange.{...curr, cursor: adjustCursor(curr.cursor)})
+    | Select(curr) =>
+      Select(Vim.VisualRange.{...curr, cursor: adjustCursor(curr.cursor)})
+    | Replace({cursor}) => Replace({cursor: adjustCursor(cursor)})
+    | Insert({cursors}) =>
+      Insert({cursors: List.map(adjustCursor, cursors)})
+    };
+
+  // Move the cursor...
+  let editor' = {...editor, mode};
 
   let newCursor = getPrimaryCursorByte(editor');
   // Figure out the delta in scrollY
@@ -1267,23 +1226,7 @@ let scrollCursorBottom = editor => {
 };
 
 let scrollLines = (~count, editor) => {
-  // Apply the scroll first - we might not need to move the cursor
-
-  let scrollDelta = float(count) *. lineHeightInPixels(editor);
-  let newScrollY = Spring.getTarget(editor.scrollY) +. scrollDelta;
-  let editor' = scrollToPixelY(~animated=true, ~pixelY=newScrollY, editor);
-
-  let didScroll =
-    Spring.getTarget(editor'.scrollY) != Spring.getTarget(editor.scrollY);
-
-  // Then, if needed, bump the cursor position - only if we actually scrolled, and the cursor isn't fully in view.
-  if (!isCursorFullyVisible(editor') && didScroll) {
-    let adjustCursor = cursor =>
-      movePositionIntoView(~deltaViewLines=0, cursor, editor');
-    mapCursor(~f=adjustCursor, editor');
-  } else {
-    editor';
-  };
+  scrollAndMoveCursor(~deltaViewLines=count, editor);
 };
 
 let scrollHalfPage = (~count, editor) => {
