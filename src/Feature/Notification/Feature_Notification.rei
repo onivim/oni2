@@ -14,6 +14,7 @@ type notification = {
   kind,
   message: string,
   source: option(string),
+  yOffset: float,
 };
 
 type model; //= list(notification);
