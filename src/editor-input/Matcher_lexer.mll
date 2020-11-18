@@ -48,6 +48,7 @@
 	"end", BINDING (Physical(End));
 	"delete", BINDING (Physical(Delete));
 	"bs", BINDING (Physical(Backspace));
+	"backspace", BINDING (Physical(Backspace));
 	"capslock", BINDING (Physical(CapsLock));
 	"insert", BINDING(Physical(Insert));
 	"numpad_multiply", BINDING(Physical(NumpadMultiply));
@@ -56,6 +57,7 @@
 	"numpad_subtract", BINDING(Physical(NumpadSubtract));
 	"numpad_decimal", BINDING(Physical(NumpadDecimal));
 	"numpad_divide", BINDING(Physical(NumpadDivide));
+	"numpad_multiply", BINDING(Physical(NumpadMultiply));
 	"leader", BINDING(Special(Leader));
 	"plug", BINDING(Special(Plug));
 	]
@@ -64,9 +66,12 @@
 let white = [' ' '\t']+
 
 let alpha = ['a' - 'z' 'A' - 'Z']
+let alphaWithUnderscore = ['a' - 'z' 'A' - 'Z' '_']
 let modifier = alpha+ ['-' '+']
 
 let binding = ['a'-'z' 'A'-'Z' '0'-'9' '`' '-' '=' '[' ']' '\\' ';' '\'' ',' '.' '/']
+
+let numpadDigit = ['n'] ['u'] ['m'] ['p'] ['a'] ['d'] ['0' '9']
 
 rule token = parse
 | modifier as m
@@ -76,18 +81,20 @@ rule token = parse
 	with Not_found ->
 		raise (UnrecognizedModifier m)
  }
-| alpha+ as sk
+| numpadDigit as numpadDigit { 
+	BINDING (Physical (NumpadDigit(int_of_string(String.make 1 (String.get numpadDigit 6)))))
+}
+| alphaWithUnderscore+ as sk
 {
 	let candidate = String.lowercase_ascii sk in
 	try Hashtbl.find specialKeyTable candidate
 	with Not_found -> 
-		BINDING(Physical(Character(String.get sk 0)))
+		BINDING(UnmatchedString(sk))
 		
 }
 | ['f' 'F'] (['0'-'9'] as m) { BINDING ( Physical(Function(int_of_string (String.make 1 m)) ) ) }
 | ['f' 'F'] '1' (['0'-'9'] as m) { BINDING ( Physical(Function(int_of_string ("1" ^ (String.make 1 m))) ) ) }
 | ['f' 'F'] '1' (['0'-'9'] as m) { BINDING ( Physical (Function(int_of_string ("1" ^ (String.make 1 m))) ) ) }
-| "numpad" { numpad_digit lexbuf }
 | white { token lexbuf }
 | binding as i
  { BINDING (Physical(Character (i))) }
@@ -95,6 +102,3 @@ rule token = parse
 | '>' { GT }
 | eof { EOF }
 | _ { raise Error }
-
-and numpad_digit = parse
-| ['0'-'9'] as digit { BINDING (Physical( NumpadDigit(int_of_string (String.make 1 digit))) ) }

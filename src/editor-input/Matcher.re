@@ -23,6 +23,7 @@ let parse = (~getKeycode, ~getScancode, str) => {
     | Matcher_internal.Sequence(keys) =>
       keys
       |> List.map(KeyPress.ofInternal(~getKeycode, ~getScancode))
+      |> List.flatten
       |> Base.Result.all
       |> Result.map(keys => Sequence(keys))
     };

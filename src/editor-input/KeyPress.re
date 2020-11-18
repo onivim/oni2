@@ -1,3 +1,4 @@
+module ZedBundled = Oni_Core.ZedBundled;
 [@deriving show]
 type t =
   | PhysicalKey(PhysicalKey.t)
@@ -34,9 +35,7 @@ let ofInternal =
         mods: list(Matcher_internal.modifier),
       ),
     ) => {
-  switch (key) {
-  | Matcher_internal.Special(special) => Ok(SpecialKey(special))
-  | Matcher_internal.Physical(key) =>
+  let keyToKeyPress = key => {
     switch (getKeycode(key), getScancode(key)) {
     | (Some(keycode), Some(scancode)) =>
       Ok(
@@ -47,7 +46,25 @@ let ofInternal =
         }),
       )
     | _ => Error("Unrecognized key: " ++ Key.toString(key))
-    }
+    };
+  };
+  switch (key) {
+  | Matcher_internal.UnmatchedString(str) =>
+    ZedBundled.explode(str)
+    |> List.map(uchar =>
+         if (Uchar.is_char(uchar)) {
+           let char = Uchar.to_char(uchar);
+           let key = Key.Character(char);
+           keyToKeyPress(key);
+         } else {
+           Error(
+             "Unicode characters not yet supported in bindings: "
+             ++ ZedBundled.make(1, uchar),
+           );
+         }
+       )
+  | Matcher_internal.Special(special) => [Ok(SpecialKey(special))]
+  | Matcher_internal.Physical(key) => [keyToKeyPress(key)]
   };
 };
 
@@ -65,7 +82,10 @@ let parse = (~getKeycode, ~getScancode, str) => {
   let flatMap = (f, r) => Result.bind(r, f);
 
   let finish = r => {
-    r |> List.map(ofInternal(~getKeycode, ~getScancode)) |> Base.Result.all;
+    r
+    |> List.map(ofInternal(~getKeycode, ~getScancode))
+    |> List.flatten
+    |> Base.Result.all;
   };
 
   str
