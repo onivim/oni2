@@ -1184,7 +1184,9 @@ let update =
     ({...state, colorTheme: model'}, eff);
 
   | Notification(msg) =>
-    let model' = Feature_Notification.update(state.notifications, msg);
+    let config = Selectors.configResolver(state);
+    let model' =
+      Feature_Notification.update(~config, state.notifications, msg);
     ({...state, notifications: model'}, Effect.none);
 
   | Modals(msg) =>

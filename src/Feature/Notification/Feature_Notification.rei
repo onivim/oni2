@@ -14,6 +14,7 @@ type notification = {
   kind,
   message: string,
   source: option(string),
+  yOffset: float,
 };
 
 type model; //= list(notification);
@@ -29,7 +30,7 @@ let all: model => list(notification);
 [@deriving show]
 type msg;
 
-let update: (model, msg) => model;
+let update: (~config: Oni_Core.Config.resolver, model, msg) => model;
 
 // EFFECTS
 

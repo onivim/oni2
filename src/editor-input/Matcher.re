@@ -4,7 +4,7 @@ type t =
 
 type sequence = list(t);
 
-let parse = (~getKeycode, ~getScancode, str) => {
+let parse = (~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, str) => {
   let parse = lexbuf =>
     switch (Matcher_parser.main(Matcher_lexer.token, lexbuf)) {
     | exception Matcher_lexer.Error => Error("Error parsing binding: " ++ str)
@@ -17,20 +17,25 @@ let parse = (~getKeycode, ~getScancode, str) => {
 
   let flatMap = (f, r) => Result.bind(r, f);
 
+  let addShiftKeyToCapital = !explicitShiftKeyNeeded;
+
   let finish = r => {
     switch (r) {
     | Matcher_internal.AllKeysReleased => Ok(AllKeysReleased)
     | Matcher_internal.Sequence(keys) =>
       keys
-      |> List.map(KeyPress.ofInternal(~getKeycode, ~getScancode))
+      |> List.map(
+           KeyPress.ofInternal(
+             ~addShiftKeyToCapital,
+             ~getKeycode,
+             ~getScancode,
+           ),
+         )
+      |> List.flatten
       |> Base.Result.all
       |> Result.map(keys => Sequence(keys))
     };
   };
 
-  str
-  |> String.lowercase_ascii
-  |> Lexing.from_string
-  |> parse
-  |> flatMap(finish);
+  str |> Lexing.from_string |> parse |> flatMap(finish);
 };

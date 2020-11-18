@@ -11,7 +11,7 @@
 %%
 
 main:
-| ALLKEYSRELEASED { Matcher_internal.AllKeysReleased }
+| LT ALLKEYSRELEASED GT { Matcher_internal.AllKeysReleased }
 | phrase = list(expr) EOF { Matcher_internal.Sequence(phrase) }
 
 keys:
