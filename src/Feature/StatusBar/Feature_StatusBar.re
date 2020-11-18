@@ -325,7 +325,7 @@ module ModeIndicator = {
     let background = Colors.Oni.backgroundFor(mode).from(theme);
     let foreground = Colors.Oni.foregroundFor(mode).from(theme);
 
-    <item backgroundColor=background>
+    <item ?key backgroundColor=background>
       <Text
         style={Styles.text(~color=foreground)}
         text={Mode.toString(mode)}

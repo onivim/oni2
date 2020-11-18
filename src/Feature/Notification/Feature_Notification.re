@@ -57,13 +57,19 @@ let internalToExternal: internal => notification =
 type model = {
   all: list(internal),
   activeNotifications: IntSet.t,
+  statusBarBackgroundColor: option(Component_Animation.ColorTransition.t),
+  statusBarForegroundColor: option(Component_Animation.ColorTransition.t),
 };
 
-let initial = {all: [], activeNotifications: IntSet.empty};
+let initial = {
+all: [], activeNotifications: IntSet.empty, 
+statusBarBackgroundColor: None,
+statusBarForegroundColor: None,
+};
 
 let all = ({all, _}) => all |> List.map(internalToExternal);
 
-let active = ({all, activeNotifications}) => {
+let active = ({all, activeNotifications, _}) => {
   all
   |> List.filter_map(notification =>
        if (IntSet.mem(notification.id, activeNotifications)) {
@@ -109,7 +115,9 @@ type msg =
   | AnimateYOffset({
       id: int,
       msg: [@opaque] Component_Animation.msg,
-    });
+    })
+  | AnimateBackground([@opaque] Component_Animation.ColorTransition.msg)
+  | AnimateForeground([@opaque] Component_Animation.ColorTransition.msg);
 
 let update = (~config, model, msg) => {
   let animationsEnabled =
@@ -120,17 +128,22 @@ let update = (~config, model, msg) => {
       animationsEnabled
         ? Some(Component_Animation.make(Animations.sequence)) : None;
     {
+      ...model,
       all: [{...item, yOffsetAnimation}, ...model.all],
       activeNotifications: IntSet.add(item.id, model.activeNotifications),
     };
+
   | Dismissed({id}) => {
+      ...model,
       all: List.filter(it => it.id != id, model.all),
       activeNotifications: IntSet.remove(id, model.activeNotifications),
     }
+
   | Expire({id}) => {
       ...model,
       activeNotifications: IntSet.remove(id, model.activeNotifications),
     }
+
   | AnimateYOffset({id, msg}) => {
       ...model,
       all:
@@ -148,6 +161,24 @@ let update = (~config, model, msg) => {
              }
            ),
     }
+
+  | AnimateBackground(msg) => {
+    ...model,
+    statusBarBackgroundColor: 
+    model.statusBarBackgroundColor
+      |> Option.map(Component_Animation.ColorTransition.update(
+      msg
+    ))
+  }
+
+  | AnimateForeground(msg) => {
+    ...model,
+    statusBarForegroundColor: 
+    model.statusBarForegroundColor
+      |> Option.map(Component_Animation.ColorTransition.update(
+      msg
+    ))
+  }
   };
 };
 
