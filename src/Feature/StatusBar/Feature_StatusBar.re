@@ -324,19 +324,6 @@ module ModeIndicator = {
     let background = Colors.Oni.backgroundFor(mode).from(theme);
     let foreground = Colors.Oni.foregroundFor(mode).from(theme);
 
-    let%hook background =
-      CustomHooks.colorTransition(
-        ~name="Mode Background Transition",
-        ~duration=transitionDuration,
-        background,
-      );
-    let%hook foreground =
-      CustomHooks.colorTransition(
-        ~name="Mode Foreground Transition",
-        ~duration=transitionDuration,
-        foreground,
-      );
-
     <item backgroundColor=background>
       <Text
         style={Styles.text(~color=foreground)}
