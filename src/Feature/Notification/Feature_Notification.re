@@ -222,6 +222,16 @@ let sub = (model: model) => {
          )
        });
 
+  let backgroundSub = model.statusBarBackgroundColor
+  |> Option.map(Component_Animation.ColorTransition.sub)
+  |> Option.map(Isolinear.Sub.map(msg => AnimateBackground(msg)))
+  |> Option.value(~default=Isolinear.Sub.none);
+
+  let foregroundSub = model.statusBarForegroundColor
+  |> Option.map(Component_Animation.ColorTransition.sub)
+  |> Option.map(Isolinear.Sub.map(msg => AnimateForeground(msg)))
+  |> Option.value(~default=Isolinear.Sub.none);
+
   let animationSub: Isolinear.Sub.t(msg) =
     switch (model.all) {
     | [] => Isolinear.Sub.none
@@ -232,7 +242,7 @@ let sub = (model: model) => {
       |> Isolinear.Sub.map(msg => AnimateYOffset({id, msg}))
     };
 
-  [animationSub, ...timerSubs] |> Isolinear.Sub.batch;
+  [animationSub, backgroundSub, foregroundSub, ...timerSubs] |> Isolinear.Sub.batch;
 };
 
 // COLORS
