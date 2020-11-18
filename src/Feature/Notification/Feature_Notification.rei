@@ -17,7 +17,7 @@ type notification = {
   yOffset: float,
 };
 
-type model; //= list(notification);
+type model;
 
 let initial: model;
 

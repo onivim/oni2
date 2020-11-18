@@ -202,6 +202,7 @@ let section = (~children=React.empty, ~align, ()) =>
 
 let item =
     (
+      ~key=?,
       ~children,
       ~backgroundColor=Revery.Colors.transparentWhite,
       ~onClick=?,
@@ -212,9 +213,9 @@ let item =
 
   // Avoid cursor turning into pointer if there's no mouse interaction available
   if (onClick == None && onRightClick == None) {
-    <View style> children </View>;
+    <View ?key style> children </View>;
   } else {
-    <Clickable ?onClick ?onRightClick style> children </Clickable>;
+    <Clickable ?key ?onClick ?onRightClick style> children </Clickable>;
   };
 };
 
@@ -320,7 +321,7 @@ let diagnosticCount = (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => 
 module ModeIndicator = {
   let transitionDuration = Revery.Time.milliseconds(300);
 
-  let%component make = (~font: UiFont.t, ~theme, ~mode, ()) => {
+  let make = (~key=?, ~font: UiFont.t, ~theme, ~mode, ()) => {
     let background = Colors.Oni.backgroundFor(mode).from(theme);
     let foreground = Colors.Oni.foregroundFor(mode).from(theme);
 
