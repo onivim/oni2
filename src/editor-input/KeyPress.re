@@ -28,6 +28,7 @@ let equals = (keyA, keyB) => {
 
 let ofInternal =
     (
+      ~addShiftKeyToCapital,
       ~getKeycode,
       ~getScancode,
       (
@@ -35,7 +36,7 @@ let ofInternal =
         mods: list(Matcher_internal.modifier),
       ),
     ) => {
-  let keyToKeyPress = key => {
+  let keyToKeyPress = (~mods=mods, key) => {
     switch (getKeycode(key), getScancode(key)) {
     | (Some(keycode), Some(scancode)) =>
       Ok(
@@ -54,8 +55,14 @@ let ofInternal =
     |> List.map(uchar =>
          if (Uchar.is_char(uchar)) {
            let char = Uchar.to_char(uchar);
-           let key = Key.Character(char);
-           keyToKeyPress(key);
+           let lowercaseChar = Char.lowercase_ascii(char);
+           let isCapitalized = 
+           lowercaseChar != char;
+           if (isCapitalized && addShiftKeyToCapital) {
+            keyToKeyPress(~mods=[Shift, ...mods], Key.Character(lowercaseChar))
+           } else {
+            keyToKeyPress(Key.Character(lowercaseChar));
+           };
          } else {
            Error(
              "Unicode characters not yet supported in bindings: "
@@ -68,7 +75,7 @@ let ofInternal =
   };
 };
 
-let parse = (~getKeycode, ~getScancode, str) => {
+let parse = (~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, str) => {
   let parse = lexbuf =>
     switch (Matcher_parser.keys(Matcher_lexer.token, lexbuf)) {
     | exception Matcher_lexer.Error => Error("Error parsing binding: " ++ str)
@@ -81,15 +88,16 @@ let parse = (~getKeycode, ~getScancode, str) => {
 
   let flatMap = (f, r) => Result.bind(r, f);
 
+  let addShiftKeyToCapital = !explicitShiftKeyNeeded;
+
   let finish = r => {
     r
-    |> List.map(ofInternal(~getKeycode, ~getScancode))
+    |> List.map(ofInternal(~addShiftKeyToCapital, ~getKeycode, ~getScancode))
     |> List.flatten
     |> Base.Result.all;
   };
 
   str
-  |> String.lowercase_ascii
   |> Lexing.from_string
   |> parse
   |> flatMap(finish);

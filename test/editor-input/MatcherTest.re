@@ -51,7 +51,7 @@ let getKeycode =
 
 let getScancode = getKeycode;
 
-let defaultParse = Matcher.parse(~getKeycode, ~getScancode);
+let defaultParse = Matcher.parse(~explicitShiftKeyNeeded=true, ~getKeycode, ~getScancode);
 
 let modifiersControl = {...Modifiers.none, control: true};
 
