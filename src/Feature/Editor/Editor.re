@@ -1143,7 +1143,7 @@ let scrollDeltaPixelXY = (~animated, ~pixelX, ~pixelY, view) => {
   {...view, scrollX, scrollY, minimapScrollY};
 };
 
-let movePositionIntoView = (~deltaViewLines=0, cursor: BytePosition.t, editor) => {
+let movePositionIntoView = (cursor: BytePosition.t, editor) => {
   let wrapping = editor.wrapState |> WrapState.wrapping;
   let currentViewLine =
     Wrapping.bufferBytePositionToViewLine(~bytePosition=cursor, wrapping);
@@ -1153,7 +1153,7 @@ let movePositionIntoView = (~deltaViewLines=0, cursor: BytePosition.t, editor) =
     Utility.IntEx.clamp(
       ~lo=topViewLine + editor.verticalScrollMargin,
       ~hi=bottomViewLine - editor.verticalScrollMargin - 1,
-      currentViewLine + deltaViewLines,
+      currentViewLine,
     );
   let {line: outLine, byteOffset, _}: Wrapping.bufferPosition =
     Wrapping.viewLineToBufferPosition(~line=newViewLine, wrapping);
@@ -1163,6 +1163,24 @@ let movePositionIntoView = (~deltaViewLines=0, cursor: BytePosition.t, editor) =
     Utility.IntEx.clamp(~lo=0, ~hi=bufferLineCount - 1, line)
     |> EditorCoreTypes.LineNumber.ofZeroBased;
   BytePosition.{line: line', byte: byteOffset};
+};
+
+let movePositionByViewLines =
+    (~deltaViewLines=0, position: BytePosition.t, editor) => {
+  let wrapping = editor.wrapState |> WrapState.wrapping;
+  let currentViewLine =
+    Wrapping.bufferBytePositionToViewLine(~bytePosition=position, wrapping);
+  let totalViewLines = Wrapping.numberOfLines(wrapping);
+  let newViewLine =
+    Utility.IntEx.clamp(
+      ~lo=0,
+      ~hi=totalViewLines - 1,
+      currentViewLine + deltaViewLines,
+    );
+  let {line: outLine, byteOffset, _}: Wrapping.bufferPosition =
+    Wrapping.viewLineToBufferPosition(~line=newViewLine, wrapping);
+
+  BytePosition.{line: outLine, byte: byteOffset};
 };
 
 let mapCursor = (~f, editor) => {
@@ -1185,13 +1203,10 @@ let mapCursor = (~f, editor) => {
 };
 
 let scrollAndMoveCursor = (~deltaViewLines, editor) => {
-  // let wrapping = editor.wrapState |> WrapState.wrapping;
-  // let totalViewLines = Wrapping.numberOfLines(wrapping);
-
   let oldCursor = getPrimaryCursorByte(editor);
 
   let adjustCursor = cursor =>
-    movePositionIntoView(~deltaViewLines, cursor, editor);
+    movePositionByViewLines(~deltaViewLines, cursor, editor);
 
   // Move the cursor
   let editor' = mapCursor(~f=adjustCursor, editor);
@@ -1214,7 +1229,6 @@ let scrollAndMoveCursor = (~deltaViewLines, editor) => {
 
   // Adjust scroll to compensate cursor position - keeping the cursor in the same
   // relative spot to scroll, after moving it.
-  // TODO: Bring back
   editor' |> scrollDeltaPixelY(~animated=true, ~pixelY=newY -. oldY);
 };
 
@@ -1278,8 +1292,7 @@ let scrollLines = (~count, editor) => {
 
   // Then, if needed, bump the cursor position - only if we actually scrolled, and the cursor isn't fully in view.
   if (!isCursorFullyVisible(editor') && didScroll) {
-    let adjustCursor = cursor =>
-      movePositionIntoView(~deltaViewLines=0, cursor, editor');
+    let adjustCursor = cursor => movePositionIntoView(cursor, editor');
     mapCursor(~f=adjustCursor, editor');
   } else {
     editor';
