@@ -25,12 +25,24 @@ let active: model => list(notification);
 
 let all: model => list(notification);
 
+let statusBarBackground:
+  (~theme: ColorTheme.Colors.t, model) => Revery.Color.t;
+let statusBarForeground:
+  (~theme: ColorTheme.Colors.t, model) => Revery.Color.t;
+
 // UPDATE
 
 [@deriving show]
 type msg;
 
-let update: (~config: Oni_Core.Config.resolver, model, msg) => model;
+let update:
+  (
+    ~theme: Oni_Core.ColorTheme.Colors.t,
+    ~config: Oni_Core.Config.resolver,
+    model,
+    msg
+  ) =>
+  model;
 
 // EFFECTS
 

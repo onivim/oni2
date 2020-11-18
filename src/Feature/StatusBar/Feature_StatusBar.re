@@ -350,55 +350,43 @@ let indentationToString = (indentation: IndentationSettings.t) => {
 };
 
 module View = {
-  let%component make =
-                (
-                  ~mode,
-                  ~notifications: Feature_Notification.model,
-                  ~recordingMacro: option(char),
-                  ~diagnostics: Diagnostics.model,
-                  ~font: UiFont.t,
-                  ~activeBuffer: option(Oni_Core.Buffer.t),
-                  ~activeEditor: option(Feature_Editor.Editor.t),
-                  ~indentationSettings: IndentationSettings.t,
-                  ~scm: Feature_SCM.model,
-                  ~statusBar: model,
-                  ~theme,
-                  ~dispatch,
-                  ~workingDirectory: string,
-                  (),
-                ) => {
+  let make =
+      (
+        ~key=?,
+        ~mode,
+        ~notifications: Feature_Notification.model,
+        ~recordingMacro: option(char),
+        ~diagnostics: Diagnostics.model,
+        ~font: UiFont.t,
+        ~activeBuffer: option(Oni_Core.Buffer.t),
+        ~activeEditor: option(Feature_Editor.Editor.t),
+        ~indentationSettings: IndentationSettings.t,
+        ~scm: Feature_SCM.model,
+        ~statusBar: model,
+        ~theme,
+        ~dispatch,
+        ~workingDirectory: string,
+        (),
+      ) => {
     let activeNotifications = Feature_Notification.active(notifications);
-    let (background, foreground) =
-      switch (activeNotifications) {
-      | [] =>
-        Colors.StatusBar.(background.from(theme), foreground.from(theme))
-      | [last, ..._] =>
-        Feature_Notification.Colors.(
-          backgroundFor(last).from(theme),
-          foregroundFor(last).from(theme),
-        )
-      };
-
-    let%hook background =
-      CustomHooks.colorTransition(
-        ~name="StatusBar Background Color Transition",
-        ~duration=Feature_Notification.Animations.transitionDuration,
-        background,
-      );
-    let%hook foreground =
-      CustomHooks.colorTransition(
-        ~name="StatusBar Foreground Color Transition",
-        ~duration=Feature_Notification.Animations.transitionDuration,
-        foreground,
-      );
-
-    let%hook (yOffset, _animationState, _reset) =
-      Hooks.animation(
-        ~name="StatusBar Transition Animation",
-        transitionAnimation,
-      );
+    let background =
+      Feature_Notification.statusBarBackground(~theme, notifications);
+    let foreground =
+      Feature_Notification.statusBarForeground(~theme, notifications);
+    // let (background, foreground) =
+    //   switch (activeNotifications) {
+    //   | [] =>
+    //     Colors.StatusBar.(background.from(theme), foreground.from(theme))
+    //   | [last, ..._] =>
+    //     Feature_Notification.Colors.(
+    //       backgroundFor(last).from(theme),
+    //       foregroundFor(last).from(theme),
+    //     )
+    //   };
 
     let defaultForeground = Colors.StatusBar.foreground.from(theme);
+
+    let yOffset = 0.;
 
     let toStatusBarElement = (~command=?, ~color=?, ~tooltip=?, label) => {
       let onClick =
@@ -540,7 +528,7 @@ module View = {
       |> Option.map(register => <macro register />)
       |> Option.value(~default=React.empty);
 
-    <View style={Styles.view(background, yOffset)}>
+    <View ?key style={Styles.view(background, yOffset)}>
       <section align=`FlexStart>
         <notificationCount
           dispatch
