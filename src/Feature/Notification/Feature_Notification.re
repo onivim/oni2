@@ -37,7 +37,7 @@ type internal = {
   kind,
   message: string,
   source: option(string),
-  yOffset: [@opaque] Component_Animation.t(float),
+  yOffsetAnimation: [@opaque] option(Component_Animation.t(float)),
 };
 
 let internalToExternal: internal => notification =
@@ -47,7 +47,10 @@ let internalToExternal: internal => notification =
       kind: internal.kind,
       message: internal.message,
       source: internal.source,
-      yOffset: Component_Animation.get(internal.yOffset),
+      yOffset:
+        internal.yOffsetAnimation
+        |> Option.map(Component_Animation.get)
+        |> Option.value(~default=0.),
     };
   };
 
@@ -108,12 +111,18 @@ type msg =
       msg: [@opaque] Component_Animation.msg,
     });
 
-let update = (model, msg) => {
+let update = (~config, model, msg) => {
+  let animationsEnabled =
+    Feature_Configuration.GlobalConfiguration.animation.get(config);
   switch (msg) {
-  | Created(item) => {
-      all: [item, ...model.all],
+  | Created(item) =>
+    let yOffsetAnimation =
+      animationsEnabled
+        ? Some(Component_Animation.make(Animations.sequence)) : None;
+    {
+      all: [{...item, yOffsetAnimation}, ...model.all],
       activeNotifications: IntSet.add(item.id, model.activeNotifications),
-    }
+    };
   | Dismissed({id}) => {
       all: List.filter(it => it.id != id, model.all),
       activeNotifications: IntSet.remove(id, model.activeNotifications),
@@ -130,7 +139,9 @@ let update = (model, msg) => {
              if (item.id == id) {
                {
                  ...item,
-                 yOffset: Component_Animation.update(msg, item.yOffset),
+                 yOffsetAnimation:
+                   item.yOffsetAnimation
+                   |> Option.map(Component_Animation.update(msg)),
                };
              } else {
                item;
@@ -155,7 +166,7 @@ module Effects = {
             kind,
             message,
             source,
-            yOffset: Component_Animation.make(Animations.sequence),
+            yOffsetAnimation: None,
           }),
         );
       }
@@ -183,8 +194,10 @@ let sub = (model: model) => {
   let animationSub: Isolinear.Sub.t(msg) =
     switch (model.all) {
     | [] => Isolinear.Sub.none
-    | [{yOffset, id, _}, ..._rest] =>
-      Component_Animation.sub(yOffset)
+    | [{yOffsetAnimation, id, _}, ..._rest] =>
+      yOffsetAnimation
+      |> Option.map(Component_Animation.sub)
+      |> Option.value(~default=Isolinear.Sub.none)
       |> Isolinear.Sub.map(msg => AnimateYOffset({id, msg}))
     };
 

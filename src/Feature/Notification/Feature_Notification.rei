@@ -30,7 +30,7 @@ let all: model => list(notification);
 [@deriving show]
 type msg;
 
-let update: (model, msg) => model;
+let update: (~config: Oni_Core.Config.resolver, model, msg) => model;
 
 // EFFECTS
 
