@@ -3,7 +3,8 @@
  (public_name Oni2.KeyboardLayout)
  (foreign_stubs
   (language c)
-  (names keyboard-layout keyboard-layout-mac keyboard-layout-windows)
+  (names keyboard-layout keyboard-layout-mac keyboard-layout-windows
+    keyboard-layout-linux)
   (flags
    (:include c_flags.sexp)))
  (library_flags

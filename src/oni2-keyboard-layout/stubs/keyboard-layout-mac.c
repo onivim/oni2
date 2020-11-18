@@ -230,6 +230,4 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
   CAMLreturn(Val_unit);
 }
 
-
-
 #endif
