@@ -34,6 +34,9 @@ steps:
       fi
       echo "ESY__CACHE_INSTALL_PATH: $ESY__CACHE_INSTALL_PATH"
       echo "STDIR: $STDIR"
+      ls "$STDIR"
+      echo "ls: $STDIR/$CACHE_ARTIFACT_NAME"
+      ls "$STDIR/$CACHE_ARTIFACT_NAME"
       tar -xf "$STDIR/$CACHE_ARTIFACT_NAME/esy-cache.tar" -C .
 
       echo "TEMP - Deleting dependencies: $ESY__CACHE_INSTALL_PATH"
