@@ -4,6 +4,7 @@ open EditorInput;
 let getKeycode =
   fun
   | Key.Character('a') => Some(1)
+  | Key.Character('A') => Some(1)
   | Key.Character('b') => Some(2)
   | Key.Character('0') => Some(50)
   | Key.Character('9') => Some(59)

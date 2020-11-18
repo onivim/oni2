@@ -29,7 +29,7 @@ let parse = (~getKeycode, ~getScancode, str) => {
   };
 
   str
-  |> String.lowercase_ascii
+  //|> String.lowercase_ascii
   |> Lexing.from_string
   |> parse
   |> flatMap(finish);
