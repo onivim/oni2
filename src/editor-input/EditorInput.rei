@@ -61,7 +61,9 @@ module SpecialKey: {
     | Leader
     // Special key <Plug> used by VimL plugins
     // No physical key associated with it, but useful for scoping remappings.
-    | Plug;
+    | Plug
+    // Special key <Nop> used by Vim as no-op
+    | Nop;
   // TODO;
   // | SNR;
 };
