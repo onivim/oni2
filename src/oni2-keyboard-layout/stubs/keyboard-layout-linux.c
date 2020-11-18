@@ -144,13 +144,13 @@ void characterForNativeCode(
   XKeyEvent *xKeyEvent, 
   uint xkbKeycode, 
   uint state,
-  wchar_t *buffer
+  char *buffer
 ) {
   xKeyEvent->keycode = xkbKeycode;
   xKeyEvent->state = state;
 
   if (xInputContext) {
-    int count = XwcLookupString(xInputContext, xKeyEvent, buffer, 2, NULL, NULL);
+    int count = Xutf8LookupString(xInputContext, xKeyEvent, buffer, 2, NULL, NULL);
     if (count > 0 && !iswcntrl(buffer[0])) {
       buffer[count] = '\0';
     } else {
@@ -172,9 +172,9 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
   CAMLlocal2(keymapEntry, vSDLScancode);
 
   // Allocate UTF-8 Buffers to be populated
-  wchar_t unmodified[2]; 
-  wchar_t withShift[2]; 
-  wchar_t withAlt[1] = {'\0'};
+  char unmodified[4]; 
+  char withShift[4]; 
+  char withAlt[1] = {'\0'};
 
   XMappingEvent xEventMap = {MappingNotify, 0, false, xDisplay, 0, MappingKeyboard, 0, 0};
   XRefreshKeyboardMapping(&xEventMap);
@@ -202,12 +202,12 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
     if (sdlScancode && xkbKeycode > 0x0000) {
       characterForNativeCode(xInputContext, xKeyEvent, xkbKeycode, keyboardBaseState, unmodified);
       characterForNativeCode(xInputContext, xKeyEvent, xkbKeycode, keyboardBaseState | ShiftMask, withShift);
-
+      
       keymapEntry = createKeymapEntry(
-        (char *)unmodified, 
-        (char *)withShift, 
-        (char *)withAlt, 
-        (char *)withAlt
+        unmodified, 
+        withShift, 
+        withAlt, 
+        withAlt
       );
       vSDLScancode = Val_int(sdlScancode);
 
