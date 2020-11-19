@@ -1,5 +1,5 @@
 steps:
-  - script: Xvfb :99 & export DISPLAY=:99
+  - script: Xvfb :99 &
     displayName: Start Xvfb server
 
   - script: sleep 3

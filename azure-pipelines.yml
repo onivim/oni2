@@ -66,6 +66,7 @@ jobs:
     ESY__CACHE_INSTALL_PATH: /home/vsts/.esy/3_____________________________________________________________________/i
     ESY__CACHE_BUILD_PATH: /home/vsts/.esy/3_____________________________________________________________________/b
     ESY__CACHE_SOURCE_TARBALL_PATH: /home/vsts/.esy/source/i
+    DISPLAY: :99
     # ESY__NPM_ROOT: /opt/hostedtoolcache/node/8.14.0/x64/lib/node_modules/esy
 
   steps:
