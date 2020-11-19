@@ -261,6 +261,15 @@ module Effect = {
         paths,
       )
     );
+
+  let openFolderDialog = (~initialDirectory=?, toMsg) => {
+    Revery_Native.Dialog.openFiles(
+      ~startDirectory=?initialDirectory,
+      ~canChooseDirectories=true,
+      ~canChooseFiles=false,
+
+    )
+  }
 };
 
 // SUBSCRIPTIONS
