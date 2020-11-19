@@ -1188,7 +1188,9 @@ let update =
     ({...state, colorTheme: model'}, eff);
 
   | Notification(msg) =>
-    let model' = Feature_Notification.update(state.notifications, msg);
+    let config = Selectors.configResolver(state);
+    let model' =
+      Feature_Notification.update(~config, state.notifications, msg);
     ({...state, notifications: model'}, Effect.none);
 
   | Modals(msg) =>
@@ -1246,6 +1248,13 @@ let update =
         ),
       );
 
+    let wasInInsertMode =
+      Vim.Mode.isInsert(
+        state.layout
+        |> Feature_Layout.activeEditor
+        |> Feature_Editor.Editor.mode,
+      );
+
     let shEffect =
       switch (shOutMsg) {
       | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
@@ -1253,6 +1262,11 @@ let update =
       };
     let (layout, editorEffect) =
       Internal.updateEditors(~scope, ~msg, state.layout);
+
+    let isInInsertMode =
+      Vim.Mode.isInsert(
+        layout |> Feature_Layout.activeEditor |> Feature_Editor.Editor.mode,
+      );
 
     let newCursor =
       layout
@@ -1270,7 +1284,23 @@ let update =
         state.languageSupport;
       };
 
-    let state = {...state, layout, signatureHelp, languageSupport};
+    let languageSupport' =
+      if (isInInsertMode != wasInInsertMode) {
+        if (isInInsertMode) {
+          languageSupport |> Feature_LanguageSupport.startInsertMode;
+        } else {
+          languageSupport |> Feature_LanguageSupport.stopInsertMode;
+        };
+      } else {
+        languageSupport;
+      };
+
+    let state = {
+      ...state,
+      layout,
+      signatureHelp,
+      languageSupport: languageSupport',
+    };
     let effect = [shEffect, editorEffect] |> Effect.batch;
     (state, effect);
 
@@ -1488,7 +1518,6 @@ let update =
     };
 
   | Vim(msg) =>
-    let wasInInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state.vim));
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
     let state = {...state, vim};
 
@@ -1517,23 +1546,7 @@ let update =
         ({...state, layout: layout'}, Isolinear.Effect.none);
       };
 
-    let isInInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state'.vim));
-
-    // Entered insert mode
-    let languageSupport =
-      if (isInInsertMode && !wasInInsertMode) {
-        state.languageSupport |> Feature_LanguageSupport.startInsertMode;
-                                                                    // Exited insert mode
-      } else if (!isInInsertMode && wasInInsertMode) {
-        state.languageSupport |> Feature_LanguageSupport.stopInsertMode;
-      } else {
-        state.languageSupport;
-      };
-
-    (
-      {...state', languageSupport},
-      eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
-    );
+    (state', eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
 
   | AutoUpdate(msg) =>
     let getLicenseKey = () =>

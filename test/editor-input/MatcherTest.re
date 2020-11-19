@@ -4,6 +4,7 @@ open EditorInput;
 let getKeycode =
   fun
   | Key.Character('a') => Some(1)
+  | Key.Character('A') => Some(1)
   | Key.Character('b') => Some(2)
   | Key.Character('0') => Some(50)
   | Key.Character('9') => Some(59)
@@ -50,7 +51,11 @@ let getKeycode =
 
 let getScancode = getKeycode;
 
-let defaultParse = Matcher.parse(~getKeycode, ~getScancode);
+let defaultParse =
+  Matcher.parse(~explicitShiftKeyNeeded=true, ~getKeycode, ~getScancode);
+
+let defaultParseImplicitShiftKey =
+  Matcher.parse(~explicitShiftKeyNeeded=false, ~getKeycode, ~getScancode);
 
 let modifiersControl = {...Modifiers.none, control: true};
 
@@ -96,8 +101,10 @@ describe("Matcher", ({describe, _}) => {
         ("enter", keyPress(108)),
         ("cr", keyPress(108)),
         ("escape", keyPress(99)),
+        ("EsCaPe", keyPress(99)),
         ("space", keyPress(109)),
         ("bs", keyPress(110)),
+        ("Bs", keyPress(110)),
         ("backspace", keyPress(110)),
         ("del", keyPress(111)),
         ("delete", keyPress(111)),
@@ -105,7 +112,9 @@ describe("Matcher", ({describe, _}) => {
         ("capslock", keyPress(113)),
         ("insert", keyPress(114)),
         ("f0", keyPress(115)),
+        ("F0", keyPress(115)),
         ("f19", keyPress(134)),
+        ("F19", keyPress(134)),
         ("numpad0", keyPress(135)),
         ("numpad9", keyPress(144)),
         ("numpad_multiply", keyPress(145)),
@@ -202,6 +211,21 @@ describe("Matcher", ({describe, _}) => {
             keyPress(~modifiers=modifiersControl, 1),
             keyPress(~modifiers=modifiersControl, 2),
           ]),
+        ),
+      );
+    });
+    test("explicitShiftKeyNeeded=false", ({expect, _}) => {
+      let result = defaultParseImplicitShiftKey("A");
+      expect.equal(
+        result,
+        Ok(Sequence([keyPress(~modifiers=modifiersShift, 1)])),
+      );
+
+      let result = defaultParseImplicitShiftKey("Ab");
+      expect.equal(
+        result,
+        Ok(
+          Sequence([keyPress(~modifiers=modifiersShift, 1), keyPress(2)]),
         ),
       );
     });

@@ -3,7 +3,7 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="QuickOpen eventually completes", (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   /* Switch to root directory */

@@ -23,7 +23,7 @@ if (Revery.Environment.os !== Revery.Environment.Linux) {
     ~name="EditorFontValid",
     (_, wait, _) => {
       wait(~name="Initial mode is normal", (state: State.t) =>
-        Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
+        Selectors.mode(state) |> Vim.Mode.isNormal
       );
 
       wait(

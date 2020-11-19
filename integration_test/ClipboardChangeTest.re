@@ -25,7 +25,7 @@ runTest(~name="ClipboardChangeTest", (dispatch, wait, runEffects) => {
 
   dispatch(KeyboardInput({isText: true, input: "i"}));
   wait(~name="Mode switches to insert", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isInsert
+    Selectors.mode(state) |> Vim.Mode.isInsert
   );
 
   dispatch(KeyboardInput({isText: true, input: "abc"}));
@@ -33,7 +33,7 @@ runTest(~name="ClipboardChangeTest", (dispatch, wait, runEffects) => {
   runEffects();
 
   wait(~name="Mode switches back to normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   // Clear clipboard prior to test
@@ -67,7 +67,7 @@ runTest(~name="ClipboardChangeTest", (dispatch, wait, runEffects) => {
   runEffects();
 
   wait(~name="Mode switches back to normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   wait(~name="Set configuration to yank on deletes", (state: State.t) => {

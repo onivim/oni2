@@ -7,6 +7,6 @@
 (library
  (name EditorInput)
  (public_name Oni2.editor-input)
- (libraries base)
+ (libraries Oni2.core base)
  (preprocess
   (pps ppx_deriving.show)))
