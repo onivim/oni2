@@ -48,7 +48,7 @@ jobs:
   - template: .ci/use-node.yml
   - script: brew update-reset
   - script: brew install ragel
-  # - template: .ci/restore-build-cache.yml
+  - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/esy-check-hygiene.yml

@@ -1,18 +1,26 @@
 source /opt/rh/llvm-toolset-7.0/enable
 clang -v
 
-esy install --fetch-concurrency=1 --build-concurrency=1 --prefix-path=/esy/store
-esy build --fetch-concurrency=1 --build-concurrency=1 --prefix-path=/esy/store
-esy bootstrap --fetch-concurrency=1 --build-concurrency=1 --prefix-path=/esy/store
+# Use build cache to speed up PR builds
+export ESY__PREFIX=/esy/store
+
+# Workaround for: https://github.com/esy/esy/issues/1227
+# Concurrent fetch seems to cause hang on Docker in Azure Pipelines..
+export ESY__BUILD_CONCURRENCY=1
+export ESY__FETCH_CONCURRENCY=1
+
+esy install 
+esy build 
+esy run-script bootstrap
 node install-node-deps.js --production
-esy x Oni2 -f --checkhealth
+esy x  Oni2 -f --checkhealth
 
-esy @test install --fetch-concurrency=1 --build-concurrency=1 --prefix-path=/esy/store
-esy @test build --fetch-concurrency=1 --build-concurrency=1 --prefix-path=/esy/store
-esy @test run --prefix-path=/esy/store
-esy @test inline --prefix-path=/esy/store
+esy @test install 
+esy @test build 
+esy @test run-script run
+esy @test run-script inline
 
-esy @release install --fetch-concurrency=1 --build-concurrency=1 --prefix-path=/esy/store
-esy @release build --fetch-concurrency=1 --build-concurrency=1 --prefix-path=/esy/store
+esy @release install 
+esy @release build 
 esy @release x Oni2 -f --checkhealth
-esy @release create
+esy @release run-script create
