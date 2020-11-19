@@ -157,12 +157,11 @@ void characterForNativeCode(
       buffer[0] = '\0';
     }
   } else {
-    char *cBuffer = (char *)buffer;
-    int count = XLookupString(xKeyEvent, cBuffer, 2, NULL, NULL);
-    if (count > 0 && !iscntrl(cBuffer[0])) {
-      cBuffer[count] = '\0';
+    int count = XLookupString(xKeyEvent, buffer, 2, NULL, NULL);
+    if (count > 0 && !iscntrl(buffer[0])) {
+      buffer[count] = '\0';
     } else {
-      cBuffer[0] = '\0';
+      buffer[0] = '\0';
     }
   }
 }
@@ -172,8 +171,8 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
   CAMLlocal2(keymapEntry, vSDLScancode);
 
   // Allocate UTF-8 Buffers to be populated
-  char unmodified[4]; 
-  char withShift[4]; 
+  char unmodified[4] = {'\0'}; 
+  char withShift[4] = {'\0'}; 
   char withAlt[1] = {'\0'};
 
   XMappingEvent xEventMap = {MappingNotify, 0, false, xDisplay, 0, MappingKeyboard, 0, 0};
