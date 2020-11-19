@@ -588,10 +588,10 @@ let start =
         dispatch(
           Actions.Editor({
             scope: EditorScope.Editor(editorId),
-            msg: ModeChanged({mode: newContext.mode, effects})
-          })
-          );
-      }
+            msg: ModeChanged({mode: newContext.mode, effects}),
+          }),
+        );
+      };
     });
   };
 
