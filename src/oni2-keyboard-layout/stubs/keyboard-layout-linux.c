@@ -25,6 +25,9 @@
 sprintf(message, "NULL data at %s:%d", __FILE__, __LINE__); \
 caml_failwith(message)
 
+#define RAISE_IF_UNINITIALIZED if (xDisplay == NULL) \
+caml_failwith("Oni2_KeyboardLayout not initialized!")
+
 typedef struct KeycodeMapEntry {
   uint xkbKeycode;
   const char *dom3Code;
@@ -119,6 +122,8 @@ CAMLprim value oni2_KeyboardLayoutGetCurrentLayout() {
   CAMLparam0();
   CAMLlocal1(vLayout);
 
+  RAISE_IF_UNINITIALIZED;
+
   char layout[256];
   oni2_priv_GetCurrentKeyboardLayout(layout);
 
@@ -130,6 +135,8 @@ CAMLprim value oni2_KeyboardLayoutGetCurrentLayout() {
 CAMLprim value oni2_KeyboardLayoutGetCurrentLanguage() {
   CAMLparam0();
   CAMLlocal1(vLanguage);
+
+  RAISE_IF_UNINITIALIZED;
 
   char language[256];
   oni2_priv_GetCurrentKeyboardLayout(language);
@@ -169,6 +176,8 @@ void characterForNativeCode(
 CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hashtbl_replace) {
   CAMLparam2(keymap, Hashtbl_replace);
   CAMLlocal2(keymapEntry, vSDLScancode);
+
+  RAISE_IF_UNINITIALIZED;
 
   // Allocate UTF-8 Buffers to be populated
   char unmodified[4] = {'\0'}; 
