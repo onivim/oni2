@@ -417,7 +417,6 @@ module View = {
 
       let container = [
         position(`Absolute),
-        backgroundColor(Revery.Colors.magenta),
         top(0),
         bottom(0),
         left(0),
