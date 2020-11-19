@@ -11,11 +11,10 @@ module Colors = Feature_Theme.Colors;
 module Styles = {
   open Style;
 
-  let sidebar = (~opacity, ~theme, ~transition) => [
+  let sidebar = (~opacity, ~theme) => [
     Style.opacity(opacity),
     flexDirection(`Row),
     backgroundColor(Colors.SideBar.background.from(theme)),
-    transform(Transform.[TranslateX(transition)]),
   ];
 
   let contents = (~width) => [
@@ -55,15 +54,8 @@ let animation =
     |> delay(Revery.Time.milliseconds(0))
   );
 
-let%component make = (~config, ~theme, ~state: State.t, ~dispatch, ()) => {
+let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
   let State.{sideBar, uiFont: font, _} = state;
-
-  let%hook (transition, _animationState, _reset) =
-    Hooks.animation(
-      ~name="SideBar transition animation",
-      animation,
-      ~active=true,
-    );
 
   let title =
     switch (sideBar |> selected) {
@@ -151,7 +143,7 @@ let%component make = (~config, ~theme, ~state: State.t, ~dispatch, ()) => {
     || focus == Focus.Search;
 
   let content =
-    <View style={Styles.contents(~width)}>
+    <View ?key style={Styles.contents(~width)}>
       <View style={Styles.heading(theme)}>
         <View style=Styles.titleContainer>
           <Text
@@ -196,7 +188,7 @@ let%component make = (~config, ~theme, ~state: State.t, ~dispatch, ()) => {
       : Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
           config,
         );
-  <View style={Styles.sidebar(~opacity, ~theme, ~transition)}>
+  <View style={Styles.sidebar(~opacity, ~theme)}>
     separator
     {React.listToElement(items)}
   </View>;
