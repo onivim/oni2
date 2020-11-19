@@ -14,18 +14,23 @@ type notification = {
   kind,
   message: string,
   source: option(string),
+  yOffset: float,
 };
 
-type model = list(notification);
+type model; //= list(notification);
 
 let initial: model;
+
+let active: model => list(notification);
+
+let all: model => list(notification);
 
 // UPDATE
 
 [@deriving show]
 type msg;
 
-let update: (model, msg) => model;
+let update: (~config: Oni_Core.Config.resolver, model, msg) => model;
 
 // EFFECTS
 
@@ -35,11 +40,22 @@ module Effects: {
   let dismiss: notification => Isolinear.Effect.t(msg);
 };
 
+// SUBSCRIPTION
+
+let sub: model => Isolinear.Sub.t(msg);
+
 // COLORS
 
 module Colors: {
   let backgroundFor: notification => ColorTheme.Schema.definition;
   let foregroundFor: notification => ColorTheme.Schema.definition;
+};
+
+// ANIMATIONS
+
+module Animations: {
+  let transitionDuration: Revery.Time.t;
+  let totalDuration: Revery.Time.t;
 };
 
 // VIEW
@@ -49,11 +65,6 @@ module View: {
   open Revery.UI;
 
   module Popup: {
-    module Animations: {
-      let transitionDuration: Time.t;
-      let totalDuration: Time.t;
-    };
-
     let make:
       (
         ~key: React.Key.t=?,

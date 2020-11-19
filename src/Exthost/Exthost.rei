@@ -137,6 +137,9 @@ module Edit: {
       forceMoveMarkers: bool,
     };
 
+    // Get the difference in lines due to the edit
+    let deltaLineCount: t => int;
+
     let decode: Json.decoder(t);
   };
 };
@@ -1766,7 +1769,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DocumentHighlight.t));
+      Lwt.t(option(list(DocumentHighlight.t)));
 
     let provideDocumentSymbols:
       (~handle: int, ~resource: Uri.t, Client.t) =>

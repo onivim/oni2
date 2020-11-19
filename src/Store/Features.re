@@ -390,19 +390,37 @@ let update =
 
     let state = {...state, languageSupport};
 
+    let exthostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t = (
+      exthostEdit => {
+        let range = exthostEdit.range |> Exthost.OneBasedRange.toRange;
+
+        let text =
+          exthostEdit.text
+          |> Option.map(str => {
+               str |> String.split_on_char('\n') |> Array.of_list
+             })
+          |> Option.value(~default=[||]);
+
+        Vim.Edit.{range, text};
+      }
+    );
+
     Feature_LanguageSupport.(
       switch (outmsg) {
       | Nothing => (state, Isolinear.Effect.none)
-      | ApplyCompletion({insertText, meetColumn}) => (
+      | ApplyCompletion({insertText, meetColumn, additionalEdits}) =>
+        let additionalEdits =
+          additionalEdits |> List.map(exthostEditToVimEdit);
+        (
           state,
           Service_Vim.Effects.applyCompletion(
-            ~meetColumn, ~insertText, ~toMsg=mode =>
+            ~additionalEdits, ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
               msg: ModeChanged({mode, effects: []}),
             })
           ),
-        )
+        );
       | ReferencesAvailable =>
         let references =
           Feature_LanguageSupport.References.get(languageSupport);
@@ -415,13 +433,15 @@ let update =
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
-      | InsertSnippet({meetColumn, snippet}) =>
+      | InsertSnippet({meetColumn, snippet, additionalEdits}) =>
         // TODO: Full snippet integration!
+        let additionalEdits =
+          additionalEdits |> List.map(exthostEditToVimEdit);
         let insertText = Feature_Snippets.snippetToInsert(~snippet);
         (
           state,
           Service_Vim.Effects.applyCompletion(
-            ~meetColumn, ~insertText, ~toMsg=mode =>
+            ~additionalEdits, ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
               msg: ModeChanged({mode, effects: []}),
@@ -445,19 +465,28 @@ let update =
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
         )
       | CodeLensesChanged({bufferId, lenses}) =>
-        let inlineElements =
+        let inlineElements = editor =>
           lenses
           |> List.map(lens => {
                let lineNumber =
-                 Feature_LanguageSupport.CodeLens.lineNumber(lens);
+                 Feature_LanguageSupport.CodeLens.lineNumber(lens)
+                 |> EditorCoreTypes.LineNumber.ofZeroBased;
                let uniqueId = Feature_LanguageSupport.CodeLens.uniqueId(lens);
+               let leftMargin =
+                 Feature_Editor.Editor.getLeadingWhitespacePixels(
+                   lineNumber,
+                   editor,
+                 )
+                 |> int_of_float;
                let view =
-                 Feature_LanguageSupport.CodeLens.View.make(~codeLens=lens);
+                 Feature_LanguageSupport.CodeLens.View.make(
+                   ~leftMargin,
+                   ~codeLens=lens,
+                 );
                Feature_Editor.Editor.makeInlineElement(
                  ~key="codelens",
                  ~uniqueId,
-                 ~lineNumber=
-                   EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+                 ~lineNumber,
                  ~view,
                );
              });
@@ -467,7 +496,7 @@ let update =
                if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
                  Feature_Editor.Editor.setInlineElements(
                    ~key="codelens",
-                   ~elements=inlineElements,
+                   ~elements=inlineElements(editor),
                    editor,
                  );
                } else {
@@ -644,11 +673,18 @@ let update =
     switch (outmsg) {
     | Nothing => (state, Effect.none)
     | PopFocus => (state |> FocusManager.push(Editor), Effect.none)
-    | Focus =>
+    | Focus(maybeSubFocus) =>
       let state' =
         Feature_SideBar.(
           switch (sideBar' |> Feature_SideBar.selected) {
-          | FileExplorer => state |> FocusManager.push(Focus.FileExplorer)
+          | FileExplorer =>
+            let fileExplorer =
+              switch (maybeSubFocus) {
+              | Some(Outline) =>
+                state.fileExplorer |> Feature_Explorer.focusOutline
+              | None => state.fileExplorer
+              };
+            {...state, fileExplorer} |> FocusManager.push(Focus.FileExplorer);
           | SCM =>
             {...state, scm: Feature_SCM.resetFocus(state.scm)}
             |> FocusManager.push(Focus.SCM)
@@ -1168,7 +1204,9 @@ let update =
     ({...state, colorTheme: model'}, eff);
 
   | Notification(msg) =>
-    let model' = Feature_Notification.update(state.notifications, msg);
+    let config = Selectors.configResolver(state);
+    let model' =
+      Feature_Notification.update(~config, state.notifications, msg);
     ({...state, notifications: model'}, Effect.none);
 
   | Modals(msg) =>
@@ -1226,6 +1264,13 @@ let update =
         ),
       );
 
+    let wasInInsertMode =
+      Vim.Mode.isInsert(
+        state.layout
+        |> Feature_Layout.activeEditor
+        |> Feature_Editor.Editor.mode,
+      );
+
     let shEffect =
       switch (shOutMsg) {
       | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
@@ -1233,6 +1278,11 @@ let update =
       };
     let (layout, editorEffect) =
       Internal.updateEditors(~scope, ~msg, state.layout);
+
+    let isInInsertMode =
+      Vim.Mode.isInsert(
+        layout |> Feature_Layout.activeEditor |> Feature_Editor.Editor.mode,
+      );
 
     let newCursor =
       layout
@@ -1250,7 +1300,23 @@ let update =
         state.languageSupport;
       };
 
-    let state = {...state, layout, signatureHelp, languageSupport};
+    let languageSupport' =
+      if (isInInsertMode != wasInInsertMode) {
+        if (isInInsertMode) {
+          languageSupport |> Feature_LanguageSupport.startInsertMode;
+        } else {
+          languageSupport |> Feature_LanguageSupport.stopInsertMode;
+        };
+      } else {
+        languageSupport;
+      };
+
+    let state = {
+      ...state,
+      layout,
+      signatureHelp,
+      languageSupport: languageSupport',
+    };
     let effect = [shEffect, editorEffect] |> Effect.batch;
     (state, effect);
 
@@ -1459,13 +1525,7 @@ let update =
         state.layout
         |> Feature_Layout.map(editor =>
              if (Editor.getId(editor) == activeEditorId) {
-               Editor.setYankHighlight(
-                 ~yankHighlight={
-                   key: Brisk_reconciler.Key.create(),
-                   pixelRanges,
-                 },
-                 editor,
-               );
+               Editor.startYankHighlight(pixelRanges, editor);
              } else {
                editor;
              }
@@ -1474,7 +1534,6 @@ let update =
     };
 
   | Vim(msg) =>
-    let wasInInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state.vim));
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
     let state = {...state, vim};
 
@@ -1503,23 +1562,7 @@ let update =
         ({...state, layout: layout'}, Isolinear.Effect.none);
       };
 
-    let isInInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state'.vim));
-
-    // Entered insert mode
-    let languageSupport =
-      if (isInInsertMode && !wasInInsertMode) {
-        state.languageSupport |> Feature_LanguageSupport.startInsertMode;
-                                                                    // Exited insert mode
-      } else if (!isInInsertMode && wasInInsertMode) {
-        state.languageSupport |> Feature_LanguageSupport.stopInsertMode;
-      } else {
-        state.languageSupport;
-      };
-
-    (
-      {...state', languageSupport},
-      eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
-    );
+    (state', eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
 
   | AutoUpdate(msg) =>
     let getLicenseKey = () =>

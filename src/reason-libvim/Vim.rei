@@ -1,6 +1,8 @@
 open EditorCoreTypes;
 
 type lineEnding = Types.lineEnding;
+module Event = Event;
+module Types = Types;
 
 module AutoClosingPairs: {
   module AutoPair: {
@@ -121,6 +123,17 @@ module Mode: {
   let cursors: t => list(BytePosition.t);
 };
 
+module Functions: {
+  module GetChar: {
+    type mode =
+      | Wait // getchar()
+      | Immediate // getchar(0)
+      | Peek; // getchar(1)
+
+    type t = mode => char;
+  };
+};
+
 module Context: {
   type t = {
     autoClosingPairs: AutoClosingPairs.t,
@@ -149,9 +162,23 @@ module Context: {
     mode: Mode.t,
     tabSize: int,
     insertSpaces: bool,
+    functionGetChar: Functions.GetChar.t,
   };
 
   let current: unit => t;
+};
+
+module CommandLine: {
+  type t = Types.cmdline;
+
+  let getCompletions: (~context: Context.t=?, unit) => array(string);
+  let getText: unit => option(string);
+  let getPosition: unit => int;
+  let getType: unit => Types.cmdlineType;
+
+  let onEnter: (Event.handler(t), unit) => unit;
+  let onLeave: (Event.handler(unit), unit) => unit;
+  let onUpdate: (Event.handler(t), unit) => unit;
 };
 
 module Edit: {
@@ -320,7 +347,8 @@ module Goto: {
   type effect =
     | Definition
     | Declaration
-    | Hover;
+    | Hover
+    | Outline;
 };
 
 module TabPage: {
@@ -406,10 +434,12 @@ module Mapping: {
     | InsertAndCommandLine // :map!
     | All; // :map;
 
-  [@deriving show]
-  type scriptId;
-
-  let defaultScriptId: scriptId;
+  module ScriptId: {
+    [@deriving show]
+    type t;
+    let default: t;
+    let toInt: t => int;
+  };
 
   [@deriving show]
   type t = {
@@ -419,7 +449,7 @@ module Mapping: {
     expression: bool,
     recursive: bool,
     silent: bool,
-    scriptId,
+    scriptId: ScriptId.t,
   };
 };
 
@@ -477,7 +507,7 @@ The value [s] must be a valid Vim key, such as:
 // TODO: Strongly type these keys...
 let key: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
-let eval: string => result(string, string);
+let eval: (~context: Context.t=?, string) => result(string, string);
 
 /**
 [command(cmd)] executes [cmd] as an Ex command.
@@ -559,12 +589,9 @@ module AutoCommands = AutoCommands;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
 module Clipboard = Clipboard;
-module CommandLine = CommandLine;
 module Cursor = Cursor;
-module Event = Event;
 module Options = Options;
 module Search = Search;
-module Types = Types;
 module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;

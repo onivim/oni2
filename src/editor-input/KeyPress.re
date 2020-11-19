@@ -1,3 +1,4 @@
+module ZedBundled = Oni_Core.ZedBundled;
 [@deriving show]
 type t =
   | PhysicalKey(PhysicalKey.t)
@@ -27,6 +28,7 @@ let equals = (keyA, keyB) => {
 
 let ofInternal =
     (
+      ~addShiftKeyToCapital,
       ~getKeycode,
       ~getScancode,
       (
@@ -34,9 +36,7 @@ let ofInternal =
         mods: list(Matcher_internal.modifier),
       ),
     ) => {
-  switch (key) {
-  | Matcher_internal.Special(special) => Ok(SpecialKey(special))
-  | Matcher_internal.Physical(key) =>
+  let keyToKeyPress = (~mods=mods, key) => {
     switch (getKeycode(key), getScancode(key)) {
     | (Some(keycode), Some(scancode)) =>
       Ok(
@@ -47,11 +47,37 @@ let ofInternal =
         }),
       )
     | _ => Error("Unrecognized key: " ++ Key.toString(key))
-    }
+    };
+  };
+  switch (key) {
+  | Matcher_internal.UnmatchedString(str) =>
+    ZedBundled.explode(str)
+    |> List.map(uchar =>
+         if (Uchar.is_char(uchar)) {
+           let char = Uchar.to_char(uchar);
+           let lowercaseChar = Char.lowercase_ascii(char);
+           let isCapitalized = lowercaseChar != char;
+           if (isCapitalized && addShiftKeyToCapital) {
+             keyToKeyPress(
+               ~mods=[Shift, ...mods],
+               Key.Character(lowercaseChar),
+             );
+           } else {
+             keyToKeyPress(Key.Character(lowercaseChar));
+           };
+         } else {
+           Error(
+             "Unicode characters not yet supported in bindings: "
+             ++ ZedBundled.make(1, uchar),
+           );
+         }
+       )
+  | Matcher_internal.Special(special) => [Ok(SpecialKey(special))]
+  | Matcher_internal.Physical(key) => [keyToKeyPress(key)]
   };
 };
 
-let parse = (~getKeycode, ~getScancode, str) => {
+let parse = (~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, str) => {
   let parse = lexbuf =>
     switch (Matcher_parser.keys(Matcher_lexer.token, lexbuf)) {
     | exception Matcher_lexer.Error => Error("Error parsing binding: " ++ str)
@@ -64,15 +90,18 @@ let parse = (~getKeycode, ~getScancode, str) => {
 
   let flatMap = (f, r) => Result.bind(r, f);
 
+  let addShiftKeyToCapital = !explicitShiftKeyNeeded;
+
   let finish = r => {
-    r |> List.map(ofInternal(~getKeycode, ~getScancode)) |> Base.Result.all;
+    r
+    |> List.map(
+         ofInternal(~addShiftKeyToCapital, ~getKeycode, ~getScancode),
+       )
+    |> List.flatten
+    |> Base.Result.all;
   };
 
-  str
-  |> String.lowercase_ascii
-  |> Lexing.from_string
-  |> parse
-  |> flatMap(finish);
+  str |> Lexing.from_string |> parse |> flatMap(finish);
 };
 
 let toString = (~meta="Meta", ~keyCodeToString, key) => {

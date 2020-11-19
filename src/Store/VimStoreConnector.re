@@ -28,12 +28,6 @@ let start =
   let libvimHasInitialized = ref(false);
   let currentTriggerKey = ref(None);
 
-  let colorSchemeProvider = pattern => {
-    getState().extensions
-    |> Feature_Extensions.themesByName(~filter=pattern)
-    |> Array.of_list;
-  };
-
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
     let yankConfig =
@@ -102,6 +96,9 @@ let start =
       dispatch(
         Actions.LanguageSupport(Feature_LanguageSupport.Msg.Hover.show),
       )
+
+    | Vim.Goto.Outline =>
+      dispatch(Actions.SideBar(Feature_SideBar.(Command(GotoOutline))))
 
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
@@ -256,7 +253,7 @@ let start =
         isClipboardRegister
         || operator == Vim.Yank.Yank
         && allYanks
-        || operator == Vim.Yank.Delete
+        || (operator == Vim.Yank.Delete || operator == Vim.Yank.Change)
         && allDeletes;
       if (shouldPropagateToClipboard) {
         let text =
@@ -479,8 +476,8 @@ let start =
     Vim.CommandLine.getText()
     |> Option.iter(commandStr =>
          if (position == String.length(commandStr)) {
-           let completions =
-             Vim.CommandLine.getCompletions(~colorSchemeProvider, ());
+           let context = Oni_Model.VimContext.current(getState());
+           let completions = Vim.CommandLine.getCompletions(~context, ());
 
            Log.debugf(m =>
              m("  got %n completions.", Array.length(completions))

@@ -16,7 +16,8 @@ type command =
   | ToggleSearchPane
   | ToggleSCMPane
   | ToggleExtensionsPane
-  | ToggleVisibility;
+  | ToggleVisibility
+  | GotoOutline;
 
 [@deriving show]
 type msg =
@@ -46,9 +47,12 @@ type model = {
   location,
 };
 
+type subFocus =
+  | Outline;
+
 type outmsg =
   | Nothing
-  | Focus
+  | Focus(option(subFocus))
   | PopFocus;
 
 let selected = ({selected, _}) => selected;
@@ -88,19 +92,19 @@ let update = (~isFocused, msg, model) => {
   // Focus a pane if it is not open, or close it
   let selectOrClosePane = (~pane, model) =>
     if (!model.isOpen) {
-      ({...model, isOpen: true, selected: pane}, Focus);
+      ({...model, isOpen: true, selected: pane}, Focus(None));
     } else if (model.selected == pane) {
       ({...model, isOpen: false}, PopFocus);
     } else {
-      ({...model, selected: pane}, Focus);
+      ({...model, selected: pane}, Focus(None));
     };
 
-  let togglePane = (~pane: pane, model) =>
+  let togglePane = (~pane: pane, ~subFocus=None, model) =>
     // Not open - open the sidebar, and focus
     if (!model.isOpen || model.selected != pane) {
       (
         {...model, isOpen: true, selected: pane},
-        Focus,
+        Focus(subFocus),
         // Sidebar is open, and with the selected pane...
         // If not open by default, we should close.
       );
@@ -113,7 +117,7 @@ let update = (~isFocused, msg, model) => {
     } else if (isFocused) {
       (model, PopFocus);
     } else {
-      (model, Focus);
+      (model, Focus(subFocus));
     };
 
   switch (msg) {
@@ -155,10 +159,13 @@ let update = (~isFocused, msg, model) => {
   | SearchClicked => selectOrClosePane(~pane=Search, model)
   | Command(ToggleSearchPane) => togglePane(~pane=Search, model)
 
+  | Command(GotoOutline) =>
+    togglePane(~pane=FileExplorer, ~subFocus=Some(Outline), model)
+
   | Command(ToggleVisibility) =>
     // If we were open, and we are going to close, we should pop focus...
     // Otherwise, if we are opening, we need to acquire focus.
-    let eff = model.isOpen ? PopFocus : Focus;
+    let eff = model.isOpen ? PopFocus : Focus(None);
     ({...model, shouldSnapShut: true, isOpen: !model.isOpen}, eff);
   };
 };
@@ -211,6 +218,14 @@ module Commands = {
       ~title="Open File Explorer Pane",
       "workbench.view.explorer",
       Command(ToggleExplorerPane),
+    );
+
+  let gotoOutline =
+    define(
+      ~category="Explorer",
+      ~title="Go-to file outline",
+      "workbench.action.gotoOutline",
+      Command(GotoOutline),
     );
 
   let openSCMPane =
@@ -349,6 +364,7 @@ module Contributions = {
       openExtensionsPane,
       openSCMPane,
       toggleSidebar,
+      gotoOutline,
     ];
 
   let configuration = Configuration.[visible.spec, location.spec];

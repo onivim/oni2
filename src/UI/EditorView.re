@@ -60,7 +60,6 @@ module Parts = {
         grammarRepository={state.grammarRepository}
         onEditorSizeChanged
         theme
-        mode={Feature_Vim.mode(state.vim)}
         bufferHighlights={state.bufferHighlights}
         bufferSyntaxHighlights={state.syntaxHighlights}
         diagnostics={state.diagnostics}

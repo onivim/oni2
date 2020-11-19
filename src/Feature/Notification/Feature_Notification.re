@@ -28,23 +28,126 @@ type notification = {
   kind,
   message: string,
   source: option(string),
+  yOffset: float,
 };
 
-type model = list(notification);
+[@deriving show({with_path: false})]
+type internal = {
+  id: int,
+  kind,
+  message: string,
+  source: option(string),
+  yOffsetAnimation: [@opaque] option(Component_Animation.t(float)),
+};
 
-let initial = [];
+let internalToExternal: internal => notification =
+  (internal: internal) => {
+    {
+      id: internal.id,
+      kind: internal.kind,
+      message: internal.message,
+      source: internal.source,
+      yOffset:
+        internal.yOffsetAnimation
+        |> Option.map(Component_Animation.get)
+        |> Option.value(~default=0.),
+    };
+  };
+
+type model = {
+  all: list(internal),
+  activeNotifications: IntSet.t,
+};
+
+let initial = {all: [], activeNotifications: IntSet.empty};
+
+let all = ({all, _}) => all |> List.map(internalToExternal);
+
+let active = ({all, activeNotifications}) => {
+  all
+  |> List.filter_map(notification =>
+       if (IntSet.mem(notification.id, activeNotifications)) {
+         Some(internalToExternal(notification));
+       } else {
+         None;
+       }
+     );
+};
+
+// ANIMATIONS
+
+module Constants = {
+  let popupDuration = Time.ms(3000);
+};
+
+module Animations = {
+  open Revery;
+  open Revery.UI;
+  open Revery.UI.Animation;
+
+  let transitionDuration = Time.ms(150);
+  let totalDuration =
+    Time.(Constants.popupDuration + transitionDuration *. 2.);
+
+  let enter =
+    animate(transitionDuration) |> ease(Easing.ease) |> tween(50., 0.);
+
+  let exit =
+    animate(transitionDuration) |> ease(Easing.ease) |> tween(0., 50.);
+
+  let sequence =
+    enter |> andThen(~next=exit |> delay(Constants.popupDuration));
+};
 
 // UPDATE
 
 [@deriving show({with_path: false})]
 type msg =
-  | Created(notification)
-  | Dismissed(notification);
+  | Created(internal)
+  | Dismissed({id: int})
+  | Expire({id: int})
+  | AnimateYOffset({
+      id: int,
+      msg: [@opaque] Component_Animation.msg,
+    });
 
-let update = (model, msg) => {
+let update = (~config, model, msg) => {
+  let animationsEnabled =
+    Feature_Configuration.GlobalConfiguration.animation.get(config);
   switch (msg) {
-  | Created(item) => [item, ...model]
-  | Dismissed(item) => List.filter(it => it.id != item.id, model)
+  | Created(item) =>
+    let yOffsetAnimation =
+      animationsEnabled
+        ? Some(Component_Animation.make(Animations.sequence)) : None;
+    {
+      all: [{...item, yOffsetAnimation}, ...model.all],
+      activeNotifications: IntSet.add(item.id, model.activeNotifications),
+    };
+  | Dismissed({id}) => {
+      all: List.filter(it => it.id != id, model.all),
+      activeNotifications: IntSet.remove(id, model.activeNotifications),
+    }
+  | Expire({id}) => {
+      ...model,
+      activeNotifications: IntSet.remove(id, model.activeNotifications),
+    }
+  | AnimateYOffset({id, msg}) => {
+      ...model,
+      all:
+        model.all
+        |> List.map(item =>
+             if (item.id == id) {
+               {
+                 ...item,
+                 yOffsetAnimation:
+                   item.yOffsetAnimation
+                   |> Option.map(Component_Animation.update(msg)),
+               };
+             } else {
+               item;
+             }
+           ),
+    }
   };
 };
 
@@ -58,15 +161,47 @@ module Effects = {
         Log.warnf(m => m("Received empty notification from %s", source));
       } else {
         dispatch(
-          Created({id: Internal.generateId(), kind, message, source}),
+          Created({
+            id: Internal.generateId(),
+            kind,
+            message,
+            source,
+            yOffsetAnimation: None,
+          }),
         );
       }
     );
 
-  let dismiss = notification =>
+  let dismiss = (notification: notification) =>
     Isolinear.Effect.createWithDispatch(~name="notification.dismiss", dispatch =>
-      dispatch(Dismissed(notification))
+      dispatch(Dismissed({id: notification.id}))
     );
+};
+
+let sub = (model: model) => {
+  let timerSubs: list(Isolinear.Sub.t(msg)) =
+    model
+    |> active
+    |> List.map((notification: notification) => {
+         Service_Time.Sub.once(
+           ~uniqueId="Feature_Notification" ++ string_of_int(notification.id),
+           ~delay=Animations.totalDuration,
+           ~msg=(~current as _) =>
+           Expire({id: notification.id})
+         )
+       });
+
+  let animationSub: Isolinear.Sub.t(msg) =
+    switch (model.all) {
+    | [] => Isolinear.Sub.none
+    | [{yOffsetAnimation, id, _}, ..._rest] =>
+      yOffsetAnimation
+      |> Option.map(Component_Animation.sub)
+      |> Option.value(~default=Isolinear.Sub.none)
+      |> Isolinear.Sub.map(msg => AnimateYOffset({id, msg}))
+    };
+
+  [animationSub, ...timerSubs] |> Isolinear.Sub.batch;
 };
 
 // COLORS
@@ -88,14 +223,14 @@ module Colors = {
   let errorForeground =
     define("oni.notification.errorForeground", all(hex("#FFF")));
 
-  let backgroundFor = notification =>
+  let backgroundFor = (notification: notification) =>
     switch (notification.kind) {
     | Warning => warningBackground
     | Error => errorBackground
     | Info => infoBackground
     };
 
-  let foregroundFor = notification =>
+  let foregroundFor = (notification: notification) =>
     switch (notification.kind) {
     | Warning => warningForeground
     | Error => errorForeground
@@ -115,10 +250,6 @@ module View = {
   // POPUP
 
   module Popup = {
-    module Constants = {
-      let popupDuration = Time.ms(3000);
-    };
-
     module Styles = {
       open Style;
 
@@ -142,38 +273,23 @@ module View = {
       ];
     };
 
-    module Animations = {
-      open Animation;
-
-      let transitionDuration = Time.ms(150);
-      let totalDuration =
-        Time.(Constants.popupDuration + transitionDuration *. 2.);
-
-      let enter =
-        animate(transitionDuration) |> ease(Easing.ease) |> tween(50., 0.);
-
-      let exit =
-        animate(transitionDuration) |> ease(Easing.ease) |> tween(0., 50.);
-
-      let sequence =
-        enter |> andThen(~next=exit |> delay(Constants.popupDuration));
-    };
-
-    let iconFor = item =>
+    let iconFor = (item: notification) =>
       switch (item.kind) {
       | Warning => FontAwesome.exclamationTriangle
       | Error => FontAwesome.exclamationCircle
       | Info => FontAwesome.infoCircle
       };
 
-    let%component make =
-                  (~model, ~background, ~foreground, ~font: UiFont.t, ()) => {
-      let%hook (yOffset, _animationState, _reset) =
-        Hooks.animation(
-          ~name="Notification Animation",
-          Animations.sequence,
-          ~active=true,
-        );
+    let make =
+        (
+          ~key=?,
+          ~model: notification,
+          ~background,
+          ~foreground,
+          ~font: UiFont.t,
+          (),
+        ) => {
+      let yOffset = model.yOffset;
 
       let icon = () =>
         <FontIcon icon={iconFor(model)} fontSize=16. color=foreground />;
@@ -191,7 +307,7 @@ module View = {
         | None => React.empty
         };
 
-      <View style={Styles.container(~background, ~yOffset)}>
+      <View ?key style={Styles.container(~background, ~yOffset)}>
         <icon />
         <source />
         <Text
@@ -267,7 +383,7 @@ module View = {
           };
 
         let closeButton = () => {
-          let onClick = () => dispatch(Dismissed(item));
+          let onClick = () => dispatch(Dismissed({id: item.id}));
 
           <Clickable onClick style=Styles.closeButton>
             <FontIcon icon=FontAwesome.times fontSize=13. color=foreground />
@@ -314,7 +430,8 @@ module View = {
     };
 
     let make = (~model, ~theme, ~font: UiFont.t, ~dispatch, ()) => {
-      let items = model |> List.map(item => <Item item theme font dispatch />);
+      let items =
+        model.all |> List.map(item => <Item item theme font dispatch />);
 
       let innerElement =
         if (items == []) {

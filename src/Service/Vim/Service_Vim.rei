@@ -29,7 +29,8 @@ module Effects: {
     (
       ~meetColumn: CharacterIndex.t,
       ~insertText: string,
-      ~toMsg: Vim.Mode.t => 'msg
+      ~toMsg: Vim.Mode.t => 'msg,
+      ~additionalEdits: list(Vim.Edit.t)
     ) =>
     Isolinear.Effect.t('msg);
 };
