@@ -129,7 +129,6 @@ open Revery.UI;
 open Revery.UI.Components;
 module Animation = Revery.UI.Animation;
 module ContextMenu = Oni_Components.ContextMenu;
-module CustomHooks = Oni_Components.CustomHooks;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 module Label = Oni_Components.Label;

@@ -131,7 +131,9 @@ let active = ({all, activeNotifications, _}) => {
      );
 };
 
-let updateColorTransition = (~animate, ~theme, model) => {
+let updateColorTransition = (~config, ~theme, model) => {
+  let animate =
+    Feature_Configuration.GlobalConfiguration.animation.get(config);
   let (desiredBackground, desiredForeground) = {
     switch (active(model)) {
     | [notification, ..._] =>
@@ -185,6 +187,8 @@ let updateColorTransition = (~animate, ~theme, model) => {
   };
 };
 
+let changeTheme = updateColorTransition;
+
 // ANIMATIONS
 
 module Constants = {
@@ -237,7 +241,7 @@ let update = (~theme, ~config, model, msg) => {
       all: [{...item, yOffsetAnimation}, ...model.all],
       activeNotifications: IntSet.add(item.id, model.activeNotifications),
     }
-    |> updateColorTransition(~animate=animationsEnabled, ~theme);
+    |> updateColorTransition(~config, ~theme);
 
   | Dismissed({id}) => {
       ...model,
@@ -250,7 +254,7 @@ let update = (~theme, ~config, model, msg) => {
       ...model,
       activeNotifications: IntSet.remove(id, model.activeNotifications),
     }
-    |> updateColorTransition(~animate=animationsEnabled, ~theme)
+    |> updateColorTransition(~config, ~theme)
 
   | AnimateYOffset({id, msg}) => {
       ...model,

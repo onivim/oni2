@@ -44,6 +44,14 @@ let update:
   ) =>
   model;
 
+let changeTheme:
+  (
+    ~config: Oni_Core.Config.resolver,
+    ~theme: Oni_Core.ColorTheme.Colors.t,
+    model
+  ) =>
+  model;
+
 // EFFECTS
 
 module Effects: {
