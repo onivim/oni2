@@ -179,7 +179,8 @@ let initial = keybindings => {
          },
          InputStateMachine.empty,
        );
-  {inputStateMachine, userBindings: [], keyDisplayer: None};
+  {inputStateMachine, userBindings: [], keyDisplayer: 
+  Some(KeyDisplayer.initial)}
 };
 
 type effect =
