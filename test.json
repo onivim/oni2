@@ -2,7 +2,7 @@
   "source": "./package.json",
   "scripts": {
     "run": "esy '@test' x OniUnitTestRunner",
-    "run-ci": "#{os == 'linux' ? 'xvfb-run esy' : 'esy'} '@test' x OniUnitTestRunnerCI",
+    "run-ci": "esy '@test' x OniUnitTestRunnerCI",
     "core": "esy '@test' x OniUnitTestRunnerCore",
     "cli": "esy '@test' x OniUnitTestRunnerCLI",
     "libvim": "esy '@test' x OniUnitTestRunnerLibvim",
