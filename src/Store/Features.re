@@ -67,6 +67,13 @@ module Internal = {
       dispatch(Actions.Quit(true))
     );
 
+  let chdir = (path: Fp.t(Fp.absolute)) =>
+    Isolinear.Effect.createWithDispatch(~name="chdir", dispatch => {
+      let newDirectory = Fp.toString(path);
+      Sys.chdir(newDirectory);
+      dispatch(Actions.DirectoryChanged(newDirectory));
+    });
+
   let updateEditor = (~editorId, ~msg, layout) => {
     switch (Feature_Layout.editorById(editorId, layout)) {
     | Some(editor) =>
@@ -331,6 +338,7 @@ let update =
              })
           |> Option.value(~default=Isolinear.Effect.none);
         (state, eff);
+      | ChangeWorkspaceRequested(path) => (state, Internal.chdir(path))
       }
     );
 

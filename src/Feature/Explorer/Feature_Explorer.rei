@@ -28,7 +28,8 @@ type outmsg =
   | OpenFile(string)
   | GrabFocus
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
-  | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol);
+  | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
+  | ChangeWorkspaceRequested(Fp.t(Fp.absolute));
 
 let update:
   (~configuration: Oni_Core.Configuration.t, msg, model) => (model, outmsg);

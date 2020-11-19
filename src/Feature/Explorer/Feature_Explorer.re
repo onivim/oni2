@@ -68,7 +68,9 @@ type msg =
   | VimWindowNav(Component_VimWindows.msg)
   | FileExplorerAccordionClicked
   | SymbolOutlineAccordionClicked
-  | OpenFolderClicked;
+  | OpenFolderClicked
+  | FolderSelectionCanceled
+  | FolderSelected([@opaque] Fp.t(Fp.absolute));
 
 module Msg = {
   let keyPressed = key => KeyboardInput(key);
@@ -111,7 +113,8 @@ type outmsg =
   | OpenFile(string)
   | GrabFocus
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
-  | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol);
+  | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
+  | ChangeWorkspaceRequested(Fp.t(Fp.absolute));
 
 let update = (~configuration, msg, model) => {
   switch (msg) {
@@ -272,7 +275,22 @@ let update = (~configuration, msg, model) => {
 
   | OpenFolderClicked =>
     // TODO: Implement selection dialog
-    (model, Nothing)
+    (
+      model,
+      Effect(
+        Service_OS.Effect.Dialog.openFolder(
+          fun
+          | None => FolderSelectionCanceled
+          | Some(fp) => FolderSelected(fp),
+        ),
+      ),
+    )
+
+  | FolderSelected(folderPath) => (
+      model,
+      ChangeWorkspaceRequested(folderPath),
+    )
+  | FolderSelectionCanceled => (model, Nothing)
   };
 };
 
@@ -383,19 +401,7 @@ module View = {
                   label="Open Folder"
                   theme
                   font
-                  onClick={() =>
-                    dispatch(
-                      OpenFolderClicked,
-                      // let files = Revery.Native.Dialog.openFiles(
-                      //   ~canChooseFiles=false,
-                      //   ~canChooseDirectories=true,
-                      //   (),
-                      // ) |> Option.get;
-                      // files
-                      // |> Array.iter(prerr_endline);
-                      // failwith ("no");
-                    )
-                  }
+                  onClick={() => dispatch(OpenFolderClicked)}
                 />
               </View>
             </View>
