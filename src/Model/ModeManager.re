@@ -11,17 +11,19 @@ module Internal = {
 };
 
 let current: State.t => Oni_Core.Mode.t =
-  (state: State.t) =>
+  (state: State.t) => {
+    let activeEditorMode =
+      state.layout |> Feature_Layout.activeEditor |> Feature_Editor.Editor.mode;
     state
     |> Selectors.getActiveTerminal
     |> Option.map((Feature_Terminal.{insertMode, _}) => {
          insertMode
            ? Mode.TerminalInsert
-           : Internal.getTerminalNormalMode(Feature_Vim.mode(state.vim))
+           : Internal.getTerminalNormalMode(activeEditorMode)
        })
     |> Option.value(
          ~default=
-           switch (Feature_Vim.mode(state.vim)) {
+           switch (activeEditorMode) {
            | Vim.Mode.Insert({cursors}) =>
              Mode.Insert(
                {
@@ -45,3 +47,4 @@ let current: State.t => Oni_Core.Mode.t =
            | Vim.Mode.CommandLine => Mode.CommandLine
            },
        );
+  };

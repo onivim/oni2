@@ -239,9 +239,7 @@ let notificationCount =
       (),
     ) => {
   let text =
-    (notifications :> list(Feature_Notification.notification))
-    |> List.length
-    |> string_of_int;
+    Feature_Notification.all(notifications) |> List.length |> string_of_int;
 
   let onClick = () => dispatch(NotificationCountClicked);
   let onRightClick = () => dispatch(NotificationsCountRightClicked);
@@ -381,14 +379,7 @@ module View = {
                   ~workingDirectory: string,
                   (),
                 ) => {
-    let%hook activeNotifications =
-      CustomHooks.useExpiration(
-        ~name="StatusBar Notification Expirer",
-        ~expireAfter=Feature_Notification.View.Popup.Animations.totalDuration,
-        ~equals=(a, b) => Feature_Notification.(a.id == b.id),
-        (notifications :> list(Feature_Notification.notification)),
-      );
-
+    let activeNotifications = Feature_Notification.active(notifications);
     let (background, foreground) =
       switch (activeNotifications) {
       | [] =>
@@ -403,13 +394,13 @@ module View = {
     let%hook background =
       CustomHooks.colorTransition(
         ~name="StatusBar Background Color Transition",
-        ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
+        ~duration=Feature_Notification.Animations.transitionDuration,
         background,
       );
     let%hook foreground =
       CustomHooks.colorTransition(
         ~name="StatusBar Foreground Color Transition",
-        ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
+        ~duration=Feature_Notification.Animations.transitionDuration,
         foreground,
       );
 

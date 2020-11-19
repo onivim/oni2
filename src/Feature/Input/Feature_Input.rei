@@ -55,11 +55,14 @@ let keyDown:
     ~config: Config.resolver,
     ~key: KeyPress.t,
     ~context: WhenExpr.ContextKeys.t,
+    ~time: Revery.Time.t,
     model
   ) =>
   (model, list(effect));
 
-let text: (~text: string, model) => (model, list(effect));
+let text:
+  (~text: string, ~time: Revery.Time.t, model) => (model, list(effect));
+
 let keyUp:
   (
     ~config: Config.resolver,
@@ -80,7 +83,24 @@ let remove: (uniqueId, model) => model;
 
 let update: (msg, model) => (model, outmsg);
 
+// SUBSCRIPTION
+
+let sub: model => Isolinear.Sub.t(msg);
+
+// CONTRIBUTIONS
+
 module Contributions: {
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
+  let contextKeys: model => WhenExpr.ContextKeys.t;
+};
+
+// VIEW
+
+module View: {
+  module Overlay: {
+    let make:
+      (~input: model, ~uiFont: UiFont.t, ~bottom: int, ~right: int, unit) =>
+      Revery.UI.element;
+  };
 };

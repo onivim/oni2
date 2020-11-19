@@ -4,8 +4,6 @@ type model;
 
 let initial: model;
 
-let mode: model => Vim.Mode.t;
-
 let recordingMacro: model => option(char);
 
 // MSG

@@ -42,6 +42,7 @@ module CodeLens: {
   module View: {
     let make:
       (
+        ~leftMargin: int,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~uiFont: UiFont.t,
         ~codeLens: t,
@@ -56,10 +57,12 @@ type outmsg =
   | ApplyCompletion({
       meetColumn: CharacterIndex.t,
       insertText: string,
+      additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | InsertSnippet({
       meetColumn: CharacterIndex.t,
       snippet: string,
+      additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | OpenFile({
       filePath: string,

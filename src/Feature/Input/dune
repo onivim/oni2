@@ -2,6 +2,7 @@
  (name Feature_Input)
  (public_name Oni2.feature.input)
  (inline_tests)
- (libraries Oni2.core Oni2.feature.commands EditorInput isolinear base)
+ (libraries Oni2.core Oni2.feature.commands Oni2.service.time EditorInput
+   Revery isolinear base)
  (preprocess
-  (pps ppx_let ppx_deriving.show ppx_inline_test)))
+  (pps brisk-reconciler.ppx ppx_let ppx_deriving.show ppx_inline_test)))

@@ -151,6 +151,7 @@ let%component make =
     |> Option.map((highlights: Editor.yankHighlight) =>
          <YankHighlights
            config
+           opacity={Component_Animation.get(highlights.opacity)}
            key={highlights.key}
            pixelRanges={highlights.pixelRanges}
          />

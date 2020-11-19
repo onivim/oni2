@@ -3,7 +3,7 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="VimScriptLocalFunctionTest", (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   let plugScript = getAssetPath("PlugScriptLocal.vim");
@@ -32,9 +32,7 @@ runTest(~name="VimScriptLocalFunctionTest", (dispatch, wait, runEffects) => {
   input("j");
 
   wait(~name="plugin notification shows up", (state: State.t) => {
-    let notifications = (
-      state.notifications :> list(Feature_Notification.notification)
-    );
+    let notifications = Feature_Notification.all(state.notifications);
     if (notifications != []) {
       let notification = List.hd(notifications);
       String.equal(notification.message, "hello1");
