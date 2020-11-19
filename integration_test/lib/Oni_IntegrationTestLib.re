@@ -125,6 +125,7 @@ let runTest =
   let getUserSettings = () => Ok(currentUserSettings^);
 
   Vim.init();
+  Oni2_KeyboardLayout.init();
 
   let initialBuffer = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
