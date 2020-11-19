@@ -82,7 +82,7 @@ module Session = {
         ProviderImpl.handle;
       };
 
-  let complete =
+  let complete = additionalEdits =>
     fun
     | Session({state, _} as session) => {
         let state' =
@@ -90,7 +90,10 @@ module Session = {
           | NotStarted => NotStarted
           | Pending({meet, _})
           | Completed({meet, _})
-          | Accepted({meet}) => Accepted({meet: meet})
+          | Accepted({meet}) =>
+            let meet' =
+              CompletionMeet.shiftMeet(~edits=additionalEdits, meet);
+            Accepted({meet: meet'});
           | Failure(_) as failure => failure
           };
 
@@ -758,10 +761,12 @@ let update =
             ? Outmsg.InsertSnippet({
                 meetColumn,
                 snippet: result.item.insertText,
+                additionalEdits: result.item.additionalTextEdits,
               })
             : Outmsg.ApplyCompletion({
                 meetColumn,
                 insertText: result.item.insertText,
+                additionalEdits: result.item.additionalTextEdits,
               });
 
         (
@@ -769,7 +774,10 @@ let update =
             ...model,
             providers:
               List.map(
-                provider => {provider |> Session.complete},
+                provider => {
+                  provider
+                  |> Session.complete(result.item.additionalTextEdits)
+                },
                 model.providers,
               ),
             allItems: [||],

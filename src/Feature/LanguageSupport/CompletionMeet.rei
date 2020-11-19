@@ -24,6 +24,8 @@ let toString: t => string;
 
 // This would return a meet at index 7 (the [.]) character, and a base of ["l"].
 
+let shiftMeet: (~edits: list(Exthost.Edit.SingleEditOperation.t), t) => t;
+
 let fromLine:
   (
     ~languageConfiguration: LanguageConfiguration.t,

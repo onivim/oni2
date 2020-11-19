@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Oni_Core.Utility;
 module Log = (val Log.withNamespace("Service_Vim"));
 
 let forceReload = () =>
@@ -88,7 +89,54 @@ module Effects = {
       result |> toMsg |> dispatch;
     });
   };
-  let applyCompletion = (~meetColumn, ~insertText, ~toMsg) =>
+
+  let adjustBytePositionForEdit =
+      (bytePosition: BytePosition.t, edit: Vim.Edit.t) => {
+    let editStartLine =
+      EditorCoreTypes.LineNumber.toZeroBased(edit.range.start.line);
+    let editStopLine =
+      EditorCoreTypes.LineNumber.toZeroBased(edit.range.stop.line);
+    if (editStopLine
+        <= EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line)) {
+      let originalLines = editStopLine - editStartLine + 1;
+      let newLines = Array.length(edit.text);
+      let deltaLines = newLines - originalLines;
+      BytePosition.{
+        line: EditorCoreTypes.LineNumber.(bytePosition.line + deltaLines),
+        byte: bytePosition.byte,
+      };
+    } else {
+      bytePosition;
+    };
+  };
+
+  let adjustModeForEdit = (mode: Vim.Mode.t, edit: Vim.Edit.t) => {
+    Vim.Mode.(
+      switch (mode) {
+      | Normal({cursor}) =>
+        Normal({cursor: adjustBytePositionForEdit(cursor, edit)})
+      | Insert({cursors}) =>
+        Insert({
+          cursors:
+            cursors
+            |> List.map(cursor => adjustBytePositionForEdit(cursor, edit)),
+        })
+      | Replace({cursor}) =>
+        Replace({cursor: adjustBytePositionForEdit(cursor, edit)})
+      | CommandLine => CommandLine
+      | Operator({cursor, pending}) =>
+        Operator({cursor: adjustBytePositionForEdit(cursor, edit), pending})
+      | Visual(_) as vis => vis
+      | Select(_) as select => select
+      }
+    );
+  };
+
+  let adjustModeForEdits = (mode: Vim.Mode.t, edits: list(Vim.Edit.t)) => {
+    List.fold_left(adjustModeForEdit, mode, edits);
+  };
+
+  let applyCompletion = (~meetColumn, ~insertText, ~toMsg, ~additionalEdits) =>
     Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
       let cursor = Vim.Cursor.get();
       // TODO: Does this logic correctly handle unicode characters?
@@ -99,7 +147,17 @@ module Effects = {
       let ({mode, _}: Vim.Context.t, _effects) =
         VimEx.inputString(insertText);
 
-      dispatch(toMsg(mode));
+      let buffer = Vim.Buffer.getCurrent();
+      let mode' =
+        if (additionalEdits != []) {
+          Vim.Buffer.applyEdits(~edits=additionalEdits, buffer)
+          |> Result.map(() => {adjustModeForEdits(mode, additionalEdits)})
+          |> ResultEx.value(~default=mode);
+        } else {
+          mode;
+        };
+
+      dispatch(toMsg(mode'));
     });
 
   let loadBuffer = (~filePath: string, toMsg) => {

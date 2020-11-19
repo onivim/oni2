@@ -8,6 +8,17 @@ module SingleEditOperation = {
     forceMoveMarkers: bool,
   };
 
+  let deltaLineCount = ({range, text, _}) => {
+    let originalLineCount = range.endLineNumber - range.startLineNumber + 1;
+    let newLineCount =
+      text
+      |> Option.map(lines =>
+           lines |> String.split_on_char('\n') |> List.length
+         )
+      |> Option.value(~default=0);
+    newLineCount - originalLineCount;
+  };
+
   let decode =
     Json.Decode.(
       obj(({field, _}) =>
