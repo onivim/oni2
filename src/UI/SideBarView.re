@@ -14,7 +14,7 @@ module Styles = {
   let sidebar = (~opacity, ~theme, ~transition) => [
     Style.opacity(opacity),
     flexDirection(`Row),
-    backgroundColor(Colors.SideBar.background.from(theme)),
+    backgroundColor(Revery.Color.magenta),
     transform(Transform.[TranslateX(transition)]),
   ];
 
