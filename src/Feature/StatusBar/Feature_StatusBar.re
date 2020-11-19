@@ -372,16 +372,6 @@ module View = {
       Feature_Notification.statusBarBackground(~theme, notifications);
     let foreground =
       Feature_Notification.statusBarForeground(~theme, notifications);
-    // let (background, foreground) =
-    //   switch (activeNotifications) {
-    //   | [] =>
-    //     Colors.StatusBar.(background.from(theme), foreground.from(theme))
-    //   | [last, ..._] =>
-    //     Feature_Notification.Colors.(
-    //       backgroundFor(last).from(theme),
-    //       foregroundFor(last).from(theme),
-    //     )
-    //   };
 
     let defaultForeground = Colors.StatusBar.foreground.from(theme);
 
