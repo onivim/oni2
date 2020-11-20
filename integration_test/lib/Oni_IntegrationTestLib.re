@@ -151,6 +151,7 @@ let runTest =
         ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
         ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
         ~licenseKeyPersistence=None,
+        ~titlebarHeight=0.,
       ),
     );
 
