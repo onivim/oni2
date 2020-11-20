@@ -161,7 +161,7 @@ module Workbench = {
       register(
         ~title="Go to File...",
         "workbench.action.quickOpen",
-        QuickmenuShow(OpenBuffersPicker),
+        QuickmenuShow(FilesPicker),
       );
 
     let quickOpenNavigateNextInEditorPicker =

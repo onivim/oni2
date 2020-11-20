@@ -110,6 +110,12 @@ module Effects: {
       ) =>
       Isolinear.Effect.t('msg);
   };
+
+  module Workspace: {
+    let change:
+      (~workspace: option(Exthost.WorkspaceData.t), Exthost.Client.t) =>
+      Isolinear.Effect.t(_);
+  };
 };
 
 module Sub: {

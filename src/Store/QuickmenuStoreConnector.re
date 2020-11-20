@@ -192,16 +192,26 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(FilesPicker) => (
-        Some({
-          ...Quickmenu.defaults(FilesPicker),
-          filterProgress: Loading,
-          ripgrepProgress: Loading,
-          inputText: typeToSearchInput,
-          focused: Some(0),
-        }),
-        Isolinear.Effect.none,
-      )
+    | QuickmenuShow(FilesPicker) =>
+      if (Feature_Workspace.openedFolder(workspace) == None) {
+        let items = makeBufferCommands(languageInfo, iconTheme, buffers);
+
+        (
+          Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
+          Isolinear.Effect.none,
+        );
+      } else {
+        (
+          Some({
+            ...Quickmenu.defaults(FilesPicker),
+            filterProgress: Loading,
+            ripgrepProgress: Loading,
+            inputText: typeToSearchInput,
+            focused: Some(0),
+          }),
+          Isolinear.Effect.none,
+        );
+      }
 
     | QuickmenuShow(Wildmenu(cmdType)) => (
         Some({

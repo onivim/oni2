@@ -272,7 +272,7 @@ switch (eff) {
 
     let persistGlobal = () => Store.Persistence.Global.persist(currentState^);
     let persistWorkspace = () => {
-      currentState^.workspace.openedFolder
+      Feature_Workspace.openedFolder(currentState^.workspace)
       |> Option.iter(workspace => {
            Store.Persistence.Workspace.(
              persist((currentState^, window), storeFor(workspace))
@@ -314,8 +314,9 @@ switch (eff) {
       Feature_TitleBar.title(
         ~activeBuffer,
         ~config,
-        ~workspaceRoot=state.workspace.rootName,
-        ~workspaceDirectory=state.workspace.workingDirectory,
+        ~workspaceRoot=Feature_Workspace.rootName(state.workspace),
+        ~workspaceDirectory=
+          Feature_Workspace.workingDirectory(state.workspace),
       );
     };
 

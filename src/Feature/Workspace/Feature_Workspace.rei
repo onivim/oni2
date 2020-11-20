@@ -1,3 +1,5 @@
+open Oni_Core;
+
 // MODEL
 
 type model;
@@ -17,10 +19,20 @@ let rootName: model => string;
 
 // UPDATE
 
-let update: (msg, model) => model;
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg))
+  | WorkspaceChanged(option(string));
+
+let update: (msg, model) => (model, outmsg);
 
 // EFFECTS
 
 module Effects: {
   let changeDirectory: Fp.t(Fp.absolute) => Isolinear.Effect.t(msg);
+  let pickFolder: Isolinear.Effect.t(msg);
 };
+
+// CONTRIBUTIONS
+
+module Contributions: {let commands: model => list(Command.t(msg));};

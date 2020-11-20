@@ -68,9 +68,7 @@ type msg =
   | VimWindowNav(Component_VimWindows.msg)
   | FileExplorerAccordionClicked
   | SymbolOutlineAccordionClicked
-  | OpenFolderClicked
-  | FolderSelectionCanceled
-  | FolderSelected([@opaque] Fp.t(Fp.absolute));
+  | OpenFolderClicked;
 
 module Msg = {
   let keyPressed = key => KeyboardInput(key);
@@ -114,7 +112,7 @@ type outmsg =
   | GrabFocus
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
-  | ChangeWorkspaceRequested(Fp.t(Fp.absolute));
+  | PickFolder;
 
 let update = (~configuration, msg, model) => {
   switch (msg) {
@@ -273,24 +271,7 @@ let update = (~configuration, msg, model) => {
       Nothing,
     )
 
-  | OpenFolderClicked =>
-    // TODO: Implement selection dialog
-    (
-      model,
-      Effect(
-        Service_OS.Effect.Dialog.openFolder(
-          fun
-          | None => FolderSelectionCanceled
-          | Some(fp) => FolderSelected(fp),
-        ),
-      ),
-    )
-
-  | FolderSelected(folderPath) => (
-      model,
-      ChangeWorkspaceRequested(folderPath),
-    )
-  | FolderSelectionCanceled => (model, Nothing)
+  | OpenFolderClicked => (model, PickFolder)
   };
 };
 

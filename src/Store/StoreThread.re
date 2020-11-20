@@ -142,7 +142,7 @@ let start =
     );
 
   let initialWorkspace =
-    initialState.workspace.openedFolder
+    Feature_Workspace.openedFolder(initialState.workspace)
     |> Option.map(Exthost.WorkspaceData.fromPath);
 
   let (extHostClientResult, extHostStream) =
@@ -245,7 +245,10 @@ let start =
 
     let terminalSubscription =
       Feature_Terminal.subscription(
-        ~workspaceUri=Core.Uri.fromPath(state.workspace.workingDirectory),
+        ~workspaceUri=
+          Core.Uri.fromPath(
+            Feature_Workspace.workingDirectory(state.workspace),
+          ),
         extHostClient,
         state.terminals,
       )

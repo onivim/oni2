@@ -317,6 +317,11 @@ let update =
           FocusManager.push(Focus.FileExplorer, state),
           Isolinear.Effect.none,
         )
+      | PickFolder => (
+          state,
+          Feature_Workspace.Effects.pickFolder
+          |> Isolinear.Effect.map(msg => Workspace(msg)),
+        )
       | UnhandledWindowMovement(windowMovement) => (
           state,
           Internal.unhandledWindowMotionEffect(windowMovement),
@@ -335,7 +340,6 @@ let update =
              })
           |> Option.value(~default=Isolinear.Effect.none);
         (state, eff);
-      | ChangeWorkspaceRequested(path) => (state, Internal.chdir(path))
       }
     );
 
@@ -1593,14 +1597,33 @@ let update =
     (state', eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
 
   | Workspace(msg) =>
-    let workspace = Feature_Workspace.update(msg, state.workspace);
+    let (workspace, outmsg) = Feature_Workspace.update(msg, state.workspace);
 
-    let fileExplorer =
-      Feature_Explorer.setRoot(
-        ~rootPath=Feature_Workspace.openedFolder(workspace),
-        state.fileExplorer,
-      );
-    ({...state, workspace, fileExplorer}, Isolinear.Effect.none);
+    let state = {...state, workspace};
+    switch (outmsg) {
+    | Nothing => (state, Isolinear.Effect.none)
+
+    | Effect(eff) => (
+        state,
+        eff |> Isolinear.Effect.map(msg => Workspace(msg)),
+      )
+
+    | WorkspaceChanged(maybeWorkspaceFolder) =>
+      let fileExplorer =
+        Feature_Explorer.setRoot(
+          ~rootPath=maybeWorkspaceFolder,
+          state.fileExplorer,
+        );
+
+      let extWorkspace =
+        maybeWorkspaceFolder |> Option.map(Exthost.WorkspaceData.fromPath);
+      let eff =
+        Service_Exthost.Effects.Workspace.change(
+          ~workspace=extWorkspace,
+          extHostClient,
+        );
+      ({...state, fileExplorer}, eff);
+    };
 
   | AutoUpdate(msg) =>
     let getLicenseKey = () =>
