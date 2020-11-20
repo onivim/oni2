@@ -578,10 +578,19 @@ let start =
     Isolinear.Effect.create(~name="vim.command", () => {
       let state = getState();
       let prevContext = Oni_Model.VimContext.current(state);
-      let (newContext, _effects) = Vim.command(~context=prevContext, cmd);
+      let (newContext, effects) = Vim.command(~context=prevContext, cmd);
 
       if (newContext.bufferId != prevContext.bufferId) {
         dispatch(Actions.OpenBufferById({bufferId: newContext.bufferId}));
+      } else {
+        let editorId =
+          Feature_Layout.activeEditor(state.layout) |> Editor.getId;
+        dispatch(
+          Actions.Editor({
+            scope: EditorScope.Editor(editorId),
+            msg: ModeChanged({mode: newContext.mode, effects}),
+          }),
+        );
       };
     });
   };

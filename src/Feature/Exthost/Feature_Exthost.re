@@ -51,12 +51,15 @@ type msg =
   | ExthostDocuments({
       msg: Exthost.Msg.Documents.msg,
       resolver: [@opaque] Lwt.u(Exthost.Reply.t),
-    });
+    })
+  | Initialized;
 
 module Msg = {
   let document = (msg, resolver) => {
     ExthostDocuments({msg, resolver});
   };
+
+  let initialized = Initialized;
 };
 
 type outmsg =
@@ -64,10 +67,13 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg));
 
 type model = {
+  isInitialized: bool,
   pendingResolutions: StringMap.t(list(Lwt.u(Exthost.Reply.t))),
 };
 
-let initial = {pendingResolutions: StringMap.empty};
+let initial = {pendingResolutions: StringMap.empty, isInitialized: false};
+
+let isInitialized = ({isInitialized, _}) => isInitialized;
 
 module Effects = {
   let resolve = resolver => {
@@ -96,7 +102,7 @@ let update = (msg: msg, model) =>
     let pendingResolutions =
       StringMap.remove(filePath, model.pendingResolutions);
 
-    ({pendingResolutions: pendingResolutions}, eff);
+    ({...model, pendingResolutions}, eff);
 
   | ExthostDocuments({msg, resolver}) =>
     switch (msg) {
@@ -116,7 +122,7 @@ let update = (msg: msg, model) =>
              | None => Some([resolver])
              | Some(cur) => Some([resolver, ...cur]),
            );
-      ({pendingResolutions: pendingResolutions}, eff);
+      ({...model, pendingResolutions}, eff);
 
     | Exthost.Msg.Documents.TrySaveDocument(_) =>
       Log.warn("TrySaveDocument is not yet implemented.");
@@ -126,6 +132,8 @@ let update = (msg: msg, model) =>
       Log.warn("TryCreateDocument is not yet implemented.");
       (model, Effect(Effects.resolve(resolver)));
     }
+
+  | Initialized => ({...model, isInitialized: true}, Nothing)
   };
 
 let subscription =

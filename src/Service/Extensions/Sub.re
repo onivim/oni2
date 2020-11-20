@@ -1,5 +1,5 @@
 open Oni_Core;
-type msg = result(Query.t, string);
+type msg = result(Query.t, exn);
 type params = {
   setup: Setup.t,
   query: Query.t,
@@ -35,11 +35,10 @@ module SearchSub =
               items: extensions @ query.items,
             };
           dispatch(Ok(newQuery));
-        },
-      );
+        });
 
-      Lwt.on_failure(result, err => {
-        dispatch(Error(Printexc.to_string(err)))
+      Lwt.on_failure(result, exn => {
+        dispatch(Error(exn))
       });
     };
 

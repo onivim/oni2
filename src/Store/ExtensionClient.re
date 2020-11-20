@@ -22,6 +22,9 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
       switch (msg) {
+      | Initialized =>
+        dispatch(Actions.Exthost(Feature_Exthost.Msg.initialized));
+        Lwt.return(Reply.okEmpty);
       | DownloadService(msg) => Middleware.download(msg)
       | FileSystem(msg) => Middleware.filesystem(msg)
       | SCM(msg) =>
