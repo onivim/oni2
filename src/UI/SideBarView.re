@@ -95,7 +95,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
     | SCM =>
       <Feature_SCM.Pane
         model={state.scm}
-        workingDirectory={state.workspace.workingDirectory}
+        workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
         isFocused={FocusManager.current(state) == Focus.SCM}
         languageInfo={state.languageInfo}
         iconTheme={state.iconTheme}
@@ -116,7 +116,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
         uiFont={state.uiFont}
         model={state.searchPane}
         dispatch
-        workingDirectory={state.workspace.workingDirectory}
+        workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
       />;
 
     | Extensions =>

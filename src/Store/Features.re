@@ -67,12 +67,7 @@ module Internal = {
       dispatch(Actions.Quit(true))
     );
 
-  let chdir = (path: Fp.t(Fp.absolute)) =>
-    Isolinear.Effect.createWithDispatch(~name="chdir", dispatch => {
-      let newDirectory = Fp.toString(path);
-      Sys.chdir(newDirectory);
-      dispatch(Actions.DirectoryChanged(newDirectory));
-    });
+  let chdir = (path: Fp.t(Fp.absolute)) => Feature_Workspace.Effects.changeDirectory(path) |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
 
   let updateEditor = (~editorId, ~msg, layout) => {
     switch (Feature_Layout.editorById(editorId, layout)) {
@@ -1264,7 +1259,7 @@ let update =
         | S_REG => OpenFileByPath(path, None, None)
         | S_DIR =>
           switch (Luv.Path.chdir(path)) {
-          | Ok () => DirectoryChanged(path)
+          | Ok () => Actions.Workspace(Feature_Workspace.Msg.workingDirectoryChanged(path))
           | Error(_) => Noop
           }
         | _ => Noop
@@ -1592,6 +1587,15 @@ let update =
 
     (state', eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
 
+  | Workspace(msg) =>
+    let workspace = Feature_Workspace.update(msg, state.workspace);
+
+    let fileExplorer = Feature_Explorer.setRoot(
+      ~rootPath=Feature_Workspace.openedFolder(workspace),
+      state.fileExplorer
+    );
+    ({...state, workspace, fileExplorer}, Isolinear.Effect.none)
+
   | AutoUpdate(msg) =>
     let getLicenseKey = () =>
       Feature_Registration.getLicenseKey(state.registration);
@@ -1634,7 +1638,7 @@ let updateSubscriptions = (setup: Setup.t) => {
   let searchSubscriptions = Feature_Search.subscriptions(ripgrep);
 
   (state: State.t, dispatch) => {
-    let workingDirectory = state.workspace.workingDirectory;
+    let workingDirectory = Feature_Workspace.workingDirectory(state.workspace);
     quickmenuSubscriptions(dispatch, state)
     |> QuickmenuSubscriptionRunner.run(~dispatch);
 

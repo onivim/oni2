@@ -155,6 +155,7 @@ let start = () => {
         buffers,
         languageInfo,
         iconTheme,
+        workspace,
         commands,
         menus,
         contextKeys,
@@ -230,7 +231,23 @@ let start = () => {
         Isolinear.Effect.none,
       );
 
+    | QuickmenuShow(OpenBuffersPicker) =>
+      let items = makeBufferCommands(languageInfo, iconTheme, buffers);
+
+      (
+        Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
+        Isolinear.Effect.none,
+      );
+
     | QuickmenuShow(FileTypesPicker({bufferId, languages})) =>
+    if (Feature_Workspace.openedFolder(workspace) == None) {
+      let items = makeBufferCommands(languageInfo, iconTheme, buffers);
+
+      (
+        Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
+        Isolinear.Effect.none,
+      );
+    } else {
       let items =
         languages
         |> List.map(((fileType, maybeIcon)) => {
@@ -258,6 +275,7 @@ let start = () => {
         }),
         Isolinear.Effect.none,
       );
+    };
 
     | QuickmenuPaste(text) => (
         Option.map(
@@ -479,6 +497,7 @@ let start = () => {
         state.buffers,
         state.languageInfo,
         state.iconTheme,
+        state.workspace,
         CommandManager.current(state),
         MenuManager.current(state),
         ContextKeys.all(state),
@@ -565,6 +584,7 @@ let subscriptions = (ripgrep, dispatch) => {
       switch (quickmenu.variant) {
       | CommandPalette
       | EditorsPicker
+      | OpenBuffersPicker => [filter(query, quickmenu.items)]
       | ThemesPicker(_) => [filter(query, quickmenu.items)]
 
       | Extension({hasItems, _}) =>
