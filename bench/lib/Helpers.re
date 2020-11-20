@@ -35,6 +35,7 @@ let simpleState = {
       ~workingDirectory=Sys.getcwd(),
       ~extensionsFolder=None,
       ~licenseKeyPersistence=None,
+      ~titlebarHeight=0.,
     );
 
   Reducer.reduce(

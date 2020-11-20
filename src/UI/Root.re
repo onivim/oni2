@@ -183,6 +183,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       theme
       dispatch=titleDispatch
       registrationDispatch
+      height={state.titlebarHeight}
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>

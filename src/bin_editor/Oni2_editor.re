@@ -252,6 +252,7 @@ switch (eff) {
           // TODO: Use `Fp.t` all the way down
           ~extensionsFolder=cliOptions.overriddenExtensionsDir,
           ~licenseKeyPersistence,
+          ~titlebarHeight=Revery.Window.getTitlebarHeight(window),
         ),
       );
 
