@@ -242,14 +242,14 @@ let%component make =
           }}
         />;
 
-      let message = model.lastErrorMessage
-      |> Option.value(~default="Unknown error");
+      let message =
+        model.lastErrorMessage |> Option.value(~default="Unknown error");
       let error =
         <View style=Style.[padding(8)]>
           <Text
             fontFamily={font.family}
             fontSize={font.size}
-            text={message}
+            text=message
             style=Style.[color(Colors.EditorError.foreground.from(theme))]
           />
         </View>;

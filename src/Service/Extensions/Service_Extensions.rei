@@ -127,10 +127,6 @@ module Effects: {
 
 module Sub: {
   let search:
-    (
-      ~setup: Setup.t,
-      ~query: Query.t,
-      ~toMsg: result(Query.t, exn) => 'a
-    ) =>
+    (~setup: Setup.t, ~query: Query.t, ~toMsg: result(Query.t, exn) => 'a) =>
     Isolinear.Sub.t('a);
 };

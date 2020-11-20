@@ -52,9 +52,9 @@ module Request = {
         switch (result) {
         | Ok(v) => Lwt.return(v)
         | Error(_msg) => Lwt.fail(ResponseParseFailed)
-        }
-        },
-        (_exn) => Lwt.fail(ConnectionFailed)
+        };
+      },
+      _exn => Lwt.fail(ConnectionFailed),
     );
   };
 

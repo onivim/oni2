@@ -607,8 +607,15 @@ let update = (~extHostClient, msg, model) => {
         Nothing,
       )
       : (model, Nothing)
-  | SearchQueryError(err) =>
-    ({...model, lastSearchHadError: true, lastErrorMessage: Some(err),  latestQuery: None}, Nothing)
+  | SearchQueryError(err) => (
+      {
+        ...model,
+        lastSearchHadError: true,
+        lastErrorMessage: Some(err),
+        latestQuery: None,
+      },
+      Nothing,
+    )
   | UninstallExtensionClicked({extensionId}) =>
     let toMsg = (
       fun

@@ -35,11 +35,10 @@ module SearchSub =
               items: extensions @ query.items,
             };
           dispatch(Ok(newQuery));
-        });
+        },
+      );
 
-      Lwt.on_failure(result, exn => {
-        dispatch(Error(exn))
-      });
+      Lwt.on_failure(result, exn => {dispatch(Error(exn))});
     };
 
     let update = (~params as _, ~state, ~dispatch as _) => {
