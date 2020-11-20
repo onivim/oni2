@@ -240,42 +240,42 @@ let start = () => {
       );
 
     | QuickmenuShow(FileTypesPicker({bufferId, languages})) =>
-    if (Feature_Workspace.openedFolder(workspace) == None) {
-      let items = makeBufferCommands(languageInfo, iconTheme, buffers);
+      if (Feature_Workspace.openedFolder(workspace) == None) {
+        let items = makeBufferCommands(languageInfo, iconTheme, buffers);
 
-      (
-        Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
-        Isolinear.Effect.none,
-      );
-    } else {
-      let items =
-        languages
-        |> List.map(((fileType, maybeIcon)) => {
-             Actions.{
-               category: None,
-               name: fileType,
-               command: () =>
-                 Buffers(
-                   Feature_Buffers.Msg.fileTypeChanged(
-                     ~bufferId,
-                     ~fileType=Oni_Core.Buffer.FileType.explicit(fileType),
+        (
+          Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
+          Isolinear.Effect.none,
+        );
+      } else {
+        let items =
+          languages
+          |> List.map(((fileType, maybeIcon)) => {
+               Actions.{
+                 category: None,
+                 name: fileType,
+                 command: () =>
+                   Buffers(
+                     Feature_Buffers.Msg.fileTypeChanged(
+                       ~bufferId,
+                       ~fileType=Oni_Core.Buffer.FileType.explicit(fileType),
+                     ),
                    ),
-                 ),
-               icon: maybeIcon,
-               highlight: [],
-               handle: None,
-             }
-           })
-        |> Array.of_list;
+                 icon: maybeIcon,
+                 highlight: [],
+                 handle: None,
+               }
+             })
+          |> Array.of_list;
 
-      (
-        Some({
-          ...Quickmenu.defaults(FileTypesPicker({bufferId, languages})),
-          items,
-        }),
-        Isolinear.Effect.none,
-      );
-    };
+        (
+          Some({
+            ...Quickmenu.defaults(FileTypesPicker({bufferId, languages})),
+            items,
+          }),
+          Isolinear.Effect.none,
+        );
+      }
 
     | QuickmenuPaste(text) => (
         Option.map(

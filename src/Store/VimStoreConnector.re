@@ -192,7 +192,11 @@ let start =
 
   let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
-      dispatch(Actions.Workspace(Feature_Workspace.Msg.workingDirectoryChanged(newDir)))
+      dispatch(
+        Actions.Workspace(
+          Feature_Workspace.Msg.workingDirectoryChanged(newDir),
+        ),
+      )
     );
 
   let _: unit => unit =
