@@ -182,7 +182,8 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
   // Allocate UTF-8 Buffers to be populated
   char unmodified[4] = {'\0'}; 
   char withShift[4] = {'\0'}; 
-  char withAlt[1] = {'\0'};
+  char withAltGraph[4] = {'\0'};
+  char withAltGraphShift[4] = {'\0'};
 
   XMappingEvent xEventMap = {MappingNotify, 0, false, xDisplay, 0, MappingKeyboard, 0, 0};
   XRefreshKeyboardMapping(&xEventMap);
@@ -210,12 +211,14 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
     if (sdlScancode && xkbKeycode > 0x0000) {
       characterForNativeCode(xInputContext, xKeyEvent, xkbKeycode, keyboardBaseState, unmodified);
       characterForNativeCode(xInputContext, xKeyEvent, xkbKeycode, keyboardBaseState | ShiftMask, withShift);
+      characterForNativeCode(xInputContext, xKeyEvent, xkbKeycode, keyboardBaseState | Mod5Mask, withAltGraph);
+      characterForNativeCode(xInputContext, xKeyEvent, xkbKeycode, keyboardBaseState | Mod5Mask | ShiftMask, withAltGraphShift);
       
       keymapEntry = createKeymapEntry(
         unmodified, 
         withShift, 
-        withAlt, 
-        withAlt
+        withAltGraph, 
+        withAltGraphShift
       );
       vSDLScancode = Val_int(sdlScancode);
 
