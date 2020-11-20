@@ -402,19 +402,37 @@ let update =
 
     let state = {...state, languageSupport};
 
+    let exthostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t = (
+      exthostEdit => {
+        let range = exthostEdit.range |> Exthost.OneBasedRange.toRange;
+
+        let text =
+          exthostEdit.text
+          |> Option.map(str => {
+               str |> String.split_on_char('\n') |> Array.of_list
+             })
+          |> Option.value(~default=[||]);
+
+        Vim.Edit.{range, text};
+      }
+    );
+
     Feature_LanguageSupport.(
       switch (outmsg) {
       | Nothing => (state, Isolinear.Effect.none)
-      | ApplyCompletion({insertText, meetColumn}) => (
+      | ApplyCompletion({insertText, meetColumn, additionalEdits}) =>
+        let additionalEdits =
+          additionalEdits |> List.map(exthostEditToVimEdit);
+        (
           state,
           Service_Vim.Effects.applyCompletion(
-            ~meetColumn, ~insertText, ~toMsg=mode =>
+            ~additionalEdits, ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
               msg: ModeChanged({mode, effects: []}),
             })
           ),
-        )
+        );
       | ReferencesAvailable =>
         let references =
           Feature_LanguageSupport.References.get(languageSupport);
@@ -427,13 +445,15 @@ let update =
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
-      | InsertSnippet({meetColumn, snippet}) =>
+      | InsertSnippet({meetColumn, snippet, additionalEdits}) =>
         // TODO: Full snippet integration!
+        let additionalEdits =
+          additionalEdits |> List.map(exthostEditToVimEdit);
         let insertText = Feature_Snippets.snippetToInsert(~snippet);
         (
           state,
           Service_Vim.Effects.applyCompletion(
-            ~meetColumn, ~insertText, ~toMsg=mode =>
+            ~additionalEdits, ~meetColumn, ~insertText, ~toMsg=mode =>
             Actions.Editor({
               scope: EditorScope.Editor(editorId),
               msg: ModeChanged({mode, effects: []}),
@@ -1177,28 +1197,44 @@ let update =
   | Theme(msg) =>
     let (model', outmsg) = Feature_Theme.update(state.colorTheme, msg);
 
-    let eff =
-      switch (outmsg) {
-      | OpenThemePicker(_) =>
-        let themes =
-          state.extensions
-          |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
-               Exthost.Extension.Contributions.(manifest.contributes.themes)
-             })
-          |> List.flatten;
+    let state = {...state, colorTheme: model'};
+    switch (outmsg) {
+    | OpenThemePicker(_) =>
+      let themes =
+        state.extensions
+        |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
+             Exthost.Extension.Contributions.(manifest.contributes.themes)
+           })
+        |> List.flatten;
 
+      let eff =
         Isolinear.Effect.createWithDispatch(~name="menu", dispatch => {
           dispatch(Actions.QuickmenuShow(ThemesPicker(themes)))
         });
-      | Nothing => Isolinear.Effect.none
-      };
-
-    ({...state, colorTheme: model'}, eff);
+      (state, eff);
+    | Nothing => (state, Isolinear.Effect.none)
+    | ThemeChanged(_colorTheme) =>
+      let config = Selectors.configResolver(state);
+      let theme = Feature_Theme.colors(state.colorTheme);
+      (
+        {
+          ...state,
+          notifications:
+            Feature_Notification.changeTheme(
+              ~config,
+              ~theme,
+              state.notifications,
+            ),
+        },
+        Isolinear.Effect.none,
+      );
+    };
 
   | Notification(msg) =>
     let config = Selectors.configResolver(state);
+    let theme = Feature_Theme.colors(state.colorTheme);
     let model' =
-      Feature_Notification.update(~config, state.notifications, msg);
+      Feature_Notification.update(~theme, ~config, state.notifications, msg);
     ({...state, notifications: model'}, Effect.none);
 
   | Modals(msg) =>

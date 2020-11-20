@@ -137,6 +137,9 @@ module Edit: {
       forceMoveMarkers: bool,
     };
 
+    // Get the difference in lines due to the edit
+    let deltaLineCount: t => int;
+
     let decode: Json.decoder(t);
   };
 };
