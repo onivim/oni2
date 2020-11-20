@@ -5,7 +5,7 @@ echo "Linting in : $(pwd)"
 PRERR_COUNT=$(git grep prerr_endline | wc -l)
 PRINT_COUNT=$(git grep print_endline | wc -l)
 PRINTF_COUNT=$(git grep Printf.printf | wc -l)
-PRINTF_COUNT=$(git grep magenta | wc -l)
+MAGENTA_COUNT=$(git grep magenta | wc -l)
 
 echo "prrerr_endline count: $PRERR_COUNT"
 echo "print_endline count: $PRINT_COUNT"
