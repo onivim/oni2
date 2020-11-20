@@ -1185,28 +1185,44 @@ let update =
   | Theme(msg) =>
     let (model', outmsg) = Feature_Theme.update(state.colorTheme, msg);
 
-    let eff =
-      switch (outmsg) {
-      | OpenThemePicker(_) =>
-        let themes =
-          state.extensions
-          |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
-               Exthost.Extension.Contributions.(manifest.contributes.themes)
-             })
-          |> List.flatten;
+    let state = {...state, colorTheme: model'};
+    switch (outmsg) {
+    | OpenThemePicker(_) =>
+      let themes =
+        state.extensions
+        |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
+             Exthost.Extension.Contributions.(manifest.contributes.themes)
+           })
+        |> List.flatten;
 
+      let eff =
         Isolinear.Effect.createWithDispatch(~name="menu", dispatch => {
           dispatch(Actions.QuickmenuShow(ThemesPicker(themes)))
         });
-      | Nothing => Isolinear.Effect.none
-      };
-
-    ({...state, colorTheme: model'}, eff);
+      (state, eff);
+    | Nothing => (state, Isolinear.Effect.none)
+    | ThemeChanged(_colorTheme) =>
+      let config = Selectors.configResolver(state);
+      let theme = Feature_Theme.colors(state.colorTheme);
+      (
+        {
+          ...state,
+          notifications:
+            Feature_Notification.changeTheme(
+              ~config,
+              ~theme,
+              state.notifications,
+            ),
+        },
+        Isolinear.Effect.none,
+      );
+    };
 
   | Notification(msg) =>
     let config = Selectors.configResolver(state);
+    let theme = Feature_Theme.colors(state.colorTheme);
     let model' =
-      Feature_Notification.update(~config, state.notifications, msg);
+      Feature_Notification.update(~theme, ~config, state.notifications, msg);
     ({...state, notifications: model'}, Effect.none);
 
   | Modals(msg) =>

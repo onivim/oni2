@@ -67,3 +67,58 @@ let sub = ({isComplete, uniqueId, tick, _}) =>
       Tick({totalTime: current})
     );
   };
+
+module ColorTransition = {
+  type nonrec t = {
+    startColor: Color.t,
+    stopColor: Color.t,
+    duration: Time.t,
+    delay: Time.t,
+    animation: t(float),
+  };
+  type nonrec msg = msg;
+
+  module Internal = {
+    let makeAnimation = (~duration, ~delay as delayDuration) => {
+      Animation.(
+        animate(duration)
+        |> delay(delayDuration)
+        |> ease(Easing.linear)
+        |> tween(0., 1.)
+      )
+      |> make;
+    };
+
+    let instantAnimation = Animation.const(1.0) |> make;
+  };
+
+  let make = (~duration, ~delay, color): t => {
+    startColor: color,
+    stopColor: color,
+    duration,
+    delay,
+    animation: Internal.instantAnimation,
+  };
+
+  let update = (msg, {animation, _} as model) => {
+    {...model, animation: update(msg, animation)};
+  };
+
+  let get = ({animation, startColor, stopColor, _}) => {
+    let interp = get(animation);
+    Color.mix(~start=startColor, ~stop=stopColor, ~amount=interp);
+  };
+
+  let set = (~instant, ~color, model) => {
+    let startColor = get(model);
+    let stopColor = color;
+
+    let animation =
+      instant
+        ? Internal.instantAnimation
+        : Internal.makeAnimation(~delay=model.delay, ~duration=model.duration);
+    {...model, startColor, stopColor, animation};
+  };
+
+  let sub = ({animation, _}) => sub(animation);
+};

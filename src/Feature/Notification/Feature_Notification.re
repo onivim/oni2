@@ -57,13 +57,70 @@ let internalToExternal: internal => notification =
 type model = {
   all: list(internal),
   activeNotifications: IntSet.t,
+  statusBarBackgroundColor: option(Component_Animation.ColorTransition.t),
+  statusBarForegroundColor: option(Component_Animation.ColorTransition.t),
 };
 
-let initial = {all: [], activeNotifications: IntSet.empty};
+// COLORS
+
+module Colors = {
+  open ColorTheme.Schema;
+  include Feature_Theme.Colors;
+
+  let infoBackground =
+    define("oni.notification.infoBackground", all(hex("#209CEE")));
+  let infoForeground =
+    define("oni.notification.infoForeground", all(hex("#FFF")));
+  let warningBackground =
+    define("oni.notification.warningBackground", all(hex("#FFDD57")));
+  let warningForeground =
+    define("oni.notification.warningForeground", all(hex("#333")));
+  let errorBackground =
+    define("oni.notification.errorBackground", all(hex("#FF3860")));
+  let errorForeground =
+    define("oni.notification.errorForeground", all(hex("#FFF")));
+
+  let backgroundFor = (notification: notification) =>
+    switch (notification.kind) {
+    | Warning => warningBackground
+    | Error => errorBackground
+    | Info => infoBackground
+    };
+
+  let foregroundFor = (notification: notification) =>
+    switch (notification.kind) {
+    | Warning => warningForeground
+    | Error => errorForeground
+    | Info => infoForeground
+    };
+};
+
+let initial = {
+  all: [],
+  activeNotifications: IntSet.empty,
+  statusBarBackgroundColor: None,
+  statusBarForegroundColor: None,
+};
+
+let statusBarBackground = (~theme, {statusBarBackgroundColor, _}) => {
+  statusBarBackgroundColor
+  |> Option.map(Component_Animation.ColorTransition.get)
+  |> Option.value(
+       ~default=Feature_Theme.Colors.StatusBar.background.from(theme),
+     );
+};
+
+let statusBarForeground = (~theme, {statusBarForegroundColor, _}) => {
+  statusBarForegroundColor
+  |> Option.map(Component_Animation.ColorTransition.get)
+  |> Option.value(
+       ~default=Feature_Theme.Colors.StatusBar.foreground.from(theme),
+     );
+};
 
 let all = ({all, _}) => all |> List.map(internalToExternal);
 
-let active = ({all, activeNotifications}) => {
+let active = ({all, activeNotifications, _}) => {
   all
   |> List.filter_map(notification =>
        if (IntSet.mem(notification.id, activeNotifications)) {
@@ -73,6 +130,64 @@ let active = ({all, activeNotifications}) => {
        }
      );
 };
+
+let updateColorTransition = (~config, ~theme, model) => {
+  let animate =
+    Feature_Configuration.GlobalConfiguration.animation.get(config);
+  let (desiredBackground, desiredForeground) = {
+    switch (active(model)) {
+    | [notification, ..._] =>
+      let bg = Colors.backgroundFor(notification);
+      let fg = Colors.foregroundFor(notification);
+      (bg.from(theme), fg.from(theme));
+    | [] => (
+        Feature_Theme.Colors.StatusBar.background.from(theme),
+        Feature_Theme.Colors.StatusBar.foreground.from(theme),
+      )
+    };
+  };
+
+  let currentBackground = statusBarBackground(~theme, model);
+  let currentForeground = statusBarForeground(~theme, model);
+
+  if (!Revery.Color.equals(desiredBackground, currentBackground)
+      || !Revery.Color.equals(desiredForeground, currentForeground)) {
+    let delay = Revery.Time.zero;
+    let duration = Revery.Time.milliseconds(300);
+    let instant = !animate;
+    {
+      ...model,
+      statusBarBackgroundColor:
+        Some(
+          Component_Animation.ColorTransition.make(
+            ~duration,
+            ~delay,
+            currentBackground,
+          )
+          |> Component_Animation.ColorTransition.set(
+               ~instant,
+               ~color=desiredBackground,
+             ),
+        ),
+      statusBarForegroundColor:
+        Some(
+          Component_Animation.ColorTransition.make(
+            ~duration,
+            ~delay,
+            currentBackground,
+          )
+          |> Component_Animation.ColorTransition.set(
+               ~instant,
+               ~color=desiredForeground,
+             ),
+        ),
+    };
+  } else {
+    model;
+  };
+};
+
+let changeTheme = updateColorTransition;
 
 // ANIMATIONS
 
@@ -109,9 +224,11 @@ type msg =
   | AnimateYOffset({
       id: int,
       msg: [@opaque] Component_Animation.msg,
-    });
+    })
+  | AnimateBackground([@opaque] Component_Animation.ColorTransition.msg)
+  | AnimateForeground([@opaque] Component_Animation.ColorTransition.msg);
 
-let update = (~config, model, msg) => {
+let update = (~theme, ~config, model, msg) => {
   let animationsEnabled =
     Feature_Configuration.GlobalConfiguration.animation.get(config);
   switch (msg) {
@@ -120,17 +237,25 @@ let update = (~config, model, msg) => {
       animationsEnabled
         ? Some(Component_Animation.make(Animations.sequence)) : None;
     {
+      ...model,
       all: [{...item, yOffsetAnimation}, ...model.all],
       activeNotifications: IntSet.add(item.id, model.activeNotifications),
-    };
+    }
+    |> updateColorTransition(~config, ~theme);
+
   | Dismissed({id}) => {
+      ...model,
       all: List.filter(it => it.id != id, model.all),
       activeNotifications: IntSet.remove(id, model.activeNotifications),
     }
-  | Expire({id}) => {
+
+  | Expire({id}) =>
+    {
       ...model,
       activeNotifications: IntSet.remove(id, model.activeNotifications),
     }
+    |> updateColorTransition(~config, ~theme)
+
   | AnimateYOffset({id, msg}) => {
       ...model,
       all:
@@ -147,6 +272,20 @@ let update = (~config, model, msg) => {
                item;
              }
            ),
+    }
+
+  | AnimateBackground(msg) => {
+      ...model,
+      statusBarBackgroundColor:
+        model.statusBarBackgroundColor
+        |> Option.map(Component_Animation.ColorTransition.update(msg)),
+    }
+
+  | AnimateForeground(msg) => {
+      ...model,
+      statusBarForegroundColor:
+        model.statusBarForegroundColor
+        |> Option.map(Component_Animation.ColorTransition.update(msg)),
     }
   };
 };
@@ -191,6 +330,18 @@ let sub = (model: model) => {
          )
        });
 
+  let backgroundSub =
+    model.statusBarBackgroundColor
+    |> Option.map(Component_Animation.ColorTransition.sub)
+    |> Option.map(Isolinear.Sub.map(msg => AnimateBackground(msg)))
+    |> Option.value(~default=Isolinear.Sub.none);
+
+  let foregroundSub =
+    model.statusBarForegroundColor
+    |> Option.map(Component_Animation.ColorTransition.sub)
+    |> Option.map(Isolinear.Sub.map(msg => AnimateForeground(msg)))
+    |> Option.value(~default=Isolinear.Sub.none);
+
   let animationSub: Isolinear.Sub.t(msg) =
     switch (model.all) {
     | [] => Isolinear.Sub.none
@@ -201,41 +352,8 @@ let sub = (model: model) => {
       |> Isolinear.Sub.map(msg => AnimateYOffset({id, msg}))
     };
 
-  [animationSub, ...timerSubs] |> Isolinear.Sub.batch;
-};
-
-// COLORS
-
-module Colors = {
-  open ColorTheme.Schema;
-  include Feature_Theme.Colors;
-
-  let infoBackground =
-    define("oni.notification.infoBackground", all(hex("#209CEE")));
-  let infoForeground =
-    define("oni.notification.infoForeground", all(hex("#FFF")));
-  let warningBackground =
-    define("oni.notification.warningBackground", all(hex("#FFDD57")));
-  let warningForeground =
-    define("oni.notification.warningForeground", all(hex("#333")));
-  let errorBackground =
-    define("oni.notification.errorBackground", all(hex("#FF3860")));
-  let errorForeground =
-    define("oni.notification.errorForeground", all(hex("#FFF")));
-
-  let backgroundFor = (notification: notification) =>
-    switch (notification.kind) {
-    | Warning => warningBackground
-    | Error => errorBackground
-    | Info => infoBackground
-    };
-
-  let foregroundFor = (notification: notification) =>
-    switch (notification.kind) {
-    | Warning => warningForeground
-    | Error => errorForeground
-    | Info => infoForeground
-    };
+  [animationSub, backgroundSub, foregroundSub, ...timerSubs]
+  |> Isolinear.Sub.batch;
 };
 
 // VIEW

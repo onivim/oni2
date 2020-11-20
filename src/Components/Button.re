@@ -55,13 +55,6 @@ let%component make =
       ? Colors.Button.hoverBackground.from(theme)
       : Colors.Button.background.from(theme);
 
-  let%hook background =
-    CustomHooks.colorTransition(
-      ~name="Button Color Transition",
-      ~duration=Animations.backgroundTransitionDuration,
-      background,
-    );
-
   let%hook yOffset =
     Hooks.transition(
       ~name="Button Lift Transition",
