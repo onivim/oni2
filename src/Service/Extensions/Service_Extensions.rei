@@ -130,7 +130,7 @@ module Sub: {
     (
       ~setup: Setup.t,
       ~query: Query.t,
-      ~toMsg: result(Query.t, string) => 'a
+      ~toMsg: result(Query.t, exn) => 'a
     ) =>
     Isolinear.Sub.t('a);
 };
