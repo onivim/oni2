@@ -26,4 +26,5 @@ Exthost_Test.TestFramework.cli();
 Oniguruma_Test.TestFramework.cli();
 Textmate_Test.TestFramework.cli();
 TreeSitter_Test.TestFramework.cli();
+KeyboardLayout_Test.TestFramework.cli();
 Oni_Cli_Test.TestFramework.cli();

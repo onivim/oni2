@@ -1,0 +1,19 @@
+(library
+ (name Oni2_KeyboardLayout)
+ (public_name Oni2.KeyboardLayout)
+ (foreign_stubs
+  (language c)
+  (names keyboard-layout keyboard-layout-mac keyboard-layout-windows
+    keyboard-layout-linux)
+  (flags
+   (:include c_flags.sexp)))
+ (library_flags
+  (:include flags.sexp))
+ (libraries reason-sdl2))
+
+(copy_files stubs/*)
+
+(rule
+ (targets flags.sexp c_flags.sexp)
+ (action
+  (run ./config/discover.exe)))
