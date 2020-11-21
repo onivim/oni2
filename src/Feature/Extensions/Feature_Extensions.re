@@ -77,7 +77,19 @@ let sub = (~setup, model) => {
   let toMsg =
     fun
     | Ok(query) => SearchQueryResults(query)
-    | Error(err) => SearchQueryError(err);
+    | Error(exn) =>
+      switch (exn) {
+      | Service_Net.ConnectionFailed =>
+        SearchQueryError(
+          "Unable to connect to open-vsx.org. Please check your network connection and try again.",
+        )
+      | Service_Net.ResponseParseFailed =>
+        SearchQueryError(
+          "There was an internal error parsing the response from open-vsx.org. Please log an issue.",
+        )
+      | _exn =>
+        SearchQueryError("Unknown error: " ++ Printexc.to_string(_exn))
+      };
 
   switch (model.latestQuery) {
   | Some(query) when !Service_Extensions.Query.isComplete(query) =>

@@ -152,7 +152,7 @@ module Selected = {
   let description =
     fun
     | Local(scanResult) => scanResult.manifest.description
-    | Remote({description, _}) => Some(description);
+    | Remote({description, _}) => description;
 
   let readme =
     fun
@@ -223,6 +223,7 @@ type model = {
   vimWindowNavigation: Component_VimWindows.model,
   viewModel: ViewModel.t,
   lastSearchHadError: bool,
+  lastErrorMessage: option(string),
 };
 
 let resetFocus = model => {...model, focusedWindow: Focus.initial};
@@ -255,6 +256,7 @@ let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => 
 
   viewModel: ViewModel.initial,
   lastSearchHadError: false,
+  lastErrorMessage: None,
 };
 
 let isSearching = ({searchText, _}) =>
@@ -605,9 +607,15 @@ let update = (~extHostClient, msg, model) => {
         Nothing,
       )
       : (model, Nothing)
-  | SearchQueryError(_queryResults) =>
-    // TODO: Error experience?
-    ({...model, lastSearchHadError: true, latestQuery: None}, Nothing)
+  | SearchQueryError(err) => (
+      {
+        ...model,
+        lastSearchHadError: true,
+        lastErrorMessage: Some(err),
+        latestQuery: None,
+      },
+      Nothing,
+    )
   | UninstallExtensionClicked({extensionId}) =>
     let toMsg = (
       fun

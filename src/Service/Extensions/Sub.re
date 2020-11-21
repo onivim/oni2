@@ -1,5 +1,5 @@
 open Oni_Core;
-type msg = result(Query.t, string);
+type msg = result(Query.t, exn);
 type params = {
   setup: Setup.t,
   query: Query.t,
@@ -38,9 +38,7 @@ module SearchSub =
         },
       );
 
-      Lwt.on_failure(result, err => {
-        dispatch(Error(Printexc.to_string(err)))
-      });
+      Lwt.on_failure(result, exn => {dispatch(Error(exn))});
     };
 
     let update = (~params as _, ~state, ~dispatch as _) => {
