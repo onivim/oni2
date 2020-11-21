@@ -71,7 +71,7 @@ module Details = {
     namespace: string,
     //      downloadCount: int,
     displayName: option(string),
-    description: string,
+    description: option(string),
     //      categories: list(string),
     version: string,
     versions: list(VersionInfo.t),
@@ -98,7 +98,7 @@ module Details = {
 %s
       |},
       details |> displayName,
-      description,
+      description |> Option.value(~default="(null)"),
       homepageUrl,
       downloadUrl,
       versions,
@@ -128,7 +128,7 @@ module Details = {
           homepageUrl: whatever(homepageUrl),
           licenseName: field.optional("license", string),
           displayName: field.optional("displayName", string),
-          description: field.required("description", string),
+          description: field.optional("description", string),
           name: field.required("name", string),
           namespace: field.required("namespace", string),
           version: field.required("version", string),
@@ -153,7 +153,7 @@ module Summary = {
     name: string,
     namespace: string,
     displayName: option(string),
-    description: string,
+    description: option(string),
   };
 
   let id = ({namespace, name, _}) => {
@@ -180,7 +180,7 @@ module Summary = {
         name: field.required("name", string),
         namespace: field.required("namespace", string),
         displayName: field.optional("displayName", string),
-        description: field.required("description", string),
+        description: field.optional("description", string),
       }
     );
   };
@@ -197,7 +197,7 @@ module Summary = {
       namespace,
       name,
       displayName |> Option.value(~default="(null)"),
-      description,
+      description |> Option.value(~default="(null)"),
       url,
       version,
     );

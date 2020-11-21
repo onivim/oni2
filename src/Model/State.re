@@ -456,6 +456,7 @@ type t = {
   signatureHelp: Feature_SignatureHelp.model,
   windowIsFocused: bool,
   windowDisplayMode,
+  titlebarHeight: float,
   workspace: Feature_Workspace.model,
   zenMode: bool,
   // State of the bottom pane
@@ -482,6 +483,7 @@ let initial =
       ~maybeWorkspace,
       ~extensionsFolder,
       ~licenseKeyPersistence,
+      ~titlebarHeight,
     ) => {
   let config =
     Feature_Configuration.initial(
@@ -563,6 +565,7 @@ let initial =
     layout: Feature_Layout.initial([initialEditor]),
     windowIsFocused: true,
     windowDisplayMode: Windowed,
+    titlebarHeight,
     workspace:
       Feature_Workspace.initial(
         ~openedFolder=maybeWorkspace,

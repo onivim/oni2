@@ -35,7 +35,7 @@ module Catalog: {
       namespace: string,
       //      downloadCount: int,
       displayName: option(string),
-      description: string,
+      description: option(string),
       //      categories: list(string),
       version: string,
       versions: list(VersionInfo.t),
@@ -54,7 +54,7 @@ module Catalog: {
       name: string,
       namespace: string,
       displayName: option(string),
-      description: string,
+      description: option(string),
     };
 
     let name: t => string;
@@ -127,10 +127,6 @@ module Effects: {
 
 module Sub: {
   let search:
-    (
-      ~setup: Setup.t,
-      ~query: Query.t,
-      ~toMsg: result(Query.t, string) => 'a
-    ) =>
+    (~setup: Setup.t, ~query: Query.t, ~toMsg: result(Query.t, exn) => 'a) =>
     Isolinear.Sub.t('a);
 };

@@ -202,6 +202,7 @@ switch (eff) {
     Log.debug("Init");
 
     Vim.init();
+    Oni2_KeyboardLayout.init();
     Oni2_Sparkle.init();
 
     let maybeWorkspace = initWorkspace();
@@ -267,6 +268,7 @@ switch (eff) {
           // TODO: Use `Fp.t` all the way down
           ~extensionsFolder=cliOptions.overriddenExtensionsDir,
           ~licenseKeyPersistence,
+          ~titlebarHeight=Revery.Window.getTitlebarHeight(window),
         ),
       );
 
