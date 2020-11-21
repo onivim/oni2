@@ -117,21 +117,36 @@ type outmsg =
 let update = (~configuration, msg, model) => {
   switch (msg) {
   | KeyboardInput(key) =>
-    let model =
-      model.focus == FileExplorer
-        ? {
-          ...model,
-          fileExplorer:
-            model.fileExplorer
-            |> Option.map(explorer =>
-                 Component_FileExplorer.keyPress(key, explorer)
-               ),
-        }
-        : {
+    if (model.focus == FileExplorer) {
+      if (model.fileExplorer == None) {
+        let lowerKey = String.lowercase_ascii(key);
+        if (lowerKey == "<cr>" || lowerKey == "<space>") {
+          (model, PickFolder);
+        } else {
+          (model, Nothing);
+        };
+      } else {
+        (
+          {
+            ...model,
+            fileExplorer:
+              model.fileExplorer
+              |> Option.map(explorer =>
+                   Component_FileExplorer.keyPress(key, explorer)
+                 ),
+          },
+          Nothing,
+        );
+      };
+    } else {
+      (
+        {
           ...model,
           symbolOutline: Component_VimTree.keyPress(key, model.symbolOutline),
-        };
-    (model, Nothing);
+        },
+        Nothing,
+      );
+    }
 
   | FileExplorer(fileExplorerMsg) =>
     model.fileExplorer
