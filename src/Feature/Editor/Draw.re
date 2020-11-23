@@ -10,6 +10,7 @@ type context = {
   height: int,
   editor: Editor.t,
   fontFamily: Revery.Font.Family.t,
+  fontWeight: Revery.Font.Weight.t,
   fontSize: float,
   charWidth: float,
   charHeight: float,
@@ -31,6 +32,7 @@ let createContext =
     height,
     editor,
     fontFamily: editorFont.fontFamily,
+    fontWeight: editorFont.fontWeight,
     fontSize: editorFont.fontSize,
     charWidth: editorFont.spaceWidth,
     charHeight: editorFont.measuredHeight,
@@ -86,7 +88,8 @@ let drawShapedText = {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
+        // XXX: Should I make the bold one step upper than the current weight ?
+        bold ? Revery.Font.Weight.Bold : context.fontWeight,
         context.fontFamily,
       );
     let text =
