@@ -303,6 +303,7 @@ module View = {
                      option(Feature_LanguageSupport.DocumentSymbols.t),
                   ~theme,
                   ~font: UiFont.t,
+                  ~editorFont: Oni_Core.Font.t,
                   ~dispatch: msg => unit,
                   (),
                 ) => {
@@ -392,12 +393,45 @@ module View = {
                   fontSize={font.size}
                 />
               </View>
-              <View style=[Style.padding(8)]>
+              <View style=[Style.paddingHorizontal(8)]>
                 <Oni_Components.Button
                   label="Open Folder"
                   theme
                   font
                   onClick={() => dispatch(OpenFolderClicked)}
+                />
+              </View>
+              <View
+                style=Style.[
+                  marginTop(8),
+                  justifyContent(`Center),
+                  flexDirection(`Row),
+                ]>
+                <Text
+                  style=Style.[color(foregroundColor)]
+                  text="(or,  "
+                  fontFamily={font.family}
+                  fontSize={font.size}
+                />
+                <View
+                  style=[
+                    Style.backgroundColor(
+                      Revery.Color.rgba(0., 0., 0., 0.2),
+                    ),
+                    Style.marginTop(-2),
+                  ]>
+                  <Text
+                    style=Style.[color(foregroundColor)]
+                    text=":cd"
+                    fontFamily={editorFont.fontFamily}
+                    fontSize={editorFont.fontSize}
+                  />
+                </View>
+                <Text
+                  style=Style.[color(foregroundColor)]
+                  text=" )"
+                  fontFamily={font.family}
+                  fontSize={font.size}
                 />
               </View>
             </View>

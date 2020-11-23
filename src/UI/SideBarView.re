@@ -76,61 +76,68 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
          )
        );
 
-  let elem =
-    switch (sideBar |> selected) {
-    | FileExplorer =>
-      let dispatch = msg => dispatch(Actions.FileExplorer(msg));
-      <Feature_Explorer.View
-        isFocused={FocusManager.current(state) == Focus.FileExplorer}
-        languageInfo={state.languageInfo}
-        iconTheme={state.iconTheme}
-        decorations={state.decorations}
-        documentSymbols=maybeSymbols
-        model={state.fileExplorer}
-        theme
-        font
-        dispatch
-      />;
-
-    | SCM =>
-      <Feature_SCM.Pane
-        model={state.scm}
-        workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
-        isFocused={FocusManager.current(state) == Focus.SCM}
-        languageInfo={state.languageInfo}
-        iconTheme={state.iconTheme}
-        theme
-        font
-        dispatch={msg => dispatch(Actions.SCM(msg))}
-      />
-
-    | Search =>
-      let dispatch = msg =>
-        GlobalContext.current().dispatch(Actions.Search(msg));
-
-      <Feature_Search
-        isFocused={FocusManager.current(state) == Focus.Search}
-        theme
-        languageInfo={state.languageInfo}
-        iconTheme={state.iconTheme}
-        uiFont={state.uiFont}
-        model={state.searchPane}
-        dispatch
-        workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
-      />;
-
-    | Extensions =>
-      let extensionDispatch = msg => dispatch(Actions.Extensions(msg));
-      <Feature_Extensions.ListView
-        model={state.extensions}
-        theme
-        font
-        isFocused={FocusManager.current(state) == Focus.Extensions}
-        dispatch=extensionDispatch
-      />;
-    };
-
   let width = Feature_SideBar.width(state.sideBar);
+  let elem =
+    width > 25
+      ? switch (sideBar |> selected) {
+        | FileExplorer =>
+          let dispatch = msg => dispatch(Actions.FileExplorer(msg));
+          <Feature_Explorer.View
+            isFocused={FocusManager.current(state) == Focus.FileExplorer}
+            languageInfo={state.languageInfo}
+            iconTheme={state.iconTheme}
+            decorations={state.decorations}
+            documentSymbols=maybeSymbols
+            model={state.fileExplorer}
+            editorFont={state.editorFont}
+            theme
+            font
+            dispatch
+          />;
+
+        | SCM =>
+          <Feature_SCM.Pane
+            model={state.scm}
+            workingDirectory={Feature_Workspace.workingDirectory(
+              state.workspace,
+            )}
+            isFocused={FocusManager.current(state) == Focus.SCM}
+            languageInfo={state.languageInfo}
+            iconTheme={state.iconTheme}
+            theme
+            font
+            dispatch={msg => dispatch(Actions.SCM(msg))}
+          />
+
+        | Search =>
+          let dispatch = msg =>
+            GlobalContext.current().dispatch(Actions.Search(msg));
+
+          <Feature_Search
+            isFocused={FocusManager.current(state) == Focus.Search}
+            theme
+            languageInfo={state.languageInfo}
+            iconTheme={state.iconTheme}
+            uiFont={state.uiFont}
+            model={state.searchPane}
+            dispatch
+            workingDirectory={Feature_Workspace.workingDirectory(
+              state.workspace,
+            )}
+          />;
+
+        | Extensions =>
+          let extensionDispatch = msg => dispatch(Actions.Extensions(msg));
+          <Feature_Extensions.ListView
+            model={state.extensions}
+            theme
+            font
+            isFocused={FocusManager.current(state) == Focus.Extensions}
+            dispatch=extensionDispatch
+          />;
+        }
+      : React.empty;
+
   let separator =
     Feature_SideBar.isOpen(state.sideBar) && width > 4
       ? <separator /> : React.empty;

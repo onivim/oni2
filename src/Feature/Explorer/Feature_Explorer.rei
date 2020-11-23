@@ -53,6 +53,7 @@ module View: {
       ~documentSymbols: option(Feature_LanguageSupport.DocumentSymbols.t),
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
+      ~editorFont: Font.t,
       ~dispatch: msg => unit,
       unit
     ) =>

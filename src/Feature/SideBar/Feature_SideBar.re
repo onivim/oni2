@@ -31,7 +31,9 @@ type msg =
 
 module Constants = {
   let defaultWidth = 225;
-  let minWidth = 50;
+  // Adjusted minWidth for empty experience - don't let the text get
+  // too clipped!
+  let minWidth = 75;
   let maxWidth = 800;
 };
 
