@@ -78,13 +78,6 @@ switch (eff) {
       switch (Oni_CLI.(cliOptions.folder)) {
       | Some(folder) => Some(folder)
       | None => Store.Persistence.Global.workspace()
-      // switch (Store.Persistence.Global.workspace()) {
-      // | Some(path) => path
-      // | None => None
-      // Dir.User.document()
-      // |> Option.value(~default=Dir.home())
-      // |> Fp.toString
-      // }
       };
 
     maybePath

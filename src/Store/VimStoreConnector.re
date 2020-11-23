@@ -892,22 +892,6 @@ let start =
         copyActiveFilepathToClipboardEffect,
       )
 
-    // | DirectoryChanged(workingDirectory) =>
-    //   let newState = {
-    //     ...state,
-    //     fileExplorer:
-    //       Feature_Explorer.setRoot(
-    //         ~rootPath=Some(workingDirectory),
-    //         state.fileExplorer,
-    //       ),
-    //     workspace: {
-    //       workingDirectory,
-    //       rootName: Filename.basename(workingDirectory),
-    //       openedFolder: Some(workingDirectory),
-    //     },
-    //   };
-    //   (newState, Isolinear.Effect.none);
-
     | VimMessageReceived({priority, message, _}) =>
       let kind =
         switch (priority) {
