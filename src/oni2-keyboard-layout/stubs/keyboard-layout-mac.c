@@ -159,16 +159,11 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
   CAMLlocal2(keymapEntry, vSDLScancode);
 
   // Allocate string pointers to be filled
-  const char *unmodified;
-  const char *withShift;
-  const char *withAltGraph;
-  const char *withAltGraphShift;
-
+  NSString *nsUnmodified, *nsWithShift, *nsWithAltGraph, *nsWithAltGraphShift;
   // Allocate UTF-16 Buffers to be populated
-  unichar uniUnmodified[4]; 
-  unichar uniWithShift[4]; 
-  unichar uniWithAltGraph[4]; 
-  unichar uniWithAltGraphShift[4]; 
+  unichar uniUnmodified[4], uniWithShift[4], uniWithAltGraph[4], uniWithAltGraphShift[4]; 
+  // Allocate integers to hold the lengths of the strings
+  int ccUnmodified, ccWithShift, ccWithAltGraph, ccWithAltGraphShift;
 
   TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
   CFDataRef layoutData = (CFDataRef)TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData);
@@ -185,42 +180,48 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
     int virtualKeyCode = keyCodeMap[i].virtualKeyCode;
 
     if (sdlScancode && virtualKeyCode < 0xffff) {
-      int ccUnmodified = characterForNativeCode(
+      ccUnmodified = characterForNativeCode(
         keyboardLayout,
         virtualKeyCode,
         0, 
         uniUnmodified
       );
-      int ccWithShift = characterForNativeCode(
+      ccWithShift = characterForNativeCode(
         keyboardLayout,
         virtualKeyCode, 
         (1 << shiftKeyBit), 
         uniWithShift
       );
-      int ccWithAltGraph = characterForNativeCode(
+      ccWithAltGraph = characterForNativeCode(
         keyboardLayout,
         virtualKeyCode,
         (1 << optionKeyBit),
         uniWithAltGraph
       );
-      int ccWithAltGraphShift = characterForNativeCode(
+      ccWithAltGraphShift = characterForNativeCode(
         keyboardLayout,
         virtualKeyCode,
         (1 << shiftKeyBit) | (1 << optionKeyBit),
         uniWithAltGraphShift
       );
 
-      // The NSStrings we allocate are simply mechanisms to convert the UTF-16 code points to UTF-8
-      // so they should be autoreleased.
-      @autoreleasepool {
-        unmodified = [[NSString stringWithCharacters:uniUnmodified length:ccUnmodified] UTF8String];
-        withShift = [[NSString stringWithCharacters:uniWithShift length:ccWithShift] UTF8String];
-        withAltGraph = [[NSString stringWithCharacters:uniWithAltGraph length:ccWithAltGraph] UTF8String];
-        withAltGraphShift = [[NSString stringWithCharacters:uniWithAltGraphShift length:ccWithAltGraphShift] UTF8String];
-      }
+      nsUnmodified = [NSString stringWithCharacters:uniUnmodified length:ccUnmodified];
+      nsWithShift = [NSString stringWithCharacters:uniWithShift length:ccWithShift];
+      nsWithAltGraph = [NSString stringWithCharacters:uniWithAltGraph length:ccWithAltGraph];
+      nsWithAltGraphShift = [NSString stringWithCharacters:uniWithAltGraphShift length:ccWithAltGraphShift];
       
-      keymapEntry = createKeymapEntry(unmodified, withShift, withAltGraph, withAltGraphShift);
+      keymapEntry = createKeymapEntry(
+        [nsUnmodified UTF8String],
+        [nsWithShift UTF8String],
+        [nsWithAltGraph UTF8String],
+        [nsWithAltGraphShift UTF8String]
+      );
       vSDLScancode = Val_int(sdlScancode);
+
+      [nsUnmodified release];
+      [nsWithShift release];
+      [nsWithAltGraph release];
+      [nsWithAltGraphShift release];
 
       value args[] = {keymap, vSDLScancode, keymapEntry};
       caml_callbackN(Hashtbl_replace, 3, args);
