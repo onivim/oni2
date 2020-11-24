@@ -175,12 +175,11 @@ module ExthostCompletionProvider =
                     ~handle=providerHandle,
                     ~chainedCacheId,
                     ~toMsg=
-                      _ =>
-                        fun
-                        | Ok(item) =>
-                          DetailsAvailable({handle: providerHandle, item})
-                        | Error(errorMsg) =>
-                          DetailsError({handle: providerHandle, errorMsg}),
+                      fun
+                      | Ok(item) =>
+                        DetailsAvailable({handle: providerHandle, item})
+                      | Error(errorMsg) =>
+                        DetailsError({handle: providerHandle, errorMsg}),
                     client,
                   );
 

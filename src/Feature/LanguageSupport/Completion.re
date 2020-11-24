@@ -205,6 +205,7 @@ module Session = {
                | Completed({providerModel, meet, _})
                | Pending({providerModel, meet, _}) =>
                  open CompletionMeet;
+                 // TODO: What to do with the error `_outmsg` case?
                  let (providerModel', _outmsg) =
                    ProviderImpl.update(
                      ~isFuzzyMatching=meet.base != "",
@@ -669,7 +670,7 @@ let tryToMaintainSelected = (~previousIndex, ~previousLabel, model) => {
 
   // Sanity check - make sure there is a valid position.
   // Completions list might be empty...
-  if (idxToReplace >= len) {
+  if (idxToReplace >= len || len == 0) {
     model;
   } else if
     // Nothing to do - still in a good spot!
