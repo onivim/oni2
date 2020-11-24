@@ -205,22 +205,21 @@ module Session = {
                | Completed({providerModel, meet, _})
                | Pending({providerModel, meet, _}) =>
                  open CompletionMeet;
-                 let providerModel' =
+                 let (providerModel', _outmsg) =
                    ProviderImpl.update(
                      ~isFuzzyMatching=meet.base != "",
                      internalMsg,
                      providerModel,
                    );
                  switch (ProviderImpl.items(providerModel')) {
-                 | Ok([]) => Pending({meet, providerModel: providerModel'})
-                 | Ok(items) =>
+                 | [] => Pending({meet, providerModel: providerModel'})
+                 | items =>
                    Completed({
                      meet,
                      allItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: providerModel',
                    })
-                 | Error(msg) => Failure(msg)
                  };
                | _ => state
                };
@@ -329,15 +328,14 @@ module Session = {
              let items = ProviderImpl.items(model);
              let state =
                switch (items) {
-               | Ok([]) => Pending({meet, providerModel: model})
-               | Ok(items) =>
+               | [] => Pending({meet, providerModel: model})
+               | items =>
                  Completed({
                    meet,
                    allItems: items,
                    filteredItems: filter(~query=meet.base, items),
                    providerModel: model,
                  })
-               | Error(msg) => Failure(msg)
                };
 
              Session({...session, state});
