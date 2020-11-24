@@ -6,7 +6,11 @@ module type S = {
   type msg;
   type model;
 
-  let update: (~isFuzzyMatching: bool, msg, model) => model;
+  type outmsg =
+    | Nothing
+    | ProviderError(string);
+
+  let update: (~isFuzzyMatching: bool, msg, model) => (model, outmsg);
 
   let create:
     (
@@ -19,7 +23,7 @@ module type S = {
     ) =>
     option(model);
 
-  let items: model => result(list(CompletionItem.t), string);
+  let items: model => list(CompletionItem.t);
 
   let handle: unit => option(int);
 

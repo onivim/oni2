@@ -202,22 +202,22 @@ module Session = {
                | Completed({providerModel, meet, _})
                | Pending({providerModel, meet, _}) =>
                  open CompletionMeet;
-                 let providerModel' =
+                 // TODO: What to do with the error `_outmsg` case?
+                 let (providerModel', _outmsg) =
                    ProviderImpl.update(
                      ~isFuzzyMatching=meet.base != "",
                      internalMsg,
                      providerModel,
                    );
                  switch (ProviderImpl.items(providerModel')) {
-                 | Ok([]) => Pending({meet, providerModel: providerModel'})
-                 | Ok(items) =>
+                 | [] => Pending({meet, providerModel: providerModel'})
+                 | items =>
                    Completed({
                      meet,
                      allItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: providerModel',
                    })
-                 | Error(msg) => Failure(msg)
                  };
                | _ => state
                };
@@ -326,15 +326,14 @@ module Session = {
              let items = ProviderImpl.items(model);
              let state =
                switch (items) {
-               | Ok([]) => Pending({meet, providerModel: model})
-               | Ok(items) =>
+               | [] => Pending({meet, providerModel: model})
+               | items =>
                  Completed({
                    meet,
                    allItems: items,
                    filteredItems: filter(~query=meet.base, items),
                    providerModel: model,
                  })
-               | Error(msg) => Failure(msg)
                };
 
              Session({...session, state});
@@ -668,7 +667,7 @@ let tryToMaintainSelected = (~previousIndex, ~previousLabel, model) => {
 
   // Sanity check - make sure there is a valid position.
   // Completions list might be empty...
-  if (idxToReplace >= len) {
+  if (idxToReplace >= len || len == 0) {
     model;
   } else if
     // Nothing to do - still in a good spot!
