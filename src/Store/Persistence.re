@@ -16,7 +16,7 @@ module Global = {
       define("version", string, BuildInfo.commitId, _ => BuildInfo.commitId);
     let workspace =
       define("workspace", option(string), None, state =>
-        Some(state.workspace.workingDirectory)
+        Feature_Workspace.openedFolder(state.workspace)
       );
     let licenseKey =
       define("licenseKey", option(string), None, state =>

@@ -192,7 +192,11 @@ let start =
 
   let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
-      dispatch(Actions.DirectoryChanged(newDir))
+      dispatch(
+        Actions.Workspace(
+          Feature_Workspace.Msg.workingDirectoryChanged(newDir),
+        ),
+      )
     );
 
   let _: unit => unit =
@@ -887,21 +891,6 @@ let start =
         state,
         copyActiveFilepathToClipboardEffect,
       )
-
-    | DirectoryChanged(workingDirectory) =>
-      let newState = {
-        ...state,
-        fileExplorer:
-          Feature_Explorer.setRoot(
-            ~rootPath=workingDirectory,
-            state.fileExplorer,
-          ),
-        workspace: {
-          workingDirectory,
-          rootName: Filename.basename(workingDirectory),
-        },
-      };
-      (newState, Isolinear.Effect.none);
 
     | VimMessageReceived({priority, message, _}) =>
       let kind =

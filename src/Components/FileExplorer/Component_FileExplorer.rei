@@ -13,8 +13,8 @@ module Msg: {
 type model;
 
 let initial: (~rootPath: string) => model;
-
 let setRoot: (~rootPath: string, model) => model;
+let root: model => string;
 
 let keyPress: (string, model) => model;
 

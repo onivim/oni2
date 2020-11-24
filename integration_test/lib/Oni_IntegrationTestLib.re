@@ -147,6 +147,7 @@ let runTest =
         ~initialBufferRenderers=Model.BufferRenderers.initial,
         ~getUserSettings,
         ~contributedCommands=[],
+        ~maybeWorkspace=None,
         ~workingDirectory=Sys.getcwd(),
         ~extensionsFolder=None,
         ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,

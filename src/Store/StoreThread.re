@@ -141,8 +141,13 @@ let start =
       }
     );
 
+  let initialWorkspace =
+    Feature_Workspace.openedFolder(initialState.workspace)
+    |> Option.map(Exthost.WorkspaceData.fromPath);
+
   let (extHostClientResult, extHostStream) =
     ExtensionClient.create(
+      ~initialWorkspace,
       ~attachStdio,
       ~config=getState().config,
       ~extensions,
@@ -240,7 +245,10 @@ let start =
 
     let terminalSubscription =
       Feature_Terminal.subscription(
-        ~workspaceUri=Core.Uri.fromPath(state.workspace.workingDirectory),
+        ~workspaceUri=
+          Core.Uri.fromPath(
+            Feature_Workspace.workingDirectory(state.workspace),
+          ),
         extHostClient,
         state.terminals,
       )

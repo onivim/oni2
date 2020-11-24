@@ -4,7 +4,8 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
+let create =
+    (~initialWorkspace, ~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   Log.infof(m =>
@@ -269,6 +270,7 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
           extensions,
           setup,
         ),
+      ~initialWorkspace,
       ~namedPipe,
       ~initData,
       ~handler,

@@ -30,14 +30,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
       )
     );
 
-  let changeWorkspaceEffect = path =>
-    Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
-      Exthost.Request.Workspace.acceptWorkspaceData(
-        ~workspace=Some(Exthost.WorkspaceData.fromPath(path)),
-        extHostClient,
-      )
-    });
-
   let updater = (state: State.t, action: Actions.t) =>
     switch (action) {
     | Init => (
@@ -47,8 +39,6 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
           discoveredExtensionsEffect(extensions),
         ]),
       )
-
-    | DirectoryChanged(path) => (state, changeWorkspaceEffect(path))
 
     | _ => (state, Isolinear.Effect.none)
     };

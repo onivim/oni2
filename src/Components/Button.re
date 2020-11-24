@@ -34,6 +34,8 @@ module Styles = {
     padding(8),
     margin(8),
     transform([Transform.TranslateY(yOffset)]),
+    flexDirection(`Row),
+    justifyContent(`Center),
   ];
 
   let text = (~color) => [Style.color(color)];

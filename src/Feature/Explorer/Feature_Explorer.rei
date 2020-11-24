@@ -12,9 +12,11 @@ module Msg: {
 
 type model;
 
-let initial: (~rootPath: string) => model;
+let initial: (~rootPath: option(string)) => model;
 
-let setRoot: (~rootPath: string, model) => model;
+let setRoot: (~rootPath: option(string), model) => model;
+
+let root: model => option(string);
 
 let focusOutline: model => model;
 
@@ -26,7 +28,8 @@ type outmsg =
   | OpenFile(string)
   | GrabFocus
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
-  | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol);
+  | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
+  | PickFolder;
 
 let update:
   (~configuration: Oni_Core.Configuration.t, msg, model) => (model, outmsg);
@@ -50,6 +53,7 @@ module View: {
       ~documentSymbols: option(Feature_LanguageSupport.DocumentSymbols.t),
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
+      ~editorFont: Font.t,
       ~dispatch: msg => unit,
       unit
     ) =>

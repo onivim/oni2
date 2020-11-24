@@ -106,7 +106,9 @@ let make = (~dispatch, ~state: State.t, ()) => {
           indentationSettings
           theme
           dispatch=statusBarDispatch
-          workingDirectory={state.workspace.workingDirectory}
+          workingDirectory={Feature_Workspace.workingDirectory(
+            state.workspace,
+          )}
         />
       </View>;
     } else {
@@ -138,7 +140,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       <Feature_Modals.View
         model
         buffers
-        workingDirectory={state.workspace.workingDirectory}
+        workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
         theme
         font
         dispatch
@@ -173,8 +175,8 @@ let make = (~dispatch, ~state: State.t, ()) => {
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
       activeBuffer=maybeActiveBuffer
-      workspaceRoot={state.workspace.rootName}
-      workspaceDirectory={state.workspace.workingDirectory}
+      workspaceRoot={Feature_Workspace.rootName(state.workspace)}
+      workspaceDirectory={Feature_Workspace.workingDirectory(state.workspace)}
       registration={state.registration}
       config
       isFocused={state.windowIsFocused}
@@ -200,7 +202,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
         dispatch={msg => dispatch(Actions.Pane(msg))}
         notificationDispatch={msg => dispatch(Actions.Notification(msg))}
         pane={state.pane}
-        workingDirectory={state.workspace.workingDirectory}
+        workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
       />
     </View>
     <Overlay>

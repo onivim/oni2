@@ -155,6 +155,7 @@ let start = () => {
         buffers,
         languageInfo,
         iconTheme,
+        workspace,
         commands,
         menus,
         contextKeys,
@@ -191,16 +192,26 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(FilesPicker) => (
-        Some({
-          ...Quickmenu.defaults(FilesPicker),
-          filterProgress: Loading,
-          ripgrepProgress: Loading,
-          inputText: typeToSearchInput,
-          focused: Some(0),
-        }),
-        Isolinear.Effect.none,
-      )
+    | QuickmenuShow(FilesPicker) =>
+      if (Feature_Workspace.openedFolder(workspace) == None) {
+        let items = makeBufferCommands(languageInfo, iconTheme, buffers);
+
+        (
+          Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
+          Isolinear.Effect.none,
+        );
+      } else {
+        (
+          Some({
+            ...Quickmenu.defaults(FilesPicker),
+            filterProgress: Loading,
+            ripgrepProgress: Loading,
+            inputText: typeToSearchInput,
+            focused: Some(0),
+          }),
+          Isolinear.Effect.none,
+        );
+      }
 
     | QuickmenuShow(Wildmenu(cmdType)) => (
         Some({
@@ -230,34 +241,51 @@ let start = () => {
         Isolinear.Effect.none,
       );
 
-    | QuickmenuShow(FileTypesPicker({bufferId, languages})) =>
-      let items =
-        languages
-        |> List.map(((fileType, maybeIcon)) => {
-             Actions.{
-               category: None,
-               name: fileType,
-               command: () =>
-                 Buffers(
-                   Feature_Buffers.Msg.fileTypeChanged(
-                     ~bufferId,
-                     ~fileType=Oni_Core.Buffer.FileType.explicit(fileType),
-                   ),
-                 ),
-               icon: maybeIcon,
-               highlight: [],
-               handle: None,
-             }
-           })
-        |> Array.of_list;
+    | QuickmenuShow(OpenBuffersPicker) =>
+      let items = makeBufferCommands(languageInfo, iconTheme, buffers);
 
       (
-        Some({
-          ...Quickmenu.defaults(FileTypesPicker({bufferId, languages})),
-          items,
-        }),
+        Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
         Isolinear.Effect.none,
       );
+
+    | QuickmenuShow(FileTypesPicker({bufferId, languages})) =>
+      if (Feature_Workspace.openedFolder(workspace) == None) {
+        let items = makeBufferCommands(languageInfo, iconTheme, buffers);
+
+        (
+          Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
+          Isolinear.Effect.none,
+        );
+      } else {
+        let items =
+          languages
+          |> List.map(((fileType, maybeIcon)) => {
+               Actions.{
+                 category: None,
+                 name: fileType,
+                 command: () =>
+                   Buffers(
+                     Feature_Buffers.Msg.fileTypeChanged(
+                       ~bufferId,
+                       ~fileType=Oni_Core.Buffer.FileType.explicit(fileType),
+                     ),
+                   ),
+                 icon: maybeIcon,
+                 highlight: [],
+                 handle: None,
+               }
+             })
+          |> Array.of_list;
+
+        (
+          Some({
+            ...Quickmenu.defaults(FileTypesPicker({bufferId, languages})),
+            items,
+          }),
+          Isolinear.Effect.none,
+        );
+      }
 
     | QuickmenuPaste(text) => (
         Option.map(
@@ -479,6 +507,7 @@ let start = () => {
         state.buffers,
         state.languageInfo,
         state.iconTheme,
+        state.workspace,
         CommandManager.current(state),
         MenuManager.current(state),
         ContextKeys.all(state),
@@ -565,6 +594,7 @@ let subscriptions = (ripgrep, dispatch) => {
       switch (quickmenu.variant) {
       | CommandPalette
       | EditorsPicker
+      | OpenBuffersPicker => [filter(query, quickmenu.items)]
       | ThemesPicker(_) => [filter(query, quickmenu.items)]
 
       | Extension({hasItems, _}) =>

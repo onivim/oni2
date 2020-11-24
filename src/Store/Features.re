@@ -67,6 +67,10 @@ module Internal = {
       dispatch(Actions.Quit(true))
     );
 
+  let chdir = (path: Fp.t(Fp.absolute)) =>
+    Feature_Workspace.Effects.changeDirectory(path)
+    |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
+
   let updateEditor = (~editorId, ~msg, layout) => {
     switch (Feature_Layout.editorById(editorId, layout)) {
     | Some(editor) =>
@@ -136,9 +140,13 @@ module Internal = {
   let updateConfiguration: State.t => State.t =
     state => {
       let resolver = Selectors.configResolver(state);
+      let maybeRoot = Feature_Explorer.root(state.fileExplorer);
       let sideBar =
         state.sideBar
-        |> Feature_SideBar.configurationChanged(~config=resolver);
+        |> Feature_SideBar.configurationChanged(
+             ~hasWorkspace=maybeRoot != None,
+             ~config=resolver,
+           );
 
       let perFileTypeConfig =
         Feature_Configuration.resolver(state.config, state.vim);
@@ -308,6 +316,11 @@ let update =
       | GrabFocus => (
           FocusManager.push(Focus.FileExplorer, state),
           Isolinear.Effect.none,
+        )
+      | PickFolder => (
+          state,
+          Feature_Workspace.Effects.pickFolder
+          |> Isolinear.Effect.map(msg => Workspace(msg)),
         )
       | UnhandledWindowMovement(windowMovement) => (
           state,
@@ -1252,7 +1265,10 @@ let update =
         | S_REG => OpenFileByPath(path, None, None)
         | S_DIR =>
           switch (Luv.Path.chdir(path)) {
-          | Ok () => DirectoryChanged(path)
+          | Ok () =>
+            Actions.Workspace(
+              Feature_Workspace.Msg.workingDirectoryChanged(path),
+            )
           | Error(_) => Noop
           }
         | _ => Noop
@@ -1580,6 +1596,35 @@ let update =
 
     (state', eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
 
+  | Workspace(msg) =>
+    let (workspace, outmsg) = Feature_Workspace.update(msg, state.workspace);
+
+    let state = {...state, workspace};
+    switch (outmsg) {
+    | Nothing => (state, Isolinear.Effect.none)
+
+    | Effect(eff) => (
+        state,
+        eff |> Isolinear.Effect.map(msg => Workspace(msg)),
+      )
+
+    | WorkspaceChanged(maybeWorkspaceFolder) =>
+      let fileExplorer =
+        Feature_Explorer.setRoot(
+          ~rootPath=maybeWorkspaceFolder,
+          state.fileExplorer,
+        );
+
+      let extWorkspace =
+        maybeWorkspaceFolder |> Option.map(Exthost.WorkspaceData.fromPath);
+      let eff =
+        Service_Exthost.Effects.Workspace.change(
+          ~workspace=extWorkspace,
+          extHostClient,
+        );
+      ({...state, fileExplorer}, eff);
+    };
+
   | AutoUpdate(msg) =>
     let getLicenseKey = () =>
       Feature_Registration.getLicenseKey(state.registration);
@@ -1622,7 +1667,8 @@ let updateSubscriptions = (setup: Setup.t) => {
   let searchSubscriptions = Feature_Search.subscriptions(ripgrep);
 
   (state: State.t, dispatch) => {
-    let workingDirectory = state.workspace.workingDirectory;
+    let workingDirectory =
+      Feature_Workspace.workingDirectory(state.workspace);
     quickmenuSubscriptions(dispatch, state)
     |> QuickmenuSubscriptionRunner.run(~dispatch);
 

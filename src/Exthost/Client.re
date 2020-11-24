@@ -21,7 +21,7 @@ module Testing = {
 let start =
     (
       ~initialConfiguration=Configuration.empty,
-      ~initialWorkspace=WorkspaceData.fromPath(Sys.getcwd()),
+      ~initialWorkspace=None,
       ~namedPipe,
       ~initData: Extension.InitData.t,
       ~handler: Msg.t => Lwt.t(Reply.t),
@@ -82,16 +82,21 @@ let start =
 
         incr(lastRequestId);
         let rpcId = "ExtHostWorkspace" |> Handlers.stringToId |> Option.get;
+        let initialWorkspaceListJson =
+          switch (initialWorkspace) {
+          | None => `List([])
+          | Some(workspace) =>
+            `List([
+              workspace
+              |> Oni_Core.Json.Encode.encode_value(WorkspaceData.encode),
+            ])
+          };
         send(
           Outgoing.RequestJSONArgs({
             requestId: lastRequestId^,
             rpcId,
             method: "$initializeWorkspace",
-            args:
-              `List([
-                initialWorkspace
-                |> Oni_Core.Json.Encode.encode_value(WorkspaceData.encode),
-              ]),
+            args: initialWorkspaceListJson,
             usesCancellationToken: false,
           }),
         );
