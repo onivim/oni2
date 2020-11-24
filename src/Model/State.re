@@ -79,7 +79,9 @@ let defaultKeyBindings =
       {
         key: "<ESC>",
         command: Commands.Workbench.Action.closeQuickOpen.id,
-        condition: "inQuickOpen" |> WhenExpr.parse,
+        // When in command-line mode, we should let Vim control when it is closed
+        // (The <esc> key might not always trigger closing, like if 'insert literal' (Ctrl-v/Ctrl-q) is active)
+        condition: "!commandLineFocus && inQuickOpen" |> WhenExpr.parse,
       },
       {
         key: "<C-N>",
