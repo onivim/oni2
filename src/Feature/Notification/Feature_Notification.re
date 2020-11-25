@@ -497,7 +497,7 @@ module View = {
       let icon = () =>
         <FontIcon
           icon={iconFor(notification)}
-          fontSize=16.
+          fontSize=12.
           color={colorFor(notification, ~theme)}
         />;
 

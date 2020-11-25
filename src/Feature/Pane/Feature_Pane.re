@@ -609,12 +609,13 @@ module View = {
         ~iconTheme,
         ~languageInfo,
         ~uiFont,
-        ~notificationDispatch,
         ~locationsList,
         ~locationsDispatch: Component_VimTree.msg => unit,
         ~diagnosticDispatch: Component_VimTree.msg => unit,
         ~diagnosticsList: Component_VimTree.model(string, LocationListItem.t),
-        ~notifications: Feature_Notification.model,
+        ~notificationsList:
+           Component_VimList.model(Feature_Notification.notification),
+        ~notificationsDispatch: Component_VimList.msg => unit,
         ~workingDirectory,
         (),
       ) =>
@@ -643,11 +644,12 @@ module View = {
         dispatch=diagnosticDispatch
       />
     | Notifications =>
-      <Feature_Notification.View.List
-        model=notifications
+      <NotificationsPaneView
+        isFocused
+        notificationsList
         theme
-        font=uiFont
-        dispatch=notificationDispatch
+        uiFont
+        dispatch=notificationsDispatch
       />
     };
 
@@ -675,7 +677,6 @@ module View = {
                   ~iconTheme,
                   ~languageInfo,
                   ~uiFont,
-                  ~notifications: Feature_Notification.model,
                   ~dispatch: msg => unit,
                   ~notificationDispatch: Feature_Notification.msg => unit,
                   ~pane: model,
@@ -757,13 +758,13 @@ module View = {
           languageInfo
           diagnosticsList={pane.diagnosticsView}
           locationsList={pane.locationsView}
+          notificationsList={pane.notificationsView}
           selected={selected(pane)}
           theme
           uiFont
-          notifications
-          notificationDispatch
           diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
           locationsDispatch={msg => dispatch(LocationsList(msg))}
+          notificationsDispatch={msg => dispatch(NotificationsList(msg))}
           workingDirectory
         />
       </View>

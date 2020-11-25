@@ -69,6 +69,7 @@ let setLocations:
     model
   ) =>
   model;
+let setNotifications: (Feature_Notification.model, model) => model;
 
 module View: {
   let make:
@@ -80,7 +81,6 @@ module View: {
       ~iconTheme: Oni_Core.IconTheme.t,
       ~languageInfo: Exthost.LanguageInfo.t,
       ~uiFont: Oni_Core.UiFont.t,
-      ~notifications: Feature_Notification.model,
       ~dispatch: msg => unit,
       ~notificationDispatch: Feature_Notification.msg => unit,
       ~pane: model,
