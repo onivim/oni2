@@ -955,7 +955,7 @@ module StatusBar = {
   let background =
     define(
       "statusBar.background",
-      {dark: hex("#007ACC"), light: hex("#007ACC"), hc: unspecified},
+      {dark: hex("#000000AA"), light: hex("#FFFFFFAA"), hc: unspecified},
     );
   let foreground = define("statusBar.foreground", all(hex("#FFF")));
 
