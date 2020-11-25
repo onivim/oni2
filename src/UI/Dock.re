@@ -165,20 +165,19 @@ let onExtensionsClick = _ => {
 };
 
 let make =
-              (
-                ~key: Brisk_reconciler.Key.t=?,
-                ~theme: ColorTheme.Colors.t,
-                ~sideBar: Feature_SideBar.model,
-                ~extensions: Feature_Extensions.model,
-                ~font: UiFont.t,
-                (),
-              ) => {
+    (
+      ~theme: ColorTheme.Colors.t,
+      ~sideBar: Feature_SideBar.model,
+      ~extensions: Feature_Extensions.model,
+      ~font: UiFont.t,
+      (),
+    ) => {
   let isSidebarVisible = it => Feature_SideBar.isVisible(it, sideBar);
 
   let extensionNotification =
     Feature_Extensions.isBusy(extensions) ? Some(InProgress) : None;
 
-  <View ?key style={Styles.container(~theme)}>
+  <View style={Styles.container(~theme)}>
     <item
       font
       onClick=onExplorerClick
