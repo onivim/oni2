@@ -435,6 +435,12 @@ let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
 };
 
+let _onClear = (target: Clear.target, count: int) => {
+  queue(() =>
+    Event.dispatch(Effect.Clear(Clear.{target, count}), Listeners.effect)
+  );
+};
+
 let _onTabPage = (msg: TabPage.effect) => {
   queue(() => Event.dispatch(Effect.TabPage(msg), Listeners.effect));
 };
@@ -531,6 +537,7 @@ let init = () => {
   Callback.register("lv_onBufferChanged", _onBufferChanged);
   Callback.register("lv_onAutocommand", _onAutocommand);
   Callback.register("lv_onAutoIndent", _onAutoIndent);
+  Callback.register("lv_onClear", _onClear);
   Callback.register("lv_getColorSchemesCallback", _colorSchemesGet);
   Callback.register("lv_onColorSchemeChanged", _onColorSchemeChanged);
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);

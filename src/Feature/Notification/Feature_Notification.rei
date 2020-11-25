@@ -35,6 +35,8 @@ let statusBarForeground:
 [@deriving show]
 type msg;
 
+module Msg: {let clear: int => msg;};
+
 let update:
   (
     ~theme: Oni_Core.ColorTheme.Colors.t,

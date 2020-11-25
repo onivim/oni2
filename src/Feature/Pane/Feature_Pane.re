@@ -33,6 +33,7 @@ type msg =
   | VimWindowNav(Component_VimWindows.msg)
   | DiagnosticsList(Component_VimTree.msg)
   | LocationsList(Component_VimTree.msg)
+  | NotificationsList(Component_VimList.msg)
   | LocationFileLoaded({
       filePath: string,
       lines: array(string),
@@ -77,6 +78,8 @@ type model = {
   height: int,
   resizeDelta: int,
   vimWindowNavigation: Component_VimWindows.model,
+  notificationsView:
+    Component_VimList.model(Feature_Notification.notification),
   diagnosticsView:
     Component_VimTree.model(string, Oni_Components.LocationListItem.t),
   locationNodes:
@@ -239,6 +242,20 @@ let diagnosticToLocList =
   };
 };
 
+let setNotifications = (notifications, model) => {
+  let searchText = (notification: Feature_Notification.notification) => {
+    notification.message
+  };
+  let notificationsArray = notifications
+  |> Feature_Notification.all
+  |> Array.of_list;
+
+  let notificationsView' = 
+  model.notificationsView
+  |> Component_VimList.set(~searchText, notificationsArray);
+  {...model, notificationsView: notificationsView'}
+};
+
 let setDiagnostics = (diagnostics, model) => {
   let diagLocList =
     diagnostics
@@ -343,7 +360,13 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
 
   | KeyPressed(key) =>
     switch (model.selected) {
-    | Notifications => (model, Nothing)
+    | Notifications => (
+      {
+        ...model,
+        notificationsView:
+          Component_VimList.keyPress(key, model.notificationsView),
+      }, Nothing)
+
     | Diagnostics => (
         {
           ...model,
@@ -405,6 +428,17 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
       Nothing,
     )
 
+  | NotificationsList(listMsg) =>
+    let (notificationsView, outmsg) =
+      Component_VimList.update(listMsg, model.notificationsView);
+
+    let eff = switch (outmsg) {
+    | Component_VimList.Nothing => Nothing
+    | Component_VimList.Selected(_) => Nothing
+    };
+
+    ({...model, notificationsView}, eff)
+
   | DiagnosticsList(listMsg) =>
     let (diagnosticsView, outmsg) =
       Component_VimTree.update(listMsg, model.diagnosticsView);
@@ -433,6 +467,7 @@ let initial = {
 
   locationNodes: [],
   locationsView: Component_VimTree.create(~rowHeight=20),
+  notificationsView: Component_VimList.create(~rowHeight=20),
 };
 
 let selected = ({selected, _}) => selected;
@@ -781,8 +816,13 @@ module Contributions = {
       )
       |> List.map(Oni_Core.Command.map(msg => LocationsList(msg)));
 
+    let notificationsCommands =
+    (isFocused && model.selected == Notifications
+    ? Component_VimList.Contributions.commands : [])
+    |> List.map(Oni_Core.Command.map(msg => NotificationsList(msg)));
+
     isFocused
-      ? common @ vimWindowCommands @ diagnosticsCommands @ locationsCommands
+      ? common @ vimWindowCommands @ diagnosticsCommands @ locationsCommands @ notificationsCommands
       : common;
   };
 
@@ -805,7 +845,12 @@ module Contributions = {
         ? Component_VimTree.Contributions.contextKeys(model.locationsView)
         : empty;
 
-    [vimNavKeys, diagnosticsKeys, locationsKeys] |> unionMany;
+      let notificationsKeys =
+        isFocused && model.selected == Notifications
+        ? Component_VimList.Contributions.contextKeys(model.notificationsView)
+        : empty;
+
+    [vimNavKeys, diagnosticsKeys, locationsKeys, notificationsKeys] |> unionMany;
   };
 
   let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];

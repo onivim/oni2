@@ -221,6 +221,7 @@ type msg =
   | Created(internal)
   | Dismissed({id: int})
   | Expire({id: int})
+  | Clear({count: int})
   | AnimateYOffset({
       id: int,
       msg: [@opaque] Component_Animation.msg,
@@ -228,10 +229,23 @@ type msg =
   | AnimateBackground([@opaque] Component_Animation.ColorTransition.msg)
   | AnimateForeground([@opaque] Component_Animation.ColorTransition.msg);
 
+module Msg = {
+  let clear = count => Clear({count: count});
+};
+
 let update = (~theme, ~config, model, msg) => {
   let animationsEnabled =
     Feature_Configuration.GlobalConfiguration.animation.get(config);
   switch (msg) {
+  | Clear({count}) =>
+    let all =
+      if (count == 0) {
+        [];
+      } else {
+        Utility.ListEx.firstk(count, model.all);
+      };
+    {...model, all, activeNotifications: IntSet.empty}
+    |> updateColorTransition(~config, ~theme);
   | Created(item) =>
     let yOffsetAnimation =
       animationsEnabled
