@@ -8,6 +8,7 @@ module AutoIndent = AutoIndent;
 module Buffer = Buffer;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
+module Clear = Clear;
 module Clipboard = Clipboard;
 module ColorScheme = ColorScheme;
 module CommandLine = CommandLine;

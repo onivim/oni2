@@ -29,6 +29,7 @@ module Msg: {
   let keyPressed: string => msg;
   let resizeHandleDragged: int => msg;
   let resizeCommitted: msg;
+  let toggleMessages: msg;
 };
 
 type model;

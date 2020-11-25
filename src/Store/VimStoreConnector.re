@@ -100,6 +100,9 @@ let start =
     | Vim.Goto.Outline =>
       dispatch(Actions.SideBar(Feature_SideBar.(Command(GotoOutline))))
 
+    | Vim.Goto.Messages =>
+      dispatch(Actions.Pane(Feature_Pane.Msg.toggleMessages))
+
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
       Log.info("Goto definition requested");

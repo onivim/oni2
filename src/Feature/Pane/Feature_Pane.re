@@ -19,7 +19,8 @@ module Constants = {
 
 [@deriving show({with_path: false})]
 type command =
-  | ToggleProblems;
+  | ToggleProblems
+  | ToggleMessages;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -41,6 +42,8 @@ module Msg = {
   let keyPressed = key => KeyPressed(key);
   let resizeHandleDragged = v => ResizeHandleDragged(v);
   let resizeCommitted = ResizeCommitted;
+
+  let toggleMessages = Command(ToggleMessages);
 };
 
 module Effects = {
@@ -314,6 +317,15 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
       (close(model), ReleaseFocus);
     } else {
       (show(~pane=Diagnostics, model), Nothing);
+    }
+
+  | Command(ToggleMessages) =>
+    if (!model.isOpen) {
+      (show(~pane=Notifications, model), GrabFocus);
+    } else if (model.selected == Notifications) {
+      (close(model), ReleaseFocus);
+    } else {
+      (show(~pane=Notifications, model), Nothing);
     }
 
   | ResizeHandleDragged(delta) => (
