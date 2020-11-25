@@ -112,6 +112,7 @@ To create a release build, run:
 
 - `esy '@release' run -f --checkhealth`
 - `esy '@release' install`
+- `esy '@release' run --help`
 - `esy '@release' create`
 
 This will create a `_esy/release` folder at the root with the application bundle inside that folder there will be folders for built binaries, in `_esy/release/install/bin` the `Oni2` binary resides along `Oni2_editor`.
@@ -119,6 +120,10 @@ This will create a `_esy/release` folder at the root with the application bundle
 Mind that these are actually symbolic links to `oni2/_esy/release/store/b/oni2-<hashvalue>/install/default/bin/Oni2`, the same is true for the `Oni2_editor` binary.
 
 ### Windows
+
+To create an installation package for Windows, run the following PowerShell script:
+
+- `./scripts/windows/publish.ps1`
 
 ### OSX
 
