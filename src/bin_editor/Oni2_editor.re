@@ -16,6 +16,7 @@ module Store = Oni_Store;
 module ExtM = Service_Extensions.Management;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
+module SuperLog = Oni_Core.SuperLog;
 
 module LwtEx = Core.Utility.LwtEx;
 module OptionEx = Core.Utility.OptionEx;
@@ -73,6 +74,9 @@ switch (eff) {
     Core.ShellUtility.fixOSXPath();
   };
 
+  Oni_Core.SuperLog.start();
+  Oni_Core.SuperLog.write("Starting log...");
+
   let initWorkspace = () => {
     let maybePath =
       switch (Oni_CLI.(cliOptions.folder)) {
@@ -80,15 +84,29 @@ switch (eff) {
       | None => Store.Persistence.Global.workspace()
       };
 
+    let couldChangeDirectory = ref(false);
     maybePath
     |> Option.iter(path => {
          Log.info("Startup: Changing folder to: " ++ path);
-         try(Sys.chdir(path)) {
-         | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
+
+         switch (Luv.File.Sync.opendir(path)) {
+         | Ok(_) =>
+           Oni_Core.SuperLog.write("Luv opendir OK");
+           switch (Luv.Path.chdir(path)) {
+           | Ok () =>
+             Oni_Core.SuperLog.write("Luv chdir OK");
+             couldChangeDirectory := true;
+           | Error(_) => Oni_Core.SuperLog.write("Luv chdir ERROR")
+           };
+         | Error(_) => Oni_Core.SuperLog.write("Luv opendir ERROR")
          };
        });
 
-    maybePath;
+    if (couldChangeDirectory^) {
+      maybePath;
+    } else {
+      None;
+    };
   };
 
   // Fix for https://github.com/onivim/oni2/issues/2229
@@ -198,9 +216,13 @@ switch (eff) {
     Oni2_KeyboardLayout.init();
     Oni2_Sparkle.init();
 
+    let initialWorkingDirectory = Sys.getcwd();
+    Oni_Core.SuperLog.write(
+      "initialWorkingDirectory: " ++ initialWorkingDirectory,
+    );
     let maybeWorkspace = initWorkspace();
     let workingDirectory =
-      maybeWorkspace |> Option.value(~default=Sys.getcwd());
+      maybeWorkspace |> Option.value(~default=initialWorkingDirectory);
 
     let window =
       createWindow(
