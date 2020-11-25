@@ -80,15 +80,37 @@ switch (eff) {
       | None => Store.Persistence.Global.workspace()
       };
 
+    let couldChangeDirectory = ref(false);
     maybePath
     |> Option.iter(path => {
-         Log.info("Startup: Changing folder to: " ++ path);
-         try(Sys.chdir(path)) {
-         | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
+         Log.infof(m => m("Startup: Trying to change folder to: %s", path));
+
+         let chdirResult = {
+           open Base.Result.Let_syntax;
+           // First, check if we have permission to read the directory.
+           // In some cases - like #2742 - the directory might not be valid.
+           let%bind _: Luv.File.Dir.t = Luv.File.Sync.opendir(path);
+           Log.info(" - Have read permission");
+           let%bind () = Luv.Path.chdir(path);
+           Log.info("- Ran chdir");
+           Ok();
          };
+
+         chdirResult
+         |> Result.iter(() => {
+              couldChangeDirectory := true;
+              Log.infof(m =>
+                m("Successfully changed working directory to: %s", path)
+              );
+            });
        });
 
-    maybePath;
+    // The directory that was persisted is a valid workspace, so we can use it
+    if (couldChangeDirectory^) {
+      maybePath;
+    } else {
+      None;
+    };
   };
 
   // Fix for https://github.com/onivim/oni2/issues/2229
@@ -198,9 +220,12 @@ switch (eff) {
     Oni2_KeyboardLayout.init();
     Oni2_Sparkle.init();
 
+    // Grab initial working directory prior to trying to set it -
+    // in some cases, a directory that does not have permissions may be persisted (ie #2742)
+    let initialWorkingDirectory = Sys.getcwd();
     let maybeWorkspace = initWorkspace();
     let workingDirectory =
-      maybeWorkspace |> Option.value(~default=Sys.getcwd());
+      maybeWorkspace |> Option.value(~default=initialWorkingDirectory);
 
     let window =
       createWindow(

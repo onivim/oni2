@@ -105,7 +105,7 @@ let getMediumFriendlyName =
        | FilePath(fp) =>
          switch (workingDirectory) {
          | Some(base) => Path.toRelative(~base, fp)
-         | _ => Sys.getcwd()
+         | None => fp
          }
        }
      );
