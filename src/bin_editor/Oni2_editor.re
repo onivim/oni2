@@ -93,16 +93,17 @@ switch (eff) {
            Log.info(" - Have read permission");
            let%bind () = Luv.Path.chdir(path);
            Log.info("- Ran chdir");
-           Ok(());
+           Ok();
          };
 
          chdirResult
          |> Result.iter(() => {
-         couldChangeDirectory := true;
-         Log.infof(m => m("Successfully changed working directory to: %s", path));
-         });
+              couldChangeDirectory := true;
+              Log.infof(m =>
+                m("Successfully changed working directory to: %s", path)
+              );
+            });
        });
-
 
     // The directory that was persisted is a valid workspace, so we can use it
     if (couldChangeDirectory^) {
@@ -219,7 +220,7 @@ switch (eff) {
     Oni2_KeyboardLayout.init();
     Oni2_Sparkle.init();
 
-    // Grab initial working directory prior to trying to set it - 
+    // Grab initial working directory prior to trying to set it -
     // in some cases, a directory that does not have permissions may be persisted (ie #2742)
     let initialWorkingDirectory = Sys.getcwd();
     let maybeWorkspace = initWorkspace();
