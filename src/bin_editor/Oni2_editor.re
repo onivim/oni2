@@ -16,7 +16,6 @@ module Store = Oni_Store;
 module ExtM = Service_Extensions.Management;
 module Log = (val Core.Log.withNamespace("Oni2_editor"));
 module ReveryLog = (val Core.Log.withNamespace("Revery"));
-module SuperLog = Oni_Core.SuperLog;
 
 module LwtEx = Core.Utility.LwtEx;
 module OptionEx = Core.Utility.OptionEx;
@@ -74,9 +73,6 @@ switch (eff) {
     Core.ShellUtility.fixOSXPath();
   };
 
-  Oni_Core.SuperLog.start();
-  Oni_Core.SuperLog.write("Starting log...");
-
   let initWorkspace = () => {
     let maybePath =
       switch (Oni_CLI.(cliOptions.folder)) {
@@ -87,21 +83,28 @@ switch (eff) {
     let couldChangeDirectory = ref(false);
     maybePath
     |> Option.iter(path => {
-         Log.info("Startup: Changing folder to: " ++ path);
+         Log.infof(m => m("Startup: Trying to change folder to: %s", path));
 
-         switch (Luv.File.Sync.opendir(path)) {
-         | Ok(_) =>
-           Oni_Core.SuperLog.write("Luv opendir OK");
-           switch (Luv.Path.chdir(path)) {
-           | Ok () =>
-             Oni_Core.SuperLog.write("Luv chdir OK");
-             couldChangeDirectory := true;
-           | Error(_) => Oni_Core.SuperLog.write("Luv chdir ERROR")
-           };
-         | Error(_) => Oni_Core.SuperLog.write("Luv opendir ERROR")
+         let chdirResult = {
+           open Base.Result.Let_syntax;
+           // First, check if we have permission to read the directory.
+           // In some cases - like #2742 - the directory might not be valid.
+           let%bind _: Luv.File.Dir.t = Luv.File.Sync.opendir(path);
+           Log.info(" - Have read permission");
+           let%bind () = Luv.Path.chdir(path);
+           Log.info("- Ran chdir");
+           Ok(());
          };
+
+         chdirResult
+         |> Result.iter(() => {
+         couldChangeDirectory := true;
+         Log.infof(m => m("Successfully changed working directory to: %s", path));
+         });
        });
 
+
+    // The directory that was persisted is a valid workspace, so we can use it
     if (couldChangeDirectory^) {
       maybePath;
     } else {
@@ -216,10 +219,9 @@ switch (eff) {
     Oni2_KeyboardLayout.init();
     Oni2_Sparkle.init();
 
+    // Grab initial working directory prior to trying to set it - 
+    // in some cases, a directory that does not have permissions may be persisted (ie #2742)
     let initialWorkingDirectory = Sys.getcwd();
-    Oni_Core.SuperLog.write(
-      "initialWorkingDirectory: " ++ initialWorkingDirectory,
-    );
     let maybeWorkspace = initWorkspace();
     let workingDirectory =
       maybeWorkspace |> Option.value(~default=initialWorkingDirectory);
