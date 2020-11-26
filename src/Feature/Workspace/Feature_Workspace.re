@@ -115,7 +115,10 @@ module Commands = {
     );
 
   let all = model =>
-    model.openedFolder == None ? [openFolder] : [closeFolder];
+    model.openedFolder == None
+      ? [openFolder]
+      // Always show open folder, so the user can switch folders from command palette
+      : [openFolder, closeFolder];
 };
 
 module Contributions = {
