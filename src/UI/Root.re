@@ -199,7 +199,6 @@ let make = (~dispatch, ~state: State.t, ()) => {
         theme
         uiFont
         dispatch={msg => dispatch(Actions.Pane(msg))}
-        notificationDispatch={msg => dispatch(Actions.Notification(msg))}
         pane={state.pane}
         workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
       />

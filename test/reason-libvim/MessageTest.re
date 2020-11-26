@@ -5,7 +5,7 @@ let reset = () => Helpers.resetBuffer("test/testfile.txt");
 let input = s => ignore(Vim.input(s));
 
 describe("Messages", ({describe, test, _}) => {
-  describe("ex cmds", ({describe, test, _}) => {
+  describe("ex cmds", ({test, _}) => {
     test(":messages produces Goto Messages effect", ({expect, _}) => {
       let _ = reset();
 

@@ -9,7 +9,6 @@
 open Oni_Core;
 
 open Revery.UI;
-open Oni_Components;
 
 module Colors = Feature_Theme.Colors;
 
@@ -59,7 +58,7 @@ let make =
         model=notificationsList
         dispatch
         render={(
-          ~availableWidth,
+          ~availableWidth as _,
           ~index as _,
           ~hovered as _,
           ~selected as _,

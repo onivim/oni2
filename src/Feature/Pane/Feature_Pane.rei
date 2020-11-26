@@ -82,7 +82,6 @@ module View: {
       ~languageInfo: Exthost.LanguageInfo.t,
       ~uiFont: Oni_Core.UiFont.t,
       ~dispatch: msg => unit,
-      ~notificationDispatch: Feature_Notification.msg => unit,
       ~pane: model,
       ~workingDirectory: string,
       unit

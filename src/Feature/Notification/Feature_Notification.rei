@@ -110,18 +110,6 @@ module View: {
       ) =>
       React.element(React.node);
   };
-
-  module List: {
-    let make:
-      (
-        ~model: model,
-        ~theme: ColorTheme.Colors.t,
-        ~font: UiFont.t,
-        ~dispatch: msg => unit,
-        unit
-      ) =>
-      React.element(React.node);
-  };
 };
 
 // CONTRIBUTIONS

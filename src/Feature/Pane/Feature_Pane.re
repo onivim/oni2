@@ -678,7 +678,6 @@ module View = {
                   ~languageInfo,
                   ~uiFont,
                   ~dispatch: msg => unit,
-                  ~notificationDispatch: Feature_Notification.msg => unit,
                   ~pane: model,
                   ~workingDirectory: string,
                   (),

@@ -538,56 +538,6 @@ module View = {
       </View>;
     };
   };
-
-  module List = {
-    module Styles = {
-      open Style;
-
-      let pane = [flexGrow(1), flexDirection(`Row)];
-
-      let noResultsContainer = [
-        flexGrow(1),
-        alignItems(`Center),
-        justifyContent(`Center),
-      ];
-
-      let container = [
-        position(`Absolute),
-        top(0),
-        bottom(0),
-        left(0),
-        right(0),
-      ];
-
-      let title = (~theme) => [
-        color(Colors.PanelTitle.activeForeground.from(theme)),
-        margin(8),
-      ];
-    };
-
-    let make = (~model, ~theme, ~font: UiFont.t, ~dispatch, ()) => {
-      let items = [];
-      //model.all |> List.map(item => <Item item theme font dispatch />);
-
-      let innerElement =
-        if (items == []) {
-          <View style=Styles.noResultsContainer>
-            <Text
-              style={Styles.title(~theme)}
-              text="No notifications, yet!"
-              fontFamily={font.family}
-              fontSize={font.size}
-            />
-          </View>;
-        } else {
-          <ScrollView style=Styles.container>
-            {items |> React.listToElement}
-          </ScrollView>;
-        };
-
-      <View style=Styles.pane> innerElement </View>;
-    };
-  };
 };
 
 // CONTRIBUTIONS
