@@ -18,12 +18,11 @@ type notification =
 module Styles = {
   open Style;
 
-  let container = (~theme, ~offsetX) => [
+  let container = (~theme) => [
     top(0),
     bottom(0),
     backgroundColor(Colors.background.from(theme)),
     alignItems(`Center),
-    transform(Transform.[TranslateX(offsetX)]),
   ];
 
   let item = (~isHovered, ~isActive, ~theme, ~sideBar) => {
@@ -165,31 +164,20 @@ let onExtensionsClick = _ => {
   GlobalContext.current().dispatch(Actions.SideBar(ExtensionsClicked));
 };
 
-let animation =
-  Revery.UI.Animation.(
-    animate(Revery.Time.milliseconds(150))
-    |> ease(Easing.ease)
-    |> tween(-50.0, 0.)
-    |> delay(Revery.Time.milliseconds(75))
-  );
-
-let%component make =
-              (
-                ~theme: ColorTheme.Colors.t,
-                ~sideBar: Feature_SideBar.model,
-                ~extensions: Feature_Extensions.model,
-                ~font: UiFont.t,
-                (),
-              ) => {
-  let%hook (offsetX, _animationState, _reset) =
-    Hooks.animation(~name="Dock Notification Animation", animation);
-
+let make =
+    (
+      ~theme: ColorTheme.Colors.t,
+      ~sideBar: Feature_SideBar.model,
+      ~extensions: Feature_Extensions.model,
+      ~font: UiFont.t,
+      (),
+    ) => {
   let isSidebarVisible = it => Feature_SideBar.isVisible(it, sideBar);
 
   let extensionNotification =
     Feature_Extensions.isBusy(extensions) ? Some(InProgress) : None;
 
-  <View style={Styles.container(~theme, ~offsetX)}>
+  <View style={Styles.container(~theme)}>
     <item
       font
       onClick=onExplorerClick
