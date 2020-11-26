@@ -584,6 +584,12 @@ let update =
         Isolinear.Effect.none,
       )
 
+    | NotificationDismissed(notification) => (
+        state,
+        Feature_Notification.Effects.dismiss(notification)
+        |> Isolinear.Effect.map(msg => Notification(msg)),
+      )
+
     | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
     };
 

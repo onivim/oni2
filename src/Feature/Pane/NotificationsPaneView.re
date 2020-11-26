@@ -37,6 +37,7 @@ let make =
       ~theme,
       ~uiFont: UiFont.t,
       ~dispatch: Component_VimList.msg => unit,
+      ~onDismiss: Feature_Notification.notification => unit,
       (),
     ) => {
   let innerElement =
@@ -68,7 +69,7 @@ let make =
             notification=item
             font=uiFont
             theme
-            onDismiss={() => prerr_endline("dismiss")}
+            onDismiss={() => onDismiss(item)}
           />
         }
       />;

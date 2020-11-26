@@ -23,6 +23,7 @@ type outmsg =
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
   | ReleaseFocus
+  | NotificationDismissed(Feature_Notification.notification)
   | Effect(Isolinear.Effect.t(msg));
 
 module Msg: {

@@ -34,6 +34,7 @@ type msg =
   | DiagnosticsList(Component_VimTree.msg)
   | LocationsList(Component_VimTree.msg)
   | NotificationsList(Component_VimList.msg)
+  | DismissNotificationClicked(Feature_Notification.notification)
   | LocationFileLoaded({
       filePath: string,
       lines: array(string),
@@ -69,6 +70,7 @@ type outmsg =
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
   | ReleaseFocus
+  | NotificationDismissed(Feature_Notification.notification)
   | Effect(Isolinear.Effect.t(msg));
 
 type model = {
@@ -323,6 +325,11 @@ module Focus = {
 let update = (~buffers, ~font, ~languageInfo, msg, model) =>
   switch (msg) {
   | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
+
+  | DismissNotificationClicked(notification) => (
+      model,
+      NotificationDismissed(notification),
+    )
 
   | TabClicked(pane) => ({...model, selected: pane}, Nothing)
 
@@ -609,6 +616,7 @@ module View = {
         ~iconTheme,
         ~languageInfo,
         ~uiFont,
+        ~dispatch,
         ~locationsList,
         ~locationsDispatch: Component_VimTree.msg => unit,
         ~diagnosticDispatch: Component_VimTree.msg => unit,
@@ -650,6 +658,9 @@ module View = {
         theme
         uiFont
         dispatch=notificationsDispatch
+        onDismiss={notification =>
+          dispatch(DismissNotificationClicked(notification))
+        }
       />
     };
 
@@ -760,6 +771,7 @@ module View = {
           notificationsList={pane.notificationsView}
           selected={selected(pane)}
           theme
+          dispatch
           uiFont
           diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
           locationsDispatch={msg => dispatch(LocationsList(msg))}
