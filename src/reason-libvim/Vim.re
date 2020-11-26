@@ -432,13 +432,11 @@ let _onCursorMoveScreenPosition =
 };
 
 let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
-  queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
+  queueEffect(Effect.Goto(gotoType));
 };
 
 let _onClear = (target: Clear.target, count: int) => {
-  queue(() =>
-    Event.dispatch(Effect.Clear(Clear.{target, count}), Listeners.effect)
-  );
+  queueEffect(Effect.Clear(Clear.{target, count}));
 };
 
 let _onTabPage = (msg: TabPage.effect) => {
