@@ -131,7 +131,7 @@ Once you have a release build created, you can install Oni2 in your `Application
 
 Run the following from the `oni2` directory:
 
-- `cp -R _release/Onivim2.app $USER/Applications`
+- `cp -R _release/Onivim2.app /Applications`
 
 If you want to open the editor from terminal with an `oni2` command, you can add Oni2 to the system PATH using a command
 item within the app:
