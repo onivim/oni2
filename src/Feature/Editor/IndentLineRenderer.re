@@ -193,7 +193,7 @@ let render =
     };
 
     let (x, topY) = bufferPositionToPixel(topLine^);
-    let (_, bottomY) = bufferPositionToPixel(bottomLine^);
+    let (_, bottomY) = bufferPositionToPixel(bottomLine^ - 1);
 
     if (cursorLineIndentLevel^ >= 1) {
       Skia.Paint.setColor(
@@ -205,7 +205,7 @@ let render =
           x +. indentationWidthInPixels *. float(cursorLineIndentLevel^ - 1),
         ~top=topY +. lineHeight,
         ~width=1.,
-        ~height=bottomY -. topY -. lineHeight,
+        ~height=bottomY -. topY,
         ~paint,
         context.canvasContext,
       );
