@@ -196,8 +196,6 @@ let runWith = (~context: Context.t, f) => {
   BufferInternal.checkCurrentBufferForUpdate();
 
   if (newMode != prevMode) {
-    Event.dispatch(Effect.ModeChanged(newMode), Listeners.effect);
-
     if (newMode == CommandLine) {
       Event.dispatch(
         CommandLineInternal.getState(),
@@ -569,7 +567,6 @@ let init = () => {
 
   Native.vimInit();
 
-  Event.dispatch(Effect.ModeChanged(Mode.current()), Listeners.effect);
   BufferInternal.checkCurrentBufferForUpdate();
 };
 
