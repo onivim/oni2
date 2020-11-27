@@ -158,10 +158,6 @@ let render =
     Hashtbl.find_opt(GlobalMutable.cachedIndentLevel, cursorLine)
     |> Option.value(~default=0);
 
-  prerr_endline(
-    "cursor line indent level: " ++ string_of_int(cursorLineIndentLevel),
-  );
-
   let maybeActiveIndentRange =
     if (showActive && cursorLineIndentLevel >= 1) {
       getActiveIndentLevelAndRange(
