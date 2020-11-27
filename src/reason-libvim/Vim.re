@@ -8,6 +8,7 @@ module AutoIndent = AutoIndent;
 module Buffer = Buffer;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
+module Clear = Clear;
 module Clipboard = Clipboard;
 module ColorScheme = ColorScheme;
 module CommandLine = CommandLine;
@@ -431,7 +432,11 @@ let _onCursorMoveScreenPosition =
 };
 
 let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
-  queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
+  queueEffect(Effect.Goto(gotoType));
+};
+
+let _onClear = (target: Clear.target, count: int) => {
+  queueEffect(Effect.Clear(Clear.{target, count}));
 };
 
 let _onTabPage = (msg: TabPage.effect) => {
@@ -530,6 +535,7 @@ let init = () => {
   Callback.register("lv_onBufferChanged", _onBufferChanged);
   Callback.register("lv_onAutocommand", _onAutocommand);
   Callback.register("lv_onAutoIndent", _onAutoIndent);
+  Callback.register("lv_onClear", _onClear);
   Callback.register("lv_getColorSchemesCallback", _colorSchemesGet);
   Callback.register("lv_onColorSchemeChanged", _onColorSchemeChanged);
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);

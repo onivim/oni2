@@ -18,4 +18,5 @@ type t =
   | Unmap({
       mode: Mapping.mode,
       keys: option(string),
-    });
+    })
+  | Clear(Clear.t);

@@ -100,6 +100,9 @@ let start =
     | Vim.Goto.Outline =>
       dispatch(Actions.SideBar(Feature_SideBar.(Command(GotoOutline))))
 
+    | Vim.Goto.Messages =>
+      dispatch(Actions.Pane(Feature_Pane.Msg.toggleMessages))
+
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
       Log.info("Goto definition requested");
@@ -144,6 +147,17 @@ let start =
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
 
+      | Clear({target, count}) =>
+        Vim.Clear.(
+          {
+            switch (target) {
+            | Messages =>
+              dispatch(
+                Actions.Notification(Feature_Notification.Msg.clear(count)),
+              )
+            };
+          }
+        )
       | Map(mapping) =>
         dispatch(Actions.Input(Feature_Input.Msg.vimMap(mapping)))
       | Unmap({mode, keys}) =>

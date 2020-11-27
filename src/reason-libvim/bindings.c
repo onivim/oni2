@@ -270,6 +270,9 @@ int onGoto(gotoRequest_T gotoInfo) {
   case OUTLINE:
     target = 3;
     break;
+  case MESSAGES:
+    target = 4;
+    break;
   default:
     target = 0;
   }
@@ -277,6 +280,28 @@ int onGoto(gotoRequest_T gotoInfo) {
   caml_callback3(*lv_onGoto, Val_int(line), Val_int(col), Val_int(target));
 
   return target;
+}
+
+void onClear(clearRequest_T clearRequest) {
+  static const value *lv_onClear = NULL;
+
+  if (lv_onClear == NULL) {
+    lv_onClear = caml_named_value("lv_onClear");
+  }
+
+  int count = clearRequest.count;
+  int target = 0;
+  switch (clearRequest.target) {
+  case CLEAR_MESSAGES:
+    target = 0;
+    break;
+  default:
+    target = 0;
+  }
+
+  caml_callback2(*lv_onClear, Val_int(target), Val_int(count));
+
+  return;
 }
 
 int onTabPage(tabPageRequest_T request) {
@@ -850,6 +875,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetDisplayIntroCallback(&onIntro);
   vimSetDisplayVersionCallback(&onVersion);
   vimSetFormatCallback(&onFormat);
+  vimSetClearCallback(&onClear);
   vimSetGotoCallback(&onGoto);
   vimSetOptionSetCallback(&onSettingChanged);
   vimSetTabPageCallback(&onTabPage);

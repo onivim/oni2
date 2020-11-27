@@ -19,7 +19,8 @@ module Constants = {
 
 [@deriving show({with_path: false})]
 type command =
-  | ToggleProblems;
+  | ToggleProblems
+  | ToggleMessages;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -32,6 +33,8 @@ type msg =
   | VimWindowNav(Component_VimWindows.msg)
   | DiagnosticsList(Component_VimTree.msg)
   | LocationsList(Component_VimTree.msg)
+  | NotificationsList(Component_VimList.msg)
+  | DismissNotificationClicked(Feature_Notification.notification)
   | LocationFileLoaded({
       filePath: string,
       lines: array(string),
@@ -41,6 +44,8 @@ module Msg = {
   let keyPressed = key => KeyPressed(key);
   let resizeHandleDragged = v => ResizeHandleDragged(v);
   let resizeCommitted = ResizeCommitted;
+
+  let toggleMessages = Command(ToggleMessages);
 };
 
 module Effects = {
@@ -65,6 +70,7 @@ type outmsg =
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
   | ReleaseFocus
+  | NotificationDismissed(Feature_Notification.notification)
   | Effect(Isolinear.Effect.t(msg));
 
 type model = {
@@ -74,6 +80,8 @@ type model = {
   height: int,
   resizeDelta: int,
   vimWindowNavigation: Component_VimWindows.model,
+  notificationsView:
+    Component_VimList.model(Feature_Notification.notification),
   diagnosticsView:
     Component_VimTree.model(string, Oni_Components.LocationListItem.t),
   locationNodes:
@@ -236,6 +244,19 @@ let diagnosticToLocList =
   };
 };
 
+let setNotifications = (notifications, model) => {
+  let searchText = (notification: Feature_Notification.notification) => {
+    notification.message;
+  };
+  let notificationsArray =
+    notifications |> Feature_Notification.all |> Array.of_list;
+
+  let notificationsView' =
+    model.notificationsView
+    |> Component_VimList.set(~searchText, notificationsArray);
+  {...model, notificationsView: notificationsView'};
+};
+
 let setDiagnostics = (diagnostics, model) => {
   let diagLocList =
     diagnostics
@@ -305,6 +326,11 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
   switch (msg) {
   | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
 
+  | DismissNotificationClicked(notification) => (
+      model,
+      NotificationDismissed(notification),
+    )
+
   | TabClicked(pane) => ({...model, selected: pane}, Nothing)
 
   | Command(ToggleProblems) =>
@@ -314,6 +340,15 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
       (close(model), ReleaseFocus);
     } else {
       (show(~pane=Diagnostics, model), Nothing);
+    }
+
+  | Command(ToggleMessages) =>
+    if (!model.isOpen) {
+      (show(~pane=Notifications, model), GrabFocus);
+    } else if (model.selected == Notifications) {
+      (close(model), ReleaseFocus);
+    } else {
+      (show(~pane=Notifications, model), Nothing);
     }
 
   | ResizeHandleDragged(delta) => (
@@ -331,7 +366,15 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
 
   | KeyPressed(key) =>
     switch (model.selected) {
-    | Notifications => (model, Nothing)
+    | Notifications => (
+        {
+          ...model,
+          notificationsView:
+            Component_VimList.keyPress(key, model.notificationsView),
+        },
+        Nothing,
+      )
+
     | Diagnostics => (
         {
           ...model,
@@ -393,6 +436,18 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
       Nothing,
     )
 
+  | NotificationsList(listMsg) =>
+    let (notificationsView, outmsg) =
+      Component_VimList.update(listMsg, model.notificationsView);
+
+    let eff =
+      switch (outmsg) {
+      | Component_VimList.Nothing => Nothing
+      | Component_VimList.Selected(_) => Nothing
+      };
+
+    ({...model, notificationsView}, eff);
+
   | DiagnosticsList(listMsg) =>
     let (diagnosticsView, outmsg) =
       Component_VimTree.update(listMsg, model.diagnosticsView);
@@ -421,6 +476,7 @@ let initial = {
 
   locationNodes: [],
   locationsView: Component_VimTree.create(~rowHeight=20),
+  notificationsView: Component_VimList.create(~rowHeight=20),
 };
 
 let selected = ({selected, _}) => selected;
@@ -560,12 +616,14 @@ module View = {
         ~iconTheme,
         ~languageInfo,
         ~uiFont,
-        ~notificationDispatch,
+        ~dispatch,
         ~locationsList,
         ~locationsDispatch: Component_VimTree.msg => unit,
         ~diagnosticDispatch: Component_VimTree.msg => unit,
         ~diagnosticsList: Component_VimTree.model(string, LocationListItem.t),
-        ~notifications: Feature_Notification.model,
+        ~notificationsList:
+           Component_VimList.model(Feature_Notification.notification),
+        ~notificationsDispatch: Component_VimList.msg => unit,
         ~workingDirectory,
         (),
       ) =>
@@ -594,11 +652,15 @@ module View = {
         dispatch=diagnosticDispatch
       />
     | Notifications =>
-      <Feature_Notification.View.List
-        model=notifications
+      <NotificationsPaneView
+        isFocused
+        notificationsList
         theme
-        font=uiFont
-        dispatch=notificationDispatch
+        uiFont
+        dispatch=notificationsDispatch
+        onDismiss={notification =>
+          dispatch(DismissNotificationClicked(notification))
+        }
       />
     };
 
@@ -626,9 +688,7 @@ module View = {
                   ~iconTheme,
                   ~languageInfo,
                   ~uiFont,
-                  ~notifications: Feature_Notification.model,
                   ~dispatch: msg => unit,
-                  ~notificationDispatch: Feature_Notification.msg => unit,
                   ~pane: model,
                   ~workingDirectory: string,
                   (),
@@ -708,13 +768,14 @@ module View = {
           languageInfo
           diagnosticsList={pane.diagnosticsView}
           locationsList={pane.locationsView}
+          notificationsList={pane.notificationsView}
           selected={selected(pane)}
           theme
+          dispatch
           uiFont
-          notifications
-          notificationDispatch
           diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
           locationsDispatch={msg => dispatch(LocationsList(msg))}
+          notificationsDispatch={msg => dispatch(NotificationsList(msg))}
           workingDirectory
         />
       </View>
@@ -769,8 +830,19 @@ module Contributions = {
       )
       |> List.map(Oni_Core.Command.map(msg => LocationsList(msg)));
 
+    let notificationsCommands =
+      (
+        isFocused && model.selected == Notifications
+          ? Component_VimList.Contributions.commands : []
+      )
+      |> List.map(Oni_Core.Command.map(msg => NotificationsList(msg)));
+
     isFocused
-      ? common @ vimWindowCommands @ diagnosticsCommands @ locationsCommands
+      ? common
+        @ vimWindowCommands
+        @ diagnosticsCommands
+        @ locationsCommands
+        @ notificationsCommands
       : common;
   };
 
@@ -793,7 +865,15 @@ module Contributions = {
         ? Component_VimTree.Contributions.contextKeys(model.locationsView)
         : empty;
 
-    [vimNavKeys, diagnosticsKeys, locationsKeys] |> unionMany;
+    let notificationsKeys =
+      isFocused && model.selected == Notifications
+        ? Component_VimList.Contributions.contextKeys(
+            model.notificationsView,
+          )
+        : empty;
+
+    [vimNavKeys, diagnosticsKeys, locationsKeys, notificationsKeys]
+    |> unionMany;
   };
 
   let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];

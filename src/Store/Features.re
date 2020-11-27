@@ -584,6 +584,12 @@ let update =
         Isolinear.Effect.none,
       )
 
+    | NotificationDismissed(notification) => (
+        state,
+        Feature_Notification.Effects.dismiss(notification)
+        |> Isolinear.Effect.map(msg => Notification(msg)),
+      )
+
     | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
     };
 
@@ -1236,7 +1242,8 @@ let update =
     let theme = Feature_Theme.colors(state.colorTheme);
     let model' =
       Feature_Notification.update(~theme, ~config, state.notifications, msg);
-    ({...state, notifications: model'}, Effect.none);
+    let pane' = Feature_Pane.setNotifications(model', state.pane);
+    ({...state, notifications: model', pane: pane'}, Effect.none);
 
   | Modals(msg) =>
     switch (state.modal) {
