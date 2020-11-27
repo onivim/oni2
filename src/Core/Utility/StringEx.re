@@ -18,6 +18,19 @@ let contains = (query, str) => {
   };
 };
 
+let isWhitespaceOnly = str => {
+  let len = String.length(str);
+  let rec loop = idx =>
+    if (idx >= len) {
+      true;
+    } else if (!isSpace(str.[idx])) {
+      false;
+    } else {
+      loop(idx + 1);
+    };
+  loop(0);
+};
+
 let explode = str =>
   str |> String.to_seq |> List.of_seq |> List.map(c => String.make(1, c));
 
