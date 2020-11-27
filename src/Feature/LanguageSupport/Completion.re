@@ -903,7 +903,7 @@ module KeyBindings = {
     condition: triggerSuggestCondition,
   };
   let triggerSuggestControlP = {
-    key: "<C-N>",
+    key: "<C-P>",
     command: Commands.triggerSuggest.id,
     condition: triggerSuggestCondition,
   };
@@ -950,7 +950,7 @@ module KeyBindings = {
   };
 
   let acceptSuggestionShiftEnter = {
-    key: "<S-TAB>",
+    key: "<S-CR>",
     command: Commands.acceptSelected.id,
     condition: suggestWidgetVisible,
   };
