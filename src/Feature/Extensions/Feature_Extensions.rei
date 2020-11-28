@@ -42,6 +42,7 @@ let themesByName: (~filter: string, model) => list(string);
 let isBusy: model => bool;
 let isSearchInProgress: model => bool;
 
+let isInstalled: (~extensionId: string, model) => bool;
 let isInstalling: (~extensionId: string, model) => bool;
 let isUninstalling: (~extensionId: string, model) => bool;
 

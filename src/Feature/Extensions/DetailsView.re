@@ -187,7 +187,11 @@ let make =
 
     let maybeReadmeUrl = selected |> Selected.readme;
     let extensionId = selected |> Selected.identifier;
-    let version = selected |> Selected.version;
+    let version =
+      selected
+      |> Selected.version
+      |> Option.map(Semver.to_string)
+      |> Option.value(~default="0.0.0");
 
     let contents =
       switch (maybeReadmeUrl) {

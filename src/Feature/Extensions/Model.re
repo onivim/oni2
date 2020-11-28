@@ -95,6 +95,7 @@ type msg =
       extensionId: string,
       errorMsg: string,
     })
+  | UpdateExtensionClicked({extensionId: string})
   | SetThemeClicked({extensionId: string})
   | LocalExtensionSelected({extensionInfo: [@opaque] Scanner.ScanResult.t})
   | RemoteExtensionClicked({extensionId: string})
@@ -290,6 +291,28 @@ let isInstalled = (~extensionId, {extensions, _}) => {
        String.equal(ext.manifest |> Manifest.identifier, extensionId)
      )
   != [];
+};
+
+let canUpdate = (~extensionId, ~maybeVersion, {extensions, _}) => {
+  extensions
+  |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
+       String.equal(ext.manifest |> Manifest.identifier, extensionId)
+     )
+  |> (
+    list =>
+      List.nth_opt(list, 0)
+      |> Utility.OptionEx.flatMap(ext => {
+           let manifest = Exthost.Extension.Scanner.ScanResult.(ext.manifest);
+           Utility.OptionEx.map2(
+             (remoteVersion, manifestVersion) => {
+               Semver.greater_than(remoteVersion, manifestVersion)
+             },
+             maybeVersion,
+             Manifest.(manifest.version),
+           );
+         })
+      |> Option.value(~default=false)
+  );
 };
 
 let hasThemes = (~extensionId, model) => {
@@ -653,6 +676,20 @@ let update = (~extHostClient, msg, model) => {
     );
     let eff =
       Service_Extensions.Effects.install(
+        ~extensionsFolder=model.extensionsFolder,
+        ~toMsg,
+        extensionId,
+      );
+    (model |> Internal.addPendingInstall(~extensionId), Effect(eff));
+
+  | UpdateExtensionClicked({extensionId}) =>
+    let toMsg = (
+      fun
+      | Ok(scanResult) => InstallExtensionSuccess({extensionId, scanResult})
+      | Error(msg) => InstallExtensionFailed({extensionId, errorMsg: msg})
+    );
+    let eff =
+      Service_Extensions.Effects.update(
         ~extensionsFolder=model.extensionsFolder,
         ~toMsg,
         extensionId,

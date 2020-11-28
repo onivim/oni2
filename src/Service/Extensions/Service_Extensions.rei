@@ -15,7 +15,7 @@ module Catalog: {
   module VersionInfo: {
     [@deriving show]
     type t = {
-      version: string,
+      version: Semver.t,
       url: string,
     };
   };
@@ -37,7 +37,7 @@ module Catalog: {
       displayName: option(string),
       description: option(string),
       //      categories: list(string),
-      version: string,
+      version: option(Semver.t),
       versions: list(VersionInfo.t),
     };
 
@@ -50,7 +50,7 @@ module Catalog: {
       url: string,
       downloadUrl: string,
       iconUrl: option(string),
-      version: string,
+      version: option(Semver.t),
       name: string,
       namespace: string,
       displayName: option(string),
@@ -119,6 +119,14 @@ module Effects: {
       string
     ) =>
     Isolinear.Effect.t('a);
+
+  let update:
+    (
+      ~extensionsFolder: option(Fp.t(Fp.absolute)),
+      ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'msg,
+      string
+    ) =>
+    Isolinear.Effect.t('msg);
 
   let details:
     (~extensionId: string, ~toMsg: result(Catalog.Details.t, string) => 'a) =>
