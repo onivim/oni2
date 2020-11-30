@@ -180,9 +180,6 @@ let start =
             ),
           ),
         )
-      | ModeChanged(newMode) => {
-          dispatch(Actions.Vim(Feature_Vim.ModeChanged(newMode)));
-        }
       | SettingChanged(setting) =>
         dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
 
@@ -568,15 +565,7 @@ let start =
     });
 
   let updateActiveEditorMode = (mode, effects) => {
-    let editorId =
-      Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
-
-    dispatch(
-      Actions.Editor({
-        scope: EditorScope.Editor(editorId),
-        msg: ModeChanged({mode, effects}),
-      }),
-    );
+    dispatch(Actions.Vim(Feature_Vim.ModeChanged({mode, effects})));
   };
 
   let isVimKey = key => {
@@ -601,14 +590,7 @@ let start =
       if (newContext.bufferId != prevContext.bufferId) {
         dispatch(Actions.OpenBufferById({bufferId: newContext.bufferId}));
       } else {
-        let editorId =
-          Feature_Layout.activeEditor(state.layout) |> Editor.getId;
-        dispatch(
-          Actions.Editor({
-            scope: EditorScope.Editor(editorId),
-            msg: ModeChanged({mode: newContext.mode, effects}),
-          }),
-        );
+        updateActiveEditorMode(newContext.mode, effects);
       };
     });
   };
@@ -618,8 +600,8 @@ let start =
       if (isVimKey(key)) {
         // Set cursors based on current editor
         let state = getState();
-        let editorId =
-          Feature_Layout.activeEditor(state.layout) |> Editor.getId;
+        // let editorId =
+        //   Feature_Layout.activeEditor(state.layout) |> Editor.getId;
 
         let context = Oni_Model.VimContext.current(state);
         let previousBufferId = context.bufferId;
@@ -634,13 +616,7 @@ let start =
           dispatch(Actions.OpenBufferById({bufferId: bufferId}));
         };
 
-        dispatch(
-          Actions.Editor({
-            scope: EditorScope.Editor(editorId),
-            msg: ModeChanged({mode, effects}),
-          }),
-        );
-
+        updateActiveEditorMode(mode, effects);
         Log.debug("handled key: " ++ key);
       }
     );

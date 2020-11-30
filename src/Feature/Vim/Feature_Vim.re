@@ -16,7 +16,10 @@ let recordingMacro = ({recordingMacro, _}) => recordingMacro;
 
 [@deriving show]
 type msg =
-  | ModeChanged([@opaque] Vim.Mode.t)
+  | ModeChanged({
+      mode: [@opaque] Vim.Mode.t,
+      effects: [@opaque] list(Vim.Effect.t),
+    })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
   | SettingChanged(Vim.Setting.t)
@@ -27,11 +30,16 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | SettingsChanged
-  | ModeUpdated(Vim.Mode.t);
+  | ModeDidChange({
+      mode: Vim.Mode.t,
+      effects: list(Vim.Effect.t),
+    });
 
 let update = (msg, model: model) => {
   switch (msg) {
-  | ModeChanged(_mode) => (model, Nothing)
+  | ModeChanged({mode, effects}) =>
+    // TODO: Check submode here
+    (model, ModeDidChange({mode, effects}))
   | Pasted(text) =>
     let eff =
       Service_Vim.Effects.paste(
@@ -39,7 +47,7 @@ let update = (msg, model: model) => {
         text,
       );
     (model, Effect(eff));
-  | PasteCompleted({mode}) => (model, ModeUpdated(mode))
+  | PasteCompleted({mode}) => (model, ModeDidChange({mode, effects: []}))
   | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
       SettingsChanged,
@@ -87,6 +95,18 @@ module CommandLine = {
 
   let%test "meet multiple paths with spaces" = {
     getCompletionMeet("!cp /path\\ 1 /path\\ 2") == Some(13);
+  };
+};
+
+module Effects = {
+  let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
+    let toMsg = mode => ModeChanged({mode, effects: []});
+    Service_Vim.Effects.applyCompletion(
+      ~meetColumn,
+      ~insertText,
+      ~additionalEdits,
+      ~toMsg,
+    );
   };
 };
 
