@@ -354,6 +354,8 @@ let contributions = [
   scrolloff.spec,
   smoothScroll.spec,
   tabSize.spec,
+  wordWrap.spec,
+  wordWrapColumn.spec,
   yankHighlightColor.spec,
   yankHighlightDuration.spec,
   yankHighlightEnabled.spec,
