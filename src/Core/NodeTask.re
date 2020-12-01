@@ -8,15 +8,12 @@ module Log = (val Kernel.Log.withNamespace("Oni2.Core.NodeTask"));
 
 module Internal = {
   let getFilteredEnvironment = () => {
-
     // Filter out some keys that aren't required
     // for running node tasks. Primarily needed for Windows -
     // sometimes the environment can grow too large for node/libuv.
-    let keysToExclude = [
-      "OCAMLPATH",
-      "MAN_PATH",
-      "CAML_LD_LIBRARY_PATH"
-    ] |> Kernel.StringSet.of_list;
+    let keysToExclude =
+      ["OCAMLPATH", "MAN_PATH", "CAML_LD_LIBRARY_PATH"]
+      |> Kernel.StringSet.of_list;
 
     let env =
       Unix.environment()
@@ -27,13 +24,12 @@ module Internal = {
              | [] => acc
              | [_] => acc
              | [key, ...values] =>
-
-                if (!Kernel.StringSet.mem(key, keysToExclude)) {
+               if (!Kernel.StringSet.mem(key, keysToExclude)) {
                  let v = String.concat("=", values);
 
                  [(key, v), ...acc];
                } else {
-                acc
+                 acc;
                }
              }
            },
