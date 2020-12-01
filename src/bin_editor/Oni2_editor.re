@@ -27,6 +27,13 @@ if (cliOptions.needsConsole) {
   Revery.App.initConsole();
 };
 
+let str = "abcd";
+str.[1] = Char.of_int(128);
+str.[2] = Char.of_int(224);
+let oc = open_out(str);
+fprintf(oc, "hi");
+close_out(oc);
+
 switch (eff) {
 | PrintVersion => Cli.printVersion() |> exit
 | InstallExtension(name) => Cli.installExtension(name, cliOptions) |> exit
