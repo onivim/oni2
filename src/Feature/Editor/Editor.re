@@ -421,7 +421,7 @@ let setWrapMode = (~wrapMode, editor) => {
 
 let configure = (~config, editor) => {
   let wrapMode =
-    EditorConfiguration.Experimental.wordWrap.get(config) == `On
+    EditorConfiguration.wordWrap.get(config) == `On
       ? WrapMode.Viewport : WrapMode.NoWrap;
 
   let scrolloff = EditorConfiguration.scrolloff.get(config);
@@ -451,7 +451,7 @@ let create = (~config, ~buffer, ()) => {
   let key = Brisk_reconciler.Key.create();
 
   let wrapMode =
-    EditorConfiguration.Experimental.wordWrap.get(config) == `On
+    EditorConfiguration.wordWrap.get(config) == `On
       ? WrapMode.Viewport : WrapMode.NoWrap;
 
   let wrapState = WrapState.make(~pixelWidth=1000., ~wrapMode, ~buffer);
