@@ -1,5 +1,5 @@
 {
-  "checksum": "6a60469441fd23d4c4d1c96eb95632e2",
+  "checksum": "8d79d6d935adf64a6ac9ccd166cbc350",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -1037,7 +1037,7 @@
         "@opam/ocamlformat@opam:0.15.0@8e036963",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
         "@opam/markup@opam:0.8.2@87975241", "@opam/lwt@opam:4.5.0@542100aa",
-        "@opam/luv@github:bryphe/luv:luv.opam#466693e@d41d8cd9",
+        "@opam/luv@github:bryphe/luv:luv.opam#a4ff084@d41d8cd9",
         "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9",
         "@opam/logs@opam:0.7.0@1d03143e",
         "@opam/fs@github:bryphe/reason-native:fs.opam#5a7a756@d41d8cd9",
@@ -3003,13 +3003,13 @@
         "@opam/dune@opam:2.5.0@e0bac278"
       ]
     },
-    "@opam/luv@github:bryphe/luv:luv.opam#466693e@d41d8cd9": {
-      "id": "@opam/luv@github:bryphe/luv:luv.opam#466693e@d41d8cd9",
+    "@opam/luv@github:bryphe/luv:luv.opam#a4ff084@d41d8cd9": {
+      "id": "@opam/luv@github:bryphe/luv:luv.opam#a4ff084@d41d8cd9",
       "name": "@opam/luv",
-      "version": "github:bryphe/luv:luv.opam#466693e",
+      "version": "github:bryphe/luv:luv.opam#a4ff084",
       "source": {
         "type": "install",
-        "source": [ "github:bryphe/luv:luv.opam#466693e" ]
+        "source": [ "github:bryphe/luv:luv.opam#a4ff084" ]
       },
       "overrides": [],
       "dependencies": [
