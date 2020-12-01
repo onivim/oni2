@@ -344,7 +344,12 @@ let create =
       [];
     };
 
-  let _process: Luv.Process.t =
+  let roots = environment
+  |> List.map(((a, b)) => {
+     Ctypes.Root.create((a, b));
+  });
+
+  let maybeProcess =
     LuvEx.Process.spawn(
       ~environment,
       ~on_exit,
@@ -352,10 +357,18 @@ let create =
       nodePath,
       [nodePath, extHostScriptPath],
     )
-    // TODO: More robust error handling
-    |> Result.get_ok;
+    |> Result.map_error(Luv.Error.strerror);
 
-  client |> Result.iter(c => maybeClientRef := Some(c));
+  let () = roots
+  |> List.iter(Ctypes.Root.release);
 
-  (client, stream);
+  let outClient = maybeProcess
+  |> Utility.ResultEx.tapError(errMsg => Log.error(errMsg))
+  |> Utility.ResultEx.flatMap(_process => {
+    client
+  });
+
+  outClient |> Result.iter(c => maybeClientRef := Some(c));
+
+  (outClient, stream);
 };
