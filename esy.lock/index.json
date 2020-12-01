@@ -1,5 +1,5 @@
 {
-  "checksum": "44a10a64973b154e540bd12623390e0d",
+  "checksum": "6a60469441fd23d4c4d1c96eb95632e2",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -1036,7 +1036,7 @@
         "@opam/ocamlformat@opam:0.15.0@8e036963",
         "@opam/ocamlbuild@opam:0.14.0@6ac75d03",
         "@opam/markup@opam:0.8.2@87975241", "@opam/lwt@opam:4.5.0@542100aa",
-        "@opam/luv@opam:0.5.6@3194d0f5",
+        "@opam/luv@github:bryphe/luv:luv.opam#466693e@d41d8cd9",
         "@opam/lru@github:bryphe/lru:lru.opam#2708c70@d41d8cd9",
         "@opam/logs@opam:0.7.0@1d03143e",
         "@opam/fs@github:bryphe/reason-native:fs.opam#5a7a756@d41d8cd9",
@@ -3002,21 +3002,13 @@
         "@opam/dune@opam:2.5.0@e0bac278"
       ]
     },
-    "@opam/luv@opam:0.5.6@3194d0f5": {
-      "id": "@opam/luv@opam:0.5.6@3194d0f5",
+    "@opam/luv@github:bryphe/luv:luv.opam#466693e@d41d8cd9": {
+      "id": "@opam/luv@github:bryphe/luv:luv.opam#466693e@d41d8cd9",
       "name": "@opam/luv",
-      "version": "opam:0.5.6",
+      "version": "github:bryphe/luv:luv.opam#466693e",
       "source": {
         "type": "install",
-        "source": [
-          "archive:https://opam.ocaml.org/cache/md5/fb/fb78fd1b179f5c9585e79b5a1c5ff644#md5:fb78fd1b179f5c9585e79b5a1c5ff644",
-          "archive:https://github.com/aantron/luv/releases/download/0.5.6/luv-0.5.6.tar.gz#md5:fb78fd1b179f5c9585e79b5a1c5ff644"
-        ],
-        "opam": {
-          "name": "luv",
-          "version": "0.5.6",
-          "path": "esy.lock/opam/luv.0.5.6"
-        }
+        "source": [ "github:bryphe/luv:luv.opam#466693e" ]
       },
       "overrides": [],
       "dependencies": [
