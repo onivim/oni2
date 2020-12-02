@@ -220,7 +220,7 @@
     "@opam/fs": "*",
     "@opam/logs": "^0.7.0",
     "@opam/lru": "bryphe/lru:lru.opam#2708c70",
-    "@opam/luv": "^0.5.6",
+    "@opam/luv": "bryphe/luv:luv.opam#8e9f2b0",
     "@opam/lwt": "*",
     "@opam/markup": "^0.8.2",
     "@opam/ocamlbuild": "*",
