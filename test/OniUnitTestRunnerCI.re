@@ -49,9 +49,11 @@ EditorCoreTypes_Test.TestFramework.run |> initializeRunConfig;
 
 EditorInput_Test.TestFramework.run |> initializeRunConfig;
 
-Exthost_Transport_Test.TestFramework.run |> initializeRunConfig;
+// TEMPORARY: Speed up repro
 
-Exthost_Test.TestFramework.run |> initializeRunConfig;
+// Exthost_Transport_Test.TestFramework.run |> initializeRunConfig;
+
+// Exthost_Test.TestFramework.run |> initializeRunConfig;
 
 Vim.init();
 
