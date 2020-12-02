@@ -40,8 +40,6 @@ else
    manual-codesign Contents/MacOS/node
    manual-codesign Contents/MacOS/Oni2_editor
    manual-codesign Contents/MacOS/Oni2
-   manual-codesign Contents/Frameworks/libssl.1.1.dylib
-   manual-codesign Contents/Frameworks/libcrypto.1.1.dylib
    manual-codesign Contents/Frameworks/Sparkle.framework/Versions/A/Resources/AutoUpdate.app/Contents/MacOS/fileop
    manual-codesign Contents/Frameworks/Sparkle.framework/Versions/A/Resources/AutoUpdate.app
    manual-codesign Contents/Frameworks/Sparkle.framework/Versions/A

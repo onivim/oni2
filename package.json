@@ -16,9 +16,7 @@
       "bash -c \"#{os == 'windows' ? 'cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll \\'$cur__bin\\'': 'echo'}\"",
       "bash -c \"cp #{esy-sdl2.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
       "bash -c \"cp #{esy-skia.bin}/skia.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
-      "bash -c \"cp #{esy-angle-prebuilt.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
-      "bash -c \"cp #{@reason-native-web/esy-openssl.bin}/libcrypto-1_1-x64.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
-      "bash -c \"cp #{@reason-native-web/esy-openssl.bin}/libssl-1_1-x64.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\""
+      "bash -c \"cp #{esy-angle-prebuilt.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\""
     ]
   },
   "build": {
@@ -236,7 +234,6 @@
     "@opam/uucp": "*",
     "@opam/uutf": "*",
     "@opam/yojson": "1.7.0",
-    "@reason-native-web/esy-openssl": "*",
     "@revery/timber": "^2.0.0",
     "axios": "^0.19.0",
     "esy-angle-prebuilt": "^1.0.0",
