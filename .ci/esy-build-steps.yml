@@ -17,13 +17,6 @@ steps:
     continueOnError: true
   - script: esy bootstrap
     displayName: 'Bootstrap Oni2 setup with system specific build variables (final)'
-  - script: esy @test install
-    displayName: 'Test: install'
-  - script: esy @test run-ci
-    displayName: 'Unit Tests: esy test-ci (round 1)'
-    env:
-      ASAN_OPTIONS: use_sigaltstack=0
-      LSAN_OPTIONS: suppressions=integration_test/lsan.supp
   - script: esy build
     displayName: 'Build: esy build'
   - script: esy build dune build @check
