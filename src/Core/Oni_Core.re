@@ -48,6 +48,7 @@ module Persistence = Persistence;
 module Setup = Setup;
 module ShellUtility = ShellUtility;
 module StringMap = Kernel.StringMap;
+module StringSet = Kernel.StringSet;
 module Subscription = Subscription;
 module SyntaxScope = SyntaxScope;
 module ColorTheme = ColorTheme;
