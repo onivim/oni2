@@ -18,6 +18,8 @@ during the Installation process, if the option is selected during installation.
 On macOS, `oni2` can be added manually with the "Add to System PATH" command in the
 command palette, by pressing `Cmd-Shift-P` and searching for `System`.
 
+![add-to-path](https://user-images.githubusercontent.com/13532591/101103627-2ce09800-357e-11eb-91ef-f3ac940bc401.png)
+
 After selecting the option and giving admin permissions, the `oni2` executable
 should be accessible.
 
