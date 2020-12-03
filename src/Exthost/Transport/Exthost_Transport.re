@@ -105,10 +105,23 @@ let start = (~namedPipe: string, ~dispatch: msg => unit) => {
   // Listen for an incoming connection...
   let listen = serverPipe => {
     Log.infof(m => m("Listening on pipe: %s\n", namedPipe));
-    Luv.Pipe.bind(serverPipe, namedPipe) |> ignore;
+    let bindResult = Luv.Pipe.bind(serverPipe, namedPipe);
+    switch (bindResult) {
+    | Ok(_) => Log.info("Pipe bound successfully.")
+    | Error(err) =>
+      Log.errorf(m => m("Unable to bind pipe: %s", Luv.Error.strerror(err)))
+    };
     Luv.Stream.listen(
       serverPipe,
       listenResult => {
+        Log.info("Got listen result for pipe...");
+        switch (listenResult) {
+        | Ok(_) => Log.info("Listen result is OK")
+        | Error(err) =>
+          Log.errorf(m =>
+            m("Listen result has error: %s", Luv.Error.strerror(err))
+          )
+        };
         // Create a pipe for the client
         let clientPipeResult =
           listenResult
@@ -120,10 +133,14 @@ let start = (~namedPipe: string, ~dispatch: msg => unit) => {
           )
           |> (
             r => {
-              Stdlib.Result.bind(r, pipe => {
-                Luv.Stream.accept(~server=serverPipe, ~client=pipe)
-                |> Result.map(_ => pipe)
-              });
+              Stdlib.Result.bind(
+                r,
+                pipe => {
+                  Log.info("Accepting connection.");
+                  Luv.Stream.accept(~server=serverPipe, ~client=pipe)
+                  |> Result.map(_ => pipe);
+                },
+              );
             }
           );
 

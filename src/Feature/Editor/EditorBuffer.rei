@@ -10,3 +10,5 @@ let getEstimatedMaxLineLength: t => int;
 let numberOfLines: t => int;
 let line: (int, t) => Oni_Core.BufferLine.t;
 let font: t => Oni_Core.Font.t;
+let fileType: t => Oni_Core.Buffer.FileType.t;
+let measure: (Uchar.t, t) => float;

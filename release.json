@@ -1,0 +1,16 @@
+{
+  "source": "./package.json",
+  "scripts": {
+    "run": "esy @release x Oni2",
+    "create-win-setup": "esy @release node ./scripts/windows/BuildSetupTemplate.js",
+    "create": "esy @release node ./scripts/release.js"
+  },
+  "override": {
+    "buildEnv": {
+      "MACOSX_DEPLOYMENT_TARGET": "10.12",
+      "ONI2_ROOT": "#{self.root}",
+      "ONI2_BUILD_MODE": "Release",
+      "ONI2_APPCAST_BASEURL": "https://v2.onivim.io/appcast"
+    }
+  }
+}

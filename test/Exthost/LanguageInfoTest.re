@@ -25,7 +25,7 @@ let li =
      )
   |> Exthost.LanguageInfo.ofExtensions;
 
-let buf = Buffer.ofLines([|"#!/bin/bash", "ls *"|]);
+let buf = Buffer.ofLines(~font=Font.default(), [|"#!/bin/bash", "ls *"|]);
 
 describe("LanguageInfo", ({describe, _}) => {
   describe("get language from file path", ({test, _}) => {

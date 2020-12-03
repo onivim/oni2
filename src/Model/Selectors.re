@@ -10,11 +10,11 @@ open Oni_Core.Utility;
 module Editor = Feature_Editor.Editor;
 
 let getBufferById = (state: State.t, id: int) => {
-  Buffers.getBuffer(id, state.buffers);
+  Feature_Buffers.get(id, state.buffers);
 };
 
 let getBufferForEditor = (buffers, editor: Editor.t) => {
-  Buffers.getBuffer(Editor.getBufferId(editor), buffers);
+  Feature_Buffers.get(Editor.getBufferId(editor), buffers);
 };
 
 let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
@@ -86,3 +86,18 @@ let getActiveTerminalId = (state: State.t) => {
 
 let terminalIsActive = (state: State.t) =>
   getActiveTerminalId(state) != None;
+
+let configResolver = (state: State.t) => {
+  let maybeActiveBuffer = getActiveBuffer(state);
+  let fileType =
+    maybeActiveBuffer
+    |> Option.map(Buffer.getFileType)
+    |> Option.map(Buffer.FileType.toString)
+    |> Option.value(~default=Buffer.FileType.default);
+
+  Feature_Configuration.resolver(~fileType, state.config, state.vim);
+};
+
+let mode = (state: State.t) => {
+  state.layout |> Feature_Layout.activeEditor |> Feature_Editor.Editor.mode;
+};

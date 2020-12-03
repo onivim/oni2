@@ -135,9 +135,15 @@ module Dto = {
         let label = field.required("a", string);
 
         let kind =
-          field.required("b", int)
-          |> CompletionKind.ofInt
-          |> Option.value(~default=CompletionKind.Method);
+          field.withDefault(
+            "b",
+            CompletionKind.Property,
+            int
+            |> map(i =>
+                 CompletionKind.ofInt(i)
+                 |> Option.value(~default=CompletionKind.Property)
+               ),
+          );
 
         let detail = field.optional("c", string);
         let documentation = field.optional("d", MarkdownString.decode);

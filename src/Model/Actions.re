@@ -6,58 +6,15 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Input;
 open Oni_Syntax;
-
-module ContextMenu = Oni_Components.ContextMenu;
-//module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
-//module CompletionItem = Feature_LanguageSupport.CompletionItem;
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 [@deriving show({with_path: false})]
 type t =
   | Init
-  | ActivityBar(ActivityBar.action)
-  | BufferDisableSyntaxHighlighting(int)
-  | BufferEnter({
-      id: int,
-      fileType: Buffer.FileType.t,
-      lineEndings: [@opaque] option(Vim.lineEnding),
-      filePath: option(string),
-      isModified: bool,
-      version: int,
-      font: Font.t,
-      // TODO: This duplication-of-truth is really awkward,
-      // but I want to remove it shortly
-      buffer: [@opaque] Buffer.t,
-    })
-  | BufferFileTypeChanged({
-      id: int,
-      fileType: Oni_Core.Buffer.FileType.t,
-    })
-  | BufferFilenameChanged({
-      id: int,
-      newFilePath: option(string),
-      newFileType: Buffer.FileType.t,
-      version: int,
-      isModified: bool,
-    })
-  | BufferUpdate({
-      update: [@opaque] BufferUpdate.t,
-      oldBuffer: [@opaque] Buffer.t,
-      newBuffer: [@opaque] Buffer.t,
-      triggerKey: option(string),
-    })
-  | BufferLineEndingsChanged({
-      id: int,
-      lineEndings: [@opaque] Vim.lineEnding,
-    })
-  | BufferRenderer(BufferRenderer.action)
-  | BufferSaved(int)
-  | BufferSetIndentation(int, [@opaque] IndentationSettings.t)
-  | BufferSetModified(int, bool)
+  | AutoUpdate(Feature_AutoUpdate.msg)
+  | Buffers(Feature_Buffers.msg)
   | Clipboard(Feature_Clipboard.msg)
+  | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
   | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)
@@ -70,25 +27,23 @@ type t =
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
+  | Decorations(Feature_Decorations.msg)
+  | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)
+  | Input(Feature_Input.msg)
   | TerminalFont(Service_Font.msg)
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
-  | KeyBindingsSet([@opaque] Keybindings.t)
+  | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
   | KeybindingInvoked({command: string})
-  | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | TextInput([@opaque] string, [@opaque] Revery.Time.t)
-  | ContextMenuOverlayClicked
-  | DiagnosticsHotKey
-  | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
-  | DiagnosticsClear(string)
-  | DisableKeyDisplayer
-  | EnableKeyDisplayer
+  | KeyDown(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | KeyUp(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | Logging(Feature_Logging.msg)
+  | TextInput(string, [@opaque] Revery.Time.t)
   // TODO: This should be a function call - wired up from an input feature
   // directly to the consumer of the keyboard action.
   // In addition, in the 'not-is-text' case, we should strongly type the keys.
@@ -114,13 +69,12 @@ type t =
       msg: Feature_Editor.msg,
     })
   | FilesDropped({paths: list(string)})
-  | FileExplorer(FileExplorer.action)
-  | LanguageFeature(LanguageFeatures.action)
+  | FileExplorer(Feature_Explorer.msg)
   | LanguageSupport(Feature_LanguageSupport.msg)
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
-  | QuickmenuInputMessage(Feature_InputText.msg)
+  | QuickmenuInputMessage(Component_InputText.msg)
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
@@ -135,14 +89,12 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
+  | OpenBufferById({bufferId: int})
   | OpenFileByPath(
       string,
-      option([ | `Horizontal | `Vertical]),
-      option(Location.t),
+      option([ | `Horizontal | `Vertical | `NewTab]),
+      option(CharacterPosition.t),
     )
-  | OpenFileInNewLayout(string)
-  | BufferOpened(string, option(Location.t), int)
-  | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
   | Pasted({
       rawText: string,
@@ -150,13 +102,14 @@ type t =
       lines: array(string),
     })
   | Registers(Feature_Registers.msg)
+  | Registration(Feature_Registration.msg)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
   // ReallyQuitting is dispatched when we've decided _for sure_
   // to quit the app. This gives subscriptions the chance to clean up.
   | ReallyQuitting
   | RegisterQuitCleanup(unit => unit)
-  | SearchSetHighlights(int, list(Range.t))
+  | SearchSetHighlights(int, list(ByteRange.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
@@ -171,17 +124,12 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | SCM(Feature_SCM.msg)
-  | SearchStart
-  | SearchHotkey
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
-  | PaneTabClicked(Feature_Pane.pane)
-  | PaneCloseButtonClicked
-  | DirectoryChanged(string)
   | VimExecuteCommand(string)
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
@@ -194,42 +142,15 @@ type t =
   | WindowFullscreen
   | WindowMinimized
   | WindowRestored
+  | Workspace(Feature_Workspace.msg)
   | TitleBar(Feature_TitleBar.msg)
   | WindowCloseBlocked
   | Layout(Feature_Layout.msg)
   | WriteFailure
-  | NewTextContentProvider({
-      handle: int,
-      scheme: string,
-    })
-  | LostTextContentProvider({handle: int})
   | Modals(Feature_Modals.msg)
-  // "Internal" effect action, see TitleStoreConnector
-  | SetTitle(string)
-  | GotOriginalUri({
-      bufferId: int,
-      uri: Uri.t,
-    })
-  | GotOriginalContent({
-      bufferId: int,
-      lines: [@opaque] array(string),
-    })
-  | NewDecorationProvider({
-      handle: int,
-      label: string,
-    })
-  | LostDecorationProvider({handle: int})
-  | DecorationsChanged({
-      handle: int,
-      uris: list(Uri.t),
-    })
-  | GotDecorations({
-      handle: int,
-      uri: Uri.t,
-      decorations: list(Decoration.t),
-    })
   | Vim(Feature_Vim.msg)
   | TabPage(Vim.TabPage.effect)
+  | Yank({range: [@opaque] VisualRange.t})
   | Noop
 and command = {
   commandCategory: option(string),
@@ -256,6 +177,7 @@ and quickmenuVariant =
   | CommandPalette
   | EditorsPicker
   | FilesPicker
+  | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | FileTypesPicker({
@@ -263,7 +185,6 @@ and quickmenuVariant =
       languages:
         list((string, option(Oni_Core.IconTheme.IconDefinition.t))),
     })
-  | DocumentSymbols
   | Extension({
       id: int,
       hasItems: bool,

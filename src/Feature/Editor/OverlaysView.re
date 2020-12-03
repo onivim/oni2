@@ -7,8 +7,8 @@ module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Diagnostics = Feature_Diagnostics;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Styles = {
   open Style;
@@ -49,7 +49,7 @@ let completionsView =
 let make =
     (
       ~isActiveSplit,
-      ~cursorPosition: Location.t,
+      ~cursorPosition: CharacterPosition.t,
       ~editor: Editor.t,
       ~gutterWidth,
       ~theme,
@@ -58,12 +58,8 @@ let make =
       ~editorFont: Service_Font.font,
       (),
     ) => {
-  let ({pixelX, pixelY}: Editor.pixelPosition, _) =
-    Editor.bufferLineByteToPixel(
-      ~line=Index.toZeroBased(cursorPosition.line),
-      ~byteIndex=Index.toZeroBased(cursorPosition.column),
-      editor,
-    );
+  let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
+    Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
 
   let cursorPixelY = pixelY |> int_of_float;
   let cursorPixelX = pixelX +. gutterWidth |> int_of_float;

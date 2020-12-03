@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 open Oni_Model;
@@ -6,7 +7,7 @@ open Feature_Editor;
 
 runTestWithInput(~name="EditorUtf8Test", (input, dispatch, wait, _) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   let testFile = getAssetPath("utf8.txt");
@@ -19,15 +20,13 @@ runTestWithInput(~name="EditorUtf8Test", (input, dispatch, wait, _) => {
     |> Option.map(name => String.equal(name, "utf8.txt"))
     |> Option.value(~default=false)
   });
-  let str =
-    "κόσμε"
-    |> Oni_Core.BufferLine.make(~indentation=IndentationSettings.default);
+  let str = "κόσμε" |> Oni_Core.BufferLine.make(~measure=_ => 1.0);
 
-  let c0 = BufferLine.getUcharExn(~index=0, str);
-  let c1 = BufferLine.getUcharExn(~index=1, str);
-  let c2 = BufferLine.getUcharExn(~index=2, str);
-  let c3 = BufferLine.getUcharExn(~index=3, str);
-  let c4 = BufferLine.getUcharExn(~index=4, str);
+  let c0 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(0), str);
+  let c1 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(1), str);
+  let c2 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(2), str);
+  let c3 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(3), str);
+  let c4 = BufferLine.getUcharExn(~index=CharacterIndex.ofInt(4), str);
 
   let validateCharacter = (expectedCharacter, state: State.t) => {
     state.layout

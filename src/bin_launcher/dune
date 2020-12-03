@@ -1,6 +1,5 @@
 (executable
-    (name Oni2)
-    (package Oni2)
-    (public_name Oni2)
-    (libraries unix str)
-)
+ (name Oni2)
+ (package Oni2)
+ (public_name Oni2)
+ (libraries unix str))

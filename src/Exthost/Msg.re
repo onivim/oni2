@@ -1088,6 +1088,37 @@ module LanguageFeatures = {
   };
 };
 
+module Languages = {
+  [@deriving show]
+  type msg =
+    | GetLanguages
+    | ChangeLanguage({
+        uri: Oni_Core.Uri.t,
+        languageId: string,
+      });
+
+  let handle = (method, args: Yojson.Safe.t) => {
+    switch (method, args) {
+    | ("$getLanguages", _) => Ok(GetLanguages)
+
+    | ("$changeLanguage", `List([uriJson, `String(languageId)])) =>
+      open Base.Result.Let_syntax;
+
+      let%bind uri = uriJson |> Internal.decode_value(Oni_Core.Uri.decode);
+
+      Ok(ChangeLanguage({uri, languageId}));
+
+    | _ =>
+      Error(
+        "Unable to parse method: "
+        ++ method
+        ++ " with args: "
+        ++ Yojson.Safe.to_string(args),
+      )
+    };
+  };
+};
+
 module MessageService = {
   [@deriving show]
   type msg =
@@ -1223,6 +1254,7 @@ module StatusBar = {
           colorJson,
           alignmentJson,
           priorityJson,
+          _accessibilityInfoJson,
         ]),
       ) =>
       open Base.Result.Let_syntax;
@@ -1240,7 +1272,10 @@ module StatusBar = {
       let%bind alignmentNumber =
         alignmentJson |> Internal.decode_value(Decode.int);
       let alignment = alignmentNumber |> intToAlignment;
-      let%bind priority = priorityJson |> Internal.decode_value(Decode.int);
+      let%bind priority =
+        priorityJson
+        |> Internal.decode_value(nullable(Decode.int))
+        |> Result.map(Option.value(~default=0));
       Ok(
         SetEntry({
           id,
@@ -1364,11 +1399,10 @@ module SCM = {
         features: SCM.ProviderFeatures.t,
       })
     // statusBarCommands: option(_),
-    | RegisterSCMResourceGroup({
+    | RegisterSCMResourceGroups({
         provider: int,
-        handle: int,
-        id: string,
-        label: string,
+        groups: list(SCM.Group.t),
+        splices: list(SCM.Resource.Splices.t),
       })
     | UnregisterSCMResourceGroup({
         provider: int,
@@ -1441,15 +1475,16 @@ module SCM = {
         | _ => Error("Unexpected arguments for $updateSourceControl")
         }
 
-      | "$registerGroup" =>
+      | "$registerGroups" =>
         switch (args) {
-        | `List([
-            `Int(provider),
-            `Int(handle),
-            `String(id),
-            `String(label),
-          ]) =>
-          Ok(RegisterSCMResourceGroup({provider, handle, id, label}))
+        | `List([`Int(provider), groupsJson, splicesJson]) =>
+          open Json.Decode;
+          let%bind groups =
+            groupsJson |> Internal.decode_value(list(SCM.Group.decode));
+          let%bind splices =
+            splicesJson
+            |> Internal.decode_value(list(SCM.Resource.Decode.splices));
+          Ok(RegisterSCMResourceGroups({provider, groups, splices}));
 
         | _ => Error("Unexpected arguments for $registerGroup")
         }
@@ -1699,6 +1734,7 @@ type t =
   | ExtensionService(ExtensionService.msg)
   | FileSystem(FileSystem.msg)
   | LanguageFeatures(LanguageFeatures.msg)
+  | Languages(Languages.msg)
   | MessageService(MessageService.msg)
   | OutputService(OutputService.msg)
   | Progress(Progress.msg)

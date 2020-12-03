@@ -4,8 +4,7 @@ open Oni_Core;
 
 type terminal = {
   id: int,
-  cmd: string,
-  arguments: list(string),
+  launchConfig: Exthost.ShellLaunchConfig.t,
   rows: int,
   columns: int,
   pid: option(int),
@@ -110,7 +109,11 @@ module Configuration = {
       setting(
         "terminal.integrated.shellArgs.osx",
         list(string),
-        ~default=[],
+        // ~/.[bash|zsh}_profile etc is not sourced when logging in on macOS.
+        // Instead, terminals on macOS should run as a login shell (which in turn
+        // sources these files).
+        // See more at http://unix.stackexchange.com/a/119675/115410.
+        ~default=["-l"],
       );
   };
 };
@@ -149,20 +152,60 @@ let update = (~config: Config.resolver, model: t, msg) => {
       | _ => []
       };
 
+    let env =
+      Exthost.ShellLaunchConfig.(
+        switch (Revery.Environment.os) {
+        // Windows - simply inherit from the running process
+        | Windows => Inherit
+
+        // Mac - inherit (we rely on the '-l' flag to pick up user config)
+        | Mac => Inherit
+
+        // For Linux, there's a few stray variables that may come in from the AppImage
+        // for example - LD_LIBRARY_PATH in issue #2040. We need to clear those out.
+        | Linux =>
+          switch (
+            Sys.getenv_opt("ONI2_ORIG_PATH"),
+            Sys.getenv_opt("ONI2_ORIG_LD_LIBRARY_PATH"),
+          ) {
+          // We're running from the AppImage, which tracks the original env.
+          | (Some(origPath), Some(origLdLibPath)) =>
+            let envVariables =
+              [("PATH", origPath), ("LD_LIBRARY_PATH", origLdLibPath)]
+              |> List.to_seq
+              |> StringMap.of_seq;
+
+            Additive(envVariables);
+
+          // All other cases - just inherit. Maybe not running from AppImage.
+          | _ => Inherit
+          }
+
+        | _ => Inherit
+        }
+      );
+
+    let launchConfig =
+      Exthost.ShellLaunchConfig.{
+        name: "Terminal",
+        arguments,
+        executable: cmdToUse,
+        env,
+      };
+
     let id = model.nextId;
     let idToTerminal =
       IntMap.add(
         id,
         {
           id,
-          arguments,
-          cmd: cmdToUse,
+          launchConfig,
           rows: 40,
           columns: 40,
           pid: None,
           title: None,
           screen: ReveryTerminal.Screen.initial,
-          cursor: ReveryTerminal.Cursor.{row: 0, column: 0, visible: false},
+          cursor: ReveryTerminal.Cursor.initial,
           closeOnExit,
         },
         model.idToTerminal,
@@ -195,12 +238,8 @@ let update = (~config: Config.resolver, model: t, msg) => {
       updateById(id, term => {...term, title: Some(title)}, model);
     (newModel, Nothing);
 
-  | Service(ScreenUpdated({id, screen})) =>
-    let newModel = updateById(id, term => {...term, screen}, model);
-    (newModel, Nothing);
-
-  | Service(CursorMoved({id, cursor})) =>
-    let newModel = updateById(id, term => {...term, cursor}, model);
+  | Service(ScreenUpdated({id, screen, cursor})) =>
+    let newModel = updateById(id, term => {...term, screen, cursor}, model);
     (newModel, Nothing);
 
   | Service(ProcessExit({id, exitCode})) => (
@@ -220,8 +259,7 @@ let subscription = (~workspaceUri, extHostClient, model: t) => {
   |> List.map((terminal: terminal) => {
        Service_Terminal.Sub.terminal(
          ~id=terminal.id,
-         ~arguments=terminal.arguments,
-         ~cmd=terminal.cmd,
+         ~launchConfig=terminal.launchConfig,
          ~rows=terminal.rows,
          ~columns=terminal.columns,
          ~workspaceUri,
@@ -589,4 +627,51 @@ module Contributions = {
       ShellArgs.linux.spec,
       ShellArgs.osx.spec,
     ];
+
+  let keybindings = {
+    Feature_Input.Schema.[
+      // Insert mode -> normal mdoe
+      {
+        key: "<C-\\><C-N>",
+        command: Commands.Oni.normalMode.id,
+        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<C-\\>n",
+        command: Commands.Oni.normalMode.id,
+        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
+      },
+      // Normal mode -> insert mode
+      {
+        key: "o",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "<S-O>",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "Shift+a",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "a",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "i",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      {
+        key: "Shift+i",
+        command: Commands.Oni.insertMode.id,
+        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+    ];
+  };
 };

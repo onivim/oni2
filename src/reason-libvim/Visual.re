@@ -1,10 +1,6 @@
 open EditorCoreTypes;
 
-let zeroRange =
-  Range.create(
-    ~start=Location.create(~line=Index.zero, ~column=Index.zero),
-    ~stop=Location.create(~line=Index.zero, ~column=Index.zero),
-  );
+let zeroRange = ByteRange.{start: BytePosition.zero, stop: BytePosition.zero};
 
 let getRange = () => {
   let (startLine, startColumn, stopLine, stopColumn) =
@@ -14,23 +10,34 @@ let getRange = () => {
   if (startLine == 0 || stopLine == 0) {
     zeroRange;
   } else {
-    Range.create(
-      ~start=
-        Location.create(
-          ~line=Index.fromOneBased(startLine),
-          ~column=Index.fromZeroBased(startColumn),
-        ),
-      ~stop=
-        Location.create(
-          ~line=Index.fromOneBased(stopLine),
-          ~column=Index.fromZeroBased(stopColumn),
-        ),
-    );
+    ByteRange.{
+      start:
+        BytePosition.{
+          line: LineNumber.ofOneBased(startLine),
+          byte: ByteIndex.ofInt(startColumn),
+        },
+      stop:
+        BytePosition.{
+          line: LineNumber.ofOneBased(stopLine),
+          byte: ByteIndex.ofInt(stopColumn),
+        },
+    };
   };
 };
 
 let getType = Native.vimVisualGetType;
 
-let onRangeChanged = f => {
-  Event.add(f, Listeners.visualRangeChanged);
+let set =
+    (
+      ~visualType: Types.visualType,
+      ~start: BytePosition.t,
+      ~cursor: BytePosition.t,
+    ) => {
+  ();
+  Native.vimVisualSetType(visualType);
+  Native.vimVisualSetStart(
+    start.line |> LineNumber.toOneBased,
+    start.byte |> ByteIndex.toInt,
+  );
+  Cursor.set(cursor);
 };

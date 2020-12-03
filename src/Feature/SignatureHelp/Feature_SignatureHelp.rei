@@ -3,7 +3,7 @@ open Oni_Core;
 [@deriving show({with_path: false})]
 type provider = {
   handle: int,
-  selector: list(Exthost.DocumentFilter.t),
+  selector: Exthost.DocumentSelector.t,
   metadata: Exthost.SignatureHelp.ProviderMetadata.t,
 };
 
@@ -28,7 +28,7 @@ type msg =
       activeParameter: int,
       requestID: int,
       editorID: int,
-      location: EditorCoreTypes.Location.t,
+      location: EditorCoreTypes.CharacterPosition.t,
       context: Exthost.SignatureHelp.RequestContext.t,
     })
   | EmptyInfoReceived(int)

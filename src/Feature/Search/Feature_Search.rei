@@ -7,31 +7,44 @@ type model;
 let initial: model;
 
 [@deriving show]
-type msg =
-  | Input(string)
-  | Pasted(string)
-  | Update([@opaque] list(Ripgrep.Match.t))
-  | Complete
-  | SearchError(string)
-  | FindInput(Feature_InputText.msg);
+type msg;
+
+module Msg: {
+  let input: string => msg;
+  let pasted: string => msg;
+};
 
 type outmsg =
-  | Focus;
+  | OpenFile({
+      filePath: string,
+      location: CharacterPosition.t,
+    })
+  | Focus
+  | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 let update: (model, msg) => (model, option(outmsg));
 
+let resetFocus: model => model;
+
 let subscriptions:
-  (Ripgrep.t, msg => unit, model) => list(Subscription.t(msg));
+  (~workingDirectory: string, Ripgrep.t, msg => unit, model) =>
+  list(Subscription.t(msg));
 
 let make:
   (
     ~theme: ColorTheme.Colors.t,
     ~uiFont: UiFont.t,
-    ~editorFont: Service_Font.font,
+    ~iconTheme: IconTheme.t,
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~isFocused: bool,
     ~model: model,
-    ~onSelectResult: (string, Location.t) => unit,
     ~dispatch: msg => unit,
+    ~workingDirectory: string,
     unit
   ) =>
   React.element(React.node);
+
+module Contributions: {
+  let commands: (~isFocused: bool) => list(Command.t(msg));
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
+};

@@ -1,4 +1,6 @@
 type effect =
   | Definition
   | Declaration
-  | Hover;
+  | Hover
+  | Outline
+  | Messages;

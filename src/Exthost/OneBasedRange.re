@@ -23,26 +23,28 @@ let one = {
   endColumn: 1,
 };
 
-let ofRange = (r: Range.t) => {
-  startLineNumber: r.start.line |> Index.toOneBased,
-  endLineNumber: r.stop.line |> Index.toOneBased,
-  startColumn: r.start.column |> Index.toOneBased,
-  endColumn: r.stop.column |> Index.toOneBased,
+let ofRange = (r: CharacterRange.t) => {
+  startLineNumber: r.start.line |> EditorCoreTypes.LineNumber.toOneBased,
+  endLineNumber: r.stop.line |> EditorCoreTypes.LineNumber.toOneBased,
+  startColumn: (r.start.character |> CharacterIndex.toInt) + 1,
+  endColumn: (r.stop.character |> CharacterIndex.toInt) + 1,
 };
 
 let toRange = ({startLineNumber, endLineNumber, startColumn, endColumn}) => {
-  Range.{
-    start:
-      EditorCoreTypes.Location.{
-        line: Index.fromOneBased(startLineNumber),
-        column: Index.fromOneBased(startColumn),
-      },
-    stop:
-      EditorCoreTypes.Location.{
-        line: Index.fromOneBased(endLineNumber),
-        column: Index.fromOneBased(endColumn),
-      },
-  };
+  EditorCoreTypes.(
+    CharacterRange.{
+      start:
+        EditorCoreTypes.CharacterPosition.{
+          line: LineNumber.ofOneBased(startLineNumber),
+          character: CharacterIndex.ofInt(startColumn - 1),
+        },
+      stop:
+        EditorCoreTypes.CharacterPosition.{
+          line: LineNumber.ofOneBased(endLineNumber),
+          character: CharacterIndex.ofInt(endColumn - 1),
+        },
+    }
+  );
 };
 
 let decode =

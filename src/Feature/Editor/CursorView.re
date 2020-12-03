@@ -14,25 +14,23 @@ let%component make =
                 ~editorFont: Service_Font.font,
                 ~mode: Vim.Mode.t,
                 ~isActiveSplit,
-                ~cursorPosition: Location.t,
+                ~cursorPosition: CharacterPosition.t,
                 ~colors: Colors.t,
                 ~windowIsFocused,
                 ~config,
                 (),
               ) => {
   let%hook () = React.Hooks.effect(Always, () => None);
-  let line = Index.toZeroBased(cursorPosition.line);
-  let column = Index.toZeroBased(cursorPosition.column);
 
-  let ({pixelX, pixelY}: Editor.pixelPosition, characterWidth) =
-    Editor.bufferLineCharacterToPixel(~line, ~characterIndex=column, editor);
+  let ({x: pixelX, y: pixelY}: PixelPosition.t, characterWidth) =
+    Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
 
   let originalX = pixelX;
   let originalY = pixelY;
 
   let durationFunc = (~current, ~target) =>
     if (Float.abs(target -. current) < 2. *. editorFont.measuredHeight) {
-      if (mode == Insert) {
+      if (Vim.Mode.isInsert(mode)) {
         Revery.Time.milliseconds(50);
       } else {
         Revery.Time.zero;
@@ -50,6 +48,7 @@ let%component make =
 
   let%hook y =
     Hooks.transitionf(
+      ~name="Cursor Y Transition",
       ~active=animatedCursor,
       ~duration=durationFunc,
       ~delay,
@@ -59,6 +58,7 @@ let%component make =
     );
   let%hook x =
     Hooks.transitionf(
+      ~name="Cursor X Transition",
       ~active=animatedCursor,
       ~delay,
       ~duration=durationFunc,
@@ -77,6 +77,8 @@ let%component make =
 
   let textOpacity =
     (maxDistSquared -. deltaDistSquared) /. maxDistSquared |> max(0.);
+
+  let characterPaddingY = editor |> Editor.linePaddingInPixels;
 
   <Canvas
     style=Style.[
@@ -121,7 +123,7 @@ let%component make =
             ~height,
             ~color=foreground,
           );
-        } else if (mode == Insert) {
+        } else if (Vim.Mode.isInsert(mode)) {
           let width = 2.;
           Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
         } else {
@@ -129,7 +131,7 @@ let%component make =
           Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
 
           editor
-          |> Editor.getCharacterAtPosition(~line, ~index=column)
+          |> Editor.getCharacterAtPosition(~position=cursorPosition)
           |> Option.iter(uchar =>
                if (!BufferViewTokenizer.isWhitespace(uchar)) {
                  let text = ZedBundled.make(1, uchar);
@@ -144,7 +146,7 @@ let%component make =
                  Draw.shapedText(
                    ~context,
                    ~x=x -. 0.5,
-                   ~y=y -. fontMetrics.ascent -. 0.5,
+                   ~y=characterPaddingY +. y -. fontMetrics.ascent -. 0.5,
                    ~bold=false,
                    ~italic=false,
                    ~color=

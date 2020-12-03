@@ -36,11 +36,13 @@ module Command: {
 };
 
 module CompletionContext: {
+  [@deriving show]
   type triggerKind =
     | Invoke
     | TriggerCharacter
     | TriggerForIncompleteCompletions;
 
+  [@deriving show]
   type t = {
     triggerKind,
     triggerCharacter: option(string),
@@ -90,8 +92,8 @@ module OneBasedRange: {
     endColumn: int,
   };
 
-  let ofRange: Range.t => t;
-  let toRange: t => Range.t;
+  let ofRange: CharacterRange.t => t;
+  let toRange: t => CharacterRange.t;
 };
 
 module CodeLens: {
@@ -135,6 +137,9 @@ module Edit: {
       forceMoveMarkers: bool,
     };
 
+    // Get the difference in lines due to the edit
+    let deltaLineCount: t => int;
+
     let decode: Json.decoder(t);
   };
 };
@@ -167,26 +172,20 @@ module DefinitionLink: {
   let decode: Json.decoder(t);
 };
 
-module DocumentFilter: {
-  [@deriving show]
-  type t = {
-    language: option(string),
-    scheme: option(string),
-    exclusive: bool,
-  };
+// module DocumentFilter: {
+//   [@deriving show]
+//   type t;
 
-  let matches: (~filetype: string, t) => bool;
+//   let matches: (~filetype: string, t) => bool;
 
-  let decode: Json.decoder(t);
+//   let decode: Json.decoder(t);
 
-  let toString: t => string;
-};
+//   let toString: t => string;
+// };
 
 module DocumentSelector: {
   [@deriving show]
   type t = list(DocumentFilter.t);
-
-  let matches: (~filetype: string, t) => bool;
 
   let matchesBuffer: (~buffer: Oni_Core.Buffer.t, t) => bool;
 
@@ -267,6 +266,8 @@ module SuggestItem: {
 
     [@deriving show]
     type t;
+
+    let none: t;
 
     let matches: (~rule: rule, t) => bool;
   };
@@ -497,7 +498,6 @@ module SCM: {
     };
 
     module Splices: {
-      [@deriving show({with_path: false})]
       type t = {
         handle: int,
         resourceSplices: [@opaque] list(Splice.t),
@@ -513,7 +513,7 @@ module SCM: {
       count: option(int),
       commitTemplate: option(string),
       acceptInputCommand: option(command),
-      statusBarCommands: list(Command.t),
+      statusBarCommands: option(list(command)),
     };
 
     let decode: Json.decoder(t);
@@ -522,6 +522,18 @@ module SCM: {
   module GroupFeatures: {
     [@deriving show({with_path: false})]
     type t = {hideWhenEmpty: bool};
+
+    let decode: Json.decoder(t);
+  };
+
+  module Group: {
+    [@deriving show({with_path: false})]
+    type t = {
+      handle: int,
+      id: string,
+      label: string,
+      features: GroupFeatures.t,
+    };
 
     let decode: Json.decoder(t);
   };
@@ -704,10 +716,22 @@ module Configuration: {
 };
 
 module Diagnostic: {
+  module Severity: {
+    [@deriving show]
+    type t =
+      | Hint
+      | Info
+      | Warning
+      | Error;
+
+    let toInt: t => int;
+    let ofInt: int => option(t);
+    let max: (t, t) => t;
+  };
   type t = {
     range: OneBasedRange.t,
     message: string,
-    severity: int,
+    severity: Severity.t,
   };
 
   let decode: Json.decoder(t);
@@ -836,6 +860,16 @@ module Files: {
     let decode: Json.decoder(t);
     let encode: Json.encoder(t);
   };
+
+  module FileSystemEvents: {
+    type t = {
+      created: list(Oni_Core.Uri.t),
+      changed: list(Oni_Core.Uri.t),
+      deleted: list(Oni_Core.Uri.t),
+    };
+
+    let encode: Json.encoder(t);
+  };
 };
 
 module ModelAddedDelta: {
@@ -941,7 +975,7 @@ module OneBasedPosition: {
     column: int,
   };
 
-  let ofPosition: EditorCoreTypes.Location.t => t;
+  let ofPosition: EditorCoreTypes.CharacterPosition.t => t;
   let to_yojson: t => Yojson.Safe.t;
 };
 
@@ -969,10 +1003,16 @@ module ModelChangedEvent: {
 };
 
 module ShellLaunchConfig: {
+  type environment =
+    | Inherit
+    | Additive(StringMap.t(string))
+    | Strict(StringMap.t(string));
+
   type t = {
     name: string,
     executable: string,
     arguments: list(string),
+    env: environment,
   };
 
   let to_yojson: t => Yojson.Safe.t;
@@ -1302,6 +1342,16 @@ module Msg: {
       | Unregister({handle: int});
   };
 
+  module Languages: {
+    [@deriving show]
+    type msg =
+      | GetLanguages
+      | ChangeLanguage({
+          uri: Oni_Core.Uri.t,
+          languageId: string,
+        });
+  };
+
   module MessageService: {
     [@deriving show]
     type msg =
@@ -1365,12 +1415,10 @@ module Msg: {
           handle: int,
           features: SCM.ProviderFeatures.t,
         })
-      // statusBarCommands: option(_),
-      | RegisterSCMResourceGroup({
+      | RegisterSCMResourceGroups({
           provider: int,
-          handle: int,
-          id: string,
-          label: string,
+          groups: list(SCM.Group.t),
+          splices: [@opaque] list(SCM.Resource.Splices.t),
         })
       | UnregisterSCMResourceGroup({
           provider: int,
@@ -1535,6 +1583,7 @@ module Msg: {
     | ExtensionService(ExtensionService.msg)
     | FileSystem(FileSystem.msg)
     | LanguageFeatures(LanguageFeatures.msg)
+    | Languages(Languages.msg)
     | MessageService(MessageService.msg)
     | OutputService(OutputService.msg)
     | Progress(Progress.msg)
@@ -1587,7 +1636,7 @@ module Client: {
   let start:
     (
       ~initialConfiguration: Configuration.t=?,
-      ~initialWorkspace: WorkspaceData.t=?,
+      ~initialWorkspace: option(WorkspaceData.t)=?,
       ~namedPipe: NamedPipe.t,
       ~initData: Extension.InitData.t,
       // TODO:
@@ -1626,12 +1675,10 @@ module Request: {
   module Decorations: {
     type request = {
       id: int,
-      handle: int,
       uri: Uri.t,
     };
 
     type decoration = {
-      priority: int,
       bubble: bool,
       title: string,
       letter: string,
@@ -1641,7 +1688,7 @@ module Request: {
     type reply = IntMap.t(decoration);
 
     let provideDecorations:
-      (~requests: list(request), Client.t) => Lwt.t(reply);
+      (~handle: int, ~requests: list(request), Client.t) => Lwt.t(reply);
   };
 
   module DocumentContentProvider: {
@@ -1689,6 +1736,13 @@ module Request: {
       Lwt.t(unit);
   };
 
+  module FileSystemEventService: {
+    let onFileEvent: (~events: Files.FileSystemEvents.t, Client.t) => unit;
+    // TODO
+    // - onWillRunFileOperation
+    // - onDidRunFileOperation
+  };
+
   module LanguageFeatures: {
     let provideCodeLenses:
       (~handle: int, ~resource: Uri.t, Client.t) =>
@@ -1705,13 +1759,7 @@ module Request: {
       Lwt.t(SuggestResult.t);
 
     let resolveCompletionItem:
-      (
-        ~handle: int,
-        ~resource: Uri.t,
-        ~position: OneBasedPosition.t,
-        ~chainedCacheId: ChainedCacheId.t,
-        Client.t
-      ) =>
+      (~handle: int, ~chainedCacheId: ChainedCacheId.t, Client.t) =>
       Lwt.t(SuggestItem.t);
 
     let provideDocumentHighlights:
@@ -1721,11 +1769,11 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DocumentHighlight.t));
+      Lwt.t(option(list(DocumentHighlight.t)));
 
     let provideDocumentSymbols:
       (~handle: int, ~resource: Uri.t, Client.t) =>
-      Lwt.t(list(DocumentSymbol.t));
+      Lwt.t(option(list(DocumentSymbol.t)));
 
     let provideDefinition:
       (

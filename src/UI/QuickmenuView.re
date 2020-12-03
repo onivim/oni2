@@ -76,7 +76,7 @@ let%component busyBar = (~theme, ()) => {
       |> ease(Easing.easeInOut)
       |> repeat
       |> tween(0., 1.)
-      |> Hooks.animation
+      |> Hooks.animation(~name="QuickMenu busyBar")
     );
 
   let indicator = () => {
@@ -162,7 +162,7 @@ let make =
 
   let input = () =>
     <View style=Styles.inputContainer>
-      <Feature_InputText.View
+      <Component_InputText.View
         ?prefix
         fontFamily={font.family}
         fontSize=14.

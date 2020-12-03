@@ -5,8 +5,8 @@ type t = {
   // True if the update applies to the entire buffer, false otherwise
   isFull: bool,
   id: int,
-  startLine: Index.t,
-  endLine: Index.t,
+  startLine: LineNumber.t,
+  endLine: LineNumber.t,
   lines: [@opaque] array(string),
   version: int,
 };

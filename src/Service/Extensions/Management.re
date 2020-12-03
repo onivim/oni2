@@ -21,7 +21,9 @@ module Internal = {
     getUserExtensionsDirectory(~overriddenExtensionsDir)
     |> Option.map(
          FunEx.tap(p =>
-           Log.infof(m => m("Searching for user extensions in: %s", p))
+           Log.infof(m =>
+             m("Searching for user extensions in: %s", p |> Fp.toString)
+           )
          ),
        )
     |> Option.map(Exthost.Extension.Scanner.scan(~category=User))
@@ -43,13 +45,17 @@ module Internal = {
         };
 
       Log.debugf(m =>
-        m("Installing extension %s to %s", name, extensionsFolder)
+        m(
+          "Installing extension %s to %s",
+          name,
+          extensionsFolder |> Fp.toString,
+        )
       );
 
       NodeTask.run(
         ~name="Install",
         ~setup,
-        ~args=[absolutePath, extensionsFolder, folderName],
+        ~args=[absolutePath, extensionsFolder |> Fp.toString, folderName],
         "install-extension.js",
       );
     };

@@ -24,7 +24,7 @@ module Catalog: {
     [@deriving show]
     type t = {
       downloadUrl: string,
-      repositoryUrl: string,
+      repositoryUrl: option(string),
       homepageUrl: string,
       manifestUrl: string,
       iconUrl: option(string),
@@ -35,7 +35,7 @@ module Catalog: {
       namespace: string,
       //      downloadCount: int,
       displayName: option(string),
-      description: string,
+      description: option(string),
       //      categories: list(string),
       version: string,
       versions: list(VersionInfo.t),
@@ -54,7 +54,7 @@ module Catalog: {
       name: string,
       namespace: string,
       displayName: option(string),
-      description: string,
+      description: option(string),
     };
 
     let name: t => string;
@@ -81,12 +81,14 @@ module Catalog: {
 
 module Management: {
   let install:
-    (~setup: Setup.t, ~extensionsFolder: string=?, string) => Lwt.t(unit);
+    (~setup: Setup.t, ~extensionsFolder: Fp.t(Fp.absolute)=?, string) =>
+    Lwt.t(unit);
 
-  let uninstall: (~extensionsFolder: string=?, string) => Lwt.t(unit);
+  let uninstall:
+    (~extensionsFolder: Fp.t(Fp.absolute)=?, string) => Lwt.t(unit);
 
   let get:
-    (~extensionsFolder: string=?, unit) =>
+    (~extensionsFolder: Fp.t(Fp.absolute)=?, unit) =>
     Lwt.t(list(Exthost.Extension.Scanner.ScanResult.t));
 };
 
@@ -104,7 +106,7 @@ module Query: {
 module Effects: {
   let uninstall:
     (
-      ~extensionsFolder: option(string),
+      ~extensionsFolder: option(Fp.t(Fp.absolute)),
       ~toMsg: result(unit, string) => 'a,
       string
     ) =>
@@ -112,7 +114,7 @@ module Effects: {
 
   let install:
     (
-      ~extensionsFolder: option(string),
+      ~extensionsFolder: option(Fp.t(Fp.absolute)),
       ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'a,
       string
     ) =>
@@ -125,10 +127,6 @@ module Effects: {
 
 module Sub: {
   let search:
-    (
-      ~setup: Setup.t,
-      ~query: Query.t,
-      ~toMsg: result(Query.t, string) => 'a
-    ) =>
+    (~setup: Setup.t, ~query: Query.t, ~toMsg: result(Query.t, exn) => 'a) =>
     Isolinear.Sub.t('a);
 };

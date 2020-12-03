@@ -5,21 +5,31 @@ open TestFramework;
 let resetBuffer = () =>
   Helpers.resetBuffer("test/reason-libvim/testfile.txt");
 
-let input = (~autoClosingPairs=AutoClosingPairs.empty, ~cursors=[], key) => {
-  let out =
-    Vim.input(
-      ~context={...Context.current(), autoClosingPairs, cursors},
+let input =
+    (
+      ~autoClosingPairs=AutoClosingPairs.empty,
+      ~mode=Mode.Normal({cursor: BytePosition.zero}),
+      key,
+    ) => {
+  let (out, _effects: list(Effect.t)) =
+    Vim.input(~context={...Context.current(), autoClosingPairs, mode}, key);
+
+  Context.(out.mode);
+};
+
+let key =
+    (
+      ~autoClosingPairs=AutoClosingPairs.empty,
+      ~mode=Mode.Insert({cursors: []}),
+      key,
+    ) => {
+  let (out, _effects: list(Effect.t)) =
+    Vim.key(
+      ~context=Context.{...Context.current(), autoClosingPairs, mode},
       key,
     );
 
-  Context.(out.cursors);
-};
-
-let key = (~autoClosingPairs=AutoClosingPairs.empty, ~cursors=[], key) => {
-  let out =
-    Vim.key(~context={...Context.current(), autoClosingPairs, cursors}, key);
-
-  Context.(out.cursors);
+  Context.(out.mode);
 };
 
 describe("Multi-cursor", ({describe, _}) => {
@@ -27,33 +37,58 @@ describe("Multi-cursor", ({describe, _}) => {
     describe("single cursor", ({test, _}) => {
       test("set cursor works as expected", ({expect, _}) => {
         let _: Buffer.t = resetBuffer();
-        let cursors1 = input("j");
+        let mode1 = input("j");
 
-        cursors1
+        mode1
+        |> Vim.Mode.cursors
         |> List.hd
-        |> (cursor => expect.int((cursor.line :> int)).toBe(1));
+        |> (
+          cursor => expect.int(cursor.line |> LineNumber.toZeroBased).toBe(1)
+        );
 
-        expect.int((Cursor.getLine() :> int)).toBe(1);
+        expect.int(
+          Cursor.get() |> BytePosition.line |> LineNumber.toZeroBased,
+        ).
+          toBe(
+          1,
+        );
 
         // set cursor, and move up
-        let cursors2 =
+        let mode2 =
           input(
-            ~cursors=[
-              Cursor.create(~line=Index.fromOneBased(3), ~column=Index.zero),
-            ],
+            ~mode=
+              Normal({
+                cursor:
+                  BytePosition.{
+                    line: LineNumber.ofZeroBased(2),
+                    byte: ByteIndex.zero,
+                  },
+              }),
             "k",
           );
 
-        cursors2
+        mode2
+        |> Vim.Mode.cursors
         |> List.hd
-        |> (cursor => expect.int((cursor.line :> int)).toBe(1));
+        |> (
+          cursor =>
+            expect.int(cursor |> BytePosition.line |> LineNumber.toZeroBased).
+              toBe(
+              1,
+            )
+        );
 
-        expect.int((Cursor.getLine() :> int)).toBe(1);
+        expect.int(
+          Cursor.get() |> BytePosition.line |> LineNumber.toZeroBased,
+        ).
+          toBe(
+          1,
+        );
       })
     })
   });
   describe("insert mode", ({test, _}) => {
-    test("multi-cursor auto-closing paris", ({expect, _}) => {
+    test("multi-cursor auto-closing pairs", ({expect, _}) => {
       let buf = resetBuffer();
 
       let autoClosingPairs =
@@ -64,23 +99,32 @@ describe("Multi-cursor", ({describe, _}) => {
       let updates: ref(list(BufferUpdate.t)) = ref([]);
       let dispose = Buffer.onUpdate(upd => updates := [upd, ...updates^]);
 
-      let _context: Context.t = Vim.input("i");
+      let (_context: Context.t, _effects: list(Effect.t)) = Vim.input("i");
       expect.int(List.length(updates^)).toBe(0);
 
-      let cursors =
+      let mode =
         input(
           ~autoClosingPairs,
-          ~cursors=[
-            Cursor.create(~line=Index.zero, ~column=Index.zero),
-            Cursor.create(~line=Index.(zero + 1), ~column=Index.zero),
-            Cursor.create(~line=Index.(zero + 2), ~column=Index.zero),
-          ],
+          ~mode=
+            Vim.Mode.Insert({
+              cursors: [
+                BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+                BytePosition.{
+                  line: LineNumber.(zero + 1),
+                  byte: ByteIndex.zero,
+                },
+                BytePosition.{
+                  line: LineNumber.(zero + 2),
+                  byte: ByteIndex.zero,
+                },
+              ],
+            }),
           "{",
         );
 
-      let line1 = Buffer.getLine(buf, Index.zero);
-      let line2 = Buffer.getLine(buf, Index.(zero + 1));
-      let line3 = Buffer.getLine(buf, Index.(zero + 2));
+      let line1 = Buffer.getLine(buf, LineNumber.zero);
+      let line2 = Buffer.getLine(buf, LineNumber.(zero + 1));
+      let line3 = Buffer.getLine(buf, LineNumber.(zero + 2));
 
       expect.string(line1).toEqual(
         "{}This is the first line of a test file",
@@ -92,11 +136,11 @@ describe("Multi-cursor", ({describe, _}) => {
         "{}This is the third line of a test file",
       );
 
-      let _: list(Cursor.t) = input(~autoClosingPairs, ~cursors, "a");
+      let _: Vim.Mode.t = input(~autoClosingPairs, ~mode, "a");
 
-      let line1 = Buffer.getLine(buf, Index.zero);
-      let line2 = Buffer.getLine(buf, Index.(zero + 1));
-      let line3 = Buffer.getLine(buf, Index.(zero + 2));
+      let line1 = Buffer.getLine(buf, LineNumber.zero);
+      let line2 = Buffer.getLine(buf, LineNumber.(zero + 1));
+      let line3 = Buffer.getLine(buf, LineNumber.(zero + 2));
 
       expect.string(line1).toEqual(
         "{a}This is the first line of a test file",
@@ -116,22 +160,31 @@ describe("Multi-cursor", ({describe, _}) => {
       let updates: ref(list(BufferUpdate.t)) = ref([]);
       let dispose = Buffer.onUpdate(upd => updates := [upd, ...updates^]);
 
-      let _: Context.t = Vim.input("i");
+      let (_: Context.t, _: list(Effect.t)) = Vim.input("i");
       expect.int(List.length(updates^)).toBe(0);
 
-      let cursors =
+      let mode =
         input(
-          ~cursors=[
-            Cursor.create(~line=Index.zero, ~column=Index.zero),
-            Cursor.create(~line=Index.(zero + 1), ~column=Index.zero),
-            Cursor.create(~line=Index.(zero + 2), ~column=Index.zero),
-          ],
+          ~mode=
+            Insert({
+              cursors: [
+                BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+                BytePosition.{
+                  line: LineNumber.(zero + 1),
+                  byte: ByteIndex.zero,
+                },
+                BytePosition.{
+                  line: LineNumber.(zero + 2),
+                  byte: ByteIndex.zero,
+                },
+              ],
+            }),
           "a",
         );
 
-      let line1 = Buffer.getLine(buf, Index.zero);
-      let line2 = Buffer.getLine(buf, Index.(zero + 1));
-      let line3 = Buffer.getLine(buf, Index.(zero + 2));
+      let line1 = Buffer.getLine(buf, LineNumber.zero);
+      let line2 = Buffer.getLine(buf, LineNumber.(zero + 1));
+      let line3 = Buffer.getLine(buf, LineNumber.(zero + 2));
 
       expect.string(line1).toEqual("aThis is the first line of a test file");
       expect.string(line2).toEqual(
@@ -139,11 +192,11 @@ describe("Multi-cursor", ({describe, _}) => {
       );
       expect.string(line3).toEqual("aThis is the third line of a test file");
 
-      let cursors = input(~cursors, "b");
+      let mode = input(~mode, "b");
 
-      let line1 = Buffer.getLine(buf, Index.zero);
-      let line2 = Buffer.getLine(buf, Index.(zero + 1));
-      let line3 = Buffer.getLine(buf, Index.(zero + 2));
+      let line1 = Buffer.getLine(buf, LineNumber.zero);
+      let line2 = Buffer.getLine(buf, LineNumber.(zero + 1));
+      let line3 = Buffer.getLine(buf, LineNumber.(zero + 2));
 
       expect.string(line1).toEqual(
         "abThis is the first line of a test file",
@@ -155,11 +208,11 @@ describe("Multi-cursor", ({describe, _}) => {
         "abThis is the third line of a test file",
       );
 
-      let _: list(Cursor.t) = key(~cursors, "<bs>");
+      let _: Vim.Mode.t = key(~mode, "<bs>");
 
-      let line1 = Buffer.getLine(buf, Index.zero);
-      let line2 = Buffer.getLine(buf, Index.(zero + 1));
-      let line3 = Buffer.getLine(buf, Index.(zero + 2));
+      let line1 = Buffer.getLine(buf, LineNumber.zero);
+      let line2 = Buffer.getLine(buf, LineNumber.(zero + 1));
+      let line3 = Buffer.getLine(buf, LineNumber.(zero + 2));
 
       expect.string(line1).toEqual("aThis is the first line of a test file");
       expect.string(line2).toEqual(

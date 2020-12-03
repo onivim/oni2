@@ -11,19 +11,19 @@ module Log = (val Log.withNamespace("Oni.Feature.Hover"));
 [@deriving show({with_path: false})]
 type provider = {
   handle: int,
-  selector: list(Exthost.DocumentFilter.t),
+  selector: Exthost.DocumentSelector.t,
 };
 
 type model = {
   shown: bool,
   providers: list(provider),
   contents: list(Exthost.MarkdownString.t),
-  range: option(EditorCoreTypes.Range.t),
+  range: option(EditorCoreTypes.CharacterRange.t),
   triggeredFrom:
     option(
       [
-        | `CommandPalette(EditorCoreTypes.Location.t)
-        | `Mouse(EditorCoreTypes.Location.t)
+        | `CommandPalette(EditorCoreTypes.CharacterPosition.t)
+        | `Mouse(EditorCoreTypes.CharacterPosition.t)
       ],
     ),
   lastRequestID: option(int),
@@ -53,13 +53,13 @@ type msg =
   | KeyPressed(string)
   | HoverInfoReceived({
       contents: list(Exthost.MarkdownString.t),
-      range: option(EditorCoreTypes.Range.t),
+      range: option(EditorCoreTypes.CharacterRange.t),
       requestID: int,
       editorID: int,
     })
   | HoverRequestFailed(string)
-  | MouseHovered(EditorCoreTypes.Location.t)
-  | MouseMoved(EditorCoreTypes.Location.t);
+  | MouseHovered(option(EditorCoreTypes.CharacterPosition.t))
+  | MouseMoved(option(EditorCoreTypes.CharacterPosition.t));
 
 type outmsg =
   | Nothing
@@ -67,13 +67,10 @@ type outmsg =
 
 let getEffectsForLocation =
     (~buffer, ~location, ~extHostClient, ~model, ~requestID, ~editorId) => {
-  let filetype =
-    buffer |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
-
   let matchingProviders =
     model.providers
     |> List.filter(({selector, _}) =>
-         Exthost.DocumentSelector.matches(~filetype, selector)
+         Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
        );
 
   matchingProviders
@@ -101,7 +98,7 @@ let getEffectsForLocation =
 
 let update =
     (
-      ~cursorLocation: Location.t,
+      ~cursorLocation: CharacterPosition.t,
       ~maybeBuffer,
       ~editorId,
       ~extHostClient,
@@ -134,9 +131,8 @@ let update =
 
     | _ => (model, Nothing)
     }
-  | MouseHovered(location) =>
-    switch (maybeBuffer) {
-    | Some(buffer) =>
+  | MouseHovered(maybeLocation) =>
+    let requestNewHover = (buffer, location) => {
       let requestID = IDGenerator.get();
       let effects =
         getEffectsForLocation(
@@ -156,13 +152,23 @@ let update =
         },
         Effect(effects),
       );
+    };
+    switch (maybeBuffer) {
+    | Some(buffer) =>
+      switch (maybeLocation, model.range) {
+      | (Some(location), None) => requestNewHover(buffer, location)
+      | (Some(location), Some(range))
+          when !EditorCoreTypes.CharacterRange.contains(location, range) =>
+        requestNewHover(buffer, location)
+      | _ => (model, Nothing)
+      }
     | _ => (model, Nothing)
-    }
-  | MouseMoved(location) =>
+    };
+  | MouseMoved(maybeLocation) =>
     let newModel =
-      switch (model.range) {
-      | Some(range) =>
-        if (EditorCoreTypes.Range.contains(location, range)) {
+      switch (model.range, maybeLocation) {
+      | (Some(range), Some(location)) =>
+        if (EditorCoreTypes.CharacterRange.contains(location, range)) {
           model;
         } else {
           {
@@ -174,7 +180,7 @@ let update =
           };
         }
 
-      | None => {
+      | _ => {
           ...model,
           shown: false,
           range: None,
@@ -272,8 +278,10 @@ module Popup = {
       ) =>
     if (model.editorID != editorId) {
       None;
+    } else if (model.contents == []) {
+      None;
     } else {
-      let maybeLocation: option(EditorCoreTypes.Location.t) =
+      let maybeLocation: option(EditorCoreTypes.CharacterPosition.t) =
         switch (model.triggeredFrom, model.shown) {
         | (Some(trigger), true) =>
           switch (trigger) {
@@ -286,7 +294,8 @@ module Popup = {
       let defaultLanguage =
         buffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
-      let hoverDiagnostic = (~diagnostic: Diagnostic.t, ()) => {
+      let hoverDiagnostic =
+          (~diagnostic: Feature_Diagnostics.Diagnostic.t, ()) => {
         <Text
           text={diagnostic.message}
           fontFamily={editorFont.fontFamily}
@@ -323,7 +332,7 @@ module Popup = {
            };
 
            let diagnostics =
-             Diagnostics.getDiagnosticsAtPosition(
+             Feature_Diagnostics.getDiagnosticsAtPosition(
                diagnostics,
                buffer,
                location,

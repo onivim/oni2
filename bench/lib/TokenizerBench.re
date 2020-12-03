@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open BenchFramework;
 
@@ -9,7 +10,7 @@ let createGiantString = iter => {
 
   f("", iter);
 };
-let makeLine = BufferLine.make(~indentation=IndentationSettings.default);
+let makeLine = BufferLine.make(~measure=_ => 1.0);
 
 let giantString = createGiantString(50) |> makeLine;
 
@@ -38,7 +39,7 @@ let tokenizeWithSplits = () => {
   let _: list(Tokenizer.TextRun.t) =
     Tokenizer.tokenize(
       ~f=splitEverything,
-      ~endIndex=BufferLine.lengthSlow(giantString),
+      ~stop=BufferLine.lengthSlow(giantString) |> CharacterIndex.ofInt,
       giantString,
     );
   ();
@@ -48,7 +49,7 @@ let tokenizeWithoutSplits = () => {
   let _: list(Tokenizer.TextRun.t) =
     Tokenizer.tokenize(
       ~f=splitNothing,
-      ~endIndex=BufferLine.lengthSlow(giantString),
+      ~stop=BufferLine.lengthSlow(giantString) |> CharacterIndex.ofInt,
       giantString,
     );
   ();
@@ -57,8 +58,8 @@ let tokenizeWithoutSplits = () => {
 let tokenizeWithSplitsSub = () => {
   let _: list(Tokenizer.TextRun.t) =
     Tokenizer.tokenize(
-      ~startIndex=100,
-      ~endIndex=200,
+      ~start=100 |> CharacterIndex.ofInt,
+      ~stop=200 |> CharacterIndex.ofInt,
       ~f=splitEverything,
       giantString,
     );
@@ -68,8 +69,8 @@ let tokenizeWithSplitsSub = () => {
 let tokenizeWithoutSplitsSub = () => {
   let _: list(Tokenizer.TextRun.t) =
     Tokenizer.tokenize(
-      ~startIndex=100,
-      ~endIndex=200,
+      ~start=100 |> CharacterIndex.ofInt,
+      ~stop=200 |> CharacterIndex.ofInt,
       ~f=splitNothing,
       giantString,
     );

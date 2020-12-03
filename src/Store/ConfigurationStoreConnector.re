@@ -15,7 +15,7 @@ module Constants = {
 
 let start =
     (
-      ~configurationFilePath: option(string),
+      ~configurationFilePath: option(Fp.t(Fp.absolute)),
       ~getZoom,
       ~setZoom,
       ~setVsync,
@@ -53,7 +53,9 @@ let start =
       Log.error("Unable to load configuration: " ++ msg);
       Isolinear.Effect.none;
     | Ok(configPath) =>
-      if (!Buffers.isModifiedByPath(buffers, configPath)) {
+      // TODO: Fp.t all the way...
+      let configPath = Fp.toString(configPath);
+      if (!Feature_Buffers.isModifiedByPath(buffers, configPath)) {
         Oni_Core.Log.perf("Apply configuration transform", () => {
           let parsedJson = Yojson.Safe.from_file(configPath);
           let newJson = transformer(parsedJson);
@@ -71,12 +73,16 @@ let start =
           );
         }
         |> Isolinear.Effect.map(msg => Actions.Notification(msg));
-      }
+      };
     };
   };
 
   let clearDiagnostics = (~dispatch) => {
-    dispatch(Actions.DiagnosticsClear(Constants.diagnosticsKey));
+    dispatch(
+      Actions.Diagnostics(
+        Feature_Diagnostics.Msg.clear(~owner=Constants.diagnosticsKey),
+      ),
+    );
   };
 
   let onError = (~dispatch, err: string) => {
@@ -89,18 +95,20 @@ let start =
          defaultConfigurationFileName
          |> getConfigurationFile
          |> Result.iter(configPath => {
-              let uri = Uri.fromPath(configPath);
+              let uri = Uri.fromFilePath(configPath);
               dispatch(
-                Actions.DiagnosticsSet(
-                  uri,
-                  Constants.diagnosticsKey,
-                  [
-                    Feature_LanguageSupport.Diagnostic.create(
-                      ~range,
-                      ~message,
-                      (),
-                    ),
-                  ],
+                Actions.Diagnostics(
+                  Feature_Diagnostics.Msg.diagnostics(
+                    uri,
+                    Constants.diagnosticsKey,
+                    [
+                      Feature_Diagnostics.Diagnostic.create(
+                        ~range,
+                        ~message,
+                        ~severity=Exthost.Diagnostic.Severity.Error,
+                      ),
+                    ],
+                  ),
                 ),
               );
             })
@@ -112,6 +120,7 @@ let start =
       dispatch(Actions.Configuration(UserSettingsChanged));
       defaultConfigurationFileName
       |> getConfigurationFile
+      |> Result.map(Fp.toString)
       |> (
         result =>
           Stdlib.Result.bind(result, ConfigurationParser.ofFile)
@@ -133,6 +142,7 @@ let start =
 
         defaultConfigurationFileName
         |> getConfigurationFile
+        |> Result.map(Fp.toString)
         // Once we know the path - register a listener to reload
         |> ResultEx.tap(configPath =>
              reloadConfigOnWritePost(~configPath, dispatch)
@@ -164,7 +174,8 @@ let start =
     Isolinear.Effect.createWithDispatch(
       ~name="configuration.openFile", dispatch =>
       switch (Filesystem.getOrCreateConfigFile(filePath)) {
-      | Ok(path) => dispatch(Actions.OpenFileByPath(path, None, None))
+      | Ok(path) =>
+        dispatch(Actions.OpenFileByPath(path |> Fp.toString, None, None))
       | Error(e) => onError(~dispatch, e)
       }
     );

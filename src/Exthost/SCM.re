@@ -57,18 +57,31 @@ module Resource = {
 
     let resource =
       Json.Decode.(
-        Pipeline.(
-          decode((handle, uri, /*icons,*/ tooltip, strikeThrough, faded) =>
-            {handle, uri, /*icons,*/ tooltip, strikeThrough, faded}
+        Pipeline.
+          (
+            decode(
+              (
+                handle,
+                uri,
+                /*icons,*/ tooltip,
+                maybeStrikeThrough,
+                maybeFaded,
+              ) => {
+              let strikeThrough =
+                maybeStrikeThrough |> Option.value(~default=false);
+              let faded = maybeFaded |> Option.value(~default=false);
+
+              {handle, uri, /*icons,*/ tooltip, strikeThrough, faded};
+            })
+            |> custom(index(0, int))
+            |> custom(index(1, Uri.decode))
+            // TODO: Bring back icons
+            //|> custom(index(2, icons))
+            |> custom(index(3, string))
+            |> custom(index(4, nullable(bool)))
+            |> custom(index(5, nullable(bool)))
           )
-          |> custom(index(0, int))
-          |> custom(index(1, Uri.decode))
-          // TODO: Bring back icons
-          //|> custom(index(2, icons))
-          |> custom(index(3, string))
-          |> custom(index(4, bool))
-          |> custom(index(5, bool))
-        )
+          // TODO: Context value?
       );
 
     let splice =
@@ -109,6 +122,29 @@ module GroupFeatures = {
     );
 };
 
+module Group = {
+  [@deriving show({with_path: false})]
+  type t = {
+    handle: int,
+    id: string,
+    label: string,
+    features: GroupFeatures.t,
+  };
+
+  let decode =
+    Json.Decode.(
+      Pipeline.(
+        decode((handle, id, label, features) =>
+          {handle, id, label, features}
+        )
+        |> custom(index(0, int))
+        |> custom(index(1, string))
+        |> custom(index(2, string))
+        |> custom(index(3, GroupFeatures.decode))
+      )
+    );
+};
+
 module Decode = {
   let command =
     Json.Decode.(
@@ -130,7 +166,7 @@ module ProviderFeatures = {
     count: option(int),
     commitTemplate: option(string),
     acceptInputCommand: option(command),
-    statusBarCommands: list(ExtCommand.t),
+    statusBarCommands: option(list(command)),
   };
 
   let decode =
@@ -144,11 +180,7 @@ module ProviderFeatures = {
           acceptInputCommand:
             field.optional("acceptInputCommand", Decode.command),
           statusBarCommands:
-            field.withDefault(
-              "statusBarCommands",
-              [],
-              list(ExtCommand.decode),
-            ),
+            field.optional("statusBarCommands", list(Decode.command)),
         }
       )
     );

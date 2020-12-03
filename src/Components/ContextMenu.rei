@@ -8,9 +8,7 @@ type item('data) = {
   data: [@opaque] 'data,
 };
 
-module Overlay: {
-  let make: (~key: React.Key.t=?, ~onClick: unit => unit, unit) => element;
-};
+module Overlay: {let make: (~key: React.Key.t=?, unit) => element;};
 
 let make:
   (
@@ -23,6 +21,7 @@ let make:
     ~offsetX: int=?,
     ~offsetY: int=?,
     ~onItemSelect: item('data) => unit,
+    ~onCancel: unit => unit,
     ~theme: ColorTheme.Colors.t,
     ~font: UiFont.t,
     unit

@@ -16,6 +16,21 @@ module Effects = {
         )
       });
   };
+  module Decorations = {
+    let provideDecorations = (~handle, ~requests, ~toMsg, client) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="exthost.provideDecorations", dispatch => {
+        let promise =
+          Exthost.Request.Decorations.provideDecorations(
+            ~handle,
+            ~requests,
+            client,
+          );
+
+        Lwt.on_success(promise, decorations => dispatch(toMsg(decorations)));
+      });
+    };
+  };
   module Documents = {
     let modelChanged =
         (
@@ -51,25 +66,37 @@ module Effects = {
         })
       );
   };
-  module SCM = {
-    let provideOriginalResource = (~handles, extHostClient, path, toMsg) =>
-      Isolinear.Effect.createWithDispatch(~name="scm.getOriginalUri", dispatch => {
-        // Try our luck with every provider. If several returns Last-Writer-Wins
-        // TODO: Is there a better heuristic? Perhaps use rootUri to choose the "nearest" provider?
-        handles
-        |> List.iter(handle => {
-             let promise =
-               Exthost.Request.SCM.provideOriginalResource(
-                 ~handle,
-                 ~uri=Uri.fromPath(path),
-                 extHostClient,
-               );
+  module FileSystemEventService = {
+    let onFileEvent = (~events, extHostClient) =>
+      Isolinear.Effect.create(~name="fileSystemEventService.onFileEvent", () => {
+        Exthost.Request.FileSystemEventService.onFileEvent(
+          ~events,
+          extHostClient,
+        )
+      });
+  };
 
-             Lwt.on_success(
-               promise,
-               Option.iter(uri => dispatch(toMsg(uri))),
-             );
-           })
+  module SCM = {
+    let getOriginalContent = (~handle, ~uri, ~toMsg, client) =>
+      Isolinear.Effect.createWithDispatch(
+        ~name="scm.getOriginalSourceLines", dispatch => {
+        let promise =
+          Exthost.Request.DocumentContentProvider.provideTextDocumentContent(
+            ~handle,
+            ~uri,
+            client,
+          );
+
+        Lwt.on_success(promise, maybeContent => {
+          switch (maybeContent) {
+          | None => ()
+          | Some(content) =>
+            let lines =
+              content |> Str.(split(regexp("\r?\n"))) |> Array.of_list;
+
+            dispatch(toMsg(lines));
+          }
+        });
       });
 
     let onInputBoxValueChange = (~handle, ~value, extHostClient) =>
@@ -196,6 +223,16 @@ module Effects = {
       });
     };
   };
+
+  module Workspace = {
+    let change = (~workspace, extHostClient) =>
+      Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
+        Exthost.Request.Workspace.acceptWorkspaceData(
+          ~workspace,
+          extHostClient,
+        )
+      });
+  };
 };
 
 module MutableState = {
@@ -215,7 +252,8 @@ module Internal = {
       if (lines == []) {
         [""];
       } else {
-        lines;
+        // There needs to be an empty line at the end of the buffer to sync changes at the end
+        lines @ [""];
       };
 
     maybeFilePath
@@ -242,27 +280,55 @@ module Internal = {
     };
 };
 
-// This is a temporary helper to avoid dispatching after a subscription is disposed
-// Really, this needs to be baked into isolinear - we should not ignore dispatches that
-// occur in the context of a disposed description. However - at this point in this release,
-// it's risky, so we'll scope it to just some of the new subscriptions.
-module Latch = {
-  type state =
-    | Open
-    | Closed;
-
-  type t = ref(state);
-
-  let create = () => ref(Open);
-
-  let isOpen = latch => latch^ == Open;
-
-  let close = latch => latch := Closed;
-};
-
 // SUBSCRIPTIONS
 
 module Sub = {
+  module SCM = {
+    type originalUriParams = {
+      filePath: string,
+      handle: int,
+      client: Exthost.Client.t,
+    };
+
+    module OriginalUriSubscription =
+      Isolinear.Sub.Make({
+        type nonrec msg = Uri.t;
+        type nonrec params = originalUriParams;
+        type state = unit;
+
+        let name = "Service_Exthost.SCM.OriginalUriSubscription";
+        let id = params => string_of_int(params.handle) ++ params.filePath;
+
+        let init = (~params, ~dispatch) => {
+          let promise =
+            Exthost.Request.SCM.provideOriginalResource(
+              ~handle=params.handle,
+              ~uri=Uri.fromPath(params.filePath),
+              params.client,
+            );
+
+          Lwt.on_success(
+            promise,
+            fun
+            | None => ()
+            | Some(uri) => dispatch(uri),
+          );
+
+          ();
+        };
+
+        let update = (~params as _, ~state, ~dispatch as _) => {
+          state;
+        };
+
+        let dispose = (~params as _, ~state as _) => ();
+      });
+
+    let originalUri = (~handle, ~filePath, ~toMsg, client) => {
+      OriginalUriSubscription.create({filePath, handle, client})
+      |> Isolinear.Sub.map(uri => toMsg(uri));
+    };
+  };
   type bufferParams = {
     client: Exthost.Client.t,
     buffer: Oni_Core.Buffer.t,
@@ -270,7 +336,7 @@ module Sub = {
 
   module BufferSubscription =
     Isolinear.Sub.Make({
-      type nonrec msg = unit;
+      type nonrec msg = [ | `Added];
       type nonrec params = bufferParams;
       type state = {
         didAdd: bool,
@@ -282,7 +348,7 @@ module Sub = {
         params.buffer |> Oni_Core.Buffer.getId |> string_of_int;
       };
 
-      let init = (~params, ~dispatch as _) => {
+      let init = (~params, ~dispatch) => {
         let bufferId = Oni_Core.Buffer.getId(params.buffer);
 
         let fileType =
@@ -310,6 +376,7 @@ module Sub = {
             ~delta=addedDelta,
             params.client,
           );
+          dispatch(`Added);
           {lastFileType: fileType, didAdd: true};
         | None => {lastFileType: fileType, didAdd: false}
         };
@@ -363,8 +430,8 @@ module Sub = {
         };
     });
 
-  let buffer = (~buffer, ~client) =>
-    BufferSubscription.create({buffer, client});
+  let buffer = (~buffer, ~client, ~toMsg) =>
+    BufferSubscription.create({buffer, client}) |> Isolinear.Sub.map(toMsg);
 
   type editorParams = {
     client: Exthost.Client.t,
@@ -518,7 +585,7 @@ module Sub = {
       type nonrec msg = list(Exthost.DefinitionLink.t);
       type nonrec params = bufferPositionParams;
 
-      type state = {latch: Latch.t};
+      type state = unit;
 
       let name = "Service_Exthost.DefinitionSubscription";
       let id = ({handle, buffer, position, _}: bufferPositionParams) =>
@@ -538,27 +605,17 @@ module Sub = {
             params.client,
           );
 
-        let latch = Latch.create();
+        Lwt.on_success(promise, definitionLinks => dispatch(definitionLinks));
 
-        Lwt.on_success(promise, definitionLinks =>
-          if (Latch.isOpen(latch)) {
-            dispatch(definitionLinks);
-          }
-        );
+        Lwt.on_failure(promise, _ => dispatch([]));
 
-        Lwt.on_failure(promise, _ =>
-          if (Latch.isOpen(latch)) {
-            dispatch([]);
-          }
-        );
-
-        {latch: latch};
+        ();
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state) => {
-        Latch.close(state.latch);
+      let dispose = (~params as _, ~state as _) => {
+        ();
       };
     });
 
@@ -573,7 +630,7 @@ module Sub = {
       type nonrec msg = list(Exthost.DocumentHighlight.t);
       type nonrec params = bufferPositionParams;
 
-      type state = {latch: Latch.t};
+      type state = unit;
 
       let name = "Service_Exthost.DocumentHighlightsSubscription";
       let id = ({handle, buffer, position, _}) =>
@@ -593,33 +650,87 @@ module Sub = {
             params.client,
           );
 
-        let latch = Latch.create();
-
-        Lwt.on_success(promise, documentHighlights =>
-          if (Latch.isOpen(latch)) {
-            dispatch(documentHighlights);
-          }
+        Lwt.on_success(promise, maybeDocumentHighlights =>
+          maybeDocumentHighlights |> Option.value(~default=[]) |> dispatch
         );
 
-        Lwt.on_failure(promise, _ =>
-          if (Latch.isOpen(latch)) {
-            dispatch([]);
-          }
-        );
+        Lwt.on_failure(promise, _ => dispatch([]));
 
-        {latch: latch};
+        ();
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state) => {
-        Latch.close(state.latch);
+      let dispose = (~params as _, ~state as _) => {
+        ();
       };
     });
 
   let documentHighlights = (~handle, ~buffer, ~position, ~toMsg, client) => {
     let position = position |> Exthost.OneBasedPosition.ofPosition;
     DocumentHighlightsSub.create({handle, buffer, position, client})
+    |> Isolinear.Sub.map(toMsg);
+  };
+
+  type codeLensesParams = {
+    handle: int,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+  };
+
+  let idFromBufferSaveTick = (~handle, ~buffer, name) => {
+    Printf.sprintf(
+      "%d-%d-%d.%s",
+      handle,
+      Oni_Core.Buffer.getId(buffer),
+      Oni_Core.Buffer.getSaveTick(buffer),
+      name,
+    );
+  };
+
+  module CodeLensesSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(list(Exthost.CodeLens.t), string);
+      type nonrec params = codeLensesParams;
+
+      type state = unit;
+
+      let name = "Service_Exthost.CodeLensesSubscription";
+      let id = ({handle, buffer, _}: params) =>
+        idFromBufferSaveTick(~handle, ~buffer, "CodeLensSubscription");
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideCodeLenses(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            params.client,
+          );
+
+        Lwt.on_success(
+          promise,
+          maybeCodeLenses => {
+            let lenses =
+              maybeCodeLenses |> Option.value(~default=[]) |> Result.ok;
+            dispatch(lenses);
+          },
+        );
+
+        Lwt.on_failure(promise, exn => {
+          dispatch(Error(Printexc.to_string(exn)))
+        });
+        ();
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+
+  let codeLenses = (~handle, ~buffer, ~toMsg, client) => {
+    CodeLensesSubscription.create({handle, buffer, client}: codeLensesParams)
     |> Isolinear.Sub.map(toMsg);
   };
 
@@ -636,7 +747,7 @@ module Sub = {
       type nonrec msg = result(Exthost.SuggestResult.t, string);
       type nonrec params = completionParams;
 
-      type state = {latch: Latch.t};
+      type state = unit;
 
       let name = "Service_Exthost.CompletionSubscription";
       let id = ({handle, buffer, position, _}: params) =>
@@ -657,27 +768,21 @@ module Sub = {
             params.client,
           );
 
-        let latch = Latch.create();
-
         Lwt.on_success(promise, suggestResult =>
-          if (Latch.isOpen(latch)) {
-            dispatch(Ok(suggestResult));
-          }
+          dispatch(Ok(suggestResult))
         );
 
         Lwt.on_failure(promise, exn =>
-          if (Latch.isOpen(latch)) {
-            dispatch(Error(Printexc.to_string(exn)));
-          }
+          dispatch(Error(Printexc.to_string(exn)))
         );
 
-        {latch: latch};
+        ();
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state) => {
-        Latch.close(state.latch);
+      let dispose = (~params as _, ~state as _) => {
+        ();
       };
     });
   let completionItems =
@@ -693,8 +798,6 @@ module Sub = {
     handle: int,
     chainedCacheId: Exthost.ChainedCacheId.t,
     client: Exthost.Client.t,
-    buffer: Oni_Core.Buffer.t,
-    position: Exthost.OneBasedPosition.t,
   };
 
   module CompletionItemSubscription =
@@ -702,56 +805,93 @@ module Sub = {
       type nonrec msg = result(Exthost.SuggestItem.t, string);
       type nonrec params = completionItemParams;
 
-      type state = {latch: Latch.t};
+      type state = unit;
 
       let name = "Service_Exthost.CompletionItemSubscription";
-      let id = ({handle, buffer, position, chainedCacheId, _}: params) =>
-        idFromBufferPosition(
-          ~handle,
-          ~buffer,
-          ~position,
-          chainedCacheId |> Exthost.ChainedCacheId.show,
-        );
+      let id = ({handle, chainedCacheId, _}: params) =>
+        string_of_int(handle) ++ Exthost.ChainedCacheId.show(chainedCacheId);
 
       let init = (~params, ~dispatch) => {
         let promise =
           Exthost.Request.LanguageFeatures.resolveCompletionItem(
             ~handle=params.handle,
-            ~resource=Oni_Core.Buffer.getUri(params.buffer),
-            ~position=params.position,
             ~chainedCacheId=params.chainedCacheId,
             params.client,
           );
 
-        let latch = Latch.create();
-
-        Lwt.on_success(promise, suggestItem =>
-          if (Latch.isOpen(latch)) {
-            dispatch(Ok(suggestItem));
-          }
-        );
+        Lwt.on_success(promise, suggestItem => dispatch(Ok(suggestItem)));
 
         Lwt.on_failure(promise, exn =>
-          if (Latch.isOpen(latch)) {
-            dispatch(Error(Printexc.to_string(exn)));
-          }
+          dispatch(Error(Printexc.to_string(exn)))
         );
 
-        {latch: latch};
+        ();
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state) => {
-        Latch.close(state.latch);
+      let dispose = (~params as _, ~state as _) => {
+        ();
       };
     });
-  let completionItem =
-      (~handle, ~chainedCacheId, ~buffer, ~position, ~toMsg, client) => {
-    let position = position |> Exthost.OneBasedPosition.ofPosition;
+  let completionItem = (~handle, ~chainedCacheId, ~toMsg, client) => {
     CompletionItemSubscription.create(
-      {handle, chainedCacheId, buffer, position, client}: completionItemParams,
+      {handle, chainedCacheId, client}: completionItemParams,
     )
+    |> Isolinear.Sub.map(toMsg);
+  };
+
+  let idFromBufferHandle = (~handle, ~buffer) =>
+    Printf.sprintf(
+      "%d.%d.%d",
+      handle,
+      Oni_Core.Buffer.getVersion(buffer),
+      Oni_Core.Buffer.getId(buffer),
+    );
+
+  type bufferHandleParams = {
+    handle: int,
+    buffer: Oni_Core.Buffer.t,
+    client: Exthost.Client.t,
+  };
+
+  module DocumentSymbolsSub =
+    Isolinear.Sub.Make({
+      type nonrec msg = list(Exthost.DocumentSymbol.t);
+      type nonrec params = bufferHandleParams;
+
+      type state = unit;
+
+      let name = "Service_Exthost.DocumentSymbolSubscription";
+      let id = ({handle, buffer, _}: params) =>
+        idFromBufferHandle(~handle, ~buffer);
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideDocumentSymbols(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            params.client,
+          );
+
+        Lwt.on_success(promise, maybeDocumentSymbols =>
+          maybeDocumentSymbols |> Option.value(~default=[]) |> dispatch
+        );
+
+        Lwt.on_failure(promise, _err => dispatch([]));
+
+        ();
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+
+  let documentSymbols = (~handle, ~buffer, ~toMsg, client) => {
+    DocumentSymbolsSub.create({handle, buffer, client})
     |> Isolinear.Sub.map(toMsg);
   };
 };

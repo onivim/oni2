@@ -44,15 +44,12 @@ let checkBufferForUpdate = buffer => {
   | None =>
     let update = BufferUpdate.createInitial(buffer);
     notifyUpdate(buffer);
-    Event.dispatch(buffer, Listeners.bufferEnter);
     Event.dispatch(update, Listeners.bufferUpdate);
   | Some(lastVersion) =>
     /* Check if the current buffer changed */
     switch (currentBuffer^) {
     | Some(v) =>
       if (v != buffer) {
-        Event.dispatch(v, Listeners.bufferLeave);
-        Event.dispatch(buffer, Listeners.bufferEnter);
         currentBuffer := Some(buffer);
         lastFilename := Native.vimBufferGetFilename(buffer);
         lastFiletype := Native.vimBufferGetFiletype(buffer);
@@ -71,8 +68,6 @@ let checkBufferForUpdate = buffer => {
         };
 
         if (!String.equal(string_opt(lastFt), string_opt(newFiletype))) {
-          prerr_endline("last filetype: " ++ string_opt(lastFt));
-          prerr_endline("new filetype: " ++ string_opt(newFiletype));
           lastFiletype := newFiletype;
           Event.dispatch(
             BufferMetadata.ofBuffer(buffer),
@@ -80,9 +75,7 @@ let checkBufferForUpdate = buffer => {
           );
         };
       }
-    | None =>
-      Event.dispatch(buffer, Listeners.bufferEnter);
-      currentBuffer := Some(buffer);
+    | None => currentBuffer := Some(buffer)
     };
     let newVersion = Native.vimBufferGetChangedTick(buffer);
 

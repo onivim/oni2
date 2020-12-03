@@ -13,7 +13,11 @@ let setup = () => {
   hwnd;
 };
 
-let configResolver = (settings, key) => Config.Settings.get(key, settings);
+let configResolver =
+    (~fileType as _, settings, _vimModel, ~vimSetting as _, key) =>
+  Config.Settings.get(key, settings)
+  |> Option.map(configJson => Config.Json(configJson))
+  |> Option.value(~default=Config.NotSet);
 
 let editor = (editor, buffer, state: State.t) => {
   <EditorSurface
@@ -23,16 +27,18 @@ let editor = (editor, buffer, state: State.t) => {
     editor
     buffer
     onEditorSizeChanged={(_, _, _) => ()}
-    onCursorChange={_ => ()}
     bufferHighlights={state.bufferHighlights}
     bufferSyntaxHighlights={state.syntaxHighlights}
     diagnostics={state.diagnostics}
     tokenTheme={state.tokenTheme}
     languageSupport={state.languageSupport}
-    mode={Feature_Vim.mode(state.vim)}
     theme={Feature_Theme.colors(state.colorTheme)}
     windowIsFocused=true
-    config={configResolver(Config.Settings.empty)}
+    scm=Feature_SCM.initial
+    perFileTypeConfig={configResolver(
+      Config.Settings.empty,
+      Feature_Vim.initial,
+    )}
     languageInfo=Exthost.LanguageInfo.initial
     grammarRepository=Oni_Syntax.GrammarRepository.empty
     uiFont=Oni_Core.UiFont.default

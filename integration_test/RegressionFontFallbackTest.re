@@ -2,6 +2,7 @@ open EditorCoreTypes;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 module Editor = Feature_Editor.Editor;
+module LineNumber = EditorCoreTypes.LineNumber;
 
 runTestWithInput(~name="RegressionFontFallback", (input, dispatch, wait, _) => {
   wait(~name="Wait for split to be created 1", (state: State.t) => {
@@ -19,21 +20,21 @@ runTestWithInput(~name="RegressionFontFallback", (input, dispatch, wait, _) => {
   dispatch(Actions.OpenFileByPath(testFile, None, None));
 
   wait(~name="Wait for cursor to be ready", (state: State.t) => {
-    let location: Location.t =
+    let location: CharacterPosition.t =
       state.layout |> Feature_Layout.activeEditor |> Editor.getPrimaryCursor;
 
-    location.line == Index.zero;
+    location.line == LineNumber.zero;
   });
 
   input("G");
 
   wait(~name="Wait for cursor to be at bottom", (state: State.t) => {
-    let location: Location.t =
+    let location: CharacterPosition.t =
       state.layout |> Feature_Layout.activeEditor |> Editor.getPrimaryCursor;
 
-    location |> Location.show |> prerr_endline;
-    location.line |> Index.toZeroBased |> string_of_int |> prerr_endline;
+    location |> CharacterPosition.show |> prerr_endline;
+    location.line |> LineNumber.toZeroBased |> string_of_int |> prerr_endline;
 
-    location.line == Index.fromZeroBased(212);
+    location.line == LineNumber.ofZeroBased(212);
   });
 });

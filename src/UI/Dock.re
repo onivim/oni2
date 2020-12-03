@@ -9,6 +9,8 @@ module Colors = Feature_Theme.Colors.ActivityBar;
 module BadgeColors = Feature_Theme.Colors.ActivityBarBadge;
 module Sneakable = Feature_Sneak.View.Sneakable;
 
+open Feature_SideBar;
+
 type notification =
   | InProgress
   | Count(int);
@@ -16,12 +18,11 @@ type notification =
 module Styles = {
   open Style;
 
-  let container = (~theme, ~offsetX) => [
+  let container = (~theme) => [
     top(0),
     bottom(0),
     backgroundColor(Colors.background.from(theme)),
     alignItems(`Center),
-    transform(Transform.[TranslateX(offsetX)]),
   ];
 
   let item = (~isHovered, ~isActive, ~theme, ~sideBar) => {
@@ -87,16 +88,16 @@ module Notification = {
         );
       | InProgress => (
           3,
-          <Oni_Components.Codicon
-            icon=Oni_Components.Codicon.clock
-            fontSize=10.
-            color=foregroundColor
-          />,
+          <Codicon icon=Codicon.clock fontSize=10. color=foregroundColor />,
         )
       };
 
     let%hook (scale, _state, _reset) =
-      Hooks.animation(Animations.appear, ~active=true);
+      Hooks.animation(
+        ~name="Notification Appear",
+        Animations.appear,
+        ~active=true,
+      );
     <View style={Styles.notification(~scale, ~theme, ~padding)}>
       inner
     </View>;
@@ -148,47 +149,35 @@ let%component item =
 };
 
 let onExplorerClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(FileExplorerClick));
+  GlobalContext.current().dispatch(Actions.SideBar(FileExplorerClicked));
 };
 
 let onSearchClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(SearchClick));
+  GlobalContext.current().dispatch(Actions.SideBar(SearchClicked));
 };
 
 let onSCMClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(SCMClick));
+  GlobalContext.current().dispatch(Actions.SideBar(SCMClicked));
 };
 
 let onExtensionsClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(ExtensionsClick));
+  GlobalContext.current().dispatch(Actions.SideBar(ExtensionsClicked));
 };
 
-let animation =
-  Revery.UI.Animation.(
-    animate(Revery.Time.milliseconds(150))
-    |> ease(Easing.ease)
-    |> tween(-50.0, 0.)
-    |> delay(Revery.Time.milliseconds(75))
-  );
-
-let%component make =
-              (
-                ~theme: ColorTheme.Colors.t,
-                ~sideBar: Feature_SideBar.model,
-                ~pane: Feature_Pane.model,
-                ~extensions: Feature_Extensions.model,
-                ~font: UiFont.t,
-                (),
-              ) => {
-  let%hook (offsetX, _animationState, _reset) = Hooks.animation(animation);
-
+let make =
+    (
+      ~theme: ColorTheme.Colors.t,
+      ~sideBar: Feature_SideBar.model,
+      ~extensions: Feature_Extensions.model,
+      ~font: UiFont.t,
+      (),
+    ) => {
   let isSidebarVisible = it => Feature_SideBar.isVisible(it, sideBar);
-  let isPaneVisible = it => Feature_Pane.isVisible(it, pane);
 
   let extensionNotification =
     Feature_Extensions.isBusy(extensions) ? Some(InProgress) : None;
 
-  <View style={Styles.container(~theme, ~offsetX)}>
+  <View style={Styles.container(~theme)}>
     <item
       font
       onClick=onExplorerClick
@@ -203,7 +192,7 @@ let%component make =
       onClick=onSearchClick
       sideBar
       theme
-      isActive={isPaneVisible(Search)}
+      isActive={isSidebarVisible(Search)}
       icon=FontAwesome.search
     />
     <item

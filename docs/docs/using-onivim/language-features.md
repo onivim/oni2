@@ -62,3 +62,7 @@ Onivim will automatically insert closing pairs, based on the language configurat
 For example, if the language defines `(` and `)` as closing pairs, typing `(` will insert `(|)`.
 
 Typing the closing pair will result in the cursor 'passing through'. Pressing <kbd>Backspace</kbd> in a closing pair will remove both the opening and closing pair.
+
+## Symbol Outline
+
+If the language extension supports it, `gO` can be used to navigate to the symbol outline.

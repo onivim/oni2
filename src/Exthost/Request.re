@@ -31,23 +31,17 @@ module Configuration = {
 module Decorations = {
   type request = {
     id: int,
-    handle: int,
     uri: Uri.t,
   };
 
   module Encode = {
     let request = request =>
       Json.Encode.(
-        obj([
-          ("id", request.id |> int),
-          ("handle", request.handle |> int),
-          ("uri", request.uri |> Uri.encode),
-        ])
+        obj([("id", request.id |> int), ("uri", request.uri |> Uri.encode)])
       );
   };
 
   type decoration = {
-    priority: int,
     bubble: bool,
     title: string,
     letter: string,
@@ -58,14 +52,13 @@ module Decorations = {
     let decoration =
       Json.Decode.(
         Pipeline.(
-          decode((priority, bubble, title, letter, color) =>
-            {priority, bubble, title, letter, color}
+          decode((bubble, title, letter, color) =>
+            {bubble, title, letter, color}
           )
-          |> custom(index(0, int))
-          |> custom(index(1, bool))
+          |> custom(index(0, bool))
+          |> custom(index(1, string))
           |> custom(index(2, string))
-          |> custom(index(3, string))
-          |> custom(index(4, ThemeColor.decode))
+          |> custom(index(3, ThemeColor.decode))
         )
       );
 
@@ -87,7 +80,7 @@ module Decorations = {
 
   type reply = IntMap.t(decoration);
 
-  let provideDecorations = (~requests, client) => {
+  let provideDecorations = (~handle, ~requests, client) => {
     let requestItems =
       requests |> List.map(Json.Encode.encode_value(Encode.request));
 
@@ -96,7 +89,7 @@ module Decorations = {
       ~usesCancellationToken=true,
       ~rpcName="ExtHostDecorations",
       ~method="$provideDecorations",
-      ~args=`List([`List(requestItems)]),
+      ~args=`List([`Int(handle), `List(requestItems)]),
       client,
     );
   };
@@ -217,6 +210,19 @@ module ExtensionService = {
   };
 };
 
+module FileSystemEventService = {
+  open Json.Encode;
+
+  let onFileEvent = (~events, client) => {
+    Client.notify(
+      ~rpcName="ExtHostFileSystemEventService",
+      ~method="$onFileEvent",
+      ~args=`List([events |> encode_value(Files.FileSystemEvents.encode)]),
+      client,
+    );
+  };
+};
+
 module LanguageFeatures = {
   let provideCodeLenses = (~handle: int, ~resource: Uri.t, client) => {
     let decoder = Json.Decode.(nullable(CodeLens.List.decode));
@@ -268,13 +274,7 @@ module LanguageFeatures = {
   };
 
   let resolveCompletionItem =
-      (
-        ~handle: int,
-        ~resource: Uri.t,
-        ~position: OneBasedPosition.t,
-        ~chainedCacheId: ChainedCacheId.t,
-        client,
-      ) => {
+      (~handle: int, ~chainedCacheId: ChainedCacheId.t, client) => {
     Client.request(
       ~decoder=SuggestItem.Dto.decode,
       ~usesCancellationToken=true,
@@ -283,8 +283,6 @@ module LanguageFeatures = {
       ~args=
         `List([
           `Int(handle),
-          Uri.to_yojson(resource),
-          OneBasedPosition.to_yojson(position),
           chainedCacheId |> Json.Encode.encode_value(ChainedCacheId.encode),
         ]),
       client,
@@ -311,7 +309,7 @@ module LanguageFeatures = {
   };
   let provideDocumentHighlights = (~handle, ~resource, ~position, client) => {
     Client.request(
-      ~decoder=Json.Decode.(list(DocumentHighlight.decode)),
+      ~decoder=Json.Decode.(nullable(list(DocumentHighlight.decode))),
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideDocumentHighlights",
@@ -327,7 +325,7 @@ module LanguageFeatures = {
 
   let provideDocumentSymbols = (~handle, ~resource, client) => {
     Client.request(
-      ~decoder=Json.Decode.(list(DocumentSymbol.decode)),
+      ~decoder=Json.Decode.(nullable(list(DocumentSymbol.decode))),
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideDocumentSymbols",

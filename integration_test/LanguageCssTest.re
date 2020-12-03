@@ -1,7 +1,6 @@
 open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
-open Feature_LanguageSupport;
 
 // This test validates:
 // - The 'oni-dev' extension gets activated
@@ -9,7 +8,7 @@ open Feature_LanguageSupport;
 runTestWithInput(
   ~name="LanguageCssTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   ExtensionHelpers.waitForExtensionToActivate(
@@ -60,7 +59,8 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags =
+          Feature_Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) > 0;
       | _ => false
       };
@@ -90,7 +90,8 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags =
+          Feature_Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) == 0;
       | _ => false
       };
