@@ -102,6 +102,6 @@ describe("InsertModeEdit", ({describe, _}) => {
       expect.string(line).toEqual(
         "abcabcabcabcabcThis is the first line of a test file",
       );
-    });
-  })
+    })
+  });
 });
