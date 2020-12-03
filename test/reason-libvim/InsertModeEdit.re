@@ -89,4 +89,19 @@ describe("InsertModeEdit", ({describe, _}) => {
       expect.int(newChangedTick).toBe(startChangedTick + 3);
     });
   });
+  describe("count", ({test, _}) => {
+    test("count + i", ({expect, _}) => {
+      let buffer = resetBuffer();
+
+      input("5");
+      input("i");
+      input("abc");
+      key("<esc>");
+
+      let line = Buffer.getLine(buffer, LineNumber.zero);
+      expect.string(line).toEqual(
+        "abcabcabcabcabcThis is the first line of a test file",
+      );
+    })
+  });
 });
