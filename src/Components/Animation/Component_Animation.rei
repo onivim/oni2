@@ -17,6 +17,21 @@ module Spring: {
   let getTarget: t => float;
 };
 
+module ColorTransition: {
+  type t;
+
+  type msg;
+
+  let make:
+    (~duration: Revery.Time.t, ~delay: Revery.Time.t, Revery.Color.t) => t;
+
+  let update: (msg, t) => t;
+  let sub: t => Isolinear.Sub.t(msg);
+
+  let set: (~instant: bool, ~color: Revery.Color.t, t) => t;
+  let get: t => Revery.Color.t;
+};
+
 type t('value);
 type msg;
 

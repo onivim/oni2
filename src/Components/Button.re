@@ -34,6 +34,8 @@ module Styles = {
     padding(8),
     margin(8),
     transform([Transform.TranslateY(yOffset)]),
+    flexDirection(`Row),
+    justifyContent(`Center),
   ];
 
   let text = (~color) => [Style.color(color)];
@@ -54,13 +56,6 @@ let%component make =
     isHovered
       ? Colors.Button.hoverBackground.from(theme)
       : Colors.Button.background.from(theme);
-
-  let%hook background =
-    CustomHooks.colorTransition(
-      ~name="Button Color Transition",
-      ~duration=Animations.backgroundTransitionDuration,
-      background,
-    );
 
   let%hook yOffset =
     Hooks.transition(

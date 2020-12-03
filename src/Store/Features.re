@@ -67,6 +67,10 @@ module Internal = {
       dispatch(Actions.Quit(true))
     );
 
+  let chdir = (path: Fp.t(Fp.absolute)) =>
+    Feature_Workspace.Effects.changeDirectory(path)
+    |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
+
   let updateEditor = (~editorId, ~msg, layout) => {
     switch (Feature_Layout.editorById(editorId, layout)) {
     | Some(editor) =>
@@ -136,9 +140,13 @@ module Internal = {
   let updateConfiguration: State.t => State.t =
     state => {
       let resolver = Selectors.configResolver(state);
+      let maybeRoot = Feature_Explorer.root(state.fileExplorer);
       let sideBar =
         state.sideBar
-        |> Feature_SideBar.configurationChanged(~config=resolver);
+        |> Feature_SideBar.configurationChanged(
+             ~hasWorkspace=maybeRoot != None,
+             ~config=resolver,
+           );
 
       let perFileTypeConfig =
         Feature_Configuration.resolver(state.config, state.vim);
@@ -155,6 +163,85 @@ module Internal = {
         );
       {...state, sideBar, layout};
     };
+
+  let updateMode = (~extHostClient, state: State.t, mode: Vim.Mode.t, effects) => {
+    let prevCursor =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getPrimaryCursor;
+
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let editor = Feature_Layout.activeEditor(state.layout);
+    let (signatureHelp, shOutMsg) =
+      Feature_SignatureHelp.update(
+        ~maybeBuffer,
+        ~maybeEditor=Some(editor),
+        ~extHostClient,
+        state.signatureHelp,
+        Feature_SignatureHelp.CursorMoved(
+          Feature_Editor.Editor.getId(editor),
+        ),
+      );
+
+    let wasInInsertMode =
+      Vim.Mode.isInsert(
+        state.layout
+        |> Feature_Layout.activeEditor
+        |> Feature_Editor.Editor.mode,
+      );
+
+    let shEffect =
+      switch (shOutMsg) {
+      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
+      | _ => Effect.none
+      };
+    let activeEditorId = editor |> Feature_Editor.Editor.getId;
+
+    let msg: Feature_Editor.msg = ModeChanged({mode, effects});
+    let scope = EditorScope.Editor(activeEditorId);
+    let (layout, editorEffect) = updateEditors(~scope, ~msg, state.layout);
+
+    let isInInsertMode =
+      Vim.Mode.isInsert(
+        layout |> Feature_Layout.activeEditor |> Feature_Editor.Editor.mode,
+      );
+
+    let newCursor =
+      layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.getPrimaryCursor;
+
+    let languageSupport =
+      if (prevCursor != newCursor) {
+        Feature_LanguageSupport.cursorMoved(
+          ~previous=prevCursor,
+          ~current=newCursor,
+          state.languageSupport,
+        );
+      } else {
+        state.languageSupport;
+      };
+
+    let languageSupport' =
+      if (isInInsertMode != wasInInsertMode) {
+        if (isInInsertMode) {
+          languageSupport |> Feature_LanguageSupport.startInsertMode;
+        } else {
+          languageSupport |> Feature_LanguageSupport.stopInsertMode;
+        };
+      } else {
+        languageSupport;
+      };
+
+    let state = {
+      ...state,
+      layout,
+      signatureHelp,
+      languageSupport: languageSupport',
+    };
+    let effect = [shEffect, editorEffect] |> Effect.batch;
+    (state, effect);
+  };
 };
 
 // UPDATE
@@ -309,6 +396,11 @@ let update =
           FocusManager.push(Focus.FileExplorer, state),
           Isolinear.Effect.none,
         )
+      | PickFolder => (
+          state,
+          Feature_Workspace.Effects.pickFolder
+          |> Isolinear.Effect.map(msg => Workspace(msg)),
+        )
       | UnhandledWindowMovement(windowMovement) => (
           state,
           Internal.unhandledWindowMotionEffect(windowMovement),
@@ -413,13 +505,12 @@ let update =
           additionalEdits |> List.map(exthostEditToVimEdit);
         (
           state,
-          Service_Vim.Effects.applyCompletion(
-            ~additionalEdits, ~meetColumn, ~insertText, ~toMsg=mode =>
-            Actions.Editor({
-              scope: EditorScope.Editor(editorId),
-              msg: ModeChanged({mode, effects: []}),
-            })
-          ),
+          Feature_Vim.Effects.applyCompletion(
+            ~additionalEdits,
+            ~meetColumn,
+            ~insertText,
+          )
+          |> Isolinear.Effect.map(msg => Vim(msg)),
         );
       | ReferencesAvailable =>
         let references =
@@ -440,13 +531,12 @@ let update =
         let insertText = Feature_Snippets.snippetToInsert(~snippet);
         (
           state,
-          Service_Vim.Effects.applyCompletion(
-            ~additionalEdits, ~meetColumn, ~insertText, ~toMsg=mode =>
-            Actions.Editor({
-              scope: EditorScope.Editor(editorId),
-              msg: ModeChanged({mode, effects: []}),
-            })
-          ),
+          Feature_Vim.Effects.applyCompletion(
+            ~additionalEdits,
+            ~meetColumn,
+            ~insertText,
+          )
+          |> Isolinear.Effect.map(msg => Vim(msg)),
         );
       | OpenFile({filePath, location}) => (
           state,
@@ -569,6 +659,12 @@ let update =
     | ReleaseFocus => (
         state |> FocusManager.pop(Focus.Pane),
         Isolinear.Effect.none,
+      )
+
+    | NotificationDismissed(notification) => (
+        state,
+        Feature_Notification.Effects.dismiss(notification)
+        |> Isolinear.Effect.map(msg => Notification(msg)),
       )
 
     | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
@@ -1185,29 +1281,46 @@ let update =
   | Theme(msg) =>
     let (model', outmsg) = Feature_Theme.update(state.colorTheme, msg);
 
-    let eff =
-      switch (outmsg) {
-      | OpenThemePicker(_) =>
-        let themes =
-          state.extensions
-          |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
-               Exthost.Extension.Contributions.(manifest.contributes.themes)
-             })
-          |> List.flatten;
+    let state = {...state, colorTheme: model'};
+    switch (outmsg) {
+    | OpenThemePicker(_) =>
+      let themes =
+        state.extensions
+        |> Feature_Extensions.pick((manifest: Exthost.Extension.Manifest.t) => {
+             Exthost.Extension.Contributions.(manifest.contributes.themes)
+           })
+        |> List.flatten;
 
+      let eff =
         Isolinear.Effect.createWithDispatch(~name="menu", dispatch => {
           dispatch(Actions.QuickmenuShow(ThemesPicker(themes)))
         });
-      | Nothing => Isolinear.Effect.none
-      };
-
-    ({...state, colorTheme: model'}, eff);
+      (state, eff);
+    | Nothing => (state, Isolinear.Effect.none)
+    | ThemeChanged(_colorTheme) =>
+      let config = Selectors.configResolver(state);
+      let theme = Feature_Theme.colors(state.colorTheme);
+      (
+        {
+          ...state,
+          notifications:
+            Feature_Notification.changeTheme(
+              ~config,
+              ~theme,
+              state.notifications,
+            ),
+        },
+        Isolinear.Effect.none,
+      );
+    };
 
   | Notification(msg) =>
     let config = Selectors.configResolver(state);
+    let theme = Feature_Theme.colors(state.colorTheme);
     let model' =
-      Feature_Notification.update(~config, state.notifications, msg);
-    ({...state, notifications: model'}, Effect.none);
+      Feature_Notification.update(~theme, ~config, state.notifications, msg);
+    let pane' = Feature_Pane.setNotifications(model', state.pane);
+    ({...state, notifications: model', pane: pane'}, Effect.none);
 
   | Modals(msg) =>
     switch (state.modal) {
@@ -1236,89 +1349,16 @@ let update =
         | S_REG => OpenFileByPath(path, None, None)
         | S_DIR =>
           switch (Luv.Path.chdir(path)) {
-          | Ok () => DirectoryChanged(path)
+          | Ok () =>
+            Actions.Workspace(
+              Feature_Workspace.Msg.workingDirectoryChanged(path),
+            )
           | Error(_) => Noop
           }
         | _ => Noop
         }
       );
     (state, eff);
-
-  // TODO: Merge into Editor(...) update
-  | Editor({scope, msg: ModeChanged(_) as msg}) =>
-    let prevCursor =
-      state.layout
-      |> Feature_Layout.activeEditor
-      |> Feature_Editor.Editor.getPrimaryCursor;
-
-    let maybeBuffer = Selectors.getActiveBuffer(state);
-    let editor = Feature_Layout.activeEditor(state.layout);
-    let (signatureHelp, shOutMsg) =
-      Feature_SignatureHelp.update(
-        ~maybeBuffer,
-        ~maybeEditor=Some(editor),
-        ~extHostClient,
-        state.signatureHelp,
-        Feature_SignatureHelp.CursorMoved(
-          Feature_Editor.Editor.getId(editor),
-        ),
-      );
-
-    let wasInInsertMode =
-      Vim.Mode.isInsert(
-        state.layout
-        |> Feature_Layout.activeEditor
-        |> Feature_Editor.Editor.mode,
-      );
-
-    let shEffect =
-      switch (shOutMsg) {
-      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
-      | _ => Effect.none
-      };
-    let (layout, editorEffect) =
-      Internal.updateEditors(~scope, ~msg, state.layout);
-
-    let isInInsertMode =
-      Vim.Mode.isInsert(
-        layout |> Feature_Layout.activeEditor |> Feature_Editor.Editor.mode,
-      );
-
-    let newCursor =
-      layout
-      |> Feature_Layout.activeEditor
-      |> Feature_Editor.Editor.getPrimaryCursor;
-
-    let languageSupport =
-      if (prevCursor != newCursor) {
-        Feature_LanguageSupport.cursorMoved(
-          ~previous=prevCursor,
-          ~current=newCursor,
-          state.languageSupport,
-        );
-      } else {
-        state.languageSupport;
-      };
-
-    let languageSupport' =
-      if (isInInsertMode != wasInInsertMode) {
-        if (isInInsertMode) {
-          languageSupport |> Feature_LanguageSupport.startInsertMode;
-        } else {
-          languageSupport |> Feature_LanguageSupport.stopInsertMode;
-        };
-      } else {
-        languageSupport;
-      };
-
-    let state = {
-      ...state,
-      layout,
-      signatureHelp,
-      languageSupport: languageSupport',
-    };
-    let effect = [shEffect, editorEffect] |> Effect.batch;
-    (state, effect);
 
   | Editor({scope, msg}) =>
     let (layout, effect) =
@@ -1537,32 +1577,48 @@ let update =
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
     let state = {...state, vim};
 
-    let (state', eff) =
-      switch (outmsg) {
-      | Nothing => (state, Isolinear.Effect.none)
-      | Effect(e) => (state, e)
-      | SettingsChanged => (
-          state |> Internal.updateConfiguration,
-          Isolinear.Effect.none,
-        )
-      | ModeUpdated(mode) =>
-        open Feature_Editor;
-        let activeEditorId =
-          state.layout |> Feature_Layout.activeEditor |> Editor.getId;
+    switch (outmsg) {
+    | Nothing => (state, Isolinear.Effect.none)
+    | Effect(e) => (
+        state,
+        e |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
+      )
+    | SettingsChanged => (
+        state |> Internal.updateConfiguration,
+        Isolinear.Effect.none,
+      )
+    | ModeDidChange({mode, effects}) =>
+      Internal.updateMode(~extHostClient, state, mode, effects)
+    };
 
-        let layout' =
-          state.layout
-          |> Feature_Layout.map(editor =>
-               if (Editor.getId(editor) == activeEditorId) {
-                 Editor.setMode(mode, editor);
-               } else {
-                 editor;
-               }
-             );
-        ({...state, layout: layout'}, Isolinear.Effect.none);
-      };
+  | Workspace(msg) =>
+    let (workspace, outmsg) = Feature_Workspace.update(msg, state.workspace);
 
-    (state', eff |> Isolinear.Effect.map(msg => Actions.Vim(msg)));
+    let state = {...state, workspace};
+    switch (outmsg) {
+    | Nothing => (state, Isolinear.Effect.none)
+
+    | Effect(eff) => (
+        state,
+        eff |> Isolinear.Effect.map(msg => Workspace(msg)),
+      )
+
+    | WorkspaceChanged(maybeWorkspaceFolder) =>
+      let fileExplorer =
+        Feature_Explorer.setRoot(
+          ~rootPath=maybeWorkspaceFolder,
+          state.fileExplorer,
+        );
+
+      let extWorkspace =
+        maybeWorkspaceFolder |> Option.map(Exthost.WorkspaceData.fromPath);
+      let eff =
+        Service_Exthost.Effects.Workspace.change(
+          ~workspace=extWorkspace,
+          extHostClient,
+        );
+      ({...state, fileExplorer}, eff);
+    };
 
   | AutoUpdate(msg) =>
     let getLicenseKey = () =>
@@ -1606,7 +1662,8 @@ let updateSubscriptions = (setup: Setup.t) => {
   let searchSubscriptions = Feature_Search.subscriptions(ripgrep);
 
   (state: State.t, dispatch) => {
-    let workingDirectory = state.workspace.workingDirectory;
+    let workingDirectory =
+      Feature_Workspace.workingDirectory(state.workspace);
     quickmenuSubscriptions(dispatch, state)
     |> QuickmenuSubscriptionRunner.run(~dispatch);
 

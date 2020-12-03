@@ -116,7 +116,11 @@ let parse = (~getenv: string => option(string), args) => {
 
   let setAttached = () => {
     attachToForeground := true;
-    logLevel := Some(Timber.Level.info);
+    // Set log level if it hasn't already been set
+    switch (logLevel^) {
+    | None => logLevel := Some(Timber.Level.info)
+    | Some(_) => ()
+    };
   };
 
   getenv("ONI2_LOG_FILE") |> Option.iter(v => logFile := Some(v));

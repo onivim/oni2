@@ -130,7 +130,6 @@ type t =
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
-  | DirectoryChanged(string)
   | VimExecuteCommand(string)
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
@@ -143,6 +142,7 @@ type t =
   | WindowFullscreen
   | WindowMinimized
   | WindowRestored
+  | Workspace(Feature_Workspace.msg)
   | TitleBar(Feature_TitleBar.msg)
   | WindowCloseBlocked
   | Layout(Feature_Layout.msg)
@@ -177,6 +177,7 @@ and quickmenuVariant =
   | CommandPalette
   | EditorsPicker
   | FilesPicker
+  | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | FileTypesPicker({

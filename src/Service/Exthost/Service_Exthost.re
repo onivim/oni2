@@ -223,6 +223,16 @@ module Effects = {
       });
     };
   };
+
+  module Workspace = {
+    let change = (~workspace, extHostClient) =>
+      Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
+        Exthost.Request.Workspace.acceptWorkspaceData(
+          ~workspace,
+          extHostClient,
+        )
+      });
+  };
 };
 
 module MutableState = {

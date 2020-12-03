@@ -100,6 +100,9 @@ let start =
     | Vim.Goto.Outline =>
       dispatch(Actions.SideBar(Feature_SideBar.(Command(GotoOutline))))
 
+    | Vim.Goto.Messages =>
+      dispatch(Actions.Pane(Feature_Pane.Msg.toggleMessages))
+
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
       Log.info("Goto definition requested");
@@ -144,6 +147,17 @@ let start =
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
 
+      | Clear({target, count}) =>
+        Vim.Clear.(
+          {
+            switch (target) {
+            | Messages =>
+              dispatch(
+                Actions.Notification(Feature_Notification.Msg.clear(count)),
+              )
+            };
+          }
+        )
       | Map(mapping) =>
         dispatch(Actions.Input(Feature_Input.Msg.vimMap(mapping)))
       | Unmap({mode, keys}) =>
@@ -166,9 +180,6 @@ let start =
             ),
           ),
         )
-      | ModeChanged(newMode) => {
-          dispatch(Actions.Vim(Feature_Vim.ModeChanged(newMode)));
-        }
       | SettingChanged(setting) =>
         dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
 
@@ -192,7 +203,11 @@ let start =
 
   let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
-      dispatch(Actions.DirectoryChanged(newDir))
+      dispatch(
+        Actions.Workspace(
+          Feature_Workspace.Msg.workingDirectoryChanged(newDir),
+        ),
+      )
     );
 
   let _: unit => unit =
@@ -550,15 +565,7 @@ let start =
     });
 
   let updateActiveEditorMode = (mode, effects) => {
-    let editorId =
-      Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
-
-    dispatch(
-      Actions.Editor({
-        scope: EditorScope.Editor(editorId),
-        msg: ModeChanged({mode, effects}),
-      }),
-    );
+    dispatch(Actions.Vim(Feature_Vim.ModeChanged({mode, effects})));
   };
 
   let isVimKey = key => {
@@ -578,10 +585,12 @@ let start =
     Isolinear.Effect.create(~name="vim.command", () => {
       let state = getState();
       let prevContext = Oni_Model.VimContext.current(state);
-      let (newContext, _effects) = Vim.command(~context=prevContext, cmd);
+      let (newContext, effects) = Vim.command(~context=prevContext, cmd);
 
       if (newContext.bufferId != prevContext.bufferId) {
         dispatch(Actions.OpenBufferById({bufferId: newContext.bufferId}));
+      } else {
+        updateActiveEditorMode(newContext.mode, effects);
       };
     });
   };
@@ -591,8 +600,8 @@ let start =
       if (isVimKey(key)) {
         // Set cursors based on current editor
         let state = getState();
-        let editorId =
-          Feature_Layout.activeEditor(state.layout) |> Editor.getId;
+        // let editorId =
+        //   Feature_Layout.activeEditor(state.layout) |> Editor.getId;
 
         let context = Oni_Model.VimContext.current(state);
         let previousBufferId = context.bufferId;
@@ -607,13 +616,7 @@ let start =
           dispatch(Actions.OpenBufferById({bufferId: bufferId}));
         };
 
-        dispatch(
-          Actions.Editor({
-            scope: EditorScope.Editor(editorId),
-            msg: ModeChanged({mode, effects}),
-          }),
-        );
-
+        updateActiveEditorMode(mode, effects);
         Log.debug("handled key: " ++ key);
       }
     );
@@ -878,21 +881,6 @@ let start =
         state,
         copyActiveFilepathToClipboardEffect,
       )
-
-    | DirectoryChanged(workingDirectory) =>
-      let newState = {
-        ...state,
-        fileExplorer:
-          Feature_Explorer.setRoot(
-            ~rootPath=workingDirectory,
-            state.fileExplorer,
-          ),
-        workspace: {
-          workingDirectory,
-          rootName: Filename.basename(workingDirectory),
-        },
-      };
-      (newState, Isolinear.Effect.none);
 
     | VimMessageReceived({priority, message, _}) =>
       let kind =

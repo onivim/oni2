@@ -290,36 +290,38 @@ function activate(context) {
         }),
     )
 
-    function createResourceUri(relativePath) {
-        const absolutePath = path.join(vscode.workspace.rootPath, relativePath)
-        return vscode.Uri.file(absolutePath)
-    }
+    if (vscode.workspace.rootPath) {
+        function createResourceUri(relativePath) {
+            const absolutePath = path.join(vscode.workspace.rootPath, relativePath)
+            return vscode.Uri.file(absolutePath)
+        }
 
-    // Test SCM
+        // Test SCM
 
-    const testSCM = vscode.scm.createSourceControl("test", "Test")
+        const testSCM = vscode.scm.createSourceControl("test", "Test")
 
-    const index = testSCM.createResourceGroup("index", "Index")
-    index.resourceStates = [
-        { resourceUri: createResourceUri("README.md") },
-        { resourceUri: createResourceUri("src/test/api.ts") },
-    ]
+        const index = testSCM.createResourceGroup("index", "Index")
+        index.resourceStates = [
+            { resourceUri: createResourceUri("README.md") },
+            { resourceUri: createResourceUri("src/test/api.ts") },
+        ]
 
-    const workingTree = testSCM.createResourceGroup("workingTree", "Changes")
-    workingTree.resourceStates = [
-        { resourceUri: createResourceUri(".travis.yml") },
-        { resourceUri: createResourceUri("README.md") },
-    ]
+        const workingTree = testSCM.createResourceGroup("workingTree", "Changes")
+        workingTree.resourceStates = [
+            { resourceUri: createResourceUri(".travis.yml") },
+            { resourceUri: createResourceUri("README.md") },
+        ]
 
-    testSCM.count = 13
+        testSCM.count = 13
 
-    testSCM.quickDiffProvider = {
-        provideOriginalResource: (uri, _token) => {
-            return vscode.Uri.file("README.md.old")
-        },
-    }
+        testSCM.quickDiffProvider = {
+            provideOriginalResource: (uri, _token) => {
+                return vscode.Uri.file("README.md.old")
+            },
+        }
 
-    testSCM.dispose()
+        testSCM.dispose()
+    };
 
     // Text Document Content Provider
 

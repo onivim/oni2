@@ -121,19 +121,7 @@ let getRangesForBlockSelection =
     incr(pos);
   };
 
-  let hasValue = v =>
-    switch (v) {
-    | Some(_) => true
-    | None => false
-    };
-
-  let getValue = v =>
-    switch (v) {
-    | Some(v) => v
-    | None => failwith("Should've been filtered out")
-    };
-
-  ranges^ |> List.filter(hasValue) |> List.map(getValue);
+  ranges^ |> List.filter_map(v => v);
 };
 
 /*

@@ -9,7 +9,7 @@ module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 let renderLine =
     (
-      ~context,
+      ~context: Draw.context,
       ~buffer,
       ~colors: Colors.t,
       ~diagnosticsMap,
@@ -17,82 +17,98 @@ let renderLine =
       ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
       ~bufferHighlights,
       ~languageSupport,
-      item,
+      viewLine,
       _offset,
     ) => {
-  let index = EditorCoreTypes.LineNumber.ofZeroBased(item);
-  let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) => {
-    let color =
-      Exthost.Diagnostic.Severity.(
-        switch (diagnostic.severity) {
-        | Error => colors.errorForeground
-        | Warning => colors.warningForeground
-        | Hint => colors.hintForeground
-        | Info => colors.infoForeground
-        }
+  let topViewLine = Editor.getTopViewLine(context.editor);
+  let bottomViewLine = Editor.getBottomViewLine(context.editor);
+
+  // Since this drawing logic is per-buffer-line, we only want to draw
+  // each buffer once. So, we'll draw the _primary_ view line (the
+  // first one for a buffer line), or the top/bottom if we're in the middle
+  // of a buffer line.
+  let shouldRenderViewLine =
+    Editor.viewLineIsPrimary(viewLine, context.editor)
+    || viewLine == topViewLine
+    || viewLine == bottomViewLine;
+
+  if (shouldRenderViewLine) {
+    let index = Editor.viewLineToBufferLine(viewLine, context.editor);
+    let item = EditorCoreTypes.LineNumber.toZeroBased(index);
+
+    let renderDiagnostics = (colors: Colors.t, diagnostic: Diagnostic.t) => {
+      let color =
+        Exthost.Diagnostic.Severity.(
+          switch (diagnostic.severity) {
+          | Error => colors.errorForeground
+          | Warning => colors.warningForeground
+          | Hint => colors.hintForeground
+          | Info => colors.infoForeground
+          }
+        );
+      Draw.underline(~context, ~color, diagnostic.range);
+    };
+
+    /* Draw error markers */
+    switch (IntMap.find_opt(item, diagnosticsMap)) {
+    | None => ()
+    | Some(diagnostics) => List.iter(renderDiagnostics(colors), diagnostics)
+    };
+
+    switch (Hashtbl.find_opt(selectionRanges, index)) {
+    | None => ()
+    | Some(selections) =>
+      List.iter(
+        Draw.rangeByte(~context, ~color=colors.selectionBackground),
+        selections,
+      )
+    };
+
+    /* Draw match highlights */
+    switch (matchingPairs) {
+    | None => ()
+    | Some((startPos, endPos)) =>
+      Draw.rangeCharacter(
+        ~context,
+        ~color=colors.selectionBackground,
+        CharacterRange.{start: startPos, stop: startPos},
       );
-    Draw.underline(~context, ~color, diagnostic.range);
-  };
+      Draw.rangeCharacter(
+        ~context,
+        ~color=colors.selectionBackground,
+        CharacterRange.{start: endPos, stop: endPos},
+      );
+    };
 
-  /* Draw error markers */
-  switch (IntMap.find_opt(item, diagnosticsMap)) {
-  | None => ()
-  | Some(diagnostics) => List.iter(renderDiagnostics(colors), diagnostics)
-  };
-
-  switch (Hashtbl.find_opt(selectionRanges, index)) {
-  | None => ()
-  | Some(selections) =>
-    List.iter(
-      Draw.rangeByte(~context, ~color=colors.selectionBackground),
-      selections,
+    let bufferId = Buffer.getId(buffer);
+    /* Draw search highlights */
+    BufferHighlights.getHighlightsByLine(
+      ~bufferId,
+      ~line=index,
+      bufferHighlights,
     )
+    |> List.iter(
+         Draw.rangeByte(
+           ~context,
+           ~padding=1.,
+           ~color=colors.findMatchBackground,
+         ),
+       );
+
+    /* Draw document highlights */
+    Feature_LanguageSupport.DocumentHighlights.getByLine(
+      ~bufferId,
+      ~line=index |> EditorCoreTypes.LineNumber.toZeroBased,
+      languageSupport,
+    )
+    |> List.iter(
+         Draw.rangeCharacter(
+           ~context,
+           ~padding=1.,
+           ~color=colors.findMatchBackground,
+         ),
+       );
   };
-
-  /* Draw match highlights */
-  switch (matchingPairs) {
-  | None => ()
-  | Some((startPos, endPos)) =>
-    Draw.rangeCharacter(
-      ~context,
-      ~color=colors.selectionBackground,
-      CharacterRange.{start: startPos, stop: startPos},
-    );
-    Draw.rangeCharacter(
-      ~context,
-      ~color=colors.selectionBackground,
-      CharacterRange.{start: endPos, stop: endPos},
-    );
-  };
-
-  let bufferId = Buffer.getId(buffer);
-  /* Draw search highlights */
-  BufferHighlights.getHighlightsByLine(
-    ~bufferId,
-    ~line=index,
-    bufferHighlights,
-  )
-  |> List.iter(
-       Draw.rangeByte(
-         ~context,
-         ~padding=1.,
-         ~color=colors.findMatchBackground,
-       ),
-     );
-
-  /* Draw document highlights */
-  Feature_LanguageSupport.DocumentHighlights.getByLine(
-    ~bufferId,
-    ~line=index |> EditorCoreTypes.LineNumber.toZeroBased,
-    languageSupport,
-  )
-  |> List.iter(
-       Draw.rangeCharacter(
-         ~context,
-         ~padding=1.,
-         ~color=colors.findMatchBackground,
-       ),
-     );
 };
 
 let renderEmbellishments =

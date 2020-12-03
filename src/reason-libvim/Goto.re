@@ -2,4 +2,5 @@ type effect =
   | Definition
   | Declaration
   | Hover
-  | Outline;
+  | Outline
+  | Messages;

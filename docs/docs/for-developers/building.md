@@ -112,6 +112,7 @@ To create a release build, run:
 
 - `esy '@release' run -f --checkhealth`
 - `esy '@release' install`
+- `esy '@release' run --help`
 - `esy '@release' create`
 
 This will create a `_esy/release` folder at the root with the application bundle inside that folder there will be folders for built binaries, in `_esy/release/install/bin` the `Oni2` binary resides along `Oni2_editor`.
@@ -120,13 +121,17 @@ Mind that these are actually symbolic links to `oni2/_esy/release/store/b/oni2-<
 
 ### Windows
 
+To create an installation package for Windows, run the following PowerShell script:
+
+- `./scripts/windows/publish.ps1`
+
 ### OSX
 
 Once you have a release build created, you can install Oni2 in your `Applications` folder.
 
 Run the following from the `oni2` directory:
 
-- `cp -R _release/Onivim2.app $USER/Applications`
+- `cp -R _release/Onivim2.app /Applications`
 
 If you want to open the editor from terminal with an `oni2` command, you can add Oni2 to the system PATH using a command
 item within the app:

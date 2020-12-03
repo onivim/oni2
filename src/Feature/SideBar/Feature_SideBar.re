@@ -31,7 +31,9 @@ type msg =
 
 module Constants = {
   let defaultWidth = 225;
-  let minWidth = 50;
+  // Adjusted minWidth for empty experience - don't let the text get
+  // too clipped!
+  let minWidth = 75;
   let maxWidth = 800;
 };
 
@@ -351,9 +353,12 @@ module Configuration = {
     );
 };
 
-let configurationChanged = (~config, model) => {
+let configurationChanged = (~hasWorkspace, ~config, model) => {
   let model' = setDefaultLocation(model, Configuration.location.get(config));
-  setDefaultVisibility(model', Configuration.visible.get(config));
+  setDefaultVisibility(
+    model',
+    hasWorkspace && Configuration.visible.get(config),
+  );
 };
 
 module Contributions = {

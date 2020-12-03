@@ -261,6 +261,30 @@ module Effect = {
         paths,
       )
     );
+
+  module Dialog = {
+    let openFolder = (~initialDirectory=?, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="os.dialog.openFolder", dispatch => {
+        let maybeFolders =
+          Revery_Native.Dialog.openFiles(
+            ~startDirectory=?initialDirectory,
+            ~canChooseDirectories=true,
+            ~canChooseFiles=false,
+            ~title="Open Folder",
+            (),
+          );
+
+        let selectedFolders = maybeFolders |> Option.value(~default=[||]);
+
+        if (Array.length(selectedFolders) > 0) {
+          selectedFolders[0] |> Fp.absoluteCurrentPlatform |> toMsg |> dispatch;
+        } else {
+          None |> toMsg |> dispatch;
+        };
+      });
+    };
+  };
 };
 
 // SUBSCRIPTIONS

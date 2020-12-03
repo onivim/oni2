@@ -10,7 +10,11 @@ let recordingMacro: model => option(char);
 
 [@deriving show]
 type msg =
-  | ModeChanged([@opaque] Vim.Mode.t)
+  // TODO: sub-mode for insert-literal
+  | ModeChanged({
+      mode: [@opaque] Vim.Mode.t,
+      effects: list(Vim.Effect.t),
+    })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
   | SettingChanged(Vim.Setting.t)
@@ -21,13 +25,26 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | SettingsChanged
-  | ModeUpdated(Vim.Mode.t);
+  | ModeDidChange({
+      mode: Vim.Mode.t,
+      effects: list(Vim.Effect.t),
+    });
 
 // UPDATE
 
 let update: (msg, model) => (model, outmsg);
 
 module CommandLine: {let getCompletionMeet: string => option(int);};
+
+module Effects: {
+  let applyCompletion:
+    (
+      ~meetColumn: EditorCoreTypes.CharacterIndex.t,
+      ~insertText: string,
+      ~additionalEdits: list(Vim.Edit.t)
+    ) =>
+    Isolinear.Effect.t(msg);
+};
 
 // CONFIGURATION
 
