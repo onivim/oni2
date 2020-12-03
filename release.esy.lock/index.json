@@ -1,5 +1,5 @@
 {
-  "checksum": "aed2bf1bcf4cd78ed62fa7636fa7b940",
+  "checksum": "84adb6edfbd5ce1251d6179e6f8dced3",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -847,20 +847,6 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "esy-autoconf@github:esy-packages/esy-autoconf#fb93edf@d41d8cd9": {
-      "id": "esy-autoconf@github:esy-packages/esy-autoconf#fb93edf@d41d8cd9",
-      "name": "esy-autoconf",
-      "version": "github:esy-packages/esy-autoconf#fb93edf",
-      "source": {
-        "type": "install",
-        "source": [ "github:esy-packages/esy-autoconf#fb93edf" ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "esy-help2man@github:esy-packages/esy-help2man#c8e6931d1dcf58a81bd801145a777fd3b115c443@d41d8cd9"
-      ],
-      "devDependencies": []
-    },
     "esy-angle-prebuilt@1.0.0@d41d8cd9": {
       "id": "esy-angle-prebuilt@1.0.0@d41d8cd9",
       "name": "esy-angle-prebuilt",
@@ -1023,7 +1009,6 @@
         "esy-macdylibbundler@0.4.5@d41d8cd9",
         "esy-angle-prebuilt@1.0.0@d41d8cd9", "axios@0.19.2@d41d8cd9",
         "@revery/timber@2.0.0@d41d8cd9",
-        "@reason-native-web/esy-openssl@1.1.1007@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/uutf@opam:1.0.2@4440868f", "@opam/uucp@opam:13.0.0@e9b515e0",
         "@opam/reason@opam:3.6.0@58adb39a", "@opam/re@opam:1.9.0@d4d5e13d",
@@ -1207,23 +1192,6 @@
         "ocaml@4.10.0@d41d8cd9", "@reason-native/pastel@0.1.0@d41d8cd9",
         "@opam/re@opam:1.9.0@d4d5e13d", "@opam/dune@opam:2.5.0@e0bac278",
         "@esy-ocaml/reason@3.6.2@d41d8cd9"
-      ],
-      "devDependencies": []
-    },
-    "@reason-native-web/esy-openssl@1.1.1007@d41d8cd9": {
-      "id": "@reason-native-web/esy-openssl@1.1.1007@d41d8cd9",
-      "name": "@reason-native-web/esy-openssl",
-      "version": "1.1.1007",
-      "source": {
-        "type": "install",
-        "source": [
-          "archive:https://registry.npmjs.org/@reason-native-web/esy-openssl/-/esy-openssl-1.1.1007.tgz#sha1:1a37c64f81f5b274382cd8c725779e23853c7262"
-        ]
-      },
-      "overrides": [],
-      "dependencies": [
-        "@opam/conf-pkg-config@opam:1.2@d86c8f53",
-        "@opam/conf-autoconf@opam:0.1@27b3f7cf"
       ],
       "devDependencies": []
     },
@@ -3708,31 +3676,6 @@
       ],
       "dependencies": [
         "esy-m4@github:esy-packages/esy-m4#c7cf0ac9221be2b1f9d90e83559ca08397a629e7@d41d8cd9",
-        "@esy-ocaml/substs@0.0.1@d41d8cd9"
-      ],
-      "devDependencies": []
-    },
-    "@opam/conf-autoconf@opam:0.1@27b3f7cf": {
-      "id": "@opam/conf-autoconf@opam:0.1@27b3f7cf",
-      "name": "@opam/conf-autoconf",
-      "version": "opam:0.1",
-      "source": {
-        "type": "install",
-        "source": [ "no-source:" ],
-        "opam": {
-          "name": "conf-autoconf",
-          "version": "0.1",
-          "path": "release.esy.lock/opam/conf-autoconf.0.1"
-        }
-      },
-      "overrides": [
-        {
-          "opamoverride":
-            "release.esy.lock/overrides/opam__s__conf_autoconf_opam__c__0.1_opam_override"
-        }
-      ],
-      "dependencies": [
-        "esy-autoconf@github:esy-packages/esy-autoconf#fb93edf@d41d8cd9",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": []
