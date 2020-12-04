@@ -21,8 +21,8 @@ module Diagnostics = Feature_Diagnostics;
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Constants = {
-  // TODO: What was this again...?
-  let scrollBarThickness = 8;
+  include Constants;
+
   let diffMarkersMaxLineCount = 2000;
   let diffMarkerWidth = 3.;
   let gutterMargin = 3.;

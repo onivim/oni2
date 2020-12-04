@@ -23,8 +23,8 @@ module Styles = {
       bottom(0),
       height(h),
       opacity(0.8),
-    ]
-  }
+    ];
+  };
 
   let inner = (~opacity as opac, ~yOffset) => [
     position(`Absolute),
@@ -57,46 +57,39 @@ module Item = {
                   ~lineNumber: LineNumber.t,
                   ~children,
                   (),
-                  ) => {
-      let%hook (measuredHeight, heightChangedDispatch) =
-        Hooks.reducer(~initialState=0, (newHeight, _prev) => newHeight);
+                ) => {
+    let%hook (measuredHeight, heightChangedDispatch) =
+      Hooks.reducer(~initialState=0, (newHeight, _prev) => newHeight);
 
-      let%hook () =
-        Hooks.effect(
-          If((!=), (measuredHeight, uniqueId)),
-          () => {
-            if (measuredHeight > 0) {
-              dispatch(
-                Msg.InlineElementSizeChanged({
-                  key: inlineKey,
-                  uniqueId,
-                  line: lineNumber,
-                  height: measuredHeight,
-                }),
-              );
-            };
-            None;
-          },
-        );
+    let%hook () =
+      Hooks.effect(
+        If((!=), (measuredHeight, uniqueId)),
+        () => {
+          if (measuredHeight > 0) {
+            dispatch(
+              Msg.InlineElementSizeChanged({
+                key: inlineKey,
+                uniqueId,
+                line: lineNumber,
+                height: measuredHeight,
+              }),
+            );
+          };
+          None;
+        },
+      );
 
-      // COMPONENT
-      <View
-        style={Styles.inner(~yOffset, ~opacity)}
-        onDimensionsChanged={({height, _}) => {heightChangedDispatch(height)}}>
-        children
-      </View>
-    };
+    // COMPONENT
+    <View
+      style={Styles.inner(~yOffset, ~opacity)}
+      onDimensionsChanged={({height, _}) => {heightChangedDispatch(height)}}>
+      children
+    </View>;
+  };
 };
 
 module Container = {
-  let make = (
-    ~editor,
-    ~line,
-    ~dispatch,
-    ~theme,
-    ~uiFont,
-    ()
-  ) => {
+  let make = (~editor, ~line, ~dispatch, ~theme, ~uiFont, ()) => {
     let inlineElements = Editor.getInlineElements(~line, editor);
 
     let (maxOpacity, totalHeight, elems) =
@@ -130,19 +123,20 @@ module Container = {
            (0., 0., []),
          );
 
-      let lineNumber = line;
-      let ({y: pixelY, _}: PixelPosition.t, _width) =
-        Editor.bufferBytePositionToPixel(
-          ~position=BytePosition.{line: lineNumber, byte: ByteIndex.ofInt(0)},
-          editor,
-        );
+    let lineNumber = line;
+    let ({y: pixelY, _}: PixelPosition.t, _width) =
+      Editor.bufferBytePositionToPixel(
+        ~position=BytePosition.{line: lineNumber, byte: ByteIndex.ofInt(0)},
+        editor,
+      );
 
-      <View style={Styles.container(~opacity=maxOpacity, ~pixelY)}>
-        {elems |> React.listToElement}
-        <View style=Styles.shadowContainer(~height=int_of_float(totalHeight))>
-          <Oni_Components.ScrollShadow.Top />
-          <Oni_Components.ScrollShadow.Bottom />
-        </View>
+    <View style={Styles.container(~opacity=maxOpacity, ~pixelY)}>
+      {elems |> React.listToElement}
+      <View
+        style={Styles.shadowContainer(~height=int_of_float(totalHeight))}>
+        <Oni_Components.ScrollShadow.Top opacity=maxOpacity height=5 />
+        <Oni_Components.ScrollShadow.Bottom opacity=maxOpacity height=5 />
       </View>
-  }
-}
+    </View>;
+  };
+};

@@ -792,15 +792,6 @@ let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
 };
 
 let setInlineElementSize = (~key, ~line, ~uniqueId, ~height, editor) => {
-  prerr_endline(
-    Printf.sprintf(
-      "Setting inline element - line: %d uniqueId: %s.%s height: %d",
-      line |> EditorCoreTypes.LineNumber.toZeroBased,
-      key,
-      uniqueId,
-      height,
-    ),
-  );
   editor
   |> withSteadyCursor(e =>
        {
@@ -822,7 +813,6 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
     elements
     |> List.map((inlineElement: inlineElement) =>
          InlineElements.{
-           reconcilerKey: Brisk_reconciler.Key.create(),
            key: inlineElement.key,
            uniqueId: inlineElement.uniqueId,
            line: inlineElement.lineNumber,
@@ -832,7 +822,6 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
              ),
            opacity: Component_Animation.make(InlineElements.Animation.fadeIn),
            view: inlineElement.view,
-           //hidden: inlineElement.hidden,
          }
        );
 

@@ -29,7 +29,6 @@ type msg =
 
 [@deriving show]
 type element = {
-  reconcilerKey: [@opaque] Brisk_reconciler.Key.t,
   key: string,
   uniqueId: string,
   line: LineNumber.t,
@@ -272,8 +271,7 @@ let allElementsForLine = (~line, {keyToElements, _}) => {
 
   keyToElements
   |> StringMap.bindings
-  |> List.map(snd)
-  |> List.map(stringMap => {
+  |> List.map(((_key, stringMap)) => {
        stringMap |> StringMap.bindings |> List.map(snd)
      })
   |> List.flatten

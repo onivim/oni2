@@ -76,13 +76,13 @@ let%component make =
     switch (lines) {
     | [] => acc
     | [line, ...tail] =>
-      getInlineElements([<InlineElementView.Container
-        uiFont
-        theme
-        editor
-        line
-        dispatch />, ...acc
-      ], tail)
+      getInlineElements(
+        [
+          <InlineElementView.Container uiFont theme editor line dispatch />,
+          ...acc,
+        ],
+        tail,
+      )
     };
 
   let linesWithElements = Editor.linesWithInlineElements(editor);

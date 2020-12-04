@@ -8,6 +8,8 @@ module Log = (val Kernel.Log.withNamespace("Oni2.Core.NodeTask"));
 
 let a = 1;
 
+let d = 2;
+
 let b = 2;
 
 let c = 3;
