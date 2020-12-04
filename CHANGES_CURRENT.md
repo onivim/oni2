@@ -32,6 +32,7 @@
 ### Documentation
 
 - #2731 - Add explorer context to key-bindings.md (thanks @tristil!)
+- #2797 - Add add-to-path instructions for OSX to getting started
 
 ### Infrastructure / Refactoring
 
