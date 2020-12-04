@@ -9,7 +9,6 @@ open EditorCoreTypes;
 open Oni_Core;
 
 module Zed_utf8 = ZedBundled;
-
 [@deriving show]
 type t = {
   bufferId: int,
@@ -17,6 +16,32 @@ type t = {
   base: string,
   // Meet is the location where we request completions
   location: CharacterPosition.t,
+};
+
+let shiftMeet = (~edits, meet) => {
+  edits
+  |> List.fold_left(
+       (meet, edit: Exthost.Edit.SingleEditOperation.t) => {
+         let editStopLine1 = Exthost.OneBasedRange.(edit.range.endLineNumber);
+         let meetLine1 =
+           EditorCoreTypes.LineNumber.toOneBased(meet.location.line);
+
+         if (editStopLine1 <= meetLine1) {
+           let delta = Exthost.Edit.SingleEditOperation.deltaLineCount(edit);
+           {
+             ...meet,
+             location:
+               CharacterPosition.{
+                 line: EditorCoreTypes.LineNumber.(meet.location.line + delta),
+                 character: meet.location.character,
+               },
+           };
+         } else {
+           meet;
+         };
+       },
+       meet,
+     );
 };
 
 let matches = (a, b) => {

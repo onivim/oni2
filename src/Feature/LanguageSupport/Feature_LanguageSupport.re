@@ -44,10 +44,12 @@ type outmsg =
   | ApplyCompletion({
       meetColumn: CharacterIndex.t,
       insertText: string,
+      additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | InsertSnippet({
       meetColumn: CharacterIndex.t,
       snippet: string,
+      additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | OpenFile({
       filePath: string,
@@ -56,21 +58,27 @@ type outmsg =
   | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | CodeLensesChanged({
+      bufferId: int,
+      lenses: list(CodeLens.codeLens),
+    });
 
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
     fun
-    | Outmsg.ApplyCompletion({meetColumn, insertText}) =>
-      ApplyCompletion({meetColumn, insertText})
-    | Outmsg.InsertSnippet({meetColumn, snippet}) =>
-      InsertSnippet({meetColumn, snippet})
+    | Outmsg.ApplyCompletion({meetColumn, insertText, additionalEdits}) =>
+      ApplyCompletion({meetColumn, insertText, additionalEdits})
+    | Outmsg.InsertSnippet({meetColumn, snippet, additionalEdits}) =>
+      InsertSnippet({meetColumn, snippet, additionalEdits})
     | Outmsg.Nothing => Nothing
     | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
     | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)
     | Outmsg.ReferencesAvailable => ReferencesAvailable
     | Outmsg.OpenFile({filePath, location}) => OpenFile({filePath, location})
-    | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f));
+    | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
+    | Outmsg.CodeLensesChanged({bufferId, lenses}) =>
+      CodeLensesChanged({bufferId, lenses});
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -214,8 +222,14 @@ let update =
     (model, Nothing)
 
   | CodeLens(codeLensMsg) =>
-    let codeLens' = CodeLens.update(codeLensMsg, model.codeLens);
-    ({...model, codeLens: codeLens'}, Nothing);
+    let (codeLens', eff) = CodeLens.update(codeLensMsg, model.codeLens);
+    let outmsg =
+      switch (eff) {
+      | CodeLens.Nothing => Outmsg.Nothing
+      | CodeLens.CodeLensesChanged({bufferId, lenses}) =>
+        Outmsg.CodeLensesChanged({bufferId, lenses})
+      };
+    ({...model, codeLens: codeLens'}, outmsg |> map(msg => CodeLens(msg)));
 
   | Completion(completionMsg) =>
     let (completion', outmsg) =
@@ -355,13 +369,11 @@ let cursorMoved = (~previous, ~current, model) => {
 };
 
 let startInsertMode = model => {
-  ...model,
-  completion: Completion.startInsertMode(model.completion),
+  {...model, completion: Completion.startInsertMode(model.completion)};
 };
 
 let stopInsertMode = model => {
-  ...model,
-  completion: Completion.stopInsertMode(model.completion),
+  {...model, completion: Completion.stopInsertMode(model.completion)};
 };
 
 let isFocused = ({rename, _}) => Rename.isFocused(rename);
@@ -597,6 +609,4 @@ let sub =
   |> Isolinear.Sub.batch;
 };
 
-// TODO: Remove
 module CompletionMeet = CompletionMeet;
-module LanguageFeatures = LanguageFeatures;

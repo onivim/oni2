@@ -85,7 +85,7 @@ module CustomDecoders: {
                | "none" => `None
                | "boundary" => `Boundary
                | "selection" => `Selection
-               | "all"
+               | "all" => `All
                | _ => `Selection,
              )
         ),
@@ -233,6 +233,7 @@ open CustomDecoders;
 
 let detectIndentation =
   setting("editor.detectIndentation", bool, ~default=true);
+
 let fontFamily =
   setting(
     ~vim=VimSettings.guifont,
@@ -286,6 +287,11 @@ let smoothScroll =
 
 let tabSize = setting("editor.tabSize", int, ~default=4);
 
+let wordWrap =
+  setting("editor.wordWrap", ~vim=VimSettings.wrap, wordWrap, ~default=`Off);
+
+let wordWrapColumn = setting("editor.wordWrapColumn", int, ~default=80);
+
 let yankHighlightEnabled =
   setting("vim.highlightedyank.enable", bool, ~default=true);
 let yankHighlightColor =
@@ -299,7 +305,8 @@ let yankHighlightDuration =
 
 module Hover = {
   let enabled = setting("editor.hover.enabled", bool, ~default=true);
-  let delay = setting("editor.hover.delay", time, ~default=Time.zero);
+  let delay =
+    setting("editor.hover.delay", time, ~default=Time.milliseconds(300));
 };
 
 module Minimap = {
@@ -326,17 +333,6 @@ module Experimental = {
       bool,
       ~default=false,
     );
-
-  let wordWrap =
-    setting(
-      "experimental.editor.wordWrap",
-      ~vim=VimSettings.wrap,
-      wordWrap,
-      ~default=`Off,
-    );
-
-  let wordWrapColumn =
-    setting("experimental.editor.wordWrapColumn", int, ~default=80);
 };
 
 let contributions = [
@@ -358,6 +354,8 @@ let contributions = [
   scrolloff.spec,
   smoothScroll.spec,
   tabSize.spec,
+  wordWrap.spec,
+  wordWrapColumn.spec,
   yankHighlightColor.spec,
   yankHighlightDuration.spec,
   yankHighlightEnabled.spec,
@@ -369,6 +367,4 @@ let contributions = [
   ZenMode.hideTabs.spec,
   ZenMode.singleFile.spec,
   Experimental.cursorSmoothCaretAnimation.spec,
-  Experimental.wordWrap.spec,
-  Experimental.wordWrapColumn.spec,
 ];

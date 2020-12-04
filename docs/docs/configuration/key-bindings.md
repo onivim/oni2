@@ -101,12 +101,12 @@ For conditional expressions, you can use the following conditional operators:
 
 | Operator | Symbol | Example |
 | --- | --- | --- |
-| Or | <code>&#124;&#124;</code> | <code>menuFocus &#124;&#124; textInputFocus</code> |
+| Or | <code>&#124;&#124;</code> | <code>listFocus &#124;&#124; textInputFocus</code> |
 | And | `&&` | `insertMode && suggestWidgetVisible` |
 
 Expressions may be grouped with `()`, for example:
 ```
-(menuFocus && !insertMode) || suggestWidgetVisible
+(editorTextFocus && !insertMode) || suggestWidgetVisible
 ```
 
 #### Contexts
@@ -129,7 +129,9 @@ Onivim-specific contexts:
 | `visualMode` |  The active editor is in `visual` mode |
 | `sneakMode` | Sneak mode is active |
 | `commandLineFocus` | The Vim commandline is open |
-| `menuFocus` | A pop-up menu has focus |
+| `listFocus` | A list of items (like a pop-up menu) is focused |
+| `vimListNavigation` | Inside a Vim-navigable list |
+| `vimTreeNavigation` | Inside the file explorer |
 
 ## Commands
 
@@ -222,4 +224,32 @@ Examples:
 ```
   {"key": "kk", "command": ":split", "when": "editorTextFocus"},
   {"key": "<C-D>", "command": ":d 2", "when": "insertMode"}
+```
+
+### Leader Key
+
+A leader key can be specified via the following configuration setting:
+
+```
+{ "vim.leader": "<space>" }
+```
+> NOTE: This setting is in `configuration.json`, not `keybindings.json`
+
+Alternatively, the leader key can be specified via an `Ex` command:
+```
+:nmap <space> <Leader>
+```
+
+Once the leader key is defined, it may be used in both `keybindings.json` and via VimL map commands:
+
+```
+[
+  { "key": "<Leader>p", "command": "workbench.action.quickOpen", "when": "editorTextFocus && normalMode" }
+]
+```
+
+or, alternatively, in VimL:
+
+```
+:nnoremap <Leader>p <C-S-P>
 ```

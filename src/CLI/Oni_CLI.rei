@@ -4,7 +4,6 @@ type t = {
   filesToOpen: list(string),
   forceScaleFactor: option(float),
   overriddenExtensionsDir: option(Fp.t(Fp.absolute)),
-  //  shouldClose: bool,
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,
   shouldSyntaxHighlight: bool,

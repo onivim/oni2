@@ -28,3 +28,10 @@ let value = (~default) =>
   fun
   | Ok(v) => v
   | Error(_) => default;
+
+let map2 = (f, a, b) =>
+  switch (a, b) {
+  | (Ok(aVal), Ok(bVal)) => Ok(f(aVal, bVal))
+  | (Ok(_), Error(_) as err) => err
+  | (Error(_) as err, _) => err
+  };

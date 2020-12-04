@@ -55,7 +55,6 @@ let%component make =
                 ~editor,
                 ~colors,
                 ~dispatch,
-                ~changeMode,
                 ~cursorPosition: CharacterPosition.t,
                 ~editorFont: Service_Font.font,
                 ~diagnosticsMap,
@@ -72,16 +71,37 @@ let%component make =
                 ~bufferPixelWidth,
                 ~windowIsFocused,
                 ~config,
+                ~uiFont,
+                ~theme,
                 (),
               ) => {
   let%hook maybeBbox = React.Hooks.ref(None);
-  let%hook hoverTimerActive = React.Hooks.ref(false);
-  let%hook lastMousePosition = React.Hooks.ref(None);
-  let%hook (hoverTimer, resetHoverTimer) =
-    Hooks.timer(~name="Mouse Hover Timer", ~active=hoverTimerActive^, ());
 
-  let lineCount = editor |> Editor.totalViewLines;
   let indentation = Buffer.getIndentation(buffer);
+
+  let inlineElements = Editor.getInlineElements(editor);
+
+  let lensElements =
+    inlineElements
+    |> List.map((inlineElement: InlineElements.element) => {
+         let line = inlineElement.line;
+         let uniqueId = inlineElement.uniqueId;
+         let elem = inlineElement.view(~theme, ~uiFont);
+         let inlineKey = inlineElement.key;
+         let hidden = inlineElement.hidden;
+
+         <InlineElementView
+           config
+           key={inlineElement.reconcilerKey}
+           inlineKey
+           uniqueId
+           dispatch
+           lineNumber=line
+           hidden
+           editor>
+           <elem />
+         </InlineElementView>;
+       });
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
     dispatch(
@@ -96,75 +116,39 @@ let%component make =
     maybeBbox^
     |> Option.map(bbox => {
          let (minX, minY, _, _) = bbox |> BoundingBox2d.getBounds;
-
          let relX = mouseX -. minX;
          let relY = mouseY -. minY;
-
-         Editor.Slow.pixelPositionToBytePosition(
-           // #2463: When we're in insert mode, clicking past the end of the line
-           // should move the cursor past the last byte.
-           ~allowPast=Vim.Mode.isInsert(mode),
-           ~pixelX=relX,
-           ~pixelY=relY,
-           editor,
-         );
+         let time = Revery.Time.now();
+         (relX, relY, time);
        });
   };
 
   let onMouseMove = (evt: NodeEvents.mouseMoveEventParams) => {
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-    |> Option.iter(bytePosition => {
-         dispatch(Msg.MouseMoved({bytePosition: bytePosition}))
+    |> Option.iter(((pixelX, pixelY, time)) => {
+         dispatch(Msg.EditorMouseMoved({time, pixelX, pixelY}))
        });
-    hoverTimerActive := true;
-    lastMousePosition := Some((evt.mouseX, evt.mouseY));
-    resetHoverTimer();
   };
 
-  let onMouseLeave = _ => {
-    hoverTimerActive := false;
-    lastMousePosition := None;
-    resetHoverTimer();
+  let onMouseEnter = _evt => {
+    dispatch(Msg.EditorMouseEnter);
   };
 
-  // Usually the If hook compares a value to a prior version of itself
-  // However, here we just want to compare it to a constant value,
-  // so we discard the second argument to the function.
-  let%hook () =
-    Hooks.effect(
-      If(
-        (t, _) => Revery.Time.toFloatSeconds(t) > Constants.hoverTime,
-        hoverTimer,
-      ),
-      () => {
-        lastMousePosition^
-        |> Utility.OptionEx.flatMap(((mouseX, mouseY)) =>
-             getMaybeLocationFromMousePosition(mouseX, mouseY)
-           )
-        |> Option.iter(bytePosition => {
-             dispatch(Msg.MouseHovered({bytePosition: bytePosition}))
-           });
-        hoverTimerActive := false;
-        resetHoverTimer();
-        None;
-      },
-    );
+  let onMouseLeave = _evt => {
+    dispatch(Msg.EditorMouseLeave);
+  };
+
+  let onMouseDown = (evt: NodeEvents.mouseButtonEventParams) => {
+    getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
+    |> Option.iter(((pixelX, pixelY, time)) => {
+         dispatch(Msg.EditorMouseDown({time, pixelX, pixelY}))
+       });
+  };
 
   let onMouseUp = (evt: NodeEvents.mouseButtonEventParams) => {
-    Log.trace("editorMouseUp");
-
     getMaybeLocationFromMousePosition(evt.mouseX, evt.mouseY)
-    |> Option.iter(bytePosition => {
-         Log.tracef(m =>
-           m("  setPosition (%s)", BytePosition.show(bytePosition))
-         );
-         let newMode =
-           if (Vim.Mode.isInsert(Editor.mode(editor))) {
-             Vim.Mode.Insert({cursors: [bytePosition]});
-           } else {
-             Vim.Mode.Normal({cursor: bytePosition});
-           };
-         changeMode(newMode);
+    |> Option.iter(((pixelX, pixelY, time)) => {
+         dispatch(Msg.EditorMouseUp({time, pixelX, pixelY}))
        });
   };
 
@@ -176,6 +160,7 @@ let%component make =
     |> Option.map((highlights: Editor.yankHighlight) =>
          <YankHighlights
            config
+           opacity={Component_Animation.get(highlights.opacity)}
            key={highlights.key}
            pixelRanges={highlights.pixelRanges}
          />
@@ -191,8 +176,10 @@ let%component make =
       gutterWidth,
       float(pixelWidth) -. gutterWidth,
     )}
+    onMouseDown
     onMouseUp
     onMouseMove
+    onMouseEnter
     onMouseLeave
     onMouseWheel>
     <Canvas
@@ -233,7 +220,6 @@ let%component make =
 
         ContentView.render(
           ~context,
-          ~count=lineCount,
           ~buffer,
           ~editor,
           ~colors,
@@ -265,6 +251,7 @@ let%component make =
         };
       }}
     />
+    {lensElements |> React.listToElement}
     yankHighlightElement
     <CursorView
       config

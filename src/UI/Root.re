@@ -8,7 +8,6 @@ open Revery.UI;
 open Oni_Model;
 
 module ContextMenu = Oni_Components.ContextMenu;
-module KeyDisplayer = Oni_Components.KeyDisplayer;
 module ResizeHandle = Oni_Components.ResizeHandle;
 module Tooltip = Oni_Components.Tooltip;
 
@@ -107,7 +106,9 @@ let make = (~dispatch, ~state: State.t, ()) => {
           indentationSettings
           theme
           dispatch=statusBarDispatch
-          workingDirectory={state.workspace.workingDirectory}
+          workingDirectory={Feature_Workspace.workingDirectory(
+            state.workspace,
+          )}
         />
       </View>;
     } else {
@@ -139,7 +140,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       <Feature_Modals.View
         model
         buffers
-        workingDirectory={state.workspace.workingDirectory}
+        workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
         theme
         font
         dispatch
@@ -150,6 +151,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
   };
 
   let titleDispatch = msg => dispatch(Actions.TitleBar(msg));
+  let registrationDispatch = msg => dispatch(Actions.Registration(msg));
 
   let mapDisplayMode =
     fun
@@ -173,14 +175,17 @@ let make = (~dispatch, ~state: State.t, ()) => {
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
       activeBuffer=maybeActiveBuffer
-      workspaceRoot={state.workspace.rootName}
-      workspaceDirectory={state.workspace.workingDirectory}
+      workspaceRoot={Feature_Workspace.rootName(state.workspace)}
+      workspaceDirectory={Feature_Workspace.workingDirectory(state.workspace)}
+      registration={state.registration}
       config
       isFocused={state.windowIsFocused}
       windowDisplayMode={state.windowDisplayMode |> mapDisplayMode}
       font={state.uiFont}
       theme
       dispatch=titleDispatch
+      registrationDispatch
+      height={state.titlebarHeight}
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
@@ -193,11 +198,9 @@ let make = (~dispatch, ~state: State.t, ()) => {
         languageInfo={state.languageInfo}
         theme
         uiFont
-        notifications={state.notifications}
         dispatch={msg => dispatch(Actions.Pane(msg))}
-        notificationDispatch={msg => dispatch(Actions.Notification(msg))}
         pane={state.pane}
-        workingDirectory={state.workspace.workingDirectory}
+        workingDirectory={Feature_Workspace.workingDirectory(state.workspace)}
       />
     </View>
     <Overlay>
@@ -206,15 +209,23 @@ let make = (~dispatch, ~state: State.t, ()) => {
        | Some(quickmenu) =>
          <QuickmenuView theme configuration state=quickmenu font />
        }}
-      {switch (state.keyDisplayer) {
-       | Some(model) => <KeyDisplayer model uiFont bottom=50 right=50 />
-       | None => React.empty
-       }}
+      <Feature_Input.View.Overlay
+        input={state.input}
+        uiFont
+        bottom=50
+        right=50
+      />
       <Feature_Registers.View
         theme
         registers={state.registers}
         font
         dispatch={msg => dispatch(Actions.Registers(msg))}
+      />
+      <Feature_Registration.View.Modal
+        theme
+        registration={state.registration}
+        font
+        dispatch={msg => dispatch(Actions.Registration(msg))}
       />
     </Overlay>
     <statusBar />

@@ -107,8 +107,9 @@ let start = () => {
       Lwt.wakeup_exn(resolver, MenuCancelled)
     });
 
-  let makeBufferCommands = (languageInfo, iconTheme, buffers) => {
-    let workingDirectory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
+  let makeBufferCommands = (workspace, languageInfo, iconTheme, buffers) => {
+    // Get the current workspace, if available
+    let maybeWorkspace = Feature_Workspace.openedFolder(workspace);
 
     buffers
     |> Feature_Buffers.all
@@ -118,7 +119,10 @@ let start = () => {
        )
     |> List.filter_map(buffer => {
          let maybeName =
-           Buffer.getMediumFriendlyName(~workingDirectory, buffer);
+           Buffer.getMediumFriendlyName(
+             ~workingDirectory=?maybeWorkspace,
+             buffer,
+           );
          let maybePath = Buffer.getFilePath(buffer);
 
          OptionEx.map2(
@@ -155,6 +159,7 @@ let start = () => {
         buffers,
         languageInfo,
         iconTheme,
+        workspace,
         commands,
         menus,
         contextKeys,
@@ -172,7 +177,8 @@ let start = () => {
       )
 
     | QuickmenuShow(EditorsPicker) =>
-      let items = makeBufferCommands(languageInfo, iconTheme, buffers);
+      let items =
+        makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
 
       (
         Some({
@@ -191,16 +197,27 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(FilesPicker) => (
-        Some({
-          ...Quickmenu.defaults(FilesPicker),
-          filterProgress: Loading,
-          ripgrepProgress: Loading,
-          inputText: typeToSearchInput,
-          focused: Some(0),
-        }),
-        Isolinear.Effect.none,
-      )
+    | QuickmenuShow(FilesPicker) =>
+      if (Feature_Workspace.openedFolder(workspace) == None) {
+        let items =
+          makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
+
+        (
+          Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
+          Isolinear.Effect.none,
+        );
+      } else {
+        (
+          Some({
+            ...Quickmenu.defaults(FilesPicker),
+            filterProgress: Loading,
+            ripgrepProgress: Loading,
+            inputText: typeToSearchInput,
+            focused: Some(0),
+          }),
+          Isolinear.Effect.none,
+        );
+      }
 
     | QuickmenuShow(Wildmenu(cmdType)) => (
         Some({
@@ -230,34 +247,53 @@ let start = () => {
         Isolinear.Effect.none,
       );
 
-    | QuickmenuShow(FileTypesPicker({bufferId, languages})) =>
+    | QuickmenuShow(OpenBuffersPicker) =>
       let items =
-        languages
-        |> List.map(((fileType, maybeIcon)) => {
-             Actions.{
-               category: None,
-               name: fileType,
-               command: () =>
-                 Buffers(
-                   Feature_Buffers.Msg.fileTypeChanged(
-                     ~bufferId,
-                     ~fileType=Oni_Core.Buffer.FileType.explicit(fileType),
-                   ),
-                 ),
-               icon: maybeIcon,
-               highlight: [],
-               handle: None,
-             }
-           })
-        |> Array.of_list;
+        makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
 
       (
-        Some({
-          ...Quickmenu.defaults(FileTypesPicker({bufferId, languages})),
-          items,
-        }),
+        Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
         Isolinear.Effect.none,
       );
+
+    | QuickmenuShow(FileTypesPicker({bufferId, languages})) =>
+      if (Feature_Workspace.openedFolder(workspace) == None) {
+        let items =
+          makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
+
+        (
+          Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
+          Isolinear.Effect.none,
+        );
+      } else {
+        let items =
+          languages
+          |> List.map(((fileType, maybeIcon)) => {
+               Actions.{
+                 category: None,
+                 name: fileType,
+                 command: () =>
+                   Buffers(
+                     Feature_Buffers.Msg.fileTypeChanged(
+                       ~bufferId,
+                       ~fileType=Oni_Core.Buffer.FileType.explicit(fileType),
+                     ),
+                   ),
+                 icon: maybeIcon,
+                 highlight: [],
+                 handle: None,
+               }
+             })
+          |> Array.of_list;
+
+        (
+          Some({
+            ...Quickmenu.defaults(FileTypesPicker({bufferId, languages})),
+            items,
+          }),
+          Isolinear.Effect.none,
+        );
+      }
 
     | QuickmenuPaste(text) => (
         Option.map(
@@ -479,6 +515,7 @@ let start = () => {
         state.buffers,
         state.languageInfo,
         state.iconTheme,
+        state.workspace,
         CommandManager.current(state),
         MenuManager.current(state),
         ContextKeys.all(state),
@@ -520,42 +557,51 @@ let subscriptions = (ripgrep, dispatch) => {
     );
   };
 
-  let ripgrep = (languageInfo, iconTheme, configuration) => {
+  let ripgrep = (workspace, languageInfo, iconTheme, configuration) => {
     let filesExclude =
       Configuration.getValue(c => c.filesExclude, configuration);
-    let directory = Rench.Environment.getWorkingDirectory(); // TODO: This should be workspace-relative
 
-    let stringToCommand = (languageInfo, iconTheme, fullPath) =>
-      Actions.{
-        category: None,
-        name: Path.toRelative(~base=directory, fullPath),
-        command: () => Actions.OpenFileByPath(fullPath, None, None),
-        icon:
-          Component_FileExplorer.getFileIcon(
-            ~languageInfo,
-            ~iconTheme,
-            fullPath,
-          ),
-        highlight: [],
-        handle: None,
-      };
+    switch (Feature_Workspace.openedFolder(workspace)) {
+    | None =>
+      // It's not really clear what the behavior should be for the ripgrep subscription w/o
+      // an opened workspace / folder. In the current logic, we shouldn't ever get here -
+      // when opening the 'files picker', if there is no workspace, we'll open the 'buffers picker'
+      // instead.
+      []
+    | Some(directory) =>
+      let stringToCommand = (languageInfo, iconTheme, fullPath) =>
+        Actions.{
+          category: None,
+          name: Path.toRelative(~base=directory, fullPath),
+          command: () => Actions.OpenFileByPath(fullPath, None, None),
+          icon:
+            Component_FileExplorer.getFileIcon(
+              ~languageInfo,
+              ~iconTheme,
+              fullPath,
+            ),
+          highlight: [],
+          handle: None,
+        };
+      [
+        RipgrepSubscription.create(
+          ~id="workspace-search",
+          ~filesExclude,
+          ~directory,
+          ~ripgrep,
+          ~onUpdate=
+            items => {
+              items
+              |> List.map(stringToCommand(languageInfo, iconTheme))
+              |> addItems;
 
-    RipgrepSubscription.create(
-      ~id="workspace-search",
-      ~filesExclude,
-      ~directory,
-      ~ripgrep,
-      ~onUpdate=
-        items => {
-          items
-          |> List.map(stringToCommand(languageInfo, iconTheme))
-          |> addItems;
-
-          dispatch(Actions.QuickmenuUpdateRipgrepProgress(Loading));
-        },
-      ~onComplete=() => Actions.QuickmenuUpdateRipgrepProgress(Complete),
-      ~onError=_ => Actions.Noop,
-    );
+              dispatch(Actions.QuickmenuUpdateRipgrepProgress(Loading));
+            },
+          ~onComplete=() => Actions.QuickmenuUpdateRipgrepProgress(Complete),
+          ~onError=_ => Actions.Noop,
+        ),
+      ];
+    };
   };
 
   let updater = (state: State.t) => {
@@ -565,15 +611,20 @@ let subscriptions = (ripgrep, dispatch) => {
       switch (quickmenu.variant) {
       | CommandPalette
       | EditorsPicker
+      | OpenBuffersPicker => [filter(query, quickmenu.items)]
       | ThemesPicker(_) => [filter(query, quickmenu.items)]
 
       | Extension({hasItems, _}) =>
         hasItems ? [filter(query, quickmenu.items)] : []
 
-      | FilesPicker => [
-          filter(query, quickmenu.items),
-          ripgrep(state.languageInfo, state.iconTheme, state.configuration),
-        ]
+      | FilesPicker =>
+        [filter(query, quickmenu.items)]
+        @ ripgrep(
+            state.workspace,
+            state.languageInfo,
+            state.iconTheme,
+            state.configuration,
+          )
 
       | FileTypesPicker(_) => [filter(query, quickmenu.items)]
 

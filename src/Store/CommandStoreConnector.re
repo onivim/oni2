@@ -3,8 +3,6 @@ open Oni_Core;
 open Oni_Model;
 open Oni_Model.Actions;
 
-module KeyDisplayer = Oni_Components.KeyDisplayer;
-
 module Constants = {
   let zoomStep = 0.2;
   let defaultZoomValue = 1.0;
@@ -88,16 +86,6 @@ let start = () => {
 
   let updater = (state: State.t, action) => {
     switch (action) {
-    | EnableKeyDisplayer => (
-        {...state, keyDisplayer: Some(KeyDisplayer.initial)},
-        Isolinear.Effect.none,
-      )
-
-    | DisableKeyDisplayer => (
-        {...state, keyDisplayer: None},
-        Isolinear.Effect.none,
-      )
-
     | Command(cmd) =>
       switch (StringMap.find_opt(cmd, commandMap)) {
       | Some(v) => (state, v(state, cmd))

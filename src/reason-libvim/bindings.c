@@ -65,6 +65,85 @@ int onAutoIndent(int lnum, buf_T *buf, char_u *prevLine, char_u *newLine) {
   CAMLreturnT(int, ret);
 };
 
+value Val_input_mode(int mode) {
+  CAMLparam0();
+  CAMLlocal1(vRet);
+
+  if (mode == INSERT) {
+    vRet = Val_int(0);
+  } else if(mode == LANGMAP) {
+    vRet = Val_int(1);
+  } else if(mode == CMDLINE) {
+    vRet = Val_int(2);
+  } else if (mode == NORMAL) {
+    vRet = Val_int(3);
+  } else if (mode == VISUAL + SELECTMODE) {
+    vRet = Val_int(4);
+  } else if (mode == VISUAL) {
+    vRet = Val_int(5);
+  } else if (mode == SELECTMODE) {
+    vRet = Val_int(6);
+  } else if (mode == OP_PENDING) {
+    vRet = Val_int(7);
+  } else if (mode == TERMINAL) {
+    vRet = Val_int(8);
+  } else if (mode == INSERT + CMDLINE) {
+    vRet = Val_int(9);
+  } else {
+    vRet = Val_int(10);
+  }
+
+  CAMLreturn(vRet);
+}
+
+void onInputMap(const mapblock_T* mapping) {
+  CAMLparam0();
+  CAMLlocal4(vRet, vMode, vFromKeys, vToKeys);
+
+  static const value *lv_onInputMap = NULL;
+  if (lv_onInputMap == NULL) {
+    lv_onInputMap = caml_named_value("lv_onInputMap");
+  }
+
+  vRet = caml_alloc(7, 0);
+  vMode = Val_input_mode(mapping->m_mode);
+  vFromKeys = caml_copy_string((const char*)mapping->m_orig_keys);
+  vToKeys = caml_copy_string((const char*)mapping->m_orig_str);
+
+  Store_field(vRet, 0, vMode);
+  Store_field(vRet, 1, vFromKeys);
+  Store_field(vRet, 2, vToKeys);
+  Store_field(vRet, 3, Val_bool(mapping->m_expr));
+  Store_field(vRet, 4, Val_bool(mapping->m_noremap == 0));
+  Store_field(vRet, 5, Val_bool(mapping->m_silent));
+  Store_field(vRet, 6, Val_int(mapping->m_script_ctx.sc_sid));
+
+  caml_callback(*lv_onInputMap, vRet);
+
+  CAMLreturn0;
+};
+
+void onInputUnmap(int mode, const char_u* maybeKeys) {
+  CAMLparam0();
+  CAMLlocal2(vKeyStr, vMaybeKeys);
+
+  static const value *lv_onInputUnmap = NULL;
+  if (lv_onInputUnmap == NULL) {
+    lv_onInputUnmap = caml_named_value("lv_onInputUnmap");
+  }
+
+  if (maybeKeys == NULL) {
+    vMaybeKeys = Val_none;
+  } else {
+    vKeyStr = caml_copy_string((const char*)maybeKeys);
+    vMaybeKeys = Val_some(vKeyStr);
+  }
+
+  caml_callback2(*lv_onInputUnmap, Val_input_mode(mode), vMaybeKeys);
+
+  CAMLreturn0;
+};
+
 int getColorSchemesCallback(char_u *pat, int *num_schemes, char_u ***schemes) {
   CAMLparam0();
   CAMLlocal2(vPat, vSchemes);
@@ -110,9 +189,29 @@ int onColorSchemeChanged(char_u *colorscheme) {
   }
   
   caml_callback(*lv_onColorSchemeChanged, vThemeOpt);
+
   
   CAMLreturnT(int, OK);
 };
+
+int onGetChar(int mode, char* c, int *modMask) {
+  CAMLparam0();
+  CAMLlocal1(vRet);
+  *modMask = 0;
+  *c = 0;
+
+  static const value *lv_onGetChar = NULL;
+
+  if (lv_onGetChar == NULL) {
+    lv_onGetChar = caml_named_value("lv_onGetChar");
+  }
+
+  vRet = caml_callback(*lv_onGetChar, Val_int(mode));
+  *c = Int_val(Field(vRet, 0));
+  *modMask = Int_val(Field(vRet, 1));
+
+  CAMLreturnT(int, OK);
+}
 
 void onSettingChanged(optionSet_T *options) {
   CAMLparam0();
@@ -168,6 +267,12 @@ int onGoto(gotoRequest_T gotoInfo) {
   case HOVER:
     target = 2;
     break;
+  case OUTLINE:
+    target = 3;
+    break;
+  case MESSAGES:
+    target = 4;
+    break;
   default:
     target = 0;
   }
@@ -175,6 +280,28 @@ int onGoto(gotoRequest_T gotoInfo) {
   caml_callback3(*lv_onGoto, Val_int(line), Val_int(col), Val_int(target));
 
   return target;
+}
+
+void onClear(clearRequest_T clearRequest) {
+  static const value *lv_onClear = NULL;
+
+  if (lv_onClear == NULL) {
+    lv_onClear = caml_named_value("lv_onClear");
+  }
+
+  int count = clearRequest.count;
+  int target = 0;
+  switch (clearRequest.target) {
+  case CLEAR_MESSAGES:
+    target = 0;
+    break;
+  default:
+    target = 0;
+  }
+
+  caml_callback2(*lv_onClear, Val_int(target), Val_int(count));
+
+  return;
 }
 
 int onTabPage(tabPageRequest_T request) {
@@ -595,6 +722,42 @@ void onCursorMoveScreenLine(screenLineMotion_T motion, int count, linenr_T start
    CAMLreturn0;
 }
 
+int onToggleComments(buf_T *buf, linenr_T start, linenr_T end,
+linenr_T *outCount, char_u ***outLines
+) {
+  CAMLparam0();
+  CAMLlocal1(vArray);
+
+  int count = end - start + 1;
+
+  if (count <= 0) {
+    CAMLreturnT(int, FAIL);
+  } else {
+    
+    *outCount = count;
+   static const value *lv_onToggleComments = NULL;
+   if (lv_onToggleComments == NULL) {
+     lv_onToggleComments = caml_named_value("lv_onToggleComments");
+   }
+
+   vArray = caml_callback3(*lv_onToggleComments, 
+  // TODO: Naked pointer
+    (value)buf, Val_int(start), Val_int(end));
+
+    int count = Wosize_val(vArray);
+    *outCount = count;
+
+    char_u **newLines = malloc(sizeof(char_u *) * count);
+    for (int i = 0; i < count; i++) {
+      const char *sz = String_val(Field(vArray, i));
+      newLines[i] = malloc((sizeof(char) * strlen(sz)) + 1);
+      strcpy((char *)newLines[i], sz);
+    }
+    *outLines = newLines;
+    CAMLreturnT(int, OK);
+  }
+}
+
 void onCursorMoveScreenPosition(int dir, int count, linenr_T srcLine,
 colnr_T srcColumn, colnr_T wantColumn, linenr_T *destLine, colnr_T *destColumn) {
     CAMLparam0();
@@ -712,6 +875,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetDisplayIntroCallback(&onIntro);
   vimSetDisplayVersionCallback(&onVersion);
   vimSetFormatCallback(&onFormat);
+  vimSetClearCallback(&onClear);
   vimSetGotoCallback(&onGoto);
   vimSetOptionSetCallback(&onSettingChanged);
   vimSetTabPageCallback(&onTabPage);
@@ -727,6 +891,10 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetCursorMoveScreenLineCallback(&onCursorMoveScreenLine);
   vimSetCursorMoveScreenPositionCallback(&onCursorMoveScreenPosition);
   vimSetScrollCallback(&onScrollCallback);
+  vimSetInputMapCallback(&onInputMap);
+  vimSetInputUnmapCallback(&onInputUnmap);
+  vimSetToggleCommentsCallback(&onToggleComments);
+  vimSetFunctionGetCharCallback(&onGetChar);
 
   char *args[0];
   vimInit(0, args);
@@ -1176,12 +1344,6 @@ CAMLprim value libvim_vimOptionSetTabSize(value ts) {
 CAMLprim value libvim_vimOptionSetInsertSpaces(value v) {
   int insertSpaces = Bool_val(v);
   vimOptionSetInsertSpaces(insertSpaces);
-  return Val_unit;
-}
-
-CAMLprim value libvim_vimOptionSetLineComment(value v) {
-  const char *str = String_val(v);
-  vimOptionSetLineComment((char_u *) str);
   return Val_unit;
 }
 

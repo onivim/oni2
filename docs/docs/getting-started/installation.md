@@ -12,12 +12,12 @@ While we're developing Onivim 2, the latest builds are available at our [early a
 
 - Requires OSX 10.13+
 
+> NOTE: Apple Silicon ARM Macs are not yet supported - tracking in [issue #2708](https://github.com/onivim/oni2/issues/2708).
+
 ### Windows
 
 - x64 Only
 - Windows 8+ or higher
-
-> NOTE: Windows 7 will also be supported, but there is a [blocking issue](https://github.com/onivim/oni2/issues/850)
 
 ### Linux 
 

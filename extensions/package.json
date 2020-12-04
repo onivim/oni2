@@ -4,8 +4,8 @@
   "dependencies": {
     "byline": "^5.0.0",
     "file-type": "^7.2.0",
-    "iconv-lite": "^0.4.24",
-    "jschardet": "^1.6.0",
+    "iconv-lite-umd": "^0.6.8",
+    "jschardet": "2.2.1",
     "jsonc-parser": "^2.2.1",
     "rimraf": "^2.6.3",
     "semver": "5.5.1",

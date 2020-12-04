@@ -44,6 +44,7 @@ let startWithExtensions =
       ~onError=noopErrorHandler,
       extensions,
     ) => {
+  Log.info("Starting test!");
   let messages = ref([]);
 
   let errorHandler = err => {
@@ -70,8 +71,16 @@ let startWithExtensions =
 
   extensions |> List.iter(m => m |> InitData.Extension.show |> prerr_endline);
 
-  let logsLocation = Filename.temp_file("test", "log") |> Uri.fromPath;
-  let logFile = Filename.get_temp_dir_name() |> Uri.fromPath;
+  let logFile = Filename.temp_file("test", "log") |> Uri.fromPath;
+  let logsLocation = Filename.get_temp_dir_name() |> Uri.fromPath;
+
+  Log.errorf(m =>
+    m(
+      "Log location: %s Log file: %s",
+      logFile |> Uri.toString,
+      logsLocation |> Uri.toString,
+    )
+  );
 
   let parentPid = pid;
 
@@ -79,6 +88,7 @@ let startWithExtensions =
     InitData.create(
       ~version="9.9.9",
       ~parentPid,
+      ~logLevel=1, // DEBUG
       ~logsLocation,
       ~logFile,
       extensions,
@@ -120,6 +130,8 @@ let startWithExtensions =
           "AMD_ENTRYPOINT",
           "vs/workbench/services/extensions/node/extensionHostProcess",
         ),
+        ("PIPE_LOGGING", "true"), // Pipe logging to parent
+        ("VERBOSE_LOGGING", "true"), // Pipe logging to parent
         ("VSCODE_IPC_HOOK_EXTHOST", pipeStr),
         ("VSCODE_PARENT_PID", parentPid |> string_of_int),
       ],
@@ -148,14 +160,20 @@ let executeContributedCommand = (~command, context) => {
   context;
 };
 
+let fail = (~name, msg) => {
+  prerr_endline(Printf.sprintf("== CONDITION %s FAILED: %s", name, msg));
+  exit(2);
+};
+
 let waitForProcessClosed = ({processHasExited, _}) => {
-  Waiter.wait(~timeout=15.0, ~name="Wait for node process to close", () =>
+  Waiter.wait(
+    ~onFail=fail, ~timeout=15.0, ~name="Wait for node process to close", () =>
     processHasExited^
   );
 };
 
 let waitForMessage = (~name, f, {messages, _} as context) => {
-  Waiter.wait(~name="Wait for message: " ++ name, () =>
+  Waiter.wait(~onFail=fail, ~name="Wait for message: " ++ name, () =>
     List.exists(f, messages^)
   );
 
@@ -194,19 +212,14 @@ let withClientRequest = (~name, ~validate, f, context) => {
 
   let validator = returnValue => {
     if (!validate(returnValue)) {
-      failwith("Validation failed: " ++ name);
+      fail(~name, "Validation failed");
     };
     hasValidated := true;
   };
   let () = Lwt.on_success(response, validator);
-  Waiter.wait(
-    ~timeout=10.0,
-    ~name="Waiter: " ++ name,
-    () => {
-      prerr_endline("Waiting...");
-      hasValidated^;
-    },
-  );
+  Waiter.wait(~onFail=fail, ~timeout=10.0, ~name="Waiter: " ++ name, () => {
+    hasValidated^
+  });
 
   context;
 };
@@ -222,7 +235,7 @@ let activate = (~extensionId, ~reason, context) => {
 
 let validateNoPendingRequests = context => {
   if (Client.Testing.getPendingRequestCount(context.client) > 0) {
-    failwith("There are still pending requests");
+    fail(~name="Pending Requests", "There are still pending requests");
   };
   context;
 };

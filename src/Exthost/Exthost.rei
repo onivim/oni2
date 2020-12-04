@@ -137,6 +137,9 @@ module Edit: {
       forceMoveMarkers: bool,
     };
 
+    // Get the difference in lines due to the edit
+    let deltaLineCount: t => int;
+
     let decode: Json.decoder(t);
   };
 };
@@ -169,26 +172,20 @@ module DefinitionLink: {
   let decode: Json.decoder(t);
 };
 
-module DocumentFilter: {
-  [@deriving show]
-  type t = {
-    language: option(string),
-    scheme: option(string),
-    exclusive: bool,
-  };
+// module DocumentFilter: {
+//   [@deriving show]
+//   type t;
 
-  let matches: (~filetype: string, t) => bool;
+//   let matches: (~filetype: string, t) => bool;
 
-  let decode: Json.decoder(t);
+//   let decode: Json.decoder(t);
 
-  let toString: t => string;
-};
+//   let toString: t => string;
+// };
 
 module DocumentSelector: {
   [@deriving show]
   type t = list(DocumentFilter.t);
-
-  let matches: (~filetype: string, t) => bool;
 
   let matchesBuffer: (~buffer: Oni_Core.Buffer.t, t) => bool;
 
@@ -501,7 +498,6 @@ module SCM: {
     };
 
     module Splices: {
-      [@deriving show({with_path: false})]
       type t = {
         handle: int,
         resourceSplices: [@opaque] list(Splice.t),
@@ -517,7 +513,7 @@ module SCM: {
       count: option(int),
       commitTemplate: option(string),
       acceptInputCommand: option(command),
-      statusBarCommands: list(Command.t),
+      statusBarCommands: option(list(command)),
     };
 
     let decode: Json.decoder(t);
@@ -526,6 +522,18 @@ module SCM: {
   module GroupFeatures: {
     [@deriving show({with_path: false})]
     type t = {hideWhenEmpty: bool};
+
+    let decode: Json.decoder(t);
+  };
+
+  module Group: {
+    [@deriving show({with_path: false})]
+    type t = {
+      handle: int,
+      id: string,
+      label: string,
+      features: GroupFeatures.t,
+    };
 
     let decode: Json.decoder(t);
   };
@@ -1407,12 +1415,10 @@ module Msg: {
           handle: int,
           features: SCM.ProviderFeatures.t,
         })
-      // statusBarCommands: option(_),
-      | RegisterSCMResourceGroup({
+      | RegisterSCMResourceGroups({
           provider: int,
-          handle: int,
-          id: string,
-          label: string,
+          groups: list(SCM.Group.t),
+          splices: [@opaque] list(SCM.Resource.Splices.t),
         })
       | UnregisterSCMResourceGroup({
           provider: int,
@@ -1630,7 +1636,7 @@ module Client: {
   let start:
     (
       ~initialConfiguration: Configuration.t=?,
-      ~initialWorkspace: WorkspaceData.t=?,
+      ~initialWorkspace: option(WorkspaceData.t)=?,
       ~namedPipe: NamedPipe.t,
       ~initData: Extension.InitData.t,
       // TODO:
@@ -1673,7 +1679,6 @@ module Request: {
     };
 
     type decoration = {
-      priority: int,
       bubble: bool,
       title: string,
       letter: string,
@@ -1764,11 +1769,11 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DocumentHighlight.t));
+      Lwt.t(option(list(DocumentHighlight.t)));
 
     let provideDocumentSymbols:
       (~handle: int, ~resource: Uri.t, Client.t) =>
-      Lwt.t(list(DocumentSymbol.t));
+      Lwt.t(option(list(DocumentSymbol.t)));
 
     let provideDefinition:
       (

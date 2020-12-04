@@ -223,6 +223,16 @@ module Effects = {
       });
     };
   };
+
+  module Workspace = {
+    let change = (~workspace, extHostClient) =>
+      Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
+        Exthost.Request.Workspace.acceptWorkspaceData(
+          ~workspace,
+          extHostClient,
+        )
+      });
+  };
 };
 
 module MutableState = {
@@ -640,8 +650,8 @@ module Sub = {
             params.client,
           );
 
-        Lwt.on_success(promise, documentHighlights =>
-          dispatch(documentHighlights)
+        Lwt.on_success(promise, maybeDocumentHighlights =>
+          maybeDocumentHighlights |> Option.value(~default=[]) |> dispatch
         );
 
         Lwt.on_failure(promise, _ => dispatch([]));
@@ -668,12 +678,12 @@ module Sub = {
     buffer: Oni_Core.Buffer.t,
   };
 
-  let idFromBufferVersion = (~handle, ~buffer, name) => {
+  let idFromBufferSaveTick = (~handle, ~buffer, name) => {
     Printf.sprintf(
       "%d-%d-%d.%s",
       handle,
       Oni_Core.Buffer.getId(buffer),
-      Oni_Core.Buffer.getVersion(buffer),
+      Oni_Core.Buffer.getSaveTick(buffer),
       name,
     );
   };
@@ -687,7 +697,7 @@ module Sub = {
 
       let name = "Service_Exthost.CodeLensesSubscription";
       let id = ({handle, buffer, _}: params) =>
-        idFromBufferVersion(~handle, ~buffer, "CodeLensSubscription");
+        idFromBufferSaveTick(~handle, ~buffer, "CodeLensSubscription");
 
       let init = (~params, ~dispatch) => {
         let promise =
@@ -864,7 +874,9 @@ module Sub = {
             params.client,
           );
 
-        Lwt.on_success(promise, documentSymbols => dispatch(documentSymbols));
+        Lwt.on_success(promise, maybeDocumentSymbols =>
+          maybeDocumentSymbols |> Option.value(~default=[]) |> dispatch
+        );
 
         Lwt.on_failure(promise, _err => dispatch([]));
 

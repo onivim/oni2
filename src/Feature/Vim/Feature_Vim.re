@@ -1,22 +1,14 @@
-open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
 // MODEL
 
 type model = {
-  mode: Vim.Mode.t,
   settings: StringMap.t(Vim.Setting.value),
   recordingMacro: option(char),
 };
 
-let initial = {
-  mode: Vim.Mode.Normal({cursor: BytePosition.zero}),
-  settings: StringMap.empty,
-  recordingMacro: None,
-};
-
-let mode = ({mode, _}) => mode;
+let initial = {settings: StringMap.empty, recordingMacro: None};
 
 let recordingMacro = ({recordingMacro, _}) => recordingMacro;
 
@@ -24,7 +16,10 @@ let recordingMacro = ({recordingMacro, _}) => recordingMacro;
 
 [@deriving show]
 type msg =
-  | ModeChanged([@opaque] Vim.Mode.t)
+  | ModeChanged({
+      mode: [@opaque] Vim.Mode.t,
+      effects: [@opaque] list(Vim.Effect.t),
+    })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
   | SettingChanged(Vim.Setting.t)
@@ -35,11 +30,16 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | SettingsChanged
-  | ModeUpdated(Vim.Mode.t);
+  | ModeDidChange({
+      mode: Vim.Mode.t,
+      effects: list(Vim.Effect.t),
+    });
 
 let update = (msg, model: model) => {
   switch (msg) {
-  | ModeChanged(mode) => ({...model, mode}, Nothing)
+  | ModeChanged({mode, effects}) =>
+    // TODO: Check submode here
+    (model, ModeDidChange({mode, effects}))
   | Pasted(text) =>
     let eff =
       Service_Vim.Effects.paste(
@@ -47,8 +47,8 @@ let update = (msg, model: model) => {
         text,
       );
     (model, Effect(eff));
-  | PasteCompleted({mode}) => (model, ModeUpdated(mode))
-  | SettingChanged({fullName, value, _}: Vim.Setting.t) => (
+  | PasteCompleted({mode}) => (model, ModeDidChange({mode, effects: []}))
+  | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
       SettingsChanged,
     )
@@ -61,17 +61,13 @@ let update = (msg, model: model) => {
 };
 
 module CommandLine = {
-  let getCompletionMeet = commandLine => {
-    let len = String.length(commandLine);
-
-    if (len == 0) {
+  let getCompletionMeet = commandLine =>
+    if (StringEx.isEmpty(commandLine)) {
       None;
     } else {
-      String.index_opt(commandLine, ' ')
-      |> Option.map(idx => idx + 1)  // Advance past space
+      StringEx.findUnescapedFromEnd(commandLine, ' ')
       |> OptionEx.or_(Some(0));
     };
-  };
 
   let%test "empty command line returns None" = {
     getCompletionMeet("") == None;
@@ -90,7 +86,27 @@ module CommandLine = {
   };
 
   let%test "meet with a path, spaces" = {
-    getCompletionMeet("vsp /path with spaces/") == Some(4);
+    getCompletionMeet("vsp /path\\ with\\ spaces/") == Some(4);
+  };
+
+  let%test "meet multiple paths" = {
+    getCompletionMeet("!cp /path1 /path2") == Some(11);
+  };
+
+  let%test "meet multiple paths with spaces" = {
+    getCompletionMeet("!cp /path\\ 1 /path\\ 2") == Some(13);
+  };
+};
+
+module Effects = {
+  let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
+    let toMsg = mode => ModeChanged({mode, effects: []});
+    Service_Vim.Effects.applyCompletion(
+      ~meetColumn,
+      ~insertText,
+      ~additionalEdits,
+      ~toMsg,
+    );
   };
 };
 

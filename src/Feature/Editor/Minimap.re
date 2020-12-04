@@ -264,10 +264,11 @@ let%component make =
 
   let yankHighlightElement =
     maybeYankHighlights
-    |> Option.map(({key, pixelRanges}: Editor.yankHighlight) => {
+    |> Option.map(({key, pixelRanges, opacity}: Editor.yankHighlight) => {
          let pixelRanges = pixelRanges |> List.map(mapPixelRange);
+         let opacity = Component_Animation.get(opacity);
 
-         <YankHighlights config key pixelRanges />;
+         <YankHighlights opacity config key pixelRanges />;
        })
     |> Option.value(~default=React.empty);
 
@@ -498,7 +499,7 @@ let%component make =
         );
 
         Option.iter(
-          EditorDiffMarkers.render(
+          EditorDiffMarkers.renderMinimap(
             ~editor,
             ~scrollY,
             ~rowHeight,

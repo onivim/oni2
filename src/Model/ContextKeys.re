@@ -86,6 +86,18 @@ let editors = (~isFocused) => {
               | _ => false
               }
             ),
+            bool("selectMode", state =>
+              switch (ModeManager.current(state)) {
+              | Select(_) => true
+              | _ => false
+              }
+            ),
+            bool("operatorPending", state =>
+              switch (ModeManager.current(state)) {
+              | Operator(_) => true
+              | _ => false
+              }
+            ),
             bool("parameterHintsVisible", state =>
               Feature_SignatureHelp.isShown(state.signatureHelp)
             ),
@@ -110,7 +122,6 @@ let other = {
         ),
         bool("sneakMode", state => Feature_Sneak.isActive(state.sneak)),
         bool("zenMode", state => state.zenMode),
-        bool("keyDisplayerEnabled", state => state.keyDisplayer != None),
       ],
     )
   );
@@ -170,17 +181,24 @@ let all = (state: State.t) => {
     | _ => false
     };
 
+  let inputContextKeys = Feature_Input.Contributions.contextKeys(state.input);
+
   unionMany([
     Feature_Registers.Contributions.contextKeys(
       ~isFocused=focus == Focus.InsertRegister,
       state.registers,
     ),
+    inputContextKeys,
     explorerContextKeys,
     sideBarContext,
     scmContextKeys,
     extensionContextKeys,
     searchContextKeys,
     paneContextKeys,
+    Feature_Registration.Contributions.contextKeys(
+      ~isFocused=focus == Focus.LicenseKey,
+      state.registration,
+    ),
     Feature_LanguageSupport.Contributions.contextKeys
     |> Schema.map(({languageSupport, _}: State.t) => languageSupport)
     |> fromSchema(state),

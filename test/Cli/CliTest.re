@@ -48,4 +48,25 @@ describe("CLI", ({describe, test, _}) => {
       );
     })
   });
+  describe("log level", ({test, _}) => {
+    test("--trace should set log level", ({expect, _}) => {
+      let (options, _eff) =
+        Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "-f", "--trace"|]);
+      expect.equal(options.logLevel, Some(Timber.Level.trace));
+    });
+    test("-f should not override --trace", ({expect, _}) => {
+      let (options, _eff) =
+        Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "--trace", "-f"|]);
+      expect.equal(options.logLevel, Some(Timber.Level.trace));
+    });
+    test("-f should set info level", ({expect, _}) => {
+      let (options, _eff) =
+        Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "-f"|]);
+      expect.equal(options.logLevel, Some(Timber.Level.info));
+    });
+    test("no log level set by default", ({expect, _}) => {
+      let (options, _eff) = Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor"|]);
+      expect.equal(options.logLevel, None);
+    });
+  });
 });

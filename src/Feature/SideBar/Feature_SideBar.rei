@@ -22,7 +22,8 @@ type command =
   | ToggleSearchPane
   | ToggleSCMPane
   | ToggleExtensionsPane
-  | ToggleVisibility;
+  | ToggleVisibility
+  | GotoOutline;
 
 [@deriving show]
 type msg =
@@ -34,9 +35,12 @@ type msg =
   | SCMClicked
   | ExtensionsClicked;
 
+type subFocus =
+  | Outline;
+
 type outmsg =
   | Nothing
-  | Focus
+  | Focus(option(subFocus))
   | PopFocus;
 
 let update: (~isFocused: bool, msg, model) => (model, outmsg);
@@ -51,12 +55,13 @@ let location: model => location;
 let isVisible: (pane, model) => bool;
 let toggle: (pane, model) => model;
 
-let configurationChanged: (~config: Oni_Core.Config.resolver, model) => model;
+let configurationChanged:
+  (~hasWorkspace: bool, ~config: Oni_Core.Config.resolver, model) => model;
 
 module Contributions: {
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
-  let keybindings: list(Oni_Input.Keybindings.keybinding);
+  let keybindings: list(Feature_Input.Schema.keybinding);
   let contextKeys:
     (~isFocused: bool) => list(WhenExpr.ContextKeys.Schema.entry(model));
 };

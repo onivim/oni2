@@ -13,6 +13,7 @@ type scrollbarMetrics = {
 type yankHighlight = {
   key: Brisk_reconciler.Key.t,
   pixelRanges: list(PixelRange.t),
+  opacity: Component_Animation.t(float),
 };
 
 module WrapMode: {
@@ -25,11 +26,32 @@ module WrapMode: {
 let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
 let copy: t => t;
 
+type inlineElement;
+
+let makeInlineElement:
+  (
+    ~key: string,
+    ~uniqueId: string,
+    ~lineNumber: EditorCoreTypes.LineNumber.t,
+    ~view: (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
+           Revery.UI.element
+  ) =>
+  inlineElement;
+
+let setInlineElements: (~key: string, ~elements: list(inlineElement), t) => t;
+
+let setInlineElementSize:
+  (~key: string, ~uniqueId: string, ~height: int, t) => t;
+
+let getInlineElements: t => list(InlineElements.element);
+
 let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;
 let getBufferId: t => int;
 let getTopVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
 let getBottomVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
+let getTopViewLine: t => int;
+let getBottomViewLine: t => int;
 let getLeftVisibleColumn: t => int;
 let getLayout: t => EditorLayout.t;
 let getCharacterUnderCursor: t => option(Uchar.t);
@@ -48,6 +70,9 @@ let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
 
 let shouldRender: (t, t) => bool;
 
+// Get the horizontal width in pixels of the tab/space whitespace in front of a line.
+let getLeadingWhitespacePixels: (EditorCoreTypes.LineNumber.t, t) => float;
+
 let mode: t => Vim.Mode.t;
 let setMode: (Vim.Mode.t, t) => t;
 
@@ -58,13 +83,24 @@ let getTokenAt:
   option(CharacterRange.t);
 
 let yankHighlight: t => option(yankHighlight);
-let setYankHighlight: (~yankHighlight: yankHighlight, t) => t;
+let startYankHighlight: (list(PixelRange.t), t) => t;
 
 let setWrapPadding: (~padding: float, t) => t;
 let setVerticalScrollMargin: (~lines: int, t) => t;
 
 let setMinimap: (~enabled: bool, ~maxColumn: int, t) => t;
 let isMinimapEnabled: t => bool;
+
+// Mouse interactions
+let mouseDown: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseUp: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseMove: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseEnter: t => t;
+let mouseLeave: t => t;
+let hasMouseEntered: t => bool;
+let isMouseDown: t => bool;
+let lastMouseMoveTime: t => option(Revery.Time.t);
+let getCharacterUnderMouse: t => option(CharacterPosition.t);
 
 // Scale factor between horizontal pixels on the editor surface vs minimap
 let getMinimapWidthScaleFactor: t => float;
@@ -108,16 +144,16 @@ let selectionOrCursorRange: t => ByteRange.t;
 
 let totalViewLines: t => int;
 
-let isScrollAnimated: t => bool;
-let scrollToPixelX: (~pixelX: float, t) => t;
-let scrollDeltaPixelX: (~pixelX: float, t) => t;
+let scrollToPixelX: (~animated: bool, ~pixelX: float, t) => t;
+let scrollDeltaPixelX: (~animated: bool, ~pixelX: float, t) => t;
 
 let scrollToLine: (~line: int, t) => t;
-let scrollToPixelY: (~pixelY: float, t) => t;
-let scrollDeltaPixelY: (~pixelY: float, t) => t;
+let scrollToPixelY: (~animated: bool, ~pixelY: float, t) => t;
+let scrollDeltaPixelY: (~animated: bool, ~pixelY: float, t) => t;
 
-let scrollToPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
-let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
+let scrollToPixelXY: (~animated: bool, ~pixelX: float, ~pixelY: float, t) => t;
+let scrollDeltaPixelXY:
+  (~animated: bool, ~pixelX: float, ~pixelY: float, t) => t;
 
 let scrollCenterCursorVertically: t => t;
 let scrollCursorTop: t => t;
@@ -146,6 +182,7 @@ let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
 let viewLineIsPrimary: (int, t) => bool;
 let viewLineToBufferLine: (int, t) => EditorCoreTypes.LineNumber.t;
 let bufferBytePositionToViewLine: (BytePosition.t, t) => int;
+let viewLineToPixelY: (int, t) => float;
 
 // PIXEL-SPACE CONVERSION
 
@@ -203,3 +240,10 @@ module Slow: {
     // the end of the line.
     (~allowPast: bool=?, ~pixelX: float, ~pixelY: float, t) => BytePosition.t;
 };
+
+[@deriving show]
+type msg;
+
+let update: (msg, t) => t;
+
+let sub: t => Isolinear.Sub.t(msg);

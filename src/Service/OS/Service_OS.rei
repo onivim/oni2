@@ -35,6 +35,12 @@ module Effect: {
   let stat: (string, Unix.stats => 'msg) => Isolinear.Effect.t('msg);
   let statMultiple:
     (list(string), (string, Unix.stats) => 'msg) => Isolinear.Effect.t('msg);
+
+  module Dialog: {
+    let openFolder:
+      (~initialDirectory: string=?, option(Fp.t(Fp.absolute)) => 'msg) =>
+      Isolinear.Effect.t('msg);
+  };
 };
 
 module Sub: {

@@ -39,16 +39,19 @@ let createContext =
   };
 };
 
-let renderImmediate = (~context, ~count, render) => {
-  let scrollY = Editor.scrollY(context.editor);
-  ImmediateList.render(
-    ~scrollY,
-    ~rowHeight=Editor.lineHeightInPixels(context.editor),
-    ~height=float(context.height),
-    ~count,
-    ~render=(i, offsetY) => render(i, offsetY),
-    (),
-  );
+let renderImmediate = (~context, render) => {
+  let topLine = max(0, Editor.getTopViewLine(context.editor) - 1);
+  let bottomLine =
+    min(
+      Editor.totalViewLines(context.editor) - 1,
+      Editor.getBottomViewLine(context.editor) + 1,
+    );
+
+  for (idx in topLine to bottomLine) {
+    let offsetY = Editor.viewLineToPixelY(idx, context.editor);
+
+    render(idx, offsetY -. Editor.scrollY(context.editor));
+  };
 };
 
 let drawRect = {
@@ -209,8 +212,7 @@ let rangeByte =
 
   for (idx in startViewLine to stopViewLine) {
     let y =
-      float(idx)
-      *. Editor.lineHeightInPixels(context.editor)
+      Editor.viewLineToPixelY(idx, context.editor)
       -. Editor.scrollY(context.editor);
     let startX =
       if (idx == startViewLine) {
@@ -322,15 +324,12 @@ let ruler = (~context, ~color, x) =>
   );
 
 let lineHighlight = (~context, ~color, viewLine) => {
-  let pixelY =
-    float(viewLine)
-    *. Editor.lineHeightInPixels(context.editor)
-    -. Editor.scrollY(context.editor);
+  let pixelY = Editor.viewLineToPixelY(viewLine, context.editor);
 
   drawRect(
     ~context,
     ~x=0.,
-    ~y=pixelY,
+    ~y=pixelY -. Editor.scrollY(context.editor),
     ~height=Editor.lineHeightInPixels(context.editor),
     ~width=float(context.width),
     ~color,

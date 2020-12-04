@@ -45,20 +45,56 @@ module Modifiers: {
   let equals: (t, t) => bool;
 };
 
-module KeyPress: {
+module PhysicalKey: {
   [@deriving show]
   type t = {
     scancode: int,
     keycode: int,
     modifiers: Modifiers.t,
   };
+};
+
+module SpecialKey: {
+  [@deriving show]
+  type t =
+    // Leader key defined by 'vim.leader' or `let mapleader = "<space>"` in VimL
+    | Leader
+    // Special key <Plug> used by VimL plugins
+    // No physical key associated with it, but useful for scoping remappings.
+    | Plug
+    // Special key <Nop> used by Vim as no-op
+    | Nop;
+  // TODO;
+  // | SNR;
+};
+
+module KeyPress: {
+  [@deriving show]
+  type t =
+    | PhysicalKey(PhysicalKey.t)
+    | SpecialKey(SpecialKey.t);
 
   let toString:
     // The name of the 'meta' key. Defaults to "Meta".
     (~meta: string=?, ~keyCodeToString: int => string, t) => string;
 
+  let physicalKey:
+    (~keycode: int, ~scancode: int, ~modifiers: Modifiers.t) => t;
+
+  let specialKey: SpecialKey.t => t;
+
+  let toPhysicalKey: t => option(PhysicalKey.t);
+
   let parse:
+    // When [explicitShiftKeyNeeded] is [true]:
+    // - Both 's' and 'S' would get resolved as 's'
+    // In other words, 'S' requires a 'Shift+' modifier
+    // (VScode style parsing)
+    // When [explicitShiftKeyNeeded] is [false]:
+    // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
+    // (Vim style parsing)
     (
+      ~explicitShiftKeyNeeded: bool,
       ~getKeycode: Key.t => option(int),
       ~getScancode: Key.t => option(int),
       string
@@ -72,7 +108,15 @@ module Matcher: {
     | AllKeysReleased;
 
   let parse:
+    // When [explicitShiftKeyNeeded] is [true]:
+    // - Both 's' and 'S' would get resolved as 's'
+    // In other words, 'S' requires a 'Shift+' modifier
+    // (VScode style parsing)
+    // When [explicitShiftKeyNeeded] is [false]:
+    // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
+    // (Vim style parsing)
     (
+      ~explicitShiftKeyNeeded: bool,
       ~getKeycode: Key.t => option(int),
       ~getScancode: Key.t => option(int),
       string
@@ -106,9 +150,25 @@ module type Input = {
     // in remappings such that we hit the max limit.
     | RemapRecursionLimitHit;
 
-  let keyDown: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
+  let keyDown:
+    (
+      ~leaderKey: option(PhysicalKey.t)=?,
+      ~context: context,
+      ~key: KeyPress.t,
+      t
+    ) =>
+    (t, list(effect));
   let text: (~text: string, t) => (t, list(effect));
-  let keyUp: (~context: context, ~key: KeyPress.t, t) => (t, list(effect));
+  let keyUp:
+    (
+      ~leaderKey: option(PhysicalKey.t)=?,
+      ~context: context,
+      ~key: KeyPress.t,
+      t
+    ) =>
+    (t, list(effect));
+
+  let remove: (uniqueId, t) => t;
 
   /**
   [isPending(bindings)] returns true if there is a potential

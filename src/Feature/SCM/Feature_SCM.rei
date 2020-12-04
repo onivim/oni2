@@ -3,7 +3,7 @@ open Oni_Core;
 // MODEL
 
 [@deriving show]
-type command;
+type command = Exthost.SCM.command;
 
 module Resource: {
   [@deriving show]
@@ -43,7 +43,7 @@ module Provider: {
     acceptInputCommand: option(command),
     inputVisible: bool,
     validationEnabled: bool,
-    statusBarCommands: list(Exthost.Command.t),
+    statusBarCommands: list(command),
   };
 };
 
@@ -54,8 +54,7 @@ let resetFocus: model => model;
 
 let initial: model;
 
-let statusBarCommands:
-  (~workingDirectory: string, model) => list(Exthost.Command.t);
+let statusBarCommands: (~workingDirectory: string, model) => list(command);
 
 // UPDATE
 

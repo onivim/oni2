@@ -8,10 +8,7 @@ mkdir -p _staging
 
 cp -r $cur__bin _release/linux
 
-# Temporary workaround for: https://github.com/linuxdeploy/linuxdeploy/issues/142
-#wget -O _staging/linuxdeploy-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-wget -O _staging/linuxdeploy-x86_64.AppImage https://artifacts.assassinate-you.net/artifactory/list/linuxdeploy/travis-456/linuxdeploy-x86_64.AppImage
-
+wget -O _staging/linuxdeploy-x86_64.AppImage https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
 chmod +x _staging/linuxdeploy-x86_64.AppImage
 
 wget -O _staging/appimagetool-x86_64.AppImage https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage

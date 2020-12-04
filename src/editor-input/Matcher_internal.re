@@ -4,7 +4,12 @@ type modifier =
   | Alt
   | Meta;
 
-type keyMatcher = (Key.t, list(modifier));
+type keyPress =
+  | UnmatchedString(string)
+  | Physical(Key.t)
+  | Special(SpecialKey.t);
+
+type keyMatcher = (keyPress, list(modifier));
 
 type t =
   | Sequence(list(keyMatcher))

@@ -213,7 +213,7 @@ let guessIndentation = (~config, buffer) => {
 let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   switch (msg) {
   | EditorRequested({buffer, split, position, grabFocus}) => (
-      model,
+      IntMap.add(Buffer.getId(buffer), buffer, model),
       CreateEditor({
         buffer,
         split,
@@ -310,11 +310,13 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
     )
 
   | Saved(bufferId) =>
+    let model' =
+      IntMap.update(bufferId, Option.map(Buffer.incrementSaveTick), model);
     let eff =
       IntMap.find_opt(bufferId, model)
       |> Option.map(buffer => BufferSaved(buffer))
       |> Option.value(~default=Nothing);
-    (model, eff);
+    (model', eff);
 
   | Command(command) =>
     switch (command) {
@@ -342,7 +344,8 @@ module Effects = {
 
     switch (IntMap.find_opt(bufferId, model)) {
     // We already have this buffer loaded - so just ask for an editor!
-    | Some(buffer) => f(~alreadyLoaded=true, buffer)
+    | Some(buffer) =>
+      buffer |> Buffer.stampLastUsed |> f(~alreadyLoaded=true)
 
     | None =>
       // No buffer yet, so we need to create one _and_ ask for an editor.

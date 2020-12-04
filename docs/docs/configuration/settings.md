@@ -74,6 +74,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.wordBasedSuggestions` __(_bool_ default: `true`)__ When `true`, keywords are provided as completion suggestions.
 
+- `editor.wordWrap` __(_bool_ default: `false`)__ When `true`, Onivim will soft-wrap lines at the viewport boundary.
+
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
 - `explorer.autoReveal` __(_string|bool_ default: `true`)__  - When `true`, the file explorer will jump to highlight the file current focused. When `false` the file explorer will remain static. If a string is entered it must be `"focusNoScroll"` which will still highlight the currently focused file in the file explorer but the file explorer will not scroll to it. Any other string supplied will be treated as if `false` was entered and the file explorer will remain static and not highlight the currently focused file. 
@@ -97,6 +99,10 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `vim.highlightedyank.color` __(_string_)__ - Hex string defining a color, ie `#FF00FFFF`.
 
 - `vim.highlightedyank.duration` __(_int_ default: `300`)__ - The time, in milliseconds, the yank highlight is visible.
+
+### Input
+
+- `vim.leader` __(_string_)__ - Specify a custom [leader key](./key-bindings#leader-key). 
 
 ### Layout
 
@@ -154,8 +160,6 @@ Experimental features are features that we are working to stabilize and turn on-
 > __NOTE:__ Experimental features may cause instability, like crashes. Use with caution!
 
 - `experimental.editor.cursorSmoothCaretAnimation` - __(_bool_ default: `false`)__ - Use an animation for moving the cursor caret.
-
-- `experimental.editor.smoothScroll` - __(_bool_ default: `false`)__ - Use an animation for scrolling the editor surface.
 
 - `experimental.viml` - __(_string|list of string_ default: `[]`)__ - Execute some VimL upon load. Example: `"experimental.viml": ["nnoremap ; :"]`
 

@@ -48,12 +48,11 @@ bindings: [
 |}
   |> Yojson.Safe.from_string;
 
-let getKeyFromSDL: string => EditorInput.KeyPress.t =
-  key => {
-    let scancode = Sdl2.Scancode.ofName(key);
-    let keycode = Sdl2.Keycode.ofName(key);
-    {keycode, scancode, modifiers: EditorInput.Modifiers.none};
-  };
+let getKeyFromSDL = (~modifiers=EditorInput.Modifiers.none, key: string) => {
+  let scancode = Sdl2.Scancode.ofName(key);
+  let keycode = Sdl2.Keycode.ofName(key);
+  EditorInput.KeyPress.physicalKey(~keycode, ~scancode, ~modifiers);
+};
 
 let contextWithEditorTextFocus =
   WhenExpr.ContextKeys.(
@@ -71,7 +70,7 @@ let isOk = v =>
 
 let bindingCount = v =>
   switch (v) {
-  | Ok((bindings, _)) => count(bindings)
+  | Ok((bindings, _)) => List.length(bindings)
   | Error(_) => 0
   };
 
@@ -124,14 +123,29 @@ describe("Keybindings", ({describe, _}) => {
       result
       |> Utility.ResultEx.tapError(err => failwith(err))
       |> Result.iter(((bindings, _)) => {
-           let (_bindings, effects) =
-             keyDown(
-               ~context=contextWithEditorTextFocus,
-               ~key=getKeyFromSDL("F2"),
+           let input =
+             List.fold_left(
+               (acc, binding) => {
+                 let (acc', _uniqueId) =
+                   Feature_Input.addKeyBinding(~binding, acc);
+                 acc';
+               },
+               Feature_Input.initial([]),
                bindings,
              );
+           let (_bindings, effects) =
+             Feature_Input.keyDown(
+               ~time=Revery.Time.zero,
+               ~config=Oni_Core.Config.emptyResolver,
+               ~context=contextWithEditorTextFocus,
+               ~key=getKeyFromSDL("F2"),
+               input,
+             );
 
-           expect.equal(effects, [Execute("explorer.toggle")]);
+           expect.equal(
+             effects,
+             [Execute(NamedCommand("explorer.toggle"))],
+           );
          });
     });
     test("regression test: #1160 (legacy binding)", ({expect, _}) => {
@@ -143,10 +157,26 @@ describe("Keybindings", ({describe, _}) => {
       let validateKeyResultsInCommand = ((key, modifiers, cmd)) => {
         result
         |> Result.iter(((bindings, _)) => {
-             let key = {...getKeyFromSDL(key), modifiers};
+             let input =
+               List.fold_left(
+                 (acc, binding) => {
+                   let (acc', _uniqueId) =
+                     Feature_Input.addKeyBinding(~binding, acc);
+                   acc';
+                 },
+                 Feature_Input.initial([]),
+                 bindings,
+               );
+             let key = getKeyFromSDL(~modifiers, key);
              let (_bindings, effects) =
-               keyDown(~context=contextWithEditorTextFocus, ~key, bindings);
-             expect.equal(effects, [Execute(cmd)]);
+               Feature_Input.keyDown(
+                 ~time=Revery.Time.zero,
+                 ~config=Oni_Core.Config.emptyResolver,
+                 ~context=contextWithEditorTextFocus,
+                 ~key,
+                 input,
+               );
+             expect.equal(effects, [Execute(NamedCommand(cmd))]);
            });
       };
 

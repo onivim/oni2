@@ -134,38 +134,4 @@ describe("Options", ({describe, _}) => {
       );
     });
   });
-
-  describe("line comment", ({test, _}) => {
-    test("toggle comment based on settings", ({expect, _}) => {
-      let b = resetBuffer();
-
-      Options.setLineComment("; ");
-
-      input("g");
-      input("c");
-      input("c");
-
-      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
-        "; This is the first line of a test file",
-      );
-
-      input("g");
-      input("c");
-      input("c");
-
-      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
-        "This is the first line of a test file",
-      );
-
-      Options.setLineComment("!!");
-
-      input("g");
-      input("c");
-      input("c");
-
-      expect.string(Buffer.getLine(b, LineNumber.zero)).toEqual(
-        "!!This is the first line of a test file",
-      );
-    })
-  });
 });

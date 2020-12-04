@@ -44,12 +44,15 @@ module View: {
       ~activeBuffer: option(Oni_Core.Buffer.t),
       ~workspaceRoot: string,
       ~workspaceDirectory: string,
+      ~registration: Feature_Registration.model,
       ~config: Config.resolver,
       ~dispatch: msg => unit,
+      ~registrationDispatch: Feature_Registration.msg => unit,
       ~isFocused: bool,
       ~windowDisplayMode: windowDisplayMode,
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
+      ~height: float,
       unit
     ) =>
     Revery.UI.element;

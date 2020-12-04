@@ -23,12 +23,14 @@ type outmsg =
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
   | ReleaseFocus
+  | NotificationDismissed(Feature_Notification.notification)
   | Effect(Isolinear.Effect.t(msg));
 
 module Msg: {
   let keyPressed: string => msg;
   let resizeHandleDragged: int => msg;
   let resizeCommitted: msg;
+  let toggleMessages: msg;
 };
 
 type model;
@@ -46,7 +48,7 @@ let update:
 module Contributions: {
   let commands: (~isFocused: bool, model) => list(Command.t(msg));
   let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
-  let keybindings: list(Oni_Input.Keybindings.keybinding);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };
 
 let initial: model;
@@ -68,6 +70,7 @@ let setLocations:
     model
   ) =>
   model;
+let setNotifications: (Feature_Notification.model, model) => model;
 
 module View: {
   let make:
@@ -79,9 +82,7 @@ module View: {
       ~iconTheme: Oni_Core.IconTheme.t,
       ~languageInfo: Exthost.LanguageInfo.t,
       ~uiFont: Oni_Core.UiFont.t,
-      ~notifications: Feature_Notification.model,
       ~dispatch: msg => unit,
-      ~notificationDispatch: Feature_Notification.msg => unit,
       ~pane: model,
       ~workingDirectory: string,
       unit

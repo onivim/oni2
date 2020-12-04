@@ -141,8 +141,13 @@ let start =
       }
     );
 
+  let initialWorkspace =
+    Feature_Workspace.openedFolder(initialState.workspace)
+    |> Option.map(Exthost.WorkspaceData.fromPath);
+
   let (extHostClientResult, extHostStream) =
     ExtensionClient.create(
+      ~initialWorkspace,
       ~attachStdio,
       ~config=getState().config,
       ~extensions,
@@ -203,7 +208,11 @@ let start =
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
 
-    let isInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state.vim));
+    let isInsertMode =
+      state.layout
+      |> Feature_Layout.activeEditor
+      |> Feature_Editor.Editor.mode
+      |> Vim.Mode.isInsert;
 
     let visibleRanges =
       visibleBuffersAndRanges
@@ -236,7 +245,10 @@ let start =
 
     let terminalSubscription =
       Feature_Terminal.subscription(
-        ~workspaceUri=Core.Uri.fromPath(state.workspace.workingDirectory),
+        ~workspaceUri=
+          Core.Uri.fromPath(
+            Feature_Workspace.workingDirectory(state.workspace),
+          ),
         extHostClient,
         state.terminals,
       )
@@ -367,6 +379,32 @@ let start =
       Feature_AutoUpdate.sub(~config)
       |> Isolinear.Sub.map(msg => Model.Actions.AutoUpdate(msg));
 
+    let visibleEditorsSubscription =
+      visibleEditors
+      |> List.map(editor =>
+           Feature_Editor.Sub.editor(~config, editor)
+           |> Isolinear.Sub.map(msg =>
+                Model.Actions.Editor({
+                  scope:
+                    Model.EditorScope.Editor(
+                      editor |> Feature_Editor.Editor.getId,
+                    ),
+                  msg,
+                })
+              )
+         )
+      |> Isolinear.Sub.batch;
+
+    let inputSubscription =
+      state.input
+      |> Feature_Input.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Input(msg));
+
+    let notificationSub =
+      state.notifications
+      |> Feature_Notification.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Notification(msg));
+
     [
       extHostSubscription,
       languageSupportSub,
@@ -381,6 +419,9 @@ let start =
       registersSub,
       scmSub,
       autoUpdateSub,
+      visibleEditorsSubscription,
+      inputSubscription,
+      notificationSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -461,6 +502,8 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Input(msg))),
     Feature_AutoUpdate.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.AutoUpdate(msg))),
+    Feature_Registration.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Registration(msg))),
   ]
   |> List.flatten
   |> registerCommands(~dispatch);

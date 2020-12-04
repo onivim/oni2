@@ -6,10 +6,7 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Input;
 open Oni_Syntax;
-
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 [@deriving show({with_path: false})]
 type t =
@@ -38,7 +35,7 @@ type t =
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
-  | KeyBindingsSet([@opaque] Keybindings.t)
+  | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
@@ -47,8 +44,6 @@ type t =
   | KeyUp(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | Logging(Feature_Logging.msg)
   | TextInput(string, [@opaque] Revery.Time.t)
-  | DisableKeyDisplayer
-  | EnableKeyDisplayer
   // TODO: This should be a function call - wired up from an input feature
   // directly to the consumer of the keyboard action.
   // In addition, in the 'not-is-text' case, we should strongly type the keys.
@@ -75,7 +70,6 @@ type t =
     })
   | FilesDropped({paths: list(string)})
   | FileExplorer(Feature_Explorer.msg)
-  | LanguageFeature(LanguageFeatures.action)
   | LanguageSupport(Feature_LanguageSupport.msg)
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
@@ -108,6 +102,7 @@ type t =
       lines: array(string),
     })
   | Registers(Feature_Registers.msg)
+  | Registration(Feature_Registration.msg)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
   // ReallyQuitting is dispatched when we've decided _for sure_
@@ -135,7 +130,6 @@ type t =
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
-  | DirectoryChanged(string)
   | VimExecuteCommand(string)
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
@@ -148,6 +142,7 @@ type t =
   | WindowFullscreen
   | WindowMinimized
   | WindowRestored
+  | Workspace(Feature_Workspace.msg)
   | TitleBar(Feature_TitleBar.msg)
   | WindowCloseBlocked
   | Layout(Feature_Layout.msg)
@@ -182,6 +177,7 @@ and quickmenuVariant =
   | CommandPalette
   | EditorsPicker
   | FilesPicker
+  | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | FileTypesPicker({

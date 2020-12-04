@@ -1,6 +1,8 @@
 open EditorCoreTypes;
 
 type lineEnding = Types.lineEnding;
+module Event = Event;
+module Types = Types;
 
 module AutoClosingPairs: {
   module AutoPair: {
@@ -121,6 +123,17 @@ module Mode: {
   let cursors: t => list(BytePosition.t);
 };
 
+module Functions: {
+  module GetChar: {
+    type mode =
+      | Wait // getchar()
+      | Immediate // getchar(0)
+      | Peek; // getchar(1)
+
+    type t = mode => char;
+  };
+};
+
 module Context: {
   type t = {
     autoClosingPairs: AutoClosingPairs.t,
@@ -139,6 +152,7 @@ module Context: {
         ~wantByte: ByteIndex.t
       ) =>
       BytePosition.t,
+    toggleComments: array(string) => array(string),
     bufferId: int,
     colorSchemeProvider: ColorScheme.Provider.t,
     width: int,
@@ -146,12 +160,25 @@ module Context: {
     leftColumn: int,
     topLine: int,
     mode: Mode.t,
-    lineComment: option(string),
     tabSize: int,
     insertSpaces: bool,
+    functionGetChar: Functions.GetChar.t,
   };
 
   let current: unit => t;
+};
+
+module CommandLine: {
+  type t = Types.cmdline;
+
+  let getCompletions: (~context: Context.t=?, unit) => array(string);
+  let getText: unit => option(string);
+  let getPosition: unit => int;
+  let getType: unit => Types.cmdlineType;
+
+  let onEnter: (Event.handler(t), unit) => unit;
+  let onLeave: (Event.handler(unit), unit) => unit;
+  let onUpdate: (Event.handler(t), unit) => unit;
 };
 
 module Edit: {
@@ -316,11 +343,23 @@ module Buffer: {
   let onWrite: Listeners.bufferWriteListener => Event.unsubscribe;
 };
 
+module Clear: {
+  type target =
+    | Messages;
+
+  type t = {
+    target,
+    count: int,
+  };
+};
+
 module Goto: {
   type effect =
     | Definition
     | Declaration
-    | Hover;
+    | Hover
+    | Outline
+    | Messages;
 };
 
 module TabPage: {
@@ -391,12 +430,45 @@ module Scroll: {
     | ColumnRight;
 };
 
+module Mapping: {
+  [@deriving show]
+  type mode =
+    | Insert // imap, inoremap
+    | Language // lmap
+    | CommandLine // cmap
+    | Normal // nmap, nnoremap
+    | VisualAndSelect // vmap, vnoremap
+    | Visual // xmap, xnoremap
+    | Select // smap, snoremap
+    | Operator // omap, onoremap
+    | Terminal // tmap, tnoremap
+    | InsertAndCommandLine // :map!
+    | All; // :map;
+
+  module ScriptId: {
+    [@deriving show]
+    type t;
+    let default: t;
+    let toInt: t => int;
+  };
+
+  [@deriving show]
+  type t = {
+    mode,
+    fromKeys: string, // mapped from, lhs
+    toValue: string, // mapped to, rhs
+    expression: bool,
+    recursive: bool,
+    silent: bool,
+    scriptId: ScriptId.t,
+  };
+};
+
 module Effect: {
   type t =
     | Goto(Goto.effect)
     | TabPage(TabPage.effect)
     | Format(Format.effect)
-    | ModeChanged(Mode.t)
     | SettingChanged(Setting.t)
     | ColorSchemeChanged(option(string))
     | MacroRecordingStarted({register: char})
@@ -407,7 +479,13 @@ module Effect: {
     | Scroll({
         count: int,
         direction: Scroll.direction,
-      });
+      })
+    | Map(Mapping.t)
+    | Unmap({
+        mode: Mapping.mode,
+        keys: option(string),
+      })
+    | Clear(Clear.t);
 };
 
 /**
@@ -440,7 +518,7 @@ The value [s] must be a valid Vim key, such as:
 // TODO: Strongly type these keys...
 let key: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
-let eval: string => result(string, string);
+let eval: (~context: Context.t=?, string) => result(string, string);
 
 /**
 [command(cmd)] executes [cmd] as an Ex command.
@@ -522,12 +600,9 @@ module AutoCommands = AutoCommands;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
 module Clipboard = Clipboard;
-module CommandLine = CommandLine;
 module Cursor = Cursor;
-module Event = Event;
 module Options = Options;
 module Search = Search;
-module Types = Types;
 module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;

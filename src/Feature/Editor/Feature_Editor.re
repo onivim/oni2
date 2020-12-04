@@ -28,14 +28,8 @@ type msg = Msg.t;
 
 type outmsg =
   | Nothing
-  | MouseHovered({
-      bytePosition: BytePosition.t,
-      characterPosition: CharacterPosition.t,
-    })
-  | MouseMoved({
-      bytePosition: BytePosition.t,
-      characterPosition: CharacterPosition.t,
-    });
+  | MouseHovered(option(CharacterPosition.t))
+  | MouseMoved(option(CharacterPosition.t));
 
 type model = Editor.t;
 
@@ -50,11 +44,12 @@ let update = (editor, msg) => {
   | VerticalScrollbarAfterTrackClicked({newPixelScrollY})
   | VerticalScrollbarBeforeTrackClicked({newPixelScrollY})
   | VerticalScrollbarMouseDrag({newPixelScrollY}) => (
-      Editor.scrollToPixelY(~pixelY=newPixelScrollY, editor),
+      Editor.scrollToPixelY(~animated=false, ~pixelY=newPixelScrollY, editor),
       Nothing,
     )
   | MinimapMouseWheel({deltaWheel}) => (
       Editor.scrollDeltaPixelY(
+        ~animated=false,
         ~pixelY=deltaWheel *. Constants.minimapWheelMultiplier,
         editor,
       ),
@@ -65,11 +60,12 @@ let update = (editor, msg) => {
       Nothing,
     )
   | MinimapDragged({newPixelScrollY}) => (
-      Editor.scrollToPixelY(~pixelY=newPixelScrollY, editor),
+      Editor.scrollToPixelY(~animated=false, ~pixelY=newPixelScrollY, editor),
       Nothing,
     )
   | EditorMouseWheel({deltaX, deltaY, shiftKey}) => (
       Editor.scrollDeltaPixelXY(
+        ~animated=false,
         ~pixelX=
           (shiftKey ? deltaY : deltaX) *. Constants.editorWheelMultiplier,
         ~pixelY=(shiftKey ? 0. : deltaY) *. Constants.editorWheelMultiplier,
@@ -79,6 +75,7 @@ let update = (editor, msg) => {
     )
   | VerticalScrollbarMouseWheel({deltaWheel}) => (
       Editor.scrollDeltaPixelY(
+        ~animated=false,
         ~pixelY=deltaWheel *. Constants.scrollbarWheelMultiplier,
         editor,
       ),
@@ -87,11 +84,12 @@ let update = (editor, msg) => {
   | HorizontalScrollbarBeforeTrackClicked({newPixelScrollX})
   | HorizontalScrollbarAfterTrackClicked({newPixelScrollX})
   | HorizontalScrollbarMouseDrag({newPixelScrollX}) => (
-      Editor.scrollToPixelX(~pixelX=newPixelScrollX, editor),
+      Editor.scrollToPixelX(~animated=false, ~pixelX=newPixelScrollX, editor),
       Nothing,
     )
   | HorizontalScrollbarMouseWheel({deltaWheel}) => (
       Editor.scrollDeltaPixelX(
+        ~animated=false,
         ~pixelX=deltaWheel *. Constants.scrollbarWheelMultiplier,
         editor,
       ),
@@ -101,26 +99,40 @@ let update = (editor, msg) => {
   | HorizontalScrollbarMouseRelease
   | VerticalScrollbarMouseRelease
   | VerticalScrollbarMouseDown => (editor, Nothing)
-  | MouseHovered({bytePosition}) => (
-      editor,
-      {
-        Editor.byteToCharacter(bytePosition, editor)
-        |> Option.map(characterPosition => {
-             MouseHovered({bytePosition, characterPosition})
-           })
-        |> Option.value(~default=Nothing);
-      },
+  | EditorMouseDown({time, pixelX, pixelY}) => (
+      editor |> Editor.mouseDown(~time, ~pixelX, ~pixelY),
+      Nothing,
     )
-  | MouseMoved({bytePosition}) => (
-      editor,
-      {
-        Editor.byteToCharacter(bytePosition, editor)
-        |> Option.map(characterPosition => {
-             MouseMoved({bytePosition, characterPosition})
-           })
-        |> Option.value(~default=Nothing);
-      },
+  | EditorMouseUp({time, pixelX, pixelY}) => (
+      editor |> Editor.mouseUp(~time, ~pixelX, ~pixelY),
+      Nothing,
     )
+  | InlineElementSizeChanged({key, uniqueId, height}) => (
+      Editor.setInlineElementSize(~key, ~uniqueId, ~height, editor),
+      Nothing,
+    )
+  | Internal(msg) => (Editor.update(msg, editor), Nothing)
+  | EditorMouseMoved({time, pixelX, pixelY}) =>
+    let editor' = editor |> Editor.mouseMove(~time, ~pixelX, ~pixelY);
+
+    let maybeCharacter = Editor.getCharacterUnderMouse(editor');
+    let eff = MouseMoved(maybeCharacter);
+    (editor', eff);
+  | EditorMouseLeave => (editor |> Editor.mouseLeave, Nothing)
+  | EditorMouseEnter => (editor |> Editor.mouseEnter, Nothing)
+  | MouseHovered =>
+    let maybeCharacter = Editor.getCharacterUnderMouse(editor);
+    (editor, MouseHovered(maybeCharacter));
+  //  | MouseMoved({bytePosition}) => (
+  //      editor,
+  //      {
+  //        Editor.byteToCharacter(bytePosition, editor)
+  //        |> Option.map(characterPosition => {
+  //             MouseMoved({bytePosition, characterPosition})
+  //           })
+  //        |> Option.value(~default=Nothing);
+  //      },
+  //    )
   | ModeChanged({mode, effects}) =>
     let handleScrollEffect = (~count, ~direction, editor) => {
       let count = max(count, 1);
@@ -130,8 +142,8 @@ let update = (editor, msg) => {
           Editor.scrollCenterCursorVertically(editor)
         | CursorTop => Editor.scrollCursorTop(editor)
         | CursorBottom => Editor.scrollCursorBottom(editor)
-        | LineUp => Editor.scrollLines(~count=count * (-1), editor)
-        | LineDown => Editor.scrollLines(~count, editor)
+        | LineUp => Editor.scrollLines(~count, editor)
+        | LineDown => Editor.scrollLines(~count=count * (-1), editor)
         | HalfPageUp => Editor.scrollHalfPage(~count=count * (-1), editor)
         | HalfPageDown => Editor.scrollHalfPage(~count, editor)
         | PageUp => Editor.scrollPage(~count=count * (-1), editor)
@@ -155,5 +167,31 @@ let update = (editor, msg) => {
            editor',
          );
     (editor'', Nothing);
+  };
+};
+
+module Sub = {
+  let editor = (~config, editor: Editor.t) => {
+    let hoverEnabled = EditorConfiguration.Hover.enabled.get(config);
+    let hoverSub =
+      switch (Editor.lastMouseMoveTime(editor)) {
+      | Some(time) when hoverEnabled && !Editor.isMouseDown(editor) =>
+        let delay = EditorConfiguration.Hover.delay.get(config);
+        Service_Time.Sub.once(
+          ~uniqueId={
+            string_of_int(Editor.getId(editor))
+            ++ string_of_float(Revery.Time.toFloatSeconds(time));
+          },
+          ~delay,
+          ~msg=(~current as _) =>
+          Msg.MouseHovered
+        );
+      | Some(_) => Isolinear.Sub.none
+      | None => Isolinear.Sub.none
+      };
+
+    let internalSub =
+      Editor.sub(editor) |> Isolinear.Sub.map(msg => Msg.Internal(msg));
+    Isolinear.Sub.batch([hoverSub, internalSub]);
   };
 };

@@ -1,9 +1,9 @@
 type t = Types.cmdline;
 
-let getCompletions = (~colorSchemeProvider: ColorScheme.Provider.t, ()) => {
-  GlobalState.colorSchemeProvider := colorSchemeProvider;
+let getCompletions = (~context: Context.t=Context.current(), ()) => {
+  GlobalState.context := Some(context);
   let completions = Native.vimCommandLineGetCompletions();
-  GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
+  GlobalState.context := None;
   completions;
 };
 
