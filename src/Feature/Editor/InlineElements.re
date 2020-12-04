@@ -13,6 +13,10 @@ module Animation = {
     );
 };
 
+module Constants = {
+  let maxElementsToAnimate = 5;
+};
+
 type msg =
   | OpacityAnimation({
       key: string,
@@ -329,15 +333,20 @@ let shift = (update: Oni_Core.BufferUpdate.t, model) => {
   };
 };
 
-let sub = model => {
+let sub = (~topLine, ~bottomLine, model) => {
   let allElements = model.sortedElements;
 
   let rec loop = (acc, elements) => {
     switch (elements) {
     | [] => acc
     | [elem, ...tail] =>
-      if (!Component_Animation.isComplete(elem.opacity)
-          || !Component_Animation.isComplete(elem.height)) {
+      if (EditorCoreTypes.LineNumber.(
+            elem.line >= topLine && elem.line <= bottomLine
+          )
+          && (
+            !Component_Animation.isComplete(elem.opacity)
+            || !Component_Animation.isComplete(elem.height)
+          )) {
         loop(
           [
             Component_Animation.sub(elem.height)

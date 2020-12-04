@@ -549,7 +549,10 @@ let getViewLineFromPixelY = (~pixelY, editor) => {
           // We need to advance
           loop(
             viewLine + 1,
-            accumulatedPixels +. additionalRegion +. hd.height +. lineHeight,
+            accumulatedPixels
+            +. additionalRegion
+            +. Component_Animation.get(hd.height)
+            +. lineHeight,
             tail,
           );
         };
@@ -785,7 +788,16 @@ let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
   view,
 };
 
-let setInlineElementSize = (~key, ~uniqueId, ~height, editor) => {
+let linesWithInlineElements = ({inlineElements, _}) => {
+  InlineElements.lines(inlineElements)
+  |> List.map(EditorCoreTypes.LineNumber.ofZeroBased);
+};
+
+let getInlineElements = (~line, {inlineElements, _}) => {
+  InlineElements.allElementsForLine(~line, inlineElements);
+};
+
+let setInlineElementSize = (~key, ~line, ~uniqueId, ~height, editor) => {
   editor
   |> withSteadyCursor(e =>
        {
@@ -793,6 +805,7 @@ let setInlineElementSize = (~key, ~uniqueId, ~height, editor) => {
          inlineElements:
            InlineElements.setSize(
              ~key,
+             ~line,
              ~uniqueId,
              ~height=float(height),
              e.inlineElements,
@@ -806,13 +819,12 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
     elements
     |> List.map((inlineElement: inlineElement) =>
          InlineElements.{
-           reconcilerKey: Brisk_reconciler.Key.create(),
            key: inlineElement.key,
            uniqueId: inlineElement.uniqueId,
            line: inlineElement.lineNumber,
-           height: 0.,
+           height: Component_Animation.make(Animation.expand(0., 0.)),
            view: inlineElement.view,
-           hidden: inlineElement.hidden,
+           opacity: Component_Animation.make(Animation.fadeIn),
          }
        );
 
@@ -826,9 +838,9 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
      );
 };
 
-let getInlineElements = ({inlineElements, _}) => {
-  inlineElements |> InlineElements.allElements;
-};
+// let getInlineElements = ({inlineElements, _}) => {
+//   inlineElements |> InlineElements.allElements;
+// };
 
 let selectionOrCursorRange = editor => {
   switch (selection(editor)) {
@@ -1623,10 +1635,15 @@ let getLeadingWhitespacePixels = (lineNumber, editor) => {
 type msg =
   | ScrollSpringX([@opaque] Spring.msg)
   | ScrollSpringY([@opaque] Spring.msg)
-  | YankHighlight([@opaque] Component_Animation.msg);
+  | YankHighlight([@opaque] Component_Animation.msg)
+  | InlineElements([@opaque] InlineElements.msg);
 
 let update = (msg, editor) => {
   switch (msg) {
+  | InlineElements(msg) => {
+      ...editor,
+      inlineElements: InlineElements.update(msg, editor.inlineElements),
+    }
   | YankHighlight(msg) =>
     let yankHighlight' =
       yankHighlight(editor)
@@ -1653,6 +1670,8 @@ let update = (msg, editor) => {
 };
 
 let sub = editor => {
+  let topLine = getTopVisibleBufferLine(editor);
+  let bottomLine = getBottomVisibleBufferLine(editor);
   let yankHighlightAnimation =
     yankHighlight(editor)
     |> Option.map(({opacity, _}) => {
@@ -1662,7 +1681,10 @@ let sub = editor => {
        })
     |> Option.value(~default=Isolinear.Sub.none);
   [
-    Spring.sub(editor.scrollX) |> Isolinear.Sub.map(msg => ScrollSpringX(msg)),
+    InlineElements.sub(~topLine, ~bottomLine, editor.inlineElements)
+    |> Isolinear.Sub.map(msg => InlineElements(msg)),
+    Spring.sub(editor.scrollX)
+    |> Isolinear.Sub.map(msg => ScrollSpringX(msg)),
     Spring.sub(editor.scrollY)
     |> Isolinear.Sub.map(msg => ScrollSpringY(msg)),
     yankHighlightAnimation,
