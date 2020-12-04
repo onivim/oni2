@@ -3,8 +3,6 @@ open Oni_Core;
 open Utility;
 open Component_Animation;
 
-let a = 1;
-
 module GlobalState = {
   let lastId = ref(0);
 
@@ -16,8 +14,6 @@ module GlobalState = {
 };
 
 type inlineElement = {
-  reconcilerKey: Brisk_reconciler.Key.t,
-  // hidden: bool,
   key: string,
   uniqueId: string,
   lineNumber: EditorCoreTypes.LineNumber.t,
@@ -789,7 +785,6 @@ let withSteadyCursor = (f, editor) => {
 
 let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
   //hidden: false,
-  reconcilerKey: Brisk_reconciler.Key.create(),
   key,
   uniqueId,
   lineNumber,

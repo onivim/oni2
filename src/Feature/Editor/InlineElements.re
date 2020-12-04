@@ -87,25 +87,23 @@ let compare = (a, b) => {
 
 let computeSortedElements =
     (keyToElements: IntMap.t(KeyMap.t(StringMap.t(element)))) => {
-  let ret =
-    keyToElements
-    |> IntMap.bindings
-    |> List.map(((lineNumber, innerMap)) => {
-         innerMap
-         |> KeyMap.bindings
-         |> List.map(bindings => (lineNumber, snd(bindings)))
-       })
-    |> List.flatten;
-  let ret2 =
-    ret
-    |> List.map(((lineNumber, uniqueIdMap)) => {
-         uniqueIdMap
-         |> StringMap.bindings
-         |> List.map(((_uniqueId, elem)) => {
-              {...elem, line: LineNumber.ofZeroBased(lineNumber)}
-            })
-       });
-  ret2 |> List.flatten |> List.sort(compare);
+  keyToElements
+  |> IntMap.bindings
+  |> List.map(((lineNumber, innerMap)) => {
+       innerMap
+       |> KeyMap.bindings
+       |> List.map(bindings => (lineNumber, snd(bindings)))
+     })
+  |> List.flatten
+  |> List.map(((lineNumber, uniqueIdMap)) => {
+       uniqueIdMap
+       |> StringMap.bindings
+       |> List.map(((_uniqueId, elem)) => {
+            {...elem, line: LineNumber.ofZeroBased(lineNumber)}
+          })
+     })
+  |> List.flatten
+  |> List.sort(compare);
 };
 
 let elementsToMap = (elements: list(element)) => {
@@ -127,23 +125,44 @@ let elementsToMap = (elements: list(element)) => {
 };
 
 let set = (~key: string, ~elements, model) => {
-  prerr_endline("SET -- BEFORE: ");
-  prerr_endline(toString(model));
-
   let mergeLine =
       (
         previousLineElements: StringMap.t(element),
         newLineElements: StringMap.t(element),
       ) => {
-    // TODO:
+    // Special case - replacement. In the case where the codelens
+    // is a single element, we want to handle 'replace' gracefully.
+    // For example, switching from `int` to `float` should not trigger a new transition.
+
+    let isReplace =
+      previousLineElements != StringMap.empty
+      && newLineElements != StringMap.empty;
+
+    let maybeSentinelValue =
+      previousLineElements
+      |> StringMap.bindings
+      |> (l => List.nth_opt(l, 0) |> Option.map(snd));
+
     StringMap.merge(
       (_key, maybePrev, maybeNew) => {
         switch (maybePrev, maybeNew) {
-        | (Some(_) as prev, Some(_)) =>
-          prerr_endline("Old and new present...");
-          prev;
+        | (Some(_) as prev, Some(_)) => prev
         | (Some(_), None) => None
-        | (None, Some(_) as newItem) => newItem
+        | (None, Some(_) as newItem) =>
+          if (isReplace) {
+            Utility.OptionEx.map2(
+              (newItem, prevItem) =>
+                {
+                  ...newItem,
+                  height: prevItem.height,
+                  opacity: prevItem.opacity,
+                },
+              newItem,
+              maybeSentinelValue,
+            );
+          } else {
+            newItem;
+          }
         | (None, None) => None
         }
       },
@@ -190,12 +209,7 @@ let set = (~key: string, ~elements, model) => {
     );
 
   let sortedElements' = computeSortedElements(keyToElements');
-  let model' = {
-    keyToElements: keyToElements',
-    sortedElements: sortedElements',
-  };
-  toString(model');
-  model';
+  {keyToElements: keyToElements', sortedElements: sortedElements'};
 };
 
 let updateElement = (~key, ~uniqueId, ~line, ~f: element => element, model) => {
@@ -237,13 +251,6 @@ let update = (msg, model) =>
 
 let setSize = (~key, ~line, ~uniqueId, ~height, model) => {
   let setHeight = (curr: element) => {
-    prerr_endline(
-      Printf.sprintf(
-        "Setting height! prev: %f new: %f",
-        Component_Animation.get(curr.height),
-        height,
-      ),
-    );
     {
       ...curr,
       height:
@@ -310,9 +317,6 @@ let shift = (update: Oni_Core.BufferUpdate.t, model) => {
   if (update.isFull || delta == 0) {
     model;
   } else {
-    prerr_endline("DELTA: " ++ string_of_int(delta));
-    prerr_endline("BEFORE");
-    prerr_endline(toString(model));
     let keyToElements' =
       model.keyToElements
       |> IntMap.shift(
@@ -322,16 +326,8 @@ let shift = (update: Oni_Core.BufferUpdate.t, model) => {
            ~delta,
          );
 
-    prerr_endline("SHIFTING");
-
     let sortedElements' = computeSortedElements(keyToElements');
-    let model' = {
-      keyToElements: keyToElements',
-      sortedElements: sortedElements',
-    };
-    prerr_endline("AFTER");
-    prerr_endline(toString(model'));
-    model';
+    {keyToElements: keyToElements', sortedElements: sortedElements'};
   };
 };
 

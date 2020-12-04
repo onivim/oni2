@@ -86,7 +86,7 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
            }
          )
        })
-    |> List.mapi((idx, lens) =>
+    |> List.map(lens =>
          {
            lens,
            handle,

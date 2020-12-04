@@ -124,7 +124,7 @@ module Top = {
         top(0),
         left(0),
         right(0),
-        height(12),
+        height(6),
         pointerEvents(`Ignore),
       ]
       render={(canvasContext, dimensions) => {
@@ -149,7 +149,7 @@ module Bottom = {
         bottom(0),
         left(0),
         right(0),
-        height(12),
+        height(6),
         pointerEvents(`Ignore),
       ]
       render={(canvasContext, dimensions) => {

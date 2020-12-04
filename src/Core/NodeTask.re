@@ -6,15 +6,11 @@ open Utility;
 exception TaskFailed;
 module Log = (val Kernel.Log.withNamespace("Oni2.Core.NodeTask"));
 
-let k = 6;
+let a = 1;
 
-let j = 5;
+let b = 2;
 
-let i = 4;
-
-let h = 2;
-
-let g = 1;
+let c = 3;
 
 module Internal = {
   let getFilteredEnvironment = () => {
@@ -48,6 +44,7 @@ module Internal = {
     env;
   };
 };
+
 let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
   Log.info("Starting task: " ++ name);
   let (promise, resolver) = Lwt.task();
@@ -148,15 +145,3 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
   };
   promise;
 };
-
-let g = 6;
-
-let h = 7;
-
-let f = 5;
-
-let d = 5.;
-
-let e = 5;
-
-let c = 3;

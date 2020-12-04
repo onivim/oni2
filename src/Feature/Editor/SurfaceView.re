@@ -76,37 +76,13 @@ let%component make =
     switch (lines) {
     | [] => acc
     | [line, ...tail] =>
-      let inlineElements = Editor.getInlineElements(~line, editor);
-      let (_totalOffset, elems) =
-        inlineElements
-        |> List.fold_left(
-             (acc, inlineElement: InlineElements.element) => {
-               let (height, accElements) = acc;
-               let uniqueId = inlineElement.uniqueId;
-               let elem = inlineElement.view(~theme, ~uiFont);
-               let inlineKey = inlineElement.key;
-               let opacity = inlineElement.opacity |> Component_Animation.get;
-
-               let newElement =
-                 <InlineElementView
-                   inlineKey
-                   uniqueId
-                   dispatch
-                   lineNumber=line
-                   yOffset=height
-                   opacity
-                   editor>
-                   <elem />
-                 </InlineElementView>;
-
-               (
-                 height +. Component_Animation.get(inlineElement.height),
-                 [newElement, ...accElements],
-               );
-             },
-             (0., []),
-           );
-      getInlineElements(elems @ acc, tail);
+      getInlineElements([<InlineElementView.Container
+        uiFont
+        theme
+        editor
+        line
+        dispatch />, ...acc
+      ], tail)
     };
 
   let linesWithElements = Editor.linesWithInlineElements(editor);
