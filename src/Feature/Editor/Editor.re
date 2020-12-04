@@ -14,6 +14,8 @@ module GlobalState = {
 };
 
 type inlineElement = {
+  reconcilerKey: Brisk_reconciler.Key.t,
+  hidden: bool,
   key: string,
   uniqueId: string,
   lineNumber: EditorCoreTypes.LineNumber.t,
@@ -547,10 +549,7 @@ let getViewLineFromPixelY = (~pixelY, editor) => {
           // We need to advance
           loop(
             viewLine + 1,
-            accumulatedPixels
-            +. additionalRegion
-            +. Component_Animation.get(hd.height)
-            +. lineHeight,
+            accumulatedPixels +. additionalRegion +. hd.height +. lineHeight,
             tail,
           );
         };
@@ -772,26 +771,21 @@ let withSteadyCursor = (f, editor) => {
   let newOffset = calculateOffset(bytePosition, editor');
   let scrollYValue =
     Spring.getTarget(editor.scrollY) +. (newOffset -. originalOffset);
-
-  let wasAnimating = Spring.isActive(editor.scrollY);
   let scrollY =
-    Spring.set(
-      ~instant=!wasAnimating,
-      ~position=scrollYValue,
-      editor.scrollY,
-    );
+    Spring.set(~instant=true, ~position=scrollYValue, editor.scrollY);
   {...editor', scrollY};
 };
 
 let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
-  //hidden: false,
+  hidden: false,
+  reconcilerKey: Brisk_reconciler.Key.create(),
   key,
   uniqueId,
   lineNumber,
   view,
 };
 
-let setInlineElementSize = (~key, ~line, ~uniqueId, ~height, editor) => {
+let setInlineElementSize = (~key, ~uniqueId, ~height, editor) => {
   editor
   |> withSteadyCursor(e =>
        {
@@ -800,7 +794,6 @@ let setInlineElementSize = (~key, ~line, ~uniqueId, ~height, editor) => {
            InlineElements.setSize(
              ~key,
              ~uniqueId,
-             ~line,
              ~height=float(height),
              e.inlineElements,
            ),
@@ -813,15 +806,13 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
     elements
     |> List.map((inlineElement: inlineElement) =>
          InlineElements.{
+           reconcilerKey: Brisk_reconciler.Key.create(),
            key: inlineElement.key,
            uniqueId: inlineElement.uniqueId,
            line: inlineElement.lineNumber,
-           height:
-             Component_Animation.make(
-               InlineElements.Animation.expand(0., 0.),
-             ),
-           opacity: Component_Animation.make(InlineElements.Animation.fadeIn),
+           height: 0.,
            view: inlineElement.view,
+           hidden: inlineElement.hidden,
          }
        );
 
@@ -835,14 +826,8 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
      );
 };
 
-let getInlineElements = (~line, {inlineElements, _}) => {
-  inlineElements |> InlineElements.allElementsForLine(~line);
-};
-
-let linesWithInlineElements = ({inlineElements, _}) => {
-  inlineElements
-  |> InlineElements.lines
-  |> List.map(EditorCoreTypes.LineNumber.ofZeroBased);
+let getInlineElements = ({inlineElements, _}) => {
+  inlineElements |> InlineElements.allElements;
 };
 
 let selectionOrCursorRange = editor => {
@@ -1638,15 +1623,10 @@ let getLeadingWhitespacePixels = (lineNumber, editor) => {
 type msg =
   | ScrollSpringX([@opaque] Spring.msg)
   | ScrollSpringY([@opaque] Spring.msg)
-  | YankHighlight([@opaque] Component_Animation.msg)
-  | InlineElements([@opaque] InlineElements.msg);
+  | YankHighlight([@opaque] Component_Animation.msg);
 
 let update = (msg, editor) => {
   switch (msg) {
-  | InlineElements(msg) => {
-      ...editor,
-      inlineElements: InlineElements.update(msg, editor.inlineElements),
-    }
   | YankHighlight(msg) =>
     let yankHighlight' =
       yankHighlight(editor)
@@ -1682,10 +1662,7 @@ let sub = editor => {
        })
     |> Option.value(~default=Isolinear.Sub.none);
   [
-    InlineElements.sub(editor.inlineElements)
-    |> Isolinear.Sub.map(msg => InlineElements(msg)),
-    Spring.sub(editor.scrollX)
-    |> Isolinear.Sub.map(msg => ScrollSpringX(msg)),
+    Spring.sub(editor.scrollX) |> Isolinear.Sub.map(msg => ScrollSpringX(msg)),
     Spring.sub(editor.scrollY)
     |> Isolinear.Sub.map(msg => ScrollSpringY(msg)),
     yankHighlightAnimation,

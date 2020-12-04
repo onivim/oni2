@@ -134,8 +134,14 @@ module Container = {
       {elems |> React.listToElement}
       <View
         style={Styles.shadowContainer(~height=int_of_float(totalHeight))}>
-        <Oni_Components.ScrollShadow.Top opacity=maxOpacity height=5 />
-        <Oni_Components.ScrollShadow.Bottom opacity=maxOpacity height=5 />
+        <Oni_Components.ScrollShadow.Top
+          opacity={maxOpacity *. 0.8}
+          height=5
+        />
+        <Oni_Components.ScrollShadow.Bottom
+          opacity={maxOpacity *. 0.8}
+          height=5
+        />
       </View>
     </View>;
   };

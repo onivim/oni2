@@ -14,6 +14,8 @@ let b = 2;
 
 let c = 3;
 
+let get = 3;
+
 module Internal = {
   let getFilteredEnvironment = () => {
     // Filter out some keys that aren't required
