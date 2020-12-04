@@ -30,13 +30,14 @@ module Effects = {
       dispatch(toMsg(logFileName));
     });
 
-  let toggleDebugDraw = Isolinear.Effect.create(~name="Feature.Logging.toggleDebugDraw", () => {
-    if (Revery.Debug.isEnabled()) {
-        Revery.Debug.disable()
-    } else {
-        Revery.Debug.enable()
-    };
-  })
+  let toggleDebugDraw =
+    Isolinear.Effect.create(~name="Feature.Logging.toggleDebugDraw", () =>
+      if (Revery.Debug.isEnabled()) {
+        Revery.Debug.disable();
+      } else {
+        Revery.Debug.enable();
+      }
+    );
 };
 
 // UPDATE
@@ -53,10 +54,7 @@ let update = (msg, _model) =>
         (),
         Effect(Effects.traceToFile(~toMsg=str => LogFileStarted(str))),
       )
-    | ToggleRenderPerformanceView => (
-        (),
-        Effect(Effects.toggleDebugDraw)
-    )
+    | ToggleRenderPerformanceView => ((), Effect(Effects.toggleDebugDraw))
     }
   | LogFileStarted(filePath) => (
       (),
@@ -77,11 +75,11 @@ module Commands = {
 
   let showDebugVisualization =
     define(
-        ~category="Debug",
-        ~title="Render performance",
-        "oni.debug.toggleRenderPerformance",
-        Command(ToggleRenderPerformanceView)
-    )
+      ~category="Debug",
+      ~title="Render performance",
+      "oni.debug.toggleRenderPerformance",
+      Command(ToggleRenderPerformanceView),
+    );
 };
 
 module Contributions = {

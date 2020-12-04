@@ -101,21 +101,20 @@ type t = {
   // Number of lines to preserve before or after the cursor, when scrolling.
   // Like the `scrolloff` vim setting or the `editor.cursorSurroundingLines` VSCode setting.
   verticalScrollMargin: int,
-
   renderNonce: int,
 };
 
 let shouldRender = (editorA, editorB) => {
- // TODO: View lines different?
- // TODO: Diagnostics different?
- // TODO: Wrapping different?
- // TODO: Move cursor rendering
- // TODO: Move definition rendering
- editorA.key !== editorB.key
- || editorA.renderNonce != editorB.renderNonce
- || editorA.scrollX != editorB.scrollX
- || editorA.scrollY != editorB.scrollY
- || editorA.buffer !== editorB.buffer;
+  // TODO: View lines different?
+  // TODO: Diagnostics different?
+  // TODO: Wrapping different?
+  // TODO: Move cursor rendering
+  // TODO: Move definition rendering
+  editorA.key !== editorB.key
+  || editorA.renderNonce != editorB.renderNonce
+  || editorA.scrollX != editorB.scrollX
+  || editorA.scrollY != editorB.scrollY
+  || editorA.buffer !== editorB.buffer;
 };
 
 let key = ({key, _}) => key;

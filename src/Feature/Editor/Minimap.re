@@ -13,13 +13,14 @@ open Revery.UI;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
-let layerCondition = Revery.UI.Layer.Condition.make((previousEditor, newEditor) => {
+let layerCondition =
+  Revery.UI.Layer.Condition.make((previousEditor, newEditor) =>
     if (Editor.shouldRender(previousEditor, newEditor)) {
-       true 
+      true;
     } else {
-       false 
+      false;
     }
-});
+  );
 
 module Constants = {
   include Constants;
@@ -271,8 +272,8 @@ let%component make =
     |> Option.value(~default=React.empty);
 
   <Layer
-    backgroundColor={backgroundColor}
-    condition=layerCondition(editor)
+    backgroundColor
+    condition={layerCondition(editor)}
     style={Styles.container(backgroundColor)}
     onMouseDown
     onMouseMove

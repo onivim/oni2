@@ -48,7 +48,7 @@ let update = (msg, model: model) => {
       );
     (model, Effect(eff));
   | PasteCompleted({mode}) => (model, ModeUpdated(mode))
-  | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
+  | SettingChanged({fullName, value, _}: Vim.Setting.t) => (
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
       SettingsChanged,
     )

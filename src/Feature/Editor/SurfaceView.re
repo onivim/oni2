@@ -40,13 +40,14 @@ let renderRulers = (~context: Draw.context, ~colors: Colors.t, rulers) => {
   |> List.iter(Draw.ruler(~context, ~color=colors.rulerForeground));
 };
 
-let layerCondition = Revery.UI.Layer.Condition.make((previousEditor, newEditor) => {
+let layerCondition =
+  Revery.UI.Layer.Condition.make((previousEditor, newEditor) =>
     if (Editor.shouldRender(previousEditor, newEditor)) {
-       true 
+      true;
     } else {
-       false 
+      false;
     }
-})
+  );
 
 let%component make =
               (
@@ -182,9 +183,9 @@ let%component make =
     |> Option.value(~default=React.empty);
 
   <Layer
-    key=Editor.key(editor)
-    backgroundColor={Colors.(colors.editorBackground)}
-    condition=layerCondition(editor)
+    key={Editor.key(editor)}
+    backgroundColor=Colors.(colors.editorBackground)
+    condition={layerCondition(editor)}
     onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
     style={Styles.bufferViewClipped(
       gutterWidth,
