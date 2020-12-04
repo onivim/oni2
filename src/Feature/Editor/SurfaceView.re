@@ -70,29 +70,48 @@ let%component make =
 
   let indentation = Buffer.getIndentation(buffer);
 
-  let inlineElements = Editor.getInlineElements(editor);
+  //let inlineElements = Editor.getInlineElements(editor);
 
-  let lensElements =
-    inlineElements
-    |> List.map((inlineElement: InlineElements.element) => {
-         let line = inlineElement.line;
-         let uniqueId = inlineElement.uniqueId;
-         let elem = inlineElement.view(~theme, ~uiFont);
-         let inlineKey = inlineElement.key;
-         let hidden = inlineElement.hidden;
+  let rec getInlineElements = (acc: list(Revery.UI.element), lines) =>
+    switch (lines) {
+    | [] => acc
+    | [line, ...tail] =>
+      let inlineElements = Editor.getInlineElements(~line, editor);
+      let (_totalOffset, elems) =
+        inlineElements
+        |> List.fold_left(
+             (acc, inlineElement: InlineElements.element) => {
+               let (height, accElements) = acc;
+               let uniqueId = inlineElement.uniqueId;
+               let elem = inlineElement.view(~theme, ~uiFont);
+               let inlineKey = inlineElement.key;
+               let opacity = inlineElement.opacity |> Component_Animation.get;
 
-         <InlineElementView
-           config
-           key={inlineElement.reconcilerKey}
-           inlineKey
-           uniqueId
-           dispatch
-           lineNumber=line
-           hidden
-           editor>
-           <elem />
-         </InlineElementView>;
-       });
+               let newElement =
+                 <InlineElementView
+                   inlineKey
+                   uniqueId
+                   dispatch
+                   lineNumber=line
+                   yOffset=height
+                   opacity
+                   editor>
+                   <elem />
+                 </InlineElementView>;
+
+               (
+                 height +. Component_Animation.get(inlineElement.height),
+                 [newElement, ...accElements],
+               );
+             },
+             (0., []),
+           );
+      getInlineElements(elems @ acc, tail);
+    };
+
+  let linesWithElements = Editor.linesWithInlineElements(editor);
+
+  let lensElements = getInlineElements([], linesWithElements);
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
     dispatch(

@@ -46,6 +46,7 @@ type t =
   | InlineElementSizeChanged({
       key: string,
       uniqueId: string,
+      line: EditorCoreTypes.LineNumber.t,
       height: int,
     })
   | Internal(Editor.msg);

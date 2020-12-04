@@ -1,95 +1,217 @@
 open Oni_Core;
 open EditorCoreTypes;
 
+module Animation = {
+  open Revery;
+  open Revery.UI;
+  let fadeIn =
+    Animation.(animate(Time.milliseconds(500)) |> tween(0., 1.0));
+
+  let expand = (previousHeight, height) =>
+    Animation.(
+      animate(Time.milliseconds(200)) |> tween(previousHeight, height)
+    );
+};
+
+type msg =
+  | OpacityAnimation({
+      key: string,
+      line: LineNumber.t,
+      uniqueId: string,
+      msg: Component_Animation.msg,
+    })
+  | HeightAnimation({
+      key: string,
+      line: LineNumber.t,
+      uniqueId: string,
+      msg: Component_Animation.msg,
+    });
+
 [@deriving show]
 type element = {
   reconcilerKey: [@opaque] Brisk_reconciler.Key.t,
   key: string,
   uniqueId: string,
   line: LineNumber.t,
-  height: float,
-  hidden: bool,
+  height: [@opaque] Component_Animation.t(float),
+  opacity: [@opaque] Component_Animation.t(float),
   view:
     (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
     Revery.UI.element,
 };
 
+// A map of inline element key -> inline elements
+// An example of a key might be `"codelens"`, `"diff"` -
+// a category of inline elements.
+module KeyMap = StringMap;
+
 [@deriving show]
 type t = {
-  keyToElements: [@opaque] StringMap.t(StringMap.t(element)),
+  // A map of line number -> key -> uniqueId -> element
+  keyToElements: [@opaque] IntMap.t(KeyMap.t(StringMap.t(element))),
   sortedElements: list(element),
 };
 
-let initial = {keyToElements: StringMap.empty, sortedElements: []};
+let initial = {keyToElements: IntMap.empty, sortedElements: []};
+
+let toString = ({keyToElements, _}) => {
+  let str = ref("");
+  keyToElements
+  |> IntMap.iter((line, keyMap) => {
+       str := str^ ++ "-- LINE: " ++ string_of_int(line) ++ "\n";
+       keyMap
+       |> KeyMap.iter((key, idMap) => {
+            str := str^ ++ "--- KEY: " ++ key ++ "\n";
+
+            idMap
+            |> StringMap.iter((uniqueId, elem) => {
+                 str :=
+                   str^
+                   ++ "--- "
+                   ++ uniqueId
+                   ++ "("
+                   ++ string_of_float(Component_Animation.get(elem.height))
+                   ++ ")\n"
+               });
+          });
+     });
+  str^;
+};
+
+let lines = ({keyToElements, _}) =>
+  keyToElements |> IntMap.bindings |> List.map(fst);
 
 let compare = (a, b) => {
   LineNumber.toZeroBased(a.line) - LineNumber.toZeroBased(b.line);
 };
 
 let computeSortedElements =
-    (keyToElements: StringMap.t(StringMap.t(element))) => {
-  keyToElements
-  |> StringMap.bindings
-  |> List.map(snd)
-  |> List.map(innerMap => {innerMap |> StringMap.bindings |> List.map(snd)})
-  |> List.flatten
-  |> List.sort(compare);
+    (keyToElements: IntMap.t(KeyMap.t(StringMap.t(element)))) => {
+  let ret =
+    keyToElements
+    |> IntMap.bindings
+    |> List.map(((lineNumber, innerMap)) => {
+         innerMap
+         |> KeyMap.bindings
+         |> List.map(bindings => (lineNumber, snd(bindings)))
+       })
+    |> List.flatten;
+  let ret2 =
+    ret
+    |> List.map(((lineNumber, uniqueIdMap)) => {
+         uniqueIdMap
+         |> StringMap.bindings
+         |> List.map(((_uniqueId, elem)) => {
+              {...elem, line: LineNumber.ofZeroBased(lineNumber)}
+            })
+       });
+  ret2 |> List.flatten |> List.sort(compare);
+};
+
+let elementsToMap = (elements: list(element)) => {
+  elements
+  |> List.fold_left(
+       (acc, curr) => {
+         let lineNumber = curr.line |> LineNumber.toZeroBased;
+         acc
+         |> IntMap.update(
+              lineNumber,
+              fun
+              | None =>
+                Some(StringMap.empty |> StringMap.add(curr.uniqueId, curr))
+              | Some(map) => Some(map |> StringMap.add(curr.uniqueId, curr)),
+            );
+       },
+       IntMap.empty,
+     );
 };
 
 let set = (~key: string, ~elements, model) => {
-  // Create a map for new keys... and then union with our current map
+  prerr_endline("SET -- BEFORE: ");
+  prerr_endline(toString(model));
 
-  let incomingMap =
-    elements
-    |> List.fold_left(
-         (acc, curr) => {StringMap.add(curr.uniqueId, curr, acc)},
-         StringMap.empty,
-       );
-
-  // When merging - use our current measured height, but bring in the new view.
-  let merge = (_key, maybeCurrent, maybeIncoming) => {
-    switch (maybeCurrent, maybeIncoming) {
-    | (Some(current), Some(incoming)) =>
-      Some({
-        ...incoming,
-        reconcilerKey: current.reconcilerKey,
-        height: current.height,
-      })
-    | (None, Some(_) as incoming) => incoming
-    | (Some(_), None) => None
-    | (None, None) => None
-    };
+  let mergeLine =
+      (
+        previousLineElements: StringMap.t(element),
+        newLineElements: StringMap.t(element),
+      ) => {
+    // TODO:
+    StringMap.merge(
+      (_key, maybePrev, maybeNew) => {
+        switch (maybePrev, maybeNew) {
+        | (Some(_) as prev, Some(_)) =>
+          prerr_endline("Old and new present...");
+          prev;
+        | (Some(_), None) => None
+        | (None, Some(_) as newItem) => newItem
+        | (None, None) => None
+        }
+      },
+      previousLineElements,
+      newLineElements,
+    );
   };
 
-  let currentMap =
-    model.keyToElements
-    |> StringMap.find_opt(key)
-    |> Option.value(~default=StringMap.empty);
+  let mergeKeys = (previousLineMap, incomingLineMap) => {
+    KeyMap.merge(
+      (_key, maybePrev, maybeNew) => {
+        switch (maybePrev, maybeNew) {
+        | (Some(prev), Some(incoming)) => Some(mergeLine(prev, incoming))
+        | (None, Some(incoming)) => Some(incoming)
+        | (Some(_), None) => None
+        | (None, None) => None
+        }
+      },
+      previousLineMap,
+      incomingLineMap,
+    );
+  };
 
-  let mergedMap = StringMap.merge(merge, currentMap, incomingMap);
-
-  let keyToElements' = StringMap.add(key, mergedMap, model.keyToElements);
-
-  let sortedElements' = computeSortedElements(keyToElements');
-  {keyToElements: keyToElements', sortedElements: sortedElements'};
-};
-
-let setSize = (~key, ~uniqueId, ~height, model) => {
-  let setHeight =
-    Option.map((curr: element)
-      // Use the max of the current height or previous height,
-      // because we might've already measured this element - use
-      // the measured value if we have it. This will reserve space
-      // in the case where the editor is cloned, making the
-      // transition less jarring.
-      => {...curr, height: max(height, curr.height)});
+  let incomingMap = elements |> elementsToMap;
 
   let keyToElements' =
+    IntMap.merge(
+      (_line, maybePrev, maybeIncoming) => {
+        switch (maybePrev, maybeIncoming) {
+        | (Some(prev), Some(incoming)) =>
+          let incomingKeyMap =
+            StringMap.empty |> StringMap.add(key, incoming);
+          Some(mergeKeys(prev, incomingKeyMap));
+        | (None, Some(incoming)) =>
+          let incomingKeyMap =
+            StringMap.empty |> StringMap.add(key, incoming);
+          Some(incomingKeyMap);
+        | (Some(prev), None) => Some(prev |> StringMap.remove(key))
+        | (None, None) => None
+        }
+      },
+      model.keyToElements,
+      incomingMap,
+    );
+
+  let sortedElements' = computeSortedElements(keyToElements');
+  let model' = {
+    keyToElements: keyToElements',
+    sortedElements: sortedElements',
+  };
+  toString(model');
+  model';
+};
+
+let updateElement = (~key, ~uniqueId, ~line, ~f: element => element, model) => {
+  let lineNumber = EditorCoreTypes.LineNumber.toZeroBased(line);
+  let keyToElements' =
     model.keyToElements
-    |> StringMap.update(
-         key,
-         Option.map(innerMap => {
-           innerMap |> StringMap.update(uniqueId, setHeight)
+    |> IntMap.update(
+         lineNumber,
+         Option.map(keyMap => {
+           keyMap
+           |> KeyMap.update(
+                key,
+                Option.map(idMap => {
+                  idMap |> StringMap.update(uniqueId, Option.map(f))
+                }),
+              )
          }),
        );
 
@@ -97,9 +219,61 @@ let setSize = (~key, ~uniqueId, ~height, model) => {
   {keyToElements: keyToElements', sortedElements: sortedElements'};
 };
 
-let allElements = ({sortedElements, _}) => {
-  sortedElements;
+let update = (msg, model) =>
+  switch (msg) {
+  | OpacityAnimation({key, uniqueId, line, msg}) =>
+    let updateOpacity = element => {
+      ...element,
+      opacity: Component_Animation.update(msg, element.opacity),
+    };
+    updateElement(~key, ~uniqueId, ~line, ~f=updateOpacity, model);
+  | HeightAnimation({key, uniqueId, line, msg}) =>
+    let updateHeight = element => {
+      ...element,
+      height: Component_Animation.update(msg, element.height),
+    };
+    updateElement(~key, ~uniqueId, ~line, ~f=updateHeight, model);
+  };
+
+let setSize = (~key, ~line, ~uniqueId, ~height, model) => {
+  let setHeight = (curr: element) => {
+    prerr_endline(
+      Printf.sprintf(
+        "Setting height! prev: %f new: %f",
+        Component_Animation.get(curr.height),
+        height,
+      ),
+    );
+    {
+      ...curr,
+      height:
+        Component_Animation.make(
+          Animation.expand(Component_Animation.get(curr.height), height),
+        ),
+    };
+  };
+  updateElement(~key, ~line, ~uniqueId, ~f=setHeight, model);
 };
+
+let allElementsForLine = (~line, {keyToElements, _}) => {
+  let keyToElements =
+    IntMap.find_opt(
+      EditorCoreTypes.LineNumber.toZeroBased(line),
+      keyToElements,
+    )
+    |> Option.value(~default=StringMap.empty);
+
+  keyToElements
+  |> StringMap.bindings
+  |> List.map(snd)
+  |> List.map(stringMap => {
+       stringMap |> StringMap.bindings |> List.map(snd)
+     })
+  |> List.flatten
+  |> List.sort(compare);
+};
+
+let allElements = ({sortedElements, _}) => sortedElements;
 
 let getReservedSpace = (line: LineNumber.t, elements: t) => {
   let lineNumber = LineNumber.toZeroBased(line);
@@ -107,8 +281,7 @@ let getReservedSpace = (line: LineNumber.t, elements: t) => {
     switch (remainingElements) {
     | [] => acc
     | [hd, ...tail] when LineNumber.toZeroBased(hd.line) <= lineNumber =>
-      let height = hd.hidden ? 0. : hd.height;
-      loop(acc +. height, tail);
+      loop(acc +. Component_Animation.get(hd.height), tail)
     | _elementsPastLine => acc
     };
   };
@@ -120,9 +293,7 @@ let getAllReservedSpace = elements => {
   let rec loop = (acc, remainingElements) => {
     switch (remainingElements) {
     | [] => acc
-    | [hd, ...tail] =>
-      let height = hd.hidden ? 0. : hd.height;
-      loop(acc +. height, tail);
+    | [hd, ...tail] => loop(acc +. Component_Animation.get(hd.height), tail)
     };
   };
 
@@ -139,35 +310,69 @@ let shift = (update: Oni_Core.BufferUpdate.t, model) => {
   if (update.isFull || delta == 0) {
     model;
   } else {
-    let updateElement = element => {
-      let lineIdx = LineNumber.toZeroBased(element.line);
+    prerr_endline("DELTA: " ++ string_of_int(delta));
+    prerr_endline("BEFORE");
+    prerr_endline(toString(model));
+    let keyToElements' =
+      model.keyToElements
+      |> IntMap.shift(
+           ~default=_ => None,
+           ~startPos=startLineIdx,
+           ~endPos=endLineIdx,
+           ~delta,
+         );
 
-      if (lineIdx < startLineIdx) {
-        Some(element);
-      } else if (lineIdx >= startLineIdx && lineIdx < endLineIdx) {
-        Some({...element, hidden: true});
-      } else {
-        Some({...element, line: LineNumber.ofZeroBased(lineIdx + delta)});
-      };
-    };
-
-    let updateElements = (idToElement: StringMap.t(element)) => {
-      StringMap.fold(
-        (key, v, acc) => {
-          let maybeElement = updateElement(v);
-          switch (maybeElement) {
-          | None => acc
-          | Some(element) => StringMap.add(key, element, acc)
-          };
-        },
-        idToElement,
-        StringMap.empty,
-      );
-    };
-
-    let keyToElements' = model.keyToElements |> StringMap.map(updateElements);
+    prerr_endline("SHIFTING");
 
     let sortedElements' = computeSortedElements(keyToElements');
-    {keyToElements: keyToElements', sortedElements: sortedElements'};
+    let model' = {
+      keyToElements: keyToElements',
+      sortedElements: sortedElements',
+    };
+    prerr_endline("AFTER");
+    prerr_endline(toString(model'));
+    model';
   };
+};
+
+let sub = model => {
+  let allElements = model.sortedElements;
+
+  let rec loop = (acc, elements) => {
+    switch (elements) {
+    | [] => acc
+    | [elem, ...tail] =>
+      if (!Component_Animation.isComplete(elem.opacity)
+          || !Component_Animation.isComplete(elem.height)) {
+        loop(
+          [
+            Component_Animation.sub(elem.height)
+            |> Isolinear.Sub.map(msg =>
+                 HeightAnimation({
+                   key: elem.key,
+                   line: elem.line,
+                   uniqueId: elem.uniqueId,
+                   msg,
+                 })
+               ),
+            Component_Animation.sub(elem.opacity)
+            |> Isolinear.Sub.map(msg =>
+                 OpacityAnimation({
+                   key: elem.key,
+                   line: elem.line,
+                   uniqueId: elem.uniqueId,
+                   msg,
+                 })
+               ),
+            ...acc,
+          ],
+          tail,
+        );
+      } else {
+        loop(acc, tail);
+      }
+    };
+  };
+
+  loop([], allElements) |> Isolinear.Sub.batch;
 };

@@ -92,10 +92,9 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
            handle,
            uniqueId:
              Printf.sprintf(
-               "%d%d%d%d",
+               "%d%d%d",
                handle,
                bufferId,
-               idx,
                Hashtbl.hash(textFromExthost(lens)),
              ),
          }

@@ -6,6 +6,16 @@ open Utility;
 exception TaskFailed;
 module Log = (val Kernel.Log.withNamespace("Oni2.Core.NodeTask"));
 
+let k = 6;
+
+let j = 5;
+
+let i = 4;
+
+let h = 2;
+
+let g = 1;
+
 module Internal = {
   let getFilteredEnvironment = () => {
     // Filter out some keys that aren't required
@@ -138,3 +148,15 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
   };
   promise;
 };
+
+let g = 6;
+
+let h = 7;
+
+let f = 5;
+
+let d = 5.;
+
+let e = 5;
+
+let c = 3;

@@ -3,6 +3,8 @@ open Oni_Core;
 open Utility;
 open Component_Animation;
 
+let a = 1;
+
 module GlobalState = {
   let lastId = ref(0);
 
@@ -15,7 +17,7 @@ module GlobalState = {
 
 type inlineElement = {
   reconcilerKey: Brisk_reconciler.Key.t,
-  hidden: bool,
+  // hidden: bool,
   key: string,
   uniqueId: string,
   lineNumber: EditorCoreTypes.LineNumber.t,
@@ -549,7 +551,10 @@ let getViewLineFromPixelY = (~pixelY, editor) => {
           // We need to advance
           loop(
             viewLine + 1,
-            accumulatedPixels +. additionalRegion +. hd.height +. lineHeight,
+            accumulatedPixels
+            +. additionalRegion
+            +. Component_Animation.get(hd.height)
+            +. lineHeight,
             tail,
           );
         };
@@ -771,13 +776,19 @@ let withSteadyCursor = (f, editor) => {
   let newOffset = calculateOffset(bytePosition, editor');
   let scrollYValue =
     Spring.getTarget(editor.scrollY) +. (newOffset -. originalOffset);
+
+  let wasAnimating = Spring.isActive(editor.scrollY);
   let scrollY =
-    Spring.set(~instant=true, ~position=scrollYValue, editor.scrollY);
+    Spring.set(
+      ~instant=!wasAnimating,
+      ~position=scrollYValue,
+      editor.scrollY,
+    );
   {...editor', scrollY};
 };
 
 let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
-  hidden: false,
+  //hidden: false,
   reconcilerKey: Brisk_reconciler.Key.create(),
   key,
   uniqueId,
@@ -785,7 +796,16 @@ let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
   view,
 };
 
-let setInlineElementSize = (~key, ~uniqueId, ~height, editor) => {
+let setInlineElementSize = (~key, ~line, ~uniqueId, ~height, editor) => {
+  prerr_endline(
+    Printf.sprintf(
+      "Setting inline element - line: %d uniqueId: %s.%s height: %d",
+      line |> EditorCoreTypes.LineNumber.toZeroBased,
+      key,
+      uniqueId,
+      height,
+    ),
+  );
   editor
   |> withSteadyCursor(e =>
        {
@@ -794,6 +814,7 @@ let setInlineElementSize = (~key, ~uniqueId, ~height, editor) => {
            InlineElements.setSize(
              ~key,
              ~uniqueId,
+             ~line,
              ~height=float(height),
              e.inlineElements,
            ),
@@ -810,9 +831,13 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
            key: inlineElement.key,
            uniqueId: inlineElement.uniqueId,
            line: inlineElement.lineNumber,
-           height: 0.,
+           height:
+             Component_Animation.make(
+               InlineElements.Animation.expand(0., 0.),
+             ),
+           opacity: Component_Animation.make(InlineElements.Animation.fadeIn),
            view: inlineElement.view,
-           hidden: inlineElement.hidden,
+           //hidden: inlineElement.hidden,
          }
        );
 
@@ -826,8 +851,14 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
      );
 };
 
-let getInlineElements = ({inlineElements, _}) => {
-  inlineElements |> InlineElements.allElements;
+let getInlineElements = (~line, {inlineElements, _}) => {
+  inlineElements |> InlineElements.allElementsForLine(~line);
+};
+
+let linesWithInlineElements = ({inlineElements, _}) => {
+  inlineElements
+  |> InlineElements.lines
+  |> List.map(EditorCoreTypes.LineNumber.ofZeroBased);
 };
 
 let selectionOrCursorRange = editor => {
@@ -1623,10 +1654,15 @@ let getLeadingWhitespacePixels = (lineNumber, editor) => {
 type msg =
   | ScrollSpringX([@opaque] Spring.msg)
   | ScrollSpringY([@opaque] Spring.msg)
-  | YankHighlight([@opaque] Component_Animation.msg);
+  | YankHighlight([@opaque] Component_Animation.msg)
+  | InlineElements([@opaque] InlineElements.msg);
 
 let update = (msg, editor) => {
   switch (msg) {
+  | InlineElements(msg) => {
+      ...editor,
+      inlineElements: InlineElements.update(msg, editor.inlineElements),
+    }
   | YankHighlight(msg) =>
     let yankHighlight' =
       yankHighlight(editor)
@@ -1662,7 +1698,10 @@ let sub = editor => {
        })
     |> Option.value(~default=Isolinear.Sub.none);
   [
-    Spring.sub(editor.scrollX) |> Isolinear.Sub.map(msg => ScrollSpringX(msg)),
+    InlineElements.sub(editor.inlineElements)
+    |> Isolinear.Sub.map(msg => InlineElements(msg)),
+    Spring.sub(editor.scrollX)
+    |> Isolinear.Sub.map(msg => ScrollSpringX(msg)),
     Spring.sub(editor.scrollY)
     |> Isolinear.Sub.map(msg => ScrollSpringY(msg)),
     yankHighlightAnimation,

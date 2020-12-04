@@ -9,15 +9,15 @@ module Styles = {
     [
       opacity(opac),
       position(`Absolute),
-      top(pixelY |> int_of_float),
+      top(int_of_float(pixelY)),
       left(0),
       right(0),
     ];
   };
 
-  let inner = [
+  let inner = (~yOffset) => [
     position(`Absolute),
-    bottom(0),
+    bottom(int_of_float(yOffset)),
     left(0),
     right(0),
     flexDirection(`Row),
@@ -35,56 +35,57 @@ module Animation = {
 
 let%component make =
               (
-                ~config,
-                ~hidden: bool,
                 ~dispatch: Msg.t => unit,
                 ~inlineKey: string,
                 ~uniqueId: string,
+                ~opacity: float,
                 ~editor,
+                ~yOffset: float,
                 ~lineNumber: LineNumber.t,
                 ~children,
                 (),
               ) => {
-  let animationsActive =
-    Feature_Configuration.GlobalConfiguration.animation.get(config);
-
+  // let animationsActive =
+  //   Feature_Configuration.GlobalConfiguration.animation.get(config);
   // HOOKS
   // TODO: Graceful fade-in transition
   // Ensure that existing code-lenses don't get paved
-  let%hook (opacity, _opacityAnimationState, _resetOpacity) =
-    Hooks.animation(
-      ~name="Inline Element Opacity",
-      Animation.fadeIn,
-      ~active=animationsActive,
-    );
-
-  let opacity = !animationsActive ? 1.0 : opacity;
-  let opacity = hidden ? 0. : opacity;
-
+  // let%hook (opacity, _opacityAnimationState, _resetOpacity) =
+  //   Hooks.animation(
+  //     ~name="Inline Element Opacity",
+  //     Animation.fadeIn,
+  //     ~active=animationsActive,
+  //   );
+  // let opacity = !animationsActive ? 1.0 : opacity;
+  // let opacity = hidden ? 0. : opacity;
   let%hook (measuredHeight, heightChangedDispatch) =
     Hooks.reducer(~initialState=0, (newHeight, _prev) => newHeight);
 
-  let%hook (animatedHeight, _heightAnimationState, _resetHeight) =
-    Hooks.animation(
-      ~name="Inline Element Expand",
-      Animation.expand,
-      ~active=animationsActive,
-    );
+  // let%hook (animatedHeight, _heightAnimationState, _resetHeight) =
+  //   Hooks.animation(
+  //     ~name="Inline Element Expand",
+  //     Animation.expand,
+  //     ~active=animationsActive,
+  //   );
 
-  let animatedHeight = !animationsActive ? 1.0 : animatedHeight;
-  let calculatedHeight =
-    int_of_float(float(measuredHeight) *. animatedHeight);
+  // let animatedHeight = !animationsActive ? 1.0 : animatedHeight;
+  // let calculatedHeight =
+  //   int_of_float(float(measuredHeight) *. animatedHeight);
 
+  // prerr_endline ("Rendering at linenumber: " ++ string_of_int(
+  //   EditorCoreTypes.LineNumber.toZeroBased(lineNumber)
+  // ));
   let%hook () =
     Hooks.effect(
-      If((!=), (calculatedHeight, uniqueId)),
+      If((!=), (measuredHeight, uniqueId)),
       () => {
         if (measuredHeight > 0) {
           dispatch(
             Msg.InlineElementSizeChanged({
               key: inlineKey,
               uniqueId,
-              height: calculatedHeight,
+              line: lineNumber,
+              height: measuredHeight,
             }),
           );
         };
@@ -102,7 +103,7 @@ let%component make =
 
   <View style={Styles.container(~opacity, ~pixelY)}>
     <View
-      style=Styles.inner
+      style={Styles.inner(~yOffset)}
       onDimensionsChanged={({height, _}) => {heightChangedDispatch(height)}}>
       children
     </View>

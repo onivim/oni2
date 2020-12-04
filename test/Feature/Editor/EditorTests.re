@@ -76,6 +76,7 @@ describe("Editor", ({describe, _}) => {
              ~elements=[inlineElement0],
            )
         |> Editor.setInlineElementSize(
+             ~line=LineNumber.zero,
              ~key="test-inline-element",
              ~uniqueId="0",
              ~height=25,
@@ -96,6 +97,7 @@ describe("Editor", ({describe, _}) => {
              ~elements=[inlineElement1],
            )
         |> Editor.setInlineElementSize(
+             ~line=LineNumber.zero,
              ~key="test-inline-element",
              ~uniqueId="1",
              ~height=25,
