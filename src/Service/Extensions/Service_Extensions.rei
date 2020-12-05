@@ -137,4 +137,12 @@ module Sub: {
   let search:
     (~setup: Setup.t, ~query: Query.t, ~toMsg: result(Query.t, exn) => 'a) =>
     Isolinear.Sub.t('a);
+
+  let details:
+    (
+      ~setup: Setup.t,
+      ~extensionId: string,
+      ~toMsg: result(Catalog.Details.t, string) => 'a
+    ) =>
+    Isolinear.Sub.t('a);
 };

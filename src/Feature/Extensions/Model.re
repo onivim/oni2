@@ -301,18 +301,19 @@ let canUpdate = (~extensionId, ~maybeVersion, model) => {
   |> Utility.OptionEx.flatMap(ext => {
        // If it's bundled, we don't support updating at this time..
        Exthost.Extension.Scanner.ScanResult.(
-       if (ext.category == Exthost.Extension.Scanner.Bundled) {
-        Some(false)
-       } else {
-         let manifest = (ext.manifest);
-         Utility.OptionEx.map2(
-           (remoteVersion, manifestVersion) => {
-             Semver.greater_than(remoteVersion, manifestVersion)
-           },
-           maybeVersion,
-           Manifest.(manifest.version),
-         );
-       });
+         if (ext.category == Exthost.Extension.Scanner.Bundled) {
+           Some(false);
+         } else {
+           let manifest = ext.manifest;
+           Utility.OptionEx.map2(
+             (remoteVersion, manifestVersion) => {
+               Semver.greater_than(remoteVersion, manifestVersion)
+             },
+             maybeVersion,
+             Manifest.(manifest.version),
+           );
+         }
+       )
      })
   |> Option.value(~default=false);
 };
