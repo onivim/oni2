@@ -274,11 +274,12 @@ let isInstalling = (~extensionId, {pendingInstalls, _}) => {
 let getExtension = (~extensionId, {extensions, _}) => {
   extensions
   |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
-       String.equal(String.lowercase_ascii(ext.manifest |> Manifest.identifier), String.lowercase_ascii(extensionId))
+       String.equal(
+         String.lowercase_ascii(ext.manifest |> Manifest.identifier),
+         String.lowercase_ascii(extensionId),
+       )
      )
-  |> (
-    l =>
-      List.nth_opt(l, 0));
+  |> (l => List.nth_opt(l, 0));
 };
 
 let themes = (~extensionId, model) => {
@@ -286,21 +287,24 @@ let themes = (~extensionId, model) => {
   |> getExtension(~extensionId)
   |> Option.map(({manifest, _}: Exthost.Extension.Scanner.ScanResult.t) =>
        manifest.contributes.themes
-  );
+     );
 };
 
 let isInstalled = (~extensionId, model) => {
-  let maybe = model
-  |> getExtension(~extensionId);
-  Option.is_some(maybe)
+  let maybe = model |> getExtension(~extensionId);
+  Option.is_some(maybe);
 };
 
 let canUpdate = (~extensionId, ~maybeVersion, model) => {
-
   model
   |> getExtension(~extensionId)
-    |> Utility.OptionEx.flatMap(ext => {
-         let manifest = Exthost.Extension.Scanner.ScanResult.(ext.manifest);
+  |> Utility.OptionEx.flatMap(ext => {
+       // If it's bundled, we don't support updating at this time..
+       Exthost.Extension.Scanner.ScanResult.(
+       if (ext.category == Exthost.Extension.Scanner.Bundled) {
+        Some(false)
+       } else {
+         let manifest = (ext.manifest);
          Utility.OptionEx.map2(
            (remoteVersion, manifestVersion) => {
              Semver.greater_than(remoteVersion, manifestVersion)
@@ -308,8 +312,9 @@ let canUpdate = (~extensionId, ~maybeVersion, model) => {
            maybeVersion,
            Manifest.(manifest.version),
          );
-       })
-    |> Option.value(~default=false)
+       });
+     })
+  |> Option.value(~default=false);
 };
 
 let hasThemes = (~extensionId, model) => {
