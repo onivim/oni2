@@ -84,6 +84,7 @@
 - #2704 - Vim: Implement initial `getchar()` handler 
 - #2704 - Vim: Fix normal commands applied across ranges (fixes #2704)
 - #2719 - Bufffers: Buffer metadata not getting updated on switch to existing buffer (fixes #2605 - thanks @glennsl!)
+- #2802 - Editor: Fix crash when moving mouse in empty buffer (fixes #2800)
 
 ### Performance
 
