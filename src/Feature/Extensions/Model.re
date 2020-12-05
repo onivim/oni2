@@ -271,48 +271,45 @@ let isInstalling = (~extensionId, {pendingInstalls, _}) => {
   pendingInstalls |> List.exists(id => id == extensionId);
 };
 
-let themes = (~extensionId, {extensions, _}) => {
+let getExtension = (~extensionId, {extensions, _}) => {
   extensions
   |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
-       String.equal(ext.manifest |> Manifest.identifier, extensionId)
+       String.equal(String.lowercase_ascii(ext.manifest |> Manifest.identifier), String.lowercase_ascii(extensionId))
      )
   |> (
     l =>
-      List.nth_opt(l, 0)
-      |> Option.map(({manifest, _}: Exthost.Extension.Scanner.ScanResult.t) =>
-           manifest.contributes.themes
-         )
+      List.nth_opt(l, 0));
+};
+
+let themes = (~extensionId, model) => {
+  model
+  |> getExtension(~extensionId)
+  |> Option.map(({manifest, _}: Exthost.Extension.Scanner.ScanResult.t) =>
+       manifest.contributes.themes
   );
 };
 
-let isInstalled = (~extensionId, {extensions, _}) => {
-  extensions
-  |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
-       String.equal(ext.manifest |> Manifest.identifier, extensionId)
-     )
-  != [];
+let isInstalled = (~extensionId, model) => {
+  let maybe = model
+  |> getExtension(~extensionId);
+  Option.is_some(maybe)
 };
 
-let canUpdate = (~extensionId, ~maybeVersion, {extensions, _}) => {
-  extensions
-  |> List.filter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
-       String.equal(ext.manifest |> Manifest.identifier, extensionId)
-     )
-  |> (
-    list =>
-      List.nth_opt(list, 0)
-      |> Utility.OptionEx.flatMap(ext => {
-           let manifest = Exthost.Extension.Scanner.ScanResult.(ext.manifest);
-           Utility.OptionEx.map2(
-             (remoteVersion, manifestVersion) => {
-               Semver.greater_than(remoteVersion, manifestVersion)
-             },
-             maybeVersion,
-             Manifest.(manifest.version),
-           );
-         })
-      |> Option.value(~default=false)
-  );
+let canUpdate = (~extensionId, ~maybeVersion, model) => {
+
+  model
+  |> getExtension(~extensionId)
+    |> Utility.OptionEx.flatMap(ext => {
+         let manifest = Exthost.Extension.Scanner.ScanResult.(ext.manifest);
+         Utility.OptionEx.map2(
+           (remoteVersion, manifestVersion) => {
+             Semver.greater_than(remoteVersion, manifestVersion)
+           },
+           maybeVersion,
+           Manifest.(manifest.version),
+         );
+       })
+    |> Option.value(~default=false)
 };
 
 let hasThemes = (~extensionId, model) => {
