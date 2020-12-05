@@ -247,7 +247,7 @@ if (process.platform == "linux") {
     // Make sure these are codesigned as well in codesign.sh
     // Must be kept in sync with:
     // src/scripts/osx/codesign.sh
-    const frameworksWhiteList = ["libcrypto.1.1.dylib", "libssl.1.1.dylib", "Sparkle.framework"]
+    const frameworksWhiteList = ["Sparkle.framework"]
 
     const disallowedFrameworks = frameworks.filter(
         (framework) =>

@@ -3,4 +3,4 @@
 (install
  (section bin)
  (package Oni2)
- (files package.json))
+ (files package.json CHANGES_CURRENT.md CHANGES.md))
