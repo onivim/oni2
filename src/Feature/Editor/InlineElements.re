@@ -340,9 +340,7 @@ let sub = (~topLine, ~bottomLine, model) => {
     switch (elements) {
     | [] => acc
     | [elem, ...tail] =>
-      if (EditorCoreTypes.LineNumber.(
-            elem.line >= topLine && elem.line <= bottomLine
-          )
+      if ((elem.line >= topLine && elem.line <= bottomLine)
           && (
             !Component_Animation.isComplete(elem.opacity)
             || !Component_Animation.isComplete(elem.height)

@@ -52,7 +52,6 @@ module Item = {
                   ~inlineKey: string,
                   ~uniqueId: string,
                   ~opacity: float,
-                  ~editor,
                   ~yOffset: float,
                   ~lineNumber: LineNumber.t,
                   ~children,
@@ -110,7 +109,7 @@ module Container = {
                  lineNumber=line
                  yOffset=height
                  opacity
-                 editor>
+                 >
                  <elem />
                </Item>;
 

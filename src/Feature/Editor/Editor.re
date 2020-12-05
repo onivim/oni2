@@ -774,8 +774,10 @@ let withSteadyCursor = (f, editor) => {
   let newOffset = calculateOffset(bytePosition, editor');
   let scrollYValue =
     Spring.getTarget(editor.scrollY) +. (newOffset -. originalOffset);
+
+  let isAnimated = Spring.isActive(editor.scrollY);
   let scrollY =
-    Spring.set(~instant=true, ~position=scrollYValue, editor.scrollY);
+    Spring.set(~instant=!isAnimated, ~position=scrollYValue, editor.scrollY);
   {...editor', scrollY};
 };
 
