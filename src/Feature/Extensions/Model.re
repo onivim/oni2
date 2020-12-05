@@ -225,6 +225,7 @@ type model = {
   viewModel: ViewModel.t,
   lastSearchHadError: bool,
   lastErrorMessage: option(string),
+  updateAvailable: StringMap.t(bool),
 };
 
 let resetFocus = model => {...model, focusedWindow: Focus.initial};
@@ -258,7 +259,14 @@ let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => 
   viewModel: ViewModel.initial,
   lastSearchHadError: false,
   lastErrorMessage: None,
+
+  updateAvailable: StringMap.empty,
 };
+
+let hasCheckedForUpdate = (~extensionId, {updateAvailable, _}) => {
+  StringMap.find_opt(extensionId
+  |> String.lowercase_ascii, updateAvailable) == None
+}
 
 let isSearching = ({searchText, _}) =>
   !Component_InputText.isEmpty(searchText);
