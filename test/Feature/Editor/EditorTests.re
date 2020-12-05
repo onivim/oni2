@@ -259,4 +259,21 @@ describe("Editor", ({describe, _}) => {
       );
     })
   });
+
+  describe("getCharacterUnderMouse", ({test, _}) => {
+    test("#2800 - should not crash on empty buffer", ({expect, _}) => {
+      let (editor, _buffer) = create([||]);
+
+      // Mouse needs to be moved to reproduce #2800
+      let editor' =
+        editor
+        |> Editor.mouseMove(
+             ~time=Revery.Time.zero,
+             ~pixelX=500.,
+             ~pixelY=500.,
+           );
+
+      expect.equal(Editor.getCharacterUnderMouse(editor'), None);
+    })
+  });
 });
