@@ -800,12 +800,18 @@ let getInlineElements = (~line, {inlineElements, _}) => {
 };
 
 let setInlineElementSize = (~key, ~line, ~uniqueId, ~height, editor) => {
+  let topBuffer = getTopVisibleBufferLine(editor);
+  let bottomBuffer = getBottomVisibleBufferLine(editor);
   editor
   |> withSteadyCursor(e =>
        {
          ...e,
          inlineElements:
            InlineElements.setSize(
+             ~animated=
+               (
+                 line >= topBuffer && line <= bottomBuffer
+               ),
              ~key,
              ~line,
              ~uniqueId,
@@ -839,10 +845,6 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
        }
      );
 };
-
-// let getInlineElements = ({inlineElements, _}) => {
-//   inlineElements |> InlineElements.allElements;
-// };
 
 let selectionOrCursorRange = editor => {
   switch (selection(editor)) {
@@ -1673,8 +1675,6 @@ let update = (msg, editor) => {
 };
 
 let sub = editor => {
-  let topLine = getTopVisibleBufferLine(editor);
-  let bottomLine = getBottomVisibleBufferLine(editor);
   let yankHighlightAnimation =
     yankHighlight(editor)
     |> Option.map(({opacity, _}) => {
@@ -1684,7 +1684,7 @@ let sub = editor => {
        })
     |> Option.value(~default=Isolinear.Sub.none);
   [
-    InlineElements.sub(~topLine, ~bottomLine, editor.inlineElements)
+    InlineElements.sub(editor.inlineElements)
     |> Isolinear.Sub.map(msg => InlineElements(msg)),
     Spring.sub(editor.scrollX)
     |> Isolinear.Sub.map(msg => ScrollSpringX(msg)),

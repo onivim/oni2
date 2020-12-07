@@ -14,7 +14,7 @@ module Animation = {
 };
 
 module Constants = {
-  let maxElementsToAnimate = 5;
+  let maxElementsToAnimate = 10;
 };
 
 type msg =
@@ -252,14 +252,17 @@ let update = (msg, model) =>
     updateElement(~key, ~uniqueId, ~line, ~f=updateHeight, model);
   };
 
-let setSize = (~key, ~line, ~uniqueId, ~height, model) => {
+let setSize = (~animated, ~key, ~line, ~uniqueId, ~height, model) => {
   let setHeight = (curr: element) => {
     {
       ...curr,
+      opacity: animated ? curr.opacity : Component_Animation.constant(1.0),
       height:
-        Component_Animation.make(
-          Animation.expand(Component_Animation.get(curr.height), height),
-        ),
+        animated
+          ? Component_Animation.make(
+              Animation.expand(Component_Animation.get(curr.height), height),
+            )
+          : Component_Animation.constant(height),
     };
   };
   updateElement(~key, ~line, ~uniqueId, ~f=setHeight, model);
@@ -333,47 +336,49 @@ let shift = (update: Oni_Core.BufferUpdate.t, model) => {
   };
 };
 
-let sub = (~topLine, ~bottomLine, model) => {
+let sub = model => {
   let allElements = model.sortedElements;
 
-  let rec loop = (acc, elements) => {
-    switch (elements) {
-    | [] => acc
-    | [elem, ...tail] =>
-      if ((elem.line >= topLine && elem.line <= bottomLine)
-          && (
-            !Component_Animation.isComplete(elem.opacity)
-            || !Component_Animation.isComplete(elem.height)
-          )) {
-        loop(
-          [
-            Component_Animation.sub(elem.height)
-            |> Isolinear.Sub.map(msg =>
-                 HeightAnimation({
-                   key: elem.key,
-                   line: elem.line,
-                   uniqueId: elem.uniqueId,
-                   msg,
-                 })
-               ),
-            Component_Animation.sub(elem.opacity)
-            |> Isolinear.Sub.map(msg =>
-                 OpacityAnimation({
-                   key: elem.key,
-                   line: elem.line,
-                   uniqueId: elem.uniqueId,
-                   msg,
-                 })
-               ),
-            ...acc,
-          ],
-          tail,
-        );
-      } else {
-        loop(acc, tail);
-      }
+  let rec loop = (count, acc, elements) =>
+    // Gate the number of animated elements, since the animation is expensive
+    if (count > Constants.maxElementsToAnimate) {
+      acc;
+    } else {
+      switch (elements) {
+      | [] => acc
+      | [elem, ...tail] =>
+        if (!Component_Animation.isComplete(elem.opacity)
+            || !Component_Animation.isComplete(elem.height)) {
+          loop(
+            count + 1,
+            [
+              Component_Animation.sub(elem.height)
+              |> Isolinear.Sub.map(msg =>
+                   HeightAnimation({
+                     key: elem.key,
+                     line: elem.line,
+                     uniqueId: elem.uniqueId,
+                     msg,
+                   })
+                 ),
+              Component_Animation.sub(elem.opacity)
+              |> Isolinear.Sub.map(msg =>
+                   OpacityAnimation({
+                     key: elem.key,
+                     line: elem.line,
+                     uniqueId: elem.uniqueId,
+                     msg,
+                   })
+                 ),
+              ...acc,
+            ],
+            tail,
+          );
+        } else {
+          loop(count, acc, tail);
+        }
+      };
     };
-  };
 
-  loop([], allElements) |> Isolinear.Sub.batch;
+  loop(0, [], allElements) |> Isolinear.Sub.batch;
 };

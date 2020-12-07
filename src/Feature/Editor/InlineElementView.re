@@ -37,14 +37,6 @@ module Styles = {
   ];
 };
 
-module Animation = {
-  let fadeIn =
-    Revery.(Animation.(animate(Time.milliseconds(500)) |> tween(0., 1.0)));
-
-  let expand =
-    Revery.(Animation.(animate(Time.milliseconds(200)) |> tween(0., 1.0)));
-};
-
 module Item = {
   let%component make =
                 (
@@ -88,7 +80,7 @@ module Item = {
 };
 
 module Container = {
-  let make = (~editor, ~line, ~dispatch, ~theme, ~uiFont, ()) => {
+  let make = (~editor, ~isVisible, ~line, ~dispatch, ~theme, ~uiFont, ()) => {
     let inlineElements = Editor.getInlineElements(~line, editor);
 
     let (maxOpacity, totalHeight, elems) =
@@ -128,8 +120,9 @@ module Container = {
         editor,
       );
 
-    <View style={Styles.container(~opacity=maxOpacity, ~pixelY)}>
-      {elems |> React.listToElement}
+    // Rendering shadows can be expensive, so let's not do it if 
+    // we don't need to...
+    let shadow = isVisible ?
       <View
         style={Styles.shadowContainer(~height=int_of_float(totalHeight))}>
         <Oni_Components.ScrollShadow.Top
@@ -140,7 +133,11 @@ module Container = {
           opacity={maxOpacity *. 0.8}
           height=5
         />
-      </View>
+      </View> : React.empty;
+
+    <View style={Styles.container(~opacity=maxOpacity, ~pixelY)}>
+      {elems |> React.listToElement}
+      {shadow}
     </View>;
   };
 };

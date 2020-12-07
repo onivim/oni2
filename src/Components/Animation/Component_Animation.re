@@ -27,7 +27,7 @@ let make = animation => {
 
 let constant = v => {
   let animation = Animation.const(v);
-  make(animation)
+  make(animation);
 };
 
 type msg =
