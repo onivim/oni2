@@ -24,6 +24,7 @@ module Operator = Operator;
 module Scroll = Scroll;
 module TabPage = TabPage;
 module Mode = Mode;
+module SubMode = SubMode;
 module Options = Options;
 module Search = Search;
 module Setting = Setting;
