@@ -287,7 +287,10 @@ let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
 };
 
 let isInstalling = (~extensionId, {pendingInstalls, _}) => {
-  pendingInstalls |> List.exists(id => id == extensionId);
+  pendingInstalls
+  |> List.exists(id =>
+       String.lowercase_ascii(id) == String.lowercase_ascii(extensionId)
+     );
 };
 
 let isUpdateAvailable = (~extensionId, {updateAvailable, _}) => {

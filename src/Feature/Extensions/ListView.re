@@ -166,11 +166,15 @@ let%component make =
     let extensionId = extension.manifest |> Manifest.identifier;
     let isRestartRequired = Model.isRestartRequired(~extensionId, model);
     let actionButton =
-      Model.isUninstalling(~extensionId=id, model)
-        ? <progressButton extensionId font title="Uninstalling" />
-        : Model.isUpdateAvailable(~extensionId=id, model)
-            ? <updateButton font extensionId dispatch />
-            : <uninstallButton font extensionId dispatch />;
+      if (Model.isInstalling(~extensionId, model)) {
+        <progressButton extensionId title="Updating" font />;
+      } else if (Model.isUninstalling(~extensionId=id, model)) {
+        <progressButton extensionId font title="Uninstalling" />;
+      } else if (Model.isUpdateAvailable(~extensionId=id, model)) {
+        <updateButton font extensionId dispatch />;
+      } else {
+        <uninstallButton font extensionId dispatch />;
+      };
 
     <ItemView
       actionButton
@@ -253,7 +257,9 @@ let%component make =
 
             let actionButton =
               if (Model.isInstalled(~extensionId, model)) {
-                if (Model.canUpdate(~extensionId, ~maybeVersion, model)) {
+                if (Model.isInstalling(~extensionId, model)) {
+                  <progressButton extensionId title="Updating" font />;
+                } else if (Model.canUpdate(~extensionId, ~maybeVersion, model)) {
                   <updateButton extensionId font dispatch />;
                 } else {
                   <installedButton extensionId font />;
