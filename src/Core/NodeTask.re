@@ -6,6 +6,38 @@ open Utility;
 exception TaskFailed;
 module Log = (val Kernel.Log.withNamespace("Oni2.Core.NodeTask"));
 
+module Internal = {
+  let getFilteredEnvironment = () => {
+    // Filter out some keys that aren't required
+    // for running node tasks. Primarily needed for Windows -
+    // sometimes the environment can grow too large for node/libuv.
+    let keysToExclude =
+      ["OCAMLPATH", "MAN_PATH", "CAML_LD_LIBRARY_PATH"]
+      |> Kernel.StringSet.of_list;
+
+    let env =
+      Unix.environment()
+      |> Array.to_list
+      |> List.fold_left(
+           (acc, curr) => {
+             switch (String.split_on_char('=', curr)) {
+             | [] => acc
+             | [_] => acc
+             | [key, ...values] =>
+               if (!Kernel.StringSet.mem(key, keysToExclude)) {
+                 let v = String.concat("=", values);
+
+                 [(key, v), ...acc];
+               } else {
+                 acc;
+               }
+             }
+           },
+           [],
+         );
+    env;
+  };
+};
 let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
   Log.info("Starting task: " ++ name);
   let (promise, resolver) = Lwt.task();
@@ -53,6 +85,7 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
     let%bind _: Luv.Process.t =
       LuvEx.Process.spawn(
         ~on_exit,
+        ~environment=Internal.getFilteredEnvironment(),
         ~redirect=[
           Luv.Process.to_parent_pipe(
             ~fd=Luv.Process.stdout,

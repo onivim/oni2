@@ -6,17 +6,28 @@ open Oni_Core.Utility;
 type model = {
   settings: StringMap.t(Vim.Setting.value),
   recordingMacro: option(char),
+  subMode: Vim.SubMode.t,
 };
 
-let initial = {settings: StringMap.empty, recordingMacro: None};
+let initial = {
+  settings: StringMap.empty,
+  recordingMacro: None,
+  subMode: Vim.SubMode.None,
+};
 
 let recordingMacro = ({recordingMacro, _}) => recordingMacro;
+
+let subMode = ({subMode, _}) => subMode;
 
 // MSG
 
 [@deriving show]
 type msg =
-  | ModeChanged([@opaque] Vim.Mode.t)
+  | ModeChanged({
+      mode: [@opaque] Vim.Mode.t,
+      subMode: [@opaque] Vim.SubMode.t,
+      effects: [@opaque] list(Vim.Effect.t),
+    })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
   | SettingChanged(Vim.Setting.t)
@@ -27,11 +38,17 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | SettingsChanged
-  | ModeUpdated(Vim.Mode.t);
+  | ModeDidChange({
+      mode: Vim.Mode.t,
+      effects: list(Vim.Effect.t),
+    });
 
 let update = (msg, model: model) => {
   switch (msg) {
-  | ModeChanged(_mode) => (model, Nothing)
+  | ModeChanged({mode, effects, subMode}) => (
+      {...model, subMode},
+      ModeDidChange({mode, effects}),
+    )
   | Pasted(text) =>
     let eff =
       Service_Vim.Effects.paste(
@@ -39,7 +56,7 @@ let update = (msg, model: model) => {
         text,
       );
     (model, Effect(eff));
-  | PasteCompleted({mode}) => (model, ModeUpdated(mode))
+  | PasteCompleted({mode}) => (model, ModeDidChange({mode, effects: []}))
   | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
       SettingsChanged,
@@ -87,6 +104,19 @@ module CommandLine = {
 
   let%test "meet multiple paths with spaces" = {
     getCompletionMeet("!cp /path\\ 1 /path\\ 2") == Some(13);
+  };
+};
+
+module Effects = {
+  let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
+    let toMsg = mode =>
+      ModeChanged({subMode: Vim.SubMode.None, mode, effects: []});
+    Service_Vim.Effects.applyCompletion(
+      ~meetColumn,
+      ~insertText,
+      ~additionalEdits,
+      ~toMsg,
+    );
   };
 };
 

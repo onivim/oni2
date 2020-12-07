@@ -35,6 +35,8 @@ let statusBarForeground:
 [@deriving show]
 type msg;
 
+module Msg: {let clear: int => msg;};
+
 let update:
   (
     ~theme: Oni_Core.ColorTheme.Colors.t,
@@ -97,13 +99,13 @@ module View: {
       React.element(React.node);
   };
 
-  module List: {
+  module Item: {
     let make:
       (
-        ~model: model,
+        ~notification: notification,
         ~theme: ColorTheme.Colors.t,
         ~font: UiFont.t,
-        ~dispatch: msg => unit,
+        ~onDismiss: unit => unit,
         unit
       ) =>
       React.element(React.node);

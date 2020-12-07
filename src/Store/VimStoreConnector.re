@@ -100,6 +100,9 @@ let start =
     | Vim.Goto.Outline =>
       dispatch(Actions.SideBar(Feature_SideBar.(Command(GotoOutline))))
 
+    | Vim.Goto.Messages =>
+      dispatch(Actions.Pane(Feature_Pane.Msg.toggleMessages))
+
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
       Log.info("Goto definition requested");
@@ -144,6 +147,17 @@ let start =
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
 
+      | Clear({target, count}) =>
+        Vim.Clear.(
+          {
+            switch (target) {
+            | Messages =>
+              dispatch(
+                Actions.Notification(Feature_Notification.Msg.clear(count)),
+              )
+            };
+          }
+        )
       | Map(mapping) =>
         dispatch(Actions.Input(Feature_Input.Msg.vimMap(mapping)))
       | Unmap({mode, keys}) =>
@@ -166,9 +180,6 @@ let start =
             ),
           ),
         )
-      | ModeChanged(newMode) => {
-          dispatch(Actions.Vim(Feature_Vim.ModeChanged(newMode)));
-        }
       | SettingChanged(setting) =>
         dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
 
@@ -553,15 +564,9 @@ let start =
       libvimHasInitialized := true
     });
 
-  let updateActiveEditorMode = (mode, effects) => {
-    let editorId =
-      Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
-
+  let updateActiveEditorMode = (subMode, mode, effects) => {
     dispatch(
-      Actions.Editor({
-        scope: EditorScope.Editor(editorId),
-        msg: ModeChanged({mode, effects}),
-      }),
+      Actions.Vim(Feature_Vim.ModeChanged({subMode, mode, effects})),
     );
   };
 
@@ -587,14 +592,7 @@ let start =
       if (newContext.bufferId != prevContext.bufferId) {
         dispatch(Actions.OpenBufferById({bufferId: newContext.bufferId}));
       } else {
-        let editorId =
-          Feature_Layout.activeEditor(state.layout) |> Editor.getId;
-        dispatch(
-          Actions.Editor({
-            scope: EditorScope.Editor(editorId),
-            msg: ModeChanged({mode: newContext.mode, effects}),
-          }),
-        );
+        updateActiveEditorMode(newContext.subMode, newContext.mode, effects);
       };
     });
   };
@@ -604,14 +602,14 @@ let start =
       if (isVimKey(key)) {
         // Set cursors based on current editor
         let state = getState();
-        let editorId =
-          Feature_Layout.activeEditor(state.layout) |> Editor.getId;
+        // let editorId =
+        //   Feature_Layout.activeEditor(state.layout) |> Editor.getId;
 
         let context = Oni_Model.VimContext.current(state);
         let previousBufferId = context.bufferId;
 
         currentTriggerKey := Some(key);
-        let ({mode, bufferId, _}: Vim.Context.t, effects) =
+        let ({mode, bufferId, subMode, _}: Vim.Context.t, effects) =
           isText ? Vim.input(~context, key) : Vim.key(~context, key);
         currentTriggerKey := None;
 
@@ -620,13 +618,7 @@ let start =
           dispatch(Actions.OpenBufferById({bufferId: bufferId}));
         };
 
-        dispatch(
-          Actions.Editor({
-            scope: EditorScope.Editor(editorId),
-            msg: ModeChanged({mode, effects}),
-          }),
-        );
-
+        updateActiveEditorMode(subMode, mode, effects);
         Log.debug("handled key: " ++ key);
       }
     );
@@ -662,7 +654,11 @@ let start =
           completion |> Path.trimTrailingSeparator |> StringEx.escapeSpaces;
         let (latestContext: Vim.Context.t, effects) =
           Core.VimEx.inputString(completion);
-        updateActiveEditorMode(latestContext.mode, effects);
+        updateActiveEditorMode(
+          latestContext.subMode,
+          latestContext.mode,
+          effects,
+        );
         isCompleting := false;
       }
     );
@@ -698,8 +694,8 @@ let start =
     Isolinear.Effect.create(~name="vim.undo", () => {
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
-      let ({mode, _}: Vim.Context.t, effects) = Vim.key("u");
-      updateActiveEditorMode(mode, effects);
+      let ({subMode, mode, _}: Vim.Context.t, effects) = Vim.key("u");
+      updateActiveEditorMode(subMode, mode, effects);
       ();
     });
 
@@ -707,8 +703,8 @@ let start =
     Isolinear.Effect.create(~name="vim.redo", () => {
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
-      let ({mode, _}: Vim.Context.t, effects) = Vim.key("<c-r>");
-      updateActiveEditorMode(mode, effects);
+      let ({subMode, mode, _}: Vim.Context.t, effects) = Vim.key("<c-r>");
+      updateActiveEditorMode(subMode, mode, effects);
       ();
     });
 
@@ -724,8 +720,8 @@ let start =
 
   let escapeEffect =
     Isolinear.Effect.create(~name="vim.esc", () => {
-      let ({mode, _}: Vim.Context.t, effects) = Vim.key("<esc>");
-      updateActiveEditorMode(mode, effects);
+      let ({subMode, mode, _}: Vim.Context.t, effects) = Vim.key("<esc>");
+      updateActiveEditorMode(subMode, mode, effects);
       ();
     });
 

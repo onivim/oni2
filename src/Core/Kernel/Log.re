@@ -42,7 +42,9 @@ let enableQuiet = () => {
 };
 
 let init = () =>
-  if (Timber.App.isLevelEnabled(Timber.Level.debug)) {
+  if (Timber.App.isLevelEnabled(Timber.Level.trace)) {
+    enableTrace();
+  } else if (Timber.App.isLevelEnabled(Timber.Level.debug)) {
     enableDebug();
   } else {
     // Even if we're not debugging.... at least emit the exception

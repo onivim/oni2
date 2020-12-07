@@ -350,12 +350,23 @@ module Buffer: {
   let onWrite: Listeners.bufferWriteListener => Event.unsubscribe;
 };
 
+module Clear: {
+  type target =
+    | Messages;
+
+  type t = {
+    target,
+    count: int,
+  };
+};
+
 module Goto: {
   type effect =
     | Definition
     | Declaration
     | Hover
-    | Outline;
+    | Outline
+    | Messages;
 };
 
 module TabPage: {
@@ -465,7 +476,6 @@ module Effect: {
     | Goto(Goto.effect)
     | TabPage(TabPage.effect)
     | Format(Format.effect)
-    | ModeChanged(Mode.t)
     | SettingChanged(Setting.t)
     | ColorSchemeChanged(option(string))
     | MacroRecordingStarted({register: char})
@@ -481,7 +491,8 @@ module Effect: {
     | Unmap({
         mode: Mapping.mode,
         keys: option(string),
-      });
+      })
+    | Clear(Clear.t);
 };
 
 /**

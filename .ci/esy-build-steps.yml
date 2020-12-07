@@ -31,9 +31,8 @@ steps:
     displayName: 'Release: install'
   - script: 'esy @release build'
     displayName: 'esy @release build'
-  - script: 'esy @release run -f --version'
-    displayName: 'esy @release run -f --version'
-    continueOnError: true
+  - script: 'esy @release run -f --help'
+    displayName: 'esy @release run -f --help'
   - script: esy @release create --codesign
     displayName: "esy @release create --codesign"
   - script: esy build-env

@@ -150,7 +150,7 @@ module Manifest: {
   [@deriving show]
   type t = {
     name: string,
-    version: string,
+    version: option(Semver.t),
     author: string,
     displayName: option(LocalizedToken.t),
     description: option(string),

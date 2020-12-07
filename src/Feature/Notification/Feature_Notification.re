@@ -221,6 +221,7 @@ type msg =
   | Created(internal)
   | Dismissed({id: int})
   | Expire({id: int})
+  | Clear({count: int})
   | AnimateYOffset({
       id: int,
       msg: [@opaque] Component_Animation.msg,
@@ -228,10 +229,23 @@ type msg =
   | AnimateBackground([@opaque] Component_Animation.ColorTransition.msg)
   | AnimateForeground([@opaque] Component_Animation.ColorTransition.msg);
 
+module Msg = {
+  let clear = count => Clear({count: count});
+};
+
 let update = (~theme, ~config, model, msg) => {
   let animationsEnabled =
     Feature_Configuration.GlobalConfiguration.animation.get(config);
   switch (msg) {
+  | Clear({count}) =>
+    let all =
+      if (count == 0) {
+        [];
+      } else {
+        Utility.ListEx.firstk(count, model.all);
+      };
+    {...model, all, activeNotifications: IntSet.empty}
+    |> updateColorTransition(~config, ~theme);
   | Created(item) =>
     let yOffsetAnimation =
       animationsEnabled
@@ -440,134 +454,88 @@ module View = {
 
   // LIST
 
-  module List = {
-    module Item = {
-      module Styles = {
-        open Style;
-
-        let container = [
-          flexDirection(`Row),
-          alignItems(`Center),
-          paddingHorizontal(10),
-          paddingVertical(5),
-        ];
-
-        let text = (~foreground) => [
-          textWrap(TextWrapping.NoWrap),
-          marginLeft(6),
-          color(foreground),
-        ];
-
-        let message = (~foreground) => [flexGrow(1), ...text(~foreground)];
-
-        let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
-      };
-
-      let colorFor = (item, ~theme) =>
-        switch (item.kind) {
-        | Warning => Colors.warningBackground.from(theme)
-        | Error => Colors.errorBackground.from(theme)
-        | Info => Colors.infoBackground.from(theme)
-        };
-
-      let iconFor = item =>
-        switch (item.kind) {
-        | Warning => FontAwesome.exclamationTriangle
-        | Error => FontAwesome.exclamationCircle
-        | Info => FontAwesome.infoCircle
-        };
-
-      let make = (~item, ~theme, ~font: UiFont.t, ~dispatch, ()) => {
-        let foreground = Colors.foreground.from(theme);
-
-        let icon = () =>
-          <FontIcon
-            icon={iconFor(item)}
-            fontSize=16.
-            color={colorFor(item, ~theme)}
-          />;
-
-        let source = () =>
-          switch (item.source) {
-          | Some(text) =>
-            let foreground = Color.multiplyAlpha(0.5, foreground);
-            <Text
-              style={Styles.text(~foreground)}
-              fontFamily={font.family}
-              fontSize=11.
-              text
-            />;
-          | None => React.empty
-          };
-
-        let closeButton = () => {
-          let onClick = () => dispatch(Dismissed({id: item.id}));
-
-          <Clickable onClick style=Styles.closeButton>
-            <FontIcon icon=FontAwesome.times fontSize=13. color=foreground />
-          </Clickable>;
-        };
-
-        <View style=Styles.container>
-          <icon />
-          <source />
-          <Text
-            style={Styles.message(~foreground)}
-            fontFamily={font.family}
-            fontSize=11.
-            text={item.message}
-          />
-          <closeButton />
-        </View>;
-      };
-    };
-
+  module Item = {
     module Styles = {
       open Style;
 
-      let pane = [flexGrow(1), flexDirection(`Row)];
-
-      let noResultsContainer = [
-        flexGrow(1),
-        alignItems(`Center),
-        justifyContent(`Center),
-      ];
-
       let container = [
-        position(`Absolute),
-        top(0),
-        bottom(0),
-        left(0),
-        right(0),
+        flexDirection(`Row),
+        alignItems(`Center),
+        paddingHorizontal(10),
+        paddingVertical(5),
       ];
 
-      let title = (~theme) => [
-        color(Colors.PanelTitle.activeForeground.from(theme)),
-        margin(8),
+      let text = (~foreground) => [
+        textWrap(TextWrapping.NoWrap),
+        marginLeft(6),
+        color(foreground),
       ];
+
+      let message = (~foreground) => [flexGrow(1), ...text(~foreground)];
+
+      let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
     };
 
-    let make = (~model, ~theme, ~font: UiFont.t, ~dispatch, ()) => {
-      let items =
-        model.all |> List.map(item => <Item item theme font dispatch />);
+    let colorFor = (item: notification, ~theme) =>
+      switch (item.kind) {
+      | Warning => Colors.warningBackground.from(theme)
+      | Error => Colors.errorBackground.from(theme)
+      | Info => Colors.infoBackground.from(theme)
+      };
 
-      let innerElement =
-        if (items == []) {
-          <View style=Styles.noResultsContainer>
-            <Text
-              style={Styles.title(~theme)}
-              text="No notifications, yet!"
-              fontFamily={font.family}
-              fontSize={font.size}
-            />
-          </View>;
-        } else {
-          <ScrollView style=Styles.container>
-            {items |> React.listToElement}
-          </ScrollView>;
+    let iconFor = (item: notification) =>
+      switch (item.kind) {
+      | Warning => FontAwesome.exclamationTriangle
+      | Error => FontAwesome.exclamationCircle
+      | Info => FontAwesome.infoCircle
+      };
+
+    let make =
+        (~notification: notification, ~theme, ~font: UiFont.t, ~onDismiss, ()) => {
+      let foreground = Colors.foreground.from(theme);
+
+      let icon = () =>
+        <FontIcon
+          icon={iconFor(notification)}
+          fontSize=12.
+          color={colorFor(notification, ~theme)}
+        />;
+
+      let source = () =>
+        switch (notification.source) {
+        | Some(text) =>
+          let foreground = Color.multiplyAlpha(0.5, foreground);
+          <Text
+            style={Styles.text(~foreground)}
+            fontFamily={font.family}
+            fontSize=11.
+            text
+          />;
+        | None => React.empty
         };
 
-      <View style=Styles.pane> innerElement </View>;
+      let closeButton = () => {
+        // TODO: Bring back
+        //let onClick = () => dispatch(Dismissed({id: item.id}));
+
+        let onClick = onDismiss;
+
+        <Clickable onClick style=Styles.closeButton>
+          <FontIcon icon=FontAwesome.times fontSize=13. color=foreground />
+        </Clickable>;
+      };
+
+      <View style=Styles.container>
+        <icon />
+        <source />
+        <Text
+          style={Styles.message(~foreground)}
+          fontFamily={font.family}
+          fontSize=11.
+          text={notification.message}
+        />
+        <closeButton />
+      </View>;
     };
   };
 };

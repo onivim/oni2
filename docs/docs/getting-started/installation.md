@@ -42,6 +42,8 @@ Tested on:
 
 5. _OPTIONAL:_ Add Onivim2 to your Dock by right-clicking on the icon to bring up the context menu, and choosing __Options, Keep in Dock.__
 
+6. __OPTIONAL:__ Add `oni2` to your `PATH` so that it can be launched from the terminal: [Adding `oni2` to PATH on OSX](https://onivim.github.io/docs/using-onivim/command-line#macos)
+
 ### Windows (x64)
 
 1. Download the Onivim 2 Installer for Windows.
