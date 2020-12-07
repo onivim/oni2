@@ -89,4 +89,18 @@ describe("InsertModeEdit", ({describe, _}) => {
       expect.int(newChangedTick).toBe(startChangedTick + 3);
     });
   });
+  describe("insert literal", ({test, _}) => {
+    test("validate sub-mode changes", ({expect, _}) => {
+      let _buffer = resetBuffer();
+
+      let (context, _eff) = Vim.input("O");
+      expect.equal(context.subMode, Vim.SubMode.None);
+
+      let (context', _eff) = Vim.key(~context, "<C-q>");
+      expect.equal(context'.subMode, Vim.SubMode.InsertLiteral);
+
+      let (context'', _eff) = Vim.input(~context=context', "a");
+      expect.equal(context''.subMode, Vim.SubMode.None);
+    })
+  });
 });
