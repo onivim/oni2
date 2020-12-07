@@ -102,7 +102,7 @@ describe("InsertModeEdit", ({describe, _}) => {
 
       let (context'', _eff) = Vim.input(~context=context', "a");
       expect.equal(context''.subMode, Vim.SubMode.None);
-      });
+    })
   });
 
   describe("count", ({test, _}) => {
