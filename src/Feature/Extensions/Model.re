@@ -104,7 +104,15 @@ type msg =
     })
   | RemoteExtensionUnableToFetchDetails({errorMsg: string})
   | VimWindowNav(Component_VimWindows.msg)
-  | ViewModel(ViewModel.msg);
+  | ViewModel(ViewModel.msg)
+  | UpdateCheckSucceeded({
+      extensionId: string,
+      latestVersion: [@opaque] option(Semver.t),
+    })
+  | UpdateCheckFailed({
+      extensionId: string,
+      msg: string,
+    });
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -225,6 +233,8 @@ type model = {
   viewModel: ViewModel.t,
   lastSearchHadError: bool,
   lastErrorMessage: option(string),
+  // update checks
+  extensionsToCheckForUpdates: list(string),
   updateAvailable: StringMap.t(bool),
 };
 
@@ -260,13 +270,14 @@ let initial = (~workspacePersistence, ~globalPersistence, ~extensionsFolder) => 
   lastSearchHadError: false,
   lastErrorMessage: None,
 
+  extensionsToCheckForUpdates: [],
   updateAvailable: StringMap.empty,
 };
 
 let hasCheckedForUpdate = (~extensionId, {updateAvailable, _}) => {
-  StringMap.find_opt(extensionId
-  |> String.lowercase_ascii, updateAvailable) == None
-}
+  StringMap.find_opt(extensionId |> String.lowercase_ascii, updateAvailable)
+  == None;
+};
 
 let isSearching = ({searchText, _}) =>
   !Component_InputText.isEmpty(searchText);
@@ -277,6 +288,13 @@ let isBusy = ({pendingInstalls, pendingUninstalls, _}) => {
 
 let isInstalling = (~extensionId, {pendingInstalls, _}) => {
   pendingInstalls |> List.exists(id => id == extensionId);
+};
+
+let isUpdateAvailable = (~extensionId, {updateAvailable, _}) => {
+  let normalizedExtensionId = String.lowercase_ascii(extensionId);
+  updateAvailable
+  |> StringMap.find_opt(normalizedExtensionId)
+  |> Option.value(~default=false);
 };
 
 let getExtension = (~extensionId, {extensions, _}) => {
@@ -405,7 +423,27 @@ module Internal = {
   };
 
   let add = (extensions, model) => {
-    {...model, extensions: extensions @ model.extensions} |> syncViewModel;
+    // Add any non-built-in extensions to our update check
+    let extensionsToCheckForUpdates' =
+      extensions
+      |> List.fold_left(
+           (acc, curr: Scanner.ScanResult.t) =>
+             if (curr.category != Exthost.Extension.Scanner.Bundled) {
+               let identifier =
+                 Exthost.Extension.Manifest.identifier(curr.manifest);
+               [identifier, ...acc];
+             } else {
+               acc;
+             },
+           model.extensionsToCheckForUpdates,
+         );
+
+    {
+      ...model,
+      extensionsToCheckForUpdates: extensionsToCheckForUpdates',
+      extensions: extensions @ model.extensions,
+    }
+    |> syncViewModel;
   };
 
   let addPendingInstall = (~extensionId, model) => {
@@ -442,25 +480,61 @@ module Internal = {
       ),
   };
 
-  let installed = (~extensionId, ~scanResult, model) => {
-    model
-    |> clearPendingInstall(~extensionId)
-    |> markRestartNeeded(~extensionId)
-    |> add([scanResult]);
-  };
-
   let uninstalled = (~extensionId, model) => {
     let model' = model |> clearPendingUninstall(~extensionId);
     let extensions =
       List.filter(
         (scanResult: Exthost.Extension.Scanner.ScanResult.t) => {
-          scanResult.manifest
-          |> Exthost.Extension.Manifest.identifier != extensionId
+          let identifier =
+            Exthost.Extension.Manifest.identifier(scanResult.manifest);
+          String.lowercase_ascii(identifier)
+          != String.lowercase_ascii(extensionId);
         },
         model'.extensions,
       );
 
-    {...model', extensions};
+    {...model', extensions} |> syncViewModel;
+  };
+
+  let installed = (~extensionId, ~scanResult, model) => {
+    model
+    // Remove any existing entries, to replace with new one
+    |> uninstalled(~extensionId)
+    |> clearPendingInstall(~extensionId)
+    |> markRestartNeeded(~extensionId)
+    |> add([scanResult]);
+  };
+
+  let removeFromUpdateCheck = (~extensionId, model) => {
+    let extensionsToCheckForUpdates' =
+      model.extensionsToCheckForUpdates
+      |> List.filter(ext => ext != extensionId);
+    {...model, extensionsToCheckForUpdates: extensionsToCheckForUpdates'};
+  };
+
+  let markUpdateAvailable =
+      (~extensionId, ~latestVersion: option(Semver.t), model) => {
+    let maybeCurrentVersion =
+      model
+      |> getExtension(~extensionId)
+      |> Utility.OptionEx.flatMap(
+           (ext: Exthost.Extension.Scanner.ScanResult.t) =>
+           Exthost.Extension.Manifest.(ext.manifest.version)
+         );
+
+    let isUpdateAvailable =
+      Utility.OptionEx.map2(
+        (newVersion, curVersion) => {
+          Semver.greater_than(newVersion, curVersion)
+        },
+        latestVersion,
+        maybeCurrentVersion,
+      )
+      |> Option.value(~default=false);
+
+    let updateAvailable' =
+      model.updateAvailable |> StringMap.add(extensionId, isUpdateAvailable);
+    {...model, updateAvailable: updateAvailable'};
   };
 };
 
@@ -798,5 +872,17 @@ let update = (~extHostClient, msg, model) => {
       | NextTab => (focusedWindow, Nothing)
       };
     ({...model', focusedWindow: focus}, outmsg);
+
+  // Update checks
+  | UpdateCheckSucceeded({extensionId, latestVersion}) =>
+    let model' =
+      model
+      |> Internal.removeFromUpdateCheck(~extensionId)
+      |> Internal.markUpdateAvailable(~extensionId, ~latestVersion);
+    (model', Nothing);
+
+  | UpdateCheckFailed({extensionId, _}) =>
+    let model' = model |> Internal.removeFromUpdateCheck(~extensionId);
+    (model', Nothing);
   };
 };

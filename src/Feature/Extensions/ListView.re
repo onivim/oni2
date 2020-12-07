@@ -168,7 +168,9 @@ let%component make =
     let actionButton =
       Model.isUninstalling(~extensionId=id, model)
         ? <progressButton extensionId font title="Uninstalling" />
-        : <uninstallButton font extensionId dispatch />;
+        : Model.isUpdateAvailable(~extensionId=id, model)
+            ? <updateButton font extensionId dispatch />
+            : <uninstallButton font extensionId dispatch />;
 
     <ItemView
       actionButton

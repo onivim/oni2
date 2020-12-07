@@ -82,8 +82,9 @@ type t = {
 
 let identifier = manifest => {
   switch (manifest.publisher) {
-  | Some(publisher) => publisher ++ "." ++ manifest.name
-  | None => manifest.name
+  | Some(publisher) =>
+    String.lowercase_ascii(publisher ++ "." ++ manifest.name)
+  | None => String.lowercase_ascii(manifest.name)
   };
 };
 
