@@ -490,7 +490,8 @@ let start =
     let position = Vim.CommandLine.getPosition();
     Vim.CommandLine.getText()
     |> Option.iter(commandStr =>
-         if (position == String.length(commandStr)) {
+         if (position == String.length(commandStr) &&
+           !StringEx.isEmpty(commandStr)) {
            let context = Oni_Model.VimContext.current(getState());
            let completions = Vim.CommandLine.getCompletions(~context, ());
 
