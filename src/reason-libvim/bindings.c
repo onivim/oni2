@@ -940,7 +940,7 @@ CAMLprim value libvim_vimGetMode(value unit) {
 
 CAMLprim value libvim_vimGetSubMode(value unit) {
   CAMLparam0();
-  int submode = vimGetSubMode();
+  subMode_T submode = vimGetSubMode();
 
   int val = 0;
   switch (submode) {

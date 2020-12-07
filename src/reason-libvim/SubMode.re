@@ -1,3 +1,3 @@
 type t =
-| None
-| InsertLiteral;
+  | None
+  | InsertLiteral;

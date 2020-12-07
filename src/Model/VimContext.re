@@ -212,6 +212,7 @@ let current = (state: State.t) => {
     autoClosingPairs,
     toggleComments,
     insertSpaces,
+    subMode: Vim.SubMode.None,
     tabSize: indentation.size,
     functionGetChar: Internal.functionGetChar,
   };

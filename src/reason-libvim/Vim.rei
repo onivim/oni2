@@ -125,8 +125,8 @@ module Mode: {
 
 module SubMode: {
   type t =
-  | None
-  | InsertLiteral;
+    | None
+    | InsertLiteral;
 };
 
 module Functions: {
@@ -166,6 +166,7 @@ module Context: {
     leftColumn: int,
     topLine: int,
     mode: Mode.t,
+    subMode: SubMode.t,
     tabSize: int,
     insertSpaces: bool,
     functionGetChar: Functions.GetChar.t,
