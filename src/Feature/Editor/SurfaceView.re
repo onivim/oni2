@@ -78,16 +78,22 @@ let%component make =
   let rec getInlineElements = (acc: list(Revery.UI.element), lines) =>
     switch (lines) {
     | [] => acc
-    | [line, ...tail] => {
+    | [line, ...tail] =>
       let isVisible = line >= topVisibleLine && line <= bottomVisibleLine;
       getInlineElements(
         [
-          <InlineElementView.Container uiFont theme editor line dispatch isVisible />,
+          <InlineElementView.Container
+            uiFont
+            theme
+            editor
+            line
+            dispatch
+            isVisible
+          />,
           ...acc,
         ],
         tail,
-      )
-      }
+      );
     };
 
   let linesWithElements = Editor.linesWithInlineElements(editor);

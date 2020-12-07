@@ -120,24 +120,26 @@ module Container = {
         editor,
       );
 
-    // Rendering shadows can be expensive, so let's not do it if 
+    // Rendering shadows can be expensive, so let's not do it if
     // we don't need to...
-    let shadow = isVisible ?
-      <View
-        style={Styles.shadowContainer(~height=int_of_float(totalHeight))}>
-        <Oni_Components.ScrollShadow.Top
-          opacity={maxOpacity *. 0.8}
-          height=5
-        />
-        <Oni_Components.ScrollShadow.Bottom
-          opacity={maxOpacity *. 0.8}
-          height=5
-        />
-      </View> : React.empty;
+    let shadow =
+      isVisible
+        ? <View
+            style={Styles.shadowContainer(~height=int_of_float(totalHeight))}>
+            <Oni_Components.ScrollShadow.Top
+              opacity={maxOpacity *. 0.8}
+              height=5
+            />
+            <Oni_Components.ScrollShadow.Bottom
+              opacity={maxOpacity *. 0.8}
+              height=5
+            />
+          </View>
+        : React.empty;
 
     <View style={Styles.container(~opacity=maxOpacity, ~pixelY)}>
       {elems |> React.listToElement}
-      {shadow}
+      shadow
     </View>;
   };
 };

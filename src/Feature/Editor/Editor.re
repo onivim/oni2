@@ -808,10 +808,7 @@ let setInlineElementSize = (~key, ~line, ~uniqueId, ~height, editor) => {
          ...e,
          inlineElements:
            InlineElements.setSize(
-             ~animated=
-               (
-                 line >= topBuffer && line <= bottomBuffer
-               ),
+             ~animated=line >= topBuffer && line <= bottomBuffer,
              ~key,
              ~line,
              ~uniqueId,
