@@ -1642,10 +1642,11 @@ type msg =
 
 let update = (msg, editor) => {
   switch (msg) {
-  | InlineElements(msg) => {
-      ...editor,
-      inlineElements: InlineElements.update(msg, editor.inlineElements),
-    }
+  | InlineElements(msg) =>
+    editor
+    |> withSteadyCursor(e =>
+         {...e, inlineElements: InlineElements.update(msg, e.inlineElements)}
+       )
   | YankHighlight(msg) =>
     let yankHighlight' =
       yankHighlight(editor)

@@ -108,8 +108,7 @@ module Container = {
                  dispatch
                  lineNumber=line
                  yOffset=height
-                 opacity
-                 >
+                 opacity>
                  <elem />
                </Item>;
 
