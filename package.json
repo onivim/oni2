@@ -231,6 +231,7 @@
     "@opam/ppxlib": ">=0.10.0",
     "@opam/re": "*",
     "@opam/reason": "3.6.0",
+    "@opam/semver2": "^1.1.0",
     "@opam/uucp": "*",
     "@opam/uutf": "*",
     "@opam/yojson": "1.7.0",

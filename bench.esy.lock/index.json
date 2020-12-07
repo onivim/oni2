@@ -1,5 +1,5 @@
 {
-  "checksum": "84adb6edfbd5ce1251d6179e6f8dced3",
+  "checksum": "1b61f464e935805c800bde10ad044cdf",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -1012,6 +1012,7 @@
         "@revery/timber@2.0.0@d41d8cd9",
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/uutf@opam:1.0.2@4440868f", "@opam/uucp@opam:13.0.0@e9b515e0",
+        "@opam/semver2@opam:1.1.0@ec4fbaf4",
         "@opam/reason@opam:3.6.0@58adb39a", "@opam/re@opam:1.9.0@d4d5e13d",
         "@opam/ppxlib@opam:0.15.0@6a9d8126",
         "@opam/ppx_optcomp@opam:v0.14.0@47cec200",
@@ -1564,6 +1565,33 @@
         "ocaml@4.10.0@d41d8cd9", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [ "ocaml@4.10.0@d41d8cd9" ]
+    },
+    "@opam/semver2@opam:1.1.0@ec4fbaf4": {
+      "id": "@opam/semver2@opam:1.1.0@ec4fbaf4",
+      "name": "@opam/semver2",
+      "version": "opam:1.1.0",
+      "source": {
+        "type": "install",
+        "source": [
+          "archive:https://opam.ocaml.org/cache/md5/30/3054c5c107ae2b87246113debbf999fc#md5:3054c5c107ae2b87246113debbf999fc",
+          "archive:https://github.com/dividat/ocaml-semver/archive/1.1.0.tar.gz#md5:3054c5c107ae2b87246113debbf999fc"
+        ],
+        "opam": {
+          "name": "semver2",
+          "version": "1.1.0",
+          "path": "bench.esy.lock/opam/semver2.1.1.0"
+        }
+      },
+      "overrides": [],
+      "dependencies": [
+        "ocaml@4.10.0@d41d8cd9", "@opam/dune@opam:2.5.0@e0bac278",
+        "@opam/angstrom@opam:0.15.0@48ede9cb",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
+      ],
+      "devDependencies": [
+        "ocaml@4.10.0@d41d8cd9", "@opam/dune@opam:2.5.0@e0bac278",
+        "@opam/angstrom@opam:0.15.0@48ede9cb"
+      ]
     },
     "@opam/rresult@opam:0.6.0@4b185e72": {
       "id": "@opam/rresult@opam:0.6.0@4b185e72",
