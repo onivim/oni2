@@ -61,7 +61,8 @@ let defaultKeyBindings =
         key: "<C-V>",
         command: Feature_Clipboard.Commands.paste.id,
         condition:
-          "insertMode || textInputFocus || commandLineFocus" |> WhenExpr.parse,
+          "editorTextFocus && insertMode || textInputFocus || commandLineFocus"
+          |> WhenExpr.parse,
       },
       {
         key: "<D-V>",
