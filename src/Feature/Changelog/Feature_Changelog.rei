@@ -25,7 +25,6 @@ module View: {
 
   module Update: {
     let make:
-      (~since: string, ~theme: ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
-      element;
+      (~theme: ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) => element;
   };
 };

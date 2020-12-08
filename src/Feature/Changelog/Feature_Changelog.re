@@ -1,5 +1,4 @@
 open Oni_Core;
-open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Feature.Changelog"));
 
@@ -18,6 +17,10 @@ let initial: model = {currentMarkdown: "", previousMarkdown: ""};
 //   | PullRequestClicked(int)
 //   | CommitHashClicked(string)
 //   | IssueClicked(int);
+[@deriving show]
+type msg = unit;
+
+let update = (model, _msg) => (model, Isolinear.Effect.none);
 
 // let update = (model, msg) =>
 //   switch (msg) {
@@ -87,38 +90,46 @@ module View = {
     ];
   };
 
-  // MOREINFO
+  let markdown = () =>
+    <Markdown
+      tokenTheme=Oni_Syntax.TokenTheme.empty
+      languageInfo=Exthost.LanguageInfo.initial
+      grammars=Oni_Syntax.GrammarRepository.empty
+      headerMargin=16
+      baseFontSize=12.
+      codeBlockFontSize=11.
+    />;
+
+  let title = (~text, ~theme, ~uiFont: UiFont.t, ()) =>
+    <Text
+      text={Printf.sprintf(
+        "%s | %s | %s",
+        text,
+        Oni_Core.BuildInfo.version,
+        Oni_Core.BuildInfo.commitId,
+      )}
+      style={Styles.header(~theme)}
+      fontFamily={uiFont.family}
+      fontSize=20.
+    />;
 
   // FULL
 
   module Full = {
-    let make = (~state: model, ~theme, ~uiFont: UiFont.t, ~dispatch, ()) => {
+    let make = (~state as _, ~theme, ~uiFont: UiFont.t, ~dispatch as _, ()) => {
       switch (Lazy.force(model)) {
       | Ok({currentMarkdown, previousMarkdown}) =>
         <ScrollView style=Styles.scrollContainer>
           <View style=Styles.content>
-            <Text
-              text="Changelog"
-              style={Styles.header(~theme)}
-              fontFamily={uiFont.family}
-              fontSize=20.
-            />
-            <Markdown
-              headerMargin=16
+            <title text="Full Changelog" uiFont theme />
+            <markdown
               colorTheme=theme
-              tokenTheme=Oni_Syntax.TokenTheme.empty
-              languageInfo=Exthost.LanguageInfo.initial
-              grammars=Oni_Syntax.GrammarRepository.empty
               fontFamily={uiFont.family}
               codeFontFamily={uiFont.family}
               markdown=currentMarkdown
             />
-            <Markdown
-              headerMargin=16
+            <markdown
               colorTheme=theme
-              tokenTheme=Oni_Syntax.TokenTheme.empty
-              languageInfo=Exthost.LanguageInfo.initial
-              grammars=Oni_Syntax.GrammarRepository.empty
               fontFamily={uiFont.family}
               codeFontFamily={uiFont.family}
               markdown=previousMarkdown
@@ -136,16 +147,17 @@ module View = {
     let make = (~theme, ~uiFont: UiFont.t, ()) => {
       switch (Lazy.force(model)) {
       | Ok({currentMarkdown, _}) =>
-        <Markdown
-          headerMargin=16
-          colorTheme=theme
-          tokenTheme=Oni_Syntax.TokenTheme.empty
-          languageInfo=Exthost.LanguageInfo.initial
-          grammars=Oni_Syntax.GrammarRepository.empty
-          fontFamily={uiFont.family}
-          codeFontFamily={uiFont.family}
-          markdown=currentMarkdown
-        />
+        <ScrollView style=Styles.scrollContainer>
+          <View style=Styles.content>
+            <title text="Latest Updates" uiFont theme />
+            <markdown
+              colorTheme=theme
+              fontFamily={uiFont.family}
+              codeFontFamily={uiFont.family}
+              markdown=currentMarkdown
+            />
+          </View>
+        </ScrollView>
 
       | Error(message) => <Text text=message />
       };

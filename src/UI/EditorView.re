@@ -182,7 +182,7 @@ module Parts = {
 
       | DebugInput => <DebugInputView state />
 
-      | UpdateChangelog(_) => <Feature_Changelog.View.Update theme uiFont />
+      | UpdateChangelog => <Feature_Changelog.View.Update theme uiFont />
       };
     };
   };

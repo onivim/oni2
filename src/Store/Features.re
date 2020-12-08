@@ -955,7 +955,7 @@ let update =
                  }),
                )
              | Version => Some(BufferRenderer.Version)
-             | UpdateChangelog => None
+             | UpdateChangelog => Some(BufferRenderer.UpdateChangelog)
              | Image => Some(BufferRenderer.Image)
              | Welcome => Some(BufferRenderer.Welcome)
              | Changelog => Some(BufferRenderer.FullChangelog)
