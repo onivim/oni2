@@ -70,6 +70,7 @@ external vimKey: string => unit = "libvim_vimKey";
 external vimCommand: string => unit = "libvim_vimCommand";
 
 external vimGetMode: unit => mode = "libvim_vimGetMode";
+external vimGetSubMode: unit => SubMode.t = "libvim_vimGetSubMode";
 
 external vimBufferOpen: string => buffer = "libvim_vimBufferOpen";
 external vimBufferLoad: string => buffer = "libvim_vimBufferLoad";

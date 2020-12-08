@@ -224,6 +224,16 @@ let keyDown =
   );
 };
 
+let disable = ({inputStateMachine, _} as model) => {
+  ...model,
+  inputStateMachine: InputStateMachine.disable(inputStateMachine),
+};
+
+let enable = ({inputStateMachine, _} as model) => {
+  ...model,
+  inputStateMachine: InputStateMachine.enable(inputStateMachine),
+};
+
 let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
   let (inputStateMachine', effects) =
     InputStateMachine.text(~text, inputStateMachine);

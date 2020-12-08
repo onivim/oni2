@@ -1574,8 +1574,24 @@ let update =
     };
 
   | Vim(msg) =>
+    let previousSubMode = state.vim |> Feature_Vim.subMode;
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
-    let state = {...state, vim};
+    let newSubMode = state.vim |> Feature_Vim.subMode;
+
+    // If we've switched to, or from, insert literal,
+    // we may need to enable/disable key bindings.
+    let input' =
+      if (previousSubMode != newSubMode) {
+        if (newSubMode == Vim.SubMode.InsertLiteral) {
+          Feature_Input.disable(state.input);
+        } else {
+          Feature_Input.enable(state.input);
+        };
+      } else {
+        state.input;
+      };
+
+    let state = {...state, input: input', vim};
 
     switch (outmsg) {
     | Nothing => (state, Isolinear.Effect.none)

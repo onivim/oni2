@@ -79,6 +79,9 @@ let addKeyBinding:
 
 let remove: (uniqueId, model) => model;
 
+let enable: model => model;
+let disable: model => model;
+
 // UPDATE
 
 let update: (msg, model) => (model, outmsg);
