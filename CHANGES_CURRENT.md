@@ -24,6 +24,7 @@
 - #2785 - Windows: Fix intermittent crash in `Luv.Process.spawn`
 - #2792 - Vim: Handle count for insert mode commands (`i`/`a`, etc) (fixes #809, #2190)
 - #2802 - Editor: Fix crash when moving mouse in empty buffer (fixes #2800)
+- #2807 - Terminal: Implement paste in insert mode (fixes #2805)
 
 ### Performance
 
