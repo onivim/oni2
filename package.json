@@ -16,9 +16,7 @@
       "bash -c \"#{os == 'windows' ? 'cp /usr/x86_64-w64-mingw32/sys-root/mingw/bin/*.dll \\'$cur__bin\\'': 'echo'}\"",
       "bash -c \"cp #{esy-sdl2.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
       "bash -c \"cp #{esy-skia.bin}/skia.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
-      "bash -c \"cp #{esy-angle-prebuilt.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
-      "bash -c \"cp #{@reason-native-web/esy-openssl.bin}/libcrypto-1_1-x64.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\"",
-      "bash -c \"cp #{@reason-native-web/esy-openssl.bin}/libssl-1_1-x64.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\""
+      "bash -c \"cp #{esy-angle-prebuilt.bin}/*.dll \\'$cur__bin\\' #{os == 'windows' ? '' : '2>/dev/null || true'}\""
     ]
   },
   "build": {
@@ -220,7 +218,7 @@
     "@opam/fs": "*",
     "@opam/logs": "^0.7.0",
     "@opam/lru": "bryphe/lru:lru.opam#2708c70",
-    "@opam/luv": "^0.5.6",
+    "@opam/luv": "bryphe/luv:luv.opam#8e9f2b0",
     "@opam/lwt": "*",
     "@opam/markup": "^0.8.2",
     "@opam/ocamlbuild": "*",
@@ -236,7 +234,6 @@
     "@opam/uucp": "*",
     "@opam/uutf": "*",
     "@opam/yojson": "1.7.0",
-    "@reason-native-web/esy-openssl": "*",
     "@revery/timber": "^2.0.0",
     "axios": "^0.19.0",
     "esy-angle-prebuilt": "^1.0.0",
@@ -246,7 +243,7 @@
     "esy-skia": "*",
     "esy-tree-sitter": "^1.4.1",
     "isolinear": "^3.0.0",
-    "libvim": "8.10869.78",
+    "libvim": "8.10869.79",
     "ocaml": "4.10.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
     "reason-fzy": "CrossR/reason-fzy#7339d4e",
@@ -256,7 +253,7 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#30bef47",
+    "revery": "revery-ui/revery#dd47c70",
     "esy-skia": "revery-ui/esy-skia#60e0260",
     "rench": "bryphe/rench#a976fe5",
     "isolinear": "revery-ui/isolinear#53fc4eb",
@@ -277,6 +274,6 @@
     "innosetup-compiler": "5.5.9",
     "plist": "3.0.1",
     "rcedit": "2.0.0",
-    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#c1e51a5"
+    "@opam/ocaml-lsp-server": "ocaml/ocaml-lsp:ocaml-lsp-server.opam#f0fbe44"
   }
 }
