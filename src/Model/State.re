@@ -71,7 +71,7 @@ let defaultKeyBindings =
                 And([Defined("editorTextFocus"), Defined("insertMode")]),
                 Defined("textInputFocus"),
                 Defined("commandLineFocus"),
-              ])
+              ]),
             ])
           ),
       },
