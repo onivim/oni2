@@ -24,6 +24,7 @@
 - #2785 - Windows: Fix intermittent crash in `Luv.Process.spawn`
 - #2792 - Vim: Handle count for insert mode commands (`i`/`a`, etc) (fixes #809, #2190)
 - #2802 - Editor: Fix crash when moving mouse in empty buffer (fixes #2800)
+- #2806 - Windows: Add open-directory command to windows installer (fixes #2046)
 
 ### Performance
 
