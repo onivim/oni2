@@ -83,6 +83,7 @@ let%component make =
       getInlineElements(
         [
           <InlineElementView.Container
+            config
             uiFont
             theme
             editor

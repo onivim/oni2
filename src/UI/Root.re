@@ -207,7 +207,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       {switch (state.quickmenu) {
        | None => React.empty
        | Some(quickmenu) =>
-         <QuickmenuView theme configuration state=quickmenu font />
+         <QuickmenuView theme config state=quickmenu font />
        }}
       <Feature_Input.View.Overlay
         input={state.input}

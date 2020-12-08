@@ -80,7 +80,8 @@ module Item = {
 };
 
 module Container = {
-  let make = (~editor, ~isVisible, ~line, ~dispatch, ~theme, ~uiFont, ()) => {
+  let make =
+      (~config, ~editor, ~isVisible, ~line, ~dispatch, ~theme, ~uiFont, ()) => {
     let inlineElements = Editor.getInlineElements(~line, editor);
 
     let (maxOpacity, totalHeight, elems) =
@@ -124,6 +125,7 @@ module Container = {
     // we don't need to...
     let shadow =
       isVisible
+      && Feature_Configuration.GlobalConfiguration.shadows.get(config)
         ? <View
             style={Styles.shadowContainer(~height=int_of_float(totalHeight))}>
             <Oni_Components.ScrollShadow.Top
