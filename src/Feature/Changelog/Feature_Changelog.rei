@@ -1,8 +1,6 @@
 open Oni_Core;
 open Revery.UI;
 
-type commit;
-
 type model;
 
 let initial: model;
