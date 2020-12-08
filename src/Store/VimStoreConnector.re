@@ -19,6 +19,7 @@ module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
 let start =
     (
+      ~showUpdateChangelog: bool,
       languageInfo: Exthost.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
@@ -562,7 +563,13 @@ let start =
 
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
-      libvimHasInitialized := true
+      if (showUpdateChangelog
+          && Core.BuildInfo.commitId != Persistence.Global.version()) {
+        dispatch(
+          Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
+        );
+      };
+      libvimHasInitialized := true;
     });
 
   let updateActiveEditorMode = (subMode, mode, effects) => {
