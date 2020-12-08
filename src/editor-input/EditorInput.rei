@@ -137,6 +137,12 @@ module type Input = {
   let addMapping:
     (Matcher.t, context => bool, list(KeyPress.t), t) => (t, uniqueId);
 
+  // Turn off all bindings, as if no bindings are defined
+  let disable: t => t;
+
+  // Turn on binding handling
+  let enable: t => t;
+
   type effect =
     // The `Execute` effect means that a key-sequence associated with `command`
     // has been completed, and the `command` should now be executed.

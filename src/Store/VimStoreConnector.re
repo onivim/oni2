@@ -490,7 +490,8 @@ let start =
     let position = Vim.CommandLine.getPosition();
     Vim.CommandLine.getText()
     |> Option.iter(commandStr =>
-         if (position == String.length(commandStr)) {
+         if (position == String.length(commandStr)
+             && !StringEx.isEmpty(commandStr)) {
            let context = Oni_Model.VimContext.current(getState());
            let completions = Vim.CommandLine.getCompletions(~context, ());
 
@@ -564,8 +565,10 @@ let start =
       libvimHasInitialized := true
     });
 
-  let updateActiveEditorMode = (mode, effects) => {
-    dispatch(Actions.Vim(Feature_Vim.ModeChanged({mode, effects})));
+  let updateActiveEditorMode = (subMode, mode, effects) => {
+    dispatch(
+      Actions.Vim(Feature_Vim.ModeChanged({subMode, mode, effects})),
+    );
   };
 
   let isVimKey = key => {
@@ -590,7 +593,7 @@ let start =
       if (newContext.bufferId != prevContext.bufferId) {
         dispatch(Actions.OpenBufferById({bufferId: newContext.bufferId}));
       } else {
-        updateActiveEditorMode(newContext.mode, effects);
+        updateActiveEditorMode(newContext.subMode, newContext.mode, effects);
       };
     });
   };
@@ -607,7 +610,7 @@ let start =
         let previousBufferId = context.bufferId;
 
         currentTriggerKey := Some(key);
-        let ({mode, bufferId, _}: Vim.Context.t, effects) =
+        let ({mode, bufferId, subMode, _}: Vim.Context.t, effects) =
           isText ? Vim.input(~context, key) : Vim.key(~context, key);
         currentTriggerKey := None;
 
@@ -616,7 +619,7 @@ let start =
           dispatch(Actions.OpenBufferById({bufferId: bufferId}));
         };
 
-        updateActiveEditorMode(mode, effects);
+        updateActiveEditorMode(subMode, mode, effects);
         Log.debug("handled key: " ++ key);
       }
     );
@@ -652,7 +655,11 @@ let start =
           completion |> Path.trimTrailingSeparator |> StringEx.escapeSpaces;
         let (latestContext: Vim.Context.t, effects) =
           Core.VimEx.inputString(completion);
-        updateActiveEditorMode(latestContext.mode, effects);
+        updateActiveEditorMode(
+          latestContext.subMode,
+          latestContext.mode,
+          effects,
+        );
         isCompleting := false;
       }
     );
@@ -688,8 +695,8 @@ let start =
     Isolinear.Effect.create(~name="vim.undo", () => {
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
-      let ({mode, _}: Vim.Context.t, effects) = Vim.key("u");
-      updateActiveEditorMode(mode, effects);
+      let ({subMode, mode, _}: Vim.Context.t, effects) = Vim.key("u");
+      updateActiveEditorMode(subMode, mode, effects);
       ();
     });
 
@@ -697,8 +704,8 @@ let start =
     Isolinear.Effect.create(~name="vim.redo", () => {
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
-      let ({mode, _}: Vim.Context.t, effects) = Vim.key("<c-r>");
-      updateActiveEditorMode(mode, effects);
+      let ({subMode, mode, _}: Vim.Context.t, effects) = Vim.key("<c-r>");
+      updateActiveEditorMode(subMode, mode, effects);
       ();
     });
 
@@ -714,8 +721,8 @@ let start =
 
   let escapeEffect =
     Isolinear.Effect.create(~name="vim.esc", () => {
-      let ({mode, _}: Vim.Context.t, effects) = Vim.key("<esc>");
-      updateActiveEditorMode(mode, effects);
+      let ({subMode, mode, _}: Vim.Context.t, effects) = Vim.key("<esc>");
+      updateActiveEditorMode(subMode, mode, effects);
       ();
     });
 
