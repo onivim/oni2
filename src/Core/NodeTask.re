@@ -138,9 +138,3 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
   };
   promise;
 };
-
-let b = 2;
-
-let c = 3;
-
-let d = 4;

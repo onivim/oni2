@@ -104,6 +104,7 @@ type t = {
   scrollX: [@opaque] Component_Animation.Spring.t,
   scrollY: [@opaque] Component_Animation.Spring.t,
   inlineElements: InlineElements.t,
+  isAnimated: bool,
   isScrollAnimated: bool,
   isMinimapEnabled: bool,
   minimapMaxColumnWidth: int,
@@ -426,14 +427,15 @@ let configure = (~config, editor) => {
 
   let scrolloff = EditorConfiguration.scrolloff.get(config);
 
+  let isAnimated =
+    Feature_Configuration.GlobalConfiguration.animation.get(config);
   let isScrollAnimated =
-    Feature_Configuration.GlobalConfiguration.animation.get(config)
-    && EditorConfiguration.smoothScroll.get(config);
+    isAnimated && EditorConfiguration.smoothScroll.get(config);
 
   let yankHighlightDuration =
     EditorConfiguration.yankHighlightDuration.get(config);
 
-  {...editor, isScrollAnimated, yankHighlightDuration}
+  {...editor, isAnimated, isScrollAnimated, yankHighlightDuration}
   |> setVerticalScrollMargin(~lines=scrolloff)
   |> setMinimap(
        ~enabled=EditorConfiguration.Minimap.enabled.get(config),
@@ -456,9 +458,10 @@ let create = (~config, ~buffer, ()) => {
 
   let wrapState = WrapState.make(~pixelWidth=1000., ~wrapMode, ~buffer);
 
+  let isAnimated =
+    Feature_Configuration.GlobalConfiguration.animation.get(config);
   let isScrollAnimated =
-    Feature_Configuration.GlobalConfiguration.animation.get(config)
-    && EditorConfiguration.smoothScroll.get(config);
+    isAnimated && EditorConfiguration.smoothScroll.get(config);
 
   let yankHighlightDuration =
     EditorConfiguration.yankHighlightDuration.get(config);
@@ -469,6 +472,7 @@ let create = (~config, ~buffer, ()) => {
     lineHeight: LineHeight.default,
     lineNumbers: `On,
     isMinimapEnabled: true,
+    isAnimated,
     isScrollAnimated,
     buffer,
     scrollX: Spring.make(~restThreshold=1., ~options=scrollSpringOptions, 0.),
@@ -808,7 +812,8 @@ let setInlineElementSize = (~key, ~line, ~uniqueId, ~height, editor) => {
          ...e,
          inlineElements:
            InlineElements.setSize(
-             ~animated=line >= topBuffer && line <= bottomBuffer,
+             ~animated=
+               editor.isAnimated && line >= topBuffer && line <= bottomBuffer,
              ~key,
              ~line,
              ~uniqueId,
