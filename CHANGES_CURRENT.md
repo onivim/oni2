@@ -1,5 +1,3 @@
-## vNext
-
 ### Features
 
 - #2712 - Completion: Add support for additionalTextEdits (fixes #2360)
