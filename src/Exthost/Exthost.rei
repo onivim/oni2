@@ -17,7 +17,9 @@ module Label: {
     | Icon(string);
 
   [@deriving show]
-  type t = list(segment);
+  type t;
+
+  let segments: t => list(segment);
 
   let ofString: string => t;
   let toString: t => string;
@@ -1747,6 +1749,10 @@ module Request: {
     let provideCodeLenses:
       (~handle: int, ~resource: Uri.t, Client.t) =>
       Lwt.t(option(list(CodeLens.t)));
+
+    let resolveCodeLens:
+      (~handle: int, ~codeLens: CodeLens.t, Client.t) =>
+      Lwt.t(option(CodeLens.t));
 
     let provideCompletionItems:
       (

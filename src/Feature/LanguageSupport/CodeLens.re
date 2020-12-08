@@ -35,6 +35,7 @@ type handleToLenses = IntMap.t(list(codeLens));
 type model = {
   providers: list(provider),
   bufferToLenses: IntMap.t(handleToLenses),
+  unresolvedLenses: list(codeLens)
 };
 
 type outmsg =
@@ -53,7 +54,7 @@ let get = (~bufferId, {bufferToLenses, _}) => {
   |> List.flatten;
 };
 
-let initial = {providers: [], bufferToLenses: IntMap.empty};
+let initial = {providers: [], bufferToLenses: IntMap.empty, unresolvedLenses: []};
 
 [@deriving show]
 type msg =
@@ -86,7 +87,8 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
            }
          )
        })
-    |> List.mapi((idx, lens) =>
+    |> List.mapi((idx, lens) => {
+         prerr_endline ("Exthost.Codelens: " ++ Exthost.CodeLens.show(lens));
          {
            lens,
            handle,
@@ -98,6 +100,7 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
                idx,
                Hashtbl.hash(textFromExthost(lens)),
              ),
+         }
          }
        );
   IntMap.add(handle, internalLenses, handleToLenses);

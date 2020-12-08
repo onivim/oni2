@@ -734,6 +734,10 @@ module Sub = {
     |> Isolinear.Sub.map(toMsg);
   };
 
+  let codeLens = (~handle as _, ~lens as _, ~toMsg as _, client) => {
+    Isolinear.Sub.none
+  }
+
   type completionParams = {
     handle: int,
     context: Exthost.CompletionContext.t,
