@@ -61,7 +61,15 @@ let defaultKeyBindings =
         key: "<C-V>",
         command: Feature_Clipboard.Commands.paste.id,
         condition:
-          "insertMode || textInputFocus || commandLineFocus" |> WhenExpr.parse,
+          // The WhenExpr parser doesn't support precedence, so we manually construct it here...
+          // It'd be nice to bring back explicit precedence via '(' and ')'
+          // Alternatively, a manual construction could be done with separate bindings for !isMac OR each condition
+          WhenExpr.(
+            And([
+              Not(Defined("isMac")),
+              parse("insertMode || textInputFocus || commandLine"),
+            ])
+          ),
       },
       {
         key: "<D-V>",
@@ -71,7 +79,9 @@ let defaultKeyBindings =
       {
         key: "<ESC>",
         command: Commands.Workbench.Action.closeQuickOpen.id,
-        condition: "inQuickOpen" |> WhenExpr.parse,
+        // When in command-line mode, we should let Vim control when it is closed
+        // (The <esc> key might not always trigger closing, like if 'insert literal' (Ctrl-v/Ctrl-q) is active)
+        condition: "!commandLineFocus && inQuickOpen" |> WhenExpr.parse,
       },
       {
         key: "<C-N>",

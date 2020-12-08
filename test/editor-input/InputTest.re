@@ -562,4 +562,24 @@ describe("EditorInput", ({describe, _}) => {
       expect.equal(effects, [Execute("command2"), Execute("command3")]);
     });
   });
+  describe("enable / disable", ({test, _}) => {
+    test("unhandled when bindings are disabled", ({expect, _}) => {
+      let alwaysTrue = _ => true;
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers]),
+             alwaysTrue,
+             "command1",
+           );
+
+      let bindings' = Input.disable(bindings);
+
+      let (_bindings, effects) =
+        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings');
+
+      // Should be unhandled because the context function is [false]
+      expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
+    })
+  });
 });

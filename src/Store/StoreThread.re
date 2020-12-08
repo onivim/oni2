@@ -355,8 +355,15 @@ let start =
          })
       |> Option.value(~default=Isolinear.Sub.none);
 
+    let isSideBarOpen = Feature_SideBar.isOpen(state.sideBar);
+    let isExtensionsFocused =
+      Feature_SideBar.selected(state.sideBar) == Feature_SideBar.Extensions;
     let extensionsSub =
-      Feature_Extensions.sub(~setup, state.extensions)
+      Feature_Extensions.sub(
+        ~isVisible=isSideBarOpen && isExtensionsFocused,
+        ~setup,
+        state.extensions,
+      )
       |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
 
     let registersSub =

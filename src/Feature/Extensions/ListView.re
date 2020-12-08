@@ -82,6 +82,35 @@ let progressButton = (~extensionId, ~font, ~title, ()) => {
   />;
 };
 
+let installedButton = (~extensionId, ~font, ()) => {
+  <ItemView.ActionButton
+    extensionId
+    font
+    title="Installed"
+    backgroundColor=Revery.Colors.blue
+    color=Revery.Colors.white
+    onAction={() => ()}
+  />;
+};
+
+let updateButton = (~extensionId, ~font, ~dispatch, ()) => {
+  <ItemView.ActionButton
+    extensionId
+    font
+    title="Update"
+    backgroundColor=Revery.Colors.blue
+    color=Revery.Colors.white
+    onAction={() =>
+      dispatch(Model.UpdateExtensionClicked({extensionId: extensionId}))
+    }
+  />;
+};
+
+let versionToString: option(Semver.t) => string =
+  semver => {
+    semver |> Option.map(Semver.to_string) |> Option.value(~default="0.0.0");
+  };
+
 let%component make =
               (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
   let%hook ({width, installedExpanded, bundledExpanded}, localDispatch) =
@@ -100,7 +129,7 @@ let%component make =
     let iconPath = extension.manifest.icon;
     let displayName = Manifest.getDisplayName(extension.manifest);
     let author = extension.manifest.author;
-    let version = extension.manifest.version;
+    let version = versionToString(extension.manifest.version);
 
     let actionButton = React.empty;
 
@@ -131,15 +160,21 @@ let%component make =
     let iconPath = extension.manifest.icon;
     let displayName = Manifest.getDisplayName(extension.manifest);
     let author = extension.manifest.author;
-    let version = extension.manifest.version;
+    let version = versionToString(extension.manifest.version);
     let id = Manifest.identifier(extension.manifest);
 
     let extensionId = extension.manifest |> Manifest.identifier;
     let isRestartRequired = Model.isRestartRequired(~extensionId, model);
     let actionButton =
-      Model.isUninstalling(~extensionId=id, model)
-        ? <progressButton extensionId font title="Uninstalling" />
-        : <uninstallButton font extensionId dispatch />;
+      if (Model.isInstalling(~extensionId, model)) {
+        <progressButton extensionId title="Updating" font />;
+      } else if (Model.isUninstalling(~extensionId=id, model)) {
+        <progressButton extensionId font title="Uninstalling" />;
+      } else if (Model.isUpdateAvailable(~extensionId=id, model)) {
+        <updateButton font extensionId dispatch />;
+      } else {
+        <uninstallButton font extensionId dispatch />;
+      };
 
     <ItemView
       actionButton
@@ -213,15 +248,28 @@ let%component make =
               summary |> Service_Extensions.Catalog.Summary.name;
             let extensionId = summary |> Service_Extensions.Catalog.Summary.id;
             let {namespace, version, iconUrl, _}: Service_Extensions.Catalog.Summary.t = summary;
+            let maybeVersion = version;
+            let version = versionToString(version);
             let author = namespace;
 
             let isRestartRequired =
               Model.isRestartRequired(~extensionId, model);
 
             let actionButton =
-              Model.isInstalling(~extensionId, model)
-                ? <progressButton extensionId title="Installing" font />
-                : <installButton extensionId dispatch font extensionId />;
+              if (Model.isInstalled(~extensionId, model)) {
+                if (Model.isInstalling(~extensionId, model)) {
+                  <progressButton extensionId title="Updating" font />;
+                } else if (Model.canUpdate(~extensionId, ~maybeVersion, model)) {
+                  <updateButton extensionId font dispatch />;
+                } else {
+                  <installedButton extensionId font />;
+                };
+              } else {
+                Model.isInstalling(~extensionId, model)
+                  ? <progressButton extensionId title="Installing" font />
+                  : <installButton extensionId dispatch font extensionId />;
+              };
+
             <ItemView
               actionButton
               width

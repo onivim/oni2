@@ -320,14 +320,20 @@ let diagnosticCount = (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => 
 module ModeIndicator = {
   let transitionDuration = Revery.Time.milliseconds(300);
 
-  let make = (~key=?, ~font: UiFont.t, ~theme, ~mode, ()) => {
+  let make = (~key=?, ~font: UiFont.t, ~theme, ~mode, ~subMode, ()) => {
     let background = Colors.Oni.backgroundFor(mode).from(theme);
     let foreground = Colors.Oni.foregroundFor(mode).from(theme);
+
+    let text =
+      switch (subMode) {
+      | Vim.SubMode.InsertLiteral => "Insert Literal"
+      | Vim.SubMode.None => Mode.toString(mode)
+      };
 
     <item ?key backgroundColor=background>
       <Text
         style={Styles.text(~color=foreground)}
-        text={Mode.toString(mode)}
+        text
         fontFamily={font.family}
         fontWeight=Medium
         fontSize=11.
@@ -353,6 +359,7 @@ module View = {
       (
         ~key=?,
         ~mode,
+        ~subMode,
         ~notifications: Feature_Notification.model,
         ~recordingMacro: option(char),
         ~diagnostics: Diagnostics.model,
@@ -545,7 +552,9 @@ module View = {
         </section>
         <notificationPopups />
       </sectionGroup>
-      <section align=`FlexEnd> <ModeIndicator font theme mode /> </section>
+      <section align=`FlexEnd>
+        <ModeIndicator font theme mode subMode />
+      </section>
     </View>;
   };
 };

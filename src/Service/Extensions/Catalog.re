@@ -42,18 +42,24 @@ module Identifier = {
 module VersionInfo = {
   [@deriving show]
   type t = {
-    version: string,
+    version: [@opaque] Semver.t,
     url: string,
   };
 
   let decode =
     Json.Decode.(
       key_value_pairs(string)
-      |> map(List.map(((version, url)) => {version, url}))
+      |> map(
+           List.filter_map(((maybeVersion, url)) => {
+             maybeVersion
+             |> Semver.of_string
+             |> Option.map(version => {version, url})
+           }),
+         )
     );
 
   let toString = ({version, url}) =>
-    Printf.sprintf(" - Version %s: %s", version, url);
+    Printf.sprintf(" - Version %s: %s", Semver.to_string(version), url);
 };
 
 module Details = {
@@ -73,7 +79,7 @@ module Details = {
     displayName: option(string),
     description: option(string),
     //      categories: list(string),
-    version: string,
+    version: [@opaque] option(Semver.t),
     versions: list(VersionInfo.t),
   };
 
@@ -131,7 +137,12 @@ module Details = {
           description: field.optional("description", string),
           name: field.required("name", string),
           namespace: field.required("namespace", string),
-          version: field.required("version", string),
+          version:
+            field.withDefault(
+              "version",
+              None,
+              string |> map(Semver.of_string),
+            ),
           versions: field.withDefault("allVersions", [], VersionInfo.decode),
         }
       );
@@ -149,7 +160,7 @@ module Summary = {
     url: string,
     downloadUrl: string,
     iconUrl: option(string),
-    version: string,
+    version: [@opaque] option(Semver.t),
     name: string,
     namespace: string,
     displayName: option(string),
@@ -176,7 +187,12 @@ module Summary = {
         url: field.required("url", string),
         downloadUrl: whatever(downloadUrl),
         iconUrl: whatever(iconUrl),
-        version: field.required("version", string),
+        version:
+          field.withDefault(
+            "version",
+            None,
+            string |> map(Semver.of_string),
+          ),
         name: field.required("name", string),
         namespace: field.required("namespace", string),
         displayName: field.optional("displayName", string),
@@ -199,7 +215,9 @@ module Summary = {
       displayName |> Option.value(~default="(null)"),
       description |> Option.value(~default="(null)"),
       url,
-      version,
+      version
+      |> Option.map(Semver.to_string)
+      |> Option.value(~default="(null)"),
     );
   };
 };

@@ -6,11 +6,18 @@ open Oni_Core.Utility;
 type model = {
   settings: StringMap.t(Vim.Setting.value),
   recordingMacro: option(char),
+  subMode: Vim.SubMode.t,
 };
 
-let initial = {settings: StringMap.empty, recordingMacro: None};
+let initial = {
+  settings: StringMap.empty,
+  recordingMacro: None,
+  subMode: Vim.SubMode.None,
+};
 
 let recordingMacro = ({recordingMacro, _}) => recordingMacro;
+
+let subMode = ({subMode, _}) => subMode;
 
 // MSG
 
@@ -18,6 +25,7 @@ let recordingMacro = ({recordingMacro, _}) => recordingMacro;
 type msg =
   | ModeChanged({
       mode: [@opaque] Vim.Mode.t,
+      subMode: [@opaque] Vim.SubMode.t,
       effects: [@opaque] list(Vim.Effect.t),
     })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
@@ -37,9 +45,10 @@ type outmsg =
 
 let update = (msg, model: model) => {
   switch (msg) {
-  | ModeChanged({mode, effects}) =>
-    // TODO: Check submode here
-    (model, ModeDidChange({mode, effects}))
+  | ModeChanged({mode, effects, subMode}) => (
+      {...model, subMode},
+      ModeDidChange({mode, effects}),
+    )
   | Pasted(text) =>
     let eff =
       Service_Vim.Effects.paste(
@@ -100,7 +109,8 @@ module CommandLine = {
 
 module Effects = {
   let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
-    let toMsg = mode => ModeChanged({mode, effects: []});
+    let toMsg = mode =>
+      ModeChanged({subMode: Vim.SubMode.None, mode, effects: []});
     Service_Vim.Effects.applyCompletion(
       ~meetColumn,
       ~insertText,
