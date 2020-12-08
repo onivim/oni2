@@ -60,7 +60,7 @@ module Kind = {
 [@deriving show]
 type t = {
   name: string,
-  version: string,
+  version: [@opaque] option(Semver.t),
   author: string,
   displayName: option(LocalizedToken.t),
   description: option(string),
@@ -82,8 +82,9 @@ type t = {
 
 let identifier = manifest => {
   switch (manifest.publisher) {
-  | Some(publisher) => publisher ++ "." ++ manifest.name
-  | None => manifest.name
+  | Some(publisher) =>
+    String.lowercase_ascii(publisher ++ "." ++ manifest.name)
+  | None => String.lowercase_ascii(manifest.name)
   };
 };
 
@@ -104,7 +105,12 @@ module Decode = {
       obj(({field, whatever, _}) =>
         {
           name: field.required("name", string),
-          version: field.required("version", string),
+          version:
+            field.withDefault(
+              "version",
+              None,
+              string |> map(Semver.of_string),
+            ),
           author:
             whatever(
               one_of([

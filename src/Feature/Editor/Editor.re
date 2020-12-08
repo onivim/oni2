@@ -1502,14 +1502,16 @@ let getCharacterUnderMouse = editor => {
            editor,
          );
 
-       let bufferLine =
-         EditorBuffer.line(
-           EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line),
-           editor.buffer,
-         );
-       if (BufferLine.lengthInBytes(bufferLine)
-           > ByteIndex.toInt(bytePosition.byte)) {
-         byteToCharacter(bytePosition, editor);
+       let lineIdx =
+         EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line);
+       if (lineIdx < EditorBuffer.numberOfLines(editor.buffer)) {
+         let bufferLine = EditorBuffer.line(lineIdx, editor.buffer);
+         if (BufferLine.lengthInBytes(bufferLine)
+             > ByteIndex.toInt(bytePosition.byte)) {
+           byteToCharacter(bytePosition, editor);
+         } else {
+           None;
+         };
        } else {
          None;
        };

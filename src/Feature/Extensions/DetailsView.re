@@ -69,6 +69,21 @@ let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
   </View>;
 };
 
+let updateButton = (~font, ~extensionId, ~dispatch, ()) => {
+  <View style=Styles.headerButton>
+    <ItemView.ActionButton
+      font
+      title="Update"
+      extensionId
+      backgroundColor=Revery.Colors.green
+      color=Revery.Colors.white
+      onAction={() =>
+        dispatch(Model.UpdateExtensionClicked({extensionId: extensionId}))
+      }
+    />
+  </View>;
+};
+
 let setThemeButton = (~font, ~extensionId, ~dispatch, ()) => {
   <View style=Styles.headerButton>
     <ItemView.ActionButton
@@ -107,17 +122,24 @@ let header =
   let hasThemes = Model.hasThemes(~extensionId, model);
 
   let buttons =
-    (
-      switch (isInstalled, hasThemes) {
-      | (true, true) => [
-          <setThemeButton font extensionId dispatch />,
-          <uninstallButton font extensionId dispatch />,
-        ]
-      | (true, false) => [<uninstallButton font extensionId dispatch />]
-      | _ => [<installButton font extensionId dispatch />]
-      }
-    )
-    |> React.listToElement;
+    switch (isInstalled, hasThemes) {
+    | (true, true) => [
+        <setThemeButton font extensionId dispatch />,
+        <uninstallButton font extensionId dispatch />,
+      ]
+    | (true, false) => [<uninstallButton font extensionId dispatch />]
+    | _ => [<installButton font extensionId dispatch />]
+    };
+
+  // Tack on an update button, if available...
+  let buttons' =
+    if (isInstalled && Model.isUpdateAvailable(~extensionId, model)) {
+      [<updateButton font extensionId dispatch />, ...buttons];
+    } else {
+      buttons;
+    };
+
+  let buttonElements = buttons' |> React.listToElement;
 
   <View
     style=Style.[
@@ -170,7 +192,7 @@ let header =
           <Text fontFamily={font.family} fontSize=18. text=description />
         </View>
       </View>
-      <View style=Styles.headerRow> buttons </View>
+      <View style=Styles.headerRow> buttonElements </View>
     </View>
   </View>;
 };
@@ -187,7 +209,11 @@ let make =
 
     let maybeReadmeUrl = selected |> Selected.readme;
     let extensionId = selected |> Selected.identifier;
-    let version = selected |> Selected.version;
+    let version =
+      selected
+      |> Selected.version
+      |> Option.map(Semver.to_string)
+      |> Option.value(~default="0.0.0");
 
     let contents =
       switch (maybeReadmeUrl) {
