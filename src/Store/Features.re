@@ -561,7 +561,7 @@ let update =
                let lineNumber =
                  Feature_LanguageSupport.CodeLens.lineNumber(lens)
                  |> EditorCoreTypes.LineNumber.ofZeroBased;
-               let uniqueId = Feature_LanguageSupport.CodeLens.uniqueId(lens);
+               let uniqueId = Feature_LanguageSupport.CodeLens.text(lens);
                let leftMargin =
                  Feature_Editor.Editor.getLeadingWhitespacePixels(
                    lineNumber,

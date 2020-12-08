@@ -11,8 +11,6 @@ let uname () =
     let () = close_in ic in
     uname;;
 
-let derp () = "abc";;
-
 let get_os =
     match Sys.os_type with
     | "Win32" -> Windows
