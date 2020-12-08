@@ -682,6 +682,24 @@ module Contributions = {
         command: Commands.Oni.insertMode.id,
         condition: "terminalFocus && normalMode" |> WhenExpr.parse,
       },
+      // Paste - Windows:
+      {
+        key: "<C-V>",
+        command: Feature_Clipboard.Commands.paste.id,
+        condition: "terminalFocus && insertMode && isWin" |> WhenExpr.parse,
+      },
+      // Paste - Linux:
+      {
+        key: "<C-S-V>",
+        command: Feature_Clipboard.Commands.paste.id,
+        condition: "terminalFocus && insertMode && isLinux" |> WhenExpr.parse,
+      },
+      // Paste - Mac:
+      {
+        key: "<D-V>",
+        command: Feature_Clipboard.Commands.paste.id,
+        condition: "terminalFocus && insertMode && isMac" |> WhenExpr.parse,
+      },
     ];
   };
 };
