@@ -1,5 +1,3 @@
-## vNext
-
 ### Features
 
 - #2712 - Completion: Add support for additionalTextEdits (fixes #2360)
@@ -27,6 +25,7 @@
 - #2758 - Vim: Insert literal not working in command-line mode (fixes #2747)
 - #2806 - Windows: Add open-directory command to windows installer (fixes #2046)
 - #2807 - Terminal: Implement paste in insert mode (fixes #2805)
+- #2808 - Auto-Update: Fix changelog display (fixes #2787)
 
 ### Performance
 
