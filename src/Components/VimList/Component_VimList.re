@@ -948,7 +948,7 @@ module View = {
             key={model.key}
             style=Style.[flexGrow(1), flexDirection(`Column)]
             condition=LayerConditions.root(Obj.repr(model))
-            backgroundColor=Revery.Colors.black
+            backgroundColor=Feature_Theme.Colors.SideBar.background.from(theme)
             >
             <View
               style=Style.[flexGrow(1), position(`Relative)]
