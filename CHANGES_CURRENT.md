@@ -26,6 +26,7 @@
 - #2806 - Windows: Add open-directory command to windows installer (fixes #2046)
 - #2807 - Terminal: Implement paste in insert mode (fixes #2805)
 - #2808 - Auto-Update: Fix changelog display (fixes #2787)
+- #2812 - CLI: Add `+` and `-c` arguments to run Vim ex commands (fixes #1861)
 
 ### Performance
 
