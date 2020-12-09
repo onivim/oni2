@@ -35,6 +35,7 @@
 - #2736 - Switch to model-based animation for notification yOffset
 - #2407 - Migrate color transitions to model-based animation
 - #2766 - Remove initial dock aniamtion (fixes #1131)
+- #2798 - Improve rendering performance with layers (experimental)
 
 ### Documentation
 
