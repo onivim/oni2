@@ -173,6 +173,7 @@ module Manifest: {
   let decode: Oni_Core.Json.decoder(t);
 
   let identifier: t => string;
+  let publisher: t => string;
   let getDisplayName: t => string;
 };
 

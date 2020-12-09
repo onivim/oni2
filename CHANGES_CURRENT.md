@@ -6,6 +6,7 @@
 - #2765 - Vim: Hook up `:messages` and `:messages clear` ex commands
 - #2783 - Promote editor.wordWrap from experimental (fixes #1444)
 - #2774 - Extensions: Implement update check (also fixes #2748)
+- #2812 - CLI: Add `+` and `-c` arguments to run Vim ex commands (fixes #1861)
 
 ### Bug Fixes
 
@@ -26,7 +27,9 @@
 - #2806 - Windows: Add open-directory command to windows installer (fixes #2046)
 - #2807 - Terminal: Implement paste in insert mode (fixes #2805)
 - #2808 - Auto-Update: Fix changelog display (fixes #2787)
-- #2812 - CLI: Add `+` and `-c` arguments to run Vim ex commands (fixes #1861)
+- #2809 - Extensions: Warn on open-vsx public namespaces (fixes #2345)
+- #2810 - Extensions: Fix intermittent request failure getting extension details
+- #2811 - Extensions: Show logo image for remote extensions
 
 ### Performance
 
