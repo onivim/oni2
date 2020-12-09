@@ -803,7 +803,8 @@ let getInlineElements = (~line, {inlineElements, _}) => {
   InlineElements.allElementsForLine(~line, inlineElements);
 };
 
-let setInlineElementSize = (~key, ~line, ~uniqueId, ~height, editor) => {
+let setInlineElementSize =
+    (~allowAnimation=true, ~key, ~line, ~uniqueId, ~height, editor) => {
   let topBuffer = getTopVisibleBufferLine(editor);
   let bottomBuffer = getBottomVisibleBufferLine(editor);
   editor
@@ -813,7 +814,10 @@ let setInlineElementSize = (~key, ~line, ~uniqueId, ~height, editor) => {
          inlineElements:
            InlineElements.setSize(
              ~animated=
-               editor.isAnimated && line >= topBuffer && line <= bottomBuffer,
+               allowAnimation
+               && editor.isAnimated
+               && line >= topBuffer
+               && line <= bottomBuffer,
              ~key,
              ~line,
              ~uniqueId,

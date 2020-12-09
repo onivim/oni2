@@ -42,6 +42,7 @@ let setInlineElements: (~key: string, ~elements: list(inlineElement), t) => t;
 
 let setInlineElementSize:
   (
+    ~allowAnimation: bool=?,
     ~key: string,
     ~line: EditorCoreTypes.LineNumber.t,
     ~uniqueId: string,
