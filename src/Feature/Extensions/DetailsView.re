@@ -34,6 +34,13 @@ module Styles = {
     marginLeft(8),
   ];
 
+  let warningRow = [
+    flexGrow(0),
+    flexDirection(`Row),
+    alignItems(`Center),
+    justifyContent(`FlexStart),
+  ];
+
   let headerButton = [padding(8)];
 
   let headerTextContainer = [marginHorizontal(8), marginVertical(4)];
@@ -197,6 +204,73 @@ let header =
   </View>;
 };
 
+let warning = (~displayName, ~namespace, ~font: UiFont.t, ()) => {
+  let bg = Revery.Color.hex("#FFDD57");
+  let foregroundColor = Revery.Color.hex("#333");
+  <View style=Styles.warningRow>
+    <View
+      style=Style.[
+        backgroundColor(bg),
+        flexGrow(1),
+        padding(8),
+        flexDirection(`Row),
+      ]>
+      <View
+        style=Style.[
+          flexShrink(0),
+          flexGrow(0),
+          justifyContent(`Center),
+          alignItems(`Center),
+          marginHorizontal(8),
+        ]>
+        <Codicon
+          icon=Codicon.warning
+          fontSize=16.
+          color={Revery.Color.hex("#333")}
+        />
+      </View>
+      <View style=Style.[flexGrow(1), flexShrink(1)]>
+        <Text
+          fontFamily={font.family}
+          fontSize=12.
+          fontWeight=Revery.Font.Weight.Bold
+          style=[Style.color(foregroundColor)]
+          text={Printf.sprintf(
+            "The namespace %s is public, which means anyone can publish a new version of the %s extension. Please verify you trust the source before installing.",
+            namespace,
+            displayName,
+          )}
+        />
+      </View>
+      <View
+        style=Style.[
+          flexShrink(0),
+          flexGrow(0),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ]>
+        <Revery.UI.Components.Link
+          fontFamily={font.family}
+          fontSize=12.
+          fontWeight=Revery.Font.Weight.Bold
+          inactiveStyle=Style.[
+            marginHorizontal(8),
+            color(foregroundColor),
+            opacity(0.9),
+          ]
+          activeStyle=Style.[
+            marginHorizontal(8),
+            color(foregroundColor),
+            opacity(1.0),
+          ]
+          text="More info"
+          href="https://github.com/eclipse/openvsx/wiki/Namespace-Access#why-is-a-warning-shown"
+        />
+      </View>
+    </View>
+  </View>;
+};
+
 let make =
     (~model: Model.model, ~theme, ~tokenTheme, ~font: UiFont.t, ~dispatch, ()) => {
   switch (model.selected) {
@@ -204,6 +278,7 @@ let make =
   | Some(selected) =>
     let maybeLogo = selected |> Selected.logo;
     let displayName = selected |> Selected.displayName;
+    let namespace = selected |> Selected.namespace;
     let description =
       selected |> Selected.description |> Option.value(~default="");
 
@@ -214,6 +289,11 @@ let make =
       |> Selected.version
       |> Option.map(Semver.to_string)
       |> Option.value(~default="0.0.0");
+
+    let isPublicNamespace = selected |> Selected.isPublicNamespace;
+
+    let warningElement =
+      isPublicNamespace ? <warning displayName namespace font /> : React.empty;
 
     let contents =
       switch (maybeReadmeUrl) {
@@ -255,6 +335,7 @@ let make =
         dispatch
         model
       />
+      warningElement
       contents
     </View>;
   };

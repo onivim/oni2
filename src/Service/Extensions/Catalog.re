@@ -75,6 +75,7 @@ module Details = {
     //      licenseUrl: string,
     name: string,
     namespace: string,
+    isPublicNamespace: bool,
     //      downloadCount: int,
     displayName: option(string),
     description: option(string),
@@ -135,6 +136,12 @@ module Details = {
           licenseName: field.optional("license", string),
           displayName: field.optional("displayName", string),
           description: field.optional("description", string),
+          isPublicNamespace:
+            field.withDefault(
+              "namespaceAccess",
+              true,
+              string |> map(str => {String.lowercase_ascii(str) == "public"}),
+            ),
           name: field.required("name", string),
           namespace: field.required("namespace", string),
           version:
