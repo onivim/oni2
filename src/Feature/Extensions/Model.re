@@ -147,6 +147,16 @@ module Selected = {
     | Local(scanResult) => scanResult.manifest |> Manifest.identifier
     | Remote(details) => details.namespace ++ "." ++ details.name;
 
+  let namespace =
+    fun
+    | Local(scanResult) => scanResult.manifest |> Manifest.publisher
+    | Remote(details) => details.namespace;
+
+  let isPublicNamespace =
+    fun
+    | Local(_) => false
+    | Remote({isPublicNamespace, _}) => isPublicNamespace;
+
   let logo =
     fun
     | Local(scanResult) => scanResult.manifest.icon

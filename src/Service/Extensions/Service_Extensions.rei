@@ -33,6 +33,7 @@ module Catalog: {
       //      licenseUrl: string,
       name: string,
       namespace: string,
+      isPublicNamespace: bool,
       //      downloadCount: int,
       displayName: option(string),
       description: option(string),
