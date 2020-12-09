@@ -6,6 +6,7 @@
 - #2765 - Vim: Hook up `:messages` and `:messages clear` ex commands
 - #2783 - Promote editor.wordWrap from experimental (fixes #1444)
 - #2774 - Extensions: Implement update check (also fixes #2748)
+- #2801 - Extensions: CodeLens - Handle multiple codelens on same line
 
 ### Bug Fixes
 

@@ -107,8 +107,8 @@ let update = (editor, msg) => {
       editor |> Editor.mouseUp(~time, ~pixelX, ~pixelY),
       Nothing,
     )
-  | InlineElementSizeChanged({key, uniqueId, height}) => (
-      Editor.setInlineElementSize(~key, ~uniqueId, ~height, editor),
+  | InlineElementSizeChanged({key, line, uniqueId, height}) => (
+      Editor.setInlineElementSize(~key, ~line, ~uniqueId, ~height, editor),
       Nothing,
     )
   | Internal(msg) => (Editor.update(msg, editor), Nothing)
