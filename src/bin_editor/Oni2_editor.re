@@ -474,6 +474,14 @@ switch (eff) {
       v => dispatch(Model.Actions.OpenFileByPath(v, None, None)),
       cliOptions.filesToOpen,
     );
+
+    List.iter(
+      v => {
+        dispatch(Model.Actions.VimExecuteCommand(v));
+        runEffects();
+      },
+      cliOptions.vimExCommands,
+    );
   };
 
   /* Let's get this party started! */
