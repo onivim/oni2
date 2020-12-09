@@ -1,5 +1,6 @@
 open Oni_Core;
 open EditorCoreTypes;
+open Utility;
 
 module Animation = {
   open Revery;
@@ -77,18 +78,13 @@ module Cache = {
   };
 
   let ofList = (~sortedElements: list(element)) => {
-    let revSortedElements = sortedElements |> List.rev;
-
     let arraySize =
-      revSortedElements
-      |> (
-        l =>
-          List.nth_opt(l, 0)
-          |> Option.map(element =>
-               element.line |> EditorCoreTypes.LineNumber.toOneBased
-             )
-          |> Option.value(~default=0)
-      );
+      sortedElements
+      |> ListEx.last
+      |> Option.map(element =>
+           element.line |> EditorCoreTypes.LineNumber.toOneBased
+         )
+      |> Option.value(~default=0)
 
     let cache =
       Array.make(
