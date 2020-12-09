@@ -45,6 +45,7 @@ describe("CLI Integration Tests", ({describe, _}) => {
       )
     })
   });
+
   describe("install / uninstall extensions", ({test, _}) => {
     test("install / uninstall extension from file system", _ => {
       TestRunner.(
@@ -78,6 +79,29 @@ describe("CLI Integration Tests", ({describe, _}) => {
             |> validateExitStatus(WEXITED(0))
             |> finish;
           ();
+        }
+      )
+    })
+  });
+
+  describe("ex commands", ({test, _}) => {
+    test("run ex commands with '+'", ({expect, _}) => {
+      TestRunner.(
+        {
+          let filePath =
+            Rench.Path.join(
+              Sys.getcwd(),
+              "test-" ++ string_of_int(Luv.Pid.getpid()),
+            );
+
+          let () =
+            startEditorWithArgs(["+new " ++ filePath, "+norm! oabc", "+xa!"])
+            |> validateExitStatus(WEXITED(0))
+            |> finish;
+
+          let lines = Oni_Core.Utility.File.readAllLines(filePath);
+
+          expect.equal(lines, ["", "abc"]);
         }
       )
     })
