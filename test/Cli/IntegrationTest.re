@@ -95,7 +95,7 @@ describe("CLI Integration Tests", ({describe, _}) => {
             );
 
           let () =
-            startEditorWithArgs(["+new " ++ filePath, "+norm! oabc", "+xa!"])
+            startEditorWithArgs(["-f", "+new " ++ filePath, "+norm! oabc", "+xa!"])
             |> validateExitStatus(WEXITED(0))
             |> finish;
 
