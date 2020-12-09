@@ -45,7 +45,6 @@ type t = {
   filesExclude: list(string),
   vsync: Revery.Vsync.t,
   vimUseSystemClipboard,
-  uiShadows: bool,
   uiZoom: float,
   zenModeHideTabs: bool,
   zenModeSingleFile: bool,
@@ -72,7 +71,6 @@ let default = {
   workbenchIconTheme: "vs-seti",
   workbenchTreeIndent: 2,
   filesExclude: ["_esy", "node_modules", ".git"],
-  uiShadows: true,
   uiZoom: 1.0,
   vimUseSystemClipboard: {
     yank: true,

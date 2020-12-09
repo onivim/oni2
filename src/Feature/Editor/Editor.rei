@@ -41,9 +41,20 @@ let makeInlineElement:
 let setInlineElements: (~key: string, ~elements: list(inlineElement), t) => t;
 
 let setInlineElementSize:
-  (~key: string, ~uniqueId: string, ~height: int, t) => t;
+  (
+    ~allowAnimation: bool=?,
+    ~key: string,
+    ~line: EditorCoreTypes.LineNumber.t,
+    ~uniqueId: string,
+    ~height: int,
+    t
+  ) =>
+  t;
 
-let getInlineElements: t => list(InlineElements.element);
+let getInlineElements:
+  (~line: EditorCoreTypes.LineNumber.t, t) => list(InlineElements.element);
+
+let linesWithInlineElements: t => list(EditorCoreTypes.LineNumber.t);
 
 let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;

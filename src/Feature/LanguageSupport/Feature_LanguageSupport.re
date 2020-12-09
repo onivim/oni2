@@ -545,6 +545,8 @@ module CodeLens = {
   let lineNumber = codeLens => ShadowedCodeLens.lineNumber(codeLens);
   let uniqueId = codeLens => ShadowedCodeLens.uniqueId(codeLens);
 
+  let text = codeLens => ShadowedCodeLens.text(codeLens);
+
   module View = ShadowedCodeLens.View;
 };
 

@@ -37,6 +37,7 @@ module CodeLens: {
   let get: (~bufferId: int, model) => list(t);
 
   let lineNumber: t => int;
+  let text: t => string;
   let uniqueId: t => string;
 
   module View: {
