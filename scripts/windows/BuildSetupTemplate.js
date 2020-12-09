@@ -51,6 +51,15 @@ Root: HKCU; Subkey: "Environment"; ValueType: expandsz; ValueName: "Path"; Value
 Root: HKCU; Subkey: "SOFTWARE\\Classes\\*\\shell\\${prodName}"; ValueType: expandsz; ValueName: ""; ValueData: "Open with ${prodName}"; Tasks: addToRightClickMenu; Flags: uninsdeletekey
 Root: HKCU; Subkey: "SOFTWARE\\Classes\\*\\shell\\${prodName}"; ValueType: expandsz; ValueName: "Icon"; ValueData: "${appIcon}"; Tasks: addToRightClickMenu
 Root: HKCU; Subkey: "SOFTWARE\\Classes\\*\\shell\\${prodName}\\command"; ValueType: expandsz; ValueName: ""; ValueData: """{app}\\${executableName}"" ""%1"""; Tasks: addToRightClickMenu
+Root: HKCU; Subkey: "SOFTWARE\\Classes\\directory\\shell\\${prodName}"; ValueType: expandsz; ValueName: ""; ValueData: "Open with ${prodName}"; Tasks: addToRightClickMenu; Flags: uninsdeletekey
+Root: HKCU; Subkey: "SOFTWARE\\Classes\\directory\\shell\\${prodName}"; ValueType: expandsz; ValueName: "Icon"; ValueData: "${appIcon}"; Tasks: addToRightClickMenu
+Root: HKCU; Subkey: "SOFTWARE\\Classes\\directory\\shell\\${prodName}\\command"; ValueType: expandsz; ValueName: ""; ValueData: """{app}\\${executableName}"" ""%V"""; Tasks: addToRightClickMenu
+Root: HKCU; Subkey: "SOFTWARE\\Classes\\directory\\background\\shell\\${prodName}"; ValueType: expandsz; ValueName: ""; ValueData: "Open with ${prodName}"; Tasks: addToRightClickMenu; Flags: uninsdeletekey
+Root: HKCU; Subkey: "SOFTWARE\\Classes\\directory\\background\\shell\\${prodName}"; ValueType: expandsz; ValueName: "Icon"; ValueData: "${appIcon}"; Tasks: addToRightClickMenu
+Root: HKCU; Subkey: "SOFTWARE\\Classes\\directory\\background\\shell\\${prodName}\\command"; ValueType: expandsz; ValueName: ""; ValueData: """{app}\\${executableName}"" ""%V"""; Tasks: addToRightClickMenu
+Root: HKCU; Subkey: "SOFTWARE\\Classes\\Drive\\shell\\${prodName}"; ValueType: expandsz; ValueName: ""; ValueData: "Open with ${prodName}"; Tasks: addToRightClickMenu; Flags: uninsdeletekey
+Root: HKCU; Subkey: "SOFTWARE\\Classes\\Drive\\shell\\${prodName}"; ValueType: expandsz; ValueName: "Icon"; ValueData: "${appIcon}"; Tasks: addToRightClickMenu
+Root: HKCU; Subkey: "SOFTWARE\\Classes\\Drive\\shell\\${prodName}\\command"; ValueType: expandsz; ValueName: ""; ValueData: """{app}\\${executableName}"" ""%V"""; Tasks: addToRightClickMenu
 `
 
 function getFileRegKey(ext, desc) {

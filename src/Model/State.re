@@ -67,7 +67,11 @@ let defaultKeyBindings =
           WhenExpr.(
             And([
               Not(Defined("isMac")),
-              parse("insertMode || textInputFocus || commandLine"),
+              Or([
+                And([Defined("editorTextFocus"), Defined("insertMode")]),
+                Defined("textInputFocus"),
+                Defined("commandLineFocus"),
+              ]),
             ])
           ),
       },
