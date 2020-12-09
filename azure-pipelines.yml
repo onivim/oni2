@@ -46,6 +46,8 @@ jobs:
 
   steps:
   - template: .ci/use-node.yml
+  - script: brew cleanup
+    continueOnError: true
   - script: brew update-reset
   - script: brew install ragel
   - template: .ci/restore-build-cache.yml
@@ -133,6 +135,8 @@ jobs:
 
   steps:
   - template: .ci/use-node.yml
+  - script: brew cleanup
+    continueOnError: true
   - script: brew update-reset
   - script: brew install ragel
   - template: .ci/restore-build-cache.yml

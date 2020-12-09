@@ -111,6 +111,7 @@ let run = (~name="Anonymous", ~args=[], ~setup: Setup.t, script: string) => {
             hasClosedStdout := true;
             Log.info("Got EOF on stdout");
             Luv.Handle.close(stdoutPipe, ignore);
+            tryToFinish();
           }
         | Error(msg) => Log.error(Luv.Error.strerror(msg))
         | Ok(buffer) => buffers := [buffer, ...buffers^],

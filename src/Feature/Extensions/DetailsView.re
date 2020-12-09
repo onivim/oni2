@@ -34,6 +34,13 @@ module Styles = {
     marginLeft(8),
   ];
 
+  let warningRow = [
+    flexGrow(0),
+    flexDirection(`Row),
+    alignItems(`Center),
+    justifyContent(`FlexStart),
+  ];
+
   let headerButton = [padding(8)];
 
   let headerTextContainer = [marginHorizontal(8), marginVertical(4)];
@@ -69,6 +76,21 @@ let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
   </View>;
 };
 
+let updateButton = (~font, ~extensionId, ~dispatch, ()) => {
+  <View style=Styles.headerButton>
+    <ItemView.ActionButton
+      font
+      title="Update"
+      extensionId
+      backgroundColor=Revery.Colors.green
+      color=Revery.Colors.white
+      onAction={() =>
+        dispatch(Model.UpdateExtensionClicked({extensionId: extensionId}))
+      }
+    />
+  </View>;
+};
+
 let setThemeButton = (~font, ~extensionId, ~dispatch, ()) => {
   <View style=Styles.headerButton>
     <ItemView.ActionButton
@@ -98,7 +120,7 @@ let header =
     ) => {
   let logo =
     switch (maybeLogo) {
-    | Some(src) => <Image width=96 height=96 src={`File(src)} />
+    | Some(src) => <RemoteImage width=96 height=96 url=src />
     // TODO: Replace with real logo
     | None => <Container color=Revery.Colors.gray height=96 width=96 />
     };
@@ -107,17 +129,24 @@ let header =
   let hasThemes = Model.hasThemes(~extensionId, model);
 
   let buttons =
-    (
-      switch (isInstalled, hasThemes) {
-      | (true, true) => [
-          <setThemeButton font extensionId dispatch />,
-          <uninstallButton font extensionId dispatch />,
-        ]
-      | (true, false) => [<uninstallButton font extensionId dispatch />]
-      | _ => [<installButton font extensionId dispatch />]
-      }
-    )
-    |> React.listToElement;
+    switch (isInstalled, hasThemes) {
+    | (true, true) => [
+        <setThemeButton font extensionId dispatch />,
+        <uninstallButton font extensionId dispatch />,
+      ]
+    | (true, false) => [<uninstallButton font extensionId dispatch />]
+    | _ => [<installButton font extensionId dispatch />]
+    };
+
+  // Tack on an update button, if available...
+  let buttons' =
+    if (isInstalled && Model.isUpdateAvailable(~extensionId, model)) {
+      [<updateButton font extensionId dispatch />, ...buttons];
+    } else {
+      buttons;
+    };
+
+  let buttonElements = buttons' |> React.listToElement;
 
   <View
     style=Style.[
@@ -133,6 +162,7 @@ let header =
         justifyContent(`Center),
         alignItems(`Center),
         margin(8),
+        paddingLeft(12),
       ]>
       logo
     </View>
@@ -156,21 +186,88 @@ let header =
           ]>
           <Text
             fontFamily={font.family}
-            fontSize=18.
+            fontSize=16.
             fontWeight=Revery.Font.Weight.Bold
             text=extensionId
           />
         </View>
         <View style=Styles.headerTextContainer>
-          <Text fontFamily={font.family} fontSize=18. text=version />
+          <Text fontFamily={font.family} fontSize=14. text=version />
         </View>
       </View>
       <View style=Styles.headerRow>
         <View style=Styles.headerTextContainer>
-          <Text fontFamily={font.family} fontSize=18. text=description />
+          <Text fontFamily={font.family} fontSize=14. text=description />
         </View>
       </View>
-      <View style=Styles.headerRow> buttons </View>
+      <View style=Styles.headerRow> buttonElements </View>
+    </View>
+  </View>;
+};
+
+let warning = (~displayName, ~namespace, ~font: UiFont.t, ()) => {
+  let bg = Revery.Color.hex("#FFDD57");
+  let foregroundColor = Revery.Color.hex("#333");
+  <View style=Styles.warningRow>
+    <View
+      style=Style.[
+        backgroundColor(bg),
+        flexGrow(1),
+        padding(8),
+        flexDirection(`Row),
+      ]>
+      <View
+        style=Style.[
+          flexShrink(0),
+          flexGrow(0),
+          justifyContent(`Center),
+          alignItems(`Center),
+          marginHorizontal(8),
+        ]>
+        <Codicon
+          icon=Codicon.warning
+          fontSize=16.
+          color={Revery.Color.hex("#333")}
+        />
+      </View>
+      <View style=Style.[flexGrow(1), flexShrink(1)]>
+        <Text
+          fontFamily={font.family}
+          fontSize=12.
+          fontWeight=Revery.Font.Weight.Bold
+          style=[Style.color(foregroundColor)]
+          text={Printf.sprintf(
+            "The namespace %s is public, which means anyone can publish a new version of the %s extension. Please verify you trust the source before installing.",
+            namespace,
+            displayName,
+          )}
+        />
+      </View>
+      <View
+        style=Style.[
+          flexShrink(0),
+          flexGrow(0),
+          justifyContent(`Center),
+          alignItems(`Center),
+        ]>
+        <Revery.UI.Components.Link
+          fontFamily={font.family}
+          fontSize=12.
+          fontWeight=Revery.Font.Weight.Bold
+          inactiveStyle=Style.[
+            marginHorizontal(8),
+            color(foregroundColor),
+            opacity(0.9),
+          ]
+          activeStyle=Style.[
+            marginHorizontal(8),
+            color(foregroundColor),
+            opacity(1.0),
+          ]
+          text="More info"
+          href="https://github.com/eclipse/openvsx/wiki/Namespace-Access#why-is-a-warning-shown"
+        />
+      </View>
     </View>
   </View>;
 };
@@ -182,12 +279,22 @@ let make =
   | Some(selected) =>
     let maybeLogo = selected |> Selected.logo;
     let displayName = selected |> Selected.displayName;
+    let namespace = selected |> Selected.namespace;
     let description =
       selected |> Selected.description |> Option.value(~default="");
 
     let maybeReadmeUrl = selected |> Selected.readme;
     let extensionId = selected |> Selected.identifier;
-    let version = selected |> Selected.version;
+    let version =
+      selected
+      |> Selected.version
+      |> Option.map(Semver.to_string)
+      |> Option.value(~default="0.0.0");
+
+    let isPublicNamespace = selected |> Selected.isPublicNamespace;
+
+    let warningElement =
+      isPublicNamespace ? <warning displayName namespace font /> : React.empty;
 
     let contents =
       switch (maybeReadmeUrl) {
@@ -229,6 +336,7 @@ let make =
         dispatch
         model
       />
+      warningElement
       contents
     </View>;
   };

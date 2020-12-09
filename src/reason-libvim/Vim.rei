@@ -123,6 +123,12 @@ module Mode: {
   let cursors: t => list(BytePosition.t);
 };
 
+module SubMode: {
+  type t =
+    | None
+    | InsertLiteral;
+};
+
 module Functions: {
   module GetChar: {
     type mode =
@@ -160,6 +166,7 @@ module Context: {
     leftColumn: int,
     topLine: int,
     mode: Mode.t,
+    subMode: SubMode.t,
     tabSize: int,
     insertSpaces: bool,
     functionGetChar: Functions.GetChar.t,

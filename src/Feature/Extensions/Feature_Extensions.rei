@@ -42,6 +42,7 @@ let themesByName: (~filter: string, model) => list(string);
 let isBusy: model => bool;
 let isSearchInProgress: model => bool;
 
+let isInstalled: (~extensionId: string, model) => bool;
 let isInstalling: (~extensionId: string, model) => bool;
 let isUninstalling: (~extensionId: string, model) => bool;
 
@@ -53,7 +54,8 @@ let all: model => list(Scanner.ScanResult.t);
 let activatedIds: model => list(string);
 
 let menus: model => list(Menu.Schema.definition);
-let sub: (~setup: Oni_Core.Setup.t, model) => Isolinear.Sub.t(msg);
+let sub:
+  (~isVisible: bool, ~setup: Oni_Core.Setup.t, model) => Isolinear.Sub.t(msg);
 
 module Persistence: {
   type t = Yojson.Safe.t;

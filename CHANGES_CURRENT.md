@@ -1,5 +1,3 @@
-## vNext
-
 ### Features
 
 - #2712 - Completion: Add support for additionalTextEdits (fixes #2360)
@@ -7,6 +5,7 @@
 - #2763 - Explorer: Open Folder button
 - #2765 - Vim: Hook up `:messages` and `:messages clear` ex commands
 - #2783 - Promote editor.wordWrap from experimental (fixes #1444)
+- #2774 - Extensions: Implement update check (also fixes #2748)
 - #2801 - Extensions: CodeLens - Handle multiple codelens on same line
 
 ### Bug Fixes
@@ -23,6 +22,14 @@
 - #2786 - Extensions: Fix download from open-vsx
 - #2785 - Windows: Fix intermittent crash in `Luv.Process.spawn`
 - #2792 - Vim: Handle count for insert mode commands (`i`/`a`, etc) (fixes #809, #2190)
+- #2802 - Editor: Fix crash when moving mouse in empty buffer (fixes #2800)
+- #2758 - Vim: Insert literal not working in command-line mode (fixes #2747)
+- #2806 - Windows: Add open-directory command to windows installer (fixes #2046)
+- #2807 - Terminal: Implement paste in insert mode (fixes #2805)
+- #2808 - Auto-Update: Fix changelog display (fixes #2787)
+- #2809 - Extensions: Warn on open-vsx public namespaces (fixes #2345)
+- #2810 - Extensions: Fix intermittent request failure getting extension details
+- #2811 - Extensions: Show logo image for remote extensions
 
 ### Performance
 

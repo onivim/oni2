@@ -964,6 +964,26 @@ CAMLprim value libvim_vimGetMode(value unit) {
   return Val_int(val);
 }
 
+CAMLprim value libvim_vimGetSubMode(value unit) {
+  CAMLparam0();
+  subMode_T submode = vimGetSubMode();
+
+  int val = 0;
+  switch (submode) {
+    case SM_NONE:
+      val = 0;
+      break;
+    case SM_INSERT_LITERAL:
+      val = 1;
+      break;
+    default:
+      val = 0;
+      break;
+  }
+
+  CAMLreturn(Val_int(val));
+}
+
 CAMLprim value libvim_vimBufferGetId(value v) {
   buf_T *buf = (buf_T *)v;
   int id = vimBufferGetId(buf);

@@ -60,6 +60,10 @@ type msg =
       id: int,
       key: string,
     })
+  | Pasted({
+      id: int,
+      text: string,
+    })
   | Service(Service_Terminal.msg);
 
 type outmsg =
@@ -222,6 +226,12 @@ let update = (~config: Config.resolver, model: t, msg) => {
   | KeyPressed({id, key}) =>
     let inputEffect =
       Service_Terminal.Effect.input(~id, key)
+      |> Isolinear.Effect.map(msg => Service(msg));
+    (model, Effect(inputEffect));
+
+  | Pasted({id, text}) =>
+    let inputEffect =
+      Service_Terminal.Effect.paste(~id, text)
       |> Isolinear.Effect.map(msg => Service(msg));
     (model, Effect(inputEffect));
 
@@ -671,6 +681,24 @@ module Contributions = {
         key: "Shift+i",
         command: Commands.Oni.insertMode.id,
         condition: "terminalFocus && normalMode" |> WhenExpr.parse,
+      },
+      // Paste - Windows:
+      {
+        key: "<C-V>",
+        command: Feature_Clipboard.Commands.paste.id,
+        condition: "terminalFocus && insertMode && isWin" |> WhenExpr.parse,
+      },
+      // Paste - Linux:
+      {
+        key: "<C-S-V>",
+        command: Feature_Clipboard.Commands.paste.id,
+        condition: "terminalFocus && insertMode && isLinux" |> WhenExpr.parse,
+      },
+      // Paste - Mac:
+      {
+        key: "<D-V>",
+        command: Feature_Clipboard.Commands.paste.id,
+        condition: "terminalFocus && insertMode && isMac" |> WhenExpr.parse,
       },
     ];
   };
