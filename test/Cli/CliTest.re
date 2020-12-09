@@ -69,4 +69,38 @@ describe("CLI", ({describe, test, _}) => {
       expect.equal(options.logLevel, None);
     });
   });
+
+  describe("vim ex commands", ({test, _}) => {
+    test("-c should add ex command", ({expect, _}) => {
+      let (options, _eff) =
+        Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "-c", "term"|]);
+
+      expect.equal(options.vimExCommands, ["term"]);
+    });
+    test("multiple -c commands should be handled, in order", ({expect, _}) => {
+      let (options, _eff) =
+        Oni_CLI.parse(
+          ~getenv=noenv,
+          [|"Oni2_editor", "-c", "term", "-c", "xa!"|],
+        );
+
+      expect.equal(options.vimExCommands, ["term", "xa!"]);
+    });
+    test("+ anonymous arg should add ex command", ({expect, _}) => {
+      let (options, _eff) =
+        Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "+term"|]);
+
+      expect.equal(options.vimExCommands, ["term"]);
+      expect.equal(options.filesToOpen, []);
+      expect.equal(options.folder, None);
+    });
+    test("multiple + anonymous arg should add ex commands", ({expect, _}) => {
+      let (options, _eff) =
+        Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "+term", "+xa!"|]);
+
+      expect.equal(options.vimExCommands, ["term", "xa!"]);
+      expect.equal(options.filesToOpen, []);
+      expect.equal(options.folder, None);
+    });
+  });
 });
