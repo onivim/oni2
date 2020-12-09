@@ -155,6 +155,7 @@ let header =
         justifyContent(`Center),
         alignItems(`Center),
         margin(8),
+        paddingLeft(12),
       ]>
       logo
     </View>
@@ -178,18 +179,18 @@ let header =
           ]>
           <Text
             fontFamily={font.family}
-            fontSize=18.
+            fontSize=16.
             fontWeight=Revery.Font.Weight.Bold
             text=extensionId
           />
         </View>
         <View style=Styles.headerTextContainer>
-          <Text fontFamily={font.family} fontSize=18. text=version />
+          <Text fontFamily={font.family} fontSize=14. text=version />
         </View>
       </View>
       <View style=Styles.headerRow>
         <View style=Styles.headerTextContainer>
-          <Text fontFamily={font.family} fontSize=18. text=description />
+          <Text fontFamily={font.family} fontSize=14. text=description />
         </View>
       </View>
       <View style=Styles.headerRow> buttonElements </View>
