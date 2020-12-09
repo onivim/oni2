@@ -78,7 +78,7 @@ module Make =
                 url,
               );
             } else {
-              //localDispatch(Reset);
+              localDispatch(Reset);
               Log.infof(m => m("Mounted or src changed: %s", url));
 
               url
@@ -101,11 +101,8 @@ module Make =
                })
             |> LwtEx.flatMap(filePath => Config.mapper(~filePath));
 
-          let active = ref(true);
           Lwt.on_success(promise, res => {
-            if (active^) {
-              localDispatch(DownloadSuccess(res))
-            }
+            localDispatch(DownloadSuccess(res))
           });
 
           Lwt.on_failure(
@@ -113,12 +110,10 @@ module Make =
             exn => {
               let errMsg = exn |> Printexc.to_string;
               Log.errorf(m => m("Download failed %s with %s", url, errMsg));
-              if (active^) {
-                localDispatch(DownloadFailed(errMsg));
-              }
+              localDispatch(DownloadFailed(errMsg));
             },
           );
-          Some(() => active := false);
+          None;
         },
       );
 

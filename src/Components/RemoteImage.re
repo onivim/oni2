@@ -17,9 +17,7 @@ let make = (~width: int, ~height: int, ~url: string, ()) => {
              <Image width height src={`File(filePath)} />
            </Container>
          | FilePathDownloader.DownloadFailed({errorMsg}) =>
-           <Container width height>
-             <Text text=errorMsg />
-           </Container>
+           <Container width height> <Text text=errorMsg /> </Container>
        }
   </FilePathDownloader>;
 };
