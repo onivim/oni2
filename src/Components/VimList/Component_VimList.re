@@ -5,6 +5,7 @@ open Utility;
 
 [@deriving show]
 type model('item) = {
+  key: [@opaque] Brisk_reconciler.Key.t,
   scrollY: float,
   rowHeight: int,
   items: array('item),
@@ -21,6 +22,7 @@ type model('item) = {
 };
 
 let create = (~rowHeight) => {
+  key: Brisk_reconciler.Key.create(),
   scrollY: 0.,
   rowHeight,
   items: [||],
@@ -669,6 +671,12 @@ module View = {
       Spring.Options.create(~stiffness=310., ~damping=30., ());
   };
 
+  module LayerConditions = {
+    let root = Revery.UI.Layer.Condition.make((previous: Obj.t, newObj: Obj.t) => {
+      previous != newObj
+    });
+  }
+
   module Styles = {
     open Style;
 
@@ -936,7 +944,12 @@ module View = {
             ? <Oni_Components.ScrollShadow.Bottom /> : React.empty;
 
         (
-          <View style=Style.[flexGrow(1), flexDirection(`Column)]>
+          <Layer 
+            key={model.key}
+            style=Style.[flexGrow(1), flexDirection(`Column)]
+            condition=LayerConditions.root(Obj.repr(model))
+            backgroundColor=Revery.Colors.black
+            >
             <View
               style=Style.[flexGrow(1), position(`Relative)]
               onDimensionsChanged={({height, width}) => {
@@ -973,7 +986,7 @@ module View = {
               dispatch={msg => dispatch(SearchContext(msg))}
               theme
             />
-          </View>,
+          </Layer>,
           hooks,
         );
       });
