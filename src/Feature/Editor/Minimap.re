@@ -272,7 +272,9 @@ let%component make =
        })
     |> Option.value(~default=React.empty);
 
-  <Layer
+  <Oni_Components.OniLayer
+    key={Editor.key(editor)}
+    config
     backgroundColor
     condition={layerCondition(editor)}
     style={Styles.container(backgroundColor)}
@@ -515,5 +517,5 @@ let%component make =
       }}
     />
     yankHighlightElement
-  </Layer>;
+  </Oni_Components.OniLayer>;
 };

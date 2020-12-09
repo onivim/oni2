@@ -43,6 +43,7 @@ let sub:
 module View: {
   let make:
     (
+      ~config: Oni_Core.Config.resolver,
       ~isFocused: bool,
       ~iconTheme: IconTheme.t,
       ~languageInfo: Exthost.LanguageInfo.t,

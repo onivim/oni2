@@ -452,6 +452,7 @@ module View = {
     </View>;
   let make =
       (
+        ~config,
         ~isActive,
         ~font,
         ~focusedIndex,
@@ -479,6 +480,7 @@ module View = {
     };
 
     <Component_VimList.View
+      config
       isActive
       font
       focusedIndex

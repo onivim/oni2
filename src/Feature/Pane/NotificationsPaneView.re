@@ -31,6 +31,7 @@ module Styles = {
 
 let make =
     (
+      ~config,
       ~isFocused: bool,
       ~notificationsList:
          Component_VimList.model(Feature_Notification.notification),
@@ -52,6 +53,7 @@ let make =
       </View>;
     } else {
       <Component_VimList.View
+        config
         font=uiFont
         isActive=isFocused
         focusedIndex=None

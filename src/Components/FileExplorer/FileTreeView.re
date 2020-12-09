@@ -72,7 +72,7 @@ let nodeView =
   let tooltipText = {
     let path = node.path;
     switch (decoration) {
-    | Some(decoration: Feature_Decorations.Decoration.t) =>
+    | Some((decoration: Feature_Decorations.Decoration.t)) =>
       path ++ " • " ++ decoration.tooltip
     | None => path
     };
@@ -93,6 +93,7 @@ let getFileIcon = Model.getFileIcon;
 
 let make =
     (
+      ~config,
       ~rootName,
       ~isFocused,
       ~iconTheme,
@@ -110,6 +111,7 @@ let make =
       (),
     ) => {
   <Component_Accordion.VimTree
+    config
     title=rootName
     showCount=false
     isFocused

@@ -135,6 +135,7 @@ module Common = {
 module VimList = {
   let make =
       (
+        ~config,
         ~showCount=true,
         ~title,
         ~expanded,
@@ -150,6 +151,7 @@ module VimList = {
     let count = Component_VimList.count(model);
     let contents =
       <Component_VimList.View
+        config
         font=uiFont
         isActive=isFocused
         focusedIndex=None
@@ -176,6 +178,7 @@ module VimList = {
 module VimTree = {
   let make =
       (
+        ~config,
         ~showCount=true,
         ~focusedIndex=None,
         ~title,
@@ -194,6 +197,7 @@ module VimTree = {
     let contents =
       count > 0
         ? <Component_VimTree.View
+            config
             isActive=isFocused
             font=uiFont
             focusedIndex

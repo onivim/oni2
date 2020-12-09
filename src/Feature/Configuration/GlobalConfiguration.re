@@ -40,3 +40,5 @@ let inactiveWindowOpacity =
 let animation = setting("ui.animation", bool, ~default=true);
 
 let contributions = [inactiveWindowOpacity.spec, animation.spec];
+
+let layers = setting("experimental.ui.layers", bool, ~default=false);

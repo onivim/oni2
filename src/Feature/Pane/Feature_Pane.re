@@ -763,6 +763,7 @@ module View = {
       </View>
       <View style=Styles.content>
         <content
+          config
           isFocused
           iconTheme
           languageInfo

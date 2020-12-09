@@ -114,7 +114,7 @@ let start = maybeKeyBindingsFilePath => {
         );
       } else {
         switch (Command.Lookup.get(command, CommandManager.current(state))) {
-        | Some(command: Command.t(_)) => (
+        | Some((command: Command.t(_))) => (
             state,
             executeCommandEffect(command.msg),
           )

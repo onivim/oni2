@@ -83,6 +83,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
         | FileExplorer =>
           let dispatch = msg => dispatch(Actions.FileExplorer(msg));
           <Feature_Explorer.View
+            config
             isFocused={FocusManager.current(state) == Focus.FileExplorer}
             languageInfo={state.languageInfo}
             iconTheme={state.iconTheme}
@@ -97,6 +98,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
 
         | SCM =>
           <Feature_SCM.Pane
+            config
             model={state.scm}
             workingDirectory={Feature_Workspace.workingDirectory(
               state.workspace,
@@ -114,6 +116,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
             GlobalContext.current().dispatch(Actions.Search(msg));
 
           <Feature_Search
+            config
             isFocused={FocusManager.current(state) == Focus.Search}
             theme
             languageInfo={state.languageInfo}
@@ -129,6 +132,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
         | Extensions =>
           let extensionDispatch = msg => dispatch(Actions.Extensions(msg));
           <Feature_Extensions.ListView
+            config
             model={state.extensions}
             theme
             font

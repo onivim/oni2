@@ -672,10 +672,11 @@ module View = {
   };
 
   module LayerConditions = {
-    let root = Revery.UI.Layer.Condition.make((previous: Obj.t, newObj: Obj.t) => {
-      previous != newObj
-    });
-  }
+    let root =
+      Revery.UI.Layer.Condition.make((previous: Obj.t, newObj: Obj.t) => {
+        previous != newObj
+      });
+  };
 
   module Styles = {
     open Style;
@@ -812,6 +813,7 @@ module View = {
   let component = React.Expert.component("Component_VimList");
   let make:
     (
+      ~config: Oni_Core.Config.resolver,
       ~isActive: bool,
       ~font: UiFont.t,
       ~focusedIndex: option(int),
@@ -829,7 +831,17 @@ module View = {
       unit
     ) =>
     _ =
-    (~isActive, ~font, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
+    (
+      ~config,
+      ~isActive,
+      ~font,
+      ~focusedIndex,
+      ~theme,
+      ~model,
+      ~dispatch,
+      ~render,
+      (),
+    ) => {
       component(hooks => {
         let {rowHeight, viewportWidth, viewportHeight, _} = model;
 
@@ -944,12 +956,14 @@ module View = {
             ? <Oni_Components.ScrollShadow.Bottom /> : React.empty;
 
         (
-          <Layer 
+          <Oni_Components.OniLayer
             key={model.key}
             style=Style.[flexGrow(1), flexDirection(`Column)]
-            condition=LayerConditions.root(Obj.repr(model))
-            backgroundColor=Feature_Theme.Colors.SideBar.background.from(theme)
-            >
+            condition={LayerConditions.root(Obj.repr(model))}
+            backgroundColor={
+              Feature_Theme.Colors.SideBar.background.from(theme)
+            }
+            config>
             <View
               style=Style.[flexGrow(1), position(`Relative)]
               onDimensionsChanged={({height, width}) => {
@@ -986,7 +1000,7 @@ module View = {
               dispatch={msg => dispatch(SearchContext(msg))}
               theme
             />
-          </Layer>,
+          </Oni_Components.OniLayer>,
           hooks,
         );
       });

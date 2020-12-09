@@ -137,7 +137,7 @@ module Menu = {
 
       let height =
         switch (maybeRef) {
-        | Some(node: node) => node#measurements().height
+        | Some((node: node)) => node#measurements().height
         | None => List.length(items) * 20
         };
       let width = Constants.menuWidth;
