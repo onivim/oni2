@@ -113,7 +113,7 @@ let header =
     ) => {
   let logo =
     switch (maybeLogo) {
-    | Some(src) => <Image width=96 height=96 src={`File(src)} />
+    | Some(src) => <RemoteImage width=96 height=96 url={src} />
     // TODO: Replace with real logo
     | None => <Container color=Revery.Colors.gray height=96 width=96 />
     };
