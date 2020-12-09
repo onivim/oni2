@@ -476,8 +476,10 @@ switch (eff) {
     );
 
     List.iter(
-      v => {
-        dispatch(Model.Actions.VimExecuteCommand(v));
+      command => {
+        dispatch(
+          Model.Actions.VimExecuteCommand({allowAnimation: false, command}),
+        );
         runEffects();
       },
       cliOptions.vimExCommands,

@@ -29,7 +29,7 @@ runTest(~name="InputContextKeys", (dispatch, wait, _) => {
   });
 
   // Create a terminal - verify we have new context keys
-  dispatch(VimExecuteCommand(":term"));
+  dispatch(VimExecuteCommand({allowAnimation: true, command: ":term"}));
 
   wait(
     ~name=

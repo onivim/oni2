@@ -123,17 +123,8 @@ let update = (editor, msg) => {
   | MouseHovered =>
     let maybeCharacter = Editor.getCharacterUnderMouse(editor);
     (editor, MouseHovered(maybeCharacter));
-  //  | MouseMoved({bytePosition}) => (
-  //      editor,
-  //      {
-  //        Editor.byteToCharacter(bytePosition, editor)
-  //        |> Option.map(characterPosition => {
-  //             MouseMoved({bytePosition, characterPosition})
-  //           })
-  //        |> Option.value(~default=Nothing);
-  //      },
-  //    )
-  | ModeChanged({mode, effects}) =>
+
+  | ModeChanged({allowAnimation, mode, effects}) =>
     let handleScrollEffect = (~count, ~direction, editor) => {
       let count = max(count, 1);
       Vim.Scroll.(
@@ -153,6 +144,14 @@ let update = (editor, msg) => {
       );
     };
 
+    // Apply animation override, if disabled
+    let editor =
+      if (!allowAnimation) {
+        editor |> Editor.overrideAnimation(~animated=Some(false));
+      } else {
+        editor;
+      };
+
     let editor' = Editor.setMode(mode, editor);
     let editor'' =
       effects
@@ -165,7 +164,8 @@ let update = (editor, msg) => {
              }
            },
            editor',
-         );
+         )
+      |> Editor.overrideAnimation(~animated=None);
     (editor'', Nothing);
   };
 };
