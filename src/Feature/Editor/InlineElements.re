@@ -84,7 +84,7 @@ module Cache = {
       |> Option.map(element =>
            element.line |> EditorCoreTypes.LineNumber.toOneBased
          )
-      |> Option.value(~default=0)
+      |> Option.value(~default=0);
 
     let cache =
       Array.make(
