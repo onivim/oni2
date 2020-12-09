@@ -48,14 +48,126 @@ type element = {
 // a category of inline elements.
 module KeyMap = StringMap;
 
+let compare = (a, b) => {
+  LineNumber.toZeroBased(a.line) - LineNumber.toZeroBased(b.line);
+};
+
+// A module storing the cached computations -
+// allowing for efficient answering of the questions:
+// 1) What is the full set of sorted elements?
+// 2) For a given line, how much space is taken up by that line's inline elements?
+// 3) For a given line, how much _total space_ is taken up by the line's inline elemenets, and all before it?
+module Cache = {
+  open EditorCoreTypes;
+
+  type perLineCache = {
+    inlineElementSize: float,
+    totalInlineElementSize: float,
+  };
+
+  type t = {
+    cache: array(perLineCache),
+    allReservedSpace: float,
+  };
+
+  let empty = {
+    cache:
+      Array.make(0, {inlineElementSize: 0., totalInlineElementSize: 0.}),
+    allReservedSpace: 0.,
+  };
+
+  let ofList = (~sortedElements: list(element)) => {
+    let revSortedElements = sortedElements |> List.rev;
+
+    let arraySize =
+      revSortedElements
+      |> (
+        l =>
+          List.nth_opt(l, 0)
+          |> Option.map(element =>
+               element.line |> EditorCoreTypes.LineNumber.toOneBased
+             )
+          |> Option.value(~default=0)
+      );
+
+    let cache =
+      Array.make(
+        arraySize,
+        {inlineElementSize: 0., totalInlineElementSize: 0.},
+      );
+
+    let setTotalSize = (~start, ~stop, ~totalSize) => {
+      for (idx in start to stop) {
+        cache[idx] = {
+          inlineElementSize: 0.,
+          totalInlineElementSize: totalSize,
+        };
+      };
+    };
+
+    let rec loop = (lastLine, totalSize, remainingElements) => {
+      switch (remainingElements) {
+      | [] => totalSize
+      | [hd, ...tail] =>
+        // Set indices for all the previous elements
+        let currentLine = hd.line |> EditorCoreTypes.LineNumber.toZeroBased;
+        if (currentLine > lastLine) {
+          setTotalSize(~start=lastLine, ~stop=currentLine - 1, ~totalSize);
+        };
+
+        // Update index
+        let prevSize = cache[currentLine].inlineElementSize;
+        let currentLineHeight = Component_Animation.get(hd.height);
+
+        let totalSize = currentLineHeight +. totalSize;
+        cache[currentLine] = {
+          inlineElementSize: prevSize +. currentLineHeight,
+          totalInlineElementSize: totalSize,
+        };
+
+        loop(currentLine, totalSize, tail);
+      };
+    };
+
+    let allReservedSpace = loop(0, 0., sortedElements);
+    {allReservedSpace, cache};
+  };
+
+  let size = (lnum: EditorCoreTypes.LineNumber.t, {cache, _}: t) => {
+    let idx = lnum |> LineNumber.toZeroBased;
+    if (idx >= Array.length(cache)) {
+      0.;
+    } else {
+      cache[idx].inlineElementSize;
+    };
+  };
+
+  let totalSize =
+      (lnum: EditorCoreTypes.LineNumber.t, {allReservedSpace, cache, _}) => {
+    let idx = lnum |> LineNumber.toZeroBased;
+    if (idx >= Array.length(cache)) {
+      allReservedSpace;
+    } else {
+      cache[idx].totalInlineElementSize;
+    };
+  };
+
+  let totalReservedSpace = ({allReservedSpace, _}) => allReservedSpace;
+};
+
 [@deriving show]
 type t = {
   // A map of line number -> key -> uniqueId -> element
   keyToElements: [@opaque] IntMap.t(KeyMap.t(StringMap.t(element))),
+  cache: [@opaque] Lazy.t(Cache.t),
   sortedElements: list(element),
 };
 
-let initial = {keyToElements: IntMap.empty, sortedElements: []};
+let initial = {
+  keyToElements: IntMap.empty,
+  sortedElements: [],
+  cache: Lazy.from_val(Cache.empty),
+};
 
 let toString = ({keyToElements, _}) => {
   let str = ref("");
@@ -84,12 +196,7 @@ let toString = ({keyToElements, _}) => {
 let lines = ({keyToElements, _}) =>
   keyToElements |> IntMap.bindings |> List.map(fst);
 
-let compare = (a, b) => {
-  LineNumber.toZeroBased(a.line) - LineNumber.toZeroBased(b.line);
-};
-
-let computeSortedElements =
-    (keyToElements: IntMap.t(KeyMap.t(StringMap.t(element)))) => {
+let recomputeSortedElements = keyToElements => {
   keyToElements
   |> IntMap.bindings
   |> List.map(((lineNumber, innerMap)) => {
@@ -105,8 +212,12 @@ let computeSortedElements =
             {...elem, line: LineNumber.ofZeroBased(lineNumber)}
           })
      })
-  |> List.flatten
-  |> List.sort(compare);
+  |> List.flatten;
+};
+
+let recomputeCache = (~sortedElements) => {
+  let ret = Cache.ofList(~sortedElements);
+  ret;
 };
 
 let elementsToMap = (elements: list(element)) => {
@@ -211,8 +322,9 @@ let set = (~key: string, ~elements, model) => {
       incomingMap,
     );
 
-  let sortedElements' = computeSortedElements(keyToElements');
-  {keyToElements: keyToElements', sortedElements: sortedElements'};
+  let sortedElements = recomputeSortedElements(keyToElements');
+  let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
+  {keyToElements: keyToElements', sortedElements, cache: cache'};
 };
 
 let updateElement = (~key, ~uniqueId, ~line, ~f: element => element, model) => {
@@ -232,8 +344,10 @@ let updateElement = (~key, ~uniqueId, ~line, ~f: element => element, model) => {
          }),
        );
 
-  let sortedElements' = computeSortedElements(keyToElements');
-  {keyToElements: keyToElements', sortedElements: sortedElements'};
+  let sortedElements = recomputeSortedElements(keyToElements');
+
+  let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
+  {keyToElements: keyToElements', sortedElements, cache: cache'};
 };
 
 let update = (msg, model) =>
@@ -287,29 +401,12 @@ let allElementsForLine = (~line, {keyToElements, _}) => {
 
 let allElements = ({sortedElements, _}) => sortedElements;
 
-let getReservedSpace = (line: LineNumber.t, elements: t) => {
-  let lineNumber = LineNumber.toZeroBased(line);
-  let rec loop = (acc, remainingElements) => {
-    switch (remainingElements) {
-    | [] => acc
-    | [hd, ...tail] when LineNumber.toZeroBased(hd.line) <= lineNumber =>
-      loop(acc +. Component_Animation.get(hd.height), tail)
-    | _elementsPastLine => acc
-    };
-  };
-
-  loop(0., elements.sortedElements);
+let getReservedSpace = (line: LineNumber.t, {cache, _}: t) => {
+  Cache.totalSize(line, Lazy.force(cache));
 };
 
-let getAllReservedSpace = elements => {
-  let rec loop = (acc, remainingElements) => {
-    switch (remainingElements) {
-    | [] => acc
-    | [hd, ...tail] => loop(acc +. Component_Animation.get(hd.height), tail)
-    };
-  };
-
-  loop(0., elements.sortedElements);
+let getAllReservedSpace = ({cache, _}) => {
+  Cache.totalReservedSpace(Lazy.force(cache));
 };
 
 // When there is a buffer update, shift elements as needed
@@ -331,8 +428,9 @@ let shift = (update: Oni_Core.BufferUpdate.t, model) => {
            ~delta,
          );
 
-    let sortedElements' = computeSortedElements(keyToElements');
-    {keyToElements: keyToElements', sortedElements: sortedElements'};
+    let sortedElements = recomputeSortedElements(keyToElements');
+    let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
+    {keyToElements: keyToElements', sortedElements, cache: cache'};
   };
 };
 

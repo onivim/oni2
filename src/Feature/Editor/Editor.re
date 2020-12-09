@@ -1698,9 +1698,3 @@ let sub = editor => {
   ]
   |> Isolinear.Sub.batch;
 };
-
-let b = 1;
-
-let c = 2;
-
-let d = 3;

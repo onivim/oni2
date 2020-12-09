@@ -60,7 +60,7 @@ module Styles = {
 };
 
 let make = (~dispatch, ~state: State.t, ()) => {
-  let State.{configuration, uiFont as font, sideBar, zenMode, buffers, _} = state;
+  let State.{uiFont as font, sideBar, zenMode, buffers, _} = state;
 
   let theme = Feature_Theme.colors(state.colorTheme);
 
