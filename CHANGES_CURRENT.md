@@ -26,6 +26,7 @@
 - #2806 - Windows: Add open-directory command to windows installer (fixes #2046)
 - #2807 - Terminal: Implement paste in insert mode (fixes #2805)
 - #2808 - Auto-Update: Fix changelog display (fixes #2787)
+- #2809 - Extensions: Warn on open-vsx public namespaces (fixes #2345)
 
 ### Performance
 
