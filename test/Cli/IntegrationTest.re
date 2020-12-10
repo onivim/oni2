@@ -84,9 +84,8 @@ describe("CLI Integration Tests", ({describe, _}) => {
     })
   });
 
-  describe("ex commands", ({test, _}) => {
-
-    // On Linux Azure CI, this test fails when creating a window - 
+  describe("ex commands", ({test, _}) =>
+    // On Linux Azure CI, this test fails when creating a window -
     // need to find a workaround to allow `SDL_CreateWindow` to succeed on CI machines.
     if (Revery.Environment.os != Revery.Environment.Linux) {
       test("run ex commands with '+'", ({expect, _}) => {
@@ -99,7 +98,12 @@ describe("CLI Integration Tests", ({describe, _}) => {
               );
 
             let () =
-              startEditorWithArgs(["-f", "+new " ++ filePath, "+norm! oabc", "+xa!"])
+              startEditorWithArgs([
+                "-f",
+                "+new " ++ filePath,
+                "+norm! oabc",
+                "+xa!",
+              ])
               |> validateExitStatus(WEXITED(0))
               |> finish;
 
@@ -108,7 +112,7 @@ describe("CLI Integration Tests", ({describe, _}) => {
             expect.equal(lines, ["", "abc"]);
           }
         )
-      })
+      });
     }
-  });
+  );
 });
