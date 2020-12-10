@@ -91,6 +91,7 @@ let getTokenAt:
   (~languageConfiguration: LanguageConfiguration.t, CharacterPosition.t, t) =>
   option(CharacterRange.t);
 
+let overrideAnimation: (~animated: option(bool), t) => t;
 let yankHighlight: t => option(yankHighlight);
 let startYankHighlight: (list(PixelRange.t), t) => t;
 

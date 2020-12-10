@@ -7,6 +7,7 @@
 - #2783 - Promote editor.wordWrap from experimental (fixes #1444)
 - #2774 - Extensions: Implement update check (also fixes #2748)
 - #2801 - Extensions: CodeLens - Handle multiple codelens on same line
+- #2812 - CLI: Add `+` and `-c` arguments to run Vim ex commands (fixes #1861)
 
 ### Bug Fixes
 
@@ -35,7 +36,7 @@
 
 - #2736 - Switch to model-based animation for notification yOffset
 - #2407 - Migrate color transitions to model-based animation
-- #2766 - Remove initial dock aniamtion (fixes #1131)
+- #2766 - Remove initial dock animation (fixes #1131)
 
 ### Documentation
 

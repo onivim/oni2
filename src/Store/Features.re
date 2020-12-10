@@ -164,7 +164,14 @@ module Internal = {
       {...state, sideBar, layout};
     };
 
-  let updateMode = (~extHostClient, state: State.t, mode: Vim.Mode.t, effects) => {
+  let updateMode =
+      (
+        ~extHostClient,
+        ~allowAnimation,
+        state: State.t,
+        mode: Vim.Mode.t,
+        effects,
+      ) => {
     let prevCursor =
       state.layout
       |> Feature_Layout.activeEditor
@@ -197,7 +204,8 @@ module Internal = {
       };
     let activeEditorId = editor |> Feature_Editor.Editor.getId;
 
-    let msg: Feature_Editor.msg = ModeChanged({mode, effects});
+    let msg: Feature_Editor.msg =
+      ModeChanged({allowAnimation, mode, effects});
     let scope = EditorScope.Editor(activeEditorId);
     let (layout, editorEffect) = updateEditors(~scope, ~msg, state.layout);
 
@@ -1603,8 +1611,14 @@ let update =
         state |> Internal.updateConfiguration,
         Isolinear.Effect.none,
       )
-    | ModeDidChange({mode, effects}) =>
-      Internal.updateMode(~extHostClient, state, mode, effects)
+    | ModeDidChange({allowAnimation, mode, effects}) =>
+      Internal.updateMode(
+        ~extHostClient,
+        ~allowAnimation,
+        state,
+        mode,
+        effects,
+      )
     };
 
   | Workspace(msg) =>

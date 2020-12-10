@@ -127,6 +127,8 @@ type t = {
   lastMouseScreenPosition: option(PixelPosition.t),
   lastMouseMoveTime: [@opaque] option(Revery.Time.t),
   lastMouseUpTime: [@opaque] option(Revery.Time.t),
+  // Animation
+  isAnimationOverride: option(bool),
 };
 
 let key = ({key, _}) => key;
@@ -158,6 +160,11 @@ let setMinimap = (~enabled, ~maxColumn, editor) => {
   ...editor,
   isMinimapEnabled: enabled,
   minimapMaxColumnWidth: maxColumn,
+};
+
+let overrideAnimation = (~animated, editor) => {
+  ...editor,
+  isAnimationOverride: animated,
 };
 
 let getBufferLineCount = ({buffer, _}) =>
@@ -505,6 +512,7 @@ let create = (~config, ~buffer, ()) => {
     lastMouseMoveTime: None,
     lastMouseScreenPosition: None,
     lastMouseUpTime: None,
+    isAnimationOverride: None,
   }
   |> configure(~config);
 };
@@ -934,6 +942,13 @@ let hasSetSize = editor => {
   editor.pixelWidth > 1 && editor.pixelHeight > 1;
 };
 
+let isScrollAnimated = ({isScrollAnimated, isAnimationOverride, _}) => {
+  switch (isAnimationOverride) {
+  | Some(v) => v
+  | None => isScrollAnimated
+  };
+};
+
 let exposePrimaryCursor = editor =>
   if (!hasSetSize(editor)) {
     // If the size hasn't been set yet - don't try to expose the cursor.
@@ -996,7 +1011,7 @@ let exposePrimaryCursor = editor =>
         && Float.abs(adjustedScrollY -. scrollY) < lineHeightInPixels(editor)
         *. 1.1;
 
-      let animated = editor.isScrollAnimated;
+      let animated = editor |> isScrollAnimated;
       {
         ...editor,
         scrollX:
@@ -1081,7 +1096,7 @@ let getContentPixelWidth = editor => {
 
 let scrollToPixelY = (~animated, ~pixelY as newScrollY, editor) => {
   let originalScrollY = Spring.getTarget(editor.scrollY);
-  let animated = editor.isScrollAnimated && animated;
+  let animated = editor |> isScrollAnimated && animated;
   let {pixelHeight, _} = editor;
   let viewLines = editor |> totalViewLines;
   let newScrollY = max(0., newScrollY);
@@ -1125,7 +1140,7 @@ let scrollToLine = (~line, view) => {
 };
 
 let scrollToPixelX = (~animated, ~pixelX as newScrollX, editor) => {
-  let animated = editor.isScrollAnimated && animated;
+  let animated = editor |> isScrollAnimated && animated;
   let maxLineLength = editor |> maxLineLength;
   let newScrollX = max(0., newScrollX);
 
@@ -1360,7 +1375,10 @@ let setSize = (~pixelWidth, ~pixelHeight, originalEditor) => {
 
   // If we hadn't measured before, make sure the cursor is in view
   if (!hasSetSize(originalEditor)) {
-    scrollCursorTop(editor');
+    editor'
+    |> overrideAnimation(~animated=Some(false))
+    |> scrollCursorTop
+    |> overrideAnimation(~animated=None);
   } else {
     editor';
   };

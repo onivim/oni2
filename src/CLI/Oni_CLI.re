@@ -24,6 +24,7 @@ type t = {
   logFilter: option(string),
   logColorsEnabled: option(bool),
   needsConsole: bool,
+  vimExCommands: list(string),
 };
 
 type eff =
@@ -93,8 +94,8 @@ let parse = (~getenv: string => option(string), args) => {
   let logFile = ref(None);
   let logFilter = ref(None);
   let logColorsEnabled = ref(None);
-
   let gpuAcceleration = ref(`Auto);
+  let vimExCommands = ref([]);
 
   let setGpuAcceleration =
     fun
@@ -134,6 +135,7 @@ let parse = (~getenv: string => option(string), args) => {
     ~current=ref(0),
     sysArgs,
     [
+      ("-c", String(str => vimExCommands := [str, ...vimExCommands^]), ""),
       ("-f", Unit(setAttached), ""),
       ("--nofork", Unit(setAttached), ""),
       ("--debug", Unit(() => logLevel := Some(Timber.Level.debug)), ""),
@@ -195,6 +197,14 @@ let parse = (~getenv: string => option(string), args) => {
     || shouldAlwaysAllocateConsole;
 
   let paths = additionalArgs^ |> List.rev;
+
+  let isAnonymousExCommand = str => String.length(str) > 0 && str.[0] == '+';
+  let anonymousExCommands =
+    paths
+    |> List.filter(isAnonymousExCommand)
+    |> List.map(str => String.sub(str, 1, String.length(str) - 1));
+
+  let paths = paths |> List.filter(str => !isAnonymousExCommand(str));
 
   let workingDirectory = Environment.getWorkingDirectory();
 
@@ -275,6 +285,7 @@ let parse = (~getenv: string => option(string), args) => {
     logFilter: logFilter^,
     logColorsEnabled: logColorsEnabled^,
     needsConsole,
+    vimExCommands: (vimExCommands^ |> List.rev) @ anonymousExCommands,
   };
 
   (cli, eff^);
