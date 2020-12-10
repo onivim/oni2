@@ -1,10 +1,11 @@
-%token <int> NUMBER
-%token <string> TEXT
 %token DOLLAR
 %token EOF
 %token LB
 %token RB
 %token COLON
+%token PIPE
+%token <int> NUMBER
+%token <string> TEXT
 
 %start <Snippet_internal.t> main
 

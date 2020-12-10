@@ -3,7 +3,6 @@
 
 	exception Error
 }
-let alpha = ['a' - 'z' 'A' - 'Z' ' ' '\t']+
 
 let number = ['0'-'9']+
 
@@ -12,9 +11,10 @@ rule token = parse
 | '}' { RB }
 | '$' { DOLLAR }
 | ':' { COLON }
-| alpha as text
- { TEXT (text) }
+| '|' { PIPE }
 | number as num
 	{ NUMBER (int_of_string(num)) }
+| _ as char
+ { TEXT (String.make 1 char) }
 | eof { EOF }
 | _ { raise Error }

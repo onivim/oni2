@@ -6,7 +6,9 @@ let parse = (str) => {
       Error("Error parsing binding: " ++ str)
     | v => Ok(v)
     };
-  str |> Lexing.from_string |> parse;
+    // TODO: Combine text
+  str |> Lexing.from_string |> parse
+  |> Result.map(Snippet_internal.normalize)
 }
 
 open Snippet_internal;
@@ -38,6 +40,11 @@ open Snippet_internal;
   let%test "placeholder with nested placeholder" = {
     parse("${1:abc $2}") == Ok([Placeholder({index: 1, contents: [Text("abc "),
     Placeholder({index: 2, contents: []})]})]);
+  };
+
+  let%test "placeholder with nested placeholder with text" = {
+    parse("${1:abc ${2:placeholder}}") == Ok([Placeholder({index: 1, contents: [Text("abc "),
+    Placeholder({index: 2, contents: [Text("placeholder")]})]})]);
   };
 
 
