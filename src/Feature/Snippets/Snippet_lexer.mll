@@ -6,6 +6,8 @@
 
 let number = ['0'-'9']+
 
+let var = ['_' 'a'-'z' 'A'-'Z'] ['_' 'a'-'z' 'A'-'Z' '0'-'9']*
+
 rule token = parse
 | '\\' '{' { TEXT("{") }
 | '\\' '}' { TEXT("}") }
@@ -20,6 +22,8 @@ rule token = parse
 | ':' { COLON }
 | '|' { PIPE }
 | ',' { COMMA }
+| var as variable
+	{ VARIABLE (variable) }
 | number as num
 	{ NUMBER (int_of_string(num)) }
 | _ as char

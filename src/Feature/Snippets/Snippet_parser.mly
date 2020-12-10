@@ -7,6 +7,7 @@
 %token COMMA
 %token <int> NUMBER
 %token <string> TEXT
+%token <string> VARIABLE
 
 %start <Snippet_internal.t> main
 
@@ -23,14 +24,20 @@ expr:
 | DOLLAR; LB; num = NUMBER; PIPE; firstChoice = string; additionalChoices = list(additional_choice); PIPE; RB { Choice({index = num; choices = [firstChoice] @
 additionalChoices }) }
 
+| DOLLAR; var = VARIABLE; { Variable({name = var; default = None }) }
+| DOLLAR; LB; var = VARIABLE; COLON; default = string; RB { Variable({name = var; default = Some(default) }) }
+
 | text = TEXT { Text(text) }
 | numberAsText = NUMBER { Text(string_of_int(numberAsText)) }
+| variableAsText = VARIABLE { Text(variableAsText) }
 
 additional_choice:
 | COMMA; choice = string; { choice }
 
 string:
 | str = list(character) { String.concat "" str }
+| numberAsText = NUMBER { string_of_int(numberAsText) }
+| variableAsText = VARIABLE { variableAsText }
 
 character:
 | char = TEXT { char }

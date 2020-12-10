@@ -76,3 +76,13 @@ let%test "text around placeholder" = {
   parse("a $0 b")
   == Ok([Text("a "), Placeholder({index: 0, contents: []}), Text(" b")]);
 };
+
+let%test "simple variable" = {
+  parse("$TM_FILENAME")
+  == Ok([Variable({name: "TM_FILENAME", default: None})]);
+};
+
+let%test "variable with default" = {
+  parse("${TM_FILENAME:test}")
+  == Ok([Variable({name: "TM_FILENAME", default: Some("test")})]);
+};

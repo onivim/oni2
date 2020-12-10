@@ -7,6 +7,10 @@ type segment =
   | Choice({
       index: int,
       choices: list(string),
+    })
+  | Variable({
+      name: string,
+      default: option(string),
     });
 
 type t = list(segment);
@@ -30,6 +34,8 @@ let rec normalize = (segments: list(segment)) => {
       )
     | ([Choice(_) as choice, ...tail], Some(text)) =>
       loop([choice, Text(text), ...acc], None, tail)
+    | ([Variable(_) as variable, ...tail], Some(text)) =>
+      loop([variable, Text(text), ...acc], None, tail)
     | ([Text(newText), ...tail], None) => loop(acc, Some(newText), tail)
     | ([Placeholder({index, contents}), ...tail], None) =>
       loop(
@@ -39,6 +45,8 @@ let rec normalize = (segments: list(segment)) => {
       )
     | ([Choice(_) as choice, ...tail], None) =>
       loop([choice, ...acc], None, tail)
+    | ([Variable(_) as variable, ...tail], None) =>
+      loop([variable, ...acc], None, tail)
     };
   };
 
