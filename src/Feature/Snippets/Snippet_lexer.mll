@@ -9,6 +9,8 @@ let number = ['0'-'9']+
 let var = ['_' 'a'-'z' 'A'-'Z'] ['_' 'a'-'z' 'A'-'Z' '0'-'9']*
 
 rule token = parse
+| '\r' '\n' { NEWLINE }
+| '\n' { NEWLINE }
 | '\\' '{' { TEXT("{") }
 | '\\' '}' { TEXT("}") }
 | '\\' '$' { TEXT("$") }

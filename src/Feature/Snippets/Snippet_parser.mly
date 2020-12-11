@@ -8,13 +8,17 @@
 %token <int> NUMBER
 %token <string> TEXT
 %token <string> VARIABLE
+%token NEWLINE
 
-%start <Snippet_internal.t> main
+%start <Snippet_internal.t list> main
 
 %%
 
 main:
-| phrase = list(expr) EOF { phrase }
+| lines = list(line); EOF { lines }
+
+line:
+| phrase = list(expr); NEWLINE { phrase }
 
 expr:
 | DOLLAR; num = NUMBER { Placeholder({index = num; contents = [] }) }
