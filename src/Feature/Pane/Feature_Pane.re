@@ -94,6 +94,7 @@ type model = {
       LocationsPaneView.location,
       Oni_Components.LocationListItem.t,
     ),
+  outputPane: option(Component_Output.model),
 };
 
 let locationsToReferences = (locations: list(Exthost.Location.t)) => {
@@ -301,6 +302,15 @@ let show = (~pane, model) => {
 };
 let close = model => {...model, allowAnimation: false, isOpen: false};
 
+let setOutput = (_cmd, maybeContents, model) => {
+  let outputPane' =
+    maybeContents
+    |> Option.map(output =>
+         Component_Output.set(output, Component_Output.initial)
+       );
+  {...model, outputPane: outputPane'} |> setPane(~pane=Output);
+};
+
 module Focus = {
   let cycleForward = model => {
     let pane =
@@ -483,6 +493,8 @@ let initial = {
   locationNodes: [],
   locationsView: Component_VimTree.create(~rowHeight=20),
   notificationsView: Component_VimList.create(~rowHeight=20),
+
+  outputPane: None,
 };
 
 let selected = ({selected, _}) => selected;
@@ -621,8 +633,10 @@ module View = {
         ~theme,
         ~iconTheme,
         ~languageInfo,
+        ~editorFont,
         ~uiFont,
         ~dispatch,
+        ~outputPane,
         ~locationsList,
         ~locationsDispatch: Component_VimTree.msg => unit,
         ~diagnosticDispatch: Component_VimTree.msg => unit,
@@ -668,7 +682,18 @@ module View = {
           dispatch(DismissNotificationClicked(notification))
         }
       />
-    | Output => <Text text="TODO" />
+    | Output =>
+      outputPane
+      |> Option.map(model => {
+           <Component_Output.View
+             model
+             isActive=isFocused
+             editorFont
+             theme
+             dispatch={_ => ()}
+           />
+         })
+      |> Option.value(~default=React.empty)
     };
 
   module Animation = {
@@ -694,6 +719,7 @@ module View = {
                   ~theme,
                   ~iconTheme,
                   ~languageInfo,
+                  ~editorFont: Service_Font.font,
                   ~uiFont,
                   ~dispatch: msg => unit,
                   ~pane: model,
@@ -787,9 +813,11 @@ module View = {
           locationsList={pane.locationsView}
           notificationsList={pane.notificationsView}
           selected={selected(pane)}
+          outputPane={pane.outputPane}
           theme
           dispatch
           uiFont
+          editorFont
           diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
           locationsDispatch={msg => dispatch(LocationsList(msg))}
           notificationsDispatch={msg => dispatch(NotificationsList(msg))}

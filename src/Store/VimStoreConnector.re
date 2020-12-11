@@ -148,10 +148,9 @@ let start =
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
 
+      // TODO: Move internal to Feature_Vim
       | Output({cmd, output}) => {
-          prerr_endline("CMD: " ++ cmd);
-          prerr_endline("OUTPUT: " ++ Option.value(~default="null", output));
-          failwith("");
+          dispatch(Actions.Vim(Feature_Vim.Output({cmd, output})));
         }
 
       | Clear({target, count}) =>

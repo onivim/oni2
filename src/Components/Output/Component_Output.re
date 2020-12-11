@@ -8,11 +8,11 @@
 type msg = unit;
 
 [@deriving show]
-type model = unit;
+type model = {contents: string};
 
-let initial = ();
+let initial = {contents: ""};
 
-let set = (_contents, model) => model;
+let set = (contents, _model) => {contents: contents};
 
 type outmsg =
   | Nothing;
@@ -27,19 +27,22 @@ module Contributions = {
 };
 
 module View = {
-  open Revery;
   open Revery.UI;
 
   let make =
       (
         ~isActive as _,
-        ~editorFont as _,
+        ~editorFont: Service_Font.font,
         ~theme as _,
-        ~model as _,
+        ~model,
         ~dispatch as _,
         (),
       ) => {
-    <Text text="todo" />;
+    <Text
+      fontFamily={editorFont.fontFamily}
+      fontSize={editorFont.fontSize}
+      text={model.contents}
+    />;
   };
 };
 
