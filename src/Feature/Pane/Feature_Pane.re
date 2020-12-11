@@ -9,7 +9,8 @@ open Oni_Core;
 type pane =
   | Diagnostics
   | Notifications
-  | Locations;
+  | Locations
+  | Output;
 
 module Constants = {
   let defaultHeight = 225;
@@ -306,7 +307,8 @@ module Focus = {
       switch (model.selected) {
       | Diagnostics => Notifications
       | Notifications => Locations
-      | Locations => Diagnostics
+      | Locations => Output
+      | Output => Diagnostics
       };
     {...model, selected: pane};
   };
@@ -314,9 +316,10 @@ module Focus = {
   let cycleBackward = model => {
     let pane =
       switch (model.selected) {
+      | Output => Locations
       | Notifications => Diagnostics
       | Locations => Notifications
-      | Diagnostics => Locations
+      | Diagnostics => Output
       };
     {...model, selected: pane};
   };
@@ -390,6 +393,9 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
         },
         Nothing,
       )
+
+    // TODO
+    | Output => (model, Nothing)
     }
 
   | VimWindowNav(navMsg) =>
@@ -662,6 +668,7 @@ module View = {
           dispatch(DismissNotificationClicked(notification))
         }
       />
+    | Output => <Text text="TODO" />
     };
 
   module Animation = {
@@ -701,6 +708,9 @@ module View = {
     };
     let locationsTabClicked = () => {
       dispatch(TabClicked(Locations));
+    };
+    let outputTabClicked = () => {
+      dispatch(TabClicked(Output));
     };
 
     let desiredHeight = height(pane);
@@ -757,6 +767,13 @@ module View = {
             title="Locations"
             onClick=locationsTabClicked
             isActive={isSelected(Locations, pane)}
+          />
+          <PaneTab
+            uiFont
+            theme
+            title="Output"
+            onClick=outputTabClicked
+            isActive={isSelected(Output, pane)}
           />
         </View>
         <closeButton dispatch theme />

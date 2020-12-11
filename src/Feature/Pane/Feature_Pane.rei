@@ -9,7 +9,8 @@ open Oni_Core;
 type pane =
   | Diagnostics
   | Notifications
-  | Locations;
+  | Locations
+  | Output;
 
 [@deriving show({with_path: false})]
 type msg;
