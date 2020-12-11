@@ -44,10 +44,11 @@ describe("Eval", ({describe, test, _}) => {
       let (_: Context.t, effects) = Vim.command("!ls");
 
       Vim.Effect.(
-      switch (effects) {
-      | [Output({cmd, _})] => expect.equal(cmd, "ls");
-      | _ => failwith ("Unexpected effect")
-      })
+        switch (effects) {
+        | [Output({cmd, _})] => expect.equal(cmd, "ls")
+        | _ => failwith("Unexpected effect")
+        }
+      );
     })
   });
 });
