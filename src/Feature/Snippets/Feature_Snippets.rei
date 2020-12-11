@@ -1,5 +1,4 @@
 open Oni_Core;
-open EditorCoreTypes;
 
 // Placeholder until full snippet support: Break snippet at first placeholder
 let snippetToInsert: (~snippet: string) => string;
