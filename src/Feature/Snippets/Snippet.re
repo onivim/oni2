@@ -8,9 +8,8 @@ let parse: string => result(t, string) =
     let parse = lexbuf =>
       switch (Snippet_parser.main(Snippet_lexer.token, lexbuf)) {
       | exception Snippet_lexer.Error =>
-        prerr_endline("ERROR");
-        Error("Error parsing binding: " ++ str);
-      //| exception Snippet_parser.Error => Error("Error parsing")
+        Error("Error parsing binding: " ++ str)
+      | exception Snippet_parser.Error => Error("Error parsing")
       | v => Ok(v)
       };
 
