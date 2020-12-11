@@ -1,5 +1,6 @@
-open Oni_Core;
 open Oniguruma;
+
+module Snippet = Snippet;
 
 let placeholderRegex = OnigRegExp.create("\\$\\{[0-9]+.*\\}|\\$[0-9]*");
 
@@ -75,10 +76,26 @@ module Commands = {
     );
 };
 
+module ContextKeys = {
+  open WhenExpr.ContextKeys.Schema;
+
+  // TODO:
+  let inSnippetMode = bool("inSnippetMode", (_: model) => false);
+}
+
 module Contributions = {
   let commands = Commands.[
     nextPlaceholder,
     previousPlaceholder,
     insertSnippet,
   ]
+
+  let contextKeys = model => {
+    open WhenExpr.ContextKeys;
+    ContextKeys.[
+      inSnippetMode
+    ]
+    |> Schema.fromList
+    |> fromSchema(model);
+  }
 };

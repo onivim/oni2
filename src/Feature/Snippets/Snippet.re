@@ -1,22 +1,25 @@
-let parse = str => {
-  let str = str ++ "\n";
-  let parse = lexbuf =>
-    switch (Snippet_parser.main(Snippet_lexer.token, lexbuf)) {
-    | exception Snippet_lexer.Error =>
-      prerr_endline("ERROR");
-      Error("Error parsing binding: " ++ str);
-    //| exception Snippet_parser.Error => Error("Error parsing")
-    | v => Ok(v)
-    };
-
-  // TODO: Combine text
-  str
-  |> Lexing.from_string
-  |> parse
-  |> Result.map(List.map(Snippet_internal.normalize));
-};
-
 open Snippet_internal;
+
+type t = list(Snippet_internal.t);
+
+let parse: string => result(t, string) =
+  str => {
+    let str = str ++ "\n";
+    let parse = lexbuf =>
+      switch (Snippet_parser.main(Snippet_lexer.token, lexbuf)) {
+      | exception Snippet_lexer.Error =>
+        prerr_endline("ERROR");
+        Error("Error parsing binding: " ++ str);
+      //| exception Snippet_parser.Error => Error("Error parsing")
+      | v => Ok(v)
+      };
+
+    // TODO: Combine text
+    str
+    |> Lexing.from_string
+    |> parse
+    |> Result.map(List.map(Snippet_internal.normalize));
+  };
 
 let%test "simple text" = {
   parse("abc") == Ok([[Text("abc")]]);
