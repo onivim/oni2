@@ -13,7 +13,6 @@ let parse: string => result(t, string) =
       | v => Ok(v)
       };
 
-    // TODO: Combine text
     str
     |> Lexing.from_string
     |> parse
