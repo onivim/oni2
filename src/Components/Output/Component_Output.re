@@ -33,16 +33,21 @@ module View = {
       (
         ~isActive as _,
         ~editorFont: Service_Font.font,
-        ~theme as _,
+        ~theme: Oni_Core.ColorTheme.Colors.t,
         ~model,
         ~dispatch as _,
         (),
       ) => {
-    <Text
-      fontFamily={editorFont.fontFamily}
-      fontSize={editorFont.fontSize}
-      text={model.contents}
-    />;
+    let bg = Feature_Theme.Colors.Terminal.background.from(theme);
+    let fg = Feature_Theme.Colors.Terminal.foreground.from(theme);
+    <View style=Style.[backgroundColor(bg)]>
+      <Text
+        fontFamily={editorFont.fontFamily}
+        fontSize={editorFont.fontSize}
+        text={model.contents}
+        style=Style.[color(fg)]
+      />
+    </View>;
   };
 };
 
