@@ -73,7 +73,6 @@ let sub = (~config) => {
   let automaticallyChecksForUpdates =
     Configuration.automaticallyChecksForUpdates.get(config);
   let releaseChannel = Configuration.releaseChannel.get(config);
-  prerr_endline ("RELEASE CHANNEL: " ++ releaseChannel);
 
   Service_AutoUpdate.Sub.autoUpdate(
     ~uniqueId="autoUpdate",
