@@ -34,17 +34,17 @@ let%test "clips at first placeholder w/ default" = {
 };
 
 type command =
-| JumpToNextPlaceholder
-| JumpToPreviousPlaceholder
-| InsertSnippet // TODO: How to have payload
+  | JumpToNextPlaceholder
+  | JumpToPreviousPlaceholder
+  | InsertSnippet; // TODO: How to have payload
 
-type msg = 
-| Command(command);
+type msg =
+  | Command(command);
 
 type model = unit;
 
-type outmsg = 
-| Nothing;
+type outmsg =
+  | Nothing;
 
 let update = (_msg, model) => (model, Nothing);
 
@@ -81,21 +81,15 @@ module ContextKeys = {
 
   // TODO:
   let inSnippetMode = bool("inSnippetMode", (_: model) => false);
-}
+};
 
 module Contributions = {
-  let commands = Commands.[
-    nextPlaceholder,
-    previousPlaceholder,
-    insertSnippet,
-  ]
+  let commands =
+    Commands.[nextPlaceholder, previousPlaceholder, insertSnippet];
 
   let contextKeys = model => {
-    open WhenExpr.ContextKeys;
-    ContextKeys.[
-      inSnippetMode
-    ]
-    |> Schema.fromList
-    |> fromSchema(model);
-  }
+    WhenExpr.ContextKeys.(
+      ContextKeys.[inSnippetMode] |> Schema.fromList |> fromSchema(model)
+    );
+  };
 };

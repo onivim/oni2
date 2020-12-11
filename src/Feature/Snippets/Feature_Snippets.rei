@@ -32,5 +32,5 @@ let update: (msg, model) => (model, outmsg);
 
 module Contributions: {
   let commands: list(Command.t(msg));
-  let contextKeys: (model) => WhenExpr.ContextKeys.t;
+  let contextKeys: model => WhenExpr.ContextKeys.t;
 };
