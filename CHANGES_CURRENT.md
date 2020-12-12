@@ -9,6 +9,7 @@
 - #2801 - Extensions: CodeLens - Handle multiple codelens on same line
 - #2812 - CLI: Add `+` and `-c` arguments to run Vim ex commands (fixes #1861)
 - #2817 - Snippets: Initial snippet parser (related #160)
+- #2818 - Vim: Initial `:!` command output implementation (fixes #1889, #1909)
 
 ### Bug Fixes
 
@@ -34,6 +35,7 @@
 - #2811 - Extensions: Show logo image for remote extensions
 - #2819 - Auto-Update: Set default update channel based on build type
 - #2822 - Build: Use development `Info.plist` that sets `NSSupportsAutomaticGraphicsSwitching` (fixes #2816)
+- #2826 - Search: Default to simple string search for find-in-files (fixes #2821)
 
 ### Performance
 

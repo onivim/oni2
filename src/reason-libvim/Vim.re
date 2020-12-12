@@ -434,6 +434,10 @@ let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queueEffect(Effect.Goto(gotoType));
 };
 
+let _onOutput = (cmd, output) => {
+  queueEffect(Effect.Output({cmd, output}));
+};
+
 let _onClear = (target: Clear.target, count: int) => {
   queueEffect(Effect.Clear(Clear.{target, count}));
 };
@@ -565,6 +569,7 @@ let init = () => {
   Callback.register("lv_onInputUnmap", _onInputUnmap);
   Callback.register("lv_onToggleComments", _onToggleComments);
   Callback.register("lv_onGetChar", _onGetChar);
+  Callback.register("lv_onOutput", _onOutput);
 
   Native.vimInit();
 

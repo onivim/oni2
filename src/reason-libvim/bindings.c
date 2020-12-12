@@ -720,6 +720,33 @@ void onCursorMoveScreenLine(screenLineMotion_T motion, int count, linenr_T start
    Val_int(count), Val_int(startLine));
    *outLine = Int_val(valDestLine);
    CAMLreturn0;
+
+}
+
+void onOutput(char_u *cmd, char_u* output) {
+  CAMLparam0();
+  CAMLlocal2(vStr, vMaybeOutput);
+
+  // `cmd` shouldn't be NULL, but if it is, don't bother calling back..
+  if (cmd == NULL) {
+    CAMLreturn0;
+  }
+
+  vStr = caml_copy_string((const char*) cmd);
+
+  if (output == NULL) {
+    vMaybeOutput = Val_none;
+  } else {
+    vMaybeOutput = Val_some(caml_copy_string((const char *)output));
+  }
+
+   static const value *lv_onOutput = NULL;
+   if (lv_onOutput == NULL) {
+     lv_onOutput = caml_named_value("lv_onOutput");
+   }
+  caml_callback2(*lv_onOutput, vStr, vMaybeOutput);
+
+  CAMLreturn0;
 }
 
 int onToggleComments(buf_T *buf, linenr_T start, linenr_T end,
@@ -895,7 +922,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetInputUnmapCallback(&onInputUnmap);
   vimSetToggleCommentsCallback(&onToggleComments);
   vimSetFunctionGetCharCallback(&onGetChar);
-
+  vimSetOutputCallback(&onOutput);
   char *args[0];
   vimInit(0, args);
   return Val_unit;
