@@ -128,7 +128,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let effectToActions = (state, effect) =>
     switch (effect) {
     | Feature_Input.(Execute(VimExCommand(command))) => [
-        Actions.VimExecuteCommand(command),
+        Actions.VimExecuteCommand({allowAnimation: true, command}),
       ]
     | Feature_Input.(Execute(NamedCommand(command))) => [
         Actions.KeybindingInvoked({command: command}),

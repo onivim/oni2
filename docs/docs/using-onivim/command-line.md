@@ -129,3 +129,7 @@ oni2 -f --checkhealth
 - `-force-device-scale-factor` overrides the current scaling.
 
 > Example: `oni2 --force-device-scale-factor 2`
+
+- `-c` or `+` runs a Vim ex command, after loading files.
+
+> Example: `oni2 +100 src/my-file.txt` would run the `:100` ex command, meaning the editor would start with line 100 focused.

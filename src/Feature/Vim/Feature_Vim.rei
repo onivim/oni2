@@ -13,6 +13,7 @@ let subMode: model => Vim.SubMode.t;
 [@deriving show]
 type msg =
   | ModeChanged({
+      allowAnimation: bool,
       mode: [@opaque] Vim.Mode.t,
       subMode: [@opaque] Vim.SubMode.t,
       effects: list(Vim.Effect.t),
@@ -28,6 +29,7 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | SettingsChanged
   | ModeDidChange({
+      allowAnimation: bool,
       mode: Vim.Mode.t,
       effects: list(Vim.Effect.t),
     });

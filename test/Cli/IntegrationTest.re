@@ -45,6 +45,7 @@ describe("CLI Integration Tests", ({describe, _}) => {
       )
     })
   });
+
   describe("install / uninstall extensions", ({test, _}) => {
     test("install / uninstall extension from file system", _ => {
       TestRunner.(
@@ -82,4 +83,37 @@ describe("CLI Integration Tests", ({describe, _}) => {
       )
     })
   });
+
+  describe("ex commands", ({test, _})
+    // On Linux Azure CI, this test fails when creating a window -
+    // need to find a workaround to allow `SDL_CreateWindow` to succeed on CI machines.
+    =>
+      if (Revery.Environment.os != Revery.Environment.Linux) {
+        test("run ex commands with '+'", ({expect, _}) => {
+          TestRunner.(
+            {
+              let filePath =
+                Rench.Path.join(
+                  Sys.getcwd(),
+                  "test-" ++ string_of_int(Luv.Pid.getpid()),
+                );
+
+              let () =
+                startEditorWithArgs([
+                  "-f",
+                  "+new " ++ filePath,
+                  "+norm! oabc",
+                  "+xa!",
+                ])
+                |> validateExitStatus(WEXITED(0))
+                |> finish;
+
+              let lines = Oni_Core.Utility.File.readAllLines(filePath);
+
+              expect.equal(lines, ["", "abc"]);
+            }
+          )
+        });
+      }
+    );
 });

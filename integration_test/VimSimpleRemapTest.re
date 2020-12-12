@@ -7,7 +7,9 @@ runTest(~name="VimSimpleRemapTest", (dispatch, wait, runEffects) => {
   );
 
   // Use inoremap to set up jj -> <ESC> binding
-  dispatch(VimExecuteCommand("inoremap jj <ESC>"));
+  dispatch(
+    VimExecuteCommand({allowAnimation: true, command: "inoremap jj <ESC>"}),
+  );
   runEffects();
 
   let input = key => {

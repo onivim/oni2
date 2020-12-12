@@ -6,6 +6,9 @@
 - #2765 - Vim: Hook up `:messages` and `:messages clear` ex commands
 - #2783 - Promote editor.wordWrap from experimental (fixes #1444)
 - #2774 - Extensions: Implement update check (also fixes #2748)
+- #2801 - Extensions: CodeLens - Handle multiple codelens on same line
+- #2812 - CLI: Add `+` and `-c` arguments to run Vim ex commands (fixes #1861)
+- #2817 - Snippets: Initial snippet parser (related #160)
 
 ### Bug Fixes
 
@@ -29,6 +32,8 @@
 - #2809 - Extensions: Warn on open-vsx public namespaces (fixes #2345)
 - #2810 - Extensions: Fix intermittent request failure getting extension details
 - #2811 - Extensions: Show logo image for remote extensions
+- #2819 - Auto-Update: Set default update channel based on build type
+- #2822 - Build: Use development `Info.plist` that sets `NSSupportsAutomaticGraphicsSwitching` (fixes #2816)
 
 ### Performance
 

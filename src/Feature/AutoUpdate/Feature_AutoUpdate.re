@@ -2,10 +2,13 @@ open Oni_Core;
 
 type model = {
   automaticallyChecksForUpdates: bool,
-  releaseChannel: [ | `Nightly | `Master | `Test],
+  releaseChannel: string,
 };
 
-let initial = {automaticallyChecksForUpdates: true, releaseChannel: `Master};
+let initial = {
+  automaticallyChecksForUpdates: true,
+  releaseChannel: Oni_Core.BuildInfo.defaultUpdateChannel,
+};
 
 [@deriving show({with_path: false})]
 type command =
@@ -19,12 +22,6 @@ type msg =
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg));
-
-let releaseChannelToString =
-  fun
-  | `Nightly => "nightly"
-  | `Master => "master"
-  | `Test => "test-update";
 
 let platformStr =
   switch (Revery.Environment.os) {
@@ -41,33 +38,13 @@ module Configuration = {
     setting("oni.app.automaticallyChecksForUpdates", bool, ~default=true);
 
   let releaseChannelCodec =
-    custom(
-      ~decode=
-        Json.Decode.(
-          string
-          |> map(
-               fun
-               | "nightly" => `Nightly
-               | "test-update"
-               | "test" => `Test
-               | "master"
-               | _ => `Master,
-             )
-        ),
-      ~encode=
-        Json.Encode.(
-          fun
-          | `Nightly => string("nightly")
-          | `Master => string("master")
-          | `Test => string("test-update")
-        ),
-    );
+    custom(~decode=Json.Decode.(string), ~encode=Json.Encode.(string));
 
   let releaseChannel =
     setting(
       "oni.app.updateReleaseChannel",
       releaseChannelCodec,
-      ~default=`Master,
+      ~default=Oni_Core.BuildInfo.defaultUpdateChannel,
     );
 };
 
@@ -76,7 +53,7 @@ module Commands = {
 
   let checkForUpdates =
     define(
-      ~category="Oni2",
+      ~category="Auto-Update",
       ~title="Check for updates",
       "oni.app.checkForUpdates",
       Command(CheckForUpdates),
@@ -124,7 +101,7 @@ let update = (~getLicenseKey, model, msg) =>
         Service_AutoUpdate.Effect.setFeed(
           ~updater=Oni2_Sparkle.Updater.getInstance(),
           ~licenseKey=getLicenseKey(),
-          ~releaseChannel=releaseChannelToString(newModel.releaseChannel),
+          ~releaseChannel=newModel.releaseChannel,
           ~platform=platformStr,
         ),
       ),
@@ -135,7 +112,7 @@ let update = (~getLicenseKey, model, msg) =>
         Service_AutoUpdate.Effect.setFeed(
           ~updater=Oni2_Sparkle.Updater.getInstance(),
           ~licenseKey,
-          ~releaseChannel=releaseChannelToString(model.releaseChannel),
+          ~releaseChannel=model.releaseChannel,
           ~platform=platformStr,
         ),
       ),

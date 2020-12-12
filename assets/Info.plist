@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>CFBundleName</key>
+    <string>Onivim 2</string>
+    <key>CFBundleDisplayName</key>
+    <string>Onivim 2 - Development</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.outrunlabs.onivim2-dev</string>
+    <key>CFBundleIconFile</key>
+    <string>Onivim2</string>
+    <key>CFBundleVersion</key>
+    <string>9.9.9999</string>
+    <key>CFBundleShortVersionString</key>
+    <string>9.9.9</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    <key>CFBundleExecutable</key>
+    <string>Oni2_editor</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
+  </dict>
+</plist>

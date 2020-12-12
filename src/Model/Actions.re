@@ -130,7 +130,10 @@ type t =
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
-  | VimExecuteCommand(string)
+  | VimExecuteCommand({
+      allowAnimation: bool,
+      command: string,
+    })
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
       title: string,

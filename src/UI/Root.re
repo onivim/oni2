@@ -60,7 +60,7 @@ module Styles = {
 };
 
 let make = (~dispatch, ~state: State.t, ()) => {
-  let State.{configuration, uiFont as font, sideBar, zenMode, buffers, _} = state;
+  let State.{uiFont as font, sideBar, zenMode, buffers, _} = state;
 
   let theme = Feature_Theme.colors(state.colorTheme);
 
@@ -208,7 +208,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       {switch (state.quickmenu) {
        | None => React.empty
        | Some(quickmenu) =>
-         <QuickmenuView theme configuration state=quickmenu font />
+         <QuickmenuView theme config state=quickmenu font />
        }}
       <Feature_Input.View.Overlay
         input={state.input}

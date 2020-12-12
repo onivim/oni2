@@ -266,10 +266,6 @@ let configurationParsers: list(configurationTuple) = [
     "editor.zenMode.singleFile",
     (config, json) => {...config, zenModeSingleFile: parseBool(json)},
   ),
-  (
-    "ui.shadows",
-    (config, json) => {...config, uiShadows: parseBool(json)},
-  ),
   ("ui.zoom", (config, json) => {...config, uiZoom: parseFloat(json)}),
   (
     "vim.useSystemClipboard",

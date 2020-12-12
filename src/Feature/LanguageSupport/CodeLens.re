@@ -86,16 +86,15 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
            }
          )
        })
-    |> List.mapi((idx, lens) =>
+    |> List.map(lens =>
          {
            lens,
            handle,
            uniqueId:
              Printf.sprintf(
-               "%d%d%d%d",
+               "%d%d%d",
                handle,
                bufferId,
-               idx,
                Hashtbl.hash(textFromExthost(lens)),
              ),
          }
@@ -131,8 +130,8 @@ module VimSettings = {
   open VimSetting.Schema;
 
   let codeLens =
-    vim("codelens", scrollSetting => {
-      scrollSetting
+    vim("codelens", codeLensSetting => {
+      codeLensSetting
       |> VimSetting.decode_value_opt(bool)
       |> Option.value(~default=false)
     });

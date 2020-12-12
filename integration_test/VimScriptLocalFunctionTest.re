@@ -8,11 +8,21 @@ runTest(~name="VimScriptLocalFunctionTest", (dispatch, wait, runEffects) => {
 
   let plugScript = getAssetPath("PlugScriptLocal.vim");
 
-  dispatch(VimExecuteCommand("source " ++ plugScript));
+  dispatch(
+    VimExecuteCommand({
+      allowAnimation: true,
+      command: "source " ++ plugScript,
+    }),
+  );
   runEffects();
 
   // set up a binding to the <Plug>Hello1 command provided by the script
-  dispatch(VimExecuteCommand("nnoremap j <Plug>Hello1"));
+  dispatch(
+    VimExecuteCommand({
+      allowAnimation: true,
+      command: "nnoremap j <Plug>Hello1",
+    }),
+  );
   runEffects();
 
   let input = key => {
