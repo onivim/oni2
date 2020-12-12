@@ -752,10 +752,8 @@ module Sub = {
       let uniqueIdForCodeLens = ({cacheId, _}: Exthost.CodeLens.t) => {
         cacheId
         |> Option.map(ids => {
-          ids
-          |> List.map(string_of_int)
-          |> String.concat("|");
-        })
+             ids |> List.map(string_of_int) |> String.concat("|")
+           })
         |> Option.value(~default="(no id)");
       };
 
@@ -771,12 +769,9 @@ module Sub = {
             params.client,
           );
 
-        Lwt.on_success(
-          promise,
-          maybeCodeLens => {
-              maybeCodeLens |> Option.iter(lens => dispatch(Ok(lens)));
-          },
-        );
+        Lwt.on_success(promise, maybeCodeLens => {
+          maybeCodeLens |> Option.iter(lens => dispatch(Ok(lens)))
+        });
 
         Lwt.on_failure(promise, exn => {
           dispatch(Error(Printexc.to_string(exn)))

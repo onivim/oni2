@@ -35,7 +35,7 @@ type handleToLenses = IntMap.t(list(codeLens));
 type model = {
   providers: list(provider),
   bufferToLenses: IntMap.t(handleToLenses),
-  unresolvedLenses: list(codeLens)
+  unresolvedLenses: list(codeLens),
 };
 
 type outmsg =
@@ -54,7 +54,11 @@ let get = (~bufferId, {bufferToLenses, _}) => {
   |> List.flatten;
 };
 
-let initial = {providers: [], bufferToLenses: IntMap.empty, unresolvedLenses: []};
+let initial = {
+  providers: [],
+  bufferToLenses: IntMap.empty,
+  unresolvedLenses: [],
+};
 
 [@deriving show]
 type msg =
