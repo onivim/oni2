@@ -21,7 +21,8 @@ module Constants = {
 [@deriving show({with_path: false})]
 type command =
   | ToggleProblems
-  | ToggleMessages;
+  | ToggleMessages
+  | ClosePane;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -338,6 +339,7 @@ module Focus = {
 
 let update = (~buffers, ~font, ~languageInfo, msg, model) =>
   switch (msg) {
+  | Command(ClosePane)
   | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
 
   | DismissNotificationClicked(notification) => (
@@ -858,6 +860,13 @@ module Commands = {
       "workbench.actions.view.problems",
       Command(ToggleProblems),
     );
+
+  let closePane =
+    define(
+      // TODO: Is there a VSCode equivalent?
+      "workbench.actions.pane.close",
+      Command(ClosePane),
+    );
 };
 
 module Keybindings = {
@@ -873,11 +882,17 @@ module Keybindings = {
     command: Commands.problems.id,
     condition: "isMac" |> WhenExpr.parse,
   };
+
+  let escKey = {
+    key: "<ESC>",
+    command: Commands.closePane.id,
+    condition: "paneFocus" |> WhenExpr.parse,
+  };
 };
 
 module Contributions = {
   let commands = (~isFocused, model) => {
-    let common = Commands.[problems];
+    let common = Commands.[problems, closePane];
     let vimWindowCommands =
       Component_VimWindows.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)));
@@ -955,7 +970,13 @@ module Contributions = {
           )
         : empty;
 
+    let paneFocus =
+      [Schema.bool("paneFocus", (_: model) => isFocused)]
+      |> Schema.fromList
+      |> fromSchema(model);
+
     [
+      paneFocus,
       vimNavKeys,
       diagnosticsKeys,
       locationsKeys,
@@ -965,5 +986,5 @@ module Contributions = {
     |> unionMany;
   };
 
-  let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];
+  let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX, escKey];
 };
