@@ -3,7 +3,7 @@
 <plist version="1.0">
   <dict>
     <key>CFBundleName</key>
-    <string>Onivim2Dev</string>
+    <string>Onivim 2</string>
     <key>CFBundleDisplayName</key>
     <string>Onivim 2 - Development</string>
     <key>CFBundleIdentifier</key>

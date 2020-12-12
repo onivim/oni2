@@ -144,7 +144,7 @@ if (process.platform == "linux") {
     const bundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
 
     const plistContents = {
-        CFBundleName: "Onivim2",
+        CFBundleName: "Onivim 2",
         CFBundleDisplayName: "Onivim 2",
         CFBundleIdentifier: "com.outrunlabs.onivim2",
         CFBundleIconFile: "Onivim2",
