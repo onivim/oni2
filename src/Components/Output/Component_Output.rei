@@ -21,7 +21,8 @@ let set: (string, model) => model;
 // UPDATE
 
 type outmsg =
-  | Nothing;
+  | Nothing
+  | Selected;
 
 let update: (msg, model) => (model, outmsg);
 

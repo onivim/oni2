@@ -29,14 +29,20 @@ let set = (contents, model) => {
 };
 
 type outmsg =
-  | Nothing;
+  | Nothing
+  | Selected;
 
 let update = (msg, model) =>
   switch (msg) {
   | VimList(listMsg) =>
-    let (vimList', _outmsg) =
+    let (vimList', outmsg) =
       Component_VimList.update(listMsg, model.vimList);
-    ({vimList: vimList'}, Nothing);
+    let out =
+      switch (outmsg) {
+      | Nothing => Nothing
+      | Selected(_) => Selected
+      };
+    ({vimList: vimList'}, out);
   };
 
 let keyPress = (key, model) => {

@@ -489,15 +489,19 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
     ({...model, diagnosticsView}, eff);
 
   | OutputPane(outputMsg) =>
-    prerr_endline("OUTPUT MSG: " ++ show_msg(msg));
-    let outputPane' =
-      model.outputPane
-      |> Option.map(outputPane => {
-           let (outputPane, _outmsg) =
-             Component_Output.update(outputMsg, outputPane);
-           outputPane;
-         });
-    ({...model, outputPane: outputPane'}, Nothing);
+    model.outputPane
+    |> Option.map(outputPane => {
+         let (outputPane, outmsg) =
+           Component_Output.update(outputMsg, outputPane);
+
+         let model' = {...model, outputPane: Some(outputPane)};
+         switch (outmsg) {
+         | Nothing => (model', Nothing)
+         // Emulate Vim behavior on space / enter - close pane
+         | Selected => ({...model', isOpen: false}, ReleaseFocus)
+         };
+       })
+    |> Option.value(~default=(model, Nothing))
   };
 
 let initial = {
