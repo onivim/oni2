@@ -970,12 +970,31 @@ module Contributions = {
           )
         : empty;
 
+    let activePanel =
+      (
+        isFocused
+          ? [
+            Schema.string("activePanel", model =>
+              switch (model.selected) {
+              | Diagnostics => "workbench.panel.markers"
+              | Output => "workbench.panel.output"
+              | Notifications => "workbench.panel.notifications"
+              | Locations => "workbench.panel.locations"
+              }
+            ),
+          ]
+          : []
+      )
+      |> Schema.fromList
+      |> fromSchema(model);
+
     let paneFocus =
       [Schema.bool("paneFocus", (_: model) => isFocused)]
       |> Schema.fromList
       |> fromSchema(model);
 
     [
+      activePanel,
       paneFocus,
       vimNavKeys,
       diagnosticsKeys,
