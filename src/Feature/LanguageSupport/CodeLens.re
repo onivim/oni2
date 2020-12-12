@@ -1,6 +1,10 @@
 open Oni_Core;
 open Oni_Core.Utility;
 
+module Log = (
+  val Oni_Core.Log.withNamespace("Oni2.LanguageSupport.CodeLens")
+);
+
 // MODEL
 
 type codeLens = {
@@ -78,6 +82,7 @@ type msg =
       handle: int,
       bufferId: int,
       lens: Exthost.CodeLens.t,
+      msg: string,
     });
 
 let register = (~handle: int, ~selector, model) => {
@@ -95,13 +100,13 @@ let unregister = (~handle: int, model) => {
 let addLenses = (handle, bufferId, lenses, handleToLenses) => {
   let internalLenses =
     lenses
-    |> List.sort((lensA, lensB) => {
-         Exthost.CodeLens.(
-           {
-             lensA.range.startLineNumber - lensB.range.startLineNumber;
-           }
-         )
-       })
+    // |> List.sort((lensA, lensB) => {
+    //      Exthost.CodeLens.(
+    //        {
+    //          lensA.range.startLineNumber - lensB.range.startLineNumber;
+    //        }
+    //      )
+    //    })
     |> List.map(lens =>
          {
            lens,
@@ -115,7 +120,61 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
              ),
          }
        );
-  IntMap.add(handle, internalLenses, handleToLenses);
+
+  let sort = (lenses: list(codeLens)) =>
+    lenses
+    |> Base.List.dedup_and_sort(~compare=(lensA, lensB) => {
+         Exthost.CodeLens.(
+           {
+             lensA.lens.range.startLineNumber - lensB.lens.range.startLineNumber;
+           }
+         )
+       });
+
+  handleToLenses
+  |> IntMap.update(
+       handle,
+       fun
+       | None => internalLenses |> sort |> Option.some
+       | Some(prev) => prev @ internalLenses |> sort |> Option.some,
+     );
+};
+
+let resolveLens = (~bufferId, ~handle, ~oldLens, ~resolvedLens, model) => {
+  let bufferToUnresolvedLenses' =
+    model.bufferToUnresolvedLenses
+    |> IntMap.update(
+         bufferId,
+         fun
+         | None => None
+         | Some(lenses) => {
+             lenses
+             |> List.filter(((h, lens)) =>
+                  handle != h
+                  || Exthost.CodeLens.(lens.cacheId != oldLens.cacheId)
+                )
+             |> Option.some;
+           },
+       );
+
+  let bufferToLenses' =
+    model.bufferToLenses
+    |> IntMap.update(
+         bufferId,
+         fun
+         | None =>
+           IntMap.empty
+           |> addLenses(handle, bufferId, [resolvedLens])
+           |> Option.some
+         | Some(map) =>
+           map |> addLenses(handle, bufferId, [resolvedLens]) |> Option.some,
+       );
+
+  {
+    ...model,
+    bufferToUnresolvedLenses: bufferToUnresolvedLenses',
+    bufferToLenses: bufferToLenses',
+  };
 };
 
 let update = (msg, model) =>
@@ -124,7 +183,12 @@ let update = (msg, model) =>
   | CodeLensResolveFailed(_) => (model, Nothing)
 
   // TODO
-  | CodeLensResolved(_) => (model, Nothing)
+  | CodeLensResolved({bufferId, handle, oldLens, resolvedLens}) =>
+    let model' =
+      model |> resolveLens(~handle, ~bufferId, ~oldLens, ~resolvedLens);
+
+    let lenses = get(~bufferId, model');
+    (model', CodeLensesChanged({bufferId, lenses}));
 
   | CodeLensesError(_) => (model, Nothing)
   | CodeLensesReceived({handle, bufferId, lenses}) =>
@@ -151,7 +215,9 @@ let update = (msg, model) =>
              |> addLenses(handle, bufferId, resolvedLenses)
              |> Option.some
            | Some(existing) =>
-             existing |> addLenses(handle, bufferId, lenses) |> Option.some,
+             existing
+             |> addLenses(handle, bufferId, resolvedLenses)
+             |> Option.some,
          );
 
     let bufferToUnresolvedLenses =
@@ -230,20 +296,28 @@ module Sub = {
     let codeLensResolve =
       visibleBuffers
       |> List.map(buffer => {
+           let bufferId = buffer |> Oni_Core.Buffer.getId;
            let lenses =
              model.bufferToUnresolvedLenses
-             |> IntMap.find_opt(Oni_Core.Buffer.getId(buffer))
+             |> IntMap.find_opt(bufferId)
              |> Option.value(~default=[]);
 
            lenses
            |> List.map(((handle, lens)) => {
                 let toMsg = maybeLens => {
-                  let () =
-                    maybeLens
-                    |> Result.iter(lens =>
-                         prerr_endline(Exthost.CodeLens.show(lens))
-                       );
-                  failwith("check");
+                  switch (maybeLens) {
+                  | Ok(resolvedLens) =>
+                    CodeLensResolved({
+                      handle,
+                      bufferId,
+                      oldLens: lens,
+                      resolvedLens,
+                    })
+                  | Error(msg) =>
+                    prerr_endline("Resolve failed!");
+                    Log.errorf(m => m("Codelens resolve failed: %s", msg));
+                    CodeLensResolveFailed({handle, bufferId, lens, msg});
+                  };
                 };
                 Service_Exthost.Sub.codeLens(~toMsg, ~handle, ~lens, client);
               });
