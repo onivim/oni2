@@ -70,29 +70,36 @@ let%component make =
 
   let indentation = Buffer.getIndentation(buffer);
 
-  let inlineElements = Editor.getInlineElements(editor);
+  //let inlineElements = Editor.getInlineElements(editor);
 
-  let lensElements =
-    inlineElements
-    |> List.map((inlineElement: InlineElements.element) => {
-         let line = inlineElement.line;
-         let uniqueId = inlineElement.uniqueId;
-         let elem = inlineElement.view(~theme, ~uiFont);
-         let inlineKey = inlineElement.key;
-         let hidden = inlineElement.hidden;
+  let topVisibleLine = Editor.getTopVisibleBufferLine(editor);
+  let bottomVisibleLine = Editor.getBottomVisibleBufferLine(editor);
 
-         <InlineElementView
-           config
-           key={inlineElement.reconcilerKey}
-           inlineKey
-           uniqueId
-           dispatch
-           lineNumber=line
-           hidden
-           editor>
-           <elem />
-         </InlineElementView>;
-       });
+  let rec getInlineElements = (acc: list(Revery.UI.element), lines) =>
+    switch (lines) {
+    | [] => acc
+    | [line, ...tail] =>
+      let isVisible = line >= topVisibleLine && line <= bottomVisibleLine;
+      getInlineElements(
+        [
+          <InlineElementView.Container
+            config
+            uiFont
+            theme
+            editor
+            line
+            dispatch
+            isVisible
+          />,
+          ...acc,
+        ],
+        tail,
+      );
+    };
+
+  let linesWithElements = Editor.linesWithInlineElements(editor);
+
+  let lensElements = getInlineElements([], linesWithElements);
 
   let onMouseWheel = (wheelEvent: NodeEvents.mouseWheelEventParams) =>
     dispatch(

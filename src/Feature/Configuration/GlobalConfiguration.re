@@ -39,4 +39,10 @@ let inactiveWindowOpacity =
 
 let animation = setting("ui.animation", bool, ~default=true);
 
-let contributions = [inactiveWindowOpacity.spec, animation.spec];
+let shadows = setting("ui.shadows", bool, ~default=true);
+
+let contributions = [
+  inactiveWindowOpacity.spec,
+  animation.spec,
+  shadows.spec,
+];

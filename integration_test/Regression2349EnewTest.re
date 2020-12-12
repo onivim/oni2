@@ -14,7 +14,9 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => 
     true;
   });
 
-  dispatch(Actions.VimExecuteCommand("enew"));
+  dispatch(
+    Actions.VimExecuteCommand({allowAnimation: true, command: "enew"}),
+  );
 
   wait(~name="New editor created", (state: State.t) => {
     let currentEditorId =

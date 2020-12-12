@@ -24,6 +24,7 @@ let subMode = ({subMode, _}) => subMode;
 [@deriving show]
 type msg =
   | ModeChanged({
+      allowAnimation: bool,
       mode: [@opaque] Vim.Mode.t,
       subMode: [@opaque] Vim.SubMode.t,
       effects: [@opaque] list(Vim.Effect.t),
@@ -39,15 +40,16 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | SettingsChanged
   | ModeDidChange({
+      allowAnimation: bool,
       mode: Vim.Mode.t,
       effects: list(Vim.Effect.t),
     });
 
 let update = (msg, model: model) => {
   switch (msg) {
-  | ModeChanged({mode, effects, subMode}) => (
+  | ModeChanged({allowAnimation, mode, effects, subMode}) => (
       {...model, subMode},
-      ModeDidChange({mode, effects}),
+      ModeDidChange({allowAnimation, mode, effects}),
     )
   | Pasted(text) =>
     let eff =
@@ -56,7 +58,10 @@ let update = (msg, model: model) => {
         text,
       );
     (model, Effect(eff));
-  | PasteCompleted({mode}) => (model, ModeDidChange({mode, effects: []}))
+  | PasteCompleted({mode}) => (
+      model,
+      ModeDidChange({allowAnimation: true, mode, effects: []}),
+    )
   | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
       SettingsChanged,
@@ -110,7 +115,12 @@ module CommandLine = {
 module Effects = {
   let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
     let toMsg = mode =>
-      ModeChanged({subMode: Vim.SubMode.None, mode, effects: []});
+      ModeChanged({
+        allowAnimation: true,
+        subMode: Vim.SubMode.None,
+        mode,
+        effects: [],
+      });
     Service_Vim.Effects.applyCompletion(
       ~meetColumn,
       ~insertText,

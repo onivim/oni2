@@ -19,6 +19,7 @@ module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
 let start =
     (
+      ~showUpdateChangelog: bool,
       languageInfo: Exthost.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
@@ -562,12 +563,21 @@ let start =
 
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
-      libvimHasInitialized := true
+      if (showUpdateChangelog
+          && Core.BuildInfo.commitId != Persistence.Global.version()) {
+        dispatch(
+          Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
+        );
+      };
+      libvimHasInitialized := true;
     });
 
-  let updateActiveEditorMode = (subMode, mode, effects) => {
+  let updateActiveEditorMode = (~allowAnimation=true, subMode, mode, effects) => {
     dispatch(
-      Actions.Vim(Feature_Vim.ModeChanged({subMode, mode, effects})),
+      // TODO
+      Actions.Vim(
+        Feature_Vim.ModeChanged({allowAnimation, subMode, mode, effects}),
+      ),
     );
   };
 
@@ -584,7 +594,7 @@ let start =
     && !String.equal(key, "<S-C->");
   };
 
-  let commandEffect = cmd => {
+  let commandEffect = (~allowAnimation, cmd) => {
     Isolinear.Effect.create(~name="vim.command", () => {
       let state = getState();
       let prevContext = Oni_Model.VimContext.current(state);
@@ -593,7 +603,12 @@ let start =
       if (newContext.bufferId != prevContext.bufferId) {
         dispatch(Actions.OpenBufferById({bufferId: newContext.bufferId}));
       } else {
-        updateActiveEditorMode(newContext.subMode, newContext.mode, effects);
+        updateActiveEditorMode(
+          ~allowAnimation,
+          newContext.subMode,
+          newContext.mode,
+          effects,
+        );
       };
     });
   };
@@ -765,7 +780,12 @@ let start =
 
       // Update the editor, which is the source of truth for cursor position
       let scope = EditorScope.Editor(editorId);
-      dispatch(Actions.Editor({scope, msg: ModeChanged({mode, effects})}));
+      dispatch(
+        Actions.Editor({
+          scope,
+          msg: ModeChanged({allowAnimation: true, mode, effects}),
+        }),
+      );
     });
   };
 
@@ -785,7 +805,10 @@ let start =
     | Command("editor.action.outdentLines") => (state, outdentEffect)
     | Command("vim.esc") => (state, escapeEffect)
     | Command("vim.tutor") => (state, openTutorEffect)
-    | VimExecuteCommand(cmd) => (state, commandEffect(cmd))
+    | VimExecuteCommand({allowAnimation, command}) => (
+        state,
+        commandEffect(~allowAnimation, command),
+      )
 
     | ListFocusUp
     | ListFocusDown

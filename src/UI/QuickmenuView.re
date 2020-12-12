@@ -94,7 +94,7 @@ let make =
     (
       ~font: UiFont.t,
       ~theme,
-      ~configuration: Configuration.t,
+      ~config: Oni_Core.Config.resolver,
       ~state: Quickmenu.t,
       //      ~placeholder: string="type here to search the menu",
       ~onFocusedChange: int => unit=onFocusedChange,
@@ -189,7 +189,7 @@ let make =
     </View>;
 
   <AllowPointer>
-    <OniBoxShadow configuration theme>
+    <OniBoxShadow config theme>
       <View style={Styles.container(theme)}>
         {switch (variant) {
          | EditorsPicker => React.empty

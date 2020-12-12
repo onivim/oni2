@@ -146,6 +146,7 @@ module CustomDecoders: {
 
 module VimSettings = {
   open VimSetting.Schema;
+
   let smoothScroll =
     vim("smoothscroll", scrollSetting => {
       scrollSetting

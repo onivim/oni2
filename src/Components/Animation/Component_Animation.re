@@ -25,6 +25,11 @@ let make = animation => {
   tick: 0,
 };
 
+let constant = v => {
+  let animation = Animation.const(v);
+  make(animation);
+};
+
 type msg =
   | Tick({totalTime: Revery.Time.t});
 

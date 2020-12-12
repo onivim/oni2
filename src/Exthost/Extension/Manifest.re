@@ -88,6 +88,10 @@ let identifier = manifest => {
   };
 };
 
+let publisher = manifest => {
+  manifest.publisher |> Option.value(~default="Unknown");
+};
+
 let displayName = ({displayName, _}) => {
   displayName |> Option.map(LocalizedToken.toString);
 };

@@ -1,5 +1,3 @@
-## vNext
-
 ### Features
 
 - #2712 - Completion: Add support for additionalTextEdits (fixes #2360)
@@ -8,6 +6,9 @@
 - #2765 - Vim: Hook up `:messages` and `:messages clear` ex commands
 - #2783 - Promote editor.wordWrap from experimental (fixes #1444)
 - #2774 - Extensions: Implement update check (also fixes #2748)
+- #2801 - Extensions: CodeLens - Handle multiple codelens on same line
+- #2812 - CLI: Add `+` and `-c` arguments to run Vim ex commands (fixes #1861)
+- #2817 - Snippets: Initial snippet parser (related #160)
 
 ### Bug Fixes
 
@@ -25,12 +26,20 @@
 - #2792 - Vim: Handle count for insert mode commands (`i`/`a`, etc) (fixes #809, #2190)
 - #2802 - Editor: Fix crash when moving mouse in empty buffer (fixes #2800)
 - #2758 - Vim: Insert literal not working in command-line mode (fixes #2747)
+- #2806 - Windows: Add open-directory command to windows installer (fixes #2046)
+- #2807 - Terminal: Implement paste in insert mode (fixes #2805)
+- #2808 - Auto-Update: Fix changelog display (fixes #2787)
+- #2809 - Extensions: Warn on open-vsx public namespaces (fixes #2345)
+- #2810 - Extensions: Fix intermittent request failure getting extension details
+- #2811 - Extensions: Show logo image for remote extensions
+- #2819 - Auto-Update: Set default update channel based on build type
+- #2822 - Build: Use development `Info.plist` that sets `NSSupportsAutomaticGraphicsSwitching` (fixes #2816)
 
 ### Performance
 
 - #2736 - Switch to model-based animation for notification yOffset
 - #2407 - Migrate color transitions to model-based animation
-- #2766 - Remove initial dock aniamtion (fixes #1131)
+- #2766 - Remove initial dock animation (fixes #1131)
 
 ### Documentation
 

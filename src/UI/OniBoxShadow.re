@@ -1,11 +1,11 @@
 open Revery;
 open Revery.UI;
-open Oni_Core;
 
 module Colors = Feature_Theme.Colors;
 
-let make = (~children, ~theme, ~configuration: Configuration.t, ()) => {
-  let useBoxShadow = Configuration.getValue(c => c.uiShadows, configuration);
+let make = (~children, ~theme, ~config, ()) => {
+  let useBoxShadow =
+    Feature_Configuration.GlobalConfiguration.shadows.get(config);
 
   if (useBoxShadow) {
     let color = Color.rgba(0., 0., 0., 0.75);

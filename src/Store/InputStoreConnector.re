@@ -107,10 +107,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           )
         | LicenseKey =>
           Actions.Registration(Feature_Registration.Pasted(firstLine))
+        | Terminal(id) =>
+          Actions.Terminal(Feature_Terminal.Pasted({id, text: rawText}))
 
         // No paste handling in these UIs, currently...
         | Pane => Actions.Noop
-        | Terminal(_) => Actions.Noop
         | InsertRegister
         | Sneak
         | FileExplorer
@@ -127,7 +128,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let effectToActions = (state, effect) =>
     switch (effect) {
     | Feature_Input.(Execute(VimExCommand(command))) => [
-        Actions.VimExecuteCommand(command),
+        Actions.VimExecuteCommand({allowAnimation: true, command}),
       ]
     | Feature_Input.(Execute(NamedCommand(command))) => [
         Actions.KeybindingInvoked({command: command}),

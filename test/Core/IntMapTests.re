@@ -21,6 +21,27 @@ describe("IntMap", ({describe, _}) => {
       expect.string(thirdVal).toEqual("c");
     });
 
+    test("shift sparse list", ({expect, _}) => {
+      let map = [(1, "a")] |> List.to_seq |> IntMap.of_seq;
+
+      let map' =
+        IntMap.shift(
+          ~default=_ => None,
+          ~startPos=0,
+          ~endPos=0,
+          ~delta=1,
+          map,
+        );
+
+      let val0 = IntMap.find_opt(0, map');
+      let val1 = IntMap.find_opt(1, map');
+      let val2 = IntMap.find_opt(2, map');
+
+      expect.equal(val0, None);
+      expect.equal(val1, None);
+      expect.equal(val2, Some("a"));
+    });
+
     test("add lines between 1 and 2", ({expect, _}) => {
       let newMap =
         IntMap.shift(

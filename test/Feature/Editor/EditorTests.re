@@ -40,10 +40,10 @@ describe("Editor", ({describe, _}) => {
     |> Editor.setWrapMode(~wrapMode=WrapMode.Viewport);
   };
 
-  let inlineElement = lineIdx =>
+  let inlineElement = (~uniqueId, lineIdx) =>
     Editor.makeInlineElement(
       ~key="test-inline-element",
-      ~uniqueId=string_of_int(lineIdx),
+      ~uniqueId,
       ~lineNumber=LineNumber.ofZeroBased(lineIdx),
       ~view=(~theme as _, ~uiFont as _, ()) =>
       Revery.UI.React.listToElement([])
@@ -66,7 +66,7 @@ describe("Editor", ({describe, _}) => {
   describe("inline elements", ({test, _}) => {
     test("inline element at top", ({expect, _}) => {
       let (editor, _buffer) = create([|"aaa"|]);
-      let inlineElement0 = inlineElement(0);
+      let inlineElement0 = inlineElement(~uniqueId="0", 0);
       let editor =
         editor
         |> Editor.setWrapMode(~wrapMode=WrapMode.NoWrap)
@@ -76,6 +76,8 @@ describe("Editor", ({describe, _}) => {
              ~elements=[inlineElement0],
            )
         |> Editor.setInlineElementSize(
+             ~allowAnimation=false,
+             ~line=LineNumber.zero,
              ~key="test-inline-element",
              ~uniqueId="0",
              ~height=25,
@@ -86,9 +88,41 @@ describe("Editor", ({describe, _}) => {
       expect.float(pixelY).toBeCloseTo(25.);
     });
 
+    test("multiple inline elements", ({expect, _}) => {
+      let (editor, _buffer) = create([|"aaa"|]);
+      let inlineElement00 = inlineElement(~uniqueId="00", 0);
+      let inlineElement01 = inlineElement(~uniqueId="01", 0);
+      let editor =
+        editor
+        |> Editor.setWrapMode(~wrapMode=WrapMode.NoWrap)
+        |> Editor.setSize(~pixelWidth=500, ~pixelHeight=500)
+        |> Editor.setInlineElements(
+             ~key="test-inline-element",
+             ~elements=[inlineElement00, inlineElement01],
+           )
+        |> Editor.setInlineElementSize(
+             ~allowAnimation=false,
+             ~line=LineNumber.zero,
+             ~key="test-inline-element",
+             ~uniqueId="00",
+             ~height=25,
+           )
+        |> Editor.setInlineElementSize(
+             ~allowAnimation=false,
+             ~line=LineNumber.zero,
+             ~key="test-inline-element",
+             ~uniqueId="01",
+             ~height=35,
+           );
+
+      let pixelY = Editor.viewLineToPixelY(0, editor);
+
+      expect.float(pixelY).toBeCloseTo(60.);
+    });
+
     test("inline element after wrapping", ({expect, _}) => {
       let editor = createThreeWideWithWrapping([|"aaaaaa", "aaaaaa"|]);
-      let inlineElement1 = inlineElement(1);
+      let inlineElement1 = inlineElement(~uniqueId="1", 1);
       let editor =
         editor
         |> Editor.setInlineElements(
@@ -96,6 +130,8 @@ describe("Editor", ({describe, _}) => {
              ~elements=[inlineElement1],
            )
         |> Editor.setInlineElementSize(
+             ~allowAnimation=false,
+             ~line=LineNumber.(zero + 1),
              ~key="test-inline-element",
              ~uniqueId="1",
              ~height=25,
