@@ -60,7 +60,7 @@ module Styles = {
 };
 
 let make = (~dispatch, ~state: State.t, ()) => {
-  let State.{uiFont as font, sideBar, zenMode, buffers, _} = state;
+  let State.{uiFont as font, sideBar, zenMode, buffers, editorFont, _} = state;
 
   let theme = Feature_Theme.colors(state.colorTheme);
 
@@ -198,6 +198,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
         iconTheme={state.iconTheme}
         languageInfo={state.languageInfo}
         theme
+        editorFont
         uiFont
         dispatch={msg => dispatch(Actions.Pane(msg))}
         pane={state.pane}

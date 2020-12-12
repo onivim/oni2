@@ -148,6 +148,11 @@ let start =
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
 
+      // TODO: Move internal to Feature_Vim
+      | Output({cmd, output}) => {
+          dispatch(Actions.Vim(Feature_Vim.Output({cmd, output})));
+        }
+
       | Clear({target, count}) =>
         Vim.Clear.(
           {

@@ -1619,6 +1619,12 @@ let update =
         mode,
         effects,
       )
+    | Output({cmd, output}) =>
+      let pane' = state.pane |> Feature_Pane.setOutput(cmd, output);
+      (
+        {...state, pane: pane'} |> FocusManager.push(Pane),
+        Isolinear.Effect.none,
+      );
     };
 
   | Workspace(msg) =>

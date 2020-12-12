@@ -18,4 +18,8 @@ type t =
       mode: Mapping.mode,
       keys: option(string),
     })
-  | Clear(Clear.t);
+  | Clear(Clear.t)
+  | Output({
+      cmd: string,
+      output: option(string),
+    });
