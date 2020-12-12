@@ -33,6 +33,7 @@
 - #2810 - Extensions: Fix intermittent request failure getting extension details
 - #2811 - Extensions: Show logo image for remote extensions
 - #2819 - Auto-Update: Set default update channel based on build type
+- #2822 - Build: Use development `Info.plist` that sets `NSSupportsAutomaticGraphicsSwitching` (fixes #2816)
 
 ### Performance
 
