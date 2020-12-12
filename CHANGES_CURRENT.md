@@ -32,6 +32,7 @@
 - #2809 - Extensions: Warn on open-vsx public namespaces (fixes #2345)
 - #2810 - Extensions: Fix intermittent request failure getting extension details
 - #2811 - Extensions: Show logo image for remote extensions
+- #2819 - Auto-Update: Set default update channel based on build type
 
 ### Performance
 

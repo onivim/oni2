@@ -2,12 +2,12 @@
 type msg =
   | AutoCheckChanged(bool)
   | LicenseKeyChanged(string)
-  | ReleaseChannelChanged([ | `Nightly | `Master | `Test]);
+  | ReleaseChannelChanged(string);
 
 module Sub = {
   type params = {
     automaticallyChecksForUpdates: bool,
-    releaseChannel: [ | `Nightly | `Master | `Test],
+    releaseChannel: string,
     uniqueId: string,
   };
 
@@ -15,7 +15,7 @@ module Sub = {
     Isolinear.Sub.Make({
       type state = {
         automaticallyChecksForUpdates: bool,
-        releaseChannel: [ | `Nightly | `Master | `Test],
+        releaseChannel: string,
       };
       type nonrec msg = msg;
       type nonrec params = params;
