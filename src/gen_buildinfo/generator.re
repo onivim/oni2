@@ -9,6 +9,23 @@ let getCommitId = () => {
   commitId;
 };
 
+let getBranch = () => {
+  let ic = Unix.open_process_in("git rev-parse --abbrev-ref HEAD");
+  let branch = input_line(ic) |> String.trim |> String.lowercase_ascii;
+  let () = close_in(ic);
+  branch;
+};
+
+let getDefaultUpdateChannel = () => {
+  let currentBranch = getBranch();
+
+  if (currentBranch == "staging" || currentBranch == "stable") {
+    currentBranch;
+  } else {
+    "master";
+  };
+};
+
 let getVersion = () => {
   Yojson.Safe.from_file("../../package.json")
   |> Yojson.Safe.Util.member("version")
@@ -22,8 +39,10 @@ Printf.fprintf(
   {|
 let commitId = "%s";
 let version = "%s";
+let defaultUpdateChannel = "%s";
 |},
   getCommitId(),
   getVersion(),
+  getDefaultUpdateChannel(),
 );
 close_out(oc);
