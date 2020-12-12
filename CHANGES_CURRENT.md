@@ -34,6 +34,7 @@
 - #2811 - Extensions: Show logo image for remote extensions
 - #2819 - Auto-Update: Set default update channel based on build type
 - #2822 - Build: Use development `Info.plist` that sets `NSSupportsAutomaticGraphicsSwitching` (fixes #2816)
+- #2826 - Search: Default to simple string search for find-in-files (fixes #2821)
 
 ### Performance
 
