@@ -264,7 +264,7 @@ module Configuration = {
 // SUBSCRIPTION
 
 module Sub = {
-  let create = (~visibleBuffers, ~client, model) => {
+  let create = (~visibleBuffers, ~visibleBuffersAndRanges, ~client, model) => {
     let codeLenses =
       visibleBuffers
       |> List.map(buffer => {
@@ -294,16 +294,15 @@ module Sub = {
       |> List.flatten;
 
     let codeLensResolve =
-      visibleBuffers
-      |> List.map(buffer => {
-           let bufferId = buffer |> Oni_Core.Buffer.getId;
+      visibleBuffersAndRanges
+      |> List.map(((bufferId, ranges: list(EditorCoreTypes.Range.t))) => {
            let lenses =
              model.bufferToUnresolvedLenses
              |> IntMap.find_opt(bufferId)
              |> Option.value(~default=[]);
 
            lenses
-           |> List.map(((handle, lens)) => {
+           |> List.filter_map(((handle, lens)) => {
                 let toMsg = maybeLens => {
                   switch (maybeLens) {
                   | Ok(resolvedLens) =>
@@ -314,12 +313,36 @@ module Sub = {
                       resolvedLens,
                     })
                   | Error(msg) =>
-                    prerr_endline("Resolve failed!");
                     Log.errorf(m => m("Codelens resolve failed: %s", msg));
                     CodeLensResolveFailed({handle, bufferId, lens, msg});
                   };
                 };
-                Service_Exthost.Sub.codeLens(~toMsg, ~handle, ~lens, client);
+
+                if (ranges
+                    |> List.exists(range => {
+                         let startLine =
+                           Exthost.(CodeLens.(lens.range.startLineNumber));
+                         EditorCoreTypes.(
+                           Range.contains(
+                             Location.{
+                               line: Index.fromOneBased(startLine),
+                               column: Index.zero,
+                             },
+                             range,
+                           )
+                         );
+                       })) {
+                  Some(
+                    Service_Exthost.Sub.codeLens(
+                      ~toMsg,
+                      ~handle,
+                      ~lens,
+                      client,
+                    ),
+                  );
+                } else {
+                  None;
+                };
               });
          })
       |> List.flatten;
@@ -328,9 +351,9 @@ module Sub = {
   };
 };
 
-let sub = (~config, ~visibleBuffers, ~client, model) =>
+let sub = (~config, ~visibleBuffers, ~visibleBuffersAndRanges, ~client, model) =>
   if (Configuration.Experimental.enabled.get(config)) {
-    Sub.create(~visibleBuffers, ~client, model);
+    Sub.create(~visibleBuffers, ~visibleBuffersAndRanges, ~client, model);
   } else {
     Isolinear.Sub.none;
   };
