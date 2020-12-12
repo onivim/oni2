@@ -1,4 +1,4 @@
 (install
-    (section bin)
-    (package Oni2)
-    (files Info.plist))
+ (section bin)
+ (package Oni2)
+ (files Info.plist))
