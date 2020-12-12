@@ -22,7 +22,11 @@ type msg =
   | Pasted(string)
   | SettingChanged(Vim.Setting.t)
   | MacroRecordingStarted({register: char})
-  | MacroRecordingStopped;
+  | MacroRecordingStopped
+  | Output({
+      cmd: string,
+      output: option(string),
+    });
 
 type outmsg =
   | Nothing
@@ -32,6 +36,10 @@ type outmsg =
       allowAnimation: bool,
       mode: Vim.Mode.t,
       effects: list(Vim.Effect.t),
+    })
+  | Output({
+      cmd: string,
+      output: option(string),
     });
 
 // UPDATE
