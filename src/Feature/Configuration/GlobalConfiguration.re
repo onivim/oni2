@@ -47,5 +47,5 @@ let contributions = [
   inactiveWindowOpacity.spec,
   animation.spec,
   shadows.spec,
-  layers.spec
+  layers.spec,
 ];

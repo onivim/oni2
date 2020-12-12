@@ -127,10 +127,8 @@ type t = {
   lastMouseScreenPosition: option(PixelPosition.t),
   lastMouseMoveTime: [@opaque] option(Revery.Time.t),
   lastMouseUpTime: [@opaque] option(Revery.Time.t),
-
   // Layers
   renderNonce: int,
-
   // Animation
   isAnimationOverride: option(bool),
 };
