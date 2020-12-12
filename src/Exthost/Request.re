@@ -244,7 +244,11 @@ module LanguageFeatures = {
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$resolveCodeLens",
-      ~args=`List([`Int(handle),codeLens |> Json.Encode.encode_value(CodeLens.encode)]),
+      ~args=
+        `List([
+          `Int(handle),
+          codeLens |> Json.Encode.encode_value(CodeLens.encode),
+        ]),
       client,
     );
   };

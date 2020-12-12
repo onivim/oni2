@@ -8,7 +8,7 @@ type segment =
 [@deriving show]
 type t = {
   parsed: list(segment),
-  raw: string
+  raw: string,
 };
 
 let segments = ({parsed, _}) => parsed;
@@ -58,23 +58,18 @@ module Parse = {
 
 module Decode = {
   open Json.Decode;
-  let decode: Json.decoder(t) = string |> map(str => {
-    parsed: Parse.parse(str),
-    raw: str
-    });
+  let decode: Json.decoder(t) =
+    string |> map(str => {parsed: Parse.parse(str), raw: str});
 };
 
 module Encode = {
   open Json.Encode;
 
   let encode = label => label.raw |> string;
-}
+};
 
 let decode = Decode.decode;
 let encode = Encode.encode;
-let ofString = str => {
-  parsed: Parse.parse(str),
-  raw: str
-};
+let ofString = str => {parsed: Parse.parse(str), raw: str};
 
-let toString = ({raw,_}) => raw;
+let toString = ({raw, _}) => raw;

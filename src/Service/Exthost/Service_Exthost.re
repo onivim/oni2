@@ -735,8 +735,8 @@ module Sub = {
   };
 
   let codeLens = (~handle as _, ~lens as _, ~toMsg as _, client) => {
-    Isolinear.Sub.none
-  }
+    Isolinear.Sub.none;
+  };
 
   type completionParams = {
     handle: int,

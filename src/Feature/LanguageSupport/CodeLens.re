@@ -99,7 +99,6 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
                Hashtbl.hash(textFromExthost(lens)),
              ),
          }
-         }
        );
   IntMap.add(handle, internalLenses, handleToLenses);
 };
