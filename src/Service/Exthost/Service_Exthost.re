@@ -758,8 +758,9 @@ module Sub = {
       };
 
       let name = "Service_Exthost.CodeLensSubscription";
-      let id = ({handle, codeLens, _}: params) =>
+      let id = ({handle, codeLens, _}: params) => {
         Printf.sprintf("%d:%s", handle, uniqueIdForCodeLens(codeLens));
+      };
 
       let init = (~params, ~dispatch) => {
         let promise =
@@ -786,8 +787,11 @@ module Sub = {
       };
     });
 
-  let codeLens = (~handle as _, ~lens as _, ~toMsg as _, client) => {
-    Isolinear.Sub.none;
+  let codeLens = (~handle, ~lens, ~toMsg, client) => {
+    CodeLensSubscription.create(
+      {handle, codeLens: lens, client}: codeLensParams,
+    )
+    |> Isolinear.Sub.map(toMsg);
   };
 
   type completionParams = {

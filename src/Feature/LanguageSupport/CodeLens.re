@@ -35,7 +35,7 @@ type handleToLenses = IntMap.t(list(codeLens));
 type model = {
   providers: list(provider),
   bufferToLenses: IntMap.t(handleToLenses),
-  unresolvedLenses: list(codeLens),
+  bufferToUnresolvedLenses: IntMap.t(list((int, Exthost.CodeLens.t))),
 };
 
 type outmsg =
@@ -57,7 +57,7 @@ let get = (~bufferId, {bufferToLenses, _}) => {
 let initial = {
   providers: [],
   bufferToLenses: IntMap.empty,
-  unresolvedLenses: [],
+  bufferToUnresolvedLenses: IntMap.empty,
 };
 
 [@deriving show]
@@ -67,6 +67,17 @@ type msg =
       handle: int,
       bufferId: int,
       lenses: list(Exthost.CodeLens.t),
+    })
+  | CodeLensResolved({
+      handle: int,
+      bufferId: int,
+      oldLens: Exthost.CodeLens.t,
+      resolvedLens: Exthost.CodeLens.t,
+    })
+  | CodeLensResolveFailed({
+      handle: int,
+      bufferId: int,
+      lens: Exthost.CodeLens.t,
     });
 
 let register = (~handle: int, ~selector, model) => {
@@ -109,8 +120,27 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
 
 let update = (msg, model) =>
   switch (msg) {
+  // TODO
+  | CodeLensResolveFailed(_) => (model, Nothing)
+
+  // TODO
+  | CodeLensResolved(_) => (model, Nothing)
+
   | CodeLensesError(_) => (model, Nothing)
   | CodeLensesReceived({handle, bufferId, lenses}) =>
+    let resolvedLenses =
+      lenses
+      |> List.filter((lens: Exthost.CodeLens.t) =>
+           Option.is_some(lens.command)
+         );
+
+    let unresolvedLenses =
+      lenses
+      |> List.filter((lens: Exthost.CodeLens.t) =>
+           Option.is_none(lens.command)
+         )
+      |> List.map(lens => (handle, lens));
+
     let bufferToLenses =
       model.bufferToLenses
       |> IntMap.update(
@@ -118,12 +148,21 @@ let update = (msg, model) =>
            fun
            | None =>
              IntMap.empty
-             |> addLenses(handle, bufferId, lenses)
+             |> addLenses(handle, bufferId, resolvedLenses)
              |> Option.some
            | Some(existing) =>
              existing |> addLenses(handle, bufferId, lenses) |> Option.some,
          );
-    let model' = {...model, bufferToLenses};
+
+    let bufferToUnresolvedLenses =
+      model.bufferToUnresolvedLenses
+      |> IntMap.update(
+           bufferId,
+           fun
+           | None => Some(unresolvedLenses)
+           | Some(cur) => Some(cur @ unresolvedLenses),
+         );
+    let model' = {...model, bufferToLenses, bufferToUnresolvedLenses};
     let lenses = get(~bufferId, model');
     (model', CodeLensesChanged({bufferId, lenses}));
   };
@@ -160,33 +199,58 @@ module Configuration = {
 
 module Sub = {
   let create = (~visibleBuffers, ~client, model) => {
-    visibleBuffers
-    |> List.map(buffer => {
-         model.providers
-         |> List.filter(({selector, _}) =>
-              Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
-            )
-         |> List.map(({handle, _}) => {
-              let toMsg =
-                fun
-                | Error(msg) => CodeLensesError(msg)
-                | Ok(lenses) =>
-                  CodeLensesReceived({
-                    handle,
-                    bufferId: buffer |> Oni_Core.Buffer.getId,
-                    lenses,
-                  });
+    let codeLenses =
+      visibleBuffers
+      |> List.map(buffer => {
+           model.providers
+           |> List.filter(({selector, _}) =>
+                Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
+              )
+           |> List.map(({handle, _}) => {
+                let toMsg =
+                  fun
+                  | Error(msg) => CodeLensesError(msg)
+                  | Ok(lenses) =>
+                    CodeLensesReceived({
+                      handle,
+                      bufferId: buffer |> Oni_Core.Buffer.getId,
+                      lenses,
+                    });
 
-              Service_Exthost.Sub.codeLenses(
-                ~handle,
-                ~buffer,
-                ~toMsg,
-                client,
-              );
-            })
-       })
-    |> List.flatten
-    |> Isolinear.Sub.batch;
+                Service_Exthost.Sub.codeLenses(
+                  ~handle,
+                  ~buffer,
+                  ~toMsg,
+                  client,
+                );
+              })
+         })
+      |> List.flatten;
+
+    let codeLensResolve =
+      visibleBuffers
+      |> List.map(buffer => {
+           let lenses =
+             model.bufferToUnresolvedLenses
+             |> IntMap.find_opt(Oni_Core.Buffer.getId(buffer))
+             |> Option.value(~default=[]);
+
+           lenses
+           |> List.map(((handle, lens)) => {
+                let toMsg = maybeLens => {
+                  let () =
+                    maybeLens
+                    |> Result.iter(lens =>
+                         prerr_endline(Exthost.CodeLens.show(lens))
+                       );
+                  failwith("check");
+                };
+                Service_Exthost.Sub.codeLens(~toMsg, ~handle, ~lens, client);
+              });
+         })
+      |> List.flatten;
+
+    codeLenses @ codeLensResolve |> Isolinear.Sub.batch;
   };
 };
 
