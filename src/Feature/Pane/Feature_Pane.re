@@ -35,6 +35,7 @@ type msg =
   | DiagnosticsList(Component_VimTree.msg)
   | LocationsList(Component_VimTree.msg)
   | NotificationsList(Component_VimList.msg)
+  | OutputPane(Component_Output.msg)
   | DismissNotificationClicked(Feature_Notification.notification)
   | LocationFileLoaded({
       filePath: string,
@@ -478,6 +479,17 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
       };
 
     ({...model, diagnosticsView}, eff);
+
+  | OutputPane(outputMsg) =>
+    
+    prerr_endline ("OUTPUT MSG: " ++ show_msg(msg));
+    let outputPane' = model.outputPane
+    |> Option.map(outputPane => {
+      
+    let (outputPane, _outmsg) = Component_Output.update(outputMsg, outputPane);
+    outputPane
+    });
+    ({...model, outputPane: outputPane'}, Nothing)
   };
 
 let initial = {
@@ -644,6 +656,7 @@ module View = {
         ~notificationsList:
            Component_VimList.model(Feature_Notification.notification),
         ~notificationsDispatch: Component_VimList.msg => unit,
+        ~outputDispatch: Component_Output.msg => unit,
         ~workingDirectory,
         (),
       ) =>
@@ -689,8 +702,9 @@ module View = {
              model
              isActive=isFocused
              editorFont
+             uiFont
              theme
-             dispatch={_ => ()}
+             dispatch=outputDispatch
            />
          })
       |> Option.value(~default=React.empty)
@@ -821,6 +835,7 @@ module View = {
           diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
           locationsDispatch={msg => dispatch(LocationsList(msg))}
           notificationsDispatch={msg => dispatch(NotificationsList(msg))}
+          outputDispatch={msg => dispatch(OutputPane(msg))}
           workingDirectory
         />
       </View>

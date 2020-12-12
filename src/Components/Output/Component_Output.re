@@ -4,22 +4,51 @@
  * A simple component for showing terminal-style output
  */
 
-[@deriving show]
-type msg = unit;
+open Oni_Core;
+open Oni_Core.Utility;
 
 [@deriving show]
-type model = {contents: string};
+type msg = 
+| VimList(Component_VimList.msg);
 
-let initial = {contents: ""};
+[@deriving show]
+type model = {
+  vimList: Component_VimList.model(string),
+};
 
-let set = (contents, _model) => {contents: contents};
+let initial = {
+  vimList: Component_VimList.create(~rowHeight=20)
+};
+
+let set = (contents, model) => {
+  let (_isMultiple, lines) = contents
+  |> StringEx.splitLines;
+
+  let vimList' = Component_VimList.set(
+    ~searchText=str => str,
+    lines,
+    model.vimList
+  );
+
+  prerr_endline ("LINE COUNT: " ++ string_of_int(Array.length(lines)));
+
+  { vimList: vimList' };
+};
 
 type outmsg =
   | Nothing;
 
-let update = (_msg, model) => (model, Nothing);
+let update = (msg, model) => switch (msg) {
+| VimList(listMsg) => 
+  let (vimList', _outmsg) = Component_VimList.update(listMsg, model.vimList);
+  ({ vimList: vimList' }, Nothing)
+}
 
-let keyPress = (_key, model) => model;
+let keyPress = (key, model) => {
+  {
+    vimList: model.vimList |> Component_VimList.keyPress(key)
+  }
+};
 
 module Contributions = {
   let commands = [];
@@ -31,22 +60,40 @@ module View = {
 
   let make =
       (
-        ~isActive as _,
+        ~isActive,
         ~editorFont: Service_Font.font,
-        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~uiFont: UiFont.t,
+        ~theme: ColorTheme.Colors.t,
         ~model,
-        ~dispatch as _,
+        ~dispatch,
         (),
       ) => {
     let bg = Feature_Theme.Colors.Terminal.background.from(theme);
     let fg = Feature_Theme.Colors.Terminal.foreground.from(theme);
-    <View style=Style.[backgroundColor(bg)]>
-      <Text
-        fontFamily={editorFont.fontFamily}
-        fontSize={editorFont.fontSize}
-        text={model.contents}
-        style=Style.[color(fg)]
-      />
+    <View style=Style.[backgroundColor(bg), flexGrow(1)]>
+      <Component_VimList.View
+        isActive
+        font=uiFont
+        focusedIndex=None
+        theme
+        model={model.vimList}
+        dispatch={msg => dispatch(VimList(msg))}
+        render={
+          (
+          ~availableWidth as _,
+          ~index as _,
+          ~hovered as _,
+          ~selected as _,
+          text
+        ) => {
+          <Text
+            fontFamily={editorFont.fontFamily}
+            fontSize={editorFont.fontSize}
+            text
+            style=Style.[color(fg)]
+          />
+        }}
+        />
     </View>;
   };
 };

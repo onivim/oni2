@@ -41,6 +41,7 @@ module View: {
     (
       ~isActive: bool,
       ~editorFont: Service_Font.font,
+      ~uiFont: UiFont.t,
       ~theme: ColorTheme.Colors.t,
       ~model: model,
       ~dispatch: msg => unit,
