@@ -8,51 +8,50 @@ open Oni_Core;
 open Oni_Core.Utility;
 
 [@deriving show]
-type msg = 
-| VimList(Component_VimList.msg);
+type msg =
+  | VimList(Component_VimList.msg);
 
 [@deriving show]
-type model = {
-  vimList: Component_VimList.model(string),
-};
+type model = {vimList: Component_VimList.model(string)};
 
-let initial = {
-  vimList: Component_VimList.create(~rowHeight=20)
-};
+let initial = {vimList: Component_VimList.create(~rowHeight=20)};
 
 let set = (contents, model) => {
-  let (_isMultiple, lines) = contents
-  |> StringEx.splitLines;
+  let (_isMultiple, lines) = contents |> StringEx.splitLines;
 
-  let vimList' = Component_VimList.set(
-    ~searchText=str => str,
-    lines,
-    model.vimList
-  );
+  let index = Array.length(lines) - 1;
 
-  prerr_endline ("LINE COUNT: " ++ string_of_int(Array.length(lines)));
+  let vimList' =
+    Component_VimList.set(~searchText=str => str, lines, model.vimList)
+    |> Component_VimList.scrollTo(~index, ~alignment=`Bottom);
 
-  { vimList: vimList' };
+  {vimList: vimList'};
 };
 
 type outmsg =
   | Nothing;
 
-let update = (msg, model) => switch (msg) {
-| VimList(listMsg) => 
-  let (vimList', _outmsg) = Component_VimList.update(listMsg, model.vimList);
-  ({ vimList: vimList' }, Nothing)
-}
+let update = (msg, model) =>
+  switch (msg) {
+  | VimList(listMsg) =>
+    let (vimList', _outmsg) =
+      Component_VimList.update(listMsg, model.vimList);
+    ({vimList: vimList'}, Nothing);
+  };
 
 let keyPress = (key, model) => {
-  {
-    vimList: model.vimList |> Component_VimList.keyPress(key)
-  }
+  {vimList: model.vimList |> Component_VimList.keyPress(key)};
 };
 
 module Contributions = {
-  let commands = [];
+  let commands =
+    Component_VimList.Contributions.commands
+    |> List.map(Oni_Core.Command.map(msg => VimList(msg)));
+
   let keybindings = [];
+
+  let contextKeys = ({vimList, _}) =>
+    Component_VimList.Contributions.contextKeys(vimList);
 };
 
 module View = {
@@ -78,13 +77,12 @@ module View = {
         theme
         model={model.vimList}
         dispatch={msg => dispatch(VimList(msg))}
-        render={
-          (
+        render={(
           ~availableWidth as _,
           ~index as _,
           ~hovered as _,
           ~selected as _,
-          text
+          text,
         ) => {
           <Text
             fontFamily={editorFont.fontFamily}
@@ -93,7 +91,7 @@ module View = {
             style=Style.[color(fg)]
           />
         }}
-        />
+      />
     </View>;
   };
 };

@@ -32,6 +32,7 @@ let keyPress: (string, model) => model;
 module Contributions: {
   let commands: list(Command.t(msg));
   let keybindings: list(Feature_Input.Schema.keybinding);
+  let contextKeys: model => WhenExpr.ContextKeys.t;
 };
 
 // VIEW

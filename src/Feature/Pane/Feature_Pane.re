@@ -405,8 +405,14 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
         Nothing,
       )
 
-    // TODO
-    | Output => (model, Nothing)
+    | Output => (
+        {
+          ...model,
+          outputPane:
+            model.outputPane |> Option.map(Component_Output.keyPress(key)),
+        },
+        Nothing,
+      )
     }
 
   | VimWindowNav(navMsg) =>
@@ -481,15 +487,15 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
     ({...model, diagnosticsView}, eff);
 
   | OutputPane(outputMsg) =>
-    
-    prerr_endline ("OUTPUT MSG: " ++ show_msg(msg));
-    let outputPane' = model.outputPane
-    |> Option.map(outputPane => {
-      
-    let (outputPane, _outmsg) = Component_Output.update(outputMsg, outputPane);
-    outputPane
-    });
-    ({...model, outputPane: outputPane'}, Nothing)
+    prerr_endline("OUTPUT MSG: " ++ show_msg(msg));
+    let outputPane' =
+      model.outputPane
+      |> Option.map(outputPane => {
+           let (outputPane, _outmsg) =
+             Component_Output.update(outputMsg, outputPane);
+           outputPane;
+         });
+    ({...model, outputPane: outputPane'}, Nothing);
   };
 
 let initial = {
@@ -890,6 +896,13 @@ module Contributions = {
       )
       |> List.map(Oni_Core.Command.map(msg => LocationsList(msg)));
 
+    let outputCommands =
+      (
+        isFocused && model.selected == Output
+          ? Component_Output.Contributions.commands : []
+      )
+      |> List.map(Oni_Core.Command.map(msg => OutputPane(msg)));
+
     let notificationsCommands =
       (
         isFocused && model.selected == Notifications
@@ -903,6 +916,7 @@ module Contributions = {
         @ diagnosticsCommands
         @ locationsCommands
         @ notificationsCommands
+        @ outputCommands
       : common;
   };
 
@@ -925,6 +939,15 @@ module Contributions = {
         ? Component_VimTree.Contributions.contextKeys(model.locationsView)
         : empty;
 
+    let outputKeys =
+      isFocused && model.selected == Output
+        ? model.outputPane
+          |> Option.map(outputPane =>
+               Component_Output.Contributions.contextKeys(outputPane)
+             )
+          |> Option.value(~default=empty)
+        : empty;
+
     let notificationsKeys =
       isFocused && model.selected == Notifications
         ? Component_VimList.Contributions.contextKeys(
@@ -932,7 +955,13 @@ module Contributions = {
           )
         : empty;
 
-    [vimNavKeys, diagnosticsKeys, locationsKeys, notificationsKeys]
+    [
+      vimNavKeys,
+      diagnosticsKeys,
+      locationsKeys,
+      notificationsKeys,
+      outputKeys,
+    ]
     |> unionMany;
   };
 
