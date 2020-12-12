@@ -723,7 +723,7 @@ module View = {
     };
 
   module Animation = {
-    let openSpring = Spring.Options.create(~stiffness=500., ~damping=30., ());
+    let openSpring = Spring.Options.create(~stiffness=600., ~damping=50., ());
   };
 
   let closeButton = (~theme, ~dispatch, ()) => {
