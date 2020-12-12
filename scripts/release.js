@@ -144,7 +144,7 @@ if (process.platform == "linux") {
     const bundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
 
     const plistContents = {
-        CFBundleName: "Onivim2",
+        CFBundleName: "Onivim 2",
         CFBundleDisplayName: "Onivim 2",
         CFBundleIdentifier: "com.outrunlabs.onivim2",
         CFBundleIconFile: "Onivim2",
@@ -205,6 +205,8 @@ if (process.platform == "linux") {
     // Remove setup.json prior to remapping bundled files,
     // so it doesn't get symlinked.
     fs.removeSync(path.join(binaryDirectory, "setup.json"))
+    // Remove development plist file
+    fs.removeSync(path.join(binaryDirectory, "Info.plist"))
 
     // We need to remap the binary files - we end up with font files, images, and configuration files in the bin folder
     // These should be in 'Resources' instead. Move everything that is _not_ a binary out, and symlink back in.
