@@ -763,7 +763,7 @@ let getPrimaryCursor = editor => {
 };
 
 let additionalCursors = editor => {
-  switch (editor.cursors) {
+  switch (editor |> cursors) {
   | [] => []
   | [_primaryCursor] => []
   | [_primaryCursor, ...additionalCursors] =>
