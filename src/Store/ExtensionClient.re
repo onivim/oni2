@@ -4,81 +4,28 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-
-module ExtensionDocumentSymbolProvider = {
-  let create =
-      (
-        id,
-        selector,
-        _label, // TODO: What to do with label?
-        client,
-        buffer,
-      ) => {
-    ProviderUtility.runIfSelectorPasses(~buffer, ~selector, () => {
-      Exthost.Request.LanguageFeatures.provideDocumentSymbols(
-        ~handle=id,
-        ~resource=Buffer.getUri(buffer),
-        client,
-      )
-    });
-  };
-};
-
-let create = (~config, ~extensions, ~setup: Setup.t) => {
+let create =
+    (~initialWorkspace, ~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
+
+  Log.infof(m =>
+    m("ExtensionClient.create called with attachStdio: %b", attachStdio)
+  );
+
+  let maybeClientRef = ref(None);
 
   let extensionInfo =
     extensions |> List.map(Exthost.Extension.InitData.Extension.ofScanResult);
-
-  let onRegisterDocumentSymbolProvider = (handle, selector, label, client) => {
-    let id = "exthost." ++ string_of_int(handle);
-    let documentSymbolProvider =
-      ExtensionDocumentSymbolProvider.create(handle, selector, label, client);
-
-    dispatch(
-      Actions.LanguageFeature(
-        LanguageFeatures.DocumentSymbolProviderAvailable(
-          id,
-          documentSymbolProvider,
-        ),
-      ),
-    );
-  };
-
-  let onDiagnosticsChangeMany =
-      (owner: string, entries: list(Exthost.Msg.Diagnostics.entry)) => {
-    let protocolDiagToDiag: Exthost.Diagnostic.t => Diagnostic.t =
-      d => {
-        let range = Exthost.OneBasedRange.toRange(d.range);
-        let message = d.message;
-        Diagnostic.create(~range, ~message, ());
-      };
-
-    let f = (d: Exthost.Msg.Diagnostics.entry) => {
-      let diagnostics = List.map(protocolDiagToDiag, snd(d));
-      let uri = fst(d);
-      Actions.DiagnosticsSet(uri, owner, diagnostics);
-    };
-
-    entries |> List.map(f) |> List.iter(a => dispatch(a));
-  };
   open Exthost;
   open Exthost.Extension;
   open Exthost.Msg;
 
-  let maybeClientRef = ref(None);
-
-  let withClient = f =>
-    switch (maybeClientRef^) {
-    | None => Log.warn("Warning - withClient does not have a client")
-    | Some(client) => f(client)
-    };
-
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
       switch (msg) {
+      | Initialized =>
+        dispatch(Actions.Exthost(Feature_Exthost.Msg.initialized));
+        Lwt.return(Reply.okEmpty);
       | DownloadService(msg) => Middleware.download(msg)
       | FileSystem(msg) => Middleware.filesystem(msg)
       | SCM(msg) =>
@@ -114,19 +61,12 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
-      | LanguageFeatures(
-          RegisterDocumentSymbolProvider({handle, selector, label}),
-        ) =>
-        withClient(
-          onRegisterDocumentSymbolProvider(handle, selector, label),
+      | Diagnostics(diagnosticMsg) =>
+        dispatch(
+          Actions.Diagnostics(
+            Feature_Diagnostics.Msg.exthost(diagnosticMsg),
+          ),
         );
-        Lwt.return(Reply.okEmpty);
-
-      | Diagnostics(Clear({owner})) =>
-        dispatch(Actions.DiagnosticsClear(owner));
-        Lwt.return(Reply.okEmpty);
-      | Diagnostics(ChangeMany({owner, entries})) =>
-        onDiagnosticsChangeMany(owner, entries);
         Lwt.return(Reply.okEmpty);
 
       | DocumentContentProvider(documentContentProviderMsg) =>
@@ -140,14 +80,10 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
 
         Lwt.return(Reply.okEmpty);
 
-      | Decorations(RegisterDecorationProvider({handle, label})) =>
-        dispatch(NewDecorationProvider({handle, label}));
-        Lwt.return(Reply.okEmpty);
-      | Decorations(UnregisterDecorationProvider({handle})) =>
-        dispatch(LostDecorationProvider({handle: handle}));
-        Lwt.return(Reply.okEmpty);
-      | Decorations(DecorationsDidChange({handle, uris})) =>
-        dispatch(DecorationsChanged({handle, uris}));
+      | Decorations(decorationsMsg) =>
+        dispatch(
+          Decorations(Feature_Decorations.Msg.exthost(decorationsMsg)),
+        );
         Lwt.return(Reply.okEmpty);
 
       | Documents(documentsMsg) =>
@@ -179,6 +115,14 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           ),
         );
         Lwt.return(Reply.okEmpty);
+
+      | Languages(msg) =>
+        let (promise, resolver) = Lwt.task();
+
+        let languagesMsg = Feature_Extensions.Msg.languages(~resolver, msg);
+        dispatch(Extensions(languagesMsg));
+
+        promise;
 
       | LanguageFeatures(msg) =>
         dispatch(
@@ -300,18 +244,17 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
 
   let tempDir = Filename.get_temp_dir_name();
 
-  let logsLocation = tempDir |> Uri.fromPath;
-  let logFile =
+  let logFile = tempDir |> Uri.fromPath;
+  let logsLocation =
     Filename.temp_file(~temp_dir=tempDir, "onivim2", "exthost.log")
     |> Uri.fromPath;
 
   let initData =
     InitData.create(
-      ~version="1.44.5", // TODO: How to keep in sync with bundled version?
+      ~version="1.50.1", // TODO: How to keep in sync with bundled version?
       ~parentPid,
       ~logsLocation,
       ~logFile,
-      ~logLevel=0,
       extensionInfo,
     );
 
@@ -327,6 +270,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
           extensions,
           setup,
         ),
+      ~initialWorkspace,
       ~namedPipe,
       ~initData,
       ~handler,
@@ -334,7 +278,26 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
       (),
     );
 
-  let env = Luv.Env.environ() |> Result.get_ok;
+  // INVESTIGATE: Why does using `Luv.Env.environ()` sometimes not work correctly when calling Process.spawn?
+  // In some cases - intermittently - the spawned process will not have the environment variables set.
+  // let env = Luv.Env.environ() |> Result.get_ok;
+  // ...in the meantime, fall-back to Unix.environment:
+  let env =
+    Unix.environment()
+    |> Array.to_list
+    |> List.fold_left(
+         (acc, curr) => {
+           switch (String.split_on_char('=', curr)) {
+           | [] => acc
+           | [_] => acc
+           | [key, ...values] =>
+             let v = String.concat("=", values);
+
+             [(key, v), ...acc];
+           }
+         },
+         [],
+       );
   let environment = [
     (
       "AMD_ENTRYPOINT",
@@ -359,7 +322,7 @@ let create = (~config, ~extensions, ~setup: Setup.t) => {
   };
 
   let redirect =
-    if (Timber.App.isEnabled()) {
+    if (attachStdio) {
       [
         Luv.Process.inherit_fd(
           ~fd=Luv.Process.stdin,

@@ -12,11 +12,13 @@
 
 [@deriving show({with_path: false})]
 type t =
+  | DebugInput
   | Editor
   | Welcome
   | Version
   | FullChangelog
-  | UpdateChangelog({since: string})
+  | Image
+  | UpdateChangelog
   | Terminal(Feature_Terminal.rendererState)
   | ExtensionDetails;
 

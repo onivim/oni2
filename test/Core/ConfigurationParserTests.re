@@ -7,66 +7,6 @@ module ConfigurationParser = Oni_Core.ConfigurationParser;
 module Constants = Oni_Core.Constants;
 
 describe("ConfigurationParser", ({test, describe, _}) => {
-  describe("per-filetype handling", ({test, _}) => {
-    test("simple filetype case", ({expect, _}) => {
-      let fileTypeConfiguration = {|
-		{
-      	"editor.insertSpaces": false,
-		  "[reason]": {
-		  	"editor.insertSpaces": true
-		  }
-	  }
-      |};
-
-      switch (ConfigurationParser.ofString(fileTypeConfiguration)) {
-      | Error(_) => expect.bool(true).toBe(false)
-      | Ok(v) =>
-        let insertSpaces =
-          Configuration.getValue(
-            ~fileType="reason",
-            c => c.editorInsertSpaces,
-            v,
-          );
-        expect.bool(insertSpaces).toBe(true);
-
-        let insertSpaces =
-          Configuration.getValue(
-            ~fileType="someotherlang",
-            c => c.editorInsertSpaces,
-            v,
-          );
-        expect.bool(insertSpaces).toBe(false);
-      };
-    });
-
-    test("ignores doubly-nested languages", ({expect, _}) => {
-      let fileTypeConfiguration = {|
-	  {
-      	"editor.insertSpaces": false,
-		  "[reason]": {
-		  	"editor.insertSpaces": true,
-			  "[ocaml]": {
-			  	"editor.insertSpaces": false
-			  }
-		  },
-		  "[ocaml]": {
-		  	"editor.insertSpaces": true
-		  }
-	  }
-      |};
-      switch (ConfigurationParser.ofString(fileTypeConfiguration)) {
-      | Error(_) => expect.int(1).toBe(2)
-      | Ok(v) =>
-        let ocamlInsertSpaces =
-          Configuration.getValue(
-            ~fileType="ocaml",
-            c => c.editorInsertSpaces,
-            v,
-          );
-        expect.bool(ocamlInsertSpaces).toBe(true);
-      };
-    });
-  });
   describe("error handling", ({test, _}) => {
     test("invalid json returns error", ({expect, _}) => {
       let invalidConfiguration = "{]";
@@ -98,55 +38,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
       )
     | Error(_) => expect.bool(false).toBe(true)
     };
-  });
-
-  test("bool value", ({expect, _}) => {
-    let configuration = {|
-      { "editor.minimap.enabled": false }
-      |};
-
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(v) =>
-      expect.bool(Configuration.getValue(c => c.editorMinimapEnabled, v)).
-        toBe(
-        false,
-      )
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
-  let getExpectedValue = (valueGetter, configuration) => {
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(parsedConfig) => Configuration.getValue(valueGetter, parsedConfig)
-    | Error(_) => failwith("Unable to parse configuration: " ++ configuration)
-    };
-  };
-
-  describe("editor.fontSize", ({test, _}) => {
-    let getFontSize = getExpectedValue(c => c.editorFontSize);
-    test("parses string if possible", ({expect, _}) => {
-      let fontSize =
-        getFontSize({|
-        { "editor.fontSize": "12" }
-      |});
-      expect.float(fontSize).toBeCloseTo(12.);
-    });
-
-    test("uses default size if unable to parse", ({expect, _}) => {
-      let fontSize =
-        getFontSize({|
-        { "editor.fontSize": "true" }
-      |});
-      expect.float(fontSize).toBeCloseTo(Constants.defaultFontSize);
-    });
-
-    test("does not allow value lower than minimum size", ({expect, _}) => {
-      let fontSize =
-        getFontSize({|
-        { "editor.fontSize": 1 }
-      |});
-      expect.float(fontSize).toBeCloseTo(Constants.minimumFontSize);
-    });
   });
 
   test("vimUseSystemClipboard value", ({expect, _}) => {
@@ -215,21 +106,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
-  test("list of numbers", ({expect, _}) => {
-    let configuration = {|
-      { "editor.rulers": [120, 80] }
-    |};
-
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(v) =>
-      expect.list(Configuration.getValue(c => c.editorRulers, v)).toEqual([
-        80,
-        120,
-      ])
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
   test("list of strings", ({expect, _}) => {
     let configuration = {|
      { "experimental.viml": ["first thing", "second thing", "third thing"] }
@@ -278,46 +154,67 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     };
   });
 
-  test("resiliency tests", ({expect, _}) => {
-    let trailingCommaInObject = {|
-      { "editor.rulers": [120, 80], }
+  test("autoReveal bool(true) setting", ({expect, _}) => {
+    let configuration = {|
+    { "explorer.autoReveal": true }
     |};
+    let expected = `HighlightAndScroll;
 
-    let trailingCommaInArray = {|
-      { "editor.rulers": [120, 80,] }
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.equal(
+        expected,
+        Configuration.getValue(c => c.explorerAutoReveal, v),
+      )
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
+
+  test("autoReveal bool(false) setting", ({expect, _}) => {
+    let configuration = {|
+    { "explorer.autoReveal": false }
     |};
+    let expected = `NoReveal;
 
-    let commentBeforeEverything = {|
-      // This is my configuration
-      { "editor.rulers": [120, 80] }
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.equal(
+        expected,
+        Configuration.getValue(c => c.explorerAutoReveal, v),
+      )
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
+
+  test("autoReveal focusNoScroll string setting", ({expect, _}) => {
+    let configuration = {|
+    { "explorer.autoReveal": "focusNoScroll" }
     |};
+    let expected = `HighlightOnly;
 
-    let commentInObject = {|
-      {
-        // This is a setting
-        "editor.rulers": [120, 80]
-      }
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.equal(
+        expected,
+        Configuration.getValue(c => c.explorerAutoReveal, v),
+      )
+    | Error(_) => expect.bool(false).toBe(true)
+    };
+  });
+
+  test("autoReveal 'bad string' setting", ({expect, _}) => {
+    let configuration = {|
+    { "explorer.autoReveal": "rocinante" }
     |};
+    let expected = `NoReveal;
 
-    let cases = [
-      trailingCommaInObject,
-      trailingCommaInArray,
-      commentBeforeEverything,
-      commentInObject,
-    ];
-
-    List.iter(
-      case => {
-        switch (ConfigurationParser.ofString(case)) {
-        | Ok(v) =>
-          expect.list(Configuration.getValue(c => c.editorRulers, v)).toEqual([
-            80,
-            120,
-          ])
-        | Error(_) => expect.bool(false).toBe(true)
-        }
-      },
-      cases,
-    );
+    switch (ConfigurationParser.ofString(configuration)) {
+    | Ok(v) =>
+      expect.equal(
+        expected,
+        Configuration.getValue(c => c.explorerAutoReveal, v),
+      )
+    | Error(_) => expect.bool(false).toBe(true)
+    };
   });
 });

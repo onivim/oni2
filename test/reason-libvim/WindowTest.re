@@ -49,7 +49,8 @@ describe("Window", ({describe, _}) => {
           splits := [(splitType, name), ...splits^]
         );
 
-      let _context: Context.t = command("vsp test.txt");
+      let (_context: Context.t, _effects: list(Vim.Effect.t)) =
+        command("vsp test.txt");
 
       expect.int(List.length(splits^)).toBe(1);
 
@@ -70,7 +71,8 @@ describe("Window", ({describe, _}) => {
           splits := [(splitType, name), ...splits^]
         );
 
-      let _context: Context.t = command("sp test2.txt");
+      let (_context: Context.t, _effects: list(Vim.Effect.t)) =
+        command("sp test2.txt");
 
       expect.int(List.length(splits^)).toBe(1);
 

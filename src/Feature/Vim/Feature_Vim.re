@@ -1,53 +1,97 @@
-open EditorCoreTypes;
+open Oni_Core;
 open Oni_Core.Utility;
 
 // MODEL
 
-type model = {mode: Vim.Mode.t};
+type model = {
+  settings: StringMap.t(Vim.Setting.value),
+  recordingMacro: option(char),
+  subMode: Vim.SubMode.t,
+};
 
-let initial = {mode: Vim.Types.Normal};
+let initial = {
+  settings: StringMap.empty,
+  recordingMacro: None,
+  subMode: Vim.SubMode.None,
+};
 
-let mode = ({mode}) => mode;
+let recordingMacro = ({recordingMacro, _}) => recordingMacro;
+
+let subMode = ({subMode, _}) => subMode;
 
 // MSG
 
 [@deriving show]
 type msg =
-  | ModeChanged([@opaque] Vim.Mode.t)
-  | PasteCompleted({cursors: [@opaque] list(BytePosition.t)})
-  | Pasted(string);
+  | ModeChanged({
+      allowAnimation: bool,
+      mode: [@opaque] Vim.Mode.t,
+      subMode: [@opaque] Vim.SubMode.t,
+      effects: [@opaque] list(Vim.Effect.t),
+    })
+  | PasteCompleted({mode: [@opaque] Vim.Mode.t})
+  | Pasted(string)
+  | SettingChanged(Vim.Setting.t)
+  | MacroRecordingStarted({register: char})
+  | MacroRecordingStopped
+  | Output({
+      cmd: string,
+      output: option(string),
+    });
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | CursorsUpdated(list(BytePosition.t));
+  | SettingsChanged
+  | ModeDidChange({
+      allowAnimation: bool,
+      mode: Vim.Mode.t,
+      effects: list(Vim.Effect.t),
+    })
+  | Output({
+      cmd: string,
+      output: option(string),
+    });
 
 let update = (msg, model: model) => {
   switch (msg) {
-  | ModeChanged(mode) => ({mode: mode}: model, Nothing)
+  | ModeChanged({allowAnimation, mode, effects, subMode}) => (
+      {...model, subMode},
+      ModeDidChange({allowAnimation, mode, effects}),
+    )
   | Pasted(text) =>
     let eff =
       Service_Vim.Effects.paste(
-        ~toMsg=cursors => PasteCompleted({cursors: cursors}),
+        ~toMsg=mode => PasteCompleted({mode: mode}),
         text,
       );
     (model, Effect(eff));
-  | PasteCompleted({cursors}) => (model, CursorsUpdated(cursors))
+  | PasteCompleted({mode}) => (
+      model,
+      ModeDidChange({allowAnimation: true, mode, effects: []}),
+    )
+  | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
+      {...model, settings: model.settings |> StringMap.add(fullName, value)},
+      SettingsChanged,
+    )
+  | MacroRecordingStarted({register}) => (
+      {...model, recordingMacro: Some(register)},
+      Nothing,
+    )
+  | MacroRecordingStopped => ({...model, recordingMacro: None}, Nothing)
+
+  | Output({cmd, output}) => (model, Output({cmd, output}))
   };
 };
 
 module CommandLine = {
-  let getCompletionMeet = commandLine => {
-    let len = String.length(commandLine);
-
-    if (len == 0) {
+  let getCompletionMeet = commandLine =>
+    if (StringEx.isEmpty(commandLine)) {
       None;
     } else {
-      String.index_opt(commandLine, ' ')
-      |> Option.map(idx => idx + 1)  // Advance past space
+      StringEx.findUnescapedFromEnd(commandLine, ' ')
       |> OptionEx.or_(Some(0));
     };
-  };
 
   let%test "empty command line returns None" = {
     getCompletionMeet("") == None;
@@ -66,6 +110,40 @@ module CommandLine = {
   };
 
   let%test "meet with a path, spaces" = {
-    getCompletionMeet("vsp /path with spaces/") == Some(4);
+    getCompletionMeet("vsp /path\\ with\\ spaces/") == Some(4);
+  };
+
+  let%test "meet multiple paths" = {
+    getCompletionMeet("!cp /path1 /path2") == Some(11);
+  };
+
+  let%test "meet multiple paths with spaces" = {
+    getCompletionMeet("!cp /path\\ 1 /path\\ 2") == Some(13);
+  };
+};
+
+module Effects = {
+  let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
+    let toMsg = mode =>
+      ModeChanged({
+        allowAnimation: true,
+        subMode: Vim.SubMode.None,
+        mode,
+        effects: [],
+      });
+    Service_Vim.Effects.applyCompletion(
+      ~meetColumn,
+      ~insertText,
+      ~additionalEdits,
+      ~toMsg,
+    );
+  };
+};
+
+module Configuration = {
+  type resolver = string => option(Vim.Setting.value);
+
+  let resolver = ({settings, _}, settingName) => {
+    settings |> StringMap.find_opt(settingName);
   };
 };

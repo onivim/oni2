@@ -165,7 +165,7 @@ module Internal = {
         ~languageConfiguration,
         ~formatFn,
         ~model,
-        ~configuration,
+        ~configuration as _,
         ~matchingFormatters,
         ~buf,
         ~extHostClient,
@@ -173,8 +173,7 @@ module Internal = {
       ) => {
     let sessionId = model.nextSessionId;
 
-    let indentation =
-      Oni_Core.Indentation.getForBuffer(~buffer=buf, configuration);
+    let indentation = Buffer.getIndentation(buf);
 
     if (matchingFormatters == []) {
       (
@@ -244,13 +243,11 @@ let update =
             character: CharacterIndex.zero,
           },
         };
-      let filetype =
-        buf |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
 
       let matchingFormatters =
         model.availableRangeFormatters
         |> List.filter(({selector, _}) =>
-             DocumentSelector.matches(~filetype, selector)
+             DocumentSelector.matchesBuffer(~buffer=buf, selector)
            );
 
       Internal.runFormat(
@@ -271,13 +268,10 @@ let update =
   | Command(FormatSelection) =>
     switch (maybeBuffer, maybeSelection) {
     | (Some(buf), Some(range)) =>
-      let filetype =
-        buf |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
-
       let matchingFormatters =
         model.availableRangeFormatters
         |> List.filter(({selector, _}) =>
-             DocumentSelector.matches(~filetype, selector)
+             DocumentSelector.matchesBuffer(~buffer=buf, selector)
            );
 
       Internal.runFormat(
@@ -300,13 +294,10 @@ let update =
     switch (maybeBuffer) {
     | None => (model, Nothing)
     | Some(buf) =>
-      let filetype =
-        buf |> Oni_Core.Buffer.getFileType |> Oni_Core.Buffer.FileType.toString;
-
       let matchingFormatters =
         model.availableDocumentFormatters
         |> List.filter(({selector, _}) =>
-             DocumentSelector.matches(~filetype, selector)
+             DocumentSelector.matchesBuffer(~buffer=buf, selector)
            );
 
       Internal.runFormat(

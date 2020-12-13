@@ -2,13 +2,16 @@ open TestFramework;
 open EditorInput;
 
 let aKeyNoModifiers =
-  KeyPress.{scancode: 101, keycode: 1, modifiers: Modifiers.none};
+  KeyPress.physicalKey(~scancode=101, ~keycode=1, ~modifiers=Modifiers.none);
 
 let bKeyNoModifiers =
-  KeyPress.{scancode: 102, keycode: 2, modifiers: Modifiers.none};
+  KeyPress.physicalKey(~scancode=102, ~keycode=2, ~modifiers=Modifiers.none);
 
 let cKeyNoModifiers =
-  KeyPress.{scancode: 103, keycode: 3, modifiers: Modifiers.none};
+  KeyPress.physicalKey(~scancode=103, ~keycode=3, ~modifiers=Modifiers.none);
+
+let leaderKey = KeyPress.specialKey(SpecialKey.Leader);
+let plugKey = KeyPress.specialKey(SpecialKey.Plug);
 
 module Input =
   EditorInput.Make({
@@ -17,36 +20,106 @@ module Input =
   });
 
 describe("EditorInput", ({describe, _}) => {
-  describe("flush", ({test, _}) => {
-    test("simple sequence", ({expect, _}) => {
+  describe("special keys", ({test, _}) => {
+    test("special keys can participate in remap", ({expect, _}) => {
+      // Add a <Plug>a -> "commandA" mapping
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(2, Modifiers.none)),
-             ]),
-             _ => true,
-             "commandAB",
-           );
-
-      let (bindings, _id) =
-        bindings
-        |> Input.addBinding(
-             Sequence([Keydown(Keycode(1, Modifiers.none))]),
+             Sequence([plugKey, aKeyNoModifiers]),
              _ => true,
              "commandA",
            );
 
-      let (bindings, effects) =
-        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
+      // Remap b -> <Plug>a
+      let (bindings, _id) =
+        bindings
+        |> Input.addMapping(
+             Sequence([bKeyNoModifiers]),
+             _ => true,
+             [plugKey, aKeyNoModifiers],
+           );
 
+      // Pressing b should remap to <Plug>a, which should execute "commandA"
+      let (_bindings, effects) =
+        Input.keyDown(~context=true, ~key=bKeyNoModifiers, bindings);
+      expect.equal(effects, [Execute("commandA")]);
+    });
+
+    test("leader key can participate in remap", ({expect, _}) => {
+      // Add a <Leader>a -> "commandLeaderA" mapping
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([leaderKey, aKeyNoModifiers]),
+             _ => true,
+             "commandLeaderA",
+           );
+
+      // Remap b -> <Leadeer>
+      let (bindings, _id) =
+        bindings
+        |> Input.addMapping(
+             Sequence([bKeyNoModifiers]),
+             _ => true,
+             [leaderKey],
+           );
+
+      // Pressing b, as the leader key...
+      let (bindings, effects) =
+        Input.keyDown(~context=true, ~key=bKeyNoModifiers, bindings);
       expect.equal(effects, []);
 
-      let (_bindings, effects) = Input.flush(~context=true, bindings);
+      // And then a to complete the binding
+      let (_bindings, effects) =
+        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
+      expect.equal(effects, [Execute("commandLeaderA")]);
+    });
 
+    test("leader key defined as a", ({expect, _}) => {
+      let physicalKey =
+        PhysicalKey.{scancode: 101, keycode: 1, modifiers: Modifiers.none};
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(Sequence([leaderKey]), _ => true, "commandA");
+
+      let (_bindings, effects) =
+        Input.keyDown(
+          ~leaderKey=Some(physicalKey),
+          ~context=true,
+          ~key=aKeyNoModifiers,
+          bindings,
+        );
       expect.equal(effects, [Execute("commandA")]);
-    })
+    });
+  });
+  describe("leader key", ({test, _}) => {
+    test("no leader key defined", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(Sequence([leaderKey]), _ => true, "commandA");
+
+      let (_bindings, effects) =
+        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
+      expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
+    });
+
+    test("leader key defined as a", ({expect, _}) => {
+      let physicalKey =
+        PhysicalKey.{scancode: 101, keycode: 1, modifiers: Modifiers.none};
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(Sequence([leaderKey]), _ => true, "commandA");
+
+      let (_bindings, effects) =
+        Input.keyDown(
+          ~leaderKey=Some(physicalKey),
+          ~context=true,
+          ~key=aKeyNoModifiers,
+          bindings,
+        );
+      expect.equal(effects, [Execute("commandA")]);
+    });
   });
   describe("allKeysReleased", ({test, _}) => {
     test("basic release case", ({expect, _}) => {
@@ -69,7 +142,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
-             Sequence([Keydown(Keycode(1, Modifiers.none))]),
+             Sequence([aKeyNoModifiers]),
              _ => true,
              "commandA",
            );
@@ -81,10 +154,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(2, Modifiers.none)),
-             ]),
+             Sequence([aKeyNoModifiers, bKeyNoModifiers]),
              _ => true,
              "commandAB",
            );
@@ -106,10 +176,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(2, Modifiers.none)),
-             ]),
+             Sequence([aKeyNoModifiers, bKeyNoModifiers]),
              _ => true,
              "commandAB",
            );
@@ -135,10 +202,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(2, Modifiers.none)),
-             ]),
+             Sequence([aKeyNoModifiers, bKeyNoModifiers]),
              _ => true,
              "commandAB",
            );
@@ -160,10 +224,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(2, Modifiers.none)),
-             ]),
+             Sequence([aKeyNoModifiers, bKeyNoModifiers]),
              _ => true,
              "command1",
            );
@@ -186,10 +247,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(1, Modifiers.none)),
-             ]),
+             Sequence([aKeyNoModifiers, aKeyNoModifiers]),
              _ => true,
              "commandAA",
            );
@@ -208,10 +266,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(2, Modifiers.none)),
-             ]),
+             Sequence([aKeyNoModifiers, bKeyNoModifiers]),
              _ => true,
              "commandAB",
            );
@@ -231,71 +286,33 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(effects, [Execute("commandAB")]);
     });
-    test("sequence with keyups", ({expect, _}) => {
-      let (bindings, _id) =
-        Input.empty
-        |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keyup(Keycode(1, Modifiers.none)),
-             ]),
-             _ => true,
-             "commandA!A",
-           );
-
-      let (bindings, effects) =
-        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
-
-      expect.equal(effects, []);
-
-      let (_bindings, effects) =
-        Input.keyUp(~context=true, ~key=aKeyNoModifiers, bindings);
-
-      expect.equal(effects, [Execute("commandA!A")]);
-    });
-    test("partial match with another match", ({expect, _}) => {
-      let (bindings, _id) =
-        Input.empty
-        |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(3, Modifiers.none)),
-             ]),
-             _ => true,
-             "commandAC",
-           );
-
-      let (bindings, _id) =
-        bindings
-        |> Input.addBinding(
-             Sequence([Keydown(Keycode(1, Modifiers.none))]),
-             _ => true,
-             "commandA",
-           );
-
-      let (bindings, effects) =
-        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
-
-      expect.equal(effects, []);
-
-      let (bindings, effects) =
-        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
-
-      expect.equal(effects, [Execute("commandA")]);
-
-      let (_bindings, effects) =
-        Input.keyDown(~context=true, ~key=cKeyNoModifiers, bindings);
-
-      expect.equal(effects, [Execute("commandAC")]);
-    });
+    //    test("sequence with keyups", ({expect, _}) => {
+    //      let (bindings, _id) =
+    //        Input.empty
+    //        |> Input.addBinding(
+    //             Sequence([
+    //               Keydown(Keycode(1, Modifiers.none)),
+    //               Keyup(Keycode(1, Modifiers.none)),
+    //             ]),
+    //             _ => true,
+    //             "commandA!A",
+    //           );
+    //
+    //      let (bindings, effects) =
+    //        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
+    //
+    //      expect.equal(effects, []);
+    //
+    //      let (_bindings, effects) =
+    //        Input.keyUp(~context=true, ~key=aKeyNoModifiers, bindings);
+    //
+    //      expect.equal(effects, [Execute("commandA!A")]);
+    //    });
     test("partial match with unhandled", ({expect, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(3, Modifiers.none)),
-             ]),
+             Sequence([aKeyNoModifiers, cKeyNoModifiers]),
              _ => true,
              "commandAC",
            );
@@ -303,7 +320,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         bindings
         |> Input.addBinding(
-             Sequence([Keydown(Keycode(1, Modifiers.none))]),
+             Sequence([aKeyNoModifiers]),
              _ => true,
              "commandA",
            );
@@ -318,7 +335,32 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(
         effects,
-        [Unhandled(bKeyNoModifiers), Execute("commandA")],
+        [Execute("commandA"), Unhandled(bKeyNoModifiers)],
+      );
+    });
+    test("#1691: almost match gets unhandled", ({expect, _}) => {
+      // Add binding for 'aa'
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers, aKeyNoModifiers]),
+             _ => true,
+             "commandAC",
+           );
+
+      // Press a...
+      let (bindings, effects) =
+        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
+
+      expect.equal(effects, []);
+
+      // Press b...
+      let (_bindings, effects) =
+        Input.keyDown(~context=true, ~key=bKeyNoModifiers, bindings);
+
+      expect.equal(
+        effects,
+        [Unhandled(aKeyNoModifiers), Unhandled(bKeyNoModifiers)],
       );
     });
   });
@@ -328,7 +370,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
-             Sequence([Keydown(Keycode(1, Modifiers.none))]),
+             Sequence([aKeyNoModifiers]),
              identity,
              "command1",
            );
@@ -343,10 +385,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(3, Modifiers.none)),
-             ]),
+             Sequence([aKeyNoModifiers, cKeyNoModifiers]),
              identity,
              "commandAC",
            );
@@ -362,7 +401,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addBinding(
-             Sequence([Keydown(Keycode(1, Modifiers.none))]),
+             Sequence([aKeyNoModifiers]),
              _ => true,
              "command1",
            );
@@ -386,7 +425,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addMapping(
-             Sequence([Keydown(Keycode(1, Modifiers.none))]),
+             Sequence([aKeyNoModifiers]),
              _ => true,
              [bKeyNoModifiers],
            );
@@ -401,7 +440,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addMapping(
-             Sequence([Keydown(Keycode(1, Modifiers.none))]),
+             Sequence([aKeyNoModifiers]),
              _ => true,
              [bKeyNoModifiers],
            );
@@ -409,7 +448,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         bindings
         |> Input.addMapping(
-             Sequence([Keydown(Keycode(2, Modifiers.none))]),
+             Sequence([bKeyNoModifiers]),
              _ => true,
              [cKeyNoModifiers],
            );
@@ -424,7 +463,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addMapping(
-             Sequence([Keydown(Keycode(1, Modifiers.none))]),
+             Sequence([aKeyNoModifiers]),
              _ => true,
              [aKeyNoModifiers],
            );
@@ -432,17 +471,17 @@ describe("EditorInput", ({describe, _}) => {
       let (_bindings, effects) =
         Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
 
-      expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
+      expect.equal(
+        effects,
+        [RemapRecursionLimitHit, Unhandled(aKeyNoModifiers)],
+      );
     });
 
     test("unhandled, sequence remap", ({expect, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addMapping(
-             Sequence([
-               Keydown(Keycode(1, Modifiers.none)),
-               Keydown(Keycode(2, Modifiers.none)),
-             ]),
+             Sequence([aKeyNoModifiers, bKeyNoModifiers]),
              _ => true,
              [cKeyNoModifiers],
            );
@@ -455,33 +494,35 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(effects, [Unhandled(cKeyNoModifiers)]);
     });
-    /*test("unhandled, multiple keys", ({expect, _}) => {
-        let (bindings, _id) =
-          Input.empty
-          |> Input.addMapping(
-               [Keydown(Keycode(1, Modifiers.none)],
-               _ => true,
-               [bKeyNoModifiers, cKeyNoModifiers],
-             );
+    test("unhandled, multiple keys", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addMapping(
+             Sequence([aKeyNoModifiers]),
+             _ => true,
+             [bKeyNoModifiers, cKeyNoModifiers],
+           );
 
-        let (_bindings, effects) = Input.keyDown(context=true, aKeyNoModifiers, bindings);
+      let (_bindings, effects) =
+        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
 
-        expect.equal(effects, [
-          Unhandled(cKeyNoModifiers),
-          Unhandled(bKeyNoModifiers)]);
-      });*/
+      expect.equal(
+        effects,
+        [Unhandled(bKeyNoModifiers), Unhandled(cKeyNoModifiers)],
+      );
+    });
     test("with command", ({expect, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addMapping(
-             Sequence([Keydown(Keycode(1, Modifiers.none))]),
+             Sequence([aKeyNoModifiers]),
              _ => true,
              [bKeyNoModifiers],
            );
       let (bindings, _id) =
         bindings
         |> Input.addBinding(
-             Sequence([Keydown(Keycode(2, Modifiers.none))]),
+             Sequence([aKeyNoModifiers]),
              _ => true,
              "command2",
            );
@@ -491,5 +532,54 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(effects, [Execute("command2")]);
     });
+    test("with multiple commands", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addMapping(
+             Sequence([aKeyNoModifiers]),
+             _ => true,
+             [bKeyNoModifiers, cKeyNoModifiers],
+           );
+      let (bindings, _id) =
+        bindings
+        |> Input.addBinding(
+             Sequence([bKeyNoModifiers]),
+             _ => true,
+             "command2",
+           );
+
+      let (bindings, _id) =
+        bindings
+        |> Input.addBinding(
+             Sequence([cKeyNoModifiers]),
+             _ => true,
+             "command3",
+           );
+
+      let (_bindings, effects) =
+        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings);
+
+      expect.equal(effects, [Execute("command2"), Execute("command3")]);
+    });
+  });
+  describe("enable / disable", ({test, _}) => {
+    test("unhandled when bindings are disabled", ({expect, _}) => {
+      let alwaysTrue = _ => true;
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers]),
+             alwaysTrue,
+             "command1",
+           );
+
+      let bindings' = Input.disable(bindings);
+
+      let (_bindings, effects) =
+        Input.keyDown(~context=true, ~key=aKeyNoModifiers, bindings');
+
+      // Should be unhandled because the context function is [false]
+      expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
+    })
   });
 });

@@ -3,19 +3,20 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   dispatch(KeyboardInput({isText: true, input: ":"}));
 
   wait(~name="Mode switches to command line", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.CommandLine
+    Selectors.mode(state) == Vim.Mode.CommandLine
   );
 
   dispatch(KeyboardInput({isText: true, input: "e"}));
   wait(~name="Mode switches to command line", (state: State.t) =>
     switch (state.quickmenu) {
-    | Some(quickmenu) => quickmenu.inputText |> Feature_InputText.value == "e"
+    | Some(quickmenu) =>
+      quickmenu.inputText |> Component_InputText.value == "e"
     | None => false
     }
   );
@@ -25,7 +26,7 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => 
   wait(~name="Mode switches to command line", (state: State.t) =>
     switch (state.quickmenu) {
     | Some(quickmenu) =>
-      quickmenu.inputText |> Feature_InputText.value == "eh"
+      quickmenu.inputText |> Component_InputText.value == "eh"
     | None => false
     }
   );

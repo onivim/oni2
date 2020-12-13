@@ -33,7 +33,7 @@ let _getTextForOnivimBuffer = state => {
 
 let _getTextFromExtHost = state => {
   Model.State.(
-    switch ((state.notifications :> list(Feature_Notification.notification))) {
+    switch (Feature_Notification.all(state.notifications)) {
     | [hd, ..._] => hd.message
     | [] => "(Empty)"
     }

@@ -76,7 +76,7 @@ let%component busyBar = (~theme, ()) => {
       |> ease(Easing.easeInOut)
       |> repeat
       |> tween(0., 1.)
-      |> Hooks.animation
+      |> Hooks.animation(~name="QuickMenu busyBar")
     );
 
   let indicator = () => {
@@ -94,7 +94,7 @@ let make =
     (
       ~font: UiFont.t,
       ~theme,
-      ~configuration: Configuration.t,
+      ~config: Oni_Core.Config.resolver,
       ~state: Quickmenu.t,
       //      ~placeholder: string="type here to search the menu",
       ~onFocusedChange: int => unit=onFocusedChange,
@@ -162,7 +162,7 @@ let make =
 
   let input = () =>
     <View style=Styles.inputContainer>
-      <Feature_InputText.View
+      <Component_InputText.View
         ?prefix
         fontFamily={font.family}
         fontSize=14.
@@ -189,7 +189,7 @@ let make =
     </View>;
 
   <AllowPointer>
-    <OniBoxShadow configuration theme>
+    <OniBoxShadow config theme>
       <View style={Styles.container(theme)}>
         {switch (variant) {
          | EditorsPicker => React.empty

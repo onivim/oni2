@@ -1,9 +1,6 @@
 // Disable colors on windows to prevent hanging on CI
-if (Sys.win32) {
-  Timber.App.disableColors();
-};
 
-Timber.App.enable();
+Timber.App.enable(Timber.Reporter.console());
 Timber.App.setLevel(Timber.Level.trace);
 
 Console.log("Running FileWatcherTest...");

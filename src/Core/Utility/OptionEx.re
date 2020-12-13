@@ -29,10 +29,18 @@ let map3 = (f, a, b, c) =>
 let tap = f =>
   fun
   | Some(v) as some => {
-      f(v);
+      let () = f(v);
       some;
     }
   | None => None;
+
+let tapNone = f =>
+  fun
+  | Some(_) as some => some
+  | None => {
+      let () = f();
+      None;
+    };
 
 let iter2 = (f, a, b) => {
   switch (a, b) {
@@ -68,6 +76,11 @@ let zip = (a, b) =>
   };
 
 let values = list => List.filter_map(Fun.id, list);
+
+let value_or_lazy = f =>
+  fun
+  | Some(v) => v
+  | None => f();
 
 let toString = f =>
   fun

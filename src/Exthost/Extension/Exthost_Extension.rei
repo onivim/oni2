@@ -150,7 +150,7 @@ module Manifest: {
   [@deriving show]
   type t = {
     name: string,
-    version: string,
+    version: option(Semver.t),
     author: string,
     displayName: option(LocalizedToken.t),
     description: option(string),
@@ -173,6 +173,7 @@ module Manifest: {
   let decode: Oni_Core.Json.decoder(t);
 
   let identifier: t => string;
+  let publisher: t => string;
   let getDisplayName: t => string;
 };
 
@@ -193,7 +194,7 @@ module Scanner: {
   };
 
   let load: (~category: category, string) => option(ScanResult.t);
-  let scan: (~category: category, string) => list(ScanResult.t);
+  let scan: (~category: category, Fp.t(Fp.absolute)) => list(ScanResult.t);
 };
 
 module InitData: {

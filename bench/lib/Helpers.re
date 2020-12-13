@@ -7,7 +7,7 @@ module LineNumber = EditorCoreTypes.LineNumber;
 
 Vim.init();
 
-let config = _ => None;
+let config = (~vimSetting as _, _) => Config.NotSet;
 
 /* Create a state with some editor size */
 let simpleState = {
@@ -15,7 +15,7 @@ let simpleState = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
       Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
     Buffer.ofMetadata(
-      ~font=Font.default,
+      ~font=Font.default(),
       ~id,
       ~version,
       ~filePath,
@@ -25,14 +25,18 @@ let simpleState = {
 
   let state =
     State.initial(
+      ~cli=Oni_CLI.default,
       ~initialBuffer,
       ~initialBufferRenderers=BufferRenderers.initial,
       ~getUserSettings=() => Ok(Config.Settings.empty),
       ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
       ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
       ~contributedCommands=[],
+      ~maybeWorkspace=None,
       ~workingDirectory=Sys.getcwd(),
       ~extensionsFolder=None,
+      ~licenseKeyPersistence=None,
+      ~titlebarHeight=0.,
     );
 
   Reducer.reduce(
@@ -42,16 +46,30 @@ let simpleState = {
 };
 
 let defaultFont: Service_Font.font = {
-  fontFamily: Revery.Font.Family.fromFile("JetBrainsMono-Regular.ttf"),
-  fontSize: 10.,
-  spaceWidth: 10.,
-  underscoreWidth: 10.,
-  avgCharWidth: 10.,
-  maxCharWidth: 10.,
-  measuredHeight: 10.,
-  descenderHeight: 1.,
-  smoothing: Revery.Font.Smoothing.default,
-  features: [],
+  let fontFamily = Revery.Font.Family.fromFile("JetBrainsMono-Regular.ttf");
+  let fontSize = 10.;
+  let smoothing = Revery.Font.Smoothing.default;
+  let features = [];
+
+  {
+    fontFamily,
+    fontSize,
+    spaceWidth: 10.,
+    underscoreWidth: 10.,
+    avgCharWidth: 10.,
+    maxCharWidth: 10.,
+    measuredHeight: 10.,
+    descenderHeight: 1.,
+    smoothing,
+    features,
+    measurementCache:
+      FontMeasurementCache.create(
+        ~fontFamily,
+        ~fontSize,
+        ~smoothing,
+        ~features,
+      ),
+  };
 };
 
 let simpleState =
@@ -63,7 +81,8 @@ let simpleState =
 let thousandLines =
   Array.make(1000, "This is a buffer with a thousand lines!");
 
-let defaultBuffer = Oni_Core.Buffer.ofLines(~id=0, thousandLines);
+let defaultBuffer =
+  Oni_Core.Buffer.ofLines(~font=defaultFont, ~id=0, thousandLines);
 let defaultEditorBuffer =
   defaultBuffer |> Feature_Editor.EditorBuffer.ofBuffer;
 
@@ -74,11 +93,16 @@ let simpleEditor =
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {
   let newBuffer = Buffer.update(oldBuffer, update);
   Actions.Buffers(
-    Feature_Buffers.Update({update, oldBuffer, newBuffer, triggerKey: None}),
+    Feature_Buffers.Msg.updated(
+      ~update,
+      ~oldBuffer,
+      ~newBuffer,
+      ~triggerKey=None,
+    ),
   );
 };
 
-let thousandLineBuffer = Buffer.ofLines(thousandLines);
+let thousandLineBuffer = Buffer.ofLines(~font=Font.default(), thousandLines);
 
 let thousandLineState =
   Reducer.reduce(
@@ -128,7 +152,7 @@ let hundredThousandLineState =
   Reducer.reduce(
     simpleState,
     createUpdateAction(
-      Buffer.ofLines([||]),
+      Buffer.ofLines(~font=Font.default(), [||]),
       BufferUpdate.create(
         ~startLine=LineNumber.zero,
         ~endLine=LineNumber.ofZeroBased(1),

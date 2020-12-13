@@ -4,6 +4,7 @@ type yankType =
   | Char;
 
 type yankOperator =
+  | Change
   | Delete
   | Yank;
 
@@ -17,8 +18,6 @@ type t = {
   endLine: int,
   endColumn: int,
 };
-
-let dCode = Char.code('d');
 
 let create =
     (
@@ -45,7 +44,8 @@ let create =
 
   let op =
     switch (operator) {
-    | v when v == dCode => Delete
+    | v when v == Char.code('d') => Delete
+    | v when v == Char.code('c') => Change
     | _ => Yank
     };
 

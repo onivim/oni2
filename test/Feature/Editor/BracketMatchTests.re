@@ -8,7 +8,7 @@ module BracketMatch = Feature_Editor.BracketMatch;
 let create = lines =>
   lines
   |> Array.of_list
-  |> Oni_Core.Buffer.ofLines
+  |> Oni_Core.Buffer.ofLines(~font=Font.default())
   |> Feature_Editor.EditorBuffer.ofBuffer;
 
 let pairs =

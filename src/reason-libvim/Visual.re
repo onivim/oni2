@@ -27,6 +27,17 @@ let getRange = () => {
 
 let getType = Native.vimVisualGetType;
 
-let onRangeChanged = f => {
-  Event.add(f, Listeners.visualRangeChanged);
+let set =
+    (
+      ~visualType: Types.visualType,
+      ~start: BytePosition.t,
+      ~cursor: BytePosition.t,
+    ) => {
+  ();
+  Native.vimVisualSetType(visualType);
+  Native.vimVisualSetStart(
+    start.line |> LineNumber.toOneBased,
+    start.byte |> ByteIndex.toInt,
+  );
+  Cursor.set(cursor);
 };

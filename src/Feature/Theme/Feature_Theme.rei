@@ -16,9 +16,12 @@ type msg =
   | Command(command)
   | TextmateThemeLoaded(ColorTheme.variant, [@opaque] Textmate.ColorTheme.t);
 
+module Msg: {let openThemePicker: msg;};
+
 type outmsg =
   | Nothing
-  | OpenThemePicker(list(theme));
+  | OpenThemePicker(list(theme))
+  | ThemeChanged(ColorTheme.Colors.t);
 
 let update: (model, msg) => (model, outmsg);
 

@@ -10,6 +10,9 @@ module Msg: {
   let exthost: Exthost.Msg.ExtensionService.msg => msg;
   let storage:
     (~resolver: Lwt.u(Exthost.Reply.t), Exthost.Msg.Storage.msg) => msg;
+
+  let languages:
+    (~resolver: Lwt.u(Exthost.Reply.t), Exthost.Msg.Languages.msg) => msg;
   let discovered: list(Scanner.ScanResult.t) => msg;
   let keyPressed: string => msg;
   let pasted: string => msg;
@@ -28,27 +31,31 @@ type outmsg =
   | NotifySuccess(string)
   | NotifyFailure(string)
   | OpenExtensionDetails
-  | SelectTheme({themes: list(Exthost.Extension.Contributions.Theme.t)});
+  | SelectTheme({themes: list(Exthost.Extension.Contributions.Theme.t)})
+  | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
 let pick: (Exthost.Extension.Manifest.t => 'a, model) => list('a);
 
 let themeByName: (~name: string, model) => option(Contributions.Theme.t);
+let themesByName: (~filter: string, model) => list(string);
 
 let isBusy: model => bool;
 let isSearchInProgress: model => bool;
 
+let isInstalled: (~extensionId: string, model) => bool;
 let isInstalling: (~extensionId: string, model) => bool;
 let isUninstalling: (~extensionId: string, model) => bool;
 
 let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
 
+let resetFocus: model => model;
+
 let all: model => list(Scanner.ScanResult.t);
 let activatedIds: model => list(string);
 
 let menus: model => list(Menu.Schema.definition);
-let commands: model => list(Command.t(msg));
-
-let sub: (~setup: Oni_Core.Setup.t, model) => Isolinear.Sub.t(msg);
+let sub:
+  (~isVisible: bool, ~setup: Oni_Core.Setup.t, model) => Isolinear.Sub.t(msg);
 
 module Persistence: {
   type t = Yojson.Safe.t;
@@ -63,7 +70,7 @@ let initial:
   (
     ~workspacePersistence: Persistence.t,
     ~globalPersistence: Persistence.t,
-    ~extensionsFolder: option(string)
+    ~extensionsFolder: option(Fp.t(Fp.absolute))
   ) =>
   model;
 
@@ -92,4 +99,9 @@ module DetailsView: {
       unit
     ) =>
     Revery.UI.element;
+};
+
+module Contributions: {
+  let commands: (~isFocused: bool, model) => list(Command.t(msg));
+  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
 };

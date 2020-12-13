@@ -6,19 +6,13 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Input;
 open Oni_Syntax;
-
-module ContextMenu = Oni_Components.ContextMenu;
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
 
 [@deriving show({with_path: false})]
 type t =
   | Init
-  | ActivityBar(ActivityBar.action)
+  | AutoUpdate(Feature_AutoUpdate.msg)
   | Buffers(Feature_Buffers.msg)
-  | BufferRenderer(BufferRenderer.action)
   | Clipboard(Feature_Clipboard.msg)
   | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
@@ -33,25 +27,23 @@ type t =
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)
+  | Decorations(Feature_Decorations.msg)
+  | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)
+  | Input(Feature_Input.msg)
   | TerminalFont(Service_Font.msg)
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
-  | KeyBindingsSet([@opaque] Keybindings.t)
+  | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
   | KeybindingInvoked({command: string})
-  | KeyDown([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | KeyUp([@opaque] EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | TextInput([@opaque] string, [@opaque] Revery.Time.t)
-  | ContextMenuOverlayClicked
-  | DiagnosticsHotKey
-  | DiagnosticsSet(Uri.t, string, [@opaque] list(Diagnostic.t))
-  | DiagnosticsClear(string)
-  | DisableKeyDisplayer
-  | EnableKeyDisplayer
+  | KeyDown(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | KeyUp(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | Logging(Feature_Logging.msg)
+  | TextInput(string, [@opaque] Revery.Time.t)
   // TODO: This should be a function call - wired up from an input feature
   // directly to the consumer of the keyboard action.
   // In addition, in the 'not-is-text' case, we should strongly type the keys.
@@ -77,13 +69,12 @@ type t =
       msg: Feature_Editor.msg,
     })
   | FilesDropped({paths: list(string)})
-  | FileExplorer(FileExplorer.action)
-  | LanguageFeature(LanguageFeatures.action)
+  | FileExplorer(Feature_Explorer.msg)
   | LanguageSupport(Feature_LanguageSupport.msg)
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
-  | QuickmenuInputMessage(Feature_InputText.msg)
+  | QuickmenuInputMessage(Component_InputText.msg)
   | QuickmenuCommandlineUpdated(string, int)
   | QuickmenuUpdateRipgrepProgress(progress)
   | QuickmenuUpdateFilterProgress([@opaque] array(menuItem), progress)
@@ -98,14 +89,12 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
+  | OpenBufferById({bufferId: int})
   | OpenFileByPath(
       string,
-      option([ | `Horizontal | `Vertical]),
+      option([ | `Horizontal | `Vertical | `NewTab]),
       option(CharacterPosition.t),
     )
-  | OpenFileInNewLayout(string)
-  | BufferOpened(string, option(CharacterPosition.t), int)
-  | BufferOpenedForLayout(int)
   | OpenConfigFile(string)
   | Pasted({
       rawText: string,
@@ -113,6 +102,7 @@ type t =
       lines: array(string),
     })
   | Registers(Feature_Registers.msg)
+  | Registration(Feature_Registration.msg)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
   // ReallyQuitting is dispatched when we've decided _for sure_
@@ -134,18 +124,16 @@ type t =
   | DisableZenMode
   | CopyActiveFilepathToClipboard
   | SCM(Feature_SCM.msg)
-  | SearchStart
-  | SearchHotkey
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
-  | PaneTabClicked(Feature_Pane.pane)
-  | PaneCloseButtonClicked
-  | DirectoryChanged(string)
-  | VimExecuteCommand(string)
+  | VimExecuteCommand({
+      allowAnimation: bool,
+      command: string,
+    })
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
       title: string,
@@ -157,29 +145,15 @@ type t =
   | WindowFullscreen
   | WindowMinimized
   | WindowRestored
+  | Workspace(Feature_Workspace.msg)
   | TitleBar(Feature_TitleBar.msg)
   | WindowCloseBlocked
   | Layout(Feature_Layout.msg)
   | WriteFailure
   | Modals(Feature_Modals.msg)
-  // "Internal" effect action, see TitleStoreConnector
-  | SetTitle(string)
-  | NewDecorationProvider({
-      handle: int,
-      label: string,
-    })
-  | LostDecorationProvider({handle: int})
-  | DecorationsChanged({
-      handle: int,
-      uris: list(Uri.t),
-    })
-  | GotDecorations({
-      handle: int,
-      uri: Uri.t,
-      decorations: list(Decoration.t),
-    })
   | Vim(Feature_Vim.msg)
   | TabPage(Vim.TabPage.effect)
+  | Yank({range: [@opaque] VisualRange.t})
   | Noop
 and command = {
   commandCategory: option(string),
@@ -206,6 +180,7 @@ and quickmenuVariant =
   | CommandPalette
   | EditorsPicker
   | FilesPicker
+  | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | FileTypesPicker({
@@ -213,7 +188,6 @@ and quickmenuVariant =
       languages:
         list((string, option(Oni_Core.IconTheme.IconDefinition.t))),
     })
-  | DocumentSymbols
   | Extension({
       id: int,
       hasItems: bool,

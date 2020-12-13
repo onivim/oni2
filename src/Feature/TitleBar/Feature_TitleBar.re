@@ -1,3 +1,6 @@
+open Oni_Core;
+open Utility;
+
 type windowDisplayMode =
   | Minimized
   | Windowed
@@ -12,12 +15,183 @@ type msg =
   | WindowCloseClicked
   | TitleDoubleClicked;
 
+module Log = (val Log.withNamespace("Oni2.Feature.TitleBar"));
+
+module Internal = {
+  let withTag = (tag: string, value: option(string)) =>
+    Option.map(v => (tag, v), value);
+  let getTemplateVariables =
+      (~activeBuffer, ~workspaceRoot, ~workspaceDirectory) => {
+    let maybeBuffer = activeBuffer;
+    let maybeFilePath = Option.bind(maybeBuffer, Buffer.getFilePath);
+
+    let appName = Option.some("Onivim 2") |> withTag("appName");
+
+    let dirty =
+      Option.map(Buffer.isModified, maybeBuffer)
+      |> (
+        fun
+        | Some(true) => Some("*")
+        | _ => None
+      )
+      |> withTag("dirty");
+
+    let activeEditorShort =
+      Option.bind(maybeBuffer, Buffer.getShortFriendlyName)
+      |> withTag("activeEditorShort");
+
+    let activeEditorMedium =
+      Option.bind(maybeBuffer, buf =>
+        Buffer.getMediumFriendlyName(
+          ~workingDirectory=workspaceDirectory,
+          buf,
+        )
+      )
+      |> withTag("activeEditorMedium");
+
+    let activeEditorLong =
+      Option.bind(maybeBuffer, Buffer.getLongFriendlyName)
+      |> withTag("activeEditorLong");
+
+    let activeFolderShort =
+      Option.(
+        maybeFilePath |> map(Filename.dirname) |> map(Filename.basename)
+      )
+      |> withTag("activeFolderShort");
+
+    let activeFolderMedium =
+      maybeFilePath
+      |> Option.map(Filename.dirname)
+      |> OptionEx.flatMap(fp =>
+           Some(Path.toRelative(~base=workspaceDirectory, fp))
+         )
+      |> withTag("activeFolderMedium");
+
+    let activeFolderLong =
+      maybeFilePath
+      |> Option.map(Filename.dirname)
+      |> withTag("activeFolderLong");
+
+    [
+      appName,
+      dirty,
+      activeEditorShort,
+      activeEditorMedium,
+      activeEditorLong,
+      activeFolderShort,
+      activeFolderMedium,
+      activeFolderLong,
+      Some(("rootName", workspaceRoot)),
+      Some(("rootPath", workspaceDirectory)),
+    ]
+    |> OptionEx.values
+    |> List.to_seq
+    |> StringMap.of_seq;
+  };
+
+  type titleClickBehavior =
+    | Maximize
+    | Minimize;
+
+  let getTitleDoubleClickBehavior = () => {
+    switch (Revery.Environment.os) {
+    | Mac =>
+      try({
+        let ic =
+          Unix.open_process_in(
+            "defaults read 'Apple Global Domain' AppleActionOnDoubleClick",
+          );
+        let operation = input_line(ic);
+        switch (operation) {
+        | "Maximize" => Maximize
+        | "Minimize" => Minimize
+        | _ => Maximize
+        };
+      }) {
+      | _exn =>
+        Log.warn(
+          "
+          Unable to read default behavior for AppleActionOnDoubleClick",
+        );
+        Maximize;
+      }
+    | _ => Maximize
+    };
+  };
+};
+
+// CONFIGURATION
+
+module Configuration = {
+  open Oni_Core;
+  open Config.Schema;
+
+  let windowTitle =
+    setting(
+      "window.title",
+      string,
+      ~default=
+        "${dirty}${activeEditorShort}${separator}${rootName}${separator}${appName}",
+    );
+};
+
+let title = (~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config) => {
+  let templateVariables =
+    Internal.getTemplateVariables(
+      ~activeBuffer,
+      ~workspaceRoot,
+      ~workspaceDirectory,
+    );
+
+  let titleTemplate = Configuration.windowTitle.get(config);
+  let titleModel = titleTemplate |> Title.ofString;
+
+  Title.toString(titleModel, templateVariables);
+};
+
+// UPDATE
+
+type outmsg =
+  | Nothing
+  | Effect(Isolinear.Effect.t(msg));
+
+let update = (~maximize, ~minimize, ~restore, ~close, msg) => {
+  let internalDoubleClickEffect =
+    Isolinear.Effect.create(~name="window.doubleClick", () => {
+      switch (Internal.getTitleDoubleClickBehavior()) {
+      | Maximize => maximize()
+      | Minimize => minimize()
+      }
+    });
+
+  let internalWindowCloseEffect =
+    Isolinear.Effect.create(~name="window.close", () => close());
+  let internalWindowMaximizeEffect =
+    Isolinear.Effect.create(~name="window.maximize", () => maximize());
+  let internalWindowMinimizeEffect =
+    Isolinear.Effect.create(~name="window.minimize", () => minimize());
+  let internalWindowRestoreEffect =
+    Isolinear.Effect.create(~name="window.restore", () => restore());
+
+  switch (msg) {
+  | TitleDoubleClicked => Effect(internalDoubleClickEffect)
+  | WindowCloseClicked => Effect(internalWindowCloseEffect)
+  | WindowMaximizeClicked => Effect(internalWindowMaximizeEffect)
+  | WindowRestoreClicked => Effect(internalWindowRestoreEffect)
+  | WindowMinimizeClicked => Effect(internalWindowMinimizeEffect)
+  };
+};
+
+// CONTRIBUTIONS
+
+module Contributions = {
+  let configuration = Configuration.[windowTitle.spec];
+};
+
 // VIEW
 open Revery;
 open Revery.UI;
 open Revery.UI.Components;
-
-open Oni_Components;
 
 module UiFont = Oni_Core.UiFont;
 module Colors = Feature_Theme.Colors.TitleBar;
@@ -26,19 +200,19 @@ module Styles = {
   open Style;
 
   module Mac = {
-    let container = (~isFocused, ~theme) => [
+    let container = (~isFocused, ~theme, ~height) => [
       flexGrow(0),
-      height(25),
+      Style.height(int_of_float(height)),
       backgroundColor(
         isFocused
           ? Colors.activeBackground.from(theme)
           : Colors.inactiveBackground.from(theme),
       ),
       flexDirection(`Row),
-      justifyContent(`Center),
-      alignItems(`Center),
+      justifyContent(`SpaceBetween),
     ];
-    let text = (~isFocused, ~theme) => [
+
+    let text = (~isFocused, ~theme, ~isRegistered) => [
       flexGrow(0),
       backgroundColor(
         isFocused
@@ -50,7 +224,10 @@ module Styles = {
           ? Colors.activeForeground.from(theme)
           : Colors.inactiveForeground.from(theme),
       ),
+      flexDirection(`Row),
+      justifyContent(`Center),
       textWrap(TextWrapping.NoWrap),
+      marginLeft(!isRegistered ? Feature_Registration.Constants.macWidth : 0),
     ];
   };
 
@@ -72,9 +249,15 @@ module Styles = {
       flexDirection(`Row),
       alignItems(`Center),
       marginHorizontal(16),
+      flexGrow(1),
+      flexShrink(1),
+      overflow(`Hidden),
     ];
 
+    let icon = [pointerEvents(`Ignore)];
+
     let title = (~isFocused, ~theme) => [
+      pointerEvents(`Ignore),
       flexGrow(0),
       marginLeft(16),
       marginTop(2),
@@ -89,9 +272,15 @@ module Styles = {
           : Colors.inactiveForeground.from(theme),
       ),
       textWrap(TextWrapping.NoWrap),
+      textOverflow(`Ellipsis),
     ];
 
-    let buttons = [flexDirection(`Row), alignItems(`Center)];
+    let buttons = [
+      flexDirection(`Row),
+      flexGrow(0),
+      flexShrink(0),
+      alignItems(`Center),
+    ];
 
     module Button = {
       let container = [
@@ -125,25 +314,43 @@ module View = {
     let make =
         (
           ~dispatch,
+          ~registration,
+          ~registrationDispatch,
           ~isFocused,
           ~windowDisplayMode,
           ~title,
           ~theme,
           ~font: UiFont.t,
+          ~height,
           (),
         ) =>
       if (windowDisplayMode == Fullscreen) {
         React.empty;
       } else {
+        let isRegistered = Feature_Registration.isRegistered(registration);
+
         <Clickable
           onDoubleClick={_ => dispatch(TitleDoubleClicked)}
-          style={Styles.Mac.container(~isFocused, ~theme)}>
-          <Text
-            style={Styles.Mac.text(~isFocused, ~theme)}
-            fontFamily={font.family}
-            fontWeight=Medium
-            fontSize=12.
-            text=title
+          style={Styles.Mac.container(~isFocused, ~theme, ~height)}>
+          <View
+            style=Style.[
+              flexDirection(`Row),
+              justifyContent(`Center),
+              flexGrow(1),
+            ]>
+            <Text
+              style={Styles.Mac.text(~isFocused, ~theme, ~isRegistered)}
+              fontFamily={font.family}
+              fontWeight=Medium
+              fontSize=12.
+              text=title
+            />
+          </View>
+          <Feature_Registration.View.TitleBar.Mac
+            theme
+            registration
+            dispatch=registrationDispatch
+            font
           />
         </Clickable>;
       };
@@ -237,6 +444,8 @@ module View = {
     let make =
         (
           ~dispatch,
+          ~registrationDispatch,
+          ~registration,
           ~isFocused,
           ~windowDisplayMode,
           ~title,
@@ -248,12 +457,24 @@ module View = {
         mouseBehavior=Draggable
         style={Styles.Windows.container(~isFocused, ~theme)}>
         <View mouseBehavior=Draggable style=Styles.Windows.iconAndTitle>
-          <Image src={`File("./logo-titlebar.png")} width=18 height=18 />
+          <Image
+            style=Styles.Windows.icon
+            src={`File("./logo-titlebar.png")}
+            width=18
+            height=18
+          />
           <Text
             style={Styles.Windows.title(~isFocused, ~theme)}
             fontFamily={font.family}
             fontSize=12.
             text=title
+          />
+          <Feature_Registration.View.TitleBar.Windows
+            theme
+            registration
+            dispatch=registrationDispatch
+            font
+            isFocused
           />
         </View>
         <View style=Styles.Windows.buttons>
@@ -266,18 +487,46 @@ module View = {
 
   let make =
       (
+        ~activeBuffer,
+        ~workspaceRoot,
+        ~workspaceDirectory,
+        ~registration,
+        ~config,
         ~dispatch,
+        ~registrationDispatch,
         ~isFocused,
         ~windowDisplayMode,
-        ~title,
         ~theme,
         ~font: UiFont.t,
+        ~height,
         (),
       ) => {
+    let title =
+      title(~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config);
     switch (Revery.Environment.os) {
-    | Mac => <Mac isFocused windowDisplayMode font title theme dispatch />
+    | Mac =>
+      <Mac
+        isFocused
+        windowDisplayMode
+        font
+        title
+        theme
+        dispatch
+        registration
+        registrationDispatch
+        height
+      />
     | Windows =>
-      <Windows isFocused windowDisplayMode font title theme dispatch />
+      <Windows
+        isFocused
+        windowDisplayMode
+        font
+        title
+        theme
+        dispatch
+        registrationDispatch
+        registration
+      />
     | _ => React.empty
     };
   };

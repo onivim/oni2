@@ -27,9 +27,6 @@ Service_Clipboard.Testing.setClipboardProvider(~get=() => _currentClipboard^);
 
 let setTime = v => _currentTime := v;
 
-let setTitle = title => _currentTitle := title;
-let getTitle = () => _currentTitle^;
-
 let setZoom = v => _currentZoom := v;
 let getZoom = () => _currentZoom^;
 
@@ -95,21 +92,21 @@ let runTest =
       test: testCallback,
     ) => {
   // Disable colors on windows to prevent hanging on CI
-  if (Sys.win32) {
-    Timber.App.disableColors();
-  };
 
   Revery.App.initConsole();
 
   Core.Log.enableDebug();
-  Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
+  Oni_Core.Log.init();
 
   Internal.prepareEnvironment();
 
   switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
-  | None => ()
-  | Some(logFile) => Timber.App.setLogFile(logFile)
+  | None => Timber.App.enable(Timber.Reporter.console())
+  | Some(logFile) =>
+    let fileReporter = Timber.Reporter.file(logFile);
+    let reporters = Timber.Reporter.(combine(console(), fileReporter));
+    Timber.App.enable(reporters);
   };
 
   Log.info("Starting test... Working directory: " ++ Sys.getcwd());
@@ -128,12 +125,13 @@ let runTest =
   let getUserSettings = () => Ok(currentUserSettings^);
 
   Vim.init();
+  Oni2_KeyboardLayout.init();
 
   let initialBuffer = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
       Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
     Core.Buffer.ofMetadata(
-      ~font=Oni_Core.Font.default,
+      ~font=Oni_Core.Font.default(),
       ~id,
       ~version,
       ~filePath,
@@ -144,14 +142,18 @@ let runTest =
   let currentState =
     ref(
       Model.State.initial(
+        ~cli=Oni_CLI.default,
         ~initialBuffer,
         ~initialBufferRenderers=Model.BufferRenderers.initial,
         ~getUserSettings,
         ~contributedCommands=[],
+        ~maybeWorkspace=None,
         ~workingDirectory=Sys.getcwd(),
         ~extensionsFolder=None,
         ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
         ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
+        ~licenseKeyPersistence=None,
+        ~titlebarHeight=0.,
       ),
     );
 
@@ -168,6 +170,7 @@ let runTest =
 
   let _: unit => unit =
     Revery.Tick.interval(
+      ~name="Integration Test Ticker",
       _ => {
         let state = currentState^;
         Revery.Utility.HeadlessWindow.render(
@@ -196,7 +199,7 @@ let runTest =
       |> Printf.fprintf(oc, "%s\n");
 
     close_out(oc);
-    tempFilePath;
+    tempFilePath |> Fp.absoluteCurrentPlatform |> Option.get;
   };
 
   let configurationFilePath =
@@ -206,12 +209,12 @@ let runTest =
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
+      ~showUpdateChangelog=false,
       ~getUserSettings,
       ~setup,
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
-      ~setTitle,
       ~getZoom,
       ~setZoom,
       ~setVsync,

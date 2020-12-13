@@ -87,12 +87,27 @@ module Group: {
       group.editors,
     );
 
+  let map = (f, group) => {...group, editors: List.map(f, group.editors)};
+
   let openEditor = (editor, group) => {
     let bufferId = Editor.getBufferId(editor);
     switch (
       List.find_opt(e => Editor.getBufferId(e) == bufferId, group.editors)
     ) {
-    | Some(editor) => {...group, selectedId: Editor.getId(editor)}
+    | Some(previousEditor) =>
+      let newCursors = Editor.getCursors(editor);
+      {...group, selectedId: Editor.getId(previousEditor)}
+      |> map(originalEditor
+           // Update cursors to match new editor, if they are specified
+           =>
+             if (Editor.getBufferId(editor)
+                 == Editor.getBufferId(originalEditor)
+                 && newCursors != [EditorCoreTypes.BytePosition.zero]) {
+               originalEditor |> Editor.setMode(Editor.mode(editor));
+             } else {
+               originalEditor;
+             }
+           );
     | None => {
         ...group,
         editors: [editor, ...group.editors],
@@ -127,12 +142,12 @@ module Group: {
       Some({...group, editors, selectedId});
     };
   };
-
-  let map = (f, group) => {...group, editors: List.map(f, group.editors)};
 };
 
+[@deriving show]
 type panel =
   | Left
+  | Right
   | Center
   | Bottom;
 

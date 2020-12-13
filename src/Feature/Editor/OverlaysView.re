@@ -7,8 +7,8 @@ module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 
 module FontIcon = Oni_Components.FontIcon;
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Diagnostics = Feature_LanguageSupport.Diagnostics;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Diagnostics = Feature_Diagnostics;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Styles = {
   open Style;
@@ -58,7 +58,7 @@ let make =
       ~editorFont: Service_Font.font,
       (),
     ) => {
-  let ({pixelX, pixelY}: Editor.pixelPosition, _) =
+  let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
     Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
 
   let cursorPixelY = pixelY |> int_of_float;

@@ -15,7 +15,7 @@ module Catalog: {
   module VersionInfo: {
     [@deriving show]
     type t = {
-      version: string,
+      version: Semver.t,
       url: string,
     };
   };
@@ -24,7 +24,7 @@ module Catalog: {
     [@deriving show]
     type t = {
       downloadUrl: string,
-      repositoryUrl: string,
+      repositoryUrl: option(string),
       homepageUrl: string,
       manifestUrl: string,
       iconUrl: option(string),
@@ -33,11 +33,12 @@ module Catalog: {
       //      licenseUrl: string,
       name: string,
       namespace: string,
+      isPublicNamespace: bool,
       //      downloadCount: int,
       displayName: option(string),
-      description: string,
+      description: option(string),
       //      categories: list(string),
-      version: string,
+      version: option(Semver.t),
       versions: list(VersionInfo.t),
     };
 
@@ -50,11 +51,11 @@ module Catalog: {
       url: string,
       downloadUrl: string,
       iconUrl: option(string),
-      version: string,
+      version: option(Semver.t),
       name: string,
       namespace: string,
       displayName: option(string),
-      description: string,
+      description: option(string),
     };
 
     let name: t => string;
@@ -81,12 +82,14 @@ module Catalog: {
 
 module Management: {
   let install:
-    (~setup: Setup.t, ~extensionsFolder: string=?, string) => Lwt.t(unit);
+    (~setup: Setup.t, ~extensionsFolder: Fp.t(Fp.absolute)=?, string) =>
+    Lwt.t(unit);
 
-  let uninstall: (~extensionsFolder: string=?, string) => Lwt.t(unit);
+  let uninstall:
+    (~extensionsFolder: Fp.t(Fp.absolute)=?, string) => Lwt.t(unit);
 
   let get:
-    (~extensionsFolder: string=?, unit) =>
+    (~extensionsFolder: Fp.t(Fp.absolute)=?, unit) =>
     Lwt.t(list(Exthost.Extension.Scanner.ScanResult.t));
 };
 
@@ -104,7 +107,7 @@ module Query: {
 module Effects: {
   let uninstall:
     (
-      ~extensionsFolder: option(string),
+      ~extensionsFolder: option(Fp.t(Fp.absolute)),
       ~toMsg: result(unit, string) => 'a,
       string
     ) =>
@@ -112,11 +115,19 @@ module Effects: {
 
   let install:
     (
-      ~extensionsFolder: option(string),
+      ~extensionsFolder: option(Fp.t(Fp.absolute)),
       ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'a,
       string
     ) =>
     Isolinear.Effect.t('a);
+
+  let update:
+    (
+      ~extensionsFolder: option(Fp.t(Fp.absolute)),
+      ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'msg,
+      string
+    ) =>
+    Isolinear.Effect.t('msg);
 
   let details:
     (~extensionId: string, ~toMsg: result(Catalog.Details.t, string) => 'a) =>
@@ -125,10 +136,14 @@ module Effects: {
 
 module Sub: {
   let search:
+    (~setup: Setup.t, ~query: Query.t, ~toMsg: result(Query.t, exn) => 'a) =>
+    Isolinear.Sub.t('a);
+
+  let details:
     (
       ~setup: Setup.t,
-      ~query: Query.t,
-      ~toMsg: result(Query.t, string) => 'a
+      ~extensionId: string,
+      ~toMsg: result(Catalog.Details.t, string) => 'a
     ) =>
     Isolinear.Sub.t('a);
 };

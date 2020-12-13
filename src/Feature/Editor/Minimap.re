@@ -11,7 +11,7 @@ open Revery.Draw;
 open Revery.UI;
 
 module BufferHighlights = Oni_Syntax.BufferHighlights;
-module Diagnostic = Feature_LanguageSupport.Diagnostic;
+module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Constants = {
   include Constants;
@@ -49,6 +49,7 @@ let minimapPaint = Skia.Paint.make();
 
 let renderLine =
     (
+      ~scaleFactor,
       shouldHighlight,
       canvasContext,
       yOffset,
@@ -58,12 +59,11 @@ let renderLine =
     switch (token.tokenType) {
     | Text =>
       let startPosition = CharacterIndex.toInt(token.startIndex);
-      let endPosition = CharacterIndex.toInt(token.endIndex);
-      let tokenWidth = endPosition - startPosition;
 
-      let x = float(Constants.minimapCharacterWidth * startPosition);
+      let x = token.startPixel *. scaleFactor;
+      let endX = token.endPixel *. scaleFactor;
       let height = float(Constants.minimapCharacterHeight);
-      let width = float(tokenWidth * Constants.minimapCharacterWidth);
+      let width = endX -. x;
 
       let emphasis = shouldHighlight(startPosition);
       let color =
@@ -111,11 +111,13 @@ let%component make =
               (
                 ~dispatch: Msg.t => unit,
                 ~editor: Editor.t,
+                ~config: Config.resolver,
                 ~cursorPosition: CharacterPosition.t,
                 ~width: int,
                 ~height: int,
                 ~count,
                 ~diagnostics,
+                ~maybeYankHighlights: option(Editor.yankHighlight),
                 ~getTokensForLine: int => list(BufferViewTokenizer.t),
                 ~selection:
                    Hashtbl.t(
@@ -134,8 +136,9 @@ let%component make =
 
   let scrollY = Editor.minimapScrollY(editor);
 
-  let thumbTop =
-    rowHeight *. float(Editor.getTopVisibleLine(editor) - 1) -. scrollY;
+  let editorScrollY = Editor.scrollY(editor);
+  let topViewLine = editorScrollY /. Editor.lineHeightInPixels(editor);
+  let thumbTop = rowHeight *. topViewLine -. scrollY;
   let thumbSize = rowHeight *. float(getMinimapSize(editor));
 
   let%hook (maybeBbox, setBbox) = Hooks.state(None);
@@ -232,6 +235,34 @@ let%component make =
     isHovering
       ? colors.minimapSliderHoverBackground : colors.minimapSliderBackground;
 
+  // Convert an editor surface pixel range (post-scroll) to a
+  // minimap pixel range. For now, this just has per-line fidelity.
+  let mapPixelRange = ({start, stop}: PixelRange.t) => {
+    let editorPixelYToMinimapPixelY = pixelY => {
+      let scaleFactor = rowHeight /. Editor.lineHeightInPixels(editor);
+      pixelY *. scaleFactor +. thumbTop;
+    };
+
+    PixelRange.{
+      start: PixelPosition.{x: 0., y: editorPixelYToMinimapPixelY(start.y)},
+      stop:
+        PixelPosition.{
+          x: float(width),
+          y: editorPixelYToMinimapPixelY(stop.y),
+        },
+    };
+  };
+
+  let yankHighlightElement =
+    maybeYankHighlights
+    |> Option.map(({key, pixelRanges, opacity}: Editor.yankHighlight) => {
+         let pixelRanges = pixelRanges |> List.map(mapPixelRange);
+         let opacity = Component_Animation.get(opacity);
+
+         <YankHighlights opacity config key pixelRanges />;
+       })
+    |> Option.value(~default=React.empty);
+
   <View
     style={Styles.container(backgroundColor)}
     onMouseDown
@@ -277,21 +308,19 @@ let%component make =
           Revery.Color.toSkia(colors.lineHighlightBackground),
         );
         /* Draw cursor line */
-        CanvasContext.drawRectLtwh(
-          ~left=Constants.leftMargin,
-          ~top=
-            rowHeight
-            *. float(
-                 EditorCoreTypes.LineNumber.toZeroBased(
-                   CharacterPosition.(cursorPosition.line),
-                 ),
-               )
-            -. scrollY,
-          ~height=float(Constants.minimapCharacterHeight),
-          ~width=float(width),
-          ~paint=minimapPaint,
-          canvasContext,
-        );
+        Editor.characterToByte(cursorPosition, editor)
+        |> Option.iter(bytePosition => {
+             let viewLine =
+               Editor.bufferBytePositionToViewLine(bytePosition, editor);
+             CanvasContext.drawRectLtwh(
+               ~left=Constants.leftMargin,
+               ~top=rowHeight *. float(viewLine) -. scrollY,
+               ~height=float(Constants.minimapCharacterHeight),
+               ~width=float(width),
+               ~paint=minimapPaint,
+               canvasContext,
+             );
+           });
 
         let renderRange = (~color, ~offset, range: ByteRange.t) =>
           {let maybeCharacterStart =
@@ -348,6 +377,7 @@ let%component make =
              canvasContext,
            )};
 
+        let scaleFactor = Editor.getMinimapWidthScaleFactor(editor);
         ImmediateList.render(
           ~scrollY,
           ~rowHeight,
@@ -396,8 +426,18 @@ let%component make =
 
               // Draw error highlight
               switch (IntMap.find_opt(item, diagnostics)) {
-              | Some(_) =>
-                let color = Revery.Color.rgba(1.0, 0.0, 0.0, 0.3);
+              | Some(diags) =>
+                let severity = Feature_Diagnostics.maxSeverity(diags);
+                let color =
+                  (
+                    switch (severity) {
+                    | Error => colors.errorForeground
+                    | Warning => colors.warningForeground
+                    | Info => colors.infoForeground
+                    | Hint => colors.hintForeground
+                    }
+                  )
+                  |> Revery.Color.multiplyAlpha(0.3);
                 Skia.Paint.setColor(
                   minimapPaint,
                   Revery.Color.toSkia(color),
@@ -413,7 +453,13 @@ let%component make =
               | None => ()
               };
 
-              renderLine(shouldHighlight, canvasContext, offset, tokens);
+              renderLine(
+                ~scaleFactor,
+                shouldHighlight,
+                canvasContext,
+                offset,
+                tokens,
+              );
             },
           (),
         );
@@ -442,7 +488,8 @@ let%component make =
         );
 
         Option.iter(
-          EditorDiffMarkers.render(
+          EditorDiffMarkers.renderMinimap(
+            ~editor,
             ~scrollY,
             ~rowHeight,
             ~x=Constants.leftMargin,
@@ -456,5 +503,6 @@ let%component make =
         );
       }}
     />
+    yankHighlightElement
   </View>;
 };

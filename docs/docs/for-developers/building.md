@@ -11,6 +11,8 @@ sidebar_label: Building from Source
 - Install [Git](https://git-scm.com/)
 - Install [Node](https://nodejs.org/en)
 - Install [Esy](https://esy.sh) (__0.6.2__ or above is required, but the latest version is recommened: `npm install -g esy@latest`)
+> __NOTE:__ **Linux-only**: if you need to install using `sudo npm install -g esy@latest` then your NPM installation **might be broken** follow [the instruction here to fix it](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally) this is related to this issue [esy/esy#1099.](https://github.com/esy/esy/issues/1099)
+
 - __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
 - Install any other system packages required by Oni2 dependencies, as outlined below.
 
@@ -32,7 +34,7 @@ Requires `libtool` and `gettext` from homebrew: `brew install libtool gettext`.
 Some Linux distributions may need other packages:
 
  - Ubuntu : `libacl1-dev`, `libncurses-dev` for `libvim`.
- - Fedora/CentOS : `libXt-devel`, `libSM-devel`, `libICE-devel` for `libvim`
+ - Fedora/CentOS : `libXt-devel`, `libSM-devel`, `libICE-devel`, `libacl-devel` and `ncurses-devel ` for `libvim`
 
 ## Build and Run
 
@@ -45,8 +47,16 @@ Some Linux distributions may need other packages:
 ```sh
 git clone https://github.com/onivim/oni2
 cd oni2
+
+# Install dependencies in package.json
 esy install
+
+# Builds most dependencies and run Oni2 specific bootstrapping.
+# Takes upwards of 30 mins on a normal machine.
+# esy does intelligently cache to ~/.esy, subsequent builds are fast.
 esy bootstrap
+
+# Finish up remaining parts of building. Should be quick.
 esy build
 ```
 
@@ -78,7 +88,7 @@ node install-node-deps.js
 
 ### Inline Unit Tests
 
-- `esy @test inline`
+- `esy '@test' inline`
 
 ### Check build
 
@@ -100,12 +110,20 @@ We use auto formatting tool, you might want to run it before you commit changes
 
 To create a release build, run:
 
-- `esy x Oni2 -f --checkhealth`
-- `esy create-release`
+- `esy '@release' run -f --checkhealth`
+- `esy '@release' install`
+- `esy '@release' run --help`
+- `esy '@release' create`
 
-This will create a `_release` folder at the root with the application bundle inside.
+This will create a `_esy/release` folder at the root with the application bundle inside that folder there will be folders for built binaries, in `_esy/release/install/bin` the `Oni2` binary resides along `Oni2_editor`.
+
+Mind that these are actually symbolic links to `oni2/_esy/release/store/b/oni2-<hashvalue>/install/default/bin/Oni2`, the same is true for the `Oni2_editor` binary.
 
 ### Windows
+
+To create an installation package for Windows, run the following PowerShell script:
+
+- `./scripts/windows/publish.ps1`
 
 ### OSX
 
@@ -113,7 +131,7 @@ Once you have a release build created, you can install Oni2 in your `Application
 
 Run the following from the `oni2` directory:
 
-- `cp -R _release/Onivim2.app $USER/Applications`
+- `cp -R _release/Onivim2.app /Applications`
 
 If you want to open the editor from terminal with an `oni2` command, you can add Oni2 to the system PATH using a command
 item within the app:
@@ -133,7 +151,7 @@ There is a development extension in `src/development_extensions/oni-dev-extensio
 #### Resources
 - [VS Code API reference](https://code.visualstudio.com/api/references/vscode-api)
 
-### Intrumenting extensions
+### Instrumenting extensions
 
 To add logging, use `console.error` - messages on `stderr` will be shown in Onivim's log. (Make sure to turn debug logging on, via `ONI2_DEBUG=1` environment variable or the `--debug` command-line arg).
 

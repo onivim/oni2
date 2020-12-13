@@ -2,7 +2,7 @@ open EditorCoreTypes;
 open Oni_Core;
 open TestFramework;
 
-let makeLine = BufferLine.make(~indentation=IndentationSettings.default);
+let makeLine = BufferLine.make(~measure=_ => 1.0);
 
 let characterWidth = {
   let (_, width) =
@@ -19,7 +19,7 @@ describe("WordWrap", ({describe, _}) =>
       let wrap = WordWrap.fixed(~pixels=threeCharacterWidth, line);
       expect.equal(
         wrap,
-        [{byte: ByteIndex.zero, character: CharacterIndex.zero}],
+        [|{byte: ByteIndex.zero, character: CharacterIndex.zero}|],
       );
     });
     test("ascii line exceeds wrap point", ({expect, _}) => {
@@ -27,10 +27,10 @@ describe("WordWrap", ({describe, _}) =>
       let wrap = WordWrap.fixed(~pixels=threeCharacterWidth, line);
       expect.equal(
         wrap,
-        [
+        [|
           {byte: ByteIndex.zero, character: CharacterIndex.zero},
           {byte: ByteIndex.(zero + 3), character: CharacterIndex.(zero + 3)},
-        ],
+        |],
       );
     });
   })

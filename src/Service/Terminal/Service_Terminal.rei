@@ -17,9 +17,6 @@ type msg =
   | ScreenUpdated({
       id: int,
       screen: ReveryTerminal.Screen.t,
-    })
-  | CursorMoved({
-      id: int,
       cursor: ReveryTerminal.Cursor.t,
     });
 
@@ -27,8 +24,7 @@ module Sub: {
   let terminal:
     (
       ~id: int,
-      ~arguments: list(string),
-      ~cmd: string,
+      ~launchConfig: Exthost.ShellLaunchConfig.t,
       ~columns: int,
       ~rows: int,
       ~workspaceUri: Uri.t,
@@ -37,7 +33,10 @@ module Sub: {
     Isolinear.Sub.t(msg);
 };
 
-module Effect: {let input: (~id: int, string) => Isolinear.Effect.t(msg);};
+module Effect: {
+  let input: (~id: int, string) => Isolinear.Effect.t(msg);
+  let paste: (~id: int, string) => Isolinear.Effect.t(msg);
+};
 
 let handleExtensionMessage: Exthost.Msg.TerminalService.msg => unit;
 

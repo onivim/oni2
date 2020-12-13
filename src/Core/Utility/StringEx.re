@@ -18,8 +18,32 @@ let contains = (query, str) => {
   };
 };
 
+let isWhitespaceOnly = str => {
+  let len = String.length(str);
+  let rec loop = idx =>
+    if (idx >= len) {
+      true;
+    } else if (!isSpace(str.[idx])) {
+      false;
+    } else {
+      loop(idx + 1);
+    };
+  loop(0);
+};
+
 let explode = str =>
   str |> String.to_seq |> List.of_seq |> List.map(c => String.make(1, c));
+
+let padFront = (~totalLength, char, str) => {
+  let originalLength = String.length(str);
+  let padLength = totalLength - originalLength;
+
+  if (padLength <= 0) {
+    str;
+  } else {
+    String.make(padLength, char) ++ str;
+  };
+};
 
 exception NoMatchException;
 
@@ -259,6 +283,7 @@ let removeWindowsNewLines = s =>
   |> List.filter(c => c != '\r')
   |> List.map(c => String.make(1, c))
   |> String.concat("");
+
 let splitNewLines = s => s |> String.split_on_char('\n') |> Array.of_list;
 
 let removeTrailingNewLine = s => {
@@ -279,3 +304,25 @@ let splitLines: string => (bool, array(string)) =
 
     (isMultipleLines(text), out);
   };
+
+/** unescaped meaning not preceded directly by a backslash (\) */
+let findUnescapedFromEnd: (string, char) => option(int) =
+  (str, chr) => {
+    let last_unescaped_index = ref(None); // default result
+    String.iteri(
+      (i, c) =>
+        if (i > 0 && str.[i - 1] != '\\' && c == chr) {
+          last_unescaped_index := Some(i + 1); // Advance past space
+        },
+      str,
+    );
+    last_unescaped_index^;
+  };
+
+// turns 'hello world' into 'hello\ world'
+// may be worth replacing/complementing with 'escapeFilePath' */
+let escapeSpaces: string => string =
+  s =>
+    List.init(String.length(s), String.get(s))
+    |> List.map(c => (c == ' ' ? "\\" : "") ++ String.make(1, c))
+    |> String.concat("");

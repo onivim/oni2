@@ -210,6 +210,7 @@ let process = (rgPath, args, onUpdate, onComplete, onError) => {
     disposeTick :=
       Some(
         Revery.Tick.interval(
+          ~name="Ripgrep - Processing Ticker",
           _ =>
             if (!Job.isComplete(job^)) {
               job := Job.tick(job^);
@@ -273,7 +274,15 @@ let findInFiles =
     (~executablePath, ~directory, ~query, ~onUpdate, ~onComplete, ~onError) => {
   process(
     executablePath,
-    ["--smart-case", "--hidden", "--json", "--", query, directory],
+    [
+      "--fixed-strings",
+      "--smart-case",
+      "--hidden",
+      "--json",
+      "--",
+      query,
+      directory,
+    ],
     items => {
       items
       |> List.filter_map(Match.fromJsonString)

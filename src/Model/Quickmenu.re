@@ -3,7 +3,7 @@ open Actions;
 type t = {
   variant,
   prefix: option(string),
-  inputText: Feature_InputText.model,
+  inputText: Component_InputText.model,
   items: array(menuItem),
   filterProgress: progress,
   ripgrepProgress: progress,
@@ -15,6 +15,7 @@ and variant =
     | CommandPalette
     | EditorsPicker
     | FilesPicker
+    | OpenBuffersPicker
     | Wildmenu(Vim.Types.cmdlineType)
     | ThemesPicker(list(Feature_Theme.theme))
     | FileTypesPicker({
@@ -22,7 +23,6 @@ and variant =
         languages:
           list((string, option(Oni_Core.IconTheme.IconDefinition.t))),
       })
-    | DocumentSymbols
     | Extension({
         id: int,
         hasItems: bool,
@@ -32,15 +32,16 @@ and variant =
 let placeholderText =
   fun
   | FilesPicker
+  | OpenBuffersPicker
   | ThemesPicker(_)
-  | CommandPalette
-  | DocumentSymbols => "type to search..."
+  | CommandPalette => "type to search..."
   | _ => "";
 
 let defaults = variant => {
   variant,
   prefix: None,
-  inputText: Feature_InputText.create(~placeholder=placeholderText(variant)),
+  inputText:
+    Component_InputText.create(~placeholder=placeholderText(variant)),
   focused: None,
   items: [||],
   filterProgress: Complete,

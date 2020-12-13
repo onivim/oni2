@@ -9,6 +9,7 @@ Oni_UI_Test.TestFramework.cli();
 Oni_Syntax_Test.TestFramework.cli();
 Feature_Editor_Test.TestFramework.cli();
 Feature_LanguageSupport_Test.TestFramework.cli();
+Feature_Diagnostics_Test.TestFramework.cli();
 
 Service_Extensions_Test.TestFramework.cli();
 Service_Net_Test.TestFramework.cli();
@@ -25,4 +26,5 @@ Exthost_Test.TestFramework.cli();
 Oniguruma_Test.TestFramework.cli();
 Textmate_Test.TestFramework.cli();
 TreeSitter_Test.TestFramework.cli();
+KeyboardLayout_Test.TestFramework.cli();
 Oni_Cli_Test.TestFramework.cli();

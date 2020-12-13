@@ -1,4 +1,5 @@
 open Revery.UI;
+open Revery.UI.Components;
 
 module FilePathDownloader =
   RemoteAsset.Make({
@@ -10,11 +11,13 @@ let make = (~width: int, ~height: int, ~url: string, ()) => {
   <FilePathDownloader url>
     ...{
          fun
-         | FilePathDownloader.Downloading => <View />
+         | FilePathDownloader.Downloading => <Container width height />
          | FilePathDownloader.Downloaded(filePath) =>
-           <Image width height src={`File(filePath)} />
+           <Container width height>
+             <Image width height src={`File(filePath)} />
+           </Container>
          | FilePathDownloader.DownloadFailed({errorMsg}) =>
-           <Text text=errorMsg />
+           <Container width height> <Text text=errorMsg /> </Container>
        }
   </FilePathDownloader>;
 };

@@ -42,25 +42,31 @@ module Identifier = {
 module VersionInfo = {
   [@deriving show]
   type t = {
-    version: string,
+    version: [@opaque] Semver.t,
     url: string,
   };
 
   let decode =
     Json.Decode.(
       key_value_pairs(string)
-      |> map(List.map(((version, url)) => {version, url}))
+      |> map(
+           List.filter_map(((maybeVersion, url)) => {
+             maybeVersion
+             |> Semver.of_string
+             |> Option.map(version => {version, url})
+           }),
+         )
     );
 
   let toString = ({version, url}) =>
-    Printf.sprintf(" - Version %s: %s", version, url);
+    Printf.sprintf(" - Version %s: %s", Semver.to_string(version), url);
 };
 
 module Details = {
   [@deriving show]
   type t = {
     downloadUrl: string,
-    repositoryUrl: string,
+    repositoryUrl: option(string),
     homepageUrl: string,
     manifestUrl: string,
     iconUrl: option(string),
@@ -69,11 +75,12 @@ module Details = {
     //      licenseUrl: string,
     name: string,
     namespace: string,
+    isPublicNamespace: bool,
     //      downloadCount: int,
     displayName: option(string),
-    description: string,
+    description: option(string),
     //      categories: list(string),
-    version: string,
+    version: [@opaque] option(Semver.t),
     versions: list(VersionInfo.t),
   };
 
@@ -98,7 +105,7 @@ module Details = {
 %s
       |},
       details |> displayName,
-      description,
+      description |> Option.value(~default="(null)"),
       homepageUrl,
       downloadUrl,
       versions,
@@ -109,9 +116,11 @@ module Details = {
     open Json.Decode;
 
     let files = (name, decoder) => field("files", field(name, decoder));
+    let filesOpt = (name, decoder) =>
+      field("files", field_opt(name, decoder));
     let downloadUrl = files("download", string);
     let manifestUrl = files("manifest", string);
-    let iconUrl = files("icon", nullable(string));
+    let iconUrl = filesOpt("icon", string);
     let readmeUrl = files("readme", nullable(string));
     let homepageUrl = field("publishedBy", field("homepage", string));
 
@@ -122,14 +131,25 @@ module Details = {
           manifestUrl: whatever(manifestUrl),
           iconUrl: whatever(iconUrl),
           readmeUrl: whatever(readmeUrl),
-          repositoryUrl: field.required("repository", string),
+          repositoryUrl: field.optional("repository", string),
           homepageUrl: whatever(homepageUrl),
           licenseName: field.optional("license", string),
           displayName: field.optional("displayName", string),
-          description: field.required("description", string),
+          description: field.optional("description", string),
+          isPublicNamespace:
+            field.withDefault(
+              "namespaceAccess",
+              true,
+              string |> map(str => {String.lowercase_ascii(str) == "public"}),
+            ),
           name: field.required("name", string),
           namespace: field.required("namespace", string),
-          version: field.required("version", string),
+          version:
+            field.withDefault(
+              "version",
+              None,
+              string |> map(Semver.of_string),
+            ),
           versions: field.withDefault("allVersions", [], VersionInfo.decode),
         }
       );
@@ -147,11 +167,11 @@ module Summary = {
     url: string,
     downloadUrl: string,
     iconUrl: option(string),
-    version: string,
+    version: [@opaque] option(Semver.t),
     name: string,
     namespace: string,
     displayName: option(string),
-    description: string,
+    description: option(string),
   };
 
   let id = ({namespace, name, _}) => {
@@ -167,18 +187,23 @@ module Summary = {
     open Json.Decode;
 
     let downloadUrl = field("files", field("download", string));
-    let iconUrl = field("files", field("icon", nullable(string)));
+    let iconUrl = field("files", field_opt("icon", string));
 
     obj(({field, whatever, _}) =>
       {
         url: field.required("url", string),
         downloadUrl: whatever(downloadUrl),
         iconUrl: whatever(iconUrl),
-        version: field.required("version", string),
+        version:
+          field.withDefault(
+            "version",
+            None,
+            string |> map(Semver.of_string),
+          ),
         name: field.required("name", string),
         namespace: field.required("namespace", string),
         displayName: field.optional("displayName", string),
-        description: field.required("description", string),
+        description: field.optional("description", string),
       }
     );
   };
@@ -195,9 +220,11 @@ module Summary = {
       namespace,
       name,
       displayName |> Option.value(~default="(null)"),
-      description,
+      description |> Option.value(~default="(null)"),
       url,
-      version,
+      version
+      |> Option.map(Semver.to_string)
+      |> Option.value(~default="(null)"),
     );
   };
 };

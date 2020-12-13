@@ -22,7 +22,7 @@ let%component make =
               ) => {
   let%hook () = React.Hooks.effect(Always, () => None);
 
-  let ({pixelX, pixelY}: Editor.pixelPosition, characterWidth) =
+  let ({x: pixelX, y: pixelY}: PixelPosition.t, characterWidth) =
     Editor.bufferCharacterPositionToPixel(~position=cursorPosition, editor);
 
   let originalX = pixelX;
@@ -30,7 +30,7 @@ let%component make =
 
   let durationFunc = (~current, ~target) =>
     if (Float.abs(target -. current) < 2. *. editorFont.measuredHeight) {
-      if (mode == Insert) {
+      if (Vim.Mode.isInsert(mode)) {
         Revery.Time.milliseconds(50);
       } else {
         Revery.Time.zero;
@@ -48,6 +48,7 @@ let%component make =
 
   let%hook y =
     Hooks.transitionf(
+      ~name="Cursor Y Transition",
       ~active=animatedCursor,
       ~duration=durationFunc,
       ~delay,
@@ -57,6 +58,7 @@ let%component make =
     );
   let%hook x =
     Hooks.transitionf(
+      ~name="Cursor X Transition",
       ~active=animatedCursor,
       ~delay,
       ~duration=durationFunc,
@@ -121,7 +123,7 @@ let%component make =
             ~height,
             ~color=foreground,
           );
-        } else if (mode == Insert) {
+        } else if (Vim.Mode.isInsert(mode)) {
           let width = 2.;
           Draw.rect(~context, ~x, ~y, ~width, ~height, ~color=foreground);
         } else {

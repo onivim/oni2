@@ -1,6 +1,8 @@
 open EditorCoreTypes;
 
 type lineEnding = Types.lineEnding;
+module Event = Event;
+module Types = Types;
 
 module AutoClosingPairs: {
   module AutoPair: {
@@ -35,27 +37,156 @@ module AutoIndent: {
     | DecreaseIndent;
 };
 
+module ColorScheme: {
+  module Provider: {
+    type t = string => array(string);
+    let default: t;
+  };
+};
+
+module ViewLineMotion: {
+  type t =
+    | MotionH
+    | MotionM
+    | MotionL;
+};
+
+module Registers: {let get: (~register: char) => option(array(string));};
+
+module Operator: {
+  type operation =
+    | NoPending
+    | Delete
+    | Yank
+    | Change
+    | LeftShift
+    | RightShift
+    | Filter
+    | SwitchCase
+    | Indent
+    | Format
+    | Colon
+    | MakeUpperCase
+    | MakeLowerCase
+    | Join
+    | JoinNS
+    | Rot13
+    | Replace
+    | Insert
+    | Append
+    | Fold
+    | FoldOpen
+    | FoldOpenRecursive
+    | FoldClose
+    | FoldCloseRecursive
+    | FoldDelete
+    | FoldDeleteRecursive
+    | Format2
+    | Function
+    | NumberAdd
+    | NumberSubtract
+    | Comment;
+
+  type pending = {
+    operation,
+    register: int,
+    count: int,
+  };
+
+  let get: unit => option(pending);
+
+  let toString: pending => string;
+};
+
+module Mode: {
+  type t =
+    | Normal({cursor: BytePosition.t})
+    | Insert({cursors: list(BytePosition.t)})
+    | CommandLine
+    | Replace({cursor: BytePosition.t})
+    | Visual(VisualRange.t)
+    | Operator({
+        cursor: BytePosition.t,
+        pending: Operator.pending,
+      })
+    | Select(VisualRange.t);
+
+  let current: unit => t;
+
+  let isInsert: t => bool;
+  let isNormal: t => bool;
+  let isVisual: t => bool;
+  let isSelect: t => bool;
+  let isReplace: t => bool;
+  let isOperatorPending: t => bool;
+
+  let cursors: t => list(BytePosition.t);
+};
+
+module SubMode: {
+  type t =
+    | None
+    | InsertLiteral;
+};
+
+module Functions: {
+  module GetChar: {
+    type mode =
+      | Wait // getchar()
+      | Immediate // getchar(0)
+      | Peek; // getchar(1)
+
+    type t = mode => char;
+  };
+};
+
 module Context: {
   type t = {
     autoClosingPairs: AutoClosingPairs.t,
     autoIndent:
       (~previousLine: string, ~beforePreviousLine: option(string)) =>
       AutoIndent.action,
+    viewLineMotion:
+      (~motion: ViewLineMotion.t, ~count: int, ~startLine: LineNumber.t) =>
+      LineNumber.t,
+    screenCursorMotion:
+      (
+        ~direction: [ | `Up | `Down],
+        ~count: int,
+        ~line: LineNumber.t,
+        ~currentByte: ByteIndex.t,
+        ~wantByte: ByteIndex.t
+      ) =>
+      BytePosition.t,
+    toggleComments: array(string) => array(string),
     bufferId: int,
+    colorSchemeProvider: ColorScheme.Provider.t,
     width: int,
     height: int,
     leftColumn: int,
     topLine: int,
-    cursors: list(BytePosition.t),
-    lineComment: option(string),
+    mode: Mode.t,
+    subMode: SubMode.t,
     tabSize: int,
     insertSpaces: bool,
+    functionGetChar: Functions.GetChar.t,
   };
 
   let current: unit => t;
 };
 
-module Registers: {let get: (~register: char) => option(array(string));};
+module CommandLine: {
+  type t = Types.cmdline;
+
+  let getCompletions: (~context: Context.t=?, unit) => array(string);
+  let getText: unit => option(string);
+  let getPosition: unit => int;
+  let getType: unit => Types.cmdlineType;
+
+  let onEnter: (Event.handler(t), unit) => unit;
+  let onLeave: (Event.handler(unit), unit) => unit;
+  let onUpdate: (Event.handler(t), unit) => unit;
+};
 
 module Edit: {
   [@deriving show]
@@ -85,6 +216,11 @@ module Buffer: {
   [openFile(path)] opens a file, sets it as the active buffer, and returns a handle to the buffer.
   */
   let openFile: string => t;
+
+  /**
+  [loadFile(path)] opens a file and returns a handle to the buffer.
+  */
+  let loadFile: string => t;
 
   /**
   [getFileName(buffer)] returns the full file path of the buffer [buffer]
@@ -121,6 +257,8 @@ module Buffer: {
   [getline(buffer, line)] returns the text content at the one-based line number [line] for buffer [buffer].
   */
   let getLine: (t, LineNumber.t) => string;
+
+  let getLines: t => array(string);
 
   /**
   [getId(buffer)] returns the id of buffer [buffer];
@@ -168,16 +306,6 @@ module Buffer: {
 
   let applyEdits: (~edits: list(Edit.t), t) => result(unit, string);
 
-  /**
-  [onEnter(f)] adds a listener [f] that is called whenever a new buffer is entered.
-
-  This is more reliable than autocommands, as it will dispatch in any case the buffer
-  is changed, even in cases where [BufEnter] would not be dispatched.
-
-  Returns a function that can be called to unsubscribe.
-  */
-  let onEnter: Listeners.bufferListener => Event.unsubscribe;
-
   let onLineEndingsChanged:
     Listeners.bufferLineEndingsChangedListener => Event.unsubscribe;
 
@@ -222,11 +350,23 @@ module Buffer: {
   let onWrite: Listeners.bufferWriteListener => Event.unsubscribe;
 };
 
+module Clear: {
+  type target =
+    | Messages;
+
+  type t = {
+    target,
+    count: int,
+  };
+};
+
 module Goto: {
   type effect =
     | Definition
     | Declaration
-    | Hover;
+    | Hover
+    | Outline
+    | Messages;
 };
 
 module TabPage: {
@@ -262,11 +402,101 @@ module Format: {
       });
 };
 
+module Setting: {
+  [@deriving show]
+  type value =
+    | String(string)
+    | Int(int);
+
+  [@deriving show]
+  type t = {
+    fullName: string,
+    shortName: option(string),
+    value,
+  };
+};
+
+module Scroll: {
+  [@deriving show]
+  type direction =
+    | CursorCenterVertically // zz
+    | CursorCenterHorizontally
+    | CursorTop // zt
+    | CursorBottom // zb
+    | CursorLeft
+    | CursorRight
+    | LineUp
+    | LineDown
+    | HalfPageDown
+    | HalfPageUp
+    | PageDown
+    | PageUp
+    | HalfPageLeft
+    | HalfPageRight
+    | ColumnLeft
+    | ColumnRight;
+};
+
+module Mapping: {
+  [@deriving show]
+  type mode =
+    | Insert // imap, inoremap
+    | Language // lmap
+    | CommandLine // cmap
+    | Normal // nmap, nnoremap
+    | VisualAndSelect // vmap, vnoremap
+    | Visual // xmap, xnoremap
+    | Select // smap, snoremap
+    | Operator // omap, onoremap
+    | Terminal // tmap, tnoremap
+    | InsertAndCommandLine // :map!
+    | All; // :map;
+
+  module ScriptId: {
+    [@deriving show]
+    type t;
+    let default: t;
+    let toInt: t => int;
+  };
+
+  [@deriving show]
+  type t = {
+    mode,
+    fromKeys: string, // mapped from, lhs
+    toValue: string, // mapped to, rhs
+    expression: bool,
+    recursive: bool,
+    silent: bool,
+    scriptId: ScriptId.t,
+  };
+};
+
 module Effect: {
   type t =
     | Goto(Goto.effect)
     | TabPage(TabPage.effect)
-    | Format(Format.effect);
+    | Format(Format.effect)
+    | SettingChanged(Setting.t)
+    | ColorSchemeChanged(option(string))
+    | MacroRecordingStarted({register: char})
+    | MacroRecordingStopped({
+        register: char,
+        value: option(string),
+      })
+    | Scroll({
+        count: int,
+        direction: Scroll.direction,
+      })
+    | Map(Mapping.t)
+    | Unmap({
+        mode: Mapping.mode,
+        keys: option(string),
+      })
+    | Clear(Clear.t)
+    | Output({
+        cmd: string,
+        output: option(string),
+      });
 };
 
 /**
@@ -286,7 +516,7 @@ The value [s] must be a string of UTF-8 characters.
 
 The keystroke is processed synchronously.
 */
-let input: (~context: Context.t=?, string) => Context.t;
+let input: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
 /**
 [key(s)] sends a single keystroke.
@@ -297,9 +527,9 @@ The value [s] must be a valid Vim key, such as:
 */
 
 // TODO: Strongly type these keys...
-let key: (~context: Context.t=?, string) => Context.t;
+let key: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
-let eval: string => result(string, string);
+let eval: (~context: Context.t=?, string) => result(string, string);
 
 /**
 [command(cmd)] executes [cmd] as an Ex command.
@@ -310,7 +540,7 @@ You may use any valid Ex command, although you must omit the leading semicolon.
 
 The command [cmd] is processed synchronously.
 */
-let command: string => Context.t;
+let command: (~context: Context.t=?, string) => (Context.t, list(Effect.t));
 
 /**
 [onDirectoryChanged(f)] registers a directory changed listener [f].
@@ -381,13 +611,9 @@ module AutoCommands = AutoCommands;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
 module Clipboard = Clipboard;
-module CommandLine = CommandLine;
 module Cursor = Cursor;
-module Event = Event;
-module Mode = Mode;
 module Options = Options;
 module Search = Search;
-module Types = Types;
 module Visual = Visual;
 module VisualRange = VisualRange;
 module Window = Window;
