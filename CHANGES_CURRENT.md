@@ -10,6 +10,7 @@
 - #2812 - CLI: Add `+` and `-c` arguments to run Vim ex commands (fixes #1861)
 - #2817 - Snippets: Initial snippet parser (related #160)
 - #2818 - Vim: Initial `:!` command output implementation (fixes #1889, #1909)
+- #2833 - Outline: Don't wrap long signatures when overflowing (fixes #2626)
 
 ### Bug Fixes
 

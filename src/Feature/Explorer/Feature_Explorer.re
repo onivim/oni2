@@ -349,7 +349,10 @@ module View = {
           <View style=Style.[flexGrow(1), flexShrink(1)]>
             <Text
               text={symbolData.name}
-              style=Style.[color(foregroundColor), textWrap(Revery.TextWrapping.NoWrap)]
+              style=Style.[
+                color(foregroundColor),
+                textWrap(Revery.TextWrapping.NoWrap),
+              ]
               fontFamily={font.family}
               fontSize={font.size}
             />
