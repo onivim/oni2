@@ -33,6 +33,11 @@ let constant = v => {
   make(animation);
 };
 
+let almostConstant = v => {
+  let animation = Animation.(animate(Time.milliseconds(1)) |> map(_ => v));
+  make(animation);
+};
+
 let update = (msg, model) =>
   switch (msg) {
   | Tick(totalTime) =>

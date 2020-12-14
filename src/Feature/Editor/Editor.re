@@ -1702,12 +1702,13 @@ let update = (msg, editor) => {
     };
 
     // TODO: inline elements
-    editor';
-  // | InlineElements(msg) =>
-  //   editor
-  //   |> withSteadyCursor(e =>
-  //        {...e, inlineElements: InlineElements.update(msg, e.inlineElements)}
-  //      )
+    editor'
+    |> withSteadyCursor(e =>
+         {
+           ...e,
+           inlineElements: InlineElements.animate(msg, editor.inlineElements),
+         }
+       );
   };
 };
 
@@ -1719,17 +1720,13 @@ let sub = editor => {
        })
     |> Option.value(~default=false);
 
-  // let isInlineElementAnimating = InlineElements.isAnimating(
-  //   editor.inlineElements
-  // );
-
-  let isInlineElementAnimating = false;
+  let isInlineElementAnimating =
+    InlineElements.isAnimating(editor.inlineElements);
 
   let isScrollAnimating =
     Spring.isActive(editor.scrollY) || Spring.isActive(editor.scrollX);
 
   if (isYankAnimating || isInlineElementAnimating || isScrollAnimating) {
-    // prerr_endline ("nonce: " ++ string_of_int(editor.animationNonce));
     Component_Animation.subAny(
       ~uniqueId="editor." ++ string_of_int(editor.animationNonce),
     )

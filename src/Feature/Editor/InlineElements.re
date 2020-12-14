@@ -17,7 +17,7 @@ module Animation = {
 };
 
 module Constants = {
-  let maxElementsToAnimate = 10;
+  let maxElementsToAnimate = 100;
 };
 
 type msg =
@@ -354,24 +354,22 @@ let set = (~key: string, ~elements, model) => {
   keyToElements' |> makeConsistent;
 };
 
-let updateElement = (~key, ~uniqueId, ~line, ~f: element => element, model) => {
+let updateElement =
+    (~key, ~uniqueId, ~line, ~f: element => element, keyToElements) => {
   let lineNumber = EditorCoreTypes.LineNumber.toZeroBased(line);
-  let keyToElements' =
-    model.keyToElements
-    |> IntMap.update(
-         lineNumber,
-         Option.map(keyMap => {
-           keyMap
-           |> KeyMap.update(
-                key,
-                Option.map(idMap => {
-                  idMap |> StringMap.update(uniqueId, Option.map(f))
-                }),
-              )
-         }),
-       );
-
-  keyToElements' |> makeConsistent;
+  keyToElements
+  |> IntMap.update(
+       lineNumber,
+       Option.map(keyMap => {
+         keyMap
+         |> KeyMap.update(
+              key,
+              Option.map(idMap => {
+                idMap |> StringMap.update(uniqueId, Option.map(f))
+              }),
+            )
+       }),
+     );
 };
 
 let update = (msg, model) =>
@@ -394,16 +392,21 @@ let setSize = (~animated, ~key, ~line, ~uniqueId, ~height, model) => {
   let setHeight = (curr: element) => {
     {
       ...curr,
-      opacity: animated ? curr.opacity : Component_Animation.constant(1.0),
+      opacity:
+        animated ? curr.opacity : Component_Animation.almostConstant(1.0),
       height:
         animated
           ? Component_Animation.make(
               Animation.expand(Component_Animation.get(curr.height), height),
             )
-          : Component_Animation.constant(height),
+          : Component_Animation.almostConstant(height),
     };
   };
-  updateElement(~key, ~line, ~uniqueId, ~f=setHeight, model);
+  let keyToElements' =
+    updateElement(~key, ~line, ~uniqueId, ~f=setHeight, model.keyToElements);
+  {...model, keyToElements: keyToElements'};
+  // let keyToElements' = updateElement(~key, ~line, ~uniqueId, ~f=setHeight, model.keyToElements);
+  // keyToElements' |> makeConsistent;
 };
 
 let allElementsForLine = (~line, {keyToElements, _}) => {
@@ -454,6 +457,42 @@ let shift = (update: Oni_Core.BufferUpdate.t, model) => {
 
     keyToElements' |> makeConsistent;
   };
+};
+
+let animate = (msg, model) => {
+  let updateIndividualElement = element => {
+    ...element,
+    height: Component_Animation.update(msg, element.height),
+    opacity: Component_Animation.update(msg, element.opacity),
+  };
+  let rec loop = (count, acc, elements) =>
+    if (count > Constants.maxElementsToAnimate) {
+      acc;
+    } else {
+      switch (elements) {
+      | [] => acc
+      | [elem, ...tail] =>
+        if (!Component_Animation.isComplete(elem.opacity)
+            || !Component_Animation.isComplete(elem.height)) {
+          loop(
+            count + 1,
+            acc
+            |> updateElement(
+                 ~key=elem.key,
+                 ~line=elem.line,
+                 ~uniqueId=elem.uniqueId,
+                 ~f=updateIndividualElement,
+               ),
+            tail,
+          );
+        } else {
+          loop(count, acc, tail);
+        }
+      };
+    };
+
+  let keyToElements' = loop(0, model.keyToElements, model.sortedElements);
+  keyToElements' |> makeConsistent;
 };
 
 // let sub = model => {

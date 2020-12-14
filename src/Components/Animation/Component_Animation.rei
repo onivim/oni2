@@ -37,6 +37,7 @@ type t('value);
 let get: t('value) => 'value;
 let isComplete: t(_) => bool;
 let isActive: t(_) => bool;
+let almostConstant: 'value => t('value);
 let constant: 'value => t('value);
 let make: Revery.UI.Animation.t('value) => t('value);
 let update: (msg, t('value)) => t('value);
