@@ -2,6 +2,8 @@ open Oni_Core;
 open EditorCoreTypes;
 open Utility;
 
+let a = 1;
+
 module Animation = {
   open Revery;
   open Revery.UI;
@@ -157,12 +159,14 @@ type t = {
   keyToElements: [@opaque] IntMap.t(KeyMap.t(StringMap.t(element))),
   cache: [@opaque] Lazy.t(Cache.t),
   sortedElements: list(element),
+  isAnimating: bool,
 };
 
 let initial = {
   keyToElements: IntMap.empty,
   sortedElements: [],
   cache: Lazy.from_val(Cache.empty),
+  isAnimating: false,
 };
 
 let toString = ({keyToElements, _}) => {
@@ -232,6 +236,35 @@ let elementsToMap = (elements: list(element)) => {
        },
        IntMap.empty,
      );
+};
+
+module Internal = {
+  let isAnimating = (elements: list(element)) => {
+    let rec loop = elems => {
+      switch (elems) {
+      | [] => false
+      | [hd, ...tail] =>
+        if (!Component_Animation.isComplete(hd.opacity)
+            || !Component_Animation.isComplete(hd.height)) {
+          true;
+        } else {
+          loop(tail);
+        }
+      };
+    };
+
+    loop(elements);
+  };
+};
+
+let isAnimating = ({isAnimating, _}) => isAnimating;
+
+let makeConsistent = keyToElements => {
+  let sortedElements = recomputeSortedElements(keyToElements);
+
+  let isAnimating = Internal.isAnimating(sortedElements);
+  let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
+  {keyToElements, isAnimating, sortedElements, cache: cache'};
 };
 
 let set = (~key: string, ~elements, model) => {
@@ -318,9 +351,7 @@ let set = (~key: string, ~elements, model) => {
       incomingMap,
     );
 
-  let sortedElements = recomputeSortedElements(keyToElements');
-  let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
-  {keyToElements: keyToElements', sortedElements, cache: cache'};
+  keyToElements' |> makeConsistent;
 };
 
 let updateElement = (~key, ~uniqueId, ~line, ~f: element => element, model) => {
@@ -340,10 +371,7 @@ let updateElement = (~key, ~uniqueId, ~line, ~f: element => element, model) => {
          }),
        );
 
-  let sortedElements = recomputeSortedElements(keyToElements');
-
-  let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
-  {keyToElements: keyToElements', sortedElements, cache: cache'};
+  keyToElements' |> makeConsistent;
 };
 
 let update = (msg, model) =>
@@ -424,55 +452,53 @@ let shift = (update: Oni_Core.BufferUpdate.t, model) => {
            ~delta,
          );
 
-    let sortedElements = recomputeSortedElements(keyToElements');
-    let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
-    {keyToElements: keyToElements', sortedElements, cache: cache'};
+    keyToElements' |> makeConsistent;
   };
 };
 
-let sub = model => {
-  let allElements = model.sortedElements;
+// let sub = model => {
+//   let allElements = model.sortedElements;
 
-  let rec loop = (count, acc, elements) =>
-    // Gate the number of animated elements, since the animation is expensive
-    if (count > Constants.maxElementsToAnimate) {
-      acc;
-    } else {
-      switch (elements) {
-      | [] => acc
-      | [elem, ...tail] =>
-        if (!Component_Animation.isComplete(elem.opacity)
-            || !Component_Animation.isComplete(elem.height)) {
-          loop(
-            count + 1,
-            [
-              Component_Animation.sub(elem.height)
-              |> Isolinear.Sub.map(msg =>
-                   HeightAnimation({
-                     key: elem.key,
-                     line: elem.line,
-                     uniqueId: elem.uniqueId,
-                     msg,
-                   })
-                 ),
-              Component_Animation.sub(elem.opacity)
-              |> Isolinear.Sub.map(msg =>
-                   OpacityAnimation({
-                     key: elem.key,
-                     line: elem.line,
-                     uniqueId: elem.uniqueId,
-                     msg,
-                   })
-                 ),
-              ...acc,
-            ],
-            tail,
-          );
-        } else {
-          loop(count, acc, tail);
-        }
-      };
-    };
+//   let rec loop = (count, acc, elements) =>
+// Gate the number of animated elements, since the animation is expensive
+//     if (count > Constants.maxElementsToAnimate) {
+//       acc;
+//     } else {
+//       switch (elements) {
+//       | [] => acc
+//       | [elem, ...tail] =>
+//         if (!Component_Animation.isComplete(elem.opacity)
+//             || !Component_Animation.isComplete(elem.height)) {
+//           loop(
+//             count + 1,
+//             [
+//               Component_Animation.sub(elem.height)
+//               |> Isolinear.Sub.map(msg =>
+//                    HeightAnimation({
+//                      key: elem.key,
+//                      line: elem.line,
+//                      uniqueId: elem.uniqueId,
+//                      msg,
+//                    })
+//                  ),
+//               Component_Animation.sub(elem.opacity)
+//               |> Isolinear.Sub.map(msg =>
+//                    OpacityAnimation({
+//                      key: elem.key,
+//                      line: elem.line,
+//                      uniqueId: elem.uniqueId,
+//                      msg,
+//                    })
+//                  ),
+//               ...acc,
+//             ],
+//             tail,
+//           );
+//         } else {
+//           loop(count, acc, tail);
+//         }
+//       };
+//     };
 
-  loop(0, [], allElements) |> Isolinear.Sub.batch;
-};
+//   loop(0, [], allElements) |> Isolinear.Sub.batch;
+// };

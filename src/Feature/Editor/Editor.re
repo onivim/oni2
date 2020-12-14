@@ -129,6 +129,7 @@ type t = {
   lastMouseUpTime: [@opaque] option(Revery.Time.t),
   // Animation
   isAnimationOverride: option(bool),
+  animationNonce: int,
 };
 
 let key = ({key, _}) => key;
@@ -238,6 +239,7 @@ module Animations = {
 let yankHighlight = ({yankHighlight, _}) => yankHighlight;
 let startYankHighlight = (pixelRanges, editor) => {
   ...editor,
+  animationNonce: editor.animationNonce + 1,
   yankHighlight:
     Some({
       pixelRanges,
@@ -512,7 +514,10 @@ let create = (~config, ~buffer, ()) => {
     lastMouseMoveTime: None,
     lastMouseScreenPosition: None,
     lastMouseUpTime: None,
+
+    // Animation
     isAnimationOverride: None,
+    animationNonce: 0,
   }
   |> configure(~config);
 };
@@ -790,7 +795,12 @@ let withSteadyCursor = (f, editor) => {
   let isAnimated = Spring.isActive(editor.scrollY);
   let scrollY =
     Spring.set(~instant=!isAnimated, ~position=scrollYValue, editor.scrollY);
-  {...editor', scrollY};
+  {
+    ...editor',
+    animationNonce:
+      isAnimated ? editor.animationNonce + 1 : editor.animationNonce,
+    scrollY,
+  };
 };
 
 let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
@@ -1026,6 +1036,8 @@ let exposePrimaryCursor = editor =>
             ~position=adjustedScrollY,
             editor.scrollY,
           ),
+        animationNonce:
+          animated ? editor.animationNonce + 1 : editor.animationNonce,
       };
 
     | _ => editor
@@ -1124,15 +1136,13 @@ let scrollToPixelY = (~animated, ~pixelY as newScrollY, editor) => {
     && Float.abs(newScrollY -. originalScrollY) < lineHeightInPixels(editor)
     *. 1.1;
 
+  let instant = !animated || isSmallJump;
   {
     ...editor,
+    animationNonce:
+      instant ? editor.animationNonce : editor.animationNonce + 1,
     minimapScrollY: newMinimapScroll,
-    scrollY:
-      Spring.set(
-        ~instant=!animated || isSmallJump,
-        ~position=newScrollY,
-        editor.scrollY,
-      ),
+    scrollY: Spring.set(~instant, ~position=newScrollY, editor.scrollY),
   };
 };
 
@@ -1665,19 +1675,11 @@ let getLeadingWhitespacePixels = (lineNumber, editor) => {
 
 [@deriving show]
 type msg =
-  | ScrollSpringX([@opaque] Spring.msg)
-  | ScrollSpringY([@opaque] Spring.msg)
-  | YankHighlight([@opaque] Component_Animation.msg)
-  | InlineElements([@opaque] InlineElements.msg);
+  | Animation([@opaque] Component_Animation.msg);
 
 let update = (msg, editor) => {
   switch (msg) {
-  | InlineElements(msg) =>
-    editor
-    |> withSteadyCursor(e =>
-         {...e, inlineElements: InlineElements.update(msg, e.inlineElements)}
-       )
-  | YankHighlight(msg) =>
+  | Animation(msg) =>
     let yankHighlight' =
       yankHighlight(editor)
       |> OptionEx.flatMap(yankHighlight => {
@@ -1690,35 +1692,59 @@ let update = (msg, editor) => {
              Some({...yankHighlight, opacity: opacity'});
            };
          });
-    {...editor, yankHighlight: yankHighlight'};
-  | ScrollSpringX(msg) => {
+
+    let editor' = {
       ...editor,
       scrollX: Spring.update(msg, editor.scrollX),
-    }
-  | ScrollSpringY(msg) => {
-      ...editor,
       scrollY: Spring.update(msg, editor.scrollY),
-    }
+      yankHighlight: yankHighlight',
+      animationNonce: editor.animationNonce + 1,
+    };
+
+    // TODO: inline elements
+    editor';
+  // | InlineElements(msg) =>
+  //   editor
+  //   |> withSteadyCursor(e =>
+  //        {...e, inlineElements: InlineElements.update(msg, e.inlineElements)}
+  //      )
   };
 };
 
 let sub = editor => {
-  let yankHighlightAnimation =
+  let isYankAnimating =
     yankHighlight(editor)
     |> Option.map(({opacity, _}) => {
-         opacity
-         |> Component_Animation.sub
-         |> Isolinear.Sub.map(msg => YankHighlight(msg))
+         opacity |> Component_Animation.isActive
        })
-    |> Option.value(~default=Isolinear.Sub.none);
-  [
-    InlineElements.sub(editor.inlineElements)
-    |> Isolinear.Sub.map(msg => InlineElements(msg)),
-    Spring.sub(editor.scrollX)
-    |> Isolinear.Sub.map(msg => ScrollSpringX(msg)),
-    Spring.sub(editor.scrollY)
-    |> Isolinear.Sub.map(msg => ScrollSpringY(msg)),
-    yankHighlightAnimation,
-  ]
-  |> Isolinear.Sub.batch;
+    |> Option.value(~default=false);
+
+  // let isInlineElementAnimating = InlineElements.isAnimating(
+  //   editor.inlineElements
+  // );
+
+  let isInlineElementAnimating = false;
+
+  let isScrollAnimating =
+    Spring.isActive(editor.scrollY) || Spring.isActive(editor.scrollX);
+
+  if (isYankAnimating || isInlineElementAnimating || isScrollAnimating) {
+    // prerr_endline ("nonce: " ++ string_of_int(editor.animationNonce));
+    Component_Animation.subAny(
+      ~uniqueId="editor." ++ string_of_int(editor.animationNonce),
+    )
+    |> Isolinear.Sub.map(msg => Animation(msg));
+  } else {
+    Isolinear.Sub.none;
+  };
+  // [
+  //   InlineElements.sub(editor.inlineElements)
+  //   |> Isolinear.Sub.map(msg => InlineElements(msg)),
+  //   Spring.sub(editor.scrollX)
+  //   |> Isolinear.Sub.map(msg => ScrollSpringX(msg)),
+  //   Spring.sub(editor.scrollY)
+  //   |> Isolinear.Sub.map(msg => ScrollSpringY(msg)),
+  //   yankHighlightAnimation,
+  // ]
+  // |> Isolinear.Sub.batch;
 };
