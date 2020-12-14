@@ -10,6 +10,7 @@
 - #2812, #2842 - CLI: Add `+` and `-c` arguments to run Vim ex commands (fixes #1861, #2803)
 - #2817 - Snippets: Initial snippet parser (related #160)
 - #2818 - Vim: Initial `:!` command output implementation (fixes #1889, #1909)
+- #2832 - CodeLens: Implement resolve provider
 
 ### Bug Fixes
 
@@ -36,6 +37,7 @@
 - #2819 - Auto-Update: Set default update channel based on build type
 - #2822 - Build: Use development `Info.plist` that sets `NSSupportsAutomaticGraphicsSwitching` (fixes #2816)
 - #2826 - Search: Default to simple string search for find-in-files (fixes #2821)
+- #2841 - UX: Tone down shadow color for light themes
 
 ### Performance
 
@@ -51,5 +53,6 @@
 ### Infrastructure / Refactoring
 
 - #2759 - Fix `esy @release run` command on CI (thanks @zbaylin)
+- #2831 - Upgrade `ocaml-lsp` to 966a28f
 
 

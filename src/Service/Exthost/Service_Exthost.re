@@ -734,6 +734,66 @@ module Sub = {
     |> Isolinear.Sub.map(toMsg);
   };
 
+  // CODELENS - Resolve subscription for a codelens
+
+  type codeLensParams = {
+    handle: int,
+    codeLens: Exthost.CodeLens.t,
+    client: Exthost.Client.t,
+  };
+
+  module CodeLensSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(Exthost.CodeLens.t, string);
+      type nonrec params = codeLensParams;
+
+      type state = unit;
+
+      let uniqueIdForCodeLens = ({cacheId, _}: Exthost.CodeLens.t) => {
+        cacheId
+        |> Option.map(ids => {
+             ids |> List.map(string_of_int) |> String.concat("|")
+           })
+        |> Option.value(~default="(no id)");
+      };
+
+      let name = "Service_Exthost.CodeLensSubscription";
+      let id = ({handle, codeLens, _}: params) => {
+        Printf.sprintf("%d:%s", handle, uniqueIdForCodeLens(codeLens));
+      };
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.resolveCodeLens(
+            ~handle=params.handle,
+            ~codeLens=params.codeLens,
+            params.client,
+          );
+
+        Lwt.on_success(promise, maybeCodeLens => {
+          maybeCodeLens |> Option.iter(lens => dispatch(Ok(lens)))
+        });
+
+        Lwt.on_failure(promise, exn => {
+          dispatch(Error(Printexc.to_string(exn)))
+        });
+        ();
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+
+  let codeLens = (~handle, ~lens, ~toMsg, client) => {
+    CodeLensSubscription.create(
+      {handle, codeLens: lens, client}: codeLensParams,
+    )
+    |> Isolinear.Sub.map(toMsg);
+  };
+
   type completionParams = {
     handle: int,
     context: Exthost.CompletionContext.t,

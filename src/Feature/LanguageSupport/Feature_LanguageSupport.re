@@ -557,6 +557,7 @@ let sub =
       ~activeBuffer,
       ~activePosition,
       ~visibleBuffers,
+      ~visibleBuffersAndRanges,
       ~client,
       {
         codeLens,
@@ -568,7 +569,13 @@ let sub =
       },
     ) => {
   let codeLensSub =
-    ShadowedCodeLens.sub(~config, ~visibleBuffers, ~client, codeLens)
+    ShadowedCodeLens.sub(
+      ~config,
+      ~visibleBuffers,
+      ~visibleBuffersAndRanges,
+      ~client,
+      codeLens,
+    )
     |> Isolinear.Sub.map(msg => CodeLens(msg));
 
   let definitionSub =
