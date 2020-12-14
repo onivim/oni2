@@ -188,6 +188,10 @@ let make = (~dispatch, ~state: State.t, ()) => {
       registrationDispatch
       height={state.titlebarHeight}
     />
+    <Feature_MenuBar.View
+      config
+      theme
+      model={state.menuBar} />
     <View style=Styles.workspace>
       <View style=Styles.surface>
         {React.listToElement(surfaceComponents)}
