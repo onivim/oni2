@@ -131,10 +131,12 @@ module Container = {
             <Oni_Components.ScrollShadow.Top
               opacity={maxOpacity *. 0.8}
               height=5
+              theme
             />
             <Oni_Components.ScrollShadow.Bottom
               opacity={maxOpacity *. 0.8}
               height=5
+              theme
             />
           </View>
         : React.empty;
