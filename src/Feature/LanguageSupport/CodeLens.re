@@ -100,13 +100,6 @@ let unregister = (~handle: int, model) => {
 let addLenses = (handle, bufferId, lenses, handleToLenses) => {
   let internalLenses =
     lenses
-    // |> List.sort((lensA, lensB) => {
-    //      Exthost.CodeLens.(
-    //        {
-    //          lensA.range.startLineNumber - lensB.range.startLineNumber;
-    //        }
-    //      )
-    //    })
     |> List.map(lens =>
          {
            lens,
