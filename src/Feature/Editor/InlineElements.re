@@ -323,6 +323,17 @@ let set = (~key: string, ~elements, model) => {
   {keyToElements: keyToElements', sortedElements, cache: cache'};
 };
 
+let clear = (~key, model) => {
+  prerr_endline("CLEARING!");
+  let keyToElements' =
+    model.keyToElements
+    |> IntMap.map(keyToElements => {StringMap.remove(key, keyToElements)});
+
+  let sortedElements = recomputeSortedElements(keyToElements');
+  let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
+  {keyToElements: keyToElements', sortedElements, cache: cache'};
+};
+
 let updateElement = (~key, ~uniqueId, ~line, ~f: element => element, model) => {
   let lineNumber = EditorCoreTypes.LineNumber.toZeroBased(line);
   let keyToElements' =

@@ -442,7 +442,26 @@ let configure = (~config, editor) => {
   let yankHighlightDuration =
     EditorConfiguration.yankHighlightDuration.get(config);
 
-  {...editor, isAnimated, isScrollAnimated, yankHighlightDuration}
+  // If codelens is turned off, remove all codelens keys
+
+  let inlineElements =
+    if (!
+          Feature_Configuration.GlobalConfiguration.Experimental.Editor.codeLensEnabled.
+            get(
+            config,
+          )) {
+      editor.inlineElements |> InlineElements.clear(~key="codelens");
+    } else {
+      editor.inlineElements;
+    };
+
+  {
+    ...editor,
+    inlineElements,
+    isAnimated,
+    isScrollAnimated,
+    yankHighlightDuration,
+  }
   |> setVerticalScrollMargin(~lines=scrolloff)
   |> setMinimap(
        ~enabled=EditorConfiguration.Minimap.enabled.get(config),
