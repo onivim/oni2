@@ -1091,14 +1091,16 @@ let getTokenAt =
         ~direction=`Backwards,
         ~index=character,
         bufferLine,
-      );
+      )
+      |> Option.value(~default=character);
     let stopIndex =
       BufferLine.traverse(
         ~f,
         ~direction=`Forwards,
         ~index=character,
         bufferLine,
-      );
+      )
+      |> Option.value(~default=character);
     Some(
       CharacterRange.{
         start: CharacterPosition.{line, character: startIndex},

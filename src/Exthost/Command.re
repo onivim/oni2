@@ -19,4 +19,14 @@ module Decode = {
   };
 };
 
+module Encode = {
+  open Json.Encode;
+  let encode = lens =>
+    obj([
+      ("id", lens.id |> string),
+      ("title", lens.label |> nullable(Label.encode)),
+    ]);
+};
+
 let decode = Decode.decode;
+let encode = Encode.encode;
