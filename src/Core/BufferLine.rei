@@ -67,7 +67,7 @@ let traverse:
     ~index: CharacterIndex.t,
     t
   ) =>
-  CharacterIndex.t;
+  option(CharacterIndex.t);
 
 module Slow: {
   /*

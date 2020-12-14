@@ -7,7 +7,7 @@ describe("StatusBar", ({test, _}) => {
     let waitForStatusBar =
       fun
       | Msg.StatusBar(SetEntry({label, _})) => {
-          label == Label.[Text("Hello!")];
+          label |> Label.segments == Label.[Text("Hello!")];
         }
       | _ => false;
 

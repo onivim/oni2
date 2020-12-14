@@ -118,6 +118,7 @@ let sub:
     ~activeBuffer: Oni_Core.Buffer.t,
     ~activePosition: CharacterPosition.t,
     ~visibleBuffers: list(Oni_Core.Buffer.t),
+    ~visibleBuffersAndRanges: list((int, list(EditorCoreTypes.Range.t))),
     ~client: Exthost.Client.t,
     model
   ) =>

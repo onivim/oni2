@@ -34,6 +34,16 @@ let activeContrastBorder =
     {light: unspecified, dark: unspecified, hc: ref(focusBorder)},
   );
 
+let shadow =
+  define(
+    "shadow",
+    {
+      light: transparent(0.1, hex("#000F")),
+      dark: transparent(0.20, hex("#000F")),
+      hc: unspecified,
+    },
+  );
+
 module ActivityBar = {
   let background =
     define(
@@ -1439,4 +1449,4 @@ module TitleBar = {
   ];
 };
 
-let defaults = [foreground, contrastBorder];
+let defaults = [foreground, contrastBorder, shadow];
