@@ -31,17 +31,24 @@ let shift =
     let newMap =
       map
       |> bindings
-      |> List.map(((key, v)) =>
+      |> List.filter_map(((key, v)) =>
            if (delta > 0) {
              if (key < startPos) {
-               (key, v);
+               Some((key, v));
              } else {
-               (key + delta, v);
+               Some((key + delta, v))
              };
-           } else if (key <= endPos) {
-             (key, v);
            } else {
-             (key + delta, v);
+            if (key < startPos) {
+              Some((key, v))
+            } else {
+              let newPosition = key + delta;
+              if (newPosition < startPos) {
+                None
+              } else {
+                Some((newPosition, v))
+              }
+            }
            }
          )
       |> List.to_seq
