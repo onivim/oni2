@@ -73,6 +73,25 @@ let sub = ({isComplete, uniqueId, tick, _}) =>
     );
   };
 
+let subMany =
+    (~animationUniqueId, ~selector: t('a) => 'uniqueId, items: list(t('a))) => {
+  Service_Time.Sub.once(
+    ~uniqueId=animationUniqueId,
+    ~delay=Revery.Time.zero,
+    ~msg=(~current) => {
+      let msg = Tick({totalTime: current});
+      items
+      |> List.filter_map(item =>
+           if (item.isComplete) {
+             None;
+           } else {
+             Some((selector(item), msg));
+           }
+         );
+    },
+  );
+};
+
 module ColorTransition = {
   type nonrec t = {
     startColor: Color.t,

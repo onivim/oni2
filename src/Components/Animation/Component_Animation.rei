@@ -40,4 +40,12 @@ let isComplete: t(_) => bool;
 let constant: 'value => t('value);
 let make: Revery.UI.Animation.t('value) => t('value);
 let update: (msg, t('value)) => t('value);
+
 let sub: t(_) => Isolinear.Sub.t(msg);
+let subMany:
+  (
+    ~animationUniqueId: string,
+    ~selector: t('a) => 'uniqueId,
+    list(t('a))
+  ) =>
+  Isolinear.Sub.t(list(('uniqueId, msg)));
