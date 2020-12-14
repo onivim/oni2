@@ -7,7 +7,7 @@
 - #2783 - Promote editor.wordWrap from experimental (fixes #1444)
 - #2774 - Extensions: Implement update check (also fixes #2748)
 - #2801 - Extensions: CodeLens - Handle multiple codelens on same line
-- #2812 - CLI: Add `+` and `-c` arguments to run Vim ex commands (fixes #1861)
+- #2812, #2842 - CLI: Add `+` and `-c` arguments to run Vim ex commands (fixes #1861, #2803)
 - #2817 - Snippets: Initial snippet parser (related #160)
 - #2818 - Vim: Initial `:!` command output implementation (fixes #1889, #1909)
 
