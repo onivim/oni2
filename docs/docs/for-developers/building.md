@@ -33,7 +33,7 @@ Requires `libtool` and `gettext` from homebrew: `brew install libtool gettext`.
 
 Some Linux distributions may need other packages:
 
- - Ubuntu : `libacl1-dev`, `libncurses-dev` for `libvim`.
+ - Ubuntu : `nasm`,`libacl1-dev`, `libncurses-dev` latter two for `libvim`.
  - Fedora/CentOS : `libXt-devel`, `libSM-devel`, `libICE-devel`, `libacl-devel` and `ncurses-devel ` for `libvim`
 
 ## Build and Run
