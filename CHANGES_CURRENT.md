@@ -51,5 +51,6 @@
 ### Infrastructure / Refactoring
 
 - #2759 - Fix `esy @release run` command on CI (thanks @zbaylin)
+- #2831 - Upgrade `ocaml-lsp` to 966a28f
 
 
