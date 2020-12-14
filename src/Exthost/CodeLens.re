@@ -18,7 +18,19 @@ module Decode = {
     );
 };
 
+module Encode = {
+  open Oni_Core.Json.Encode;
+
+  let encode = lens =>
+    obj([
+      ("cacheId", lens.cacheId |> nullable(list(int))),
+      ("range", lens.range |> OneBasedRange.encode),
+      ("command", lens.command |> nullable(Command.encode)),
+    ]);
+};
+
 let decode = Decode.decode;
+let encode = Encode.encode;
 
 module List = {
   module Decode = {

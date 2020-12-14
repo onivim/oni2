@@ -212,10 +212,10 @@ describe("BufferLine", ({describe, _}) => {
              ~direction=`Forwards,
              ~index=CharacterIndex.zero,
            ),
-        characterIndex(0),
+        None,
       )
     });
-    test("out-of-bounds is pass-through", ({expect, _}) => {
+    test("out-of-bounds is none", ({expect, _}) => {
       expect.equal(
         makeLine("")
         |> traverse(
@@ -223,7 +223,7 @@ describe("BufferLine", ({describe, _}) => {
              ~direction=`Forwards,
              ~index=characterIndex(99),
            ),
-        characterIndex(99),
+        None,
       )
     });
     test("travel forwards to end", ({expect, _}) => {
@@ -234,7 +234,7 @@ describe("BufferLine", ({describe, _}) => {
              ~direction=`Forwards,
              ~index=characterIndex(1),
            ),
-        characterIndex(2),
+        Some(characterIndex(2)),
       )
     });
     test("travel backwards to beginning", ({expect, _}) => {
@@ -245,7 +245,7 @@ describe("BufferLine", ({describe, _}) => {
              ~direction=`Backwards,
              ~index=characterIndex(1),
            ),
-        characterIndex(0),
+        Some(characterIndex(0)),
       )
     });
     test("travel backwards to beginning", ({expect, _}) => {
@@ -256,7 +256,7 @@ describe("BufferLine", ({describe, _}) => {
              ~direction=`Backwards,
              ~index=characterIndex(1),
            ),
-        characterIndex(0),
+        Some(characterIndex(0)),
       )
     });
     test("travel backwards to word boundary", ({expect, _}) => {
@@ -267,14 +267,14 @@ describe("BufferLine", ({describe, _}) => {
              ~direction=`Backwards,
              ~index=characterIndex(2),
            ),
-        characterIndex(1),
+        Some(characterIndex(1)),
       )
     });
     test("travel forwards to word boundary", ({expect, _}) => {
       expect.equal(
         makeLine("bAAAb")
         |> traverse(~f=onlyA, ~direction=`Forwards, ~index=characterIndex(2)),
-        characterIndex(3),
+        Some(characterIndex(3)),
       )
     });
   });

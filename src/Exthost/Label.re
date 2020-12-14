@@ -6,7 +6,12 @@ type segment =
   | Icon(string);
 
 [@deriving show]
-type t = list(segment);
+type t = {
+  parsed: list(segment),
+  raw: string,
+};
+
+let segments = ({parsed, _}) => parsed;
 
 module Parse = {
   open Oniguruma;
@@ -53,22 +58,18 @@ module Parse = {
 
 module Decode = {
   open Json.Decode;
-  let decode: Json.decoder(t) = string |> map(Parse.parse);
+  let decode: Json.decoder(t) =
+    string |> map(str => {parsed: Parse.parse(str), raw: str});
+};
+
+module Encode = {
+  open Json.Encode;
+
+  let encode = label => label.raw |> string;
 };
 
 let decode = Decode.decode;
-let ofString = Parse.parse;
+let encode = Encode.encode;
+let ofString = str => {parsed: Parse.parse(str), raw: str};
 
-let toString = label =>
-  List.fold_left(
-    (acc, curr) => {
-      let str =
-        switch (curr) {
-        | Text(text) => text
-        | Icon(str) => str
-        };
-      acc ++ str;
-    },
-    "",
-    label,
-  );
+let toString = ({raw, _}) => raw;
