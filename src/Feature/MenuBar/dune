@@ -3,4 +3,4 @@
  (public_name Oni2.feature.menubar)
  (libraries Oni2.core Oni2.feature.commands Oni2.feature.input isolinear base)
  (preprocess
-  (pps ppx_let ppx_deriving.show)))
+  (pps ppx_let ppx_deriving.show brisk-reconciler.ppx)))
