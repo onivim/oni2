@@ -324,7 +324,6 @@ let set = (~key: string, ~elements, model) => {
 };
 
 let clear = (~key, model) => {
-  prerr_endline("CLEARING!");
   let keyToElements' =
     model.keyToElements
     |> IntMap.map(keyToElements => {StringMap.remove(key, keyToElements)});
