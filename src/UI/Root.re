@@ -189,9 +189,12 @@ let make = (~dispatch, ~state: State.t, ()) => {
       height={state.titlebarHeight}
     />
     <Feature_MenuBar.View
+      isWindowFocused={state.windowIsFocused}
+      font={state.uiFont}
       config
       theme
-      model={state.menuBar} />
+      model={state.menuBar}
+    />
     <View style=Styles.workspace>
       <View style=Styles.surface>
         {React.listToElement(surfaceComponents)}
