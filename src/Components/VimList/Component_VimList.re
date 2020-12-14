@@ -947,11 +947,11 @@ module View = {
 
         let topShadow =
           model |> showTopScrollShadow
-            ? <Oni_Components.ScrollShadow.Top /> : React.empty;
+            ? <Oni_Components.ScrollShadow.Top theme /> : React.empty;
 
         let bottomShadow =
           model |> showBottomScrollShadow
-            ? <Oni_Components.ScrollShadow.Bottom /> : React.empty;
+            ? <Oni_Components.ScrollShadow.Bottom theme /> : React.empty;
 
         (
           <View style=Style.[flexGrow(1), flexDirection(`Column)]>
