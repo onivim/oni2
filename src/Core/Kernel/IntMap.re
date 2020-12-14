@@ -36,19 +36,17 @@ let shift =
              if (key < startPos) {
                Some((key, v));
              } else {
-               Some((key + delta, v))
+               Some((key + delta, v));
              };
+           } else if (key < startPos) {
+             Some((key, v));
            } else {
-            if (key < startPos) {
-              Some((key, v))
-            } else {
-              let newPosition = key + delta;
-              if (newPosition < startPos) {
-                None
-              } else {
-                Some((newPosition, v))
-              }
-            }
+             let newPosition = key + delta;
+             if (newPosition < startPos) {
+               None;
+             } else {
+               Some((newPosition, v));
+             };
            }
          )
       |> List.to_seq
