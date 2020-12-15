@@ -1265,6 +1265,17 @@ let update =
       |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
     (state, effect);
 
+  | NewBuffer({direction}) =>
+    let effect =
+      Feature_Buffers.Effects.openNewBuffer(
+        ~split=direction,
+        ~languageInfo=state.languageInfo,
+        ~font=state.editorFont,
+        state.buffers,
+      )
+      |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
+    (state, effect);
+
   | OpenFileByPath(filePath, direction, position) =>
     let split =
       switch (direction) {

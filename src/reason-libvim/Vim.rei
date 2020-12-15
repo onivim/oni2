@@ -217,6 +217,8 @@ module Buffer: {
   */
   let openFile: string => t;
 
+  let make: unit => t;
+
   /**
   [loadFile(path)] opens a file and returns a handle to the buffer.
   */

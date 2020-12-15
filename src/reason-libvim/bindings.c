@@ -1079,6 +1079,14 @@ CAMLprim value libvim_vimBufferLoad(value v) {
   CAMLreturn(vbuf);
 }
 
+CAMLprim value libvim_vimBufferNew(value vUnit) {
+  CAMLparam1(vUnit);
+
+  buf_T *buf = vimBufferNew(BLN_NEW);
+  value vbuf = (value)buf;
+  CAMLreturn(vbuf);
+}
+
 CAMLprim value libvim_vimBufferGetById(value v) {
   CAMLparam1(v);
   CAMLlocal1(ret);

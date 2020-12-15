@@ -415,6 +415,29 @@ module Effects = {
     });
   };
 
+  let openNewBuffer = (~font, ~languageInfo, ~split, model) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Buffers.openNewBuffer", dispatch => {
+      let buffer = Vim.Buffer.make();
+
+      let handler = (~alreadyLoaded as _, buffer) =>
+        // if (alreadyLoaded) {
+        //   dispatch(EditorRequested({buffer, split, position, grabFocus}));
+        // } else {
+        dispatch(
+          NewBufferAndEditorRequested({
+            buffer,
+            split,
+            position: None,
+            grabFocus: true,
+          }),
+        );
+      // };
+
+      openCommon(~vimBuffer=buffer, ~languageInfo, ~font, ~model, handler);
+    });
+  };
+
   let openBufferInEditor = (~font, ~languageInfo, ~bufferId, model) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Buffers.openBufferInEditor", dispatch => {
