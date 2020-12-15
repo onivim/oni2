@@ -1,4 +1,4 @@
-## 0.5.1
+## 0.5.2 (Jan 2021)
 
 ### Features
 
@@ -59,7 +59,7 @@
 - #2759 - Fix `esy @release run` command on CI (thanks @zbaylin)
 - #2831 - Upgrade `ocaml-lsp` to 966a28f
 
-## 0.5.1
+## 0.5.1 (Dec 2020)
 
 ### Features
 
