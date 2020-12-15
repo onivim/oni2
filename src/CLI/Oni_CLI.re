@@ -262,11 +262,11 @@ let parse = (~getenv: string => option(string), args) => {
   let folder =
     switch (directories) {
     | [first, ..._] => Some(first)
-    | [] =>
-      switch (filesToOpen) {
-      | [first, ..._] => Some(Rench.Path.dirname(first))
-      | [] => None
-      }
+    | [] => None
+    // switch (filesToOpen) {
+    // | [first, ..._] => Some(Rench.Path.dirname(first))
+    // | [] => None
+    // }
     };
 
   let cli = {
