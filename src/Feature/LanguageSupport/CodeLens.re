@@ -226,34 +226,6 @@ let update = (msg, model) =>
     (model', CodeLensesChanged({bufferId, lenses}));
   };
 
-// CONFIGURATION
-
-module VimSettings = {
-  open Config.Schema;
-  open VimSetting.Schema;
-
-  let codeLens =
-    vim("codelens", codeLensSetting => {
-      codeLensSetting
-      |> VimSetting.decode_value_opt(bool)
-      |> Option.value(~default=false)
-    });
-};
-
-module Configuration = {
-  open Config.Schema;
-
-  module Experimental = {
-    let enabled =
-      setting(
-        ~vim=VimSettings.codeLens,
-        "experimental.editor.codeLens",
-        bool,
-        ~default=false,
-      );
-  };
-};
-
 // SUBSCRIPTION
 
 module Sub = {
@@ -344,8 +316,10 @@ module Sub = {
   };
 };
 
+module Configuration = Feature_Configuration.GlobalConfiguration;
+
 let sub = (~config, ~visibleBuffers, ~visibleBuffersAndRanges, ~client, model) =>
-  if (Configuration.Experimental.enabled.get(config)) {
+  if (Configuration.Experimental.Editor.codeLensEnabled.get(config)) {
     Sub.create(~visibleBuffers, ~visibleBuffersAndRanges, ~client, model);
   } else {
     Isolinear.Sub.none;
@@ -366,7 +340,7 @@ module Colors = {
 module Contributions = {
   let colors = Colors.[foreground];
 
-  let configuration = Configuration.[Experimental.enabled.spec];
+  let configuration = [];
 };
 
 // VIEW
