@@ -71,6 +71,7 @@ type t =
   | FilesDropped({paths: list(string)})
   | FileExplorer(Feature_Explorer.msg)
   | LanguageSupport(Feature_LanguageSupport.msg)
+  | MenuBar(Feature_MenuBar.msg)
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)

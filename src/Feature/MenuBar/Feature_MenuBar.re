@@ -1,7 +1,12 @@
 open Oni_Core;
 open MenuBar;
 
+[@deriving show]
+type msg = unit;
+
 type model = {menuSchema: Schema.t};
+
+let update = (_msg, model) => model;
 
 let initial = schema => {
   let global = Global.[application, file, edit, view] |> Schema.menus;

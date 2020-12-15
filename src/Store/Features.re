@@ -622,6 +622,10 @@ let update =
       );
     (state', eff);
 
+  | MenuBar(msg) =>
+    let menuBar' = Feature_MenuBar.update(msg, state.menuBar);
+    ({...state, menuBar: menuBar'}, Isolinear.Effect.none);
+
   | Messages(msg) =>
     let (model, outmsg) = Feature_Messages.update(msg, state.messages);
     let state = {...state, messages: model};

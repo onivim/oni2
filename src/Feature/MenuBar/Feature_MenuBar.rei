@@ -1,8 +1,13 @@
 open Oni_Core;
 
+[@deriving show]
+type msg;
+
 type model;
 
 let initial: MenuBar.Schema.t => model;
+
+let update: (msg, model) => model;
 
 module Global = Global;
 
