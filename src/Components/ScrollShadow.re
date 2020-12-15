@@ -74,12 +74,22 @@ module Shadow = {
     | Down
     | Up;
 
-  let render = (~opacity, ~direction, ~x, ~y, ~width, ~height, ~context) => {
+  let render =
+      (
+        ~color=shadowStartColor,
+        ~opacity,
+        ~direction,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      ) => {
     switch (direction) {
     | Right =>
       Gradient.drawLeftToRight(
         ~opacity,
-        ~leftColor=shadowStartColor,
+        ~leftColor=color,
         ~rightColor=shadowStopColor,
         ~x,
         ~y,
@@ -91,7 +101,7 @@ module Shadow = {
       Gradient.drawLeftToRight(
         ~opacity,
         ~leftColor=shadowStopColor,
-        ~rightColor=shadowStartColor,
+        ~rightColor=color,
         ~x,
         ~y,
         ~width,
@@ -101,7 +111,7 @@ module Shadow = {
     | Down =>
       Gradient.drawTopToBottom(
         ~opacity,
-        ~topColor=shadowStartColor,
+        ~topColor=color,
         ~bottomColor=shadowStopColor,
         ~x,
         ~y,
@@ -113,7 +123,7 @@ module Shadow = {
       Gradient.drawTopToBottom(
         ~opacity,
         ~topColor=shadowStopColor,
-        ~bottomColor=shadowStartColor,
+        ~bottomColor=color,
         ~x,
         ~y,
         ~width,
@@ -125,7 +135,8 @@ module Shadow = {
 };
 
 module Top = {
-  let make = (~opacity=1.0, ~height as h=12, ()) => {
+  let make = (~theme, ~opacity=1.0, ~height as h=12, ()) => {
+    let destColor = Feature_Theme.Colors.shadow.from(theme);
     <Canvas
       style=Style.[
         position(`Absolute),
@@ -138,6 +149,7 @@ module Top = {
       render={(canvasContext, dimensions) => {
         Shadow.render(
           ~opacity,
+          ~color=destColor,
           ~direction=Shadow.Down,
           ~x=0.,
           ~y=0.,
@@ -151,7 +163,8 @@ module Top = {
 };
 
 module Bottom = {
-  let make = (~opacity=1.0, ~height as h=12, ()) => {
+  let make = (~theme, ~opacity=1.0, ~height as h=12, ()) => {
+    let destColor = Feature_Theme.Colors.shadow.from(theme);
     <Canvas
       style=Style.[
         position(`Absolute),
@@ -164,6 +177,7 @@ module Bottom = {
       render={(canvasContext, dimensions) => {
         Shadow.render(
           ~opacity,
+          ~color=destColor,
           ~direction=Shadow.Up,
           ~x=0.,
           ~y=0.,

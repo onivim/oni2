@@ -350,6 +350,7 @@ let start =
              ~activeBuffer,
              ~activePosition,
              ~visibleBuffers,
+             ~visibleBuffersAndRanges,
              ~client=extHostClient,
              state.languageSupport,
            )
