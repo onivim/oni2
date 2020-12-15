@@ -46,6 +46,7 @@ type quitType =
 type windowSplitType =
   | Horizontal
   | HorizontalNew
+  | Vertical
   | VerticalNew
   | TabPage
   | TabPageNew;
