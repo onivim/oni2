@@ -38,6 +38,7 @@
 - #2822 - Build: Use development `Info.plist` that sets `NSSupportsAutomaticGraphicsSwitching` (fixes #2816)
 - #2826 - Search: Default to simple string search for find-in-files (fixes #2821)
 - #2841 - UX: Tone down shadow color for light themes
+- #2844 - Vim: Fix `:tabnew`/`:new`/`:vnew` behavior (fixes #1455, #2753, #2843)
 
 ### Performance
 
