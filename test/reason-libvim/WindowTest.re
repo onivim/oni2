@@ -39,7 +39,7 @@ describe("Window", ({describe, _}) => {
     })
   );
 
-  describe("tabpages", ({describe, test, _}) => {
+  describe("tabpages", ({describe, _}) => {
     describe(":tabnew", ({test, _}) => {
       test("tabnew w/o file creates new tabpage", ({expect, _}) => {
         let _ = resetBuffer();

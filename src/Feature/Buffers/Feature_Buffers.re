@@ -434,14 +434,13 @@ module Effects = {
     });
   };
 
-  let openBufferInEditor = (~font, ~languageInfo, ~bufferId, model) => {
+  let openBufferInEditor = (~font, ~languageInfo, ~split, ~bufferId, model) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Buffers.openBufferInEditor", dispatch => {
       switch (Vim.Buffer.getById(bufferId)) {
       | None => Log.warnf(m => m("Unable to open buffer: %d", bufferId))
       | Some(vimBuffer) =>
         let handler = (~alreadyLoaded, buffer) => {
-          let split = `Current;
           let position = None;
           let grabFocus = true;
 

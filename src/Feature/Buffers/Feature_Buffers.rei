@@ -115,6 +115,7 @@ module Effects: {
     (
       ~font: Service_Font.font,
       ~languageInfo: Exthost.LanguageInfo.t,
+      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       ~bufferId: int,
       model
     ) =>

@@ -90,10 +90,13 @@ type t =
   | ListSelect
   | ListSelectBackground
   | NewBuffer({direction: [ | `Current | `Horizontal | `Vertical | `NewTab]})
-  | OpenBufferById({bufferId: int})
+  | OpenBufferById({
+      bufferId: int,
+      direction: [ | `Current | `Horizontal | `Vertical | `NewTab],
+    })
   | OpenFileByPath(
       string,
-      option([ | `Horizontal | `Vertical | `NewTab]),
+      option([ | `Current | `Horizontal | `Vertical | `NewTab]),
       option(CharacterPosition.t),
     )
   | OpenConfigFile(string)
