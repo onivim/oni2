@@ -1,30 +1,17 @@
 open Oni_Core;
 open MenuBar;
 
-type model = {
-  menuSchema: Schema.t,
-}
+type model = {menuSchema: Schema.t};
 
 let initial = schema => {
+  let global = Global.[application, file, edit, view] |> Schema.menus;
 
-  let global = Global.[
-    application,
-    file,
-    edit,
-    view
-  ] |> Schema.menus;
-
-  {
-  menuSchema: Schema.union(global, schema)
-  }
-}
+  {menuSchema: Schema.union(global, schema)};
+};
 
 module Global = Global;
-
 module View = {
-  open Revery;
   open Revery.UI;
-  open Revery.UI.Components;
 
   module Styles = {
     open Style;
@@ -37,6 +24,17 @@ module View = {
     ];
 
     let text = fg => [color(fg)];
+  };
+
+  let topMenu = (~font: UiFont.t, ~title, ~color, ()) => {
+    <View style=Style.[paddingHorizontal(6)]>
+      <Text
+        style={Styles.text(color)}
+        text=title
+        fontFamily={font.family}
+        fontSize={font.size}
+      />
+    </View>;
   };
 
   let make =
@@ -61,28 +59,18 @@ module View = {
     let bgColor = bgTheme.from(theme);
     let fgColor = fgTheme.from(theme);
 
-    let builtMenu = MenuBar.build(
-      ~contextKeys,
-      ~commands,
-      model.menuSchema
-    );
+    let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
 
     let topLevelMenuItems = MenuBar.top(builtMenu);
 
-    let menuItems = topLevelMenuItems
-    |> List.map(menu => {
-      let title = MenuBar.Menu.title(menu);
-      <Text
-        style={Styles.text(fgColor)}
-        text=title
-        fontFamily={font.family}
-        fontSize={font.size}
-      />
-    })
-    |> React.listToElement;
+    let menuItems =
+      topLevelMenuItems
+      |> List.map(menu => {
+           let title = MenuBar.Menu.title(menu);
+           <topMenu font title color=fgColor />;
+         })
+      |> React.listToElement;
 
-    <View style={Styles.container(bgColor)}>
-      menuItems
-    </View>;
+    <View style={Styles.container(bgColor)}> menuItems </View>;
   };
 };

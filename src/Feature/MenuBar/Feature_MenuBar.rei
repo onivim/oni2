@@ -2,7 +2,7 @@ open Oni_Core;
 
 type model;
 
-let initial: (MenuBar.Schema.t) => model;
+let initial: MenuBar.Schema.t => model;
 
 module Global = Global;
 

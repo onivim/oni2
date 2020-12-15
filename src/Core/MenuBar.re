@@ -9,6 +9,7 @@ module Schema = {
   };
 
   type menu = {
+    order: int,
     uniqueId: string,
     title: string,
   };
@@ -20,14 +21,14 @@ module Schema = {
     uniqueId: parent.uniqueId ++ "." ++ title,
   };
 
-  let menu = (~uniqueId, ~title, ~parent: option(menu)) => {
+  let menu = (~order=500, ~uniqueId, ~parent: option(menu), title) => {
     let uniqueId =
       switch (parent) {
       | None => uniqueId
       | Some(parent) => parent.uniqueId ++ "." ++ uniqueId
       };
 
-    {uniqueId, title};
+    {order, uniqueId, title};
   };
 
   type t = {
@@ -35,12 +36,9 @@ module Schema = {
     items: list(item),
   };
 
-  let initial = {
-    menus: StringMap.empty,
-    items: [],
-  }
+  let initial = {menus: StringMap.empty, items: []};
 
-  let menus = (menus) => {
+  let menus = menus => {
     let menuMap =
       menus
       |> List.fold_left(
@@ -49,20 +47,16 @@ module Schema = {
          );
 
     {menus: menuMap, items: []};
-    
-  }
-
-  let items = (items) => {
-    menus: StringMap.empty,
-    items: []
   };
+
+  let items = items => {menus: StringMap.empty, items};
 
   let union = (map1, map2) => {
     let items' = map1.items @ map2.items;
 
     let menus' =
       StringMap.merge(
-        (key, maybeA, maybeB) => {
+        (_key, maybeA, maybeB) => {
           switch (maybeA, maybeB) {
           | (Some(_) as a, _) => a
           | (None, Some(_) as b) => b
@@ -76,17 +70,12 @@ module Schema = {
     {menus: menus', items: items'};
   };
 
-  let ofList = (schemas) => {
-    schemas
-    |> List.fold_left((acc, curr) => {
-      union(acc, curr)
-    }, initial);
-  }
+  let ofList = schemas => {
+    schemas |> List.fold_left((acc, curr) => {union(acc, curr)}, initial);
+  };
 };
 
 type t = Schema.t;
-
-let initial = menu => menu;
 
 module Item = {
   type t = Schema.item;
@@ -94,32 +83,31 @@ module Item = {
   let title = ({title, _}: Schema.item) => title;
 
   let command = ({command, _}: Schema.item) => command;
-}
+};
 
 module Menu = {
   type t = Schema.menu;
 
-  type contentItem = 
-  | SubMenu(t)
-  | Item(Item.t)
+  type contentItem =
+    | SubMenu(t)
+    | Item(Item.t);
 
   let title = ({title, _}: Schema.menu) => title;
 
-  let contents = (_, _) =>  [];
-}
-
-type builtMenu = {
-  schema: t
+  let contents = (_, _) => [];
 };
 
-let build = (~contextKeys as _, ~commands as _, menu) => {
-  schema: menu
-};
+type builtMenu = {schema: t};
+
+let build = (~contextKeys as _, ~commands as _, menu) => {schema: menu};
 
 let top = ({schema, _}) => {
-  Schema.({
-    schema.menus
-    |> StringMap.bindings
-    |> List.map(snd)
-  })
-}
+  Schema.(
+    {
+      schema.menus
+      |> StringMap.bindings
+      |> List.map(snd)
+      |> List.sort((a, b) => Schema.(a.order - b.order));
+    }
+  );
+};

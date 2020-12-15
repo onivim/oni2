@@ -1,12 +1,11 @@
 module Schema: {
-
   type menu;
   type item;
 
   let item: (~title: string, ~command: string, ~parent: menu) => item;
 
   let menu:
-    (~uniqueId: string, ~title: string, ~parent: option(menu)) => menu;
+    (~order: int=?, ~uniqueId: string, ~parent: option(menu), string) => menu;
 
   type t;
   let initial: t;
@@ -26,19 +25,19 @@ module Item: {
 
   let title: t => string;
   let command: t => string;
-}
+};
 
 module Menu: {
   type t;
 
-  type contentItem = 
-  | SubMenu(t)
-  | Item(Item.t)
+  type contentItem =
+    | SubMenu(t)
+    | Item(Item.t);
 
   let title: t => string;
 
   let contents: (t, builtMenu) => list(contentItem);
-}
+};
 
 let build:
   (

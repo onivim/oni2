@@ -258,9 +258,8 @@ module Anchor = {
         );
 
       switch (maybeBbox) {
-      | Some(bbox: Math.BoundingBox2d.t) =>
-        let (x, y, width, _) = bbox
-        |> Math.BoundingBox2d.getBounds;
+      | Some((bbox: Math.BoundingBox2d.t)) =>
+        let (x, y, width, _) = bbox |> Math.BoundingBox2d.getBounds;
 
         let x =
           switch (orientation) {
@@ -281,10 +280,14 @@ module Anchor = {
       | None => ()
       };
 
-      (<View 
-        onBoundingBoxChanged={(bbox: Math.BoundingBox2d.t) => {
-          setBbox(_ => Some(bbox));
-        }} />, hooks);
+      (
+        <View
+          onBoundingBoxChanged={(bbox: Math.BoundingBox2d.t) => {
+            setBbox(_ => Some(bbox))
+          }}
+        />,
+        hooks,
+      );
     });
 };
 
