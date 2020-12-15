@@ -33,7 +33,15 @@ describe("CLI", ({describe, test, _}) => {
         Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "README.md"|]);
       expect.equal(eff, Run);
       expect.equal(options.filesToOpen |> List.length, 1);
-    })
+    });
+
+    test("#1983: Specifying a file should not open a folder", ({expect, _}) => {
+      let (options, eff) =
+        Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "some-file.md"|]);
+      expect.equal(eff, Run);
+      expect.equal(options.filesToOpen |> List.length, 1);
+      expect.equal(options.folder, None);
+    });
   });
   describe("syntax server", ({test, _}) => {
     test("Syntax server with PID", ({expect, _}) => {

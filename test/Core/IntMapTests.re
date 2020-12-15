@@ -81,5 +81,19 @@ describe("IntMap", ({describe, _}) => {
       expect.string(val0).toEqual("a");
       expect.string(val1).toEqual("c");
     });
+
+    test("remove line in sparse list", ({expect, _}) => {
+      let map = [(1, "b")] |> List.to_seq |> IntMap.of_seq;
+      let newMap =
+        map
+        |> IntMap.shift(~default=_ => None, ~startPos=1, ~endPos=1, ~delta=-1);
+      let val0 = IntMap.find_opt(0, newMap);
+      let val1 = IntMap.find_opt(1, newMap);
+      let val2 = IntMap.find_opt(2, newMap);
+
+      expect.equal(val0, None);
+      expect.equal(val1, None);
+      expect.equal(val2, None);
+    });
   })
 });
