@@ -4,6 +4,8 @@ type model = unit;
 
 let initial = ();
 
+module Global = Global;
+
 module View = {
   open Revery;
   open Revery.UI;

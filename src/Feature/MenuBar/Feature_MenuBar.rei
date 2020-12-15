@@ -4,6 +4,8 @@ type model;
 
 let initial: model;
 
+module Global = Global;
+
 module View: {
   let make:
     (
