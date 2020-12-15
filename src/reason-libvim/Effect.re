@@ -22,4 +22,5 @@ type t =
   | Output({
       cmd: string,
       output: option(string),
-    });
+    })
+  | WindowSplit(Split.t);
