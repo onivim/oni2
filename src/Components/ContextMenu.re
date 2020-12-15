@@ -249,7 +249,7 @@ module Anchor = {
       ) =>
     component(hooks => {
       let ((id, _), hooks) = Hooks.state(generateId(), hooks);
-      let ((maybeRef, setRef), hooks) = Hooks.state(None, hooks);
+      let ((maybeBbox, setBbox), hooks) = Hooks.state(None, hooks);
       let ((), hooks) =
         Hooks.effect(
           OnMount,
@@ -257,10 +257,10 @@ module Anchor = {
           hooks,
         );
 
-      switch (maybeRef) {
-      | Some(node) =>
-        let (x, y, width, _) =
-          Math.BoundingBox2d.getBounds(node#getBoundingBox());
+      switch (maybeBbox) {
+      | Some(bbox: Math.BoundingBox2d.t) =>
+        let (x, y, width, _) = bbox
+        |> Math.BoundingBox2d.getBounds;
 
         let x =
           switch (orientation) {
@@ -281,7 +281,10 @@ module Anchor = {
       | None => ()
       };
 
-      (<View ref={node => setRef(_ => Some(node))} />, hooks);
+      (<View 
+        onBoundingBoxChanged={(bbox: Math.BoundingBox2d.t) => {
+          setBbox(_ => Some(bbox));
+        }} />, hooks);
     });
 };
 
