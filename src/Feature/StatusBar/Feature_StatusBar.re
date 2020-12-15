@@ -40,14 +40,17 @@ module Item = {
 // MSG
 
 [@deriving show]
+type contextMenuMsg =
+  | ClearAll
+  | Open;
+
+[@deriving show]
 type msg =
   | ItemAdded(Item.t)
   | ItemDisposed(string)
   | DiagnosticsClicked
   | FileTypeClicked
-  | ContextMenuClosed
-  | ContextMenuNotificationClearAllClicked
-  | ContextMenuNotificationOpenClicked
+  | ContextMenu(Component_ContextMenu.msg(contextMenuMsg))
   | NotificationCountClicked
   | NotificationsCountRightClicked
   | ContributedItemClicked({command: string});
@@ -61,12 +64,26 @@ type outmsg =
   | ShowFileTypePicker
   | Effect(Isolinear.Effect.t(msg));
 
+let notificationContextMenu =
+  Component_ContextMenu.make([
+    {
+      label: "Clear All",
+      // icon: None,
+      data: ClearAll,
+    },
+    {
+      label: "Open",
+      // icon: None,
+      data: Open,
+    },
+  ]);
+
 type model = {
   items: list(Item.t),
-  contextMenuVisible: bool,
+  contextMenu: option(Component_ContextMenu.model(contextMenuMsg)),
 };
 
-let initial = {items: [], contextMenuVisible: false};
+let initial = {items: [], contextMenu: None};
 
 // UPDATE
 
@@ -86,21 +103,33 @@ let update = (~client, model, msg) => {
     )
 
   | NotificationsCountRightClicked => (
-      {...model, contextMenuVisible: true},
+      {...model, contextMenu: Some(notificationContextMenu)},
       Nothing,
     )
 
-  | ContextMenuNotificationClearAllClicked => (
-      {...model, contextMenuVisible: false},
-      Nothing,
-    )
+  | ContextMenu(msg) =>
+    model.contextMenu
+    |> Option.map(contextMenu => {
+         let (contextMenu', outmsg) =
+           contextMenu |> Component_ContextMenu.update(msg);
 
-  | ContextMenuNotificationOpenClicked => (
-      {...model, contextMenuVisible: false},
-      ToggleNotifications,
-    )
-
-  | ContextMenuClosed => ({...model, contextMenuVisible: false}, Nothing)
+         switch (outmsg) {
+         | Component_ContextMenu.Nothing => (
+             {...model, contextMenu: Some(contextMenu')},
+             Nothing,
+           )
+         | Component_ContextMenu.Selected({data}) =>
+           switch (data) {
+           | ClearAll => ({...model, contextMenu: None}, ClearNotifications)
+           | Open => ({...model, contextMenu: None}, ToggleNotifications)
+           }
+         | Component_ContextMenu.Cancelled => (
+             {...model, contextMenu: None},
+             Nothing,
+           )
+         };
+       })
+    |> Option.value(~default=(model, Nothing))
 
   | FileTypeClicked => (model, ShowFileTypePicker)
 
@@ -128,7 +157,7 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 module Animation = Revery.UI.Animation;
-module ContextMenu = Oni_Components.ContextMenu;
+module ContextMenu = Component_ContextMenu;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 module Label = Oni_Components.Label;
@@ -233,8 +262,8 @@ let notificationCount =
       ~theme,
       ~font: UiFont.t,
       ~foreground as color,
+      ~maybeContextMenu,
       ~notifications: Feature_Notification.model,
-      ~contextMenuVisible,
       ~dispatch,
       (),
     ) => {
@@ -245,33 +274,22 @@ let notificationCount =
   let onRightClick = () => dispatch(NotificationsCountRightClicked);
 
   let menu = () => {
-    let items =
-      ContextMenu.[
-        {
-          label: "Clear All",
-          // icon: None,
-          data: ContextMenuNotificationClearAllClicked,
-        },
-        {
-          label: "Open",
-          // icon: None,
-          data: ContextMenuNotificationOpenClicked,
-        },
-      ];
-
-    <ContextMenu
-      orientation=(`Top, `Left)
-      offsetX=(-10)
-      items
-      theme
-      font // correct for item padding
-      onCancel={() => dispatch(ContextMenuClosed)}
-      onItemSelect={({data, _}: ContextMenu.item(msg)) => dispatch(data)}
-    />;
+    maybeContextMenu
+    |> Option.map(model => {
+         <Component_ContextMenu.View
+           orientation=(`Top, `Left)
+           offsetX=(-10)
+           theme
+           font
+           dispatch={msg => dispatch(ContextMenu(msg))}
+           model
+         />
+       })
+    |> Option.value(~default=React.empty);
   };
 
   <item onClick onRightClick>
-    {contextMenuVisible ? <menu /> : React.empty}
+    <menu />
     <View
       style=Style.[
         flexDirection(`Row),
@@ -532,7 +550,7 @@ module View = {
           font
           foreground
           notifications
-          contextMenuVisible={statusBar.contextMenuVisible}
+          maybeContextMenu={statusBar.contextMenu}
         />
       </section>
       <sectionGroup>

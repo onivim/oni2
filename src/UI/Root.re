@@ -7,7 +7,6 @@
 open Revery.UI;
 open Oni_Model;
 
-module ContextMenu = Oni_Components.ContextMenu;
 module ResizeHandle = Oni_Components.ResizeHandle;
 module Tooltip = Oni_Components.Tooltip;
 
@@ -243,7 +242,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       />
     </Overlay>
     <statusBar />
-    <ContextMenu.Overlay />
+    <Component_ContextMenu.View.Overlay />
     <Tooltip.Overlay theme font=uiFont />
     <messages />
     <modals />
