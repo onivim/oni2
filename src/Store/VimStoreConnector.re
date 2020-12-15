@@ -6,6 +6,8 @@
  * - Translates Actions into Effects that should run against vim
  */
 
+
+
 open EditorCoreTypes;
 open Oni_Model;
 
@@ -204,7 +206,9 @@ let start =
         )
 
       | MacroRecordingStopped(_) =>
-        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped)),
+        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped))
+
+      | WindowSplit(_split) => () // TODO
     );
 
   let _: unit => unit =
@@ -369,36 +373,36 @@ let start =
       );
     });
 
-  let _: unit => unit =
-    Vim.Window.onSplit((splitType, maybeBuffer) => {
+  // let _: unit => unit =
+  //   Vim.Window.onSplit((splitType, maybeBuffer) => {
       // TODO: This logic needs to be revised to handle the differentation between new / split,
       // and handling filenames in both cases.
 
-      /* If buf wasn't specified, use the filepath from the current buffer */
-      let command =
-        switch (maybeBuffer) {
-        | "" =>
-          Log.trace("Vim.Window.onSplit - creating new buffer.");
-          switch (splitType) {
-          | Vim.Types.Vertical => Actions.NewBuffer({direction: `Vertical})
-          | Vim.Types.Horizontal =>
-            Actions.NewBuffer({direction: `Horizontal})
-          | Vim.Types.TabPage => Actions.NewBuffer({direction: `NewTab})
-          };
-        | filePath =>
-          Log.tracef(m => m("Vim.Window.onSplit: %s", filePath));
-          switch (splitType) {
-          | Vim.Types.Vertical =>
-            Actions.OpenFileByPath(filePath, Some(`Vertical), None)
-          | Vim.Types.Horizontal =>
-            Actions.OpenFileByPath(filePath, Some(`Horizontal), None)
-          | Vim.Types.TabPage =>
-            Actions.OpenFileByPath(filePath, Some(`NewTab), None)
-          };
-        };
+  //     /* If buf wasn't specified, use the filepath from the current buffer */
+  //     let command =
+  //       switch (maybeBuffer) {
+  //       | "" =>
+  //         Log.trace("Vim.Window.onSplit - creating new buffer.");
+  //         switch (splitType) {
+  //         | Vim.Types.Vertical => Actions.NewBuffer({direction: `Vertical})
+  //         | Vim.Types.Horizontal =>
+  //           Actions.NewBuffer({direction: `Horizontal})
+  //         | Vim.Types.TabPage => Actions.NewBuffer({direction: `NewTab})
+  //         };
+  //       | filePath =>
+  //         Log.tracef(m => m("Vim.Window.onSplit: %s", filePath));
+  //         switch (splitType) {
+  //         | Vim.Types.Vertical =>
+  //           Actions.OpenFileByPath(filePath, Some(`Vertical), None)
+  //         | Vim.Types.Horizontal =>
+  //           Actions.OpenFileByPath(filePath, Some(`Horizontal), None)
+  //         | Vim.Types.TabPage =>
+  //           Actions.OpenFileByPath(filePath, Some(`NewTab), None)
+  //         };
+  //       };
 
-      dispatch(command);
-    });
+  //     dispatch(command);
+  //   });
 
   let _: unit => unit =
     Vim.Buffer.onUpdate(update => {
