@@ -91,6 +91,28 @@ let start =
       };
     });
 
+  let handleSplit = (split: Vim.Split.t) => {
+    let currentBufferId = Vim.Buffer.getId(Vim.Buffer.getCurrent());
+
+    let actionForFilePath = (filePath, direction) => {
+      switch (filePath) {
+      | Some(fp) => Actions.OpenFileByPath(fp, Some(direction), None)
+      // No file path specified, so let's use the current buffer
+      | None => Actions.OpenBufferById({bufferId: currentBufferId, direction})
+      };
+    };
+    Vim.Split.(
+      switch (split) {
+      | NewHorizontal => Actions.NewBuffer({direction: `Horizontal})
+      | NewVertical => Actions.NewBuffer({direction: `Vertical})
+      | NewTabPage => Actions.NewBuffer({direction: `NewTab})
+      | Vertical({filePath}) => actionForFilePath(filePath, `Vertical)
+      | Horizontal({filePath}) => actionForFilePath(filePath, `Horizontal)
+      | TabPage({filePath}) => actionForFilePath(filePath, `NewTab)
+      }
+    );
+  };
+
   let handleGoto = gotoType => {
     switch (gotoType) {
     | Vim.Goto.Hover =>
@@ -204,7 +226,9 @@ let start =
         )
 
       | MacroRecordingStopped(_) =>
-        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped)),
+        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped))
+
+      | WindowSplit(split) => handleSplit(split) |> dispatch,
     );
 
   let _: unit => unit =
@@ -367,33 +391,6 @@ let start =
           ),
         ),
       );
-    });
-
-  let _: unit => unit =
-    Vim.Window.onSplit((splitType, buf) => {
-      /* If buf wasn't specified, use the filepath from the current buffer */
-      let buf =
-        switch (buf) {
-        | "" =>
-          switch (Vim.Buffer.getFilename(Vim.Buffer.getCurrent())) {
-          | None => ""
-          | Some(v) => v
-          }
-        | v => v
-        };
-
-      Log.trace("Vim.Window.onSplit: " ++ buf);
-
-      let command =
-        switch (splitType) {
-        | Vim.Types.Vertical =>
-          Actions.OpenFileByPath(buf, Some(`Vertical), None)
-        | Vim.Types.Horizontal =>
-          Actions.OpenFileByPath(buf, Some(`Horizontal), None)
-        | Vim.Types.TabPage =>
-          Actions.OpenFileByPath(buf, Some(`NewTab), None)
-        };
-      dispatch(command);
     });
 
   let _: unit => unit =
@@ -606,7 +603,12 @@ let start =
       let (newContext, effects) = Vim.command(~context=prevContext, cmd);
 
       if (newContext.bufferId != prevContext.bufferId) {
-        dispatch(Actions.OpenBufferById({bufferId: newContext.bufferId}));
+        dispatch(
+          Actions.OpenBufferById({
+            bufferId: newContext.bufferId,
+            direction: `Current,
+          }),
+        );
       } else {
         updateActiveEditorMode(
           ~allowAnimation,
@@ -636,7 +638,7 @@ let start =
 
         // If we switched buffer, open it in current editor
         if (previousBufferId != bufferId) {
-          dispatch(Actions.OpenBufferById({bufferId: bufferId}));
+          dispatch(Actions.OpenBufferById({bufferId, direction: `Current}));
         };
 
         updateActiveEditorMode(subMode, mode, effects);

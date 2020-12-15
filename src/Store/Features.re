@@ -1254,12 +1254,24 @@ let update =
 
     (state, effect);
 
-  | OpenBufferById({bufferId}) =>
+  | OpenBufferById({bufferId, direction}) =>
     let effect =
       Feature_Buffers.Effects.openBufferInEditor(
         ~languageInfo=state.languageInfo,
         ~font=state.editorFont,
         ~bufferId,
+        ~split=direction,
+        state.buffers,
+      )
+      |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
+    (state, effect);
+
+  | NewBuffer({direction}) =>
+    let effect =
+      Feature_Buffers.Effects.openNewBuffer(
+        ~split=direction,
+        ~languageInfo=state.languageInfo,
+        ~font=state.editorFont,
         state.buffers,
       )
       |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
@@ -1269,6 +1281,7 @@ let update =
     let split =
       switch (direction) {
       | None => `Current
+      | Some(`Current) => `Current
       | Some(`Horizontal) => `Horizontal
       | Some(`Vertical) => `Vertical
       | Some(`NewTab) => `NewTab
