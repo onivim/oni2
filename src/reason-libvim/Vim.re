@@ -283,7 +283,6 @@ let _onWindowSplit = (st, p) => {
   queueEffect(Effect.WindowSplit(Split.ofNative(st, p)));
 };
 
-
 let _onYank =
     (
       lines,

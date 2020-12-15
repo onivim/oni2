@@ -5,8 +5,5 @@ let getTopLine = Native.vimWindowGetTopLine;
 let setWidth = Native.vimWindowSetWidth;
 let setHeight = Native.vimWindowSetHeight;
 let setTopLeft = (top, left) => {
-  Native.vimWindowSetTopLeft(
-    top,
-    left,
-  );
+  Native.vimWindowSetTopLeft(top, left);
 };

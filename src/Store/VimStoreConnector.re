@@ -6,8 +6,6 @@
  * - Translates Actions into Effects that should run against vim
  */
 
-
-
 open EditorCoreTypes;
 open Oni_Model;
 
@@ -375,8 +373,8 @@ let start =
 
   // let _: unit => unit =
   //   Vim.Window.onSplit((splitType, maybeBuffer) => {
-      // TODO: This logic needs to be revised to handle the differentation between new / split,
-      // and handling filenames in both cases.
+  // TODO: This logic needs to be revised to handle the differentation between new / split,
+  // and handling filenames in both cases.
 
   //     /* If buf wasn't specified, use the filepath from the current buffer */
   //     let command =

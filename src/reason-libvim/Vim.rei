@@ -124,13 +124,13 @@ module Mode: {
 };
 
 module Split: {
-  type t = 
-  | NewHorizontal
-  | Horizontal({ filePath: option(string) } )
-  | NewVertical
-  | Vertical({ filePath: option(string) })
-  | NewTabPage
-  | TabPage({ filePath: option(string) });
+  type t =
+    | NewHorizontal
+    | Horizontal({filePath: option(string)})
+    | NewVertical
+    | Vertical({filePath: option(string)})
+    | NewTabPage
+    | TabPage({filePath: option(string)});
 };
 
 module SubMode: {
