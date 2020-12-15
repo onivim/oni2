@@ -421,9 +421,6 @@ module Effects = {
       let buffer = Vim.Buffer.make();
 
       let handler = (~alreadyLoaded as _, buffer) =>
-        // if (alreadyLoaded) {
-        //   dispatch(EditorRequested({buffer, split, position, grabFocus}));
-        // } else {
         dispatch(
           NewBufferAndEditorRequested({
             buffer,
@@ -432,7 +429,6 @@ module Effects = {
             grabFocus: true,
           }),
         );
-      // };
 
       openCommon(~vimBuffer=buffer, ~languageInfo, ~font, ~model, handler);
     });

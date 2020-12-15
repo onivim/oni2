@@ -371,13 +371,8 @@ let start =
 
   let _: unit => unit =
     Vim.Window.onSplit((splitType, maybeBuffer) => {
-      prerr_endline("SPLIT!");
-
-      // switch (buf) {
-      // | "" => prerr_endline ("no buffer!");
-      // | b =>
-      //   prerr_endline ("PATH: " ++ b);
-      // };
+      // TODO: This logic needs to be revised to handle the differentation between new / split,
+      // and handling filenames in both cases.
 
       /* If buf wasn't specified, use the filepath from the current buffer */
       let command =
