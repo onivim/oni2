@@ -343,15 +343,20 @@ module View = {
             justifyContent(`Center),
             alignItems(`Center),
           ]>
-          <View style=Style.[paddingRight(4)]>
+          <View style=Style.[flexGrow(0), flexShrink(0), paddingRight(4)]>
             <Oni_Components.SymbolIcon theme symbol={symbolData.kind} />
           </View>
-          <Text
-            text={symbolData.name}
-            style=Style.[color(foregroundColor)]
-            fontFamily={font.family}
-            fontSize={font.size}
-          />
+          <View style=Style.[flexGrow(1), flexShrink(1)]>
+            <Text
+              text={symbolData.name}
+              style=Style.[
+                color(foregroundColor),
+                textWrap(Revery.TextWrapping.NoWrap),
+              ]
+              fontFamily={font.family}
+              fontSize={font.size}
+            />
+          </View>
         </View>
       </Oni_Components.Tooltip>;
     };

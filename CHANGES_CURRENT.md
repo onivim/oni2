@@ -11,6 +11,7 @@
 - #2817 - Snippets: Initial snippet parser (related #160)
 - #2818 - Vim: Initial `:!` command output implementation (fixes #1889, #1909)
 - #2832 - CodeLens: Implement resolve provider
+- #2833 - Outline: Don't wrap long signatures when overflowing (fixes #2626)
 
 ### Bug Fixes
 
