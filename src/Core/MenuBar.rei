@@ -1,6 +1,7 @@
 module Schema: {
-  type item;
+
   type menu;
+  type item;
 
   let item: (~title: string, ~command: string, ~parent: menu) => item;
 
@@ -8,21 +9,44 @@ module Schema: {
     (~uniqueId: string, ~title: string, ~parent: option(menu)) => menu;
 
   type t;
+  let initial: t;
 
-  let toSchema: (~menus: list(menu)=?, ~items: list(item)) => t;
+  let menus: list(menu) => t;
+  let items: list(item) => t;
+
+  //let toSchema: (~menus: list(menu)=?, ~items: list(item)) => t;
   let union: (t, t) => t;
+  let ofList: list(t) => t;
 };
 
-type t;
+type builtMenu;
 
-let initial: Schema.t => t;
+module Item: {
+  type t;
 
-type builtMenu('msg);
+  let title: t => string;
+  let command: t => string;
+}
+
+module Menu: {
+  type t;
+
+  type contentItem = 
+  | SubMenu(t)
+  | Item(Item.t)
+
+  let title: t => string;
+
+  let contents: (t, builtMenu) => list(contentItem);
+}
 
 let build:
   (
     ~contextKeys: WhenExpr.ContextKeys.t,
-    ~commands: Command.Lookup.t('msg),
-    t
+    ~commands: Command.Lookup.t(_),
+    Schema.t
   ) =>
-  builtMenu('msg);
+  builtMenu;
+
+// [top(builtMenu)] returns the top-level menu items for [builtMenu]
+let top: builtMenu => list(Menu.t);

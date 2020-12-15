@@ -1,8 +1,23 @@
 open Oni_Core;
+open MenuBar;
 
-type model = unit;
+type model = {
+  menuSchema: Schema.t,
+}
 
-let initial = ();
+let initial = schema => {
+
+  let global = Global.[
+    application,
+    file,
+    edit,
+    view
+  ] |> Schema.menus;
+
+  {
+  menuSchema: Schema.union(global, schema)
+  }
+}
 
 module Global = Global;
 
@@ -30,7 +45,9 @@ module View = {
         ~theme,
         ~font: UiFont.t,
         ~config as _,
-        ~model as _,
+        ~contextKeys,
+        ~commands,
+        ~model,
         (),
       ) => {
     let bgTheme =
@@ -43,13 +60,29 @@ module View = {
       );
     let bgColor = bgTheme.from(theme);
     let fgColor = fgTheme.from(theme);
-    <View style={Styles.container(bgColor)}>
+
+    let builtMenu = MenuBar.build(
+      ~contextKeys,
+      ~commands,
+      model.menuSchema
+    );
+
+    let topLevelMenuItems = MenuBar.top(builtMenu);
+
+    let menuItems = topLevelMenuItems
+    |> List.map(menu => {
+      let title = MenuBar.Menu.title(menu);
       <Text
         style={Styles.text(fgColor)}
-        text="Hello, world!"
+        text=title
         fontFamily={font.family}
         fontSize={font.size}
       />
+    })
+    |> React.listToElement;
+
+    <View style={Styles.container(bgColor)}>
+      menuItems
     </View>;
   };
 };

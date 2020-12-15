@@ -35,7 +35,12 @@ module Schema = {
     items: list(item),
   };
 
-  let toSchema = (~menus=[], ~items) => {
+  let initial = {
+    menus: StringMap.empty,
+    items: [],
+  }
+
+  let menus = (menus) => {
     let menuMap =
       menus
       |> List.fold_left(
@@ -43,7 +48,13 @@ module Schema = {
            StringMap.empty,
          );
 
-    {menus: menuMap, items};
+    {menus: menuMap, items: []};
+    
+  }
+
+  let items = (items) => {
+    menus: StringMap.empty,
+    items: []
   };
 
   let union = (map1, map2) => {
@@ -64,12 +75,51 @@ module Schema = {
 
     {menus: menus', items: items'};
   };
+
+  let ofList = (schemas) => {
+    schemas
+    |> List.fold_left((acc, curr) => {
+      union(acc, curr)
+    }, initial);
+  }
 };
 
 type t = Schema.t;
 
 let initial = menu => menu;
 
-type builtMenu('msg) = unit;
+module Item = {
+  type t = Schema.item;
 
-let build = (~contextKeys as _, ~commands as _, _menu) => ();
+  let title = ({title, _}: Schema.item) => title;
+
+  let command = ({command, _}: Schema.item) => command;
+}
+
+module Menu = {
+  type t = Schema.menu;
+
+  type contentItem = 
+  | SubMenu(t)
+  | Item(Item.t)
+
+  let title = ({title, _}: Schema.menu) => title;
+
+  let contents = (_, _) =>  [];
+}
+
+type builtMenu = {
+  schema: t
+};
+
+let build = (~contextKeys as _, ~commands as _, menu) => {
+  schema: menu
+};
+
+let top = ({schema, _}) => {
+  Schema.({
+    schema.menus
+    |> StringMap.bindings
+    |> List.map(snd)
+  })
+}

@@ -78,6 +78,9 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let statusBarDispatch = msg => dispatch(Actions.StatusBar(msg));
   let messagesDispatch = msg => dispatch(Actions.Messages(msg));
 
+  let contextKeys = Oni_Model.ContextKeys.all(state);
+  let commands = Oni_Model.CommandManager.current(state);
+
   let messages = () => {
     <Feature_Messages.View
       theme
@@ -193,6 +196,8 @@ let make = (~dispatch, ~state: State.t, ()) => {
       font={state.uiFont}
       config
       theme
+      contextKeys
+      commands
       model={state.menuBar}
     />
     <View style=Styles.workspace>

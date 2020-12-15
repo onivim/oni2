@@ -2,7 +2,7 @@ open Oni_Core;
 
 type model;
 
-let initial: model;
+let initial: (MenuBar.Schema.t) => model;
 
 module Global = Global;
 
@@ -13,6 +13,8 @@ module View: {
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~config: Config.resolver,
+      ~contextKeys: WhenExpr.ContextKeys.t,
+      ~commands: Command.Lookup.t(_),
       ~model: model,
       unit
     ) =>
