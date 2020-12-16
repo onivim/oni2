@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 open MenuBar;
 
 [@deriving show]
@@ -17,6 +18,9 @@ type model = {
   menuSchema: Schema.t,
   activeSession: option(session),
 };
+
+type outmsg =
+  | Nothing;
 
 let update = (~contextKeys, ~commands, msg, model) => {
   switch (msg) {
@@ -51,7 +55,30 @@ let update = (~contextKeys, ~commands, msg, model) => {
 
     {...model, activeSession: session};
 
-  | ContextMenu(_contextMenuMsg) => model
+  | ContextMenu(contextMenuMsg) =>
+    let (activeSession', _eff) =
+      model.activeSession
+      |> Option.map(session => {
+           let (contextMenu', outmsg) =
+             Component_ContextMenu.update(
+               contextMenuMsg,
+               session.contextMenu,
+             );
+
+           switch (outmsg) {
+           | Component_ContextMenu.Nothing => (
+               Some({...session, contextMenu: contextMenu'}),
+               Nothing,
+             )
+           | Component_ContextMenu.Selected({data}) =>
+             prerr_endline("DATA: " ++ data);
+             failwith(data);
+           | Component_ContextMenu.Cancelled => (None, Nothing)
+           };
+         })
+      |> Option.value(~default=(model.activeSession, Nothing));
+
+    {...model, activeSession: activeSession'};
   };
 };
 
