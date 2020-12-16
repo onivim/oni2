@@ -4,8 +4,6 @@ open MenuBar;
 
 [@deriving show]
 type msg =
-  | MouseOver({uniqueId: string})
-  | MouseOut({uniqueId: string})
   | MouseClicked({uniqueId: string})
   | ContextMenu(Component_ContextMenu.msg(string));
 
@@ -25,10 +23,6 @@ type outmsg =
 
 let update = (~contextKeys, ~commands, msg, model) => {
   switch (msg) {
-  | MouseOver(_) => (model, Nothing)
-
-  | MouseOut(_) => (model, Nothing)
-
   | MouseClicked({uniqueId}) =>
     let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
     let topLevelItems = MenuBar.top(model.menuSchema);
@@ -42,14 +36,17 @@ let update = (~contextKeys, ~commands, msg, model) => {
       |> Option.map(menu => {
            let contextMenu =
              Menu.contents(menu, builtMenu)
-             |> List.map(
-                  fun
-                  | Menu.Item(item) =>
-                    Component_ContextMenu.{
-                      label: Item.title(item),
-                      data: Item.command(item),
-                    },
-                )
+             |> List.map(group => {
+                  let items =
+                    MenuBar.Group.items(group)
+                    |> List.map(item =>
+                         Component_ContextMenu.{
+                           label: Item.title(item),
+                           data: Item.command(item),
+                         }
+                       );
+                  Component_ContextMenu.Group(items);
+                })
              |> Component_ContextMenu.make;
            {activePath: uniqueId, contextMenu};
          });
@@ -91,14 +88,21 @@ let isActive = (uniqueId, model) => {
   };
 };
 
-let initial = (~menus, ~items) => {
-  let items = items |> Schema.items;
+let initial = (~menus, ~groups) => {
+  let contributedGroups = groups |> Schema.groups;
   let contributedMenus = Schema.menus(menus);
-  let global = Global.[application, file, edit, view] |> Schema.menus;
+  let globalMenus = Global.menus |> Schema.menus;
+  let globalGroups = Global.groups |> Schema.groups;
 
   {
     activeSession: None,
-    menuSchema: Schema.ofList([global, items, contributedMenus]),
+    menuSchema:
+      Schema.ofList([
+        globalMenus,
+        globalGroups,
+        contributedGroups,
+        contributedMenus,
+      ]),
   };
 };
 
@@ -138,7 +142,10 @@ module View = {
     let elem = maybeElem |> Option.value(~default=React.empty);
 
     <View
-      style=Style.[paddingHorizontal(6)]
+      style=Style.[
+        cursor(Revery.MouseCursors.pointer),
+        paddingHorizontal(6),
+      ]
       onMouseDown={_ => dispatch(MouseClicked({uniqueId: uniqueId}))}>
       <Text
         style={Styles.text(color)}

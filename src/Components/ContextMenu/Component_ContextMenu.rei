@@ -8,6 +8,10 @@ type item('data) = {
   data: [@opaque] 'data,
 };
 
+type content('data) =
+  | Item(item('data))
+  | Group(list(item('data)));
+
 // MODEL
 
 type model('data);
@@ -15,7 +19,7 @@ type model('data);
 [@deriving show]
 type msg('data);
 
-let make: list(item('data)) => model('data);
+let make: list(content('data)) => model('data);
 
 type outmsg('data) =
   | Nothing

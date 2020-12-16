@@ -66,16 +66,16 @@ type outmsg =
 
 let notificationContextMenu =
   Component_ContextMenu.make([
-    {
+    Item({
       label: "Clear All",
       // icon: None,
       data: ClearAll,
-    },
-    {
+    }),
+    Item({
       label: "Open",
       // icon: None,
       data: Open,
-    },
+    }),
   ]);
 
 type model = {

@@ -571,7 +571,10 @@ let initial =
     menuBar:
       Feature_MenuBar.initial(
         ~menus=[],
-        ~items=Feature_Workspace.Contributions.menuItems,
+        ~groups=[
+          Feature_Workspace.Contributions.menuGroup,
+          Feature_SideBar.Contributions.menuGroup,
+        ],
       ),
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,

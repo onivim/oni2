@@ -38,5 +38,5 @@ module Effects: {
 module Contributions: {
   let commands: model => list(Command.t(msg));
 
-  let menuItems: list(MenuBar.Schema.item);
+  let menuGroup: MenuBar.Schema.group;
 };

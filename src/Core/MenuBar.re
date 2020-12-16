@@ -6,8 +6,14 @@ module Schema = {
   type item = {
     title: string,
     command: string,
-    parentId: uniqueId,
   };
+
+  type group = {
+    parentId: uniqueId,
+    items: list(item),
+  };
+  // | Item(item)
+  // | Group({ parentId: uniqueId, items: list(item) });
 
   type menu = {
     order: int,
@@ -15,18 +21,17 @@ module Schema = {
     title: string,
   };
 
-  let idToString = uniqueId => uniqueId |> String.concat(".");
-
-  let item = (~title, ~command, ~parent) => {
-    title,
-    command,
-    parentId: parent.uniqueId,
+  let group = (~parent, items) => {
+    {parentId: parent.uniqueId, items};
   };
 
-  let command = (~parent, command: Command.t(_)) => {
+  let idToString = uniqueId => uniqueId |> String.concat(".");
+
+  let item = (~title, ~command) => {title, command};
+
+  let command = (command: Command.t(_)) => {
     command: command.id,
     title: command.title |> Option.value(~default="(null)"),
-    parentId: parent.uniqueId,
   };
 
   let menu = (~order=500, ~uniqueId, ~parent: option(menu), title) => {
@@ -41,7 +46,7 @@ module Schema = {
 
   type t = {
     menus: StringMap.t(menu),
-    items: StringMap.t(list(item)),
+    items: StringMap.t(list(group)),
   };
 
   let initial = {menus: StringMap.empty, items: StringMap.empty};
@@ -59,11 +64,11 @@ module Schema = {
     {menus: menuMap, items: StringMap.empty};
   };
 
-  let items = items => {
+  let groups = groups => {
     let itemsMap =
-      items
+      groups
       |> List.fold_left(
-           (acc, curr: item) => {
+           (acc, curr: group) => {
              acc
              |> StringMap.update(
                   idToString(curr.parentId),
@@ -79,15 +84,23 @@ module Schema = {
   };
 
   let union = (map1, map2) => {
-    let merge = (_key, maybeA, maybeB) =>
+    let mergeGreedy = (_key, maybeA, maybeB) =>
       switch (maybeA, maybeB) {
       | (Some(_) as a, _) => a
       | (None, Some(_) as b) => b
       | (None, None) => None
       };
-    let items' = StringMap.merge(merge, map1.items, map2.items);
 
-    let menus' = StringMap.merge(merge, map1.menus, map2.menus);
+    let mergeLists = (_key, maybeA, maybeB) =>
+      switch (maybeA, maybeB) {
+      | (Some(aList), Some(bList)) => Some(aList @ bList)
+      | (None, Some(list)) => Some(list)
+      | (Some(list), None) => Some(list)
+      | (None, None) => None
+      };
+    let items' = StringMap.merge(mergeLists, map1.items, map2.items);
+
+    let menus' = StringMap.merge(mergeGreedy, map1.menus, map2.menus);
 
     {menus: menus', items: items'};
   };
@@ -107,13 +120,16 @@ module Item = {
   let command = ({command, _}: Schema.item) => command;
 };
 
+module Group = {
+  type t = Schema.group;
+
+  let items = ({items, _}: Schema.group) => items;
+};
+
 type builtMenu = {schema: t};
 
 module Menu = {
   type t = Schema.menu;
-
-  type contentItem =
-    | Item(Item.t);
 
   let title = ({title, _}: Schema.menu) => title;
   let uniqueId = ({uniqueId, _}: Schema.menu) =>
@@ -121,8 +137,7 @@ module Menu = {
 
   let contents = (menu: t, builtMenu) => {
     StringMap.find_opt(uniqueId(menu), builtMenu.schema.items)
-    |> Option.value(~default=[])
-    |> List.map(item => Item(item));
+    |> Option.value(~default=[]);
   };
 };
 

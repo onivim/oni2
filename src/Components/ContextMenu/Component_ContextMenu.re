@@ -21,6 +21,10 @@ type item('data) = {
   data: [@opaque] 'data,
 };
 
+type content('data) =
+  | Item(item('data))
+  | Group(list(item('data)));
+
 [@deriving show]
 type msg('data) =
   | ItemClicked({data: 'data})
@@ -31,7 +35,7 @@ type outmsg('data) =
   | Selected({data: 'data})
   | Cancelled;
 
-type model('data) = {items: list(item('data))};
+type model('data) = {items: list(content('data))};
 
 let make = items => {items: items};
 
@@ -57,7 +61,7 @@ module View = {
         isFocused ? Colors.Menu.selectionBackground : Colors.Menu.background;
 
       let container = (~theme, ~isFocused) => [
-        padding(10),
+        padding(4),
         flexDirection(`Row),
         backgroundColor(bg(~isFocused).from(theme)),
       ];
@@ -130,6 +134,11 @@ module View = {
         });
   };
 
+  let divider = (~theme, ()) => {
+    let fg = Colors.Menu.foreground.from(theme);
+    <View style=Style.[height(1), opacity(0.3), backgroundColor(fg)] />;
+  };
+
   // MENU
 
   module Menu = {
@@ -186,10 +195,23 @@ module View = {
             style={Styles.container(~x, ~y, ~theme)}
             ref={node => setRef(_ => Some(node))}>
             {items
-             |> List.map(item => {
-                  let onClick = () => onItemSelect(item);
-                  <MenuItem item theme font onClick />;
+             |> List.mapi((idx, item) => {
+                  switch (item) {
+                  | Item(item) =>
+                    let onClick = () => onItemSelect(item);
+                    [<MenuItem item theme font onClick />];
+                  | Group(items) =>
+                    let items' =
+                      items
+                      |> List.map(item => {
+                           let onClick = () => onItemSelect(item);
+                           <MenuItem item theme font onClick />;
+                         });
+
+                    idx == 0 ? items' : [<divider theme />, ...items'];
+                  }
                 })
+             |> List.flatten
              |> React.listToElement}
           </View>,
           hooks,

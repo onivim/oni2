@@ -443,6 +443,7 @@ module View = {
 
     let make =
         (
+          ~menuBar,
           ~dispatch,
           ~registrationDispatch,
           ~registration,
@@ -463,6 +464,7 @@ module View = {
             width=18
             height=18
           />
+          menuBar
           <Text
             style={Styles.Windows.title(~isFocused, ~theme)}
             fontFamily={font.family}
@@ -487,6 +489,7 @@ module View = {
 
   let make =
       (
+        ~menuBar,
         ~activeBuffer,
         ~workspaceRoot,
         ~workspaceDirectory,
@@ -504,20 +507,21 @@ module View = {
     let title =
       title(~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config);
     switch (Revery.Environment.os) {
-    | Mac =>
-      <Mac
-        isFocused
-        windowDisplayMode
-        font
-        title
-        theme
-        dispatch
-        registration
-        registrationDispatch
-        height
-      />
-    | Windows =>
+    // | Mac =>
+    //   <Mac
+    //     isFocused
+    //     windowDisplayMode
+    //     font
+    //     title
+    //     theme
+    //     dispatch
+    //     registration
+    //     registrationDispatch
+    //     height
+    //   />
+    | _ =>
       <Windows
+        menuBar
         isFocused
         windowDisplayMode
         font
@@ -527,7 +531,8 @@ module View = {
         registrationDispatch
         registration
       />
-    | _ => React.empty
+    // | Linux => menuBar
+    // | _ => React.empty
     };
   };
 };

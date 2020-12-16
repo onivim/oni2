@@ -3,6 +3,7 @@
  (public_name Oni2.feature.sideBar)
  (inline_tests)
  (libraries Oni2.core Oni2.components Oni2.feature.extensions
-   Oni2.feature.scm Oni2.feature.theme isolinear base Revery)
+   Oni2.feature.menubar Oni2.feature.scm Oni2.feature.theme isolinear base
+   Revery)
  (preprocess
   (pps brisk-reconciler.ppx ppx_deriving.show ppx_inline_test)))

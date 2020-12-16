@@ -77,9 +77,6 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let statusBarDispatch = msg => dispatch(Actions.StatusBar(msg));
   let messagesDispatch = msg => dispatch(Actions.Messages(msg));
 
-  let contextKeys = Oni_Model.ContextKeys.all(state);
-  let commands = Oni_Model.CommandManager.current(state);
-
   let messages = () => {
     <Feature_Messages.View
       theme
@@ -175,8 +172,19 @@ let make = (~dispatch, ~state: State.t, ()) => {
     | Feature_SideBar.Right => List.rev(defaultSurfaceComponents)
     };
 
+  let menuBarElement =
+    <Feature_MenuBar.View
+      isWindowFocused={state.windowIsFocused}
+      font={state.uiFont}
+      config
+      theme
+      model={state.menuBar}
+      dispatch={msg => dispatch(Actions.MenuBar(msg))}
+    />;
+
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
+      menuBar=menuBarElement
       activeBuffer=maybeActiveBuffer
       workspaceRoot={Feature_Workspace.rootName(state.workspace)}
       workspaceDirectory={Feature_Workspace.workingDirectory(state.workspace)}
@@ -189,14 +197,6 @@ let make = (~dispatch, ~state: State.t, ()) => {
       dispatch=titleDispatch
       registrationDispatch
       height={state.titlebarHeight}
-    />
-    <Feature_MenuBar.View
-      isWindowFocused={state.windowIsFocused}
-      font={state.uiFont}
-      config
-      theme
-      model={state.menuBar}
-      dispatch={msg => dispatch(Actions.MenuBar(msg))}
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>

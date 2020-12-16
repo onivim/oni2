@@ -1,10 +1,14 @@
 module Schema: {
   type menu;
+
   type item;
+  type group;
 
-  let item: (~title: string, ~command: string, ~parent: menu) => item;
+  let item: (~title: string, ~command: string) => item;
 
-  let command: (~parent: menu, Command.t(_)) => item;
+  let command: Command.t(_) => item;
+
+  let group: (~parent: menu, list(item)) => group;
 
   let menu:
     (~order: int=?, ~uniqueId: string, ~parent: option(menu), string) => menu;
@@ -13,7 +17,7 @@ module Schema: {
   let initial: t;
 
   let menus: list(menu) => t;
-  let items: list(item) => t;
+  let groups: list(group) => t;
 
   //let toSchema: (~menus: list(menu)=?, ~items: list(item)) => t;
   let union: (t, t) => t;
@@ -29,16 +33,19 @@ module Item: {
   let command: t => string;
 };
 
-module Menu: {
+module Group: {
   type t;
 
-  type contentItem =
-    | Item(Item.t);
+  let items: t => list(Item.t);
+};
+
+module Menu: {
+  type t;
 
   let title: t => string;
   let uniqueId: t => string;
 
-  let contents: (t, builtMenu) => list(contentItem);
+  let contents: (t, builtMenu) => list(Group.t);
 };
 
 let build:

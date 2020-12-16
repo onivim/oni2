@@ -387,6 +387,11 @@ module Contributions = {
       openSCM,
     ];
 
+  let menuItems = commands |> List.map(MenuBar.Schema.command);
+
+  let menuGroup =
+    MenuBar.Schema.group(~parent=Feature_MenuBar.Global.view, menuItems);
+
   let contextKeys = (~isFocused) => {
     let common = ContextKeys.[sideBarVisible];
 
