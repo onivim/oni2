@@ -45,8 +45,11 @@ type quitType =
 
 type windowSplitType =
   | Horizontal
+  | HorizontalNew
   | Vertical
-  | TabPage;
+  | VerticalNew
+  | TabPage
+  | TabPageNew;
 
 type windowMovementType =
   | OneLeft

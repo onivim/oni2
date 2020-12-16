@@ -415,14 +415,32 @@ module Effects = {
     });
   };
 
-  let openBufferInEditor = (~font, ~languageInfo, ~bufferId, model) => {
+  let openNewBuffer = (~font, ~languageInfo, ~split, model) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Buffers.openNewBuffer", dispatch => {
+      let buffer = Vim.Buffer.make();
+
+      let handler = (~alreadyLoaded as _, buffer) =>
+        dispatch(
+          NewBufferAndEditorRequested({
+            buffer,
+            split,
+            position: None,
+            grabFocus: true,
+          }),
+        );
+
+      openCommon(~vimBuffer=buffer, ~languageInfo, ~font, ~model, handler);
+    });
+  };
+
+  let openBufferInEditor = (~font, ~languageInfo, ~split, ~bufferId, model) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Buffers.openBufferInEditor", dispatch => {
       switch (Vim.Buffer.getById(bufferId)) {
       | None => Log.warnf(m => m("Unable to open buffer: %d", bufferId))
       | Some(vimBuffer) =>
         let handler = (~alreadyLoaded, buffer) => {
-          let split = `Current;
           let position = None;
           let grabFocus = true;
 

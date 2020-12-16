@@ -345,7 +345,13 @@ module Sub = {
 
       let name = "Service_Exthost.BufferSubscription";
       let id = params => {
-        params.buffer |> Oni_Core.Buffer.getId |> string_of_int;
+        Printf.sprintf(
+          "%d:%s",
+          params.buffer |> Oni_Core.Buffer.getId,
+          // Use the buffer path, too, so that if it changes, we subscribe to the new file
+          Buffer.getFilePath(params.buffer)
+          |> Option.value(~default="(null)"),
+        );
       };
 
       let init = (~params, ~dispatch) => {
