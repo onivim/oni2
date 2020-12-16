@@ -63,8 +63,8 @@ let keyDown:
 let text:
   (~text: string, ~time: Revery.Time.t, model) => (model, list(effect));
 
-let candidates: (~config: Config.resolver, 
-  ~context: WhenExpr.ContextKeys.t, model) => 
+let candidates:
+  (~config: Config.resolver, ~context: WhenExpr.ContextKeys.t, model) =>
   list((EditorInput.Matcher.t, execute));
 
 let keyPressToString: EditorInput.KeyPress.t => string;
@@ -84,7 +84,6 @@ type uniqueId;
 
 let addKeyBinding:
   (~binding: Schema.resolvedKeybinding, model) => (model, uniqueId);
-
 
 let remove: (uniqueId, model) => model;
 
@@ -117,8 +116,8 @@ module View: {
   };
 
   module Matcher: {
-    let make: 
-    (~matcher: EditorInput.Matcher.t, ~font: UiFont.t, unit) =>
-    Revery.UI.element;
-  }
+    let make:
+      (~matcher: EditorInput.Matcher.t, ~font: UiFont.t, unit) =>
+      Revery.UI.element;
+  };
 };

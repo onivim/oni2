@@ -4,12 +4,10 @@ open Oni_Core;
 open Utility;
 module Log = (val Log.withNamespace("Oni2.Feature.Input"));
 
-let keyCodeToString=Sdl2.Keycode.getName;
+let keyCodeToString = Sdl2.Keycode.getName;
 
-let keyPressToString = EditorInput.KeyPress.toString(
-  ~meta="Meta",
-  ~keyCodeToString
-);
+let keyPressToString =
+  EditorInput.KeyPress.toString(~meta="Meta", ~keyCodeToString);
 
 // CONFIGURATION
 module Configuration = {
@@ -198,7 +196,6 @@ type effect =
 
 let keyCodeToString = Sdl2.Keycode.getName;
 
-
 let keyDown =
     (
       ~config,
@@ -273,10 +270,10 @@ let keyUp = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
 let candidates = (~config, ~context, {inputStateMachine, _}) => {
   let leaderKey = Configuration.leaderKey.get(config);
   InputStateMachine.candidates(~leaderKey, ~context, inputStateMachine);
-}
+};
 
-let consumedKeys =({inputStateMachine, _}) => inputStateMachine
-|> InputStateMachine.consumedKeys;
+let consumedKeys = ({inputStateMachine, _}) =>
+  inputStateMachine |> InputStateMachine.consumedKeys;
 
 let addKeyBinding = (~binding, {inputStateMachine, _} as model) => {
   open Schema;
@@ -541,22 +538,18 @@ module View = {
   };
 
   module Matcher = {
-      open EditorInput;
-      open EditorInput.Matcher;
+    open EditorInput;
+    open EditorInput.Matcher;
     let make = (~matcher: EditorInput.Matcher.t, ~font: UiFont.t, ()) => {
       switch (matcher) {
       | AllKeysReleased => React.empty
       | Sequence(matchers) =>
-        let text = matchers
-        |> List.map(KeyPress.toString(
-          ~keyCodeToString,
-        ))
-        |> String.concat(", ");
-        <Text
-          text
-          fontFamily=font.family
-          fontSize=font.size />
-      }
-    }
-  }
+        let text =
+          matchers
+          |> List.map(KeyPress.toString(~keyCodeToString))
+          |> String.concat(", ");
+        <Text text fontFamily={font.family} fontSize={font.size} />;
+      };
+    };
+  };
 };

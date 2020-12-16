@@ -50,7 +50,8 @@ module type Input = {
     ) =>
     (t, list(effect));
 
-  let candidates: (~leaderKey: option(PhysicalKey.t), ~context: context, t) =>
+  let candidates:
+    (~leaderKey: option(PhysicalKey.t), ~context: context, t) =>
     list((Matcher.t, command));
 
   let consumedKeys: t => list(KeyPress.t);
@@ -164,12 +165,13 @@ module Make = (Config: {
   let consumedKeys = ({revKeys, _}) => {
     revKeys
     |> List.rev
-    |> List.filter_map(fun
-    | Down(_id, key) => Some(key)
-    | Up(_) => None
-    | AllKeysReleased => None
-    );
-  }
+    |> List.filter_map(
+         fun
+         | Down(_id, key) => Some(key)
+         | Up(_) => None
+         | AllKeysReleased => None,
+       );
+  };
 
   let keyMatches = (~leaderKey, keyMatcher, key: gesture) => {
     switch (keyMatcher, key) {
@@ -406,34 +408,24 @@ module Make = (Config: {
     enabled: true,
   };
 
-  let candidates = (
-    ~leaderKey,
-    ~context,
-    {revKeys, enabled, bindings,  _}
-  ) => {
+  let candidates = (~leaderKey, ~context, {revKeys, enabled, bindings, _}) =>
     if (!enabled) {
-      []
+      [];
     } else {
-        applyKeysToBindings(
-          ~leaderKey,
-          ~context,
-          revKeys |> List.rev,
-          bindings,
-        )
-        |> List.filter_map(({id, matcher, action, enabled}: binding) => {
-          switch (action) {
-          | Remap(_) => None // TODO
-          | Dispatch(command) =>
-            switch (matcher) {
-            | Matched => None
-            | Unmatched(matchers) when enabled(context) =>
-              Some((matchers, command));
-            | _ => None
-            }
-          }
-        });
-    }
-  };
+      applyKeysToBindings(~leaderKey, ~context, revKeys |> List.rev, bindings)
+      |> List.filter_map(({matcher, action, enabled, _}: binding) => {
+           switch (action) {
+           | Remap(_) => None // TODO
+           | Dispatch(command) =>
+             switch (matcher) {
+             | Matched => None
+             | Unmatched(matchers) when enabled(context) =>
+               Some((matchers, command))
+             | _ => None
+             }
+           }
+         });
+    };
 
   let rec handleKeyCore =
           (~leaderKey, ~recursionDepth=0, ~context, gesture, bindings) =>

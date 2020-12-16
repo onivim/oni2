@@ -22,7 +22,7 @@ module Styles = {
 };
 
 let make = (~state: Model.State.t, ()) => {
-  let context=Model.ContextKeys.all(state);
+  let context = Model.ContextKeys.all(state);
   let contextKeys =
     Model.ContextKeys.all(state)
     |> WhenExpr.ContextKeys.values
@@ -35,27 +35,30 @@ let make = (~state: Model.State.t, ()) => {
 
   let config = Model.Selectors.configResolver(state);
 
-  let availableBindings = 
+  let availableBindings =
     Feature_Input.candidates(~config, ~context, state.input);
 
-  let bindingElems = availableBindings
-  |> List.map(((matcher, command)) => {
-    let cmd = switch (command) {
-    | Feature_Input.VimExCommand(ex) => ex
-    | Feature_Input.NamedCommand(cmd) => cmd
-    };
-    <View style=Styles.row>
-    <View style=Style.[marginHorizontal(8)]>
-      <Feature_Input.View.Matcher matcher font={state.uiFont} />
-    </View>
-      <Text text=cmd />
-    </View>
-  })
-  |> React.listToElement;
+  let bindingElems =
+    availableBindings
+    |> List.map(((matcher, command)) => {
+         let cmd =
+           switch (command) {
+           | Feature_Input.VimExCommand(ex) => ex
+           | Feature_Input.NamedCommand(cmd) => cmd
+           };
+         <View style=Styles.row>
+           <View style=Style.[marginHorizontal(8)]>
+             <Feature_Input.View.Matcher matcher font={state.uiFont} />
+           </View>
+           <Text text=cmd />
+         </View>;
+       })
+    |> React.listToElement;
 
-  let consumedKeys = Feature_Input.consumedKeys(state.input)
-  |> List.map(Feature_Input.keyPressToString)
-  |> String.concat(", ");
+  let consumedKeys =
+    Feature_Input.consumedKeys(state.input)
+    |> List.map(Feature_Input.keyPressToString)
+    |> String.concat(", ");
 
   <ScrollView style=Styles.row>
     <View style=Styles.section>

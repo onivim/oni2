@@ -176,7 +176,8 @@ module type Input = {
 
   // [candidates] returns a list of available matcher / command
   // candidates, based on the current context and input state.
-  let candidates: (~leaderKey: option(PhysicalKey.t), ~context: context, t) =>
+  let candidates:
+    (~leaderKey: option(PhysicalKey.t), ~context: context, t) =>
     list((Matcher.t, command));
 
   // [consumedKeys(model)] returns a list of keys
