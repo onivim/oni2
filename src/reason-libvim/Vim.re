@@ -23,6 +23,7 @@ module Goto = Goto;
 module Mapping = Mapping;
 module Operator = Operator;
 module Scroll = Scroll;
+module Split = Split;
 module TabPage = TabPage;
 module Mode = Mode;
 module SubMode = SubMode;
@@ -279,11 +280,7 @@ let _onWindowMovement = (mt, c) => {
 };
 
 let _onWindowSplit = (st, p) => {
-  queue(() => Event.dispatch2(st, p, Listeners.windowSplit));
-};
-
-let _onWindowSplit = (st, p) => {
-  queue(() => Event.dispatch2(st, p, Listeners.windowSplit));
+  queueEffect(Effect.WindowSplit(Split.ofNative(st, p)));
 };
 
 let _onYank =

@@ -90,6 +90,15 @@ module Effects: {
     ) =>
     Isolinear.Effect.t('msg);
 
+  let openNewBuffer:
+    (
+      ~font: Service_Font.font,
+      ~languageInfo: Exthost.LanguageInfo.t,
+      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      model
+    ) =>
+    Isolinear.Effect.t(msg);
+
   let openFileInEditor:
     (
       ~font: Service_Font.font,
@@ -106,6 +115,7 @@ module Effects: {
     (
       ~font: Service_Font.font,
       ~languageInfo: Exthost.LanguageInfo.t,
+      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       ~bufferId: int,
       model
     ) =>

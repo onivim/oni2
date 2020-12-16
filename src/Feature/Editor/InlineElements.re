@@ -354,8 +354,17 @@ let set = (~key: string, ~elements, model) => {
   keyToElements' |> makeConsistent;
 };
 
-let updateElement =
-    (~key, ~uniqueId, ~line, ~f: element => element, keyToElements) => {
+let clear = (~key, model) => {
+  let keyToElements' =
+    model.keyToElements
+    |> IntMap.map(keyToElements => {StringMap.remove(key, keyToElements)});
+
+  let sortedElements = recomputeSortedElements(keyToElements');
+  let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
+  {keyToElements: keyToElements', sortedElements, cache: cache'};
+};
+
+let updateElement = (~key, ~uniqueId, ~line, ~f: element => element, keyToElements) => {
   let lineNumber = EditorCoreTypes.LineNumber.toZeroBased(line);
   keyToElements
   |> IntMap.update(

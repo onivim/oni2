@@ -1,5 +1,5 @@
 {
-  "checksum": "b9c0e9fbdbd78562d3101d5626a9f6b7",
+  "checksum": "3a239db5a902f26769b360d9e46f0c70",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -428,14 +428,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "libvim@8.10869.81@d41d8cd9": {
-      "id": "libvim@8.10869.81@d41d8cd9",
+    "libvim@8.10869.82@d41d8cd9": {
+      "id": "libvim@8.10869.82@d41d8cd9",
       "name": "libvim",
-      "version": "8.10869.81",
+      "version": "8.10869.82",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.81.tgz#sha1:5eadf97cc49c05838bd261d2e265f1b7e5b3beb9"
+          "archive:https://registry.npmjs.org/libvim/-/libvim-8.10869.82.tgz#sha1:1b8b2d7a99a6dac9caebdad625e5c6cc3673e523"
         ]
       },
       "overrides": [],
@@ -1001,7 +1001,7 @@
         "refmterr@3.3.2@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
         "reason-fzy@github:CrossR/reason-fzy#7339d4e@d41d8cd9",
-        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.81@d41d8cd9",
+        "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.82@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#53fc4eb@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
         "esy-skia@github:revery-ui/esy-skia#60e0260@d41d8cd9",

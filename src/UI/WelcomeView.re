@@ -134,7 +134,11 @@ let%component make = (~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
           style={Styles.version(~theme)}
           fontFamily={uiFont.family}
           fontSize=12.
-          text={Printf.sprintf("Version %s", Oni_Core.BuildInfo.version)}
+          text={Printf.sprintf(
+            "Version %s | %s",
+            Oni_Core.BuildInfo.version,
+            Oni_Core.BuildInfo.commitId,
+          )}
         />
       </View>
       <View style=Styles.controls>
