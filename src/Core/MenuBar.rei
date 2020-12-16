@@ -4,6 +4,8 @@ module Schema: {
 
   let item: (~title: string, ~command: string, ~parent: menu) => item;
 
+  let command: (~parent: menu, Command.t(_)) => item;
+
   let menu:
     (~order: int=?, ~uniqueId: string, ~parent: option(menu), string) => menu;
 
@@ -31,7 +33,6 @@ module Menu: {
   type t;
 
   type contentItem =
-    | SubMenu(t)
     | Item(Item.t);
 
   let title: t => string;
@@ -49,4 +50,4 @@ let build:
   builtMenu;
 
 // [top(builtMenu)] returns the top-level menu items for [builtMenu]
-let top: builtMenu => list(Menu.t);
+let top: Schema.t => list(Menu.t);

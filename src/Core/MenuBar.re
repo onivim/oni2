@@ -1,31 +1,39 @@
 open Kernel;
 
 module Schema = {
+  type uniqueId = list(string);
+
   type item = {
     title: string,
     command: string,
-    parentId: string,
-    uniqueId: string,
+    parentId: uniqueId,
   };
 
   type menu = {
     order: int,
-    uniqueId: string,
+    uniqueId,
     title: string,
   };
+
+  let idToString = uniqueId => uniqueId |> String.concat(".");
 
   let item = (~title, ~command, ~parent) => {
     title,
     command,
     parentId: parent.uniqueId,
-    uniqueId: parent.uniqueId ++ "." ++ title,
+  };
+
+  let command = (~parent, command: Command.t(_)) => {
+    command: command.id,
+    title: command.title |> Option.value(~default="(null)"),
+    parentId: parent.uniqueId,
   };
 
   let menu = (~order=500, ~uniqueId, ~parent: option(menu), title) => {
     let uniqueId =
       switch (parent) {
-      | None => uniqueId
-      | Some(parent) => parent.uniqueId ++ "." ++ uniqueId
+      | None => [uniqueId]
+      | Some(parent) => [uniqueId, ...parent.uniqueId]
       };
 
     {order, uniqueId, title};
@@ -33,39 +41,53 @@ module Schema = {
 
   type t = {
     menus: StringMap.t(menu),
-    items: list(item),
+    items: StringMap.t(list(item)),
   };
 
-  let initial = {menus: StringMap.empty, items: []};
+  let initial = {menus: StringMap.empty, items: StringMap.empty};
 
   let menus = menus => {
     let menuMap =
       menus
       |> List.fold_left(
-           (acc, curr: menu) => {acc |> StringMap.add(curr.uniqueId, curr)},
+           (acc, curr: menu) => {
+             acc |> StringMap.add(idToString(curr.uniqueId), curr)
+           },
            StringMap.empty,
          );
 
-    {menus: menuMap, items: []};
+    {menus: menuMap, items: StringMap.empty};
   };
 
-  let items = items => {menus: StringMap.empty, items};
+  let items = items => {
+    let itemsMap =
+      items
+      |> List.fold_left(
+           (acc, curr: item) => {
+             acc
+             |> StringMap.update(
+                  idToString(curr.parentId),
+                  fun
+                  | None => Some([curr])
+                  | Some(items) => Some([curr, ...items]),
+                )
+           },
+           StringMap.empty,
+         );
+
+    {menus: StringMap.empty, items: itemsMap};
+  };
 
   let union = (map1, map2) => {
-    let items' = map1.items @ map2.items;
+    let merge = (_key, maybeA, maybeB) =>
+      switch (maybeA, maybeB) {
+      | (Some(_) as a, _) => a
+      | (None, Some(_) as b) => b
+      | (None, None) => None
+      };
+    let items' = StringMap.merge(merge, map1.items, map2.items);
 
-    let menus' =
-      StringMap.merge(
-        (_key, maybeA, maybeB) => {
-          switch (maybeA, maybeB) {
-          | (Some(_) as a, _) => a
-          | (None, Some(_) as b) => b
-          | (None, None) => None
-          }
-        },
-        map1.menus,
-        map2.menus,
-      );
+    let menus' = StringMap.merge(merge, map1.menus, map2.menus);
 
     {menus: menus', items: items'};
   };
@@ -85,24 +107,28 @@ module Item = {
   let command = ({command, _}: Schema.item) => command;
 };
 
+type builtMenu = {schema: t};
+
 module Menu = {
   type t = Schema.menu;
 
   type contentItem =
-    | SubMenu(t)
     | Item(Item.t);
 
   let title = ({title, _}: Schema.menu) => title;
-  let uniqueId = ({uniqueId, _}: Schema.menu) => uniqueId;
+  let uniqueId = ({uniqueId, _}: Schema.menu) =>
+    uniqueId |> Schema.idToString;
 
-  let contents = (_, _) => [];
+  let contents = (menu: t, builtMenu) => {
+    StringMap.find_opt(uniqueId(menu), builtMenu.schema.items)
+    |> Option.value(~default=[])
+    |> List.map(item => Item(item));
+  };
 };
-
-type builtMenu = {schema: t};
 
 let build = (~contextKeys as _, ~commands as _, menu) => {schema: menu};
 
-let top = ({schema, _}) => {
+let top = schema => {
   Schema.(
     {
       schema.menus

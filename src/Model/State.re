@@ -568,7 +568,11 @@ let initial =
     iconTheme: IconTheme.create(),
     isQuitting: false,
     languageInfo: Exthost.LanguageInfo.initial,
-    menuBar: Feature_MenuBar.initial([] |> Oni_Core.MenuBar.Schema.ofList),
+    menuBar:
+      Feature_MenuBar.initial(
+        ~menus=[],
+        ~items=Feature_Workspace.Contributions.menuItems,
+      ),
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,
     registers: Feature_Registers.initial,

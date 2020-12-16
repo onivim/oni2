@@ -121,6 +121,16 @@ module Commands = {
       : [openFolder, closeFolder];
 };
 
+module MenuItems = {
+  open MenuBar.Schema;
+  open Feature_MenuBar;
+
+  let openFolder = command(~parent=Global.file, Commands.openFolder);
+  let closeFolder = command(~parent=Global.file, Commands.closeFolder);
+};
+
 module Contributions = {
   let commands = model => Commands.all(model);
+
+  let menuItems = MenuItems.[openFolder, closeFolder];
 };

@@ -2,41 +2,75 @@ open Oni_Core;
 open MenuBar;
 
 [@deriving show]
-type msg = 
-| MouseOver({ uniqueId: string })
-| MouseOut({ uniqueId: string })
-| MouseClicked({ uniqueId: string });
+type msg =
+  | MouseOver({uniqueId: string})
+  | MouseOut({uniqueId: string})
+  | MouseClicked({uniqueId: string})
+  | ContextMenu(Component_ContextMenu.msg(string));
+
+type session = {
+  activePath: string,
+  contextMenu: Component_ContextMenu.model(string),
+};
 
 type model = {
   menuSchema: Schema.t,
-  activePath: option(string),
+  activeSession: option(session),
 };
 
-let update = (msg, model) => {
+let update = (~contextKeys, ~commands, msg, model) => {
   switch (msg) {
   | MouseOver(_) => model
-  
+
   | MouseOut(_) => model
 
-  | MouseClicked({uniqueId}) => 
-    ({
-      ...model,
-      activePath: Some(uniqueId)
-    })
-  }
-}
+  | MouseClicked({uniqueId}) =>
+    let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
+    let topLevelItems = MenuBar.top(model.menuSchema);
+    let maybeMenu =
+      topLevelItems
+      |> List.filter((menu: Menu.t) => Menu.uniqueId(menu) == uniqueId)
+      |> (l => List.nth_opt(l, 0));
+
+    let session =
+      maybeMenu
+      |> Option.map(menu => {
+           let contextMenu =
+             Menu.contents(menu, builtMenu)
+             |> List.map(
+                  fun
+                  | Menu.Item(item) =>
+                    Component_ContextMenu.{
+                      label: Item.title(item),
+                      data: Item.command(item),
+                    },
+                )
+             |> Component_ContextMenu.make;
+           {activePath: uniqueId, contextMenu};
+         });
+
+    {...model, activeSession: session};
+
+  | ContextMenu(_contextMenuMsg) => model
+  };
+};
 
 let isActive = (uniqueId, model) => {
-  switch (model.activePath) {
+  switch (model.activeSession) {
   | None => false
-  | Some(activePath) => Utility.StringEx.contains(uniqueId, activePath)
-  }
-}
+  | Some({activePath, _}) => Utility.StringEx.contains(uniqueId, activePath)
+  };
+};
 
-let initial = schema => {
+let initial = (~menus, ~items) => {
+  let items = items |> Schema.items;
+  let contributedMenus = Schema.menus(menus);
   let global = Global.[application, file, edit, view] |> Schema.menus;
 
-  {activePath: None, menuSchema: Schema.union(global, schema)};
+  {
+    activeSession: None,
+    menuSchema: Schema.ofList([global, items, contributedMenus]),
+  };
 };
 
 module Global = Global;
@@ -56,28 +90,30 @@ module View = {
     let text = fg => [color(fg)];
   };
 
-  let topMenu = (~model, ~theme, ~dispatch, ~uniqueId, ~font: UiFont.t, ~title, ~color, ()) => {
+  let topMenu =
+      (~model, ~menu, ~theme, ~dispatch, ~font: UiFont.t, ~color, ()) => {
+    let uniqueId = Menu.uniqueId(menu);
+    let maybeElem =
+      isActive(uniqueId, model)
+        ? model.activeSession
+          |> Option.map(({contextMenu, _}) => {
+               <Component_ContextMenu.View
+                 model=contextMenu
+                 orientation=(`Bottom, `Left)
+                 dispatch={msg => dispatch(ContextMenu(msg))}
+                 theme
+                 font
+               />
+             })
+        : None;
+    let elem = maybeElem |> Option.value(~default=React.empty);
 
-    let contextMenu = Component_ContextMenu.(make(
-      [
-        {label: "test1", data: "test1"},
-        {label: "test2", data: "test2"},
-        {label: "test3", data: "test3"}
-      ]
-    ));
-    let elem = isActive(uniqueId, model) ?
-    <Component_ContextMenu.View
-      model=contextMenu
-      orientation=(`Bottom, `Left)
-      dispatch={(_) => ()}
-      theme
-      font /> : React.empty;
-    <View style=Style.[paddingHorizontal(6)] 
-      onMouseDown={(_) => dispatch(MouseClicked({uniqueId: uniqueId}))}
-    >
+    <View
+      style=Style.[paddingHorizontal(6)]
+      onMouseDown={_ => dispatch(MouseClicked({uniqueId: uniqueId}))}>
       <Text
         style={Styles.text(color)}
-        text=title
+        text={Menu.title(menu)}
         fontFamily={font.family}
         fontSize={font.size}
       />
@@ -91,8 +127,6 @@ module View = {
         ~theme,
         ~font: UiFont.t,
         ~config as _,
-        ~contextKeys,
-        ~commands,
         ~model,
         ~dispatch,
         (),
@@ -108,16 +142,12 @@ module View = {
     let bgColor = bgTheme.from(theme);
     let fgColor = fgTheme.from(theme);
 
-    let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
-
-    let topLevelMenuItems = MenuBar.top(builtMenu);
+    let topLevelMenuItems = MenuBar.top(model.menuSchema);
 
     let menuItems =
       topLevelMenuItems
       |> List.map(menu => {
-           let title = MenuBar.Menu.title(menu);
-           let uniqueId = MenuBar.Menu.uniqueId(menu);
-           <topMenu model theme uniqueId dispatch font title color=fgColor />;
+           <topMenu model menu theme dispatch font color=fgColor />
          })
       |> React.listToElement;
 

@@ -304,7 +304,7 @@ module View = {
             | (`Top, _) => y
             | (`Middle, _) => y +. height /. 2.
             | (`Bottom, _) => y
-            }
+            };
 
           let x = int_of_float(x) + offsetX;
           let y = int_of_float(y) + offsetY - Constants.overlayY;

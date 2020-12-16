@@ -5,9 +5,18 @@ type msg;
 
 type model;
 
-let initial: MenuBar.Schema.t => model;
+let initial:
+  (~menus: list(MenuBar.Schema.menu), ~items: list(MenuBar.Schema.item)) =>
+  model;
 
-let update: (msg, model) => model;
+let update:
+  (
+    ~contextKeys: WhenExpr.ContextKeys.t,
+    ~commands: Command.Lookup.t(_),
+    msg,
+    model
+  ) =>
+  model;
 
 module Global = Global;
 
@@ -18,8 +27,6 @@ module View: {
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~config: Config.resolver,
-      ~contextKeys: WhenExpr.ContextKeys.t,
-      ~commands: Command.Lookup.t(_),
       ~model: model,
       ~dispatch: msg => unit,
       unit

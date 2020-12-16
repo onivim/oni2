@@ -195,8 +195,6 @@ let make = (~dispatch, ~state: State.t, ()) => {
       font={state.uiFont}
       config
       theme
-      contextKeys
-      commands
       model={state.menuBar}
       dispatch={msg => dispatch(Actions.MenuBar(msg))}
     />

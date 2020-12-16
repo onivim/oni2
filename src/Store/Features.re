@@ -623,7 +623,10 @@ let update =
     (state', eff);
 
   | MenuBar(msg) =>
-    let menuBar' = Feature_MenuBar.update(msg, state.menuBar);
+    let contextKeys = Oni_Model.ContextKeys.all(state);
+    let commands = CommandManager.current(state);
+    let menuBar' =
+      Feature_MenuBar.update(~contextKeys, ~commands, msg, state.menuBar);
     ({...state, menuBar: menuBar'}, Isolinear.Effect.none);
 
   | Messages(msg) =>
