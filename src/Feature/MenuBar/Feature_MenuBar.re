@@ -20,13 +20,14 @@ type model = {
 };
 
 type outmsg =
-  | Nothing;
+  | Nothing
+  | ExecuteCommand({command: string});
 
 let update = (~contextKeys, ~commands, msg, model) => {
   switch (msg) {
-  | MouseOver(_) => model
+  | MouseOver(_) => (model, Nothing)
 
-  | MouseOut(_) => model
+  | MouseOut(_) => (model, Nothing)
 
   | MouseClicked({uniqueId}) =>
     let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
@@ -53,10 +54,10 @@ let update = (~contextKeys, ~commands, msg, model) => {
            {activePath: uniqueId, contextMenu};
          });
 
-    {...model, activeSession: session};
+    ({...model, activeSession: session}, Nothing);
 
   | ContextMenu(contextMenuMsg) =>
-    let (activeSession', _eff) =
+    let (activeSession', eff) =
       model.activeSession
       |> Option.map(session => {
            let (contextMenu', outmsg) =
@@ -70,15 +71,16 @@ let update = (~contextKeys, ~commands, msg, model) => {
                Some({...session, contextMenu: contextMenu'}),
                Nothing,
              )
-           | Component_ContextMenu.Selected({data}) =>
-             prerr_endline("DATA: " ++ data);
-             failwith(data);
+           | Component_ContextMenu.Selected({data}) => (
+               None,
+               ExecuteCommand({command: data}),
+             )
            | Component_ContextMenu.Cancelled => (None, Nothing)
            };
          })
       |> Option.value(~default=(model.activeSession, Nothing));
 
-    {...model, activeSession: activeSession'};
+    ({...model, activeSession: activeSession'}, eff);
   };
 };
 

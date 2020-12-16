@@ -9,6 +9,10 @@ let initial:
   (~menus: list(MenuBar.Schema.menu), ~items: list(MenuBar.Schema.item)) =>
   model;
 
+type outmsg =
+  | Nothing
+  | ExecuteCommand({command: string});
+
 let update:
   (
     ~contextKeys: WhenExpr.ContextKeys.t,
@@ -16,7 +20,7 @@ let update:
     msg,
     model
   ) =>
-  model;
+  (model, outmsg);
 
 module Global = Global;
 

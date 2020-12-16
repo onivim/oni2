@@ -18,6 +18,13 @@ module Internal = {
     );
   };
 
+  let executeCommandEffect = command => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="features.executeCommand", dispatch =>
+      dispatch(Actions.KeybindingInvoked({command: command}))
+    );
+  };
+
   let setThemesEffect =
       (~themes: list(Exthost.Extension.Contributions.Theme.t)) => {
     switch (themes) {
@@ -625,9 +632,15 @@ let update =
   | MenuBar(msg) =>
     let contextKeys = Oni_Model.ContextKeys.all(state);
     let commands = CommandManager.current(state);
-    let menuBar' =
+    let (menuBar', outmsg) =
       Feature_MenuBar.update(~contextKeys, ~commands, msg, state.menuBar);
-    ({...state, menuBar: menuBar'}, Isolinear.Effect.none);
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | ExecuteCommand({command}) => Internal.executeCommandEffect(command)
+      };
+    ({...state, menuBar: menuBar'}, eff);
 
   | Messages(msg) =>
     let (model, outmsg) = Feature_Messages.update(msg, state.messages);
