@@ -198,6 +198,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       contextKeys
       commands
       model={state.menuBar}
+      dispatch={msg => dispatch(Actions.MenuBar(msg))}
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>

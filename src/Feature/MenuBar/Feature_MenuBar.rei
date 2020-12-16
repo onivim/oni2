@@ -21,6 +21,7 @@ module View: {
       ~contextKeys: WhenExpr.ContextKeys.t,
       ~commands: Command.Lookup.t(_),
       ~model: model,
+      ~dispatch: msg => unit,
       unit
     ) =>
     Revery.UI.element;

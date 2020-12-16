@@ -9,6 +9,8 @@ module Colors = Feature_Theme.Colors;
 module Constants = {
   let menuWidth = 200;
   // let maxMenuHeight = 600;
+
+  let overlayY = 30;
 };
 
 // MODEL
@@ -214,7 +216,7 @@ module View = {
 
       let backdrop = [
         position(`Absolute),
-        top(0),
+        top(Constants.overlayY), // TODO
         bottom(0),
         left(0),
         right(0),
@@ -288,7 +290,7 @@ module View = {
 
         switch (maybeBbox) {
         | Some((bbox: Math.BoundingBox2d.t)) =>
-          let (x, y, width, _) = bbox |> Math.BoundingBox2d.getBounds;
+          let (x, y, width, height) = bbox |> Math.BoundingBox2d.getBounds;
 
           let x =
             switch (orientation) {
@@ -297,8 +299,15 @@ module View = {
             | (_, `Right) => x -. width
             };
 
+          let y =
+            switch (orientation) {
+            | (`Top, _) => y
+            | (`Middle, _) => y +. height /. 2.
+            | (`Bottom, _) => y
+            }
+
           let x = int_of_float(x) + offsetX;
-          let y = int_of_float(y) + offsetY;
+          let y = int_of_float(y) + offsetY - Constants.overlayY;
 
           Overlay.setMenu(
             id,

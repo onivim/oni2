@@ -93,6 +93,7 @@ module Menu = {
     | Item(Item.t);
 
   let title = ({title, _}: Schema.menu) => title;
+  let uniqueId = ({uniqueId, _}: Schema.menu) => uniqueId;
 
   let contents = (_, _) => [];
 };

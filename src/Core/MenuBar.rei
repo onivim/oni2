@@ -35,6 +35,7 @@ module Menu: {
     | Item(Item.t);
 
   let title: t => string;
+  let uniqueId: t => string;
 
   let contents: (t, builtMenu) => list(contentItem);
 };

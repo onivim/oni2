@@ -2,16 +2,41 @@ open Oni_Core;
 open MenuBar;
 
 [@deriving show]
-type msg = unit;
+type msg = 
+| MouseOver({ uniqueId: string })
+| MouseOut({ uniqueId: string })
+| MouseClicked({ uniqueId: string });
 
-type model = {menuSchema: Schema.t};
+type model = {
+  menuSchema: Schema.t,
+  activePath: option(string),
+};
 
-let update = (_msg, model) => model;
+let update = (msg, model) => {
+  switch (msg) {
+  | MouseOver(_) => model
+  
+  | MouseOut(_) => model
+
+  | MouseClicked({uniqueId}) => 
+    ({
+      ...model,
+      activePath: Some(uniqueId)
+    })
+  }
+}
+
+let isActive = (uniqueId, model) => {
+  switch (model.activePath) {
+  | None => false
+  | Some(activePath) => Utility.StringEx.contains(uniqueId, activePath)
+  }
+}
 
 let initial = schema => {
   let global = Global.[application, file, edit, view] |> Schema.menus;
 
-  {menuSchema: Schema.union(global, schema)};
+  {activePath: None, menuSchema: Schema.union(global, schema)};
 };
 
 module Global = Global;
@@ -31,14 +56,32 @@ module View = {
     let text = fg => [color(fg)];
   };
 
-  let topMenu = (~font: UiFont.t, ~title, ~color, ()) => {
-    <View style=Style.[paddingHorizontal(6)]>
+  let topMenu = (~model, ~theme, ~dispatch, ~uniqueId, ~font: UiFont.t, ~title, ~color, ()) => {
+
+    let contextMenu = Component_ContextMenu.(make(
+      [
+        {label: "test1", data: "test1"},
+        {label: "test2", data: "test2"},
+        {label: "test3", data: "test3"}
+      ]
+    ));
+    let elem = isActive(uniqueId, model) ?
+    <Component_ContextMenu.View
+      model=contextMenu
+      orientation=(`Bottom, `Left)
+      dispatch={(_) => ()}
+      theme
+      font /> : React.empty;
+    <View style=Style.[paddingHorizontal(6)] 
+      onMouseDown={(_) => dispatch(MouseClicked({uniqueId: uniqueId}))}
+    >
       <Text
         style={Styles.text(color)}
         text=title
         fontFamily={font.family}
         fontSize={font.size}
       />
+      elem
     </View>;
   };
 
@@ -51,6 +94,7 @@ module View = {
         ~contextKeys,
         ~commands,
         ~model,
+        ~dispatch,
         (),
       ) => {
     let bgTheme =
@@ -72,7 +116,8 @@ module View = {
       topLevelMenuItems
       |> List.map(menu => {
            let title = MenuBar.Menu.title(menu);
-           <topMenu font title color=fgColor />;
+           let uniqueId = MenuBar.Menu.uniqueId(menu);
+           <topMenu model theme uniqueId dispatch font title color=fgColor />;
          })
       |> React.listToElement;
 
