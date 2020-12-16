@@ -507,19 +507,19 @@ module View = {
     let title =
       title(~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config);
     switch (Revery.Environment.os) {
-    // | Mac =>
-    //   <Mac
-    //     isFocused
-    //     windowDisplayMode
-    //     font
-    //     title
-    //     theme
-    //     dispatch
-    //     registration
-    //     registrationDispatch
-    //     height
-    //   />
-    | _ =>
+    | Mac =>
+      <Mac
+        isFocused
+        windowDisplayMode
+        font
+        title
+        theme
+        dispatch
+        registration
+        registrationDispatch
+        height
+      />
+    | Windows =>
       <Windows
         menuBar
         isFocused
@@ -531,8 +531,8 @@ module View = {
         registrationDispatch
         registration
       />
-    // | Linux => menuBar
-    // | _ => React.empty
+    | Linux => menuBar
+    | _ => React.empty
     };
   };
 };

@@ -9,6 +9,7 @@ module Schema = {
   };
 
   type group = {
+    order: int,
     parentId: uniqueId,
     items: list(item),
   };
@@ -21,8 +22,8 @@ module Schema = {
     title: string,
   };
 
-  let group = (~parent, items) => {
-    {parentId: parent.uniqueId, items};
+  let group = (~order=500, ~parent, items) => {
+    {order, parentId: parent.uniqueId, items};
   };
 
   let idToString = uniqueId => uniqueId |> String.concat(".");
@@ -137,7 +138,8 @@ module Menu = {
 
   let contents = (menu: t, builtMenu) => {
     StringMap.find_opt(uniqueId(menu), builtMenu.schema.items)
-    |> Option.value(~default=[]);
+    |> Option.value(~default=[])
+    |> List.sort((a: Schema.group, b) => Schema.(a.order - b.order));
   };
 };
 

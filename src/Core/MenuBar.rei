@@ -8,7 +8,7 @@ module Schema: {
 
   let command: Command.t(_) => item;
 
-  let group: (~parent: menu, list(item)) => group;
+  let group: (~order: int=?, ~parent: menu, list(item)) => group;
 
   let menu:
     (~order: int=?, ~uniqueId: string, ~parent: option(menu), string) => menu;

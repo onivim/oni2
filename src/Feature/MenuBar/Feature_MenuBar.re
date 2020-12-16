@@ -1,6 +1,7 @@
 open Oni_Core;
-open Utility;
 open MenuBar;
+
+module Colors = Feature_Theme.Colors;
 
 [@deriving show]
 type msg =
@@ -123,38 +124,59 @@ module View = {
     let text = fg => [color(fg)];
   };
 
-  let topMenu =
-      (~model, ~menu, ~theme, ~dispatch, ~font: UiFont.t, ~color, ()) => {
-    let uniqueId = Menu.uniqueId(menu);
-    let maybeElem =
-      isActive(uniqueId, model)
-        ? model.activeSession
-          |> Option.map(({contextMenu, _}) => {
-               <Component_ContextMenu.View
-                 model=contextMenu
-                 orientation=(`Bottom, `Left)
-                 dispatch={msg => dispatch(ContextMenu(msg))}
-                 theme
-                 font
-               />
-             })
-        : None;
-    let elem = maybeElem |> Option.value(~default=React.empty);
+  module TopMenu = {
+    let%component make =
+                  (
+                    ~model,
+                    ~menu,
+                    ~theme,
+                    ~dispatch,
+                    ~font: UiFont.t,
+                    ~color,
+                    ~backgroundColor,
+                    (),
+                  ) => {
+      let%hook (isFocused, setIsFocused) = Hooks.state(false);
 
-    <View
-      style=Style.[
-        cursor(Revery.MouseCursors.pointer),
-        paddingHorizontal(6),
-      ]
-      onMouseDown={_ => dispatch(MouseClicked({uniqueId: uniqueId}))}>
-      <Text
-        style={Styles.text(color)}
-        text={Menu.title(menu)}
-        fontFamily={font.family}
-        fontSize={font.size}
-      />
-      elem
-    </View>;
+      let uniqueId = Menu.uniqueId(menu);
+      let maybeElem =
+        isActive(uniqueId, model)
+          ? model.activeSession
+            |> Option.map(({contextMenu, _}) => {
+                 <Component_ContextMenu.View
+                   model=contextMenu
+                   orientation=(`Bottom, `Left)
+                   dispatch={msg => dispatch(ContextMenu(msg))}
+                   theme
+                   font
+                 />
+               })
+          : None;
+
+      let elem = maybeElem |> Option.value(~default=React.empty);
+
+      let bgColor =
+        isFocused
+          ? Colors.Menu.selectionBackground.from(theme) : backgroundColor;
+
+      <View
+        style=Style.[
+          cursor(Revery.MouseCursors.pointer),
+          paddingHorizontal(8),
+          backgroundColor(bgColor),
+        ]
+        onMouseOut={_ => setIsFocused(_ => false)}
+        onMouseOver={_ => setIsFocused(_ => true)}
+        onMouseDown={_ => dispatch(MouseClicked({uniqueId: uniqueId}))}>
+        <Text
+          style={Styles.text(color)}
+          text={Menu.title(menu)}
+          fontFamily={font.family}
+          fontSize={font.size}
+        />
+        elem
+      </View>;
+    };
   };
 
   let make =
@@ -183,7 +205,15 @@ module View = {
     let menuItems =
       topLevelMenuItems
       |> List.map(menu => {
-           <topMenu model menu theme dispatch font color=fgColor />
+           <TopMenu
+             model
+             menu
+             theme
+             dispatch
+             font
+             color=fgColor
+             backgroundColor=bgColor
+           />
          })
       |> React.listToElement;
 

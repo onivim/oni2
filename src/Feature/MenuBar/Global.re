@@ -38,8 +38,8 @@ module Items = {
 let menus = (isMac ? [OSX.application] : []) @ [file, edit, view, help];
 
 let groups = [
-  group(~parent=file, Items.File.[newFile]),
-  group(~parent=file, Items.File.[saveFile, saveAll]),
+  group(~order=100, ~parent=file, Items.File.[newFile]),
+  group(~order=200,~parent=file, Items.File.[saveFile, saveAll]),
   group(~parent=edit, Items.Edit.[undo, redo]),
   group(~parent=help, Items.Help.[changelog]),
 ];
