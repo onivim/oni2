@@ -110,7 +110,7 @@ let toString = (~meta="Meta", ~keyCodeToString, key) => {
     Printf.sprintf("Special(%s)", SpecialKey.show(special))
   | PhysicalKey({keycode, modifiers, _}) =>
     let buffer = Buffer.create(16);
-    let separator = " + ";
+    let separator = "+";
 
     let keyString = keyCodeToString(keycode);
 

@@ -14,3 +14,5 @@
 
 ### Infrastructure / Refactoring
 
+- #2853 - Input: Add APIs for querying contextually available bindings and consumed keys
+
