@@ -10,7 +10,11 @@ type item('data) = {
 
 type content('data) =
   | Item(item('data))
-  | Group(list(item('data)));
+  | Group(list(item('data)))
+  | Submenu({
+      label: string,
+      items: list(content('data)),
+    });
 
 // MODEL
 

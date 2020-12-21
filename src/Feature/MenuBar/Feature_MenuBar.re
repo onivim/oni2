@@ -46,7 +46,13 @@ let update = (~contextKeys, ~commands, msg, model) => {
                            data: Item.command(item),
                          }
                        );
-                  Component_ContextMenu.Group(items);
+                  //Component_ContextMenu.Group(items);
+                  Component_ContextMenu.(
+                    Submenu({
+                      label: "test",
+                      items: items |> List.map(i => Item(i)),
+                    })
+                  );
                 })
              |> Component_ContextMenu.make;
            {activePath: uniqueId, contextMenu};

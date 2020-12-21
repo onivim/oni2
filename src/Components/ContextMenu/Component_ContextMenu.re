@@ -7,7 +7,7 @@ open Revery.UI.Components;
 module Colors = Feature_Theme.Colors;
 
 module Constants = {
-  let menuWidth = 200;
+  let menuWidth = 175;
   // let maxMenuHeight = 600;
 
   let overlayY = 30;
@@ -21,28 +21,44 @@ type item('data) = {
   data: [@opaque] 'data,
 };
 
+[@deriving show({with_path: false})]
 type content('data) =
   | Item(item('data))
-  | Group(list(item('data)));
+  | Group(list(item('data)))
+  | Submenu({
+      label: string,
+      items: list(content('data)),
+    });
+
+[@deriving show]
+type submenu('data) = {
+  items: list(content('data)),
+  yOffset: float,
+};
 
 [@deriving show]
 type msg('data) =
   | ItemClicked({data: 'data})
-  | ClickedOutside;
+  | ClickedOutside
+  | SubmenuHovered({ revSubmenus: list(submenu('data)) })
 
 type outmsg('data) =
   | Nothing
   | Selected({data: 'data})
   | Cancelled;
 
-type model('data) = {items: list(content('data))};
+type model('data) = {
+items: list(content('data)),
+openSubmenus: list(submenu('data)),
+};
 
-let make = items => {items: items};
+let make = items => {items: items, openSubmenus: []};
 
 let update = (msg, model) => {
   switch (msg) {
   | ItemClicked({data}) => (model, Selected({data: data}))
   | ClickedOutside => (model, Cancelled)
+  | SubmenuHovered({ revSubmenus }) => ({...model, openSubmenus: List.rev(revSubmenus)}, Nothing)
   };
 };
 
@@ -82,20 +98,20 @@ module View = {
 
     let component = React.Expert.component("MenuItem");
     let make:
-      'data.
       (
-        ~item: item('data),
+        ~label: string,
         ~theme: ColorTheme.Colors.t,
         ~font: UiFont.t,
         ~onClick: unit => unit,
+        ~onHover: Revery.Math.BoundingBox2d.t => unit,
         unit
       ) =>
-      _
-     =
-      (~item, ~theme, ~font, ~onClick, ()) =>
+      _ =
+      (~label, ~theme, ~font, ~onClick, ~onHover, ()) =>
         component(hooks => {
           let ((isFocused, setIsFocused), hooks) =
             Hooks.state(false, hooks);
+        let ((maybeBbox, setBbox), hooks) = Hooks.state(None, hooks);
 
           // let iconView =
           //   switch (item.icon) {
@@ -116,7 +132,7 @@ module View = {
               fontFamily={font.family}
               fontSize=Constants.fontSize
               style
-              text={item.label}
+              text=label
             />;
           };
 
@@ -124,8 +140,11 @@ module View = {
             <Clickable onClick>
               <View
                 style={Styles.container(~theme, ~isFocused)}
+                onBoundingBoxChanged={(bbox: Math.BoundingBox2d.t) => {
+                  setBbox(_ => Some(bbox))
+                }}
                 onMouseOut={_ => setIsFocused(_ => false)}
-                onMouseOver={_ => setIsFocused(_ => true)}>
+                onMouseOver={_ => { Option.iter(bbox => onHover(bbox), maybeBbox); setIsFocused(_ => true); }}>
                 // iconView
                  labelView </View>
             </Clickable>,
@@ -164,7 +183,7 @@ module View = {
 
     let component = React.Expert.component("Submenu");
     let make =
-        (~items, ~x, ~y, ~theme, ~font, ~onItemSelect, ()) =>
+        (~items, ~x, ~y, ~theme, ~font, ~onItemSelect, ~onSubmenuHover, ()) =>
       component(hooks => {
 
         (
@@ -173,15 +192,28 @@ module View = {
             {items
              |> List.mapi((idx, item) => {
                   switch (item) {
+                  | Submenu({label, items}) =>
+                    let onClick = () => ();
+                    let onHover = (bbox) => {
+                      let (_x, yOffset, _width, _height) = Revery.Math.BoundingBox2d.getBounds(bbox)
+                      onSubmenuHover({yOffset, items: items });
+                    };
+                    [
+                      <MenuItem label theme font onClick onHover />,
+                    ];
+
                   | Item(item) =>
                     let onClick = () => onItemSelect(item);
-                    [<MenuItem item theme font onClick />];
+                    let onHover = (_) => ();
+                    [<MenuItem label={item.label} theme font onClick onHover />];
+
                   | Group(items) =>
                     let items' =
                       items
                       |> List.map(item => {
                            let onClick = () => onItemSelect(item);
-                           <MenuItem item theme font onClick />;
+                           let onHover = (_) => ();
+                           <MenuItem label={item.label} theme font onClick onHover />;
                          });
 
                     idx == 0 ? items' : [<divider theme />, ...items'];
@@ -210,19 +242,47 @@ module View = {
 
     let component = React.Expert.component("Menu");
     let make =
-        (~model, ~x, ~y, ~theme, ~font, ~onItemSelect, ()) =>
+        (~model, ~x, ~y, ~theme, ~font, ~onItemSelect, ~onSubmenuHover, ()) =>
       component(hooks => {
-
-        (
-          <View
-            style={Styles.container(~x, ~y, ~theme)}>
+        let rootMenu = 
             <Submenu
               items={model.items}
               x
               y
               theme
               font
-              onItemSelect />
+              onItemSelect 
+              onSubmenuHover={(items) => onSubmenuHover([items])}
+              />;
+
+        let (menus, _, _) = 
+        model.openSubmenus
+          |> List.fold_left((acc, curr: submenu('a)) => {
+            let (menus, submenus, xOffset) = acc;
+
+            let newX = xOffset + Constants.menuWidth;
+            let newSubmenus = [curr, ...submenus];
+            let nextMenu = 
+              <Submenu
+                items={curr.items}
+                x=newX
+                y={int_of_float(curr.yOffset) - Constants.overlayY}
+                theme
+                font
+                onItemSelect
+                onSubmenuHover={(items) => onSubmenuHover([items, ...newSubmenus])}
+                />;
+
+            ([nextMenu, ...menus], newSubmenus, newX)
+          
+        }, ([rootMenu], [], x));
+
+let menuElements = menus |> React.listToElement;
+
+        (
+          <View
+            style={Styles.container(~x, ~y=0, ~theme)}>
+            {menuElements}
           </View>,
           hooks,
         );
@@ -311,6 +371,9 @@ module View = {
         let onItemSelect = item => {
           dispatch(ItemClicked({data: item.data}));
         };
+        let onSubmenuHover = (revSubmenus) => {
+          dispatch(SubmenuHovered({ revSubmenus: revSubmenus }))
+        };
         let ((id, _), hooks) = Hooks.state(generateId(), hooks);
         let ((maybeBbox, setBbox), hooks) = Hooks.state(None, hooks);
         let ((), hooks) =
@@ -350,6 +413,7 @@ module View = {
               theme
               font
               onItemSelect
+              onSubmenuHover
             />,
             onCancel,
           );
