@@ -1,7 +1,7 @@
+type msg;
+
 module Spring: {
   type t;
-
-  type msg;
 
   let make:
     (~restThreshold: float=?, ~options: Revery.UI.Spring.Options.t=?, float) =>
@@ -33,11 +33,12 @@ module ColorTransition: {
 };
 
 type t('value);
-type msg;
 
 let get: t('value) => 'value;
 let isComplete: t(_) => bool;
+let isActive: t(_) => bool;
 let constant: 'value => t('value);
 let make: Revery.UI.Animation.t('value) => t('value);
 let update: (msg, t('value)) => t('value);
 let sub: t(_) => Isolinear.Sub.t(msg);
+let subAny: (~uniqueId: string) => Isolinear.Sub.t(msg);
