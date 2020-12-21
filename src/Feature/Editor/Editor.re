@@ -167,6 +167,10 @@ let overrideAnimation = (~animated, editor) => {
   isAnimationOverride: animated,
 };
 
+let isAnimatingScroll = ({scrollX, scrollY, _}) => {
+  Spring.isActive(scrollX) || Spring.isActive(scrollY);
+};
+
 let getBufferLineCount = ({buffer, _}) =>
   EditorBuffer.numberOfLines(buffer);
 

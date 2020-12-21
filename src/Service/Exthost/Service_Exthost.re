@@ -683,7 +683,7 @@ module Sub = {
     client: Exthost.Client.t,
     buffer: Oni_Core.Buffer.t,
     startLine: int, // One-based start line
-    stopLine: int, // One-based stop line
+    stopLine: int // One-based stop line
   };
 
   let idFromBufferRange = (~handle, ~buffer, ~startLine, ~stopLine) => {
@@ -702,13 +702,14 @@ module Sub = {
       type nonrec msg = result(list(Exthost.CodeLens.t), string);
       type nonrec params = codeLensesParams;
 
-      type state = unit;
+      type state = ref(bool);
 
       let name = "Service_Exthost.CodeLensesSubscription";
       let id = ({handle, buffer, startLine, stopLine, _}: params) =>
         idFromBufferRange(~handle, ~buffer, ~startLine, ~stopLine);
 
       let init = (~params, ~dispatch) => {
+        let active = ref(true);
         let init =
           Exthost.Request.LanguageFeatures.provideCodeLenses(
             ~handle=params.handle,
@@ -716,64 +717,77 @@ module Sub = {
             params.client,
           );
 
-        let resolveLens = (codeLens: Exthost.CodeLens.t) => {
-          switch (codeLens.command) {
-          | Some(_) => Lwt.return(Some(codeLens))
-          | None => Exthost.Request.LanguageFeatures.resolveCodeLens(
-            ~handle=params.handle,
-            ~codeLens=codeLens,
-            params.client,
-          )
-        };
-        };
-
-        let promise = Lwt.bind(init, initResult => {
-          let unresolvedLenses = initResult
-          |> Option.value(~default=[])
-          |> List.filter(_ => true); // TODO: Filter range
-
-          let resolvePromises = unresolvedLenses
-          |> List.map(resolveLens);
-
-          let join: (list(Exthost.CodeLens.t), option(Exthost.CodeLens.t)) =>
-          list(Exthost.CodeLens.t) = (acc, cur) => {
-            switch (cur) {
-            | None => acc
-            | Some(lens) => [lens, ...acc]
-            }
+        let resolveLens = (codeLens: Exthost.CodeLens.t) =>
+          if (! active^) {
+            // If the subscription is over, don't both resolving...
+            Lwt.return(
+              None,
+            );
+          } else {
+            switch (codeLens.command) {
+            | Some(_) => Lwt.return(Some(codeLens))
+            | None =>
+              Exthost.Request.LanguageFeatures.resolveCodeLens(
+                ~handle=params.handle,
+                ~codeLens,
+                params.client,
+              )
+            };
           };
 
-          Utility.LwtEx.all(
-          ~initial=[], 
-          join,
-          resolvePromises);
-        });
+        let promise =
+          Lwt.bind(
+            init,
+            initResult => {
+              let unresolvedLenses =
+                initResult
+                |> Option.value(~default=[])
+                |> List.filter((lens: Exthost.CodeLens.t) => {
+                     Exthost.OneBasedRange.(
+                       {
+                         lens.range.startLineNumber >= params.startLine
+                         && lens.range.endLineNumber <= params.stopLine;
+                       }
+                     )
+                   });
 
+              let resolvePromises = unresolvedLenses |> List.map(resolveLens);
 
-        Lwt.on_success(
-          promise,
-          codeLenses => {
-            dispatch(Ok(codeLenses));
-          },
-        );
+              let join:
+                (list(Exthost.CodeLens.t), option(Exthost.CodeLens.t)) =>
+                list(Exthost.CodeLens.t) =
+                (acc, cur) => {
+                  switch (cur) {
+                  | None => acc
+                  | Some(lens) => [lens, ...acc]
+                  };
+                };
+
+              Utility.LwtEx.all(~initial=[], join, resolvePromises);
+            },
+          );
+
+        Lwt.on_success(promise, codeLenses => {dispatch(Ok(codeLenses))});
 
         Lwt.on_failure(promise, exn => {
           dispatch(Error(Printexc.to_string(exn)))
         });
-        ();
+        active;
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state as _) => {
-        ();
+      let dispose = (~params as _, ~state) => {
+        state := false;
       };
     });
 
   let codeLenses = (~handle, ~buffer, ~startLine, ~stopLine, ~toMsg, client) => {
     let startLine = EditorCoreTypes.LineNumber.toOneBased(startLine);
     let stopLine = EditorCoreTypes.LineNumber.toOneBased(stopLine);
-    CodeLensesSubscription.create({handle, buffer, client, startLine, stopLine}: codeLensesParams)
+    CodeLensesSubscription.create(
+      {handle, buffer, client, startLine, stopLine}: codeLensesParams,
+    )
     |> Isolinear.Sub.map(toMsg);
   };
 

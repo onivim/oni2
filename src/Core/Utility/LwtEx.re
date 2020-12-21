@@ -1,4 +1,9 @@
-let all = (~initial: 'acc, join: ('acc, 'cur) => 'acc, promises: list(Lwt.t('cur))) => {
+let all =
+    (
+      ~initial: 'acc,
+      join: ('acc, 'cur) => 'acc,
+      promises: list(Lwt.t('cur)),
+    ) => {
   List.fold_left(
     (accPromise, promise) => {
       let%lwt acc = accPromise;

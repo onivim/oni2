@@ -209,12 +209,13 @@ let start =
     let config = Model.Selectors.configResolver(state);
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
+    let activeEditor = state.layout |> Feature_Layout.activeEditor;
 
     let isInsertMode =
-      state.layout
-      |> Feature_Layout.activeEditor
-      |> Feature_Editor.Editor.mode
-      |> Vim.Mode.isInsert;
+      activeEditor |> Feature_Editor.Editor.mode |> Vim.Mode.isInsert;
+
+    let isAnimatingScroll =
+      activeEditor |> Feature_Editor.Editor.isAnimatingScroll;
 
     let visibleRanges =
       visibleBuffersAndRanges
@@ -223,6 +224,12 @@ let start =
            |> Option.map(buffer => {(buffer, ranges)})
          })
       |> Core.Utility.OptionEx.values;
+
+    let topVisibleBufferLine =
+      activeEditor |> Feature_Editor.Editor.getTopVisibleBufferLine;
+
+    let bottomVisibleBufferLine =
+      activeEditor |> Feature_Editor.Editor.getBottomVisibleBufferLine;
 
     let visibleBuffers =
       visibleBuffersAndRanges
@@ -347,10 +354,12 @@ let start =
            Feature_LanguageSupport.sub(
              ~config,
              ~isInsertMode,
+             ~isAnimatingScroll,
              ~activeBuffer,
              ~activePosition,
+             ~topVisibleBufferLine,
+             ~bottomVisibleBufferLine,
              ~visibleBuffers,
-             ~visibleBuffersAndRanges,
              ~client=extHostClient,
              state.languageSupport,
            )

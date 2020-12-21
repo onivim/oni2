@@ -229,7 +229,14 @@ let update = (msg, model) =>
 // SUBSCRIPTION
 
 module Sub = {
-  let create = (~visibleBuffers, ~visibleBuffersAndRanges, ~client, model) => {
+  let create =
+      (
+        ~topVisibleBufferLine,
+        ~bottomVisibleBufferLine,
+        ~visibleBuffers,
+        ~client,
+        model,
+      ) => {
     let codeLenses =
       visibleBuffers
       |> List.map(buffer => {
@@ -251,8 +258,8 @@ module Sub = {
                 Service_Exthost.Sub.codeLenses(
                   ~handle,
                   ~buffer,
-                  ~startLine=EditorCoreTypes.LineNumber.zero,
-                  ~stopLine=EditorCoreTypes.LineNumber.(zero + 1000),
+                  ~startLine=topVisibleBufferLine,
+                  ~stopLine=bottomVisibleBufferLine,
                   ~toMsg,
                   client,
                 );
@@ -260,70 +267,31 @@ module Sub = {
          })
       |> List.flatten;
 
-    // let codeLensResolve =
-    //   visibleBuffersAndRanges
-    //   |> List.map(((bufferId, ranges: list(EditorCoreTypes.Range.t))) => {
-    //        let lenses =
-    //          model.bufferToUnresolvedLenses
-    //          |> IntMap.find_opt(bufferId)
-    //          |> Option.value(~default=[]);
-
-    //        lenses
-    //        |> List.filter_map(((handle, lens)) => {
-    //             let toMsg = maybeLens => {
-    //               switch (maybeLens) {
-    //               | Ok(resolvedLens) =>
-    //                 CodeLensResolved({
-    //                   handle,
-    //                   bufferId,
-    //                   oldLens: lens,
-    //                   resolvedLens,
-    //                 })
-    //               | Error(msg) =>
-    //                 Log.errorf(m => m("Codelens resolve failed: %s", msg));
-    //                 CodeLensResolveFailed({handle, bufferId, lens, msg});
-    //               };
-    //             };
-
-    //             if (ranges
-    //                 |> List.exists(range => {
-    //                      let startLine =
-    //                        Exthost.(CodeLens.(lens.range.startLineNumber));
-    //                      EditorCoreTypes.(
-    //                        Range.contains(
-    //                          Location.{
-    //                            line: Index.fromOneBased(startLine),
-    //                            column: Index.zero,
-    //                          },
-    //                          range,
-    //                        )
-    //                      );
-    //                    })) {
-    //               Some(
-    //                 Service_Exthost.Sub.codeLens(
-    //                   ~toMsg,
-    //                   ~handle,
-    //                   ~lens,
-    //                   client,
-    //                 ),
-    //               );
-    //             } else {
-    //               None;
-    //             };
-    //           });
-    //      })
-    //   |> List.flatten;
-
-    codeLenses
-    |> Isolinear.Sub.batch;
+    codeLenses |> Isolinear.Sub.batch;
   };
 };
 
 module Configuration = Feature_Configuration.GlobalConfiguration;
 
-let sub = (~config, ~visibleBuffers, ~visibleBuffersAndRanges, ~client, model) =>
-  if (Configuration.Experimental.Editor.codeLensEnabled.get(config)) {
-    Sub.create(~visibleBuffers, ~visibleBuffersAndRanges, ~client, model);
+let sub =
+    (
+      ~config,
+      ~isAnimatingScroll,
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
+      ~visibleBuffers,
+      ~client,
+      model,
+    ) =>
+  if (!isAnimatingScroll
+      && Configuration.Experimental.Editor.codeLensEnabled.get(config)) {
+    Sub.create(
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
+      ~visibleBuffers,
+      ~client,
+      model,
+    );
   } else {
     Isolinear.Sub.none;
   };

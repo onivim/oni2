@@ -554,10 +554,12 @@ let sub =
     (
       ~config,
       ~isInsertMode,
+      ~isAnimatingScroll,
       ~activeBuffer,
       ~activePosition,
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
       ~visibleBuffers,
-      ~visibleBuffersAndRanges,
       ~client,
       {
         codeLens,
@@ -571,8 +573,10 @@ let sub =
   let codeLensSub =
     ShadowedCodeLens.sub(
       ~config,
+      ~isAnimatingScroll,
       ~visibleBuffers,
-      ~visibleBuffersAndRanges,
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
       ~client,
       codeLens,
     )

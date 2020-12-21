@@ -115,10 +115,12 @@ let sub:
   (
     ~config: Oni_Core.Config.resolver,
     ~isInsertMode: bool,
+    ~isAnimatingScroll: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
     ~activePosition: CharacterPosition.t,
+    ~topVisibleBufferLine: EditorCoreTypes.LineNumber.t,
+    ~bottomVisibleBufferLine: EditorCoreTypes.LineNumber.t,
     ~visibleBuffers: list(Oni_Core.Buffer.t),
-    ~visibleBuffersAndRanges: list((int, list(EditorCoreTypes.Range.t))),
     ~client: Exthost.Client.t,
     model
   ) =>

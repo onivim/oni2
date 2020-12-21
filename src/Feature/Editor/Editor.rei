@@ -87,6 +87,8 @@ let setMode: (Vim.Mode.t, t) => t;
 
 let getBufferLineCount: t => int;
 
+let isAnimatingScroll: t => bool;
+
 let getTokenAt:
   (~languageConfiguration: LanguageConfiguration.t, CharacterPosition.t, t) =>
   option(CharacterRange.t);
