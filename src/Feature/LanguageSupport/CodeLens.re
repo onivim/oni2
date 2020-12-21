@@ -39,7 +39,6 @@ type handleToLenses = IntMap.t(list(codeLens));
 type model = {
   providers: list(provider),
   bufferToLenses: IntMap.t(handleToLenses),
-  bufferToUnresolvedLenses: IntMap.t(list((int, Exthost.CodeLens.t))),
 };
 
 type outmsg =
@@ -60,11 +59,7 @@ let get = (~bufferId, {bufferToLenses, _}) => {
   |> List.flatten;
 };
 
-let initial = {
-  providers: [],
-  bufferToLenses: IntMap.empty,
-  bufferToUnresolvedLenses: IntMap.empty,
-};
+let initial = {providers: [], bufferToLenses: IntMap.empty};
 
 [@deriving show]
 type msg =
@@ -125,41 +120,24 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
      );
 };
 
-let resolveLens = (~bufferId, ~handle, ~oldLens, ~resolvedLens, model) => {
-  let bufferToUnresolvedLenses' =
-    model.bufferToUnresolvedLenses
-    |> IntMap.update(
-         bufferId,
-         fun
-         | None => None
-         | Some(lenses) => {
-             lenses
-             |> List.filter(((h, lens)) =>
-                  handle != h
-                  || Exthost.CodeLens.(lens.cacheId != oldLens.cacheId)
-                )
-             |> Option.some;
-           },
-       );
-
-  let bufferToLenses' =
-    model.bufferToLenses
-    |> IntMap.update(
-         bufferId,
-         fun
-         | None =>
-           IntMap.empty
-           |> addLenses(handle, bufferId, [resolvedLens])
-           |> Option.some
-         | Some(map) =>
-           map |> addLenses(handle, bufferId, [resolvedLens]) |> Option.some,
-       );
-
-  {
-    ...model,
-    bufferToUnresolvedLenses: bufferToUnresolvedLenses',
-    bufferToLenses: bufferToLenses',
+let removeLensesInRange = (startLine, stopLine, handle, handleToLenses) => {
+  let start1 = EditorCoreTypes.LineNumber.toOneBased(startLine);
+  let stop1 = EditorCoreTypes.LineNumber.toOneBased(stopLine);
+  let filter = (lens: codeLens) => {
+    Exthost.CodeLens.(
+      {
+        let line = lens.lens.range.startLineNumber;
+        !(line >= start1 && line <= stop1);
+      }
+    );
   };
+  handleToLenses
+  |> IntMap.update(
+       handle,
+       fun
+       | None => None
+       | Some(lenses) => lenses |> List.filter(filter) |> Option.some,
+     );
 };
 
 let update = (msg, model) =>
@@ -176,7 +154,10 @@ let update = (msg, model) =>
              |> addLenses(handle, bufferId, lenses)
              |> Option.some
            | Some(existing) =>
-             existing |> addLenses(handle, bufferId, lenses) |> Option.some,
+             existing
+             |> removeLensesInRange(startLine, stopLine, handle)
+             |> addLenses(handle, bufferId, lenses)
+             |> Option.some,
          );
 
     let model' = {...model, bufferToLenses};

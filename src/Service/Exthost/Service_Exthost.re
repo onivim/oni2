@@ -686,14 +686,13 @@ module Sub = {
     stopLine: int // One-based stop line
   };
 
-  let idFromBufferRange = (~handle, ~buffer, ~startLine, ~stopLine) => {
+  let idFromBufferRange = (~handle, ~buffer, ~startLine) => {
     Printf.sprintf(
-      "%d-%d-%d:%d-%d",
+      "%d-%d-%d:%d",
       handle,
       Oni_Core.Buffer.getId(buffer),
       Oni_Core.Buffer.getSaveTick(buffer),
       startLine,
-      stopLine,
     );
   };
 
@@ -705,8 +704,8 @@ module Sub = {
       type state = ref(bool);
 
       let name = "Service_Exthost.CodeLensesSubscription";
-      let id = ({handle, buffer, startLine, stopLine, _}: params) =>
-        idFromBufferRange(~handle, ~buffer, ~startLine, ~stopLine);
+      let id = ({handle, buffer, startLine, _}: params) =>
+        idFromBufferRange(~handle, ~buffer, ~startLine);
 
       let init = (~params, ~dispatch) => {
         let active = ref(true);

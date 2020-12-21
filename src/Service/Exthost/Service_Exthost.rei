@@ -146,16 +146,6 @@ module Sub: {
     ) =>
     Isolinear.Sub.t('a);
 
-  // Subscription to resolve a code lens
-  // let codeLens:
-  //   (
-  //     ~handle: int,
-  //     ~lens: Exthost.CodeLens.t,
-  //     ~toMsg: result(Exthost.CodeLens.t, string) => 'msg,
-  //     Exthost.Client.t
-  //   ) =>
-  //   Isolinear.Sub.t('msg);
-
   let completionItems:
     // TODO: ~base: option(string),
     (

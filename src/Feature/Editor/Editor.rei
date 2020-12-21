@@ -40,11 +40,15 @@ let makeInlineElement:
 
 let setInlineElements: (~key: string, ~elements: list(inlineElement), t) => t;
 
-let replaceInlineElements: (
-  ~key: string,
-~startLine: EditorCoreTypes.LineNumber.t,
-~stopLine: EditorCoreTypes.LineNumber.t,  ~elements: list(inlineElement), t) => t;
-
+let replaceInlineElements:
+  (
+    ~key: string,
+    ~startLine: EditorCoreTypes.LineNumber.t,
+    ~stopLine: EditorCoreTypes.LineNumber.t,
+    ~elements: list(inlineElement),
+    t
+  ) =>
+  t;
 
 let setInlineElementSize:
   (

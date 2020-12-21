@@ -894,7 +894,6 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
 };
 
 let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => {
-  
   // TODO
   ignore(startLine);
   ignore(stopLine);
