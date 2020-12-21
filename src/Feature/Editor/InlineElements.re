@@ -2,8 +2,6 @@ open Oni_Core;
 open EditorCoreTypes;
 open Utility;
 
-let a = 1;
-
 module Animation = {
   open Revery;
   open Revery.UI;
