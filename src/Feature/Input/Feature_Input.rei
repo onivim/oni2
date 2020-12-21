@@ -63,6 +63,14 @@ let keyDown:
 let text:
   (~text: string, ~time: Revery.Time.t, model) => (model, list(effect));
 
+let candidates:
+  (~config: Config.resolver, ~context: WhenExpr.ContextKeys.t, model) =>
+  list((EditorInput.Matcher.t, execute));
+
+let keyPressToString: EditorInput.KeyPress.t => string;
+
+let consumedKeys: model => list(EditorInput.KeyPress.t);
+
 let keyUp:
   (
     ~config: Config.resolver,
@@ -104,6 +112,12 @@ module View: {
   module Overlay: {
     let make:
       (~input: model, ~uiFont: UiFont.t, ~bottom: int, ~right: int, unit) =>
+      Revery.UI.element;
+  };
+
+  module Matcher: {
+    let make:
+      (~matcher: EditorInput.Matcher.t, ~font: UiFont.t, unit) =>
       Revery.UI.element;
   };
 };
