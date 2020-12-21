@@ -139,20 +139,12 @@ module Sub: {
     (
       ~handle: int,
       ~buffer: Oni_Core.Buffer.t,
+      ~startLine: EditorCoreTypes.LineNumber.t,
+      ~stopLine: EditorCoreTypes.LineNumber.t,
       ~toMsg: result(list(Exthost.CodeLens.t), string) => 'a,
       Exthost.Client.t
     ) =>
     Isolinear.Sub.t('a);
-
-  // Subscription to resolve a code lens
-  let codeLens:
-    (
-      ~handle: int,
-      ~lens: Exthost.CodeLens.t,
-      ~toMsg: result(Exthost.CodeLens.t, string) => 'msg,
-      Exthost.Client.t
-    ) =>
-    Isolinear.Sub.t('msg);
 
   let completionItems:
     // TODO: ~base: option(string),

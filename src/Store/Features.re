@@ -562,7 +562,7 @@ let update =
           state,
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
         )
-      | CodeLensesChanged({bufferId, lenses}) =>
+      | CodeLensesChanged({bufferId, startLine, stopLine, lenses}) =>
         let inlineElements = editor =>
           lenses
           |> List.map(lens => {
@@ -592,7 +592,9 @@ let update =
           state.layout
           |> Feature_Layout.map(editor =>
                if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
-                 Feature_Editor.Editor.setInlineElements(
+                 Feature_Editor.Editor.replaceInlineElements(
+                   ~startLine,
+                   ~stopLine,
                    ~key="codelens",
                    ~elements=inlineElements(editor),
                    editor,

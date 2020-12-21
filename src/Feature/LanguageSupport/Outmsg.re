@@ -21,6 +21,8 @@ type internalMsg('a) =
   | NotifyFailure(string)
   | CodeLensesChanged({
       bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.codeLens),
     })
   | Effect(Isolinear.Effect.t('a));

@@ -10,7 +10,7 @@
 
 ### Performance
 
-- #2852 - Performance: Batch editor / codelens animations
+- #2852,#2864 - Performance: Batch editor / codelens animations
 
 ### Documentation
 
