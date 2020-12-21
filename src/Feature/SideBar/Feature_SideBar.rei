@@ -49,6 +49,7 @@ let initial: model;
 
 let width: model => int;
 let isOpen: model => bool;
+let isOpenByDefault: model => bool;
 let selected: model => pane;
 let location: model => location;
 
