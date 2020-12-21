@@ -1,3 +1,6 @@
+open Msg;
+type msg = Msg.t;
+
 module Spring = Spring;
 
 open Revery;
@@ -30,12 +33,9 @@ let constant = v => {
   make(animation);
 };
 
-type msg =
-  | Tick({totalTime: Revery.Time.t});
-
 let update = (msg, model) =>
   switch (msg) {
-  | Tick({totalTime}) =>
+  | Tick(totalTime) =>
     let (startTime, deltaTime) =
       switch (model.maybeStartTime) {
       | None => (totalTime, Time.zero)
@@ -57,6 +57,8 @@ let update = (msg, model) =>
     };
   };
 let isComplete = ({isComplete, _}) => isComplete;
+
+let isActive = model => !isComplete(model);
 let get = ({animation, duration, _}) => {
   Animation.valueAt(duration, animation);
 };
@@ -69,7 +71,7 @@ let sub = ({isComplete, uniqueId, tick, _}) =>
       ~uniqueId=uniqueId ++ string_of_int(tick),
       ~delay=Revery.Time.zero,
       ~msg=(~current) =>
-      Tick({totalTime: current})
+      Tick(current)
     );
   };
 
@@ -127,3 +129,8 @@ module ColorTransition = {
 
   let sub = ({animation, _}) => sub(animation);
 };
+
+let subAny = (~uniqueId) =>
+  Service_Time.Sub.once(~uniqueId, ~delay=Revery.Time.zero, ~msg=(~current) =>
+    Tick(current)
+  );

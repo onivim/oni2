@@ -3,8 +3,8 @@ open Revery.UI;
 
 // MODEL
 
-type msg =
-  | Tick(Revery.Time.t);
+open Msg;
+type msg = Msg.t;
 
 module UniqueId =
   UniqueId.Make({});
@@ -32,6 +32,10 @@ let make = (~restThreshold=1.0, ~options=Spring.Options.default, position) => {
 
 // UPDATE
 
+let isActive = ({spring, restThreshold, target, startTime, _}) => {
+  startTime == None || Float.abs(spring.value -. target) > restThreshold;
+};
+
 let update = (msg, model) => {
   switch (msg) {
   | Tick(time) =>
@@ -44,10 +48,6 @@ let update = (msg, model) => {
       Spring.tick(model.target, model.spring, model.options, timeSinceStart);
     {...model, startTime: Some(startTime), spring, tick: model.tick + 1};
   };
-};
-
-let isActive = ({spring, restThreshold, target, _}) => {
-  Float.abs(spring.value -. target) > restThreshold;
 };
 
 let get = ({spring, target, _} as model) =>
@@ -72,11 +72,7 @@ let set = (~instant: bool, ~position: float, model) => {
       spring: Spring.create(position, Revery.Time.now()),
     }
 
-  | Some(time) => {
-      ...model,
-      target: position,
-      spring: Spring.tick(model.target, model.spring, model.options, time),
-    }
+  | Some(_) => {...model, target: position}
   };
 };
 

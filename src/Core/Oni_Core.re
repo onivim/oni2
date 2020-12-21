@@ -34,6 +34,7 @@ module IntMap = Kernel.IntMap;
 module IntSet = Kernel.IntSet;
 module Json = Json;
 module Job = Job;
+module KeyedStringMap = Kernel.KeyedStringMap;
 module LanguageConfiguration = LanguageConfiguration;
 module LazyLoader = LazyLoader;
 module LineNumber = LineNumber;

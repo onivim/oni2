@@ -15,7 +15,7 @@ module Animation = {
 };
 
 module Constants = {
-  let maxElementsToAnimate = 10;
+  let maxElementsToAnimate = 100;
 };
 
 type msg =
@@ -157,12 +157,14 @@ type t = {
   keyToElements: [@opaque] IntMap.t(KeyMap.t(StringMap.t(element))),
   cache: [@opaque] Lazy.t(Cache.t),
   sortedElements: list(element),
+  isAnimating: bool,
 };
 
 let initial = {
   keyToElements: IntMap.empty,
   sortedElements: [],
   cache: Lazy.from_val(Cache.empty),
+  isAnimating: false,
 };
 
 let toString = ({keyToElements, _}) => {
@@ -232,6 +234,35 @@ let elementsToMap = (elements: list(element)) => {
        },
        IntMap.empty,
      );
+};
+
+module Internal = {
+  let isAnimating = (elements: list(element)) => {
+    let rec loop = elems => {
+      switch (elems) {
+      | [] => false
+      | [hd, ...tail] =>
+        if (!Component_Animation.isComplete(hd.opacity)
+            || !Component_Animation.isComplete(hd.height)) {
+          true;
+        } else {
+          loop(tail);
+        }
+      };
+    };
+
+    loop(elements);
+  };
+};
+
+let isAnimating = ({isAnimating, _}) => isAnimating;
+
+let makeConsistent = keyToElements => {
+  let sortedElements = recomputeSortedElements(keyToElements);
+
+  let isAnimating = Internal.isAnimating(sortedElements);
+  let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
+  {keyToElements, isAnimating, sortedElements, cache: cache'};
 };
 
 let set = (~key: string, ~elements, model) => {
@@ -318,9 +349,7 @@ let set = (~key: string, ~elements, model) => {
       incomingMap,
     );
 
-  let sortedElements = recomputeSortedElements(keyToElements');
-  let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
-  {keyToElements: keyToElements', sortedElements, cache: cache'};
+  keyToElements' |> makeConsistent;
 };
 
 let clear = (~key, model) => {
@@ -328,32 +357,25 @@ let clear = (~key, model) => {
     model.keyToElements
     |> IntMap.map(keyToElements => {StringMap.remove(key, keyToElements)});
 
-  let sortedElements = recomputeSortedElements(keyToElements');
-  let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
-  {keyToElements: keyToElements', sortedElements, cache: cache'};
+  keyToElements' |> makeConsistent;
 };
 
-let updateElement = (~key, ~uniqueId, ~line, ~f: element => element, model) => {
+let updateElement =
+    (~key, ~uniqueId, ~line, ~f: element => element, keyToElements) => {
   let lineNumber = EditorCoreTypes.LineNumber.toZeroBased(line);
-  let keyToElements' =
-    model.keyToElements
-    |> IntMap.update(
-         lineNumber,
-         Option.map(keyMap => {
-           keyMap
-           |> KeyMap.update(
-                key,
-                Option.map(idMap => {
-                  idMap |> StringMap.update(uniqueId, Option.map(f))
-                }),
-              )
-         }),
-       );
-
-  let sortedElements = recomputeSortedElements(keyToElements');
-
-  let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
-  {keyToElements: keyToElements', sortedElements, cache: cache'};
+  keyToElements
+  |> IntMap.update(
+       lineNumber,
+       Option.map(keyMap => {
+         keyMap
+         |> KeyMap.update(
+              key,
+              Option.map(idMap => {
+                idMap |> StringMap.update(uniqueId, Option.map(f))
+              }),
+            )
+       }),
+     );
 };
 
 let update = (msg, model) =>
@@ -385,7 +407,9 @@ let setSize = (~animated, ~key, ~line, ~uniqueId, ~height, model) => {
           : Component_Animation.constant(height),
     };
   };
-  updateElement(~key, ~line, ~uniqueId, ~f=setHeight, model);
+  let keyToElements' =
+    updateElement(~key, ~line, ~uniqueId, ~f=setHeight, model.keyToElements);
+  keyToElements' |> makeConsistent;
 };
 
 let allElementsForLine = (~line, {keyToElements, _}) => {
@@ -434,17 +458,17 @@ let shift = (update: Oni_Core.BufferUpdate.t, model) => {
            ~delta,
          );
 
-    let sortedElements = recomputeSortedElements(keyToElements');
-    let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
-    {keyToElements: keyToElements', sortedElements, cache: cache'};
+    keyToElements' |> makeConsistent;
   };
 };
 
-let sub = model => {
-  let allElements = model.sortedElements;
-
+let animate = (msg, model) => {
+  let updateIndividualElement = element => {
+    ...element,
+    height: Component_Animation.update(msg, element.height),
+    opacity: Component_Animation.update(msg, element.opacity),
+  };
   let rec loop = (count, acc, elements) =>
-    // Gate the number of animated elements, since the animation is expensive
     if (count > Constants.maxElementsToAnimate) {
       acc;
     } else {
@@ -455,27 +479,13 @@ let sub = model => {
             || !Component_Animation.isComplete(elem.height)) {
           loop(
             count + 1,
-            [
-              Component_Animation.sub(elem.height)
-              |> Isolinear.Sub.map(msg =>
-                   HeightAnimation({
-                     key: elem.key,
-                     line: elem.line,
-                     uniqueId: elem.uniqueId,
-                     msg,
-                   })
-                 ),
-              Component_Animation.sub(elem.opacity)
-              |> Isolinear.Sub.map(msg =>
-                   OpacityAnimation({
-                     key: elem.key,
-                     line: elem.line,
-                     uniqueId: elem.uniqueId,
-                     msg,
-                   })
-                 ),
-              ...acc,
-            ],
+            acc
+            |> updateElement(
+                 ~key=elem.key,
+                 ~line=elem.line,
+                 ~uniqueId=elem.uniqueId,
+                 ~f=updateIndividualElement,
+               ),
             tail,
           );
         } else {
@@ -484,5 +494,6 @@ let sub = model => {
       };
     };
 
-  loop(0, [], allElements) |> Isolinear.Sub.batch;
+  let keyToElements' = loop(0, model.keyToElements, model.sortedElements);
+  keyToElements' |> makeConsistent;
 };
