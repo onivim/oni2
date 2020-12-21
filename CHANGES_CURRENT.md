@@ -10,6 +10,8 @@
 
 ### Performance
 
+- #2852 - Performance: Batch editor / codelens animations
+
 ### Documentation
 
 ### Infrastructure / Refactoring
