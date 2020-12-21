@@ -198,6 +198,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       registrationDispatch
       height={state.titlebarHeight}
     />
+    menuBarElement
     <View style=Styles.workspace>
       <View style=Styles.surface>
         {React.listToElement(surfaceComponents)}

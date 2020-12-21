@@ -23,7 +23,11 @@ type item('data) = {
 
 type content('data) =
   | Item(item('data))
-  | Group(list(item('data)));
+  | Group(list(item('data)))
+  | Submenu({
+      label: string,
+      items: list(content('data)),
+    });
 
 [@deriving show]
 type msg('data) =
@@ -82,17 +86,15 @@ module View = {
 
     let component = React.Expert.component("MenuItem");
     let make:
-      'data.
       (
-        ~item: item('data),
+        ~label: string,
         ~theme: ColorTheme.Colors.t,
         ~font: UiFont.t,
         ~onClick: unit => unit,
         unit
       ) =>
-      _
-     =
-      (~item, ~theme, ~font, ~onClick, ()) =>
+      _ =
+      (~label, ~theme, ~font, ~onClick, ()) =>
         component(hooks => {
           let ((isFocused, setIsFocused), hooks) =
             Hooks.state(false, hooks);
@@ -116,7 +118,7 @@ module View = {
               fontFamily={font.family}
               fontSize=Constants.fontSize
               style
-              text={item.label}
+              text=label
             />;
           };
 
@@ -163,8 +165,8 @@ module View = {
     };
 
     let component = React.Expert.component("Menu");
-    let make =
-        (~items, ~x, ~y, ~orientation, ~theme, ~font, ~onItemSelect, ()) =>
+    let rec make =
+            (~items, ~x, ~y, ~orientation, ~theme, ~font, ~onItemSelect, ()) =>
       component(hooks => {
         let ((maybeRef, setRef), hooks) = Hooks.state(None, hooks);
         let (orientY, orientX) = orientation;
@@ -189,6 +191,13 @@ module View = {
           | `Middle => y - height / 2
           | `Bottom => y
           };
+        // - Add hover behavior into model
+        //  push hover into model
+
+        // Split Menu/Submenu
+        // - Submenu - renders current submenu w/ just label
+        // - Menu - renders each level of submenu
+        // - recursively render based on level / items
 
         (
           <View
@@ -197,15 +206,32 @@ module View = {
             {items
              |> List.mapi((idx, item) => {
                   switch (item) {
+                  | Submenu({label, items}) =>
+                    let onClick = () => ();
+                    [
+                      <MenuItem label theme font onClick />,
+                      make(
+                        ~x=width,
+                        ~y,
+                        ~orientation=(`Top, `Left),
+                        ~items,
+                        ~theme,
+                        ~font,
+                        ~onItemSelect,
+                        (),
+                      ),
+                    ];
+
                   | Item(item) =>
                     let onClick = () => onItemSelect(item);
-                    [<MenuItem item theme font onClick />];
+                    [<MenuItem label={item.label} theme font onClick />];
+
                   | Group(items) =>
                     let items' =
                       items
                       |> List.map(item => {
                            let onClick = () => onItemSelect(item);
-                           <MenuItem item theme font onClick />;
+                           <MenuItem label={item.label} theme font onClick />;
                          });
 
                     idx == 0 ? items' : [<divider theme />, ...items'];
