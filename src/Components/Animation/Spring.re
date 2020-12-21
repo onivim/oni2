@@ -72,11 +72,7 @@ let set = (~instant: bool, ~position: float, model) => {
       spring: Spring.create(position, Revery.Time.now()),
     }
 
-  | Some(_) => {
-      ...model,
-      target: position,
-      //spring: Spring.tick(model.target, model.spring, model.options, 0.),
-    }
+  | Some(_) => {...model, target: position}
   };
 };
 

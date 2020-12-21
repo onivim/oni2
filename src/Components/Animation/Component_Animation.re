@@ -136,8 +136,6 @@ module ColorTransition = {
 };
 
 let subAny = (~uniqueId) =>
-  Service_Time.Sub.once(
-    // TODO
-    ~uniqueId, ~delay=Revery.Time.zero, ~msg=(~current) =>
+  Service_Time.Sub.once(~uniqueId, ~delay=Revery.Time.zero, ~msg=(~current) =>
     Tick(current)
   );

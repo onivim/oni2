@@ -359,12 +359,11 @@ let clear = (~key, model) => {
     model.keyToElements
     |> IntMap.map(keyToElements => {StringMap.remove(key, keyToElements)});
 
-  let sortedElements = recomputeSortedElements(keyToElements');
-  let cache' = Lazy.from_fun(() => recomputeCache(~sortedElements));
-  {keyToElements: keyToElements', sortedElements, cache: cache'};
+  keyToElements' |> makeConsistent;
 };
 
-let updateElement = (~key, ~uniqueId, ~line, ~f: element => element, keyToElements) => {
+let updateElement =
+    (~key, ~uniqueId, ~line, ~f: element => element, keyToElements) => {
   let lineNumber = EditorCoreTypes.LineNumber.toZeroBased(line);
   keyToElements
   |> IntMap.update(
@@ -414,8 +413,6 @@ let setSize = (~animated, ~key, ~line, ~uniqueId, ~height, model) => {
   let keyToElements' =
     updateElement(~key, ~line, ~uniqueId, ~f=setHeight, model.keyToElements);
   {...model, keyToElements: keyToElements'};
-  // let keyToElements' = updateElement(~key, ~line, ~uniqueId, ~f=setHeight, model.keyToElements);
-  // keyToElements' |> makeConsistent;
 };
 
 let allElementsForLine = (~line, {keyToElements, _}) => {
@@ -503,50 +500,3 @@ let animate = (msg, model) => {
   let keyToElements' = loop(0, model.keyToElements, model.sortedElements);
   keyToElements' |> makeConsistent;
 };
-
-// let sub = model => {
-//   let allElements = model.sortedElements;
-
-//   let rec loop = (count, acc, elements) =>
-// Gate the number of animated elements, since the animation is expensive
-//     if (count > Constants.maxElementsToAnimate) {
-//       acc;
-//     } else {
-//       switch (elements) {
-//       | [] => acc
-//       | [elem, ...tail] =>
-//         if (!Component_Animation.isComplete(elem.opacity)
-//             || !Component_Animation.isComplete(elem.height)) {
-//           loop(
-//             count + 1,
-//             [
-//               Component_Animation.sub(elem.height)
-//               |> Isolinear.Sub.map(msg =>
-//                    HeightAnimation({
-//                      key: elem.key,
-//                      line: elem.line,
-//                      uniqueId: elem.uniqueId,
-//                      msg,
-//                    })
-//                  ),
-//               Component_Animation.sub(elem.opacity)
-//               |> Isolinear.Sub.map(msg =>
-//                    OpacityAnimation({
-//                      key: elem.key,
-//                      line: elem.line,
-//                      uniqueId: elem.uniqueId,
-//                      msg,
-//                    })
-//                  ),
-//               ...acc,
-//             ],
-//             tail,
-//           );
-//         } else {
-//           loop(count, acc, tail);
-//         }
-//       };
-//     };
-
-//   loop(0, [], allElements) |> Isolinear.Sub.batch;
-// };

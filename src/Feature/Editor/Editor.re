@@ -1720,7 +1720,6 @@ let update = (msg, editor) => {
       animationNonce: editor.animationNonce + 1,
     };
 
-    // TODO: inline elements
     editor'
     |> withSteadyCursor(e =>
          {
@@ -1753,14 +1752,4 @@ let sub = editor => {
   } else {
     Isolinear.Sub.none;
   };
-  // [
-  //   InlineElements.sub(editor.inlineElements)
-  //   |> Isolinear.Sub.map(msg => InlineElements(msg)),
-  //   Spring.sub(editor.scrollX)
-  //   |> Isolinear.Sub.map(msg => ScrollSpringX(msg)),
-  //   Spring.sub(editor.scrollY)
-  //   |> Isolinear.Sub.map(msg => ScrollSpringY(msg)),
-  //   yankHighlightAnimation,
-  // ]
-  // |> Isolinear.Sub.batch;
 };
