@@ -141,7 +141,7 @@ module View = {
 
   // MENU
 
-  module Menu = {
+  module Submenu = {
     module Styles = {
       open Style;
 
@@ -162,38 +162,14 @@ module View = {
       ];
     };
 
-    let component = React.Expert.component("Menu");
+    let component = React.Expert.component("Submenu");
     let make =
-        (~items, ~x, ~y, ~orientation, ~theme, ~font, ~onItemSelect, ()) =>
+        (~items, ~x, ~y, ~theme, ~font, ~onItemSelect, ()) =>
       component(hooks => {
-        let ((maybeRef, setRef), hooks) = Hooks.state(None, hooks);
-        let (orientY, orientX) = orientation;
-
-        let height =
-          switch (maybeRef) {
-          | Some((node: node)) => node#measurements().height
-          | None => List.length(items) * 20
-          };
-        let width = Constants.menuWidth;
-
-        let x =
-          switch (orientX) {
-          | `Left => x
-          | `Middle => x - width / 2
-          | `Right => x - width
-          };
-
-        let y =
-          switch (orientY) {
-          | `Top => y - height
-          | `Middle => y - height / 2
-          | `Bottom => y
-          };
 
         (
           <View
-            style={Styles.container(~x, ~y, ~theme)}
-            ref={node => setRef(_ => Some(node))}>
+            style={Styles.container(~x, ~y, ~theme)}>
             {items
              |> List.mapi((idx, item) => {
                   switch (item) {
@@ -213,6 +189,40 @@ module View = {
                 })
              |> List.flatten
              |> React.listToElement}
+          </View>,
+          hooks,
+        );
+      });
+  };
+
+  module Menu = {
+    module Styles = {
+      open Style;
+
+      let container = (~x, ~y, ~theme) => [
+        position(`Absolute),
+        top(0),
+        left(0),
+        bottom(0),
+        right(0),
+      ];
+    };
+
+    let component = React.Expert.component("Menu");
+    let make =
+        (~model, ~x, ~y, ~theme, ~font, ~onItemSelect, ()) =>
+      component(hooks => {
+
+        (
+          <View
+            style={Styles.container(~x, ~y, ~theme)}>
+            <Submenu
+              items={model.items}
+              x
+              y
+              theme
+              font
+              onItemSelect />
           </View>,
           hooks,
         );
@@ -334,10 +344,9 @@ module View = {
           Overlay.setMenu(
             id,
             <Menu
-              items={model.items}
+              model
               x
               y
-              orientation
               theme
               font
               onItemSelect
