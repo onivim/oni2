@@ -746,7 +746,7 @@ module Sub = {
                      Exthost.OneBasedRange.(
                        {
                          lens.range.startLineNumber >= params.startLine
-                         && lens.range.endLineNumber <= params.stopLine;
+                         && lens.range.startLineNumber <= params.stopLine;
                        }
                      )
                    });
