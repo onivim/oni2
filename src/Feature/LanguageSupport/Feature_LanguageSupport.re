@@ -61,6 +61,8 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | CodeLensesChanged({
       bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.codeLens),
     });
 
@@ -77,8 +79,8 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     | Outmsg.ReferencesAvailable => ReferencesAvailable
     | Outmsg.OpenFile({filePath, location}) => OpenFile({filePath, location})
     | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
-    | Outmsg.CodeLensesChanged({bufferId, lenses}) =>
-      CodeLensesChanged({bufferId, lenses});
+    | Outmsg.CodeLensesChanged({bufferId, lenses, startLine, stopLine}) =>
+      CodeLensesChanged({bufferId, lenses, startLine, stopLine});
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -226,8 +228,8 @@ let update =
     let outmsg =
       switch (eff) {
       | CodeLens.Nothing => Outmsg.Nothing
-      | CodeLens.CodeLensesChanged({bufferId, lenses}) =>
-        Outmsg.CodeLensesChanged({bufferId, lenses})
+      | CodeLens.CodeLensesChanged({bufferId, startLine, stopLine, lenses}) =>
+        Outmsg.CodeLensesChanged({bufferId, startLine, stopLine, lenses})
       };
     ({...model, codeLens: codeLens'}, outmsg |> map(msg => CodeLens(msg)));
 

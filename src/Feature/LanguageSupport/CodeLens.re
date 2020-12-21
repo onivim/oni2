@@ -46,6 +46,8 @@ type outmsg =
   | Nothing
   | CodeLensesChanged({
       bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(codeLens),
     });
 
@@ -70,19 +72,9 @@ type msg =
   | CodeLensesReceived({
       handle: int,
       bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(Exthost.CodeLens.t),
-    })
-  | CodeLensResolved({
-      handle: int,
-      bufferId: int,
-      oldLens: Exthost.CodeLens.t,
-      resolvedLens: Exthost.CodeLens.t,
-    })
-  | CodeLensResolveFailed({
-      handle: int,
-      bufferId: int,
-      lens: Exthost.CodeLens.t,
-      msg: string,
     });
 
 let register = (~handle: int, ~selector, model) => {
@@ -172,32 +164,8 @@ let resolveLens = (~bufferId, ~handle, ~oldLens, ~resolvedLens, model) => {
 
 let update = (msg, model) =>
   switch (msg) {
-  // TODO
-  | CodeLensResolveFailed(_) => (model, Nothing)
-
-  // TODO
-  | CodeLensResolved({bufferId, handle, oldLens, resolvedLens}) =>
-    let model' =
-      model |> resolveLens(~handle, ~bufferId, ~oldLens, ~resolvedLens);
-
-    let lenses = get(~bufferId, model');
-    (model', CodeLensesChanged({bufferId, lenses}));
-
   | CodeLensesError(_) => (model, Nothing)
-  | CodeLensesReceived({handle, bufferId, lenses}) =>
-    let resolvedLenses =
-      lenses
-      |> List.filter((lens: Exthost.CodeLens.t) =>
-           Option.is_some(lens.command)
-         );
-
-    let unresolvedLenses =
-      lenses
-      |> List.filter((lens: Exthost.CodeLens.t) =>
-           Option.is_none(lens.command)
-         )
-      |> List.map(lens => (handle, lens));
-
+  | CodeLensesReceived({handle, startLine, stopLine, bufferId, lenses}) =>
     let bufferToLenses =
       model.bufferToLenses
       |> IntMap.update(
@@ -205,25 +173,15 @@ let update = (msg, model) =>
            fun
            | None =>
              IntMap.empty
-             |> addLenses(handle, bufferId, resolvedLenses)
+             |> addLenses(handle, bufferId, lenses)
              |> Option.some
            | Some(existing) =>
-             existing
-             |> addLenses(handle, bufferId, resolvedLenses)
-             |> Option.some,
+             existing |> addLenses(handle, bufferId, lenses) |> Option.some,
          );
 
-    let bufferToUnresolvedLenses =
-      model.bufferToUnresolvedLenses
-      |> IntMap.update(
-           bufferId,
-           fun
-           | None => Some(unresolvedLenses)
-           | Some(cur) => Some(cur @ unresolvedLenses),
-         );
-    let model' = {...model, bufferToLenses, bufferToUnresolvedLenses};
+    let model' = {...model, bufferToLenses};
     let lenses = get(~bufferId, model');
-    (model', CodeLensesChanged({bufferId, lenses}));
+    (model', CodeLensesChanged({bufferId, startLine, stopLine, lenses}));
   };
 
 // SUBSCRIPTION
@@ -251,6 +209,8 @@ module Sub = {
                   | Ok(lenses) =>
                     CodeLensesReceived({
                       handle,
+                      startLine: topVisibleBufferLine,
+                      stopLine: bottomVisibleBufferLine,
                       bufferId: buffer |> Oni_Core.Buffer.getId,
                       lenses,
                     });

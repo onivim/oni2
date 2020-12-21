@@ -75,6 +75,8 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | CodeLensesChanged({
       bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.t),
     });
 
