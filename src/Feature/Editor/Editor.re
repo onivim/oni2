@@ -1746,7 +1746,11 @@ let sub = editor => {
 
   if (isYankAnimating || isInlineElementAnimating || isScrollAnimating) {
     Component_Animation.subAny(
-      ~uniqueId="editor." ++ string_of_int(editor.animationNonce),
+      ~uniqueId=
+        "editor."
+        ++ string_of_int(editor.editorId)
+        ++ "."
+        ++ string_of_int(editor.animationNonce),
     )
     |> Isolinear.Sub.map(msg => Animation(msg));
   } else {
