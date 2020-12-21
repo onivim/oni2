@@ -40,7 +40,7 @@ type submenu('data) = {
 type msg('data) =
   | ItemClicked({data: 'data})
   | ClickedOutside
-  | SubmenuHovered({ revSubmenus: list(submenu('data)) })
+  | SubmenuHovered({revSubmenus: list(submenu('data))});
 
 type outmsg('data) =
   | Nothing
@@ -48,17 +48,20 @@ type outmsg('data) =
   | Cancelled;
 
 type model('data) = {
-items: list(content('data)),
-openSubmenus: list(submenu('data)),
+  items: list(content('data)),
+  openSubmenus: list(submenu('data)),
 };
 
-let make = items => {items: items, openSubmenus: []};
+let make = items => {items, openSubmenus: []};
 
 let update = (msg, model) => {
   switch (msg) {
   | ItemClicked({data}) => (model, Selected({data: data}))
   | ClickedOutside => (model, Cancelled)
-  | SubmenuHovered({ revSubmenus }) => ({...model, openSubmenus: List.rev(revSubmenus)}, Nothing)
+  | SubmenuHovered({revSubmenus}) => (
+      {...model, openSubmenus: List.rev(revSubmenus)},
+      Nothing,
+    )
   };
 };
 
@@ -111,7 +114,7 @@ module View = {
         component(hooks => {
           let ((isFocused, setIsFocused), hooks) =
             Hooks.state(false, hooks);
-        let ((maybeBbox, setBbox), hooks) = Hooks.state(None, hooks);
+          let ((maybeBbox, setBbox), hooks) = Hooks.state(None, hooks);
 
           // let iconView =
           //   switch (item.icon) {
@@ -144,7 +147,10 @@ module View = {
                   setBbox(_ => Some(bbox))
                 }}
                 onMouseOut={_ => setIsFocused(_ => false)}
-                onMouseOver={_ => { Option.iter(bbox => onHover(bbox), maybeBbox); setIsFocused(_ => true); }}>
+                onMouseOver={_ => {
+                  Option.iter(bbox => onHover(bbox), maybeBbox);
+                  setIsFocused(_ => true);
+                }}>
                 // iconView
                  labelView </View>
             </Clickable>,
@@ -185,35 +191,46 @@ module View = {
     let make =
         (~items, ~x, ~y, ~theme, ~font, ~onItemSelect, ~onSubmenuHover, ()) =>
       component(hooks => {
-
         (
-          <View
-            style={Styles.container(~x, ~y, ~theme)}>
+          <View style={Styles.container(~x, ~y, ~theme)}>
             {items
              |> List.mapi((idx, item) => {
                   switch (item) {
                   | Submenu({label, items}) =>
                     let onClick = () => ();
-                    let onHover = (bbox) => {
-                      let (_x, yOffset, _width, _height) = Revery.Math.BoundingBox2d.getBounds(bbox)
-                      onSubmenuHover({yOffset, items: items });
+                    let onHover = bbox => {
+                      let (_x, yOffset, _width, _height) =
+                        Revery.Math.BoundingBox2d.getBounds(bbox);
+                      onSubmenuHover({yOffset, items});
                     };
-                    [
-                      <MenuItem label theme font onClick onHover />,
-                    ];
+                    [<MenuItem label theme font onClick onHover />];
 
                   | Item(item) =>
                     let onClick = () => onItemSelect(item);
-                    let onHover = (_) => ();
-                    [<MenuItem label={item.label} theme font onClick onHover />];
+                    let onHover = _ => ();
+                    [
+                      <MenuItem
+                        label={item.label}
+                        theme
+                        font
+                        onClick
+                        onHover
+                      />,
+                    ];
 
                   | Group(items) =>
                     let items' =
                       items
                       |> List.map(item => {
                            let onClick = () => onItemSelect(item);
-                           let onHover = (_) => ();
-                           <MenuItem label={item.label} theme font onClick onHover />;
+                           let onHover = _ => ();
+                           <MenuItem
+                             label={item.label}
+                             theme
+                             font
+                             onClick
+                             onHover
+                           />;
                          });
 
                     idx == 0 ? items' : [<divider theme />, ...items'];
@@ -223,7 +240,7 @@ module View = {
              |> React.listToElement}
           </View>,
           hooks,
-        );
+        )
       });
   };
 
@@ -244,45 +261,48 @@ module View = {
     let make =
         (~model, ~x, ~y, ~theme, ~font, ~onItemSelect, ~onSubmenuHover, ()) =>
       component(hooks => {
-        let rootMenu = 
-            <Submenu
-              items={model.items}
-              x
-              y
-              theme
-              font
-              onItemSelect 
-              onSubmenuHover={(items) => onSubmenuHover([items])}
-              />;
+        let rootMenu =
+          <Submenu
+            items={model.items}
+            x
+            y
+            theme
+            font
+            onItemSelect
+            onSubmenuHover={items => onSubmenuHover([items])}
+          />;
 
-        let (menus, _, _) = 
-        model.openSubmenus
-          |> List.fold_left((acc, curr: submenu('a)) => {
-            let (menus, submenus, xOffset) = acc;
+        let (menus, _, _) =
+          model.openSubmenus
+          |> List.fold_left(
+               (acc, curr: submenu('a)) => {
+                 let (menus, submenus, xOffset) = acc;
 
-            let newX = xOffset + Constants.menuWidth;
-            let newSubmenus = [curr, ...submenus];
-            let nextMenu = 
-              <Submenu
-                items={curr.items}
-                x=newX
-                y={int_of_float(curr.yOffset) - Constants.overlayY}
-                theme
-                font
-                onItemSelect
-                onSubmenuHover={(items) => onSubmenuHover([items, ...newSubmenus])}
-                />;
+                 let newX = xOffset + Constants.menuWidth;
+                 let newSubmenus = [curr, ...submenus];
+                 let nextMenu =
+                   <Submenu
+                     items={curr.items}
+                     x=newX
+                     y={int_of_float(curr.yOffset) - Constants.overlayY}
+                     theme
+                     font
+                     onItemSelect
+                     onSubmenuHover={items =>
+                       onSubmenuHover([items, ...newSubmenus])
+                     }
+                   />;
 
-            ([nextMenu, ...menus], newSubmenus, newX)
-          
-        }, ([rootMenu], [], x));
+                 ([nextMenu, ...menus], newSubmenus, newX);
+               },
+               ([rootMenu], [], x),
+             );
 
-let menuElements = menus |> React.listToElement;
+        let menuElements = menus |> React.listToElement;
 
         (
-          <View
-            style={Styles.container(~x, ~y=0, ~theme)}>
-            {menuElements}
+          <View style={Styles.container(~x, ~y=0, ~theme)}>
+            menuElements
           </View>,
           hooks,
         );
@@ -371,8 +391,8 @@ let menuElements = menus |> React.listToElement;
         let onItemSelect = item => {
           dispatch(ItemClicked({data: item.data}));
         };
-        let onSubmenuHover = (revSubmenus) => {
-          dispatch(SubmenuHovered({ revSubmenus: revSubmenus }))
+        let onSubmenuHover = revSubmenus => {
+          dispatch(SubmenuHovered({revSubmenus: revSubmenus}));
         };
         let ((id, _), hooks) = Hooks.state(generateId(), hooks);
         let ((maybeBbox, setBbox), hooks) = Hooks.state(None, hooks);
@@ -406,15 +426,7 @@ let menuElements = menus |> React.listToElement;
 
           Overlay.setMenu(
             id,
-            <Menu
-              model
-              x
-              y
-              theme
-              font
-              onItemSelect
-              onSubmenuHover
-            />,
+            <Menu model x y theme font onItemSelect onSubmenuHover />,
             onCancel,
           );
 
