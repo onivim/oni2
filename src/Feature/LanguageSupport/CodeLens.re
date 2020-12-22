@@ -176,6 +176,17 @@ module Sub = {
         ~client,
         model,
       ) => {
+    // Query above and below a viewport - grabbing some extra codelenses above and below -
+    // to minimize codelens popping in while scrolling
+    let delta: int =
+      EditorCoreTypes.LineNumber.toOneBased(bottomVisibleBufferLine)
+      - EditorCoreTypes.LineNumber.toOneBased(topVisibleBufferLine);
+    let (topVisibleBufferLine, bottomVisibleBufferLine) =
+      EditorCoreTypes.LineNumber.(
+        topVisibleBufferLine - delta,
+        bottomVisibleBufferLine + delta,
+      );
+
     let codeLenses =
       visibleBuffers
       |> List.map(buffer => {
