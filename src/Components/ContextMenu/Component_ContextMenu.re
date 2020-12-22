@@ -301,7 +301,7 @@ module View = {
         let menuElements = menus |> React.listToElement;
 
         (
-          <View style={Styles.container(~x, ~y=0, ~theme)}>
+          <View style={Styles.container(~x=0, ~y=0, ~theme)}>
             menuElements
           </View>,
           hooks,
@@ -334,6 +334,7 @@ module View = {
         right(0),
         pointerEvents(`Allow),
         cursor(MouseCursors.arrow),
+        backgroundColor(Revery.Colors.red),
       ];
     };
 

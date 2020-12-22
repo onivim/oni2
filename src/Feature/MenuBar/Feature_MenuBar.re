@@ -46,13 +46,7 @@ let update = (~contextKeys, ~commands, msg, model) => {
                            data: Item.command(item),
                          }
                        );
-                  //Component_ContextMenu.Group(items);
-                  Component_ContextMenu.(
-                    Submenu({
-                      label: "test",
-                      items: items |> List.map(i => Item(i)),
-                    })
-                  );
+                  Component_ContextMenu.Group(items);
                 })
              |> Component_ContextMenu.make;
            {activePath: uniqueId, contextMenu};
@@ -151,7 +145,7 @@ module View = {
             |> Option.map(({contextMenu, _}) => {
                  <Component_ContextMenu.View
                    model=contextMenu
-                   orientation=(`Bottom, `Left)
+                   orientation=(`Top, `Left)
                    dispatch={msg => dispatch(ContextMenu(msg))}
                    theme
                    font
@@ -167,20 +161,36 @@ module View = {
 
       <View
         style=Style.[
-          cursor(Revery.MouseCursors.pointer),
+          height(30),
+          cursor(Revery.MouseCursors.arrow),
           paddingHorizontal(8),
           backgroundColor(bgColor),
+          flexDirection(`Column),
+          justifyContent(`Center),
+          position(`Relative)
         ]
         onMouseOut={_ => setIsFocused(_ => false)}
         onMouseOver={_ => setIsFocused(_ => true)}
         onMouseDown={_ => dispatch(MouseClicked({uniqueId: uniqueId}))}>
+        <View style=Style.[paddingTop(2)]>
         <Text
           style={Styles.text(color)}
           text={Menu.title(menu)}
           fontFamily={font.family}
           fontSize={font.size}
+          fontWeight={Revery.Font.Weight.SemiBold}
         />
+        </View>
+        <View style=Style.[
+          position(`Absolute),
+          bottom(0),
+          left(0),
+          width(1),
+          height(1),
+          backgroundColor(Revery.Colors.red)
+        ]>
         elem
+        </View>
       </View>;
     };
   };

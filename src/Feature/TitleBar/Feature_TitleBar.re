@@ -464,7 +464,9 @@ module View = {
             width=18
             height=18
           />
+          <View style=Style.[paddingLeft(8)]>
           menuBar
+          </View>
           <Text
             style={Styles.Windows.title(~isFocused, ~theme)}
             fontFamily={font.family}
