@@ -863,6 +863,12 @@ module Files: {
     let encode: Json.encoder(t);
   };
 
+  module ReadDirResult: {
+    type t = (string, FileType.t);
+
+    let encode: Json.encoder(t);
+  };
+
   module FileSystemEvents: {
     type t = {
       created: list(Oni_Core.Uri.t),
