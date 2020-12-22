@@ -46,6 +46,43 @@ module Styles = {
   let headerTextContainer = [marginHorizontal(8), marginVertical(4)];
 };
 
+module Rating = {
+  let make = (~rating: int, ~font: UiFont.t, ~fontSize, ~ratingCount, ()) => {
+    <View style=Styles.[Style.flexDirection(`Row), ...headerTextContainer]>
+      <Codicon
+        icon=Codicon.starEmpty
+        fontSize=16.
+        color={Revery.Color.hex("#333")}
+      />
+      <Codicon
+        icon=Codicon.starEmpty
+        fontSize=16.
+        color={Revery.Color.hex("#333")}
+      />
+      <Codicon
+        icon=Codicon.starEmpty
+        fontSize=16.
+        color={Revery.Color.hex("#333")}
+      />
+      <Codicon
+        icon=Codicon.starEmpty
+        fontSize=16.
+        color={Revery.Color.hex("#333")}
+      />
+      <Codicon
+        icon=Codicon.starEmpty
+        fontSize=16.
+        color={Revery.Color.hex("#333")}
+      />
+      <Text
+        fontFamily={font.family}
+        fontSize
+        text={"(" ++ string_of_int(ratingCount) ++ ")"}
+      />
+    </View>;
+  };
+};
+
 let installButton = (~font, ~extensionId, ~dispatch, ()) => {
   <View style=Styles.headerButton>
     <ItemView.ActionButton
@@ -110,6 +147,7 @@ let header =
     (
       ~model: Model.model,
       ~font: UiFont.t,
+      ~publisher,
       ~maybeLogo,
       ~displayName,
       ~description,
@@ -176,24 +214,33 @@ let header =
             text=displayName
           />
         </View>
-      </View>
-      <View style=Styles.headerRow>
         <View
           style=Style.[
             backgroundColor(Revery.Color.rgba_int(128, 128, 128, 64)),
             marginLeft(8),
             padding(4),
           ]>
-          <Text
-            fontFamily={font.family}
-            fontSize=16.
-            fontWeight=Revery.Font.Weight.Bold
-            text=extensionId
-          />
+          <View style=Style.[marginTop(4)]>
+            <Text
+              fontFamily={font.family}
+              fontSize=16.
+              fontWeight=Revery.Font.Weight.Bold
+              text=extensionId
+            />
+          </View>
+        </View>
+      </View>
+      <View style=Styles.headerRow>
+        <View style=Styles.headerTextContainer>
+          <Text fontFamily={font.family} fontSize=14. text=publisher />
         </View>
         <View style=Styles.headerTextContainer>
           <Text fontFamily={font.family} fontSize=14. text=version />
         </View>
+        <View style=Styles.headerTextContainer>
+          <Text fontFamily={font.family} fontSize=14. text="5.4K downloads" />
+        </View>
+        <Rating rating=5 font fontSize=14. ratingCount=1 />
       </View>
       <View style=Styles.headerRow>
         <View style=Styles.headerTextContainer>
@@ -329,6 +376,7 @@ let make =
       <header
         font
         maybeLogo
+        publisher=namespace
         displayName
         description
         extensionId
