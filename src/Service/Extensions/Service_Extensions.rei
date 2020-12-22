@@ -40,7 +40,14 @@ module Catalog: {
       //      categories: list(string),
       version: option(Semver.t),
       versions: list(VersionInfo.t),
+      downloadCount: option(int),
+      averageRating: option(float),
+      reviewCount: option(int),
     };
+
+    let downloadCount: t => int;
+    let averageRating: t => float;
+    let reviewCount: t => int;
 
     let toString: t => string;
   };
