@@ -25,12 +25,21 @@ module Items = {
 
     let saveFile = item(~title="Save", ~command=":w!");
     let saveAll = item(~title="Save All", ~command=":wa!");
-    let quit = item(~title="Quit", ~command=":q");
+    let quit = item(~title="Quit", ~command=":qa");
 
     module Preferences = {
-      let test1 = item(~title="Test1", ~command="test1");
-      let test2 = item(~title="Test2", ~command="test2");
-      let test3 = item(~title="Test3", ~command="test3");
+      let test1 =
+        item(
+          ~title="Configuration",
+          ~command="workbench.action.openSettings",
+        );
+      let test2 =
+        item(
+          ~title="Keybindings",
+          ~command="workbench.action.openDefaultKeybindingsFile",
+        );
+      let test3 =
+        item(~title="Change Theme", ~command="workbench.action.selectTheme");
 
       let submenu =
         submenu(
