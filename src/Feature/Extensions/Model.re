@@ -135,12 +135,36 @@ type outmsg =
   | SelectTheme({themes: list(Exthost.Extension.Contributions.Theme.t)})
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
+module RatingInfo = {
+  type t = {
+    downloadCount: int,
+    rating: int,
+    ratingCount: int,
+  };
+};
+
 module Selected = {
   open Exthost_Extension;
   open Exthost_Extension.Manifest;
   type t =
     | Local(Scanner.ScanResult.t)
     | Remote(Service_Extensions.Catalog.Details.t);
+
+  let ratings =
+    fun
+    | Local(_) => None
+    | Remote(details) =>
+      RatingInfo.(
+        {
+          Service_Extensions.Catalog.Details.(
+            Some({
+              downloadCount: details |> downloadCount,
+              rating: details |> averageRating |> int_of_float,
+              ratingCount: details |> reviewCount,
+            })
+          );
+        }
+      );
 
   let identifier =
     fun
