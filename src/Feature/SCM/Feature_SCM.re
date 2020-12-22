@@ -291,7 +291,7 @@ type msg =
       bufferId: int,
       lines: array(string),
     })
-  | GetOriginalContentFailed({ bufferId: int})
+  | GetOriginalContentFailed({bufferId: int})
   | NewProvider({
       handle: int,
       id: string,
