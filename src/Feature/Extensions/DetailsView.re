@@ -180,12 +180,13 @@ let header =
   let fg = color;
 
   let buttonElements = buttons' |> React.listToElement;
-  let headerText = (~text, ()) => {
+  let headerText = (~fontWeight=Revery.Font.Weight.Normal, ~text, ()) => {
     <View style=Styles.headerTextContainer>
       <Text
         style=Style.[color(fg)]
         fontFamily={font.family}
         fontSize=14.
+        fontWeight
         text
       />
     </View>;
@@ -271,7 +272,7 @@ let header =
         maybeRatingElement
       </View>
       <View style=Styles.headerRow>
-        <headerText text=description />
+        <headerText fontWeight=Revery.Font.Weight.SemiBold text=description />
       </View>
       <View style=Styles.headerRow> buttonElements </View>
     </View>
