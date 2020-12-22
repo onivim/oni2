@@ -47,38 +47,28 @@ module Styles = {
 };
 
 module Rating = {
-  let make = (~rating: int, ~font: UiFont.t, ~fontSize, ~ratingCount, ()) => {
+  let make =
+      (~color, ~rating: int, ~font: UiFont.t, ~fontSize, ~ratingCount, ()) => {
+    let stars = List.init(5, i => i);
+    let elems =
+      stars
+      |> List.map(idx => {
+           let icon = idx < rating ? Codicon.starFull : Codicon.starEmpty;
+           <Codicon icon fontSize=16. color />;
+         })
+      |> React.listToElement;
+
+    let foregroundColor = color;
     <View style=Styles.[Style.flexDirection(`Row), ...headerTextContainer]>
-      <Codicon
-        icon=Codicon.starEmpty
-        fontSize=16.
-        color={Revery.Color.hex("#333")}
-      />
-      <Codicon
-        icon=Codicon.starEmpty
-        fontSize=16.
-        color={Revery.Color.hex("#333")}
-      />
-      <Codicon
-        icon=Codicon.starEmpty
-        fontSize=16.
-        color={Revery.Color.hex("#333")}
-      />
-      <Codicon
-        icon=Codicon.starEmpty
-        fontSize=16.
-        color={Revery.Color.hex("#333")}
-      />
-      <Codicon
-        icon=Codicon.starEmpty
-        fontSize=16.
-        color={Revery.Color.hex("#333")}
-      />
-      <Text
-        fontFamily={font.family}
-        fontSize
-        text={"(" ++ string_of_int(ratingCount) ++ ")"}
-      />
+      elems
+      <View style=Style.[paddingLeft(2), paddingTop(2)]>
+        <Text
+          style=[Style.color(foregroundColor)]
+          fontFamily={font.family}
+          fontSize
+          text={"(" ++ string_of_int(ratingCount) ++ ")"}
+        />
+      </View>
     </View>;
   };
 };
@@ -154,6 +144,8 @@ let header =
       ~extensionId,
       ~version,
       ~dispatch,
+      ~theme,
+      ~maybeRating,
       (),
     ) => {
   let logo =
@@ -184,7 +176,38 @@ let header =
       buttons;
     };
 
+  let color = Feature_Theme.Colors.foreground.from(theme);
+  let fg = color;
+
   let buttonElements = buttons' |> React.listToElement;
+  let headerText = (~text, ()) => {
+    <View style=Styles.headerTextContainer>
+      <Text
+        style=Style.[color(fg)]
+        fontFamily={font.family}
+        fontSize=14.
+        text
+      />
+    </View>;
+  };
+
+  let headerTextSeparator = () => {
+    <headerText text="|" />;
+  };
+
+  let maybeRatingElement =
+    maybeRating
+    |> Option.map(({rating, ratingCount, downloadCount}: Model.RatingInfo.t) => {
+         <View style=Style.[flexDirection(`Row), alignItems(`Center)]>
+           <View style=Style.[marginLeft(4), marginTop(-4)]>
+             <Codicon icon=Codicon.cloudDownload fontSize=16. color />
+           </View>
+           <headerText text={string_of_int(downloadCount)} />
+           <headerTextSeparator />
+           <Rating rating font fontSize=14. ratingCount color />
+         </View>
+       })
+    |> Option.value(~default=React.empty);
 
   <View
     style=Style.[
@@ -193,6 +216,13 @@ let header =
       flexShrink(0),
       flexBasis(200),
       backgroundColor(Revery.Color.rgba_int(0, 0, 0, 32)),
+      boxShadow(
+        ~xOffset=4.,
+        ~yOffset=4.,
+        ~blurRadius=12.,
+        ~spreadRadius=0.,
+        ~color=Revery.Color.rgba(0., 0., 0., 0.75),
+      ),
     ]>
     <View
       style=Style.[
@@ -208,6 +238,7 @@ let header =
       <View style=Styles.headerRow>
         <View style=Styles.headerTextContainer>
           <Text
+            style=Style.[color(fg)]
             fontFamily={font.family}
             fontSize=24.
             fontWeight=Revery.Font.Weight.Bold
@@ -217,11 +248,13 @@ let header =
         <View
           style=Style.[
             backgroundColor(Revery.Color.rgba_int(128, 128, 128, 64)),
+            marginTop(-4),
             marginLeft(8),
             padding(4),
           ]>
           <View style=Style.[marginTop(4)]>
             <Text
+              style=Style.[color(fg)]
               fontFamily={font.family}
               fontSize=16.
               fontWeight=Revery.Font.Weight.Bold
@@ -231,20 +264,20 @@ let header =
         </View>
       </View>
       <View style=Styles.headerRow>
-        <View style=Styles.headerTextContainer>
-          <Text fontFamily={font.family} fontSize=14. text=publisher />
-        </View>
-        <View style=Styles.headerTextContainer>
-          <Text fontFamily={font.family} fontSize=14. text=version />
-        </View>
-        <View style=Styles.headerTextContainer>
-          <Text fontFamily={font.family} fontSize=14. text="5.4K downloads" />
-        </View>
-        <Rating rating=5 font fontSize=14. ratingCount=1 />
+        <headerText text=publisher />
+        <headerTextSeparator />
+        <headerText text=version />
+        <headerTextSeparator />
+        maybeRatingElement
       </View>
       <View style=Styles.headerRow>
         <View style=Styles.headerTextContainer>
-          <Text fontFamily={font.family} fontSize=14. text=description />
+          <Text
+            style=Style.[color(fg)]
+            fontFamily={font.family}
+            fontSize=14.
+            text=description
+          />
         </View>
       </View>
       <View style=Styles.headerRow> buttonElements </View>
@@ -338,6 +371,8 @@ let make =
       |> Option.map(Semver.to_string)
       |> Option.value(~default="0.0.0");
 
+    let maybeRating = selected |> Selected.ratings;
+
     let isPublicNamespace = selected |> Selected.isPublicNamespace;
 
     let warningElement =
@@ -374,6 +409,7 @@ let make =
 
     <View style=Styles.container>
       <header
+        theme
         font
         maybeLogo
         publisher=namespace
@@ -383,6 +419,7 @@ let make =
         version
         dispatch
         model
+        maybeRating
       />
       warningElement
       contents

@@ -140,7 +140,7 @@ module RatingInfo = {
     downloadCount: int,
     rating: int,
     ratingCount: int,
-  }
+  };
 };
 
 module Selected = {
@@ -150,17 +150,21 @@ module Selected = {
     | Local(Scanner.ScanResult.t)
     | Remote(Service_Extensions.Catalog.Details.t);
 
-  let ratings = 
-  fun 
-  | Local(_) => None
-  | Remote(details) => RatingInfo.({
-    open Service_Extensions.Catalog.Details;
-    Some({
-    downloadCount: details |> downloadCount,
-    rating: details |> averageRating |> int_of_float,
-    ratingCount: details |> reviewCount
-    })
-  })
+  let ratings =
+    fun
+    | Local(_) => None
+    | Remote(details) =>
+      RatingInfo.(
+        {
+          Service_Extensions.Catalog.Details.(
+            Some({
+              downloadCount: details |> downloadCount,
+              rating: details |> averageRating |> int_of_float,
+              ratingCount: details |> reviewCount,
+            })
+          );
+        }
+      );
 
   let identifier =
     fun
