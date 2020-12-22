@@ -27,7 +27,14 @@ let create =
         dispatch(Actions.Exthost(Feature_Exthost.Msg.initialized));
         Lwt.return(Reply.okEmpty);
       | DownloadService(msg) => Middleware.download(msg)
-      | FileSystem(msg) => Middleware.filesystem(msg)
+
+      | FileSystem(msg) =>
+        let (promise, resolver) = Lwt.task();
+
+        let fileSystemMsg = Feature_FileSystem.Msg.exthost(~resolver, msg);
+        dispatch(FileSystem(fileSystemMsg));
+        promise;
+
       | SCM(msg) =>
         Feature_SCM.handleExtensionMessage(
           ~dispatch=msg => dispatch(Actions.SCM(msg)),
