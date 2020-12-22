@@ -172,11 +172,15 @@ let make = (~dispatch, ~state: State.t, ()) => {
     | Feature_SideBar.Right => List.rev(defaultSurfaceComponents)
     };
 
+  let context = Oni_Model.ContextKeys.all(state);
+
   let menuBarElement =
     <Feature_MenuBar.View
       isWindowFocused={state.windowIsFocused}
       font={state.uiFont}
       config
+      context
+      input={state.input}
       theme
       model={state.menuBar}
       dispatch={msg => dispatch(Actions.MenuBar(msg))}

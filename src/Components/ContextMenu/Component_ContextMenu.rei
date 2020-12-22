@@ -20,6 +20,8 @@ type content('data) =
 
 type model('data);
 
+let map: (~f: item('data) => item('data), model('data)) => model('data);
+
 [@deriving show]
 type msg('data);
 

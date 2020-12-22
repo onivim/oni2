@@ -7,7 +7,7 @@ open Revery.UI.Components;
 module Colors = Feature_Theme.Colors;
 
 module Constants = {
-  let menuWidth = 175;
+  let menuWidth = 225;
   // let maxMenuHeight = 600;
 
   let overlayY = 30;
@@ -63,6 +63,28 @@ let update = (msg, model) => {
       Nothing,
     )
   };
+};
+
+let map = (~f: item('a) => item('a), {items, openSubmenus}) => {
+  let rec loopItems =
+    fun
+    | Item(data) => Item(f(data))
+    | Group(items) => Group(List.map(f, items))
+    | Submenu({label, items}) =>
+      Submenu({label, items: List.map(loopItems, items)});
+
+  let items' = List.map(loopItems, items);
+
+  let subMenus' =
+    List.map(
+      (submenu: submenu('a)) =>
+        {
+          yOffset: submenu.yOffset,
+          items: List.map(loopItems, submenu.items),
+        },
+      openSubmenus,
+    );
+  {items: items', openSubmenus: subMenus'};
 };
 
 module View = {

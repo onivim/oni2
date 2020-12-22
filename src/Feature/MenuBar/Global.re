@@ -24,7 +24,8 @@ module Items = {
     let newFile = item(~title="New", ~command=":enew");
 
     let saveFile = item(~title="Save", ~command=":w!");
-    let saveAll = item(~title="Save All", ~command=":w!");
+    let saveAll = item(~title="Save All", ~command=":wa!");
+    let quit = item(~title="Quit", ~command=":q");
   };
   module Edit = {
     let undo = item(~title="Undo", ~command="undo");
@@ -40,6 +41,7 @@ let menus = (isMac ? [OSX.application] : []) @ [file, edit, view, help];
 let groups = [
   group(~order=100, ~parent=file, Items.File.[newFile]),
   group(~order=200, ~parent=file, Items.File.[saveFile, saveAll]),
+  group(~order=999, ~parent=file, Items.File.[quit]),
   group(~parent=edit, Items.Edit.[undo, redo]),
   group(~parent=help, Items.Help.[changelog]),
 ];

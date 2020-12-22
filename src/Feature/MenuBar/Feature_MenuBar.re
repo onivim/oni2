@@ -124,9 +124,19 @@ module View = {
     let text = fg => [color(fg)];
   };
 
+  let augmentWithShortcutKeys = (~getShortcutKey, contextMenu) =>
+    contextMenu
+    |> Component_ContextMenu.map(~f=item =>
+         Component_ContextMenu.{
+           ...item,
+           label: item.label ++ getShortcutKey(item.data),
+         }
+       );
+
   module TopMenu = {
     let%component make =
                   (
+                    ~getShortcutKey,
                     ~model,
                     ~menu,
                     ~theme,
@@ -143,13 +153,16 @@ module View = {
         isActive(uniqueId, model)
           ? model.activeSession
             |> Option.map(({contextMenu, _}) => {
+                 let contextMenu' =
+                   contextMenu |> augmentWithShortcutKeys(~getShortcutKey);
+
                  <Component_ContextMenu.View
-                   model=contextMenu
+                   model=contextMenu'
                    orientation=(`Top, `Left)
                    dispatch={msg => dispatch(ContextMenu(msg))}
                    theme
                    font
-                 />
+                 />;
                })
           : None;
 
@@ -167,29 +180,30 @@ module View = {
           backgroundColor(bgColor),
           flexDirection(`Column),
           justifyContent(`Center),
-          position(`Relative)
+          position(`Relative),
         ]
         onMouseOut={_ => setIsFocused(_ => false)}
         onMouseOver={_ => setIsFocused(_ => true)}
         onMouseDown={_ => dispatch(MouseClicked({uniqueId: uniqueId}))}>
         <View style=Style.[paddingTop(2)]>
-        <Text
-          style={Styles.text(color)}
-          text={Menu.title(menu)}
-          fontFamily={font.family}
-          fontSize={font.size}
-          fontWeight={Revery.Font.Weight.SemiBold}
-        />
+          <Text
+            style={Styles.text(color)}
+            text={Menu.title(menu)}
+            fontFamily={font.family}
+            fontSize={font.size}
+            fontWeight=Revery.Font.Weight.SemiBold
+          />
         </View>
-        <View style=Style.[
-          position(`Absolute),
-          bottom(0),
-          left(0),
-          width(1),
-          height(1),
-          backgroundColor(Revery.Colors.red)
-        ]>
-        elem
+        <View
+          style=Style.[
+            position(`Absolute),
+            bottom(0),
+            left(0),
+            width(1),
+            height(1),
+            backgroundColor(Revery.Colors.red),
+          ]>
+          elem
         </View>
       </View>;
     };
@@ -200,7 +214,9 @@ module View = {
         ~isWindowFocused: bool,
         ~theme,
         ~font: UiFont.t,
-        ~config as _,
+        ~config,
+        ~context,
+        ~input,
         ~model,
         ~dispatch,
         (),
@@ -218,10 +234,37 @@ module View = {
 
     let topLevelMenuItems = MenuBar.top(model.menuSchema);
 
+    let getShortcutKey = command => {
+      Feature_Input.commandToAvailableBindings(
+        ~command,
+        ~config,
+        ~context,
+        input,
+      )
+      |> (
+        l =>
+          List.nth_opt(l, 0)
+          |> Option.map(keys =>
+               keys
+               |> List.map(Feature_Input.keyPressToString)
+               |> String.concat(" ")
+             )
+          |> Utility.OptionEx.or_lazy(() =>
+               if (Utility.StringEx.startsWith(~prefix=":", command)) {
+                 Some(command);
+               } else {
+                 None;
+               }
+             )
+          |> Option.value(~default="none")
+      );
+    };
+
     let menuItems =
       topLevelMenuItems
       |> List.map(menu => {
            <TopMenu
+             getShortcutKey
              model
              menu
              theme

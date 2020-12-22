@@ -31,6 +31,8 @@ module View: {
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
       ~config: Config.resolver,
+      ~context: WhenExpr.ContextKeys.t,
+      ~input: Feature_Input.model,
       ~model: model,
       ~dispatch: msg => unit,
       unit
