@@ -252,14 +252,14 @@ module View = {
                     let onHover = bbox => {
                       let (_x, yOffset, _width, _height) =
                         Revery.Math.BoundingBox2d.getBounds(bbox);
-                      onSubmenuHover({yOffset, items});
+                      onSubmenuHover(Some({yOffset, items}));
                     };
                     let details = <subMenuIcon theme />;
                     [<MenuItem label theme font onClick onHover details />];
 
                   | Item(item) =>
                     let onClick = () => onItemSelect(item);
-                    let onHover = _ => ();
+                    let onHover = _ => onSubmenuHover(None);
                     [
                       <MenuItem
                         label={item.label}
@@ -283,7 +283,7 @@ module View = {
                                let onHover = bbox => {
                                  let (_x, yOffset, _width, _height) =
                                    Revery.Math.BoundingBox2d.getBounds(bbox);
-                                 onSubmenuHover({yOffset, items});
+                                 onSubmenuHover(Some({yOffset, items}));
                                };
                                let details = <subMenuIcon theme />;
                                [
@@ -299,7 +299,7 @@ module View = {
 
                              | Item(item) =>
                                let onClick = () => onItemSelect(item);
-                               let onHover = _ => ();
+                               let onHover = _ => onSubmenuHover(None);
                                [
                                  <MenuItem
                                    label={item.label}
@@ -351,7 +351,15 @@ module View = {
             theme
             font
             onItemSelect
-            onSubmenuHover={items => onSubmenuHover([items])}
+            onSubmenuHover={maybeItems => {
+              (
+                switch (maybeItems) {
+                | None => []
+                | Some(v) => [v]
+                }
+              )
+              |> onSubmenuHover
+            }}
           />;
 
         let (menus, _, _) =
@@ -370,8 +378,14 @@ module View = {
                      theme
                      font
                      onItemSelect
-                     onSubmenuHover={items =>
-                       onSubmenuHover([items, ...newSubmenus])
+                     onSubmenuHover={maybeItems =>
+                       (
+                         switch (maybeItems) {
+                         | None => newSubmenus
+                         | Some(item) => [item, ...newSubmenus]
+                         }
+                       )
+                       |> onSubmenuHover
                      }
                    />;
 
