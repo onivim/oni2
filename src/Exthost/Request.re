@@ -210,6 +210,20 @@ module ExtensionService = {
   };
 };
 
+module FileSystem = {
+  open Json.Encode;
+
+  let readFile = (~handle, ~uri, client) => {
+    Client.request(
+      ~decoder=Json.Decode.string,
+      ~rpcName="ExtHostFileSystem",
+      ~method="$readFile",
+      ~args=`List([`Int(handle), uri |> encode_value(Uri.encode)]),
+      client,
+    );
+  };
+};
+
 module FileSystemEventService = {
   open Json.Encode;
 

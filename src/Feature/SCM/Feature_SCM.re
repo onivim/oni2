@@ -417,6 +417,7 @@ module Effects = {
             | Ok(lines) => GotOriginalContent({bufferId, lines})
             },
         fileSystem,
+        client,
       )
     };
   };

@@ -167,19 +167,15 @@ let start =
         |> Option.iter(resolver => {
              switch (payload) {
              | Json(json) => Lwt.wakeup(resolver, json)
+
              | Empty =>
                Log.tracef(m =>
                  m("Got empty payload for requestId: %d", requestId)
                );
                Lwt.wakeup(resolver, `Null);
+
              | Bytes(bytes) =>
-               Log.warnf(m =>
-                 m(
-                   "Got %d bytes for requestId: %d, but bytes handler is not implemented",
-                   Bytes.length(bytes),
-                   requestId,
-                 )
-               )
+               Lwt.wakeup(resolver, `String(Bytes.to_string(bytes)))
              }
            });
         Hashtbl.remove(requestIdToReply, requestId);
@@ -270,6 +266,7 @@ let request =
       };
 
       let parser = json => {
+        prerr_endline("JSON: " ++ Yojson.Safe.to_string(json));
         Oni_Core.Json.Decode.(
           json |> decode_value(decoder) |> Result.map_error(string_of_error)
         );

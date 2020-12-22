@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 
 open Exthost;
 
@@ -221,9 +222,22 @@ let getFileSystem = (~scheme, model) => {
 };
 
 module Effects = {
-  let readFile = (~handle as _, ~uri as _, ~toMsg, _model) => {
+  let readFile = (~handle, ~uri, ~toMsg, _model, client) => {
     Isolinear.Effect.createWithDispatch(~name="test", dispatch => {
-      dispatch(toMsg(Ok([|"abc"|])))
+      let promise =
+        Exthost.Request.FileSystem.readFile(~handle, ~uri, client);
+
+      Lwt.on_success(
+        promise,
+        str => {
+          let lines =
+            str |> StringEx.removeWindowsNewLines |> StringEx.splitNewLines;
+          dispatch(toMsg(Ok(lines)));
+        },
+      );
+      Lwt.on_failure(promise, exn =>
+        dispatch(toMsg(Error(Printexc.to_string(exn))))
+      );
     });
   };
 };

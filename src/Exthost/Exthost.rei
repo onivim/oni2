@@ -1741,6 +1741,10 @@ module Request: {
       Lwt.t(unit);
   };
 
+  module FileSystem: {
+    let readFile: (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(string);
+  };
+
   module FileSystemEventService: {
     let onFileEvent: (~events: Files.FileSystemEvents.t, Client.t) => unit;
     // TODO

@@ -37,7 +37,8 @@ module Effects: {
       ~handle: handle,
       ~uri: Oni_Core.Uri.t,
       ~toMsg: result(array(string), string) => 'msg,
-      model
+      model,
+      Exthost.Client.t
     ) =>
     Isolinear.Effect.t('msg);
 };
