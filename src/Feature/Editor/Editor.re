@@ -1484,15 +1484,12 @@ let unprojectToPixel =
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
 
 let updateBuffer = (~update, ~buffer, editor) => {
-  editor
-  |> withSteadyCursor(editor =>
-       {
-         ...editor,
-         buffer,
-         wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
-         inlineElements: InlineElements.shift(update, editor.inlineElements),
-       }
-     );
+  {
+    ...editor,
+    buffer,
+    wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
+    inlineElements: InlineElements.shift(update, editor.inlineElements),
+  };
 };
 
 let setBuffer = (~buffer, editor) => {

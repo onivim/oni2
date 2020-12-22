@@ -10,6 +10,7 @@
 - #2844 - Vim: Fix `:tabnew`/`:new`/`:vnew` behavior (fixes #1455, #2753, #2843)
 - #2846 - UX: Editor Tabs - horizontal scrolling on trackpad is reversed (thanks @SeitaHigashi!)
 - #2865 - OSX: Fix drag-and-drop on dock icon (fixes #2855)
+- #2867 - Editor: Fix viewport shifting when deleting lines with codelens
 
 ### Performance
 
