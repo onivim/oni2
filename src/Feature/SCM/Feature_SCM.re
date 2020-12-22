@@ -382,44 +382,42 @@ type outmsg =
 module Effects = {
   let getOriginalContent = (fileSystem, bufferId, uri, providers, client) => {
     let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
-    
+
     // Is there a file system provider?
 
-    let maybeFileSystem = Feature_FileSystem.getFileSystem(
-      ~scheme, fileSystem
-    );
+    let maybeFileSystem =
+      Feature_FileSystem.getFileSystem(~scheme, fileSystem);
     switch (maybeFileSystem) {
-      
-
     // No file system - fall back to text content provider,
     // if available...
     | None =>
-    providers
-    |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
-    |> Option.map(provider => {
-         let (handle, _) = provider;
-         Service_Exthost.Effects.SCM.getOriginalContent(
-           ~handle,
-           ~uri,
-           ~toMsg=lines => GotOriginalContent({bufferId, lines}),
-           client,
-         );
-       })
-    |> Option.value(~default=Isolinear.Effect.none);
+      providers
+      |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
+      |> Option.map(provider => {
+           let (handle, _) = provider;
+           Service_Exthost.Effects.SCM.getOriginalContent(
+             ~handle,
+             ~uri,
+             ~toMsg=lines => GotOriginalContent({bufferId, lines}),
+             client,
+           );
+         })
+      |> Option.value(~default=Isolinear.Effect.none)
 
     | Some(handle) =>
       Feature_FileSystem.Effects.readFile(
         ~handle,
         ~uri,
-        ~toMsg={resultLines => switch (resultLines) {
-        | Error(_) => 
-          prerr_endline ("TODO");
-          failwith("TODO")
-        | Ok(lines) => GotOriginalContent({bufferId, lines})
-        }},
-        fileSystem
-      );
-
+        ~toMsg=
+          resultLines =>
+            switch (resultLines) {
+            | Error(_) =>
+              prerr_endline("TODO");
+              failwith("TODO");
+            | Ok(lines) => GotOriginalContent({bufferId, lines})
+            },
+        fileSystem,
+      )
     };
   };
 };
@@ -458,7 +456,13 @@ module Internal = {
   };
 };
 
-let update = (~fileSystem: Feature_FileSystem.model, extHostClient: Exthost.Client.t, model, msg) =>
+let update =
+    (
+      ~fileSystem: Feature_FileSystem.model,
+      extHostClient: Exthost.Client.t,
+      model,
+      msg,
+    ) =>
   switch (msg) {
   | DocumentContentProvider(documentContentProviderMsg) =>
     Exthost.Msg.DocumentContentProvider.(
