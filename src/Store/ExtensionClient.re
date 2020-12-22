@@ -22,12 +22,20 @@ let create =
 
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
+      //prerr_endline ("MSG: " ++ Msg.show(msg));
       switch (msg) {
       | Initialized =>
         dispatch(Actions.Exthost(Feature_Exthost.Msg.initialized));
         Lwt.return(Reply.okEmpty);
       | DownloadService(msg) => Middleware.download(msg)
-      | FileSystem(msg) => Middleware.filesystem(msg)
+      | FileSystem(msg) =>
+        prerr_endline("FILE SYSTEM MSG");
+        let (promise, resolver) = Lwt.task();
+
+        let fileSystemMsg = Feature_FileSystem.Msg.exthost(~resolver, msg);
+        dispatch(FileSystem(fileSystemMsg));
+        promise;
+
       | SCM(msg) =>
         Feature_SCM.handleExtensionMessage(
           ~dispatch=msg => dispatch(Actions.SCM(msg)),

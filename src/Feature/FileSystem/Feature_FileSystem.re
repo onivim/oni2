@@ -55,23 +55,21 @@ module Internal = {
       (dirent.name, fileType);
     };
 
-
   let promiseAndResolverToEffect = (promise, resolver) => {
-    Isolinear.Effect.create(
-      ~name="Feature_FileSystem.promiseEffect",
-      () => {
-        Lwt.on_success(promise, v => Lwt.wakeup(resolver, v));
-        Lwt.on_failure(promise, exn => Lwt.wakeup_exn(resolver, exn))
-      });
-  }
-}
+    Isolinear.Effect.create(~name="Feature_FileSystem.promiseEffect", () => {
+      Lwt.on_success(promise, v => Lwt.wakeup(resolver, v));
+      Lwt.on_failure(promise, exn => Lwt.wakeup_exn(resolver, exn));
+    });
+  };
+};
 
 type model = {providers: list(unit)};
 
 let initial = {providers: []};
 
+[@deriving show]
 type msg =
-  | Exthost(Exthost.Msg.FileSystem.msg, Lwt.u(Exthost.Reply.t));
+  | Exthost(Exthost.Msg.FileSystem.msg, [@opaque] Lwt.u(Exthost.Reply.t));
 
 module Msg = {
   let exthost = (~resolver, msg) => Exthost(msg, resolver);
@@ -84,38 +82,47 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg));
 
 let update = (msg, model) => {
+  prerr_endline("MSG: " ++ show_msg(msg));
   switch (msg) {
   | Exthost(Stat({uri}), resolver) =>
-    let promise = uri
-    |> Uri.toFileSystemPath
-    |> Service_OS.Api.stat
-    |> Lwt.map(Internal.statToExthostStat)
-    |> Lwt.map(Internal.mapEncoder(Files.StatResult.encode));
+    let promise =
+      uri
+      |> Uri.toFileSystemPath
+      |> Service_OS.Api.stat
+      |> Lwt.map(Internal.statToExthostStat)
+      |> Lwt.map(Internal.mapEncoder(Files.StatResult.encode));
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(ReadDir({uri}), resolver) =>
-    let promise = uri
-    |> Uri.toFileSystemPath
-    |> Service_OS.Api.readdir
-    |> Lwt.map(List.map(Internal.dirEntryToExthostDirEntry))
-    |> Lwt.map(Internal.mapEncoder(Json.Encode.list(Exthost.Files.ReadDirResult.encode)));
+    let promise =
+      uri
+      |> Uri.toFileSystemPath
+      |> Service_OS.Api.readdir
+      |> Lwt.map(List.map(Internal.dirEntryToExthostDirEntry))
+      |> Lwt.map(
+           Internal.mapEncoder(
+             Json.Encode.list(Exthost.Files.ReadDirResult.encode),
+           ),
+         );
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(ReadFile({uri}), resolver) =>
-    let promise = uri
-    |> Uri.toFileSystemPath
-    |> Service_OS.Api.readFile
-    |> Lwt.map(Reply.okBuffer);
+    let promise =
+      uri
+      |> Uri.toFileSystemPath
+      |> Service_OS.Api.readFile
+      |> Lwt.map(Reply.okBuffer);
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(WriteFile({uri, bytes}), resolver) =>
-    let promise = uri
-    |> Uri.toFileSystemPath
-    |> Service_OS.Api.writeFile(~contents=bytes)
-    |> Lwt.map(() => Reply.okEmpty);
+    let promise =
+      uri
+      |> Uri.toFileSystemPath
+      |> Service_OS.Api.writeFile(~contents=bytes)
+      |> Lwt.map(() => Reply.okEmpty);
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
@@ -123,12 +130,13 @@ let update = (msg, model) => {
     let sourcePath = source |> Uri.toFileSystemPath;
     let targetPath = target |> Uri.toFileSystemPath;
 
-    let promise = Service_OS.Api.rename(
-      ~source=sourcePath,
-      ~target=targetPath,
-      ~overwrite=opts.overwrite,
-    )
-    |> Lwt.map(() => Reply.okEmpty);
+    let promise =
+      Service_OS.Api.rename(
+        ~source=sourcePath,
+        ~target=targetPath,
+        ~overwrite=opts.overwrite,
+      )
+      |> Lwt.map(() => Reply.okEmpty);
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
@@ -136,39 +144,62 @@ let update = (msg, model) => {
     let sourcePath = source |> Uri.toFileSystemPath;
     let targetPath = target |> Uri.toFileSystemPath;
 
-    let promise = Service_OS.Api.rename(
-      ~source=sourcePath,
-      ~target=targetPath,
-      ~overwrite=opts.overwrite,
-    )
-    |> Lwt.map(() => Reply.okEmpty);
+    let promise =
+      Service_OS.Api.rename(
+        ~source=sourcePath,
+        ~target=targetPath,
+        ~overwrite=opts.overwrite,
+      )
+      |> Lwt.map(() => Reply.okEmpty);
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(Mkdir({uri}), resolver) =>
-    let promise = uri
-    |> Uri.toFileSystemPath
-    |> Service_OS.Api.mkdir
-    |> Lwt.map(() => Reply.okEmpty);
+    let promise =
+      uri
+      |> Uri.toFileSystemPath
+      |> Service_OS.Api.mkdir
+      |> Lwt.map(() => Reply.okEmpty);
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(Delete({uri, opts}), resolver) =>
-    let promise = uri
-    |> Uri.toFileSystemPath
-    |> Service_OS.Api.rmdir(~recursive=opts.recursive)
-    |> Lwt.map(() => Reply.okEmpty);
+    let promise =
+      uri
+      |> Uri.toFileSystemPath
+      |> Service_OS.Api.rmdir(~recursive=opts.recursive)
+      |> Lwt.map(() => Reply.okEmpty);
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
-  | Exthost(RegisterFileSystemProvider(_), resolver) => 
+  | Exthost(RegisterFileSystemProvider(_), resolver) => (
+      model,
+      Effect(
+        Internal.promiseAndResolverToEffect(
+          Lwt.return(Reply.okEmpty),
+          resolver,
+        ),
+      ),
+    )
 
-  (model, Effect(Internal.promiseAndResolverToEffect(Lwt.return(Reply.okEmpty), resolver)))
+  | Exthost(UnregisterProvider(_), resolver) => (
+      model,
+      Effect(
+        Internal.promiseAndResolverToEffect(
+          Lwt.return(Reply.okEmpty),
+          resolver,
+        ),
+      ),
+    )
 
-  | Exthost(UnregisterProvider(_), resolver) => 
-  (model, Effect(Internal.promiseAndResolverToEffect(Lwt.return(Reply.okEmpty), resolver)))
-
-  | Exthost(OnFileSystemChange(_), resolver) => 
-  (model, Effect(Internal.promiseAndResolverToEffect(Lwt.return(Reply.okEmpty), resolver)))
+  | Exthost(OnFileSystemChange(_), resolver) => (
+      model,
+      Effect(
+        Internal.promiseAndResolverToEffect(
+          Lwt.return(Reply.okEmpty),
+          resolver,
+        ),
+      ),
+    )
   };
 };
 

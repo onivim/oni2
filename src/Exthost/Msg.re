@@ -650,6 +650,8 @@ module FileSystem = {
       });
 
   let handle = (method, args: Yojson.Safe.t) => {
+    prerr_endline("METHOD: " ++ method);
+    prerr_endline("JSON: " ++ Yojson.Safe.to_string(args));
     Base.Result.Let_syntax.(
       switch (method, args) {
       | ("$stat", `List([uriJson])) =>
@@ -685,6 +687,19 @@ module FileSystem = {
         let%bind opts =
           deleteOptsJson |> Internal.decode_value(FileDeleteOptions.decode);
         Ok(Delete({uri, opts}));
+
+      | (
+          "$registerFileSystemProvider",
+          `List([`Int(handle), `String(scheme), capabilitiesJson]),
+        ) =>
+        let%bind capabilities =
+          capabilitiesJson
+          |> Internal.decode_value(FileSystemProviderCapabilities.decode);
+        Ok(RegisterFileSystemProvider({handle, scheme, capabilities}));
+
+      | ("$unregisterFileSystemProvider", `List([`Int(handle)])) =>
+        Ok(UnregisterProvider({handle: handle}))
+
       | _ => Error("Unhandled FileSystem method: " ++ method)
       }
     );

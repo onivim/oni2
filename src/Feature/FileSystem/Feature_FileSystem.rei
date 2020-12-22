@@ -12,6 +12,7 @@ type model;
 
 let initial: model;
 
+[@deriving show]
 type msg;
 
 module Msg: {
