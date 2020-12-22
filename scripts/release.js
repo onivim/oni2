@@ -160,6 +160,7 @@ if (process.platform == "linux") {
                 CFBundleTypeExtensions: fileAssoc.ext.map((ext) => ext.substr(1)),
                 CFBundleTypeName: fileAssoc.name,
                 CFBundleTypeRole: fileAssoc.role,
+                CFBundleTypeOSTypes: ["TEXT", "utxt", "TUTX", "****"],
                 CFBundleTypeIconFile: "macDocumentIcons/" + fileAssoc.icon.mac,
             }
         }),

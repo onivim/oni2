@@ -1,5 +1,7 @@
 ### Features
 
+- #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
+
 ### Bug Fixes
 
 - #2845 - Workspace: Opening a file should not always open a folder (fixes #1983)
@@ -7,10 +9,12 @@
 - #2839 - Extensions: CodeLens - fix lens persisting when line is deleted
 - #2844 - Vim: Fix `:tabnew`/`:new`/`:vnew` behavior (fixes #1455, #2753, #2843)
 - #2846 - UX: Editor Tabs - horizontal scrolling on trackpad is reversed (thanks @SeitaHigashi!)
+- #2865 - OSX: Fix drag-and-drop on dock icon (fixes #2855)
+- #2867 - Editor: Fix viewport shifting when deleting lines with codelens
 
 ### Performance
 
-- #2852 - Performance: Batch editor / codelens animations
+- #2852,#2864 - Performance: Batch editor / codelens animations
 
 ### Documentation
 

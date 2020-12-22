@@ -168,6 +168,10 @@ let overrideAnimation = (~animated, editor) => {
   isAnimationOverride: animated,
 };
 
+let isAnimatingScroll = ({scrollX, scrollY, _}) => {
+  Spring.isActive(scrollX) || Spring.isActive(scrollY);
+};
+
 let getBufferLineCount = ({buffer, _}) =>
   EditorBuffer.numberOfLines(buffer);
 
@@ -889,6 +893,33 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
      );
 };
 
+let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => {
+  // TODO
+  ignore(startLine);
+  ignore(stopLine);
+
+  let elements': list(InlineElements.element) =
+    elements
+    |> List.map((inlineElement: inlineElement) =>
+         InlineElements.{
+           key: inlineElement.key,
+           uniqueId: inlineElement.uniqueId,
+           line: inlineElement.lineNumber,
+           height: Component_Animation.make(Animation.expand(0., 0.)),
+           view: inlineElement.view,
+           opacity: Component_Animation.make(Animation.fadeIn),
+         }
+       );
+  editor
+  |> withSteadyCursor(e =>
+       {
+         ...e,
+         inlineElements:
+           InlineElements.set(~key, ~elements=elements', e.inlineElements),
+       }
+     );
+};
+
 let selectionOrCursorRange = editor => {
   switch (selection(editor)) {
   | None =>
@@ -1453,15 +1484,12 @@ let unprojectToPixel =
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
 
 let updateBuffer = (~update, ~buffer, editor) => {
-  editor
-  |> withSteadyCursor(editor =>
-       {
-         ...editor,
-         buffer,
-         wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
-         inlineElements: InlineElements.shift(update, editor.inlineElements),
-       }
-     );
+  {
+    ...editor,
+    buffer,
+    wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
+    inlineElements: InlineElements.shift(update, editor.inlineElements),
+  };
 };
 
 let setBuffer = (~buffer, editor) => {

@@ -569,7 +569,7 @@ let update =
           state,
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
         )
-      | CodeLensesChanged({bufferId, lenses}) =>
+      | CodeLensesChanged({bufferId, startLine, stopLine, lenses}) =>
         let inlineElements = editor =>
           lenses
           |> List.map(lens => {
@@ -599,7 +599,9 @@ let update =
           state.layout
           |> Feature_Layout.map(editor =>
                if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
-                 Feature_Editor.Editor.setInlineElements(
+                 Feature_Editor.Editor.replaceInlineElements(
+                   ~startLine,
+                   ~stopLine,
                    ~key="codelens",
                    ~elements=inlineElements(editor),
                    editor,
@@ -1679,6 +1681,16 @@ let update =
           state.fileExplorer,
         );
 
+      // Pop open and focus sidebar
+      let sideBar =
+        if (!Feature_SideBar.isOpen(state.sideBar)
+            || Feature_SideBar.selected(state.sideBar)
+            !== Feature_SideBar.FileExplorer) {
+          Feature_SideBar.toggle(FileExplorer, state.sideBar);
+        } else {
+          state.sideBar;
+        };
+
       let extWorkspace =
         maybeWorkspaceFolder |> Option.map(Exthost.WorkspaceData.fromPath);
       let eff =
@@ -1686,7 +1698,11 @@ let update =
           ~workspace=extWorkspace,
           extHostClient,
         );
-      ({...state, fileExplorer}, eff);
+
+      let state' =
+        {...state, fileExplorer, sideBar}
+        |> FocusManager.push(Focus.FileExplorer);
+      (state', eff);
     };
 
   | AutoUpdate(msg) =>

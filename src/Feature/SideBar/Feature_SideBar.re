@@ -61,6 +61,8 @@ let selected = ({selected, _}) => selected;
 let isOpen = ({isOpen, _}) => isOpen;
 let location = ({location, _}) => location;
 
+let isOpenByDefault = ({openByDefault, _}) => openByDefault;
+
 let initial = {
   openByDefault: false,
   isOpen: false,
