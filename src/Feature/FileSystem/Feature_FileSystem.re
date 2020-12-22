@@ -88,7 +88,6 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg));
 
 let update = (msg, model) => {
-  prerr_endline("MSG: " ++ show_msg(msg));
   switch (msg) {
   | Exthost(Stat({uri}), resolver) =>
     let promise =

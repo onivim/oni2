@@ -650,8 +650,6 @@ module FileSystem = {
       });
 
   let handle = (method, args: Yojson.Safe.t) => {
-    prerr_endline("METHOD: " ++ method);
-    prerr_endline("JSON: " ++ Yojson.Safe.to_string(args));
     Base.Result.Let_syntax.(
       switch (method, args) {
       | ("$stat", `List([uriJson])) =>
