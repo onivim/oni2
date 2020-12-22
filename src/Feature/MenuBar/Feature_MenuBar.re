@@ -6,6 +6,8 @@ module Colors = Feature_Theme.Colors;
 [@deriving show]
 type msg =
   | MouseClicked({uniqueId: string})
+  | MouseOver({uniqueId: string})
+  | MouseOut({uniqueId: string})
   | ContextMenu(Component_ContextMenu.msg(string));
 
 type session = {
@@ -16,56 +18,79 @@ type session = {
 type model = {
   menuSchema: Schema.t,
   activeSession: option(session),
+  hoverId: option(string),
 };
 
 type outmsg =
   | Nothing
   | ExecuteCommand({command: string});
 
+let show = (~contextKeys, ~commands, ~uniqueId, model) => {
+  let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
+  let topLevelItems = MenuBar.top(model.menuSchema);
+  let maybeMenu =
+    topLevelItems
+    |> List.filter((menu: Menu.t) => Menu.uniqueId(menu) == uniqueId)
+    |> (l => List.nth_opt(l, 0));
+
+  let rec groupToContextMenu = (group: MenuBar.Group.t) => {
+    let items =
+      MenuBar.Group.items(group)
+      |> List.map(item =>
+           if (Item.isSubmenu(item)) {
+             let submenuItems = Item.submenu(item);
+             let groups = submenuItems |> List.map(groupToContextMenu);
+             Component_ContextMenu.Submenu({
+               label: Item.title(item),
+               items: groups,
+             });
+           } else {
+             Component_ContextMenu.Item({
+               label: Item.title(item),
+               data: Item.command(item),
+               details: Revery.UI.React.empty,
+             });
+           }
+         );
+
+    Component_ContextMenu.Group(items);
+  };
+
+  let session =
+    maybeMenu
+    |> Option.map(menu => {
+         let contextMenu =
+           Menu.contents(menu, builtMenu)
+           |> List.map(groupToContextMenu)
+           |> Component_ContextMenu.make;
+         {activePath: uniqueId, contextMenu};
+       });
+  {...model, activeSession: session};
+};
+
 let update = (~contextKeys, ~commands, msg, model) => {
   switch (msg) {
   | MouseClicked({uniqueId}) =>
-    let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
-    let topLevelItems = MenuBar.top(model.menuSchema);
-    let maybeMenu =
-      topLevelItems
-      |> List.filter((menu: Menu.t) => Menu.uniqueId(menu) == uniqueId)
-      |> (l => List.nth_opt(l, 0));
+    let model' = model |> show(~contextKeys, ~commands, ~uniqueId);
+    (model', Nothing);
 
-    let rec groupToContextMenu = (group: MenuBar.Group.t) => {
-      let items =
-        MenuBar.Group.items(group)
-        |> List.map(item =>
-             if (Item.isSubmenu(item)) {
-               let submenuItems = Item.submenu(item);
-               let groups = submenuItems |> List.map(groupToContextMenu);
-               Component_ContextMenu.Submenu({
-                 label: Item.title(item),
-                 items: groups,
-               });
-             } else {
-               Component_ContextMenu.Item({
-                 label: Item.title(item),
-                 data: Item.command(item),
-                 details: Revery.UI.React.empty,
-               });
-             }
-           );
+  | MouseOver({uniqueId}) =>
+    let model' =
+      if (model.activeSession != None) {
+        model |> show(~contextKeys, ~commands, ~uniqueId);
+      } else {
+        model;
+      };
+    ({...model', hoverId: Some(uniqueId)}, Nothing);
 
-      Component_ContextMenu.Group(items);
-    };
-
-    let session =
-      maybeMenu
-      |> Option.map(menu => {
-           let contextMenu =
-             Menu.contents(menu, builtMenu)
-             |> List.map(groupToContextMenu)
-             |> Component_ContextMenu.make;
-           {activePath: uniqueId, contextMenu};
-         });
-
-    ({...model, activeSession: session}, Nothing);
+  | MouseOut({uniqueId}) =>
+    let model' =
+      if (model.hoverId == Some(uniqueId)) {
+        {...model, hoverId: None};
+      } else {
+        model;
+      };
+    (model', Nothing);
 
   | ContextMenu(contextMenuMsg) =>
     let (activeSession', eff) =
@@ -110,6 +135,7 @@ let initial = (~menus, ~groups) => {
 
   {
     activeSession: None,
+    hoverId: None,
     menuSchema:
       Schema.ofList([
         globalMenus,
@@ -148,21 +174,22 @@ module View = {
        );
 
   module TopMenu = {
-    let%component make =
-                  (
-                    ~getShortcutKey,
-                    ~model,
-                    ~menu,
-                    ~theme,
-                    ~dispatch,
-                    ~font: UiFont.t,
-                    ~color,
-                    ~backgroundColor,
-                    (),
-                  ) => {
-      let%hook (isFocused, setIsFocused) = Hooks.state(false);
+    let make =
+        (
+          ~getShortcutKey,
+          ~model,
+          ~menu,
+          ~theme,
+          ~dispatch,
+          ~font: UiFont.t,
+          ~color,
+          ~backgroundColor,
+          (),
+        ) => {
+      // let%hook (isFocused, setIsFocused) = Hooks.state(false);
 
       let uniqueId = Menu.uniqueId(menu);
+      let isFocused = Some(uniqueId) == model.hoverId;
       let maybeElem =
         isActive(uniqueId, model)
           ? model.activeSession
@@ -196,8 +223,8 @@ module View = {
           justifyContent(`Center),
           position(`Relative),
         ]
-        onMouseOut={_ => setIsFocused(_ => false)}
-        onMouseOver={_ => setIsFocused(_ => true)}
+        onMouseOut={_ => dispatch(MouseOut({uniqueId: uniqueId}))}
+        onMouseOver={_ => {dispatch(MouseOver({uniqueId: uniqueId}))}}
         onMouseDown={_ => dispatch(MouseClicked({uniqueId: uniqueId}))}>
         <View style=Style.[paddingTop(2)]>
           <Text
