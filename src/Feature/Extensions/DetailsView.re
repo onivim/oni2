@@ -271,14 +271,7 @@ let header =
         maybeRatingElement
       </View>
       <View style=Styles.headerRow>
-        <View style=Styles.headerTextContainer>
-          <Text
-            style=Style.[color(fg)]
-            fontFamily={font.family}
-            fontSize=14.
-            text=description
-          />
-        </View>
+        <headerText text=description />
       </View>
       <View style=Styles.headerRow> buttonElements </View>
     </View>
