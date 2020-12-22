@@ -1,5 +1,3 @@
-open Oni_Core;
-
 let download = (msg: Msg.DownloadService.msg) => {
   switch (msg) {
   | Download({uri, dest}) =>
