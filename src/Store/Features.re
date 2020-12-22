@@ -1661,6 +1661,16 @@ let update =
           state.fileExplorer,
         );
 
+      // Pop open and focus sidebar
+      let sideBar =
+        if (!Feature_SideBar.isOpen(state.sideBar)
+            || Feature_SideBar.selected(state.sideBar)
+            !== Feature_SideBar.FileExplorer) {
+          Feature_SideBar.toggle(FileExplorer, state.sideBar);
+        } else {
+          state.sideBar;
+        };
+
       let extWorkspace =
         maybeWorkspaceFolder |> Option.map(Exthost.WorkspaceData.fromPath);
       let eff =
@@ -1668,7 +1678,11 @@ let update =
           ~workspace=extWorkspace,
           extHostClient,
         );
-      ({...state, fileExplorer}, eff);
+
+      let state' =
+        {...state, fileExplorer, sideBar}
+        |> FocusManager.push(Focus.FileExplorer);
+      (state', eff);
     };
 
   | AutoUpdate(msg) =>
