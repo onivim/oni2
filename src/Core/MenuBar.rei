@@ -5,6 +5,7 @@ module Schema: {
   type group;
 
   let item: (~title: string, ~command: string) => item;
+  let submenu: (~title: string, list(group)) => item;
 
   let command: Command.t(_) => item;
 
@@ -27,14 +28,17 @@ module Schema: {
 type builtMenu;
 
 module Item: {
-  type t;
+  type t = Schema.item;
 
   let title: t => string;
   let command: t => string;
+
+  let isSubmenu: t => bool;
+  let submenu: t => list(Schema.group);
 };
 
 module Group: {
-  type t;
+  type t = Schema.group;
 
   let items: t => list(Item.t);
 };

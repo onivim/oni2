@@ -6,11 +6,12 @@ type item('data) = {
   label: string,
   // TODO: icon: option(IconTheme.IconDefinition.t),
   data: [@opaque] 'data,
+  details: [@opaque] element,
 };
 
 type content('data) =
   | Item(item('data))
-  | Group(list(item('data)))
+  | Group(list(content('data)))
   | Submenu({
       label: string,
       items: list(content('data)),

@@ -32,22 +32,35 @@ let update = (~contextKeys, ~commands, msg, model) => {
       |> List.filter((menu: Menu.t) => Menu.uniqueId(menu) == uniqueId)
       |> (l => List.nth_opt(l, 0));
 
+    let rec groupToContextMenu = (group: MenuBar.Group.t) => {
+      let items =
+        MenuBar.Group.items(group)
+        |> List.map(item =>
+             if (Item.isSubmenu(item)) {
+               let submenuItems = Item.submenu(item);
+               let groups = submenuItems |> List.map(groupToContextMenu);
+               Component_ContextMenu.Submenu({
+                 label: Item.title(item),
+                 items: groups,
+               });
+             } else {
+               Component_ContextMenu.Item({
+                 label: Item.title(item),
+                 data: Item.command(item),
+                 details: Revery.UI.React.empty,
+               });
+             }
+           );
+
+      Component_ContextMenu.Group(items);
+    };
+
     let session =
       maybeMenu
       |> Option.map(menu => {
            let contextMenu =
              Menu.contents(menu, builtMenu)
-             |> List.map(group => {
-                  let items =
-                    MenuBar.Group.items(group)
-                    |> List.map(item =>
-                         Component_ContextMenu.{
-                           label: Item.title(item),
-                           data: Item.command(item),
-                         }
-                       );
-                  Component_ContextMenu.Group(items);
-                })
+             |> List.map(groupToContextMenu)
              |> Component_ContextMenu.make;
            {activePath: uniqueId, contextMenu};
          });
@@ -129,7 +142,8 @@ module View = {
     |> Component_ContextMenu.map(~f=item =>
          Component_ContextMenu.{
            ...item,
-           label: item.label ++ getShortcutKey(item.data),
+           label: item.label,
+           details: getShortcutKey(item.data),
          }
        );
 
@@ -256,7 +270,15 @@ module View = {
                  None;
                }
              )
-          |> Option.value(~default="none")
+          |> Option.map(cmd =>
+               <Text
+                 fontFamily={font.family}
+                 fontSize=11.
+                 style=Style.[color(fgColor), opacity(0.75)]
+                 text=cmd
+               />
+             )
+          |> Option.value(~default=Revery.UI.React.empty)
       );
     };
 

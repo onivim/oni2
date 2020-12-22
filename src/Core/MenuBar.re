@@ -3,12 +3,16 @@ open Kernel;
 module Schema = {
   type uniqueId = list(string);
 
-  type item = {
-    title: string,
-    command: string,
-  };
-
-  type group = {
+  type item =
+    | Item({
+        title: string,
+        command: string,
+      })
+    | Submenu({
+        title: string,
+        items: list(group),
+      })
+  and group = {
     order: int,
     parentId: uniqueId,
     items: list(item),
@@ -28,12 +32,15 @@ module Schema = {
 
   let idToString = uniqueId => uniqueId |> String.concat(".");
 
-  let item = (~title, ~command) => {title, command};
+  let item = (~title, ~command) => Item({title, command});
 
-  let command = (command: Command.t(_)) => {
-    command: command.id,
-    title: command.title |> Option.value(~default="(null)"),
-  };
+  let submenu = (~title, items) => Submenu({title, items});
+
+  let command = (command: Command.t(_)) =>
+    Item({
+      command: command.id,
+      title: command.title |> Option.value(~default="(null)"),
+    });
 
   let menu = (~order=500, ~uniqueId, ~parent: option(menu), title) => {
     let uniqueId =
@@ -114,11 +121,28 @@ module Schema = {
 type t = Schema.t;
 
 module Item = {
+  open Schema;
   type t = Schema.item;
 
-  let title = ({title, _}: Schema.item) => title;
+  let title =
+    fun
+    | Item({title, _}) => title
+    | Submenu({title, _}) => title;
 
-  let command = ({command, _}: Schema.item) => command;
+  let command =
+    fun
+    | Item({command, _}) => command
+    | Submenu(_) => "___submenu___";
+
+  let isSubmenu =
+    fun
+    | Item(_) => false
+    | Submenu(_) => true;
+
+  let submenu =
+    fun
+    | Item(_) => []
+    | Submenu({items, _}) => items;
 };
 
 module Group = {

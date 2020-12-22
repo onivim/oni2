@@ -19,12 +19,13 @@ type item('data) = {
   label: string,
   // icon: option(IconTheme.IconDefinition.t),
   data: [@opaque] 'data,
+  details: [@opaque] element,
 };
 
 [@deriving show({with_path: false})]
 type content('data) =
   | Item(item('data))
-  | Group(list(item('data)))
+  | Group(list(content('data)))
   | Submenu({
       label: string,
       items: list(content('data)),
@@ -69,7 +70,7 @@ let map = (~f: item('a) => item('a), {items, openSubmenus}) => {
   let rec loopItems =
     fun
     | Item(data) => Item(f(data))
-    | Group(items) => Group(List.map(f, items))
+    | Group(items) => Group(List.map(loopItems, items))
     | Submenu({label, items}) =>
       Submenu({label, items: List.map(loopItems, items)});
 
@@ -104,6 +105,7 @@ module View = {
       let container = (~theme, ~isFocused) => [
         padding(4),
         flexDirection(`Row),
+        alignItems(`Center),
         backgroundColor(bg(~isFocused).from(theme)),
       ];
 
@@ -125,6 +127,7 @@ module View = {
     let make:
       (
         ~label: string,
+        ~details: Revery.UI.element,
         ~theme: ColorTheme.Colors.t,
         ~font: UiFont.t,
         ~onClick: unit => unit,
@@ -132,7 +135,7 @@ module View = {
         unit
       ) =>
       _ =
-      (~label, ~theme, ~font, ~onClick, ~onHover, ()) =>
+      (~label, ~details, ~theme, ~font, ~onClick, ~onHover, ()) =>
         component(hooks => {
           let ((isFocused, setIsFocused), hooks) =
             Hooks.state(false, hooks);
@@ -174,7 +177,20 @@ module View = {
                   setIsFocused(_ => true);
                 }}>
                 // iconView
-                 labelView </View>
+
+                  <View
+                    style=Style.[marginLeft(4), flexGrow(1), flexShrink(1)]>
+                    labelView
+                  </View>
+                  <View
+                    style=Style.[
+                      marginHorizontal(4),
+                      flexGrow(0),
+                      flexShrink(0),
+                    ]>
+                    details
+                  </View>
+                </View>
             </Clickable>,
             hooks,
           );
@@ -183,7 +199,14 @@ module View = {
 
   let divider = (~theme, ()) => {
     let fg = Colors.Menu.foreground.from(theme);
-    <View style=Style.[height(1), opacity(0.3), backgroundColor(fg)] />;
+    <View
+      style=Style.[
+        marginHorizontal(8),
+        height(1),
+        opacity(0.3),
+        backgroundColor(fg),
+      ]
+    />;
   };
 
   // MENU
@@ -209,6 +232,12 @@ module View = {
       ];
     };
 
+    let subMenuIcon = (~theme, ()) => {
+      let icon = Codicon.triangleRight;
+      let color = Colors.Menu.foreground.from(theme);
+      <Codicon icon fontSize=12. color />;
+    };
+
     let component = React.Expert.component("Submenu");
     let make =
         (~items, ~x, ~y, ~theme, ~font, ~onItemSelect, ~onSubmenuHover, ()) =>
@@ -225,7 +254,8 @@ module View = {
                         Revery.Math.BoundingBox2d.getBounds(bbox);
                       onSubmenuHover({yOffset, items});
                     };
-                    [<MenuItem label theme font onClick onHover />];
+                    let details = <subMenuIcon theme />;
+                    [<MenuItem label theme font onClick onHover details />];
 
                   | Item(item) =>
                     let onClick = () => onItemSelect(item);
@@ -233,6 +263,7 @@ module View = {
                     [
                       <MenuItem
                         label={item.label}
+                        details={item.details}
                         theme
                         font
                         onClick
@@ -244,16 +275,45 @@ module View = {
                     let items' =
                       items
                       |> List.map(item => {
-                           let onClick = () => onItemSelect(item);
-                           let onHover = _ => ();
-                           <MenuItem
-                             label={item.label}
-                             theme
-                             font
-                             onClick
-                             onHover
-                           />;
-                         });
+                           let elem =
+                             switch (item) {
+                             | Group(_) => []
+                             | Submenu({label, items}) =>
+                               let onClick = () => ();
+                               let onHover = bbox => {
+                                 let (_x, yOffset, _width, _height) =
+                                   Revery.Math.BoundingBox2d.getBounds(bbox);
+                                 onSubmenuHover({yOffset, items});
+                               };
+                               let details = <subMenuIcon theme />;
+                               [
+                                 <MenuItem
+                                   details
+                                   label
+                                   theme
+                                   font
+                                   onClick
+                                   onHover
+                                 />,
+                               ];
+
+                             | Item(item) =>
+                               let onClick = () => onItemSelect(item);
+                               let onHover = _ => ();
+                               [
+                                 <MenuItem
+                                   label={item.label}
+                                   details={item.details}
+                                   theme
+                                   font
+                                   onClick
+                                   onHover
+                                 />,
+                               ];
+                             };
+                           elem;
+                         })
+                      |> List.flatten;
 
                     idx == 0 ? items' : [<divider theme />, ...items'];
                   }

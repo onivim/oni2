@@ -70,11 +70,13 @@ let notificationContextMenu =
       label: "Clear All",
       // icon: None,
       data: ClearAll,
+      details: Revery.UI.React.empty,
     }),
     Item({
       label: "Open",
       // icon: None,
       data: Open,
+      details: Revery.UI.React.empty,
     }),
   ]);
 
