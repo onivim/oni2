@@ -82,6 +82,8 @@ external vimBufferGetFilename: buffer => option(string) =
 external vimBufferGetFiletype: buffer => option(string) =
   "libvim_vimBufferGetFiletype";
 
+external vimBufferNew: unit => buffer = "libvim_vimBufferNew";
+
 external vimBufferGetFileFormat: buffer => option(lineEnding) =
   "libvim_vimBufferGetFileFormat";
 external vimBufferSetFileFormat: (buffer, lineEnding) => unit =

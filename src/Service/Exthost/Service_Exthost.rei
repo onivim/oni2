@@ -139,6 +139,8 @@ module Sub: {
     (
       ~handle: int,
       ~buffer: Oni_Core.Buffer.t,
+      ~startLine: EditorCoreTypes.LineNumber.t,
+      ~stopLine: EditorCoreTypes.LineNumber.t,
       ~toMsg: result(list(Exthost.CodeLens.t), string) => 'a,
       Exthost.Client.t
     ) =>

@@ -23,6 +23,7 @@ module Goto = Goto;
 module Mapping = Mapping;
 module Operator = Operator;
 module Scroll = Scroll;
+module Split = Split;
 module TabPage = TabPage;
 module Mode = Mode;
 module SubMode = SubMode;
@@ -279,11 +280,7 @@ let _onWindowMovement = (mt, c) => {
 };
 
 let _onWindowSplit = (st, p) => {
-  queue(() => Event.dispatch2(st, p, Listeners.windowSplit));
-};
-
-let _onWindowSplit = (st, p) => {
-  queue(() => Event.dispatch2(st, p, Listeners.windowSplit));
+  queueEffect(Effect.WindowSplit(Split.ofNative(st, p)));
 };
 
 let _onYank =
@@ -434,6 +431,10 @@ let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
   queueEffect(Effect.Goto(gotoType));
 };
 
+let _onOutput = (cmd, output) => {
+  queueEffect(Effect.Output({cmd, output}));
+};
+
 let _onClear = (target: Clear.target, count: int) => {
   queueEffect(Effect.Clear(Clear.{target, count}));
 };
@@ -565,6 +566,7 @@ let init = () => {
   Callback.register("lv_onInputUnmap", _onInputUnmap);
   Callback.register("lv_onToggleComments", _onToggleComments);
   Callback.register("lv_onGetChar", _onGetChar);
+  Callback.register("lv_onOutput", _onOutput);
 
   Native.vimInit();
 

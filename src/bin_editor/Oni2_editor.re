@@ -76,8 +76,15 @@ switch (eff) {
   let initWorkspace = () => {
     let maybePath =
       switch (Oni_CLI.(cliOptions.folder)) {
+      // If a folder was specified, we should for sure use that
       | Some(folder) => Some(folder)
-      | None => Store.Persistence.Global.workspace()
+
+      // If no files were specified, we can pull from persistence
+      | None when cliOptions.filesToOpen == [] =>
+        Store.Persistence.Global.workspace()
+
+      // If files were specified (#1983), don't open workspace from persistence
+      | None => None
       };
 
     let couldChangeDirectory = ref(false);
@@ -427,7 +434,7 @@ switch (eff) {
 
     let _: App.unsubscribe =
       App.onFileOpen(app, path => {
-        dispatch(Model.Actions.OpenFileByPath(path, None, None))
+        dispatch(Model.Actions.FilesDropped({paths: [path]}))
       });
     let _: Window.unsubscribe =
       Window.onMaximized(window, () =>

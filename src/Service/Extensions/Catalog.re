@@ -82,6 +82,9 @@ module Details = {
     //      categories: list(string),
     version: [@opaque] option(Semver.t),
     versions: list(VersionInfo.t),
+    downloadCount: option(int),
+    averageRating: option(float),
+    reviewCount: option(int),
   };
 
   let id = ({namespace, name, _}) => {
@@ -91,6 +94,15 @@ module Details = {
   let displayName = ({displayName, _} as details) => {
     displayName |> Option.value(~default=id(details));
   };
+
+  let averageRating = ({averageRating, _}) =>
+    averageRating |> Option.value(~default=0.);
+
+  let downloadCount = ({downloadCount, _}) =>
+    downloadCount |> Option.value(~default=0);
+
+  let reviewCount = ({reviewCount, _}) =>
+    reviewCount |> Option.value(~default=0);
 
   let toString =
       ({downloadUrl, description, homepageUrl, versions, _} as details) => {
@@ -136,6 +148,9 @@ module Details = {
           licenseName: field.optional("license", string),
           displayName: field.optional("displayName", string),
           description: field.optional("description", string),
+          downloadCount: field.optional("downloadCount", int),
+          averageRating: field.optional("averageRating", float),
+          reviewCount: field.optional("reviewCount", int),
           isPublicNamespace:
             field.withDefault(
               "namespaceAccess",

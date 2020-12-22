@@ -19,6 +19,9 @@ type model('item) = {
   // But for keyboarding gestures, like 'zz', the animation is helpful.
   isScrollAnimated: bool,
   searchContext: [@opaque] SearchContext.model,
+  // Keep track of the last scroll alignment, so when the view resizes,
+  // we can keep the selected item where it should be
+  lastAlignment: option([ | `Top | `Bottom | `Center]),
 };
 
 let create = (~rowHeight) => {
@@ -35,6 +38,7 @@ let create = (~rowHeight) => {
   isScrollAnimated: false,
 
   searchContext: SearchContext.initial,
+  lastAlignment: None,
 };
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
@@ -212,9 +216,15 @@ let scrollWindows = (~count: int, model) => {
   |> enableScrollAnimation;
 };
 
+let setScrollAlignment = (~maybeAlignment, model) => {
+  ...model,
+  lastAlignment: maybeAlignment,
+};
+
 let scrollSelectedToTop = model => {
   model
   |> setScrollY(~scrollY=float(model.selected * model.rowHeight))
+  |> setScrollAlignment(~maybeAlignment=Some(`Top))
   |> enableScrollAnimation;
 };
 
@@ -228,6 +238,7 @@ let scrollSelectedToBottom = model => {
            - (model.viewportHeight - model.rowHeight),
          ),
      )
+  |> setScrollAlignment(~maybeAlignment=Some(`Bottom))
   |> enableScrollAnimation;
 };
 
@@ -242,7 +253,17 @@ let scrollSelectedToCenter = model => {
            / 2,
          ),
      )
+  |> setScrollAlignment(~maybeAlignment=Some(`Center))
   |> enableScrollAnimation;
+};
+
+let restoreAlignment = model => {
+  switch (model.lastAlignment) {
+  | Some(`Top) => model |> scrollSelectedToTop
+  | Some(`Bottom) => model |> scrollSelectedToBottom
+  | Some(`Center) => model |> scrollSelectedToCenter
+  | None => model
+  };
 };
 
 let scrollTo = (~index, ~alignment, model) => {
@@ -378,11 +399,8 @@ let update = (msg, model) => {
     (model', Nothing);
 
   | ViewDimensionsChanged({heightInPixels, widthInPixels}) => (
-      {
-        ...model,
-        viewportWidth: widthInPixels,
-        viewportHeight: heightInPixels,
-      },
+      {...model, viewportWidth: widthInPixels, viewportHeight: heightInPixels}
+      |> restoreAlignment,
       Nothing,
     )
 
@@ -949,11 +967,11 @@ module View = {
 
         let topShadow =
           model |> showTopScrollShadow
-            ? <Oni_Components.ScrollShadow.Top /> : React.empty;
+            ? <Oni_Components.ScrollShadow.Top theme /> : React.empty;
 
         let bottomShadow =
           model |> showBottomScrollShadow
-            ? <Oni_Components.ScrollShadow.Bottom /> : React.empty;
+            ? <Oni_Components.ScrollShadow.Bottom theme /> : React.empty;
 
         (
           <Oni_Components.OniLayer

@@ -13,7 +13,6 @@ type directoryChangedListener = string => unit;
 type messageListener = (Types.msgPriority, string, string) => unit;
 type quitListener = (Types.quitType, bool) => unit;
 type windowMovementListener = (Types.windowMovementType, int) => unit;
-type windowSplitListener = (Types.windowSplitType, string) => unit;
 type yankListener = Yank.t => unit;
 type writeFailureListener = (writeFailureReason, buffer) => unit;
 type noopListener = unit => unit;
@@ -43,6 +42,5 @@ let terminalRequested: Event.t(Types.terminalRequest => unit) =
 let unhandledEscape: ref(list(noopListener)) = ref([]);
 let version: ref(list(noopListener)) = ref([]);
 let windowMovement: ref(list(windowMovementListener)) = ref([]);
-let windowSplit: ref(list(windowSplitListener)) = ref([]);
 let yank: ref(list(yankListener)) = ref([]);
 let writeFailure: ref(list(writeFailureListener)) = ref([]);

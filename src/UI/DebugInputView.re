@@ -5,6 +5,7 @@
  */
 
 open Revery.UI;
+open Revery.UI.Components;
 
 module Model = Oni_Model;
 
@@ -13,12 +14,15 @@ module Colors = Feature_Theme.Colors;
 module Styles = {
   open Style;
 
-  let row = [flexDirection(`Row)];
+  let row = [flexDirection(`Row), flexGrow(1)];
 
-  let column = [flexDirection(`Column)];
+  let column = [flexDirection(`Column), flexGrow(1)];
+
+  let section = [padding(16)];
 };
 
 let make = (~state: Model.State.t, ()) => {
+  let context = Model.ContextKeys.all(state);
   let contextKeys =
     Model.ContextKeys.all(state)
     |> WhenExpr.ContextKeys.values
@@ -29,8 +33,35 @@ let make = (~state: Model.State.t, ()) => {
     |> List.map(text => <Text text />)
     |> React.listToElement;
 
-  <View style=Styles.row>
-    <View style=Styles.column>
+  let config = Model.Selectors.configResolver(state);
+
+  let availableBindings =
+    Feature_Input.candidates(~config, ~context, state.input);
+
+  let bindingElems =
+    availableBindings
+    |> List.map(((matcher, command)) => {
+         let cmd =
+           switch (command) {
+           | Feature_Input.VimExCommand(ex) => ex
+           | Feature_Input.NamedCommand(cmd) => cmd
+           };
+         <View style=Styles.row>
+           <View style=Style.[marginHorizontal(8)]>
+             <Feature_Input.View.Matcher matcher font={state.uiFont} />
+           </View>
+           <Text text=cmd />
+         </View>;
+       })
+    |> React.listToElement;
+
+  let consumedKeys =
+    Feature_Input.consumedKeys(state.input)
+    |> List.map(Feature_Input.keyPressToString)
+    |> String.concat(", ");
+
+  <ScrollView style=Styles.row>
+    <View style=Styles.section>
       <Text
         text={
           "Focus: "
@@ -40,5 +71,13 @@ let make = (~state: Model.State.t, ()) => {
       <Text text="Context Keys:" />
       contextKeys
     </View>
-  </View>;
+    <View style=Styles.section>
+      <Text text="Consumed keys:" />
+      <Text text=consumedKeys />
+    </View>
+    <View style=Styles.section>
+      <Text text="Available bindings:" />
+      bindingElems
+    </View>
+  </ScrollView>;
 };

@@ -174,6 +174,16 @@ module type Input = {
     ) =>
     (t, list(effect));
 
+  // [candidates] returns a list of available matcher / command
+  // candidates, based on the current context and input state.
+  let candidates:
+    (~leaderKey: option(PhysicalKey.t), ~context: context, t) =>
+    list((Matcher.t, command));
+
+  // [consumedKeys(model)] returns a list of keys
+  // that are currently consumed by the state machine.
+  let consumedKeys: t => list(KeyPress.t);
+
   let remove: (uniqueId, t) => t;
 
   /**

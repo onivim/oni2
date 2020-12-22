@@ -236,6 +236,22 @@ module LanguageFeatures = {
       client,
     );
   };
+
+  let resolveCodeLens = (~handle: int, ~codeLens: CodeLens.t, client) => {
+    let decoder = Json.Decode.(nullable(CodeLens.decode));
+    Client.request(
+      ~decoder,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$resolveCodeLens",
+      ~args=
+        `List([
+          `Int(handle),
+          codeLens |> Json.Encode.encode_value(CodeLens.encode),
+        ]),
+      client,
+    );
+  };
   let provideCompletionItems =
       (
         ~handle: int,

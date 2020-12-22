@@ -1,6 +1,10 @@
 open Oni_Core;
 open Oni_Core.Utility;
 
+module Log = (
+  val Oni_Core.Log.withNamespace("Oni2.LanguageSupport.CodeLens")
+);
+
 // MODEL
 
 type codeLens = {
@@ -41,6 +45,8 @@ type outmsg =
   | Nothing
   | CodeLensesChanged({
       bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(codeLens),
     });
 
@@ -61,6 +67,8 @@ type msg =
   | CodeLensesReceived({
       handle: int,
       bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(Exthost.CodeLens.t),
     });
 
@@ -79,13 +87,6 @@ let unregister = (~handle: int, model) => {
 let addLenses = (handle, bufferId, lenses, handleToLenses) => {
   let internalLenses =
     lenses
-    |> List.sort((lensA, lensB) => {
-         Exthost.CodeLens.(
-           {
-             lensA.range.startLineNumber - lensB.range.startLineNumber;
-           }
-         )
-       })
     |> List.map(lens =>
          {
            lens,
@@ -99,13 +100,50 @@ let addLenses = (handle, bufferId, lenses, handleToLenses) => {
              ),
          }
        );
-  IntMap.add(handle, internalLenses, handleToLenses);
+
+  let sort = (lenses: list(codeLens)) =>
+    lenses
+    |> Base.List.dedup_and_sort(~compare=(lensA, lensB) => {
+         Exthost.CodeLens.(
+           {
+             lensA.lens.range.startLineNumber - lensB.lens.range.startLineNumber;
+           }
+         )
+       });
+
+  handleToLenses
+  |> IntMap.update(
+       handle,
+       fun
+       | None => internalLenses |> sort |> Option.some
+       | Some(prev) => prev @ internalLenses |> sort |> Option.some,
+     );
+};
+
+let removeLensesInRange = (startLine, stopLine, handle, handleToLenses) => {
+  let start1 = EditorCoreTypes.LineNumber.toOneBased(startLine);
+  let stop1 = EditorCoreTypes.LineNumber.toOneBased(stopLine);
+  let filter = (lens: codeLens) => {
+    Exthost.CodeLens.(
+      {
+        let line = lens.lens.range.startLineNumber;
+        !(line >= start1 && line <= stop1);
+      }
+    );
+  };
+  handleToLenses
+  |> IntMap.update(
+       handle,
+       fun
+       | None => None
+       | Some(lenses) => lenses |> List.filter(filter) |> Option.some,
+     );
 };
 
 let update = (msg, model) =>
   switch (msg) {
   | CodeLensesError(_) => (model, Nothing)
-  | CodeLensesReceived({handle, bufferId, lenses}) =>
+  | CodeLensesReceived({handle, startLine, stopLine, bufferId, lenses}) =>
     let bufferToLenses =
       model.bufferToLenses
       |> IntMap.update(
@@ -116,78 +154,96 @@ let update = (msg, model) =>
              |> addLenses(handle, bufferId, lenses)
              |> Option.some
            | Some(existing) =>
-             existing |> addLenses(handle, bufferId, lenses) |> Option.some,
+             existing
+             |> removeLensesInRange(startLine, stopLine, handle)
+             |> addLenses(handle, bufferId, lenses)
+             |> Option.some,
          );
+
     let model' = {...model, bufferToLenses};
     let lenses = get(~bufferId, model');
-    (model', CodeLensesChanged({bufferId, lenses}));
+    (model', CodeLensesChanged({bufferId, startLine, stopLine, lenses}));
   };
-
-// CONFIGURATION
-
-module VimSettings = {
-  open Config.Schema;
-  open VimSetting.Schema;
-
-  let codeLens =
-    vim("codelens", codeLensSetting => {
-      codeLensSetting
-      |> VimSetting.decode_value_opt(bool)
-      |> Option.value(~default=false)
-    });
-};
-
-module Configuration = {
-  open Config.Schema;
-
-  module Experimental = {
-    let enabled =
-      setting(
-        ~vim=VimSettings.codeLens,
-        "experimental.editor.codeLens",
-        bool,
-        ~default=false,
-      );
-  };
-};
 
 // SUBSCRIPTION
 
 module Sub = {
-  let create = (~visibleBuffers, ~client, model) => {
-    visibleBuffers
-    |> List.map(buffer => {
-         model.providers
-         |> List.filter(({selector, _}) =>
-              Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
-            )
-         |> List.map(({handle, _}) => {
-              let toMsg =
-                fun
-                | Error(msg) => CodeLensesError(msg)
-                | Ok(lenses) =>
-                  CodeLensesReceived({
-                    handle,
-                    bufferId: buffer |> Oni_Core.Buffer.getId,
-                    lenses,
-                  });
+  let create =
+      (
+        ~topVisibleBufferLine,
+        ~bottomVisibleBufferLine,
+        ~visibleBuffers,
+        ~client,
+        model,
+      ) => {
+    // Query above and below a viewport - grabbing some extra codelenses above and below -
+    // to minimize codelens popping in while scrolling
+    let delta: int =
+      EditorCoreTypes.LineNumber.toOneBased(bottomVisibleBufferLine)
+      - EditorCoreTypes.LineNumber.toOneBased(topVisibleBufferLine);
+    let (topVisibleBufferLine, bottomVisibleBufferLine) =
+      EditorCoreTypes.LineNumber.(
+        topVisibleBufferLine - delta,
+        bottomVisibleBufferLine + delta,
+      );
 
-              Service_Exthost.Sub.codeLenses(
-                ~handle,
-                ~buffer,
-                ~toMsg,
-                client,
-              );
-            })
-       })
-    |> List.flatten
-    |> Isolinear.Sub.batch;
+    let codeLenses =
+      visibleBuffers
+      |> List.map(buffer => {
+           model.providers
+           |> List.filter(({selector, _}) =>
+                Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
+              )
+           |> List.map(({handle, _}) => {
+                let toMsg =
+                  fun
+                  | Error(msg) => CodeLensesError(msg)
+                  | Ok(lenses) =>
+                    CodeLensesReceived({
+                      handle,
+                      startLine: topVisibleBufferLine,
+                      stopLine: bottomVisibleBufferLine,
+                      bufferId: buffer |> Oni_Core.Buffer.getId,
+                      lenses,
+                    });
+
+                Service_Exthost.Sub.codeLenses(
+                  ~handle,
+                  ~buffer,
+                  ~startLine=topVisibleBufferLine,
+                  ~stopLine=bottomVisibleBufferLine,
+                  ~toMsg,
+                  client,
+                );
+              })
+         })
+      |> List.flatten;
+
+    codeLenses |> Isolinear.Sub.batch;
   };
 };
 
-let sub = (~config, ~visibleBuffers, ~client, model) =>
-  if (Configuration.Experimental.enabled.get(config)) {
-    Sub.create(~visibleBuffers, ~client, model);
+module Configuration = Feature_Configuration.GlobalConfiguration;
+
+let sub =
+    (
+      ~config,
+      ~isAnimatingScroll,
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
+      ~visibleBuffers,
+      ~client,
+      model,
+    ) =>
+  if (!isAnimatingScroll
+      && Configuration.Experimental.Editor.codeLensEnabled.get(config)) {
+    Sub.create(
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
+      ~visibleBuffers,
+      ~client,
+      model,
+    );
   } else {
     Isolinear.Sub.none;
   };
@@ -207,7 +263,7 @@ module Colors = {
 module Contributions = {
   let colors = Colors.[foreground];
 
-  let configuration = Configuration.[Experimental.enabled.spec];
+  let configuration = [];
 };
 
 // VIEW

@@ -1,11 +1,16 @@
-let all = (join: ('a, 'a) => 'a, promises: list(Lwt.t('a))) => {
+let all =
+    (
+      ~initial: 'acc,
+      join: ('acc, 'cur) => 'acc,
+      promises: list(Lwt.t('cur)),
+    ) => {
   List.fold_left(
     (accPromise, promise) => {
       let%lwt acc = accPromise;
       let%lwt curr = promise;
       Lwt.return(join(acc, curr));
     },
-    Lwt.return([]),
+    Lwt.return(initial),
     promises,
   );
 };
@@ -22,7 +27,7 @@ let some = (~default: 'a, join: ('a, 'a) => 'a, promises: list(Lwt.t('a))) => {
        | _exn => Lwt.return(default)
        }
      })
-  |> all(join);
+  |> all(~initial=[], join);
 };
 
 let flatMap = (f, promise) => Lwt.bind(promise, f);
