@@ -35,7 +35,7 @@ module Effects: {
   let readFile:
     (
       ~handle: handle,
-      ~uri: Oni_Core.Uri.t,
+      ~uri: Uri.t,
       ~toMsg: result(array(string), string) => 'msg,
       model,
       Exthost.Client.t

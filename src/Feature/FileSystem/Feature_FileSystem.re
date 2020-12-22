@@ -7,7 +7,6 @@ module Internal = {
   let mapEncoder = (encoder, v) => {
     v |> Json.Encode.encode_value(encoder) |> Reply.okJson;
   };
-  open Msg.FileSystem;
 
   let fileTypeFromStat: Luv.File.Stat.t => Files.FileType.t =
     (statResult: Luv.File.Stat.t) => {
