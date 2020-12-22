@@ -291,6 +291,7 @@ type msg =
       bufferId: int,
       lines: array(string),
     })
+  | GetOriginalContentFailed({ bufferId: int})
   | NewProvider({
       handle: int,
       id: string,
@@ -411,9 +412,7 @@ module Effects = {
         ~toMsg=
           resultLines =>
             switch (resultLines) {
-            | Error(_) =>
-              prerr_endline("TODO");
-              failwith("TODO");
+            | Error(_) => GetOriginalContentFailed({bufferId: bufferId})
             | Ok(lines) => GotOriginalContent({bufferId, lines})
             },
         fileSystem,
@@ -516,6 +515,8 @@ let update =
       },
       Nothing,
     )
+
+  | GetOriginalContentFailed(_) => (model, Nothing)
 
   | NewProvider({handle, id, label, rootUri}) => (
       {
