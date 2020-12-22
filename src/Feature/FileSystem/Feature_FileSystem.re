@@ -63,7 +63,15 @@ module Internal = {
   };
 };
 
-type model = {providers: list(unit)};
+type handle = int;
+
+type provider = {
+  handle: handle,
+  scheme: string,
+  capabilities: Exthost.Files.FileSystemProviderCapabilities.t,
+};
+
+type model = {providers: list(provider)};
 
 let initial = {providers: []};
 
@@ -74,8 +82,6 @@ type msg =
 module Msg = {
   let exthost = (~resolver, msg) => Exthost(msg, resolver);
 };
-
-type handle = int;
 
 type outmsg =
   | Nothing
@@ -171,8 +177,10 @@ let update = (msg, model) => {
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
-  | Exthost(RegisterFileSystemProvider(_), resolver) => (
-      model,
+  | Exthost(RegisterFileSystemProvider({handle, scheme, capabilities}), resolver) => (
+      {
+        providers: [{handle, scheme, capabilities}, ...model.providers]
+      },
       Effect(
         Internal.promiseAndResolverToEffect(
           Lwt.return(Reply.okEmpty),
@@ -181,8 +189,10 @@ let update = (msg, model) => {
       ),
     )
 
-  | Exthost(UnregisterProvider(_), resolver) => (
-      model,
+  | Exthost(UnregisterProvider({handle}), resolver) => (
+      {
+        providers: List.filter(prov => prov.handle != handle, model.providers)
+      },
       Effect(
         Internal.promiseAndResolverToEffect(
           Lwt.return(Reply.okEmpty),
@@ -203,8 +213,17 @@ let update = (msg, model) => {
   };
 };
 
-let getFileSystem = (~scheme as _, model) => None;
+let getFileSystem = (~scheme, model) => {
+  let candidates = model.providers
+  |> List.filter(prov => prov.scheme == scheme);
+  List.nth_opt(candidates, 0)
+  |> Option.map(prov => prov.handle);
+}
 
 module Effects = {
-  let readFile = (~handle as _, ~uri as _, ~toMsg as _, _model) => Isolinear.Effect.none;
+  let readFile = (~handle as _, ~uri as _, ~toMsg, _model) => {
+    Isolinear.Effect.createWithDispatch(~name="test", (dispatch) => {
+      dispatch(toMsg(Ok([|"abc"|])));
+    });
+  };
 };
