@@ -7,7 +7,7 @@ module Schema: {
   let item: (~title: string, ~command: string) => item;
   let submenu: (~title: string, list(group)) => item;
 
-  let command: Command.t(_) => item;
+  let command: (~title: string=?, Command.t(_)) => item;
 
   let group: (~order: int=?, ~parent: menu, list(item)) => group;
 

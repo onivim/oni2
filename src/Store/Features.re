@@ -437,6 +437,15 @@ let update =
       }
     );
 
+  | Help(msg) =>
+    let (model, outmsg) = Feature_Help.update(msg, state.help);
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(effect) => effect |> Isolinear.Effect.map(msg => Help(msg))
+      };
+    ({...state, help: model}, eff);
+
   | Input(msg) =>
     let (model, outmsg) = Feature_Input.update(msg, state.input);
 

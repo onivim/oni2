@@ -30,6 +30,7 @@ type t =
   | Decorations(Feature_Decorations.msg)
   | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)
+  | Help(Feature_Help.msg)
   | Input(Feature_Input.msg)
   | TerminalFont(Service_Font.msg)
   | Extensions(Feature_Extensions.msg)

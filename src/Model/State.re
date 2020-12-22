@@ -440,6 +440,7 @@ type t = {
   decorations: Feature_Decorations.model,
   diagnostics: Feature_Diagnostics.model,
   editorFont: Service_Font.font,
+  help: Feature_Help.model,
   input: Feature_Input.model,
   logging: Feature_Logging.model,
   messages: Feature_Messages.model,
@@ -565,16 +566,19 @@ let initial =
     uiFont: UiFont.default,
     sideBar: Feature_SideBar.initial,
     tokenTheme: TokenTheme.empty,
+    help: Feature_Help.initial,
     iconTheme: IconTheme.create(),
     isQuitting: false,
     languageInfo: Exthost.LanguageInfo.initial,
     menuBar:
       Feature_MenuBar.initial(
         ~menus=[],
-        ~groups=[
-          Feature_Workspace.Contributions.menuGroup,
-          Feature_SideBar.Contributions.menuGroup,
-        ],
+        ~groups=
+          [
+            Feature_Workspace.Contributions.menuGroup,
+            Feature_SideBar.Contributions.menuGroup,
+          ]
+          @ Feature_Help.Contributions.menuGroups,
       ),
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
     notifications: Feature_Notification.initial,

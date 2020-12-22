@@ -36,11 +36,14 @@ module Schema = {
 
   let submenu = (~title, items) => Submenu({title, items});
 
-  let command = (command: Command.t(_)) =>
-    Item({
-      command: command.id,
-      title: command.title |> Option.value(~default="(null)"),
-    });
+  let command = (~title=?, command: Command.t(_)) => {
+    let title =
+      switch (title) {
+      | Some(v) => v
+      | None => command.title |> Option.value(~default="(null)")
+      };
+    Item({command: command.id, title});
+  };
 
   let menu = (~order=500, ~uniqueId, ~parent: option(menu), title) => {
     let uniqueId =
