@@ -19,22 +19,6 @@ type command =
 
 [@deriving show({with_path: false})]
 type msg;
-// | Command(command)
-// | ProviderRegistered(provider)
-// | KeyPressed(option(string), bool)
-// | InfoReceived({
-//     signatures: list(Exthost.SignatureHelp.Signature.t),
-//     activeSignature: int,
-//     activeParameter: int,
-//     editorID: int,
-//     location: EditorCoreTypes.CharacterPosition.t,
-//     context: Exthost.SignatureHelp.RequestContext.t,
-//   })
-// | EmptyInfoReceived
-// | RequestFailed(string)
-// | SignatureIncrementClicked
-// | SignatureDecrementClicked
-// | CursorMoved(int);
 
 module Msg: {let providerAvailable: provider => msg;};
 
