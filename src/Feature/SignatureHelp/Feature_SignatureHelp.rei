@@ -18,24 +18,25 @@ type command =
   | DecrementSignature;
 
 [@deriving show({with_path: false})]
-type msg =
-  | Command(command)
-  | ProviderRegistered(provider)
-  | KeyPressed(option(string), bool)
-  | InfoReceived({
-      signatures: list(Exthost.SignatureHelp.Signature.t),
-      activeSignature: int,
-      activeParameter: int,
-      requestID: int,
-      editorID: int,
-      location: EditorCoreTypes.CharacterPosition.t,
-      context: Exthost.SignatureHelp.RequestContext.t,
-    })
-  | EmptyInfoReceived(int)
-  | RequestFailed(string)
-  | SignatureIncrementClicked
-  | SignatureDecrementClicked
-  | CursorMoved(int);
+type msg;
+// | Command(command)
+// | ProviderRegistered(provider)
+// | KeyPressed(option(string), bool)
+// | InfoReceived({
+//     signatures: list(Exthost.SignatureHelp.Signature.t),
+//     activeSignature: int,
+//     activeParameter: int,
+//     editorID: int,
+//     location: EditorCoreTypes.CharacterPosition.t,
+//     context: Exthost.SignatureHelp.RequestContext.t,
+//   })
+// | EmptyInfoReceived
+// | RequestFailed(string)
+// | SignatureIncrementClicked
+// | SignatureDecrementClicked
+// | CursorMoved(int);
+
+module Msg: {let providerAvailable: provider => msg;};
 
 type outmsg =
   | Nothing
@@ -58,6 +59,16 @@ let update:
     msg
   ) =>
   (model, outmsg);
+
+let sub:
+  (
+    ~buffer: Buffer.t,
+    ~isInsertMode: bool,
+    ~activePosition: EditorCoreTypes.CharacterPosition.t,
+    ~client: Exthost.Client.t,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
 
 module Contributions: {let commands: list(Command.t(msg));};
 

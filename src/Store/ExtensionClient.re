@@ -114,7 +114,7 @@ let create =
         ) =>
         dispatch(
           Actions.SignatureHelp(
-            Feature_SignatureHelp.ProviderRegistered({
+            Feature_SignatureHelp.Msg.providerAvailable({
               handle,
               selector,
               metadata,

@@ -177,18 +177,21 @@ module Internal = {
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.getPrimaryCursor;
 
-    let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
-    let (signatureHelp, shOutMsg) =
-      Feature_SignatureHelp.update(
-        ~maybeBuffer,
-        ~maybeEditor=Some(editor),
-        ~extHostClient,
-        state.signatureHelp,
-        Feature_SignatureHelp.CursorMoved(
-          Feature_Editor.Editor.getId(editor),
-        ),
-      );
+    // TODO: refactor to 'cursorMoved' action
+    let signatureHelp = state.signatureHelp;
+    //let maybeBuffer = Selectors.getActiveBuffer(state);
+
+    // let (signatureHelp, shOutMsg) =
+    //   Feature_SignatureHelp.update(
+    //     ~maybeBuffer,
+    //     ~maybeEditor=Some(editor),
+    //     ~extHostClient,
+    //     state.signatureHelp,
+    //     Feature_SignatureHelp.CursorMoved(
+    //       Feature_Editor.Editor.getId(editor),
+    //     ),
+    //   );
 
     let wasInInsertMode =
       Vim.Mode.isInsert(
@@ -197,11 +200,6 @@ module Internal = {
         |> Feature_Editor.Editor.mode,
       );
 
-    let shEffect =
-      switch (shOutMsg) {
-      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
-      | _ => Effect.none
-      };
     let activeEditorId = editor |> Feature_Editor.Editor.getId;
 
     let msg: Feature_Editor.msg =
@@ -247,8 +245,7 @@ module Internal = {
       signatureHelp,
       languageSupport: languageSupport',
     };
-    let effect = [shEffect, editorEffect] |> Effect.batch;
-    (state, effect);
+    (state, editorEffect);
   };
 };
 
@@ -1500,19 +1497,16 @@ let update =
     let activeCursor = editor |> Feature_Editor.Editor.getPrimaryCursor;
     let activeCursorByte =
       editor |> Feature_Editor.Editor.getPrimaryCursorByte;
-    let (signatureHelp, shOutMsg) =
-      Feature_SignatureHelp.update(
-        ~maybeBuffer,
-        ~maybeEditor=Some(editor),
-        ~extHostClient,
-        state.signatureHelp,
-        Feature_SignatureHelp.KeyPressed(triggerKey, false),
-      );
-    let shEffect =
-      switch (shOutMsg) {
-      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
-      | _ => Effect.none
-      };
+    // TODO: Bring back as a function
+    let signatureHelp = state.signatureHelp;
+    // let (signatureHelp, shOutMsg) =
+    //   Feature_SignatureHelp.update(
+    //     ~maybeBuffer,
+    //     ~maybeEditor=Some(editor),
+    //     ~extHostClient,
+    //     state.signatureHelp,
+    //     Feature_SignatureHelp.KeyPressed(triggerKey, false),
+    //   );
 
     let languageSupport' =
       maybeBuffer
@@ -1546,7 +1540,10 @@ let update =
          })
       |> Option.value(~default=state.languageSupport);
 
-    ({...state, signatureHelp, languageSupport: languageSupport'}, shEffect);
+    (
+      {...state, signatureHelp, languageSupport: languageSupport'},
+      Isolinear.Effect.none,
+    );
 
   | Yank({range}) =>
     open EditorCoreTypes;
