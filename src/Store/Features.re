@@ -1505,7 +1505,6 @@ let update =
     let activeCursorByte =
       editor |> Feature_Editor.Editor.getPrimaryCursorByte;
     // TODO: Bring back as a function
-    let signatureHelp = state.signatureHelp;
     // let (signatureHelp, shOutMsg) =
     //   Feature_SignatureHelp.update(
     //     ~maybeBuffer,
@@ -1515,7 +1514,8 @@ let update =
     //     Feature_SignatureHelp.KeyPressed(triggerKey, false),
     //   );
 
-    let languageSupport' =
+
+    let (languageSupport', signatureHelp') =
       maybeBuffer
       |> Option.map(buffer => {
            let syntaxScope =
@@ -1535,7 +1535,7 @@ let update =
                 )
              |> Option.value(~default=LanguageConfiguration.default);
 
-           Feature_LanguageSupport.bufferUpdated(
+           let languageSupport = Feature_LanguageSupport.bufferUpdated(
              ~languageConfiguration,
              ~buffer,
              ~config,
@@ -1544,11 +1544,14 @@ let update =
              ~triggerKey,
              state.languageSupport,
            );
+
+           let signatureHelp = state.signatureHelp;
+           (languageSupport, signatureHelp);
          })
-      |> Option.value(~default=state.languageSupport);
+      |> Option.value(~default=(state.languageSupport, state.signatureHelp));
 
     (
-      {...state, signatureHelp, languageSupport: languageSupport'},
+      {...state, signatureHelp: signatureHelp', languageSupport: languageSupport'},
       Isolinear.Effect.none,
     );
 

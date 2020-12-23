@@ -144,6 +144,14 @@ let stopInsert = (~maybeBuffer, model) => {
   {...model, sessions: []};
 };
 
+let bufferUpdated = (
+  ~languageConfiguration,
+  ~buffer,
+  ~activeCursor,
+  ~triggerKey,
+  model
+) => model;
+
 [@deriving show({with_path: false})]
 type command =
   | Show
