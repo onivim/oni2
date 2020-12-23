@@ -180,7 +180,7 @@ module Internal = {
     let editor = Feature_Layout.activeEditor(state.layout);
     // TODO: refactor to 'cursorMoved' action
     let signatureHelp = state.signatureHelp;
-    //let maybeBuffer = Selectors.getActiveBuffer(state);
+    let maybeBuffer = Selectors.getActiveBuffer(state);
 
     // let (signatureHelp, shOutMsg) =
     //   Feature_SignatureHelp.update(
@@ -232,16 +232,15 @@ module Internal = {
     let (languageSupport', signatureHelp') =
       if (isInInsertMode != wasInInsertMode) {
         if (isInInsertMode) {
-          
           (
-          languageSupport |> Feature_LanguageSupport.startInsertMode,
-          signatureHelp |> Feature_SignatureHelp.startInsert(~maybeBuffer)
+            languageSupport |> Feature_LanguageSupport.startInsertMode,
+            signatureHelp |> Feature_SignatureHelp.startInsert(~maybeBuffer),
           );
         } else {
           (
-          languageSupport |> Feature_LanguageSupport.stopInsertMode,
-          signatureHelp |> Feature_SignatureHelp.stopInsert(~maybeBuffer)
-          )
+            languageSupport |> Feature_LanguageSupport.stopInsertMode,
+            signatureHelp |> Feature_SignatureHelp.stopInsert(~maybeBuffer),
+          );
         };
       } else {
         (languageSupport, signatureHelp);

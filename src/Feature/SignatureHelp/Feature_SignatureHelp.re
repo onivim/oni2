@@ -50,6 +50,14 @@ module Session = {
     latestMeet: option(meet),
   };
 
+  let start = (provider: provider) => {
+    handle: provider.handle,
+    triggerCharacters: provider.metadata.triggerCharacters,
+    retriggerCharacters: provider.metadata.retriggerCharacters,
+    latestSignatureHelpResult: None,
+    latestMeet: None,
+  };
+
   let handle = ({handle, _}) => handle;
 
   [@deriving show]
@@ -118,14 +126,22 @@ let getSignatureHelp = ({sessions, _}) => {
 };
 
 let startInsert = (~maybeBuffer, model) => {
-  model;
+  switch (maybeBuffer) {
+  | None => model
+  | Some(buffer) =>
+    let sessions =
+      model.providers
+      |> List.filter(provider =>
+           Exthost.DocumentSelector.matchesBuffer(~buffer, provider.selector)
+         )
+      |> List.map(provider => Session.start(provider));
+
+    {...model, sessions};
+  };
 };
 
 let stopInsert = (~maybeBuffer, model) => {
-  {
-    ...model,
-    sessions: []
-  }
+  {...model, sessions: []};
 };
 
 [@deriving show({with_path: false})]
