@@ -652,6 +652,7 @@ module View = {
   };
   let content =
       (
+        ~config,
         ~isFocused,
         ~selected,
         ~theme,
@@ -675,6 +676,7 @@ module View = {
     switch (selected) {
     | Locations =>
       <LocationsPaneView
+        config
         isFocused
         locationsList
         iconTheme
@@ -687,6 +689,7 @@ module View = {
 
     | Diagnostics =>
       <DiagnosticsPaneView
+        config
         isFocused
         diagnosticsList
         iconTheme
@@ -698,6 +701,7 @@ module View = {
       />
     | Notifications =>
       <NotificationsPaneView
+        config
         isFocused
         notificationsList
         theme
@@ -711,6 +715,7 @@ module View = {
       outputPane
       |> Option.map(model => {
            <Component_Output.View
+              config
              model
              isActive=isFocused
              editorFont
@@ -832,6 +837,7 @@ module View = {
       </View>
       <View style=Styles.content>
         <content
+          config
           isFocused
           iconTheme
           languageInfo

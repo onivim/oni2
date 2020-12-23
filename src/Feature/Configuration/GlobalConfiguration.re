@@ -65,9 +65,19 @@ module Experimental = {
   };
 };
 
+module Editor = {
+  let mouseWheelScrollPixels =
+    setting(
+      "editor.mouseWheelScrollPixels",
+      float,
+      ~default=50.
+    )
+};
+
 let contributions = [
   inactiveWindowOpacity.spec,
   animation.spec,
   shadows.spec,
   Experimental.Editor.codeLensEnabled.spec,
+  Editor.mouseWheelScrollPixels.spec,
 ];

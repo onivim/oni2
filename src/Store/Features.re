@@ -71,12 +71,12 @@ module Internal = {
     Feature_Workspace.Effects.changeDirectory(path)
     |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
 
-  let updateEditor = (~editorId, ~msg, layout) => {
+  let updateEditor = (~config, ~editorId, ~msg, layout) => {
     switch (Feature_Layout.editorById(editorId, layout)) {
     | Some(editor) =>
       open Feature_Editor;
 
-      let (updatedEditor, outmsg) = update(editor, msg);
+      let (updatedEditor, outmsg) = update(~config, editor, msg);
       let layout =
         Feature_Layout.map(
           editor => Editor.getId(editor) == editorId ? updatedEditor : editor,
@@ -115,6 +115,7 @@ module Internal = {
 
   let updateEditors =
       (
+        ~config: Config.resolver,
         ~scope: EditorScope.t,
         ~msg: Feature_Editor.msg,
         layout: Feature_Layout.model,
@@ -126,14 +127,14 @@ module Internal = {
           (prev, editor) => {
             let (layout, effects) = prev;
             let editorId = Feature_Editor.Editor.getId(editor);
-            let (layout', effect') = updateEditor(~editorId, ~msg, layout);
+            let (layout', effect') = updateEditor(~config, ~editorId, ~msg, layout);
             (layout', [effect', ...effects]);
           },
           (layout, []),
           layout,
         );
       (layout', Isolinear.Effect.batch(effects));
-    | Editor(editorId) => updateEditor(~editorId, ~msg, layout)
+    | Editor(editorId) => updateEditor(~config, ~editorId, ~msg, layout)
     };
   };
 
@@ -207,7 +208,8 @@ module Internal = {
     let msg: Feature_Editor.msg =
       ModeChanged({allowAnimation, mode, effects});
     let scope = EditorScope.Editor(activeEditorId);
-    let (layout, editorEffect) = updateEditors(~scope, ~msg, state.layout);
+      let config = Selectors.configResolver(state);
+    let (layout, editorEffect) = updateEditors(~config, ~scope, ~msg, state.layout);
 
     let isInInsertMode =
       Vim.Mode.isInsert(
@@ -1399,8 +1401,9 @@ let update =
     (state, eff);
 
   | Editor({scope, msg}) =>
+    let config = Selectors.configResolver(state);
     let (layout, effect) =
-      Internal.updateEditors(~scope, ~msg, state.layout);
+      Internal.updateEditors(~config, ~scope, ~msg, state.layout);
     let state = {...state, layout};
     (state, effect);
 

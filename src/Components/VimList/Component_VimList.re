@@ -676,7 +676,6 @@ module View = {
   module Colors = Feature_Theme.Colors;
 
   module Constants = {
-    let scrollWheelMultiplier = 25;
     let additionalRowsToRender = 1;
     let scrollBarThickness = 6;
     let minimumThumbSize = 4;
@@ -822,6 +821,7 @@ module View = {
   let component = React.Expert.component("Component_VimList");
   let make:
     (
+      ~config: Config.resolver,
       ~isActive: bool,
       ~font: UiFont.t,
       ~focusedIndex: option(int),
@@ -839,7 +839,7 @@ module View = {
       unit
     ) =>
     _ =
-    (~isActive, ~font, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
+    (~config, ~isActive, ~font, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
       component(hooks => {
         let {rowHeight, viewportWidth, viewportHeight, _} = model;
 
@@ -858,8 +858,11 @@ module View = {
             hooks,
           );
         let scroll = (wheelEvent: NodeEvents.mouseWheelEventParams) => {
+
+          let mouseWheelPixels =
+          Feature_Configuration.GlobalConfiguration.Editor.mouseWheelScrollPixels.get(config);
           let delta =
-            wheelEvent.deltaY *. float(- Constants.scrollWheelMultiplier);
+            wheelEvent.deltaY *. -1. *. mouseWheelPixels;
 
           dispatch(MouseWheelScrolled({delta: delta}));
         };
