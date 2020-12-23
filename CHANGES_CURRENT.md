@@ -21,6 +21,8 @@
 
 ### Documentation
 
+- #2874 - Languages: Fix extension ids for `exuberant-ctags` and `clangd` (fixes #2872)
+
 ### Infrastructure / Refactoring
 
 - #2853 - Input: Add APIs for querying contextually available bindings and consumed keys
