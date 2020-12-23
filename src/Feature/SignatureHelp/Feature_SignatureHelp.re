@@ -117,6 +117,17 @@ let getSignatureHelp = ({sessions, _}) => {
   List.nth_opt(candidates, 0);
 };
 
+let startInsert = (~maybeBuffer, model) => {
+  model;
+};
+
+let stopInsert = (~maybeBuffer, model) => {
+  {
+    ...model,
+    sessions: []
+  }
+};
+
 [@deriving show({with_path: false})]
 type command =
   | Show

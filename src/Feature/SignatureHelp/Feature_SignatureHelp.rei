@@ -43,6 +43,9 @@ let update:
     msg
   ) =>
   (model, outmsg);
+ 
+let startInsert: (~maybeBuffer: option(Buffer.t), model) => model;
+let stopInsert: (~maybeBuffer: option(Buffer.t), model) => model;
 
 let sub:
   (

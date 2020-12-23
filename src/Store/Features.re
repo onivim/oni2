@@ -228,21 +228,29 @@ module Internal = {
         state.languageSupport;
       };
 
-    let languageSupport' =
+    // TODO: Bring signature help into language support
+    let (languageSupport', signatureHelp') =
       if (isInInsertMode != wasInInsertMode) {
         if (isInInsertMode) {
-          languageSupport |> Feature_LanguageSupport.startInsertMode;
+          
+          (
+          languageSupport |> Feature_LanguageSupport.startInsertMode,
+          signatureHelp |> Feature_SignatureHelp.startInsert(~maybeBuffer)
+          );
         } else {
-          languageSupport |> Feature_LanguageSupport.stopInsertMode;
+          (
+          languageSupport |> Feature_LanguageSupport.stopInsertMode,
+          signatureHelp |> Feature_SignatureHelp.stopInsert(~maybeBuffer)
+          )
         };
       } else {
-        languageSupport;
+        (languageSupport, signatureHelp);
       };
 
     let state = {
       ...state,
       layout,
-      signatureHelp,
+      signatureHelp: signatureHelp',
       languageSupport: languageSupport',
     };
     (state, editorEffect);
