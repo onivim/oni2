@@ -9,7 +9,7 @@ let key = s => ignore(Vim.key(s));
 
 describe("InsertModeEdit", ({describe, _}) => {
   describe("ctrl+o (accept normal mode command, restart edit)", ({test, _}) => {
-    test("simple edit modification", ({expect, _}) => {
+    test("ctrl+o -> dd", ({expect, _}) => {
       let buffer = resetBuffer();
       let initialLineCount = Buffer.getLineCount(buffer);
 
@@ -25,7 +25,7 @@ describe("InsertModeEdit", ({describe, _}) => {
 
       // ...and a line should be deleted
       expect.equal(Buffer.getLineCount(buffer), initialLineCount - 1);
-    });
+    })
   });
   describe("utf8", ({test, _}) => {
     test("insert 32773", ({expect, _}) => {
