@@ -32,4 +32,3 @@ RUN yum -y install git222
 RUN node -v
 RUN npm -v
 RUN git --version
-RUN unzip --version
