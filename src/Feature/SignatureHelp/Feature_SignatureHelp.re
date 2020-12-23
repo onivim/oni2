@@ -44,18 +44,60 @@ module Session = {
 
   type model = {
     handle: int,
-    triggerCharacters: list(string),
-    retriggerCharacters: list(string),
+    triggerCharacters: list(Uchar.t),
+    retriggerCharacters: list(Uchar.t),
     latestSignatureHelpResult: option(signatureHelp),
     latestMeet: option(meet),
   };
 
+  let stringToTriggerCharacter = str =>
+    try(Some(ZedBundled.get(str, 0))) {
+    | _exn => None
+    };
+
+  let triggerCharacters = strings => {
+    strings |> List.filter_map(stringToTriggerCharacter);
+  };
+
   let start = (provider: provider) => {
     handle: provider.handle,
-    triggerCharacters: provider.metadata.triggerCharacters,
-    retriggerCharacters: provider.metadata.retriggerCharacters,
+    triggerCharacters:
+      provider.metadata.triggerCharacters |> triggerCharacters,
+    retriggerCharacters:
+      provider.metadata.retriggerCharacters |> triggerCharacters,
     latestSignatureHelpResult: None,
     latestMeet: None,
+  };
+
+  let bufferUpdated =
+      (~languageConfiguration, ~buffer, ~activeCursor, ~triggerKey, model) => {
+    open Exthost.SignatureHelp;
+    let maybeMeet =
+      SignatureHelpMeet.fromBufferPosition(
+        ~languageConfiguration,
+        ~triggerCharacters=model.triggerCharacters,
+        ~retriggerCharacters=model.retriggerCharacters,
+        ~position=activeCursor,
+        buffer,
+      )
+      |> Option.map((meet: SignatureHelpMeet.t) =>
+           {
+             bufferId: Buffer.getId(buffer),
+             position: meet.location,
+             isRetrigger: meet.isRetrigger,
+             triggerCharacter: triggerKey,
+             triggerKind:
+               Option.is_some(triggerKey) ? TriggerCharacter : ContentChange,
+           }
+         );
+
+    if (maybeMeet == model.latestMeet) {
+      prerr_endline("Meet is the same!");
+      model;
+    } else {
+      prerr_endline("New meet!");
+      {...model, latestMeet: maybeMeet, latestSignatureHelpResult: None};
+    };
   };
 
   let handle = ({handle, _}) => handle;
@@ -81,10 +123,14 @@ module Session = {
       if (Buffer.getId(buffer) != meet.bufferId) {
         Isolinear.Sub.none;
       } else {
-        let toMsg = (
-          fun
-          | _ => EmptyInfoReceived
-        );
+        let toMsg = msg => {
+          switch (msg) {
+          | Ok(Some(response)) => prerr_endline("!! Response!")
+          | Ok(None) => prerr_endline("!! Empty")
+          | Error(msg) => prerr_endline("!! ERROR")
+          };
+          EmptyInfoReceived;
+        };
         let context = meetToRequestContext(meet);
         Service_Exthost.Sub.signatureHelp(
           ~handle=model.handle,
@@ -126,6 +172,7 @@ let getSignatureHelp = ({sessions, _}) => {
 };
 
 let startInsert = (~maybeBuffer, model) => {
+  prerr_endline("startinsert");
   switch (maybeBuffer) {
   | None => model
   | Some(buffer) =>
@@ -141,16 +188,26 @@ let startInsert = (~maybeBuffer, model) => {
 };
 
 let stopInsert = (~maybeBuffer, model) => {
+  prerr_endline("stopInsert");
   {...model, sessions: []};
 };
 
-let bufferUpdated = (
-  ~languageConfiguration,
-  ~buffer,
-  ~activeCursor,
-  ~triggerKey,
-  model
-) => model;
+let bufferUpdated =
+    (~languageConfiguration, ~buffer, ~activeCursor, ~triggerKey, model) => {
+  prerr_endline("--buffer updated");
+  let sessions' =
+    model.sessions
+    |> List.map(session =>
+         Session.bufferUpdated(
+           ~languageConfiguration,
+           ~buffer,
+           ~activeCursor,
+           ~triggerKey,
+           session,
+         )
+       );
+  {...model, sessions: sessions'};
+};
 
 [@deriving show({with_path: false})]
 type command =

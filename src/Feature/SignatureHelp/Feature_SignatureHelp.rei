@@ -47,13 +47,15 @@ let update:
 let startInsert: (~maybeBuffer: option(Buffer.t), model) => model;
 let stopInsert: (~maybeBuffer: option(Buffer.t), model) => model;
 
-let bufferUpdated: (
-  ~languageConfiguration: LanguageConfiguration.t,
-  ~buffer: Buffer.t,
-  ~activeCursor: EditorCoreTypes.CharacterPosition.t,
-  ~triggerKey: option(string),
-  model
-) => model;
+let bufferUpdated:
+  (
+    ~languageConfiguration: LanguageConfiguration.t,
+    ~buffer: Buffer.t,
+    ~activeCursor: EditorCoreTypes.CharacterPosition.t,
+    ~triggerKey: option(string),
+    model
+  ) =>
+  model;
 
 let sub:
   (

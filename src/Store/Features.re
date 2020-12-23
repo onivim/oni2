@@ -1514,7 +1514,6 @@ let update =
     //     Feature_SignatureHelp.KeyPressed(triggerKey, false),
     //   );
 
-
     let (languageSupport', signatureHelp') =
       maybeBuffer
       |> Option.map(buffer => {
@@ -1535,23 +1534,35 @@ let update =
                 )
              |> Option.value(~default=LanguageConfiguration.default);
 
-           let languageSupport = Feature_LanguageSupport.bufferUpdated(
-             ~languageConfiguration,
-             ~buffer,
-             ~config,
-             ~activeCursor,
-             ~syntaxScope,
-             ~triggerKey,
-             state.languageSupport,
-           );
+           let languageSupport =
+             Feature_LanguageSupport.bufferUpdated(
+               ~languageConfiguration,
+               ~buffer,
+               ~config,
+               ~activeCursor,
+               ~syntaxScope,
+               ~triggerKey,
+               state.languageSupport,
+             );
 
-           let signatureHelp = state.signatureHelp;
+           let signatureHelp =
+             Feature_SignatureHelp.bufferUpdated(
+               ~languageConfiguration,
+               ~buffer,
+               ~activeCursor,
+               ~triggerKey,
+               state.signatureHelp,
+             );
            (languageSupport, signatureHelp);
          })
       |> Option.value(~default=(state.languageSupport, state.signatureHelp));
 
     (
-      {...state, signatureHelp: signatureHelp', languageSupport: languageSupport'},
+      {
+        ...state,
+        signatureHelp: signatureHelp',
+        languageSupport: languageSupport',
+      },
       Isolinear.Effect.none,
     );
 
