@@ -320,15 +320,24 @@ let diagnosticCount = (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => 
 module ModeIndicator = {
   let transitionDuration = Revery.Time.milliseconds(300);
 
-  let make = (~key=?, ~font: UiFont.t, ~theme, ~mode, ~subMode, ()) => {
+  let make = (~key=?, ~input: Feature_Input.model, ~font: UiFont.t, ~theme, ~mode, ~subMode, ()) => {
     let background = Colors.Oni.backgroundFor(mode).from(theme);
     let foreground = Colors.Oni.foregroundFor(mode).from(theme);
 
-    let text =
+    let consumedKeys = Feature_Input.consumedKeys(input);
+
+    let text = if (consumedKeys == []) {
       switch (subMode) {
       | Vim.SubMode.InsertLiteral => "Insert Literal"
       | Vim.SubMode.None => Mode.toString(mode)
-      };
+      }
+    } else {
+      let str = consumedKeys
+      |> List.map(Feature_Input.keyPressToString)
+      |> String.concat(" ");
+
+      str ++ "..."
+    };
 
     <item ?key backgroundColor=background>
       <Text
@@ -360,6 +369,7 @@ module View = {
         ~key=?,
         ~mode,
         ~subMode,
+        ~input: Feature_Input.model,
         ~notifications: Feature_Notification.model,
         ~recordingMacro: option(char),
         ~diagnostics: Diagnostics.model,
@@ -484,6 +494,7 @@ module View = {
         |> positionToString;
       };
 
+
       <textItem font theme text />;
     };
 
@@ -553,7 +564,7 @@ module View = {
         <notificationPopups />
       </sectionGroup>
       <section align=`FlexEnd>
-        <ModeIndicator font theme mode subMode />
+        <ModeIndicator input font theme mode subMode />
       </section>
     </View>;
   };

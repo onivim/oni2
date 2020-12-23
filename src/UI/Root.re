@@ -95,6 +95,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       <View style=Styles.statusBar>
         <Feature_StatusBar.View
           mode
+          input={state.input}
           subMode={Feature_Vim.subMode(state.vim)}
           recordingMacro={state.vim |> Feature_Vim.recordingMacro}
           notifications={state.notifications}
