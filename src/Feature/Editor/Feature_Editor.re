@@ -65,7 +65,7 @@ let update = (editor, msg) => {
     )
   | EditorMouseWheel({deltaX, deltaY, shiftKey}) => (
       Editor.scrollDeltaPixelXY(
-        ~animated=false,
+        ~animated=true,
         ~pixelX=
           (shiftKey ? deltaY : deltaX) *. Constants.editorWheelMultiplier,
         ~pixelY=(shiftKey ? 0. : deltaY) *. Constants.editorWheelMultiplier,
@@ -75,7 +75,7 @@ let update = (editor, msg) => {
     )
   | VerticalScrollbarMouseWheel({deltaWheel}) => (
       Editor.scrollDeltaPixelY(
-        ~animated=false,
+        ~animated=true,
         ~pixelY=deltaWheel *. Constants.scrollbarWheelMultiplier,
         editor,
       ),
@@ -89,7 +89,7 @@ let update = (editor, msg) => {
     )
   | HorizontalScrollbarMouseWheel({deltaWheel}) => (
       Editor.scrollDeltaPixelX(
-        ~animated=false,
+        ~animated=true,
         ~pixelX=deltaWheel *. Constants.scrollbarWheelMultiplier,
         editor,
       ),
