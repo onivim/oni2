@@ -18,7 +18,7 @@ The following features are supported:
 
 Install via the command-line:
 
-- `oni2 --install-extension exuberant-ctags`
+- `oni2 --install-extension chriswheeldon.exuberant-ctags`
 
 Once installed, there will be a status bar entry showing the state of the CTags index:
 
