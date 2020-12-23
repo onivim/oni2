@@ -437,6 +437,16 @@ let update =
       }
     );
 
+  | FileSystem(msg) =>
+    let (model, outmsg) = Feature_FileSystem.update(msg, state.fileSystem);
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(eff) => eff |> Isolinear.Effect.map(msg => FileSystem(msg))
+      };
+    ({...state, fileSystem: model}, eff);
+
   | Help(msg) =>
     let (model, outmsg) = Feature_Help.update(msg, state.help);
     let eff =
@@ -776,7 +786,12 @@ let update =
 
   | SCM(msg) =>
     let (model, maybeOutmsg) =
-      Feature_SCM.update(extHostClient, state.scm, msg);
+      Feature_SCM.update(
+        ~fileSystem=state.fileSystem,
+        extHostClient,
+        state.scm,
+        msg,
+      );
     let state = {...state, scm: model};
 
     switch ((maybeOutmsg: Feature_SCM.outmsg)) {
