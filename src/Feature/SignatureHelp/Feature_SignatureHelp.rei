@@ -12,30 +12,9 @@ type model;
 let initial: model;
 
 [@deriving show({with_path: false})]
-type command =
-  | Show
-  | IncrementSignature
-  | DecrementSignature;
+type msg;
 
-[@deriving show({with_path: false})]
-type msg =
-  | Command(command)
-  | ProviderRegistered(provider)
-  | KeyPressed(option(string), bool)
-  | InfoReceived({
-      signatures: list(Exthost.SignatureHelp.Signature.t),
-      activeSignature: int,
-      activeParameter: int,
-      requestID: int,
-      editorID: int,
-      location: EditorCoreTypes.CharacterPosition.t,
-      context: Exthost.SignatureHelp.RequestContext.t,
-    })
-  | EmptyInfoReceived(int)
-  | RequestFailed(string)
-  | SignatureIncrementClicked
-  | SignatureDecrementClicked
-  | CursorMoved(int);
+module Msg: {let providerAvailable: provider => msg;};
 
 type outmsg =
   | Nothing
@@ -53,13 +32,39 @@ let update:
   (
     ~maybeBuffer: option(Buffer.t),
     ~maybeEditor: option(Feature_Editor.Editor.t),
-    ~extHostClient: Exthost.Client.t,
     model,
     msg
   ) =>
   (model, outmsg);
 
-module Contributions: {let commands: list(Command.t(msg));};
+let startInsert:
+  (~config: Config.resolver, ~maybeBuffer: option(Buffer.t), model) => model;
+let stopInsert: model => model;
+
+let bufferUpdated:
+  (
+    ~languageConfiguration: LanguageConfiguration.t,
+    ~buffer: Buffer.t,
+    ~activeCursor: EditorCoreTypes.CharacterPosition.t,
+    model
+  ) =>
+  model;
+
+let sub:
+  (
+    ~buffer: Buffer.t,
+    ~isInsertMode: bool,
+    ~activePosition: EditorCoreTypes.CharacterPosition.t,
+    ~client: Exthost.Client.t,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
+
+module Contributions: {
+  let commands: list(Command.t(msg));
+  let keybindings: list(Feature_Input.Schema.keybinding);
+  let configuration: list(Config.Schema.spec);
+};
 
 module View: {
   let make:

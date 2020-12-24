@@ -15,64 +15,305 @@ type provider = {
   metadata: Exthost.SignatureHelp.ProviderMetadata.t,
 };
 
-type model = {
-  shown: bool,
-  providers: list(provider),
-  triggeredFrom: option([ | `CommandPalette]),
-  lastRequestID: option(int),
+type signatureHelp = {
   signatures: list(Exthost.SignatureHelp.Signature.t),
-  activeSignature: option(int),
-  activeParameter: option(int),
-  editorID: option(int),
+  activeSignature: int,
+  activeParameter: int,
+};
+
+module Configuration = {
+  open Oni_Core;
+  open Config.Schema;
+
+  let enabled = setting("editor.parameterHints.enabled", bool, ~default=true);
+};
+
+// SESSION
+
+// A session models the state of an individual signature help provider
+// (there may be multiple signature help providers registered)
+module Session = {
+  // SignatureHelpMeet.t, plus some extra info
+  type meet = {
+    triggerKind: Exthost.SignatureHelp.TriggerKind.t,
+    triggerCharacter: option(string),
+    bufferId: int,
+    position: CharacterPosition.t,
+    isRetrigger: bool,
+  };
+
+  let meetToRequestContext = (meet: meet) =>
+    Exthost.SignatureHelp.RequestContext.{
+      triggerKind: meet.triggerKind,
+      triggerCharacter: meet.triggerCharacter,
+      isRetrigger: meet.isRetrigger,
+    };
+
+  type model = {
+    handle: int,
+    triggerCharacters: list(Uchar.t),
+    retriggerCharacters: list(Uchar.t),
+    latestSignatureHelpResult: option(signatureHelp),
+    latestMeet: option(meet),
+  };
+
+  let stringToTriggerCharacter = str =>
+    try(Some(ZedBundled.get(str, 0))) {
+    | _exn => None
+    };
+
+  let triggerCharacters = strings => {
+    strings |> List.filter_map(stringToTriggerCharacter);
+  };
+
+  let start = (provider: provider) => {
+    handle: provider.handle,
+    triggerCharacters:
+      provider.metadata.triggerCharacters |> triggerCharacters,
+    retriggerCharacters:
+      provider.metadata.retriggerCharacters |> triggerCharacters,
+    latestSignatureHelpResult: None,
+    latestMeet: None,
+  };
+
+  let invoke = (~bufferId, ~position, provider: provider) => {
+    let model = start(provider);
+
+    let meet = {
+      triggerKind: Exthost.SignatureHelp.TriggerKind.Invoke,
+      triggerCharacter: None,
+      bufferId,
+      position,
+      isRetrigger: false,
+    };
+    {...model, latestMeet: Some(meet)};
+  };
+
+  let incrementSignature = model => {
+    let latestResult' =
+      model.latestSignatureHelpResult
+      |> Option.map(sigHelp => {
+           let activeSignature' =
+             Oni_Core.Utility.IntEx.clamp(
+               ~lo=0,
+               ~hi=List.length(sigHelp.signatures) - 1,
+               sigHelp.activeSignature + 1,
+             );
+           {...sigHelp, activeSignature: activeSignature'};
+         });
+    {...model, latestSignatureHelpResult: latestResult'};
+  };
+
+  let decrementSignature = model => {
+    let latestResult' =
+      model.latestSignatureHelpResult
+      |> Option.map(sigHelp => {
+           let activeSignature' =
+             Oni_Core.Utility.IntEx.clamp(
+               ~lo=0,
+               ~hi=List.length(sigHelp.signatures) - 1,
+               sigHelp.activeSignature - 1,
+             );
+           {...sigHelp, activeSignature: activeSignature'};
+         });
+    {...model, latestSignatureHelpResult: latestResult'};
+  };
+
+  let bufferUpdated = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
+    let maybeMeet =
+      SignatureHelpMeet.fromBufferPosition(
+        ~languageConfiguration,
+        ~triggerCharacters=model.triggerCharacters,
+        ~retriggerCharacters=model.retriggerCharacters,
+        ~position=activeCursor,
+        buffer,
+      );
+
+    let maybeMeet =
+      maybeMeet
+      |> Option.map((meet: SignatureHelpMeet.t) =>
+           {
+             bufferId: Buffer.getId(buffer),
+             position: meet.location,
+             isRetrigger: meet.isRetrigger,
+             triggerCharacter:
+               Some(ZedBundled.make(1, meet.triggerCharacter)),
+             triggerKind: TriggerCharacter,
+           }
+         );
+
+    if (maybeMeet == model.latestMeet) {
+      model;
+    } else {
+      let latestSignatureHelpResult =
+        switch (maybeMeet, model.latestSignatureHelpResult) {
+        // If we had a previous result, keep the signature help result around, until it's refreshed...
+        | (Some(_newMeet), Some(lastSignatureHelpResult)) =>
+          Some(lastSignatureHelpResult)
+        // Otherwise, close it out
+        | (Some(_), None) => None
+        | (None, Some(_)) => None
+        | (None, None) => None
+        };
+      {...model, latestMeet: maybeMeet, latestSignatureHelpResult};
+    };
+  };
+
+  let close = model => {...model, latestSignatureHelpResult: None};
+
+  let handle = ({handle, _}) => handle;
+
+  [@deriving show]
+  type msg =
+    | InfoReceived({
+        signatures: list(Exthost.SignatureHelp.Signature.t),
+        activeSignature: int,
+        activeParameter: int,
+      })
+    | EmptyInfoReceived
+    | RequestFailed(string);
+
+  let update = (msg: msg, model: model) =>
+    switch (msg) {
+    | InfoReceived({signatures, activeSignature, activeParameter}) =>
+      // Some providers will submit an empty signature help... not very useful to show this!
+      if (signatures == []) {
+        {...model, latestSignatureHelpResult: None};
+      } else {
+        {
+          ...model,
+          latestSignatureHelpResult:
+            Some({signatures, activeSignature, activeParameter}),
+        };
+      }
+    | EmptyInfoReceived => {...model, latestSignatureHelpResult: None}
+    | RequestFailed(_) => {...model, latestSignatureHelpResult: None}
+    };
+
+  let get = ({latestSignatureHelpResult, _}) => latestSignatureHelpResult;
+  let sub = (~buffer, ~client, model) => {
+    switch (model.latestMeet) {
+    | None => Isolinear.Sub.none
+    | Some(meet) =>
+      // Our meet is out-of-date... we're now in a different buffer
+      if (Buffer.getId(buffer) != meet.bufferId) {
+        Isolinear.Sub.none;
+      } else {
+        let toMsg = msg => {
+          switch (msg) {
+          | Ok(
+              Some(
+                (
+                  {signatures, activeSignature, activeParameter, _}: Exthost.SignatureHelp.Response.t
+                ),
+              ),
+            ) =>
+            InfoReceived({signatures, activeSignature, activeParameter})
+          | Ok(None) => EmptyInfoReceived
+          | Error(s) => RequestFailed(s)
+          };
+        };
+        let context = meetToRequestContext(meet);
+        Service_Exthost.Sub.signatureHelp(
+          ~handle=model.handle,
+          ~buffer,
+          ~position=meet.position,
+          ~context,
+          ~toMsg,
+          client,
+        );
+      }
+    };
+  };
+};
+
+type model = {
+  providers: list(provider),
+  sessions: list(Session.model),
+  triggeredFrom: option([ | `CommandPalette]),
   location: option(CharacterPosition.t),
   context: option(Exthost.SignatureHelp.RequestContext.t),
 };
 
 let initial = {
-  shown: false,
   providers: [],
+  sessions: [],
   triggeredFrom: None,
-  lastRequestID: None,
-  signatures: [],
-  activeSignature: None,
-  activeParameter: None,
-  editorID: None,
   location: None,
   context: None,
+};
+
+let getSignatureHelp = ({sessions, _}) => {
+  let candidates =
+    sessions |> List.filter_map(session => Session.get(session));
+
+  // If there are multiple, just return the first one
+  List.nth_opt(candidates, 0);
+};
+
+let isShown = model => model |> getSignatureHelp |> Option.is_some;
+
+let startInsert = (~config, ~maybeBuffer, model) => {
+  let enabled = Configuration.enabled.get(config);
+  switch (maybeBuffer) {
+  | None => model
+  | Some(_) when !enabled => model
+  | Some(buffer) =>
+    let sessions =
+      model.providers
+      |> List.filter(provider =>
+           Exthost.DocumentSelector.matchesBuffer(~buffer, provider.selector)
+         )
+      |> List.map(provider => Session.start(provider));
+
+    {...model, sessions};
+  };
+};
+
+let stopInsert = model => {
+  {...model, sessions: []};
+};
+
+let bufferUpdated = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
+  let sessions' =
+    model.sessions
+    |> List.map(session =>
+         Session.bufferUpdated(
+           ~languageConfiguration,
+           ~buffer,
+           ~activeCursor,
+           session,
+         )
+       );
+  {...model, sessions: sessions'};
 };
 
 [@deriving show({with_path: false})]
 type command =
   | Show
   | IncrementSignature
-  | DecrementSignature;
+  | DecrementSignature
+  | Close;
 
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
   | ProviderRegistered(provider)
-  | KeyPressed(option(string), bool)
-  | InfoReceived({
-      signatures: list(Exthost.SignatureHelp.Signature.t),
-      activeSignature: int,
-      activeParameter: int,
-      requestID: int,
-      editorID: int,
-      location: CharacterPosition.t,
-      context: Exthost.SignatureHelp.RequestContext.t,
-    })
-  | EmptyInfoReceived(int)
-  | RequestFailed(string)
   | SignatureIncrementClicked
   | SignatureDecrementClicked
-  | CursorMoved(int);
+  | Session({
+      handle: int,
+      msg: Session.msg,
+    });
+
+module Msg = {
+  let providerAvailable = provider => ProviderRegistered(provider);
+};
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | Error(string);
-
-let isShown = model => model.shown;
 
 module Commands = {
   open Feature_Commands.Schema;
@@ -83,6 +324,14 @@ module Commands = {
       ~title="Show parameter hints",
       "editor.action.triggerParameterHints",
       Command(Show),
+    );
+
+  let close =
+    define(
+      ~category="Parameter Hints",
+      ~title="Close",
+      "editor.action.hideParameterHints",
+      Command(Close),
     );
 
   let incrementSignature =
@@ -102,293 +351,101 @@ module Commands = {
     );
 };
 
+module Keybindings = {
+  open Feature_Input.Schema;
+
+  let decrementSignature = {
+    key: "<A-DOWN>",
+    command: Commands.decrementSignature.id,
+    condition: "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+  };
+
+  let incrementSignature = {
+    key: "<A-UP>",
+    command: Commands.incrementSignature.id,
+    condition: "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+  };
+
+  let close = {
+    key: "<ESC>",
+    command: Commands.close.id,
+    condition: "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+  };
+};
+
 module Contributions = {
-  let commands = Commands.[show, incrementSignature, decrementSignature];
+  let commands =
+    Commands.[show, incrementSignature, decrementSignature, close];
+
+  let keybindings =
+    Keybindings.[incrementSignature, decrementSignature, close];
+
+  let configuration = Configuration.[enabled.spec];
 };
 
-let getEffectsForLocation =
-    (
-      ~buffer,
-      ~location,
-      ~extHostClient,
-      ~model,
-      ~context,
-      ~requestID,
-      ~editor,
-    ) => {
-  let matchingProviders =
-    model.providers
-    |> List.filter(({selector, _}) =>
-         Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
-       );
+let sub = (~buffer, ~isInsertMode, ~activePosition as _, ~client, model) =>
+  if (!isInsertMode) {
+    Isolinear.Sub.none;
+  } else {
+    model.sessions
+    |> List.map(session => {
+         let handle = Session.handle(session);
+         Session.sub(~buffer, ~client, session)
+         |> Isolinear.Sub.map(msg => Session({handle, msg}));
+       })
+    |> Isolinear.Sub.batch;
+  };
 
-  matchingProviders
-  |> List.map(provider =>
-       Service_Exthost.Effects.LanguageFeatures.provideSignatureHelp(
-         ~handle=provider.handle,
-         ~uri=Buffer.getUri(buffer),
-         ~position=location,
-         ~context,
-         extHostClient,
-         res =>
-         switch (res) {
-         | Ok(Some({signatures, activeSignature, activeParameter, _})) =>
-           InfoReceived({
-             signatures,
-             activeSignature,
-             activeParameter,
-             requestID,
-             editorID: Feature_Editor.Editor.getId(editor),
-             location,
-             context,
-           })
-         | Ok(None) => EmptyInfoReceived(requestID)
-         | Error(s) => RequestFailed(s)
-         }
-       )
-     )
-  |> Isolinear.Effect.batch;
-};
-
-let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
+let update = (~maybeBuffer, ~maybeEditor, model, msg) =>
   switch (msg) {
   | Command(Show) =>
     switch (maybeBuffer, maybeEditor) {
     | (Some(buffer), Some(editor)) =>
-      let requestID = IDGenerator.get();
-      let context =
-        Exthost.SignatureHelp.RequestContext.{
-          triggerKind: Exthost.SignatureHelp.TriggerKind.Invoke,
-          triggerCharacter: None,
-          isRetrigger: false,
-        };
+      let position = Feature_Editor.Editor.getPrimaryCursor(editor);
+      let bufferId = Buffer.getId(buffer);
+      let sessions =
+        model.providers
+        |> List.filter(provider =>
+             Exthost.DocumentSelector.matchesBuffer(
+               ~buffer,
+               provider.selector,
+             )
+           )
+        |> List.map(provider =>
+             Session.invoke(~bufferId, ~position, provider)
+           );
 
-      let effects =
-        getEffectsForLocation(
-          ~buffer,
-          ~editor,
-          ~location=Feature_Editor.Editor.getPrimaryCursor(editor),
-          ~extHostClient,
-          ~model,
-          ~context,
-          ~requestID,
-        );
-
-      (
-        {
-          ...model,
-          shown: true,
-          triggeredFrom: Some(`CommandPalette),
-          lastRequestID: Some(requestID),
-        },
-        Effect(effects),
-      );
+      ({...model, sessions}, Nothing);
     | _ => (model, Nothing)
     }
+
+  | Command(Close) =>
+    let sessions' = model.sessions |> List.map(Session.close);
+    ({...model, sessions: sessions'}, Nothing);
+
   | ProviderRegistered(provider) => (
       {...model, providers: [provider, ...model.providers]},
       Nothing,
     )
-  | InfoReceived({
-      signatures,
-      activeSignature,
-      activeParameter,
-      requestID,
-      editorID,
-      location,
-      context,
-    }) =>
-    switch (model.lastRequestID) {
-    | Some(reqID) when reqID == requestID => (
-        {
-          ...model,
-          signatures,
-          activeSignature: Some(activeSignature),
-          activeParameter: Some(activeParameter),
-          editorID: Some(editorID),
-          location: Some(location),
-          context: Some(context),
-        },
-        Nothing,
-      )
-    | _ => (model, Nothing)
-    }
-  | EmptyInfoReceived(requestID) =>
-    switch (model.lastRequestID) {
-    | Some(reqID) when reqID == requestID => (
-        {
-          ...model,
-          signatures: [],
-          activeSignature: None,
-          activeParameter: None,
-          shown: false,
-          lastRequestID: None,
-          triggeredFrom: None,
-        },
-        Nothing,
-      )
-    | _ => (model, Nothing)
-    }
-  | RequestFailed(str) =>
-    Log.warnf(m => m("Request failed : %s", str));
-    (model, Error(str));
-  | KeyPressed(maybeKey, before) =>
-    switch (maybeBuffer, maybeEditor, maybeKey) {
-    | (Some(buffer), Some(editor), Some(key)) =>
-      let matchingProviders =
-        model.providers
-        |> List.filter(({selector, _}) =>
-             Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
-           );
-      let trigger =
-        matchingProviders
-        |> List.exists(({metadata, _}) =>
-             List.mem(key, metadata.triggerCharacters)
-           );
-      let retrigger =
-        matchingProviders
-        |> List.exists(({metadata, _}) =>
-             List.mem(key, metadata.retriggerCharacters)
-           );
-      let location =
-        if (before) {
-          let CharacterPosition.{line, character: col} =
-            Feature_Editor.Editor.getPrimaryCursor(editor);
-          CharacterPosition.{line, character: CharacterIndex.(col + 1)};
-        } else {
-          Feature_Editor.Editor.getPrimaryCursor(editor);
-        };
-      if (trigger) {
-        Log.infof(m => m("Trigger character hit: %s", key));
-        let requestID = IDGenerator.get();
-        let context =
-          Exthost.SignatureHelp.RequestContext.{
-            triggerKind: Exthost.SignatureHelp.TriggerKind.TriggerCharacter,
-            triggerCharacter: Some(key),
-            isRetrigger: false,
-          };
-        let effects =
-          getEffectsForLocation(
-            ~buffer,
-            ~editor,
-            ~location,
-            ~extHostClient,
-            ~model,
-            ~context,
-            ~requestID,
-          );
-        (
-          {...model, shown: true, lastRequestID: Some(requestID)},
-          Effect(effects),
-        );
-      } else if (retrigger && model.shown) {
-        Log.infof(m => m("Retrigger character hit: %s", key));
-        let requestID = IDGenerator.get();
-        let context =
-          Exthost.SignatureHelp.RequestContext.{
-            triggerKind: Exthost.SignatureHelp.TriggerKind.TriggerCharacter,
-            triggerCharacter: Some(key),
-            isRetrigger: true,
-          };
-        let effects =
-          getEffectsForLocation(
-            ~buffer,
-            ~editor,
-            ~location,
-            ~extHostClient,
-            ~model,
-            ~context,
-            ~requestID,
-          );
-        (
-          {...model, shown: true, lastRequestID: Some(requestID)},
-          Effect(effects),
-        );
-      } else if (key == "<ESC>") {
-        (
-          {
-            ...model,
-            shown: false,
-            lastRequestID: None,
-            activeSignature: None,
-            activeParameter: None,
-            triggeredFrom: None,
-          },
-          Nothing,
-        );
-      } else {
-        (model, Nothing);
-      };
-    | _ => (model, Nothing)
-    }
+  | Session({handle, msg}) =>
+    let sessions' =
+      model.sessions
+      |> List.map(session =>
+           if (Session.handle(session) == handle) {
+             Session.update(msg, session);
+           } else {
+             session;
+           }
+         );
+    ({...model, sessions: sessions'}, Nothing);
   | Command(IncrementSignature)
-  | SignatureIncrementClicked => (
-      {
-        ...model,
-        activeSignature:
-          Option.map(
-            i =>
-              Oni_Core.Utility.IntEx.clamp(
-                ~lo=0,
-                ~hi=List.length(model.signatures) - 1,
-                i + 1,
-              ),
-            model.activeSignature,
-          ),
-      },
-      Nothing,
-    )
+  | SignatureIncrementClicked =>
+    let sessions' = model.sessions |> List.map(Session.incrementSignature);
+    ({...model, sessions: sessions'}, Nothing);
   | Command(DecrementSignature)
-  | SignatureDecrementClicked => (
-      {
-        ...model,
-        activeSignature:
-          Option.map(
-            i =>
-              Oni_Core.Utility.IntEx.clamp(
-                ~lo=0,
-                ~hi=List.length(model.signatures) - 1,
-                i - 1,
-              ),
-            model.activeSignature,
-          ),
-      },
-      Nothing,
-    )
-  | CursorMoved(editorID) =>
-    switch (model.editorID, maybeEditor, maybeBuffer, model.context) {
-    | (Some(editorID'), Some(editor), Some(buffer), Some(context))
-        when
-          editorID == editorID'
-          && editorID == Feature_Editor.Editor.getId(editor) =>
-      let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
-
-      let loc =
-        CharacterPosition.{
-          line: cursorLocation.line,
-          character: CharacterIndex.(cursorLocation.character + 1),
-        };
-      switch (model.location) {
-      | Some(location) when location == loc =>
-        let requestID = IDGenerator.get();
-        let effects =
-          getEffectsForLocation(
-            ~buffer,
-            ~editor,
-            ~location=cursorLocation,
-            ~extHostClient,
-            ~model,
-            ~context,
-            ~requestID,
-          );
-        (
-          {...model, shown: true, lastRequestID: Some(requestID)},
-          Effect(effects),
-        );
-      | _ => (model, Nothing)
-      };
-    | _ => (model, Nothing)
-    }
+  | SignatureDecrementClicked =>
+    let sessions' = model.sessions |> List.map(Session.decrementSignature);
+    ({...model, sessions: sessions'}, Nothing);
   };
 
 module View = {
@@ -445,9 +502,9 @@ module View = {
         ~languageInfo,
         ~uiFont: UiFont.t,
         ~editorFont: Service_Font.font,
-        ~model,
+        ~signatures,
         ~buffer,
-        ~editor,
+        ~editor as _,
         ~grammars,
         ~signatureIndex,
         ~parameterIndex,
@@ -471,7 +528,7 @@ module View = {
       );
     };
     let maybeSignature: option(Signature.t) =
-      Base.List.nth(model.signatures, signatureIndex);
+      Base.List.nth(signatures, signatureIndex);
     let maybeParameter: option(ParameterInformation.t) =
       Option.bind(maybeSignature, signature =>
         Base.List.nth(signature.parameters, parameterIndex)
@@ -541,63 +598,59 @@ module View = {
         }
       | _ => React.empty
       };
-    switch (model.editorID) {
-    | Some(editorID) when editorID == Feature_Editor.Editor.getId(editor) =>
-      <HoverView x y displayAt=`Top theme=colorTheme>
-        <View style=Styles.signatureLine> {renderLabel()} </View>
-        <UI.Components.Row>
-          <View
-            style=Styles.button
-            onMouseUp={_ => dispatch(SignatureDecrementClicked)}>
-            <Codicon
-              icon=Codicon.chevronLeft
-              color={Feature_Theme.Colors.foreground.from(colorTheme)}
-              fontSize={uiFont.size *. 0.9}
-            />
-          </View>
-          <Text
-            text={Printf.sprintf(
-              "%d/%d",
-              signatureIndex + 1,
-              List.length(model.signatures),
-            )}
-            style={Styles.text(~theme=colorTheme)}
-            fontFamily={uiFont.family}
-            fontSize={uiFont.size *. 0.8}
+    <HoverView x y displayAt=`Top theme=colorTheme>
+      <View style=Styles.signatureLine> {renderLabel()} </View>
+      <UI.Components.Row>
+        <View
+          style=Styles.button
+          onMouseUp={_ => dispatch(SignatureDecrementClicked)}>
+          <Codicon
+            icon=Codicon.chevronLeft
+            color={Feature_Theme.Colors.foreground.from(colorTheme)}
+            fontSize={uiFont.size *. 0.9}
           />
-          <View
-            style=Styles.button
-            onMouseUp={_ => dispatch(SignatureIncrementClicked)}>
-            <Codicon
-              icon=Codicon.chevronRight
-              color={Feature_Theme.Colors.foreground.from(colorTheme)}
-              fontSize={uiFont.size *. 0.9}
-            />
-          </View>
-        </UI.Components.Row>
-        {switch (maybeParameter) {
-         | Some({documentation: Some(docs), _})
-             when Exthost.MarkdownString.toString(docs) != "" =>
-           [
-             <horizontalRule theme=colorTheme />,
-             <signatureHelpMarkdown markdown=docs />,
-           ]
-           |> React.listToElement
-         | _ => React.empty
-         }}
-        {switch (maybeSignature) {
-         | Some({documentation: Some(docs), _})
-             when Exthost.MarkdownString.toString(docs) != "" =>
-           [
-             <horizontalRule theme=colorTheme />,
-             <signatureHelpMarkdown markdown=docs />,
-           ]
-           |> React.listToElement
-         | _ => React.empty
-         }}
-      </HoverView>
-    | _ => React.empty
-    };
+        </View>
+        <Text
+          text={Printf.sprintf(
+            "%d/%d",
+            signatureIndex + 1,
+            List.length(signatures),
+          )}
+          style={Styles.text(~theme=colorTheme)}
+          fontFamily={uiFont.family}
+          fontSize={uiFont.size *. 0.8}
+        />
+        <View
+          style=Styles.button
+          onMouseUp={_ => dispatch(SignatureIncrementClicked)}>
+          <Codicon
+            icon=Codicon.chevronRight
+            color={Feature_Theme.Colors.foreground.from(colorTheme)}
+            fontSize={uiFont.size *. 0.9}
+          />
+        </View>
+      </UI.Components.Row>
+      {switch (maybeParameter) {
+       | Some({documentation: Some(docs), _})
+           when Exthost.MarkdownString.toString(docs) != "" =>
+         [
+           <horizontalRule theme=colorTheme />,
+           <signatureHelpMarkdown markdown=docs />,
+         ]
+         |> React.listToElement
+       | _ => React.empty
+       }}
+      {switch (maybeSignature) {
+       | Some({documentation: Some(docs), _})
+           when Exthost.MarkdownString.toString(docs) != "" =>
+         [
+           <horizontalRule theme=colorTheme />,
+           <signatureHelpMarkdown markdown=docs />,
+         ]
+         |> React.listToElement
+       | _ => React.empty
+       }}
+    </HoverView>;
   };
 
   let make =
@@ -616,14 +669,10 @@ module View = {
         (),
       ) => {
     let maybeCoords =
-      (
-        if (model.shown) {
-          let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
-          Some(cursorLocation);
-        } else {
-          None;
-        }
-      )
+      {
+        let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
+        Some(cursorLocation);
+      }
       |> Option.map((characterPosition: CharacterPosition.t) => {
            let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
              Feature_Editor.Editor.bufferCharacterPositionToPixel(
@@ -632,8 +681,13 @@ module View = {
              );
            (pixelX +. gutterWidth |> int_of_float, pixelY |> int_of_float);
          });
-    switch (maybeCoords, model.activeSignature, model.activeParameter) {
-    | (Some((x, y)), Some(signatureIndex), Some(parameterIndex)) =>
+
+    let maybeSignatureHelp = getSignatureHelp(model);
+    switch (maybeCoords, maybeSignatureHelp) {
+    | (
+        Some((x, y)),
+        Some({signatures, activeSignature, activeParameter, _}),
+      ) =>
       <signatureHelp
         x
         y
@@ -643,11 +697,11 @@ module View = {
         uiFont
         editorFont
         buffer
-        model
         editor
         grammars
-        signatureIndex
-        parameterIndex
+        signatures
+        signatureIndex=activeSignature
+        parameterIndex=activeParameter
         dispatch
       />
     | _ => React.empty
