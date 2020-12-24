@@ -70,6 +70,28 @@ module Items = {
         ~title="Cycle open files",
         ~command="workbench.action.openNextRecentlyUsedEditorInGroup",
       );
+
+    module Zoom = {
+      let zoomIn = item(
+        ~title="Zoom in",
+        ~command="workbench.action.zoomIn"
+      );
+
+      let zoomOut = item(
+        ~title="Zoom out",
+        ~command="workbench.action.zoomOut"
+      );
+
+      let zoomReset = item(
+        ~title="Reset zoom",
+        ~command="workbench.action.zoomReset"
+      );
+
+      let submenu = submenu(
+        ~title="Zoom",
+        [group(~parent=view, [zoomIn, zoomOut, zoomReset])]
+      )
+    }
   };
 };
 
@@ -85,6 +107,7 @@ let groups = [
     ~parent=view,
     Items.View.[commands, files, cycleOpenFiles],
   ),
+  group(~order=150, ~parent=view, Items.View.Zoom.[submenu]),
   group(~parent=edit, Items.Edit.[undo, redo]),
   group(~parent=help, Items.Help.[changelog, checkForUpdate]),
 ];
