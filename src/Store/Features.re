@@ -217,7 +217,8 @@ module Internal = {
         if (isInInsertMode) {
           (
             languageSupport |> Feature_LanguageSupport.startInsertMode,
-            signatureHelp |> Feature_SignatureHelp.startInsert(~config, ~maybeBuffer),
+            signatureHelp
+            |> Feature_SignatureHelp.startInsert(~config, ~maybeBuffer),
           );
         } else {
           (
@@ -1464,7 +1465,6 @@ let update =
       Feature_SignatureHelp.update(
         ~maybeBuffer,
         ~maybeEditor=Some(editor),
-        ~extHostClient,
         state.signatureHelp,
         msg,
       );

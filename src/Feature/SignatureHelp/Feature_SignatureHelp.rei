@@ -37,7 +37,8 @@ let update:
   ) =>
   (model, outmsg);
 
-let startInsert: (~config: Config.resolver, ~maybeBuffer: option(Buffer.t), model) => model;
+let startInsert:
+  (~config: Config.resolver, ~maybeBuffer: option(Buffer.t), model) => model;
 let stopInsert: model => model;
 
 let bufferUpdated:

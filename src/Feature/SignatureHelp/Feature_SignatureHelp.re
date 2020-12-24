@@ -76,6 +76,19 @@ module Session = {
     latestMeet: None,
   };
 
+  let invoke = (~bufferId, ~position, provider: provider) => {
+    let model = start(provider);
+
+    let meet = {
+      triggerKind: Exthost.SignatureHelp.TriggerKind.Invoke,
+      triggerCharacter: None,
+      bufferId,
+      position,
+      isRetrigger: false,
+    };
+    {...model, latestMeet: Some(meet)};
+  };
+
   let incrementSignature = model => {
     let latestResult' =
       model.latestSignatureHelpResult
@@ -367,9 +380,7 @@ module Contributions = {
   let keybindings =
     Keybindings.[incrementSignature, decrementSignature, close];
 
-  let configuration = Configuration.[
-    enabled.spec,
-  ];
+  let configuration = Configuration.[enabled.spec];
 };
 
 let sub = (~buffer, ~isInsertMode, ~activePosition as _, ~client, model) =>
@@ -389,26 +400,22 @@ let update = (~maybeBuffer, ~maybeEditor, model, msg) =>
   switch (msg) {
   | Command(Show) =>
     switch (maybeBuffer, maybeEditor) {
-    | (Some(_buffer), Some(_editor)) =>
-      // let context =
-      //   Exthost.SignatureHelp.RequestContext.{
-      //     triggerKind: Exthost.SignatureHelp.TriggerKind.Invoke,
-      //     triggerCharacter: None,
-      //     isRetrigger: false,
-      //   };
+    | (Some(buffer), Some(editor)) =>
+      let position = Feature_Editor.Editor.getPrimaryCursor(editor);
+      let bufferId = Buffer.getId(buffer);
+      let sessions =
+        model.providers
+        |> List.filter(provider =>
+             Exthost.DocumentSelector.matchesBuffer(
+               ~buffer,
+               provider.selector,
+             )
+           )
+        |> List.map(provider =>
+             Session.invoke(~bufferId, ~position, provider)
+           );
 
-      let effects = Isolinear.Effect.none;
-      // getEffectsForLocation(
-      //   ~buffer,
-      //   ~editor,
-      //   ~location=Feature_Editor.Editor.getPrimaryCursor(editor),
-      //   ~extHostClient,
-      //   ~model,
-      //   ~context,
-      //   ~requestID,
-      // );
-
-      ({...model, triggeredFrom: Some(`CommandPalette)}, Effect(effects));
+      ({...model, sessions}, Nothing);
     | _ => (model, Nothing)
     }
 
