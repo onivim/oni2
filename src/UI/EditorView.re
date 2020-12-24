@@ -99,8 +99,10 @@ module Parts = {
       let buffer =
         Selectors.getBufferForEditor(state.buffers, editor)
         |> OptionEx.value_or_lazy(() => Buffer.empty(~font=state.editorFont));
+
+      // TODO: Move to overlays view
       let renderOverlays = (~gutterWidth) =>
-        [
+        isActive ?
           <Feature_SignatureHelp.View
             colorTheme=theme
             tokenTheme={state.tokenTheme}
@@ -113,9 +115,7 @@ module Parts = {
             gutterWidth
             buffer
             dispatch={msg => dispatch(SignatureHelp(msg))}
-          />,
-        ]
-        |> React.listToElement;
+          /> : React.empty;
 
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>

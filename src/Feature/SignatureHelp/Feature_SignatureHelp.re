@@ -26,6 +26,7 @@ type signatureHelp = {
 // A session models the state of an individual signature help provider
 // (there may be multiple signature help providers registered)
 module Session = {
+
   // SignatureHelpMeet.t, plus some extra info
   type meet = {
     triggerKind: Exthost.SignatureHelp.TriggerKind.t,
@@ -102,10 +103,8 @@ module Session = {
          );
 
     if (maybeMeet == model.latestMeet) {
-      prerr_endline("Meet is the same!");
       model;
     } else {
-      prerr_endline("New meet!");
       {...model, latestMeet: maybeMeet, latestSignatureHelpResult: None};
     };
   };
@@ -127,7 +126,6 @@ module Session = {
   let update = (msg: msg, model: model) =>
     switch (msg) {
     | InfoReceived({signatures, activeSignature, activeParameter}) =>
-      prerr_endline("!!! Info received!");
       {
         ...model,
         latestSignatureHelpResult:
@@ -147,12 +145,6 @@ module Session = {
         Isolinear.Sub.none;
       } else {
         let toMsg = msg => {
-          switch (msg) {
-          | Ok(Some(response)) => prerr_endline("!! Response!")
-          | Ok(None) => prerr_endline("!! Empty")
-          | Error(msg) => prerr_endline("!! ERROR")
-          };
-
           switch (msg) {
           | Ok(
               Some(
@@ -207,7 +199,6 @@ let getSignatureHelp = ({sessions, _}) => {
 let isShown = model => model |> getSignatureHelp |> Option.is_some;
 
 let startInsert = (~maybeBuffer, model) => {
-  prerr_endline("startinsert");
   switch (maybeBuffer) {
   | None => model
   | Some(buffer) =>
@@ -223,13 +214,11 @@ let startInsert = (~maybeBuffer, model) => {
 };
 
 let stopInsert = (~maybeBuffer, model) => {
-  prerr_endline("stopInsert");
   {...model, sessions: []};
 };
 
 let bufferUpdated =
     (~languageConfiguration, ~buffer, ~activeCursor, ~triggerKey, model) => {
-  prerr_endline("--buffer updated");
   let sessions' =
     model.sessions
     |> List.map(session =>
@@ -824,7 +813,6 @@ module View = {
         Some((x, y)),
         Some({signatures, activeSignature, activeParameter, _}),
       ) =>
-      prerr_endline("!!!!! RENDERING SIG HELP");
       <signatureHelp
         x
         y
