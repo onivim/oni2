@@ -18,7 +18,7 @@ The following features are supported:
 
 Install via the command-line:
 
-- `oni2 --install-extension exuberant-ctags`
+- `oni2 --install-extension chriswheeldon.exuberant-ctags`
 
 Once installed, there will be a status bar entry showing the state of the CTags index:
 
@@ -39,7 +39,7 @@ The following features are supported:
 
 Install via the command-line:
 
-- `oni2 --install-extension vscode-clangd`
+- `oni2 --install-extension llvm-vs-code-extensions.vscode-clangd`
 
 For best results, you'll need to generate a `compile_commands.json` file.
 

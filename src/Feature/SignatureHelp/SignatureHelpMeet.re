@@ -8,6 +8,7 @@ open Oni_Core;
 
 module CompletionMeet = Feature_LanguageSupport.CompletionMeet;
 
+[@deriving show]
 type t = {
   bufferId: int,
   // Location where the signature help meet is

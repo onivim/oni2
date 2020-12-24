@@ -180,7 +180,7 @@ module Internal = {
     let editor = Feature_Layout.activeEditor(state.layout);
     // TODO: refactor to 'cursorMoved' action
     let signatureHelp = state.signatureHelp;
-    //let maybeBuffer = Selectors.getActiveBuffer(state);
+    let maybeBuffer = Selectors.getActiveBuffer(state);
 
     // let (signatureHelp, shOutMsg) =
     //   Feature_SignatureHelp.update(
@@ -228,21 +228,28 @@ module Internal = {
         state.languageSupport;
       };
 
-    let languageSupport' =
+    // TODO: Bring signature help into language support
+    let (languageSupport', signatureHelp') =
       if (isInInsertMode != wasInInsertMode) {
         if (isInInsertMode) {
-          languageSupport |> Feature_LanguageSupport.startInsertMode;
+          (
+            languageSupport |> Feature_LanguageSupport.startInsertMode,
+            signatureHelp |> Feature_SignatureHelp.startInsert(~maybeBuffer),
+          );
         } else {
-          languageSupport |> Feature_LanguageSupport.stopInsertMode;
+          (
+            languageSupport |> Feature_LanguageSupport.stopInsertMode,
+            signatureHelp |> Feature_SignatureHelp.stopInsert(~maybeBuffer),
+          );
         };
       } else {
-        languageSupport;
+        (languageSupport, signatureHelp);
       };
 
     let state = {
       ...state,
       layout,
-      signatureHelp,
+      signatureHelp: signatureHelp',
       languageSupport: languageSupport',
     };
     (state, editorEffect);
@@ -1498,7 +1505,6 @@ let update =
     let activeCursorByte =
       editor |> Feature_Editor.Editor.getPrimaryCursorByte;
     // TODO: Bring back as a function
-    let signatureHelp = state.signatureHelp;
     // let (signatureHelp, shOutMsg) =
     //   Feature_SignatureHelp.update(
     //     ~maybeBuffer,
@@ -1508,7 +1514,7 @@ let update =
     //     Feature_SignatureHelp.KeyPressed(triggerKey, false),
     //   );
 
-    let languageSupport' =
+    let (languageSupport', signatureHelp') =
       maybeBuffer
       |> Option.map(buffer => {
            let syntaxScope =
@@ -1528,20 +1534,35 @@ let update =
                 )
              |> Option.value(~default=LanguageConfiguration.default);
 
-           Feature_LanguageSupport.bufferUpdated(
-             ~languageConfiguration,
-             ~buffer,
-             ~config,
-             ~activeCursor,
-             ~syntaxScope,
-             ~triggerKey,
-             state.languageSupport,
-           );
+           let languageSupport =
+             Feature_LanguageSupport.bufferUpdated(
+               ~languageConfiguration,
+               ~buffer,
+               ~config,
+               ~activeCursor,
+               ~syntaxScope,
+               ~triggerKey,
+               state.languageSupport,
+             );
+
+           let signatureHelp =
+             Feature_SignatureHelp.bufferUpdated(
+               ~languageConfiguration,
+               ~buffer,
+               ~activeCursor,
+               ~triggerKey,
+               state.signatureHelp,
+             );
+           (languageSupport, signatureHelp);
          })
-      |> Option.value(~default=state.languageSupport);
+      |> Option.value(~default=(state.languageSupport, state.signatureHelp));
 
     (
-      {...state, signatureHelp, languageSupport: languageSupport'},
+      {
+        ...state,
+        signatureHelp: signatureHelp',
+        languageSupport: languageSupport',
+      },
       Isolinear.Effect.none,
     );
 
