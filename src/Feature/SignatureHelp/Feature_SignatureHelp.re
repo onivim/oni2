@@ -50,54 +50,74 @@ module Session = {
     latestMeet: option(meet),
   };
 
-  let stringToTriggerCharacter = str =>
-    try(Some(ZedBundled.get(str, 0))) {
+  let stringToTriggerCharacter = (str) => {
+    try ({
+      Some(ZedBundled.get(str, 0))
+    }){
     | _exn => None
-    };
-
-  let triggerCharacters = strings => {
-    strings |> List.filter_map(stringToTriggerCharacter);
+    }
   };
+
+  let triggerCharacters = (strings) => {
+    strings
+    |> List.filter_map(stringToTriggerCharacter);
+  }
 
   let start = (provider: provider) => {
     handle: provider.handle,
-    triggerCharacters:
-      provider.metadata.triggerCharacters |> triggerCharacters,
-    retriggerCharacters:
-      provider.metadata.retriggerCharacters |> triggerCharacters,
+    triggerCharacters: provider.metadata.triggerCharacters |> triggerCharacters,
+    retriggerCharacters: provider.metadata.retriggerCharacters |> triggerCharacters,
     latestSignatureHelpResult: None,
     latestMeet: None,
   };
 
-  let bufferUpdated =
-      (~languageConfiguration, ~buffer, ~activeCursor, ~triggerKey, model) => {
+  let bufferUpdated = (
+    ~languageConfiguration,
+    ~buffer,
+    ~activeCursor,
+    ~triggerKey,
+    model
+  ) => {
     open Exthost.SignatureHelp;
-    let maybeMeet =
-      SignatureHelpMeet.fromBufferPosition(
-        ~languageConfiguration,
-        ~triggerCharacters=model.triggerCharacters,
-        ~retriggerCharacters=model.retriggerCharacters,
-        ~position=activeCursor,
-        buffer,
-      )
-      |> Option.map((meet: SignatureHelpMeet.t) =>
-           {
-             bufferId: Buffer.getId(buffer),
-             position: meet.location,
-             isRetrigger: meet.isRetrigger,
-             triggerCharacter: triggerKey,
-             triggerKind:
-               Option.is_some(triggerKey) ? TriggerCharacter : ContentChange,
-           }
-         );
+    let maybeMeet = SignatureHelpMeet.fromBufferPosition(
+      ~languageConfiguration,
+      ~triggerCharacters=model.triggerCharacters,
+      ~retriggerCharacters=model.retriggerCharacters,
+      ~position=activeCursor,
+      buffer
+    );
+
+    let str = maybeMeet
+    |> Option.map(meet => SignatureHelpMeet.show(meet))
+    |> Option.value(~default="(null)");
+
+    prerr_endline ("MEET: " ++ str);
+
+    let maybeMeet = maybeMeet
+    |> Option.map((meet: SignatureHelpMeet.t) => {
+      bufferId: Buffer.getId(buffer),
+      position: meet.location,
+      isRetrigger: meet.isRetrigger,
+      triggerCharacter: triggerKey,
+      triggerKind: Option.is_some(triggerKey) ? TriggerCharacter : ContentChange,
+    });
 
     if (maybeMeet == model.latestMeet) {
-      prerr_endline("Meet is the same!");
-      model;
+      prerr_endline ("Meet is the same!");
+      model
     } else {
-      prerr_endline("New meet!");
-      {...model, latestMeet: maybeMeet, latestSignatureHelpResult: None};
-    };
+      prerr_endline ("New meet!");
+      {
+      ...model,
+      latestMeet: maybeMeet,
+      latestSignatureHelpResult: None,
+      }
+    }
+  }
+
+  let close = (model) => {
+    ...model,
+    latestSignatureHelpResult: None
   };
 
   let handle = ({handle, _}) => handle;
@@ -112,7 +132,16 @@ module Session = {
     | EmptyInfoReceived
     | RequestFailed(string);
 
-  let update = (_msg: msg, model: model) => model;
+  let update = (msg: msg, model: model) => switch (msg) {
+  | InfoReceived({ signatures, activeSignature, activeParameter}) =>
+  prerr_endline ("!!! Info received!");
+    {
+      ...model,
+      latestSignatureHelpResult: Some({signatures, activeSignature, activeParameter})
+    }
+  | EmptyInfoReceived => {...model, latestSignatureHelpResult: None}
+  | RequestFailed(_) => {...model, latestSignatureHelpResult: None}
+  };
 
   let get = ({latestSignatureHelpResult, _}) => latestSignatureHelpResult;
   let sub = (~buffer, ~client, model) => {
@@ -124,12 +153,22 @@ module Session = {
         Isolinear.Sub.none;
       } else {
         let toMsg = msg => {
-          switch (msg) {
-          | Ok(Some(response)) => prerr_endline("!! Response!")
-          | Ok(None) => prerr_endline("!! Empty")
-          | Error(msg) => prerr_endline("!! ERROR")
+          switch(msg) {
+          | Ok(Some(response)) => prerr_endline ("!! Response!")
+          | Ok(None) => prerr_endline ("!! Empty");
+          | Error(msg) => prerr_endline ("!! ERROR");
           };
-          EmptyInfoReceived;
+
+          switch(msg) {
+         | Ok(Some({signatures, activeSignature, activeParameter, _}: Exthost.SignatureHelp.Response.t)) =>
+           InfoReceived({
+             signatures,
+             activeSignature,
+             activeParameter,
+           })
+         | Ok(None) => EmptyInfoReceived
+         | Error(s) => RequestFailed(s)
+          };
         };
         let context = meetToRequestContext(meet);
         Service_Exthost.Sub.signatureHelp(
@@ -171,8 +210,12 @@ let getSignatureHelp = ({sessions, _}) => {
   List.nth_opt(candidates, 0);
 };
 
+let isShown = model => model
+|> getSignatureHelp
+|> Option.is_some;
+
 let startInsert = (~maybeBuffer, model) => {
-  prerr_endline("startinsert");
+  prerr_endline ("startinsert");
   switch (maybeBuffer) {
   | None => model
   | Some(buffer) =>
@@ -188,32 +231,38 @@ let startInsert = (~maybeBuffer, model) => {
 };
 
 let stopInsert = (~maybeBuffer, model) => {
-  prerr_endline("stopInsert");
+  prerr_endline ("stopInsert");
   {...model, sessions: []};
 };
 
-let bufferUpdated =
-    (~languageConfiguration, ~buffer, ~activeCursor, ~triggerKey, model) => {
-  prerr_endline("--buffer updated");
-  let sessions' =
-    model.sessions
-    |> List.map(session =>
-         Session.bufferUpdated(
-           ~languageConfiguration,
-           ~buffer,
-           ~activeCursor,
-           ~triggerKey,
-           session,
-         )
-       );
-  {...model, sessions: sessions'};
+let bufferUpdated = (
+  ~languageConfiguration,
+  ~buffer,
+  ~activeCursor,
+  ~triggerKey,
+  model
+) => {
+  prerr_endline ("--buffer updated");
+  let sessions' = model.sessions
+  |> List.map(session => Session.bufferUpdated(
+    ~languageConfiguration,
+    ~buffer,
+    ~activeCursor,
+    ~triggerKey,
+    session
+  ));
+  {
+    ...model,
+    sessions: sessions'
+  }
 };
 
 [@deriving show({with_path: false})]
 type command =
   | Show
   | IncrementSignature
-  | DecrementSignature;
+  | DecrementSignature
+  | Close;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -237,8 +286,6 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | Error(string);
 
-let isShown = model => model.shown;
-
 module Commands = {
   open Feature_Commands.Schema;
 
@@ -248,6 +295,14 @@ module Commands = {
       ~title="Show parameter hints",
       "editor.action.triggerParameterHints",
       Command(Show),
+    );
+
+  let close = 
+    define(
+      ~category="Parameter Hints",
+      ~title="Close",
+      "editor.action.hideParameterHints",
+      Command(Close)
     );
 
   let incrementSignature =
@@ -267,8 +322,40 @@ module Commands = {
     );
 };
 
+module Keybindings = {
+  open Feature_Input.Schema;
+
+  let decrementSignature = {
+        key: "<A-DOWN>",
+        command: Commands.incrementSignature.id,
+        condition:
+          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+  };
+
+  let incrementSignature = {
+      key: "<A-DOWN>",
+      command: Commands.incrementSignature.id,
+      condition:
+        "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+  };
+
+  let close = {
+      key: "<ESC>",
+      command: Commands.close.id,
+      condition:
+        "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+  }
+};
+
 module Contributions = {
-  let commands = Commands.[show, incrementSignature, decrementSignature];
+  let commands = Commands.[
+  show, incrementSignature, decrementSignature, close];
+
+  let keybindings = Keybindings.[
+    incrementSignature,
+    decrementSignature,
+    close
+  ];
 };
 
 let sub = (~buffer, ~isInsertMode, ~activePosition, ~client, model) =>
@@ -361,6 +448,12 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
       );
     | _ => (model, Nothing)
     }
+
+  | Command(Close) =>
+    let sessions' = model.sessions
+    |> List.map(Session.close);
+    ({...model, sessions: sessions'}, Nothing)
+
   | ProviderRegistered(provider) => (
       {...model, providers: [provider, ...model.providers]},
       Nothing,
@@ -786,14 +879,10 @@ module View = {
         (),
       ) => {
     let maybeCoords =
-      (
-        if (model.shown) {
+      ({
           let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
           Some(cursorLocation);
-        } else {
-          None;
-        }
-      )
+      })
       |> Option.map((characterPosition: CharacterPosition.t) => {
            let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
              Feature_Editor.Editor.bufferCharacterPositionToPixel(
@@ -808,7 +897,8 @@ module View = {
     | (
         Some((x, y)),
         Some({signatures, activeSignature, activeParameter, _}),
-      ) =>
+      ) => {
+      prerr_endline ("!!!!! RENDERING SIG HELP");
       <signatureHelp
         x
         y
@@ -825,6 +915,7 @@ module View = {
         parameterIndex=activeParameter
         dispatch
       />
+      }
     | _ => React.empty
     };
   };

@@ -12,12 +12,6 @@ type model;
 let initial: model;
 
 [@deriving show({with_path: false})]
-type command =
-  | Show
-  | IncrementSignature
-  | DecrementSignature;
-
-[@deriving show({with_path: false})]
 type msg;
 
 module Msg: {let providerAvailable: provider => msg;};
@@ -67,7 +61,10 @@ let sub:
   ) =>
   Isolinear.Sub.t(msg);
 
-module Contributions: {let commands: list(Command.t(msg));};
+module Contributions: {
+  let commands: list(Command.t(msg));
+  let keybindings: list(Feature_Input.Schema.keybinding);
+};
 
 module View: {
   let make:
