@@ -101,6 +101,17 @@ module Schema = {
     condition: WhenExpr.ContextKeys.t => bool,
   };
 
+  let bind = (~key, ~command, ~condition) => {key, command, condition};
+
+  let mapCommand = (~f, binding: keybinding) => {
+    ...binding,
+    command: f(binding.command),
+  };
+
+  let clear = (~key as _) => failwith("Not implemented");
+
+  let remap = (~remap as _, ~toKeys as _) => failwith("Not implemented");
+
   let resolve = ({key, command, condition}) => {
     let evaluateCondition = (whenExpr, contextKeys) => {
       WhenExpr.evaluate(

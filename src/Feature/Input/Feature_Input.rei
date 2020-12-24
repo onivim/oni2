@@ -16,11 +16,19 @@ type command;
 // MODEL
 
 module Schema: {
-  type keybinding = {
-    key: string,
-    command: string,
-    condition: WhenExpr.t,
-  };
+  type keybinding;
+
+  // Bind a key to a command
+  let bind:
+    (~key: string, ~command: string, ~condition: WhenExpr.t) => keybinding;
+
+  // Clear all bindings for a key
+  let clear: (~key: string) => keybinding;
+
+  // Remap a key -> to another key
+  let remap: (~remap: string, ~toKeys: string) => keybinding;
+
+  let mapCommand: (~f: string => string, keybinding) => keybinding;
 
   type resolvedKeybinding;
 

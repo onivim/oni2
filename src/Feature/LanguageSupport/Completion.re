@@ -892,68 +892,79 @@ module KeyBindings = {
   let triggerSuggestCondition =
     "editorTextFocus && insertMode && !suggestWidgetVisible" |> WhenExpr.parse;
 
-  let triggerSuggestControlSpace = {
-    key: "<C-Space>",
-    command: Commands.triggerSuggest.id,
-    condition: triggerSuggestCondition,
-  };
-  let triggerSuggestControlN = {
-    key: "<C-N>",
-    command: Commands.triggerSuggest.id,
-    condition: triggerSuggestCondition,
-  };
-  let triggerSuggestControlP = {
-    key: "<C-P>",
-    command: Commands.triggerSuggest.id,
-    condition: triggerSuggestCondition,
-  };
+  let triggerSuggestControlSpace =
+    bind(
+      ~key="<C-Space>",
+      ~command=Commands.triggerSuggest.id,
+      ~condition=triggerSuggestCondition,
+    );
+  let triggerSuggestControlN =
+    bind(
+      ~key="<C-N>",
+      ~command=Commands.triggerSuggest.id,
+      ~condition=triggerSuggestCondition,
+    );
+  let triggerSuggestControlP =
+    bind(
+      ~key="<C-P>",
+      ~command=Commands.triggerSuggest.id,
+      ~condition=triggerSuggestCondition,
+    );
 
-  let nextSuggestion = {
-    key: "<C-N>",
-    command: Commands.selectNextSuggestion.id,
-    condition: suggestWidgetVisible,
-  };
+  let nextSuggestion =
+    bind(
+      ~key="<C-N>",
+      ~command=Commands.selectNextSuggestion.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let nextSuggestionArrow = {
-    key: "<DOWN>",
-    command: Commands.selectNextSuggestion.id,
-    condition: suggestWidgetVisible,
-  };
+  let nextSuggestionArrow =
+    bind(
+      ~key="<DOWN>",
+      ~command=Commands.selectNextSuggestion.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let previousSuggestion = {
-    key: "<C-P>",
-    command: Commands.selectPrevSuggestion.id,
-    condition: suggestWidgetVisible,
-  };
-  let previousSuggestionArrow = {
-    key: "<UP>",
-    command: Commands.selectPrevSuggestion.id,
-    condition: suggestWidgetVisible,
-  };
+  let previousSuggestion =
+    bind(
+      ~key="<C-P>",
+      ~command=Commands.selectPrevSuggestion.id,
+      ~condition=suggestWidgetVisible,
+    );
+  let previousSuggestionArrow =
+    bind(
+      ~key="<UP>",
+      ~command=Commands.selectPrevSuggestion.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let acceptSuggestionEnter = {
-    key: "<CR>",
-    command: Commands.acceptSelected.id,
-    condition: acceptOnEnter,
-  };
+  let acceptSuggestionEnter =
+    bind(
+      ~key="<CR>",
+      ~command=Commands.acceptSelected.id,
+      ~condition=acceptOnEnter,
+    );
 
-  let acceptSuggestionTab = {
-    key: "<TAB>",
-    command: Commands.acceptSelected.id,
-    condition: suggestWidgetVisible,
-  };
+  let acceptSuggestionTab =
+    bind(
+      ~key="<TAB>",
+      ~command=Commands.acceptSelected.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let acceptSuggestionShiftTab = {
-    key: "<S-TAB>",
-    command: Commands.acceptSelected.id,
-    condition: suggestWidgetVisible,
-  };
+  let acceptSuggestionShiftTab =
+    bind(
+      ~key="<S-TAB>",
+      ~command=Commands.acceptSelected.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let acceptSuggestionShiftEnter = {
-    key: "<S-CR>",
-    command: Commands.acceptSelected.id,
-    condition: suggestWidgetVisible,
-  };
+  let acceptSuggestionShiftEnter =
+    bind(
+      ~key="<S-CR>",
+      ~command=Commands.acceptSelected.id,
+      ~condition=suggestWidgetVisible,
+    );
 };
 
 module Contributions = {
