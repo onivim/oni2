@@ -140,7 +140,14 @@ module CustomDecoders: {
     custom(
       ~decode=Json.Decode.(int |> map(Time.ms)),
       ~encode=
-        Json.Encode.(t => t |> Time.toFloatSeconds |> int_of_float |> int),
+        Json.Encode.(
+          t =>
+            t
+            |> Time.toFloatSeconds
+            |> (t => t *. 1000.)
+            |> int_of_float
+            |> int
+        ),
     );
 };
 

@@ -863,6 +863,12 @@ module Files: {
     let encode: Json.encoder(t);
   };
 
+  module ReadDirResult: {
+    type t = (string, FileType.t);
+
+    let encode: Json.encoder(t);
+  };
+
   module FileSystemEvents: {
     type t = {
       created: list(Oni_Core.Uri.t),
@@ -1627,10 +1633,7 @@ module Reply: {
   let okBuffer: Bytes.t => t;
 };
 
-module Middleware: {
-  let download: Msg.DownloadService.msg => Lwt.t(Reply.t);
-  let filesystem: Msg.FileSystem.msg => Lwt.t(Reply.t);
-};
+module Middleware: {let download: Msg.DownloadService.msg => Lwt.t(Reply.t);};
 
 module Client: {
   type t;
@@ -1736,6 +1739,10 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(unit);
+  };
+
+  module FileSystem: {
+    let readFile: (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(string);
   };
 
   module FileSystemEventService: {

@@ -177,13 +177,15 @@ module Sub = {
       switch (Editor.lastMouseMoveTime(editor)) {
       | Some(time) when hoverEnabled && !Editor.isMouseDown(editor) =>
         let delay = EditorConfiguration.Hover.delay.get(config);
-        Service_Time.Sub.once(
-          ~uniqueId={
-            string_of_int(Editor.getId(editor))
-            ++ string_of_float(Revery.Time.toFloatSeconds(time));
-          },
-          ~delay,
-          ~msg=(~current as _) =>
+        let uniqueId =
+          Printf.sprintf(
+            "editor:%d.%f.%f.%f",
+            Editor.getId(editor),
+            Revery.Time.toFloatSeconds(time),
+            Editor.scrollX(editor),
+            Editor.scrollY(editor),
+          );
+        Service_Time.Sub.once(~uniqueId, ~delay, ~msg=(~current as _) =>
           Msg.MouseHovered
         );
       | Some(_) => Isolinear.Sub.none

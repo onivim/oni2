@@ -685,6 +685,19 @@ module FileSystem = {
         let%bind opts =
           deleteOptsJson |> Internal.decode_value(FileDeleteOptions.decode);
         Ok(Delete({uri, opts}));
+
+      | (
+          "$registerFileSystemProvider",
+          `List([`Int(handle), `String(scheme), capabilitiesJson]),
+        ) =>
+        let%bind capabilities =
+          capabilitiesJson
+          |> Internal.decode_value(FileSystemProviderCapabilities.decode);
+        Ok(RegisterFileSystemProvider({handle, scheme, capabilities}));
+
+      | ("$unregisterFileSystemProvider", `List([`Int(handle)])) =>
+        Ok(UnregisterProvider({handle: handle}))
+
       | _ => Error("Unhandled FileSystem method: " ++ method)
       }
     );
