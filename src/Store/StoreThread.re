@@ -367,6 +367,20 @@ let start =
          })
       |> Option.value(~default=Isolinear.Sub.none);
 
+    let signatureHelpSub =
+      maybeActiveBuffer
+      |> Option.map(activeBuffer => {
+           Feature_SignatureHelp.sub(
+             ~isInsertMode,
+             ~buffer=activeBuffer,
+             ~activePosition,
+             ~client=extHostClient,
+             state.signatureHelp,
+           )
+           |> Isolinear.Sub.map(msg => Model.Actions.SignatureHelp(msg))
+         })
+      |> Option.value(~default=Isolinear.Sub.none);
+
     let isSideBarOpen = Feature_SideBar.isOpen(state.sideBar);
     let isExtensionsFocused =
       Feature_SideBar.selected(state.sideBar) == Feature_SideBar.Extensions;
@@ -441,6 +455,7 @@ let start =
       visibleEditorsSubscription,
       inputSubscription,
       notificationSub,
+      signatureHelpSub,
     ]
     |> Isolinear.Sub.batch;
   };
