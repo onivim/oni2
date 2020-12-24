@@ -407,7 +407,14 @@ let defaultKeyBindings =
   @ Feature_SignatureHelp.Contributions.keybindings
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings
-  @ Component_VimTree.Contributions.keybindings;
+  @ Component_VimTree.Contributions.keybindings
+  @ Feature_Input.Schema.[
+      remap(
+        ~fromKeys="<C-[>",
+        ~toKeys="<ESC>",
+        ~condition=WhenExpr.Value(True),
+      ),
+    ];
 
 type windowDisplayMode =
   | Minimized

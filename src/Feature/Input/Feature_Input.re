@@ -96,9 +96,10 @@ module Schema = {
         condition: WhenExpr.t,
       })
     | Remap({
-      fromKeys: string,
-      toKeys: string,
-    });
+        fromKeys: string,
+        toKeys: string,
+        condition: WhenExpr.t,
+      });
 
   type resolvedKeybinding =
     | ResolvedBinding({
@@ -107,10 +108,10 @@ module Schema = {
         condition: WhenExpr.ContextKeys.t => bool,
       })
     | ResolvedRemap({
-      matcher: EditorInput.Matcher.t,
-      toKeys: list(EditorInput.KeyPress.t),
-      condition: WhenExpr.ContextKeys.t => bool,
-    })
+        matcher: EditorInput.Matcher.t,
+        toKeys: list(EditorInput.KeyPress.t),
+        condition: WhenExpr.ContextKeys.t => bool,
+      });
 
   let bind = (~key, ~command, ~condition) =>
     Binding({key, command, condition});
@@ -124,21 +125,19 @@ module Schema = {
 
   let clear = (~key as _) => failwith("Not implemented");
 
-  let remap = (~remap, ~toKeys) => Remap({
-    fromKeys: remap,
-    toKeys
-  })
+  let remap = (~fromKeys, ~toKeys, ~condition) =>
+    Remap({fromKeys, toKeys, condition});
 
   let resolve = keybinding => {
+    let evaluateCondition = (whenExpr, contextKeys) => {
+      WhenExpr.evaluate(
+        whenExpr,
+        WhenExpr.ContextKeys.getValue(contextKeys),
+      );
+    };
+
     switch (keybinding) {
     | Binding({key, command, condition}) =>
-      let evaluateCondition = (whenExpr, contextKeys) => {
-        WhenExpr.evaluate(
-          whenExpr,
-          WhenExpr.ContextKeys.getValue(contextKeys),
-        );
-      };
-
       let maybeMatcher =
         EditorInput.Matcher.parse(
           ~explicitShiftKeyNeeded=true,
@@ -155,7 +154,41 @@ module Schema = {
            })
          });
 
-    | Remap(_) => failwith("nope");
+    | Remap({fromKeys, condition, toKeys}) =>
+      let evaluateCondition = (whenExpr, contextKeys) => {
+        WhenExpr.evaluate(
+          whenExpr,
+          WhenExpr.ContextKeys.getValue(contextKeys),
+        );
+      };
+
+      let maybeMatcher =
+        EditorInput.Matcher.parse(
+          ~explicitShiftKeyNeeded=true,
+          ~getKeycode,
+          ~getScancode,
+          fromKeys,
+        );
+
+      let maybeKeys =
+        EditorInput.KeyPress.parse(
+          ~explicitShiftKeyNeeded=true,
+          ~getKeycode,
+          ~getScancode,
+          toKeys,
+        );
+
+      ResultEx.map2(
+        (matcher, toKeys) => {
+          ResolvedRemap({
+            matcher,
+            condition: evaluateCondition(condition),
+            toKeys,
+          })
+        },
+        maybeMatcher,
+        maybeKeys,
+      );
     };
   };
 };
@@ -215,11 +248,11 @@ let initial = keybindings => {
                InputStateMachine.addBinding(matcher, condition, command, ism);
              ism;
 
-           | Ok(ResolvedRemap({matcher, condition, toKeys})) => 
-            let (ism, _bindingId) =
-              InputStateMachine.addMapping(matcher, condition, toKeys, ism);
-              ism;
-          }
+           | Ok(ResolvedRemap({matcher, condition, toKeys})) =>
+             let (ism, _bindingId) =
+               InputStateMachine.addMapping(matcher, condition, toKeys, ism);
+             ism;
+           }
          },
          InputStateMachine.empty,
        );
@@ -333,7 +366,7 @@ let addKeyBinding = (~binding, {inputStateMachine, _} as model) => {
           remap.matcher,
           remap.condition,
           remap.toKeys,
-          inputStateMachine
+          inputStateMachine,
         );
       ({...model, inputStateMachine: inputStateMachine'}, uniqueId);
     }
@@ -396,7 +429,6 @@ module Internal = {
              let (ism, bindings) = acc;
              let (ism', bindingId) =
                switch (resolvedBinding) {
-
                | ResolvedBinding({matcher, condition, command}) =>
                  InputStateMachine.addBinding(
                    matcher,
@@ -405,13 +437,8 @@ module Internal = {
                    ism,
                  )
 
-              | ResolvedRemap({matcher, condition, toKeys}) =>
-                 InputStateMachine.addMapping(
-                   matcher,
-                   condition,
-                   toKeys,
-                   ism,
-                 )
+               | ResolvedRemap({matcher, condition, toKeys}) =>
+                 InputStateMachine.addMapping(matcher, condition, toKeys, ism)
                };
              (ism', [bindingId, ...bindings]);
            },

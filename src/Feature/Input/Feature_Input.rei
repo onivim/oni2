@@ -26,7 +26,8 @@ module Schema: {
   let clear: (~key: string) => keybinding;
 
   // Remap a key -> to another key
-  let remap: (~remap: string, ~toKeys: string) => keybinding;
+  let remap:
+    (~fromKeys: string, ~toKeys: string, ~condition: WhenExpr.t) => keybinding;
 
   let mapCommand: (~f: string => string, keybinding) => keybinding;
 

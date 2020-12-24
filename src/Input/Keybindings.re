@@ -28,7 +28,7 @@ module Keybinding = {
           ~key=field.required("key", string),
           ~command=field.required("command", string),
           ~condition=
-            field.withDefault("condition", WhenExpr.Value(True), condition),
+            field.withDefault("when", WhenExpr.Value(True), condition),
         )
       });
   };
