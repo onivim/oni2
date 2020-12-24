@@ -15,6 +15,53 @@ type t = {
   isRetrigger: bool,
 };
 
+module Internal = {
+
+  let fromLine =
+  (
+    ~getUchar: int => option(Uchar.t),
+    ~index: int,
+    ~languageConfiguration,
+    ~triggerCharacters,
+    ~retriggerCharacters
+  ) => {
+    None
+  }
+
+  let fromString =
+    (
+      ~index,
+      ~languageConfiguration,
+      ~triggerCharacters,
+      ~retriggerCharacters,
+      str,
+    ) => {
+      let getUchar = idx => if(idx < 0) {
+        None
+      } else {
+        Some(Uchar.of_char(str[idx]))
+      };
+
+      fromLine(
+        ~getUchar,
+        ~index,
+        ~languageConfiguration,
+        ~retriggerCharacters
+      );
+    };
+
+    let%test_module "fromString" = (module {
+      let getMeet = fromString(
+        ~languageConfiguration=LanguageConfiguration.initial,
+        ~triggerCharacters=[Uchar.of_char('(')],
+        ~retriggerCharacters=[Uchar.of_char(',')]
+      );
+      let%test "basic test" = {
+        getMeet(~index=2, "abc") == None
+      };
+    });
+}
+
 let fromBufferPosition =
     (
       ~languageConfiguration,
