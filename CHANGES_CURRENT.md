@@ -14,6 +14,7 @@
 - #2868 - SCM: Diff markers not showing up in gutter (fixes #2857)
 - #2869 - Hover: Fix hover pop up while scrolling via mousewheel
 - #2871 - Vim: Fix `ctrl+o` behavior in insert mode (fixes #2425)
+- #2854 - Extensions: Signature Help - fix overlay staying open in normal mode
 
 ### Performance
 
