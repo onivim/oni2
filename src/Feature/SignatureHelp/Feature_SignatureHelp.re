@@ -99,14 +99,7 @@ module Session = {
     {...model, latestSignatureHelpResult: latestResult'};
   };
 
-  let bufferUpdated =
-      (
-        ~languageConfiguration,
-        ~buffer,
-        ~activeCursor,
-        ~triggerKey as _,
-        model,
-      ) => {
+  let bufferUpdated = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
     let maybeMeet =
       SignatureHelpMeet.fromBufferPosition(
         ~languageConfiguration,
@@ -255,12 +248,11 @@ let startInsert = (~maybeBuffer, model) => {
   };
 };
 
-let stopInsert = (~maybeBuffer as _, model) => {
+let stopInsert = model => {
   {...model, sessions: []};
 };
 
-let bufferUpdated =
-    (~languageConfiguration, ~buffer, ~activeCursor, ~triggerKey, model) => {
+let bufferUpdated = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
   let sessions' =
     model.sessions
     |> List.map(session =>
@@ -268,7 +260,6 @@ let bufferUpdated =
            ~languageConfiguration,
            ~buffer,
            ~activeCursor,
-           ~triggerKey,
            session,
          )
        );
@@ -286,14 +277,12 @@ type command =
 type msg =
   | Command(command)
   | ProviderRegistered(provider)
-  // | KeyPressed(option(string), bool)
   | SignatureIncrementClicked
   | SignatureDecrementClicked
   | Session({
       handle: int,
       msg: Session.msg,
     });
-// | CursorMoved(int);
 
 module Msg = {
   let providerAvailable = provider => ProviderRegistered(provider);

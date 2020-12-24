@@ -172,7 +172,6 @@ module Internal = {
       |> Feature_Editor.Editor.getPrimaryCursor;
 
     let editor = Feature_Layout.activeEditor(state.layout);
-    // TODO: refactor to 'cursorMoved' action
     let signatureHelp = state.signatureHelp;
     let maybeBuffer = Selectors.getActiveBuffer(state);
 
@@ -222,7 +221,7 @@ module Internal = {
         } else {
           (
             languageSupport |> Feature_LanguageSupport.stopInsertMode,
-            signatureHelp |> Feature_SignatureHelp.stopInsert(~maybeBuffer),
+            signatureHelp |> Feature_SignatureHelp.stopInsert,
           );
         };
       } else {
@@ -1487,15 +1486,6 @@ let update =
     let activeCursor = editor |> Feature_Editor.Editor.getPrimaryCursor;
     let activeCursorByte =
       editor |> Feature_Editor.Editor.getPrimaryCursorByte;
-    // TODO: Bring back as a function
-    // let (signatureHelp, shOutMsg) =
-    //   Feature_SignatureHelp.update(
-    //     ~maybeBuffer,
-    //     ~maybeEditor=Some(editor),
-    //     ~extHostClient,
-    //     state.signatureHelp,
-    //     Feature_SignatureHelp.KeyPressed(triggerKey, false),
-    //   );
 
     let (languageSupport', signatureHelp') =
       maybeBuffer
@@ -1533,7 +1523,6 @@ let update =
                ~languageConfiguration,
                ~buffer,
                ~activeCursor,
-               ~triggerKey,
                state.signatureHelp,
              );
            (languageSupport, signatureHelp);
