@@ -408,13 +408,7 @@ let defaultKeyBindings =
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings
   @ Component_VimTree.Contributions.keybindings
-  @ Feature_Input.Schema.[
-      remap(
-        ~fromKeys="<C-[>",
-        ~toKeys="<ESC>",
-        ~condition=WhenExpr.Value(True),
-      ),
-    ];
+  @ Feature_Vim.Contributions.keybindings;
 
 type windowDisplayMode =
   | Minimized
