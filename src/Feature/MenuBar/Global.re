@@ -54,6 +54,22 @@ module Items = {
   };
   module Help = {
     let changelog = item(~title="Changelog", ~command="oni.changelog");
+
+    let checkForUpdate =
+      item(~title="Check for updates...", ~command="oni.app.checkForUpdates");
+  };
+
+  module View = {
+    let commands =
+      item(~title="Commands", ~command="workbench.action.showCommands");
+
+    let files = item(~title="Files", ~command="workbench.action.quickOpen");
+
+    let cycleOpenFiles =
+      item(
+        ~title="Cycle open files",
+        ~command="workbench.action.openNextRecentlyUsedEditorInGroup",
+      );
   };
 };
 
@@ -64,6 +80,11 @@ let groups = [
   group(~order=200, ~parent=file, Items.File.[saveFile, saveAll]),
   group(~order=300, ~parent=file, Items.File.Preferences.[submenu]),
   group(~order=999, ~parent=file, Items.File.[quit]),
+  group(
+    ~order=100,
+    ~parent=view,
+    Items.View.[commands, files, cycleOpenFiles],
+  ),
   group(~parent=edit, Items.Edit.[undo, redo]),
-  group(~parent=help, Items.Help.[changelog]),
+  group(~parent=help, Items.Help.[changelog, checkForUpdate]),
 ];

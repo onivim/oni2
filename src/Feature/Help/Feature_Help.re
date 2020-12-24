@@ -96,6 +96,8 @@ module MenuItems = {
   let website = command(~title="Website", website);
   let documentation = command(~title="Documentation", documentation);
 
+  let reportBug = command(~title="Report bug", reportBug);
+
   let documentationGroup =
     group(
       ~order=0,
@@ -113,8 +115,6 @@ module MenuItems = {
       ~parent=Feature_MenuBar.Global.help,
       [joinDevTalk, joinTwitter, joinDiscord],
     );
-
-  let reportBug = command(~title="Report bug", reportBug);
 
   let developmentGroup =
     group(~order=500, ~parent=Feature_MenuBar.Global.help, [reportBug]);

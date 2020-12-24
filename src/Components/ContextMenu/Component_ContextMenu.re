@@ -165,7 +165,7 @@ module View = {
           };
 
           (
-            <Clickable onClick>
+            <View onMouseUp={_ => {onClick()}}>
               <View
                 style={Styles.container(~theme, ~isFocused)}
                 onBoundingBoxChanged={(bbox: Math.BoundingBox2d.t) => {
@@ -191,7 +191,7 @@ module View = {
                     details
                   </View>
                 </View>
-            </Clickable>,
+            </View>,
             hooks,
           );
         });
@@ -430,7 +430,6 @@ module View = {
         right(0),
         pointerEvents(`Allow),
         cursor(MouseCursors.arrow),
-        backgroundColor(Revery.Colors.red),
       ];
     };
 
@@ -439,19 +438,19 @@ module View = {
         Hooks.state(IntMap.empty);
       internalSetMenus := setMenus;
 
-      let onOverlayClick = () => {
+      let onOverlayClick = _ => {
         IntMap.iter((_key, {onCancel, _}) => {onCancel()}, menus);
       };
 
       if (IntMap.is_empty(menus)) {
         React.empty;
       } else {
-        <Clickable onClick=onOverlayClick style=Styles.backdrop>
+        <View onMouseUp=onOverlayClick style=Styles.backdrop>
           {IntMap.bindings(menus)
            |> List.map(snd)
            |> List.map(({menu, _}) => menu)
            |> React.listToElement}
-        </Clickable>;
+        </View>;
       };
     };
   };

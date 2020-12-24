@@ -576,10 +576,8 @@ let initial =
       Feature_MenuBar.initial(
         ~menus=[],
         ~groups=
-          [
-            Feature_Workspace.Contributions.menuGroup,
-            Feature_SideBar.Contributions.menuGroup,
-          ]
+          [Feature_Workspace.Contributions.menuGroup]
+          @ Feature_SideBar.Contributions.menuGroups
           @ Feature_Help.Contributions.menuGroups,
       ),
     grammarRepository: Oni_Syntax.GrammarRepository.empty,
