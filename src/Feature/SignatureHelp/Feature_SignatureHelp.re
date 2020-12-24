@@ -26,7 +26,6 @@ type signatureHelp = {
 // A session models the state of an individual signature help provider
 // (there may be multiple signature help providers registered)
 module Session = {
-
   // SignatureHelpMeet.t, plus some extra info
   type meet = {
     triggerKind: Exthost.SignatureHelp.TriggerKind.t,
@@ -126,11 +125,16 @@ module Session = {
   let update = (msg: msg, model: model) =>
     switch (msg) {
     | InfoReceived({signatures, activeSignature, activeParameter}) =>
-      {
-        ...model,
-        latestSignatureHelpResult:
-          Some({signatures, activeSignature, activeParameter}),
-      };
+      // Some providers will submit an empty signature help... not very useful to show this!
+      if (signatures == []) {
+        {...model, latestSignatureHelpResult: None};
+      } else {
+        {
+          ...model,
+          latestSignatureHelpResult:
+            Some({signatures, activeSignature, activeParameter}),
+        };
+      }
     | EmptyInfoReceived => {...model, latestSignatureHelpResult: None}
     | RequestFailed(_) => {...model, latestSignatureHelpResult: None}
     };
@@ -828,7 +832,7 @@ module View = {
         signatureIndex=activeSignature
         parameterIndex=activeParameter
         dispatch
-      />;
+      />
     | _ => React.empty
     };
   };

@@ -102,20 +102,21 @@ module Parts = {
 
       // TODO: Move to overlays view
       let renderOverlays = (~gutterWidth) =>
-        isActive ?
-          <Feature_SignatureHelp.View
-            colorTheme=theme
-            tokenTheme={state.tokenTheme}
-            model={state.signatureHelp}
-            uiFont={state.uiFont}
-            editorFont={state.editorFont}
-            languageInfo={state.languageInfo}
-            grammars={state.grammarRepository}
-            editor
-            gutterWidth
-            buffer
-            dispatch={msg => dispatch(SignatureHelp(msg))}
-          /> : React.empty;
+        isActive
+          ? <Feature_SignatureHelp.View
+              colorTheme=theme
+              tokenTheme={state.tokenTheme}
+              model={state.signatureHelp}
+              uiFont={state.uiFont}
+              editorFont={state.editorFont}
+              languageInfo={state.languageInfo}
+              grammars={state.grammarRepository}
+              editor
+              gutterWidth
+              buffer
+              dispatch={msg => dispatch(SignatureHelp(msg))}
+            />
+          : React.empty;
 
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
