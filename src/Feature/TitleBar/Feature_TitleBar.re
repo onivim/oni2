@@ -210,6 +210,7 @@ module Styles = {
       ),
       flexDirection(`Row),
       justifyContent(`SpaceBetween),
+      alignItems(`Center),
     ];
 
     let text = (~isFocused, ~theme, ~isRegistered) => [
@@ -341,8 +342,8 @@ module View = {
             <Text
               style={Styles.Mac.text(~isFocused, ~theme, ~isRegistered)}
               fontFamily={font.family}
-              fontWeight=Medium
-              fontSize=12.
+              fontWeight=Bold
+              fontSize={0.45 *. height}
               text=title
             />
           </View>
