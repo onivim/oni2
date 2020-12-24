@@ -15,6 +15,7 @@
 - #2869 - Hover: Fix hover pop up while scrolling via mousewheel
 - #2871 - Vim: Fix `ctrl+o` behavior in insert mode (fixes #2425)
 - #2854 - Extensions: Signature Help - fix overlay staying open in normal mode
+- #2877 - Vim: Remove conflicting `ctrl+b` binding on Windows / Linux (fixes #2870)
 
 ### Performance
 
