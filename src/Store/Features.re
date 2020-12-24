@@ -171,6 +171,7 @@ module Internal = {
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.getPrimaryCursor;
 
+    let config = Selectors.configResolver(state);
     let editor = Feature_Layout.activeEditor(state.layout);
     let signatureHelp = state.signatureHelp;
     let maybeBuffer = Selectors.getActiveBuffer(state);
@@ -216,7 +217,7 @@ module Internal = {
         if (isInInsertMode) {
           (
             languageSupport |> Feature_LanguageSupport.startInsertMode,
-            signatureHelp |> Feature_SignatureHelp.startInsert(~maybeBuffer),
+            signatureHelp |> Feature_SignatureHelp.startInsert(~config, ~maybeBuffer),
           );
         } else {
           (

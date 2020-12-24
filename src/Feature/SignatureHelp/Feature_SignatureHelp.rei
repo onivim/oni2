@@ -32,13 +32,12 @@ let update:
   (
     ~maybeBuffer: option(Buffer.t),
     ~maybeEditor: option(Feature_Editor.Editor.t),
-    ~extHostClient: Exthost.Client.t,
     model,
     msg
   ) =>
   (model, outmsg);
 
-let startInsert: (~maybeBuffer: option(Buffer.t), model) => model;
+let startInsert: (~config: Config.resolver, ~maybeBuffer: option(Buffer.t), model) => model;
 let stopInsert: model => model;
 
 let bufferUpdated:
@@ -63,6 +62,7 @@ let sub:
 module Contributions: {
   let commands: list(Command.t(msg));
   let keybindings: list(Feature_Input.Schema.keybinding);
+  let configuration: list(Config.Schema.spec);
 };
 
 module View: {

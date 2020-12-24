@@ -21,6 +21,13 @@ type signatureHelp = {
   activeParameter: int,
 };
 
+module Configuration = {
+  open Oni_Core;
+  open Config.Schema;
+
+  let enabled = setting("editor.parameterHints.enabled", bool, ~default=true);
+};
+
 // SESSION
 
 // A session models the state of an individual signature help provider
@@ -233,9 +240,11 @@ let getSignatureHelp = ({sessions, _}) => {
 
 let isShown = model => model |> getSignatureHelp |> Option.is_some;
 
-let startInsert = (~maybeBuffer, model) => {
+let startInsert = (~config, ~maybeBuffer, model) => {
+  let enabled = Configuration.enabled.get(config);
   switch (maybeBuffer) {
   | None => model
+  | Some(_) when !enabled => model
   | Some(buffer) =>
     let sessions =
       model.providers
@@ -357,6 +366,10 @@ module Contributions = {
 
   let keybindings =
     Keybindings.[incrementSignature, decrementSignature, close];
+
+  let configuration = Configuration.[
+    enabled.spec,
+  ];
 };
 
 let sub = (~buffer, ~isInsertMode, ~activePosition as _, ~client, model) =>
@@ -372,7 +385,7 @@ let sub = (~buffer, ~isInsertMode, ~activePosition as _, ~client, model) =>
     |> Isolinear.Sub.batch;
   };
 
-let update = (~maybeBuffer, ~maybeEditor, ~extHostClient as _, model, msg) =>
+let update = (~maybeBuffer, ~maybeEditor, model, msg) =>
   switch (msg) {
   | Command(Show) =>
     switch (maybeBuffer, maybeEditor) {
