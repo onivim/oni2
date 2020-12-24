@@ -69,6 +69,36 @@ module Session = {
     latestMeet: None,
   };
 
+  let incrementSignature = model => {
+    let latestResult' =
+      model.latestSignatureHelpResult
+      |> Option.map(sigHelp => {
+           let activeSignature' =
+             Oni_Core.Utility.IntEx.clamp(
+               ~lo=0,
+               ~hi=List.length(sigHelp.signatures) - 1,
+               sigHelp.activeSignature + 1,
+             );
+           {...sigHelp, activeSignature: activeSignature'};
+         });
+    {...model, latestSignatureHelpResult: latestResult'};
+  };
+
+  let decrementSignature = model => {
+    let latestResult' =
+      model.latestSignatureHelpResult
+      |> Option.map(sigHelp => {
+           let activeSignature' =
+             Oni_Core.Utility.IntEx.clamp(
+               ~lo=0,
+               ~hi=List.length(sigHelp.signatures) - 1,
+               sigHelp.activeSignature - 1,
+             );
+           {...sigHelp, activeSignature: activeSignature'};
+         });
+    {...model, latestSignatureHelpResult: latestResult'};
+  };
+
   let bufferUpdated =
       (~languageConfiguration, ~buffer, ~activeCursor, ~triggerKey, model) => {
     open Exthost.SignatureHelp;
@@ -307,7 +337,7 @@ module Keybindings = {
 
   let decrementSignature = {
     key: "<A-DOWN>",
-    command: Commands.incrementSignature.id,
+    command: Commands.decrementSignature.id,
     condition: "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
   };
 
@@ -506,44 +536,14 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
   // | _ => (model, Nothing)
   // }
   | Command(IncrementSignature)
-  | SignatureIncrementClicked => (
-      // TODO:
-      model,
-      Nothing,
-      // {
-      //   ...model,
-      //   activeSignature:
-      //     Option.map(
-      //       i =>
-      //         Oni_Core.Utility.IntEx.clamp(
-      //           ~lo=0,
-      //           ~hi=List.length(model.signatures) - 1,
-      //           i + 1,
-      //         ),
-      //       model.activeSignature,
-      //     ),
-      // },
-      // Nothing,
-    )
+  | SignatureIncrementClicked =>
+    let sessions' = model.sessions |> List.map(Session.incrementSignature);
+    ({...model, sessions: sessions'}, Nothing);
   | Command(DecrementSignature)
-  | SignatureDecrementClicked => (
-      // TODO:
-      // {
-      // ...model,
-      // activeSignature:
-      //   Option.map(
-      //     i =>
-      //       Oni_Core.Utility.IntEx.clamp(
-      //         ~lo=0,
-      //         ~hi=List.length(model.signatures) - 1,
-      //         i - 1,
-      //       ),
-      //     model.activeSignature,
-      //   ),
-      // },
-      model,
-      Nothing,
-    )
+  | SignatureDecrementClicked =>
+    let sessions' = model.sessions |> List.map(Session.decrementSignature);
+    ({...model, sessions: sessions'}, Nothing);
+
   | CursorMoved(editorID) =>
     // TODO
     (model, Nothing)
