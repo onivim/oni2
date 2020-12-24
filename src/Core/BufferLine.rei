@@ -53,6 +53,8 @@ let getByteFromIndex: (~index: CharacterIndex.t, t) => ByteIndex.t;
  */
 let getUcharExn: (~index: CharacterIndex.t, t) => Uchar.t;
 
+let getUchar: (~index: CharacterIndex.t, t) => option(Uchar.t);
+
 let subExn: (~index: CharacterIndex.t, ~length: int, t) => string;
 
 let getPixelPositionAndWidth: (~index: CharacterIndex.t, t) => (float, float);

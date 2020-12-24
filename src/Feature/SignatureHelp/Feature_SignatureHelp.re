@@ -100,7 +100,13 @@ module Session = {
   };
 
   let bufferUpdated =
-      (~languageConfiguration, ~buffer, ~activeCursor, ~triggerKey, model) => {
+      (
+        ~languageConfiguration,
+        ~buffer,
+        ~activeCursor,
+        ~triggerKey as _,
+        model,
+      ) => {
     let maybeMeet =
       SignatureHelpMeet.fromBufferPosition(
         ~languageConfiguration,
@@ -110,13 +116,6 @@ module Session = {
         buffer,
       );
 
-    let str =
-      maybeMeet
-      |> Option.map(meet => SignatureHelpMeet.show(meet))
-      |> Option.value(~default="(null)");
-
-    prerr_endline("MEET: " ++ str);
-
     let maybeMeet =
       maybeMeet
       |> Option.map((meet: SignatureHelpMeet.t) =>
@@ -124,16 +123,26 @@ module Session = {
              bufferId: Buffer.getId(buffer),
              position: meet.location,
              isRetrigger: meet.isRetrigger,
-             triggerCharacter: triggerKey,
-             triggerKind:
-               Option.is_some(triggerKey) ? TriggerCharacter : ContentChange,
+             triggerCharacter:
+               Some(ZedBundled.make(1, meet.triggerCharacter)),
+             triggerKind: TriggerCharacter,
            }
          );
 
     if (maybeMeet == model.latestMeet) {
       model;
     } else {
-      {...model, latestMeet: maybeMeet, latestSignatureHelpResult: None};
+      let latestSignatureHelpResult =
+        switch (maybeMeet, model.latestSignatureHelpResult) {
+        // If we had a previous result, keep the signature help result around, until it's refreshed...
+        | (Some(_newMeet), Some(lastSignatureHelpResult)) =>
+          Some(lastSignatureHelpResult)
+        // Otherwise, close it out
+        | (Some(_), None) => None
+        | (None, Some(_)) => None
+        | (None, None) => None
+        };
+      {...model, latestMeet: maybeMeet, latestSignatureHelpResult};
     };
   };
 
@@ -365,10 +374,6 @@ let sub = (~buffer, ~isInsertMode, ~activePosition as _, ~client, model) =>
   if (!isInsertMode) {
     Isolinear.Sub.none;
   } else {
-    // TODO: Wire this back up when starting a session!
-    // |> List.filter(({selector, _}) =>
-    //      Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
-    //    )
     model.sessions
     |> List.map(session => {
          let handle = Session.handle(session);
@@ -377,50 +382,6 @@ let sub = (~buffer, ~isInsertMode, ~activePosition as _, ~client, model) =>
        })
     |> Isolinear.Sub.batch;
   };
-
-// let getEffectsForLocation =
-//     (
-//       ~buffer,
-//       ~location,
-//       ~extHostClient,
-//       ~model,
-//       ~context,
-//       ~requestID,
-//       ~editor,
-//     ) => {
-//   let matchingProviders =
-//     model.providers
-//     |> List.filter(({selector, _}) =>
-//          Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
-//        );
-
-//   matchingProviders
-//   |> List.map(provider =>
-//        Service_Exthost.Effects.LanguageFeatures.provideSignatureHelp(
-//          ~handle=provider.handle,
-//          ~uri=Buffer.getUri(buffer),
-//          ~position=location,
-//          ~context,
-//          extHostClient,
-//          res =>
-//          switch (res) {
-//          | Ok(Some({signatures, activeSignature, activeParameter, _})) =>
-//            InfoReceived({
-//              signatures,
-//              activeSignature,
-//              activeParameter,
-//              requestID,
-//              editorID: Feature_Editor.Editor.getId(editor),
-//              location,
-//              context,
-//            })
-//          | Ok(None) => EmptyInfoReceived(requestID)
-//          | Error(s) => RequestFailed(s)
-//          }
-//        )
-//      )
-//   |> Isolinear.Effect.batch;
-// };
 
 let update = (~maybeBuffer, ~maybeEditor, ~extHostClient as _, model, msg) =>
   switch (msg) {
@@ -468,72 +429,6 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient as _, model, msg) =>
            }
          );
     ({...model, sessions: sessions'}, Nothing);
-  // | KeyPressed(maybeKey, before) => (model, Nothing)
-  // switch (maybeBuffer, maybeEditor, maybeKey) {
-  // | (Some(buffer), Some(editor), Some(key)) =>
-  //   let matchingProviders =
-  //     model.providers
-  //     |> List.filter(({selector, _}) =>
-  //          Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
-  //        );
-  //   let trigger =
-  //     matchingProviders
-  //     |> List.exists(({metadata, _}) =>
-  //          List.mem(key, metadata.triggerCharacters)
-  //        );
-  //   let retrigger =
-  //     matchingProviders
-  //     |> List.exists(({metadata, _}) =>
-  //          List.mem(key, metadata.retriggerCharacters)
-  //        );
-  //   let location =
-  //     if (before) {
-  //       let CharacterPosition.{line, character: col} =
-  //         Feature_Editor.Editor.getPrimaryCursor(editor);
-  //       CharacterPosition.{line, character: CharacterIndex.(col + 1)};
-  //     } else {
-  //       Feature_Editor.Editor.getPrimaryCursor(editor);
-  //     };
-  //   if (trigger) {
-  //     Log.infof(m => m("Trigger character hit: %s", key));
-  //     let context =
-  //       Exthost.SignatureHelp.RequestContext.{
-  //         triggerKind: Exthost.SignatureHelp.TriggerKind.TriggerCharacter,
-  //         triggerCharacter: Some(key),
-  //         isRetrigger: false,
-  //       };
-  // let effects =
-  //   getEffectsForLocation(
-  //     ~buffer,
-  //     ~editor,
-  //     ~location,
-  //     ~extHostClient,
-  //     ~model,
-  //     ~context,
-  //     ~requestID,
-  //   );
-  //     ({...model, shown: true}, Effect(Isolinear.Effect.none));
-  //   } else if (retrigger && model.shown) {
-  //     Log.infof(m => m("Retrigger character hit: %s", key));
-  //     let context =
-  //       Exthost.SignatureHelp.RequestContext.{
-  //         triggerKind: Exthost.SignatureHelp.TriggerKind.TriggerCharacter,
-  //         triggerCharacter: Some(key),
-  //         isRetrigger: true,
-  //       };
-  // let effects =
-  //   getEffectsForLocation(
-  //     ~buffer,
-  //     ~editor,
-  //     ~location,
-  //     ~extHostClient,
-  //     ~model,
-  //     ~context,
-  //     ~requestID,
-  //   );
-  //     ({...model, shown: true}, Effect(Isolinear.Effect.none));
-  // | _ => (model, Nothing)
-  // }
   | Command(IncrementSignature)
   | SignatureIncrementClicked =>
     let sessions' = model.sessions |> List.map(Session.incrementSignature);
@@ -542,37 +437,6 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient as _, model, msg) =>
   | SignatureDecrementClicked =>
     let sessions' = model.sessions |> List.map(Session.decrementSignature);
     ({...model, sessions: sessions'}, Nothing);
-  // | CursorMoved(editorID) =>
-  // TODO
-  //   (model, Nothing)
-  // switch (model.editorID, maybeEditor, maybeBuffer, model.context) {
-  // | (Some(editorID'), Some(editor), Some(buffer), Some(context))
-  //     when
-  //       editorID == editorID'
-  //       && editorID == Feature_Editor.Editor.getId(editor) =>
-  //   let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
-  //   let loc =
-  //     CharacterPosition.{
-  //       line: cursorLocation.line,
-  //       character: CharacterIndex.(cursorLocation.character + 1),
-  //     };
-  //   switch (model.location) {
-  //   | Some(location) when location == loc =>
-  // let effects =
-  //   getEffectsForLocation(
-  //     ~buffer,
-  //     ~editor,
-  //     ~location=cursorLocation,
-  //     ~extHostClient,
-  //     ~model,
-  //     ~context,
-  //     ~requestID,
-  //   );
-  //     ({...model, shown: true}, Effect(Isolinear.Effect.none));
-  //   | _ => (model, Nothing)
-  //   };
-  // | _ => (model, Nothing)
-  // }
   };
 
 module View = {

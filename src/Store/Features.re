@@ -165,13 +165,7 @@ module Internal = {
     };
 
   let updateMode =
-      (
-        ~extHostClient,
-        ~allowAnimation,
-        state: State.t,
-        mode: Vim.Mode.t,
-        effects,
-      ) => {
+      (~allowAnimation, state: State.t, mode: Vim.Mode.t, effects) => {
     let prevCursor =
       state.layout
       |> Feature_Layout.activeEditor
@@ -181,17 +175,6 @@ module Internal = {
     // TODO: refactor to 'cursorMoved' action
     let signatureHelp = state.signatureHelp;
     let maybeBuffer = Selectors.getActiveBuffer(state);
-
-    // let (signatureHelp, shOutMsg) =
-    //   Feature_SignatureHelp.update(
-    //     ~maybeBuffer,
-    //     ~maybeEditor=Some(editor),
-    //     ~extHostClient,
-    //     state.signatureHelp,
-    //     Feature_SignatureHelp.CursorMoved(
-    //       Feature_Editor.Editor.getId(editor),
-    //     ),
-    //   );
 
     let wasInInsertMode =
       Vim.Mode.isInsert(
@@ -1660,13 +1643,7 @@ let update =
         Isolinear.Effect.none,
       )
     | ModeDidChange({allowAnimation, mode, effects}) =>
-      Internal.updateMode(
-        ~extHostClient,
-        ~allowAnimation,
-        state,
-        mode,
-        effects,
-      )
+      Internal.updateMode(~allowAnimation, state, mode, effects)
     | Output({cmd, output}) =>
       let pane' = state.pane |> Feature_Pane.setOutput(cmd, output);
       (

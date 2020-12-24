@@ -13,6 +13,7 @@ type t = {
   bufferId: int,
   // Location where the signature help meet is
   location: CharacterPosition.t,
+  triggerCharacter: [@opaque] Uchar.t,
   isRetrigger: bool,
 };
 
@@ -39,9 +40,9 @@ module Internal = {
             retriggerCharacters |> List.exists(retrigger => retrigger == uchar);
 
           if (isTrigger) {
-            Some((currentIdx, false));
+            Some((currentIdx, uchar, false));
           } else if (isRetrigger) {
-            Some((currentIdx, true));
+            Some((currentIdx, uchar, true));
           } else if (LanguageConfiguration.isWordCharacter(
                        uchar,
                        languageConfiguration,
@@ -99,16 +100,18 @@ module Internal = {
        };
 
        let%test "trigger meet, no extra characters" = {
-         getMeet(~index=3, "abc(") == Some((3, false));
+         getMeet(~index=3, "abc(") == Some((3, Uchar.of_char('('), false));
        };
        let%test "trigger meet, extra word characters and space" = {
-         getMeet(~index=6, "abc( ab") == Some((3, false));
+         getMeet(~index=6, "abc( ab")
+         == Some((3, Uchar.of_char('('), false));
        };
        let%test "retrigger meet, no extra characters" = {
-         getMeet(~index=5, "abc(a,") == Some((5, true));
+         getMeet(~index=5, "abc(a,") == Some((5, Uchar.of_char(','), true));
        };
        let%test "retrigger meet, extra characters" = {
-         getMeet(~index=7, "abc(a, b") == Some((5, true));
+         getMeet(~index=7, "abc(a, b")
+         == Some((5, Uchar.of_char(','), true));
        };
        let%test "no meet, after closing character" = {
          getMeet(~index=8, "abc(a, b)") == None;
@@ -124,41 +127,33 @@ let fromBufferPosition =
       ~position: CharacterPosition.t,
       buffer: Buffer.t,
     ) => {
-  let maybeTriggerMeet =
-    CompletionMeet.fromBufferPosition(
-      ~languageConfiguration,
-      ~triggerCharacters,
-      ~position,
-      buffer,
-    );
-  let maybeRetriggerMeet =
-    CompletionMeet.fromBufferPosition(
-      ~languageConfiguration,
-      ~triggerCharacters=retriggerCharacters,
-      ~position,
-      buffer,
-    );
+  let bufferLines = Buffer.getNumberOfLines(buffer);
+  let line0 = EditorCoreTypes.LineNumber.toZeroBased(position.line);
 
-  switch (maybeTriggerMeet, maybeRetriggerMeet) {
-  | (None, None) => None
-  | (Some({bufferId, location, _}), None) =>
-    Some({bufferId, location, isRetrigger: false})
-  | (None, Some({bufferId, location, _})) =>
-    Some({bufferId, location, isRetrigger: true})
-  | (
-      Some({bufferId, location: triggerLocation, _}),
-      Some({location: retriggerLocation, _}),
-    ) =>
-    CharacterPosition.(
-      if (EditorCoreTypes.(
-            CharacterIndex.(
-              retriggerLocation.character > triggerLocation.character
-            )
-          )) {
-        Some({bufferId, location: retriggerLocation, isRetrigger: true});
-      } else {
-        Some({bufferId, location: triggerLocation, isRetrigger: false});
-      }
+  if (line0 < bufferLines) {
+    let line = Buffer.getLine(line0, buffer);
+    let getUchar = idx =>
+      BufferLine.getUchar(~index=CharacterIndex.ofInt(idx), line);
+    Internal.fromLine(
+      ~getUchar,
+      ~index=CharacterIndex.toInt(position.character) - 1,
+      ~triggerCharacters,
+      ~retriggerCharacters,
+      ~languageConfiguration,
     )
+    |> Option.map(((idx, triggerCharacter, isRetrigger)) =>
+         {
+           bufferId: Oni_Core.Buffer.getId(buffer),
+           location:
+             EditorCoreTypes.CharacterPosition.{
+               line: position.line,
+               character: CharacterIndex.ofInt(idx + 1),
+             },
+           triggerCharacter,
+           isRetrigger,
+         }
+       );
+  } else {
+    None;
   };
 };
