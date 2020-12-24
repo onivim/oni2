@@ -89,36 +89,36 @@ type execute =
 
 module Schema = {
   [@deriving show]
-  type keybinding = Binding({
-    key: string,
-    command: string,
-    condition: WhenExpr.t,
-  });
+  type keybinding =
+    | Binding({
+        key: string,
+        command: string,
+        condition: WhenExpr.t,
+      });
 
-  type resolvedKeybinding = {
-    matcher: EditorInput.Matcher.t,
-    command: InputStateMachine.execute,
-    condition: WhenExpr.ContextKeys.t => bool,
-  };
+  type resolvedKeybinding =
+    | ResolvedBinding({
+        matcher: EditorInput.Matcher.t,
+        command: InputStateMachine.execute,
+        condition: WhenExpr.ContextKeys.t => bool,
+      });
 
-  let bind = (~key, ~command, ~condition) => Binding({key, command, condition});
+  let bind = (~key, ~command, ~condition) =>
+    Binding({key, command, condition});
 
   let mapCommand = (~f, keybinding: keybinding) => {
-    switch(keybinding) {
-    | Binding(binding) => Binding({
-    ...binding,
-    command: f(binding.command),
-    })
-    }
+    switch (keybinding) {
+    | Binding(binding) => Binding({...binding, command: f(binding.command)})
+    };
   };
 
   let clear = (~key as _) => failwith("Not implemented");
 
   let remap = (~remap as _, ~toKeys as _) => failwith("Not implemented");
 
-  let resolve = (keybinding) => {
-    switch(keybinding) {
-    | Binding({key, command, condition}) => 
+  let resolve = keybinding => {
+    switch (keybinding) {
+    | Binding({key, command, condition}) =>
       let evaluateCondition = (whenExpr, contextKeys) => {
         WhenExpr.evaluate(
           whenExpr,
@@ -135,14 +135,14 @@ module Schema = {
         );
       maybeMatcher
       |> Stdlib.Result.map(matcher => {
-           {
+           ResolvedBinding({
              matcher,
              command: InputStateMachine.NamedCommand(command),
              condition: evaluateCondition(condition),
-           }
+           })
          });
     };
-  }
+  };
 };
 
 [@deriving show]
@@ -194,7 +194,7 @@ let initial = keybindings => {
                )
              );
              ism;
-           | Ok({matcher, condition, command}) =>
+           | Ok(ResolvedBinding({matcher, condition, command})) =>
              let (ism, _bindingId) =
                InputStateMachine.addBinding(matcher, condition, command, ism);
              ism;
@@ -294,15 +294,19 @@ let consumedKeys = ({inputStateMachine, _}) =>
   inputStateMachine |> InputStateMachine.consumedKeys;
 
 let addKeyBinding = (~binding, {inputStateMachine, _} as model) => {
-  open Schema;
-  let (inputStateMachine', uniqueId) =
-    InputStateMachine.addBinding(
-      binding.matcher,
-      binding.condition,
-      binding.command,
-      inputStateMachine,
-    );
-  ({...model, inputStateMachine: inputStateMachine'}, uniqueId);
+  Schema.(
+    switch (binding) {
+    | ResolvedBinding(binding) =>
+      let (inputStateMachine', uniqueId) =
+        InputStateMachine.addBinding(
+          binding.matcher,
+          binding.condition,
+          binding.command,
+          inputStateMachine,
+        );
+      ({...model, inputStateMachine: inputStateMachine'}, uniqueId);
+    }
+  );
 };
 
 let remove = (uniqueId, {inputStateMachine, _} as model) => {
@@ -360,12 +364,15 @@ module Internal = {
            (acc, resolvedBinding: Schema.resolvedKeybinding) => {
              let (ism, bindings) = acc;
              let (ism', bindingId) =
-               InputStateMachine.addBinding(
-                 resolvedBinding.matcher,
-                 resolvedBinding.condition,
-                 resolvedBinding.command,
-                 ism,
-               );
+               switch (resolvedBinding) {
+               | ResolvedBinding({matcher, condition, command}) =>
+                 InputStateMachine.addBinding(
+                   matcher,
+                   condition,
+                   command,
+                   ism,
+                 )
+               };
              (ism', [bindingId, ...bindings]);
            },
            (inputStateMachine', []),
