@@ -101,7 +101,6 @@ module Session = {
 
   let bufferUpdated =
       (~languageConfiguration, ~buffer, ~activeCursor, ~triggerKey, model) => {
-    open Exthost.SignatureHelp;
     let maybeMeet =
       SignatureHelpMeet.fromBufferPosition(
         ~languageConfiguration,
@@ -247,7 +246,7 @@ let startInsert = (~maybeBuffer, model) => {
   };
 };
 
-let stopInsert = (~maybeBuffer, model) => {
+let stopInsert = (~maybeBuffer as _, model) => {
   {...model, sessions: []};
 };
 
@@ -278,14 +277,14 @@ type command =
 type msg =
   | Command(command)
   | ProviderRegistered(provider)
-  | KeyPressed(option(string), bool)
+  // | KeyPressed(option(string), bool)
   | SignatureIncrementClicked
   | SignatureDecrementClicked
   | Session({
       handle: int,
       msg: Session.msg,
-    })
-  | CursorMoved(int);
+    });
+// | CursorMoved(int);
 
 module Msg = {
   let providerAvailable = provider => ProviderRegistered(provider);
@@ -362,7 +361,7 @@ module Contributions = {
     Keybindings.[incrementSignature, decrementSignature, close];
 };
 
-let sub = (~buffer, ~isInsertMode, ~activePosition, ~client, model) =>
+let sub = (~buffer, ~isInsertMode, ~activePosition as _, ~client, model) =>
   if (!isInsertMode) {
     Isolinear.Sub.none;
   } else {
@@ -423,11 +422,11 @@ let sub = (~buffer, ~isInsertMode, ~activePosition, ~client, model) =>
 //   |> Isolinear.Effect.batch;
 // };
 
-let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
+let update = (~maybeBuffer, ~maybeEditor, ~extHostClient as _, model, msg) =>
   switch (msg) {
   | Command(Show) =>
     switch (maybeBuffer, maybeEditor) {
-    | (Some(buffer), Some(editor)) =>
+    | (Some(_buffer), Some(_editor)) =>
       // let context =
       //   Exthost.SignatureHelp.RequestContext.{
       //     triggerKind: Exthost.SignatureHelp.TriggerKind.Invoke,
@@ -469,7 +468,7 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
            }
          );
     ({...model, sessions: sessions'}, Nothing);
-  | KeyPressed(maybeKey, before) => (model, Nothing)
+  // | KeyPressed(maybeKey, before) => (model, Nothing)
   // switch (maybeBuffer, maybeEditor, maybeKey) {
   // | (Some(buffer), Some(editor), Some(key)) =>
   //   let matchingProviders =
@@ -543,10 +542,9 @@ let update = (~maybeBuffer, ~maybeEditor, ~extHostClient, model, msg) =>
   | SignatureDecrementClicked =>
     let sessions' = model.sessions |> List.map(Session.decrementSignature);
     ({...model, sessions: sessions'}, Nothing);
-
-  | CursorMoved(editorID) =>
-    // TODO
-    (model, Nothing)
+  // | CursorMoved(editorID) =>
+  // TODO
+  //   (model, Nothing)
   // switch (model.editorID, maybeEditor, maybeBuffer, model.context) {
   // | (Some(editorID'), Some(editor), Some(buffer), Some(context))
   //     when
@@ -633,7 +631,7 @@ module View = {
         ~editorFont: Service_Font.font,
         ~signatures,
         ~buffer,
-        ~editor,
+        ~editor as _,
         ~grammars,
         ~signatureIndex,
         ~parameterIndex,
