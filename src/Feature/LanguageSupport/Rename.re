@@ -12,24 +12,26 @@ type msg =
   | Command(command)
   | InputText(Component_InputText.msg);
 
+[@deriving show]
 type provider = {
   handle: int,
   selector: DocumentSelector.t,
   supportsResolveInitialValues: bool,
 };
 
+[@deriving show]
 type sessionState =
   | Inactive
   | Resolving({sessionId: int})
   | Resolved({
       sessionId: int, //location: RenameLocation.t,
-      inputText: Component_InputText.model,
+      inputText: [@opaque] Component_InputText.model,
     })
   | Applying({
       sessionId: int,
-      edit: WorkspaceEdit.t,
-    });
+      edit: [@opaque] WorkspaceEdit.t, });
 
+[@deriving show]
 type model = {
   nextSessionId: int,
   sessionState,
@@ -140,15 +142,11 @@ module Keybindings = {
 };
 
 module Contributions = {
-  // TODO:
-  //let commands = Commands.[rename, cancel, commit];
-  let commands = [];
+  let commands = Commands.[rename, cancel, commit];
 
   let contextKeys = [ContextKeys.renameInputVisible];
 
-  // TODO:
-  // let keybindings = Keybindings.[rename, cancel, commit];
-  let keybindings = [];
+   let keybindings = Keybindings.[rename, cancel, commit];
 };
 
 module View = {
@@ -157,8 +155,13 @@ module View = {
   module Styles = {
     open Style;
     let color = Color.rgba(0., 0., 0., 0.75);
-    let boxShadow = [
-      backgroundColor(color),
+    let boxShadow = (x, y) => [
+      position(`Absolute),
+      top(y),
+      left(x),
+      width(100),
+      height(100),
+      backgroundColor(Colors.red),
       boxShadow(
         ~xOffset=4.,
         ~yOffset=4.,
@@ -172,14 +175,16 @@ module View = {
   let make =
       (
         ~theme: ColorTheme.Colors.t,
-        ~rename: model,
+        ~model: model,
         ~font: UiFont.t,
         ~dispatch: msg => unit,
         (),
       ) => {
-    switch (rename.sessionState) {
+        prerr_endline ("!!RenameView: " ++ show_model(model));
+    switch (model.sessionState) {
     | Resolved({inputText, _}) =>
-      <View style=Styles.boxShadow>
+      prerr_endline ("!!!RENDERING");
+      <View style=Styles.boxShadow(100, 100)>
         <View
           style=Style.[
             width(400),

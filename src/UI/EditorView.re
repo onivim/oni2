@@ -114,6 +114,11 @@ module Parts = {
             buffer
             dispatch={msg => dispatch(SignatureHelp(msg))}
           />,
+          <Feature_LanguageSupport.Rename.View
+            theme
+            font=uiFont
+            dispatch={msg => dispatch(LanguageSupport(msg))}
+            model=state.languageSupport />
         ]
         |> React.listToElement;
 
