@@ -296,7 +296,7 @@ module Keybindings = {
   };
 
   let toggleSidebar = {
-    key: "<C-B>",
+    key: "<C-S-B>",
     command: Commands.toggleSidebar.id,
     condition: "!isMac" |> WhenExpr.parse,
   };
