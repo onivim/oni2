@@ -89,11 +89,11 @@ type execute =
 
 module Schema = {
   [@deriving show]
-  type keybinding = {
+  type keybinding = Binding({
     key: string,
     command: string,
     condition: WhenExpr.t,
-  };
+  });
 
   type resolvedKeybinding = {
     matcher: EditorInput.Matcher.t,
@@ -101,41 +101,48 @@ module Schema = {
     condition: WhenExpr.ContextKeys.t => bool,
   };
 
-  let bind = (~key, ~command, ~condition) => {key, command, condition};
+  let bind = (~key, ~command, ~condition) => Binding({key, command, condition});
 
-  let mapCommand = (~f, binding: keybinding) => {
+  let mapCommand = (~f, keybinding: keybinding) => {
+    switch(keybinding) {
+    | Binding(binding) => Binding({
     ...binding,
     command: f(binding.command),
+    })
+    }
   };
 
   let clear = (~key as _) => failwith("Not implemented");
 
   let remap = (~remap as _, ~toKeys as _) => failwith("Not implemented");
 
-  let resolve = ({key, command, condition}) => {
-    let evaluateCondition = (whenExpr, contextKeys) => {
-      WhenExpr.evaluate(
-        whenExpr,
-        WhenExpr.ContextKeys.getValue(contextKeys),
-      );
-    };
+  let resolve = (keybinding) => {
+    switch(keybinding) {
+    | Binding({key, command, condition}) => 
+      let evaluateCondition = (whenExpr, contextKeys) => {
+        WhenExpr.evaluate(
+          whenExpr,
+          WhenExpr.ContextKeys.getValue(contextKeys),
+        );
+      };
 
-    let maybeMatcher =
-      EditorInput.Matcher.parse(
-        ~explicitShiftKeyNeeded=true,
-        ~getKeycode,
-        ~getScancode,
-        key,
-      );
-    maybeMatcher
-    |> Stdlib.Result.map(matcher => {
-         {
-           matcher,
-           command: InputStateMachine.NamedCommand(command),
-           condition: evaluateCondition(condition),
-         }
-       });
-  };
+      let maybeMatcher =
+        EditorInput.Matcher.parse(
+          ~explicitShiftKeyNeeded=true,
+          ~getKeycode,
+          ~getScancode,
+          key,
+        );
+      maybeMatcher
+      |> Stdlib.Result.map(matcher => {
+           {
+             matcher,
+             command: InputStateMachine.NamedCommand(command),
+             condition: evaluateCondition(condition),
+           }
+         });
+    };
+  }
 };
 
 [@deriving show]
