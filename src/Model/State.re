@@ -403,19 +403,8 @@ let defaultKeyBindings =
         command: Feature_Layout.Commands.toggleMaximize.id,
         condition: windowCommandCondition,
       },
-      {
-        key: "<A-DOWN>",
-        command: Feature_SignatureHelp.Commands.incrementSignature.id,
-        condition:
-          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
-      },
-      {
-        key: "<A-UP>",
-        command: Feature_SignatureHelp.Commands.decrementSignature.id,
-        condition:
-          "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
-      },
     ]
+  @ Feature_SignatureHelp.Contributions.keybindings
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings
   @ Component_VimTree.Contributions.keybindings;
@@ -509,6 +498,7 @@ let initial =
         Feature_Editor.Contributions.configuration,
         Feature_Input.Contributions.configuration,
         Feature_SideBar.Contributions.configuration,
+        Feature_SignatureHelp.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
         Feature_LanguageSupport.Contributions.configuration,

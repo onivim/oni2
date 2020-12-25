@@ -120,7 +120,11 @@ let update =
     ) =>
   switch (msg) {
   | KeyPressed(key) => (
-      {...model, hover: Hover.keyPressed(key, model.hover)},
+
+      {...model, 
+      hover: Hover.keyPressed(key, model.hover), 
+      rename: Rename.isFocused(model.rename) ? Rename.keyPressed(key, model.rename): model.rename,
+      },
       Nothing,
     )
   | Pasted(_) => (model, Nothing)
@@ -338,9 +342,7 @@ let update =
 
   | Rename(renameMsg) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);
-    prerr_endline("UPDATE: " ++ Rename.show_model(rename'));
     ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
-
   };
 
 let bufferUpdated =
@@ -560,21 +562,11 @@ module Rename = {
   let isActive = model => ShadowedRename.isFocused(model.rename);
 
   module View = {
-    let make = (
-      ~theme,
-      ~model,
-      ~font,
-      ~dispatch,
-      ()
-    ) => {
+    let make = (~theme, ~model, ~font, ~dispatch, ()) => {
       let dispatch = msg => dispatch(Rename(msg));
       let model = model.rename;
 
-      <ShadowedRename.View
-        theme
-        model
-        font
-        dispatch />
+      <ShadowedRename.View theme model font dispatch />;
     };
   };
 };

@@ -170,13 +170,15 @@ module Rename: {
   let isActive: model => bool;
 
   module View: {
-    let make: (
-      ~theme: ColorTheme.Colors.t,
-      ~model: model,
-      ~font: UiFont.t,
-      ~dispatch: msg => unit,
-      unit,
-    ) => Revery.UI.element;
+    let make:
+      (
+        ~theme: ColorTheme.Colors.t,
+        ~model: model,
+        ~font: UiFont.t,
+        ~dispatch: msg => unit,
+        unit
+      ) =>
+      Revery.UI.element;
   };
 };
 

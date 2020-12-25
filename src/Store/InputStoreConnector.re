@@ -50,9 +50,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         Actions.LanguageSupport(
           Feature_LanguageSupport.Msg.Hover.keyPressed(k),
         ),
-        Actions.SignatureHelp(
-          Feature_SignatureHelp.KeyPressed(Some(k), true),
-        ),
       ]
 
     | Quickmenu => [Actions.QuickmenuInput(k)]

@@ -29,7 +29,8 @@ type sessionState =
     })
   | Applying({
       sessionId: int,
-      edit: [@opaque] WorkspaceEdit.t, });
+      edit: [@opaque] WorkspaceEdit.t,
+    });
 
 [@deriving show]
 type model = {
@@ -97,6 +98,17 @@ let update = (msg, model) => {
   };
 };
 
+let keyPressed = (key, model) => {
+  let sessionState' = switch(model.sessionState) {
+  | Resolved(state) => Resolved({...state, inputText: Component_InputText.handleInput(~key, state.inputText)})
+  | state => state
+  };
+  {
+  ...model,
+  sessionState: sessionState'
+  };
+};
+
 module Commands = {
   open Feature_Commands.Schema;
 
@@ -146,7 +158,7 @@ module Contributions = {
 
   let contextKeys = [ContextKeys.renameInputVisible];
 
-   let keybindings = Keybindings.[rename, cancel, commit];
+  let keybindings = Keybindings.[rename, cancel, commit];
 };
 
 module View = {
@@ -159,9 +171,6 @@ module View = {
       position(`Absolute),
       top(y),
       left(x),
-      width(100),
-      height(100),
-      backgroundColor(Colors.red),
       boxShadow(
         ~xOffset=4.,
         ~yOffset=4.,
@@ -180,11 +189,9 @@ module View = {
         ~dispatch: msg => unit,
         (),
       ) => {
-        prerr_endline ("!!RenameView: " ++ show_model(model));
     switch (model.sessionState) {
     | Resolved({inputText, _}) =>
-      prerr_endline ("!!!RENDERING");
-      <View style=Styles.boxShadow(100, 100)>
+      <View style={Styles.boxShadow(100, 100)}>
         <View
           style=Style.[
             width(400),
@@ -203,7 +210,7 @@ module View = {
             />
           </View>
         </View>
-      </View>
+      </View>;
     | _ => React.empty
     };
   };
