@@ -14,13 +14,11 @@ let generate: (~scm: Feature_SCM.model, Buffer.t) => option(t);
 
 let render:
   (
-    ~editor: Editor.t,
+    ~context: Draw.context,
     ~scrollY: float,
     ~rowHeight: float,
     ~x: float,
-    ~height: float,
     ~width: float,
-    ~count: int,
     ~canvasContext: Revery.Draw.CanvasContext.t,
     ~colors: Colors.t,
     t

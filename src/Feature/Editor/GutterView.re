@@ -139,13 +139,11 @@ let render =
 
   Option.iter(
     EditorDiffMarkers.render(
-      ~editor,
+      ~context,
       ~scrollY=Editor.scrollY(editor),
       ~rowHeight=Editor.lineHeightInPixels(editor),
       ~x=lineNumberWidth,
-      ~height=float(height),
       ~width=Constants.diffMarkerWidth,
-      ~count,
       ~canvasContext,
       ~colors,
     ),
