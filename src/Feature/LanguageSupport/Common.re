@@ -5,8 +5,4 @@ type outmsg =
   | OpenFile({
       filePath: string,
       location: option(Location.t),
-    })
-  | PreviewFile({
-      filePath: string,
-      location: option(Location.t),
     });

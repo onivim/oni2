@@ -443,10 +443,6 @@ let update =
           state,
           Internal.openFileEffect(~position=location, filePath),
         )
-      | PreviewFile({filePath, location}) => (
-          state,
-          Internal.previewFileEffect(~position=location, filePath),
-        )
       | NotifySuccess(msg) => (
           state,
           Internal.notificationEffect(~kind=Info, msg),
@@ -534,7 +530,7 @@ let update =
         ~buffers=state.buffers,
         ~previewEnabled=
           Oni_Core.Configuration.getValue(
-            c => c.editorEnablePreview,
+            c => c.workbenchEditorEnablePreview,
             state.configuration,
           ),
         msg,
@@ -618,7 +614,7 @@ let update =
       Feature_Search.update(
         ~previewEnabled=
           Oni_Core.Configuration.getValue(
-            c => c.editorEnablePreview,
+            c => c.workbenchEditorEnablePreview,
             state.configuration,
           ),
         state.searchPane,
@@ -653,7 +649,7 @@ let update =
       Feature_SCM.update(
         ~previewEnabled=
           Oni_Core.Configuration.getValue(
-            c => c.editorEnablePreview,
+            c => c.workbenchEditorEnablePreview,
             state.configuration,
           ),
         extHostClient,
@@ -850,8 +846,16 @@ let update =
 
       let bufferId = EditorBuffer.id(editorBuffer);
 
+      let layout =
+        switch (split) {
+        | `Current => state.layout
+        | `Horizontal => Feature_Layout.split(`Horizontal, state.layout)
+        | `Vertical => Feature_Layout.split(`Vertical, state.layout)
+        | `NewTab => Feature_Layout.addLayoutTab(state.layout)
+        };
+
       let existingEditor =
-        Feature_Layout.activeGroupEditors(state.layout)
+        Feature_Layout.activeGroupEditors(layout)
         |> List.find_opt(editor => Editor.getBufferId(editor) == bufferId);
 
       let (isPreview, editor) =
@@ -881,21 +885,14 @@ let update =
            })
         |> Option.value(~default=editor);
 
-      let layout =
-        (
-          switch (split) {
-          | `Current => state.layout
-          | `Horizontal => Feature_Layout.split(`Horizontal, state.layout)
-          | `Vertical => Feature_Layout.split(`Vertical, state.layout)
-          | `NewTab => Feature_Layout.addLayoutTab(state.layout)
-          }
-        )
+      let layout' =
+        layout
         |> Feature_Layout.openEditor(~config=config(~fileType), editor');
 
       let cleanLayout =
         isPreview
           ? {
-            Feature_Layout.activeGroupEditors(layout)
+            Feature_Layout.activeGroupEditors(layout')
             |> List.filter(ed =>
                  Editor.getPreview(ed)
                  && Editor.getId(ed) != Editor.getId(editor')
@@ -909,10 +906,10 @@ let update =
                    | None => acc
                    }
                  },
-                 layout,
+                 layout',
                );
           }
-          : layout;
+          : layout';
 
       let bufferRenderers =
         buffer

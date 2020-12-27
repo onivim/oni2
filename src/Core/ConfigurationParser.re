@@ -195,10 +195,6 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.enablePreview",
-    (config, json) => {...config, editorEnablePreview: parseBool(json)},
-  ),
-  (
     "explorer.autoReveal",
     (config, json) => {
       ...config,
@@ -250,6 +246,13 @@ let configurationParsers: list(configurationTuple) = [
   (
     "workbench.editor.showTabs",
     (config, json) => {...config, workbenchEditorShowTabs: parseBool(json)},
+  ),
+  (
+    "workbench.editor.enablePreview",
+    (config, json) => {
+      ...config,
+      workbenchEditorEnablePreview: parseBool(json),
+    },
   ),
   (
     "workbench.statusBar.visible",

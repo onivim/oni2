@@ -277,17 +277,7 @@ let update = (msg, model) => {
       | Some(ViewLeaf({data, _})) => (model, Touched(data))
       // TODO: Expand / collapse
       | Some(ViewNode({data, expanded, _})) =>
-        let expansionContext =
-          expanded
-            ? model.expansionContext
-              |> ExpansionContext.collapse(data.uniqueId)
-            : model.expansionContext |> ExpansionContext.expand(data.uniqueId);
-
-        (
-          updateTreeList(model.trees, expansionContext, model),
-          expanded ? Collapsed(data.inner) : Expanded(data.inner),
-        );
-
+        toggleExpanded(~expanded, ~data, model)
       | None => (model, Nothing)
       }
     | Component_VimList.Selected({index}) =>

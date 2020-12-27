@@ -102,14 +102,12 @@ module Group: {
   let map = (f, group) => {...group, editors: List.map(f, group.editors)};
 
   let openEditor = (editor, group) => {
-    let bufferId = Editor.getBufferId(editor);
-    switch (
-      List.find_opt(e => Editor.getBufferId(e) == bufferId, group.editors)
-    ) {
+    let editorId = Editor.getId(editor);
+    switch (List.find_opt(e => Editor.getId(e) == editorId, group.editors)) {
     | Some(existingEditor) =>
       let editorId = Editor.getId(existingEditor);
 
-      {...group, selectedId: Editor.getId(editor)}
+      {...group, selectedId: Editor.getId(existingEditor)}
       |> map(e => Editor.getId(e) != editorId ? e : editor);
     | None => {
         ...group,

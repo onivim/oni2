@@ -14,10 +14,6 @@ type internalMsg('a) =
       filePath: string,
       location: option(CharacterPosition.t),
     })
-  | PreviewFile({
-      filePath: string,
-      location: option(CharacterPosition.t),
-    })
   | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)

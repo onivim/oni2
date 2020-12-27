@@ -251,7 +251,8 @@ let lineHeight =
   );
 let largeFileOptimization =
   setting("editor.largeFileOptimizations", bool, ~default=true);
-let enablePreview = setting("editor.enablePreview", bool, ~default=true);
+let enablePreview =
+  setting("workbench.editor.enablePreview", bool, ~default=true);
 let highlightActiveIndentGuide =
   setting("editor.highlightActiveIndentGuide", bool, ~default=true);
 let indentSize = setting("editor.indentSize", int, ~default=4);

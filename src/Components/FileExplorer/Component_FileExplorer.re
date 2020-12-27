@@ -257,7 +257,7 @@ let update = (~configuration, msg, model) => {
       (
         model |> setActive(Some(node.path)),
         Oni_Core.Configuration.getValue(
-          c => c.editorEnablePreview,
+          c => c.workbenchEditorEnablePreview,
           configuration,
         )
           ? PreviewFile(node.path) : OpenFile(node.path),
