@@ -52,6 +52,10 @@ type msg =
       id: int,
       key: string,
     })
+  | Pasted({
+      id: int,
+      text: string,
+    })
   | Service(Service_Terminal.msg);
 
 type outmsg =

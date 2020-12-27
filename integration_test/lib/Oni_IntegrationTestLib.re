@@ -125,6 +125,7 @@ let runTest =
   let getUserSettings = () => Ok(currentUserSettings^);
 
   Vim.init();
+  Oni2_KeyboardLayout.init();
 
   let initialBuffer = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
@@ -146,11 +147,13 @@ let runTest =
         ~initialBufferRenderers=Model.BufferRenderers.initial,
         ~getUserSettings,
         ~contributedCommands=[],
+        ~maybeWorkspace=None,
         ~workingDirectory=Sys.getcwd(),
         ~extensionsFolder=None,
         ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
         ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
         ~licenseKeyPersistence=None,
+        ~titlebarHeight=0.,
       ),
     );
 
@@ -206,6 +209,7 @@ let runTest =
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
+      ~showUpdateChangelog=false,
       ~getUserSettings,
       ~setup,
       ~onAfterDispatch,

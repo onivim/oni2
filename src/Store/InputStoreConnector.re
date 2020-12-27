@@ -50,9 +50,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         Actions.LanguageSupport(
           Feature_LanguageSupport.Msg.Hover.keyPressed(k),
         ),
-        Actions.SignatureHelp(
-          Feature_SignatureHelp.KeyPressed(Some(k), true),
-        ),
       ]
 
     | Quickmenu => [Actions.QuickmenuInput(k)]
@@ -107,10 +104,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           )
         | LicenseKey =>
           Actions.Registration(Feature_Registration.Pasted(firstLine))
+        | Terminal(id) =>
+          Actions.Terminal(Feature_Terminal.Pasted({id, text: rawText}))
 
         // No paste handling in these UIs, currently...
         | Pane => Actions.Noop
-        | Terminal(_) => Actions.Noop
         | InsertRegister
         | Sneak
         | FileExplorer
@@ -126,7 +124,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let effectToActions = (state, effect) =>
     switch (effect) {
-    | Feature_Input.Execute(command) => [
+    | Feature_Input.(Execute(VimExCommand(command))) => [
+        Actions.VimExecuteCommand({allowAnimation: true, command}),
+      ]
+    | Feature_Input.(Execute(NamedCommand(command))) => [
         Actions.KeybindingInvoked({command: command}),
       ]
     | Feature_Input.Text(text) => handleTextEffect(~isText=true, state, text)
@@ -185,23 +186,39 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
   };
 
-  let keyCodeToString = Sdl2.Keycode.getName;
-
-  let keyPressToString = EditorInput.KeyPress.toString(~keyCodeToString);
-
   /**
      The key handlers return (keyPressedString, shouldOniListen)
      i.e. if ctrl or alt or cmd were pressed then Oni2 should listen
      /respond to commands otherwise if input is alphabetical AND
      a revery element is focused oni2 should defer to revery
    */
-  let handleKeyPress = (state: State.t, key) => {
+  let handleKeyPress = (state: State.t, time, key) => {
     let context = Model.ContextKeys.all(state);
 
     let config = Model.Selectors.configResolver(state);
     let (input, effects) =
-      Feature_Input.keyDown(~config, ~context, ~key, state.input);
+      Feature_Input.keyDown(~config, ~context, ~key, ~time, state.input);
 
+    switch (key) {
+    | PhysicalKey(physicalKey) =>
+      let scancode = physicalKey.scancode;
+      let keyboard = Oni2_KeyboardLayout.Keymap.getCurrent();
+      let maybeKeymap =
+        Oni2_KeyboardLayout.Keymap.entryOfScancode(keyboard, scancode);
+
+      switch (maybeKeymap) {
+      | Some(keymap) =>
+        Log.infof(m =>
+          m(
+            "Key info: %s\n",
+            Oni2_KeyboardLayout.Keymap.entryToString(keymap),
+          )
+        )
+      | None => Log.info("No keymap for key.")
+      };
+
+    | _ => ()
+    };
     let newState = {...state, input};
 
     let actions =
@@ -210,8 +227,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     updateFromInput(newState, /*Some(keyPressToString(key)),*/ actions);
   };
 
-  let handleTextInput = (state: State.t, text) => {
-    let (input, effects) = Feature_Input.text(~text, state.input);
+  let handleTextInput = (state: State.t, time, text) => {
+    let (input, effects) = Feature_Input.text(~text, ~time, state.input);
 
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
@@ -225,7 +242,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     let context = Model.ContextKeys.all(state);
 
     let config = Model.Selectors.configResolver(state);
-    //let inputKey = reveryKeyToEditorKey(key);
     let (input, effects) =
       Feature_Input.keyUp(~config, ~context, ~key, state.input);
 
@@ -238,34 +254,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   };
 
   // TODO: This should be moved to a Feature_Keybindings project
-  // (Including the KeyDisplayer too!)
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | KeyDown(event, time) =>
-      let keyDisplayer =
-        state.keyDisplayer
-        |> Option.map(keyDisplayer =>
-             Oni_Components.KeyDisplayer.keyPress(
-               ~time=Revery.Time.toFloatSeconds(time),
-               keyPressToString(event),
-               keyDisplayer,
-             )
-           );
-
-      handleKeyPress({...state, keyDisplayer}, event);
+    | KeyDown(event, time) => handleKeyPress(state, time, event)
     | KeyUp(event, _time) => handleKeyUp(state, event)
-    | TextInput(text, time) =>
-      let keyDisplayer =
-        state.keyDisplayer
-        |> Option.map(keyDisplayer =>
-             Oni_Components.KeyDisplayer.textInput(
-               ~time=Revery.Time.toFloatSeconds(time),
-               text,
-               keyDisplayer,
-             )
-           );
-
-      handleTextInput({...state, keyDisplayer}, text);
+    | TextInput(text, time) => handleTextInput(state, time, text)
 
     | Pasted({rawText, isMultiLine, lines}) => (
         state,

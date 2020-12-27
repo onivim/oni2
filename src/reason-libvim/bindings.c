@@ -189,9 +189,29 @@ int onColorSchemeChanged(char_u *colorscheme) {
   }
   
   caml_callback(*lv_onColorSchemeChanged, vThemeOpt);
+
   
   CAMLreturnT(int, OK);
 };
+
+int onGetChar(int mode, char* c, int *modMask) {
+  CAMLparam0();
+  CAMLlocal1(vRet);
+  *modMask = 0;
+  *c = 0;
+
+  static const value *lv_onGetChar = NULL;
+
+  if (lv_onGetChar == NULL) {
+    lv_onGetChar = caml_named_value("lv_onGetChar");
+  }
+
+  vRet = caml_callback(*lv_onGetChar, Val_int(mode));
+  *c = Int_val(Field(vRet, 0));
+  *modMask = Int_val(Field(vRet, 1));
+
+  CAMLreturnT(int, OK);
+}
 
 void onSettingChanged(optionSet_T *options) {
   CAMLparam0();
@@ -247,6 +267,12 @@ int onGoto(gotoRequest_T gotoInfo) {
   case HOVER:
     target = 2;
     break;
+  case OUTLINE:
+    target = 3;
+    break;
+  case MESSAGES:
+    target = 4;
+    break;
   default:
     target = 0;
   }
@@ -254,6 +280,28 @@ int onGoto(gotoRequest_T gotoInfo) {
   caml_callback3(*lv_onGoto, Val_int(line), Val_int(col), Val_int(target));
 
   return target;
+}
+
+void onClear(clearRequest_T clearRequest) {
+  static const value *lv_onClear = NULL;
+
+  if (lv_onClear == NULL) {
+    lv_onClear = caml_named_value("lv_onClear");
+  }
+
+  int count = clearRequest.count;
+  int target = 0;
+  switch (clearRequest.target) {
+  case CLEAR_MESSAGES:
+    target = 0;
+    break;
+  default:
+    target = 0;
+  }
+
+  caml_callback2(*lv_onClear, Val_int(target), Val_int(count));
+
+  return;
 }
 
 int onTabPage(tabPageRequest_T request) {
@@ -672,6 +720,33 @@ void onCursorMoveScreenLine(screenLineMotion_T motion, int count, linenr_T start
    Val_int(count), Val_int(startLine));
    *outLine = Int_val(valDestLine);
    CAMLreturn0;
+
+}
+
+void onOutput(char_u *cmd, char_u* output) {
+  CAMLparam0();
+  CAMLlocal2(vStr, vMaybeOutput);
+
+  // `cmd` shouldn't be NULL, but if it is, don't bother calling back..
+  if (cmd == NULL) {
+    CAMLreturn0;
+  }
+
+  vStr = caml_copy_string((const char*) cmd);
+
+  if (output == NULL) {
+    vMaybeOutput = Val_none;
+  } else {
+    vMaybeOutput = Val_some(caml_copy_string((const char *)output));
+  }
+
+   static const value *lv_onOutput = NULL;
+   if (lv_onOutput == NULL) {
+     lv_onOutput = caml_named_value("lv_onOutput");
+   }
+  caml_callback2(*lv_onOutput, vStr, vMaybeOutput);
+
+  CAMLreturn0;
 }
 
 int onToggleComments(buf_T *buf, linenr_T start, linenr_T end,
@@ -827,6 +902,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetDisplayIntroCallback(&onIntro);
   vimSetDisplayVersionCallback(&onVersion);
   vimSetFormatCallback(&onFormat);
+  vimSetClearCallback(&onClear);
   vimSetGotoCallback(&onGoto);
   vimSetOptionSetCallback(&onSettingChanged);
   vimSetTabPageCallback(&onTabPage);
@@ -845,7 +921,8 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetInputMapCallback(&onInputMap);
   vimSetInputUnmapCallback(&onInputUnmap);
   vimSetToggleCommentsCallback(&onToggleComments);
-
+  vimSetFunctionGetCharCallback(&onGetChar);
+  vimSetOutputCallback(&onOutput);
   char *args[0];
   vimInit(0, args);
   return Val_unit;
@@ -914,6 +991,26 @@ CAMLprim value libvim_vimGetMode(value unit) {
   return Val_int(val);
 }
 
+CAMLprim value libvim_vimGetSubMode(value unit) {
+  CAMLparam0();
+  subMode_T submode = vimGetSubMode();
+
+  int val = 0;
+  switch (submode) {
+    case SM_NONE:
+      val = 0;
+      break;
+    case SM_INSERT_LITERAL:
+      val = 1;
+      break;
+    default:
+      val = 0;
+      break;
+  }
+
+  CAMLreturn(Val_int(val));
+}
+
 CAMLprim value libvim_vimBufferGetId(value v) {
   buf_T *buf = (buf_T *)v;
   int id = vimBufferGetId(buf);
@@ -978,6 +1075,14 @@ CAMLprim value libvim_vimBufferLoad(value v) {
   char_u *s;
   s = (char_u *)String_val(v);
   buf_T *buf = vimBufferLoad(s, 1, 0);
+  value vbuf = (value)buf;
+  CAMLreturn(vbuf);
+}
+
+CAMLprim value libvim_vimBufferNew(value vUnit) {
+  CAMLparam1(vUnit);
+
+  buf_T *buf = vimBufferNew(BLN_NEW);
   value vbuf = (value)buf;
   CAMLreturn(vbuf);
 }

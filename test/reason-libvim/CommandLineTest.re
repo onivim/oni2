@@ -7,9 +7,11 @@ let input = s => ignore(Vim.input(s));
 let key = s => ignore(Vim.key(s));
 
 describe("CommandLine", ({describe, _}) => {
-  let emptyColorSchemeProvider = _ => [||];
-  let getCompletions =
-    CommandLine.getCompletions(~colorSchemeProvider=emptyColorSchemeProvider);
+  let context = colorSchemeProvider => {
+    ...Vim.Context.current(),
+    colorSchemeProvider,
+  };
+  let getCompletions = CommandLine.getCompletions;
   describe("getType", ({test, _}) =>
     test("simple command line", ({expect, _}) => {
       let _ = reset();
@@ -34,12 +36,17 @@ describe("CommandLine", ({describe, _}) => {
 
         input(":colorscheme ");
         let colorSchemeProvider = _ => {
-          Gc.full_major();
+          Gc.compact();
           Array.make(10000, String.make(1000, 'a'));
         };
 
         expect.int(
-          Array.length(CommandLine.getCompletions(~colorSchemeProvider, ())),
+          Array.length(
+            CommandLine.getCompletions(
+              ~context=context(colorSchemeProvider),
+              (),
+            ),
+          ),
         ).
           toBe(
           10000,
@@ -56,7 +63,12 @@ describe("CommandLine", ({describe, _}) => {
         };
 
         expect.int(
-          Array.length(CommandLine.getCompletions(~colorSchemeProvider, ())),
+          Array.length(
+            CommandLine.getCompletions(
+              ~context=context(colorSchemeProvider),
+              (),
+            ),
+          ),
         ).
           toBe(
           1,
@@ -65,7 +77,12 @@ describe("CommandLine", ({describe, _}) => {
 
         input("a");
         expect.int(
-          Array.length(CommandLine.getCompletions(~colorSchemeProvider, ())),
+          Array.length(
+            CommandLine.getCompletions(
+              ~context=context(colorSchemeProvider),
+              (),
+            ),
+          ),
         ).
           toBe(
           1,
@@ -74,7 +91,12 @@ describe("CommandLine", ({describe, _}) => {
 
         input("b");
         expect.int(
-          Array.length(CommandLine.getCompletions(~colorSchemeProvider, ())),
+          Array.length(
+            CommandLine.getCompletions(
+              ~context=context(colorSchemeProvider),
+              (),
+            ),
+          ),
         ).
           toBe(
           1,

@@ -91,7 +91,14 @@ module Internal = {
          Service_Net.Request.download(~setup, downloadUrl)
          |> Lwt.map(downloadPath => {
               let folderName =
-                Printf.sprintf("%s.%s-%s", namespace, name, version);
+                Printf.sprintf(
+                  "%s.%s-%s",
+                  namespace,
+                  name,
+                  version
+                  |> Option.map(Semver.to_string)
+                  |> Option.value(~default="0.0.0"),
+                );
 
               (downloadPath, folderName);
             });
@@ -177,6 +184,13 @@ let uninstall = (~extensionsFolder=?, extensionId) => {
 
     promise;
   };
+};
+
+let update = (~setup, ~extensionsFolder=?, extensionId) => {
+  let uninstallPromise = uninstall(~extensionsFolder?, extensionId);
+  Lwt.bind(uninstallPromise, () => {
+    Internal.installFromOpenVSX(~setup, ~extensionsFolder, extensionId)
+  });
 };
 
 let get = (~extensionsFolder=?, ()) => {

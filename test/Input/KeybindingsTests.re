@@ -135,13 +135,17 @@ describe("Keybindings", ({describe, _}) => {
              );
            let (_bindings, effects) =
              Feature_Input.keyDown(
+               ~time=Revery.Time.zero,
                ~config=Oni_Core.Config.emptyResolver,
                ~context=contextWithEditorTextFocus,
                ~key=getKeyFromSDL("F2"),
                input,
              );
 
-           expect.equal(effects, [Execute("explorer.toggle")]);
+           expect.equal(
+             effects,
+             [Execute(NamedCommand("explorer.toggle"))],
+           );
          });
     });
     test("regression test: #1160 (legacy binding)", ({expect, _}) => {
@@ -166,12 +170,13 @@ describe("Keybindings", ({describe, _}) => {
              let key = getKeyFromSDL(~modifiers, key);
              let (_bindings, effects) =
                Feature_Input.keyDown(
+                 ~time=Revery.Time.zero,
                  ~config=Oni_Core.Config.emptyResolver,
                  ~context=contextWithEditorTextFocus,
                  ~key,
                  input,
                );
-             expect.equal(effects, [Execute(cmd)]);
+             expect.equal(effects, [Execute(NamedCommand(cmd))]);
            });
       };
 

@@ -22,6 +22,13 @@ let initializeRunConfig = runFn => {
   runFn(runConfig);
 };
 
+// On Windows, esy might pollute the environment - exceeding the 8192 character limit.
+// Some applications don't handle this well - like node. Clear it out some of the
+// biggest offenders...
+Unix.putenv("CAML_LD_LIBRARY_PATH", "");
+Unix.putenv("MAN_PATH", "");
+Unix.putenv("OCAMLPATH", "");
+
 Oni_Core_Test.TestFramework.run |> initializeRunConfig;
 
 Oni_Core_Utility_Test.TestFramework.run |> initializeRunConfig;

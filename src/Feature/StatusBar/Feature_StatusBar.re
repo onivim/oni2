@@ -129,7 +129,6 @@ open Revery.UI;
 open Revery.UI.Components;
 module Animation = Revery.UI.Animation;
 module ContextMenu = Oni_Components.ContextMenu;
-module CustomHooks = Oni_Components.CustomHooks;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 module Label = Oni_Components.Label;
@@ -202,6 +201,7 @@ let section = (~children=React.empty, ~align, ()) =>
 
 let item =
     (
+      ~key=?,
       ~children,
       ~backgroundColor=Revery.Colors.transparentWhite,
       ~onClick=?,
@@ -212,9 +212,9 @@ let item =
 
   // Avoid cursor turning into pointer if there's no mouse interaction available
   if (onClick == None && onRightClick == None) {
-    <View style> children </View>;
+    <View ?key style> children </View>;
   } else {
-    <Clickable ?onClick ?onRightClick style> children </Clickable>;
+    <Clickable ?key ?onClick ?onRightClick style> children </Clickable>;
   };
 };
 
@@ -239,9 +239,7 @@ let notificationCount =
       (),
     ) => {
   let text =
-    (notifications :> list(Feature_Notification.notification))
-    |> List.length
-    |> string_of_int;
+    Feature_Notification.all(notifications) |> List.length |> string_of_int;
 
   let onClick = () => dispatch(NotificationCountClicked);
   let onRightClick = () => dispatch(NotificationsCountRightClicked);
@@ -322,27 +320,20 @@ let diagnosticCount = (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => 
 module ModeIndicator = {
   let transitionDuration = Revery.Time.milliseconds(300);
 
-  let%component make = (~font: UiFont.t, ~theme, ~mode, ()) => {
+  let make = (~key=?, ~font: UiFont.t, ~theme, ~mode, ~subMode, ()) => {
     let background = Colors.Oni.backgroundFor(mode).from(theme);
     let foreground = Colors.Oni.foregroundFor(mode).from(theme);
 
-    let%hook background =
-      CustomHooks.colorTransition(
-        ~name="Mode Background Transition",
-        ~duration=transitionDuration,
-        background,
-      );
-    let%hook foreground =
-      CustomHooks.colorTransition(
-        ~name="Mode Foreground Transition",
-        ~duration=transitionDuration,
-        foreground,
-      );
+    let text =
+      switch (subMode) {
+      | Vim.SubMode.InsertLiteral => "Insert Literal"
+      | Vim.SubMode.None => Mode.toString(mode)
+      };
 
-    <item backgroundColor=background>
+    <item ?key backgroundColor=background>
       <Text
         style={Styles.text(~color=foreground)}
-        text={Mode.toString(mode)}
+        text
         fontFamily={font.family}
         fontWeight=Medium
         fontSize=11.
@@ -364,62 +355,34 @@ let indentationToString = (indentation: IndentationSettings.t) => {
 };
 
 module View = {
-  let%component make =
-                (
-                  ~mode,
-                  ~notifications: Feature_Notification.model,
-                  ~recordingMacro: option(char),
-                  ~diagnostics: Diagnostics.model,
-                  ~font: UiFont.t,
-                  ~activeBuffer: option(Oni_Core.Buffer.t),
-                  ~activeEditor: option(Feature_Editor.Editor.t),
-                  ~indentationSettings: IndentationSettings.t,
-                  ~scm: Feature_SCM.model,
-                  ~statusBar: model,
-                  ~theme,
-                  ~dispatch,
-                  ~workingDirectory: string,
-                  (),
-                ) => {
-    let%hook activeNotifications =
-      CustomHooks.useExpiration(
-        ~name="StatusBar Notification Expirer",
-        ~expireAfter=Feature_Notification.View.Popup.Animations.totalDuration,
-        ~equals=(a, b) => Feature_Notification.(a.id == b.id),
-        (notifications :> list(Feature_Notification.notification)),
-      );
-
-    let (background, foreground) =
-      switch (activeNotifications) {
-      | [] =>
-        Colors.StatusBar.(background.from(theme), foreground.from(theme))
-      | [last, ..._] =>
-        Feature_Notification.Colors.(
-          backgroundFor(last).from(theme),
-          foregroundFor(last).from(theme),
-        )
-      };
-
-    let%hook background =
-      CustomHooks.colorTransition(
-        ~name="StatusBar Background Color Transition",
-        ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
-        background,
-      );
-    let%hook foreground =
-      CustomHooks.colorTransition(
-        ~name="StatusBar Foreground Color Transition",
-        ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
-        foreground,
-      );
-
-    let%hook (yOffset, _animationState, _reset) =
-      Hooks.animation(
-        ~name="StatusBar Transition Animation",
-        transitionAnimation,
-      );
+  let make =
+      (
+        ~key=?,
+        ~mode,
+        ~subMode,
+        ~notifications: Feature_Notification.model,
+        ~recordingMacro: option(char),
+        ~diagnostics: Diagnostics.model,
+        ~font: UiFont.t,
+        ~activeBuffer: option(Oni_Core.Buffer.t),
+        ~activeEditor: option(Feature_Editor.Editor.t),
+        ~indentationSettings: IndentationSettings.t,
+        ~scm: Feature_SCM.model,
+        ~statusBar: model,
+        ~theme,
+        ~dispatch,
+        ~workingDirectory: string,
+        (),
+      ) => {
+    let activeNotifications = Feature_Notification.active(notifications);
+    let background =
+      Feature_Notification.statusBarBackground(~theme, notifications);
+    let foreground =
+      Feature_Notification.statusBarForeground(~theme, notifications);
 
     let defaultForeground = Colors.StatusBar.foreground.from(theme);
+
+    let yOffset = 0.;
 
     let toStatusBarElement = (~command=?, ~color=?, ~tooltip=?, label) => {
       let onClick =
@@ -561,7 +524,7 @@ module View = {
       |> Option.map(register => <macro register />)
       |> Option.value(~default=React.empty);
 
-    <View style={Styles.view(background, yOffset)}>
+    <View ?key style={Styles.view(background, yOffset)}>
       <section align=`FlexStart>
         <notificationCount
           dispatch
@@ -589,7 +552,9 @@ module View = {
         </section>
         <notificationPopups />
       </sectionGroup>
-      <section align=`FlexEnd> <ModeIndicator font theme mode /> </section>
+      <section align=`FlexEnd>
+        <ModeIndicator font theme mode subMode />
+      </section>
     </View>;
   };
 };

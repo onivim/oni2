@@ -61,7 +61,9 @@ module SpecialKey: {
     | Leader
     // Special key <Plug> used by VimL plugins
     // No physical key associated with it, but useful for scoping remappings.
-    | Plug;
+    | Plug
+    // Special key <Nop> used by Vim as no-op
+    | Nop;
   // TODO;
   // | SNR;
 };
@@ -84,7 +86,15 @@ module KeyPress: {
   let toPhysicalKey: t => option(PhysicalKey.t);
 
   let parse:
+    // When [explicitShiftKeyNeeded] is [true]:
+    // - Both 's' and 'S' would get resolved as 's'
+    // In other words, 'S' requires a 'Shift+' modifier
+    // (VScode style parsing)
+    // When [explicitShiftKeyNeeded] is [false]:
+    // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
+    // (Vim style parsing)
     (
+      ~explicitShiftKeyNeeded: bool,
       ~getKeycode: Key.t => option(int),
       ~getScancode: Key.t => option(int),
       string
@@ -98,7 +108,15 @@ module Matcher: {
     | AllKeysReleased;
 
   let parse:
+    // When [explicitShiftKeyNeeded] is [true]:
+    // - Both 's' and 'S' would get resolved as 's'
+    // In other words, 'S' requires a 'Shift+' modifier
+    // (VScode style parsing)
+    // When [explicitShiftKeyNeeded] is [false]:
+    // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
+    // (Vim style parsing)
     (
+      ~explicitShiftKeyNeeded: bool,
       ~getKeycode: Key.t => option(int),
       ~getScancode: Key.t => option(int),
       string
@@ -118,6 +136,12 @@ module type Input = {
 
   let addMapping:
     (Matcher.t, context => bool, list(KeyPress.t), t) => (t, uniqueId);
+
+  // Turn off all bindings, as if no bindings are defined
+  let disable: t => t;
+
+  // Turn on binding handling
+  let enable: t => t;
 
   type effect =
     // The `Execute` effect means that a key-sequence associated with `command`
@@ -149,6 +173,16 @@ module type Input = {
       t
     ) =>
     (t, list(effect));
+
+  // [candidates] returns a list of available matcher / command
+  // candidates, based on the current context and input state.
+  let candidates:
+    (~leaderKey: option(PhysicalKey.t), ~context: context, t) =>
+    list((Matcher.t, command));
+
+  // [consumedKeys(model)] returns a list of keys
+  // that are currently consumed by the state machine.
+  let consumedKeys: t => list(KeyPress.t);
 
   let remove: (uniqueId, t) => t;
 

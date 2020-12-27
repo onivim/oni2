@@ -19,6 +19,7 @@ module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
 let start =
     (
+      ~showUpdateChangelog: bool,
       languageInfo: Exthost.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
@@ -27,12 +28,6 @@ let start =
   let (stream, dispatch) = Isolinear.Stream.create();
   let libvimHasInitialized = ref(false);
   let currentTriggerKey = ref(None);
-
-  let colorSchemeProvider = pattern => {
-    getState().extensions
-    |> Feature_Extensions.themesByName(~filter=pattern)
-    |> Array.of_list;
-  };
 
   Vim.Clipboard.setProvider(reg => {
     let state = getState();
@@ -96,12 +91,40 @@ let start =
       };
     });
 
+  let handleSplit = (split: Vim.Split.t) => {
+    let currentBufferId = Vim.Buffer.getId(Vim.Buffer.getCurrent());
+
+    let actionForFilePath = (filePath, direction) => {
+      switch (filePath) {
+      | Some(fp) => Actions.OpenFileByPath(fp, Some(direction), None)
+      // No file path specified, so let's use the current buffer
+      | None => Actions.OpenBufferById({bufferId: currentBufferId, direction})
+      };
+    };
+    Vim.Split.(
+      switch (split) {
+      | NewHorizontal => Actions.NewBuffer({direction: `Horizontal})
+      | NewVertical => Actions.NewBuffer({direction: `Vertical})
+      | NewTabPage => Actions.NewBuffer({direction: `NewTab})
+      | Vertical({filePath}) => actionForFilePath(filePath, `Vertical)
+      | Horizontal({filePath}) => actionForFilePath(filePath, `Horizontal)
+      | TabPage({filePath}) => actionForFilePath(filePath, `NewTab)
+      }
+    );
+  };
+
   let handleGoto = gotoType => {
     switch (gotoType) {
     | Vim.Goto.Hover =>
       dispatch(
         Actions.LanguageSupport(Feature_LanguageSupport.Msg.Hover.show),
       )
+
+    | Vim.Goto.Outline =>
+      dispatch(Actions.SideBar(Feature_SideBar.(Command(GotoOutline))))
+
+    | Vim.Goto.Messages =>
+      dispatch(Actions.Pane(Feature_Pane.Msg.toggleMessages))
 
     | Vim.Goto.Definition
     | Vim.Goto.Declaration =>
@@ -147,6 +170,22 @@ let start =
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
 
+      // TODO: Move internal to Feature_Vim
+      | Output({cmd, output}) => {
+          dispatch(Actions.Vim(Feature_Vim.Output({cmd, output})));
+        }
+
+      | Clear({target, count}) =>
+        Vim.Clear.(
+          {
+            switch (target) {
+            | Messages =>
+              dispatch(
+                Actions.Notification(Feature_Notification.Msg.clear(count)),
+              )
+            };
+          }
+        )
       | Map(mapping) =>
         dispatch(Actions.Input(Feature_Input.Msg.vimMap(mapping)))
       | Unmap({mode, keys}) =>
@@ -169,9 +208,6 @@ let start =
             ),
           ),
         )
-      | ModeChanged(newMode) => {
-          dispatch(Actions.Vim(Feature_Vim.ModeChanged(newMode)));
-        }
       | SettingChanged(setting) =>
         dispatch(Actions.Vim(Feature_Vim.SettingChanged(setting)))
 
@@ -190,12 +226,18 @@ let start =
         )
 
       | MacroRecordingStopped(_) =>
-        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped)),
+        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped))
+
+      | WindowSplit(split) => handleSplit(split) |> dispatch,
     );
 
   let _: unit => unit =
     Vim.onDirectoryChanged(newDir =>
-      dispatch(Actions.DirectoryChanged(newDir))
+      dispatch(
+        Actions.Workspace(
+          Feature_Workspace.Msg.workingDirectoryChanged(newDir),
+        ),
+      )
     );
 
   let _: unit => unit =
@@ -256,7 +298,7 @@ let start =
         isClipboardRegister
         || operator == Vim.Yank.Yank
         && allYanks
-        || operator == Vim.Yank.Delete
+        || (operator == Vim.Yank.Delete || operator == Vim.Yank.Change)
         && allDeletes;
       if (shouldPropagateToClipboard) {
         let text =
@@ -349,33 +391,6 @@ let start =
           ),
         ),
       );
-    });
-
-  let _: unit => unit =
-    Vim.Window.onSplit((splitType, buf) => {
-      /* If buf wasn't specified, use the filepath from the current buffer */
-      let buf =
-        switch (buf) {
-        | "" =>
-          switch (Vim.Buffer.getFilename(Vim.Buffer.getCurrent())) {
-          | None => ""
-          | Some(v) => v
-          }
-        | v => v
-        };
-
-      Log.trace("Vim.Window.onSplit: " ++ buf);
-
-      let command =
-        switch (splitType) {
-        | Vim.Types.Vertical =>
-          Actions.OpenFileByPath(buf, Some(`Vertical), None)
-        | Vim.Types.Horizontal =>
-          Actions.OpenFileByPath(buf, Some(`Horizontal), None)
-        | Vim.Types.TabPage =>
-          Actions.OpenFileByPath(buf, Some(`NewTab), None)
-        };
-      dispatch(command);
     });
 
   let _: unit => unit =
@@ -478,9 +493,10 @@ let start =
     let position = Vim.CommandLine.getPosition();
     Vim.CommandLine.getText()
     |> Option.iter(commandStr =>
-         if (position == String.length(commandStr)) {
-           let completions =
-             Vim.CommandLine.getCompletions(~colorSchemeProvider, ());
+         if (position == String.length(commandStr)
+             && !StringEx.isEmpty(commandStr)) {
+           let context = Oni_Model.VimContext.current(getState());
+           let completions = Vim.CommandLine.getCompletions(~context, ());
 
            Log.debugf(m =>
              m("  got %n completions.", Array.length(completions))
@@ -549,18 +565,21 @@ let start =
 
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
-      libvimHasInitialized := true
+      if (showUpdateChangelog
+          && Core.BuildInfo.commitId != Persistence.Global.version()) {
+        dispatch(
+          Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
+        );
+      };
+      libvimHasInitialized := true;
     });
 
-  let updateActiveEditorMode = (mode, effects) => {
-    let editorId =
-      Feature_Layout.activeEditor(getState().layout) |> Editor.getId;
-
+  let updateActiveEditorMode = (~allowAnimation=true, subMode, mode, effects) => {
     dispatch(
-      Actions.Editor({
-        scope: EditorScope.Editor(editorId),
-        msg: ModeChanged({mode, effects}),
-      }),
+      // TODO
+      Actions.Vim(
+        Feature_Vim.ModeChanged({allowAnimation, subMode, mode, effects}),
+      ),
     );
   };
 
@@ -577,14 +596,26 @@ let start =
     && !String.equal(key, "<S-C->");
   };
 
-  let commandEffect = cmd => {
+  let commandEffect = (~allowAnimation, cmd) => {
     Isolinear.Effect.create(~name="vim.command", () => {
       let state = getState();
       let prevContext = Oni_Model.VimContext.current(state);
-      let (newContext, _effects) = Vim.command(~context=prevContext, cmd);
+      let (newContext, effects) = Vim.command(~context=prevContext, cmd);
 
       if (newContext.bufferId != prevContext.bufferId) {
-        dispatch(Actions.OpenBufferById({bufferId: newContext.bufferId}));
+        dispatch(
+          Actions.OpenBufferById({
+            bufferId: newContext.bufferId,
+            direction: `Current,
+          }),
+        );
+      } else {
+        updateActiveEditorMode(
+          ~allowAnimation,
+          newContext.subMode,
+          newContext.mode,
+          effects,
+        );
       };
     });
   };
@@ -594,29 +625,23 @@ let start =
       if (isVimKey(key)) {
         // Set cursors based on current editor
         let state = getState();
-        let editorId =
-          Feature_Layout.activeEditor(state.layout) |> Editor.getId;
+        // let editorId =
+        //   Feature_Layout.activeEditor(state.layout) |> Editor.getId;
 
         let context = Oni_Model.VimContext.current(state);
         let previousBufferId = context.bufferId;
 
         currentTriggerKey := Some(key);
-        let ({mode, bufferId, _}: Vim.Context.t, effects) =
+        let ({mode, bufferId, subMode, _}: Vim.Context.t, effects) =
           isText ? Vim.input(~context, key) : Vim.key(~context, key);
         currentTriggerKey := None;
 
         // If we switched buffer, open it in current editor
         if (previousBufferId != bufferId) {
-          dispatch(Actions.OpenBufferById({bufferId: bufferId}));
+          dispatch(Actions.OpenBufferById({bufferId, direction: `Current}));
         };
 
-        dispatch(
-          Actions.Editor({
-            scope: EditorScope.Editor(editorId),
-            msg: ModeChanged({mode, effects}),
-          }),
-        );
-
+        updateActiveEditorMode(subMode, mode, effects);
         Log.debug("handled key: " ++ key);
       }
     );
@@ -652,7 +677,11 @@ let start =
           completion |> Path.trimTrailingSeparator |> StringEx.escapeSpaces;
         let (latestContext: Vim.Context.t, effects) =
           Core.VimEx.inputString(completion);
-        updateActiveEditorMode(latestContext.mode, effects);
+        updateActiveEditorMode(
+          latestContext.subMode,
+          latestContext.mode,
+          effects,
+        );
         isCompleting := false;
       }
     );
@@ -688,8 +717,8 @@ let start =
     Isolinear.Effect.create(~name="vim.undo", () => {
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
-      let ({mode, _}: Vim.Context.t, effects) = Vim.key("u");
-      updateActiveEditorMode(mode, effects);
+      let ({subMode, mode, _}: Vim.Context.t, effects) = Vim.key("u");
+      updateActiveEditorMode(subMode, mode, effects);
       ();
     });
 
@@ -697,8 +726,8 @@ let start =
     Isolinear.Effect.create(~name="vim.redo", () => {
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
-      let ({mode, _}: Vim.Context.t, effects) = Vim.key("<c-r>");
-      updateActiveEditorMode(mode, effects);
+      let ({subMode, mode, _}: Vim.Context.t, effects) = Vim.key("<c-r>");
+      updateActiveEditorMode(subMode, mode, effects);
       ();
     });
 
@@ -714,8 +743,8 @@ let start =
 
   let escapeEffect =
     Isolinear.Effect.create(~name="vim.esc", () => {
-      let ({mode, _}: Vim.Context.t, effects) = Vim.key("<esc>");
-      updateActiveEditorMode(mode, effects);
+      let ({subMode, mode, _}: Vim.Context.t, effects) = Vim.key("<esc>");
+      updateActiveEditorMode(subMode, mode, effects);
       ();
     });
 
@@ -758,7 +787,12 @@ let start =
 
       // Update the editor, which is the source of truth for cursor position
       let scope = EditorScope.Editor(editorId);
-      dispatch(Actions.Editor({scope, msg: ModeChanged({mode, effects})}));
+      dispatch(
+        Actions.Editor({
+          scope,
+          msg: ModeChanged({allowAnimation: true, mode, effects}),
+        }),
+      );
     });
   };
 
@@ -778,7 +812,10 @@ let start =
     | Command("editor.action.outdentLines") => (state, outdentEffect)
     | Command("vim.esc") => (state, escapeEffect)
     | Command("vim.tutor") => (state, openTutorEffect)
-    | VimExecuteCommand(cmd) => (state, commandEffect(cmd))
+    | VimExecuteCommand({allowAnimation, command}) => (
+        state,
+        commandEffect(~allowAnimation, command),
+      )
 
     | ListFocusUp
     | ListFocusDown
@@ -880,21 +917,6 @@ let start =
         state,
         copyActiveFilepathToClipboardEffect,
       )
-
-    | DirectoryChanged(workingDirectory) =>
-      let newState = {
-        ...state,
-        fileExplorer:
-          Feature_Explorer.setRoot(
-            ~rootPath=workingDirectory,
-            state.fileExplorer,
-          ),
-        workspace: {
-          workingDirectory,
-          rootName: Filename.basename(workingDirectory),
-        },
-      };
-      (newState, Isolinear.Effect.none);
 
     | VimMessageReceived({priority, message, _}) =>
       let kind =

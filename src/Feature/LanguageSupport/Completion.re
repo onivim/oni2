@@ -82,7 +82,7 @@ module Session = {
         ProviderImpl.handle;
       };
 
-  let complete =
+  let complete = additionalEdits =>
     fun
     | Session({state, _} as session) => {
         let state' =
@@ -90,7 +90,10 @@ module Session = {
           | NotStarted => NotStarted
           | Pending({meet, _})
           | Completed({meet, _})
-          | Accepted({meet}) => Accepted({meet: meet})
+          | Accepted({meet}) =>
+            let meet' =
+              CompletionMeet.shiftMeet(~edits=additionalEdits, meet);
+            Accepted({meet: meet'});
           | Failure(_) as failure => failure
           };
 
@@ -202,22 +205,22 @@ module Session = {
                | Completed({providerModel, meet, _})
                | Pending({providerModel, meet, _}) =>
                  open CompletionMeet;
-                 let providerModel' =
+                 // TODO: What to do with the error `_outmsg` case?
+                 let (providerModel', _outmsg) =
                    ProviderImpl.update(
                      ~isFuzzyMatching=meet.base != "",
                      internalMsg,
                      providerModel,
                    );
                  switch (ProviderImpl.items(providerModel')) {
-                 | Ok([]) => Pending({meet, providerModel: providerModel'})
-                 | Ok(items) =>
+                 | [] => Pending({meet, providerModel: providerModel'})
+                 | items =>
                    Completed({
                      meet,
                      allItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: providerModel',
                    })
-                 | Error(msg) => Failure(msg)
                  };
                | _ => state
                };
@@ -326,15 +329,14 @@ module Session = {
              let items = ProviderImpl.items(model);
              let state =
                switch (items) {
-               | Ok([]) => Pending({meet, providerModel: model})
-               | Ok(items) =>
+               | [] => Pending({meet, providerModel: model})
+               | items =>
                  Completed({
                    meet,
                    allItems: items,
                    filteredItems: filter(~query=meet.base, items),
                    providerModel: model,
                  })
-               | Error(msg) => Failure(msg)
                };
 
              Session({...session, state});
@@ -668,7 +670,7 @@ let tryToMaintainSelected = (~previousIndex, ~previousLabel, model) => {
 
   // Sanity check - make sure there is a valid position.
   // Completions list might be empty...
-  if (idxToReplace >= len) {
+  if (idxToReplace >= len || len == 0) {
     model;
   } else if
     // Nothing to do - still in a good spot!
@@ -758,10 +760,12 @@ let update =
             ? Outmsg.InsertSnippet({
                 meetColumn,
                 snippet: result.item.insertText,
+                additionalEdits: result.item.additionalTextEdits,
               })
             : Outmsg.ApplyCompletion({
                 meetColumn,
                 insertText: result.item.insertText,
+                additionalEdits: result.item.additionalTextEdits,
               });
 
         (
@@ -769,7 +773,10 @@ let update =
             ...model,
             providers:
               List.map(
-                provider => {provider |> Session.complete},
+                provider => {
+                  provider
+                  |> Session.complete(result.item.additionalTextEdits)
+                },
                 model.providers,
               ),
             allItems: [||],
@@ -885,68 +892,79 @@ module KeyBindings = {
   let triggerSuggestCondition =
     "editorTextFocus && insertMode && !suggestWidgetVisible" |> WhenExpr.parse;
 
-  let triggerSuggestControlSpace = {
-    key: "<C-Space>",
-    command: Commands.triggerSuggest.id,
-    condition: triggerSuggestCondition,
-  };
-  let triggerSuggestControlN = {
-    key: "<C-N>",
-    command: Commands.triggerSuggest.id,
-    condition: triggerSuggestCondition,
-  };
-  let triggerSuggestControlP = {
-    key: "<C-N>",
-    command: Commands.triggerSuggest.id,
-    condition: triggerSuggestCondition,
-  };
+  let triggerSuggestControlSpace =
+    bind(
+      ~key="<C-Space>",
+      ~command=Commands.triggerSuggest.id,
+      ~condition=triggerSuggestCondition,
+    );
+  let triggerSuggestControlN =
+    bind(
+      ~key="<C-N>",
+      ~command=Commands.triggerSuggest.id,
+      ~condition=triggerSuggestCondition,
+    );
+  let triggerSuggestControlP =
+    bind(
+      ~key="<C-P>",
+      ~command=Commands.triggerSuggest.id,
+      ~condition=triggerSuggestCondition,
+    );
 
-  let nextSuggestion = {
-    key: "<C-N>",
-    command: Commands.selectNextSuggestion.id,
-    condition: suggestWidgetVisible,
-  };
+  let nextSuggestion =
+    bind(
+      ~key="<C-N>",
+      ~command=Commands.selectNextSuggestion.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let nextSuggestionArrow = {
-    key: "<DOWN>",
-    command: Commands.selectNextSuggestion.id,
-    condition: suggestWidgetVisible,
-  };
+  let nextSuggestionArrow =
+    bind(
+      ~key="<DOWN>",
+      ~command=Commands.selectNextSuggestion.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let previousSuggestion = {
-    key: "<C-P>",
-    command: Commands.selectPrevSuggestion.id,
-    condition: suggestWidgetVisible,
-  };
-  let previousSuggestionArrow = {
-    key: "<UP>",
-    command: Commands.selectPrevSuggestion.id,
-    condition: suggestWidgetVisible,
-  };
+  let previousSuggestion =
+    bind(
+      ~key="<C-P>",
+      ~command=Commands.selectPrevSuggestion.id,
+      ~condition=suggestWidgetVisible,
+    );
+  let previousSuggestionArrow =
+    bind(
+      ~key="<UP>",
+      ~command=Commands.selectPrevSuggestion.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let acceptSuggestionEnter = {
-    key: "<CR>",
-    command: Commands.acceptSelected.id,
-    condition: acceptOnEnter,
-  };
+  let acceptSuggestionEnter =
+    bind(
+      ~key="<CR>",
+      ~command=Commands.acceptSelected.id,
+      ~condition=acceptOnEnter,
+    );
 
-  let acceptSuggestionTab = {
-    key: "<TAB>",
-    command: Commands.acceptSelected.id,
-    condition: suggestWidgetVisible,
-  };
+  let acceptSuggestionTab =
+    bind(
+      ~key="<TAB>",
+      ~command=Commands.acceptSelected.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let acceptSuggestionShiftTab = {
-    key: "<S-TAB>",
-    command: Commands.acceptSelected.id,
-    condition: suggestWidgetVisible,
-  };
+  let acceptSuggestionShiftTab =
+    bind(
+      ~key="<S-TAB>",
+      ~command=Commands.acceptSelected.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let acceptSuggestionShiftEnter = {
-    key: "<S-TAB>",
-    command: Commands.acceptSelected.id,
-    condition: suggestWidgetVisible,
-  };
+  let acceptSuggestionShiftEnter =
+    bind(
+      ~key="<S-CR>",
+      ~command=Commands.acceptSelected.id,
+      ~condition=suggestWidgetVisible,
+    );
 };
 
 module Contributions = {

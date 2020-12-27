@@ -35,6 +35,7 @@ type t =
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
+  | FileSystem(Feature_FileSystem.msg)
   | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
   // Reload keybindings from configuration
   | KeyBindingsReload
@@ -44,8 +45,6 @@ type t =
   | KeyUp(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
   | Logging(Feature_Logging.msg)
   | TextInput(string, [@opaque] Revery.Time.t)
-  | DisableKeyDisplayer
-  | EnableKeyDisplayer
   // TODO: This should be a function call - wired up from an input feature
   // directly to the consumer of the keyboard action.
   // In addition, in the 'not-is-text' case, we should strongly type the keys.
@@ -91,10 +90,14 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | OpenBufferById({bufferId: int})
+  | NewBuffer({direction: [ | `Current | `Horizontal | `Vertical | `NewTab]})
+  | OpenBufferById({
+      bufferId: int,
+      direction: [ | `Current | `Horizontal | `Vertical | `NewTab],
+    })
   | OpenFileByPath(
       string,
-      option([ | `Horizontal | `Vertical | `NewTab]),
+      option([ | `Current | `Horizontal | `Vertical | `NewTab]),
       option(CharacterPosition.t),
     )
   | PreviewFileByPath(
@@ -137,8 +140,10 @@ type t =
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
-  | DirectoryChanged(string)
-  | VimExecuteCommand(string)
+  | VimExecuteCommand({
+      allowAnimation: bool,
+      command: string,
+    })
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
       title: string,
@@ -150,6 +155,7 @@ type t =
   | WindowFullscreen
   | WindowMinimized
   | WindowRestored
+  | Workspace(Feature_Workspace.msg)
   | TitleBar(Feature_TitleBar.msg)
   | WindowCloseBlocked
   | Layout(Feature_Layout.msg)
@@ -184,6 +190,7 @@ and quickmenuVariant =
   | CommandPalette
   | EditorsPicker
   | FilesPicker
+  | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | FileTypesPicker({

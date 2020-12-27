@@ -52,6 +52,7 @@ module View: {
       ~windowDisplayMode: windowDisplayMode,
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,
+      ~height: float,
       unit
     ) =>
     Revery.UI.element;

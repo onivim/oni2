@@ -77,7 +77,14 @@ type outmsg =
   | Nothing;
 
 let update:
-  (~previewEnabled: bool, Exthost.Client.t, model, msg) => (model, outmsg);
+  (
+    ~previewEnabled: bool,
+    ~fileSystem: Feature_FileSystem.model,
+    Exthost.Client.t,
+    model,
+    msg
+  ) =>
+  (model, outmsg);
 
 let getOriginalLines: (Oni_Core.Buffer.t, model) => option(array(string));
 let setOriginalLines: (Oni_Core.Buffer.t, array(string), model) => model;

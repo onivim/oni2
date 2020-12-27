@@ -3,11 +3,13 @@ open Oni_IntegrationTestLib;
 
 runTest(~name="VimSimpleRemapTest", (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   // Use inoremap to set up jj -> <ESC> binding
-  dispatch(VimExecuteCommand("inoremap jj <ESC>"));
+  dispatch(
+    VimExecuteCommand({allowAnimation: true, command: "inoremap jj <ESC>"}),
+  );
   runEffects();
 
   let input = key => {
@@ -26,7 +28,7 @@ runTest(~name="VimSimpleRemapTest", (dispatch, wait, runEffects) => {
 
   input("i");
   wait(~name="Mode is now insert", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isInsert
+    Selectors.mode(state) |> Vim.Mode.isInsert
   );
 
   input("a");
@@ -34,7 +36,7 @@ runTest(~name="VimSimpleRemapTest", (dispatch, wait, runEffects) => {
   input("j");
 
   wait(~name="Mode is back to normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   wait(~name="Validate buffer is empty", (state: State.t) => {

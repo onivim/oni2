@@ -12,8 +12,14 @@ type mode =
   | InsertAndCommandLine // :map!
   | All; // :map;
 
-[@deriving show]
-type scriptId = int;
+module ScriptId = {
+  [@deriving show]
+  type t = int;
+
+  let default = 0;
+
+  let toInt: t => int = Fun.id;
+};
 
 let defaultScriptId = 0;
 [@deriving show]
@@ -24,5 +30,5 @@ type t = {
   expression: bool,
   recursive: bool,
   silent: bool,
-  scriptId,
+  scriptId: ScriptId.t,
 };

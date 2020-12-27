@@ -73,18 +73,55 @@ let themesByName = (~filter: string, model) => {
 module ListView = ListView;
 module DetailsView = DetailsView;
 
-let sub = (~setup, model) => {
+let sub = (~isVisible, ~setup, model) => {
   let toMsg =
     fun
     | Ok(query) => SearchQueryResults(query)
-    | Error(err) => SearchQueryError(err);
+    | Error(exn) =>
+      switch (exn) {
+      | Service_Net.ConnectionFailed =>
+        SearchQueryError(
+          "Unable to connect to open-vsx.org. Please check your network connection and try again.",
+        )
+      | Service_Net.ResponseParseFailed =>
+        SearchQueryError(
+          "There was an internal error parsing the response from open-vsx.org. Please log an issue.",
+        )
+      | _exn =>
+        SearchQueryError("Unknown error: " ++ Printexc.to_string(_exn))
+      };
 
-  switch (model.latestQuery) {
-  | Some(query) when !Service_Extensions.Query.isComplete(query) =>
-    Service_Extensions.Sub.search(~setup, ~query, ~toMsg)
-  | Some(_)
-  | None => Isolinear.Sub.none
-  };
+  let querySub =
+    switch (model.latestQuery) {
+    | Some(query) when !Service_Extensions.Query.isComplete(query) =>
+      Service_Extensions.Sub.search(~setup, ~query, ~toMsg)
+    | Some(_)
+    | None => Isolinear.Sub.none
+    };
+
+  let updateCheckSub =
+    !isVisible
+      ? Isolinear.Sub.none
+      : (
+        switch (model.extensionsToCheckForUpdates) {
+        | [] => Isolinear.Sub.none
+        | [extensionId, ..._] =>
+          Service_Extensions.Sub.details(
+            ~setup,
+            ~extensionId,
+            ~toMsg=
+              fun
+              | Ok(details) =>
+                UpdateCheckSucceeded({
+                  extensionId,
+                  latestVersion: details.version,
+                })
+              | Error(msg) => UpdateCheckFailed({extensionId, msg}),
+          )
+        }
+      );
+
+  [querySub, updateCheckSub] |> Isolinear.Sub.batch;
 };
 
 module Contributions = {

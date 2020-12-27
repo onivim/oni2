@@ -45,6 +45,8 @@ let setRoot = (~rootPath, model) => {
   focus: None,
 };
 
+let root = ({rootPath, _}) => rootPath;
+
 let getFileIcon = (~languageInfo, ~iconTheme, filePath) => {
   Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, filePath)
   |> Oni_Core.IconTheme.getIconForFile(iconTheme, filePath);

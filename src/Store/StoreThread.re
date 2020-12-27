@@ -73,6 +73,7 @@ let registerCommands = (~dispatch, commands) => {
 
 let start =
     (
+      ~showUpdateChangelog=true,
       ~getUserSettings,
       ~configurationFilePath=None,
       ~keybindingsFilePath=None,
@@ -123,6 +124,7 @@ let start =
   let commandUpdater = CommandStoreConnector.start();
   let (vimUpdater, vimStream) =
     VimStoreConnector.start(
+      ~showUpdateChangelog,
       languageInfo,
       getState,
       getClipboardText,
@@ -141,8 +143,13 @@ let start =
       }
     );
 
+  let initialWorkspace =
+    Feature_Workspace.openedFolder(initialState.workspace)
+    |> Option.map(Exthost.WorkspaceData.fromPath);
+
   let (extHostClientResult, extHostStream) =
     ExtensionClient.create(
+      ~initialWorkspace,
       ~attachStdio,
       ~config=getState().config,
       ~extensions,
@@ -202,8 +209,13 @@ let start =
     let config = Model.Selectors.configResolver(state);
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
+    let activeEditor = state.layout |> Feature_Layout.activeEditor;
 
-    let isInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state.vim));
+    let isInsertMode =
+      activeEditor |> Feature_Editor.Editor.mode |> Vim.Mode.isInsert;
+
+    let isAnimatingScroll =
+      activeEditor |> Feature_Editor.Editor.isAnimatingScroll;
 
     let visibleRanges =
       visibleBuffersAndRanges
@@ -212,6 +224,12 @@ let start =
            |> Option.map(buffer => {(buffer, ranges)})
          })
       |> Core.Utility.OptionEx.values;
+
+    let topVisibleBufferLine =
+      activeEditor |> Feature_Editor.Editor.getTopVisibleBufferLine;
+
+    let bottomVisibleBufferLine =
+      activeEditor |> Feature_Editor.Editor.getBottomVisibleBufferLine;
 
     let visibleBuffers =
       visibleBuffersAndRanges
@@ -236,7 +254,10 @@ let start =
 
     let terminalSubscription =
       Feature_Terminal.subscription(
-        ~workspaceUri=Core.Uri.fromPath(state.workspace.workingDirectory),
+        ~workspaceUri=
+          Core.Uri.fromPath(
+            Feature_Workspace.workingDirectory(state.workspace),
+          ),
         extHostClient,
         state.terminals,
       )
@@ -333,8 +354,11 @@ let start =
            Feature_LanguageSupport.sub(
              ~config,
              ~isInsertMode,
+             ~isAnimatingScroll,
              ~activeBuffer,
              ~activePosition,
+             ~topVisibleBufferLine,
+             ~bottomVisibleBufferLine,
              ~visibleBuffers,
              ~client=extHostClient,
              state.languageSupport,
@@ -343,8 +367,29 @@ let start =
          })
       |> Option.value(~default=Isolinear.Sub.none);
 
+    let signatureHelpSub =
+      maybeActiveBuffer
+      |> Option.map(activeBuffer => {
+           Feature_SignatureHelp.sub(
+             ~isInsertMode,
+             ~buffer=activeBuffer,
+             ~activePosition,
+             ~client=extHostClient,
+             state.signatureHelp,
+           )
+           |> Isolinear.Sub.map(msg => Model.Actions.SignatureHelp(msg))
+         })
+      |> Option.value(~default=Isolinear.Sub.none);
+
+    let isSideBarOpen = Feature_SideBar.isOpen(state.sideBar);
+    let isExtensionsFocused =
+      Feature_SideBar.selected(state.sideBar) == Feature_SideBar.Extensions;
     let extensionsSub =
-      Feature_Extensions.sub(~setup, state.extensions)
+      Feature_Extensions.sub(
+        ~isVisible=isSideBarOpen && isExtensionsFocused,
+        ~setup,
+        state.extensions,
+      )
       |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
 
     let registersSub =
@@ -382,6 +427,17 @@ let start =
               )
          )
       |> Isolinear.Sub.batch;
+
+    let inputSubscription =
+      state.input
+      |> Feature_Input.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Input(msg));
+
+    let notificationSub =
+      state.notifications
+      |> Feature_Notification.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Notification(msg));
+
     [
       extHostSubscription,
       languageSupportSub,
@@ -397,6 +453,9 @@ let start =
       scmSub,
       autoUpdateSub,
       visibleEditorsSubscription,
+      inputSubscription,
+      notificationSub,
+      signatureHelpSub,
     ]
     |> Isolinear.Sub.batch;
   };

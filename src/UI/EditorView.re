@@ -60,7 +60,6 @@ module Parts = {
         grammarRepository={state.grammarRepository}
         onEditorSizeChanged
         theme
-        mode={Feature_Vim.mode(state.vim)}
         bufferHighlights={state.bufferHighlights}
         bufferSyntaxHighlights={state.syntaxHighlights}
         diagnostics={state.diagnostics}
@@ -100,23 +99,24 @@ module Parts = {
       let buffer =
         Selectors.getBufferForEditor(state.buffers, editor)
         |> OptionEx.value_or_lazy(() => Buffer.empty(~font=state.editorFont));
+
+      // TODO: Move to overlays view
       let renderOverlays = (~gutterWidth) =>
-        [
-          <Feature_SignatureHelp.View
-            colorTheme=theme
-            tokenTheme={state.tokenTheme}
-            model={state.signatureHelp}
-            uiFont={state.uiFont}
-            editorFont={state.editorFont}
-            languageInfo={state.languageInfo}
-            grammars={state.grammarRepository}
-            editor
-            gutterWidth
-            buffer
-            dispatch={msg => dispatch(SignatureHelp(msg))}
-          />,
-        ]
-        |> React.listToElement;
+        isActive
+          ? <Feature_SignatureHelp.View
+              colorTheme=theme
+              tokenTheme={state.tokenTheme}
+              model={state.signatureHelp}
+              uiFont={state.uiFont}
+              editorFont={state.editorFont}
+              languageInfo={state.languageInfo}
+              grammars={state.grammarRepository}
+              editor
+              gutterWidth
+              buffer
+              dispatch={msg => dispatch(SignatureHelp(msg))}
+            />
+          : React.empty;
 
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
@@ -183,8 +183,7 @@ module Parts = {
 
       | DebugInput => <DebugInputView state />
 
-      | UpdateChangelog({since}) =>
-        <Feature_Changelog.View.Update since theme uiFont />
+      | UpdateChangelog => <Feature_Changelog.View.Update theme uiFont />
       };
     };
   };

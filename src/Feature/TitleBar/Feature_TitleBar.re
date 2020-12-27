@@ -200,9 +200,9 @@ module Styles = {
   open Style;
 
   module Mac = {
-    let container = (~isFocused, ~theme) => [
+    let container = (~isFocused, ~theme, ~height) => [
       flexGrow(0),
-      height(25),
+      Style.height(int_of_float(height)),
       backgroundColor(
         isFocused
           ? Colors.activeBackground.from(theme)
@@ -321,6 +321,7 @@ module View = {
           ~title,
           ~theme,
           ~font: UiFont.t,
+          ~height,
           (),
         ) =>
       if (windowDisplayMode == Fullscreen) {
@@ -330,7 +331,7 @@ module View = {
 
         <Clickable
           onDoubleClick={_ => dispatch(TitleDoubleClicked)}
-          style={Styles.Mac.container(~isFocused, ~theme)}>
+          style={Styles.Mac.container(~isFocused, ~theme, ~height)}>
           <View
             style=Style.[
               flexDirection(`Row),
@@ -497,6 +498,7 @@ module View = {
         ~windowDisplayMode,
         ~theme,
         ~font: UiFont.t,
+        ~height,
         (),
       ) => {
     let title =
@@ -512,6 +514,7 @@ module View = {
         dispatch
         registration
         registrationDispatch
+        height
       />
     | Windows =>
       <Windows

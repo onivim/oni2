@@ -9,7 +9,8 @@ open Oni_Core;
 type pane =
   | Diagnostics
   | Notifications
-  | Locations;
+  | Locations
+  | Output;
 
 module Constants = {
   let defaultHeight = 225;
@@ -19,7 +20,9 @@ module Constants = {
 
 [@deriving show({with_path: false})]
 type command =
-  | ToggleProblems;
+  | ToggleProblems
+  | ToggleMessages
+  | ClosePane;
 
 [@deriving show({with_path: false})]
 type msg =
@@ -32,6 +35,9 @@ type msg =
   | VimWindowNav(Component_VimWindows.msg)
   | DiagnosticsList(Component_VimTree.msg)
   | LocationsList(Component_VimTree.msg)
+  | NotificationsList(Component_VimList.msg)
+  | OutputPane(Component_Output.msg)
+  | DismissNotificationClicked(Feature_Notification.notification)
   | LocationFileLoaded({
       filePath: string,
       lines: array(string),
@@ -41,6 +47,8 @@ module Msg = {
   let keyPressed = key => KeyPressed(key);
   let resizeHandleDragged = v => ResizeHandleDragged(v);
   let resizeCommitted = ResizeCommitted;
+
+  let toggleMessages = Command(ToggleMessages);
 };
 
 module Effects = {
@@ -69,6 +77,7 @@ type outmsg =
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
   | ReleaseFocus
+  | NotificationDismissed(Feature_Notification.notification)
   | Effect(Isolinear.Effect.t(msg));
 
 type model = {
@@ -78,6 +87,8 @@ type model = {
   height: int,
   resizeDelta: int,
   vimWindowNavigation: Component_VimWindows.model,
+  notificationsView:
+    Component_VimList.model(Feature_Notification.notification),
   diagnosticsView:
     Component_VimTree.model(string, Oni_Components.LocationListItem.t),
   locationNodes:
@@ -89,6 +100,7 @@ type model = {
       LocationsPaneView.location,
       Oni_Components.LocationListItem.t,
     ),
+  outputPane: option(Component_Output.model),
 };
 
 let locationsToReferences = (locations: list(Exthost.Location.t)) => {
@@ -240,6 +252,19 @@ let diagnosticToLocList =
   };
 };
 
+let setNotifications = (notifications, model) => {
+  let searchText = (notification: Feature_Notification.notification) => {
+    notification.message;
+  };
+  let notificationsArray =
+    notifications |> Feature_Notification.all |> Array.of_list;
+
+  let notificationsView' =
+    model.notificationsView
+    |> Component_VimList.set(~searchText, notificationsArray);
+  {...model, notificationsView: notificationsView'};
+};
+
 let setDiagnostics = (diagnostics, model) => {
   let diagLocList =
     diagnostics
@@ -283,13 +308,23 @@ let show = (~pane, model) => {
 };
 let close = model => {...model, allowAnimation: false, isOpen: false};
 
+let setOutput = (_cmd, maybeContents, model) => {
+  let outputPane' =
+    maybeContents
+    |> Option.map(output =>
+         Component_Output.set(output, Component_Output.initial)
+       );
+  {...model, outputPane: outputPane'} |> setPane(~pane=Output);
+};
+
 module Focus = {
   let cycleForward = model => {
     let pane =
       switch (model.selected) {
       | Diagnostics => Notifications
       | Notifications => Locations
-      | Locations => Diagnostics
+      | Locations => Output
+      | Output => Diagnostics
       };
     {...model, selected: pane};
   };
@@ -297,9 +332,10 @@ module Focus = {
   let cycleBackward = model => {
     let pane =
       switch (model.selected) {
+      | Output => Locations
       | Notifications => Diagnostics
       | Locations => Notifications
-      | Diagnostics => Locations
+      | Diagnostics => Output
       };
     {...model, selected: pane};
   };
@@ -307,7 +343,13 @@ module Focus = {
 
 let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
   switch (msg) {
+  | Command(ClosePane)
   | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
+
+  | DismissNotificationClicked(notification) => (
+      model,
+      NotificationDismissed(notification),
+    )
 
   | TabClicked(pane) => ({...model, selected: pane}, Nothing)
 
@@ -318,6 +360,15 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
       (close(model), ReleaseFocus);
     } else {
       (show(~pane=Diagnostics, model), Nothing);
+    }
+
+  | Command(ToggleMessages) =>
+    if (!model.isOpen) {
+      (show(~pane=Notifications, model), GrabFocus);
+    } else if (model.selected == Notifications) {
+      (close(model), ReleaseFocus);
+    } else {
+      (show(~pane=Notifications, model), Nothing);
     }
 
   | ResizeHandleDragged(delta) => (
@@ -335,7 +386,15 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
 
   | KeyPressed(key) =>
     switch (model.selected) {
-    | Notifications => (model, Nothing)
+    | Notifications => (
+        {
+          ...model,
+          notificationsView:
+            Component_VimList.keyPress(key, model.notificationsView),
+        },
+        Nothing,
+      )
+
     | Diagnostics => (
         {
           ...model,
@@ -348,6 +407,15 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
         {
           ...model,
           locationsView: Component_VimTree.keyPress(key, model.locationsView),
+        },
+        Nothing,
+      )
+
+    | Output => (
+        {
+          ...model,
+          outputPane:
+            model.outputPane |> Option.map(Component_Output.keyPress(key)),
         },
         Nothing,
       )
@@ -401,6 +469,19 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
       Nothing,
     )
 
+  | NotificationsList(listMsg) =>
+    let (notificationsView, outmsg) =
+      Component_VimList.update(listMsg, model.notificationsView);
+
+    let eff =
+      switch (outmsg) {
+      | Component_VimList.Nothing => Nothing
+      | Component_VimList.Selected(_) => Nothing
+      | Component_VimList.Touched(_) => Nothing
+      };
+
+    ({...model, notificationsView}, eff);
+
   | DiagnosticsList(listMsg) =>
     let (diagnosticsView, outmsg) =
       Component_VimTree.update(listMsg, model.diagnosticsView);
@@ -419,6 +500,21 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
       };
 
     ({...model, diagnosticsView}, eff);
+
+  | OutputPane(outputMsg) =>
+    model.outputPane
+    |> Option.map(outputPane => {
+         let (outputPane, outmsg) =
+           Component_Output.update(outputMsg, outputPane);
+
+         let model' = {...model, outputPane: Some(outputPane)};
+         switch (outmsg) {
+         | Nothing => (model', Nothing)
+         // Emulate Vim behavior on space / enter - close pane
+         | Selected => ({...model', isOpen: false}, ReleaseFocus)
+         };
+       })
+    |> Option.value(~default=(model, Nothing))
   };
 
 let initial = {
@@ -433,6 +529,9 @@ let initial = {
 
   locationNodes: [],
   locationsView: Component_VimTree.create(~rowHeight=20),
+  notificationsView: Component_VimList.create(~rowHeight=20),
+
+  outputPane: None,
 };
 
 let selected = ({selected, _}) => selected;
@@ -571,13 +670,18 @@ module View = {
         ~theme,
         ~iconTheme,
         ~languageInfo,
+        ~editorFont,
         ~uiFont,
-        ~notificationDispatch,
+        ~dispatch,
+        ~outputPane,
         ~locationsList,
         ~locationsDispatch: Component_VimTree.msg => unit,
         ~diagnosticDispatch: Component_VimTree.msg => unit,
         ~diagnosticsList: Component_VimTree.model(string, LocationListItem.t),
-        ~notifications: Feature_Notification.model,
+        ~notificationsList:
+           Component_VimList.model(Feature_Notification.notification),
+        ~notificationsDispatch: Component_VimList.msg => unit,
+        ~outputDispatch: Component_Output.msg => unit,
         ~workingDirectory,
         (),
       ) =>
@@ -606,16 +710,33 @@ module View = {
         dispatch=diagnosticDispatch
       />
     | Notifications =>
-      <Feature_Notification.View.List
-        model=notifications
+      <NotificationsPaneView
+        isFocused
+        notificationsList
         theme
-        font=uiFont
-        dispatch=notificationDispatch
+        uiFont
+        dispatch=notificationsDispatch
+        onDismiss={notification =>
+          dispatch(DismissNotificationClicked(notification))
+        }
       />
+    | Output =>
+      outputPane
+      |> Option.map(model => {
+           <Component_Output.View
+             model
+             isActive=isFocused
+             editorFont
+             uiFont
+             theme
+             dispatch=outputDispatch
+           />
+         })
+      |> Option.value(~default=React.empty)
     };
 
   module Animation = {
-    let openSpring = Spring.Options.create(~stiffness=500., ~damping=30., ());
+    let openSpring = Spring.Options.create(~stiffness=600., ~damping=50., ());
   };
 
   let closeButton = (~theme, ~dispatch, ()) => {
@@ -637,10 +758,9 @@ module View = {
                   ~theme,
                   ~iconTheme,
                   ~languageInfo,
+                  ~editorFont: Service_Font.font,
                   ~uiFont,
-                  ~notifications: Feature_Notification.model,
                   ~dispatch: msg => unit,
-                  ~notificationDispatch: Feature_Notification.msg => unit,
                   ~pane: model,
                   ~workingDirectory: string,
                   (),
@@ -653,6 +773,9 @@ module View = {
     };
     let locationsTabClicked = () => {
       dispatch(TabClicked(Locations));
+    };
+    let outputTabClicked = () => {
+      dispatch(TabClicked(Output));
     };
 
     let desiredHeight = height(pane);
@@ -710,6 +833,13 @@ module View = {
             onClick=locationsTabClicked
             isActive={isSelected(Locations, pane)}
           />
+          <PaneTab
+            uiFont
+            theme
+            title="Output"
+            onClick=outputTabClicked
+            isActive={isSelected(Output, pane)}
+          />
         </View>
         <closeButton dispatch theme />
       </View>
@@ -720,13 +850,17 @@ module View = {
           languageInfo
           diagnosticsList={pane.diagnosticsView}
           locationsList={pane.locationsView}
+          notificationsList={pane.notificationsView}
           selected={selected(pane)}
+          outputPane={pane.outputPane}
           theme
+          dispatch
           uiFont
-          notifications
-          notificationDispatch
+          editorFont
           diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
           locationsDispatch={msg => dispatch(LocationsList(msg))}
+          notificationsDispatch={msg => dispatch(NotificationsList(msg))}
+          outputDispatch={msg => dispatch(OutputPane(msg))}
           workingDirectory
         />
       </View>
@@ -743,26 +877,42 @@ module Commands = {
       "workbench.actions.view.problems",
       Command(ToggleProblems),
     );
+
+  let closePane =
+    define(
+      // TODO: Is there a VSCode equivalent?
+      "workbench.actions.pane.close",
+      Command(ClosePane),
+    );
 };
 
 module Keybindings = {
   open Feature_Input.Schema;
-  let toggleProblems = {
-    key: "<S-C-M>",
-    command: Commands.problems.id,
-    condition: WhenExpr.Value(True),
-  };
+  let toggleProblems =
+    bind(
+      ~key="<S-C-M>",
+      ~command=Commands.problems.id,
+      ~condition=WhenExpr.Value(True),
+    );
 
-  let toggleProblemsOSX = {
-    key: "<D-S-M>",
-    command: Commands.problems.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let toggleProblemsOSX =
+    bind(
+      ~key="<D-S-M>",
+      ~command=Commands.problems.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
+
+  let escKey =
+    bind(
+      ~key="<ESC>",
+      ~command=Commands.closePane.id,
+      ~condition="paneFocus" |> WhenExpr.parse,
+    );
 };
 
 module Contributions = {
   let commands = (~isFocused, model) => {
-    let common = Commands.[problems];
+    let common = Commands.[problems, closePane];
     let vimWindowCommands =
       Component_VimWindows.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)));
@@ -781,8 +931,27 @@ module Contributions = {
       )
       |> List.map(Oni_Core.Command.map(msg => LocationsList(msg)));
 
+    let outputCommands =
+      (
+        isFocused && model.selected == Output
+          ? Component_Output.Contributions.commands : []
+      )
+      |> List.map(Oni_Core.Command.map(msg => OutputPane(msg)));
+
+    let notificationsCommands =
+      (
+        isFocused && model.selected == Notifications
+          ? Component_VimList.Contributions.commands : []
+      )
+      |> List.map(Oni_Core.Command.map(msg => NotificationsList(msg)));
+
     isFocused
-      ? common @ vimWindowCommands @ diagnosticsCommands @ locationsCommands
+      ? common
+        @ vimWindowCommands
+        @ diagnosticsCommands
+        @ locationsCommands
+        @ notificationsCommands
+        @ outputCommands
       : common;
   };
 
@@ -805,8 +974,56 @@ module Contributions = {
         ? Component_VimTree.Contributions.contextKeys(model.locationsView)
         : empty;
 
-    [vimNavKeys, diagnosticsKeys, locationsKeys] |> unionMany;
+    let outputKeys =
+      isFocused && model.selected == Output
+        ? model.outputPane
+          |> Option.map(outputPane =>
+               Component_Output.Contributions.contextKeys(outputPane)
+             )
+          |> Option.value(~default=empty)
+        : empty;
+
+    let notificationsKeys =
+      isFocused && model.selected == Notifications
+        ? Component_VimList.Contributions.contextKeys(
+            model.notificationsView,
+          )
+        : empty;
+
+    let activePanel =
+      (
+        isFocused
+          ? [
+            Schema.string("activePanel", model =>
+              switch (model.selected) {
+              | Diagnostics => "workbench.panel.markers"
+              | Output => "workbench.panel.output"
+              | Notifications => "workbench.panel.notifications"
+              | Locations => "workbench.panel.locations"
+              }
+            ),
+          ]
+          : []
+      )
+      |> Schema.fromList
+      |> fromSchema(model);
+
+    let paneFocus =
+      [Schema.bool("paneFocus", (_: model) => isFocused)]
+      |> Schema.fromList
+      |> fromSchema(model);
+
+    [
+      activePanel,
+      paneFocus,
+      vimNavKeys,
+      diagnosticsKeys,
+      locationsKeys,
+      notificationsKeys,
+      outputKeys,
+    ]
+    |> unionMany;
   };
 
-  let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX];
+  let keybindings = Keybindings.[toggleProblems, toggleProblemsOSX, escKey];
 };

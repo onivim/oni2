@@ -217,7 +217,7 @@ let guessIndentation = (~config, buffer) => {
 let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   switch (msg) {
   | EditorRequested({buffer, split, position, grabFocus, preview}) => (
-      model,
+      IntMap.add(Buffer.getId(buffer), buffer, model),
       CreateEditor({
         buffer,
         split,
@@ -351,7 +351,8 @@ module Effects = {
 
     switch (IntMap.find_opt(bufferId, model)) {
     // We already have this buffer loaded - so just ask for an editor!
-    | Some(buffer) => f(~alreadyLoaded=true, buffer)
+    | Some(buffer) =>
+      buffer |> Buffer.stampLastUsed |> f(~alreadyLoaded=true)
 
     | None =>
       // No buffer yet, so we need to create one _and_ ask for an editor.
@@ -430,14 +431,33 @@ module Effects = {
     });
   };
 
-  let openBufferInEditor = (~font, ~languageInfo, ~bufferId, model) => {
+  let openNewBuffer = (~font, ~languageInfo, ~split, model) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Buffers.openNewBuffer", dispatch => {
+      let buffer = Vim.Buffer.make();
+
+      let handler = (~alreadyLoaded as _, buffer) =>
+        dispatch(
+          NewBufferAndEditorRequested({
+            buffer,
+            split,
+            position: None,
+            grabFocus: true,
+            preview: false,
+          }),
+        );
+
+      openCommon(~vimBuffer=buffer, ~languageInfo, ~font, ~model, handler);
+    });
+  };
+
+  let openBufferInEditor = (~font, ~languageInfo, ~split, ~bufferId, model) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Buffers.openBufferInEditor", dispatch => {
       switch (Vim.Buffer.getById(bufferId)) {
       | None => Log.warnf(m => m("Unable to open buffer: %d", bufferId))
       | Some(vimBuffer) =>
         let handler = (~alreadyLoaded, buffer) => {
-          let split = `Current;
           let position = None;
           let grabFocus = true;
 

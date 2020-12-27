@@ -5,6 +5,7 @@ type modifier =
   | Meta;
 
 type keyPress =
+  | UnmatchedString(string)
   | Physical(Key.t)
   | Special(SpecialKey.t);
 

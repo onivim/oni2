@@ -4,7 +4,8 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
+let create =
+    (~initialWorkspace, ~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
 
   Log.infof(m =>
@@ -22,8 +23,18 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
       switch (msg) {
+      | Initialized =>
+        dispatch(Actions.Exthost(Feature_Exthost.Msg.initialized));
+        Lwt.return(Reply.okEmpty);
       | DownloadService(msg) => Middleware.download(msg)
-      | FileSystem(msg) => Middleware.filesystem(msg)
+
+      | FileSystem(msg) =>
+        let (promise, resolver) = Lwt.task();
+
+        let fileSystemMsg = Feature_FileSystem.Msg.exthost(~resolver, msg);
+        dispatch(FileSystem(fileSystemMsg));
+        promise;
+
       | SCM(msg) =>
         Feature_SCM.handleExtensionMessage(
           ~dispatch=msg => dispatch(Actions.SCM(msg)),
@@ -103,7 +114,7 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
         ) =>
         dispatch(
           Actions.SignatureHelp(
-            Feature_SignatureHelp.ProviderRegistered({
+            Feature_SignatureHelp.Msg.providerAvailable({
               handle,
               selector,
               metadata,
@@ -266,6 +277,7 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
           extensions,
           setup,
         ),
+      ~initialWorkspace,
       ~namedPipe,
       ~initData,
       ~handler,

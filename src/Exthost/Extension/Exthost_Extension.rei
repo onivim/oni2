@@ -150,7 +150,7 @@ module Manifest: {
   [@deriving show]
   type t = {
     name: string,
-    version: string,
+    version: option(Semver.t),
     author: string,
     displayName: option(LocalizedToken.t),
     description: option(string),
@@ -173,6 +173,7 @@ module Manifest: {
   let decode: Oni_Core.Json.decoder(t);
 
   let identifier: t => string;
+  let publisher: t => string;
   let getDisplayName: t => string;
 };
 

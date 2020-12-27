@@ -2,7 +2,6 @@ type t =
   | Goto(Goto.effect)
   | TabPage(TabPage.effect)
   | Format(Format.effect)
-  | ModeChanged(Mode.t)
   | SettingChanged(Setting.t)
   | ColorSchemeChanged(option(string))
   | MacroRecordingStarted({register: char})
@@ -18,4 +17,10 @@ type t =
   | Unmap({
       mode: Mapping.mode,
       keys: option(string),
-    });
+    })
+  | Clear(Clear.t)
+  | Output({
+      cmd: string,
+      output: option(string),
+    })
+  | WindowSplit(Split.t);

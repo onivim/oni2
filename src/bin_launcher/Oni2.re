@@ -16,6 +16,7 @@ let passthroughStringAndStayAttached = Arg.String(_ => stayAttached := true);
 
 let spec =
   Arg.align([
+    ("-c", passthroughString, "Execute an :ex command after loading files"),
     (
       "-f",
       Arg.Set(stayAttached),

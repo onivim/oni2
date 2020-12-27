@@ -27,26 +27,30 @@ let shift =
   if (delta == 0) {
     map;
   } else {
-    let original: t('a) = map;
     // Shift all items based on delta
     let newMap =
-      fold(
-        (key, oldValue, prev) =>
-          if (delta > 0) {
-            if (key < startPos) {
-              prev;
-            } else {
-              update(key + delta, _ => Some(oldValue), prev);
-            };
-          } else if (key <= endPos) {
-            prev;
-          } else {
-            let originalValue: option('a) = find_opt(key, original);
-            update(key + delta, _ => originalValue, prev);
-          },
-        map, /* map to fold over */
-        map /* seed defaults */
-      );
+      map
+      |> bindings
+      |> List.filter_map(((key, v)) =>
+           if (delta > 0) {
+             if (key < startPos) {
+               Some((key, v));
+             } else {
+               Some((key + delta, v));
+             };
+           } else if (key < startPos) {
+             Some((key, v));
+           } else {
+             let newPosition = key + delta;
+             if (newPosition < startPos) {
+               None;
+             } else {
+               Some((newPosition, v));
+             };
+           }
+         )
+      |> List.to_seq
+      |> of_seq;
 
     // Set 'new' items to be the default value
     let current = find_opt(startPos, newMap);

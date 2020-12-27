@@ -17,7 +17,9 @@ module Label: {
     | Icon(string);
 
   [@deriving show]
-  type t = list(segment);
+  type t;
+
+  let segments: t => list(segment);
 
   let ofString: string => t;
   let toString: t => string;
@@ -136,6 +138,9 @@ module Edit: {
       text: option(string),
       forceMoveMarkers: bool,
     };
+
+    // Get the difference in lines due to the edit
+    let deltaLineCount: t => int;
 
     let decode: Json.decoder(t);
   };
@@ -855,6 +860,12 @@ module Files: {
     };
 
     let decode: Json.decoder(t);
+    let encode: Json.encoder(t);
+  };
+
+  module ReadDirResult: {
+    type t = (string, FileType.t);
+
     let encode: Json.encoder(t);
   };
 
@@ -1622,10 +1633,7 @@ module Reply: {
   let okBuffer: Bytes.t => t;
 };
 
-module Middleware: {
-  let download: Msg.DownloadService.msg => Lwt.t(Reply.t);
-  let filesystem: Msg.FileSystem.msg => Lwt.t(Reply.t);
-};
+module Middleware: {let download: Msg.DownloadService.msg => Lwt.t(Reply.t);};
 
 module Client: {
   type t;
@@ -1633,7 +1641,7 @@ module Client: {
   let start:
     (
       ~initialConfiguration: Configuration.t=?,
-      ~initialWorkspace: WorkspaceData.t=?,
+      ~initialWorkspace: option(WorkspaceData.t)=?,
       ~namedPipe: NamedPipe.t,
       ~initData: Extension.InitData.t,
       // TODO:
@@ -1733,6 +1741,10 @@ module Request: {
       Lwt.t(unit);
   };
 
+  module FileSystem: {
+    let readFile: (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(string);
+  };
+
   module FileSystemEventService: {
     let onFileEvent: (~events: Files.FileSystemEvents.t, Client.t) => unit;
     // TODO
@@ -1744,6 +1756,10 @@ module Request: {
     let provideCodeLenses:
       (~handle: int, ~resource: Uri.t, Client.t) =>
       Lwt.t(option(list(CodeLens.t)));
+
+    let resolveCodeLens:
+      (~handle: int, ~codeLens: CodeLens.t, Client.t) =>
+      Lwt.t(option(CodeLens.t));
 
     let provideCompletionItems:
       (
@@ -1766,7 +1782,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DocumentHighlight.t));
+      Lwt.t(option(list(DocumentHighlight.t)));
 
     let provideDocumentSymbols:
       (~handle: int, ~resource: Uri.t, Client.t) =>

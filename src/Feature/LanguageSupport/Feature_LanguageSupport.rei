@@ -37,11 +37,13 @@ module CodeLens: {
   let get: (~bufferId: int, model) => list(t);
 
   let lineNumber: t => int;
+  let text: t => string;
   let uniqueId: t => string;
 
   module View: {
     let make:
       (
+        ~leftMargin: int,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~uiFont: UiFont.t,
         ~codeLens: t,
@@ -56,10 +58,12 @@ type outmsg =
   | ApplyCompletion({
       meetColumn: CharacterIndex.t,
       insertText: string,
+      additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | InsertSnippet({
       meetColumn: CharacterIndex.t,
       snippet: string,
+      additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | OpenFile({
       filePath: string,
@@ -71,6 +75,8 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | CodeLensesChanged({
       bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.t),
     });
 
@@ -111,8 +117,11 @@ let sub:
   (
     ~config: Oni_Core.Config.resolver,
     ~isInsertMode: bool,
+    ~isAnimatingScroll: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
     ~activePosition: CharacterPosition.t,
+    ~topVisibleBufferLine: EditorCoreTypes.LineNumber.t,
+    ~bottomVisibleBufferLine: EditorCoreTypes.LineNumber.t,
     ~visibleBuffers: list(Oni_Core.Buffer.t),
     ~client: Exthost.Client.t,
     model

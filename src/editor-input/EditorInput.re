@@ -23,6 +23,9 @@ module type Input = {
   let addMapping:
     (Matcher.t, context => bool, list(KeyPress.t), t) => (t, uniqueId);
 
+  let disable: t => t;
+  let enable: t => t;
+
   type effect =
     | Execute(command)
     | Text(string)
@@ -46,6 +49,12 @@ module type Input = {
       t
     ) =>
     (t, list(effect));
+
+  let candidates:
+    (~leaderKey: option(PhysicalKey.t), ~context: context, t) =>
+    list((Matcher.t, command));
+
+  let consumedKeys: t => list(KeyPress.t);
 
   let remove: (uniqueId, t) => t;
 
@@ -136,7 +145,11 @@ module Make = (Config: {
     // Keys stored in reverse order - most recent keys first
     revKeys: list(gesture),
     pressedScancodes: IntSet.t,
+    enabled: bool,
   };
+
+  let enable = model => {...model, enabled: true};
+  let disable = model => {...model, enabled: false};
 
   let count = ({bindings, _}) => List.length(bindings);
 
@@ -146,6 +159,18 @@ module Make = (Config: {
     revKeys: [],
     text: [],
     pressedScancodes: IntSet.empty,
+    enabled: first.enabled && second.enabled,
+  };
+
+  let consumedKeys = ({revKeys, _}) => {
+    revKeys
+    |> List.rev
+    |> List.filter_map(
+         fun
+         | Down(_id, key) => Some(key)
+         | Up(_) => None
+         | AllKeysReleased => None,
+       );
   };
 
   let keyMatches = (~leaderKey, keyMatcher, key: gesture) => {
@@ -165,7 +190,7 @@ module Make = (Config: {
     bindings: model.bindings |> List.filter(binding => binding.id != uniqueId),
   };
 
-  let applyKeyToBinding = (~leaderKey, ~context, key, binding) =>
+  let applyKeyToBinding = (~leaderKey, ~context, key, binding: binding) =>
     if (!binding.enabled(context)) {
       None;
     } else {
@@ -380,12 +405,40 @@ module Make = (Config: {
     bindings: [],
     revKeys: [],
     pressedScancodes: IntSet.empty,
+    enabled: true,
   };
+
+  let candidates = (~leaderKey, ~context, {revKeys, enabled, bindings, _}) =>
+    if (!enabled) {
+      [];
+    } else {
+      applyKeysToBindings(~leaderKey, ~context, revKeys |> List.rev, bindings)
+      |> List.filter_map(({matcher, action, enabled, _}: binding) => {
+           switch (action) {
+           | Remap(_) => None // TODO
+           | Dispatch(command) =>
+             switch (matcher) {
+             | Matched => None
+             | Unmatched(matchers) when enabled(context) =>
+               Some((matchers, command))
+             | _ => None
+             }
+           }
+         });
+    };
 
   let rec handleKeyCore =
           (~leaderKey, ~recursionDepth=0, ~context, gesture, bindings) =>
-    // Hit the maximum remap recursion depth - just bail on this key.
-    if (recursionDepth > Constants.maxRecursiveDepth) {
+    if (!bindings.enabled) {
+      let eff =
+        switch (gesture) {
+        | Down(_id, key) => [Unhandled(key)]
+        | Up(_) => []
+        | AllKeysReleased => []
+        };
+      (bindings, eff);
+    } else if (recursionDepth > Constants.maxRecursiveDepth) {
+      // Hit the maximum remap recursion depth - just bail on this key.
       let eff =
         switch (gesture) {
         | Down(_id, key) => [Unhandled(key), RemapRecursionLimitHit]

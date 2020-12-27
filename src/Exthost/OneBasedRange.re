@@ -48,18 +48,67 @@ let toRange = ({startLineNumber, endLineNumber, startColumn, endColumn}) => {
 };
 
 let decode =
-  Json.Decode.(
-    {
-      obj(({field, _}) =>
-        {
-          startLineNumber: field.required("startLineNumber", int),
-          endLineNumber: field.required("endLineNumber", int),
-          startColumn: field.required("startColumn", int),
-          endColumn: field.required("endColumn", int),
-        }
-      );
-    }
-  );
+  Json.Decode.
+    // The default `int` decoder, or `Number` json type,
+    // doesn't handle exponents. So we need to use the float decoder / type,
+    // and coerce it to an int.
+    (
+      {
+        let intWithExponent =
+          float
+          |> map(f
+               // If the value is outside of `Int.max_int` or `Int.min_int`,
+               // `float_of_int` returns 0:
+               // https://stackoverflow.com/questions/48871692/how-to-handle-integer-overflow-in-ocaml-when-converting-from-float-using-int-of
+               =>
+                 if (f >= float_of_int(Int.max_int)) {
+                   Int.max_int;
+                 } else if (f <= float_of_int(Int.min_int)) {
+                   Int.min_int;
+                 } else {
+                   int_of_float(f);
+                 }
+               );
+        obj(({field, _}) =>
+          {
+            startLineNumber:
+              field.required("startLineNumber", intWithExponent),
+            endLineNumber: field.required("endLineNumber", intWithExponent),
+            startColumn: field.required("startColumn", intWithExponent),
+            endColumn: field.required("endColumn", intWithExponent),
+          }
+        );
+      }
+    );
+
+let%test_module "decode" =
+  (module
+   {
+     let%test "#2820 - Number.MAX_VALUE handling" = {
+       let json = {|
+   {
+    "startLineNumber": 0,
+    "startColumn": 0,
+    "endLineNumber": 1.7976931348623157e+308,
+    "endColumn": 1.7976931348623157e+308
+   }
+  |};
+
+       let range =
+         json
+         |> Yojson.Safe.from_string
+         |> Json.Decode.decode_value(decode)
+         |> Result.get_ok;
+
+       range
+       == {
+            startLineNumber: 0,
+            startColumn: 0,
+            endLineNumber: Int.max_int,
+            endColumn: Int.max_int,
+          };
+     };
+   });
 
 let encode = range =>
   Json.Encode.(

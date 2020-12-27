@@ -32,7 +32,6 @@ let editor = (editor, buffer, state: State.t) => {
     diagnostics={state.diagnostics}
     tokenTheme={state.tokenTheme}
     languageSupport={state.languageSupport}
-    mode={Feature_Vim.mode(state.vim)}
     theme={Feature_Theme.colors(state.colorTheme)}
     windowIsFocused=true
     scm=Feature_SCM.initial
