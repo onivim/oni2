@@ -175,18 +175,19 @@ module Keybindings = {
 
   let condition = "registerEvaluationFocus" |> WhenExpr.parse;
 
-  let cancel = {key: "<ESC>", command: Commands.cancel.id, condition};
+  let cancel = bind(~key="<ESC>", ~command=Commands.cancel.id, ~condition);
 
-  let commit = {key: "<CR>", command: Commands.commit.id, condition};
+  let commit = bind(~key="<CR>", ~command=Commands.commit.id, ~condition);
 
-  let insert = {
-    key: "<C-R>",
-    command: Commands.insert.id,
-    condition:
+  let insert =
+    bind(
+      ~key="<C-R>",
+      ~command=Commands.insert.id,
       // !terminalFocus - #2205 - we should not override the '<C-R>' terminal behavior.
-      "!terminalFocus && insertMode || commandLineMode || inQuickOpen"
-      |> WhenExpr.parse,
-  };
+      ~condition=
+        "!terminalFocus && insertMode || commandLineMode || inQuickOpen"
+        |> WhenExpr.parse,
+    );
 };
 
 module Contributions = {

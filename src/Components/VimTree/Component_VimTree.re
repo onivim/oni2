@@ -364,16 +364,16 @@ module Keybindings = {
 
   let keybindings =
     Feature_Input.Schema.[
-      {
-        key: "h",
-        command: Commands.toggleExpanded.id,
-        condition: commandCondition,
-      },
-      {
-        key: "l",
-        command: Commands.toggleExpanded.id,
-        condition: commandCondition,
-      },
+      bind(
+        ~key="h",
+        ~command=Commands.toggleExpanded.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="l",
+        ~command=Commands.toggleExpanded.id,
+        ~condition=commandCondition,
+      ),
     ];
 };
 

@@ -13,57 +13,57 @@ let windowCommandCondition = "!insertMode || terminalFocus" |> WhenExpr.parse;
 let isMacCondition = "isMac" |> WhenExpr.parse;
 let defaultKeyBindings =
   Feature_Input.Schema.[
-    {
-      key: "<UP>",
-      command: Commands.List.focusUp.id,
-      condition: "listFocus || textInputFocus" |> WhenExpr.parse,
-    },
-    {
-      key: "<DOWN>",
-      command: Commands.List.focusDown.id,
-      condition: "listFocus || textInputFocus" |> WhenExpr.parse,
-    },
-    {
-      key: "<RIGHT>",
-      command: Commands.List.selectBackground.id,
-      condition: "quickmenuCursorEnd" |> WhenExpr.parse,
-    },
+    bind(
+      ~key="<UP>",
+      ~command=Commands.List.focusUp.id,
+      ~condition="listFocus || textInputFocus" |> WhenExpr.parse,
+    ),
+    bind(
+      ~key="<DOWN>",
+      ~command=Commands.List.focusDown.id,
+      ~condition="listFocus || textInputFocus" |> WhenExpr.parse,
+    ),
+    bind(
+      ~key="<RIGHT>",
+      ~command=Commands.List.selectBackground.id,
+      ~condition="quickmenuCursorEnd" |> WhenExpr.parse,
+    ),
   ]
   @ Feature_SideBar.Contributions.keybindings
   @ Feature_Input.Schema.[
-      {
-        key: "<C-TAB>",
-        command:
+      bind(
+        ~key="<C-TAB>",
+        ~command=
           Commands.Workbench.Action.openNextRecentlyUsedEditorInGroup.id,
-        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-P>",
-        command: Commands.Workbench.Action.quickOpen.id,
-        condition: "editorTextFocus || terminalFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-P>",
-        command: Commands.Workbench.Action.quickOpen.id,
-        condition: "isMac" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-C-P>",
-        command: Commands.Workbench.Action.showCommands.id,
-        condition: "!isMac" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-S-P>",
-        command: Commands.Workbench.Action.showCommands.id,
-        condition: "isMac" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-V>",
-        command: Feature_Clipboard.Commands.paste.id,
-        condition:
-          // The WhenExpr parser doesn't support precedence, so we manually construct it here...
-          // It'd be nice to bring back explicit precedence via '(' and ')'
-          // Alternatively, a manual construction could be done with separate bindings for !isMac OR each condition
+        ~condition="editorTextFocus || terminalFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-P>",
+        ~command=Commands.Workbench.Action.quickOpen.id,
+        ~condition="editorTextFocus || terminalFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-P>",
+        ~command=Commands.Workbench.Action.quickOpen.id,
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-C-P>",
+        ~command=Commands.Workbench.Action.showCommands.id,
+        ~condition="!isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S-P>",
+        ~command=Commands.Workbench.Action.showCommands.id,
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-V>",
+        ~command=Feature_Clipboard.Commands.paste.id,
+        // The WhenExpr parser doesn't support precedence, so we manually construct it here...
+        // It'd be nice to bring back explicit precedence via '(' and ')'
+        // Alternatively, a manual construction could be done with separate bindings for !isMac OR each condition
+        ~condition=
           WhenExpr.(
             And([
               Not(Defined("isMac")),
@@ -74,318 +74,318 @@ let defaultKeyBindings =
               ]),
             ])
           ),
-      },
-      {
-        key: "<D-V>",
-        command: Feature_Clipboard.Commands.paste.id,
-        condition: isMacCondition,
-      },
-      {
-        key: "<ESC>",
-        command: Commands.Workbench.Action.closeQuickOpen.id,
+      ),
+      bind(
+        ~key="<D-V>",
+        ~command=Feature_Clipboard.Commands.paste.id,
+        ~condition=isMacCondition,
+      ),
+      bind(
+        ~key="<ESC>",
+        ~command=Commands.Workbench.Action.closeQuickOpen.id,
         // When in command-line mode, we should let Vim control when it is closed
         // (The <esc> key might not always trigger closing, like if 'insert literal' (Ctrl-v/Ctrl-q) is active)
-        condition: "!commandLineFocus && inQuickOpen" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-N>",
-        command: Commands.List.focusDown.id,
-        condition: "listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-P>",
-        command: Commands.List.focusUp.id,
-        condition: "listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-N>",
-        command: Commands.List.focusDown.id,
-        condition: "isMac && listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-P>",
-        command: Commands.List.focusUp.id,
-        condition: "isMac && listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<TAB>",
-        command: Commands.List.focusDown.id,
-        condition: "listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-TAB>",
-        command: Commands.List.focusUp.id,
-        condition: "listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-TAB>",
-        command:
+        ~condition="!commandLineFocus && inQuickOpen" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-N>",
+        ~command=Commands.List.focusDown.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-P>",
+        ~command=Commands.List.focusUp.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-N>",
+        ~command=Commands.List.focusDown.id,
+        ~condition="isMac && listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-P>",
+        ~command=Commands.List.focusUp.id,
+        ~condition="isMac && listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<TAB>",
+        ~command=Commands.List.focusDown.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-TAB>",
+        ~command=Commands.List.focusUp.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-TAB>",
+        ~command=
           Commands.Workbench.Action.quickOpenNavigateNextInEditorPicker.id,
-        condition: "inEditorsPicker" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-C-TAB>",
-        command:
+        ~condition="inEditorsPicker" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-C-TAB>",
+        ~command=
           Commands.Workbench.Action.quickOpenNavigatePreviousInEditorPicker.id,
-        condition: "inEditorsPicker" |> WhenExpr.parse,
-      },
-      {
-        key: "<release>",
-        command: Commands.List.select.id,
-        condition: "inEditorsPicker" |> WhenExpr.parse,
-      },
+        ~condition="inEditorsPicker" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<release>",
+        ~command=Commands.List.select.id,
+        ~condition="inEditorsPicker" |> WhenExpr.parse,
+      ),
     ]
   @ Feature_Registers.Contributions.keybindings
   @ Feature_LanguageSupport.Contributions.keybindings
   @ Feature_Input.Schema.[
-      {
-        key: "<CR>",
-        command: Commands.List.select.id,
-        condition: "listFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-Z>",
-        command: Commands.undo.id,
-        condition: "isMac && editorTextFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-S-Z>",
-        command: Commands.redo.id,
-        condition: "isMac && editorTextFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-S>",
-        command: Commands.Workbench.Action.Files.save.id,
-        condition: "isMac && editorTextFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-S>",
-        command: Commands.Workbench.Action.Files.save.id,
-        condition: "editorTextFocus" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-]>",
-        command: Commands.Editor.Action.indentLines.id,
-        condition: "visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-[>",
-        command: Commands.Editor.Action.outdentLines.id,
-        condition: "visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-]>",
-        command: Commands.Editor.Action.indentLines.id,
-        condition: "isMac && visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<D-[>",
-        command: Commands.Editor.Action.outdentLines.id,
-        condition: "isMac && visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<TAB>",
-        command: Commands.indent.id,
-        condition: "visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-TAB>",
-        command: Commands.outdent.id,
-        condition: "visualMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-G>",
-        command: Feature_Sneak.Commands.start.id,
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<ESC>",
-        command: Feature_Sneak.Commands.stop.id,
-        condition: "sneakMode" |> WhenExpr.parse,
-      },
+      bind(
+        ~key="<CR>",
+        ~command=Commands.List.select.id,
+        ~condition="listFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-Z>",
+        ~command=Commands.undo.id,
+        ~condition="isMac && editorTextFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S-Z>",
+        ~command=Commands.redo.id,
+        ~condition="isMac && editorTextFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S>",
+        ~command=Commands.Workbench.Action.Files.save.id,
+        ~condition="isMac && editorTextFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-S>",
+        ~command=Commands.Workbench.Action.Files.save.id,
+        ~condition="editorTextFocus" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-]>",
+        ~command=Commands.Editor.Action.indentLines.id,
+        ~condition="visualMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-[>",
+        ~command=Commands.Editor.Action.outdentLines.id,
+        ~condition="visualMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-]>",
+        ~command=Commands.Editor.Action.indentLines.id,
+        ~condition="isMac && visualMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-[>",
+        ~command=Commands.Editor.Action.outdentLines.id,
+        ~condition="isMac && visualMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<TAB>",
+        ~command=Commands.indent.id,
+        ~condition="visualMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-TAB>",
+        ~command=Commands.outdent.id,
+        ~condition="visualMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-G>",
+        ~command=Feature_Sneak.Commands.start.id,
+        ~condition=WhenExpr.Value(True),
+      ),
+      bind(
+        ~key="<ESC>",
+        ~command=Feature_Sneak.Commands.stop.id,
+        ~condition="sneakMode" |> WhenExpr.parse,
+      ),
     ]
   @ Feature_Pane.Contributions.keybindings
   @ Feature_Input.Schema.[
-      {
-        key: "<D-W>",
-        command: Feature_Layout.Commands.closeActiveEditor.id,
-        condition: isMacCondition,
-      },
-      {
-        key: "<C-PAGEDOWN>",
-        command: Feature_Layout.Commands.nextEditor.id,
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<D-S-]>",
-        command: Feature_Layout.Commands.nextEditor.id,
-        condition: isMacCondition,
-      },
-      {
-        key: "<C-PAGEUP>",
-        command: Feature_Layout.Commands.previousEditor.id,
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<D-S-[>",
-        command: Feature_Layout.Commands.previousEditor.id,
-        condition: isMacCondition,
-      },
-      {
-        key: "<D-=>",
-        command: "workbench.action.zoomIn",
-        condition: isMacCondition,
-      },
-      {
-        key: "<C-=>",
-        command: "workbench.action.zoomIn",
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<D-->",
-        command: "workbench.action.zoomOut",
-        condition: isMacCondition,
-      },
-      {
-        key: "<C-->",
-        command: "workbench.action.zoomOut",
-        condition: WhenExpr.Value(True),
-      },
-      {
-        key: "<D-0>",
-        command: "workbench.action.zoomReset",
-        condition: isMacCondition,
-      },
-      {
-        key: "<C-0>",
-        command: "workbench.action.zoomReset",
-        condition: WhenExpr.Value(True),
-      },
+      bind(
+        ~key="<D-W>",
+        ~command=Feature_Layout.Commands.closeActiveEditor.id,
+        ~condition=isMacCondition,
+      ),
+      bind(
+        ~key="<C-PAGEDOWN>",
+        ~command=Feature_Layout.Commands.nextEditor.id,
+        ~condition=WhenExpr.Value(True),
+      ),
+      bind(
+        ~key="<D-S-]>",
+        ~command=Feature_Layout.Commands.nextEditor.id,
+        ~condition=isMacCondition,
+      ),
+      bind(
+        ~key="<C-PAGEUP>",
+        ~command=Feature_Layout.Commands.previousEditor.id,
+        ~condition=WhenExpr.Value(True),
+      ),
+      bind(
+        ~key="<D-S-[>",
+        ~command=Feature_Layout.Commands.previousEditor.id,
+        ~condition=isMacCondition,
+      ),
+      bind(
+        ~key="<D-=>",
+        ~command="workbench.action.zoomIn",
+        ~condition=isMacCondition,
+      ),
+      bind(
+        ~key="<C-=>",
+        ~command="workbench.action.zoomIn",
+        ~condition=WhenExpr.Value(True),
+      ),
+      bind(
+        ~key="<D-->",
+        ~command="workbench.action.zoomOut",
+        ~condition=isMacCondition,
+      ),
+      bind(
+        ~key="<C-->",
+        ~command="workbench.action.zoomOut",
+        ~condition=WhenExpr.Value(True),
+      ),
+      bind(
+        ~key="<D-0>",
+        ~command="workbench.action.zoomReset",
+        ~condition=isMacCondition,
+      ),
+      bind(
+        ~key="<C-0>",
+        ~command="workbench.action.zoomReset",
+        ~condition=WhenExpr.Value(True),
+      ),
     ]
   @ Feature_Terminal.Contributions.keybindings
   //LAYOUT
   @ Feature_Input.Schema.[
-      {
-        key: "<C-W>H",
-        command: Feature_Layout.Commands.moveLeft.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><C-H>",
-        command: Feature_Layout.Commands.moveLeft.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><LEFT>",
-        command: Feature_Layout.Commands.moveLeft.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W>L",
-        command: Feature_Layout.Commands.moveRight.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><C-L>",
-        command: Feature_Layout.Commands.moveRight.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><C-S>",
-        command: Feature_Layout.Commands.splitHorizontal.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W>S",
-        command: Feature_Layout.Commands.splitHorizontal.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><C-V>",
-        command: Feature_Layout.Commands.splitVertical.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W>V",
-        command: Feature_Layout.Commands.splitVertical.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><RIGHT>",
-        command: Feature_Layout.Commands.moveRight.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W>K",
-        command: Feature_Layout.Commands.moveUp.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><C-K>",
-        command: Feature_Layout.Commands.moveUp.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><UP>",
-        command: Feature_Layout.Commands.moveUp.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W>J",
-        command: Feature_Layout.Commands.moveDown.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><C-J>",
-        command: Feature_Layout.Commands.moveDown.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><DOWN>",
-        command: Feature_Layout.Commands.moveDown.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W>R",
-        command: Feature_Layout.Commands.rotateForward.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><C-R>",
-        command: Feature_Layout.Commands.rotateForward.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><C-S-R>",
-        command: Feature_Layout.Commands.rotateBackward.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W>-",
-        command: Feature_Layout.Commands.decreaseVerticalSize.id,
-        condition: windowCommandCondition,
-      },
+      bind(
+        ~key="<C-W>H",
+        ~command=Feature_Layout.Commands.moveLeft.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-H>",
+        ~command=Feature_Layout.Commands.moveLeft.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><LEFT>",
+        ~command=Feature_Layout.Commands.moveLeft.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>L",
+        ~command=Feature_Layout.Commands.moveRight.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-L>",
+        ~command=Feature_Layout.Commands.moveRight.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-S>",
+        ~command=Feature_Layout.Commands.splitHorizontal.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>S",
+        ~command=Feature_Layout.Commands.splitHorizontal.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-V>",
+        ~command=Feature_Layout.Commands.splitVertical.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>V",
+        ~command=Feature_Layout.Commands.splitVertical.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><RIGHT>",
+        ~command=Feature_Layout.Commands.moveRight.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>K",
+        ~command=Feature_Layout.Commands.moveUp.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-K>",
+        ~command=Feature_Layout.Commands.moveUp.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><UP>",
+        ~command=Feature_Layout.Commands.moveUp.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>J",
+        ~command=Feature_Layout.Commands.moveDown.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-J>",
+        ~command=Feature_Layout.Commands.moveDown.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><DOWN>",
+        ~command=Feature_Layout.Commands.moveDown.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>R",
+        ~command=Feature_Layout.Commands.rotateForward.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-R>",
+        ~command=Feature_Layout.Commands.rotateForward.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-S-R>",
+        ~command=Feature_Layout.Commands.rotateBackward.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>-",
+        ~command=Feature_Layout.Commands.decreaseVerticalSize.id,
+        ~condition=windowCommandCondition,
+      ),
       //      TODO: Does not work, blocked by bug in editor-input
       //      {
       //        key: "<C-W>+",
       //        command: Feature_Layout.Commands.increaseVerticalSize.id,
       //        condition: "!insertMode" |> WhenExpr.parse
       //      },
-      {
-        key: "<C-W><S-,>", // TODO: Does not work and should be `<`, but blocked by bugs in editor-input,
-        command: Feature_Layout.Commands.increaseHorizontalSize.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W><S-.>", // TODO: Does not work and should be `>`, but blocked by bugs in editor-input
-        command: Feature_Layout.Commands.decreaseHorizontalSize.id,
-        condition: windowCommandCondition,
-      },
-      {
-        key: "<C-W>=",
-        command: Feature_Layout.Commands.resetSizes.id,
-        condition: windowCommandCondition,
-      },
+      bind(
+        ~key="<C-W><S-,>", // TODO: Does not work and should be `<`, but blocked by bugs in editor-input,
+        ~command=Feature_Layout.Commands.increaseHorizontalSize.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><S-.>", // TODO: Does not work and should be `>`, but blocked by bugs in editor-input
+        ~command=Feature_Layout.Commands.decreaseHorizontalSize.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>=",
+        ~command=Feature_Layout.Commands.resetSizes.id,
+        ~condition=windowCommandCondition,
+      ),
       // TODO: Fails to parse
       // {
       //   key: "<C-W>_",
@@ -398,16 +398,17 @@ let defaultKeyBindings =
       //   command: Feature_Layout.Commands.maximizeHorizontal.id,
       //   condition: windowCommandCondition,
       // },
-      {
-        key: "<C-W>o",
-        command: Feature_Layout.Commands.toggleMaximize.id,
-        condition: windowCommandCondition,
-      },
+      bind(
+        ~key="<C-W>o",
+        ~command=Feature_Layout.Commands.toggleMaximize.id,
+        ~condition=windowCommandCondition,
+      ),
     ]
   @ Feature_SignatureHelp.Contributions.keybindings
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings
-  @ Component_VimTree.Contributions.keybindings;
+  @ Component_VimTree.Contributions.keybindings
+  @ Feature_Vim.Contributions.keybindings;
 
 type windowDisplayMode =
   | Minimized

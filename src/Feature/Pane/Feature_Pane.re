@@ -875,23 +875,26 @@ module Commands = {
 
 module Keybindings = {
   open Feature_Input.Schema;
-  let toggleProblems = {
-    key: "<S-C-M>",
-    command: Commands.problems.id,
-    condition: WhenExpr.Value(True),
-  };
+  let toggleProblems =
+    bind(
+      ~key="<S-C-M>",
+      ~command=Commands.problems.id,
+      ~condition=WhenExpr.Value(True),
+    );
 
-  let toggleProblemsOSX = {
-    key: "<D-S-M>",
-    command: Commands.problems.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let toggleProblemsOSX =
+    bind(
+      ~key="<D-S-M>",
+      ~command=Commands.problems.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 
-  let escKey = {
-    key: "<ESC>",
-    command: Commands.closePane.id,
-    condition: "paneFocus" |> WhenExpr.parse,
-  };
+  let escKey =
+    bind(
+      ~key="<ESC>",
+      ~command=Commands.closePane.id,
+      ~condition="paneFocus" |> WhenExpr.parse,
+    );
 };
 
 module Contributions = {
