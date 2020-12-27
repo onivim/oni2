@@ -70,76 +70,76 @@ module Keybindings = {
 
   let keybindings =
     Feature_Input.Schema.[
-      {
-        key: "<C-W>H",
-        command: Commands.moveLeft.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-W><C-H>",
-        command: Commands.moveLeft.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-W><LEFT>",
-        command: Commands.moveLeft.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-W>L",
-        command: Commands.moveRight.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-W><C-L>",
-        command: Commands.moveRight.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-W><RIGHT>",
-        command: Commands.moveRight.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-W>K",
-        command: Commands.moveUp.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-W><C-K>",
-        command: Commands.moveUp.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-W><UP>",
-        command: Commands.moveUp.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-W>J",
-        command: Commands.moveDown.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-W><C-J>",
-        command: Commands.moveDown.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-W><DOWN>",
-        command: Commands.moveDown.id,
-        condition: commandCondition,
-      },
-      {
-        key: "gt",
-        command: Commands.nextTab.id,
-        condition: noTextInputCondition,
-      },
-      {
-        key: "gT",
-        command: Commands.previousTab.id,
-        condition: noTextInputCondition,
-      },
+      bind(
+        ~key="<C-W>H",
+        ~command=Commands.moveLeft.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-H>",
+        ~command=Commands.moveLeft.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-W><LEFT>",
+        ~command=Commands.moveLeft.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-W>L",
+        ~command=Commands.moveRight.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-L>",
+        ~command=Commands.moveRight.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-W><RIGHT>",
+        ~command=Commands.moveRight.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-W>K",
+        ~command=Commands.moveUp.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-K>",
+        ~command=Commands.moveUp.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-W><UP>",
+        ~command=Commands.moveUp.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-W>J",
+        ~command=Commands.moveDown.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-J>",
+        ~command=Commands.moveDown.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-W><DOWN>",
+        ~command=Commands.moveDown.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="gt",
+        ~command=Commands.nextTab.id,
+        ~condition=noTextInputCondition,
+      ),
+      bind(
+        ~key="gT",
+        ~command=Commands.previousTab.id,
+        ~condition=noTextInputCondition,
+      ),
     ];
 };
 

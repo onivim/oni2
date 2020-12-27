@@ -354,23 +354,26 @@ module Commands = {
 module Keybindings = {
   open Feature_Input.Schema;
 
-  let decrementSignature = {
-    key: "<A-DOWN>",
-    command: Commands.decrementSignature.id,
-    condition: "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
-  };
+  let decrementSignature =
+    bind(
+      ~key="<A-DOWN>",
+      ~command=Commands.decrementSignature.id,
+      ~condition="editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+    );
 
-  let incrementSignature = {
-    key: "<A-UP>",
-    command: Commands.incrementSignature.id,
-    condition: "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
-  };
+  let incrementSignature =
+    bind(
+      ~key="<A-UP>",
+      ~command=Commands.incrementSignature.id,
+      ~condition="editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+    );
 
-  let close = {
-    key: "<ESC>",
-    command: Commands.close.id,
-    condition: "editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
-  };
+  let close =
+    bind(
+      ~key="<ESC>",
+      ~command=Commands.close.id,
+      ~condition="editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
+    );
 };
 
 module Contributions = {

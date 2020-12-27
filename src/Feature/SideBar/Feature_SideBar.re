@@ -252,60 +252,69 @@ module Commands = {
 module Keybindings = {
   open Feature_Input.Schema;
 
-  let findInFiles = {
-    key: "<S-C-F>",
-    command: Commands.openSearchPane.id,
-    condition: "!isMac" |> WhenExpr.parse,
-  };
+  let findInFiles =
+    bind(
+      ~key="<S-C-F>",
+      ~command=Commands.openSearchPane.id,
+      ~condition="!isMac" |> WhenExpr.parse,
+    );
 
-  let findInFilesMac = {
-    key: "<D-S-F>",
-    command: Commands.openSearchPane.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let findInFilesMac =
+    bind(
+      ~key="<D-S-F>",
+      ~command=Commands.openSearchPane.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 
-  let openExtensions = {
-    key: "<S-C-X>",
-    command: Commands.openExtensionsPane.id,
-    condition: "!isMac" |> WhenExpr.parse,
-  };
+  let openExtensions =
+    bind(
+      ~key="<S-C-X>",
+      ~command=Commands.openExtensionsPane.id,
+      ~condition="!isMac" |> WhenExpr.parse,
+    );
 
-  let openExtensionsMac = {
-    key: "<D-S-X>",
-    command: Commands.openExtensionsPane.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let openExtensionsMac =
+    bind(
+      ~key="<D-S-X>",
+      ~command=Commands.openExtensionsPane.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 
-  let openExplorer = {
-    key: "<S-C-E>",
-    command: Commands.openExplorerPane.id,
-    condition: "!isMac" |> WhenExpr.parse,
-  };
+  let openExplorer =
+    bind(
+      ~key="<S-C-E>",
+      ~command=Commands.openExplorerPane.id,
+      ~condition="!isMac" |> WhenExpr.parse,
+    );
 
-  let openExplorerMac = {
-    key: "<D-S-E>",
-    command: Commands.openExplorerPane.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let openExplorerMac =
+    bind(
+      ~key="<D-S-E>",
+      ~command=Commands.openExplorerPane.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 
   // This keybinding is used in both MacOS & Windows
-  let openSCM = {
-    key: "<S-C-G>",
-    command: Commands.openSCMPane.id,
-    condition: WhenExpr.Value(True),
-  };
+  let openSCM =
+    bind(
+      ~key="<S-C-G>",
+      ~command=Commands.openSCMPane.id,
+      ~condition=WhenExpr.Value(True),
+    );
 
-  let toggleSidebar = {
-    key: "<C-S-B>",
-    command: Commands.toggleSidebar.id,
-    condition: "!isMac" |> WhenExpr.parse,
-  };
+  let toggleSidebar =
+    bind(
+      ~key="<C-S-B>",
+      ~command=Commands.toggleSidebar.id,
+      ~condition="!isMac" |> WhenExpr.parse,
+    );
 
-  let toggleSidebarMac = {
-    key: "<D-B>",
-    command: Commands.toggleSidebar.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let toggleSidebarMac =
+    bind(
+      ~key="<D-B>",
+      ~command=Commands.toggleSidebar.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 };
 
 module ContextKeys = {

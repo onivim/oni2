@@ -89,19 +89,46 @@ type execute =
 
 module Schema = {
   [@deriving show]
-  type keybinding = {
-    key: string,
-    command: string,
-    condition: WhenExpr.t,
+  type keybinding =
+    | Binding({
+        key: string,
+        command: string,
+        condition: WhenExpr.t,
+      })
+    | Remap({
+        fromKeys: string,
+        toKeys: string,
+        condition: WhenExpr.t,
+      });
+
+  type resolvedKeybinding =
+    | ResolvedBinding({
+        matcher: EditorInput.Matcher.t,
+        command: InputStateMachine.execute,
+        condition: WhenExpr.ContextKeys.t => bool,
+      })
+    | ResolvedRemap({
+        matcher: EditorInput.Matcher.t,
+        toKeys: list(EditorInput.KeyPress.t),
+        condition: WhenExpr.ContextKeys.t => bool,
+      });
+
+  let bind = (~key, ~command, ~condition) =>
+    Binding({key, command, condition});
+
+  let mapCommand = (~f, keybinding: keybinding) => {
+    switch (keybinding) {
+    | Binding(binding) => Binding({...binding, command: f(binding.command)})
+    | Remap(_) as remap => remap
+    };
   };
 
-  type resolvedKeybinding = {
-    matcher: EditorInput.Matcher.t,
-    command: InputStateMachine.execute,
-    condition: WhenExpr.ContextKeys.t => bool,
-  };
+  let clear = (~key as _) => failwith("Not implemented");
 
-  let resolve = ({key, command, condition}) => {
+  let remap = (~fromKeys, ~toKeys, ~condition) =>
+    Remap({fromKeys, toKeys, condition});
+
+  let resolve = keybinding => {
     let evaluateCondition = (whenExpr, contextKeys) => {
       WhenExpr.evaluate(
         whenExpr,
@@ -109,21 +136,60 @@ module Schema = {
       );
     };
 
-    let maybeMatcher =
-      EditorInput.Matcher.parse(
-        ~explicitShiftKeyNeeded=true,
-        ~getKeycode,
-        ~getScancode,
-        key,
+    switch (keybinding) {
+    | Binding({key, command, condition}) =>
+      let maybeMatcher =
+        EditorInput.Matcher.parse(
+          ~explicitShiftKeyNeeded=true,
+          ~getKeycode,
+          ~getScancode,
+          key,
+        );
+      maybeMatcher
+      |> Stdlib.Result.map(matcher => {
+           ResolvedBinding({
+             matcher,
+             command: InputStateMachine.NamedCommand(command),
+             condition: evaluateCondition(condition),
+           })
+         });
+
+    | Remap({fromKeys, condition, toKeys}) =>
+      let evaluateCondition = (whenExpr, contextKeys) => {
+        WhenExpr.evaluate(
+          whenExpr,
+          WhenExpr.ContextKeys.getValue(contextKeys),
+        );
+      };
+
+      let maybeMatcher =
+        EditorInput.Matcher.parse(
+          ~explicitShiftKeyNeeded=true,
+          ~getKeycode,
+          ~getScancode,
+          fromKeys,
+        );
+
+      let maybeKeys =
+        EditorInput.KeyPress.parse(
+          ~explicitShiftKeyNeeded=true,
+          ~getKeycode,
+          ~getScancode,
+          toKeys,
+        );
+
+      ResultEx.map2(
+        (matcher, toKeys) => {
+          ResolvedRemap({
+            matcher,
+            condition: evaluateCondition(condition),
+            toKeys,
+          })
+        },
+        maybeMatcher,
+        maybeKeys,
       );
-    maybeMatcher
-    |> Stdlib.Result.map(matcher => {
-         {
-           matcher,
-           command: InputStateMachine.NamedCommand(command),
-           condition: evaluateCondition(condition),
-         }
-       });
+    };
   };
 };
 
@@ -176,9 +242,15 @@ let initial = keybindings => {
                )
              );
              ism;
-           | Ok({matcher, condition, command}) =>
+
+           | Ok(ResolvedBinding({matcher, condition, command})) =>
              let (ism, _bindingId) =
                InputStateMachine.addBinding(matcher, condition, command, ism);
+             ism;
+
+           | Ok(ResolvedRemap({matcher, condition, toKeys})) =>
+             let (ism, _bindingId) =
+               InputStateMachine.addMapping(matcher, condition, toKeys, ism);
              ism;
            }
          },
@@ -276,15 +348,29 @@ let consumedKeys = ({inputStateMachine, _}) =>
   inputStateMachine |> InputStateMachine.consumedKeys;
 
 let addKeyBinding = (~binding, {inputStateMachine, _} as model) => {
-  open Schema;
-  let (inputStateMachine', uniqueId) =
-    InputStateMachine.addBinding(
-      binding.matcher,
-      binding.condition,
-      binding.command,
-      inputStateMachine,
-    );
-  ({...model, inputStateMachine: inputStateMachine'}, uniqueId);
+  Schema.(
+    switch (binding) {
+    | ResolvedBinding(binding) =>
+      let (inputStateMachine', uniqueId) =
+        InputStateMachine.addBinding(
+          binding.matcher,
+          binding.condition,
+          binding.command,
+          inputStateMachine,
+        );
+      ({...model, inputStateMachine: inputStateMachine'}, uniqueId);
+
+    | ResolvedRemap(remap) =>
+      let (inputStateMachine', uniqueId) =
+        InputStateMachine.addMapping(
+          remap.matcher,
+          remap.condition,
+          remap.toKeys,
+          inputStateMachine,
+        );
+      ({...model, inputStateMachine: inputStateMachine'}, uniqueId);
+    }
+  );
 };
 
 let remove = (uniqueId, {inputStateMachine, _} as model) => {
@@ -342,12 +428,18 @@ module Internal = {
            (acc, resolvedBinding: Schema.resolvedKeybinding) => {
              let (ism, bindings) = acc;
              let (ism', bindingId) =
-               InputStateMachine.addBinding(
-                 resolvedBinding.matcher,
-                 resolvedBinding.condition,
-                 resolvedBinding.command,
-                 ism,
-               );
+               switch (resolvedBinding) {
+               | ResolvedBinding({matcher, condition, command}) =>
+                 InputStateMachine.addBinding(
+                   matcher,
+                   condition,
+                   command,
+                   ism,
+                 )
+
+               | ResolvedRemap({matcher, condition, toKeys}) =>
+                 InputStateMachine.addMapping(matcher, condition, toKeys, ism)
+               };
              (ism', [bindingId, ...bindings]);
            },
            (inputStateMachine', []),
