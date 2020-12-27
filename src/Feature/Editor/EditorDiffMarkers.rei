@@ -15,7 +15,6 @@ let generate: (~scm: Feature_SCM.model, Buffer.t) => option(t);
 let render:
   (
     ~context: Draw.context,
-    ~scrollY: float,
     ~rowHeight: float,
     ~x: float,
     ~width: float,

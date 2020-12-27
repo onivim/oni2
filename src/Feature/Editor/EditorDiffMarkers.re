@@ -109,7 +109,6 @@ let renderMarker =
 let render =
     (
       ~context: Draw.context,
-      ~scrollY,
       ~rowHeight,
       ~x,
       ~width,
@@ -119,23 +118,23 @@ let render =
     ) =>
   Draw.renderImmediate(
     ~context,
-      (i, y) => {
-        let bufferLine =
-          Editor.viewLineToBufferLine(i, context.editor)
-          |> EditorCoreTypes.LineNumber.toZeroBased;
+    (i, y) => {
+      let bufferLine =
+        Editor.viewLineToBufferLine(i, context.editor)
+        |> EditorCoreTypes.LineNumber.toZeroBased;
 
-        if (markers[bufferLine] != Unmodified) {
-          renderMarker(
-            ~x,
-            ~y,
-            ~rowHeight,
-            ~width,
-            ~canvasContext,
-            ~colors,
-            markers[bufferLine],
-          );
-        };
-      },
+      if (markers[bufferLine] != Unmodified) {
+        renderMarker(
+          ~x,
+          ~y,
+          ~rowHeight,
+          ~width,
+          ~canvasContext,
+          ~colors,
+          markers[bufferLine],
+        );
+      };
+    },
   );
 
 let renderMinimap =
@@ -176,4 +175,3 @@ let renderMinimap =
       },
     (),
   );
-

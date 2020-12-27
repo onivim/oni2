@@ -117,7 +117,6 @@ let render =
       ~height,
       ~colors,
       ~editorFont: Service_Font.font,
-      ~count,
       ~cursorLine,
       ~diffMarkers,
       canvasContext,
@@ -140,7 +139,6 @@ let render =
   Option.iter(
     EditorDiffMarkers.render(
       ~context,
-      ~scrollY=Editor.scrollY(editor),
       ~rowHeight=Editor.lineHeightInPixels(editor),
       ~x=lineNumberWidth,
       ~width=Constants.diffMarkerWidth,
