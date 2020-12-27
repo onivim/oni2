@@ -198,7 +198,6 @@ let make =
       ~height,
       ~colors,
       ~editorFont,
-      ~count,
       ~cursorLine,
       ~diffMarkers,
     );
