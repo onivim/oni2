@@ -112,11 +112,28 @@ module CustomDecoders: {
         ),
       ~encode=Json.Encode.float,
     );
-
-  let fontWeight =
-    custom(
-      ~decode=
-        Json.Decode.(
+  let fontWeightDecoder =
+    Json.Decode.(
+      one_of([
+        (
+          "fontWeight.int",
+          int
+          |> map(
+               fun
+               | 100 => Revery.Font.Weight.Thin
+               | 200 => Revery.Font.Weight.UltraLight
+               | 300 => Revery.Font.Weight.Light
+               | 400 => Revery.Font.Weight.Normal
+               | 500 => Revery.Font.Weight.Medium
+               | 600 => Revery.Font.Weight.SemiBold
+               | 700 => Revery.Font.Weight.Bold
+               | 800 => Revery.Font.Weight.UltraBold
+               | 900 => Revery.Font.Weight.Heavy
+               | _ => Revery.Font.Weight.Normal,
+             ),
+        ),
+        (
+          "fontWeight.string",
           string
           |> map(
                fun
@@ -132,8 +149,13 @@ module CustomDecoders: {
                | "800" => Revery.Font.Weight.UltraBold
                | "900" => Revery.Font.Weight.Heavy
                | _ => Revery.Font.Weight.Normal,
-             )
+             ),
         ),
+      ])
+    );
+  let fontWeight =
+    custom(
+      ~decode=fontWeightDecoder,
       ~encode=
         Json.Encode.(
           t =>
