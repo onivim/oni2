@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@onivim/vscode-exthost@1.50.1000":
-  version "1.50.1000"
-  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.50.1000.tgz#4b883e6668020f0fa71ca611df46bdb313ec46c3"
-  integrity sha512-ud7CLJ179ypSzD2TPPWBI8wtLbj1KeCexDbjkmTlkRZb1iov1sqhql+bBt1TQwNF3m9H7qTLYGwpqtEjeE7bPw==
+"@onivim/vscode-exthost@1.51.0":
+  version "1.51.0"
+  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.51.0.tgz#539e440cda74aaef47b3f215139f2350f39bf609"
+  integrity sha512-ay1WFryuFDfTY8RE7H0pQCpb5su4YHLPG+/83dGfFfj7zt44BqSmhOSE3ui5M9CLSxNkz3KA44i3qGN4sV/Txg==
   dependencies:
     graceful-fs "4.2.3"
     iconv-lite-umd "0.6.8"

@@ -258,7 +258,7 @@ let create =
 
   let initData =
     InitData.create(
-      ~version="1.50.1", // TODO: How to keep in sync with bundled version?
+      ~version="1.51.0", // TODO: How to keep in sync with bundled version?
       ~parentPid,
       ~logsLocation,
       ~logFile,
