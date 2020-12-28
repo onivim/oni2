@@ -5,56 +5,60 @@
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TypeScriptServerError = void 0;
+const regexp_1 = require("../utils/regexp");
 class TypeScriptServerError extends Error {
-    constructor(serverId, version, response, serverMessage, serverStack, sanitizedStack) {
+    constructor(serverId, version, response, serverMessage, serverStack) {
         super(`<${serverId}> TypeScript Server Error (${version.displayName})\n${serverMessage}\n${serverStack}`);
-        this.serverId = serverId;
         this.version = version;
         this.response = response;
         this.serverMessage = serverMessage;
         this.serverStack = serverStack;
-        this.sanitizedStack = sanitizedStack;
     }
     static create(serverId, version, response) {
-        const parsedResult = TypeScriptServerError.parseErrorText(response);
-        return new TypeScriptServerError(serverId, version, response, parsedResult === null || parsedResult === void 0 ? void 0 : parsedResult.message, parsedResult === null || parsedResult === void 0 ? void 0 : parsedResult.stack, parsedResult === null || parsedResult === void 0 ? void 0 : parsedResult.sanitizedStack);
+        const parsedResult = TypeScriptServerError.parseErrorText(version, response);
+        return new TypeScriptServerError(serverId, version, response, parsedResult === null || parsedResult === void 0 ? void 0 : parsedResult.message, parsedResult === null || parsedResult === void 0 ? void 0 : parsedResult.stack);
     }
     get serverErrorText() { return this.response.message; }
     get serverCommand() { return this.response.command; }
     get telemetry() {
-        // The "sanitizedstack" has been purged of error messages, paths, and file names (other than tsserver)
-        // and, thus, can be classified as SystemMetaData, rather than CallstackOrException.
         /* __GDPR__FRAGMENT__
             "TypeScriptRequestErrorProperties" : {
                 "command" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-                "serverid" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-                "sanitizedstack" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+                "message" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+                "stack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
+                "errortext" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" }
             }
         */
         return {
             command: this.serverCommand,
-            serverid: this.serverId,
-            sanitizedstack: this.sanitizedStack || '',
+            message: this.serverMessage || '',
+            stack: this.serverStack || '',
+            errortext: this.serverErrorText || '',
         };
     }
     /**
      * Given a `errorText` from a tsserver request indicating failure in handling a request,
      * prepares a payload for telemetry-logging.
      */
-    static parseErrorText(response) {
+    static parseErrorText(version, response) {
         const errorText = response.message;
         if (errorText) {
             const errorPrefix = 'Error processing request. ';
             if (errorText.startsWith(errorPrefix)) {
-                const prefixFreeErrorText = errorText.substr(errorPrefix.length);
+                let prefixFreeErrorText = errorText.substr(errorPrefix.length);
+                // Prior to https://github.com/microsoft/TypeScript/pull/32785, this error
+                // returned and excessively long and detailed list of paths.  Since server-side
+                // filtering doesn't have sufficient granularity to drop these specific
+                // messages, we sanitize them here.
+                if (prefixFreeErrorText.indexOf('Could not find sourceFile') >= 0) {
+                    prefixFreeErrorText = prefixFreeErrorText.replace(/ in \[[^\]]*\]/g, '');
+                }
                 const newlineIndex = prefixFreeErrorText.indexOf('\n');
                 if (newlineIndex >= 0) {
                     // Newline expected between message and stack.
-                    const stack = prefixFreeErrorText.substring(newlineIndex + 1);
                     return {
                         message: prefixFreeErrorText.substring(0, newlineIndex),
-                        stack,
-                        sanitizedStack: TypeScriptServerError.sanitizeStack(stack)
+                        stack: TypeScriptServerError.normalizeMessageStack(version, prefixFreeErrorText.substring(newlineIndex + 1))
                     };
                 }
             }
@@ -62,24 +66,13 @@ class TypeScriptServerError extends Error {
         return undefined;
     }
     /**
-     * Drop everything but ".js" and line/column numbers (though retain "tsserver" if that's the filename).
+     * Try to replace full TS Server paths with 'tsserver.js' so that we don't have to post process the data as much
      */
-    static sanitizeStack(message) {
+    static normalizeMessageStack(version, message) {
         if (!message) {
             return '';
         }
-        const regex = /(\btsserver)?(\.(?:ts|tsx|js|jsx)(?::\d+(?::\d+)?)?)\)?$/igm;
-        let serverStack = '';
-        while (true) {
-            const match = regex.exec(message);
-            if (!match) {
-                break;
-            }
-            // [1] is 'tsserver' or undefined
-            // [2] is '.js:{line_number}:{column_number}'
-            serverStack += `${match[1] || 'suppressed'}${match[2]}\n`;
-        }
-        return serverStack;
+        return message.replace(new RegExp(`${regexp_1.escapeRegExp(version.path)}[/\\\\]tsserver.js:`, 'gi'), 'tsserver.js:');
     }
 }
 exports.TypeScriptServerError = TypeScriptServerError;

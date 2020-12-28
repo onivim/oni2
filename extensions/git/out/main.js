@@ -4,7 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.activate = exports.getExtensionContext = exports._activate = exports.deactivate = void 0;
+exports.activate = exports._activate = exports.deactivate = void 0;
 const nls = require("vscode-nls");
 const localize = nls.loadMessageBundle();
 const vscode_1 = require("vscode");
@@ -129,13 +129,7 @@ async function _activate(context) {
     }
 }
 exports._activate = _activate;
-let _context;
-function getExtensionContext() {
-    return _context;
-}
-exports.getExtensionContext = getExtensionContext;
 async function activate(context) {
-    _context = context;
     const result = await _activate(context);
     context.subscriptions.push(api1_1.registerAPICommands(result));
     return result;

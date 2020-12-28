@@ -15,8 +15,7 @@
     "onLanguage:scss",
     "onCommand:_css.applyCodeAction"
   ],
-  "main": "./client/out/node/cssClientMain",
-  "browser": "./client/dist/browser/cssClientMain",
+  "main": "./client/out/cssMain",
   "enableProposedApi": true,
   "scripts": {
     "compile": "gulp compile-extension:css-language-features-client compile-extension:css-language-features-server",
@@ -798,7 +797,7 @@
     "jsonValidation": [
       {
         "fileMatch": "*.css-data.json",
-        "url": "https://raw.githubusercontent.com/microsoft/vscode-css-languageservice/master/docs/customData.schema.json"
+        "url": "https://raw.githubusercontent.com/Microsoft/vscode-css-languageservice/master/docs/customData.schema.json"
       },
       {
         "fileMatch": "package.json",
@@ -807,8 +806,8 @@
     ]
   },
   "dependencies": {
-    "vscode-languageclient": "7.0.0-next.5.1",
-    "vscode-nls": "^4.1.2"
+    "vscode-languageclient": "^6.1.1",
+    "vscode-nls": "^4.1.1"
   },
   "devDependencies": {
     "@types/node": "^12.11.7",

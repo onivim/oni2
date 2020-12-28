@@ -54,8 +54,7 @@ class RemoteSourceProviderQuickPick {
                 this.quickpick.items = remoteSources.map(remoteSource => ({
                     label: remoteSource.name,
                     description: remoteSource.description || (typeof remoteSource.url === 'string' ? remoteSource.url : remoteSource.url[0]),
-                    remoteSource,
-                    alwaysShow: true
+                    remoteSource
                 }));
             }
         }
@@ -82,13 +81,6 @@ __decorate([
 async function pickRemoteSource(model, options = {}) {
     const quickpick = vscode_1.window.createQuickPick();
     quickpick.ignoreFocusOut = true;
-    if (options.providerName) {
-        const provider = model.getRemoteProviders()
-            .filter(provider => provider.name === options.providerName)[0];
-        if (provider) {
-            return await pickProviderSource(provider, options);
-        }
-    }
     const providers = model.getRemoteProviders()
         .map(provider => ({ label: (provider.icon ? `$(${provider.icon}) ` : '') + (options.providerLabel ? options.providerLabel(provider) : provider.name), alwaysShow: true, provider }));
     quickpick.placeholder = providers.length === 0
@@ -116,40 +108,19 @@ async function pickRemoteSource(model, options = {}) {
             return result.url;
         }
         else if (result.provider) {
-            return await pickProviderSource(result.provider, options);
+            const quickpick = new RemoteSourceProviderQuickPick(result.provider);
+            const remote = await quickpick.pick();
+            if (remote) {
+                if (typeof remote.url === 'string') {
+                    return remote.url;
+                }
+                else if (remote.url.length > 0) {
+                    return await vscode_1.window.showQuickPick(remote.url, { ignoreFocusOut: true, placeHolder: localize('pick url', "Choose a URL to clone from.") });
+                }
+            }
         }
     }
     return undefined;
 }
 exports.pickRemoteSource = pickRemoteSource;
-async function pickProviderSource(provider, options = {}) {
-    const quickpick = new RemoteSourceProviderQuickPick(provider);
-    const remote = await quickpick.pick();
-    let url;
-    if (remote) {
-        if (typeof remote.url === 'string') {
-            url = remote.url;
-        }
-        else if (remote.url.length > 0) {
-            url = await vscode_1.window.showQuickPick(remote.url, { ignoreFocusOut: true, placeHolder: localize('pick url', "Choose a URL to clone from.") });
-        }
-    }
-    if (!url || !options.branch) {
-        return url;
-    }
-    if (!provider.getBranches) {
-        return { url };
-    }
-    const branches = await provider.getBranches(url);
-    if (!branches) {
-        return { url };
-    }
-    const branch = await vscode_1.window.showQuickPick(branches, {
-        placeHolder: localize('branch name', "Branch name")
-    });
-    if (!branch) {
-        return { url };
-    }
-    return { url, branch };
-}
 //# sourceMappingURL=remoteSource.js.map

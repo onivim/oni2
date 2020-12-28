@@ -1,0 +1,89 @@
+# Copyright (C) 2017-present Arctic Ice Studio <development@arcticicestudio.com>
+# Copyright (C) 2017-present Sven Greb <development@svengreb.de>
+
+# Project:    Nord Visual Studio Code
+# Repository: https://github.com/arcticicestudio/nord-visual-studio-code
+# License:    MIT
+
+# Configuration for Circle CI.
+#
+# References:
+# - https://circleci.com/docs/2.0
+# - https://circleci.com/docs/2.0/circleci-images
+
+version: 2.1
+
+commands:
+  build:
+    description: "Build a packaged VSIX extension"
+    steps:
+      - run:
+          name: Build packaged VSIX extension
+          command: npm run build
+  post-process:
+    description: "Post-process the build"
+    steps:
+      - save-npm-cache
+      - store_artifacts:
+          path: "nord-visual-studio-code.vsix"
+  pre-process:
+    description: "Pre-process the build"
+    steps:
+      - checkout
+      - print-env-info
+      - restore-npm-cache
+      - run:
+          name: Install dependencies
+          command: npm ci
+  print-env-info:
+    description: "Print build & environment information"
+    steps:
+      - run:
+          name: NPM and NodeJS Version Information
+          command: npm version
+      - run:
+          name: OS Information
+          command: uname -a
+      - run:
+          name: Git and Build Metadata
+          command: |
+            echo $CIRCLE_COMPARE_URL | cut -d/ -f7
+            echo "Git branch: $CIRCLE_BRANCH"
+            echo "Git commit: $CIRCLE_SHA1"
+            echo "Job: $CIRCLE_JOB"
+            echo "Build: $CIRCLE_BUILD_NUM"
+  restore-npm-cache:
+    steps:
+      - restore_cache:
+          keys:
+            - v1-npm-cache--{{ arch }}-{{ .Branch }}-{{ checksum "package-lock.json" }}
+            - v1-npm-cache--{{ arch }}-{{ .Branch }}
+            - v1-npm-cache--{{ arch }}
+  save-npm-cache:
+    steps:
+      - save_cache:
+          key: v1-npm-cache--{{ arch }}-{{ .Branch }}-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+  test:
+    steps:
+      - run:
+          name: Lint
+          command: npm run lint
+
+jobs:
+  nodejs-latest:
+    docker:
+      - image: node:latest
+    steps:
+      - pre-process
+      - test
+      - build
+      - post-process
+
+workflows:
+  version: 2.1
+  build-latest-version:
+    jobs:
+      - nodejs-latest:
+          context: nord-visual-studio-code-ctx

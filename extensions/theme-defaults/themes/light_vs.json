@@ -45,12 +45,13 @@
 		{
 			"scope": [
 				"constant.numeric",
+				"entity.name.operator.custom-literal.number",
 				"variable.other.enummember",
 				"keyword.operator.plus.exponent",
 				"keyword.operator.minus.exponent"
 			],
 			"settings": {
-				"foreground": "#098658"
+				"foreground": "#09885a"
 			}
 		},
 		{
@@ -87,6 +88,7 @@
 				"entity.other.attribute-name.pseudo-class.css",
 				"entity.other.attribute-name.pseudo-element.css",
 				"source.css.less entity.other.attribute-name.id",
+				"entity.other.attribute-name.attribute.scss",
 				"entity.other.attribute-name.scss"
 			],
 			"settings": {
@@ -128,7 +130,7 @@
 		{
 			"scope": "markup.inserted",
 			"settings": {
-				"foreground": "#098658"
+				"foreground": "#09885a"
 			}
 		},
 		{
@@ -168,7 +170,7 @@
 		{
 			"scope": [
 				"meta.preprocessor",
-				"entity.name.function.preprocessor"
+				"keyword.control.directive"
 			],
 			"settings": {
 				"foreground": "#0000ff"
@@ -183,7 +185,7 @@
 		{
 			"scope": "meta.preprocessor.numeric",
 			"settings": {
-				"foreground": "#098658"
+				"foreground": "#09885a"
 			}
 		},
 		{
@@ -216,7 +218,7 @@
 		{
 			"scope": [
 				"string",
-				"meta.embedded.assembly"
+				"entity.name.operator.custom-literal.string"
 			],
 			"settings": {
 				"foreground": "#a31515"
@@ -329,7 +331,6 @@
 				"keyword.operator.expression",
 				"keyword.operator.cast",
 				"keyword.operator.sizeof",
-				"keyword.operator.alignof",
 				"keyword.operator.typeid",
 				"keyword.operator.alignas",
 				"keyword.operator.instanceof",
@@ -343,7 +344,7 @@
 		{
 			"scope": "keyword.other.unit",
 			"settings": {
-				"foreground": "#098658"
+				"foreground": "#09885a"
 			}
 		},
 		{
@@ -364,7 +365,7 @@
 		{
 			"scope": "constant.sha.git-rebase",
 			"settings": {
-				"foreground": "#098658"
+				"foreground": "#09885a"
 			}
 		},
 		{
@@ -385,11 +386,5 @@
 				"foreground": "#0000ff"
 			}
 		}
-	],
-	"semanticTokenColors": {
-		"newOperator": "#0000ff",
-		"stringLiteral": "#a31515",
-		"customLiteral": "#000000",
-		"numberLiteral": "#098658",
-	}
+	]
 }

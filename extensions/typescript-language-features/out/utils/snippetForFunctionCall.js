@@ -55,9 +55,7 @@ function getParameterListParts(displayParts) {
                     const next = displayParts[i + 1];
                     // Skip optional parameters
                     const nameIsFollowedByOptionalIndicator = next && next.text === '?';
-                    // Skip this parameter
-                    const nameIsThis = part.text === 'this';
-                    if (!nameIsFollowedByOptionalIndicator && !nameIsThis) {
+                    if (!nameIsFollowedByOptionalIndicator) {
                         parts.push(part);
                     }
                     hasOptionalParameters = hasOptionalParameters || nameIsFollowedByOptionalIndicator;

@@ -20,20 +20,14 @@ function inferredProjectCompilerOptions(projectType, serviceConfig) {
         target: 'es2016',
         jsx: 'preserve',
     };
-    if (serviceConfig.implictProjectConfiguration.checkJs) {
+    if (serviceConfig.checkJs) {
         projectConfig.checkJs = true;
         if (projectType === 0 /* TypeScript */) {
             projectConfig.allowJs = true;
         }
     }
-    if (serviceConfig.implictProjectConfiguration.experimentalDecorators) {
+    if (serviceConfig.experimentalDecorators) {
         projectConfig.experimentalDecorators = true;
-    }
-    if (serviceConfig.implictProjectConfiguration.strictNullChecks) {
-        projectConfig.strictNullChecks = true;
-    }
-    if (serviceConfig.implictProjectConfiguration.strictFunctionTypes) {
-        projectConfig.strictFunctionTypes = true;
     }
     if (projectType === 0 /* TypeScript */) {
         projectConfig.sourceMap = true;

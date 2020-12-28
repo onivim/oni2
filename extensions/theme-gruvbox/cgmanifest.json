@@ -1,0 +1,16 @@
+{
+    "registrations": [
+        {
+            "component": {
+                "type": "git",
+                "git": {
+                    "name": "Gruvbox Themes",
+                    "repositoryUrl": "https://github.com/jdinhify/vscode-theme-gruvbox",
+                    "commitHash": "87daca1968ed0fd1df855aa535b89922f5da14e6"
+                }
+            },
+            "version": "0.1.0"
+        }
+    ],
+    "version": 1
+}

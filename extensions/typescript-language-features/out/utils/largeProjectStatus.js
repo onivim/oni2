@@ -81,14 +81,14 @@ function onConfigureExcludesSelected(client, configFileName) {
         }
     }
 }
-function create(client) {
+function create(client, telemetryReporter) {
     const toDispose = [];
-    const item = new ExcludeHintItem(client.telemetryReporter);
+    const item = new ExcludeHintItem(telemetryReporter);
     toDispose.push(vscode.commands.registerCommand('js.projectStatus.command', () => {
         if (item.configFileName) {
             onConfigureExcludesSelected(client, item.configFileName);
         }
-        const { message } = item.getCurrentHint();
+        let { message } = item.getCurrentHint();
         return vscode.window.showInformationMessage(message);
     }));
     toDispose.push(createLargeProjectMonitorFromTypeScript(item, client));

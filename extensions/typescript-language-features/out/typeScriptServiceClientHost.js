@@ -6,86 +6,75 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 /* --------------------------------------------------------------------------------------------
  * Includes code from typescript-sublime-plugin project, obtained from
- * https://github.com/microsoft/TypeScript-Sublime-Plugin/blob/master/TypeScript%20Indent.tmPreferences
+ * https://github.com/Microsoft/TypeScript-Sublime-Plugin/blob/master/TypeScript%20Indent.tmPreferences
  * ------------------------------------------------------------------------------------------ */
 const vscode = require("vscode");
-const fileConfigurationManager_1 = require("./languageFeatures/fileConfigurationManager");
+const fileConfigurationManager_1 = require("./features/fileConfigurationManager");
 const languageProvider_1 = require("./languageProvider");
 const PConst = require("./protocol.const");
-const versionStatus_1 = require("./tsServer/versionStatus");
 const typescriptServiceClient_1 = require("./typescriptServiceClient");
 const arrays_1 = require("./utils/arrays");
 const dispose_1 = require("./utils/dispose");
-const errorCodes = require("./utils/errorCodes");
 const typeConverters = require("./utils/typeConverters");
 const typingsStatus_1 = require("./utils/typingsStatus");
-const ProjectStatus = require("./utils/largeProjectStatus");
+const versionStatus_1 = require("./utils/versionStatus");
 // Style check diagnostics that can be reported as warnings
-const styleCheckDiagnostics = new Set([
-    ...errorCodes.variableDeclaredButNeverUsed,
-    ...errorCodes.propertyDeclaretedButNeverUsed,
-    ...errorCodes.allImportsAreUnused,
-    ...errorCodes.unreachableCode,
-    ...errorCodes.unusedLabel,
-    ...errorCodes.fallThroughCaseInSwitch,
-    ...errorCodes.notAllCodePathsReturnAValue,
-]);
+const styleCheckDiagnostics = [
+    6133,
+    6138,
+    6192,
+    7027,
+    7028,
+    7029,
+    7030 // not all code paths return a value
+];
 class TypeScriptServiceClientHost extends dispose_1.Disposable {
-    constructor(descriptions, workspaceState, onCaseInsenitiveFileSystem, services, onCompletionAccepted) {
+    constructor(descriptions, workspaceState, pluginManager, commandManager, logDirectoryProvider, onCompletionAccepted) {
         super();
+        this.commandManager = commandManager;
         this.languages = [];
         this.languagePerId = new Map();
         this.reportStyleCheckAsWarnings = true;
-        this.commandManager = services.commandManager;
-        const allModeIds = this.getAllModeIds(descriptions, services.pluginManager);
-        this.client = this._register(new typescriptServiceClient_1.default(workspaceState, onCaseInsenitiveFileSystem, services, allModeIds));
+        const allModeIds = this.getAllModeIds(descriptions, pluginManager);
+        this.client = this._register(new typescriptServiceClient_1.default(workspaceState, version => this.versionStatus.onDidChangeTypeScriptVersion(version), pluginManager, logDirectoryProvider, allModeIds));
         this.client.onDiagnosticsReceived(({ kind, resource, diagnostics }) => {
             this.diagnosticsReceived(kind, resource, diagnostics);
         }, null, this._disposables);
         this.client.onConfigDiagnosticsReceived(diag => this.configFileDiagnosticsReceived(diag), null, this._disposables);
         this.client.onResendModelsRequested(() => this.populateService(), null, this._disposables);
-        this._register(new versionStatus_1.default(this.client, services.commandManager));
+        this.versionStatus = this._register(new versionStatus_1.default(this.client, commandManager));
         this._register(new typingsStatus_1.AtaProgressReporter(this.client));
         this.typingsStatus = this._register(new typingsStatus_1.default(this.client));
-        this._register(ProjectStatus.create(this.client));
-        this.fileConfigurationManager = this._register(new fileConfigurationManager_1.default(this.client, onCaseInsenitiveFileSystem));
+        this.fileConfigurationManager = this._register(new fileConfigurationManager_1.default(this.client));
         for (const description of descriptions) {
             const manager = new languageProvider_1.default(this.client, description, this.commandManager, this.client.telemetryReporter, this.typingsStatus, this.fileConfigurationManager, onCompletionAccepted);
             this.languages.push(manager);
             this._register(manager);
             this.languagePerId.set(description.id, manager);
         }
-        Promise.resolve().then(() => require('./languageFeatures/updatePathsOnRename')).then(module => this._register(module.register(this.client, this.fileConfigurationManager, uri => this.handles(uri))));
-        Promise.resolve().then(() => require('./languageFeatures/workspaceSymbols')).then(module => this._register(module.register(this.client, allModeIds)));
+        Promise.resolve().then(() => require('./features/updatePathsOnRename')).then(module => this._register(module.register(this.client, this.fileConfigurationManager, uri => this.handles(uri))));
+        Promise.resolve().then(() => require('./features/workspaceSymbols')).then(module => this._register(module.register(this.client, allModeIds)));
         this.client.ensureServiceStarted();
         this.client.onReady(() => {
             const languages = new Set();
-            for (const plugin of services.pluginManager.plugins) {
-                if (plugin.configNamespace && plugin.languages.length) {
-                    this.registerExtensionLanguageProvider({
-                        id: plugin.configNamespace,
-                        modeIds: Array.from(plugin.languages),
-                        diagnosticSource: 'ts-plugin',
-                        diagnosticLanguage: 1 /* TypeScript */,
-                        diagnosticOwner: 'typescript',
-                        isExternal: true
-                    }, onCompletionAccepted);
-                }
-                else {
-                    for (const language of plugin.languages) {
-                        languages.add(language);
-                    }
+            for (const plugin of pluginManager.plugins) {
+                for (const language of plugin.languages) {
+                    languages.add(language);
                 }
             }
             if (languages.size) {
-                this.registerExtensionLanguageProvider({
+                const description = {
                     id: 'typescript-plugins',
                     modeIds: Array.from(languages.values()),
                     diagnosticSource: 'ts-plugin',
                     diagnosticLanguage: 1 /* TypeScript */,
                     diagnosticOwner: 'typescript',
                     isExternal: true
-                }, onCompletionAccepted);
+                };
+                const manager = new languageProvider_1.default(this.client, description, this.commandManager, this.client.telemetryReporter, this.typingsStatus, this.fileConfigurationManager, onCompletionAccepted);
+                this.languages.push(manager);
+                this._register(manager);
+                this.languagePerId.set(description.id, manager);
             }
         });
         this.client.onTsServerStarted(() => {
@@ -93,12 +82,6 @@ class TypeScriptServiceClientHost extends dispose_1.Disposable {
         });
         vscode.workspace.onDidChangeConfiguration(this.configurationChanged, this, this._disposables);
         this.configurationChanged();
-    }
-    registerExtensionLanguageProvider(description, onCompletionAccepted) {
-        const manager = new languageProvider_1.default(this.client, description, this.commandManager, this.client.telemetryReporter, this.typingsStatus, this.fileConfigurationManager, onCompletionAccepted);
-        this.languages.push(manager);
-        this._register(manager);
-        this.languagePerId.set(description.id, manager);
     }
     getAllModeIds(descriptions, pluginManager) {
         const allModeIds = arrays_1.flatten([
@@ -141,9 +124,12 @@ class TypeScriptServiceClientHost extends dispose_1.Disposable {
     }
     populateService() {
         this.fileConfigurationManager.reset();
-        for (const language of this.languagePerId.values()) {
-            language.reInitialize();
-        }
+        // See https://github.com/Microsoft/TypeScript/issues/5530
+        vscode.workspace.saveAll(false).then(() => {
+            for (const language of this.languagePerId.values()) {
+                language.reInitialize();
+            }
+        });
     }
     async diagnosticsReceived(kind, resource, diagnostics) {
         const language = await this.findLanguage(resource);
@@ -152,7 +138,7 @@ class TypeScriptServiceClientHost extends dispose_1.Disposable {
         }
     }
     configFileDiagnosticsReceived(event) {
-        // See https://github.com/microsoft/TypeScript/issues/10384
+        // See https://github.com/Microsoft/TypeScript/issues/10384
         const body = event.body;
         if (!body || !body.diagnostics || !body.configFile) {
             return;
@@ -190,18 +176,11 @@ class TypeScriptServiceClientHost extends dispose_1.Disposable {
                 return new vscode.DiagnosticRelatedInformation(typeConverters.Location.fromTextSpan(this.client.toResource(span.file), span), info.message);
             }));
         }
-        const tags = [];
         if (diagnostic.reportsUnnecessary) {
-            tags.push(vscode.DiagnosticTag.Unnecessary);
+            converted.tags = [vscode.DiagnosticTag.Unnecessary];
         }
-        if (diagnostic.reportsDeprecated) {
-            tags.push(vscode.DiagnosticTag.Deprecated);
-        }
-        converted.tags = tags.length ? tags : undefined;
-        const resultConverted = converted;
-        resultConverted.reportUnnecessary = diagnostic.reportsUnnecessary;
-        resultConverted.reportDeprecated = diagnostic.reportsDeprecated;
-        return resultConverted;
+        converted.reportUnnecessary = diagnostic.reportsUnnecessary;
+        return converted;
     }
     getDiagnosticSeverity(diagnostic) {
         if (this.reportStyleCheckAsWarnings
@@ -221,7 +200,7 @@ class TypeScriptServiceClientHost extends dispose_1.Disposable {
         }
     }
     isStyleCheckDiagnostic(code) {
-        return typeof code === 'number' && styleCheckDiagnostics.has(code);
+        return code ? styleCheckDiagnostics.indexOf(code) !== -1 : false;
     }
 }
 exports.default = TypeScriptServiceClientHost;

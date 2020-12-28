@@ -37,7 +37,7 @@
     ],
 		"snippets": [{
 			"language": "csharp",
-			"path": "./snippets/csharp.code-snippets"
+			"path": "./snippets/csharp.json"
 		}]
   }
 }

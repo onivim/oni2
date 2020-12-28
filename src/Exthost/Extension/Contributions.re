@@ -462,6 +462,7 @@ module Grammar = {
 module Theme = {
   [@deriving show]
   type t = {
+    id: string,
     label: string,
     uiTheme: string,
     path: string,
@@ -471,6 +472,7 @@ module Theme = {
     Json.Decode.(
       obj(({field, _}) =>
         {
+          id: field.required("id", string),
           label: field.required("label", string),
           uiTheme: field.required("uiTheme", string),
           path: field.required("path", string),

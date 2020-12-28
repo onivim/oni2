@@ -49,7 +49,7 @@ let themeByName = (~name, model) => {
   |> List.flatten
   |> List.fold_left(
        (acc, curr: Contributions.Theme.t) =>
-         if (curr.label == name) {
+         if (curr.id == name) {
            Some(curr);
          } else {
            acc;

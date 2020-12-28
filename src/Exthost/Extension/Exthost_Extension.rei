@@ -109,6 +109,7 @@ module Contributions: {
   module Theme: {
     [@deriving show]
     type t = {
+      id: string,
       label: string,
       uiTheme: string,
       path: string,

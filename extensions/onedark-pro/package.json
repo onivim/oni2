@@ -1,0 +1,74 @@
+{
+  "name": "Material-theme",
+  "displayName": "One Dark Pro",
+  "description": "Atom's iconic One Dark theme for Visual Studio Code",
+  "version": "2.18.2",
+  "publisher": "zhuangtongfa",
+  "bugs": {
+    "url": "https://github.com/Binaryify/OneDark-Pro/issues"
+  },
+  "homepage": "https://binaryify.github.io/OneDark-Pro/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Binaryify/OneDark-Pro"
+  },
+  "engines": {
+    "vscode": "^1.12.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "scripts": {
+    "build": "node build.js",
+    "docs": "docsify serve docs"
+  },
+  "pre-commit": [
+    "build"
+  ],
+  "prettier": {
+    "singleQuote": true,
+    "semi": false
+  },
+  "contributes": {
+    "themes": [
+      {
+        "label": "One Dark Pro",
+        "uiTheme": "vs-dark",
+        "path": "./themes/OneDark-Pro.json"
+      },
+      {
+        "label": "One Dark Pro Vivid",
+        "uiTheme": "vs-dark",
+        "path": "./themes/OneDark-Pro-vivid.json"
+      },
+      {
+        "label": "One Dark Pro Bold",
+        "uiTheme": "vs-dark",
+        "path": "./themes/OneDark-Pro-bold.json"
+      }
+    ]
+  },
+  "icon": "icon.png",
+  "keywords": [
+    "one dark",
+    "onedark",
+    "one dark pro",
+    "theme",
+    "atom"
+  ],
+  "devDependencies": {
+    "lodash": "^4.17.11",
+    "docsify-cli": "^4.3.0",
+    "pre-commit": "^1.2.2"
+  },
+  "__metadata": {
+    "id": "26a529c9-2654-4b95-a63f-02f6a52429e6",
+    "publisherId": "8ae75bda-ec22-4a17-9340-abf1a20beca9",
+    "publisherDisplayName": "binaryify",
+    "name": "OneDarkPro"
+  },
+  "galleryBanner": {
+    "color": "#2d323b",
+    "theme": "dark"
+  }
+}

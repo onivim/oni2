@@ -3,12 +3,14 @@
 	"tokenColors": [
 		{
 			"settings": {
+				"background": "#FDF6E3",
 				"foreground": "#657B83"
 			}
 		},
 		{
 			"scope": ["meta.embedded", "source.groovy.embedded"],
 			"settings": {
+				"background": "#FDF6E3",
 				"foreground": "#657B83"
 			}
 		},
@@ -182,10 +184,7 @@
 		},
 		{
 			"name": "Library constant",
-			"scope": [
-				"support.constant",
-				"support.variable"
-			],
+			"scope": "support.constant",
 			"settings": {}
 		},
 		{
@@ -213,9 +212,7 @@
 		{
 			"name": "Invalid",
 			"scope": "invalid",
-			"settings": {
-				"foreground": "#cd3131"
-			}
+			"settings": {}
 		},
 		{
 			"name": "diff: header",
@@ -276,20 +273,6 @@
 			}
 		},
 		{
-			"name": "Markup: Strong",
-			"scope": "markup.bold",
-			"settings": {
-				"fontStyle": "bold"
-			}
-		},
-		{
-			"name": "Markup: Emphasis",
-			"scope": "markup.italic",
-			"settings": {
-				"fontStyle": "italic"
-			}
-		},
-		{
 			"name": "Markup Inline",
 			"scope": "markup.inline.raw",
 			"settings": {
@@ -301,7 +284,6 @@
 			"name": "Markup Headings",
 			"scope": "markup.heading",
 			"settings": {
-				"fontStyle": "bold",
 				"foreground": "#268BD2"
 			}
 		},
@@ -438,11 +420,11 @@
 		// "tab.activeBackground": "",
 		// "tab.activeForeground": "",
 		// "tab.inactiveForeground": "",
-		"tab.lastPinnedBorder": "#FDF6E3",
 
 		// Workbench: Activity Bar
 		"activityBar.background": "#DDD6C1",
 		"activityBar.foreground": "#584c27",
+		"activityBar.dropBackground": "#EEE8D5",
 		"activityBarBadge.background": "#B58900",
 		// "activityBarBadge.foreground": "",
 
@@ -504,6 +486,5 @@
 
 		// Interactive Playground
 		"walkThrough.embeddedEditorBackground": "#00000014"
-	},
-	"semanticHighlighting": true
+	}
 }

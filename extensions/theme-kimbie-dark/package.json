@@ -9,8 +9,7 @@
 	"contributes": {
 		"themes": [
 			{
-				"id": "Kimbie Dark",
-				"label": "%themeLabel%",
+				"label": "Kimbie Dark",
 				"uiTheme": "vs-dark",
 				"path": "./themes/kimbie-dark-color-theme.json"
 			}

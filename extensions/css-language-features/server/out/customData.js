@@ -4,35 +4,47 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.fetchDataProviders = void 0;
-const vscode_css_languageservice_1 = require("vscode-css-languageservice");
-function fetchDataProviders(dataPaths, requestService) {
-    const providers = dataPaths.map(async (p) => {
-        try {
-            const content = await requestService.getContent(p);
-            return parseCSSData(content);
+exports.getDataProviders = void 0;
+const fs = require("fs");
+function getDataProviders(dataPaths) {
+    const providers = dataPaths.map(p => {
+        if (fs.existsSync(p)) {
+            const data = parseCSSData(fs.readFileSync(p, 'utf-8'));
+            return {
+                provideProperties: () => data.properties || [],
+                provideAtDirectives: () => data.atDirectives || [],
+                providePseudoClasses: () => data.pseudoClasses || [],
+                providePseudoElements: () => data.pseudoElements || []
+            };
         }
-        catch (e) {
-            return vscode_css_languageservice_1.newCSSDataProvider({ version: 1 });
+        else {
+            return {
+                provideProperties: () => [],
+                provideAtDirectives: () => [],
+                providePseudoClasses: () => [],
+                providePseudoElements: () => []
+            };
         }
     });
-    return Promise.all(providers);
+    return providers;
 }
-exports.fetchDataProviders = fetchDataProviders;
+exports.getDataProviders = getDataProviders;
 function parseCSSData(source) {
     let rawData;
     try {
         rawData = JSON.parse(source);
     }
     catch (err) {
-        return vscode_css_languageservice_1.newCSSDataProvider({ version: 1 });
+        return {
+            version: 1
+        };
     }
-    return vscode_css_languageservice_1.newCSSDataProvider({
-        version: rawData.version || 1,
+    return {
+        version: 1,
         properties: rawData.properties || [],
         atDirectives: rawData.atDirectives || [],
         pseudoClasses: rawData.pseudoClasses || [],
         pseudoElements: rawData.pseudoElements || []
-    });
+    };
 }
 //# sourceMappingURL=customData.js.map

@@ -1,0 +1,29 @@
+{
+  "name": "oni test theme",
+  "type": "dark",
+  "colors": {
+  },
+  "tokenColors": [
+    {
+      "name": "storage.type",
+      "scope": "storage.type",
+      "settings": {
+        "foreground": "#ff0000"
+      }
+    },
+    {
+      "name": "entity.name.function",
+      "scope": "entity.name.function",
+      "settings": {
+        "foreground": "#00ff00"
+      }
+    },
+    {
+      "name": "constant.numeric",
+      "scope": "constant.numeric",
+      "settings": {
+        "foreground": "#0000ff"
+      }
+    }
+  ]
+}

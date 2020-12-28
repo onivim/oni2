@@ -9,8 +9,7 @@
 	"contributes": {
 		"themes": [
 			{
-				"id": "Solarized Dark",
-				"label": "%themeLabel%",
+				"label": "Solarized Dark",
 				"uiTheme": "vs-dark",
 				"path": "./themes/solarized-dark-color-theme.json"
 			}

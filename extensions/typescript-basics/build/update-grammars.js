@@ -25,10 +25,7 @@ function removeNodeTypes(grammar) {
 			}
 		}
 		if (pattern.captures) {
-			if (Object.values(pattern.captures).some(capture =>
-				capture.name  && (capture.name.startsWith('support.variable.object.process')
-				|| capture.name.startsWith('support.class.console'))
-			)) {
+			if (Object.values(pattern.captures).some(capture => capture.name && capture.name.startsWith('support.variable.object.process'))) {
 				return false;
 			}
 		}
@@ -77,7 +74,7 @@ function adaptToJavaScript(grammar, replacementScope) {
 	}
 }
 
-var tsGrammarRepo = 'microsoft/TypeScript-TmLanguage';
+var tsGrammarRepo = 'Microsoft/TypeScript-TmLanguage';
 updateGrammar.update(tsGrammarRepo, 'TypeScript.tmLanguage', './syntaxes/TypeScript.tmLanguage.json', grammar => patchGrammar(grammar));
 updateGrammar.update(tsGrammarRepo, 'TypeScriptReact.tmLanguage', './syntaxes/TypeScriptReact.tmLanguage.json', grammar => patchGrammar(grammar));
 updateGrammar.update(tsGrammarRepo, 'TypeScriptReact.tmLanguage', '../javascript/syntaxes/JavaScript.tmLanguage.json', grammar => adaptToJavaScript(patchGrammar(grammar), '.js'));

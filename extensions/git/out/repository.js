@@ -31,8 +31,7 @@ function getIconUri(iconName, theme) {
     return vscode_1.Uri.file(path.join(iconsRootPath, theme, `${iconName}.svg`));
 }
 class Resource {
-    constructor(_commandResolver, _resourceGroupType, _resourceUri, _type, _useIcons, _renameResourceUri) {
-        this._commandResolver = _commandResolver;
+    constructor(_resourceGroupType, _resourceUri, _type, _useIcons, _renameResourceUri) {
         this._resourceGroupType = _resourceGroupType;
         this._resourceUri = _resourceUri;
         this._type = _type;
@@ -67,17 +66,12 @@ class Resource {
         }
         return this._resourceUri;
     }
-    get leftUri() {
-        return this.resources[0];
-    }
-    get rightUri() {
-        return this.resources[1];
-    }
     get command() {
-        return this._commandResolver.resolveDefaultCommand(this);
-    }
-    get resources() {
-        return this._commandResolver.getResources(this);
+        return {
+            command: 'git.openResource',
+            title: localize('open', "Open"),
+            arguments: [this]
+        };
     }
     get resourceGroupType() { return this._resourceGroupType; }
     get type() { return this._type; }
@@ -222,18 +216,6 @@ class Resource {
         res.propagate = this.type !== 6 /* DELETED */ && this.type !== 2 /* INDEX_DELETED */;
         return res;
     }
-    async open() {
-        const command = this.command;
-        await vscode_1.commands.executeCommand(command.command, ...(command.arguments || []));
-    }
-    async openFile() {
-        const command = this._commandResolver.resolveFileCommand(this);
-        await vscode_1.commands.executeCommand(command.command, ...(command.arguments || []));
-    }
-    async openChange() {
-        const command = this._commandResolver.resolveChangeCommand(this);
-        await vscode_1.commands.executeCommand(command.command, ...(command.arguments || []));
-    }
 }
 Resource.Icons = {
     light: {
@@ -262,7 +244,7 @@ __decorate([
 ], Resource.prototype, "resourceUri", null);
 __decorate([
     decorators_1.memoize
-], Resource.prototype, "resources", null);
+], Resource.prototype, "command", null);
 __decorate([
     decorators_1.memoize
 ], Resource.prototype, "faded", null);
@@ -443,117 +425,6 @@ class DotGitWatcher {
         this.disposables = util_1.dispose(this.disposables);
     }
 }
-class ResourceCommandResolver {
-    constructor(repository) {
-        this.repository = repository;
-    }
-    resolveDefaultCommand(resource) {
-        const config = vscode_1.workspace.getConfiguration('git', vscode_1.Uri.file(this.repository.root));
-        const openDiffOnClick = config.get('openDiffOnClick', true);
-        return openDiffOnClick ? this.resolveChangeCommand(resource) : this.resolveFileCommand(resource);
-    }
-    resolveFileCommand(resource) {
-        return {
-            command: 'vscode.open',
-            title: localize('open', "Open"),
-            arguments: [resource.resourceUri]
-        };
-    }
-    resolveChangeCommand(resource) {
-        const title = this.getTitle(resource);
-        if (!resource.leftUri) {
-            return {
-                command: 'vscode.open',
-                title: localize('open', "Open"),
-                arguments: [resource.rightUri, { override: resource.type === 16 /* BOTH_MODIFIED */ ? false : undefined }, title]
-            };
-        }
-        else {
-            return {
-                command: 'vscode.diff',
-                title: localize('open', "Open"),
-                arguments: [resource.leftUri, resource.rightUri, title]
-            };
-        }
-    }
-    getResources(resource) {
-        for (const submodule of this.repository.submodules) {
-            if (path.join(this.repository.root, submodule.path) === resource.resourceUri.fsPath) {
-                return [undefined, uri_1.toGitUri(resource.resourceUri, resource.resourceGroupType === 1 /* Index */ ? 'index' : 'wt', { submoduleOf: this.repository.root })];
-            }
-        }
-        return [this.getLeftResource(resource), this.getRightResource(resource)];
-    }
-    getLeftResource(resource) {
-        switch (resource.type) {
-            case 0 /* INDEX_MODIFIED */:
-            case 3 /* INDEX_RENAMED */:
-            case 1 /* INDEX_ADDED */:
-                return uri_1.toGitUri(resource.original, 'HEAD');
-            case 5 /* MODIFIED */:
-            case 7 /* UNTRACKED */:
-                return uri_1.toGitUri(resource.resourceUri, '~');
-            case 12 /* DELETED_BY_US */:
-            case 13 /* DELETED_BY_THEM */:
-                return uri_1.toGitUri(resource.resourceUri, '~1');
-        }
-        return undefined;
-    }
-    getRightResource(resource) {
-        switch (resource.type) {
-            case 0 /* INDEX_MODIFIED */:
-            case 1 /* INDEX_ADDED */:
-            case 4 /* INDEX_COPIED */:
-            case 3 /* INDEX_RENAMED */:
-                return uri_1.toGitUri(resource.resourceUri, '');
-            case 2 /* INDEX_DELETED */:
-            case 6 /* DELETED */:
-                return uri_1.toGitUri(resource.resourceUri, 'HEAD');
-            case 12 /* DELETED_BY_US */:
-                return uri_1.toGitUri(resource.resourceUri, '~3');
-            case 13 /* DELETED_BY_THEM */:
-                return uri_1.toGitUri(resource.resourceUri, '~2');
-            case 5 /* MODIFIED */:
-            case 7 /* UNTRACKED */:
-            case 8 /* IGNORED */:
-            case 9 /* INTENT_TO_ADD */:
-                const uriString = resource.resourceUri.toString();
-                const [indexStatus] = this.repository.indexGroup.resourceStates.filter(r => r.resourceUri.toString() === uriString);
-                if (indexStatus && indexStatus.renameResourceUri) {
-                    return indexStatus.renameResourceUri;
-                }
-                return resource.resourceUri;
-            case 14 /* BOTH_ADDED */:
-            case 16 /* BOTH_MODIFIED */:
-                return resource.resourceUri;
-        }
-        throw new Error('Should never happen');
-    }
-    getTitle(resource) {
-        const basename = path.basename(resource.resourceUri.fsPath);
-        switch (resource.type) {
-            case 0 /* INDEX_MODIFIED */:
-            case 3 /* INDEX_RENAMED */:
-            case 1 /* INDEX_ADDED */:
-                return localize('git.title.index', '{0} (Index)', basename);
-            case 5 /* MODIFIED */:
-            case 14 /* BOTH_ADDED */:
-            case 16 /* BOTH_MODIFIED */:
-                return localize('git.title.workingTree', '{0} (Working Tree)', basename);
-            case 2 /* INDEX_DELETED */:
-            case 6 /* DELETED */:
-                return localize('git.title.deleted', '{0} (Deleted)', basename);
-            case 12 /* DELETED_BY_US */:
-                return localize('git.title.theirs', '{0} (Theirs)', basename);
-            case 13 /* DELETED_BY_THEM */:
-                return localize('git.title.ours', '{0} (Ours)', basename);
-            case 7 /* UNTRACKED */:
-                return localize('git.title.untracked', '{0} (Untracked)', basename);
-            default:
-                return '';
-        }
-    }
-}
 class Repository {
     constructor(repository, remoteSourceProviderRegistry, pushErrorHandlerRegistry, globalState, outputChannel) {
         this.repository = repository;
@@ -578,7 +449,6 @@ class Repository {
         this._state = 0 /* Idle */;
         this.isRepositoryHuge = false;
         this.didWarnAboutLimit = false;
-        this.resourceCommandResolver = new ResourceCommandResolver(this);
         this.disposables = [];
         const workspaceWatcher = vscode_1.workspace.createFileSystemWatcher('**');
         this.disposables.push(workspaceWatcher);
@@ -624,10 +494,10 @@ class Repository {
         const onConfigListener = util_1.filterEvent(vscode_1.workspace.onDidChangeConfiguration, e => e.affectsConfiguration('git.alwaysShowStagedChangesResourceGroup', root));
         onConfigListener(updateIndexGroupVisibility, this, this.disposables);
         updateIndexGroupVisibility();
-        util_1.filterEvent(vscode_1.workspace.onDidChangeConfiguration, e => e.affectsConfiguration('git.branchSortOrder', root)
-            || e.affectsConfiguration('git.untrackedChanges', root)
-            || e.affectsConfiguration('git.ignoreSubmodules', root)
-            || e.affectsConfiguration('git.openDiffOnClick', root))(this.updateModelState, this, this.disposables);
+        const onConfigListenerForBranchSortOrder = util_1.filterEvent(vscode_1.workspace.onDidChangeConfiguration, e => e.affectsConfiguration('git.branchSortOrder', root));
+        onConfigListenerForBranchSortOrder(this.updateModelState, this, this.disposables);
+        const onConfigListenerForUntracked = util_1.filterEvent(vscode_1.workspace.onDidChangeConfiguration, e => e.affectsConfiguration('git.untrackedChanges', root));
+        onConfigListenerForUntracked(this.updateModelState, this, this.disposables);
         const updateInputBoxVisibility = () => {
             const config = vscode_1.workspace.getConfiguration('git', root);
             this._sourceControl.inputBox.visible = config.get('showCommitInput', true);
@@ -704,7 +574,6 @@ class Repository {
             this.inputBox.value = rebaseCommit.message;
         }
         this._rebaseCommit = rebaseCommit;
-        vscode_1.commands.executeCommand('setContext', 'gitRebaseInProgress', !!this._rebaseCommit);
     }
     get rebaseCommit() {
         return this._rebaseCommit;
@@ -785,10 +654,6 @@ class Repository {
     provideOriginalResource(uri) {
         if (uri.scheme !== 'file') {
             return;
-        }
-        const path = uri.path;
-        if (this.mergeGroup.resourceStates.some(r => r.resourceUri.path === path)) {
-            return undefined;
         }
         return uri_1.toGitUri(uri, '', { replaceFileExtension: true });
     }
@@ -926,12 +791,6 @@ class Repository {
     async renameBranch(name) {
         await this.run("RenameBranch" /* RenameBranch */, () => this.repository.renameBranch(name));
     }
-    async cherryPick(commitHash) {
-        await this.run("CherryPick" /* CherryPick */, () => this.repository.cherryPick(commitHash));
-    }
-    async move(from, to) {
-        await this.run("Move" /* Move */, () => this.repository.move(from, to));
-    }
     async getBranch(name) {
         return await this.run("GetBranch" /* GetBranch */, () => this.repository.getBranch(name));
     }
@@ -944,20 +803,17 @@ class Repository {
     async merge(ref) {
         await this.run("Merge" /* Merge */, () => this.repository.merge(ref));
     }
-    async rebase(branch) {
-        await this.run("Rebase" /* Rebase */, () => this.repository.rebase(branch));
-    }
     async tag(name, message) {
         await this.run("Tag" /* Tag */, () => this.repository.tag(name, message));
     }
     async deleteTag(name) {
         await this.run("DeleteTag" /* DeleteTag */, () => this.repository.deleteTag(name));
     }
-    async checkout(treeish, opts) {
-        await this.run("Checkout" /* Checkout */, () => this.repository.checkout(treeish, [], opts));
+    async checkout(treeish) {
+        await this.run("Checkout" /* Checkout */, () => this.repository.checkout(treeish, []));
     }
-    async checkoutTracking(treeish, opts = {}) {
-        await this.run("CheckoutTracking" /* CheckoutTracking */, () => this.repository.checkout(treeish, [], { ...opts, track: true }));
+    async checkoutTracking(treeish) {
+        await this.run("CheckoutTracking" /* CheckoutTracking */, () => this.repository.checkout(treeish, [], { track: true }));
     }
     async findTrackingBranches(upstreamRef) {
         return await this.run("GetTracking" /* FindTrackingBranches */, () => this.repository.findTrackingBranches(upstreamRef));
@@ -981,24 +837,16 @@ class Repository {
         await this.run("Remote" /* Remote */, () => this.repository.renameRemote(name, newName));
     }
     async fetchDefault(options = {}) {
-        await this._fetch({ silent: options.silent });
+        await this.run("Fetch" /* Fetch */, () => this.repository.fetch(options));
     }
     async fetchPrune() {
-        await this._fetch({ prune: true });
+        await this.run("Fetch" /* Fetch */, () => this.repository.fetch({ prune: true }));
     }
     async fetchAll() {
-        await this._fetch({ all: true });
+        await this.run("Fetch" /* Fetch */, () => this.repository.fetch({ all: true }));
     }
     async fetch(remote, ref, depth) {
-        await this._fetch({ remote, ref, depth });
-    }
-    async _fetch(options = {}) {
-        if (!options.prune) {
-            const config = vscode_1.workspace.getConfiguration('git', vscode_1.Uri.file(this.root));
-            const prune = config.get('pruneOnFetch');
-            options.prune = prune;
-        }
-        await this.run("Fetch" /* Fetch */, async () => this.repository.fetch(options));
+        await this.run("Fetch" /* Fetch */, () => this.repository.fetch({ remote, ref, depth }));
     }
     async pullWithRebase(head) {
         let remote;
@@ -1024,11 +872,12 @@ class Repository {
                 const config = vscode_1.workspace.getConfiguration('git', vscode_1.Uri.file(this.root));
                 const fetchOnPull = config.get('fetchOnPull');
                 const tags = config.get('pullTags');
-                // When fetchOnPull is enabled, fetch all branches when pulling
                 if (fetchOnPull) {
-                    await this.repository.fetch({ all: true });
+                    await this.repository.pull(rebase, undefined, undefined, { unshallow, tags });
                 }
-                await this.repository.pull(rebase, remote, branch, { unshallow, tags });
+                else {
+                    await this.repository.pull(rebase, remote, branch, { unshallow, tags });
+                }
             });
         });
     }
@@ -1046,9 +895,6 @@ class Repository {
     }
     async pushFollowTags(remote, forcePushMode) {
         await this.run("Push" /* Push */, () => this._push(remote, undefined, false, true, forcePushMode));
-    }
-    async pushTags(remote, forcePushMode) {
-        await this.run("Push" /* Push */, () => this._push(remote, undefined, false, false, forcePushMode, true));
     }
     async blame(path) {
         return await this.run("Blame" /* Blame */, () => this.repository.blame(path));
@@ -1073,15 +919,10 @@ class Repository {
                 const config = vscode_1.workspace.getConfiguration('git', vscode_1.Uri.file(this.root));
                 const fetchOnPull = config.get('fetchOnPull');
                 const tags = config.get('pullTags');
-                const followTags = config.get('followTagsWhenSync');
                 const supportCancellation = config.get('supportCancellation');
-                const fn = async (cancellationToken) => {
-                    // When fetchOnPull is enabled, fetch all branches when pulling
-                    if (fetchOnPull) {
-                        await this.repository.fetch({ all: true, cancellationToken });
-                    }
-                    await this.repository.pull(rebase, remoteName, pullBranch, { tags, cancellationToken });
-                };
+                const fn = fetchOnPull
+                    ? async (cancellationToken) => await this.repository.pull(rebase, undefined, undefined, { tags, cancellationToken })
+                    : async (cancellationToken) => await this.repository.pull(rebase, remoteName, pullBranch, { tags, cancellationToken });
                 if (supportCancellation) {
                     const opts = {
                         location: vscode_1.ProgressLocation.Notification,
@@ -1099,7 +940,7 @@ class Repository {
                 }
                 const shouldPush = this.HEAD && (typeof this.HEAD.ahead === 'number' ? this.HEAD.ahead > 0 : true);
                 if (shouldPush) {
-                    await this._push(remoteName, pushBranch, false, followTags);
+                    await this._push(remoteName, pushBranch);
                 }
             });
         });
@@ -1235,9 +1076,9 @@ class Repository {
         }
         return ignored;
     }
-    async _push(remote, refspec, setUpstream = false, followTags = false, forcePushMode, tags = false) {
+    async _push(remote, refspec, setUpstream = false, tags = false, forcePushMode) {
         try {
-            await this.repository.push(remote, refspec, setUpstream, followTags, forcePushMode, tags);
+            await this.repository.push(remote, refspec, setUpstream, tags, forcePushMode);
         }
         catch (err) {
             if (!remote || !refspec) {
@@ -1314,10 +1155,9 @@ class Repository {
         return folderPaths.filter(p => !ignored.has(p));
     }
     async updateModelState() {
-        const scopedConfig = vscode_1.workspace.getConfiguration('git', vscode_1.Uri.file(this.repository.root));
-        const ignoreSubmodules = scopedConfig.get('ignoreSubmodules');
-        const { status, didHitLimit } = await this.repository.getStatus({ ignoreSubmodules });
+        const { status, didHitLimit } = await this.repository.getStatus();
         const config = vscode_1.workspace.getConfiguration('git');
+        const scopedConfig = vscode_1.workspace.getConfiguration('git', vscode_1.Uri.file(this.repository.root));
         const shouldIgnore = config.get('ignoreLimitWarning') === true;
         const useIcons = !config.get('decorations.enabled', true);
         this.isRepositoryHuge = didHitLimit;
@@ -1381,49 +1221,49 @@ class Repository {
                 : undefined;
             switch (raw.x + raw.y) {
                 case '??': switch (untrackedChanges) {
-                    case 'mixed': return workingTree.push(new Resource(this.resourceCommandResolver, 2 /* WorkingTree */, uri, 7 /* UNTRACKED */, useIcons));
-                    case 'separate': return untracked.push(new Resource(this.resourceCommandResolver, 3 /* Untracked */, uri, 7 /* UNTRACKED */, useIcons));
+                    case 'mixed': return workingTree.push(new Resource(2 /* WorkingTree */, uri, 7 /* UNTRACKED */, useIcons));
+                    case 'separate': return untracked.push(new Resource(3 /* Untracked */, uri, 7 /* UNTRACKED */, useIcons));
                     default: return undefined;
                 }
                 case '!!': switch (untrackedChanges) {
-                    case 'mixed': return workingTree.push(new Resource(this.resourceCommandResolver, 2 /* WorkingTree */, uri, 8 /* IGNORED */, useIcons));
-                    case 'separate': return untracked.push(new Resource(this.resourceCommandResolver, 3 /* Untracked */, uri, 8 /* IGNORED */, useIcons));
+                    case 'mixed': return workingTree.push(new Resource(2 /* WorkingTree */, uri, 8 /* IGNORED */, useIcons));
+                    case 'separate': return untracked.push(new Resource(3 /* Untracked */, uri, 8 /* IGNORED */, useIcons));
                     default: return undefined;
                 }
-                case 'DD': return merge.push(new Resource(this.resourceCommandResolver, 0 /* Merge */, uri, 15 /* BOTH_DELETED */, useIcons));
-                case 'AU': return merge.push(new Resource(this.resourceCommandResolver, 0 /* Merge */, uri, 10 /* ADDED_BY_US */, useIcons));
-                case 'UD': return merge.push(new Resource(this.resourceCommandResolver, 0 /* Merge */, uri, 13 /* DELETED_BY_THEM */, useIcons));
-                case 'UA': return merge.push(new Resource(this.resourceCommandResolver, 0 /* Merge */, uri, 11 /* ADDED_BY_THEM */, useIcons));
-                case 'DU': return merge.push(new Resource(this.resourceCommandResolver, 0 /* Merge */, uri, 12 /* DELETED_BY_US */, useIcons));
-                case 'AA': return merge.push(new Resource(this.resourceCommandResolver, 0 /* Merge */, uri, 14 /* BOTH_ADDED */, useIcons));
-                case 'UU': return merge.push(new Resource(this.resourceCommandResolver, 0 /* Merge */, uri, 16 /* BOTH_MODIFIED */, useIcons));
+                case 'DD': return merge.push(new Resource(0 /* Merge */, uri, 15 /* BOTH_DELETED */, useIcons));
+                case 'AU': return merge.push(new Resource(0 /* Merge */, uri, 10 /* ADDED_BY_US */, useIcons));
+                case 'UD': return merge.push(new Resource(0 /* Merge */, uri, 13 /* DELETED_BY_THEM */, useIcons));
+                case 'UA': return merge.push(new Resource(0 /* Merge */, uri, 11 /* ADDED_BY_THEM */, useIcons));
+                case 'DU': return merge.push(new Resource(0 /* Merge */, uri, 12 /* DELETED_BY_US */, useIcons));
+                case 'AA': return merge.push(new Resource(0 /* Merge */, uri, 14 /* BOTH_ADDED */, useIcons));
+                case 'UU': return merge.push(new Resource(0 /* Merge */, uri, 16 /* BOTH_MODIFIED */, useIcons));
             }
             switch (raw.x) {
                 case 'M':
-                    index.push(new Resource(this.resourceCommandResolver, 1 /* Index */, uri, 0 /* INDEX_MODIFIED */, useIcons));
+                    index.push(new Resource(1 /* Index */, uri, 0 /* INDEX_MODIFIED */, useIcons));
                     break;
                 case 'A':
-                    index.push(new Resource(this.resourceCommandResolver, 1 /* Index */, uri, 1 /* INDEX_ADDED */, useIcons));
+                    index.push(new Resource(1 /* Index */, uri, 1 /* INDEX_ADDED */, useIcons));
                     break;
                 case 'D':
-                    index.push(new Resource(this.resourceCommandResolver, 1 /* Index */, uri, 2 /* INDEX_DELETED */, useIcons));
+                    index.push(new Resource(1 /* Index */, uri, 2 /* INDEX_DELETED */, useIcons));
                     break;
                 case 'R':
-                    index.push(new Resource(this.resourceCommandResolver, 1 /* Index */, uri, 3 /* INDEX_RENAMED */, useIcons, renameUri));
+                    index.push(new Resource(1 /* Index */, uri, 3 /* INDEX_RENAMED */, useIcons, renameUri));
                     break;
                 case 'C':
-                    index.push(new Resource(this.resourceCommandResolver, 1 /* Index */, uri, 4 /* INDEX_COPIED */, useIcons, renameUri));
+                    index.push(new Resource(1 /* Index */, uri, 4 /* INDEX_COPIED */, useIcons, renameUri));
                     break;
             }
             switch (raw.y) {
                 case 'M':
-                    workingTree.push(new Resource(this.resourceCommandResolver, 2 /* WorkingTree */, uri, 5 /* MODIFIED */, useIcons, renameUri));
+                    workingTree.push(new Resource(2 /* WorkingTree */, uri, 5 /* MODIFIED */, useIcons, renameUri));
                     break;
                 case 'D':
-                    workingTree.push(new Resource(this.resourceCommandResolver, 2 /* WorkingTree */, uri, 6 /* DELETED */, useIcons, renameUri));
+                    workingTree.push(new Resource(2 /* WorkingTree */, uri, 6 /* DELETED */, useIcons, renameUri));
                     break;
                 case 'A':
-                    workingTree.push(new Resource(this.resourceCommandResolver, 2 /* WorkingTree */, uri, 9 /* INTENT_TO_ADD */, useIcons, renameUri));
+                    workingTree.push(new Resource(2 /* WorkingTree */, uri, 9 /* INTENT_TO_ADD */, useIcons, renameUri));
                     break;
             }
             return undefined;
@@ -1556,26 +1396,6 @@ class Repository {
             return `${this.HEAD.behind}↓`;
         }
         return `${this.HEAD.behind}↓ ${this.HEAD.ahead}↑`;
-    }
-    get syncTooltip() {
-        if (!this.HEAD
-            || !this.HEAD.name
-            || !this.HEAD.commit
-            || !this.HEAD.upstream
-            || !(this.HEAD.ahead || this.HEAD.behind)) {
-            return localize('sync changes', "Synchronize Changes");
-        }
-        const remoteName = this.HEAD && this.HEAD.remote || this.HEAD.upstream.remote;
-        const remote = this.remotes.find(r => r.name === remoteName);
-        if ((remote && remote.isReadOnly) || !this.HEAD.ahead) {
-            return localize('pull n', "Pull {0} commits from {1}/{2}", this.HEAD.behind, this.HEAD.upstream.remote, this.HEAD.upstream.name);
-        }
-        else if (!this.HEAD.behind) {
-            return localize('push n', "Push {0} commits to {1}/{2}", this.HEAD.ahead, this.HEAD.upstream.remote, this.HEAD.upstream.name);
-        }
-        else {
-            return localize('pull push n', "Pull {0} and push {1} commits between {2}/{3}", this.HEAD.behind, this.HEAD.ahead, this.HEAD.upstream.remote, this.HEAD.upstream.name);
-        }
     }
     updateInputBoxPlaceholder() {
         const branchName = this.headShortName;

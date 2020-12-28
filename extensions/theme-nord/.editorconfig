@@ -1,0 +1,25 @@
+# Copyright (C) 2017-present Arctic Ice Studio <development@arcticicestudio.com>
+# Copyright (C) 2017-present Sven Greb <development@svengreb.de>
+#
+# Project:    Nord Visual Studio Code
+# Repository: https://github.com/arcticicestudio/nord-visual-studio-code
+# License:    MIT
+
+# +--------------------+
+# + Base Configuration +
+# +--------------------+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 2
+indent_style = space
+insert_final_newline = true
+max_line_length = 120
+trim_trailing_whitespace = true
+
+# +-----------+
+# + Languages +
+# +-----------+
+# +--- Markdown ---+
+[*.{md}]
+trim_trailing_whitespace = false

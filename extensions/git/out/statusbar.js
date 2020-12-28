@@ -22,7 +22,7 @@ class CheckoutStatusBar {
         const title = `$(git-branch) ${this.repository.headLabel}${rebasing ? ` (${localize('rebasing', 'Rebasing')})` : ''}`;
         return {
             command: 'git.checkout',
-            tooltip: localize('checkout', "Checkout branch/tag..."),
+            tooltip: `${this.repository.headLabel}`,
             title,
             arguments: [this.repository.sourceControl]
         };
@@ -114,7 +114,7 @@ class SyncStatusBar {
                 const config = vscode_1.workspace.getConfiguration('git', vscode_1.Uri.file(this.repository.root));
                 const rebaseWhenSync = config.get('rebaseWhenSync');
                 command = rebaseWhenSync ? 'git.syncRebase' : 'git.sync';
-                tooltip = this.repository.syncTooltip;
+                tooltip = localize('sync changes', "Synchronize Changes");
             }
             else {
                 icon = '$(cloud-upload)';
