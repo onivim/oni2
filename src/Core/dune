@@ -1,6 +1,7 @@
 (rule
  (targets BuildInfo.re)
  (deps
+  (universe)
   (:generator ../gen_buildinfo/generator.exe))
  (action
   (run %{generator})))
