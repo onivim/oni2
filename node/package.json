@@ -8,7 +8,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@onivim/vscode-exthost": "1.51.0",
+    "@onivim/vscode-exthost": "1.52.1000",
     "follow-redirects": "1.13.0",
     "fs-extra": "^8.1.0",
     "sudo-prompt": "^9.0.0",
