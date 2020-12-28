@@ -38,6 +38,17 @@ Some Linux distributions may need other packages:
 
 ## Build and Run
 
+### Install node dependencies
+
+```sh
+npm install -g node-gyp
+node install-node-deps.js
+```
+
+> __NOTE:__ The non-standard `node install-node-deps.js` step instead of `npm install` is necessary because the script picks up our _vendored_ node binary.
+
+> __NOTE:__ The `node install-node-deps.js` command will need to be re-run whenever the extension host is upgraded.
+
 ### Build the front-end
 
 > __NOTE:__ On Windows, you must __build from a shell running as administrator__. This is a requirement of esy because creating symlinks requires administrator permissions. More info at [esy/esy#389](https://github.com/esy/esy/issues/389).
@@ -59,15 +70,6 @@ esy bootstrap
 # Finish up remaining parts of building. Should be quick.
 esy build
 ```
-
-### Install node dependencies
-
-```sh
-npm install -g node-gyp
-node install-node-deps.js
-```
-
-> __NOTE:__ The non-standard `node install-node-deps.js` step instead of `npm install` is necessary because the script picks up our _vendored_ node binary.
 
 ### Run health-check
 
