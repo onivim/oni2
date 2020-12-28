@@ -1,6 +1,7 @@
 ### Features
 
 - #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
+- #2889 - Extensions: Include HTML, JSON, and Markdwon language servers
 
 ### Bug Fixes
 
@@ -33,3 +34,4 @@
 - #2886 - Extensions: Upgrade vscode-exthost -> 1.51.0
 - #2887 - Build: Remove hardcoded extension host version; pull from package
 - #2888 - Extensions: Upgrade vscode-exthost -> 1.52.1
+- #2889 - Extensions: Upgrade extensions to 1.52.1
