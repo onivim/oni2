@@ -30,4 +30,5 @@
 ### Infrastructure / Refactoring
 
 - #2853 - Input: Add APIs for querying contextually available bindings and consumed keys
+- #2886 - Extensions: Upgrade vscode-exthost -> 1.51.0
 
