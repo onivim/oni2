@@ -25,7 +25,9 @@ module Internal = {
     | [theme] =>
       Isolinear.Effect.createWithDispatch(
         ~name="feature.extensions.selectTheme", dispatch => {
-        dispatch(ThemeLoadByName(theme.id))
+        dispatch(
+          ThemeLoadById(Exthost.Extension.Contributions.Theme.id(theme)),
+        )
       })
     | themes =>
       Isolinear.Effect.createWithDispatch(
