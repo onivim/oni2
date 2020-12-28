@@ -142,7 +142,7 @@ let drawUtf8Text = {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
+        bold ? bolder(context.fontWeight) : context.fontWeight,
         context.fontFamily,
       );
     Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
@@ -269,7 +269,7 @@ let token =
   let font =
     Service_Font.resolveWithFallback(
       ~italic=token.italic,
-      token.bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
+      token.bold ? bolder(context.fontWeight) : context.fontWeight,
       context.fontFamily,
     );
 
