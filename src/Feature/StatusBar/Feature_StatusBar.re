@@ -12,6 +12,7 @@ module Item = {
     label: Exthost.Label.t,
     alignment: Exthost.Msg.StatusBar.alignment,
     color: option(Exthost.Color.t),
+    backgroundColor: option(Exthost.Color.t),
     command: option(string),
     tooltip: option(string),
   };
@@ -19,6 +20,7 @@ module Item = {
   let create =
       (
         ~color=?,
+        ~backgroundColor=?,
         ~command=?,
         ~tooltip=?,
         ~id,
@@ -29,6 +31,7 @@ module Item = {
       ) => {
     id,
     color,
+    backgroundColor,
     priority,
     label,
     alignment,
@@ -384,7 +387,8 @@ module View = {
 
     let yOffset = 0.;
 
-    let toStatusBarElement = (~command=?, ~color=?, ~tooltip=?, label) => {
+    let toStatusBarElement =
+        (~command=?, ~color=?, ~backgroundColor=?, ~tooltip=?, label) => {
       let onClick =
         command
         |> Option.map((command, ()) =>
@@ -395,6 +399,11 @@ module View = {
         color
         |> OptionEx.flatMap(Exthost.Color.resolve(theme))
         |> Option.value(~default=defaultForeground);
+
+      let backgroundColor =
+        backgroundColor
+        |> OptionEx.flatMap(Exthost.Color.resolve(theme))
+        |> Option.value(~default=Revery.Colors.transparentWhite);
 
       let children = <Label font color label />;
       let style =
@@ -411,14 +420,21 @@ module View = {
           <Tooltip offsetY=(-25) text=tooltip style> children </Tooltip>
         };
 
-      <item ?onClick> viewOrTooltip </item>;
+      <item ?onClick backgroundColor> viewOrTooltip </item>;
     };
 
     let leftItems =
       statusBar.items
       |> List.filter((item: Item.t) => item.alignment == Left)
-      |> List.map(({command, label, color, tooltip, _}: Item.t) =>
-           toStatusBarElement(~command?, ~color?, ~tooltip?, label)
+      |> List.map(
+           ({command, label, color, tooltip, backgroundColor, _}: Item.t) =>
+           toStatusBarElement(
+             ~command?,
+             ~backgroundColor?,
+             ~color?,
+             ~tooltip?,
+             label,
+           )
          )
       |> React.listToElement;
 

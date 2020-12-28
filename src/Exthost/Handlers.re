@@ -182,6 +182,7 @@ let handlers =
     mainNotImplemented("MainThreadWebviewViews"),
     mainNotImplemented("MainThreadCustomEditors"),
     mainNotImplemented("MainThreadUrls"),
+    //mainNotImplemented("MainThreadUriOpeners"),
     main(
       ~handler=Msg.Workspace.handle,
       ~mapper=msg => Msg.Workspace(msg),
@@ -214,6 +215,7 @@ let handlers =
     mainNotImplemented("MainThreadTheming"),
     mainNotImplemented("MainThreadTunnelService"),
     mainNotImplemented("MainThreadTimeline"),
+    mainNotImplemented("MainThreadTesting"),
     ext("ExtHostCommands"),
     ext("ExtHostConfiguration"),
     ext("ExtHostDiagnostics"),
@@ -247,6 +249,7 @@ let handlers =
     ext("ExtHostComments"),
     ext("ExtHostStorage"),
     ext("ExtHostUrls"),
+    //ext("ExtHostUriOpeners"),
     ext("ExtHostOutputService"),
     ext("ExtHosLabelService"), // SIC
     ext("ExtHostNotebook"),
@@ -254,6 +257,7 @@ let handlers =
     ext("ExtHostTunnelService"),
     ext("ExtHostAuthentication"),
     ext("ExtHostTimeline"),
+    ext("ExtHostTesting"),
   ]
   |> List.mapi((idx, v) => setId(~id=idx + 1, v));
 

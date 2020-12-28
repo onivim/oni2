@@ -1549,6 +1549,7 @@ module Msg: {
           alignment,
           command: option(Command.t),
           color: option(Color.t),
+          backgroundColor: option(Color.t),
           tooltip: option(string),
           priority: int,
         })

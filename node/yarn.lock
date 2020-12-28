@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@onivim/vscode-exthost@1.51.0":
-  version "1.51.0"
-  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.51.0.tgz#539e440cda74aaef47b3f215139f2350f39bf609"
-  integrity sha512-ay1WFryuFDfTY8RE7H0pQCpb5su4YHLPG+/83dGfFfj7zt44BqSmhOSE3ui5M9CLSxNkz3KA44i3qGN4sV/Txg==
+"@onivim/vscode-exthost@1.52.1000":
+  version "1.52.1000"
+  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.52.1000.tgz#f69523da388b9595662ff12c600fe5fe0c2150ae"
+  integrity sha512-MuW8QfmHPj9q5D37lHdavUZG5cuCanTF8hZ1k/sCGbWKBCVCHPOtQ74pxRFa91t+JCXDTpzXdiW6DBLh+fIjDA==
   dependencies:
     graceful-fs "4.2.3"
     iconv-lite-umd "0.6.8"
@@ -15,6 +15,7 @@
     semver-umd "^5.5.5"
     spdlog "^0.11.1"
     vscode-proxy-agent "^0.5.2"
+    vscode-regexpp "^3.1.0"
 
 agent-base@4, agent-base@4.3.0, agent-base@^4.3.0, agent-base@~4.2.1:
   version "4.3.0"
@@ -211,6 +212,11 @@ vscode-proxy-agent@^0.5.2:
     http-proxy-agent "^2.1.0"
     https-proxy-agent "^2.2.3"
     socks-proxy-agent "^4.0.1"
+
+vscode-regexpp@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/vscode-regexpp/-/vscode-regexpp-3.1.0.tgz#42d059b6fffe99bd42939c0d013f632f0cad823f"
+  integrity sha512-pqtN65VC1jRLawfluX4Y80MMG0DHJydWhe5ZwMHewZD6sys4LbU6lHwFAHxeuaVE6Y6+xZOtAw+9hvq7/0ejkg==
 
 yauzl@^2.5.1:
   version "2.10.0"
