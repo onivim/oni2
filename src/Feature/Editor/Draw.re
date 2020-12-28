@@ -78,6 +78,22 @@ let drawText = (~context, ~x, ~y, ~paint, text) =>
   CanvasContext.drawText(~x, ~y, ~paint, ~text, context.canvasContext);
 let text = drawText;
 
+let bolder =
+  Revery.Font.Weight.
+    (
+      fun
+      | Thin => UltraLight
+      | UltraLight => Light
+      | Light => Normal
+      | Normal => Medium
+      | Medium => SemiBold
+      | SemiBold => Bold
+      | Bold => UltraBold
+      | UltraBold => Heavy
+      | Heavy => Heavy // Can't go beyond !
+      | _ => Normal
+    ); // For exhaustivity.
+
 let drawShapedText = {
   let paint = Skia.Paint.make();
   Skia.Paint.setTextEncoding(paint, GlyphId);
@@ -88,8 +104,7 @@ let drawShapedText = {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        // XXX: Should I make the bold one step upper than the current weight ?
-        bold ? Revery.Font.Weight.Bold : context.fontWeight,
+        bold ? bolder(context.fontWeight) : context.fontWeight,
         context.fontFamily,
       );
     let text =
