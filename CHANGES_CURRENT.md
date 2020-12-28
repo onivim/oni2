@@ -17,6 +17,7 @@
 - #2854 - Extensions: Signature Help - fix overlay staying open in normal mode
 - #2877 - Vim: Remove conflicting `ctrl+b` binding on Windows / Linux (fixes #2870)
 - #2878 - Input: Treat `Ctrl+[` as `Escape` everywhere
+- #2879 - Editor: Correct diff marker rendering in presence of codelens
 
 ### Performance
 
