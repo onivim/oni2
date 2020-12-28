@@ -180,6 +180,7 @@ let create =
             label,
             alignment,
             priority,
+            backgroundColor,
             color,
             command,
             tooltip,
@@ -194,6 +195,7 @@ let create =
               Feature_StatusBar.Item.create(
                 ~command?,
                 ~color?,
+                ~backgroundColor?,
                 ~tooltip?,
                 ~id,
                 ~label,

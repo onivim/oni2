@@ -969,7 +969,18 @@ module StatusBar = {
     );
   let foreground = define("statusBar.foreground", all(hex("#FFF")));
 
-  let defaults = [background, foreground];
+  let errorItemBackground =
+    define("statusBarItem.errorBackground", all(hex("#FF0000FF")));
+
+  let errorItemForeground =
+    define("statusBarItem.errorForeground", all(ref(foreground)));
+
+  let defaults = [
+    background,
+    foreground,
+    errorItemBackground,
+    errorItemForeground,
+  ];
 };
 
 module SymbolIcon = {
