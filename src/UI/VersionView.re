@@ -116,6 +116,9 @@ let make = (~theme, ~uiFont, ~editorFont, ()) => {
     <version name="Version" version=Oni_Core.BuildInfo.version />
     <version name="Commit" version=Oni_Core.BuildInfo.commitId />
     // spacer
+    <header text="Extension Host" />
+    <version name="Version " version=Oni_Core.BuildInfo.extensionHostVersion />
+    // spacer
     <header text="OCaml" />
     <version name="Compiler Version " version=Sys.ocaml_version />
     <header text="libuv" />
