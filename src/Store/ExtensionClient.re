@@ -256,9 +256,32 @@ let create =
     Filename.temp_file(~temp_dir=tempDir, "onivim2", "exthost.log")
     |> Uri.fromPath;
 
+  let extHostVersion = {
+    // The @onivim/vscode-exthost has an adjusted patch version number -
+    // @onivim/vscode-exthost at 1.51.1000 corresponds to 1.51.1 of the vscode extension host
+    let originalVersion = Oni_Core.BuildInfo.extensionHostVersion;
+
+    originalVersion
+    |> Semver.of_string
+    |> OptionEx.flatMap((ver: Semver.t) => {
+         Semver.from_parts(
+           ver.major,
+           ver.minor,
+           ver.patch / 1000,
+           ver.prerelease,
+           ver.build,
+         )
+       })
+    |> Option.map(Semver.to_string)
+    |> OptionEx.tapNone(() =>
+         Log.errorf(m => m("Unable to adjust version: %s", originalVersion))
+       )
+    |> Option.value(~default=originalVersion);
+  };
+
   let initData =
     InitData.create(
-      ~version="1.51.0", // TODO: How to keep in sync with bundled version?
+      ~version=extHostVersion,
       ~parentPid,
       ~logsLocation,
       ~logFile,
