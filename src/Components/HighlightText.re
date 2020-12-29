@@ -12,11 +12,15 @@ let make =
     ) => {
   let highlighted = {
     let textLength = String.length(text);
+    prerr_endline ("TOTAL LENGTH: " ++ string_of_int(textLength));
 
     // Assumes ranges are sorted low to high
-    let rec highlighter = last =>
-      fun
-      | [] => [
+    let rec highlighter = (last, rest) =>  {
+      prerr_endline(Printf.sprintf("highligher - last: %d", last)); 
+      switch (rest) {
+      | [] => 
+        prerr_endline ("-- empty");
+        [
           <Text
             ?fontFamily
             ?fontSize
@@ -25,7 +29,9 @@ let make =
           />,
         ]
 
-      | [(low, high), ...rest] => [
+      | [(low, high), ...rest] => 
+        prerr_endline (Printf.sprintf("-- Not empty - low: %d high: %d", low, high));
+        [
           <Text
             style
             ?fontFamily
@@ -41,6 +47,8 @@ let make =
           />,
           ...highlighter(high + 1, rest),
         ];
+    }
+    };
 
     highlighter(0, highlights) |> React.listToElement;
   };
