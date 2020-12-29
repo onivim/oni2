@@ -1,5 +1,7 @@
 open Revery.UI;
 
+module Log = (val Oni_Core.Log.withNamespace("Oni2.Component.HighlightText"));
+
 let make =
     (
       ~text: string,
@@ -12,14 +14,11 @@ let make =
     ) => {
   let highlighted = {
     let textLength = String.length(text);
-    prerr_endline ("TOTAL LENGTH: " ++ string_of_int(textLength));
 
     // Assumes ranges are sorted low to high
-    let rec highlighter = (last, rest) =>  {
-      prerr_endline(Printf.sprintf("highligher - last: %d", last)); 
+    let rec highlighter = (last, rest) => {
       switch (rest) {
-      | [] => 
-        prerr_endline ("-- empty");
+      | [] =>
         [
           <Text
             ?fontFamily
@@ -27,10 +26,9 @@ let make =
             style
             text={String.sub(text, last, textLength - last)}
           />,
-        ]
+        ];
 
-      | [(low, high), ...rest] => 
-        prerr_endline (Printf.sprintf("-- Not empty - low: %d high: %d", low, high));
+      | [(low, high), ...rest] =>
         [
           <Text
             style
@@ -47,10 +45,17 @@ let make =
           />,
           ...highlighter(high + 1, rest),
         ];
-    }
+      };
     };
 
-    highlighter(0, highlights) |> React.listToElement;
+    try ({
+      highlighter(0, highlights) |> React.listToElement;
+    }) {
+      // There was an error creating the highlight text - don't crash, but fallback to un-highlighted-text.
+    | exn => 
+      Log.errorf(m => m("HighlightText error: %s", Printexc.toString(exn))))
+      <Text style ?fontFamily ?fontSize text />
+    };
   };
 
   <View style=Style.[flexDirection(`Row)]> highlighted </View>;
