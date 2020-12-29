@@ -1248,6 +1248,7 @@ module StatusBar = {
         alignment,
         command: option(ExtCommand.t),
         color: option(Color.t),
+        backgroundColor: option(Color.t),
         tooltip: option(string),
         priority: int,
       })
@@ -1265,6 +1266,7 @@ module StatusBar = {
           tooltipJson,
           commandJson,
           colorJson,
+          backgroundColorJson,
           alignmentJson,
           priorityJson,
           _accessibilityInfoJson,
@@ -1278,6 +1280,8 @@ module StatusBar = {
         commandJson |> Internal.decode_value(nullable(ExtCommand.decode));
       let%bind color =
         colorJson |> Internal.decode_value(nullable(Color.decode));
+      let%bind backgroundColor =
+        backgroundColorJson |> Internal.decode_value(nullable(Color.decode));
       let%bind tooltip =
         tooltipJson |> Internal.decode_value(nullable(string));
       let%bind label = labelJson |> Internal.decode_value(Label.decode);
@@ -1296,6 +1300,7 @@ module StatusBar = {
           label,
           alignment,
           color,
+          backgroundColor,
           priority,
           tooltip,
           command,

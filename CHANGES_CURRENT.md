@@ -15,6 +15,10 @@
 - #2868 - SCM: Diff markers not showing up in gutter (fixes #2857)
 - #2869 - Hover: Fix hover pop up while scrolling via mousewheel
 - #2871 - Vim: Fix `ctrl+o` behavior in insert mode (fixes #2425)
+- #2854 - Extensions: Signature Help - fix overlay staying open in normal mode
+- #2877 - Vim: Remove conflicting `ctrl+b` binding on Windows / Linux (fixes #2870)
+- #2878 - Input: Treat `Ctrl+[` as `Escape` everywhere
+- #2879 - Editor: Correct diff marker rendering in presence of codelens
 
 ### Performance
 
@@ -27,4 +31,6 @@
 ### Infrastructure / Refactoring
 
 - #2853 - Input: Add APIs for querying contextually available bindings and consumed keys
-
+- #2886 - Extensions: Upgrade vscode-exthost -> 1.51.0
+- #2887 - Build: Remove hardcoded extension host version; pull from package
+- #2888 - Extensions: Upgrade vscode-exthost -> 1.52.1
