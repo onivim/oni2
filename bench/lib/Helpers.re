@@ -48,12 +48,14 @@ let simpleState = {
 let defaultFont: Service_Font.font = {
   let fontFamily = Revery.Font.Family.fromFile("JetBrainsMono-Regular.ttf");
   let fontSize = 10.;
+  let fontWeight = Revery.Font.Weight.Normal;
   let smoothing = Revery.Font.Smoothing.default;
   let features = [];
 
   {
     fontFamily,
     fontSize,
+    fontWeight,
     spaceWidth: 10.,
     underscoreWidth: 10.,
     avgCharWidth: 10.,
@@ -66,6 +68,7 @@ let defaultFont: Service_Font.font = {
       FontMeasurementCache.create(
         ~fontFamily,
         ~fontSize,
+        ~fontWeight,
         ~smoothing,
         ~features,
       ),
