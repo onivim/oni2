@@ -1,5 +1,5 @@
 {
-  "checksum": "33999a49fc135708c1d346f0e7e40787",
+  "checksum": "93f2cffc612c64b47bd783164897de3b",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -281,13 +281,13 @@
       ],
       "devDependencies": [ "ocaml@4.10.0@d41d8cd9" ]
     },
-    "reason-fzy@github:bryphe/reason-fzy#f3f9b24@d41d8cd9": {
-      "id": "reason-fzy@github:bryphe/reason-fzy#f3f9b24@d41d8cd9",
+    "reason-fzy@github:bryphe/reason-fzy#ab172e1@d41d8cd9": {
+      "id": "reason-fzy@github:bryphe/reason-fzy#ab172e1@d41d8cd9",
       "name": "reason-fzy",
-      "version": "github:bryphe/reason-fzy#f3f9b24",
+      "version": "github:bryphe/reason-fzy#ab172e1",
       "source": {
         "type": "install",
-        "source": [ "github:bryphe/reason-fzy#f3f9b24" ]
+        "source": [ "github:bryphe/reason-fzy#ab172e1" ]
       },
       "overrides": [],
       "dependencies": [
@@ -1000,7 +1000,7 @@
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
-        "reason-fzy@github:bryphe/reason-fzy#f3f9b24@d41d8cd9",
+        "reason-fzy@github:bryphe/reason-fzy#ab172e1@d41d8cd9",
         "ocaml@4.10.0@d41d8cd9", "libvim@8.10869.83@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#53fc4eb@d41d8cd9",
         "esy-tree-sitter@1.4.1@d41d8cd9",
