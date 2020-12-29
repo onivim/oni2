@@ -18,18 +18,16 @@ let make =
     // Assumes ranges are sorted low to high
     let rec highlighter = (last, rest) => {
       switch (rest) {
-      | [] =>
-        [
+      | [] => [
           <Text
             ?fontFamily
             ?fontSize
             style
             text={String.sub(text, last, textLength - last)}
           />,
-        ];
+        ]
 
-      | [(low, high), ...rest] =>
-        [
+      | [(low, high), ...rest] => [
           <Text
             style
             ?fontFamily
@@ -44,17 +42,15 @@ let make =
             text={String.sub(text, low, high + 1 - low)}
           />,
           ...highlighter(high + 1, rest),
-        ];
+        ]
       };
     };
 
-    try ({
-      highlighter(0, highlights) |> React.listToElement;
-    }) {
-      // There was an error creating the highlight text - don't crash, but fallback to un-highlighted-text.
-    | exn => 
-      Log.errorf(m => m("HighlightText error: %s", Printexc.toString(exn))))
-      <Text style ?fontFamily ?fontSize text />
+    try(highlighter(0, highlights) |> React.listToElement) {
+    // There was an error creating the highlight text - don't crash, but fallback to un-highlighted-text.
+    | exn =>
+      Log.errorf(m => m("HighlightText error: %s", Printexc.toString(exn)));
+      <Text style ?fontFamily ?fontSize text />;
     };
   };
 
