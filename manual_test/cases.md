@@ -91,7 +91,7 @@ __Pass:__
 
 ## 5.1 Validate File Preview from explorer
 
-- Ensure `editor.enablePreview` is set to `true`
+- Ensure `workbench.editor.enablePreview` is set to `true`
 - Open file explorer in `oni2` repo
 - Click `README.md`
 - Click `CHANGES.md`
