@@ -1,7 +1,7 @@
 ### Features
 
 - #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
-- #2889 - Extensions: Include HTML, JSON, and Markdwon language servers
+- #2889 - Extensions: Include HTML, JSON, PHP, and Markdwon language servers
 
 ### Bug Fixes
 
