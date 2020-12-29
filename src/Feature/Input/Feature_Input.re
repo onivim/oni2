@@ -344,6 +344,34 @@ let candidates = (~config, ~context, {inputStateMachine, _}) => {
   InputStateMachine.candidates(~leaderKey, ~context, inputStateMachine);
 };
 
+let commandToAvailableBindings = (~command, ~config, ~context, model) => {
+  let allCandidates = candidates(~config, ~context, model);
+
+  if (String.length(command) <= 0) {
+    [];
+  } else {
+    let firstChar = command.[0];
+    let execute =
+      if (firstChar == ':') {
+        VimExCommand(String.sub(command, 1, String.length(command) - 1));
+      } else {
+        NamedCommand(command);
+      };
+
+    allCandidates
+    |> List.filter_map(((matcher: EditorInput.Matcher.t, ex: execute)) =>
+         if (ex == execute) {
+           switch (matcher) {
+           | Sequence(keys) => Some(keys)
+           | AllKeysReleased => None
+           };
+         } else {
+           None;
+         }
+       );
+  };
+};
+
 let consumedKeys = ({inputStateMachine, _}) =>
   inputStateMachine |> InputStateMachine.consumedKeys;
 
