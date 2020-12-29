@@ -61,7 +61,15 @@ let setFont =
   incr(requestId);
   let req = requestId^;
 
-  Log.infof(m => m("Loading font: %s %f %d", familyString, fontSize, req));
+  Log.infof(m =>
+    m(
+      "Loading font: %s %s %f %d",
+      familyString,
+      Revery.Font.Weight.show(fontWeight),
+      fontSize,
+      req,
+    )
+  );
 
   // We load the font asynchronously
   ThreadHelper.create(

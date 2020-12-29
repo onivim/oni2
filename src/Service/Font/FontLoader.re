@@ -72,11 +72,11 @@ let loadAndValidateEditorFont =
           );
         }
       | Error(msg) =>
-        // XXX: Update error message with weight ?
         Log.warnf(m =>
           m(
-            "Unable to load italic variant of %s: %s",
+            "Unable to load italic variant of %s with weight %s: %s",
             font |> getSkiaTypeface |> Skia.Typeface.getFamilyName,
+            Revery.Font.Weight.show(weight),
             msg,
           )
         )
@@ -99,8 +99,9 @@ let loadAndValidateEditorFont =
       | Error(msg) =>
         Log.warnf(m =>
           m(
-            "Unable to load bold variant of %s: %s",
+            "Unable to load bold variant of %s with weight %s: %s",
             font |> getSkiaTypeface |> Skia.Typeface.getFamilyName,
+            Revery.Font.Weight.show(bolderWeight),
             msg,
           )
         )
