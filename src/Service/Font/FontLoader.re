@@ -83,7 +83,6 @@ let loadAndValidateEditorFont =
       };
       let maybeBoldFont =
         family
-        // XXX: Should I make the bold one step upper than the current weight ?
         |> Revery_Font.Family.toSkia(Oni_Core.Font.bolder(weight))
         |> Revery.Font.FontCache.load;
 
