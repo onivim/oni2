@@ -315,7 +315,7 @@ jobs:
       SYSTEM_ARTIFACTSDIRECTORY: $(System.ArtifactsDirectory)
 
 - job: ValidateWindowsRelease
-  timeoutInMinutes: 10
+  timeoutInMinutes: 15
   displayName: "Windows: Validate Release"
   dependsOn: 
   - Kickoff
