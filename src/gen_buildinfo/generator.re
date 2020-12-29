@@ -32,6 +32,14 @@ let getVersion = () => {
   |> Yojson.Safe.Util.to_string;
 };
 
+let getExtensionHostVersion = () => {
+  Yojson.Safe.from_file(
+    "../../../../../../../../node/node_modules/@onivim/vscode-exthost/package.json",
+  )
+  |> Yojson.Safe.Util.member("version")
+  |> Yojson.Safe.Util.to_string;
+};
+
 let oc = open_out("BuildInfo.re");
 
 Printf.fprintf(
@@ -40,9 +48,11 @@ Printf.fprintf(
 let commitId = "%s";
 let version = "%s";
 let defaultUpdateChannel = "%s";
+let extensionHostVersion = "%s";
 |},
   getCommitId(),
   getVersion(),
   getDefaultUpdateChannel(),
+  getExtensionHostVersion(),
 );
 close_out(oc);

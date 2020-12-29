@@ -35,8 +35,21 @@ Some Linux distributions may need other packages:
 
  - Ubuntu : `nasm`,`libacl1-dev`, `libncurses-dev` latter two for `libvim`.
  - Fedora/CentOS : `libXt-devel`, `libSM-devel`, `libICE-devel`, `libacl-devel` and `ncurses-devel ` for `libvim`
+ - Xorg related libraries: `libglu1-mesa-dev`, `libxxf86vm-dev` and `libxkbfile-dev`.
+
 
 ## Build and Run
+
+### Install node dependencies
+
+```sh
+npm install -g node-gyp
+node install-node-deps.js
+```
+
+> __NOTE:__ The non-standard `node install-node-deps.js` step instead of `npm install` is necessary because the script picks up our _vendored_ node binary.
+
+> __NOTE:__ The `node install-node-deps.js` command will need to be re-run whenever the extension host is upgraded.
 
 ### Build the front-end
 
@@ -59,15 +72,6 @@ esy bootstrap
 # Finish up remaining parts of building. Should be quick.
 esy build
 ```
-
-### Install node dependencies
-
-```sh
-npm install -g node-gyp
-node install-node-deps.js
-```
-
-> __NOTE:__ The non-standard `node install-node-deps.js` step instead of `npm install` is necessary because the script picks up our _vendored_ node binary.
 
 ### Run health-check
 
