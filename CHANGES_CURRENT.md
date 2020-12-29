@@ -1,6 +1,7 @@
 ### Features
 
 - #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
+- #2849 - UX: Initial menu bar on Windows / Linux (fixes #1255)
 
 ### Bug Fixes
 

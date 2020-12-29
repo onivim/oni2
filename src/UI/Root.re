@@ -7,7 +7,6 @@
 open Revery.UI;
 open Oni_Model;
 
-module ContextMenu = Oni_Components.ContextMenu;
 module ResizeHandle = Oni_Components.ResizeHandle;
 module Tooltip = Oni_Components.Tooltip;
 
@@ -173,8 +172,23 @@ let make = (~dispatch, ~state: State.t, ()) => {
     | Feature_SideBar.Right => List.rev(defaultSurfaceComponents)
     };
 
+  let context = Oni_Model.ContextKeys.all(state);
+
+  let menuBarElement =
+    <Feature_MenuBar.View
+      isWindowFocused={state.windowIsFocused}
+      font={state.uiFont}
+      config
+      context
+      input={state.input}
+      theme
+      model={state.menuBar}
+      dispatch={msg => dispatch(Actions.MenuBar(msg))}
+    />;
+
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
+      menuBar=menuBarElement
       activeBuffer=maybeActiveBuffer
       workspaceRoot={Feature_Workspace.rootName(state.workspace)}
       workspaceDirectory={Feature_Workspace.workingDirectory(state.workspace)}
@@ -231,7 +245,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       />
     </Overlay>
     <statusBar />
-    <ContextMenu.Overlay />
+    <Component_ContextMenu.View.Overlay />
     <Tooltip.Overlay theme font=uiFont />
     <messages />
     <modals />

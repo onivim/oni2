@@ -372,6 +372,25 @@ let configurationChanged = (~hasWorkspace, ~config, model) => {
   );
 };
 
+module MenuItems = {
+  open MenuBar.Schema;
+  module View = {
+    let explorer = command(~title="Explorer", Commands.openExplorerPane);
+
+    let extensions =
+      command(~title="Extensions", Commands.openExtensionsPane);
+
+    let scm = command(~title="Source Control", Commands.openSCMPane);
+
+    let toggle = command(~title="Toggle Sidebar", Commands.toggleSidebar);
+  };
+
+  module Edit = {
+    let findInFiles =
+      command(~title="Find in files", Commands.openSearchPane);
+  };
+};
+
 module Contributions = {
   let commands =
     Commands.[
@@ -397,6 +416,28 @@ module Contributions = {
       toggleSidebarMac,
       openSCM,
     ];
+
+  let menuItems = commands |> List.map(MenuBar.Schema.command);
+
+  let menuGroups =
+    MenuBar.Schema.[
+      group(
+        ~order=200,
+        ~parent=Feature_MenuBar.Global.view,
+        MenuItems.View.[explorer, scm, extensions],
+      ),
+      group(
+        ~order=900,
+        ~parent=Feature_MenuBar.Global.view,
+        MenuItems.View.[toggle],
+      ),
+      group(
+        ~order=100,
+        ~parent=Feature_MenuBar.Global.edit,
+        MenuItems.Edit.[findInFiles],
+      ),
+    ];
+  MenuBar.Schema.group(~parent=Feature_MenuBar.Global.view, menuItems);
 
   let contextKeys = (~isFocused) => {
     let common = ContextKeys.[sideBarVisible];
