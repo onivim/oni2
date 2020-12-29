@@ -28,6 +28,7 @@
 ### Documentation
 
 - #2874 - Languages: Fix extension ids for `exuberant-ctags` and `clangd` (fixes #2872)
+- #2893 - Building: Add Xorg dependencies for Linux (thanks @marcinkoziej!)
 
 ### Infrastructure / Refactoring
 

@@ -35,6 +35,8 @@ Some Linux distributions may need other packages:
 
  - Ubuntu : `nasm`,`libacl1-dev`, `libncurses-dev` latter two for `libvim`.
  - Fedora/CentOS : `libXt-devel`, `libSM-devel`, `libICE-devel`, `libacl-devel` and `ncurses-devel ` for `libvim`
+ - Xorg related libraries: `libglu1-mesa-dev`, `libxxf86vm-dev` and `libxkbfile-dev`.
+
 
 ## Build and Run
 
