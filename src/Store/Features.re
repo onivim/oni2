@@ -18,6 +18,13 @@ module Internal = {
     );
   };
 
+  let executeCommandEffect = command => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="features.executeCommand", dispatch =>
+      dispatch(Actions.KeybindingInvoked({command: command}))
+    );
+  };
+
   let setThemesEffect =
       (~themes: list(Exthost.Extension.Contributions.Theme.t)) => {
     switch (themes) {
@@ -428,6 +435,15 @@ let update =
       };
     ({...state, fileSystem: model}, eff);
 
+  | Help(msg) =>
+    let (model, outmsg) = Feature_Help.update(msg, state.help);
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(effect) => effect |> Isolinear.Effect.map(msg => Help(msg))
+      };
+    ({...state, help: model}, eff);
+
   | Input(msg) =>
     let (model, outmsg) = Feature_Input.update(msg, state.input);
 
@@ -621,6 +637,19 @@ let update =
         }
       );
     (state', eff);
+
+  | MenuBar(msg) =>
+    let contextKeys = Oni_Model.ContextKeys.all(state);
+    let commands = CommandManager.current(state);
+    let (menuBar', outmsg) =
+      Feature_MenuBar.update(~contextKeys, ~commands, msg, state.menuBar);
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | ExecuteCommand({command}) => Internal.executeCommandEffect(command)
+      };
+    ({...state, menuBar: menuBar'}, eff);
 
   | Messages(msg) =>
     let (model, outmsg) = Feature_Messages.update(msg, state.messages);

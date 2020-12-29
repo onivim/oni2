@@ -60,5 +60,8 @@ let current = state => {
     Feature_Workspace.Contributions.commands(state.workspace)
     |> Command.Lookup.fromList
     |> Command.Lookup.map(msg => Actions.Workspace(msg)),
+    Feature_Help.Contributions.commands
+    |> Command.Lookup.fromList
+    |> Command.Lookup.map(msg => Actions.Help(msg)),
   ]);
 };

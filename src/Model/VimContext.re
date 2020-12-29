@@ -162,25 +162,21 @@ let current = (state: State.t) => {
     |> Array.of_list;
   };
 
-  let viewLineMotion = (~motion, ~count as _, ~startLine as _) => {
+  let viewLineMotion = (~motion, ~count, ~startLine as _) => {
+    open EditorCoreTypes;
+    let topLine =
+      editor |> Editor.getTopVisibleBufferLine |> LineNumber.toZeroBased;
+    let bottomLine =
+      (editor |> Editor.getBottomVisibleBufferLine |> LineNumber.toZeroBased)
+      - 1;
+    let normalizedCount = max(count - 1, 0);
     switch (motion) {
-    | Vim.ViewLineMotion.MotionH => Editor.getTopVisibleBufferLine(editor)
+    | Vim.ViewLineMotion.MotionH =>
+      LineNumber.ofZeroBased(min(topLine + normalizedCount, bottomLine))
     | Vim.ViewLineMotion.MotionM =>
-      EditorCoreTypes.(
-        {
-          let topLine =
-            editor |> Editor.getTopVisibleBufferLine |> LineNumber.toZeroBased;
-          let bottomLine =
-            editor
-            |> Editor.getBottomVisibleBufferLine
-            |> LineNumber.toZeroBased;
-          LineNumber.ofZeroBased(topLine + (bottomLine - topLine) / 2);
-        }
-      )
+      LineNumber.ofZeroBased(topLine + (bottomLine - topLine) / 2)
     | Vim.ViewLineMotion.MotionL =>
-      EditorCoreTypes.LineNumber.(
-        Editor.getBottomVisibleBufferLine(editor) - 1
-      )
+      LineNumber.ofZeroBased(max(bottomLine - normalizedCount, topLine))
     };
   };
 

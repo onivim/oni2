@@ -35,4 +35,8 @@ module Effects: {
 
 // CONTRIBUTIONS
 
-module Contributions: {let commands: model => list(Command.t(msg));};
+module Contributions: {
+  let commands: model => list(Command.t(msg));
+
+  let menuGroup: MenuBar.Schema.group;
+};

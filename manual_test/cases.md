@@ -66,3 +66,23 @@ __Pass:__
 - [ ] Win
 - [ ] OSX
 - [ ] Linux
+
+# 4. Editing
+
+## 4.1 Verify H/L/M behavior on editor surface
+
+- Launch Onivim in oni2 directory
+- Open `README.md`
+- Set line wrap (`:set wrap`)
+- In normal mode, verify `H` goes to top buffer line
+- In normal mode, verify `L` goes to bottom buffer line
+- In normal mode, verify `M` goes to middle buffer line
+- In normal mode, verify `3H` goes to third buffer line 
+- In normal mode, verify `4L` goes to fourth-from-bottom buffer line
+- In normal mode, verify `1000H` goes to the same position as `L`
+- In normal mode, verify `1000L` goes to the same position as `H`
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
