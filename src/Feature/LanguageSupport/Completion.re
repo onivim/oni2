@@ -158,7 +158,7 @@ module Session = {
         |> Filter.rank(query, toString);
 
       // Tag as fuzzy matched
-      let ret = if (explodedQuery != []) {
+      if (explodedQuery != []) {
         items'
         |> List.map((filterItem: Filter.result(CompletionItem.t)) =>
              {
@@ -172,16 +172,6 @@ module Session = {
       } else {
         items';
       };
-      ret
-      |> List.iteri((idx, item: Filter.result(CompletionItem.t)) => {
-        prerr_endline("Got item at index: "++ string_of_int(idx));
-        prerr_endline ("-- " ++ item.item.label)
-
-        let highlights = item.highlight;
-        highlights
-        |> List.iter(((start, stop)) => prerr_endline (Printf.sprintf("-- Highlight: %d-%d", start, stop)));
-      });
-      ret;
     };
 
   let filteredItems =
