@@ -49,7 +49,7 @@ let make =
     try(highlighter(0, highlights) |> React.listToElement) {
     // There was an error creating the highlight text - don't crash, but fallback to un-highlighted-text.
     | exn =>
-      Log.errorf(m => m("HighlightText error: %s", Printexc.toString(exn)));
+      Log.errorf(m => m("HighlightText error: %s", Printexc.to_string(exn)));
       <Text style ?fontFamily ?fontSize text />;
     };
   };
