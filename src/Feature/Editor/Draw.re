@@ -78,22 +78,6 @@ let drawText = (~context, ~x, ~y, ~paint, text) =>
   CanvasContext.drawText(~x, ~y, ~paint, ~text, context.canvasContext);
 let text = drawText;
 
-let bolder =
-  Revery.Font.Weight.
-    (
-      fun
-      | Thin => UltraLight
-      | UltraLight => Light
-      | Light => Normal
-      | Normal => Medium
-      | Medium => SemiBold
-      | SemiBold => Bold
-      | Bold => UltraBold
-      | UltraBold => Heavy
-      | Heavy => Heavy // Can't go beyond !
-      | _ => Normal
-    ); // For exhaustivity.
-
 let drawShapedText = {
   let paint = Skia.Paint.make();
   Skia.Paint.setTextEncoding(paint, GlyphId);
@@ -104,7 +88,7 @@ let drawShapedText = {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        bold ? bolder(context.fontWeight) : context.fontWeight,
+        bold ? Oni_Core.Font.bolder(context.fontWeight) : context.fontWeight,
         context.fontFamily,
       );
     let text =
@@ -142,7 +126,7 @@ let drawUtf8Text = {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        bold ? bolder(context.fontWeight) : context.fontWeight,
+        bold ? Oni_Core.Font.bolder(context.fontWeight) : context.fontWeight,
         context.fontFamily,
       );
     Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
@@ -269,7 +253,8 @@ let token =
   let font =
     Service_Font.resolveWithFallback(
       ~italic=token.italic,
-      token.bold ? bolder(context.fontWeight) : context.fontWeight,
+      token.bold
+        ? Oni_Core.Font.bolder(context.fontWeight) : context.fontWeight,
       context.fontFamily,
     );
 

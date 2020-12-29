@@ -45,3 +45,18 @@ let default = () => {
 
 let measure = (uchar, {measurementCache, _}) =>
   FontMeasurementCache.measure(uchar, measurementCache);
+
+let bolder =
+  Revery.Font.Weight.(
+    fun
+    | Thin => UltraLight
+    | UltraLight => Light
+    | Light => Normal
+    | Normal => Medium
+    | Medium => SemiBold
+    | SemiBold => Bold
+    | Bold => UltraBold
+    | UltraBold => Heavy
+    | Heavy => Heavy // Can't go beyond !
+    | _ => Normal
+  ); // For exhaustivity.
