@@ -81,16 +81,17 @@ let loadAndValidateEditorFont =
           )
         )
       };
+      let bolderWeight = Oni_Core.Font.bolder(weight);
       let maybeBoldFont =
         family
-        |> Revery_Font.Family.toSkia(Oni_Core.Font.bolder(weight))
+        |> Revery_Font.Family.toSkia(bolderWeight)
         |> Revery.Font.FontCache.load;
 
       switch (maybeBoldFont) {
       | Ok(boldFont) =>
         if (isSameFamily(font, boldFont)) {
           FontResolutionCache.add(
-            (family, Weight.Bold, false),
+            (family, bolderWeight, false),
             boldFont,
             fontCache,
           );
