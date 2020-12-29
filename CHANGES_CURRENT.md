@@ -2,6 +2,7 @@
 
 - #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
 - #2889 - Extensions: Include HTML, JSON, PHP, and Markdown language servers
+- #2849 - UX: Initial menu bar on Windows / Linux (fixes #1255)
 
 ### Bug Fixes
 
@@ -19,6 +20,7 @@
 - #2877 - Vim: Remove conflicting `ctrl+b` binding on Windows / Linux (fixes #2870)
 - #2878 - Input: Treat `Ctrl+[` as `Escape` everywhere
 - #2879 - Editor: Correct diff marker rendering in presence of codelens
+- #2891 - Vim: Fix count behavior for L/H jumps (fixes #2882)
 
 ### Performance
 
