@@ -2,7 +2,6 @@ open Oni_Core;
 
 open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 
 module Colors = Feature_Theme.Colors;
 
@@ -330,7 +329,7 @@ module View = {
     module Styles = {
       open Style;
 
-      let container = (~x, ~y, ~theme) => [
+      let container = [
         position(`Absolute),
         top(0),
         left(0),
@@ -396,12 +395,7 @@ module View = {
 
         let menuElements = menus |> React.listToElement;
 
-        (
-          <View style={Styles.container(~x=0, ~y=0, ~theme)}>
-            menuElements
-          </View>,
-          hooks,
-        );
+        (<View style=Styles.container> menuElements </View>, hooks);
       });
   };
 

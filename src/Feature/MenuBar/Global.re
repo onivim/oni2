@@ -72,26 +72,20 @@ module Items = {
       );
 
     module Zoom = {
-      let zoomIn = item(
-        ~title="Zoom in",
-        ~command="workbench.action.zoomIn"
-      );
+      let zoomIn = item(~title="Zoom in", ~command="workbench.action.zoomIn");
 
-      let zoomOut = item(
-        ~title="Zoom out",
-        ~command="workbench.action.zoomOut"
-      );
+      let zoomOut =
+        item(~title="Zoom out", ~command="workbench.action.zoomOut");
 
-      let zoomReset = item(
-        ~title="Reset zoom",
-        ~command="workbench.action.zoomReset"
-      );
+      let zoomReset =
+        item(~title="Reset zoom", ~command="workbench.action.zoomReset");
 
-      let submenu = submenu(
-        ~title="Zoom",
-        [group(~parent=view, [zoomIn, zoomOut, zoomReset])]
-      )
-    }
+      let submenu =
+        submenu(
+          ~title="Zoom",
+          [group(~parent=view, [zoomIn, zoomOut, zoomReset])],
+        );
+    };
   };
 };
 
