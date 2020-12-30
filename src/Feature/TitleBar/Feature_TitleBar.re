@@ -312,6 +312,38 @@ module Styles = {
 
 module View = {
   module Mac = {
+    let title =
+        (
+          ~isFocused,
+          ~isRegistered,
+          ~theme,
+          ~title,
+          ~font: UiFont.t,
+          ~majorVersion,
+          (),
+        ) =>
+      /* The titlebar text style changed on Big Sur
+         This will make sure that on all OS X versions (i.e. 10.x.y), the old style applies.
+         On new versions we want the new style -- this can be easily augmented with other conditions,
+         should the design change again.
+         */
+      if (majorVersion <= 10) {
+        <Text
+          style={Styles.Mac.text(~isFocused, ~theme, ~isRegistered)}
+          fontFamily={font.family}
+          fontWeight=Medium
+          fontSize=12.
+          text=title
+        />;
+      } else {
+        <Text
+          style={Styles.Mac.text(~isFocused, ~theme, ~isRegistered)}
+          fontFamily={font.family}
+          fontWeight=Bold
+          fontSize=13.
+          text=title
+        />;
+      };
     let make =
         (
           ~dispatch,
@@ -319,17 +351,18 @@ module View = {
           ~registrationDispatch,
           ~isFocused,
           ~windowDisplayMode,
-          ~title,
+          ~title as titleText,
           ~theme,
           ~font: UiFont.t,
           ~height,
+          ~majorVersion,
           (),
         ) =>
       if (windowDisplayMode == Fullscreen) {
         React.empty;
       } else {
         let isRegistered = Feature_Registration.isRegistered(registration);
-
+        print_endline(string_of_float(height));
         <Clickable
           onDoubleClick={_ => dispatch(TitleDoubleClicked)}
           style={Styles.Mac.container(~isFocused, ~theme, ~height)}>
@@ -339,12 +372,13 @@ module View = {
               justifyContent(`Center),
               flexGrow(1),
             ]>
-            <Text
-              style={Styles.Mac.text(~isFocused, ~theme, ~isRegistered)}
-              fontFamily={font.family}
-              fontWeight=Bold
-              fontSize={0.45 *. height}
-              text=title
+            <title
+              title=titleText
+              isFocused
+              isRegistered
+              theme
+              font
+              majorVersion
             />
           </View>
           <Feature_Registration.View.TitleBar.Mac
@@ -508,7 +542,7 @@ module View = {
     let title =
       title(~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config);
     switch (Revery.Environment.os) {
-    | Mac(_) =>
+    | Mac({major, _}) =>
       <Mac
         isFocused
         windowDisplayMode
@@ -519,6 +553,7 @@ module View = {
         registration
         registrationDispatch
         height
+        majorVersion=major
       />
     | Windows(_) =>
       <Windows
