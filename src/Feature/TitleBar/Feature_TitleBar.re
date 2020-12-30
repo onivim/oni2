@@ -95,7 +95,7 @@ module Internal = {
 
   let getTitleDoubleClickBehavior = () => {
     switch (Revery.Environment.os) {
-    | Mac =>
+    | Mac(_) =>
       try({
         let ic =
           Unix.open_process_in(
@@ -508,7 +508,7 @@ module View = {
     let title =
       title(~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config);
     switch (Revery.Environment.os) {
-    | Mac =>
+    | Mac(_) =>
       <Mac
         isFocused
         windowDisplayMode
@@ -520,7 +520,7 @@ module View = {
         registrationDispatch
         height
       />
-    | Windows =>
+    | Windows(_) =>
       <Windows
         menuBar
         isFocused
@@ -532,7 +532,7 @@ module View = {
         registrationDispatch
         registration
       />
-    | Linux => menuBar
+    | Linux(_) => menuBar
     | _ => React.empty
     };
   };

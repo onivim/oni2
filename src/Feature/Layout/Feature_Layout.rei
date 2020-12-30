@@ -16,10 +16,12 @@ let initial: list(Editor.t) => model;
 
 let visibleEditors: model => list(Editor.t);
 let editorById: (int, model) => option(Editor.t);
+let removeEditor: (int, model) => option(model);
 
 let split: ([ | `Horizontal | `Vertical], model) => model;
 
 let activeEditor: model => Editor.t;
+let activeGroupEditors: model => list(Editor.t);
 
 let openEditor: (~config: Config.resolver, Editor.t, model) => model;
 let closeBuffer: (~force: bool, Vim.Types.buffer, model) => option(model);
@@ -69,6 +71,7 @@ module View: {
 
     let id: t => int;
     let title: t => string;
+    let preview: t => bool;
     let tooltip: t => string;
     let icon: t => option(IconTheme.IconDefinition.t);
     let isModified: t => bool;

@@ -72,11 +72,18 @@ type outmsg =
   | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
   | OpenFile(string)
+  | PreviewFile(string)
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | Nothing;
 
 let update:
-  (~fileSystem: Feature_FileSystem.model, Exthost.Client.t, model, msg) =>
+  (
+    ~previewEnabled: bool,
+    ~fileSystem: Feature_FileSystem.model,
+    Exthost.Client.t,
+    model,
+    msg
+  ) =>
   (model, outmsg);
 
 let getOriginalLines: (Oni_Core.Buffer.t, model) => option(array(string));

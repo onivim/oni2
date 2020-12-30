@@ -23,7 +23,9 @@ module WrapMode: {
     | Viewport;
 };
 
-let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
+let create:
+  (~config: Config.resolver, ~buffer: EditorBuffer.t, ~preview: bool, unit) =>
+  t;
 let copy: t => t;
 
 type inlineElement;
@@ -68,6 +70,8 @@ let linesWithInlineElements: t => list(EditorCoreTypes.LineNumber.t);
 
 let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;
+let getPreview: t => bool;
+let setPreview: (~preview: bool, t) => t;
 let getBufferId: t => int;
 let getTopVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
 let getBottomVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;

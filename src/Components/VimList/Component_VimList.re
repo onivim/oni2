@@ -113,6 +113,7 @@ type msg =
   | MouseOver({index: int})
   | MouseOut({index: int})
   | MouseClicked({index: int})
+  | MouseDoubleClicked({index: int})
   | ViewDimensionsChanged({
       heightInPixels: int,
       widthInPixels: int,
@@ -121,6 +122,7 @@ type msg =
 
 type outmsg =
   | Nothing
+  | Touched({index: int})
   | Selected({index: int});
 
 let showTopScrollShadow = ({scrollY, _}) => scrollY > 0.1;
@@ -365,6 +367,15 @@ let update = (msg, model) => {
     };
 
   | MouseClicked({index}) =>
+    let isValidIndex = index >= 0 && index < Array.length(model.items);
+
+    if (isValidIndex) {
+      (model |> setSelected(~selected=index), Touched({index: index}));
+    } else {
+      (model, Nothing);
+    };
+
+  | MouseDoubleClicked({index}) =>
     let isValidIndex = index >= 0 && index < Array.length(model.items);
 
     if (isValidIndex) {
@@ -796,6 +807,7 @@ module View = {
         ~focusBorder,
         ~searchBorder,
         ~onMouseClick,
+        ~onMouseDoubleClick,
         ~onMouseOver,
         ~onMouseOut,
         ~viewportWidth,
@@ -853,6 +865,7 @@ module View = {
           onMouseEnter={_ => onMouseOver(i)}
           onMouseLeave={_ => onMouseOut(i)}
           onClick={_ => onMouseClick(i)}
+          onDoubleClick={_ => onMouseDoubleClick(i)}
           style={Styles.item(~offset, ~rowHeight, ~bg)}>
           {render(
              ~availableWidth=viewportWidth,
@@ -924,6 +937,10 @@ module View = {
           dispatch(MouseClicked({index: idx}));
         };
 
+        let onMouseDoubleClick = idx => {
+          dispatch(MouseDoubleClicked({index: idx}));
+        };
+
         let scrollbar = {
           let maxHeight = count * rowHeight - viewportHeight;
           let thumbHeight =
@@ -983,6 +1000,7 @@ module View = {
             ~onMouseOver,
             ~onMouseOut,
             ~onMouseClick,
+            ~onMouseDoubleClick,
             ~viewportWidth,
             ~viewportHeight,
             ~rowHeight,

@@ -18,6 +18,8 @@ module Group: {
   let selected: t => Editor.t;
 
   let select: (int, t) => t;
+  let updateEditor: (int, Editor.t => Editor.t, t) => t;
+
   let nextEditor: t => t;
   let previousEditor: t => t;
   let openEditor: (Editor.t, t) => t;
@@ -56,6 +58,16 @@ module Group: {
     {...group, selectedId: id};
   };
 
+  let updateEditor = (editorId, f, group) => {
+    let newEditors =
+      List.map(
+        e => {Editor.getId(e) != editorId ? e : f(e)},
+        group.editors,
+      );
+
+    {...group, editors: newEditors};
+  };
+
   let nextEditor = group => {
     let rec loop =
       fun
@@ -90,24 +102,13 @@ module Group: {
   let map = (f, group) => {...group, editors: List.map(f, group.editors)};
 
   let openEditor = (editor, group) => {
-    let bufferId = Editor.getBufferId(editor);
-    switch (
-      List.find_opt(e => Editor.getBufferId(e) == bufferId, group.editors)
-    ) {
-    | Some(previousEditor) =>
-      let newCursors = Editor.getCursors(editor);
-      {...group, selectedId: Editor.getId(previousEditor)}
-      |> map(originalEditor
-           // Update cursors to match new editor, if they are specified
-           =>
-             if (Editor.getBufferId(editor)
-                 == Editor.getBufferId(originalEditor)
-                 && newCursors != [EditorCoreTypes.BytePosition.zero]) {
-               originalEditor |> Editor.setMode(Editor.mode(editor));
-             } else {
-               originalEditor;
-             }
-           );
+    let editorId = Editor.getId(editor);
+    switch (List.find_opt(e => Editor.getId(e) == editorId, group.editors)) {
+    | Some(existingEditor) =>
+      let editorId = Editor.getId(existingEditor);
+
+      {...group, selectedId: Editor.getId(existingEditor)}
+      |> map(e => Editor.getId(e) != editorId ? e : editor);
     | None => {
         ...group,
         editors: [editor, ...group.editors],
@@ -456,4 +457,10 @@ let fold = (f, initial, model) => {
     initial,
     model.layouts,
   );
+};
+
+let activeGroupEditors = model => {
+  let group = activeGroup(model);
+
+  group.editors;
 };

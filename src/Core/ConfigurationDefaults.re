@@ -31,6 +31,7 @@ let getDefaultConfigString = configName =>
   "files.exclude": ["_esy", "node_modules", ".git"],
   "workbench.activityBar.visible": true,
   "workbench.editor.showTabs": true,
+  "workbench.editor.enablePreview": true,
   "workbench.iconTheme": "vs-seti",
   "workbench.sideBar.location": "left",
   "workbench.sideBar.visible": true,

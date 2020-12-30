@@ -3,6 +3,7 @@
 - #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
 - #2889 - Extensions: Include HTML, JSON, PHP, and Markdown language servers
 - #2849 - UX: Initial menu bar on Windows / Linux (fixes #1255)
+- #2596 - Editor: File preview when clicking on files (thanks @fanantoxa!)
 
 ### Bug Fixes
 
@@ -21,6 +22,7 @@
 - #2878 - Input: Treat `Ctrl+[` as `Escape` everywhere
 - #2879 - Editor: Correct diff marker rendering in presence of codelens
 - #2891 - Vim: Fix count behavior for L/H jumps (fixes #2882)
+- #2895 - Completion: Fix crash on long (>1024 character) completion matches (fixes #2892)
 
 ### Performance
 
