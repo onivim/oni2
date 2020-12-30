@@ -1,6 +1,5 @@
 module Key: {
   type t =
-    | String(string)
     | Character(char)
     | Function(int)
     | NumpadDigit(int)

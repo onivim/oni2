@@ -1,56 +1,6 @@
 open TestFramework;
 open EditorInput;
 
-// let getKeycode =
-//   fun
-//   | Key.Character('a') => Some(1)
-//   | Key.Character('A') => Some(1)
-//   | Key.Character('b') => Some(2)
-//   | Key.Character('0') => Some(50)
-//   | Key.Character('9') => Some(59)
-//   | Key.Character('`') => Some(60)
-//   | Key.Character('-') => Some(61)
-//   | Key.Character('=') => Some(62)
-//   | Key.Character('[') => Some(63)
-//   | Key.Character(']') => Some(64)
-//   | Key.Character('\\') => Some(65)
-//   | Key.Character(';') => Some(66)
-//   | Key.Character('\'') => Some(67)
-//   | Key.Character(',') => Some(68)
-//   | Key.Character('.') => Some(69)
-//   | Key.Character('/') => Some(70)
-//   | Key.Tab => Some(98)
-//   | Key.Escape => Some(99)
-//   | Key.Up => Some(100)
-//   | Key.Left => Some(101)
-//   | Key.Right => Some(102)
-//   | Key.Down => Some(103)
-//   | Key.PageUp => Some(104)
-//   | Key.PageDown => Some(105)
-//   | Key.End => Some(106)
-//   | Key.Home => Some(107)
-//   | Key.Return => Some(108)
-//   | Key.Space => Some(109)
-//   | Key.Backspace => Some(110)
-//   | Key.Delete => Some(111)
-//   | Key.Pause => Some(112)
-//   | Key.CapsLock => Some(113)
-//   | Key.Insert => Some(114)
-//   | Key.Function(0) => Some(115)
-//   | Key.Function(12) => Some(133)
-//   | Key.Function(19) => Some(134)
-//   | Key.NumpadDigit(0) => Some(135)
-//   | Key.NumpadDigit(9) => Some(144)
-//   | NumpadMultiply => Some(145)
-//   | NumpadAdd => Some(146)
-//   | NumpadSeparator => Some(147)
-//   | NumpadSubtract => Some(148)
-//   | NumpadDecimal => Some(149)
-//   | NumpadDivide => Some(150)
-//   | _ => None;
-
-// let getScancode = getKeycode;
-
 let defaultParse = Matcher.parse(~explicitShiftKeyNeeded=true);
 
 let defaultParseImplicitShiftKey =
@@ -128,9 +78,8 @@ describe("Matcher", ({describe, _}) => {
         ("<leader>", specialKey(SpecialKey.Leader)),
         ("<Leader>", specialKey(SpecialKey.Leader)),
         // Non-direct production keys - start of cases for #2114 / #2883
-        // TODO: Split into Uchar?
-        (":", keyPress(Key.String(":"))),
-        ("~", keyPress(Key.String("~"))),
+        (":", keyPress(Key.Character(':'))),
+        ("~", keyPress(Key.Character('~'))),
         ("_", keyPress(Key.Character('_'))),
         ("+", keyPress(Key.Character('+'))),
       ];

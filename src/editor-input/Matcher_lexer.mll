@@ -101,4 +101,4 @@ rule token = parse
 | '<' { LT }
 | '>' { GT }
 | eof { EOF }
-| _ { BINDING (Physical(String (Lexing.lexeme lexbuf))) }
+| _ { BINDING (UnmatchedString(Lexing.lexeme lexbuf)) }

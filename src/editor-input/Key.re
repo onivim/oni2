@@ -1,6 +1,5 @@
 [@deriving show]
 type t =
-  | String(string)
   | Character(char)
   | Function(int)
   | NumpadDigit(int)
@@ -30,7 +29,6 @@ type t =
 
 let toString =
   fun
-  | String(str) => Printf.sprintf("String(%s)", str)
   | Character(c) => Printf.sprintf("Character(%c)", c)
   | Function(digit) => Printf.sprintf("Function(%d)", digit)
   | NumpadDigit(digit) => Printf.sprintf("Numpad(%d)", digit)
