@@ -26,12 +26,10 @@ runTest(~name="VimScriptLocalFunctionTest", (dispatch, wait, runEffects) => {
   runEffects();
 
   let input = key => {
-    let scancode = Sdl2.Scancode.ofName(key);
-    let keycode = Sdl2.Keycode.ofName(key);
     let modifiers = EditorInput.Modifiers.none;
 
     let keyPress: EditorInput.KeyPress.t =
-      EditorInput.KeyPress.physicalKey(~scancode, ~keycode, ~modifiers);
+      EditorInput.KeyPress.physicalKey(~key=EditorInput.Key.Character(key), ~modifiers);
     let time = Revery.Time.now();
 
     dispatch(Model.Actions.KeyDown(keyPress, time));
@@ -39,7 +37,7 @@ runTest(~name="VimScriptLocalFunctionTest", (dispatch, wait, runEffects) => {
     runEffects();
   };
 
-  input("j");
+  input('j');
 
   wait(~name="plugin notification shows up", (state: State.t) => {
     let notifications = Feature_Notification.all(state.notifications);

@@ -19,8 +19,7 @@ runTest(
     let input = key => {
       let keyPress =
         EditorInput.KeyPress.physicalKey(
-          ~scancode=Sdl2.Scancode.ofName(key),
-          ~keycode=Sdl2.Keycode.ofName(key),
+          ~key=EditorInput.Key.Character(key),
           ~modifiers=EditorInput.Modifiers.none,
         );
       let time = Revery.Time.now();
@@ -48,8 +47,8 @@ runTest(
       }
     );
 
-    input("k");
-    input("k");
+    input('k');
+    input('k');
 
     wait(~name="Wait for split to be created", (state: State.t) =>
       switch (Selectors.getActiveBuffer(state)) {

@@ -13,12 +13,10 @@ runTest(~name="VimSimpleRemapTest", (dispatch, wait, runEffects) => {
   runEffects();
 
   let input = key => {
-    let scancode = Sdl2.Scancode.ofName(key);
-    let keycode = Sdl2.Keycode.ofName(key);
     let modifiers = EditorInput.Modifiers.none;
 
     let keyPress: EditorInput.KeyPress.t =
-      EditorInput.KeyPress.physicalKey(~scancode, ~keycode, ~modifiers);
+      EditorInput.KeyPress.physicalKey(~key=EditorInput.Key.Character(key), ~modifiers);
     let time = Revery.Time.now();
 
     dispatch(Model.Actions.KeyDown(keyPress, time));
@@ -26,14 +24,14 @@ runTest(~name="VimSimpleRemapTest", (dispatch, wait, runEffects) => {
     runEffects();
   };
 
-  input("i");
+  input('i');
   wait(~name="Mode is now insert", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isInsert
   );
 
-  input("a");
-  input("j");
-  input("j");
+  input('a');
+  input('j');
+  input('j');
 
   wait(~name="Mode is back to normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
@@ -57,7 +55,7 @@ runTest(~name="VimSimpleRemapTest", (dispatch, wait, runEffects) => {
 
   // #2601 - Make sure we're _actually_ in normal mode!
   // Type another 'j' to see...
-  input("j");
+  input('j');
 
   wait(
     ~name=

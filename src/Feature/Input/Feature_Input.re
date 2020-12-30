@@ -248,8 +248,6 @@ type effect =
     | Unhandled(EditorInput.KeyPress.t)
     | RemapRecursionLimitHit;
 
-let keyCodeToString = Sdl2.Keycode.getName;
-
 let keyDown =
     (
       ~config,
