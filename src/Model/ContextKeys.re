@@ -111,15 +111,9 @@ let other = {
   Schema.(
     fromList(
       State.[
-        bool("isLinux", _state =>
-          Revery.Environment.isLinux
-        ),
-        bool("isMac", _state =>
-          Revery.Environment.isMac
-        ),
-        bool("isWin", _state =>
-          Revery.Environment.isWindows
-        ),
+        bool("isLinux", _state => Revery.Environment.isLinux),
+        bool("isMac", _state => Revery.Environment.isMac),
+        bool("isWin", _state => Revery.Environment.isWindows),
         bool("sneakMode", state => Feature_Sneak.isActive(state.sneak)),
         bool("zenMode", state => state.zenMode),
       ],

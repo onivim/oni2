@@ -87,7 +87,9 @@ module Items = {
   };
 };
 
-let menus = (Revery.Environment.isMac ? [OSX.application] : []) @ [file, edit, view, help];
+let menus =
+  (Revery.Environment.isMac ? [OSX.application] : [])
+  @ [file, edit, view, help];
 
 let groups = [
   group(~order=100, ~parent=file, Items.File.[newFile]),
