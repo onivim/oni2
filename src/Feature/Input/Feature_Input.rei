@@ -76,6 +76,15 @@ let candidates:
   (~config: Config.resolver, ~context: WhenExpr.ContextKeys.t, model) =>
   list((EditorInput.Matcher.t, execute));
 
+let commandToAvailableBindings:
+  (
+    ~command: string,
+    ~config: Config.resolver,
+    ~context: WhenExpr.ContextKeys.t,
+    model
+  ) =>
+  list(list(EditorInput.KeyPress.t));
+
 let keyPressToString: EditorInput.KeyPress.t => string;
 
 let consumedKeys: model => list(EditorInput.KeyPress.t);
