@@ -1594,22 +1594,12 @@ let mouseDown = (~time, ~pixelX, ~pixelY, editor) => {
       ~pixelY,
       editor,
     );
-  // let bytePosition =
-  //   Slow.pixelPositionToBytePosition(
-  // #2463: When we're insert mode, clicking past the end of the line
-  // should move the cursor past the last byte
-  //     ~allowPast=isInsertMode,
-  //     ~pixelX,
-  //     ~pixelY,
-  //     editor,
-  //   );
   let mode =
     if (Vim.Mode.isInsert(editor.mode)) {
       Vim.Mode.Insert({cursors: [bytePosition]});
     } else {
       Vim.Mode.Normal({cursor: bytePosition});
     };
-  prerr_endline("BYTE POSITION: " ++ BytePosition.show(bytePosition));
   {
     ...editor,
     mode,
