@@ -28,7 +28,7 @@ let keyToSdlName =
       | NumpadDivide => "Keypad //"
       | NumpadDecimal => "Keypad ."
       | Character(c) => String.make(1, c) |> String.uppercase_ascii
-      | String(str) => str
+      | String(str) => str;
     }
   );
 
