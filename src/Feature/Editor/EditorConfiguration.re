@@ -302,12 +302,10 @@ let fontFamily =
     ~vim=VimSettings.guifont,
     "editor.fontFamily",
     string,
-    // XXX: Might have to remove the regular part"
-    ~default="JetBrainsMono-Regular.ttf",
+    ~default=Constants.defaultFontFile,
   );
 let fontLigatures = setting("editor.fontLigatures", bool, ~default=true);
 let fontSize = setting("editor.fontSize", fontSize, ~default=14.);
-// XXX: Set the vim named argument?
 let fontWeight =
   setting(
     "editor.fontWeight",
