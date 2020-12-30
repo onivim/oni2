@@ -112,13 +112,13 @@ let other = {
     fromList(
       State.[
         bool("isLinux", _state =>
-          Revery.Environment.os == Revery.Environment.Linux
+          Revery.Environment.isLinux
         ),
         bool("isMac", _state =>
-          Revery.Environment.os == Revery.Environment.Mac
+          Revery.Environment.isMac
         ),
         bool("isWin", _state =>
-          Revery.Environment.os == Revery.Environment.Windows
+          Revery.Environment.isWindows
         ),
         bool("sneakMode", state => Feature_Sneak.isActive(state.sneak)),
         bool("zenMode", state => state.zenMode),
