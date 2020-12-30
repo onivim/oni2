@@ -18,6 +18,13 @@ module Internal = {
     );
   };
 
+  let previewFileEffect = (~position=None, filePath) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="features.previewFileByPath", dispatch =>
+      dispatch(PreviewFileByPath(filePath, None, position))
+    );
+  };
+
   let executeCommandEffect = command => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.executeCommand", dispatch =>
@@ -397,6 +404,10 @@ let update =
           effect |> Isolinear.Effect.map(msg => FileExplorer(msg)),
         )
       | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
+      | PreviewFile(filePath) => (
+          state,
+          Internal.previewFileEffect(filePath),
+        )
       | GrabFocus => (
           FocusManager.push(Focus.FileExplorer, state),
           Isolinear.Effect.none,
@@ -675,6 +686,11 @@ let update =
         ~font=state.editorFont,
         ~languageInfo=state.languageInfo,
         ~buffers=state.buffers,
+        ~previewEnabled=
+          Oni_Core.Configuration.getValue(
+            c => c.workbenchEditorEnablePreview,
+            state.configuration,
+          ),
         msg,
         state.pane,
       );
@@ -686,6 +702,10 @@ let update =
     | OpenFile({filePath, position}) => (
         state,
         Internal.openFileEffect(~position=Some(position), filePath),
+      )
+    | PreviewFile({filePath, position}) => (
+        state,
+        Internal.previewFileEffect(~position=Some(position), filePath),
       )
     | UnhandledWindowMovement(windowMovement) => (
         state,
@@ -754,7 +774,16 @@ let update =
     ({...state, registration: state'}, effect);
 
   | Search(msg) =>
-    let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
+    let (model, maybeOutmsg) =
+      Feature_Search.update(
+        ~previewEnabled=
+          Oni_Core.Configuration.getValue(
+            c => c.workbenchEditorEnablePreview,
+            state.configuration,
+          ),
+        state.searchPane,
+        msg,
+      );
     let state = {...state, searchPane: model};
 
     switch (maybeOutmsg) {
@@ -767,6 +796,11 @@ let update =
         state,
         Internal.openFileEffect(~position=Some(location), filePath),
       )
+
+    | Some(PreviewFile({filePath, location})) => (
+        state,
+        Internal.previewFileEffect(~position=Some(location), filePath),
+      )
     | Some(UnhandledWindowMovement(windowMovement)) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -777,6 +811,11 @@ let update =
   | SCM(msg) =>
     let (model, maybeOutmsg) =
       Feature_SCM.update(
+        ~previewEnabled=
+          Oni_Core.Configuration.getValue(
+            c => c.workbenchEditorEnablePreview,
+            state.configuration,
+          ),
         ~fileSystem=state.fileSystem,
         extHostClient,
         state.scm,
@@ -793,6 +832,7 @@ let update =
       )
 
     | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
+    | PreviewFile(filePath) => (state, Internal.previewFileEffect(filePath))
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -951,17 +991,61 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Effect.none)
+    | BufferModifiedSet(id, _) =>
+      open Feature_Editor;
 
-    | CreateEditor({buffer, split, position, grabFocus}) =>
-      let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
+      let bufferId = id;
+
+      let newLayout =
+        Feature_Layout.map(
+          editor =>
+            if (Editor.getBufferId(editor) == bufferId
+                && Editor.getPreview(editor) == true) {
+              Editor.setPreview(~preview=false, editor);
+            } else {
+              editor;
+            },
+          state.layout,
+        );
+
+      ({...state, layout: newLayout}, Effect.none);
+
+    | CreateEditor({buffer, split, position, grabFocus, preview}) =>
+      open Feature_Editor;
+
+      let editorBuffer = buffer |> EditorBuffer.ofBuffer;
       let fileType = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
-      let editor =
-        Feature_Editor.Editor.create(
-          ~config=config(~fileType),
-          ~buffer=editorBuffer,
-          (),
-        );
+      let bufferId = EditorBuffer.id(editorBuffer);
+
+      let layout =
+        switch (split) {
+        | `Current => state.layout
+        | `Horizontal => Feature_Layout.split(`Horizontal, state.layout)
+        | `Vertical => Feature_Layout.split(`Vertical, state.layout)
+        | `NewTab => Feature_Layout.addLayoutTab(state.layout)
+        };
+
+      let existingEditor =
+        Feature_Layout.activeGroupEditors(layout)
+        |> List.find_opt(editor => Editor.getBufferId(editor) == bufferId);
+
+      let (isPreview, editor) =
+        switch (existingEditor) {
+        | Some(ed) =>
+          let isPreview = Editor.getPreview(ed) && preview;
+
+          (isPreview, Editor.setPreview(~preview=isPreview, ed));
+        | None => (
+            preview,
+            Editor.create(
+              ~config=config(~fileType),
+              ~buffer=editorBuffer,
+              ~preview,
+              (),
+            ),
+          )
+        };
 
       let editor' =
         position
@@ -973,16 +1057,31 @@ let update =
            })
         |> Option.value(~default=editor);
 
-      let layout =
-        (
-          switch (split) {
-          | `Current => state.layout
-          | `Horizontal => Feature_Layout.split(`Horizontal, state.layout)
-          | `Vertical => Feature_Layout.split(`Vertical, state.layout)
-          | `NewTab => Feature_Layout.addLayoutTab(state.layout)
-          }
-        )
+      let layout' =
+        layout
         |> Feature_Layout.openEditor(~config=config(~fileType), editor');
+
+      let cleanLayout =
+        isPreview
+          ? {
+            Feature_Layout.activeGroupEditors(layout')
+            |> List.filter(ed =>
+                 Editor.getPreview(ed)
+                 && Editor.getId(ed) != Editor.getId(editor')
+               )
+            |> List.fold_left(
+                 (acc, ed) => {
+                   switch (
+                     Feature_Layout.removeEditor(Editor.getId(ed), acc)
+                   ) {
+                   | Some(lay) => lay
+                   | None => acc
+                   }
+                 },
+                 layout',
+               );
+          }
+          : layout';
 
       let bufferRenderers =
         buffer
@@ -1016,7 +1115,7 @@ let update =
            })
         |> Option.value(~default=state.bufferRenderers);
 
-      let state' = {...state, bufferRenderers, layout};
+      let state' = {...state, bufferRenderers, layout: cleanLayout};
 
       let state'' =
         if (grabFocus) {
@@ -1026,7 +1125,6 @@ let update =
         };
 
       (state'', Effect.none);
-
     | BufferSaved(buffer) =>
       let eff =
         Service_Exthost.Effects.FileSystemEventService.onFileEvent(
@@ -1330,6 +1428,27 @@ let update =
         ~position,
         ~grabFocus=true,
         ~filePath,
+        state.buffers,
+      )
+      |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
+    (state, effect);
+  | PreviewFileByPath(filePath, direction, position) =>
+    let split =
+      switch (direction) {
+      | None => `Current
+      | Some(`Horizontal) => `Horizontal
+      | Some(`Vertical) => `Vertical
+      | Some(`NewTab) => `NewTab
+      };
+    let effect =
+      Feature_Buffers.Effects.openFileInEditor(
+        ~languageInfo=state.languageInfo,
+        ~font=state.editorFont,
+        ~split,
+        ~position,
+        ~grabFocus=true,
+        ~filePath,
+        ~preview=true,
         state.buffers,
       )
       |> Isolinear.Effect.map(msg => Actions.Buffers(msg));

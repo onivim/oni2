@@ -87,7 +87,7 @@ let defaultEditorBuffer =
   defaultBuffer |> Feature_Editor.EditorBuffer.ofBuffer;
 
 let simpleEditor =
-  Editor.create(~config, ~buffer=defaultEditorBuffer, ())
+  Editor.create(~config, ~buffer=defaultEditorBuffer, ~preview=false, ())
   |> Editor.setSize(~pixelWidth=3440, ~pixelHeight=1440);
 
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {

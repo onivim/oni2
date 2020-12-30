@@ -35,6 +35,7 @@ type outmsg('node, 'leaf) =
   | Nothing
   | Expanded('node)
   | Collapsed('node)
+  | Touched('leaf)
   | Selected('leaf);
 
 let update:
