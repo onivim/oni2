@@ -169,7 +169,7 @@ module type Input = {
     (
       ~leaderKey: option(PhysicalKey.t)=?,
       ~context: context,
-      ~key: KeyPress.t,
+      ~scancode: int,
       t
     ) =>
     (t, list(effect));

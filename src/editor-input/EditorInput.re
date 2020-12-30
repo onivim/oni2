@@ -45,7 +45,7 @@ module type Input = {
     (
       ~leaderKey: option(PhysicalKey.t)=?,
       ~context: context,
-      ~key: KeyPress.t,
+      ~scancode: int,
       t
     ) =>
     (t, list(effect));
@@ -121,7 +121,6 @@ module Make = (Config: {
 
   type gesture =
     | Down(keyDownId, KeyPress.t)
-    | Up(KeyPress.t)
     | AllKeysReleased;
 
   type textEntry = {
@@ -168,7 +167,6 @@ module Make = (Config: {
     |> List.filter_map(
          fun
          | Down(_id, key) => Some(key)
-         | Up(_) => None
          | AllKeysReleased => None,
        );
   };
@@ -221,8 +219,16 @@ module Make = (Config: {
   };
 
   let applyKeysToBindings = (~leaderKey, ~context, keys, bindings) => {
-    let bindingsWithKeyUp =
+    let keyPresses =
       keys
+      |> List.filter_map(
+           fun
+           | AllKeysReleased => None
+           | Down(id, key) => Some(Down(id, key))
+         );
+
+    let bindingsWithKeyApplied =
+      keyPresses
       |> List.fold_left(
            (acc, curr) => {
              applyKeyToBindings(~leaderKey, ~context, curr, acc)
@@ -230,43 +236,7 @@ module Make = (Config: {
            bindings,
          );
 
-    let consumedBindings =
-      bindingsWithKeyUp
-      |> List.fold_left(
-           (acc, curr) => {
-             Hashtbl.add(acc, curr.id, true);
-             acc;
-           },
-           Hashtbl.create(16),
-         );
-
-    let unusedBindings =
-      bindings
-      |> List.filter(binding =>
-           Stdlib.Option.is_none(
-             Hashtbl.find_opt(consumedBindings, binding.id),
-           )
-         );
-
-    let keysWithoutUps =
-      keys
-      |> List.filter_map(
-           fun
-           | AllKeysReleased => None
-           | Down(id, key) => Some(Down(id, key))
-           | Up(_key) => None,
-         );
-
-    let bindingsWithoutUpKey =
-      keysWithoutUps
-      |> List.fold_left(
-           (acc, curr) => {
-             applyKeyToBindings(~leaderKey, ~context, curr, acc)
-           },
-           unusedBindings,
-         );
-
-    bindingsWithKeyUp @ bindingsWithoutUpKey;
+    bindingsWithKeyApplied
   };
 
   let addBinding = (matcher, enabled, command, keyBindings) => {
@@ -306,7 +276,6 @@ module Make = (Config: {
     |> List.iter(curr => {
          switch (curr) {
          | AllKeysReleased => ()
-         | Up(_key) => ()
          | Down(id, _key) => Hashtbl.add(ret, id, true)
          }
        });
@@ -331,7 +300,6 @@ module Make = (Config: {
       | None => Some(Unhandled(keyPress))
       | Some(text) => Some(Text(text))
       }
-    | Up(_)
     | AllKeysReleased => None
     };
   };
@@ -433,7 +401,6 @@ module Make = (Config: {
       let eff =
         switch (gesture) {
         | Down(_id, key) => [Unhandled(key)]
-        | Up(_) => []
         | AllKeysReleased => []
         };
       (bindings, eff);
@@ -442,7 +409,6 @@ module Make = (Config: {
       let eff =
         switch (gesture) {
         | Down(_id, key) => [Unhandled(key), RemapRecursionLimitHit]
-        | Up(_) => [RemapRecursionLimitHit]
         | AllKeysReleased => [RemapRecursionLimitHit]
         };
       (empty, eff);
@@ -656,14 +622,9 @@ module Make = (Config: {
     loop(releaseBindings);
   };
 
-  let keyUp = (~leaderKey=None, ~context, ~key, bindings) => {
+  let keyUp = (~leaderKey=None, ~context, ~scancode, bindings) => {
     let pressedScancodes =
-      key
-      |> KeyPress.toPhysicalKey
-      |> Option.map((key: PhysicalKey.t) => {
-           IntSet.remove(key.scancode, bindings.pressedScancodes)
-         })
-      |> Option.value(~default=bindings.pressedScancodes);
+           IntSet.remove(scancode, bindings.pressedScancodes);
 
     let bindings = {...bindings, suppressText: false, pressedScancodes};
 
@@ -676,9 +637,6 @@ module Make = (Config: {
         [];
       };
 
-    let (bindings, effects) =
-      handleKeyCore(~leaderKey, ~context, Up(key), bindings);
-
-    (bindings, effects @ initialEffects);
+    (bindings, initialEffects);
   };
 };
