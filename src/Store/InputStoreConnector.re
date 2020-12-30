@@ -247,7 +247,14 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     let config = Model.Selectors.configResolver(state);
     let (input, effects) =
-      Feature_Input.keyDown(~config, ~context, ~scancode, ~key, ~time, state.input);
+      Feature_Input.keyDown(
+        ~config,
+        ~context,
+        ~scancode,
+        ~key,
+        ~time,
+        state.input,
+      );
 
     let newState = {...state, input};
 
@@ -286,9 +293,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   // TODO: This should be moved to a Feature_Keybindings project
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-
-      // TODO hardcoded scancode:
-    | KeyDown(event, time) => handleKeyPress(~scancode=101, state, time, event)
+    // TODO hardcoded scancode:
+    | KeyDown(event, time) =>
+      handleKeyPress(~scancode=101, state, time, event)
 
     // TODO - hardcoded scancode:
     | KeyUp(_event, _time) => handleKeyUp(~scancode=101, state)

@@ -29,7 +29,10 @@ runTest(~name="VimScriptLocalFunctionTest", (dispatch, wait, runEffects) => {
     let modifiers = EditorInput.Modifiers.none;
 
     let keyPress: EditorInput.KeyPress.t =
-      EditorInput.KeyPress.physicalKey(~key=EditorInput.Key.Character(key), ~modifiers);
+      EditorInput.KeyPress.physicalKey(
+        ~key=EditorInput.Key.Character(key),
+        ~modifiers,
+      );
     let time = Revery.Time.now();
 
     dispatch(Model.Actions.KeyDown(keyPress, time));

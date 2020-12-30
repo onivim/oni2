@@ -133,9 +133,13 @@ describe("Keybindings", ({describe, _}) => {
                ~config=Oni_Core.Config.emptyResolver,
                ~context=contextWithEditorTextFocus,
                ~scancode=101,
-               ~key=EditorInput.(
-                PhysicalKey({key: Key.Function(2), modifiers: Modifiers.none})
-               ),
+               ~key=
+                 EditorInput.(
+                   PhysicalKey({
+                     key: Key.Function(2),
+                     modifiers: Modifiers.none,
+                   })
+                 ),
                input,
              );
 
@@ -184,28 +188,29 @@ describe("Keybindings", ({describe, _}) => {
         meta,
       };
 
-      let cases = EditorInput.[
-        (
-          Key.Character('p'),
-          modifier(~control=true, ~shift=false, ~meta=false),
-          "workbench.action.quickOpen",
-        ),
-        (
-          Key.Character('p'),
-          modifier(~control=false, ~shift=false, ~meta=true),
-          "workbench.action.quickOpen",
-        ),
-        (
-          Key.Character('p'),
-          modifier(~control=true, ~shift=true, ~meta=false),
-          "workbench.action.showCommands",
-        ),
-        (
-          Key.Character('p'),
-          modifier(~control=false, ~shift=true, ~meta=true),
-          "workbench.action.showCommands",
-        ),
-      ];
+      let cases =
+        EditorInput.[
+          (
+            Key.Character('p'),
+            modifier(~control=true, ~shift=false, ~meta=false),
+            "workbench.action.quickOpen",
+          ),
+          (
+            Key.Character('p'),
+            modifier(~control=false, ~shift=false, ~meta=true),
+            "workbench.action.quickOpen",
+          ),
+          (
+            Key.Character('p'),
+            modifier(~control=true, ~shift=true, ~meta=false),
+            "workbench.action.showCommands",
+          ),
+          (
+            Key.Character('p'),
+            modifier(~control=false, ~shift=true, ~meta=true),
+            "workbench.action.showCommands",
+          ),
+        ];
 
       cases |> List.iter(validateKeyResultsInCommand);
     });

@@ -51,8 +51,7 @@ open EditorInput;
 
 // let getScancode = getKeycode;
 
-let defaultParse =
-  Matcher.parse(~explicitShiftKeyNeeded=true);
+let defaultParse = Matcher.parse(~explicitShiftKeyNeeded=true);
 
 let defaultParseImplicitShiftKey =
   Matcher.parse(~explicitShiftKeyNeeded=false);
@@ -128,6 +127,12 @@ describe("Matcher", ({describe, _}) => {
         ("<Plug>", specialKey(SpecialKey.Plug)),
         ("<leader>", specialKey(SpecialKey.Leader)),
         ("<Leader>", specialKey(SpecialKey.Leader)),
+        // Non-direct production keys - start of cases for #2114 / #2883
+        // TODO: Split into Uchar?
+        (":", keyPress(Key.String(":"))),
+        ("~", keyPress(Key.String("~"))),
+        ("_", keyPress(Key.Character('_'))),
+        ("+", keyPress(Key.Character('+'))),
       ];
 
       let runCase = case => {
@@ -161,45 +166,95 @@ describe("Matcher", ({describe, _}) => {
       let result = defaultParse("<c-a>");
       expect.equal(
         result,
-        Ok(Sequence([keyPress(~modifiers=modifiersControl, Key.Character('a'))])),
+        Ok(
+          Sequence([
+            keyPress(~modifiers=modifiersControl, Key.Character('a')),
+          ]),
+        ),
       );
 
       let result = defaultParse("<S-a>");
       expect.equal(
         result,
-        Ok(Sequence([keyPress(~modifiers=modifiersShift, Key.Character('a'))])),
+        Ok(
+          Sequence([
+            keyPress(~modifiers=modifiersShift, Key.Character('a')),
+          ]),
+        ),
       );
 
       let result = defaultParse("<S-F12>");
       expect.equal(
         result,
-        Ok(Sequence([keyPress(~modifiers=modifiersShift, Key.Function(12))])),
+        Ok(
+          Sequence([keyPress(~modifiers=modifiersShift, Key.Function(12))]),
+        ),
       );
     });
     test("vscode bindings", ({expect, _}) => {
       let result = defaultParse("Ctrl+a");
       expect.equal(
         result,
-        Ok(Sequence([keyPress(~modifiers=modifiersControl, Key.Character('a'))])),
+        Ok(
+          Sequence([
+            keyPress(~modifiers=modifiersControl, Key.Character('a')),
+          ]),
+        ),
       );
 
       let result = defaultParse("ctrl+a");
       expect.equal(
         result,
-        Ok(Sequence([keyPress(~modifiers=modifiersControl, Key.Character('a'))])),
+        Ok(
+          Sequence([
+            keyPress(~modifiers=modifiersControl, Key.Character('a')),
+          ]),
+        ),
       );
     });
     test("binding list", ({expect, _}) => {
       let result = defaultParse("ab");
-      expect.equal(result, Ok(Sequence([keyPress(Key.Character('a')), keyPress(Key.Character('b'))])));
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(Key.Character('a')),
+            keyPress(Key.Character('b')),
+          ]),
+        ),
+      );
 
       let result = defaultParse("a b");
-      expect.equal(result, Ok(Sequence([keyPress(Key.Character('a')), keyPress(Key.Character('b'))])));
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(Key.Character('a')),
+            keyPress(Key.Character('b')),
+          ]),
+        ),
+      );
 
       let result = defaultParse("<a>b");
-      expect.equal(result, Ok(Sequence([keyPress(Key.Character('a')), keyPress(Key.Character('b'))])));
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(Key.Character('a')),
+            keyPress(Key.Character('b')),
+          ]),
+        ),
+      );
       let result = defaultParse("<a><b>");
-      expect.equal(result, Ok(Sequence([keyPress(Key.Character('a')), keyPress(Key.Character('b'))])));
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(Key.Character('a')),
+            keyPress(Key.Character('b')),
+          ]),
+        ),
+      );
 
       let result = defaultParse("<c-a> Ctrl+b");
       expect.equal(
@@ -216,14 +271,21 @@ describe("Matcher", ({describe, _}) => {
       let result = defaultParseImplicitShiftKey("A");
       expect.equal(
         result,
-        Ok(Sequence([keyPress(~modifiers=modifiersShift, Key.Character('a'))])),
+        Ok(
+          Sequence([
+            keyPress(~modifiers=modifiersShift, Key.Character('a')),
+          ]),
+        ),
       );
 
       let result = defaultParseImplicitShiftKey("Ab");
       expect.equal(
         result,
         Ok(
-          Sequence([keyPress(~modifiers=modifiersShift, Key.Character('a')), keyPress(Key.Character('b'))]),
+          Sequence([
+            keyPress(~modifiers=modifiersShift, Key.Character('a')),
+            keyPress(Key.Character('b')),
+          ]),
         ),
       );
     });
