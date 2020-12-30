@@ -31,6 +31,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.fontFamily` __(_string_)__ - The font family used by the editor surface. This must be a monospace font. The font may be specified by either the name of the font, or an absolute path to the font file.
 
+- `editor.fontWeight` __(_int|string_ 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | "normal" | "bold" default: `"normal"`)__ - The font weight used by the editor surface.
+
 - `editor.fontSize` __(_int_ default: `14`)__ - The font size used by the editor surface.
 
 - `editor.fontSmoothing` __(_"none"|"antialiased"|"subpixel-antialiased"_)__ - The smoothing strategy used when rendering fonts. The `"antialiased"` setting smooths font edges, and `"subpixel-antialiased"` means characters may be positioned fractionally on the pixel grid.
