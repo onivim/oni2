@@ -1636,6 +1636,9 @@ let getCharacterUnderMouse = editor => {
 };
 
 let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
+  ignore(pixelX);
+  ignore(pixelY);
+
   let isDoubleClick =
     switch (editor.lastMouseUpTime) {
     | Some(lastMouseUpTime) =>
