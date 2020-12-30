@@ -6,7 +6,6 @@
   "esy": {
     "build": "refmterr dune build -p libvim,textmate,treesitter,Oni2 -j4",
     "buildEnv": {
-      "MACOSX_DEPLOYMENT_TARGET": "10.12",
       "ONI2_ROOT": "#{self.root}",
       "ONI2_BUILD_MODE": "Debug",
       "ONI2_APPCAST_BASEURL": "http://localhost:8080/"
