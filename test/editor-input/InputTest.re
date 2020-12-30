@@ -1,8 +1,13 @@
 open TestFramework;
 open EditorInput;
 
+let aKeyScancode = 101;
 let aKeyNoModifiers =
-  KeyPress.physicalKey(~scancode=101, ~keycode=1, ~modifiers=Modifiers.none);
+  KeyPress.physicalKey(
+    ~scancode=aKeyScancode,
+    ~keycode=1,
+    ~modifiers=Modifiers.none,
+  );
 
 let bKeyNoModifiers =
   KeyPress.physicalKey(~scancode=102, ~keycode=2, ~modifiers=Modifiers.none);
@@ -132,7 +137,7 @@ describe("EditorInput", ({describe, _}) => {
       expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
 
       let (_bindings, effects) =
-        Input.keyUp(~context=true, ~key=aKeyNoModifiers, bindings);
+        Input.keyUp(~context=true, ~scancode=aKeyScancode, bindings);
 
       expect.equal(effects, [Execute("commandA")]);
     })
@@ -277,7 +282,7 @@ describe("EditorInput", ({describe, _}) => {
       expect.equal(effects, []);
 
       let (bindings, effects) =
-        Input.keyUp(~context=true, ~key=aKeyNoModifiers, bindings);
+        Input.keyUp(~context=true, ~scancode=aKeyScancode, bindings);
 
       expect.equal(effects, []);
 

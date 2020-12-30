@@ -224,7 +224,7 @@ module Make = (Config: {
       |> List.filter_map(
            fun
            | AllKeysReleased => None
-           | Down(id, key) => Some(Down(id, key))
+           | Down(id, key) => Some(Down(id, key)),
          );
 
     let bindingsWithKeyApplied =
@@ -236,7 +236,7 @@ module Make = (Config: {
            bindings,
          );
 
-    bindingsWithKeyApplied
+    bindingsWithKeyApplied;
   };
 
   let addBinding = (matcher, enabled, command, keyBindings) => {
@@ -623,8 +623,7 @@ module Make = (Config: {
   };
 
   let keyUp = (~leaderKey=None, ~context, ~scancode, bindings) => {
-    let pressedScancodes =
-           IntSet.remove(scancode, bindings.pressedScancodes);
+    let pressedScancodes = IntSet.remove(scancode, bindings.pressedScancodes);
 
     let bindings = {...bindings, suppressText: false, pressedScancodes};
 

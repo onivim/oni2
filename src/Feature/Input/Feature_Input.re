@@ -338,8 +338,13 @@ let keyUp = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
     key
     |> EditorInput.KeyPress.toPhysicalKey
     |> Option.map((key: EditorInput.PhysicalKey.t) => {
-    InputStateMachine.keyUp(~leaderKey, ~scancode=key.scancode, ~context, inputStateMachine);
-    })
+         InputStateMachine.keyUp(
+           ~leaderKey,
+           ~scancode=key.scancode,
+           ~context,
+           inputStateMachine,
+         )
+       })
     |> Option.value(~default=(inputStateMachine, []));
   ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
