@@ -145,7 +145,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     };
 
   let reveryKeyToEditorKey =
-      ({keycode, scancode, keymod, repeat}: Revery.Key.KeyEvent.t) => {
+      ({scancode, keymod, repeat, _}: Revery.Key.KeyEvent.t) => {
     // TODO: Should we filter out repeat keys from key binding processing?
     ignore(repeat);
 
@@ -242,12 +242,12 @@ let start = (window: option(Revery.Window.t), runEffects) => {
      /respond to commands otherwise if input is alphabetical AND
      a revery element is focused oni2 should defer to revery
    */
-  let handleKeyPress = (state: State.t, time, key) => {
+  let handleKeyPress = (~scancode, state: State.t, time, key) => {
     let context = Model.ContextKeys.all(state);
 
     let config = Model.Selectors.configResolver(state);
     let (input, effects) =
-      Feature_Input.keyDown(~config, ~context, ~key, ~time, state.input);
+      Feature_Input.keyDown(~config, ~context, ~scancode, ~key, ~time, state.input);
 
     let newState = {...state, input};
 
@@ -268,12 +268,12 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     updateFromInput(newState, /*Some("Text: " ++ text),*/ actions);
   };
 
-  let handleKeyUp = (state: State.t, key) => {
+  let handleKeyUp = (~scancode, state: State.t) => {
     let context = Model.ContextKeys.all(state);
 
     let config = Model.Selectors.configResolver(state);
     let (input, effects) =
-      Feature_Input.keyUp(~config, ~context, ~key, state.input);
+      Feature_Input.keyUp(~config, ~scancode, ~context, state.input);
 
     let newState = {...state, input};
 
@@ -286,8 +286,13 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   // TODO: This should be moved to a Feature_Keybindings project
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | KeyDown(event, time) => handleKeyPress(state, time, event)
-    | KeyUp(event, _time) => handleKeyUp(state, event)
+
+      // TODO hardcoded scancode:
+    | KeyDown(event, time) => handleKeyPress(~scancode=101, state, time, event)
+
+    // TODO - hardcoded scancode:
+    | KeyUp(_event, _time) => handleKeyUp(~scancode=101, state)
+
     | TextInput(text, time) => handleTextInput(state, time, text)
 
     | Pasted({rawText, isMultiLine, lines}) => (

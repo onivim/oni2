@@ -62,6 +62,7 @@ type effect =
 let keyDown:
   (
     ~config: Config.resolver,
+    ~scancode: int,
     ~key: KeyPress.t,
     ~context: WhenExpr.ContextKeys.t,
     ~time: Revery.Time.t,
@@ -92,7 +93,7 @@ let consumedKeys: model => list(EditorInput.KeyPress.t);
 let keyUp:
   (
     ~config: Config.resolver,
-    ~key: KeyPress.t,
+    ~scancode: int,
     ~context: WhenExpr.ContextKeys.t,
     model
   ) =>

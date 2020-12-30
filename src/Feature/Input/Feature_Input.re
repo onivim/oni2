@@ -1,10 +1,6 @@
-open KeyResolver;
-
 open Oni_Core;
 open Utility;
 module Log = (val Log.withNamespace("Oni2.Feature.Input"));
-
-let keyCodeToString = Sdl2.Keycode.getName;
 
 let keyPressToString =
   EditorInput.KeyPress.toString(
@@ -257,15 +253,13 @@ let keyCodeToString = Sdl2.Keycode.getName;
 let keyDown =
     (
       ~config,
+      ~scancode,
       ~key,
       ~context,
       ~time,
       {inputStateMachine, keyDisplayer, _} as model,
     ) => {
   let leaderKey = Configuration.leaderKey.get(config);
-
-  // TODO: Wire up through Feature_Input interface
-  let scancode = 101;
 
   let (inputStateMachine', effects) =
     InputStateMachine.keyDown(
@@ -328,24 +322,15 @@ let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
   );
 };
 
-let keyUp = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
-  // TODO: Fix this!
-  let scancode = 101;
-  // TODO
-
+let keyUp = (~config, ~scancode, ~context, {inputStateMachine, _} as model) => {
   let leaderKey = Configuration.leaderKey.get(config);
   let (inputStateMachine', effects) =
-    // key
-    // |> EditorInput.KeyPress.toPhysicalKey
-    // |> Option.map((key: EditorInput.PhysicalKey.t) => {
     InputStateMachine.keyUp(
       ~leaderKey,
       ~scancode,
       ~context,
       inputStateMachine,
     );
-  //    })
-  // |> Option.value(~default=(inputStateMachine, []));
   ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
