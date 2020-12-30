@@ -39,6 +39,10 @@ type t =
       groupId: int,
       editorId: int,
     })
+  | EditorTabDoubleClicked({
+      groupId: int,
+      editorId: int,
+    })
   | GroupSelected(int)
   | EditorCloseButtonClicked(int)
   | LayoutTabClicked(int)
