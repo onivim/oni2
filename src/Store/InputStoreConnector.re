@@ -5,6 +5,7 @@
  */
 
 open Oni_Core;
+open Utility;
 open Oni_Input;
 
 module Model = Oni_Model;
@@ -175,14 +176,66 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           (altGr, ctrlKey, altKey);
         | _ => (altGr, control, alt)
         };
+      let keyboard = Oni2_KeyboardLayout.Keymap.getCurrent();
+      let maybeKeymap =
+        Oni2_KeyboardLayout.Keymap.entryOfScancode(keyboard, scancode);
 
-      Some(
-        EditorInput.KeyPress.physicalKey(
-          ~scancode,
-          ~keycode,
-          ~modifiers={shift, control, alt, meta, altGr},
-        ),
-      );
+      switch (maybeKeymap) {
+      | Some(keymap) =>
+        Log.infof(m =>
+          m(
+            "Key info: %s\n",
+            Oni2_KeyboardLayout.Keymap.entryToString(keymap),
+          )
+        )
+      | None => Log.info("No keymap for key.")
+      };
+
+      let stringToKey = maybeString => {
+        maybeString
+        |> OptionEx.flatMap(str =>
+             if (String.length(str) != 1) {
+               None;
+             } else {
+               Some(str.[0]);
+             }
+           );
+      };
+
+      let maybeKey =
+        maybeKeymap
+        |> OptionEx.tap(keymap => {
+             Log.infof(m =>
+               m(
+                 "Key info: %s\n",
+                 Oni2_KeyboardLayout.Keymap.entryToString(keymap),
+               )
+             )
+           })
+        |> OptionEx.tapNone(() => Log.info("No keymap for key"))
+        |> OptionEx.flatMap((keymap: Oni2_KeyboardLayout.Keymap.entry) =>
+             if (shift && altGr) {
+               stringToKey(keymap.withAltGraphShift);
+             } else if (shift) {
+               stringToKey(keymap.withShift);
+             } else if (altGr) {
+               stringToKey(keymap.withAltGraph);
+             } else {
+               stringToKey(keymap.unmodified);
+             }
+           )
+        |> Option.map(keyChar => EditorInput.Key.Character(keyChar));
+
+      // TODO: Figure out key from keycode / scancode
+      // let key = EditorInput.Key.Character('a');
+
+      maybeKey
+      |> Option.map(key => {
+           EditorInput.KeyPress.physicalKey(
+             ~key,
+             ~modifiers={shift, control, alt, meta, altGr},
+           )
+         });
     };
   };
 
@@ -199,26 +252,27 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     let (input, effects) =
       Feature_Input.keyDown(~config, ~context, ~key, ~time, state.input);
 
-    switch (key) {
-    | PhysicalKey(physicalKey) =>
-      let scancode = physicalKey.scancode;
-      let keyboard = Oni2_KeyboardLayout.Keymap.getCurrent();
-      let maybeKeymap =
-        Oni2_KeyboardLayout.Keymap.entryOfScancode(keyboard, scancode);
+    // TODO: Move this to proper spot
+    // switch (key) {
+    // | PhysicalKey(physicalKey) =>
+    //   let scancode = physicalKey.scancode;
+    //   let keyboard = Oni2_KeyboardLayout.Keymap.getCurrent();
+    //   let maybeKeymap =
+    //     Oni2_KeyboardLayout.Keymap.entryOfScancode(keyboard, scancode);
 
-      switch (maybeKeymap) {
-      | Some(keymap) =>
-        Log.infof(m =>
-          m(
-            "Key info: %s\n",
-            Oni2_KeyboardLayout.Keymap.entryToString(keymap),
-          )
-        )
-      | None => Log.info("No keymap for key.")
-      };
+    //   switch (maybeKeymap) {
+    //   | Some(keymap) =>
+    //     Log.infof(m =>
+    //       m(
+    //         "Key info: %s\n",
+    //         Oni2_KeyboardLayout.Keymap.entryToString(keymap),
+    //       )
+    //     )
+    //   | None => Log.info("No keymap for key.")
+    //   };
 
-    | _ => ()
-    };
+    // | _ => ()
+    // };
     let newState = {...state, input};
 
     let actions =

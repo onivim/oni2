@@ -36,6 +36,7 @@ module type Input = {
     (
       ~leaderKey: option(PhysicalKey.t)=?,
       ~context: context,
+      ~scancode: int,
       ~key: KeyPress.t,
       t
     ) =>
@@ -567,15 +568,15 @@ module Make = (Config: {
     };
   };
 
-  let keyDown = (~leaderKey=None, ~context, ~key, bindings) => {
+  let keyDown = (~leaderKey=None, ~context, ~scancode, ~key, bindings) => {
     let id = KeyDownId.get();
     let pressedScancodes =
-      key
-      |> KeyPress.toPhysicalKey
-      |> Option.map((key: PhysicalKey.t) => {
-           IntSet.add(key.scancode, bindings.pressedScancodes)
-         })
-      |> Option.value(~default=bindings.pressedScancodes);
+      // key
+      // |> KeyPress.toPhysicalKey
+      // |> Option.map((key: PhysicalKey.t) => {
+      IntSet.add(scancode, bindings.pressedScancodes);
+    // })
+    // |> Option.value(~default=bindings.pressedScancodes);
 
     handleKeyCore(
       ~leaderKey,

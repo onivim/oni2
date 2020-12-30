@@ -48,8 +48,7 @@ module Modifiers: {
 module PhysicalKey: {
   [@deriving show]
   type t = {
-    scancode: int,
-    keycode: int,
+    key: Key.t,
     modifiers: Modifiers.t,
   };
 };
@@ -76,10 +75,9 @@ module KeyPress: {
 
   let toString:
     // The name of the 'meta' key. Defaults to "Meta".
-    (~meta: string=?, ~keyCodeToString: int => string, t) => string;
+    (~meta: string=?, ~keyToString: Key.t => string=?, t) => string;
 
-  let physicalKey:
-    (~keycode: int, ~scancode: int, ~modifiers: Modifiers.t) => t;
+  let physicalKey: (~key: Key.t, ~modifiers: Modifiers.t) => t;
 
   let specialKey: SpecialKey.t => t;
 
@@ -93,13 +91,7 @@ module KeyPress: {
     // When [explicitShiftKeyNeeded] is [false]:
     // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
     // (Vim style parsing)
-    (
-      ~explicitShiftKeyNeeded: bool,
-      ~getKeycode: Key.t => option(int),
-      ~getScancode: Key.t => option(int),
-      string
-    ) =>
-    result(list(t), string);
+    (~explicitShiftKeyNeeded: bool, string) => result(list(t), string);
 };
 
 module Matcher: {
@@ -115,13 +107,7 @@ module Matcher: {
     // When [explicitShiftKeyNeeded] is [false]:
     // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
     // (Vim style parsing)
-    (
-      ~explicitShiftKeyNeeded: bool,
-      ~getKeycode: Key.t => option(int),
-      ~getScancode: Key.t => option(int),
-      string
-    ) =>
-    result(t, string);
+    (~explicitShiftKeyNeeded: bool, string) => result(t, string);
 };
 
 module type Input = {
@@ -160,6 +146,7 @@ module type Input = {
     (
       ~leaderKey: option(PhysicalKey.t)=?,
       ~context: context,
+      ~scancode: int,
       ~key: KeyPress.t,
       t
     ) =>
