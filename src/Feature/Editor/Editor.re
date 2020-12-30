@@ -1594,23 +1594,28 @@ let mouseDown = (~time, ~pixelX, ~pixelY, editor) => {
       ~pixelY,
       editor,
     );
-      // let bytePosition =
-      //   Slow.pixelPositionToBytePosition(
-      // #2463: When we're insert mode, clicking past the end of the line
-      // should move the cursor past the last byte
-      //     ~allowPast=isInsertMode,
-      //     ~pixelX,
-      //     ~pixelY,
-      //     editor,
-      //   );
-      let mode =
-        if (Vim.Mode.isInsert(editor.mode)) {
-          Vim.Mode.Insert({cursors: [bytePosition]});
-        } else {
-          Vim.Mode.Normal({cursor: bytePosition});
-        };
+  // let bytePosition =
+  //   Slow.pixelPositionToBytePosition(
+  // #2463: When we're insert mode, clicking past the end of the line
+  // should move the cursor past the last byte
+  //     ~allowPast=isInsertMode,
+  //     ~pixelX,
+  //     ~pixelY,
+  //     editor,
+  //   );
+  let mode =
+    if (Vim.Mode.isInsert(editor.mode)) {
+      Vim.Mode.Insert({cursors: [bytePosition]});
+    } else {
+      Vim.Mode.Normal({cursor: bytePosition});
+    };
   prerr_endline("BYTE POSITION: " ++ BytePosition.show(bytePosition));
-  {...editor, mode, isMouseDown: true, mouseDownBytePosition: Some(bytePosition)};
+  {
+    ...editor,
+    mode,
+    isMouseDown: true,
+    mouseDownBytePosition: Some(bytePosition),
+  };
 };
 
 let getCharacterUnderMouse = editor => {
@@ -1725,16 +1730,14 @@ let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
 
          if (isInsertMode || isSelectMode) {
            if (newPosition == pos) {
-            Vim.Mode.Insert({cursors: [newPosition]})
+             Vim.Mode.Insert({cursors: [newPosition]});
            } else {
              Vim.Mode.Select(visualRange);
-           }
+           };
+         } else if (newPosition == pos) {
+           Vim.Mode.Normal({cursor: newPosition});
          } else {
-           if (newPosition == pos) {
-            Vim.Mode.Normal({cursor: newPosition})
-           } else {
            Vim.Mode.Visual(visualRange);
-           }
          };
        })
     |> Option.value(~default=editor.mode);
