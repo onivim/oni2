@@ -104,3 +104,20 @@ __Pass:__
 - [ ] Win
 - [ ] OSX
 - [ ] Linux
+
+# 6. Font Rendering
+
+## 2.1 Validate editor.fontWeight
+
+Prerequisite:
+- In configuration file, key "editor.fontFamily" either set to a __non absolute__ font name or absent (Ideally test both).
+
+- Run Onivim 2
+- Open configuration file
+- Change "editor.fontWeight" to ["bold"|"normal"|100|200|...|900] - verify it changes at each step.
+- Check that bold text is always effectively bolder than normal text.
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
