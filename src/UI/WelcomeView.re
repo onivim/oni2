@@ -107,7 +107,7 @@ let animation =
 
 let cmdOrCtrl =
   switch (Revery.Environment.os) {
-  | Mac => "Cmd"
+  | Mac(_) => "Cmd"
   | _ => "Ctrl"
   };
 

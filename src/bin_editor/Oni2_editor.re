@@ -165,13 +165,13 @@ switch (eff) {
 
     let decorated =
       switch (Revery.Environment.os) {
-      | Windows => false
+      | Windows(_) => false
       | _ => true
       };
 
     let icon =
       switch (Revery.Environment.os) {
-      | Mac =>
+      | Mac(_) =>
         switch (Sys.getenv_opt("ONI2_BUNDLED")) {
         | Some(_) => None
         | None => Some("logo.png")

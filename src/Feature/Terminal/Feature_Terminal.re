@@ -140,9 +140,9 @@ let update = (~config: Config.resolver, model: t, msg) => {
       switch (cmd) {
       | None =>
         switch (Revery.Environment.os) {
-        | Windows => Configuration.Shell.windows.get(config)
-        | Mac => Configuration.Shell.osx.get(config)
-        | Linux => Configuration.Shell.linux.get(config)
+        | Windows(_) => Configuration.Shell.windows.get(config)
+        | Mac(_) => Configuration.Shell.osx.get(config)
+        | Linux(_) => Configuration.Shell.linux.get(config)
         | _ => shellCmd
         }
       | Some(specifiedCommand) => specifiedCommand
@@ -150,9 +150,9 @@ let update = (~config: Config.resolver, model: t, msg) => {
 
     let arguments =
       switch (Revery.Environment.os) {
-      | Windows => Configuration.ShellArgs.windows.get(config)
-      | Mac => Configuration.ShellArgs.osx.get(config)
-      | Linux => Configuration.ShellArgs.linux.get(config)
+      | Windows(_) => Configuration.ShellArgs.windows.get(config)
+      | Mac(_) => Configuration.ShellArgs.osx.get(config)
+      | Linux(_) => Configuration.ShellArgs.linux.get(config)
       | _ => []
       };
 
@@ -160,14 +160,14 @@ let update = (~config: Config.resolver, model: t, msg) => {
       Exthost.ShellLaunchConfig.(
         switch (Revery.Environment.os) {
         // Windows - simply inherit from the running process
-        | Windows => Inherit
+        | Windows(_) => Inherit
 
         // Mac - inherit (we rely on the '-l' flag to pick up user config)
-        | Mac => Inherit
+        | Mac(_) => Inherit
 
         // For Linux, there's a few stray variables that may come in from the AppImage
         // for example - LD_LIBRARY_PATH in issue #2040. We need to clear those out.
-        | Linux =>
+        | Linux(_) =>
           switch (
             Sys.getenv_opt("ONI2_ORIG_PATH"),
             Sys.getenv_opt("ONI2_ORIG_LD_LIBRARY_PATH"),
