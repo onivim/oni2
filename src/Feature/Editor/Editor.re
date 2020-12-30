@@ -123,6 +123,7 @@ type t = {
   // Mouse state
   isMouseDown: bool,
   hasMouseEntered: bool,
+  mouseDownBytePosition: option(BytePosition.t),
   // The last mouse position, in screen coordinates
   lastMouseScreenPosition: option(PixelPosition.t),
   lastMouseMoveTime: [@opaque] option(Revery.Time.t),
@@ -535,6 +536,7 @@ let create = (~config, ~buffer, ()) => {
     isMouseDown: false,
     hasMouseEntered: false,
     lastMouseMoveTime: None,
+    mouseDownBytePosition: None,
     lastMouseScreenPosition: None,
     lastMouseUpTime: None,
 
@@ -1585,9 +1587,15 @@ let moveScreenLines = (~position, ~count, editor) => {
 
 let mouseDown = (~time, ~pixelX, ~pixelY, editor) => {
   ignore(time);
-  ignore(pixelX);
-  ignore(pixelY);
-  {...editor, isMouseDown: true};
+  let bytePosition: BytePosition.t =
+    Slow.pixelPositionToBytePosition(
+      ~allowPast=true,
+      ~pixelX,
+      ~pixelY,
+      editor,
+    );
+  prerr_endline("BYTE POSITION: " ++ BytePosition.show(bytePosition));
+  {...editor, isMouseDown: true, mouseDownBytePosition: Some(bytePosition)};
 };
 
 let getCharacterUnderMouse = editor => {
@@ -1659,30 +1667,73 @@ let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
          })
       |> Option.value(~default=editor.mode);
 
-    {...editor, isMouseDown: false, mode, lastMouseUpTime: None};
+    {
+      ...editor,
+      isMouseDown: false,
+      mode,
+      lastMouseUpTime: None,
+      mouseDownBytePosition: None,
+    };
   } else {
-    let bytePosition =
-      Slow.pixelPositionToBytePosition(
-        // #2463: When we're insert mode, clicking past the end of the line
-        // should move the cursor past the last byte
-        ~allowPast=isInsertMode,
-        ~pixelX,
-        ~pixelY,
-        editor,
-      );
-    let mode =
-      if (Vim.Mode.isInsert(editor.mode)) {
-        Vim.Mode.Insert({cursors: [bytePosition]});
-      } else {
-        Vim.Mode.Normal({cursor: bytePosition});
-      };
-    {...editor, isMouseDown: false, mode, lastMouseUpTime: Some(time)};
+    {
+      // let bytePosition =
+      //   Slow.pixelPositionToBytePosition(
+      // #2463: When we're insert mode, clicking past the end of the line
+      // should move the cursor past the last byte
+      //     ~allowPast=isInsertMode,
+      //     ~pixelX,
+      //     ~pixelY,
+      //     editor,
+      //   );
+      // let mode =
+      //   if (Vim.Mode.isInsert(editor.mode)) {
+      //     Vim.Mode.Insert({cursors: [bytePosition]});
+      //   } else {
+      //     Vim.Mode.Normal({cursor: bytePosition});
+      //   };
+      ...editor,
+      isMouseDown: false,
+      lastMouseUpTime: Some(time),
+      mouseDownBytePosition: None,
+    };
   };
 };
 
 let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
+  let mode' =
+    editor.mouseDownBytePosition
+    |> Option.map(pos => {
+         let isInsertMode = Vim.Mode.isInsert(editor.mode);
+         let isSelectMode = Vim.Mode.isSelect(editor.mode);
+
+         let newPosition =
+           Slow.pixelPositionToBytePosition(
+             // #2463: When we're insert mode, clicking past the end of the line
+             // should move the cursor past the last byte
+             ~allowPast=isInsertMode,
+             ~pixelX,
+             ~pixelY,
+             editor,
+           );
+
+         let visualRange =
+           Vim.VisualRange.{
+             cursor: newPosition,
+             anchor: pos,
+             visualType: Vim.Types.Character,
+           };
+
+         if (isInsertMode || isSelectMode) {
+           Vim.Mode.Select(visualRange);
+         } else {
+           Vim.Mode.Visual(visualRange);
+         };
+       })
+    |> Option.value(~default=editor.mode);
+
   {
     ...editor,
+    mode: mode',
     lastMouseMoveTime: Some(time),
     lastMouseScreenPosition: Some(PixelPosition.{x: pixelX, y: pixelY}),
   };
