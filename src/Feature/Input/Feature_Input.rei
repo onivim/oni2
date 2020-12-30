@@ -16,11 +16,20 @@ type command;
 // MODEL
 
 module Schema: {
-  type keybinding = {
-    key: string,
-    command: string,
-    condition: WhenExpr.t,
-  };
+  type keybinding;
+
+  // Bind a key to a command
+  let bind:
+    (~key: string, ~command: string, ~condition: WhenExpr.t) => keybinding;
+
+  // Clear all bindings for a key
+  let clear: (~key: string) => keybinding;
+
+  // Remap a key -> to another key
+  let remap:
+    (~fromKeys: string, ~toKeys: string, ~condition: WhenExpr.t) => keybinding;
+
+  let mapCommand: (~f: string => string, keybinding) => keybinding;
 
   type resolvedKeybinding;
 
@@ -66,6 +75,15 @@ let text:
 let candidates:
   (~config: Config.resolver, ~context: WhenExpr.ContextKeys.t, model) =>
   list((EditorInput.Matcher.t, execute));
+
+let commandToAvailableBindings:
+  (
+    ~command: string,
+    ~config: Config.resolver,
+    ~context: WhenExpr.ContextKeys.t,
+    model
+  ) =>
+  list(list(EditorInput.KeyPress.t));
 
 let keyPressToString: EditorInput.KeyPress.t => string;
 

@@ -564,65 +564,65 @@ module Contributions = {
   let keybindings = {
     Feature_Input.Schema.[
       // Insert mode -> normal mdoe
-      {
-        key: "<C-\\><C-N>",
-        command: Commands.Oni.normalMode.id,
-        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-\\>n",
-        command: Commands.Oni.normalMode.id,
-        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
-      },
+      bind(
+        ~key="<C-\\><C-N>",
+        ~command=Commands.Oni.normalMode.id,
+        ~condition="terminalFocus && insertMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-\\>n",
+        ~command=Commands.Oni.normalMode.id,
+        ~condition="terminalFocus && insertMode" |> WhenExpr.parse,
+      ),
       // Normal mode -> insert mode
-      {
-        key: "o",
-        command: Commands.Oni.insertMode.id,
-        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-O>",
-        command: Commands.Oni.insertMode.id,
-        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
-      },
-      {
-        key: "Shift+a",
-        command: Commands.Oni.insertMode.id,
-        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
-      },
-      {
-        key: "a",
-        command: Commands.Oni.insertMode.id,
-        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
-      },
-      {
-        key: "i",
-        command: Commands.Oni.insertMode.id,
-        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
-      },
-      {
-        key: "Shift+i",
-        command: Commands.Oni.insertMode.id,
-        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
-      },
+      bind(
+        ~key="o",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-O>",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="Shift+a",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="a",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="i",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="Shift+i",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
       // Paste - Windows:
-      {
-        key: "<C-V>",
-        command: Feature_Clipboard.Commands.paste.id,
-        condition: "terminalFocus && insertMode && isWin" |> WhenExpr.parse,
-      },
+      bind(
+        ~key="<C-V>",
+        ~command=Feature_Clipboard.Commands.paste.id,
+        ~condition="terminalFocus && insertMode && isWin" |> WhenExpr.parse,
+      ),
       // Paste - Linux:
-      {
-        key: "<C-S-V>",
-        command: Feature_Clipboard.Commands.paste.id,
-        condition: "terminalFocus && insertMode && isLinux" |> WhenExpr.parse,
-      },
+      bind(
+        ~key="<C-S-V>",
+        ~command=Feature_Clipboard.Commands.paste.id,
+        ~condition="terminalFocus && insertMode && isLinux" |> WhenExpr.parse,
+      ),
       // Paste - Mac:
-      {
-        key: "<D-V>",
-        command: Feature_Clipboard.Commands.paste.id,
-        condition: "terminalFocus && insertMode && isMac" |> WhenExpr.parse,
-      },
+      bind(
+        ~key="<D-V>",
+        ~command=Feature_Clipboard.Commands.paste.id,
+        ~condition="terminalFocus && insertMode && isMac" |> WhenExpr.parse,
+      ),
     ];
   };
 };

@@ -65,3 +65,6 @@ module Configuration: {
 
   let resolver: model => resolver;
 };
+
+module Contributions: {let keybindings: list(Feature_Input.Schema.keybinding);
+};

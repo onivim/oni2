@@ -233,8 +233,9 @@ let start = () => {
         |> List.map((theme: ExtensionContributions.Theme.t) => {
              Actions.{
                category: Some("Theme"),
-               name: theme.label,
-               command: () => ThemeLoadByName(theme.label),
+               name: ExtensionContributions.Theme.label(theme),
+               command: () =>
+                 ThemeLoadById(ExtensionContributions.Theme.id(theme)),
                icon: None,
                highlight: [],
                handle: None,
