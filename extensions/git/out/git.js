@@ -15,7 +15,6 @@ const iconv = require("iconv-lite-umd");
 const filetype = require("file-type");
 const util_1 = require("./util");
 const vscode_1 = require("vscode");
-const vscode_uri_1 = require("vscode-uri");
 const encoding_1 = require("./encoding");
 const byline = require("byline");
 const string_decoder_1 = require("string_decoder");
@@ -189,6 +188,7 @@ class GitError {
         this.exitCode = data.exitCode;
         this.gitErrorCode = data.gitErrorCode;
         this.gitCommand = data.gitCommand;
+        this.gitArgs = data.gitArgs;
     }
     toString() {
         let result = this.message + ' ' + JSON.stringify({
@@ -264,16 +264,16 @@ class Git {
         await this.exec(repository, ['init']);
         return;
     }
-    async clone(url, parentPath, progress, cancellationToken) {
+    async clone(url, options, cancellationToken) {
         let baseFolderName = decodeURI(url).replace(/[\/]+$/, '').replace(/^.*[\/\\]/, '').replace(/\.git$/, '') || 'repository';
         let folderName = baseFolderName;
-        let folderPath = path.join(parentPath, folderName);
+        let folderPath = path.join(options.parentPath, folderName);
         let count = 1;
         while (count < 20 && await new Promise(c => fs_1.exists(folderPath, c))) {
             folderName = `${baseFolderName}-${count++}`;
-            folderPath = path.join(parentPath, folderName);
+            folderPath = path.join(options.parentPath, folderName);
         }
-        await util_1.mkdirp(parentPath);
+        await util_1.mkdirp(options.parentPath);
         const onSpawn = (child) => {
             const decoder = new string_decoder_1.StringDecoder('utf8');
             const lineStream = new byline.LineStream({ encoding: 'utf8' });
@@ -295,13 +295,17 @@ class Git {
                     totalProgress = 60 + Math.floor(parseInt(match[1]) * 0.4);
                 }
                 if (totalProgress !== previousProgress) {
-                    progress.report({ increment: totalProgress - previousProgress });
+                    options.progress.report({ increment: totalProgress - previousProgress });
                     previousProgress = totalProgress;
                 }
             });
         };
         try {
-            await this.exec(parentPath, ['clone', url.includes(' ') ? encodeURI(url) : url, folderPath, '--progress'], { cancellationToken, onSpawn });
+            let command = ['clone', url.includes(' ') ? encodeURI(url) : url, folderPath, '--progress'];
+            if (options.recursive) {
+                command.push('--recursive');
+            }
+            await this.exec(options.parentPath, command, { cancellationToken, onSpawn });
         }
         catch (err) {
             if (err.stderr) {
@@ -383,7 +387,8 @@ class Git {
                 stderr: result.stderr,
                 exitCode: result.exitCode,
                 gitErrorCode: getGitErrorCode(result.stderr),
-                gitCommand: args[0]
+                gitCommand: args[0],
+                gitArgs: args
             }));
         }
         return result;
@@ -489,7 +494,7 @@ function parseGitmodules(raw) {
         if (!submodule) {
             return;
         }
-        const propertyMatch = /^\s*(\w+)\s+=\s+(.*)$/.exec(line);
+        const propertyMatch = /^\s*(\w+)\s*=\s*(.*)$/.exec(line);
         if (!propertyMatch) {
             return;
         }
@@ -843,7 +848,7 @@ class Repository {
             if (!change || !resourcePath) {
                 break;
             }
-            const originalUri = vscode_uri_1.URI.file(path.isAbsolute(resourcePath) ? resourcePath : path.join(this.repositoryRoot, resourcePath));
+            const originalUri = vscode_1.Uri.file(path.isAbsolute(resourcePath) ? resourcePath : path.join(this.repositoryRoot, resourcePath));
             let status = 7 /* UNTRACKED */;
             // Copy or Rename status comes with a number, e.g. 'R100'. We don't need the number, so we use only first character of the status.
             switch (change[0]) {
@@ -865,7 +870,7 @@ class Repository {
                     if (!newPath) {
                         break;
                     }
-                    const uri = vscode_uri_1.URI.file(path.isAbsolute(newPath) ? newPath : path.join(this.repositoryRoot, newPath));
+                    const uri = vscode_1.Uri.file(path.isAbsolute(newPath) ? newPath : path.join(this.repositoryRoot, newPath));
                     result.push({
                         uri,
                         renameUri: uri,
@@ -905,7 +910,7 @@ class Repository {
             args.push('-A');
         }
         if (paths && paths.length) {
-            for (const chunk of util_1.splitInChunks(paths, MAX_CLI_LENGTH)) {
+            for (const chunk of util_1.splitInChunks(paths.map(sanitizePath), MAX_CLI_LENGTH)) {
                 await this.run([...args, '--', ...chunk]);
             }
         }
@@ -953,6 +958,9 @@ class Repository {
         if (opts.track) {
             args.push('--track');
         }
+        if (opts.detached) {
+            args.push('--detach');
+        }
         if (treeish) {
             args.push(treeish);
         }
@@ -969,17 +977,24 @@ class Repository {
         catch (err) {
             if (/Please,? commit your changes or stash them/.test(err.stderr || '')) {
                 err.gitErrorCode = "DirtyWorkTree" /* DirtyWorkTree */;
+                err.gitTreeish = treeish;
             }
             throw err;
         }
     }
     async commit(message, opts = Object.create(null)) {
-        const args = ['commit', '--quiet', '--allow-empty-message', '--file', '-'];
+        const args = ['commit', '--quiet', '--allow-empty-message'];
         if (opts.all) {
             args.push('--all');
         }
-        if (opts.amend) {
+        if (opts.amend && message) {
             args.push('--amend');
+        }
+        if (opts.amend && !message) {
+            args.push('--amend', '--no-edit');
+        }
+        else {
+            args.push('--file', '-');
         }
         if (opts.signoff) {
             args.push('--signoff');
@@ -993,8 +1008,10 @@ class Repository {
         if (opts.noVerify) {
             args.push('--no-verify');
         }
+        // Stops git from guessing at user/email
+        args.splice(0, 0, '-c', 'user.useConfigOnly=true');
         try {
-            await this.run(args, { input: message || '' });
+            await this.run(args, !opts.amend || message ? { input: message || '' } : {});
         }
         catch (commitErr) {
             await this.handleCommitError(commitErr);
@@ -1048,6 +1065,10 @@ class Repository {
         const args = ['branch', '-m', name];
         await this.run(args);
     }
+    async move(from, to) {
+        const args = ['mv', from, to];
+        await this.run(args);
+    }
     async setBranchUpstream(name, upstream) {
         const args = ['branch', '--set-upstream-to', upstream, name];
         await this.run(args);
@@ -1089,7 +1110,7 @@ class Repository {
         const promises = [];
         const args = ['clean', '-f', '-q'];
         for (const paths of groups) {
-            for (const chunk of util_1.splitInChunks(paths, MAX_CLI_LENGTH)) {
+            for (const chunk of util_1.splitInChunks(paths.map(sanitizePath), MAX_CLI_LENGTH)) {
                 promises.push(limiter.queue(() => this.run([...args, '--', ...chunk])));
             }
         }
@@ -1123,7 +1144,7 @@ class Repository {
         }
         try {
             if (paths && paths.length > 0) {
-                for (const chunk of util_1.splitInChunks(paths, MAX_CLI_LENGTH)) {
+                for (const chunk of util_1.splitInChunks(paths.map(sanitizePath), MAX_CLI_LENGTH)) {
                     await this.run([...args, '--', ...chunk]);
                 }
             }
@@ -1154,7 +1175,9 @@ class Repository {
     }
     async fetch(options = {}) {
         const args = ['fetch'];
-        const spawnOptions = {};
+        const spawnOptions = {
+            cancellationToken: options.cancellationToken,
+        };
         if (options.remote) {
             args.push(options.remote);
             if (options.ref) {
@@ -1227,7 +1250,23 @@ class Repository {
             throw err;
         }
     }
-    async push(remote, name, setUpstream = false, tags = false, forcePushMode) {
+    async rebase(branch, options = {}) {
+        const args = ['rebase'];
+        args.push(branch);
+        try {
+            await this.run(args, options);
+        }
+        catch (err) {
+            if (/^CONFLICT \([^)]+\): \b/m.test(err.stdout || '')) {
+                err.gitErrorCode = "Conflict" /* Conflict */;
+            }
+            else if (/cannot rebase onto multiple branches/i.test(err.stderr || '')) {
+                err.gitErrorCode = "CantRebaseMultipleBranches" /* CantRebaseMultipleBranches */;
+            }
+            throw err;
+        }
+    }
+    async push(remote, name, setUpstream = false, followTags = false, forcePushMode, tags = false) {
         const args = ['push'];
         if (forcePushMode === ForcePushMode.ForceWithLease) {
             args.push('--force-with-lease');
@@ -1238,8 +1277,11 @@ class Repository {
         if (setUpstream) {
             args.push('-u');
         }
-        if (tags) {
+        if (followTags) {
             args.push('--follow-tags');
+        }
+        if (tags) {
+            args.push('--tags');
         }
         if (remote) {
             args.push(remote);
@@ -1265,6 +1307,10 @@ class Repository {
             }
             throw err;
         }
+    }
+    async cherryPick(commitHash) {
+        const args = ['cherry-pick', commitHash];
+        await this.run(args);
     }
     async blame(path) {
         try {
@@ -1340,11 +1386,16 @@ class Repository {
             throw err;
         }
     }
-    getStatus(limit = 5000) {
+    getStatus(opts) {
         return new Promise((c, e) => {
+            var _a;
             const parser = new GitStatusParser();
             const env = { GIT_OPTIONAL_LOCKS: '0' };
-            const child = this.stream(['status', '-z', '-u'], { env });
+            const args = ['status', '-z', '-u'];
+            if (opts === null || opts === void 0 ? void 0 : opts.ignoreSubmodules) {
+                args.push('--ignore-submodules');
+            }
+            const child = this.stream(args, { env });
             const onExit = (exitCode) => {
                 if (exitCode !== 0) {
                     const stderr = stderrData.join('');
@@ -1353,11 +1404,13 @@ class Repository {
                         stderr,
                         exitCode,
                         gitErrorCode: getGitErrorCode(stderr),
-                        gitCommand: 'status'
+                        gitCommand: 'status',
+                        gitArgs: args
                     }));
                 }
                 c({ status: parser.status, didHitLimit: false });
             };
+            const limit = (_a = opts === null || opts === void 0 ? void 0 : opts.limit) !== null && _a !== void 0 ? _a : 5000;
             const onStdoutData = (raw) => {
                 parser.update(raw);
                 if (parser.status.length > limit) {
@@ -1407,7 +1460,7 @@ class Repository {
         if (opts && opts.sort && opts.sort !== 'alphabetically') {
             args.push('--sort', `-${opts.sort}`);
         }
-        args.push('--format', '%(refname) %(objectname)');
+        args.push('--format', '%(refname) %(objectname) %(*objectname)');
         if (opts === null || opts === void 0 ? void 0 : opts.pattern) {
             args.push(opts.pattern);
         }
@@ -1416,15 +1469,16 @@ class Repository {
         }
         const result = await this.run(args);
         const fn = (line) => {
+            var _a;
             let match;
-            if (match = /^refs\/heads\/([^ ]+) ([0-9a-f]{40})$/.exec(line)) {
+            if (match = /^refs\/heads\/([^ ]+) ([0-9a-f]{40}) ([0-9a-f]{40})?$/.exec(line)) {
                 return { name: match[1], commit: match[2], type: 0 /* Head */ };
             }
-            else if (match = /^refs\/remotes\/([^/]+)\/([^ ]+) ([0-9a-f]{40})$/.exec(line)) {
+            else if (match = /^refs\/remotes\/([^/]+)\/([^ ]+) ([0-9a-f]{40}) ([0-9a-f]{40})?$/.exec(line)) {
                 return { name: `${match[1]}/${match[2]}`, commit: match[3], type: 1 /* RemoteHead */, remote: match[1] };
             }
-            else if (match = /^refs\/tags\/([^ ]+) ([0-9a-f]{40})$/.exec(line)) {
-                return { name: match[1], commit: match[2], type: 2 /* Tag */ };
+            else if (match = /^refs\/tags\/([^ ]+) ([0-9a-f]{40}) ([0-9a-f]{40})?$/.exec(line)) {
+                return { name: match[1], commit: (_a = match[3]) !== null && _a !== void 0 ? _a : match[2], type: 2 /* Tag */ };
             }
             return null;
         };

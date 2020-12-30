@@ -109,10 +109,15 @@ module Contributions: {
   module Theme: {
     [@deriving show]
     type t = {
-      label: string,
+      id: option(string),
+      label: LocalizedToken.t,
       uiTheme: string,
       path: string,
     };
+
+    let id: t => string;
+
+    let label: t => string;
   };
 
   module IconTheme: {

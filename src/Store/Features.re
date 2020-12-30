@@ -18,6 +18,13 @@ module Internal = {
     );
   };
 
+  let executeCommandEffect = command => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="features.executeCommand", dispatch =>
+      dispatch(Actions.KeybindingInvoked({command: command}))
+    );
+  };
+
   let setThemesEffect =
       (~themes: list(Exthost.Extension.Contributions.Theme.t)) => {
     switch (themes) {
@@ -25,7 +32,9 @@ module Internal = {
     | [theme] =>
       Isolinear.Effect.createWithDispatch(
         ~name="feature.extensions.selectTheme", dispatch => {
-        dispatch(ThemeLoadByName(theme.label))
+        dispatch(
+          ThemeLoadById(Exthost.Extension.Contributions.Theme.id(theme)),
+        )
       })
     | themes =>
       Isolinear.Effect.createWithDispatch(
@@ -165,30 +174,16 @@ module Internal = {
     };
 
   let updateMode =
-      (
-        ~extHostClient,
-        ~allowAnimation,
-        state: State.t,
-        mode: Vim.Mode.t,
-        effects,
-      ) => {
+      (~allowAnimation, state: State.t, mode: Vim.Mode.t, effects) => {
     let prevCursor =
       state.layout
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.getPrimaryCursor;
 
-    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let config = Selectors.configResolver(state);
     let editor = Feature_Layout.activeEditor(state.layout);
-    let (signatureHelp, shOutMsg) =
-      Feature_SignatureHelp.update(
-        ~maybeBuffer,
-        ~maybeEditor=Some(editor),
-        ~extHostClient,
-        state.signatureHelp,
-        Feature_SignatureHelp.CursorMoved(
-          Feature_Editor.Editor.getId(editor),
-        ),
-      );
+    let signatureHelp = state.signatureHelp;
+    let maybeBuffer = Selectors.getActiveBuffer(state);
 
     let wasInInsertMode =
       Vim.Mode.isInsert(
@@ -197,11 +192,6 @@ module Internal = {
         |> Feature_Editor.Editor.mode,
       );
 
-    let shEffect =
-      switch (shOutMsg) {
-      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
-      | _ => Effect.none
-      };
     let activeEditorId = editor |> Feature_Editor.Editor.getId;
 
     let msg: Feature_Editor.msg =
@@ -230,25 +220,32 @@ module Internal = {
         state.languageSupport;
       };
 
-    let languageSupport' =
+    // TODO: Bring signature help into language support
+    let (languageSupport', signatureHelp') =
       if (isInInsertMode != wasInInsertMode) {
         if (isInInsertMode) {
-          languageSupport |> Feature_LanguageSupport.startInsertMode;
+          (
+            languageSupport |> Feature_LanguageSupport.startInsertMode,
+            signatureHelp
+            |> Feature_SignatureHelp.startInsert(~config, ~maybeBuffer),
+          );
         } else {
-          languageSupport |> Feature_LanguageSupport.stopInsertMode;
+          (
+            languageSupport |> Feature_LanguageSupport.stopInsertMode,
+            signatureHelp |> Feature_SignatureHelp.stopInsert,
+          );
         };
       } else {
-        languageSupport;
+        (languageSupport, signatureHelp);
       };
 
     let state = {
       ...state,
       layout,
-      signatureHelp,
+      signatureHelp: signatureHelp',
       languageSupport: languageSupport',
     };
-    let effect = [shEffect, editorEffect] |> Effect.batch;
-    (state, effect);
+    (state, editorEffect);
   };
 };
 
@@ -439,6 +436,15 @@ let update =
       | Effect(eff) => eff |> Isolinear.Effect.map(msg => FileSystem(msg))
       };
     ({...state, fileSystem: model}, eff);
+
+  | Help(msg) =>
+    let (model, outmsg) = Feature_Help.update(msg, state.help);
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(effect) => effect |> Isolinear.Effect.map(msg => Help(msg))
+      };
+    ({...state, help: model}, eff);
 
   | Input(msg) =>
     let (model, outmsg) = Feature_Input.update(msg, state.input);
@@ -633,6 +639,19 @@ let update =
         }
       );
     (state', eff);
+
+  | MenuBar(msg) =>
+    let contextKeys = Oni_Model.ContextKeys.all(state);
+    let commands = CommandManager.current(state);
+    let (menuBar', outmsg) =
+      Feature_MenuBar.update(~contextKeys, ~commands, msg, state.menuBar);
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | ExecuteCommand({command}) => Internal.executeCommandEffect(command)
+      };
+    ({...state, menuBar: menuBar'}, eff);
 
   | Messages(msg) =>
     let (model, outmsg) = Feature_Messages.update(msg, state.messages);
@@ -1477,7 +1496,6 @@ let update =
       Feature_SignatureHelp.update(
         ~maybeBuffer,
         ~maybeEditor=Some(editor),
-        ~extHostClient,
         state.signatureHelp,
         msg,
       );
@@ -1500,21 +1518,8 @@ let update =
     let activeCursor = editor |> Feature_Editor.Editor.getPrimaryCursor;
     let activeCursorByte =
       editor |> Feature_Editor.Editor.getPrimaryCursorByte;
-    let (signatureHelp, shOutMsg) =
-      Feature_SignatureHelp.update(
-        ~maybeBuffer,
-        ~maybeEditor=Some(editor),
-        ~extHostClient,
-        state.signatureHelp,
-        Feature_SignatureHelp.KeyPressed(triggerKey, false),
-      );
-    let shEffect =
-      switch (shOutMsg) {
-      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
-      | _ => Effect.none
-      };
 
-    let languageSupport' =
+    let (languageSupport', signatureHelp') =
       maybeBuffer
       |> Option.map(buffer => {
            let syntaxScope =
@@ -1534,19 +1539,36 @@ let update =
                 )
              |> Option.value(~default=LanguageConfiguration.default);
 
-           Feature_LanguageSupport.bufferUpdated(
-             ~languageConfiguration,
-             ~buffer,
-             ~config,
-             ~activeCursor,
-             ~syntaxScope,
-             ~triggerKey,
-             state.languageSupport,
-           );
-         })
-      |> Option.value(~default=state.languageSupport);
+           let languageSupport =
+             Feature_LanguageSupport.bufferUpdated(
+               ~languageConfiguration,
+               ~buffer,
+               ~config,
+               ~activeCursor,
+               ~syntaxScope,
+               ~triggerKey,
+               state.languageSupport,
+             );
 
-    ({...state, signatureHelp, languageSupport: languageSupport'}, shEffect);
+           let signatureHelp =
+             Feature_SignatureHelp.bufferUpdated(
+               ~languageConfiguration,
+               ~buffer,
+               ~activeCursor,
+               state.signatureHelp,
+             );
+           (languageSupport, signatureHelp);
+         })
+      |> Option.value(~default=(state.languageSupport, state.signatureHelp));
+
+    (
+      {
+        ...state,
+        signatureHelp: signatureHelp',
+        languageSupport: languageSupport',
+      },
+      Isolinear.Effect.none,
+    );
 
   | Yank({range}) =>
     open EditorCoreTypes;
@@ -1642,13 +1664,7 @@ let update =
         Isolinear.Effect.none,
       )
     | ModeDidChange({allowAnimation, mode, effects}) =>
-      Internal.updateMode(
-        ~extHostClient,
-        ~allowAnimation,
-        state,
-        mode,
-        effects,
-      )
+      Internal.updateMode(~allowAnimation, state, mode, effects)
     | Output({cmd, output}) =>
       let pane' = state.pane |> Feature_Pane.setOutput(cmd, output);
       (

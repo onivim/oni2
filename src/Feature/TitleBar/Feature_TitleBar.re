@@ -444,6 +444,7 @@ module View = {
 
     let make =
         (
+          ~menuBar,
           ~dispatch,
           ~registrationDispatch,
           ~registration,
@@ -464,6 +465,7 @@ module View = {
             width=18
             height=18
           />
+          <View style=Style.[paddingLeft(16)]> menuBar </View>
           <Text
             style={Styles.Windows.title(~isFocused, ~theme)}
             fontFamily={font.family}
@@ -488,6 +490,7 @@ module View = {
 
   let make =
       (
+        ~menuBar,
         ~activeBuffer,
         ~workspaceRoot,
         ~workspaceDirectory,
@@ -519,6 +522,7 @@ module View = {
       />
     | Windows =>
       <Windows
+        menuBar
         isFocused
         windowDisplayMode
         font
@@ -528,6 +532,7 @@ module View = {
         registrationDispatch
         registration
       />
+    | Linux => menuBar
     | _ => React.empty
     };
   };

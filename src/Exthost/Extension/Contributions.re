@@ -462,16 +462,28 @@ module Grammar = {
 module Theme = {
   [@deriving show]
   type t = {
-    label: string,
+    id: option(string),
+    label: LocalizedToken.t,
     uiTheme: string,
     path: string,
   };
+
+  let localize = (loc: LocalizationDictionary.t, theme) => {
+    ...theme,
+    label: LocalizedToken.localize(loc, theme.label),
+  };
+
+  let id = ({id, label, _}) =>
+    id |> Option.value(~default=LocalizedToken.toString(label));
+
+  let label = ({label, _}) => LocalizedToken.toString(label);
 
   let decode =
     Json.Decode.(
       obj(({field, _}) =>
         {
-          label: field.required("label", string),
+          id: field.optional("id", string),
+          label: field.required("label", LocalizedToken.decode),
           uiTheme: field.required("uiTheme", string),
           path: field.required("path", string),
         }
@@ -481,7 +493,8 @@ module Theme = {
   let encode = theme =>
     Json.Encode.(
       obj([
-        ("label", theme.label |> string),
+        ("id", theme.id |> nullable(string)),
+        ("label", theme.label |> LocalizedToken.encode),
         ("uiTheme", theme.uiTheme |> string),
         ("path", theme.path |> string),
       ])
@@ -618,6 +631,10 @@ let _localizeCommands = (loc, cmds) => {
      );
 };
 
+let _localizeThemes = (loc, themes) => {
+  themes |> List.map(theme => Theme.localize(loc, theme));
+};
+
 let remapPaths = (path: string, contributions: t) => {
   ...contributions,
   grammars: _remapGrammars(path, contributions.grammars),
@@ -629,4 +646,5 @@ let remapPaths = (path: string, contributions: t) => {
 let localize = (locDictionary: LocalizationDictionary.t, contributions: t) => {
   ...contributions,
   commands: _localizeCommands(locDictionary, contributions.commands),
+  themes: _localizeThemes(locDictionary, contributions.themes),
 };

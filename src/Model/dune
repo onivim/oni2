@@ -5,18 +5,19 @@
    ppx_deriving.runtime ppx_deriving_yojson.runtime isolinear Oni2.core
    Oni2.cli Oni2.input Oni2.syntax Oni2.syntax_client Oni2.service.font
    Oni2.service.file-watcher Oni2.service.os Oni2.components
-   Oni2.feature.buffers Oni2.feature.clipboard Oni2.feature.configuration
-   Oni2.feature.contextMenu Oni2.feature.diagnostics Oni2.feature.explorer
+   Oni2.feature.help Oni2.feature.buffers Oni2.feature.clipboard
+   Oni2.feature.configuration Oni2.feature.diagnostics Oni2.feature.explorer
    Oni2.feature.exthost Oni2.feature.extensions Oni2.feature.messages
    Oni2.feature.theme Oni2.feature.notification Oni2.feature.changelog
    Oni2.feature.commands Oni2.feature.decorations Oni2.feature.input
    Oni2.feature.logging Oni2.component.inputText Oni2.feature.search
-   Oni2.feature.sideBar Oni2.feature.syntax Oni2.feature.language_support
-   Oni2.feature.editor Oni2.feature.fileSystem Oni2.feature.pane
-   Oni2.feature.registers Oni2.feature.scm Oni2.feature.sneak
-   Oni2.feature.statusbar Oni2.feature.terminal Oni2.feature.titlebar
-   Oni2.feature.modals Oni2.feature.layout Oni2.feature.vim
-   Oni2.feature.signature_help Oni2.feature.workspace Oni2.feature.autoupdate
-   Oni2.feature.registration Fzy textmate Oni2.editor-core-types)
+   Oni2.feature.menubar Oni2.feature.sideBar Oni2.feature.syntax
+   Oni2.feature.language_support Oni2.feature.editor Oni2.feature.fileSystem
+   Oni2.feature.pane Oni2.feature.registers Oni2.feature.scm
+   Oni2.feature.sneak Oni2.feature.statusbar Oni2.feature.terminal
+   Oni2.feature.titlebar Oni2.feature.modals Oni2.feature.layout
+   Oni2.feature.vim Oni2.feature.signature_help Oni2.feature.workspace
+   Oni2.feature.autoupdate Oni2.feature.registration Fzy textmate
+   Oni2.editor-core-types)
  (preprocess
   (pps lwt_ppx ppx_deriving_yojson ppx_deriving.show)))

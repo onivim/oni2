@@ -1,6 +1,8 @@
 ### Features
 
 - #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
+- #2889 - Extensions: Include HTML, JSON, PHP, and Markdown language servers
+- #2849 - UX: Initial menu bar on Windows / Linux (fixes #1255)
 
 ### Bug Fixes
 
@@ -14,6 +16,11 @@
 - #2868 - SCM: Diff markers not showing up in gutter (fixes #2857)
 - #2869 - Hover: Fix hover pop up while scrolling via mousewheel
 - #2871 - Vim: Fix `ctrl+o` behavior in insert mode (fixes #2425)
+- #2854 - Extensions: Signature Help - fix overlay staying open in normal mode
+- #2877 - Vim: Remove conflicting `ctrl+b` binding on Windows / Linux (fixes #2870)
+- #2878 - Input: Treat `Ctrl+[` as `Escape` everywhere
+- #2879 - Editor: Correct diff marker rendering in presence of codelens
+- #2891 - Vim: Fix count behavior for L/H jumps (fixes #2882)
 
 ### Performance
 
@@ -22,8 +29,13 @@
 ### Documentation
 
 - #2874 - Languages: Fix extension ids for `exuberant-ctags` and `clangd` (fixes #2872)
+- #2893 - Building: Add Xorg dependencies for Linux (thanks @marcinkoziej!)
 
 ### Infrastructure / Refactoring
 
 - #2853 - Input: Add APIs for querying contextually available bindings and consumed keys
-
+- #2886 - Extensions: Upgrade vscode-exthost -> 1.51.0
+- #2887 - Build: Remove hardcoded extension host version; pull from package
+- #2888 - Extensions: Upgrade vscode-exthost -> 1.52.1
+- #2894 - Build: Linux - Fix permission problem removing setup.json (thanks @marcinkoziej!)
+- #2889 - Extensions: Upgrade extensions to 1.52.1

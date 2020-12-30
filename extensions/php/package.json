@@ -35,12 +35,26 @@
 				"language": "php",
 				"scopeName": "source.php",
 				"path": "./syntaxes/php.tmLanguage.json"
+			},
+			{
+				"language": "php",
+				"scopeName": "text.html.php",
+				"path": "./syntaxes/html.tmLanguage.json",
+				"embeddedLanguages": {
+					"text.html": "html",
+					"source.php": "php",
+					"source.sql": "sql",
+					"text.xml": "xml",
+					"source.js": "javascript",
+					"source.json": "json",
+					"source.css": "css"
+				}
 			}
 		],
 		"snippets": [
 			{
 				"language": "php",
-				"path": "./snippets/php.snippets.json"
+				"path": "./snippets/php.code-snippets"
 			}
 		]
 	},

@@ -40,6 +40,7 @@ module LazyLoader = LazyLoader;
 module LineNumber = LineNumber;
 module Log = Kernel.Log;
 module Menu = Menu;
+module MenuBar = MenuBar;
 module Mode = Mode;
 module NodeTask = NodeTask;
 module Ripgrep = Ripgrep;

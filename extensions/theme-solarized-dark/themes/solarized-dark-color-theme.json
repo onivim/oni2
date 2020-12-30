@@ -3,14 +3,12 @@
 	"tokenColors": [
 		{
 			"settings": {
-				"background": "#002B36",
 				"foreground": "#93A1A1"
 			}
 		},
 		{
 			"scope": ["meta.embedded", "source.groovy.embedded"],
 			"settings": {
-				"background": "#002B36",
 				"foreground": "#93A1A1"
 			}
 		},
@@ -212,7 +210,9 @@
 		{
 			"name": "Invalid",
 			"scope": "invalid",
-			"settings": {}
+			"settings": {
+				"foreground": "#D30102"
+			}
 		},
 		{
 			"name": "diff: header",
@@ -221,7 +221,6 @@
 				"meta.diff.header"
 			],
 			"settings": {
-				"background": "#b58900",
 				"fontStyle": "italic",
 				"foreground": "#E0EDDD"
 			}
@@ -230,7 +229,6 @@
 			"name": "diff: deleted",
 			"scope": "markup.deleted",
 			"settings": {
-				"background": "#eee8d5",
 				"fontStyle": "",
 				"foreground": "#dc322f"
 			}
@@ -239,7 +237,6 @@
 			"name": "diff: changed",
 			"scope": "markup.changed",
 			"settings": {
-				"background": "#eee8d5",
 				"fontStyle": "",
 				"foreground": "#cb4b16"
 			}
@@ -248,7 +245,6 @@
 			"name": "diff: inserted",
 			"scope": "markup.inserted",
 			"settings": {
-				"background": "#eee8d5",
 				"foreground": "#219186"
 			}
 		},
@@ -277,6 +273,20 @@
 			}
 		},
 		{
+			"name": "Markup: Strong",
+			"scope": "markup.bold",
+			"settings": {
+				"fontStyle": "bold"
+			}
+		},
+		{
+			"name": "Markup: Emphasis",
+			"scope": "markup.italic",
+			"settings": {
+				"fontStyle": "italic"
+			}
+		},
+		{
 			"name": "Markup Inline",
 			"scope": "markup.inline.raw",
 			"settings": {
@@ -288,6 +298,7 @@
 			"name": "Markup Headings",
 			"scope": "markup.heading",
 			"settings": {
+				"fontStyle": "bold",
 				"foreground": "#268BD2"
 			}
 		},
@@ -425,12 +436,11 @@
 		"tab.inactiveForeground": "#93A1A1",
 		"tab.inactiveBackground": "#004052",
 		"tab.border": "#003847",
-		"tab.modifiedBorder": "#268bd2",
+		"tab.lastPinnedBorder": "#2AA19844",
 
 		// Workbench: Activity Bar
 		"activityBar.background": "#003847",
 		// "activityBarBadge.background": "",
-		// "activityBar.dropBackground": "",
 		// "activityBar.foreground": "",
 		// "activityBarBadge.foreground": "",
 
@@ -484,5 +494,6 @@
 		"terminal.ansiBrightMagenta": "#6c71c4",
 		"terminal.ansiBrightCyan": "#93a1a1",
 		"terminal.ansiBrightWhite": "#fdf6e3"
-	}
+	},
+	"semanticHighlighting": true
 }

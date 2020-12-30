@@ -10,53 +10,51 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Logger = void 0;
 const vscode = require("vscode");
 const nls = require("vscode-nls");
 const memoize_1 = require("./memoize");
 const localize = nls.loadMessageBundle();
-let Logger = /** @class */ (() => {
-    class Logger {
-        get output() {
-            return vscode.window.createOutputChannel(localize('channelName', 'TypeScript'));
+class Logger {
+    get output() {
+        return vscode.window.createOutputChannel(localize('channelName', 'TypeScript'));
+    }
+    data2String(data) {
+        if (data instanceof Error) {
+            return data.stack || data.message;
         }
-        data2String(data) {
-            if (data instanceof Error) {
-                return data.stack || data.message;
-            }
-            if (data.success === false && data.message) {
-                return data.message;
-            }
-            return data.toString();
+        if (data.success === false && data.message) {
+            return data.message;
         }
-        info(message, data) {
-            this.logLevel('Info', message, data);
+        return data.toString();
+    }
+    info(message, data) {
+        this.logLevel('Info', message, data);
+    }
+    error(message, data) {
+        // See https://github.com/microsoft/TypeScript/issues/10496
+        if (data && data.message === 'No content available.') {
+            return;
         }
-        error(message, data) {
-            // See https://github.com/Microsoft/TypeScript/issues/10496
-            if (data && data.message === 'No content available.') {
-                return;
-            }
-            this.logLevel('Error', message, data);
-        }
-        logLevel(level, message, data) {
-            this.output.appendLine(`[${level}  - ${this.now()}] ${message}`);
-            if (data) {
-                this.output.appendLine(this.data2String(data));
-            }
-        }
-        now() {
-            const now = new Date();
-            return padLeft(now.getUTCHours() + '', 2, '0')
-                + ':' + padLeft(now.getMinutes() + '', 2, '0')
-                + ':' + padLeft(now.getUTCSeconds() + '', 2, '0') + '.' + now.getMilliseconds();
+        this.logLevel('Error', message, data);
+    }
+    logLevel(level, message, data) {
+        this.output.appendLine(`[${level}  - ${this.now()}] ${message}`);
+        if (data) {
+            this.output.appendLine(this.data2String(data));
         }
     }
-    __decorate([
-        memoize_1.memoize
-    ], Logger.prototype, "output", null);
-    return Logger;
-})();
-exports.default = Logger;
+    now() {
+        const now = new Date();
+        return padLeft(now.getUTCHours() + '', 2, '0')
+            + ':' + padLeft(now.getMinutes() + '', 2, '0')
+            + ':' + padLeft(now.getUTCSeconds() + '', 2, '0') + '.' + now.getMilliseconds();
+    }
+}
+__decorate([
+    memoize_1.memoize
+], Logger.prototype, "output", null);
+exports.Logger = Logger;
 function padLeft(s, n, pad = ' ') {
     return pad.repeat(Math.max(0, n - s.length)) + s;
 }
