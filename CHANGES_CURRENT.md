@@ -21,6 +21,7 @@
 - #2878 - Input: Treat `Ctrl+[` as `Escape` everywhere
 - #2879 - Editor: Correct diff marker rendering in presence of codelens
 - #2891 - Vim: Fix count behavior for L/H jumps (fixes #2882)
+- #2895 - Completion: Fix crash on long (>1024 character) completion matches (fixes #2892)
 
 ### Performance
 

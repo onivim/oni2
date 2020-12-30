@@ -1,5 +1,7 @@
 open Revery.UI;
 
+module Log = (val Oni_Core.Log.withNamespace("Oni2.Component.HighlightText"));
+
 let make =
     (
       ~text: string,
@@ -14,8 +16,8 @@ let make =
     let textLength = String.length(text);
 
     // Assumes ranges are sorted low to high
-    let rec highlighter = last =>
-      fun
+    let rec highlighter = (last, rest) => {
+      switch (rest) {
       | [] => [
           <Text
             ?fontFamily
@@ -40,9 +42,16 @@ let make =
             text={String.sub(text, low, high + 1 - low)}
           />,
           ...highlighter(high + 1, rest),
-        ];
+        ]
+      };
+    };
 
-    highlighter(0, highlights) |> React.listToElement;
+    try(highlighter(0, highlights) |> React.listToElement) {
+    // There was an error creating the highlight text - don't crash, but fallback to un-highlighted-text.
+    | exn =>
+      Log.errorf(m => m("HighlightText error: %s", Printexc.to_string(exn)));
+      <Text style ?fontFamily ?fontSize text />;
+    };
   };
 
   <View style=Style.[flexDirection(`Row)]> highlighted </View>;

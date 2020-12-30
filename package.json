@@ -247,7 +247,7 @@
     "libvim": "8.10869.83",
     "ocaml": "4.10.0",
     "reason-native-crash-utils": "onivim/reason-native-crash-utils#38c8f00",
-    "reason-fzy": "CrossR/reason-fzy#7339d4e",
+    "reason-fzy": "bryphe/reason-fzy#ab172e1",
     "refmterr": "*",
     "rench": "1.7.1",
     "revery": "*",
