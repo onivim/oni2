@@ -40,8 +40,7 @@ module Internal = {
     );
   };
 
-  let tryToGetCharacterFromKey =
-      (~shift, ~control, ~altGr, ~alt, ~meta, ~scancode) => {
+  let tryToGetCharacterFromKey = (~shift, ~altGr, ~scancode) => {
     let keyboard = Oni2_KeyboardLayout.Keymap.getCurrent();
     let maybeKeymap =
       Oni2_KeyboardLayout.Keymap.entryOfScancode(keyboard, scancode);
@@ -124,14 +123,7 @@ let reveryKeyToKeyPress =
     keycode
     |> Internal.tryToGetSpecialKey
     |> OptionEx.or_lazy(() => {
-         Internal.tryToGetCharacterFromKey(
-           ~shift,
-           ~control,
-           ~alt,
-           ~meta,
-           ~altGr,
-           ~scancode,
-         )
+         Internal.tryToGetCharacterFromKey(~shift, ~altGr, ~scancode)
        })
     |> Option.map(key => {
          EditorInput.KeyPress.physicalKey(

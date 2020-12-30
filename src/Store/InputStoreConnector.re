@@ -5,7 +5,6 @@
  */
 
 open Oni_Core;
-open Utility;
 open Oni_Input;
 
 module Model = Oni_Model;
