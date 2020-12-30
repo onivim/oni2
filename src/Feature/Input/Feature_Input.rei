@@ -1,6 +1,9 @@
 open Oni_Core;
 open EditorInput;
 
+// TODO: Move to Service_Input
+module ReveryKeyConverter = ReveryKeyConverter;
+
 type outmsg =
   | Nothing
   | DebugInputShown

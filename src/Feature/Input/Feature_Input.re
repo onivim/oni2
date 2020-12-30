@@ -2,6 +2,9 @@ open Oni_Core;
 open Utility;
 module Log = (val Log.withNamespace("Oni2.Feature.Input"));
 
+// TODO: Move to Service_Input
+module ReveryKeyConverter = ReveryKeyConverter;
+
 let keyPressToString =
   EditorInput.KeyPress.toString(
     ~meta="Meta",
