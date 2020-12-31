@@ -582,6 +582,37 @@ describe("EditorInput", ({describe, _}) => {
     });
   });
   describe("remapping", ({test, _}) => {
+    test("no-recursive mapping", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addMapping(
+             ~allowRecursive=false,
+             Sequence([aKeyNoModifiers]),
+             _ => true,
+             [bKeyNoModifiers],
+           );
+
+        let (bindings, _id) = bindings
+        |> Input.addMapping(
+             ~allowRecursive=false,
+             Sequence([bKeyNoModifiers]),
+             _ => true,
+             [cKeyNoModifiers],
+           );
+        let (_bindings, effects) =
+          Input.keyDown(
+            ~context=true,
+            ~scancode=aKeyScancode,
+            ~key=aKeyNoModifiers,
+            bindings,
+          );
+
+        expect.equal(
+          effects,
+          [Unhandled({key: bKeyNoModifiers, isProducedByRemap: true})],
+        );
+    });
+
     test("unhandled, single key remap", ({expect, _}) => {
       let (bindings, _id) =
         Input.empty
