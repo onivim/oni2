@@ -165,6 +165,7 @@ type outmsg('node, 'leaf) =
   | Nothing
   | Expanded('node)
   | Collapsed('node)
+  | Touched('leaf)
   | Selected('leaf);
 
 let calculateIndentGuides = model => {
@@ -271,9 +272,18 @@ let update = (msg, model) => {
 
     switch (outmsg) {
     | Component_VimList.Nothing => (model, Nothing)
+    | Component_VimList.Touched({index}) =>
+      switch (Component_VimList.get(index, treeAsList)) {
+      | Some(ViewLeaf({data, _})) => (model, Touched(data))
+      // TODO: Expand / collapse
+      | Some(ViewNode({data, expanded, _})) =>
+        toggleExpanded(~expanded, ~data, model)
+      | None => (model, Nothing)
+      }
     | Component_VimList.Selected({index}) =>
       switch (Component_VimList.get(index, treeAsList)) {
       | Some(ViewLeaf({data, _})) => (model, Selected(data))
+      // TODO: Expand / collapse
       | Some(ViewNode({data, expanded, _})) =>
         toggleExpanded(~expanded, ~data, model)
 

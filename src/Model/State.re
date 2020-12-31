@@ -517,7 +517,7 @@ let initial =
         config,
         Feature_Vim.initial,
       );
-    Editor.create(~config, ~buffer=editorBuffer, ());
+    Editor.create(~config, ~buffer=editorBuffer, ~preview=false, ());
   };
 
   let defaultEditorFont = Service_Font.default();

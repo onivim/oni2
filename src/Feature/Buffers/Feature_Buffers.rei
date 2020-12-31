@@ -69,7 +69,9 @@ type outmsg =
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       position: option(BytePosition.t),
       grabFocus: bool,
-    });
+      preview: bool,
+    })
+  | BufferModifiedSet(int, bool);
 
 // UPDATE
 
@@ -107,6 +109,7 @@ module Effects: {
       ~position: option(CharacterPosition.t)=?,
       ~grabFocus: bool=?,
       ~filePath: string,
+      ~preview: bool=?,
       model
     ) =>
     Isolinear.Effect.t(msg);

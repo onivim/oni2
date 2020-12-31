@@ -3,6 +3,7 @@
 - #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
 - #2889 - Extensions: Include HTML, JSON, PHP, and Markdown language servers
 - #2849 - UX: Initial menu bar on Windows / Linux (fixes #1255)
+- #2596 - Editor: File preview when clicking on files (thanks @fanantoxa!)
 
 ### Bug Fixes
 
@@ -26,6 +27,7 @@
 ### Performance
 
 - #2852,#2864 - Performance: Batch editor / codelens animations
+- #2901 - Bundle Size: Remove unused Selawik and Inconsolata fonts
 
 ### Documentation
 
