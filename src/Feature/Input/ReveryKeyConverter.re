@@ -5,7 +5,6 @@ module Log = (val Log.withNamespace("Feature.Input.ReveryKeyConverter"));
 
 module Internal = {
   let tryToGetSpecialKey = keycode => {
-    prerr_endline("KEYCODE: " ++ string_of_int(keycode));
     EditorInput.(
       switch (keycode) {
       | v when v == 13 /* enter */ => Some(Key.Return)
