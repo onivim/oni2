@@ -60,16 +60,15 @@ switch (eff) {
 | QueryExtension(name) => Cli.queryExtension(name, cliOptions) |> exit
 | UninstallExtension(name) =>
   Cli.uninstallExtension(name, cliOptions) |> exit
-| CheckHealth => 
+| CheckHealth =>
   initializeLogging();
-  HealthCheck.run(~checks=All, cliOptions) |> exit
+  HealthCheck.run(~checks=All, cliOptions) |> exit;
 | ListExtensions => Cli.listExtensions(cliOptions) |> exit
 | StartSyntaxServer({parentPid, namedPipe}) =>
   Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>
     HealthCheck.run(~checks=Common, cliOptions)
   )
 | Run =>
-
   initializeLogging();
 
   // #1161 - OSX - Make sure we're using the terminal / shell PATH.
