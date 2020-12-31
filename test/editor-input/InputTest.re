@@ -40,6 +40,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         bindings
         |> Input.addMapping(
+             ~allowRecursive=true,
              Sequence([bKeyNoModifiers]),
              _ => true,
              [plugKey, aKeyNoModifiers],
@@ -70,6 +71,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         bindings
         |> Input.addMapping(
+             ~allowRecursive=true,
              Sequence([bKeyNoModifiers]),
              _ => true,
              [leaderKey],
@@ -584,6 +586,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addMapping(
+             ~allowRecursive=true,
              Sequence([aKeyNoModifiers]),
              _ => true,
              [bKeyNoModifiers],
@@ -607,6 +610,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addMapping(
+             ~allowRecursive=true,
              Sequence([aKeyNoModifiers]),
              _ => true,
              [bKeyNoModifiers],
@@ -615,6 +619,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         bindings
         |> Input.addMapping(
+             ~allowRecursive=true,
              Sequence([bKeyNoModifiers]),
              _ => true,
              [cKeyNoModifiers],
@@ -638,6 +643,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addMapping(
+             ~allowRecursive=true,
              Sequence([aKeyNoModifiers]),
              _ => true,
              [aKeyNoModifiers],
@@ -664,6 +670,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addMapping(
+             ~allowRecursive=true,
              Sequence([aKeyNoModifiers, bKeyNoModifiers]),
              _ => true,
              [cKeyNoModifiers],
@@ -694,6 +701,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addMapping(
+             ~allowRecursive=false,
              Sequence([aKeyNoModifiers]),
              _ => true,
              [bKeyNoModifiers, cKeyNoModifiers],
@@ -719,6 +727,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addMapping(
+             ~allowRecursive=true,
              Sequence([aKeyNoModifiers]),
              _ => true,
              [bKeyNoModifiers],
@@ -745,6 +754,7 @@ describe("EditorInput", ({describe, _}) => {
       let (bindings, _id) =
         Input.empty
         |> Input.addMapping(
+             ~allowRecursive=true,
              Sequence([aKeyNoModifiers]),
              _ => true,
              [bKeyNoModifiers, cKeyNoModifiers],

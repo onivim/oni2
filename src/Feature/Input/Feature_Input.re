@@ -238,7 +238,13 @@ let initial = keybindings => {
 
            | Ok(ResolvedRemap({allowRecursive, matcher, condition, toKeys})) =>
              let (ism, _bindingId) =
-               InputStateMachine.addMapping(~allowRecursive, matcher, condition, toKeys, ism);
+               InputStateMachine.addMapping(
+                 ~allowRecursive,
+                 matcher,
+                 condition,
+                 toKeys,
+                 ism,
+               );
              ism;
            }
          },
@@ -469,7 +475,13 @@ module Internal = {
                  )
 
                | ResolvedRemap({allowRecursive, matcher, condition, toKeys}) =>
-                 InputStateMachine.addMapping(allowRecursive, matcher, condition, toKeys, ism)
+                 InputStateMachine.addMapping(
+                   allowRecursive,
+                   matcher,
+                   condition,
+                   toKeys,
+                   ism,
+                 )
                };
              (ism', [bindingId, ...bindings]);
            },

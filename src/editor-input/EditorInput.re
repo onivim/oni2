@@ -21,7 +21,14 @@ module type Input = {
 
   let addBinding: (Matcher.t, context => bool, command, t) => (t, uniqueId);
   let addMapping:
-    (~allowRecursive: bool, Matcher.t, context => bool, list(KeyPress.t), t) => (t, uniqueId);
+    (
+      ~allowRecursive: bool,
+      Matcher.t,
+      context => bool,
+      list(KeyPress.t),
+      t
+    ) =>
+    (t, uniqueId);
 
   let disable: t => t;
   let enable: t => t;
@@ -109,7 +116,10 @@ module Make = (Config: {
 
   type action =
     | Dispatch(command)
-    | Remap({ allowRecursive: bool, keys: list(KeyPress.t) });
+    | Remap({
+        allowRecursive: bool,
+        keys: list(KeyPress.t),
+      });
 
   type matchState =
     | Matched
@@ -262,7 +272,12 @@ module Make = (Config: {
     let {bindings, _} = keyBindings;
     let id = UniqueId.get();
     let bindings = [
-      {id, matcher: Unmatched(matcher), action: Remap({ allowRecursive, keys }), enabled},
+      {
+        id,
+        matcher: Unmatched(matcher),
+        action: Remap({allowRecursive, keys}),
+        enabled,
+      },
       ...bindings,
     ];
 
