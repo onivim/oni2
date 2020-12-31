@@ -165,18 +165,12 @@ module Editor = {
       "editor.selectionBackground",
       {light: hex("#ADD6FF"), dark: hex("#264F78"), hc: hex("#f3f518")},
     );
-//const editorWordHighlight =
-// registerColor('editor.wordHighlightBackground', 
-// { dark: '#575757B8', light: '#57575740', hc: null }, nls.localize('wordHighlight', 'Background color of a symbol during read-access, like reading a variable. The color must not be opaque so as not to hide underlying decorations.'), true);
 
-  let wordHighlightBackground = define(
-    "editor.wordHighlightBackground",
-    {
-      light: hex("#57575740"),
-      dark: hex("#575757B8"),
-      hc: unspecified
-    }
-  );
+  let wordHighlightBackground =
+    define(
+      "editor.wordHighlightBackground",
+      {light: hex("#57575740"), dark: hex("#575757B8"), hc: unspecified},
+    );
   let defaults = [
     background,
     foreground,

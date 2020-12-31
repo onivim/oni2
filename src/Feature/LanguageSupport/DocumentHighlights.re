@@ -59,13 +59,12 @@ let getLinesWithHighlight = (~bufferId, model) => {
 
 module Configuration = {
   open Config.Schema;
-  let enabled =
-    setting("editor.occurrencesHighlight", bool, ~default=true);
+  let enabled = setting("editor.occurrencesHighlight", bool, ~default=true);
 };
 
-let sub = (~config, ~buffer, ~location, ~client, model) => {
+let sub = (~config, ~buffer, ~location, ~client, model) =>
   if (!Configuration.enabled.get(config)) {
-    Isolinear.Sub.none
+    Isolinear.Sub.none;
   } else {
     let toMsg = (highlights: list(Exthost.DocumentHighlight.t)) => {
       let ranges =
@@ -92,10 +91,7 @@ let sub = (~config, ~buffer, ~location, ~client, model) => {
        })
     |> Isolinear.Sub.batch;
   };
-};
 
 module Contributions = {
-  let configuration = Configuration.[
-    enabled.spec
-  ];
-}
+  let configuration = Configuration.[enabled.spec];
+};
