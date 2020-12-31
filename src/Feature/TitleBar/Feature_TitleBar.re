@@ -362,7 +362,7 @@ module View = {
         React.empty;
       } else {
         let isRegistered = Feature_Registration.isRegistered(registration);
-        print_endline(string_of_float(height));
+
         <Clickable
           onDoubleClick={_ => dispatch(TitleDoubleClicked)}
           style={Styles.Mac.container(~isFocused, ~theme, ~height)}>
