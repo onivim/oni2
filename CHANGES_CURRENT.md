@@ -24,6 +24,7 @@
 - #2891 - Vim: Fix count behavior for L/H jumps (fixes #2882)
 - #2895 - Completion: Fix crash on long (>1024 character) completion matches (fixes #2892)
 - #2905 - CLI: HealthCheck - Re-enable output logging
+- #2902 - Input: Fix remaps for characters w/o scancode (fixes #2883)
 
 ### Performance
 
