@@ -476,7 +476,7 @@ module Internal = {
 
                | ResolvedRemap({allowRecursive, matcher, condition, toKeys}) =>
                  InputStateMachine.addMapping(
-                   allowRecursive,
+                   ~allowRecursive,
                    matcher,
                    condition,
                    toKeys,

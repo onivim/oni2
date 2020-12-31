@@ -235,7 +235,26 @@ module Make = (Config: {
     List.filter_map(applyKeyToBinding(~leaderKey, ~context, key), bindings);
   };
 
-  let applyKeysToBindings = (~leaderKey, ~context, keys, bindings) => {
+  let removeRemaps = bindings => {
+    bindings
+    |> List.filter_map(binding =>
+         switch (binding.action) {
+         | Remap(_) => None
+         | Dispatch(_) => Some(binding)
+         }
+       );
+  };
+
+  let applyKeysToBindings =
+      (~allowRemaps, ~leaderKey, ~context, keys, bindings) => {
+    // Filter out remaps if we're not allowing them
+    let bindings =
+      if (!allowRemaps) {
+        bindings |> removeRemaps;
+      } else {
+        bindings;
+      };
+
     let keyPresses =
       keys
       |> List.filter_map(
@@ -350,7 +369,14 @@ module Make = (Config: {
 
   // Pop keys for matcher, and ignore all effects
   let useUpKeysForBinding =
-      (~isRemap, ~leaderKey, ~context, ~bindingId, initialBindings) => {
+      (
+        ~allowRemaps,
+        ~isRemap,
+        ~leaderKey,
+        ~context,
+        ~bindingId,
+        initialBindings,
+      ) => {
     let rec loop = bindings =>
       // Popped all the way
       if (bindings.revKeys == []) {
@@ -358,6 +384,7 @@ module Make = (Config: {
       } else {
         let candidateBindings =
           applyKeysToBindings(
+            ~allowRemaps,
             ~leaderKey,
             ~context,
             bindings.revKeys |> List.rev,
@@ -402,7 +429,13 @@ module Make = (Config: {
     if (!enabled) {
       [];
     } else {
-      applyKeysToBindings(~leaderKey, ~context, revKeys |> List.rev, bindings)
+      applyKeysToBindings(
+        ~allowRemaps=true,
+        ~leaderKey,
+        ~context,
+        revKeys |> List.rev,
+        bindings,
+      )
       |> List.filter_map(({matcher, action, enabled, _}: binding) => {
            switch (action) {
            | Remap(_) => None // TODO
@@ -420,6 +453,7 @@ module Make = (Config: {
   let rec handleKeyCore =
           (
             ~isRemap=false,
+            ~allowRemaps,
             ~leaderKey,
             ~recursionDepth=0,
             ~context,
@@ -451,6 +485,7 @@ module Make = (Config: {
 
       let candidateBindings =
         applyKeysToBindings(
+          ~allowRemaps,
           ~leaderKey,
           ~context,
           revKeys |> List.rev,
@@ -474,6 +509,7 @@ module Make = (Config: {
         | Some(binding) =>
           let bindings' =
             useUpKeysForBinding(
+              ~allowRemaps,
               ~isRemap,
               ~leaderKey,
               ~context,
@@ -490,6 +526,7 @@ module Make = (Config: {
           | Remap(_) =>
             // Let flush handle the remap action
             flush(
+              ~allowRemaps,
               ~isRemap=true,
               ~leaderKey,
               ~recursionDepth,
@@ -500,6 +537,7 @@ module Make = (Config: {
 
         | None =>
           flush(
+            ~allowRemaps,
             ~isRemap,
             ~leaderKey,
             ~recursionDepth,
@@ -511,7 +549,14 @@ module Make = (Config: {
     }
 
   and runRemappedKeys =
-      (~leaderKey, ~recursionDepth, ~context, ~keys, bindings) => {
+      (
+        ~allowRecursive,
+        ~leaderKey,
+        ~recursionDepth,
+        ~context,
+        ~keys,
+        bindings,
+      ) => {
     let (bindings', effects') =
       keys
       |> List.fold_left(
@@ -520,6 +565,7 @@ module Make = (Config: {
              let (bindings, effs) = acc;
              let (bindings', effects') =
                handleKeyCore(
+                 ~allowRemaps=allowRecursive,
                  ~isRemap=true,
                  ~leaderKey,
                  ~recursionDepth,
@@ -536,13 +582,21 @@ module Make = (Config: {
   }
 
   and flush =
-      (~isRemap, ~leaderKey, ~recursionDepth, ~context, initialBindings) => {
+      (
+        ~allowRemaps,
+        ~isRemap,
+        ~leaderKey,
+        ~recursionDepth,
+        ~context,
+        initialBindings,
+      ) => {
     let rec loop = (~revEffects: list(effect), bindings) =>
       if (bindings.revKeys == []) {
         (bindings, revEffects);
       } else {
         let candidateBindings =
           applyKeysToBindings(
+            ~allowRemaps,
             ~leaderKey,
             ~context,
             bindings.revKeys |> List.rev,
@@ -559,10 +613,11 @@ module Make = (Config: {
           loop(~revEffects=effs @ revEffects, bindings');
         | Some(binding) =>
           switch (binding.action) {
-          | Remap({keys, _}) =>
+          | Remap({keys, allowRecursive}) =>
             // Use up keys for the bindings
             let rewindBindings =
               useUpKeysForBinding(
+                ~allowRemaps,
                 ~isRemap,
                 ~leaderKey,
                 ~context,
@@ -572,6 +627,7 @@ module Make = (Config: {
 
             // Run all the new keys
             runRemappedKeys(
+              ~allowRecursive=allowRemaps && allowRecursive,
               ~leaderKey,
               ~recursionDepth=recursionDepth + 1,
               ~context,
@@ -583,6 +639,7 @@ module Make = (Config: {
             // Use up keys related to this binding
             let rewindBindings =
               useUpKeysForBinding(
+                ~allowRemaps,
                 ~isRemap,
                 ~leaderKey,
                 ~context,
@@ -623,6 +680,7 @@ module Make = (Config: {
     // |> Option.value(~default=bindings.pressedScancodes);
 
     handleKeyCore(
+      ~allowRemaps=true,
       ~leaderKey,
       ~context,
       Down(id, key),

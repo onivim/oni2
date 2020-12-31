@@ -592,25 +592,26 @@ describe("EditorInput", ({describe, _}) => {
              [bKeyNoModifiers],
            );
 
-        let (bindings, _id) = bindings
+      let (bindings, _id) =
+        bindings
         |> Input.addMapping(
              ~allowRecursive=false,
              Sequence([bKeyNoModifiers]),
              _ => true,
              [cKeyNoModifiers],
            );
-        let (_bindings, effects) =
-          Input.keyDown(
-            ~context=true,
-            ~scancode=aKeyScancode,
-            ~key=aKeyNoModifiers,
-            bindings,
-          );
-
-        expect.equal(
-          effects,
-          [Unhandled({key: bKeyNoModifiers, isProducedByRemap: true})],
+      let (_bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=aKeyNoModifiers,
+          bindings,
         );
+
+      expect.equal(
+        effects,
+        [Unhandled({key: bKeyNoModifiers, isProducedByRemap: true})],
+      );
     });
 
     test("unhandled, single key remap", ({expect, _}) => {
