@@ -3,6 +3,10 @@
  (package Oni2)
  (files Inter-UI-Medium.ttf Inter-UI-MediumItalic.ttf Inter-UI-Regular.ttf
    Inter-UI-Italic.ttf Inter-UI-SemiBoldItalic.ttf Inter-UI-SemiBold.ttf
-   Inter-UI-Bold.ttf JetBrainsMono-Regular.ttf JetBrainsMono-Bold.ttf
-   JetBrainsMono-Italic.ttf JetBrainsMono-Bold-Italic.ttf
-   FontAwesome5FreeRegular.otf FontAwesome5FreeSolid.otf codicon.ttf))
+   Inter-UI-Bold.ttf JetBrainsMono-Bold-Italic.ttf JetBrainsMono-Bold.ttf
+   JetBrainsMono-ExtraBold-Italic.ttf JetBrainsMono-ExtraBold.ttf
+   JetBrainsMono-ExtraLight-Italic.ttf JetBrainsMono-ExtraLight.ttf
+   JetBrainsMono-Italic.ttf JetBrainsMono-Light-Italic.ttf
+   JetBrainsMono-Light.ttf JetBrainsMono-Medium-Italic.ttf
+   JetBrainsMono-Medium.ttf JetBrainsMono-Regular.ttf
+   FontAwesome5FreeRegular.otf FontAwesome5FreeSolid.otf seti.ttf codicon.ttf))
