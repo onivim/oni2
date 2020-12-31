@@ -210,12 +210,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   // TODO: This should be moved to a Feature_Keybindings project
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    // TODO hardcoded scancode:
-    | KeyDown(event, time) =>
-      handleKeyPress(~scancode=101, state, time, event)
+    | KeyDown({key, scancode, time}) =>
+      handleKeyPress(~scancode, state, time, key)
 
-    // TODO - hardcoded scancode:
-    | KeyUp(_event, _time) => handleKeyUp(~scancode=101, state)
+    | KeyUp({scancode, _}) => handleKeyUp(~scancode, state)
 
     | TextInput(text, time) => handleTextInput(state, time, text)
 
@@ -240,7 +238,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           let time = Revery.Time.now();
           event
           |> reveryKeyToEditorKey
-          |> Option.iter(key => {dispatch(Actions.KeyDown(key, time))});
+          |> Option.iter(key => {
+               dispatch(
+                 Actions.KeyDown({key, time, scancode: event.scancode}),
+               )
+             });
         },
       );
 
@@ -251,7 +253,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           let time = Revery.Time.now();
           event
           |> reveryKeyToEditorKey
-          |> Option.iter(key => {dispatch(Actions.KeyUp(key, time))});
+          |> Option.iter(key => {
+               dispatch(Actions.KeyUp({key, time, scancode: event.scancode}))
+             });
         },
       );
 

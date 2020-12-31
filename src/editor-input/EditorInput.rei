@@ -25,7 +25,9 @@ module Key: {
     | NumpadSeparator
     | NumpadSubtract
     | NumpadDecimal
-    | NumpadDivide;
+    | NumpadDivide
+    | LeftControl
+    | RightControl;
 
   let toString: t => string;
 };

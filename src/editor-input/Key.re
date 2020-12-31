@@ -25,7 +25,9 @@ type t =
   | NumpadSeparator
   | NumpadSubtract
   | NumpadDecimal
-  | NumpadDivide;
+  | NumpadDivide
+  | LeftControl
+  | RightControl;
 
 let toString =
   fun
@@ -54,4 +56,6 @@ let toString =
   | NumpadSeparator => "NumpadSeparator"
   | NumpadSubtract => "NumpadSubtract"
   | NumpadDecimal => "NumpadDecimal"
-  | NumpadDivide => "NumpadDivide";
+  | NumpadDivide => "NumpadDivide"
+  | LeftControl => "LeftControl"
+  | RightControl => "RightControl";
