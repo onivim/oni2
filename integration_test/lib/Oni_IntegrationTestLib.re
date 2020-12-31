@@ -96,7 +96,8 @@ let runTest =
   Revery.App.initConsole();
 
   Core.Log.enableDebug();
-  Timber.App.setLevel(Timber.Level.trace);
+  // TODO: Switch back
+  Timber.App.setLevel(Timber.Level.warn);
   Oni_Core.Log.init();
 
   Internal.prepareEnvironment();
