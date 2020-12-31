@@ -106,6 +106,9 @@ let bufferUpdated:
     model
   ) =>
   model;
+
+let configurationChanged: (~config: Config.resolver, model) => model;
+
 let cursorMoved:
   (~previous: CharacterPosition.t, ~current: CharacterPosition.t, model) =>
   model;

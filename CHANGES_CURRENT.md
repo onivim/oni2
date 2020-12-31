@@ -24,6 +24,7 @@
 - #2891 - Vim: Fix count behavior for L/H jumps (fixes #2882)
 - #2895 - Completion: Fix crash on long (>1024 character) completion matches (fixes #2892)
 - #2905 - CLI: HealthCheck - Re-enable output logging
+- #2907 - Editor: Add configuration for document highlights and use proper theme color
 
 ### Performance
 

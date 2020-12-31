@@ -64,6 +64,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.insertSpaces` __(_bool_ default: `true`)__ - When `true`, the Onivim will use spaces for indentation as opposed to tabs.
 
+- `editor.occurrencesHighlight` __(_bool_ default: `true`)__ When `true`, and provided by a language extension, Onivim will highlight all occurrences of the token under the cursor in the active editor.
+
 - `editor.parameterHints.enabled` __(_bool_ default: `true`)__ - When `true`, and provided by a language extension, Onivim will display a pop-up showing hints for the current function invocation.
 
 - `editor.quickSuggestions` __(_bool_ default: `true`)__ - When `true`, code completions will be enabled. When `false`, code completions will be disabled.
