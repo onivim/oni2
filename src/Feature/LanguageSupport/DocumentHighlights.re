@@ -62,6 +62,13 @@ module Configuration = {
   let enabled = setting("editor.occurrencesHighlight", bool, ~default=true);
 };
 
+let configurationChanged = (~config, model) =>
+  if (!Configuration.enabled.get(config)) {
+    {...model, bufferToHighlights: IntMap.empty};
+  } else {
+    model;
+  };
+
 let sub = (~config, ~buffer, ~location, ~client, model) =>
   if (!Configuration.enabled.get(config)) {
     Isolinear.Sub.none;
