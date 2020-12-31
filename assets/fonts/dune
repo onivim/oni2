@@ -1,7 +1,7 @@
 (install
  (section bin)
  (package Oni2)
- (files Inconsolata-Bold.ttf Inconsolata-Regular.ttf Inter-UI-Medium.ttf
+ (files Inter-UI-Medium.ttf
    Inter-UI-MediumItalic.ttf Inter-UI-Regular.ttf Inter-UI-Italic.ttf
    Inter-UI-SemiBoldItalic.ttf Inter-UI-SemiBold.ttf Inter-UI-Bold.ttf
    JetBrainsMono-Bold-Italic.ttf JetBrainsMono-Bold.ttf
@@ -10,5 +10,5 @@
    JetBrainsMono-Italic.ttf JetBrainsMono-Light-Italic.ttf
    JetBrainsMono-Light.ttf JetBrainsMono-Medium-Italic.ttf
    JetBrainsMono-Medium.ttf JetBrainsMono-Regular.ttf
-   FontAwesome5FreeRegular.otf FontAwesome5FreeSolid.otf selawk.ttf
-   selawkb.ttf selawkl.ttf selawksb.ttf selawksl.ttf seti.ttf codicon.ttf))
+   FontAwesome5FreeRegular.otf FontAwesome5FreeSolid.otf seti.ttf codicon.ttf))
+
