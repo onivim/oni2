@@ -164,7 +164,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         // On Windows, we need to do some special handling here
         // Windows has this funky behavior where pressing AltGr registers as RAlt+LControl down - more info here:
         // https://devblogs.microsoft.com/oldnewthing/?p=40003
-        | Revery.Environment.Windows =>
+        | Windows(_) =>
           let altGr =
             altGr
             || Revery.Key.Keymod.isRightAltDown(keymod)
