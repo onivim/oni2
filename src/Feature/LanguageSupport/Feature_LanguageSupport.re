@@ -364,6 +364,15 @@ let bufferUpdated =
   {...model, completion};
 };
 
+let configurationChanged = (~config, model) => {
+  ...model,
+  documentHighlights:
+    DocumentHighlights.configurationChanged(
+      ~config,
+      model.documentHighlights,
+    ),
+};
+
 let cursorMoved = (~previous, ~current, model) => {
   let completion =
     Completion.cursorMoved(~previous, ~current, model.completion);
