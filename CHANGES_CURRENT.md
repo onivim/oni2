@@ -43,3 +43,4 @@
 - #2888 - Extensions: Upgrade vscode-exthost -> 1.52.1
 - #2894 - Build: Linux - Fix permission problem removing setup.json (thanks @marcinkoziej!)
 - #2889 - Extensions: Upgrade extensions to 1.52.1
+- #2904 - Build: Fix warnings in macOS build (thanks @zbaylin!)
