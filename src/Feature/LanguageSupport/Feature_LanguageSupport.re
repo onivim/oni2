@@ -413,7 +413,8 @@ module Contributions = {
 
   let configuration =
     CodeLens.Contributions.configuration
-    @ Completion.Contributions.configuration;
+    @ Completion.Contributions.configuration
+    @ DocumentHighlights.Contributions.configuration;
 
   let contextKeys =
     [
@@ -607,6 +608,7 @@ let sub =
 
   let documentHighlightsSub =
     OldHighlights.sub(
+      ~config,
       ~buffer=activeBuffer,
       ~location=activePosition,
       ~client,
