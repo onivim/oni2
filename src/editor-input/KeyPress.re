@@ -35,24 +35,12 @@ let ofInternal =
       ),
     ) => {
   let keyToKeyPress = (~mods=mods, key) => {
-    Ok
-      (
-        PhysicalKey({
-          key,
-          modifiers: Matcher_internal.Helpers.internalModsToMods(mods),
-        }),
-      );
-      // switch (getKeycode(key), getScancode(key)) {
-      // | (Some(keycode), Some(scancode)) =>
-      //   Ok(
-      //     PhysicalKey({
-      //       modifiers: Matcher_internal.Helpers.internalModsToMods(mods),
-      //       scancode,
-      //       keycode,
-      //     }),
-      //   )
-      // | _ => Error("Unrecognized key: " ++ Key.toString(key))
-      // };
+    Ok(
+      PhysicalKey({
+        key,
+        modifiers: Matcher_internal.Helpers.internalModsToMods(mods),
+      }),
+    );
   };
   switch (key) {
   | Matcher_internal.UnmatchedString(str) =>

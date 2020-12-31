@@ -35,8 +35,8 @@ runTest(~name="VimScriptLocalFunctionTest", (dispatch, wait, runEffects) => {
       );
     let time = Revery.Time.now();
 
-    dispatch(Model.Actions.KeyDown(keyPress, time));
-    dispatch(Model.Actions.KeyUp(keyPress, time));
+    dispatch(Model.Actions.KeyDown({key: keyPress, scancode: 1, time}));
+    dispatch(Model.Actions.KeyUp({key: keyPress, scancode: 1, time}));
     runEffects();
   };
 

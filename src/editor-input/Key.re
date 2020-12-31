@@ -25,13 +25,15 @@ type t =
   | NumpadSeparator
   | NumpadSubtract
   | NumpadDecimal
-  | NumpadDivide;
+  | NumpadDivide
+  | LeftControl
+  | RightControl;
 
 let toString =
   fun
-  | Character(c) => Printf.sprintf("Character(%c)", c)
-  | Function(digit) => Printf.sprintf("Function(%d)", digit)
-  | NumpadDigit(digit) => Printf.sprintf("Numpad(%d)", digit)
+  | Character(c) => String.make(1, c)
+  | Function(digit) => Printf.sprintf("F%d", digit)
+  | NumpadDigit(digit) => Printf.sprintf("Numpad%d", digit)
   | Escape => "Escape"
   | Down => "Down"
   | Up => "Up"
@@ -54,4 +56,6 @@ let toString =
   | NumpadSeparator => "NumpadSeparator"
   | NumpadSubtract => "NumpadSubtract"
   | NumpadDecimal => "NumpadDecimal"
-  | NumpadDivide => "NumpadDivide";
+  | NumpadDivide => "NumpadDivide"
+  | LeftControl => "LeftControl"
+  | RightControl => "RightControl";

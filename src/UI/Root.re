@@ -33,8 +33,7 @@ module Styles = {
         justifyContent(`Center),
         alignItems(`Stretch),
       ]);
-    if (Revery.Environment.os == Windows
-        && windowDisplayMode == State.Maximized) {
+    if (Revery.Environment.isWindows && windowDisplayMode == State.Maximized) {
       style := [margin(6), ...style^];
     };
     style^;
@@ -252,8 +251,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
     <Overlay>
       <Feature_Sneak.View.Overlay model={state.sneak} theme font />
     </Overlay>
-    {Revery.Environment.os == Windows
-     && state.windowDisplayMode != State.Maximized
+    {Revery.Environment.isWindows && state.windowDisplayMode != State.Maximized
        ? <WindowResizers /> : React.empty}
   </View>;
 };

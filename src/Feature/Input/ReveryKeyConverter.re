@@ -35,6 +35,8 @@ module Internal = {
       | v when v == 1073741891 => Some(Key.Function(10))
       | v when v == 1073741892 => Some(Key.Function(11))
       | v when v == 1073741893 => Some(Key.Function(12))
+      | v when v == 1073742048 => Some(Key.LeftControl)
+      | v when v == 1073742052 => Some(Key.RightControl)
       | _ => None
       }
     );
@@ -74,17 +76,20 @@ module Internal = {
          )
        })
     |> OptionEx.tapNone(() => Log.info("No keymap for key"))
-    |> OptionEx.flatMap((keymap: Oni2_KeyboardLayout.Keymap.entry) =>
-         if (shift && altGr) {
-           stringToKey(keymap.withAltGraphShift);
-         } else if (shift) {
-           stringToKey(keymap.withShift);
-         } else if (altGr) {
-           stringToKey(keymap.withAltGraph);
-         } else {
-           stringToKey(keymap.unmodified);
-         }
-       )
+    |> OptionEx.flatMap((keymap: Oni2_KeyboardLayout.Keymap.entry) => {
+         // TODO: For #2293
+         ignore(shift);
+         ignore(altGr);
+
+         // if (shift && altGr) {
+         //   stringToKey(keymap.withAltGraphShift);
+         // } else if (shift) {
+         //   stringToKey(keymap.withShift);
+         // } else if (altGr) {
+         //   stringToKey(keymap.withAltGraph);
+         // } else {
+         stringToKey(keymap.unmodified);
+       })
     |> Option.map(keyChar => EditorInput.Key.Character(keyChar));
   };
 };
@@ -108,7 +113,7 @@ let reveryKeyToKeyPress =
       // On Windows, we need to do some special handling here
       // Windows has this funky behavior where pressing AltGr registers as RAlt+LControl down - more info here:
       // https://devblogs.microsoft.com/oldnewthing/?p=40003
-      | Revery.Environment.Windows =>
+      | Windows(_) =>
         let altGr =
           altGr
           || Revery.Key.Keymod.isRightAltDown(keymod)

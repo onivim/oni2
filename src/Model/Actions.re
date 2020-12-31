@@ -42,8 +42,16 @@ type t =
   | KeyBindingsReload
   | KeyBindingsParseError(string)
   | KeybindingInvoked({command: string})
-  | KeyDown(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | KeyUp(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | KeyDown({
+      key: EditorInput.KeyPress.t,
+      scancode: int,
+      time: [@opaque] Revery.Time.t,
+    })
+  | KeyUp({
+      key: EditorInput.KeyPress.t,
+      scancode: int,
+      time: [@opaque] Revery.Time.t,
+    })
   | Logging(Feature_Logging.msg)
   | TextInput(string, [@opaque] Revery.Time.t)
   // TODO: This should be a function call - wired up from an input feature
