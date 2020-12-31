@@ -23,9 +23,9 @@ runTest(
         );
       let time = Revery.Time.now();
 
-      dispatch(KeyDown(keyPress, time));
+      dispatch(KeyDown({key: keyPress, scancode: 1, time}));
       //dispatch(TextInput(key));
-      dispatch(KeyUp(keyPress, time));
+      dispatch(KeyUp({key: keyPress, scancode: 1, time}));
     };
 
     wait(~name="Initial sanity check", (state: State.t) => {
