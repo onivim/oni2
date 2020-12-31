@@ -39,7 +39,15 @@ module Internal = {
   };
 
   let keyPressToString =
-      (~isTextInputActive, ~altKey, ~shiftKey, ~ctrlKey, ~superKey, key) => {
+      (
+        ~force,
+        ~isTextInputActive,
+        ~altKey,
+        ~shiftKey,
+        ~ctrlKey,
+        ~superKey,
+        key,
+      ) => {
     let keyString = EditorInput.Key.toString(key);
     Log.trace("keyPressToString - key name: " ++ keyString);
 
@@ -67,6 +75,7 @@ module Internal = {
         ? (ctrlKey || superKey)
           && Zed_utf8.length(keyString) == 1
           || vimStringLength > 1
+          || force
         : true;
 
     if (isKeyAllowed) {
@@ -93,7 +102,7 @@ module Internal = {
   };
 };
 
-let keyPressToCommand = (~isTextInputActive, key) => {
+let keyPressToCommand = (~force, ~isTextInputActive, key) => {
   let maybeKey = EditorInput.KeyPress.toPhysicalKey(key);
   maybeKey
   |> OptionEx.flatMap(({modifiers, key}: EditorInput.PhysicalKey.t) => {
@@ -108,6 +117,7 @@ let keyPressToCommand = (~isTextInputActive, key) => {
              // If AltGr is pressed, and we're in text input mode, we'll assume the text input handled it
        } else {
          Internal.keyPressToString(
+           ~force,
            ~isTextInputActive,
            ~shiftKey,
            ~altKey,

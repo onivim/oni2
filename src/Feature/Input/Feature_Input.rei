@@ -59,7 +59,10 @@ type execute =
 type effect =
   | Execute(execute)
   | Text(string)
-  | Unhandled(KeyPress.t)
+  | Unhandled({
+      key: KeyPress.t,
+      isProducedByRemap: bool,
+    })
   | RemapRecursionLimitHit;
 
 let keyDown:

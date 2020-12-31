@@ -127,7 +127,10 @@ describe("EditorInput", ({describe, _}) => {
           ~key=aKeyNoModifiers,
           bindings,
         );
-      expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
+      expect.equal(
+        effects,
+        [Unhandled({key: aKeyNoModifiers, isProducedByRemap: false})],
+      );
     });
 
     test("leader key defined as a", ({expect, _}) => {
@@ -161,7 +164,10 @@ describe("EditorInput", ({describe, _}) => {
           ~key=aKeyNoModifiers,
           bindings,
         );
-      expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
+      expect.equal(
+        effects,
+        [Unhandled({key: aKeyNoModifiers, isProducedByRemap: false})],
+      );
 
       let (_bindings, effects) =
         Input.keyUp(~context=true, ~scancode=aKeyScancode, bindings);
@@ -210,7 +216,13 @@ describe("EditorInput", ({describe, _}) => {
           bindings,
         );
 
-      expect.equal(effects, [Text("a"), Unhandled(cKeyNoModifiers)]);
+      expect.equal(
+        effects,
+        [
+          Text("a"),
+          Unhandled({key: cKeyNoModifiers, isProducedByRemap: false}),
+        ],
+      );
     });
 
     test(
@@ -437,7 +449,10 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(
         effects,
-        [Execute("commandA"), Unhandled(bKeyNoModifiers)],
+        [
+          Execute("commandA"),
+          Unhandled({key: bKeyNoModifiers, isProducedByRemap: false}),
+        ],
       );
     });
     test("#1691: almost match gets unhandled", ({expect, _}) => {
@@ -472,7 +487,10 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(
         effects,
-        [Unhandled(aKeyNoModifiers), Unhandled(bKeyNoModifiers)],
+        [
+          Unhandled({key: aKeyNoModifiers, isProducedByRemap: false}),
+          Unhandled({key: bKeyNoModifiers, isProducedByRemap: false}),
+        ],
       );
     });
   });
@@ -496,7 +514,10 @@ describe("EditorInput", ({describe, _}) => {
         );
 
       // Should be unhandled because the context function is [false]
-      expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
+      expect.equal(
+        effects,
+        [Unhandled({key: aKeyNoModifiers, isProducedByRemap: false})],
+      );
     });
     test("key sequence is unhandled when context is false", ({expect, _}) => {
       let (bindings, _id) =
@@ -515,7 +536,10 @@ describe("EditorInput", ({describe, _}) => {
           bindings,
         );
 
-      expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
+      expect.equal(
+        effects,
+        [Unhandled({key: aKeyNoModifiers, isProducedByRemap: false})],
+      );
     });
   });
   describe("key matching", ({test, _}) => {
@@ -549,7 +573,10 @@ describe("EditorInput", ({describe, _}) => {
           bindings,
         );
 
-      expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
+      expect.equal(
+        effects,
+        [Unhandled({key: aKeyNoModifiers, isProducedByRemap: false})],
+      );
     });
   });
   describe("remapping", ({test, _}) => {
@@ -570,7 +597,10 @@ describe("EditorInput", ({describe, _}) => {
           bindings,
         );
 
-      expect.equal(effects, [Unhandled(bKeyNoModifiers)]);
+      expect.equal(
+        effects,
+        [Unhandled({key: bKeyNoModifiers, isProducedByRemap: true})],
+      );
     });
 
     test("2-step recursive mapping", ({expect, _}) => {
@@ -598,7 +628,10 @@ describe("EditorInput", ({describe, _}) => {
           bindings,
         );
 
-      expect.equal(effects, [Unhandled(cKeyNoModifiers)]);
+      expect.equal(
+        effects,
+        [Unhandled({key: cKeyNoModifiers, isProducedByRemap: true})],
+      );
     });
 
     test("recursive mapping doesn't hang", ({expect, _}) => {
@@ -620,7 +653,10 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(
         effects,
-        [RemapRecursionLimitHit, Unhandled(aKeyNoModifiers)],
+        [
+          RemapRecursionLimitHit,
+          Unhandled({key: aKeyNoModifiers, isProducedByRemap: true}),
+        ],
       );
     });
 
@@ -649,7 +685,10 @@ describe("EditorInput", ({describe, _}) => {
           bindings,
         );
 
-      expect.equal(effects, [Unhandled(cKeyNoModifiers)]);
+      expect.equal(
+        effects,
+        [Unhandled({key: cKeyNoModifiers, isProducedByRemap: true})],
+      );
     });
     test("unhandled, multiple keys", ({expect, _}) => {
       let (bindings, _id) =
@@ -670,7 +709,10 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(
         effects,
-        [Unhandled(bKeyNoModifiers), Unhandled(cKeyNoModifiers)],
+        [
+          Unhandled({key: bKeyNoModifiers, isProducedByRemap: true}),
+          Unhandled({key: cKeyNoModifiers, isProducedByRemap: true}),
+        ],
       );
     });
     test("with command", ({expect, _}) => {
@@ -756,7 +798,10 @@ describe("EditorInput", ({describe, _}) => {
         );
 
       // Should be unhandled because the context function is [false]
-      expect.equal(effects, [Unhandled(aKeyNoModifiers)]);
+      expect.equal(
+        effects,
+        [Unhandled({key: aKeyNoModifiers, isProducedByRemap: false})],
+      );
     })
   });
 });

@@ -131,9 +131,15 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         Actions.KeybindingInvoked({command: command}),
       ]
     | Feature_Input.Text(text) => handleTextEffect(~isText=true, state, text)
-    | Feature_Input.Unhandled(key) =>
+    | Feature_Input.Unhandled({key, isProducedByRemap}) =>
       let isTextInputActive = isTextInputActive();
-      let maybeKeyString = Handler.keyPressToCommand(~isTextInputActive, key);
+
+      let maybeKeyString =
+        Handler.keyPressToCommand(
+          ~force=isProducedByRemap,
+          ~isTextInputActive,
+          key,
+        );
       switch (maybeKeyString) {
       | None => []
       | Some(k) => handleTextEffect(~isText=false, state, k)

@@ -5,4 +5,5 @@
   *  Otherwise, returns `Some(keyString)`
  */
 let keyPressToCommand:
-  (~isTextInputActive: bool, EditorInput.KeyPress.t) => option(string);
+  (~force: bool, ~isTextInputActive: bool, EditorInput.KeyPress.t) =>
+  option(string);

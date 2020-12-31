@@ -248,7 +248,10 @@ type effect =
   InputStateMachine.effect =
     | Execute(InputStateMachine.command)
     | Text(string)
-    | Unhandled(EditorInput.KeyPress.t)
+    | Unhandled({
+        key: EditorInput.KeyPress.t,
+        isProducedByRemap: bool,
+      })
     | RemapRecursionLimitHit;
 
 let keyDown =
