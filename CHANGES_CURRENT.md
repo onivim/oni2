@@ -23,6 +23,7 @@
 - #2879 - Editor: Correct diff marker rendering in presence of codelens
 - #2891 - Vim: Fix count behavior for L/H jumps (fixes #2882)
 - #2895 - Completion: Fix crash on long (>1024 character) completion matches (fixes #2892)
+- #2905 - CLI: HealthCheck - Re-enable output logging
 
 ### Performance
 
@@ -42,3 +43,4 @@
 - #2888 - Extensions: Upgrade vscode-exthost -> 1.52.1
 - #2894 - Build: Linux - Fix permission problem removing setup.json (thanks @marcinkoziej!)
 - #2889 - Extensions: Upgrade extensions to 1.52.1
+- #2904 - Build: Fix warnings in macOS build (thanks @zbaylin!)
