@@ -29,9 +29,9 @@ type t =
 
 let toString =
   fun
-  | Character(c) => Printf.sprintf("Character(%c)", c)
-  | Function(digit) => Printf.sprintf("Function(%d)", digit)
-  | NumpadDigit(digit) => Printf.sprintf("Numpad(%d)", digit)
+  | Character(c) => String.make(1, c)
+  | Function(digit) => Printf.sprintf("F%d", digit)
+  | NumpadDigit(digit) => Printf.sprintf("Numpad%d", digit)
   | Escape => "Escape"
   | Down => "Down"
   | Up => "Up"

@@ -74,8 +74,11 @@ module Internal = {
          )
        })
     |> OptionEx.tapNone(() => Log.info("No keymap for key"))
-    |> OptionEx.flatMap((keymap: Oni2_KeyboardLayout.Keymap.entry)
+    |> OptionEx.flatMap((keymap: Oni2_KeyboardLayout.Keymap.entry) => {
          // TODO: For #2293
+         ignore(shift);
+         ignore(altGr);
+
          // if (shift && altGr) {
          //   stringToKey(keymap.withAltGraphShift);
          // } else if (shift) {
@@ -83,8 +86,8 @@ module Internal = {
          // } else if (altGr) {
          //   stringToKey(keymap.withAltGraph);
          // } else {
-         => stringToKey(keymap.unmodified))
-         // }
+         stringToKey(keymap.unmodified);
+       })
     |> Option.map(keyChar => EditorInput.Key.Character(keyChar));
   };
 };
