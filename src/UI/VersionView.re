@@ -81,15 +81,6 @@ module VersionView = {
   };
 };
 
-let osString =
-  Revery.Environment.os
-  |> (
-    fun
-    | Windows => "Windows"
-    | Mac => "OSX"
-    | _ => "Linux"
-  );
-
 let sdlVersionToString = ({major, minor, patch}: Sdl2.Version.t) => {
   Printf.sprintf("%d.%d.%d", major, minor, patch);
 };
