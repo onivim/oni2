@@ -166,6 +166,11 @@ module Editor = {
       {light: hex("#ADD6FF"), dark: hex("#264F78"), hc: hex("#f3f518")},
     );
 
+  let wordHighlightBackground =
+    define(
+      "editor.wordHighlightBackground",
+      {light: hex("#57575740"), dark: hex("#575757B8"), hc: unspecified},
+    );
   let defaults = [
     background,
     foreground,
@@ -174,6 +179,7 @@ module Editor = {
     findMatchHighlightsBackground,
     lineHighlightBackground,
     selectionBackground,
+    wordHighlightBackground,
   ];
 };
 

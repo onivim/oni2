@@ -10,6 +10,7 @@ module CustomDecoders: {
     Config.Schema.codec([ | `On | `Relative | `RelativeOnly | `Off]);
   let time: Config.Schema.codec(Time.t);
   let fontSize: Config.Schema.codec(float);
+  let fontWeight: Config.Schema.codec(Revery.Font.Weight.t);
   let color: Config.Schema.codec(Revery.Color.t);
   let wordWrap: Config.Schema.codec([ | `Off | `On]);
 } = {
@@ -110,6 +111,60 @@ module CustomDecoders: {
              })
         ),
       ~encode=Json.Encode.float,
+    );
+  let fontWeightDecoder =
+    Json.Decode.(
+      one_of([
+        (
+          "fontWeight.int",
+          int
+          |> map(
+               fun
+               | 100 => Revery.Font.Weight.Thin
+               | 200 => Revery.Font.Weight.UltraLight
+               | 300 => Revery.Font.Weight.Light
+               | 400 => Revery.Font.Weight.Normal
+               | 500 => Revery.Font.Weight.Medium
+               | 600 => Revery.Font.Weight.SemiBold
+               | 700 => Revery.Font.Weight.Bold
+               | 800 => Revery.Font.Weight.UltraBold
+               | 900 => Revery.Font.Weight.Heavy
+               | _ => Revery.Font.Weight.Normal,
+             ),
+        ),
+        (
+          "fontWeight.string",
+          string
+          |> map(
+               fun
+               | "100" => Revery.Font.Weight.Thin
+               | "200" => Revery.Font.Weight.UltraLight
+               | "300" => Revery.Font.Weight.Light
+               | "400"
+               | "normal" => Revery.Font.Weight.Normal
+               | "500" => Revery.Font.Weight.Medium
+               | "600" => Revery.Font.Weight.SemiBold
+               | "700"
+               | "bold" => Revery.Font.Weight.Bold
+               | "800" => Revery.Font.Weight.UltraBold
+               | "900" => Revery.Font.Weight.Heavy
+               | _ => Revery.Font.Weight.Normal,
+             ),
+        ),
+      ])
+    );
+  let fontWeight =
+    custom(
+      ~decode=fontWeightDecoder,
+      ~encode=
+        Json.Encode.(
+          t =>
+            switch (t) {
+            | Revery.Font.Weight.Normal => string("normal")
+            | Revery.Font.Weight.Bold => string("bold")
+            | _ => string(string_of_int(Revery.Font.Weight.toInt(t)))
+            }
+        ),
     );
 
   let lineNumbers =
@@ -247,10 +302,16 @@ let fontFamily =
     ~vim=VimSettings.guifont,
     "editor.fontFamily",
     string,
-    ~default="JetBrainsMono-Regular.ttf",
+    ~default=Constants.defaultFontFile,
   );
 let fontLigatures = setting("editor.fontLigatures", bool, ~default=true);
 let fontSize = setting("editor.fontSize", fontSize, ~default=14.);
+let fontWeight =
+  setting(
+    "editor.fontWeight",
+    fontWeight,
+    ~default=Revery.Font.Weight.Normal,
+  );
 let lineHeight =
   setting(
     ~vim=VimSettings.lineSpace,
@@ -350,6 +411,7 @@ let contributions = [
   fontFamily.spec,
   fontLigatures.spec,
   fontSize.spec,
+  fontWeight.spec,
   lineHeight.spec,
   largeFileOptimization.spec,
   enablePreview.spec,
