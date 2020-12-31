@@ -86,3 +86,21 @@ __Pass:__
 - [ ] Win
 - [ ] OSX
 - [ ] Linux
+
+# 5. File Preview
+
+## 5.1 Validate File Preview from explorer
+
+- Ensure `workbench.editor.enablePreview` is set to `true`
+- Open file explorer in `oni2` repo
+- Click `README.md`
+- Click `CHANGES.md`
+- Verify that the 'preview' editor is re-used
+- Make a change to `CHANGES.md`
+- Click `CHANGES_CURRENT.md`
+- Verify that a new editor is created for `CHANGES_CURRENT.md`
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux

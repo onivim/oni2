@@ -6,12 +6,10 @@ module OSX = {
     menu(~order=0, ~uniqueId="application", ~parent=None, "Application");
 };
 
-let isMac = Revery.Environment.os == Revery.Environment.Mac;
-
 let file = menu(~order=100, ~uniqueId="file", ~parent=None, "File");
 
 // The 'Application' menu on OSX
-let application = isMac ? OSX.application : file;
+let application = Revery.Environment.isMac ? OSX.application : file;
 
 let edit = menu(~order=200, ~uniqueId="edit", ~parent=None, "Edit");
 
@@ -89,7 +87,9 @@ module Items = {
   };
 };
 
-let menus = (isMac ? [OSX.application] : []) @ [file, edit, view, help];
+let menus =
+  (Revery.Environment.isMac ? [OSX.application] : [])
+  @ [file, edit, view, help];
 
 let groups = [
   group(~order=100, ~parent=file, Items.File.[newFile]),

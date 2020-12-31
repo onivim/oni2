@@ -88,7 +88,7 @@ describe("CLI Integration Tests", ({describe, _}) => {
     // On Linux Azure CI, this test fails when creating a window -
     // need to find a workaround to allow `SDL_CreateWindow` to succeed on CI machines.
     =>
-      if (Revery.Environment.os != Revery.Environment.Linux) {
+      if (!Revery.Environment.isLinux) {
         test("run ex commands with '+'", ({expect, _}) => {
           TestRunner.(
             {

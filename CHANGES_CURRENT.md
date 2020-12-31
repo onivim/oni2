@@ -3,6 +3,7 @@
 - #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
 - #2889 - Extensions: Include HTML, JSON, PHP, and Markdown language servers
 - #2849 - UX: Initial menu bar on Windows / Linux (fixes #1255)
+- #2596 - Editor: File preview when clicking on files (thanks @fanantoxa!)
 
 ### Bug Fixes
 
@@ -21,11 +22,14 @@
 - #2878 - Input: Treat `Ctrl+[` as `Escape` everywhere
 - #2879 - Editor: Correct diff marker rendering in presence of codelens
 - #2891 - Vim: Fix count behavior for L/H jumps (fixes #2882)
+- #2895 - Completion: Fix crash on long (>1024 character) completion matches (fixes #2892)
+- #2905 - CLI: HealthCheck - Re-enable output logging
 - #2898 - Editor: Implement mouse selection (fixes #537)
 
 ### Performance
 
 - #2852,#2864 - Performance: Batch editor / codelens animations
+- #2901 - Bundle Size: Remove unused Selawik and Inconsolata fonts
 
 ### Documentation
 
@@ -40,3 +44,4 @@
 - #2888 - Extensions: Upgrade vscode-exthost -> 1.52.1
 - #2894 - Build: Linux - Fix permission problem removing setup.json (thanks @marcinkoziej!)
 - #2889 - Extensions: Upgrade extensions to 1.52.1
+- #2904 - Build: Fix warnings in macOS build (thanks @zbaylin!)
