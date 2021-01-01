@@ -1780,12 +1780,32 @@ let getLeadingWhitespacePixels = (lineNumber, editor) => {
   };
 };
 
+let autoScroll = (~deltaPixelX: float, ~deltaPixelY: float, editor) => {
+   // Scroll editor to new position
+    let editor' = editor
+    |> scrollDeltaPixelXY(~animated= true, ~pixelX= deltaPixelX,
+    ~pixelY=deltaPixelY);
+
+  // Simulate a mouse move if the mouse is pressed, to readjust selection
+
+  OptionEx.map2((time, position: PixelPosition.t) => {
+    editor'
+    |> mouseMove(~time, ~pixelX=position.x, ~pixelY= position.y);
+  }, editor'.lastMouseMoveTime, editor'.lastMouseScreenPosition)
+  |> Option.value(~default=editor');
+};
+
 [@deriving show]
 type msg =
-  | Animation([@opaque] Component_Animation.msg);
+  | Animation([@opaque] Component_Animation.msg)
+  | AutoScroll({ deltaPixelY: float, deltaPixelX: float});
 
 let update = (msg, editor) => {
   switch (msg) {
+
+  | AutoScroll({deltaPixelY, deltaPixelX}) => 
+    autoScroll(~deltaPixelX, ~deltaPixelY, editor);
+
   | Animation(msg) =>
     let yankHighlight' =
       yankHighlight(editor)
@@ -1818,6 +1838,22 @@ let update = (msg, editor) => {
   };
 };
 
+let isMousePressedNearTop = ({lastMouseScreenPosition, _}) => {
+  lastMouseScreenPosition
+  |> Option.map(({y, _}: PixelPosition.t) => {
+    int_of_float(y) < Constants.mouseAutoScrollBorder;
+  })
+  |> Option.value(~default=false);
+}
+
+let isMousePressedNearBottom = ({lastMouseScreenPosition, pixelHeight, _}) => {
+  lastMouseScreenPosition
+  |> Option.map(({y, _}: PixelPosition.t) => {
+    int_of_float(y) > (pixelHeight - Constants.mouseAutoScrollBorder);
+  })
+  |> Option.value(~default=false);
+}
+
 let sub = editor => {
   let isYankAnimating =
     yankHighlight(editor)
@@ -1832,7 +1868,39 @@ let sub = editor => {
   let isScrollAnimating =
     Spring.isActive(editor.scrollY) || Spring.isActive(editor.scrollX);
 
-  if (isYankAnimating || isInlineElementAnimating || isScrollAnimating) {
+  let maybeAutoScrollUp = if(isMousePressedNearTop(editor)) {
+    Some(Service_Time.Sub.interval(
+      ~uniqueId="AutoScrollUp"++string_of_int(editor.editorId),
+      ~every=Revery.Time.milliseconds(50),
+      ~msg=(~current as _) => {
+        prerr_endline ("Scrolling");
+        AutoScroll({deltaPixelY: -1. *. Constants.mouseAutoScrollSpeed, deltaPixelX: 0.})
+      }
+    ));
+  } else {
+    None
+  };
+
+  let maybeAutoScrollDown = if(isMousePressedNearBottom(editor)) {
+    Some(Service_Time.Sub.interval(
+      ~uniqueId="AutoScrollDown"++string_of_int(editor.editorId),
+      ~every=Revery.Time.milliseconds(50),
+      ~msg=(~current as _) => {
+        prerr_endline ("Scrolling");
+        AutoScroll({deltaPixelY: Constants.mouseAutoScrollSpeed, deltaPixelX: 0.})
+      }
+    ));
+  } else {
+    None
+  };
+
+  let autoScrollSubs = [
+    maybeAutoScrollUp,
+    maybeAutoScrollDown,
+  ] |> List.filter_map(v => v);
+
+
+  let animationSub = if (isYankAnimating || isInlineElementAnimating || isScrollAnimating) {
     Component_Animation.subAny(
       ~uniqueId=
         "editor."
@@ -1844,4 +1912,6 @@ let sub = editor => {
   } else {
     Isolinear.Sub.none;
   };
+
+  [animationSub, ...autoScrollSubs] |> Isolinear.Sub.batch;
 };
