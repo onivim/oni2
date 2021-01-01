@@ -18,15 +18,14 @@ runTest(
     let input = key => {
       let keyPress =
         EditorInput.KeyPress.physicalKey(
-          ~scancode=Sdl2.Scancode.ofName(key),
-          ~keycode=Sdl2.Keycode.ofName(key),
+          ~key,
           ~modifiers=EditorInput.Modifiers.none,
         );
       let time = Revery.Time.now();
 
-      dispatch(KeyDown(keyPress, time));
+      dispatch(KeyDown({key: keyPress, scancode: 1, time}));
       //dispatch(TextInput(key));
-      dispatch(KeyUp(keyPress, time));
+      dispatch(KeyUp({key: keyPress, scancode: 1, time}));
     };
 
     wait(~name="Initial sanity check", (state: State.t) => {
@@ -36,8 +35,8 @@ runTest(
       splitCount == 1;
     });
 
-    input("k");
-    input("k");
+    input(EditorInput.Key.Character('k'));
+    input(EditorInput.Key.Character('k'));
 
     wait(~name="Wait for split to be created", (state: State.t) => {
       let splitCount =
