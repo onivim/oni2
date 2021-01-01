@@ -26,6 +26,7 @@
 - #2905 - CLI: HealthCheck - Re-enable output logging
 - #2907 - Editor: Add configuration for document highlights and use proper theme color
 - #2902 - Input: Fix remaps for characters w/o scancode (fixes #2883)
+- #2908 - Input: Fix no-recursive remap behavior (fixes #2114)
 
 ### Performance
 

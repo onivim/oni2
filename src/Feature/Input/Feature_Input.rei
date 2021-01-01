@@ -30,7 +30,13 @@ module Schema: {
 
   // Remap a key -> to another key
   let remap:
-    (~fromKeys: string, ~toKeys: string, ~condition: WhenExpr.t) => keybinding;
+    (
+      ~allowRecursive: bool,
+      ~fromKeys: string,
+      ~toKeys: string,
+      ~condition: WhenExpr.t
+    ) =>
+    keybinding;
 
   let mapCommand: (~f: string => string, keybinding) => keybinding;
 

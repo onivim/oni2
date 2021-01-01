@@ -96,6 +96,7 @@ module Schema = {
         condition: WhenExpr.t,
       })
     | Remap({
+        allowRecursive: bool,
         fromKeys: string,
         toKeys: string,
         condition: WhenExpr.t,
@@ -108,6 +109,7 @@ module Schema = {
         condition: WhenExpr.ContextKeys.t => bool,
       })
     | ResolvedRemap({
+        allowRecursive: bool,
         matcher: EditorInput.Matcher.t,
         toKeys: list(EditorInput.KeyPress.t),
         condition: WhenExpr.ContextKeys.t => bool,
@@ -125,8 +127,8 @@ module Schema = {
 
   let clear = (~key as _) => failwith("Not implemented");
 
-  let remap = (~fromKeys, ~toKeys, ~condition) =>
-    Remap({fromKeys, toKeys, condition});
+  let remap = (~allowRecursive, ~fromKeys, ~toKeys, ~condition) =>
+    Remap({allowRecursive, fromKeys, toKeys, condition});
 
   let resolve = keybinding => {
     let evaluateCondition = (whenExpr, contextKeys) => {
@@ -149,7 +151,7 @@ module Schema = {
            })
          });
 
-    | Remap({fromKeys, condition, toKeys}) =>
+    | Remap({allowRecursive, fromKeys, condition, toKeys}) =>
       let evaluateCondition = (whenExpr, contextKeys) => {
         WhenExpr.evaluate(
           whenExpr,
@@ -166,6 +168,7 @@ module Schema = {
       ResultEx.map2(
         (matcher, toKeys) => {
           ResolvedRemap({
+            allowRecursive,
             matcher,
             condition: evaluateCondition(condition),
             toKeys,
@@ -233,9 +236,15 @@ let initial = keybindings => {
                InputStateMachine.addBinding(matcher, condition, command, ism);
              ism;
 
-           | Ok(ResolvedRemap({matcher, condition, toKeys})) =>
+           | Ok(ResolvedRemap({allowRecursive, matcher, condition, toKeys})) =>
              let (ism, _bindingId) =
-               InputStateMachine.addMapping(matcher, condition, toKeys, ism);
+               InputStateMachine.addMapping(
+                 ~allowRecursive,
+                 matcher,
+                 condition,
+                 toKeys,
+                 ism,
+               );
              ism;
            }
          },
@@ -390,6 +399,7 @@ let addKeyBinding = (~binding, {inputStateMachine, _} as model) => {
     | ResolvedRemap(remap) =>
       let (inputStateMachine', uniqueId) =
         InputStateMachine.addMapping(
+          ~allowRecursive=remap.allowRecursive,
           remap.matcher,
           remap.condition,
           remap.toKeys,
@@ -464,8 +474,14 @@ module Internal = {
                    ism,
                  )
 
-               | ResolvedRemap({matcher, condition, toKeys}) =>
-                 InputStateMachine.addMapping(matcher, condition, toKeys, ism)
+               | ResolvedRemap({allowRecursive, matcher, condition, toKeys}) =>
+                 InputStateMachine.addMapping(
+                   ~allowRecursive,
+                   matcher,
+                   condition,
+                   toKeys,
+                   ism,
+                 )
                };
              (ism', [bindingId, ...bindings]);
            },
@@ -510,6 +526,7 @@ let update = (msg, model) => {
             (matcher, keys) => {
               let (inputStateMachine', _mappingId) =
                 InputStateMachine.addMapping(
+                  ~allowRecursive=mapping.recursive,
                   matcher,
                   Internal.vimMapModeToWhenExpr(mapping.mode),
                   keys,
