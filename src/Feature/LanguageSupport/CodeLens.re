@@ -7,12 +7,9 @@ module Log = (
 
 // MODEL
 
-type codeLens = {
-  handle: int,
-  lens: Exthost.CodeLens.t,
-};
+type codeLens = Exthost.CodeLens.t;
 
-let lineNumber = ({lens, _}) =>
+let lineNumber = (lens: Exthost.CodeLens.t) =>
   Exthost.OneBasedRange.(lens.range.startLineNumber - 1);
 
 let textFromExthost = (lens: Exthost.CodeLens.t) => {
@@ -24,7 +21,7 @@ let textFromExthost = (lens: Exthost.CodeLens.t) => {
   );
 };
 
-let text = ({lens, _}: codeLens) => textFromExthost(lens);
+let text = (lens: Exthost.CodeLens.t) => textFromExthost(lens);
 
 type provider = {
   handle: int,
@@ -33,10 +30,7 @@ type provider = {
 
 type handleToLenses = IntMap.t(list(codeLens));
 
-type model = {
-  providers: list(provider),
-  bufferToLenses: IntMap.t(handleToLenses),
-};
+type model = {providers: list(provider)};
 
 type outmsg =
   | Nothing
@@ -48,16 +42,7 @@ type outmsg =
       lenses: list(codeLens),
     });
 
-let get = (~bufferId, {bufferToLenses, _}) => {
-  bufferToLenses
-  |> IntMap.find_opt(bufferId)
-  |> Option.value(~default=IntMap.empty)
-  |> IntMap.bindings
-  |> List.map(snd)
-  |> List.flatten;
-};
-
-let initial = {providers: [], bufferToLenses: IntMap.empty};
+let initial = {providers: []};
 
 [@deriving show]
 type msg =
@@ -71,12 +56,10 @@ type msg =
     });
 
 let register = (~handle: int, ~selector, model) => {
-  ...model,
   providers: [{handle, selector}, ...model.providers],
 };
 
 let unregister = (~handle: int, model) => {
-  ...model,
   providers: model.providers |> List.filter(prov => prov.handle != handle),
 };
 
@@ -85,11 +68,10 @@ let unregister = (~handle: int, model) => {
 let update = (msg, model) =>
   switch (msg) {
   | CodeLensesError(_) => (model, Nothing)
-  | CodeLensesReceived({handle, startLine, stopLine, bufferId, lenses}) =>
-    let lenses = lenses
-    |> List.map(lens => {lens, handle});
-
-    (model, CodeLensesChanged({handle, bufferId, startLine, stopLine, lenses}));
+  | CodeLensesReceived({handle, startLine, stopLine, bufferId, lenses}) => (
+      model,
+      CodeLensesChanged({handle, bufferId, startLine, stopLine, lenses}),
+    )
   };
 
 // SUBSCRIPTION
