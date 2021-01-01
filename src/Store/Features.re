@@ -164,6 +164,10 @@ module Internal = {
              ~config=resolver,
            );
 
+      let languageSupport =
+        state.languageSupport
+        |> Feature_LanguageSupport.configurationChanged(~config=resolver);
+
       let perFileTypeConfig =
         Feature_Configuration.resolver(state.config, state.vim);
 
@@ -177,7 +181,7 @@ module Internal = {
           },
           state.layout,
         );
-      {...state, sideBar, layout};
+      {...state, languageSupport, sideBar, layout};
     };
 
   let updateMode =

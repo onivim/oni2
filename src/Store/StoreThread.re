@@ -265,6 +265,7 @@ let start =
 
     let fontFamily = Feature_Editor.Configuration.fontFamily.get(config);
     let fontSize = Feature_Editor.Configuration.fontSize.get(config);
+    let fontWeight = Feature_Editor.Configuration.fontWeight.get(config);
 
     let fontLigatures =
       Oni_Core.Configuration.getValue(
@@ -283,6 +284,7 @@ let start =
         ~uniqueId="editorFont",
         ~fontFamily,
         ~fontSize,
+        ~fontWeight,
         ~fontSmoothing,
         ~fontLigatures,
       )
@@ -303,11 +305,19 @@ let start =
         c => c.terminalIntegratedFontSmoothing,
         state.configuration,
       );
+
+    let terminalFontWeight =
+      Oni_Core.Configuration.getValue(
+        c => c.terminalIntegratedFontWeight,
+        state.configuration,
+      );
+
     let terminalFontSubscription =
       Service_Font.Sub.font(
         ~uniqueId="terminalFont",
         ~fontFamily=terminalFontFamily,
         ~fontSize=terminalFontSize,
+        ~fontWeight=terminalFontWeight,
         ~fontSmoothing=terminalFontSmoothing,
         ~fontLigatures,
       )

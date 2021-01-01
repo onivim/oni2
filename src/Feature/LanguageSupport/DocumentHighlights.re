@@ -57,29 +57,48 @@ let getLinesWithHighlight = (~bufferId, model) => {
   |> Option.value(~default=[]);
 };
 
-let sub = (~buffer, ~location, ~client, model) => {
-  let toMsg = (highlights: list(Exthost.DocumentHighlight.t)) => {
-    let ranges =
-      highlights
-      |> List.map(({range, _}: Exthost.DocumentHighlight.t) => {
-           Exthost.OneBasedRange.toRange(range)
-         });
+module Configuration = {
+  open Config.Schema;
+  let enabled = setting("editor.occurrencesHighlight", bool, ~default=true);
+};
 
-    DocumentHighlighted({bufferId: Oni_Core.Buffer.getId(buffer), ranges});
+let configurationChanged = (~config, model) =>
+  if (!Configuration.enabled.get(config)) {
+    {...model, bufferToHighlights: IntMap.empty};
+  } else {
+    model;
   };
 
-  model.providers
-  |> List.filter(({selector, _}) =>
-       selector |> Exthost.DocumentSelector.matchesBuffer(~buffer)
-     )
-  |> List.map(({handle, _}) => {
-       Service_Exthost.Sub.documentHighlights(
-         ~handle,
-         ~buffer,
-         ~position=location,
-         ~toMsg,
-         client,
+let sub = (~config, ~buffer, ~location, ~client, model) =>
+  if (!Configuration.enabled.get(config)) {
+    Isolinear.Sub.none;
+  } else {
+    let toMsg = (highlights: list(Exthost.DocumentHighlight.t)) => {
+      let ranges =
+        highlights
+        |> List.map(({range, _}: Exthost.DocumentHighlight.t) => {
+             Exthost.OneBasedRange.toRange(range)
+           });
+
+      DocumentHighlighted({bufferId: Oni_Core.Buffer.getId(buffer), ranges});
+    };
+
+    model.providers
+    |> List.filter(({selector, _}) =>
+         selector |> Exthost.DocumentSelector.matchesBuffer(~buffer)
        )
-     })
-  |> Isolinear.Sub.batch;
+    |> List.map(({handle, _}) => {
+         Service_Exthost.Sub.documentHighlights(
+           ~handle,
+           ~buffer,
+           ~position=location,
+           ~toMsg,
+           client,
+         )
+       })
+    |> Isolinear.Sub.batch;
+  };
+
+module Contributions = {
+  let configuration = Configuration.[enabled.spec];
 };
