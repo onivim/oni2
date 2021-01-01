@@ -154,10 +154,10 @@ let update = (msg, model) =>
              |> addLenses(handle, bufferId, lenses)
              |> Option.some
            | Some(existing) =>
-             existing
-             |> removeLensesInRange(startLine, stopLine, handle)
+           // Experiment
+             IntMap.empty
              |> addLenses(handle, bufferId, lenses)
-             |> Option.some,
+             |> Option.some
          );
 
     let model' = {...model, bufferToLenses};
