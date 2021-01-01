@@ -19,14 +19,15 @@ runTest(
     let input = key => {
       let keyPress =
         EditorInput.KeyPress.physicalKey(
-          ~key=EditorInput.Key.Character(key),
+          ~scancode=Sdl2.Scancode.ofName(key),
+          ~keycode=Sdl2.Keycode.ofName(key),
           ~modifiers=EditorInput.Modifiers.none,
         );
       let time = Revery.Time.now();
 
-      dispatch(KeyDown({key: keyPress, scancode: 1, time}));
+      dispatch(KeyDown(keyPress, time));
       //dispatch(TextInput(key));
-      dispatch(KeyUp({key: keyPress, scancode: 1, time}));
+      dispatch(KeyUp(keyPress, time));
     };
 
     let testFile = getAssetPath("some-test-file.txt");
@@ -47,8 +48,8 @@ runTest(
       }
     );
 
-    input('k');
-    input('k');
+    input("k");
+    input("k");
 
     wait(~name="Wait for split to be created", (state: State.t) =>
       switch (Selectors.getActiveBuffer(state)) {

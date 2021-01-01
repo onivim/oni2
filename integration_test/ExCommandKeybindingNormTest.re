@@ -16,14 +16,15 @@ runTest(
     let input = key => {
       let keyPress =
         EditorInput.KeyPress.physicalKey(
-          ~key,
+          ~scancode=Sdl2.Scancode.ofName(key),
+          ~keycode=Sdl2.Keycode.ofName(key),
           ~modifiers=EditorInput.Modifiers.none,
         );
       let time = Revery.Time.now();
 
-      dispatch(KeyDown({key: keyPress, scancode: 1, time}));
+      dispatch(KeyDown(keyPress, time));
       //dispatch(TextInput(key));
-      dispatch(KeyUp({key: keyPress, scancode: 1, time}));
+      dispatch(KeyUp(keyPress, time));
     };
 
     let testFile = getAssetPath("some-test-file.txt");
@@ -48,7 +49,7 @@ runTest(
     });
 
     // Press k, which is re-bound to 'norm! j'
-    input(EditorInput.Key.Character('k'));
+    input("k");
 
     // Verify cursor is at top of file
     wait(~name="Verify cursor moved down a line", (state: State.t) => {

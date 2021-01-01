@@ -1,9 +1,6 @@
 open Oni_Core;
 open EditorInput;
 
-// TODO: Move to Service_Input
-module ReveryKeyConverter = ReveryKeyConverter;
-
 type outmsg =
   | Nothing
   | DebugInputShown
@@ -59,16 +56,12 @@ type execute =
 type effect =
   | Execute(execute)
   | Text(string)
-  | Unhandled({
-      key: KeyPress.t,
-      isProducedByRemap: bool,
-    })
+  | Unhandled(KeyPress.t)
   | RemapRecursionLimitHit;
 
 let keyDown:
   (
     ~config: Config.resolver,
-    ~scancode: int,
     ~key: KeyPress.t,
     ~context: WhenExpr.ContextKeys.t,
     ~time: Revery.Time.t,
@@ -99,7 +92,7 @@ let consumedKeys: model => list(EditorInput.KeyPress.t);
 let keyUp:
   (
     ~config: Config.resolver,
-    ~scancode: int,
+    ~key: KeyPress.t,
     ~context: WhenExpr.ContextKeys.t,
     model
   ) =>

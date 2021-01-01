@@ -1,4 +1,3 @@
-[@deriving show]
 type t =
   | Character(char)
   | Function(int)
@@ -25,15 +24,13 @@ type t =
   | NumpadSeparator
   | NumpadSubtract
   | NumpadDecimal
-  | NumpadDivide
-  | LeftControl
-  | RightControl;
+  | NumpadDivide;
 
 let toString =
   fun
-  | Character(c) => String.make(1, c)
-  | Function(digit) => Printf.sprintf("F%d", digit)
-  | NumpadDigit(digit) => Printf.sprintf("Numpad%d", digit)
+  | Character(c) => Printf.sprintf("Character(%c)", c)
+  | Function(digit) => Printf.sprintf("Function(%d)", digit)
+  | NumpadDigit(digit) => Printf.sprintf("Numpad(%d)", digit)
   | Escape => "Escape"
   | Down => "Down"
   | Up => "Up"
@@ -56,6 +53,4 @@ let toString =
   | NumpadSeparator => "NumpadSeparator"
   | NumpadSubtract => "NumpadSubtract"
   | NumpadDecimal => "NumpadDecimal"
-  | NumpadDivide => "NumpadDivide"
-  | LeftControl => "LeftControl"
-  | RightControl => "RightControl";
+  | NumpadDivide => "NumpadDivide";

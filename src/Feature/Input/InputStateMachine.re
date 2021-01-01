@@ -19,8 +19,5 @@ type effect =
   Input.effect =
     | Execute(execute)
     | Text(string)
-    | Unhandled({
-        key: EditorInput.KeyPress.t,
-        isProducedByRemap: bool,
-      })
+    | Unhandled(EditorInput.KeyPress.t)
     | RemapRecursionLimitHit;

@@ -1,15 +1,13 @@
+open KeyResolver;
+
 open Oni_Core;
 open Utility;
 module Log = (val Log.withNamespace("Oni2.Feature.Input"));
 
-// TODO: Move to Service_Input
-module ReveryKeyConverter = ReveryKeyConverter;
+let keyCodeToString = Sdl2.Keycode.getName;
 
 let keyPressToString =
-  EditorInput.KeyPress.toString(
-    ~meta="Meta",
-    ~keyToString=EditorInput.Key.toString,
-  );
+  EditorInput.KeyPress.toString(~meta="Meta", ~keyCodeToString);
 
 // CONFIGURATION
 module Configuration = {
@@ -31,6 +29,8 @@ module Configuration = {
                        // When parsing from JSON - use VSCode style parsing
                        // where an explicit shift key is required.
                        ~explicitShiftKeyNeeded=true,
+                       ~getKeycode,
+                       ~getScancode,
                        keyString,
                      )
                    ) {
@@ -58,7 +58,7 @@ module Configuration = {
               switch (maybeKey) {
               | Some(key) =>
                 EditorInput.KeyPress.toString(
-                  //~keyCodeToString=Sdl2.Keycode.getName,
+                  ~keyCodeToString=Sdl2.Keycode.getName,
                   EditorInput.KeyPress.PhysicalKey(key),
                 )
                 |> string
@@ -139,7 +139,12 @@ module Schema = {
     switch (keybinding) {
     | Binding({key, command, condition}) =>
       let maybeMatcher =
-        EditorInput.Matcher.parse(~explicitShiftKeyNeeded=true, key);
+        EditorInput.Matcher.parse(
+          ~explicitShiftKeyNeeded=true,
+          ~getKeycode,
+          ~getScancode,
+          key,
+        );
       maybeMatcher
       |> Stdlib.Result.map(matcher => {
            ResolvedBinding({
@@ -158,10 +163,20 @@ module Schema = {
       };
 
       let maybeMatcher =
-        EditorInput.Matcher.parse(~explicitShiftKeyNeeded=true, fromKeys);
+        EditorInput.Matcher.parse(
+          ~explicitShiftKeyNeeded=true,
+          ~getKeycode,
+          ~getScancode,
+          fromKeys,
+        );
 
       let maybeKeys =
-        EditorInput.KeyPress.parse(~explicitShiftKeyNeeded=true, toKeys);
+        EditorInput.KeyPress.parse(
+          ~explicitShiftKeyNeeded=true,
+          ~getKeycode,
+          ~getScancode,
+          toKeys,
+        );
 
       ResultEx.map2(
         (matcher, toKeys) => {
@@ -248,31 +263,22 @@ type effect =
   InputStateMachine.effect =
     | Execute(InputStateMachine.command)
     | Text(string)
-    | Unhandled({
-        key: EditorInput.KeyPress.t,
-        isProducedByRemap: bool,
-      })
+    | Unhandled(EditorInput.KeyPress.t)
     | RemapRecursionLimitHit;
+
+let keyCodeToString = Sdl2.Keycode.getName;
 
 let keyDown =
     (
       ~config,
-      ~scancode,
       ~key,
       ~context,
       ~time,
       {inputStateMachine, keyDisplayer, _} as model,
     ) => {
   let leaderKey = Configuration.leaderKey.get(config);
-
   let (inputStateMachine', effects) =
-    InputStateMachine.keyDown(
-      ~leaderKey,
-      ~scancode,
-      ~key,
-      ~context,
-      inputStateMachine,
-    );
+    InputStateMachine.keyDown(~leaderKey, ~key, ~context, inputStateMachine);
 
   let keyDisplayer' =
     keyDisplayer
@@ -326,15 +332,10 @@ let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
   );
 };
 
-let keyUp = (~config, ~scancode, ~context, {inputStateMachine, _} as model) => {
+let keyUp = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
   let leaderKey = Configuration.leaderKey.get(config);
   let (inputStateMachine', effects) =
-    InputStateMachine.keyUp(
-      ~leaderKey,
-      ~scancode,
-      ~context,
-      inputStateMachine,
-    );
+    InputStateMachine.keyUp(~leaderKey, ~key, ~context, inputStateMachine);
   ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
@@ -496,14 +497,24 @@ let update = (msg, model) => {
     // In other words - characters like 'J' should resolve to 'Shift+j'
     let explicitShiftKeyNeeded = false;
     let maybeMatcher =
-      EditorInput.Matcher.parse(~explicitShiftKeyNeeded, mapping.fromKeys);
+      EditorInput.Matcher.parse(
+        ~explicitShiftKeyNeeded,
+        ~getKeycode,
+        ~getScancode,
+        mapping.fromKeys,
+      );
     let (model, eff) =
       switch (
         VimCommandParser.parse(~scriptId=mapping.scriptId, mapping.toValue)
       ) {
       | KeySequence(toValue) =>
         let maybeKeys =
-          EditorInput.KeyPress.parse(~explicitShiftKeyNeeded, toValue);
+          EditorInput.KeyPress.parse(
+            ~explicitShiftKeyNeeded,
+            ~getKeycode,
+            ~getScancode,
+            toValue,
+          );
 
         let maybeModel =
           ResultEx.map2(
@@ -654,7 +665,9 @@ module View = {
       | AllKeysReleased => React.empty
       | Sequence(matchers) =>
         let text =
-          matchers |> List.map(KeyPress.toString) |> String.concat(", ");
+          matchers
+          |> List.map(KeyPress.toString(~keyCodeToString))
+          |> String.concat(", ");
         <Text text fontFamily={font.family} fontSize={font.size} />;
       };
     };

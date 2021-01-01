@@ -4,8 +4,8 @@ type t =
   | PhysicalKey(PhysicalKey.t)
   | SpecialKey(SpecialKey.t);
 
-let physicalKey = (~key, ~modifiers) =>
-  PhysicalKey(PhysicalKey.{key, modifiers});
+let physicalKey = (~keycode, ~scancode, ~modifiers) =>
+  PhysicalKey(PhysicalKey.{scancode, keycode, modifiers});
 
 let specialKey = special => SpecialKey(special);
 
@@ -19,7 +19,7 @@ let equals = (keyA, keyB) => {
   | (SpecialKey(specialKeyA), SpecialKey(specialKeyB)) =>
     specialKeyA == specialKeyB
   | (PhysicalKey(physicalKeyA), PhysicalKey(physicalKeyB)) =>
-    physicalKeyA.key == physicalKeyB.key
+    physicalKeyA.keycode == physicalKeyB.keycode
     && Modifiers.equals(physicalKeyA.modifiers, physicalKeyB.modifiers)
   | (SpecialKey(_), PhysicalKey(_))
   | (PhysicalKey(_), SpecialKey(_)) => false
@@ -29,18 +29,25 @@ let equals = (keyA, keyB) => {
 let ofInternal =
     (
       ~addShiftKeyToCapital,
+      ~getKeycode,
+      ~getScancode,
       (
         key: Matcher_internal.keyPress,
         mods: list(Matcher_internal.modifier),
       ),
     ) => {
   let keyToKeyPress = (~mods=mods, key) => {
-    Ok(
-      PhysicalKey({
-        key,
-        modifiers: Matcher_internal.Helpers.internalModsToMods(mods),
-      }),
-    );
+    switch (getKeycode(key), getScancode(key)) {
+    | (Some(keycode), Some(scancode)) =>
+      Ok(
+        PhysicalKey({
+          modifiers: Matcher_internal.Helpers.internalModsToMods(mods),
+          scancode,
+          keycode,
+        }),
+      )
+    | _ => Error("Unrecognized key: " ++ Key.toString(key))
+    };
   };
   switch (key) {
   | Matcher_internal.UnmatchedString(str) =>
@@ -70,7 +77,7 @@ let ofInternal =
   };
 };
 
-let parse = (~explicitShiftKeyNeeded, str) => {
+let parse = (~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, str) => {
   let parse = lexbuf =>
     switch (Matcher_parser.keys(Matcher_lexer.token, lexbuf)) {
     | exception Matcher_lexer.Error => Error("Error parsing binding: " ++ str)
@@ -87,7 +94,9 @@ let parse = (~explicitShiftKeyNeeded, str) => {
 
   let finish = r => {
     r
-    |> List.map(ofInternal(~addShiftKeyToCapital))
+    |> List.map(
+         ofInternal(~addShiftKeyToCapital, ~getKeycode, ~getScancode),
+       )
     |> List.flatten
     |> Base.Result.all;
   };
@@ -95,15 +104,15 @@ let parse = (~explicitShiftKeyNeeded, str) => {
   str |> Lexing.from_string |> parse |> flatMap(finish);
 };
 
-let toString = (~meta="Meta", ~keyToString=Key.toString, key) => {
+let toString = (~meta="Meta", ~keyCodeToString, key) => {
   switch (key) {
   | SpecialKey(special) =>
     Printf.sprintf("Special(%s)", SpecialKey.show(special))
-  | PhysicalKey({key, modifiers, _}) =>
+  | PhysicalKey({keycode, modifiers, _}) =>
     let buffer = Buffer.create(16);
     let separator = "+";
 
-    let keyString = keyToString(key);
+    let keyString = keyCodeToString(keycode);
 
     let onlyShiftPressed =
       modifiers.shift

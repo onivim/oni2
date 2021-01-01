@@ -121,8 +121,6 @@ module Mode: {
   let isOperatorPending: t => bool;
 
   let cursors: t => list(BytePosition.t);
-
-  let show: t => string;
 };
 
 module Split: {

@@ -48,6 +48,12 @@ bindings: [
 |}
   |> Yojson.Safe.from_string;
 
+let getKeyFromSDL = (~modifiers=EditorInput.Modifiers.none, key: string) => {
+  let scancode = Sdl2.Scancode.ofName(key);
+  let keycode = Sdl2.Keycode.ofName(key);
+  EditorInput.KeyPress.physicalKey(~keycode, ~scancode, ~modifiers);
+};
+
 let contextWithEditorTextFocus =
   WhenExpr.ContextKeys.(
     fromSchema(
@@ -132,14 +138,7 @@ describe("Keybindings", ({describe, _}) => {
                ~time=Revery.Time.zero,
                ~config=Oni_Core.Config.emptyResolver,
                ~context=contextWithEditorTextFocus,
-               ~scancode=101,
-               ~key=
-                 EditorInput.(
-                   PhysicalKey({
-                     key: Key.Function(2),
-                     modifiers: Modifiers.none,
-                   })
-                 ),
+               ~key=getKeyFromSDL("F2"),
                input,
              );
 
@@ -168,13 +167,13 @@ describe("Keybindings", ({describe, _}) => {
                  Feature_Input.initial([]),
                  bindings,
                );
+             let key = getKeyFromSDL(~modifiers, key);
              let (_bindings, effects) =
                Feature_Input.keyDown(
                  ~time=Revery.Time.zero,
                  ~config=Oni_Core.Config.emptyResolver,
-                 ~scancode=1,
                  ~context=contextWithEditorTextFocus,
-                 ~key=PhysicalKey({key, modifiers}),
+                 ~key,
                  input,
                );
              expect.equal(effects, [Execute(NamedCommand(cmd))]);
@@ -188,29 +187,28 @@ describe("Keybindings", ({describe, _}) => {
         meta,
       };
 
-      let cases =
-        EditorInput.[
-          (
-            Key.Character('p'),
-            modifier(~control=true, ~shift=false, ~meta=false),
-            "workbench.action.quickOpen",
-          ),
-          (
-            Key.Character('p'),
-            modifier(~control=false, ~shift=false, ~meta=true),
-            "workbench.action.quickOpen",
-          ),
-          (
-            Key.Character('p'),
-            modifier(~control=true, ~shift=true, ~meta=false),
-            "workbench.action.showCommands",
-          ),
-          (
-            Key.Character('p'),
-            modifier(~control=false, ~shift=true, ~meta=true),
-            "workbench.action.showCommands",
-          ),
-        ];
+      let cases = [
+        (
+          "p",
+          modifier(~control=true, ~shift=false, ~meta=false),
+          "workbench.action.quickOpen",
+        ),
+        (
+          "p",
+          modifier(~control=false, ~shift=false, ~meta=true),
+          "workbench.action.quickOpen",
+        ),
+        (
+          "p",
+          modifier(~control=true, ~shift=true, ~meta=false),
+          "workbench.action.showCommands",
+        ),
+        (
+          "p",
+          modifier(~control=false, ~shift=true, ~meta=true),
+          "workbench.action.showCommands",
+        ),
+      ];
 
       cases |> List.iter(validateKeyResultsInCommand);
     });
