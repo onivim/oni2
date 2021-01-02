@@ -174,16 +174,20 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let context = Oni_Model.ContextKeys.all(state);
 
   let menuBarElement =
-    <Feature_MenuBar.View
-      isWindowFocused={state.windowIsFocused}
-      font={state.uiFont}
-      config
-      context
-      input={state.input}
-      theme
-      model={state.menuBar}
-      dispatch={msg => dispatch(Actions.MenuBar(msg))}
-    />;
+    switch (Feature_MenuBar.Configuration.visibility.get(config)) {
+    | `visible =>
+      <Feature_MenuBar.View
+        isWindowFocused={state.windowIsFocused}
+        font={state.uiFont}
+        config
+        context
+        input={state.input}
+        theme
+        model={state.menuBar}
+        dispatch={msg => dispatch(Actions.MenuBar(msg))}
+      />
+    | `hidden => React.empty
+    };
 
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
