@@ -1,13 +1,15 @@
-open KeyResolver;
-
 open Oni_Core;
 open Utility;
 module Log = (val Log.withNamespace("Oni2.Feature.Input"));
 
-let keyCodeToString = Sdl2.Keycode.getName;
+// TODO: Move to Service_Input
+module ReveryKeyConverter = ReveryKeyConverter;
 
 let keyPressToString =
-  EditorInput.KeyPress.toString(~meta="Meta", ~keyCodeToString);
+  EditorInput.KeyPress.toString(
+    ~meta="Meta",
+    ~keyToString=EditorInput.Key.toString,
+  );
 
 // CONFIGURATION
 module Configuration = {
@@ -29,8 +31,6 @@ module Configuration = {
                        // When parsing from JSON - use VSCode style parsing
                        // where an explicit shift key is required.
                        ~explicitShiftKeyNeeded=true,
-                       ~getKeycode,
-                       ~getScancode,
                        keyString,
                      )
                    ) {
@@ -58,7 +58,7 @@ module Configuration = {
               switch (maybeKey) {
               | Some(key) =>
                 EditorInput.KeyPress.toString(
-                  ~keyCodeToString=Sdl2.Keycode.getName,
+                  //~keyCodeToString=Sdl2.Keycode.getName,
                   EditorInput.KeyPress.PhysicalKey(key),
                 )
                 |> string
@@ -96,6 +96,7 @@ module Schema = {
         condition: WhenExpr.t,
       })
     | Remap({
+        allowRecursive: bool,
         fromKeys: string,
         toKeys: string,
         condition: WhenExpr.t,
@@ -108,6 +109,7 @@ module Schema = {
         condition: WhenExpr.ContextKeys.t => bool,
       })
     | ResolvedRemap({
+        allowRecursive: bool,
         matcher: EditorInput.Matcher.t,
         toKeys: list(EditorInput.KeyPress.t),
         condition: WhenExpr.ContextKeys.t => bool,
@@ -125,8 +127,8 @@ module Schema = {
 
   let clear = (~key as _) => failwith("Not implemented");
 
-  let remap = (~fromKeys, ~toKeys, ~condition) =>
-    Remap({fromKeys, toKeys, condition});
+  let remap = (~allowRecursive, ~fromKeys, ~toKeys, ~condition) =>
+    Remap({allowRecursive, fromKeys, toKeys, condition});
 
   let resolve = keybinding => {
     let evaluateCondition = (whenExpr, contextKeys) => {
@@ -139,12 +141,7 @@ module Schema = {
     switch (keybinding) {
     | Binding({key, command, condition}) =>
       let maybeMatcher =
-        EditorInput.Matcher.parse(
-          ~explicitShiftKeyNeeded=true,
-          ~getKeycode,
-          ~getScancode,
-          key,
-        );
+        EditorInput.Matcher.parse(~explicitShiftKeyNeeded=true, key);
       maybeMatcher
       |> Stdlib.Result.map(matcher => {
            ResolvedBinding({
@@ -154,7 +151,7 @@ module Schema = {
            })
          });
 
-    | Remap({fromKeys, condition, toKeys}) =>
+    | Remap({allowRecursive, fromKeys, condition, toKeys}) =>
       let evaluateCondition = (whenExpr, contextKeys) => {
         WhenExpr.evaluate(
           whenExpr,
@@ -163,24 +160,15 @@ module Schema = {
       };
 
       let maybeMatcher =
-        EditorInput.Matcher.parse(
-          ~explicitShiftKeyNeeded=true,
-          ~getKeycode,
-          ~getScancode,
-          fromKeys,
-        );
+        EditorInput.Matcher.parse(~explicitShiftKeyNeeded=true, fromKeys);
 
       let maybeKeys =
-        EditorInput.KeyPress.parse(
-          ~explicitShiftKeyNeeded=true,
-          ~getKeycode,
-          ~getScancode,
-          toKeys,
-        );
+        EditorInput.KeyPress.parse(~explicitShiftKeyNeeded=true, toKeys);
 
       ResultEx.map2(
         (matcher, toKeys) => {
           ResolvedRemap({
+            allowRecursive,
             matcher,
             condition: evaluateCondition(condition),
             toKeys,
@@ -248,9 +236,15 @@ let initial = keybindings => {
                InputStateMachine.addBinding(matcher, condition, command, ism);
              ism;
 
-           | Ok(ResolvedRemap({matcher, condition, toKeys})) =>
+           | Ok(ResolvedRemap({allowRecursive, matcher, condition, toKeys})) =>
              let (ism, _bindingId) =
-               InputStateMachine.addMapping(matcher, condition, toKeys, ism);
+               InputStateMachine.addMapping(
+                 ~allowRecursive,
+                 matcher,
+                 condition,
+                 toKeys,
+                 ism,
+               );
              ism;
            }
          },
@@ -263,22 +257,31 @@ type effect =
   InputStateMachine.effect =
     | Execute(InputStateMachine.command)
     | Text(string)
-    | Unhandled(EditorInput.KeyPress.t)
+    | Unhandled({
+        key: EditorInput.KeyPress.t,
+        isProducedByRemap: bool,
+      })
     | RemapRecursionLimitHit;
-
-let keyCodeToString = Sdl2.Keycode.getName;
 
 let keyDown =
     (
       ~config,
+      ~scancode,
       ~key,
       ~context,
       ~time,
       {inputStateMachine, keyDisplayer, _} as model,
     ) => {
   let leaderKey = Configuration.leaderKey.get(config);
+
   let (inputStateMachine', effects) =
-    InputStateMachine.keyDown(~leaderKey, ~key, ~context, inputStateMachine);
+    InputStateMachine.keyDown(
+      ~leaderKey,
+      ~scancode,
+      ~key,
+      ~context,
+      inputStateMachine,
+    );
 
   let keyDisplayer' =
     keyDisplayer
@@ -332,10 +335,15 @@ let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
   );
 };
 
-let keyUp = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
+let keyUp = (~config, ~scancode, ~context, {inputStateMachine, _} as model) => {
   let leaderKey = Configuration.leaderKey.get(config);
   let (inputStateMachine', effects) =
-    InputStateMachine.keyUp(~leaderKey, ~key, ~context, inputStateMachine);
+    InputStateMachine.keyUp(
+      ~leaderKey,
+      ~scancode,
+      ~context,
+      inputStateMachine,
+    );
   ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
@@ -391,6 +399,7 @@ let addKeyBinding = (~binding, {inputStateMachine, _} as model) => {
     | ResolvedRemap(remap) =>
       let (inputStateMachine', uniqueId) =
         InputStateMachine.addMapping(
+          ~allowRecursive=remap.allowRecursive,
           remap.matcher,
           remap.condition,
           remap.toKeys,
@@ -465,8 +474,14 @@ module Internal = {
                    ism,
                  )
 
-               | ResolvedRemap({matcher, condition, toKeys}) =>
-                 InputStateMachine.addMapping(matcher, condition, toKeys, ism)
+               | ResolvedRemap({allowRecursive, matcher, condition, toKeys}) =>
+                 InputStateMachine.addMapping(
+                   ~allowRecursive,
+                   matcher,
+                   condition,
+                   toKeys,
+                   ism,
+                 )
                };
              (ism', [bindingId, ...bindings]);
            },
@@ -497,30 +512,21 @@ let update = (msg, model) => {
     // In other words - characters like 'J' should resolve to 'Shift+j'
     let explicitShiftKeyNeeded = false;
     let maybeMatcher =
-      EditorInput.Matcher.parse(
-        ~explicitShiftKeyNeeded,
-        ~getKeycode,
-        ~getScancode,
-        mapping.fromKeys,
-      );
+      EditorInput.Matcher.parse(~explicitShiftKeyNeeded, mapping.fromKeys);
     let (model, eff) =
       switch (
         VimCommandParser.parse(~scriptId=mapping.scriptId, mapping.toValue)
       ) {
       | KeySequence(toValue) =>
         let maybeKeys =
-          EditorInput.KeyPress.parse(
-            ~explicitShiftKeyNeeded,
-            ~getKeycode,
-            ~getScancode,
-            toValue,
-          );
+          EditorInput.KeyPress.parse(~explicitShiftKeyNeeded, toValue);
 
         let maybeModel =
           ResultEx.map2(
             (matcher, keys) => {
               let (inputStateMachine', _mappingId) =
                 InputStateMachine.addMapping(
+                  ~allowRecursive=mapping.recursive,
                   matcher,
                   Internal.vimMapModeToWhenExpr(mapping.mode),
                   keys,
@@ -665,9 +671,7 @@ module View = {
       | AllKeysReleased => React.empty
       | Sequence(matchers) =>
         let text =
-          matchers
-          |> List.map(KeyPress.toString(~keyCodeToString))
-          |> String.concat(", ");
+          matchers |> List.map(KeyPress.toString) |> String.concat(", ");
         <Text text fontFamily={font.family} fontSize={font.size} />;
       };
     };

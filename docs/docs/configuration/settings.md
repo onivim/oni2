@@ -122,6 +122,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `workbench.statusBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the status bar.
 
+- `window.menuBarVisibility` __(_"visible" | "hidden"_ default: `"visible"`)__ - Controls the visibility of the menu bar.
+
 - `oni.layout.showLayoutTabs` __(_"always"|"smart"|"never"_ default: `"smart"`)__ - Controls the display of layout tabs. `"smart"` will only show the tabs if there's more than one.
 
 - `oni.layout.layoutTabPosition` __(_"top"|"bottom"_ default: `"bottom"`)__ - Controls the position of the layout tabs.
