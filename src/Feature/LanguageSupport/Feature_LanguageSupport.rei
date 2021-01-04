@@ -34,11 +34,8 @@ module Msg: {
 module CodeLens: {
   type t;
 
-  let get: (~bufferId: int, model) => list(t);
-
   let lineNumber: t => int;
   let text: t => string;
-  let uniqueId: t => string;
 
   module View: {
     let make:
@@ -74,6 +71,7 @@ type outmsg =
   | NotifyFailure(string)
   | Effect(Isolinear.Effect.t(msg))
   | CodeLensesChanged({
+      handle: int,
       bufferId: int,
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,
