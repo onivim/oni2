@@ -39,3 +39,13 @@ module View: {
     ) =>
     Revery.UI.element;
 };
+
+// CONFIGURATION
+
+module Configuration: {
+  let visibility: Config.Schema.setting([ | `visible | `hidden]);
+};
+
+// CONTRIBUTIONS
+
+module Contributions: {let configuration: list(Config.Schema.spec);};

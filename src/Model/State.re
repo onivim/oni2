@@ -499,6 +499,7 @@ let initial =
         Feature_Buffers.Contributions.configuration,
         Feature_Editor.Contributions.configuration,
         Feature_Input.Contributions.configuration,
+        Feature_MenuBar.Contributions.configuration,
         Feature_SideBar.Contributions.configuration,
         Feature_SignatureHelp.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
