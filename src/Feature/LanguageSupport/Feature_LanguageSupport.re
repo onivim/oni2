@@ -60,6 +60,7 @@ type outmsg =
   | NotifyFailure(string)
   | Effect(Isolinear.Effect.t(msg))
   | CodeLensesChanged({
+      handle: int,
       bufferId: int,
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,
@@ -79,8 +80,14 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     | Outmsg.ReferencesAvailable => ReferencesAvailable
     | Outmsg.OpenFile({filePath, location}) => OpenFile({filePath, location})
     | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
-    | Outmsg.CodeLensesChanged({bufferId, lenses, startLine, stopLine}) =>
-      CodeLensesChanged({bufferId, lenses, startLine, stopLine});
+    | Outmsg.CodeLensesChanged({
+        handle,
+        bufferId,
+        lenses,
+        startLine,
+        stopLine,
+      }) =>
+      CodeLensesChanged({handle, bufferId, lenses, startLine, stopLine});
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -228,8 +235,20 @@ let update =
     let outmsg =
       switch (eff) {
       | CodeLens.Nothing => Outmsg.Nothing
-      | CodeLens.CodeLensesChanged({bufferId, startLine, stopLine, lenses}) =>
-        Outmsg.CodeLensesChanged({bufferId, startLine, stopLine, lenses})
+      | CodeLens.CodeLensesChanged({
+          handle,
+          bufferId,
+          startLine,
+          stopLine,
+          lenses,
+        }) =>
+        Outmsg.CodeLensesChanged({
+          handle,
+          bufferId,
+          startLine,
+          stopLine,
+          lenses,
+        })
       };
     ({...model, codeLens: codeLens'}, outmsg |> map(msg => CodeLens(msg)));
 
@@ -550,12 +569,7 @@ module ShadowedCodeLens = CodeLens;
 module CodeLens = {
   type t = ShadowedCodeLens.codeLens;
 
-  let get = (~bufferId, model) => {
-    ShadowedCodeLens.get(~bufferId, model.codeLens);
-  };
-
   let lineNumber = codeLens => ShadowedCodeLens.lineNumber(codeLens);
-  let uniqueId = codeLens => ShadowedCodeLens.uniqueId(codeLens);
 
   let text = codeLens => ShadowedCodeLens.text(codeLens);
 

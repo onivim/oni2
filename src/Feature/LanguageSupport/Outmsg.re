@@ -20,6 +20,7 @@ type internalMsg('a) =
   | NotifySuccess(string)
   | NotifyFailure(string)
   | CodeLensesChanged({
+      handle: int,
       bufferId: int,
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,

@@ -19,7 +19,7 @@ module Internal = {
       | v when v == 1073741899 => Some(Key.PageUp)
       | v when v == 1073741901 => Some(Key.End)
       | v when v == 1073741902 => Some(Key.PageDown)
-      | v when v == 1073741903 => Some(Key.PageUp)
+      | v when v == 1073741903 => Some(Key.Right)
       | v when v == 1073741904 => Some(Key.Left)
       | v when v == 1073741905 => Some(Key.Down)
       | v when v == 1073741906 => Some(Key.Up)
