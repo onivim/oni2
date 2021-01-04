@@ -8,12 +8,13 @@
    ExCommandKeybindingNormTest ExtConfigurationChangedTest
    ExtHostBufferOpenTest ExtHostBufferUpdatesTest ExtHostCompletionTest
    ExtHostDefinitionTest FileWatcherTest KeybindingsInvalidJsonTest
-   KeySequenceJJTest InputIgnoreTest InputContextKeysTest LanguageCssTest
-   LanguageTypeScriptTest LineEndingsLFTest LineEndingsCRLFTest
-   QuickOpenEventuallyCompletesTest SearchShowClearHighlightsTest
-   SyntaxServer SyntaxServerCloseTest SyntaxServerMessageExceptionTest
-   SyntaxServerParentPidTest SyntaxServerParentPidCorrectTest
-   SyntaxServerReadExceptionTest Regression1671Test Regression2349EnewTest
+   KeySequenceJJTest InputIgnoreTest InputContextKeysTest
+   InputRemapMotionTest LanguageCssTest LanguageTypeScriptTest
+   LineEndingsLFTest LineEndingsCRLFTest QuickOpenEventuallyCompletesTest
+   SearchShowClearHighlightsTest SyntaxServer SyntaxServerCloseTest
+   SyntaxServerMessageExceptionTest SyntaxServerParentPidTest
+   SyntaxServerParentPidCorrectTest SyntaxServerReadExceptionTest
+   Regression1671Test Regression2349EnewTest
    RegressionCommandLineNoCompletionTest RegressionFontFallbackTest
    RegressionFileModifiedIndicationTest RegressionNonExistentDirectory
    RegressionVspEmptyInitialBufferTest RegressionVspEmptyExistingBufferTest
@@ -40,8 +41,8 @@
    ExtHostBufferUpdatesTest.exe ExtHostCompletionTest.exe
    ExtHostDefinitionTest.exe FileWatcherTest.exe
    KeybindingsInvalidJsonTest.exe KeySequenceJJTest.exe InputIgnoreTest.exe
-   InputContextKeysTest.exe LanguageCssTest.exe LanguageTypeScriptTest.exe
-   LineEndingsCRLFTest.exe LineEndingsLFTest.exe
+   InputContextKeysTest.exe InputRemapMotionTest.exe LanguageCssTest.exe
+   LanguageTypeScriptTest.exe LineEndingsCRLFTest.exe LineEndingsLFTest.exe
    QuickOpenEventuallyCompletesTest.exe Regression1671Test.exe
    Regression2349EnewTest.exe RegressionCommandLineNoCompletionTest.exe
    RegressionFileModifiedIndicationTest.exe RegressionFontFallbackTest.exe

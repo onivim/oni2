@@ -123,7 +123,14 @@ module type Input = {
   let addBinding: (Matcher.t, context => bool, command, t) => (t, uniqueId);
 
   let addMapping:
-    (Matcher.t, context => bool, list(KeyPress.t), t) => (t, uniqueId);
+    (
+      ~allowRecursive: bool,
+      Matcher.t,
+      context => bool,
+      list(KeyPress.t),
+      t
+    ) =>
+    (t, uniqueId);
 
   // Turn off all bindings, as if no bindings are defined
   let disable: t => t;
