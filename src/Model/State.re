@@ -499,6 +499,7 @@ let initial =
         Feature_Buffers.Contributions.configuration,
         Feature_Editor.Contributions.configuration,
         Feature_Input.Contributions.configuration,
+        Feature_MenuBar.Contributions.configuration,
         Feature_SideBar.Contributions.configuration,
         Feature_SignatureHelp.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
@@ -517,7 +518,7 @@ let initial =
         config,
         Feature_Vim.initial,
       );
-    Editor.create(~config, ~buffer=editorBuffer, ());
+    Editor.create(~config, ~buffer=editorBuffer, ~preview=false, ());
   };
 
   let defaultEditorFont = Service_Font.default();

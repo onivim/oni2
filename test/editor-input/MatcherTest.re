@@ -1,68 +1,17 @@
 open TestFramework;
 open EditorInput;
 
-let getKeycode =
-  fun
-  | Key.Character('a') => Some(1)
-  | Key.Character('A') => Some(1)
-  | Key.Character('b') => Some(2)
-  | Key.Character('0') => Some(50)
-  | Key.Character('9') => Some(59)
-  | Key.Character('`') => Some(60)
-  | Key.Character('-') => Some(61)
-  | Key.Character('=') => Some(62)
-  | Key.Character('[') => Some(63)
-  | Key.Character(']') => Some(64)
-  | Key.Character('\\') => Some(65)
-  | Key.Character(';') => Some(66)
-  | Key.Character('\'') => Some(67)
-  | Key.Character(',') => Some(68)
-  | Key.Character('.') => Some(69)
-  | Key.Character('/') => Some(70)
-  | Key.Tab => Some(98)
-  | Key.Escape => Some(99)
-  | Key.Up => Some(100)
-  | Key.Left => Some(101)
-  | Key.Right => Some(102)
-  | Key.Down => Some(103)
-  | Key.PageUp => Some(104)
-  | Key.PageDown => Some(105)
-  | Key.End => Some(106)
-  | Key.Home => Some(107)
-  | Key.Return => Some(108)
-  | Key.Space => Some(109)
-  | Key.Backspace => Some(110)
-  | Key.Delete => Some(111)
-  | Key.Pause => Some(112)
-  | Key.CapsLock => Some(113)
-  | Key.Insert => Some(114)
-  | Key.Function(0) => Some(115)
-  | Key.Function(12) => Some(133)
-  | Key.Function(19) => Some(134)
-  | Key.NumpadDigit(0) => Some(135)
-  | Key.NumpadDigit(9) => Some(144)
-  | NumpadMultiply => Some(145)
-  | NumpadAdd => Some(146)
-  | NumpadSeparator => Some(147)
-  | NumpadSubtract => Some(148)
-  | NumpadDecimal => Some(149)
-  | NumpadDivide => Some(150)
-  | _ => None;
-
-let getScancode = getKeycode;
-
-let defaultParse =
-  Matcher.parse(~explicitShiftKeyNeeded=true, ~getKeycode, ~getScancode);
+let defaultParse = Matcher.parse(~explicitShiftKeyNeeded=true);
 
 let defaultParseImplicitShiftKey =
-  Matcher.parse(~explicitShiftKeyNeeded=false, ~getKeycode, ~getScancode);
+  Matcher.parse(~explicitShiftKeyNeeded=false);
 
 let modifiersControl = {...Modifiers.none, control: true};
 
 let modifiersShift = {...Modifiers.none, shift: true};
 
-let keyPress = (~modifiers=Modifiers.none, code) =>
-  KeyPress.physicalKey(~keycode=code, ~scancode=code, ~modifiers);
+let keyPress = (~modifiers=Modifiers.none, key) =>
+  KeyPress.physicalKey(~key, ~modifiers);
 
 let specialKey = KeyPress.specialKey;
 
@@ -73,60 +22,66 @@ describe("Matcher", ({describe, _}) => {
       // Exercise full set of keys described here:
       // https://code.visualstudio.com/docs/getstarted/keybindings#_accepted-keys
       let cases = [
-        ("a", keyPress(1)),
-        ("A", keyPress(1)),
-        ("0", keyPress(50)),
-        ("9", keyPress(59)),
-        ("`", keyPress(60)),
-        ("-", keyPress(61)),
-        ("=", keyPress(62)),
-        ("[", keyPress(63)),
-        ("]", keyPress(64)),
-        ("\\", keyPress(65)),
-        (";", keyPress(66)),
-        ("'", keyPress(67)),
-        (",", keyPress(68)),
-        (".", keyPress(69)),
-        ("/", keyPress(70)),
-        ("tab", keyPress(98)),
-        ("ESC", keyPress(99)),
-        ("up", keyPress(100)),
-        ("left", keyPress(101)),
-        ("right", keyPress(102)),
-        ("down", keyPress(103)),
-        ("PageUp", keyPress(104)),
-        ("pagedown", keyPress(105)),
-        ("end", keyPress(106)),
-        ("home", keyPress(107)),
-        ("enter", keyPress(108)),
-        ("cr", keyPress(108)),
-        ("escape", keyPress(99)),
-        ("EsCaPe", keyPress(99)),
-        ("space", keyPress(109)),
-        ("bs", keyPress(110)),
-        ("Bs", keyPress(110)),
-        ("backspace", keyPress(110)),
-        ("del", keyPress(111)),
-        ("delete", keyPress(111)),
-        ("pause", keyPress(112)),
-        ("capslock", keyPress(113)),
-        ("insert", keyPress(114)),
-        ("f0", keyPress(115)),
-        ("F0", keyPress(115)),
-        ("f19", keyPress(134)),
-        ("F19", keyPress(134)),
-        ("numpad0", keyPress(135)),
-        ("numpad9", keyPress(144)),
-        ("numpad_multiply", keyPress(145)),
-        ("numpad_add", keyPress(146)),
-        ("numpad_separator", keyPress(147)),
-        ("numpad_subtract", keyPress(148)),
-        ("numpad_decimal", keyPress(149)),
-        ("numpad_divide", keyPress(150)),
+        // TODO: Add production cases here
+        ("a", keyPress(Key.Character('a'))),
+        ("A", keyPress(Key.Character('a'))), // Because implicit shift is false
+        ("0", keyPress(Key.Character('0'))),
+        ("9", keyPress(Key.Character('9'))),
+        ("`", keyPress(Key.Character('`'))),
+        ("-", keyPress(Key.Character('-'))),
+        ("=", keyPress(Key.Character('='))),
+        ("[", keyPress(Key.Character('['))),
+        ("]", keyPress(Key.Character(']'))),
+        ("\\", keyPress(Key.Character('\\'))),
+        (";", keyPress(Key.Character(';'))),
+        ("'", keyPress(Key.Character('\''))),
+        (",", keyPress(Key.Character(','))),
+        (".", keyPress(Key.Character('.'))),
+        ("/", keyPress(Key.Character('/'))),
+        ("tab", keyPress(Key.Tab)),
+        ("ESC", keyPress(Key.Escape)),
+        ("up", keyPress(Key.Up)),
+        ("left", keyPress(Key.Left)),
+        ("right", keyPress(Key.Right)),
+        ("down", keyPress(Key.Down)),
+        ("PageUp", keyPress(Key.PageUp)),
+        ("pagedown", keyPress(Key.PageDown)),
+        ("end", keyPress(Key.End)),
+        ("home", keyPress(Key.Home)),
+        ("enter", keyPress(Key.Return)),
+        ("cr", keyPress(Key.Return)),
+        ("escape", keyPress(Key.Escape)),
+        ("EsCaPe", keyPress(Key.Escape)),
+        ("space", keyPress(Key.Space)),
+        ("bs", keyPress(Key.Backspace)),
+        ("Bs", keyPress(Key.Backspace)),
+        ("backspace", keyPress(Key.Backspace)),
+        ("del", keyPress(Key.Delete)),
+        ("delete", keyPress(Key.Delete)),
+        ("pause", keyPress(Key.Pause)),
+        ("capslock", keyPress(Key.CapsLock)),
+        ("insert", keyPress(Key.Insert)),
+        ("f0", keyPress(Key.Function(0))),
+        ("F0", keyPress(Key.Function(0))),
+        ("f19", keyPress(Key.Function(19))),
+        ("F19", keyPress(Key.Function(19))),
+        ("numpad0", keyPress(Key.NumpadDigit(0))),
+        ("numpad9", keyPress(Key.NumpadDigit(9))),
+        ("numpad_multiply", keyPress(Key.NumpadMultiply)),
+        ("numpad_add", keyPress(Key.NumpadAdd)),
+        ("numpad_separator", keyPress(Key.NumpadSeparator)),
+        ("numpad_subtract", keyPress(Key.NumpadSubtract)),
+        ("numpad_decimal", keyPress(Key.NumpadDecimal)),
+        ("numpad_divide", keyPress(Key.NumpadDivide)),
         ("<plug>", specialKey(SpecialKey.Plug)),
         ("<Plug>", specialKey(SpecialKey.Plug)),
         ("<leader>", specialKey(SpecialKey.Leader)),
         ("<Leader>", specialKey(SpecialKey.Leader)),
+        // Non-direct production keys - start of cases for #2114 / #2883
+        (":", keyPress(Key.Character(':'))),
+        ("~", keyPress(Key.Character('~'))),
+        ("_", keyPress(Key.Character('_'))),
+        ("+", keyPress(Key.Character('+'))),
       ];
 
       let runCase = case => {
@@ -141,16 +96,13 @@ describe("Matcher", ({describe, _}) => {
     });
     test("simple parsing", ({expect, _}) => {
       let result = defaultParse("a");
-      expect.equal(result, Ok(Sequence([keyPress(1)])));
+      expect.equal(result, Ok(Sequence([keyPress(Key.Character('a'))])));
 
       let result = defaultParse("b");
-      expect.equal(result, Ok(Sequence([keyPress(2)])));
-
-      let result = defaultParse("c");
-      expect.equal(Result.is_error(result), true);
+      expect.equal(result, Ok(Sequence([keyPress(Key.Character('b'))])));
 
       let result = defaultParse("esc");
-      expect.equal(result, Ok(Sequence([keyPress(99)])));
+      expect.equal(result, Ok(Sequence([keyPress(Key.Escape)])));
     });
     test("all keys released", ({expect, _}) => {
       let result = defaultParse("<RELEASE>");
@@ -158,58 +110,108 @@ describe("Matcher", ({describe, _}) => {
     });
     test("vim bindings", ({expect, _}) => {
       let result = defaultParse("<a>");
-      expect.equal(result, Ok(Sequence([keyPress(1)])));
+      expect.equal(result, Ok(Sequence([keyPress(Key.Character('a'))])));
 
       let result = defaultParse("<c-a>");
       expect.equal(
         result,
-        Ok(Sequence([keyPress(~modifiers=modifiersControl, 1)])),
+        Ok(
+          Sequence([
+            keyPress(~modifiers=modifiersControl, Key.Character('a')),
+          ]),
+        ),
       );
 
       let result = defaultParse("<S-a>");
       expect.equal(
         result,
-        Ok(Sequence([keyPress(~modifiers=modifiersShift, 1)])),
+        Ok(
+          Sequence([
+            keyPress(~modifiers=modifiersShift, Key.Character('a')),
+          ]),
+        ),
       );
 
       let result = defaultParse("<S-F12>");
       expect.equal(
         result,
-        Ok(Sequence([keyPress(~modifiers=modifiersShift, 133)])),
+        Ok(
+          Sequence([keyPress(~modifiers=modifiersShift, Key.Function(12))]),
+        ),
       );
     });
     test("vscode bindings", ({expect, _}) => {
       let result = defaultParse("Ctrl+a");
       expect.equal(
         result,
-        Ok(Sequence([keyPress(~modifiers=modifiersControl, 1)])),
+        Ok(
+          Sequence([
+            keyPress(~modifiers=modifiersControl, Key.Character('a')),
+          ]),
+        ),
       );
 
       let result = defaultParse("ctrl+a");
       expect.equal(
         result,
-        Ok(Sequence([keyPress(~modifiers=modifiersControl, 1)])),
+        Ok(
+          Sequence([
+            keyPress(~modifiers=modifiersControl, Key.Character('a')),
+          ]),
+        ),
       );
     });
     test("binding list", ({expect, _}) => {
       let result = defaultParse("ab");
-      expect.equal(result, Ok(Sequence([keyPress(1), keyPress(2)])));
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(Key.Character('a')),
+            keyPress(Key.Character('b')),
+          ]),
+        ),
+      );
 
       let result = defaultParse("a b");
-      expect.equal(result, Ok(Sequence([keyPress(1), keyPress(2)])));
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(Key.Character('a')),
+            keyPress(Key.Character('b')),
+          ]),
+        ),
+      );
 
       let result = defaultParse("<a>b");
-      expect.equal(result, Ok(Sequence([keyPress(1), keyPress(2)])));
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(Key.Character('a')),
+            keyPress(Key.Character('b')),
+          ]),
+        ),
+      );
       let result = defaultParse("<a><b>");
-      expect.equal(result, Ok(Sequence([keyPress(1), keyPress(2)])));
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(Key.Character('a')),
+            keyPress(Key.Character('b')),
+          ]),
+        ),
+      );
 
       let result = defaultParse("<c-a> Ctrl+b");
       expect.equal(
         result,
         Ok(
           Sequence([
-            keyPress(~modifiers=modifiersControl, 1),
-            keyPress(~modifiers=modifiersControl, 2),
+            keyPress(~modifiers=modifiersControl, Key.Character('a')),
+            keyPress(~modifiers=modifiersControl, Key.Character('b')),
           ]),
         ),
       );
@@ -218,14 +220,21 @@ describe("Matcher", ({describe, _}) => {
       let result = defaultParseImplicitShiftKey("A");
       expect.equal(
         result,
-        Ok(Sequence([keyPress(~modifiers=modifiersShift, 1)])),
+        Ok(
+          Sequence([
+            keyPress(~modifiers=modifiersShift, Key.Character('a')),
+          ]),
+        ),
       );
 
       let result = defaultParseImplicitShiftKey("Ab");
       expect.equal(
         result,
         Ok(
-          Sequence([keyPress(~modifiers=modifiersShift, 1), keyPress(2)]),
+          Sequence([
+            keyPress(~modifiers=modifiersShift, Key.Character('a')),
+            keyPress(Key.Character('b')),
+          ]),
         ),
       );
     });

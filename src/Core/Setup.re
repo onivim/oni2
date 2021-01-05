@@ -27,7 +27,7 @@ let default = () => {
   let execDir = Revery.Environment.executingDirectory;
 
   switch (Revery.Environment.os) {
-  | Revery.Environment.Windows => {
+  | Windows(_) => {
       nodePath: execDir ++ "node.exe",
       nodeScriptPath: execDir ++ "node",
       bundledExtensionsPath: execDir ++ "extensions",
@@ -35,7 +35,7 @@ let default = () => {
       rgPath: execDir ++ "rg.exe",
       rlsPath: execDir ++ "rls.exe",
     }
-  | Revery.Environment.Mac => {
+  | Mac(_) => {
       nodePath: execDir ++ "node",
       nodeScriptPath: execDir ++ "../Resources/node",
       bundledExtensionsPath: execDir ++ "../Resources/extensions",

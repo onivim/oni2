@@ -10,6 +10,7 @@ type context = {
   height: int,
   editor: Editor.t,
   fontFamily: Revery.Font.Family.t,
+  fontWeight: Revery.Font.Weight.t,
   fontSize: float,
   charWidth: float,
   charHeight: float,
@@ -31,6 +32,7 @@ let createContext =
     height,
     editor,
     fontFamily: editorFont.fontFamily,
+    fontWeight: editorFont.fontWeight,
     fontSize: editorFont.fontSize,
     charWidth: editorFont.spaceWidth,
     charHeight: editorFont.measuredHeight,
@@ -86,7 +88,7 @@ let drawShapedText = {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
+        bold ? Oni_Core.Font.bolder(context.fontWeight) : context.fontWeight,
         context.fontFamily,
       );
     let text =
@@ -124,7 +126,7 @@ let drawUtf8Text = {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
+        bold ? Oni_Core.Font.bolder(context.fontWeight) : context.fontWeight,
         context.fontFamily,
       );
     Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
@@ -251,7 +253,8 @@ let token =
   let font =
     Service_Font.resolveWithFallback(
       ~italic=token.italic,
-      token.bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
+      token.bold
+        ? Oni_Core.Font.bolder(context.fontWeight) : context.fontWeight,
       context.fontFamily,
     );
 

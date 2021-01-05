@@ -28,6 +28,7 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
+  | PreviewFile(string)
   | GrabFocus;
 
 let update:

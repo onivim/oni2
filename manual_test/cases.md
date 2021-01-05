@@ -86,3 +86,38 @@ __Pass:__
 - [ ] Win
 - [ ] OSX
 - [ ] Linux
+
+# 5. File Preview
+
+## 5.1 Validate File Preview from explorer
+
+- Ensure `workbench.editor.enablePreview` is set to `true`
+- Open file explorer in `oni2` repo
+- Click `README.md`
+- Click `CHANGES.md`
+- Verify that the 'preview' editor is re-used
+- Make a change to `CHANGES.md`
+- Click `CHANGES_CURRENT.md`
+- Verify that a new editor is created for `CHANGES_CURRENT.md`
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+# 6. Font Rendering
+
+## 2.1 Validate editor.fontWeight
+
+Prerequisite:
+- In configuration file, key "editor.fontFamily" either set to a __non absolute__ font name or absent (Ideally test both).
+
+- Run Onivim 2
+- Open configuration file
+- Change "editor.fontWeight" to ["bold"|"normal"|100|200|...|900] - verify it changes at each step.
+- Check that bold text is always effectively bolder than normal text.
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux

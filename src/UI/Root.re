@@ -33,8 +33,7 @@ module Styles = {
         justifyContent(`Center),
         alignItems(`Stretch),
       ]);
-    if (Revery.Environment.os == Windows
-        && windowDisplayMode == State.Maximized) {
+    if (Revery.Environment.isWindows && windowDisplayMode == State.Maximized) {
       style := [margin(6), ...style^];
     };
     style^;
@@ -175,16 +174,20 @@ let make = (~dispatch, ~state: State.t, ()) => {
   let context = Oni_Model.ContextKeys.all(state);
 
   let menuBarElement =
-    <Feature_MenuBar.View
-      isWindowFocused={state.windowIsFocused}
-      font={state.uiFont}
-      config
-      context
-      input={state.input}
-      theme
-      model={state.menuBar}
-      dispatch={msg => dispatch(Actions.MenuBar(msg))}
-    />;
+    switch (Feature_MenuBar.Configuration.visibility.get(config)) {
+    | `visible =>
+      <Feature_MenuBar.View
+        isWindowFocused={state.windowIsFocused}
+        font={state.uiFont}
+        config
+        context
+        input={state.input}
+        theme
+        model={state.menuBar}
+        dispatch={msg => dispatch(Actions.MenuBar(msg))}
+      />
+    | `hidden => React.empty
+    };
 
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
@@ -252,8 +255,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
     <Overlay>
       <Feature_Sneak.View.Overlay model={state.sneak} theme font />
     </Overlay>
-    {Revery.Environment.os == Windows
-     && state.windowDisplayMode != State.Maximized
+    {Revery.Environment.isWindows && state.windowDisplayMode != State.Maximized
        ? <WindowResizers /> : React.empty}
   </View>;
 };

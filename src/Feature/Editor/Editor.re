@@ -116,6 +116,7 @@ type t = {
   yankHighlightDuration: int,
   wrapMode: WrapMode.t,
   wrapState: WrapState.t,
+  preview: bool,
   wrapPadding: option(float),
   // Number of lines to preserve before or after the cursor, when scrolling.
   // Like the `scrolloff` vim setting or the `editor.cursorSurroundingLines` VSCode setting.
@@ -480,7 +481,7 @@ let configure = (~config, editor) => {
   |> setWrapMode(~wrapMode);
 };
 
-let create = (~config, ~buffer, ()) => {
+let create = (~config, ~buffer, ~preview: bool, ()) => {
   let id = GlobalState.generateId();
   let key = Brisk_reconciler.Key.create();
 
@@ -529,6 +530,7 @@ let create = (~config, ~buffer, ()) => {
     yankHighlightDuration,
     wrapState,
     wrapMode,
+    preview,
     wrapPadding: None,
     verticalScrollMargin: 1,
     inlineElements: InlineElements.initial,
@@ -937,6 +939,9 @@ let selectionOrCursorRange = editor => {
 };
 
 let getId = model => model.editorId;
+
+let getPreview = model => model.preview;
+let setPreview = (~preview, editor) => {...editor, preview};
 
 let getVisibleView = editor => {
   let {pixelHeight, _} = editor;

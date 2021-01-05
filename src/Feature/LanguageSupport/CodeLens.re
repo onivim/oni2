@@ -7,16 +7,10 @@ module Log = (
 
 // MODEL
 
-type codeLens = {
-  handle: int,
-  lens: Exthost.CodeLens.t,
-  uniqueId: string,
-};
+type codeLens = Exthost.CodeLens.t;
 
-let lineNumber = ({lens, _}) =>
+let lineNumber = (lens: Exthost.CodeLens.t) =>
   Exthost.OneBasedRange.(lens.range.startLineNumber - 1);
-
-let uniqueId = ({uniqueId, _}) => uniqueId;
 
 let textFromExthost = (lens: Exthost.CodeLens.t) => {
   Exthost.Command.(
@@ -27,7 +21,7 @@ let textFromExthost = (lens: Exthost.CodeLens.t) => {
   );
 };
 
-let text = ({lens, _}: codeLens) => textFromExthost(lens);
+let text = (lens: Exthost.CodeLens.t) => textFromExthost(lens);
 
 type provider = {
   handle: int,
@@ -36,30 +30,19 @@ type provider = {
 
 type handleToLenses = IntMap.t(list(codeLens));
 
-type model = {
-  providers: list(provider),
-  bufferToLenses: IntMap.t(handleToLenses),
-};
+type model = {providers: list(provider)};
 
 type outmsg =
   | Nothing
   | CodeLensesChanged({
+      handle: int,
       bufferId: int,
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(codeLens),
     });
 
-let get = (~bufferId, {bufferToLenses, _}) => {
-  bufferToLenses
-  |> IntMap.find_opt(bufferId)
-  |> Option.value(~default=IntMap.empty)
-  |> IntMap.bindings
-  |> List.map(snd)
-  |> List.flatten;
-};
-
-let initial = {providers: [], bufferToLenses: IntMap.empty};
+let initial = {providers: []};
 
 [@deriving show]
 type msg =
@@ -73,96 +56,22 @@ type msg =
     });
 
 let register = (~handle: int, ~selector, model) => {
-  ...model,
   providers: [{handle, selector}, ...model.providers],
 };
 
 let unregister = (~handle: int, model) => {
-  ...model,
   providers: model.providers |> List.filter(prov => prov.handle != handle),
 };
 
 // UPDATE
 
-let addLenses = (handle, bufferId, lenses, handleToLenses) => {
-  let internalLenses =
-    lenses
-    |> List.map(lens =>
-         {
-           lens,
-           handle,
-           uniqueId:
-             Printf.sprintf(
-               "%d%d%d",
-               handle,
-               bufferId,
-               Hashtbl.hash(textFromExthost(lens)),
-             ),
-         }
-       );
-
-  let sort = (lenses: list(codeLens)) =>
-    lenses
-    |> Base.List.dedup_and_sort(~compare=(lensA, lensB) => {
-         Exthost.CodeLens.(
-           {
-             lensA.lens.range.startLineNumber - lensB.lens.range.startLineNumber;
-           }
-         )
-       });
-
-  handleToLenses
-  |> IntMap.update(
-       handle,
-       fun
-       | None => internalLenses |> sort |> Option.some
-       | Some(prev) => prev @ internalLenses |> sort |> Option.some,
-     );
-};
-
-let removeLensesInRange = (startLine, stopLine, handle, handleToLenses) => {
-  let start1 = EditorCoreTypes.LineNumber.toOneBased(startLine);
-  let stop1 = EditorCoreTypes.LineNumber.toOneBased(stopLine);
-  let filter = (lens: codeLens) => {
-    Exthost.CodeLens.(
-      {
-        let line = lens.lens.range.startLineNumber;
-        !(line >= start1 && line <= stop1);
-      }
-    );
-  };
-  handleToLenses
-  |> IntMap.update(
-       handle,
-       fun
-       | None => None
-       | Some(lenses) => lenses |> List.filter(filter) |> Option.some,
-     );
-};
-
 let update = (msg, model) =>
   switch (msg) {
   | CodeLensesError(_) => (model, Nothing)
-  | CodeLensesReceived({handle, startLine, stopLine, bufferId, lenses}) =>
-    let bufferToLenses =
-      model.bufferToLenses
-      |> IntMap.update(
-           bufferId,
-           fun
-           | None =>
-             IntMap.empty
-             |> addLenses(handle, bufferId, lenses)
-             |> Option.some
-           | Some(existing) =>
-             existing
-             |> removeLensesInRange(startLine, stopLine, handle)
-             |> addLenses(handle, bufferId, lenses)
-             |> Option.some,
-         );
-
-    let model' = {...model, bufferToLenses};
-    let lenses = get(~bufferId, model');
-    (model', CodeLensesChanged({bufferId, startLine, stopLine, lenses}));
+  | CodeLensesReceived({handle, startLine, stopLine, bufferId, lenses}) => (
+      model,
+      CodeLensesChanged({handle, bufferId, startLine, stopLine, lenses}),
+    )
   };
 
 // SUBSCRIPTION
@@ -176,14 +85,14 @@ module Sub = {
         ~client,
         model,
       ) => {
-    // Query above and below a viewport - grabbing some extra codelenses above and below -
+    // Query below a viewport - grabbing some extra codelenses above and below -
     // to minimize codelens popping in while scrolling
     let delta: int =
       EditorCoreTypes.LineNumber.toOneBased(bottomVisibleBufferLine)
       - EditorCoreTypes.LineNumber.toOneBased(topVisibleBufferLine);
     let (topVisibleBufferLine, bottomVisibleBufferLine) =
       EditorCoreTypes.LineNumber.(
-        topVisibleBufferLine - delta,
+        topVisibleBufferLine - 1,
         bottomVisibleBufferLine + delta,
       );
 
