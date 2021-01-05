@@ -58,9 +58,9 @@ module Experimental = {
     let codeLensEnabled =
       setting(
         ~vim=VimSettings.codeLens,
-        "experimental.editor.codeLens",
+        "editor.codeLens",
         bool,
-        ~default=false,
+        ~default=true,
       );
   };
 };
