@@ -2,6 +2,11 @@ open Oni_Core;
 
 module Log = (val Log.withNamespace("Service_Exthost"));
 
+module Constants = {
+  let highPriorityDebounceTime = Revery.Time.milliseconds(50);
+  let lowPriorityDebounceTime = Revery.Time.milliseconds(500);
+};
+
 // EFFECTS
 
 module Effects = {
@@ -570,7 +575,7 @@ module Sub = {
       type nonrec msg = list(Exthost.DefinitionLink.t);
       type nonrec params = bufferPositionParams;
 
-      type state = unit;
+      type state = unit => unit;
 
       let name = "Service_Exthost.DefinitionSubscription";
       let id = ({handle, buffer, position, _}: bufferPositionParams) =>
@@ -582,25 +587,31 @@ module Sub = {
         );
 
       let init = (~params, ~dispatch) => {
-        let promise =
-          Exthost.Request.LanguageFeatures.provideDefinition(
-            ~handle=params.handle,
-            ~resource=Oni_Core.Buffer.getUri(params.buffer),
-            ~position=params.position,
-            params.client,
-          );
+        Revery.Tick.timeout(
+          ~name="Timeout.provideDefinition",
+          _ => {
+            let promise =
+              Exthost.Request.LanguageFeatures.provideDefinition(
+                ~handle=params.handle,
+                ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                ~position=params.position,
+                params.client,
+              );
 
-        Lwt.on_success(promise, definitionLinks => dispatch(definitionLinks));
+            Lwt.on_success(promise, definitionLinks =>
+              dispatch(definitionLinks)
+            );
 
-        Lwt.on_failure(promise, _ => dispatch([]));
-
-        ();
+            Lwt.on_failure(promise, _ => dispatch([]));
+          },
+          Constants.highPriorityDebounceTime,
+        );
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state as _) => {
-        ();
+      let dispose = (~params as _, ~state as dispose) => {
+        dispose();
       };
     });
 
@@ -615,7 +626,7 @@ module Sub = {
       type nonrec msg = list(Exthost.DocumentHighlight.t);
       type nonrec params = bufferPositionParams;
 
-      type state = unit;
+      type state = unit => unit;
 
       let name = "Service_Exthost.DocumentHighlightsSubscription";
       let id = ({handle, buffer, position, _}) =>
@@ -627,27 +638,31 @@ module Sub = {
         );
 
       let init = (~params, ~dispatch) => {
-        let promise =
-          Exthost.Request.LanguageFeatures.provideDocumentHighlights(
-            ~handle=params.handle,
-            ~resource=Oni_Core.Buffer.getUri(params.buffer),
-            ~position=params.position,
-            params.client,
-          );
+        Revery.Tick.timeout(
+          ~name="Timeout.provideHighlights",
+          () => {
+            let promise =
+              Exthost.Request.LanguageFeatures.provideDocumentHighlights(
+                ~handle=params.handle,
+                ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                ~position=params.position,
+                params.client,
+              );
 
-        Lwt.on_success(promise, maybeDocumentHighlights =>
-          maybeDocumentHighlights |> Option.value(~default=[]) |> dispatch
+            Lwt.on_success(promise, maybeDocumentHighlights =>
+              maybeDocumentHighlights |> Option.value(~default=[]) |> dispatch
+            );
+
+            Lwt.on_failure(promise, _ => dispatch([]));
+          },
+          Constants.highPriorityDebounceTime,
         );
-
-        Lwt.on_failure(promise, _ => dispatch([]));
-
-        ();
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state as _) => {
-        ();
+      let dispose = (~params as _, ~state as dispose) => {
+        dispose();
       };
     });
 
@@ -764,7 +779,7 @@ module Sub = {
                 dispatch(Error(Printexc.to_string(exn)))
               });
             },
-            Revery.Time.milliseconds(500),
+            Constants.lowPriorityDebounceTime,
           );
         {isActive: active, dispose};
       };
@@ -968,33 +983,37 @@ module Sub = {
       type nonrec msg = list(Exthost.DocumentSymbol.t);
       type nonrec params = bufferHandleParams;
 
-      type state = unit;
+      type state = unit => unit;
 
       let name = "Service_Exthost.DocumentSymbolSubscription";
       let id = ({handle, buffer, _}: params) =>
         idFromBufferHandle(~handle, ~buffer);
 
       let init = (~params, ~dispatch) => {
-        let promise =
-          Exthost.Request.LanguageFeatures.provideDocumentSymbols(
-            ~handle=params.handle,
-            ~resource=Oni_Core.Buffer.getUri(params.buffer),
-            params.client,
-          );
+        Revery.Tick.timeout(
+          ~name="Timeout.documentSymbols",
+          _ => {
+            let promise =
+              Exthost.Request.LanguageFeatures.provideDocumentSymbols(
+                ~handle=params.handle,
+                ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                params.client,
+              );
 
-        Lwt.on_success(promise, maybeDocumentSymbols =>
-          maybeDocumentSymbols |> Option.value(~default=[]) |> dispatch
+            Lwt.on_success(promise, maybeDocumentSymbols =>
+              maybeDocumentSymbols |> Option.value(~default=[]) |> dispatch
+            );
+
+            Lwt.on_failure(promise, _err => dispatch([]));
+          },
+          Constants.lowPriorityDebounceTime,
         );
-
-        Lwt.on_failure(promise, _err => dispatch([]));
-
-        ();
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state as _) => {
-        ();
+      let dispose = (~params as _, ~state as dispose) => {
+        dispose();
       };
     });
 
