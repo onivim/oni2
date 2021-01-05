@@ -240,3 +240,5 @@ let numberOfLines = ({totalViewLines, _}) => {
 
 let maxLineLength = ({buffer, _}) =>
   EditorBuffer.getEstimatedMaxLineLength(buffer);
+
+let maxLineLengthInPixels = (_) => 0.;

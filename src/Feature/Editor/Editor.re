@@ -955,9 +955,10 @@ let getTotalHeightInPixels = editor => {
   int_of_float(float_of_int(totalViewLines) *. lineHeightInPixels(editor));
 };
 
-let getTotalWidthInPixels = editor => {
-  let maxLineLength = editor |> maxLineLength;
-  int_of_float(float_of_int(maxLineLength) *. getCharacterWidth(editor));
+let getTotalWidthInPixels = ({wrapping, pixelWidth, _}) => {
+  max(Wrapping.maxLineWidthInPixels(wrapping), pixelWidth);
+  // let maxLineLength = editor |> maxLineLength;
+  // int_of_float(float_of_int(maxLineLength) *. getCharacterWidth(editor));
 };
 
 let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
@@ -975,11 +976,8 @@ let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
 };
 
 let getHorizontalScrollbarMetrics = (editor, availableWidth) => {
-  let maxLineLength = editor |> maxLineLength;
   let availableWidthF = float_of_int(availableWidth);
-  let totalViewWidthInPixels =
-    float_of_int(maxLineLength + 1) *. getCharacterWidth(editor);
-  //+. availableWidthF;
+  let totalViewWidthInPixels = getTotalWidthInPixels(editor);
 
   totalViewWidthInPixels <= availableWidthF
     ? {visible: false, thumbSize: 0, thumbOffset: 0}
@@ -1210,11 +1208,9 @@ let scrollToLine = (~line, view) => {
 
 let scrollToPixelX = (~animated, ~pixelX as newScrollX, editor) => {
   let animated = editor |> isScrollAnimated && animated;
-  let maxLineLength = editor |> maxLineLength;
   let newScrollX = max(0., newScrollX);
 
-  let availableScroll =
-    max(0., float_of_int(maxLineLength) *. getCharacterWidth(editor));
+  let availableScroll = float(getTotalWidthInPixels(editor) - editor.pixelWidth);
   let newScrollX = min(newScrollX, availableScroll);
   let scrollX =
     Spring.set(~instant=!animated, ~position=newScrollX, editor.scrollX);

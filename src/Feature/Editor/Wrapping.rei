@@ -18,3 +18,5 @@ let viewLineToBufferPosition: (~line: int, t) => bufferPosition;
 
 let numberOfLines: t => int;
 let maxLineLength: t => int;
+
+let maxLineWidthInPixels: t => float;
