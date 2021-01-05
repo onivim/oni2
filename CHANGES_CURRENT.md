@@ -30,6 +30,7 @@
 - #2917 - Extensions: CodeLens - fix extraneous animation with multiple providers
 - #2628 - Input: Right arrow key treated as PageUp
 - #2929 - Input: Fix intermittent crash when scrolling with the mouse (fixes #2919)
+- #2927 - Input: Windows - fix crash in entering Unicode character (fixes #2926)
 
 ### Performance
 

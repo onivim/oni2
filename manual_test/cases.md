@@ -121,3 +121,24 @@ __Pass:__
 - [ ] Win
 - [ ] OSX
 - [ ] Linux
+
+# 7. Input
+
+## 7.1 Unicode Input 
+
+Regression test for #2926
+
+Prerequisite:
+- Install German (de-de) keyboard layout
+
+- Run Onivim 2
+- Create new file (`:new test.txt`)
+- Switch keyboard layout to German (`de-de`)
+- Enter insert mode (`i`)
+- Type `ü` (on english keyboard: `[`)
+- Verify character shows
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
