@@ -7,31 +7,34 @@ runTest(~name="VimSimpleRemapTest", (dispatch, wait, runEffects) => {
   );
 
   // Use inoremap to set up jj -> <ESC> binding
-  dispatch(VimExecuteCommand("inoremap jj <ESC>"));
+  dispatch(
+    VimExecuteCommand({allowAnimation: true, command: "inoremap jj <ESC>"}),
+  );
   runEffects();
 
   let input = key => {
-    let scancode = Sdl2.Scancode.ofName(key);
-    let keycode = Sdl2.Keycode.ofName(key);
     let modifiers = EditorInput.Modifiers.none;
 
     let keyPress: EditorInput.KeyPress.t =
-      EditorInput.KeyPress.physicalKey(~scancode, ~keycode, ~modifiers);
+      EditorInput.KeyPress.physicalKey(
+        ~key=EditorInput.Key.Character(key),
+        ~modifiers,
+      );
     let time = Revery.Time.now();
 
-    dispatch(Model.Actions.KeyDown(keyPress, time));
-    dispatch(Model.Actions.KeyUp(keyPress, time));
+    dispatch(Model.Actions.KeyDown({key: keyPress, scancode: 1, time}));
+    dispatch(Model.Actions.KeyUp({key: keyPress, scancode: 1, time}));
     runEffects();
   };
 
-  input("i");
+  input('i');
   wait(~name="Mode is now insert", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isInsert
   );
 
-  input("a");
-  input("j");
-  input("j");
+  input('a');
+  input('j');
+  input('j');
 
   wait(~name="Mode is back to normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
@@ -55,7 +58,7 @@ runTest(~name="VimSimpleRemapTest", (dispatch, wait, runEffects) => {
 
   // #2601 - Make sure we're _actually_ in normal mode!
   // Type another 'j' to see...
-  input("j");
+  input('j');
 
   wait(
     ~name=

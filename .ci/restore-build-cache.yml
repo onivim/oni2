@@ -38,13 +38,6 @@ steps:
       echo "ls: $STDIR/$CACHE_ARTIFACT_NAME"
       ls "$STDIR/$CACHE_ARTIFACT_NAME"
       tar -xf "$STDIR/$CACHE_ARTIFACT_NAME/esy-cache.tar" -C .
-
-      echo "TEMP - Deleting dependencies: $ESY__CACHE_INSTALL_PATH"
-      echo "ls before:"
-      ls *fzy*
-      rm -rf *fzy*
-      echo "ls after:"
-      ls
     continueOnError: true
     condition: and(succeeded(), ne(variables['Build.SourceBranch'], 'refs/heads/master'))
     displayName: '[Cache][Restore] Untar esy cache directory'

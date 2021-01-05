@@ -12,6 +12,7 @@ module Log = (val Log.withNamespace("Oni2.Service.FontLoader"));
 [@deriving show({with_path: false})]
 type t = {
   fontFamily: [@opaque] Family.t,
+  fontWeight: [@opaque] Weight.t,
   fontSize: float,
   font: [@opaque] Revery.Font.t,
   spaceWidth: float,
@@ -36,13 +37,12 @@ let loadAndValidateEditorFont =
       ~requestId: int,
       ~smoothing: Smoothing.t,
       ~family: Family.t,
+      ~weight: Weight.t,
       ~fontCache: FontResolutionCache.t,
       fontSize: float,
     ) => {
   let result =
-    family
-    |> Revery_Font.Family.toSkia(Weight.Normal)
-    |> Revery.Font.FontCache.load;
+    family |> Revery_Font.Family.toSkia(weight) |> Revery.Font.FontCache.load;
 
   Result.bind(
     result,
@@ -55,22 +55,18 @@ let loadAndValidateEditorFont =
           width;
       let {lineHeight, descent, avgCharWidth, maxCharWidth, _}: Revery.Font.FontMetrics.t =
         Revery.Font.getMetrics(font, fontSize);
-      FontResolutionCache.add(
-        (family, Weight.Normal, false),
-        font,
-        fontCache,
-      );
+      FontResolutionCache.add((family, weight, false), font, fontCache);
 
       let maybeItalicFont =
         family
-        |> Revery_Font.Family.toSkia(~italic=true, Weight.Normal)
+        |> Revery_Font.Family.toSkia(~italic=true, weight)
         |> Revery.Font.FontCache.load;
 
       switch (maybeItalicFont) {
       | Ok(italicFont) =>
         if (isSameFamily(font, italicFont)) {
           FontResolutionCache.add(
-            (family, Weight.Normal, true),
+            (family, weight, true),
             italicFont,
             fontCache,
           );
@@ -78,22 +74,24 @@ let loadAndValidateEditorFont =
       | Error(msg) =>
         Log.warnf(m =>
           m(
-            "Unable to load italic variant of %s: %s",
+            "Unable to load italic variant of %s with weight %s: %s",
             font |> getSkiaTypeface |> Skia.Typeface.getFamilyName,
+            Revery.Font.Weight.show(weight),
             msg,
           )
         )
       };
+      let bolderWeight = Oni_Core.Font.bolder(weight);
       let maybeBoldFont =
         family
-        |> Revery_Font.Family.toSkia(Weight.Bold)
+        |> Revery_Font.Family.toSkia(bolderWeight)
         |> Revery.Font.FontCache.load;
 
       switch (maybeBoldFont) {
       | Ok(boldFont) =>
         if (isSameFamily(font, boldFont)) {
           FontResolutionCache.add(
-            (family, Weight.Bold, false),
+            (family, bolderWeight, false),
             boldFont,
             fontCache,
           );
@@ -101,8 +99,9 @@ let loadAndValidateEditorFont =
       | Error(msg) =>
         Log.warnf(m =>
           m(
-            "Unable to load bold variant of %s: %s",
+            "Unable to load bold variant of %s with weight %s: %s",
             font |> getSkiaTypeface |> Skia.Typeface.getFamilyName,
+            Revery.Font.Weight.show(bolderWeight),
             msg,
           )
         )
@@ -114,6 +113,7 @@ let loadAndValidateEditorFont =
         requestId,
         {
           fontFamily: family,
+          fontWeight: weight,
           fontSize,
           font,
           spaceWidth,

@@ -4,15 +4,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.registerCommands = void 0;
+exports.registerBaseCommands = void 0;
 const configurePlugin_1 = require("./configurePlugin");
 const goToProjectConfiguration_1 = require("./goToProjectConfiguration");
+const learnMoreAboutRefactorings_1 = require("./learnMoreAboutRefactorings");
 const openTsServerLog_1 = require("./openTsServerLog");
 const reloadProject_1 = require("./reloadProject");
 const restartTsServer_1 = require("./restartTsServer");
 const selectTypeScriptVersion_1 = require("./selectTypeScriptVersion");
-const learnMoreAboutRefactorings_1 = require("./learnMoreAboutRefactorings");
-function registerCommands(commandManager, lazyClientHost, pluginManager) {
+function registerBaseCommands(commandManager, lazyClientHost, pluginManager) {
     commandManager.register(new reloadProject_1.ReloadTypeScriptProjectsCommand(lazyClientHost));
     commandManager.register(new reloadProject_1.ReloadJavaScriptProjectsCommand(lazyClientHost));
     commandManager.register(new selectTypeScriptVersion_1.SelectTypeScriptVersionCommand(lazyClientHost));
@@ -23,5 +23,5 @@ function registerCommands(commandManager, lazyClientHost, pluginManager) {
     commandManager.register(new configurePlugin_1.ConfigurePluginCommand(pluginManager));
     commandManager.register(new learnMoreAboutRefactorings_1.LearnMoreAboutRefactoringsCommand());
 }
-exports.registerCommands = registerCommands;
+exports.registerBaseCommands = registerBaseCommands;
 //# sourceMappingURL=index.js.map

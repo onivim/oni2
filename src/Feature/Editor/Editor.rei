@@ -23,7 +23,9 @@ module WrapMode: {
     | Viewport;
 };
 
-let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
+let create:
+  (~config: Config.resolver, ~buffer: EditorBuffer.t, ~preview: bool, unit) =>
+  t;
 let copy: t => t;
 
 type inlineElement;
@@ -40,13 +42,36 @@ let makeInlineElement:
 
 let setInlineElements: (~key: string, ~elements: list(inlineElement), t) => t;
 
-let setInlineElementSize:
-  (~key: string, ~uniqueId: string, ~height: int, t) => t;
+let replaceInlineElements:
+  (
+    ~key: string,
+    ~startLine: EditorCoreTypes.LineNumber.t,
+    ~stopLine: EditorCoreTypes.LineNumber.t,
+    ~elements: list(inlineElement),
+    t
+  ) =>
+  t;
 
-let getInlineElements: t => list(InlineElements.element);
+let setInlineElementSize:
+  (
+    ~allowAnimation: bool=?,
+    ~key: string,
+    ~line: EditorCoreTypes.LineNumber.t,
+    ~uniqueId: string,
+    ~height: int,
+    t
+  ) =>
+  t;
+
+let getInlineElements:
+  (~line: EditorCoreTypes.LineNumber.t, t) => list(InlineElements.element);
+
+let linesWithInlineElements: t => list(EditorCoreTypes.LineNumber.t);
 
 let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;
+let getPreview: t => bool;
+let setPreview: (~preview: bool, t) => t;
 let getBufferId: t => int;
 let getTopVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
 let getBottomVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
@@ -76,10 +101,13 @@ let setMode: (Vim.Mode.t, t) => t;
 
 let getBufferLineCount: t => int;
 
+let isAnimatingScroll: t => bool;
+
 let getTokenAt:
   (~languageConfiguration: LanguageConfiguration.t, CharacterPosition.t, t) =>
   option(CharacterRange.t);
 
+let overrideAnimation: (~animated: option(bool), t) => t;
 let yankHighlight: t => option(yankHighlight);
 let startYankHighlight: (list(PixelRange.t), t) => t;
 

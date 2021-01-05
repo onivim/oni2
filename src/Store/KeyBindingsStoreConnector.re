@@ -91,7 +91,7 @@ let start = maybeKeyBindingsFilePath => {
   let executeExCommandEffect = command =>
     Isolinear.Effect.createWithDispatch(
       ~name="keybindings.executeExCommand", dispatch =>
-      dispatch(Actions.VimExecuteCommand(command))
+      dispatch(Actions.VimExecuteCommand({allowAnimation: true, command}))
     );
 
   let updater = (state: State.t, action: Actions.t) => {

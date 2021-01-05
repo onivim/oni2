@@ -34,10 +34,8 @@ module Msg: {
 module CodeLens: {
   type t;
 
-  let get: (~bufferId: int, model) => list(t);
-
   let lineNumber: t => int;
-  let uniqueId: t => string;
+  let text: t => string;
 
   module View: {
     let make:
@@ -73,7 +71,10 @@ type outmsg =
   | NotifyFailure(string)
   | Effect(Isolinear.Effect.t(msg))
   | CodeLensesChanged({
+      handle: int,
       bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.t),
     });
 
@@ -103,8 +104,16 @@ let bufferUpdated:
     model
   ) =>
   model;
+
+let configurationChanged: (~config: Config.resolver, model) => model;
+
 let cursorMoved:
-  (~previous: CharacterPosition.t, ~current: CharacterPosition.t, model) =>
+  (
+    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~previous: CharacterPosition.t,
+    ~current: CharacterPosition.t,
+    model
+  ) =>
   model;
 let startInsertMode: model => model;
 let stopInsertMode: model => model;
@@ -114,8 +123,11 @@ let sub:
   (
     ~config: Oni_Core.Config.resolver,
     ~isInsertMode: bool,
+    ~isAnimatingScroll: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
     ~activePosition: CharacterPosition.t,
+    ~topVisibleBufferLine: EditorCoreTypes.LineNumber.t,
+    ~bottomVisibleBufferLine: EditorCoreTypes.LineNumber.t,
     ~visibleBuffers: list(Oni_Core.Buffer.t),
     ~client: Exthost.Client.t,
     model

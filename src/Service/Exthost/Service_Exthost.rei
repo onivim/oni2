@@ -98,17 +98,6 @@ module Effects: {
         result(list(Exthost.Location.t), string) => 'msg
       ) =>
       Isolinear.Effect.t('msg);
-
-    let provideSignatureHelp:
-      (
-        ~handle: int,
-        ~uri: Oni_Core.Uri.t,
-        ~position: EditorCoreTypes.CharacterPosition.t,
-        ~context: Exthost.SignatureHelp.RequestContext.t,
-        Exthost.Client.t,
-        result(option(Exthost.SignatureHelp.Response.t), string) => 'msg
-      ) =>
-      Isolinear.Effect.t('msg);
   };
 
   module Workspace: {
@@ -139,6 +128,8 @@ module Sub: {
     (
       ~handle: int,
       ~buffer: Oni_Core.Buffer.t,
+      ~startLine: EditorCoreTypes.LineNumber.t,
+      ~stopLine: EditorCoreTypes.LineNumber.t,
       ~toMsg: result(list(Exthost.CodeLens.t), string) => 'a,
       Exthost.Client.t
     ) =>
@@ -193,6 +184,18 @@ module Sub: {
       Exthost.Client.t
     ) =>
     Isolinear.Sub.t('a);
+
+  let signatureHelp:
+    (
+      ~handle: int,
+      ~context: Exthost.SignatureHelp.RequestContext.t,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.CharacterPosition.t,
+      ~toMsg: result(option(Exthost.SignatureHelp.Response.t), string) =>
+              'msg,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('msg);
 
   module SCM: {
     let originalUri:

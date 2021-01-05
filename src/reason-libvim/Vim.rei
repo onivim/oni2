@@ -121,6 +121,24 @@ module Mode: {
   let isOperatorPending: t => bool;
 
   let cursors: t => list(BytePosition.t);
+
+  let show: t => string;
+};
+
+module Split: {
+  type t =
+    | NewHorizontal
+    | Horizontal({filePath: option(string)})
+    | NewVertical
+    | Vertical({filePath: option(string)})
+    | NewTabPage
+    | TabPage({filePath: option(string)});
+};
+
+module SubMode: {
+  type t =
+    | None
+    | InsertLiteral;
 };
 
 module Functions: {
@@ -160,6 +178,7 @@ module Context: {
     leftColumn: int,
     topLine: int,
     mode: Mode.t,
+    subMode: SubMode.t,
     tabSize: int,
     insertSpaces: bool,
     functionGetChar: Functions.GetChar.t,
@@ -209,6 +228,8 @@ module Buffer: {
   [openFile(path)] opens a file, sets it as the active buffer, and returns a handle to the buffer.
   */
   let openFile: string => t;
+
+  let make: unit => t;
 
   /**
   [loadFile(path)] opens a file and returns a handle to the buffer.
@@ -485,7 +506,12 @@ module Effect: {
         mode: Mapping.mode,
         keys: option(string),
       })
-    | Clear(Clear.t);
+    | Clear(Clear.t)
+    | Output({
+        cmd: string,
+        output: option(string),
+      })
+    | WindowSplit(Split.t);
 };
 
 /**

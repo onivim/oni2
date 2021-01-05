@@ -76,22 +76,16 @@ class AtaProgressReporter extends dispose_1.Disposable {
             resolve();
         }
     }
-    onTypesInstallerInitializationFailed() {
-        if (vscode.workspace.getConfiguration('typescript').get('check.npmIsInstalled', true)) {
-            vscode.window.showWarningMessage(localize('typesInstallerInitializationFailed.title', "Could not install typings files for JavaScript language features. Please ensure that NPM is installed or configure 'typescript.npm' in your user settings. Click [here]({0}) to learn more.", 'https://go.microsoft.com/fwlink/?linkid=847635'), {
+    async onTypesInstallerInitializationFailed() {
+        const config = vscode.workspace.getConfiguration('typescript');
+        if (config.get('check.npmIsInstalled', true)) {
+            const dontShowAgain = {
                 title: localize('typesInstallerInitializationFailed.doNotCheckAgain', "Don't Show Again"),
-                id: 1
-            }).then(selected => {
-                if (!selected) {
-                    return;
-                }
-                switch (selected.id) {
-                    case 1:
-                        const tsConfig = vscode.workspace.getConfiguration('typescript');
-                        tsConfig.update('check.npmIsInstalled', false, true);
-                        break;
-                }
-            });
+            };
+            const selected = await vscode.window.showWarningMessage(localize('typesInstallerInitializationFailed.title', "Could not install typings files for JavaScript language features. Please ensure that NPM is installed or configure 'typescript.npm' in your user settings. Click [here]({0}) to learn more.", 'https://go.microsoft.com/fwlink/?linkid=847635'), dontShowAgain);
+            if (selected === dontShowAgain) {
+                config.update('check.npmIsInstalled', false, true);
+            }
         }
     }
 }

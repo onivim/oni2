@@ -42,6 +42,7 @@ let iconToElement = (~color, icon) => {
 let make = (~font, ~color, ~label: Exthost.Label.t, ()) => {
   Exthost.Label.(
     label
+    |> segments
     |> List.map(
          fun
          | Text(text) => textToElement(~color, ~font, ~text)

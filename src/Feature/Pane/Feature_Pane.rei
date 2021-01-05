@@ -9,7 +9,8 @@ open Oni_Core;
 type pane =
   | Diagnostics
   | Notifications
-  | Locations;
+  | Locations
+  | Output;
 
 [@deriving show({with_path: false})]
 type msg;
@@ -17,6 +18,10 @@ type msg;
 type outmsg =
   | Nothing
   | OpenFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
+  | PreviewFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
     })
@@ -40,6 +45,7 @@ let update:
     ~buffers: Feature_Buffers.model,
     ~font: Service_Font.font,
     ~languageInfo: Exthost.LanguageInfo.t,
+    ~previewEnabled: bool,
     msg,
     model
   ) =>
@@ -72,6 +78,8 @@ let setLocations:
   model;
 let setNotifications: (Feature_Notification.model, model) => model;
 
+let setOutput: (string, option(string), model) => model;
+
 module View: {
   let make:
     (
@@ -81,6 +89,7 @@ module View: {
       ~theme: Oni_Core.ColorTheme.Colors.t,
       ~iconTheme: Oni_Core.IconTheme.t,
       ~languageInfo: Exthost.LanguageInfo.t,
+      ~editorFont: Service_Font.font,
       ~uiFont: Oni_Core.UiFont.t,
       ~dispatch: msg => unit,
       ~pane: model,

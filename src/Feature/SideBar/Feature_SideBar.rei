@@ -49,6 +49,7 @@ let initial: model;
 
 let width: model => int;
 let isOpen: model => bool;
+let isOpenByDefault: model => bool;
 let selected: model => pane;
 let location: model => location;
 
@@ -62,6 +63,7 @@ module Contributions: {
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
   let keybindings: list(Feature_Input.Schema.keybinding);
+  let menuGroups: list(MenuBar.Schema.group);
   let contextKeys:
     (~isFocused: bool) => list(WhenExpr.ContextKeys.Schema.entry(model));
 };

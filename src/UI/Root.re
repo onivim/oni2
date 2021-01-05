@@ -7,7 +7,6 @@
 open Revery.UI;
 open Oni_Model;
 
-module ContextMenu = Oni_Components.ContextMenu;
 module ResizeHandle = Oni_Components.ResizeHandle;
 module Tooltip = Oni_Components.Tooltip;
 
@@ -34,8 +33,7 @@ module Styles = {
         justifyContent(`Center),
         alignItems(`Stretch),
       ]);
-    if (Revery.Environment.os == Windows
-        && windowDisplayMode == State.Maximized) {
+    if (Revery.Environment.isWindows && windowDisplayMode == State.Maximized) {
       style := [margin(6), ...style^];
     };
     style^;
@@ -60,7 +58,7 @@ module Styles = {
 };
 
 let make = (~dispatch, ~state: State.t, ()) => {
-  let State.{configuration, uiFont as font, sideBar, zenMode, buffers, _} = state;
+  let State.{uiFont as font, sideBar, zenMode, buffers, editorFont, _} = state;
 
   let theme = Feature_Theme.colors(state.colorTheme);
 
@@ -95,6 +93,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       <View style=Styles.statusBar>
         <Feature_StatusBar.View
           mode
+          subMode={Feature_Vim.subMode(state.vim)}
           recordingMacro={state.vim |> Feature_Vim.recordingMacro}
           notifications={state.notifications}
           diagnostics={state.diagnostics}
@@ -172,8 +171,27 @@ let make = (~dispatch, ~state: State.t, ()) => {
     | Feature_SideBar.Right => List.rev(defaultSurfaceComponents)
     };
 
+  let context = Oni_Model.ContextKeys.all(state);
+
+  let menuBarElement =
+    switch (Feature_MenuBar.Configuration.visibility.get(config)) {
+    | `visible =>
+      <Feature_MenuBar.View
+        isWindowFocused={state.windowIsFocused}
+        font={state.uiFont}
+        config
+        context
+        input={state.input}
+        theme
+        model={state.menuBar}
+        dispatch={msg => dispatch(Actions.MenuBar(msg))}
+      />
+    | `hidden => React.empty
+    };
+
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
+      menuBar=menuBarElement
       activeBuffer=maybeActiveBuffer
       workspaceRoot={Feature_Workspace.rootName(state.workspace)}
       workspaceDirectory={Feature_Workspace.workingDirectory(state.workspace)}
@@ -197,6 +215,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
         iconTheme={state.iconTheme}
         languageInfo={state.languageInfo}
         theme
+        editorFont
         uiFont
         dispatch={msg => dispatch(Actions.Pane(msg))}
         pane={state.pane}
@@ -207,7 +226,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       {switch (state.quickmenu) {
        | None => React.empty
        | Some(quickmenu) =>
-         <QuickmenuView theme configuration state=quickmenu font />
+         <QuickmenuView theme config state=quickmenu font />
        }}
       <Feature_Input.View.Overlay
         input={state.input}
@@ -229,15 +248,14 @@ let make = (~dispatch, ~state: State.t, ()) => {
       />
     </Overlay>
     <statusBar />
-    <ContextMenu.Overlay />
+    <Component_ContextMenu.View.Overlay />
     <Tooltip.Overlay theme font=uiFont />
     <messages />
     <modals />
     <Overlay>
       <Feature_Sneak.View.Overlay model={state.sneak} theme font />
     </Overlay>
-    {Revery.Environment.os == Windows
-     && state.windowDisplayMode != State.Maximized
+    {Revery.Environment.isWindows && state.windowDisplayMode != State.Maximized
        ? <WindowResizers /> : React.empty}
   </View>;
 };

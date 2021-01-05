@@ -109,10 +109,15 @@ module Contributions: {
   module Theme: {
     [@deriving show]
     type t = {
-      label: string,
+      id: option(string),
+      label: LocalizedToken.t,
       uiTheme: string,
       path: string,
     };
+
+    let id: t => string;
+
+    let label: t => string;
   };
 
   module IconTheme: {
@@ -150,7 +155,7 @@ module Manifest: {
   [@deriving show]
   type t = {
     name: string,
-    version: string,
+    version: option(Semver.t),
     author: string,
     displayName: option(LocalizedToken.t),
     description: option(string),
@@ -173,6 +178,7 @@ module Manifest: {
   let decode: Oni_Core.Json.decoder(t);
 
   let identifier: t => string;
+  let publisher: t => string;
   let getDisplayName: t => string;
 };
 

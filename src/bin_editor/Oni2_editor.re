@@ -27,26 +27,13 @@ if (cliOptions.needsConsole) {
   Revery.App.initConsole();
 };
 
-switch (eff) {
-| PrintVersion => Cli.printVersion() |> exit
-| InstallExtension(name) => Cli.installExtension(name, cliOptions) |> exit
-| QueryExtension(name) => Cli.queryExtension(name, cliOptions) |> exit
-| UninstallExtension(name) =>
-  Cli.uninstallExtension(name, cliOptions) |> exit
-| CheckHealth => HealthCheck.run(~checks=All, cliOptions) |> exit
-| ListExtensions => Cli.listExtensions(cliOptions) |> exit
-| StartSyntaxServer({parentPid, namedPipe}) =>
-  Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>
-    HealthCheck.run(~checks=Common, cliOptions)
-  )
-| Run =>
+let initializeLogging = () => {
   // Turn on logging, if necessary
   let loggingToConsole =
     cliOptions.attachToForeground && Option.is_some(cliOptions.logLevel);
   let loggingToFile = Option.is_some(cliOptions.logFile);
 
   cliOptions.logLevel |> Option.iter(Timber.App.setLevel);
-
   cliOptions.logFilter |> Option.iter(Timber.App.setNamespaceFilter);
 
   if (loggingToConsole && loggingToFile) {
@@ -65,6 +52,24 @@ switch (eff) {
     Timber.App.enable(fileReporter);
   };
   Oni_Core.Log.init();
+};
+
+switch (eff) {
+| PrintVersion => Cli.printVersion() |> exit
+| InstallExtension(name) => Cli.installExtension(name, cliOptions) |> exit
+| QueryExtension(name) => Cli.queryExtension(name, cliOptions) |> exit
+| UninstallExtension(name) =>
+  Cli.uninstallExtension(name, cliOptions) |> exit
+| CheckHealth =>
+  initializeLogging();
+  HealthCheck.run(~checks=All, cliOptions) |> exit;
+| ListExtensions => Cli.listExtensions(cliOptions) |> exit
+| StartSyntaxServer({parentPid, namedPipe}) =>
+  Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>
+    HealthCheck.run(~checks=Common, cliOptions)
+  )
+| Run =>
+  initializeLogging();
 
   // #1161 - OSX - Make sure we're using the terminal / shell PATH.
   // Only fix path when launched from finder -
@@ -76,8 +81,15 @@ switch (eff) {
   let initWorkspace = () => {
     let maybePath =
       switch (Oni_CLI.(cliOptions.folder)) {
+      // If a folder was specified, we should for sure use that
       | Some(folder) => Some(folder)
-      | None => Store.Persistence.Global.workspace()
+
+      // If no files were specified, we can pull from persistence
+      | None when cliOptions.filesToOpen == [] =>
+        Store.Persistence.Global.workspace()
+
+      // If files were specified (#1983), don't open workspace from persistence
+      | None => None
       };
 
     let couldChangeDirectory = ref(false);
@@ -165,13 +177,13 @@ switch (eff) {
 
     let decorated =
       switch (Revery.Environment.os) {
-      | Windows => false
+      | Windows(_) => false
       | _ => true
       };
 
     let icon =
       switch (Revery.Environment.os) {
-      | Mac =>
+      | Mac(_) =>
         switch (Sys.getenv_opt("ONI2_BUNDLED")) {
         | Some(_) => None
         | None => Some("logo.png")
@@ -427,7 +439,7 @@ switch (eff) {
 
     let _: App.unsubscribe =
       App.onFileOpen(app, path => {
-        dispatch(Model.Actions.OpenFileByPath(path, None, None))
+        dispatch(Model.Actions.FilesDropped({paths: [path]}))
       });
     let _: Window.unsubscribe =
       Window.onMaximized(window, () =>
@@ -473,6 +485,16 @@ switch (eff) {
     List.iter(
       v => dispatch(Model.Actions.OpenFileByPath(v, None, None)),
       cliOptions.filesToOpen,
+    );
+
+    List.iter(
+      command => {
+        dispatch(
+          Model.Actions.VimExecuteCommand({allowAnimation: false, command}),
+        );
+        runEffects();
+      },
+      cliOptions.vimExCommands,
     );
   };
 

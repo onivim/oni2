@@ -130,7 +130,18 @@ let update = (~focus, model, msg) => {
       ),
       Nothing,
     )
-
+  | EditorTabDoubleClicked({groupId, editorId}) => (
+      updateActiveLayout(
+        updateGroup(
+          groupId,
+          Group.updateEditor(editorId, editor =>
+            Feature_Editor.Editor.setPreview(~preview=false, editor)
+          ),
+        ),
+        model,
+      ),
+      Nothing,
+    )
   | GroupSelected(id) => (
       updateActiveLayout(layout => {...layout, activeGroupId: id}, model),
       Focus(Center),

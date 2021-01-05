@@ -18,6 +18,20 @@ module Internal = {
     );
   };
 
+  let previewFileEffect = (~position=None, filePath) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="features.previewFileByPath", dispatch =>
+      dispatch(PreviewFileByPath(filePath, None, position))
+    );
+  };
+
+  let executeCommandEffect = command => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="features.executeCommand", dispatch =>
+      dispatch(Actions.KeybindingInvoked({command: command}))
+    );
+  };
+
   let setThemesEffect =
       (~themes: list(Exthost.Extension.Contributions.Theme.t)) => {
     switch (themes) {
@@ -25,7 +39,9 @@ module Internal = {
     | [theme] =>
       Isolinear.Effect.createWithDispatch(
         ~name="feature.extensions.selectTheme", dispatch => {
-        dispatch(ThemeLoadByName(theme.label))
+        dispatch(
+          ThemeLoadById(Exthost.Extension.Contributions.Theme.id(theme)),
+        )
       })
     | themes =>
       Isolinear.Effect.createWithDispatch(
@@ -148,6 +164,10 @@ module Internal = {
              ~config=resolver,
            );
 
+      let languageSupport =
+        state.languageSupport
+        |> Feature_LanguageSupport.configurationChanged(~config=resolver);
+
       let perFileTypeConfig =
         Feature_Configuration.resolver(state.config, state.vim);
 
@@ -161,27 +181,20 @@ module Internal = {
           },
           state.layout,
         );
-      {...state, sideBar, layout};
+      {...state, languageSupport, sideBar, layout};
     };
 
-  let updateMode = (~extHostClient, state: State.t, mode: Vim.Mode.t, effects) => {
+  let updateMode =
+      (~allowAnimation, state: State.t, mode: Vim.Mode.t, effects) => {
     let prevCursor =
       state.layout
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.getPrimaryCursor;
 
-    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let config = Selectors.configResolver(state);
     let editor = Feature_Layout.activeEditor(state.layout);
-    let (signatureHelp, shOutMsg) =
-      Feature_SignatureHelp.update(
-        ~maybeBuffer,
-        ~maybeEditor=Some(editor),
-        ~extHostClient,
-        state.signatureHelp,
-        Feature_SignatureHelp.CursorMoved(
-          Feature_Editor.Editor.getId(editor),
-        ),
-      );
+    let signatureHelp = state.signatureHelp;
+    let maybeBuffer = Selectors.getActiveBuffer(state);
 
     let wasInInsertMode =
       Vim.Mode.isInsert(
@@ -190,14 +203,10 @@ module Internal = {
         |> Feature_Editor.Editor.mode,
       );
 
-    let shEffect =
-      switch (shOutMsg) {
-      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
-      | _ => Effect.none
-      };
     let activeEditorId = editor |> Feature_Editor.Editor.getId;
 
-    let msg: Feature_Editor.msg = ModeChanged({mode, effects});
+    let msg: Feature_Editor.msg =
+      ModeChanged({allowAnimation, mode, effects});
     let scope = EditorScope.Editor(activeEditorId);
     let (layout, editorEffect) = updateEditors(~scope, ~msg, state.layout);
 
@@ -214,6 +223,7 @@ module Internal = {
     let languageSupport =
       if (prevCursor != newCursor) {
         Feature_LanguageSupport.cursorMoved(
+          ~maybeBuffer,
           ~previous=prevCursor,
           ~current=newCursor,
           state.languageSupport,
@@ -222,25 +232,32 @@ module Internal = {
         state.languageSupport;
       };
 
-    let languageSupport' =
+    // TODO: Bring signature help into language support
+    let (languageSupport', signatureHelp') =
       if (isInInsertMode != wasInInsertMode) {
         if (isInInsertMode) {
-          languageSupport |> Feature_LanguageSupport.startInsertMode;
+          (
+            languageSupport |> Feature_LanguageSupport.startInsertMode,
+            signatureHelp
+            |> Feature_SignatureHelp.startInsert(~config, ~maybeBuffer),
+          );
         } else {
-          languageSupport |> Feature_LanguageSupport.stopInsertMode;
+          (
+            languageSupport |> Feature_LanguageSupport.stopInsertMode,
+            signatureHelp |> Feature_SignatureHelp.stopInsert,
+          );
         };
       } else {
-        languageSupport;
+        (languageSupport, signatureHelp);
       };
 
     let state = {
       ...state,
       layout,
-      signatureHelp,
+      signatureHelp: signatureHelp',
       languageSupport: languageSupport',
     };
-    let effect = [shEffect, editorEffect] |> Effect.batch;
-    (state, effect);
+    (state, editorEffect);
   };
 };
 
@@ -392,6 +409,10 @@ let update =
           effect |> Isolinear.Effect.map(msg => FileExplorer(msg)),
         )
       | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
+      | PreviewFile(filePath) => (
+          state,
+          Internal.previewFileEffect(filePath),
+        )
       | GrabFocus => (
           FocusManager.push(Focus.FileExplorer, state),
           Isolinear.Effect.none,
@@ -421,6 +442,25 @@ let update =
         (state, eff);
       }
     );
+
+  | FileSystem(msg) =>
+    let (model, outmsg) = Feature_FileSystem.update(msg, state.fileSystem);
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(eff) => eff |> Isolinear.Effect.map(msg => FileSystem(msg))
+      };
+    ({...state, fileSystem: model}, eff);
+
+  | Help(msg) =>
+    let (model, outmsg) = Feature_Help.update(msg, state.help);
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(effect) => effect |> Isolinear.Effect.map(msg => Help(msg))
+      };
+    ({...state, help: model}, eff);
 
   | Input(msg) =>
     let (model, outmsg) = Feature_Input.update(msg, state.input);
@@ -554,14 +594,14 @@ let update =
           state,
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
         )
-      | CodeLensesChanged({bufferId, lenses}) =>
+      | CodeLensesChanged({handle, bufferId, startLine, stopLine, lenses}) =>
         let inlineElements = editor =>
           lenses
           |> List.map(lens => {
                let lineNumber =
                  Feature_LanguageSupport.CodeLens.lineNumber(lens)
                  |> EditorCoreTypes.LineNumber.ofZeroBased;
-               let uniqueId = Feature_LanguageSupport.CodeLens.uniqueId(lens);
+               let uniqueId = Feature_LanguageSupport.CodeLens.text(lens);
                let leftMargin =
                  Feature_Editor.Editor.getLeadingWhitespacePixels(
                    lineNumber,
@@ -574,7 +614,7 @@ let update =
                    ~codeLens=lens,
                  );
                Feature_Editor.Editor.makeInlineElement(
-                 ~key="codelens",
+                 ~key="codelens:" ++ string_of_int(handle),
                  ~uniqueId,
                  ~lineNumber,
                  ~view,
@@ -584,8 +624,10 @@ let update =
           state.layout
           |> Feature_Layout.map(editor =>
                if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
-                 Feature_Editor.Editor.setInlineElements(
-                   ~key="codelens",
+                 Feature_Editor.Editor.replaceInlineElements(
+                   ~startLine,
+                   ~stopLine,
+                   ~key="codelens:" ++ string_of_int(handle),
                    ~elements=inlineElements(editor),
                    editor,
                  );
@@ -614,6 +656,19 @@ let update =
       );
     (state', eff);
 
+  | MenuBar(msg) =>
+    let contextKeys = Oni_Model.ContextKeys.all(state);
+    let commands = CommandManager.current(state);
+    let (menuBar', outmsg) =
+      Feature_MenuBar.update(~contextKeys, ~commands, msg, state.menuBar);
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | ExecuteCommand({command}) => Internal.executeCommandEffect(command)
+      };
+    ({...state, menuBar: menuBar'}, eff);
+
   | Messages(msg) =>
     let (model, outmsg) = Feature_Messages.update(msg, state.messages);
     let state = {...state, messages: model};
@@ -636,6 +691,11 @@ let update =
         ~font=state.editorFont,
         ~languageInfo=state.languageInfo,
         ~buffers=state.buffers,
+        ~previewEnabled=
+          Oni_Core.Configuration.getValue(
+            c => c.workbenchEditorEnablePreview,
+            state.configuration,
+          ),
         msg,
         state.pane,
       );
@@ -647,6 +707,10 @@ let update =
     | OpenFile({filePath, position}) => (
         state,
         Internal.openFileEffect(~position=Some(position), filePath),
+      )
+    | PreviewFile({filePath, position}) => (
+        state,
+        Internal.previewFileEffect(~position=Some(position), filePath),
       )
     | UnhandledWindowMovement(windowMovement) => (
         state,
@@ -715,7 +779,16 @@ let update =
     ({...state, registration: state'}, effect);
 
   | Search(msg) =>
-    let (model, maybeOutmsg) = Feature_Search.update(state.searchPane, msg);
+    let (model, maybeOutmsg) =
+      Feature_Search.update(
+        ~previewEnabled=
+          Oni_Core.Configuration.getValue(
+            c => c.workbenchEditorEnablePreview,
+            state.configuration,
+          ),
+        state.searchPane,
+        msg,
+      );
     let state = {...state, searchPane: model};
 
     switch (maybeOutmsg) {
@@ -728,6 +801,11 @@ let update =
         state,
         Internal.openFileEffect(~position=Some(location), filePath),
       )
+
+    | Some(PreviewFile({filePath, location})) => (
+        state,
+        Internal.previewFileEffect(~position=Some(location), filePath),
+      )
     | Some(UnhandledWindowMovement(windowMovement)) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -737,7 +815,17 @@ let update =
 
   | SCM(msg) =>
     let (model, maybeOutmsg) =
-      Feature_SCM.update(extHostClient, state.scm, msg);
+      Feature_SCM.update(
+        ~previewEnabled=
+          Oni_Core.Configuration.getValue(
+            c => c.workbenchEditorEnablePreview,
+            state.configuration,
+          ),
+        ~fileSystem=state.fileSystem,
+        extHostClient,
+        state.scm,
+        msg,
+      );
     let state = {...state, scm: model};
 
     switch ((maybeOutmsg: Feature_SCM.outmsg)) {
@@ -749,6 +837,7 @@ let update =
       )
 
     | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
+    | PreviewFile(filePath) => (state, Internal.previewFileEffect(filePath))
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -907,17 +996,61 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Effect.none)
+    | BufferModifiedSet(id, _) =>
+      open Feature_Editor;
 
-    | CreateEditor({buffer, split, position, grabFocus}) =>
-      let editorBuffer = buffer |> Feature_Editor.EditorBuffer.ofBuffer;
+      let bufferId = id;
+
+      let newLayout =
+        Feature_Layout.map(
+          editor =>
+            if (Editor.getBufferId(editor) == bufferId
+                && Editor.getPreview(editor) == true) {
+              Editor.setPreview(~preview=false, editor);
+            } else {
+              editor;
+            },
+          state.layout,
+        );
+
+      ({...state, layout: newLayout}, Effect.none);
+
+    | CreateEditor({buffer, split, position, grabFocus, preview}) =>
+      open Feature_Editor;
+
+      let editorBuffer = buffer |> EditorBuffer.ofBuffer;
       let fileType = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
-      let editor =
-        Feature_Editor.Editor.create(
-          ~config=config(~fileType),
-          ~buffer=editorBuffer,
-          (),
-        );
+      let bufferId = EditorBuffer.id(editorBuffer);
+
+      let layout =
+        switch (split) {
+        | `Current => state.layout
+        | `Horizontal => Feature_Layout.split(`Horizontal, state.layout)
+        | `Vertical => Feature_Layout.split(`Vertical, state.layout)
+        | `NewTab => Feature_Layout.addLayoutTab(state.layout)
+        };
+
+      let existingEditor =
+        Feature_Layout.activeGroupEditors(layout)
+        |> List.find_opt(editor => Editor.getBufferId(editor) == bufferId);
+
+      let (isPreview, editor) =
+        switch (existingEditor) {
+        | Some(ed) =>
+          let isPreview = Editor.getPreview(ed) && preview;
+
+          (isPreview, Editor.setPreview(~preview=isPreview, ed));
+        | None => (
+            preview,
+            Editor.create(
+              ~config=config(~fileType),
+              ~buffer=editorBuffer,
+              ~preview,
+              (),
+            ),
+          )
+        };
 
       let editor' =
         position
@@ -929,16 +1062,31 @@ let update =
            })
         |> Option.value(~default=editor);
 
-      let layout =
-        (
-          switch (split) {
-          | `Current => state.layout
-          | `Horizontal => Feature_Layout.split(`Horizontal, state.layout)
-          | `Vertical => Feature_Layout.split(`Vertical, state.layout)
-          | `NewTab => Feature_Layout.addLayoutTab(state.layout)
-          }
-        )
+      let layout' =
+        layout
         |> Feature_Layout.openEditor(~config=config(~fileType), editor');
+
+      let cleanLayout =
+        isPreview
+          ? {
+            Feature_Layout.activeGroupEditors(layout')
+            |> List.filter(ed =>
+                 Editor.getPreview(ed)
+                 && Editor.getId(ed) != Editor.getId(editor')
+               )
+            |> List.fold_left(
+                 (acc, ed) => {
+                   switch (
+                     Feature_Layout.removeEditor(Editor.getId(ed), acc)
+                   ) {
+                   | Some(lay) => lay
+                   | None => acc
+                   }
+                 },
+                 layout',
+               );
+          }
+          : layout';
 
       let bufferRenderers =
         buffer
@@ -955,7 +1103,7 @@ let update =
                  }),
                )
              | Version => Some(BufferRenderer.Version)
-             | UpdateChangelog => None
+             | UpdateChangelog => Some(BufferRenderer.UpdateChangelog)
              | Image => Some(BufferRenderer.Image)
              | Welcome => Some(BufferRenderer.Welcome)
              | Changelog => Some(BufferRenderer.FullChangelog)
@@ -972,7 +1120,7 @@ let update =
            })
         |> Option.value(~default=state.bufferRenderers);
 
-      let state' = {...state, bufferRenderers, layout};
+      let state' = {...state, bufferRenderers, layout: cleanLayout};
 
       let state'' =
         if (grabFocus) {
@@ -982,7 +1130,6 @@ let update =
         };
 
       (state'', Effect.none);
-
     | BufferSaved(buffer) =>
       let eff =
         Service_Exthost.Effects.FileSystemEventService.onFileEvent(
@@ -1246,18 +1393,51 @@ let update =
 
     (state, effect);
 
-  | OpenBufferById({bufferId}) =>
+  | OpenBufferById({bufferId, direction}) =>
     let effect =
       Feature_Buffers.Effects.openBufferInEditor(
         ~languageInfo=state.languageInfo,
         ~font=state.editorFont,
         ~bufferId,
+        ~split=direction,
+        state.buffers,
+      )
+      |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
+    (state, effect);
+
+  | NewBuffer({direction}) =>
+    let effect =
+      Feature_Buffers.Effects.openNewBuffer(
+        ~split=direction,
+        ~languageInfo=state.languageInfo,
+        ~font=state.editorFont,
         state.buffers,
       )
       |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
     (state, effect);
 
   | OpenFileByPath(filePath, direction, position) =>
+    let split =
+      switch (direction) {
+      | None => `Current
+      | Some(`Current) => `Current
+      | Some(`Horizontal) => `Horizontal
+      | Some(`Vertical) => `Vertical
+      | Some(`NewTab) => `NewTab
+      };
+    let effect =
+      Feature_Buffers.Effects.openFileInEditor(
+        ~languageInfo=state.languageInfo,
+        ~font=state.editorFont,
+        ~split,
+        ~position,
+        ~grabFocus=true,
+        ~filePath,
+        state.buffers,
+      )
+      |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
+    (state, effect);
+  | PreviewFileByPath(filePath, direction, position) =>
     let split =
       switch (direction) {
       | None => `Current
@@ -1273,6 +1453,7 @@ let update =
         ~position,
         ~grabFocus=true,
         ~filePath,
+        ~preview=true,
         state.buffers,
       )
       |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
@@ -1439,7 +1620,6 @@ let update =
       Feature_SignatureHelp.update(
         ~maybeBuffer,
         ~maybeEditor=Some(editor),
-        ~extHostClient,
         state.signatureHelp,
         msg,
       );
@@ -1462,21 +1642,8 @@ let update =
     let activeCursor = editor |> Feature_Editor.Editor.getPrimaryCursor;
     let activeCursorByte =
       editor |> Feature_Editor.Editor.getPrimaryCursorByte;
-    let (signatureHelp, shOutMsg) =
-      Feature_SignatureHelp.update(
-        ~maybeBuffer,
-        ~maybeEditor=Some(editor),
-        ~extHostClient,
-        state.signatureHelp,
-        Feature_SignatureHelp.KeyPressed(triggerKey, false),
-      );
-    let shEffect =
-      switch (shOutMsg) {
-      | Effect(e) => Effect.map(msg => Actions.SignatureHelp(msg), e)
-      | _ => Effect.none
-      };
 
-    let languageSupport' =
+    let (languageSupport', signatureHelp') =
       maybeBuffer
       |> Option.map(buffer => {
            let syntaxScope =
@@ -1496,19 +1663,36 @@ let update =
                 )
              |> Option.value(~default=LanguageConfiguration.default);
 
-           Feature_LanguageSupport.bufferUpdated(
-             ~languageConfiguration,
-             ~buffer,
-             ~config,
-             ~activeCursor,
-             ~syntaxScope,
-             ~triggerKey,
-             state.languageSupport,
-           );
-         })
-      |> Option.value(~default=state.languageSupport);
+           let languageSupport =
+             Feature_LanguageSupport.bufferUpdated(
+               ~languageConfiguration,
+               ~buffer,
+               ~config,
+               ~activeCursor,
+               ~syntaxScope,
+               ~triggerKey,
+               state.languageSupport,
+             );
 
-    ({...state, signatureHelp, languageSupport: languageSupport'}, shEffect);
+           let signatureHelp =
+             Feature_SignatureHelp.bufferUpdated(
+               ~languageConfiguration,
+               ~buffer,
+               ~activeCursor,
+               state.signatureHelp,
+             );
+           (languageSupport, signatureHelp);
+         })
+      |> Option.value(~default=(state.languageSupport, state.signatureHelp));
+
+    (
+      {
+        ...state,
+        signatureHelp: signatureHelp',
+        languageSupport: languageSupport',
+      },
+      Isolinear.Effect.none,
+    );
 
   | Yank({range}) =>
     open EditorCoreTypes;
@@ -1574,8 +1758,24 @@ let update =
     };
 
   | Vim(msg) =>
+    let previousSubMode = state.vim |> Feature_Vim.subMode;
     let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
-    let state = {...state, vim};
+    let newSubMode = state.vim |> Feature_Vim.subMode;
+
+    // If we've switched to, or from, insert literal,
+    // we may need to enable/disable key bindings.
+    let input' =
+      if (previousSubMode != newSubMode) {
+        if (newSubMode == Vim.SubMode.InsertLiteral) {
+          Feature_Input.disable(state.input);
+        } else {
+          Feature_Input.enable(state.input);
+        };
+      } else {
+        state.input;
+      };
+
+    let state = {...state, input: input', vim};
 
     switch (outmsg) {
     | Nothing => (state, Isolinear.Effect.none)
@@ -1587,8 +1787,14 @@ let update =
         state |> Internal.updateConfiguration,
         Isolinear.Effect.none,
       )
-    | ModeDidChange({mode, effects}) =>
-      Internal.updateMode(~extHostClient, state, mode, effects)
+    | ModeDidChange({allowAnimation, mode, effects}) =>
+      Internal.updateMode(~allowAnimation, state, mode, effects)
+    | Output({cmd, output}) =>
+      let pane' = state.pane |> Feature_Pane.setOutput(cmd, output);
+      (
+        {...state, pane: pane'} |> FocusManager.push(Pane),
+        Isolinear.Effect.none,
+      );
     };
 
   | Workspace(msg) =>
@@ -1610,6 +1816,16 @@ let update =
           state.fileExplorer,
         );
 
+      // Pop open and focus sidebar
+      let sideBar =
+        if (!Feature_SideBar.isOpen(state.sideBar)
+            || Feature_SideBar.selected(state.sideBar)
+            !== Feature_SideBar.FileExplorer) {
+          Feature_SideBar.toggle(FileExplorer, state.sideBar);
+        } else {
+          state.sideBar;
+        };
+
       let extWorkspace =
         maybeWorkspaceFolder |> Option.map(Exthost.WorkspaceData.fromPath);
       let eff =
@@ -1617,7 +1833,11 @@ let update =
           ~workspace=extWorkspace,
           extHostClient,
         );
-      ({...state, fileExplorer}, eff);
+
+      let state' =
+        {...state, fileExplorer, sideBar}
+        |> FocusManager.push(Focus.FileExplorer);
+      (state', eff);
     };
 
   | AutoUpdate(msg) =>

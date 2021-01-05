@@ -291,6 +291,7 @@ type msg =
       bufferId: int,
       lines: array(string),
     })
+  | GetOriginalContentFailed({bufferId: int})
   | NewProvider({
       handle: int,
       id: string,
@@ -376,24 +377,49 @@ type outmsg =
   | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
   | OpenFile(string)
+  | PreviewFile(string)
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | Nothing;
 
 module Effects = {
-  let getOriginalContent = (bufferId, uri, providers, client) => {
+  let getOriginalContent = (fileSystem, bufferId, uri, providers, client) => {
     let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
-    providers
-    |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
-    |> Option.map(provider => {
-         let (handle, _) = provider;
-         Service_Exthost.Effects.SCM.getOriginalContent(
-           ~handle,
-           ~uri,
-           ~toMsg=lines => GotOriginalContent({bufferId, lines}),
-           client,
-         );
-       })
-    |> Option.value(~default=Isolinear.Effect.none);
+
+    // Is there a file system provider?
+
+    let maybeFileSystem =
+      Feature_FileSystem.getFileSystem(~scheme, fileSystem);
+    switch (maybeFileSystem) {
+    // No file system - fall back to text content provider,
+    // if available...
+    | None =>
+      providers
+      |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
+      |> Option.map(provider => {
+           let (handle, _) = provider;
+           Service_Exthost.Effects.SCM.getOriginalContent(
+             ~handle,
+             ~uri,
+             ~toMsg=lines => GotOriginalContent({bufferId, lines}),
+             client,
+           );
+         })
+      |> Option.value(~default=Isolinear.Effect.none)
+
+    | Some(handle) =>
+      Feature_FileSystem.Effects.readFile(
+        ~handle,
+        ~uri,
+        ~toMsg=
+          resultLines =>
+            switch (resultLines) {
+            | Error(_) => GetOriginalContentFailed({bufferId: bufferId})
+            | Ok(lines) => GotOriginalContent({bufferId, lines})
+            },
+        fileSystem,
+        client,
+      )
+    };
   };
 };
 
@@ -431,7 +457,14 @@ module Internal = {
   };
 };
 
-let update = (extHostClient: Exthost.Client.t, model, msg) =>
+let update =
+    (
+      ~previewEnabled,
+      ~fileSystem: Feature_FileSystem.model,
+      extHostClient: Exthost.Client.t,
+      model,
+      msg,
+    ) =>
   switch (msg) {
   | DocumentContentProvider(documentContentProviderMsg) =>
     Exthost.Msg.DocumentContentProvider.(
@@ -468,6 +501,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       model,
       Effect(
         Effects.getOriginalContent(
+          fileSystem,
           bufferId,
           uri,
           model.textContentProviders,
@@ -483,6 +517,8 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       },
       Nothing,
     )
+
+  | GetOriginalContentFailed(_) => (model, Nothing)
 
   | NewProvider({handle, id, label, rootUri}) => (
       {
@@ -819,6 +855,15 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
              let outmsg =
                switch (outmsg) {
                | Component_VimList.Nothing => Some(Nothing)
+               | Component_VimList.Touched({index}) =>
+                 Component_VimList.get(index, viewModel)
+                 |> Option.map((item: Resource.t) =>
+                      previewEnabled
+                        ? PreviewFile(
+                            item.uri |> Oni_Core.Uri.toFileSystemPath,
+                          )
+                        : OpenFile(item.uri |> Oni_Core.Uri.toFileSystemPath)
+                    )
                | Component_VimList.Selected({index}) =>
                  Component_VimList.get(index, viewModel)
                  |> Option.map((item: Resource.t) =>

@@ -18,6 +18,9 @@ type model('item) = {
   // But for keyboarding gestures, like 'zz', the animation is helpful.
   isScrollAnimated: bool,
   searchContext: [@opaque] SearchContext.model,
+  // Keep track of the last scroll alignment, so when the view resizes,
+  // we can keep the selected item where it should be
+  lastAlignment: option([ | `Top | `Bottom | `Center]),
 };
 
 let create = (~rowHeight) => {
@@ -33,6 +36,7 @@ let create = (~rowHeight) => {
   isScrollAnimated: false,
 
   searchContext: SearchContext.initial,
+  lastAlignment: None,
 };
 
 let isScrollAnimated = ({isScrollAnimated, _}) => isScrollAnimated;
@@ -109,6 +113,7 @@ type msg =
   | MouseOver({index: int})
   | MouseOut({index: int})
   | MouseClicked({index: int})
+  | MouseDoubleClicked({index: int})
   | ViewDimensionsChanged({
       heightInPixels: int,
       widthInPixels: int,
@@ -117,6 +122,7 @@ type msg =
 
 type outmsg =
   | Nothing
+  | Touched({index: int})
   | Selected({index: int});
 
 let showTopScrollShadow = ({scrollY, _}) => scrollY > 0.1;
@@ -210,9 +216,15 @@ let scrollWindows = (~count: int, model) => {
   |> enableScrollAnimation;
 };
 
+let setScrollAlignment = (~maybeAlignment, model) => {
+  ...model,
+  lastAlignment: maybeAlignment,
+};
+
 let scrollSelectedToTop = model => {
   model
   |> setScrollY(~scrollY=float(model.selected * model.rowHeight))
+  |> setScrollAlignment(~maybeAlignment=Some(`Top))
   |> enableScrollAnimation;
 };
 
@@ -226,6 +238,7 @@ let scrollSelectedToBottom = model => {
            - (model.viewportHeight - model.rowHeight),
          ),
      )
+  |> setScrollAlignment(~maybeAlignment=Some(`Bottom))
   |> enableScrollAnimation;
 };
 
@@ -240,7 +253,17 @@ let scrollSelectedToCenter = model => {
            / 2,
          ),
      )
+  |> setScrollAlignment(~maybeAlignment=Some(`Center))
   |> enableScrollAnimation;
+};
+
+let restoreAlignment = model => {
+  switch (model.lastAlignment) {
+  | Some(`Top) => model |> scrollSelectedToTop
+  | Some(`Bottom) => model |> scrollSelectedToBottom
+  | Some(`Center) => model |> scrollSelectedToCenter
+  | None => model
+  };
 };
 
 let scrollTo = (~index, ~alignment, model) => {
@@ -347,6 +370,15 @@ let update = (msg, model) => {
     let isValidIndex = index >= 0 && index < Array.length(model.items);
 
     if (isValidIndex) {
+      (model |> setSelected(~selected=index), Touched({index: index}));
+    } else {
+      (model, Nothing);
+    };
+
+  | MouseDoubleClicked({index}) =>
+    let isValidIndex = index >= 0 && index < Array.length(model.items);
+
+    if (isValidIndex) {
       (model |> setSelected(~selected=index), Selected({index: index}));
     } else {
       (model, Nothing);
@@ -376,11 +408,8 @@ let update = (msg, model) => {
     (model', Nothing);
 
   | ViewDimensionsChanged({heightInPixels, widthInPixels}) => (
-      {
-        ...model,
-        viewportWidth: widthInPixels,
-        viewportHeight: heightInPixels,
-      },
+      {...model, viewportWidth: widthInPixels, viewportHeight: heightInPixels}
+      |> restoreAlignment,
       Nothing,
     )
 
@@ -487,111 +516,159 @@ module Keybindings = {
   let keybindings =
     Feature_Input.Schema.[
       // NORMAL MODE MOVEMENT
-      {key: "gg", command: Commands.gg.id, condition: commandCondition},
-      {key: "<S-G>", command: Commands.g.id, condition: commandCondition},
-      {key: "j", command: Commands.j.id, condition: commandCondition},
-      {key: "k", command: Commands.k.id, condition: commandCondition},
-      {key: "<DOWN>", command: Commands.j.id, condition: commandCondition},
-      {key: "<UP>", command: Commands.k.id, condition: commandCondition},
-      {key: "<CR>", command: Commands.enter.id, condition: commandCondition},
+      bind(~key="gg", ~command=Commands.gg.id, ~condition=commandCondition),
+      bind(~key="<S-G>", ~command=Commands.g.id, ~condition=commandCondition),
+      bind(~key="j", ~command=Commands.j.id, ~condition=commandCondition),
+      bind(~key="k", ~command=Commands.k.id, ~condition=commandCondition),
+      bind(
+        ~key="<DOWN>",
+        ~command=Commands.j.id,
+        ~condition=commandCondition,
+      ),
+      bind(~key="<UP>", ~command=Commands.k.id, ~condition=commandCondition),
+      bind(
+        ~key="<CR>",
+        ~command=Commands.enter.id,
+        ~condition=commandCondition,
+      ),
       // Scroll alignment
-      {key: "zz", command: Commands.zz.id, condition: commandCondition},
-      {key: "zb", command: Commands.zb.id, condition: commandCondition},
-      {key: "zt", command: Commands.zt.id, condition: commandCondition},
+      bind(~key="zz", ~command=Commands.zz.id, ~condition=commandCondition),
+      bind(~key="zb", ~command=Commands.zb.id, ~condition=commandCondition),
+      bind(~key="zt", ~command=Commands.zt.id, ~condition=commandCondition),
       // Scroll downwards
-      {
-        key: "<C-e>",
-        command: Commands.scrollDownLine.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-d>",
-        command: Commands.scrollDownWindow.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<S-DOWN>",
-        command: Commands.scrollDownWindow.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<PageDown>",
-        command: Commands.scrollDownWindow.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-f>",
-        command: Commands.scrollDownWindow.id,
-        condition: commandCondition,
-      },
+      bind(
+        ~key="<C-e>",
+        ~command=Commands.scrollDownLine.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-d>",
+        ~command=Commands.scrollDownWindow.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<S-DOWN>",
+        ~command=Commands.scrollDownWindow.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<PageDown>",
+        ~command=Commands.scrollDownWindow.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-f>",
+        ~command=Commands.scrollDownWindow.id,
+        ~condition=commandCondition,
+      ),
       // Scroll upwards
-      {
-        key: "<C-y>",
-        command: Commands.scrollUpLine.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-u>",
-        command: Commands.scrollUpWindow.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<S-UP>",
-        command: Commands.scrollUpWindow.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<PageUp>",
-        command: Commands.scrollUpWindow.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<C-b>",
-        command: Commands.scrollUpWindow.id,
-        condition: commandCondition,
-      },
+      bind(
+        ~key="<C-y>",
+        ~command=Commands.scrollUpLine.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-u>",
+        ~command=Commands.scrollUpWindow.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<S-UP>",
+        ~command=Commands.scrollUpWindow.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<PageUp>",
+        ~command=Commands.scrollUpWindow.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<C-b>",
+        ~command=Commands.scrollUpWindow.id,
+        ~condition=commandCondition,
+      ),
       // MULTIPLIER
-      {key: "0", command: Commands.digit0.id, condition: commandCondition},
-      {key: "1", command: Commands.digit1.id, condition: commandCondition},
-      {key: "2", command: Commands.digit2.id, condition: commandCondition},
-      {key: "3", command: Commands.digit3.id, condition: commandCondition},
-      {key: "4", command: Commands.digit4.id, condition: commandCondition},
-      {key: "5", command: Commands.digit5.id, condition: commandCondition},
-      {key: "6", command: Commands.digit6.id, condition: commandCondition},
-      {key: "7", command: Commands.digit7.id, condition: commandCondition},
-      {key: "8", command: Commands.digit8.id, condition: commandCondition},
-      {key: "9", command: Commands.digit9.id, condition: commandCondition},
+      bind(
+        ~key="0",
+        ~command=Commands.digit0.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="1",
+        ~command=Commands.digit1.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="2",
+        ~command=Commands.digit2.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="3",
+        ~command=Commands.digit3.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="4",
+        ~command=Commands.digit4.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="5",
+        ~command=Commands.digit5.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="6",
+        ~command=Commands.digit6.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="7",
+        ~command=Commands.digit7.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="8",
+        ~command=Commands.digit8.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="9",
+        ~command=Commands.digit9.id,
+        ~condition=commandCondition,
+      ),
       // SEARCH
-      {
-        key: "/",
-        command: Commands.searchForward.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<S-/>",
-        command: Commands.searchBackward.id,
-        condition: commandCondition,
-      },
-      {
-        key: "n",
-        command: Commands.nextSearchResult.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<S-N>",
-        command: Commands.previousSearchResult.id,
-        condition: commandCondition,
-      },
-      {
-        key: "<CR>",
-        command: Commands.commitSearch.id,
-        condition: searchActiveCommandCondition,
-      },
-      {
-        key: "<ESC>",
-        command: Commands.cancelSearch.id,
-        condition: searchActiveCommandCondition,
-      },
+      bind(
+        ~key="/",
+        ~command=Commands.searchForward.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<S-/>",
+        ~command=Commands.searchBackward.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="n",
+        ~command=Commands.nextSearchResult.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<S-N>",
+        ~command=Commands.previousSearchResult.id,
+        ~condition=commandCondition,
+      ),
+      bind(
+        ~key="<CR>",
+        ~command=Commands.commitSearch.id,
+        ~condition=searchActiveCommandCondition,
+      ),
+      bind(
+        ~key="<ESC>",
+        ~command=Commands.cancelSearch.id,
+        ~condition=searchActiveCommandCondition,
+      ),
     ];
 };
 
@@ -730,6 +807,7 @@ module View = {
         ~focusBorder,
         ~searchBorder,
         ~onMouseClick,
+        ~onMouseDoubleClick,
         ~onMouseOver,
         ~onMouseOut,
         ~viewportWidth,
@@ -787,6 +865,7 @@ module View = {
           onMouseEnter={_ => onMouseOver(i)}
           onMouseLeave={_ => onMouseOut(i)}
           onClick={_ => onMouseClick(i)}
+          onDoubleClick={_ => onMouseDoubleClick(i)}
           style={Styles.item(~offset, ~rowHeight, ~bg)}>
           {render(
              ~availableWidth=viewportWidth,
@@ -858,6 +937,10 @@ module View = {
           dispatch(MouseClicked({index: idx}));
         };
 
+        let onMouseDoubleClick = idx => {
+          dispatch(MouseDoubleClicked({index: idx}));
+        };
+
         let scrollbar = {
           let maxHeight = count * rowHeight - viewportHeight;
           let thumbHeight =
@@ -917,6 +1000,7 @@ module View = {
             ~onMouseOver,
             ~onMouseOut,
             ~onMouseClick,
+            ~onMouseDoubleClick,
             ~viewportWidth,
             ~viewportHeight,
             ~rowHeight,
@@ -929,11 +1013,11 @@ module View = {
 
         let topShadow =
           model |> showTopScrollShadow
-            ? <Oni_Components.ScrollShadow.Top /> : React.empty;
+            ? <Oni_Components.ScrollShadow.Top theme /> : React.empty;
 
         let bottomShadow =
           model |> showBottomScrollShadow
-            ? <Oni_Components.ScrollShadow.Bottom /> : React.empty;
+            ? <Oni_Components.ScrollShadow.Bottom theme /> : React.empty;
 
         (
           <View style=Style.[flexGrow(1), flexDirection(`Column)]>

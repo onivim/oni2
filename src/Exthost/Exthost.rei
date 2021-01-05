@@ -17,7 +17,9 @@ module Label: {
     | Icon(string);
 
   [@deriving show]
-  type t = list(segment);
+  type t;
+
+  let segments: t => list(segment);
 
   let ofString: string => t;
   let toString: t => string;
@@ -861,6 +863,12 @@ module Files: {
     let encode: Json.encoder(t);
   };
 
+  module ReadDirResult: {
+    type t = (string, FileType.t);
+
+    let encode: Json.encoder(t);
+  };
+
   module FileSystemEvents: {
     type t = {
       created: list(Oni_Core.Uri.t),
@@ -1541,6 +1549,7 @@ module Msg: {
           alignment,
           command: option(Command.t),
           color: option(Color.t),
+          backgroundColor: option(Color.t),
           tooltip: option(string),
           priority: int,
         })
@@ -1625,10 +1634,7 @@ module Reply: {
   let okBuffer: Bytes.t => t;
 };
 
-module Middleware: {
-  let download: Msg.DownloadService.msg => Lwt.t(Reply.t);
-  let filesystem: Msg.FileSystem.msg => Lwt.t(Reply.t);
-};
+module Middleware: {let download: Msg.DownloadService.msg => Lwt.t(Reply.t);};
 
 module Client: {
   type t;
@@ -1736,6 +1742,10 @@ module Request: {
       Lwt.t(unit);
   };
 
+  module FileSystem: {
+    let readFile: (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(string);
+  };
+
   module FileSystemEventService: {
     let onFileEvent: (~events: Files.FileSystemEvents.t, Client.t) => unit;
     // TODO
@@ -1747,6 +1757,10 @@ module Request: {
     let provideCodeLenses:
       (~handle: int, ~resource: Uri.t, Client.t) =>
       Lwt.t(option(list(CodeLens.t)));
+
+    let resolveCodeLens:
+      (~handle: int, ~codeLens: CodeLens.t, Client.t) =>
+      Lwt.t(option(CodeLens.t));
 
     let provideCompletionItems:
       (

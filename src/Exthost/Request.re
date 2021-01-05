@@ -210,6 +210,20 @@ module ExtensionService = {
   };
 };
 
+module FileSystem = {
+  open Json.Encode;
+
+  let readFile = (~handle, ~uri, client) => {
+    Client.request(
+      ~decoder=Json.Decode.string,
+      ~rpcName="ExtHostFileSystem",
+      ~method="$readFile",
+      ~args=`List([`Int(handle), uri |> encode_value(Uri.encode)]),
+      client,
+    );
+  };
+};
+
 module FileSystemEventService = {
   open Json.Encode;
 
@@ -233,6 +247,22 @@ module LanguageFeatures = {
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$provideCodeLenses",
       ~args=`List([`Int(handle), Uri.to_yojson(resource)]),
+      client,
+    );
+  };
+
+  let resolveCodeLens = (~handle: int, ~codeLens: CodeLens.t, client) => {
+    let decoder = Json.Decode.(nullable(CodeLens.decode));
+    Client.request(
+      ~decoder,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$resolveCodeLens",
+      ~args=
+        `List([
+          `Int(handle),
+          codeLens |> Json.Encode.encode_value(CodeLens.encode),
+        ]),
       client,
     );
   };

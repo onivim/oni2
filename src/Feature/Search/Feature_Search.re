@@ -85,10 +85,14 @@ type outmsg =
       filePath: string,
       location: CharacterPosition.t,
     })
+  | PreviewFile({
+      filePath: string,
+      location: CharacterPosition.t,
+    })
   | Focus
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
-let update = (model, msg) => {
+let update = (~previewEnabled, model, msg) => {
   switch (msg) {
   | Input(key) =>
     switch (model.focus) {
@@ -175,16 +179,20 @@ let update = (model, msg) => {
       Component_VimTree.update(listMsg, model.resultsTree);
 
     let eff =
-      Component_VimTree.(
-        switch (outmsg) {
-        | Nothing => None
-        | Selected(item) =>
-          Some(OpenFile({filePath: item.file, location: item.location}))
-        // TODO
-        | Collapsed(_) => None
-        | Expanded(_) => None
-        }
-      );
+      switch (outmsg) {
+      | Component_VimTree.Nothing => None
+      | Component_VimTree.Touched(item) =>
+        Some(
+          previewEnabled
+            ? PreviewFile({filePath: item.file, location: item.location})
+            : OpenFile({filePath: item.file, location: item.location}),
+        )
+      | Component_VimTree.Selected(item) =>
+        Some(OpenFile({filePath: item.file, location: item.location}))
+      // TODO
+      | Component_VimTree.Collapsed(_) => None
+      | Component_VimTree.Expanded(_) => None
+      };
 
     ({...model, resultsTree}, eff);
 

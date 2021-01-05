@@ -73,6 +73,7 @@ let registerCommands = (~dispatch, commands) => {
 
 let start =
     (
+      ~showUpdateChangelog=true,
       ~getUserSettings,
       ~configurationFilePath=None,
       ~keybindingsFilePath=None,
@@ -123,6 +124,7 @@ let start =
   let commandUpdater = CommandStoreConnector.start();
   let (vimUpdater, vimStream) =
     VimStoreConnector.start(
+      ~showUpdateChangelog,
       languageInfo,
       getState,
       getClipboardText,
@@ -207,12 +209,13 @@ let start =
     let config = Model.Selectors.configResolver(state);
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
+    let activeEditor = state.layout |> Feature_Layout.activeEditor;
 
     let isInsertMode =
-      state.layout
-      |> Feature_Layout.activeEditor
-      |> Feature_Editor.Editor.mode
-      |> Vim.Mode.isInsert;
+      activeEditor |> Feature_Editor.Editor.mode |> Vim.Mode.isInsert;
+
+    let isAnimatingScroll =
+      activeEditor |> Feature_Editor.Editor.isAnimatingScroll;
 
     let visibleRanges =
       visibleBuffersAndRanges
@@ -221,6 +224,12 @@ let start =
            |> Option.map(buffer => {(buffer, ranges)})
          })
       |> Core.Utility.OptionEx.values;
+
+    let topVisibleBufferLine =
+      activeEditor |> Feature_Editor.Editor.getTopVisibleBufferLine;
+
+    let bottomVisibleBufferLine =
+      activeEditor |> Feature_Editor.Editor.getBottomVisibleBufferLine;
 
     let visibleBuffers =
       visibleBuffersAndRanges
@@ -256,6 +265,7 @@ let start =
 
     let fontFamily = Feature_Editor.Configuration.fontFamily.get(config);
     let fontSize = Feature_Editor.Configuration.fontSize.get(config);
+    let fontWeight = Feature_Editor.Configuration.fontWeight.get(config);
 
     let fontLigatures =
       Oni_Core.Configuration.getValue(
@@ -274,6 +284,7 @@ let start =
         ~uniqueId="editorFont",
         ~fontFamily,
         ~fontSize,
+        ~fontWeight,
         ~fontSmoothing,
         ~fontLigatures,
       )
@@ -294,11 +305,19 @@ let start =
         c => c.terminalIntegratedFontSmoothing,
         state.configuration,
       );
+
+    let terminalFontWeight =
+      Oni_Core.Configuration.getValue(
+        c => c.terminalIntegratedFontWeight,
+        state.configuration,
+      );
+
     let terminalFontSubscription =
       Service_Font.Sub.font(
         ~uniqueId="terminalFont",
         ~fontFamily=terminalFontFamily,
         ~fontSize=terminalFontSize,
+        ~fontWeight=terminalFontWeight,
         ~fontSmoothing=terminalFontSmoothing,
         ~fontLigatures,
       )
@@ -345,8 +364,11 @@ let start =
            Feature_LanguageSupport.sub(
              ~config,
              ~isInsertMode,
+             ~isAnimatingScroll,
              ~activeBuffer,
              ~activePosition,
+             ~topVisibleBufferLine,
+             ~bottomVisibleBufferLine,
              ~visibleBuffers,
              ~client=extHostClient,
              state.languageSupport,
@@ -355,8 +377,29 @@ let start =
          })
       |> Option.value(~default=Isolinear.Sub.none);
 
+    let signatureHelpSub =
+      maybeActiveBuffer
+      |> Option.map(activeBuffer => {
+           Feature_SignatureHelp.sub(
+             ~isInsertMode,
+             ~buffer=activeBuffer,
+             ~activePosition,
+             ~client=extHostClient,
+             state.signatureHelp,
+           )
+           |> Isolinear.Sub.map(msg => Model.Actions.SignatureHelp(msg))
+         })
+      |> Option.value(~default=Isolinear.Sub.none);
+
+    let isSideBarOpen = Feature_SideBar.isOpen(state.sideBar);
+    let isExtensionsFocused =
+      Feature_SideBar.selected(state.sideBar) == Feature_SideBar.Extensions;
     let extensionsSub =
-      Feature_Extensions.sub(~setup, state.extensions)
+      Feature_Extensions.sub(
+        ~isVisible=isSideBarOpen && isExtensionsFocused,
+        ~setup,
+        state.extensions,
+      )
       |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
 
     let registersSub =
@@ -422,6 +465,7 @@ let start =
       visibleEditorsSubscription,
       inputSubscription,
       notificationSub,
+      signatureHelpSub,
     ]
     |> Isolinear.Sub.batch;
   };

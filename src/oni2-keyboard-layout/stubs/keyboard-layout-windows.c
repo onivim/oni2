@@ -81,6 +81,33 @@ CAMLprim value oni2_KeyboardLayoutInit() {
   CAMLreturn(Val_unit);
 }
 
+#define UTF16_BUFFER_SIZE 40
+#define UTF8_BUFFER_SIZE 10
+
+int keyboardCharacterToUTF8(UINT keycode, UINT scancode, BYTE *keyboardState, char* dest, int destSize, HKL keyboardLayout) {
+  wchar_t destUtf16[UTF16_BUFFER_SIZE];
+
+  int utf16Count = ToUnicodeEx(keycode, scancode, keyboardState, destUtf16, UTF16_BUFFER_SIZE, 0, keyboardLayout);
+
+  if (utf16Count == -1) {
+    return -1;
+  } else {
+    // We have a UTF-16 string for the keycode - now convert it to 
+
+    int utf8Count = WideCharToMultiByte(
+      CP_UTF8,
+      0, 
+      destUtf16,
+      utf16Count,
+      dest,
+      destSize,
+      NULL,
+      NULL
+    );
+    return utf8Count;
+  }
+}
+
 void characterForNativeCode(
   HKL keyboardLayout,
   UINT keycode, 
@@ -88,7 +115,8 @@ void characterForNativeCode(
   BYTE *keyboardState, 
   int shift, 
   int altGraph,
-  wchar_t *dest
+  char *dest,
+  int destSize
 ) {
   memset(keyboardState, 0, 256);
 
@@ -101,15 +129,12 @@ void characterForNativeCode(
     keyboardState[VK_CONTROL] = 0x80;
   }
 
-  int count = ToUnicodeEx(keycode, scancode, keyboardState, dest, 5, 0, keyboardLayout);
+  int count = keyboardCharacterToUTF8(keycode, scancode, keyboardState, dest, destSize, keyboardLayout);
 
   if (count == -1) {
     keyboardState[VK_SHIFT] = 0x0;
     keyboardState[VK_MENU] = 0x0;
     keyboardState[VK_CONTROL] = 0x0;
-
-    UINT spaceKeycode = MapVirtualKeyEx(SPACE_SCAN_CODE, MAPVK_VSC_TO_VK, keyboardLayout);
-    ToUnicodeEx(spaceKeycode, SPACE_SCAN_CODE, keyboardState, dest, 5, 0, keyboardLayout);
 
     dest[0] = '\0';
   } else if (count > 0 && !iswcntrl(dest[0])) {
@@ -127,10 +152,10 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
   HKL keyboardLayout = getForegroundWindowHKL();
 
   // Allocate UTF-8 Buffers to be populated
-  wchar_t unmodified[5]; 
-  wchar_t withShift[5]; 
-  wchar_t withAltGraph[5]; 
-  wchar_t withAltGraphShift[5]; 
+  char unmodified[UTF8_BUFFER_SIZE]; 
+  char withShift[UTF8_BUFFER_SIZE]; 
+  char withAltGraph[UTF8_BUFFER_SIZE]; 
+  char withAltGraphShift[UTF8_BUFFER_SIZE]; 
 
   size_t keyCodeMapSize = sizeof(keyCodeMap) / sizeof(keyCodeMap[0]);
   for (size_t i = 0; i < keyCodeMapSize; i++) {
@@ -143,10 +168,10 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
       if ((MapVirtualKeyEx(keycode, MAPVK_VK_TO_CHAR, keyboardLayout) >> (sizeof(UINT) * 8 - 1)))
         continue;
 
-      characterForNativeCode(keyboardLayout, keycode, scancode, keyboardState, 0, 0, unmodified);
-      characterForNativeCode(keyboardLayout, keycode, scancode, keyboardState, 1, 0, withShift);
-      characterForNativeCode(keyboardLayout, keycode, scancode, keyboardState, 0, 1, withAltGraph);
-      characterForNativeCode(keyboardLayout, keycode, scancode, keyboardState, 1, 1, withAltGraphShift);
+      characterForNativeCode(keyboardLayout, keycode, scancode, keyboardState, 0, 0, unmodified, UTF8_BUFFER_SIZE);
+      characterForNativeCode(keyboardLayout, keycode, scancode, keyboardState, 1, 0, withShift, UTF8_BUFFER_SIZE);
+      characterForNativeCode(keyboardLayout, keycode, scancode, keyboardState, 0, 1, withAltGraph, UTF8_BUFFER_SIZE);
+      characterForNativeCode(keyboardLayout, keycode, scancode, keyboardState, 1, 1, withAltGraphShift, UTF8_BUFFER_SIZE);
 
       keymapEntry = createKeymapEntry(
         (char *)unmodified,

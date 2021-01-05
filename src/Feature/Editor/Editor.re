@@ -104,6 +104,7 @@ type t = {
   scrollX: [@opaque] Component_Animation.Spring.t,
   scrollY: [@opaque] Component_Animation.Spring.t,
   inlineElements: InlineElements.t,
+  isAnimated: bool,
   isScrollAnimated: bool,
   isMinimapEnabled: bool,
   minimapMaxColumnWidth: int,
@@ -115,6 +116,7 @@ type t = {
   yankHighlightDuration: int,
   wrapMode: WrapMode.t,
   wrapState: WrapState.t,
+  preview: bool,
   wrapPadding: option(float),
   // Number of lines to preserve before or after the cursor, when scrolling.
   // Like the `scrolloff` vim setting or the `editor.cursorSurroundingLines` VSCode setting.
@@ -126,6 +128,9 @@ type t = {
   lastMouseScreenPosition: option(PixelPosition.t),
   lastMouseMoveTime: [@opaque] option(Revery.Time.t),
   lastMouseUpTime: [@opaque] option(Revery.Time.t),
+  // Animation
+  isAnimationOverride: option(bool),
+  animationNonce: int,
 };
 
 let key = ({key, _}) => key;
@@ -157,6 +162,15 @@ let setMinimap = (~enabled, ~maxColumn, editor) => {
   ...editor,
   isMinimapEnabled: enabled,
   minimapMaxColumnWidth: maxColumn,
+};
+
+let overrideAnimation = (~animated, editor) => {
+  ...editor,
+  isAnimationOverride: animated,
+};
+
+let isAnimatingScroll = ({scrollX, scrollY, _}) => {
+  Spring.isActive(scrollX) || Spring.isActive(scrollY);
 };
 
 let getBufferLineCount = ({buffer, _}) =>
@@ -230,6 +244,7 @@ module Animations = {
 let yankHighlight = ({yankHighlight, _}) => yankHighlight;
 let startYankHighlight = (pixelRanges, editor) => {
   ...editor,
+  animationNonce: editor.animationNonce + 1,
   yankHighlight:
     Some({
       pixelRanges,
@@ -426,14 +441,34 @@ let configure = (~config, editor) => {
 
   let scrolloff = EditorConfiguration.scrolloff.get(config);
 
+  let isAnimated =
+    Feature_Configuration.GlobalConfiguration.animation.get(config);
   let isScrollAnimated =
-    Feature_Configuration.GlobalConfiguration.animation.get(config)
-    && EditorConfiguration.smoothScroll.get(config);
+    isAnimated && EditorConfiguration.smoothScroll.get(config);
 
   let yankHighlightDuration =
     EditorConfiguration.yankHighlightDuration.get(config);
 
-  {...editor, isScrollAnimated, yankHighlightDuration}
+  // If codelens is turned off, remove all codelens keys
+
+  let inlineElements =
+    if (!
+          Feature_Configuration.GlobalConfiguration.Experimental.Editor.codeLensEnabled.
+            get(
+            config,
+          )) {
+      editor.inlineElements |> InlineElements.clear(~key="codelens");
+    } else {
+      editor.inlineElements;
+    };
+
+  {
+    ...editor,
+    inlineElements,
+    isAnimated,
+    isScrollAnimated,
+    yankHighlightDuration,
+  }
   |> setVerticalScrollMargin(~lines=scrolloff)
   |> setMinimap(
        ~enabled=EditorConfiguration.Minimap.enabled.get(config),
@@ -446,7 +481,7 @@ let configure = (~config, editor) => {
   |> setWrapMode(~wrapMode);
 };
 
-let create = (~config, ~buffer, ()) => {
+let create = (~config, ~buffer, ~preview: bool, ()) => {
   let id = GlobalState.generateId();
   let key = Brisk_reconciler.Key.create();
 
@@ -456,9 +491,10 @@ let create = (~config, ~buffer, ()) => {
 
   let wrapState = WrapState.make(~pixelWidth=1000., ~wrapMode, ~buffer);
 
+  let isAnimated =
+    Feature_Configuration.GlobalConfiguration.animation.get(config);
   let isScrollAnimated =
-    Feature_Configuration.GlobalConfiguration.animation.get(config)
-    && EditorConfiguration.smoothScroll.get(config);
+    isAnimated && EditorConfiguration.smoothScroll.get(config);
 
   let yankHighlightDuration =
     EditorConfiguration.yankHighlightDuration.get(config);
@@ -469,6 +505,7 @@ let create = (~config, ~buffer, ()) => {
     lineHeight: LineHeight.default,
     lineNumbers: `On,
     isMinimapEnabled: true,
+    isAnimated,
     isScrollAnimated,
     buffer,
     scrollX: Spring.make(~restThreshold=1., ~options=scrollSpringOptions, 0.),
@@ -493,6 +530,7 @@ let create = (~config, ~buffer, ()) => {
     yankHighlightDuration,
     wrapState,
     wrapMode,
+    preview,
     wrapPadding: None,
     verticalScrollMargin: 1,
     inlineElements: InlineElements.initial,
@@ -501,6 +539,10 @@ let create = (~config, ~buffer, ()) => {
     lastMouseMoveTime: None,
     lastMouseScreenPosition: None,
     lastMouseUpTime: None,
+
+    // Animation
+    isAnimationOverride: None,
+    animationNonce: 0,
   }
   |> configure(~config);
 };
@@ -549,7 +591,10 @@ let getViewLineFromPixelY = (~pixelY, editor) => {
           // We need to advance
           loop(
             viewLine + 1,
-            accumulatedPixels +. additionalRegion +. hd.height +. lineHeight,
+            accumulatedPixels
+            +. additionalRegion
+            +. Component_Animation.get(hd.height)
+            +. lineHeight,
             tail,
           );
         };
@@ -771,9 +816,16 @@ let withSteadyCursor = (f, editor) => {
   let newOffset = calculateOffset(bytePosition, editor');
   let scrollYValue =
     Spring.getTarget(editor.scrollY) +. (newOffset -. originalOffset);
+
+  let isAnimated = Spring.isActive(editor.scrollY);
   let scrollY =
-    Spring.set(~instant=true, ~position=scrollYValue, editor.scrollY);
-  {...editor', scrollY};
+    Spring.set(~instant=!isAnimated, ~position=scrollYValue, editor.scrollY);
+  {
+    ...editor',
+    animationNonce:
+      isAnimated ? editor.animationNonce + 1 : editor.animationNonce,
+    scrollY,
+  };
 };
 
 let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
@@ -785,14 +837,32 @@ let makeInlineElement = (~key, ~uniqueId, ~lineNumber, ~view) => {
   view,
 };
 
-let setInlineElementSize = (~key, ~uniqueId, ~height, editor) => {
+let linesWithInlineElements = ({inlineElements, _}) => {
+  InlineElements.lines(inlineElements)
+  |> List.map(EditorCoreTypes.LineNumber.ofZeroBased);
+};
+
+let getInlineElements = (~line, {inlineElements, _}) => {
+  InlineElements.allElementsForLine(~line, inlineElements);
+};
+
+let setInlineElementSize =
+    (~allowAnimation=true, ~key, ~line, ~uniqueId, ~height, editor) => {
+  let topBuffer = getTopVisibleBufferLine(editor);
+  let bottomBuffer = getBottomVisibleBufferLine(editor);
   editor
   |> withSteadyCursor(e =>
        {
          ...e,
          inlineElements:
            InlineElements.setSize(
+             ~animated=
+               allowAnimation
+               && editor.isAnimated
+               && line >= topBuffer
+               && line <= bottomBuffer,
              ~key,
+             ~line,
              ~uniqueId,
              ~height=float(height),
              e.inlineElements,
@@ -806,13 +876,12 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
     elements
     |> List.map((inlineElement: inlineElement) =>
          InlineElements.{
-           reconcilerKey: Brisk_reconciler.Key.create(),
            key: inlineElement.key,
            uniqueId: inlineElement.uniqueId,
            line: inlineElement.lineNumber,
-           height: 0.,
+           height: Component_Animation.make(Animation.expand(0., 0.)),
            view: inlineElement.view,
-           hidden: inlineElement.hidden,
+           opacity: Component_Animation.make(Animation.fadeIn),
          }
        );
 
@@ -826,8 +895,33 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
      );
 };
 
-let getInlineElements = ({inlineElements, _}) => {
-  inlineElements |> InlineElements.allElements;
+let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => {
+  let elements': list(InlineElements.element) =
+    elements
+    |> List.map((inlineElement: inlineElement) =>
+         InlineElements.{
+           key: inlineElement.key,
+           uniqueId: inlineElement.uniqueId,
+           line: inlineElement.lineNumber,
+           height: Component_Animation.make(Animation.expand(0., 0.)),
+           view: inlineElement.view,
+           opacity: Component_Animation.make(Animation.fadeIn),
+         }
+       );
+  editor
+  |> withSteadyCursor(e =>
+       {
+         ...e,
+         inlineElements:
+           InlineElements.replace(
+             ~startLine=Some(startLine),
+             ~stopLine=Some(stopLine),
+             ~key,
+             ~elements=elements',
+             e.inlineElements,
+           ),
+       }
+     );
 };
 
 let selectionOrCursorRange = editor => {
@@ -847,6 +941,9 @@ let selectionOrCursorRange = editor => {
 };
 
 let getId = model => model.editorId;
+
+let getPreview = model => model.preview;
+let setPreview = (~preview, editor) => {...editor, preview};
 
 let getVisibleView = editor => {
   let {pixelHeight, _} = editor;
@@ -912,6 +1009,13 @@ let hasSetSize = editor => {
   editor.pixelWidth > 1 && editor.pixelHeight > 1;
 };
 
+let isScrollAnimated = ({isScrollAnimated, isAnimationOverride, _}) => {
+  switch (isAnimationOverride) {
+  | Some(v) => v
+  | None => isScrollAnimated
+  };
+};
+
 let exposePrimaryCursor = editor =>
   if (!hasSetSize(editor)) {
     // If the size hasn't been set yet - don't try to expose the cursor.
@@ -974,7 +1078,7 @@ let exposePrimaryCursor = editor =>
         && Float.abs(adjustedScrollY -. scrollY) < lineHeightInPixels(editor)
         *. 1.1;
 
-      let animated = editor.isScrollAnimated;
+      let animated = editor |> isScrollAnimated;
       {
         ...editor,
         scrollX:
@@ -989,6 +1093,8 @@ let exposePrimaryCursor = editor =>
             ~position=adjustedScrollY,
             editor.scrollY,
           ),
+        animationNonce:
+          animated ? editor.animationNonce + 1 : editor.animationNonce,
       };
 
     | _ => editor
@@ -1035,14 +1141,16 @@ let getTokenAt =
         ~direction=`Backwards,
         ~index=character,
         bufferLine,
-      );
+      )
+      |> Option.value(~default=character);
     let stopIndex =
       BufferLine.traverse(
         ~f,
         ~direction=`Forwards,
         ~index=character,
         bufferLine,
-      );
+      )
+      |> Option.value(~default=character);
     Some(
       CharacterRange.{
         start: CharacterPosition.{line, character: startIndex},
@@ -1059,7 +1167,7 @@ let getContentPixelWidth = editor => {
 
 let scrollToPixelY = (~animated, ~pixelY as newScrollY, editor) => {
   let originalScrollY = Spring.getTarget(editor.scrollY);
-  let animated = editor.isScrollAnimated && animated;
+  let animated = editor |> isScrollAnimated && animated;
   let {pixelHeight, _} = editor;
   let viewLines = editor |> totalViewLines;
   let newScrollY = max(0., newScrollY);
@@ -1085,15 +1193,13 @@ let scrollToPixelY = (~animated, ~pixelY as newScrollY, editor) => {
     && Float.abs(newScrollY -. originalScrollY) < lineHeightInPixels(editor)
     *. 1.1;
 
+  let instant = !animated || isSmallJump;
   {
     ...editor,
+    animationNonce:
+      instant ? editor.animationNonce : editor.animationNonce + 1,
     minimapScrollY: newMinimapScroll,
-    scrollY:
-      Spring.set(
-        ~instant=!animated || isSmallJump,
-        ~position=newScrollY,
-        editor.scrollY,
-      ),
+    scrollY: Spring.set(~instant, ~position=newScrollY, editor.scrollY),
   };
 };
 
@@ -1103,7 +1209,7 @@ let scrollToLine = (~line, view) => {
 };
 
 let scrollToPixelX = (~animated, ~pixelX as newScrollX, editor) => {
-  let animated = editor.isScrollAnimated && animated;
+  let animated = editor |> isScrollAnimated && animated;
   let maxLineLength = editor |> maxLineLength;
   let newScrollX = max(0., newScrollX);
 
@@ -1338,7 +1444,10 @@ let setSize = (~pixelWidth, ~pixelHeight, originalEditor) => {
 
   // If we hadn't measured before, make sure the cursor is in view
   if (!hasSetSize(originalEditor)) {
-    scrollCursorTop(editor');
+    editor'
+    |> overrideAnimation(~animated=Some(false))
+    |> scrollCursorTop
+    |> overrideAnimation(~animated=None);
   } else {
     editor';
   };
@@ -1382,15 +1491,12 @@ let unprojectToPixel =
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
 
 let updateBuffer = (~update, ~buffer, editor) => {
-  editor
-  |> withSteadyCursor(editor =>
-       {
-         ...editor,
-         buffer,
-         wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
-         inlineElements: InlineElements.shift(update, editor.inlineElements),
-       }
-     );
+  {
+    ...editor,
+    buffer,
+    wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
+    inlineElements: InlineElements.shift(update, editor.inlineElements),
+  };
 };
 
 let setBuffer = (~buffer, editor) => {
@@ -1502,14 +1608,16 @@ let getCharacterUnderMouse = editor => {
            editor,
          );
 
-       let bufferLine =
-         EditorBuffer.line(
-           EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line),
-           editor.buffer,
-         );
-       if (BufferLine.lengthInBytes(bufferLine)
-           > ByteIndex.toInt(bytePosition.byte)) {
-         byteToCharacter(bytePosition, editor);
+       let lineIdx =
+         EditorCoreTypes.LineNumber.toZeroBased(bytePosition.line);
+       if (lineIdx < EditorBuffer.numberOfLines(editor.buffer)) {
+         let bufferLine = EditorBuffer.line(lineIdx, editor.buffer);
+         if (BufferLine.lengthInBytes(bufferLine)
+             > ByteIndex.toInt(bytePosition.byte)) {
+           byteToCharacter(bytePosition, editor);
+         } else {
+           None;
+         };
        } else {
          None;
        };
@@ -1621,13 +1729,11 @@ let getLeadingWhitespacePixels = (lineNumber, editor) => {
 
 [@deriving show]
 type msg =
-  | ScrollSpringX([@opaque] Spring.msg)
-  | ScrollSpringY([@opaque] Spring.msg)
-  | YankHighlight([@opaque] Component_Animation.msg);
+  | Animation([@opaque] Component_Animation.msg);
 
 let update = (msg, editor) => {
   switch (msg) {
-  | YankHighlight(msg) =>
+  | Animation(msg) =>
     let yankHighlight' =
       yankHighlight(editor)
       |> OptionEx.flatMap(yankHighlight => {
@@ -1640,32 +1746,49 @@ let update = (msg, editor) => {
              Some({...yankHighlight, opacity: opacity'});
            };
          });
-    {...editor, yankHighlight: yankHighlight'};
-  | ScrollSpringX(msg) => {
+
+    let editor' = {
       ...editor,
       scrollX: Spring.update(msg, editor.scrollX),
-    }
-  | ScrollSpringY(msg) => {
-      ...editor,
       scrollY: Spring.update(msg, editor.scrollY),
-    }
+      yankHighlight: yankHighlight',
+      animationNonce: editor.animationNonce + 1,
+    };
+
+    editor'
+    |> withSteadyCursor(e =>
+         {
+           ...e,
+           inlineElements: InlineElements.animate(msg, editor.inlineElements),
+         }
+       );
   };
 };
 
 let sub = editor => {
-  let yankHighlightAnimation =
+  let isYankAnimating =
     yankHighlight(editor)
     |> Option.map(({opacity, _}) => {
-         opacity
-         |> Component_Animation.sub
-         |> Isolinear.Sub.map(msg => YankHighlight(msg))
+         opacity |> Component_Animation.isActive
        })
-    |> Option.value(~default=Isolinear.Sub.none);
-  [
-    Spring.sub(editor.scrollX) |> Isolinear.Sub.map(msg => ScrollSpringX(msg)),
-    Spring.sub(editor.scrollY)
-    |> Isolinear.Sub.map(msg => ScrollSpringY(msg)),
-    yankHighlightAnimation,
-  ]
-  |> Isolinear.Sub.batch;
+    |> Option.value(~default=false);
+
+  let isInlineElementAnimating =
+    InlineElements.isAnimating(editor.inlineElements);
+
+  let isScrollAnimating =
+    Spring.isActive(editor.scrollY) || Spring.isActive(editor.scrollX);
+
+  if (isYankAnimating || isInlineElementAnimating || isScrollAnimating) {
+    Component_Animation.subAny(
+      ~uniqueId=
+        "editor."
+        ++ string_of_int(editor.editorId)
+        ++ "."
+        ++ string_of_int(editor.animationNonce),
+    )
+    |> Isolinear.Sub.map(msg => Animation(msg));
+  } else {
+    Isolinear.Sub.none;
+  };
 };

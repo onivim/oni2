@@ -6,7 +6,9 @@ runTest(~name="EchoNotificationTest", (dispatch, wait, _runEffects) => {
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
-  dispatch(VimExecuteCommand("echo 'hi from test'"));
+  dispatch(
+    VimExecuteCommand({allowAnimation: true, command: "echo 'hi from test'"}),
+  );
 
   wait(~name="notification shows up", (state: State.t) => {
     let notifications = Feature_Notification.all(state.notifications);

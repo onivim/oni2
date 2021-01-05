@@ -7,20 +7,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.LearnMoreAboutRefactoringsCommand = void 0;
 const vscode = require("vscode");
 const languageModeIds_1 = require("../utils/languageModeIds");
-let LearnMoreAboutRefactoringsCommand = /** @class */ (() => {
-    class LearnMoreAboutRefactoringsCommand {
-        constructor() {
-            this.id = LearnMoreAboutRefactoringsCommand.id;
-        }
-        execute() {
-            const docUrl = vscode.window.activeTextEditor && languageModeIds_1.isTypeScriptDocument(vscode.window.activeTextEditor.document)
-                ? 'https://go.microsoft.com/fwlink/?linkid=2114477'
-                : 'https://go.microsoft.com/fwlink/?linkid=2116761';
-            vscode.env.openExternal(vscode.Uri.parse(docUrl));
-        }
+class LearnMoreAboutRefactoringsCommand {
+    constructor() {
+        this.id = LearnMoreAboutRefactoringsCommand.id;
     }
-    LearnMoreAboutRefactoringsCommand.id = '_typescript.learnMoreAboutRefactorings';
-    return LearnMoreAboutRefactoringsCommand;
-})();
+    execute() {
+        const docUrl = vscode.window.activeTextEditor && languageModeIds_1.isTypeScriptDocument(vscode.window.activeTextEditor.document)
+            ? 'https://go.microsoft.com/fwlink/?linkid=2114477'
+            : 'https://go.microsoft.com/fwlink/?linkid=2116761';
+        vscode.env.openExternal(vscode.Uri.parse(docUrl));
+    }
+}
 exports.LearnMoreAboutRefactoringsCommand = LearnMoreAboutRefactoringsCommand;
+LearnMoreAboutRefactoringsCommand.id = '_typescript.learnMoreAboutRefactorings';
 //# sourceMappingURL=learnMoreAboutRefactorings.js.map
