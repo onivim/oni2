@@ -40,6 +40,7 @@
 - #2826 - Search: Default to simple string search for find-in-files (fixes #2821)
 - #2841 - UX: Tone down shadow color for light themes
 - #2840 - Extensions: CodeLens - handle toggling via `:set codelens`
+- #2929 - Input: Fix intermittent crash when scrolling with the mouse (fixes #2919)
 
 ### Performance
 
