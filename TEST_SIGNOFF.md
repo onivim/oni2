@@ -8,7 +8,7 @@
 - Validate full shell path is available
 
 __PASS:__
-- [ ] OSX
+- [x] OSX
 
 ## 1.2 Validate launches from dock in OSX (#2659)
 
@@ -18,7 +18,7 @@ __PASS:__
 - Validate Onivim 2 launches and PATH is correct
 
 __PASS:__
-- [ ] OSX
+- [x] OSX
 
 # 2. First-Run Experience
 
@@ -35,7 +35,7 @@ Test cases covering launching and using Onivim without any persistence or config
 __PASS:__
 - [x] Linux
 - [x] Windows
-- [ ] OSX
+- [x] OSX
 
 # 2.2 Home directory set [OSX]
 
@@ -52,4 +52,4 @@ not have permission to read that folder.
 - Verify Control+Shift+P/Command+Shift+P shows the command palette
 
 __PASS:__
-- [ ] OSX
+- [x] OSX
