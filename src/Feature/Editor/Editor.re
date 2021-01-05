@@ -896,10 +896,6 @@ let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
 };
 
 let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => {
-  // TODO
-  ignore(startLine);
-  ignore(stopLine);
-
   let elements': list(InlineElements.element) =
     elements
     |> List.map((inlineElement: inlineElement) =>
@@ -917,7 +913,13 @@ let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => 
        {
          ...e,
          inlineElements:
-           InlineElements.set(~key, ~elements=elements', e.inlineElements),
+           InlineElements.replace(
+             ~startLine=Some(startLine),
+             ~stopLine=Some(stopLine),
+             ~key,
+             ~elements=elements',
+             e.inlineElements,
+           ),
        }
      );
 };
