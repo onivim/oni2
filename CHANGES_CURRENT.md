@@ -1,5 +1,4 @@
-### Features
-
+### Features 
 - #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
 - #2889 - Extensions: Include HTML, JSON, PHP, and Markdown language servers
 - #2849 - UX: Initial menu bar on Windows / Linux (fixes #1255)
@@ -31,6 +30,7 @@
 - #2628 - Input: Right arrow key treated as PageUp
 - #2929 - Input: Fix intermittent crash when scrolling with the mouse (fixes #2919)
 - #2927 - Input: Windows - fix crash in entering Unicode character (fixes #2926)
+- #2941 - Input: Fix handling of `<space>` as leader key (fixes #2935)
 
 ### Performance
 
