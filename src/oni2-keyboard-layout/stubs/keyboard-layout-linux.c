@@ -103,8 +103,7 @@ CAMLprim value oni2_KeyboardLayoutInit() {
 
 void oni2_priv_GetCurrentKeyboardLayout(char *layout) {
   XkbRF_VarDefsRec vdr;
-  char *tmp;
-  if (XkbRF_GetNamesProp(xDisplay, &tmp, &vdr) && vdr.layout) {
+  if (XkbRF_GetNamesProp(xDisplay, NULL, &vdr) && vdr.layout) {
     XkbStateRec xkbState;
     XkbGetState(xDisplay, XkbUseCoreKbd, &xkbState);
 
