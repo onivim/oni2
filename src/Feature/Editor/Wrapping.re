@@ -12,7 +12,7 @@ type t = {
   wrap: WordWrap.t,
   buffer: EditorBuffer.t,
   // Per-buffer-line array of wrap points
-  wraps: array(array(WordWrap.lineWrap)),
+  wraps: array((array(WordWrap.lineWrap), float)),
   wrapsMutationCount: int,
   // Map of buffer line index -> view line index
   bufferLineToViewLineCache: IntMap.t(int),
@@ -24,7 +24,7 @@ type t = {
 module Internal = {
   let bufferToWraps = (~wrap, buffer) => {
     let bufferLineCount = EditorBuffer.numberOfLines(buffer);
-    let wraps = Array.make(bufferLineCount, [||]);
+    let wraps = Array.make(bufferLineCount, ([||], 0.));
 
     for (idx in 0 to bufferLineCount - 1) {
       let line = EditorBuffer.line(idx, buffer);
@@ -33,7 +33,8 @@ module Internal = {
     wraps;
   };
 
-  let recalculateCaches = (~wraps: array(array(WordWrap.lineWrap))) => {
+  let recalculateCaches =
+      (~wraps: array((array(WordWrap.lineWrap), float))) => {
     let len = Array.length(wraps);
 
     let rec addViewLines = (map, bufferLine, currentViewLine, stopViewLine) =>
@@ -49,7 +50,8 @@ module Internal = {
         acc;
       } else {
         let (map, viewLineMap, count) = acc;
-        let wrapCount = wraps[idx] |> Array.length;
+        let (lineWraps, _totalPixelSize) = wraps[idx];
+        let wrapCount = lineWraps |> Array.length;
         let map' = IntMap.add(idx, count, map);
         let count' = count + wrapCount;
 
@@ -106,13 +108,16 @@ let update =
     let isRecalculationNeeded = ref(false);
     for (idx in startLine to endLine - 1) {
       // Check previous wrap count
-      let wrapCount = wraps[idx] |> Array.length;
+      let (previousWraps, _pixelSize) = wraps[idx];
+      let wrapCount = previousWraps |> Array.length;
 
       let line = EditorBuffer.line(idx, newBuffer);
 
       // HACK: Mutation
+
       let newWraps = wrap(line);
-      let newWrapCount = newWraps |> Array.length;
+      let (newLineWraps, _pixelSize) = wrap(line);
+      let newWrapCount = newLineWraps |> Array.length;
       wraps[idx] = newWraps;
 
       if (newWrapCount != wrapCount) {
@@ -162,7 +167,7 @@ let bufferBytePositionToViewLine = (~bytePosition: BytePosition.t, wrap) => {
   if (line >= Array.length(wrap.wraps)) {
     startViewLine;
   } else {
-    let viewLines = wrap.wraps[line];
+    let (viewLines, _pixelSize) = wrap.wraps[line];
 
     let len = Array.length(viewLines);
     let rec loop = idx =>
@@ -210,7 +215,7 @@ let viewLineToBufferPosition = (~line: int, wrapping) => {
       characterOffset: CharacterIndex.zero,
     };
   } else {
-    let wraps = wrapping.wraps[bufferLineIdx];
+    let (wraps, _pixelSize) = wrapping.wraps[bufferLineIdx];
 
     let idx = line - startViewLine;
     let len = Array.length(wraps);
