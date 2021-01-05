@@ -128,7 +128,7 @@ void oni2_priv_GetCurrentKeyboardLayout(char *layout) {
     }
 
     if (vdr.model) {
-      free(vdr.model)
+      free(vdr.model);
     }
   } else {
     layout[0] = '\0';
