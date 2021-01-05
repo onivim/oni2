@@ -10,7 +10,9 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
-  | InputText(Component_InputText.msg);
+  | InputText(Component_InputText.msg)
+  | RenameLocationAvailable(Exthost.RenameLocation.t)
+  | RenameLocationUnavailable;
 
 [@deriving show]
 type provider = {
@@ -22,7 +24,7 @@ type provider = {
 [@deriving show]
 type sessionState =
   | Inactive
-  | Resolving({sessionId: int})
+  | Resolving
   | Resolved({
       sessionId: int, //location: RenameLocation.t,
       inputText: [@opaque] Component_InputText.model,
@@ -42,11 +44,13 @@ type model = {
 let initial = {nextSessionId: 0, sessionState: Inactive, providers: []};
 
 let register = (~handle, ~selector, ~supportsResolveInitialValues, model) => {
-  ...model,
-  providers: [
-    {handle, selector, supportsResolveInitialValues},
-    ...model.providers,
-  ],
+  {
+    ...model,
+    providers: [
+      {handle, selector, supportsResolveInitialValues},
+      ...model.providers,
+    ],
+  };
 };
 
 let unregister = (~handle, model) => {
@@ -58,13 +62,13 @@ let unregister = (~handle, model) => {
 let isFocused = ({sessionState, _}) => {
   switch (sessionState) {
   | Inactive => false
-  | Resolving(_) => false
+  | Resolving => false
   | Resolved(_) => true
   | Applying(_) => true
   };
 };
 
-let update = (msg, model) => {
+let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
   switch (msg) {
   | InputText(inputMsg) =>
     switch (model.sessionState) {
@@ -79,22 +83,62 @@ let update = (msg, model) => {
       );
     | _ => (model, Outmsg.Nothing)
     }
+
+  | RenameLocationAvailable(_location) =>
+    switch (model.sessionState) {
+    | Resolving =>
+      let sessionId = model.nextSessionId;
+      (
+        {
+          ...model,
+          nextSessionId: sessionId + 1,
+          sessionState:
+            Resolved({
+              sessionId,
+              inputText: Component_InputText.create(~placeholder="hi"),
+            }),
+        },
+        Outmsg.Nothing,
+      );
+    | _ => (model, Outmsg.Nothing)
+    }
+
+  | RenameLocationUnavailable => (model, Outmsg.Nothing)
+
   | Command(Commit)
   | Command(Cancel) => ({...model, sessionState: Inactive}, Outmsg.Nothing)
   | Command(RenameSymbol) =>
-    let sessionId = model.nextSessionId;
-    (
-      {
-        ...model,
-        nextSessionId: sessionId + 1,
-        sessionState:
-          Resolved({
-            sessionId,
-            inputText: Component_InputText.create(~placeholder="hi"),
-          }),
-      },
-      Outmsg.Nothing,
-    );
+    switch (maybeBuffer) {
+    | None => (model, Outmsg.Nothing)
+    | Some(buffer) =>
+      let toMsg = maybeLocationResult => {
+        switch (maybeLocationResult) {
+        | Ok(Some(location)) => RenameLocationAvailable(location)
+        | Ok(None) => RenameLocationUnavailable
+        | Error(_msg) => RenameLocationUnavailable
+        };
+      };
+      let eff =
+        model.providers
+        |> List.filter(provider =>
+             Exthost.DocumentSelector.matchesBuffer(
+               ~buffer,
+               provider.selector,
+             )
+           )
+        |> List.map(provider => {
+             Service_Exthost.Effects.LanguageFeatures.resolveRenameLocation(
+               ~handle=provider.handle,
+               ~uri=Oni_Core.Buffer.getUri(buffer),
+               ~position=cursorLocation,
+               client,
+               toMsg,
+             )
+           })
+        |> Isolinear.Effect.batch;
+
+      ({...model, sessionState: Resolving}, Outmsg.Effect(eff));
+    }
   };
 };
 

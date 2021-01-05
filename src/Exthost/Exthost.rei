@@ -251,6 +251,7 @@ module Message: {
 };
 
 module RenameLocation: {
+  [@deriving show]
   type t = {
     range: OneBasedRange.t,
     text: string,

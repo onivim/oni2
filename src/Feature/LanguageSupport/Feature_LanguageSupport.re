@@ -167,6 +167,18 @@ let update =
     ({...model, references: references'}, Nothing);
 
   | Exthost(
+      RegisterRenameSupport({handle, selector, supportsResolveInitialValues}),
+    ) =>
+    let rename' =
+      Rename.register(
+        ~handle,
+        ~selector,
+        ~supportsResolveInitialValues,
+        model.rename,
+      );
+    ({...model, rename: rename'}, Nothing);
+
+  | Exthost(
       RegisterSuggestSupport({
         handle,
         selector,
@@ -362,7 +374,14 @@ let update =
     ({...model, hover: hover'}, outMsg');
 
   | Rename(renameMsg) =>
-    let (rename', outmsg) = Rename.update(renameMsg, model.rename);
+    let (rename', outmsg) =
+      Rename.update(
+        ~client,
+        ~maybeBuffer,
+        ~cursorLocation,
+        renameMsg,
+        model.rename,
+      );
     ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
   };
 
