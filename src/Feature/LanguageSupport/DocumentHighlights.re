@@ -23,6 +23,36 @@ type msg =
     });
 // TODO: kind?
 
+let clear = (~bufferId, model) => {
+  {
+    ...model,
+    bufferToHighlights:
+      IntMap.add(bufferId, IntMap.empty, model.bufferToHighlights),
+  };
+};
+
+let cursorMoved = (~buffer, ~cursor, model) => {
+  let isCursorInHighlight = (highlights: IntMap.t(list(CharacterRange.t))) => {
+    highlights
+    |> IntMap.bindings
+    |> List.map(snd)
+    |> List.flatten
+    |> List.exists(range => CharacterRange.contains(cursor, range));
+  };
+
+  let bufferId = Oni_Core.Buffer.getId(buffer);
+  let currentHighlights =
+    model.bufferToHighlights
+    |> IntMap.find_opt(bufferId)
+    |> Option.value(~default=IntMap.empty);
+
+  if (!isCursorInHighlight(currentHighlights)) {
+    clear(~bufferId, model);
+  } else {
+    model;
+  };
+};
+
 let update = (msg, model) => {
   switch (msg) {
   | DocumentHighlighted({bufferId, ranges}) =>
@@ -69,8 +99,8 @@ let configurationChanged = (~config, model) =>
     model;
   };
 
-let sub = (~config, ~buffer, ~location, ~client, model) =>
-  if (!Configuration.enabled.get(config)) {
+let sub = (~isInsertMode, ~config, ~buffer, ~location, ~client, model) =>
+  if (!Configuration.enabled.get(config) || isInsertMode) {
     Isolinear.Sub.none;
   } else {
     let toMsg = (highlights: list(Exthost.DocumentHighlight.t)) => {

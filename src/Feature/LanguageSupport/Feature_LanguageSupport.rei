@@ -108,7 +108,12 @@ let bufferUpdated:
 let configurationChanged: (~config: Config.resolver, model) => model;
 
 let cursorMoved:
-  (~previous: CharacterPosition.t, ~current: CharacterPosition.t, model) =>
+  (
+    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~previous: CharacterPosition.t,
+    ~current: CharacterPosition.t,
+    model
+  ) =>
   model;
 let startInsertMode: model => model;
 let stopInsertMode: model => model;

@@ -36,6 +36,7 @@
 
 - #2852,#2864 - Performance: Batch editor / codelens animations
 - #2901 - Bundle Size: Remove unused Selawik and Inconsolata fonts
+- #2932 - Language Features: Debounce high-frequency subscriptions
 
 ### Documentation
 

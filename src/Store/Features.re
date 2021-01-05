@@ -223,6 +223,7 @@ module Internal = {
     let languageSupport =
       if (prevCursor != newCursor) {
         Feature_LanguageSupport.cursorMoved(
+          ~maybeBuffer,
           ~previous=prevCursor,
           ~current=newCursor,
           state.languageSupport,
