@@ -105,7 +105,7 @@ let renderLine =
          Draw.rangeCharacter(
            ~context,
            ~padding=1.,
-           ~color=colors.findMatchBackground,
+           ~color=colors.wordHighlightBackground,
          ),
        );
   };

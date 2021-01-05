@@ -3,6 +3,56 @@ open MenuBar;
 
 module Colors = Feature_Theme.Colors;
 
+module Configuration = {
+  open Config.Schema;
+
+  module Codec: {
+    let menuBarVisibility:
+      Config.Schema.codec(
+        [
+          // | `default
+          | `visible
+          // | `toggle
+          | `hidden
+          // | `compact
+        ],
+      );
+  } = {
+    let menuBarVisibility =
+      custom(
+        ~decode=
+          Json.Decode.(
+            string
+            |> map(
+                 fun
+                 | "default" => `visible
+                 | "visible" => `visible
+                 | "toggle" => `visible
+                 | "hidden" => `hidden
+                 | "compact" => `visible
+                 | _ => `visible,
+               )
+          ),
+        ~encode=
+          Json.Encode.(
+            fun
+            // | `default => string("default")
+            | `visible => string("visible")
+            // | `toggle => string("toggle")
+            | `hidden => string("hidden")
+          ),
+        // | `compact => string("compact")
+      );
+  };
+
+  let visibility =
+    setting(
+      "window.menuBarVisibility",
+      Codec.menuBarVisibility,
+      ~default=`visible,
+    );
+};
+
 [@deriving show]
 type msg =
   | MouseClicked({uniqueId: string})
@@ -326,4 +376,10 @@ module View = {
 
     <View style={Styles.container(bgColor)}> menuItems </View>;
   };
+};
+
+// CONTRIBUTIONS
+
+module Contributions = {
+  let configuration = Configuration.[visibility.spec];
 };

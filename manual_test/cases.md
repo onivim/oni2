@@ -104,3 +104,41 @@ __Pass:__
 - [ ] Win
 - [ ] OSX
 - [ ] Linux
+
+# 6. Font Rendering
+
+## 2.1 Validate editor.fontWeight
+
+Prerequisite:
+- In configuration file, key "editor.fontFamily" either set to a __non absolute__ font name or absent (Ideally test both).
+
+- Run Onivim 2
+- Open configuration file
+- Change "editor.fontWeight" to ["bold"|"normal"|100|200|...|900] - verify it changes at each step.
+- Check that bold text is always effectively bolder than normal text.
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+# 7. Input
+
+## 7.1 Unicode Input 
+
+Regression test for #2926
+
+Prerequisite:
+- Install German (de-de) keyboard layout
+
+- Run Onivim 2
+- Create new file (`:new test.txt`)
+- Switch keyboard layout to German (`de-de`)
+- Enter insert mode (`i`)
+- Type `ü` (on english keyboard: `[`)
+- Verify character shows
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux

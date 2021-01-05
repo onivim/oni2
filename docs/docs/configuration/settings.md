@@ -29,7 +29,9 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.detectIndentation` __(_bool_ default: `true`)__ - Allow Onivim to auto-detect indentation settings (tab vs space, indent size)
 
-- `editor.fontFamily` __(_string_)__ - The font family used by the editor surface. This must be a monospace font. The font may be specified by either the name of the font, or an absolute path to the font file.
+- `editor.fontFamily` __(_string_)__ - The font family used by the editor surface. This must be a monospace font.
+
+- `editor.fontWeight` __(_int|string_ 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | "normal" | "bold" default: `"normal"`)__ - The font weight used by the editor surface.
 
 - `editor.fontSize` __(_int_ default: `14`)__ - The font size used by the editor surface.
 
@@ -61,6 +63,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `editor.minimapMaxColumn` __(_int_ default: `80`)__ - Sets the maximum column that will be rendered in the minimap. By default, we size the minimap proportionally to the editor surface - this puts a constraint on that size.
 
 - `editor.insertSpaces` __(_bool_ default: `true`)__ - When `true`, the Onivim will use spaces for indentation as opposed to tabs.
+
+- `editor.occurrencesHighlight` __(_bool_ default: `true`)__ When `true`, and provided by a language extension, Onivim will highlight all occurrences of the token under the cursor in the active editor.
 
 - `editor.parameterHints.enabled` __(_bool_ default: `true`)__ - When `true`, and provided by a language extension, Onivim will display a pop-up showing hints for the current function invocation.
 
@@ -117,6 +121,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `workbench.sideBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the sidebar.
 
 - `workbench.statusBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the status bar.
+
+- `window.menuBarVisibility` __(_"visible" | "hidden"_ default: `"visible"`)__ - Controls the visibility of the menu bar.
 
 - `oni.layout.showLayoutTabs` __(_"always"|"smart"|"never"_ default: `"smart"`)__ - Controls the display of layout tabs. `"smart"` will only show the tabs if there's more than one.
 

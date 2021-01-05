@@ -24,6 +24,13 @@
 - #2891 - Vim: Fix count behavior for L/H jumps (fixes #2882)
 - #2895 - Completion: Fix crash on long (>1024 character) completion matches (fixes #2892)
 - #2905 - CLI: HealthCheck - Re-enable output logging
+- #2907 - Editor: Add configuration for document highlights and use proper theme color
+- #2902 - Input: Fix remaps for characters w/o scancode (fixes #2883)
+- #2908 - Input: Fix no-recursive remap behavior (fixes #2114)
+- #2917 - Extensions: CodeLens - fix extraneous animation with multiple providers
+- #2628 - Input: Right arrow key treated as PageUp
+- #2929 - Input: Fix intermittent crash when scrolling with the mouse (fixes #2919)
+- #2927 - Input: Windows - fix crash in entering Unicode character (fixes #2926)
 - #2898 - Editor: Implement mouse selection (fixes #537)
 
 ### Performance

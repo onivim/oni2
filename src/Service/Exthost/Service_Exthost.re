@@ -764,7 +764,7 @@ module Sub = {
                 dispatch(Error(Printexc.to_string(exn)))
               });
             },
-            Revery.Time.milliseconds(250),
+            Revery.Time.milliseconds(500),
           );
         {isActive: active, dispose};
       };

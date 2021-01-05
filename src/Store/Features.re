@@ -164,6 +164,10 @@ module Internal = {
              ~config=resolver,
            );
 
+      let languageSupport =
+        state.languageSupport
+        |> Feature_LanguageSupport.configurationChanged(~config=resolver);
+
       let perFileTypeConfig =
         Feature_Configuration.resolver(state.config, state.vim);
 
@@ -177,7 +181,7 @@ module Internal = {
           },
           state.layout,
         );
-      {...state, sideBar, layout};
+      {...state, languageSupport, sideBar, layout};
     };
 
   let updateMode =
@@ -589,7 +593,7 @@ let update =
           state,
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
         )
-      | CodeLensesChanged({bufferId, startLine, stopLine, lenses}) =>
+      | CodeLensesChanged({handle, bufferId, startLine, stopLine, lenses}) =>
         let inlineElements = editor =>
           lenses
           |> List.map(lens => {
@@ -609,7 +613,7 @@ let update =
                    ~codeLens=lens,
                  );
                Feature_Editor.Editor.makeInlineElement(
-                 ~key="codelens",
+                 ~key="codelens:" ++ string_of_int(handle),
                  ~uniqueId,
                  ~lineNumber,
                  ~view,
@@ -622,7 +626,7 @@ let update =
                  Feature_Editor.Editor.replaceInlineElements(
                    ~startLine,
                    ~stopLine,
-                   ~key="codelens",
+                   ~key="codelens:" ++ string_of_int(handle),
                    ~elements=inlineElements(editor),
                    editor,
                  );
