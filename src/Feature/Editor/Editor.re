@@ -3,8 +3,6 @@ open Oni_Core;
 open Utility;
 open Component_Animation;
 
-let a = 1;
-
 module GlobalState = {
   let lastId = ref(0);
 
