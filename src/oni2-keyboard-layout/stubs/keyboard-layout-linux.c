@@ -112,6 +112,24 @@ void oni2_priv_GetCurrentKeyboardLayout(char *layout) {
     } else {
       sprintf(layout, "%s[%d]", vdr.layout, xkbState.group);
     }
+
+    // TODO: Is there an actual unitializer for XkbRF_VarDefsRec?
+    // Looks like we have to manually free this fields...
+    if (vdr.variant) {
+      free(vdr.variant);
+    }
+
+    if (vdr.layout) {
+      free(vdr.layout);
+    }
+
+    if (vdr.options) {
+      free(vdr.options);
+    }
+
+    if (vdr.model) {
+      free(vdr.model)
+    }
   } else {
     layout[0] = '\0';
   }
