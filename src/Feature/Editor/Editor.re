@@ -453,10 +453,10 @@ let configure = (~config, editor) => {
 
   let inlineElements =
     if (!
-          Feature_Configuration.GlobalConfiguration.Experimental.Editor.codeLensEnabled.
-            get(
+          Feature_Configuration.GlobalConfiguration.Editor.codeLensEnabled.get(
             config,
           )) {
+      // TODO: Fix this
       editor.inlineElements |> InlineElements.clear(~key="codelens");
     } else {
       editor.inlineElements;
