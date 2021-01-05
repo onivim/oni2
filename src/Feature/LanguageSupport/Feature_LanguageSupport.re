@@ -127,10 +127,12 @@ let update =
     ) =>
   switch (msg) {
   | KeyPressed(key) => (
-
-      {...model, 
-      hover: Hover.keyPressed(key, model.hover), 
-      rename: Rename.isFocused(model.rename) ? Rename.keyPressed(key, model.rename): model.rename,
+      {
+        ...model,
+        hover: Hover.keyPressed(key, model.hover),
+        rename:
+          Rename.isFocused(model.rename)
+            ? Rename.keyPressed(key, model.rename) : model.rename,
       },
       Nothing,
     )

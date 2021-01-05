@@ -98,6 +98,16 @@ module Effects: {
         result(list(Exthost.Location.t), string) => 'msg
       ) =>
       Isolinear.Effect.t('msg);
+
+    let resolveRenameLocation:
+      (
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~position: EditorCoreTypes.CharacterPosition.t,
+        Exthost.Client.t,
+        result(option(Exthost.RenameLocation.t), string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
   };
 
   module Workspace: {

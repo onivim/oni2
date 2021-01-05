@@ -99,14 +99,16 @@ let update = (msg, model) => {
 };
 
 let keyPressed = (key, model) => {
-  let sessionState' = switch(model.sessionState) {
-  | Resolved(state) => Resolved({...state, inputText: Component_InputText.handleInput(~key, state.inputText)})
-  | state => state
-  };
-  {
-  ...model,
-  sessionState: sessionState'
-  };
+  let sessionState' =
+    switch (model.sessionState) {
+    | Resolved(state) =>
+      Resolved({
+        ...state,
+        inputText: Component_InputText.handleInput(~key, state.inputText),
+      })
+    | state => state
+    };
+  {...model, sessionState: sessionState'};
 };
 
 module Commands = {
@@ -212,7 +214,7 @@ module View = {
             />
           </View>
         </View>
-      </View>;
+      </View>
     | _ => React.empty
     };
   };

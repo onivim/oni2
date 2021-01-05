@@ -201,6 +201,27 @@ module Effects = {
         );
       });
     };
+
+    let resolveRenameLocation = (~handle, ~uri, ~position, client, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="language.resolveRenameLocation", dispatch => {
+        let promise =
+          Exthost.Request.LanguageFeatures.resolveRenameLocation(
+            ~handle,
+            ~resource=uri,
+            ~position=Exthost.OneBasedPosition.ofPosition(position),
+            client,
+          );
+
+        Lwt.on_success(promise, maybeLocation =>
+          dispatch(toMsg(Ok(maybeLocation)))
+        );
+
+        Lwt.on_failure(promise, err =>
+          dispatch(toMsg(Error(Printexc.to_string(err))))
+        );
+      });
+    };
   };
 
   module Workspace = {
