@@ -34,7 +34,7 @@ Test cases covering launching and using Onivim without any persistence or config
 
 __PASS:__
 - [x] Linux
-- [ ] Windows
+- [x] Windows
 - [ ] OSX
 
 # 2.2 Home directory set [OSX]
