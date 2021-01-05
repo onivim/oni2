@@ -136,10 +136,6 @@ void characterForNativeCode(
     keyboardState[VK_MENU] = 0x0;
     keyboardState[VK_CONTROL] = 0x0;
 
-    // Doesn't look like this is used?
-    UINT spaceKeycode = MapVirtualKeyEx(SPACE_SCAN_CODE, MAPVK_VSC_TO_VK, keyboardLayout);
-    // ToUnicodeEx(spaceKeycode, SPACE_SCAN_CODE, keyboardState, dest, 5, 0, keyboardLayout);
-
     dest[0] = '\0';
   } else if (count > 0 && !iswcntrl(dest[0])) {
     dest[count] = '\0';
