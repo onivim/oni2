@@ -29,6 +29,7 @@
 - #2908 - Input: Fix no-recursive remap behavior (fixes #2114)
 - #2917 - Extensions: CodeLens - fix extraneous animation with multiple providers
 - #2628 - Input: Right arrow key treated as PageUp
+- #2929 - Input: Fix intermittent crash when scrolling with the mouse (fixes #2919)
 
 ### Performance
 

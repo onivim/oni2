@@ -1,5 +1,5 @@
 {
-  "checksum": "7881c97bad0f1edfdb02d158812549f3",
+  "checksum": "ff568f16a842aa3d96e77e47302f2228",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -118,7 +118,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#f2da66e@d41d8cd9",
+        "revery@github:revery-ui/revery#931f3d0@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#53fc4eb@d41d8cd9",
         "@revery/timber@2.0.0@d41d8cd9",
         "@revery/esy-libvterm@1.0.3@d41d8cd9",
@@ -126,13 +126,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#f2da66e@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#f2da66e@d41d8cd9",
+    "revery@github:revery-ui/revery#931f3d0@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#931f3d0@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#f2da66e",
+      "version": "github:revery-ui/revery#931f3d0",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#f2da66e" ]
+        "source": [ "github:revery-ui/revery#931f3d0" ]
       },
       "overrides": [],
       "dependencies": [
@@ -996,7 +996,7 @@
       "overrides": [ "bench.json" ],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#a9cb168@d41d8cd9",
-        "revery@github:revery-ui/revery#f2da66e@d41d8cd9",
+        "revery@github:revery-ui/revery#931f3d0@d41d8cd9",
         "reperf@1.5.0@d41d8cd9",
         "rench@github:bryphe/rench#a976fe5@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
