@@ -142,3 +142,20 @@ __Pass:__
 - [ ] Win
 - [ ] OSX
 - [ ] Linux
+
+## 7.2 Japanese / Romanji layout
+
+Regression test for #2924
+
+Prerequisite:
+- Install Romanji keyboard layout
+
+- Switch keyboard layout to Romanji
+- Run Onivim 2
+- Verify can open quickopen menu (Command+P/Control+P)
+- Verify can enter insert mode and type text
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux

@@ -232,6 +232,14 @@ switch (eff) {
     Oni2_KeyboardLayout.init();
     Oni2_Sparkle.init();
 
+    Log.infof(m =>
+      m(
+        "Keyboard Language: %s Layout: %s",
+        Oni2_KeyboardLayout.getCurrentLanguage(),
+        Oni2_KeyboardLayout.getCurrentLayout(),
+      )
+    );
+
     // Grab initial working directory prior to trying to set it -
     // in some cases, a directory that does not have permissions may be persisted (ie #2742)
     let initialWorkingDirectory = Sys.getcwd();
