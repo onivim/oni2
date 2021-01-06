@@ -227,7 +227,7 @@ let rangeByte =
       if (idx == stopViewLine) {
         stopPixelX;
       } else {
-        float(Editor.getTotalWidthInPixels(context.editor));
+        Editor.getTotalWidthInPixels(context.editor);
       };
 
     drawRect(

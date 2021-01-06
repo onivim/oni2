@@ -33,6 +33,7 @@
 - #2927 - Input: Windows - fix crash in entering Unicode character (fixes #2926)
 - #2938 - Input: OSX - Modifier keys not working on Romaji keyboard (fixes #2924)
 - #2941 - Input: Fix handling of `<space>` as leader key (fixes #2935)
+- #2937 - Editor: Fix bugs around horizontal scrolling (fixes #1544, #2914)
 
 ### Performance
 

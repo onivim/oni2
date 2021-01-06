@@ -19,6 +19,8 @@ type t = {
   // Map of view line index -> buffer index
   viewLineToBufferCache: IntMap.t(int),
   totalViewLines: int,
+  // The maximum length in pixels, of any line
+  maxLengthInPixels: float,
 };
 
 module Internal = {
@@ -74,6 +76,19 @@ module Internal = {
     IntMap.find_opt(viewLine, viewLineToBufferCache)
     |> Option.value(~default=len);
   };
+
+  let recalculateMaxLineSize =
+      (wraps: array((array(WordWrap.lineWrap), float))) => {
+    let len = Array.length(wraps);
+    let max = ref(0.);
+    for (idx in 0 to len - 1) {
+      let (_wraps, pixelSize) = wraps[idx];
+      if (pixelSize > max^) {
+        max := pixelSize;
+      };
+    };
+    max^;
+  };
 };
 
 let make = (~wrap: Oni_Core.WordWrap.t, ~buffer) => {
@@ -88,6 +103,7 @@ let make = (~wrap: Oni_Core.WordWrap.t, ~buffer) => {
     bufferLineToViewLineCache,
     viewLineToBufferCache,
     totalViewLines,
+    maxLengthInPixels: Internal.recalculateMaxLineSize(wraps),
   };
 };
 
@@ -142,6 +158,7 @@ let update =
       bufferLineToViewLineCache,
       viewLineToBufferCache,
       totalViewLines,
+      maxLengthInPixels: Internal.recalculateMaxLineSize(wraps),
     };
   } else {
     let wraps = Internal.bufferToWraps(~wrap, newBuffer);
@@ -155,6 +172,7 @@ let update =
       bufferLineToViewLineCache,
       viewLineToBufferCache,
       totalViewLines,
+      maxLengthInPixels: Internal.recalculateMaxLineSize(wraps),
     };
   };
 };
@@ -238,7 +256,4 @@ let numberOfLines = ({totalViewLines, _}) => {
   totalViewLines;
 };
 
-let maxLineLength = ({buffer, _}) =>
-  EditorBuffer.getEstimatedMaxLineLength(buffer);
-
-let maxLineLengthInPixels = (_) => 0.;
+let maxLineLengthInPixels = ({maxLengthInPixels, _}) => maxLengthInPixels;

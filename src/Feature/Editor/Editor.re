@@ -549,9 +549,6 @@ let create = (~config, ~buffer, ~preview: bool, ()) => {
 
 let cursors = ({mode, _}) => Vim.Mode.cursors(mode);
 
-let maxLineLength = ({wrapState, _}) =>
-  wrapState |> WrapState.wrapping |> Wrapping.maxLineLength;
-
 let viewLineToPixelY = (idx, editor) => {
   let wrapping = editor.wrapState |> WrapState.wrapping;
   let {line: bufferLine, _}: Wrapping.bufferPosition =
@@ -955,10 +952,10 @@ let getTotalHeightInPixels = editor => {
   int_of_float(float_of_int(totalViewLines) *. lineHeightInPixels(editor));
 };
 
-let getTotalWidthInPixels = ({wrapping, pixelWidth, _}) => {
-  max(Wrapping.maxLineWidthInPixels(wrapping), pixelWidth);
-  // let maxLineLength = editor |> maxLineLength;
-  // int_of_float(float_of_int(maxLineLength) *. getCharacterWidth(editor));
+let getTotalWidthInPixels = ({wrapState, _} as editor) => {
+  let contentPixelWidth = getContentPixelWidth(editor);
+  let wrapping = wrapState |> WrapState.wrapping;
+  max(Wrapping.maxLineLengthInPixels(wrapping), contentPixelWidth);
 };
 
 let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
@@ -977,9 +974,10 @@ let getVerticalScrollbarMetrics = (view, scrollBarHeight) => {
 
 let getHorizontalScrollbarMetrics = (editor, availableWidth) => {
   let availableWidthF = float_of_int(availableWidth);
+  let contentPixelWidth = getContentPixelWidth(editor);
   let totalViewWidthInPixels = getTotalWidthInPixels(editor);
 
-  totalViewWidthInPixels <= availableWidthF
+  totalViewWidthInPixels <= contentPixelWidth
     ? {visible: false, thumbSize: 0, thumbOffset: 0}
     : {
       let thumbPercentage = availableWidthF /. totalViewWidthInPixels;
@@ -988,7 +986,16 @@ let getHorizontalScrollbarMetrics = (editor, availableWidth) => {
       let topF = Spring.get(editor.scrollX) /. totalViewWidthInPixels;
       let thumbOffset = int_of_float(topF *. availableWidthF);
 
-      {thumbSize, thumbOffset, visible: true};
+      // Clamp thumbsize to not exceed scrollable area
+      let thumbSize' =
+        if (thumbSize + thumbOffset > availableWidth) {
+          let delta = thumbSize + thumbOffset - availableWidth;
+          thumbSize - delta;
+        } else {
+          thumbSize;
+        };
+
+      {thumbSize: thumbSize', thumbOffset, visible: true};
     };
 };
 
@@ -1210,8 +1217,18 @@ let scrollToPixelX = (~animated, ~pixelX as newScrollX, editor) => {
   let animated = editor |> isScrollAnimated && animated;
   let newScrollX = max(0., newScrollX);
 
-  let availableScroll = float(getTotalWidthInPixels(editor) - editor.pixelWidth);
+  let contentPixelWidth = getContentPixelWidth(editor);
+  let totalWidthInPixels = getTotalWidthInPixels(editor);
+
+  let availableScroll =
+    if (totalWidthInPixels > contentPixelWidth) {
+      getTotalWidthInPixels(editor)
+      -. (contentPixelWidth -. getCharacterWidth(editor) *. 2.);
+    } else {
+      0.;
+    };
   let newScrollX = min(newScrollX, availableScroll);
+
   let scrollX =
     Spring.set(~instant=!animated, ~position=newScrollX, editor.scrollX);
 
@@ -1475,7 +1492,7 @@ let projectLine = (~line, ~pixelHeight, editor) => {
 
 let unprojectToPixel =
     (~pixelX: float, ~pixelY, ~pixelWidth: int, ~pixelHeight, editor) => {
-  let totalWidth = getTotalWidthInPixels(editor) |> float_of_int;
+  let totalWidth = getTotalWidthInPixels(editor);
   let x = totalWidth *. pixelX /. float_of_int(pixelWidth);
 
   let totalHeight = getTotalHeightInPixels(editor) |> float_of_int;
