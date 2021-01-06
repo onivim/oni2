@@ -258,6 +258,7 @@ let scrollSelectedToBottom = model => {
 let scrollSelectedToCenter = model => {
   model
   |> setScrollY(
+       ~allowOverscroll=true,
        ~scrollY=
          float(
            model.selected
