@@ -191,9 +191,12 @@ let set = (~searchText=?, items, model) => {
 };
 
 let setScrollY = (~scrollY, model) => {
-  // Allow for overscroll such that the very last item is visible
-  let countMinusOne = max(0, Array.length(model.items) - 1);
-  let maxScroll = float(countMinusOne * model.rowHeight);
+  let visibleCount =
+    max(
+      0,
+      Array.length(model.items) - model.viewportHeight / model.rowHeight,
+    );
+  let maxScroll = float(visibleCount * model.rowHeight);
   let minScroll = 0.;
 
   let newScrollY = FloatEx.clamp(scrollY, ~hi=maxScroll, ~lo=minScroll);
