@@ -190,13 +190,19 @@ let set = (~searchText=?, items, model) => {
   {...model, searchContext, items} |> setSelected(~selected=model.selected);
 };
 
-let setScrollY = (~scrollY, model) => {
-  let visibleCount =
-    max(
-      0,
-      Array.length(model.items) - model.viewportHeight / model.rowHeight,
-    );
-  let maxScroll = float(visibleCount * model.rowHeight);
+let setScrollY = (~allowOverscroll=false, ~scrollY, model) => {
+  let maxScroll =
+    if (allowOverscroll) {
+      let minusOneCount = max(0, Array.length(model.items) - 1);
+      float(minusOneCount * model.rowHeight);
+    } else {
+      let visibleCount =
+        max(
+          0,
+          Array.length(model.items) - model.viewportHeight / model.rowHeight,
+        );
+      float(visibleCount * model.rowHeight);
+    };
   let minScroll = 0.;
 
   let newScrollY = FloatEx.clamp(scrollY, ~hi=maxScroll, ~lo=minScroll);
@@ -226,7 +232,10 @@ let setScrollAlignment = (~maybeAlignment, model) => {
 
 let scrollSelectedToTop = model => {
   model
-  |> setScrollY(~scrollY=float(model.selected * model.rowHeight))
+  |> setScrollY(
+       ~allowOverscroll=true,
+       ~scrollY=float(model.selected * model.rowHeight),
+     )
   |> setScrollAlignment(~maybeAlignment=Some(`Top))
   |> enableScrollAnimation;
 };
@@ -234,6 +243,7 @@ let scrollSelectedToTop = model => {
 let scrollSelectedToBottom = model => {
   model
   |> setScrollY(
+       ~allowOverscroll=true,
        ~scrollY=
          float(
            model.selected
