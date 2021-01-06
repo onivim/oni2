@@ -126,6 +126,13 @@ let runTest =
 
   Vim.init();
   Oni2_KeyboardLayout.init();
+  Log.infof(m =>
+    m(
+      "Keyboard Language: %s Layout: %s",
+      Oni2_KeyboardLayout.getCurrentLanguage(),
+      Oni2_KeyboardLayout.getCurrentLayout(),
+    )
+  );
 
   let initialBuffer = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =

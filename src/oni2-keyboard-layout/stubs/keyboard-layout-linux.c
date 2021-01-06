@@ -103,8 +103,7 @@ CAMLprim value oni2_KeyboardLayoutInit() {
 
 void oni2_priv_GetCurrentKeyboardLayout(char *layout) {
   XkbRF_VarDefsRec vdr;
-  char *tmp;
-  if (XkbRF_GetNamesProp(xDisplay, &tmp, &vdr) && vdr.layout) {
+  if (XkbRF_GetNamesProp(xDisplay, NULL, &vdr) && vdr.layout) {
     XkbStateRec xkbState;
     XkbGetState(xDisplay, XkbUseCoreKbd, &xkbState);
 
@@ -112,6 +111,24 @@ void oni2_priv_GetCurrentKeyboardLayout(char *layout) {
       sprintf(layout, "%s,%s[%d]", vdr.layout, vdr.variant, xkbState.group);
     } else {
       sprintf(layout, "%s[%d]", vdr.layout, xkbState.group);
+    }
+
+    // TODO: Is there an actual unitializer for XkbRF_VarDefsRec?
+    // Looks like we have to manually free this fields...
+    if (vdr.variant) {
+      free(vdr.variant);
+    }
+
+    if (vdr.layout) {
+      free(vdr.layout);
+    }
+
+    if (vdr.options) {
+      free(vdr.options);
+    }
+
+    if (vdr.model) {
+      free(vdr.model);
     }
   } else {
     layout[0] = '\0';
