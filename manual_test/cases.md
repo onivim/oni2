@@ -142,3 +142,37 @@ __Pass:__
 - [ ] Win
 - [ ] OSX
 - [ ] Linux
+
+## 7.2 Leader Key
+
+Regression test for #2935
+
+Prerequisite:
+- Set `vim.leader` to `"<space>"` in configuration
+- Add keybinding `{ "key": "<leader>p", "command": "workbench.action.quickOpen", "when": "!insertMode && editorTextFocus" }`
+
+- Run Onivim 2
+- Press `<space>` and then `p` in editor surface
+- Verify quick open shows
+
+__Pass:__
+- [ ] Windows
+- [ ] OSX
+- [ ] LInux
+
+## 7.3 Japanese / Romanji layout
+
+Regression test for #2924
+
+Prerequisite:
+- Install Romanji keyboard layout
+
+- Switch keyboard layout to Romanji
+- Run Onivim 2
+- Verify can open quickopen menu (Command+P/Control+P)
+- Verify can enter insert mode and type text
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux

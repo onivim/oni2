@@ -392,10 +392,21 @@ let configurationChanged = (~config, model) => {
     ),
 };
 
-let cursorMoved = (~previous, ~current, model) => {
+let cursorMoved = (~maybeBuffer, ~previous, ~current, model) => {
   let completion =
     Completion.cursorMoved(~previous, ~current, model.completion);
-  {...model, completion};
+
+  let documentHighlights =
+    maybeBuffer
+    |> Option.map(buffer =>
+         DocumentHighlights.cursorMoved(
+           ~buffer,
+           ~cursor=current,
+           model.documentHighlights,
+         )
+       )
+    |> Option.value(~default=model.documentHighlights);
+  {...model, completion, documentHighlights};
 };
 
 let startInsertMode = model => {
@@ -631,6 +642,7 @@ let sub =
 
   let documentHighlightsSub =
     OldHighlights.sub(
+      ~isInsertMode,
       ~config,
       ~buffer=activeBuffer,
       ~location=activePosition,
