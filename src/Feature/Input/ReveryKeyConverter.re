@@ -136,6 +136,7 @@ let reveryKeyToKeyPress =
            ~key,
            ~modifiers={shift, control, alt, meta, altGr},
          )
-       });
+       })
+    |> Option.map(key => EditorInput.KeyCandidate.ofKeyPress(key));
   };
 };
