@@ -284,7 +284,52 @@ let removeWindowsNewLines = s =>
   |> List.map(c => String.make(1, c))
   |> String.concat("");
 
+let%test_module "removeWindowsNewLines" = (module {
+  let%test "empty" = {
+    removeWindowsNewLines("") == ""
+  };
+  let%test "just \r" = {
+    removeWindowsNewLines("\r") == "";
+  };
+  let%test "part of a newline" = {
+    removeWindowsNewLines("a\r\nb")== "a\nb";
+  }
+
+  let%test "very large string" = {
+    let size = 100 * 1024 * 1024;
+    let str = String.make(size, 'a')
+    removeWindowsNewLines(str) == "";
+  }
+});
+
 let splitNewLines = s => s |> String.split_on_char('\n') |> Array.of_list;
+
+let%test_module "splitNewLines" = (module {
+  let%test "empty" = {
+    splitNewLines("") == [|""|];
+  };
+  let%test "single line" = {
+    splitNewLines("abc") == [|"abc"|];
+  };
+  let%test "multiple lines, LF" = {
+    splitNewLines("abc\ndef") == [|"abc", "def"|];
+  }
+
+  let%test "multiple lines, ending with newline, LF" = {
+    splitNewLines("abc\ndef\n") == [|"abc", "def", ""|];
+  }
+
+  // TODO:
+  // let%test "multiple lines, ending with newline, CRLF" = {
+  //   splitNewLines("abc\r\ndef\r\n") == [|"abc", "def", ""|];
+  // }
+
+  let%test "very large string, LF" = {
+    let size = 100 * 1024 * 1024;
+    let str = String.make(size, '\n')
+    splitNewLines(str) == Array.make(size + 1, "");
+  }
+});
 
 let removeTrailingNewLine = s => {
   let len = String.length(s);
