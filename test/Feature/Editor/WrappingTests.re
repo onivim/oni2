@@ -30,8 +30,80 @@ let (_, aWidth) =
   |> BufferLine.getPixelPositionAndWidth(~index=CharacterIndex.zero);
 
 describe("Wrapping", ({describe, _}) => {
-  describe("nowrap", ({test, _}) => {
+  describe("nowrap", ({describe, test, _}) => {
     let wrap = WordWrap.none;
+    describe("maxLengthInPixels", ({test, _}) => {
+      test("correct for empty buffer", ({expect, _}) => {
+        let buffer = makeBuffer([||]) |> EditorBuffer.ofBuffer;
+        let wrapping = Wrapping.make(~wrap, ~buffer);
+
+        let pixelWidth = Wrapping.maxLineLengthInPixels(wrapping);
+        expect.float(pixelWidth).toBeCloseTo(0.0);
+      });
+      test("correct for single line", ({expect, _}) => {
+        let buffer = makeBuffer([|"aaa"|]) |> EditorBuffer.ofBuffer;
+        let wrapping = Wrapping.make(~wrap, ~buffer);
+
+        let pixelWidth = Wrapping.maxLineLengthInPixels(wrapping);
+        expect.float(pixelWidth).toBeCloseTo(3.0 *. aWidth);
+      });
+      test("chooses max", ({expect, _}) => {
+        let buffer =
+          makeBuffer([|"a", "aaaa", "aa"|]) |> EditorBuffer.ofBuffer;
+        let wrapping = Wrapping.make(~wrap, ~buffer);
+
+        let pixelWidth = Wrapping.maxLineLengthInPixels(wrapping);
+        expect.float(pixelWidth).toBeCloseTo(4.0 *. aWidth);
+      });
+      test("update: max increases", ({expect, _}) => {
+        let startBuffer = makeBuffer([|"aaa"|]);
+
+        let wrapping =
+          Wrapping.make(~wrap, ~buffer=startBuffer |> EditorBuffer.ofBuffer);
+
+        let update =
+          BufferUpdate.{
+            id: 0,
+            startLine: LineNumber.ofZeroBased(0),
+            endLine: LineNumber.ofZeroBased(1),
+            lines: [|"aaaa"|],
+            isFull: false,
+            version: 999,
+          };
+
+        let newBuffer =
+          Buffer.update(startBuffer, update) |> EditorBuffer.ofBuffer;
+
+        let wrapping' = Wrapping.update(~update, ~newBuffer, wrapping);
+
+        let pixelWidth = Wrapping.maxLineLengthInPixels(wrapping');
+        expect.float(pixelWidth).toBeCloseTo(4.0 *. aWidth);
+      });
+      test("update: max decreases", ({expect, _}) => {
+        let startBuffer = makeBuffer([|"aaa"|]);
+
+        let wrapping =
+          Wrapping.make(~wrap, ~buffer=startBuffer |> EditorBuffer.ofBuffer);
+
+        let update =
+          BufferUpdate.{
+            id: 0,
+            startLine: LineNumber.ofZeroBased(0),
+            endLine: LineNumber.ofZeroBased(1),
+            lines: [|"aa"|],
+            isFull: false,
+            version: 999,
+          };
+
+        let newBuffer =
+          Buffer.update(startBuffer, update) |> EditorBuffer.ofBuffer;
+
+        let wrapping' = Wrapping.update(~update, ~newBuffer, wrapping);
+
+        let pixelWidth = Wrapping.maxLineLengthInPixels(wrapping');
+        expect.float(pixelWidth).toBeCloseTo(2.0 *. aWidth);
+      });
+    });
     let wrapping = Wrapping.make(~wrap, ~buffer=simpleAsciiBuffer);
     test("bufferLineByteToViewLine", ({expect, _}) => {
       expect.int(

@@ -87,6 +87,21 @@ __Pass:__
 - [ ] OSX
 - [ ] Linux
 
+## 4.2 Verify horizontal scroll
+
+- Turn off wrapping `:set nowrap`
+- Open Onivim 2
+- Open EULA file
+- Validate can scroll to edge, and the scroll is aligned with max line length
+
+- Turn on wrapping `:set wrap`
+- Validate can no longer scroll horizontally, and no text overflows
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
 # 5. File Preview
 
 ## 5.1 Validate File Preview from explorer
