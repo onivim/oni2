@@ -175,7 +175,11 @@ describe("Keybindings", ({describe, _}) => {
                  ~config=Oni_Core.Config.emptyResolver,
                  ~scancode=1,
                  ~context=contextWithEditorTextFocus,
-                 ~key=EditorInput.(KeyPress.PhysicalKey({key, modifiers}) |> KeyCandidate.ofKeyPress),
+                 ~key=
+                   EditorInput.(
+                     KeyPress.PhysicalKey({key, modifiers})
+                     |> KeyCandidate.ofKeyPress
+                   ),
                  input,
                );
              expect.equal(effects, [Execute(NamedCommand(cmd))]);
