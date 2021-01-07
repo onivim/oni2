@@ -196,7 +196,11 @@ module Make = (Config: {
       switch (keyMatcher) {
       | KeyPress.SpecialKey(Leader) =>
         switch (leaderKey) {
-        | None => false
+        | None =>
+          KeyCandidate.exists(
+            ~f=key => KeyPress.equals(KeyPress.SpecialKey(Leader), key),
+            keyCandidates,
+          )
         | Some(leaderKey) =>
           KeyCandidate.exists(
             ~f=key => KeyPress.equals(KeyPress.PhysicalKey(leaderKey), key),
