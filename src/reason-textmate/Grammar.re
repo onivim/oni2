@@ -14,14 +14,15 @@ type t = {
 
 type grammarRepository = string => option(t);
 
-let getScopeName = (v: t) => v.scopeName;
+let getScopeName = ({scopeName, _}) => scopeName;
 
-let getScope = (repo: grammarRepository, grammarScope, scope: string, v: t) => {
+let getScope =
+    (repo: grammarRepository, grammarScope, scope: string, grammar: t) => {
   let len = String.length(scope);
 
   let grammar =
-    if (String.equal(grammarScope, v.scopeName)) {
-      Some(v);
+    if (String.equal(grammarScope, grammar.scopeName)) {
+      Some(grammar);
     } else {
       repo(grammarScope);
     };
@@ -29,10 +30,19 @@ let getScope = (repo: grammarRepository, grammarScope, scope: string, v: t) => {
   switch (grammar) {
   | Some(g) =>
     if (len > 0 && scope.[0] == '#') {
-      StringMap.find_opt(scope, g.repository);
+      // A named reference, like `#comments` - let's try and find it from the current grammar repository.
+      StringMap.find_opt(
+        scope,
+        g.repository,
+      );
+    } else if (scope == "$self" || scope == "$base") {
+      // '$self' or '$base' just return the current grammar patterns
+      Some(
+        g.patterns,
+      );
     } else {
-      // This is implicity '$self'
-      Some(g.patterns);
+      // An external reference, like `text.html.javadoc` - let's see if the repository has it.
+      repo(scope) |> Option.map(grammar => grammar.patterns);
     }
   | None => None
   };

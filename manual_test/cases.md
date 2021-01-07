@@ -87,6 +87,21 @@ __Pass:__
 - [ ] OSX
 - [ ] Linux
 
+## 4.2 Verify horizontal scroll
+
+- Turn off wrapping `:set nowrap`
+- Open Onivim 2
+- Open EULA file
+- Validate can scroll to edge, and the scroll is aligned with max line length
+
+- Turn on wrapping `:set wrap`
+- Validate can no longer scroll horizontally, and no text overflows
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
 # 5. File Preview
 
 ## 5.1 Validate File Preview from explorer
@@ -137,6 +152,40 @@ Prerequisite:
 - Enter insert mode (`i`)
 - Type `ü` (on english keyboard: `[`)
 - Verify character shows
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 7.2 Leader Key
+
+Regression test for #2935
+
+Prerequisite:
+- Set `vim.leader` to `"<space>"` in configuration
+- Add keybinding `{ "key": "<leader>p", "command": "workbench.action.quickOpen", "when": "!insertMode && editorTextFocus" }`
+
+- Run Onivim 2
+- Press `<space>` and then `p` in editor surface
+- Verify quick open shows
+
+__Pass:__
+- [ ] Windows
+- [ ] OSX
+- [ ] LInux
+
+## 7.3 Japanese / Romanji layout
+
+Regression test for #2924
+
+Prerequisite:
+- Install Romanji keyboard layout
+
+- Switch keyboard layout to Romanji
+- Run Onivim 2
+- Verify can open quickopen menu (Command+P/Control+P)
+- Verify can enter insert mode and type text
 
 __Pass:__
 - [ ] Win

@@ -63,6 +63,22 @@ describe("Grammar", ({describe, _}) => {
   });
 
   describe("xml parsing", ({test, _}) => {
+    test("regression test #2933: vala grammar", ({expect, _}) => {
+      let gr =
+        Grammar.Xml.of_file(getExecutingDirectory() ++ "/vala.tmLanguage");
+      switch (gr) {
+      | Ok(grammar) =>
+        expect.string(Grammar.getScopeName(grammar)).toEqual("source.vala");
+        let (tokens, _) =
+          Grammar.tokenize(
+            ~grammarRepository,
+            ~grammar,
+            "class Activity: GLib.Object",
+          );
+        List.iter(t => prerr_endline(Token.show(t)), tokens);
+      | _ => failwith("Unable to load grammar")
+      };
+    });
     test("json grammar", ({expect, _}) => {
       let result =
         Grammar.Xml.of_file(getExecutingDirectory() ++ "/json.json");

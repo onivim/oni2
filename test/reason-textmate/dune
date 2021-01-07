@@ -11,4 +11,4 @@
 (install
  (section bin)
  (package OniUnitTestRunner)
- (files json.json haskell.tmLanguage lua.tmLanguage))
+ (files json.json haskell.tmLanguage lua.tmLanguage vala.tmLanguage))

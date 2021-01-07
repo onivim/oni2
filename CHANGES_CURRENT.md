@@ -1,4 +1,4 @@
-### Features
+### Features 
 
 - #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
 - #2889 - Extensions: Include HTML, JSON, PHP, and Markdown language servers
@@ -31,17 +31,24 @@
 - #2628 - Input: Right arrow key treated as PageUp
 - #2929 - Input: Fix intermittent crash when scrolling with the mouse (fixes #2919)
 - #2927 - Input: Windows - fix crash in entering Unicode character (fixes #2926)
+- #2938 - Input: OSX - Modifier keys not working on Romaji keyboard (fixes #2924)
+- #2941 - Input: Fix handling of `<space>` as leader key (fixes #2935)
+- #2944 - Components: Remove overscroll in `VimList`
+- #2942 - TextMate: Fix infinite loop with vala grammar (fixes #2933)
+- #2937 - Editor: Fix bugs around horizontal scrolling (fixes #1544, #2914)
 - #2898 - Editor: Implement mouse selection (fixes #537)
 
 ### Performance
 
 - #2852,#2864 - Performance: Batch editor / codelens animations
 - #2901 - Bundle Size: Remove unused Selawik and Inconsolata fonts
+- #2932 - Language Features: Debounce high-frequency subscriptions
 
 ### Documentation
 
 - #2874 - Languages: Fix extension ids for `exuberant-ctags` and `clangd` (fixes #2872)
 - #2893 - Building: Add Xorg dependencies for Linux (thanks @marcinkoziej!)
+- #2939 - Release: Document monthly release process
 
 ### Infrastructure / Refactoring
 
