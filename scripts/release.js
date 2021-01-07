@@ -118,7 +118,7 @@ const updateIcon = (rcedit, exe, iconFile) => {
 }
 
 if (process.platform == "linux") {
-    const result = cp.spawnSync("esy", ["scripts/linux/package-linux.sh"], {
+    const result = cp.spawnSync("esy", ["bash", "-c", "scripts/linux/package-linux.sh"], {
         cwd: process.cwd(),
         env: process.env,
         stdio: "inherit",
