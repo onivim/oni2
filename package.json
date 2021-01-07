@@ -267,7 +267,7 @@
     "flex": "bryphe/flex#5e19b05"
   },
   "devDependencies": {
-    "ocaml": "4.10.0",
+    "ocaml": "~4.10",
     "reperf": "^1.5.0",
     "fs-extra": "7.0.1",
     "lodash": "*",

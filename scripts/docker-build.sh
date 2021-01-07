@@ -11,9 +11,8 @@ export ESY__FETCH_CONCURRENCY=1
 
 esy install 
 esy build 
-esy run-script bootstrap
 node install-node-deps.js --production
-esy x  Oni2 -f --checkhealth
+esy run-script bootstrap
 
 esy @test install 
 esy @test build 
@@ -22,5 +21,5 @@ esy @test run-script inline
 
 esy @release install 
 esy @release build 
-esy @release x Oni2 -f --checkhealth
+esy @release x Oni2 --version
 esy @release run-script create
