@@ -174,10 +174,13 @@ let reveryKeyToKeyPress =
         (altGr, ctrlKey, altKey);
       | _ => (altGr, control, alt)
       };
+    let modifiers = EditorInput.Modifiers.{shift, control, alt, meta, altGr};
 
     keycode
     |> Internal.tryToGetSpecialKey
-    |> Option.map(key => [key])
+    |> Option.map(key =>
+         [EditorInput.KeyPress.physicalKey(~key, ~modifiers)]
+       )
     |> OptionEx.or_lazy(() => {
          Internal.tryToGetCharacterFromKey(
            ~shift,
@@ -188,6 +191,6 @@ let reveryKeyToKeyPress =
            ~scancode,
          )
        })
-    |> Option.map(keys => EditorInput.KeyCandidate.ofKeyPress(keys));
+    |> Option.map(keys => EditorInput.KeyCandidate.ofList(keys));
   };
 };

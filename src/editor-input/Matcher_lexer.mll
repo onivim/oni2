@@ -60,6 +60,8 @@
 	"numpad_multiply", BINDING(Physical(NumpadMultiply));
 	"leader", BINDING(Special(Leader));
 	"plug", BINDING(Special(Plug));
+	"lt", BINDING(Physical(Character('<')));
+	"gt", BINDING(Physical(Character('>')));
 	]
 }
 
