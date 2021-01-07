@@ -308,13 +308,13 @@ let%test_module "removeWindowsNewLines" =
      };
 
      let%test "very large string, without CR" = {
-       let size = 100 * 1024 * 1024;
+       let size = 10 * 1024 * 1024;
        let str = String.make(size, 'a');
        removeWindowsNewLines(str) == str;
      };
 
      let%test "very large string, with CR" = {
-       let size = 100 * 1024 * 1024;
+       let size = 10 * 1024 * 1024;
        let str = String.make(size, '\r');
        removeWindowsNewLines(str) == "";
      };
@@ -340,7 +340,7 @@ let%test_module "splitNewLines" =
      };
 
      let%test "very large string, LF" = {
-       let size = 100 * 1024 * 1024;
+       let size = 10 * 1024 * 1024;
        let str = String.make(size, '\n');
        splitNewLines(str) == Array.make(size + 1, "");
      };
