@@ -128,10 +128,21 @@ module Button = {
   let secondaryHoverBackground =
     define(
       "button.secondaryHoverBackground",
-      {dark: ref(secondaryBackground), light: ref(secondaryBackground), hc: unspecified},
+      {
+        dark: ref(secondaryBackground),
+        light: ref(secondaryBackground),
+        hc: unspecified,
+      },
     );
 
-  let defaults = [background, foreground, hoverBackground, secondaryForeground, secondaryBackground, secondaryHoverBackground];
+  let defaults = [
+    background,
+    foreground,
+    hoverBackground,
+    secondaryForeground,
+    secondaryBackground,
+    secondaryHoverBackground,
+  ];
 };
 
 module Dropdown = {

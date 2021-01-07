@@ -276,8 +276,19 @@ let%component make =
                 };
               } else {
                 Model.isInstalling(~extensionId, model)
-                  ? <progressButton theme extensionId title="Installing" font />
-                  : <installButton theme extensionId dispatch font extensionId />;
+                  ? <progressButton
+                      theme
+                      extensionId
+                      title="Installing"
+                      font
+                    />
+                  : <installButton
+                      theme
+                      extensionId
+                      dispatch
+                      font
+                      extensionId
+                    />;
               };
 
             <ItemView
