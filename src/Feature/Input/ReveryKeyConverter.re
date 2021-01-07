@@ -80,10 +80,11 @@ module Internal = {
        })
     |> OptionEx.tapNone(() => Log.info("No keymap for key"))
     |> OptionEx.flatMap((keymap: Oni2_KeyboardLayout.Keymap.entry) => {
-         let modifiers = {shift, control, alt, meta, altGr};
          open EditorInput;
          open KeyPress;
+         open Modifiers;
 
+         let modifiers = {shift, control, alt, meta, altGr};
          let defaultCandidate =
            keymap.unmodified
            |> stringToKey
