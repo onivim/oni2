@@ -62,6 +62,7 @@
 	"plug", BINDING(Special(Plug));
 	"lt", BINDING(Physical(Character('<')));
 	"gt", BINDING(Physical(Character('>')));
+	"plus", BINDING(Physical(Character('+')));
 	]
 }
 
