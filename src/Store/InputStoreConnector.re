@@ -260,11 +260,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
-          event
-          |> reveryKeyToEditorKey
-          |> Option.iter(key => {
-               dispatch(Actions.KeyUp({time, scancode: event.scancode}))
-             });
+          dispatch(Actions.KeyUp({time, scancode: event.scancode}))
         },
       );
 
