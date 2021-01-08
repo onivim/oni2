@@ -20,12 +20,13 @@ runTest(
         EditorInput.KeyPress.physicalKey(
           ~key,
           ~modifiers=EditorInput.Modifiers.none,
-        );
+        )
+        |> EditorInput.KeyCandidate.ofKeyPress;
       let time = Revery.Time.now();
 
       dispatch(KeyDown({key: keyPress, scancode: 1, time}));
       //dispatch(TextInput(key));
-      dispatch(KeyUp({key: keyPress, scancode: 1, time}));
+      dispatch(KeyUp({scancode: 1, time}));
     };
 
     wait(~name="Initial sanity check", (state: State.t) => {

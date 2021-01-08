@@ -34,6 +34,7 @@ let make =
              codeFontFamily
              headerMargin=16
              baseFontSize=12.
+             codeBlockFontSize=12.
            />
          | FileContentsDownloader.DownloadFailed({errorMsg}) =>
            <Text text=errorMsg />

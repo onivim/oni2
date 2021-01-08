@@ -5,11 +5,25 @@ module Log = (val Log.withNamespace("Oni2.Feature.Input"));
 // TODO: Move to Service_Input
 module ReveryKeyConverter = ReveryKeyConverter;
 
-let keyPressToString =
-  EditorInput.KeyPress.toString(
-    ~meta="Meta",
-    ~keyToString=EditorInput.Key.toString,
+let keyPressToString = key => {
+  key
+  |> EditorInput.KeyPress.toString(
+       ~meta="Meta",
+       ~keyToString=EditorInput.Key.toString,
+     );
+};
+
+let keyCandidateToString = keyCandidate => {
+  keyCandidate
+  |> EditorInput.KeyCandidate.toList
+  // TODO: Alternate strategy - maybe choose shortest option from list?
+  |> (
+    list =>
+      List.nth_opt(list, 0)
+      |> Option.map(keyPressToString)
+      |> Option.value(~default="?Unknown key?")
   );
+};
 
 // CONFIGURATION
 module Configuration = {
@@ -258,7 +272,7 @@ type effect =
     | Execute(InputStateMachine.command)
     | Text(string)
     | Unhandled({
-        key: EditorInput.KeyPress.t,
+        key: EditorInput.KeyCandidate.t,
         isProducedByRemap: bool,
       })
     | RemapRecursionLimitHit;
@@ -288,7 +302,7 @@ let keyDown =
     |> Option.map(kd => {
          KeyDisplayer.keyPress(
            ~time=Revery.Time.toFloatSeconds(time),
-           keyPressToString(key),
+           keyCandidateToString(key),
            kd,
          )
        });

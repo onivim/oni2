@@ -73,14 +73,16 @@ module Rating = {
   };
 };
 
-let installButton = (~font, ~extensionId, ~dispatch, ()) => {
+let installButton = (~theme, ~font, ~extensionId, ~dispatch, ()) => {
+  let backgroundColor = Colors.Button.background.from(theme);
+  let color = Colors.Button.foreground.from(theme);
   <View style=Styles.headerButton>
     <ItemView.ActionButton
       font
       title="Install"
       extensionId
-      backgroundColor=Revery.Colors.green
-      color=Revery.Colors.white
+      backgroundColor
+      color
       onAction={() =>
         dispatch(Model.InstallExtensionClicked({extensionId: extensionId}))
       }
@@ -88,14 +90,16 @@ let installButton = (~font, ~extensionId, ~dispatch, ()) => {
   </View>;
 };
 
-let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
+let uninstallButton = (~theme, ~font, ~extensionId, ~dispatch, ()) => {
+  let backgroundColor = Colors.Button.background.from(theme);
+  let color = Colors.Button.foreground.from(theme);
   <View style=Styles.headerButton>
     <ItemView.ActionButton
       font
       title="Uninstall"
       extensionId
-      backgroundColor=Revery.Colors.green
-      color=Revery.Colors.white
+      backgroundColor
+      color
       onAction={() =>
         dispatch(Model.UninstallExtensionClicked({extensionId: extensionId}))
       }
@@ -103,14 +107,16 @@ let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
   </View>;
 };
 
-let updateButton = (~font, ~extensionId, ~dispatch, ()) => {
+let updateButton = (~theme, ~font, ~extensionId, ~dispatch, ()) => {
+  let backgroundColor = Colors.Button.secondaryBackground.from(theme);
+  let color = Colors.Button.secondaryForeground.from(theme);
   <View style=Styles.headerButton>
     <ItemView.ActionButton
       font
       title="Update"
       extensionId
-      backgroundColor=Revery.Colors.green
-      color=Revery.Colors.white
+      backgroundColor
+      color
       onAction={() =>
         dispatch(Model.UpdateExtensionClicked({extensionId: extensionId}))
       }
@@ -118,14 +124,16 @@ let updateButton = (~font, ~extensionId, ~dispatch, ()) => {
   </View>;
 };
 
-let setThemeButton = (~font, ~extensionId, ~dispatch, ()) => {
+let setThemeButton = (~theme, ~font, ~extensionId, ~dispatch, ()) => {
+  let backgroundColor = Colors.Button.secondaryBackground.from(theme);
+  let color = Colors.Button.secondaryForeground.from(theme);
   <View style=Styles.headerButton>
     <ItemView.ActionButton
       font
       title="Set Theme"
       extensionId
-      backgroundColor=Revery.Colors.green
-      color=Revery.Colors.white
+      backgroundColor
+      color
       onAction={() =>
         dispatch(Model.SetThemeClicked({extensionId: extensionId}))
       }
@@ -161,17 +169,17 @@ let header =
   let buttons =
     switch (isInstalled, hasThemes) {
     | (true, true) => [
-        <setThemeButton font extensionId dispatch />,
-        <uninstallButton font extensionId dispatch />,
+        <setThemeButton theme font extensionId dispatch />,
+        <uninstallButton theme font extensionId dispatch />,
       ]
-    | (true, false) => [<uninstallButton font extensionId dispatch />]
-    | _ => [<installButton font extensionId dispatch />]
+    | (true, false) => [<uninstallButton theme font extensionId dispatch />]
+    | _ => [<installButton theme font extensionId dispatch />]
     };
 
   // Tack on an update button, if available...
   let buttons' =
     if (isInstalled && Model.isUpdateAvailable(~extensionId, model)) {
-      [<updateButton font extensionId dispatch />, ...buttons];
+      [<updateButton theme font extensionId dispatch />, ...buttons];
     } else {
       buttons;
     };

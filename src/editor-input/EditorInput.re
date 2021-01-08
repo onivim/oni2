@@ -1,4 +1,5 @@
 module Key = Key;
+module KeyCandidate = KeyCandidate;
 module Modifiers = Modifiers;
 module Matcher = Matcher;
 module KeyPress = KeyPress;
@@ -37,7 +38,7 @@ module type Input = {
     | Execute(command)
     | Text(string)
     | Unhandled({
-        key: KeyPress.t,
+        key: KeyCandidate.t,
         isProducedByRemap: bool,
       })
     | RemapRecursionLimitHit;
@@ -47,7 +48,7 @@ module type Input = {
       ~leaderKey: option(PhysicalKey.t)=?,
       ~context: context,
       ~scancode: int,
-      ~key: KeyPress.t,
+      ~key: KeyCandidate.t,
       t
     ) =>
     (t, list(effect));
@@ -65,7 +66,7 @@ module type Input = {
     (~leaderKey: option(PhysicalKey.t), ~context: context, t) =>
     list((Matcher.t, command));
 
-  let consumedKeys: t => list(KeyPress.t);
+  let consumedKeys: t => list(KeyCandidate.t);
 
   let remove: (uniqueId, t) => t;
 
@@ -109,7 +110,7 @@ module Make = (Config: {
     | Execute(command)
     | Text(string)
     | Unhandled({
-        key: KeyPress.t,
+        key: KeyCandidate.t,
         isProducedByRemap: bool,
       })
     | RemapRecursionLimitHit;
@@ -137,7 +138,7 @@ module Make = (Config: {
   type keyDownId = int;
 
   type gesture =
-    | Down(keyDownId, KeyPress.t)
+    | Down(keyDownId, KeyCandidate.t)
     | AllKeysReleased;
 
   type textEntry = {
@@ -188,14 +189,30 @@ module Make = (Config: {
        );
   };
 
-  let keyMatches = (~leaderKey, keyMatcher, key: gesture) => {
-    switch (keyMatcher, key) {
-    | (KeyPress.SpecialKey(Leader), Down(_id, KeyPress.PhysicalKey(key))) =>
-      switch (leaderKey) {
-      | None => false
-      | Some(leaderKey) => leaderKey == key
+  let keyMatches =
+      (~leaderKey: option(PhysicalKey.t), keyMatcher, key: gesture) => {
+    switch (key) {
+    | Down(_id, keyCandidates) =>
+      switch (keyMatcher) {
+      | KeyPress.SpecialKey(Leader) =>
+        switch (leaderKey) {
+        | None =>
+          KeyCandidate.exists(
+            ~f=key => KeyPress.equals(KeyPress.SpecialKey(Leader), key),
+            keyCandidates,
+          )
+        | Some(leaderKey) =>
+          KeyCandidate.exists(
+            ~f=key => KeyPress.equals(KeyPress.PhysicalKey(leaderKey), key),
+            keyCandidates,
+          )
+        }
+      | keyPress =>
+        KeyCandidate.exists(
+          ~f=key => KeyPress.equals(key, keyPress),
+          keyCandidates,
+        )
       }
-    | (keyPress, Down(_id, key)) => KeyPress.equals(keyPress, key)
     | _ => false
     };
   };
@@ -554,13 +571,13 @@ module Make = (Config: {
         ~leaderKey,
         ~recursionDepth,
         ~context,
-        ~keys,
+        ~keys: list(KeyCandidate.t),
         bindings,
       ) => {
     let (bindings', effects') =
       keys
       |> List.fold_left(
-           (acc, key) => {
+           (acc, key: KeyCandidate.t) => {
              let gesture = Down(KeyDownId.get(), key);
              let (bindings, effs) = acc;
              let (bindings', effects') =
@@ -625,13 +642,15 @@ module Make = (Config: {
                 bindings,
               );
 
+            let candidates = keys |> List.map(KeyCandidate.ofKeyPress);
+
             // Run all the new keys
             runRemappedKeys(
               ~allowRecursive=allowRemaps && allowRecursive,
               ~leaderKey,
               ~recursionDepth=recursionDepth + 1,
               ~context,
-              ~keys,
+              ~keys=candidates,
               {...rewindBindings, suppressText: true},
             );
           | Dispatch(command) =>
@@ -671,13 +690,7 @@ module Make = (Config: {
 
   let keyDown = (~leaderKey=None, ~context, ~scancode, ~key, bindings) => {
     let id = KeyDownId.get();
-    let pressedScancodes =
-      // key
-      // |> KeyPress.toPhysicalKey
-      // |> Option.map((key: PhysicalKey.t) => {
-      IntSet.add(scancode, bindings.pressedScancodes);
-    // })
-    // |> Option.value(~default=bindings.pressedScancodes);
+    let pressedScancodes = IntSet.add(scancode, bindings.pressedScancodes);
 
     handleKeyCore(
       ~allowRemaps=true,
