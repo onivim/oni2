@@ -5,6 +5,7 @@
 - #2849 - UX: Initial menu bar on Windows / Linux (fixes #1255)
 - #2596 - Editor: File preview when clicking on files (thanks @fanantoxa!)
 - #2755 - Editor: Implement customizable font-weight (fixes #1573, thanks @marcagba!)
+- #2969 - UX: Menu bar integration on OSX
 
 ### Bug Fixes
 
