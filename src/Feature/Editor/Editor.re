@@ -1881,8 +1881,16 @@ let isMousePressedNearBottom = ({lastMouseScreenPosition, pixelHeight, _}) => {
 let isMousePressedNearLeftEdge = ({lastMouseScreenPosition, _}) => {
   lastMouseScreenPosition
   |> Option.map(({x, _}: PixelPosition.t) => {
-       prerr_endline("X: " ++ string_of_float(x));
-       int_of_float(x) < Constants.mouseAutoScrollBorder;
+       int_of_float(x) < Constants.mouseAutoScrollBorder
+     })
+  |> Option.value(~default=false);
+};
+
+let isMousePressedNearRightEdge = ({lastMouseScreenPosition, _} as editor) => {
+  let {bufferWidthInPixels, _}: EditorLayout.t = getLayout(editor);
+  lastMouseScreenPosition
+  |> Option.map(({x, _}: PixelPosition.t) => {
+       x > bufferWidthInPixels -. float(Constants.mouseAutoScrollBorder)
      })
   |> Option.value(~default=false);
 };
@@ -1906,7 +1914,7 @@ let sub = editor => {
       Some(
         Service_Time.Sub.interval(
           ~uniqueId="AutoScrollUp" ++ string_of_int(editor.editorId),
-          ~every=Revery.Time.milliseconds(50),
+          ~every=Constants.mouseAutoScrollInterval,
           ~msg=(~current as _) => {
           AutoScroll({
             deltaPixelY: (-1.) *. Constants.mouseAutoScrollSpeed,
@@ -1923,7 +1931,7 @@ let sub = editor => {
       Some(
         Service_Time.Sub.interval(
           ~uniqueId="AutoScrollDown" ++ string_of_int(editor.editorId),
-          ~every=Revery.Time.milliseconds(50),
+          ~every=Constants.mouseAutoScrollInterval,
           ~msg=(~current as _) => {
           AutoScroll({
             deltaPixelY: Constants.mouseAutoScrollSpeed,
@@ -1941,7 +1949,7 @@ let sub = editor => {
       Some(
         Service_Time.Sub.interval(
           ~uniqueId="AutoScrollLeft" ++ string_of_int(editor.editorId),
-          ~every=Revery.Time.milliseconds(50),
+          ~every=Constants.mouseAutoScrollInterval,
           ~msg=(~current as _) => {
           AutoScroll({
             deltaPixelY: 0.,
@@ -1953,9 +1961,30 @@ let sub = editor => {
       None;
     };
 
+  let maybeAutoScrollRight =
+    if (isMousePressedNearRightEdge(editor)) {
+      Some(
+        Service_Time.Sub.interval(
+          ~uniqueId="AutoScrollRight" ++ string_of_int(editor.editorId),
+          ~every=Constants.mouseAutoScrollInterval,
+          ~msg=(~current as _) => {
+          AutoScroll({
+            deltaPixelY: 0.,
+            deltaPixelX: Constants.mouseAutoScrollSpeed,
+          })
+        }),
+      );
+    } else {
+      None;
+    };
   let autoScrollSubs =
-    [maybeAutoScrollUp, maybeAutoScrollDown, maybeAutoScrollLeft]
-    |> List.filter_map(v => v);
+    [
+      maybeAutoScrollUp,
+      maybeAutoScrollDown,
+      maybeAutoScrollLeft,
+      maybeAutoScrollRight,
+    ]
+    |> List.filter_map(Fun.id);
 
   let animationSub =
     if (isYankAnimating || isInlineElementAnimating || isScrollAnimating) {
