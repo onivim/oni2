@@ -1862,33 +1862,39 @@ let update = (msg, editor) => {
   };
 };
 
-let isMousePressedNearTop = ({lastMouseScreenPosition, _}) => {
-  lastMouseScreenPosition
+let isMousePressedNearTop = ({isMouseDown, lastMouseScreenPosition, _}) => {
+  isMouseDown
+  && lastMouseScreenPosition
   |> Option.map(({y, _}: PixelPosition.t) => {
        int_of_float(y) < Constants.mouseAutoScrollBorder
      })
   |> Option.value(~default=false);
 };
 
-let isMousePressedNearBottom = ({lastMouseScreenPosition, pixelHeight, _}) => {
-  lastMouseScreenPosition
+let isMousePressedNearBottom =
+    ({isMouseDown, lastMouseScreenPosition, pixelHeight, _}) => {
+  isMouseDown
+  && lastMouseScreenPosition
   |> Option.map(({y, _}: PixelPosition.t) => {
        int_of_float(y) > pixelHeight - Constants.mouseAutoScrollBorder
      })
   |> Option.value(~default=false);
 };
 
-let isMousePressedNearLeftEdge = ({lastMouseScreenPosition, _}) => {
-  lastMouseScreenPosition
+let isMousePressedNearLeftEdge = ({isMouseDown, lastMouseScreenPosition, _}) => {
+  isMouseDown
+  && lastMouseScreenPosition
   |> Option.map(({x, _}: PixelPosition.t) => {
        int_of_float(x) < Constants.mouseAutoScrollBorder
      })
   |> Option.value(~default=false);
 };
 
-let isMousePressedNearRightEdge = ({lastMouseScreenPosition, _} as editor) => {
+let isMousePressedNearRightEdge =
+    ({isMouseDown, lastMouseScreenPosition, _} as editor) => {
   let {bufferWidthInPixels, _}: EditorLayout.t = getLayout(editor);
-  lastMouseScreenPosition
+  isMouseDown
+  && lastMouseScreenPosition
   |> Option.map(({x, _}: PixelPosition.t) => {
        x > bufferWidthInPixels -. float(Constants.mouseAutoScrollBorder)
      })
