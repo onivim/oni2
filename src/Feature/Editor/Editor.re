@@ -1881,16 +1881,17 @@ let isMousePressedNearBottom = ({lastMouseScreenPosition, pixelHeight, _}) => {
 let isMousePressedNearLeftEdge = ({lastMouseScreenPosition, _}) => {
   lastMouseScreenPosition
   |> Option.map(({x, _}: PixelPosition.t) => {
-       int_of_float(x) < Constants.mouseAutoScrollBorder;
+       int_of_float(x) < Constants.mouseAutoScrollBorder
      })
   |> Option.value(~default=false);
 };
 
 let isMousePressedNearRightEdge = ({lastMouseScreenPosition, _} as editor) => {
-  let {lineNumberWidthInPixels, bufferWidthInPixels, _}: EditorLayout.t = getLayout(editor);
+  let {bufferWidthInPixels, _}: EditorLayout.t =
+    getLayout(editor);
   lastMouseScreenPosition
   |> Option.map(({x, _}: PixelPosition.t) => {
-       x > (bufferWidthInPixels -. float(Constants.mouseAutoScrollBorder))
+       x > bufferWidthInPixels -. float(Constants.mouseAutoScrollBorder)
      })
   |> Option.value(~default=false);
 };
@@ -1978,7 +1979,12 @@ let sub = editor => {
       None;
     };
   let autoScrollSubs =
-    [maybeAutoScrollUp, maybeAutoScrollDown, maybeAutoScrollLeft, maybeAutoScrollRight]
+    [
+      maybeAutoScrollUp,
+      maybeAutoScrollDown,
+      maybeAutoScrollLeft,
+      maybeAutoScrollRight,
+    ]
     |> List.filter_map(Fun.id);
 
   let animationSub =
