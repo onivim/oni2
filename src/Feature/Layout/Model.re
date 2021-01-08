@@ -240,10 +240,7 @@ let visibleEditors = model =>
   |> List.filter_map(id => model |> activeLayout |> groupById(id))
   |> List.map(Group.selected);
 
-let activeLayoutGroups = model =>
-  model
-  |> activeLayout
-  |> groups;
+let activeLayoutGroups = model => model |> activeLayout |> groups;
 
 let editorById = (id, model) =>
   Base.List.find_map(activeLayout(model).groups, ~f=group =>

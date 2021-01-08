@@ -10,7 +10,15 @@ type panel =
   | Center
   | Bottom;
 
+module Group: {
+  type t;
+
+  let allEditors: t => list(Editor.t);
+};
+
 type model;
+
+let activeLayoutGroups: model => list(Group.t);
 
 let initial: list(Editor.t) => model;
 
