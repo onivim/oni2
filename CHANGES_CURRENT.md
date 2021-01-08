@@ -39,6 +39,7 @@
 - #2946 - SCM: Fix StackOverflow when retrieving original content for large files
 - #2954 - Markdown: explicitly set code block font size (fixes #2953)
 - #2950 - Input: Fix binding to `+` key (fixes #2293)
+- #2955 - UX: Fix hardcoded theme colors in extensions list/details
 
 ### Performance
 

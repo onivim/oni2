@@ -113,7 +113,36 @@ module Button = {
       {dark: ref(background), light: ref(background), hc: unspecified},
     );
 
-  let defaults = [background, foreground, hoverBackground];
+  let secondaryForeground =
+    define(
+      "button.secondaryForeground",
+      {dark: hex("#FFF"), light: hex("#FFF"), hc: hex("#FFF")},
+    );
+
+  let secondaryBackground =
+    define(
+      "button.secondaryBackground",
+      {dark: hex("#0E639C"), light: hex("#007ACC"), hc: unspecified},
+    );
+
+  let secondaryHoverBackground =
+    define(
+      "button.secondaryHoverBackground",
+      {
+        dark: ref(secondaryBackground),
+        light: ref(secondaryBackground),
+        hc: unspecified,
+      },
+    );
+
+  let defaults = [
+    background,
+    foreground,
+    hoverBackground,
+    secondaryForeground,
+    secondaryBackground,
+    secondaryHoverBackground,
+  ];
 };
 
 module Dropdown = {
