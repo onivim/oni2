@@ -14,15 +14,16 @@ runTest(~name="Viml Remap ; -> :", (dispatch, wait, runEffects) => {
   let input = key => {
     let modifiers = EditorInput.Modifiers.none;
 
-    let keyPress: EditorInput.KeyPress.t =
+    let keyPress =
       EditorInput.KeyPress.physicalKey(
         ~key=EditorInput.Key.Character(key),
         ~modifiers,
-      );
+      )
+      |> EditorInput.KeyCandidate.ofKeyPress;
     let time = Revery.Time.now();
 
     dispatch(Model.Actions.KeyDown({key: keyPress, scancode: 1, time}));
-    dispatch(Model.Actions.KeyUp({key: keyPress, scancode: 1, time}));
+    dispatch(Model.Actions.KeyUp({scancode: 1, time}));
     runEffects();
   };
 
