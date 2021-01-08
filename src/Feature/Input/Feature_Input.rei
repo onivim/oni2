@@ -66,7 +66,7 @@ type effect =
   | Execute(execute)
   | Text(string)
   | Unhandled({
-      key: KeyPress.t,
+      key: KeyCandidate.t,
       isProducedByRemap: bool,
     })
   | RemapRecursionLimitHit;
@@ -75,7 +75,7 @@ let keyDown:
   (
     ~config: Config.resolver,
     ~scancode: int,
-    ~key: KeyPress.t,
+    ~key: KeyCandidate.t,
     ~context: WhenExpr.ContextKeys.t,
     ~time: Revery.Time.t,
     model
@@ -99,8 +99,9 @@ let commandToAvailableBindings:
   list(list(EditorInput.KeyPress.t));
 
 let keyPressToString: EditorInput.KeyPress.t => string;
+let keyCandidateToString: EditorInput.KeyCandidate.t => string;
 
-let consumedKeys: model => list(EditorInput.KeyPress.t);
+let consumedKeys: model => list(EditorInput.KeyCandidate.t);
 
 let keyUp:
   (

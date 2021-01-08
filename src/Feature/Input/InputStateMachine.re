@@ -20,7 +20,7 @@ type effect =
     | Execute(execute)
     | Text(string)
     | Unhandled({
-        key: EditorInput.KeyPress.t,
+        key: EditorInput.KeyCandidate.t,
         isProducedByRemap: bool,
       })
     | RemapRecursionLimitHit;
