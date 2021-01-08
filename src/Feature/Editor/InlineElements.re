@@ -392,9 +392,11 @@ let clearMatching = (~key, model) => {
   let keyToElements' =
     model.keyToElements
     |> IntMap.map(keyToElements => {
-      keyToElements
-      |> StringMap.filter((keyOnLine, _v) => !StringEx.startsWith(~prefix=key,keyOnLine))
-    });
+         keyToElements
+         |> StringMap.filter((keyOnLine, _v) =>
+              !StringEx.startsWith(~prefix=key, keyOnLine)
+            )
+       });
 
   keyToElements' |> makeConsistent;
 };
