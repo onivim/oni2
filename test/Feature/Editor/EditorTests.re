@@ -44,19 +44,22 @@ describe("Editor", ({describe, _}) => {
   };
 
   let codeLens = (~uniqueId, lineIdx) =>
-    Exthost.(CodeLens.{
-      cacheId: None,
-      range: OneBasedRange.{
-        startLineNumber: lineIdx + 1,
-        endLineNumber: lineIdx + 1, 
-        startColumn: 0,
-        endColumn: 0,
-      },
-      command: Some(Command.{
-        id: uniqueId,
-        label:  Some(Label.ofString(uniqueId)),
-      })
-    });
+    Exthost.(
+      CodeLens.{
+        cacheId: None,
+        range:
+          OneBasedRange.{
+            startLineNumber: lineIdx + 1,
+            endLineNumber: lineIdx + 1,
+            startColumn: 0,
+            endColumn: 0,
+          },
+        command:
+          Some(
+            Command.{id: uniqueId, label: Some(Label.ofString(uniqueId))},
+          ),
+      }
+    );
 
   let colorizer = (~startByte as _, _) => {
     BufferLineColorizer.{
