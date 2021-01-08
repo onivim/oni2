@@ -232,12 +232,12 @@ let defaultKeyBindings =
         ~condition=isMacCondition,
       ),
       bind(
-        ~key="<D-=>",
+        ~key="<D-+>",
         ~command="workbench.action.zoomIn",
         ~condition=isMacCondition,
       ),
       bind(
-        ~key="<C-=>",
+        ~key="<C-+>",
         ~command="workbench.action.zoomIn",
         ~condition=WhenExpr.Value(True),
       ),
@@ -365,19 +365,18 @@ let defaultKeyBindings =
         ~command=Feature_Layout.Commands.decreaseVerticalSize.id,
         ~condition=windowCommandCondition,
       ),
-      //      TODO: Does not work, blocked by bug in editor-input
-      //      {
-      //        key: "<C-W>+",
-      //        command: Feature_Layout.Commands.increaseVerticalSize.id,
-      //        condition: "!insertMode" |> WhenExpr.parse
-      //      },
       bind(
-        ~key="<C-W><S-,>", // TODO: Does not work and should be `<`, but blocked by bugs in editor-input,
+        ~key="<C-W>+",
+        ~command=Feature_Layout.Commands.increaseVerticalSize.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><LT>",
         ~command=Feature_Layout.Commands.increaseHorizontalSize.id,
         ~condition=windowCommandCondition,
       ),
       bind(
-        ~key="<C-W><S-.>", // TODO: Does not work and should be `>`, but blocked by bugs in editor-input
+        ~key="<C-W><GT>",
         ~command=Feature_Layout.Commands.decreaseHorizontalSize.id,
         ~condition=windowCommandCondition,
       ),
@@ -386,18 +385,16 @@ let defaultKeyBindings =
         ~command=Feature_Layout.Commands.resetSizes.id,
         ~condition=windowCommandCondition,
       ),
-      // TODO: Fails to parse
-      // {
-      //   key: "<C-W>_",
-      //   command: Feature_Layout.Commands.maximizeVertical.id,
-      //   condition: windowCommandCondition,
-      // },
-      // TODO: Fails to parse
-      // {
-      //   key: "<C-W>|",
-      //   command: Feature_Layout.Commands.maximizeHorizontal.id,
-      //   condition: windowCommandCondition,
-      // },
+      bind(
+        ~key="<C-W>_",
+        ~command=Feature_Layout.Commands.maximizeVertical.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>|",
+        ~command=Feature_Layout.Commands.maximizeHorizontal.id,
+        ~condition=windowCommandCondition,
+      ),
       bind(
         ~key="<C-W>o",
         ~command=Feature_Layout.Commands.toggleMaximize.id,

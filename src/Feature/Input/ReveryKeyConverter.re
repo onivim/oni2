@@ -43,7 +43,8 @@ module Internal = {
     );
   };
 
-  let tryToGetCharacterFromKey = (~shift, ~altGr, ~scancode) => {
+  let tryToGetCharacterFromKey =
+      (~shift, ~control, ~alt, ~meta, ~altGr, ~scancode) => {
     let keyboard = Oni2_KeyboardLayout.Keymap.getCurrent();
     let maybeKeymap =
       Oni2_KeyboardLayout.Keymap.entryOfScancode(keyboard, scancode);
@@ -64,7 +65,8 @@ module Internal = {
            } else {
              Some(str.[0]);
            }
-         );
+         )
+      |> Option.map(char => EditorInput.Key.Character(char));
     };
 
     maybeKeymap
@@ -78,20 +80,67 @@ module Internal = {
        })
     |> OptionEx.tapNone(() => Log.info("No keymap for key"))
     |> OptionEx.flatMap((keymap: Oni2_KeyboardLayout.Keymap.entry) => {
-         // TODO: For #2293
-         ignore(shift);
-         ignore(altGr);
+         open EditorInput;
+         open KeyPress;
+         open Modifiers;
 
-         // if (shift && altGr) {
-         //   stringToKey(keymap.withAltGraphShift);
-         // } else if (shift) {
-         //   stringToKey(keymap.withShift);
-         // } else if (altGr) {
-         //   stringToKey(keymap.withAltGraph);
-         // } else {
-         stringToKey(keymap.unmodified);
-       })
-    |> Option.map(keyChar => EditorInput.Key.Character(keyChar));
+         let modifiers = {shift, control, alt, meta, altGr};
+         let defaultCandidate =
+           keymap.unmodified
+           |> stringToKey
+           |> Option.map(key => physicalKey(~key, ~modifiers));
+
+         let maybeShiftAltGrCandidate =
+           if (shift && altGr) {
+             keymap.withAltGraphShift
+             |> stringToKey
+             |> Option.map(key =>
+                  physicalKey(
+                    ~key,
+                    ~modifiers={...modifiers, shift: false, altGr: false},
+                  )
+                );
+           } else {
+             None;
+           };
+
+         let maybeShiftCandidate =
+           if (shift) {
+             keymap.withShift
+             |> stringToKey
+             |> Option.map(key =>
+                  physicalKey(~key, ~modifiers={...modifiers, shift: false})
+                );
+           } else {
+             None;
+           };
+
+         let maybeAltGrCandidate =
+           if (altGr) {
+             keymap.withAltGraph
+             |> stringToKey
+             |> Option.map(key =>
+                  physicalKey(~key, ~modifiers={...modifiers, altGr: false})
+                );
+           } else {
+             None;
+           };
+
+         let candidates =
+           [
+             defaultCandidate,
+             maybeShiftAltGrCandidate,
+             maybeShiftCandidate,
+             maybeAltGrCandidate,
+           ]
+           |> List.filter_map(Fun.id);
+
+         if (candidates == []) {
+           None;
+         } else {
+           Some(candidates);
+         };
+       });
   };
 };
 let reveryKeyToKeyPress =
@@ -125,17 +174,23 @@ let reveryKeyToKeyPress =
         (altGr, ctrlKey, altKey);
       | _ => (altGr, control, alt)
       };
+    let modifiers = EditorInput.Modifiers.{shift, control, alt, meta, altGr};
 
     keycode
     |> Internal.tryToGetSpecialKey
+    |> Option.map(key =>
+         [EditorInput.KeyPress.physicalKey(~key, ~modifiers)]
+       )
     |> OptionEx.or_lazy(() => {
-         Internal.tryToGetCharacterFromKey(~shift, ~altGr, ~scancode)
-       })
-    |> Option.map(key => {
-         EditorInput.KeyPress.physicalKey(
-           ~key,
-           ~modifiers={shift, control, alt, meta, altGr},
+         Internal.tryToGetCharacterFromKey(
+           ~shift,
+           ~control,
+           ~alt,
+           ~meta,
+           ~altGr,
+           ~scancode,
          )
-       });
+       })
+    |> Option.map(keys => EditorInput.KeyCandidate.ofList(keys));
   };
 };

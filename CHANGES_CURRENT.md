@@ -38,6 +38,7 @@
 - #2937 - Editor: Fix bugs around horizontal scrolling (fixes #1544, #2914)
 - #2946 - SCM: Fix StackOverflow when retrieving original content for large files
 - #2954 - Markdown: explicitly set code block font size (fixes #2953)
+- #2950 - Input: Fix binding to `+` key (fixes #2293)
 
 ### Performance
 

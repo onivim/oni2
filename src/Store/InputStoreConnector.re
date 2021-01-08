@@ -5,6 +5,8 @@
  */
 
 open Oni_Core;
+open Utility;
+
 open Oni_Input;
 
 module Model = Oni_Model;
@@ -135,10 +137,17 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       let isTextInputActive = isTextInputActive();
 
       let maybeKeyString =
-        Handler.keyPressToCommand(
-          ~force=isProducedByRemap,
-          ~isTextInputActive,
-          key,
+        key
+        |> EditorInput.KeyCandidate.toList
+        |> (
+          list =>
+            List.nth_opt(list, 0)
+            |> OptionEx.flatMap(
+                 Handler.keyPressToCommand(
+                   ~force=isProducedByRemap,
+                   ~isTextInputActive,
+                 ),
+               )
         );
       switch (maybeKeyString) {
       | None => []
@@ -251,11 +260,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
-          event
-          |> reveryKeyToEditorKey
-          |> Option.iter(key => {
-               dispatch(Actions.KeyUp({key, time, scancode: event.scancode}))
-             });
+          dispatch(Actions.KeyUp({time, scancode: event.scancode}));
         },
       );
 
