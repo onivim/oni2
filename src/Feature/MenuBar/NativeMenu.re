@@ -12,12 +12,45 @@ module Sub = {
       let name = "Feature_Menu.nativeOSX";
       let id = (_: params) => "";
 
-      let init = (~params as _, ~dispatch as _) => {
-        open Revery.Native;
-        let menuBar = Menu.getMenuBarHandle();
+      let init = (~params, ~dispatch as _) => {
+        module NativeMenu = Revery.Native.Menu;
+        let menuBar = NativeMenu.getMenuBarHandle();
 
-        let menu1 = Menu.create("Test 1");
-        Menu.addSubmenu(~parent=menuBar, ~child=menu1);
+        let topItems = MenuBar.top(params.builtMenu |> MenuBar.schema);
+
+        let rec buildItem =
+                (parent: NativeMenu.t, items: list(MenuBar.Item.t)) => {
+          items
+          |> List.iter(item => {
+               let title = MenuBar.Item.title(item);
+               if (MenuBar.Item.isSubmenu(item)) {
+                 let nativeMenu = NativeMenu.create(title);
+                 NativeMenu.addSubmenu(~parent, ~child=nativeMenu);
+                 buildGroup(nativeMenu, MenuBar.Item.submenu(item));
+               } else {
+                 ();
+               };
+             });
+        }
+        and buildGroup =
+            (parent: NativeMenu.t, groups: list(MenuBar.Group.t)) => {
+          groups
+          |> List.iter(group => {
+               let items = MenuBar.Group.items(group);
+               buildItem(parent, items);
+             });
+        };
+        topItems
+        |> List.iter(item => {
+             let title = MenuBar.Menu.title(item);
+             let nativeMenu = NativeMenu.create(title);
+             let () =
+               NativeMenu.addSubmenu(~parent=menuBar, ~child=nativeMenu);
+             buildGroup(
+               nativeMenu,
+               MenuBar.Menu.contents(item, params.builtMenu),
+             );
+           });
         ();
       };
 
