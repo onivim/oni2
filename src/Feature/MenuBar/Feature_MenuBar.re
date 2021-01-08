@@ -59,7 +59,7 @@ type msg =
   | MouseOver({uniqueId: string})
   | MouseOut({uniqueId: string})
   | ContextMenu(Component_ContextMenu.msg(string))
-  | Noop;
+  | NativeMenu({command: string});
 
 type session = {
   activePath: string,
@@ -142,6 +142,9 @@ let update = (~contextKeys, ~commands, msg, model) => {
         model;
       };
     (model', Nothing);
+
+  | NativeMenu({command}) =>
+    (model, ExecuteCommand({command: command}))
 
   | ContextMenu(contextMenuMsg) =>
     let (activeSession', eff) =
@@ -383,7 +386,7 @@ module View = {
 
 let sub = (~contextKeys, ~commands, model) => {
   let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
-  NativeMenu.sub(~toMsg=_ => Noop, ~builtMenu);
+  NativeMenu.sub(~toMsg=command => NativeMenu({command: command}), ~builtMenu);
 };
 
 // CONTRIBUTIONS

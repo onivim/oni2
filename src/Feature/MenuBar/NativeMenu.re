@@ -12,7 +12,7 @@ module Sub = {
       let name = "Feature_Menu.nativeOSX";
       let id = (_: params) => "";
 
-      let init = (~params, ~dispatch as _) => {
+      let init = (~params, ~dispatch) => {
         module NativeMenu = Revery.Native.Menu;
         let menuBar = NativeMenu.getMenuBarHandle();
 
@@ -29,6 +29,15 @@ module Sub = {
                  buildGroup(nativeMenu, MenuBar.Item.submenu(item));
                } else {
                  ();
+                 let command = MenuBar.Item.command(item);
+                 let keyEquivalent = Revery.Native.Menu.KeyEquivalent.ofString("");
+                 let nativeMenuItem = Revery.Native.Menu.Item.create(
+                   ~title,
+                   ~onClick={() => {
+                    dispatch(command);
+                   }},
+                   ~keyEquivalent, ());
+                  Revery.Native.Menu.addItem(parent, nativeMenuItem);
                };
              });
         }
