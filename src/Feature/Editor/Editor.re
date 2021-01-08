@@ -124,6 +124,7 @@ type t = {
   // Mouse state
   isMouseDown: bool,
   hasMouseEntered: bool,
+  mouseDownBytePosition: option(BytePosition.t),
   // The last mouse position, in screen coordinates
   lastMouseScreenPosition: option(PixelPosition.t),
   lastMouseMoveTime: [@opaque] option(Revery.Time.t),
@@ -537,6 +538,7 @@ let create = (~config, ~buffer, ~preview: bool, ()) => {
     isMouseDown: false,
     hasMouseEntered: false,
     lastMouseMoveTime: None,
+    mouseDownBytePosition: None,
     lastMouseScreenPosition: None,
     lastMouseUpTime: None,
 
@@ -1605,9 +1607,25 @@ let moveScreenLines = (~position, ~count, editor) => {
 
 let mouseDown = (~time, ~pixelX, ~pixelY, editor) => {
   ignore(time);
-  ignore(pixelX);
-  ignore(pixelY);
-  {...editor, isMouseDown: true};
+  let bytePosition: BytePosition.t =
+    Slow.pixelPositionToBytePosition(
+      ~allowPast=true,
+      ~pixelX,
+      ~pixelY,
+      editor,
+    );
+  let mode =
+    if (Vim.Mode.isInsert(editor.mode)) {
+      Vim.Mode.Insert({cursors: [bytePosition]});
+    } else {
+      Vim.Mode.Normal({cursor: bytePosition});
+    };
+  {
+    ...editor,
+    mode,
+    isMouseDown: true,
+    mouseDownBytePosition: Some(bytePosition),
+  };
 };
 
 let getCharacterUnderMouse = editor => {
@@ -1638,6 +1656,9 @@ let getCharacterUnderMouse = editor => {
 };
 
 let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
+  ignore(pixelX);
+  ignore(pixelY);
+
   let isDoubleClick =
     switch (editor.lastMouseUpTime) {
     | Some(lastMouseUpTime) =>
@@ -1679,30 +1700,64 @@ let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
          })
       |> Option.value(~default=editor.mode);
 
-    {...editor, isMouseDown: false, mode, lastMouseUpTime: None};
+    {
+      ...editor,
+      isMouseDown: false,
+      mode,
+      lastMouseUpTime: None,
+      mouseDownBytePosition: None,
+    };
   } else {
-    let bytePosition =
-      Slow.pixelPositionToBytePosition(
-        // #2463: When we're insert mode, clicking past the end of the line
-        // should move the cursor past the last byte
-        ~allowPast=isInsertMode,
-        ~pixelX,
-        ~pixelY,
-        editor,
-      );
-    let mode =
-      if (Vim.Mode.isInsert(editor.mode)) {
-        Vim.Mode.Insert({cursors: [bytePosition]});
-      } else {
-        Vim.Mode.Normal({cursor: bytePosition});
-      };
-    {...editor, isMouseDown: false, mode, lastMouseUpTime: Some(time)};
+    {
+      ...editor,
+      isMouseDown: false,
+      lastMouseUpTime: Some(time),
+      mouseDownBytePosition: None,
+    };
   };
 };
 
 let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
+  let mode' =
+    editor.mouseDownBytePosition
+    |> Option.map(pos => {
+         let isInsertMode = Vim.Mode.isInsert(editor.mode);
+         let isSelectMode = Vim.Mode.isSelect(editor.mode);
+
+         let newPosition =
+           Slow.pixelPositionToBytePosition(
+             // #2463: When we're insert mode, clicking past the end of the line
+             // should move the cursor past the last byte
+             ~allowPast=isInsertMode,
+             ~pixelX,
+             ~pixelY,
+             editor,
+           );
+
+         let visualRange =
+           Vim.VisualRange.{
+             cursor: newPosition,
+             anchor: pos,
+             visualType: Vim.Types.Character,
+           };
+
+         if (isInsertMode || isSelectMode) {
+           if (newPosition == pos) {
+             Vim.Mode.Insert({cursors: [newPosition]});
+           } else {
+             Vim.Mode.Select(visualRange);
+           };
+         } else if (newPosition == pos) {
+           Vim.Mode.Normal({cursor: newPosition});
+         } else {
+           Vim.Mode.Visual(visualRange);
+         };
+       })
+    |> Option.value(~default=editor.mode);
+
   {
     ...editor,
+    mode: mode',
     lastMouseMoveTime: Some(time),
     lastMouseScreenPosition: Some(PixelPosition.{x: pixelX, y: pixelY}),
   };
@@ -1740,12 +1795,41 @@ let getLeadingWhitespacePixels = (lineNumber, editor) => {
   };
 };
 
+let autoScroll = (~deltaPixelX: float, ~deltaPixelY: float, editor) => {
+  // Scroll editor to new position
+  let editor' =
+    editor
+    |> scrollDeltaPixelXY(
+         ~animated=true,
+         ~pixelX=deltaPixelX,
+         ~pixelY=deltaPixelY,
+       );
+
+  // Simulate a mouse move if the mouse is pressed, to readjust selection
+
+  OptionEx.map2(
+    (time, position: PixelPosition.t) => {
+      editor' |> mouseMove(~time, ~pixelX=position.x, ~pixelY=position.y)
+    },
+    editor'.lastMouseMoveTime,
+    editor'.lastMouseScreenPosition,
+  )
+  |> Option.value(~default=editor');
+};
+
 [@deriving show]
 type msg =
-  | Animation([@opaque] Component_Animation.msg);
+  | Animation([@opaque] Component_Animation.msg)
+  | AutoScroll({
+      deltaPixelY: float,
+      deltaPixelX: float,
+    });
 
 let update = (msg, editor) => {
   switch (msg) {
+  | AutoScroll({deltaPixelY, deltaPixelX}) =>
+    autoScroll(~deltaPixelX, ~deltaPixelY, editor)
+
   | Animation(msg) =>
     let yankHighlight' =
       yankHighlight(editor)
@@ -1778,6 +1862,39 @@ let update = (msg, editor) => {
   };
 };
 
+let isMousePressedNearTop = ({lastMouseScreenPosition, _}) => {
+  lastMouseScreenPosition
+  |> Option.map(({y, _}: PixelPosition.t) => {
+       int_of_float(y) < Constants.mouseAutoScrollBorder
+     })
+  |> Option.value(~default=false);
+};
+
+let isMousePressedNearBottom = ({lastMouseScreenPosition, pixelHeight, _}) => {
+  lastMouseScreenPosition
+  |> Option.map(({y, _}: PixelPosition.t) => {
+       int_of_float(y) > pixelHeight - Constants.mouseAutoScrollBorder
+     })
+  |> Option.value(~default=false);
+};
+
+let isMousePressedNearLeftEdge = ({lastMouseScreenPosition, _}) => {
+  lastMouseScreenPosition
+  |> Option.map(({x, _}: PixelPosition.t) => {
+       int_of_float(x) < Constants.mouseAutoScrollBorder
+     })
+  |> Option.value(~default=false);
+};
+
+let isMousePressedNearRightEdge = ({lastMouseScreenPosition, _} as editor) => {
+  let {bufferWidthInPixels, _}: EditorLayout.t = getLayout(editor);
+  lastMouseScreenPosition
+  |> Option.map(({x, _}: PixelPosition.t) => {
+       x > bufferWidthInPixels -. float(Constants.mouseAutoScrollBorder)
+     })
+  |> Option.value(~default=false);
+};
+
 let sub = editor => {
   let isYankAnimating =
     yankHighlight(editor)
@@ -1792,16 +1909,96 @@ let sub = editor => {
   let isScrollAnimating =
     Spring.isActive(editor.scrollY) || Spring.isActive(editor.scrollX);
 
-  if (isYankAnimating || isInlineElementAnimating || isScrollAnimating) {
-    Component_Animation.subAny(
-      ~uniqueId=
-        "editor."
-        ++ string_of_int(editor.editorId)
-        ++ "."
-        ++ string_of_int(editor.animationNonce),
-    )
-    |> Isolinear.Sub.map(msg => Animation(msg));
-  } else {
-    Isolinear.Sub.none;
-  };
+  let maybeAutoScrollUp =
+    if (isMousePressedNearTop(editor)) {
+      Some(
+        Service_Time.Sub.interval(
+          ~uniqueId="AutoScrollUp" ++ string_of_int(editor.editorId),
+          ~every=Constants.mouseAutoScrollInterval,
+          ~msg=(~current as _) => {
+          AutoScroll({
+            deltaPixelY: (-1.) *. Constants.mouseAutoScrollSpeed,
+            deltaPixelX: 0.,
+          })
+        }),
+      );
+    } else {
+      None;
+    };
+
+  let maybeAutoScrollDown =
+    if (isMousePressedNearBottom(editor)) {
+      Some(
+        Service_Time.Sub.interval(
+          ~uniqueId="AutoScrollDown" ++ string_of_int(editor.editorId),
+          ~every=Constants.mouseAutoScrollInterval,
+          ~msg=(~current as _) => {
+          AutoScroll({
+            deltaPixelY: Constants.mouseAutoScrollSpeed,
+            deltaPixelX: 0.,
+          })
+        }),
+      );
+    } else {
+      None;
+    };
+
+  let maybeAutoScrollLeft =
+    if (isMousePressedNearLeftEdge(editor)
+        && Component_Animation.Spring.get(editor.scrollX) > 0.) {
+      Some(
+        Service_Time.Sub.interval(
+          ~uniqueId="AutoScrollLeft" ++ string_of_int(editor.editorId),
+          ~every=Constants.mouseAutoScrollInterval,
+          ~msg=(~current as _) => {
+          AutoScroll({
+            deltaPixelY: 0.,
+            deltaPixelX: (-1.) *. Constants.mouseAutoScrollSpeed,
+          })
+        }),
+      );
+    } else {
+      None;
+    };
+
+  let maybeAutoScrollRight =
+    if (isMousePressedNearRightEdge(editor)) {
+      Some(
+        Service_Time.Sub.interval(
+          ~uniqueId="AutoScrollRight" ++ string_of_int(editor.editorId),
+          ~every=Constants.mouseAutoScrollInterval,
+          ~msg=(~current as _) => {
+          AutoScroll({
+            deltaPixelY: 0.,
+            deltaPixelX: Constants.mouseAutoScrollSpeed,
+          })
+        }),
+      );
+    } else {
+      None;
+    };
+  let autoScrollSubs =
+    [
+      maybeAutoScrollUp,
+      maybeAutoScrollDown,
+      maybeAutoScrollLeft,
+      maybeAutoScrollRight,
+    ]
+    |> List.filter_map(Fun.id);
+
+  let animationSub =
+    if (isYankAnimating || isInlineElementAnimating || isScrollAnimating) {
+      Component_Animation.subAny(
+        ~uniqueId=
+          "editor."
+          ++ string_of_int(editor.editorId)
+          ++ "."
+          ++ string_of_int(editor.animationNonce),
+      )
+      |> Isolinear.Sub.map(msg => Animation(msg));
+    } else {
+      Isolinear.Sub.none;
+    };
+
+  [animationSub, ...autoScrollSubs] |> Isolinear.Sub.batch;
 };

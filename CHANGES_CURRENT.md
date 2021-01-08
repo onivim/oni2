@@ -41,6 +41,7 @@
 - #2954 - Markdown: explicitly set code block font size (fixes #2953)
 - #2950 - Input: Fix binding to `+` key (fixes #2293)
 - #2955 - UX: Fix hardcoded theme colors in extensions list/details
+- #2898 - Editor: Implement mouse selection (fixes #537)
 
 ### Performance
 
