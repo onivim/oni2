@@ -468,8 +468,7 @@ let configure = (~config, editor) => {
           Feature_Configuration.GlobalConfiguration.Editor.codeLensEnabled.get(
             config,
           )) {
-      // TODO: Fix this
-      editor.inlineElements |> InlineElements.clear(~key="codelens");
+      editor.inlineElements |> InlineElements.clearMatching(~key="codelens");
     } else {
       editor.inlineElements;
     };
