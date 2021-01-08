@@ -184,10 +184,10 @@ let runTest =
           headlessWindow,
           <Oni_UI.Root state dispatch=uiDispatch^ />,
         );
-        Revery.Utility.HeadlessWindow.takeScreenshot(
-          headlessWindow,
-          "screenshot.png",
-        );
+        // Revery.Utility.HeadlessWindow.takeScreenshot(
+        //   headlessWindow,
+        //   "screenshot.png",
+        // );
       },
       Revery.Time.zero,
     );
