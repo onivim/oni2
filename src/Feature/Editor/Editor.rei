@@ -40,24 +40,12 @@ let makeInlineElement:
   ) =>
   inlineElement;
 
-// let setInlineElements: (~key: string, ~elements: list(inlineElement), t) => t;
-
-// let replaceInlineElements:
-//   (
-//     ~key: string,
-//     ~startLine: EditorCoreTypes.LineNumber.t,
-//     ~stopLine: EditorCoreTypes.LineNumber.t,
-//     ~elements: list(inlineElement),
-//     t
-//   ) =>
-//   t;
-
 let setCodeLens:
   (
     ~startLine: EditorCoreTypes.LineNumber.t,
     ~stopLine: EditorCoreTypes.LineNumber.t,
     ~handle: int,
-    ~lenses: list(Exthost.CodeLens.t),
+    ~lenses: list(Feature_LanguageSupport.CodeLens.t),
     t
   ) =>
   t;
