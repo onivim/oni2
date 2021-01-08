@@ -58,7 +58,8 @@ type msg =
   | MouseClicked({uniqueId: string})
   | MouseOver({uniqueId: string})
   | MouseOut({uniqueId: string})
-  | ContextMenu(Component_ContextMenu.msg(string));
+  | ContextMenu(Component_ContextMenu.msg(string))
+  | Noop;
 
 type session = {
   activePath: string,
@@ -376,6 +377,13 @@ module View = {
 
     <View style={Styles.container(bgColor)}> menuItems </View>;
   };
+};
+
+// SUBSCRIPTIOn
+
+let sub = (~contextKeys, ~commands, model) => {
+  let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
+  NativeMenu.sub(~toMsg=_ => Noop, ~builtMenu);
 };
 
 // CONTRIBUTIONS
