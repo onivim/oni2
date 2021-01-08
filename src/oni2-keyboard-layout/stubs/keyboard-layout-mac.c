@@ -75,14 +75,30 @@ static void notificationHandler(
 CAMLprim value oni2_KeyboardLayoutInit() {
   CAMLparam0();
 
-  CFNotificationCenterAddObserver(
-    CFNotificationCenterGetDistributedCenter(),
-    NULL,
-    notificationHandler,
-    kTISNotifySelectedKeyboardInputSourceChanged,
-    NULL,
-    CFNotificationSuspensionBehaviorDeliverImmediately
-  );
+  // TODO:
+
+  // This callback can get called in unexpected scenarios,
+  // like when the open file dialog is opened. 
+
+  // This means that we hit the same issue we had with the resize -
+  // we could get a callback on a thread that already has the
+  // ocaml runtime locked (or not), which can cause a crash.
+
+  // Until we have a robust way to ensure the state of the runtime,
+  // it makes sense to disable this to avoid a crash.
+
+  // The downside is that the callbacks for keyboard layout changing
+  // won't work as expected... but today we're querying each key press,
+  // anyway.
+
+  // CFNotificationCenterAddObserver(
+  //   CFNotificationCenterGetDistributedCenter(),
+  //   NULL,
+  //   notificationHandler,
+  //   kTISNotifySelectedKeyboardInputSourceChanged,
+  //   NULL,
+  //   CFNotificationSuspensionBehaviorDrop
+  // );
 
   CAMLreturn(Val_unit);
 }
