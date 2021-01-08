@@ -84,3 +84,5 @@ let doubleClickTime = Revery.Time.milliseconds(500);
 // Number of pixels the mouse needs to be within the border in order to trigger auto-scroll.
 let mouseAutoScrollBorder = 75;
 let mouseAutoScrollSpeed = 75.;
+
+let mouseAutoScrollInterval = Revery.Time.milliseconds(50);
