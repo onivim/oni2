@@ -73,3 +73,6 @@ let quickSuggestions =
 
 let wordBasedSuggestions =
   setting("editor.wordBasedSuggestions", bool, ~default=true);
+
+let acceptSuggestionOnEnter =
+  setting("editor.acceptSuggestionOnEnter", bool, ~default=true);
