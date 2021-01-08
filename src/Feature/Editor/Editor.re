@@ -173,6 +173,18 @@ let isAnimatingScroll = ({scrollX, scrollY, _}) => {
   Spring.isActive(scrollX) || Spring.isActive(scrollY);
 };
 
+let getLeadingWhitespacePixels = (lineNumber, editor) => {
+  let buffer = editor.buffer;
+  let lineCount = EditorBuffer.numberOfLines(buffer);
+  let line = lineNumber |> EditorCoreTypes.LineNumber.toZeroBased;
+  if (line < 0 || line >= lineCount) {
+    0.;
+  } else {
+    let bufferLine = buffer |> EditorBuffer.line(line);
+    BufferLine.getLeadingWhitespacePixels(bufferLine);
+  };
+};
+
 let getBufferLineCount = ({buffer, _}) =>
   EditorBuffer.numberOfLines(buffer);
 
@@ -919,6 +931,37 @@ let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => 
            ),
        }
      );
+};
+
+let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
+  let inlineElements =
+    lenses
+    |> List.map(lens => {
+         let lineNumber =
+           Feature_LanguageSupport.CodeLens.lineNumber(lens)
+           |> EditorCoreTypes.LineNumber.ofZeroBased;
+         let uniqueId = Feature_LanguageSupport.CodeLens.text(lens);
+         let leftMargin =
+           getLeadingWhitespacePixels(lineNumber, editor) |> int_of_float;
+         let view =
+           Feature_LanguageSupport.CodeLens.View.make(
+             ~leftMargin,
+             ~codeLens=lens,
+           );
+         makeInlineElement(
+           ~key="codelens:" ++ string_of_int(handle),
+           ~uniqueId,
+           ~lineNumber,
+           ~view,
+         );
+       });
+  replaceInlineElements(
+    ~startLine,
+    ~stopLine,
+    ~key="codelens:" ++ string_of_int(handle),
+    ~elements=inlineElements,
+    editor,
+  );
 };
 
 let selectionOrCursorRange = editor => {
@@ -1727,18 +1770,6 @@ let hasMouseEntered = ({hasMouseEntered, _}) => hasMouseEntered;
 let isMouseDown = ({isMouseDown, _}) => isMouseDown;
 
 let lastMouseMoveTime = ({lastMouseMoveTime, _}) => lastMouseMoveTime;
-
-let getLeadingWhitespacePixels = (lineNumber, editor) => {
-  let buffer = editor.buffer;
-  let lineCount = EditorBuffer.numberOfLines(buffer);
-  let line = lineNumber |> EditorCoreTypes.LineNumber.toZeroBased;
-  if (line < 0 || line >= lineCount) {
-    0.;
-  } else {
-    let bufferLine = buffer |> EditorBuffer.line(line);
-    BufferLine.getLeadingWhitespacePixels(bufferLine);
-  };
-};
 
 [@deriving show]
 type msg =
