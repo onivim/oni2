@@ -42,6 +42,7 @@
 - #2950 - Input: Fix binding to `+` key (fixes #2293)
 - #2955 - UX: Fix hardcoded theme colors in extensions list/details
 - #2898 - Editor: Implement mouse selection (fixes #537)
+- #2959 - Completion: Implement `"editor.acceptSuggestionOnEnter"` configuration setting
 
 ### Performance
 
