@@ -57,6 +57,28 @@ module QuickSuggestionsSetting = {
     );
 };
 
+module Decode = {
+  open Json.Decode;
+
+  module AcceptSuggestionOnEnter = {
+    let decodeBool = bool;
+    let decodeString =
+      string
+      |> map(
+           fun
+           | "on" => true
+           // TODO: "smart" setting?
+           | _ => false,
+         );
+
+    let decode =
+      one_of([
+        ("acceptSuggestionOnEnter.bool", decodeBool),
+        ("acceptSuggestionOnEnter.string", decodeString),
+      ]);
+  };
+};
+
 // CONFIGURATION
 
 open Config.Schema;
@@ -75,4 +97,11 @@ let wordBasedSuggestions =
   setting("editor.wordBasedSuggestions", bool, ~default=true);
 
 let acceptSuggestionOnEnter =
-  setting("editor.acceptSuggestionOnEnter", bool, ~default=true);
+  setting(
+    "editor.acceptSuggestionOnEnter",
+    custom(
+      ~decode=Decode.AcceptSuggestionOnEnter.decode,
+      ~encode=Json.Encode.bool,
+    ),
+    ~default=true,
+  );
