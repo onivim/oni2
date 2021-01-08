@@ -46,60 +46,70 @@ let reduce = (msg, model) =>
   | WidthChanged(width) => {...model, width}
   };
 
-let installButton = (~font, ~extensionId, ~dispatch, ()) => {
+let installButton = (~theme, ~font, ~extensionId, ~dispatch, ()) => {
+  let backgroundColor = Colors.Button.background.from(theme);
+  let color = Colors.Button.foreground.from(theme);
   <ItemView.ActionButton
     font
     title="Install"
-    backgroundColor=Revery.Colors.green
-    color=Revery.Colors.white
+    backgroundColor
+    color
     onAction={() =>
       dispatch(Model.InstallExtensionClicked({extensionId: extensionId}))
     }
   />;
 };
 
-let uninstallButton = (~font, ~extensionId, ~dispatch, ()) => {
+let uninstallButton = (~theme, ~font, ~extensionId, ~dispatch, ()) => {
+  let backgroundColor = Colors.Button.background.from(theme);
+  let color = Colors.Button.foreground.from(theme);
   <ItemView.ActionButton
     extensionId
     font
     title="Uninstall"
-    backgroundColor=Revery.Colors.red
-    color=Revery.Colors.white
+    backgroundColor
+    color
     onAction={() =>
       dispatch(Model.UninstallExtensionClicked({extensionId: extensionId}))
     }
   />;
 };
 
-let progressButton = (~extensionId, ~font, ~title, ()) => {
+let progressButton = (~theme, ~extensionId, ~font, ~title, ()) => {
+  let backgroundColor = Colors.Button.secondaryBackground.from(theme);
+  let color = Colors.Button.secondaryForeground.from(theme);
   <ItemView.ActionButton
     extensionId
     font
     title
-    backgroundColor=Revery.Colors.blue
-    color=Revery.Colors.white
+    backgroundColor
+    color
     onAction={() => ()}
   />;
 };
 
-let installedButton = (~extensionId, ~font, ()) => {
+let installedButton = (~theme, ~extensionId, ~font, ()) => {
+  let backgroundColor = Colors.Button.background.from(theme);
+  let color = Colors.Button.foreground.from(theme);
   <ItemView.ActionButton
     extensionId
     font
     title="Installed"
-    backgroundColor=Revery.Colors.blue
-    color=Revery.Colors.white
+    backgroundColor
+    color
     onAction={() => ()}
   />;
 };
 
-let updateButton = (~extensionId, ~font, ~dispatch, ()) => {
+let updateButton = (~theme, ~extensionId, ~font, ~dispatch, ()) => {
+  let backgroundColor = Colors.Button.secondaryBackground.from(theme);
+  let color = Colors.Button.secondaryForeground.from(theme);
   <ItemView.ActionButton
     extensionId
     font
     title="Update"
-    backgroundColor=Revery.Colors.blue
-    color=Revery.Colors.white
+    backgroundColor
+    color
     onAction={() =>
       dispatch(Model.UpdateExtensionClicked({extensionId: extensionId}))
     }
@@ -167,13 +177,13 @@ let%component make =
     let isRestartRequired = Model.isRestartRequired(~extensionId, model);
     let actionButton =
       if (Model.isInstalling(~extensionId, model)) {
-        <progressButton extensionId title="Updating" font />;
+        <progressButton theme extensionId title="Updating" font />;
       } else if (Model.isUninstalling(~extensionId=id, model)) {
-        <progressButton extensionId font title="Uninstalling" />;
+        <progressButton theme extensionId font title="Uninstalling" />;
       } else if (Model.isUpdateAvailable(~extensionId=id, model)) {
-        <updateButton font extensionId dispatch />;
+        <updateButton theme font extensionId dispatch />;
       } else {
-        <uninstallButton font extensionId dispatch />;
+        <uninstallButton theme font extensionId dispatch />;
       };
 
     <ItemView
@@ -258,16 +268,27 @@ let%component make =
             let actionButton =
               if (Model.isInstalled(~extensionId, model)) {
                 if (Model.isInstalling(~extensionId, model)) {
-                  <progressButton extensionId title="Updating" font />;
+                  <progressButton theme extensionId title="Updating" font />;
                 } else if (Model.canUpdate(~extensionId, ~maybeVersion, model)) {
-                  <updateButton extensionId font dispatch />;
+                  <updateButton theme extensionId font dispatch />;
                 } else {
-                  <installedButton extensionId font />;
+                  <installedButton theme extensionId font />;
                 };
               } else {
                 Model.isInstalling(~extensionId, model)
-                  ? <progressButton extensionId title="Installing" font />
-                  : <installButton extensionId dispatch font extensionId />;
+                  ? <progressButton
+                      theme
+                      extensionId
+                      title="Installing"
+                      font
+                    />
+                  : <installButton
+                      theme
+                      extensionId
+                      dispatch
+                      font
+                      extensionId
+                    />;
               };
 
             <ItemView

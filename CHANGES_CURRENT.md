@@ -1,4 +1,4 @@
-### Features
+### Features 
 
 - #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
 - #2889 - Extensions: Include HTML, JSON, PHP, and Markdown language servers
@@ -31,7 +31,15 @@
 - #2628 - Input: Right arrow key treated as PageUp
 - #2929 - Input: Fix intermittent crash when scrolling with the mouse (fixes #2919)
 - #2927 - Input: Windows - fix crash in entering Unicode character (fixes #2926)
-- #2938 - Input: OSX - Modifier keys not working on Romanji keyboard (fixes #2924)
+- #2938 - Input: OSX - Modifier keys not working on Romaji keyboard (fixes #2924)
+- #2941 - Input: Fix handling of `<space>` as leader key (fixes #2935)
+- #2944 - Components: Remove overscroll in `VimList`
+- #2942 - TextMate: Fix infinite loop with vala grammar (fixes #2933)
+- #2937 - Editor: Fix bugs around horizontal scrolling (fixes #1544, #2914)
+- #2946 - SCM: Fix StackOverflow when retrieving original content for large files
+- #2954 - Markdown: explicitly set code block font size (fixes #2953)
+- #2950 - Input: Fix binding to `+` key (fixes #2293)
+- #2955 - UX: Fix hardcoded theme colors in extensions list/details
 
 ### Performance
 

@@ -57,7 +57,7 @@ let make = (~state: Model.State.t, ()) => {
 
   let consumedKeys =
     Feature_Input.consumedKeys(state.input)
-    |> List.map(Feature_Input.keyPressToString)
+    |> List.map(Feature_Input.keyCandidateToString)
     |> String.concat(", ");
 
   <ScrollView style=Styles.row>

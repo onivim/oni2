@@ -43,12 +43,11 @@ type t =
   | KeyBindingsParseError(string)
   | KeybindingInvoked({command: string})
   | KeyDown({
-      key: EditorInput.KeyPress.t,
+      key: EditorInput.KeyCandidate.t,
       scancode: int,
       time: [@opaque] Revery.Time.t,
     })
   | KeyUp({
-      key: EditorInput.KeyPress.t,
       scancode: int,
       time: [@opaque] Revery.Time.t,
     })

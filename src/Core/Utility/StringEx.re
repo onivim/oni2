@@ -278,13 +278,73 @@ let extractSnippet = (~maxLength, ~charStart, ~charEnd, text) => {
   };
 };
 
-let removeWindowsNewLines = s =>
-  List.init(String.length(s), String.get(s))
-  |> List.filter(c => c != '\r')
-  |> List.map(c => String.make(1, c))
-  |> String.concat("");
+let removeWindowsNewLines = str => {
+  let len = String.length(str);
+  let filteredString = Bytes.of_string(str);
+
+  let destIdx = ref(0);
+  for (srcIdx in 0 to len - 1) {
+    if (str.[srcIdx] != '\r') {
+      Bytes.set(filteredString, destIdx^, str.[srcIdx]);
+      incr(destIdx);
+    };
+  };
+
+  let destLen = destIdx^;
+  Bytes.sub(filteredString, 0, destLen) |> Bytes.to_string;
+};
+
+let%test_module "removeWindowsNewLines" =
+  (module
+   {
+     let%test "empty" = {
+       removeWindowsNewLines("") == "";
+     };
+     let%test "just CR" = {
+       removeWindowsNewLines("\r") == "";
+     };
+     let%test "CR as part of a newline" = {
+       removeWindowsNewLines("a\r\nb") == "a\nb";
+     };
+
+     let%test "very large string, without CR" = {
+       let size = 10 * 1024 * 1024;
+       let str = String.make(size, 'a');
+       removeWindowsNewLines(str) == str;
+     };
+
+     let%test "very large string, with CR" = {
+       let size = 10 * 1024 * 1024;
+       let str = String.make(size, '\r');
+       removeWindowsNewLines(str) == "";
+     };
+   });
 
 let splitNewLines = s => s |> String.split_on_char('\n') |> Array.of_list;
+
+let%test_module "splitNewLines" =
+  (module
+   {
+     let%test "empty" = {
+       splitNewLines("") == [|""|];
+     };
+     let%test "single line" = {
+       splitNewLines("abc") == [|"abc"|];
+     };
+     let%test "multiple lines, LF" = {
+       splitNewLines("abc\ndef") == [|"abc", "def"|];
+     };
+
+     let%test "multiple lines, ending with newline, LF" = {
+       splitNewLines("abc\ndef\n") == [|"abc", "def", ""|];
+     };
+
+     let%test "very large string, LF" = {
+       let size = 10 * 1024 * 1024;
+       let str = String.make(size, '\n');
+       splitNewLines(str) == Array.make(size + 1, "");
+     };
+   });
 
 let removeTrailingNewLine = s => {
   let len = String.length(s);

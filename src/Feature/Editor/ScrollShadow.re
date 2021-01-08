@@ -23,7 +23,7 @@ let renderHorizontal = (~editor: Editor.t, ~width: float, ~context) => {
     );
   };
 
-  if (scrollX +. width < float(Editor.getTotalWidthInPixels(editor))) {
+  if (scrollX +. width < Editor.getTotalWidthInPixels(editor)) {
     let () =
       Draw.Shadow.render(
         ~direction=Left,
