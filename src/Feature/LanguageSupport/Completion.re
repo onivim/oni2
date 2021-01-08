@@ -429,10 +429,12 @@ type model = {
   allItems: array((CharacterPosition.t, Filter.result(CompletionItem.t))),
   selection: Selection.t,
   isInsertMode: bool,
+  acceptOnEnter: bool,
 };
 
 let initial = {
   isInsertMode: false,
+  acceptOnEnter: false,
   providers: [
     Session.create(
       ~triggerCharacters=[],
@@ -447,6 +449,13 @@ let initial = {
   ],
   allItems: [||],
   selection: Selection.initial,
+};
+
+let configurationChanged = (~config, model) => {
+  {
+    ...model,
+    acceptOnEnter: CompletionConfig.acceptSuggestionOnEnter.get(config),
+  };
 };
 
 let providerCount = ({providers, _}) => List.length(providers) - 1;
@@ -502,6 +511,7 @@ let isActive = (model: model) => {
 
 let startInsertMode = model => {
   {
+    ...model,
     isInsertMode: true,
     providers: model.providers |> List.map(Session.start),
     allItems: [||],
@@ -510,6 +520,7 @@ let startInsertMode = model => {
 };
 
 let stopInsertMode = model => {
+  ...model,
   isInsertMode: false,
   providers: model.providers |> List.map(Session.stop),
   allItems: [||],
@@ -876,6 +887,9 @@ module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
 
   let suggestWidgetVisible = bool("suggestWidgetVisible", isActive);
+
+  let acceptSuggestionOnEnter =
+    bool("acceptSuggestionOnEnter", model => model.acceptOnEnter);
 };
 
 // KEYBINDINGS
@@ -971,7 +985,11 @@ module Contributions = {
   let colors = [];
 
   let configuration =
-    CompletionConfig.[quickSuggestions.spec, wordBasedSuggestions.spec];
+    CompletionConfig.[
+      quickSuggestions.spec,
+      wordBasedSuggestions.spec,
+      acceptSuggestionOnEnter.spec,
+    ];
 
   let commands =
     Commands.[
@@ -981,7 +999,8 @@ module Contributions = {
       triggerSuggest,
     ];
 
-  let contextKeys = ContextKeys.[suggestWidgetVisible];
+  let contextKeys =
+    ContextKeys.[acceptSuggestionOnEnter, suggestWidgetVisible];
 
   let keybindings =
     KeyBindings.[
