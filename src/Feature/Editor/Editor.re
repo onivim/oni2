@@ -1887,8 +1887,7 @@ let isMousePressedNearLeftEdge = ({lastMouseScreenPosition, _}) => {
 };
 
 let isMousePressedNearRightEdge = ({lastMouseScreenPosition, _} as editor) => {
-  let {bufferWidthInPixels, _}: EditorLayout.t =
-    getLayout(editor);
+  let {bufferWidthInPixels, _}: EditorLayout.t = getLayout(editor);
   lastMouseScreenPosition
   |> Option.map(({x, _}: PixelPosition.t) => {
        x > bufferWidthInPixels -. float(Constants.mouseAutoScrollBorder)
