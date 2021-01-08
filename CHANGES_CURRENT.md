@@ -44,7 +44,7 @@
 
 ### Performance
 
-- #2852,#2864 - Performance: Batch editor / codelens animations
+- #2852, #2864 - Performance: Batch editor / codelens animations
 - #2901 - Bundle Size: Remove unused Selawik and Inconsolata fonts
 - #2932 - Language Features: Debounce high-frequency subscriptions
 
@@ -63,3 +63,4 @@
 - #2894 - Build: Linux - Fix permission problem removing setup.json (thanks @marcinkoziej!)
 - #2889 - Extensions: Upgrade extensions to 1.52.1
 - #2904 - Build: Fix warnings in macOS build (thanks @zbaylin!)
+- #2964 - Dependency: Upgrade revery -> 3f48f6d
