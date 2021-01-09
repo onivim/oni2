@@ -41,7 +41,9 @@
 - #2954 - Markdown: explicitly set code block font size (fixes #2953)
 - #2950 - Input: Fix binding to `+` key (fixes #2293)
 - #2955 - UX: Fix hardcoded theme colors in extensions list/details
+- #2898, #2966 - Editor: Implement mouse selection (fixes #537)
 - #2898 - Editor: Implement mouse selection (fixes #537)
+- #2959 - Completion: Implement `"editor.acceptSuggestionOnEnter"` configuration setting
 - #2956 - Layout: Fix extra editor when splitting with a file or terminal (fixes #2900, #2952)
 
 ### Performance
