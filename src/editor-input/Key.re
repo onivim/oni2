@@ -1,6 +1,8 @@
+open Oni_Core;
+
 [@deriving show]
 type t =
-  | Character(char)
+  | Character([@opaque] Uchar.t)
   | Function(int)
   | NumpadDigit(int)
   | Escape
@@ -31,7 +33,7 @@ type t =
 
 let toString =
   fun
-  | Character(c) => String.make(1, c)
+  | Character(c) => ZedBundled.make(1, c)
   | Function(digit) => Printf.sprintf("F%d", digit)
   | NumpadDigit(digit) => Printf.sprintf("Numpad%d", digit)
   | Escape => "Escape"

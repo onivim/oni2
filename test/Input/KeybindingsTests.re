@@ -196,22 +196,22 @@ describe("Keybindings", ({describe, _}) => {
       let cases =
         EditorInput.[
           (
-            Key.Character('p'),
+            Key.Character(Uchar.of_char('p')),
             modifier(~control=true, ~shift=false, ~meta=false),
             "workbench.action.quickOpen",
           ),
           (
-            Key.Character('p'),
+            Key.Character(Uchar.of_char('p')),
             modifier(~control=false, ~shift=false, ~meta=true),
             "workbench.action.quickOpen",
           ),
           (
-            Key.Character('p'),
+            Key.Character(Uchar.of_char('p')),
             modifier(~control=true, ~shift=true, ~meta=false),
             "workbench.action.showCommands",
           ),
           (
-            Key.Character('p'),
+            Key.Character(Uchar.of_char('p')),
             modifier(~control=false, ~shift=true, ~meta=true),
             "workbench.action.showCommands",
           ),
