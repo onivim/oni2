@@ -28,12 +28,16 @@ module Group: {
 
   let map: (Editor.t => Editor.t, t) => t;
   let fold: (('acc, Editor.t) => 'acc, 'acc, t) => 'acc;
+
+  let allEditors: t => list(Editor.t);
 } = {
   type t = {
     id: int,
     editors: list(Editor.t),
     selectedId: int,
   };
+
+  let allEditors = ({editors, _}) => editors;
 
   let fold = (f, initial, group) => {
     List.fold_left(f, initial, group.editors);
@@ -188,6 +192,8 @@ let initial = editors => {
   {layouts: [initialLayout], activeLayoutIndex: 0};
 };
 
+let groups = ({groups, _}) => groups;
+
 let groupById = (id, layout) =>
   List.find_opt((group: Group.t) => group.id == id, layout.groups);
 
@@ -234,6 +240,8 @@ let visibleEditors = model =>
   |> List.filter_map(id => model |> activeLayout |> groupById(id))
   |> List.map(Group.selected);
 
+let activeLayoutGroups = model => model |> activeLayout |> groups;
+
 let editorById = (id, model) =>
   Base.List.find_map(activeLayout(model).groups, ~f=group =>
     List.find_opt(editor => Editor.getId(editor) == id, group.editors)
@@ -245,9 +253,8 @@ let insertWindow = (target, direction, focus) =>
   updateTree(Layout.insertWindow(target, direction, focus));
 let removeWindow = target => updateTree(Layout.removeWindow(target));
 
-let split = (direction, model) => {
-  let activeEditor = activeEditor(model);
-  let newGroup = Group.create([Editor.copy(activeEditor)]);
+let split = (~editor, direction, model) => {
+  let newGroup = Group.create([editor]);
 
   updateActiveLayout(
     layout =>

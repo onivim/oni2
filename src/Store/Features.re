@@ -595,40 +595,15 @@ let update =
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
         )
       | CodeLensesChanged({handle, bufferId, startLine, stopLine, lenses}) =>
-        let inlineElements = editor =>
-          lenses
-          |> List.map(lens => {
-               let lineNumber =
-                 Feature_LanguageSupport.CodeLens.lineNumber(lens)
-                 |> EditorCoreTypes.LineNumber.ofZeroBased;
-               let uniqueId = Feature_LanguageSupport.CodeLens.text(lens);
-               let leftMargin =
-                 Feature_Editor.Editor.getLeadingWhitespacePixels(
-                   lineNumber,
-                   editor,
-                 )
-                 |> int_of_float;
-               let view =
-                 Feature_LanguageSupport.CodeLens.View.make(
-                   ~leftMargin,
-                   ~codeLens=lens,
-                 );
-               Feature_Editor.Editor.makeInlineElement(
-                 ~key="codelens:" ++ string_of_int(handle),
-                 ~uniqueId,
-                 ~lineNumber,
-                 ~view,
-               );
-             });
         let layout' =
           state.layout
           |> Feature_Layout.map(editor =>
                if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
-                 Feature_Editor.Editor.replaceInlineElements(
+                 Feature_Editor.Editor.setCodeLens(
                    ~startLine,
                    ~stopLine,
-                   ~key="codelens:" ++ string_of_int(handle),
-                   ~elements=inlineElements(editor),
+                   ~handle,
+                   ~lenses,
                    editor,
                  );
                } else {
@@ -1023,16 +998,8 @@ let update =
 
       let bufferId = EditorBuffer.id(editorBuffer);
 
-      let layout =
-        switch (split) {
-        | `Current => state.layout
-        | `Horizontal => Feature_Layout.split(`Horizontal, state.layout)
-        | `Vertical => Feature_Layout.split(`Vertical, state.layout)
-        | `NewTab => Feature_Layout.addLayoutTab(state.layout)
-        };
-
       let existingEditor =
-        Feature_Layout.activeGroupEditors(layout)
+        Feature_Layout.activeGroupEditors(state.layout)
         |> List.find_opt(editor => Editor.getBufferId(editor) == bufferId);
 
       let (isPreview, editor) =
@@ -1040,7 +1007,10 @@ let update =
         | Some(ed) =>
           let isPreview = Editor.getPreview(ed) && preview;
 
-          (isPreview, Editor.setPreview(~preview=isPreview, ed));
+          (
+            isPreview,
+            Editor.setPreview(~preview=isPreview, Editor.copy(ed)),
+          );
         | None => (
             preview,
             Editor.create(
@@ -1050,6 +1020,15 @@ let update =
               (),
             ),
           )
+        };
+
+      let layout =
+        switch (split) {
+        | `Current => state.layout
+        | `Horizontal =>
+          Feature_Layout.split(~editor, `Horizontal, state.layout)
+        | `Vertical => Feature_Layout.split(~editor, `Vertical, state.layout)
+        | `NewTab => Feature_Layout.addLayoutTab(state.layout)
         };
 
       let editor' =

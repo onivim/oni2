@@ -385,6 +385,7 @@ let bufferUpdated =
 
 let configurationChanged = (~config, model) => {
   ...model,
+  completion: Completion.configurationChanged(~config, model.completion),
   documentHighlights:
     DocumentHighlights.configurationChanged(
       ~config,

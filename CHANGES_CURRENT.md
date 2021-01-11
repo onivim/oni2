@@ -5,6 +5,10 @@
 - #2849 - UX: Initial menu bar on Windows / Linux (fixes #1255)
 - #2596 - Editor: File preview when clicking on files (thanks @fanantoxa!)
 - #2755 - Editor: Implement customizable font-weight (fixes #1573, thanks @marcagba!)
+- #2940 - Extensions: CodeLens - promote from experimental to on-by-default
+
+> NOTE: CodeLens can be disabled with either `"editor.codeLens": false` or `:set nocodelens`.
+
 - #2969 - UX: Menu bar integration on OSX
 
 ### Bug Fixes
@@ -42,7 +46,10 @@
 - #2954 - Markdown: explicitly set code block font size (fixes #2953)
 - #2950 - Input: Fix binding to `+` key (fixes #2293)
 - #2955 - UX: Fix hardcoded theme colors in extensions list/details
+- #2898, #2966 - Editor: Implement mouse selection (fixes #537)
 - #2898 - Editor: Implement mouse selection (fixes #537)
+- #2959 - Completion: Implement `"editor.acceptSuggestionOnEnter"` configuration setting
+- #2956 - Layout: Fix extra editor when splitting with a file or terminal (fixes #2900, #2952)
 
 ### Performance
 
@@ -66,3 +73,4 @@
 - #2889 - Extensions: Upgrade extensions to 1.52.1
 - #2904 - Build: Fix warnings in macOS build (thanks @zbaylin!)
 - #2964 - Dependency: Upgrade revery -> 3f48f6d
+- #2975 - Dependency: Upgrade revery -> 7191349

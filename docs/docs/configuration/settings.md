@@ -23,7 +23,11 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 ### Editor
 
+- `editor.acceptSuggestionOnEnter` __(_bool_ default: `false`)__ - When `true`, the enter key can be used to select a suggestion. By default, the enter key will not be used, so as not to interfere with creating a new line.
+
 - `editor.autoClosingBrackets` __(_"LanguageDefined"|"Never"_ default: `"LanguageDefined"`)__ - When set to `"LanguageDefined"`, Onivim will automatically close brackets and pairs, based on language configuration.
+
+- `editor.codeLens` __(_bool_ default: `true`)__ - Whether to show codelens, when available from a language extension.
 
 - `editor.cursorSurroundingLines` __(_int_ default: `1`)__ - The number of view lines to keep visible above and below the cursor when scrolling. Equivalent to the Vim `scrolloff` setting.
 
