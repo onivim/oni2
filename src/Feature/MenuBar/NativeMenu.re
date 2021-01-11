@@ -30,23 +30,32 @@ module Sub = {
                } else {
                  ();
                  let command = MenuBar.Item.command(item);
-                 let keyEquivalent = Revery.Native.Menu.KeyEquivalent.ofString("");
-                 let nativeMenuItem = Revery.Native.Menu.Item.create(
-                   ~title,
-                   ~onClick={() => {
-                    dispatch(command);
-                   }},
-                   ~keyEquivalent, ());
-                  Revery.Native.Menu.addItem(parent, nativeMenuItem);
+                 let keyEquivalent =
+                   Revery.Native.Menu.KeyEquivalent.ofString("");
+                 let nativeMenuItem =
+                   Revery.Native.Menu.Item.create(
+                     ~title,
+                     ~onClick=() => {dispatch(command)},
+                     ~keyEquivalent,
+                     (),
+                   );
+                 Revery.Native.Menu.addItem(parent, nativeMenuItem);
                };
              });
         }
         and buildGroup =
             (parent: NativeMenu.t, groups: list(MenuBar.Group.t)) => {
+          let len = List.length(groups);
           groups
-          |> List.iter(group => {
+          |> List.iteri((idx, group) => {
+               let isLast = idx == len - 1;
                let items = MenuBar.Group.items(group);
                buildItem(parent, items);
+
+               if (!isLast) {
+                 let separator = Revery.Native.Menu.Item.createSeparator();
+                 Revery.Native.Menu.addItem(parent, separator);
+               };
              });
         };
         topItems

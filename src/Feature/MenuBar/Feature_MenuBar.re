@@ -143,8 +143,7 @@ let update = (~contextKeys, ~commands, msg, model) => {
       };
     (model', Nothing);
 
-  | NativeMenu({command}) =>
-    (model, ExecuteCommand({command: command}))
+  | NativeMenu({command}) => (model, ExecuteCommand({command: command}))
 
   | ContextMenu(contextMenuMsg) =>
     let (activeSession', eff) =
@@ -386,7 +385,10 @@ module View = {
 
 let sub = (~contextKeys, ~commands, model) => {
   let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
-  NativeMenu.sub(~toMsg=command => NativeMenu({command: command}), ~builtMenu);
+  NativeMenu.sub(
+    ~toMsg=command => NativeMenu({command: command}),
+    ~builtMenu,
+  );
 };
 
 // CONTRIBUTIONS
