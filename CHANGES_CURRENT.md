@@ -70,3 +70,4 @@
 - #2889 - Extensions: Upgrade extensions to 1.52.1
 - #2904 - Build: Fix warnings in macOS build (thanks @zbaylin!)
 - #2964 - Dependency: Upgrade revery -> 3f48f6d
+- #2975 - Dependency: Upgrade revery -> 7191349
