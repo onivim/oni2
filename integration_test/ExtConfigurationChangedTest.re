@@ -6,8 +6,7 @@ open Oni_IntegrationTestLib;
 // - The 'oni-dev' extension gets activated
 // - That changes to configuration settings are properly propagated to extensions
 // - That extension messages are delivered as notifications Oni-side
-runTestWithInput(
-  ~name="ExtConfigurationChangedTest", (_input, dispatch, wait, _runEffects) => {
+runTest(~name="ExtConfigurationChangedTest", ({dispatch, wait, _}) => {
   wait(~name="Capture initial state", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
