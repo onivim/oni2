@@ -25,9 +25,9 @@ type outmsg =
 
 let platformStr =
   switch (Revery.Environment.os) {
-  | Mac => "macos"
-  | Linux => "linux"
-  | Windows => "windows"
+  | Mac(_) => "macos"
+  | Linux(_) => "linux"
+  | Windows(_) => "windows"
   | _ => ""
   };
 

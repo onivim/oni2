@@ -265,7 +265,36 @@ let makeConsistent = keyToElements => {
   {keyToElements, isAnimating, sortedElements, cache: cache'};
 };
 
-let set = (~key: string, ~elements, model) => {
+let replace =
+    (
+      ~startLine: option(EditorCoreTypes.LineNumber.t)=None,
+      ~stopLine=None,
+      ~key: string,
+      ~elements,
+      model,
+    ) => {
+  let maybeStartIdx =
+    startLine |> Option.map(EditorCoreTypes.LineNumber.toZeroBased);
+
+  let maybeStopIdx =
+    stopLine |> Option.map(EditorCoreTypes.LineNumber.toZeroBased);
+
+  let isInRange = lineIdx => {
+    let isStartInRange =
+      switch (maybeStartIdx) {
+      | None => true
+      | Some(start) => lineIdx >= start
+      };
+
+    let isStopInRange =
+      switch (maybeStopIdx) {
+      | None => true
+      | Some(stop) => lineIdx <= stop
+      };
+
+    isStartInRange && isStopInRange;
+  };
+
   let mergeLine =
       (
         previousLineElements: StringMap.t(element),
@@ -331,7 +360,7 @@ let set = (~key: string, ~elements, model) => {
 
   let keyToElements' =
     IntMap.merge(
-      (_line, maybePrev, maybeIncoming) => {
+      (line, maybePrev, maybeIncoming) => {
         switch (maybePrev, maybeIncoming) {
         | (Some(prev), Some(incoming)) =>
           let incomingKeyMap =
@@ -341,7 +370,12 @@ let set = (~key: string, ~elements, model) => {
           let incomingKeyMap =
             StringMap.empty |> StringMap.add(key, incoming);
           Some(incomingKeyMap);
-        | (Some(prev), None) => Some(prev |> StringMap.remove(key))
+        | (Some(prev), None) =>
+          if (isInRange(line)) {
+            Some(prev |> StringMap.remove(key));
+          } else {
+            Some(prev);
+          }
         | (None, None) => None
         }
       },
@@ -352,13 +386,22 @@ let set = (~key: string, ~elements, model) => {
   keyToElements' |> makeConsistent;
 };
 
-let clear = (~key, model) => {
+// Clear any key that starts with the prefix [key].
+// For example, [clearMatching(~key="codelens", model)] will delete keys "codelens6", "codelens100", etc
+let clearMatching = (~key, model) => {
   let keyToElements' =
     model.keyToElements
-    |> IntMap.map(keyToElements => {StringMap.remove(key, keyToElements)});
+    |> IntMap.map(keyToElements => {
+         keyToElements
+         |> StringMap.filter((keyOnLine, _v) =>
+              !StringEx.startsWith(~prefix=key, keyOnLine)
+            )
+       });
 
   keyToElements' |> makeConsistent;
 };
+
+let set = replace(~startLine=None, ~stopLine=None);
 
 let updateElement =
     (~key, ~uniqueId, ~line, ~f: element => element, keyToElements) => {

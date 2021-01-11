@@ -140,9 +140,9 @@ let update = (~config: Config.resolver, model: t, msg) => {
       switch (cmd) {
       | None =>
         switch (Revery.Environment.os) {
-        | Windows => Configuration.Shell.windows.get(config)
-        | Mac => Configuration.Shell.osx.get(config)
-        | Linux => Configuration.Shell.linux.get(config)
+        | Windows(_) => Configuration.Shell.windows.get(config)
+        | Mac(_) => Configuration.Shell.osx.get(config)
+        | Linux(_) => Configuration.Shell.linux.get(config)
         | _ => shellCmd
         }
       | Some(specifiedCommand) => specifiedCommand
@@ -150,9 +150,9 @@ let update = (~config: Config.resolver, model: t, msg) => {
 
     let arguments =
       switch (Revery.Environment.os) {
-      | Windows => Configuration.ShellArgs.windows.get(config)
-      | Mac => Configuration.ShellArgs.osx.get(config)
-      | Linux => Configuration.ShellArgs.linux.get(config)
+      | Windows(_) => Configuration.ShellArgs.windows.get(config)
+      | Mac(_) => Configuration.ShellArgs.osx.get(config)
+      | Linux(_) => Configuration.ShellArgs.linux.get(config)
       | _ => []
       };
 
@@ -160,14 +160,14 @@ let update = (~config: Config.resolver, model: t, msg) => {
       Exthost.ShellLaunchConfig.(
         switch (Revery.Environment.os) {
         // Windows - simply inherit from the running process
-        | Windows => Inherit
+        | Windows(_) => Inherit
 
         // Mac - inherit (we rely on the '-l' flag to pick up user config)
-        | Mac => Inherit
+        | Mac(_) => Inherit
 
         // For Linux, there's a few stray variables that may come in from the AppImage
         // for example - LD_LIBRARY_PATH in issue #2040. We need to clear those out.
-        | Linux =>
+        | Linux(_) =>
           switch (
             Sys.getenv_opt("ONI2_ORIG_PATH"),
             Sys.getenv_opt("ONI2_ORIG_LD_LIBRARY_PATH"),
@@ -564,65 +564,65 @@ module Contributions = {
   let keybindings = {
     Feature_Input.Schema.[
       // Insert mode -> normal mdoe
-      {
-        key: "<C-\\><C-N>",
-        command: Commands.Oni.normalMode.id,
-        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<C-\\>n",
-        command: Commands.Oni.normalMode.id,
-        condition: "terminalFocus && insertMode" |> WhenExpr.parse,
-      },
+      bind(
+        ~key="<C-\\><C-N>",
+        ~command=Commands.Oni.normalMode.id,
+        ~condition="terminalFocus && insertMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<C-\\>n",
+        ~command=Commands.Oni.normalMode.id,
+        ~condition="terminalFocus && insertMode" |> WhenExpr.parse,
+      ),
       // Normal mode -> insert mode
-      {
-        key: "o",
-        command: Commands.Oni.insertMode.id,
-        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
-      },
-      {
-        key: "<S-O>",
-        command: Commands.Oni.insertMode.id,
-        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
-      },
-      {
-        key: "Shift+a",
-        command: Commands.Oni.insertMode.id,
-        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
-      },
-      {
-        key: "a",
-        command: Commands.Oni.insertMode.id,
-        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
-      },
-      {
-        key: "i",
-        command: Commands.Oni.insertMode.id,
-        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
-      },
-      {
-        key: "Shift+i",
-        command: Commands.Oni.insertMode.id,
-        condition: "terminalFocus && normalMode" |> WhenExpr.parse,
-      },
+      bind(
+        ~key="o",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-O>",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="Shift+a",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="a",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="i",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="Shift+i",
+        ~command=Commands.Oni.insertMode.id,
+        ~condition="terminalFocus && normalMode" |> WhenExpr.parse,
+      ),
       // Paste - Windows:
-      {
-        key: "<C-V>",
-        command: Feature_Clipboard.Commands.paste.id,
-        condition: "terminalFocus && insertMode && isWin" |> WhenExpr.parse,
-      },
+      bind(
+        ~key="<C-V>",
+        ~command=Feature_Clipboard.Commands.paste.id,
+        ~condition="terminalFocus && insertMode && isWin" |> WhenExpr.parse,
+      ),
       // Paste - Linux:
-      {
-        key: "<C-S-V>",
-        command: Feature_Clipboard.Commands.paste.id,
-        condition: "terminalFocus && insertMode && isLinux" |> WhenExpr.parse,
-      },
+      bind(
+        ~key="<C-S-V>",
+        ~command=Feature_Clipboard.Commands.paste.id,
+        ~condition="terminalFocus && insertMode && isLinux" |> WhenExpr.parse,
+      ),
       // Paste - Mac:
-      {
-        key: "<D-V>",
-        command: Feature_Clipboard.Commands.paste.id,
-        condition: "terminalFocus && insertMode && isMac" |> WhenExpr.parse,
-      },
+      bind(
+        ~key="<D-V>",
+        ~command=Feature_Clipboard.Commands.paste.id,
+        ~condition="terminalFocus && insertMode && isMac" |> WhenExpr.parse,
+      ),
     ];
   };
 };

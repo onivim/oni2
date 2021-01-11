@@ -25,7 +25,9 @@ module Key: {
     | NumpadSeparator
     | NumpadSubtract
     | NumpadDecimal
-    | NumpadDivide;
+    | NumpadDivide
+    | LeftControl
+    | RightControl;
 
   let toString: t => string;
 };
@@ -48,8 +50,7 @@ module Modifiers: {
 module PhysicalKey: {
   [@deriving show]
   type t = {
-    scancode: int,
-    keycode: int,
+    key: Key.t,
     modifiers: Modifiers.t,
   };
 };
@@ -76,10 +77,9 @@ module KeyPress: {
 
   let toString:
     // The name of the 'meta' key. Defaults to "Meta".
-    (~meta: string=?, ~keyCodeToString: int => string, t) => string;
+    (~meta: string=?, ~keyToString: Key.t => string=?, t) => string;
 
-  let physicalKey:
-    (~keycode: int, ~scancode: int, ~modifiers: Modifiers.t) => t;
+  let physicalKey: (~key: Key.t, ~modifiers: Modifiers.t) => t;
 
   let specialKey: SpecialKey.t => t;
 
@@ -93,13 +93,27 @@ module KeyPress: {
     // When [explicitShiftKeyNeeded] is [false]:
     // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
     // (Vim style parsing)
-    (
-      ~explicitShiftKeyNeeded: bool,
-      ~getKeycode: Key.t => option(int),
-      ~getScancode: Key.t => option(int),
-      string
-    ) =>
-    result(list(t), string);
+    (~explicitShiftKeyNeeded: bool, string) => result(list(t), string);
+};
+
+module KeyCandidate: {
+  // A KeyCandidate is a list of potential key-presses that could match.
+  // For example, on a US keyboard, a `Shift+=` key could be interpreted multiple ways:
+  // - `<S-=>`
+  // - `+`
+  // We should be able to handle bindings of either type, but the burden is on the consumer
+  // to provide the potential match candidates.
+  [@deriving show]
+  type t;
+
+  // [ofKeyPress(keyPress)] creates a candidate of a single key press
+  let ofKeyPress: KeyPress.t => t;
+
+  // [ofList(keyPresses)] creates a candidate from multiple key presses
+  let ofList: list(KeyPress.t) => t;
+
+  // [toList(candidate)] returns a list of key presses associate with the candidate
+  let toList: t => list(KeyPress.t);
 };
 
 module Matcher: {
@@ -115,13 +129,7 @@ module Matcher: {
     // When [explicitShiftKeyNeeded] is [false]:
     // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
     // (Vim style parsing)
-    (
-      ~explicitShiftKeyNeeded: bool,
-      ~getKeycode: Key.t => option(int),
-      ~getScancode: Key.t => option(int),
-      string
-    ) =>
-    result(t, string);
+    (~explicitShiftKeyNeeded: bool, string) => result(t, string);
 };
 
 module type Input = {
@@ -135,7 +143,14 @@ module type Input = {
   let addBinding: (Matcher.t, context => bool, command, t) => (t, uniqueId);
 
   let addMapping:
-    (Matcher.t, context => bool, list(KeyPress.t), t) => (t, uniqueId);
+    (
+      ~allowRecursive: bool,
+      Matcher.t,
+      context => bool,
+      list(KeyPress.t),
+      t
+    ) =>
+    (t, uniqueId);
 
   // Turn off all bindings, as if no bindings are defined
   let disable: t => t;
@@ -151,7 +166,10 @@ module type Input = {
     | Text(string)
     // The `Unhandled` effect occurs when an unhandled `keyDown` input event occurs.
     // This can happen if there is no binding associated with a key.
-    | Unhandled(KeyPress.t)
+    | Unhandled({
+        key: KeyCandidate.t,
+        isProducedByRemap: bool,
+      })
     // RemapRecursionLimitHit is produced if there is a recursive loop
     // in remappings such that we hit the max limit.
     | RemapRecursionLimitHit;
@@ -160,7 +178,8 @@ module type Input = {
     (
       ~leaderKey: option(PhysicalKey.t)=?,
       ~context: context,
-      ~key: KeyPress.t,
+      ~scancode: int,
+      ~key: KeyCandidate.t,
       t
     ) =>
     (t, list(effect));
@@ -169,7 +188,7 @@ module type Input = {
     (
       ~leaderKey: option(PhysicalKey.t)=?,
       ~context: context,
-      ~key: KeyPress.t,
+      ~scancode: int,
       t
     ) =>
     (t, list(effect));
@@ -182,7 +201,7 @@ module type Input = {
 
   // [consumedKeys(model)] returns a list of keys
   // that are currently consumed by the state machine.
-  let consumedKeys: t => list(KeyPress.t);
+  let consumedKeys: t => list(KeyCandidate.t);
 
   let remove: (uniqueId, t) => t;
 

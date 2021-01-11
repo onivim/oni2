@@ -12,6 +12,7 @@ module Item = {
     label: Exthost.Label.t,
     alignment: Exthost.Msg.StatusBar.alignment,
     color: option(Exthost.Color.t),
+    backgroundColor: option(Exthost.Color.t),
     command: option(string),
     tooltip: option(string),
   };
@@ -19,6 +20,7 @@ module Item = {
   let create =
       (
         ~color=?,
+        ~backgroundColor=?,
         ~command=?,
         ~tooltip=?,
         ~id,
@@ -29,6 +31,7 @@ module Item = {
       ) => {
     id,
     color,
+    backgroundColor,
     priority,
     label,
     alignment,
@@ -40,14 +43,17 @@ module Item = {
 // MSG
 
 [@deriving show]
+type contextMenuMsg =
+  | ClearAll
+  | Open;
+
+[@deriving show]
 type msg =
   | ItemAdded(Item.t)
   | ItemDisposed(string)
   | DiagnosticsClicked
   | FileTypeClicked
-  | ContextMenuClosed
-  | ContextMenuNotificationClearAllClicked
-  | ContextMenuNotificationOpenClicked
+  | ContextMenu(Component_ContextMenu.msg(contextMenuMsg))
   | NotificationCountClicked
   | NotificationsCountRightClicked
   | ContributedItemClicked({command: string});
@@ -61,12 +67,28 @@ type outmsg =
   | ShowFileTypePicker
   | Effect(Isolinear.Effect.t(msg));
 
+let notificationContextMenu =
+  Component_ContextMenu.make([
+    Item({
+      label: "Clear All",
+      // icon: None,
+      data: ClearAll,
+      details: Revery.UI.React.empty,
+    }),
+    Item({
+      label: "Open",
+      // icon: None,
+      data: Open,
+      details: Revery.UI.React.empty,
+    }),
+  ]);
+
 type model = {
   items: list(Item.t),
-  contextMenuVisible: bool,
+  contextMenu: option(Component_ContextMenu.model(contextMenuMsg)),
 };
 
-let initial = {items: [], contextMenuVisible: false};
+let initial = {items: [], contextMenu: None};
 
 // UPDATE
 
@@ -86,21 +108,33 @@ let update = (~client, model, msg) => {
     )
 
   | NotificationsCountRightClicked => (
-      {...model, contextMenuVisible: true},
+      {...model, contextMenu: Some(notificationContextMenu)},
       Nothing,
     )
 
-  | ContextMenuNotificationClearAllClicked => (
-      {...model, contextMenuVisible: false},
-      Nothing,
-    )
+  | ContextMenu(msg) =>
+    model.contextMenu
+    |> Option.map(contextMenu => {
+         let (contextMenu', outmsg) =
+           contextMenu |> Component_ContextMenu.update(msg);
 
-  | ContextMenuNotificationOpenClicked => (
-      {...model, contextMenuVisible: false},
-      ToggleNotifications,
-    )
-
-  | ContextMenuClosed => ({...model, contextMenuVisible: false}, Nothing)
+         switch (outmsg) {
+         | Component_ContextMenu.Nothing => (
+             {...model, contextMenu: Some(contextMenu')},
+             Nothing,
+           )
+         | Component_ContextMenu.Selected({data}) =>
+           switch (data) {
+           | ClearAll => ({...model, contextMenu: None}, ClearNotifications)
+           | Open => ({...model, contextMenu: None}, ToggleNotifications)
+           }
+         | Component_ContextMenu.Cancelled => (
+             {...model, contextMenu: None},
+             Nothing,
+           )
+         };
+       })
+    |> Option.value(~default=(model, Nothing))
 
   | FileTypeClicked => (model, ShowFileTypePicker)
 
@@ -128,7 +162,7 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 module Animation = Revery.UI.Animation;
-module ContextMenu = Oni_Components.ContextMenu;
+module ContextMenu = Component_ContextMenu;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 module Label = Oni_Components.Label;
@@ -233,8 +267,8 @@ let notificationCount =
       ~theme,
       ~font: UiFont.t,
       ~foreground as color,
+      ~maybeContextMenu,
       ~notifications: Feature_Notification.model,
-      ~contextMenuVisible,
       ~dispatch,
       (),
     ) => {
@@ -245,33 +279,22 @@ let notificationCount =
   let onRightClick = () => dispatch(NotificationsCountRightClicked);
 
   let menu = () => {
-    let items =
-      ContextMenu.[
-        {
-          label: "Clear All",
-          // icon: None,
-          data: ContextMenuNotificationClearAllClicked,
-        },
-        {
-          label: "Open",
-          // icon: None,
-          data: ContextMenuNotificationOpenClicked,
-        },
-      ];
-
-    <ContextMenu
-      orientation=(`Top, `Left)
-      offsetX=(-10)
-      items
-      theme
-      font // correct for item padding
-      onCancel={() => dispatch(ContextMenuClosed)}
-      onItemSelect={({data, _}: ContextMenu.item(msg)) => dispatch(data)}
-    />;
+    maybeContextMenu
+    |> Option.map(model => {
+         <Component_ContextMenu.View
+           orientation=(`Top, `Left)
+           offsetX=(-10)
+           theme
+           font
+           dispatch={msg => dispatch(ContextMenu(msg))}
+           model
+         />
+       })
+    |> Option.value(~default=React.empty);
   };
 
   <item onClick onRightClick>
-    {contextMenuVisible ? <menu /> : React.empty}
+    <menu />
     <View
       style=Style.[
         flexDirection(`Row),
@@ -384,7 +407,8 @@ module View = {
 
     let yOffset = 0.;
 
-    let toStatusBarElement = (~command=?, ~color=?, ~tooltip=?, label) => {
+    let toStatusBarElement =
+        (~command=?, ~color=?, ~backgroundColor=?, ~tooltip=?, label) => {
       let onClick =
         command
         |> Option.map((command, ()) =>
@@ -395,6 +419,11 @@ module View = {
         color
         |> OptionEx.flatMap(Exthost.Color.resolve(theme))
         |> Option.value(~default=defaultForeground);
+
+      let backgroundColor =
+        backgroundColor
+        |> OptionEx.flatMap(Exthost.Color.resolve(theme))
+        |> Option.value(~default=Revery.Colors.transparentWhite);
 
       let children = <Label font color label />;
       let style =
@@ -411,14 +440,21 @@ module View = {
           <Tooltip offsetY=(-25) text=tooltip style> children </Tooltip>
         };
 
-      <item ?onClick> viewOrTooltip </item>;
+      <item ?onClick backgroundColor> viewOrTooltip </item>;
     };
 
     let leftItems =
       statusBar.items
       |> List.filter((item: Item.t) => item.alignment == Left)
-      |> List.map(({command, label, color, tooltip, _}: Item.t) =>
-           toStatusBarElement(~command?, ~color?, ~tooltip?, label)
+      |> List.map(
+           ({command, label, color, tooltip, backgroundColor, _}: Item.t) =>
+           toStatusBarElement(
+             ~command?,
+             ~backgroundColor?,
+             ~color?,
+             ~tooltip?,
+             label,
+           )
          )
       |> React.listToElement;
 
@@ -532,7 +568,7 @@ module View = {
           font
           foreground
           notifications
-          contextMenuVisible={statusBar.contextMenuVisible}
+          maybeContextMenu={statusBar.contextMenu}
         />
       </section>
       <sectionGroup>

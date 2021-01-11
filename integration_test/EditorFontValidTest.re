@@ -3,16 +3,16 @@ open Oni_IntegrationTestLib;
 
 let fontToUse =
   switch (Revery.Environment.os) {
-  | Revery.Environment.Windows => "Consolas"
-  | Revery.Environment.Mac => "Menlo"
-  | Revery.Environment.Linux => "Ubuntu Mono"
+  | Revery.Environment.Windows(_) => "Consolas"
+  | Revery.Environment.Mac(_) => "Menlo"
+  | Revery.Environment.Linux(_) => "Ubuntu Mono"
   | _ => "Courier"
   };
 
 // Try loading a different font
 let configuration = {|{ "editor.fontFamily": "|} ++ fontToUse ++ {|"}|};
 
-if (Revery.Environment.os !== Revery.Environment.Linux) {
+if (!Revery.Environment.isLinux) {
   // Skipping this test on Linux, because there is a known fontconfig memory leak we hit.
   // The `FcInit` function in fontconfig leaks, and calling `FcFini` to clean it up crashes.
   // Some related notes:

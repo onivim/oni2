@@ -53,19 +53,15 @@ module VimSettings = {
     });
 };
 
-module Experimental = {
-  module Editor = {
-    let codeLensEnabled =
-      setting(
-        ~vim=VimSettings.codeLens,
-        "experimental.editor.codeLens",
-        bool,
-        ~default=false,
-      );
-  };
-};
-
 module Editor = {
+  let codeLensEnabled =
+    setting(
+      ~vim=VimSettings.codeLens,
+      "editor.codeLens",
+      bool,
+      ~default=true,
+    );
+
   let mouseWheelScrollPixels =
     setting(
       "editor.mouseWheelScrollPixels",
@@ -74,10 +70,12 @@ module Editor = {
     )
 };
 
+module Experimental = {};
+
 let contributions = [
   inactiveWindowOpacity.spec,
   animation.spec,
   shadows.spec,
-  Experimental.Editor.codeLensEnabled.spec,
   Editor.mouseWheelScrollPixels.spec,
+  Editor.codeLensEnabled.spec,
 ];

@@ -214,8 +214,7 @@ let start =
       | ColorSchemeChanged(maybeColorScheme) =>
         switch (maybeColorScheme) {
         | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker))
-        | Some(colorScheme) =>
-          dispatch(Actions.ThemeLoadByName(colorScheme))
+        | Some(colorScheme) => dispatch(Actions.ThemeLoadById(colorScheme))
         }
 
       | MacroRecordingStarted({register}) =>
@@ -832,7 +831,6 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
-
     | Terminal(Command(NormalMode)) =>
       let maybeBufferId =
         state

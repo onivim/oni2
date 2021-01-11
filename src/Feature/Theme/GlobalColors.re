@@ -113,7 +113,36 @@ module Button = {
       {dark: ref(background), light: ref(background), hc: unspecified},
     );
 
-  let defaults = [background, foreground, hoverBackground];
+  let secondaryForeground =
+    define(
+      "button.secondaryForeground",
+      {dark: hex("#FFF"), light: hex("#FFF"), hc: hex("#FFF")},
+    );
+
+  let secondaryBackground =
+    define(
+      "button.secondaryBackground",
+      {dark: hex("#0E639C"), light: hex("#007ACC"), hc: unspecified},
+    );
+
+  let secondaryHoverBackground =
+    define(
+      "button.secondaryHoverBackground",
+      {
+        dark: ref(secondaryBackground),
+        light: ref(secondaryBackground),
+        hc: unspecified,
+      },
+    );
+
+  let defaults = [
+    background,
+    foreground,
+    hoverBackground,
+    secondaryForeground,
+    secondaryBackground,
+    secondaryHoverBackground,
+  ];
 };
 
 module Dropdown = {
@@ -166,6 +195,11 @@ module Editor = {
       {light: hex("#ADD6FF"), dark: hex("#264F78"), hc: hex("#f3f518")},
     );
 
+  let wordHighlightBackground =
+    define(
+      "editor.wordHighlightBackground",
+      {light: hex("#57575740"), dark: hex("#575757B8"), hc: unspecified},
+    );
   let defaults = [
     background,
     foreground,
@@ -174,6 +208,7 @@ module Editor = {
     findMatchHighlightsBackground,
     lineHighlightBackground,
     selectionBackground,
+    wordHighlightBackground,
   ];
 };
 
@@ -969,7 +1004,18 @@ module StatusBar = {
     );
   let foreground = define("statusBar.foreground", all(hex("#FFF")));
 
-  let defaults = [background, foreground];
+  let errorItemBackground =
+    define("statusBarItem.errorBackground", all(hex("#FF0000FF")));
+
+  let errorItemForeground =
+    define("statusBarItem.errorForeground", all(ref(foreground)));
+
+  let defaults = [
+    background,
+    foreground,
+    errorItemBackground,
+    errorItemForeground,
+  ];
 };
 
 module SymbolIcon = {

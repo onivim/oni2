@@ -43,13 +43,14 @@ let pick = (f, {extensions, _}) => {
      });
 };
 
-let themeByName = (~name, model) => {
+let themeById = (~id, model) => {
   model
   |> pick(manifest => manifest.contributes.themes)
   |> List.flatten
   |> List.fold_left(
        (acc, curr: Contributions.Theme.t) =>
-         if (curr.label == name) {
+         if (Contributions.Theme.id(curr) == id
+             || Contributions.Theme.label(curr) == id) {
            Some(curr);
          } else {
            acc;
@@ -64,9 +65,7 @@ let themesByName = (~filter: string, model) => {
        Exthost.Extension.Contributions.(manifest.contributes.themes)
      })
   |> List.flatten
-  |> List.map(({label, _}: Exthost.Extension.Contributions.Theme.t) =>
-       label
-     )
+  |> List.map(theme => Contributions.Theme.label(theme))
   |> List.filter(label => Utility.StringEx.contains(filter, label));
 };
 

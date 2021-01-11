@@ -113,6 +113,10 @@ let update = (~config, editor, msg) => {
       Editor.setInlineElementSize(~key, ~line, ~uniqueId, ~height, editor),
       Nothing,
     )
+  | PreviewChanged(preview) => (
+      Editor.setPreview(~preview, editor),
+      Nothing,
+    )
   | Internal(msg) => (Editor.update(msg, editor), Nothing)
   | EditorMouseMoved({time, pixelX, pixelY}) =>
     let editor' = editor |> Editor.mouseMove(~time, ~pixelX, ~pixelY);

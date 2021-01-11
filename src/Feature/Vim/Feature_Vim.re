@@ -147,3 +147,18 @@ module Configuration = {
     settings |> StringMap.find_opt(settingName);
   };
 };
+
+module Keybindings = {
+  open Feature_Input.Schema;
+  let controlSquareBracketRemap =
+    remap(
+      ~allowRecursive=true,
+      ~fromKeys="<C-[>",
+      ~toKeys="<ESC>",
+      ~condition=WhenExpr.Value(True),
+    );
+};
+
+module Contributions = {
+  let keybindings = Keybindings.[controlSquareBracketRemap];
+};

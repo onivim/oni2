@@ -23,6 +23,36 @@ type msg =
     });
 // TODO: kind?
 
+let clear = (~bufferId, model) => {
+  {
+    ...model,
+    bufferToHighlights:
+      IntMap.add(bufferId, IntMap.empty, model.bufferToHighlights),
+  };
+};
+
+let cursorMoved = (~buffer, ~cursor, model) => {
+  let isCursorInHighlight = (highlights: IntMap.t(list(CharacterRange.t))) => {
+    highlights
+    |> IntMap.bindings
+    |> List.map(snd)
+    |> List.flatten
+    |> List.exists(range => CharacterRange.contains(cursor, range));
+  };
+
+  let bufferId = Oni_Core.Buffer.getId(buffer);
+  let currentHighlights =
+    model.bufferToHighlights
+    |> IntMap.find_opt(bufferId)
+    |> Option.value(~default=IntMap.empty);
+
+  if (!isCursorInHighlight(currentHighlights)) {
+    clear(~bufferId, model);
+  } else {
+    model;
+  };
+};
+
 let update = (msg, model) => {
   switch (msg) {
   | DocumentHighlighted({bufferId, ranges}) =>
@@ -57,29 +87,48 @@ let getLinesWithHighlight = (~bufferId, model) => {
   |> Option.value(~default=[]);
 };
 
-let sub = (~buffer, ~location, ~client, model) => {
-  let toMsg = (highlights: list(Exthost.DocumentHighlight.t)) => {
-    let ranges =
-      highlights
-      |> List.map(({range, _}: Exthost.DocumentHighlight.t) => {
-           Exthost.OneBasedRange.toRange(range)
-         });
+module Configuration = {
+  open Config.Schema;
+  let enabled = setting("editor.occurrencesHighlight", bool, ~default=true);
+};
 
-    DocumentHighlighted({bufferId: Oni_Core.Buffer.getId(buffer), ranges});
+let configurationChanged = (~config, model) =>
+  if (!Configuration.enabled.get(config)) {
+    {...model, bufferToHighlights: IntMap.empty};
+  } else {
+    model;
   };
 
-  model.providers
-  |> List.filter(({selector, _}) =>
-       selector |> Exthost.DocumentSelector.matchesBuffer(~buffer)
-     )
-  |> List.map(({handle, _}) => {
-       Service_Exthost.Sub.documentHighlights(
-         ~handle,
-         ~buffer,
-         ~position=location,
-         ~toMsg,
-         client,
+let sub = (~isInsertMode, ~config, ~buffer, ~location, ~client, model) =>
+  if (!Configuration.enabled.get(config) || isInsertMode) {
+    Isolinear.Sub.none;
+  } else {
+    let toMsg = (highlights: list(Exthost.DocumentHighlight.t)) => {
+      let ranges =
+        highlights
+        |> List.map(({range, _}: Exthost.DocumentHighlight.t) => {
+             Exthost.OneBasedRange.toRange(range)
+           });
+
+      DocumentHighlighted({bufferId: Oni_Core.Buffer.getId(buffer), ranges});
+    };
+
+    model.providers
+    |> List.filter(({selector, _}) =>
+         selector |> Exthost.DocumentSelector.matchesBuffer(~buffer)
        )
-     })
-  |> Isolinear.Sub.batch;
+    |> List.map(({handle, _}) => {
+         Service_Exthost.Sub.documentHighlights(
+           ~handle,
+           ~buffer,
+           ~position=location,
+           ~toMsg,
+           client,
+         )
+       })
+    |> Isolinear.Sub.batch;
+  };
+
+module Contributions = {
+  let configuration = Configuration.[enabled.spec];
 };

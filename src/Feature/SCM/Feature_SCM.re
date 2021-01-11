@@ -377,6 +377,7 @@ type outmsg =
   | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
   | OpenFile(string)
+  | PreviewFile(string)
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | Nothing;
 
@@ -458,6 +459,7 @@ module Internal = {
 
 let update =
     (
+      ~previewEnabled,
       ~fileSystem: Feature_FileSystem.model,
       extHostClient: Exthost.Client.t,
       model,
@@ -853,6 +855,15 @@ let update =
              let outmsg =
                switch (outmsg) {
                | Component_VimList.Nothing => Some(Nothing)
+               | Component_VimList.Touched({index}) =>
+                 Component_VimList.get(index, viewModel)
+                 |> Option.map((item: Resource.t) =>
+                      previewEnabled
+                        ? PreviewFile(
+                            item.uri |> Oni_Core.Uri.toFileSystemPath,
+                          )
+                        : OpenFile(item.uri |> Oni_Core.Uri.toFileSystemPath)
+                    )
                | Component_VimList.Selected({index}) =>
                  Component_VimList.get(index, viewModel)
                  |> Option.map((item: Resource.t) =>

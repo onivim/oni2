@@ -3,45 +3,40 @@ open Feature_Input.Schema;
 module Json = Oni_Core.Json;
 
 module Keybinding = {
-  let parseSimple =
-    fun
-    | `String(s) => WhenExpr.Defined(s)
-    | _ => WhenExpr.Value(False);
+  module Decode = {
+    open Json.Decode;
 
-  let parseAndExpression =
-    fun
-    | `String(expr) => WhenExpr.Defined(expr)
-    | `List(andExpressions) =>
-      WhenExpr.And(List.map(parseSimple, andExpressions))
-    | _ => WhenExpr.Value(False);
+    let andExpressions =
+      list(
+        one_of([
+          ("string", string |> map(str => WhenExpr.Defined(str))),
+          ("fallback", succeed(WhenExpr.Value(False))),
+        ]),
+      )
+      |> map(items => WhenExpr.And(items));
 
-  let condition_of_yojson =
-    fun
-    | `List(orExpressions) =>
-      Ok(WhenExpr.Or(List.map(parseAndExpression, orExpressions)))
-    | `String(v) => Ok(WhenExpr.parse(v))
-    | `Null => Ok(WhenExpr.Value(True))
-    | _ => Error("Expected string for condition");
+    let condition =
+      one_of([
+        ("list", list(andExpressions) |> map(items => WhenExpr.Or(items))),
+        ("string", string |> map(WhenExpr.parse)),
+        ("null", null |> map(_ => WhenExpr.Value(True))),
+      ]);
+
+    let binding =
+      obj(({field, _}) => {
+        Feature_Input.Schema.bind(
+          ~key=field.required("key", string),
+          ~command=field.required("command", string),
+          ~condition=
+            field.withDefault("when", WhenExpr.Value(True), condition),
+        )
+      });
+  };
 
   let of_yojson = (json: Yojson.Safe.t) => {
-    let key = Yojson.Safe.Util.member("key", json);
-    let command = Yojson.Safe.Util.member("command", json);
-    let condition =
-      Yojson.Safe.Util.member("when", json) |> condition_of_yojson;
-
-    let wrapError = msg => Error(msg ++ ": " ++ Yojson.Safe.to_string(json));
-
-    switch (condition) {
-    | Ok(condition) =>
-      switch (key, command) {
-      | (`String(key), `String(command)) => Ok({key, command, condition})
-      | (`String(_), _) => wrapError("'command' is required")
-      | (_, `String(_)) => wrapError("'key' is required")
-      | _ => wrapError("'key' and 'command' are required")
-      }
-
-    | Error(_) as err => err
-    };
+    json
+    |> Json.Decode.decode_value(Decode.binding)
+    |> Result.map_error(Json.Decode.string_of_error);
   };
 };
 
@@ -89,17 +84,14 @@ module Legacy = {
     list(Feature_Input.Schema.keybinding) =
     keys => {
       let upgradeBinding = (binding: Feature_Input.Schema.keybinding) => {
-        switch (binding.command) {
-        | "quickOpen.open" => {
-            ...binding,
-            command: "workbench.action.quickOpen",
-          }
-        | "commandPalette.open" => {
-            ...binding,
-            command: "workbench.action.showCommands",
-          }
-        | _ => binding
-        };
+        let f = cmd =>
+          switch (cmd) {
+          | "quickOpen.open" => "workbench.action.quickOpen"
+          | "commandPalette.open" => "workbench.action.showCommands"
+          | str => str
+          };
+
+        Feature_Input.Schema.mapCommand(~f, binding);
       };
 
       keys |> List.map(upgradeBinding);

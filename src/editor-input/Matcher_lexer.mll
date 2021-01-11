@@ -60,6 +60,9 @@
 	"numpad_multiply", BINDING(Physical(NumpadMultiply));
 	"leader", BINDING(Special(Leader));
 	"plug", BINDING(Special(Plug));
+	"lt", BINDING(Physical(Character('<')));
+	"gt", BINDING(Physical(Character('>')));
+	"plus", BINDING(Physical(Character('+')));
 	]
 }
 
@@ -69,7 +72,7 @@ let alpha = ['a' - 'z' 'A' - 'Z']
 let alphaWithUnderscore = ['a' - 'z' 'A' - 'Z' '_']
 let modifier = alpha+ ['-' '+']
 
-let binding = ['a'-'z' 'A'-'Z' '0'-'9' '`' '-' '=' '[' ']' '\\' ';' '\'' ',' '.' '/']
+let binding = ['a'-'z' 'A'-'Z' '0'-'9' '`' '-' '=' '[' ']' '\\' ';' '\'' ',' '.' '/' '+' ]
 
 let numpadDigit = ['n'] ['u'] ['m'] ['p'] ['a'] ['d'] ['0' '9']
 
@@ -101,4 +104,4 @@ rule token = parse
 | '<' { LT }
 | '>' { GT }
 | eof { EOF }
-| _ { raise Error }
+| _ { BINDING (UnmatchedString(Lexing.lexeme lexbuf)) }

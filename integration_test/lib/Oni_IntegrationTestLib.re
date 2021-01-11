@@ -126,6 +126,13 @@ let runTest =
 
   Vim.init();
   Oni2_KeyboardLayout.init();
+  Log.infof(m =>
+    m(
+      "Keyboard Language: %s Layout: %s",
+      Oni2_KeyboardLayout.getCurrentLanguage(),
+      Oni2_KeyboardLayout.getCurrentLayout(),
+    )
+  );
 
   let initialBuffer = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
@@ -178,10 +185,10 @@ let runTest =
           <Oni_UI.Root state dispatch=uiDispatch^ />,
         );
       },
-      //      Revery.Utility.HeadlessWindow.takeScreenshot(
-      //        headlessWindow,
-      //        "screenshot.png",
-      //      );
+      // Revery.Utility.HeadlessWindow.takeScreenshot(
+      //   headlessWindow,
+      //   "screenshot.png",
+      // );
       Revery.Time.zero,
     );
 

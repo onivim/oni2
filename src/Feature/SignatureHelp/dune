@@ -3,6 +3,7 @@
  (public_name Oni2.feature.signature_help)
  (libraries Oni2.editor-core-types Oni2.core Oni2.syntax
    Oni2.feature.commands Oni2.feature.editor Oni2.components
-   Oni2.service.exthost uucp)
+   Oni2.feature.language_support Oni2.service.exthost uucp)
+ (inline_tests)
  (preprocess
-  (pps ppx_deriving.show brisk-reconciler.ppx)))
+  (pps ppx_deriving.show ppx_inline_test brisk-reconciler.ppx)))

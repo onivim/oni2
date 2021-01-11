@@ -1,6 +1,5 @@
 [@deriving show]
 type t = {
-  scancode: int,
-  keycode: int,
+  key: Key.t,
   modifiers: Modifiers.t,
 };

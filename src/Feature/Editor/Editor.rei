@@ -23,7 +23,9 @@ module WrapMode: {
     | Viewport;
 };
 
-let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
+let create:
+  (~config: Config.resolver, ~buffer: EditorBuffer.t, ~preview: bool, unit) =>
+  t;
 let copy: t => t;
 
 type inlineElement;
@@ -38,14 +40,12 @@ let makeInlineElement:
   ) =>
   inlineElement;
 
-let setInlineElements: (~key: string, ~elements: list(inlineElement), t) => t;
-
-let replaceInlineElements:
+let setCodeLens:
   (
-    ~key: string,
     ~startLine: EditorCoreTypes.LineNumber.t,
     ~stopLine: EditorCoreTypes.LineNumber.t,
-    ~elements: list(inlineElement),
+    ~handle: int,
+    ~lenses: list(Feature_LanguageSupport.CodeLens.t),
     t
   ) =>
   t;
@@ -68,6 +68,8 @@ let linesWithInlineElements: t => list(EditorCoreTypes.LineNumber.t);
 
 let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;
+let getPreview: t => bool;
+let setPreview: (~preview: bool, t) => t;
 let getBufferId: t => int;
 let getTopVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
 let getBottomVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
@@ -83,7 +85,7 @@ let getPrimaryCursor: t => CharacterPosition.t;
 let getPrimaryCursorByte: t => BytePosition.t;
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
-let getTotalWidthInPixels: t => int;
+let getTotalWidthInPixels: t => float;
 let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
