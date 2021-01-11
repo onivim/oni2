@@ -20,7 +20,7 @@ __Pass:__
 __Pass:__
 - [ ] OSX
 
-# 2. First-Run Experience
+# 2. First-run Experience
 
 Test cases covering launching and using Onivim without any persistence or configuration.
 
@@ -186,6 +186,29 @@ Prerequisite:
 - Run Onivim 2
 - Verify can open quickopen menu (Command+P/Control+P)
 - Verify can enter insert mode and type text
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+# 8. Workspace
+
+## 8.1 Open Workspace via Command Palette
+
+Regression test for #2967 (crash with open file / folder )
+
+Prerequisite:
+- Set keyboard layout to Romaji
+
+- Open Onivim 2
+- Open command palette (Command+Shift+P/Control+Shift+P)
+- Select 'Open folder'
+- Select a different folder, press 'Open'
+- Verify folder is changed
+- Select 'Open folder'
+- Press 'Cancel'
+- Verify folder did not change
 
 __Pass:__
 - [ ] Win
