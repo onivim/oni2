@@ -209,3 +209,8 @@ Prerequisite:
 - Select 'Open folder'
 - Press 'Cancel'
 - Verify folder did not change
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
