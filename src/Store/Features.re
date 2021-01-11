@@ -998,16 +998,8 @@ let update =
 
       let bufferId = EditorBuffer.id(editorBuffer);
 
-      let layout =
-        switch (split) {
-        | `Current => state.layout
-        | `Horizontal => Feature_Layout.split(`Horizontal, state.layout)
-        | `Vertical => Feature_Layout.split(`Vertical, state.layout)
-        | `NewTab => Feature_Layout.addLayoutTab(state.layout)
-        };
-
       let existingEditor =
-        Feature_Layout.activeGroupEditors(layout)
+        Feature_Layout.activeGroupEditors(state.layout)
         |> List.find_opt(editor => Editor.getBufferId(editor) == bufferId);
 
       let (isPreview, editor) =
@@ -1015,7 +1007,10 @@ let update =
         | Some(ed) =>
           let isPreview = Editor.getPreview(ed) && preview;
 
-          (isPreview, Editor.setPreview(~preview=isPreview, ed));
+          (
+            isPreview,
+            Editor.setPreview(~preview=isPreview, Editor.copy(ed)),
+          );
         | None => (
             preview,
             Editor.create(
@@ -1025,6 +1020,15 @@ let update =
               (),
             ),
           )
+        };
+
+      let layout =
+        switch (split) {
+        | `Current => state.layout
+        | `Horizontal =>
+          Feature_Layout.split(~editor, `Horizontal, state.layout)
+        | `Vertical => Feature_Layout.split(~editor, `Vertical, state.layout)
+        | `NewTab => Feature_Layout.addLayoutTab(state.layout)
         };
 
       let editor' =
