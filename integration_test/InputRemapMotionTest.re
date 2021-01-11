@@ -2,7 +2,9 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 open EditorCoreTypes;
 
-runTest(~name="InputRemapMotionTest (#2114)", (dispatch, wait, runEffects) => {
+runTest(
+  ~name="InputRemapMotionTest (#2114)",
+  ({dispatch, wait, runEffects, input, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
@@ -39,22 +41,6 @@ runTest(~name="InputRemapMotionTest (#2114)", (dispatch, wait, runEffects) => {
   );
   runEffects();
 
-  let input = key => {
-    let modifiers = EditorInput.Modifiers.none;
-
-    let keyPress =
-      EditorInput.KeyPress.physicalKey(
-        ~key=EditorInput.Key.Character(key),
-        ~modifiers,
-      )
-      |> EditorInput.KeyCandidate.ofKeyPress;
-    let time = Revery.Time.now();
-
-    dispatch(Model.Actions.KeyDown({key: keyPress, scancode: 1, time}));
-    dispatch(Model.Actions.KeyUp({scancode: 1, time}));
-    runEffects();
-  };
-
   let waitForCursorPosition = bytePosition => {
     wait(
       ~name="Verify cursor is at:" ++ BytePosition.show(bytePosition),
@@ -74,25 +60,25 @@ runTest(~name="InputRemapMotionTest (#2114)", (dispatch, wait, runEffects) => {
   );
 
   // Move down, jklm style
-  input('k');
+  input("k");
   waitForCursorPosition(
     BytePosition.{line: LineNumber.(zero + 1), byte: ByteIndex.zero},
   );
 
   // Move right, jklm style
-  input('m');
+  input("m");
   waitForCursorPosition(
     BytePosition.{line: LineNumber.(zero + 1), byte: ByteIndex.(zero + 1)},
   );
 
   // Move up, jklm style
-  input('l');
+  input("l");
   waitForCursorPosition(
     BytePosition.{line: LineNumber.(zero), byte: ByteIndex.(zero + 1)},
   );
 
   // Move left, jklm style
-  input('j');
+  input("j");
   waitForCursorPosition(
     BytePosition.{line: LineNumber.(zero), byte: ByteIndex.(zero)},
   );
