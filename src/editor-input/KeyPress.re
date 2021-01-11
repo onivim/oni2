@@ -44,11 +44,9 @@ let ofInternal =
   };
   switch (key) {
   | Matcher_internal.UnmatchedString(str) =>
-    prerr_endline("--str: " ++ str);
     ZedBundled.explode(str)
     |> List.map(uchar =>
          if (Uchar.is_char(uchar)) {
-           prerr_endline("NOt uchar");
            let char = Uchar.to_char(uchar);
            let lowercaseChar = Char.lowercase_ascii(char);
            let isCapitalized = lowercaseChar != char;
@@ -61,20 +59,47 @@ let ofInternal =
              keyToKeyPress(Key.Character(Uchar.of_char(lowercaseChar)));
            };
          } else {
-           prerr_endline(
-             "Unicode charecters not yet supported in bindings: "
-             ++ ZedBundled.make(1, uchar),
-           );
-           keyToKeyPress(Key.Character(Uchar.of_char('o')));
-           // Error(
-           //   "Unicode characters not yet supported in bindings: "
-           //   ++ ZedBundled.make(1, uchar),
-           // );
+           keyToKeyPress(Key.Character(uchar));
          }
-       );
+       )
   | Matcher_internal.Special(special) => [Ok(SpecialKey(special))]
   | Matcher_internal.Physical(key) => [keyToKeyPress(key)]
   };
+};
+
+let combineUnmatchedStrings = (keys: list(Matcher_internal.keyMatcher)) => {
+  let rec combine = (acc, current, keys) => {
+    Matcher_internal.(
+      {
+        switch (keys) {
+        | [hd, ...tail] =>
+          switch (hd) {
+          | (UnmatchedString(str), mods) =>
+            switch (current) {
+            | None => combine(acc, Some((str, mods)), tail)
+            | Some((prev, _mods)) =>
+              combine(acc, Some((prev ++ str, mods)), tail)
+            }
+
+          | key =>
+            let acc' =
+              switch (current) {
+              | None => acc
+              | Some((str, mods)) => [(UnmatchedString(str), mods), ...acc]
+              };
+            combine([key, ...acc'], None, tail);
+          }
+        | [] =>
+          switch (current) {
+          | None => acc
+          | Some((str, mods)) => [(UnmatchedString(str), mods), ...acc]
+          }
+        };
+      }
+    );
+  };
+
+  combine([], None, keys) |> List.rev;
 };
 
 let parse = (~explicitShiftKeyNeeded, str) => {
@@ -88,13 +113,13 @@ let parse = (~explicitShiftKeyNeeded, str) => {
     | v => Ok(v)
     };
 
-  prerr_endline("Parsing str: " ++ str);
   let flatMap = (f, r) => Result.bind(r, f);
 
   let addShiftKeyToCapital = !explicitShiftKeyNeeded;
 
   let finish = r => {
     r
+    |> combineUnmatchedStrings
     |> List.map(ofInternal(~addShiftKeyToCapital))
     |> List.flatten
     |> Base.Result.all;
