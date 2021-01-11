@@ -1,5 +1,49 @@
 open Oni_Core;
 
+module Internal = {
+  let keyBindingsToKeyEquivalent:
+    list(list(EditorInput.KeyPress.t)) =>
+    option(Revery.Native.Menu.KeyEquivalent.t) =
+    candidates => {
+      candidates
+      // Filter to single key press
+      |> List.filter_map(
+           fun
+           | [hd] => Some(hd)
+           | _ => None,
+         )
+      |> List.filter_map(EditorInput.KeyPress.toPhysicalKey)
+      |> List.filter(({modifiers, _}: EditorInput.PhysicalKey.t) => {
+           modifiers.meta
+         })
+      |> (
+        l =>
+          List.nth_opt(l, 0)
+          |> Option.map(({modifiers, key}: EditorInput.PhysicalKey.t) => {
+               open Revery.Native.Menu;
+               let key =
+                 KeyEquivalent.ofString(EditorInput.Key.toString(key));
+
+               let key =
+                 if (modifiers.shift) {
+                   KeyEquivalent.enableShift(key);
+                 } else {
+                   key;
+                 };
+
+               let key =
+                 if (modifiers.alt) {
+                   KeyEquivalent.enableAlt(key);
+                 } else {
+                   key;
+                 };
+
+               key;
+             })
+      );
+    };
+};
+
 module Sub = {
   type menuParams = {
     builtMenu: MenuBar.builtMenu,
