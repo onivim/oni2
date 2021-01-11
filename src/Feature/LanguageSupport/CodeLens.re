@@ -144,8 +144,7 @@ let sub =
       ~client,
       model,
     ) =>
-  if (!isAnimatingScroll
-      && Configuration.Experimental.Editor.codeLensEnabled.get(config)) {
+  if (!isAnimatingScroll && Configuration.Editor.codeLensEnabled.get(config)) {
     Sub.create(
       ~topVisibleBufferLine,
       ~bottomVisibleBufferLine,

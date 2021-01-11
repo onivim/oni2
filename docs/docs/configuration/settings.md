@@ -27,6 +27,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.autoClosingBrackets` __(_"LanguageDefined"|"Never"_ default: `"LanguageDefined"`)__ - When set to `"LanguageDefined"`, Onivim will automatically close brackets and pairs, based on language configuration.
 
+- `editor.codeLens` __(_bool_ default: `true`)__ - Whether to show codelens, when available from a language extension.
+
 - `editor.cursorSurroundingLines` __(_int_ default: `1`)__ - The number of view lines to keep visible above and below the cursor when scrolling. Equivalent to the Vim `scrolloff` setting.
 
 - `editor.detectIndentation` __(_bool_ default: `true`)__ - Allow Onivim to auto-detect indentation settings (tab vs space, indent size)
