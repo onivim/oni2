@@ -174,6 +174,18 @@ let isAnimatingScroll = ({scrollX, scrollY, _}) => {
   Spring.isActive(scrollX) || Spring.isActive(scrollY);
 };
 
+let getLeadingWhitespacePixels = (lineNumber, editor) => {
+  let buffer = editor.buffer;
+  let lineCount = EditorBuffer.numberOfLines(buffer);
+  let line = lineNumber |> EditorCoreTypes.LineNumber.toZeroBased;
+  if (line < 0 || line >= lineCount) {
+    0.;
+  } else {
+    let bufferLine = buffer |> EditorBuffer.line(line);
+    BufferLine.getLeadingWhitespacePixels(bufferLine);
+  };
+};
+
 let getBufferLineCount = ({buffer, _}) =>
   EditorBuffer.numberOfLines(buffer);
 
@@ -454,11 +466,10 @@ let configure = (~config, editor) => {
 
   let inlineElements =
     if (!
-          Feature_Configuration.GlobalConfiguration.Experimental.Editor.codeLensEnabled.
-            get(
+          Feature_Configuration.GlobalConfiguration.Editor.codeLensEnabled.get(
             config,
           )) {
-      editor.inlineElements |> InlineElements.clear(~key="codelens");
+      editor.inlineElements |> InlineElements.clearMatching(~key="codelens");
     } else {
       editor.inlineElements;
     };
@@ -870,30 +881,6 @@ let setInlineElementSize =
      );
 };
 
-let setInlineElements = (~key, ~elements: list(inlineElement), editor) => {
-  let elements': list(InlineElements.element) =
-    elements
-    |> List.map((inlineElement: inlineElement) =>
-         InlineElements.{
-           key: inlineElement.key,
-           uniqueId: inlineElement.uniqueId,
-           line: inlineElement.lineNumber,
-           height: Component_Animation.make(Animation.expand(0., 0.)),
-           view: inlineElement.view,
-           opacity: Component_Animation.make(Animation.fadeIn),
-         }
-       );
-
-  editor
-  |> withSteadyCursor(e =>
-       {
-         ...e,
-         inlineElements:
-           InlineElements.set(~key, ~elements=elements', e.inlineElements),
-       }
-     );
-};
-
 let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => {
   let elements': list(InlineElements.element) =
     elements
@@ -921,6 +908,37 @@ let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => 
            ),
        }
      );
+};
+
+let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
+  let inlineElements =
+    lenses
+    |> List.map(lens => {
+         let lineNumber =
+           Feature_LanguageSupport.CodeLens.lineNumber(lens)
+           |> EditorCoreTypes.LineNumber.ofZeroBased;
+         let uniqueId = Feature_LanguageSupport.CodeLens.text(lens);
+         let leftMargin =
+           getLeadingWhitespacePixels(lineNumber, editor) |> int_of_float;
+         let view =
+           Feature_LanguageSupport.CodeLens.View.make(
+             ~leftMargin,
+             ~codeLens=lens,
+           );
+         makeInlineElement(
+           ~key="codelens:" ++ string_of_int(handle),
+           ~uniqueId,
+           ~lineNumber,
+           ~view,
+         );
+       });
+  replaceInlineElements(
+    ~startLine,
+    ~stopLine,
+    ~key="codelens:" ++ string_of_int(handle),
+    ~elements=inlineElements,
+    editor,
+  );
 };
 
 let selectionOrCursorRange = editor => {

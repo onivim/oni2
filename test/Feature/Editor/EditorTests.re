@@ -43,13 +43,22 @@ describe("Editor", ({describe, _}) => {
     |> Editor.setWrapMode(~wrapMode=WrapMode.Viewport);
   };
 
-  let inlineElement = (~uniqueId, lineIdx) =>
-    Editor.makeInlineElement(
-      ~key="test-inline-element",
-      ~uniqueId,
-      ~lineNumber=LineNumber.ofZeroBased(lineIdx),
-      ~view=(~theme as _, ~uiFont as _, ()) =>
-      Revery.UI.React.listToElement([])
+  let codeLens = (~uniqueId, lineIdx) =>
+    Exthost.(
+      CodeLens.{
+        cacheId: None,
+        range:
+          OneBasedRange.{
+            startLineNumber: lineIdx + 1,
+            endLineNumber: lineIdx + 1,
+            startColumn: 0,
+            endColumn: 0,
+          },
+        command:
+          Some(
+            Command.{id: uniqueId, label: Some(Label.ofString(uniqueId))},
+          ),
+      }
     );
 
   let colorizer = (~startByte as _, _) => {
@@ -66,22 +75,24 @@ describe("Editor", ({describe, _}) => {
       line: LineNumber.ofZeroBased(lnum),
       byte: ByteIndex.ofInt(byteNum),
     };
-  describe("inline elements", ({test, _}) => {
-    test("inline element at top", ({expect, _}) => {
+  describe("codelens", ({test, _}) => {
+    test("codelens at top", ({expect, _}) => {
       let (editor, _buffer) = create([|"aaa"|]);
-      let inlineElement0 = inlineElement(~uniqueId="0", 0);
+      let codeLens0 = codeLens(~uniqueId="0", 0);
       let editor =
         editor
         |> Editor.setWrapMode(~wrapMode=WrapMode.NoWrap)
         |> Editor.setSize(~pixelWidth=500, ~pixelHeight=500)
-        |> Editor.setInlineElements(
-             ~key="test-inline-element",
-             ~elements=[inlineElement0],
+        |> Editor.setCodeLens(
+             ~startLine=EditorCoreTypes.LineNumber.zero,
+             ~stopLine=EditorCoreTypes.LineNumber.(zero + 1),
+             ~handle=0,
+             ~lenses=[codeLens0],
            )
         |> Editor.setInlineElementSize(
              ~allowAnimation=false,
              ~line=LineNumber.zero,
-             ~key="test-inline-element",
+             ~key="codelens:0",
              ~uniqueId="0",
              ~height=25,
            );
@@ -93,27 +104,29 @@ describe("Editor", ({describe, _}) => {
 
     test("multiple inline elements", ({expect, _}) => {
       let (editor, _buffer) = create([|"aaa"|]);
-      let inlineElement00 = inlineElement(~uniqueId="00", 0);
-      let inlineElement01 = inlineElement(~uniqueId="01", 0);
+      let codeLens00 = codeLens(~uniqueId="00", 0);
+      let codeLens01 = codeLens(~uniqueId="01", 0);
       let editor =
         editor
         |> Editor.setWrapMode(~wrapMode=WrapMode.NoWrap)
         |> Editor.setSize(~pixelWidth=500, ~pixelHeight=500)
-        |> Editor.setInlineElements(
-             ~key="test-inline-element",
-             ~elements=[inlineElement00, inlineElement01],
+        |> Editor.setCodeLens(
+             ~startLine=EditorCoreTypes.LineNumber.zero,
+             ~stopLine=EditorCoreTypes.LineNumber.(zero + 1),
+             ~handle=0,
+             ~lenses=[codeLens00, codeLens01],
            )
         |> Editor.setInlineElementSize(
              ~allowAnimation=false,
              ~line=LineNumber.zero,
-             ~key="test-inline-element",
+             ~key="codelens:0",
              ~uniqueId="00",
              ~height=25,
            )
         |> Editor.setInlineElementSize(
              ~allowAnimation=false,
              ~line=LineNumber.zero,
-             ~key="test-inline-element",
+             ~key="codelens:0",
              ~uniqueId="01",
              ~height=35,
            );
@@ -123,19 +136,21 @@ describe("Editor", ({describe, _}) => {
       expect.float(pixelY).toBeCloseTo(60.);
     });
 
-    test("inline element after wrapping", ({expect, _}) => {
+    test("codeLens after wrapping", ({expect, _}) => {
       let editor = createThreeWideWithWrapping([|"aaaaaa", "aaaaaa"|]);
-      let inlineElement1 = inlineElement(~uniqueId="1", 1);
+      let codeLens1 = codeLens(~uniqueId="1", 1);
       let editor =
         editor
-        |> Editor.setInlineElements(
-             ~key="test-inline-element",
-             ~elements=[inlineElement1],
+        |> Editor.setCodeLens(
+             ~startLine=EditorCoreTypes.LineNumber.zero,
+             ~stopLine=EditorCoreTypes.LineNumber.(zero + 2),
+             ~handle=0,
+             ~lenses=[codeLens1],
            )
         |> Editor.setInlineElementSize(
              ~allowAnimation=false,
              ~line=LineNumber.(zero + 1),
-             ~key="test-inline-element",
+             ~key="codelens:0",
              ~uniqueId="1",
              ~height=25,
            );

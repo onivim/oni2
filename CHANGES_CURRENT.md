@@ -5,6 +5,9 @@
 - #2849 - UX: Initial menu bar on Windows / Linux (fixes #1255)
 - #2596 - Editor: File preview when clicking on files (thanks @fanantoxa!)
 - #2755 - Editor: Implement customizable font-weight (fixes #1573, thanks @marcagba!)
+- #2940 - Extensions: CodeLens - promote from experimental to on-by-default
+
+> NOTE: CodeLens can be disabled with either `"editor.codeLens": false` or `:set nocodelens`.
 
 ### Bug Fixes
 
