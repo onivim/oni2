@@ -53,21 +53,21 @@ module VimSettings = {
     });
 };
 
-module Experimental = {
-  module Editor = {
-    let codeLensEnabled =
-      setting(
-        ~vim=VimSettings.codeLens,
-        "experimental.editor.codeLens",
-        bool,
-        ~default=false,
-      );
-  };
+module Editor = {
+  let codeLensEnabled =
+    setting(
+      ~vim=VimSettings.codeLens,
+      "editor.codeLens",
+      bool,
+      ~default=true,
+    );
 };
+
+module Experimental = {};
 
 let contributions = [
   inactiveWindowOpacity.spec,
   animation.spec,
   shadows.spec,
-  Experimental.Editor.codeLensEnabled.spec,
+  Editor.codeLensEnabled.spec,
 ];
