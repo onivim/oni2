@@ -254,8 +254,6 @@ let insertWindow = (target, direction, focus) =>
 let removeWindow = target => updateTree(Layout.removeWindow(target));
 
 let split = (~editor, direction, model) => {
-  //let activeEditor = activeEditor(model);
-  // let newGroup = Group.create([Editor.copy(activeEditor)]);
   let newGroup = Group.create([editor]);
 
   updateActiveLayout(
