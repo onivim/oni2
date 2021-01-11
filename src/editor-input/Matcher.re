@@ -15,7 +15,6 @@ let parse = (~explicitShiftKeyNeeded, str) => {
     | v => Ok(v)
     };
 
-  prerr_endline("Matcher: " ++ str);
   let flatMap = (f, r) => Result.bind(r, f);
 
   let addShiftKeyToCapital = !explicitShiftKeyNeeded;
@@ -26,15 +25,10 @@ let parse = (~explicitShiftKeyNeeded, str) => {
     | Matcher_internal.Sequence(keys) =>
       keys
       |> KeyPress.combineUnmatchedStrings
-      |> List.iter(key =>
-           prerr_endline("KEYS: " ++ Matcher_internal.show_keyMatcher(key))
-         );
-      keys
-      |> KeyPress.combineUnmatchedStrings
       |> List.map(KeyPress.ofInternal(~addShiftKeyToCapital))
       |> List.flatten
       |> Base.Result.all
-      |> Result.map(keys => Sequence(keys));
+      |> Result.map(keys => Sequence(keys))
     };
   };
 
