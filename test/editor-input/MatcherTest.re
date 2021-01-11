@@ -38,6 +38,7 @@ describe("Matcher", ({describe, _}) => {
         (",", keyPress(Key.Character(Uchar.of_char(',')))),
         (".", keyPress(Key.Character(Uchar.of_char('.')))),
         ("/", keyPress(Key.Character(Uchar.of_char('/')))),
+        ("ö", keyPress(Key.Character(Uchar.of_int(246)))),
         ("tab", keyPress(Key.Tab)),
         ("ESC", keyPress(Key.Escape)),
         ("up", keyPress(Key.Up)),

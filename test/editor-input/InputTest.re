@@ -24,6 +24,9 @@ let cKeyNoModifiers =
     ~modifiers=Modifiers.none,
   );
 
+let ucharNoModifiers = uchar =>
+  KeyPress.physicalKey(~key=Key.Character(uchar), ~modifiers=Modifiers.none);
+
 let leaderKey = KeyPress.specialKey(SpecialKey.Leader);
 let plugKey = KeyPress.specialKey(SpecialKey.Plug);
 
@@ -630,6 +633,70 @@ describe("EditorInput", ({describe, _}) => {
           Unhandled({
             key: candidate(aKeyNoModifiers),
             isProducedByRemap: false,
+          }),
+        ],
+      );
+    });
+  });
+  describe("utf8", ({test, _}) => {
+    let uc252 = Zed_utf8.get("ü", 0);
+    let sc252 = 252;
+
+    let uc246 = Zed_utf8.get("ö", 0);
+
+    test("map utf8 -> ascii", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addMapping(
+             ~allowRecursive=false,
+             Sequence([ucharNoModifiers(uc252)]),
+             _ => true,
+             [aKeyNoModifiers],
+           );
+
+      let (_bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=sc252,
+          ~key=candidate(ucharNoModifiers(uc252)),
+          bindings,
+        );
+
+      expect.equal(
+        effects,
+        [
+          Unhandled({
+            key: candidate(aKeyNoModifiers),
+            isProducedByRemap: true,
+          }),
+        ],
+      );
+    });
+
+    test("map ascii -> utf8", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addMapping(
+             ~allowRecursive=false,
+             Sequence([aKeyNoModifiers]),
+             _ => true,
+             [ucharNoModifiers(uc246)],
+           );
+
+      let (_bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(aKeyNoModifiers),
+          bindings,
+        );
+
+      expect.equal(
+        effects,
+        [
+          Unhandled({
+            key: candidate(ucharNoModifiers(uc246)),
+            isProducedByRemap: true,
           }),
         ],
       );
