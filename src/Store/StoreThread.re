@@ -211,7 +211,13 @@ let start =
     let commands = Model.CommandManager.current(state);
 
     let menuBarSub =
-      Feature_MenuBar.sub(~contextKeys, ~commands, state.menuBar)
+      Feature_MenuBar.sub(
+        ~config,
+        ~contextKeys,
+        ~commands,
+        ~input=state.input,
+        state.menuBar,
+      )
       |> Isolinear.Sub.map(msg => Model.Actions.MenuBar(msg));
 
     let visibleBuffersAndRanges =

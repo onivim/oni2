@@ -1,7 +1,10 @@
 open Oni_Core;
 
 module Sub = {
-  type menuParams = {builtMenu: MenuBar.builtMenu};
+  type menuParams = {
+    builtMenu: MenuBar.builtMenu,
+    getKeyEquivalent: string => option(Revery.Native.Menu.KeyEquivalent.t),
+  };
 
   module OSXMenuSub =
     Isolinear.Sub.Make({
@@ -31,7 +34,12 @@ module Sub = {
                  ();
                  let command = MenuBar.Item.command(item);
                  let keyEquivalent =
-                   Revery.Native.Menu.KeyEquivalent.ofString("");
+                   params.getKeyEquivalent(command)
+                   |> Option.value(
+                        ~default=
+                          Revery.Native.Menu.KeyEquivalent.ofString(""),
+                      );
+
                  let nativeMenuItem =
                    Revery.Native.Menu.Item.create(
                      ~title,
@@ -81,9 +89,20 @@ module Sub = {
       };
     });
 
-  let menu = (~builtMenu: MenuBar.builtMenu, ~toMsg) =>
+  let menu =
+      (
+        ~config as _,
+        ~context as _,
+        ~input,
+        ~builtMenu: MenuBar.builtMenu,
+        ~toMsg,
+      ) =>
     if (Revery.Environment.isMac) {
-      OSXMenuSub.create({builtMenu: builtMenu}) |> Isolinear.Sub.map(toMsg);
+      let getKeyEquivalent = command => {
+        None;
+      };
+      OSXMenuSub.create({getKeyEquivalent, builtMenu})
+      |> Isolinear.Sub.map(toMsg);
     } else {
       Isolinear.Sub.none;
     };

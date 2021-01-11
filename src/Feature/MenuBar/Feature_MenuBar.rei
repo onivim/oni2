@@ -26,8 +26,10 @@ let update:
 
 let sub:
   (
+    ~config: Config.resolver,
     ~contextKeys: WhenExpr.ContextKeys.t,
     ~commands: Command.Lookup.t(_),
+    ~input: Feature_Input.model,
     model
   ) =>
   Isolinear.Sub.t(msg);

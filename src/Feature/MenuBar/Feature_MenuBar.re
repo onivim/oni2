@@ -383,9 +383,12 @@ module View = {
 
 // SUBSCRIPTIOn
 
-let sub = (~contextKeys, ~commands, model) => {
+let sub = (~config, ~contextKeys, ~commands, ~input, model) => {
   let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
   NativeMenu.sub(
+    ~config,
+    ~context=contextKeys,
+    ~input,
     ~toMsg=command => NativeMenu({command: command}),
     ~builtMenu,
   );
