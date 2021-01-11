@@ -44,31 +44,34 @@ let ofInternal =
   };
   switch (key) {
   | Matcher_internal.UnmatchedString(str) =>
-  prerr_endline ("--str: " ++ str);
+    prerr_endline("--str: " ++ str);
     ZedBundled.explode(str)
     |> List.map(uchar =>
          if (Uchar.is_char(uchar)) {
-           prerr_endline ("NOt uchar")
+           prerr_endline("NOt uchar");
            let char = Uchar.to_char(uchar);
            let lowercaseChar = Char.lowercase_ascii(char);
            let isCapitalized = lowercaseChar != char;
            if (isCapitalized && addShiftKeyToCapital) {
              keyToKeyPress(
                ~mods=[Shift, ...mods],
-               Key.Character(lowercaseChar),
+               Key.Character(Uchar.of_char(lowercaseChar)),
              );
            } else {
-             keyToKeyPress(Key.Character(lowercaseChar));
+             keyToKeyPress(Key.Character(Uchar.of_char(lowercaseChar)));
            };
          } else {
-           prerr_endline ("Unicode charecters not yet supported in bindings: " ++ ZedBundled.make(1, uchar));
-           keyToKeyPress(Key.Character('o'));
+           prerr_endline(
+             "Unicode charecters not yet supported in bindings: "
+             ++ ZedBundled.make(1, uchar),
+           );
+           keyToKeyPress(Key.Character(Uchar.of_char('o')));
            // Error(
            //   "Unicode characters not yet supported in bindings: "
            //   ++ ZedBundled.make(1, uchar),
            // );
          }
-       )
+       );
   | Matcher_internal.Special(special) => [Ok(SpecialKey(special))]
   | Matcher_internal.Physical(key) => [keyToKeyPress(key)]
   };
@@ -85,7 +88,7 @@ let parse = (~explicitShiftKeyNeeded, str) => {
     | v => Ok(v)
     };
 
-  prerr_endline ("Parsing str: " ++ str);
+  prerr_endline("Parsing str: " ++ str);
   let flatMap = (f, r) => Result.bind(r, f);
 
   let addShiftKeyToCapital = !explicitShiftKeyNeeded;

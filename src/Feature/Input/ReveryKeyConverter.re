@@ -57,16 +57,12 @@ module Internal = {
     | None => Log.info("No keymap for key.")
     };
 
-    let stringToKey = maybeString => {
-      maybeString
-      |> OptionEx.flatMap(str =>
-           if (String.length(str) != 1) {
-             None;
-           } else {
-             Some(str.[0]);
-           }
-         )
-      |> Option.map(char => EditorInput.Key.Character(char));
+    let stringToKey = (maybeString: string) => {
+      let maybeChar =
+        try(Some(ZedBundled.get(maybeString, 0))) {
+        | _exn => None
+        };
+      maybeChar |> Option.map(char => EditorInput.Key.Character(char));
     };
 
     maybeKeymap
@@ -87,13 +83,13 @@ module Internal = {
          let modifiers = {shift, control, alt, meta, altGr};
          let defaultCandidate =
            keymap.unmodified
-           |> stringToKey
+           |> OptionEx.flatMap(stringToKey)
            |> Option.map(key => physicalKey(~key, ~modifiers));
 
          let maybeShiftAltGrCandidate =
            if (shift && altGr) {
              keymap.withAltGraphShift
-             |> stringToKey
+             |> OptionEx.flatMap(stringToKey)
              |> Option.map(key =>
                   physicalKey(
                     ~key,
@@ -107,7 +103,7 @@ module Internal = {
          let maybeShiftCandidate =
            if (shift) {
              keymap.withShift
-             |> stringToKey
+             |> OptionEx.flatMap(stringToKey)
              |> Option.map(key =>
                   physicalKey(~key, ~modifiers={...modifiers, shift: false})
                 );
@@ -118,7 +114,7 @@ module Internal = {
          let maybeAltGrCandidate =
            if (altGr) {
              keymap.withAltGraph
-             |> stringToKey
+             |> OptionEx.flatMap(stringToKey)
              |> Option.map(key =>
                   physicalKey(~key, ~modifiers={...modifiers, altGr: false})
                 );
