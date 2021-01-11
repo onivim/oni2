@@ -155,7 +155,7 @@ jobs:
   - template: .ci/publish-build-cache.yml
 
 - job: Windows
-  timeoutInMinutes: 150
+  timeoutInMinutes: 180
   displayName: "Windows - Build & Package"
   pool:
     vmImage: 'vs2017-win2016'
