@@ -6,11 +6,7 @@ module Log = (val Log.withNamespace("Oni2.Feature.Input"));
 module ReveryKeyConverter = ReveryKeyConverter;
 
 let keyPressToString = key => {
-  key
-  |> EditorInput.KeyPress.toString(
-       ~meta="Meta",
-       ~keyToString=EditorInput.Key.toString,
-     );
+  key |> EditorInput.KeyPress.toString(~keyToString=EditorInput.Key.toString);
 };
 
 let keyCandidateToString = keyCandidate => {

@@ -44,7 +44,7 @@ module Internal = {
   };
 
   let tryToGetCharacterFromKey =
-      (~shift, ~control, ~alt, ~meta, ~altGr, ~scancode) => {
+      (~shift, ~control, ~alt, ~super, ~altGr, ~scancode) => {
     let keyboard = Oni2_KeyboardLayout.Keymap.getCurrent();
     let maybeKeymap =
       Oni2_KeyboardLayout.Keymap.entryOfScancode(keyboard, scancode);
@@ -80,7 +80,7 @@ module Internal = {
          open KeyPress;
          open Modifiers;
 
-         let modifiers = {shift, control, alt, meta, altGr};
+         let modifiers = {shift, control, alt, super, altGr};
          let defaultCandidate =
            keymap.unmodified
            |> OptionEx.flatMap(stringToKey)
@@ -151,7 +151,7 @@ let reveryKeyToKeyPress =
     let shift = Revery.Key.Keymod.isShiftDown(keymod);
     let control = Revery.Key.Keymod.isControlDown(keymod);
     let alt = Revery.Key.Keymod.isAltDown(keymod);
-    let meta = Revery.Key.Keymod.isGuiDown(keymod);
+    let super = Revery.Key.Keymod.isGuiDown(keymod);
     let altGr = Revery.Key.Keymod.isAltGrKeyDown(keymod);
 
     let (altGr, control, alt) =
@@ -170,7 +170,7 @@ let reveryKeyToKeyPress =
         (altGr, ctrlKey, altKey);
       | _ => (altGr, control, alt)
       };
-    let modifiers = EditorInput.Modifiers.{shift, control, alt, meta, altGr};
+    let modifiers = EditorInput.Modifiers.{shift, control, alt, super, altGr};
 
     keycode
     |> Internal.tryToGetSpecialKey
@@ -182,7 +182,7 @@ let reveryKeyToKeyPress =
            ~shift,
            ~control,
            ~alt,
-           ~meta,
+           ~super,
            ~altGr,
            ~scancode,
          )
