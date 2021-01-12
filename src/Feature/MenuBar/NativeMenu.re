@@ -95,6 +95,40 @@ module Sub = {
                };
              });
         }
+        and buildApplicationItems =
+            (parent: NativeMenu.t, items: list(MenuBar.Item.t)) => {
+          items
+          |> List.iter(item => {
+               let title = MenuBar.Item.title(item);
+               if (MenuBar.Item.isSubmenu(item)) {
+                 let nativeMenu = NativeMenu.create(title);
+                 NativeMenu.insertSubmenuAt(
+                   ~idx=1,
+                   ~parent,
+                   ~child=nativeMenu,
+                 );
+                 buildGroup(nativeMenu, MenuBar.Item.submenu(item));
+               } else {
+                 ();
+                 let command = MenuBar.Item.command(item);
+                 let keyEquivalent =
+                   params.getKeyEquivalent(command)
+                   |> Option.value(
+                        ~default=
+                          Revery.Native.Menu.KeyEquivalent.ofString(""),
+                      );
+
+                 let nativeMenuItem =
+                   Revery.Native.Menu.Item.create(
+                     ~title,
+                     ~onClick=() => {dispatch(command)},
+                     ~keyEquivalent,
+                     (),
+                   );
+                 Revery.Native.Menu.insertItemAt(parent, nativeMenuItem, 1);
+               };
+             });
+        }
         and buildGroup =
             (parent: NativeMenu.t, groups: list(MenuBar.Group.t)) => {
           let len = List.length(groups);
@@ -114,26 +148,58 @@ module Sub = {
         |> List.rev
         |> List.iter(item => {
              let title = MenuBar.Menu.title(item);
-             let nativeMenu = NativeMenu.create(title);
 
              if (MenuBar.Menu.uniqueId(item) == "help") {
                // Always add 'Help' last...
-               NativeMenu.addSubmenu(
-                 ~parent=menuBar,
-                 ~child=nativeMenu,
+               let nativeMenu = NativeMenu.create(title);
+               NativeMenu.addSubmenu(~parent=menuBar, ~child=nativeMenu);
+               buildGroup(
+                 nativeMenu,
+                 MenuBar.Menu.contents(item, params.builtMenu),
                );
+             } else if (MenuBar.Menu.uniqueId(item) == "application") {
+               // Merge application items to existing bar
+               let groups = MenuBar.Menu.contents(item, params.builtMenu);
+               let maybeAppMenu =
+                 NativeMenu.nth(menuBar, 0)
+                 |> Utility.OptionEx.flatMap(NativeMenu.Item.getSubmenu);
+
+               maybeAppMenu
+               |> Option.iter(appMenu => {
+                    // First, remove existing 'preferences' item
+
+                    let maybeExistingPreferences = NativeMenu.nth(appMenu, 2);
+                    maybeExistingPreferences
+                    |> Option.iter(pref =>
+                         Revery.Native.Menu.removeItem(appMenu, pref)
+                       );
+
+                    groups
+                    |> List.iter(group => {
+                         let items = MenuBar.Group.items(group);
+                         buildApplicationItems(appMenu, items);
+                         let separator =
+                           Revery.Native.Menu.Item.createSeparator();
+                         Revery.Native.Menu.insertItemAt(
+                           appMenu,
+                           separator,
+                           1,
+                         );
+                       });
+                  });
              } else {
                // But other menu items - add before the existing 'Window' menu item
+               let nativeMenu = NativeMenu.create(title);
                NativeMenu.insertSubmenuAt(
                  ~idx=1,
                  ~parent=menuBar,
                  ~child=nativeMenu,
                );
+               buildGroup(
+                 nativeMenu,
+                 MenuBar.Menu.contents(item, params.builtMenu),
+               );
              };
-             buildGroup(
-               nativeMenu,
-               MenuBar.Menu.contents(item, params.builtMenu),
-             );
            });
         ();
       };
