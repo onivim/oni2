@@ -286,7 +286,7 @@ describe("Matcher", ({describe, _}) => {
           ]),
         ),
       );
-    })
+    });
     //    test("keyup", ({expect, _}) => {
     //      let result = defaultParse("!a");
     //      expect.equal(
