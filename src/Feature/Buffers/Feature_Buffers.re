@@ -512,4 +512,23 @@ module Contributions = {
     ];
 
   let commands = Commands.[detectIndentation] |> Command.Lookup.fromList;
+
+  let keybindings =
+    Feature_Input.Schema.[
+      bind(
+        ~key="<D-N>",
+        ~command=":enew",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S>",
+        ~command=":w!",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S-S>",
+        ~command=":wa!",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+    ];
 };
