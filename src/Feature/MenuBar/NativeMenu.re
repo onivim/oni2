@@ -134,16 +134,17 @@ module Sub = {
     });
 
   let menu =
-      (
-        ~config as _,
-        ~context as _,
-        ~input,
-        ~builtMenu: MenuBar.builtMenu,
-        ~toMsg,
-      ) =>
+      (~config, ~context, ~input, ~builtMenu: MenuBar.builtMenu, ~toMsg) =>
     if (Revery.Environment.isMac) {
       let getKeyEquivalent = command => {
-        None;
+        let bindings =
+          Feature_Input.commandToAvailableBindings(
+            ~config,
+            ~context,
+            ~command,
+            input,
+          );
+        Internal.keyBindingsToKeyEquivalent(bindings);
       };
       OSXMenuSub.create({getKeyEquivalent, builtMenu})
       |> Isolinear.Sub.map(toMsg);
