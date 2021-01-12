@@ -1,14 +1,17 @@
+[@deriving show]
 type modifier =
   | Control
   | Shift
   | Alt
   | Meta;
 
+[@deriving show]
 type keyPress =
   | UnmatchedString(string)
   | Physical(Key.t)
   | Special(SpecialKey.t);
 
+[@deriving show]
 type keyMatcher = (keyPress, list(modifier));
 
 type t =

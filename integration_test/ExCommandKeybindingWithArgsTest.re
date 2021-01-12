@@ -1,7 +1,6 @@
 open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
-open Actions;
 
 let keybindings =
   Some(
@@ -15,21 +14,7 @@ let keybindings =
 runTest(
   ~keybindings,
   ~name="ExCommandKeybindingTest",
-  (dispatch, wait, _) => {
-    let input = key => {
-      let keyPress =
-        EditorInput.KeyPress.physicalKey(
-          ~key=EditorInput.Key.Character(key),
-          ~modifiers=EditorInput.Modifiers.none,
-        )
-        |> EditorInput.KeyCandidate.ofKeyPress;
-      let time = Revery.Time.now();
-
-      dispatch(KeyDown({key: keyPress, scancode: 1, time}));
-      //dispatch(TextInput(key));
-      dispatch(KeyUp({scancode: 1, time}));
-    };
-
+  ({dispatch, wait, input, _}) => {
     let testFile = getAssetPath("some-test-file.txt");
     dispatch(Actions.OpenFileByPath(testFile, None, None));
 
@@ -48,8 +33,8 @@ runTest(
       }
     );
 
-    input('k');
-    input('k');
+    input("k");
+    input("k");
 
     wait(~name="Wait for split to be created", (state: State.t) =>
       switch (Selectors.getActiveBuffer(state)) {
