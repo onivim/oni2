@@ -111,11 +111,25 @@ module Sub = {
              });
         };
         topItems
+        |> List.rev
         |> List.iter(item => {
              let title = MenuBar.Menu.title(item);
              let nativeMenu = NativeMenu.create(title);
-             let () =
-               NativeMenu.addSubmenu(~parent=menuBar, ~child=nativeMenu);
+
+             if (MenuBar.Menu.uniqueId(item) == "help") {
+               // Always add 'Help' last...
+               NativeMenu.addSubmenu(
+                 ~parent=menuBar,
+                 ~child=nativeMenu,
+               );
+             } else {
+               // But other menu items - add before the existing 'Window' menu item
+               NativeMenu.insertSubmenuAt(
+                 ~idx=1,
+                 ~parent=menuBar,
+                 ~child=nativeMenu,
+               );
+             };
              buildGroup(
                nativeMenu,
                MenuBar.Menu.contents(item, params.builtMenu),
