@@ -1,7 +1,7 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="ZenModeSplitTest", ({dispatch, wait, _}) => {
+runTest(~name="ZenModeSplitTest", (dispatch, wait, _) => {
   dispatch(Actions.EnableZenMode);
 
   wait(~name="Wait until ZenMode is enabled", (state: State.t) =>

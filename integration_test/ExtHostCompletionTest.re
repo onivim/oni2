@@ -5,7 +5,8 @@ open Oni_IntegrationTestLib;
 // This test validates:
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, we get some completion results
-runTest(~name="ExtHostCompletionTest", ({input, dispatch, wait, _}) => {
+runTestWithInput(
+  ~name="ExtHostCompletionTest", (input, dispatch, wait, _runEffects) => {
   wait(~timeout=30.0, ~name="Exthost is initialized", (state: State.t) =>
     Feature_Exthost.isInitialized(state.exthost)
   );

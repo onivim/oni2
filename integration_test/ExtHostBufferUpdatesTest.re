@@ -8,7 +8,8 @@ module TS = TextSynchronization;
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, the buffer received by the extension host
 // is in sync with the buffer in the main process
-runTest(~name="ExtHostBufferUpdates", ({input, dispatch, wait, key, _}) => {
+runTestWithInput(
+  ~name="ExtHostBufferUpdates", (input, dispatch, wait, _runEffects) => {
   wait(~timeout=30.0, ~name="Exthost is initialized", (state: State.t) =>
     Feature_Exthost.isInitialized(state.exthost)
   );
@@ -46,13 +47,13 @@ runTest(~name="ExtHostBufferUpdates", ({input, dispatch, wait, key, _}) => {
   input("i");
 
   input("a");
-  key(EditorInput.Key.Return);
+  input("<CR>");
 
   input("b");
-  key(EditorInput.Key.Return);
+  input("<CR>");
 
   input("c");
-  key(EditorInput.Key.Escape);
+  input("<esc>");
 
   // TODO: Do we need to wait to ensure the buffer update gets sent?
   TS.validateTextIsSynchronized(

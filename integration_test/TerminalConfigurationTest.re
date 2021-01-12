@@ -35,7 +35,7 @@ let expectedShellArgs =
 runTest(
   ~configuration,
   ~name="TerminalConfigurationTest",
-  ({dispatch, wait, _}) => {
+  (dispatch, wait, _) => {
     // Wait until the extension is activated
     // Give some time for the exthost to start
     wait(

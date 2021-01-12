@@ -10,7 +10,7 @@ let configuration = Some({|
 runTest(
   ~configuration,
   ~name="SyntaxHighlightTreesitterTest",
-  ({dispatch, wait, _}) => {
+  (dispatch, wait, _runEffects) => {
     wait(~name="Capture initial state", (state: State.t) =>
       Selectors.mode(state) |> Vim.Mode.isNormal
     );

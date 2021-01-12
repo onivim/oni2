@@ -1,7 +1,7 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="TerminalSetPidTitle", ({dispatch, wait, _}) => {
+runTest(~name="TerminalSetPidTitle", (dispatch, wait, _) => {
   // Wait until the extension is activated
   // Give some time for the exthost to start
   wait(

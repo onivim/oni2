@@ -2,7 +2,8 @@ open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="LanguageTypeScriptTest", ({input, dispatch, wait, _}) => {
+runTestWithInput(
+  ~name="LanguageTypeScriptTest", (input, dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );

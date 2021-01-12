@@ -24,7 +24,6 @@ let parse = (~explicitShiftKeyNeeded, str) => {
     | Matcher_internal.AllKeysReleased => Ok(AllKeysReleased)
     | Matcher_internal.Sequence(keys) =>
       keys
-      |> KeyPress.combineUnmatchedStrings
       |> List.map(KeyPress.ofInternal(~addShiftKeyToCapital))
       |> List.flatten
       |> Base.Result.all

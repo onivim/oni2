@@ -3,7 +3,7 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 
 // Validate that textmate highlight runs
-runTest(~name="SyntaxHighlightTextMateTest", ({dispatch, wait, _}) => {
+runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
   wait(~name="Capture initial state", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );

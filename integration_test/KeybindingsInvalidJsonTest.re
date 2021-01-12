@@ -8,7 +8,7 @@ invalid json
 runTest(
   ~keybindings,
   ~name="KeybindingsInvalidJson",
-  ({wait, _}) => {
+  (_dispatch, wait, _) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
       Selectors.mode(state) |> Vim.Mode.isNormal
     );

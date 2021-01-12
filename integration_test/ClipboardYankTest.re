@@ -14,7 +14,7 @@ let printOpt = sOpt =>
   | Some(v) => "Some(" ++ v ++ ")"
   };
 
-runTest(~name="ClipboardYankTest", ({dispatch, wait, runEffects, _}) => {
+runTest(~name="ClipboardYankTest", (dispatch, wait, runEffects) => {
   wait(
     ~name="Set configuration to always yank to clipboard", (state: State.t) => {
     let configuration = state.configuration;

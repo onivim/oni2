@@ -6,7 +6,7 @@ module Log = (val Log.withNamespace("IntegrationTest.TypingBatched"));
 
 runTest(
   ~name="InsertMode test - effects batched to runEffects",
-  ({dispatch, wait, runEffects, _}) => {
+  (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
