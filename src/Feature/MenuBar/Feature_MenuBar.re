@@ -58,7 +58,8 @@ type msg =
   | MouseClicked({uniqueId: string})
   | MouseOver({uniqueId: string})
   | MouseOut({uniqueId: string})
-  | ContextMenu(Component_ContextMenu.msg(string));
+  | ContextMenu(Component_ContextMenu.msg(string))
+  | NativeMenu({command: string});
 
 type session = {
   activePath: string,
@@ -141,6 +142,8 @@ let update = (~contextKeys, ~commands, msg, model) => {
         model;
       };
     (model', Nothing);
+
+  | NativeMenu({command}) => (model, ExecuteCommand({command: command}))
 
   | ContextMenu(contextMenuMsg) =>
     let (activeSession', eff) =
@@ -376,6 +379,19 @@ module View = {
 
     <View style={Styles.container(bgColor)}> menuItems </View>;
   };
+};
+
+// SUBSCRIPTIOn
+
+let sub = (~config, ~contextKeys, ~commands, ~input, model) => {
+  let builtMenu = MenuBar.build(~contextKeys, ~commands, model.menuSchema);
+  NativeMenu.sub(
+    ~config,
+    ~context=contextKeys,
+    ~input,
+    ~toMsg=command => NativeMenu({command: command}),
+    ~builtMenu,
+  );
 };
 
 // CONTRIBUTIONS

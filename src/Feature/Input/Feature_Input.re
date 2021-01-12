@@ -372,13 +372,7 @@ let commandToAvailableBindings = (~command, ~config, ~context, model) => {
   if (String.length(command) <= 0) {
     [];
   } else {
-    let firstChar = command.[0];
-    let execute =
-      if (firstChar == ':') {
-        VimExCommand(String.sub(command, 1, String.length(command) - 1));
-      } else {
-        NamedCommand(command);
-      };
+    let execute = NamedCommand(command);
 
     allCandidates
     |> List.filter_map(((matcher: EditorInput.Matcher.t, ex: execute)) =>

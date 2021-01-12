@@ -128,4 +128,5 @@ module Effects: {
 module Contributions: {
   let commands: Command.Lookup.t(msg);
   let configuration: list(Config.Schema.spec);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };

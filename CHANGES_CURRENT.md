@@ -9,6 +9,8 @@
 
 > NOTE: CodeLens can be disabled with either `"editor.codeLens": false` or `:set nocodelens`.
 
+- #2969 - UX: Menu bar integration on OSX
+
 ### Bug Fixes
 
 - #2845 - Workspace: Opening a file should not always open a folder (fixes #1983)
