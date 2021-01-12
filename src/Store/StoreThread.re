@@ -207,6 +207,19 @@ let start =
 
   let subscriptions = (state: Model.State.t) => {
     let config = Model.Selectors.configResolver(state);
+    let contextKeys = Model.ContextKeys.all(state);
+    let commands = Model.CommandManager.current(state);
+
+    let menuBarSub =
+      Feature_MenuBar.sub(
+        ~config,
+        ~contextKeys,
+        ~commands,
+        ~input=state.input,
+        state.menuBar,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.MenuBar(msg));
+
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
     let activeEditor = state.layout |> Feature_Layout.activeEditor;
@@ -449,6 +462,7 @@ let start =
       |> Isolinear.Sub.map(msg => Model.Actions.Notification(msg));
 
     [
+      menuBarSub,
       extHostSubscription,
       languageSupportSub,
       syntaxSubscription,
