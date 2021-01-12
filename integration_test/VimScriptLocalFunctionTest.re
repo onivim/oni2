@@ -1,9 +1,7 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(
-  ~name="VimScriptLocalFunctionTest",
-  ({dispatch, wait, runEffects, input, _}) => {
+runTest(~name="VimScriptLocalFunctionTest", (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
@@ -27,7 +25,23 @@ runTest(
   );
   runEffects();
 
-  input("j");
+  let input = key => {
+    let modifiers = EditorInput.Modifiers.none;
+
+    let keyPress =
+      EditorInput.KeyPress.physicalKey(
+        ~key=EditorInput.Key.Character(key),
+        ~modifiers,
+      )
+      |> EditorInput.KeyCandidate.ofKeyPress;
+    let time = Revery.Time.now();
+
+    dispatch(Model.Actions.KeyDown({key: keyPress, scancode: 1, time}));
+    dispatch(Model.Actions.KeyUp({scancode: 1, time}));
+    runEffects();
+  };
+
+  input('j');
 
   wait(~name="plugin notification shows up", (state: State.t) => {
     let notifications = Feature_Notification.all(state.notifications);

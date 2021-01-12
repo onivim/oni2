@@ -5,7 +5,7 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 open Feature_Editor;
 
-runTest(~name="EditorUtf8Test", ({input, dispatch, wait, _}) => {
+runTestWithInput(~name="EditorUtf8Test", (input, dispatch, wait, _) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );

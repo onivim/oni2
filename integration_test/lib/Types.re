@@ -5,17 +5,10 @@ type runEffectsFunction = unit => unit;
 type waiter = Model.State.t => bool;
 type waitForState = (~name: string, ~timeout: float=?, waiter) => unit;
 
-type inputFunction = (~modifiers: EditorInput.Modifiers.t=?, string) => unit;
+type inputFunction = string => unit;
 
-type keyFunction =
-  (~modifiers: EditorInput.Modifiers.t=?, EditorInput.Key.t) => unit;
+type testCallback =
+  (dispatchFunction, waitForState, runEffectsFunction) => unit;
 
-type testContext = {
-  dispatch: dispatchFunction,
-  wait: waitForState,
-  runEffects: runEffectsFunction,
-  input: inputFunction,
-  key: keyFunction,
-};
-
-type testCallback = testContext => unit;
+type testCallbackWithInput =
+  (inputFunction, dispatchFunction, waitForState, runEffectsFunction) => unit;

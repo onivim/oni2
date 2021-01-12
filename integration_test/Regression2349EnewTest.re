@@ -1,8 +1,7 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(
-  ~name="Regression: Command line no completions", ({dispatch, wait, _}) => {
+runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );

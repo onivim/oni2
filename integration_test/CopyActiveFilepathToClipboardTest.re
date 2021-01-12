@@ -5,7 +5,7 @@ open Oni_IntegrationTestLib;
 runTest(
   ~name=
     "CopyActiveFilepathToClipboard writes the active buffer's file path to the clipboard",
-  ({dispatch, wait, runEffects, _}) => {
+  (dispatch, wait, runEffects) => {
     setClipboard(Some("def"));
     dispatch(CopyActiveFilepathToClipboard);
     runEffects();

@@ -1,6 +1,6 @@
 module Key: {
   type t =
-    | Character(Uchar.t)
+    | Character(char)
     | Function(int)
     | NumpadDigit(int)
     | Escape

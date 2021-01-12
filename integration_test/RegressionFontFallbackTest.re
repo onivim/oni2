@@ -4,7 +4,7 @@ open Oni_IntegrationTestLib;
 module Editor = Feature_Editor.Editor;
 module LineNumber = EditorCoreTypes.LineNumber;
 
-runTest(~name="RegressionFontFallback", ({input, dispatch, wait, _}) => {
+runTestWithInput(~name="RegressionFontFallback", (input, dispatch, wait, _) => {
   wait(~name="Wait for split to be created 1", (state: State.t) => {
     let splitCount =
       state.layout |> Feature_Layout.visibleEditors |> List.length;

@@ -60,9 +60,9 @@
 	"numpad_multiply", BINDING(Physical(NumpadMultiply));
 	"leader", BINDING(Special(Leader));
 	"plug", BINDING(Special(Plug));
-	"lt", BINDING(Physical(Character(Uchar.of_char '<')));
-	"gt", BINDING(Physical(Character(Uchar.of_char '>')));
-	"plus", BINDING(Physical(Character(Uchar.of_char '+')));
+	"lt", BINDING(Physical(Character('<')));
+	"gt", BINDING(Physical(Character('>')));
+	"plus", BINDING(Physical(Character('+')));
 	]
 }
 
@@ -100,7 +100,7 @@ rule token = parse
 | ['f' 'F'] '1' (['0'-'9'] as m) { BINDING ( Physical (Function(int_of_string ("1" ^ (String.make 1 m))) ) ) }
 | white { token lexbuf }
 | binding as i
- { BINDING (Physical(Character (Uchar.of_char i))) }
+ { BINDING (Physical(Character (i))) }
 | '<' { LT }
 | '>' { GT }
 | eof { EOF }

@@ -1,25 +1,41 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="Viml Remap ö -> :", ({dispatch, wait, runEffects, input, _}) => {
+runTest(~name="Viml Remap ; -> :", (dispatch, wait, runEffects) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   dispatch(
-    VimExecuteCommand({allowAnimation: true, command: "nnoremap ö :"}),
+    VimExecuteCommand({allowAnimation: true, command: "nnoremap ; :"}),
   );
   runEffects();
 
-  // Because of our remap, the 'ö' character
+  let input = key => {
+    let modifiers = EditorInput.Modifiers.none;
+
+    let keyPress =
+      EditorInput.KeyPress.physicalKey(
+        ~key=EditorInput.Key.Character(key),
+        ~modifiers,
+      )
+      |> EditorInput.KeyCandidate.ofKeyPress;
+    let time = Revery.Time.now();
+
+    dispatch(Model.Actions.KeyDown({key: keyPress, scancode: 1, time}));
+    dispatch(Model.Actions.KeyUp({scancode: 1, time}));
+    runEffects();
+  };
+
+  // Because of our remap, the ';' semicolon
   // is mapped to ':' - so sending it should open the command line.
-  input("ö");
+  input(';');
 
   wait(~name="Mode switches to command line", (state: State.t) => {
     Selectors.mode(state) == Vim.Mode.CommandLine
   });
 
-  input("e");
+  input('e');
 
   wait(~name="'e' key is entered", (state: State.t) =>
     switch (state.quickmenu) {
@@ -29,7 +45,7 @@ runTest(~name="Viml Remap ö -> :", ({dispatch, wait, runEffects, input, _}) => 
     }
   );
 
-  input("h");
+  input('h');
 
   wait(~name="'h' key is entered", (state: State.t) =>
     switch (state.quickmenu) {

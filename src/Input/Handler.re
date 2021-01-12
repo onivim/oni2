@@ -14,7 +14,7 @@ module Internal = {
     EditorInput.Key.(
       {
         switch (key) {
-        | Character(char) => Some(Zed_utf8.make(1, char))
+        | Character(char) => Some(String.make(1, char))
         | Return => Some("CR")
         | Escape => Some("ESC")
         | Tab => Some("TAB")

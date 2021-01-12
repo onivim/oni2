@@ -6,7 +6,8 @@ open Feature_Editor;
 // This test validates:
 // - The 'oni-dev' extension gets activated
 // - We get a definition response
-runTest(~name="ExtHostDefinitionTest", ({input, dispatch, wait, key, _}) => {
+runTestWithInput(
+  ~name="ExtHostDefinitionTest", (input, dispatch, wait, _runEffects) => {
   wait(~timeout=30.0, ~name="Exthost is initialized", (state: State.t) =>
     Feature_Exthost.isInitialized(state.exthost)
   );
@@ -47,7 +48,9 @@ runTest(~name="ExtHostDefinitionTest", ({input, dispatch, wait, key, _}) => {
   input("b");
   input("c");
 
-  key(EditorInput.Key.Escape);
+  // Workaround a bug where cursor position is offset with <esc>
+  input("<esc>");
+  input("h");
 
   // Should get a definition
   wait(

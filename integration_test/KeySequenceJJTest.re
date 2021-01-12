@@ -11,19 +11,36 @@ let keybindings =
 runTest(
   ~keybindings,
   ~name="KeySequenceJJTest",
-  ({wait, input, _}) => {
+  (dispatch, wait, runEffects) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
       Selectors.mode(state) |> Vim.Mode.isNormal
     );
 
-    input("i");
+    let input = key => {
+      let modifiers = EditorInput.Modifiers.none;
+
+      let keyPress =
+        EditorInput.KeyPress.physicalKey(
+          ~key=EditorInput.Key.Character(key),
+          ~modifiers,
+        )
+        |> EditorInput.KeyCandidate.ofKeyPress;
+      let time = Revery.Time.now();
+
+      dispatch(Model.Actions.KeyDown({key: keyPress, scancode: 1, time}));
+      //dispatch(Model.Actions.TextInput(key));
+      dispatch(Model.Actions.KeyUp({scancode: 1, time}));
+      runEffects();
+    };
+
+    input('i');
     wait(~name="Mode is now insert", (state: State.t) =>
       Selectors.mode(state) |> Vim.Mode.isInsert
     );
 
-    input("a");
-    input("j");
-    input("j");
+    input('a');
+    input('j');
+    input('j');
 
     wait(~name="Mode is back to normal", (state: State.t) =>
       Selectors.mode(state) |> Vim.Mode.isNormal
@@ -49,7 +66,7 @@ runTest(
 
     // #2601 - Make sure we're _actually_ in normal mode!
     // Type another 'j' to see...
-    input("j");
+    input('j');
 
     wait(
       ~name=
