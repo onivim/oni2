@@ -68,7 +68,7 @@ let default = {
   terminalIntegratedFontWeight: Revery.Font.Weight.Normal,
   terminalIntegratedFontSmoothing: Default,
   workbenchActivityBarVisible: true,
-  workbenchColorTheme: "LaserWave Italic",
+  workbenchColorTheme: Constants.defaultTheme,
   workbenchEditorShowTabs: true,
   workbenchEditorEnablePreview: true,
   workbenchStatusBarVisible: true,
