@@ -78,7 +78,6 @@ let start = () => {
     });
 
   let loadThemeByIdEffect = (~extensions, themeId) => {
-    prerr_endline("Load theme by id: " ++ themeId);
     Log.infof(m => m("Loading theme by id: %s", themeId));
     let maybeTheme = Feature_Extensions.themeById(~id=themeId, extensions);
 
