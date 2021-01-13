@@ -12,33 +12,34 @@ let configuration = {|
 
 runTest(
   ~configuration=Some(configuration),
-  ~name="ConfigurationInvalidThemeTest",
-  (dispatch, wait, _) => {
-    wait(~name="Initial mode is normal", (state: State.t) =>
-      Selectors.mode(state) |> Vim.Mode.isNormal
-    );
-
+  ~name="ConfigurationInvalidThemeTest (Regression test for #2985)",
+  (_dispatch, wait, _) => {
     // We should get an error message referencing our very-invalid-theme..
     wait(~name="Wait for error message", (state: State.t) => {
       state.notifications
       |> Feature_Notification.all
       |> List.exists(notification => {
-        Feature_Notification.({
-        notification.kind == Error && StringEx.contains("very-invalid-theme", notification.message)
-        })
-      })
+           Feature_Notification.(
+             {
+               notification.kind == Error
+               && StringEx.contains(
+                    "very-invalid-theme",
+                    notification.message,
+                  );
+             }
+           )
+         })
     });
 
     // But, we should revert to our default laserwave-italic theme. Check one of the colors...
     wait(~name="Wait for error message", (state: State.t) => {
-      let colors = state.colorTheme
-      |> Feature_Theme.colors;
+      let colors = state.colorTheme |> Feature_Theme.colors;
 
-      let editorBackgroundColor = Feature_Theme.Colors.Editor.background.from(colors);
+      let editorBackgroundColor =
+        Feature_Theme.Colors.Editor.background.from(colors);
 
       let expectedColor = Revery.Color.hex("#27212e");
-      expectedColor == editorBackgroundColor
+      expectedColor == editorBackgroundColor;
     });
-
   },
 );
