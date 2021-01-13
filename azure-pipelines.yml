@@ -182,7 +182,7 @@ jobs:
   - script: dir
     workingDirectory: _release/win32
     displayName: 'check directory contents'
-  - script: Oni2.exe -f --no-log-colors --checkhealth
+  - script: Oni2.exe --checkhealth
     workingDirectory: _release/win32
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-win.yml
