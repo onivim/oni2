@@ -15,7 +15,7 @@
    SearchShowClearHighlightsTest SyntaxServer SyntaxServerCloseTest
    SyntaxServerMessageExceptionTest SyntaxServerParentPidTest
    SyntaxServerParentPidCorrectTest SyntaxServerReadExceptionTest
-   Regression1671Test Regression2349EnewTest
+   Regression1671Test Regression2349EnewTest Regression2988SwitchEditorTest
    RegressionCommandLineNoCompletionTest RegressionFontFallbackTest
    RegressionFileModifiedIndicationTest RegressionNonExistentDirectory
    RegressionVspEmptyInitialBufferTest RegressionVspEmptyExistingBufferTest
@@ -46,7 +46,8 @@
    InputContextKeysTest.exe InputRemapMotionTest.exe LanguageCssTest.exe
    LanguageTypeScriptTest.exe LineEndingsCRLFTest.exe LineEndingsLFTest.exe
    QuickOpenEventuallyCompletesTest.exe Regression1671Test.exe
-   Regression2349EnewTest.exe RegressionCommandLineNoCompletionTest.exe
+   Regression2349EnewTest.exe Regression2988SwitchEditorTest.exe
+   RegressionCommandLineNoCompletionTest.exe
    RegressionFileModifiedIndicationTest.exe RegressionFontFallbackTest.exe
    RegressionVspEmptyInitialBufferTest.exe RegressionNonExistentDirectory.exe
    RegressionVspEmptyExistingBufferTest.exe SCMGitTest.exe

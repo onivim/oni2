@@ -1007,10 +1007,18 @@ let update =
         | Some(ed) =>
           let isPreview = Editor.getPreview(ed) && preview;
 
-          (
-            isPreview,
-            Editor.setPreview(~preview=isPreview, Editor.copy(ed)),
-          );
+          let editor' =
+            switch (split) {
+            // If we're in the same split, just re-use current editor
+            | `Current => ed
+
+            // However, if we're splitting, we need to clone the editor
+            | `Horizontal
+            | `Vertical
+            | `NewTab => Editor.copy(ed)
+            };
+
+          (isPreview, Editor.setPreview(~preview=isPreview, editor'));
         | None => (
             preview,
             Editor.create(
