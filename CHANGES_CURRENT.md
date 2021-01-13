@@ -50,6 +50,7 @@
 - #2898 - Editor: Implement mouse selection (fixes #537)
 - #2959 - Completion: Implement `"editor.acceptSuggestionOnEnter"` configuration setting
 - #2956 - Layout: Fix extra editor when splitting with a file or terminal (fixes #2900, #2952)
+- #2986 - Theme: Fallback to default theme if invalid theme is specified
 
 ### Performance
 
