@@ -53,21 +53,65 @@ let ofInternal =
            if (isCapitalized && addShiftKeyToCapital) {
              keyToKeyPress(
                ~mods=[Shift, ...mods],
-               Key.Character(lowercaseChar),
+               Key.Character(Uchar.of_char(lowercaseChar)),
              );
            } else {
-             keyToKeyPress(Key.Character(lowercaseChar));
+             keyToKeyPress(Key.Character(Uchar.of_char(lowercaseChar)));
            };
          } else {
-           Error(
-             "Unicode characters not yet supported in bindings: "
-             ++ ZedBundled.make(1, uchar),
-           );
+           keyToKeyPress(Key.Character(uchar));
          }
        )
   | Matcher_internal.Special(special) => [Ok(SpecialKey(special))]
   | Matcher_internal.Physical(key) => [keyToKeyPress(key)]
   };
+};
+
+let combineUnmatchedStrings = (keys: list(Matcher_internal.keyMatcher)) => {
+  let rec combine = (acc, current, keys) => {
+    Matcher_internal.(
+      {
+        switch (keys) {
+        | [hd, ...tail] =>
+          switch (hd) {
+          | (UnmatchedString(str), mods) =>
+            switch (current) {
+            // No accumulated string yet - might need to track it to combine later.
+            | None => combine(acc, Some((str, mods)), tail)
+
+            // Might be able to accumulate, check if the modifiers match (#2980)
+            | Some((prev, prevMods)) when prevMods == mods =>
+              combine(acc, Some((prev ++ str, mods)), tail)
+
+            // Modifiers don't match, so append the current to the key sequence,
+            // and start a new sequence to track.
+            | Some((prev, prevMods)) =>
+              combine(
+                [(UnmatchedString(prev), prevMods), ...acc],
+                Some((str, mods)),
+                tail,
+              )
+            }
+
+          | key =>
+            let acc' =
+              switch (current) {
+              | None => acc
+              | Some((str, mods)) => [(UnmatchedString(str), mods), ...acc]
+              };
+            combine([key, ...acc'], None, tail);
+          }
+        | [] =>
+          switch (current) {
+          | None => acc
+          | Some((str, mods)) => [(UnmatchedString(str), mods), ...acc]
+          }
+        };
+      }
+    );
+  };
+
+  combine([], None, keys) |> List.rev;
 };
 
 let parse = (~explicitShiftKeyNeeded, str) => {
@@ -87,6 +131,7 @@ let parse = (~explicitShiftKeyNeeded, str) => {
 
   let finish = r => {
     r
+    |> combineUnmatchedStrings
     |> List.map(ofInternal(~addShiftKeyToCapital))
     |> List.flatten
     |> Base.Result.all;
