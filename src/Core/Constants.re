@@ -44,6 +44,8 @@ let defaultFontFamily =
   });
 let defaultTerminalFontSize = 12.;
 
+let defaultTheme = "LaserWave Italic";
+
 let syntaxEagerMaxLines = 500;
 let syntaxEagerMaxLineLength = 1000;
 let syntaxEagerBudget = 0.25; /* 250 milliseconds */
