@@ -23,21 +23,22 @@ describe("Matcher", ({describe, _}) => {
       // https://code.visualstudio.com/docs/getstarted/keybindings#_accepted-keys
       let cases = [
         // TODO: Add production cases here
-        ("a", keyPress(Key.Character('a'))),
-        ("A", keyPress(Key.Character('a'))), // Because implicit shift is false
-        ("0", keyPress(Key.Character('0'))),
-        ("9", keyPress(Key.Character('9'))),
-        ("`", keyPress(Key.Character('`'))),
-        ("-", keyPress(Key.Character('-'))),
-        ("=", keyPress(Key.Character('='))),
-        ("[", keyPress(Key.Character('['))),
-        ("]", keyPress(Key.Character(']'))),
-        ("\\", keyPress(Key.Character('\\'))),
-        (";", keyPress(Key.Character(';'))),
-        ("'", keyPress(Key.Character('\''))),
-        (",", keyPress(Key.Character(','))),
-        (".", keyPress(Key.Character('.'))),
-        ("/", keyPress(Key.Character('/'))),
+        ("a", keyPress(Key.Character(Uchar.of_char('a')))),
+        ("A", keyPress(Key.Character(Uchar.of_char('a')))), // Because implicit shift is false
+        ("0", keyPress(Key.Character(Uchar.of_char('0')))),
+        ("9", keyPress(Key.Character(Uchar.of_char('9')))),
+        ("`", keyPress(Key.Character(Uchar.of_char('`')))),
+        ("-", keyPress(Key.Character(Uchar.of_char('-')))),
+        ("=", keyPress(Key.Character(Uchar.of_char('=')))),
+        ("[", keyPress(Key.Character(Uchar.of_char('[')))),
+        ("]", keyPress(Key.Character(Uchar.of_char(']')))),
+        ("\\", keyPress(Key.Character(Uchar.of_char('\\')))),
+        (";", keyPress(Key.Character(Uchar.of_char(';')))),
+        ("'", keyPress(Key.Character(Uchar.of_char('\'')))),
+        (",", keyPress(Key.Character(Uchar.of_char(',')))),
+        (".", keyPress(Key.Character(Uchar.of_char('.')))),
+        ("/", keyPress(Key.Character(Uchar.of_char('/')))),
+        ("ö", keyPress(Key.Character(Uchar.of_int(246)))),
         ("tab", keyPress(Key.Tab)),
         ("ESC", keyPress(Key.Escape)),
         ("up", keyPress(Key.Up)),
@@ -78,10 +79,10 @@ describe("Matcher", ({describe, _}) => {
         ("<leader>", specialKey(SpecialKey.Leader)),
         ("<Leader>", specialKey(SpecialKey.Leader)),
         // Non-direct production keys - start of cases for #2114 / #2883
-        (":", keyPress(Key.Character(':'))),
-        ("~", keyPress(Key.Character('~'))),
-        ("_", keyPress(Key.Character('_'))),
-        ("+", keyPress(Key.Character('+'))),
+        (":", keyPress(Key.Character(Uchar.of_char(':')))),
+        ("~", keyPress(Key.Character(Uchar.of_char('~')))),
+        ("_", keyPress(Key.Character(Uchar.of_char('_')))),
+        ("+", keyPress(Key.Character(Uchar.of_char('+')))),
       ];
 
       let runCase = case => {
@@ -96,10 +97,16 @@ describe("Matcher", ({describe, _}) => {
     });
     test("simple parsing", ({expect, _}) => {
       let result = defaultParse("a");
-      expect.equal(result, Ok(Sequence([keyPress(Key.Character('a'))])));
+      expect.equal(
+        result,
+        Ok(Sequence([keyPress(Key.Character(Uchar.of_char('a')))])),
+      );
 
       let result = defaultParse("b");
-      expect.equal(result, Ok(Sequence([keyPress(Key.Character('b'))])));
+      expect.equal(
+        result,
+        Ok(Sequence([keyPress(Key.Character(Uchar.of_char('b')))])),
+      );
 
       let result = defaultParse("esc");
       expect.equal(result, Ok(Sequence([keyPress(Key.Escape)])));
@@ -110,14 +117,20 @@ describe("Matcher", ({describe, _}) => {
     });
     test("vim bindings", ({expect, _}) => {
       let result = defaultParse("<a>");
-      expect.equal(result, Ok(Sequence([keyPress(Key.Character('a'))])));
+      expect.equal(
+        result,
+        Ok(Sequence([keyPress(Key.Character(Uchar.of_char('a')))])),
+      );
 
       let result = defaultParse("<c-a>");
       expect.equal(
         result,
         Ok(
           Sequence([
-            keyPress(~modifiers=modifiersControl, Key.Character('a')),
+            keyPress(
+              ~modifiers=modifiersControl,
+              Key.Character(Uchar.of_char('a')),
+            ),
           ]),
         ),
       );
@@ -127,7 +140,10 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            keyPress(~modifiers=modifiersShift, Key.Character('a')),
+            keyPress(
+              ~modifiers=modifiersShift,
+              Key.Character(Uchar.of_char('a')),
+            ),
           ]),
         ),
       );
@@ -146,7 +162,10 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            keyPress(~modifiers=modifiersControl, Key.Character('a')),
+            keyPress(
+              ~modifiers=modifiersControl,
+              Key.Character(Uchar.of_char('a')),
+            ),
           ]),
         ),
       );
@@ -156,7 +175,10 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            keyPress(~modifiers=modifiersControl, Key.Character('a')),
+            keyPress(
+              ~modifiers=modifiersControl,
+              Key.Character(Uchar.of_char('a')),
+            ),
           ]),
         ),
       );
@@ -167,8 +189,8 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            keyPress(Key.Character('a')),
-            keyPress(Key.Character('b')),
+            keyPress(Key.Character(Uchar.of_char('a'))),
+            keyPress(Key.Character(Uchar.of_char('b'))),
           ]),
         ),
       );
@@ -178,8 +200,8 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            keyPress(Key.Character('a')),
-            keyPress(Key.Character('b')),
+            keyPress(Key.Character(Uchar.of_char('a'))),
+            keyPress(Key.Character(Uchar.of_char('b'))),
           ]),
         ),
       );
@@ -189,8 +211,8 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            keyPress(Key.Character('a')),
-            keyPress(Key.Character('b')),
+            keyPress(Key.Character(Uchar.of_char('a'))),
+            keyPress(Key.Character(Uchar.of_char('b'))),
           ]),
         ),
       );
@@ -199,8 +221,8 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            keyPress(Key.Character('a')),
-            keyPress(Key.Character('b')),
+            keyPress(Key.Character(Uchar.of_char('a'))),
+            keyPress(Key.Character(Uchar.of_char('b'))),
           ]),
         ),
       );
@@ -210,8 +232,14 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            keyPress(~modifiers=modifiersControl, Key.Character('a')),
-            keyPress(~modifiers=modifiersControl, Key.Character('b')),
+            keyPress(
+              ~modifiers=modifiersControl,
+              Key.Character(Uchar.of_char('a')),
+            ),
+            keyPress(
+              ~modifiers=modifiersControl,
+              Key.Character(Uchar.of_char('b')),
+            ),
           ]),
         ),
       );
@@ -222,7 +250,10 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            keyPress(~modifiers=modifiersShift, Key.Character('a')),
+            keyPress(
+              ~modifiers=modifiersShift,
+              Key.Character(Uchar.of_char('a')),
+            ),
           ]),
         ),
       );
@@ -232,8 +263,26 @@ describe("Matcher", ({describe, _}) => {
         result,
         Ok(
           Sequence([
-            keyPress(~modifiers=modifiersShift, Key.Character('a')),
-            keyPress(Key.Character('b')),
+            keyPress(
+              ~modifiers=modifiersShift,
+              Key.Character(Uchar.of_char('a')),
+            ),
+            keyPress(Key.Character(Uchar.of_char('b'))),
+          ]),
+        ),
+      );
+    });
+    test("#2980 - separate modifier keys", ({expect, _}) => {
+      let result = defaultParse("<c-w>r");
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(
+              ~modifiers=modifiersControl,
+              Key.Character(Uchar.of_char('w')),
+            ),
+            keyPress(Key.Character(Uchar.of_char('r'))),
           ]),
         ),
       );

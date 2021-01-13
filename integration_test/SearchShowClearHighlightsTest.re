@@ -5,7 +5,7 @@ open Oni_Syntax;
 
 runTest(
   ~name="InsertMode test - effects batched to runEffects",
-  (dispatch, wait, runEffects) => {
+  ({dispatch, wait, runEffects, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );

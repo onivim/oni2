@@ -13,7 +13,7 @@ let configuration = {|
 runTest(
   ~configuration=Some(configuration),
   ~name="ConfigurationInvalidThemeTest (Regression test for #2985)",
-  (_dispatch, wait, _) => {
+  ({wait, _}) => {
     // We should get an error message referencing our very-invalid-theme..
     wait(~name="Wait for error message", (state: State.t) => {
       state.notifications
