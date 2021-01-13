@@ -113,7 +113,7 @@ jobs:
     displayName: 'Check esy root path'
   - script: ls $(ESY__CACHE_INSTALL_PATH)
     displayName: 'Check esy cache install path after build'
-  - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
+  - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --no-log-colors --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-linux.yml
   - template: .ci/publish-build-cache.yml
@@ -149,7 +149,7 @@ jobs:
   - template: .ci/run-integration-tests.yml
     parameters:
       platform: darwin
-  - script: _release/Onivim2.App/Contents/MacOS/Oni2 -f --checkhealth
+  - script: _release/Onivim2.App/Contents/MacOS/Oni2 -f --no-log-colors --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-osx.yml
   - template: .ci/publish-build-cache.yml
