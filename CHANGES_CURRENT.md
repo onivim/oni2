@@ -51,6 +51,7 @@
 - #2959 - Completion: Implement `"editor.acceptSuggestionOnEnter"` configuration setting
 - #2956 - Layout: Fix extra editor when splitting with a file or terminal (fixes #2900, #2952)
 - #2986 - Theme: Fallback to default theme if invalid theme is specified
+- #2977, #2983 - Input: Handle unicode characters in mappings (fixes #2972, #2980)
 
 ### Performance
 

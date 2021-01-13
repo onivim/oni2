@@ -2,7 +2,7 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 
 // Regression test for #2694
-runTest(~name="ClipboardChangeTest", (dispatch, wait, runEffects) => {
+runTest(~name="ClipboardChangeTest", ({dispatch, wait, runEffects, _}) => {
   wait(
     ~name="Set configuration to always yank to clipboard", (state: State.t) => {
     let configuration = state.configuration;
