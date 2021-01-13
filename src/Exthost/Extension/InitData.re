@@ -82,6 +82,7 @@ module Environment = {
     appRoot: Uri.t,
     globalStorageHome: option(Uri.t),
     userHome: option(Uri.t),
+    useHostProxy: bool,
     // TODO
     /*
      appUriScheme: string,
@@ -106,6 +107,7 @@ module Environment = {
       Oni_Core.Filesystem.getUserDataDirectory()
       |> Result.to_option
       |> Option.map(Uri.fromFilePath),
+    useHostProxy: false,
   };
 };
 

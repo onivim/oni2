@@ -1566,6 +1566,7 @@ module Msg: {
   module Workspace: {
     [@deriving show]
     type msg =
+      | ResolveProxy({url: string})
       | StartFileSearch({
           includePattern: option(string),
           //        includeFolder: option(Oni_Core.Uri.t),

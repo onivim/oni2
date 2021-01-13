@@ -1684,6 +1684,7 @@ module Window = {
 module Workspace = {
   [@deriving show]
   type msg =
+    | ResolveProxy({ url: string})
     | StartFileSearch({
         includePattern: option(string),
         //        includeFolder: option(Oni_Core.Uri.t),
@@ -1694,6 +1695,15 @@ module Workspace = {
   let handle = (method, args: Yojson.Safe.t) => {
     Base.Result.Let_syntax.(
       switch (method) {
+      | "$resolveProxy" =>
+        switch (args) {
+        | `List([`String(url)]) => 
+        prerr_endline ("Resolve proxy: " ++ url);
+        failwith("nooooo");
+        Ok(ResolveProxy({url: url}))
+        | _ => Error("Unexpected arguments for $resolveProxy: " ++ Yojson.Safe.to_string(args))
+        }
+
       | "$startFileSearch" =>
         switch (args) {
         | `List([

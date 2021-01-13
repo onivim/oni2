@@ -225,6 +225,7 @@ module InitData: {
       appRoot: Oni_Core.Uri.t,
       globalStorageHome: option(Oni_Core.Uri.t),
       userHome: option(Oni_Core.Uri.t),
+      useHostProxy: bool,
       // TODO
       /*
        appLanguage: string,
@@ -232,7 +233,6 @@ module InitData: {
        appSettingsHome: option(Uri.t),
        webviewResourceRoot: string,
        webviewCspSource: string,
-       useHostProxy: boolean,
        */
     };
 
