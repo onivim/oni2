@@ -3,6 +3,7 @@
    ClipboardInsertModePasteSingleLineTest ClipboardInsertModePasteEmptyTest
    ClipboardNormalModePasteTest ClipboardYankTest ClipboardxpTest
    ClipboardyypTest CopyActiveFilepathToClipboardTest EchoNotificationTest
+   ConfigurationInvalidThemeTest
    ConfigurationPerFileTypeTest EditorFontFromPathTest EditorFontValidTest
    EditorSplitFileTest EditorUtf8Test ExCommandKeybindingTest
    ExCommandKeybindingWithArgsTest ExCommandKeybindingNormTest
@@ -33,6 +34,7 @@
    ClipboardInsertModePasteSingleLineTest.exe
    ClipboardInsertModePasteEmptyTest.exe ClipboardNormalModePasteTest.exe
    ClipboardYankTest.exe ClipboardxpTest.exe ClipboardyypTest.exe
+   ConfigurationInvalidThemeTest.exe
    ConfigurationPerFileTypeTest.exe CopyActiveFilepathToClipboardTest.exe
    EchoNotificationTest.exe EditorFontFromPathTest.exe
    EditorFontValidTest.exe EditorSplitFileTest.exe EditorUtf8Test.exe
