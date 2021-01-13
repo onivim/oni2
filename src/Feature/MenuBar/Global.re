@@ -94,7 +94,7 @@ let menus =
 let groups = [
   group(~order=100, ~parent=file, Items.File.[newFile]),
   group(~order=200, ~parent=file, Items.File.[saveFile, saveAll]),
-  group(~order=300, ~parent=file, Items.File.Preferences.[submenu]),
+  group(~order=300, ~parent=application, Items.File.Preferences.[submenu]),
   group(~order=999, ~parent=file, Items.File.[quit]),
   group(
     ~order=100,

@@ -272,6 +272,21 @@ describe("Matcher", ({describe, _}) => {
         ),
       );
     });
+    test("#2980 - separate modifier keys", ({expect, _}) => {
+      let result = defaultParse("<c-w>r");
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(
+              ~modifiers=modifiersControl,
+              Key.Character(Uchar.of_char('w')),
+            ),
+            keyPress(Key.Character(Uchar.of_char('r'))),
+          ]),
+        ),
+      );
+    });
     //    test("keyup", ({expect, _}) => {
     //      let result = defaultParse("!a");
     //      expect.equal(

@@ -137,6 +137,7 @@ let defaultKeyBindings =
     ]
   @ Feature_Registers.Contributions.keybindings
   @ Feature_LanguageSupport.Contributions.keybindings
+  @ Feature_Buffers.Contributions.keybindings
   @ Feature_Input.Schema.[
       bind(
         ~key="<CR>",

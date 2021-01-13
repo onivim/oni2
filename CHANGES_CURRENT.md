@@ -9,6 +9,8 @@
 
 > NOTE: CodeLens can be disabled with either `"editor.codeLens": false` or `:set nocodelens`.
 
+- #2969 - UX: Menu bar integration on OSX
+
 ### Bug Fixes
 
 - #2845 - Workspace: Opening a file should not always open a folder (fixes #1983)
@@ -48,7 +50,8 @@
 - #2898 - Editor: Implement mouse selection (fixes #537)
 - #2959 - Completion: Implement `"editor.acceptSuggestionOnEnter"` configuration setting
 - #2956 - Layout: Fix extra editor when splitting with a file or terminal (fixes #2900, #2952)
-- #2977 - Input: Handle unicode characters in mappings (fixes #2972)
+- #2986 - Theme: Fallback to default theme if invalid theme is specified
+- #2977, #2983 - Input: Handle unicode characters in mappings (fixes #2972, #2980)
 
 ### Performance
 

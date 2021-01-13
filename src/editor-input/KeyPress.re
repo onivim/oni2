@@ -76,9 +76,21 @@ let combineUnmatchedStrings = (keys: list(Matcher_internal.keyMatcher)) => {
           switch (hd) {
           | (UnmatchedString(str), mods) =>
             switch (current) {
+            // No accumulated string yet - might need to track it to combine later.
             | None => combine(acc, Some((str, mods)), tail)
-            | Some((prev, _mods)) =>
+
+            // Might be able to accumulate, check if the modifiers match (#2980)
+            | Some((prev, prevMods)) when prevMods == mods =>
               combine(acc, Some((prev ++ str, mods)), tail)
+
+            // Modifiers don't match, so append the current to the key sequence,
+            // and start a new sequence to track.
+            | Some((prev, prevMods)) =>
+              combine(
+                [(UnmatchedString(prev), prevMods), ...acc],
+                Some((str, mods)),
+                tail,
+              )
             }
 
           | key =>
