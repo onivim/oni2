@@ -3,18 +3,19 @@
    ClipboardInsertModePasteSingleLineTest ClipboardInsertModePasteEmptyTest
    ClipboardNormalModePasteTest ClipboardYankTest ClipboardxpTest
    ClipboardyypTest CopyActiveFilepathToClipboardTest EchoNotificationTest
-   ConfigurationPerFileTypeTest EditorFontFromPathTest EditorFontValidTest
-   EditorSplitFileTest EditorUtf8Test ExCommandKeybindingTest
-   ExCommandKeybindingWithArgsTest ExCommandKeybindingNormTest
-   ExtConfigurationChangedTest ExtHostBufferOpenTest ExtHostBufferUpdatesTest
-   ExtHostCompletionTest ExtHostDefinitionTest FileWatcherTest
-   KeybindingsInvalidJsonTest KeySequenceJJTest InputIgnoreTest
-   InputContextKeysTest InputRemapMotionTest LanguageCssTest
-   LanguageTypeScriptTest LineEndingsLFTest LineEndingsCRLFTest
-   QuickOpenEventuallyCompletesTest SearchShowClearHighlightsTest
-   SyntaxServer SyntaxServerCloseTest SyntaxServerMessageExceptionTest
-   SyntaxServerParentPidTest SyntaxServerParentPidCorrectTest
-   SyntaxServerReadExceptionTest Regression1671Test Regression2349EnewTest
+   ConfigurationInvalidThemeTest ConfigurationPerFileTypeTest
+   EditorFontFromPathTest EditorFontValidTest EditorSplitFileTest
+   EditorUtf8Test ExCommandKeybindingTest ExCommandKeybindingWithArgsTest
+   ExCommandKeybindingNormTest ExtConfigurationChangedTest
+   ExtHostBufferOpenTest ExtHostBufferUpdatesTest ExtHostCompletionTest
+   ExtHostDefinitionTest FileWatcherTest KeybindingsInvalidJsonTest
+   KeySequenceJJTest InputIgnoreTest InputContextKeysTest
+   InputRemapMotionTest LanguageCssTest LanguageTypeScriptTest
+   LineEndingsLFTest LineEndingsCRLFTest QuickOpenEventuallyCompletesTest
+   SearchShowClearHighlightsTest SyntaxServer SyntaxServerCloseTest
+   SyntaxServerMessageExceptionTest SyntaxServerParentPidTest
+   SyntaxServerParentPidCorrectTest SyntaxServerReadExceptionTest
+   Regression1671Test Regression2349EnewTest
    RegressionCommandLineNoCompletionTest RegressionFontFallbackTest
    RegressionFileModifiedIndicationTest RegressionNonExistentDirectory
    RegressionVspEmptyInitialBufferTest RegressionVspEmptyExistingBufferTest
@@ -33,13 +34,14 @@
    ClipboardInsertModePasteSingleLineTest.exe
    ClipboardInsertModePasteEmptyTest.exe ClipboardNormalModePasteTest.exe
    ClipboardYankTest.exe ClipboardxpTest.exe ClipboardyypTest.exe
-   ConfigurationPerFileTypeTest.exe CopyActiveFilepathToClipboardTest.exe
-   EchoNotificationTest.exe EditorFontFromPathTest.exe
-   EditorFontValidTest.exe EditorSplitFileTest.exe EditorUtf8Test.exe
-   ExCommandKeybindingTest.exe ExCommandKeybindingNormTest.exe
-   ExCommandKeybindingWithArgsTest.exe ExtConfigurationChangedTest.exe
-   ExtHostBufferOpenTest.exe ExtHostBufferUpdatesTest.exe
-   ExtHostCompletionTest.exe ExtHostDefinitionTest.exe FileWatcherTest.exe
+   ConfigurationInvalidThemeTest.exe ConfigurationPerFileTypeTest.exe
+   CopyActiveFilepathToClipboardTest.exe EchoNotificationTest.exe
+   EditorFontFromPathTest.exe EditorFontValidTest.exe EditorSplitFileTest.exe
+   EditorUtf8Test.exe ExCommandKeybindingTest.exe
+   ExCommandKeybindingNormTest.exe ExCommandKeybindingWithArgsTest.exe
+   ExtConfigurationChangedTest.exe ExtHostBufferOpenTest.exe
+   ExtHostBufferUpdatesTest.exe ExtHostCompletionTest.exe
+   ExtHostDefinitionTest.exe FileWatcherTest.exe
    KeybindingsInvalidJsonTest.exe KeySequenceJJTest.exe InputIgnoreTest.exe
    InputContextKeysTest.exe InputRemapMotionTest.exe LanguageCssTest.exe
    LanguageTypeScriptTest.exe LineEndingsCRLFTest.exe LineEndingsLFTest.exe
