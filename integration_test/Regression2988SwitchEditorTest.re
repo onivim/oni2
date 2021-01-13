@@ -32,7 +32,7 @@ runTest(~name="#2988: SwitchEditorTest", (dispatch, wait, runEffects) => {
     let editorCount =
       state.layout |> Feature_Layout.activeGroupEditors |> List.length;
 
-    initialEditorCount := 0;
+    initialEditorCount := editorCount;
     editorCount == 3;
   });
 
