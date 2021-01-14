@@ -53,7 +53,6 @@ let signatureHelpView =
       ~languageSupport,
       ~theme,
       ~tokenTheme,
-      // TODO: ~languageInfo
       ~editorFont: Service_Font.font,
       ~uiFont: UiFont.t,
       ~languageInfo,
