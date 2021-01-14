@@ -376,7 +376,7 @@ module Keybindings = {
 
   let close =
     bind(
-      ~key="<ESC>",
+      ~key="<S-ESC>",
       ~command=Commands.close.id,
       ~condition="editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
     );
