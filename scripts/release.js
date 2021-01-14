@@ -165,6 +165,7 @@ if (process.platform == "linux") {
             }
         }),
         LSEnvironment: {
+            ONI2_DEBUG: "1",
             ONI2_BUNDLED: "1",
             ONI2_LAUNCHED_FROM_FINDER: "1",
         },
