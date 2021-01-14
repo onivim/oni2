@@ -1603,10 +1603,11 @@ let update =
   | SignatureHelp(msg) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
+    let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
     let (model', eff) =
       Feature_SignatureHelp.update(
         ~maybeBuffer,
-        ~maybeEditor=Some(editor),
+        ~cursor,
         state.signatureHelp,
         msg,
       );

@@ -31,7 +31,7 @@ module Commands: {
 let update:
   (
     ~maybeBuffer: option(Buffer.t),
-    ~maybeEditor: option(Feature_Editor.Editor.t),
+    ~cursor: EditorCoreTypes.CharacterPosition.t,
     model,
     msg
   ) =>
@@ -76,7 +76,6 @@ module View: {
       ~editorFont: Service_Font.font,
       ~model: model,
       ~buffer: Oni_Core.Buffer.t,
-      ~editor: Feature_Editor.Editor.t,
       ~gutterWidth: float,
       ~grammars: Oni_Syntax.GrammarRepository.t,
       ~dispatch: msg => unit,

@@ -399,12 +399,11 @@ let sub = (~buffer, ~isInsertMode, ~activePosition as _, ~client, model) =>
     |> Isolinear.Sub.batch;
   };
 
-let update = (~maybeBuffer, ~maybeEditor, model, msg) =>
+let update = (~maybeBuffer, ~cursor, model, msg) =>
   switch (msg) {
   | Command(Show) =>
-    switch (maybeBuffer, maybeEditor) {
-    | (Some(buffer), Some(editor)) =>
-      let position = Feature_Editor.Editor.getPrimaryCursor(editor);
+    switch (maybeBuffer) {
+    | (Some(buffer)) =>
       let bufferId = Buffer.getId(buffer);
       let sessions =
         model.providers
@@ -415,11 +414,11 @@ let update = (~maybeBuffer, ~maybeEditor, model, msg) =>
              )
            )
         |> List.map(provider =>
-             Session.invoke(~bufferId, ~position, provider)
+             Session.invoke(~bufferId, ~position=cursor, provider)
            );
 
       ({...model, sessions}, Nothing);
-    | _ => (model, Nothing)
+    | None => (model, Nothing)
     }
 
   | Command(Close) =>
@@ -507,7 +506,6 @@ module View = {
         ~editorFont: Service_Font.font,
         ~signatures,
         ~buffer,
-        ~editor as _,
         ~grammars,
         ~signatureIndex,
         ~parameterIndex,
@@ -665,25 +663,26 @@ module View = {
         ~editorFont: Service_Font.font,
         ~model,
         ~buffer,
-        ~editor,
         ~gutterWidth,
         ~grammars,
         ~dispatch,
         (),
       ) => {
-    let maybeCoords =
-      {
-        let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
-        Some(cursorLocation);
-      }
-      |> Option.map((characterPosition: CharacterPosition.t) => {
-           let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
-             Feature_Editor.Editor.bufferCharacterPositionToPixel(
-               ~position=characterPosition,
-               editor,
-             );
-           (pixelX +. gutterWidth |> int_of_float, pixelY |> int_of_float);
-         });
+        // TODO:
+        let maybeCoords = Some((0, 0));
+    // let maybeCoords =
+    //   {
+    //     let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
+    //     Some(cursorLocation);
+    //   }
+    //   |> Option.map((characterPosition: CharacterPosition.t) => {
+    //        let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
+    //          Feature_Editor.Editor.bufferCharacterPositionToPixel(
+    //            ~position=characterPosition,
+    //            editor,
+    //          );
+    //        (pixelX +. gutterWidth |> int_of_float, pixelY |> int_of_float);
+    //      });
 
     let maybeSignatureHelp = getSignatureHelp(model);
     switch (maybeCoords, maybeSignatureHelp) {
@@ -700,7 +699,6 @@ module View = {
         uiFont
         editorFont
         buffer
-        editor
         grammars
         signatures
         signatureIndex=activeSignature

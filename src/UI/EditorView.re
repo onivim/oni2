@@ -111,7 +111,6 @@ module Parts = {
               editorFont={state.editorFont}
               languageInfo={state.languageInfo}
               grammars={state.grammarRepository}
-              editor
               gutterWidth
               buffer
               dispatch={msg => dispatch(SignatureHelp(msg))}
