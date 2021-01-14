@@ -45,7 +45,7 @@ let editors = (~isFocused) => {
   Schema.(
     fromList(
       isFocused
-        ? State.[
+        ? [
             bool("editorTextFocus", state =>
               switch (ModeManager.current(state)) {
               | TerminalInsert
@@ -97,9 +97,6 @@ let editors = (~isFocused) => {
               | Operator(_) => true
               | _ => false
               }
-            ),
-            bool("parameterHintsVisible", state =>
-              Feature_SignatureHelp.isShown(state.signatureHelp)
             ),
           ]
         : [],

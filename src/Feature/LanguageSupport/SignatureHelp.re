@@ -298,17 +298,12 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
-  | ProviderRegistered(provider)
   | SignatureIncrementClicked
   | SignatureDecrementClicked
   | Session({
       handle: int,
       msg: Session.msg,
     });
-
-module Msg = {
-  let providerAvailable = provider => ProviderRegistered(provider);
-};
 
 type outmsg =
   | Nothing
@@ -351,6 +346,17 @@ module Commands = {
     );
 };
 
+let register = (~handle, ~selector, ~metadata, model) => {
+  {...model, providers: [{handle, selector, metadata}, ...model.providers]};
+};
+
+let unregister = (~handle, model) => {
+  {
+    ...model,
+    providers: List.filter(it => it.handle != handle, model.providers),
+  };
+};
+
 module Keybindings = {
   open Feature_Input.Schema;
 
@@ -376,9 +382,17 @@ module Keybindings = {
     );
 };
 
+module ContextKeys = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let parameterHintsVisible = bool("parameterHintsVisible", isShown);
+};
+
 module Contributions = {
   let commands =
     Commands.[show, incrementSignature, decrementSignature, close];
+
+  let contextKeys = ContextKeys.[parameterHintsVisible];
 
   let keybindings =
     Keybindings.[incrementSignature, decrementSignature, close];
@@ -403,7 +417,7 @@ let update = (~maybeBuffer, ~cursor, model, msg) =>
   switch (msg) {
   | Command(Show) =>
     switch (maybeBuffer) {
-    | (Some(buffer)) =>
+    | Some(buffer) =>
       let bufferId = Buffer.getId(buffer);
       let sessions =
         model.providers
@@ -425,10 +439,6 @@ let update = (~maybeBuffer, ~cursor, model, msg) =>
     let sessions' = model.sessions |> List.map(Session.close);
     ({...model, sessions: sessions'}, Nothing);
 
-  | ProviderRegistered(provider) => (
-      {...model, providers: [provider, ...model.providers]},
-      Nothing,
-    )
   | Session({handle, msg}) =>
     let sessions' =
       model.sessions
@@ -504,14 +514,13 @@ module View = {
         ~languageInfo,
         ~uiFont: UiFont.t,
         ~editorFont: Service_Font.font,
-        ~signatures,
-        ~buffer,
+        ~buffer: Oni_Core.Buffer.t,
+        ~model,
         ~grammars,
-        ~signatureIndex,
-        ~parameterIndex,
         ~dispatch,
         (),
       ) => {
+    let {signatures, activeSignature, activeParameter, _} = model;
     let defaultLanguage =
       Buffer.getFileType(buffer) |> Buffer.FileType.toString;
     let signatureHelpMarkdown = (~markdown) => {
@@ -529,10 +538,10 @@ module View = {
       );
     };
     let maybeSignature: option(Signature.t) =
-      Base.List.nth(signatures, signatureIndex);
+      Base.List.nth(signatures, activeSignature);
     let maybeParameter: option(ParameterInformation.t) =
       Option.bind(maybeSignature, signature =>
-        Base.List.nth(signature.parameters, parameterIndex)
+        Base.List.nth(signature.parameters, activeParameter)
       );
     let renderLabel = () =>
       switch (maybeSignature, maybeParameter) {
@@ -614,7 +623,7 @@ module View = {
         <Text
           text={Printf.sprintf(
             "%d/%d",
-            signatureIndex + 1,
+            activeSignature + 1,
             List.length(signatures),
           )}
           style={Styles.text(~theme=colorTheme)}
@@ -656,6 +665,8 @@ module View = {
 
   let make =
       (
+        ~x,
+        ~y,
         ~colorTheme,
         ~tokenTheme,
         ~languageInfo,
@@ -663,13 +674,12 @@ module View = {
         ~editorFont: Service_Font.font,
         ~model,
         ~buffer,
-        ~gutterWidth,
         ~grammars,
         ~dispatch,
         (),
       ) => {
-        // TODO:
-        let maybeCoords = Some((0, 0));
+    // TODO:
+    // let maybeCoords = Some((0, 0));
     // let maybeCoords =
     //   {
     //     let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
@@ -685,11 +695,8 @@ module View = {
     //      });
 
     let maybeSignatureHelp = getSignatureHelp(model);
-    switch (maybeCoords, maybeSignatureHelp) {
-    | (
-        Some((x, y)),
-        Some({signatures, activeSignature, activeParameter, _}),
-      ) =>
+    switch (maybeSignatureHelp) {
+    | Some(model) =>
       <signatureHelp
         x
         y
@@ -700,12 +707,10 @@ module View = {
         editorFont
         buffer
         grammars
-        signatures
-        signatureIndex=activeSignature
-        parameterIndex=activeParameter
+        model
         dispatch
       />
-    | _ => React.empty
+    | None => React.empty
     };
   };
 };

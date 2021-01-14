@@ -16,7 +16,6 @@ type t =
   | Clipboard(Feature_Clipboard.msg)
   | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
-  | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)
   | Command(string)
   | Commands(Feature_Commands.msg(t))
