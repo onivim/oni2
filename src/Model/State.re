@@ -402,7 +402,6 @@ let defaultKeyBindings =
         ~condition=windowCommandCondition,
       ),
     ]
-  @ Feature_SignatureHelp.Contributions.keybindings
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings
   @ Component_VimTree.Contributions.keybindings
@@ -457,7 +456,6 @@ type t = {
   terminals: Feature_Terminal.t,
   layout: Feature_Layout.model,
   fileExplorer: Feature_Explorer.model,
-  signatureHelp: Feature_SignatureHelp.model,
   windowIsFocused: bool,
   windowDisplayMode,
   titlebarHeight: float,
@@ -499,7 +497,6 @@ let initial =
         Feature_Input.Contributions.configuration,
         Feature_MenuBar.Contributions.configuration,
         Feature_SideBar.Contributions.configuration,
-        Feature_SignatureHelp.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
         Feature_LanguageSupport.Contributions.configuration,
@@ -587,7 +584,6 @@ let initial =
         workingDirectory,
       ),
     fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),
-    signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
     pane: Feature_Pane.initial,
     searchPane: Feature_Search.initial,

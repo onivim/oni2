@@ -193,7 +193,6 @@ module Internal = {
 
     let config = Selectors.configResolver(state);
     let editor = Feature_Layout.activeEditor(state.layout);
-    let signatureHelp = state.signatureHelp;
     let maybeBuffer = Selectors.getActiveBuffer(state);
 
     let wasInInsertMode =
@@ -232,31 +231,19 @@ module Internal = {
         state.languageSupport;
       };
 
-    // TODO: Bring signature help into language support
-    let (languageSupport', signatureHelp') =
+    let languageSupport' =
       if (isInInsertMode != wasInInsertMode) {
         if (isInInsertMode) {
-          (
-            languageSupport |> Feature_LanguageSupport.startInsertMode,
-            signatureHelp
-            |> Feature_SignatureHelp.startInsert(~config, ~maybeBuffer),
-          );
+          languageSupport
+          |> Feature_LanguageSupport.startInsertMode(~config, ~maybeBuffer);
         } else {
-          (
-            languageSupport |> Feature_LanguageSupport.stopInsertMode,
-            signatureHelp |> Feature_SignatureHelp.stopInsert,
-          );
+          languageSupport |> Feature_LanguageSupport.stopInsertMode;
         };
       } else {
-        (languageSupport, signatureHelp);
+        languageSupport;
       };
 
-    let state = {
-      ...state,
-      layout,
-      signatureHelp: signatureHelp',
-      languageSupport: languageSupport',
-    };
+    let state = {...state, layout, languageSupport: languageSupport'};
     (state, editorEffect);
   };
 };
@@ -1600,29 +1587,6 @@ let update =
 
     (state, eff |> Isolinear.Effect.map(msg => TitleBar(msg)));
 
-  | SignatureHelp(msg) =>
-    let maybeBuffer = Selectors.getActiveBuffer(state);
-    let editor = Feature_Layout.activeEditor(state.layout);
-    let (model', eff) =
-      Feature_SignatureHelp.update(
-        ~maybeBuffer,
-        ~maybeEditor=Some(editor),
-        state.signatureHelp,
-        msg,
-      );
-    let effect =
-      switch (eff) {
-      | Feature_SignatureHelp.Nothing => Effect.none
-      | Feature_SignatureHelp.Effect(eff) =>
-        Effect.map(msg => Actions.SignatureHelp(msg), eff)
-      | Feature_SignatureHelp.Error(str) =>
-        Internal.notificationEffect(
-          ~kind=Error,
-          "Signature help error: " ++ str,
-        )
-      };
-    ({...state, signatureHelp: model'}, effect);
-
   | ExtensionBufferUpdateQueued({triggerKey}) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
@@ -1630,7 +1594,7 @@ let update =
     let activeCursorByte =
       editor |> Feature_Editor.Editor.getPrimaryCursorByte;
 
-    let (languageSupport', signatureHelp') =
+    let languageSupport' =
       maybeBuffer
       |> Option.map(buffer => {
            let syntaxScope =
@@ -1661,25 +1625,11 @@ let update =
                state.languageSupport,
              );
 
-           let signatureHelp =
-             Feature_SignatureHelp.bufferUpdated(
-               ~languageConfiguration,
-               ~buffer,
-               ~activeCursor,
-               state.signatureHelp,
-             );
-           (languageSupport, signatureHelp);
+           languageSupport;
          })
-      |> Option.value(~default=(state.languageSupport, state.signatureHelp));
+      |> Option.value(~default=state.languageSupport);
 
-    (
-      {
-        ...state,
-        signatureHelp: signatureHelp',
-        languageSupport: languageSupport',
-      },
-      Isolinear.Effect.none,
-    );
+    ({...state, languageSupport: languageSupport'}, Isolinear.Effect.none);
 
   | Yank({range}) =>
     open EditorCoreTypes;

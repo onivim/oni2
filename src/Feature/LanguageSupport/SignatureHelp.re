@@ -298,17 +298,12 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
-  | ProviderRegistered(provider)
   | SignatureIncrementClicked
   | SignatureDecrementClicked
   | Session({
       handle: int,
       msg: Session.msg,
     });
-
-module Msg = {
-  let providerAvailable = provider => ProviderRegistered(provider);
-};
 
 type outmsg =
   | Nothing
@@ -351,6 +346,17 @@ module Commands = {
     );
 };
 
+let register = (~handle, ~selector, ~metadata, model) => {
+  {...model, providers: [{handle, selector, metadata}, ...model.providers]};
+};
+
+let unregister = (~handle, model) => {
+  {
+    ...model,
+    providers: List.filter(it => it.handle != handle, model.providers),
+  };
+};
+
 module Keybindings = {
   open Feature_Input.Schema;
 
@@ -370,15 +376,23 @@ module Keybindings = {
 
   let close =
     bind(
-      ~key="<ESC>",
+      ~key="<S-ESC>",
       ~command=Commands.close.id,
       ~condition="editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
     );
 };
 
+module ContextKeys = {
+  open WhenExpr.ContextKeys.Schema;
+
+  let parameterHintsVisible = bool("parameterHintsVisible", isShown);
+};
+
 module Contributions = {
   let commands =
     Commands.[show, incrementSignature, decrementSignature, close];
+
+  let contextKeys = ContextKeys.[parameterHintsVisible];
 
   let keybindings =
     Keybindings.[incrementSignature, decrementSignature, close];
@@ -399,12 +413,11 @@ let sub = (~buffer, ~isInsertMode, ~activePosition as _, ~client, model) =>
     |> Isolinear.Sub.batch;
   };
 
-let update = (~maybeBuffer, ~maybeEditor, model, msg) =>
+let update = (~maybeBuffer, ~cursor, model, msg) =>
   switch (msg) {
   | Command(Show) =>
-    switch (maybeBuffer, maybeEditor) {
-    | (Some(buffer), Some(editor)) =>
-      let position = Feature_Editor.Editor.getPrimaryCursor(editor);
+    switch (maybeBuffer) {
+    | Some(buffer) =>
       let bufferId = Buffer.getId(buffer);
       let sessions =
         model.providers
@@ -415,21 +428,17 @@ let update = (~maybeBuffer, ~maybeEditor, model, msg) =>
              )
            )
         |> List.map(provider =>
-             Session.invoke(~bufferId, ~position, provider)
+             Session.invoke(~bufferId, ~position=cursor, provider)
            );
 
       ({...model, sessions}, Nothing);
-    | _ => (model, Nothing)
+    | None => (model, Nothing)
     }
 
   | Command(Close) =>
     let sessions' = model.sessions |> List.map(Session.close);
     ({...model, sessions: sessions'}, Nothing);
 
-  | ProviderRegistered(provider) => (
-      {...model, providers: [provider, ...model.providers]},
-      Nothing,
-    )
   | Session({handle, msg}) =>
     let sessions' =
       model.sessions
@@ -505,15 +514,13 @@ module View = {
         ~languageInfo,
         ~uiFont: UiFont.t,
         ~editorFont: Service_Font.font,
-        ~signatures,
-        ~buffer,
-        ~editor as _,
+        ~buffer: Oni_Core.Buffer.t,
+        ~model,
         ~grammars,
-        ~signatureIndex,
-        ~parameterIndex,
         ~dispatch,
         (),
       ) => {
+    let {signatures, activeSignature, activeParameter, _} = model;
     let defaultLanguage =
       Buffer.getFileType(buffer) |> Buffer.FileType.toString;
     let signatureHelpMarkdown = (~markdown) => {
@@ -531,10 +538,10 @@ module View = {
       );
     };
     let maybeSignature: option(Signature.t) =
-      Base.List.nth(signatures, signatureIndex);
+      Base.List.nth(signatures, activeSignature);
     let maybeParameter: option(ParameterInformation.t) =
       Option.bind(maybeSignature, signature =>
-        Base.List.nth(signature.parameters, parameterIndex)
+        Base.List.nth(signature.parameters, activeParameter)
       );
     let renderLabel = () =>
       switch (maybeSignature, maybeParameter) {
@@ -616,7 +623,7 @@ module View = {
         <Text
           text={Printf.sprintf(
             "%d/%d",
-            signatureIndex + 1,
+            activeSignature + 1,
             List.length(signatures),
           )}
           style={Styles.text(~theme=colorTheme)}
@@ -658,6 +665,8 @@ module View = {
 
   let make =
       (
+        ~x,
+        ~y,
         ~colorTheme,
         ~tokenTheme,
         ~languageInfo,
@@ -665,32 +674,29 @@ module View = {
         ~editorFont: Service_Font.font,
         ~model,
         ~buffer,
-        ~editor,
-        ~gutterWidth,
         ~grammars,
         ~dispatch,
         (),
       ) => {
-    let maybeCoords =
-      {
-        let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
-        Some(cursorLocation);
-      }
-      |> Option.map((characterPosition: CharacterPosition.t) => {
-           let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
-             Feature_Editor.Editor.bufferCharacterPositionToPixel(
-               ~position=characterPosition,
-               editor,
-             );
-           (pixelX +. gutterWidth |> int_of_float, pixelY |> int_of_float);
-         });
+    // TODO:
+    // let maybeCoords = Some((0, 0));
+    // let maybeCoords =
+    //   {
+    //     let cursorLocation = Feature_Editor.Editor.getPrimaryCursor(editor);
+    //     Some(cursorLocation);
+    //   }
+    //   |> Option.map((characterPosition: CharacterPosition.t) => {
+    //        let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
+    //          Feature_Editor.Editor.bufferCharacterPositionToPixel(
+    //            ~position=characterPosition,
+    //            editor,
+    //          );
+    //        (pixelX +. gutterWidth |> int_of_float, pixelY |> int_of_float);
+    //      });
 
     let maybeSignatureHelp = getSignatureHelp(model);
-    switch (maybeCoords, maybeSignatureHelp) {
-    | (
-        Some((x, y)),
-        Some({signatures, activeSignature, activeParameter, _}),
-      ) =>
+    switch (maybeSignatureHelp) {
+    | Some(model) =>
       <signatureHelp
         x
         y
@@ -700,14 +706,11 @@ module View = {
         uiFont
         editorFont
         buffer
-        editor
         grammars
-        signatures
-        signatureIndex=activeSignature
-        parameterIndex=activeParameter
+        model
         dispatch
       />
-    | _ => React.empty
+    | None => React.empty
     };
   };
 };

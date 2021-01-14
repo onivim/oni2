@@ -366,6 +366,10 @@ let%component make =
       languageSupport
       theme
       tokenTheme
+      uiFont
+      grammars=grammarRepository
+      buffer
+      languageInfo
     />
     {renderOverlays(~gutterWidth)}
     hoverPopup

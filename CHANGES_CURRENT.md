@@ -54,6 +54,7 @@
 - #2977, #2983 - Input: Handle unicode characters in mappings (fixes #2972, #2980)
 - #2984 - Editor: Fix extraneous clones of editor on Control+Tab (fixes #2988)
 - #2978 - Input: Fix `m-` modifier behavior (fixes #2963)
+- #2990 - Signature Help: Fix blocking `esc` key press back to normal mode
 
 ### Performance
 
