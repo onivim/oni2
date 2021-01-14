@@ -56,7 +56,7 @@ describe("Editor", ({describe, _}) => {
           },
         command:
           Some(
-            Command.{id: uniqueId, label: Some(Label.ofString(uniqueId))},
+            Command.{id: Some(uniqueId), label: Some(Label.ofString(uniqueId))},
           ),
       }
     );
