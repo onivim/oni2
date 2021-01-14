@@ -340,7 +340,7 @@ let create =
   };
 
   let redirect =
-    if (attachStdio) {
+    // if (attachStdio) {
       [
         Luv.Process.inherit_fd(
           ~fd=Luv.Process.stdin,
@@ -358,9 +358,9 @@ let create =
           (),
         ),
       ];
-    } else {
-      [];
-    };
+    // } else {
+    //   [];
+    // };
 
   let _process: Luv.Process.t =
     LuvEx.Process.spawn(

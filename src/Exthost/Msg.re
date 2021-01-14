@@ -1200,6 +1200,7 @@ module OutputService = {
     | Dispose({channelId: string});
 
   let handle = (method, args: Yojson.Safe.t) => {
+    prerr_endline (Printf.sprintf("Output - method: %s args: %s", method, Yojson.Safe.to_string(args)));
     Base.Result.Let_syntax.(
       Json.Decode.(
         switch (method, args) {
