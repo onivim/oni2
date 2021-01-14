@@ -14,7 +14,7 @@ module Internal = {
          )
       |> List.filter_map(EditorInput.KeyPress.toPhysicalKey)
       |> List.filter(({modifiers, _}: EditorInput.PhysicalKey.t) => {
-           modifiers.meta
+           modifiers.super
          })
       |> (
         l =>

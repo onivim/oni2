@@ -110,7 +110,7 @@ let keyPressToCommand = (~force, ~isTextInputActive, key) => {
        let shiftKey = modifiers.shift;
        let altKey = modifiers.alt;
        let ctrlKey = modifiers.control;
-       let superKey = modifiers.meta;
+       let superKey = modifiers.super;
 
        if (altGr && isTextInputActive) {
          None;
