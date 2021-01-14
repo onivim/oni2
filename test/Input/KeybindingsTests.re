@@ -186,33 +186,33 @@ describe("Keybindings", ({describe, _}) => {
            });
       };
 
-      let modifier = (~control, ~shift, ~meta) => {
+      let modifier = (~control, ~shift, ~super) => {
         ...EditorInput.Modifiers.none,
         control,
         shift,
-        meta,
+        super,
       };
 
       let cases =
         EditorInput.[
           (
             Key.Character(Uchar.of_char('p')),
-            modifier(~control=true, ~shift=false, ~meta=false),
+            modifier(~control=true, ~shift=false, ~super=false),
             "workbench.action.quickOpen",
           ),
           (
             Key.Character(Uchar.of_char('p')),
-            modifier(~control=false, ~shift=false, ~meta=true),
+            modifier(~control=false, ~shift=false, ~super=true),
             "workbench.action.quickOpen",
           ),
           (
             Key.Character(Uchar.of_char('p')),
-            modifier(~control=true, ~shift=true, ~meta=false),
+            modifier(~control=true, ~shift=true, ~super=false),
             "workbench.action.showCommands",
           ),
           (
             Key.Character(Uchar.of_char('p')),
-            modifier(~control=false, ~shift=true, ~meta=true),
+            modifier(~control=false, ~shift=true, ~super=true),
             "workbench.action.showCommands",
           ),
         ];

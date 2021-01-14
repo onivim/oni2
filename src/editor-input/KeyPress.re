@@ -140,7 +140,15 @@ let parse = (~explicitShiftKeyNeeded, str) => {
   str |> Lexing.from_string |> parse |> flatMap(finish);
 };
 
-let toString = (~meta="Meta", ~keyToString=Key.toString, key) => {
+let defaultSuper =
+  switch (Revery.Environment.os) {
+  | Mac(_) => "Cmd"
+  | Windows(_) => "Win"
+  | Linux(_) => "Meta"
+  | _ => "Super"
+  };
+
+let toString = (~super=defaultSuper, ~keyToString=Key.toString, key) => {
   switch (key) {
   | SpecialKey(special) =>
     Printf.sprintf("Special(%s)", SpecialKey.show(special))
@@ -153,15 +161,15 @@ let toString = (~meta="Meta", ~keyToString=Key.toString, key) => {
     let onlyShiftPressed =
       modifiers.shift
       && !modifiers.control
-      && !modifiers.meta
+      && !modifiers.super
       && !modifiers.alt;
 
     let keyString =
       String.length(keyString) == 1 && !onlyShiftPressed
         ? String.lowercase_ascii(keyString) : keyString;
 
-    if (modifiers.meta) {
-      Buffer.add_string(buffer, meta ++ separator);
+    if (modifiers.super) {
+      Buffer.add_string(buffer, super ++ separator);
     };
 
     if (modifiers.control) {
@@ -174,7 +182,7 @@ let toString = (~meta="Meta", ~keyToString=Key.toString, key) => {
       Buffer.add_string(buffer, "Alt" ++ separator);
     };
 
-    if ((modifiers.meta || modifiers.control || modifiers.alt)
+    if ((modifiers.super || modifiers.control || modifiers.alt)
         && modifiers.shift) {
       Buffer.add_string(buffer, "Shift" ++ separator);
     };

@@ -109,20 +109,6 @@ let create =
         );
         Lwt.return(Reply.okEmpty);
 
-      | LanguageFeatures(
-          RegisterSignatureHelpProvider({handle, selector, metadata}),
-        ) =>
-        dispatch(
-          Actions.SignatureHelp(
-            Feature_SignatureHelp.Msg.providerAvailable({
-              handle,
-              selector,
-              metadata,
-            }),
-          ),
-        );
-        Lwt.return(Reply.okEmpty);
-
       | Languages(msg) =>
         let (promise, resolver) = Lwt.task();
 

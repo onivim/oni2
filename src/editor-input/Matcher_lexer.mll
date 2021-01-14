@@ -16,13 +16,16 @@
 	"c-", MODIFIER (Control);
 	"s-", MODIFIER (Shift);
 	"a-", MODIFIER (Alt);
-	"d-", MODIFIER (Meta);
+	(* For Vim-style keybindings, a- and m- are equivalent modifiers *)
+	"m-", MODIFIER (Alt);
+	"d-", MODIFIER (Super);
 	"ctrl+", MODIFIER (Control);
 	"shift+", MODIFIER (Shift);
 	"alt+", MODIFIER (Alt);
-	"meta+", MODIFIER (Meta);
-	"win+", MODIFIER (Meta);
-	"cmd+", MODIFIER (Meta);
+	(* For Code-style bindings, meta+ refers to the 'super' key on Linux *)
+	"meta+", MODIFIER (Super);
+	"win+", MODIFIER (Super);
+	"cmd+", MODIFIER (Super);
 	]
 
 	let _ = List.iter(fun (name, keyword) ->

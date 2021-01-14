@@ -39,7 +39,7 @@ module Modifiers: {
     alt: bool,
     altGr: bool,
     shift: bool,
-    meta: bool,
+    super: bool,
   };
 
   let none: t;
@@ -76,8 +76,8 @@ module KeyPress: {
     | SpecialKey(SpecialKey.t);
 
   let toString:
-    // The name of the 'meta' key. Defaults to "Meta".
-    (~meta: string=?, ~keyToString: Key.t => string=?, t) => string;
+    // The name of the 'super' key. Defaults to "Super".
+    (~super: string=?, ~keyToString: Key.t => string=?, t) => string;
 
   let physicalKey: (~key: Key.t, ~modifiers: Modifiers.t) => t;
 

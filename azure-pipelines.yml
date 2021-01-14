@@ -113,7 +113,7 @@ jobs:
     displayName: 'Check esy root path'
   - script: ls $(ESY__CACHE_INSTALL_PATH)
     displayName: 'Check esy cache install path after build'
-  - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --checkhealth
+  - script: _release/Onivim2.AppDir/usr/bin/Oni2 -f --no-log-colors --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-linux.yml
   - template: .ci/publish-build-cache.yml
@@ -149,7 +149,7 @@ jobs:
   - template: .ci/run-integration-tests.yml
     parameters:
       platform: darwin
-  - script: _release/Onivim2.App/Contents/MacOS/Oni2 -f --checkhealth
+  - script: _release/Onivim2.App/Contents/MacOS/Oni2 -f --no-log-colors --checkhealth
     displayName: 'Release: --checkhealth'
   - template: .ci/publish-osx.yml
   - template: .ci/publish-build-cache.yml
@@ -182,9 +182,6 @@ jobs:
   - script: dir
     workingDirectory: _release/win32
     displayName: 'check directory contents'
-  - script: Oni2.exe -f --no-log-colors --checkhealth
-    workingDirectory: _release/win32
-    displayName: 'Release: --checkhealth'
   - template: .ci/publish-win.yml
   - template: .ci/publish-build-cache.yml
 
@@ -343,5 +340,5 @@ jobs:
   # but we need to check from the command prompt, too via %PATH% - for #872
   - script: |
       set PATH=%PATH%;D:/a/1/s/Onivim2
-      Oni2.exe -f --no-log-colors --checkhealth
-    displayName: "Oni2.exe -f --no-log-colors --checkhealth (run installed)"
+      Oni2.exe -f --silent --checkhealth
+    displayName: "Oni2.exe -f --silent --checkhealth (run installed)"
