@@ -46,59 +46,59 @@ let editors = (~isFocused) => {
     fromList(
       isFocused
         ? [
-            bool("editorTextFocus", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalInsert
-              | TerminalNormal
-              | TerminalVisual(_) => false
-              | _ => true
-              }
-            ),
-            bool("terminalFocus", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalInsert
-              | TerminalNormal
-              | TerminalVisual(_) => true
-              | _ => false
-              }
-            ),
-            bool("commandLineFocus", state =>
-              ModeManager.current(state) == CommandLine
-            ),
-            bool("insertMode", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalInsert
-              | Insert(_) => true
-              | _ => false
-              }
-            ),
-            bool("normalMode", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalNormal
-              | Normal(_) => true
-              | _ => false
-              }
-            ),
-            bool("visualMode", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalVisual(_)
-              | Visual(_) => true
-              | _ => false
-              }
-            ),
-            bool("selectMode", state =>
-              switch (ModeManager.current(state)) {
-              | Select(_) => true
-              | _ => false
-              }
-            ),
-            bool("operatorPending", state =>
-              switch (ModeManager.current(state)) {
-              | Operator(_) => true
-              | _ => false
-              }
-            ),
-          ]
+          bool("editorTextFocus", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalInsert
+            | TerminalNormal
+            | TerminalVisual(_) => false
+            | _ => true
+            }
+          ),
+          bool("terminalFocus", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalInsert
+            | TerminalNormal
+            | TerminalVisual(_) => true
+            | _ => false
+            }
+          ),
+          bool("commandLineFocus", state =>
+            ModeManager.current(state) == CommandLine
+          ),
+          bool("insertMode", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalInsert
+            | Insert(_) => true
+            | _ => false
+            }
+          ),
+          bool("normalMode", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalNormal
+            | Normal(_) => true
+            | _ => false
+            }
+          ),
+          bool("visualMode", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalVisual(_)
+            | Visual(_) => true
+            | _ => false
+            }
+          ),
+          bool("selectMode", state =>
+            switch (ModeManager.current(state)) {
+            | Select(_) => true
+            | _ => false
+            }
+          ),
+          bool("operatorPending", state =>
+            switch (ModeManager.current(state)) {
+            | Operator(_) => true
+            | _ => false
+            }
+          ),
+        ]
         : [],
     )
   );
