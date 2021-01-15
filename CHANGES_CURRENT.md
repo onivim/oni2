@@ -55,6 +55,7 @@
 - #2984 - Editor: Fix extraneous clones of editor on Control+Tab (fixes #2988)
 - #2978 - Input: Fix `m-` modifier behavior (fixes #2963)
 - #2990 - Signature Help: Fix blocking `esc` key press back to normal mode
+- #2991 - OSX: Fix shortcut keys double-triggering events
 
 ### Performance
 
@@ -79,3 +80,4 @@
 - #2904 - Build: Fix warnings in macOS build (thanks @zbaylin!)
 - #2964 - Dependency: Upgrade revery -> 3f48f6d
 - #2975 - Dependency: Upgrade revery -> 7191349
+- #2992 - Dependency: Upgrade revery -> 8497f52
