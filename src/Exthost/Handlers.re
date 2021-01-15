@@ -268,6 +268,12 @@ module Internal = {
     |> List.to_seq
     |> Hashtbl.of_seq;
 
+  let idToString =
+    handlers
+    |> List.map(handler => (getId(handler), getName(handler)))
+    |> List.to_seq
+    |> Hashtbl.of_seq;
+
   let idToHandler =
     handlers
     |> List.map(handler => (getId(handler), handler))
@@ -278,13 +284,18 @@ module Internal = {
 let stringToId = Hashtbl.find_opt(Internal.stringToId);
 
 let handle = (rpcId, method, args) => {
+  prerr_endline(Printf.sprintf("--> [%s:%s] %s",
+    Hashtbl.find_opt(Internal.idToString, rpcId) |> Option.value(~default="UNKNOWN"),
+    method,
+    args |> Yojson.Safe.to_string
+  ));
   rpcId
   |> Hashtbl.find_opt(Internal.idToHandler)
   |> Option.to_result(
        ~none="No handler registered for: " ++ (rpcId |> string_of_int),
      )
   |> (
-    opt =>
+    opt => {
       Result.bind(
         opt,
         fun
@@ -295,5 +306,5 @@ let handle = (rpcId, method, args) => {
             Error("ExtHost handler was incorrectly registered for rpcId");
           },
       )
-  );
+  });
 };
