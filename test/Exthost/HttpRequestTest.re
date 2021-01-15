@@ -24,18 +24,19 @@ describe("HttpRequestTest", ({test, _}) => {
            ~command="http.request2",
          ),
        )
-    |> waitForMessage(~name="request success", (severity, message) =>
+    |> waitForMessage(
+         ~name="wait for request result (2-param)", (severity, message) =>
          switch (severity) {
          | Info => true
-         | Error => 
-         prerr_endline ("Got error: " ++ message);
-         false
+         | Error =>
+           prerr_endline("Got error: " ++ message);
+           false;
          | _ => assert(false)
          }
        )
     |> Test.terminate
     |> Test.waitForProcessClosed
-  })
+  });
 
   // Regression test for #2981 - ensure 3-param requests work correctly
   test("#2981: Execute a (url, options, cb) request in extension host", _ => {
@@ -47,16 +48,17 @@ describe("HttpRequestTest", ({test, _}) => {
            ~command="http.request3",
          ),
        )
-    |> waitForMessage(~name="request success", (severity, message) =>
+    |> waitForMessage(
+         ~name="wait for request result (3-param)", (severity, message) =>
          switch (severity) {
          | Info => true
-         | Error => 
-         prerr_endline ("Got error: " ++ message);
-         false
+         | Error =>
+           prerr_endline("Got error: " ++ message);
+           false;
          | _ => assert(false)
          }
        )
     |> Test.terminate
     |> Test.waitForProcessClosed
-  })
+  });
 });

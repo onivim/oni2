@@ -31,7 +31,10 @@ function activate(context) {
 	);
 
 	context.subscriptions.push(
-		// Execute a 2-parameter request against an https object
+		// Execute a 3-parameter request against an https object
+		// This exercises the same failure that was causing #2981 -
+		// the [agent-base] NPM package overriding the https.request,
+		// only handling 2-param arguments.
 		vscode.commands.registerCommand('http.request3', (args) => {
 			const req = https.request("https://httpbin.org/json", { agent: false }, (res) => {
 				if (res.statusCode == 200) {
