@@ -247,7 +247,7 @@ module Internal = {
            ~versionId=version,
            ~lines,
            ~modeId,
-           ~isDirty=true,
+           ~isDirty=false,
            Uri.fromPath(filePath),
          );
        });

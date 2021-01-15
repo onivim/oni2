@@ -56,6 +56,7 @@
 - #2978 - Input: Fix `m-` modifier behavior (fixes #2963)
 - #2990 - Signature Help: Fix blocking `esc` key press back to normal mode
 - #2991 - OSX: Fix shortcut keys double-triggering events
+- #2993 - CodeLens: Handle null command id & label icons
 
 ### Performance
 
