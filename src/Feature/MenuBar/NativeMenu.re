@@ -87,7 +87,11 @@ module Sub = {
                  let nativeMenuItem =
                    Revery.Native.Menu.Item.create(
                      ~title,
-                     ~onClick=() => {dispatch(command)},
+                     ~onClick=
+                       (~fromKeyPress, ()) =>
+                         if (!fromKeyPress) {
+                           dispatch(command);
+                         },
                      ~keyEquivalent,
                      (),
                    );
@@ -121,7 +125,11 @@ module Sub = {
                  let nativeMenuItem =
                    Revery.Native.Menu.Item.create(
                      ~title,
-                     ~onClick=() => {dispatch(command)},
+                     ~onClick=
+                       (~fromKeyPress, ()) =>
+                         if (!fromKeyPress) {
+                           dispatch(command);
+                         },
                      ~keyEquivalent,
                      (),
                    );
