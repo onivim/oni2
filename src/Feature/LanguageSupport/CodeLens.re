@@ -181,7 +181,11 @@ module View = {
   open Revery.UI;
   let make = (~leftMargin, ~theme, ~uiFont: Oni_Core.UiFont.t, ~codeLens, ()) => {
     let foregroundColor = CodeLensColors.foreground.from(theme);
-    let text = text(codeLens);
+    let label =
+      Exthost.CodeLens.(codeLens.command)
+      |> OptionEx.flatMap((command: Exthost.Command.t) => command.label)
+      |> Option.value(~default=Exthost.Label.ofString("(null)"));
+
     <View
       style=Style.[
         marginTop(4),
@@ -190,16 +194,7 @@ module View = {
         flexGrow(1),
         flexShrink(0),
       ]>
-      <Text
-        text
-        fontFamily={uiFont.family}
-        fontSize={uiFont.size}
-        style=Style.[
-          color(foregroundColor),
-          flexGrow(1),
-          textWrap(Revery.TextWrapping.Wrap),
-        ]
-      />
+      <Oni_Components.Label font=uiFont color=foregroundColor label />
     </View>;
   };
 };

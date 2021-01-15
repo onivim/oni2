@@ -2,7 +2,7 @@ open Oni_Core;
 
 [@deriving show]
 type t = {
-  id: string,
+  id: option(string),
   label: option(Label.t),
 };
 
@@ -11,7 +11,7 @@ module Decode = {
     Json.Decode.(
       obj(({field, _}) =>
         {
-          id: field.required("id", string),
+          id: field.optional("id", string),
           label: field.optional("title", Label.decode),
         }
       )
@@ -23,7 +23,7 @@ module Encode = {
   open Json.Encode;
   let encode = lens =>
     obj([
-      ("id", lens.id |> string),
+      ("id", lens.id |> nullable(string)),
       ("title", lens.label |> nullable(Label.encode)),
     ]);
 };
