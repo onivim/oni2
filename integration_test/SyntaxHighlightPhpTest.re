@@ -2,27 +2,26 @@ open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-let uniqueColorCount: list(ThemeToken.t) => int = tokens => {
+let uniqueColorCount: list(ThemeToken.t) => int =
+  tokens => {
+    let rec loop = (uniqueCount, maybeLastForeground, tokens) => {
+      switch (tokens) {
+      | [] => uniqueCount
+      | [(hd: ThemeToken.t), ...tail] =>
+        switch (maybeLastForeground) {
+        | None => loop(uniqueCount + 1, Some(hd.foregroundColor), tail)
+        | Some(color) =>
+          if (Revery.Color.equals(color, hd.foregroundColor)) {
+            loop(uniqueCount, Some(hd.foregroundColor), tail);
+          } else {
+            loop(uniqueCount + 1, Some(hd.foregroundColor), tail);
+          }
+        }
+      };
+    };
 
-  let rec loop = (uniqueCount, maybeLastForeground, tokens) => {
-    switch (tokens) {
-    | [] => uniqueCount
-    | [(hd: ThemeToken.t), ...tail] => 
-      switch (maybeLastForeground) {
-      | None => 
-      loop(uniqueCount + 1, Some(hd.foregroundColor), tail)
-      | Some(color) => 
-        if(Revery.Color.equals(color, hd.foregroundColor)) {
-        loop(uniqueCount, Some(hd.foregroundColor), tail)
-      } else {
-        loop(uniqueCount + 1, Some(hd.foregroundColor), tail)
-      }
-      }
-    }
-  }
-
-  loop(0, None, tokens);
-};
+    loop(0, None, tokens);
+  };
 
 // Integration test - verify we get highlights for PHP
 // Regression test for #2985
@@ -40,8 +39,7 @@ runTest(~name="SyntaxHighlightPhpTest", ({dispatch, wait, _}) => {
   dispatch(Actions.OpenFileByPath(testFile, None, None));
 
   // Wait for highlights to show up
-  wait(
-    ~name="Verify we get syntax highlights", (state: State.t) => {
+  wait(~name="Verify we get syntax highlights", (state: State.t) => {
     state
     |> Selectors.getActiveBuffer
     |> Option.map(Buffer.getId)
@@ -53,13 +51,9 @@ runTest(~name="SyntaxHighlightPhpTest", ({dispatch, wait, _}) => {
              state.syntaxHighlights,
            );
 
+         let uniqueTokenColors = tokens |> uniqueColorCount;
 
-         let uniqueTokenColors = tokens
-         |> uniqueColorCount;
-
-         prerr_endline ("TOKENS: " ++ string_of_int(List.length(tokens)));
-         prerr_endline ("UNIQUE token colors: " ++ string_of_int(uniqueTokenColors));
-         uniqueTokenColors > 1
+         uniqueTokenColors > 1;
        })
     |> Option.value(~default=false)
   });
