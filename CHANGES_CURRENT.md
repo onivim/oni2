@@ -57,6 +57,7 @@
 - #2990 - Signature Help: Fix blocking `esc` key press back to normal mode
 - #2991 - OSX: Fix shortcut keys double-triggering events
 - #2993 - CodeLens: Handle null command id & label icons
+- #2995 - Extensions: Fix bug with 3-param http/https request (fixes #2981)
 
 ### Performance
 
