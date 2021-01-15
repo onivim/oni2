@@ -174,7 +174,7 @@ let create =
           }),
         ) =>
         let command =
-          command |> Option.map(({id, _}: Exthost.Command.t) => id);
+          command |> OptionEx.flatMap(({id, _}: Exthost.Command.t) => id);
         dispatch(
           Actions.StatusBar(
             Feature_StatusBar.ItemAdded(
