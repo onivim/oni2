@@ -19,11 +19,11 @@
    RegressionCommandLineNoCompletionTest RegressionFontFallbackTest
    RegressionFileModifiedIndicationTest RegressionNonExistentDirectory
    RegressionVspEmptyInitialBufferTest RegressionVspEmptyExistingBufferTest
-   SCMGitTest SyntaxHighlightTextMateTest SyntaxHighlightTreesitterTest
-   AddRemoveSplitTest TerminalSetPidTitleTest TerminalConfigurationTest
-   TypingBatchedTest TypingUnbatchedTest VimSimpleRemapTest
-   VimlRemapCmdlineTest ClipboardChangeTest VimScriptLocalFunctionTest
-   ZenModeSingleFileModeTest ZenModeSplitTest)
+   SCMGitTest SyntaxHighlightPhpTest SyntaxHighlightTextMateTest
+   SyntaxHighlightTreesitterTest AddRemoveSplitTest TerminalSetPidTitleTest
+   TerminalConfigurationTest TypingBatchedTest TypingUnbatchedTest
+   VimSimpleRemapTest VimlRemapCmdlineTest ClipboardChangeTest
+   VimScriptLocalFunctionTest ZenModeSingleFileModeTest ZenModeSplitTest)
  (libraries Oni_CLI Oni_IntegrationTestLib reason-native-crash-utils.asan))
 
 (install
@@ -54,12 +54,12 @@
    SearchShowClearHighlightsTest.exe SyntaxHighlightTextMateTest.exe
    SyntaxHighlightTreesitterTest.exe SyntaxServer.exe
    SyntaxServerCloseTest.exe SyntaxServerMessageExceptionTest.exe
-   SyntaxServerParentPidTest.exe SyntaxServerParentPidCorrectTest.exe
-   SyntaxServerReadExceptionTest.exe TerminalSetPidTitleTest.exe
-   TerminalConfigurationTest.exe AddRemoveSplitTest.exe TypingBatchedTest.exe
-   TypingUnbatchedTest.exe VimScriptLocalFunctionTest.exe
-   VimSimpleRemapTest.exe VimlRemapCmdlineTest.exe
-   ZenModeSingleFileModeTest.exe ZenModeSplitTest.exe ClipboardChangeTest.exe
-   large-c-file.c lsan.supp some-test-file.json some-test-file.txt test.crlf
-   test.lf utf8.txt utf8-test-file.htm Inconsolata-Regular.ttf
-   PlugScriptLocal.vim))
+   SyntaxHighlightPhpTest.exe SyntaxServerParentPidTest.exe
+   SyntaxServerParentPidCorrectTest.exe SyntaxServerReadExceptionTest.exe
+   TerminalSetPidTitleTest.exe TerminalConfigurationTest.exe
+   AddRemoveSplitTest.exe TypingBatchedTest.exe TypingUnbatchedTest.exe
+   VimScriptLocalFunctionTest.exe VimSimpleRemapTest.exe
+   VimlRemapCmdlineTest.exe ZenModeSingleFileModeTest.exe
+   ZenModeSplitTest.exe ClipboardChangeTest.exe large-c-file.c lsan.supp
+   some-test-file.json some-test-file.txt test.crlf test.lf test-syntax.php
+   utf8.txt utf8-test-file.htm Inconsolata-Regular.ttf PlugScriptLocal.vim))
