@@ -40,6 +40,13 @@ Some Linux distributions may need other packages:
 
 ## Build and Run
 
+### Clone repository
+
+```sh
+git clone https://github.com/onivim/oni2
+cd oni2
+```
+
 ### Install node dependencies
 
 ```sh
@@ -58,9 +65,6 @@ node install-node-deps.js
 > __NOTE:__ On macOS, if you receive an `error: Too many open files`, you can run `ulimit -Sn 4096` to increase the file limit. More info at [esy/esy#1057](https://github.com/esy/esy/issues/1057)
 
 ```sh
-git clone https://github.com/onivim/oni2
-cd oni2
-
 # Install dependencies in package.json
 esy install
 
