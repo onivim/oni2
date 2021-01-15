@@ -70,6 +70,13 @@ module Effects = {
           dispatch(toMsg());
         })
       );
+
+    let modelSaved = (~uri, client, toMsg) => {
+      Isolinear.Effect.createWithDispatch(~name="exthost.modelSaved", dispatch => {
+        Exthost.Request.Documents.acceptModelSaved(~uri, client);
+        dispatch(toMsg());
+      });
+    };
   };
   module FileSystemEventService = {
     let onFileEvent = (~events, extHostClient) =>
