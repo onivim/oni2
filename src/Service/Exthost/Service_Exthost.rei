@@ -131,6 +131,7 @@ module Sub: {
   let codeLenses:
     (
       ~handle: int,
+      ~eventTick: int,
       ~buffer: Oni_Core.Buffer.t,
       ~startLine: EditorCoreTypes.LineNumber.t,
       ~stopLine: EditorCoreTypes.LineNumber.t,

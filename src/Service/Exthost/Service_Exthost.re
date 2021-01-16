@@ -681,19 +681,21 @@ module Sub = {
 
   type codeLensesParams = {
     handle: int,
+    eventTick: int,
     client: Exthost.Client.t,
     buffer: Oni_Core.Buffer.t,
     startLine: int, // One-based start line
     stopLine: int // One-based stop line
   };
 
-  let idFromBufferRange = (~handle, ~buffer, ~startLine) => {
+  let idForCodeLens = (~handle, ~buffer, ~startLine, ~eventTick) => {
     Printf.sprintf(
-      "%d-%d-%d:%d",
+      "%d-%d-%d:%d-%d",
       handle,
       Oni_Core.Buffer.getId(buffer),
       Oni_Core.Buffer.getVersion(buffer),
       startLine,
+      eventTick,
     );
   };
 
@@ -708,8 +710,8 @@ module Sub = {
       };
 
       let name = "Service_Exthost.CodeLensesSubscription";
-      let id = ({handle, buffer, startLine, _}: params) =>
-        idFromBufferRange(~handle, ~buffer, ~startLine);
+      let id = ({handle, buffer, startLine, eventTick, _}: params) =>
+        idForCodeLens(~handle, ~buffer, ~startLine, ~eventTick);
 
       let init = (~params, ~dispatch) => {
         let active = ref(true);
@@ -799,11 +801,12 @@ module Sub = {
       };
     });
 
-  let codeLenses = (~handle, ~buffer, ~startLine, ~stopLine, ~toMsg, client) => {
+  let codeLenses =
+      (~handle, ~eventTick, ~buffer, ~startLine, ~stopLine, ~toMsg, client) => {
     let startLine = EditorCoreTypes.LineNumber.toOneBased(startLine);
     let stopLine = EditorCoreTypes.LineNumber.toOneBased(stopLine);
     CodeLensesSubscription.create(
-      {handle, buffer, client, startLine, stopLine}: codeLensesParams,
+      {handle, buffer, client, startLine, stopLine, eventTick}: codeLensesParams,
     )
     |> Isolinear.Sub.map(toMsg);
   };
