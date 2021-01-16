@@ -60,6 +60,7 @@
 - #2997 - Syntax: Fix regression in syntax highlighting for PHP (fixes #2985)
 - #2995 - Extensions: Fix bug with 3-param http/https request (fixes #2981)
 - #2999 - Extensions: Elm - fix bug with diagnostics not displaying (fixes #2640)
+- #3003 - Extensions: CodeLens - Handle the `$emitCodeLens` event
 
 ### Performance
 
