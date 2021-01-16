@@ -135,8 +135,18 @@ let update =
     )
   | Pasted(_) => (model, Nothing)
 
-  | Exthost(RegisterCodeLensSupport({handle, selector, _})) =>
-    let codeLens' = CodeLens.register(~handle, ~selector, model.codeLens);
+  | Exthost(EmitCodeLensEvent({eventHandle, _})) =>
+    let codeLens' = CodeLens.emit(~eventHandle, model.codeLens);
+    ({...model, codeLens: codeLens'}, Nothing);
+
+  | Exthost(RegisterCodeLensSupport({handle, selector, eventHandle})) =>
+    let codeLens' =
+      CodeLens.register(
+        ~handle,
+        ~selector,
+        ~maybeEventHandle=eventHandle,
+        model.codeLens,
+      );
     ({...model, codeLens: codeLens'}, Nothing);
 
   | Exthost(RegisterDefinitionSupport({handle, selector})) =>

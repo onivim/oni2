@@ -61,6 +61,7 @@
 - #2995 - Extensions: Fix bug with 3-param http/https request (fixes #2981)
 - #2999 - Extensions: Elm - fix bug with diagnostics not displaying (fixes #2640)
 - #3000 - Extensions: Search - Fix out-of-order search results (fixes #2979 - thanks @jakubbaron!)
+- #3003 - Extensions: CodeLens - Handle the `$emitCodeLens` event
 
 ### Performance
 
