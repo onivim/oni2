@@ -32,7 +32,7 @@ module SearchSub =
               maybeRemainingCount:
                 Some(totalSize - offset - newExtensionCount),
               searchText: query.searchText,
-              items: extensions @ query.items,
+              items: query.items @ extensions,
             };
           dispatch(Ok(newQuery));
         },
