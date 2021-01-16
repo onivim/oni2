@@ -1,8 +1,6 @@
 open Oni_Core;
 open Revery.UI;
 
-type commit;
-
 type model;
 
 let initial: model;
@@ -27,7 +25,6 @@ module View: {
 
   module Update: {
     let make:
-      (~since: string, ~theme: ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
-      element;
+      (~theme: ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) => element;
   };
 };

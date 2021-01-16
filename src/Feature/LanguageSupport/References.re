@@ -93,12 +93,13 @@ module Commands = {
 };
 
 module Keybindings = {
-  open Oni_Input.Keybindings;
+  open Feature_Input.Schema;
 
   let condition = "editorTextFocus && normalMode" |> WhenExpr.parse;
 
   // TODO: Fix this
-  let shiftF12 = {key: "<S-F12>", command: Commands.findAll.id, condition};
+  let shiftF12 =
+    bind(~key="<S-F12>", ~command=Commands.findAll.id, ~condition);
 };
 
 module Contributions = {

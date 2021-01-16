@@ -16,7 +16,8 @@ type command =
   | ToggleSearchPane
   | ToggleSCMPane
   | ToggleExtensionsPane
-  | ToggleVisibility;
+  | ToggleVisibility
+  | GotoOutline;
 
 [@deriving show]
 type msg =
@@ -30,7 +31,9 @@ type msg =
 
 module Constants = {
   let defaultWidth = 225;
-  let minWidth = 50;
+  // Adjusted minWidth for empty experience - don't let the text get
+  // too clipped!
+  let minWidth = 75;
   let maxWidth = 800;
 };
 
@@ -46,14 +49,19 @@ type model = {
   location,
 };
 
+type subFocus =
+  | Outline;
+
 type outmsg =
   | Nothing
-  | Focus
+  | Focus(option(subFocus))
   | PopFocus;
 
 let selected = ({selected, _}) => selected;
 let isOpen = ({isOpen, _}) => isOpen;
 let location = ({location, _}) => location;
+
+let isOpenByDefault = ({openByDefault, _}) => openByDefault;
 
 let initial = {
   openByDefault: false,
@@ -88,19 +96,19 @@ let update = (~isFocused, msg, model) => {
   // Focus a pane if it is not open, or close it
   let selectOrClosePane = (~pane, model) =>
     if (!model.isOpen) {
-      ({...model, isOpen: true, selected: pane}, Focus);
+      ({...model, isOpen: true, selected: pane}, Focus(None));
     } else if (model.selected == pane) {
       ({...model, isOpen: false}, PopFocus);
     } else {
-      ({...model, selected: pane}, Focus);
+      ({...model, selected: pane}, Focus(None));
     };
 
-  let togglePane = (~pane: pane, model) =>
+  let togglePane = (~pane: pane, ~subFocus=None, model) =>
     // Not open - open the sidebar, and focus
     if (!model.isOpen || model.selected != pane) {
       (
         {...model, isOpen: true, selected: pane},
-        Focus,
+        Focus(subFocus),
         // Sidebar is open, and with the selected pane...
         // If not open by default, we should close.
       );
@@ -113,7 +121,7 @@ let update = (~isFocused, msg, model) => {
     } else if (isFocused) {
       (model, PopFocus);
     } else {
-      (model, Focus);
+      (model, Focus(subFocus));
     };
 
   switch (msg) {
@@ -155,10 +163,13 @@ let update = (~isFocused, msg, model) => {
   | SearchClicked => selectOrClosePane(~pane=Search, model)
   | Command(ToggleSearchPane) => togglePane(~pane=Search, model)
 
+  | Command(GotoOutline) =>
+    togglePane(~pane=FileExplorer, ~subFocus=Some(Outline), model)
+
   | Command(ToggleVisibility) =>
     // If we were open, and we are going to close, we should pop focus...
     // Otherwise, if we are opening, we need to acquire focus.
-    let eff = model.isOpen ? PopFocus : Focus;
+    let eff = model.isOpen ? PopFocus : Focus(None);
     ({...model, shouldSnapShut: true, isOpen: !model.isOpen}, eff);
   };
 };
@@ -213,6 +224,14 @@ module Commands = {
       Command(ToggleExplorerPane),
     );
 
+  let gotoOutline =
+    define(
+      ~category="Explorer",
+      ~title="Go-to file outline",
+      "workbench.action.gotoOutline",
+      Command(GotoOutline),
+    );
+
   let openSCMPane =
     define(
       ~category="Source Control",
@@ -231,62 +250,71 @@ module Commands = {
 };
 
 module Keybindings = {
-  open Oni_Input.Keybindings;
+  open Feature_Input.Schema;
 
-  let findInFiles = {
-    key: "<S-C-F>",
-    command: Commands.openSearchPane.id,
-    condition: "!isMac" |> WhenExpr.parse,
-  };
+  let findInFiles =
+    bind(
+      ~key="<S-C-F>",
+      ~command=Commands.openSearchPane.id,
+      ~condition="!isMac" |> WhenExpr.parse,
+    );
 
-  let findInFilesMac = {
-    key: "<D-S-F>",
-    command: Commands.openSearchPane.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let findInFilesMac =
+    bind(
+      ~key="<D-S-F>",
+      ~command=Commands.openSearchPane.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 
-  let openExtensions = {
-    key: "<S-C-X>",
-    command: Commands.openExtensionsPane.id,
-    condition: "!isMac" |> WhenExpr.parse,
-  };
+  let openExtensions =
+    bind(
+      ~key="<S-C-X>",
+      ~command=Commands.openExtensionsPane.id,
+      ~condition="!isMac" |> WhenExpr.parse,
+    );
 
-  let openExtensionsMac = {
-    key: "<D-S-X>",
-    command: Commands.openExtensionsPane.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let openExtensionsMac =
+    bind(
+      ~key="<D-S-X>",
+      ~command=Commands.openExtensionsPane.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 
-  let openExplorer = {
-    key: "<S-C-E>",
-    command: Commands.openExplorerPane.id,
-    condition: "!isMac" |> WhenExpr.parse,
-  };
+  let openExplorer =
+    bind(
+      ~key="<S-C-E>",
+      ~command=Commands.openExplorerPane.id,
+      ~condition="!isMac" |> WhenExpr.parse,
+    );
 
-  let openExplorerMac = {
-    key: "<D-S-E>",
-    command: Commands.openExplorerPane.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let openExplorerMac =
+    bind(
+      ~key="<D-S-E>",
+      ~command=Commands.openExplorerPane.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 
   // This keybinding is used in both MacOS & Windows
-  let openSCM = {
-    key: "<S-C-G>",
-    command: Commands.openSCMPane.id,
-    condition: WhenExpr.Value(True),
-  };
+  let openSCM =
+    bind(
+      ~key="<S-C-G>",
+      ~command=Commands.openSCMPane.id,
+      ~condition=WhenExpr.Value(True),
+    );
 
-  let toggleSidebar = {
-    key: "<C-B>",
-    command: Commands.toggleSidebar.id,
-    condition: "!isMac" |> WhenExpr.parse,
-  };
+  let toggleSidebar =
+    bind(
+      ~key="<C-S-B>",
+      ~command=Commands.toggleSidebar.id,
+      ~condition="!isMac" |> WhenExpr.parse,
+    );
 
-  let toggleSidebarMac = {
-    key: "<D-B>",
-    command: Commands.toggleSidebar.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let toggleSidebarMac =
+    bind(
+      ~key="<D-B>",
+      ~command=Commands.toggleSidebar.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 };
 
 module ContextKeys = {
@@ -336,9 +364,31 @@ module Configuration = {
     );
 };
 
-let configurationChanged = (~config, model) => {
+let configurationChanged = (~hasWorkspace, ~config, model) => {
   let model' = setDefaultLocation(model, Configuration.location.get(config));
-  setDefaultVisibility(model', Configuration.visible.get(config));
+  setDefaultVisibility(
+    model',
+    hasWorkspace && Configuration.visible.get(config),
+  );
+};
+
+module MenuItems = {
+  open MenuBar.Schema;
+  module View = {
+    let explorer = command(~title="Explorer", Commands.openExplorerPane);
+
+    let extensions =
+      command(~title="Extensions", Commands.openExtensionsPane);
+
+    let scm = command(~title="Source Control", Commands.openSCMPane);
+
+    let toggle = command(~title="Toggle Sidebar", Commands.toggleSidebar);
+  };
+
+  module Edit = {
+    let findInFiles =
+      command(~title="Find in files", Commands.openSearchPane);
+  };
 };
 
 module Contributions = {
@@ -349,6 +399,7 @@ module Contributions = {
       openExtensionsPane,
       openSCMPane,
       toggleSidebar,
+      gotoOutline,
     ];
 
   let configuration = Configuration.[visible.spec, location.spec];
@@ -365,6 +416,28 @@ module Contributions = {
       toggleSidebarMac,
       openSCM,
     ];
+
+  let menuItems = commands |> List.map(MenuBar.Schema.command);
+
+  let menuGroups =
+    MenuBar.Schema.[
+      group(
+        ~order=200,
+        ~parent=Feature_MenuBar.Global.view,
+        MenuItems.View.[explorer, scm, extensions],
+      ),
+      group(
+        ~order=900,
+        ~parent=Feature_MenuBar.Global.view,
+        MenuItems.View.[toggle],
+      ),
+      group(
+        ~order=100,
+        ~parent=Feature_MenuBar.Global.edit,
+        MenuItems.Edit.[findInFiles],
+      ),
+    ];
+  MenuBar.Schema.group(~parent=Feature_MenuBar.Global.view, menuItems);
 
   let contextKeys = (~isFocused) => {
     let common = ContextKeys.[sideBarVisible];

@@ -13,6 +13,8 @@ type key = Lookup.path;
 type resolver = (~vimSetting: option(string), key) => rawValue;
 type fileTypeResolver = (~fileType: string) => resolver;
 
+let emptyResolver = (~vimSetting as _, _) => NotSet;
+
 let key = Lookup.path;
 let keyAsString = Lookup.key;
 

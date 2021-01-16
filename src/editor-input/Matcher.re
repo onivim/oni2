@@ -4,7 +4,7 @@ type t =
 
 type sequence = list(t);
 
-let parse = (~getKeycode, ~getScancode, str) => {
+let parse = (~explicitShiftKeyNeeded, str) => {
   let parse = lexbuf =>
     switch (Matcher_parser.main(Matcher_lexer.token, lexbuf)) {
     | exception Matcher_lexer.Error => Error("Error parsing binding: " ++ str)
@@ -17,34 +17,20 @@ let parse = (~getKeycode, ~getScancode, str) => {
 
   let flatMap = (f, r) => Result.bind(r, f);
 
-  let finish = r => {
-    let f = ((key, mods)) => {
-      switch (getKeycode(key), getScancode(key)) {
-      | (Some(keycode), Some(scancode)) =>
-        Ok(
-          KeyPress.{
-            modifiers: Matcher_internal.Helpers.internalModsToMods(mods),
-            scancode,
-            keycode,
-          },
-        )
-      | _ => Error("Unrecognized key: " ++ Key.toString(key))
-      };
-    };
+  let addShiftKeyToCapital = !explicitShiftKeyNeeded;
 
+  let finish = r => {
     switch (r) {
     | Matcher_internal.AllKeysReleased => Ok(AllKeysReleased)
     | Matcher_internal.Sequence(keys) =>
       keys
-      |> List.map(f)
+      |> KeyPress.combineUnmatchedStrings
+      |> List.map(KeyPress.ofInternal(~addShiftKeyToCapital))
+      |> List.flatten
       |> Base.Result.all
       |> Result.map(keys => Sequence(keys))
     };
   };
 
-  str
-  |> String.lowercase_ascii
-  |> Lexing.from_string
-  |> parse
-  |> flatMap(finish);
+  str |> Lexing.from_string |> parse |> flatMap(finish);
 };

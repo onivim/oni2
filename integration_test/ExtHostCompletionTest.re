@@ -5,10 +5,9 @@ open Oni_IntegrationTestLib;
 // This test validates:
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, we get some completion results
-runTestWithInput(
-  ~name="ExtHostCompletionTest", (input, dispatch, wait, _runEffects) => {
-  wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
+runTest(~name="ExtHostCompletionTest", ({input, dispatch, wait, _}) => {
+  wait(~timeout=30.0, ~name="Exthost is initialized", (state: State.t) =>
+    Feature_Exthost.isInitialized(state.exthost)
   );
 
   // Wait until the extension is activated

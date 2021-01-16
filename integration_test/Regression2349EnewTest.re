@@ -1,9 +1,10 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => {
+runTest(
+  ~name="Regression: Command line no completions", ({dispatch, wait, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   let initialEditorId = ref(None);
@@ -14,7 +15,9 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => 
     true;
   });
 
-  dispatch(Actions.VimExecuteCommand("enew"));
+  dispatch(
+    Actions.VimExecuteCommand({allowAnimation: true, command: "enew"}),
+  );
 
   wait(~name="New editor created", (state: State.t) => {
     let currentEditorId =

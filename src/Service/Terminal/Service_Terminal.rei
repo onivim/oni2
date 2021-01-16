@@ -33,7 +33,10 @@ module Sub: {
     Isolinear.Sub.t(msg);
 };
 
-module Effect: {let input: (~id: int, string) => Isolinear.Effect.t(msg);};
+module Effect: {
+  let input: (~id: int, string) => Isolinear.Effect.t(msg);
+  let paste: (~id: int, string) => Isolinear.Effect.t(msg);
+};
 
 let handleExtensionMessage: Exthost.Msg.TerminalService.msg => unit;
 

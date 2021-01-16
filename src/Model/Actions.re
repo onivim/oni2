@@ -6,7 +6,6 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Input;
 open Oni_Syntax;
 
 [@deriving show({with_path: false})]
@@ -17,7 +16,6 @@ type t =
   | Clipboard(Feature_Clipboard.msg)
   | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
-  | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)
   | Command(string)
   | Commands(Feature_Commands.msg(t))
@@ -31,22 +29,29 @@ type t =
   | Decorations(Feature_Decorations.msg)
   | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)
+  | Help(Feature_Help.msg)
   | Input(Feature_Input.msg)
   | TerminalFont(Service_Font.msg)
   | Extensions(Feature_Extensions.msg)
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
-  | KeyBindingsSet([@opaque] Keybindings.t)
+  | FileSystem(Feature_FileSystem.msg)
+  | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
   | KeybindingInvoked({command: string})
-  | KeyDown(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | KeyUp(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | KeyDown({
+      key: EditorInput.KeyCandidate.t,
+      scancode: int,
+      time: [@opaque] Revery.Time.t,
+    })
+  | KeyUp({
+      scancode: int,
+      time: [@opaque] Revery.Time.t,
+    })
   | Logging(Feature_Logging.msg)
   | TextInput(string, [@opaque] Revery.Time.t)
-  | DisableKeyDisplayer
-  | EnableKeyDisplayer
   // TODO: This should be a function call - wired up from an input feature
   // directly to the consumer of the keyboard action.
   // In addition, in the 'not-is-text' case, we should strongly type the keys.
@@ -74,6 +79,7 @@ type t =
   | FilesDropped({paths: list(string)})
   | FileExplorer(Feature_Explorer.msg)
   | LanguageSupport(Feature_LanguageSupport.msg)
+  | MenuBar(Feature_MenuBar.msg)
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
@@ -92,8 +98,17 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | OpenBufferById({bufferId: int})
+  | NewBuffer({direction: [ | `Current | `Horizontal | `Vertical | `NewTab]})
+  | OpenBufferById({
+      bufferId: int,
+      direction: [ | `Current | `Horizontal | `Vertical | `NewTab],
+    })
   | OpenFileByPath(
+      string,
+      option([ | `Current | `Horizontal | `Vertical | `NewTab]),
+      option(CharacterPosition.t),
+    )
+  | PreviewFileByPath(
       string,
       option([ | `Horizontal | `Vertical | `NewTab]),
       option(CharacterPosition.t),
@@ -105,6 +120,7 @@ type t =
       lines: array(string),
     })
   | Registers(Feature_Registers.msg)
+  | Registration(Feature_Registration.msg)
   | QuitBuffer([@opaque] Vim.Buffer.t, bool)
   | Quit(bool)
   // ReallyQuitting is dispatched when we've decided _for sure_
@@ -116,7 +132,7 @@ type t =
   | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
   | ThemeLoadByPath(string, string)
-  | ThemeLoadByName(string)
+  | ThemeLoadById(string)
   | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
@@ -132,8 +148,10 @@ type t =
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
-  | DirectoryChanged(string)
-  | VimExecuteCommand(string)
+  | VimExecuteCommand({
+      allowAnimation: bool,
+      command: string,
+    })
   | VimMessageReceived({
       priority: [@opaque] Vim.Types.msgPriority,
       title: string,
@@ -145,6 +163,7 @@ type t =
   | WindowFullscreen
   | WindowMinimized
   | WindowRestored
+  | Workspace(Feature_Workspace.msg)
   | TitleBar(Feature_TitleBar.msg)
   | WindowCloseBlocked
   | Layout(Feature_Layout.msg)
@@ -179,6 +198,7 @@ and quickmenuVariant =
   | CommandPalette
   | EditorsPicker
   | FilesPicker
+  | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | FileTypesPicker({

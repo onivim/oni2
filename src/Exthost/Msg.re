@@ -685,6 +685,19 @@ module FileSystem = {
         let%bind opts =
           deleteOptsJson |> Internal.decode_value(FileDeleteOptions.decode);
         Ok(Delete({uri, opts}));
+
+      | (
+          "$registerFileSystemProvider",
+          `List([`Int(handle), `String(scheme), capabilitiesJson]),
+        ) =>
+        let%bind capabilities =
+          capabilitiesJson
+          |> Internal.decode_value(FileSystemProviderCapabilities.decode);
+        Ok(RegisterFileSystemProvider({handle, scheme, capabilities}));
+
+      | ("$unregisterFileSystemProvider", `List([`Int(handle)])) =>
+        Ok(UnregisterProvider({handle: handle}))
+
       | _ => Error("Unhandled FileSystem method: " ++ method)
       }
     );
@@ -697,7 +710,7 @@ module LanguageFeatures = {
     | EmitCodeLensEvent({
         eventHandle: int,
         event: Yojson.Safe.t,
-      }) // ??
+      })
     | RegisterCodeLensSupport({
         handle: int,
         selector: DocumentSelector.t,
@@ -829,8 +842,13 @@ module LanguageFeatures = {
         Ok(RegisterDocumentHighlightProvider({handle, selector}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
+
+    | ("$emitCodeLensEvent", `List([`Int(eventHandle)])) =>
+      Ok(EmitCodeLensEvent({eventHandle, event: `Null}))
+
     | ("$emitCodeLensEvent", `List([`Int(eventHandle), json])) =>
       Ok(EmitCodeLensEvent({eventHandle, event: json}))
+
     | (
         "$registerCodeLensSupport",
         `List([handleJson, selectorJson, eventHandleJson]),
@@ -1235,6 +1253,7 @@ module StatusBar = {
         alignment,
         command: option(ExtCommand.t),
         color: option(Color.t),
+        backgroundColor: option(Color.t),
         tooltip: option(string),
         priority: int,
       })
@@ -1252,6 +1271,7 @@ module StatusBar = {
           tooltipJson,
           commandJson,
           colorJson,
+          backgroundColorJson,
           alignmentJson,
           priorityJson,
           _accessibilityInfoJson,
@@ -1265,6 +1285,8 @@ module StatusBar = {
         commandJson |> Internal.decode_value(nullable(ExtCommand.decode));
       let%bind color =
         colorJson |> Internal.decode_value(nullable(Color.decode));
+      let%bind backgroundColor =
+        backgroundColorJson |> Internal.decode_value(nullable(Color.decode));
       let%bind tooltip =
         tooltipJson |> Internal.decode_value(nullable(string));
       let%bind label = labelJson |> Internal.decode_value(Label.decode);
@@ -1283,6 +1305,7 @@ module StatusBar = {
           label,
           alignment,
           color,
+          backgroundColor,
           priority,
           tooltip,
           command,
@@ -1399,11 +1422,10 @@ module SCM = {
         features: SCM.ProviderFeatures.t,
       })
     // statusBarCommands: option(_),
-    | RegisterSCMResourceGroup({
+    | RegisterSCMResourceGroups({
         provider: int,
-        handle: int,
-        id: string,
-        label: string,
+        groups: list(SCM.Group.t),
+        splices: list(SCM.Resource.Splices.t),
       })
     | UnregisterSCMResourceGroup({
         provider: int,
@@ -1476,15 +1498,16 @@ module SCM = {
         | _ => Error("Unexpected arguments for $updateSourceControl")
         }
 
-      | "$registerGroup" =>
+      | "$registerGroups" =>
         switch (args) {
-        | `List([
-            `Int(provider),
-            `Int(handle),
-            `String(id),
-            `String(label),
-          ]) =>
-          Ok(RegisterSCMResourceGroup({provider, handle, id, label}))
+        | `List([`Int(provider), groupsJson, splicesJson]) =>
+          open Json.Decode;
+          let%bind groups =
+            groupsJson |> Internal.decode_value(list(SCM.Group.decode));
+          let%bind splices =
+            splicesJson
+            |> Internal.decode_value(list(SCM.Resource.Decode.splices));
+          Ok(RegisterSCMResourceGroups({provider, groups, splices}));
 
         | _ => Error("Unexpected arguments for $registerGroup")
         }

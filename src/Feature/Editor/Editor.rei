@@ -13,6 +13,7 @@ type scrollbarMetrics = {
 type yankHighlight = {
   key: Brisk_reconciler.Key.t,
   pixelRanges: list(PixelRange.t),
+  opacity: Component_Animation.t(float),
 };
 
 module WrapMode: {
@@ -22,14 +23,58 @@ module WrapMode: {
     | Viewport;
 };
 
-let create: (~config: Config.resolver, ~buffer: EditorBuffer.t, unit) => t;
+let create:
+  (~config: Config.resolver, ~buffer: EditorBuffer.t, ~preview: bool, unit) =>
+  t;
 let copy: t => t;
+
+type inlineElement;
+
+let makeInlineElement:
+  (
+    ~key: string,
+    ~uniqueId: string,
+    ~lineNumber: EditorCoreTypes.LineNumber.t,
+    ~view: (~theme: Oni_Core.ColorTheme.Colors.t, ~uiFont: UiFont.t, unit) =>
+           Revery.UI.element
+  ) =>
+  inlineElement;
+
+let setCodeLens:
+  (
+    ~startLine: EditorCoreTypes.LineNumber.t,
+    ~stopLine: EditorCoreTypes.LineNumber.t,
+    ~handle: int,
+    ~lenses: list(Feature_LanguageSupport.CodeLens.t),
+    t
+  ) =>
+  t;
+
+let setInlineElementSize:
+  (
+    ~allowAnimation: bool=?,
+    ~key: string,
+    ~line: EditorCoreTypes.LineNumber.t,
+    ~uniqueId: string,
+    ~height: int,
+    t
+  ) =>
+  t;
+
+let getInlineElements:
+  (~line: EditorCoreTypes.LineNumber.t, t) => list(InlineElements.element);
+
+let linesWithInlineElements: t => list(EditorCoreTypes.LineNumber.t);
 
 let key: t => Brisk_reconciler.Key.t;
 let getId: t => int;
+let getPreview: t => bool;
+let setPreview: (~preview: bool, t) => t;
 let getBufferId: t => int;
 let getTopVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
 let getBottomVisibleBufferLine: t => EditorCoreTypes.LineNumber.t;
+let getTopViewLine: t => int;
+let getBottomViewLine: t => int;
 let getLeftVisibleColumn: t => int;
 let getLayout: t => EditorLayout.t;
 let getCharacterUnderCursor: t => option(Uchar.t);
@@ -41,23 +86,29 @@ let getPrimaryCursorByte: t => BytePosition.t;
 let cursors: t => list(BytePosition.t);
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
-let getTotalWidthInPixels: t => int;
+let getTotalWidthInPixels: t => float;
 let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
+
+// Get the horizontal width in pixels of the tab/space whitespace in front of a line.
+let getLeadingWhitespacePixels: (EditorCoreTypes.LineNumber.t, t) => float;
 
 let mode: t => Vim.Mode.t;
 let setMode: (Vim.Mode.t, t) => t;
 
 let getBufferLineCount: t => int;
 
+let isAnimatingScroll: t => bool;
+
 let getTokenAt:
   (~languageConfiguration: LanguageConfiguration.t, CharacterPosition.t, t) =>
   option(CharacterRange.t);
 
+let overrideAnimation: (~animated: option(bool), t) => t;
 let yankHighlight: t => option(yankHighlight);
-let setYankHighlight: (~yankHighlight: yankHighlight, t) => t;
+let startYankHighlight: (list(PixelRange.t), t) => t;
 
 let setWrapPadding: (~padding: float, t) => t;
 let setVerticalScrollMargin: (~lines: int, t) => t;
@@ -120,16 +171,16 @@ let selectionOrCursorRange: t => ByteRange.t;
 
 let totalViewLines: t => int;
 
-let isScrollAnimated: t => bool;
-let scrollToPixelX: (~pixelX: float, t) => t;
-let scrollDeltaPixelX: (~pixelX: float, t) => t;
+let scrollToPixelX: (~animated: bool, ~pixelX: float, t) => t;
+let scrollDeltaPixelX: (~animated: bool, ~pixelX: float, t) => t;
 
 let scrollToLine: (~line: int, t) => t;
-let scrollToPixelY: (~pixelY: float, t) => t;
-let scrollDeltaPixelY: (~pixelY: float, t) => t;
+let scrollToPixelY: (~animated: bool, ~pixelY: float, t) => t;
+let scrollDeltaPixelY: (~animated: bool, ~pixelY: float, t) => t;
 
-let scrollToPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
-let scrollDeltaPixelXY: (~pixelX: float, ~pixelY: float, t) => t;
+let scrollToPixelXY: (~animated: bool, ~pixelX: float, ~pixelY: float, t) => t;
+let scrollDeltaPixelXY:
+  (~animated: bool, ~pixelX: float, ~pixelY: float, t) => t;
 
 let scrollCenterCursorVertically: t => t;
 let scrollCursorTop: t => t;
@@ -158,6 +209,7 @@ let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
 let viewLineIsPrimary: (int, t) => bool;
 let viewLineToBufferLine: (int, t) => EditorCoreTypes.LineNumber.t;
 let bufferBytePositionToViewLine: (BytePosition.t, t) => int;
+let viewLineToPixelY: (int, t) => float;
 
 // PIXEL-SPACE CONVERSION
 
@@ -215,3 +267,10 @@ module Slow: {
     // the end of the line.
     (~allowPast: bool=?, ~pixelX: float, ~pixelY: float, t) => BytePosition.t;
 };
+
+[@deriving show]
+type msg;
+
+let update: (msg, t) => t;
+
+let sub: t => Isolinear.Sub.t(msg);

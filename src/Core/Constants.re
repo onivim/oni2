@@ -11,13 +11,40 @@ let defaultFontFile = "JetBrainsMono-Regular.ttf";
 let defaultFontFamily =
   Revery.Font.Family.fromFiles((~weight, ~italic) => {
     switch (weight, italic) {
+    | (Revery.Font.Weight.Thin, false)
+    | (Revery.Font.Weight.UltraLight, false) => "JetBrainsMono-ExtraLight.ttf"
+
+    | (Revery.Font.Weight.Thin, true)
+    | (Revery.Font.Weight.UltraLight, true) => "JetBrainsMono-ExtraLight-Italic.ttf"
+
+    | (Revery.Font.Weight.Light, true) => "JetBrainsMono-Light-Italic.ttf"
+    | (Revery.Font.Weight.Light, false) => "JetBrainsMono-Light.ttf"
+
+    | (Revery.Font.Weight.Undefined, true)
+    | (Revery.Font.Weight.Normal, true) => "JetBrainsMono-Italic.ttf"
+
+    | (Revery.Font.Weight.Undefined, false)
+    | (Revery.Font.Weight.Normal, false) => defaultFontFile
+
+    | (Revery.Font.Weight.Medium, true)
+    | (Revery.Font.Weight.SemiBold, true) => "JetBrainsMono-Medium-Italic.ttf"
+
+    | (Revery.Font.Weight.Medium, false)
+    | (Revery.Font.Weight.SemiBold, false) => "JetBrainsMono-Medium.ttf"
+
     | (Revery.Font.Weight.Bold, true) => "JetBrainsMono-Bold-Italic.ttf"
     | (Revery.Font.Weight.Bold, false) => "JetBrainsMono-Bold.ttf"
-    | (Revery.Font.Weight.Normal, true) => "JetBrainsMono-Italic.ttf"
-    | _ => defaultFontFile
+
+    | (Revery.Font.Weight.UltraBold, true)
+    | (Revery.Font.Weight.Heavy, true) => "JetBrainsMono-ExtraBold-Italic.ttf"
+
+    | (Revery.Font.Weight.UltraBold, false)
+    | (Revery.Font.Weight.Heavy, false) => "JetBrainsMono-ExtraBold.ttf"
     }
   });
 let defaultTerminalFontSize = 12.;
+
+let defaultTheme = "LaserWave Italic";
 
 let syntaxEagerMaxLines = 500;
 let syntaxEagerMaxLineLength = 1000;
@@ -55,3 +82,9 @@ let notificationWidth = 300;
 let largeFileLineCountThreshold = 1000;
 
 let doubleClickTime = Revery.Time.milliseconds(500);
+
+// Number of pixels the mouse needs to be within the border in order to trigger auto-scroll.
+let mouseAutoScrollBorder = 75;
+let mouseAutoScrollSpeed = 75.;
+
+let mouseAutoScrollInterval = Revery.Time.milliseconds(50);

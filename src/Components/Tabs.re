@@ -96,7 +96,7 @@ let make =
       setScrollLeft(actualScrollLeft => {
         let newScrollLeft =
           actualScrollLeft
-          - int_of_float((wheelEvent.deltaX +. wheelEvent.deltaY) *. 25.);
+          - int_of_float((-. wheelEvent.deltaX +. wheelEvent.deltaY) *. 25.);
 
         newScrollLeft |> max(0) |> min(maxOffset);
       });

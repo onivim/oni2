@@ -1,49 +1,51 @@
 open Oni_Core;
 open Oni_Core.Utility;
 
+module Log = (
+  val Oni_Core.Log.withNamespace("Oni2.LanguageSupport.CodeLens")
+);
+
 // MODEL
 
-type codeLens = {
-  handle: int,
-  lens: Exthost.CodeLens.t,
-  uniqueId: string,
-};
+type codeLens = Exthost.CodeLens.t;
 
-let lineNumber = ({lens, _}) =>
+let lineNumber = (lens: Exthost.CodeLens.t) =>
   Exthost.OneBasedRange.(lens.range.startLineNumber - 1);
 
-let uniqueId = ({uniqueId, _}) => uniqueId;
-
-let text = ({lens, _}: codeLens) =>
+let textFromExthost = (lens: Exthost.CodeLens.t) => {
   Exthost.Command.(
     lens.command
     |> OptionEx.flatMap(command => command.label)
     |> Option.map(Exthost.Label.toString)
     |> Option.value(~default="(null)")
   );
+};
+
+let text = (lens: Exthost.CodeLens.t) => textFromExthost(lens);
 
 type provider = {
   handle: int,
+  maybeEventHandle: option(int),
   selector: Exthost.DocumentSelector.t,
+  // [eventTick] is incremented for each [emitCodeLens] event
+  eventTick: int,
 };
 
 type handleToLenses = IntMap.t(list(codeLens));
 
-type model = {
-  providers: list(provider),
-  bufferToLenses: IntMap.t(handleToLenses),
-};
+type model = {providers: list(provider)};
 
-let get = (~bufferId, {bufferToLenses, _}) => {
-  bufferToLenses
-  |> IntMap.find_opt(bufferId)
-  |> Option.value(~default=IntMap.empty)
-  |> IntMap.bindings
-  |> List.map(snd)
-  |> List.flatten;
-};
+type outmsg =
+  | Nothing
+  | CodeLensesChanged({
+      handle: int,
+      bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
+      lenses: list(codeLens),
+    });
 
-let initial = {providers: [], bufferToLenses: IntMap.empty};
+let initial = {providers: []};
 
 [@deriving show]
 type msg =
@@ -51,107 +53,127 @@ type msg =
   | CodeLensesReceived({
       handle: int,
       bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(Exthost.CodeLens.t),
     });
 
-let register = (~handle: int, ~selector, model) => {
-  ...model,
-  providers: [{handle, selector}, ...model.providers],
+let register = (~handle: int, ~selector, ~maybeEventHandle, model) => {
+  providers: [
+    {handle, selector, maybeEventHandle, eventTick: 0},
+    ...model.providers,
+  ],
 };
 
 let unregister = (~handle: int, model) => {
-  ...model,
   providers: model.providers |> List.filter(prov => prov.handle != handle),
+};
+
+let emit = (~eventHandle: int, model) => {
+  {
+    // Increment event tick for any matching providers
+    providers:
+      model.providers
+      |> List.map(provider =>
+           if (provider.maybeEventHandle == Some(eventHandle)) {
+             {...provider, eventTick: provider.eventTick + 1};
+           } else {
+             provider;
+           }
+         ),
+  };
 };
 
 // UPDATE
 
-let addLenses = (handle, bufferId, lenses, handleToLenses) => {
-  let internalLenses =
-    lenses
-    |> List.map(lens =>
-         {
-           lens,
-           handle,
-           uniqueId:
-             Printf.sprintf(
-               "%d%d%d",
-               handle,
-               bufferId,
-               lens.range.startLineNumber,
-             ),
-         }
-       );
-  IntMap.add(handle, internalLenses, handleToLenses);
-};
-
 let update = (msg, model) =>
   switch (msg) {
-  | CodeLensesError(_) => model
-  | CodeLensesReceived({handle, bufferId, lenses}) =>
-    let bufferToLenses =
-      model.bufferToLenses
-      |> IntMap.update(
-           bufferId,
-           fun
-           | None =>
-             IntMap.empty
-             |> addLenses(handle, bufferId, lenses)
-             |> Option.some
-           | Some(existing) =>
-             existing |> addLenses(handle, bufferId, lenses) |> Option.some,
-         );
-    {...model, bufferToLenses};
+  | CodeLensesError(_) => (model, Nothing)
+  | CodeLensesReceived({handle, startLine, stopLine, bufferId, lenses}) => (
+      model,
+      CodeLensesChanged({handle, bufferId, startLine, stopLine, lenses}),
+    )
   };
-
-// CONFIGURATION
-
-module Configuration = {
-  open Config.Schema;
-
-  module Experimental = {
-    let enabled =
-      setting("experimental.editor.codeLens", bool, ~default=false);
-  };
-};
 
 // SUBSCRIPTION
 
 module Sub = {
-  let create = (~visibleBuffers, ~client, model) => {
-    visibleBuffers
-    |> List.map(buffer => {
-         model.providers
-         |> List.filter(({selector, _}) =>
-              Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
-            )
-         |> List.map(({handle, _}) => {
-              let toMsg =
-                fun
-                | Error(msg) => CodeLensesError(msg)
-                | Ok(lenses) =>
-                  CodeLensesReceived({
-                    handle,
-                    bufferId: buffer |> Oni_Core.Buffer.getId,
-                    lenses,
-                  });
+  let create =
+      (
+        ~topVisibleBufferLine,
+        ~bottomVisibleBufferLine,
+        ~visibleBuffers,
+        ~client,
+        model,
+      ) => {
+    // Query below a viewport - grabbing some extra codelenses above and below -
+    // to minimize codelens popping in while scrolling
+    let delta: int =
+      EditorCoreTypes.LineNumber.toOneBased(bottomVisibleBufferLine)
+      - EditorCoreTypes.LineNumber.toOneBased(topVisibleBufferLine);
+    let (topVisibleBufferLine, bottomVisibleBufferLine) =
+      EditorCoreTypes.LineNumber.(
+        topVisibleBufferLine - 1,
+        bottomVisibleBufferLine + delta,
+      );
 
-              Service_Exthost.Sub.codeLenses(
-                ~handle,
-                ~buffer,
-                ~toMsg,
-                client,
-              );
-            })
-       })
-    |> List.flatten
-    |> Isolinear.Sub.batch;
+    let codeLenses =
+      visibleBuffers
+      |> List.map(buffer => {
+           model.providers
+           |> List.filter(({selector, _}) =>
+                Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
+              )
+           |> List.map(({handle, eventTick, _}) => {
+                let toMsg =
+                  fun
+                  | Error(msg) => CodeLensesError(msg)
+                  | Ok(lenses) =>
+                    CodeLensesReceived({
+                      handle,
+                      startLine: topVisibleBufferLine,
+                      stopLine: bottomVisibleBufferLine,
+                      bufferId: buffer |> Oni_Core.Buffer.getId,
+                      lenses,
+                    });
+
+                Service_Exthost.Sub.codeLenses(
+                  ~handle,
+                  ~buffer,
+                  ~startLine=topVisibleBufferLine,
+                  ~stopLine=bottomVisibleBufferLine,
+                  ~eventTick,
+                  ~toMsg,
+                  client,
+                );
+              })
+         })
+      |> List.flatten;
+
+    codeLenses |> Isolinear.Sub.batch;
   };
 };
 
-let sub = (~config, ~visibleBuffers, ~client, model) =>
-  if (Configuration.Experimental.enabled.get(config)) {
-    Sub.create(~visibleBuffers, ~client, model);
+module Configuration = Feature_Configuration.GlobalConfiguration;
+
+let sub =
+    (
+      ~config,
+      ~isAnimatingScroll,
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
+      ~visibleBuffers,
+      ~client,
+      model,
+    ) =>
+  if (!isAnimatingScroll && Configuration.Editor.codeLensEnabled.get(config)) {
+    Sub.create(
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
+      ~visibleBuffers,
+      ~client,
+      model,
+    );
   } else {
     Isolinear.Sub.none;
   };
@@ -171,7 +193,7 @@ module Colors = {
 module Contributions = {
   let colors = Colors.[foreground];
 
-  let configuration = Configuration.[Experimental.enabled.spec];
+  let configuration = [];
 };
 
 // VIEW
@@ -179,20 +201,22 @@ module Contributions = {
 module View = {
   module CodeLensColors = Colors;
   open Revery.UI;
-  let make = (~theme, ~uiFont: Oni_Core.UiFont.t, ~codeLens, ()) => {
+  let make = (~leftMargin, ~theme, ~uiFont: Oni_Core.UiFont.t, ~codeLens, ()) => {
     let foregroundColor = CodeLensColors.foreground.from(theme);
-    let text = text(codeLens);
-    <View style=Style.[marginTop(4), marginBottom(-4)]>
-      <Text
-        text
-        fontFamily={uiFont.family}
-        fontSize={uiFont.size}
-        style=Style.[
-          color(foregroundColor),
-          flexGrow(1),
-          textWrap(Revery.TextWrapping.Wrap),
-        ]
-      />
+    let label =
+      Exthost.CodeLens.(codeLens.command)
+      |> OptionEx.flatMap((command: Exthost.Command.t) => command.label)
+      |> Option.value(~default=Exthost.Label.ofString("(null)"));
+
+    <View
+      style=Style.[
+        marginTop(4),
+        marginBottom(0),
+        marginLeft(leftMargin),
+        flexGrow(1),
+        flexShrink(0),
+      ]>
+      <Oni_Components.Label font=uiFont color=foregroundColor label />
     </View>;
   };
 };

@@ -27,26 +27,13 @@ if (cliOptions.needsConsole) {
   Revery.App.initConsole();
 };
 
-switch (eff) {
-| PrintVersion => Cli.printVersion() |> exit
-| InstallExtension(name) => Cli.installExtension(name, cliOptions) |> exit
-| QueryExtension(name) => Cli.queryExtension(name, cliOptions) |> exit
-| UninstallExtension(name) =>
-  Cli.uninstallExtension(name, cliOptions) |> exit
-| CheckHealth => HealthCheck.run(~checks=All, cliOptions) |> exit
-| ListExtensions => Cli.listExtensions(cliOptions) |> exit
-| StartSyntaxServer({parentPid, namedPipe}) =>
-  Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>
-    HealthCheck.run(~checks=Common, cliOptions)
-  )
-| Run =>
+let initializeLogging = () => {
   // Turn on logging, if necessary
   let loggingToConsole =
     cliOptions.attachToForeground && Option.is_some(cliOptions.logLevel);
   let loggingToFile = Option.is_some(cliOptions.logFile);
 
   cliOptions.logLevel |> Option.iter(Timber.App.setLevel);
-
   cliOptions.logFilter |> Option.iter(Timber.App.setNamespaceFilter);
 
   if (loggingToConsole && loggingToFile) {
@@ -65,6 +52,24 @@ switch (eff) {
     Timber.App.enable(fileReporter);
   };
   Oni_Core.Log.init();
+};
+
+switch (eff) {
+| PrintVersion => Cli.printVersion() |> exit
+| InstallExtension(name) => Cli.installExtension(name, cliOptions) |> exit
+| QueryExtension(name) => Cli.queryExtension(name, cliOptions) |> exit
+| UninstallExtension(name) =>
+  Cli.uninstallExtension(name, cliOptions) |> exit
+| CheckHealth =>
+  initializeLogging();
+  HealthCheck.run(~checks=All, cliOptions) |> exit;
+| ListExtensions => Cli.listExtensions(cliOptions) |> exit
+| StartSyntaxServer({parentPid, namedPipe}) =>
+  Oni_Syntax_Server.start(~parentPid, ~namedPipe, ~healthCheck=() =>
+    HealthCheck.run(~checks=Common, cliOptions)
+  )
+| Run =>
+  initializeLogging();
 
   // #1161 - OSX - Make sure we're using the terminal / shell PATH.
   // Only fix path when launched from finder -
@@ -73,26 +78,51 @@ switch (eff) {
     Core.ShellUtility.fixOSXPath();
   };
 
-  let initWorkingDirectory = () => {
-    let path =
+  let initWorkspace = () => {
+    let maybePath =
       switch (Oni_CLI.(cliOptions.folder)) {
-      | Some(folder) => folder
-      | None =>
-        switch (Store.Persistence.Global.workspace()) {
-        | Some(path) => path
-        | None =>
-          Dir.User.document()
-          |> Option.value(~default=Dir.home())
-          |> Fp.toString
-        }
+      // If a folder was specified, we should for sure use that
+      | Some(folder) => Some(folder)
+
+      // If no files were specified, we can pull from persistence
+      | None when cliOptions.filesToOpen == [] =>
+        Store.Persistence.Global.workspace()
+
+      // If files were specified (#1983), don't open workspace from persistence
+      | None => None
       };
 
-    Log.info("Startup: Changing folder to: " ++ path);
-    try(Sys.chdir(path)) {
-    | Sys_error(msg) => Log.error("Folder does not exist: " ++ msg)
-    };
+    let couldChangeDirectory = ref(false);
+    maybePath
+    |> Option.iter(path => {
+         Log.infof(m => m("Startup: Trying to change folder to: %s", path));
 
-    path;
+         let chdirResult = {
+           open Base.Result.Let_syntax;
+           // First, check if we have permission to read the directory.
+           // In some cases - like #2742 - the directory might not be valid.
+           let%bind _: Luv.File.Dir.t = Luv.File.Sync.opendir(path);
+           Log.info(" - Have read permission");
+           let%bind () = Luv.Path.chdir(path);
+           Log.info("- Ran chdir");
+           Ok();
+         };
+
+         chdirResult
+         |> Result.iter(() => {
+              couldChangeDirectory := true;
+              Log.infof(m =>
+                m("Successfully changed working directory to: %s", path)
+              );
+            });
+       });
+
+    // The directory that was persisted is a valid workspace, so we can use it
+    if (couldChangeDirectory^) {
+      maybePath;
+    } else {
+      None;
+    };
   };
 
   // Fix for https://github.com/onivim/oni2/issues/2229
@@ -107,23 +137,31 @@ switch (eff) {
     | `Centered => "Centered"
   );
 
-  let createWindow = (~forceScaleFactor, ~workingDirectory, app) => {
+  let createWindow = (~forceScaleFactor, ~maybeWorkspace, app) => {
     let (x, y, width, height, maximized) = {
-      open Store.Persistence.Workspace;
-      let store = storeFor(workingDirectory);
-
-      (
-        windowX(store)
-        |> OptionEx.tap(x => Log.infof(m => m("Unsanitized x value: %d", x)))
-        |> OptionEx.filter(isValidPosition)
-        |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
-        windowY(store)
-        |> OptionEx.tap(y => Log.infof(m => m("Unsanitized x value: %d", y)))
-        |> OptionEx.filter(isValidPosition)
-        |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
-        windowWidth(store),
-        windowHeight(store),
-        windowMaximized(store),
+      Store.Persistence.Workspace.(
+        maybeWorkspace
+        |> Option.map(workspace => {
+             let store = storeFor(workspace);
+             (
+               windowX(store)
+               |> OptionEx.tap(x =>
+                    Log.infof(m => m("Unsanitized x value: %d", x))
+                  )
+               |> OptionEx.filter(isValidPosition)
+               |> Option.fold(~some=x => `Absolute(x), ~none=`Centered),
+               windowY(store)
+               |> OptionEx.tap(y =>
+                    Log.infof(m => m("Unsanitized x value: %d", y))
+                  )
+               |> OptionEx.filter(isValidPosition)
+               |> Option.fold(~some=y => `Absolute(y), ~none=`Centered),
+               windowWidth(store),
+               windowHeight(store),
+               windowMaximized(store),
+             );
+           })
+        |> Option.value(~default=(`Centered, `Centered, 800, 600, false))
       );
     };
 
@@ -139,13 +177,13 @@ switch (eff) {
 
     let decorated =
       switch (Revery.Environment.os) {
-      | Windows => false
+      | Windows(_) => false
       | _ => true
       };
 
     let icon =
       switch (Revery.Environment.os) {
-      | Mac =>
+      | Mac(_) =>
         switch (Sys.getenv_opt("ONI2_BUNDLED")) {
         | Some(_) => None
         | None => Some("logo.png")
@@ -191,12 +229,28 @@ switch (eff) {
     Log.debug("Init");
 
     Vim.init();
+    Oni2_KeyboardLayout.init();
+    Oni2_Sparkle.init();
 
-    let initialWorkingDirectory = initWorkingDirectory();
+    Log.infof(m =>
+      m(
+        "Keyboard Language: %s Layout: %s",
+        Oni2_KeyboardLayout.getCurrentLanguage(),
+        Oni2_KeyboardLayout.getCurrentLayout(),
+      )
+    );
+
+    // Grab initial working directory prior to trying to set it -
+    // in some cases, a directory that does not have permissions may be persisted (ie #2742)
+    let initialWorkingDirectory = Sys.getcwd();
+    let maybeWorkspace = initWorkspace();
+    let workingDirectory =
+      maybeWorkspace |> Option.value(~default=initialWorkingDirectory);
+
     let window =
       createWindow(
         ~forceScaleFactor=cliOptions.forceScaleFactor,
-        ~workingDirectory=initialWorkingDirectory,
+        ~maybeWorkspace,
         app,
       );
 
@@ -230,8 +284,10 @@ switch (eff) {
     let extensionGlobalPersistence =
       Store.Persistence.Global.extensionValues();
 
+    let licenseKeyPersistence = Store.Persistence.Global.licenseKey();
+
     let initialWorkspaceStore =
-      Store.Persistence.Workspace.storeFor(initialWorkingDirectory);
+      Store.Persistence.Workspace.storeFor(workingDirectory);
     let extensionWorkspacePersistence =
       Store.Persistence.Workspace.extensionValues(initialWorkspaceStore);
 
@@ -245,20 +301,24 @@ switch (eff) {
           ~extensionGlobalPersistence,
           ~extensionWorkspacePersistence,
           ~contributedCommands=[], // TODO
-          ~workingDirectory=initialWorkingDirectory,
+          ~workingDirectory,
+          ~maybeWorkspace,
           // TODO: Use `Fp.t` all the way down
           ~extensionsFolder=cliOptions.overriddenExtensionsDir,
+          ~licenseKeyPersistence,
+          ~titlebarHeight=Revery.Window.getTitlebarHeight(window),
         ),
       );
 
     let persistGlobal = () => Store.Persistence.Global.persist(currentState^);
-    let persistWorkspace = () =>
-      Store.Persistence.Workspace.(
-        persist(
-          (currentState^, window),
-          storeFor(currentState^.workspace.workingDirectory),
-        )
-      );
+    let persistWorkspace = () => {
+      Feature_Workspace.openedFolder(currentState^.workspace)
+      |> Option.iter(workspace => {
+           Store.Persistence.Workspace.(
+             persist((currentState^, window), storeFor(workspace))
+           )
+         });
+    };
 
     let uiDispatch = ref(_ => ());
 
@@ -294,8 +354,9 @@ switch (eff) {
       Feature_TitleBar.title(
         ~activeBuffer,
         ~config,
-        ~workspaceRoot=state.workspace.rootName,
-        ~workspaceDirectory=state.workspace.workingDirectory,
+        ~workspaceRoot=Feature_Workspace.rootName(state.workspace),
+        ~workspaceDirectory=
+          Feature_Workspace.workingDirectory(state.workspace),
       );
     };
 
@@ -335,6 +396,8 @@ switch (eff) {
     let close = () => {
       App.quit(~askNicely=true, app);
     };
+
+    Callback.register("oni2_close", close);
 
     let restore = () => {
       Window.restore(window);
@@ -384,7 +447,7 @@ switch (eff) {
 
     let _: App.unsubscribe =
       App.onFileOpen(app, path => {
-        dispatch(Model.Actions.OpenFileByPath(path, None, None))
+        dispatch(Model.Actions.FilesDropped({paths: [path]}))
       });
     let _: Window.unsubscribe =
       Window.onMaximized(window, () =>
@@ -430,6 +493,16 @@ switch (eff) {
     List.iter(
       v => dispatch(Model.Actions.OpenFileByPath(v, None, None)),
       cliOptions.filesToOpen,
+    );
+
+    List.iter(
+      command => {
+        dispatch(
+          Model.Actions.VimExecuteCommand({allowAnimation: false, command}),
+        );
+        runEffects();
+      },
+      cliOptions.vimExCommands,
     );
   };
 

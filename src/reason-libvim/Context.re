@@ -25,8 +25,10 @@ type t = {
   leftColumn: int,
   topLine: int,
   mode: Mode.t,
+  subMode: SubMode.t,
   tabSize: int,
   insertSpaces: bool,
+  functionGetChar: Functions.GetChar.t,
 };
 
 let current = () => {
@@ -45,7 +47,9 @@ let current = () => {
   leftColumn: Window.getLeftColumn(),
   topLine: Window.getTopLine(),
   mode: Mode.current(),
+  subMode: Native.vimGetSubMode(),
   tabSize: Options.getTabSize(),
   insertSpaces: Options.getInsertSpaces(),
   toggleComments: lines => lines,
+  functionGetChar: _ => char_of_int(0),
 };

@@ -3,7 +3,7 @@ open Oni_Core;
 // MODEL
 
 [@deriving show]
-type command;
+type command = Exthost.SCM.command;
 
 module Resource: {
   [@deriving show]
@@ -43,7 +43,7 @@ module Provider: {
     acceptInputCommand: option(command),
     inputVisible: bool,
     validationEnabled: bool,
-    statusBarCommands: list(Exthost.Command.t),
+    statusBarCommands: list(command),
   };
 };
 
@@ -54,8 +54,7 @@ let resetFocus: model => model;
 
 let initial: model;
 
-let statusBarCommands:
-  (~workingDirectory: string, model) => list(Exthost.Command.t);
+let statusBarCommands: (~workingDirectory: string, model) => list(command);
 
 // UPDATE
 
@@ -73,10 +72,19 @@ type outmsg =
   | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
   | OpenFile(string)
+  | PreviewFile(string)
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | Nothing;
 
-let update: (Exthost.Client.t, model, msg) => (model, outmsg);
+let update:
+  (
+    ~previewEnabled: bool,
+    ~fileSystem: Feature_FileSystem.model,
+    Exthost.Client.t,
+    model,
+    msg
+  ) =>
+  (model, outmsg);
 
 let getOriginalLines: (Oni_Core.Buffer.t, model) => option(array(string));
 let setOriginalLines: (Oni_Core.Buffer.t, array(string), model) => model;

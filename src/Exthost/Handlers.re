@@ -64,6 +64,7 @@ let ext = name => {
 let handlers =
   [
     mainNotImplemented("MainThreadAuthentication"),
+    mainNotImplemented("MainThreadBulkEdits"),
     main(
       ~handler=Msg.Clipboard.handle,
       ~mapper=msg => Msg.Clipboard(msg),
@@ -177,7 +178,11 @@ let handlers =
       "MainThreadTerminalService",
     ),
     mainNotImplemented("MainThreadWebviews"),
+    mainNotImplemented("MainThreadWebviewPanels"),
+    mainNotImplemented("MainThreadWebviewViews"),
+    mainNotImplemented("MainThreadCustomEditors"),
     mainNotImplemented("MainThreadUrls"),
+    //mainNotImplemented("MainThreadUriOpeners"),
     main(
       ~handler=Msg.Workspace.handle,
       ~mapper=msg => Msg.Workspace(msg),
@@ -210,6 +215,7 @@ let handlers =
     mainNotImplemented("MainThreadTheming"),
     mainNotImplemented("MainThreadTunnelService"),
     mainNotImplemented("MainThreadTimeline"),
+    mainNotImplemented("MainThreadTesting"),
     ext("ExtHostCommands"),
     ext("ExtHostConfiguration"),
     ext("ExtHostDiagnostics"),
@@ -222,6 +228,7 @@ let handlers =
     ext("ExtHostEditors"),
     ext("ExtHostTreeViews"),
     ext("ExtHostFileSystem"),
+    ext("ExtHostFileSystemInfo"),
     ext("ExtHostFileSystemEventService"),
     ext("ExtHostLanguageFeatures"),
     ext("ExtHostQuickOpen"),
@@ -234,11 +241,15 @@ let handlers =
     ext("ExtHostWorkspace"),
     ext("ExtHostWindow"),
     ext("ExtHostWebviews"),
+    ext("ExtHostWebviewPanels"),
+    ext("ExtHostCustomEditors"),
+    ext("ExtHostWebviewViews"),
     ext("ExtHostEditorInsets"),
     ext("ExtHostProgress"),
     ext("ExtHostComments"),
     ext("ExtHostStorage"),
     ext("ExtHostUrls"),
+    //ext("ExtHostUriOpeners"),
     ext("ExtHostOutputService"),
     ext("ExtHosLabelService"), // SIC
     ext("ExtHostNotebook"),
@@ -246,6 +257,7 @@ let handlers =
     ext("ExtHostTunnelService"),
     ext("ExtHostAuthentication"),
     ext("ExtHostTimeline"),
+    ext("ExtHostTesting"),
   ]
   |> List.mapi((idx, v) => setId(~id=idx + 1, v));
 

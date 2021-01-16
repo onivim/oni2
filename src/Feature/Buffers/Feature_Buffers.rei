@@ -69,7 +69,9 @@ type outmsg =
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       position: option(BytePosition.t),
       grabFocus: bool,
-    });
+      preview: bool,
+    })
+  | BufferModifiedSet(int, bool);
 
 // UPDATE
 
@@ -90,6 +92,15 @@ module Effects: {
     ) =>
     Isolinear.Effect.t('msg);
 
+  let openNewBuffer:
+    (
+      ~font: Service_Font.font,
+      ~languageInfo: Exthost.LanguageInfo.t,
+      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      model
+    ) =>
+    Isolinear.Effect.t(msg);
+
   let openFileInEditor:
     (
       ~font: Service_Font.font,
@@ -98,6 +109,7 @@ module Effects: {
       ~position: option(CharacterPosition.t)=?,
       ~grabFocus: bool=?,
       ~filePath: string,
+      ~preview: bool=?,
       model
     ) =>
     Isolinear.Effect.t(msg);
@@ -106,6 +118,7 @@ module Effects: {
     (
       ~font: Service_Font.font,
       ~languageInfo: Exthost.LanguageInfo.t,
+      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       ~bufferId: int,
       model
     ) =>
@@ -115,4 +128,5 @@ module Effects: {
 module Contributions: {
   let commands: Command.Lookup.t(msg);
   let configuration: list(Config.Schema.spec);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };

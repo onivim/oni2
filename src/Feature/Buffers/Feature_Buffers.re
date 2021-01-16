@@ -84,7 +84,9 @@ type outmsg =
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       position: option(BytePosition.t),
       grabFocus: bool,
-    });
+      preview: bool,
+    })
+  | BufferModifiedSet(int, bool);
 
 [@deriving show]
 type command =
@@ -98,12 +100,14 @@ type msg =
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       position: option(CharacterPosition.t),
       grabFocus: bool,
+      preview: bool,
     })
   | NewBufferAndEditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       position: option(CharacterPosition.t),
       grabFocus: bool,
+      preview: bool,
     })
   //  | SyntaxHighlightingDisabled(int)
   | FileTypeChanged({
@@ -212,8 +216,8 @@ let guessIndentation = (~config, buffer) => {
 
 let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   switch (msg) {
-  | EditorRequested({buffer, split, position, grabFocus}) => (
-      model,
+  | EditorRequested({buffer, split, position, grabFocus, preview}) => (
+      IntMap.add(Buffer.getId(buffer), buffer, model),
       CreateEditor({
         buffer,
         split,
@@ -223,6 +227,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
                Buffer.characterToBytePosition(pos, buffer)
              ),
         grabFocus,
+        preview,
       }),
     )
 
@@ -231,6 +236,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       split,
       position,
       grabFocus,
+      preview,
     }) =>
     let fileType =
       Buffer.getFileType(originalBuffer) |> Oni_Core.Buffer.FileType.toString;
@@ -259,6 +265,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
                Buffer.characterToBytePosition(pos, buffer)
              ),
         grabFocus,
+        preview,
       }),
     );
 
@@ -279,7 +286,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
 
   | ModifiedSet(id, isModified) => (
       IntMap.update(id, setModified(isModified), model),
-      Nothing,
+      BufferModifiedSet(id, isModified),
     )
 
   | LineEndingsChanged({id, lineEndings}) => (
@@ -310,11 +317,13 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
     )
 
   | Saved(bufferId) =>
+    let model' =
+      IntMap.update(bufferId, Option.map(Buffer.incrementSaveTick), model);
     let eff =
       IntMap.find_opt(bufferId, model)
       |> Option.map(buffer => BufferSaved(buffer))
       |> Option.value(~default=Nothing);
-    (model, eff);
+    (model', eff);
 
   | Command(command) =>
     switch (command) {
@@ -342,7 +351,8 @@ module Effects = {
 
     switch (IntMap.find_opt(bufferId, model)) {
     // We already have this buffer loaded - so just ask for an editor!
-    | Some(buffer) => f(~alreadyLoaded=true, buffer)
+    | Some(buffer) =>
+      buffer |> Buffer.stampLastUsed |> f(~alreadyLoaded=true)
 
     | None =>
       // No buffer yet, so we need to create one _and_ ask for an editor.
@@ -393,6 +403,7 @@ module Effects = {
         ~position=None,
         ~grabFocus=true,
         ~filePath,
+        ~preview=false,
         model,
       ) => {
     Isolinear.Effect.createWithDispatch(
@@ -401,10 +412,18 @@ module Effects = {
 
       let handler = (~alreadyLoaded, buffer) =>
         if (alreadyLoaded) {
-          dispatch(EditorRequested({buffer, split, position, grabFocus}));
+          dispatch(
+            EditorRequested({buffer, split, position, grabFocus, preview}),
+          );
         } else {
           dispatch(
-            NewBufferAndEditorRequested({buffer, split, position, grabFocus}),
+            NewBufferAndEditorRequested({
+              buffer,
+              split,
+              position,
+              grabFocus,
+              preview,
+            }),
           );
         };
 
@@ -412,19 +431,46 @@ module Effects = {
     });
   };
 
-  let openBufferInEditor = (~font, ~languageInfo, ~bufferId, model) => {
+  let openNewBuffer = (~font, ~languageInfo, ~split, model) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Buffers.openNewBuffer", dispatch => {
+      let buffer = Vim.Buffer.make();
+
+      let handler = (~alreadyLoaded as _, buffer) =>
+        dispatch(
+          NewBufferAndEditorRequested({
+            buffer,
+            split,
+            position: None,
+            grabFocus: true,
+            preview: false,
+          }),
+        );
+
+      openCommon(~vimBuffer=buffer, ~languageInfo, ~font, ~model, handler);
+    });
+  };
+
+  let openBufferInEditor = (~font, ~languageInfo, ~split, ~bufferId, model) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Buffers.openBufferInEditor", dispatch => {
       switch (Vim.Buffer.getById(bufferId)) {
       | None => Log.warnf(m => m("Unable to open buffer: %d", bufferId))
       | Some(vimBuffer) =>
         let handler = (~alreadyLoaded, buffer) => {
-          let split = `Current;
           let position = None;
           let grabFocus = true;
 
           if (alreadyLoaded) {
-            dispatch(EditorRequested({buffer, split, position, grabFocus}));
+            dispatch(
+              EditorRequested({
+                buffer,
+                split,
+                position,
+                grabFocus,
+                preview: false,
+              }),
+            );
           } else {
             dispatch(
               NewBufferAndEditorRequested({
@@ -432,6 +478,7 @@ module Effects = {
                 split,
                 position,
                 grabFocus,
+                preview: false,
               }),
             );
           };
@@ -465,4 +512,23 @@ module Contributions = {
     ];
 
   let commands = Commands.[detectIndentation] |> Command.Lookup.fromList;
+
+  let keybindings =
+    Feature_Input.Schema.[
+      bind(
+        ~key="<D-N>",
+        ~command=":enew",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S>",
+        ~command=":w!",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S-S>",
+        ~command=":wa!",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+    ];
 };

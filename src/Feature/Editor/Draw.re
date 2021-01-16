@@ -10,6 +10,7 @@ type context = {
   height: int,
   editor: Editor.t,
   fontFamily: Revery.Font.Family.t,
+  fontWeight: Revery.Font.Weight.t,
   fontSize: float,
   charWidth: float,
   charHeight: float,
@@ -31,6 +32,7 @@ let createContext =
     height,
     editor,
     fontFamily: editorFont.fontFamily,
+    fontWeight: editorFont.fontWeight,
     fontSize: editorFont.fontSize,
     charWidth: editorFont.spaceWidth,
     charHeight: editorFont.measuredHeight,
@@ -39,16 +41,19 @@ let createContext =
   };
 };
 
-let renderImmediate = (~context, ~count, render) => {
-  let scrollY = Editor.scrollY(context.editor);
-  ImmediateList.render(
-    ~scrollY,
-    ~rowHeight=Editor.lineHeightInPixels(context.editor),
-    ~height=float(context.height),
-    ~count,
-    ~render=(i, offsetY) => render(i, offsetY),
-    (),
-  );
+let renderImmediate = (~context, render) => {
+  let topLine = max(0, Editor.getTopViewLine(context.editor) - 1);
+  let bottomLine =
+    min(
+      Editor.totalViewLines(context.editor) - 1,
+      Editor.getBottomViewLine(context.editor) + 1,
+    );
+
+  for (idx in topLine to bottomLine) {
+    let offsetY = Editor.viewLineToPixelY(idx, context.editor);
+
+    render(idx, offsetY -. Editor.scrollY(context.editor));
+  };
 };
 
 let drawRect = {
@@ -83,7 +88,7 @@ let drawShapedText = {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
+        bold ? Oni_Core.Font.bolder(context.fontWeight) : context.fontWeight,
         context.fontFamily,
       );
     let text =
@@ -121,7 +126,7 @@ let drawUtf8Text = {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
+        bold ? Oni_Core.Font.bolder(context.fontWeight) : context.fontWeight,
         context.fontFamily,
       );
     Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
@@ -209,8 +214,7 @@ let rangeByte =
 
   for (idx in startViewLine to stopViewLine) {
     let y =
-      float(idx)
-      *. Editor.lineHeightInPixels(context.editor)
+      Editor.viewLineToPixelY(idx, context.editor)
       -. Editor.scrollY(context.editor);
     let startX =
       if (idx == startViewLine) {
@@ -223,7 +227,7 @@ let rangeByte =
       if (idx == stopViewLine) {
         stopPixelX;
       } else {
-        float(Editor.getTotalWidthInPixels(context.editor));
+        Editor.getTotalWidthInPixels(context.editor);
       };
 
     drawRect(
@@ -249,7 +253,8 @@ let token =
   let font =
     Service_Font.resolveWithFallback(
       ~italic=token.italic,
-      token.bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
+      token.bold
+        ? Oni_Core.Font.bolder(context.fontWeight) : context.fontWeight,
       context.fontFamily,
     );
 
@@ -322,15 +327,12 @@ let ruler = (~context, ~color, x) =>
   );
 
 let lineHighlight = (~context, ~color, viewLine) => {
-  let pixelY =
-    float(viewLine)
-    *. Editor.lineHeightInPixels(context.editor)
-    -. Editor.scrollY(context.editor);
+  let pixelY = Editor.viewLineToPixelY(viewLine, context.editor);
 
   drawRect(
     ~context,
     ~x=0.,
-    ~y=pixelY,
+    ~y=pixelY -. Editor.scrollY(context.editor),
     ~height=Editor.lineHeightInPixels(context.editor),
     ~width=float(context.width),
     ~color,

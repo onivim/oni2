@@ -3,6 +3,8 @@ open Oni_Core;
 open Oni_Core.Utility;
 open Feature_Editor;
 
+module Log = (val Log.withNamespace("Oni2.Model.VimContext"));
+
 module Internal = {
   let syntaxScope = (~maybeCursor: option(BytePosition.t), state: State.t) => {
     state
@@ -20,6 +22,49 @@ module Internal = {
             });
        })
     |> Option.value(~default=SyntaxScope.none);
+  };
+
+  let functionGetChar = (mode: Vim.Functions.GetChar.mode) => {
+    Vim.Functions.GetChar.(
+      switch (mode) {
+      | Immediate =>
+        Log.warn("getchar(0) not yet implemented");
+        char_of_int(0);
+      | Peek =>
+        Log.warn("getchar(1) not yet implemented");
+        char_of_int(0);
+      | Wait =>
+        let currentTime = Unix.gettimeofday();
+        let char = ref(None);
+
+        // Implement a five-second timeout
+        // Perhaps could integrate a 'timeouttlen' configuration setting?
+        while (currentTime +. 5. > Unix.gettimeofday() && char^ == None) {
+          // Not an ideal implementation of getchar - this busy-waits
+          // (and steals SDL events!)
+          // Some improvements to be made:
+          // - Push this back into the Revery layer, so we can still render in the meantime while busy-waiting (and handle non-keyboard events)
+          // Show some
+          switch (Sdl2.Event.waitTimeout(100)) {
+          | None => ()
+          | Some(Sdl2.Event.TextInput({text, _})) =>
+            if (String.length(text) == 1) {
+              char := Some(text.[0]);
+            } else {
+              Log.warnf(m =>
+                m("getchar - ignoring multi-byte string: %s", text)
+              );
+            }
+          | Some(_) => ()
+          };
+        };
+
+        char^
+        |> OptionEx.tapNone(() => Log.warn("getchar() timed out."))
+        |> OptionEx.tap(c => Log.infof(m => m("getchar: Got a key '%c'", c)))
+        |> Option.value(~default=char_of_int(0));
+      }
+    );
   };
 
   let autoClosingPairs = (~syntaxScope, ~maybeLanguageConfig, state: State.t) => {
@@ -117,25 +162,21 @@ let current = (state: State.t) => {
     |> Array.of_list;
   };
 
-  let viewLineMotion = (~motion, ~count as _, ~startLine as _) => {
+  let viewLineMotion = (~motion, ~count, ~startLine as _) => {
+    open EditorCoreTypes;
+    let topLine =
+      editor |> Editor.getTopVisibleBufferLine |> LineNumber.toZeroBased;
+    let bottomLine =
+      (editor |> Editor.getBottomVisibleBufferLine |> LineNumber.toZeroBased)
+      - 1;
+    let normalizedCount = max(count - 1, 0);
     switch (motion) {
-    | Vim.ViewLineMotion.MotionH => Editor.getTopVisibleBufferLine(editor)
+    | Vim.ViewLineMotion.MotionH =>
+      LineNumber.ofZeroBased(min(topLine + normalizedCount, bottomLine))
     | Vim.ViewLineMotion.MotionM =>
-      EditorCoreTypes.(
-        {
-          let topLine =
-            editor |> Editor.getTopVisibleBufferLine |> LineNumber.toZeroBased;
-          let bottomLine =
-            editor
-            |> Editor.getBottomVisibleBufferLine
-            |> LineNumber.toZeroBased;
-          LineNumber.ofZeroBased(topLine + (bottomLine - topLine) / 2);
-        }
-      )
+      LineNumber.ofZeroBased(topLine + (bottomLine - topLine) / 2)
     | Vim.ViewLineMotion.MotionL =>
-      EditorCoreTypes.LineNumber.(
-        Editor.getBottomVisibleBufferLine(editor) - 1
-      )
+      LineNumber.ofZeroBased(max(bottomLine - normalizedCount, topLine))
     };
   };
 
@@ -167,6 +208,8 @@ let current = (state: State.t) => {
     autoClosingPairs,
     toggleComments,
     insertSpaces,
+    subMode: Vim.SubMode.None,
     tabSize: indentation.size,
+    functionGetChar: Internal.functionGetChar,
   };
 };

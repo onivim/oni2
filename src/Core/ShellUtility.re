@@ -112,8 +112,8 @@ module Internal = {
     switch (Revery.Environment.os) {
     // Linux and Mac - use `env` command, and parse using a strategy from shell-env:
     // https://github.com/sindresorhus/shell-env/blob/a95fd441d3b7cc2c122899de72da30dae70936ec/index.js#L6
-    | Linux
-    | Mac =>
+    | Linux(_)
+    | Mac(_) =>
       let args = [
         "-ilc",
         "printf \"\n_SHELL_ENV_DELIMITER_\"; env; printf \"\n_SHELL_ENV_DELIMITER_\n\"; exit",
@@ -124,6 +124,8 @@ module Internal = {
           [shellCmd, ...args] |> Array.of_list,
           [||],
         );
+      // #2659 - Close stdin before reading any data, so we don't get blocked.
+      close_out(out);
       let lines = ref([]);
 
       let outLines =
@@ -140,12 +142,11 @@ module Internal = {
           lines^;
         };
 
-      close_out(out);
       close_in(err);
       environmentLinesToMap(true, outLines);
 
     // Windows - just use default environment.
-    | Windows
+    | Windows(_)
     | _ => Unix.environment() |> Array.to_list |> environmentLinesToMap(false)
     };
   };
@@ -156,20 +157,25 @@ let getDefaultShell = () => {
     lazy({
       let default =
         switch (Revery.Environment.os) {
-        | Windows => Constants.defaultWindowsShell
-        | Mac => Constants.defaultOSXShell
+        | Windows(_) => Constants.defaultWindowsShell
+        | Mac(_) => Constants.defaultOSXShell
         | _ => Constants.defaultLinuxShell
         };
-      // We assume if the $SHELL environment variable is specified,
-      // that should be the default.
-      Internal.getShellFromEnvironment()
-      |> OptionEx.or_lazy(() => {
-           switch (Revery.Environment.os) {
-           | Mac => Internal.discoverOSXShell()
-           | Linux => Internal.discoverLinuxShell()
-           | _ => None
-           }
-         })
+
+      (
+        switch (Revery.Environment.os) {
+        | Mac(_) =>
+          // On OSX, the 'SHELL' environment variable may not be accurate when starting from finder
+          // so try to resolve using the OSX-specific strategy
+          Internal.discoverOSXShell()
+          |> OptionEx.or_lazy(Internal.getShellFromEnvironment)
+        | Linux(_) =>
+          Internal.getShellFromEnvironment()
+          |> OptionEx.or_lazy(Internal.discoverLinuxShell)
+        | Windows(_)
+        | _ => None
+        }
+      )
       |> Option.value(~default);
     })
   )
@@ -191,7 +197,7 @@ let getPathFromEnvironment = Internal.getPathFromEnvironment;
 let getPathFromShell = () => {
   let path =
     switch (Revery.Environment.os) {
-    | Mac =>
+    | Mac(_) =>
       let envMap = getDefaultShellEnvironment();
       switch (StringMap.find_opt("PATH", envMap)) {
       | None =>
@@ -211,7 +217,7 @@ let fixOSXPath = () =>
   // By default, if the application is opened via Finder, it won't get the shell $PATH.
   // Use a strategy like the fix-path NPM module:
   // https://github.com/sindresorhus/fix-path/blob/8f12bec72ee4319638a43758b40d61c25427404b/index.js#L5
-  if (Revery.Environment.os == Mac) {
+  if (Revery.Environment.isMac) {
     let shellEnv = getDefaultShellEnvironment();
     switch (StringMap.find_opt("PATH", shellEnv)) {
     | Some(path) =>

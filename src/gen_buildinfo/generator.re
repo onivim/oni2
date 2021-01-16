@@ -9,8 +9,33 @@ let getCommitId = () => {
   commitId;
 };
 
+let getBranch = () => {
+  let ic = Unix.open_process_in("git rev-parse --abbrev-ref HEAD");
+  let branch = input_line(ic) |> String.trim |> String.lowercase_ascii;
+  let () = close_in(ic);
+  branch;
+};
+
+let getDefaultUpdateChannel = () => {
+  let currentBranch = getBranch();
+
+  if (currentBranch == "staging" || currentBranch == "stable") {
+    currentBranch;
+  } else {
+    "master";
+  };
+};
+
 let getVersion = () => {
   Yojson.Safe.from_file("../../package.json")
+  |> Yojson.Safe.Util.member("version")
+  |> Yojson.Safe.Util.to_string;
+};
+
+let getExtensionHostVersion = () => {
+  Yojson.Safe.from_file(
+    "../../../../../../../../node/node_modules/@onivim/vscode-exthost/package.json",
+  )
   |> Yojson.Safe.Util.member("version")
   |> Yojson.Safe.Util.to_string;
 };
@@ -22,8 +47,12 @@ Printf.fprintf(
   {|
 let commitId = "%s";
 let version = "%s";
+let defaultUpdateChannel = "%s";
+let extensionHostVersion = "%s";
 |},
   getCommitId(),
   getVersion(),
+  getDefaultUpdateChannel(),
+  getExtensionHostVersion(),
 );
 close_out(oc);

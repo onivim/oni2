@@ -17,7 +17,9 @@ module Label: {
     | Icon(string);
 
   [@deriving show]
-  type t = list(segment);
+  type t;
+
+  let segments: t => list(segment);
 
   let ofString: string => t;
   let toString: t => string;
@@ -28,7 +30,7 @@ module Label: {
 module Command: {
   [@deriving show]
   type t = {
-    id: string,
+    id: option(string),
     label: option(Label.t),
   };
 
@@ -137,6 +139,9 @@ module Edit: {
       forceMoveMarkers: bool,
     };
 
+    // Get the difference in lines due to the edit
+    let deltaLineCount: t => int;
+
     let decode: Json.decoder(t);
   };
 };
@@ -169,26 +174,20 @@ module DefinitionLink: {
   let decode: Json.decoder(t);
 };
 
-module DocumentFilter: {
-  [@deriving show]
-  type t = {
-    language: option(string),
-    scheme: option(string),
-    exclusive: bool,
-  };
+// module DocumentFilter: {
+//   [@deriving show]
+//   type t;
 
-  let matches: (~filetype: string, t) => bool;
+//   let matches: (~filetype: string, t) => bool;
 
-  let decode: Json.decoder(t);
+//   let decode: Json.decoder(t);
 
-  let toString: t => string;
-};
+//   let toString: t => string;
+// };
 
 module DocumentSelector: {
   [@deriving show]
   type t = list(DocumentFilter.t);
-
-  let matches: (~filetype: string, t) => bool;
 
   let matchesBuffer: (~buffer: Oni_Core.Buffer.t, t) => bool;
 
@@ -501,7 +500,6 @@ module SCM: {
     };
 
     module Splices: {
-      [@deriving show({with_path: false})]
       type t = {
         handle: int,
         resourceSplices: [@opaque] list(Splice.t),
@@ -517,7 +515,7 @@ module SCM: {
       count: option(int),
       commitTemplate: option(string),
       acceptInputCommand: option(command),
-      statusBarCommands: list(Command.t),
+      statusBarCommands: option(list(command)),
     };
 
     let decode: Json.decoder(t);
@@ -526,6 +524,18 @@ module SCM: {
   module GroupFeatures: {
     [@deriving show({with_path: false})]
     type t = {hideWhenEmpty: bool};
+
+    let decode: Json.decoder(t);
+  };
+
+  module Group: {
+    [@deriving show({with_path: false})]
+    type t = {
+      handle: int,
+      id: string,
+      label: string,
+      features: GroupFeatures.t,
+    };
 
     let decode: Json.decoder(t);
   };
@@ -850,6 +860,12 @@ module Files: {
     };
 
     let decode: Json.decoder(t);
+    let encode: Json.encoder(t);
+  };
+
+  module ReadDirResult: {
+    type t = (string, FileType.t);
+
     let encode: Json.encoder(t);
   };
 
@@ -1407,12 +1423,10 @@ module Msg: {
           handle: int,
           features: SCM.ProviderFeatures.t,
         })
-      // statusBarCommands: option(_),
-      | RegisterSCMResourceGroup({
+      | RegisterSCMResourceGroups({
           provider: int,
-          handle: int,
-          id: string,
-          label: string,
+          groups: list(SCM.Group.t),
+          splices: [@opaque] list(SCM.Resource.Splices.t),
         })
       | UnregisterSCMResourceGroup({
           provider: int,
@@ -1535,6 +1549,7 @@ module Msg: {
           alignment,
           command: option(Command.t),
           color: option(Color.t),
+          backgroundColor: option(Color.t),
           tooltip: option(string),
           priority: int,
         })
@@ -1619,10 +1634,7 @@ module Reply: {
   let okBuffer: Bytes.t => t;
 };
 
-module Middleware: {
-  let download: Msg.DownloadService.msg => Lwt.t(Reply.t);
-  let filesystem: Msg.FileSystem.msg => Lwt.t(Reply.t);
-};
+module Middleware: {let download: Msg.DownloadService.msg => Lwt.t(Reply.t);};
 
 module Client: {
   type t;
@@ -1630,7 +1642,7 @@ module Client: {
   let start:
     (
       ~initialConfiguration: Configuration.t=?,
-      ~initialWorkspace: WorkspaceData.t=?,
+      ~initialWorkspace: option(WorkspaceData.t)=?,
       ~namedPipe: NamedPipe.t,
       ~initData: Extension.InitData.t,
       // TODO:
@@ -1673,7 +1685,6 @@ module Request: {
     };
 
     type decoration = {
-      priority: int,
       bubble: bool,
       title: string,
       letter: string,
@@ -1731,6 +1742,10 @@ module Request: {
       Lwt.t(unit);
   };
 
+  module FileSystem: {
+    let readFile: (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(string);
+  };
+
   module FileSystemEventService: {
     let onFileEvent: (~events: Files.FileSystemEvents.t, Client.t) => unit;
     // TODO
@@ -1742,6 +1757,10 @@ module Request: {
     let provideCodeLenses:
       (~handle: int, ~resource: Uri.t, Client.t) =>
       Lwt.t(option(list(CodeLens.t)));
+
+    let resolveCodeLens:
+      (~handle: int, ~codeLens: CodeLens.t, Client.t) =>
+      Lwt.t(option(CodeLens.t));
 
     let provideCompletionItems:
       (
@@ -1764,11 +1783,11 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(list(DocumentHighlight.t));
+      Lwt.t(option(list(DocumentHighlight.t)));
 
     let provideDocumentSymbols:
       (~handle: int, ~resource: Uri.t, Client.t) =>
-      Lwt.t(list(DocumentSymbol.t));
+      Lwt.t(option(list(DocumentSymbol.t)));
 
     let provideDefinition:
       (

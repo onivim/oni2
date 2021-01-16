@@ -8,6 +8,25 @@ let input = s => ignore(Vim.input(s));
 let key = s => ignore(Vim.key(s));
 
 describe("InsertModeEdit", ({describe, _}) => {
+  describe("ctrl+o (accept normal mode command, restart edit)", ({test, _}) => {
+    test("ctrl+o -> dd", ({expect, _}) => {
+      let buffer = resetBuffer();
+      let initialLineCount = Buffer.getLineCount(buffer);
+
+      let (context: Context.t, _effects) = Vim.input("i");
+      expect.equal(Vim.Mode.isInsert(context.mode), true);
+
+      let (context: Context.t, _effects) = Vim.key(~context, "<c-o>");
+      expect.equal(Vim.Mode.isInsert(context.mode), false);
+
+      let (context: Context.t, _effects) = Vim.key(~context, "dd");
+      // Return to insert mode after command
+      expect.equal(Vim.Mode.isInsert(context.mode), true);
+
+      // ...and a line should be deleted
+      expect.equal(Buffer.getLineCount(buffer), initialLineCount - 1);
+    })
+  });
   describe("utf8", ({test, _}) => {
     test("insert 32773", ({expect, _}) => {
       let buffer = resetBuffer();
@@ -88,5 +107,36 @@ describe("InsertModeEdit", ({describe, _}) => {
       let newChangedTick = Buffer.getVersion(buffer);
       expect.int(newChangedTick).toBe(startChangedTick + 3);
     });
+  });
+
+  describe("insert literal", ({test, _}) => {
+    test("validate sub-mode changes", ({expect, _}) => {
+      let _buffer = resetBuffer();
+
+      let (context, _eff) = Vim.input("O");
+      expect.equal(context.subMode, Vim.SubMode.None);
+
+      let (context', _eff) = Vim.key(~context, "<C-q>");
+      expect.equal(context'.subMode, Vim.SubMode.InsertLiteral);
+
+      let (context'', _eff) = Vim.input(~context=context', "a");
+      expect.equal(context''.subMode, Vim.SubMode.None);
+    })
+  });
+
+  describe("count", ({test, _}) => {
+    test("count + i", ({expect, _}) => {
+      let buffer = resetBuffer();
+
+      input("5");
+      input("i");
+      input("abc");
+      key("<esc>");
+
+      let line = Buffer.getLine(buffer, LineNumber.zero);
+      expect.string(line).toEqual(
+        "abcabcabcabcabcThis is the first line of a test file",
+      );
+    })
   });
 });

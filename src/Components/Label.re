@@ -10,10 +10,7 @@ open Oni_Core;
 
 module Styles = {
   open Style;
-  let text = (~color) => [
-    textWrap(TextWrapping.NoWrap),
-    Style.color(color),
-  ];
+  let text = (~color) => [textWrap(TextWrapping.Wrap), Style.color(color)];
 };
 
 let textToElement = (~color, ~font: UiFont.t, ~text) => {
@@ -42,6 +39,7 @@ let iconToElement = (~color, icon) => {
 let make = (~font, ~color, ~label: Exthost.Label.t, ()) => {
   Exthost.Label.(
     label
+    |> segments
     |> List.map(
          fun
          | Text(text) => textToElement(~color, ~font, ~text)

@@ -14,6 +14,8 @@ function activate(context) {
     // Create a simple status bar
     let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000)
     item.color = new vscode.ThemeColor("foreground")
+    // TODO: Bring back
+    // item.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground")
     item.command = "developer.oni.statusBarClicked"
     item.text = "$(wrench) Developer"
     item.tooltip = "Hello from oni-dev-extension!"
@@ -76,7 +78,22 @@ function activate(context) {
     cleanup(
         vscode.languages.registerCompletionItemProvider("oni-dev", {
             provideCompletionItems: (document, position, token, context) => {
-                return [vscode.CompletionItem("ReasonML1"), vscode.CompletionItem("OCaml1")]
+                const itemWithAdditionalEdit = vscode.CompletionItem("ReasonML1");
+                itemWithAdditionalEdit.detail = "(Inserts line at top too)";
+                const range0 = new vscode.Range(0, 0, 0, 0);
+                const edit0 = new vscode.TextEdit(range0, "Insert line up top!\n");
+                itemWithAdditionalEdit.additionalTextEdits = [
+                    edit0
+                ];
+
+                const itemWithAdditionalEditAfter = vscode.CompletionItem("OCaml");
+                itemWithAdditionalEditAfter.detail = "(Inserts line at line 10, too)";
+                const range1 = new vscode.Range(11, 0, 11, 0);
+                const edit1 = new vscode.TextEdit(range1, "Insert line at line 10\n");
+                itemWithAdditionalEditAfter.additionalTextEdits = [
+                    edit1
+                ];
+                return [itemWithAdditionalEdit, itemWithAdditionalEditAfter];
             },
         }),
     )
@@ -275,36 +292,38 @@ function activate(context) {
         }),
     )
 
-    function createResourceUri(relativePath) {
-        const absolutePath = path.join(vscode.workspace.rootPath, relativePath)
-        return vscode.Uri.file(absolutePath)
-    }
+    if (vscode.workspace.rootPath) {
+        function createResourceUri(relativePath) {
+            const absolutePath = path.join(vscode.workspace.rootPath, relativePath)
+            return vscode.Uri.file(absolutePath)
+        }
 
-    // Test SCM
+        // Test SCM
 
-    const testSCM = vscode.scm.createSourceControl("test", "Test")
+        const testSCM = vscode.scm.createSourceControl("test", "Test")
 
-    const index = testSCM.createResourceGroup("index", "Index")
-    index.resourceStates = [
-        { resourceUri: createResourceUri("README.md") },
-        { resourceUri: createResourceUri("src/test/api.ts") },
-    ]
+        const index = testSCM.createResourceGroup("index", "Index")
+        index.resourceStates = [
+            { resourceUri: createResourceUri("README.md") },
+            { resourceUri: createResourceUri("src/test/api.ts") },
+        ]
 
-    const workingTree = testSCM.createResourceGroup("workingTree", "Changes")
-    workingTree.resourceStates = [
-        { resourceUri: createResourceUri(".travis.yml") },
-        { resourceUri: createResourceUri("README.md") },
-    ]
+        const workingTree = testSCM.createResourceGroup("workingTree", "Changes")
+        workingTree.resourceStates = [
+            { resourceUri: createResourceUri(".travis.yml") },
+            { resourceUri: createResourceUri("README.md") },
+        ]
 
-    testSCM.count = 13
+        testSCM.count = 13
 
-    testSCM.quickDiffProvider = {
-        provideOriginalResource: (uri, _token) => {
-            return vscode.Uri.file("README.md.old")
-        },
-    }
+        testSCM.quickDiffProvider = {
+            provideOriginalResource: (uri, _token) => {
+                return vscode.Uri.file("README.md.old")
+            },
+        }
 
-    testSCM.dispose()
+        testSCM.dispose()
+    };
 
     // Text Document Content Provider
 

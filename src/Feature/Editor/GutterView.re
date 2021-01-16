@@ -83,7 +83,6 @@ let renderLineNumbers =
       ~lineNumberWidth,
       ~height,
       ~colors: Colors.t,
-      ~count,
       ~showLineNumbers,
       ~cursorLine,
     ) => {
@@ -96,7 +95,7 @@ let renderLineNumbers =
     ~color=colors.gutterBackground,
   );
 
-  Draw.renderImmediate(~context, ~count, (item, _) =>
+  Draw.renderImmediate(~context, (item, _) =>
     renderLineNumber(
       ~context,
       item,
@@ -118,7 +117,6 @@ let render =
       ~height,
       ~colors,
       ~editorFont: Service_Font.font,
-      ~count,
       ~cursorLine,
       ~diffMarkers,
       canvasContext,
@@ -133,7 +131,6 @@ let render =
       ~lineNumberWidth,
       ~height,
       ~colors,
-      ~count,
       ~showLineNumbers,
       ~cursorLine,
     );
@@ -141,13 +138,10 @@ let render =
 
   Option.iter(
     EditorDiffMarkers.render(
-      ~editor,
-      ~scrollY=Editor.scrollY(editor),
+      ~context,
       ~rowHeight=Editor.lineHeightInPixels(editor),
       ~x=lineNumberWidth,
-      ~height=float(height),
       ~width=Constants.diffMarkerWidth,
-      ~count,
       ~canvasContext,
       ~colors,
     ),
@@ -204,7 +198,6 @@ let make =
       ~height,
       ~colors,
       ~editorFont,
-      ~count,
       ~cursorLine,
       ~diffMarkers,
     );

@@ -6,7 +6,11 @@ module type S = {
   type msg;
   type model;
 
-  let update: (~isFuzzyMatching: bool, msg, model) => model;
+  type outmsg =
+    | Nothing
+    | ProviderError(string);
+
+  let update: (~isFuzzyMatching: bool, msg, model) => (model, outmsg);
 
   let create:
     (
@@ -19,7 +23,7 @@ module type S = {
     ) =>
     option(model);
 
-  let items: model => result(list(CompletionItem.t), string);
+  let items: model => list(CompletionItem.t);
 
   let handle: unit => option(int);
 
@@ -37,7 +41,7 @@ module type S = {
 type provider('model, 'msg) = (module S with
                                   type model = 'model and type msg = 'msg);
 
-type exthostModel = result(list(CompletionItem.t), string);
+type exthostModel = list(CompletionItem.t);
 [@deriving show]
 type exthostMsg =
   | ResultAvailable({
@@ -72,6 +76,10 @@ module ExthostCompletionProvider =
   type msg = exthostMsg;
   type model = exthostModel;
 
+  type outmsg =
+    | Nothing
+    | ProviderError(string);
+
   let create =
       (
         ~config as _,
@@ -84,7 +92,7 @@ module ExthostCompletionProvider =
     if (!Exthost.DocumentSelector.matchesBuffer(~buffer, Config.selector)) {
       None;
     } else {
-      Some(Ok([]));
+      Some([]);
     };
 
   let handle = () => Some(providerHandle);
@@ -98,28 +106,31 @@ module ExthostCompletionProvider =
         |> List.map(
              CompletionItem.create(~isFuzzyMatching, ~handle=providerHandle),
            );
-      Ok(completions);
+      (completions, Nothing);
     | DetailsAvailable({handle, item}) when handle == providerHandle =>
-      model
-      |> Result.map(items => {
-           items
-           |> List.map((previousItem: CompletionItem.t) =>
-                if (previousItem.chainedCacheId == item.chainedCacheId) {
-                  CompletionItem.create(
-                    ~isFuzzyMatching=previousItem.isFuzzyMatching,
-                    ~handle=providerHandle,
-                    item,
-                  );
-                } else {
-                  previousItem;
-                }
-              )
-         })
-    | DetailsError({handle, errorMsg}) when handle == providerHandle =>
-      Error(errorMsg)
-    | ResultError({handle, errorMsg}) when handle == providerHandle =>
-      Error(errorMsg)
-    | _ => model
+      let model' =
+        model
+        |> List.map((previousItem: CompletionItem.t) =>
+             if (previousItem.chainedCacheId == item.chainedCacheId) {
+               CompletionItem.create(
+                 ~isFuzzyMatching=previousItem.isFuzzyMatching,
+                 ~handle=providerHandle,
+                 item,
+               );
+             } else {
+               previousItem;
+             }
+           );
+      (model', Nothing);
+    | DetailsError({handle, errorMsg}) when handle == providerHandle => (
+        model,
+        ProviderError(errorMsg),
+      )
+    | ResultError({handle, errorMsg}) when handle == providerHandle => (
+        model,
+        ProviderError(errorMsg),
+      )
+    | _ => (model, Nothing)
     };
 
   let items = model => model;
@@ -210,6 +221,10 @@ module KeywordCompletionProvider =
   type msg = keywordMsg;
   type model = keywordModel;
 
+  type outmsg =
+    | Nothing
+    | ProviderError(string);
+
   let handle = () => None;
 
   let create =
@@ -245,9 +260,12 @@ module KeywordCompletionProvider =
     };
   };
 
-  let update = (~isFuzzyMatching as _, _msg: msg, model: model) => model;
+  let update = (~isFuzzyMatching as _, _msg: msg, model: model) => (
+    model,
+    Nothing,
+  );
 
-  let items = model => Ok(model);
+  let items = model => model;
 
   let sub =
       (~client as _, ~position as _, ~buffer as _, ~selectedItem as _, _model) => Isolinear.Sub.none;

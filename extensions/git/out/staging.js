@@ -4,6 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.invertLineChange = exports.intersectDiffWithRange = exports.getModifiedRange = exports.toLineRanges = exports.applyLineChanges = void 0;
 const vscode_1 = require("vscode");
 function applyLineChanges(original, modified, diffs) {
     const result = [];
@@ -15,8 +16,8 @@ function applyLineChanges(original, modified, diffs) {
         let endCharacter = 0;
         // if this is a deletion at the very end of the document,then we need to account
         // for a newline at the end of the last line which may have been deleted
-        // https://github.com/Microsoft/vscode/issues/59670
-        if (isDeletion && diff.originalStartLineNumber === original.lineCount) {
+        // https://github.com/microsoft/vscode/issues/59670
+        if (isDeletion && diff.originalEndLineNumber === original.lineCount) {
             endLine -= 1;
             endCharacter = original.lineAt(endLine).range.end.character;
         }

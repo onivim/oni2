@@ -150,15 +150,12 @@ module Commands = {
 };
 
 module Keybindings = {
-  open Oni_Input.Keybindings;
+  open Feature_Input.Schema;
 
   let condition = "normalMode" |> WhenExpr.parse;
 
-  let goToDefinition = {
-    key: "<F12>",
-    command: Commands.gotoDefinition.id,
-    condition,
-  };
+  let goToDefinition =
+    bind(~key="<F12>", ~command=Commands.gotoDefinition.id, ~condition);
 };
 
 module Contributions = {

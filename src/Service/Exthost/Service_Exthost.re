@@ -2,6 +2,11 @@ open Oni_Core;
 
 module Log = (val Log.withNamespace("Service_Exthost"));
 
+module Constants = {
+  let highPriorityDebounceTime = Revery.Time.milliseconds(50);
+  let lowPriorityDebounceTime = Revery.Time.milliseconds(500);
+};
+
 // EFFECTS
 
 module Effects = {
@@ -65,6 +70,13 @@ module Effects = {
           dispatch(toMsg());
         })
       );
+
+    let modelSaved = (~uri, client, toMsg) => {
+      Isolinear.Effect.createWithDispatch(~name="exthost.modelSaved", dispatch => {
+        Exthost.Request.Documents.acceptModelSaved(~uri, client);
+        dispatch(toMsg());
+      });
+    };
   };
   module FileSystemEventService = {
     let onFileEvent = (~events, extHostClient) =>
@@ -201,27 +213,16 @@ module Effects = {
         );
       });
     };
+  };
 
-    let provideSignatureHelp =
-        (~handle, ~uri, ~position, ~context, client, toMsg) => {
-      Isolinear.Effect.createWithDispatch(
-        ~name="language.provideSignatureHelp", dispatch => {
-        let promise =
-          Exthost.Request.LanguageFeatures.provideSignatureHelp(
-            ~handle,
-            ~resource=uri,
-            ~position=Exthost.OneBasedPosition.ofPosition(position),
-            ~context,
-            client,
-          );
-
-        Lwt.on_success(promise, sigHelp => dispatch(Ok(sigHelp) |> toMsg));
-
-        Lwt.on_failure(promise, err =>
-          dispatch(Error(Printexc.to_string(err)) |> toMsg)
-        );
+  module Workspace = {
+    let change = (~workspace, extHostClient) =>
+      Isolinear.Effect.create(~name="exthost.changeWorkspace", () => {
+        Exthost.Request.Workspace.acceptWorkspaceData(
+          ~workspace,
+          extHostClient,
+        )
       });
-    };
   };
 };
 
@@ -253,7 +254,7 @@ module Internal = {
            ~versionId=version,
            ~lines,
            ~modeId,
-           ~isDirty=true,
+           ~isDirty=false,
            Uri.fromPath(filePath),
          );
        });
@@ -335,7 +336,13 @@ module Sub = {
 
       let name = "Service_Exthost.BufferSubscription";
       let id = params => {
-        params.buffer |> Oni_Core.Buffer.getId |> string_of_int;
+        Printf.sprintf(
+          "%d:%s",
+          params.buffer |> Oni_Core.Buffer.getId,
+          // Use the buffer path, too, so that if it changes, we subscribe to the new file
+          Buffer.getFilePath(params.buffer)
+          |> Option.value(~default="(null)"),
+        );
       };
 
       let init = (~params, ~dispatch) => {
@@ -575,7 +582,7 @@ module Sub = {
       type nonrec msg = list(Exthost.DefinitionLink.t);
       type nonrec params = bufferPositionParams;
 
-      type state = unit;
+      type state = unit => unit;
 
       let name = "Service_Exthost.DefinitionSubscription";
       let id = ({handle, buffer, position, _}: bufferPositionParams) =>
@@ -587,25 +594,31 @@ module Sub = {
         );
 
       let init = (~params, ~dispatch) => {
-        let promise =
-          Exthost.Request.LanguageFeatures.provideDefinition(
-            ~handle=params.handle,
-            ~resource=Oni_Core.Buffer.getUri(params.buffer),
-            ~position=params.position,
-            params.client,
-          );
+        Revery.Tick.timeout(
+          ~name="Timeout.provideDefinition",
+          _ => {
+            let promise =
+              Exthost.Request.LanguageFeatures.provideDefinition(
+                ~handle=params.handle,
+                ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                ~position=params.position,
+                params.client,
+              );
 
-        Lwt.on_success(promise, definitionLinks => dispatch(definitionLinks));
+            Lwt.on_success(promise, definitionLinks =>
+              dispatch(definitionLinks)
+            );
 
-        Lwt.on_failure(promise, _ => dispatch([]));
-
-        ();
+            Lwt.on_failure(promise, _ => dispatch([]));
+          },
+          Constants.highPriorityDebounceTime,
+        );
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state as _) => {
-        ();
+      let dispose = (~params as _, ~state as dispose) => {
+        dispose();
       };
     });
 
@@ -620,7 +633,7 @@ module Sub = {
       type nonrec msg = list(Exthost.DocumentHighlight.t);
       type nonrec params = bufferPositionParams;
 
-      type state = unit;
+      type state = unit => unit;
 
       let name = "Service_Exthost.DocumentHighlightsSubscription";
       let id = ({handle, buffer, position, _}) =>
@@ -632,27 +645,31 @@ module Sub = {
         );
 
       let init = (~params, ~dispatch) => {
-        let promise =
-          Exthost.Request.LanguageFeatures.provideDocumentHighlights(
-            ~handle=params.handle,
-            ~resource=Oni_Core.Buffer.getUri(params.buffer),
-            ~position=params.position,
-            params.client,
-          );
+        Revery.Tick.timeout(
+          ~name="Timeout.provideHighlights",
+          () => {
+            let promise =
+              Exthost.Request.LanguageFeatures.provideDocumentHighlights(
+                ~handle=params.handle,
+                ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                ~position=params.position,
+                params.client,
+              );
 
-        Lwt.on_success(promise, documentHighlights =>
-          dispatch(documentHighlights)
+            Lwt.on_success(promise, maybeDocumentHighlights =>
+              maybeDocumentHighlights |> Option.value(~default=[]) |> dispatch
+            );
+
+            Lwt.on_failure(promise, _ => dispatch([]));
+          },
+          Constants.highPriorityDebounceTime,
         );
-
-        Lwt.on_failure(promise, _ => dispatch([]));
-
-        ();
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state as _) => {
-        ();
+      let dispose = (~params as _, ~state as dispose) => {
+        dispose();
       };
     });
 
@@ -664,17 +681,21 @@ module Sub = {
 
   type codeLensesParams = {
     handle: int,
+    eventTick: int,
     client: Exthost.Client.t,
     buffer: Oni_Core.Buffer.t,
+    startLine: int, // One-based start line
+    stopLine: int // One-based stop line
   };
 
-  let idFromBufferVersion = (~handle, ~buffer, name) => {
+  let idForCodeLens = (~handle, ~buffer, ~startLine, ~eventTick) => {
     Printf.sprintf(
-      "%d-%d-%d.%s",
+      "%d-%d-%d:%d-%d",
       handle,
       Oni_Core.Buffer.getId(buffer),
       Oni_Core.Buffer.getVersion(buffer),
-      name,
+      startLine,
+      eventTick,
     );
   };
 
@@ -683,44 +704,110 @@ module Sub = {
       type nonrec msg = result(list(Exthost.CodeLens.t), string);
       type nonrec params = codeLensesParams;
 
-      type state = unit;
+      type state = {
+        isActive: ref(bool),
+        dispose: unit => unit,
+      };
 
       let name = "Service_Exthost.CodeLensesSubscription";
-      let id = ({handle, buffer, _}: params) =>
-        idFromBufferVersion(~handle, ~buffer, "CodeLensSubscription");
+      let id = ({handle, buffer, startLine, eventTick, _}: params) =>
+        idForCodeLens(~handle, ~buffer, ~startLine, ~eventTick);
 
       let init = (~params, ~dispatch) => {
-        let promise =
-          Exthost.Request.LanguageFeatures.provideCodeLenses(
-            ~handle=params.handle,
-            ~resource=Oni_Core.Buffer.getUri(params.buffer),
-            params.client,
+        let active = ref(true);
+        let dispose =
+          Revery.Tick.timeout(
+            ~name,
+            _ => {
+              let init =
+                Exthost.Request.LanguageFeatures.provideCodeLenses(
+                  ~handle=params.handle,
+                  ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                  params.client,
+                );
+
+              let resolveLens = (codeLens: Exthost.CodeLens.t) =>
+                if (! active^) {
+                  // If the subscription is over, don't both resolving...
+                  Lwt.return(
+                    None,
+                  );
+                } else {
+                  switch (codeLens.command) {
+                  | Some(_) => Lwt.return(Some(codeLens))
+                  | None =>
+                    Exthost.Request.LanguageFeatures.resolveCodeLens(
+                      ~handle=params.handle,
+                      ~codeLens,
+                      params.client,
+                    )
+                  };
+                };
+
+              let promise =
+                Lwt.bind(
+                  init,
+                  initResult => {
+                    let unresolvedLenses =
+                      initResult
+                      |> Option.value(~default=[])
+                      |> List.filter((lens: Exthost.CodeLens.t) => {
+                           Exthost.OneBasedRange.(
+                             {
+                               lens.range.startLineNumber >= params.startLine
+                               && lens.range.startLineNumber <= params.stopLine;
+                             }
+                           )
+                         });
+
+                    let resolvePromises =
+                      unresolvedLenses |> List.map(resolveLens);
+
+                    let join:
+                      (
+                        list(Exthost.CodeLens.t),
+                        option(Exthost.CodeLens.t)
+                      ) =>
+                      list(Exthost.CodeLens.t) =
+                      (acc, cur) => {
+                        switch (cur) {
+                        | None => acc
+                        | Some(lens) => [lens, ...acc]
+                        };
+                      };
+
+                    Utility.LwtEx.all(~initial=[], join, resolvePromises);
+                  },
+                );
+
+              Lwt.on_success(promise, codeLenses => {
+                dispatch(Ok(codeLenses))
+              });
+
+              Lwt.on_failure(promise, exn => {
+                dispatch(Error(Printexc.to_string(exn)))
+              });
+            },
+            Constants.lowPriorityDebounceTime,
           );
-
-        Lwt.on_success(
-          promise,
-          maybeCodeLenses => {
-            let lenses =
-              maybeCodeLenses |> Option.value(~default=[]) |> Result.ok;
-            dispatch(lenses);
-          },
-        );
-
-        Lwt.on_failure(promise, exn => {
-          dispatch(Error(Printexc.to_string(exn)))
-        });
-        ();
+        {isActive: active, dispose};
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state as _) => {
-        ();
+      let dispose = (~params as _, ~state) => {
+        state.isActive := false;
+        state.dispose();
       };
     });
 
-  let codeLenses = (~handle, ~buffer, ~toMsg, client) => {
-    CodeLensesSubscription.create({handle, buffer, client}: codeLensesParams)
+  let codeLenses =
+      (~handle, ~eventTick, ~buffer, ~startLine, ~stopLine, ~toMsg, client) => {
+    let startLine = EditorCoreTypes.LineNumber.toOneBased(startLine);
+    let stopLine = EditorCoreTypes.LineNumber.toOneBased(stopLine);
+    CodeLensesSubscription.create(
+      {handle, buffer, client, startLine, stopLine, eventTick}: codeLensesParams,
+    )
     |> Isolinear.Sub.map(toMsg);
   };
 
@@ -824,6 +911,62 @@ module Sub = {
         ();
       };
     });
+
+  type signatureHelpParams = {
+    handle: int,
+    context: Exthost.SignatureHelp.RequestContext.t,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+    position: Exthost.OneBasedPosition.t,
+  };
+
+  module SignatureHelpSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg =
+        result(option(Exthost.SignatureHelp.Response.t), string);
+      type nonrec params = signatureHelpParams;
+
+      type state = unit;
+
+      let name = "Service_Exthost.SignatureHelpSubscription";
+      let id = ({handle, buffer, position, _}: params) =>
+        idFromBufferPosition(~handle, ~buffer, ~position, "SignatureHelp");
+
+      let init = (~params, ~dispatch) => {
+        let promise =
+          Exthost.Request.LanguageFeatures.provideSignatureHelp(
+            ~handle=params.handle,
+            ~resource=Oni_Core.Buffer.getUri(params.buffer),
+            ~position=params.position,
+            ~context=params.context,
+            params.client,
+          );
+
+        Lwt.on_success(promise, suggestResult =>
+          dispatch(Ok(suggestResult))
+        );
+
+        Lwt.on_failure(promise, exn =>
+          dispatch(Error(Printexc.to_string(exn)))
+        );
+
+        ();
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+  let signatureHelp = (~handle, ~context, ~buffer, ~position, ~toMsg, client) => {
+    let position = position |> Exthost.OneBasedPosition.ofPosition;
+    SignatureHelpSubscription.create(
+      {handle, context, buffer, position, client}: signatureHelpParams,
+    )
+    |> Isolinear.Sub.map(toMsg);
+  };
+
   let completionItem = (~handle, ~chainedCacheId, ~toMsg, client) => {
     CompletionItemSubscription.create(
       {handle, chainedCacheId, client}: completionItemParams,
@@ -850,31 +993,37 @@ module Sub = {
       type nonrec msg = list(Exthost.DocumentSymbol.t);
       type nonrec params = bufferHandleParams;
 
-      type state = unit;
+      type state = unit => unit;
 
       let name = "Service_Exthost.DocumentSymbolSubscription";
       let id = ({handle, buffer, _}: params) =>
         idFromBufferHandle(~handle, ~buffer);
 
       let init = (~params, ~dispatch) => {
-        let promise =
-          Exthost.Request.LanguageFeatures.provideDocumentSymbols(
-            ~handle=params.handle,
-            ~resource=Oni_Core.Buffer.getUri(params.buffer),
-            params.client,
-          );
+        Revery.Tick.timeout(
+          ~name="Timeout.documentSymbols",
+          _ => {
+            let promise =
+              Exthost.Request.LanguageFeatures.provideDocumentSymbols(
+                ~handle=params.handle,
+                ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                params.client,
+              );
 
-        Lwt.on_success(promise, documentSymbols => dispatch(documentSymbols));
+            Lwt.on_success(promise, maybeDocumentSymbols =>
+              maybeDocumentSymbols |> Option.value(~default=[]) |> dispatch
+            );
 
-        Lwt.on_failure(promise, _err => dispatch([]));
-
-        ();
+            Lwt.on_failure(promise, _err => dispatch([]));
+          },
+          Constants.lowPriorityDebounceTime,
+        );
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state as _) => {
-        ();
+      let dispose = (~params as _, ~state as dispose) => {
+        dispose();
       };
     });
 

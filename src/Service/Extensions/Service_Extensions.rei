@@ -15,7 +15,7 @@ module Catalog: {
   module VersionInfo: {
     [@deriving show]
     type t = {
-      version: string,
+      version: Semver.t,
       url: string,
     };
   };
@@ -24,7 +24,7 @@ module Catalog: {
     [@deriving show]
     type t = {
       downloadUrl: string,
-      repositoryUrl: string,
+      repositoryUrl: option(string),
       homepageUrl: string,
       manifestUrl: string,
       iconUrl: option(string),
@@ -33,13 +33,21 @@ module Catalog: {
       //      licenseUrl: string,
       name: string,
       namespace: string,
+      isPublicNamespace: bool,
       //      downloadCount: int,
       displayName: option(string),
-      description: string,
+      description: option(string),
       //      categories: list(string),
-      version: string,
+      version: option(Semver.t),
       versions: list(VersionInfo.t),
+      downloadCount: option(int),
+      averageRating: option(float),
+      reviewCount: option(int),
     };
+
+    let downloadCount: t => int;
+    let averageRating: t => float;
+    let reviewCount: t => int;
 
     let toString: t => string;
   };
@@ -50,11 +58,11 @@ module Catalog: {
       url: string,
       downloadUrl: string,
       iconUrl: option(string),
-      version: string,
+      version: option(Semver.t),
       name: string,
       namespace: string,
       displayName: option(string),
-      description: string,
+      description: option(string),
     };
 
     let name: t => string;
@@ -120,6 +128,14 @@ module Effects: {
     ) =>
     Isolinear.Effect.t('a);
 
+  let update:
+    (
+      ~extensionsFolder: option(Fp.t(Fp.absolute)),
+      ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'msg,
+      string
+    ) =>
+    Isolinear.Effect.t('msg);
+
   let details:
     (~extensionId: string, ~toMsg: result(Catalog.Details.t, string) => 'a) =>
     Isolinear.Effect.t('a);
@@ -127,10 +143,14 @@ module Effects: {
 
 module Sub: {
   let search:
+    (~setup: Setup.t, ~query: Query.t, ~toMsg: result(Query.t, exn) => 'a) =>
+    Isolinear.Sub.t('a);
+
+  let details:
     (
       ~setup: Setup.t,
-      ~query: Query.t,
-      ~toMsg: result(Query.t, string) => 'a
+      ~extensionId: string,
+      ~toMsg: result(Catalog.Details.t, string) => 'a
     ) =>
     Isolinear.Sub.t('a);
 };

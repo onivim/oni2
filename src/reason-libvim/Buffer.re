@@ -13,6 +13,8 @@ let loadFile = (filePath: string) => {
   Native.vimBufferLoad(filePath);
 };
 
+let make = Native.vimBufferNew;
+
 let getFilename = (buffer: t) => {
   Native.vimBufferGetFilename(buffer);
 };

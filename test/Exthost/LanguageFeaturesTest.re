@@ -96,7 +96,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
                              Some(
                                Exthost.Label.ofString("codelens: command1"),
                              ),
-                           id: "codelens.command1",
+                           id: Some("codelens.command1"),
                          },
                        ),
                    },
@@ -110,7 +110,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
                              Some(
                                Exthost.Label.ofString("codelens: command2"),
                              ),
-                           id: "codelens.command2",
+                           id: Some("codelens.command2"),
                          },
                        ),
                    },
@@ -311,7 +311,8 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get highlights",
            ~validate=
-             (highlights: list(Exthost.DocumentHighlight.t)) => {
+             (maybeHighlights: option(list(Exthost.DocumentHighlight.t))) => {
+               let highlights = Option.get(maybeHighlights);
                expect.int(List.length(highlights)).toBe(2);
                let highlight0: Exthost.DocumentHighlight.t =
                  List.nth(highlights, 0);
@@ -424,7 +425,9 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get symbols",
            ~validate=
-             (symbols: list(Exthost.DocumentSymbol.t)) => {
+             (maybeSymbols: option(list(Exthost.DocumentSymbol.t))) => {
+               expect.equal(Option.is_some(maybeSymbols), true);
+               let symbols = Option.get(maybeSymbols);
                expect.int(List.length(symbols)).toBe(2);
                let symbol0: Exthost.DocumentSymbol.t = List.nth(symbols, 0);
                let symbol1: Exthost.DocumentSymbol.t = List.nth(symbols, 1);

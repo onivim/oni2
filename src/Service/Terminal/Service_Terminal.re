@@ -262,6 +262,19 @@ module Effect = {
       }
     });
   };
+
+  let paste = (~id, input) => {
+    Isolinear.Effect.create(~name="terminal.input", () => {
+      switch (Hashtbl.find_opt(Internal.idToTerminal, id)) {
+      | Some(terminal) =>
+        input
+        |> Zed_utf8.iter(uchar => {
+             ReveryTerminal.input(~key=Unicode(uchar), terminal)
+           })
+      | None => ()
+      }
+    });
+  };
 };
 
 let handleExtensionMessage = (msg: Exthost.Msg.TerminalService.msg) => {

@@ -95,7 +95,7 @@ module Internal = {
 
   let getTitleDoubleClickBehavior = () => {
     switch (Revery.Environment.os) {
-    | Mac =>
+    | Mac(_) =>
       try({
         let ic =
           Unix.open_process_in(
@@ -200,19 +200,20 @@ module Styles = {
   open Style;
 
   module Mac = {
-    let container = (~isFocused, ~theme) => [
+    let container = (~isFocused, ~theme, ~height) => [
       flexGrow(0),
-      height(25),
+      Style.height(int_of_float(height)),
       backgroundColor(
         isFocused
           ? Colors.activeBackground.from(theme)
           : Colors.inactiveBackground.from(theme),
       ),
       flexDirection(`Row),
-      justifyContent(`Center),
+      justifyContent(`SpaceBetween),
       alignItems(`Center),
     ];
-    let text = (~isFocused, ~theme) => [
+
+    let text = (~isFocused, ~theme, ~isRegistered) => [
       flexGrow(0),
       backgroundColor(
         isFocused
@@ -224,7 +225,10 @@ module Styles = {
           ? Colors.activeForeground.from(theme)
           : Colors.inactiveForeground.from(theme),
       ),
+      flexDirection(`Row),
+      justifyContent(`Center),
       textWrap(TextWrapping.NoWrap),
+      marginLeft(!isRegistered ? Feature_Registration.Constants.macWidth : 0),
     ];
   };
 
@@ -308,28 +312,80 @@ module Styles = {
 
 module View = {
   module Mac = {
+    let title =
+        (
+          ~isFocused,
+          ~isRegistered,
+          ~theme,
+          ~title,
+          ~font: UiFont.t,
+          ~majorVersion,
+          (),
+        ) =>
+      /* The titlebar text style changed on Big Sur
+         This will make sure that on all OS X versions (i.e. 10.x.y), the old style applies.
+         On new versions we want the new style -- this can be easily augmented with other conditions,
+         should the design change again.
+         */
+      if (majorVersion <= 10) {
+        <Text
+          style={Styles.Mac.text(~isFocused, ~theme, ~isRegistered)}
+          fontFamily={font.family}
+          fontWeight=Medium
+          fontSize=12.
+          text=title
+        />;
+      } else {
+        <Text
+          style={Styles.Mac.text(~isFocused, ~theme, ~isRegistered)}
+          fontFamily={font.family}
+          fontWeight=Bold
+          fontSize=13.
+          text=title
+        />;
+      };
     let make =
         (
           ~dispatch,
+          ~registration,
+          ~registrationDispatch,
           ~isFocused,
           ~windowDisplayMode,
-          ~title,
+          ~title as titleText,
           ~theme,
           ~font: UiFont.t,
+          ~height,
+          ~majorVersion,
           (),
         ) =>
       if (windowDisplayMode == Fullscreen) {
         React.empty;
       } else {
+        let isRegistered = Feature_Registration.isRegistered(registration);
+
         <Clickable
           onDoubleClick={_ => dispatch(TitleDoubleClicked)}
-          style={Styles.Mac.container(~isFocused, ~theme)}>
-          <Text
-            style={Styles.Mac.text(~isFocused, ~theme)}
-            fontFamily={font.family}
-            fontWeight=Medium
-            fontSize=12.
-            text=title
+          style={Styles.Mac.container(~isFocused, ~theme, ~height)}>
+          <View
+            style=Style.[
+              flexDirection(`Row),
+              justifyContent(`Center),
+              flexGrow(1),
+            ]>
+            <title
+              title=titleText
+              isFocused
+              isRegistered
+              theme
+              font
+              majorVersion
+            />
+          </View>
+          <Feature_Registration.View.TitleBar.Mac
+            theme
+            registration
+            dispatch=registrationDispatch
+            font
           />
         </Clickable>;
       };
@@ -422,7 +478,10 @@ module View = {
 
     let make =
         (
+          ~menuBar,
           ~dispatch,
+          ~registrationDispatch,
+          ~registration,
           ~isFocused,
           ~windowDisplayMode,
           ~title,
@@ -440,11 +499,19 @@ module View = {
             width=18
             height=18
           />
+          <View style=Style.[paddingLeft(16)]> menuBar </View>
           <Text
             style={Styles.Windows.title(~isFocused, ~theme)}
             fontFamily={font.family}
             fontSize=12.
             text=title
+          />
+          <Feature_Registration.View.TitleBar.Windows
+            theme
+            registration
+            dispatch=registrationDispatch
+            font
+            isFocused
           />
         </View>
         <View style=Styles.Windows.buttons>
@@ -457,23 +524,50 @@ module View = {
 
   let make =
       (
+        ~menuBar,
         ~activeBuffer,
         ~workspaceRoot,
         ~workspaceDirectory,
+        ~registration,
         ~config,
         ~dispatch,
+        ~registrationDispatch,
         ~isFocused,
         ~windowDisplayMode,
         ~theme,
         ~font: UiFont.t,
+        ~height,
         (),
       ) => {
     let title =
       title(~activeBuffer, ~workspaceRoot, ~workspaceDirectory, ~config);
     switch (Revery.Environment.os) {
-    | Mac => <Mac isFocused windowDisplayMode font title theme dispatch />
-    | Windows =>
-      <Windows isFocused windowDisplayMode font title theme dispatch />
+    | Mac({major, _}) =>
+      <Mac
+        isFocused
+        windowDisplayMode
+        font
+        title
+        theme
+        dispatch
+        registration
+        registrationDispatch
+        height
+        majorVersion=major
+      />
+    | Windows(_) =>
+      <Windows
+        menuBar
+        isFocused
+        windowDisplayMode
+        font
+        title
+        theme
+        dispatch
+        registrationDispatch
+        registration
+      />
+    | Linux(_) => menuBar
     | _ => React.empty
     };
   };

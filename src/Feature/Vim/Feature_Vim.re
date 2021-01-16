@@ -1,45 +1,64 @@
-open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
 // MODEL
 
 type model = {
-  mode: Vim.Mode.t,
   settings: StringMap.t(Vim.Setting.value),
   recordingMacro: option(char),
+  subMode: Vim.SubMode.t,
 };
 
 let initial = {
-  mode: Vim.Mode.Normal({cursor: BytePosition.zero}),
   settings: StringMap.empty,
   recordingMacro: None,
+  subMode: Vim.SubMode.None,
 };
 
-let mode = ({mode, _}) => mode;
-
 let recordingMacro = ({recordingMacro, _}) => recordingMacro;
+
+let subMode = ({subMode, _}) => subMode;
 
 // MSG
 
 [@deriving show]
 type msg =
-  | ModeChanged([@opaque] Vim.Mode.t)
+  | ModeChanged({
+      allowAnimation: bool,
+      mode: [@opaque] Vim.Mode.t,
+      subMode: [@opaque] Vim.SubMode.t,
+      effects: [@opaque] list(Vim.Effect.t),
+    })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
   | SettingChanged(Vim.Setting.t)
   | MacroRecordingStarted({register: char})
-  | MacroRecordingStopped;
+  | MacroRecordingStopped
+  | Output({
+      cmd: string,
+      output: option(string),
+    });
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | SettingsChanged
-  | ModeUpdated(Vim.Mode.t);
+  | ModeDidChange({
+      allowAnimation: bool,
+      mode: Vim.Mode.t,
+      effects: list(Vim.Effect.t),
+    })
+  | Output({
+      cmd: string,
+      output: option(string),
+    });
 
 let update = (msg, model: model) => {
   switch (msg) {
-  | ModeChanged(mode) => ({...model, mode}, Nothing)
+  | ModeChanged({allowAnimation, mode, effects, subMode}) => (
+      {...model, subMode},
+      ModeDidChange({allowAnimation, mode, effects}),
+    )
   | Pasted(text) =>
     let eff =
       Service_Vim.Effects.paste(
@@ -47,7 +66,10 @@ let update = (msg, model: model) => {
         text,
       );
     (model, Effect(eff));
-  | PasteCompleted({mode}) => (model, ModeUpdated(mode))
+  | PasteCompleted({mode}) => (
+      model,
+      ModeDidChange({allowAnimation: true, mode, effects: []}),
+    )
   | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
       SettingsChanged,
@@ -57,6 +79,8 @@ let update = (msg, model: model) => {
       Nothing,
     )
   | MacroRecordingStopped => ({...model, recordingMacro: None}, Nothing)
+
+  | Output({cmd, output}) => (model, Output({cmd, output}))
   };
 };
 
@@ -98,10 +122,43 @@ module CommandLine = {
   };
 };
 
+module Effects = {
+  let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
+    let toMsg = mode =>
+      ModeChanged({
+        allowAnimation: true,
+        subMode: Vim.SubMode.None,
+        mode,
+        effects: [],
+      });
+    Service_Vim.Effects.applyCompletion(
+      ~meetColumn,
+      ~insertText,
+      ~additionalEdits,
+      ~toMsg,
+    );
+  };
+};
+
 module Configuration = {
   type resolver = string => option(Vim.Setting.value);
 
   let resolver = ({settings, _}, settingName) => {
     settings |> StringMap.find_opt(settingName);
   };
+};
+
+module Keybindings = {
+  open Feature_Input.Schema;
+  let controlSquareBracketRemap =
+    remap(
+      ~allowRecursive=true,
+      ~fromKeys="<C-[>",
+      ~toKeys="<ESC>",
+      ~condition=WhenExpr.Value(True),
+    );
+};
+
+module Contributions = {
+  let keybindings = Keybindings.[controlSquareBracketRemap];
 };

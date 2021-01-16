@@ -4,8 +4,15 @@ open Oni_Model;
 
 module Log = (val Log.withNamespace("Oni2.Extension.ClientStore"));
 
-let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
+let create =
+    (~initialWorkspace, ~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   let (stream, dispatch) = Isolinear.Stream.create();
+
+  Log.infof(m =>
+    m("ExtensionClient.create called with attachStdio: %b", attachStdio)
+  );
+
+  let maybeClientRef = ref(None);
 
   let extensionInfo =
     extensions |> List.map(Exthost.Extension.InitData.Extension.ofScanResult);
@@ -13,13 +20,21 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
   open Exthost.Extension;
   open Exthost.Msg;
 
-  let maybeClientRef = ref(None);
-
   let handler: Msg.t => Lwt.t(Reply.t) =
     msg => {
       switch (msg) {
+      | Initialized =>
+        dispatch(Actions.Exthost(Feature_Exthost.Msg.initialized));
+        Lwt.return(Reply.okEmpty);
       | DownloadService(msg) => Middleware.download(msg)
-      | FileSystem(msg) => Middleware.filesystem(msg)
+
+      | FileSystem(msg) =>
+        let (promise, resolver) = Lwt.task();
+
+        let fileSystemMsg = Feature_FileSystem.Msg.exthost(~resolver, msg);
+        dispatch(FileSystem(fileSystemMsg));
+        promise;
+
       | SCM(msg) =>
         Feature_SCM.handleExtensionMessage(
           ~dispatch=msg => dispatch(Actions.SCM(msg)),
@@ -94,20 +109,6 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
         );
         Lwt.return(Reply.okEmpty);
 
-      | LanguageFeatures(
-          RegisterSignatureHelpProvider({handle, selector, metadata}),
-        ) =>
-        dispatch(
-          Actions.SignatureHelp(
-            Feature_SignatureHelp.ProviderRegistered({
-              handle,
-              selector,
-              metadata,
-            }),
-          ),
-        );
-        Lwt.return(Reply.okEmpty);
-
       | Languages(msg) =>
         let (promise, resolver) = Lwt.task();
 
@@ -165,6 +166,7 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
             label,
             alignment,
             priority,
+            backgroundColor,
             color,
             command,
             tooltip,
@@ -172,13 +174,14 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
           }),
         ) =>
         let command =
-          command |> Option.map(({id, _}: Exthost.Command.t) => id);
+          command |> OptionEx.flatMap(({id, _}: Exthost.Command.t) => id);
         dispatch(
           Actions.StatusBar(
             Feature_StatusBar.ItemAdded(
               Feature_StatusBar.Item.create(
                 ~command?,
                 ~color?,
+                ~backgroundColor?,
                 ~tooltip?,
                 ~id,
                 ~label,
@@ -236,18 +239,40 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
 
   let tempDir = Filename.get_temp_dir_name();
 
-  let logsLocation = tempDir |> Uri.fromPath;
-  let logFile =
+  let logFile = tempDir |> Uri.fromPath;
+  let logsLocation =
     Filename.temp_file(~temp_dir=tempDir, "onivim2", "exthost.log")
     |> Uri.fromPath;
 
+  let extHostVersion = {
+    // The @onivim/vscode-exthost has an adjusted patch version number -
+    // @onivim/vscode-exthost at 1.51.1000 corresponds to 1.51.1 of the vscode extension host
+    let originalVersion = Oni_Core.BuildInfo.extensionHostVersion;
+
+    originalVersion
+    |> Semver.of_string
+    |> OptionEx.flatMap((ver: Semver.t) => {
+         Semver.from_parts(
+           ver.major,
+           ver.minor,
+           ver.patch / 1000,
+           ver.prerelease,
+           ver.build,
+         )
+       })
+    |> Option.map(Semver.to_string)
+    |> OptionEx.tapNone(() =>
+         Log.errorf(m => m("Unable to adjust version: %s", originalVersion))
+       )
+    |> Option.value(~default=originalVersion);
+  };
+
   let initData =
     InitData.create(
-      ~version="1.46.0", // TODO: How to keep in sync with bundled version?
+      ~version=extHostVersion,
       ~parentPid,
       ~logsLocation,
       ~logFile,
-      ~logLevel=0,
       extensionInfo,
     );
 
@@ -263,6 +288,7 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
           extensions,
           setup,
         ),
+      ~initialWorkspace,
       ~namedPipe,
       ~initData,
       ~handler,
@@ -270,7 +296,26 @@ let create = (~attachStdio, ~config, ~extensions, ~setup: Setup.t) => {
       (),
     );
 
-  let env = Luv.Env.environ() |> Result.get_ok;
+  // INVESTIGATE: Why does using `Luv.Env.environ()` sometimes not work correctly when calling Process.spawn?
+  // In some cases - intermittently - the spawned process will not have the environment variables set.
+  // let env = Luv.Env.environ() |> Result.get_ok;
+  // ...in the meantime, fall-back to Unix.environment:
+  let env =
+    Unix.environment()
+    |> Array.to_list
+    |> List.fold_left(
+         (acc, curr) => {
+           switch (String.split_on_char('=', curr)) {
+           | [] => acc
+           | [_] => acc
+           | [key, ...values] =>
+             let v = String.concat("=", values);
+
+             [(key, v), ...acc];
+           }
+         },
+         [],
+       );
   let environment = [
     (
       "AMD_ENTRYPOINT",

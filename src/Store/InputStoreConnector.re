@@ -5,6 +5,8 @@
  */
 
 open Oni_Core;
+open Utility;
+
 open Oni_Input;
 
 module Model = Oni_Model;
@@ -50,9 +52,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         Actions.LanguageSupport(
           Feature_LanguageSupport.Msg.Hover.keyPressed(k),
         ),
-        Actions.SignatureHelp(
-          Feature_SignatureHelp.KeyPressed(Some(k), true),
-        ),
       ]
 
     | Quickmenu => [Actions.QuickmenuInput(k)]
@@ -80,6 +79,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | InsertRegister => [
         Actions.Registers(Feature_Registers.Msg.keyPressed(k)),
       ]
+    | LicenseKey => [
+        Actions.Registration(Feature_Registration.KeyPressed(k)),
+      ]
     | LanguageSupport => [
         Actions.LanguageSupport(Feature_LanguageSupport.Msg.keyPressed(k)),
       ]
@@ -102,10 +104,13 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           Actions.LanguageSupport(
             Feature_LanguageSupport.Msg.pasted(firstLine),
           )
+        | LicenseKey =>
+          Actions.Registration(Feature_Registration.Pasted(firstLine))
+        | Terminal(id) =>
+          Actions.Terminal(Feature_Terminal.Pasted({id, text: rawText}))
 
         // No paste handling in these UIs, currently...
         | Pane => Actions.Noop
-        | Terminal(_) => Actions.Noop
         | InsertRegister
         | Sneak
         | FileExplorer
@@ -121,74 +126,41 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
   let effectToActions = (state, effect) =>
     switch (effect) {
-    | Keybindings.Execute(command) => [
+    | Feature_Input.(Execute(VimExCommand(command))) => [
+        Actions.VimExecuteCommand({allowAnimation: true, command}),
+      ]
+    | Feature_Input.(Execute(NamedCommand(command))) => [
         Actions.KeybindingInvoked({command: command}),
       ]
-    | Keybindings.Text(text) => handleTextEffect(~isText=true, state, text)
-    | Keybindings.Unhandled(key) =>
+    | Feature_Input.Text(text) => handleTextEffect(~isText=true, state, text)
+    | Feature_Input.Unhandled({key, isProducedByRemap}) =>
       let isTextInputActive = isTextInputActive();
-      let maybeKeyString = Handler.keyPressToCommand(~isTextInputActive, key);
+
+      let maybeKeyString =
+        key
+        |> EditorInput.KeyCandidate.toList
+        |> (
+          list =>
+            List.nth_opt(list, 0)
+            |> OptionEx.flatMap(
+                 Handler.keyPressToCommand(
+                   ~force=isProducedByRemap,
+                   ~isTextInputActive,
+                 ),
+               )
+        );
       switch (maybeKeyString) {
       | None => []
       | Some(k) => handleTextEffect(~isText=false, state, k)
       };
 
     // TODO: Show a notification that recursion limit was hit
-    | Keybindings.RemapRecursionLimitHit => []
+    | Feature_Input.RemapRecursionLimitHit => []
     };
 
-  let reveryKeyToEditorKey =
-      ({keycode, scancode, keymod, repeat}: Revery.Key.KeyEvent.t) => {
-    // TODO: Should we filter out repeat keys from key binding processing?
-    ignore(repeat);
-
-    let name = Sdl2.Scancode.ofInt(scancode) |> Sdl2.Scancode.getName;
-
-    if (name == "Left Shift" || name == "Right Shift") {
-      None;
-    } else {
-      let shift = Revery.Key.Keymod.isShiftDown(keymod);
-      let control = Revery.Key.Keymod.isControlDown(keymod);
-      let alt = Revery.Key.Keymod.isAltDown(keymod);
-      let meta = Revery.Key.Keymod.isGuiDown(keymod);
-      let altGr = Revery.Key.Keymod.isAltGrKeyDown(keymod);
-
-      let (altGr, control, alt) =
-        switch (Revery.Environment.os) {
-        // On Windows, we need to do some special handling here
-        // Windows has this funky behavior where pressing AltGr registers as RAlt+LControl down - more info here:
-        // https://devblogs.microsoft.com/oldnewthing/?p=40003
-        | Revery.Environment.Windows =>
-          let altGr =
-            altGr
-            || Revery.Key.Keymod.isRightAltDown(keymod)
-            && Revery.Key.Keymod.isControlDown(keymod);
-          // If altGr is active, disregard control / alt key
-          let ctrlKey = altGr ? false : control;
-          let altKey = altGr ? false : alt;
-          (altGr, ctrlKey, altKey);
-        | _ => (altGr, control, alt)
-        };
-
-      Some(
-        EditorInput.KeyPress.{
-          scancode,
-          keycode,
-          modifiers: {
-            shift,
-            control,
-            alt,
-            meta,
-            altGr,
-          },
-        },
-      );
-    };
+  let reveryKeyToEditorKey = keyEvent => {
+    keyEvent |> Feature_Input.ReveryKeyConverter.reveryKeyToKeyPress;
   };
-
-  let keyCodeToString = Sdl2.Keycode.getName;
-
-  let keyPressToString = EditorInput.KeyPress.toString(~keyCodeToString);
 
   /**
      The key handlers return (keyPressedString, shouldOniListen)
@@ -196,13 +168,21 @@ let start = (window: option(Revery.Window.t), runEffects) => {
      /respond to commands otherwise if input is alphabetical AND
      a revery element is focused oni2 should defer to revery
    */
-  let handleKeyPress = (state: State.t, key) => {
+  let handleKeyPress = (~scancode, state: State.t, time, key) => {
     let context = Model.ContextKeys.all(state);
 
-    let (keyBindings, effects) =
-      Keybindings.keyDown(~context, ~key, state.keyBindings);
+    let config = Model.Selectors.configResolver(state);
+    let (input, effects) =
+      Feature_Input.keyDown(
+        ~config,
+        ~context,
+        ~scancode,
+        ~key,
+        ~time,
+        state.input,
+      );
 
-    let newState = {...state, keyBindings};
+    let newState = {...state, input};
 
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
@@ -210,25 +190,25 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     updateFromInput(newState, /*Some(keyPressToString(key)),*/ actions);
   };
 
-  let handleTextInput = (state: State.t, text) => {
-    let (keyBindings, effects) = Keybindings.text(~text, state.keyBindings);
+  let handleTextInput = (state: State.t, time, text) => {
+    let (input, effects) = Feature_Input.text(~text, ~time, state.input);
 
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
 
-    let newState = {...state, keyBindings};
+    let newState = {...state, input};
 
     updateFromInput(newState, /*Some("Text: " ++ text),*/ actions);
   };
 
-  let handleKeyUp = (state: State.t, key) => {
+  let handleKeyUp = (~scancode, state: State.t) => {
     let context = Model.ContextKeys.all(state);
 
-    //let inputKey = reveryKeyToEditorKey(key);
-    let (keyBindings, effects) =
-      Keybindings.keyUp(~context, ~key, state.keyBindings);
+    let config = Model.Selectors.configResolver(state);
+    let (input, effects) =
+      Feature_Input.keyUp(~config, ~scancode, ~context, state.input);
 
-    let newState = {...state, keyBindings};
+    let newState = {...state, input};
 
     let actions =
       effects |> List.map(effectToActions(state)) |> List.flatten;
@@ -237,34 +217,14 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   };
 
   // TODO: This should be moved to a Feature_Keybindings project
-  // (Including the KeyDisplayer too!)
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | KeyDown(event, time) =>
-      let keyDisplayer =
-        state.keyDisplayer
-        |> Option.map(keyDisplayer =>
-             Oni_Components.KeyDisplayer.keyPress(
-               ~time=Revery.Time.toFloatSeconds(time),
-               keyPressToString(event),
-               keyDisplayer,
-             )
-           );
+    | KeyDown({key, scancode, time}) =>
+      handleKeyPress(~scancode, state, time, key)
 
-      handleKeyPress({...state, keyDisplayer}, event);
-    | KeyUp(event, _time) => handleKeyUp(state, event)
-    | TextInput(text, time) =>
-      let keyDisplayer =
-        state.keyDisplayer
-        |> Option.map(keyDisplayer =>
-             Oni_Components.KeyDisplayer.textInput(
-               ~time=Revery.Time.toFloatSeconds(time),
-               text,
-               keyDisplayer,
-             )
-           );
+    | KeyUp({scancode, _}) => handleKeyUp(~scancode, state)
 
-      handleTextInput({...state, keyDisplayer}, text);
+    | TextInput(text, time) => handleTextInput(state, time, text)
 
     | Pasted({rawText, isMultiLine, lines}) => (
         state,
@@ -287,7 +247,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           let time = Revery.Time.now();
           event
           |> reveryKeyToEditorKey
-          |> Option.iter(key => {dispatch(Actions.KeyDown(key, time))});
+          |> Option.iter(key => {
+               dispatch(
+                 Actions.KeyDown({key, time, scancode: event.scancode}),
+               )
+             });
         },
       );
 
@@ -296,9 +260,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
-          event
-          |> reveryKeyToEditorKey
-          |> Option.iter(key => {dispatch(Actions.KeyUp(key, time))});
+          dispatch(Actions.KeyUp({time, scancode: event.scancode}));
         },
       );
 

@@ -67,6 +67,11 @@ describe("WorkspaceTest", ({test, _}) => {
     Test.startWithExtensions(["oni-workspace"])
     |> Test.waitForExtensionActivation("oni-workspace")
     |> Test.withClient(
+         Request.Workspace.acceptWorkspaceData(
+           ~workspace=Some(Exthost.WorkspaceData.fromPath(Sys.getcwd())),
+         ),
+       )
+    |> Test.withClient(
          Request.Commands.executeContributedCommand(
            ~arguments=[],
            ~command="workspace.showActive",

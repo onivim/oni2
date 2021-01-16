@@ -32,8 +32,11 @@ let simpleState = {
       ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
       ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
       ~contributedCommands=[],
+      ~maybeWorkspace=None,
       ~workingDirectory=Sys.getcwd(),
       ~extensionsFolder=None,
+      ~licenseKeyPersistence=None,
+      ~titlebarHeight=0.,
     );
 
   Reducer.reduce(
@@ -45,12 +48,14 @@ let simpleState = {
 let defaultFont: Service_Font.font = {
   let fontFamily = Revery.Font.Family.fromFile("JetBrainsMono-Regular.ttf");
   let fontSize = 10.;
+  let fontWeight = Revery.Font.Weight.Normal;
   let smoothing = Revery.Font.Smoothing.default;
   let features = [];
 
   {
     fontFamily,
     fontSize,
+    fontWeight,
     spaceWidth: 10.,
     underscoreWidth: 10.,
     avgCharWidth: 10.,
@@ -63,6 +68,7 @@ let defaultFont: Service_Font.font = {
       FontMeasurementCache.create(
         ~fontFamily,
         ~fontSize,
+        ~fontWeight,
         ~smoothing,
         ~features,
       ),
@@ -84,7 +90,7 @@ let defaultEditorBuffer =
   defaultBuffer |> Feature_Editor.EditorBuffer.ofBuffer;
 
 let simpleEditor =
-  Editor.create(~config, ~buffer=defaultEditorBuffer, ())
+  Editor.create(~config, ~buffer=defaultEditorBuffer, ~preview=false, ())
   |> Editor.setSize(~pixelWidth=3440, ~pixelHeight=1440);
 
 let createUpdateAction = (oldBuffer: Buffer.t, update: BufferUpdate.t) => {

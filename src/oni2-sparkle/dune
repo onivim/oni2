@@ -6,7 +6,7 @@
   (pps ppx_optcomp))
  (foreign_stubs
   (language c)
-  (names utils sparkle)
+  (names utils sparkle winsparkle)
   (flags
    (:include c_flags.sexp)))
  (library_flags

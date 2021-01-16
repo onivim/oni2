@@ -3,9 +3,9 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 
 // Validate that textmate highlight runs
-runTest(~name="SyntaxHighlightTextMateTest", (dispatch, wait, _runEffects) => {
+runTest(~name="SyntaxHighlightTextMateTest", ({dispatch, wait, _}) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Vim.mode(state.vim) |> Vim.Mode.isNormal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
   wait(~name="Wait for syntax server", ~timeout=10.0, (state: State.t) => {
     Feature_Syntax.isSyntaxServerRunning(state.syntaxHighlights)

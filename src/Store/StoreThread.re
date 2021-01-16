@@ -73,6 +73,7 @@ let registerCommands = (~dispatch, commands) => {
 
 let start =
     (
+      ~showUpdateChangelog=true,
       ~getUserSettings,
       ~configurationFilePath=None,
       ~keybindingsFilePath=None,
@@ -123,6 +124,7 @@ let start =
   let commandUpdater = CommandStoreConnector.start();
   let (vimUpdater, vimStream) =
     VimStoreConnector.start(
+      ~showUpdateChangelog,
       languageInfo,
       getState,
       getClipboardText,
@@ -141,8 +143,13 @@ let start =
       }
     );
 
+  let initialWorkspace =
+    Feature_Workspace.openedFolder(initialState.workspace)
+    |> Option.map(Exthost.WorkspaceData.fromPath);
+
   let (extHostClientResult, extHostStream) =
     ExtensionClient.create(
+      ~initialWorkspace,
       ~attachStdio,
       ~config=getState().config,
       ~extensions,
@@ -200,10 +207,28 @@ let start =
 
   let subscriptions = (state: Model.State.t) => {
     let config = Model.Selectors.configResolver(state);
+    let contextKeys = Model.ContextKeys.all(state);
+    let commands = Model.CommandManager.current(state);
+
+    let menuBarSub =
+      Feature_MenuBar.sub(
+        ~config,
+        ~contextKeys,
+        ~commands,
+        ~input=state.input,
+        state.menuBar,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.MenuBar(msg));
+
     let visibleBuffersAndRanges =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
+    let activeEditor = state.layout |> Feature_Layout.activeEditor;
 
-    let isInsertMode = Vim.Mode.isInsert(Feature_Vim.mode(state.vim));
+    let isInsertMode =
+      activeEditor |> Feature_Editor.Editor.mode |> Vim.Mode.isInsert;
+
+    let isAnimatingScroll =
+      activeEditor |> Feature_Editor.Editor.isAnimatingScroll;
 
     let visibleRanges =
       visibleBuffersAndRanges
@@ -212,6 +237,12 @@ let start =
            |> Option.map(buffer => {(buffer, ranges)})
          })
       |> Core.Utility.OptionEx.values;
+
+    let topVisibleBufferLine =
+      activeEditor |> Feature_Editor.Editor.getTopVisibleBufferLine;
+
+    let bottomVisibleBufferLine =
+      activeEditor |> Feature_Editor.Editor.getBottomVisibleBufferLine;
 
     let visibleBuffers =
       visibleBuffersAndRanges
@@ -236,7 +267,10 @@ let start =
 
     let terminalSubscription =
       Feature_Terminal.subscription(
-        ~workspaceUri=Core.Uri.fromPath(state.workspace.workingDirectory),
+        ~workspaceUri=
+          Core.Uri.fromPath(
+            Feature_Workspace.workingDirectory(state.workspace),
+          ),
         extHostClient,
         state.terminals,
       )
@@ -244,6 +278,7 @@ let start =
 
     let fontFamily = Feature_Editor.Configuration.fontFamily.get(config);
     let fontSize = Feature_Editor.Configuration.fontSize.get(config);
+    let fontWeight = Feature_Editor.Configuration.fontWeight.get(config);
 
     let fontLigatures =
       Oni_Core.Configuration.getValue(
@@ -262,6 +297,7 @@ let start =
         ~uniqueId="editorFont",
         ~fontFamily,
         ~fontSize,
+        ~fontWeight,
         ~fontSmoothing,
         ~fontLigatures,
       )
@@ -282,11 +318,19 @@ let start =
         c => c.terminalIntegratedFontSmoothing,
         state.configuration,
       );
+
+    let terminalFontWeight =
+      Oni_Core.Configuration.getValue(
+        c => c.terminalIntegratedFontWeight,
+        state.configuration,
+      );
+
     let terminalFontSubscription =
       Service_Font.Sub.font(
         ~uniqueId="terminalFont",
         ~fontFamily=terminalFontFamily,
         ~fontSize=terminalFontSize,
+        ~fontWeight=terminalFontWeight,
         ~fontSmoothing=terminalFontSmoothing,
         ~fontLigatures,
       )
@@ -333,8 +377,11 @@ let start =
            Feature_LanguageSupport.sub(
              ~config,
              ~isInsertMode,
+             ~isAnimatingScroll,
              ~activeBuffer,
              ~activePosition,
+             ~topVisibleBufferLine,
+             ~bottomVisibleBufferLine,
              ~visibleBuffers,
              ~client=extHostClient,
              state.languageSupport,
@@ -343,8 +390,15 @@ let start =
          })
       |> Option.value(~default=Isolinear.Sub.none);
 
+    let isSideBarOpen = Feature_SideBar.isOpen(state.sideBar);
+    let isExtensionsFocused =
+      Feature_SideBar.selected(state.sideBar) == Feature_SideBar.Extensions;
     let extensionsSub =
-      Feature_Extensions.sub(~setup, state.extensions)
+      Feature_Extensions.sub(
+        ~isVisible=isSideBarOpen && isExtensionsFocused,
+        ~setup,
+        state.extensions,
+      )
       |> Isolinear.Sub.map(msg => Model.Actions.Extensions(msg));
 
     let registersSub =
@@ -382,7 +436,19 @@ let start =
               )
          )
       |> Isolinear.Sub.batch;
+
+    let inputSubscription =
+      state.input
+      |> Feature_Input.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Input(msg));
+
+    let notificationSub =
+      state.notifications
+      |> Feature_Notification.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Notification(msg));
+
     [
+      menuBarSub,
       extHostSubscription,
       languageSupportSub,
       syntaxSubscription,
@@ -397,6 +463,8 @@ let start =
       scmSub,
       autoUpdateSub,
       visibleEditorsSubscription,
+      inputSubscription,
+      notificationSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -463,8 +531,6 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Sneak(msg))),
     Feature_Layout.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Layout(msg))),
-    Feature_SignatureHelp.Contributions.commands
-    |> List.map(Core.Command.map(msg => Model.Actions.SignatureHelp(msg))),
     Feature_Theme.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Theme(msg))),
     Feature_Clipboard.Contributions.commands
@@ -477,6 +543,8 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.Input(msg))),
     Feature_AutoUpdate.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.AutoUpdate(msg))),
+    Feature_Registration.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Registration(msg))),
   ]
   |> List.flatten
   |> registerCommands(~dispatch);

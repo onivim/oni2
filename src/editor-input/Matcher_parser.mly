@@ -1,5 +1,5 @@
 %token <Matcher_internal.modifier> MODIFIER
-%token <Key.t> BINDING
+%token <Matcher_internal.keyPress> BINDING
 %token ALLKEYSRELEASED
 %token LT GT
 %token EOF
@@ -11,7 +11,7 @@
 %%
 
 main:
-| ALLKEYSRELEASED { Matcher_internal.AllKeysReleased }
+| LT ALLKEYSRELEASED GT { Matcher_internal.AllKeysReleased }
 | phrase = list(expr) EOF { Matcher_internal.Sequence(phrase) }
 
 keys:

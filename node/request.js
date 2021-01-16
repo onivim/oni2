@@ -1,5 +1,5 @@
-const http = require("http")
-const https = require("https")
+const http = require("follow-redirects").http
+const https = require("follow-redirects").https
 
 const url = new URL(process.argv[2])
 

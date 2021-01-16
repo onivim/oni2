@@ -11,7 +11,7 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 module Editor = Feature_Editor.Editor;
 
-runTest(~name="RegressionVspEmpty", (_, wait, _) => {
+runTest(~name="RegressionVspEmpty", ({wait, _}) => {
   wait(~name="Wait for split to be created 1", (state: State.t) => {
     let splitCount =
       state.layout |> Feature_Layout.visibleEditors |> List.length;

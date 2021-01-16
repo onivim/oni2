@@ -8,6 +8,7 @@ module AutoIndent = AutoIndent;
 module Buffer = Buffer;
 module BufferMetadata = BufferMetadata;
 module BufferUpdate = BufferUpdate;
+module Clear = Clear;
 module Clipboard = Clipboard;
 module ColorScheme = ColorScheme;
 module CommandLine = CommandLine;
@@ -17,11 +18,15 @@ module Edit = Edit;
 module Effect = Effect;
 module Event = Event;
 module Format = Format;
+module Functions = Functions;
 module Goto = Goto;
+module Mapping = Mapping;
 module Operator = Operator;
 module Scroll = Scroll;
+module Split = Split;
 module TabPage = TabPage;
 module Mode = Mode;
+module SubMode = SubMode;
 module Options = Options;
 module Search = Search;
 module Setting = Setting;
@@ -172,8 +177,7 @@ let runWith = (~context: Context.t, f) => {
   let prevModified = Buffer.isModified(oldBuf);
   let prevLineEndings = Buffer.getLineEndings(oldBuf);
 
-  GlobalState.autoIndent := Some(context.autoIndent);
-  GlobalState.colorSchemeProvider := context.colorSchemeProvider;
+  GlobalState.context := Some(context);
   GlobalState.viewLineMotion := Some(context.viewLineMotion);
   GlobalState.screenPositionMotion := Some(context.screenCursorMotion);
   GlobalState.effects := [];
@@ -182,8 +186,7 @@ let runWith = (~context: Context.t, f) => {
 
   let mode = f();
 
-  GlobalState.autoIndent := None;
-  GlobalState.colorSchemeProvider := ColorScheme.Provider.default;
+  GlobalState.context := None;
   GlobalState.viewLineMotion := None;
   GlobalState.screenPositionMotion := None;
   GlobalState.toggleComments := None;
@@ -203,10 +206,8 @@ let runWith = (~context: Context.t, f) => {
 
   BufferInternal.checkCurrentBufferForUpdate();
 
-  if (mode != prevMode) {
-    Event.dispatch(Effect.ModeChanged(mode), Listeners.effect);
-
-    if (mode == CommandLine) {
+  if (newMode != prevMode) {
+    if (newMode == CommandLine) {
       Event.dispatch(
         CommandLineInternal.getState(),
         Listeners.commandLineEnter,
@@ -288,11 +289,7 @@ let _onWindowMovement = (mt, c) => {
 };
 
 let _onWindowSplit = (st, p) => {
-  queue(() => Event.dispatch2(st, p, Listeners.windowSplit));
-};
-
-let _onWindowSplit = (st, p) => {
-  queue(() => Event.dispatch2(st, p, Listeners.windowSplit));
+  queueEffect(Effect.WindowSplit(Split.ofNative(st, p)));
 };
 
 let _onYank =
@@ -372,7 +369,8 @@ let _onAutoIndent = (lnum: int, sourceLine: string) => {
     };
 
   let indentAction =
-    GlobalState.autoIndent^
+    GlobalState.context^
+    |> Option.map(({autoIndent, _}: Context.t) => autoIndent)
     |> Option.map(fn => fn(~previousLine=beforeLine, ~beforePreviousLine))
     |> Option.value(~default=AutoIndent.KeepIndent);
 
@@ -439,7 +437,15 @@ let _onCursorMoveScreenPosition =
 };
 
 let _onGoto = (_line: int, _column: int, gotoType: Goto.effect) => {
-  queue(() => Event.dispatch(Effect.Goto(gotoType), Listeners.effect));
+  queueEffect(Effect.Goto(gotoType));
+};
+
+let _onOutput = (cmd, output) => {
+  queueEffect(Effect.Output({cmd, output}));
+};
+
+let _onClear = (target: Clear.target, count: int) => {
+  queueEffect(Effect.Clear(Clear.{target, count}));
 };
 
 let _onTabPage = (msg: TabPage.effect) => {
@@ -471,7 +477,11 @@ let _onColorSchemeChanged = (maybeScheme: option(string)) => {
 };
 
 let _colorSchemesGet = pattern => {
-  GlobalState.colorSchemeProvider^(pattern);
+  GlobalState.context^
+  |> Option.map(({colorSchemeProvider, _}: Context.t) =>
+       colorSchemeProvider(pattern)
+     )
+  |> Option.value(~default=[||]);
 };
 
 let _onMacroStartRecording = (register: char) => {
@@ -492,6 +502,14 @@ let _onMacroStopRecording = (register: char, value: option(string)) => {
   });
 };
 
+let _onInputMap = (mapping: Mapping.t) => {
+  queueEffect(Map(mapping));
+};
+
+let _onInputUnmap = (mode: Mapping.mode, keys: option(string)) => {
+  queueEffect(Unmap({mode, keys}));
+};
+
 let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
   let count = endLine - startLine + 1;
   let currentLines =
@@ -504,6 +522,7 @@ let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
   |> Option.value(~default=currentLines);
 };
 
+<<<<<<< HEAD
 let _onCursorAdd = (oneBasedLine: int, column: int) => {
   GlobalState.additionalCursors :=
     [
@@ -514,6 +533,23 @@ let _onCursorAdd = (oneBasedLine: int, column: int) => {
       ...GlobalState.additionalCursors^,
     ];
   Printf.sprintf("_onCursorAdd: %d %d", oneBasedLine, column) |> prerr_endline;
+=======
+let _onGetChar = mode => {
+  let mode' =
+    switch (mode) {
+    | 0 => Functions.GetChar.Immediate
+    | 1 => Functions.GetChar.Peek
+    | _ => Functions.GetChar.Wait
+    };
+
+  let c =
+    GlobalState.context^
+    |> Option.map(({functionGetChar, _}: Context.t) =>
+         functionGetChar(mode')
+       )
+    |> Option.value(~default=char_of_int(0));
+  (int_of_char(c), 0);
+>>>>>>> master
 };
 
 let init = () => {
@@ -521,6 +557,7 @@ let init = () => {
   Callback.register("lv_onBufferChanged", _onBufferChanged);
   Callback.register("lv_onAutocommand", _onAutocommand);
   Callback.register("lv_onAutoIndent", _onAutoIndent);
+  Callback.register("lv_onClear", _onClear);
   Callback.register("lv_getColorSchemesCallback", _colorSchemesGet);
   Callback.register("lv_onColorSchemeChanged", _onColorSchemeChanged);
   Callback.register("lv_onDirectoryChanged", _onDirectoryChanged);
@@ -547,12 +584,18 @@ let init = () => {
     "lv_onCursorMoveScreenPosition",
     _onCursorMoveScreenPosition,
   );
+  Callback.register("lv_onInputMap", _onInputMap);
+  Callback.register("lv_onInputUnmap", _onInputUnmap);
   Callback.register("lv_onToggleComments", _onToggleComments);
+<<<<<<< HEAD
   Callback.register("lv_onCursorAdd", _onCursorAdd);
+=======
+  Callback.register("lv_onGetChar", _onGetChar);
+  Callback.register("lv_onOutput", _onOutput);
+>>>>>>> master
 
   Native.vimInit();
 
-  Event.dispatch(Effect.ModeChanged(Mode.current()), Listeners.effect);
   BufferInternal.checkCurrentBufferForUpdate();
 };
 
@@ -685,7 +728,7 @@ let command = (~context=Context.current(), v) => {
   );
 };
 
-let eval = v =>
+let eval = (~context=Context.current(), v) =>
   // Error messages come through the message handler,
   // so we'll temporarily override it during the course of the eval
   if (v == "") {
@@ -695,9 +738,9 @@ let eval = v =>
 
     GlobalState.overriddenMessageHandler :=
       Some((_priority, _title, msg) => {lastMessage := Some(msg)});
-
+    GlobalState.context := Some(context);
     let maybeEval = Native.vimEval(v);
-
+    GlobalState.context := None;
     GlobalState.overriddenMessageHandler := None;
 
     switch (maybeEval, lastMessage^) {

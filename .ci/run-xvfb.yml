@@ -1,0 +1,6 @@
+steps:
+  - script: Xvfb :99 &
+    displayName: Start Xvfb server
+
+  - script: sleep 3
+    displayName: Wait for server to start

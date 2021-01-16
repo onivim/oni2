@@ -31,15 +31,36 @@ module Msg: {
   };
 };
 
+module CodeLens: {
+  type t = Exthost.CodeLens.t;
+
+  let lineNumber: t => int;
+  let text: t => string;
+
+  module View: {
+    let make:
+      (
+        ~leftMargin: int,
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~uiFont: UiFont.t,
+        ~codeLens: t,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
+
 type outmsg =
   | Nothing
   | ApplyCompletion({
       meetColumn: CharacterIndex.t,
       insertText: string,
+      additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | InsertSnippet({
       meetColumn: CharacterIndex.t,
       snippet: string,
+      additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | OpenFile({
       filePath: string,
@@ -48,7 +69,14 @@ type outmsg =
   | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | CodeLensesChanged({
+      handle: int,
+      bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
+      lenses: list(CodeLens.t),
+    });
 
 let update:
   (
@@ -76,10 +104,26 @@ let bufferUpdated:
     model
   ) =>
   model;
+
+let configurationChanged: (~config: Config.resolver, model) => model;
+
 let cursorMoved:
-  (~previous: CharacterPosition.t, ~current: CharacterPosition.t, model) =>
+  (
+    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~previous: CharacterPosition.t,
+    ~current: CharacterPosition.t,
+    model
+  ) =>
   model;
-let startInsertMode: model => model;
+
+let startInsertMode:
+  (
+    ~config: Oni_Core.Config.resolver,
+    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    model
+  ) =>
+  model;
+
 let stopInsertMode: model => model;
 let isFocused: model => bool;
 
@@ -87,33 +131,16 @@ let sub:
   (
     ~config: Oni_Core.Config.resolver,
     ~isInsertMode: bool,
+    ~isAnimatingScroll: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
     ~activePosition: CharacterPosition.t,
+    ~topVisibleBufferLine: EditorCoreTypes.LineNumber.t,
+    ~bottomVisibleBufferLine: EditorCoreTypes.LineNumber.t,
     ~visibleBuffers: list(Oni_Core.Buffer.t),
     ~client: Exthost.Client.t,
     model
   ) =>
   Isolinear.Sub.t(msg);
-
-module CodeLens: {
-  type t;
-
-  let get: (~bufferId: int, model) => list(t);
-
-  let lineNumber: t => int;
-  let uniqueId: t => string;
-
-  module View: {
-    let make:
-      (
-        ~theme: Oni_Core.ColorTheme.Colors.t,
-        ~uiFont: UiFont.t,
-        ~codeLens: t,
-        unit
-      ) =>
-      Revery.UI.element;
-  };
-};
 
 module Completion: {
   let isActive: model => bool;
@@ -131,6 +158,29 @@ module Completion: {
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~editorFont: Service_Font.font,
+        ~model: model,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
+
+module SignatureHelp: {
+  let isActive: model => bool;
+
+  module View: {
+    let make:
+      (
+        ~x: int,
+        ~y: int,
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~tokenTheme: Oni_Syntax.TokenTheme.t,
+        ~editorFont: Service_Font.font,
+        ~uiFont: Oni_Core.UiFont.t,
+        ~languageInfo: Exthost.LanguageInfo.t,
+        ~buffer: Oni_Core.Buffer.t,
+        ~grammars: Oni_Syntax.GrammarRepository.t,
+        ~dispatch: msg => unit,
         ~model: model,
         unit
       ) =>
@@ -177,7 +227,7 @@ module Contributions: {
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
   let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
-  let keybindings: list(Oni_Input.Keybindings.keybinding);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };
 
 module Definition: {

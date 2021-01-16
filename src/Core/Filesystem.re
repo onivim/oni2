@@ -18,7 +18,7 @@ module Internal = {
   let getUserDataDirectoryExn = () =>
     Revery.(
       switch (Environment.os) {
-      | Environment.Windows =>
+      | Environment.Windows(_) =>
         Sys.getenv_opt("LOCALAPPDATA")
         |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
         |> Option.get
@@ -116,7 +116,7 @@ let mkdirp = path => {
 let getOniDirectory = dataDirectory =>
   Revery.(
     switch (Environment.os) {
-    | Environment.Windows => Fp.append(dataDirectory, "Oni2") |> return
+    | Environment.Windows(_) => Fp.append(dataDirectory, "Oni2") |> return
     | _ => Fp.At.(dataDirectory / ".config" / "oni2") |> return
     }
   );

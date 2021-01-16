@@ -2,9 +2,21 @@
 
 steps:
   - script: esy install
-    displayName: 'Install Dependencies: esy install'
+    displayName: 'Install Dependencies: esy install (attempt 1)'
+    continueOnError: true
+  - script: esy install
+    displayName: 'Install Dependencies: esy install (attempt 2)'
+    continueOnError: true
+  - script: esy install
+    displayName: 'Install Dependencies: esy install (final)'
   - script: esy bootstrap
-    displayName: 'Bootstrap Oni2 setup with system specific build variables'
+    displayName: 'Bootstrap Oni2 setup with system specific build variables (attempt 1)'
+    continueOnError: true
+  - script: esy bootstrap
+    displayName: 'Bootstrap Oni2 setup with system specific build variables (attempt 2)'
+    continueOnError: true
+  - script: esy bootstrap
+    displayName: 'Bootstrap Oni2 setup with system specific build variables (final)'
   - script: esy build
     displayName: 'Build: esy build'
   - script: esy build dune build @check
@@ -13,15 +25,14 @@ steps:
     displayName: "esy x Oni2 --help"
   - script: esy x Oni2 -f --version
     displayName: "esy x Oni2_editor -f --version"
-  - script: esy x Oni2 -f --checkhealth 
-    displayName: "esy x Oni2 -f --checkhealth"
+  - script: esy x Oni2 -f --silent --checkhealth 
+    displayName: "esy x Oni2 -f --silent --checkhealth"
   - script: 'esy @release install'
     displayName: 'Release: install'
   - script: 'esy @release build'
     displayName: 'esy @release build'
-  - script: 'esy @release run -f --version'
-    displayName: 'esy @release run -f --version'
-    continueOnError: true
+  - script: 'esy @release run -f --help'
+    displayName: 'esy @release run -f --help'
   - script: esy @release create --codesign
     displayName: "esy @release create --codesign"
   - script: esy build-env

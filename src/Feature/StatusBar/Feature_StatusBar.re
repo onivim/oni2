@@ -12,6 +12,7 @@ module Item = {
     label: Exthost.Label.t,
     alignment: Exthost.Msg.StatusBar.alignment,
     color: option(Exthost.Color.t),
+    backgroundColor: option(Exthost.Color.t),
     command: option(string),
     tooltip: option(string),
   };
@@ -19,6 +20,7 @@ module Item = {
   let create =
       (
         ~color=?,
+        ~backgroundColor=?,
         ~command=?,
         ~tooltip=?,
         ~id,
@@ -29,6 +31,7 @@ module Item = {
       ) => {
     id,
     color,
+    backgroundColor,
     priority,
     label,
     alignment,
@@ -40,14 +43,17 @@ module Item = {
 // MSG
 
 [@deriving show]
+type contextMenuMsg =
+  | ClearAll
+  | Open;
+
+[@deriving show]
 type msg =
   | ItemAdded(Item.t)
   | ItemDisposed(string)
   | DiagnosticsClicked
   | FileTypeClicked
-  | ContextMenuClosed
-  | ContextMenuNotificationClearAllClicked
-  | ContextMenuNotificationOpenClicked
+  | ContextMenu(Component_ContextMenu.msg(contextMenuMsg))
   | NotificationCountClicked
   | NotificationsCountRightClicked
   | ContributedItemClicked({command: string});
@@ -61,12 +67,28 @@ type outmsg =
   | ShowFileTypePicker
   | Effect(Isolinear.Effect.t(msg));
 
+let notificationContextMenu =
+  Component_ContextMenu.make([
+    Item({
+      label: "Clear All",
+      // icon: None,
+      data: ClearAll,
+      details: Revery.UI.React.empty,
+    }),
+    Item({
+      label: "Open",
+      // icon: None,
+      data: Open,
+      details: Revery.UI.React.empty,
+    }),
+  ]);
+
 type model = {
   items: list(Item.t),
-  contextMenuVisible: bool,
+  contextMenu: option(Component_ContextMenu.model(contextMenuMsg)),
 };
 
-let initial = {items: [], contextMenuVisible: false};
+let initial = {items: [], contextMenu: None};
 
 // UPDATE
 
@@ -86,21 +108,33 @@ let update = (~client, model, msg) => {
     )
 
   | NotificationsCountRightClicked => (
-      {...model, contextMenuVisible: true},
+      {...model, contextMenu: Some(notificationContextMenu)},
       Nothing,
     )
 
-  | ContextMenuNotificationClearAllClicked => (
-      {...model, contextMenuVisible: false},
-      Nothing,
-    )
+  | ContextMenu(msg) =>
+    model.contextMenu
+    |> Option.map(contextMenu => {
+         let (contextMenu', outmsg) =
+           contextMenu |> Component_ContextMenu.update(msg);
 
-  | ContextMenuNotificationOpenClicked => (
-      {...model, contextMenuVisible: false},
-      ToggleNotifications,
-    )
-
-  | ContextMenuClosed => ({...model, contextMenuVisible: false}, Nothing)
+         switch (outmsg) {
+         | Component_ContextMenu.Nothing => (
+             {...model, contextMenu: Some(contextMenu')},
+             Nothing,
+           )
+         | Component_ContextMenu.Selected({data}) =>
+           switch (data) {
+           | ClearAll => ({...model, contextMenu: None}, ClearNotifications)
+           | Open => ({...model, contextMenu: None}, ToggleNotifications)
+           }
+         | Component_ContextMenu.Cancelled => (
+             {...model, contextMenu: None},
+             Nothing,
+           )
+         };
+       })
+    |> Option.value(~default=(model, Nothing))
 
   | FileTypeClicked => (model, ShowFileTypePicker)
 
@@ -128,8 +162,7 @@ open Revery;
 open Revery.UI;
 open Revery.UI.Components;
 module Animation = Revery.UI.Animation;
-module ContextMenu = Oni_Components.ContextMenu;
-module CustomHooks = Oni_Components.CustomHooks;
+module ContextMenu = Component_ContextMenu;
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
 module Label = Oni_Components.Label;
@@ -202,6 +235,7 @@ let section = (~children=React.empty, ~align, ()) =>
 
 let item =
     (
+      ~key=?,
       ~children,
       ~backgroundColor=Revery.Colors.transparentWhite,
       ~onClick=?,
@@ -212,9 +246,9 @@ let item =
 
   // Avoid cursor turning into pointer if there's no mouse interaction available
   if (onClick == None && onRightClick == None) {
-    <View style> children </View>;
+    <View ?key style> children </View>;
   } else {
-    <Clickable ?onClick ?onRightClick style> children </Clickable>;
+    <Clickable ?key ?onClick ?onRightClick style> children </Clickable>;
   };
 };
 
@@ -233,47 +267,34 @@ let notificationCount =
       ~theme,
       ~font: UiFont.t,
       ~foreground as color,
+      ~maybeContextMenu,
       ~notifications: Feature_Notification.model,
-      ~contextMenuVisible,
       ~dispatch,
       (),
     ) => {
   let text =
-    (notifications :> list(Feature_Notification.notification))
-    |> List.length
-    |> string_of_int;
+    Feature_Notification.all(notifications) |> List.length |> string_of_int;
 
   let onClick = () => dispatch(NotificationCountClicked);
   let onRightClick = () => dispatch(NotificationsCountRightClicked);
 
   let menu = () => {
-    let items =
-      ContextMenu.[
-        {
-          label: "Clear All",
-          // icon: None,
-          data: ContextMenuNotificationClearAllClicked,
-        },
-        {
-          label: "Open",
-          // icon: None,
-          data: ContextMenuNotificationOpenClicked,
-        },
-      ];
-
-    <ContextMenu
-      orientation=(`Top, `Left)
-      offsetX=(-10)
-      items
-      theme
-      font // correct for item padding
-      onCancel={() => dispatch(ContextMenuClosed)}
-      onItemSelect={({data, _}: ContextMenu.item(msg)) => dispatch(data)}
-    />;
+    maybeContextMenu
+    |> Option.map(model => {
+         <Component_ContextMenu.View
+           orientation=(`Top, `Left)
+           offsetX=(-10)
+           theme
+           font
+           dispatch={msg => dispatch(ContextMenu(msg))}
+           model
+         />
+       })
+    |> Option.value(~default=React.empty);
   };
 
   <item onClick onRightClick>
-    {contextMenuVisible ? <menu /> : React.empty}
+    <menu />
     <View
       style=Style.[
         flexDirection(`Row),
@@ -322,27 +343,20 @@ let diagnosticCount = (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => 
 module ModeIndicator = {
   let transitionDuration = Revery.Time.milliseconds(300);
 
-  let%component make = (~font: UiFont.t, ~theme, ~mode, ()) => {
+  let make = (~key=?, ~font: UiFont.t, ~theme, ~mode, ~subMode, ()) => {
     let background = Colors.Oni.backgroundFor(mode).from(theme);
     let foreground = Colors.Oni.foregroundFor(mode).from(theme);
 
-    let%hook background =
-      CustomHooks.colorTransition(
-        ~name="Mode Background Transition",
-        ~duration=transitionDuration,
-        background,
-      );
-    let%hook foreground =
-      CustomHooks.colorTransition(
-        ~name="Mode Foreground Transition",
-        ~duration=transitionDuration,
-        foreground,
-      );
+    let text =
+      switch (subMode) {
+      | Vim.SubMode.InsertLiteral => "Insert Literal"
+      | Vim.SubMode.None => Mode.toString(mode)
+      };
 
-    <item backgroundColor=background>
+    <item ?key backgroundColor=background>
       <Text
         style={Styles.text(~color=foreground)}
-        text={Mode.toString(mode)}
+        text
         fontFamily={font.family}
         fontWeight=Medium
         fontSize=11.
@@ -364,64 +378,37 @@ let indentationToString = (indentation: IndentationSettings.t) => {
 };
 
 module View = {
-  let%component make =
-                (
-                  ~mode,
-                  ~notifications: Feature_Notification.model,
-                  ~recordingMacro: option(char),
-                  ~diagnostics: Diagnostics.model,
-                  ~font: UiFont.t,
-                  ~activeBuffer: option(Oni_Core.Buffer.t),
-                  ~activeEditor: option(Feature_Editor.Editor.t),
-                  ~indentationSettings: IndentationSettings.t,
-                  ~scm: Feature_SCM.model,
-                  ~statusBar: model,
-                  ~theme,
-                  ~dispatch,
-                  ~workingDirectory: string,
-                  (),
-                ) => {
-    let%hook activeNotifications =
-      CustomHooks.useExpiration(
-        ~name="StatusBar Notification Expirer",
-        ~expireAfter=Feature_Notification.View.Popup.Animations.totalDuration,
-        ~equals=(a, b) => Feature_Notification.(a.id == b.id),
-        (notifications :> list(Feature_Notification.notification)),
-      );
-
-    let (background, foreground) =
-      switch (activeNotifications) {
-      | [] =>
-        Colors.StatusBar.(background.from(theme), foreground.from(theme))
-      | [last, ..._] =>
-        Feature_Notification.Colors.(
-          backgroundFor(last).from(theme),
-          foregroundFor(last).from(theme),
-        )
-      };
-
-    let%hook background =
-      CustomHooks.colorTransition(
-        ~name="StatusBar Background Color Transition",
-        ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
-        background,
-      );
-    let%hook foreground =
-      CustomHooks.colorTransition(
-        ~name="StatusBar Foreground Color Transition",
-        ~duration=Feature_Notification.View.Popup.Animations.transitionDuration,
-        foreground,
-      );
-
-    let%hook (yOffset, _animationState, _reset) =
-      Hooks.animation(
-        ~name="StatusBar Transition Animation",
-        transitionAnimation,
-      );
+  let make =
+      (
+        ~key=?,
+        ~mode,
+        ~subMode,
+        ~notifications: Feature_Notification.model,
+        ~recordingMacro: option(char),
+        ~diagnostics: Diagnostics.model,
+        ~font: UiFont.t,
+        ~activeBuffer: option(Oni_Core.Buffer.t),
+        ~activeEditor: option(Feature_Editor.Editor.t),
+        ~indentationSettings: IndentationSettings.t,
+        ~scm: Feature_SCM.model,
+        ~statusBar: model,
+        ~theme,
+        ~dispatch,
+        ~workingDirectory: string,
+        (),
+      ) => {
+    let activeNotifications = Feature_Notification.active(notifications);
+    let background =
+      Feature_Notification.statusBarBackground(~theme, notifications);
+    let foreground =
+      Feature_Notification.statusBarForeground(~theme, notifications);
 
     let defaultForeground = Colors.StatusBar.foreground.from(theme);
 
-    let toStatusBarElement = (~command=?, ~color=?, ~tooltip=?, label) => {
+    let yOffset = 0.;
+
+    let toStatusBarElement =
+        (~command=?, ~color=?, ~backgroundColor=?, ~tooltip=?, label) => {
       let onClick =
         command
         |> Option.map((command, ()) =>
@@ -432,6 +419,11 @@ module View = {
         color
         |> OptionEx.flatMap(Exthost.Color.resolve(theme))
         |> Option.value(~default=defaultForeground);
+
+      let backgroundColor =
+        backgroundColor
+        |> OptionEx.flatMap(Exthost.Color.resolve(theme))
+        |> Option.value(~default=Revery.Colors.transparentWhite);
 
       let children = <Label font color label />;
       let style =
@@ -448,25 +440,33 @@ module View = {
           <Tooltip offsetY=(-25) text=tooltip style> children </Tooltip>
         };
 
-      <item ?onClick> viewOrTooltip </item>;
+      <item ?onClick backgroundColor> viewOrTooltip </item>;
     };
 
     let leftItems =
       statusBar.items
       |> List.filter((item: Item.t) => item.alignment == Left)
-      |> List.map(({command, label, color, tooltip, _}: Item.t) =>
-           toStatusBarElement(~command?, ~color?, ~tooltip?, label)
+      |> List.map(
+           ({command, label, color, tooltip, backgroundColor, _}: Item.t) =>
+           toStatusBarElement(
+             ~command?,
+             ~backgroundColor?,
+             ~color?,
+             ~tooltip?,
+             label,
+           )
          )
       |> React.listToElement;
 
     let scmItems =
       scm
       |> Feature_SCM.statusBarCommands(~workingDirectory)
-      |> List.filter_map((item: Exthost.Command.t) =>
-           item.label
-           |> Option.map(label => {
-                toStatusBarElement(~command=item.id, label)
-              })
+      |> List.map((command: Feature_SCM.command) =>
+           toStatusBarElement(
+             ~command=command.id,
+             ~tooltip=?command.tooltip,
+             command.title |> Exthost.Label.ofString,
+           )
          )
       |> React.listToElement;
 
@@ -560,7 +560,7 @@ module View = {
       |> Option.map(register => <macro register />)
       |> Option.value(~default=React.empty);
 
-    <View style={Styles.view(background, yOffset)}>
+    <View ?key style={Styles.view(background, yOffset)}>
       <section align=`FlexStart>
         <notificationCount
           dispatch
@@ -568,7 +568,7 @@ module View = {
           font
           foreground
           notifications
-          contextMenuVisible={statusBar.contextMenuVisible}
+          maybeContextMenu={statusBar.contextMenu}
         />
       </section>
       <sectionGroup>
@@ -588,7 +588,9 @@ module View = {
         </section>
         <notificationPopups />
       </sectionGroup>
-      <section align=`FlexEnd> <ModeIndicator font theme mode /> </section>
+      <section align=`FlexEnd>
+        <ModeIndicator font theme mode subMode />
+      </section>
     </View>;
   };
 };

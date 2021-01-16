@@ -4,7 +4,7 @@ open WhenExpr;
 module Model = Oni_Model;
 module State = Model.State;
 
-runTest(~name="InputContextKeys", (dispatch, wait, _) => {
+runTest(~name="InputContextKeys", ({dispatch, wait, _}) => {
   // Wait until the extension is activated
   // Give some time for the exthost to start
   wait(
@@ -29,7 +29,7 @@ runTest(~name="InputContextKeys", (dispatch, wait, _) => {
   });
 
   // Create a terminal - verify we have new context keys
-  dispatch(VimExecuteCommand(":term"));
+  dispatch(VimExecuteCommand({allowAnimation: true, command: ":term"}));
 
   wait(
     ~name=
