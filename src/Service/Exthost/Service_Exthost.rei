@@ -33,6 +33,10 @@ module Effects: {
         unit => 'msg
       ) =>
       Isolinear.Effect.t('msg);
+
+    let modelSaved:
+      (~uri: Oni_Core.Uri.t, Exthost.Client.t, unit => 'msg) =>
+      Isolinear.Effect.t('msg);
   };
 
   module FileSystemEventService: {

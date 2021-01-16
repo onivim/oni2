@@ -30,8 +30,8 @@ let toString =
   Printf.sprintf(
     "ColorizedToken - index: %d foreground: %s background: %s scope: %s bold: %b italic: %b",
     index,
-    backgroundColor |> Revery.Color.toString,
     foregroundColor |> Revery.Color.toString,
+    backgroundColor |> Revery.Color.toString,
     syntaxScope |> SyntaxScope.toString,
     bold,
     italic,
