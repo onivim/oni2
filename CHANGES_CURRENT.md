@@ -60,6 +60,7 @@
 - #2997 - Syntax: Fix regression in syntax highlighting for PHP (fixes #2985)
 - #2995 - Extensions: Fix bug with 3-param http/https request (fixes #2981)
 - #2999 - Extensions: Elm - fix bug with diagnostics not displaying (fixes #2640)
+- #3000 - Extensions: Search - Fix out-of-order search results (fixes #2979 - thanks @jakubbaron!)
 
 ### Performance
 
@@ -72,6 +73,7 @@
 - #2874 - Languages: Fix extension ids for `exuberant-ctags` and `clangd` (fixes #2872)
 - #2893 - Building: Add Xorg dependencies for Linux (thanks @marcinkoziej!)
 - #2939 - Release: Document monthly release process
+- #2996 - Building: Reorder instructions so that `git clone` is first step (thanks @jakubbaron!)
 
 ### Infrastructure / Refactoring
 
