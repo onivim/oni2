@@ -1115,7 +1115,13 @@ let update =
             },
           extHostClient,
         );
-      (state, eff);
+
+      let modelSavedEff =
+        Service_Exthost.Effects.Documents.modelSaved(
+          ~uri=Buffer.getUri(buffer), extHostClient, () =>
+          Noop
+        );
+      (state, Isolinear.Effect.batch([eff, modelSavedEff]));
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
       let fileType =

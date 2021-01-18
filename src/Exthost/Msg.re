@@ -710,7 +710,7 @@ module LanguageFeatures = {
     | EmitCodeLensEvent({
         eventHandle: int,
         event: Yojson.Safe.t,
-      }) // ??
+      })
     | RegisterCodeLensSupport({
         handle: int,
         selector: DocumentSelector.t,
@@ -842,8 +842,13 @@ module LanguageFeatures = {
         Ok(RegisterDocumentHighlightProvider({handle, selector}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
+
+    | ("$emitCodeLensEvent", `List([`Int(eventHandle)])) =>
+      Ok(EmitCodeLensEvent({eventHandle, event: `Null}))
+
     | ("$emitCodeLensEvent", `List([`Int(eventHandle), json])) =>
       Ok(EmitCodeLensEvent({eventHandle, event: json}))
+
     | (
         "$registerCodeLensSupport",
         `List([handleJson, selectorJson, eventHandleJson]),

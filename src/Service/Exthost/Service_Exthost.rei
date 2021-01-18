@@ -33,6 +33,10 @@ module Effects: {
         unit => 'msg
       ) =>
       Isolinear.Effect.t('msg);
+
+    let modelSaved:
+      (~uri: Oni_Core.Uri.t, Exthost.Client.t, unit => 'msg) =>
+      Isolinear.Effect.t('msg);
   };
 
   module FileSystemEventService: {
@@ -127,6 +131,7 @@ module Sub: {
   let codeLenses:
     (
       ~handle: int,
+      ~eventTick: int,
       ~buffer: Oni_Core.Buffer.t,
       ~startLine: EditorCoreTypes.LineNumber.t,
       ~stopLine: EditorCoreTypes.LineNumber.t,
