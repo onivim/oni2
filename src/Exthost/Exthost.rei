@@ -146,6 +146,13 @@ module Edit: {
   };
 };
 
+module ExtensionActivationError: {
+  [@deriving show]
+  type t =
+    | Message(string)
+    | MissingDependency(ExtensionId.t);
+};
+
 module ExtensionActivationReason: {
   type t;
 
@@ -158,6 +165,8 @@ module ExtensionActivationReason: {
 module ExtensionId: {
   [@deriving show]
   type t = string;
+
+  let toString: t => string;
 
   let decode: Json.decoder(t);
 };

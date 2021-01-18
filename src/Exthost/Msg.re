@@ -541,7 +541,7 @@ module ExtensionService = {
     //activationEvent: option(string),
     | ExtensionActivationError({
         extensionId: ExtensionId.t,
-        errorMessage: string,
+        error: ExtensionActivationError.t,
       })
     | ExtensionRuntimeError({extensionId: ExtensionId.t});
   let withExtensionId = (f, extensionIdJson) => {
@@ -552,62 +552,78 @@ module ExtensionService = {
   };
 
   let handle = (method, args: Yojson.Safe.t) => {
-    switch (method, args) {
-    | ("$activateExtension", `List([extensionIdJson])) =>
-      extensionIdJson
-      |> withExtensionId(extensionId => {
-           ActivateExtension({extensionId, activationEvent: None})
-         })
-    | ("$activateExtension", `List([extensionIdJson, activationEventJson])) =>
-      let activationEvent =
-        switch (activationEventJson) {
-        | `String(v) => Some(v)
-        | _ => None
-        };
+    Base.Let_Syntax.(
+      {
+        switch (method, args) {
+        | ("$activateExtension", `List([extensionIdJson])) =>
+          extensionIdJson
+          |> withExtensionId(extensionId => {
+               ActivateExtension({extensionId, activationEvent: None})
+             })
+        | (
+            "$activateExtension",
+            `List([extensionIdJson, activationEventJson]),
+          ) =>
+          let activationEvent =
+            switch (activationEventJson) {
+            | `String(v) => Some(v)
+            | _ => None
+            };
 
-      extensionIdJson
-      |> withExtensionId(extensionId => {
-           ActivateExtension({extensionId, activationEvent})
-         });
-    | (
-        "$onExtensionActivationError",
-        `List([extensionIdJson, `String(errorMessage)]),
-      ) =>
-      extensionIdJson
-      |> withExtensionId(extensionId => {
-           ExtensionActivationError({extensionId, errorMessage})
-         })
-    | ("$onWillActivateExtension", `List([extensionIdJson])) =>
-      extensionIdJson
-      |> withExtensionId(extensionId => {
-           WillActivateExtension({extensionId: extensionId})
-         })
-    | (
-        "$onDidActivateExtension",
-        `List([
-          extensionIdJson,
-          `Int(codeLoadingTime),
-          `Int(activateCallTime),
-          `Int(activateResolvedTime),
-          ..._args,
-        ]),
-      ) =>
-      extensionIdJson
-      |> withExtensionId(extensionId => {
-           DidActivateExtension({
-             extensionId,
-             codeLoadingTime,
-             activateCallTime,
-             activateResolvedTime,
-           })
-         })
-    | ("$onExtensionRuntimeError", `List([extensionIdJson, ..._args])) =>
-      extensionIdJson
-      |> withExtensionId(extensionId => {
-           ExtensionRuntimeError({extensionId: extensionId})
-         })
-    | _ => Error("Unhandled method: " ++ method)
-    };
+          extensionIdJson
+          |> withExtensionId(extensionId => {
+               ActivateExtension({extensionId, activationEvent})
+             });
+        | (
+            "$onExtensionActivationError",
+            `List([extensionIdJson, errorJson]),
+          ) =>
+          let%bind extensionId =
+            extensionIdJson |> decode_value(ExtensionId.decode);
+
+          let%bind error =
+            errorJson |> decode_value(ExtensionActivationError.decode);
+
+          Ok(ExtensionActivationError({extensionId, error}));
+
+        | ("$onWillActivateExtension", `List([extensionIdJson])) =>
+          let%bind extensionId =
+            extensionIdJson |> decode_value(ExtensionId.decode);
+          Ok(WillActivateExtension({extensionId: extensionId}));
+        | (
+            "$onDidActivateExtension",
+            `List([
+              extensionIdJson,
+              `Int(codeLoadingTime),
+              `Int(activateCallTime),
+              `Int(activateResolvedTime),
+              ..._args,
+            ]),
+          ) =>
+          let%bind extensionId =
+            extensionIdJson |> decode_value(ExtensionId.decode);
+          Ok(
+            DidActivateExtension({
+              extensionId,
+              codeLoadingTime,
+              activateCallTime,
+              activateResolvedTime,
+            }),
+          );
+        | ("$onExtensionRuntimeError", `List([extensionIdJson, ..._args])) =>
+          let%bind extensionId =
+            extensionIdJson |> decode_value(ExtensionId.decode);
+          Ok(
+            ExtensionRunTimeError(
+              {
+                extensionId;
+              },
+            ),
+          );
+        | _ => Error("Unhandled method: " ++ method)
+        };
+      }
+    );
   };
 };
 
