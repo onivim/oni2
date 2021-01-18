@@ -37,7 +37,7 @@ let generate = (~scm, buffer) =>
        // `deletes` is an array of bools the length of the originall lines array where `true` indicates the line has been deleted
        let (adds, deletes) = Diff.f(Buffer.getLines(buffer), originalLines);
 
-       // shift is he offset between lines that should match up at the current index;
+       // shift is the offset between lines that should match up at the current index;
        // ie. `deletes[i + shift] == adds[i]`
        let shift = ref(0);
 
