@@ -538,28 +538,21 @@ module ExtensionService = {
         activateCallTime: int,
         activateResolvedTime: int,
       })
-    //activationEvent: option(string),
     | ExtensionActivationError({
         extensionId: ExtensionId.t,
         error: ExtensionActivationError.t,
       })
-    | ExtensionRuntimeError({extensionId: ExtensionId.t});
-  let withExtensionId = (f, extensionIdJson) => {
-    extensionIdJson
-    |> Json.Decode.decode_value(ExtensionId.decode)
-    |> Result.map(f)
-    |> Result.map_error(Json.Decode.string_of_error);
-  };
+    | ExtensionRuntimeError({extensionId: ExtensionId.t, errorsJson: list(Yojson.Safe.t)});
 
   let handle = (method, args: Yojson.Safe.t) => {
-    Base.Let_Syntax.(
+    Base.Result.Let_syntax.(
       {
         switch (method, args) {
         | ("$activateExtension", `List([extensionIdJson])) =>
-          extensionIdJson
-          |> withExtensionId(extensionId => {
-               ActivateExtension({extensionId, activationEvent: None})
-             })
+          let%bind extensionId =
+            extensionIdJson |> Internal.decode_value(ExtensionId.decode);
+          Ok(ActivateExtension({extensionId, activationEvent: None}));
+
         | (
             "$activateExtension",
             `List([extensionIdJson, activationEventJson]),
@@ -570,25 +563,25 @@ module ExtensionService = {
             | _ => None
             };
 
-          extensionIdJson
-          |> withExtensionId(extensionId => {
-               ActivateExtension({extensionId, activationEvent})
-             });
+          let%bind extensionId =
+            extensionIdJson |> Internal.decode_value(ExtensionId.decode);
+          Ok(ActivateExtension({extensionId, activationEvent}));
         | (
             "$onExtensionActivationError",
             `List([extensionIdJson, errorJson]),
           ) =>
           let%bind extensionId =
-            extensionIdJson |> decode_value(ExtensionId.decode);
+            extensionIdJson |> Internal.decode_value(ExtensionId.decode);
 
           let%bind error =
-            errorJson |> decode_value(ExtensionActivationError.decode);
+            errorJson
+            |> Internal.decode_value(ExtensionActivationError.decode);
 
           Ok(ExtensionActivationError({extensionId, error}));
 
         | ("$onWillActivateExtension", `List([extensionIdJson])) =>
           let%bind extensionId =
-            extensionIdJson |> decode_value(ExtensionId.decode);
+            extensionIdJson |> Internal.decode_value(ExtensionId.decode);
           Ok(WillActivateExtension({extensionId: extensionId}));
         | (
             "$onDidActivateExtension",
@@ -601,7 +594,7 @@ module ExtensionService = {
             ]),
           ) =>
           let%bind extensionId =
-            extensionIdJson |> decode_value(ExtensionId.decode);
+            extensionIdJson |> Internal.decode_value(ExtensionId.decode);
           Ok(
             DidActivateExtension({
               extensionId,
@@ -610,16 +603,11 @@ module ExtensionService = {
               activateResolvedTime,
             }),
           );
-        | ("$onExtensionRuntimeError", `List([extensionIdJson, ..._args])) =>
+        | ("$onExtensionRuntimeError", `List([extensionIdJson, ...errorsJson])) =>
           let%bind extensionId =
-            extensionIdJson |> decode_value(ExtensionId.decode);
-          Ok(
-            ExtensionRunTimeError(
-              {
-                extensionId;
-              },
-            ),
-          );
+            extensionIdJson |> Internal.decode_value(ExtensionId.decode);
+          Ok(ExtensionRuntimeError({extensionId: extensionId, errorsJson}));
+
         | _ => Error("Unhandled method: " ++ method)
         };
       }

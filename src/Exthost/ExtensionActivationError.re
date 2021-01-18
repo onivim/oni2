@@ -1,5 +1,6 @@
 open Oni_Core;
 
+[@deriving show]
 type t =
   | Message(string)
   | MissingDependency(ExtensionId.t);
@@ -9,7 +10,7 @@ let toString =
   | Message(str) => str
   | MissingDependency(extensionId) =>
     Printf.sprintf(
-      "Missing extension dependency missing: %s",
+      "Missing required extension: %s",
       ExtensionId.toString(extensionId),
     );
 
