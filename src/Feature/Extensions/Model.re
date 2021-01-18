@@ -616,9 +616,10 @@ let update = (~extHostClient, msg, model) => {
         Printf.sprintf(
           "Extension runtime error %s:%s",
           Exthost.ExtensionId.toString(extensionId),
-          Yojson.Safe.to_string(`List(errorsJson))
+          Yojson.Safe.to_string(`List(errorsJson)),
         ),
-      ))
+      ),
+    )
 
   | Exthost(ActivateExtension({extensionId, _})) => (
       Internal.markActivated(extensionId, model),

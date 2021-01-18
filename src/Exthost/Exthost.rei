@@ -1224,7 +1224,10 @@ module Msg: {
           extensionId: ExtensionId.t,
           error: ExtensionActivationError.t,
         })
-      | ExtensionRuntimeError({extensionId: ExtensionId.t, errorsJson: list(Yojson.Safe.t)});
+      | ExtensionRuntimeError({
+          extensionId: ExtensionId.t,
+          errorsJson: list(Yojson.Safe.t),
+        });
   };
 
   module FileSystem: {

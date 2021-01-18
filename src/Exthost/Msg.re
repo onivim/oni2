@@ -542,7 +542,10 @@ module ExtensionService = {
         extensionId: ExtensionId.t,
         error: ExtensionActivationError.t,
       })
-    | ExtensionRuntimeError({extensionId: ExtensionId.t, errorsJson: list(Yojson.Safe.t)});
+    | ExtensionRuntimeError({
+        extensionId: ExtensionId.t,
+        errorsJson: list(Yojson.Safe.t),
+      });
 
   let handle = (method, args: Yojson.Safe.t) => {
     Base.Result.Let_syntax.(
@@ -603,10 +606,13 @@ module ExtensionService = {
               activateResolvedTime,
             }),
           );
-        | ("$onExtensionRuntimeError", `List([extensionIdJson, ...errorsJson])) =>
+        | (
+            "$onExtensionRuntimeError",
+            `List([extensionIdJson, ...errorsJson]),
+          ) =>
           let%bind extensionId =
             extensionIdJson |> Internal.decode_value(ExtensionId.decode);
-          Ok(ExtensionRuntimeError({extensionId: extensionId, errorsJson}));
+          Ok(ExtensionRuntimeError({extensionId, errorsJson}));
 
         | _ => Error("Unhandled method: " ++ method)
         };
