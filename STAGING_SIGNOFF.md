@@ -35,7 +35,7 @@ Test cases covering launching and using Onivim without any persistence or config
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 2.2 Home directory set [OSX]
 
@@ -65,7 +65,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 4. Editing
 
@@ -85,7 +85,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 4.2 Verify horizontal scroll
 
@@ -100,7 +100,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 5. File Preview
 
@@ -118,7 +118,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 6. Font Rendering
 
@@ -135,7 +135,7 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 7. Input
 
@@ -145,6 +145,8 @@ Regression test for #2926
 
 Prerequisite:
 - Install German (de-de) keyboard layout
+
+> LINUX: `setxkbmap de` (`setxkbmap us` to revert)
 
 - Run Onivim 2
 - Create new file (`:new test.txt`)
@@ -156,7 +158,7 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 7.2 Leader Key
 
@@ -173,7 +175,7 @@ Prerequisite:
 __Pass:__
 - [ ] Windows
 - [ ] OSX
-- [ ] LInux
+- [x] Linux
 
 ## 7.3 Japanese / Romanji layout
 
@@ -190,7 +192,7 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [-] Linux
 
 # 8. Workspace
 
@@ -213,4 +215,4 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [-] Linux
