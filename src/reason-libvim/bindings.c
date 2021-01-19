@@ -834,7 +834,6 @@ void onCursorAdd(pos_T newCursorPosition) {
     Val_int(newCursorPosition.lnum),
     Val_int(newCursorPosition.col)
     );
-  printf("NEW CURSOR: %ld, %d\n", newCursorPosition.lnum, newCursorPosition.col);
   CAMLreturn0;
 }
 

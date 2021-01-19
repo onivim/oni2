@@ -531,8 +531,8 @@ let _onCursorAdd = (oneBasedLine: int, column: int) => {
       },
       ...GlobalState.additionalCursors^,
     ];
-  Printf.sprintf("_onCursorAdd: %d %d", oneBasedLine, column) |> prerr_endline;
 };
+
 let _onGetChar = mode => {
   let mode' =
     switch (mode) {

@@ -33,6 +33,73 @@ let key =
 };
 
 describe("Multi-cursor", ({describe, _}) => {
+  describe("visual block mode", ({test, _}) => {
+    let hasCursorMatching = (~lineIndex, ~byteIndex, cursors) => {
+      EditorCoreTypes.(
+        cursors
+        |> List.exists((cursor: BytePosition.t) =>
+             LineNumber.toZeroBased(cursor.line) == lineIndex
+             && ByteIndex.toInt(cursor.byte) == byteIndex
+           )
+      );
+    };
+    test("expand to multiple cursors with 'I'", ({expect, _}) => {
+      let _: Buffer.t = resetBuffer();
+      let (context, _) = Vim.key("<c-v>");
+      let (context, _) = Vim.input(~context, "j");
+      let (context, _) = Vim.input(~context, "j");
+
+      expect.equal(Vim.Mode.isVisual(context.mode), true);
+
+      let (context, _) = Vim.input(~context, "I");
+
+      expect.equal(Vim.Mode.isInsert(context.mode), true);
+
+      let cursors = Vim.Mode.cursors(context.mode);
+      expect.equal(List.length(cursors), 3);
+
+      expect.equal(
+        cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=0),
+        true,
+      );
+      expect.equal(
+        cursors |> hasCursorMatching(~lineIndex=1, ~byteIndex=0),
+        true,
+      );
+      expect.equal(
+        cursors |> hasCursorMatching(~lineIndex=2, ~byteIndex=0),
+        true,
+      );
+    });
+    test("expand to multiple cursors with 'A'", ({expect, _}) => {
+      let _: Buffer.t = resetBuffer();
+      let (context, _) = Vim.key("<c-v>");
+      let (context, _) = Vim.input(~context, "j");
+      let (context, _) = Vim.input(~context, "j");
+
+      expect.equal(Vim.Mode.isVisual(context.mode), true);
+
+      let (context, _) = Vim.input(~context, "A");
+
+      expect.equal(Vim.Mode.isInsert(context.mode), true);
+
+      let cursors = Vim.Mode.cursors(context.mode);
+      expect.equal(List.length(cursors), 3);
+
+      expect.equal(
+        cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=1),
+        true,
+      );
+      expect.equal(
+        cursors |> hasCursorMatching(~lineIndex=1, ~byteIndex=1),
+        true,
+      );
+      expect.equal(
+        cursors |> hasCursorMatching(~lineIndex=2, ~byteIndex=1),
+        true,
+      );
+    });
+  });
   describe("normal mode", ({describe, _}) => {
     describe("single cursor", ({test, _}) => {
       test("set cursor works as expected", ({expect, _}) => {
