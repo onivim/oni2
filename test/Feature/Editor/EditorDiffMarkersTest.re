@@ -19,7 +19,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected =
         EditorDiffMarkers.(
           [|Unmodified, Unmodified, Added, Unmodified, Unmodified|]
@@ -38,7 +39,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected =
         EditorDiffMarkers.(
           [|
@@ -65,7 +67,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected =
         EditorDiffMarkers.([|Unmodified, Unmodified, DeletedBefore|]);
 
@@ -82,7 +85,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected = EditorDiffMarkers.([|DeletedBefore, Unmodified|]);
 
       switch (actual) {
@@ -98,7 +102,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected = EditorDiffMarkers.([|Unmodified, DeletedAfter|]);
 
       switch (actual) {
@@ -114,7 +119,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected = EditorDiffMarkers.([|DeletedBefore|]);
 
       switch (actual) {
@@ -130,7 +136,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected =
         EditorDiffMarkers.([|Unmodified, Unmodified, Modified, Unmodified|]);
 
@@ -147,7 +154,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected =
         EditorDiffMarkers.([|Unmodified, Modified, Modified, Unmodified|]);
 
@@ -164,7 +172,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected =
         EditorDiffMarkers.(
           [|Unmodified, Modified, Added, Unmodified, Unmodified|]
@@ -183,7 +192,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected =
         EditorDiffMarkers.([|Unmodified, Modified, DeletedBefore|]);
 
@@ -200,7 +210,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected =
         EditorDiffMarkers.(
           [|
@@ -226,7 +237,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected =
         EditorDiffMarkers.(
           [|
@@ -255,7 +267,8 @@ describe("EditorDiffMarkers", ({describe, _}) => {
       let buffer = makeBuffer(now);
       let scm = scm(buffer, was);
 
-      let actual = EditorDiffMarkers.generate(~scm, buffer);
+      let actual =
+        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
       let expected =
         EditorDiffMarkers.(
           [|
