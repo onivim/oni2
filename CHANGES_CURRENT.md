@@ -62,6 +62,7 @@
 - #2999 - Extensions: Elm - fix bug with diagnostics not displaying (fixes #2640)
 - #3000 - Extensions: Search - Fix out-of-order search results (fixes #2979 - thanks @jakubbaron!)
 - #3003 - Extensions: CodeLens - Handle the `$emitCodeLens` event
+- #3008 - SCM: Fix index-out-of-bound exception when rendering diff markers
 
 ### Performance
 
