@@ -118,7 +118,7 @@ describe("Mode", ({describe, _}) => {
       let _ = Vim.input("I");
 
       expect.equal(Vim.Mode.isInsert(Vim.Mode.current()), true);
-    })
+    });
     test("characterwise visual -> insert ('A')", ({expect, _}) => {
       let _ = resetBuffer();
 
@@ -126,7 +126,7 @@ describe("Mode", ({describe, _}) => {
       let _ = Vim.input("A");
 
       expect.equal(Vim.Mode.isInsert(Vim.Mode.current()), true);
-    })
+    });
   });
   describe("select mode", ({test, _}) => {
     test("select mode is reported correctly", ({expect, _}) => {
