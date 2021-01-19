@@ -1674,7 +1674,8 @@ let getCharacterUnderMouse = editor => {
      });
 };
 
-let mouseUp = (~time, ~pixelX, ~pixelY, editor) => {
+let mouseUp = (~altKey, ~time, ~pixelX, ~pixelY, editor) => {
+  ignore(altKey);
   ignore(pixelX);
   ignore(pixelY);
 

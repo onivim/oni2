@@ -206,8 +206,8 @@ let runWith = (~context: Context.t, f) => {
 
   BufferInternal.checkCurrentBufferForUpdate();
 
-  if (newMode != prevMode) {
-    if (newMode == CommandLine) {
+  if (mode != prevMode) {
+    if (mode == CommandLine) {
       Event.dispatch(
         CommandLineInternal.getState(),
         Listeners.commandLineEnter,
@@ -522,7 +522,6 @@ let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
   |> Option.value(~default=currentLines);
 };
 
-<<<<<<< HEAD
 let _onCursorAdd = (oneBasedLine: int, column: int) => {
   GlobalState.additionalCursors :=
     [
@@ -533,7 +532,7 @@ let _onCursorAdd = (oneBasedLine: int, column: int) => {
       ...GlobalState.additionalCursors^,
     ];
   Printf.sprintf("_onCursorAdd: %d %d", oneBasedLine, column) |> prerr_endline;
-=======
+};
 let _onGetChar = mode => {
   let mode' =
     switch (mode) {
@@ -549,7 +548,6 @@ let _onGetChar = mode => {
        )
     |> Option.value(~default=char_of_int(0));
   (int_of_char(c), 0);
->>>>>>> master
 };
 
 let init = () => {
@@ -587,12 +585,9 @@ let init = () => {
   Callback.register("lv_onInputMap", _onInputMap);
   Callback.register("lv_onInputUnmap", _onInputUnmap);
   Callback.register("lv_onToggleComments", _onToggleComments);
-<<<<<<< HEAD
-  Callback.register("lv_onCursorAdd", _onCursorAdd);
-=======
   Callback.register("lv_onGetChar", _onGetChar);
   Callback.register("lv_onOutput", _onOutput);
->>>>>>> master
+  Callback.register("lv_onCursorAdd", _onCursorAdd);
 
   Native.vimInit();
 
