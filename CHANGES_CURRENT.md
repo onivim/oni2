@@ -2,7 +2,8 @@
 
 ### Bug Fixes
 
- - #3007 - Extensions: Show 'missing dependency' activation error to user
+- #3008 - SCM: Fix index-out-of-bound exception when rendering diff markers
+- #3007 - Extensions: Show 'missing dependency' activation error to user
 
 ### Performance
 
