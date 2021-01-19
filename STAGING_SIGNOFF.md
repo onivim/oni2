@@ -8,7 +8,7 @@
 - Validate full shell path is available
 
 __Pass:__
-- [ ] OSX
+- [x] OSX
 
 ## 1.2 Validate launches from dock in OSX (#2659)
 
@@ -18,7 +18,7 @@ __Pass:__
 - Validate Onivim 2 launches and PATH is correct
 
 __Pass:__
-- [ ] OSX
+- [x] OSX
 
 # 2. First-run Experience
 
@@ -33,9 +33,9 @@ Test cases covering launching and using Onivim without any persistence or config
 - Verify Control+Shift+P/Command+P shows the command palette
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 2.2 Home directory set [OSX]
 
@@ -52,7 +52,7 @@ not have permission to read that folder.
 - Verify Control+Shift+P/Command+Shift+P shows the command palette
 
 __Pass:__
-- [ ] OSX
+- [x] OSX
 
 # 3. SCM
 
@@ -63,9 +63,9 @@ __Pass:__
 - Verify diff markers show 
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 # 4. Editing
 
@@ -83,9 +83,9 @@ __Pass:__
 - In normal mode, verify `1000L` goes to the same position as `H`
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 4.2 Verify horizontal scroll
 
@@ -98,9 +98,9 @@ __Pass:__
 - Validate can no longer scroll horizontally, and no text overflows
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 # 5. File Preview
 
@@ -116,9 +116,9 @@ __Pass:__
 - Verify that a new editor is created for `CHANGES_CURRENT.md`
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 # 6. Font Rendering
 
@@ -133,9 +133,9 @@ Prerequisite:
 - Check that bold text is always effectively bolder than normal text.
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win (NOTE: Requires starting the editor 
+- [x] OSX
+- [x] Linux
 
 # 7. Input
 
@@ -146,6 +146,8 @@ Regression test for #2926
 Prerequisite:
 - Install German (de-de) keyboard layout
 
+> LINUX: `setxkbmap de` (`setxkbmap us` to revert)
+
 - Run Onivim 2
 - Create new file (`:new test.txt`)
 - Switch keyboard layout to German (`de-de`)
@@ -154,9 +156,9 @@ Prerequisite:
 - Verify character shows
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [x] Linux
 
 ## 7.2 Leader Key
 
@@ -171,9 +173,9 @@ Prerequisite:
 - Verify quick open shows
 
 __Pass:__
-- [ ] Windows
-- [ ] OSX
-- [ ] LInux
+- [x] Windows NOTE: Requires restart..
+- [x] OSX
+- [x] Linux
 
 ## 7.3 Japanese / Romanji layout
 
@@ -188,9 +190,9 @@ Prerequisite:
 - Verify can enter insert mode and type text
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [-] Linux
 
 # 8. Workspace
 
@@ -211,6 +213,6 @@ Prerequisite:
 - Verify folder did not change
 
 __Pass:__
-- [ ] Win
-- [ ] OSX
-- [ ] Linux
+- [x] Win
+- [x] OSX
+- [-] Linux
