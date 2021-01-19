@@ -146,6 +146,15 @@ module Edit: {
   };
 };
 
+module ExtensionActivationError: {
+  [@deriving show]
+  type t =
+    | Message(string)
+    | MissingDependency(ExtensionId.t);
+
+  let toString: t => string;
+};
+
 module ExtensionActivationReason: {
   type t;
 
@@ -158,6 +167,8 @@ module ExtensionActivationReason: {
 module ExtensionId: {
   [@deriving show]
   type t = string;
+
+  let toString: t => string;
 
   let decode: Json.decoder(t);
 };
@@ -173,17 +184,6 @@ module DefinitionLink: {
 
   let decode: Json.decoder(t);
 };
-
-// module DocumentFilter: {
-//   [@deriving show]
-//   type t;
-
-//   let matches: (~filetype: string, t) => bool;
-
-//   let decode: Json.decoder(t);
-
-//   let toString: t => string;
-// };
 
 module DocumentSelector: {
   [@deriving show]
@@ -1220,12 +1220,14 @@ module Msg: {
           activateCallTime: int,
           activateResolvedTime: int,
         })
-      //activationEvent: option(string),
       | ExtensionActivationError({
           extensionId: ExtensionId.t,
-          errorMessage: string,
+          error: ExtensionActivationError.t,
         })
-      | ExtensionRuntimeError({extensionId: ExtensionId.t});
+      | ExtensionRuntimeError({
+          extensionId: ExtensionId.t,
+          errorsJson: list(Yojson.Safe.t),
+        });
   };
 
   module FileSystem: {

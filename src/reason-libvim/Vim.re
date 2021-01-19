@@ -182,6 +182,7 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.screenPositionMotion := Some(context.screenCursorMotion);
   GlobalState.effects := [];
   GlobalState.toggleComments := Some(context.toggleComments);
+  GlobalState.additionalCursors := [];
 
   let mode = f();
 
@@ -191,14 +192,22 @@ let runWith = (~context: Context.t, f) => {
   GlobalState.toggleComments := None;
 
   let newBuf = Buffer.getCurrent();
-  let newMode = Mode.current();
+  //let newMode = Mode.current();
   let newModified = Buffer.isModified(newBuf);
   let newLineEndings = Buffer.getLineEndings(newBuf);
 
+  // Apply additional cursors
+  let mode =
+    switch (mode) {
+    | Mode.Insert({cursors}) =>
+      Mode.Insert({cursors: cursors @ GlobalState.additionalCursors^})
+    | mode => mode
+    };
+
   BufferInternal.checkCurrentBufferForUpdate();
 
-  if (newMode != prevMode) {
-    if (newMode == CommandLine) {
+  if (mode != prevMode) {
+    if (mode == CommandLine) {
       Event.dispatch(
         CommandLineInternal.getState(),
         Listeners.commandLineEnter,
@@ -206,7 +215,7 @@ let runWith = (~context: Context.t, f) => {
     } else if (prevMode == CommandLine) {
       Event.dispatch((), Listeners.commandLineLeave);
     };
-  } else if (newMode == CommandLine) {
+  } else if (mode == CommandLine) {
     Event.dispatch(
       CommandLineInternal.getState(),
       Listeners.commandLineUpdate,
@@ -513,6 +522,17 @@ let _onToggleComments = (buf: Buffer.t, startLine: int, endLine: int) => {
   |> Option.value(~default=currentLines);
 };
 
+let _onCursorAdd = (oneBasedLine: int, column: int) => {
+  GlobalState.additionalCursors :=
+    [
+      BytePosition.{
+        line: LineNumber.ofOneBased(oneBasedLine),
+        byte: ByteIndex.ofInt(column),
+      },
+      ...GlobalState.additionalCursors^,
+    ];
+};
+
 let _onGetChar = mode => {
   let mode' =
     switch (mode) {
@@ -567,6 +587,7 @@ let init = () => {
   Callback.register("lv_onToggleComments", _onToggleComments);
   Callback.register("lv_onGetChar", _onGetChar);
   Callback.register("lv_onOutput", _onOutput);
+  Callback.register("lv_onCursorAdd", _onCursorAdd);
 
   Native.vimInit();
 
@@ -581,7 +602,9 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
     () => {
       // Special auto-closing pairs handling...
 
-      let runCursor = cursor => {
+      let runCursor = (cursor: BytePosition.t) => {
+        let lineNumber = EditorCoreTypes.LineNumber.toOneBased(cursor.line);
+        Undo.saveRegion(lineNumber - 1, lineNumber + 1);
         Cursor.set(cursor);
         if (Mode.current() |> Mode.isInsert) {
           let position: BytePosition.t = Cursor.get();

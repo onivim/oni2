@@ -25,7 +25,10 @@ let text = (lens: Exthost.CodeLens.t) => textFromExthost(lens);
 
 type provider = {
   handle: int,
+  maybeEventHandle: option(int),
   selector: Exthost.DocumentSelector.t,
+  // [eventTick] is incremented for each [emitCodeLens] event
+  eventTick: int,
 };
 
 type handleToLenses = IntMap.t(list(codeLens));
@@ -55,12 +58,30 @@ type msg =
       lenses: list(Exthost.CodeLens.t),
     });
 
-let register = (~handle: int, ~selector, model) => {
-  providers: [{handle, selector}, ...model.providers],
+let register = (~handle: int, ~selector, ~maybeEventHandle, model) => {
+  providers: [
+    {handle, selector, maybeEventHandle, eventTick: 0},
+    ...model.providers,
+  ],
 };
 
 let unregister = (~handle: int, model) => {
   providers: model.providers |> List.filter(prov => prov.handle != handle),
+};
+
+let emit = (~eventHandle: int, model) => {
+  {
+    // Increment event tick for any matching providers
+    providers:
+      model.providers
+      |> List.map(provider =>
+           if (provider.maybeEventHandle == Some(eventHandle)) {
+             {...provider, eventTick: provider.eventTick + 1};
+           } else {
+             provider;
+           }
+         ),
+  };
 };
 
 // UPDATE
@@ -103,7 +124,7 @@ module Sub = {
            |> List.filter(({selector, _}) =>
                 Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
               )
-           |> List.map(({handle, _}) => {
+           |> List.map(({handle, eventTick, _}) => {
                 let toMsg =
                   fun
                   | Error(msg) => CodeLensesError(msg)
@@ -121,6 +142,7 @@ module Sub = {
                   ~buffer,
                   ~startLine=topVisibleBufferLine,
                   ~stopLine=bottomVisibleBufferLine,
+                  ~eventTick,
                   ~toMsg,
                   client,
                 );
