@@ -160,7 +160,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
            ~name="Get completion items",
            ~validate=
              (suggestResult: Exthost.SuggestResult.t) => {
-               let {completions, isIncomplete}: Exthost.SuggestResult.t = suggestResult;
+               let {completions, isIncomplete, _}: Exthost.SuggestResult.t = suggestResult;
                expect.int(List.length(completions)).toBe(2);
                expect.bool(isIncomplete).toBe(false);
 

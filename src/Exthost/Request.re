@@ -319,6 +319,16 @@ module LanguageFeatures = {
     );
   };
 
+  let releaseCompletionItems = (~handle: int, ~cacheId, client) => {
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$releaseCompletionItems",
+      ~args=`List([`Int(handle), `Int(cacheId)]),
+      client,
+    );
+  };
+
   module Internal = {
     let provideDefinitionLink =
         (~handle, ~resource, ~position, method, client) => {

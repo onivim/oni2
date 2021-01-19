@@ -824,7 +824,10 @@ module Sub = {
       type nonrec msg = result(Exthost.SuggestResult.t, string);
       type nonrec params = completionParams;
 
-      type state = unit;
+      type state = {
+        isDisposed: ref(bool),
+        cacheId: ref(option(Exthost.SuggestResult.cacheId)),
+      };
 
       let name = "Service_Exthost.CompletionSubscription";
       let id = ({handle, buffer, position, _}: params) =>
@@ -835,7 +838,21 @@ module Sub = {
           "CompletionSubscription",
         );
 
+      let cleanupCache =
+          (~params, ~cacheId: ref(option(Exthost.SuggestResult.cacheId))) => {
+        cacheId^
+        |> Option.iter(cacheId => {
+             Exthost.Request.LanguageFeatures.releaseCompletionItems(
+               ~handle=params.handle,
+               ~cacheId,
+               params.client,
+             )
+           });
+      };
+
       let init = (~params, ~dispatch) => {
+        let isDisposed = ref(false);
+        let cacheId = ref(None);
         let promise =
           Exthost.Request.LanguageFeatures.provideCompletionItems(
             ~handle=params.handle,
@@ -845,21 +862,30 @@ module Sub = {
             params.client,
           );
 
-        Lwt.on_success(promise, suggestResult =>
-          dispatch(Ok(suggestResult))
+        Lwt.on_success(
+          promise,
+          suggestResult => {
+            cacheId := suggestResult.cacheId;
+            if (isDisposed^) {
+              cleanupCache(~params, ~cacheId);
+            } else {
+              dispatch(Ok(suggestResult));
+            };
+          },
         );
 
         Lwt.on_failure(promise, exn =>
           dispatch(Error(Printexc.to_string(exn)))
         );
 
-        ();
+        {isDisposed, cacheId};
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state as _) => {
-        ();
+      let dispose = (~params, ~state) => {
+        state.isDisposed := true;
+        cleanupCache(~params, ~cacheId=state.cacheId);
       };
     });
   let completionItems =
