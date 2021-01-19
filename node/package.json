@@ -24,9 +24,9 @@
     "typescript": "^3.3.3333"
   },
   "resolutions": {
-    "graceful-fs": "4.1.11",
+    "graceful-fs": "4.2.4",
     "debug": "3.2.6",
     "ms": "2.1.2",
-    "agent-base": "4.3.0"
+    "agent-base": "4.2.1"
   }
 }
