@@ -1328,7 +1328,8 @@ let mapCursor = (~f, editor) => {
     // When scrolling in operator pending, cancel the pending operator
     | Operator({cursor, _}) => Vim.Mode.Normal({cursor: f(cursor)})
     // Don't do anything for command line mode
-    | CommandLine => CommandLine
+    | CommandLine({cursor, text, commandCursor, commandType}) =>
+      CommandLine({text, commandCursor, commandType, cursor: f(cursor)})
     | Normal({cursor}) => Normal({cursor: f(cursor)})
     | Visual(curr) =>
       Visual(Vim.VisualRange.{...curr, cursor: f(curr.cursor)})

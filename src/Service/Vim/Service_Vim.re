@@ -31,7 +31,7 @@ let quitAll = () =>
 module Effects = {
   let paste = (~toMsg, text) => {
     Isolinear.Effect.createWithDispatch(~name="vim.clipboardPaste", dispatch => {
-      let isCmdLineMode = Vim.Mode.current() == Vim.Mode.CommandLine;
+      let isCmdLineMode = Vim.Mode.isCommandLine(Vim.Mode.current());
       let isInsertMode = Vim.Mode.isInsert(Vim.Mode.current());
 
       if (isInsertMode || isCmdLineMode) {
@@ -123,7 +123,13 @@ module Effects = {
         })
       | Replace({cursor}) =>
         Replace({cursor: adjustBytePositionForEdit(cursor, edit)})
-      | CommandLine => CommandLine
+      | CommandLine({commandType, text, commandCursor, cursor}) =>
+        CommandLine({
+          commandType,
+          text,
+          commandCursor,
+          cursor: adjustBytePositionForEdit(cursor, edit),
+        })
       | Operator({cursor, pending}) =>
         Operator({cursor: adjustBytePositionForEdit(cursor, edit), pending})
       | Visual(_) as vis => vis

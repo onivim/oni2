@@ -486,56 +486,45 @@ let start =
   let lastCompletionMeet = ref(None);
   let isCompleting = ref(false);
 
-  let checkCommandLineCompletions = () => {
+  let checkCommandLineCompletions = (~text: string, ~position: int) => {
     Log.debug("checkCommandLineCompletions");
 
-    let position = Vim.CommandLine.getPosition();
-    Vim.CommandLine.getText()
-    |> Option.iter(commandStr =>
-         if (position == String.length(commandStr)
-             && !StringEx.isEmpty(commandStr)) {
-           let context = Oni_Model.VimContext.current(getState());
-           let completions = Vim.CommandLine.getCompletions(~context, ());
+    if (position == String.length(text) && !StringEx.isEmpty(text)) {
+      let context = Oni_Model.VimContext.current(getState());
+      let completions = Vim.CommandLine.getCompletions(~context, ());
 
-           Log.debugf(m =>
-             m("  got %n completions.", Array.length(completions))
-           );
+      Log.debugf(m => m("  got %n completions.", Array.length(completions)));
 
-           let items =
-             Array.map(
-               name =>
-                 Actions.{
-                   name,
-                   category: None,
-                   icon: None,
-                   command: () => Noop,
-                   highlight: [],
-                   handle: None,
-                 },
-               completions,
-             );
+      let items =
+        Array.map(
+          name =>
+            Actions.{
+              name,
+              category: None,
+              icon: None,
+              command: () => Noop,
+              highlight: [],
+              handle: None,
+            },
+          completions,
+        );
 
-           dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
-         }
-       );
+      dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
+    };
   };
 
   let _: unit => unit =
-    Vim.CommandLine.onUpdate(({text, position: cursorPosition, _}) => {
+    Vim.CommandLine.onUpdate(({text, position: cursorPosition, cmdType}) => {
       dispatch(Actions.QuickmenuCommandlineUpdated(text, cursorPosition));
 
-      let cmdlineType = Vim.CommandLine.getType();
+      let cmdlineType = cmdType;
       switch (cmdlineType) {
       | Ex =>
-        let text =
-          switch (Vim.CommandLine.getText()) {
-          | Some(v) => v
-          | None => ""
-          };
         let meet = Feature_Vim.CommandLine.getCompletionMeet(text);
         lastCompletionMeet := meet;
 
-        isCompleting^ ? () : checkCommandLineCompletions();
+        isCompleting^
+          ? () : checkCommandLineCompletions(~position=cursorPosition, ~text);
 
       | SearchForward
       | SearchReverse =>

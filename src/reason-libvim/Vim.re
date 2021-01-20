@@ -206,16 +206,16 @@ let runWith = (~context: Context.t, f) => {
 
   BufferInternal.checkCurrentBufferForUpdate();
 
-  if (mode != prevMode) {
-    if (mode == CommandLine) {
+  if (!Mode.isCommandLine(mode) || !Mode.isCommandLine(prevMode)) {
+    if (Mode.isCommandLine(mode)) {
       Event.dispatch(
         CommandLineInternal.getState(),
         Listeners.commandLineEnter,
       );
-    } else if (prevMode == CommandLine) {
+    } else if (Mode.isCommandLine(prevMode)) {
       Event.dispatch((), Listeners.commandLineLeave);
     };
-  } else if (mode == CommandLine) {
+  } else if (Mode.isCommandLine(mode)) {
     Event.dispatch(
       CommandLineInternal.getState(),
       Listeners.commandLineUpdate,

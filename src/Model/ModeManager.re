@@ -6,7 +6,7 @@ module Internal = {
     | Vim.Mode.Visual(range) =>
       Mode.TerminalVisual({range: Oni_Core.VisualRange.ofVim(range)})
     | Vim.Mode.Operator({pending, _}) => Mode.Operator({pending: pending})
-    | Vim.Mode.CommandLine => Mode.CommandLine
+    | Vim.Mode.CommandLine(_) => Mode.CommandLine
     | _ => Mode.TerminalNormal;
 };
 
@@ -44,7 +44,7 @@ let current: State.t => Oni_Core.Mode.t =
            | Vim.Mode.Replace({cursor}) => Mode.Replace({cursor: cursor})
            | Vim.Mode.Operator({pending, _}) =>
              Mode.Operator({pending: pending})
-           | Vim.Mode.CommandLine => Mode.CommandLine
+           | Vim.Mode.CommandLine(_) => Mode.CommandLine
            },
        );
   };
