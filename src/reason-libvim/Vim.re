@@ -206,7 +206,8 @@ let runWith = (~context: Context.t, f) => {
 
   BufferInternal.checkCurrentBufferForUpdate();
 
-  if (mode != prevMode) {
+  // Some gnarly state management here - check if we are entering
+  if (!Mode.isCommandLine(mode) || !Mode.isCommandLine(prevMode)) {
     if (Mode.isCommandLine(mode)) {
       Event.dispatch(
         CommandLineInternal.getState(),

@@ -102,7 +102,12 @@ module Mode: {
   type t =
     | Normal({cursor: BytePosition.t})
     | Insert({cursors: list(BytePosition.t)})
-    | CommandLine({cursor: BytePosition.t})
+    | CommandLine({
+        text: string,
+        commandCursor: ByteIndex.t,
+        commandType: Types.cmdlineType,
+        cursor: BytePosition.t,
+      })
     | Replace({cursor: BytePosition.t})
     | Visual(VisualRange.t)
     | Operator({
@@ -192,9 +197,8 @@ module CommandLine: {
   type t = Types.cmdline;
 
   let getCompletions: (~context: Context.t=?, unit) => array(string);
-  let getText: unit => option(string);
+
   let getPosition: unit => int;
-  let getType: unit => Types.cmdlineType;
 
   let onEnter: (Event.handler(t), unit) => unit;
   let onLeave: (Event.handler(unit), unit) => unit;
