@@ -13,6 +13,20 @@ module Identifier = {
 };
 
 module Hacks = {
+  let patchIonideDependencies = (dependencies: list(Yojson.Safe.t)) => {
+    dependencies
+    |> List.map(
+         fun
+         | `String(str) =>
+           if (str == "ms-dotnettools.csharp") {
+             `String("muhammad-sammy.csharp");
+           } else {
+             `String(str);
+           }
+         | json => json,
+       );
+  };
+
   // TEMPORARY workarounds for external bugs blocking extensions
   let hacks = [
     // Workaround for https://github.com/open-vsx/publish-extensions/issues/106
@@ -23,6 +37,17 @@ module Hacks = {
         fun
         | Some(`String(str)) => Some(`String(str))
         | _ => Some(`String("2020-08-04")),
+      ),
+    ),
+    (
+      // Workaround for https://github.com/onivim/oni2/issues/2974
+      "ionide.ionide-fsharp",
+      Utility.JsonEx.update(
+        "extensionDependencies",
+        fun
+        | Some(`List(dependencies)) =>
+          Some(`List(dependencies |> patchIonideDependencies))
+        | json => json,
       ),
     ),
   ];
