@@ -100,15 +100,26 @@ module OneBasedRange: {
 
 module CodeLens: {
   [@deriving show]
-  type t = {
+  type lens = {
     cacheId: option(list(int)),
     range: OneBasedRange.t,
     command: option(Command.t),
   };
 
-  let decode: Json.decoder(t);
+  module List: {
+    [@deriving show]
+    type cacheId;
 
-  module List: {let decode: Json.decoder(list(t));};
+    [@deriving show]
+    type t = {
+      cacheId: option(cacheId),
+      lenses: list(lens),
+    };
+
+    let default: t;
+
+    let decode: Json.decoder(t);
+  };
 };
 
 module Location: {
@@ -1765,11 +1776,14 @@ module Request: {
   module LanguageFeatures: {
     let provideCodeLenses:
       (~handle: int, ~resource: Uri.t, Client.t) =>
-      Lwt.t(option(list(CodeLens.t)));
+      Lwt.t(option(CodeLens.List.t));
 
     let resolveCodeLens:
-      (~handle: int, ~codeLens: CodeLens.t, Client.t) =>
-      Lwt.t(option(CodeLens.t));
+      (~handle: int, ~codeLens: CodeLens.lens, Client.t) =>
+      Lwt.t(option(CodeLens.lens));
+
+    let releaseCodeLenses:
+      (~handle: int, ~cacheId: CodeLens.List.cacheId, Client.t) => unit;
 
     let provideCompletionItems:
       (

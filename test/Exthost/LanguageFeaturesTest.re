@@ -82,40 +82,44 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get code lenses items",
            ~validate=
-             (codeLenses: option(list(Exthost.CodeLens.t))) => {
-               expect.equal(
-                 codeLenses,
-                 Some([
-                   CodeLens.{
-                     cacheId: Some([1, 0]),
-                     range: range1,
-                     command:
-                       Some(
-                         Exthost.Command.{
-                           label:
-                             Some(
-                               Exthost.Label.ofString("codelens: command1"),
-                             ),
-                           id: Some("codelens.command1"),
-                         },
-                       ),
-                   },
-                   CodeLens.{
-                     cacheId: Some([1, 1]),
-                     range: range2,
-                     command:
-                       Some(
-                         Exthost.Command.{
-                           label:
-                             Some(
-                               Exthost.Label.ofString("codelens: command2"),
-                             ),
-                           id: Some("codelens.command2"),
-                         },
-                       ),
-                   },
-                 ]),
-               );
+             (codeLenses: option(Exthost.CodeLens.List.t)) => {
+               switch (codeLenses) {
+               | None => expect.equal(false, true)
+               | Some({lenses, _}) =>
+                 expect.equal(
+                   lenses,
+                   [
+                     CodeLens.{
+                       cacheId: Some([1, 0]),
+                       range: range1,
+                       command:
+                         Some(
+                           Exthost.Command.{
+                             label:
+                               Some(
+                                 Exthost.Label.ofString("codelens: command1"),
+                               ),
+                             id: Some("codelens.command1"),
+                           },
+                         ),
+                     },
+                     CodeLens.{
+                       cacheId: Some([1, 1]),
+                       range: range2,
+                       command:
+                         Some(
+                           Exthost.Command.{
+                             label:
+                               Some(
+                                 Exthost.Label.ofString("codelens: command2"),
+                               ),
+                             id: Some("codelens.command2"),
+                           },
+                         ),
+                     },
+                   ],
+                 )
+               };
                true;
              },
            getCodeLenses,

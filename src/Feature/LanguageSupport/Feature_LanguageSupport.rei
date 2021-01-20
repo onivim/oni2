@@ -32,7 +32,7 @@ module Msg: {
 };
 
 module CodeLens: {
-  type t = Exthost.CodeLens.t;
+  type t = Exthost.CodeLens.lens;
 
   let lineNumber: t => int;
   let text: t => string;

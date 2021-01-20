@@ -7,12 +7,12 @@ module Log = (
 
 // MODEL
 
-type codeLens = Exthost.CodeLens.t;
+type codeLens = Exthost.CodeLens.lens;
 
-let lineNumber = (lens: Exthost.CodeLens.t) =>
+let lineNumber = (lens: Exthost.CodeLens.lens) =>
   Exthost.OneBasedRange.(lens.range.startLineNumber - 1);
 
-let textFromExthost = (lens: Exthost.CodeLens.t) => {
+let textFromExthost = (lens: Exthost.CodeLens.lens) => {
   Exthost.Command.(
     lens.command
     |> OptionEx.flatMap(command => command.label)
@@ -21,7 +21,7 @@ let textFromExthost = (lens: Exthost.CodeLens.t) => {
   );
 };
 
-let text = (lens: Exthost.CodeLens.t) => textFromExthost(lens);
+let text = (lens: Exthost.CodeLens.lens) => textFromExthost(lens);
 
 type provider = {
   handle: int,
@@ -55,7 +55,7 @@ type msg =
       bufferId: int,
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,
-      lenses: list(Exthost.CodeLens.t),
+      lenses: list(Exthost.CodeLens.lens),
     });
 
 let register = (~handle: int, ~selector, ~maybeEventHandle, model) => {

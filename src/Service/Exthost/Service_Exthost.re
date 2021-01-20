@@ -701,21 +701,36 @@ module Sub = {
 
   module CodeLensesSubscription =
     Isolinear.Sub.Make({
-      type nonrec msg = result(list(Exthost.CodeLens.t), string);
+      type nonrec msg = result(list(Exthost.CodeLens.lens), string);
       type nonrec params = codeLensesParams;
 
       type state = {
+        cacheId: ref(option(Exthost.CodeLens.List.cacheId)),
         isActive: ref(bool),
-        dispose: unit => unit,
+        disposeTimeout: unit => unit,
       };
 
       let name = "Service_Exthost.CodeLensesSubscription";
       let id = ({handle, buffer, startLine, eventTick, _}: params) =>
         idForCodeLens(~handle, ~buffer, ~startLine, ~eventTick);
 
+      let cleanup = (~cacheId as maybeCacheId, ~params) => {
+        maybeCacheId^
+        |> Option.iter(cacheId => {
+             Exthost.Request.LanguageFeatures.releaseCodeLenses(
+               ~handle=params.handle,
+               ~cacheId,
+               params.client,
+             );
+
+             maybeCacheId := None;
+           });
+      };
+
       let init = (~params, ~dispatch) => {
         let active = ref(true);
-        let dispose =
+        let cacheId = ref(None);
+        let disposeTimeout =
           Revery.Tick.timeout(
             ~name,
             _ => {
@@ -726,7 +741,7 @@ module Sub = {
                   params.client,
                 );
 
-              let resolveLens = (codeLens: Exthost.CodeLens.t) =>
+              let resolveLens = (codeLens: Exthost.CodeLens.lens) =>
                 if (! active^) {
                   // If the subscription is over, don't both resolving...
                   Lwt.return(
@@ -745,13 +760,15 @@ module Sub = {
                 };
 
               let promise =
-                Lwt.bind(
-                  init,
-                  initResult => {
+                Lwt.bind(init, (initResult: option(Exthost.CodeLens.List.t)) =>
+                  if (active^) {
                     let unresolvedLenses =
                       initResult
+                      |> Option.map((lensResult: Exthost.CodeLens.List.t) =>
+                           lensResult.lenses
+                         )
                       |> Option.value(~default=[])
-                      |> List.filter((lens: Exthost.CodeLens.t) => {
+                      |> List.filter((lens: Exthost.CodeLens.lens) => {
                            Exthost.OneBasedRange.(
                              {
                                lens.range.startLineNumber >= params.startLine
@@ -765,10 +782,10 @@ module Sub = {
 
                     let join:
                       (
-                        list(Exthost.CodeLens.t),
-                        option(Exthost.CodeLens.t)
+                        list(Exthost.CodeLens.lens),
+                        option(Exthost.CodeLens.lens)
                       ) =>
-                      list(Exthost.CodeLens.t) =
+                      list(Exthost.CodeLens.lens) =
                       (acc, cur) => {
                         switch (cur) {
                         | None => acc
@@ -777,7 +794,10 @@ module Sub = {
                       };
 
                     Utility.LwtEx.all(~initial=[], join, resolvePromises);
-                  },
+                  } else {
+                    cleanup(~cacheId, ~params);
+                    Lwt.return([]);
+                  }
                 );
 
               Lwt.on_success(promise, codeLenses => {
@@ -790,14 +810,15 @@ module Sub = {
             },
             Constants.lowPriorityDebounceTime,
           );
-        {isActive: active, dispose};
+        {isActive: active, disposeTimeout, cacheId};
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state) => {
+      let dispose = (~params, ~state) => {
+        cleanup(~params, ~cacheId=state.cacheId);
         state.isActive := false;
-        state.dispose();
+        state.disposeTimeout();
       };
     });
 

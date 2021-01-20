@@ -251,7 +251,7 @@ module LanguageFeatures = {
     );
   };
 
-  let resolveCodeLens = (~handle: int, ~codeLens: CodeLens.t, client) => {
+  let resolveCodeLens = (~handle: int, ~codeLens: CodeLens.lens, client) => {
     let decoder = Json.Decode.(nullable(CodeLens.decode));
     Client.request(
       ~decoder,
@@ -263,6 +263,16 @@ module LanguageFeatures = {
           `Int(handle),
           codeLens |> Json.Encode.encode_value(CodeLens.encode),
         ]),
+      client,
+    );
+  };
+
+  let releaseCodeLenses = (~handle: int, ~cacheId, client) => {
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$releaseCodeLenses",
+      ~args=`List([`Int(handle), `Int(cacheId)]),
       client,
     );
   };
