@@ -102,7 +102,7 @@ module Mode: {
   type t =
     | Normal({cursor: BytePosition.t})
     | Insert({cursors: list(BytePosition.t)})
-    | CommandLine
+    | CommandLine({cursor: BytePosition.t})
     | Replace({cursor: BytePosition.t})
     | Visual(VisualRange.t)
     | Operator({
@@ -113,6 +113,7 @@ module Mode: {
 
   let current: unit => t;
 
+  let isCommandLine: t => bool;
   let isInsert: t => bool;
   let isNormal: t => bool;
   let isVisual: t => bool;

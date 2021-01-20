@@ -3,7 +3,7 @@ open EditorCoreTypes;
 type t =
   | Normal({cursor: BytePosition.t})
   | Insert({cursors: list(BytePosition.t)})
-  | CommandLine
+  | CommandLine({ cursor: BytePosition. t})
   | Replace({cursor: BytePosition.t})
   | Visual(VisualRange.t)
   | Operator({
@@ -16,7 +16,7 @@ let show = (mode: t) => {
   switch (mode) {
   | Normal(_) => "Normal"
   | Visual(_) => "Visual"
-  | CommandLine => "CommandLine"
+  | CommandLine(_) => "CommandLine"
   | Replace(_) => "Replace"
   | Operator(_) => "Operator"
   | Insert(_) => "Insert"
@@ -32,7 +32,7 @@ let cursors =
   | Visual(range) => [range |> VisualRange.cursor]
   | Operator({cursor, _}) => [cursor]
   | Select(range) => [range |> VisualRange.cursor]
-  | CommandLine => [];
+  | CommandLine({cursor, _}) => [cursor];
 
 let current = () => {
   let nativeMode: Native.mode = Native.vimGetMode();
@@ -41,7 +41,7 @@ let current = () => {
   switch (nativeMode) {
   | Native.Normal => Normal({cursor: cursor})
   | Native.Visual => Visual(VisualRange.current())
-  | Native.CommandLine => CommandLine
+  | Native.CommandLine => CommandLine({cursor: cursor})
   | Native.Replace => Replace({cursor: cursor})
   | Native.Operator =>
     Operator({
@@ -66,6 +66,11 @@ let isSelect =
 let isInsert =
   fun
   | Insert(_) => true
+  | _ => false;
+
+let isCommandLine =
+  fun
+  | CommandLine(_) => true
   | _ => false;
 
 let isNormal =
@@ -139,7 +144,7 @@ let trySet = newMode => {
   // These modes cannot be explicitly transitioned to currently
   | Operator(_)
   | Replace(_)
-  | CommandLine => ()
+  | CommandLine(_) => ()
   };
 
   current();
