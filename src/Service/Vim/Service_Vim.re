@@ -123,7 +123,8 @@ module Effects = {
         })
       | Replace({cursor}) =>
         Replace({cursor: adjustBytePositionForEdit(cursor, edit)})
-      | CommandLine => CommandLine
+      | CommandLine({cursor}) =>
+        CommandLine({cursor: adjustBytePositionForEdit(cursor, edit)})
       | Operator({cursor, pending}) =>
         Operator({cursor: adjustBytePositionForEdit(cursor, edit), pending})
       | Visual(_) as vis => vis

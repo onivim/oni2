@@ -44,7 +44,7 @@ let current: State.t => Oni_Core.Mode.t =
            | Vim.Mode.Replace({cursor}) => Mode.Replace({cursor: cursor})
            | Vim.Mode.Operator({pending, _}) =>
              Mode.Operator({pending: pending})
-           | Vim.Mode.CommandLine => Mode.CommandLine
+           | Vim.Mode.CommandLine(_) => Mode.CommandLine
            },
        );
   };

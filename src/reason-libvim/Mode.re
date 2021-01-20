@@ -3,7 +3,7 @@ open EditorCoreTypes;
 type t =
   | Normal({cursor: BytePosition.t})
   | Insert({cursors: list(BytePosition.t)})
-  | CommandLine({ cursor: BytePosition. t})
+  | CommandLine({cursor: BytePosition.t})
   | Replace({cursor: BytePosition.t})
   | Visual(VisualRange.t)
   | Operator({
