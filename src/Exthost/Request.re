@@ -276,6 +276,7 @@ module LanguageFeatures = {
       client,
     );
   };
+
   let provideCompletionItems =
       (
         ~handle: int,
