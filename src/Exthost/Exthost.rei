@@ -100,15 +100,26 @@ module OneBasedRange: {
 
 module CodeLens: {
   [@deriving show]
-  type t = {
+  type lens = {
     cacheId: option(list(int)),
     range: OneBasedRange.t,
     command: option(Command.t),
   };
 
-  let decode: Json.decoder(t);
+  module List: {
+    [@deriving show]
+    type cacheId;
 
-  module List: {let decode: Json.decoder(list(t));};
+    [@deriving show]
+    type t = {
+      cacheId: option(cacheId),
+      lenses: list(lens),
+    };
+
+    let default: t;
+
+    let decode: Json.decoder(t);
+  };
 };
 
 module Location: {
@@ -593,9 +604,11 @@ module SignatureHelp: {
     let decode: Json.decoder(t);
   };
 
+  type cacheId;
+
   module Response: {
     type t = {
-      id: int,
+      cacheId,
       signatures: list(Signature.t),
       activeSignature: int,
       activeParameter: int,
@@ -606,10 +619,15 @@ module SignatureHelp: {
 };
 
 module SuggestResult: {
+  [@deriving show];
+
+  type cacheId;
+
   [@deriving show]
   type t = {
     completions: list(SuggestItem.t),
     isIncomplete: bool,
+    cacheId: option(cacheId),
   };
 
   let empty: t;
@@ -1758,11 +1776,14 @@ module Request: {
   module LanguageFeatures: {
     let provideCodeLenses:
       (~handle: int, ~resource: Uri.t, Client.t) =>
-      Lwt.t(option(list(CodeLens.t)));
+      Lwt.t(option(CodeLens.List.t));
 
     let resolveCodeLens:
-      (~handle: int, ~codeLens: CodeLens.t, Client.t) =>
-      Lwt.t(option(CodeLens.t));
+      (~handle: int, ~codeLens: CodeLens.lens, Client.t) =>
+      Lwt.t(option(CodeLens.lens));
+
+    let releaseCodeLenses:
+      (~handle: int, ~cacheId: CodeLens.List.cacheId, Client.t) => unit;
 
     let provideCompletionItems:
       (
@@ -1777,6 +1798,9 @@ module Request: {
     let resolveCompletionItem:
       (~handle: int, ~chainedCacheId: ChainedCacheId.t, Client.t) =>
       Lwt.t(SuggestItem.t);
+
+    let releaseCompletionItems:
+      (~handle: int, ~cacheId: SuggestResult.cacheId, Client.t) => unit;
 
     let provideDocumentHighlights:
       (
@@ -1875,6 +1899,9 @@ module Request: {
       ) =>
       Lwt.t(option(SignatureHelp.Response.t));
 
+    let releaseSignatureHelp:
+      (~handle: int, ~cacheId: SignatureHelp.cacheId, Client.t) => unit;
+
     let provideDocumentFormattingEdits:
       (
         ~handle: int,
@@ -1904,8 +1931,6 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(option(list(Edit.SingleEditOperation.t)));
-
-    let releaseSignatureHelp: (~handle: int, ~id: int, Client.t) => unit;
   };
 
   module SCM: {
