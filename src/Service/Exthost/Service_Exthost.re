@@ -952,13 +952,29 @@ module Sub = {
         result(option(Exthost.SignatureHelp.Response.t), string);
       type nonrec params = signatureHelpParams;
 
-      type state = unit;
+      type state = {
+        isActive: ref(bool),
+        cacheId: ref(option(Exthost.SignatureHelp.cacheId)),
+      };
+
+      let cleanup = (~params, ~cacheId) => {
+        cacheId^
+        |> Option.iter(cacheId => {
+             Exthost.Request.LanguageFeatures.releaseSignatureHelp(
+               ~handle=params.handle,
+               ~cacheId,
+               params.client,
+             )
+           });
+      };
 
       let name = "Service_Exthost.SignatureHelpSubscription";
       let id = ({handle, buffer, position, _}: params) =>
         idFromBufferPosition(~handle, ~buffer, ~position, "SignatureHelp");
 
       let init = (~params, ~dispatch) => {
+        let isActive = ref(true);
+        let cacheId = ref(None);
         let promise =
           Exthost.Request.LanguageFeatures.provideSignatureHelp(
             ~handle=params.handle,
@@ -968,21 +984,37 @@ module Sub = {
             params.client,
           );
 
-        Lwt.on_success(promise, suggestResult =>
-          dispatch(Ok(suggestResult))
+        Lwt.on_success(
+          promise,
+          (maybeSigHelpResult: option(Exthost.SignatureHelp.Response.t)) => {
+            maybeSigHelpResult
+            |> Option.iter(suggestResult => {
+                 cacheId :=
+                   Some(
+                     Exthost.SignatureHelp.Response.(suggestResult.cacheId),
+                   )
+               });
+
+            if (isActive^) {
+              dispatch(Ok(maybeSigHelpResult));
+            } else {
+              cleanup(~params, ~cacheId);
+            };
+          },
         );
 
         Lwt.on_failure(promise, exn =>
           dispatch(Error(Printexc.to_string(exn)))
         );
 
-        ();
+        {isActive, cacheId};
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params as _, ~state as _) => {
-        ();
+      let dispose = (~params, ~state) => {
+        state.isActive := false;
+        cleanup(~params, ~cacheId=state.cacheId);
       };
     });
   let signatureHelp = (~handle, ~context, ~buffer, ~position, ~toMsg, client) => {

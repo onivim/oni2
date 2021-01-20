@@ -458,7 +458,7 @@ module LanguageFeatures = {
     );
   };
 
-  let releaseSignatureHelp = (~handle, ~id, client) =>
+  let releaseSignatureHelp = (~handle, ~cacheId, client) =>
     Client.notify(
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$releaseSignatureHelp",
@@ -466,7 +466,7 @@ module LanguageFeatures = {
         `List(
           Json.Encode.[
             handle |> encode_value(int),
-            id |> encode_value(int),
+            cacheId |> encode_value(int),
           ],
         ),
       client,

@@ -544,14 +544,15 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get signature help",
            ~validate=
-             (signatureHelp: option(Exthost.SignatureHelp.Response.t)) => {
+             (maybeSignatureHelp: option(Exthost.SignatureHelp.Response.t)) => {
                open Exthost.SignatureHelp;
 
-               expect.equal(
-                 signatureHelp,
-                 Some({
-                   id: 1,
-                   signatures: [
+               switch (maybeSignatureHelp) {
+               | None => failwith("No signature help returned")
+               | Some({signatures, activeSignature, activeParameter, _}) =>
+                 expect.equal(
+                   signatures,
+                   [
                      Signature.{
                        label: "signature 1",
                        documentation:
@@ -573,11 +574,10 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
                        ],
                      },
                    ],
-                   activeSignature: 0,
-                   activeParameter: 0,
-                 }),
-               );
-
+                 );
+                 expect.equal(activeSignature, 0);
+                 expect.equal(activeParameter, 0);
+               };
                true;
              },
            getSignatureHelp,

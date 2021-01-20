@@ -593,9 +593,11 @@ module SignatureHelp: {
     let decode: Json.decoder(t);
   };
 
+  type cacheId;
+
   module Response: {
     type t = {
-      id: int,
+      cacheId,
       signatures: list(Signature.t),
       activeSignature: int,
       activeParameter: int,
@@ -1883,6 +1885,9 @@ module Request: {
       ) =>
       Lwt.t(option(SignatureHelp.Response.t));
 
+    let releaseSignatureHelp:
+      (~handle: int, ~cacheId: SignatureHelp.cacheId, Client.t) => unit;
+
     let provideDocumentFormattingEdits:
       (
         ~handle: int,
@@ -1912,8 +1917,6 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(option(list(Edit.SingleEditOperation.t)));
-
-    let releaseSignatureHelp: (~handle: int, ~id: int, Client.t) => unit;
   };
 
   module SCM: {
