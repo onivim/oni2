@@ -16,7 +16,7 @@ runTest(~name="Viml Remap ö -> :", ({dispatch, wait, runEffects, input, _}) => 
   input("ö");
 
   wait(~name="Mode switches to command line", (state: State.t) => {
-    Selectors.mode(state) == Vim.Mode.CommandLine
+    Vim.Mode.isCommandLine(Selectors.mode(state))
   });
 
   input("e");
