@@ -40,13 +40,10 @@ let start = () => {
 
       if (newZoomValue != currentZoomValue) {
         dispatch(
-          ConfigurationSet({
-            ...configuration,
-            default: {
-              ...configuration.default,
-              uiZoom: newZoomValue,
-            },
-          }),
+          Actions.ConfigurationTransform(
+            "configuration.json",
+            ConfigurationTransformer.setField("ui.zoom", `Float(newZoomValue)),
+          ),
         );
       };
     });

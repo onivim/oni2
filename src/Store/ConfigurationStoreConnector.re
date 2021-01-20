@@ -46,37 +46,6 @@ let start =
     ();
   };
 
-  let transformConfigurationEffect = (fileName, buffers, transformer) => {
-    let configPath = getConfigurationFile(fileName);
-    switch (configPath) {
-    | Error(msg) =>
-      Log.error("Unable to load configuration: " ++ msg);
-      Isolinear.Effect.none;
-    | Ok(configPath) =>
-      // TODO: Fp.t all the way...
-      let configPath = Fp.toString(configPath);
-      if (!Feature_Buffers.isModifiedByPath(buffers, configPath)) {
-        Oni_Core.Log.perf("Apply configuration transform", () => {
-          let parsedJson = Yojson.Safe.from_file(configPath);
-          let newJson = transformer(parsedJson);
-          let oc = open_out(configPath);
-          Yojson.Safe.pretty_to_channel(oc, newJson);
-          close_out(oc);
-        });
-
-        Isolinear.Effect.none;
-      } else {
-        {
-          Feature_Notification.Effects.create(
-            ~kind=Error,
-            "Unable to save theme selection to configuration; configuration file is modified.",
-          );
-        }
-        |> Isolinear.Effect.map(msg => Actions.Notification(msg));
-      };
-    };
-  };
-
   let clearDiagnostics = (~dispatch) => {
     dispatch(
       Actions.Diagnostics(
@@ -134,6 +103,38 @@ let start =
           )
       );
     });
+
+
+  let transformConfigurationEffect = (fileName, buffers, transformer) => {
+    let configPath = getConfigurationFile(fileName);
+    switch (configPath) {
+    | Error(msg) =>
+      Log.error("Unable to load configuration: " ++ msg);
+      Isolinear.Effect.none;
+    | Ok(configPath) =>
+      // TODO: Fp.t all the way...
+      let configPath = Fp.toString(configPath);
+      if (!Feature_Buffers.isModifiedByPath(buffers, configPath)) {
+        Oni_Core.Log.perf("Apply configuration transform", () => {
+          let parsedJson = Yojson.Safe.from_file(configPath);
+          let newJson = transformer(parsedJson);
+          let oc = open_out(configPath);
+          Yojson.Safe.pretty_to_channel(oc, newJson);
+          close_out(oc);
+        });
+
+        reloadConfigurationEffect
+      } else {
+        {
+          Feature_Notification.Effects.create(
+            ~kind=Error,
+            "Unable to save theme selection to configuration; configuration file is modified.",
+          );
+        }
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg));
+      };
+    };
+  };
 
   let initConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch =>
