@@ -705,7 +705,7 @@ module Sub = {
       type nonrec params = codeLensesParams;
 
       type state = {
-        cacheId: ref(option(Exthost.CodeLens.List.cacheId)),
+        maybeCacheId: ref(option(Exthost.CodeLens.List.cacheId)),
         isActive: ref(bool),
         disposeTimeout: unit => unit,
       };
@@ -714,7 +714,7 @@ module Sub = {
       let id = ({handle, buffer, startLine, eventTick, _}: params) =>
         idForCodeLens(~handle, ~buffer, ~startLine, ~eventTick);
 
-      let cleanup = (~cacheId as maybeCacheId, ~params) => {
+      let cleanup = (~maybeCacheId, ~params) => {
         maybeCacheId^
         |> Option.iter(cacheId => {
              Exthost.Request.LanguageFeatures.releaseCodeLenses(
@@ -729,7 +729,7 @@ module Sub = {
 
       let init = (~params, ~dispatch) => {
         let active = ref(true);
-        let cacheId = ref(None);
+        let maybeCacheId = ref(None);
         let disposeTimeout =
           Revery.Tick.timeout(
             ~name,
@@ -760,44 +760,52 @@ module Sub = {
                 };
 
               let promise =
-                Lwt.bind(init, (initResult: option(Exthost.CodeLens.List.t)) =>
-                  if (active^) {
-                    let unresolvedLenses =
-                      initResult
-                      |> Option.map((lensResult: Exthost.CodeLens.List.t) =>
-                           lensResult.lenses
-                         )
-                      |> Option.value(~default=[])
-                      |> List.filter((lens: Exthost.CodeLens.lens) => {
-                           Exthost.OneBasedRange.(
-                             {
-                               lens.range.startLineNumber >= params.startLine
-                               && lens.range.startLineNumber <= params.stopLine;
-                             }
+                Lwt.bind(
+                  init,
+                  (initResult: option(Exthost.CodeLens.List.t)) => {
+                    initResult
+                    |> Option.iter(({cacheId, _}: Exthost.CodeLens.List.t) => {
+                         maybeCacheId := cacheId
+                       });
+                    if (active^) {
+                      let unresolvedLenses =
+                        initResult
+                        |> Option.map((lensResult: Exthost.CodeLens.List.t) =>
+                             lensResult.lenses
                            )
-                         });
+                        |> Option.value(~default=[])
+                        |> List.filter((lens: Exthost.CodeLens.lens) => {
+                             Exthost.OneBasedRange.(
+                               {
+                                 lens.range.startLineNumber >= params.startLine
+                                 && lens.range.startLineNumber
+                                 <= params.stopLine;
+                               }
+                             )
+                           });
 
-                    let resolvePromises =
-                      unresolvedLenses |> List.map(resolveLens);
+                      let resolvePromises =
+                        unresolvedLenses |> List.map(resolveLens);
 
-                    let join:
-                      (
-                        list(Exthost.CodeLens.lens),
-                        option(Exthost.CodeLens.lens)
-                      ) =>
-                      list(Exthost.CodeLens.lens) =
-                      (acc, cur) => {
-                        switch (cur) {
-                        | None => acc
-                        | Some(lens) => [lens, ...acc]
+                      let join:
+                        (
+                          list(Exthost.CodeLens.lens),
+                          option(Exthost.CodeLens.lens)
+                        ) =>
+                        list(Exthost.CodeLens.lens) =
+                        (acc, cur) => {
+                          switch (cur) {
+                          | None => acc
+                          | Some(lens) => [lens, ...acc]
+                          };
                         };
-                      };
 
-                    Utility.LwtEx.all(~initial=[], join, resolvePromises);
-                  } else {
-                    cleanup(~cacheId, ~params);
-                    Lwt.return([]);
-                  }
+                      Utility.LwtEx.all(~initial=[], join, resolvePromises);
+                    } else {
+                      cleanup(~maybeCacheId, ~params);
+                      Lwt.return([]);
+                    };
+                  },
                 );
 
               Lwt.on_success(promise, codeLenses => {
@@ -810,13 +818,13 @@ module Sub = {
             },
             Constants.lowPriorityDebounceTime,
           );
-        {isActive: active, disposeTimeout, cacheId};
+        {isActive: active, disposeTimeout, maybeCacheId};
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
       let dispose = (~params, ~state) => {
-        cleanup(~params, ~cacheId=state.cacheId);
+        cleanup(~params, ~maybeCacheId=state.maybeCacheId);
         state.isActive := false;
         state.disposeTimeout();
       };
