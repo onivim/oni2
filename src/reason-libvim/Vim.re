@@ -724,6 +724,8 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         if (!canDoMultiCursorSelect) {
           Mode.current();
         } else {
+          // TODO: Actually do multi-select...
+          prerr_endline ("TODO: Implement multi-select!");
           Mode.current();
         }
         
