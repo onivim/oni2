@@ -70,9 +70,9 @@ type outmsg =
       lenses: list(CodeLens.codeLens),
     })
   | SetSelections({
-    editorId: int,
-    ranges: list(CharacterRange.t)
-  });
+      editorId: int,
+      ranges: list(CharacterRange.t),
+    });
 
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
@@ -95,7 +95,8 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
         stopLine,
       }) =>
       CodeLensesChanged({handle, bufferId, lenses, startLine, stopLine})
-    | Outmsg.SetSelections({editorId, ranges}) => SetSelections({editorId, ranges});
+    | Outmsg.SetSelections({editorId, ranges}) =>
+      SetSelections({editorId, ranges});
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -314,8 +315,10 @@ let update =
         model.documentHighlights,
       );
 
-    ({...model, documentHighlights: documentHighlights'}, 
-      outmsg |> map(msg => DocumentHighlights(msg)));
+    (
+      {...model, documentHighlights: documentHighlights'},
+      outmsg |> map(msg => DocumentHighlights(msg)),
+    );
 
   | DocumentSymbols(documentSymbolsMsg) =>
     let documentSymbols' =
@@ -506,6 +509,10 @@ module Contributions = {
       |> List.map(Oni_Core.Command.map(msg => Definition(msg)))
     )
     @ (
+      DocumentHighlights.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => DocumentHighlights(msg)))
+    )
+    @ (
       Hover.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Hover(msg)))
     )
@@ -546,6 +553,7 @@ module Contributions = {
     Rename.Contributions.keybindings
     @ Completion.Contributions.keybindings
     @ Definition.Contributions.keybindings
+    @ DocumentHighlights.Contributions.keybindings
     @ References.Contributions.keybindings
     @ SignatureHelp.Contributions.keybindings;
 };

@@ -26,7 +26,10 @@ type internalMsg('a) =
       stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.codeLens),
     })
-  | SetSelections({editorId: int, ranges: list(CharacterRange.t)})
+  | SetSelections({
+      editorId: int,
+      ranges: list(CharacterRange.t),
+    })
   | Effect(Isolinear.Effect.t('a));
 
 let map = f =>

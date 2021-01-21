@@ -696,23 +696,31 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         };
       } else if (Mode.isSelect(mode)) {
         // Handle multiple selector cursors
-        let ranges = switch (mode) {
-        | Select({ranges}) => ranges
-        | _ => []
-        };
+        let ranges =
+          switch (mode) {
+          | Select({ranges}) => ranges
+          | _ => []
+          };
 
         // Check if we can run multi-cursor insert - preconditions are:
         // 1) All selections are character-wise
-        let allSelectionsCharacterWise = ranges
-        |> List.for_all((range: VisualRange.t) => range.visualType == Types.Character);
+        let allSelectionsCharacterWise =
+          ranges
+          |> List.for_all((range: VisualRange.t) =>
+               range.visualType == Types.Character
+             );
 
         // 2) All selections individually span a single line
-        let allSelectionsAreSingleLine = 
-        ranges |> List.for_all((range: VisualRange.t) => range.cursor.line == range.anchor.line)
+        let allSelectionsAreSingleLine =
+          ranges
+          |> List.for_all((range: VisualRange.t) =>
+               range.cursor.line == range.anchor.line
+             );
 
         // In subsequent iterations, would be nice to remove this limitation..
 
-        let canDoMultiCursorSelect = allSelectionsAreSingleLine && allSelectionsCharacterWise;
+        let canDoMultiCursorSelect =
+          allSelectionsAreSingleLine && allSelectionsCharacterWise;
 
         // Run the cursor as normal...
         switch (cursors) {
@@ -725,10 +733,9 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
           Mode.current();
         } else {
           // TODO: Actually do multi-select...
-          prerr_endline ("TODO: Implement multi-select!");
+          prerr_endline("TODO: Implement multi-select!");
           Mode.current();
-        }
-        
+        };
       } else {
         switch (cursors) {
         | [hd, ..._] => Cursor.set(hd)

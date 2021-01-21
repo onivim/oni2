@@ -17,7 +17,7 @@ let initial = {providers: [], bufferToHighlights: IntMap.empty};
 
 [@deriving show]
 type command =
-| ChangeAll;
+  | ChangeAll;
 
 [@deriving show]
 type msg =
@@ -27,6 +27,29 @@ type msg =
       ranges: list(CharacterRange.t),
     });
 // TODO: kind?
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let changeAll =
+    define(
+      ~category="Editor",
+      ~title="Change All Occurrences",
+      "editor.action.changeAll",
+      Command(ChangeAll),
+    );
+};
+
+module Keybindings = {
+  open Feature_Input.Schema;
+
+  let changeAll =
+    bind(
+      ~key="<F2>",
+      ~command=Commands.changeAll.id,
+      ~condition="editorTextFocus" |> WhenExpr.parse,
+    );
+};
 
 let clear = (~bufferId, model) => {
   {
@@ -59,7 +82,7 @@ let cursorMoved = (~buffer, ~cursor, model) => {
 };
 
 let allHighlights = (~bufferId, model) => {
-  []
+  [];
 };
 
 let update = (~maybeBuffer, ~editorId, msg, model) => {
@@ -71,13 +94,40 @@ let update = (~maybeBuffer, ~editorId, msg, model) => {
     ({...model, bufferToHighlights}, Outmsg.Nothing);
 
   | Command(ChangeAll) =>
-    let _model = maybeBuffer
-    |> Option.map(Oni_Core.Buffer.getId)
-    |> Option.map(bufferId => {
-    let _allHighlights = allHighlights(~bufferId, model);
-    });
+    let _model =
+      maybeBuffer
+      |> Option.map(Oni_Core.Buffer.getId)
+      |> Option.map(bufferId => {
+           let _allHighlights = allHighlights(~bufferId, model);
+           ();
+         });
+    open EditorCoreTypes;
+    let rangeForLine = idx =>
+      CharacterRange.{
+        start:
+          CharacterPosition.{
+            line: LineNumber.ofZeroBased(idx),
+            character: CharacterIndex.zero,
+          },
+        stop:
+          BytePosition.{
+            line: LineNumber.ofZeroBased(idx),
+            character: CharacterIndex.(zero + 1),
+          },
+      };
 
-    (model, Outmsg.Nothing);
+    (
+      model,
+      Outmsg.SetSelections({
+        editorId,
+        ranges:
+          CharacterRange.[
+            rangeForLine(0),
+            rangeForLine(1),
+            rangeForLine(2),
+          ],
+      }),
+    );
   };
 };
 
@@ -149,4 +199,8 @@ let sub = (~isInsertMode, ~config, ~buffer, ~location, ~client, model) =>
 
 module Contributions = {
   let configuration = Configuration.[enabled.spec];
+
+  let commands = Commands.[changeAll];
+
+  let keybindings = Keybindings.[changeAll];
 };

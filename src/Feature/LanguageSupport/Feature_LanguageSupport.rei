@@ -78,9 +78,9 @@ type outmsg =
       lenses: list(CodeLens.t),
     })
   | SetSelections({
-    editorId: int,
-    ranges: list(CharacterRange.t),
-  });
+      editorId: int,
+      ranges: list(CharacterRange.t),
+    });
 
 let update:
   (
