@@ -63,8 +63,6 @@
 	"numpad_multiply", BINDING(Physical(NumpadMultiply));
 	"leader", BINDING(Special(Leader));
 	"plug", BINDING(Special(Plug));
-	"lt", BINDING(Physical(Character(Uchar.of_char '<')));
-	"gt", BINDING(Physical(Character(Uchar.of_char '>')));
 	"plus", BINDING(Physical(Character(Uchar.of_char '+')));
 	]
 }
@@ -104,6 +102,8 @@ rule token = parse
 | white { token lexbuf }
 | binding as i
  { BINDING (Physical(Character (Uchar.of_char i))) }
+| '<' ['g' 'G'] ['t' 'T'] '>' { BINDING (Physical(Character (Uchar.of_char '>')))}
+| '<' ['l' 'L'] ['t' 'T'] '>' { BINDING (Physical(Character (Uchar.of_char '<')))}
 | '<' { LT }
 | '>' { GT }
 | eof { EOF }

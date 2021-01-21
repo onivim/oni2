@@ -327,5 +327,47 @@ describe("Matcher", ({describe, _}) => {
     //        ),
     //      );
     //    });
-  })
+  });
+  describe("special cases - lt/gt", ({test, _}) => {
+    test("'gt'", ({expect, _}) => {
+      let result = defaultParse("gt");
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(Key.Character(Uchar.of_char('g'))),
+            keyPress(Key.Character(Uchar.of_char('t'))),
+          ]),
+        ),
+      );
+    });
+
+    test("'lt'", ({expect, _}) => {
+      let result = defaultParse("lt");
+      expect.equal(
+        result,
+        Ok(
+          Sequence([
+            keyPress(Key.Character(Uchar.of_char('l'))),
+            keyPress(Key.Character(Uchar.of_char('t'))),
+          ]),
+        ),
+      );
+    });
+
+    test("'<gt>'", ({expect, _}) => {
+      let result = defaultParse("<gt>");
+      expect.equal(
+        result,
+        Ok(Sequence([keyPress(Key.Character(Uchar.of_char('>')))])),
+      );
+    });
+    test("'<lt>'", ({expect, _}) => {
+      let result = defaultParse("<lt>");
+      expect.equal(
+        result,
+        Ok(Sequence([keyPress(Key.Character(Uchar.of_char('<')))])),
+      );
+    });
+  });
 });
