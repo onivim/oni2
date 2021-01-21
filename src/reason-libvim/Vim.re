@@ -602,7 +602,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
     () => {
       // Special auto-closing pairs handling...
 
-      let runCursor = (cursor: BytePosition.t) => {
+      let runInsertCursor = (cursor: BytePosition.t) => {
         let lineNumber = EditorCoreTypes.LineNumber.toOneBased(cursor.line);
         Undo.saveRegion(lineNumber - 1, lineNumber + 1);
         Cursor.set(cursor);
@@ -680,12 +680,12 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         // Run first command, verify we don't go back to normal mode
         switch (cursors) {
         | [hd, ...tail] =>
-          let newHead = runCursor(hd);
+          let newHead = runInsertCursor(hd);
 
           let newMode = Mode.current();
           // If we're still in insert mode, run the command for all the rest of the characters too
           if (Mode.isInsert(newMode)) {
-            let remainingCursors = List.map(runCursor, tail);
+            let remainingCursors = List.map(runInsertCursor, tail);
             Insert({cursors: [newHead, ...remainingCursors]});
           } else {
             newMode;
@@ -694,6 +694,39 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         // This should never happen...
         | [] => Insert({cursors: cursors})
         };
+      } else if (Mode.isSelect(mode)) {
+        // Handle multiple selector cursors
+        let ranges = switch (mode) {
+        | Select({ranges}) => ranges
+        | _ => []
+        };
+
+        // Check if we can run multi-cursor insert - preconditions are:
+        // 1) All selections are character-wise
+        let allSelectionsCharacterWise = ranges
+        |> List.for_all((range: VisualRange.t) => range.visualType == Types.Character);
+
+        // 2) All selections individually span a single line
+        let allSelectionsAreSingleLine = 
+        ranges |> List.for_all((range: VisualRange.t) => range.cursor.line == range.anchor.line)
+
+        // In subsequent iterations, would be nice to remove this limitation..
+
+        let canDoMultiCursorSelect = allSelectionsAreSingleLine && allSelectionsCharacterWise;
+
+        // Run the cursor as normal...
+        switch (cursors) {
+        | [hd, ..._] => Cursor.set(hd)
+        | _ => ()
+        };
+        inputFn(v);
+
+        if (!canDoMultiCursorSelect) {
+          Mode.current();
+        } else {
+          Mode.current();
+        }
+        
       } else {
         switch (cursors) {
         | [hd, ..._] => Cursor.set(hd)

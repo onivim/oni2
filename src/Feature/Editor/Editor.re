@@ -142,7 +142,7 @@ let selection = ({mode, _}) =>
 
   | Select({ranges}) =>
     switch (ranges) {
-    | [range, ...tail] => Some(Oni_Core.VisualRange.ofVim(range))
+    | [range, ..._] => Some(Oni_Core.VisualRange.ofVim(range))
     | [] => None
     }
   | _ => None
