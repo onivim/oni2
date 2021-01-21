@@ -212,7 +212,9 @@ module Session = {
                      internalMsg,
                      providerModel,
                    );
-                 switch (ProviderImpl.items(providerModel')) {
+                 let (_completionState, items) = ProviderImpl.items(providerModel');
+                 // TODO: Handle completion state
+                 switch (items) {
                  | [] => Pending({meet, providerModel: providerModel'})
                  | items =>
                    Completed({
@@ -326,7 +328,7 @@ module Session = {
              |> Option.map(model => (meet, model))
            })
         |> Option.map(((meet, model)) => {
-             let items = ProviderImpl.items(model);
+             let (_isComplete, items) = ProviderImpl.items(model);
              let state =
                switch (items) {
                | [] => Pending({meet, providerModel: model})

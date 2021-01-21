@@ -2,6 +2,11 @@ open Oni_Core;
 open Utility;
 open EditorCoreTypes;
 
+type completionState =
+| Complete
+| Incomplete;
+
+
 module type S = {
   type msg;
   type model;
@@ -23,7 +28,7 @@ module type S = {
     ) =>
     option(model);
 
-  let items: model => list(CompletionItem.t);
+  let items: model => (completionState, list(CompletionItem.t));
 
   let handle: unit => option(int);
 
@@ -41,7 +46,11 @@ module type S = {
 type provider('model, 'msg) = (module S with
                                   type model = 'model and type msg = 'msg);
 
-type exthostModel = list(CompletionItem.t);
+type exthostModel = {
+  isComplete: bool,
+  completions: list(CompletionItem.t)
+};
+
 [@deriving show]
 type exthostMsg =
   | ResultAvailable({
@@ -92,7 +101,7 @@ module ExthostCompletionProvider =
     if (!Exthost.DocumentSelector.matchesBuffer(~buffer, Config.selector)) {
       None;
     } else {
-      Some([]);
+      Some({completions: [], isComplete: false});
     };
 
   let handle = () => Some(providerHandle);
@@ -101,15 +110,16 @@ module ExthostCompletionProvider =
     switch (msg) {
     // TODO: Handle incomplete result
     | ResultAvailable({handle, result}) when handle == providerHandle =>
+      let isComplete = !result.isIncomplete;
       let completions =
         Exthost.SuggestResult.(result.completions)
         |> List.map(
              CompletionItem.create(~isFuzzyMatching, ~handle=providerHandle),
            );
-      (completions, Nothing);
+      ({isComplete, completions}, Nothing);
     | DetailsAvailable({handle, item}) when handle == providerHandle =>
-      let model' =
-        model
+      let completions' =
+        model.completions
         |> List.map((previousItem: CompletionItem.t) =>
              if (previousItem.chainedCacheId == item.chainedCacheId) {
                CompletionItem.create(
@@ -121,7 +131,7 @@ module ExthostCompletionProvider =
                previousItem;
              }
            );
-      (model', Nothing);
+      ({...model, completions: completions'}, Nothing);
     | DetailsError({handle, errorMsg}) when handle == providerHandle => (
         model,
         ProviderError(errorMsg),
@@ -133,7 +143,7 @@ module ExthostCompletionProvider =
     | _ => (model, Nothing)
     };
 
-  let items = model => model;
+  let items = ({isComplete, completions}) => (isComplete ? Complete : Incomplete, completions);
 
   let sub =
       (
@@ -265,7 +275,7 @@ module KeywordCompletionProvider =
     Nothing,
   );
 
-  let items = model => model;
+  let items = model => (Complete, model);
 
   let sub =
       (~client as _, ~position as _, ~buffer as _, ~selectedItem as _, _model) => Isolinear.Sub.none;

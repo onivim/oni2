@@ -1,6 +1,10 @@
 open Oni_Core;
 open EditorCoreTypes;
 
+type completionState =
+| Complete
+| Incomplete;
+
 // [S] is the interface for completion providers
 module type S = {
   type msg;
@@ -23,7 +27,7 @@ module type S = {
     ) =>
     option(model);
 
-  let items: model => list(CompletionItem.t);
+  let items: model => (completionState, list(CompletionItem.t));
 
   let handle: unit => option(int);
 
