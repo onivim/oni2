@@ -135,10 +135,16 @@ type t = {
 };
 
 let key = ({key, _}) => key;
+// TODO: Handle multiple ranges
 let selection = ({mode, _}) =>
   switch (mode) {
   | Visual(range) => Some(Oni_Core.VisualRange.ofVim(range))
-  | Select(range) => Some(Oni_Core.VisualRange.ofVim(range))
+
+  | Select({ranges}) =>
+    switch (ranges) {
+    | [range, ...tail] => Some(Oni_Core.VisualRange.ofVim(range))
+    | [] => None
+    }
   | _ => None
   };
 let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
@@ -1333,8 +1339,7 @@ let mapCursor = (~f, editor) => {
     | Normal({cursor}) => Normal({cursor: f(cursor)})
     | Visual(curr) =>
       Visual(Vim.VisualRange.{...curr, cursor: f(curr.cursor)})
-    | Select(curr) =>
-      Select(Vim.VisualRange.{...curr, cursor: f(curr.cursor)})
+    | Select({ranges}) => Select({ranges: ranges})
     | Replace({cursor}) => Replace({cursor: f(cursor)})
     | Insert({cursors}) => Insert({cursors: List.map(f, cursors)})
     };
@@ -1714,7 +1719,7 @@ let mouseUp = (~altKey, ~time, ~pixelX, ~pixelY, editor) => {
              };
 
            if (isInsertMode) {
-             Vim.Mode.Select(visualRange);
+             Vim.Mode.Select({ranges: [visualRange]});
            } else {
              Vim.Mode.Visual(visualRange);
            };
@@ -1766,7 +1771,7 @@ let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
            if (newPosition == pos) {
              Vim.Mode.Insert({cursors: [newPosition]});
            } else {
-             Vim.Mode.Select(visualRange);
+             Vim.Mode.Select({ranges: [visualRange]});
            };
          } else if (newPosition == pos) {
            Vim.Mode.Normal({cursor: newPosition});

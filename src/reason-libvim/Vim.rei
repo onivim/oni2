@@ -114,7 +114,7 @@ module Mode: {
         cursor: BytePosition.t,
         pending: Operator.pending,
       })
-    | Select(VisualRange.t);
+    | Select({ranges: list(VisualRange.t)});
 
   let current: unit => t;
 
