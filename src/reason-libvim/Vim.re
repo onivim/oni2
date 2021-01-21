@@ -40,6 +40,17 @@ module Window = Window;
 module ViewLineMotion = ViewLineMotion;
 module Yank = Yank;
 
+/**
+[replace(~insert, ~start, ~len, str)] replaces the string segment
+from [start] to [len] with str
+*/
+let replace = (~insert, ~start, ~len, str) => {
+  let totalLen = String.length(str);
+  let prefix = String.sub(str, 0, start);
+  let postfix = String.sub(str, start + len + 1, totalLen - len - start - 1);
+  prefix ++ insert ++ postfix;
+};
+
 module Internal = {
   let nativeFormatRequestToEffect: Native.formatRequest => Format.effect =
     ({bufferId, startLine, endLine, returnCursor, formatType, lineCount}) => {
@@ -597,6 +608,7 @@ let init = () => {
 let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
   let {autoClosingPairs, mode, _}: Context.t = context;
   let cursors = Mode.cursors(mode);
+  let ranges = Mode.ranges(mode);
   runWith(
     ~context,
     () => {
@@ -696,11 +708,15 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         };
       } else if (Mode.isSelect(mode)) {
         // Handle multiple selector cursors
-        let ranges =
-          switch (mode) {
-          | Select({ranges}) => ranges
-          | _ => []
-          };
+        let maybeEditRange =
+          (
+            switch (mode) {
+            | Select({ranges}) => List.nth_opt(ranges, 0)
+            | _ => None
+            }
+          )
+          |> Option.map(VisualRange.range)
+          |> Option.map(ByteRange.normalize);
 
         // Check if we can run multi-cursor insert - preconditions are:
         // 1) All selections are character-wise
@@ -717,10 +733,9 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
                range.cursor.line == range.anchor.line
              );
 
-        // In subsequent iterations, would be nice to remove this limitation..
-
-        let canDoMultiCursorSelect =
-          allSelectionsAreSingleLine && allSelectionsCharacterWise;
+        let originalCursor = Cursor.get();
+        let originalLine =
+          Buffer.getLine(Buffer.getCurrent(), originalCursor.line);
 
         // Run the cursor as normal...
         switch (cursors) {
@@ -729,12 +744,120 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         };
         inputFn(v);
 
+        let newCursor = Cursor.get();
+        let newLine = Buffer.getLine(Buffer.getCurrent(), newCursor.line);
+
+        let cursorStayedOnSameLine = originalCursor.line == newCursor.line;
+
+        let hasEditRange = maybeEditRange != None;
+
+        // In subsequent iterations, would be nice to remove this limitation..
+        let canDoMultiCursorSelect =
+          allSelectionsAreSingleLine
+          && allSelectionsCharacterWise
+          && cursorStayedOnSameLine
+          && hasEditRange;
+
         if (!canDoMultiCursorSelect) {
           Mode.current();
         } else {
+          let editRange = Option.get(maybeEditRange);
           // TODO: Actually do multi-select...
           prerr_endline("TODO: Implement multi-select!");
-          Mode.current();
+
+          let byteDelta =
+            String.length(newLine) - String.length(originalLine);
+          let shiftIfImpactedByPrimaryCursorEdit = (range: ByteRange.t) =>
+            // If the cursor shifted, adjust ranges on the same lines
+            if (range.start.line == newCursor.line
+                && range.start.byte > newCursor.byte) {
+              ByteRange.{
+                start: {
+                  line: range.start.line,
+                  byte: ByteIndex.(range.start.byte + byteDelta),
+                },
+                stop: {
+                  line: range.stop.line,
+                  byte: ByteIndex.(range.stop.byte + byteDelta),
+                },
+              };
+            } else {
+              range;
+            };
+
+          prerr_endline(
+            "ORIGINAL CURSOR: " ++ BytePosition.show(originalCursor),
+          );
+          prerr_endline("CURSOR: " ++ BytePosition.show(newCursor));
+          prerr_endline("EDIT RANGE: " ++ ByteRange.show(editRange));
+          prerr_endline("BYTE DELTA: " ++ string_of_int(byteDelta));
+
+          let updateRange = range =>
+            ByteRange.{
+              start:
+                BytePosition.{line: range.start.line, byte: range.start.byte},
+              stop:
+                BytePosition.{
+                  line: range.stop.line,
+                  byte: ByteIndex.(range.stop.byte + byteDelta + 1),
+                },
+            };
+
+          let newRange = editRange |> updateRange;
+          let insertedText =
+            String.sub(
+              newLine,
+              ByteIndex.toInt(newRange.start.byte),
+              ByteIndex.toInt(newRange.stop.byte),
+            );
+
+          // Filter out all ranges that intersected with the cursor
+          let secondaryRanges =
+            ranges
+            |> List.map(range => VisualRange.range(range))
+            |> List.map(ByteRange.normalize)
+            |> List.filter(range =>
+                 !ByteRange.contains(originalCursor, range)
+               )
+            |> List.map(shiftIfImpactedByPrimaryCursorEdit);
+
+          let buffer = Buffer.getCurrent();
+
+          // Sort in descending order for applying edits
+          secondaryRanges
+          |> List.iter(range => {
+               open EditorCoreTypes.ByteRange;
+               prerr_endline("Handling range: " ++ ByteRange.show(range));
+               let currentLine =
+                 Buffer.getLine(Buffer.getCurrent(), range.start.line);
+               let updatedLine =
+                 replace(
+                   ~insert=insertedText,
+                   ~start=ByteIndex.toInt(range.start.byte),
+                   ~len=
+                     ByteIndex.toInt(range.stop.byte)
+                     - ByteIndex.toInt(range.start.byte),
+                   currentLine,
+                 );
+               let lineNumber =
+                 EditorCoreTypes.LineNumber.toOneBased(range.start.line);
+               Undo.saveRegion(lineNumber - 1, lineNumber + 1);
+               // Clear out range, and replace with current line
+               Buffer.setLines(
+                 ~start=range.start.line,
+                 ~stop=EditorCoreTypes.LineNumber.(range.start.line + 1),
+                 ~lines=[|updatedLine|],
+                 buffer,
+               );
+             });
+
+          let cursors =
+            secondaryRanges
+            |> List.map(updateRange)
+            |> List.map(range => ByteRange.(range.stop));
+
+          // Transition to insert mode, with multiple cursors for each range
+          Mode.Insert({cursors: [newCursor, ...cursors]});
         };
       } else {
         switch (cursors) {

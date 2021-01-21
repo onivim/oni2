@@ -39,6 +39,16 @@ let cursors =
   | Select({ranges}) => ranges |> List.map(VisualRange.cursor)
   | CommandLine({cursor, _}) => [cursor];
 
+let ranges =
+  fun
+  | Normal(_) => []
+  | Insert(_) => []
+  | Replace(_) => []
+  | Visual(range) => [range]
+  | Operator(_) => []
+  | Select({ranges}) => ranges
+  | CommandLine(_) => [];
+
 let current = () => {
   let nativeMode: Native.mode = Native.vimGetMode();
 

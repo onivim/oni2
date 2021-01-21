@@ -16,3 +16,9 @@ let contains: (BytePosition.t, t) => bool;
 let toHash: list(t) => Hashtbl.t(LineNumber.t, list(t));
 
 let equals: (t, t) => bool;
+
+/**
+ * [normalize(range)] returns a new range, with the [start] less than
+ * or equal to the [stop]
+ */
+let normalize: t => t;

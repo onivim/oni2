@@ -62,9 +62,28 @@ describe("Multi-cursor", ({describe, _}) => {
           {
             visualType: Vim.Types.Character,
             cursor:
-              BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+              BytePosition.{
+                line: LineNumber.(zero + 1),
+                byte: ByteIndex.zero,
+              },
             anchor:
-              BytePosition.{line: LineNumber.zero, byte: ByteIndex.ofInt(3)},
+              BytePosition.{
+                line: LineNumber.(zero + 1),
+                byte: ByteIndex.ofInt(3),
+              },
+          },
+          {
+            visualType: Vim.Types.Character,
+            cursor:
+              BytePosition.{
+                line: LineNumber.(zero + 2),
+                byte: ByteIndex.zero,
+              },
+            anchor:
+              BytePosition.{
+                line: LineNumber.(zero + 2),
+                byte: ByteIndex.ofInt(3),
+              },
           },
         ];
 
@@ -89,23 +108,25 @@ describe("Multi-cursor", ({describe, _}) => {
         true,
       );
 
-      // TODO: Get green
-      // expect.equal(
-      //   cursors |> hasCursorMatching(~lineIndex=1, ~byteIndex=1),
-      //   true,
-      // );
-      // expect.equal(
-      //   cursors |> hasCursorMatching(~lineIndex=2, ~byteIndex=1),
-      //   true,
-      // );
+      expect.equal(
+        cursors |> hasCursorMatching(~lineIndex=1, ~byteIndex=1),
+        true,
+      );
+      expect.equal(
+        cursors |> hasCursorMatching(~lineIndex=2, ~byteIndex=1),
+        true,
+      );
 
       // Verify buffer contents
       expect.string(Buffer.getLine(buffer, LineNumber.zero)).toEqual(
         "a is the first line of a test file",
       );
-      // TODO: Get green
-      // expect.string(Buffer.getLine(buffer, LineNumber.(zero + 1))).toEqual("b is the first line of a test file.");
-      // expect.string(Buffer.getLine(buffer, LineNumber.(zero + 2))).toEqual("c is the first line of a test file.");
+      expect.string(Buffer.getLine(buffer, LineNumber.(zero + 1))).toEqual(
+        "a is the second line of a test file",
+      );
+      expect.string(Buffer.getLine(buffer, LineNumber.(zero + 2))).toEqual(
+        "a is the third line of a test file",
+      );
     })
   });
   describe("visual block mode", ({test, _}) => {
