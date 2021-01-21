@@ -94,7 +94,8 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
         startLine,
         stopLine,
       }) =>
-      CodeLensesChanged({handle, bufferId, lenses, startLine, stopLine});
+      CodeLensesChanged({handle, bufferId, lenses, startLine, stopLine})
+    | Outmsg.SetSelections({editorId, ranges}) => SetSelections({editorId, ranges});
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -305,12 +306,16 @@ let update =
     );
 
   | DocumentHighlights(documentHighlightsMsg) =>
-    let documentHighlights' =
+    let (documentHighlights', outmsg) =
       DocumentHighlights.update(
+        ~maybeBuffer,
+        ~editorId,
         documentHighlightsMsg,
         model.documentHighlights,
       );
-    ({...model, documentHighlights: documentHighlights'}, Nothing);
+
+    ({...model, documentHighlights: documentHighlights'}, 
+      outmsg |> map(msg => DocumentHighlights(msg)));
 
   | DocumentSymbols(documentSymbolsMsg) =>
     let documentSymbols' =

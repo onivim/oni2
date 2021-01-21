@@ -16,7 +16,12 @@ type model = {
 let initial = {providers: [], bufferToHighlights: IntMap.empty};
 
 [@deriving show]
+type command =
+| ChangeAll;
+
+[@deriving show]
 type msg =
+  | Command(command)
   | DocumentHighlighted({
       bufferId: int,
       ranges: list(CharacterRange.t),
@@ -53,13 +58,26 @@ let cursorMoved = (~buffer, ~cursor, model) => {
   };
 };
 
-let update = (msg, model) => {
+let allHighlights = (~bufferId, model) => {
+  []
+};
+
+let update = (~maybeBuffer, ~editorId, msg, model) => {
   switch (msg) {
   | DocumentHighlighted({bufferId, ranges}) =>
     let lineMap = ranges |> Utility.RangeEx.toCharacterLineMap;
     let bufferToHighlights =
       model.bufferToHighlights |> IntMap.add(bufferId, lineMap);
-    {...model, bufferToHighlights};
+    ({...model, bufferToHighlights}, Outmsg.Nothing);
+
+  | Command(ChangeAll) =>
+    let _model = maybeBuffer
+    |> Option.map(Oni_Core.Buffer.getId)
+    |> Option.map(bufferId => {
+    let _allHighlights = allHighlights(~bufferId, model);
+    });
+
+    (model, Outmsg.Nothing);
   };
 };
 
