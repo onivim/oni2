@@ -201,6 +201,7 @@ let byteToCharacter: (BytePosition.t, t) => option(CharacterPosition.t);
 let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
 
 let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
+let characterRangeToByteRange: (CharacterRange.t, t) => option(ByteRange.t);
 
 // VIEW-SPACE CONVERSION
 

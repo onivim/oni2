@@ -31,9 +31,6 @@ let key =
 
   Context.(out.mode);
 };
-
-describe("Multi-cursor", ({describe, _}) => {
-  describe("visual block mode", ({test, _}) => {
     let hasCursorMatching = (~lineIndex, ~byteIndex, cursors) => {
       EditorCoreTypes.(
         cursors
@@ -43,6 +40,81 @@ describe("Multi-cursor", ({describe, _}) => {
            )
       );
     };
+
+describe("Multi-cursor", ({describe, _}) => {
+  describe("multi-selection", ({test, _}) => {
+    test("multiple selection -> multiple insert mode cursors", ({expect, _}) => {
+      let buffer = resetBuffer();
+
+      expect.int(Buffer.getLineCount(buffer)).toBe(3);
+
+      expect.bool(Mode.isNormal(Mode.current())).toBe(true);
+
+      let ranges: list(VisualRange.t) =  VisualRange.[{
+                    visualType: Vim.Types.Character,
+                    cursor:
+                      BytePosition.{
+                        line: LineNumber.zero,
+                        byte: ByteIndex.zero,
+                      },
+                    anchor:
+                      BytePosition.{
+                        line: LineNumber.zero,
+                        byte: ByteIndex.ofInt(3),
+                      },
+      }, {
+                    visualType: Vim.Types.Character,
+                    cursor:
+                      BytePosition.{
+                        line: LineNumber.zero,
+                        byte: ByteIndex.zero,
+                      },
+                    anchor:
+                      BytePosition.{
+                        line: LineNumber.zero,
+                        byte: ByteIndex.ofInt(3),
+                      },
+      }];
+
+      // Force selection mode with 3 ranges
+      let (outContext, _: list(Effect.t)) =
+        Vim.input(
+          ~context={
+            ...Vim.Context.current(),
+            mode:
+              Mode.Select({
+                ranges: ranges
+              }),
+          },
+          "a",
+        );
+
+      // Verify we've transitioned to insert mode
+      expect.bool(Mode.isInsert(outContext.mode)).toBe(true);
+
+      let cursors = Mode.cursors(outContext.mode);
+
+      // Verify we now have 3 cursors
+      expect.equal(
+        cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=1),
+        true,
+      );
+      expect.equal(
+        cursors |> hasCursorMatching(~lineIndex=1, ~byteIndex=1),
+        true,
+      );
+      expect.equal(
+        cursors |> hasCursorMatching(~lineIndex=2, ~byteIndex=1),
+        true,
+      );
+
+      // Verify buffer contents
+      expect.string(Buffer.getLine(buffer, LineNumber.zero)).toEqual("a is the first line of a test file");
+      expect.string(Buffer.getLine(buffer, LineNumber.(zero + 1))).toEqual("b is the first line of a test file.");
+      expect.string(Buffer.getLine(buffer, LineNumber.(zero + 2))).toEqual("c is the first line of a test file.");
+    })
+  });
+  describe("visual block mode", ({test, _}) => {
     test("expand to multiple cursors with 'I'", ({expect, _}) => {
       let _: Buffer.t = resetBuffer();
       let (context, _) = Vim.key("<c-v>");
