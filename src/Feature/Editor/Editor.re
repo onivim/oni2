@@ -171,6 +171,24 @@ let setMinimap = (~enabled, ~maxColumn, editor) => {
   minimapMaxColumnWidth: maxColumn,
 };
 
+let setSelections = (selections: list(ByteRange.t), editor) => {
+  let ranges = selections
+  |> List.map(r => {
+    open ByteRange;
+    open Vim.VisualRange;
+    let {start, stop}: ByteRange.t = r;
+    {
+      anchor: start,
+      cursor: stop,
+      visualType: Vim.Types.Character,
+    }
+  });
+  {
+  ...editor,
+  mode: Select({ranges: ranges }),
+  }
+};
+
 let overrideAnimation = (~animated, editor) => {
   ...editor,
   isAnimationOverride: animated,

@@ -68,7 +68,11 @@ type outmsg =
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.codeLens),
-    });
+    })
+  | SetSelections({
+    editorId: int,
+    ranges: list(CharacterRange.t)
+  });
 
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
