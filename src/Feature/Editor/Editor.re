@@ -136,16 +136,12 @@ type t = {
 
 let key = ({key, _}) => key;
 // TODO: Handle multiple ranges
-let selection = ({mode, _}) =>
+let selections = ({mode, _}) =>
   switch (mode) {
-  | Visual(range) => Some(Oni_Core.VisualRange.ofVim(range))
+  | Visual(range) => [Oni_Core.VisualRange.ofVim(range)]
 
-  | Select({ranges}) =>
-    switch (ranges) {
-    | [range, ..._] => Some(Oni_Core.VisualRange.ofVim(range))
-    | [] => None
-    }
-  | _ => None
+  | Select({ranges}) => ranges |> List.map(Oni_Core.VisualRange.ofVim)
+  | _ => []
   };
 let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
 let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
@@ -960,8 +956,8 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
 };
 
 let selectionOrCursorRange = editor => {
-  switch (selection(editor)) {
-  | None =>
+  switch (selections(editor)) {
+  | [] =>
     let pos = getPrimaryCursorByte(editor);
     ByteRange.{
       start: BytePosition.{line: pos.line, byte: ByteIndex.zero},
@@ -971,7 +967,7 @@ let selectionOrCursorRange = editor => {
           byte: ByteIndex.zero,
         },
     };
-  | Some(selection) => selection.range
+  | [selection, ..._tail] => selection.range
   };
 };
 

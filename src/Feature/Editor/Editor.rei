@@ -167,7 +167,7 @@ let linePaddingInPixels: t => float;
 let setLineHeight: (~lineHeight: LineHeight.t, t) => t;
 let characterWidthInPixels: t => float;
 
-let selection: t => option(VisualRange.t);
+let selections: t => list(VisualRange.t);
 
 let selectionOrCursorRange: t => ByteRange.t;
 
