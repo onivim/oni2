@@ -8,6 +8,7 @@
 - #3016 - Extensions: Fix memory leak in extension host language features (fixes #3009)
 - #3019 - Extensions: Fix activation error for Ionide.Ionide-fsharp extension (fixes #2974)
 - #3020 - Vim: Fix incsearch cursor movement (fixes #2968)
+- #3023 - Keybindings: Fix default - add quotes around "when" (thanks @noahhaasis!)
 
 ### Performance
 
