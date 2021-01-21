@@ -127,7 +127,109 @@ describe("Multi-cursor", ({describe, _}) => {
       expect.string(Buffer.getLine(buffer, LineNumber.(zero + 2))).toEqual(
         "a is the third line of a test file",
       );
-    })
+
+      // Entering another character should update all lines
+      let (_: Vim.Context.t, _: list(Effect.t)) =
+        Vim.input(~context=outContext, "b");
+      expect.string(Buffer.getLine(buffer, LineNumber.zero)).toEqual(
+        "ab is the first line of a test file",
+      );
+      expect.string(Buffer.getLine(buffer, LineNumber.(zero + 1))).toEqual(
+        "ab is the second line of a test file",
+      );
+      expect.string(Buffer.getLine(buffer, LineNumber.(zero + 2))).toEqual(
+        "ab is the third line of a test file",
+      );
+    });
+    test(
+      "multiple selection -> multiple insert mode cursors - same line (forward order)",
+      ({expect, _}) => {
+        let buffer = resetBuffer();
+
+        expect.int(Buffer.getLineCount(buffer)).toBe(3);
+
+        expect.bool(Mode.isNormal(Mode.current())).toBe(true);
+
+        let ranges: list(VisualRange.t) =
+          VisualRange.[
+            {
+              visualType: Vim.Types.Character,
+              cursor:
+                BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+              anchor:
+                BytePosition.{
+                  line: LineNumber.zero,
+                  byte: ByteIndex.ofInt(3),
+                },
+            },
+            {
+              visualType: Vim.Types.Character,
+              cursor:
+                BytePosition.{
+                  line: LineNumber.(zero),
+                  byte: ByteIndex.ofInt(5),
+                },
+              anchor:
+                BytePosition.{
+                  line: LineNumber.(zero),
+                  byte: ByteIndex.ofInt(6),
+                },
+            },
+            {
+              visualType: Vim.Types.Character,
+              cursor:
+                BytePosition.{
+                  line: LineNumber.(zero),
+                  byte: ByteIndex.ofInt(8),
+                },
+              anchor:
+                BytePosition.{
+                  line: LineNumber.(zero),
+                  byte: ByteIndex.ofInt(10),
+                },
+            },
+          ];
+
+        // Force selection mode with 3 ranges
+        let (outContext, _: list(Effect.t)) =
+          Vim.input(
+            ~context={
+              ...Vim.Context.current(),
+              mode: Mode.Select({ranges: ranges}),
+            },
+            "a",
+          );
+
+        // Verify we've transitioned to insert mode
+        expect.bool(Mode.isInsert(outContext.mode)).toBe(true);
+
+        let cursors = Mode.cursors(outContext.mode);
+
+        // Verify we now have 3 cursors
+        expect.equal(
+          cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=1),
+          true,
+        );
+        // TODO: Get green
+        // expect.equal(
+        //   cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=3),
+        //   true,
+        // );
+        // expect.equal(
+        //   cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=5),
+        //   true,
+        // );
+        // Verify buffer contents
+        // expect.string(Buffer.getLine(buffer, LineNumber.zero)).toEqual(
+        //   "a a a first line of a test file",
+        // );
+        // Entering another character should update all lines
+        // let (_: Vim.Context.t, _: list(Effect.t)) = Vim.input(~context=outContext, "b");
+        // expect.string(Buffer.getLine(buffer, LineNumber.zero)).toEqual(
+        //   "ab is the first line of a test file",
+        // );
+      },
+    );
   });
   describe("visual block mode", ({test, _}) => {
     test("expand to multiple cursors with 'I'", ({expect, _}) => {

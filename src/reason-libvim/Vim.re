@@ -762,11 +762,10 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
           Mode.current();
         } else {
           let editRange = Option.get(maybeEditRange);
-          // TODO: Actually do multi-select...
-          prerr_endline("TODO: Implement multi-select!");
 
           let byteDelta =
             String.length(newLine) - String.length(originalLine);
+
           let shiftIfImpactedByPrimaryCursorEdit = (range: ByteRange.t) =>
             // If the cursor shifted, adjust ranges on the same lines
             if (range.start.line == newCursor.line
@@ -785,13 +784,6 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
               range;
             };
 
-          prerr_endline(
-            "ORIGINAL CURSOR: " ++ BytePosition.show(originalCursor),
-          );
-          prerr_endline("CURSOR: " ++ BytePosition.show(newCursor));
-          prerr_endline("EDIT RANGE: " ++ ByteRange.show(editRange));
-          prerr_endline("BYTE DELTA: " ++ string_of_int(byteDelta));
-
           let updateRange = range =>
             ByteRange.{
               start:
@@ -799,7 +791,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
               stop:
                 BytePosition.{
                   line: range.stop.line,
-                  byte: ByteIndex.(range.stop.byte + byteDelta + 1),
+                  byte: ByteIndex.(range.stop.byte + byteDelta),
                 },
             };
 
@@ -808,8 +800,11 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
             String.sub(
               newLine,
               ByteIndex.toInt(newRange.start.byte),
-              ByteIndex.toInt(newRange.stop.byte),
+              ByteIndex.toInt(newRange.stop.byte)
+              - ByteIndex.toInt(newRange.start.byte)
+              + 1,
             );
+          prerr_endline("inserted text: |" ++ insertedText ++ "|");
 
           // Filter out all ranges that intersected with the cursor
           let secondaryRanges =
@@ -823,13 +818,15 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
 
           let buffer = Buffer.getCurrent();
 
-          // Sort in descending order for applying edits
+          // TODO: Sort in ascending order for applying edits
+          // Adjust cursor position as we go
           secondaryRanges
           |> List.iter(range => {
                open EditorCoreTypes.ByteRange;
-               prerr_endline("Handling range: " ++ ByteRange.show(range));
+
                let currentLine =
                  Buffer.getLine(Buffer.getCurrent(), range.start.line);
+
                let updatedLine =
                  replace(
                    ~insert=insertedText,
@@ -839,6 +836,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
                      - ByteIndex.toInt(range.start.byte),
                    currentLine,
                  );
+
                let lineNumber =
                  EditorCoreTypes.LineNumber.toOneBased(range.start.line);
                Undo.saveRegion(lineNumber - 1, lineNumber + 1);
@@ -854,7 +852,14 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
           let cursors =
             secondaryRanges
             |> List.map(updateRange)
-            |> List.map(range => ByteRange.(range.stop));
+            |> List.map(range => ByteRange.(range.stop))
+            |> List.map(position =>
+                 BytePosition.{
+                   line: position.line,
+                   byte:
+                     ByteIndex.(position.byte + String.length(insertedText)),
+                 }
+               );
 
           // Transition to insert mode, with multiple cursors for each range
           Mode.Insert({cursors: [newCursor, ...cursors]});
