@@ -1041,7 +1041,7 @@ let isScrollAnimated = ({isScrollAnimated, isAnimationOverride, _}) => {
   };
 };
 
-let exposePrimaryCursor = editor =>
+let exposePrimaryCursor = (~isSmallJump=false, editor) =>
   if (!hasSetSize(editor)) {
     // If the size hasn't been set yet - don't try to expose the cursor.
     // We don't know about the viewport to do a good job.
@@ -1098,10 +1098,10 @@ let exposePrimaryCursor = editor =>
           0.,
         );
 
-      let isSmallJump =
-        !Spring.isActive(editor.scrollY)
-        && Float.abs(adjustedScrollY -. scrollY) < lineHeightInPixels(editor)
-        *. 1.1;
+      //let isSmallJump = true;
+        // !Spring.isActive(editor.scrollY)
+        // && Float.abs(adjustedScrollY -. scrollY) < lineHeightInPixels(editor)
+        // *. 1.1;
 
       let animated = editor |> isScrollAnimated;
       {
@@ -1142,7 +1142,22 @@ let isCursorFullyVisible = editor => {
 let mode = ({mode, _}) => mode;
 
 let setMode = (mode, editor) => {
-  {...editor, mode} |> exposePrimaryCursor;
+  open EditorCoreTypes;
+  let previousCursor = getPrimaryCursor(editor);
+  let editor' = {...editor, mode};
+  let newCursor = getPrimaryCursor(editor');
+
+  if (CharacterPosition.equals(previousCursor, newCursor)) {
+    editor'
+  } else {
+    let delta = CharacterPosition.(abs(LineNumber.toZeroBased(previousCursor.line) - LineNumber.toZeroBased(newCursor.line)));
+    let isSmallJumpLinewise = delta <= 1;
+    prerr_endline ("DELTA: " ++ string_of_int(delta));
+    let isSmallJump = isSmallJumpLinewise;
+    prerr_endline ("ISSMALLJUMP: " ++ string_of_bool(isSmallJump));
+    editor' |> exposePrimaryCursor(~isSmallJump);
+    
+  }
 };
 
 let getLeftVisibleColumn = view => {
