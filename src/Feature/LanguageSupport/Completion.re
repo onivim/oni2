@@ -43,6 +43,12 @@ module Session = {
         providerModel: [@opaque] 'model,
         meet: CompletionMeet.t,
       })
+    | Partial({
+        providerModel: [@opaque] 'model,
+        meet: CompletionMeet.t,
+        currentItems: list(CompletionItem.t),
+        filteredItems: [@opaque] list(Filter.result(CompletionItem.t)),
+      })
     | Completed({
         providerModel: [@opaque] 'model,
         meet: CompletionMeet.t,
@@ -89,6 +95,7 @@ module Session = {
           switch (state) {
           | NotStarted => NotStarted
           | Pending({meet, _})
+          | Partial({meet, _})
           | Completed({meet, _})
           | Accepted({meet}) =>
             let meet' =
@@ -126,6 +133,7 @@ module Session = {
           switch (state) {
           | Pending({meet, _}) as prev when isCompletionMeetStillValid(meet) => prev
           | Pending(_) => NotStarted
+          | Partial(_) as prev => prev
           | Completed({meet, _}) as prev
               when isCompletionMeetStillValid(meet) => prev
           | Completed(_) => NotStarted
@@ -182,6 +190,7 @@ module Session = {
         | Accepted(_) => StringMap.empty
         | Pending(_) => StringMap.empty
         | Failure(_) => StringMap.empty
+        | Partial({filteredItems, meet, _})
         | Completed({filteredItems, meet, _}) =>
           filteredItems
           |> List.fold_left(
@@ -212,7 +221,8 @@ module Session = {
                      internalMsg,
                      providerModel,
                    );
-                 let (_completionState, items) = ProviderImpl.items(providerModel');
+                 let (_completionState, items) =
+                   ProviderImpl.items(providerModel');
                  // TODO: Handle completion state
                  switch (items) {
                  | [] => Pending({meet, providerModel: providerModel'})
@@ -236,6 +246,17 @@ module Session = {
     fun
     | Session({state, provider, providerMapper, _}) => {
         switch (state) {
+        | Partial({providerModel, meet, _}) =>
+          // TODO: Use cursor position
+          let (module ProviderImpl) = provider;
+          ProviderImpl.sub(
+            ~client,
+            ~buffer=activeBuffer,
+            ~position=CompletionMeet.(meet.location),
+            ~selectedItem,
+            providerModel,
+          )
+          |> Isolinear.Sub.map(msg => Provider(providerMapper(msg)));
         | Pending({providerModel, meet, _})
         | Completed({providerModel, meet, _}) =>
           let (module ProviderImpl) = provider;
@@ -286,6 +307,17 @@ module Session = {
                | Accepted(_) as accepted => accepted
                | Pending(_) as pending => pending
                | Failure(_) as failure => failure
+               | Partial({currentItems, meet, _} as prev)
+                   when CompletionMeet.matches(meet, newMeet) =>
+                 Partial({
+                   ...prev,
+                   meet: newMeet,
+                   filteredItems:
+                     filter(
+                       ~query=CompletionMeet.(newMeet.base),
+                       currentItems,
+                     ),
+                 })
                | Completed({allItems, meet, _} as prev)
                    when CompletionMeet.matches(meet, newMeet) =>
                  Completed({
@@ -296,6 +328,7 @@ module Session = {
                  })
                // The meet changed on us - reset
                | Completed(_) => NotStarted
+               | Partial(_) => NotStarted
                }
              })
           |> Option.value(~default=NotStarted);

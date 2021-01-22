@@ -3,9 +3,8 @@ open Utility;
 open EditorCoreTypes;
 
 type completionState =
-| Complete
-| Incomplete;
-
+  | Complete
+  | Incomplete;
 
 module type S = {
   type msg;
@@ -48,7 +47,7 @@ type provider('model, 'msg) = (module S with
 
 type exthostModel = {
   isComplete: bool,
-  completions: list(CompletionItem.t)
+  completions: list(CompletionItem.t),
 };
 
 [@deriving show]
@@ -143,7 +142,10 @@ module ExthostCompletionProvider =
     | _ => (model, Nothing)
     };
 
-  let items = ({isComplete, completions}) => (isComplete ? Complete : Incomplete, completions);
+  let items = ({isComplete, completions}) => (
+    isComplete ? Complete : Incomplete,
+    completions,
+  );
 
   let sub =
       (

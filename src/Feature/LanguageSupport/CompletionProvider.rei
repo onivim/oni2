@@ -2,8 +2,8 @@ open Oni_Core;
 open EditorCoreTypes;
 
 type completionState =
-| Complete
-| Incomplete;
+  | Complete
+  | Incomplete;
 
 // [S] is the interface for completion providers
 module type S = {
