@@ -493,12 +493,12 @@ let start =
       let context = Oni_Model.VimContext.current(getState());
       let completions = Vim.CommandLine.getCompletions(~context, ());
 
-      let completions = if (StringEx.startsWith(~prefix="set no", text)) {
-        completions
-        |> Array.map(name => "no" ++ name)
-      } else {
-        completions
-      };
+      let completions =
+        if (StringEx.startsWith(~prefix="set no", text)) {
+          completions |> Array.map(name => "no" ++ name);
+        } else {
+          completions;
+        };
 
       Log.debugf(m => m("  got %n completions.", Array.length(completions)));
 
@@ -513,7 +513,7 @@ let start =
               highlight: [],
               handle: None,
             }
-            },
+          },
           completions,
         );
 
