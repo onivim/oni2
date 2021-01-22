@@ -9,6 +9,7 @@
 - #3019 - Extensions: Fix activation error for Ionide.Ionide-fsharp extension (fixes #2974)
 - #3020 - Vim: Fix incsearch cursor movement (fixes #2968)
 - #3023 - Keybindings: Fix default - add quotes around "when" (thanks @noahhaasis!)
+- #3027 - Vim: Command-line completion - fix 'set no' completion
 
 ### Performance
 
