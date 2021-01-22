@@ -10,6 +10,7 @@
 - #3020 - Vim: Fix incsearch cursor movement (fixes #2968)
 - #3023 - Keybindings: Fix default - add quotes around "when" (thanks @noahhaasis!)
 - #3027 - Vim: Command-line completion - fix 'set no' completion
+- #3029 - Editor: Fix rubber-banding while scrolling with high key-repeat set
 
 ### Performance
 
