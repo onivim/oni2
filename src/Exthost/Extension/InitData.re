@@ -106,8 +106,8 @@ module StaticWorkspaceData = {
   }
 
   let default = {
-    id: "hello-workspace-test",
-    name: "hello-workspace-test",
+    id: "__default",
+    name: "__default",
   }
 }
 
