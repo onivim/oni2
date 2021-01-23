@@ -90,7 +90,6 @@ let cursorMoved = (~buffer, ~cursor, model) => {
 
 let update = (~maybeBuffer, ~editorId, msg, model) => {
   switch (msg) {
-
   | DocumentHighlighted({bufferId, ranges}) =>
     let lineMap = ranges |> Utility.RangeEx.toCharacterLineMap;
     let bufferToHighlights =
@@ -98,13 +97,28 @@ let update = (~maybeBuffer, ~editorId, msg, model) => {
     ({...model, bufferToHighlights}, Outmsg.Nothing);
 
   | Command(ChangeAll) =>
-      maybeBuffer
-      |> Option.map(Oni_Core.Buffer.getId)
-      |> Option.map(bufferId => {
-           let allHighlights = allHighlights(~bufferId, model);
-           (model, Outmsg.SetSelections({editorId, ranges: allHighlights}))
-         })
-      |> Option.value(~default=(model, Outmsg.Nothing));
+    maybeBuffer
+    |> Option.map(Oni_Core.Buffer.getId)
+    |> Option.map(bufferId => {
+         // Fix 'impedance mismatch' - the highlights return the last character as an 'exclusive' character,
+         // but the selection treats the last character as inclusive.
+         let allHighlights =
+           allHighlights(~bufferId, model)
+           |> List.map((range: CharacterRange.t) =>
+                CharacterRange.{
+                  start: {
+                    line: range.start.line,
+                    character: range.start.character,
+                  },
+                  stop: {
+                    line: range.stop.line,
+                    character: CharacterIndex.(range.stop.character - 1),
+                  },
+                }
+              );
+         (model, Outmsg.SetSelections({editorId, ranges: allHighlights}));
+       })
+    |> Option.value(~default=(model, Outmsg.Nothing))
   };
 };
 

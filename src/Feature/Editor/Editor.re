@@ -167,18 +167,6 @@ let setMinimap = (~enabled, ~maxColumn, editor) => {
   minimapMaxColumnWidth: maxColumn,
 };
 
-let setSelections = (selections: list(ByteRange.t), editor) => {
-  let ranges =
-    selections
-    |> List.map(r => {
-         open ByteRange;
-         open Vim.VisualRange;
-         let {start, stop}: ByteRange.t = r;
-         {anchor: start, cursor: stop, visualType: Vim.Types.Character};
-       });
-  {...editor, mode: Select({ranges: ranges})};
-};
-
 let overrideAnimation = (~animated, editor) => {
   ...editor,
   isAnimationOverride: animated,
@@ -822,6 +810,31 @@ let getPrimaryCursorByte = editor =>
   | [] =>
     BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}
   };
+
+let setSelections = (selections: list(ByteRange.t), editor) => {
+  let mapRange = (r: ByteRange.t) => {
+    open ByteRange;
+    open Vim.VisualRange;
+    let {start, stop}: ByteRange.t = r;
+    {anchor: start, cursor: stop, visualType: Vim.Types.Character};
+  };
+  // Try to preserve the existing cursor, if we can
+  let primaryCursor = getPrimaryCursorByte(editor);
+  let primaryRanges =
+    selections
+    |> List.filter(range => ByteRange.contains(primaryCursor, range))
+    |> List.map(mapRange);
+
+  let secondaryRanges =
+    selections
+    |> List.filter(range => !ByteRange.contains(primaryCursor, range))
+    |> List.map(mapRange);
+
+  // Make sure primary ranges (ranges on the existing cursor) are first
+  let ranges = primaryRanges @ secondaryRanges;
+
+  {...editor, mode: Select({ranges: ranges})};
+};
 
 let withSteadyCursor = (f, editor) => {
   let bytePosition = getPrimaryCursorByte(editor);
