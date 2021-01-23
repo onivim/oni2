@@ -43,11 +43,18 @@ module Commands = {
 module Keybindings = {
   open Feature_Input.Schema;
 
-  let changeAll =
+  let changeAllWindows =
     bind(
-      ~key="<F2>",
+      ~key="<S-F2>",
       ~command=Commands.changeAll.id,
-      ~condition="editorTextFocus" |> WhenExpr.parse,
+      ~condition="!isMac && editorTextFocus" |> WhenExpr.parse,
+    );
+
+  let changeAllMac =
+    bind(
+      ~key="<D-F2>",
+      ~command=Commands.changeAll.id,
+      ~condition="isMac && editorTextFocus" |> WhenExpr.parse,
     );
 };
 
@@ -192,5 +199,5 @@ module Contributions = {
 
   let commands = Commands.[changeAll];
 
-  let keybindings = Keybindings.[changeAll];
+  let keybindings = Keybindings.[changeAllWindows, changeAllMac];
 };
