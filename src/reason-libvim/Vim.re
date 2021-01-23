@@ -617,6 +617,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
       let runInsertCursor = (cursor: BytePosition.t) => {
         let lineNumber = EditorCoreTypes.LineNumber.toOneBased(cursor.line);
         Undo.saveRegion(lineNumber - 1, lineNumber + 1);
+        let originalCursor = cursor;
         Cursor.set(cursor);
         if (Mode.current() |> Mode.isInsert) {
           let position: BytePosition.t = Cursor.get();
@@ -683,7 +684,15 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         } else {
           inputFn(v);
         };
-        Cursor.get();
+        let newCursor = Cursor.get();
+        let delta =
+          if (LineNumber.equals(newCursor.line, originalCursor.line)) {
+            ByteIndex.toInt(newCursor.byte)
+            - ByteIndex.toInt(originalCursor.byte);
+          } else {
+            0;
+          };
+        (newCursor, delta);
       };
 
       let mode = Mode.current();
@@ -692,13 +701,48 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         // Run first command, verify we don't go back to normal mode
         switch (cursors) {
         | [hd, ...tail] =>
-          let newHead = runInsertCursor(hd);
+          let (newHead, primaryCursorDelta) = runInsertCursor(hd);
+
+          let adjustCursors =
+              (
+                allCursorDeltas: list((BytePosition.t, int)),
+                position: BytePosition.t,
+              ) => {
+            allCursorDeltas
+            |> List.fold_left(
+                 (cursor: BytePosition.t, candidateOffset) => {
+                   let (positionToConsider: BytePosition.t, deltaBytes) = candidateOffset;
+                   if (LineNumber.equals(cursor.line, positionToConsider.line)
+                       && ByteIndex.(positionToConsider.byte < cursor.byte)) {
+                     {
+                       line: cursor.line,
+                       byte: ByteIndex.(cursor.byte + deltaBytes),
+                     };
+                   } else {
+                     position;
+                   };
+                 },
+                 position,
+               );
+          };
 
           let newMode = Mode.current();
           // If we're still in insert mode, run the command for all the rest of the characters too
           if (Mode.isInsert(newMode)) {
-            let remainingCursors = List.map(runInsertCursor, tail);
-            Insert({cursors: [newHead, ...remainingCursors]});
+            let revCompare = (a, b) => BytePosition.compare(a, b) * (-1);
+            let secondaryCursorAndDeltas =
+              tail
+              |> List.sort(revCompare)
+              |> List.map(adjustCursors([(newHead, primaryCursorDelta)]))
+              |> List.map(runInsertCursor);
+
+            let secondaryCursors = secondaryCursorAndDeltas |> List.map(fst);
+
+            let allCursors =
+              [newHead, ...secondaryCursors]
+              |> List.map(adjustCursors(secondaryCursorAndDeltas));
+
+            Insert({cursors: allCursors});
           } else {
             newMode;
           };

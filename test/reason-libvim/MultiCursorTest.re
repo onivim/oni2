@@ -610,5 +610,54 @@ describe("Multi-cursor", ({describe, _}) => {
 
       dispose();
     });
+    test("multiple cursor, same line", ({expect, _}) => {
+      let buf = resetBuffer();
+
+      let (_: Context.t, _: list(Effect.t)) = Vim.input("i");
+
+      let mode =
+        input(
+          ~mode=
+            Insert({
+              cursors: [
+                BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+                BytePosition.{
+                  line: LineNumber.(zero),
+                  byte: ByteIndex.(zero + 5),
+                },
+                BytePosition.{
+                  line: LineNumber.(zero),
+                  byte: ByteIndex.(zero + 8),
+                },
+              ],
+            }),
+          "a",
+        );
+
+      let line = Buffer.getLine(buf, LineNumber.zero);
+
+      expect.string(line).toEqual(
+        "aThis ais athe first line of a test file",
+      );
+
+      let mode =
+        input(
+          ~mode,
+          "ό" // 3-byte character
+        );
+
+      let line = Buffer.getLine(buf, LineNumber.zero);
+      expect.string(line).toEqual(
+        "aόThis aόis aόthe first line of a test file",
+      );
+
+      let _: Vim.Mode.t = key(~mode, "<bs>");
+
+      let line = Buffer.getLine(buf, LineNumber.zero);
+
+      expect.string(line).toEqual(
+        "aThis ais athe first line of a test file",
+      );
+    });
   });
 });
