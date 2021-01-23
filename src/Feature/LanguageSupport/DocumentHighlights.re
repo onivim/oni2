@@ -60,19 +60,19 @@ let clear = (~bufferId, model) => {
 };
 
 let allHighlights = (~bufferId, model) => {
-    model.bufferToHighlights
-    |> IntMap.find_opt(bufferId)
-    |> Option.value(~default=IntMap.empty)
-    |> IntMap.bindings
-    |> List.map(snd)
-    |> List.flatten;
+  model.bufferToHighlights
+  |> IntMap.find_opt(bufferId)
+  |> Option.value(~default=IntMap.empty)
+  |> IntMap.bindings
+  |> List.map(snd)
+  |> List.flatten;
 };
 
 let cursorMoved = (~buffer, ~cursor, model) => {
-
   let bufferId = Oni_Core.Buffer.getId(buffer);
-  let isCursorInHighlight = allHighlights(~bufferId, model)
-  |> List.exists(range => CharacterRange.contains(cursor, range));
+  let isCursorInHighlight =
+    allHighlights(~bufferId, model)
+    |> List.exists(range => CharacterRange.contains(cursor, range));
 
   if (!isCursorInHighlight) {
     clear(~bufferId, model);
@@ -105,23 +105,17 @@ let update = (~maybeBuffer, ~editorId, msg, model) => {
             line: LineNumber.ofZeroBased(idx),
             character: CharacterIndex.zero,
           },
-        stop:
-          {
-            line: LineNumber.ofZeroBased(idx),
-            character: CharacterIndex.(zero + 1),
-          },
+        stop: {
+          line: LineNumber.ofZeroBased(idx),
+          character: CharacterIndex.(zero + 1),
+        },
       };
 
     (
       model,
       Outmsg.SetSelections({
         editorId,
-        ranges:
-          [
-            rangeForLine(0),
-            rangeForLine(1),
-            rangeForLine(2),
-          ],
+        ranges: [rangeForLine(0), rangeForLine(1), rangeForLine(2)],
       }),
     );
   };

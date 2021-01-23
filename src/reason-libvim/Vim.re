@@ -793,7 +793,8 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
             String.sub(
               newLine,
               ByteIndex.toInt(editRange.start.byte),
-              (ByteIndex.toInt(editRange.stop.byte) + byteDelta)
+              ByteIndex.toInt(editRange.stop.byte)
+              + byteDelta
               - ByteIndex.toInt(editRange.start.byte)
               + 1,
             );
@@ -858,19 +859,14 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
                          curr.line,
                          rangeToConsider.start.line,
                        )
-                       && ByteIndex.(
-                            rangeToConsider.start.byte < curr.byte
-                          )) {
+                       && ByteIndex.(rangeToConsider.start.byte < curr.byte)) {
                      let originalByteLength =
                        ByteIndex.toInt(rangeToConsider.stop.byte)
                        - ByteIndex.toInt(rangeToConsider.start.byte)
                        + 1;
                      let delta =
                        String.length(insertedText) - originalByteLength;
-                     {
-                         line: curr.line,
-                         byte: ByteIndex.(curr.byte + delta),
-                     };
+                     {line: curr.line, byte: ByteIndex.(curr.byte + delta)};
                    } else {
                      curr;
                    },
@@ -887,17 +883,14 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
             |> List.map((pos: BytePosition.t) => {
                  BytePosition.{
                    line: pos.line,
-                   byte:
-                     ByteIndex.(
-                       pos.byte + String.length(insertedText)
-                     ),
+                   byte: ByteIndex.(pos.byte + String.length(insertedText)),
                  }
                });
 
           // Primary cursor may also need to be updated,
           // if there were select ranges before it on the same line
-          let primaryCursor = newCursor
-          |> adjustPositionBasedOnPreviousRanges(secondaryRanges);
+          let primaryCursor =
+            newCursor |> adjustPositionBasedOnPreviousRanges(secondaryRanges);
 
           // Transition to insert mode, with multiple cursors for each range
           Mode.Insert({cursors: [primaryCursor, ...cursors]});
