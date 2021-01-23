@@ -90,6 +90,7 @@ let cursorMoved = (~buffer, ~cursor, model) => {
 
 let update = (~maybeBuffer, ~editorId, msg, model) => {
   switch (msg) {
+
   | DocumentHighlighted({bufferId, ranges}) =>
     let lineMap = ranges |> Utility.RangeEx.toCharacterLineMap;
     let bufferToHighlights =
@@ -97,34 +98,13 @@ let update = (~maybeBuffer, ~editorId, msg, model) => {
     ({...model, bufferToHighlights}, Outmsg.Nothing);
 
   | Command(ChangeAll) =>
-    let _model =
       maybeBuffer
       |> Option.map(Oni_Core.Buffer.getId)
       |> Option.map(bufferId => {
-           let _allHighlights = allHighlights(~bufferId, model);
-           ();
-         });
-    open EditorCoreTypes;
-    let rangeForLine = idx =>
-      CharacterRange.{
-        start:
-          CharacterPosition.{
-            line: LineNumber.ofZeroBased(idx),
-            character: CharacterIndex.zero,
-          },
-        stop: {
-          line: LineNumber.ofZeroBased(idx),
-          character: CharacterIndex.(zero + 1),
-        },
-      };
-
-    (
-      model,
-      Outmsg.SetSelections({
-        editorId,
-        ranges: [rangeForLine(0), rangeForLine(1), rangeForLine(2)],
-      }),
-    );
+           let allHighlights = allHighlights(~bufferId, model);
+           (model, Outmsg.SetSelections({editorId, ranges: allHighlights}))
+         })
+      |> Option.value(~default=(model, Outmsg.Nothing));
   };
 };
 
