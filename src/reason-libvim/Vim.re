@@ -761,6 +761,11 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         if (!canDoMultiCursorSelect) {
           Mode.current();
         } else {
+          // Apply multi-selection behavior:
+          // 1) Shift the secondary ranges by the edit range (the delta between the cursor-selection and inserted text)
+          // 2) Replace all the secondary ranges with the inserted text
+          // 3) Set up insert mode cursor positions
+
           let editRange = Option.get(maybeEditRange);
 
           let byteDelta =
@@ -784,24 +789,13 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
               range;
             };
 
-          let remapRangeToInsertedText = range =>
-            ByteRange.{
-              start:
-                BytePosition.{line: range.start.line, byte: range.start.byte},
-              stop:
-                BytePosition.{
-                  line: range.stop.line,
-                  byte: ByteIndex.(range.stop.byte + byteDelta),
-                },
-            };
-
-          let newRange = editRange |> remapRangeToInsertedText;
+          //let newRange = editRange |> remapRangeToInsertedText;
           let insertedText =
             String.sub(
               newLine,
-              ByteIndex.toInt(newRange.start.byte),
-              ByteIndex.toInt(newRange.stop.byte)
-              - ByteIndex.toInt(newRange.start.byte)
+              ByteIndex.toInt(editRange.start.byte),
+              (ByteIndex.toInt(editRange.stop.byte) + byteDelta)
+              - ByteIndex.toInt(editRange.start.byte)
               + 1,
             );
 
