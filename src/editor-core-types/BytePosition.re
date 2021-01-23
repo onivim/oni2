@@ -15,10 +15,9 @@ let (==) = equals;
 let line = ({line, _}) => line;
 let byte = ({byte, _}) => byte;
 
-let compare = (a, b) => {
+let compare = (a, b) =>
   if (LineNumber.equals(a.line, b.line)) {
-    ByteIndex.toInt(a.byte) - ByteIndex.toInt(b.byte)
+    ByteIndex.toInt(a.byte) - ByteIndex.toInt(b.byte);
   } else {
-    LineNumber.toZeroBased(a.line) - LineNumber.toZeroBased(b.line)
-  }
-};
+    LineNumber.toZeroBased(a.line) - LineNumber.toZeroBased(b.line);
+  };

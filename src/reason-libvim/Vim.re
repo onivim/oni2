@@ -820,7 +820,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
           // We sort edits in descending order, so we can apply them
           // without adjusting positions. However, we'll need to account
           // for updated positions when mapping to cursors.
-          let revCompare = (a, b) => ByteRange.compare(a, b) * -1;
+          let revCompare = (a, b) => ByteRange.compare(a, b) * (-1);
 
           // Adjust cursor position as we go
           secondaryRanges
@@ -857,41 +857,52 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
           // after we've applied all edits.
           let adjustPositionBasedOnPreviousRanges = (allRanges, range) => {
             allRanges
-            |> List.fold_left((curr: ByteRange.t, rangeToConsider: ByteRange.t) => {
-
-               // If the line is equal, and the range to consider is _before_
-               // our current range, shift the current range by the delta bytes.
-               if (LineNumber.equals(curr.start.line, rangeToConsider.start.line)
-               && ByteIndex.(rangeToConsider.start.byte < curr.start.byte))
-                 {
-                let originalByteLength = ByteIndex.toInt(rangeToConsider.stop.byte) -
-                ByteIndex.toInt(rangeToConsider.start.byte) + 1;
-                let delta = String.length(insertedText) - originalByteLength;
-                {
-                  start: {
-                    line: curr.start.line,
-                    byte: ByteIndex.(curr.start.byte + delta),
-                  },
-                  stop: {
-                    line: curr.stop.line,
-                    byte: ByteIndex.(curr.stop.byte + delta),
-                  }
-                }
-               } else {
-                curr
-               }
-              
-            }, range);
+            |> List.fold_left(
+                 (curr: ByteRange.t, rangeToConsider: ByteRange.t) =>
+                   // If the line is equal, and the range to consider is _before_
+                   // our current range, shift the current range by the delta bytes.
+                   if (LineNumber.equals(
+                         curr.start.line,
+                         rangeToConsider.start.line,
+                       )
+                       && ByteIndex.(
+                            rangeToConsider.start.byte < curr.start.byte
+                          )) {
+                     let originalByteLength =
+                       ByteIndex.toInt(rangeToConsider.stop.byte)
+                       - ByteIndex.toInt(rangeToConsider.start.byte)
+                       + 1;
+                     let delta =
+                       String.length(insertedText) - originalByteLength;
+                     {
+                       start: {
+                         line: curr.start.line,
+                         byte: ByteIndex.(curr.start.byte + delta),
+                       },
+                       stop: {
+                         line: curr.stop.line,
+                         byte: ByteIndex.(curr.stop.byte + delta),
+                       },
+                     };
+                   } else {
+                     curr;
+                   },
+                 range,
+               );
           };
 
           let cursors =
             secondaryRanges
-            |> List.map(adjustPositionBasedOnPreviousRanges(secondaryRanges))
+            |> List.map(
+                 adjustPositionBasedOnPreviousRanges(secondaryRanges),
+               )
             |> List.map((range: ByteRange.t) => {
                  BytePosition.{
                    line: range.start.line,
                    byte:
-                     ByteIndex.(range.start.byte + String.length(insertedText)),
+                     ByteIndex.(
+                       range.start.byte + String.length(insertedText)
+                     ),
                  }
                });
 
