@@ -216,6 +216,53 @@ describe("Multi-cursor", ({describe, _}) => {
       },
     );
     test(
+      "multiple selection -> multiple insert mode cursors - same line (reverse order)",
+      ({expect, _}) => {
+        let buffer = resetBuffer();
+
+        expect.int(Buffer.getLineCount(buffer)).toBe(3);
+
+        expect.bool(Mode.isNormal(Mode.current())).toBe(true);
+
+        let ranges = sameLineRanges |> List.rev;
+
+        // Force selection mode with 3 ranges
+        let (outContext, _: list(Effect.t)) =
+          Vim.input(
+            ~context={
+              ...Vim.Context.current(),
+              mode: Mode.Select({ranges: ranges}),
+            },
+            "a",
+          );
+
+        // Verify we've transitioned to insert mode
+        expect.bool(Mode.isInsert(outContext.mode)).toBe(true);
+
+        let cursors = Mode.cursors(outContext.mode);
+        expect.int(List.length(cursors)).toBe(3);
+
+        // Verify we now have 3 cursors
+        expect.equal(
+          cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=1),
+          true,
+        );
+
+        expect.equal(
+          cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=3),
+          true,
+        );
+        expect.equal(
+          cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=5),
+          true,
+        );
+        // Verify buffer contents
+        expect.string(Buffer.getLine(buffer, LineNumber.zero)).toEqual(
+          "a a a first line of a test file",
+        );
+      },
+    );
+    test(
       "multiple selection -> multiple insert mode cursors - same line (multi-byte character)",
       ({expect, _}) => {
         let buffer = resetBuffer();

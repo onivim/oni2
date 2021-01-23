@@ -789,7 +789,6 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
               range;
             };
 
-          //let newRange = editRange |> remapRangeToInsertedText;
           let insertedText =
             String.sub(
               newLine,
@@ -816,7 +815,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
           // for updated positions when mapping to cursors.
           let revCompare = (a, b) => ByteRange.compare(a, b) * (-1);
 
-          // Adjust cursor position as we go
+          // Update subsequent selections - replace current text with insert text
           secondaryRanges
           |> Base.List.sort(~compare=revCompare)
           |> List.iter(range => {
@@ -849,18 +848,18 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
 
           // Remap the ranges from the 'source' text position to the range
           // after we've applied all edits.
-          let adjustPositionBasedOnPreviousRanges = (allRanges, range) => {
+          let adjustPositionBasedOnPreviousRanges = (allRanges, position) => {
             allRanges
             |> List.fold_left(
-                 (curr: ByteRange.t, rangeToConsider: ByteRange.t) =>
+                 (curr: BytePosition.t, rangeToConsider: ByteRange.t) =>
                    // If the line is equal, and the range to consider is _before_
                    // our current range, shift the current range by the delta bytes.
                    if (LineNumber.equals(
-                         curr.start.line,
+                         curr.line,
                          rangeToConsider.start.line,
                        )
                        && ByteIndex.(
-                            rangeToConsider.start.byte < curr.start.byte
+                            rangeToConsider.start.byte < curr.byte
                           )) {
                      let originalByteLength =
                        ByteIndex.toInt(rangeToConsider.stop.byte)
@@ -869,39 +868,39 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
                      let delta =
                        String.length(insertedText) - originalByteLength;
                      {
-                       start: {
-                         line: curr.start.line,
-                         byte: ByteIndex.(curr.start.byte + delta),
-                       },
-                       stop: {
-                         line: curr.stop.line,
-                         byte: ByteIndex.(curr.stop.byte + delta),
-                       },
+                         line: curr.line,
+                         byte: ByteIndex.(curr.byte + delta),
                      };
                    } else {
                      curr;
                    },
-                 range,
+                 position,
                );
           };
 
           let cursors =
             secondaryRanges
+            |> List.map((range: ByteRange.t) => range.start)
             |> List.map(
                  adjustPositionBasedOnPreviousRanges(secondaryRanges),
                )
-            |> List.map((range: ByteRange.t) => {
+            |> List.map((pos: BytePosition.t) => {
                  BytePosition.{
-                   line: range.start.line,
+                   line: pos.line,
                    byte:
                      ByteIndex.(
-                       range.start.byte + String.length(insertedText)
+                       pos.byte + String.length(insertedText)
                      ),
                  }
                });
 
+          // Primary cursor may also need to be updated,
+          // if there were select ranges before it on the same line
+          let primaryCursor = newCursor
+          |> adjustPositionBasedOnPreviousRanges(secondaryRanges);
+
           // Transition to insert mode, with multiple cursors for each range
-          Mode.Insert({cursors: [newCursor, ...cursors]});
+          Mode.Insert({cursors: [primaryCursor, ...cursors]});
         };
       } else {
         switch (cursors) {
