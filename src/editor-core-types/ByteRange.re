@@ -24,6 +24,14 @@ module Internal = {
     };
 };
 
+let compare = (a, b) => {
+  // Compare start positions, unless they are equal - then use end positions
+  let (aPosition, bPosition) = (BytePosition.equals(a.start, b.start)) ?
+  (a.stop, b.stop) : (a.start, b.start);
+
+  BytePosition.compare(aPosition, bPosition);
+};
+
 let normalize = range =>
   range |> Internal.normalizeLines |> Internal.normalizeByte;
 

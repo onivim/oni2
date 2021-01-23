@@ -210,23 +210,24 @@ describe("Multi-cursor", ({describe, _}) => {
           cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=1),
           true,
         );
-        // TODO: Get green
+
         // expect.equal(
         //   cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=3),
         //   true,
         // );
-        // expect.equal(
-        //   cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=5),
-        //   true,
-        // );
+        expect.equal(
+          cursors |> hasCursorMatching(~lineIndex=0, ~byteIndex=5),
+          true,
+        );
         // Verify buffer contents
-        // expect.string(Buffer.getLine(buffer, LineNumber.zero)).toEqual(
-        //   "a a a first line of a test file",
-        // );
+        expect.string(Buffer.getLine(buffer, LineNumber.zero)).toEqual(
+          "a a a first line of a test file",
+        );
         // Entering another character should update all lines
+        // TODO: Add separate test for this...
         // let (_: Vim.Context.t, _: list(Effect.t)) = Vim.input(~context=outContext, "b");
         // expect.string(Buffer.getLine(buffer, LineNumber.zero)).toEqual(
-        //   "ab is the first line of a test file",
+        //   "ab ab ab first line of a test file",
         // );
       },
     );

@@ -784,7 +784,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
               range;
             };
 
-          let updateRange = range =>
+          let remapRangeToInsertedText = range =>
             ByteRange.{
               start:
                 BytePosition.{line: range.start.line, byte: range.start.byte},
@@ -795,7 +795,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
                 },
             };
 
-          let newRange = editRange |> updateRange;
+          let newRange = editRange |> remapRangeToInsertedText;
           let insertedText =
             String.sub(
               newLine,
@@ -804,7 +804,6 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
               - ByteIndex.toInt(newRange.start.byte)
               + 1,
             );
-          prerr_endline("inserted text: |" ++ insertedText ++ "|");
 
           // Filter out all ranges that intersected with the cursor
           let secondaryRanges =
@@ -818,9 +817,14 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
 
           let buffer = Buffer.getCurrent();
 
-          // TODO: Sort in ascending order for applying edits
+          // We sort edits in descending order, so we can apply them
+          // without adjusting positions. However, we'll need to account
+          // for updated positions when mapping to cursors.
+          let revCompare = (a, b) => ByteRange.compare(a, b) * -1;
+
           // Adjust cursor position as we go
           secondaryRanges
+          |> Base.List.sort(~compare=revCompare)
           |> List.iter(range => {
                open EditorCoreTypes.ByteRange;
 
@@ -849,17 +853,47 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
                );
              });
 
+          // Remap the ranges from the 'source' text position to the range
+          // after we've applied all edits.
+          let adjustPositionBasedOnPreviousRanges = (allRanges, range) => {
+            allRanges
+            |> List.fold_left((curr: ByteRange.t, rangeToConsider: ByteRange.t) => {
+
+               // If the line is equal, and the range to consider is _before_
+               // our current range, shift the current range by the delta bytes.
+               if (LineNumber.equals(curr.start.line, rangeToConsider.start.line)
+               && ByteIndex.(rangeToConsider.start.byte < curr.start.byte))
+                 {
+                let originalByteLength = ByteIndex.toInt(rangeToConsider.stop.byte) -
+                ByteIndex.toInt(rangeToConsider.start.byte) + 1;
+                let delta = String.length(insertedText) - originalByteLength;
+                {
+                  start: {
+                    line: curr.start.line,
+                    byte: ByteIndex.(curr.start.byte + delta),
+                  },
+                  stop: {
+                    line: curr.stop.line,
+                    byte: ByteIndex.(curr.stop.byte + delta),
+                  }
+                }
+               } else {
+                curr
+               }
+              
+            }, range);
+          };
+
           let cursors =
             secondaryRanges
-            |> List.map(updateRange)
-            |> List.map(range => ByteRange.(range.stop))
-            |> List.map(position =>
+            |> List.map(adjustPositionBasedOnPreviousRanges(secondaryRanges))
+            |> List.map((range: ByteRange.t) => {
                  BytePosition.{
-                   line: position.line,
+                   line: range.start.line,
                    byte:
-                     ByteIndex.(position.byte + String.length(insertedText)),
+                     ByteIndex.(range.start.byte + String.length(insertedText)),
                  }
-               );
+               });
 
           // Transition to insert mode, with multiple cursors for each range
           Mode.Insert({cursors: [newCursor, ...cursors]});
