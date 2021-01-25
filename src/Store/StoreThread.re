@@ -84,8 +84,6 @@ let start =
       ~onStateChanged,
       ~getClipboardText,
       ~setClipboardText,
-      ~getZoom,
-      ~setZoom,
       ~quit,
       ~setVsync,
       ~maximize,
@@ -167,8 +165,6 @@ let start =
   let configurationUpdater =
     ConfigurationStoreConnector.start(
       ~configurationFilePath,
-      ~getZoom,
-      ~setZoom,
       ~setVsync,
       ~shouldLoadConfiguration,
       ~filesToOpen,

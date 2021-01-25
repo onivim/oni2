@@ -6,7 +6,7 @@ open Oni_Model.Actions;
 module Constants = {
   let zoomStep = 0.2;
   let defaultZoomValue = 1.0;
-  let minZoomValue = 0.0;
+  let minZoomValue = 0.2;
   let maxZoomValue = 2.8;
 };
 
@@ -26,9 +26,7 @@ let start = () => {
 
   let zoomEffect = (state: State.t, getCalculatedZoomValue, _) =>
     Isolinear.Effect.createWithDispatch(~name="window.zoom", dispatch => {
-      let configuration = state.configuration;
-      let currentZoomValue =
-        Configuration.getValue(c => c.uiZoom, configuration);
+      let currentZoomValue = Feature_Zoom.zoom(state.zoom);
 
       let calculatedZoomValue = getCalculatedZoomValue(currentZoomValue);
       let newZoomValue =
@@ -42,7 +40,10 @@ let start = () => {
         dispatch(
           Actions.ConfigurationTransform(
             "configuration.json",
-            ConfigurationTransformer.setField("ui.zoom", `Float(newZoomValue)),
+            ConfigurationTransformer.setField(
+              "ui.zoom",
+              `Float(newZoomValue),
+            ),
           ),
         );
       };

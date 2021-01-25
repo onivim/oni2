@@ -291,6 +291,12 @@ switch (eff) {
     let extensionWorkspacePersistence =
       Store.Persistence.Workspace.extensionValues(initialWorkspaceStore);
 
+    let getZoom = () => {
+      Window.getZoom(window);
+    };
+
+    let setZoom = zoomFactor => Window.setZoom(window, zoomFactor);
+
     let currentState =
       ref(
         Model.State.initial(
@@ -307,6 +313,8 @@ switch (eff) {
           ~extensionsFolder=cliOptions.overriddenExtensionsDir,
           ~licenseKeyPersistence,
           ~titlebarHeight=Revery.Window.getTitlebarHeight(window),
+          ~setZoom,
+          ~getZoom,
         ),
       );
 
@@ -379,12 +387,6 @@ switch (eff) {
     let _: unit => unit =
       Tick.interval(~name="Oni2_Editor Apploop", tick, Time.zero);
 
-    let getZoom = () => {
-      Window.getZoom(window);
-    };
-
-    let setZoom = zoomFactor => Window.setZoom(window, zoomFactor);
-
     let maximize = () => {
       Window.maximize(window);
     };
@@ -424,8 +426,6 @@ switch (eff) {
         ~executingDirectory=Revery.Environment.executingDirectory,
         ~getState=() => currentState^,
         ~onStateChanged,
-        ~getZoom,
-        ~setZoom,
         ~setVsync,
         ~maximize,
         ~minimize,

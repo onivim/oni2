@@ -232,37 +232,8 @@ let defaultKeyBindings =
         ~command=Feature_Layout.Commands.previousEditor.id,
         ~condition=isMacCondition,
       ),
-      bind(
-        ~key="<D-+>",
-        ~command="workbench.action.zoomIn",
-        ~condition=isMacCondition,
-      ),
-      bind(
-        ~key="<C-+>",
-        ~command="workbench.action.zoomIn",
-        ~condition=WhenExpr.Value(True),
-      ),
-      bind(
-        ~key="<D-->",
-        ~command="workbench.action.zoomOut",
-        ~condition=isMacCondition,
-      ),
-      bind(
-        ~key="<C-->",
-        ~command="workbench.action.zoomOut",
-        ~condition=WhenExpr.Value(True),
-      ),
-      bind(
-        ~key="<D-0>",
-        ~command="workbench.action.zoomReset",
-        ~condition=isMacCondition,
-      ),
-      bind(
-        ~key="<C-0>",
-        ~command="workbench.action.zoomReset",
-        ~condition=WhenExpr.Value(True),
-      ),
     ]
+  @ Feature_Zoom.Contributions.keybindings
   @ Feature_Terminal.Contributions.keybindings
   //LAYOUT
   @ Feature_Input.Schema.[
@@ -468,6 +439,7 @@ type t = {
   modal: option(Feature_Modals.model),
   textContentProviders: list((int, string)),
   vim: Feature_Vim.model,
+  zoom: Feature_Zoom.model,
   autoUpdate: Feature_AutoUpdate.model,
   registration: Feature_Registration.model,
 };
@@ -486,6 +458,8 @@ let initial =
       ~extensionsFolder,
       ~licenseKeyPersistence,
       ~titlebarHeight,
+      ~getZoom,
+      ~setZoom,
     ) => {
   let config =
     Feature_Configuration.initial(
@@ -502,6 +476,7 @@ let initial =
         Feature_LanguageSupport.Contributions.configuration,
         Feature_Layout.Contributions.configuration,
         Feature_TitleBar.Contributions.configuration,
+        Feature_Zoom.Contributions.configuration,
       ],
     );
   let initialEditor = {
@@ -592,6 +567,7 @@ let initial =
     terminals: Feature_Terminal.initial,
     textContentProviders: [],
     vim: Feature_Vim.initial,
+    zoom: Feature_Zoom.initial(~getZoom, ~setZoom),
     autoUpdate: Feature_AutoUpdate.initial,
     registration: Feature_Registration.initial(licenseKeyPersistence),
   };
