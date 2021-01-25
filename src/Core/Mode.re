@@ -13,10 +13,7 @@ type t =
       cursor: BytePosition.t,
       range: VisualRange.t,
     })
-  | Select({
-      cursor: BytePosition.t,
-      range: VisualRange.t,
-    })
+  | Select({ranges: list(VisualRange.t)})
   | Replace({cursor: BytePosition.t})
   | Operator({pending: Vim.Operator.pending})
   | CommandLine
@@ -36,12 +33,16 @@ let toString =
     | Block => "Visual Block"
     | None => "Visual"
     }
-  | Select({range, _}) =>
-    switch (range.mode) {
-    | Character => "Select Character"
-    | Line => "Select Line"
-    | Block => "Select Block"
-    | None => "Select"
+  | Select({ranges, _}) =>
+    switch (ranges) {
+    | [range, ..._] =>
+      switch (range.mode) {
+      | Character => "Select Character"
+      | Line => "Select Line"
+      | Block => "Select Block"
+      | None => "Select"
+      }
+    | [] => "Select"
     }
   | Replace(_) => "Replace"
   | Operator({pending}) => Vim.Operator.toString(pending)

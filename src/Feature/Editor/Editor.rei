@@ -92,6 +92,8 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
 
+let setSelections: (list(ByteRange.t), t) => t;
+
 // Get the horizontal width in pixels of the tab/space whitespace in front of a line.
 let getLeadingWhitespacePixels: (EditorCoreTypes.LineNumber.t, t) => float;
 
@@ -165,7 +167,7 @@ let linePaddingInPixels: t => float;
 let setLineHeight: (~lineHeight: LineHeight.t, t) => t;
 let characterWidthInPixels: t => float;
 
-let selection: t => option(VisualRange.t);
+let selections: t => list(VisualRange.t);
 
 let selectionOrCursorRange: t => ByteRange.t;
 
@@ -201,6 +203,7 @@ let byteToCharacter: (BytePosition.t, t) => option(CharacterPosition.t);
 let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
 
 let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
+let characterRangeToByteRange: (CharacterRange.t, t) => option(ByteRange.t);
 
 // VIEW-SPACE CONVERSION
 

@@ -238,10 +238,10 @@ let%component make =
     Feature_Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =
     editor
-    |> Editor.selection
-    |> Option.map(selection => Selection.getRanges(selection, buffer))
-    |> Option.map(ByteRange.toHash)
-    |> Option.value(~default=Hashtbl.create(1));
+    |> Editor.selections
+    |> List.map(selection => Selection.getRanges(selection, buffer))
+    |> List.flatten
+    |> ByteRange.toHash;
 
   let diffMarkers =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
