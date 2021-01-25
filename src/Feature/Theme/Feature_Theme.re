@@ -12,6 +12,8 @@ type model = {
   theme: ColorTheme.t,
 };
 
+let variant = ({theme, _}) => theme.variant;
+
 let defaults =
   [
     Colors.ActivityBar.defaults,
