@@ -8,6 +8,8 @@ type theme = Exthost.Extension.Contributions.Theme.t;
 
 let initial: list(list(ColorTheme.Schema.definition)) => model;
 
+let variant: model => Oni_Core.ColorTheme.variant;
+
 [@deriving show]
 type command;
 
