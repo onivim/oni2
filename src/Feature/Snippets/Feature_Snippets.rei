@@ -3,6 +3,7 @@ open Oni_Core;
 // Placeholder until full snippet support: Break snippet at first placeholder
 let snippetToInsert: (~snippet: string) => string;
 
+[@deriving show]
 type msg;
 
 type model;

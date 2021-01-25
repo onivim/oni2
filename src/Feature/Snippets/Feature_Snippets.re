@@ -35,11 +35,13 @@ let%test "clips at first placeholder w/ default" = {
   snippetToInsert(~snippet="Hello (${1:expr})") == "Hello (";
 };
 
+[@deriving show]
 type command =
   | JumpToNextPlaceholder
   | JumpToPreviousPlaceholder
-  | InsertSnippet(Snippet.t); // TODO: How to have payload
+  | InsertSnippet([@opaque] Snippet.t); // TODO: How to have payload
 
+[@deriving show]
 type msg =
   | Command(command)
   | SnippetInsertionError(string);
