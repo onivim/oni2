@@ -598,6 +598,29 @@ let update =
                }
              );
         ({...state, layout: layout'}, Isolinear.Effect.none);
+
+      | SetSelections({editorId, ranges}) =>
+        let layout' =
+          state.layout
+          |> Feature_Layout.map(editor =>
+               Feature_Editor.(
+                 if (Editor.getId(editor) == editorId) {
+                   let byteRanges =
+                     ranges
+                     |> List.filter_map(characterRange =>
+                          Editor.characterRangeToByteRange(
+                            characterRange,
+                            editor,
+                          )
+                        );
+
+                   Editor.setSelections(byteRanges, editor);
+                 } else {
+                   editor;
+                 }
+               )
+             );
+        ({...state, layout: layout'}, Isolinear.Effect.none);
       }
     );
 
