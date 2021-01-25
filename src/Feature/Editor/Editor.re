@@ -1041,7 +1041,7 @@ let isScrollAnimated = ({isScrollAnimated, isAnimationOverride, _}) => {
   };
 };
 
-let exposePrimaryCursor = editor =>
+let exposePrimaryCursor = (~disableAnimation=false, editor) =>
   if (!hasSetSize(editor)) {
     // If the size hasn't been set yet - don't try to expose the cursor.
     // We don't know about the viewport to do a good job.
@@ -1098,23 +1098,18 @@ let exposePrimaryCursor = editor =>
           0.,
         );
 
-      let isSmallJump =
-        !Spring.isActive(editor.scrollY)
-        && Float.abs(adjustedScrollY -. scrollY) < lineHeightInPixels(editor)
-        *. 1.1;
-
       let animated = editor |> isScrollAnimated;
       {
         ...editor,
         scrollX:
           Spring.set(
-            ~instant=!animated,
+            ~instant=!animated || disableAnimation,
             ~position=adjustedScrollX,
             editor.scrollX,
           ),
         scrollY:
           Spring.set(
-            ~instant=!animated || isSmallJump,
+            ~instant=!animated || disableAnimation,
             ~position=adjustedScrollY,
             editor.scrollY,
           ),
@@ -1142,7 +1137,41 @@ let isCursorFullyVisible = editor => {
 let mode = ({mode, _}) => mode;
 
 let setMode = (mode, editor) => {
-  {...editor, mode} |> exposePrimaryCursor;
+  open EditorCoreTypes;
+  let previousCursor = getPrimaryCursor(editor);
+  let editor' = {...editor, mode};
+  let newCursor = getPrimaryCursor(editor');
+
+  if (CharacterPosition.equals(previousCursor, newCursor)) {
+    editor';
+  } else {
+    // Check if we should animate the cursor.
+    // The animation should be disabled for 'small jumps', ie:
+    // - Single line movement
+    // - Single character movement
+
+    let lineDelta =
+      CharacterPosition.(
+        abs(
+          LineNumber.toZeroBased(previousCursor.line)
+          - LineNumber.toZeroBased(newCursor.line),
+        )
+      );
+    let isSmallJumpLineWise = lineDelta <= 1;
+
+    let isSmallJumpCharacterWise =
+      previousCursor.line == newCursor.line
+      && abs(
+           CharacterIndex.toInt(previousCursor.character)
+           - CharacterIndex.toInt(newCursor.character),
+         )
+      <= 1;
+    let isSmallJump = isSmallJumpLineWise || isSmallJumpCharacterWise;
+
+    // If it was a 'small jump', don't animate
+    let disableAnimation = isSmallJump;
+    editor' |> exposePrimaryCursor(~disableAnimation);
+  };
 };
 
 let getLeftVisibleColumn = view => {

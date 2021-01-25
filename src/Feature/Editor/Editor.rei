@@ -137,7 +137,7 @@ let setLineNumbers:
 let lineNumbers: t => [ | `Off | `On | `Relative | `RelativeOnly];
 
 // [exposePrimaryCursor(editor)] ensures the primary cursor is visible - adjusting the scroll if it isnot.
-let exposePrimaryCursor: t => t;
+let exposePrimaryCursor: (~disableAnimation: bool=?, t) => t;
 
 let getNearestMatchingPair:
   (
