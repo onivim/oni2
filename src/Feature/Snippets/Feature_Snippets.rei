@@ -8,6 +8,7 @@ type msg;
 type model;
 
 type outmsg =
+  | Effect(Isolinear.Effect.t(msg))
   | Nothing;
 
 module Snippet: {

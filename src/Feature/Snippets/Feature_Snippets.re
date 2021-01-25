@@ -44,6 +44,7 @@ type msg =
 type model = unit;
 
 type outmsg =
+  | Effect(Isolinear.Effect.t(msg))
   | Nothing;
 
 let update = (_msg, model) => (model, Nothing);
