@@ -102,6 +102,9 @@ module Parts = {
 
       let renderOverlays = (~gutterWidth as _) => React.empty;
 
+      let isDark =
+        state.colorTheme |> Feature_Theme.variant != ColorTheme.Light;
+
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
         let backgroundColor = Feature_Terminal.defaultBackground(theme);
@@ -144,7 +147,7 @@ module Parts = {
       | Editor =>
         <Editor editor buffer state theme isActive dispatch renderOverlays />
 
-      | Welcome => <WelcomeView theme uiFont editorFont />
+      | Welcome => <WelcomeView isDark theme uiFont editorFont />
 
       | Version => <VersionView theme uiFont editorFont />
 
