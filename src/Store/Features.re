@@ -32,6 +32,15 @@ module Internal = {
     );
   };
 
+  let updateConfigurationEffect = transformer => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="features.updateConfiguration", dispatch => {
+      dispatch(
+        Actions.ConfigurationTransform("configuration.json", transformer),
+      )
+    });
+  };
+
   let setThemesEffect =
       (~themes: list(Exthost.Extension.Contributions.Theme.t)) => {
     switch (themes) {
@@ -153,7 +162,8 @@ module Internal = {
     };
   };
 
-  let updateConfiguration: State.t => State.t =
+  let updateConfiguration:
+    State.t => (State.t, Isolinear.Effect.t(Actions.t)) =
     state => {
       let resolver = Selectors.configResolver(state);
       let maybeRoot = Feature_Explorer.root(state.fileExplorer);
@@ -181,7 +191,11 @@ module Internal = {
           },
           state.layout,
         );
-      {...state, languageSupport, sideBar, layout};
+
+      let (zoom, zoomEffect) =
+        Feature_Zoom.configurationChanged(~config=resolver, state.zoom);
+      let eff = zoomEffect |> Isolinear.Effect.map(msg => Actions.Zoom(msg));
+      ({...state, languageSupport, sideBar, layout, zoom}, eff);
     };
 
   let updateMode =
@@ -1255,7 +1269,10 @@ let update =
             extHostClient,
           );
         });
-      (state |> Internal.updateConfiguration, eff);
+
+      let (state', configurationEffect) =
+        state |> Internal.updateConfiguration;
+      (state', Isolinear.Effect.batch([eff, configurationEffect]));
     | Nothing => (state, Effect.none)
     };
 
@@ -1749,10 +1766,7 @@ let update =
         state,
         e |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
       )
-    | SettingsChanged => (
-        state |> Internal.updateConfiguration,
-        Isolinear.Effect.none,
-      )
+    | SettingsChanged => state |> Internal.updateConfiguration
     | ModeDidChange({allowAnimation, mode, effects}) =>
       Internal.updateMode(~allowAnimation, state, mode, effects)
     | Output({cmd, output}) =>
@@ -1805,6 +1819,18 @@ let update =
         |> FocusManager.push(Focus.FileExplorer);
       (state', eff);
     };
+
+  | Zoom(msg) =>
+    let (zoom', outmsg) = Feature_Zoom.update(msg, state.zoom);
+    let eff =
+      switch (outmsg) {
+      | Feature_Zoom.Nothing => Isolinear.Effect.none
+      | Feature_Zoom.UpdateConfiguration(transformer) =>
+        Internal.updateConfigurationEffect(transformer)
+      | Feature_Zoom.Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Zoom(msg))
+      };
+    ({...state, zoom: zoom'}, eff);
 
   | AutoUpdate(msg) =>
     let getLicenseKey = () =>

@@ -189,6 +189,10 @@ let make = (~dispatch, ~state: State.t, ()) => {
     | `hidden => React.empty
     };
 
+  let zoom = Feature_Zoom.zoom(state.zoom);
+  // Correct for zoom in title bar height
+  let titlebarHeight = state.titlebarHeight /. zoom;
+
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
       menuBar=menuBarElement
@@ -203,7 +207,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       theme
       dispatch=titleDispatch
       registrationDispatch
-      height={state.titlebarHeight}
+      height=titlebarHeight
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>
