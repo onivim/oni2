@@ -182,14 +182,6 @@ let start =
   let vsync = ref(Revery.Vsync.Immediate);
   let synchronizeConfigurationEffect = configuration =>
     Isolinear.Effect.create(~name="configuration.synchronize", () => {
-      // TODO: Move to feature zoom
-      // let zoomValue = Configuration.getValue(c => c.uiZoom, configuration);
-      // if (zoomValue != zoom^) {
-      //   Log.infof(m => m("Setting zoom: %f", zoomValue));
-      //   setZoom(zoomValue);
-      //   zoom := zoomValue;
-      // };
-
       let vsyncValue = Configuration.getValue(c => c.vsync, configuration);
       if (vsyncValue != vsync^) {
         Log.info("Setting vsync: " ++ Revery.Vsync.toString(vsyncValue));
