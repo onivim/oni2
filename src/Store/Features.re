@@ -32,6 +32,15 @@ module Internal = {
     );
   };
 
+  let updateConfigurationEffect = transformer => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="features.updateConfiguration", dispatch => {
+      dispatch(
+        Actions.ConfigurationTransform("configuration.json", transformer),
+      )
+    });
+  };
+
   let setThemesEffect =
       (~themes: list(Exthost.Extension.Contributions.Theme.t)) => {
     switch (themes) {
@@ -1816,6 +1825,8 @@ let update =
     let eff =
       switch (outmsg) {
       | Feature_Zoom.Nothing => Isolinear.Effect.none
+      | Feature_Zoom.UpdateConfiguration(transformer) =>
+        Internal.updateConfigurationEffect(transformer)
       | Feature_Zoom.Effect(eff) =>
         eff |> Isolinear.Effect.map(msg => Actions.Zoom(msg))
       };
