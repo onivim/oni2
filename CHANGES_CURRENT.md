@@ -1,5 +1,7 @@
 ### Features 
 
+- #3024 - Editor: Snippet Support - Multi-select handler
+
 ### Bug Fixes
 
 - #3008 - SCM: Fix index-out-of-bound exception when rendering diff markers
