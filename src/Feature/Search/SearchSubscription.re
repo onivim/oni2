@@ -10,6 +10,7 @@ module Make = (Config: {type action;}) => {
 
     type params = {
       directory: string,
+      searchExclude: list(string),
       query: string,
       ripgrep: Ripgrep.t, // TODO: Necessary dependency?
       onUpdate: list(Ripgrep.Match.t) => unit, // TODO: Should return action
@@ -36,6 +37,7 @@ module Make = (Config: {type action;}) => {
 
       let dispose =
         ripgrep.Ripgrep.findInFiles(
+          ~searchExclude=[],
           ~directory,
           ~query,
           ~onUpdate,
@@ -72,10 +74,27 @@ module Make = (Config: {type action;}) => {
   };
 
   let create =
-      (~id, ~directory, ~query, ~ripgrep, ~onUpdate, ~onCompleted, ~onError) =>
+      (
+        ~id,
+        ~searchExclude,
+        ~directory,
+        ~query,
+        ~ripgrep,
+        ~onUpdate,
+        ~onCompleted,
+        ~onError,
+      ) =>
     Subscription.create(
       id,
       (module Provider),
-      {directory, query, ripgrep, onUpdate, onCompleted, onError},
+      {
+        searchExclude,
+        directory,
+        query,
+        ripgrep,
+        onUpdate,
+        onCompleted,
+        onError,
+      },
     );
 };

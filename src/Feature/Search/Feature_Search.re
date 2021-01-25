@@ -213,6 +213,7 @@ let subscriptions = (~workingDirectory, ripgrep, dispatch) => {
   let search = query => {
     SearchSubscription.create(
       ~id="workspace-search",
+      ~searchExclude=[],
       ~query,
       ~directory=workingDirectory,
       ~ripgrep,
