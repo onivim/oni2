@@ -1,3 +1,5 @@
+open Oni_Core;
+open Utility;
 open Oniguruma;
 
 module Snippet = Snippet;
@@ -36,10 +38,11 @@ let%test "clips at first placeholder w/ default" = {
 type command =
   | JumpToNextPlaceholder
   | JumpToPreviousPlaceholder
-  | InsertSnippet; // TODO: How to have payload
+  | InsertSnippet(Snippet.t); // TODO: How to have payload
 
 type msg =
-  | Command(command);
+  | Command(command)
+  | SnippetInsertionError(string);
 
 type model = unit;
 
@@ -68,12 +71,44 @@ module Commands = {
       Command(JumpToPreviousPlaceholder),
     );
 
+  let snippetCommandParser = json => {
+    open Oni_Core.Json.Decode;
+
+    // Decode {"snippets": "some-snippet-text"}
+    let snippets = obj(({field, _}) => {
+      field.required("snippet", string
+      |> and_then(str => {
+        switch(Snippet.parse(str)) {
+        | Ok(snippet) => succeed(snippet)
+        | Error(msg) => fail(msg)
+        };
+      })
+    )
+    });
+
+    let decode = one_of([
+      // TODO: Decoder for getting snippet by name
+      ("snippets", snippets)
+    ]);
+
+    let snippetResult = json
+    |> decode_value(decode);
+
+    switch (snippetResult) {
+    | Ok(snippet) => Command(InsertSnippet(snippet))
+    | Error(msg) =>
+      SnippetInsertionError(string_of_error(msg));
+    }
+
+  };
+
+
   let insertSnippet =
-    define(
+    defineWithArgs(
       ~category="Snippets",
       ~title="Insert snippet",
       "editor.action.insertSnippet",
-      Command(InsertSnippet),
+      snippetCommandParser,
     );
 };
 

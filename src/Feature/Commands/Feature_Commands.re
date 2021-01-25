@@ -12,7 +12,7 @@ module Schema = {
       ) =>
     Command.{id, title, category, icon, isEnabledWhen, msg: `Arg0(msg)};
 
-  let defineArgs =
+  let defineWithArgs =
       (
         ~category=?,
         ~title=?,

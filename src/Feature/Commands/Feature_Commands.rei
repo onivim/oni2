@@ -12,7 +12,7 @@ module Schema: {
     ) =>
     Command.t('msg);
 
-  let defineArgs:
+  let defineWithArgs:
     (
       ~category: string=?,
       ~title: string=?,
