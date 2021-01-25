@@ -102,7 +102,8 @@ module Parts = {
 
       let renderOverlays = (~gutterWidth as _) => React.empty;
 
-      let isDark = (state.colorTheme |> Feature_Theme.variant) != ColorTheme.Light
+      let isDark =
+        state.colorTheme |> Feature_Theme.variant != ColorTheme.Light;
 
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
