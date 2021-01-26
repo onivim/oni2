@@ -328,29 +328,29 @@ module Vertical = {
         ),
       ];
     };
-    let getSelectionElements = (selection: option(VisualRange.t)) => {
-      switch (selection) {
-      | None => []
-      | Some(selection) =>
-        let topLine =
-          Editor.projectLine(
-            ~line=selection.range.start.line,
-            ~pixelHeight=totalHeight,
-            editor,
-          )
-          |> int_of_float;
-        let botLine =
-          Editor.projectLine(
-            ~line=EditorCoreTypes.LineNumber.(selection.range.stop.line + 1),
-            ~pixelHeight=totalHeight,
-            editor,
-          )
-          |> int_of_float;
-        [<View style={selectionStyle(topLine, botLine)} />];
-      };
+    let getSelectionElements = (selections: list(VisualRange.t)) => {
+      selections
+      |> List.map((selection: VisualRange.t) => {
+           let topLine =
+             Editor.projectLine(
+               ~line=selection.range.start.line,
+               ~pixelHeight=totalHeight,
+               editor,
+             )
+             |> int_of_float;
+           let botLine =
+             Editor.projectLine(
+               ~line=
+                 EditorCoreTypes.LineNumber.(selection.range.stop.line + 1),
+               ~pixelHeight=totalHeight,
+               editor,
+             )
+             |> int_of_float;
+           <View style={selectionStyle(topLine, botLine)} />;
+         });
     };
 
-    getSelectionElements(Editor.selection(editor)) |> React.listToElement;
+    getSelectionElements(Editor.selections(editor)) |> React.listToElement;
   };
 
   let make =

@@ -135,11 +135,13 @@ type t = {
 };
 
 let key = ({key, _}) => key;
-let selection = ({mode, _}) =>
+// TODO: Handle multiple ranges
+let selections = ({mode, _}) =>
   switch (mode) {
-  | Visual(range) => Some(Oni_Core.VisualRange.ofVim(range))
-  | Select(range) => Some(Oni_Core.VisualRange.ofVim(range))
-  | _ => None
+  | Visual(range) => [Oni_Core.VisualRange.ofVim(range)]
+
+  | Select({ranges}) => ranges |> List.map(Oni_Core.VisualRange.ofVim)
+  | _ => []
   };
 let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
 let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
@@ -809,6 +811,31 @@ let getPrimaryCursorByte = editor =>
     BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}
   };
 
+let setSelections = (selections: list(ByteRange.t), editor) => {
+  let mapRange = (r: ByteRange.t) => {
+    open ByteRange;
+    open Vim.VisualRange;
+    let {start, stop}: ByteRange.t = r;
+    {anchor: start, cursor: stop, visualType: Vim.Types.Character};
+  };
+  // Try to preserve the existing cursor, if we can
+  let primaryCursor = getPrimaryCursorByte(editor);
+  let primaryRanges =
+    selections
+    |> List.filter(range => ByteRange.contains(primaryCursor, range))
+    |> List.map(mapRange);
+
+  let secondaryRanges =
+    selections
+    |> List.filter(range => !ByteRange.contains(primaryCursor, range))
+    |> List.map(mapRange);
+
+  // Make sure primary ranges (ranges on the existing cursor) are first
+  let ranges = primaryRanges @ secondaryRanges;
+
+  {...editor, mode: Select({ranges: ranges})};
+};
+
 let withSteadyCursor = (f, editor) => {
   let bytePosition = getPrimaryCursorByte(editor);
 
@@ -942,8 +969,8 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
 };
 
 let selectionOrCursorRange = editor => {
-  switch (selection(editor)) {
-  | None =>
+  switch (selections(editor)) {
+  | [] =>
     let pos = getPrimaryCursorByte(editor);
     ByteRange.{
       start: BytePosition.{line: pos.line, byte: ByteIndex.zero},
@@ -953,7 +980,7 @@ let selectionOrCursorRange = editor => {
           byte: ByteIndex.zero,
         },
     };
-  | Some(selection) => selection.range
+  | [selection, ..._tail] => selection.range
   };
 };
 
@@ -1362,8 +1389,7 @@ let mapCursor = (~f, editor) => {
     | Normal({cursor}) => Normal({cursor: f(cursor)})
     | Visual(curr) =>
       Visual(Vim.VisualRange.{...curr, cursor: f(curr.cursor)})
-    | Select(curr) =>
-      Select(Vim.VisualRange.{...curr, cursor: f(curr.cursor)})
+    | Select({ranges}) => Select({ranges: ranges})
     | Replace({cursor}) => Replace({cursor: f(cursor)})
     | Insert({cursors}) => Insert({cursors: List.map(f, cursors)})
     };
@@ -1743,7 +1769,7 @@ let mouseUp = (~altKey, ~time, ~pixelX, ~pixelY, editor) => {
              };
 
            if (isInsertMode) {
-             Vim.Mode.Select(visualRange);
+             Vim.Mode.Select({ranges: [visualRange]});
            } else {
              Vim.Mode.Visual(visualRange);
            };
@@ -1795,7 +1821,7 @@ let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
            if (newPosition == pos) {
              Vim.Mode.Insert({cursors: [newPosition]});
            } else {
-             Vim.Mode.Select(visualRange);
+             Vim.Mode.Select({ranges: [visualRange]});
            };
          } else if (newPosition == pos) {
            Vim.Mode.Normal({cursor: newPosition});
