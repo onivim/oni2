@@ -59,7 +59,10 @@ type model;
 let initial: list(Schema.keybinding) => model;
 
 type execute =
-  | NamedCommand(string)
+  | NamedCommand({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | VimExCommand(string);
 
 type effect =

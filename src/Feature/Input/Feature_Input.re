@@ -95,7 +95,12 @@ type outmsg =
     });
 
 type execute =
-  InputStateMachine.execute = | NamedCommand(string) | VimExCommand(string);
+  InputStateMachine.execute =
+    | NamedCommand({
+        command: string,
+        arguments: Yojson.Safe.t,
+      })
+    | VimExCommand(string);
 
 module Schema = {
   [@deriving show]
@@ -156,7 +161,9 @@ module Schema = {
       |> Stdlib.Result.map(matcher => {
            ResolvedBinding({
              matcher,
-             command: InputStateMachine.NamedCommand(command),
+             // TODO:
+             command:
+               InputStateMachine.NamedCommand({command, arguments: `Null}),
              condition: evaluateCondition(condition),
            })
          });
@@ -368,17 +375,16 @@ let commandToAvailableBindings = (~command, ~config, ~context, model) => {
   if (String.length(command) <= 0) {
     [];
   } else {
-    let execute = NamedCommand(command);
-
     allCandidates
     |> List.filter_map(((matcher: EditorInput.Matcher.t, ex: execute)) =>
-         if (ex == execute) {
+         switch (ex) {
+         | NamedCommand({command: namedCommand, _})
+             when command == namedCommand =>
            switch (matcher) {
            | Sequence(keys) => Some(keys)
            | AllKeysReleased => None
-           };
-         } else {
-           None;
+           }
+         | _ => None
          }
        );
   };

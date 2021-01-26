@@ -44,7 +44,7 @@ let make = (~state: Model.State.t, ()) => {
          let cmd =
            switch (command) {
            | Feature_Input.VimExCommand(ex) => ex
-           | Feature_Input.NamedCommand(cmd) => cmd
+           | Feature_Input.NamedCommand({command, _}) => command
            };
          <View style=Styles.row>
            <View style=Style.[marginHorizontal(8)]>

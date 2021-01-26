@@ -21,8 +21,8 @@ module Schema = {
         id,
         toMsg,
       ) => {
-      Command.{id, title, category, icon, isEnabledWhen, msg: `Arg1(toMsg)};
-    }
+    Command.{id, title, category, icon, isEnabledWhen, msg: `Arg1(toMsg)};
+  };
 };
 
 // MODEL

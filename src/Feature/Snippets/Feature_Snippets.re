@@ -77,33 +77,33 @@ module Commands = {
     open Oni_Core.Json.Decode;
 
     // Decode {"snippets": "some-snippet-text"}
-    let snippets = obj(({field, _}) => {
-      field.required("snippet", string
-      |> and_then(str => {
-        switch(Snippet.parse(str)) {
-        | Ok(snippet) => succeed(snippet)
-        | Error(msg) => fail(msg)
-        };
-      })
-    )
-    });
+    let snippets =
+      obj(({field, _}) => {
+        field.required(
+          "snippet",
+          string
+          |> and_then(str => {
+               switch (Snippet.parse(str)) {
+               | Ok(snippet) => succeed(snippet)
+               | Error(msg) => fail(msg)
+               }
+             }),
+        )
+      });
 
-    let decode = one_of([
-      // TODO: Decoder for getting snippet by name
-      ("snippets", snippets)
-    ]);
+    let decode =
+      one_of([
+        // TODO: Decoder for getting snippet by name
+        ("snippets", snippets),
+      ]);
 
-    let snippetResult = json
-    |> decode_value(decode);
+    let snippetResult = json |> decode_value(decode);
 
     switch (snippetResult) {
     | Ok(snippet) => Command(InsertSnippet(snippet))
-    | Error(msg) =>
-      SnippetInsertionError(string_of_error(msg));
-    }
-
+    | Error(msg) => SnippetInsertionError(string_of_error(msg))
+    };
   };
-
 
   let insertSnippet =
     defineWithArgs(

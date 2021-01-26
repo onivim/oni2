@@ -25,10 +25,10 @@ module Internal = {
     );
   };
 
-  let executeCommandEffect = command => {
+  let executeCommandEffect = (command, arguments) => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.executeCommand", dispatch =>
-      dispatch(Actions.KeybindingInvoked({command: command}))
+      dispatch(Actions.KeybindingInvoked({command, arguments}))
     );
   };
 
@@ -664,7 +664,8 @@ let update =
     let eff =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
-      | ExecuteCommand({command}) => Internal.executeCommandEffect(command)
+      | ExecuteCommand({command}) =>
+        Internal.executeCommandEffect(command, `Null)
       };
     ({...state, menuBar: menuBar'}, eff);
 
