@@ -165,7 +165,6 @@ module Schema = {
       |> Stdlib.Result.map(matcher => {
            ResolvedBinding({
              matcher,
-             // TODO:
              command: InputStateMachine.NamedCommand({command, arguments}),
              condition: evaluateCondition(condition),
            })
