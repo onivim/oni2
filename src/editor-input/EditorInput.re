@@ -715,7 +715,7 @@ module Make = (Config: {
   };
 
   let text = (~text, bindings) =>
-    // The last key down participating in binding,
+    // The last key down participated in a binding,
     // so we'll ignore text until we get a keyup
     if (bindings.suppressText) {
       (bindings, []);
