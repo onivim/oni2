@@ -62,13 +62,13 @@ module Effects = {
         ~position: BytePosition.t,
         ~snippet: Snippet.t,
       ) => {
-        // TODO:
-        ignore(position);
-        ignore(snippet);
+    // TODO:
+    ignore(position);
+    ignore(snippet);
 
-        prerr_endline ("Starting session: " ++ Snippet.show(snippet))
-      Isolinear.Effect.none;
-      };
+    prerr_endline("Starting session: " ++ Snippet.show(snippet));
+    Isolinear.Effect.none;
+  };
 };
 
 let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>

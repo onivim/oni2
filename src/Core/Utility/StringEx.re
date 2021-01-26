@@ -152,6 +152,29 @@ let findNonWhitespace = str => {
   loop(0);
 };
 
+/** [leadingWhitespace(str)] returns a string containing the leading whitespace characters of [str] */
+let leadingWhitespace = str => {
+  let maybeIdx = findNonWhitespace(str);
+  switch (maybeIdx) {
+  | None => str
+  | Some(idx) => String.sub(str, 0, idx)
+  };
+};
+
+let%test_module "leadingWhitespace" =
+  (module
+   {
+     let%test "no whitespace" = {
+       leadingWhitespace("abc") == "";
+     };
+     let%test "single space" = {
+       leadingWhitespace(" abc") == " ";
+     };
+     let%test "mixed spaces" = {
+       leadingWhitespace(" \t abc") == " \t ";
+     };
+   });
+
 let isEmpty = str =>
   if (String.equal(str, "")) {
     true;
