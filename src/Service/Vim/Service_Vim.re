@@ -106,7 +106,13 @@ module Effects = {
         | None =>
           Error("No buffer found with id: " ++ string_of_int(bufferId))
         | Some(buffer) =>
-          Vim.Buffer.setLines(~start?, ~stop?, ~lines, buffer);
+          Vim.Buffer.setLines(
+            ~undoable=true,
+            ~start?,
+            ~stop?,
+            ~lines,
+            buffer,
+          );
           Ok();
         };
 
