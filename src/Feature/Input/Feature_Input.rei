@@ -25,6 +25,16 @@ module Schema: {
   let bind:
     (~key: string, ~command: string, ~condition: WhenExpr.t) => keybinding;
 
+  // Bind a key to a command, with arguments
+  let bindWithArgs:
+    (
+      ~arguments: Yojson.Safe.t,
+      ~key: string,
+      ~command: string,
+      ~condition: WhenExpr.t
+    ) =>
+    keybinding;
+
   // Clear all bindings for a key
   let clear: (~key: string) => keybinding;
 

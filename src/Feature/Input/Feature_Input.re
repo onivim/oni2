@@ -108,6 +108,7 @@ module Schema = {
     | Binding({
         key: string,
         command: string,
+        arguments: Yojson.Safe.t,
         condition: WhenExpr.t,
       })
     | Remap({
@@ -131,7 +132,10 @@ module Schema = {
       });
 
   let bind = (~key, ~command, ~condition) =>
-    Binding({key, command, condition});
+    Binding({key, command, arguments: `Null, condition});
+
+  let bindWithArgs = (~arguments, ~key, ~command, ~condition) =>
+    Binding({key, command, arguments, condition});
 
   let mapCommand = (~f, keybinding: keybinding) => {
     switch (keybinding) {
@@ -154,7 +158,7 @@ module Schema = {
     };
 
     switch (keybinding) {
-    | Binding({key, command, condition}) =>
+    | Binding({key, command, arguments, condition}) =>
       let maybeMatcher =
         EditorInput.Matcher.parse(~explicitShiftKeyNeeded=true, key);
       maybeMatcher
@@ -162,8 +166,7 @@ module Schema = {
            ResolvedBinding({
              matcher,
              // TODO:
-             command:
-               InputStateMachine.NamedCommand({command, arguments: `Null}),
+             command: InputStateMachine.NamedCommand({command, arguments}),
              condition: evaluateCondition(condition),
            })
          });

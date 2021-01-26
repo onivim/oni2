@@ -146,7 +146,7 @@ describe("Keybindings", ({describe, _}) => {
 
            expect.equal(
              effects,
-             [Execute(NamedCommand("explorer.toggle"))],
+             [Execute(NamedCommand({command: "explorer.toggle", arguments: `Null}))],
            );
          });
     });
@@ -182,7 +182,7 @@ describe("Keybindings", ({describe, _}) => {
                    ),
                  input,
                );
-             expect.equal(effects, [Execute(NamedCommand(cmd))]);
+             expect.equal(effects, [Execute(NamedCommand({ command: cmd, arguments: `Null }))]);
            });
       };
 

@@ -1,5 +1,3 @@
-open Oni_Core;
-open Utility;
 open Oniguruma;
 
 module Snippet = Snippet;
