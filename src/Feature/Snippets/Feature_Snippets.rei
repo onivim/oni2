@@ -20,6 +20,17 @@ module Snippet: {
   type raw;
 
   let parse: string => result(raw, string);
+
+  type t;
+
+  let resolve:
+    (
+      ~prefix: string,
+      ~postfix: string,
+      ~indentationSettings: IndentationSettings.t,
+      raw
+    ) =>
+    t;
 };
 
 // module Session: {
