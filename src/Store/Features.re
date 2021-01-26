@@ -1607,6 +1607,31 @@ let update =
       Internal.notificationEffect(~kind=Error, message),
     )
 
+  | Snippets(msg) =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let editor = Feature_Layout.activeEditor(state.layout);
+    let editorId = editor |> Feature_Editor.Editor.getId;
+
+    let cursorPosition = editor |> Feature_Editor.Editor.getPrimaryCursorByte;
+
+    let (snippets', outmsg) =
+      Feature_Snippets.update(
+        ~maybeBuffer,
+        ~editorId,
+        ~cursorPosition,
+        msg,
+        state.snippets,
+      );
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | ErrorMessage(msg) => Internal.notificationEffect(~kind=Error, msg)
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Snippets(msg))
+      };
+    ({...state, snippets: snippets'}, eff);
+
   // TODO: This should live in the terminal feature project
   | TerminalFont(Service_Font.FontLoaded(font)) => (
       {...state, terminalFont: font},

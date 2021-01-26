@@ -1,4 +1,5 @@
 open Oni_Core;
+open EditorCoreTypes;
 
 // Placeholder until full snippet support: Break snippet at first placeholder
 let snippetToInsert: (~snippet: string) => string;
@@ -8,14 +9,17 @@ type msg;
 
 type model;
 
+let initial: model;
+
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
+  | ErrorMessage(string)
   | Nothing;
 
 module Snippet: {
-  type t;
+  type raw;
 
-  let parse: string => result(t, string);
+  let parse: string => result(raw, string);
 };
 
 // module Session: {
@@ -29,7 +33,15 @@ module Snippet: {
 //   ) => Isolinear.Effect.t(msg);
 // }
 
-let update: (msg, model) => (model, outmsg);
+let update:
+  (
+    ~maybeBuffer: option(Buffer.t),
+    ~editorId: int,
+    ~cursorPosition: BytePosition.t,
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 module Contributions: {
   let commands: list(Command.t(msg));

@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oniguruma;
 
 module Snippet = Snippet;
@@ -46,11 +47,55 @@ type msg =
 
 type model = unit;
 
+let initial = ();
+
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
+  | ErrorMessage(string)
   | Nothing;
 
-let update = (_msg, model) => (model, Nothing);
+module Effects = {
+  let startSession =
+      (
+        ~buffer as _,
+        ~editorId as _,
+        ~position: BytePosition.t,
+        ~snippet: Snippet.t,
+      ) => {
+        // TODO:
+        ignore(position);
+        ignore(snippet);
+
+        prerr_endline ("Starting session: " ++ Snippet.show(snippet))
+      Isolinear.Effect.none;
+      };
+};
+
+let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
+  switch (msg) {
+  | SnippetInsertionError(msg) => (model, ErrorMessage(msg))
+
+  // TODO
+  | Command(JumpToNextPlaceholder) => (model, Nothing)
+
+  // TODO
+  | Command(JumpToPreviousPlaceholder) => (model, Nothing)
+
+  | Command(InsertSnippet(snippet)) =>
+    let eff =
+      maybeBuffer
+      |> Option.map(buffer => {
+           Effects.startSession(
+             ~buffer,
+             ~editorId,
+             ~position=cursorPosition,
+             ~snippet,
+           )
+         })
+      |> Option.value(~default=Isolinear.Effect.none);
+
+    (model, Effect(eff));
+  };
 
 module Commands = {
   open Feature_Commands.Schema;
