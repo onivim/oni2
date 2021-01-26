@@ -1,5 +1,7 @@
 ### Features 
 
+- #3024 - Editor: Snippet Support - Multi-select handler
+
 ### Bug Fixes
 
 - #3008 - SCM: Fix index-out-of-bound exception when rendering diff markers
@@ -10,6 +12,8 @@
 - #3020 - Vim: Fix incsearch cursor movement (fixes #2968)
 - #3023 - Keybindings: Fix default - add quotes around "when" (thanks @noahhaasis!)
 - #3027 - Vim: Command-line completion - fix 'set no' completion
+- #3029 - Editor: Fix rubber-banding while scrolling with high key-repeat set
+- #3021 - Configuration: Fix zoom being reset when saving configuration (fixes #2294)
 
 ### Performance
 

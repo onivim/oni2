@@ -485,7 +485,6 @@ module Layout = {
         ~model as layout,
         ~config,
         ~isFocused,
-        ~isZenMode,
         ~showTabs,
         ~uiFont,
         ~theme,
@@ -501,16 +500,7 @@ module Layout = {
       let children =
         switch (maybeDimensions) {
         | Some((width, height)) =>
-          let positioned =
-            isZenMode
-              ? Positioned.fromWindow(
-                  0,
-                  0,
-                  width,
-                  height,
-                  layout.activeGroupId,
-                )
-              : Positioned.fromLayout(0, 0, width, height, tree);
+          let positioned = Positioned.fromLayout(0, 0, width, height, tree);
 
           let renderWindow = id =>
             switch (groupById(id, layout)) {
@@ -581,7 +571,6 @@ let make =
       model={activeLayout(model)}
       config
       isFocused
-      isZenMode
       showTabs
       uiFont
       theme

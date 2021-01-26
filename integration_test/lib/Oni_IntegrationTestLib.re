@@ -161,6 +161,8 @@ let runTest =
         ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
         ~licenseKeyPersistence=None,
         ~titlebarHeight=0.,
+        ~setZoom,
+        ~getZoom,
       ),
     );
 
@@ -222,8 +224,6 @@ let runTest =
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
-      ~getZoom,
-      ~setZoom,
       ~setVsync,
       ~maximize,
       ~minimize,
