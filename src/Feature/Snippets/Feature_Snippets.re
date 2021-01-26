@@ -61,15 +61,23 @@ module Effects = {
         ~buffer,
         ~editorId as _,
         ~position: BytePosition.t,
-        ~snippet: Snippet.t,
+        ~snippet: Snippet.raw,
       ) => {
-    // TODO:
-    ignore(position);
-    ignore(snippet);
-
     let bufferId = Oni_Core.Buffer.getId(buffer);
+    let indentationSettings = Oni_Core.Buffer.getIndentation(buffer);
 
-    let lines = Snippet.toLines(snippet);
+    let line =
+      buffer
+      |> Oni_Core.Buffer.getLine(position.line |> LineNumber.toZeroBased)
+      |> Oni_Core.BufferLine.raw;
+
+    let (prefix, postfix) =
+      Utility.StringEx.splitAt(~byte=ByteIndex.toInt(position.byte), line);
+
+    let resolvedSnippet =
+      Snippet.resolve(~indentationSettings, ~prefix, ~postfix, snippet);
+
+    let lines = Snippet.toLines(resolvedSnippet);
 
     let toMsg =
       fun

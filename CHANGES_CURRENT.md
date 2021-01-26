@@ -1,6 +1,7 @@
 ### Features 
 
 - #3024 - Editor: Snippet Support - Multi-select handler
+- #3047 - Editor: Snippet Feature
 
 ### Bug Fixes
 
