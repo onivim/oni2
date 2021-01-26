@@ -78,8 +78,8 @@ module Effects = {
 
     Service_Vim.Effects.setLines(
       ~bufferId,
-      ~start=EditorCoreTypes.LineNumber.zero,
-      ~stop=EditorCoreTypes.LineNumber.zero,
+      ~start=position.line,
+      ~stop=LineNumber.(position.line + 1),
       ~lines,
       toMsg,
     );
