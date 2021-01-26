@@ -231,3 +231,23 @@ let%test_module "resolve" =
           ];
      };
    });
+
+let toLines = (resolvedSnippet: t) => {
+  let rec lineToString = (acc, line: list(Snippet_internal.segment)) =>
+    switch (line) {
+    | [] => acc
+    | [hd, ...tail] =>
+      let acc' = acc ++ segmentToString(hd);
+      lineToString(acc', tail);
+    }
+  and segmentToString = segment =>
+    switch (segment) {
+    | Text(str) => str
+    | Placeholder({contents, _}) => lineToString("", contents)
+    | Choice({choices, _}) =>
+      List.nth_opt(choices, 0) |> Option.value(~default="")
+    | Variable({name, default}) => default |> Option.value(~default=name)
+    };
+
+  resolvedSnippet |> List.map(lineToString("")) |> Array.of_list;
+};

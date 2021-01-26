@@ -43,6 +43,7 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
+  | SnippetInserted
   | SnippetInsertionError(string);
 
 type model = unit;
@@ -57,7 +58,7 @@ type outmsg =
 module Effects = {
   let startSession =
       (
-        ~buffer as _,
+        ~buffer,
         ~editorId as _,
         ~position: BytePosition.t,
         ~snippet: Snippet.t,
@@ -66,14 +67,31 @@ module Effects = {
     ignore(position);
     ignore(snippet);
 
-    prerr_endline("Starting session: " ++ Snippet.show(snippet));
-    Isolinear.Effect.none;
+    let bufferId = Oni_Core.Buffer.getId(buffer);
+
+    let lines = Snippet.toLines(snippet);
+
+    let toMsg =
+      fun
+      | Ok () => SnippetInserted
+      | Error(msg) => SnippetInsertionError(msg);
+
+    Service_Vim.Effects.setLines(
+      ~bufferId,
+      ~start=EditorCoreTypes.LineNumber.zero,
+      ~stop=EditorCoreTypes.LineNumber.zero,
+      ~lines,
+      toMsg,
+    );
   };
 };
 
 let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
   switch (msg) {
   | SnippetInsertionError(msg) => (model, ErrorMessage(msg))
+
+  // TODO: Start session!
+  | SnippetInserted => (model, Nothing)
 
   // TODO
   | Command(JumpToNextPlaceholder) => (model, Nothing)
