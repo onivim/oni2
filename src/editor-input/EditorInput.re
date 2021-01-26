@@ -692,13 +692,26 @@ module Make = (Config: {
     let id = KeyDownId.get();
     let pressedScancodes = IntSet.add(scancode, bindings.pressedScancodes);
 
-    handleKeyCore(
+    let (model, effects) = handleKeyCore(
       ~allowRemaps=true,
       ~leaderKey,
       ~context,
       Down(id, key),
       {...bindings, pressedScancodes},
     );
+
+    let isUnhandled = switch(effects) {
+    | [Unhandled({isProducedByRemap: false, _})] => true
+    | _ => false;
+    };
+
+    let model' = if(isUnhandled) {
+      ...model, suppressText: false
+    } else {
+      model
+    };
+
+    (model', effects);
   };
 
   let text = (~text, bindings) =>
