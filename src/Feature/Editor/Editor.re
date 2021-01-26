@@ -137,6 +137,7 @@ type t = {
 };
 
 let verticalScrollbarThickness = ({scrollbarVerticalWidth, _}) => scrollbarVerticalWidth;
+let horizontalScrollbarThickness = ({scrollbarHorizontalWidth, _}) => scrollbarHorizontalWidth;
 
 let key = ({key, _}) => key;
 // TODO: Handle multiple ranges
@@ -471,7 +472,12 @@ let configure = (~config, editor) => {
     EditorConfiguration.yankHighlightDuration.get(config);
 
   let scrollbarVerticalWidth =
-    EditorConfiguration.verticalScrollbarSize.get(config);
+    EditorConfiguration.verticalScrollbarSize.get(config)
+    |> IntEx.clamp(~hi=100, ~lo=1);
+
+  let scrollbarHorizontalWidth =
+    EditorConfiguration.horizontalScrollbarSize.get(config)
+    |> IntEx.clamp(~hi=100, ~lo=1);
 
   // If codelens is turned off, remove all codelens keys
 
@@ -491,6 +497,7 @@ let configure = (~config, editor) => {
     isAnimated,
     isScrollAnimated,
     scrollbarVerticalWidth,
+    scrollbarHorizontalWidth,
     yankHighlightDuration,
   }
   |> setVerticalScrollMargin(~lines=scrolloff)

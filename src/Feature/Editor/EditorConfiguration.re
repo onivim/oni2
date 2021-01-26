@@ -344,6 +344,9 @@ let rulers = setting("editor.rulers", list(int), ~default=[]);
 let verticalScrollbarSize =
   setting("editor.scrollbar.verticalScrollbarSize", int, ~default=15);
 
+let horizontalScrollbarSize =
+  setting("editor.scrollbar.horizontalScrollbarSize", int, ~default=8);
+
 let scrolloff =
   setting(
     "editor.cursorSurroundingLines",
@@ -420,6 +423,7 @@ let contributions = [
   largeFileOptimization.spec,
   enablePreview.spec,
   highlightActiveIndentGuide.spec,
+  horizontalScrollbarSize.spec,
   indentSize.spec,
   insertSpaces.spec,
   lineNumbers.spec,

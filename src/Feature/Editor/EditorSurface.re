@@ -55,13 +55,12 @@ module Styles = {
     bottom(0),
   ];
 
-  let horizontalScrollBar = (gutterOffset, width) => [
+  let horizontalScrollBar = (~thickness, gutterOffset, width) => [
     position(`Absolute),
     bottom(0),
     left(gutterOffset),
     Style.width(width),
-    // TODO:
-    height(8),
+    height(thickness),
   ];
 };
 
@@ -314,6 +313,8 @@ let%component make =
       : <View style={Styles.inactiveCover(~colors, ~opacity=coverAmount)} />;
 
   let verticalScrollbarThickness = Editor.verticalScrollbarThickness(editor);
+  let horizontalScrollbarThickness =
+    Editor.horizontalScrollbarThickness(editor);
 
   <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
@@ -393,6 +394,7 @@ let%component make =
     </View>
     <View
       style={Styles.horizontalScrollBar(
+        ~thickness=horizontalScrollbarThickness,
         int_of_float(gutterWidth),
         int_of_float(layout.bufferWidthInPixels),
       )}>

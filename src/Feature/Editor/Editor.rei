@@ -94,6 +94,7 @@ let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
 
 let setSelections: (list(ByteRange.t), t) => t;
 
+let horizontalScrollbarThickness: t => int;
 let verticalScrollbarThickness: t => int;
 
 // Get the horizontal width in pixels of the tab/space whitespace in front of a line.
