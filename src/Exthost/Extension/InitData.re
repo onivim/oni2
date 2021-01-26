@@ -102,14 +102,11 @@ module StaticWorkspaceData = {
   [@deriving (show, yojson({strict: false}))]
   type t = {
     id: string,
-    name: string
-  }
+    name: string,
+  };
 
-  let default = {
-    id: "__default",
-    name: "__default",
-  }
-}
+  let global = {id: "global", name: "global"};
+};
 
 module Environment = {
   [@deriving (show, yojson({strict: false}))]
@@ -197,7 +194,7 @@ type t = {
   autoStart: bool,
   remote: Remote.t,
   telemetryInfo: TelemetryInfo.t,
-  workspace: option(StaticWorkspaceData.t),
+  workspace: StaticWorkspaceData.t,
 };
 
 let create =
@@ -211,7 +208,7 @@ let create =
       ~autoStart=true,
       ~remote=Remote.default,
       ~telemetryInfo=TelemetryInfo.default,
-      ~workspace=StaticWorkspaceData.default,
+      ~workspace=StaticWorkspaceData.global,
       extensions,
     ) => {
   let environment =
@@ -219,8 +216,6 @@ let create =
     | None => Environment.default()
     | Some(env) => env
     };
-
-  let workspace = Some(workspace);
 
   {
     version,
@@ -235,6 +230,6 @@ let create =
     autoStart,
     remote,
     telemetryInfo,
-    workspace
+    workspace,
   };
 };

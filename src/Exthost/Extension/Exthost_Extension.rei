@@ -209,14 +209,15 @@ module InitData: {
     let fromString: string => t;
   };
 
-module StaticWorkspaceData: {
-  [@deriving (show, yojson({strict: false}))]
-  type t = {
-    id: string,
-    name: string
-  }
-};
+  module StaticWorkspaceData: {
+    [@deriving (show, yojson({strict: false}))]
+    type t = {
+      id: string,
+      name: string,
+    };
 
+    let global: t;
+  };
 
   module Extension: {
     [@deriving (show, yojson({strict: false}))]
@@ -287,7 +288,7 @@ module StaticWorkspaceData: {
     autoStart: bool,
     remote: Remote.t,
     telemetryInfo: TelemetryInfo.t,
-    workspace: option(StaticWorkspaceData.t),
+    workspace: StaticWorkspaceData.t,
   };
 
   let create:
