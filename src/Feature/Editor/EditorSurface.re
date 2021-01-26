@@ -47,11 +47,11 @@ module Styles = {
     bottom(0),
   ];
 
-  let verticalScrollBar = [
+  let verticalScrollBar = (~thickness) => [
     position(`Absolute),
     top(0),
     right(0),
-    width(Constants.scrollBarThickness),
+    width(thickness),
     bottom(0),
   ];
 
@@ -60,7 +60,8 @@ module Styles = {
     bottom(0),
     left(gutterOffset),
     Style.width(width),
-    height(Constants.editorHorizontalScrollBarThickness),
+    // TODO:
+    height(8),
   ];
 };
 
@@ -88,7 +89,7 @@ let minimap =
     Style.[
       position(`Absolute),
       top(0),
-      right(Constants.scrollBarThickness),
+      right(Editor.verticalScrollbarThickness(editor)),
       width(minimapPixelWidth),
       bottom(0),
     ];
@@ -312,6 +313,8 @@ let%component make =
       ? React.empty
       : <View style={Styles.inactiveCover(~colors, ~opacity=coverAmount)} />;
 
+  let verticalScrollbarThickness = Editor.verticalScrollbarThickness(editor);
+
   <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
     <SurfaceView
@@ -373,13 +376,14 @@ let%component make =
     />
     {renderOverlays(~gutterWidth)}
     hoverPopup
-    <View style=Styles.verticalScrollBar>
+    <View
+      style={Styles.verticalScrollBar(~thickness=verticalScrollbarThickness)}>
       <Scrollbar.Vertical
         dispatch
         editor
         matchingPair=matchingPairs
         cursorPosition
-        width=Constants.scrollBarThickness
+        width=verticalScrollbarThickness
         height=pixelHeight
         diagnostics=diagnosticsMap
         colors

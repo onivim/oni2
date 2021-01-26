@@ -340,6 +340,10 @@ let renderIndentGuides =
 let renderWhitespace =
   setting("editor.renderWhitespace", whitespace, ~default=`Selection);
 let rulers = setting("editor.rulers", list(int), ~default=[]);
+
+let verticalScrollbarSize =
+  setting("editor.scrollbar.verticalScrollbarSize", int, ~default=15);
+
 let scrolloff =
   setting(
     "editor.cursorSurroundingLines",
@@ -429,6 +433,7 @@ let contributions = [
   tabSize.spec,
   wordWrap.spec,
   wordWrapColumn.spec,
+  verticalScrollbarSize.spec,
   yankHighlightColor.spec,
   yankHighlightDuration.spec,
   yankHighlightEnabled.spec,
