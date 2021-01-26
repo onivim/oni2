@@ -194,7 +194,6 @@ let configurationParsers: list(configurationTuple) = [
       editorLargeFileOptimizations: parseBool(json),
     },
   ),
-  
   (
     "explorer.autoReveal",
     (config, json) => {
@@ -205,11 +204,6 @@ let configurationParsers: list(configurationTuple) = [
   (
     "files.exclude",
     (config, json) => {...config, filesExclude: parseStringList(json)},
-  ),
-  (
-    "search.exclude",
-    (config, json) => { ...config, searchExclude: parseStringList(json)}
-
   ),
   (
     "terminal.integrated.fontFamily",

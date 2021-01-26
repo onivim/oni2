@@ -281,21 +281,18 @@ let findInFiles =
       ~onComplete,
       ~onError,
     ) => {
+  let excludeArgs = searchExclude |> List.concat_map(x => ["-g", "!" ++ x]);
   let args =
-    searchExclude
-    |> List.map(x => "!" ++ x)
-    |> List.map(x => ["-g", x])
-    |> List.concat
-    |> List.append([
-         "--fixed-strings",
-         "--smart-case",
-         "--hidden",
-         "--json",
-         "--",
-         query,
-         directory,
-       ]);
-
+    excludeArgs
+    @ [
+      "--fixed-strings",
+      "--smart-case",
+      "--hidden",
+      "--json",
+      "--",
+      query,
+      directory,
+    ];
   process(
     executablePath,
     args,

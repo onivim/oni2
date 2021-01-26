@@ -9,8 +9,8 @@ module Make = (Config: {type action;}) => {
     include Config;
 
     type params = {
-      directory: string,
       searchExclude: list(string),
+      directory: string,
       query: string,
       ripgrep: Ripgrep.t, // TODO: Necessary dependency?
       onUpdate: list(Ripgrep.Match.t) => unit, // TODO: Should return action
@@ -24,6 +24,7 @@ module Make = (Config: {type action;}) => {
         (
           ~id,
           ~params as {
+            searchExclude,
             directory,
             query,
             ripgrep,
@@ -37,7 +38,7 @@ module Make = (Config: {type action;}) => {
 
       let dispose =
         ripgrep.Ripgrep.findInFiles(
-          ~searchExclude=[],
+          ~searchExclude,
           ~directory,
           ~query,
           ~onUpdate,

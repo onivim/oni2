@@ -29,6 +29,12 @@ let initial = {
   resultsTree: Component_VimTree.create(~rowHeight=25),
 };
 
+module Configuration = {
+  open Config.Schema;
+
+  let searchExclude = setting("search.exclude", list(string), ~default=[]);
+};
+
 let matchToLocListItem = (hit: Ripgrep.Match.t) =>
   LocationListItem.{
     file: hit.file,
@@ -209,12 +215,14 @@ module SearchSubscription =
     type action = msg;
   });
 
-let subscriptions = (~workingDirectory, ripgrep, dispatch) => {
+let subscriptions =
+    (~config: Oni_Core.Config.resolver, ~workingDirectory, ripgrep, dispatch) => {
+  let searchExclude = Configuration.searchExclude.get(config);
   let search = query => {
     SearchSubscription.create(
       ~id="workspace-search",
-      ~searchExclude=[],
       ~query,
+      ~searchExclude,
       ~directory=workingDirectory,
       ~ripgrep,
       ~onUpdate=items => dispatch(Update(items)),
