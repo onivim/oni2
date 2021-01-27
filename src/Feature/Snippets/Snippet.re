@@ -439,7 +439,7 @@ module Placeholder = {
                   },
                   stop: {
                     line: EditorCoreTypes.LineNumber.zero,
-                    byte: ByteIndex.(zero + 6),
+                    byte: ByteIndex.(zero + 5),
                   },
                 },
               ]),
