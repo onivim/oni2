@@ -17,6 +17,7 @@
 - #3021 - Configuration: Fix zoom being reset when saving configuration (fixes #2294)
 - #3051 - Editor: Make horizontal / vertical scrollbars on editor surface configurable (fixes #3036)
 - #3030 - Extensions: Implement workspace storage (related #2676)
+- #3054 - Extensions: Completion - Implement 'isIncomplete' handler (fixes #3009)
 
 ### Performance
 
