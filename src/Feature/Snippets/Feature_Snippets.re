@@ -34,6 +34,72 @@ let%test "clips at first placeholder w/ default" = {
   snippetToInsert(~snippet="Hello (${1:expr})") == "Hello (";
 };
 
+module Session = {
+  type t = {
+    editorId: int,
+    snippet: Snippet.t,
+    placeholders: Snippet.Placeholder.t,
+    startLine: LineNumber.t,
+    lineCount: int,
+    currentPlaceholder: int,
+  };
+
+  let start = (~editorId, ~position: BytePosition.t, ~snippet) => {
+    let (currentPlaceholder, placeholders) =
+      Snippet.Placeholder.initial(snippet);
+    let lineCount = List.length(snippet);
+    {
+      editorId,
+      snippet,
+      currentPlaceholder,
+      placeholders,
+      startLine: position.line,
+      lineCount,
+    };
+  };
+
+  let remapPositions = (~startLine, positions) => {
+    let startLineIdx = EditorCoreTypes.LineNumber.toZeroBased(startLine);
+
+    let remapRange = (range: ByteRange.t) => {
+      ByteRange.{
+        start: {
+          line: LineNumber.(range.start.line + startLineIdx),
+          byte: range.start.byte,
+        },
+        stop: {
+          line: LineNumber.(range.stop.line + startLineIdx),
+          byte: range.stop.byte,
+        },
+      };
+    };
+
+    let remapPosition = (position: BytePosition.t) => {
+      BytePosition.{
+        line: LineNumber.(position.line + startLineIdx),
+        byte: position.byte,
+      };
+    };
+
+    switch (positions) {
+    | Snippet.Placeholder.Ranges(ranges) =>
+      Snippet.Placeholder.Ranges(ranges |> List.map(remapRange))
+    | Snippet.Placeholder.Positions(positions) =>
+      Snippet.Placeholder.Positions(positions |> List.map(remapPosition))
+    };
+  };
+
+  let getPlaceholderPositions =
+      ({placeholders, snippet, currentPlaceholder, startLine, _}) => {
+    Snippet.Placeholder.positions(
+      ~placeholders,
+      ~index=currentPlaceholder,
+      snippet,
+    )
+    |> Option.map(remapPositions(~startLine));
+  };
+};
+
 [@deriving show]
 type command =
   | JumpToNextPlaceholder
@@ -43,7 +109,7 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
-  | SnippetInserted([@opaque] Snippet.t)
+  | SnippetInserted([@opaque] Session.t)
   | SnippetInsertionError(string);
 
 type model = unit;
@@ -59,12 +125,7 @@ type outmsg =
 
 module Effects = {
   let startSession =
-      (
-        ~buffer,
-        ~editorId as _,
-        ~position: BytePosition.t,
-        ~snippet: Snippet.raw,
-      ) => {
+      (~buffer, ~editorId, ~position: BytePosition.t, ~snippet: Snippet.raw) => {
     let bufferId = Oni_Core.Buffer.getId(buffer);
     let indentationSettings = Oni_Core.Buffer.getIndentation(buffer);
 
@@ -81,9 +142,11 @@ module Effects = {
 
     let lines = Snippet.toLines(resolvedSnippet);
 
+    let session = Session.start(~editorId, ~snippet, ~position);
+
     let toMsg =
       fun
-      | Ok () => SnippetInserted(resolvedSnippet)
+      | Ok () => SnippetInserted(session)
       | Error(msg) => SnippetInsertionError(msg);
 
     Service_Vim.Effects.setLines(
@@ -100,15 +163,10 @@ let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
   switch (msg) {
   | SnippetInsertionError(msg) => (model, ErrorMessage(msg))
 
-  | SnippetInserted(snippet) =>
+  | SnippetInserted(session) =>
     // Start a session!
-    let (startingPlaceholder, placeholders) =
-      Snippet.Placeholder.initial(snippet);
-    Snippet.Placeholder.positions(
-      ~placeholders,
-      ~index=startingPlaceholder,
-      snippet,
-    )
+    session
+    |> Session.getPlaceholderPositions
     |> Option.map(positions => {
          let outmsg =
            switch (positions) {
@@ -118,7 +176,7 @@ let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
            };
          (model, outmsg);
        })
-    |> Option.value(~default=(model, Nothing));
+    |> Option.value(~default=(model, Nothing))
 
   // TODO
   | Command(JumpToNextPlaceholder) => (model, Nothing)
