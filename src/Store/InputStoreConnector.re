@@ -135,8 +135,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Feature_Input.(Execute(VimExCommand(command))) => [
         Actions.VimExecuteCommand({allowAnimation: true, command}),
       ]
-    | Feature_Input.(Execute(NamedCommand(command))) => [
-        Actions.KeybindingInvoked({command: command}),
+    | Feature_Input.(Execute(NamedCommand({command, arguments}))) => [
+        Actions.KeybindingInvoked({command, arguments}),
       ]
     | Feature_Input.Text(text) => 
     prerr_endline ("Text: " ++ text);

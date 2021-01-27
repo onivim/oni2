@@ -18,6 +18,36 @@ let contains = (query, str) => {
   };
 };
 
+let splitAt = (~byte: int, str) => {
+  let len = String.length(str);
+  if (byte <= 0) {
+    ("", str);
+  } else if (byte >= len) {
+    (str, "");
+  } else {
+    (String.sub(str, 0, byte), String.sub(str, byte, len - byte));
+  };
+};
+
+let%test_module "splitAt" =
+  (module
+   {
+     let%test "out-of-bounds - negative" = {
+       splitAt(~byte=-1, "abc") == ("", "abc");
+     };
+
+     let%test "out-of-bounds - past length" = {
+       splitAt(~byte=100, "abc") == ("abc", "");
+     };
+
+     let%test "valid splits" = {
+       splitAt(~byte=0, "abc") == ("", "abc")
+       && splitAt(~byte=1, "abc") == ("a", "bc")
+       && splitAt(~byte=2, "abc") == ("ab", "c")
+       && splitAt(~byte=3, "abc") == ("abc", "");
+     };
+   });
+
 let isWhitespaceOnly = str => {
   let len = String.length(str);
   let rec loop = idx =>
@@ -151,6 +181,29 @@ let findNonWhitespace = str => {
     };
   loop(0);
 };
+
+/** [leadingWhitespace(str)] returns a string containing the leading whitespace characters of [str] */
+let leadingWhitespace = str => {
+  let maybeIdx = findNonWhitespace(str);
+  switch (maybeIdx) {
+  | None => str
+  | Some(idx) => String.sub(str, 0, idx)
+  };
+};
+
+let%test_module "leadingWhitespace" =
+  (module
+   {
+     let%test "no whitespace" = {
+       leadingWhitespace("abc") == "";
+     };
+     let%test "single space" = {
+       leadingWhitespace(" abc") == " ";
+     };
+     let%test "mixed spaces" = {
+       leadingWhitespace(" \t abc") == " \t ";
+     };
+   });
 
 let isEmpty = str =>
   if (String.equal(str, "")) {
