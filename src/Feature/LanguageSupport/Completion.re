@@ -134,7 +134,9 @@ module Session = {
           switch (state) {
           | Pending({meet, _}) as prev when isCompletionMeetStillValid(meet) => prev
           | Pending(_) => NotStarted
-          | Partial({meet, _} as partial) when isCompletionMeetStillValid(meet)=> Partial({ ...partial, cursor: position })
+          | Partial({meet, _} as partial)
+              when isCompletionMeetStillValid(meet) =>
+            Partial({...partial, cursor: position})
           | Partial(_) => NotStarted
           | Completed({meet, _}) as prev
               when isCompletionMeetStillValid(meet) => prev
@@ -225,7 +227,7 @@ module Session = {
                    );
                  let (completionState, items) =
                    ProviderImpl.items(providerModel');
-                 switch ((completionState, items)) {
+                 switch (completionState, items) {
                  | (_, []) => Pending({meet, providerModel: providerModel'})
                  | (Incomplete, items) =>
                    Partial({
@@ -734,7 +736,7 @@ let tryToMaintainSelected = (~previousIndex, ~previousLabel, model) => {
   } else {
     let idx = ref(-1);
     let foundCurrent = ref(None);
-    while (idx^ < len && foundCurrent^ == None) {
+    while (idx^ < len - 1 && foundCurrent^ == None) {
       incr(idx);
       if (getItemAtIndex(idx^).label == previousLabel) {
         foundCurrent := Some(idx^);
