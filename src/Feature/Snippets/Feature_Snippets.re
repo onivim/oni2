@@ -43,7 +43,7 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
-  | SnippetInserted
+  | SnippetInserted([@opaque] Snippet.t)
   | SnippetInsertionError(string);
 
 type model = unit;
@@ -53,6 +53,8 @@ let initial = ();
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | ErrorMessage(string)
+  | SetCursors(list(BytePosition.t))
+  | SetSelections(list(ByteRange.t))
   | Nothing;
 
 module Effects = {
@@ -81,7 +83,7 @@ module Effects = {
 
     let toMsg =
       fun
-      | Ok () => SnippetInserted
+      | Ok () => SnippetInserted(resolvedSnippet)
       | Error(msg) => SnippetInsertionError(msg);
 
     Service_Vim.Effects.setLines(
@@ -98,8 +100,25 @@ let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
   switch (msg) {
   | SnippetInsertionError(msg) => (model, ErrorMessage(msg))
 
-  // TODO: Start session!
-  | SnippetInserted => (model, Nothing)
+  | SnippetInserted(snippet) =>
+    // Start a session!
+    let (startingPlaceholder, placeholders) =
+      Snippet.Placeholder.initial(snippet);
+    Snippet.Placeholder.positions(
+      ~placeholders,
+      ~index=startingPlaceholder,
+      snippet,
+    )
+    |> Option.map(positions => {
+         let outmsg =
+           switch (positions) {
+           | Snippet.Placeholder.Ranges(ranges) => SetSelections(ranges)
+           | Snippet.Placeholder.Positions(positions) =>
+             SetCursors(positions)
+           };
+         (model, outmsg);
+       })
+    |> Option.value(~default=(model, Nothing));
 
   // TODO
   | Command(JumpToNextPlaceholder) => (model, Nothing)

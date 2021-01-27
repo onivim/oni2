@@ -831,6 +831,10 @@ let getPrimaryCursorByte = editor =>
     BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}
   };
 
+let setCursors = (cursors, editor) => {
+  {...editor, mode: Insert({cursors: cursors})};
+};
+
 let setSelections = (selections: list(ByteRange.t), editor) => {
   let mapRange = (r: ByteRange.t) => {
     open ByteRange;
