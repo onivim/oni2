@@ -270,7 +270,7 @@ let create =
   let staticWorkspace =
     initialWorkspace
     |> Option.map(({id, name, _}: Exthost.WorkspaceData.t) => {
-         Exthost.Extension.InitData.StaticWorkspaceData.{id, name};
+         Exthost.Extension.InitData.StaticWorkspaceData.{id, name}
        })
     |> Option.value(
          ~default=Exthost.Extension.InitData.StaticWorkspaceData.global,
