@@ -25,10 +25,10 @@ module Internal = {
     );
   };
 
-  let executeCommandEffect = command => {
+  let executeCommandEffect = (command, arguments) => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.executeCommand", dispatch =>
-      dispatch(Actions.KeybindingInvoked({command: command}))
+      dispatch(Actions.KeybindingInvoked({command, arguments}))
     );
   };
 
@@ -664,7 +664,8 @@ let update =
     let eff =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
-      | ExecuteCommand({command}) => Internal.executeCommandEffect(command)
+      | ExecuteCommand({command}) =>
+        Internal.executeCommandEffect(command, `Null)
       };
     ({...state, menuBar: menuBar'}, eff);
 
@@ -1605,6 +1606,31 @@ let update =
       state,
       Internal.notificationEffect(~kind=Error, message),
     )
+
+  | Snippets(msg) =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let editor = Feature_Layout.activeEditor(state.layout);
+    let editorId = editor |> Feature_Editor.Editor.getId;
+
+    let cursorPosition = editor |> Feature_Editor.Editor.getPrimaryCursorByte;
+
+    let (snippets', outmsg) =
+      Feature_Snippets.update(
+        ~maybeBuffer,
+        ~editorId,
+        ~cursorPosition,
+        msg,
+        state.snippets,
+      );
+
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | ErrorMessage(msg) => Internal.notificationEffect(~kind=Error, msg)
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Snippets(msg))
+      };
+    ({...state, snippets: snippets'}, eff);
 
   // TODO: This should live in the terminal feature project
   | TerminalFont(Service_Font.FontLoaded(font)) => (

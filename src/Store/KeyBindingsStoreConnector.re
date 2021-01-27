@@ -79,12 +79,12 @@ let start = maybeKeyBindingsFilePath => {
          })
     });
 
-  let executeCommandEffect = msg =>
+  let executeCommandEffect = (msg, arguments) =>
     Isolinear.Effect.createWithDispatch(
       ~name="keybindings.executeCommand", dispatch =>
       switch (msg) {
       | `Arg0(msg) => dispatch(msg)
-      | `Arg1(msgf) => dispatch(msgf(Json.Encode.null))
+      | `Arg1(msgf) => dispatch(msgf(arguments))
       }
     );
 
@@ -106,7 +106,7 @@ let start = maybeKeyBindingsFilePath => {
         |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       )
 
-    | KeybindingInvoked({command}) =>
+    | KeybindingInvoked({command, arguments}) =>
       if (command |> Utility.StringEx.startsWith(~prefix=":")) {
         (
           state,
@@ -116,7 +116,7 @@ let start = maybeKeyBindingsFilePath => {
         switch (Command.Lookup.get(command, CommandManager.current(state))) {
         | Some((command: Command.t(_))) => (
             state,
-            executeCommandEffect(command.msg),
+            executeCommandEffect(command.msg, arguments),
           )
         | None =>
           Log.errorf(m => m("Unknown command: %s", command));

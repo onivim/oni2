@@ -14,6 +14,7 @@ type segment =
       default: option(string),
     });
 
+[@deriving show]
 type t = list(segment);
 
 let toString = segment => {

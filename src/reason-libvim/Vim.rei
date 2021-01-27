@@ -316,6 +316,7 @@ module Buffer: {
   */
   let setLines:
     (
+      ~undoable: bool=?,
       ~start: LineNumber.t=?,
       ~stop: LineNumber.t=?,
       ~lines: array(string),
