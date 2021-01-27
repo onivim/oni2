@@ -257,8 +257,7 @@ module Session = {
     fun
     | Session({state, provider, providerMapper, _}) => {
         switch (state) {
-        | Partial({providerModel, meet, cursor, _}) =>
-          // TODO: Use cursor position
+        | Partial({providerModel, cursor, _}) =>
           let (module ProviderImpl) = provider;
           ProviderImpl.sub(
             ~client,
