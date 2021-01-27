@@ -45,11 +45,9 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   };
 
   let handleTextEffect = (~isText, state: State.t, k: string) => {
-    prerr_endline("handleTextEffect......: " ++ k);
     switch (Model.FocusManager.current(state)) {
     | Editor
     | Wildmenu =>
-      prerr_endline("-- handleTextEffect (editor / wildmenu): " ++ k);
 
       [
         Actions.KeyboardInput({isText, input: k}),
@@ -59,7 +57,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       ];
 
     | Quickmenu =>
-      prerr_endline("handleTextEffect (Quickmenu): " ++ k);
       [Actions.QuickmenuInput(k)];
 
     | Sneak => [Actions.Sneak(Feature_Sneak.KeyboardInput(k))]
@@ -139,10 +136,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         Actions.KeybindingInvoked({command, arguments}),
       ]
     | Feature_Input.Text(text) =>
-      prerr_endline("Text: " ++ text);
       handleTextEffect(~isText=true, state, text);
     | Feature_Input.Unhandled({key, isProducedByRemap}) =>
-      prerr_endline("Unhandled: " ++ EditorInput.KeyCandidate.show(key));
       let isTextInputActive = isTextInputActive();
 
       let maybeKeyString =
@@ -229,20 +224,12 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | KeyDown({key, scancode, time}) =>
-      prerr_endline(
-        "updater -keydown ["
-        ++ string_of_int(scancode)
-        ++ "]: "
-        ++ EditorInput.KeyCandidate.show(key),
-      );
       handleKeyPress(~scancode, state, time, key);
 
     | KeyUp({scancode, _}) =>
-      prerr_endline("updater -keyup [" ++ string_of_int(scancode) ++ "]: ");
       handleKeyUp(~scancode, state);
 
     | TextInput(text, time) =>
-      prerr_endline("text input: " ++ text);
       handleTextInput(state, time, text);
 
     | Pasted({rawText, isMultiLine, lines}) => (
@@ -267,9 +254,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           event
           |> reveryKeyToEditorKey
           |> Option.iter(key => {
-               prerr_endline(
-                 "REVERY - keydown: " ++ string_of_int(event.scancode),
-               );
                dispatch(
                  Actions.KeyDown({key, time, scancode: event.scancode}),
                );
@@ -282,7 +266,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
-          prerr_endline("REVERY - keyup: " ++ string_of_int(event.scancode));
           dispatch(Actions.KeyUp({time, scancode: event.scancode}));
         },
       );
@@ -292,7 +275,6 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
-          prerr_endline("REVERY - text: " ++ event.text);
           dispatch(Actions.TextInput(event.text, time));
         },
       );
