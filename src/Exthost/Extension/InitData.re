@@ -98,6 +98,16 @@ module Extension = {
   };
 };
 
+module StaticWorkspaceData = {
+  [@deriving (show, yojson({strict: false}))]
+  type t = {
+    id: string,
+    name: string,
+  };
+
+  let global = {id: "global", name: "global"};
+};
+
 module Environment = {
   [@deriving (show, yojson({strict: false}))]
   type t = {
@@ -106,6 +116,7 @@ module Environment = {
     appLanguage: string,
     appRoot: Uri.t,
     globalStorageHome: option(Uri.t),
+    workspaceStorageHome: option(Uri.t),
     userHome: option(Uri.t),
     // TODO
     /*
@@ -123,6 +134,11 @@ module Environment = {
     // TODO - INTL: Get proper user language
     appLanguage: "en-US",
     appRoot: Revery.Environment.getExecutingDirectory() |> Uri.fromPath,
+    // TODO: Set up correctly
+    workspaceStorageHome:
+      Oni_Core.Filesystem.getWorkspaceStorageFolder()
+      |> Result.to_option
+      |> Option.map(Uri.fromFilePath),
     globalStorageHome:
       Oni_Core.Filesystem.getGlobalStorageFolder()
       |> Result.to_option
@@ -178,6 +194,7 @@ type t = {
   autoStart: bool,
   remote: Remote.t,
   telemetryInfo: TelemetryInfo.t,
+  workspace: StaticWorkspaceData.t,
 };
 
 let create =
@@ -191,6 +208,7 @@ let create =
       ~autoStart=true,
       ~remote=Remote.default,
       ~telemetryInfo=TelemetryInfo.default,
+      ~workspace=StaticWorkspaceData.global,
       extensions,
     ) => {
   let environment =
@@ -198,6 +216,7 @@ let create =
     | None => Environment.default()
     | Some(env) => env
     };
+
   {
     version,
     parentPid,
@@ -211,5 +230,6 @@ let create =
     autoStart,
     remote,
     telemetryInfo,
+    workspace,
   };
 };

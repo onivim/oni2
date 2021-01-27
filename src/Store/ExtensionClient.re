@@ -267,12 +267,22 @@ let create =
     |> Option.value(~default=originalVersion);
   };
 
+  let staticWorkspace =
+    initialWorkspace
+    |> Option.map(({id, name, _}: Exthost.WorkspaceData.t) => {
+         Exthost.Extension.InitData.StaticWorkspaceData.{id, name}
+       })
+    |> Option.value(
+         ~default=Exthost.Extension.InitData.StaticWorkspaceData.global,
+       );
+
   let initData =
     InitData.create(
       ~version=extHostVersion,
       ~parentPid,
       ~logsLocation,
       ~logFile,
+      ~workspace=staticWorkspace,
       extensionInfo,
     );
 

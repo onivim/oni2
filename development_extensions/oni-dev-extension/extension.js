@@ -207,6 +207,7 @@ function activate(context) {
     cleanup(
         vscode.commands.registerCommand("developer.oni.showWorkspaceRootPath", () => {
             vscode.window.showInformationMessage("Workspace rootPath: " + vscode.workspace.rootPath)
+            vscode.window.showInformationMessage("Workspace storagePath: " + context.storagePath)
         }),
     )
 
@@ -338,6 +339,8 @@ function activate(context) {
         textContentProvider,
     )
     disposable.dispose()
+
+    console.log("Storage path available: " + context.storagePath);
 
     // Configuration
 
