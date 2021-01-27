@@ -297,6 +297,44 @@ describe("EditorInput", ({describe, _}) => {
       expect.equal(effects, []);
     });
 
+    test(
+      "#3048: text with new keydown after successful binding should be dispatched",
+      ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers]),
+             _ => true,
+             "commandA",
+           );
+
+      let (bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(aKeyNoModifiers),
+          bindings,
+        );
+
+      // Keydown should trigger command...
+      expect.equal(effects, [Execute("commandA")]);
+
+      let (bindings, _effects) = Input.text(~text="a", bindings);
+
+      let (bindings, _effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=bKeyScancode,
+          ~key=candidate(bKeyNoModifiers),
+          bindings,
+        );
+
+      let (_bindings, effects) = Input.text(~text="b", bindings);
+
+      // Subsequent text input should be triggered, even though we haven't had a KeyUp for "a" yet
+      expect.equal(effects, [Text("b")]);
+    });
+
     test("text not dispatched in sequence", ({expect, _}) => {
       let (bindings, _id) =
         Input.empty

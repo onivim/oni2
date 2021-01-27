@@ -92,6 +92,7 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
 
+let setCursors: (list(BytePosition.t), t) => t;
 let setSelections: (list(ByteRange.t), t) => t;
 
 let horizontalScrollbarThickness: t => int;

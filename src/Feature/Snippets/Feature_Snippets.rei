@@ -14,6 +14,8 @@ let initial: model;
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | ErrorMessage(string)
+  | SetCursors(list(BytePosition.t))
+  | SetSelections(list(ByteRange.t))
   | Nothing;
 
 module Snippet: {

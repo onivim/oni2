@@ -1,7 +1,7 @@
 ### Features 
 
 - #3024 - Editor: Snippet Support - Multi-select handler
-- #3047 - Editor: Snippet Feature
+- #3047, #3052 - Editor: Snippet Feature
 
 ### Bug Fixes
 
@@ -17,6 +17,7 @@
 - #3021 - Configuration: Fix zoom being reset when saving configuration (fixes #2294)
 - #3051 - Editor: Make horizontal / vertical scrollbars on editor surface configurable (fixes #3036)
 - #3030 - Extensions: Implement workspace storage (related #2676)
+- #3052 - Input: Fix key being 'eaten' after executing remapped key (fixes #3048)
 - #3054 - Extensions: Completion - Implement 'isIncomplete' handler (fixes #3009)
 
 ### Performance
