@@ -15,7 +15,7 @@ type t =
       cursor: BytePosition.t,
       pending: Operator.pending,
     })
-  | Select(VisualRange.t);
+  | Select({ranges: list(VisualRange.t)});
 
 let show = (mode: t) => {
   switch (mode) {
@@ -36,8 +36,18 @@ let cursors =
   | Replace({cursor}) => [cursor]
   | Visual(range) => [range |> VisualRange.cursor]
   | Operator({cursor, _}) => [cursor]
-  | Select(range) => [range |> VisualRange.cursor]
+  | Select({ranges}) => ranges |> List.map(VisualRange.cursor)
   | CommandLine({cursor, _}) => [cursor];
+
+let ranges =
+  fun
+  | Normal(_) => []
+  | Insert(_) => []
+  | Replace(_) => []
+  | Visual(range) => [range]
+  | Operator(_) => []
+  | Select({ranges}) => ranges
+  | CommandLine(_) => [];
 
 let current = () => {
   let nativeMode: Native.mode = Native.vimGetMode();
@@ -58,7 +68,7 @@ let current = () => {
       pending: Operator.get() |> Option.value(~default=Operator.default),
     })
   | Native.Insert => Insert({cursors: [cursor]})
-  | Native.Select => Select(VisualRange.current())
+  | Native.Select => Select({ranges: [VisualRange.current()]})
   };
 };
 
@@ -142,13 +152,17 @@ let trySet = newMode => {
       ~start=range.anchor,
       ~cursor=range.cursor,
     );
-  | Select(range) =>
-    Internal.ensureSelect(range.visualType);
-    Visual.set(
-      ~visualType=range.visualType,
-      ~start=range.anchor,
-      ~cursor=range.cursor,
-    );
+  | Select({ranges}) =>
+    switch (ranges) {
+    | [range, ..._] =>
+      Internal.ensureSelect(range.visualType);
+      Visual.set(
+        ~visualType=range.visualType,
+        ~start=range.anchor,
+        ~cursor=range.cursor,
+      );
+    | [] => ()
+    }
   | Insert(_) => Internal.ensureInsert()
   // These modes cannot be explicitly transitioned to currently
   | Operator(_)

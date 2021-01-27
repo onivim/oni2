@@ -36,7 +36,10 @@ describe("Editor", ({describe, _}) => {
     |> Editor.setSize(
          ~pixelWidth=
            int_of_float(
-             3. *. aWidth +. 1.0 +. float(Constants.scrollBarThickness),
+             3.
+             *. aWidth
+             +. 1.0
+             +. float(Editor.verticalScrollbarThickness(editor)),
            ),
          ~pixelHeight=500,
        )

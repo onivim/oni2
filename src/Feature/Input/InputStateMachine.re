@@ -4,7 +4,10 @@
 // State management for input (keys pressed, potential bindings, etc)
 
 type execute =
-  | NamedCommand(string)
+  | NamedCommand({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | VimExCommand(string);
 
 module Input =

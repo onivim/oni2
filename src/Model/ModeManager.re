@@ -36,10 +36,9 @@ let current: State.t => Oni_Core.Mode.t =
                cursor: Vim.VisualRange.cursor(range),
                range: Oni_Core.VisualRange.ofVim(range),
              })
-           | Vim.Mode.Select(range) =>
+           | Vim.Mode.Select({ranges}) =>
              Mode.Select({
-               cursor: Vim.VisualRange.cursor(range),
-               range: Oni_Core.VisualRange.ofVim(range),
+               ranges: ranges |> List.map(Oni_Core.VisualRange.ofVim),
              })
            | Vim.Mode.Replace({cursor}) => Mode.Replace({cursor: cursor})
            | Vim.Mode.Operator({pending, _}) =>

@@ -8,6 +8,8 @@ let getStoreFolder: unit => result(Fp.t(Fp.absolute), string);
 
 let getGlobalStorageFolder: unit => result(Fp.t(Fp.absolute), string);
 
+let getWorkspaceStorageFolder: unit => result(Fp.t(Fp.absolute), string);
+
 let getOrCreateConfigFolder:
   Fp.t(Fp.absolute) => result(Fp.t(Fp.absolute), string);
 
