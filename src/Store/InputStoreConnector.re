@@ -47,17 +47,14 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let handleTextEffect = (~isText, state: State.t, k: string) => {
     switch (Model.FocusManager.current(state)) {
     | Editor
-    | Wildmenu =>
-
-      [
+    | Wildmenu => [
         Actions.KeyboardInput({isText, input: k}),
         Actions.LanguageSupport(
           Feature_LanguageSupport.Msg.Hover.keyPressed(k),
         ),
-      ];
+      ]
 
-    | Quickmenu =>
-      [Actions.QuickmenuInput(k)];
+    | Quickmenu => [Actions.QuickmenuInput(k)]
 
     | Sneak => [Actions.Sneak(Feature_Sneak.KeyboardInput(k))]
 
@@ -135,8 +132,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Feature_Input.(Execute(NamedCommand({command, arguments}))) => [
         Actions.KeybindingInvoked({command, arguments}),
       ]
-    | Feature_Input.Text(text) =>
-      handleTextEffect(~isText=true, state, text);
+    | Feature_Input.Text(text) => handleTextEffect(~isText=true, state, text)
     | Feature_Input.Unhandled({key, isProducedByRemap}) =>
       let isTextInputActive = isTextInputActive();
 
@@ -224,13 +220,11 @@ let start = (window: option(Revery.Window.t), runEffects) => {
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | KeyDown({key, scancode, time}) =>
-      handleKeyPress(~scancode, state, time, key);
+      handleKeyPress(~scancode, state, time, key)
 
-    | KeyUp({scancode, _}) =>
-      handleKeyUp(~scancode, state);
+    | KeyUp({scancode, _}) => handleKeyUp(~scancode, state)
 
-    | TextInput(text, time) =>
-      handleTextInput(state, time, text);
+    | TextInput(text, time) => handleTextInput(state, time, text)
 
     | Pasted({rawText, isMultiLine, lines}) => (
         state,
@@ -256,7 +250,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
           |> Option.iter(key => {
                dispatch(
                  Actions.KeyDown({key, time, scancode: event.scancode}),
-               );
+               )
              });
         },
       );
