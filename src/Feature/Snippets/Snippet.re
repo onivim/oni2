@@ -334,7 +334,7 @@ module Placeholder = {
                          },
                          stop: {
                            line: lineNumber,
-                           byte: ByteIndex.ofInt(offset + len),
+                           byte: ByteIndex.ofInt(offset + len - 1),
                          },
                        },
                      ),
