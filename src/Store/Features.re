@@ -1623,14 +1623,45 @@ let update =
         state.snippets,
       );
 
-    let eff =
+    let (layout', eff) =
       switch (outmsg) {
-      | Nothing => Isolinear.Effect.none
-      | ErrorMessage(msg) => Internal.notificationEffect(~kind=Error, msg)
-      | Effect(eff) =>
-        eff |> Isolinear.Effect.map(msg => Actions.Snippets(msg))
+      | Nothing => (state.layout, Isolinear.Effect.none)
+      | ErrorMessage(msg) => (
+          state.layout,
+          Internal.notificationEffect(~kind=Error, msg),
+        )
+      | SetCursors(cursors) =>
+        let layout' =
+          state.layout
+          |> Feature_Layout.map(editor =>
+               Feature_Editor.(
+                 if (Editor.getId(editor) == editorId) {
+                   Editor.setCursors(cursors, editor);
+                 } else {
+                   editor;
+                 }
+               )
+             );
+        (layout', Isolinear.Effect.none);
+      | SetSelections(ranges) =>
+        let layout' =
+          state.layout
+          |> Feature_Layout.map(editor =>
+               Feature_Editor.(
+                 if (Editor.getId(editor) == editorId) {
+                   Editor.setSelections(ranges, editor);
+                 } else {
+                   editor;
+                 }
+               )
+             );
+        (layout', Isolinear.Effect.none);
+      | Effect(eff) => (
+          state.layout,
+          eff |> Isolinear.Effect.map(msg => Actions.Snippets(msg)),
+        )
       };
-    ({...state, snippets: snippets'}, eff);
+    ({...state, layout: layout', snippets: snippets'}, eff);
 
   // TODO: This should live in the terminal feature project
   | TerminalFont(Service_Font.FontLoaded(font)) => (
