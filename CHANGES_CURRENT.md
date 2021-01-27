@@ -15,6 +15,7 @@
 - #3027 - Vim: Command-line completion - fix 'set no' completion
 - #3029 - Editor: Fix rubber-banding while scrolling with high key-repeat set
 - #3021 - Configuration: Fix zoom being reset when saving configuration (fixes #2294)
+- #3051 - Editor: Make horizontal / vertical scrollbars on editor surface configurable (fixes #3036)
 
 ### Performance
 
