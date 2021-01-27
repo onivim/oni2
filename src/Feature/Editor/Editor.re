@@ -117,6 +117,8 @@ type t = {
   wrapMode: WrapMode.t,
   wrapState: WrapState.t,
   preview: bool,
+  scrollbarVerticalWidth: int,
+  scrollbarHorizontalWidth: int,
   wrapPadding: option(float),
   // Number of lines to preserve before or after the cursor, when scrolling.
   // Like the `scrolloff` vim setting or the `editor.cursorSurroundingLines` VSCode setting.
@@ -133,6 +135,9 @@ type t = {
   isAnimationOverride: option(bool),
   animationNonce: int,
 };
+
+let verticalScrollbarThickness = ({scrollbarVerticalWidth, _}) => scrollbarVerticalWidth;
+let horizontalScrollbarThickness = ({scrollbarHorizontalWidth, _}) => scrollbarHorizontalWidth;
 
 let key = ({key, _}) => key;
 // TODO: Handle multiple ranges
@@ -294,6 +299,7 @@ let getLayout = editor => {
     isMinimapEnabled,
     lineNumbers,
     minimapMaxColumnWidth,
+    scrollbarVerticalWidth,
     _,
   } = editor;
   let layout: EditorLayout.t =
@@ -306,6 +312,7 @@ let getLayout = editor => {
       ~characterWidth=getCharacterWidth(editor),
       ~characterHeight=lineHeightInPixels(editor),
       ~bufferLineCount=editor |> totalViewLines,
+      ~verticalScrollBarWidth=scrollbarVerticalWidth,
       (),
     );
 
@@ -464,6 +471,14 @@ let configure = (~config, editor) => {
   let yankHighlightDuration =
     EditorConfiguration.yankHighlightDuration.get(config);
 
+  let scrollbarVerticalWidth =
+    EditorConfiguration.verticalScrollbarSize.get(config)
+    |> IntEx.clamp(~hi=100, ~lo=1);
+
+  let scrollbarHorizontalWidth =
+    EditorConfiguration.horizontalScrollbarSize.get(config)
+    |> IntEx.clamp(~hi=100, ~lo=1);
+
   // If codelens is turned off, remove all codelens keys
 
   let inlineElements =
@@ -481,6 +496,8 @@ let configure = (~config, editor) => {
     inlineElements,
     isAnimated,
     isScrollAnimated,
+    scrollbarVerticalWidth,
+    scrollbarHorizontalWidth,
     yankHighlightDuration,
   }
   |> setVerticalScrollMargin(~lines=scrolloff)
@@ -558,6 +575,9 @@ let create = (~config, ~buffer, ~preview: bool, ()) => {
     // Animation
     isAnimationOverride: None,
     animationNonce: 0,
+
+    scrollbarHorizontalWidth: 8,
+    scrollbarVerticalWidth: 15,
   }
   |> configure(~config);
 };

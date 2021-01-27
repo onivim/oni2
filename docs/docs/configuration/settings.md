@@ -84,6 +84,10 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
     - _"selection"_ - Render whitespace characters in visual mode selected text
     - _"none"_ - Don't render whitespace at all
 
+- `editor.scrollbar.horizontalScrollbarSize` __(_int_ default: `8`)__ - The size, in pixels, of the horizontal scroll bar on the editor surface.
+
+- `editor.scrollbar.verticalScrollbarSize` __(_int_ default: `15`)__ - The size, in pixels, of the vertical scroll bar on the editor surface.
+
 - `editor.wordBasedSuggestions` __(_bool_ default: `true`)__ When `true`, keywords are provided as completion suggestions.
 
 - `editor.wordWrap` __(_bool_ default: `false`)__ When `true`, Onivim will soft-wrap lines at the viewport boundary.

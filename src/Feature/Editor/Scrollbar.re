@@ -171,7 +171,14 @@ module Common = {
 
 module Vertical = {
   let diagnosticMarkers =
-      (~diagnostics, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
+      (
+        ~scrollBarThickness,
+        ~diagnostics,
+        ~totalHeight,
+        ~editor,
+        ~colors: Colors.t,
+        (),
+      ) => {
     IntMap.bindings(diagnostics)
     |> List.map(binding => {
          let (line, diagnostics) = binding;
@@ -197,7 +204,7 @@ module Vertical = {
              position(`Absolute),
              top(diagTop),
              right(0),
-             width(Constants.scrollBarThickness / 3),
+             width(scrollBarThickness / 3),
              height(Constants.scrollBarCursorSize),
              backgroundColor(diagColor),
            ];
@@ -420,6 +427,8 @@ module Vertical = {
         Msg.VerticalScrollbarMouseWheel({deltaWheel: (-1.0) *. deltaWheel}),
       );
 
+    let scrollBarThickness = Editor.verticalScrollbarThickness(editor);
+
     <Common
       background={colors.scrollbarSliderBackground}
       hoverBackground={colors.scrollbarSliderHoverBackground}
@@ -444,7 +453,13 @@ module Vertical = {
           <View style={Styles.cursor(~cursorLine, ~totalWidth, ~colors)} />
           <View style=Styles.absolute>
             <selectionMarkers totalHeight editor colors />
-            <diagnosticMarkers totalHeight editor diagnostics colors />
+            <diagnosticMarkers
+              scrollBarThickness
+              totalHeight
+              editor
+              diagnostics
+              colors
+            />
             <matchingPairMarkers
               matchingPair
               bufferHighlights

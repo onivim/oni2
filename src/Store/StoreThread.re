@@ -541,6 +541,8 @@ let start =
     |> List.map(Core.Command.map(msg => Model.Actions.AutoUpdate(msg))),
     Feature_Registration.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Registration(msg))),
+    Feature_Snippets.Contributions.commands
+    |> List.map(Core.Command.map(msg => Model.Actions.Snippets(msg))),
     Feature_Zoom.Contributions.commands
     |> List.map(Core.Command.map(msg => Model.Actions.Zoom(msg))),
   ]

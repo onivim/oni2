@@ -40,7 +40,10 @@ type t =
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
-  | KeybindingInvoked({command: string})
+  | KeybindingInvoked({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | KeyDown({
       key: EditorInput.KeyCandidate.t,
       scancode: int,
@@ -145,6 +148,7 @@ type t =
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
+  | Snippets(Feature_Snippets.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
