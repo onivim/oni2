@@ -46,6 +46,7 @@ module Session = {
     | Partial({
         providerModel: [@opaque] 'model,
         meet: CompletionMeet.t,
+        cursor: CharacterPosition.t,
         currentItems: list(CompletionItem.t),
         filteredItems: [@opaque] list(Filter.result(CompletionItem.t)),
       })
@@ -133,7 +134,8 @@ module Session = {
           switch (state) {
           | Pending({meet, _}) as prev when isCompletionMeetStillValid(meet) => prev
           | Pending(_) => NotStarted
-          | Partial(_) as prev => prev
+          | Partial({meet, _} as partial) when isCompletionMeetStillValid(meet)=> Partial({ ...partial, cursor: position })
+          | Partial(_) => NotStarted
           | Completed({meet, _}) as prev
               when isCompletionMeetStillValid(meet) => prev
           | Completed(_) => NotStarted
@@ -228,7 +230,8 @@ module Session = {
                  | (Incomplete, items) =>
                    Partial({
                      meet,
-                     allItems: items,
+                     cursor: meet.location,
+                     currentItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: providerModel',
                    })
@@ -252,13 +255,13 @@ module Session = {
     fun
     | Session({state, provider, providerMapper, _}) => {
         switch (state) {
-        | Partial({providerModel, meet, _}) =>
+        | Partial({providerModel, meet, cursor, _}) =>
           // TODO: Use cursor position
           let (module ProviderImpl) = provider;
           ProviderImpl.sub(
             ~client,
             ~buffer=activeBuffer,
-            ~position=CompletionMeet.(meet.location),
+            ~position=cursor,
             ~selectedItem,
             providerModel,
           )
