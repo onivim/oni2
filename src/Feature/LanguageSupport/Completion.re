@@ -221,12 +221,18 @@ module Session = {
                      internalMsg,
                      providerModel,
                    );
-                 let (_completionState, items) =
+                 let (completionState, items) =
                    ProviderImpl.items(providerModel');
-                 // TODO: Handle completion state
-                 switch (items) {
-                 | [] => Pending({meet, providerModel: providerModel'})
-                 | items =>
+                 switch ((completionState, items)) {
+                 | (_, []) => Pending({meet, providerModel: providerModel'})
+                 | (Incomplete, items) =>
+                   Partial({
+                     meet,
+                     allItems: items,
+                     filteredItems: filter(~query=meet.base, items),
+                     providerModel: providerModel',
+                   })
+                 | (Complete, items) =>
                    Completed({
                      meet,
                      allItems: items,
