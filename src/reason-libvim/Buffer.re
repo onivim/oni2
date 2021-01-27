@@ -82,7 +82,7 @@ let setLineEndings = (buffer, lineEnding) => {
      );
 };
 
-let setLines = (~start=?, ~stop=?, ~lines, buffer) => {
+let setLines = (~undoable=false, ~start=?, ~stop=?, ~lines, buffer) => {
   let startLine =
     switch (start) {
     | Some(v) => LineNumber.toOneBased(v) - 1
@@ -94,6 +94,10 @@ let setLines = (~start=?, ~stop=?, ~lines, buffer) => {
     | Some(v) => LineNumber.toOneBased(v) - 1
     | None => (-1)
     };
+
+  if (undoable) {
+    Undo.saveRegion(startLine - 1, endLine + 1);
+  };
 
   Native.vimBufferSetLines(buffer, startLine, endLine, lines);
 };

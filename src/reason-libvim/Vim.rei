@@ -114,7 +114,7 @@ module Mode: {
         cursor: BytePosition.t,
         pending: Operator.pending,
       })
-    | Select(VisualRange.t);
+    | Select({ranges: list(VisualRange.t)});
 
   let current: unit => t;
 
@@ -316,6 +316,7 @@ module Buffer: {
   */
   let setLines:
     (
+      ~undoable: bool=?,
       ~start: LineNumber.t=?,
       ~stop: LineNumber.t=?,
       ~lines: array(string),

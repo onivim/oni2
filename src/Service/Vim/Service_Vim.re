@@ -90,6 +90,36 @@ module Effects = {
     });
   };
 
+  let setLines =
+      (
+        ~bufferId: int,
+        ~start=?,
+        ~stop=?,
+        ~lines: array(string),
+        toMsg: result(unit, string) => 'msg,
+      ) => {
+    Isolinear.Effect.createWithDispatch(~name="vim.setLines", dispatch => {
+      Log.infof(m => m("Trying to set lines for buffer: %d", bufferId));
+      let maybeBuffer = Vim.Buffer.getById(bufferId);
+      let result =
+        switch (maybeBuffer) {
+        | None =>
+          Error("No buffer found with id: " ++ string_of_int(bufferId))
+        | Some(buffer) =>
+          Vim.Buffer.setLines(
+            ~undoable=true,
+            ~start?,
+            ~stop?,
+            ~lines,
+            buffer,
+          );
+          Ok();
+        };
+
+      result |> toMsg |> dispatch;
+    });
+  };
+
   let adjustBytePositionForEdit =
       (bytePosition: BytePosition.t, edit: Vim.Edit.t) => {
     let editStartLine =
