@@ -32,7 +32,12 @@ let initial = {
 module Configuration = {
   open Config.Schema;
   let searchExclude = setting("search.exclude", list(string), ~default=[]);
-  let filesExclude = setting("files.exclude", list(string), ~default=["_esy",".git","node_modules"]);
+  let filesExclude =
+    setting(
+      "files.exclude",
+      list(string),
+      ~default=["_esy", ".git", "node_modules"],
+    );
 };
 
 let matchToLocListItem = (hit: Ripgrep.Match.t) =>
@@ -217,8 +222,9 @@ module SearchSubscription =
 
 let subscriptions =
     (~config: Oni_Core.Config.resolver, ~workingDirectory, ripgrep, dispatch) => {
-  let searchExclude = Configuration.searchExclude.get(config) 
-  |> List.append(Configuration.filesExclude.get(config))
+  let searchExclude =
+    Configuration.searchExclude.get(config)
+    |> List.append(Configuration.filesExclude.get(config));
 
   let search = query => {
     SearchSubscription.create(
