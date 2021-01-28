@@ -480,15 +480,49 @@ module Placeholder = {
        );
   };
 
-  let final = placeholders => {
-    let nonZeroIndices =
-      placeholders
-      |> IntMap.bindings
-      |> List.map(fst)
-      |> List.filter(idx => idx != 0)
-      |> List.sort((a, b) => compare(a, b) * (-1));
+  let all = placeholders => {
+    let candidates = placeholders |> IntMap.bindings |> List.map(fst);
+    let sorted = candidates |> List.filter(idx => idx != 0);
 
-    List.nth_opt(nonZeroIndices, 0) |> Option.value(~default=0);
+    let hasZero = List.exists(idx => idx == 0, candidates);
+    // Add zero back to the very end
+    if (hasZero) {
+      sorted @ [0];
+    } else {
+      sorted;
+    };
+  };
+  let move = (~f, ~placeholder, placeholders) => {
+    let sortedPlaceholders = all(placeholders);
+    let len = List.length(sortedPlaceholders);
+
+    let maybeMatch =
+      sortedPlaceholders
+      |> List.mapi((idx, item) => (idx, item))
+      |> List.filter(((_idx, item)) => item == placeholder)
+      |> (l => List.nth_opt(l, 0));
+
+    maybeMatch
+    |> Option.map(fst)
+    |> OptionEx.flatMap(newIdx => {
+         let destIdx = IntEx.clamp(~hi=len - 1, ~lo=0, f(newIdx));
+         List.nth_opt(sortedPlaceholders, destIdx);
+       })
+    |> Option.value(~default=0);
+  };
+
+  let next = (~placeholder, placeholders) => {
+    move(~f=idx => idx + 1, ~placeholder, placeholders);
+  };
+
+  let previous = (~placeholder, placeholders) => {
+    move(~f=idx => idx - 1, ~placeholder, placeholders);
+  };
+
+  let final = placeholders => {
+    let revPlaceholders = all(placeholders) |> List.rev;
+
+    List.nth_opt(revPlaceholders, 0) |> Option.value(~default=0);
   };
 
   let initial = placeholders => {

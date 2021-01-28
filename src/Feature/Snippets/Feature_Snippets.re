@@ -1,3 +1,4 @@
+open Oni_Core;
 open EditorCoreTypes;
 open Oniguruma;
 
@@ -89,6 +90,25 @@ module Session = {
     | Snippet.Placeholder.Positions(positions) =>
       Snippet.Placeholder.Positions(positions |> List.map(remapPosition))
     };
+  };
+
+  let next = ({snippet, currentPlaceholder, _} as session) => {
+    let placeholders = Snippet.placeholders(snippet);
+
+    let newPlaceholder =
+      Snippet.Placeholder.next(~placeholder=currentPlaceholder, placeholders);
+    {...session, currentPlaceholder: newPlaceholder};
+  };
+
+  let previous = ({snippet, currentPlaceholder, _} as session) => {
+    let placeholders = Snippet.placeholders(snippet);
+
+    let newPlaceholder =
+      Snippet.Placeholder.previous(
+        ~placeholder=currentPlaceholder,
+        placeholders,
+      );
+    {...session, currentPlaceholder: newPlaceholder};
   };
 
   let getPlaceholderPositions = ({snippet, currentPlaceholder, startLine, _}) => {
@@ -213,10 +233,55 @@ let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
     |> Option.value(~default=(model, Nothing))
 
   // TODO
-  | Command(JumpToNextPlaceholder) => (model, Nothing)
+  | Command(JumpToNextPlaceholder) =>
+    model.maybeSession
+    |> Option.map(session => {
+         let session' = Session.next(session);
 
-  // TODO
-  | Command(JumpToPreviousPlaceholder) => (model, Nothing)
+         let outmsg =
+           session'
+           |> Session.getPlaceholderPositions
+           |> Option.map(positions => {
+                switch (positions) {
+                | Snippet.Placeholder.Ranges(ranges) => SetSelections(ranges)
+                | Snippet.Placeholder.Positions(positions) =>
+                  SetCursors(positions)
+                }
+              })
+           |> Option.value(~default=Nothing);
+
+         if (Session.isComplete(session')) {
+           ({maybeSession: None}, outmsg);
+         } else {
+           ({maybeSession: Some(session')}, outmsg);
+         };
+       })
+    |> Option.value(~default=(model, Nothing))
+
+  | Command(JumpToPreviousPlaceholder) =>
+    model.maybeSession
+    |> Option.map(session => {
+         let session' = Session.previous(session);
+
+         let outmsg =
+           session'
+           |> Session.getPlaceholderPositions
+           |> Option.map(positions => {
+                switch (positions) {
+                | Snippet.Placeholder.Ranges(ranges) => SetSelections(ranges)
+                | Snippet.Placeholder.Positions(positions) =>
+                  SetCursors(positions)
+                }
+              })
+           |> Option.value(~default=Nothing);
+
+         if (Session.isComplete(session')) {
+           ({maybeSession: None}, outmsg);
+         } else {
+           ({maybeSession: Some(session')}, outmsg);
+         };
+       })
+    |> Option.value(~default=(model, Nothing));
 
   | Command(InsertSnippet(snippet)) =>
     let eff =
@@ -308,5 +373,19 @@ module Contributions = {
     WhenExpr.ContextKeys.(
       ContextKeys.[inSnippetMode] |> Schema.fromList |> fromSchema(model)
     );
+  };
+  let keybindings = {
+    Feature_Input.Schema.[
+      bind(
+        ~key="<TAB>",
+        ~command=Commands.nextPlaceholder.id,
+        ~condition="editorTextFocus && inSnippetMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-TAB>",
+        ~command=Commands.previousPlaceholder.id,
+        ~condition="editorTextFocus && inSnippetMode" |> WhenExpr.parse,
+      ),
+    ];
   };
 };
