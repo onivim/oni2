@@ -1,5 +1,4 @@
 open EditorCoreTypes;
-open Oni_Core;
 open Feature_Snippets;
 
 open Revery.Draw;
