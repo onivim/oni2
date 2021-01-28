@@ -112,7 +112,7 @@ module Session = {
 type command =
   | JumpToNextPlaceholder
   | JumpToPreviousPlaceholder
-  | InsertSnippet([@opaque] Snippet.t); // TODO: How to have payload
+  | InsertSnippet([@opaque] Snippet.t);
 
 [@deriving show]
 type msg =
@@ -127,18 +127,21 @@ let session = ({maybeSession}) => maybeSession;
 let isActive = ({maybeSession}) => maybeSession != None;
 
 let modeChanged = (~mode, model) => {
-  let isModeValid = Vim.Mode.(switch(mode) {
-  | Select(_)
-  | Insert(_) => true
-  | _ => false
-  });
+  let isModeValid =
+    Vim.Mode.(
+      switch (mode) {
+      | Select(_)
+      | Insert(_) => true
+      | _ => false
+      }
+    );
 
   if (!isModeValid) {
-    {maybeSession: None}
+    {maybeSession: None};
   } else {
-    model
-  }
-}
+    model;
+  };
+};
 
 let initial = {maybeSession: None};
 

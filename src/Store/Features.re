@@ -259,7 +259,12 @@ module Internal = {
         languageSupport;
       };
 
-    let state = {...state, layout, languageSupport: languageSupport', snippets: snippets'};
+    let state = {
+      ...state,
+      layout,
+      languageSupport: languageSupport',
+      snippets: snippets',
+    };
     (state, editorEffect);
   };
 };
