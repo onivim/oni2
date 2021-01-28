@@ -281,7 +281,7 @@ let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
            ({maybeSession: Some(session')}, outmsg);
          };
        })
-    |> Option.value(~default=(model, Nothing));
+    |> Option.value(~default=(model, Nothing))
 
   | Command(InsertSnippet(snippet)) =>
     let eff =
