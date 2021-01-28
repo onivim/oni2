@@ -480,6 +480,17 @@ module Placeholder = {
        );
   };
 
+  let final = placeholders => {
+    let nonZeroIndices =
+      placeholders
+      |> IntMap.bindings
+      |> List.map(fst)
+      |> List.filter(idx => idx != 0)
+      |> List.sort((a, b) => compare(a, b) * (-1));
+
+    List.nth_opt(nonZeroIndices, 0) |> Option.value(~default=0);
+  };
+
   let initial = snippet => {
     let placeholders = extractPlaceholders(snippet);
 

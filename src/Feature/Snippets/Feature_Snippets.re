@@ -98,6 +98,10 @@ module Session = {
     )
     |> Option.map(remapPositions(~startLine));
   };
+
+  let isComplete = ({placeholders, currentPlaceholder, _}) => {
+    Snippet.Placeholder.final(placeholders) == currentPlaceholder;
+  };
 };
 
 [@deriving show]
@@ -112,9 +116,11 @@ type msg =
   | SnippetInserted([@opaque] Session.t)
   | SnippetInsertionError(string);
 
-type model = unit;
+type model = {maybeSession: option(Session.t)};
 
-let initial = ();
+let isActive = ({maybeSession, _}) => maybeSession != None;
+
+let initial = {maybeSession: None};
 
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
@@ -174,7 +180,13 @@ let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
            | Snippet.Placeholder.Positions(positions) =>
              SetCursors(positions)
            };
-         (model, outmsg);
+
+         // Check if we should continue the snippet session
+         if (Session.isComplete(session)) {
+           ({maybeSession: None}, outmsg);
+         } else {
+           ({maybeSession: Some(session)}, outmsg);
+         };
        })
     |> Option.value(~default=(model, Nothing))
 
@@ -263,8 +275,7 @@ module Commands = {
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
 
-  // TODO:
-  let inSnippetMode = bool("inSnippetMode", (_: model) => false);
+  let inSnippetMode = bool("inSnippetMode", isActive);
 };
 
 module Contributions = {

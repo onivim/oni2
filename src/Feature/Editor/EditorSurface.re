@@ -154,6 +154,7 @@ let%component make =
                 ~tokenTheme,
                 ~languageSupport,
                 ~scm,
+                ~snippets: Feature_Snippets.model,
                 ~windowIsFocused,
                 ~perFileTypeConfig: Oni_Core.Config.fileTypeResolver,
                 ~renderOverlays,
