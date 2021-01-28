@@ -44,6 +44,10 @@ module Session = {
     currentPlaceholder: int,
   };
 
+  let startLine = ({startLine, _}) => startLine;
+  let stopLine = ({startLine, lineCount, _}) =>
+    EditorCoreTypes.LineNumber.(startLine + lineCount);
+
   let start = (~editorId, ~position: BytePosition.t, ~snippet) => {
     let (currentPlaceholder, placeholders) =
       Snippet.Placeholder.initial(snippet);
@@ -118,7 +122,9 @@ type msg =
 
 type model = {maybeSession: option(Session.t)};
 
-let isActive = ({maybeSession, _}) => maybeSession != None;
+let session = ({maybeSession}) => maybeSession;
+
+let isActive = ({maybeSession}) => maybeSession != None;
 
 let initial = {maybeSession: None};
 

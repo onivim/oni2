@@ -57,6 +57,7 @@ let%component make =
                 ~bufferSyntaxHighlights,
                 ~maybeYankHighlights,
                 ~mode,
+                ~snippets: Feature_Snippets.model,
                 ~isActiveSplit,
                 ~gutterWidth,
                 ~bufferPixelWidth,
@@ -233,6 +234,10 @@ let%component make =
             indentation,
           );
         };
+
+        snippets
+        |> Feature_Snippets.session
+        |> Option.iter(SnippetVisualizer.draw(~context));
 
         ContentView.render(
           ~context,

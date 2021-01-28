@@ -35,6 +35,15 @@ module Snippet: {
     t;
 };
 
+module Session: {
+  type t;
+
+  let startLine: t => EditorCoreTypes.LineNumber.t;
+  let stopLine: t => EditorCoreTypes.LineNumber.t;
+};
+
+let session: model => option(Session.t);
+
 // module Session: {
 //   type t;
 

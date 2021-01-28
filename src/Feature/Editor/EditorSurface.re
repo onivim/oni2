@@ -335,6 +335,7 @@ let%component make =
       languageConfiguration
       bufferSyntaxHighlights
       mode
+      snippets
       isActiveSplit
       gutterWidth
       bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
