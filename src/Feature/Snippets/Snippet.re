@@ -491,9 +491,7 @@ module Placeholder = {
     List.nth_opt(nonZeroIndices, 0) |> Option.value(~default=0);
   };
 
-  let initial = snippet => {
-    let placeholders = extractPlaceholders(snippet);
-
+  let initial = placeholders => {
     let nonZeroIndices =
       placeholders
       |> IntMap.bindings
@@ -504,9 +502,11 @@ module Placeholder = {
     let initialIndex =
       List.nth_opt(nonZeroIndices, 0) |> Option.value(~default=0);
 
-    (initialIndex, placeholders);
+    initialIndex;
   };
 };
+
+let placeholders = Placeholder.extractPlaceholders;
 
 let resolve =
     (
@@ -634,69 +634,70 @@ let%test_module "resolve" =
    });
 
 let updatePlaceholder = (~index: int, ~text: string, snippet: snippet) => {
-  let rec map = (segment) => switch (segment) {
-  | Placeholder({index: placeholderIndex, contents}) =>
-    if (index == placeholderIndex) {
-      Placeholder({index, contents: [Text(text)]})
-    } else {
-      Placeholder({index: placeholderIndex, contents: contents |> List.map(map)})
-    }
-  | other => other
-  };
+  let rec map = segment =>
+    switch (segment) {
+    | Placeholder({index: placeholderIndex, contents}) =>
+      if (index == placeholderIndex) {
+        Placeholder({index, contents: [Text(text)]});
+      } else {
+        Placeholder({
+          index: placeholderIndex,
+          contents: contents |> List.map(map),
+        });
+      }
+    | other => other
+    };
 
-  snippet
-  |> List.map(segments => segments |> List.map(map));
-}
+  snippet |> List.map(segments => segments |> List.map(map));
+};
 
 let%test_module "updatePlaceholder" =
   (module
    {
      let%test "placeholder gets updated" = {
-       let snippet = [
-        [Placeholder({index: 1, contents: [Text("abc")]})]
-       ];
+       let snippet = [[Placeholder({index: 1, contents: [Text("abc")]})]];
 
        let expected = [
-        [Placeholder({index: 1, contents: [Text("def")]})]
+         [Placeholder({index: 1, contents: [Text("def")]})],
        ];
-       updatePlaceholder(
-        ~index=1,
-        ~text="def",
-        snippet
-       ) == expected;
-
+       updatePlaceholder(~index=1, ~text="def", snippet) == expected;
      };
      let%test "nested placeholder gets updated" = {
        let snippet = [
-        [Placeholder({index: 1, contents: [Placeholder({index: 2, contents:  [Text("abc")] })]})]
+         [
+           Placeholder({
+             index: 1,
+             contents: [Placeholder({index: 2, contents: [Text("abc")]})],
+           }),
+         ],
        ];
 
        let expected = [
-        [Placeholder({index: 1, contents: [Placeholder({index: 2, contents:  [Text("def")] })]})]
+         [
+           Placeholder({
+             index: 1,
+             contents: [Placeholder({index: 2, contents: [Text("def")]})],
+           }),
+         ],
        ];
-       updatePlaceholder(
-        ~index=2,
-        ~text="def",
-        snippet
-       ) == expected;
-
+       updatePlaceholder(~index=2, ~text="def", snippet) == expected;
      };
      let%test "nested placeholder removed if outer is updated" = {
        let snippet = [
-        [Placeholder({index: 1, contents: [Placeholder({index: 2, contents:  [Text("abc")] })]})]
+         [
+           Placeholder({
+             index: 1,
+             contents: [Placeholder({index: 2, contents: [Text("abc")]})],
+           }),
+         ],
        ];
 
        let expected = [
-        [Placeholder({index: 1, contents: [Text("def")]})]
+         [Placeholder({index: 1, contents: [Text("def")]})],
        ];
-       updatePlaceholder(
-        ~index=1,
-        ~text="def",
-        snippet
-       ) == expected;
-
+       updatePlaceholder(~index=1, ~text="def", snippet) == expected;
      };
-    })
+   });
 
 let toLines = (resolvedSnippet: snippet) => {
   let rec lineToString = (acc, line: list(Snippet_internal.segment)) =>

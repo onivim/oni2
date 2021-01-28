@@ -38,7 +38,6 @@ module Session = {
   type t = {
     editorId: int,
     snippet: Snippet.t,
-    placeholders: Snippet.Placeholder.t,
     startLine: LineNumber.t,
     lineCount: int,
     currentPlaceholder: int,
@@ -49,14 +48,13 @@ module Session = {
     EditorCoreTypes.LineNumber.(startLine + lineCount);
 
   let start = (~editorId, ~position: BytePosition.t, ~snippet) => {
-    let (currentPlaceholder, placeholders) =
-      Snippet.Placeholder.initial(snippet);
+    let placeholders = Snippet.placeholders(snippet);
+    let currentPlaceholder = Snippet.Placeholder.initial(placeholders);
     let lineCount = List.length(snippet);
     {
       editorId,
       snippet,
       currentPlaceholder,
-      placeholders,
       startLine: position.line,
       lineCount,
     };
@@ -93,8 +91,8 @@ module Session = {
     };
   };
 
-  let getPlaceholderPositions =
-      ({placeholders, snippet, currentPlaceholder, startLine, _}) => {
+  let getPlaceholderPositions = ({snippet, currentPlaceholder, startLine, _}) => {
+    let placeholders = Snippet.placeholders(snippet);
     Snippet.Placeholder.positions(
       ~placeholders,
       ~index=currentPlaceholder,
@@ -103,7 +101,8 @@ module Session = {
     |> Option.map(remapPositions(~startLine));
   };
 
-  let isComplete = ({placeholders, currentPlaceholder, _}) => {
+  let isComplete = ({snippet, currentPlaceholder, _}) => {
+    let placeholders = Snippet.placeholders(snippet);
     Snippet.Placeholder.final(placeholders) == currentPlaceholder;
   };
 };
