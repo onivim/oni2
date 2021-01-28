@@ -131,6 +131,17 @@ let%test_module "parse" =
        parse("${TM_FILENAME:test}")
        == Ok([[Variable({name: "TM_FILENAME", default: Some("test")})]]);
      };
+
+     let%test "curly braces" = {
+       parse("{ $0 }")
+       == Ok([
+            [
+              Text("{ "),
+              Placeholder({index: 0, contents: []}),
+              Text(" }"),
+            ],
+          ]);
+     };
    });
 
 module Placeholder = {
