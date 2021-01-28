@@ -18,6 +18,7 @@
 - #3051 - Editor: Make horizontal / vertical scrollbars on editor surface configurable (fixes #3036)
 - #3030 - Extensions: Implement workspace storage (related #2676)
 - #3052 - Input: Fix key being 'eaten' after executing remapped key (fixes #3048)
+- #3060 - Snippets: Fix parser handling of stand-alone curly braces
 
 ### Performance
 
