@@ -44,6 +44,8 @@ module Session: {
 
 let session: model => option(Session.t);
 
+let isActive: model => bool;
+
 // module Session: {
 //   type t;
 
