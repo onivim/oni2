@@ -510,6 +510,7 @@ module Placeholder = {
 
 let resolve =
     (
+      ~getVariable: string => option(string),
       ~prefix: string,
       ~postfix: string,
       ~indentationSettings: Oni_Core.IndentationSettings.t,
@@ -520,6 +521,17 @@ let resolve =
 
   // Keep track of the leading whitespace, so we can add it on subsequent lines
   let leadingWhitespace = StringEx.leadingWhitespace(prefix);
+
+  let rec resolveVariables = segments =>
+    switch (segments) {
+    | [] => []
+    | [Variable({name, default}), ...tail] =>
+      getVariable(name)
+      |> OptionEx.or_(default)
+      |> Option.map(v => [Text(v), ...resolveVariables(tail)])
+      |> Option.value(~default=tail)
+    | [nonVariable, ...tail] => [nonVariable, ...resolveVariables(tail)]
+    };
 
   let normalizeWhitespace = segments =>
     switch (segments) {
@@ -536,6 +548,7 @@ let resolve =
     };
 
   snippet
+  |> List.map(resolveVariables)
   |> List.mapi((idx, line) => {
        let isFirst = idx == 0;
        let isLast = idx == lines - 1;
@@ -582,6 +595,7 @@ let%test_module "resolve" =
 
        let resolved =
          resolve(
+           ~getVariable=_ => None,
            ~prefix="PREFIX",
            ~postfix="POSTFIX",
            ~indentationSettings=useSpaces2,
@@ -605,6 +619,7 @@ let%test_module "resolve" =
 
        let resolved =
          resolve(
+           ~getVariable=_ => None,
            ~prefix="PREFIX",
            ~postfix="POSTFIX",
            ~indentationSettings=useTabs,
@@ -627,6 +642,7 @@ let%test_module "resolve" =
 
        let resolved =
          resolve(
+           ~getVariable=_ => None,
            ~prefix="PREFIX",
            ~postfix="POSTFIX",
            ~indentationSettings=useTabs,
@@ -648,6 +664,7 @@ let%test_module "resolve" =
 
        let resolved =
          resolve(
+           ~getVariable=_ => None,
            ~prefix="  PREFIX",
            ~postfix="POSTFIX",
            ~indentationSettings=useTabs,
@@ -663,6 +680,50 @@ let%test_module "resolve" =
               Text("ghi"),
               Placeholder({index: 0, contents: []}),
               Text("POSTFIX"),
+            ],
+          ];
+     };
+     let%test "variable resolution replaces variable with provided text" = {
+       let raw = parse("$TESTVAR") |> Result.get_ok;
+
+       let resolved =
+         resolve(
+           ~getVariable=_ => Some("!!Expanded"),
+           ~prefix="pre",
+           ~postfix="post",
+           ~indentationSettings=useTabs,
+           raw,
+         );
+
+       resolved
+       == [
+            [
+              Text("pre"),
+              Text("!!Expanded"),
+              Placeholder({index: 0, contents: []}),
+              Text("post"),
+            ],
+          ];
+     };
+     let%test "variable resolution uses default" = {
+       let raw = parse("${TESTVAR:DEFAULT}") |> Result.get_ok;
+
+       let resolved =
+         resolve(
+           ~getVariable=_ => None,
+           ~prefix="pre",
+           ~postfix="post",
+           ~indentationSettings=useTabs,
+           raw,
+         );
+
+       resolved
+       == [
+            [
+              Text("pre"),
+              Text("DEFAULT"),
+              Placeholder({index: 0, contents: []}),
+              Text("post"),
             ],
           ];
      };

@@ -27,6 +27,7 @@ module Snippet: {
 
   let resolve:
     (
+      ~getVariable: string => option(string),
       ~prefix: string,
       ~postfix: string,
       ~indentationSettings: IndentationSettings.t,
@@ -34,17 +35,6 @@ module Snippet: {
     ) =>
     t;
 };
-
-// module Session: {
-//   type t;
-
-//   let start: (
-//     ~editorId: int,
-//     ~buffer: Buffer.t,
-//     ~position: BytePosition.t,
-//     ~snippet: Snippet.t
-//   ) => Isolinear.Effect.t(msg);
-// }
 
 let update:
   (

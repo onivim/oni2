@@ -138,7 +138,13 @@ module Effects = {
       Utility.StringEx.splitAt(~byte=ByteIndex.toInt(position.byte), line);
 
     let resolvedSnippet =
-      Snippet.resolve(~indentationSettings, ~prefix, ~postfix, snippet);
+      Snippet.resolve(
+        ~getVariable=name => Some("!!" ++ name ++ "??"),
+        ~indentationSettings,
+        ~prefix,
+        ~postfix,
+        snippet,
+      );
 
     let lines = Snippet.toLines(resolvedSnippet);
 
