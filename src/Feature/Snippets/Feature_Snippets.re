@@ -126,6 +126,20 @@ let session = ({maybeSession}) => maybeSession;
 
 let isActive = ({maybeSession}) => maybeSession != None;
 
+let modeChanged = (~mode, model) => {
+  let isModeValid = Vim.Mode.(switch(mode) {
+  | Select(_)
+  | Insert(_) => true
+  | _ => false
+  });
+
+  if (!isModeValid) {
+    {maybeSession: None}
+  } else {
+    model
+  }
+}
+
 let initial = {maybeSession: None};
 
 type outmsg =

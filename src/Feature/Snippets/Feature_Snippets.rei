@@ -46,6 +46,8 @@ let session: model => option(Session.t);
 
 let isActive: model => bool;
 
+let modeChanged: (~mode: Vim.Mode.t, model) => model;
+
 // module Session: {
 //   type t;
 
