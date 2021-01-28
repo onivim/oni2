@@ -504,14 +504,25 @@ let resolve =
       ~indentationSettings: Oni_Core.IndentationSettings.t,
       snippet,
     ) => {
-  // TODO: Wire up indentation settings
-  ignore(indentationSettings);
-
   let lines = List.length(snippet);
   let hasAnyPlaceholders = Placeholder.hasAny(snippet);
 
   // Keep track of the leading whitespace, so we can add it on subsequent lines
   let leadingWhitespace = StringEx.leadingWhitespace(prefix);
+
+  let normalizeWhitespace = segments =>
+    switch (segments) {
+    | [Text(text), ...tail] => [
+        Text(
+          IndentationSettings.normalizeTabs(
+            ~indentation=indentationSettings,
+            text,
+          ),
+        ),
+        ...tail,
+      ]
+    | nonText => nonText
+    };
 
   snippet
   |> List.mapi((idx, line) => {
@@ -521,11 +532,11 @@ let resolve =
        // Add prefix
        let line' =
          if (isFirst) {
-           [Text(prefix), ...line];
+           [Text(prefix), ...normalizeWhitespace(line)];
          } else if (leadingWhitespace != "") {
-           [Text(leadingWhitespace), ...line];
+           [Text(leadingWhitespace), ...normalizeWhitespace(line)];
          } else {
-           line;
+           normalizeWhitespace(line);
          };
 
        // Add postfix
@@ -552,8 +563,32 @@ let%test_module "resolve" =
    {
      let useTabs =
        IndentationSettings.(create(~mode=Tabs, ~size=4, ~tabSize=4, ()));
-     let _useSpaces2 =
+     let useSpaces2 =
        IndentationSettings.(create(~mode=Spaces, ~size=2, ~tabSize=2, ()));
+
+     let%test "normalizes whitespace" = {
+       let raw = parse("abc\n\tdef") |> Result.get_ok;
+
+       let resolved =
+         resolve(
+           ~prefix="PREFIX",
+           ~postfix="POSTFIX",
+           ~indentationSettings=useSpaces2,
+           raw,
+         );
+
+       resolved
+       == [
+            [Text("PREFIX"), Text("abc")],
+            [
+              // The tab should be replaced with spaces
+              Text("  def"),
+              Placeholder({index: 0, contents: []}),
+              Text("POSTFIX"),
+            ],
+          ];
+     };
+
      let%test "adds prefix and postfix in single line" = {
        let raw = parse("abc") |> Result.get_ok;
 
