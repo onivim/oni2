@@ -282,11 +282,9 @@ let findInFiles =
       ~onError,
     ) => {
   let excludeArgs =
-    switch (searchExclude) {
-    | [""] => []
-    | searchExclude => searchExclude |> List.concat_map(x => ["-g", "!" ++ x])
-    };
-
+    searchExclude
+    |> List.filter(str => !StringEx.isEmpty(str))
+    |> List.concat_map(x => ["-g", "!" ++ x]);
   let args =
     excludeArgs
     @ [
