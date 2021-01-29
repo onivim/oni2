@@ -491,9 +491,52 @@ module Placeholder = {
        );
   };
 
-  let initial = snippet => {
-    let placeholders = extractPlaceholders(snippet);
+  let all = placeholders => {
+    let candidates = placeholders |> IntMap.bindings |> List.map(fst);
+    let sorted = candidates |> List.filter(idx => idx != 0);
 
+    let hasZero = List.exists(idx => idx == 0, candidates);
+    // Add zero back to the very end
+    if (hasZero) {
+      sorted @ [0];
+    } else {
+      sorted;
+    };
+  };
+  let move = (~f, ~placeholder, placeholders) => {
+    let sortedPlaceholders = all(placeholders);
+    let len = List.length(sortedPlaceholders);
+
+    let maybeMatch =
+      sortedPlaceholders
+      |> List.mapi((idx, item) => (idx, item))
+      |> List.filter(((_idx, item)) => item == placeholder)
+      |> (l => List.nth_opt(l, 0));
+
+    maybeMatch
+    |> Option.map(fst)
+    |> OptionEx.flatMap(newIdx => {
+         let destIdx = IntEx.clamp(~hi=len - 1, ~lo=0, f(newIdx));
+         List.nth_opt(sortedPlaceholders, destIdx);
+       })
+    |> Option.value(~default=0);
+  };
+
+  let next = (~placeholder, placeholders) => {
+    move(~f=idx => idx + 1, ~placeholder, placeholders);
+  };
+
+  let previous = (~placeholder, placeholders) => {
+    move(~f=idx => idx - 1, ~placeholder, placeholders);
+  };
+
+  let final = placeholders => {
+    let revPlaceholders = all(placeholders) |> List.rev;
+
+    List.nth_opt(revPlaceholders, 0) |> Option.value(~default=0);
+  };
+
+  let initial = placeholders => {
     let nonZeroIndices =
       placeholders
       |> IntMap.bindings
@@ -504,9 +547,11 @@ module Placeholder = {
     let initialIndex =
       List.nth_opt(nonZeroIndices, 0) |> Option.value(~default=0);
 
-    (initialIndex, placeholders);
+    initialIndex;
   };
 };
+
+let placeholders = Placeholder.extractPlaceholders;
 
 let resolve =
     (
@@ -665,6 +710,72 @@ let%test_module "resolve" =
               Text("POSTFIX"),
             ],
           ];
+     };
+   });
+
+let updatePlaceholder = (~index: int, ~text: string, snippet: snippet) => {
+  let rec map = segment =>
+    switch (segment) {
+    | Placeholder({index: placeholderIndex, contents}) =>
+      if (index == placeholderIndex) {
+        Placeholder({index, contents: [Text(text)]});
+      } else {
+        Placeholder({
+          index: placeholderIndex,
+          contents: contents |> List.map(map),
+        });
+      }
+    | other => other
+    };
+
+  snippet |> List.map(segments => segments |> List.map(map));
+};
+
+let%test_module "updatePlaceholder" =
+  (module
+   {
+     let%test "placeholder gets updated" = {
+       let snippet = [[Placeholder({index: 1, contents: [Text("abc")]})]];
+
+       let expected = [
+         [Placeholder({index: 1, contents: [Text("def")]})],
+       ];
+       updatePlaceholder(~index=1, ~text="def", snippet) == expected;
+     };
+     let%test "nested placeholder gets updated" = {
+       let snippet = [
+         [
+           Placeholder({
+             index: 1,
+             contents: [Placeholder({index: 2, contents: [Text("abc")]})],
+           }),
+         ],
+       ];
+
+       let expected = [
+         [
+           Placeholder({
+             index: 1,
+             contents: [Placeholder({index: 2, contents: [Text("def")]})],
+           }),
+         ],
+       ];
+       updatePlaceholder(~index=2, ~text="def", snippet) == expected;
+     };
+     let%test "nested placeholder removed if outer is updated" = {
+       let snippet = [
+         [
+           Placeholder({
+             index: 1,
+             contents: [Placeholder({index: 2, contents: [Text("abc")]})],
+           }),
+         ],
+       ];
+
+       let expected = [
+         [Placeholder({index: 1, contents: [Text("def")]})],
+       ];
+       updatePlaceholder(~index=1, ~text="def", snippet) == expected;
      };
    });
 

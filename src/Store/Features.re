@@ -245,6 +245,8 @@ module Internal = {
         state.languageSupport;
       };
 
+    let snippets' = Feature_Snippets.modeChanged(~mode, state.snippets);
+
     let languageSupport' =
       if (isInInsertMode != wasInInsertMode) {
         if (isInInsertMode) {
@@ -257,7 +259,12 @@ module Internal = {
         languageSupport;
       };
 
-    let state = {...state, layout, languageSupport: languageSupport'};
+    let state = {
+      ...state,
+      layout,
+      languageSupport: languageSupport',
+      snippets: snippets',
+    };
     (state, editorEffect);
   };
 };

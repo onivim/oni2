@@ -692,6 +692,7 @@ module Oni = {
     | Visual(_) => visualModeBackground
     | CommandLine => commandlineModeBackground
     | Operator(_) => operatorModeBackground
+    | Snippet
     | TerminalInsert
     | Insert(_) => insertModeBackground
     | Replace(_) => replaceModeBackground
@@ -706,6 +707,7 @@ module Oni = {
     | Visual(_) => visualModeForeground
     | CommandLine => commandlineModeForeground
     | Operator(_) => operatorModeForeground
+    | Snippet
     | TerminalInsert
     | Insert(_) => insertModeForeground
     | Replace(_) => replaceModeForeground

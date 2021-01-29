@@ -1,3 +1,4 @@
+open Oni_Core;
 open EditorCoreTypes;
 open Oniguruma;
 
@@ -38,21 +39,23 @@ module Session = {
   type t = {
     editorId: int,
     snippet: Snippet.t,
-    placeholders: Snippet.Placeholder.t,
     startLine: LineNumber.t,
     lineCount: int,
     currentPlaceholder: int,
   };
 
+  let startLine = ({startLine, _}) => startLine;
+  let stopLine = ({startLine, lineCount, _}) =>
+    EditorCoreTypes.LineNumber.(startLine + lineCount);
+
   let start = (~editorId, ~position: BytePosition.t, ~snippet) => {
-    let (currentPlaceholder, placeholders) =
-      Snippet.Placeholder.initial(snippet);
+    let placeholders = Snippet.placeholders(snippet);
+    let currentPlaceholder = Snippet.Placeholder.initial(placeholders);
     let lineCount = List.length(snippet);
     {
       editorId,
       snippet,
       currentPlaceholder,
-      placeholders,
       startLine: position.line,
       lineCount,
     };
@@ -89,8 +92,27 @@ module Session = {
     };
   };
 
-  let getPlaceholderPositions =
-      ({placeholders, snippet, currentPlaceholder, startLine, _}) => {
+  let next = ({snippet, currentPlaceholder, _} as session) => {
+    let placeholders = Snippet.placeholders(snippet);
+
+    let newPlaceholder =
+      Snippet.Placeholder.next(~placeholder=currentPlaceholder, placeholders);
+    {...session, currentPlaceholder: newPlaceholder};
+  };
+
+  let previous = ({snippet, currentPlaceholder, _} as session) => {
+    let placeholders = Snippet.placeholders(snippet);
+
+    let newPlaceholder =
+      Snippet.Placeholder.previous(
+        ~placeholder=currentPlaceholder,
+        placeholders,
+      );
+    {...session, currentPlaceholder: newPlaceholder};
+  };
+
+  let getPlaceholderPositions = ({snippet, currentPlaceholder, startLine, _}) => {
+    let placeholders = Snippet.placeholders(snippet);
     Snippet.Placeholder.positions(
       ~placeholders,
       ~index=currentPlaceholder,
@@ -98,13 +120,18 @@ module Session = {
     )
     |> Option.map(remapPositions(~startLine));
   };
+
+  let isComplete = ({snippet, currentPlaceholder, _}) => {
+    let placeholders = Snippet.placeholders(snippet);
+    Snippet.Placeholder.final(placeholders) == currentPlaceholder;
+  };
 };
 
 [@deriving show]
 type command =
   | JumpToNextPlaceholder
   | JumpToPreviousPlaceholder
-  | InsertSnippet([@opaque] Snippet.t); // TODO: How to have payload
+  | InsertSnippet([@opaque] Snippet.t);
 
 [@deriving show]
 type msg =
@@ -112,9 +139,30 @@ type msg =
   | SnippetInserted([@opaque] Session.t)
   | SnippetInsertionError(string);
 
-type model = unit;
+type model = {maybeSession: option(Session.t)};
 
-let initial = ();
+let session = ({maybeSession}) => maybeSession;
+
+let isActive = ({maybeSession}) => maybeSession != None;
+
+let modeChanged = (~mode, model) => {
+  let isModeValid =
+    Vim.Mode.(
+      switch (mode) {
+      | Select(_)
+      | Insert(_) => true
+      | _ => false
+      }
+    );
+
+  if (!isModeValid) {
+    {maybeSession: None};
+  } else {
+    model;
+  };
+};
+
+let initial = {maybeSession: None};
 
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
@@ -174,15 +222,66 @@ let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
            | Snippet.Placeholder.Positions(positions) =>
              SetCursors(positions)
            };
-         (model, outmsg);
+
+         // Check if we should continue the snippet session
+         if (Session.isComplete(session)) {
+           ({maybeSession: None}, outmsg);
+         } else {
+           ({maybeSession: Some(session)}, outmsg);
+         };
        })
     |> Option.value(~default=(model, Nothing))
 
   // TODO
-  | Command(JumpToNextPlaceholder) => (model, Nothing)
+  | Command(JumpToNextPlaceholder) =>
+    model.maybeSession
+    |> Option.map(session => {
+         let session' = Session.next(session);
 
-  // TODO
-  | Command(JumpToPreviousPlaceholder) => (model, Nothing)
+         let outmsg =
+           session'
+           |> Session.getPlaceholderPositions
+           |> Option.map(positions => {
+                switch (positions) {
+                | Snippet.Placeholder.Ranges(ranges) => SetSelections(ranges)
+                | Snippet.Placeholder.Positions(positions) =>
+                  SetCursors(positions)
+                }
+              })
+           |> Option.value(~default=Nothing);
+
+         if (Session.isComplete(session')) {
+           ({maybeSession: None}, outmsg);
+         } else {
+           ({maybeSession: Some(session')}, outmsg);
+         };
+       })
+    |> Option.value(~default=(model, Nothing))
+
+  | Command(JumpToPreviousPlaceholder) =>
+    model.maybeSession
+    |> Option.map(session => {
+         let session' = Session.previous(session);
+
+         let outmsg =
+           session'
+           |> Session.getPlaceholderPositions
+           |> Option.map(positions => {
+                switch (positions) {
+                | Snippet.Placeholder.Ranges(ranges) => SetSelections(ranges)
+                | Snippet.Placeholder.Positions(positions) =>
+                  SetCursors(positions)
+                }
+              })
+           |> Option.value(~default=Nothing);
+
+         if (Session.isComplete(session')) {
+           ({maybeSession: None}, outmsg);
+         } else {
+           ({maybeSession: Some(session')}, outmsg);
+         };
+       })
+    |> Option.value(~default=(model, Nothing))
 
   | Command(InsertSnippet(snippet)) =>
     let eff =
@@ -263,8 +362,7 @@ module Commands = {
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
 
-  // TODO:
-  let inSnippetMode = bool("inSnippetMode", (_: model) => false);
+  let inSnippetMode = bool("inSnippetMode", isActive);
 };
 
 module Contributions = {
@@ -275,5 +373,19 @@ module Contributions = {
     WhenExpr.ContextKeys.(
       ContextKeys.[inSnippetMode] |> Schema.fromList |> fromSchema(model)
     );
+  };
+  let keybindings = {
+    Feature_Input.Schema.[
+      bind(
+        ~key="<TAB>",
+        ~command=Commands.nextPlaceholder.id,
+        ~condition="editorTextFocus && inSnippetMode" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-TAB>",
+        ~command=Commands.previousPlaceholder.id,
+        ~condition="editorTextFocus && inSnippetMode" |> WhenExpr.parse,
+      ),
+    ];
   };
 };
