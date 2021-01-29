@@ -36,6 +36,19 @@ module Snippet: {
     t;
 };
 
+module Session: {
+  type t;
+
+  let startLine: t => EditorCoreTypes.LineNumber.t;
+  let stopLine: t => EditorCoreTypes.LineNumber.t;
+};
+
+let session: model => option(Session.t);
+
+let isActive: model => bool;
+
+let modeChanged: (~mode: Vim.Mode.t, model) => model;
+
 let update:
   (
     ~resolverFactory: (unit, string) => option(string),
@@ -50,4 +63,5 @@ let update:
 module Contributions: {
   let commands: list(Command.t(msg));
   let contextKeys: model => WhenExpr.ContextKeys.t;
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };

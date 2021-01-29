@@ -155,6 +155,12 @@ describe("Matcher", ({describe, _}) => {
           Sequence([keyPress(~modifiers=modifiersShift, Key.Function(12))]),
         ),
       );
+
+      let result = defaultParse("<S-TAB>");
+      expect.equal(
+        result,
+        Ok(Sequence([keyPress(~modifiers=modifiersShift, Key.Tab)])),
+      );
     });
     test("vscode bindings", ({expect, _}) => {
       let result = defaultParse("Ctrl+a");

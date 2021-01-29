@@ -376,6 +376,7 @@ let defaultKeyBindings =
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings
   @ Component_VimTree.Contributions.keybindings
+  @ Feature_Snippets.Contributions.keybindings
   @ Feature_Vim.Contributions.keybindings;
 
 type windowDisplayMode =
