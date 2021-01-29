@@ -133,22 +133,27 @@ module Schema = {
         rawCondition: WhenExpr.t,
       });
 
-  let resolvedToString = fun
-  | ResolvedBinding({matcher, command, rawCondition, _}) => {
-    Printf.sprintf("Binding - command: %s matcher: %s when: %s",
-      InputStateMachine.executeToString(command),
-      EditorInput.Matcher.toString(matcher),
-      WhenExpr.show(rawCondition),
-    )
-  }
-  | ResolvedRemap({allowRecursive, matcher, toKeys, rawCondition, _}) => {
-    Printf.sprintf("Remap - rec: %b, matcher: %s to: %s when: %s",
-      allowRecursive,
-      EditorInput.Matcher.toString(matcher),
-      toKeys |> List.map(EditorInput.KeyPress.toString) |> String.concat(","),
-      WhenExpr.show(rawCondition),
-    )
-  };
+  let resolvedToString =
+    fun
+    | ResolvedBinding({matcher, command, rawCondition, _}) => {
+        Printf.sprintf(
+          "Binding - command: %s matcher: %s when: %s",
+          InputStateMachine.executeToString(command),
+          EditorInput.Matcher.toString(matcher),
+          WhenExpr.show(rawCondition),
+        );
+      }
+    | ResolvedRemap({allowRecursive, matcher, toKeys, rawCondition, _}) => {
+        Printf.sprintf(
+          "Remap - rec: %b, matcher: %s to: %s when: %s",
+          allowRecursive,
+          EditorInput.Matcher.toString(matcher),
+          toKeys
+          |> List.map(EditorInput.KeyPress.toString)
+          |> String.concat(","),
+          WhenExpr.show(rawCondition),
+        );
+      };
 
   let bind = (~key, ~command, ~condition) =>
     Binding({key, command, arguments: `Null, condition});
@@ -475,7 +480,9 @@ module Internal = {
              | Terminal => "terminalFocus" |> parse
              | InsertAndCommandLine =>
                "insertMode || commandLineFocus" |> parse
-             | All => WhenExpr.Value(True);
+             | NormalAndVisualAndSelectAndOperator =>
+               "selectMode || normalMode || visualMode || operatorPending"
+               |> parse;
            }
          );
 

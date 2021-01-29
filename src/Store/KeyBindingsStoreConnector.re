@@ -72,7 +72,15 @@ let start = maybeKeyBindingsFilePath => {
            );
 
            keyBindings
-           |> List.iteri((idx, binding) => Log.tracef(m => m("Binding %d: %s", idx, Feature_Input.Schema.resolvedToString(binding))));
+           |> List.iteri((idx, binding) =>
+                Log.tracef(m =>
+                  m(
+                    "Binding %d: %s",
+                    idx,
+                    Feature_Input.Schema.resolvedToString(binding),
+                  )
+                )
+              );
 
            dispatch(
              Actions.Input(
