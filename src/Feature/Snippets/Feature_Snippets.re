@@ -230,7 +230,6 @@ module Session = {
                           ByteIndex.toInt(startByte),
                           newByteLength,
                         );
-                      prerr_endline("NEWTEXT: |" ++ newText ++ "|");
                       Some(newText);
                     };
                   })
