@@ -125,7 +125,13 @@ type outmsg =
 
 module Effects = {
   let startSession =
-      (~buffer, ~editorId, ~position: BytePosition.t, ~snippet: Snippet.raw) => {
+      (
+        ~resolverFactory,
+        ~buffer,
+        ~editorId,
+        ~position: BytePosition.t,
+        ~snippet: Snippet.raw,
+      ) => {
     let bufferId = Oni_Core.Buffer.getId(buffer);
     let indentationSettings = Oni_Core.Buffer.getIndentation(buffer);
 
@@ -139,7 +145,7 @@ module Effects = {
 
     let resolvedSnippet =
       Snippet.resolve(
-        ~getVariable=name => Some("!!" ++ name ++ "??"),
+        ~getVariable=resolverFactory(),
         ~indentationSettings,
         ~prefix,
         ~postfix,
@@ -165,7 +171,8 @@ module Effects = {
   };
 };
 
-let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
+let update =
+    (~resolverFactory, ~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
   switch (msg) {
   | SnippetInsertionError(msg) => (model, ErrorMessage(msg))
 
@@ -195,6 +202,7 @@ let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
       maybeBuffer
       |> Option.map(buffer => {
            Effects.startSession(
+             ~resolverFactory,
              ~buffer,
              ~editorId,
              ~position=cursorPosition,

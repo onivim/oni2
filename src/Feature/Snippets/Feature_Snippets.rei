@@ -38,6 +38,7 @@ module Snippet: {
 
 let update:
   (
+    ~resolverFactory: (unit, string) => option(string),
     ~maybeBuffer: option(Buffer.t),
     ~editorId: int,
     ~cursorPosition: BytePosition.t,

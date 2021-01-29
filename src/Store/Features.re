@@ -1614,8 +1614,13 @@ let update =
 
     let cursorPosition = editor |> Feature_Editor.Editor.getPrimaryCursorByte;
 
+    let resolverFactory = () => {
+      Oni_Model.SnippetVariables.current(state);
+    };
+
     let (snippets', outmsg) =
       Feature_Snippets.update(
+        ~resolverFactory,
         ~maybeBuffer,
         ~editorId,
         ~cursorPosition,

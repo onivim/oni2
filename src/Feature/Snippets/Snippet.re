@@ -529,7 +529,7 @@ let resolve =
       getVariable(name)
       |> OptionEx.or_(default)
       |> Option.map(v => [Text(v), ...resolveVariables(tail)])
-      |> Option.value(~default=tail)
+      |> Option.value(~default=resolveVariables(tail))
     | [nonVariable, ...tail] => [nonVariable, ...resolveVariables(tail)]
     };
 
@@ -548,6 +548,7 @@ let resolve =
     };
 
   snippet
+  // Iterate through the lines and resolve all variables like `$BLOCK_COMMENT_START`
   |> List.map(resolveVariables)
   |> List.mapi((idx, line) => {
        let isFirst = idx == 0;
