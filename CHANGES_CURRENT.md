@@ -19,6 +19,7 @@
 - #3030 - Extensions: Implement workspace storage (related #2676)
 - #3052 - Input: Fix key being 'eaten' after executing remapped key (fixes #3048)
 - #3060 - Snippets: Fix parser handling of stand-alone curly braces
+- #3044 - Search: Add `search.exclude` configuration option (fixes #2115 - thanks @joseeMDS!)
 
 ### Performance
 
