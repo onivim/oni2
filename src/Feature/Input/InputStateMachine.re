@@ -10,6 +10,10 @@ type execute =
     })
   | VimExCommand(string);
 
+let executeToString = fun
+| NamedCommand({command, _}) => command
+| VimExCommand(command) => command;
+
 module Input =
   EditorInput.Make({
     type context = WhenExpr.ContextKeys.t;

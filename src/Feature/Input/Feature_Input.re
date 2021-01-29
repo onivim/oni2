@@ -123,13 +123,32 @@ module Schema = {
         matcher: EditorInput.Matcher.t,
         command: InputStateMachine.execute,
         condition: WhenExpr.ContextKeys.t => bool,
+        rawCondition: WhenExpr.t,
       })
     | ResolvedRemap({
         allowRecursive: bool,
         matcher: EditorInput.Matcher.t,
         toKeys: list(EditorInput.KeyPress.t),
         condition: WhenExpr.ContextKeys.t => bool,
+        rawCondition: WhenExpr.t,
       });
+
+  let resolvedToString = fun
+  | ResolvedBinding({matcher, command, rawCondition, _}) => {
+    Printf.sprintf("Binding - command: %s matcher: %s when: %s",
+      InputStateMachine.executeToString(command),
+      EditorInput.Matcher.toString(matcher),
+      WhenExpr.show(rawCondition),
+    )
+  }
+  | ResolvedRemap({allowRecursive, matcher, toKeys, rawCondition, _}) => {
+    Printf.sprintf("Remap - rec: %b, matcher: %s to: %s when: %s",
+      allowRecursive,
+      EditorInput.Matcher.toString(matcher),
+      toKeys |> List.map(EditorInput.KeyPress.toString) |> String.concat(","),
+      WhenExpr.show(rawCondition),
+    )
+  };
 
   let bind = (~key, ~command, ~condition) =>
     Binding({key, command, arguments: `Null, condition});
@@ -167,6 +186,7 @@ module Schema = {
              matcher,
              command: InputStateMachine.NamedCommand({command, arguments}),
              condition: evaluateCondition(condition),
+             rawCondition: condition,
            })
          });
 
@@ -191,6 +211,7 @@ module Schema = {
             matcher,
             condition: evaluateCondition(condition),
             toKeys,
+            rawCondition: condition,
           })
         },
         maybeMatcher,
