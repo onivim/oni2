@@ -106,6 +106,14 @@ module Contributions: {
     };
   };
 
+  module Snippet: {
+    [@deriving show]
+    type t = {
+      language: option(string),
+      path: string,
+    };
+  };
+
   module Theme: {
     [@deriving show]
     type t = {
@@ -137,6 +145,7 @@ module Contributions: {
     menus: list(Menu.t),
     languages: list(Language.t),
     grammars: list(Grammar.t),
+    snippets: list(Snippet.t),
     themes: list(Theme.t),
     iconThemes: list(IconTheme.t),
     configuration: Configuration.t,

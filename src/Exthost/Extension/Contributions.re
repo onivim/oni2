@@ -459,6 +459,38 @@ module Grammar = {
   };
 };
 
+module Snippet = {
+  [@deriving show]
+  type t = {
+    language: option(string),
+    path: string,
+  };
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          language: field.optional("language", string),
+          path: field.required("path", string),
+        }
+      )
+    );
+
+  let encode = snippet =>
+    Json.Encode.(
+      obj([
+        ("language", snippet.language |> nullable(string)),
+        ("path", snippet.path |> string),
+      ])
+    );
+
+  let toAbsolutePath = (base: string, snippet) => {
+    let path = Path.join(base, snippet.path);
+
+    {...snippet, path};
+  };
+};
+
 module Theme = {
   [@deriving show]
   type t = {
@@ -538,6 +570,7 @@ type t = {
   menus: list(Menu.t),
   languages: list(Language.t),
   grammars: list(Grammar.t),
+  snippets: list(Snippet.t),
   themes: list(Theme.t),
   iconThemes: list(IconTheme.t),
   configuration: Configuration.t,
@@ -552,6 +585,7 @@ let default = {
   iconThemes: [],
   configuration: [],
   debuggers: [],
+  snippets: [],
   breakpoints: [],
 };
 
@@ -571,6 +605,7 @@ let decode =
         debuggers: field.withDefault("debuggers", [], list(Debugger.decode)),
         breakpoints:
           field.withDefault("breakpoints", [], list(Breakpoint.decode)),
+        snippets: field.withDefault("snippets", [], list(Snippet.decode)),
       }
     )
   );
@@ -587,6 +622,7 @@ let encode = data =>
       ("configuration", null),
       ("debuggers", data.debuggers |> list(Debugger.encode)),
       ("breakpoints", data.breakpoints |> list(Breakpoint.encode)),
+      ("snippets", data.snippets |> list(Snippet.encode)),
     ])
   );
 let to_yojson = contributes => {
@@ -601,6 +637,10 @@ let of_yojson = json => {
 
 let _remapGrammars = (path: string, grammars: list(Grammar.t)) => {
   List.map(g => Grammar.toAbsolutePath(path, g), grammars);
+};
+
+let _remapSnippets = (path: string, snippets: list(Snippet.t)) => {
+  List.map(g => Snippet.toAbsolutePath(path, g), snippets);
 };
 
 let _remapThemes = (path: string, themes: list(Theme.t)) => {
@@ -641,6 +681,7 @@ let remapPaths = (path: string, contributions: t) => {
   themes: _remapThemes(path, contributions.themes),
   languages: _remapLanguages(path, contributions.languages),
   iconThemes: _remapIconThemes(path, contributions.iconThemes),
+  snippets: _remapSnippets(path, contributions.snippets),
 };
 
 let localize = (locDictionary: LocalizationDictionary.t, contributions: t) => {
