@@ -27,6 +27,7 @@ module Snippet: {
 
   let resolve:
     (
+      ~getVariable: string => option(string),
       ~prefix: string,
       ~postfix: string,
       ~indentationSettings: IndentationSettings.t,
@@ -48,19 +49,9 @@ let isActive: model => bool;
 
 let modeChanged: (~mode: Vim.Mode.t, model) => model;
 
-// module Session: {
-//   type t;
-
-//   let start: (
-//     ~editorId: int,
-//     ~buffer: Buffer.t,
-//     ~position: BytePosition.t,
-//     ~snippet: Snippet.t
-//   ) => Isolinear.Effect.t(msg);
-// }
-
 let update:
   (
+    ~resolverFactory: (unit, string) => option(string),
     ~maybeBuffer: option(Buffer.t),
     ~editorId: int,
     ~cursorPosition: BytePosition.t,
