@@ -61,7 +61,15 @@ describe("Mapping / Unmapping", ({describe, _}) => {
         Vim.command("inoremap jj <esc>");
 
       let (_context, effects) = Vim.command("unmap jj");
-      expect.equal(effects, [Unmap({mode: NormalAndVisualAndSelectAndOperator, keys: Some("jj")})]);
+      expect.equal(
+        effects,
+        [
+          Unmap({
+            mode: NormalAndVisualAndSelectAndOperator,
+            keys: Some("jj"),
+          }),
+        ],
+      );
     })
   });
 
@@ -69,7 +77,10 @@ describe("Mapping / Unmapping", ({describe, _}) => {
     test("mapclear", ({expect, _}) => {
       let (_context, effects) = Vim.command("mapclear");
 
-      expect.equal(effects, [Unmap({mode: NormalAndVisualAndSelectAndOperator, keys: None})]);
+      expect.equal(
+        effects,
+        [Unmap({mode: NormalAndVisualAndSelectAndOperator, keys: None})],
+      );
     })
   });
 });

@@ -281,7 +281,9 @@ let initial = keybindings => {
                InputStateMachine.addBinding(matcher, condition, command, ism);
              ism;
 
-           | Ok(ResolvedRemap({allowRecursive, matcher, condition, toKeys, _})) =>
+           | Ok(
+               ResolvedRemap({allowRecursive, matcher, condition, toKeys, _}),
+             ) =>
              let (ism, _bindingId) =
                InputStateMachine.addMapping(
                  ~allowRecursive,
@@ -514,7 +516,13 @@ module Internal = {
                    ism,
                  )
 
-               | ResolvedRemap({allowRecursive, matcher, condition, toKeys, _}) =>
+               | ResolvedRemap({
+                   allowRecursive,
+                   matcher,
+                   condition,
+                   toKeys,
+                   _,
+                 }) =>
                  InputStateMachine.addMapping(
                    ~allowRecursive,
                    matcher,
