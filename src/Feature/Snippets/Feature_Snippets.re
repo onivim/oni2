@@ -138,14 +138,7 @@ module Session = {
       ) => {
     currentPlaceholder
     |> OptionEx.flatMap(
-         (
-           {
-             placeholderIndex,
-             snippetLineIndex,
-             lineContents,
-             numberOfPlaceholdersInLine,
-           } as cur,
-         ) => {
+         ({placeholderIndex, snippetLineIndex, lineContents, _} as cur) => {
          let bufferLineIdx =
            LineNumber.(startLine + snippetLineIndex) |> LineNumber.toZeroBased;
 
@@ -266,7 +259,7 @@ module Session = {
        });
   };
 
-  let next = (~buffer, {snippet, currentPlaceholder, _} as session) => {
+  let next = (~buffer, session) => {
     synchronize(~buffer, session)
     |> Option.map(session => {
          let {snippet, currentPlaceholder, _} = session;
@@ -304,7 +297,7 @@ module Session = {
        });
   };
 
-  let previous = (~buffer, {snippet, currentPlaceholder, _} as session) => {
+  let previous = (~buffer, session) => {
     synchronize(~buffer, session)
     |> Option.map(session => {
          let {snippet, currentPlaceholder, _} = session;
