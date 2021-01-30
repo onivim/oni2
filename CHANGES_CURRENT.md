@@ -20,6 +20,7 @@
 - #3052 - Input: Fix key being 'eaten' after executing remapped key (fixes #3048)
 - #3060 - Snippets: Fix parser handling of stand-alone curly braces
 - #3044 - Search: Add `search.exclude` configuration option (fixes #2115 - thanks @joseeMDS!)
+- #3066 - Vim / Input: Fix ':map' condition (fixes #3049)
 
 ### Performance
 

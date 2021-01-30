@@ -34,3 +34,12 @@ let parse = (~explicitShiftKeyNeeded, str) => {
 
   str |> Lexing.from_string |> parse |> flatMap(finish);
 };
+
+let toString =
+  fun
+  | AllKeysReleased => "<AllKeysReleased>"
+  | Sequence(keyPresses) => {
+      let keyString =
+        keyPresses |> List.map(KeyPress.toString) |> String.concat(",");
+      Printf.sprintf("Sequence(%s)", keyString);
+    };

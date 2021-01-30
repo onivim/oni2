@@ -130,6 +130,8 @@ module Matcher: {
     // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
     // (Vim style parsing)
     (~explicitShiftKeyNeeded: bool, string) => result(t, string);
+
+  let toString: t => string;
 };
 
 module type Input = {
