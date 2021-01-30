@@ -136,6 +136,12 @@ module Commands: {
   };
 };
 
+module Configuration: {
+  let fontFamily: Config.Schema.setting(string);
+  let fontSize: Config.Schema.setting(float);
+  let fontSmoothing: Config.Schema.setting(ConfigurationValues.fontSmoothing);
+}
+
 // CONTRIBUTIONS
 
 module Contributions: {
