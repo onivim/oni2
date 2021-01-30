@@ -77,20 +77,37 @@ let start = () => {
       })
     });
 
-  let loadThemeByNameEffect = (~extensions, themeName) => {
-    Log.infof(m => m("Loading theme by name: %s", themeName));
-    let themeInfo =
-      Feature_Extensions.themeByName(~name=themeName, extensions);
+  let loadThemeByIdEffect = (~extensions, themeId) => {
+    Log.infof(m => m("Loading theme by id: %s", themeId));
+    let maybeTheme = Feature_Extensions.themeById(~id=themeId, extensions);
 
-    switch (themeInfo) {
-    | Some({uiTheme, path, _}) => loadThemeByPathEffect(uiTheme, path)
-    | None =>
-      Feature_Notification.Effects.create(
-        ~kind=Error,
-        "Unable to find theme: " ++ themeName,
-      )
-      |> Isolinear.Effect.map(msg => Actions.Notification(msg))
-    };
+    let errorEffect =
+      switch (maybeTheme) {
+      | Some(_) => Isolinear.Effect.none
+      | None =>
+        Feature_Notification.Effects.create(
+          ~kind=Error,
+          "Unable to find theme: " ++ themeId,
+        )
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg))
+      };
+
+    let loadThemeEffect =
+      maybeTheme
+      |> Utility.OptionEx.or_lazy(() => {
+           // If we were unable to load, fall back to the default
+           Feature_Extensions.themeById(
+             ~id=Constants.defaultTheme,
+             extensions,
+           )
+         })
+      |> Option.map(
+           ({uiTheme, path, _}: Exthost.Extension.Contributions.Theme.t) =>
+           loadThemeByPathEffect(uiTheme, path)
+         )
+      |> Option.value(~default=Isolinear.Effect.none);
+
+    [errorEffect, loadThemeEffect] |> Isolinear.Effect.batch;
   };
 
   let persistThemeEffect = name =>
@@ -121,10 +138,7 @@ let start = () => {
         let focusedItem = items[focused];
         (
           state,
-          loadThemeByNameEffect(
-            ~extensions=state.extensions,
-            focusedItem.name,
-          ),
+          loadThemeByIdEffect(~extensions=state.extensions, focusedItem.name),
         );
       | _ => (state, Isolinear.Effect.none)
       }
@@ -134,17 +148,17 @@ let start = () => {
         loadThemeByPathEffect(uiTheme, themePath),
       )
 
-    | Actions.ThemeLoadByName(name) => (
+    | Actions.ThemeLoadById(id) => (
         state,
         Isolinear.Effect.batch([
-          persistThemeEffect(name),
-          loadThemeByNameEffect(~extensions=state.extensions, name),
+          persistThemeEffect(id),
+          loadThemeByIdEffect(~extensions=state.extensions, id),
         ]),
       )
 
-    | ThemeChanged(name) => (
+    | ThemeChanged(id) => (
         state,
-        loadThemeByNameEffect(~extensions=state.extensions, name),
+        loadThemeByIdEffect(~extensions=state.extensions, id),
       )
 
     | Actions.ThemeLoadError(errorMsg) => (

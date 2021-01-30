@@ -109,10 +109,15 @@ module Contributions: {
   module Theme: {
     [@deriving show]
     type t = {
-      label: string,
+      id: option(string),
+      label: LocalizedToken.t,
       uiTheme: string,
       path: string,
     };
+
+    let id: t => string;
+
+    let label: t => string;
   };
 
   module IconTheme: {
@@ -204,6 +209,16 @@ module InitData: {
     let fromString: string => t;
   };
 
+  module StaticWorkspaceData: {
+    [@deriving (show, yojson({strict: false}))]
+    type t = {
+      id: string,
+      name: string,
+    };
+
+    let global: t;
+  };
+
   module Extension: {
     [@deriving (show, yojson({strict: false}))]
     type t;
@@ -219,6 +234,7 @@ module InitData: {
       appLanguage: string,
       appRoot: Oni_Core.Uri.t,
       globalStorageHome: option(Oni_Core.Uri.t),
+      workspaceStorageHome: option(Oni_Core.Uri.t),
       userHome: option(Oni_Core.Uri.t),
       // TODO
       /*
@@ -272,6 +288,7 @@ module InitData: {
     autoStart: bool,
     remote: Remote.t,
     telemetryInfo: TelemetryInfo.t,
+    workspace: StaticWorkspaceData.t,
   };
 
   let create:
@@ -285,6 +302,7 @@ module InitData: {
       ~autoStart: bool=?,
       ~remote: Remote.t=?,
       ~telemetryInfo: TelemetryInfo.t=?,
+      ~workspace: StaticWorkspaceData.t=?,
       list(Extension.t)
     ) =>
     t;

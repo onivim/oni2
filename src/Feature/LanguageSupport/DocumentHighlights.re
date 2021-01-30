@@ -16,20 +16,109 @@ type model = {
 let initial = {providers: [], bufferToHighlights: IntMap.empty};
 
 [@deriving show]
+type command =
+  | ChangeAll;
+
+[@deriving show]
 type msg =
+  | Command(command)
   | DocumentHighlighted({
       bufferId: int,
       ranges: list(CharacterRange.t),
     });
 // TODO: kind?
 
-let update = (msg, model) => {
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let changeAll =
+    define(
+      ~category="Editor",
+      ~title="Change All Occurrences",
+      "editor.action.changeAll",
+      Command(ChangeAll),
+    );
+};
+
+module Keybindings = {
+  open Feature_Input.Schema;
+
+  let changeAllWindows =
+    bind(
+      ~key="<S-F2>",
+      ~command=Commands.changeAll.id,
+      ~condition="!isMac && editorTextFocus" |> WhenExpr.parse,
+    );
+
+  let changeAllMac =
+    bind(
+      ~key="<D-F2>",
+      ~command=Commands.changeAll.id,
+      ~condition="isMac && editorTextFocus" |> WhenExpr.parse,
+    );
+};
+
+let clear = (~bufferId, model) => {
+  {
+    ...model,
+    bufferToHighlights:
+      IntMap.add(bufferId, IntMap.empty, model.bufferToHighlights),
+  };
+};
+
+let allHighlights = (~bufferId, model) => {
+  model.bufferToHighlights
+  |> IntMap.find_opt(bufferId)
+  |> Option.value(~default=IntMap.empty)
+  |> IntMap.bindings
+  |> List.map(snd)
+  |> List.flatten;
+};
+
+let cursorMoved = (~buffer, ~cursor, model) => {
+  let bufferId = Oni_Core.Buffer.getId(buffer);
+  let isCursorInHighlight =
+    allHighlights(~bufferId, model)
+    |> List.exists(range => CharacterRange.contains(cursor, range));
+
+  if (!isCursorInHighlight) {
+    clear(~bufferId, model);
+  } else {
+    model;
+  };
+};
+
+let update = (~maybeBuffer, ~editorId, msg, model) => {
   switch (msg) {
   | DocumentHighlighted({bufferId, ranges}) =>
     let lineMap = ranges |> Utility.RangeEx.toCharacterLineMap;
     let bufferToHighlights =
       model.bufferToHighlights |> IntMap.add(bufferId, lineMap);
-    {...model, bufferToHighlights};
+    ({...model, bufferToHighlights}, Outmsg.Nothing);
+
+  | Command(ChangeAll) =>
+    maybeBuffer
+    |> Option.map(Oni_Core.Buffer.getId)
+    |> Option.map(bufferId => {
+         // Fix 'impedance mismatch' - the highlights return the last character as an 'exclusive' character,
+         // but the selection treats the last character as inclusive.
+         let allHighlights =
+           allHighlights(~bufferId, model)
+           |> List.map((range: CharacterRange.t) =>
+                CharacterRange.{
+                  start: {
+                    line: range.start.line,
+                    character: range.start.character,
+                  },
+                  stop: {
+                    line: range.stop.line,
+                    character: CharacterIndex.(range.stop.character - 1),
+                  },
+                }
+              );
+         (model, Outmsg.SetSelections({editorId, ranges: allHighlights}));
+       })
+    |> Option.value(~default=(model, Outmsg.Nothing))
   };
 };
 
@@ -57,29 +146,52 @@ let getLinesWithHighlight = (~bufferId, model) => {
   |> Option.value(~default=[]);
 };
 
-let sub = (~buffer, ~location, ~client, model) => {
-  let toMsg = (highlights: list(Exthost.DocumentHighlight.t)) => {
-    let ranges =
-      highlights
-      |> List.map(({range, _}: Exthost.DocumentHighlight.t) => {
-           Exthost.OneBasedRange.toRange(range)
-         });
+module Configuration = {
+  open Config.Schema;
+  let enabled = setting("editor.occurrencesHighlight", bool, ~default=true);
+};
 
-    DocumentHighlighted({bufferId: Oni_Core.Buffer.getId(buffer), ranges});
+let configurationChanged = (~config, model) =>
+  if (!Configuration.enabled.get(config)) {
+    {...model, bufferToHighlights: IntMap.empty};
+  } else {
+    model;
   };
 
-  model.providers
-  |> List.filter(({selector, _}) =>
-       selector |> Exthost.DocumentSelector.matchesBuffer(~buffer)
-     )
-  |> List.map(({handle, _}) => {
-       Service_Exthost.Sub.documentHighlights(
-         ~handle,
-         ~buffer,
-         ~position=location,
-         ~toMsg,
-         client,
+let sub = (~isInsertMode, ~config, ~buffer, ~location, ~client, model) =>
+  if (!Configuration.enabled.get(config) || isInsertMode) {
+    Isolinear.Sub.none;
+  } else {
+    let toMsg = (highlights: list(Exthost.DocumentHighlight.t)) => {
+      let ranges =
+        highlights
+        |> List.map(({range, _}: Exthost.DocumentHighlight.t) => {
+             Exthost.OneBasedRange.toRange(range)
+           });
+
+      DocumentHighlighted({bufferId: Oni_Core.Buffer.getId(buffer), ranges});
+    };
+
+    model.providers
+    |> List.filter(({selector, _}) =>
+         selector |> Exthost.DocumentSelector.matchesBuffer(~buffer)
        )
-     })
-  |> Isolinear.Sub.batch;
+    |> List.map(({handle, _}) => {
+         Service_Exthost.Sub.documentHighlights(
+           ~handle,
+           ~buffer,
+           ~position=location,
+           ~toMsg,
+           client,
+         )
+       })
+    |> Isolinear.Sub.batch;
+  };
+
+module Contributions = {
+  let configuration = Configuration.[enabled.spec];
+
+  let commands = Commands.[changeAll];
+
+  let keybindings = Keybindings.[changeAllWindows, changeAllMac];
 };

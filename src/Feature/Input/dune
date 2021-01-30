@@ -3,6 +3,6 @@
  (public_name Oni2.feature.input)
  (inline_tests)
  (libraries Oni2.core Oni2.feature.commands Oni2.service.time EditorInput
-   Revery isolinear base)
+   Revery isolinear base Oni2.KeyboardLayout)
  (preprocess
   (pps brisk-reconciler.ppx ppx_let ppx_deriving.show ppx_inline_test)))

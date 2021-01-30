@@ -1,7 +1,8 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => {
+runTest(
+  ~name="Regression: Command line no completions", ({dispatch, wait, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
@@ -9,7 +10,7 @@ runTest(~name="Regression: Command line no completions", (dispatch, wait, _) => 
   dispatch(KeyboardInput({isText: true, input: ":"}));
 
   wait(~name="Mode switches to command line", (state: State.t) =>
-    Selectors.mode(state) == Vim.Mode.CommandLine
+    Vim.Mode.isCommandLine(Selectors.mode(state))
   );
 
   dispatch(KeyboardInput({isText: true, input: "e"}));

@@ -26,6 +26,7 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
+  | PreviewFile(string)
   | GrabFocus
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)

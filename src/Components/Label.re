@@ -10,10 +10,7 @@ open Oni_Core;
 
 module Styles = {
   open Style;
-  let text = (~color) => [
-    textWrap(TextWrapping.NoWrap),
-    Style.color(color),
-  ];
+  let text = (~color) => [textWrap(TextWrapping.Wrap), Style.color(color)];
 };
 
 let textToElement = (~color, ~font: UiFont.t, ~text) => {

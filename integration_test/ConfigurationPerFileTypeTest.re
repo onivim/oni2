@@ -21,7 +21,7 @@ let configuration = {|
 runTest(
   ~configuration=Some(configuration),
   ~name="ConfigurationPerFileType",
-  (dispatch, wait, _) => {
+  ({dispatch, wait, _}) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
       Selectors.mode(state) |> Vim.Mode.isNormal
     );

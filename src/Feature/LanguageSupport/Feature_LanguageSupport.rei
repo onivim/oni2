@@ -32,13 +32,10 @@ module Msg: {
 };
 
 module CodeLens: {
-  type t;
-
-  let get: (~bufferId: int, model) => list(t);
+  type t = Exthost.CodeLens.lens;
 
   let lineNumber: t => int;
   let text: t => string;
-  let uniqueId: t => string;
 
   module View: {
     let make:
@@ -74,10 +71,15 @@ type outmsg =
   | NotifyFailure(string)
   | Effect(Isolinear.Effect.t(msg))
   | CodeLensesChanged({
+      handle: int,
       bufferId: int,
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.t),
+    })
+  | SetSelections({
+      editorId: int,
+      ranges: list(CharacterRange.t),
     });
 
 let update:
@@ -106,10 +108,26 @@ let bufferUpdated:
     model
   ) =>
   model;
+
+let configurationChanged: (~config: Config.resolver, model) => model;
+
 let cursorMoved:
-  (~previous: CharacterPosition.t, ~current: CharacterPosition.t, model) =>
+  (
+    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~previous: CharacterPosition.t,
+    ~current: CharacterPosition.t,
+    model
+  ) =>
   model;
-let startInsertMode: model => model;
+
+let startInsertMode:
+  (
+    ~config: Oni_Core.Config.resolver,
+    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    model
+  ) =>
+  model;
+
 let stopInsertMode: model => model;
 let isFocused: model => bool;
 
@@ -144,6 +162,29 @@ module Completion: {
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~editorFont: Service_Font.font,
+        ~model: model,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
+
+module SignatureHelp: {
+  let isActive: model => bool;
+
+  module View: {
+    let make:
+      (
+        ~x: int,
+        ~y: int,
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~tokenTheme: Oni_Syntax.TokenTheme.t,
+        ~editorFont: Service_Font.font,
+        ~uiFont: Oni_Core.UiFont.t,
+        ~languageInfo: Exthost.LanguageInfo.t,
+        ~buffer: Oni_Core.Buffer.t,
+        ~grammars: Oni_Syntax.GrammarRepository.t,
+        ~dispatch: msg => unit,
         ~model: model,
         unit
       ) =>

@@ -248,6 +248,13 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, workbenchEditorShowTabs: parseBool(json)},
   ),
   (
+    "workbench.editor.enablePreview",
+    (config, json) => {
+      ...config,
+      workbenchEditorEnablePreview: parseBool(json),
+    },
+  ),
+  (
     "workbench.statusBar.visible",
     (config, json) => {
       ...config,
@@ -266,7 +273,6 @@ let configurationParsers: list(configurationTuple) = [
     "editor.zenMode.singleFile",
     (config, json) => {...config, zenModeSingleFile: parseBool(json)},
   ),
-  ("ui.zoom", (config, json) => {...config, uiZoom: parseFloat(json)}),
   (
     "vim.useSystemClipboard",
     (config, json) => {

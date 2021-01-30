@@ -20,8 +20,8 @@ class GitIgnoreDecorationProvider {
         this.model = model;
         this.queue = new Map();
         this.disposables = [];
-        this.onDidChange = util_1.fireEvent(util_1.anyEvent(util_1.filterEvent(vscode_1.workspace.onDidSaveTextDocument, e => /\.gitignore$|\.git\/info\/exclude$/.test(e.uri.path)), model.onDidOpenRepository, model.onDidCloseRepository));
-        this.disposables.push(vscode_1.window.registerDecorationProvider(this));
+        this.onDidChangeFileDecorations = util_1.fireEvent(util_1.anyEvent(util_1.filterEvent(vscode_1.workspace.onDidSaveTextDocument, e => /\.gitignore$|\.git\/info\/exclude$/.test(e.uri.path)), model.onDidOpenRepository, model.onDidCloseRepository));
+        this.disposables.push(vscode_1.window.registerFileDecorationProvider(this));
     }
     async provideFileDecoration(uri) {
         const repository = this.model.getRepository(uri);
@@ -73,10 +73,10 @@ class GitDecorationProvider {
     constructor(repository) {
         this.repository = repository;
         this._onDidChangeDecorations = new vscode_1.EventEmitter();
-        this.onDidChange = this._onDidChangeDecorations.event;
+        this.onDidChangeFileDecorations = this._onDidChangeDecorations.event;
         this.disposables = [];
         this.decorations = new Map();
-        this.disposables.push(vscode_1.window.registerDecorationProvider(this), repository.onDidRunGitStatus(this.onDidRunGitStatus, this));
+        this.disposables.push(vscode_1.window.registerFileDecorationProvider(this), repository.onDidRunGitStatus(this.onDidRunGitStatus, this));
     }
     onDidRunGitStatus() {
         let newDecorations = new Map();

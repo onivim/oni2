@@ -608,15 +608,32 @@ let getExtensions = Internal.getExtensions;
 
 let update = (~extHostClient, msg, model) => {
   switch (msg) {
-  | Exthost(WillActivateExtension(_))
-  | Exthost(ExtensionRuntimeError(_)) => (model, Nothing)
+  | Exthost(WillActivateExtension(_)) => (model, Nothing)
+
+  | Exthost(ExtensionRuntimeError({extensionId, errorsJson})) => (
+      model,
+      NotifyFailure(
+        Printf.sprintf(
+          "Extension runtime error %s:%s",
+          Exthost.ExtensionId.toString(extensionId),
+          Yojson.Safe.to_string(`List(errorsJson)),
+        ),
+      ),
+    )
+
   | Exthost(ActivateExtension({extensionId, _})) => (
       Internal.markActivated(extensionId, model),
       Nothing,
     )
-  | Exthost(ExtensionActivationError({errorMessage, _})) => (
+  | Exthost(ExtensionActivationError({error, extensionId})) => (
       model,
-      NotifyFailure(Printf.sprintf("Error: %s", errorMessage)),
+      NotifyFailure(
+        Printf.sprintf(
+          "Error activating extension %s: %s",
+          Exthost.ExtensionId.toString(extensionId),
+          Exthost.ExtensionActivationError.toString(error),
+        ),
+      ),
     )
   | Exthost(DidActivateExtension({extensionId, _})) => (
       Internal.markActivated(extensionId, model),

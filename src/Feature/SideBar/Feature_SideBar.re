@@ -252,60 +252,69 @@ module Commands = {
 module Keybindings = {
   open Feature_Input.Schema;
 
-  let findInFiles = {
-    key: "<S-C-F>",
-    command: Commands.openSearchPane.id,
-    condition: "!isMac" |> WhenExpr.parse,
-  };
+  let findInFiles =
+    bind(
+      ~key="<S-C-F>",
+      ~command=Commands.openSearchPane.id,
+      ~condition="!isMac" |> WhenExpr.parse,
+    );
 
-  let findInFilesMac = {
-    key: "<D-S-F>",
-    command: Commands.openSearchPane.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let findInFilesMac =
+    bind(
+      ~key="<D-S-F>",
+      ~command=Commands.openSearchPane.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 
-  let openExtensions = {
-    key: "<S-C-X>",
-    command: Commands.openExtensionsPane.id,
-    condition: "!isMac" |> WhenExpr.parse,
-  };
+  let openExtensions =
+    bind(
+      ~key="<S-C-X>",
+      ~command=Commands.openExtensionsPane.id,
+      ~condition="!isMac" |> WhenExpr.parse,
+    );
 
-  let openExtensionsMac = {
-    key: "<D-S-X>",
-    command: Commands.openExtensionsPane.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let openExtensionsMac =
+    bind(
+      ~key="<D-S-X>",
+      ~command=Commands.openExtensionsPane.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 
-  let openExplorer = {
-    key: "<S-C-E>",
-    command: Commands.openExplorerPane.id,
-    condition: "!isMac" |> WhenExpr.parse,
-  };
+  let openExplorer =
+    bind(
+      ~key="<S-C-E>",
+      ~command=Commands.openExplorerPane.id,
+      ~condition="!isMac" |> WhenExpr.parse,
+    );
 
-  let openExplorerMac = {
-    key: "<D-S-E>",
-    command: Commands.openExplorerPane.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let openExplorerMac =
+    bind(
+      ~key="<D-S-E>",
+      ~command=Commands.openExplorerPane.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 
   // This keybinding is used in both MacOS & Windows
-  let openSCM = {
-    key: "<S-C-G>",
-    command: Commands.openSCMPane.id,
-    condition: WhenExpr.Value(True),
-  };
+  let openSCM =
+    bind(
+      ~key="<S-C-G>",
+      ~command=Commands.openSCMPane.id,
+      ~condition=WhenExpr.Value(True),
+    );
 
-  let toggleSidebar = {
-    key: "<C-B>",
-    command: Commands.toggleSidebar.id,
-    condition: "!isMac" |> WhenExpr.parse,
-  };
+  let toggleSidebar =
+    bind(
+      ~key="<C-S-B>",
+      ~command=Commands.toggleSidebar.id,
+      ~condition="!isMac" |> WhenExpr.parse,
+    );
 
-  let toggleSidebarMac = {
-    key: "<D-B>",
-    command: Commands.toggleSidebar.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let toggleSidebarMac =
+    bind(
+      ~key="<D-B>",
+      ~command=Commands.toggleSidebar.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 };
 
 module ContextKeys = {
@@ -363,6 +372,25 @@ let configurationChanged = (~hasWorkspace, ~config, model) => {
   );
 };
 
+module MenuItems = {
+  open MenuBar.Schema;
+  module View = {
+    let explorer = command(~title="Explorer", Commands.openExplorerPane);
+
+    let extensions =
+      command(~title="Extensions", Commands.openExtensionsPane);
+
+    let scm = command(~title="Source Control", Commands.openSCMPane);
+
+    let toggle = command(~title="Toggle Sidebar", Commands.toggleSidebar);
+  };
+
+  module Edit = {
+    let findInFiles =
+      command(~title="Find in files", Commands.openSearchPane);
+  };
+};
+
 module Contributions = {
   let commands =
     Commands.[
@@ -388,6 +416,28 @@ module Contributions = {
       toggleSidebarMac,
       openSCM,
     ];
+
+  let menuItems = commands |> List.map(MenuBar.Schema.command);
+
+  let menuGroups =
+    MenuBar.Schema.[
+      group(
+        ~order=200,
+        ~parent=Feature_MenuBar.Global.view,
+        MenuItems.View.[explorer, scm, extensions],
+      ),
+      group(
+        ~order=900,
+        ~parent=Feature_MenuBar.Global.view,
+        MenuItems.View.[toggle],
+      ),
+      group(
+        ~order=100,
+        ~parent=Feature_MenuBar.Global.edit,
+        MenuItems.Edit.[findInFiles],
+      ),
+    ];
+  MenuBar.Schema.group(~parent=Feature_MenuBar.Global.view, menuItems);
 
   let contextKeys = (~isFocused) => {
     let common = ContextKeys.[sideBarVisible];

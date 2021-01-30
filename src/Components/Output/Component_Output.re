@@ -41,6 +41,7 @@ let update = (msg, model) =>
       switch (outmsg) {
       | Nothing => Nothing
       | Selected(_) => Selected
+      | Touched(_) => Nothing
       };
     ({vimList: vimList'}, out);
   };

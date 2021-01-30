@@ -41,6 +41,7 @@ let update:
 module View: {
   let make:
     (
+      ~menuBar: Revery.UI.element,
       ~activeBuffer: option(Oni_Core.Buffer.t),
       ~workspaceRoot: string,
       ~workspaceDirectory: string,

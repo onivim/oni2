@@ -22,6 +22,16 @@ module Effects: {
     ) =>
     Isolinear.Effect.t('msg);
 
+  let setLines:
+    (
+      ~bufferId: int,
+      ~start: LineNumber.t=?,
+      ~stop: LineNumber.t=?,
+      ~lines: array(string),
+      result(unit, string) => 'msg
+    ) =>
+    Isolinear.Effect.t('msg);
+
   let loadBuffer:
     (~filePath: string, (~bufferId: int) => 'msg) => Isolinear.Effect.t('msg);
 

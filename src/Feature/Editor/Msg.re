@@ -20,8 +20,10 @@ type t =
       deltaY: float,
       shiftKey: bool,
     })
+  | PreviewChanged(bool)
   | EditorMouseEnter
   | EditorMouseDown({
+      altKey: bool,
       time: [@opaque] Revery.Time.t,
       pixelX: float,
       pixelY: float,
@@ -32,6 +34,7 @@ type t =
       pixelY: float,
     })
   | EditorMouseUp({
+      altKey: bool,
       time: [@opaque] Revery.Time.t,
       pixelX: float,
       pixelY: float,

@@ -130,7 +130,18 @@ let update = (~focus, model, msg) => {
       ),
       Nothing,
     )
-
+  | EditorTabDoubleClicked({groupId, editorId}) => (
+      updateActiveLayout(
+        updateGroup(
+          groupId,
+          Group.updateEditor(editorId, editor =>
+            Feature_Editor.Editor.setPreview(~preview=false, editor)
+          ),
+        ),
+        model,
+      ),
+      Nothing,
+    )
   | GroupSelected(id) => (
       updateActiveLayout(layout => {...layout, activeGroupId: id}, model),
       Focus(Center),
@@ -157,9 +168,13 @@ let update = (~focus, model, msg) => {
 
   | Command(PreviousEditor) => (previousEditor(model), Nothing)
 
-  | Command(SplitVertical) => (split(`Vertical, model), SplitAdded)
+  | Command(SplitVertical) =>
+    let editor = Feature_Editor.Editor.copy(activeEditor(model));
+    (split(~editor, `Vertical, model), SplitAdded);
 
-  | Command(SplitHorizontal) => (split(`Horizontal, model), SplitAdded)
+  | Command(SplitHorizontal) =>
+    let editor = Feature_Editor.Editor.copy(activeEditor(model));
+    (split(~editor, `Horizontal, model), SplitAdded);
 
   | Command(CloseActiveEditor) =>
     switch (removeActiveEditor(model)) {

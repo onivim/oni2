@@ -20,10 +20,15 @@ type internalMsg('a) =
   | NotifySuccess(string)
   | NotifyFailure(string)
   | CodeLensesChanged({
+      handle: int,
       bufferId: int,
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.codeLens),
+    })
+  | SetSelections({
+      editorId: int,
+      ranges: list(CharacterRange.t),
     })
   | Effect(Isolinear.Effect.t('a));
 

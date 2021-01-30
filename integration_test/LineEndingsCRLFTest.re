@@ -3,7 +3,7 @@ open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="LineEndingsCRLFTest", (dispatch, wait, _runEffects) => {
+runTest(~name="LineEndingsCRLFTest", ({dispatch, wait, _}) => {
   wait(~name="Capture initial state", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );

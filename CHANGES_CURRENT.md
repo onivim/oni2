@@ -1,30 +1,32 @@
-### Features
+### Features 
 
-- #2866 - Extensions: Show ratings / download count in details view (fixes #2866)
+- #3024 - Editor: Snippet Support - Multi-select handler
+- #3047, #3052, #3056, #3059, #3061 - Editor: Snippet Feature
 
 ### Bug Fixes
 
-- #2845 - Workspace: Opening a file should not always open a folder (fixes #1983)
-- #2842 - CLI: AppImage - fix argument parsing in `AppRun` (fixes #2803)
-- #2839 - Extensions: CodeLens - fix lens persisting when line is deleted
-- #2844 - Vim: Fix `:tabnew`/`:new`/`:vnew` behavior (fixes #1455, #2753, #2843)
-- #2846 - UX: Editor Tabs - horizontal scrolling on trackpad is reversed (thanks @SeitaHigashi!)
-- #2865 - OSX: Fix drag-and-drop on dock icon (fixes #2855)
-- #2867 - Editor: Fix viewport shifting when deleting lines with codelens
-- #2868 - SCM: Diff markers not showing up in gutter (fixes #2857)
-- #2869 - Hover: Fix hover pop up while scrolling via mousewheel
-- #2871 - Vim: Fix `ctrl+o` behavior in insert mode (fixes #2425)
+- #3008 - SCM: Fix index-out-of-bound exception when rendering diff markers
+- #3007 - Extensions: Show 'missing dependency' activation error to user
+- #3011 - Vim: Visual Block - Handle 'I' and 'A' in visual block mode (fixes #1633)
+- #3016 - Extensions: Fix memory leak in extension host language features (fixes #3009)
+- #3019 - Extensions: Fix activation error for Ionide.Ionide-fsharp extension (fixes #2974)
+- #3020 - Vim: Fix incsearch cursor movement (fixes #2968)
+- #3023 - Keybindings: Fix default - add quotes around "when" (thanks @noahhaasis!)
+- #3027 - Vim: Command-line completion - fix 'set no' completion
+- #3029 - Editor: Fix rubber-banding while scrolling with high key-repeat set
+- #3021 - Configuration: Fix zoom being reset when saving configuration (fixes #2294)
+- #3051 - Editor: Make horizontal / vertical scrollbars on editor surface configurable (fixes #3036)
+- #3030 - Extensions: Implement workspace storage (related #2676)
+- #3052 - Input: Fix key being 'eaten' after executing remapped key (fixes #3048)
+- #3060 - Snippets: Fix parser handling of stand-alone curly braces
+- #3044 - Search: Add `search.exclude` configuration option (fixes #2115 - thanks @joseeMDS!)
 
 ### Performance
 
-- #2852,#2864 - Performance: Batch editor / codelens animations
 - #2798 - Improve rendering performance with layers (experimental)
 
 ### Documentation
 
-- #2874 - Languages: Fix extension ids for `exuberant-ctags` and `clangd` (fixes #2872)
-
 ### Infrastructure / Refactoring
 
-- #2853 - Input: Add APIs for querying contextually available bindings and consumed keys
-
+- #3012 - Node: Upgrade from Node 12 LTS -> Node 14 LTS (related #3009)

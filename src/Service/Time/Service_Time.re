@@ -34,4 +34,40 @@ module Sub = {
     TimerOnceSubscription.create({delay, uniqueId})
     |> Isolinear.Sub.map(current => msg(~current));
   };
+
+  type timerIntervalParams = {
+    every: Revery.Time.t,
+    uniqueId: string,
+  };
+
+  module TimerIntervalSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = Revery.Time.t;
+      type nonrec params = timerIntervalParams;
+      type state = unit => unit;
+
+      let name = "Service_Time.interval";
+      let id = ({uniqueId, _}) => uniqueId;
+
+      let init = (~params, ~dispatch) => {
+        Revery.Tick.interval(
+          ~name="Service_Time.interval: " ++ params.uniqueId,
+          _ => {dispatch(Revery.Time.now())},
+          params.every,
+        );
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => {
+        state;
+      };
+
+      let dispose = (~params as _, ~state) => {
+        state();
+      };
+    });
+
+  let interval = (~uniqueId: string, ~every, ~msg) => {
+    TimerIntervalSubscription.create({every, uniqueId})
+    |> Isolinear.Sub.map(current => msg(~current));
+  };
 };

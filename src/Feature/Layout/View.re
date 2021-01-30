@@ -17,6 +17,7 @@ module type ContentModel = {
 
   let id: t => int;
   let title: t => string;
+  let preview: t => bool;
   let tooltip: t => string;
   let icon: t => option(Oni_Core.IconTheme.IconDefinition.t);
   let isModified: t => bool;
@@ -162,10 +163,12 @@ module Tab = {
                   ~isActive,
                   ~isModified,
                   ~onClick,
+                  ~onDoubleClick=() => (),
                   ~onClose,
                   ~theme: ColorTheme.Colors.t,
                   ~uiFont: UiFont.t,
                   ~icon,
+                  ~isPreview: bool=false,
                   (),
                 ) => {
     let%hook (isHovered, setHovered) = Hooks.state(false);
@@ -205,6 +208,7 @@ module Tab = {
         sneakId=title
         onSneak=onClick
         onAnyClick
+        onDoubleClick
         style=Style.[
           width(proportion(0.80)),
           flexGrow(1),
@@ -217,7 +221,7 @@ module Tab = {
           <Text
             style={Styles.text(~isGroupFocused, ~isActive, ~theme)}
             fontFamily={uiFont.family}
-            italic={isGroupFocused && isActive}
+            italic=isPreview
             fontSize={uiFont.size}
             text=title
           />
@@ -260,6 +264,7 @@ module EditorGroupView = {
 
     let id: t => int;
     let title: t => string;
+    let preview: t => bool;
     let tooltip: t => string;
     let icon: t => option(IconTheme.IconDefinition.t);
     let isModified: t => bool;
@@ -307,10 +312,19 @@ module EditorGroupView = {
                 isGroupFocused=isActive
                 isActive=isSelected
                 isModified={ContentModel.isModified(item)}
+                isPreview={ContentModel.preview(item)}
                 icon={ContentModel.icon(item)}
                 onClick={() =>
                   dispatch(
                     EditorTabClicked({
+                      groupId: model.id,
+                      editorId: ContentModel.id(item),
+                    }),
+                  )
+                }
+                onDoubleClick={() =>
+                  dispatch(
+                    EditorTabDoubleClicked({
                       groupId: model.id,
                       editorId: ContentModel.id(item),
                     }),
@@ -471,7 +485,6 @@ module Layout = {
         ~model as layout,
         ~config,
         ~isFocused,
-        ~isZenMode,
         ~showTabs,
         ~uiFont,
         ~theme,
@@ -487,16 +500,7 @@ module Layout = {
       let children =
         switch (maybeDimensions) {
         | Some((width, height)) =>
-          let positioned =
-            isZenMode
-              ? Positioned.fromWindow(
-                  0,
-                  0,
-                  width,
-                  height,
-                  layout.activeGroupId,
-                )
-              : Positioned.fromLayout(0, 0, width, height, tree);
+          let positioned = Positioned.fromLayout(0, 0, width, height, tree);
 
           let renderWindow = id =>
             switch (groupById(id, layout)) {
@@ -567,7 +571,6 @@ let make =
       model={activeLayout(model)}
       config
       isFocused
-      isZenMode
       showTabs
       uiFont
       theme

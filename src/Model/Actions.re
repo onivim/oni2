@@ -16,7 +16,6 @@ type t =
   | Clipboard(Feature_Clipboard.msg)
   | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
-  | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)
   | Command(string)
   | Commands(Feature_Commands.msg(t))
@@ -30,6 +29,7 @@ type t =
   | Decorations(Feature_Decorations.msg)
   | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)
+  | Help(Feature_Help.msg)
   | Input(Feature_Input.msg)
   | TerminalFont(Service_Font.msg)
   | Extensions(Feature_Extensions.msg)
@@ -40,9 +40,19 @@ type t =
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
-  | KeybindingInvoked({command: string})
-  | KeyDown(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
-  | KeyUp(EditorInput.KeyPress.t, [@opaque] Revery.Time.t)
+  | KeybindingInvoked({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
+  | KeyDown({
+      key: EditorInput.KeyCandidate.t,
+      scancode: int,
+      time: [@opaque] Revery.Time.t,
+    })
+  | KeyUp({
+      scancode: int,
+      time: [@opaque] Revery.Time.t,
+    })
   | Logging(Feature_Logging.msg)
   | TextInput(string, [@opaque] Revery.Time.t)
   // TODO: This should be a function call - wired up from an input feature
@@ -72,6 +82,7 @@ type t =
   | FilesDropped({paths: list(string)})
   | FileExplorer(Feature_Explorer.msg)
   | LanguageSupport(Feature_LanguageSupport.msg)
+  | MenuBar(Feature_MenuBar.msg)
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
@@ -100,6 +111,11 @@ type t =
       option([ | `Current | `Horizontal | `Vertical | `NewTab]),
       option(CharacterPosition.t),
     )
+  | PreviewFileByPath(
+      string,
+      option([ | `Horizontal | `Vertical | `NewTab]),
+      option(CharacterPosition.t),
+    )
   | OpenConfigFile(string)
   | Pasted({
       rawText: string,
@@ -119,7 +135,7 @@ type t =
   | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
   | ThemeLoadByPath(string, string)
-  | ThemeLoadByName(string)
+  | ThemeLoadById(string)
   | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
@@ -132,6 +148,7 @@ type t =
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
+  | Snippets(Feature_Snippets.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
@@ -159,6 +176,7 @@ type t =
   | Vim(Feature_Vim.msg)
   | TabPage(Vim.TabPage.effect)
   | Yank({range: [@opaque] VisualRange.t})
+  | Zoom(Feature_Zoom.msg)
   | Noop
 and command = {
   commandCategory: option(string),

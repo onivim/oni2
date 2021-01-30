@@ -62,6 +62,7 @@ class PluginManager extends dispose_1.Disposable {
                         enableForWorkspaceTypeScriptVersions: !!plugin.enableForWorkspaceTypeScriptVersions,
                         path: extension.extensionPath,
                         languages: Array.isArray(plugin.languages) ? plugin.languages : [],
+                        configNamespace: plugin.configNamespace,
                     });
                 }
                 if (plugins.length) {

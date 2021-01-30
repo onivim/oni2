@@ -76,7 +76,7 @@ const getRipgrepPath = () => {
 }
 
 const getNodePath = () => {
-    const nodeDir = "node-v12.17.0"
+    const nodeDir = "node-v14.15.4"
 
     if (process.platform == "darwin") {
         return path.join(rootDirectory, "vendor", nodeDir, "osx", "node")
@@ -118,7 +118,7 @@ const updateIcon = (rcedit, exe, iconFile) => {
 }
 
 if (process.platform == "linux") {
-    const result = cp.spawnSync("esy", ["scripts/linux/package-linux.sh"], {
+    const result = cp.spawnSync("esy", ["bash", "-c", "scripts/linux/package-linux.sh"], {
         cwd: process.cwd(),
         env: process.env,
         stdio: "inherit",

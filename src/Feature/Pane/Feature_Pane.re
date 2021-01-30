@@ -70,6 +70,10 @@ type outmsg =
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
     })
+  | PreviewFile({
+      filePath: string,
+      position: EditorCoreTypes.CharacterPosition.t,
+    })
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | GrabFocus
   | ReleaseFocus
@@ -337,7 +341,7 @@ module Focus = {
   };
 };
 
-let update = (~buffers, ~font, ~languageInfo, msg, model) =>
+let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
   switch (msg) {
   | Command(ClosePane)
   | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
@@ -440,6 +444,10 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
     let eff =
       switch (outmsg) {
       | Component_VimTree.Nothing => Nothing
+      | Component_VimTree.Touched(item) =>
+        previewEnabled
+          ? PreviewFile({filePath: item.file, position: item.location})
+          : OpenFile({filePath: item.file, position: item.location})
       | Component_VimTree.Selected(item) =>
         OpenFile({filePath: item.file, position: item.location})
       | Component_VimTree.Collapsed(_) => Nothing
@@ -469,6 +477,7 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
       switch (outmsg) {
       | Component_VimList.Nothing => Nothing
       | Component_VimList.Selected(_) => Nothing
+      | Component_VimList.Touched(_) => Nothing
       };
 
     ({...model, notificationsView}, eff);
@@ -480,6 +489,10 @@ let update = (~buffers, ~font, ~languageInfo, msg, model) =>
     let eff =
       switch (outmsg) {
       | Component_VimTree.Nothing => Nothing
+      | Component_VimTree.Touched(item) =>
+        previewEnabled
+          ? PreviewFile({filePath: item.file, position: item.location})
+          : OpenFile({filePath: item.file, position: item.location})
       | Component_VimTree.Selected(item) =>
         OpenFile({filePath: item.file, position: item.location})
       | Component_VimTree.Collapsed(_) => Nothing
@@ -881,23 +894,26 @@ module Commands = {
 
 module Keybindings = {
   open Feature_Input.Schema;
-  let toggleProblems = {
-    key: "<S-C-M>",
-    command: Commands.problems.id,
-    condition: WhenExpr.Value(True),
-  };
+  let toggleProblems =
+    bind(
+      ~key="<S-C-M>",
+      ~command=Commands.problems.id,
+      ~condition=WhenExpr.Value(True),
+    );
 
-  let toggleProblemsOSX = {
-    key: "<D-S-M>",
-    command: Commands.problems.id,
-    condition: "isMac" |> WhenExpr.parse,
-  };
+  let toggleProblemsOSX =
+    bind(
+      ~key="<D-S-M>",
+      ~command=Commands.problems.id,
+      ~condition="isMac" |> WhenExpr.parse,
+    );
 
-  let escKey = {
-    key: "<ESC>",
-    command: Commands.closePane.id,
-    condition: "paneFocus" |> WhenExpr.parse,
-  };
+  let escKey =
+    bind(
+      ~key="<ESC>",
+      ~command=Commands.closePane.id,
+      ~condition="paneFocus" |> WhenExpr.parse,
+    );
 };
 
 module Contributions = {
