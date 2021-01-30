@@ -205,29 +205,29 @@ let configurationParsers: list(configurationTuple) = [
     "files.exclude",
     (config, json) => {...config, filesExclude: parseStringList(json)},
   ),
-  (
-    "terminal.integrated.fontFamily",
-    (config, json) => {
-      ...config,
-      terminalIntegratedFontFile:
-        parseString(~default=Constants.defaultFontFile, json),
-    },
-  ),
-  (
-    "terminal.integrated.fontSize",
-    (config, json) => {
-      ...config,
-      terminalIntegratedFontSize:
-        parseEditorFontSize(~default=Constants.defaultTerminalFontSize, json),
-    },
-  ),
-  (
-    "terminal.integrated.fontSmoothing",
-    (config, json) => {
-      ...config,
-      terminalIntegratedFontSmoothing: parseFontSmoothing(json),
-    },
-  ),
+  // (
+  //   "terminal.integrated.fontFamily",
+  //   (config, json) => {
+  //     ...config,
+  //     terminalIntegratedFontFile:
+  //       parseString(~default=Constants.defaultFontFile, json),
+  //   },
+  // ),
+  // (
+  //   "terminal.integrated.fontSize",
+  //   (config, json) => {
+  //     ...config,
+  //     terminalIntegratedFontSize:
+  //       parseEditorFontSize(~default=Constants.defaultTerminalFontSize, json),
+  //   },
+  // ),
+  // (
+  //   "terminal.integrated.fontSmoothing",
+  //   (config, json) => {
+  //     ...config,
+  //     terminalIntegratedFontSmoothing: parseFontSmoothing(json),
+  //   },
+  // ),
   (
     "workbench.activityBar.visible",
     (config, json) => {
