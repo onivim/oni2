@@ -793,6 +793,43 @@ let updatePlaceholder = (~index: int, ~text: string, snippet: snippet) => {
   snippet |> List.map(segments => segments |> List.map(map));
 };
 
+let getFirstLineIndexWithPlaceholder = (~index: int, snippet: snippet) => {
+  let rec hasPlaceholder = segments =>
+    switch (segments) {
+    | [] => false
+    | [Placeholder({index: placeholderIndex, contents}), ...tail] =>
+      if (placeholderIndex == index) {
+        true;
+      } else {
+        hasPlaceholder(contents) || hasPlaceholder(tail);
+      }
+    | [_other, ...tail] => hasPlaceholder(tail)
+    };
+
+  let snippetsWithIndices =
+    snippet
+    |> List.mapi((idx, snippetLine) => (idx, snippetLine))
+    |> List.filter(((_idx, snippetLine)) => hasPlaceholder(snippetLine));
+
+  List.nth_opt(snippetsWithIndices, 0) |> Option.map(fst);
+};
+
+let getPlaceholderCountForLine = (~index: int, ~line: int, snippet: snippet) => {
+  let rec countPlaceholders = (acc, segments) =>
+    switch (segments) {
+    | [] => acc
+    | [Placeholder({index: placeholderIndex, contents}), ...tail] =>
+      let acc' = placeholderIndex == index ? acc + 1 : acc;
+      let placeholderCount = countPlaceholders(0, contents);
+      countPlaceholders(acc' + placeholderCount, tail);
+    | [_other, ...tail] => countPlaceholders(acc, tail)
+    };
+
+  List.nth_opt(snippet, line)
+  |> Option.map(countPlaceholders(0))
+  |> Option.value(~default=0);
+};
+
 let%test_module "updatePlaceholder" =
   (module
    {
