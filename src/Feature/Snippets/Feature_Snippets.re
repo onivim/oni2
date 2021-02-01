@@ -217,6 +217,15 @@ module Effects = {
       toMsg,
     );
   };
+
+  let insertSnippet = (~snippet: string) => {
+    Isolinear.Effect.createWithDispatch(~name="Feature_Snippets.insertSnippet", (dispatch) => {
+      switch (Snippet.parse(snippet)) {
+      | Ok(resolvedSnippet) => dispatch(Command(InsertSnippet(resolvedSnippet)))
+      | Error(msg) => dispatch(SnippetInsertionError(msg))
+      }
+    });
+  }
 };
 
 let update =
@@ -372,6 +381,7 @@ module Commands = {
       snippetCommandParser,
     );
 };
+
 
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;

@@ -60,6 +60,10 @@ let update:
   ) =>
   (model, outmsg);
 
+module Effects: {
+  let insertSnippet: (~snippet: string) => Isolinear.Effect.t(msg);
+};
+
 module Contributions: {
   let commands: list(Command.t(msg));
   let contextKeys: model => WhenExpr.ContextKeys.t;
