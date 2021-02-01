@@ -275,3 +275,69 @@ let keyword: provider(keywordModel, keywordMsg) = {
   (module
    KeywordCompletionProvider({}));
 };
+
+type snippetModel = list(CompletionItem.t);
+[@deriving show]
+type snippetMsg = unit;
+
+module SnippetCompletionProvider =
+       (())
+       : (S with type msg = snippetMsg and type model = snippetModel) => {
+  type msg = snippetMsg;
+  type model = snippetModel;
+
+  type outmsg =
+    | Nothing
+    | ProviderError(string);
+
+  let handle = () => None;
+
+  let create =
+      (
+        ~config,
+        ~languageConfiguration: LanguageConfiguration.t,
+        ~trigger: Exthost.CompletionContext.t,
+        ~buffer,
+        ~base: string,
+        ~location: CharacterPosition.t,
+      ) => {
+    ignore(trigger);
+    ignore(base);
+    ignore(location);
+
+    if (!CompletionConfig.wordBasedSuggestions.get(config)) {
+      None;
+    } else {
+      // let snippets =
+      //   Feature_Keywords.keywords(~languageConfiguration, ~buffer);
+
+      // TODO: 
+      let snippets = 
+      [("for", "for $1 in $2 { $0 }")]
+      |> List.map(((prefix, snippet)) => {
+        CompletionItem.snippet(
+          ~isFuzzyMatching=base != "",
+          ~prefix,
+          snippet
+        )
+      });
+
+      Some(snippets);
+    };
+  };
+
+  let update = (~isFuzzyMatching as _, _msg: msg, model: model) => (
+    model,
+    Nothing,
+  );
+
+  let items = model => model;
+
+  let sub =
+      (~client as _, ~position as _, ~buffer as _, ~selectedItem as _, _model) => Isolinear.Sub.none;
+};
+
+let snippet: provider(snippetModel, snippetMsg) = {
+  (module
+   SnippetCompletionProvider({}));
+};

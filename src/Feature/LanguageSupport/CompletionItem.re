@@ -64,6 +64,24 @@ let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
   };
 };
 
+let snippet = (~isFuzzyMatching, ~prefix: string, snippet: string) => {
+  chainedCacheId: None,
+  handle: None,
+  label: prefix,
+  kind: Exthost.CompletionKind.Snippet,
+  detail: Some("snippet"),
+  documentation: Some(Exthost.MarkdownString.fromString(snippet)),
+  insertText: snippet,
+  insertTextRules: Exthost.SuggestItem.InsertTextRules.insertAsSnippet,
+  filterText: prefix,
+  sortText: prefix,
+  suggestRange: None,
+  commitCharacters: [],
+  additionalTextEdits: [],
+  command: None,
+  isFuzzyMatching,
+}
+
 let prefer = (itemA, itemB) => {
   switch (itemA.handle, itemB.handle) {
   // Prefer items with a handle - in other words, items that come from the extension host

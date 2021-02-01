@@ -41,6 +41,8 @@ module type S = {
 type provider('model, 'msg) = (module S with
                                   type model = 'model and type msg = 'msg);
 
+// EXTHOST completion provider
+
 type exthostModel;
 
 [@deriving show]
@@ -54,9 +56,20 @@ let exthost:
   ) =>
   provider(exthostModel, exthostMsg);
 
+// KEYWORD completion provider
+
 type keywordModel;
 
 [@deriving show]
 type keywordMsg;
 
 let keyword: provider(keywordModel, keywordMsg);
+
+// SNIPPET completion provider
+
+type snippetModel;
+
+[@deriving show]
+type snippetMsg;
+
+let snippet: provider(snippetModel, snippetMsg);
