@@ -52,6 +52,8 @@ module Schema: {
 
   type resolvedKeybinding;
 
+  let resolvedToString: resolvedKeybinding => string;
+
   let resolve: keybinding => result(resolvedKeybinding, string);
 };
 
