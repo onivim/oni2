@@ -311,16 +311,16 @@ module SnippetCompletionProvider =
       // let snippets =
       //   Feature_Keywords.keywords(~languageConfiguration, ~buffer);
 
-      // TODO: 
-      let snippets = 
-      [("for_", "for $1 in $2 { $0 }")]
-      |> List.map(((prefix, snippet)) => {
-        CompletionItem.snippet(
-          ~isFuzzyMatching=base != "",
-          ~prefix,
-          snippet
-        )
-      });
+      // TODO:
+      let snippets =
+        [("for_", "for $1 in $2 { $0 }")]
+        |> List.map(((prefix, snippet)) => {
+             CompletionItem.snippet(
+               ~isFuzzyMatching=base != "",
+               ~prefix,
+               snippet,
+             )
+           });
 
       Some(snippets);
     };

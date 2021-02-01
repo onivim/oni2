@@ -5,6 +5,7 @@
 open Utility;
 exception TaskFailed;
 module Log = (val Kernel.Log.withNamespace("Oni2.Core.NodeTask"));
+for_for abc in def { ghi }
 
 module Internal = {
   let getFilteredEnvironment = () => {

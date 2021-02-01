@@ -80,7 +80,7 @@ let snippet = (~isFuzzyMatching, ~prefix: string, snippet: string) => {
   additionalTextEdits: [],
   command: None,
   isFuzzyMatching,
-}
+};
 
 let prefer = (itemA, itemB) => {
   switch (itemA.handle, itemB.handle) {
