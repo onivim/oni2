@@ -573,7 +573,7 @@ let update =
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
       | InsertSnippet({meetColumn, snippet, additionalEdits}) =>
-        // prerr_endline("Insert snippet: " ++ snippet);
+         prerr_endline("Insert snippet: " ++ snippet);
         // prerr_endline(
         //   "- Meet column: "
         //   ++ string_of_int(CharacterIndex.toInt(meetColumn)),

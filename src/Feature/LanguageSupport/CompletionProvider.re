@@ -295,9 +295,9 @@ module SnippetCompletionProvider =
   let create =
       (
         ~config,
-        ~languageConfiguration: LanguageConfiguration.t,
+        ~languageConfiguration as _,
         ~trigger: Exthost.CompletionContext.t,
-        ~buffer,
+        ~buffer as _,
         ~base: string,
         ~location: CharacterPosition.t,
       ) => {
