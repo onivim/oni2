@@ -71,18 +71,20 @@ let themesByName = (~filter: string, model) => {
 
 let snippetFilePaths = (~fileType, model) => {
   Exthost.Extension.(
-  model
-  |> pick((manifest: Manifest.t) => {
-       Contributions.(manifest.contributes.snippets)
-     })
-  |> List.flatten
-  |> List.filter(({language, _}: Contributions.Snippet.t) => {
-    switch (language) {
-    | None => true
-    | Some(languageId) => fileType == languageId
-    }
-  })
-  |> List.filter_map(({path, }: Contributions.Snippet.t) => Fp.absoluteCurrentPlatform(path))
+    model
+    |> pick((manifest: Manifest.t) => {
+         Contributions.(manifest.contributes.snippets)
+       })
+    |> List.flatten
+    |> List.filter(({language, _}: Contributions.Snippet.t) => {
+         switch (language) {
+         | None => true
+         | Some(languageId) => fileType == languageId
+         }
+       })
+    |> List.filter_map(({path}: Contributions.Snippet.t) =>
+         Fp.absoluteCurrentPlatform(path)
+       )
   );
 };
 

@@ -303,7 +303,14 @@ module Session = {
       };
 
   let tryInvoke =
-      (~config, ~languageConfiguration, ~trigger, ~buffer, ~location) =>
+      (
+        ~config,
+        ~extensions,
+        ~languageConfiguration,
+        ~trigger,
+        ~buffer,
+        ~location,
+      ) =>
     fun
     | Session({provider, _} as session) as original => {
         let (module ProviderImpl) = provider;
@@ -318,6 +325,7 @@ module Session = {
         |> OptionEx.flatMap((meet: CompletionMeet.t) => {
              ProviderImpl.create(
                ~config,
+               ~extensions,
                ~languageConfiguration,
                ~base=meet.base,
                ~trigger,
@@ -346,7 +354,14 @@ module Session = {
       };
 
   let reinvoke =
-      (~config, ~languageConfiguration, ~trigger, ~buffer, ~activeCursor) =>
+      (
+        ~config,
+        ~extensions,
+        ~languageConfiguration,
+        ~trigger,
+        ~buffer,
+        ~activeCursor,
+      ) =>
     fun
     | Session(previous) as model => {
         let maybeMeet =
@@ -370,6 +385,7 @@ module Session = {
                    // try to complete
                    tryInvoke(
                      ~config,
+                     ~extensions,
                      ~languageConfiguration,
                      ~trigger,
                      ~buffer,
@@ -389,6 +405,7 @@ module Session = {
                | _incomplete =>
                  tryInvoke(
                    ~config,
+                   ~extensions,
                    ~languageConfiguration,
                    ~trigger,
                    ~buffer,
@@ -600,12 +617,21 @@ let cursorMoved =
 };
 
 let invokeCompletion =
-    (~config, ~languageConfiguration, ~trigger, ~buffer, ~activeCursor, model) => {
+    (
+      ~config,
+      ~extensions,
+      ~languageConfiguration,
+      ~trigger,
+      ~buffer,
+      ~activeCursor,
+      model,
+    ) => {
   let providers' =
     model.providers
     |> List.map(
          Session.reinvoke(
            ~config,
+           ~extensions,
            ~languageConfiguration,
            ~trigger,
            ~buffer,
@@ -633,6 +659,7 @@ let refine = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
 let bufferUpdated =
     (
       ~languageConfiguration,
+      ~extensions,
       ~buffer,
       ~config,
       ~activeCursor,
@@ -660,6 +687,7 @@ let bufferUpdated =
     model
     |> invokeCompletion(
          ~config,
+         ~extensions,
          ~languageConfiguration,
          ~trigger,
          ~buffer,
@@ -721,7 +749,15 @@ let tryToMaintainSelected = (~previousIndex, ~previousLabel, model) => {
 };
 
 let update =
-    (~config, ~languageConfiguration, ~maybeBuffer, ~activeCursor, msg, model) => {
+    (
+      ~config,
+      ~extensions,
+      ~languageConfiguration,
+      ~maybeBuffer,
+      ~activeCursor,
+      msg,
+      model,
+    ) => {
   let default = (model, Outmsg.Nothing);
   switch (msg) {
   | Command(TriggerSuggest) =>
@@ -735,6 +771,7 @@ let update =
          (
            invokeCompletion(
              ~config,
+             ~extensions,
              ~languageConfiguration,
              ~trigger,
              ~buffer,

@@ -518,6 +518,7 @@ let update =
       Feature_LanguageSupport.update(
         ~config,
         ~languageConfiguration,
+        ~extensions=state.extensions,
         ~configuration=state.configuration,
         ~maybeBuffer,
         ~maybeSelection=characterSelection,
@@ -1725,6 +1726,7 @@ let update =
            let languageSupport =
              Feature_LanguageSupport.bufferUpdated(
                ~languageConfiguration,
+               ~extensions=state.extensions,
                ~buffer,
                ~config,
                ~activeCursor,

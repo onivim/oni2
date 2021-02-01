@@ -15,6 +15,7 @@ module type S = {
   let create:
     (
       ~config: Oni_Core.Config.resolver,
+      ~extensions: Feature_Extensions.model,
       ~languageConfiguration: LanguageConfiguration.t,
       ~trigger: Exthost.CompletionContext.t,
       ~buffer: Oni_Core.Buffer.t,

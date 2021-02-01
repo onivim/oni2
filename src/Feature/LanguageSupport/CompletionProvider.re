@@ -15,6 +15,7 @@ module type S = {
   let create:
     (
       ~config: Oni_Core.Config.resolver,
+      ~extensions: Feature_Extensions.model,
       ~languageConfiguration: LanguageConfiguration.t,
       ~trigger: Exthost.CompletionContext.t,
       ~buffer: Oni_Core.Buffer.t,
@@ -83,6 +84,7 @@ module ExthostCompletionProvider =
   let create =
       (
         ~config as _,
+        ~extensions as _,
         ~languageConfiguration as _,
         ~trigger as _,
         ~buffer,
@@ -230,6 +232,7 @@ module KeywordCompletionProvider =
   let create =
       (
         ~config,
+        ~extensions as _,
         ~languageConfiguration: LanguageConfiguration.t,
         ~trigger: Exthost.CompletionContext.t,
         ~buffer,
@@ -276,7 +279,11 @@ let keyword: provider(keywordModel, keywordMsg) = {
    KeywordCompletionProvider({}));
 };
 
-type snippetModel = list(CompletionItem.t);
+type snippetModel = {
+  items: list(CompletionItem.t),
+  isComplete: bool,
+  filePaths: list(Fp.t(Fp.absolute)),
+};
 [@deriving show]
 type snippetMsg = unit;
 
@@ -295,9 +302,10 @@ module SnippetCompletionProvider =
   let create =
       (
         ~config,
+        ~extensions,
         ~languageConfiguration as _,
         ~trigger: Exthost.CompletionContext.t,
-        ~buffer as _,
+        ~buffer,
         ~base: string,
         ~location: CharacterPosition.t,
       ) => {
@@ -311,8 +319,16 @@ module SnippetCompletionProvider =
       // let snippets =
       //   Feature_Keywords.keywords(~languageConfiguration, ~buffer);
 
+      let fileType = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
+
+      let snippetFilePaths =
+        Feature_Extensions.snippetFilePaths(~fileType, extensions);
+
+      snippetFilePaths
+      |> List.iter(fp => prerr_endline("FilePath: " ++ Fp.toString(fp)));
+
       // TODO:
-      let snippets =
+      let items =
         [("for", "for $1 in $2 { $0 }")]
         |> List.map(((prefix, snippet)) => {
              CompletionItem.snippet(
@@ -322,7 +338,7 @@ module SnippetCompletionProvider =
              )
            });
 
-      Some(snippets);
+      Some({filePaths: snippetFilePaths, items, isComplete: true});
     };
   };
 
@@ -331,7 +347,7 @@ module SnippetCompletionProvider =
     Nothing,
   );
 
-  let items = model => model;
+  let items = ({items, _}: model) => items;
 
   let sub =
       (~client as _, ~position as _, ~buffer as _, ~selectedItem as _, _model) => Isolinear.Sub.none;
