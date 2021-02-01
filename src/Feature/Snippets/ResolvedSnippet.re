@@ -3,7 +3,6 @@ open Oni_Core;
 open Utility;
 open Snippet;
 
-[@deriving show]
 type snippet = Snippet.t;
 
 module Placeholder = {

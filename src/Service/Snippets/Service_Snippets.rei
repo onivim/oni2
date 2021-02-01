@@ -1,5 +1,3 @@
-open Oni_Core;
-
 module Sub: {
   let snippetFromFiles:
     (
