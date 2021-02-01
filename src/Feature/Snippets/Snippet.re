@@ -1,13 +1,13 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Utility;
-open Snippet_internal;
+open Oni_Core.Snippet;
 
 [@deriving show]
-type raw = list(Snippet_internal.t);
+type raw = list(Oni_Core.Snippet.t);
 
 [@deriving show]
-type snippet = list(Snippet_internal.t);
+type snippet = list(Oni_Core.Snippet.t);
 
 let parse: string => result(raw, string) =
   str => {
@@ -153,7 +153,7 @@ let%test_module "parse" =
    });
 
 module Placeholder = {
-  type t = IntMap.t(list(Snippet_internal.segment));
+  type t = IntMap.t(list(Oni_Core.Snippet.segment));
 
   type positions =
     | Positions(list(BytePosition.t))
@@ -208,12 +208,14 @@ module Placeholder = {
       switch (snippetLine) {
       | [] => false
       | [hd, ...tail] =>
-        switch (hd) {
-        | Text(_) => lineHasPlaceHolder(tail)
-        | Placeholder(_) => true
-        | Choice(_) => true
-        | Variable(_) => lineHasPlaceHolder(tail)
-        }
+        Oni_Core.Snippet.(
+          switch (hd) {
+          | Text(_) => lineHasPlaceHolder(tail)
+          | Placeholder(_) => true
+          | Choice(_) => true
+          | Variable(_) => lineHasPlaceHolder(tail)
+          }
+        )
       };
     };
 
@@ -327,7 +329,7 @@ module Placeholder = {
                    lineNumber: EditorCoreTypes.LineNumber.t,
                    acc: list(position),
                    offset: int,
-                   segments: list(Snippet_internal.segment),
+                   segments: list(Oni_Core.Snippet.segment),
                  ) => {
            switch (segments) {
            | [] => (acc, offset)
@@ -887,7 +889,7 @@ let%test_module "updatePlaceholder" =
    });
 
 let toLines = (resolvedSnippet: snippet) => {
-  let rec lineToString = (acc, line: list(Snippet_internal.segment)) =>
+  let rec lineToString = (acc, line: list(Oni_Core.Snippet.segment)) =>
     switch (line) {
     | [] => acc
     | [hd, ...tail] =>

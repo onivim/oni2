@@ -1,9 +1,9 @@
+module OrigSnippet = Snippet;
 open Oni_Core;
 open Utility;
 open EditorCoreTypes;
 open Oniguruma;
-
-module Snippet = Snippet;
+module Snippet = OrigSnippet;
 
 let placeholderRegex = OnigRegExp.create("\\$\\{[0-9]+.*\\}|\\$[0-9]*");
 

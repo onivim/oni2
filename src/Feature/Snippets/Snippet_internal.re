@@ -1,21 +1,6 @@
-[@deriving show]
-type segment =
-  | Text(string)
-  | Placeholder({
-      index: int,
-      contents: list(segment),
-    })
-  | Choice({
-      index: int,
-      choices: list(string),
-    })
-  | Variable({
-      name: string,
-      default: option(string),
-    });
+open Oni_Core.Snippet;
 
-[@deriving show]
-type t = list(segment);
+type t = Oni_Core.Snippet.t;
 
 let toString = segment => {
   segment

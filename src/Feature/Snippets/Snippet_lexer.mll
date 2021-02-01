@@ -1,4 +1,5 @@
 {
+	open Oni_Core.Snippet
 	open Snippet_parser
 
 	exception Error
