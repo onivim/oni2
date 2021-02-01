@@ -580,10 +580,9 @@ let update =
         // );
         // TODO: Full snippet integration!
         // TODO: Bring additional text edits in
-        // TODO: Handle meet column
         (
           state,
-          Feature_Snippets.Effects.insertSnippet(~snippet)
+          Feature_Snippets.Effects.insertSnippet(~meetColumn, ~snippet)
           |> Isolinear.Effect.map(msg => Snippets(msg)),
         );
       | OpenFile({filePath, location}) => (

@@ -362,7 +362,7 @@ module Session = {
 type command =
   | JumpToNextPlaceholder
   | JumpToPreviousPlaceholder
-  | InsertSnippet([@opaque] Snippet.t);
+  | InsertSnippet({ snippet: [@opaque] Snippet.t, maybeMeetColumn: option(CharacterIndex.t)});
 
 [@deriving show]
 type msg =
@@ -405,6 +405,7 @@ type outmsg =
 module Effects = {
   let startSession =
       (
+        ~maybeMeetColumn: option(CharacterIndex.t),
         ~resolverFactory,
         ~buffer,
         ~editorId,
@@ -421,6 +422,25 @@ module Effects = {
 
     let (prefix, postfix) =
       Utility.StringEx.splitAt(~byte=ByteIndex.toInt(position.byte), line);
+
+    // Handle the 'meet column' - if we a meet column was provided,
+    // as in the case of completion, we may need to remove some characters
+    // from the prefix.
+    let prefix = switch(maybeMeetColumn) {
+    | None => prefix
+    | Some(column) => 
+      // First, see how many characters we're working with...
+      let characterCount = Zed_utf8.length(prefix);
+
+      let columnIdx = CharacterIndex.toInt(column);
+      if (columnIdx == 0) {
+        ""
+      } else if (columnIdx >= characterCount) {
+        prefix
+      } else {
+        Zed_utf8.sub(prefix, 0, columnIdx);
+      }
+    };
 
     let resolvedSnippet =
       Snippet.resolve(
@@ -454,12 +474,12 @@ module Effects = {
     };
   };
 
-  let insertSnippet = (~snippet: string) => {
+  let insertSnippet = (~meetColumn: CharacterIndex.t, ~snippet: string) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Snippets.insertSnippet", dispatch => {
       switch (Snippet.parse(snippet)) {
       | Ok(resolvedSnippet) =>
-        dispatch(Command(InsertSnippet(resolvedSnippet)))
+        dispatch(Command(InsertSnippet({ snippet: resolvedSnippet, maybeMeetColumn: Some(meetColumn) })))
       | Error(msg) => dispatch(SnippetInsertionError(msg))
       }
     });
@@ -549,11 +569,12 @@ let update =
        })
     |> Option.value(~default=(model, Nothing))
 
-  | Command(InsertSnippet(snippet)) =>
+  | Command(InsertSnippet({ snippet, maybeMeetColumn })) =>
     let eff =
       maybeBuffer
       |> Option.map(buffer => {
            Effects.startSession(
+             ~maybeMeetColumn,
              ~resolverFactory,
              ~buffer,
              ~editorId,
@@ -612,7 +633,7 @@ module Commands = {
     let snippetResult = json |> decode_value(decode);
 
     switch (snippetResult) {
-    | Ok(snippet) => Command(InsertSnippet(snippet))
+    | Ok(snippet) => Command(InsertSnippet({snippet, maybeMeetColumn: None }))
     | Error(msg) => SnippetInsertionError(string_of_error(msg))
     };
   };

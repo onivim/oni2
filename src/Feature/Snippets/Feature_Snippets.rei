@@ -61,7 +61,7 @@ let update:
   (model, outmsg);
 
 module Effects: {
-  let insertSnippet: (~snippet: string) => Isolinear.Effect.t(msg);
+  let insertSnippet: (~meetColumn: CharacterIndex.t, ~snippet: string) => Isolinear.Effect.t(msg);
 };
 
 module Contributions: {
