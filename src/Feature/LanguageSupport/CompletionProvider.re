@@ -313,7 +313,7 @@ module SnippetCompletionProvider =
 
       // TODO:
       let snippets =
-        [("for_", "for $1 in $2 { $0 }")]
+        [("for", "for $1 in $2 { $0 }")]
         |> List.map(((prefix, snippet)) => {
              CompletionItem.snippet(
                ~isFuzzyMatching=base != "",

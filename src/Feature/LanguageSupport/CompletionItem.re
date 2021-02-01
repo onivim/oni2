@@ -90,7 +90,11 @@ let prefer = (itemA, itemB) => {
   // They both have a handle, or neither does... use sort text to break the tie
   | (Some(_), Some(_))
   | (None, None) =>
-    if (String.compare(itemA.sortText, itemB.sortText) <= 0) {
+    if (String.compare(
+          String.uppercase_ascii(itemA.sortText),
+          String.uppercase_ascii(itemB.sortText),
+        )
+        <= 0) {
       (-1);
     } else {
       1;

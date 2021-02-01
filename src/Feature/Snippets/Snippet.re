@@ -144,13 +144,12 @@ let%test_module "parse" =
      };
 
      let%test "placeholder with spaces" = {
-      parse("${1:int a}") == Ok([[
-        Placeholder({index: 1, contents: [Text("int a")]})
-      ]]);
-     }
+       parse("${1:int a}")
+       == Ok([[Placeholder({index: 1, contents: [Text("int a")]})]]);
+     };
      let%test "comma in snippet" = {
-      parse("a, b") == Ok([[Text("a, b")]])
-     }
+       parse("a, b") == Ok([[Text("a, b")]]);
+     };
    });
 
 module Placeholder = {

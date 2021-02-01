@@ -572,19 +572,13 @@ let update =
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
-      | InsertSnippet({meetColumn, snippet, additionalEdits}) =>
-         prerr_endline("Insert snippet: " ++ snippet);
-        // prerr_endline(
-        //   "- Meet column: "
-        //   ++ string_of_int(CharacterIndex.toInt(meetColumn)),
-        // );
-        // TODO: Full snippet integration!
-        // TODO: Bring additional text edits in
+      | InsertSnippet({meetColumn, snippet, additionalEdits: _ /* TODO */}) =>
+        // TODO: Gate via experimental feature
         (
           state,
           Feature_Snippets.Effects.insertSnippet(~meetColumn, ~snippet)
           |> Isolinear.Effect.map(msg => Snippets(msg)),
-        );
+        )
       | OpenFile({filePath, location}) => (
           state,
           Internal.openFileEffect(~position=location, filePath),
