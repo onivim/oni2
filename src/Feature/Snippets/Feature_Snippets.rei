@@ -18,24 +18,6 @@ type outmsg =
   | SetSelections(list(ByteRange.t))
   | Nothing;
 
-module Snippet: {
-  type raw;
-
-  let parse: string => result(raw, string);
-
-  type t;
-
-  let resolve:
-    (
-      ~getVariable: string => option(string),
-      ~prefix: string,
-      ~postfix: string,
-      ~indentationSettings: IndentationSettings.t,
-      raw
-    ) =>
-    t;
-};
-
 module Session: {
   type t;
 

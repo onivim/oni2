@@ -10,7 +10,7 @@
 %token <string> VARIABLE
 %token NEWLINE
 
-%start <Snippet_internal.t list> main
+%start <Snippet_internal.t> main
 
 %%
 
@@ -30,13 +30,13 @@ expr_nested:
 | DOLLAR; num = NUMBER { Placeholder({index = num; contents = [] }) } 
 | DOLLAR; LB; num = NUMBER; RB{ Placeholder({ index = num; contents = []}) }
 | DOLLAR; LB; num = NUMBER; COLON; e = list(expr_nested); RB{ Placeholder({ index = num; contents = e}) }
-| DOLLAR; LB; num = NUMBER; PIPE; firstChoice = string; additionalChoices = list(additional_choice); PIPE; RB { Oni_Core.Snippet.Choice({index = num; choices = [firstChoice] @
+| DOLLAR; LB; num = NUMBER; PIPE; firstChoice = string; additionalChoices = list(additional_choice); PIPE; RB { Snippet_internal.Choice({index = num; choices = [firstChoice] @
 additionalChoices }) }
 | DOLLAR; var = VARIABLE; { Variable({name = var; default = None }) }
 | DOLLAR; LB; var = VARIABLE; COLON; default = string; RB { Variable({name = var; default = Some(default) }) }
 | text = TEXT { Text(text) }
 | numberAsText = NUMBER { Text(string_of_int(numberAsText)) }
-| variableAsText = VARIABLE { Oni_Core.Snippet.Text(variableAsText) }
+| variableAsText = VARIABLE { Snippet_internal.Text(variableAsText) }
 
 
 additional_choice:

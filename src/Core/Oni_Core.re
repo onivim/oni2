@@ -49,7 +49,6 @@ module Decoration = Decoration;
 module Persistence = Persistence;
 module Setup = Setup;
 module ShellUtility = ShellUtility;
-module Snippet = Snippet;
 module StringMap = Kernel.StringMap;
 module StringSet = Kernel.StringSet;
 module Subscription = Subscription;

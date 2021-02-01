@@ -15,4 +15,6 @@ type segment =
     });
 
 [@deriving show]
-type t = list(segment);
+type t = list(list(segment));
+
+let parse: string => result(t, string);

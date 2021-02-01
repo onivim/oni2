@@ -1,9 +1,7 @@
-module OrigSnippet = Snippet;
 open Oni_Core;
 open Utility;
 open EditorCoreTypes;
 open Oniguruma;
-module Snippet = OrigSnippet;
 
 let placeholderRegex = OnigRegExp.create("\\$\\{[0-9]+.*\\}|\\$[0-9]*");
 
@@ -47,7 +45,7 @@ module Session = {
   };
   type t = {
     editorId: int,
-    snippet: Snippet.t,
+    snippet: ResolvedSnippet.t,
     startLine: LineNumber.t,
     lineCount: int,
     currentPlaceholder: option(placeholder),
@@ -58,18 +56,19 @@ module Session = {
     EditorCoreTypes.LineNumber.(startLine + lineCount);
 
   let start = (~editorId, ~position: BytePosition.t, ~snippet) => {
-    let lines = Snippet.toLines(snippet);
-    let placeholders = Snippet.placeholders(snippet);
-    let currentPlaceholder = Snippet.Placeholder.initial(placeholders);
+    let lines = ResolvedSnippet.toLines(snippet);
+    let placeholders = ResolvedSnippet.placeholders(snippet);
+    let currentPlaceholder =
+      ResolvedSnippet.Placeholder.initial(placeholders);
     let maybePlaceholderLine =
-      Snippet.getFirstLineIndexWithPlaceholder(
+      ResolvedSnippet.getFirstLineIndexWithPlaceholder(
         ~index=currentPlaceholder,
         snippet,
       );
     let maybePlaceholderCount =
       maybePlaceholderLine
       |> Option.map(line => {
-           Snippet.getPlaceholderCountForLine(
+           ResolvedSnippet.getPlaceholderCountForLine(
              ~index=currentPlaceholder,
              ~line,
              snippet,
@@ -89,7 +88,7 @@ module Session = {
         maybePlaceholderCount,
       );
 
-    let lineCount = List.length(snippet);
+    let lineCount = ResolvedSnippet.lineCount(snippet);
     {
       editorId,
       snippet,
@@ -123,10 +122,12 @@ module Session = {
     };
 
     switch (positions) {
-    | Snippet.Placeholder.Ranges(ranges) =>
-      Snippet.Placeholder.Ranges(ranges |> List.map(remapRange))
-    | Snippet.Placeholder.Positions(positions) =>
-      Snippet.Placeholder.Positions(positions |> List.map(remapPosition))
+    | ResolvedSnippet.Placeholder.Ranges(ranges) =>
+      ResolvedSnippet.Placeholder.Ranges(ranges |> List.map(remapRange))
+    | ResolvedSnippet.Placeholder.Positions(positions) =>
+      ResolvedSnippet.Placeholder.Positions(
+        positions |> List.map(remapPosition),
+      )
     };
   };
 
@@ -164,18 +165,18 @@ module Session = {
              // - if there are two placeholders, there will be twice the delta.
 
              let placeholderCount =
-               Snippet.getPlaceholderCountForLine(
+               ResolvedSnippet.getPlaceholderCountForLine(
                  ~index=placeholderIndex,
                  ~line=snippetLineIndex,
                  snippet,
                );
              if (placeholderCount > 0) {
                let normalizedDelta = delta / placeholderCount;
-               let placeholders = Snippet.placeholders(snippet);
+               let placeholders = ResolvedSnippet.placeholders(snippet);
 
                // Now... we need to find the original range to get the
                // exact substring text.
-               Snippet.Placeholder.positions(
+               ResolvedSnippet.Placeholder.positions(
                  ~placeholders,
                  ~index=placeholderIndex,
                  snippet,
@@ -186,7 +187,7 @@ module Session = {
                         snippetLineIndex,
                       );
                     switch (positions) {
-                    | Snippet.Placeholder.Positions(_) =>
+                    | ResolvedSnippet.Placeholder.Positions(_) =>
                       Some(
                         ByteRange.{
                           start: {
@@ -199,7 +200,7 @@ module Session = {
                           },
                         },
                       )
-                    | Snippet.Placeholder.Ranges(ranges) =>
+                    | ResolvedSnippet.Placeholder.Ranges(ranges) =>
                       let rangesForLine =
                         ranges
                         |> List.filter((range: ByteRange.t) =>
@@ -235,7 +236,7 @@ module Session = {
                   })
                |> Option.map(newPlaceholderText => {
                     let snippet' =
-                      Snippet.updatePlaceholder(
+                      ResolvedSnippet.updatePlaceholder(
                         ~index=placeholderIndex,
                         ~text=newPlaceholderText,
                         snippet,
@@ -262,28 +263,28 @@ module Session = {
     synchronize(~buffer, session)
     |> Option.map(session => {
          let {snippet, currentPlaceholder, _} = session;
-         let placeholders = Snippet.placeholders(snippet);
+         let placeholders = ResolvedSnippet.placeholders(snippet);
 
          let currentPlaceholder': option(placeholder) =
            currentPlaceholder
            |> OptionEx.flatMap(placeholder => {
                 let newPlaceholder =
-                  Snippet.Placeholder.next(
+                  ResolvedSnippet.Placeholder.next(
                     ~placeholder=placeholder.placeholderIndex,
                     placeholders,
                   );
-                Snippet.getFirstLineIndexWithPlaceholder(
+                ResolvedSnippet.getFirstLineIndexWithPlaceholder(
                   ~index=newPlaceholder,
                   snippet,
                 )
                 |> Option.map(line => {
                      let count =
-                       Snippet.getPlaceholderCountForLine(
+                       ResolvedSnippet.getPlaceholderCountForLine(
                          ~index=newPlaceholder,
                          ~line,
                          snippet,
                        );
-                     let lines = Snippet.toLines(snippet);
+                     let lines = ResolvedSnippet.toLines(snippet);
                      {
                        placeholderIndex: newPlaceholder,
                        snippetLineIndex: line,
@@ -300,28 +301,28 @@ module Session = {
     synchronize(~buffer, session)
     |> Option.map(session => {
          let {snippet, currentPlaceholder, _} = session;
-         let placeholders = Snippet.placeholders(snippet);
+         let placeholders = ResolvedSnippet.placeholders(snippet);
 
          let currentPlaceholder': option(placeholder) =
            currentPlaceholder
            |> OptionEx.flatMap(placeholder => {
                 let newPlaceholder =
-                  Snippet.Placeholder.previous(
+                  ResolvedSnippet.Placeholder.previous(
                     ~placeholder=placeholder.placeholderIndex,
                     placeholders,
                   );
-                Snippet.getFirstLineIndexWithPlaceholder(
+                ResolvedSnippet.getFirstLineIndexWithPlaceholder(
                   ~index=newPlaceholder,
                   snippet,
                 )
                 |> Option.map(line => {
                      let count =
-                       Snippet.getPlaceholderCountForLine(
+                       ResolvedSnippet.getPlaceholderCountForLine(
                          ~index=newPlaceholder,
                          ~line,
                          snippet,
                        );
-                     let lines = Snippet.toLines(snippet);
+                     let lines = ResolvedSnippet.toLines(snippet);
                      {
                        placeholderIndex: newPlaceholder,
                        snippetLineIndex: line,
@@ -335,11 +336,11 @@ module Session = {
   };
 
   let getPlaceholderPositions = ({snippet, currentPlaceholder, startLine, _}) => {
-    let placeholders = Snippet.placeholders(snippet);
+    let placeholders = ResolvedSnippet.placeholders(snippet);
     currentPlaceholder
     |> Option.map(({placeholderIndex, _}) => placeholderIndex)
     |> OptionEx.flatMap(placeholderIndex => {
-         Snippet.Placeholder.positions(
+         ResolvedSnippet.Placeholder.positions(
            ~placeholders,
            ~index=placeholderIndex,
            snippet,
@@ -349,11 +350,11 @@ module Session = {
   };
 
   let isComplete = ({snippet, currentPlaceholder, _}) => {
-    let placeholders = Snippet.placeholders(snippet);
+    let placeholders = ResolvedSnippet.placeholders(snippet);
     switch (currentPlaceholder) {
     | None => true
     | Some({placeholderIndex, _}) =>
-      placeholderIndex == Snippet.Placeholder.final(placeholders)
+      placeholderIndex == ResolvedSnippet.Placeholder.final(placeholders)
     };
   };
 };
@@ -413,7 +414,7 @@ module Effects = {
         ~buffer,
         ~editorId,
         ~position: BytePosition.t,
-        ~snippet: Snippet.raw,
+        ~snippet: Snippet.t,
       ) => {
     let bufferId = Oni_Core.Buffer.getId(buffer);
     let indentationSettings = Oni_Core.Buffer.getIndentation(buffer);
@@ -447,7 +448,7 @@ module Effects = {
       };
 
     let resolvedSnippet =
-      Snippet.resolve(
+      ResolvedSnippet.resolve(
         ~getVariable=resolverFactory(),
         ~indentationSettings,
         ~prefix,
@@ -455,7 +456,7 @@ module Effects = {
         snippet,
       );
 
-    let lines = Snippet.toLines(resolvedSnippet);
+    let lines = ResolvedSnippet.toLines(resolvedSnippet);
 
     if (Array.length(lines) > 0) {
       let session =
@@ -509,8 +510,9 @@ let update =
     |> Option.map(positions => {
          let outmsg =
            switch (positions) {
-           | Snippet.Placeholder.Ranges(ranges) => SetSelections(ranges)
-           | Snippet.Placeholder.Positions(positions) =>
+           | ResolvedSnippet.Placeholder.Ranges(ranges) =>
+             SetSelections(ranges)
+           | ResolvedSnippet.Placeholder.Positions(positions) =>
              SetCursors(positions)
            };
 
@@ -535,9 +537,9 @@ let update =
                 |> Session.getPlaceholderPositions
                 |> Option.map(positions => {
                      switch (positions) {
-                     | Snippet.Placeholder.Ranges(ranges) =>
+                     | ResolvedSnippet.Placeholder.Ranges(ranges) =>
                        SetSelections(ranges)
-                     | Snippet.Placeholder.Positions(positions) =>
+                     | ResolvedSnippet.Placeholder.Positions(positions) =>
                        SetCursors(positions)
                      }
                    })
@@ -563,9 +565,9 @@ let update =
                 |> Session.getPlaceholderPositions
                 |> Option.map(positions => {
                      switch (positions) {
-                     | Snippet.Placeholder.Ranges(ranges) =>
+                     | ResolvedSnippet.Placeholder.Ranges(ranges) =>
                        SetSelections(ranges)
-                     | Snippet.Placeholder.Positions(positions) =>
+                     | ResolvedSnippet.Placeholder.Positions(positions) =>
                        SetCursors(positions)
                      }
                    })
