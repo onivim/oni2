@@ -85,3 +85,9 @@ The terminal font can be configured independently from the editor font, via the 
 
 The default shell and command will be used when running a terminal via `:term`, but can be overrided by passing a command to `:term`.
 
+### Environment
+
+Some special environment variables are set for the embedded terminal:
+
+- `ONIVIM_TERMINAL` - set to the current version of the editor
+
