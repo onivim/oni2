@@ -316,16 +316,10 @@ module SnippetCompletionProvider =
     if (!CompletionConfig.wordBasedSuggestions.get(config)) {
       None;
     } else {
-      // let snippets =
-      //   Feature_Keywords.keywords(~languageConfiguration, ~buffer);
-
       let fileType = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
       let snippetFilePaths =
         Feature_Extensions.snippetFilePaths(~fileType, extensions);
-
-      snippetFilePaths
-      |> List.iter(fp => prerr_endline("FilePath: " ++ Fp.toString(fp)));
 
       // TODO:
       let items =

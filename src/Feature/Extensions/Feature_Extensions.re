@@ -82,7 +82,7 @@ let snippetFilePaths = (~fileType, model) => {
          | Some(languageId) => fileType == languageId
          }
        })
-    |> List.filter_map(({path}: Contributions.Snippet.t) =>
+    |> List.filter_map(({path, _}: Contributions.Snippet.t) =>
          Fp.absoluteCurrentPlatform(path)
        )
   );
