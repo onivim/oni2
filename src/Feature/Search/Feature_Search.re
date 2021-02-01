@@ -398,4 +398,5 @@ module Contributions = {
 
     [inputTextKeys, vimNavKeys, vimTreeKeys] |> unionMany;
   };
+  let configuration = Configuration.[searchExclude.spec, filesExclude.spec];
 };

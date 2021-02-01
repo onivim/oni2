@@ -12,7 +12,8 @@ type command =
 [@deriving show]
 type providerMsg =
   | Exthost(CompletionProvider.exthostMsg)
-  | Keyword(CompletionProvider.keywordMsg);
+  | Keyword(CompletionProvider.keywordMsg)
+  | Snippet(CompletionProvider.snippetMsg);
 
 [@deriving show]
 type msg =
@@ -438,12 +439,20 @@ let initial = {
   providers: [
     Session.create(
       ~triggerCharacters=[],
-      // Remove from command
       ~provider=CompletionProvider.keyword,
       ~mapper=msg => Keyword(msg),
       ~revMapper=
         fun
         | Keyword(msg) => Some(msg)
+        | _ => None,
+    ),
+    Session.create(
+      ~triggerCharacters=[],
+      ~provider=CompletionProvider.snippet,
+      ~mapper=msg => Snippet(msg),
+      ~revMapper=
+        fun
+        | Snippet(msg) => Some(msg)
         | _ => None,
     ),
   ],
@@ -1064,7 +1073,7 @@ module View = {
     | TypeParameter => Codicon.symbolTypeParameter
     | User => Codicon.symbolMisc
     | Issue => Codicon.symbolMisc
-    | Snippet => Codicon.symbolText;
+    | Snippet => Codicon.symbolSnippet;
 
   let kindToColor = (colors: Oni_Core.ColorTheme.Colors.t) =>
     Feature_Theme.Colors.SymbolIcon.(

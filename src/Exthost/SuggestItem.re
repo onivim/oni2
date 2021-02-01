@@ -14,6 +14,8 @@ module InsertTextRules = {
 
   let none = [];
 
+  let insertAsSnippet = [InsertAsSnippet];
+
   let ofInt = ruleAsInt => {
     let keepWhitespace = ruleAsInt land 0b001 == 0b001;
     let insertAsSnippet = ruleAsInt land 0b100 == 0b100;

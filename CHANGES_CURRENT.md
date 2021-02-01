@@ -1,7 +1,7 @@
 ### Features 
 
 - #3024 - Editor: Snippet Support - Multi-select handler
-- #3047, #3052, #3056, #3059, #3061 - Editor: Snippet Feature
+- #3047, #3052, #3056, #3059, #3061, #3064 - Editor: Snippet Feature
 
 ### Bug Fixes
 
@@ -20,6 +20,7 @@
 - #3052 - Input: Fix key being 'eaten' after executing remapped key (fixes #3048)
 - #3060 - Snippets: Fix parser handling of stand-alone curly braces
 - #3044 - Search: Add `search.exclude` configuration option (fixes #2115 - thanks @joseeMDS!)
+- #3066 - Vim / Input: Fix ':map' condition (fixes #3049)
 
 ### Performance
 

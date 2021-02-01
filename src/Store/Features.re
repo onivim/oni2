@@ -572,20 +572,13 @@ let update =
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
-      | InsertSnippet({meetColumn, snippet, additionalEdits}) =>
-        // TODO: Full snippet integration!
-        let additionalEdits =
-          additionalEdits |> List.map(exthostEditToVimEdit);
-        let insertText = Feature_Snippets.snippetToInsert(~snippet);
+      | InsertSnippet({meetColumn, snippet, additionalEdits: _ /* TODO */}) =>
+        // TODO: Gate via experimental feature
         (
           state,
-          Feature_Vim.Effects.applyCompletion(
-            ~additionalEdits,
-            ~meetColumn,
-            ~insertText,
-          )
-          |> Isolinear.Effect.map(msg => Vim(msg)),
-        );
+          Feature_Snippets.Effects.insertSnippet(~meetColumn, ~snippet)
+          |> Isolinear.Effect.map(msg => Snippets(msg)),
+        )
       | OpenFile({filePath, location}) => (
           state,
           Internal.openFileEffect(~position=location, filePath),
