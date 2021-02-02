@@ -314,7 +314,11 @@ module SnippetCompletionProvider =
     ignore(base);
     ignore(location);
 
-    if (!CompletionConfig.wordBasedSuggestions.get(config)) {
+    if (!
+          Feature_Configuration.GlobalConfiguration.Experimental.Snippets.enabled.
+            get(
+            config,
+          )) {
       None;
     } else {
       let fileType = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
