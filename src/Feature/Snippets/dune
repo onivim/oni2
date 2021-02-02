@@ -1,9 +1,3 @@
-(ocamllex
- (modules Snippet_lexer))
-
-(menhir
- (modules Snippet_parser))
-
 (library
  (name Feature_Snippets)
  (public_name Oni2.feature.snippets)

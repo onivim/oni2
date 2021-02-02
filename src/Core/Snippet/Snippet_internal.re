@@ -15,7 +15,10 @@ type segment =
     });
 
 [@deriving show]
-type t = list(segment);
+type line = list(segment);
+
+[@deriving show]
+type t = list(line);
 
 let toString = segment => {
   segment
