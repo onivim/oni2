@@ -21,6 +21,7 @@
 - #3060 - Snippets: Fix parser handling of stand-alone curly braces
 - #3044 - Search: Add `search.exclude` configuration option (fixes #2115 - thanks @joseeMDS!)
 - #3066 - Vim / Input: Fix ':map' condition (fixes #3049)
+- #3076 - Terminal: Add `ONIVIM_TERMINAL` environment variable (fixes #3068)
 
 ### Performance
 
