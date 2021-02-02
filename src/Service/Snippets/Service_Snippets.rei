@@ -1,6 +1,7 @@
 module SnippetWithMetadata: {
+  [@deriving show]
   type t = {
-    snippet: Snippet.t,
+    snippet: string,
     prefix: string,
     description: string,
   };
@@ -9,8 +10,9 @@ module SnippetWithMetadata: {
 module Sub: {
   let snippetFromFiles:
     (
+      ~uniqueId: string,
       ~filePaths: list(Fp.t(Fp.absolute)),
-      result(list(SnippetWithMetadata.t), string) => 'msg
+      list(SnippetWithMetadata.t) => 'msg
     ) =>
     Isolinear.Sub.t('msg);
 };

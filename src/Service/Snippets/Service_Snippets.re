@@ -1,8 +1,12 @@
 open Oni_Core;
+open Utility;
+
+module Log = (val Log.withNamespace("Service_Snippets"));
 
 module SnippetWithMetadata = {
+  [@deriving show]
   type t = {
-    snippet: Snippet.t,
+    snippet: string,
     prefix: string,
     description: string,
   };
@@ -13,20 +17,12 @@ module Decode = {
   open Json.Decode;
 
   let snippetLines =
-    list(string)
-    |> and_then(lines => {
-         let parseResult = lines |> String.concat("\n") |> Snippet.parse;
-
-         switch (parseResult) {
-         | Ok(snippet) => succeed(snippet)
-         | Error(msg) => fail(msg)
-         };
-       });
+    list(string) |> map(lines => {lines |> String.concat("\n")});
 
   module PrefixAndBody = {
     type t = {
       prefix: option(string),
-      body: Snippet.t,
+      body: string,
     };
 
     let decode =
@@ -60,10 +56,15 @@ module Cache = {
   let fileToPromise: Hashtbl.t(string, Lwt.t(list(SnippetWithMetadata.t))) =
     Hashtbl.create(16);
 
-  let _get = (filePath: string) => {
+  let get = (filePath: string) => {
     switch (Hashtbl.find_opt(fileToPromise, filePath)) {
-    | Some(promise) => promise
+    | Some(promise) =>
+      Log.tracef(m => m("Cache.get - using cached result for %s", filePath));
+      promise;
     | None =>
+      Log.tracef(m =>
+        m("Cache.get - no cached result for %s, loading...", filePath)
+      );
       let promise =
         Lwt.bind(
           Service_OS.Api.readFile(filePath),
@@ -85,5 +86,56 @@ module Cache = {
 };
 
 module Sub = {
-  let snippetFromFiles = (~filePaths as _, _toMsg) => Isolinear.Sub.none;
+  type snippetFileParams = {
+    uniqueId: string,
+    filePaths: list(Fp.t(Fp.absolute)),
+  };
+  module SnippetFileSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = list(SnippetWithMetadata.t);
+      type nonrec params = snippetFileParams;
+
+      type state = unit;
+
+      let name = "Service_Snippet.SnippetFileSubscription";
+      let id = ({uniqueId, _}) => uniqueId;
+
+      let init = (~params, ~dispatch) => {
+        // Load all files
+        // Coalesce all promises
+        let promises =
+          params.filePaths |> List.map(Fp.toString) |> List.map(Cache.get);
+
+        let join = (a, b) => a @ b;
+        let promise = LwtEx.some(~default=[], join, promises);
+
+        Lwt.on_success(
+          promise,
+          snippets => {
+            Log.infof(m => m("Loaded %d snippets", List.length(snippets)));
+            dispatch(snippets);
+          },
+        );
+
+        Lwt.on_failure(
+          promise,
+          exn => {
+            Log.errorf(m =>
+              m("Error loading snippets: %s", Printexc.to_string(exn))
+            );
+            dispatch([]);
+          },
+        );
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+  let snippetFromFiles = (~uniqueId, ~filePaths, toMsg) => {
+    SnippetFileSubscription.create({uniqueId, filePaths})
+    |> Isolinear.Sub.map(toMsg);
+  };
 };

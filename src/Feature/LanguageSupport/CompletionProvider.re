@@ -285,7 +285,8 @@ type snippetModel = {
   filePaths: list(Fp.t(Fp.absolute)),
 };
 [@deriving show]
-type snippetMsg = unit;
+type snippetMsg =
+  | SnippetsAvailable(list(Service_Snippets.SnippetWithMetadata.t));
 
 module SnippetCompletionProvider =
        (())
@@ -321,30 +322,38 @@ module SnippetCompletionProvider =
       let snippetFilePaths =
         Feature_Extensions.snippetFilePaths(~fileType, extensions);
 
-      // TODO:
-      let items =
-        [("for", "for $1 in $2 { $0 }")]
-        |> List.map(((prefix, snippet)) => {
-             CompletionItem.snippet(
-               ~isFuzzyMatching=base != "",
-               ~prefix,
-               snippet,
-             )
-           });
-
-      Some({filePaths: snippetFilePaths, items, isComplete: true});
+      Some({filePaths: snippetFilePaths, items: [], isComplete: false});
     };
   };
 
-  let update = (~isFuzzyMatching as _, _msg: msg, model: model) => (
-    model,
-    Nothing,
-  );
+  let update = (~isFuzzyMatching, msg, model: model) => {
+    Service_Snippets.(
+      switch (msg) {
+      | SnippetsAvailable(snippets) =>
+        let items =
+          snippets
+          |> List.map((snippet: SnippetWithMetadata.t) => {
+               CompletionItem.snippet(
+                 ~isFuzzyMatching,
+                 ~prefix=snippet.prefix,
+                 snippet.snippet,
+               )
+             });
+        ({...model, items, isComplete: true}, Nothing);
+      }
+    );
+  };
 
   let items = ({items, _}: model) => items;
 
   let sub =
-      (~client as _, ~position as _, ~buffer as _, ~selectedItem as _, _model) => Isolinear.Sub.none;
+      (~client as _, ~position as _, ~buffer as _, ~selectedItem as _, model) => {
+    let filePaths = model.filePaths;
+    let uniqueId = "Feature_LanguageSupport.SnippetCompletionProvider";
+
+    let toMsg = snippets => SnippetsAvailable(snippets);
+    Service_Snippets.Sub.snippetFromFiles(~uniqueId, ~filePaths, toMsg);
+  };
 };
 
 let snippet: provider(snippetModel, snippetMsg) = {
