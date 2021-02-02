@@ -141,7 +141,7 @@ module Configuration: {
   let fontSize: Config.Schema.setting(option(float));
   // let fontSmoothing: Config.Schema.setting(option(ConfigurationValues.fontSmoothing));
   let fontWeight: Config.Schema.setting(option(Revery.Font.Weight.t));
-  let fontLigatures: Config.Schema.setting(option(bool));
+  let fontLigatures: Config.Schema.setting(option(FontLigatures.t));
 };
 
 // CONTRIBUTIONS

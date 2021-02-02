@@ -275,12 +275,8 @@ let start =
     let fontFamily = Feature_Editor.Configuration.fontFamily.get(config);
     let fontSize = Feature_Editor.Configuration.fontSize.get(config);
     let fontWeight = Feature_Editor.Configuration.fontWeight.get(config);
-
     let fontLigatures =
-      Oni_Core.Configuration.getValue(
-        c => c.editorFontLigatures,
-        state.configuration,
-      );
+      Feature_Editor.Configuration.fontLigatures.get(config);
 
     let fontSmoothing =
       Oni_Core.Configuration.getValue(
@@ -299,19 +295,21 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.EditorFont(msg));
 
-    let terminalFontFamily = Feature_Terminal.Configuration.fontFamily.get(config)
-    |> Option.value(~default=fontFamily);
+    let terminalFontFamily =
+      Feature_Terminal.Configuration.fontFamily.get(config)
+      |> Option.value(~default=fontFamily);
 
-    let terminalFontSize = Feature_Terminal.Configuration.fontSize.get(config)
-    |> Option.value(~default=fontSize);
+    let terminalFontSize =
+      Feature_Terminal.Configuration.fontSize.get(config)
+      |> Option.value(~default=fontSize);
 
-    let terminalFontWeight = Feature_Terminal.Configuration.fontWeight.get(config)
-    |> Option.value(~default=fontWeight);
+    let terminalFontWeight =
+      Feature_Terminal.Configuration.fontWeight.get(config)
+      |> Option.value(~default=fontWeight);
 
-    // TODO:
-    // let terminalFontLigatures = Feature_Terminal.Configuration.fontLigatures.get(config)
-    // |> Option.value(~default=fontLigatures);
-
+    let terminalFontLigatures =
+      Feature_Terminal.Configuration.fontLigatures.get(config)
+      |> Option.value(~default=fontLigatures);
 
     let terminalFontSubscription =
       Service_Font.Sub.font(
@@ -319,8 +317,8 @@ let start =
         ~fontFamily=terminalFontFamily,
         ~fontSize=terminalFontSize,
         ~fontWeight=terminalFontWeight,
-        ~fontSmoothing=fontSmoothing, // TODO
-        ~fontLigatures,
+        ~fontSmoothing, // TODO
+        ~fontLigatures=terminalFontLigatures,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 

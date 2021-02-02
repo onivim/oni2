@@ -5,7 +5,6 @@
  */
 open Kernel;
 open ConfigurationValues;
-open Utility;
 
 let parseBool = json =>
   switch (json) {
@@ -22,19 +21,6 @@ let parseInt = (~default=0, json) =>
     | None => default
     | Some(v) => v
     }
-  | _ => default
-  };
-
-let parseFloat = (~default=0., json) =>
-  switch (json) {
-  | `Int(v) => float_of_int(v)
-  | `Float(v) => v
-  | `String(str) =>
-    let floatMaybe = float_of_string_opt(str);
-    let floatFromIntMaybe =
-      int_of_string_opt(str) |> Option.map(float_of_int);
-
-    floatMaybe |> OptionEx.or_(floatFromIntMaybe) |> Option.value(~default);
   | _ => default
   };
 
@@ -78,14 +64,6 @@ let parseVimUseSystemClipboardSetting = json => {
   };
 };
 
-let parseEditorFontSize = (~default=Constants.defaultFontSize, json) =>
-  json
-  |> parseFloat(~default)
-  |> (
-    result =>
-      result > Constants.minimumFontSize ? result : Constants.minimumFontSize
-  );
-
 let parseFontSmoothing: Yojson.Safe.t => ConfigurationValues.fontSmoothing =
   json =>
     switch (json) {
@@ -122,37 +100,6 @@ let parseString = (~default="", json) =>
   | _ => default
   };
 
-let parseFontLigatures = json =>
-  switch (json) {
-  | `Bool(true) => FontLigatures.enabled
-  | `Bool(false) => FontLigatures.disabled
-  | `String(str) =>
-    open Angstrom;
-
-    let quoted = p => char('\'') *> p <* char('\'');
-
-    let isAlphaNumeric = (
-      fun
-      | 'a'..'z'
-      | 'A'..'Z'
-      | '0'..'9' => true
-      | _ => false
-    );
-
-    let alphaString = take_while1(isAlphaNumeric);
-
-    let feature = quoted(alphaString);
-    let spaces = many(char(' '));
-
-    let parse = sep_by(char(',') <* spaces, feature);
-
-    switch (Angstrom.parse_string(~consume=All, parse, str)) {
-    | Ok(list) => FontLigatures.ofFeatures(list)
-    | Error(_) => FontLigatures.enabled
-    };
-  | _ => FontLigatures.enabled
-  };
-
 let parseAutoReveal = json =>
   switch (json) {
   | `Bool(true) => `HighlightAndScroll
@@ -179,13 +126,6 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {
       ...config,
       editorFontSmoothing: parseFontSmoothing(json),
-    },
-  ),
-  (
-    "editor.fontLigatures",
-    (config, json) => {
-      ...config,
-      editorFontLigatures: parseFontLigatures(json),
     },
   ),
   (

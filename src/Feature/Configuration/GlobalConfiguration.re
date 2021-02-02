@@ -127,7 +127,10 @@ module Codecs = {
         ),
       ~encode=Json.Encode.float,
     );
-}
+
+  let fontLigatures =
+    custom(~decode=FontLigatures.decode, ~encode=FontLigatures.encode);
+};
 
 module Custom = {
   let inactiveWindowOpacity =

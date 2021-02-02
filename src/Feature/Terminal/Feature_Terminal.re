@@ -122,21 +122,32 @@ module Configuration = {
       );
   };
 
-let fontFamily =
-  setting(
-    "terminal.integrated.fontFamily",
-    nullable(string),
-    ~default=None
-  );
-let fontLigatures = setting("terminal.integrated.fontLigatures", nullable(bool), ~default=None);
+  let fontFamily =
+    setting(
+      "terminal.integrated.fontFamily",
+      nullable(string),
+      ~default=None,
+    );
 
-let fontSize = setting("terminal.integrated.fontSize", nullable(Codecs.fontSize), ~default=None);
-let fontWeight =
-  setting(
-    "terminal.integrated.fontWeight",
-    nullable(Codecs.fontWeight),
-    ~default=None,
-  );
+  let fontSize =
+    setting(
+      "terminal.integrated.fontSize",
+      nullable(Codecs.fontSize),
+      ~default=None,
+    );
+  let fontWeight =
+    setting(
+      "terminal.integrated.fontWeight",
+      nullable(Codecs.fontWeight),
+      ~default=None,
+    );
+
+  let fontLigatures =
+    setting(
+      "terminal.integrated.fontLigatures",
+      nullable(Codecs.fontLigatures),
+      ~default=None,
+    );
 };
 
 let shouldClose = (~id, {idToTerminal, _}) => {
