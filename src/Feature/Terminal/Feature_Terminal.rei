@@ -137,10 +137,12 @@ module Commands: {
 };
 
 module Configuration: {
-  let fontFamily: Config.Schema.setting(string);
-  let fontSize: Config.Schema.setting(float);
-  let fontSmoothing: Config.Schema.setting(ConfigurationValues.fontSmoothing);
-}
+  let fontFamily: Config.Schema.setting(option(string));
+  let fontSize: Config.Schema.setting(option(float));
+  // let fontSmoothing: Config.Schema.setting(option(ConfigurationValues.fontSmoothing));
+  let fontWeight: Config.Schema.setting(option(Revery.Font.Weight.t));
+  let fontLigatures: Config.Schema.setting(option(bool));
+};
 
 // CONTRIBUTIONS
 

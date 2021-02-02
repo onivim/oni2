@@ -9,8 +9,6 @@ module CustomDecoders: {
   let lineNumbers:
     Config.Schema.codec([ | `On | `Relative | `RelativeOnly | `Off]);
   let time: Config.Schema.codec(Time.t);
-  let fontSize: Config.Schema.codec(float);
-  let fontWeight: Config.Schema.codec(Revery.Font.Weight.t);
   let color: Config.Schema.codec(Revery.Color.t);
   let wordWrap: Config.Schema.codec([ | `Off | `On]);
 } = {
@@ -100,18 +98,6 @@ module CustomDecoders: {
         ),
     );
 
-  let fontSize =
-    custom(
-      ~decode=
-        Json.Decode.(
-          float
-          |> map(size => {
-               size < Constants.minimumFontSize
-                 ? Constants.minimumFontSize : size
-             })
-        ),
-      ~encode=Json.Encode.float,
-    );
   let fontWeightDecoder =
     Json.Decode.(
       one_of([
@@ -294,6 +280,8 @@ module VimSettings = {
 
 open CustomDecoders;
 
+module Codecs = Feature_Configuration.GlobalConfiguration.Codecs;
+
 let detectIndentation =
   setting("editor.detectIndentation", bool, ~default=true);
 
@@ -305,11 +293,11 @@ let fontFamily =
     ~default=Constants.defaultFontFile,
   );
 let fontLigatures = setting("editor.fontLigatures", bool, ~default=true);
-let fontSize = setting("editor.fontSize", fontSize, ~default=14.);
+let fontSize = setting("editor.fontSize", Codecs.fontSize, ~default=14.);
 let fontWeight =
   setting(
     "editor.fontWeight",
-    fontWeight,
+    Codecs.fontWeight,
     ~default=Revery.Font.Weight.Normal,
   );
 let lineHeight =

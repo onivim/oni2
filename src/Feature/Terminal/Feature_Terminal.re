@@ -86,6 +86,7 @@ let shellCmd = ShellUtility.getDefaultShell();
 module Configuration = {
   open Oni_Core;
   open Config.Schema;
+  module Codecs = Feature_Configuration.GlobalConfiguration.Codecs;
 
   module Shell = {
     let windows =
@@ -120,6 +121,22 @@ module Configuration = {
         ~default=["-l"],
       );
   };
+
+let fontFamily =
+  setting(
+    "terminal.integrated.fontFamily",
+    nullable(string),
+    ~default=None
+  );
+let fontLigatures = setting("terminal.integrated.fontLigatures", nullable(bool), ~default=None);
+
+let fontSize = setting("terminal.integrated.fontSize", nullable(Codecs.fontSize), ~default=None);
+let fontWeight =
+  setting(
+    "terminal.integrated.fontWeight",
+    nullable(Codecs.fontWeight),
+    ~default=None,
+  );
 };
 
 let shouldClose = (~id, {idToTerminal, _}) => {
@@ -559,6 +576,10 @@ module Contributions = {
       ShellArgs.windows.spec,
       ShellArgs.linux.spec,
       ShellArgs.osx.spec,
+      fontFamily.spec,
+      fontSize.spec,
+      fontWeight.spec,
+      fontLigatures.spec,
     ];
 
   let keybindings = {
