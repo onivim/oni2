@@ -1,10 +1,9 @@
-
 module SnippetWithMetadata: {
   type t = {
     snippet: Snippet.t,
     prefix: string,
     description: string,
-  }
+  };
 };
 
 module Sub: {

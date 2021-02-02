@@ -25,6 +25,8 @@ expr:
 | LB; { Text("{") } 
 | RB; { Text("}") }
 | COMMA; { Text(",") }
+| PIPE; { Text("|") }
+| COLON; { Text(":") }
 
 expr_nested:
 | DOLLAR; num = NUMBER { Placeholder({index = num; contents = [] }) } 

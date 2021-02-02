@@ -135,7 +135,16 @@ let%test_module "parse" =
        parse("${1:int a}")
        == Ok([[Placeholder({index: 1, contents: [Text("int a")]})]]);
      };
+
      let%test "comma in snippet" = {
        parse("a, b") == Ok([[Text("a, b")]]);
+     };
+
+     let%test "pipe in snippet" = {
+       parse("a|b") == Ok([[Text("a|b")]]);
+     };
+
+     let%test "colon in snippet" = {
+       parse("a:b") == Ok([[Text("a:b")]]);
      };
    });
