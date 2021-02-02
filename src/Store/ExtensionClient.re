@@ -52,9 +52,7 @@ let create =
 
       | Commands(ExecuteCommand({command, args, _})) =>
         // TODO: Is this really the right action?
-        dispatch(
-          Actions.KeybindingInvoked({command, arguments: `List(args)}),
-        );
+        dispatch(Actions.CommandInvoked({command, arguments: `List(args)}));
         Lwt.return(Reply.okEmpty);
 
       | Configuration(RemoveConfigurationOption({key, _})) =>
