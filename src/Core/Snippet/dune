@@ -10,4 +10,5 @@
  (inline_tests)
  (preprocess
   (pps ppx_deriving.show ppx_inline_test))
- (libraries Oni2.core.kernel Oni2.core.utility Rench Revery re timber oniguruma))
+ (libraries Oni2.core.kernel Oni2.core.utility Rench Revery re timber
+   oniguruma))
