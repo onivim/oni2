@@ -282,6 +282,8 @@ module SuggestItem: {
 
     let none: t;
 
+    let insertAsSnippet: t;
+
     let matches: (~rule: rule, t) => bool;
   };
   module SuggestRange: {

@@ -23,7 +23,12 @@ runTest(
 
   /* Simulate multiple events getting dispatched before running effects */
   dispatch(KeyboardInput({isText: true, input: "A"}));
-  dispatch(Command("editor.action.clipboardPasteAction"));
+  dispatch(
+    CommandInvoked({
+      command: "editor.action.clipboardPasteAction",
+      arguments: `Null,
+    }),
+  );
   dispatch(KeyboardInput({isText: true, input: "B"}));
 
   runEffects();
