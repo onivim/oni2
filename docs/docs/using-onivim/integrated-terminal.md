@@ -89,5 +89,5 @@ The default shell and command will be used when running a terminal via `:term`, 
 
 Some special environment variables are set for the embedded terminal:
 
-- `ONIVIM_TERMINAL` - set to the current version of the editor
+- `ONIVIM_TERMINAL` - set to the current version of the editor. This is guaranteed to be non-empty, so can be used in initialization scripts to determine if the current environment is an embedded Onivim terminal.
 
