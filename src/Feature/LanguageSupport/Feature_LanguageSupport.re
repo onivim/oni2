@@ -125,6 +125,7 @@ let update =
     (
       ~config,
       ~configuration,
+      ~extensions,
       ~languageConfiguration,
       ~maybeSelection,
       ~maybeBuffer,
@@ -286,6 +287,7 @@ let update =
     let (completion', outmsg) =
       Completion.update(
         ~config,
+        ~extensions,
         ~languageConfiguration,
         ~maybeBuffer,
         ~activeCursor=cursorLocation,
@@ -418,6 +420,7 @@ let bufferUpdated =
       ~languageConfiguration,
       ~buffer,
       ~config,
+      ~extensions,
       ~activeCursor,
       ~syntaxScope,
       ~triggerKey,
@@ -426,6 +429,7 @@ let bufferUpdated =
   let completion =
     Completion.bufferUpdated(
       ~languageConfiguration,
+      ~extensions,
       ~buffer,
       ~config,
       ~activeCursor,
