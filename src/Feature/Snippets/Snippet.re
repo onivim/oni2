@@ -131,6 +131,17 @@ let%test_module "parse" =
        parse("${TM_FILENAME:test}")
        == Ok([[Variable({name: "TM_FILENAME", default: Some("test")})]]);
      };
+
+     let%test "curly braces" = {
+       parse("{ $0 }")
+       == Ok([
+            [
+              Text("{ "),
+              Placeholder({index: 0, contents: []}),
+              Text(" }"),
+            ],
+          ]);
+     };
    });
 
 module Placeholder = {
@@ -480,9 +491,52 @@ module Placeholder = {
        );
   };
 
-  let initial = snippet => {
-    let placeholders = extractPlaceholders(snippet);
+  let all = placeholders => {
+    let candidates = placeholders |> IntMap.bindings |> List.map(fst);
+    let sorted = candidates |> List.filter(idx => idx != 0);
 
+    let hasZero = List.exists(idx => idx == 0, candidates);
+    // Add zero back to the very end
+    if (hasZero) {
+      sorted @ [0];
+    } else {
+      sorted;
+    };
+  };
+  let move = (~f, ~placeholder, placeholders) => {
+    let sortedPlaceholders = all(placeholders);
+    let len = List.length(sortedPlaceholders);
+
+    let maybeMatch =
+      sortedPlaceholders
+      |> List.mapi((idx, item) => (idx, item))
+      |> List.filter(((_idx, item)) => item == placeholder)
+      |> (l => List.nth_opt(l, 0));
+
+    maybeMatch
+    |> Option.map(fst)
+    |> OptionEx.flatMap(newIdx => {
+         let destIdx = IntEx.clamp(~hi=len - 1, ~lo=0, f(newIdx));
+         List.nth_opt(sortedPlaceholders, destIdx);
+       })
+    |> Option.value(~default=0);
+  };
+
+  let next = (~placeholder, placeholders) => {
+    move(~f=idx => idx + 1, ~placeholder, placeholders);
+  };
+
+  let previous = (~placeholder, placeholders) => {
+    move(~f=idx => idx - 1, ~placeholder, placeholders);
+  };
+
+  let final = placeholders => {
+    let revPlaceholders = all(placeholders) |> List.rev;
+
+    List.nth_opt(revPlaceholders, 0) |> Option.value(~default=0);
+  };
+
+  let initial = placeholders => {
     let nonZeroIndices =
       placeholders
       |> IntMap.bindings
@@ -493,27 +547,54 @@ module Placeholder = {
     let initialIndex =
       List.nth_opt(nonZeroIndices, 0) |> Option.value(~default=0);
 
-    (initialIndex, placeholders);
+    initialIndex;
   };
 };
 
+let placeholders = Placeholder.extractPlaceholders;
+
 let resolve =
     (
+      ~getVariable: string => option(string),
       ~prefix: string,
       ~postfix: string,
       ~indentationSettings: Oni_Core.IndentationSettings.t,
       snippet,
     ) => {
-  // TODO: Wire up indentation settings
-  ignore(indentationSettings);
-
   let lines = List.length(snippet);
   let hasAnyPlaceholders = Placeholder.hasAny(snippet);
 
   // Keep track of the leading whitespace, so we can add it on subsequent lines
   let leadingWhitespace = StringEx.leadingWhitespace(prefix);
 
+  let rec resolveVariables = segments =>
+    switch (segments) {
+    | [] => []
+    | [Variable({name, default}), ...tail] =>
+      getVariable(name)
+      |> OptionEx.or_(default)
+      |> Option.map(v => [Text(v), ...resolveVariables(tail)])
+      |> Option.value(~default=resolveVariables(tail))
+    | [nonVariable, ...tail] => [nonVariable, ...resolveVariables(tail)]
+    };
+
+  let normalizeWhitespace = segments =>
+    switch (segments) {
+    | [Text(text), ...tail] => [
+        Text(
+          IndentationSettings.normalizeTabs(
+            ~indentation=indentationSettings,
+            text,
+          ),
+        ),
+        ...tail,
+      ]
+    | nonText => nonText
+    };
+
   snippet
+  // Iterate through the lines and resolve all variables like `$BLOCK_COMMENT_START`
+  |> List.map(resolveVariables)
   |> List.mapi((idx, line) => {
        let isFirst = idx == 0;
        let isLast = idx == lines - 1;
@@ -521,11 +602,11 @@ let resolve =
        // Add prefix
        let line' =
          if (isFirst) {
-           [Text(prefix), ...line];
+           [Text(prefix), ...normalizeWhitespace(line)];
          } else if (leadingWhitespace != "") {
-           [Text(leadingWhitespace), ...line];
+           [Text(leadingWhitespace), ...normalizeWhitespace(line)];
          } else {
-           line;
+           normalizeWhitespace(line);
          };
 
        // Add postfix
@@ -552,13 +633,39 @@ let%test_module "resolve" =
    {
      let useTabs =
        IndentationSettings.(create(~mode=Tabs, ~size=4, ~tabSize=4, ()));
-     let _useSpaces2 =
+     let useSpaces2 =
        IndentationSettings.(create(~mode=Spaces, ~size=2, ~tabSize=2, ()));
+
+     let%test "normalizes whitespace" = {
+       let raw = parse("abc\n\tdef") |> Result.get_ok;
+
+       let resolved =
+         resolve(
+           ~getVariable=_ => None,
+           ~prefix="PREFIX",
+           ~postfix="POSTFIX",
+           ~indentationSettings=useSpaces2,
+           raw,
+         );
+
+       resolved
+       == [
+            [Text("PREFIX"), Text("abc")],
+            [
+              // The tab should be replaced with spaces
+              Text("  def"),
+              Placeholder({index: 0, contents: []}),
+              Text("POSTFIX"),
+            ],
+          ];
+     };
+
      let%test "adds prefix and postfix in single line" = {
        let raw = parse("abc") |> Result.get_ok;
 
        let resolved =
          resolve(
+           ~getVariable=_ => None,
            ~prefix="PREFIX",
            ~postfix="POSTFIX",
            ~indentationSettings=useTabs,
@@ -581,6 +688,7 @@ let%test_module "resolve" =
 
        let resolved =
          resolve(
+           ~getVariable=_ => None,
            ~prefix="PREFIX",
            ~postfix="POSTFIX",
            ~indentationSettings=useTabs,
@@ -602,6 +710,7 @@ let%test_module "resolve" =
 
        let resolved =
          resolve(
+           ~getVariable=_ => None,
            ~prefix="  PREFIX",
            ~postfix="POSTFIX",
            ~indentationSettings=useTabs,
@@ -619,6 +728,153 @@ let%test_module "resolve" =
               Text("POSTFIX"),
             ],
           ];
+     };
+     let%test "variable resolution replaces variable with provided text" = {
+       let raw = parse("$TESTVAR") |> Result.get_ok;
+
+       let resolved =
+         resolve(
+           ~getVariable=_ => Some("!!Expanded"),
+           ~prefix="pre",
+           ~postfix="post",
+           ~indentationSettings=useTabs,
+           raw,
+         );
+
+       resolved
+       == [
+            [
+              Text("pre"),
+              Text("!!Expanded"),
+              Placeholder({index: 0, contents: []}),
+              Text("post"),
+            ],
+          ];
+     };
+     let%test "variable resolution uses default" = {
+       let raw = parse("${TESTVAR:DEFAULT}") |> Result.get_ok;
+
+       let resolved =
+         resolve(
+           ~getVariable=_ => None,
+           ~prefix="pre",
+           ~postfix="post",
+           ~indentationSettings=useTabs,
+           raw,
+         );
+
+       resolved
+       == [
+            [
+              Text("pre"),
+              Text("DEFAULT"),
+              Placeholder({index: 0, contents: []}),
+              Text("post"),
+            ],
+          ];
+     };
+   });
+
+let updatePlaceholder = (~index: int, ~text: string, snippet: snippet) => {
+  let rec map = segment =>
+    switch (segment) {
+    | Placeholder({index: placeholderIndex, contents}) =>
+      if (index == placeholderIndex) {
+        Placeholder({index, contents: [Text(text)]});
+      } else {
+        Placeholder({
+          index: placeholderIndex,
+          contents: contents |> List.map(map),
+        });
+      }
+    | other => other
+    };
+
+  snippet |> List.map(segments => segments |> List.map(map));
+};
+
+let getFirstLineIndexWithPlaceholder = (~index: int, snippet: snippet) => {
+  let rec hasPlaceholder = segments =>
+    switch (segments) {
+    | [] => false
+    | [Placeholder({index: placeholderIndex, contents}), ...tail] =>
+      if (placeholderIndex == index) {
+        true;
+      } else {
+        hasPlaceholder(contents) || hasPlaceholder(tail);
+      }
+    | [_other, ...tail] => hasPlaceholder(tail)
+    };
+
+  let snippetsWithIndices =
+    snippet
+    |> List.mapi((idx, snippetLine) => (idx, snippetLine))
+    |> List.filter(((_idx, snippetLine)) => hasPlaceholder(snippetLine));
+
+  List.nth_opt(snippetsWithIndices, 0) |> Option.map(fst);
+};
+
+let getPlaceholderCountForLine = (~index: int, ~line: int, snippet: snippet) => {
+  let rec countPlaceholders = (acc, segments) =>
+    switch (segments) {
+    | [] => acc
+    | [Placeholder({index: placeholderIndex, contents}), ...tail] =>
+      let acc' = placeholderIndex == index ? acc + 1 : acc;
+      let placeholderCount = countPlaceholders(0, contents);
+      countPlaceholders(acc' + placeholderCount, tail);
+    | [_other, ...tail] => countPlaceholders(acc, tail)
+    };
+
+  List.nth_opt(snippet, line)
+  |> Option.map(countPlaceholders(0))
+  |> Option.value(~default=0);
+};
+
+let%test_module "updatePlaceholder" =
+  (module
+   {
+     let%test "placeholder gets updated" = {
+       let snippet = [[Placeholder({index: 1, contents: [Text("abc")]})]];
+
+       let expected = [
+         [Placeholder({index: 1, contents: [Text("def")]})],
+       ];
+       updatePlaceholder(~index=1, ~text="def", snippet) == expected;
+     };
+     let%test "nested placeholder gets updated" = {
+       let snippet = [
+         [
+           Placeholder({
+             index: 1,
+             contents: [Placeholder({index: 2, contents: [Text("abc")]})],
+           }),
+         ],
+       ];
+
+       let expected = [
+         [
+           Placeholder({
+             index: 1,
+             contents: [Placeholder({index: 2, contents: [Text("def")]})],
+           }),
+         ],
+       ];
+       updatePlaceholder(~index=2, ~text="def", snippet) == expected;
+     };
+     let%test "nested placeholder removed if outer is updated" = {
+       let snippet = [
+         [
+           Placeholder({
+             index: 1,
+             contents: [Placeholder({index: 2, contents: [Text("abc")]})],
+           }),
+         ],
+       ];
+
+       let expected = [
+         [Placeholder({index: 1, contents: [Text("def")]})],
+       ];
+       updatePlaceholder(~index=1, ~text="def", snippet) == expected;
      };
    });
 

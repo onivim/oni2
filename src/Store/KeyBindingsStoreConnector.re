@@ -71,6 +71,17 @@ let start = maybeKeyBindingsFilePath => {
              m("Loading %i keybindings", List.length(keyBindings))
            );
 
+           keyBindings
+           |> List.iteri((idx, binding) =>
+                Log.tracef(m =>
+                  m(
+                    "Binding %d: %s",
+                    idx,
+                    Feature_Input.Schema.resolvedToString(binding),
+                  )
+                )
+              );
+
            dispatch(
              Actions.Input(
                Feature_Input.Msg.keybindingsUpdated(keyBindings),

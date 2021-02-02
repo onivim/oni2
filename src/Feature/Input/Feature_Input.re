@@ -123,13 +123,37 @@ module Schema = {
         matcher: EditorInput.Matcher.t,
         command: InputStateMachine.execute,
         condition: WhenExpr.ContextKeys.t => bool,
+        rawCondition: WhenExpr.t,
       })
     | ResolvedRemap({
         allowRecursive: bool,
         matcher: EditorInput.Matcher.t,
         toKeys: list(EditorInput.KeyPress.t),
         condition: WhenExpr.ContextKeys.t => bool,
+        rawCondition: WhenExpr.t,
       });
+
+  let resolvedToString =
+    fun
+    | ResolvedBinding({matcher, command, rawCondition, _}) => {
+        Printf.sprintf(
+          "Binding - command: %s matcher: %s when: %s",
+          InputStateMachine.executeToString(command),
+          EditorInput.Matcher.toString(matcher),
+          WhenExpr.show(rawCondition),
+        );
+      }
+    | ResolvedRemap({allowRecursive, matcher, toKeys, rawCondition, _}) => {
+        Printf.sprintf(
+          "Remap - rec: %b, matcher: %s to: %s when: %s",
+          allowRecursive,
+          EditorInput.Matcher.toString(matcher),
+          toKeys
+          |> List.map(EditorInput.KeyPress.toString)
+          |> String.concat(","),
+          WhenExpr.show(rawCondition),
+        );
+      };
 
   let bind = (~key, ~command, ~condition) =>
     Binding({key, command, arguments: `Null, condition});
@@ -167,6 +191,7 @@ module Schema = {
              matcher,
              command: InputStateMachine.NamedCommand({command, arguments}),
              condition: evaluateCondition(condition),
+             rawCondition: condition,
            })
          });
 
@@ -191,6 +216,7 @@ module Schema = {
             matcher,
             condition: evaluateCondition(condition),
             toKeys,
+            rawCondition: condition,
           })
         },
         maybeMatcher,
@@ -250,12 +276,14 @@ let initial = keybindings => {
              );
              ism;
 
-           | Ok(ResolvedBinding({matcher, condition, command})) =>
+           | Ok(ResolvedBinding({matcher, condition, command, _})) =>
              let (ism, _bindingId) =
                InputStateMachine.addBinding(matcher, condition, command, ism);
              ism;
 
-           | Ok(ResolvedRemap({allowRecursive, matcher, condition, toKeys})) =>
+           | Ok(
+               ResolvedRemap({allowRecursive, matcher, condition, toKeys, _}),
+             ) =>
              let (ism, _bindingId) =
                InputStateMachine.addMapping(
                  ~allowRecursive,
@@ -454,7 +482,9 @@ module Internal = {
              | Terminal => "terminalFocus" |> parse
              | InsertAndCommandLine =>
                "insertMode || commandLineFocus" |> parse
-             | All => WhenExpr.Value(True);
+             | NormalAndVisualAndSelectAndOperator =>
+               "selectMode || normalMode || visualMode || operatorPending"
+               |> parse;
            }
          );
 
@@ -478,7 +508,7 @@ module Internal = {
              let (ism, bindings) = acc;
              let (ism', bindingId) =
                switch (resolvedBinding) {
-               | ResolvedBinding({matcher, condition, command}) =>
+               | ResolvedBinding({matcher, condition, command, _}) =>
                  InputStateMachine.addBinding(
                    matcher,
                    condition,
@@ -486,7 +516,13 @@ module Internal = {
                    ism,
                  )
 
-               | ResolvedRemap({allowRecursive, matcher, condition, toKeys}) =>
+               | ResolvedRemap({
+                   allowRecursive,
+                   matcher,
+                   condition,
+                   toKeys,
+                   _,
+                 }) =>
                  InputStateMachine.addMapping(
                    ~allowRecursive,
                    matcher,

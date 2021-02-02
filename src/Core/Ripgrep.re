@@ -68,6 +68,7 @@ type t = {
     dispose,
   findInFiles:
     (
+      ~searchExclude: list(string),
       ~directory: string,
       ~query: string,
       ~onUpdate: list(Match.t) => unit,
@@ -271,10 +272,22 @@ let search =
 };
 
 let findInFiles =
-    (~executablePath, ~directory, ~query, ~onUpdate, ~onComplete, ~onError) => {
-  process(
-    executablePath,
-    [
+    (
+      ~executablePath,
+      ~searchExclude,
+      ~directory,
+      ~query,
+      ~onUpdate,
+      ~onComplete,
+      ~onError,
+    ) => {
+  let excludeArgs =
+    searchExclude
+    |> List.filter(str => !StringEx.isEmpty(str))
+    |> List.concat_map(x => ["-g", "!" ++ x]);
+  let args =
+    excludeArgs
+    @ [
       "--fixed-strings",
       "--smart-case",
       "--hidden",
@@ -282,7 +295,10 @@ let findInFiles =
       "--",
       query,
       directory,
-    ],
+    ];
+  process(
+    executablePath,
+    args,
     items => {
       items
       |> List.filter_map(Match.fromJsonString)

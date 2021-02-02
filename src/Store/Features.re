@@ -245,6 +245,8 @@ module Internal = {
         state.languageSupport;
       };
 
+    let snippets' = Feature_Snippets.modeChanged(~mode, state.snippets);
+
     let languageSupport' =
       if (isInInsertMode != wasInInsertMode) {
         if (isInInsertMode) {
@@ -257,7 +259,12 @@ module Internal = {
         languageSupport;
       };
 
-    let state = {...state, layout, languageSupport: languageSupport'};
+    let state = {
+      ...state,
+      layout,
+      languageSupport: languageSupport',
+      snippets: snippets',
+    };
     (state, editorEffect);
   };
 };
@@ -1614,8 +1621,13 @@ let update =
 
     let cursorPosition = editor |> Feature_Editor.Editor.getPrimaryCursorByte;
 
+    let resolverFactory = () => {
+      Oni_Model.SnippetVariables.current(state);
+    };
+
     let (snippets', outmsg) =
       Feature_Snippets.update(
+        ~resolverFactory,
         ~maybeBuffer,
         ~editorId,
         ~cursorPosition,
@@ -1937,7 +1949,13 @@ let updateSubscriptions = (setup: Setup.t) => {
     |> QuickmenuSubscriptionRunner.run(~dispatch);
 
     let searchDispatch = msg => dispatch(Search(msg));
-    searchSubscriptions(~workingDirectory, searchDispatch, state.searchPane)
+    let config = Selectors.configResolver(state);
+    searchSubscriptions(
+      ~config,
+      ~workingDirectory,
+      searchDispatch,
+      state.searchPane,
+    )
     |> SearchSubscriptionRunner.run(~dispatch=searchDispatch);
   };
 };

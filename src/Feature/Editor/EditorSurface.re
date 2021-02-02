@@ -154,6 +154,7 @@ let%component make =
                 ~tokenTheme,
                 ~languageSupport,
                 ~scm,
+                ~snippets: Feature_Snippets.model,
                 ~windowIsFocused,
                 ~perFileTypeConfig: Oni_Core.Config.fileTypeResolver,
                 ~renderOverlays,
@@ -334,6 +335,7 @@ let%component make =
       languageConfiguration
       bufferSyntaxHighlights
       mode
+      snippets
       isActiveSplit
       gutterWidth
       bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
