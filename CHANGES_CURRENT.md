@@ -1,7 +1,8 @@
 ### Features 
 
 - #3024 - Editor: Snippet Support - Multi-select handler
-- #3047, #3052, #3056, #3059, #3061, #3064 - Editor: Snippet Feature
+- #3047, #3052, #3056, #3059, #3061, #3064 - Editor: Core Snippet Feature Work
+- #3067 - Editor: Integrate snippets provided by extensions
 
 ### Bug Fixes
 
@@ -22,6 +23,7 @@
 - #3044 - Search: Add `search.exclude` configuration option (fixes #2115 - thanks @joseeMDS!)
 - #3066 - Vim / Input: Fix ':map' condition (fixes #3049)
 - #3055 - Extensions: Implement 'vscode.openFolder' handler (related #3042)
+- #3076 - Terminal: Add `ONIVIM_TERMINAL` environment variable (fixes #3068)
 
 ### Performance
 

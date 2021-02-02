@@ -15,6 +15,7 @@ module type S = {
   let create:
     (
       ~config: Oni_Core.Config.resolver,
+      ~extensions: Feature_Extensions.model,
       ~languageConfiguration: LanguageConfiguration.t,
       ~trigger: Exthost.CompletionContext.t,
       ~buffer: Oni_Core.Buffer.t,
@@ -83,6 +84,7 @@ module ExthostCompletionProvider =
   let create =
       (
         ~config as _,
+        ~extensions as _,
         ~languageConfiguration as _,
         ~trigger as _,
         ~buffer,
@@ -230,6 +232,7 @@ module KeywordCompletionProvider =
   let create =
       (
         ~config,
+        ~extensions as _,
         ~languageConfiguration: LanguageConfiguration.t,
         ~trigger: Exthost.CompletionContext.t,
         ~buffer,
@@ -274,4 +277,90 @@ module KeywordCompletionProvider =
 let keyword: provider(keywordModel, keywordMsg) = {
   (module
    KeywordCompletionProvider({}));
+};
+
+type snippetModel = {
+  items: list(CompletionItem.t),
+  isComplete: bool,
+  filePaths: list(Fp.t(Fp.absolute)),
+};
+[@deriving show]
+type snippetMsg =
+  | SnippetsAvailable(list(Service_Snippets.SnippetWithMetadata.t));
+
+module SnippetCompletionProvider =
+       (())
+       : (S with type msg = snippetMsg and type model = snippetModel) => {
+  type msg = snippetMsg;
+  type model = snippetModel;
+
+  type outmsg =
+    | Nothing
+    | ProviderError(string);
+
+  let handle = () => None;
+
+  let create =
+      (
+        ~config,
+        ~extensions,
+        ~languageConfiguration as _,
+        ~trigger: Exthost.CompletionContext.t,
+        ~buffer,
+        ~base: string,
+        ~location: CharacterPosition.t,
+      ) => {
+    ignore(trigger);
+    ignore(base);
+    ignore(location);
+
+    if (!
+          Feature_Configuration.GlobalConfiguration.Experimental.Snippets.enabled.
+            get(
+            config,
+          )) {
+      None;
+    } else {
+      let fileType = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
+
+      let snippetFilePaths =
+        Feature_Extensions.snippetFilePaths(~fileType, extensions);
+
+      Some({filePaths: snippetFilePaths, items: [], isComplete: false});
+    };
+  };
+
+  let update = (~isFuzzyMatching, msg, model: model) => {
+    Service_Snippets.(
+      switch (msg) {
+      | SnippetsAvailable(snippets) =>
+        let items =
+          snippets
+          |> List.map((snippet: SnippetWithMetadata.t) => {
+               CompletionItem.snippet(
+                 ~isFuzzyMatching,
+                 ~prefix=snippet.prefix,
+                 snippet.snippet,
+               )
+             });
+        ({...model, items, isComplete: true}, Nothing);
+      }
+    );
+  };
+
+  let items = ({items, _}: model) => items;
+
+  let sub =
+      (~client as _, ~position as _, ~buffer as _, ~selectedItem as _, model) => {
+    let filePaths = model.filePaths;
+    let uniqueId = "Feature_LanguageSupport.SnippetCompletionProvider";
+
+    let toMsg = snippets => SnippetsAvailable(snippets);
+    Service_Snippets.Sub.snippetFromFiles(~uniqueId, ~filePaths, toMsg);
+  };
+};
+
+let snippet: provider(snippetModel, snippetMsg) = {
+  (module
+   SnippetCompletionProvider({}));
 };
