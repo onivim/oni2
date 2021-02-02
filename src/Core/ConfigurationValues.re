@@ -23,13 +23,11 @@ type fontSmoothing =
   | Antialiased
   | SubpixelAntialiased;
 
-type fontLigatures = [ | `Bool(bool) | `List(list(string))];
-
 type autoReveal = [ | `HighlightAndScroll | `HighlightOnly | `NoReveal];
 
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
-  editorFontLigatures: fontLigatures,
+  editorFontLigatures: FontLigatures.t,
   editorFontSmoothing: fontSmoothing,
   editorLargeFileOptimizations: bool,
   explorerAutoReveal: autoReveal,
@@ -55,7 +53,7 @@ type t = {
 let default = {
   editorAutoClosingBrackets: LanguageDefined,
   editorFontSmoothing: Default,
-  editorFontLigatures: `Bool(true),
+  editorFontLigatures: FontLigatures.enabled,
   editorLargeFileOptimizations: true,
   explorerAutoReveal: `HighlightAndScroll,
   workbenchActivityBarVisible: true,

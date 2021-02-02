@@ -124,7 +124,8 @@ let parseString = (~default="", json) =>
 
 let parseFontLigatures = json =>
   switch (json) {
-  | `Bool(_) as bool => bool
+  | `Bool(true) => FontLigatures.enabled
+  | `Bool(false) => FontLigatures.disabled
   | `String(str) =>
     open Angstrom;
 
@@ -146,10 +147,10 @@ let parseFontLigatures = json =>
     let parse = sep_by(char(',') <* spaces, feature);
 
     switch (Angstrom.parse_string(~consume=All, parse, str)) {
-    | Ok(list) => `List(list)
-    | Error(_) => `Bool(true)
+    | Ok(list) => FontLigatures.ofFeatures(list)
+    | Error(_) => FontLigatures.enabled
     };
-  | _ => `Bool(true)
+  | _ => FontLigatures.enabled
   };
 
 let parseAutoReveal = json =>
