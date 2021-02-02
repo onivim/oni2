@@ -468,7 +468,7 @@ module View = {
         | None =>
           <Components.Clickable onClick style=Styles.Mac.container>
             <FontIcon
-              icon=FontAwesome.lockOpen
+              icon=FontAwesome.lock
               color={Colors.TitleBar.inactiveForeground.from(theme)}
               fontSize=10.
             />
