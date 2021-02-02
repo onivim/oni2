@@ -214,3 +214,18 @@ __Pass:__
 - [ ] Win
 - [ ] OSX
 - [ ] Linux
+
+# 9. Terminal
+
+## 9.1 Check that `ONIVIM_TERMINAL` is set
+
+- Open Onivim 2
+- Run `:term`
+- On OSX, Linux - run `echo $ONIVIM_TERMINAL`
+- On Windows Powershell - run `$env:ONIVIM_TERMINAL`
+- Validate version string is displayed
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
