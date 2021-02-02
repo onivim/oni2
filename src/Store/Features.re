@@ -28,7 +28,7 @@ module Internal = {
   let executeCommandEffect = (command, arguments) => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.executeCommand", dispatch =>
-      dispatch(Actions.KeybindingInvoked({command, arguments}))
+      dispatch(Actions.CommandInvoked({command, arguments}))
     );
   };
 
