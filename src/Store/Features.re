@@ -1665,14 +1665,6 @@ let update =
 
     let isSnippetActive = Feature_Snippets.isActive(snippets');
 
-    prerr_endline(
-      Printf.sprintf(
-        "isSnippetActive: %b wasSnippetActive: %b",
-        isSnippetActive,
-        wasSnippetActive,
-      ),
-    );
-
     let updateLanguageSupport = (languageSupport, oldLayout, newLayout) => {
       let originalEditor = Feature_Layout.activeEditor(oldLayout);
       let originalCursor =

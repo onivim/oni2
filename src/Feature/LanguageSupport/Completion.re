@@ -542,7 +542,6 @@ let isActive = (model: model) => {
 
 let reset = model =>
   if (model.isInsertMode && !model.isSnippetMode) {
-    prerr_endline("STARTING");
     {
       ...model,
       providers: model.providers |> List.map(Session.start),
@@ -550,7 +549,6 @@ let reset = model =>
       selection: None,
     };
   } else {
-    prerr_endline("STOPPING");
     {
       ...model,
       providers: model.providers |> List.map(Session.stop),
