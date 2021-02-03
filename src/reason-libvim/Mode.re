@@ -87,6 +87,8 @@ let isInsert =
   | Insert(_) => true
   | _ => false;
 
+let isInsertOrSelect = mode => isInsert(mode) || isSelect(mode);
+
 let isCommandLine =
   fun
   | CommandLine(_) => true

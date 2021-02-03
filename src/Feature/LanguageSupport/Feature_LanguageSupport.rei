@@ -131,6 +131,10 @@ let startInsertMode:
   model;
 
 let stopInsertMode: model => model;
+
+let startSnippet: model => model;
+let stopSnippet: model => model;
+
 let isFocused: model => bool;
 
 let sub:
