@@ -681,12 +681,12 @@ module Contributions = {
       bind(
         ~key="<TAB>",
         ~command=Commands.nextPlaceholder.id,
-        ~condition="editorTextFocus && inSnippetMode" |> WhenExpr.parse,
+        ~condition="editorTextFocus && inSnippetMode && !suggestWidgetVisible" |> WhenExpr.parse,
       ),
       bind(
         ~key="<S-TAB>",
         ~command=Commands.previousPlaceholder.id,
-        ~condition="editorTextFocus && inSnippetMode" |> WhenExpr.parse,
+        ~condition="editorTextFocus && inSnippetMode && !suggestWidgetVisible" |> WhenExpr.parse,
       ),
     ];
   };

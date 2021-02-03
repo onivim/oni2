@@ -1647,6 +1647,18 @@ let update =
         state.snippets,
       );
 
+    let updateLanguageSupport = (languageSupport, oldLayout, newLayout) => {
+      let originalCursor = Feature_Layout.activeEditor(oldLayout) |> Feature_Editor.Editor.getPrimaryCursor;
+
+      let newCursor = Feature_Layout.activeEditor(newLayout) |> Feature_Editor.Editor.getPrimaryCursor;
+
+      if (originalCursor != newCursor) {
+        Feature_LanguageSupport.cursorMoved(~maybeBuffer, ~previous=originalCursor, ~current=newCursor, languageSupport)
+      } else {
+        languageSupport
+      }
+    };
+
     let (layout', eff) =
       switch (outmsg) {
       | Nothing => (state.layout, Isolinear.Effect.none)
@@ -1685,7 +1697,9 @@ let update =
           eff |> Isolinear.Effect.map(msg => Actions.Snippets(msg)),
         )
       };
-    ({...state, layout: layout', snippets: snippets'}, eff);
+
+      let languageSupport' = updateLanguageSupport(state.languageSupport, state.layout, layout');
+    ({...state, layout: layout', languageSupport: languageSupport', snippets: snippets'}, eff);
 
   // TODO: This should live in the terminal feature project
   | TerminalFont(Service_Font.FontLoaded(font)) => (
