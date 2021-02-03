@@ -9,12 +9,14 @@ module Log = (
 
 module Constants = {
   let snippetMargin = 3.;
-}
+};
 
 let snippetPaint = Skia.Paint.make();
 
-let draw = (~config, ~context: Draw.context, session: Feature_Snippets.Session.t) => {
-  let isShadowEnabled = Feature_Configuration.GlobalConfiguration.shadows.get(config);
+let draw =
+    (~config, ~context: Draw.context, session: Feature_Snippets.Session.t) => {
+  let isShadowEnabled =
+    Feature_Configuration.GlobalConfiguration.shadows.get(config);
 
   if (!isShadowEnabled) {
     ();
@@ -59,7 +61,10 @@ let draw = (~config, ~context: Draw.context, session: Feature_Snippets.Session.t
     let (bottomPixel, _) =
       Editor.bufferBytePositionToPixel(
         ~position=
-          BytePosition.{line: Session.stopLine(session), byte: ByteIndex.zero},
+          BytePosition.{
+            line: Session.stopLine(session),
+            byte: ByteIndex.zero,
+          },
         context.editor,
       );
 
@@ -83,5 +88,5 @@ let draw = (~config, ~context: Draw.context, session: Feature_Snippets.Session.t
       ~height=5.,
       ~context=Revery.Draw.CanvasContext.(context.canvasContext.canvas),
     );
-  }
+  };
 };
