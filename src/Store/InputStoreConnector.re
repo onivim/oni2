@@ -130,7 +130,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         Actions.VimExecuteCommand({allowAnimation: true, command}),
       ]
     | Feature_Input.(Execute(NamedCommand({command, arguments}))) => [
-        Actions.CommandInvoked({command, arguments}),
+        Actions.KeybindingInvoked({command, arguments}),
       ]
     | Feature_Input.Text(text) => handleTextEffect(~isText=true, state, text)
     | Feature_Input.Unhandled({key, isProducedByRemap}) =>

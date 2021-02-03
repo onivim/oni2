@@ -21,26 +21,24 @@ let copyFilePath =
     CopyActiveFilepathToClipboard,
   );
 
-let command = cmd => CommandInvoked({command: cmd, arguments: `Null});
+let undo = register("undo", Command("undo"));
+let redo = register("redo", Command("redo"));
 
-let undo = register("undo", command("undo"));
-let redo = register("redo", command("redo"));
-
-let indent = register("indent", command("indent"));
-let outdent = register("outdent", command("outdent"));
+let indent = register("indent", Command("indent"));
+let outdent = register("outdent", Command("outdent"));
 
 module Editor = {
   module Action = {
     let indentLines =
       register(
         "editor.action.indentLines",
-        command("editor.action.indentLines"),
+        Command("editor.action.indentLines"),
       );
 
     let outdentLines =
       register(
         "editor.action.outdentLines",
-        command("editor.action.outdentLines"),
+        Command("editor.action.outdentLines"),
       );
   };
 };
@@ -60,7 +58,7 @@ module Oni = {
       ~category="Help",
       ~title="Open changelog",
       "oni.changelog",
-      command("oni.changelog"),
+      Command("oni.changelog"),
     );
 
   module System = {
@@ -70,7 +68,7 @@ module Oni = {
         ~title="Add Oni2 to System PATH",
         ~isEnabledWhen=WhenExpr.parse("isMac && !symLinkExists"), // NOTE: symLinkExists only defined in command palette
         "system.addToPath",
-        command("system.addToPath"),
+        Command("system.addToPath"),
       );
 
     let removeFromPath =
@@ -79,18 +77,18 @@ module Oni = {
         ~title="Remove Oni2 from System PATH",
         ~isEnabledWhen=WhenExpr.parse("isMac && symLinkExists"), // NOTE: symLinkExists only defined in command palette
         "system.removeFromPath",
-        command("system.removeFromPath"),
+        Command("system.removeFromPath"),
       );
   };
 
   module Vim = {
-    let esc = register("vim.esc", command("vim.esc"));
+    let esc = register("vim.esc", Command("vim.esc"));
     let tutor =
       register(
         ~category="Help",
         ~title="Open Vim Tutor",
         "vim.tutor",
-        command("vim.tutor"),
+        Command("vim.tutor"),
       );
   };
 
@@ -183,11 +181,35 @@ module Workbench = {
     let closeQuickOpen =
       register("workbench.action.closeQuickOpen", QuickmenuClose);
 
+    let zoomIn =
+      register(
+        ~category="View",
+        ~title="Zoom In",
+        "workbench.action.zoomIn",
+        Command("workbench.action.zoomIn"),
+      );
+
+    let zoomOut =
+      register(
+        ~category="View",
+        ~title="Zoom Out",
+        "workbench.action.zoomOut",
+        Command("workbench.action.zoomOut"),
+      );
+
+    let zoomReset =
+      register(
+        ~category="View",
+        ~title="Reset Zoom",
+        "workbench.action.zoomReset",
+        Command("workbench.action.zoomReset"),
+      );
+
     module Files = {
       let save =
         register(
           "workbench.action.files.save",
-          command("workbench.action.files.save"),
+          Command("workbench.action.files.save"),
         );
     };
   };

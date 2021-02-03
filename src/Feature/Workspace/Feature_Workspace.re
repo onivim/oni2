@@ -9,7 +9,6 @@
  */
 
 open Oni_Core;
-open Utility;
 module Log = (val Log.withNamespace("Feature_Workspace"));
 
 [@deriving show]
@@ -22,8 +21,7 @@ type msg =
   | Command(command)
   | FolderSelectionCanceled
   | FolderPicked([@opaque] Fp.t(Fp.absolute))
-  | WorkingDirectoryChanged(string)
-  | Noop;
+  | WorkingDirectoryChanged(string);
 
 module Msg = {
   let workingDirectoryChanged = workingDirectory =>
@@ -78,7 +76,6 @@ module Effects = {
 let update = (msg, model) => {
   switch (msg) {
   | FolderSelectionCanceled => (model, Nothing)
-
   | WorkingDirectoryChanged(workingDirectory) => (
       {
         workingDirectory,
@@ -87,17 +84,12 @@ let update = (msg, model) => {
       },
       WorkspaceChanged(Some(workingDirectory)),
     )
-
   | Command(CloseFolder) => (
       {...model, rootName: "", openedFolder: None},
       WorkspaceChanged(None),
     )
-
   | Command(OpenFolder) => (model, Effect(Effects.pickFolder))
-
   | FolderPicked(path) => (model, Effect(Effects.changeDirectory(path)))
-
-  | Noop => (model, Nothing)
   };
 };
 
@@ -122,26 +114,11 @@ module Commands = {
       Command(OpenFolder),
     );
 
-  let openFolderArgs =
-    defineWithArgs(
-      "vscode.openFolder",
-      fun
-      | `List([uriJson, ..._]) =>
-        uriJson
-        |> Json.Decode.decode_value(Uri.decode)
-        |> Result.map(Uri.toFileSystemPath)
-        |> Result.to_option
-        |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
-        |> Option.map(fp => FolderPicked(fp))
-        |> Option.value(~default=Noop)
-      | _ => Noop,
-    );
-
   let all = model =>
     model.openedFolder == None
-      ? [openFolder, openFolderArgs]
+      ? [openFolder]
       // Always show open folder, so the user can switch folders from command palette
-      : [openFolder, openFolderArgs, closeFolder];
+      : [openFolder, closeFolder];
 };
 
 module MenuItems = {

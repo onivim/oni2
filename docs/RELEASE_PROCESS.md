@@ -9,6 +9,14 @@ The first week of every month - we'll cut a `stable` release.
     - Create a branch off staging - `release/x.x.x/test-pass`
     - Copy `manual_test/cases.md` to `staging` branch as `STABLE_SIGNOFF.md`
     - Run cases and update `STABLE_SIGNOFF.md`
+- Once `staging` passes:
+    - `git checkout stable`
+    - `git reset --hard staging`
+    - Update `package.json` to reflect new version
+    - `git commit -m "vx.x.x"`
+    - Update `stable`: `git push --force origin stable`
+    - Create tag: `git tag vx.x.x`
+    - Push tag: `git push vx.x.x`
 - Draft release notes
     - Pull from `CHANGES_CURRENT.md` and screenshots via `S-screenshot` label
 - Draft video

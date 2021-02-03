@@ -447,11 +447,13 @@ type model = {
   allItems: array((CharacterPosition.t, Filter.result(CompletionItem.t))),
   selection: Selection.t,
   isInsertMode: bool,
+  isSnippetMode: bool,
   acceptOnEnter: bool,
 };
 
 let initial = {
   isInsertMode: false,
+  isSnippetMode: false,
   acceptOnEnter: false,
   providers: [
     Session.create(
@@ -532,25 +534,46 @@ let focused = ({allItems, selection, _}) => {
 };
 
 let isActive = (model: model) => {
-  model.isInsertMode && model.allItems |> Array.length > 0;
+  model.isInsertMode
+  && !model.isSnippetMode
+  && model.allItems
+  |> Array.length > 0;
 };
 
-let startInsertMode = model => {
-  {
-    ...model,
-    isInsertMode: true,
-    providers: model.providers |> List.map(Session.start),
-    allItems: [||],
-    selection: None,
+let reset = model =>
+  if (model.isInsertMode && !model.isSnippetMode) {
+    {
+      ...model,
+      providers: model.providers |> List.map(Session.start),
+      allItems: [||],
+      selection: None,
+    };
+  } else {
+    {
+      ...model,
+      providers: model.providers |> List.map(Session.stop),
+      allItems: [||],
+      selection: None,
+    };
   };
+
+let startInsertMode = model => {
+  {...model, isInsertMode: true} |> reset;
 };
 
 let stopInsertMode = model => {
-  ...model,
-  isInsertMode: false,
-  providers: model.providers |> List.map(Session.stop),
-  allItems: [||],
-  selection: None,
+  {...model, isInsertMode: false} |> reset;
+};
+
+// There are some bugs with completion in snippet mode -
+// including the 'tab' key being overloaded. Need to fix
+// these and gate with a configuration setting, like:
+// `editor.suggest.snippetsPreventQuickSuggestions`
+let startSnippet = model => {
+  {...model, isSnippetMode: true} |> reset;
+};
+let stopSnippet = model => {
+  {...model, isSnippetMode: false} |> reset;
 };
 
 let register =
