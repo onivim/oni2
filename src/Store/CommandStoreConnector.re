@@ -40,7 +40,7 @@ let start = () => {
 
   let updater = (state: State.t, action) => {
     switch (action) {
-    | CommandInvoked({command: cmd, _}) =>
+    | Command(cmd) =>
       switch (StringMap.find_opt(cmd, commandMap)) {
       | Some(v) => (state, v(state, cmd))
       | None => (state, Isolinear.Effect.none)
