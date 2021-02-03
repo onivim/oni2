@@ -1648,15 +1648,24 @@ let update =
       );
 
     let updateLanguageSupport = (languageSupport, oldLayout, newLayout) => {
-      let originalCursor = Feature_Layout.activeEditor(oldLayout) |> Feature_Editor.Editor.getPrimaryCursor;
+      let originalCursor =
+        Feature_Layout.activeEditor(oldLayout)
+        |> Feature_Editor.Editor.getPrimaryCursor;
 
-      let newCursor = Feature_Layout.activeEditor(newLayout) |> Feature_Editor.Editor.getPrimaryCursor;
+      let newCursor =
+        Feature_Layout.activeEditor(newLayout)
+        |> Feature_Editor.Editor.getPrimaryCursor;
 
       if (originalCursor != newCursor) {
-        Feature_LanguageSupport.cursorMoved(~maybeBuffer, ~previous=originalCursor, ~current=newCursor, languageSupport)
+        Feature_LanguageSupport.cursorMoved(
+          ~maybeBuffer,
+          ~previous=originalCursor,
+          ~current=newCursor,
+          languageSupport,
+        );
       } else {
-        languageSupport
-      }
+        languageSupport;
+      };
     };
 
     let (layout', eff) =
@@ -1698,8 +1707,17 @@ let update =
         )
       };
 
-      let languageSupport' = updateLanguageSupport(state.languageSupport, state.layout, layout');
-    ({...state, layout: layout', languageSupport: languageSupport', snippets: snippets'}, eff);
+    let languageSupport' =
+      updateLanguageSupport(state.languageSupport, state.layout, layout');
+    (
+      {
+        ...state,
+        layout: layout',
+        languageSupport: languageSupport',
+        snippets: snippets',
+      },
+      eff,
+    );
 
   // TODO: This should live in the terminal feature project
   | TerminalFont(Service_Font.FontLoaded(font)) => (
