@@ -492,6 +492,16 @@ let stopInsertMode = model => {
   };
 };
 
+let startSnippet = model => {
+  ...model,
+  completion: Completion.startSnippet(model.completion),
+};
+
+let stopSnippet = model => {
+  ...model,
+  completion: Completion.stopSnippet(model.completion),
+};
+
 let isFocused = ({rename, _}) => Rename.isFocused(rename);
 
 module Contributions = {

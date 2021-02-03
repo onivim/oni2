@@ -210,7 +210,7 @@ module Internal = {
     let maybeBuffer = Selectors.getActiveBuffer(state);
 
     let wasInInsertMode =
-      Vim.Mode.isInsert(
+      Vim.Mode.isInsertOrSelect(
         state.layout
         |> Feature_Layout.activeEditor
         |> Feature_Editor.Editor.mode,
@@ -224,7 +224,7 @@ module Internal = {
     let (layout, editorEffect) = updateEditors(~scope, ~msg, state.layout);
 
     let isInInsertMode =
-      Vim.Mode.isInsert(
+      Vim.Mode.isInsertOrSelect(
         layout |> Feature_Layout.activeEditor |> Feature_Editor.Editor.mode,
       );
 
@@ -245,7 +245,9 @@ module Internal = {
         state.languageSupport;
       };
 
+    let wasInSnippetMode = Feature_Snippets.isActive(state.snippets);
     let snippets' = Feature_Snippets.modeChanged(~mode, state.snippets);
+    let isInSnippetMode = Feature_Snippets.isActive(snippets');
 
     let languageSupport' =
       if (isInInsertMode != wasInInsertMode) {
@@ -259,10 +261,21 @@ module Internal = {
         languageSupport;
       };
 
+    let languageSupport'' =
+      if (wasInSnippetMode != isInSnippetMode) {
+        if (isInSnippetMode) {
+          Feature_LanguageSupport.startSnippet(languageSupport');
+        } else {
+          Feature_LanguageSupport.stopSnippet(languageSupport');
+        };
+      } else {
+        languageSupport';
+      };
+
     let state = {
       ...state,
       layout,
-      languageSupport: languageSupport',
+      languageSupport: languageSupport'',
       snippets: snippets',
     };
     (state, editorEffect);
@@ -1631,11 +1644,14 @@ let update =
     let editor = Feature_Layout.activeEditor(state.layout);
     let editorId = editor |> Feature_Editor.Editor.getId;
 
+    let config = Selectors.configResolver(state);
     let cursorPosition = editor |> Feature_Editor.Editor.getPrimaryCursorByte;
 
     let resolverFactory = () => {
       Oni_Model.SnippetVariables.current(state);
     };
+
+    let wasSnippetActive = Feature_Snippets.isActive(state.snippets);
 
     let (snippets', outmsg) =
       Feature_Snippets.update(
@@ -1646,6 +1662,59 @@ let update =
         msg,
         state.snippets,
       );
+
+    let isSnippetActive = Feature_Snippets.isActive(snippets');
+
+    let updateLanguageSupport = (languageSupport, oldLayout, newLayout) => {
+      let originalEditor = Feature_Layout.activeEditor(oldLayout);
+      let originalCursor =
+        originalEditor |> Feature_Editor.Editor.getPrimaryCursor;
+
+      let originalMode = originalEditor |> Feature_Editor.Editor.mode;
+      let wasInInsert = Vim.Mode.isInsertOrSelect(originalMode);
+
+      let newEditor = Feature_Layout.activeEditor(newLayout);
+      let newCursor = newEditor |> Feature_Editor.Editor.getPrimaryCursor;
+      let newMode = newEditor |> Feature_Editor.Editor.mode;
+      let isInInsert = Vim.Mode.isInsertOrSelect(newMode);
+
+      let languageSupport' =
+        if (originalCursor != newCursor) {
+          Feature_LanguageSupport.cursorMoved(
+            ~maybeBuffer,
+            ~previous=originalCursor,
+            ~current=newCursor,
+            languageSupport,
+          );
+        } else {
+          languageSupport;
+        };
+
+      let languageSupport'' =
+        if (wasInInsert != isInInsert) {
+          if (isInInsert) {
+            Feature_LanguageSupport.startInsertMode(
+              ~config,
+              ~maybeBuffer,
+              languageSupport',
+            );
+          } else {
+            Feature_LanguageSupport.stopInsertMode(languageSupport');
+          };
+        } else {
+          languageSupport';
+        };
+
+      if (wasSnippetActive != isSnippetActive) {
+        if (isSnippetActive) {
+          Feature_LanguageSupport.startSnippet(languageSupport'');
+        } else {
+          Feature_LanguageSupport.stopSnippet(languageSupport'');
+        };
+      } else {
+        languageSupport'';
+      };
+    };
 
     let (layout', eff) =
       switch (outmsg) {
@@ -1685,7 +1754,18 @@ let update =
           eff |> Isolinear.Effect.map(msg => Actions.Snippets(msg)),
         )
       };
-    ({...state, layout: layout', snippets: snippets'}, eff);
+
+    let languageSupport' =
+      updateLanguageSupport(state.languageSupport, state.layout, layout');
+    (
+      {
+        ...state,
+        layout: layout',
+        languageSupport: languageSupport',
+        snippets: snippets',
+      },
+      eff,
+    );
 
   // TODO: This should live in the terminal feature project
   | TerminalFont(Service_Font.FontLoaded(font)) => (

@@ -220,8 +220,8 @@ let start =
       state |> Model.EditorVisibleRanges.getVisibleBuffersAndRanges;
     let activeEditor = state.layout |> Feature_Layout.activeEditor;
 
-    let isInsertMode =
-      activeEditor |> Feature_Editor.Editor.mode |> Vim.Mode.isInsert;
+    let isInsertOrSelectMode =
+      activeEditor |> Feature_Editor.Editor.mode |> Vim.Mode.isInsertOrSelect;
 
     let isAnimatingScroll =
       activeEditor |> Feature_Editor.Editor.isAnimatingScroll;
@@ -372,7 +372,7 @@ let start =
       |> Option.map(activeBuffer => {
            Feature_LanguageSupport.sub(
              ~config,
-             ~isInsertMode,
+             ~isInsertMode=isInsertOrSelectMode,
              ~isAnimatingScroll,
              ~activeBuffer,
              ~activePosition,
