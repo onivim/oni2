@@ -24,6 +24,7 @@
 - #3066 - Vim / Input: Fix ':map' condition (fixes #3049)
 - #3055 - Extensions: Implement 'vscode.openFolder' handler (related #3042)
 - #3076 - Terminal: Add `ONIVIM_TERMINAL` environment variable (fixes #3068)
+- #3078 - Auto-Update: Notify user when update fails due to missing key (fixes #3070)
 - #3086 - Snippets: Fix clash with completion / document highlights feature
 
 ### Performance
