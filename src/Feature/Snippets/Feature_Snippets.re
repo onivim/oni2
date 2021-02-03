@@ -525,7 +525,6 @@ let update =
        })
     |> Option.value(~default=(model, Nothing))
 
-  // TODO
   | Command(JumpToNextPlaceholder) =>
     maybeBuffer
     |> OptionEx.flatMap(buffer => {
