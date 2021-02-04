@@ -65,7 +65,7 @@ module Gradient = {
 };
 
 module Shadow = {
-  let shadowStartColor = Revery.Color.rgba(0., 1., 0., 0.22);
+  let shadowStartColor = Revery.Color.rgba(0., 0., 0., 0.22);
   let shadowStopColor = Revery.Color.rgba(0., 0., 0., 0.);
 
   type direction =

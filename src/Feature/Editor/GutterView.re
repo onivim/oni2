@@ -149,7 +149,7 @@ let render =
   );
 
   if (showScrollShadow) {
-    ScrollShadow.renderVertical(~editor, ~width=float(width), ~context);
+    ScrollShadow.renderVertical(~color=colors.shadow, ~editor, ~width=float(width), ~context);
   };
 };
 

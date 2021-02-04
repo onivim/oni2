@@ -38,8 +38,8 @@ let shadow =
   define(
     "shadow",
     {
-      light: transparent(0.25, hex("#F00F")),
-      dark: transparent(0.5, hex("#00FF")),
+      light: transparent(0.16, hex("#000F")),
+      dark: transparent(0.4, hex("#000F")),
       hc: unspecified,
     },
   );
