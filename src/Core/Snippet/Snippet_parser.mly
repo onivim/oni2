@@ -10,7 +10,7 @@
 %token <string> VARIABLE
 %token NEWLINE
 
-%start <Snippet_internal.t list> main
+%start <Snippet_internal.t> main
 
 %%
 
@@ -24,6 +24,9 @@ expr:
 | e = expr_nested; { e }
 | LB; { Text("{") } 
 | RB; { Text("}") }
+| COMMA; { Text(",") }
+| PIPE; { Text("|") }
+| COLON; { Text(":") }
 
 expr_nested:
 | DOLLAR; num = NUMBER { Placeholder({index = num; contents = [] }) } 

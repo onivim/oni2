@@ -120,6 +120,7 @@ module Mode: {
 
   let isCommandLine: t => bool;
   let isInsert: t => bool;
+  let isInsertOrSelect: t => bool;
   let isNormal: t => bool;
   let isVisual: t => bool;
   let isSelect: t => bool;
@@ -470,7 +471,7 @@ module Mapping: {
     | Operator // omap, onoremap
     | Terminal // tmap, tnoremap
     | InsertAndCommandLine // :map!
-    | All; // :map;
+    | NormalAndVisualAndSelectAndOperator; // :map;
 
   module ScriptId: {
     [@deriving show]

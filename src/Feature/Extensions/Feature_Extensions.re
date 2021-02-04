@@ -69,6 +69,25 @@ let themesByName = (~filter: string, model) => {
   |> List.filter(label => Utility.StringEx.contains(filter, label));
 };
 
+let snippetFilePaths = (~fileType, model) => {
+  Exthost.Extension.(
+    model
+    |> pick((manifest: Manifest.t) => {
+         Contributions.(manifest.contributes.snippets)
+       })
+    |> List.flatten
+    |> List.filter(({language, _}: Contributions.Snippet.t) => {
+         switch (language) {
+         | None => true
+         | Some(languageId) => fileType == languageId
+         }
+       })
+    |> List.filter_map(({path, _}: Contributions.Snippet.t) =>
+         Fp.absoluteCurrentPlatform(path)
+       )
+  );
+};
+
 module ListView = ListView;
 module DetailsView = DetailsView;
 

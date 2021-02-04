@@ -23,6 +23,40 @@ module Decoders = {
            ),
       ),
     ]);
+
+  let snippetSuggestions: decoder([ | `None | `Inline]) =
+    one_of([
+      (
+        "bool",
+        bool
+        |> map(
+             fun
+             | false => `None
+             | true => `Inline,
+           ),
+      ),
+      (
+        "string",
+        string
+        |> map(
+             fun
+             | "none" => `None
+             | "inline" => `Inline
+             | _ => `None,
+           ),
+      ),
+    ]);
+};
+
+module Encoders = {
+  open Json.Encode;
+
+  let snippetSuggestions: encoder([ | `None | `Inline]) =
+    suggestion =>
+      switch (suggestion) {
+      | `None => string("none")
+      | `Inline => string("inline")
+      };
 };
 
 module Custom = {
@@ -61,13 +95,30 @@ module Editor = {
       bool,
       ~default=true,
     );
+
+  let snippetSuggestions =
+    setting(
+      "editor.snippetSuggestions",
+      custom(
+        ~encode=Encoders.snippetSuggestions,
+        ~decode=Decoders.snippetSuggestions,
+      ),
+      ~default=`None,
+    );
 };
 
-module Experimental = {};
+module Experimental = {
+  module Snippets = {
+    let enabled =
+      setting("experimental.snippets.enabled", bool, ~default=false);
+  };
+};
 
 let contributions = [
   inactiveWindowOpacity.spec,
   animation.spec,
   shadows.spec,
   Editor.codeLensEnabled.spec,
+  Editor.snippetSuggestions.spec,
+  Experimental.Snippets.enabled.spec,
 ];
