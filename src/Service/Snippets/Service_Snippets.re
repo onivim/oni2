@@ -83,28 +83,15 @@ module Cache = {
       promise;
     };
   };
+
 };
 
-module Sub = {
-  type snippetFileParams = {
-    uniqueId: string,
-    filePaths: list(Fp.t(Fp.absolute)),
-  };
-  module SnippetFileSubscription =
-    Isolinear.Sub.Make({
-      type nonrec msg = list(SnippetWithMetadata.t);
-      type nonrec params = snippetFileParams;
-
-      type state = unit;
-
-      let name = "Service_Snippet.SnippetFileSubscription";
-      let id = ({uniqueId, _}) => uniqueId;
-
-      let init = (~params, ~dispatch) => {
+module Internal = {
+  let loadSnippetsFromFiles = (~filePaths, dispatch) => {
         // Load all files
         // Coalesce all promises
         let promises =
-          params.filePaths |> List.map(Fp.toString) |> List.map(Cache.get);
+          filePaths |> List.map(Fp.toString) |> List.map(Cache.get);
 
         let join = (a, b) => a @ b;
         let promise = LwtEx.some(~default=[], join, promises);
@@ -125,6 +112,45 @@ module Sub = {
             );
             dispatch([]);
           },
+        );
+  };
+}
+
+module Effect = {
+  let snippetFromFiles = (
+    ~filePaths,
+    toMsg
+  ) => Isolinear.Effect.createWithDispatch(
+    ~name="Service_Snippets.Effect.snippetFromFiles",
+    dispatch => {
+      Internal.loadSnippetsFromFiles(
+        ~filePaths,
+        snippets => dispatch(toMsg(snippets)),
+      )
+    }
+  );
+};
+
+module Sub = {
+  type snippetFileParams = {
+    uniqueId: string,
+    filePaths: list(Fp.t(Fp.absolute)),
+  };
+  module SnippetFileSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = list(SnippetWithMetadata.t);
+      type nonrec params = snippetFileParams;
+
+      type state = unit;
+
+      let name = "Service_Snippet.SnippetFileSubscription";
+      let id = ({uniqueId, _}) => uniqueId;
+
+      let init = (~params, ~dispatch) => {
+
+        Internal.loadSnippetsFromFiles(
+          ~filePaths=params.filePaths,
+          dispatch,
         );
       };
 

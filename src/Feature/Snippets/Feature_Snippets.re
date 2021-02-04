@@ -374,11 +374,11 @@ type msg =
   | Command(command)
   | SnippetInserted([@opaque] Session.t)
   | SnippetInsertionError(string)
-  | InsertInternal({ snippetString: string});
+  | InsertInternal({snippetString: string});
 
 module Msg = {
   let insert = (~snippet) => InsertInternal({snippetString: snippet});
-}
+};
 
 type model = {maybeSession: option(Session.t)};
 
@@ -601,20 +601,18 @@ let update =
                ~position=cursorPosition,
                ~snippet,
              )
-           | None => 
-           // TODO: Wire up menu
-           prerr_endline ("!! TODO");
-           Isolinear.Effect.none
+           | None =>
+             // TODO: Wire up menu
+             prerr_endline("!! TODO");
+             Isolinear.Effect.none;
            }
          })
       |> Option.value(~default=Isolinear.Effect.none);
-      (model, Effect(eff));
+    (model, Effect(eff));
 
-    | InsertInternal({snippetString}) =>
-      // TODO
-      (model, Nothing);
-
-
+  | InsertInternal({snippetString}) =>
+    // TODO
+    (model, Nothing)
   };
 
 module Commands = {
@@ -655,18 +653,18 @@ module Commands = {
       });
 
     let decode =
-      nullable(one_of([
-        // TODO: Decoder for getting snippet by name
-        ("snippets", snippets),
-      ]));
+      nullable(
+        one_of([
+          // TODO: Decoder for getting snippet by name
+          ("snippets", snippets),
+        ]),
+      );
 
     let snippetResult = json |> decode_value(decode);
 
     switch (snippetResult) {
     | Ok(snippet) =>
-      Command(
-        InsertSnippet({maybeSnippet: snippet, maybeMeetColumn: None}),
-      )
+      Command(InsertSnippet({maybeSnippet: snippet, maybeMeetColumn: None}))
     | Error(msg) => SnippetInsertionError(string_of_error(msg))
     };
   };
