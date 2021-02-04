@@ -635,8 +635,28 @@ let update =
     )
 
   | InsertInternal({snippetString}) =>
-    // TODO
-    (model, Nothing)
+    let eff =
+      maybeBuffer
+      |> Option.map(buffer => {
+           switch (Snippet.parse(snippetString)) {
+           | Ok(snippet) =>
+             Effect(
+               Effects.startSession(
+                 // TODO: Handle selection
+                 ~maybeMeetColumn=None,
+                 ~resolverFactory,
+                 ~buffer,
+                 ~editorId,
+                 ~position=cursorPosition,
+                 ~snippet,
+               ),
+             )
+           | Error(msg) => ErrorMessage(msg)
+           }
+         })
+      |> Option.value(~default=Nothing);
+
+    (model, eff);
   };
 
 module Commands = {
