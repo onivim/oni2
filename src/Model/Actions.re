@@ -40,6 +40,10 @@ type t =
   | FileChanged(Service_FileWatcher.event)
   | FileSystem(Feature_FileSystem.msg)
   | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
+  | KeybindingInvoked({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
