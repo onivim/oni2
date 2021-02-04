@@ -374,6 +374,7 @@ type msg =
   | Command(command)
   | SnippetInserted([@opaque] Session.t)
   | SnippetInsertionError(string)
+  | SnippetsLoadedForPicker(list(Service_Snippets.SnippetWithMetadata.t))
   | InsertInternal({snippetString: string});
 
 module Msg = {
@@ -506,7 +507,15 @@ module Effects = {
 };
 
 let update =
-    (~resolverFactory, ~maybeBuffer, ~editorId, ~cursorPosition, ~extensions, msg, model) =>
+    (
+      ~resolverFactory,
+      ~maybeBuffer,
+      ~editorId,
+      ~cursorPosition,
+      ~extensions,
+      msg,
+      model,
+    ) =>
   switch (msg) {
   | SnippetInsertionError(msg) => (model, ErrorMessage(msg))
 
@@ -594,22 +603,36 @@ let update =
       |> Option.map(buffer => {
            switch (maybeSnippet) {
            | Some(snippet) =>
-             Effect(Effects.startSession(
-               ~maybeMeetColumn,
-               ~resolverFactory,
-               ~buffer,
-               ~editorId,
-               ~position=cursorPosition,
-               ~snippet,
-             ))
+             Effect(
+               Effects.startSession(
+                 ~maybeMeetColumn,
+                 ~resolverFactory,
+                 ~buffer,
+                 ~editorId,
+                 ~position=cursorPosition,
+                 ~snippet,
+               ),
+             )
            | None =>
-             // TODO: Wire up menu
-             prerr_endline("!! TODO");
-             ShowPicker([])
+             let fileType =
+               buffer |> Buffer.getFileType |> Buffer.FileType.toString;
+
+             let filePaths =
+               Feature_Extensions.snippetFilePaths(~fileType, extensions);
+             Effect(
+               Service_Snippets.Effect.snippetFromFiles(~filePaths, snippets =>
+                 SnippetsLoadedForPicker(snippets)
+               ),
+             );
            }
          })
       |> Option.value(~default=Nothing);
     (model, eff);
+
+  | SnippetsLoadedForPicker(snippetsWithMetadata) => (
+      model,
+      ShowPicker(snippetsWithMetadata),
+    )
 
   | InsertInternal({snippetString}) =>
     // TODO

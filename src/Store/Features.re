@@ -1751,11 +1751,13 @@ let update =
              );
         (layout', Isolinear.Effect.none);
 
-      | ShowPicker(snippetsWithMetadata) => 
+      | ShowPicker(snippetsWithMetadata) =>
         let eff =
-            Isolinear.Effect.createWithDispatch(~name="snippet.menu", dispatch => {
-              dispatch(Actions.QuickmenuShow(SnippetPicker(snippetsWithMetadata)))
-            });
+          Isolinear.Effect.createWithDispatch(~name="snippet.menu", dispatch => {
+            dispatch(
+              Actions.QuickmenuShow(SnippetPicker(snippetsWithMetadata)),
+            )
+          });
         (state.layout, eff);
 
       | Effect(eff) => (

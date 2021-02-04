@@ -256,7 +256,9 @@ let start = () => {
                category: Some(snippet.prefix),
                name: snippet.description,
                command: () =>
-                 Snippets(Feature_Snippets.Msg.insert(~snippet=snippet.snippet)),
+                 Snippets(
+                   Feature_Snippets.Msg.insert(~snippet=snippet.snippet),
+                 ),
                icon: None,
                highlight: [],
                handle: None,
