@@ -1,8 +1,9 @@
 ### Features 
 
-- #3024 - Editor: Snippet Support - Multi-select handler
-- #3047, #3052, #3056, #3059, #3061, #3064 - Editor: Core Snippet Feature Work
-- #3067 - Editor: Integrate snippets provided by extensions
+- #3024 - Snippet Support - Multi-select handler
+- #3047, #3052, #3056, #3059, #3061, #3064 - Snippets: Core Feature Work
+- #3067 - Snippets: Integrate snippets provided by extensions
+- #3090 - Snippets: Add insert snippet command
 
 ### Bug Fixes
 

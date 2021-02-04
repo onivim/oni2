@@ -7,6 +7,8 @@ let snippetToInsert: (~snippet: string) => string;
 [@deriving show]
 type msg;
 
+module Msg: {let insert: (~snippet: string) => msg;};
+
 type model;
 
 let initial: model;
@@ -16,6 +18,7 @@ type outmsg =
   | ErrorMessage(string)
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
+  | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
   | Nothing;
 
 module Session: {
@@ -37,6 +40,7 @@ let update:
     ~maybeBuffer: option(Buffer.t),
     ~editorId: int,
     ~cursorPosition: BytePosition.t,
+    ~extensions: Feature_Extensions.model,
     msg,
     model
   ) =>

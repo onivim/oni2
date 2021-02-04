@@ -364,7 +364,8 @@ type command =
   | JumpToNextPlaceholder
   | JumpToPreviousPlaceholder
   | InsertSnippet({
-      snippet: [@opaque] Snippet.t,
+      // If no snippet is provided - we should open the snippet menu
+      maybeSnippet: [@opaque] option(Snippet.t),
       maybeMeetColumn: option(CharacterIndex.t),
     });
 
@@ -372,7 +373,13 @@ type command =
 type msg =
   | Command(command)
   | SnippetInserted([@opaque] Session.t)
-  | SnippetInsertionError(string);
+  | SnippetInsertionError(string)
+  | SnippetsLoadedForPicker(list(Service_Snippets.SnippetWithMetadata.t))
+  | InsertInternal({snippetString: string});
+
+module Msg = {
+  let insert = (~snippet) => InsertInternal({snippetString: snippet});
+};
 
 type model = {maybeSession: option(Session.t)};
 
@@ -404,6 +411,7 @@ type outmsg =
   | ErrorMessage(string)
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
+  | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
   | Nothing;
 
 module Effects = {
@@ -487,7 +495,7 @@ module Effects = {
         dispatch(
           Command(
             InsertSnippet({
-              snippet: resolvedSnippet,
+              maybeSnippet: Some(resolvedSnippet),
               maybeMeetColumn: Some(meetColumn),
             }),
           ),
@@ -499,7 +507,15 @@ module Effects = {
 };
 
 let update =
-    (~resolverFactory, ~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
+    (
+      ~resolverFactory,
+      ~maybeBuffer,
+      ~editorId,
+      ~cursorPosition,
+      ~extensions,
+      msg,
+      model,
+    ) =>
   switch (msg) {
   | SnippetInsertionError(msg) => (model, ErrorMessage(msg))
 
@@ -581,22 +597,66 @@ let update =
        })
     |> Option.value(~default=(model, Nothing))
 
-  | Command(InsertSnippet({snippet, maybeMeetColumn})) =>
+  | Command(InsertSnippet({maybeSnippet, maybeMeetColumn})) =>
     let eff =
       maybeBuffer
       |> Option.map(buffer => {
-           Effects.startSession(
-             ~maybeMeetColumn,
-             ~resolverFactory,
-             ~buffer,
-             ~editorId,
-             ~position=cursorPosition,
-             ~snippet,
-           )
-         })
-      |> Option.value(~default=Isolinear.Effect.none);
+           switch (maybeSnippet) {
+           | Some(snippet) =>
+             Effect(
+               Effects.startSession(
+                 ~maybeMeetColumn,
+                 ~resolverFactory,
+                 ~buffer,
+                 ~editorId,
+                 ~position=cursorPosition,
+                 ~snippet,
+               ),
+             )
+           | None =>
+             let fileType =
+               buffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
-    (model, Effect(eff));
+             let filePaths =
+               Feature_Extensions.snippetFilePaths(~fileType, extensions);
+             Effect(
+               Service_Snippets.Effect.snippetFromFiles(~filePaths, snippets =>
+                 SnippetsLoadedForPicker(snippets)
+               ),
+             );
+           }
+         })
+      |> Option.value(~default=Nothing);
+    (model, eff);
+
+  | SnippetsLoadedForPicker(snippetsWithMetadata) => (
+      model,
+      ShowPicker(snippetsWithMetadata),
+    )
+
+  | InsertInternal({snippetString}) =>
+    let eff =
+      maybeBuffer
+      |> Option.map(buffer => {
+           switch (Snippet.parse(snippetString)) {
+           | Ok(snippet) =>
+             Effect(
+               Effects.startSession(
+                 // TODO: Handle selection
+                 ~maybeMeetColumn=None,
+                 ~resolverFactory,
+                 ~buffer,
+                 ~editorId,
+                 ~position=cursorPosition,
+                 ~snippet,
+               ),
+             )
+           | Error(msg) => ErrorMessage(msg)
+           }
+         })
+      |> Option.value(~default=Nothing);
+
+    (model, eff);
   };
 
 module Commands = {
@@ -637,16 +697,18 @@ module Commands = {
       });
 
     let decode =
-      one_of([
-        // TODO: Decoder for getting snippet by name
-        ("snippets", snippets),
-      ]);
+      nullable(
+        one_of([
+          // TODO: Decoder for getting snippet by name
+          ("snippets", snippets),
+        ]),
+      );
 
     let snippetResult = json |> decode_value(decode);
 
     switch (snippetResult) {
     | Ok(snippet) =>
-      Command(InsertSnippet({snippet, maybeMeetColumn: None}))
+      Command(InsertSnippet({maybeSnippet: snippet, maybeMeetColumn: None}))
     | Error(msg) => SnippetInsertionError(string_of_error(msg))
     };
   };

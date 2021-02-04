@@ -1659,6 +1659,7 @@ let update =
         ~maybeBuffer,
         ~editorId,
         ~cursorPosition,
+        ~extensions=state.extensions,
         msg,
         state.snippets,
       );
@@ -1749,6 +1750,16 @@ let update =
                )
              );
         (layout', Isolinear.Effect.none);
+
+      | ShowPicker(snippetsWithMetadata) =>
+        let eff =
+          Isolinear.Effect.createWithDispatch(~name="snippet.menu", dispatch => {
+            dispatch(
+              Actions.QuickmenuShow(SnippetPicker(snippetsWithMetadata)),
+            )
+          });
+        (state.layout, eff);
+
       | Effect(eff) => (
           state.layout,
           eff |> Isolinear.Effect.map(msg => Actions.Snippets(msg)),
