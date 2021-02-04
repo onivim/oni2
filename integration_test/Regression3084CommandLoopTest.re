@@ -33,14 +33,15 @@ runTest(
     wait(~name="Mode is insert", (state: State.t) =>
       Selectors.mode(state) |> Vim.Mode.isInsert
     );
-  
-    // With #3084, we had an infinite cycle with the command - 
+
+    // With #3084, we had an infinite cycle with the command -
     // in this case, with our `jj` key binding, it would cause
     // `vim.esc` to be continually dispatched.
     // So to exercise this case - we need to make sure we don't switch back a mode.
 
-    staysTrue(~timeout=1.0, ~name="Should stay in insert mode", (state: State.t) =>
+    staysTrue(
+      ~timeout=1.0, ~name="Should stay in insert mode", (state: State.t) =>
       Selectors.mode(state) |> Vim.Mode.isInsert
     );
-}
+  },
 );

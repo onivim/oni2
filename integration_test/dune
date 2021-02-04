@@ -16,16 +16,15 @@
    SyntaxServerMessageExceptionTest SyntaxServerParentPidTest
    SyntaxServerParentPidCorrectTest SyntaxServerReadExceptionTest
    Regression1671Test Regression2349EnewTest Regression2988SwitchEditorTest
-   Regression3084CommandLoopTest
-   RegressionCommandLineNoCompletionTest RegressionFontFallbackTest
-   RegressionFileModifiedIndicationTest RegressionNonExistentDirectory
-   RegressionVspEmptyInitialBufferTest RegressionVspEmptyExistingBufferTest
-   SCMGitTest SyntaxHighlightPhpTest SyntaxHighlightTextMateTest
-   SyntaxHighlightTreesitterTest AddRemoveSplitTest TerminalSetPidTitleTest
-   TerminalConfigurationTest TypingBatchedTest TypingUnbatchedTest
-   VimIncsearchScrollTest VimSimpleRemapTest VimlRemapCmdlineTest
-   ClipboardChangeTest VimScriptLocalFunctionTest ZenModeSingleFileModeTest
-   ZenModeSplitTest)
+   Regression3084CommandLoopTest RegressionCommandLineNoCompletionTest
+   RegressionFontFallbackTest RegressionFileModifiedIndicationTest
+   RegressionNonExistentDirectory RegressionVspEmptyInitialBufferTest
+   RegressionVspEmptyExistingBufferTest SCMGitTest SyntaxHighlightPhpTest
+   SyntaxHighlightTextMateTest SyntaxHighlightTreesitterTest
+   AddRemoveSplitTest TerminalSetPidTitleTest TerminalConfigurationTest
+   TypingBatchedTest TypingUnbatchedTest VimIncsearchScrollTest
+   VimSimpleRemapTest VimlRemapCmdlineTest ClipboardChangeTest
+   VimScriptLocalFunctionTest ZenModeSingleFileModeTest ZenModeSplitTest)
  (libraries Oni_CLI Oni_IntegrationTestLib reason-native-crash-utils.asan))
 
 (install
