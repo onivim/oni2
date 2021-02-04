@@ -410,6 +410,7 @@ type outmsg =
   | ErrorMessage(string)
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
+  | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
   | Nothing;
 
 module Effects = {
@@ -505,7 +506,7 @@ module Effects = {
 };
 
 let update =
-    (~resolverFactory, ~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
+    (~resolverFactory, ~maybeBuffer, ~editorId, ~cursorPosition, ~extensions, msg, model) =>
   switch (msg) {
   | SnippetInsertionError(msg) => (model, ErrorMessage(msg))
 
@@ -593,22 +594,22 @@ let update =
       |> Option.map(buffer => {
            switch (maybeSnippet) {
            | Some(snippet) =>
-             Effects.startSession(
+             Effect(Effects.startSession(
                ~maybeMeetColumn,
                ~resolverFactory,
                ~buffer,
                ~editorId,
                ~position=cursorPosition,
                ~snippet,
-             )
+             ))
            | None =>
              // TODO: Wire up menu
              prerr_endline("!! TODO");
-             Isolinear.Effect.none;
+             ShowPicker([])
            }
          })
-      |> Option.value(~default=Isolinear.Effect.none);
-    (model, Effect(eff));
+      |> Option.value(~default=Nothing);
+    (model, eff);
 
   | InsertInternal({snippetString}) =>
     // TODO

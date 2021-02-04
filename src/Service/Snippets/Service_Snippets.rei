@@ -9,7 +9,6 @@ module SnippetWithMetadata: {
 
 module Effect: {
   let snippetFromFiles: (
-    ~uniqueId: string,
     ~filePaths: list(Fp.t(Fp.absolute)),
     list(SnippetWithMetadata.t) => 'msg
   ) => Isolinear.Effect.t('msg);
