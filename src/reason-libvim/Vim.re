@@ -619,6 +619,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         Undo.saveRegion(lineNumber - 1, lineNumber + 1);
         let originalCursor = cursor;
         Cursor.set(cursor);
+        let originalLine = Buffer.getLine(Buffer.getCurrent(), cursor.line);
         if (Mode.current() |> Mode.isInsert) {
           let position: BytePosition.t = Cursor.get();
           let line = Buffer.getLine(Buffer.getCurrent(), position.line);
@@ -687,8 +688,11 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
         let newCursor = Cursor.get();
         let delta =
           if (LineNumber.equals(newCursor.line, originalCursor.line)) {
-            ByteIndex.toInt(newCursor.byte)
-            - ByteIndex.toInt(originalCursor.byte);
+            let newLine = Buffer.getLine(Buffer.getCurrent(), newCursor.line);
+            // We need to take the byte-position-delta here,
+            // because the cursor may have moved less characters than
+            // were actually changed (ie, auto-closing pairs: {|})
+            String.length(newLine) - String.length(originalLine);
           } else {
             0;
           };
@@ -733,7 +737,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
             let secondaryCursorAndDeltas =
               tail
               |> List.sort(revCompare)
-              |> List.map(adjustCursors([(newHead, primaryCursorDelta)]))
+              |> List.map(adjustCursors([(hd, primaryCursorDelta)]))
               |> List.map(runInsertCursor);
 
             let secondaryCursors = secondaryCursorAndDeltas |> List.map(fst);

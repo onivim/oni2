@@ -547,9 +547,9 @@ describe("Multi-cursor", ({describe, _}) => {
 
       let autoClosingPairs =
         AutoClosingPairs.create(
+          ~allowBefore=[" "],
           AutoClosingPairs.[AutoPair.{opening: "{", closing: "}"}],
         );
-
       let mode =
         input(
           ~autoClosingPairs,
@@ -559,11 +559,11 @@ describe("Multi-cursor", ({describe, _}) => {
                 BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
                 BytePosition.{
                   line: LineNumber.(zero),
-                  byte: ByteIndex.(zero + 1),
+                  byte: ByteIndex.(zero + 4),
                 },
                 BytePosition.{
                   line: LineNumber.(zero),
-                  byte: ByteIndex.(zero + 2),
+                  byte: ByteIndex.(zero + 7),
                 },
               ],
             }),
@@ -573,7 +573,7 @@ describe("Multi-cursor", ({describe, _}) => {
       let line1 = Buffer.getLine(buf, LineNumber.zero);
 
       expect.string(line1).toEqual(
-        "{}T{}h{}is is the first line of a test file",
+        "{}This{} is{} the first line of a test file",
       );
 
       let _: Vim.Mode.t = input(~autoClosingPairs, ~mode, "a");
@@ -581,7 +581,7 @@ describe("Multi-cursor", ({describe, _}) => {
       let line1 = Buffer.getLine(buf, LineNumber.zero);
 
       expect.string(line1).toEqual(
-        "{a}T{a}h{a}is is the first line of a test file",
+        "{a}This{a} is{a} the first line of a test file",
       );
     });
     test("insert / backspace", ({expect, _}) => {
