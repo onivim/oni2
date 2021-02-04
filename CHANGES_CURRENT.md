@@ -36,3 +36,4 @@
 ### Infrastructure / Refactoring
 
 - #3012 - Node: Upgrade from Node 12 LTS -> Node 14 LTS (related #3009)
+- #3096 - OS: Add logging for `readdir` path (related #3092)
