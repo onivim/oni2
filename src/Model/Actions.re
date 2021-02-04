@@ -17,7 +17,10 @@ type t =
   | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
   | Changelog(Feature_Changelog.msg)
-  | Command(string)
+  | CommandInvoked({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | Commands(Feature_Commands.msg(t))
   | Configuration(Feature_Configuration.msg)
   | ConfigurationParseError(string)
@@ -40,10 +43,6 @@ type t =
   // Reload keybindings from configuration
   | KeyBindingsReload
   | KeyBindingsParseError(string)
-  | KeybindingInvoked({
-      command: string,
-      arguments: Yojson.Safe.t,
-    })
   | KeyDown({
       key: EditorInput.KeyCandidate.t,
       scancode: int,

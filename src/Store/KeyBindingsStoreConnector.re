@@ -117,7 +117,7 @@ let start = maybeKeyBindingsFilePath => {
         |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       )
 
-    | KeybindingInvoked({command, arguments}) =>
+    | CommandInvoked({command, arguments}) =>
       if (command |> Utility.StringEx.startsWith(~prefix=":")) {
         (
           state,
