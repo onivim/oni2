@@ -212,10 +212,24 @@ let bufferBytePositionToPixelInternal =
     };
   let lineCount = EditorBuffer.numberOfLines(buffer);
   let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
-  if (line < 0 || line >= lineCount) {
+  let wrapping = wrapState |> WrapState.wrapping;
+  if (line < 0) {
     ({x: 0., y: 0.}: PixelPosition.t, 0.);
+  } else if (line >= lineCount) {
+    let pixelY =
+      // Get total offset for view lines
+      float(Wrapping.numberOfLines(wrapping))
+      *. lineHeightInPixels(editor)
+      // Add in codelens / inline elements
+      +. InlineElements.getReservedSpace(
+           position.line,
+           editor.inlineElements,
+         )
+      -. scrollY
+      +. 0.5;
+
+    ({x: 0., y: pixelY}: PixelPosition.t, 0.);
   } else {
-    let wrapping = wrapState |> WrapState.wrapping;
     let bufferLine = buffer |> EditorBuffer.line(line);
 
     let viewLine =
