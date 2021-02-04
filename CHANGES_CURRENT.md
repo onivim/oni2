@@ -28,6 +28,7 @@
 - #3078 - Auto-Update: Notify user when update fails due to missing key (fixes #3070)
 - #3086 - Snippets: Fix clash with completion / document highlights feature
 - #3085 - Snippets: Fix drop-shadow calculation at end of buffer
+- #3091 - Snippets: Fix auto-closing pairs when placeholders are on same line
 
 ### Performance
 
