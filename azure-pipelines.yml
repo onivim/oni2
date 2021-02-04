@@ -73,7 +73,7 @@ jobs:
 
   steps:
   - template: .ci/clean-linux-deps.yml
-  - template: .ci/restore-build-cache.yml
+  # - template: .ci/restore-build-cache.yml
   - template: .ci/use-node.yml
   - script: sudo apt-get update
   - script: sudo apt-get install -y libncurses5-dev libacl1-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev mesa-utils mesa-utils-extra ragel libgtk-3-dev nasm xvfb
@@ -102,7 +102,7 @@ jobs:
 
   steps:
   - template: .ci/clean-linux-deps.yml
-  - template: .ci/restore-build-cache.yml
+  # - template: .ci/restore-build-cache.yml
   - script: docker build --network=host -t centos scripts/docker/centos
     displayName: 'docker: build Dockerfile'
   - script: docker container run --rm --volume `pwd`:/oni2 centos /bin/bash -c 'cd oni2 && git --version'
@@ -139,7 +139,7 @@ jobs:
     continueOnError: true
   - script: brew update-reset
   - script: brew install ragel
-  - template: .ci/restore-build-cache.yml
+  # - template: .ci/restore-build-cache.yml
   - template: .ci/swap-xcode.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/use-esy.yml
@@ -173,7 +173,7 @@ jobs:
   - template: .ci/use-node.yml
   - powershell: ./scripts/windows/verify-signtool.ps1
     displayName: 'Validate signtool path'
-  - template: .ci/restore-build-cache.yml
+  # - template: .ci/restore-build-cache.yml
   - template: .ci/js-build-steps.yml
   - template: .ci/use-esy.yml
   - template: .ci/esy-build-steps.yml
