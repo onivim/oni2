@@ -364,7 +364,8 @@ type command =
   | JumpToNextPlaceholder
   | JumpToPreviousPlaceholder
   | InsertSnippet({
-      snippet: [@opaque] Snippet.t,
+      // If no snippet is provided - we should open the snippet menu
+      maybeSnippet: [@opaque] option(Snippet.t),
       maybeMeetColumn: option(CharacterIndex.t),
     });
 
@@ -487,7 +488,7 @@ module Effects = {
         dispatch(
           Command(
             InsertSnippet({
-              snippet: resolvedSnippet,
+              maybeSnippet: Some(resolvedSnippet),
               maybeMeetColumn: Some(meetColumn),
             }),
           ),
@@ -581,18 +582,22 @@ let update =
        })
     |> Option.value(~default=(model, Nothing))
 
-  | Command(InsertSnippet({snippet, maybeMeetColumn})) =>
+  | Command(InsertSnippet({maybeSnippet, maybeMeetColumn})) =>
     let eff =
       maybeBuffer
       |> Option.map(buffer => {
-           Effects.startSession(
-             ~maybeMeetColumn,
-             ~resolverFactory,
-             ~buffer,
-             ~editorId,
-             ~position=cursorPosition,
-             ~snippet,
-           )
+           switch (maybeSnippet) {
+           | Some(snippet) =>
+             Effects.startSession(
+               ~maybeMeetColumn,
+               ~resolverFactory,
+               ~buffer,
+               ~editorId,
+               ~position=cursorPosition,
+               ~snippet,
+             )
+           | None => Isolinear.Effect.none
+           }
          })
       |> Option.value(~default=Isolinear.Effect.none);
 
@@ -646,7 +651,9 @@ module Commands = {
 
     switch (snippetResult) {
     | Ok(snippet) =>
-      Command(InsertSnippet({snippet, maybeMeetColumn: None}))
+      Command(
+        InsertSnippet({maybeSnippet: Some(snippet), maybeMeetColumn: None}),
+      )
     | Error(msg) => SnippetInsertionError(string_of_error(msg))
     };
   };
