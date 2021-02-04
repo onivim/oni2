@@ -3,6 +3,7 @@
  (public_name Oni2.feature.snippets)
  (inline_tests)
  (libraries Oni2.core Oni2.components Oni2.feature.theme Oni2.service.os
-   Oni2.service.vim Revery isolinear)
+   Oni2.feature.extensions Oni2.service.snippets Oni2.service.vim Revery
+   isolinear)
  (preprocess
   (pps ppx_let ppx_deriving.show brisk-reconciler.ppx ppx_inline_test)))

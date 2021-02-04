@@ -248,6 +248,29 @@ let start = () => {
         Isolinear.Effect.none,
       );
 
+    | QuickmenuShow(SnippetPicker(snippets)) =>
+      let items =
+        snippets
+        |> List.map((snippet: Service_Snippets.SnippetWithMetadata.t) => {
+             Actions.{
+               category: Some(snippet.prefix),
+               name: snippet.description,
+               command: () =>
+                 Snippets(
+                   Feature_Snippets.Msg.insert(~snippet=snippet.snippet),
+                 ),
+               icon: None,
+               highlight: [],
+               handle: None,
+             }
+           })
+        |> Array.of_list;
+
+      (
+        Some({...Quickmenu.defaults(SnippetPicker(snippets)), items}),
+        Isolinear.Effect.none,
+      );
+
     | QuickmenuShow(OpenBuffersPicker) =>
       let items =
         makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
@@ -614,6 +637,7 @@ let subscriptions = (ripgrep, dispatch) => {
       | EditorsPicker
       | OpenBuffersPicker => [filter(query, quickmenu.items)]
       | ThemesPicker(_) => [filter(query, quickmenu.items)]
+      | SnippetPicker(_) => [filter(query, quickmenu.items)]
 
       | Extension({hasItems, _}) =>
         hasItems ? [filter(query, quickmenu.items)] : []
