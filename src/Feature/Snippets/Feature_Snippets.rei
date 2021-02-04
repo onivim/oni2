@@ -7,6 +7,10 @@ let snippetToInsert: (~snippet: string) => string;
 [@deriving show]
 type msg;
 
+module Msg: {
+  let insert: (~snippet: string) => msg;
+}
+
 type model;
 
 let initial: model;
