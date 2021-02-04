@@ -542,6 +542,48 @@ describe("Multi-cursor", ({describe, _}) => {
 
       dispose();
     });
+    test("multi-cursor auto-closing pairs, same line", ({expect, _}) => {
+      let buf = resetBuffer();
+
+      let autoClosingPairs =
+        AutoClosingPairs.create(
+          AutoClosingPairs.[AutoPair.{opening: "{", closing: "}"}],
+        );
+
+      let mode =
+        input(
+          ~autoClosingPairs,
+          ~mode=
+            Vim.Mode.Insert({
+              cursors: [
+                BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+                BytePosition.{
+                  line: LineNumber.(zero),
+                  byte: ByteIndex.(zero + 1),
+                },
+                BytePosition.{
+                  line: LineNumber.(zero),
+                  byte: ByteIndex.(zero + 2),
+                },
+              ],
+            }),
+          "{",
+        );
+
+      let line1 = Buffer.getLine(buf, LineNumber.zero);
+
+      expect.string(line1).toEqual(
+        "{}T{}h{}is is the first line of a test file",
+      );
+
+      let _: Vim.Mode.t = input(~autoClosingPairs, ~mode, "a");
+
+      let line1 = Buffer.getLine(buf, LineNumber.zero);
+
+      expect.string(line1).toEqual(
+        "{a}T{a}h{a}is is the first line of a test file",
+      );
+    });
     test("insert / backspace", ({expect, _}) => {
       let buf = resetBuffer();
 
