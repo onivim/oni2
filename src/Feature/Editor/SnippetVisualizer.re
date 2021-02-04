@@ -14,7 +14,12 @@ module Constants = {
 let snippetPaint = Skia.Paint.make();
 
 let draw =
-    (~config, ~colors: Colors.t, ~context: Draw.context, session: Feature_Snippets.Session.t) => {
+    (
+      ~config,
+      ~colors: Colors.t,
+      ~context: Draw.context,
+      session: Feature_Snippets.Session.t,
+    ) => {
   let isShadowEnabled =
     Feature_Configuration.GlobalConfiguration.shadows.get(config);
 
@@ -23,7 +28,10 @@ let draw =
   } else {
     let color = colors.shadow;
     Skia.Paint.setColor(snippetPaint, color |> Revery.Color.toSkia);
-    Skia.Paint.setAlpha(snippetPaint, 0.2 *. (color |> Revery.Color.getAlpha));
+    Skia.Paint.setAlpha(
+      snippetPaint,
+      0.2 *. (color |> Revery.Color.getAlpha),
+    );
     let width = float(context.width);
     let height = float(context.height);
 
