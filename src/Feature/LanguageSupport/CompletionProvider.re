@@ -283,6 +283,7 @@ type snippetModel = {
   items: list(CompletionItem.t),
   isComplete: bool,
   filePaths: list(Fp.t(Fp.absolute)),
+  sortOrder: [ `Top | `Inline | `Bottom | `Hidden ],
 };
 [@deriving show]
 type snippetMsg =
@@ -314,11 +315,12 @@ module SnippetCompletionProvider =
     ignore(base);
     ignore(location);
 
+    let sortOrder = CompletionConfig.snippetSuggestions.get(config);
     if (!
           Feature_Configuration.GlobalConfiguration.Experimental.Snippets.enabled.
             get(
             config,
-          )) {
+          ) || sortOrder == `Hidden) {
       None;
     } else {
       let fileType = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
@@ -326,9 +328,19 @@ module SnippetCompletionProvider =
       let snippetFilePaths =
         Feature_Extensions.snippetFilePaths(~fileType, extensions);
 
-      Some({filePaths: snippetFilePaths, items: [], isComplete: false});
+      Some({filePaths: snippetFilePaths, items: [], isComplete: false, sortOrder});
     };
   };
+
+  let sortText = (~sortOrder, snippet: Service_Snippets.SnippetWithMetadata.t) => {
+    switch (sortOrder) {
+    | `Top => "AAAAAA" ++ snippet.prefix
+    | `Bottom => "ZZZZZZ" ++ snippet.prefix
+    | `Inline => snippet.prefix
+    // This should never be hit...
+    | `Hidden => snippet.prefix
+    }
+  }
 
   let update = (~isFuzzyMatching, msg, model: model) => {
     Service_Snippets.(
@@ -339,6 +351,7 @@ module SnippetCompletionProvider =
           |> List.map((snippet: SnippetWithMetadata.t) => {
                CompletionItem.snippet(
                  ~isFuzzyMatching,
+                 ~sortText=sortText(~sortOrder=model.sortOrder, snippet),
                  ~prefix=snippet.prefix,
                  snippet.snippet,
                )
