@@ -152,7 +152,7 @@ module Configuration = {
   let timeout =
     setting(
       ~vim=VimSettings.timeout,
-      "input.timeout",
+      "vim.timeout",
       CustomDecoders.timeout,
       ~default=Timeout(Revery.Time.seconds(1)),
     );
