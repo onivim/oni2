@@ -1069,18 +1069,9 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(effects, []);
 
-      let (_bindings, effects) =
-        Input.timeout(
-          ~context=true,
-          bindings,
-        );
+      let (_bindings, effects) = Input.timeout(~context=true, bindings);
 
-      expect.equal(
-        effects,
-        [
-          Execute("commandA"),
-        ],
-      );
+      expect.equal(effects, [Execute("commandA")]);
     });
     test("timeout with no match", ({expect, _}) => {
       let (bindings, _id) =
@@ -1101,11 +1092,7 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(effects, []);
 
-      let (_bindings, effects) =
-        Input.timeout(
-          ~context=true,
-          bindings,
-        );
+      let (_bindings, effects) = Input.timeout(~context=true, bindings);
 
       expect.equal(
         effects,
@@ -1140,18 +1127,9 @@ describe("EditorInput", ({describe, _}) => {
 
       expect.equal(effects, []);
 
-      let (_bindings, effects) =
-        Input.timeout(
-          ~context=true,
-          bindings,
-        );
+      let (_bindings, effects) = Input.timeout(~context=true, bindings);
 
-      expect.equal(
-        effects,
-        [
-          Text("a")
-        ],
-      );
+      expect.equal(effects, [Text("a")]);
     });
-  })
+  });
 });

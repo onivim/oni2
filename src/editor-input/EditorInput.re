@@ -779,14 +779,15 @@ module Make = (Config: {
     // let noopKey = KeyCandidate.ofList([]);
     // let (bindings', keyDownEffects) = keyDown(~context, ~key=noopKey, ~scancode=-1, bindings);
     // let (bindings'', keyUpEffects) = keyUp(~context, ~scancode=-1, bindings');
-    let (bindings'', effects) = flush(
-      ~allowRemaps=false,
-      ~isRemap=false,
-      ~leaderKey=None,
-      ~recursionDepth=0,
-      ~context,
-      bindings
-    );
+    let (bindings'', effects) =
+      flush(
+        ~allowRemaps=false,
+        ~isRemap=false,
+        ~leaderKey=None,
+        ~recursionDepth=0,
+        ~context,
+        bindings,
+      );
 
     (bindings'', effects);
   };
