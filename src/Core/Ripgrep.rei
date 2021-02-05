@@ -20,6 +20,7 @@ type t = {
     dispose,
   findInFiles:
     (
+      ~searchExclude: list(string),
       ~directory: string,
       ~query: string,
       ~onUpdate: list(Match.t) => unit,

@@ -19,6 +19,7 @@ module DocumentSelector = DocumentSelector;
 module DocumentSymbol = DocumentSymbol;
 module Edit = Edit;
 module Eol = Eol;
+module ExtensionActivationError = ExtensionActivationError;
 module ExtensionActivationReason = ExtensionActivationReason;
 module ExtensionId = ExtensionId;
 module Files = Files;

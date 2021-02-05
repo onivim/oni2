@@ -47,20 +47,20 @@ module Styles = {
     bottom(0),
   ];
 
-  let verticalScrollBar = [
+  let verticalScrollBar = (~thickness) => [
     position(`Absolute),
     top(0),
     right(0),
-    width(Constants.scrollBarThickness),
+    width(thickness),
     bottom(0),
   ];
 
-  let horizontalScrollBar = (gutterOffset, width) => [
+  let horizontalScrollBar = (~thickness, gutterOffset, width) => [
     position(`Absolute),
     bottom(0),
     left(gutterOffset),
     Style.width(width),
-    height(Constants.editorHorizontalScrollBarThickness),
+    height(thickness),
   ];
 };
 
@@ -88,7 +88,7 @@ let minimap =
     Style.[
       position(`Absolute),
       top(0),
-      right(Constants.scrollBarThickness),
+      right(Editor.verticalScrollbarThickness(editor)),
       width(minimapPixelWidth),
       bottom(0),
     ];
@@ -154,6 +154,7 @@ let%component make =
                 ~tokenTheme,
                 ~languageSupport,
                 ~scm,
+                ~snippets: Feature_Snippets.model,
                 ~windowIsFocused,
                 ~perFileTypeConfig: Oni_Core.Config.fileTypeResolver,
                 ~renderOverlays,
@@ -238,10 +239,10 @@ let%component make =
     Feature_Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =
     editor
-    |> Editor.selection
-    |> Option.map(selection => Selection.getRanges(selection, buffer))
-    |> Option.map(ByteRange.toHash)
-    |> Option.value(~default=Hashtbl.create(1));
+    |> Editor.selections
+    |> List.map(selection => Selection.getRanges(selection, buffer))
+    |> List.flatten
+    |> ByteRange.toHash;
 
   let diffMarkers =
     lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
@@ -312,6 +313,10 @@ let%component make =
       ? React.empty
       : <View style={Styles.inactiveCover(~colors, ~opacity=coverAmount)} />;
 
+  let verticalScrollbarThickness = Editor.verticalScrollbarThickness(editor);
+  let horizontalScrollbarThickness =
+    Editor.horizontalScrollbarThickness(editor);
+
   <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
     <SurfaceView
@@ -330,6 +335,7 @@ let%component make =
       languageConfiguration
       bufferSyntaxHighlights
       mode
+      snippets
       isActiveSplit
       gutterWidth
       bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
@@ -373,13 +379,14 @@ let%component make =
     />
     {renderOverlays(~gutterWidth)}
     hoverPopup
-    <View style=Styles.verticalScrollBar>
+    <View
+      style={Styles.verticalScrollBar(~thickness=verticalScrollbarThickness)}>
       <Scrollbar.Vertical
         dispatch
         editor
         matchingPair=matchingPairs
         cursorPosition
-        width=Constants.scrollBarThickness
+        width=verticalScrollbarThickness
         height=pixelHeight
         diagnostics=diagnosticsMap
         colors
@@ -389,6 +396,7 @@ let%component make =
     </View>
     <View
       style={Styles.horizontalScrollBar(
+        ~thickness=horizontalScrollbarThickness,
         int_of_float(gutterWidth),
         int_of_float(layout.bufferWidthInPixels),
       )}>

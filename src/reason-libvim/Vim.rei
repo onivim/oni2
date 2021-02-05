@@ -102,18 +102,25 @@ module Mode: {
   type t =
     | Normal({cursor: BytePosition.t})
     | Insert({cursors: list(BytePosition.t)})
-    | CommandLine
+    | CommandLine({
+        text: string,
+        commandCursor: ByteIndex.t,
+        commandType: Types.cmdlineType,
+        cursor: BytePosition.t,
+      })
     | Replace({cursor: BytePosition.t})
     | Visual(VisualRange.t)
     | Operator({
         cursor: BytePosition.t,
         pending: Operator.pending,
       })
-    | Select(VisualRange.t);
+    | Select({ranges: list(VisualRange.t)});
 
   let current: unit => t;
 
+  let isCommandLine: t => bool;
   let isInsert: t => bool;
+  let isInsertOrSelect: t => bool;
   let isNormal: t => bool;
   let isVisual: t => bool;
   let isSelect: t => bool;
@@ -191,9 +198,8 @@ module CommandLine: {
   type t = Types.cmdline;
 
   let getCompletions: (~context: Context.t=?, unit) => array(string);
-  let getText: unit => option(string);
+
   let getPosition: unit => int;
-  let getType: unit => Types.cmdlineType;
 
   let onEnter: (Event.handler(t), unit) => unit;
   let onLeave: (Event.handler(unit), unit) => unit;
@@ -311,6 +317,7 @@ module Buffer: {
   */
   let setLines:
     (
+      ~undoable: bool=?,
       ~start: LineNumber.t=?,
       ~stop: LineNumber.t=?,
       ~lines: array(string),
@@ -464,7 +471,7 @@ module Mapping: {
     | Operator // omap, onoremap
     | Terminal // tmap, tnoremap
     | InsertAndCommandLine // :map!
-    | All; // :map;
+    | NormalAndVisualAndSelectAndOperator; // :map;
 
   module ScriptId: {
     [@deriving show]

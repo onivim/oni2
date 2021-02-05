@@ -32,7 +32,7 @@ module Msg: {
 };
 
 module CodeLens: {
-  type t = Exthost.CodeLens.t;
+  type t = Exthost.CodeLens.lens;
 
   let lineNumber: t => int;
   let text: t => string;
@@ -76,12 +76,17 @@ type outmsg =
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.t),
+    })
+  | SetSelections({
+      editorId: int,
+      ranges: list(CharacterRange.t),
     });
 
 let update:
   (
     ~config: Oni_Core.Config.resolver,
     ~configuration: Oni_Core.Configuration.t,
+    ~extensions: Feature_Extensions.model,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~maybeSelection: option(CharacterRange.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),
@@ -98,6 +103,7 @@ let bufferUpdated:
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~buffer: Oni_Core.Buffer.t,
     ~config: Oni_Core.Config.resolver,
+    ~extensions: Feature_Extensions.model,
     ~activeCursor: CharacterPosition.t,
     ~syntaxScope: Oni_Core.SyntaxScope.t,
     ~triggerKey: option(string),
@@ -125,6 +131,10 @@ let startInsertMode:
   model;
 
 let stopInsertMode: model => model;
+
+let startSnippet: model => model;
+let stopSnippet: model => model;
+
 let isFocused: model => bool;
 
 let sub:

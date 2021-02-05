@@ -170,6 +170,8 @@ type t = {
 let brackets = ({brackets, _}) => brackets;
 let lineComment = ({lineComment, _}) => lineComment;
 
+let blockComment = ({blockComment, _}) => blockComment;
+
 let default: t = {
   autoCloseBefore: [
     ";",

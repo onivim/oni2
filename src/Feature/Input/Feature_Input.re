@@ -95,7 +95,12 @@ type outmsg =
     });
 
 type execute =
-  InputStateMachine.execute = | NamedCommand(string) | VimExCommand(string);
+  InputStateMachine.execute =
+    | NamedCommand({
+        command: string,
+        arguments: Yojson.Safe.t,
+      })
+    | VimExCommand(string);
 
 module Schema = {
   [@deriving show]
@@ -103,6 +108,7 @@ module Schema = {
     | Binding({
         key: string,
         command: string,
+        arguments: Yojson.Safe.t,
         condition: WhenExpr.t,
       })
     | Remap({
@@ -117,16 +123,43 @@ module Schema = {
         matcher: EditorInput.Matcher.t,
         command: InputStateMachine.execute,
         condition: WhenExpr.ContextKeys.t => bool,
+        rawCondition: WhenExpr.t,
       })
     | ResolvedRemap({
         allowRecursive: bool,
         matcher: EditorInput.Matcher.t,
         toKeys: list(EditorInput.KeyPress.t),
         condition: WhenExpr.ContextKeys.t => bool,
+        rawCondition: WhenExpr.t,
       });
 
+  let resolvedToString =
+    fun
+    | ResolvedBinding({matcher, command, rawCondition, _}) => {
+        Printf.sprintf(
+          "Binding - command: %s matcher: %s when: %s",
+          InputStateMachine.executeToString(command),
+          EditorInput.Matcher.toString(matcher),
+          WhenExpr.show(rawCondition),
+        );
+      }
+    | ResolvedRemap({allowRecursive, matcher, toKeys, rawCondition, _}) => {
+        Printf.sprintf(
+          "Remap - rec: %b, matcher: %s to: %s when: %s",
+          allowRecursive,
+          EditorInput.Matcher.toString(matcher),
+          toKeys
+          |> List.map(EditorInput.KeyPress.toString)
+          |> String.concat(","),
+          WhenExpr.show(rawCondition),
+        );
+      };
+
   let bind = (~key, ~command, ~condition) =>
-    Binding({key, command, condition});
+    Binding({key, command, arguments: `Null, condition});
+
+  let bindWithArgs = (~arguments, ~key, ~command, ~condition) =>
+    Binding({key, command, arguments, condition});
 
   let mapCommand = (~f, keybinding: keybinding) => {
     switch (keybinding) {
@@ -149,15 +182,16 @@ module Schema = {
     };
 
     switch (keybinding) {
-    | Binding({key, command, condition}) =>
+    | Binding({key, command, arguments, condition}) =>
       let maybeMatcher =
         EditorInput.Matcher.parse(~explicitShiftKeyNeeded=true, key);
       maybeMatcher
       |> Stdlib.Result.map(matcher => {
            ResolvedBinding({
              matcher,
-             command: InputStateMachine.NamedCommand(command),
+             command: InputStateMachine.NamedCommand({command, arguments}),
              condition: evaluateCondition(condition),
+             rawCondition: condition,
            })
          });
 
@@ -182,6 +216,7 @@ module Schema = {
             matcher,
             condition: evaluateCondition(condition),
             toKeys,
+            rawCondition: condition,
           })
         },
         maybeMatcher,
@@ -241,12 +276,14 @@ let initial = keybindings => {
              );
              ism;
 
-           | Ok(ResolvedBinding({matcher, condition, command})) =>
+           | Ok(ResolvedBinding({matcher, condition, command, _})) =>
              let (ism, _bindingId) =
                InputStateMachine.addBinding(matcher, condition, command, ism);
              ism;
 
-           | Ok(ResolvedRemap({allowRecursive, matcher, condition, toKeys})) =>
+           | Ok(
+               ResolvedRemap({allowRecursive, matcher, condition, toKeys, _}),
+             ) =>
              let (ism, _bindingId) =
                InputStateMachine.addMapping(
                  ~allowRecursive,
@@ -368,17 +405,16 @@ let commandToAvailableBindings = (~command, ~config, ~context, model) => {
   if (String.length(command) <= 0) {
     [];
   } else {
-    let execute = NamedCommand(command);
-
     allCandidates
     |> List.filter_map(((matcher: EditorInput.Matcher.t, ex: execute)) =>
-         if (ex == execute) {
+         switch (ex) {
+         | NamedCommand({command: namedCommand, _})
+             when command == namedCommand =>
            switch (matcher) {
            | Sequence(keys) => Some(keys)
            | AllKeysReleased => None
-           };
-         } else {
-           None;
+           }
+         | _ => None
          }
        );
   };
@@ -446,7 +482,9 @@ module Internal = {
              | Terminal => "terminalFocus" |> parse
              | InsertAndCommandLine =>
                "insertMode || commandLineFocus" |> parse
-             | All => WhenExpr.Value(True);
+             | NormalAndVisualAndSelectAndOperator =>
+               "selectMode || normalMode || visualMode || operatorPending"
+               |> parse;
            }
          );
 
@@ -470,7 +508,7 @@ module Internal = {
              let (ism, bindings) = acc;
              let (ism', bindingId) =
                switch (resolvedBinding) {
-               | ResolvedBinding({matcher, condition, command}) =>
+               | ResolvedBinding({matcher, condition, command, _}) =>
                  InputStateMachine.addBinding(
                    matcher,
                    condition,
@@ -478,7 +516,13 @@ module Internal = {
                    ism,
                  )
 
-               | ResolvedRemap({allowRecursive, matcher, condition, toKeys}) =>
+               | ResolvedRemap({
+                   allowRecursive,
+                   matcher,
+                   condition,
+                   toKeys,
+                   _,
+                 }) =>
                  InputStateMachine.addMapping(
                    ~allowRecursive,
                    matcher,

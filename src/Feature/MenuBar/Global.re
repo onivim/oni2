@@ -55,6 +55,9 @@ module Items = {
 
     let checkForUpdate =
       item(~title="Check for updates...", ~command="oni.app.checkForUpdates");
+
+    let enterLicenseKey =
+      item(~title="Enter license key", ~command="oni.app.enterLicenseKey");
   };
 
   module View = {
@@ -103,5 +106,8 @@ let groups = [
   ),
   group(~order=150, ~parent=view, Items.View.Zoom.[submenu]),
   group(~parent=edit, Items.Edit.[undo, redo]),
-  group(~parent=help, Items.Help.[changelog, checkForUpdate]),
+  group(
+    ~parent=help,
+    Items.Help.[changelog, enterLicenseKey, checkForUpdate],
+  ),
 ];

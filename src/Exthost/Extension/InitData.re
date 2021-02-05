@@ -13,6 +13,20 @@ module Identifier = {
 };
 
 module Hacks = {
+  let patchIonideDependencies = (dependencies: list(Yojson.Safe.t)) => {
+    dependencies
+    |> List.map(
+         fun
+         | `String(str) =>
+           if (str == "ms-dotnettools.csharp") {
+             `String("muhammad-sammy.csharp");
+           } else {
+             `String(str);
+           }
+         | json => json,
+       );
+  };
+
   // TEMPORARY workarounds for external bugs blocking extensions
   let hacks = [
     // Workaround for https://github.com/open-vsx/publish-extensions/issues/106
@@ -23,6 +37,17 @@ module Hacks = {
         fun
         | Some(`String(str)) => Some(`String(str))
         | _ => Some(`String("2020-08-04")),
+      ),
+    ),
+    (
+      // Workaround for https://github.com/onivim/oni2/issues/2974
+      "ionide.ionide-fsharp",
+      Utility.JsonEx.update(
+        "extensionDependencies",
+        fun
+        | Some(`List(dependencies)) =>
+          Some(`List(dependencies |> patchIonideDependencies))
+        | json => json,
       ),
     ),
   ];
@@ -73,6 +98,16 @@ module Extension = {
   };
 };
 
+module StaticWorkspaceData = {
+  [@deriving (show, yojson({strict: false}))]
+  type t = {
+    id: string,
+    name: string,
+  };
+
+  let global = {id: "global", name: "global"};
+};
+
 module Environment = {
   [@deriving (show, yojson({strict: false}))]
   type t = {
@@ -81,6 +116,7 @@ module Environment = {
     appLanguage: string,
     appRoot: Uri.t,
     globalStorageHome: option(Uri.t),
+    workspaceStorageHome: option(Uri.t),
     userHome: option(Uri.t),
     // TODO
     /*
@@ -98,6 +134,11 @@ module Environment = {
     // TODO - INTL: Get proper user language
     appLanguage: "en-US",
     appRoot: Revery.Environment.getExecutingDirectory() |> Uri.fromPath,
+    // TODO: Set up correctly
+    workspaceStorageHome:
+      Oni_Core.Filesystem.getWorkspaceStorageFolder()
+      |> Result.to_option
+      |> Option.map(Uri.fromFilePath),
     globalStorageHome:
       Oni_Core.Filesystem.getGlobalStorageFolder()
       |> Result.to_option
@@ -153,6 +194,7 @@ type t = {
   autoStart: bool,
   remote: Remote.t,
   telemetryInfo: TelemetryInfo.t,
+  workspace: StaticWorkspaceData.t,
 };
 
 let create =
@@ -166,6 +208,7 @@ let create =
       ~autoStart=true,
       ~remote=Remote.default,
       ~telemetryInfo=TelemetryInfo.default,
+      ~workspace=StaticWorkspaceData.global,
       extensions,
     ) => {
   let environment =
@@ -173,6 +216,7 @@ let create =
     | None => Environment.default()
     | Some(env) => env
     };
+
   {
     version,
     parentPid,
@@ -186,5 +230,6 @@ let create =
     autoStart,
     remote,
     telemetryInfo,
+    workspace,
   };
 };

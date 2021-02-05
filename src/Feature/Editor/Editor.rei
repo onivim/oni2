@@ -83,6 +83,7 @@ let getCharacterAtPosition:
   (~position: CharacterPosition.t, t) => option(Uchar.t);
 let getPrimaryCursor: t => CharacterPosition.t;
 let getPrimaryCursorByte: t => BytePosition.t;
+let cursors: t => list(BytePosition.t);
 let getVisibleView: t => int;
 let getTotalHeightInPixels: t => int;
 let getTotalWidthInPixels: t => float;
@@ -90,6 +91,12 @@ let getVerticalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
+
+let setCursors: (list(BytePosition.t), t) => t;
+let setSelections: (list(ByteRange.t), t) => t;
+
+let horizontalScrollbarThickness: t => int;
+let verticalScrollbarThickness: t => int;
 
 // Get the horizontal width in pixels of the tab/space whitespace in front of a line.
 let getLeadingWhitespacePixels: (EditorCoreTypes.LineNumber.t, t) => float;
@@ -116,8 +123,10 @@ let setMinimap: (~enabled: bool, ~maxColumn: int, t) => t;
 let isMinimapEnabled: t => bool;
 
 // Mouse interactions
-let mouseDown: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
-let mouseUp: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseDown:
+  (~altKey: bool, ~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
+let mouseUp:
+  (~altKey: bool, ~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
 let mouseMove: (~time: Revery.Time.t, ~pixelX: float, ~pixelY: float, t) => t;
 let mouseEnter: t => t;
 let mouseLeave: t => t;
@@ -134,7 +143,7 @@ let setLineNumbers:
 let lineNumbers: t => [ | `Off | `On | `Relative | `RelativeOnly];
 
 // [exposePrimaryCursor(editor)] ensures the primary cursor is visible - adjusting the scroll if it isnot.
-let exposePrimaryCursor: t => t;
+let exposePrimaryCursor: (~disableAnimation: bool=?, t) => t;
 
 let getNearestMatchingPair:
   (
@@ -162,7 +171,7 @@ let linePaddingInPixels: t => float;
 let setLineHeight: (~lineHeight: LineHeight.t, t) => t;
 let characterWidthInPixels: t => float;
 
-let selection: t => option(VisualRange.t);
+let selections: t => list(VisualRange.t);
 
 let selectionOrCursorRange: t => ByteRange.t;
 
@@ -198,6 +207,7 @@ let byteToCharacter: (BytePosition.t, t) => option(CharacterPosition.t);
 let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
 
 let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
+let characterRangeToByteRange: (CharacterRange.t, t) => option(ByteRange.t);
 
 // VIEW-SPACE CONVERSION
 

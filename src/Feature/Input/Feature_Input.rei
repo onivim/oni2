@@ -25,6 +25,16 @@ module Schema: {
   let bind:
     (~key: string, ~command: string, ~condition: WhenExpr.t) => keybinding;
 
+  // Bind a key to a command, with arguments
+  let bindWithArgs:
+    (
+      ~arguments: Yojson.Safe.t,
+      ~key: string,
+      ~command: string,
+      ~condition: WhenExpr.t
+    ) =>
+    keybinding;
+
   // Clear all bindings for a key
   let clear: (~key: string) => keybinding;
 
@@ -41,6 +51,8 @@ module Schema: {
   let mapCommand: (~f: string => string, keybinding) => keybinding;
 
   type resolvedKeybinding;
+
+  let resolvedToString: resolvedKeybinding => string;
 
   let resolve: keybinding => result(resolvedKeybinding, string);
 };
@@ -59,7 +71,10 @@ type model;
 let initial: list(Schema.keybinding) => model;
 
 type execute =
-  | NamedCommand(string)
+  | NamedCommand({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | VimExCommand(string);
 
 type effect =

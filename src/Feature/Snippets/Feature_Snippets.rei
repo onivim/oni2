@@ -1,35 +1,59 @@
 open Oni_Core;
+open EditorCoreTypes;
 
 // Placeholder until full snippet support: Break snippet at first placeholder
 let snippetToInsert: (~snippet: string) => string;
 
+[@deriving show]
 type msg;
+
+module Msg: {let insert: (~snippet: string) => msg;};
 
 type model;
 
+let initial: model;
+
 type outmsg =
+  | Effect(Isolinear.Effect.t(msg))
+  | ErrorMessage(string)
+  | SetCursors(list(BytePosition.t))
+  | SetSelections(list(ByteRange.t))
+  | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
   | Nothing;
 
-module Snippet: {
+module Session: {
   type t;
 
-  let parse: string => result(t, string);
+  let startLine: t => EditorCoreTypes.LineNumber.t;
+  let stopLine: t => EditorCoreTypes.LineNumber.t;
 };
 
-// module Session: {
-//   type t;
+let session: model => option(Session.t);
 
-//   let start: (
-//     ~editorId: int,
-//     ~buffer: Buffer.t,
-//     ~position: BytePosition.t,
-//     ~snippet: Snippet.t
-//   ) => Isolinear.Effect.t(msg);
-// }
+let isActive: model => bool;
 
-let update: (msg, model) => (model, outmsg);
+let modeChanged: (~mode: Vim.Mode.t, model) => model;
+
+let update:
+  (
+    ~resolverFactory: (unit, string) => option(string),
+    ~maybeBuffer: option(Buffer.t),
+    ~editorId: int,
+    ~cursorPosition: BytePosition.t,
+    ~extensions: Feature_Extensions.model,
+    msg,
+    model
+  ) =>
+  (model, outmsg);
+
+module Effects: {
+  let insertSnippet:
+    (~meetColumn: CharacterIndex.t, ~snippet: string) =>
+    Isolinear.Effect.t(msg);
+};
 
 module Contributions: {
   let commands: list(Command.t(msg));
   let contextKeys: model => WhenExpr.ContextKeys.t;
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };

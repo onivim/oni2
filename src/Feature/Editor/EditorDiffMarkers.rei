@@ -1,14 +1,18 @@
 open Oni_Core;
 
 [@deriving show]
-type t = array(marker)
+type t;
 
-and marker =
+type marker =
   | Modified
   | Added
   | DeletedBefore
   | DeletedAfter
   | Unmodified;
+
+let get: (~line: EditorCoreTypes.LineNumber.t, t) => marker;
+
+let toArray: t => array(marker);
 
 let generate: (~scm: Feature_SCM.model, Buffer.t) => option(t);
 

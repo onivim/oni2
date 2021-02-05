@@ -22,21 +22,23 @@ describe("Mode", ({describe, _}) => {
           ~context={
             ...Vim.Context.current(),
             mode:
-              Mode.Select(
-                VisualRange.{
-                  cursor:
-                    BytePosition.{
-                      line: LineNumber.zero,
-                      byte: ByteIndex.zero,
-                    },
-                  anchor:
-                    BytePosition.{
-                      line: LineNumber.ofZeroBased(1),
-                      byte: ByteIndex.zero,
-                    },
-                  visualType: Vim.Types.Line,
-                },
-              ),
+              Mode.Select({
+                ranges: [
+                  VisualRange.{
+                    cursor:
+                      BytePosition.{
+                        line: LineNumber.zero,
+                        byte: ByteIndex.zero,
+                      },
+                    anchor:
+                      BytePosition.{
+                        line: LineNumber.ofZeroBased(1),
+                        byte: ByteIndex.zero,
+                      },
+                    visualType: Vim.Types.Line,
+                  },
+                ],
+              }),
           },
           "a",
         );
@@ -109,6 +111,24 @@ describe("Mode", ({describe, _}) => {
 
       expect.equal(Vim.Mode.isReplace(Vim.Mode.current()), true);
     })
+  });
+  describe("visual mode", ({test, _}) => {
+    test("linewise visual -> insert ('I')", ({expect, _}) => {
+      let _ = resetBuffer();
+
+      let _ = Vim.input("V");
+      let _ = Vim.input("I");
+
+      expect.equal(Vim.Mode.isInsert(Vim.Mode.current()), true);
+    });
+    test("characterwise visual -> insert ('A')", ({expect, _}) => {
+      let _ = resetBuffer();
+
+      let _ = Vim.key("<C-v>");
+      let _ = Vim.input("A");
+
+      expect.equal(Vim.Mode.isInsert(Vim.Mode.current()), true);
+    });
   });
   describe("select mode", ({test, _}) => {
     test("select mode is reported correctly", ({expect, _}) => {

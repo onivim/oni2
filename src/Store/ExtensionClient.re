@@ -50,6 +50,11 @@ let create =
 
         promise;
 
+      | Commands(ExecuteCommand({command, args, _})) =>
+        // TODO: Is this really the right action?
+        dispatch(Actions.CommandInvoked({command, arguments: `List(args)}));
+        Lwt.return(Reply.okEmpty);
+
       | Configuration(RemoveConfigurationOption({key, _})) =>
         dispatch(
           Actions.ConfigurationTransform(
@@ -267,12 +272,22 @@ let create =
     |> Option.value(~default=originalVersion);
   };
 
+  let staticWorkspace =
+    initialWorkspace
+    |> Option.map(({id, name, _}: Exthost.WorkspaceData.t) => {
+         Exthost.Extension.InitData.StaticWorkspaceData.{id, name}
+       })
+    |> Option.value(
+         ~default=Exthost.Extension.InitData.StaticWorkspaceData.global,
+       );
+
   let initData =
     InitData.create(
       ~version=extHostVersion,
       ~parentPid,
       ~logsLocation,
       ~logFile,
+      ~workspace=staticWorkspace,
       extensionInfo,
     );
 

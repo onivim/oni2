@@ -42,6 +42,7 @@ let editor = (editor, buffer, state: State.t) => {
     languageInfo=Exthost.LanguageInfo.initial
     grammarRepository=Oni_Syntax.GrammarRepository.empty
     uiFont=Oni_Core.UiFont.default
+    snippets=Feature_Snippets.initial
     renderOverlays={(~gutterWidth as _) => <Revery.UI.View />}
   />;
 };
