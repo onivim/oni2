@@ -29,6 +29,7 @@
 - #3086 - Snippets: Fix clash with completion / document highlights feature
 - #3085 - Snippets: Fix drop-shadow calculation at end of buffer
 - #3091 - Snippets: Fix auto-closing pairs when placeholders are on same line
+- #3102 - Vim / Input: Implement mapping timeout (fixes #2850)
 
 ### Performance
 
