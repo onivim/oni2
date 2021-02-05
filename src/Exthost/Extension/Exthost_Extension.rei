@@ -245,8 +245,8 @@ module InitData: {
       globalStorageHome: option(Oni_Core.Uri.t),
       workspaceStorageHome: option(Oni_Core.Uri.t),
       userHome: option(Oni_Core.Uri.t),
-       webviewResourceRoot: string,
-       webviewCspSource: string,
+      webviewResourceRoot: string,
+      webviewCspSource: string,
       // TODO
       /*
        appLanguage: string,

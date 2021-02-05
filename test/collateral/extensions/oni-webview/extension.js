@@ -10,7 +10,7 @@ const vscode = require('vscode');
  */
 function activate(context) {
   context.subscriptions.push(
-    vscode.commands.registerCommand('webview.start', () => {
+    vscode.commands.registerCommand('webview.test.asWebviewUri', () => {
       // Create and show panel
       const panel = vscode.window.createWebviewPanel(
         'test-webview',
@@ -19,7 +19,7 @@ function activate(context) {
         {}
       );
       const onDiskPath = vscode.Uri.file(
-        path.join(context.extensionPath, 'some', 'file.gif')
+        context.extensionPath
       );
 
       // And set its HTML content
