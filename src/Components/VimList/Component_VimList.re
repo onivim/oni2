@@ -765,8 +765,11 @@ module View = {
   module LayerConditions = {
     let root =
       Revery.UI.Layer.Condition.make(
-        (previous: (float, Obj.t), newObj: (float, Obj.t)) => {
-        previous != newObj
+        (previous: (ColorTheme.Colors.t, float, Obj.t), newObj: (ColorTheme.Colors.t, float, Obj.t)) => {
+        let (previousTheme, previousScrollY, previousModel) = previous;
+        let (newTheme, newScrollY, newModel) = newObj;
+
+        newModel != previousModel || newScrollY != previousScrollY || !ColorTheme.Colors.equal(previousTheme, newTheme)
       });
   };
 
@@ -1058,7 +1061,7 @@ module View = {
           <Oni_Components.OniLayer
             key={model.key}
             style=Style.[flexGrow(1), flexDirection(`Column)]
-            condition={LayerConditions.root((scrollY, Obj.repr(model)))}
+            condition={LayerConditions.root((theme, scrollY, Obj.repr(model)))}
             backgroundColor={
               Feature_Theme.Colors.SideBar.background.from(theme)
             }
