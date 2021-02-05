@@ -4,9 +4,7 @@
  * Container to help render Exthost.Label.t
  */
 
-open Revery;
 open Revery.UI;
-open Oni_Core;
 
 let make =
     (
