@@ -121,7 +121,16 @@ module Configuration = {
                    | false => NoTimeout,
                  ),
             ),
-            ("int", int |> map(time => Timeout(Revery.Time.seconds(time)))),
+            (
+              "int",
+              int
+              |> map(
+                   fun
+                   | 0 => NoTimeout
+                   | milliseconds =>
+                     Timeout(Revery.Time.milliseconds(milliseconds)),
+                 ),
+            ),
           ])
         );
 
@@ -756,14 +765,14 @@ module Commands = {
 // SUBSCRIPTION
 
 let sub = (~config, {keyDisplayer, inputTick, inputStateMachine, _}) => {
-  let sub1 =
+  let keyDisplayerSub =
     switch (keyDisplayer) {
     | None => Isolinear.Sub.none
     | Some(kd) =>
       KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
     };
 
-  let sub2 =
+  let timeoutSub =
     switch (Configuration.timeout.get(config)) {
     | NoTimeout => Isolinear.Sub.none
     | Timeout(delay) =>
@@ -779,7 +788,7 @@ let sub = (~config, {keyDisplayer, inputTick, inputStateMachine, _}) => {
       }
     };
 
-  [sub1, sub2] |> Isolinear.Sub.batch;
+  [keyDisplayerSub, timeoutSub] |> Isolinear.Sub.batch;
 };
 
 module ContextKeys = {
