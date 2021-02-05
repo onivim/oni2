@@ -21,6 +21,33 @@ let keyCandidateToString = keyCandidate => {
   );
 };
 
+type timeout =
+| NoTimeout
+| Timeout(Revery.Time.t);
+
+// VIM SETTINGS
+
+module VimSettings = {
+  open Config.Schema;
+  open VimSetting.Schema;
+
+  let timeout = vim2("timeout", "timeoutlen", (maybeTimeout, maybeTimeoutLen) => {
+    let maybeTimeoutBool = maybeTimeout |> OptionEx.flatMap(VimSetting.decode_value_opt(bool));
+    let maybeTimeoutLenInt = maybeTimeoutLen |> OptionEx.flatMap(VimSetting.decode_value_opt(int));
+    switch ((maybeTimeoutBool, maybeTimeoutLenInt)) {
+    | (None, Some(timeoutLength)) 
+    | (Some(true), Some(timeoutLength)) => Some(Timeout(Revery.Time.milliseconds(timeoutLength)))
+
+    | (Some(true), None) => Some(Timeout(Revery.Time.seconds(1)));
+
+    | (Some(false), _) => Some(NoTimeout)
+
+    | (None, None) => None
+    };
+  });
+
+}
+
 // CONFIGURATION
 module Configuration = {
   open Oni_Core;
@@ -77,10 +104,36 @@ module Configuration = {
             }
           ),
       );
+
+      module Timeout = {
+        let decode = Json.Decode.(one_of([
+          ("bool", bool |> map(
+            fun
+            | true => Timeout(Revery.Time.seconds(1))
+            | false => NoTimeout
+          )),
+          ("int", int |> map(time =>
+            Timeout(Revery.Time.seconds(time))
+          ))
+        ]));
+
+        let encode = Json.Encode.(fun
+        | NoTimeout => bool(false)
+        | Timeout(time) => int(time |> Revery.Time.toFloatSeconds |> int_of_float)
+        )
+      };
+
+      let timeout = custom(
+        ~decode=Timeout.decode,
+        ~encode=Timeout.encode,
+      );
   };
 
   let leaderKey =
     setting("vim.leader", CustomDecoders.physicalKey, ~default=None);
+
+  let timeout =
+    setting("input.timeout", CustomDecoders.timeout, ~default=Timeout(Revery.Time.seconds(1)));
 };
 
 // MSG
