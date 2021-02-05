@@ -133,7 +133,7 @@ module Configuration = {
     setting("vim.leader", CustomDecoders.physicalKey, ~default=None);
 
   let timeout =
-    setting("input.timeout", CustomDecoders.timeout, ~default=Timeout(Revery.Time.seconds(1)));
+    setting(~vim=VimSettings.timeout, "input.timeout", CustomDecoders.timeout, ~default=Timeout(Revery.Time.seconds(1)));
 };
 
 // MSG
@@ -294,7 +294,8 @@ type msg =
       mode: Vim.Mapping.mode,
       maybeKeys: option(string),
     })
-  | KeyDisplayer([@opaque] KeyDisplayer.msg);
+  | KeyDisplayer([@opaque] KeyDisplayer.msg)
+  | Timeout;
 
 module Msg = {
   let keybindingsUpdated = keybindings => KeybindingsUpdated(keybindings);
@@ -308,9 +309,18 @@ type model = {
   userBindings: list(InputStateMachine.uniqueId),
   inputStateMachine: InputStateMachine.t,
   keyDisplayer: option(KeyDisplayer.t),
+
+  // Keep track of the input tick - an incrementing number on every input event -
+  // such that we can provide a unique id for the timer to flush on timeout.
+  inputTick: int,
 };
 
 type uniqueId = InputStateMachine.uniqueId;
+
+let incrementTick = ({inputTick, _} as model) => {
+  ...model,
+  inputTick: inputTick + 1,
+};
 
 let initial = keybindings => {
   open Schema;
@@ -350,7 +360,7 @@ let initial = keybindings => {
          },
          InputStateMachine.empty,
        );
-  {inputStateMachine, userBindings: [], keyDisplayer: None};
+  {inputStateMachine, userBindings: [], keyDisplayer: None, inputTick: 0};
 };
 
 type effect =
@@ -397,7 +407,7 @@ let keyDown =
       ...model,
       inputStateMachine: inputStateMachine',
       keyDisplayer: keyDisplayer',
-    },
+    } |> incrementTick,
     effects,
   );
 };
@@ -430,7 +440,7 @@ let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
       ...model,
       inputStateMachine: inputStateMachine',
       keyDisplayer: keyDisplayer',
-    },
+    } |> incrementTick,
     effects,
   );
 };
@@ -444,7 +454,7 @@ let keyUp = (~config, ~scancode, ~context, {inputStateMachine, _} as model) => {
       ~context,
       inputStateMachine,
     );
-  ({...model, inputStateMachine: inputStateMachine'}, effects);
+  ({...model, inputStateMachine: inputStateMachine'} |> incrementTick, effects);
 };
 
 let candidates = (~config, ~context, {inputStateMachine, _}) => {
@@ -678,6 +688,10 @@ let update = (msg, model) => {
       Nothing,
     )
 
+  | Timeout => 
+  prerr_endline ("TODO");
+  (model, Nothing)
+
   | KeyDisplayer(msg) =>
     let keyDisplayer' =
       model.keyDisplayer |> Option.map(KeyDisplayer.update(msg));
@@ -719,12 +733,22 @@ module Commands = {
 
 // SUBSCRIPTION
 
-let sub = ({keyDisplayer, _}) => {
-  switch (keyDisplayer) {
+let sub = ({keyDisplayer, inputTick, _}) => {
+  let sub1 = switch (keyDisplayer) {
   | None => Isolinear.Sub.none
   | Some(kd) =>
     KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
   };
+
+  let sub2 = Service_Time.Sub.once(
+    ~uniqueId="Feature_Input.keyExpirer:" ++ string_of_int(inputTick), 
+    ~delay=Revery.Time.seconds(1),
+    ~msg=(~current as _) => {
+      Timeout
+    }
+  );
+
+  [sub1, sub2] |> Isolinear.Sub.batch;
 };
 
 module ContextKeys = {
@@ -738,7 +762,7 @@ module Contributions = {
   let commands =
     Commands.[showInputState, enableKeyDisplayer, disableKeyDisplayer];
 
-  let configuration = Configuration.[leaderKey.spec];
+  let configuration = Configuration.[leaderKey.spec, timeout.spec];
 
   let contextKeys = model => {
     WhenExpr.ContextKeys.(
