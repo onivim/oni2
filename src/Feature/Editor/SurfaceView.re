@@ -250,7 +250,7 @@ let%component make =
 
         snippets
         |> Feature_Snippets.session
-        |> Option.iter(SnippetVisualizer.draw(~context));
+        |> Option.iter(SnippetVisualizer.draw(~config, ~context));
 
         ContentView.render(
           ~context,

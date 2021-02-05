@@ -12,7 +12,8 @@ type command =
 [@deriving show]
 type providerMsg =
   | Exthost(CompletionProvider.exthostMsg)
-  | Keyword(CompletionProvider.keywordMsg);
+  | Keyword(CompletionProvider.keywordMsg)
+  | Snippet(CompletionProvider.snippetMsg);
 
 [@deriving show]
 type msg =
@@ -302,7 +303,14 @@ module Session = {
       };
 
   let tryInvoke =
-      (~config, ~languageConfiguration, ~trigger, ~buffer, ~location) =>
+      (
+        ~config,
+        ~extensions,
+        ~languageConfiguration,
+        ~trigger,
+        ~buffer,
+        ~location,
+      ) =>
     fun
     | Session({provider, _} as session) as original => {
         let (module ProviderImpl) = provider;
@@ -317,6 +325,7 @@ module Session = {
         |> OptionEx.flatMap((meet: CompletionMeet.t) => {
              ProviderImpl.create(
                ~config,
+               ~extensions,
                ~languageConfiguration,
                ~base=meet.base,
                ~trigger,
@@ -345,7 +354,14 @@ module Session = {
       };
 
   let reinvoke =
-      (~config, ~languageConfiguration, ~trigger, ~buffer, ~activeCursor) =>
+      (
+        ~config,
+        ~extensions,
+        ~languageConfiguration,
+        ~trigger,
+        ~buffer,
+        ~activeCursor,
+      ) =>
     fun
     | Session(previous) as model => {
         let maybeMeet =
@@ -369,6 +385,7 @@ module Session = {
                    // try to complete
                    tryInvoke(
                      ~config,
+                     ~extensions,
                      ~languageConfiguration,
                      ~trigger,
                      ~buffer,
@@ -388,6 +405,7 @@ module Session = {
                | _incomplete =>
                  tryInvoke(
                    ~config,
+                   ~extensions,
                    ~languageConfiguration,
                    ~trigger,
                    ~buffer,
@@ -429,21 +447,31 @@ type model = {
   allItems: array((CharacterPosition.t, Filter.result(CompletionItem.t))),
   selection: Selection.t,
   isInsertMode: bool,
+  isSnippetMode: bool,
   acceptOnEnter: bool,
 };
 
 let initial = {
   isInsertMode: false,
+  isSnippetMode: false,
   acceptOnEnter: false,
   providers: [
     Session.create(
       ~triggerCharacters=[],
-      // Remove from command
       ~provider=CompletionProvider.keyword,
       ~mapper=msg => Keyword(msg),
       ~revMapper=
         fun
         | Keyword(msg) => Some(msg)
+        | _ => None,
+    ),
+    Session.create(
+      ~triggerCharacters=[],
+      ~provider=CompletionProvider.snippet,
+      ~mapper=msg => Snippet(msg),
+      ~revMapper=
+        fun
+        | Snippet(msg) => Some(msg)
         | _ => None,
     ),
   ],
@@ -506,25 +534,46 @@ let focused = ({allItems, selection, _}) => {
 };
 
 let isActive = (model: model) => {
-  model.isInsertMode && model.allItems |> Array.length > 0;
+  model.isInsertMode
+  && !model.isSnippetMode
+  && model.allItems
+  |> Array.length > 0;
 };
 
-let startInsertMode = model => {
-  {
-    ...model,
-    isInsertMode: true,
-    providers: model.providers |> List.map(Session.start),
-    allItems: [||],
-    selection: None,
+let reset = model =>
+  if (model.isInsertMode && !model.isSnippetMode) {
+    {
+      ...model,
+      providers: model.providers |> List.map(Session.start),
+      allItems: [||],
+      selection: None,
+    };
+  } else {
+    {
+      ...model,
+      providers: model.providers |> List.map(Session.stop),
+      allItems: [||],
+      selection: None,
+    };
   };
+
+let startInsertMode = model => {
+  {...model, isInsertMode: true} |> reset;
 };
 
 let stopInsertMode = model => {
-  ...model,
-  isInsertMode: false,
-  providers: model.providers |> List.map(Session.stop),
-  allItems: [||],
-  selection: None,
+  {...model, isInsertMode: false} |> reset;
+};
+
+// There are some bugs with completion in snippet mode -
+// including the 'tab' key being overloaded. Need to fix
+// these and gate with a configuration setting, like:
+// `editor.suggest.snippetsPreventQuickSuggestions`
+let startSnippet = model => {
+  {...model, isSnippetMode: true} |> reset;
+};
+let stopSnippet = model => {
+  {...model, isSnippetMode: false} |> reset;
 };
 
 let register =
@@ -591,12 +640,21 @@ let cursorMoved =
 };
 
 let invokeCompletion =
-    (~config, ~languageConfiguration, ~trigger, ~buffer, ~activeCursor, model) => {
+    (
+      ~config,
+      ~extensions,
+      ~languageConfiguration,
+      ~trigger,
+      ~buffer,
+      ~activeCursor,
+      model,
+    ) => {
   let providers' =
     model.providers
     |> List.map(
          Session.reinvoke(
            ~config,
+           ~extensions,
            ~languageConfiguration,
            ~trigger,
            ~buffer,
@@ -624,6 +682,7 @@ let refine = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
 let bufferUpdated =
     (
       ~languageConfiguration,
+      ~extensions,
       ~buffer,
       ~config,
       ~activeCursor,
@@ -651,6 +710,7 @@ let bufferUpdated =
     model
     |> invokeCompletion(
          ~config,
+         ~extensions,
          ~languageConfiguration,
          ~trigger,
          ~buffer,
@@ -712,7 +772,15 @@ let tryToMaintainSelected = (~previousIndex, ~previousLabel, model) => {
 };
 
 let update =
-    (~config, ~languageConfiguration, ~maybeBuffer, ~activeCursor, msg, model) => {
+    (
+      ~config,
+      ~extensions,
+      ~languageConfiguration,
+      ~maybeBuffer,
+      ~activeCursor,
+      msg,
+      model,
+    ) => {
   let default = (model, Outmsg.Nothing);
   switch (msg) {
   | Command(TriggerSuggest) =>
@@ -726,6 +794,7 @@ let update =
          (
            invokeCompletion(
              ~config,
+             ~extensions,
              ~languageConfiguration,
              ~trigger,
              ~buffer,
@@ -1064,7 +1133,7 @@ module View = {
     | TypeParameter => Codicon.symbolTypeParameter
     | User => Codicon.symbolMisc
     | Issue => Codicon.symbolMisc
-    | Snippet => Codicon.symbolText;
+    | Snippet => Codicon.symbolSnippet;
 
   let kindToColor = (colors: Oni_Core.ColorTheme.Colors.t) =>
     Feature_Theme.Colors.SymbolIcon.(

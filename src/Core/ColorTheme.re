@@ -23,6 +23,8 @@ module Colors = {
   let empty = Lookup.empty;
   let fromList = entries => entries |> List.to_seq |> Lookup.of_seq;
 
+  let equal = Lookup.equal(Revery.Color.equals);
+
   let get = Lookup.find_opt;
 
   let union = (xs, ys) => Lookup.union((_key, _x, y) => Some(y), xs, ys);

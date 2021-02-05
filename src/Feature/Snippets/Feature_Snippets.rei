@@ -7,6 +7,8 @@ let snippetToInsert: (~snippet: string) => string;
 [@deriving show]
 type msg;
 
+module Msg: {let insert: (~snippet: string) => msg;};
+
 type model;
 
 let initial: model;
@@ -16,25 +18,8 @@ type outmsg =
   | ErrorMessage(string)
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
+  | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
   | Nothing;
-
-module Snippet: {
-  type raw;
-
-  let parse: string => result(raw, string);
-
-  type t;
-
-  let resolve:
-    (
-      ~getVariable: string => option(string),
-      ~prefix: string,
-      ~postfix: string,
-      ~indentationSettings: IndentationSettings.t,
-      raw
-    ) =>
-    t;
-};
 
 module Session: {
   type t;
@@ -55,10 +40,17 @@ let update:
     ~maybeBuffer: option(Buffer.t),
     ~editorId: int,
     ~cursorPosition: BytePosition.t,
+    ~extensions: Feature_Extensions.model,
     msg,
     model
   ) =>
   (model, outmsg);
+
+module Effects: {
+  let insertSnippet:
+    (~meetColumn: CharacterIndex.t, ~snippet: string) =>
+    Isolinear.Effect.t(msg);
+};
 
 module Contributions: {
   let commands: list(Command.t(msg));

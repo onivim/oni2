@@ -39,6 +39,8 @@ let pick: (Exthost.Extension.Manifest.t => 'a, model) => list('a);
 let themeById: (~id: string, model) => option(Contributions.Theme.t);
 let themesByName: (~filter: string, model) => list(string);
 
+let snippetFilePaths: (~fileType: string, model) => list(Fp.t(Fp.absolute));
+
 let isBusy: model => bool;
 let isSearchInProgress: model => bool;
 

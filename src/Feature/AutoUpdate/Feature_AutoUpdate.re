@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 
 type model = {
   automaticallyChecksForUpdates: bool,
@@ -21,7 +22,8 @@ type msg =
 
 type outmsg =
   | Nothing
-  | Effect(Isolinear.Effect.t(msg));
+  | Effect(Isolinear.Effect.t(msg))
+  | ErrorMessage(string);
 
 let platformStr =
   switch (Revery.Environment.os) {
@@ -117,12 +119,22 @@ let update = (~getLicenseKey, model, msg) =>
         ),
       ),
     )
-  | Command(CheckForUpdates) => (
-      model,
-      Effect(
-        Service_AutoUpdate.Effect.checkForUpdates(
-          ~updater=Oni2_Sparkle.Updater.getInstance(),
+  | Command(CheckForUpdates) =>
+    if (StringEx.isEmpty(getLicenseKey())) {
+      (
+        model,
+        ErrorMessage(
+          "A valid license key is needed to check for updates. Please register and try again.",
         ),
-      ),
-    )
+      );
+    } else {
+      (
+        model,
+        Effect(
+          Service_AutoUpdate.Effect.checkForUpdates(
+            ~updater=Oni2_Sparkle.Updater.getInstance(),
+          ),
+        ),
+      );
+    }
   };
