@@ -159,7 +159,7 @@ module Sub = {
     fontFamily: string,
     fontSize: float,
     fontLigatures: FontLigatures.t,
-    fontSmoothing: ConfigurationValues.fontSmoothing,
+    fontSmoothing: FontSmoothing.t,
     fontWeight: Revery.Font.Weight.t,
     uniqueId: string,
   };
@@ -170,7 +170,7 @@ module Sub = {
         fontFamily: string,
         fontSize: float,
         fontLigatures: FontLigatures.t,
-        fontSmoothing: ConfigurationValues.fontSmoothing,
+        fontSmoothing: FontSmoothing.t,
         fontWeight: Revery.Font.Weight.t,
         requestId: ref(int),
       };
@@ -182,7 +182,7 @@ module Sub = {
       let id = ({uniqueId, _}) => uniqueId;
 
       let getReveryFontSmoothing:
-        ConfigurationValues.fontSmoothing => Revery.Font.Smoothing.t =
+        FontSmoothing.t => Revery.Font.Smoothing.t =
         fun
         | None => Revery.Font.Smoothing.None
         | Antialiased => Revery.Font.Smoothing.Antialiased

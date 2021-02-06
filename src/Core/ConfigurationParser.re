@@ -64,19 +64,13 @@ let parseVimUseSystemClipboardSetting = json => {
   };
 };
 
-let parseFontSmoothing: Yojson.Safe.t => ConfigurationValues.fontSmoothing =
-  json =>
-    switch (json) {
-    | `String(smoothing) =>
-      let smoothing = String.lowercase_ascii(smoothing);
-      switch (smoothing) {
-      | "none" => None
-      | "antialiased" => Antialiased
-      | "subpixel-antialiased" => SubpixelAntialiased
-      | _ => Default
-      };
-    | _ => Default
-    };
+let parseFontSmoothing =
+  json => {
+    switch(Json.Decode.decode_value(FontSmoothing.decode, json)) {
+    | Ok(v) => v
+    | Error(_) => FontSmoothing.Default
+    }
+  };
 
 let parseAutoClosingBrackets:
   Yojson.Safe.t => ConfigurationValues.autoClosingBrackets =

@@ -16,18 +16,11 @@ type autoClosingBrackets =
   | Never
   | LanguageDefined;
 
-[@deriving show({with_path: false})]
-type fontSmoothing =
-  | Default
-  | None
-  | Antialiased
-  | SubpixelAntialiased;
-
 type autoReveal = [ | `HighlightAndScroll | `HighlightOnly | `NoReveal];
 
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
-  editorFontSmoothing: fontSmoothing,
+  editorFontSmoothing: FontSmoothing.t,
   editorLargeFileOptimizations: bool,
   explorerAutoReveal: autoReveal,
   workbenchActivityBarVisible: bool,
@@ -51,7 +44,7 @@ type t = {
 
 let default = {
   editorAutoClosingBrackets: LanguageDefined,
-  editorFontSmoothing: Default,
+  editorFontSmoothing: FontSmoothing.Default,
   editorLargeFileOptimizations: true,
   explorerAutoReveal: `HighlightAndScroll,
   workbenchActivityBarVisible: true,

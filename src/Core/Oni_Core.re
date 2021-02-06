@@ -26,6 +26,7 @@ module Filesystem = Filesystem;
 module Filter = Filter;
 module Font = Font;
 module FontLigatures = FontLigatures;
+module FontSmoothing = FontSmoothing;
 module FontMeasurementCache = FontMeasurementCache;
 module IconTheme = IconTheme;
 module Indentation = Indentation;

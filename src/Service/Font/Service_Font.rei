@@ -42,7 +42,7 @@ module Sub: {
       ~fontSize: float,
       ~fontWeight: Revery.Font.Weight.t,
       ~fontLigatures: FontLigatures.t,
-      ~fontSmoothing: ConfigurationValues.fontSmoothing
+      ~fontSmoothing: FontSmoothing.t,
     ) =>
     Isolinear.Sub.t(msg);
 };
