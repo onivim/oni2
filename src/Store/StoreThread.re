@@ -279,10 +279,7 @@ let start =
       Feature_Editor.Configuration.fontLigatures.get(config);
 
     let fontSmoothing =
-      Oni_Core.Configuration.getValue(
-        c => c.editorFontSmoothing,
-        state.configuration,
-      );
+      Feature_Editor.Configuration.fontSmoothing.get(config);
 
     let editorFontSubscription =
       Service_Font.Sub.font(

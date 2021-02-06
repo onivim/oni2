@@ -64,14 +64,6 @@ let parseVimUseSystemClipboardSetting = json => {
   };
 };
 
-let parseFontSmoothing =
-  json => {
-    switch(Json.Decode.decode_value(FontSmoothing.decode, json)) {
-    | Ok(v) => v
-    | Error(_) => FontSmoothing.Default
-    }
-  };
-
 let parseAutoClosingBrackets:
   Yojson.Safe.t => ConfigurationValues.autoClosingBrackets =
   json =>
@@ -113,13 +105,6 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {
       ...config,
       editorAutoClosingBrackets: parseAutoClosingBrackets(json),
-    },
-  ),
-  (
-    "editor.fontSmoothing",
-    (config, json) => {
-      ...config,
-      editorFontSmoothing: parseFontSmoothing(json),
     },
   ),
   (

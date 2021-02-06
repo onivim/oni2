@@ -181,8 +181,7 @@ module Sub = {
 
       let id = ({uniqueId, _}) => uniqueId;
 
-      let getReveryFontSmoothing:
-        FontSmoothing.t => Revery.Font.Smoothing.t =
+      let getReveryFontSmoothing: FontSmoothing.t => Revery.Font.Smoothing.t =
         fun
         | None => Revery.Font.Smoothing.None
         | Antialiased => Revery.Font.Smoothing.Antialiased

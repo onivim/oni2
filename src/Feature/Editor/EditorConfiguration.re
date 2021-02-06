@@ -237,6 +237,14 @@ let fontFamily =
     string,
     ~default=Constants.defaultFontFile,
   );
+
+let fontSmoothing =
+  setting(
+    "editor.fontSmoothing",
+    custom(~encode=FontSmoothing.encode, ~decode=FontSmoothing.decode),
+    ~default=FontSmoothing.Default,
+  );
+
 let fontLigatures =
   setting(
     "editor.fontLigatures",
@@ -356,6 +364,7 @@ let contributions = [
   fontFamily.spec,
   fontLigatures.spec,
   fontSize.spec,
+  fontSmoothing.spec,
   fontWeight.spec,
   lineHeight.spec,
   largeFileOptimization.spec,

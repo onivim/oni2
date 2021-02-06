@@ -1,30 +1,33 @@
 [@deriving show({with_path: false})]
 type t =
-| Default
-| None
-| Antialiased
-| SubpixelAntialiased;
+  | Default
+  | None
+  | Antialiased
+  | SubpixelAntialiased;
 
 module Decode = {
-    open Json.Decode;
-    let decode = string
+  open Json.Decode;
+  let decode =
+    string
     |> map(
-        fun
-        | "none" => None
-        | "antialiased" => Antialiased
-        | "subpixel-antialiased" => SubpixelAntialiased
-        | _ => Default);
-}
+         fun
+         | "none" => None
+         | "antialiased" => Antialiased
+         | "subpixel-antialiased" => SubpixelAntialiased
+         | _ => Default,
+       );
+};
 
 module Encode = {
-    open Json.Encode;
+  open Json.Encode;
 
-    let encode: encoder(t) = fun
+  let encode: encoder(t) =
+    fun
     | None => string("none")
     | Antialiased => string("antialiased")
     | SubpixelAntialiased => string("subpixel-antialiased")
     | Default => string("default");
-}
+};
 
 let decode = Decode.decode;
 
