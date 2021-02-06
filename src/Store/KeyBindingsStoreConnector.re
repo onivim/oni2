@@ -107,17 +107,17 @@ let start = maybeKeyBindingsFilePath => {
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | Actions.Init => (state, loadKeyBindingsEffect(true))
+    | Init => (state, loadKeyBindingsEffect(true))
 
-    | Actions.KeyBindingsReload => (state, loadKeyBindingsEffect(false))
+    | KeyBindingsReload => (state, loadKeyBindingsEffect(false))
 
-    | Actions.KeyBindingsParseError(msg) => (
+    | KeyBindingsParseError(msg) => (
         state,
         Feature_Notification.Effects.create(~kind=Error, msg)
         |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
       )
 
-    | CommandInvoked({command, arguments}) =>
+    | KeybindingInvoked({command, arguments}) =>
       if (command |> Utility.StringEx.startsWith(~prefix=":")) {
         (
           state,

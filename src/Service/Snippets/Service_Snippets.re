@@ -85,6 +85,45 @@ module Cache = {
   };
 };
 
+module Internal = {
+  let loadSnippetsFromFiles = (~filePaths, dispatch) => {
+    // Load all files
+    // Coalesce all promises
+    let promises = filePaths |> List.map(Fp.toString) |> List.map(Cache.get);
+
+    let join = (a, b) => a @ b;
+    let promise = LwtEx.some(~default=[], join, promises);
+
+    Lwt.on_success(
+      promise,
+      snippets => {
+        Log.infof(m => m("Loaded %d snippets", List.length(snippets)));
+        dispatch(snippets);
+      },
+    );
+
+    Lwt.on_failure(
+      promise,
+      exn => {
+        Log.errorf(m =>
+          m("Error loading snippets: %s", Printexc.to_string(exn))
+        );
+        dispatch([]);
+      },
+    );
+  };
+};
+
+module Effect = {
+  let snippetFromFiles = (~filePaths, toMsg) =>
+    Isolinear.Effect.createWithDispatch(
+      ~name="Service_Snippets.Effect.snippetFromFiles", dispatch => {
+      Internal.loadSnippetsFromFiles(~filePaths, snippets =>
+        dispatch(toMsg(snippets))
+      )
+    });
+};
+
 module Sub = {
   type snippetFileParams = {
     uniqueId: string,
@@ -101,31 +140,7 @@ module Sub = {
       let id = ({uniqueId, _}) => uniqueId;
 
       let init = (~params, ~dispatch) => {
-        // Load all files
-        // Coalesce all promises
-        let promises =
-          params.filePaths |> List.map(Fp.toString) |> List.map(Cache.get);
-
-        let join = (a, b) => a @ b;
-        let promise = LwtEx.some(~default=[], join, promises);
-
-        Lwt.on_success(
-          promise,
-          snippets => {
-            Log.infof(m => m("Loaded %d snippets", List.length(snippets)));
-            dispatch(snippets);
-          },
-        );
-
-        Lwt.on_failure(
-          promise,
-          exn => {
-            Log.errorf(m =>
-              m("Error loading snippets: %s", Printexc.to_string(exn))
-            );
-            dispatch([]);
-          },
-        );
+        Internal.loadSnippetsFromFiles(~filePaths=params.filePaths, dispatch);
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;

@@ -1,8 +1,9 @@
 ### Features 
 
-- #3024 - Editor: Snippet Support - Multi-select handler
-- #3047, #3052, #3056, #3059, #3061, #3064 - Editor: Core Snippet Feature Work
-- #3067 - Editor: Integrate snippets provided by extensions
+- #3024 - Snippet Support - Multi-select handler
+- #3047, #3052, #3056, #3059, #3061, #3064 - Snippets: Core Feature Work
+- #3067 - Snippets: Integrate snippets provided by extensions
+- #3090 - Snippets: Add insert snippet command
 
 ### Bug Fixes
 
@@ -22,7 +23,13 @@
 - #3060 - Snippets: Fix parser handling of stand-alone curly braces
 - #3044 - Search: Add `search.exclude` configuration option (fixes #2115 - thanks @joseeMDS!)
 - #3066 - Vim / Input: Fix ':map' condition (fixes #3049)
-- #3055 - Extensions: Implement 'vscode.openFolder' handler (related #3042)
+- #3055, #3088 - Extensions: Implement 'vscode.openFolder' handler (related #3042)
+- #3076 - Terminal: Add `ONIVIM_TERMINAL` environment variable (fixes #3068)
+- #3078 - Auto-Update: Notify user when update fails due to missing key (fixes #3070)
+- #3086 - Snippets: Fix clash with completion / document highlights feature
+- #3085 - Snippets: Fix drop-shadow calculation at end of buffer
+- #3091 - Snippets: Fix auto-closing pairs when placeholders are on same line
+- #3102 - Vim / Input: Implement mapping timeout (fixes #2850)
 
 ### Performance
 
@@ -31,3 +38,5 @@
 ### Infrastructure / Refactoring
 
 - #3012 - Node: Upgrade from Node 12 LTS -> Node 14 LTS (related #3009)
+- #3101 - Dependency: reason-fzy -> 485cae1
+- #3096 - OS: Add logging for `readdir` path (related #3092)

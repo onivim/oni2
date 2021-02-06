@@ -69,11 +69,30 @@ module Internal = {
 module Effects = {
   let load = (directory, configuration, ~onComplete) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
+      Log.infof(m => m("Loading nodes for directory: %s", directory));
       let ignored =
         Configuration.getValue(c => c.filesExclude, configuration);
       let promise = Internal.getDirectoryTree(directory, ignored);
 
-      Lwt.on_success(promise, tree => {dispatch(onComplete(tree))});
+      Lwt.on_success(
+        promise,
+        tree => {
+          Log.infof(m =>
+            m("Successfully loaded nodes for directory: %s", directory)
+          );
+          dispatch(onComplete(tree));
+        },
+      );
+
+      Lwt.on_failure(promise, exn => {
+        Log.errorf(m =>
+          m(
+            "Error loading directory %s: %s",
+            directory,
+            Printexc.to_string(exn),
+          )
+        )
+      });
     });
   };
 };
