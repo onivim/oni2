@@ -308,13 +308,17 @@ let start =
       Feature_Terminal.Configuration.fontLigatures.get(config)
       |> Option.value(~default=fontLigatures);
 
+    let terminalFontSmoothing =
+      Feature_Terminal.Configuration.fontSmoothing.get(config)
+      |> Option.value(~default=fontSmoothing);
+
     let terminalFontSubscription =
       Service_Font.Sub.font(
         ~uniqueId="terminalFont",
         ~fontFamily=terminalFontFamily,
         ~fontSize=terminalFontSize,
         ~fontWeight=terminalFontWeight,
-        ~fontSmoothing, // TODO
+        ~fontSmoothing=terminalFontSmoothing,
         ~fontLigatures=terminalFontLigatures,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));

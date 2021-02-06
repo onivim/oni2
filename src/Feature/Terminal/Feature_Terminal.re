@@ -148,6 +148,15 @@ module Configuration = {
       nullable(Codecs.fontLigatures),
       ~default=None,
     );
+
+  let fontSmoothing =
+    setting(
+      "terminal.integrated.fontSmoothing",
+      nullable(
+        custom(~encode=FontSmoothing.encode, ~decode=FontSmoothing.decode),
+      ),
+      ~default=None,
+    );
 };
 
 let shouldClose = (~id, {idToTerminal, _}) => {
@@ -614,6 +623,7 @@ module Contributions = {
       fontSize.spec,
       fontWeight.spec,
       fontLigatures.spec,
+      fontSmoothing.spec,
     ];
 
   let keybindings = {
