@@ -124,6 +124,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `vim.leader` __(_string_)__ - Specify a custom [leader key](./key-bindings#leader-key).
 
+- `vim.timeout` __(_int_ default: `1000`)__ Sets the timeout, in milliseconds, when Onivim is waiting for a pending chord. When the timeout is reached, any pending keys that are partially mapped will be flushed. Equivalent to the `timeoutlen` Vim setting. Can be set to `0` to disable the timeout entirely.
+
 ### Layout
 
 - `workbench.editor.showTabs` __(_bool_ default: `true`)__ - When `false`, hides the editor tabs.

@@ -62,6 +62,8 @@ module type Input = {
     ) =>
     (t, list(effect));
 
+  let timeout: (~context: context, t) => (t, list(effect));
+
   let candidates:
     (~leaderKey: option(PhysicalKey.t), ~context: context, t) =>
     list((Matcher.t, command));
@@ -769,5 +771,24 @@ module Make = (Config: {
       };
 
     (bindings, initialEffects);
+  };
+
+  let timeout = (~context, bindings) => {
+    // Timeout is like pressing a non-existent key - it should flush all existing bindings
+
+    // let noopKey = KeyCandidate.ofList([]);
+    // let (bindings', keyDownEffects) = keyDown(~context, ~key=noopKey, ~scancode=-1, bindings);
+    // let (bindings'', keyUpEffects) = keyUp(~context, ~scancode=-1, bindings');
+    let (bindings'', effects) =
+      flush(
+        ~allowRemaps=false,
+        ~isRemap=false,
+        ~leaderKey=None,
+        ~recursionDepth=0,
+        ~context,
+        bindings,
+      );
+
+    (bindings'', effects);
   };
 };
