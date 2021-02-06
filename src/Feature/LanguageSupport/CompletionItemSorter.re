@@ -1,27 +1,54 @@
 open Oni_Core;
 
+let isSnippet = (item: CompletionItem.t) => {
+  item.insertTextRules |> Exthost.SuggestItem.InsertTextRules.matches(
+    ~rule=Exthost.SuggestItem.InsertTextRules.InsertAsSnippet
+  );
+};
+
+let compareSnippet = (a, b) => {
+  let isSnippetA = isSnippet(a);
+  let isSnippetB = isSnippet(b);
+
+  if (isSnippetA != isSnippetB) {
+    if (isSnippetA) {
+      -1
+    } else {
+      1
+    }
+  } else {
+    0
+  }
+}
+
 let compare =
     (a: Filter.result(CompletionItem.t), b: Filter.result(CompletionItem.t)) => {
-  // First, use the sortText, if available
-  let sortValue =
-    if (!a.item.isFuzzyMatching && !b.item.isFuzzyMatching) {
-      String.compare(a.item.sortText, b.item.sortText);
-    } else {
-      0;
-      // If we're fuzzy matching,
-    };
 
-  if (sortValue == 0) {
-    let aLen = String.length(a.item.label);
-    let bLen = String.length(b.item.label);
-    if (aLen == bLen) {
-      String.compare(a.item.label, b.item.label);
+  let snippetCompare = compareSnippet(a.item, b.item);
+  if (snippetCompare == 0) {
+    // First, use the sortText, if available
+    let sortValue =
+      if (!a.item.isFuzzyMatching && !b.item.isFuzzyMatching) {
+        String.compare(a.item.sortText, b.item.sortText);
+      } else {
+        0;
+        // If we're fuzzy matching,
+      };
+
+    if (sortValue == 0) {
+      let aLen = String.length(a.item.label);
+      let bLen = String.length(b.item.label);
+      if (aLen == bLen) {
+        String.compare(a.item.label, b.item.label);
+      } else {
+        aLen - bLen;
+      };
     } else {
-      aLen - bLen;
+      sortValue;
     };
   } else {
-    sortValue;
-  };
+    snippetCompare
+  }
 };
 
 let%test_module "compare" =

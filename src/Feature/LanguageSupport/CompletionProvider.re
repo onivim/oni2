@@ -332,16 +332,6 @@ module SnippetCompletionProvider =
     };
   };
 
-  let sortText = (~sortOrder, snippet: Service_Snippets.SnippetWithMetadata.t) => {
-    switch (sortOrder) {
-    | `Top => "AAAAAA" ++ snippet.prefix
-    | `Bottom => "ZZZZZZ" ++ snippet.prefix
-    | `Inline => snippet.prefix
-    // This should never be hit...
-    | `Hidden => snippet.prefix
-    }
-  }
-
   let update = (~isFuzzyMatching, msg, model: model) => {
     Service_Snippets.(
       switch (msg) {
@@ -351,7 +341,7 @@ module SnippetCompletionProvider =
           |> List.map((snippet: SnippetWithMetadata.t) => {
                CompletionItem.snippet(
                  ~isFuzzyMatching,
-                 ~sortText=sortText(~sortOrder=model.sortOrder, snippet),
+                 ~sortText=snippet.prefix,
                  ~prefix=snippet.prefix,
                  snippet.snippet,
                )
