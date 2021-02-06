@@ -139,7 +139,12 @@ module Configuration = {
           fun
           | NoTimeout => bool(false)
           | Timeout(time) =>
-            int(time |> Revery.Time.toFloatSeconds |> int_of_float)
+            int(
+              time
+              |> Revery.Time.toFloatSeconds
+              |> (t => t *. 1000.)
+              |> int_of_float,
+            )
         );
     };
 
