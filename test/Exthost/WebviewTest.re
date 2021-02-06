@@ -1,6 +1,5 @@
 open TestFramework;
 
-open Oni_Core;
 open Exthost;
 
 let waitForMessage = (~name, f, context) => {
