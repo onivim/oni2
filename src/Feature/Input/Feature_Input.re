@@ -21,6 +21,36 @@ let keyCandidateToString = keyCandidate => {
   );
 };
 
+type timeout =
+  | NoTimeout
+  | Timeout(Revery.Time.t);
+
+// VIM SETTINGS
+
+module VimSettings = {
+  open Config.Schema;
+  open VimSetting.Schema;
+
+  let timeout =
+    vim2("timeout", "timeoutlen", (maybeTimeout, maybeTimeoutLen) => {
+      let maybeTimeoutBool =
+        maybeTimeout |> OptionEx.flatMap(VimSetting.decode_value_opt(bool));
+      let maybeTimeoutLenInt =
+        maybeTimeoutLen |> OptionEx.flatMap(VimSetting.decode_value_opt(int));
+      switch (maybeTimeoutBool, maybeTimeoutLenInt) {
+      | (None, Some(timeoutLength))
+      | (Some(true), Some(timeoutLength)) =>
+        Some(Timeout(Revery.Time.milliseconds(timeoutLength)))
+
+      | (Some(true), None) => Some(Timeout(Revery.Time.seconds(1)))
+
+      | (Some(false), _) => Some(NoTimeout)
+
+      | (None, None) => None
+      };
+    });
+};
+
 // CONFIGURATION
 module Configuration = {
   open Oni_Core;
@@ -77,10 +107,55 @@ module Configuration = {
             }
           ),
       );
+
+    module Timeout = {
+      let decode =
+        Json.Decode.(
+          one_of([
+            (
+              "bool",
+              bool
+              |> map(
+                   fun
+                   | true => Timeout(Revery.Time.seconds(1))
+                   | false => NoTimeout,
+                 ),
+            ),
+            (
+              "int",
+              int
+              |> map(
+                   fun
+                   | 0 => NoTimeout
+                   | milliseconds =>
+                     Timeout(Revery.Time.milliseconds(milliseconds)),
+                 ),
+            ),
+          ])
+        );
+
+      let encode =
+        Json.Encode.(
+          fun
+          | NoTimeout => bool(false)
+          | Timeout(time) =>
+            int(time |> Revery.Time.toFloatSeconds |> int_of_float)
+        );
+    };
+
+    let timeout = custom(~decode=Timeout.decode, ~encode=Timeout.encode);
   };
 
   let leaderKey =
     setting("vim.leader", CustomDecoders.physicalKey, ~default=None);
+
+  let timeout =
+    setting(
+      ~vim=VimSettings.timeout,
+      "vim.timeout",
+      CustomDecoders.timeout,
+      ~default=Timeout(Revery.Time.seconds(1)),
+    );
 };
 
 // MSG
@@ -92,7 +167,8 @@ type outmsg =
       fromKeys: string,
       toKeys: string,
       error: string,
-    });
+    })
+  | TimedOut;
 
 type execute =
   InputStateMachine.execute =
@@ -241,7 +317,8 @@ type msg =
       mode: Vim.Mapping.mode,
       maybeKeys: option(string),
     })
-  | KeyDisplayer([@opaque] KeyDisplayer.msg);
+  | KeyDisplayer([@opaque] KeyDisplayer.msg)
+  | Timeout;
 
 module Msg = {
   let keybindingsUpdated = keybindings => KeybindingsUpdated(keybindings);
@@ -255,9 +332,17 @@ type model = {
   userBindings: list(InputStateMachine.uniqueId),
   inputStateMachine: InputStateMachine.t,
   keyDisplayer: option(KeyDisplayer.t),
+  // Keep track of the input tick - an incrementing number on every input event -
+  // such that we can provide a unique id for the timer to flush on timeout.
+  inputTick: int,
 };
 
 type uniqueId = InputStateMachine.uniqueId;
+
+let incrementTick = ({inputTick, _} as model) => {
+  ...model,
+  inputTick: inputTick + 1,
+};
 
 let initial = keybindings => {
   open Schema;
@@ -297,7 +382,7 @@ let initial = keybindings => {
          },
          InputStateMachine.empty,
        );
-  {inputStateMachine, userBindings: [], keyDisplayer: None};
+  {inputStateMachine, userBindings: [], keyDisplayer: None, inputTick: 0};
 };
 
 type effect =
@@ -344,7 +429,8 @@ let keyDown =
       ...model,
       inputStateMachine: inputStateMachine',
       keyDisplayer: keyDisplayer',
-    },
+    }
+    |> incrementTick,
     effects,
   );
 };
@@ -377,7 +463,8 @@ let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
       ...model,
       inputStateMachine: inputStateMachine',
       keyDisplayer: keyDisplayer',
-    },
+    }
+    |> incrementTick,
     effects,
   );
 };
@@ -391,6 +478,15 @@ let keyUp = (~config, ~scancode, ~context, {inputStateMachine, _} as model) => {
       ~context,
       inputStateMachine,
     );
+  (
+    {...model, inputStateMachine: inputStateMachine'} |> incrementTick,
+    effects,
+  );
+};
+
+let timeout = (~context, {inputStateMachine, _} as model) => {
+  let (inputStateMachine', effects) =
+    InputStateMachine.timeout(~context, inputStateMachine);
   ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
@@ -625,6 +721,8 @@ let update = (msg, model) => {
       Nothing,
     )
 
+  | Timeout => (model, TimedOut)
+
   | KeyDisplayer(msg) =>
     let keyDisplayer' =
       model.keyDisplayer |> Option.map(KeyDisplayer.update(msg));
@@ -666,12 +764,31 @@ module Commands = {
 
 // SUBSCRIPTION
 
-let sub = ({keyDisplayer, _}) => {
-  switch (keyDisplayer) {
-  | None => Isolinear.Sub.none
-  | Some(kd) =>
-    KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
-  };
+let sub = (~config, {keyDisplayer, inputTick, inputStateMachine, _}) => {
+  let keyDisplayerSub =
+    switch (keyDisplayer) {
+    | None => Isolinear.Sub.none
+    | Some(kd) =>
+      KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
+    };
+
+  let timeoutSub =
+    switch (Configuration.timeout.get(config)) {
+    | NoTimeout => Isolinear.Sub.none
+    | Timeout(delay) =>
+      if (InputStateMachine.isPending(inputStateMachine)) {
+        Service_Time.Sub.once(
+          ~uniqueId="Feature_Input.keyExpirer:" ++ string_of_int(inputTick),
+          ~delay,
+          ~msg=(~current as _) => {
+          Timeout
+        });
+      } else {
+        Isolinear.Sub.none;
+      }
+    };
+
+  [keyDisplayerSub, timeoutSub] |> Isolinear.Sub.batch;
 };
 
 module ContextKeys = {
@@ -685,7 +802,7 @@ module Contributions = {
   let commands =
     Commands.[showInputState, enableKeyDisplayer, disableKeyDisplayer];
 
-  let configuration = Configuration.[leaderKey.spec];
+  let configuration = Configuration.[leaderKey.spec, timeout.spec];
 
   let contextKeys = model => {
     WhenExpr.ContextKeys.(
