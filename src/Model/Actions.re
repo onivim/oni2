@@ -52,12 +52,13 @@ type t =
       scancode: int,
       time: [@opaque] Revery.Time.t,
     })
+  | TextInput(string, [@opaque] Revery.Time.t)
   | KeyUp({
       scancode: int,
       time: [@opaque] Revery.Time.t,
     })
+  | KeyTimeout
   | Logging(Feature_Logging.msg)
-  | TextInput(string, [@opaque] Revery.Time.t)
   // TODO: This should be a function call - wired up from an input feature
   // directly to the consumer of the keyboard action.
   // In addition, in the 'not-is-text' case, we should strongly type the keys.

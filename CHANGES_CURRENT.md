@@ -28,6 +28,8 @@
 - #3078 - Auto-Update: Notify user when update fails due to missing key (fixes #3070)
 - #3086 - Snippets: Fix clash with completion / document highlights feature
 - #3085 - Snippets: Fix drop-shadow calculation at end of buffer
+- #3091 - Snippets: Fix auto-closing pairs when placeholders are on same line
+- #3102 - Vim / Input: Implement mapping timeout (fixes #2850)
 
 ### Performance
 
@@ -36,3 +38,5 @@
 ### Infrastructure / Refactoring
 
 - #3012 - Node: Upgrade from Node 12 LTS -> Node 14 LTS (related #3009)
+- #3101 - Dependency: reason-fzy -> 485cae1
+- #3096 - OS: Add logging for `readdir` path (related #3092)

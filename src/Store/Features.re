@@ -500,6 +500,10 @@ let update =
             error,
           ),
         )
+      | TimedOut =>
+        Isolinear.Effect.createWithDispatch(~name="Input.timeout", dispatch =>
+          dispatch(KeyTimeout)
+        )
       };
 
     ({...state, input: model}, eff);
