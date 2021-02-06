@@ -185,7 +185,9 @@ module type Input = {
       t
     ) =>
     (t, list(effect));
+
   let text: (~text: string, t) => (t, list(effect));
+
   let keyUp:
     (
       ~leaderKey: option(PhysicalKey.t)=?,
@@ -194,6 +196,8 @@ module type Input = {
       t
     ) =>
     (t, list(effect));
+
+  let timeout: (~context: context, t) => (t, list(effect));
 
   // [candidates] returns a list of available matcher / command
   // candidates, based on the current context and input state.
