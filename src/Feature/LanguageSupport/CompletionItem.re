@@ -64,7 +64,7 @@ let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
   };
 };
 
-let snippet = (~sortText, ~isFuzzyMatching, ~prefix: string, snippet: string) => {
+let snippet = (~isFuzzyMatching, ~prefix: string, snippet: string) => {
   chainedCacheId: None,
   handle: None,
   label: prefix,

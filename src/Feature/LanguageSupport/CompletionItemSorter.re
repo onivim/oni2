@@ -1,29 +1,26 @@
 open Oni_Core;
 
 let isSnippet = (item: CompletionItem.t) => {
-  item.insertTextRules |> Exthost.SuggestItem.InsertTextRules.matches(
-    ~rule=Exthost.SuggestItem.InsertTextRules.InsertAsSnippet
-  );
+  item.insertTextRules
+  |> Exthost.SuggestItem.InsertTextRules.matches(
+       ~rule=Exthost.SuggestItem.InsertTextRules.InsertAsSnippet,
+     );
 };
 
 let compareSnippet = (a, b) => {
+  // TODO: Account for configuration here!
   let isSnippetA = isSnippet(a);
   let isSnippetB = isSnippet(b);
 
   if (isSnippetA != isSnippetB) {
-    if (isSnippetA) {
-      -1
-    } else {
-      1
-    }
+    if (isSnippetA) {(-1)} else {1};
   } else {
-    0
-  }
-}
+    0;
+  };
+};
 
 let compare =
     (a: Filter.result(CompletionItem.t), b: Filter.result(CompletionItem.t)) => {
-
   let snippetCompare = compareSnippet(a.item, b.item);
   if (snippetCompare == 0) {
     // First, use the sortText, if available
@@ -47,8 +44,8 @@ let compare =
       sortValue;
     };
   } else {
-    snippetCompare
-  }
+    snippetCompare;
+  };
 };
 
 let%test_module "compare" =

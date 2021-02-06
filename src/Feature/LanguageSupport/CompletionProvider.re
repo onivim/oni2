@@ -283,7 +283,7 @@ type snippetModel = {
   items: list(CompletionItem.t),
   isComplete: bool,
   filePaths: list(Fp.t(Fp.absolute)),
-  sortOrder: [ `Top | `Inline | `Bottom | `Hidden ],
+  sortOrder: [ | `Top | `Inline | `Bottom | `Hidden],
 };
 [@deriving show]
 type snippetMsg =
@@ -320,7 +320,8 @@ module SnippetCompletionProvider =
           Feature_Configuration.GlobalConfiguration.Experimental.Snippets.enabled.
             get(
             config,
-          ) || sortOrder == `Hidden) {
+          )
+        || sortOrder == `Hidden) {
       None;
     } else {
       let fileType = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
@@ -328,7 +329,12 @@ module SnippetCompletionProvider =
       let snippetFilePaths =
         Feature_Extensions.snippetFilePaths(~fileType, extensions);
 
-      Some({filePaths: snippetFilePaths, items: [], isComplete: false, sortOrder});
+      Some({
+        filePaths: snippetFilePaths,
+        items: [],
+        isComplete: false,
+        sortOrder,
+      });
     };
   };
 
@@ -341,7 +347,6 @@ module SnippetCompletionProvider =
           |> List.map((snippet: SnippetWithMetadata.t) => {
                CompletionItem.snippet(
                  ~isFuzzyMatching,
-                 ~sortText=snippet.prefix,
                  ~prefix=snippet.prefix,
                  snippet.snippet,
                )
