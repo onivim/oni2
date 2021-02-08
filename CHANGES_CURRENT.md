@@ -33,6 +33,8 @@
 
 ### Performance
 
+- #3116 - SCM: Recalculate diff markers less frequently (only on buffer updates)
+
 ### Documentation
 
 ### Infrastructure / Refactoring
