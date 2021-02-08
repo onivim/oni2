@@ -13,7 +13,6 @@ describe("DiffMarkers", ({describe, _}) => {
       let now = [|"a", "b", ".", "c", "d"|];
 
       let buffer = makeBuffer(now);
-      //let scm = scm(buffer, was);
 
       let actual =
         DiffMarkers.(generate(~originalLines, buffer) |> toArray);
@@ -30,7 +29,6 @@ describe("DiffMarkers", ({describe, _}) => {
       let now = [|"a", "b", ".", ".", ".", "c", "d"|];
 
       let buffer = makeBuffer(now);
-      // let scm = scm(buffer, was);
 
       let actual =
         DiffMarkers.(generate(~originalLines, buffer) |> toArray);
