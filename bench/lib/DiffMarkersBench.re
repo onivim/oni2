@@ -96,7 +96,7 @@ let setup = () => ();
 let options = Reperf.Options.create(~iterations=100, ());
 
 bench(
-  ~name="EditorDiffMarkers: 10k lines, no changes",
+  ~name="DiffMarkers: 10k lines, no changes",
   ~options,
   ~setup,
   ~f=Tests.diff_10k_nochanges,
@@ -104,7 +104,7 @@ bench(
 );
 
 bench(
-  ~name="EditorDiffMarkers: 10k lines, random changes",
+  ~name="DiffMarkers: 10k lines, random changes",
   ~options,
   ~setup,
   ~f=Tests.diff_10k_randomchanges,
@@ -112,7 +112,7 @@ bench(
 );
 
 bench(
-  ~name="EditorDiffMarkers: 10k lines, 1 line original",
+  ~name="DiffMarkers: 10k lines, 1 line original",
   ~options,
   ~setup,
   ~f=Tests.diff_10k_onelineoriginal,
@@ -120,7 +120,7 @@ bench(
 );
 
 bench(
-  ~name="EditorDiffMarkers: 10k lines, 1 line modified",
+  ~name="DiffMarkers: 10k lines, 1 line modified",
   ~options,
   ~setup,
   ~f=Tests.diff_10k_onelinemodified,
@@ -130,7 +130,7 @@ bench(
 let options = Reperf.Options.create(~iterations=10, ());
 
 bench(
-  ~name="EditorDiffMarkers: 100k lines, no changes",
+  ~name="DiffMarkers: 100k lines, no changes",
   ~options,
   ~setup,
   ~f=Tests.diff_100k_nochanges,
