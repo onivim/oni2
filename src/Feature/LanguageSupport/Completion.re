@@ -449,6 +449,7 @@ type model = {
   isInsertMode: bool,
   isSnippetMode: bool,
   acceptOnEnter: bool,
+  snippetSortOrder: [ | `Bottom | `Hidden | `Inline | `Top],
 };
 
 let initial = {
@@ -477,19 +478,21 @@ let initial = {
   ],
   allItems: [||],
   selection: Selection.initial,
+  snippetSortOrder: `Inline,
 };
 
 let configurationChanged = (~config, model) => {
   {
     ...model,
     acceptOnEnter: CompletionConfig.acceptSuggestionOnEnter.get(config),
+    snippetSortOrder: CompletionConfig.snippetSuggestions.get(config),
   };
 };
 
 let providerCount = ({providers, _}) => List.length(providers) - 1;
 let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
 
-let recomputeAllItems = (providers: list(Session.t)) => {
+let recomputeAllItems = (~snippetSortOrder, providers: list(Session.t)) => {
   providers
   |> List.fold_left(
        (acc, session) => {
@@ -515,7 +518,7 @@ let recomputeAllItems = (providers: list(Session.t)) => {
   |> StringMap.bindings
   |> List.map(snd)
   |> List.fast_sort(((_loc, a), (_loc, b)) =>
-       CompletionItemSorter.compare(a, b)
+       CompletionItemSorter.compare(~snippetSortOrder, a, b)
      )
   |> Array.of_list;
 };
@@ -619,7 +622,8 @@ let unregister = (~handle, model) => {
 };
 
 let updateSessions = (providers, model) => {
-  let allItems = recomputeAllItems(providers);
+  let allItems =
+    recomputeAllItems(~snippetSortOrder=model.snippetSortOrder, providers);
   let selection =
     Selection.ensureValidFocus(
       ~count=Array.length(allItems),
@@ -893,7 +897,8 @@ let update =
 
     let providers =
       model.providers |> List.map(provider => Session.update(msg, provider));
-    let allItems = recomputeAllItems(providers);
+    let allItems =
+      recomputeAllItems(~snippetSortOrder=model.snippetSortOrder, providers);
     let selection =
       Selection.ensureValidFocus(
         ~count=Array.length(allItems),
@@ -1058,6 +1063,7 @@ module Contributions = {
       quickSuggestions.spec,
       wordBasedSuggestions.spec,
       acceptSuggestionOnEnter.spec,
+      snippetSuggestions.spec,
     ];
 
   let commands =

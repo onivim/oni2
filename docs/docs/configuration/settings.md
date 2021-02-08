@@ -88,6 +88,12 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.scrollbar.verticalScrollbarSize` __(_int_ default: `15`)__ - The size, in pixels, of the vertical scroll bar on the editor surface.
 
+- `editor.snippetSuggestions` __(_string_ default: `"inline"`) - controls how snippets are presented in the suggestion UI:
+    - _"top"_ - Show snippets at the top of the suggestion list
+    - _"bottom"_ - Show snippets at the bottom of the suggestion list
+    - _"inline"_ - Show snippets sorted in-line with other suggestion items
+    - _"hidden"_ - Don't show snippet suggestions at all
+
 - `editor.wordBasedSuggestions` __(_bool_ default: `true`)__ When `true`, keywords are provided as completion suggestions.
 
 - `editor.wordWrap` __(_bool_ default: `false`)__ When `true`, Onivim will soft-wrap lines at the viewport boundary.
