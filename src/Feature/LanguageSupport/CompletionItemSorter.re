@@ -7,13 +7,19 @@ let isSnippet = (item: CompletionItem.t) => {
      );
 };
 
-let compareSnippet = (a, b) => {
+let compareSnippet = (~snippetSortOrder, a, b) => {
   // TODO: Account for configuration here!
   let isSnippetA = isSnippet(a);
   let isSnippetB = isSnippet(b);
 
-  if (isSnippetA != isSnippetB) {
-    if (isSnippetA) {(-1)} else {1};
+  if (snippetSortOrder == `Inline || snippetSortOrder == `Hidden) {
+    0;
+  } else if (isSnippetA != isSnippetB) {
+    if (isSnippetA) {
+      snippetSortOrder == `Top ? (-1) : 1;
+    } else {
+      snippetSortOrder == `Top ? 1 : (-1);
+    };
   } else {
     0;
   };
@@ -21,7 +27,8 @@ let compareSnippet = (a, b) => {
 
 let compare =
     (a: Filter.result(CompletionItem.t), b: Filter.result(CompletionItem.t)) => {
-  let snippetCompare = compareSnippet(a.item, b.item);
+  let snippetCompare =
+    compareSnippet(~snippetSortOrder=`Inline, a.item, b.item);
   if (snippetCompare == 0) {
     // First, use the sortText, if available
     let sortValue =
