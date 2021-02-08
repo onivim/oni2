@@ -342,9 +342,7 @@ let create =
   ];
 
   let nodePath = Setup.(setup.nodePath);
-  // let extHostScriptPath = Setup.getNodeExtensionHostPath(setup);
-
-  let extHostScriptPath = "/home/bryphe/vscode-exthost/out/bootstrap-fork.js";
+  let extHostScriptPath = Setup.getNodeExtensionHostPath(setup);
 
   let on_exit = (_, ~exit_status: int64, ~term_signal) => {
     Log.infof(m =>
@@ -357,7 +355,7 @@ let create =
   };
 
   let redirect =
-    // if (attachStdio) {
+    if (attachStdio) {
       [
         Luv.Process.inherit_fd(
           ~fd=Luv.Process.stdin,
@@ -375,9 +373,9 @@ let create =
           (),
         ),
       ];
-    // } else {
-    //   [];
-    // };
+    } else {
+      [];
+    };
 
   let _process: Luv.Process.t =
     LuvEx.Process.spawn(
