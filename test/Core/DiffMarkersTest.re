@@ -1,5 +1,4 @@
 open Oni_Core;
-open DiffMarkers;
 open TestFramework;
 
 module Buffer = Oni_Core.Buffer;
