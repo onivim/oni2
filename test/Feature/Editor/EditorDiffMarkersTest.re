@@ -1,48 +1,41 @@
 open Oni_Core;
+open DiffMarkers;
 open TestFramework;
 
 module Buffer = Oni_Core.Buffer;
-module EditorDiffMarkers = Feature_Editor.EditorDiffMarkers;
-
-let scm = (buffer, lines) => {
-  Feature_SCM.initial |> Feature_SCM.setOriginalLines(buffer, lines);
-};
 
 let makeBuffer = lines => Buffer.ofLines(~font=Font.default(), lines);
 
-describe("EditorDiffMarkers", ({describe, _}) => {
+describe("DiffMarkers", ({describe, _}) => {
   describe("generate", ({test, _}) => {
     test("single added", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d"|];
+      let originalLines = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", ".", "c", "d"|];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
+      //let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
-        EditorDiffMarkers.(
+        DiffMarkers.(
           [|Unmodified, Unmodified, Added, Unmodified, Unmodified|]
         );
 
-      switch (actual) {
-      | Some(actual) => expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
+      expect.array(actual).toEqual(expected)
     });
 
     test("block added", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d"|];
+      let originalLines = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", ".", ".", ".", "c", "d"|];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
+      // let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
-        EditorDiffMarkers.(
+        DiffMarkers.(
           [|
             Unmodified,
             Unmodified,
@@ -53,167 +46,130 @@ describe("EditorDiffMarkers", ({describe, _}) => {
             Unmodified,
           |]
         );
-
-      switch (actual) {
-      | Some(actual) => expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
+      expect.array(actual).toEqual(expected)
     });
 
     test("single deleted", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d"|];
+      let originalLines = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", "d"|];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
-        EditorDiffMarkers.([|Unmodified, Unmodified, DeletedBefore|]);
+        DiffMarkers.([|Unmodified, Unmodified, DeletedBefore|]);
 
-      switch (actual) {
-      | Some(actual) => expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
+      expect.array(actual).toEqual(expected)
     });
 
     test("block deleted from beginning", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d"|];
+      let originalLines = [|"a", "b", "c", "d"|];
       let now = [|"c", "d"|];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
-      let expected = EditorDiffMarkers.([|DeletedBefore, Unmodified|]);
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let expected = DiffMarkers.([|DeletedBefore, Unmodified|]);
 
-      switch (actual) {
-      | Some(actual) => expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
+      expect.array(actual).toEqual(expected)
     });
 
     test("block deleted from end", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d"|];
+      let originalLines = [|"a", "b", "c", "d"|];
       let now = [|"a", "b"|];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
-      let expected = EditorDiffMarkers.([|Unmodified, DeletedAfter|]);
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let expected = DiffMarkers.([|Unmodified, DeletedAfter|]);
 
-      switch (actual) {
-      | Some(actual) => expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
+      expect.array(actual).toEqual(expected)
     });
 
     test("block deleted entirely", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d"|];
+      let originalLines = [|"a", "b", "c", "d"|];
       let now = [||];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
-      let expected = EditorDiffMarkers.([|DeletedBefore|]);
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let expected = DiffMarkers.([|DeletedBefore|]);
 
-      switch (actual) {
-      | Some(actual) => expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
+      expect.array(actual).toEqual(expected)
     });
 
     test("single modified", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d"|];
+      let originalLines = [|"a", "b", "c", "d"|];
       let now = [|"a", "b", "C", "d"|];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
-        EditorDiffMarkers.([|Unmodified, Unmodified, Modified, Unmodified|]);
+        DiffMarkers.([|Unmodified, Unmodified, Modified, Unmodified|]);
 
-      switch (actual) {
-      | Some(actual) => expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
+      expect.array(actual).toEqual(expected)
     });
 
     test("block modified", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d"|];
+      let originalLines = [|"a", "b", "c", "d"|];
       let now = [|"a", "B", "C", "d"|];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
-        EditorDiffMarkers.([|Unmodified, Modified, Modified, Unmodified|]);
+        DiffMarkers.([|Unmodified, Modified, Modified, Unmodified|]);
 
-      switch (actual) {
-      | Some(actual) => expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
+      expect.array(actual).toEqual(expected)
     });
 
     test("add + modify", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d"|];
+      let originalLines = [|"a", "b", "c", "d"|];
       let now = [|"a", ".", "B", "c", "d"|];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
-        EditorDiffMarkers.(
+        DiffMarkers.(
           [|Unmodified, Modified, Added, Unmodified, Unmodified|]
         );
 
-      switch (actual) {
-      | Some(actual) => expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
+      expect.array(actual).toEqual(expected)
     });
 
     test("delete + modify", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d"|];
+      let originalLines = [|"a", "b", "c", "d"|];
       let now = [|"a", "C", "d"|];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
-        EditorDiffMarkers.([|Unmodified, Modified, DeletedBefore|]);
+        DiffMarkers.([|Unmodified, Modified, DeletedBefore|]);
 
-      switch (actual) {
-      | Some(actual) => expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
+      expect.array(actual).toEqual(expected)
     });
 
     test("delete + add + delete", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d", "e", "f", "g"|];
+      let originalLines = [|"a", "b", "c", "d", "e", "f", "g"|];
       let now = [|"a", "c", ".", "d", "f", "g"|];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
-        EditorDiffMarkers.(
+        DiffMarkers.(
           [|
             Unmodified,
             DeletedBefore,
@@ -224,23 +180,19 @@ describe("EditorDiffMarkers", ({describe, _}) => {
           |]
         );
 
-      switch (actual) {
-      | Some(actual) => expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
+      expect.array(actual).toEqual(expected)
     });
 
     test("delete block + add + delete", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"|];
+      let originalLines = [|"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"|];
       let now = [|"a", "d", ".", "e", "h", "i", "j"|];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
-        EditorDiffMarkers.(
+        DiffMarkers.(
           [|
             Unmodified,
             DeletedBefore,
@@ -252,25 +204,19 @@ describe("EditorDiffMarkers", ({describe, _}) => {
           |]
         );
 
-      switch (actual) {
-      | Some(actual) =>
-        // Printf.printf("\n%s\n%!", EditorDiffMarkers.show(actual));
         expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
     });
 
     test("delete + add + delete block", ({expect, _}) => {
-      let was = [|"a", "b", "c", "d", "e", "f", "g", "h"|];
+      let originalLines = [|"a", "b", "c", "d", "e", "f", "g", "h"|];
       let now = [|"a", "c", ".", "d", "g", "h"|];
 
       let buffer = makeBuffer(now);
-      let scm = scm(buffer, was);
 
       let actual =
-        EditorDiffMarkers.(generate(~scm, buffer) |> Option.map(toArray));
+        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
-        EditorDiffMarkers.(
+        DiffMarkers.(
           [|
             Unmodified,
             DeletedBefore,
@@ -281,10 +227,7 @@ describe("EditorDiffMarkers", ({describe, _}) => {
           |]
         );
 
-      switch (actual) {
-      | Some(actual) => expect.array(actual).toEqual(expected)
-      | None => failwith("unreachable")
-      };
+      expect.array(actual).toEqual(expected)
     });
   })
 });
