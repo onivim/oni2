@@ -13,14 +13,13 @@ describe("DiffMarkers", ({describe, _}) => {
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
         DiffMarkers.(
           [|Unmodified, Unmodified, Added, Unmodified, Unmodified|]
         );
 
-      expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
 
     test("block added", ({expect, _}) => {
@@ -29,8 +28,7 @@ describe("DiffMarkers", ({describe, _}) => {
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
         DiffMarkers.(
           [|
@@ -43,7 +41,7 @@ describe("DiffMarkers", ({describe, _}) => {
             Unmodified,
           |]
         );
-      expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
 
     test("single deleted", ({expect, _}) => {
@@ -52,12 +50,10 @@ describe("DiffMarkers", ({describe, _}) => {
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
-      let expected =
-        DiffMarkers.([|Unmodified, Unmodified, DeletedBefore|]);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let expected = DiffMarkers.([|Unmodified, Unmodified, DeletedBefore|]);
 
-      expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
 
     test("block deleted from beginning", ({expect, _}) => {
@@ -66,11 +62,10 @@ describe("DiffMarkers", ({describe, _}) => {
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected = DiffMarkers.([|DeletedBefore, Unmodified|]);
 
-      expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
 
     test("block deleted from end", ({expect, _}) => {
@@ -79,11 +74,10 @@ describe("DiffMarkers", ({describe, _}) => {
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected = DiffMarkers.([|Unmodified, DeletedAfter|]);
 
-      expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
 
     test("block deleted entirely", ({expect, _}) => {
@@ -92,11 +86,10 @@ describe("DiffMarkers", ({describe, _}) => {
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected = DiffMarkers.([|DeletedBefore|]);
 
-      expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
 
     test("single modified", ({expect, _}) => {
@@ -105,12 +98,11 @@ describe("DiffMarkers", ({describe, _}) => {
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
         DiffMarkers.([|Unmodified, Unmodified, Modified, Unmodified|]);
 
-      expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
 
     test("block modified", ({expect, _}) => {
@@ -119,12 +111,11 @@ describe("DiffMarkers", ({describe, _}) => {
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
         DiffMarkers.([|Unmodified, Modified, Modified, Unmodified|]);
 
-      expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
 
     test("add + modify", ({expect, _}) => {
@@ -133,14 +124,11 @@ describe("DiffMarkers", ({describe, _}) => {
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
-        DiffMarkers.(
-          [|Unmodified, Modified, Added, Unmodified, Unmodified|]
-        );
+        DiffMarkers.([|Unmodified, Modified, Added, Unmodified, Unmodified|]);
 
-      expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
 
     test("delete + modify", ({expect, _}) => {
@@ -149,12 +137,10 @@ describe("DiffMarkers", ({describe, _}) => {
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
-      let expected =
-        DiffMarkers.([|Unmodified, Modified, DeletedBefore|]);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let expected = DiffMarkers.([|Unmodified, Modified, DeletedBefore|]);
 
-      expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
 
     test("delete + add + delete", ({expect, _}) => {
@@ -163,8 +149,7 @@ describe("DiffMarkers", ({describe, _}) => {
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
         DiffMarkers.(
           [|
@@ -177,17 +162,27 @@ describe("DiffMarkers", ({describe, _}) => {
           |]
         );
 
-      expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
 
     test("delete block + add + delete", ({expect, _}) => {
-      let originalLines = [|"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"|];
+      let originalLines = [|
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f",
+        "g",
+        "h",
+        "i",
+        "j",
+      |];
       let now = [|"a", "d", ".", "e", "h", "i", "j"|];
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
         DiffMarkers.(
           [|
@@ -201,7 +196,7 @@ describe("DiffMarkers", ({describe, _}) => {
           |]
         );
 
-        expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
 
     test("delete + add + delete block", ({expect, _}) => {
@@ -210,8 +205,7 @@ describe("DiffMarkers", ({describe, _}) => {
 
       let buffer = makeBuffer(now);
 
-      let actual =
-        DiffMarkers.(generate(~originalLines, buffer) |> toArray);
+      let actual = DiffMarkers.(generate(~originalLines, buffer) |> toArray);
       let expected =
         DiffMarkers.(
           [|
@@ -224,7 +218,7 @@ describe("DiffMarkers", ({describe, _}) => {
           |]
         );
 
-      expect.array(actual).toEqual(expected)
+      expect.array(actual).toEqual(expected);
     });
   })
 });

@@ -3,16 +3,6 @@ open DiffMarkers;
 
 open Revery.Draw;
 
-module Log = (
-  val Oni_Core.Log.withNamespace("Feature_Editor.EditorDiffMarkers")
-);
-
-let generate = (~scm, buffer) =>
-  Feature_SCM.getOriginalLines(buffer, scm)
-  |> Option.map(originalLines => {
-     DiffMarkers.generate(~originalLines, buffer)
-     });
-
 let markerPaint = Skia.Paint.make();
 let renderMarker =
     (~x, ~y, ~rowHeight, ~width, ~canvasContext, ~colors: Colors.t, marker) => {

@@ -12,7 +12,6 @@ module Log = (val Log.withNamespace("Oni2.Model.Buffers"));
 
 type model = {
   buffers: IntMap.t(Buffer.t),
-
   originalLines: IntMap.t(array(string)),
   computedDiffs: IntMap.t(DiffMarkers.t),
 };
@@ -25,25 +24,28 @@ let empty = {
 
 module Internal = {
   let recomputeDiff = (~bufferId, model) => {
-    let computedDiffs' = OptionEx.map2((buffer, originalLines) => {
-      let newMarkers = DiffMarkers.generate(~originalLines, buffer);
+    let computedDiffs' =
+      OptionEx.map2(
+        (buffer, originalLines) => {
+          let newMarkers = DiffMarkers.generate(~originalLines, buffer);
 
-      IntMap.add(bufferId, newMarkers, model.computedDiffs)
-    }, IntMap.find_opt(bufferId, model.buffers), IntMap.find_opt(bufferId, model.originalLines))
-    |> Option.value(~default=model.computedDiffs);
+          IntMap.add(bufferId, newMarkers, model.computedDiffs);
+        },
+        IntMap.find_opt(bufferId, model.buffers),
+        IntMap.find_opt(bufferId, model.originalLines),
+      )
+      |> Option.value(~default=model.computedDiffs);
 
-    {
-      ...model,
-      computedDiffs: computedDiffs'
-    };
+    {...model, computedDiffs: computedDiffs'};
   };
-}
+};
 
 let setOriginalLines = (~bufferId, ~originalLines, model) => {
   {
-  ...model,
-  originalLines: IntMap.add(bufferId, originalLines, model.originalLines),
-  } |> Internal.recomputeDiff(~bufferId);
+    ...model,
+    originalLines: IntMap.add(bufferId, originalLines, model.originalLines),
+  }
+  |> Internal.recomputeDiff(~bufferId);
 };
 
 let getOriginalDiff = (~bufferId, model) => None;
@@ -56,11 +58,8 @@ let map = (f, {buffers, _} as model) => {
 let get = (id, {buffers, _}) => IntMap.find_opt(id, buffers);
 
 let update = (id, updater, {buffers, _} as model) => {
-  {
-  ...model,
-  buffers: IntMap.update(id, updater, buffers)
-  }
-}
+  {...model, buffers: IntMap.update(id, updater, buffers)};
+};
 
 let anyModified = ({buffers, _}: model) => {
   IntMap.fold(
@@ -73,8 +72,8 @@ let anyModified = ({buffers, _}: model) => {
 let add = (buffer, model) => {
   {
     ...model,
-  buffers: model.buffers |> IntMap.add(Buffer.getId(buffer), buffer)
-  }
+    buffers: model.buffers |> IntMap.add(Buffer.getId(buffer), buffer),
+  };
 };
 
 let filter = (f, {buffers, _}) => {
@@ -85,7 +84,7 @@ let all = ({buffers, _}) => {
   buffers |> IntMap.to_seq |> Seq.map(snd) |> List.of_seq;
 };
 
-let isModifiedByPath = ({buffers, _} : model, filePath: string) => {
+let isModifiedByPath = ({buffers, _}: model, filePath: string) => {
   IntMap.exists(
     (_id, v) => {
       let bufferPath = Buffer.getFilePath(v);

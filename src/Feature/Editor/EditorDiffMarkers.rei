@@ -1,6 +1,6 @@
 open Oni_Core;
 
-let generate: (~scm: Feature_SCM.model, Buffer.t) => option(DiffMarkers.t);
+// let generate: (~scm: Feature_SCM.model, Buffer.t) => option(DiffMarkers.t);
 
 let render:
   (
