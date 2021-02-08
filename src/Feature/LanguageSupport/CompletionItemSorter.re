@@ -8,7 +8,6 @@ let isSnippet = (item: CompletionItem.t) => {
 };
 
 let compareSnippet = (~snippetSortOrder, a, b) => {
-  // TODO: Account for configuration here!
   let isSnippetA = isSnippet(a);
   let isSnippetB = isSnippet(b);
 
