@@ -22,8 +22,6 @@ module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Constants = {
   include Constants;
-
-  let diffMarkersMaxLineCount = 2000;
   let diffMarkerWidth = 3.;
   let gutterMargin = 3.;
 };

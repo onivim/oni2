@@ -27,9 +27,15 @@ module Internal = {
     let computedDiffs' =
       OptionEx.map2(
         (buffer, originalLines) => {
-          let newMarkers = DiffMarkers.generate(~originalLines, buffer);
+          if (Oni_Core.Buffer.getNumberOfLines(buffer) > 
+          Constants.diffMarkersMaxLineCount
+          || Array.length(originalLines) > Constants.diffMarkersMaxLineCount) {
+            IntMap.remove(bufferId, model.computedDiffs)
+          } else {
+            let newMarkers = DiffMarkers.generate(~originalLines, buffer);
 
-          IntMap.add(bufferId, newMarkers, model.computedDiffs);
+            IntMap.add(bufferId, newMarkers, model.computedDiffs);
+          }
         },
         IntMap.find_opt(bufferId, model.buffers),
         IntMap.find_opt(bufferId, model.originalLines),
@@ -48,7 +54,9 @@ let setOriginalLines = (~bufferId, ~originalLines, model) => {
   |> Internal.recomputeDiff(~bufferId);
 };
 
-let getOriginalDiff = (~bufferId, model) => None;
+let getOriginalDiff = (~bufferId, model) => {
+  IntMap.find_opt(bufferId, model.computedDiffs);
+};
 
 let map = (f, {buffers, _} as model) => {
   ...model,

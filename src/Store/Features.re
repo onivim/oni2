@@ -874,6 +874,20 @@ let update =
 
     | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
     | PreviewFile(filePath) => (state, Internal.previewFileEffect(filePath))
+
+    | OriginalContentLoaded({bufferId, originalLines}) => (
+        {
+          ...state,
+          buffers:
+            Feature_Buffers.setOriginalLines(
+              ~bufferId,
+              ~originalLines,
+              state.buffers,
+            ),
+        },
+        Isolinear.Effect.none,
+      )
+
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
