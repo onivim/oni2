@@ -26,17 +26,17 @@ module Internal = {
   let recomputeDiff = (~bufferId, model) => {
     let computedDiffs' =
       OptionEx.map2(
-        (buffer, originalLines) => {
-          if (Oni_Core.Buffer.getNumberOfLines(buffer) > 
-          Constants.diffMarkersMaxLineCount
-          || Array.length(originalLines) > Constants.diffMarkersMaxLineCount) {
-            IntMap.remove(bufferId, model.computedDiffs)
+        (buffer, originalLines) =>
+          if (Oni_Core.Buffer.getNumberOfLines(buffer)
+              > Constants.diffMarkersMaxLineCount
+              || Array.length(originalLines)
+              > Constants.diffMarkersMaxLineCount) {
+            IntMap.remove(bufferId, model.computedDiffs);
           } else {
             let newMarkers = DiffMarkers.generate(~originalLines, buffer);
 
             IntMap.add(bufferId, newMarkers, model.computedDiffs);
-          }
-        },
+          },
         IntMap.find_opt(bufferId, model.buffers),
         IntMap.find_opt(bufferId, model.originalLines),
       )
