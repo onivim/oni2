@@ -12,6 +12,15 @@ module SnippetWithMetadata = {
   };
 };
 
+module SnippetFileMetadata = {
+  [@deriving show]
+  type t = {
+    language: option(string),
+    filePath: [@opaque] Fp.t(Fp.absolute),
+    isCreated: bool,
+  };
+};
+
 // Decoder logic for snippet files
 module Decode = {
   open Json.Decode;
@@ -122,6 +131,11 @@ module Effect = {
         dispatch(toMsg(snippets))
       )
     });
+
+  let getUserSnippetFiles = (~languageInfo as _, _) => {
+    // TODO
+    Isolinear.Effect.none
+  }
 };
 
 module Sub = {

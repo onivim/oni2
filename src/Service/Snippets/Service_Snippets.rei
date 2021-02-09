@@ -7,6 +7,15 @@ module SnippetWithMetadata: {
   };
 };
 
+module SnippetFileMetadata: {
+  [@deriving show]
+  type t = {
+    language: option(string),
+    filePath: Fp.t(Fp.absolute),
+    isCreated: bool,
+  };
+};
+
 module Effect: {
   let snippetFromFiles:
     (
@@ -14,6 +23,11 @@ module Effect: {
       list(SnippetWithMetadata.t) => 'msg
     ) =>
     Isolinear.Effect.t('msg);
+
+  let getUserSnippetFiles: (
+    ~languageInfo: Exthost.LanguageInfo.t,
+    list(SnippetFileMetadata.t) => 'msg
+  ) => Isolinear.Effect.t('msg);
 };
 
 module Sub: {
