@@ -31,6 +31,7 @@
 - #3085 - Snippets: Fix drop-shadow calculation at end of buffer
 - #3091 - Snippets: Fix auto-closing pairs when placeholders are on same line
 - #3102 - Vim / Input: Implement mapping timeout (fixes #2850)
+- #3121 - Snippets: Add support for the $TM_SELECTED_TEXT snippet variable
 
 ### Performance
 
