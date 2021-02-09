@@ -2,16 +2,16 @@
 # yarn lockfile v1
 
 
-"@onivim/vscode-exthost@1.52.1001":
-  version "1.52.1001"
-  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.52.1001.tgz#22139888543b604a2babb94c200693290fca4220"
-  integrity sha512-SbvMucGhnAnz7pwkcuv8sjgOLB8bdldYMm9d/c8Vhgm3yNwtDefsRcvmXyiXidCHRBoKk/ZRvO+9Ua7OiAMV/Q==
+"@onivim/vscode-exthost@1.53.0":
+  version "1.53.0"
+  resolved "https://registry.yarnpkg.com/@onivim/vscode-exthost/-/vscode-exthost-1.53.0.tgz#86fff6a92163c40c37e5934719992f6d3b6fc26b"
+  integrity sha512-eg9Cprn6MyueU56kAZZ6/ovN8BK1Lq8rZuGXsSh4O/vRTXJc3RJACsHtYsHzJOPAXwnlWKYx9rvKtaJc0tTFzg==
   dependencies:
     graceful-fs "4.2.3"
     iconv-lite-umd "0.6.8"
     minimist "^1.2.5"
     native-watchdog "1.3.0"
-    node-pty "^0.10.0-beta17"
+    node-pty "^0.10.0-beta19"
     semver-umd "^5.5.5"
     spdlog "^0.11.1"
     vscode-proxy-agent "^0.5.2"
@@ -146,10 +146,10 @@ native-watchdog@1.3.0:
   resolved "https://registry.yarnpkg.com/native-watchdog/-/native-watchdog-1.3.0.tgz#88cee94c9dc766b85c8506eda14c8bd8c9618e27"
   integrity sha512-WOjGRNGkYZ5MXsntcvCYrKtSYMaewlbCFplbcUVo9bE80LPVt8TAVFHYWB8+a6fWCGYheq21+Wtt6CJrUaCJhw==
 
-node-pty@^0.10.0-beta17:
-  version "0.10.0-beta9"
-  resolved "https://registry.yarnpkg.com/node-pty/-/node-pty-0.10.0-beta9.tgz#e5a795f9b53948346803cb71bac4ffc02e7909f0"
-  integrity sha512-Qm6uSH30FUcAhJ9s76C+lgvTsOW2cHUbkIGjCdOVCL0c7S4DxsmKBRgjcr+guUK9d9KwfuZHeSjXYWjpJFPe4w==
+node-pty@^0.10.0-beta19:
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/node-pty/-/node-pty-0.10.0.tgz#c98d23967b076b35c9fb216c542a04d0b5db4821"
+  integrity sha512-Q65ookKbjhqWUYKmtZ6iPn0nnqNdzpm3YJOBmzwWJde/TrenBxK9FgqGGtSW0Wjz4YsR1grQF4a7RS5nBwuW9A==
   dependencies:
     nan "^2.14.0"
 
