@@ -363,6 +363,7 @@ module Session = {
 type command =
   | JumpToNextPlaceholder
   | JumpToPreviousPlaceholder
+  | EditUserSnippets
   | InsertSnippet({
       // If no snippet is provided - we should open the snippet menu
       maybeSnippet: [@opaque] option(Snippet.t),
@@ -629,6 +630,10 @@ let update =
       |> Option.value(~default=Nothing);
     (model, eff);
 
+  | Command(EditUserSnippets) => 
+  // TODO
+  failwith ("Not implemented yet");
+
   | SnippetsLoadedForPicker(snippetsWithMetadata) => (
       model,
       ShowPicker(snippetsWithMetadata),
@@ -657,6 +662,7 @@ let update =
       |> Option.value(~default=Nothing);
 
     (model, eff);
+
   };
 
 module Commands = {
@@ -720,6 +726,14 @@ module Commands = {
       "editor.action.insertSnippet",
       snippetCommandParser,
     );
+
+  let editUserSnippets =
+    define(
+      ~category="Snippets",
+      ~title="Configure user snippets",
+      "workbench.action.openSnippets",
+      Command(EditUserSnippets),
+    );
 };
 
 module ContextKeys = {
@@ -730,7 +744,7 @@ module ContextKeys = {
 
 module Contributions = {
   let commands =
-    Commands.[nextPlaceholder, previousPlaceholder, insertSnippet];
+    Commands.[nextPlaceholder, previousPlaceholder, insertSnippet, editUserSnippets];
 
   let contextKeys = model => {
     WhenExpr.ContextKeys.(
