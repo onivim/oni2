@@ -229,3 +229,18 @@ __Pass:__
 - [ ] Win
 - [ ] OSX
 - [ ] Linux
+
+# 10. Menubar
+
+## 10.1 Verify simple command 
+
+Regression test for #3108
+
+- Open Onivim 2
+- Click on File -> Open Folder
+- Verify Open Folder dialog is shown
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux

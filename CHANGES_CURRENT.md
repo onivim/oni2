@@ -4,6 +4,7 @@
 - #3047, #3052, #3056, #3059, #3061, #3064 - Snippets: Core Feature Work
 - #3067 - Snippets: Integrate snippets provided by extensions
 - #3090 - Snippets: Add insert snippet command
+- #3105 - Snippets: Implement configuration setting
 
 ### Bug Fixes
 
@@ -33,11 +34,12 @@
 
 ### Performance
 
+- #3116 - SCM: Recalculate diff markers less frequently (only on buffer updates)
+
 ### Documentation
 
 ### Infrastructure / Refactoring
 
-- #3012 - Node: Upgrade from Node 12 LTS -> Node 14 LTS (related #3009)
 - #3101 - Dependency: reason-fzy -> 485cae1
 - #3096 - OS: Add logging for `readdir` path (related #3092)
 - #3097 - Configuration: Remove unused `workbench.tree.indent` setting
