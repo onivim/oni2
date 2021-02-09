@@ -50,8 +50,7 @@ describe("TerminalServiceTest", ({test, _}) => {
           };
     let waitForProcessData =
       fun
-      | Msg.TerminalService(Msg.TerminalService.SendProcessData(_)) =>
-        true
+      | Msg.TerminalService(Msg.TerminalService.SendProcessData(_)) => true
       | _ => false;
 
     let waitForProcessTitle =
