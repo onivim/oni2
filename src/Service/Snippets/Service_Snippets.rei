@@ -1,3 +1,8 @@
+// TODO:
+// 1) Load snippets from path (implement snippetFromFiles)
+// 2) Add placeholder text for snippet file, chain up open
+// 3) Expand `snippetFromFiles` to include user snippets, too
+
 module SnippetWithMetadata: {
   [@deriving show]
   type t = {
