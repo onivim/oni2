@@ -1,5 +1,8 @@
-const http = require("follow-redirects").http
-const https = require("follow-redirects").https
+const followRedirects = require("follow-redirects");
+followRedirects.maxBodyLength = 128 * 1024 * 1024; // 1024 MB
+
+const http = followRedirects.http
+const https = followRedirects.https
 const fs = require("fs")
 
 const url = new URL(process.argv[2])
@@ -19,4 +22,4 @@ const file = fs.createWriteStream(destPath)
 
 requestFn(url, (response) => {
     response.pipe(file)
-})
+});
