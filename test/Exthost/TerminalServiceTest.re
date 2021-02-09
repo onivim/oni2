@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 open TestFramework;
 open Exthost;
 
@@ -115,7 +116,7 @@ describe("TerminalServiceTest", ({test, _}) => {
       | Msg.TerminalService(
           Msg.TerminalService.SendProcessData({data: processData, _}),
         ) => {
-          String.equal(data, processData);
+          StringEx.contains(data, processData);
         }
       | _ => false;
 
@@ -144,7 +145,7 @@ describe("TerminalServiceTest", ({test, _}) => {
          Request.TerminalService.acceptProcessInput(~id=0, ~data="Y"),
        )
     |> Test.waitForMessage(
-         ~name="TerminalService.SendProcessData",
+         ~name="TerminalService - wait for 'Y' round-trip",
          waitForInputData(~data="Y"),
        )
     // And then a 'Z' character...
@@ -152,7 +153,7 @@ describe("TerminalServiceTest", ({test, _}) => {
          Request.TerminalService.acceptProcessInput(~id=0, ~data="Z"),
        )
     |> Test.waitForMessage(
-         ~name="TerminalService.SendProcessData",
+         ~name="TerminalService - wait for 'Z' round-trip",
          waitForInputData(~data="Z"),
        )
     |> Test.terminate
