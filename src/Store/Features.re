@@ -28,7 +28,7 @@ module Internal = {
   let executeCommandEffect = (command, arguments) => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.executeCommand", dispatch =>
-      dispatch(Actions.CommandInvoked({command, arguments}))
+      dispatch(Actions.KeybindingInvoked({command, arguments}))
     );
   };
 
@@ -874,6 +874,20 @@ let update =
 
     | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
     | PreviewFile(filePath) => (state, Internal.previewFileEffect(filePath))
+
+    | OriginalContentLoaded({bufferId, originalLines}) => (
+        {
+          ...state,
+          buffers:
+            Feature_Buffers.setOriginalLines(
+              ~bufferId,
+              ~originalLines,
+              state.buffers,
+            ),
+        },
+        Isolinear.Effect.none,
+      )
+
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
