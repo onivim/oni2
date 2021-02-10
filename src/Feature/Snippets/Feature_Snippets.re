@@ -432,9 +432,6 @@ module Effects = {
       |> Oni_Core.Buffer.getLine(position.line |> LineNumber.toZeroBased)
       |> Oni_Core.BufferLine.raw;
 
-    let (prefix, postfix) =
-      Utility.StringEx.splitAt(~byte=ByteIndex.toInt(position.byte), line);
-
     let maybeReplaceRange =
       maybeReplaceRange |> Option.map(range => range |> ByteRange.normalize);
 
@@ -443,6 +440,9 @@ module Effects = {
       | None => position
       | Some(range) => range.stop
       };
+
+    let (prefix, postfix) =
+      Utility.StringEx.splitAt(~byte=ByteIndex.toInt(position.byte), line);
 
     // Handle the 'meet column' - if we a meet column was provided,
     // as in the case of completion, we may need to remove some characters
@@ -677,7 +677,14 @@ let update =
            | Some(snippet) =>
              Effect(
                Effects.startSession(
-                 ~maybeReplaceRange,
+                 ~maybeReplaceRange=
+                   maybeReplaceRange
+                   |> OptionEx.or_lazy(() =>
+                        Internal.getReplaceRangeFromSelections(
+                          ~buffer,
+                          selections,
+                        )
+                      ),
                  ~resolverFactory,
                  ~buffer,
                  ~editorId,
