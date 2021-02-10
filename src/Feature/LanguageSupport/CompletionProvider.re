@@ -111,7 +111,6 @@ module ExthostCompletionProvider =
   let update = (~isFuzzyMatching, msg, model) =>
     switch (msg) {
     | ResultAvailable({handle, result}) when handle == providerHandle =>
-      prerr_endline("Result avialable");
       let isComplete = !result.isIncomplete;
       let completions =
         Exthost.SuggestResult.(result.completions)

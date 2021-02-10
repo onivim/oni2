@@ -140,10 +140,7 @@ module Session = {
           switch (state) {
           | Pending({meet, _}) as prev when isCompletionMeetStillValid(meet) => prev
           | Pending(_) => NotStarted
-          | Partial({meet, _}) as prev => prev
-          // | Partial(_) =>
-          // prerr_endline ("RESETTING PARTIAL");
-          // NotStarted
+          | Partial(_) as prev => prev
           | Completed({meet, _}) as prev
               when isCompletionMeetStillValid(meet) => prev
           | Completed(_) => NotStarted
@@ -233,26 +230,22 @@ module Session = {
                  let (completionState, items) =
                    ProviderImpl.items(providerModel');
                  switch (completionState, items) {
-                 | (_, []) =>
-                   prerr_endline("-to pending (1)");
-                   Pending({meet, providerModel: providerModel'});
+                 | (_, []) => Pending({meet, providerModel: providerModel'})
                  | (Incomplete, items) =>
-                   prerr_endline("-to partial (1)");
                    Partial({
                      meet,
                      cursor,
                      currentItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: providerModel',
-                   });
+                   })
                  | (Complete, items) =>
-                   prerr_endline("-to completed (1)");
                    Completed({
                      meet,
                      allItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: providerModel',
-                   });
+                   })
                  };
 
                | Completed({providerModel, meet, _})
@@ -268,26 +261,22 @@ module Session = {
                  let (completionState, items) =
                    ProviderImpl.items(providerModel');
                  switch (completionState, items) {
-                 | (_, []) =>
-                   prerr_endline("-to pending (2)");
-                   Pending({meet, providerModel: providerModel'});
+                 | (_, []) => Pending({meet, providerModel: providerModel'})
                  | (Incomplete, items) =>
-                   prerr_endline("-to partial (2)");
                    Partial({
                      meet,
                      cursor: meet.location,
                      currentItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: providerModel',
-                   });
+                   })
                  | (Complete, items) =>
-                   prerr_endline("-to completed (2)");
                    Completed({
                      meet,
                      allItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: providerModel',
-                   });
+                   })
                  };
                | _ => state
                };
@@ -299,16 +288,9 @@ module Session = {
 
   let sub = (~activeBuffer, ~selectedItem, ~client) =>
     fun
-    | Session({state, provider, providerMapper, _}) as session => {
+    | Session({state, provider, providerMapper, _}) => {
         switch (state) {
         | Partial({providerModel, cursor, _}) =>
-          prerr_endline(
-            Printf.sprintf(
-              "%s - Partial.sub: %s",
-              handleString(session),
-              CharacterPosition.show(cursor),
-            ),
-          );
           let (module ProviderImpl) = provider;
           ProviderImpl.sub(
             ~client,
@@ -325,13 +307,6 @@ module Session = {
           |> Isolinear.Sub.map(msg => Provider(providerMapper(msg)));
         | Pending({providerModel, meet, _})
         | Completed({providerModel, meet, _}) =>
-          prerr_endline(
-            Printf.sprintf(
-              "%s - Pending / complete.sub: %s",
-              handleString(session),
-              CharacterPosition.show(meet.location),
-            ),
-          );
           let (module ProviderImpl) = provider;
           ProviderImpl.sub(
             ~client,
@@ -386,12 +361,7 @@ module Session = {
                | Accepted(_) as accepted => accepted
                | Pending(_) as pending => pending
                | Failure(_) as failure => failure
-               | Partial({currentItems, meet, _} as prev) =>
-                 // when CompletionMeet.matches(meet, newMeet) =>
-                 prerr_endline(
-                   "Refining to position: "
-                   ++ CharacterPosition.show(position),
-                 );
+               | Partial({currentItems, _} as prev) =>
                  Partial({
                    ...prev,
                    meet: newMeet,
@@ -401,7 +371,7 @@ module Session = {
                        ~query=CompletionMeet.(newMeet.base),
                        currentItems,
                      ),
-                 });
+                 })
                | Completed({allItems, meet, _} as prev)
                    when CompletionMeet.matches(meet, newMeet) =>
                  Completed({
@@ -411,12 +381,7 @@ module Session = {
                      filter(~query=CompletionMeet.(newMeet.base), allItems),
                  })
                // The meet changed on us - reset
-               | Completed(_) =>
-                 prerr_endline("Reseting complete, cursor moved");
-                 NotStarted;
-               // | Partial(_) =>
-               // prerr_endline ("Reseting partial, cursor moved");
-               // NotStarted
+               | Completed(_) => NotStarted
                }
              })
           |> Option.value(~default=NotStarted);
@@ -462,19 +427,16 @@ module Session = {
                | Partial(partial) =>
                  Partial({...partial, meet, cursor: location})
                | _ =>
-                 let (isComplete, items) = ProviderImpl.items(model);
+                 let (_isComplete, items) = ProviderImpl.items(model);
                  switch (items) {
-                 | [] =>
-                   prerr_endline("complete: no items, switching to pending");
-                   Pending({meet, providerModel: model});
+                 | [] => Pending({meet, providerModel: model})
                  | items =>
-                   prerr_endline("complete: items, switching to completed");
                    Completed({
                      meet,
                      allItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: model,
-                   });
+                   })
                  };
                };
 
@@ -586,27 +548,26 @@ let initial = {
   isInsertMode: false,
   isSnippetMode: false,
   acceptOnEnter: false,
-  providers: [],
-  // providers: [
-  //   Session.create(
-  //     ~triggerCharacters=[],
-  //     ~provider=CompletionProvider.keyword,
-  //     ~mapper=msg => Keyword(msg),
-  //     ~revMapper=
-  //       fun
-  //       | Keyword(msg) => Some(msg)
-  //       | _ => None,
-  //   ),
-  //   Session.create(
-  //     ~triggerCharacters=[],
-  //     ~provider=CompletionProvider.snippet,
-  //     ~mapper=msg => Snippet(msg),
-  //     ~revMapper=
-  //       fun
-  //       | Snippet(msg) => Some(msg)
-  //       | _ => None,
-  //   ),
-  // ],
+  providers: [
+    Session.create(
+      ~triggerCharacters=[],
+      ~provider=CompletionProvider.keyword,
+      ~mapper=msg => Keyword(msg),
+      ~revMapper=
+        fun
+        | Keyword(msg) => Some(msg)
+        | _ => None,
+    ),
+    Session.create(
+      ~triggerCharacters=[],
+      ~provider=CompletionProvider.snippet,
+      ~mapper=msg => Snippet(msg),
+      ~revMapper=
+        fun
+        | Snippet(msg) => Some(msg)
+        | _ => None,
+    ),
+  ],
   allItems: [||],
   selection: Selection.initial,
   snippetSortOrder: `Inline,
