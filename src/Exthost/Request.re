@@ -293,11 +293,22 @@ module LanguageFeatures = {
         nullable(SuggestResult.Dto.decode)
         |> map(
              fun
-             | Some(suggestResult) => suggestResult
+             | Some(suggestResult) => {
+               open SuggestResult;
+             prerr_endline(Printf.sprintf("Got a result! Count: %d isIncomplete: %b", List.length(suggestResult.completions),
+             suggestResult.isIncomplete,
+             ));
+
+             suggestResult.completions
+             |> List.iteri((idx, completion: SuggestItem.t) => prerr_endline (string_of_int(idx) ++ ":" ++ completion.label));
+
+             suggestResult
+             }
              | None => SuggestResult.empty,
            )
       );
 
+    prerr_endline ("provide completion items...");
     Client.request(
       ~decoder,
       ~usesCancellationToken=true,

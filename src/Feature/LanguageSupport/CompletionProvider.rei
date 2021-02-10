@@ -35,6 +35,7 @@ module type S = {
   let sub:
     (
       ~client: Exthost.Client.t,
+      ~context: Exthost.CompletionContext.t,
       ~position: CharacterPosition.t,
       ~buffer: Oni_Core.Buffer.t,
       ~selectedItem: option(CompletionItem.t),

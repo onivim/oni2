@@ -135,9 +135,8 @@ module Session = {
           switch (state) {
           | Pending({meet, _}) as prev when isCompletionMeetStillValid(meet) => prev
           | Pending(_) => NotStarted
-          | Partial({meet, _} as partial)
-              when isCompletionMeetStillValid(meet) =>
-            Partial({...partial, cursor: position})
+          | Partial({meet, _}) as prev
+              when isCompletionMeetStillValid(meet) => prev
           | Partial(_) => NotStarted
           | Completed({meet, _}) as prev
               when isCompletionMeetStillValid(meet) => prev
@@ -216,6 +215,37 @@ module Session = {
 
              let state' =
                switch (state) {
+
+               // TODO: Can we reduce this heavyweight duplication?
+
+               | Partial({providerModel, meet, cursor, _}) =>
+                 let (providerModel', _outmsg) =
+                   ProviderImpl.update(
+                     ~isFuzzyMatching=meet.base != "",
+                     internalMsg,
+                     providerModel,
+                   );
+                 let (completionState, items) =
+                   ProviderImpl.items(providerModel');
+                 switch (completionState, items) {
+                 | (_, []) => Pending({meet, providerModel: providerModel'})
+                 | (Incomplete, items) =>
+                   Partial({
+                     meet,
+                     cursor,
+                     currentItems: items,
+                     filteredItems: filter(~query=meet.base, items),
+                     providerModel: providerModel',
+                   })
+                 | (Complete, items) =>
+                   Completed({
+                     meet,
+                     allItems: items,
+                     filteredItems: filter(~query=meet.base, items),
+                     providerModel: providerModel',
+                   })
+                 };
+
                | Completed({providerModel, meet, _})
                | Pending({providerModel, meet, _}) =>
                  open CompletionMeet;
@@ -262,6 +292,11 @@ module Session = {
           let (module ProviderImpl) = provider;
           ProviderImpl.sub(
             ~client,
+            ~context=
+          Exthost.CompletionContext.{
+            triggerKind: Exthost.CompletionContext.TriggerForIncompleteCompletions,
+            triggerCharacter: None,
+            },
             ~buffer=activeBuffer,
             ~position=cursor,
             ~selectedItem,
@@ -273,6 +308,12 @@ module Session = {
           let (module ProviderImpl) = provider;
           ProviderImpl.sub(
             ~client,
+            ~context=
+              // TODO: Proper completion context
+          Exthost.CompletionContext.{
+            triggerKind: Invoke,
+            triggerCharacter: None,
+            },
             ~buffer=activeBuffer,
             ~position=CompletionMeet.(meet.location),
             ~selectedItem,
@@ -320,9 +361,11 @@ module Session = {
                | Failure(_) as failure => failure
                | Partial({currentItems, meet, _} as prev)
                    when CompletionMeet.matches(meet, newMeet) =>
+                 prerr_endline ("Refining to position: " ++ CharacterPosition.show(position));
                  Partial({
                    ...prev,
                    meet: newMeet,
+                   cursor: position,
                    filteredItems:
                      filter(
                        ~query=CompletionMeet.(newMeet.base),
