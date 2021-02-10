@@ -537,17 +537,15 @@ module Internal = {
   // Helper function to calculate a start position given a range of selections.
   let getReplaceRangeFromSelections = (~buffer, selections) => {
     List.nth_opt(selections, 0)
-    |> OptionEx.flatMap((selection: VisualRange.t) =>
+    |> OptionEx.flatMap((selection: VisualRange.t) => {
+         let normalizedRange = selection.range |> ByteRange.normalize;
+
+         let stopLineIdx =
+           normalizedRange.stop.line |> EditorCoreTypes.LineNumber.toZeroBased;
+         let stopLineBytes =
+           Buffer.getLine(stopLineIdx, buffer) |> BufferLine.raw;
          switch (selection.mode) {
          | Vim.Types.Line =>
-           let normalizedRange = selection.range |> ByteRange.normalize;
-
-           let stopLineIdx =
-             normalizedRange.stop.line
-             |> EditorCoreTypes.LineNumber.toZeroBased;
-           let stopLineBytes =
-             Buffer.getLine(stopLineIdx, buffer) |> BufferLine.raw;
-
            Some(
              ByteRange.{
                start:
@@ -561,19 +559,35 @@ module Internal = {
                    byte: String.length(stopLineBytes) |> ByteIndex.ofInt,
                  },
              },
-           );
+           )
 
-         // TODO:
          | Vim.Types.Character =>
-           let normalizedRange = selection.range |> ByteRange.normalize;
+           // The Vim selection range is inclusive, but the snippets expect
+           // an exclusive range - so we need to bump the 'stop' character
+           // out a byte.
 
-           Some(normalizedRange);
+           Some(
+             {
+               ByteRange.{
+                 start: normalizedRange.start,
+                 stop:
+                   BytePosition.{
+                     line: normalizedRange.stop.line,
+                     byte:
+                       ByteIndex.next(
+                         stopLineBytes,
+                         normalizedRange.stop.byte,
+                       ),
+                   },
+               };
+             },
+           )
 
          // No-op for now
          | Vim.Types.Block
          | Vim.Types.None => None
-         }
-       );
+         };
+       });
   };
 };
 
