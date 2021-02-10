@@ -366,7 +366,7 @@ type command =
   | InsertSnippet({
       // If no snippet is provided - we should open the snippet menu
       maybeSnippet: [@opaque] option(Snippet.t),
-      maybeReplaceFrom: option(BytePosition.t),
+      maybeReplaceRange: option(ByteRange.t),
     });
 
 [@deriving show]
@@ -417,7 +417,7 @@ type outmsg =
 module Effects = {
   let startSession =
       (
-        ~maybeReplaceFrom: option(BytePosition.t),
+        ~maybeReplaceRange: option(ByteRange.t),
         ~resolverFactory,
         ~buffer,
         ~editorId,
@@ -435,13 +435,23 @@ module Effects = {
     let (prefix, postfix) =
       Utility.StringEx.splitAt(~byte=ByteIndex.toInt(position.byte), line);
 
+    let maybeReplaceRange =
+      maybeReplaceRange |> Option.map(range => range |> ByteRange.normalize);
+
+    let position =
+      switch (maybeReplaceRange) {
+      | None => position
+      | Some(range) => range.stop
+      };
+
     // Handle the 'meet column' - if we a meet column was provided,
     // as in the case of completion, we may need to remove some characters
     // from the prefix.
     let (prefix, replaceStartLine) =
-      switch (maybeReplaceFrom) {
+      switch (maybeReplaceRange) {
       | None => (prefix, position.line)
-      | Some((replaceFromPosition: BytePosition.t)) =>
+      | Some(range) =>
+        let replaceFromPosition = range.start;
         let replaceStartLine =
           buffer
           |> Oni_Core.Buffer.getLine(
@@ -504,8 +514,7 @@ module Effects = {
     };
   };
 
-  let insertSnippet =
-      (~replaceFrom: option(BytePosition.t), ~snippet: string) => {
+  let insertSnippet = (~replaceRange: option(ByteRange.t), ~snippet: string) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Snippets.insertSnippet", dispatch => {
       switch (Snippet.parse(snippet)) {
@@ -514,7 +523,7 @@ module Effects = {
           Command(
             InsertSnippet({
               maybeSnippet: Some(resolvedSnippet),
-              maybeReplaceFrom: replaceFrom,
+              maybeReplaceRange: replaceRange,
             }),
           ),
         )
@@ -526,39 +535,46 @@ module Effects = {
 
 module Internal = {
   // Helper function to calculate a start position given a range of selections.
-  let getReplaceStartFromSelections:
-    list(VisualRange.t) => option(BytePosition.t) =
-    selections => {
-      List.nth_opt(selections, 0)
-      |> OptionEx.flatMap((selection: VisualRange.t) =>
-           switch (selection.mode) {
-           | Vim.Types.Line =>
-             let normalizedRange = selection.range |> ByteRange.normalize;
+  let getReplaceRangeFromSelections = (~buffer, selections) => {
+    List.nth_opt(selections, 0)
+    |> OptionEx.flatMap((selection: VisualRange.t) =>
+         switch (selection.mode) {
+         | Vim.Types.Line =>
+           let normalizedRange = selection.range |> ByteRange.normalize;
 
-             Some(
-               BytePosition.{
-                 line: normalizedRange.start.line,
-                 byte: ByteIndex.zero,
-               },
-             );
+           let stopLineIdx =
+             normalizedRange.stop.line
+             |> EditorCoreTypes.LineNumber.toZeroBased;
+           let stopLineBytes =
+             Buffer.getLine(stopLineIdx, buffer) |> BufferLine.raw;
 
-           // TODO:
-           | Vim.Types.Character =>
-             let normalizedRange = selection.range |> ByteRange.normalize;
+           Some(
+             ByteRange.{
+               start:
+                 BytePosition.{
+                   line: normalizedRange.start.line,
+                   byte: ByteIndex.zero,
+                 },
+               stop:
+                 BytePosition.{
+                   line: normalizedRange.stop.line,
+                   byte: String.length(stopLineBytes) |> ByteIndex.ofInt,
+                 },
+             },
+           );
 
-             Some(
-               BytePosition.{
-                 line: normalizedRange.start.line,
-                 byte: normalizedRange.start.byte,
-               },
-             );
+         // TODO:
+         | Vim.Types.Character =>
+           let normalizedRange = selection.range |> ByteRange.normalize;
 
-           // No-op for now
-           | Vim.Types.Block
-           | Vim.Types.None => None
-           }
-         );
-    };
+           Some(normalizedRange);
+
+         // No-op for now
+         | Vim.Types.Block
+         | Vim.Types.None => None
+         }
+       );
+  };
 };
 
 let update =
@@ -653,7 +669,7 @@ let update =
        })
     |> Option.value(~default=(model, Nothing))
 
-  | Command(InsertSnippet({maybeSnippet, maybeReplaceFrom})) =>
+  | Command(InsertSnippet({maybeSnippet, maybeReplaceRange})) =>
     let eff =
       maybeBuffer
       |> Option.map(buffer => {
@@ -661,7 +677,7 @@ let update =
            | Some(snippet) =>
              Effect(
                Effects.startSession(
-                 ~maybeReplaceFrom,
+                 ~maybeReplaceRange,
                  ~resolverFactory,
                  ~buffer,
                  ~editorId,
@@ -698,8 +714,11 @@ let update =
            | Ok(snippet) =>
              Effect(
                Effects.startSession(
-                 ~maybeReplaceFrom=
-                   Internal.getReplaceStartFromSelections(selections),
+                 ~maybeReplaceRange=
+                   Internal.getReplaceRangeFromSelections(
+                     ~buffer,
+                     selections,
+                   ),
                  ~resolverFactory,
                  ~buffer,
                  ~editorId,
@@ -764,7 +783,9 @@ module Commands = {
 
     switch (snippetResult) {
     | Ok(snippet) =>
-      Command(InsertSnippet({maybeSnippet: snippet, maybeReplaceFrom: None}))
+      Command(
+        InsertSnippet({maybeSnippet: snippet, maybeReplaceRange: None}),
+      )
     | Error(msg) => SnippetInsertionError(string_of_error(msg))
     };
   };

@@ -49,7 +49,7 @@ let update:
 
 module Effects: {
   let insertSnippet:
-    (~replaceFrom: option(BytePosition.t), ~snippet: string) =>
+    (~replaceRange: option(ByteRange.t), ~snippet: string) =>
     Isolinear.Effect.t(msg);
 };
 

@@ -613,12 +613,17 @@ let update =
           let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
           let characterPosition =
             CharacterPosition.{line: cursor.line, character: meetColumn};
-          let maybeReplaceFrom =
-            Feature_Editor.Editor.characterToByte(characterPosition, editor);
+          let rangeToReplace =
+            CharacterRange.{start: characterPosition, stop: cursor};
+          let maybeReplaceRange =
+            Feature_Editor.Editor.characterRangeToByteRange(
+              rangeToReplace,
+              editor,
+            );
           (
             state,
             Feature_Snippets.Effects.insertSnippet(
-              ~replaceFrom=maybeReplaceFrom,
+              ~replaceRange=maybeReplaceRange,
               ~snippet,
             )
             |> Isolinear.Effect.map(msg => Snippets(msg)),
