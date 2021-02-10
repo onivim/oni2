@@ -1,7 +1,10 @@
 ### Features 
 
-- #3024 - Editor: Snippet Support - Multi-select handler
-- #3047, #3052 - Editor: Snippet Feature
+- #3024 - Snippet Support - Multi-select handler
+- #3047, #3052, #3056, #3059, #3061, #3064 - Snippets: Core Feature Work
+- #3067 - Snippets: Integrate snippets provided by extensions
+- #3090 - Snippets: Add insert snippet command
+- #3105 - Snippets: Implement configuration setting
 
 ### Bug Fixes
 
@@ -18,12 +21,30 @@
 - #3051 - Editor: Make horizontal / vertical scrollbars on editor surface configurable (fixes #3036)
 - #3030 - Extensions: Implement workspace storage (related #2676)
 - #3052 - Input: Fix key being 'eaten' after executing remapped key (fixes #3048)
+- #3060 - Snippets: Fix parser handling of stand-alone curly braces
+- #3044 - Search: Add `search.exclude` configuration option (fixes #2115 - thanks @joseeMDS!)
+- #3066 - Vim / Input: Fix ':map' condition (fixes #3049)
+- #3055, #3088 - Extensions: Implement 'vscode.openFolder' handler (related #3042)
+- #3076 - Terminal: Add `ONIVIM_TERMINAL` environment variable (fixes #3068)
+- #3078 - Auto-Update: Notify user when update fails due to missing key (fixes #3070)
+- #3086 - Snippets: Fix clash with completion / document highlights feature
+- #3085 - Snippets: Fix drop-shadow calculation at end of buffer
+- #3091 - Snippets: Fix auto-closing pairs when placeholders are on same line
+- #3102 - Vim / Input: Implement mapping timeout (fixes #2850)
+- #3121 - Snippets: Add support for the $TM_SELECTED_TEXT snippet variable
+- #3122 - Signature Help: Close signature help when traversing snippet placeholders
+- #3123 - Extensions: Fix failure to install extensions over 10MB from open-vsx
 - #3054 - Extensions: Completion - Implement 'isIncomplete' handler (fixes #3009)
 
 ### Performance
+
+- #3116 - SCM: Recalculate diff markers less frequently (only on buffer updates)
 
 ### Documentation
 
 ### Infrastructure / Refactoring
 
-- #3012 - Node: Upgrade from Node 12 LTS -> Node 14 LTS (related #3009)
+- #3101 - Dependency: reason-fzy -> 485cae1
+- #3096 - OS: Add logging for `readdir` path (related #3092)
+- #3097 - Configuration: Remove unused `workbench.tree.indent` setting
+- #3115 - Dependency: vscode-exthost -> 1.53.0

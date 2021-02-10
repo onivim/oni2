@@ -17,6 +17,7 @@ and variant =
     | FilesPicker
     | OpenBuffersPicker
     | Wildmenu(Vim.Types.cmdlineType)
+    | SnippetPicker(list(Service_Snippets.SnippetWithMetadata.t))
     | ThemesPicker(list(Feature_Theme.theme))
     | FileTypesPicker({
         bufferId: int,

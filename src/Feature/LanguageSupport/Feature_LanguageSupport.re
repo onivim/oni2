@@ -125,6 +125,7 @@ let update =
     (
       ~config,
       ~configuration,
+      ~extensions,
       ~languageConfiguration,
       ~maybeSelection,
       ~maybeBuffer,
@@ -286,6 +287,7 @@ let update =
     let (completion', outmsg) =
       Completion.update(
         ~config,
+        ~extensions,
         ~languageConfiguration,
         ~maybeBuffer,
         ~activeCursor=cursorLocation,
@@ -418,6 +420,7 @@ let bufferUpdated =
       ~languageConfiguration,
       ~buffer,
       ~config,
+      ~extensions,
       ~activeCursor,
       ~syntaxScope,
       ~triggerKey,
@@ -426,6 +429,7 @@ let bufferUpdated =
   let completion =
     Completion.bufferUpdated(
       ~languageConfiguration,
+      ~extensions,
       ~buffer,
       ~config,
       ~activeCursor,
@@ -468,7 +472,10 @@ let cursorMoved = (~maybeBuffer, ~previous, ~current, model) => {
          )
        )
     |> Option.value(~default=model.documentHighlights);
-  {...model, completion, documentHighlights};
+
+  let signatureHelp =
+    SignatureHelp.cursorMoved(~previous, ~current, model.signatureHelp);
+  {...model, completion, documentHighlights, signatureHelp};
 };
 
 let startInsertMode = (~config, ~maybeBuffer, model) => {
@@ -486,6 +493,16 @@ let stopInsertMode = model => {
     completion: Completion.stopInsertMode(model.completion),
     signatureHelp: SignatureHelp.stopInsert(model.signatureHelp),
   };
+};
+
+let startSnippet = model => {
+  ...model,
+  completion: Completion.startSnippet(model.completion),
+};
+
+let stopSnippet = model => {
+  ...model,
+  completion: Completion.stopSnippet(model.completion),
 };
 
 let isFocused = ({rename, _}) => Rename.isFocused(rename);

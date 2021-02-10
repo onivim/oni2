@@ -1,7 +1,7 @@
+open Oni_Core;
+open Utility;
 open EditorCoreTypes;
 open Oniguruma;
-
-module Snippet = Snippet;
 
 let placeholderRegex = OnigRegExp.create("\\$\\{[0-9]+.*\\}|\\$[0-9]*");
 
@@ -35,24 +35,64 @@ let%test "clips at first placeholder w/ default" = {
 };
 
 module Session = {
+  type placeholder = {
+    placeholderIndex: int,
+    // The current line of the current placeholder, in snippet-space
+    snippetLineIndex: int,
+    // Snippet line contents - used for synchronization
+    lineContents: string,
+    numberOfPlaceholdersInLine: int,
+  };
   type t = {
     editorId: int,
-    snippet: Snippet.t,
-    placeholders: Snippet.Placeholder.t,
+    snippet: ResolvedSnippet.t,
     startLine: LineNumber.t,
     lineCount: int,
-    currentPlaceholder: int,
+    currentPlaceholder: option(placeholder),
   };
 
+  let startLine = ({startLine, _}) => startLine;
+  let stopLine = ({startLine, lineCount, _}) =>
+    EditorCoreTypes.LineNumber.(startLine + lineCount);
+
   let start = (~editorId, ~position: BytePosition.t, ~snippet) => {
-    let (currentPlaceholder, placeholders) =
-      Snippet.Placeholder.initial(snippet);
-    let lineCount = List.length(snippet);
+    let lines = ResolvedSnippet.toLines(snippet);
+    let placeholders = ResolvedSnippet.placeholders(snippet);
+    let currentPlaceholder =
+      ResolvedSnippet.Placeholder.initial(placeholders);
+    let maybePlaceholderLine =
+      ResolvedSnippet.getFirstLineIndexWithPlaceholder(
+        ~index=currentPlaceholder,
+        snippet,
+      );
+    let maybePlaceholderCount =
+      maybePlaceholderLine
+      |> Option.map(line => {
+           ResolvedSnippet.getPlaceholderCountForLine(
+             ~index=currentPlaceholder,
+             ~line,
+             snippet,
+           )
+         });
+
+    let currentPlaceholder =
+      OptionEx.map2(
+        (placeholderLine, placeholderCount) =>
+          {
+            placeholderIndex: currentPlaceholder,
+            snippetLineIndex: placeholderLine,
+            numberOfPlaceholdersInLine: placeholderCount,
+            lineContents: lines[placeholderLine],
+          },
+        maybePlaceholderLine,
+        maybePlaceholderCount,
+      );
+
+    let lineCount = ResolvedSnippet.lineCount(snippet);
     {
       editorId,
       snippet,
       currentPlaceholder,
-      placeholders,
       startLine: position.line,
       lineCount,
     };
@@ -82,21 +122,240 @@ module Session = {
     };
 
     switch (positions) {
-    | Snippet.Placeholder.Ranges(ranges) =>
-      Snippet.Placeholder.Ranges(ranges |> List.map(remapRange))
-    | Snippet.Placeholder.Positions(positions) =>
-      Snippet.Placeholder.Positions(positions |> List.map(remapPosition))
+    | ResolvedSnippet.Placeholder.Ranges(ranges) =>
+      ResolvedSnippet.Placeholder.Ranges(ranges |> List.map(remapRange))
+    | ResolvedSnippet.Placeholder.Positions(positions) =>
+      ResolvedSnippet.Placeholder.Positions(
+        positions |> List.map(remapPosition),
+      )
     };
   };
 
-  let getPlaceholderPositions =
-      ({placeholders, snippet, currentPlaceholder, startLine, _}) => {
-    Snippet.Placeholder.positions(
-      ~placeholders,
-      ~index=currentPlaceholder,
-      snippet,
-    )
+  // [synchronize(~buffer, state)] updates our internal snippet state to reflect any updates
+  let synchronize =
+      (
+        ~buffer: Oni_Core.Buffer.t,
+        {snippet, currentPlaceholder, startLine, _} as session,
+      ) => {
+    currentPlaceholder
+    |> OptionEx.flatMap(
+         ({placeholderIndex, snippetLineIndex, lineContents, _} as cur) => {
+         let bufferLineIdx =
+           LineNumber.(startLine + snippetLineIndex) |> LineNumber.toZeroBased;
+
+         if (bufferLineIdx < Buffer.getNumberOfLines(buffer)) {
+           let newLineContents =
+             Buffer.getLine(bufferLineIdx, buffer) |> BufferLine.raw;
+
+           // If the 'before' line is equal to our new line, nothing happened -
+           // we're already synchronized
+           if (String.equal(lineContents, newLineContents)) {
+             Some(session);
+           } else {
+             // The lines are _not_ equal, so let's figure out the delta,
+             // and then update the current placeholder in the snippet to reflect
+             // the new state.
+             let originalLineLength = String.length(lineContents);
+             let newLineLength = String.length(newLineContents);
+
+             // Calculate the delta in characters.
+             let delta = newLineLength - originalLineLength;
+
+             // However, we also need to account for the number of placeholders in line
+             // - if there are two placeholders, there will be twice the delta.
+
+             let placeholderCount =
+               ResolvedSnippet.getPlaceholderCountForLine(
+                 ~index=placeholderIndex,
+                 ~line=snippetLineIndex,
+                 snippet,
+               );
+             if (placeholderCount > 0) {
+               let normalizedDelta = delta / placeholderCount;
+               let placeholders = ResolvedSnippet.placeholders(snippet);
+
+               // Now... we need to find the original range to get the
+               // exact substring text.
+               ResolvedSnippet.Placeholder.positions(
+                 ~placeholders,
+                 ~index=placeholderIndex,
+                 snippet,
+               )
+               |> OptionEx.flatMap(positions => {
+                    let line =
+                      EditorCoreTypes.LineNumber.ofZeroBased(
+                        snippetLineIndex,
+                      );
+                    switch (positions) {
+                    | ResolvedSnippet.Placeholder.Positions(_) =>
+                      Some(
+                        ByteRange.{
+                          start: {
+                            line,
+                            byte: ByteIndex.zero,
+                          },
+                          stop: {
+                            line,
+                            byte: ByteIndex.ofInt(-1),
+                          },
+                        },
+                      )
+                    | ResolvedSnippet.Placeholder.Ranges(ranges) =>
+                      let rangesForLine =
+                        ranges
+                        |> List.filter((range: ByteRange.t) =>
+                             range.start.line == line
+                           )
+                        |> List.sort(EditorCoreTypes.ByteRange.compare);
+
+                      List.nth_opt(rangesForLine, 0);
+                    };
+                  })
+               |> OptionEx.flatMap((originalRange: ByteRange.t) => {
+                    let startByte = originalRange.start.byte;
+                    let stopByte = originalRange.stop.byte;
+                    let originalByteLength =
+                      ByteIndex.toInt(stopByte)
+                      - ByteIndex.toInt(startByte)
+                      + 1;
+                    let newByteLength = normalizedDelta + originalByteLength;
+                    // We erased past the placeholder, so time to close the session..
+                    if (newByteLength < 0) {
+                      None;
+                    } else if (newByteLength == 0) {
+                      Some("");
+                    } else {
+                      let newText =
+                        String.sub(
+                          newLineContents,
+                          ByteIndex.toInt(startByte),
+                          newByteLength,
+                        );
+                      Some(newText);
+                    };
+                  })
+               |> Option.map(newPlaceholderText => {
+                    let snippet' =
+                      ResolvedSnippet.updatePlaceholder(
+                        ~index=placeholderIndex,
+                        ~text=newPlaceholderText,
+                        snippet,
+                      );
+
+                    {
+                      ...session,
+                      snippet: snippet',
+                      currentPlaceholder:
+                        Some({...cur, lineContents: newLineContents}),
+                    };
+                  });
+             } else {
+               None;
+             };
+           };
+         } else {
+           None;
+         };
+       });
+  };
+
+  let next = (~buffer, session) => {
+    synchronize(~buffer, session)
+    |> Option.map(session => {
+         let {snippet, currentPlaceholder, _} = session;
+         let placeholders = ResolvedSnippet.placeholders(snippet);
+
+         let currentPlaceholder': option(placeholder) =
+           currentPlaceholder
+           |> OptionEx.flatMap(placeholder => {
+                let newPlaceholder =
+                  ResolvedSnippet.Placeholder.next(
+                    ~placeholder=placeholder.placeholderIndex,
+                    placeholders,
+                  );
+                ResolvedSnippet.getFirstLineIndexWithPlaceholder(
+                  ~index=newPlaceholder,
+                  snippet,
+                )
+                |> Option.map(line => {
+                     let count =
+                       ResolvedSnippet.getPlaceholderCountForLine(
+                         ~index=newPlaceholder,
+                         ~line,
+                         snippet,
+                       );
+                     let lines = ResolvedSnippet.toLines(snippet);
+                     {
+                       placeholderIndex: newPlaceholder,
+                       snippetLineIndex: line,
+                       lineContents: lines[line],
+                       numberOfPlaceholdersInLine: count,
+                     };
+                   });
+              });
+         {...session, currentPlaceholder: currentPlaceholder'};
+       });
+  };
+
+  let previous = (~buffer, session) => {
+    synchronize(~buffer, session)
+    |> Option.map(session => {
+         let {snippet, currentPlaceholder, _} = session;
+         let placeholders = ResolvedSnippet.placeholders(snippet);
+
+         let currentPlaceholder': option(placeholder) =
+           currentPlaceholder
+           |> OptionEx.flatMap(placeholder => {
+                let newPlaceholder =
+                  ResolvedSnippet.Placeholder.previous(
+                    ~placeholder=placeholder.placeholderIndex,
+                    placeholders,
+                  );
+                ResolvedSnippet.getFirstLineIndexWithPlaceholder(
+                  ~index=newPlaceholder,
+                  snippet,
+                )
+                |> Option.map(line => {
+                     let count =
+                       ResolvedSnippet.getPlaceholderCountForLine(
+                         ~index=newPlaceholder,
+                         ~line,
+                         snippet,
+                       );
+                     let lines = ResolvedSnippet.toLines(snippet);
+                     {
+                       placeholderIndex: newPlaceholder,
+                       snippetLineIndex: line,
+                       lineContents: lines[line],
+                       numberOfPlaceholdersInLine: count,
+                     };
+                   });
+              });
+         {...session, currentPlaceholder: currentPlaceholder'};
+       });
+  };
+
+  let getPlaceholderPositions = ({snippet, currentPlaceholder, startLine, _}) => {
+    let placeholders = ResolvedSnippet.placeholders(snippet);
+    currentPlaceholder
+    |> Option.map(({placeholderIndex, _}) => placeholderIndex)
+    |> OptionEx.flatMap(placeholderIndex => {
+         ResolvedSnippet.Placeholder.positions(
+           ~placeholders,
+           ~index=placeholderIndex,
+           snippet,
+         )
+       })
     |> Option.map(remapPositions(~startLine));
+  };
+
+  let isComplete = ({snippet, currentPlaceholder, _}) => {
+    let placeholders = ResolvedSnippet.placeholders(snippet);
+    switch (currentPlaceholder) {
+    | None => true
+    | Some({placeholderIndex, _}) =>
+      placeholderIndex == ResolvedSnippet.Placeholder.final(placeholders)
+    };
   };
 };
 
@@ -104,28 +363,67 @@ module Session = {
 type command =
   | JumpToNextPlaceholder
   | JumpToPreviousPlaceholder
-  | InsertSnippet([@opaque] Snippet.t); // TODO: How to have payload
+  | InsertSnippet({
+      // If no snippet is provided - we should open the snippet menu
+      maybeSnippet: [@opaque] option(Snippet.t),
+      maybeMeetColumn: option(CharacterIndex.t),
+    });
 
 [@deriving show]
 type msg =
   | Command(command)
   | SnippetInserted([@opaque] Session.t)
-  | SnippetInsertionError(string);
+  | SnippetInsertionError(string)
+  | SnippetsLoadedForPicker(list(Service_Snippets.SnippetWithMetadata.t))
+  | InsertInternal({snippetString: string});
 
-type model = unit;
+module Msg = {
+  let insert = (~snippet) => InsertInternal({snippetString: snippet});
+};
 
-let initial = ();
+type model = {maybeSession: option(Session.t)};
+
+let session = ({maybeSession}) => maybeSession;
+
+let isActive = ({maybeSession}) => maybeSession != None;
+
+let modeChanged = (~mode, model) => {
+  let isModeValid =
+    Vim.Mode.(
+      switch (mode) {
+      | Select(_)
+      | Insert(_) => true
+      | _ => false
+      }
+    );
+
+  if (!isModeValid) {
+    {maybeSession: None};
+  } else {
+    model;
+  };
+};
+
+let initial = {maybeSession: None};
 
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | ErrorMessage(string)
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
+  | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
   | Nothing;
 
 module Effects = {
   let startSession =
-      (~buffer, ~editorId, ~position: BytePosition.t, ~snippet: Snippet.raw) => {
+      (
+        ~maybeMeetColumn: option(CharacterIndex.t),
+        ~resolverFactory,
+        ~buffer,
+        ~editorId,
+        ~position: BytePosition.t,
+        ~snippet: Snippet.t,
+      ) => {
     let bufferId = Oni_Core.Buffer.getId(buffer);
     let indentationSettings = Oni_Core.Buffer.getIndentation(buffer);
 
@@ -137,29 +435,87 @@ module Effects = {
     let (prefix, postfix) =
       Utility.StringEx.splitAt(~byte=ByteIndex.toInt(position.byte), line);
 
+    // Handle the 'meet column' - if we a meet column was provided,
+    // as in the case of completion, we may need to remove some characters
+    // from the prefix.
+    let prefix =
+      switch (maybeMeetColumn) {
+      | None => prefix
+      | Some(column) =>
+        // First, see how many characters we're working with...
+        let characterCount = Zed_utf8.length(prefix);
+
+        let columnIdx = CharacterIndex.toInt(column);
+        if (columnIdx == 0) {
+          "";
+        } else if (columnIdx >= characterCount) {
+          prefix;
+        } else {
+          Zed_utf8.sub(prefix, 0, columnIdx);
+        };
+      };
+
     let resolvedSnippet =
-      Snippet.resolve(~indentationSettings, ~prefix, ~postfix, snippet);
+      ResolvedSnippet.resolve(
+        ~getVariable=resolverFactory(),
+        ~indentationSettings,
+        ~prefix,
+        ~postfix,
+        snippet,
+      );
 
-    let lines = Snippet.toLines(resolvedSnippet);
+    let lines = ResolvedSnippet.toLines(resolvedSnippet);
 
-    let session = Session.start(~editorId, ~snippet, ~position);
+    if (Array.length(lines) > 0) {
+      let session =
+        Session.start(~editorId, ~snippet=resolvedSnippet, ~position);
 
-    let toMsg =
-      fun
-      | Ok () => SnippetInserted(session)
-      | Error(msg) => SnippetInsertionError(msg);
+      let toMsg =
+        fun
+        | Ok () => SnippetInserted(session)
+        | Error(msg) => SnippetInsertionError(msg);
 
-    Service_Vim.Effects.setLines(
-      ~bufferId,
-      ~start=position.line,
-      ~stop=LineNumber.(position.line + 1),
-      ~lines,
-      toMsg,
-    );
+      Service_Vim.Effects.setLines(
+        ~bufferId,
+        ~start=position.line,
+        ~stop=LineNumber.(position.line + 1),
+        ~lines,
+        toMsg,
+      );
+    } else {
+      Isolinear.Effect.none;
+    };
+  };
+
+  let insertSnippet = (~meetColumn: CharacterIndex.t, ~snippet: string) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Snippets.insertSnippet", dispatch => {
+      switch (Snippet.parse(snippet)) {
+      | Ok(resolvedSnippet) =>
+        dispatch(
+          Command(
+            InsertSnippet({
+              maybeSnippet: Some(resolvedSnippet),
+              maybeMeetColumn: Some(meetColumn),
+            }),
+          ),
+        )
+      | Error(msg) => dispatch(SnippetInsertionError(msg))
+      }
+    });
   };
 };
 
-let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
+let update =
+    (
+      ~resolverFactory,
+      ~maybeBuffer,
+      ~editorId,
+      ~cursorPosition,
+      ~extensions,
+      msg,
+      model,
+    ) =>
   switch (msg) {
   | SnippetInsertionError(msg) => (model, ErrorMessage(msg))
 
@@ -170,34 +526,137 @@ let update = (~maybeBuffer, ~editorId, ~cursorPosition, msg, model) =>
     |> Option.map(positions => {
          let outmsg =
            switch (positions) {
-           | Snippet.Placeholder.Ranges(ranges) => SetSelections(ranges)
-           | Snippet.Placeholder.Positions(positions) =>
+           | ResolvedSnippet.Placeholder.Ranges(ranges) =>
+             SetSelections(ranges)
+           | ResolvedSnippet.Placeholder.Positions(positions) =>
              SetCursors(positions)
            };
-         (model, outmsg);
+
+         // Check if we should continue the snippet session
+         if (Session.isComplete(session)) {
+           ({maybeSession: None}, outmsg);
+         } else {
+           ({maybeSession: Some(session)}, outmsg);
+         };
        })
     |> Option.value(~default=(model, Nothing))
 
-  // TODO
-  | Command(JumpToNextPlaceholder) => (model, Nothing)
+  | Command(JumpToNextPlaceholder) =>
+    maybeBuffer
+    |> OptionEx.flatMap(buffer => {
+         model.maybeSession
+         |> OptionEx.flatMap(Session.next(~buffer))
+         |> Option.map(session' => {
+              let outmsg =
+                session'
+                |> Session.getPlaceholderPositions
+                |> Option.map(positions => {
+                     switch (positions) {
+                     | ResolvedSnippet.Placeholder.Ranges(ranges) =>
+                       SetSelections(ranges)
+                     | ResolvedSnippet.Placeholder.Positions(positions) =>
+                       SetCursors(positions)
+                     }
+                   })
+                |> Option.value(~default=Nothing);
 
-  // TODO
-  | Command(JumpToPreviousPlaceholder) => (model, Nothing)
+              if (Session.isComplete(session')) {
+                ({maybeSession: None}, outmsg);
+              } else {
+                ({maybeSession: Some(session')}, outmsg);
+              };
+            })
+       })
+    |> Option.value(~default=(model, Nothing))
 
-  | Command(InsertSnippet(snippet)) =>
+  | Command(JumpToPreviousPlaceholder) =>
+    maybeBuffer
+    |> OptionEx.flatMap(buffer => {
+         model.maybeSession
+         |> OptionEx.flatMap(Session.previous(~buffer))
+         |> Option.map(session' => {
+              let outmsg =
+                session'
+                |> Session.getPlaceholderPositions
+                |> Option.map(positions => {
+                     switch (positions) {
+                     | ResolvedSnippet.Placeholder.Ranges(ranges) =>
+                       SetSelections(ranges)
+                     | ResolvedSnippet.Placeholder.Positions(positions) =>
+                       SetCursors(positions)
+                     }
+                   })
+                |> Option.value(~default=Nothing);
+
+              if (Session.isComplete(session')) {
+                ({maybeSession: None}, outmsg);
+              } else {
+                ({maybeSession: Some(session')}, outmsg);
+              };
+            })
+       })
+    |> Option.value(~default=(model, Nothing))
+
+  | Command(InsertSnippet({maybeSnippet, maybeMeetColumn})) =>
     let eff =
       maybeBuffer
       |> Option.map(buffer => {
-           Effects.startSession(
-             ~buffer,
-             ~editorId,
-             ~position=cursorPosition,
-             ~snippet,
-           )
-         })
-      |> Option.value(~default=Isolinear.Effect.none);
+           switch (maybeSnippet) {
+           | Some(snippet) =>
+             Effect(
+               Effects.startSession(
+                 ~maybeMeetColumn,
+                 ~resolverFactory,
+                 ~buffer,
+                 ~editorId,
+                 ~position=cursorPosition,
+                 ~snippet,
+               ),
+             )
+           | None =>
+             let fileType =
+               buffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
-    (model, Effect(eff));
+             let filePaths =
+               Feature_Extensions.snippetFilePaths(~fileType, extensions);
+             Effect(
+               Service_Snippets.Effect.snippetFromFiles(~filePaths, snippets =>
+                 SnippetsLoadedForPicker(snippets)
+               ),
+             );
+           }
+         })
+      |> Option.value(~default=Nothing);
+    (model, eff);
+
+  | SnippetsLoadedForPicker(snippetsWithMetadata) => (
+      model,
+      ShowPicker(snippetsWithMetadata),
+    )
+
+  | InsertInternal({snippetString}) =>
+    let eff =
+      maybeBuffer
+      |> Option.map(buffer => {
+           switch (Snippet.parse(snippetString)) {
+           | Ok(snippet) =>
+             Effect(
+               Effects.startSession(
+                 // TODO: Handle selection
+                 ~maybeMeetColumn=None,
+                 ~resolverFactory,
+                 ~buffer,
+                 ~editorId,
+                 ~position=cursorPosition,
+                 ~snippet,
+               ),
+             )
+           | Error(msg) => ErrorMessage(msg)
+           }
+         })
+      |> Option.value(~default=Nothing);
+
+    (model, eff);
   };
 
 module Commands = {
@@ -238,15 +697,18 @@ module Commands = {
       });
 
     let decode =
-      one_of([
-        // TODO: Decoder for getting snippet by name
-        ("snippets", snippets),
-      ]);
+      nullable(
+        one_of([
+          // TODO: Decoder for getting snippet by name
+          ("snippets", snippets),
+        ]),
+      );
 
     let snippetResult = json |> decode_value(decode);
 
     switch (snippetResult) {
-    | Ok(snippet) => Command(InsertSnippet(snippet))
+    | Ok(snippet) =>
+      Command(InsertSnippet({maybeSnippet: snippet, maybeMeetColumn: None}))
     | Error(msg) => SnippetInsertionError(string_of_error(msg))
     };
   };
@@ -263,8 +725,7 @@ module Commands = {
 module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
 
-  // TODO:
-  let inSnippetMode = bool("inSnippetMode", (_: model) => false);
+  let inSnippetMode = bool("inSnippetMode", isActive);
 };
 
 module Contributions = {
@@ -275,5 +736,23 @@ module Contributions = {
     WhenExpr.ContextKeys.(
       ContextKeys.[inSnippetMode] |> Schema.fromList |> fromSchema(model)
     );
+  };
+  let keybindings = {
+    Feature_Input.Schema.[
+      bind(
+        ~key="<TAB>",
+        ~command=Commands.nextPlaceholder.id,
+        ~condition=
+          "editorTextFocus && inSnippetMode && !suggestWidgetVisible"
+          |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<S-TAB>",
+        ~command=Commands.previousPlaceholder.id,
+        ~condition=
+          "editorTextFocus && inSnippetMode && !suggestWidgetVisible"
+          |> WhenExpr.parse,
+      ),
+    ];
   };
 };

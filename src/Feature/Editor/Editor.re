@@ -212,10 +212,24 @@ let bufferBytePositionToPixelInternal =
     };
   let lineCount = EditorBuffer.numberOfLines(buffer);
   let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
-  if (line < 0 || line >= lineCount) {
+  let wrapping = wrapState |> WrapState.wrapping;
+  if (line < 0) {
     ({x: 0., y: 0.}: PixelPosition.t, 0.);
+  } else if (line >= lineCount) {
+    let pixelY =
+      // Get total offset for view lines
+      float(Wrapping.numberOfLines(wrapping))
+      *. lineHeightInPixels(editor)
+      // Add in codelens / inline elements
+      +. InlineElements.getReservedSpace(
+           position.line,
+           editor.inlineElements,
+         )
+      -. scrollY
+      +. 0.5;
+
+    ({x: 0., y: pixelY}: PixelPosition.t, 0.);
   } else {
-    let wrapping = wrapState |> WrapState.wrapping;
     let bufferLine = buffer |> EditorBuffer.line(line);
 
     let viewLine =
@@ -727,6 +741,52 @@ let characterToByte = (position: CharacterPosition.t, editor) => {
   } else {
     None;
   };
+};
+
+let singleLineSelectedText = editor => {
+  let maybeSelection = editor |> selections |> (l => List.nth_opt(l, 0));
+
+  let maybeByteRange =
+    maybeSelection
+    |> OptionEx.filter((selection: VisualRange.t) =>
+         ByteRange.isSingleLine(selection.range)
+       )
+    |> OptionEx.flatMap((selection: VisualRange.t) => {
+         switch (selection.mode) {
+         | Vim.Types.Line
+         | Vim.Types.Character => Some(selection.range)
+
+         // TODO: Implement block range
+         | Vim.Types.Block
+         | Vim.Types.None => None
+         }
+       });
+
+  maybeByteRange
+  |> OptionEx.flatMap(byteRange =>
+       byteRangeToCharacterRange(byteRange, editor)
+     )
+  |> OptionEx.flatMap((characterRange: CharacterRange.t) => {
+       let lineNumber = characterRange.start.line;
+       let lineIdx = lineNumber |> EditorCoreTypes.LineNumber.toZeroBased;
+
+       let buffer = editor.buffer;
+       if (EditorBuffer.hasLine(lineNumber, buffer)) {
+         let startIdx = characterRange.start.character |> CharacterIndex.toInt;
+         let stopIdx = characterRange.stop.character |> CharacterIndex.toInt;
+
+         let lineStr = EditorBuffer.line(lineIdx, buffer) |> BufferLine.raw;
+
+         let len = ZedBundled.length(lineStr);
+         let maxLength = len - startIdx;
+         let desiredLength = stopIdx - startIdx + 1;
+         let clampedLength = min(desiredLength, maxLength);
+         let str = ZedBundled.sub(lineStr, startIdx, clampedLength);
+         Some(str);
+       } else {
+         None;
+       };
+     });
 };
 
 let characterRangeToByteRange = ({start, stop}: CharacterRange.t, editor) => {

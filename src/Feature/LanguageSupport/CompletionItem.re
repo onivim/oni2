@@ -64,6 +64,24 @@ let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
   };
 };
 
+let snippet = (~isFuzzyMatching, ~prefix: string, snippet: string) => {
+  chainedCacheId: None,
+  handle: None,
+  label: prefix,
+  kind: Exthost.CompletionKind.Snippet,
+  detail: Some(snippet),
+  documentation: None,
+  insertText: snippet,
+  insertTextRules: Exthost.SuggestItem.InsertTextRules.insertAsSnippet,
+  filterText: prefix,
+  sortText: prefix,
+  suggestRange: None,
+  commitCharacters: [],
+  additionalTextEdits: [],
+  command: None,
+  isFuzzyMatching,
+};
+
 let prefer = (itemA, itemB) => {
   switch (itemA.handle, itemB.handle) {
   // Prefer items with a handle - in other words, items that come from the extension host
@@ -72,7 +90,11 @@ let prefer = (itemA, itemB) => {
   // They both have a handle, or neither does... use sort text to break the tie
   | (Some(_), Some(_))
   | (None, None) =>
-    if (String.compare(itemA.sortText, itemB.sortText) <= 0) {
+    if (String.compare(
+          String.uppercase_ascii(itemA.sortText),
+          String.uppercase_ascii(itemB.sortText),
+        )
+        <= 0) {
       (-1);
     } else {
       1;

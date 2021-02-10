@@ -130,6 +130,8 @@ module Matcher: {
     // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
     // (Vim style parsing)
     (~explicitShiftKeyNeeded: bool, string) => result(t, string);
+
+  let toString: t => string;
 };
 
 module type Input = {
@@ -183,7 +185,9 @@ module type Input = {
       t
     ) =>
     (t, list(effect));
+
   let text: (~text: string, t) => (t, list(effect));
+
   let keyUp:
     (
       ~leaderKey: option(PhysicalKey.t)=?,
@@ -192,6 +196,8 @@ module type Input = {
       t
     ) =>
     (t, list(effect));
+
+  let timeout: (~context: context, t) => (t, list(effect));
 
   // [candidates] returns a list of available matcher / command
   // candidates, based on the current context and input state.

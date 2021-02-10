@@ -50,6 +50,11 @@ let create =
 
         promise;
 
+      | Commands(ExecuteCommand({command, args, _})) =>
+        // TODO: Is this really the right action?
+        dispatch(Actions.CommandInvoked({command, arguments: `List(args)}));
+        Lwt.return(Reply.okEmpty);
+
       | Configuration(RemoveConfigurationOption({key, _})) =>
         dispatch(
           Actions.ConfigurationTransform(
@@ -328,7 +333,7 @@ let create =
        );
   let environment = [
     (
-      "AMD_ENTRYPOINT",
+      "VSCODE_AMD_ENTRYPOINT",
       "vs/workbench/services/extensions/node/extensionHostProcess",
     ),
     ("VSCODE_IPC_HOOK_EXTHOST", pipeStr),

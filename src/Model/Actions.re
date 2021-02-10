@@ -17,7 +17,10 @@ type t =
   | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
   | Changelog(Feature_Changelog.msg)
-  | Command(string)
+  | CommandInvoked({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | Commands(Feature_Commands.msg(t))
   | Configuration(Feature_Configuration.msg)
   | ConfigurationParseError(string)
@@ -37,24 +40,25 @@ type t =
   | FileChanged(Service_FileWatcher.event)
   | FileSystem(Feature_FileSystem.msg)
   | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
-  // Reload keybindings from configuration
-  | KeyBindingsReload
-  | KeyBindingsParseError(string)
   | KeybindingInvoked({
       command: string,
       arguments: Yojson.Safe.t,
     })
+  // Reload keybindings from configuration
+  | KeyBindingsReload
+  | KeyBindingsParseError(string)
   | KeyDown({
       key: EditorInput.KeyCandidate.t,
       scancode: int,
       time: [@opaque] Revery.Time.t,
     })
+  | TextInput(string, [@opaque] Revery.Time.t)
   | KeyUp({
       scancode: int,
       time: [@opaque] Revery.Time.t,
     })
+  | KeyTimeout
   | Logging(Feature_Logging.msg)
-  | TextInput(string, [@opaque] Revery.Time.t)
   // TODO: This should be a function call - wired up from an input feature
   // directly to the consumer of the keyboard action.
   // In addition, in the 'not-is-text' case, we should strongly type the keys.
@@ -205,6 +209,7 @@ and quickmenuVariant =
   | FilesPicker
   | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
+  | SnippetPicker(list(Service_Snippets.SnippetWithMetadata.t))
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | FileTypesPicker({
       bufferId: int,

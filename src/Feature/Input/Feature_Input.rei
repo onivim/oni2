@@ -11,7 +11,8 @@ type outmsg =
       fromKeys: string,
       toKeys: string,
       error: string,
-    });
+    })
+  | TimedOut;
 
 [@deriving show]
 type command;
@@ -51,6 +52,8 @@ module Schema: {
   let mapCommand: (~f: string => string, keybinding) => keybinding;
 
   type resolvedKeybinding;
+
+  let resolvedToString: resolvedKeybinding => string;
 
   let resolve: keybinding => result(resolvedKeybinding, string);
 };
@@ -94,6 +97,9 @@ let keyDown:
     model
   ) =>
   (model, list(effect));
+
+let timeout:
+  (~context: WhenExpr.ContextKeys.t, model) => (model, list(effect));
 
 let text:
   (~text: string, ~time: Revery.Time.t, model) => (model, list(effect));
@@ -141,7 +147,7 @@ let update: (msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
-let sub: model => Isolinear.Sub.t(msg);
+let sub: (~config: Config.resolver, model) => Isolinear.Sub.t(msg);
 
 // CONTRIBUTIONS
 

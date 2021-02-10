@@ -45,7 +45,9 @@ type msg =
   | Response(Service_Registration.response)
   | InputText(Component_InputText.msg)
   | KeyPressed(string)
-  | Pasted(string);
+  | Pasted(string)
+  | CancelButtonClicked
+  | CloseButtonClicked;
 
 type outmsg =
   | Nothing
@@ -57,7 +59,7 @@ module Commands = {
 
   let enterLicenseKey =
     define(
-      ~category="Oni2",
+      ~category="Registration",
       ~title="Enter license key",
       "oni.app.enterLicenseKey",
       Command(EnterLicenseKey),
@@ -96,6 +98,10 @@ let update = (model, msg) =>
   | InputText(msg) =>
     let (inputModel', _) = Component_InputText.update(msg, model.inputModel);
     ({...model, inputModel: inputModel'}, Nothing);
+
+  | CancelButtonClicked
+  | CloseButtonClicked => ({...model, viewState: Hidden}, Nothing)
+
   | KeyPressed(key) =>
     let model' =
       switch (key) {
@@ -103,6 +109,7 @@ let update = (model, msg) =>
           ...model,
           viewState: Waiting,
         }
+      | "<CR>"
       | "<ESC>" => {...model, viewState: Hidden}
       | _ when model.viewState == EnteringKey =>
         let inputModel =
@@ -137,9 +144,13 @@ module Styles = {
   module Colors = Feature_Theme.Colors;
 
   let color = Color.rgba(0., 0., 0., 0.75);
-  let boxShadow = [
-    backgroundColor(color),
-    boxShadow(
+  let container = (~theme) => [
+    marginTop(25),
+    flexGrow(0),
+    width(400),
+    backgroundColor(Colors.Menu.background.from(theme)),
+    Style.color(Colors.Menu.foreground.from(theme)),
+    Style.boxShadow(
       ~xOffset=4.,
       ~yOffset=4.,
       ~blurRadius=12.,
@@ -147,18 +158,23 @@ module Styles = {
       ~color,
     ),
   ];
-  let container = (~theme) => [
-    width(400),
-    backgroundColor(Colors.Menu.background.from(theme)),
-    Style.color(Colors.Menu.foreground.from(theme)),
-  ];
 
   let message = [
     flexDirection(`Row),
     alignItems(`Center),
     justifyContent(`Center),
-    marginVertical(8),
+    marginVertical(0),
   ];
+
+  let messageTextContainer = [
+    flexDirection(`Row),
+    flexGrow(1),
+    flexShrink(1),
+    justifyContent(`Center),
+    alignItems(`Center),
+  ];
+
+  let messageButton = [flexGrow(0), flexShrink(0)];
 
   let registrationText = (~theme, ~isFocused) => [
     Style.color(
@@ -170,8 +186,24 @@ module Styles = {
     marginLeft(4),
   ];
 
+  let overlay =
+    Style.[
+      position(`Absolute),
+      top(0),
+      left(0),
+      bottom(0),
+      right(0),
+      backgroundColor(Revery.Color.rgba(0., 0., 0., 0.1)),
+      flexDirection(`Row),
+      justifyContent(`Center),
+      Style.pointerEvents(`Allow),
+    ];
+
   let messageIcon = [width(14), height(14), marginRight(8)];
-  let messageText = [marginTop(2)];
+  let messageText = (~theme) => [
+    Style.color(Colors.foreground.from(theme)),
+    marginTop(2),
+  ];
 
   module Windows = {
     let container = (~theme, ~isHovered) => [
@@ -212,10 +244,17 @@ module View = {
 
   module Modal = {
     let modal = (~children, ~theme, ()) =>
-      <View style=Styles.boxShadow>
-        <View style={Styles.container(~theme)}>
-          <View style=Style.[padding(5)]> children </View>
+      <View style=Styles.overlay>
+        <View>
+          <View style={Styles.container(~theme)}>
+            <View style=Style.[padding(5)]> children </View>
+          </View>
         </View>
+      </View>;
+
+    let button = (~theme, ~font, ~label, ~onClick, ()) =>
+      <View style=Styles.messageButton>
+        <Oni_Components.Button margin=0 label font theme onClick />
       </View>;
 
     let loadingAnimation =
@@ -252,82 +291,116 @@ module View = {
       | Waiting =>
         <modal theme>
           <View style=Styles.message>
-            <View
-              style=Style.[
-                width(14),
-                height(14),
-                transform([
-                  Transform.Rotate(Math.Angle.from_radians(loadingRotation)),
-                ]),
-                alignItems(`Center),
-                justifyContent(`Center),
-                marginRight(8),
-              ]>
-              <FontIcon
-                icon=FontAwesome.spinner
-                color={Colors.foreground.from(theme)}
+            <View style=Styles.messageTextContainer>
+              <View
+                style=Style.[
+                  width(14),
+                  height(14),
+                  transform([
+                    Transform.Rotate(
+                      Math.Angle.from_radians(loadingRotation),
+                    ),
+                  ]),
+                  alignItems(`Center),
+                  justifyContent(`Center),
+                  marginRight(8),
+                ]>
+                <FontIcon
+                  icon=FontAwesome.spinner
+                  color={Colors.foreground.from(theme)}
+                  fontSize=14.
+                />
+              </View>
+              <Text
+                fontFamily={font.family}
                 fontSize=14.
+                style={Styles.messageText(~theme)}
+                text="Validating license key..."
               />
             </View>
-            <Text
-              fontFamily={font.family}
-              fontSize=14.
-              style=Styles.messageText
-              text="Validating license key..."
+            <button
+              theme
+              font
+              label="Cancel"
+              onClick={() => dispatch(CancelButtonClicked)}
             />
           </View>
         </modal>
       | KeySuccess =>
         <modal theme>
           <View style=Styles.message>
-            <View style=Styles.messageIcon>
-              <FontIcon
-                icon=FontAwesome.checkCircle
+            <View style=Styles.messageTextContainer>
+              <View style=Styles.messageIcon>
+                <FontIcon
+                  icon=FontAwesome.checkCircle
+                  fontSize=14.
+                  color={Colors.foreground.from(theme)}
+                />
+              </View>
+              <Text
+                fontFamily={font.family}
                 fontSize=14.
-                color={Colors.foreground.from(theme)}
+                style={Styles.messageText(~theme)}
+                text="Thank you for purchasing Onivim!"
               />
             </View>
-            <Text
-              fontFamily={font.family}
-              fontSize=14.
-              style=Styles.messageText
-              text="Thank you for purchasing Onivim!"
+            <button
+              theme
+              font
+              label="Close"
+              onClick={() => dispatch(CloseButtonClicked)}
             />
           </View>
         </modal>
       | KeyFailure =>
         <modal theme>
           <View style=Styles.message>
-            <View style=Styles.messageIcon>
-              <FontIcon
-                icon=FontAwesome.timesCircle
+            <View style=Styles.messageTextContainer>
+              <View style=Styles.messageIcon>
+                <FontIcon
+                  icon=FontAwesome.timesCircle
+                  fontSize=14.
+                  color={Colors.foreground.from(theme)}
+                />
+              </View>
+              <Text
+                fontFamily={font.family}
                 fontSize=14.
-                color={Colors.foreground.from(theme)}
+                style={Styles.messageText(~theme)}
+                text="License key invalid."
               />
             </View>
-            <Text
-              fontFamily={font.family}
-              fontSize=14.
-              style=Styles.messageText
-              text="License key invalid."
+            <button
+              theme
+              font
+              label="Close"
+              onClick={() => dispatch(CloseButtonClicked)}
             />
           </View>
         </modal>
       | RequestFailure =>
         <modal theme>
           <View style=Styles.message>
-            <View style=Styles.messageIcon>
-              <FontIcon
-                icon=FontAwesome.timesCircle
+            <View style=Styles.messageTextContainer>
+              <View style=Styles.messageIcon>
+                <FontIcon
+                  icon=FontAwesome.timesCircle
+                  fontSize=14.
+                  color={Colors.foreground.from(theme)}
+                />
+              </View>
+              <Text
+                fontFamily={font.family}
                 fontSize=14.
-                color={Colors.foreground.from(theme)}
+                style={Styles.messageText(~theme)}
+                text="Validation failed. Please check your internet connection."
               />
             </View>
-            <Text
-              fontFamily={font.family}
-              fontSize=14.
-              style=Styles.messageText
-              text="Validation failed. Please check your internet connection."
+            <button
+              theme
+              font
+              label="Close"
+              onClick={() => dispatch(CloseButtonClicked)}
             />
           </View>
         </modal>
@@ -395,7 +468,7 @@ module View = {
         | None =>
           <Components.Clickable onClick style=Styles.Mac.container>
             <FontIcon
-              icon=FontAwesome.lockOpen
+              icon=FontAwesome.lock
               color={Colors.TitleBar.inactiveForeground.from(theme)}
               fontSize=10.
             />

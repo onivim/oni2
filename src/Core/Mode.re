@@ -18,6 +18,7 @@ type t =
   | Operator({pending: Vim.Operator.pending})
   | CommandLine
   // Additional modes
+  | Snippet
   | TerminalInsert
   | TerminalNormal
   | TerminalVisual({range: VisualRange.t});
@@ -47,6 +48,7 @@ let toString =
   | Replace(_) => "Replace"
   | Operator({pending}) => Vim.Operator.toString(pending)
   | CommandLine => "Command Line"
+  | Snippet => "Snippet"
   | TerminalInsert => "Terminal Insert"
   | TerminalNormal => "Terminal Normal"
   | TerminalVisual({range}) =>

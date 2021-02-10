@@ -291,6 +291,44 @@ let runTest =
     };
   };
 
+  let staysTrue = (~name, ~timeout, waiter) => {
+    let logWaiter = msg => Log.info(" STAYS TRUE (" ++ name ++ "): " ++ msg);
+    let startTime = Unix.gettimeofday();
+    let maxWaitTime = timeout;
+    let iteration = ref(0);
+
+    logWaiter("Starting");
+    while (waiter(currentState^)
+           && Unix.gettimeofday()
+           -. maxWaitTime < startTime) {
+      logWaiter("Iteration: " ++ string_of_int(iteration^));
+      incr(iteration);
+
+      // Flush any queued calls from `Revery.App.runOnMainThread`
+      Revery.App.flushPendingCallbacks();
+      Revery.Tick.pump();
+
+      for (_ in 1 to 100) {
+        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
+      };
+
+      // Flush any pending effects
+      runEffects();
+
+      Unix.sleepf(0.1);
+      Thread.yield();
+    };
+
+    let result = waiter(currentState^);
+
+    logWaiter("Finished - result: " ++ string_of_bool(result));
+
+    if (!result) {
+      logWaiter("FAILED: " ++ Sys.executable_name);
+      assert(false == true);
+    };
+  };
+
   let key = (~modifiers=EditorInput.Modifiers.none, key) => {
     let keyPress =
       EditorInput.KeyPress.physicalKey(~key, ~modifiers)
@@ -309,7 +347,7 @@ let runTest =
        });
   };
 
-  let ctx = {dispatch, wait: waitForState, runEffects, input, key};
+  let ctx = {dispatch, wait: waitForState, runEffects, input, key, staysTrue};
 
   Log.info("--- Starting test: " ++ name);
   test(ctx);

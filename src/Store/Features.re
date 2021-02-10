@@ -210,7 +210,7 @@ module Internal = {
     let maybeBuffer = Selectors.getActiveBuffer(state);
 
     let wasInInsertMode =
-      Vim.Mode.isInsert(
+      Vim.Mode.isInsertOrSelect(
         state.layout
         |> Feature_Layout.activeEditor
         |> Feature_Editor.Editor.mode,
@@ -224,7 +224,7 @@ module Internal = {
     let (layout, editorEffect) = updateEditors(~scope, ~msg, state.layout);
 
     let isInInsertMode =
-      Vim.Mode.isInsert(
+      Vim.Mode.isInsertOrSelect(
         layout |> Feature_Layout.activeEditor |> Feature_Editor.Editor.mode,
       );
 
@@ -245,6 +245,10 @@ module Internal = {
         state.languageSupport;
       };
 
+    let wasInSnippetMode = Feature_Snippets.isActive(state.snippets);
+    let snippets' = Feature_Snippets.modeChanged(~mode, state.snippets);
+    let isInSnippetMode = Feature_Snippets.isActive(snippets');
+
     let languageSupport' =
       if (isInInsertMode != wasInInsertMode) {
         if (isInInsertMode) {
@@ -257,7 +261,23 @@ module Internal = {
         languageSupport;
       };
 
-    let state = {...state, layout, languageSupport: languageSupport'};
+    let languageSupport'' =
+      if (wasInSnippetMode != isInSnippetMode) {
+        if (isInSnippetMode) {
+          Feature_LanguageSupport.startSnippet(languageSupport');
+        } else {
+          Feature_LanguageSupport.stopSnippet(languageSupport');
+        };
+      } else {
+        languageSupport';
+      };
+
+    let state = {
+      ...state,
+      layout,
+      languageSupport: languageSupport'',
+      snippets: snippets',
+    };
     (state, editorEffect);
   };
 };
@@ -480,6 +500,10 @@ let update =
             error,
           ),
         )
+      | TimedOut =>
+        Isolinear.Effect.createWithDispatch(~name="Input.timeout", dispatch =>
+          dispatch(KeyTimeout)
+        )
       };
 
     ({...state, input: model}, eff);
@@ -511,6 +535,7 @@ let update =
       Feature_LanguageSupport.update(
         ~config,
         ~languageConfiguration,
+        ~extensions=state.extensions,
         ~configuration=state.configuration,
         ~maybeBuffer,
         ~maybeSelection=characterSelection,
@@ -566,19 +591,30 @@ let update =
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
       | InsertSnippet({meetColumn, snippet, additionalEdits}) =>
-        // TODO: Full snippet integration!
-        let additionalEdits =
-          additionalEdits |> List.map(exthostEditToVimEdit);
-        let insertText = Feature_Snippets.snippetToInsert(~snippet);
-        (
-          state,
-          Feature_Vim.Effects.applyCompletion(
-            ~additionalEdits,
-            ~meetColumn,
-            ~insertText,
-          )
-          |> Isolinear.Effect.map(msg => Vim(msg)),
-        );
+        if (!
+              Feature_Configuration.GlobalConfiguration.Experimental.Snippets.enabled.
+                get(
+                config,
+              )) {
+          let additionalEdits =
+            additionalEdits |> List.map(exthostEditToVimEdit);
+          let insertText = Feature_Snippets.snippetToInsert(~snippet);
+          (
+            state,
+            Feature_Vim.Effects.applyCompletion(
+              ~additionalEdits,
+              ~meetColumn,
+              ~insertText,
+            )
+            |> Isolinear.Effect.map(msg => Vim(msg)),
+          );
+        } else {
+          (
+            state,
+            Feature_Snippets.Effects.insertSnippet(~meetColumn, ~snippet)
+            |> Isolinear.Effect.map(msg => Snippets(msg)),
+          );
+        }
       | OpenFile({filePath, location}) => (
           state,
           Internal.openFileEffect(~position=location, filePath),
@@ -838,6 +874,20 @@ let update =
 
     | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
     | PreviewFile(filePath) => (state, Internal.previewFileEffect(filePath))
+
+    | OriginalContentLoaded({bufferId, originalLines}) => (
+        {
+          ...state,
+          buffers:
+            Feature_Buffers.setOriginalLines(
+              ~bufferId,
+              ~originalLines,
+              state.buffers,
+            ),
+        },
+        Isolinear.Effect.none,
+      )
+
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -1612,16 +1662,78 @@ let update =
     let editor = Feature_Layout.activeEditor(state.layout);
     let editorId = editor |> Feature_Editor.Editor.getId;
 
+    let config = Selectors.configResolver(state);
     let cursorPosition = editor |> Feature_Editor.Editor.getPrimaryCursorByte;
+
+    let resolverFactory = () => {
+      Oni_Model.SnippetVariables.current(state);
+    };
+
+    let wasSnippetActive = Feature_Snippets.isActive(state.snippets);
 
     let (snippets', outmsg) =
       Feature_Snippets.update(
+        ~resolverFactory,
         ~maybeBuffer,
         ~editorId,
         ~cursorPosition,
+        ~extensions=state.extensions,
         msg,
         state.snippets,
       );
+
+    let isSnippetActive = Feature_Snippets.isActive(snippets');
+
+    let updateLanguageSupport = (languageSupport, oldLayout, newLayout) => {
+      let originalEditor = Feature_Layout.activeEditor(oldLayout);
+      let originalCursor =
+        originalEditor |> Feature_Editor.Editor.getPrimaryCursor;
+
+      let originalMode = originalEditor |> Feature_Editor.Editor.mode;
+      let wasInInsert = Vim.Mode.isInsertOrSelect(originalMode);
+
+      let newEditor = Feature_Layout.activeEditor(newLayout);
+      let newCursor = newEditor |> Feature_Editor.Editor.getPrimaryCursor;
+      let newMode = newEditor |> Feature_Editor.Editor.mode;
+      let isInInsert = Vim.Mode.isInsertOrSelect(newMode);
+
+      let languageSupport' =
+        if (originalCursor != newCursor) {
+          Feature_LanguageSupport.cursorMoved(
+            ~maybeBuffer,
+            ~previous=originalCursor,
+            ~current=newCursor,
+            languageSupport,
+          );
+        } else {
+          languageSupport;
+        };
+
+      let languageSupport'' =
+        if (wasInInsert != isInInsert) {
+          if (isInInsert) {
+            Feature_LanguageSupport.startInsertMode(
+              ~config,
+              ~maybeBuffer,
+              languageSupport',
+            );
+          } else {
+            Feature_LanguageSupport.stopInsertMode(languageSupport');
+          };
+        } else {
+          languageSupport';
+        };
+
+      if (wasSnippetActive != isSnippetActive) {
+        if (isSnippetActive) {
+          Feature_LanguageSupport.startSnippet(languageSupport'');
+        } else {
+          Feature_LanguageSupport.stopSnippet(languageSupport'');
+        };
+      } else {
+        languageSupport'';
+      };
+    };
 
     let (layout', eff) =
       switch (outmsg) {
@@ -1656,12 +1768,33 @@ let update =
                )
              );
         (layout', Isolinear.Effect.none);
+
+      | ShowPicker(snippetsWithMetadata) =>
+        let eff =
+          Isolinear.Effect.createWithDispatch(~name="snippet.menu", dispatch => {
+            dispatch(
+              Actions.QuickmenuShow(SnippetPicker(snippetsWithMetadata)),
+            )
+          });
+        (state.layout, eff);
+
       | Effect(eff) => (
           state.layout,
           eff |> Isolinear.Effect.map(msg => Actions.Snippets(msg)),
         )
       };
-    ({...state, layout: layout', snippets: snippets'}, eff);
+
+    let languageSupport' =
+      updateLanguageSupport(state.languageSupport, state.layout, layout');
+    (
+      {
+        ...state,
+        layout: layout',
+        languageSupport: languageSupport',
+        snippets: snippets',
+      },
+      eff,
+    );
 
   // TODO: This should live in the terminal feature project
   | TerminalFont(Service_Font.FontLoaded(font)) => (
@@ -1720,6 +1853,7 @@ let update =
            let languageSupport =
              Feature_LanguageSupport.bufferUpdated(
                ~languageConfiguration,
+               ~extensions=state.extensions,
                ~buffer,
                ~config,
                ~activeCursor,
@@ -1896,13 +2030,12 @@ let update =
       Feature_AutoUpdate.update(~getLicenseKey, state.autoUpdate, msg);
 
     let eff =
-      (
-        switch (outmsg) {
-        | Nothing => Isolinear.Effect.none
-        | Effect(eff) => eff
-        }
-      )
-      |> Isolinear.Effect.map(msg => Actions.AutoUpdate(msg));
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.AutoUpdate(msg))
+      | ErrorMessage(msg) => Internal.notificationEffect(~kind=Error, msg)
+      };
 
     ({...state, autoUpdate: state'}, eff);
 
@@ -1937,7 +2070,13 @@ let updateSubscriptions = (setup: Setup.t) => {
     |> QuickmenuSubscriptionRunner.run(~dispatch);
 
     let searchDispatch = msg => dispatch(Search(msg));
-    searchSubscriptions(~workingDirectory, searchDispatch, state.searchPane)
+    let config = Selectors.configResolver(state);
+    searchSubscriptions(
+      ~config,
+      ~workingDirectory,
+      searchDispatch,
+      state.searchPane,
+    )
     |> SearchSubscriptionRunner.run(~dispatch=searchDispatch);
   };
 };
