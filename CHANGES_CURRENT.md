@@ -31,6 +31,7 @@
 - #3085 - Snippets: Fix drop-shadow calculation at end of buffer
 - #3091 - Snippets: Fix auto-closing pairs when placeholders are on same line
 - #3102 - Vim / Input: Implement mapping timeout (fixes #2850)
+- #3123 - Extensions: Fix failure to install extensions over 10MB from open-vsx
 
 ### Performance
 
