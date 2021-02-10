@@ -107,18 +107,10 @@ module Editor = {
     );
 };
 
-module Experimental = {
-  module Snippets = {
-    let enabled =
-      setting("experimental.snippets.enabled", bool, ~default=false);
-  };
-};
-
 let contributions = [
   inactiveWindowOpacity.spec,
   animation.spec,
   shadows.spec,
   Editor.codeLensEnabled.spec,
   Editor.snippetSuggestions.spec,
-  Experimental.Snippets.enabled.spec,
 ];
