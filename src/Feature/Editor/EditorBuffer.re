@@ -9,3 +9,9 @@ let font = Oni_Core.Buffer.getFont;
 
 let fileType = Oni_Core.Buffer.getFileType;
 let measure = Oni_Core.Buffer.measure;
+
+let hasLine = (lineNumber, buffer) => {
+  let lineIdx = EditorCoreTypes.LineNumber.toZeroBased(lineNumber);
+  let lineCount = numberOfLines(buffer);
+  lineIdx >= 0 && lineIdx < lineCount;
+};
