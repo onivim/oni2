@@ -103,15 +103,15 @@ module ExthostCompletionProvider =
     if (!Exthost.DocumentSelector.matchesBuffer(~buffer, Config.selector)) {
       None;
     } else {
-      Some({completions: [], isComplete: false});
+      Some({completions: [], isComplete: true});
     };
 
   let handle = () => Some(providerHandle);
 
   let update = (~isFuzzyMatching, msg, model) =>
     switch (msg) {
-    // TODO: Handle incomplete result
     | ResultAvailable({handle, result}) when handle == providerHandle =>
+      prerr_endline("Result avialable");
       let isComplete = !result.isIncomplete;
       let completions =
         Exthost.SuggestResult.(result.completions)
@@ -280,7 +280,14 @@ module KeywordCompletionProvider =
   let items = model => (Complete, model);
 
   let sub =
-      (~client as _, ~context as _, ~position as _, ~buffer as _, ~selectedItem as _, _model) => Isolinear.Sub.none;
+      (
+        ~client as _,
+        ~context as _,
+        ~position as _,
+        ~buffer as _,
+        ~selectedItem as _,
+        _model,
+      ) => Isolinear.Sub.none;
 };
 
 let keyword: provider(keywordModel, keywordMsg) = {
@@ -365,10 +372,20 @@ module SnippetCompletionProvider =
     );
   };
 
-  let items = ({items, isComplete, _}: model) => (isComplete ? Complete: Incomplete, items)
+  let items = ({items, isComplete, _}: model) => (
+    isComplete ? Complete : Incomplete,
+    items,
+  );
 
   let sub =
-      (~client as _, ~context as _, ~position as _, ~buffer as _, ~selectedItem as _, model) => {
+      (
+        ~client as _,
+        ~context as _,
+        ~position as _,
+        ~buffer as _,
+        ~selectedItem as _,
+        model,
+      ) => {
     let filePaths = model.filePaths;
     let uniqueId = "Feature_LanguageSupport.SnippetCompletionProvider";
 

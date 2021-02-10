@@ -74,14 +74,14 @@ module Session = {
   type t =
     | Session(session('model, 'msg)): t;
 
-  let location =
-    fun
-    | Session({state, _}) =>
-      switch (state) {
-      | Pending({meet, _}) => Some(CompletionMeet.(meet.location))
-      | Completed({meet, _}) => Some(CompletionMeet.(meet.location))
-      | _ => None
-      };
+  // let location =
+  //   fun
+  //   | Session({state, _}) =>
+  //     switch (state) {
+  //     | Pending({meet, _}) => Some(CompletionMeet.(meet.location))
+  //     | Completed({meet, _}) => Some(CompletionMeet.(meet.location))
+  //     | _ => None
+  //     };
 
   let handle =
     fun
@@ -89,6 +89,11 @@ module Session = {
         let (module ProviderImpl) = provider;
         ProviderImpl.handle;
       };
+
+  let handleString = session =>
+    handle(session, ())
+    |> Option.map(string_of_int)
+    |> Option.value(~default="none");
 
   let complete = additionalEdits =>
     fun
@@ -135,9 +140,10 @@ module Session = {
           switch (state) {
           | Pending({meet, _}) as prev when isCompletionMeetStillValid(meet) => prev
           | Pending(_) => NotStarted
-          | Partial({meet, _}) as prev
-              when isCompletionMeetStillValid(meet) => prev
-          | Partial(_) => NotStarted
+          | Partial({meet, _}) as prev => prev
+          // | Partial(_) =>
+          // prerr_endline ("RESETTING PARTIAL");
+          // NotStarted
           | Completed({meet, _}) as prev
               when isCompletionMeetStillValid(meet) => prev
           | Completed(_) => NotStarted
@@ -215,7 +221,6 @@ module Session = {
 
              let state' =
                switch (state) {
-
                // TODO: Can we reduce this heavyweight duplication?
 
                | Partial({providerModel, meet, cursor, _}) =>
@@ -228,22 +233,26 @@ module Session = {
                  let (completionState, items) =
                    ProviderImpl.items(providerModel');
                  switch (completionState, items) {
-                 | (_, []) => Pending({meet, providerModel: providerModel'})
+                 | (_, []) =>
+                   prerr_endline("-to pending (1)");
+                   Pending({meet, providerModel: providerModel'});
                  | (Incomplete, items) =>
+                   prerr_endline("-to partial (1)");
                    Partial({
                      meet,
                      cursor,
                      currentItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: providerModel',
-                   })
+                   });
                  | (Complete, items) =>
+                   prerr_endline("-to completed (1)");
                    Completed({
                      meet,
                      allItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: providerModel',
-                   })
+                   });
                  };
 
                | Completed({providerModel, meet, _})
@@ -259,22 +268,26 @@ module Session = {
                  let (completionState, items) =
                    ProviderImpl.items(providerModel');
                  switch (completionState, items) {
-                 | (_, []) => Pending({meet, providerModel: providerModel'})
+                 | (_, []) =>
+                   prerr_endline("-to pending (2)");
+                   Pending({meet, providerModel: providerModel'});
                  | (Incomplete, items) =>
+                   prerr_endline("-to partial (2)");
                    Partial({
                      meet,
                      cursor: meet.location,
                      currentItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: providerModel',
-                   })
+                   });
                  | (Complete, items) =>
+                   prerr_endline("-to completed (2)");
                    Completed({
                      meet,
                      allItems: items,
                      filteredItems: filter(~query=meet.base, items),
                      providerModel: providerModel',
-                   })
+                   });
                  };
                | _ => state
                };
@@ -286,17 +299,24 @@ module Session = {
 
   let sub = (~activeBuffer, ~selectedItem, ~client) =>
     fun
-    | Session({state, provider, providerMapper, _}) => {
+    | Session({state, provider, providerMapper, _}) as session => {
         switch (state) {
         | Partial({providerModel, cursor, _}) =>
+          prerr_endline(
+            Printf.sprintf(
+              "%s - Partial.sub: %s",
+              handleString(session),
+              CharacterPosition.show(cursor),
+            ),
+          );
           let (module ProviderImpl) = provider;
           ProviderImpl.sub(
             ~client,
             ~context=
-          Exthost.CompletionContext.{
-            triggerKind: Exthost.CompletionContext.TriggerForIncompleteCompletions,
-            triggerCharacter: None,
-            },
+              Exthost.CompletionContext.{
+                triggerKind: Exthost.CompletionContext.TriggerForIncompleteCompletions,
+                triggerCharacter: None,
+              },
             ~buffer=activeBuffer,
             ~position=cursor,
             ~selectedItem,
@@ -305,15 +325,22 @@ module Session = {
           |> Isolinear.Sub.map(msg => Provider(providerMapper(msg)));
         | Pending({providerModel, meet, _})
         | Completed({providerModel, meet, _}) =>
+          prerr_endline(
+            Printf.sprintf(
+              "%s - Pending / complete.sub: %s",
+              handleString(session),
+              CharacterPosition.show(meet.location),
+            ),
+          );
           let (module ProviderImpl) = provider;
           ProviderImpl.sub(
             ~client,
+            // TODO: Proper completion context
             ~context=
-              // TODO: Proper completion context
-          Exthost.CompletionContext.{
-            triggerKind: Invoke,
-            triggerCharacter: None,
-            },
+              Exthost.CompletionContext.{
+                triggerKind: Invoke,
+                triggerCharacter: None,
+              },
             ~buffer=activeBuffer,
             ~position=CompletionMeet.(meet.location),
             ~selectedItem,
@@ -359,9 +386,12 @@ module Session = {
                | Accepted(_) as accepted => accepted
                | Pending(_) as pending => pending
                | Failure(_) as failure => failure
-               | Partial({currentItems, meet, _} as prev)
-                   when CompletionMeet.matches(meet, newMeet) =>
-                 prerr_endline ("Refining to position: " ++ CharacterPosition.show(position));
+               | Partial({currentItems, meet, _} as prev) =>
+                 // when CompletionMeet.matches(meet, newMeet) =>
+                 prerr_endline(
+                   "Refining to position: "
+                   ++ CharacterPosition.show(position),
+                 );
                  Partial({
                    ...prev,
                    meet: newMeet,
@@ -371,7 +401,7 @@ module Session = {
                        ~query=CompletionMeet.(newMeet.base),
                        currentItems,
                      ),
-                 })
+                 });
                | Completed({allItems, meet, _} as prev)
                    when CompletionMeet.matches(meet, newMeet) =>
                  Completed({
@@ -381,8 +411,12 @@ module Session = {
                      filter(~query=CompletionMeet.(newMeet.base), allItems),
                  })
                // The meet changed on us - reset
-               | Completed(_) => NotStarted
-               | Partial(_) => NotStarted
+               | Completed(_) =>
+                 prerr_endline("Reseting complete, cursor moved");
+                 NotStarted;
+               // | Partial(_) =>
+               // prerr_endline ("Reseting partial, cursor moved");
+               // NotStarted
                }
              })
           |> Option.value(~default=NotStarted);
@@ -423,17 +457,25 @@ module Session = {
              |> Option.map(model => (meet, model))
            })
         |> Option.map(((meet, model)) => {
-             let (_isComplete, items) = ProviderImpl.items(model);
              let state =
-               switch (items) {
-               | [] => Pending({meet, providerModel: model})
-               | items =>
-                 Completed({
-                   meet,
-                   allItems: items,
-                   filteredItems: filter(~query=meet.base, items),
-                   providerModel: model,
-                 })
+               switch (session.state) {
+               | Partial(partial) =>
+                 Partial({...partial, meet, cursor: location})
+               | _ =>
+                 let (isComplete, items) = ProviderImpl.items(model);
+                 switch (items) {
+                 | [] =>
+                   prerr_endline("complete: no items, switching to pending");
+                   Pending({meet, providerModel: model});
+                 | items =>
+                   prerr_endline("complete: items, switching to completed");
+                   Completed({
+                     meet,
+                     allItems: items,
+                     filteredItems: filter(~query=meet.base, items),
+                     providerModel: model,
+                   });
+                 };
                };
 
              Session({...session, state});
@@ -544,26 +586,27 @@ let initial = {
   isInsertMode: false,
   isSnippetMode: false,
   acceptOnEnter: false,
-  providers: [
-    Session.create(
-      ~triggerCharacters=[],
-      ~provider=CompletionProvider.keyword,
-      ~mapper=msg => Keyword(msg),
-      ~revMapper=
-        fun
-        | Keyword(msg) => Some(msg)
-        | _ => None,
-    ),
-    Session.create(
-      ~triggerCharacters=[],
-      ~provider=CompletionProvider.snippet,
-      ~mapper=msg => Snippet(msg),
-      ~revMapper=
-        fun
-        | Snippet(msg) => Some(msg)
-        | _ => None,
-    ),
-  ],
+  providers: [],
+  // providers: [
+  //   Session.create(
+  //     ~triggerCharacters=[],
+  //     ~provider=CompletionProvider.keyword,
+  //     ~mapper=msg => Keyword(msg),
+  //     ~revMapper=
+  //       fun
+  //       | Keyword(msg) => Some(msg)
+  //       | _ => None,
+  //   ),
+  //   Session.create(
+  //     ~triggerCharacters=[],
+  //     ~provider=CompletionProvider.snippet,
+  //     ~mapper=msg => Snippet(msg),
+  //     ~revMapper=
+  //       fun
+  //       | Snippet(msg) => Some(msg)
+  //       | _ => None,
+  //   ),
+  // ],
   allItems: [||],
   selection: Selection.initial,
   snippetSortOrder: `Inline,
