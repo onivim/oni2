@@ -366,7 +366,7 @@ type command =
   | InsertSnippet({
       // If no snippet is provided - we should open the snippet menu
       maybeSnippet: [@opaque] option(Snippet.t),
-      maybeMeetColumn: option(CharacterIndex.t),
+      maybeReplaceFrom: option(BytePosition.t),
     });
 
 [@deriving show]
@@ -417,7 +417,7 @@ type outmsg =
 module Effects = {
   let startSession =
       (
-        ~maybeMeetColumn: option(CharacterIndex.t),
+        ~maybeReplaceFrom: option(BytePosition.t),
         ~resolverFactory,
         ~buffer,
         ~editorId,
@@ -438,21 +438,25 @@ module Effects = {
     // Handle the 'meet column' - if we a meet column was provided,
     // as in the case of completion, we may need to remove some characters
     // from the prefix.
-    let prefix =
-      switch (maybeMeetColumn) {
-      | None => prefix
-      | Some(column) =>
+    let (prefix, replaceStartLine) =
+      switch (maybeReplaceFrom) {
+      | None => (prefix, position.line)
+      | Some(replaceFromPosition: BytePosition.t) =>
+        
+        let replaceStartLine = buffer
+        |> Oni_Core.Buffer.getLine(replaceFromPosition.line |> LineNumber.toZeroBased)
+        |> Oni_Core.BufferLine.raw;
         // First, see how many characters we're working with...
-        let characterCount = Zed_utf8.length(prefix);
 
-        let columnIdx = CharacterIndex.toInt(column);
-        if (columnIdx == 0) {
+        let byteIdx = replaceFromPosition.byte |> ByteIndex.toInt;
+        let prefix = if (byteIdx == 0) {
           "";
-        } else if (columnIdx >= characterCount) {
+        } else if (byteIdx >= String.length(replaceStartLine)) {
           prefix;
         } else {
-          Zed_utf8.sub(prefix, 0, columnIdx);
+          String.sub(replaceStartLine, 0, byteIdx);
         };
+        (prefix, replaceFromPosition.line)
       };
 
     let resolvedSnippet =
@@ -477,7 +481,7 @@ module Effects = {
 
       Service_Vim.Effects.setLines(
         ~bufferId,
-        ~start=position.line,
+        ~start=replaceStartLine,
         ~stop=LineNumber.(position.line + 1),
         ~lines,
         toMsg,
@@ -487,7 +491,7 @@ module Effects = {
     };
   };
 
-  let insertSnippet = (~meetColumn: CharacterIndex.t, ~snippet: string) => {
+  let insertSnippet = (~replaceFrom: option(BytePosition.t), ~snippet: string) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Snippets.insertSnippet", dispatch => {
       switch (Snippet.parse(snippet)) {
@@ -496,7 +500,7 @@ module Effects = {
           Command(
             InsertSnippet({
               maybeSnippet: Some(resolvedSnippet),
-              maybeMeetColumn: Some(meetColumn),
+              maybeReplaceFrom: replaceFrom,
             }),
           ),
         )
@@ -597,7 +601,7 @@ let update =
        })
     |> Option.value(~default=(model, Nothing))
 
-  | Command(InsertSnippet({maybeSnippet, maybeMeetColumn})) =>
+  | Command(InsertSnippet({maybeSnippet, maybeReplaceFrom})) =>
     let eff =
       maybeBuffer
       |> Option.map(buffer => {
@@ -605,7 +609,7 @@ let update =
            | Some(snippet) =>
              Effect(
                Effects.startSession(
-                 ~maybeMeetColumn,
+                 ~maybeReplaceFrom,
                  ~resolverFactory,
                  ~buffer,
                  ~editorId,
@@ -643,7 +647,7 @@ let update =
              Effect(
                Effects.startSession(
                  // TODO: Handle selection
-                 ~maybeMeetColumn=None,
+                 ~maybeReplaceFrom=None,
                  ~resolverFactory,
                  ~buffer,
                  ~editorId,
@@ -708,7 +712,7 @@ module Commands = {
 
     switch (snippetResult) {
     | Ok(snippet) =>
-      Command(InsertSnippet({maybeSnippet: snippet, maybeMeetColumn: None}))
+      Command(InsertSnippet({maybeSnippet: snippet, maybeReplaceFrom: None}))
     | Error(msg) => SnippetInsertionError(string_of_error(msg))
     };
   };

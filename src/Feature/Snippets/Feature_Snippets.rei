@@ -48,7 +48,7 @@ let update:
 
 module Effects: {
   let insertSnippet:
-    (~meetColumn: CharacterIndex.t, ~snippet: string) =>
+    (~replaceFrom: option(BytePosition.t), ~snippet: string) =>
     Isolinear.Effect.t(msg);
 };
 
