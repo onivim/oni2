@@ -57,8 +57,6 @@ module Session = {
         allItems: list(CompletionItem.t),
         filteredItems: [@opaque] list(Filter.result(CompletionItem.t)),
       })
-    // TODO
-    //| Incomplete(list(Exthost.SuggestItem.t))
     | Failure(string)
     | Accepted({meet: CompletionMeet.t});
 
@@ -74,26 +72,12 @@ module Session = {
   type t =
     | Session(session('model, 'msg)): t;
 
-  // let location =
-  //   fun
-  //   | Session({state, _}) =>
-  //     switch (state) {
-  //     | Pending({meet, _}) => Some(CompletionMeet.(meet.location))
-  //     | Completed({meet, _}) => Some(CompletionMeet.(meet.location))
-  //     | _ => None
-  //     };
-
   let handle =
     fun
     | Session({provider, _}) => {
         let (module ProviderImpl) = provider;
         ProviderImpl.handle;
       };
-
-  let handleString = session =>
-    handle(session, ())
-    |> Option.map(string_of_int)
-    |> Option.value(~default="none");
 
   let complete = additionalEdits =>
     fun
@@ -216,68 +200,46 @@ module Session = {
         |> Option.map(internalMsg => {
              let (module ProviderImpl) = provider;
 
+             let handleNewItems =
+                 (~providerModel, ~meet: CompletionMeet.t, ~cursor) => {
+               // TODO: What to do with the error `_outmsg` case?
+               let (providerModel', _outmsg) =
+                 ProviderImpl.update(
+                   ~isFuzzyMatching=meet.base != "",
+                   internalMsg,
+                   providerModel,
+                 );
+               let (completionState, items) =
+                 ProviderImpl.items(providerModel');
+               switch (completionState, items) {
+               | (_, []) => Pending({meet, providerModel: providerModel'})
+               | (Incomplete, items) =>
+                 Partial({
+                   meet,
+                   cursor,
+                   currentItems: items,
+                   filteredItems: filter(~query=meet.base, items),
+                   providerModel: providerModel',
+                 })
+               | (Complete, items) =>
+                 Completed({
+                   meet,
+                   allItems: items,
+                   filteredItems: filter(~query=meet.base, items),
+                   providerModel: providerModel',
+                 })
+               };
+             };
+
              let state' =
                switch (state) {
-               // TODO: Can we reduce this heavyweight duplication?
-
                | Partial({providerModel, meet, cursor, _}) =>
-                 let (providerModel', _outmsg) =
-                   ProviderImpl.update(
-                     ~isFuzzyMatching=meet.base != "",
-                     internalMsg,
-                     providerModel,
-                   );
-                 let (completionState, items) =
-                   ProviderImpl.items(providerModel');
-                 switch (completionState, items) {
-                 | (_, []) => Pending({meet, providerModel: providerModel'})
-                 | (Incomplete, items) =>
-                   Partial({
-                     meet,
-                     cursor,
-                     currentItems: items,
-                     filteredItems: filter(~query=meet.base, items),
-                     providerModel: providerModel',
-                   })
-                 | (Complete, items) =>
-                   Completed({
-                     meet,
-                     allItems: items,
-                     filteredItems: filter(~query=meet.base, items),
-                     providerModel: providerModel',
-                   })
-                 };
+                 handleNewItems(~providerModel, ~meet, ~cursor)
 
                | Completed({providerModel, meet, _})
                | Pending({providerModel, meet, _}) =>
-                 open CompletionMeet;
-                 // TODO: What to do with the error `_outmsg` case?
-                 let (providerModel', _outmsg) =
-                   ProviderImpl.update(
-                     ~isFuzzyMatching=meet.base != "",
-                     internalMsg,
-                     providerModel,
-                   );
-                 let (completionState, items) =
-                   ProviderImpl.items(providerModel');
-                 switch (completionState, items) {
-                 | (_, []) => Pending({meet, providerModel: providerModel'})
-                 | (Incomplete, items) =>
-                   Partial({
-                     meet,
-                     cursor: meet.location,
-                     currentItems: items,
-                     filteredItems: filter(~query=meet.base, items),
-                     providerModel: providerModel',
-                   })
-                 | (Complete, items) =>
-                   Completed({
-                     meet,
-                     allItems: items,
-                     filteredItems: filter(~query=meet.base, items),
-                     providerModel: providerModel',
-                   })
-                 };
+                 handleNewItems(~providerModel, ~meet, ~cursor=meet.location)
+
                | _ => state
                };
 
