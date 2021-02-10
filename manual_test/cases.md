@@ -244,3 +244,17 @@ __Pass:__
 - [ ] Win
 - [ ] OSX
 - [ ] Linux
+
+# 10. Extension Management
+
+# 10.1 Install large extension (`redhat.java`)
+
+- Open Onivim 2
+- Go to extensions pane (Command+Shift+X / Control+Shift+X)
+- Install `redhat.java` 
+- Validate installation is successful
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
