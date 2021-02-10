@@ -441,22 +441,25 @@ module Effects = {
     let (prefix, replaceStartLine) =
       switch (maybeReplaceFrom) {
       | None => (prefix, position.line)
-      | Some(replaceFromPosition: BytePosition.t) =>
-        
-        let replaceStartLine = buffer
-        |> Oni_Core.Buffer.getLine(replaceFromPosition.line |> LineNumber.toZeroBased)
-        |> Oni_Core.BufferLine.raw;
+      | Some((replaceFromPosition: BytePosition.t)) =>
+        let replaceStartLine =
+          buffer
+          |> Oni_Core.Buffer.getLine(
+               replaceFromPosition.line |> LineNumber.toZeroBased,
+             )
+          |> Oni_Core.BufferLine.raw;
         // First, see how many characters we're working with...
 
         let byteIdx = replaceFromPosition.byte |> ByteIndex.toInt;
-        let prefix = if (byteIdx == 0) {
-          "";
-        } else if (byteIdx >= String.length(replaceStartLine)) {
-          prefix;
-        } else {
-          String.sub(replaceStartLine, 0, byteIdx);
-        };
-        (prefix, replaceFromPosition.line)
+        let prefix =
+          if (byteIdx == 0) {
+            "";
+          } else if (byteIdx >= String.length(replaceStartLine)) {
+            prefix;
+          } else {
+            String.sub(replaceStartLine, 0, byteIdx);
+          };
+        (prefix, replaceFromPosition.line);
       };
 
     let resolvedSnippet =
@@ -491,7 +494,8 @@ module Effects = {
     };
   };
 
-  let insertSnippet = (~replaceFrom: option(BytePosition.t), ~snippet: string) => {
+  let insertSnippet =
+      (~replaceFrom: option(BytePosition.t), ~snippet: string) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Snippets.insertSnippet", dispatch => {
       switch (Snippet.parse(snippet)) {

@@ -611,14 +611,16 @@ let update =
         } else {
           let editor = Feature_Layout.activeEditor(state.layout);
           let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
-          let characterPosition = CharacterPosition.{
-            line: cursor.line,
-            character: meetColumn
-          };
-          let maybeReplaceFrom = Feature_Editor.Editor.characterToByte(characterPosition, editor);
+          let characterPosition =
+            CharacterPosition.{line: cursor.line, character: meetColumn};
+          let maybeReplaceFrom =
+            Feature_Editor.Editor.characterToByte(characterPosition, editor);
           (
             state,
-            Feature_Snippets.Effects.insertSnippet(~replaceFrom=maybeReplaceFrom, ~snippet)
+            Feature_Snippets.Effects.insertSnippet(
+              ~replaceFrom=maybeReplaceFrom,
+              ~snippet,
+            )
             |> Isolinear.Effect.map(msg => Snippets(msg)),
           );
         }
