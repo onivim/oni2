@@ -32,6 +32,7 @@
 - #3091 - Snippets: Fix auto-closing pairs when placeholders are on same line
 - #3102 - Vim / Input: Implement mapping timeout (fixes #2850)
 - #3121 - Snippets: Add support for the $TM_SELECTED_TEXT snippet variable
+- #3122 - Signature Help: Close signature help when traversing snippet placeholders
 
 ### Performance
 
