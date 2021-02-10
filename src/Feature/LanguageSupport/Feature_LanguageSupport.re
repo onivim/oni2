@@ -472,7 +472,10 @@ let cursorMoved = (~maybeBuffer, ~previous, ~current, model) => {
          )
        )
     |> Option.value(~default=model.documentHighlights);
-  {...model, completion, documentHighlights};
+
+  let signatureHelp =
+    SignatureHelp.cursorMoved(~previous, ~current, model.signatureHelp);
+  {...model, completion, documentHighlights, signatureHelp};
 };
 
 let startInsertMode = (~config, ~maybeBuffer, model) => {

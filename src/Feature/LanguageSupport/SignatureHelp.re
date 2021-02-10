@@ -119,6 +119,18 @@ module Session = {
     {...model, latestSignatureHelpResult: latestResult'};
   };
 
+  let cursorMoved =
+      (
+        ~previous: EditorCoreTypes.CharacterPosition.t,
+        ~current: EditorCoreTypes.CharacterPosition.t,
+        model,
+      ) =>
+    if (CharacterPosition.isWithinOneCharacter(previous, current)) {
+      model;
+    } else {
+      {...model, latestMeet: None, latestSignatureHelpResult: None};
+    };
+
   let bufferUpdated = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
     let maybeMeet =
       SignatureHelpMeet.fromBufferPosition(
@@ -285,6 +297,13 @@ let bufferUpdated = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
            session,
          )
        );
+  {...model, sessions: sessions'};
+};
+
+let cursorMoved = (~previous, ~current, model) => {
+  let sessions' =
+    model.sessions
+    |> List.map(session => Session.cursorMoved(~previous, ~current, session));
   {...model, sessions: sessions'};
 };
 
