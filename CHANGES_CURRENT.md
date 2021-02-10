@@ -33,6 +33,7 @@
 - #3102 - Vim / Input: Implement mapping timeout (fixes #2850)
 - #3121 - Snippets: Add support for the $TM_SELECTED_TEXT snippet variable
 - #3122 - Signature Help: Close signature help when traversing snippet placeholders
+- #3123 - Extensions: Fix failure to install extensions over 10MB from open-vsx
 
 ### Performance
 
