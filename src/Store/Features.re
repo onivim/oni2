@@ -1680,9 +1680,12 @@ let update =
 
     let wasSnippetActive = Feature_Snippets.isActive(state.snippets);
 
+    let selections = Feature_Editor.Editor.selections(editor);
+
     let (snippets', outmsg) =
       Feature_Snippets.update(
         ~resolverFactory,
+        ~selections,
         ~maybeBuffer,
         ~editorId,
         ~cursorPosition,

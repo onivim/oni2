@@ -137,6 +137,8 @@ module Internal = {
 
   let ensureSelect = visualType =>
     if (!isSelect(current())) {
+      Native.vimKey("<ESC>");
+      Native.vimKey("<ESC>");
       ensureVisual(visualType);
       Native.vimKey("<c-g>");
     };

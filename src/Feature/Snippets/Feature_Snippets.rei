@@ -37,6 +37,7 @@ let modeChanged: (~mode: Vim.Mode.t, model) => model;
 let update:
   (
     ~resolverFactory: (unit, string) => option(string),
+    ~selections: list(VisualRange.t),
     ~maybeBuffer: option(Buffer.t),
     ~editorId: int,
     ~cursorPosition: BytePosition.t,

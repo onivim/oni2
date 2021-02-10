@@ -473,9 +473,19 @@ module Effects = {
 
     let lines = ResolvedSnippet.toLines(resolvedSnippet);
 
+    let sessionPosition =
+      BytePosition.{
+        line: replaceStartLine,
+        byte: String.length(prefix) |> ByteIndex.ofInt,
+      };
+
     if (Array.length(lines) > 0) {
       let session =
-        Session.start(~editorId, ~snippet=resolvedSnippet, ~position);
+        Session.start(
+          ~editorId,
+          ~snippet=resolvedSnippet,
+          ~position=sessionPosition,
+        );
 
       let toMsg =
         fun
@@ -514,9 +524,47 @@ module Effects = {
   };
 };
 
+module Internal = {
+  // Helper function to calculate a start position given a range of selections.
+  let getReplaceStartFromSelections:
+    list(VisualRange.t) => option(BytePosition.t) =
+    selections => {
+      List.nth_opt(selections, 0)
+      |> OptionEx.flatMap((selection: VisualRange.t) =>
+           switch (selection.mode) {
+           | Vim.Types.Line =>
+             let normalizedRange = selection.range |> ByteRange.normalize;
+
+             Some(
+               BytePosition.{
+                 line: normalizedRange.start.line,
+                 byte: ByteIndex.zero,
+               },
+             );
+
+           // TODO:
+           | Vim.Types.Character =>
+             let normalizedRange = selection.range |> ByteRange.normalize;
+
+             Some(
+               BytePosition.{
+                 line: normalizedRange.start.line,
+                 byte: normalizedRange.start.byte,
+               },
+             );
+
+           // No-op for now
+           | Vim.Types.Block
+           | Vim.Types.None => None
+           }
+         );
+    };
+};
+
 let update =
     (
       ~resolverFactory,
+      ~selections,
       ~maybeBuffer,
       ~editorId,
       ~cursorPosition,
@@ -650,8 +698,8 @@ let update =
            | Ok(snippet) =>
              Effect(
                Effects.startSession(
-                 // TODO: Handle selection
-                 ~maybeReplaceFrom=None,
+                 ~maybeReplaceFrom=
+                   Internal.getReplaceStartFromSelections(selections),
                  ~resolverFactory,
                  ~buffer,
                  ~editorId,
