@@ -298,7 +298,6 @@ module LanguageFeatures = {
            )
       );
 
-    prerr_endline("provide completion items...");
     Client.request(
       ~decoder,
       ~usesCancellationToken=true,
