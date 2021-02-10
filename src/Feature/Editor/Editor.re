@@ -763,6 +763,7 @@ let singleLineSelectedText = editor => {
        });
 
   maybeByteRange
+  |> Option.map(ByteRange.normalize)
   |> OptionEx.flatMap(byteRange =>
        byteRangeToCharacterRange(byteRange, editor)
      )
