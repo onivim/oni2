@@ -116,6 +116,21 @@ function activate(context) {
         }),
     )
 
+    // INCOMPLETE completion provider
+    cleanup(
+        vscode.languages.registerCompletionItemProvider("oni-dev", {
+            provideCompletionItems: (document, position, token, context) => {
+                        const items = [
+                            vscode.CompletionItem("Incomplete" + Date.now().toString()),
+                        ];
+                        return {
+                            isIncomplete: true,
+                            items,
+                        };
+                },
+            }),
+    )
+
     const output = vscode.window.createOutputChannel("oni-dev")
     output.appendLine("Hello output channel!")
 
