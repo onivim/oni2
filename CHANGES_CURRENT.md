@@ -31,6 +31,9 @@
 - #3085 - Snippets: Fix drop-shadow calculation at end of buffer
 - #3091 - Snippets: Fix auto-closing pairs when placeholders are on same line
 - #3102 - Vim / Input: Implement mapping timeout (fixes #2850)
+- #3121 - Snippets: Add support for the $TM_SELECTED_TEXT snippet variable
+- #3122 - Signature Help: Close signature help when traversing snippet placeholders
+- #3123 - Extensions: Fix failure to install extensions over 10MB from open-vsx
 
 ### Performance
 
@@ -40,7 +43,7 @@
 
 ### Infrastructure / Refactoring
 
-- #3012 - Node: Upgrade from Node 12 LTS -> Node 14 LTS (related #3009)
 - #3101 - Dependency: reason-fzy -> 485cae1
 - #3096 - OS: Add logging for `readdir` path (related #3092)
 - #3097 - Configuration: Remove unused `workbench.tree.indent` setting
+- #3115 - Dependency: vscode-exthost -> 1.53.0
