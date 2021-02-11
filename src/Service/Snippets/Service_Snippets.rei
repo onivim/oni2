@@ -9,6 +9,7 @@ module SnippetWithMetadata: {
     snippet: string,
     prefix: string,
     description: string,
+    scope: option(string),
   };
 };
 

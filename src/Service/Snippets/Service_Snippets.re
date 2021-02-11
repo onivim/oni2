@@ -9,6 +9,44 @@ module SnippetWithMetadata = {
     snippet: string,
     prefix: string,
     description: string,
+    scope: option(string),
+  };
+
+  let matchesFileType = (~fileType, {scope, _}) => {
+    scope
+    |> Option.map(String.equal(fileType))
+    // If no scope is defined, it's assumed to be global
+    |> Option.value(~default=true);
+  };
+};
+
+module SnippetFile = {
+  type t = Fp.t(Fp.absolute);
+
+  type scope =
+    | Global
+    | Language(string);
+
+  let scope = (path: t) => {
+    let splitPath =
+      path |> Fp.toString |> Filename.basename |> String.split_on_char('.');
+
+    switch (splitPath) {
+    | [] => None
+    | [_] => None
+    | [_file, fileType, extension] when extension == "json" =>
+      Some(Language(fileType))
+    | [file, extension] when extension == "code-snippets" => Some(Global)
+    | _ => None
+    };
+  };
+
+  let matches = (~fileType, snippetFile: t) => {
+    switch (scope(snippetFile)) {
+    | None => false
+    | Some(Global) => true
+    | Some(Language(languageId)) => languageId == fileType
+    };
   };
 };
 
@@ -32,6 +70,7 @@ module Decode = {
     type t = {
       prefix: option(string),
       body: string,
+      scope: option(string),
     };
 
     let decode =
@@ -39,6 +78,7 @@ module Decode = {
         {
           prefix: field.optional("prefix", string),
           body: field.required("body", snippetLines),
+          scope: field.optional("scope", string),
         }
       );
   };
@@ -55,6 +95,7 @@ module Decode = {
                prefix,
                description,
                snippet: prefixAndBody.body,
+               scope: prefixAndBody.scope,
              };
            }),
          )
@@ -95,33 +136,42 @@ module Cache = {
 };
 
 module Internal = {
-  let loadSnippetsFromFiles = (~filePaths, ~fileType as _, dispatch) => {
+
+  let join = (a, b) => a @ b;
+
+  let loadSnippetsFromFolder = (~fileType, folder) => {
+    folder
+    |> Fp.toString
+    |> Service_OS.Api.readdir
+    |> LwtEx.flatMap(dirents => {
+         dirents
+         |> List.map((dirent: Luv.File.Dirent.t) =>
+              Fp.At.(folder / dirent.name)
+            )
+         |> List.filter(SnippetFile.matches(~fileType))
+         |> List.map((dir: Fp.t(Fp.absolute)) => {
+              let str = Fp.toString(dir);
+              Cache.get(str)
+              |> Lwt.map(
+                   List.filter(
+                     SnippetWithMetadata.matchesFileType(~fileType),
+                   ),
+                 );
+            })
+         |> LwtEx.some(~default=[], join)
+       });
+  };
+
+  let loadSnippetsFromFiles = (~filePaths, ~fileType, dispatch) => {
     // Load all files
     // Coalesce all promises
     let promises = filePaths |> List.map(Fp.toString) |> List.map(Cache.get);
-    let join = (a, b) => a @ b;
 
     let userPromise: Lwt.t(list(SnippetWithMetadata.t)) =
       Filesystem.getSnippetsFolder()
-      |> Result.map(snippetDirectory => {
-           snippetDirectory
-           |> Fp.toString
-           |> Service_OS.Api.readdir
-           |> LwtEx.flatMap(dirents => {
-                prerr_endline("HERE");
-                dirents
-                |> List.map((dirent: Luv.File.Dirent.t) =>
-                     Fp.At.(snippetDirectory / dirent.name)
-                   )
-                |> List.map((dir: Fp.t(Fp.absolute)) => {
-                     let str = Fp.toString(dir);
-                     prerr_endline(str);
-                     Cache.get(str);
-                   })
-                |> LwtEx.some(~default=[], join);
-              })
-         })
+      |> Result.map(loadSnippetsFromFolder(~fileType))
       |> ResultEx.value(~default=Lwt.return([]));
+
     let promise = LwtEx.some(~default=[], join, [userPromise, ...promises]);
 
     Lwt.on_success(
