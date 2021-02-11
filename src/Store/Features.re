@@ -28,7 +28,7 @@ module Internal = {
   let executeCommandEffect = (command, arguments) => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.executeCommand", dispatch =>
-      dispatch(Actions.CommandInvoked({command, arguments}))
+      dispatch(Actions.KeybindingInvoked({command, arguments}))
     );
   };
 
@@ -500,6 +500,10 @@ let update =
             error,
           ),
         )
+      | TimedOut =>
+        Isolinear.Effect.createWithDispatch(~name="Input.timeout", dispatch =>
+          dispatch(KeyTimeout)
+        )
       };
 
     ({...state, input: model}, eff);
@@ -586,31 +590,11 @@ let update =
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
-      | InsertSnippet({meetColumn, snippet, additionalEdits}) =>
-        if (!
-              Feature_Configuration.GlobalConfiguration.Experimental.Snippets.enabled.
-                get(
-                config,
-              )) {
-          let additionalEdits =
-            additionalEdits |> List.map(exthostEditToVimEdit);
-          let insertText = Feature_Snippets.snippetToInsert(~snippet);
-          (
-            state,
-            Feature_Vim.Effects.applyCompletion(
-              ~additionalEdits,
-              ~meetColumn,
-              ~insertText,
-            )
-            |> Isolinear.Effect.map(msg => Vim(msg)),
-          );
-        } else {
-          (
-            state,
-            Feature_Snippets.Effects.insertSnippet(~meetColumn, ~snippet)
-            |> Isolinear.Effect.map(msg => Snippets(msg)),
-          );
-        }
+      | InsertSnippet({meetColumn, snippet, _}) => (
+          state,
+          Feature_Snippets.Effects.insertSnippet(~meetColumn, ~snippet)
+          |> Isolinear.Effect.map(msg => Snippets(msg)),
+        )
       | OpenFile({filePath, location}) => (
           state,
           Internal.openFileEffect(~position=location, filePath),
@@ -870,6 +854,20 @@ let update =
 
     | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
     | PreviewFile(filePath) => (state, Internal.previewFileEffect(filePath))
+
+    | OriginalContentLoaded({bufferId, originalLines}) => (
+        {
+          ...state,
+          buffers:
+            Feature_Buffers.setOriginalLines(
+              ~bufferId,
+              ~originalLines,
+              state.buffers,
+            ),
+        },
+        Isolinear.Effect.none,
+      )
+
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),

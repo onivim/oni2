@@ -57,6 +57,54 @@ module QuickSuggestionsSetting = {
     );
 };
 
+module SnippetSuggestions = {
+  type t = [ | `Top | `Bottom | `Inline | `Hidden];
+
+  module Decode = {
+    open Json.Decode;
+
+    let decodeString =
+      string
+      |> map(
+           fun
+           | "hidden" => `Hidden
+           | "bottom" => `Bottom
+           | "inline" => `Inline
+           | "top" => `Top
+           | _ => `Inline,
+         );
+
+    let decodeBool =
+      bool
+      |> map(
+           fun
+           | true => `Inline
+           | false => `Hidden,
+         );
+
+    let decode =
+      one_of([
+        ("SnippetSuggestion.bool", decodeBool),
+        ("SnippetSuggestion.string", decodeString),
+      ]);
+  };
+
+  let decode = Decode.decode;
+
+  module Encode = {
+    open Json.Encode;
+
+    let encode =
+      fun
+      | `Top => string("top")
+      | `Hidden => string("hidden")
+      | `Inline => string("inline")
+      | `Bottom => string("bottom");
+  };
+
+  let encode = Encode.encode;
+};
+
 module Decode = {
   open Json.Decode;
 
@@ -104,4 +152,14 @@ let acceptSuggestionOnEnter =
       ~encode=Json.Encode.bool,
     ),
     ~default=true,
+  );
+
+let snippetSuggestions =
+  setting(
+    "editor.snippetSuggestions",
+    custom(
+      ~decode=SnippetSuggestions.decode,
+      ~encode=SnippetSuggestions.encode,
+    ),
+    ~default=`Inline,
   );

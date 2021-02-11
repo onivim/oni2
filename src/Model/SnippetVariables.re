@@ -37,7 +37,10 @@ let current = (state: State.t, variable) => {
   // Textmate Variables
 
   // TODO
-  | "TM_SELECTED_TEXT" => Some("TM_SELECTED_TEXT")
+  | "TM_SELECTED_TEXT" =>
+    editor
+    |> Feature_Editor.Editor.singleLineSelectedText
+    |> OptionEx.or_(Some(""))
 
   | "TM_CURRENT_LINE" =>
     maybeBuffer

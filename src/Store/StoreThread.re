@@ -435,7 +435,7 @@ let start =
 
     let inputSubscription =
       state.input
-      |> Feature_Input.sub
+      |> Feature_Input.sub(~config)
       |> Isolinear.Sub.map(msg => Model.Actions.Input(msg));
 
     let notificationSub =

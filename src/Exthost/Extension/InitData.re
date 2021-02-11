@@ -118,12 +118,12 @@ module Environment = {
     globalStorageHome: option(Uri.t),
     workspaceStorageHome: option(Uri.t),
     userHome: option(Uri.t),
+    webviewResourceRoot: string,
+    webviewCspSource: string,
     // TODO
     /*
      appUriScheme: string,
      appSettingsHome: option(Uri.t),
-     webviewResourceRoot: string,
-     webviewCspSource: string,
      useHostProxy: boolean,
      */
   };
@@ -147,6 +147,12 @@ module Environment = {
       Oni_Core.Filesystem.getUserDataDirectory()
       |> Result.to_option
       |> Option.map(Uri.fromFilePath),
+    // Currently, Onivim does not support webview integrations -
+    // once those are added, these resource / csp roots will need to be updated.
+    // They are placeholders right now to unblock extensions that try to create webviews,
+    // ie: `golang.go` in https://github.com/onivim/oni2/issues/3099
+    webviewResourceRoot: "onivim-resource://{{resource}}",
+    webviewCspSource: "onivim-csp://{{resource}}",
   };
 };
 
