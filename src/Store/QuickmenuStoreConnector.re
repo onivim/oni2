@@ -271,6 +271,29 @@ let start = () => {
         Isolinear.Effect.none,
       );
 
+    | QuickmenuShow(SnippetFilePicker(snippetFiles)) =>
+      let items =
+        snippetFiles
+        |> List.map((snippetFile: Service_Snippets.SnippetFileMetadata.t) => {
+             Actions.{
+               category: Fp.baseName(snippetFile.filePath),
+               name: snippetFile.language |> Option.value(~default="(global)"),
+               command: () =>
+                 Snippets(
+                   Feature_Snippets.Msg.insert(~snippet="abc"),
+                 ),
+               icon: None,
+               highlight: [],
+               handle: None,
+             }
+           })
+        |> Array.of_list;
+
+      (
+        Some({...Quickmenu.defaults(SnippetFilePicker(snippetFiles)), items}),
+        Isolinear.Effect.none,
+      );
+
     | QuickmenuShow(OpenBuffersPicker) =>
       let items =
         makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
@@ -638,6 +661,7 @@ let subscriptions = (ripgrep, dispatch) => {
       | OpenBuffersPicker => [filter(query, quickmenu.items)]
       | ThemesPicker(_) => [filter(query, quickmenu.items)]
       | SnippetPicker(_) => [filter(query, quickmenu.items)]
+      | SnippetFilePicker(_) => [filter(query, quickmenu.items)]
 
       | Extension({hasItems, _}) =>
         hasItems ? [filter(query, quickmenu.items)] : []

@@ -381,6 +381,7 @@ type outmsg =
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
   | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
+  | ShowFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
   | Nothing;
 
 module Effects = {
@@ -600,8 +601,7 @@ let update =
     (model, eff);
 
   | Command(EditUserSnippets) =>
-    // TODO
-    failwith("Not implemented yet")
+    (model, ShowFilePicker([]))
 
   | SnippetsLoadedForPicker(snippetsWithMetadata) => (
       model,

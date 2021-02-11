@@ -1756,6 +1756,15 @@ let update =
              );
         (layout', Isolinear.Effect.none);
 
+      | ShowFilePicker(snippetFiles) =>
+        let eff =
+          Isolinear.Effect.createWithDispatch(~name="snippet.fileMenu", dispatch => {
+            dispatch(
+              Actions.QuickmenuShow(SnippetFilePicker(snippetFiles)),
+            )
+          });
+        (state.layout, eff);
+
       | ShowPicker(snippetsWithMetadata) =>
         let eff =
           Isolinear.Effect.createWithDispatch(~name="snippet.menu", dispatch => {
