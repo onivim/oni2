@@ -95,7 +95,7 @@ module Cache = {
 };
 
 module Internal = {
-  let loadSnippetsFromFiles = (~filePaths, dispatch) => {
+  let loadSnippetsFromFiles = (~filePaths, ~fileType as _, dispatch) => {
     // Load all files
     // Coalesce all promises
     let promises = filePaths |> List.map(Fp.toString) |> List.map(Cache.get);
@@ -145,10 +145,10 @@ module Internal = {
 };
 
 module Effect = {
-  let snippetFromFiles = (~filePaths, toMsg) =>
+  let snippetFromFiles = (~fileType, ~filePaths, toMsg) =>
     Isolinear.Effect.createWithDispatch(
       ~name="Service_Snippets.Effect.snippetFromFiles", dispatch => {
-      Internal.loadSnippetsFromFiles(~filePaths, snippets =>
+      Internal.loadSnippetsFromFiles(~filePaths, ~fileType, snippets =>
         dispatch(toMsg(snippets))
       )
     });
@@ -163,6 +163,7 @@ module Sub = {
   type snippetFileParams = {
     uniqueId: string,
     filePaths: list(Fp.t(Fp.absolute)),
+    fileType: string,
   };
   module SnippetFileSubscription =
     Isolinear.Sub.Make({
@@ -175,7 +176,11 @@ module Sub = {
       let id = ({uniqueId, _}) => uniqueId;
 
       let init = (~params, ~dispatch) => {
-        Internal.loadSnippetsFromFiles(~filePaths=params.filePaths, dispatch);
+        Internal.loadSnippetsFromFiles(
+          ~fileType=params.fileType,
+          ~filePaths=params.filePaths,
+          dispatch,
+        );
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
@@ -184,8 +189,8 @@ module Sub = {
         ();
       };
     });
-  let snippetFromFiles = (~uniqueId, ~filePaths, toMsg) => {
-    SnippetFileSubscription.create({uniqueId, filePaths})
+  let snippetFromFiles = (~uniqueId, ~fileType, ~filePaths, toMsg) => {
+    SnippetFileSubscription.create({uniqueId, filePaths, fileType})
     |> Isolinear.Sub.map(toMsg);
   };
 };

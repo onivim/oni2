@@ -283,6 +283,7 @@ type snippetModel = {
   items: list(CompletionItem.t),
   isComplete: bool,
   filePaths: list(Fp.t(Fp.absolute)),
+  fileType: string,
   sortOrder: [ | `Top | `Inline | `Bottom | `Hidden],
 };
 [@deriving show]
@@ -331,6 +332,7 @@ module SnippetCompletionProvider =
 
       Some({
         filePaths: snippetFilePaths,
+        fileType,
         items: [],
         isComplete: false,
         sortOrder,
@@ -364,7 +366,12 @@ module SnippetCompletionProvider =
     let uniqueId = "Feature_LanguageSupport.SnippetCompletionProvider";
 
     let toMsg = snippets => SnippetsAvailable(snippets);
-    Service_Snippets.Sub.snippetFromFiles(~uniqueId, ~filePaths, toMsg);
+    Service_Snippets.Sub.snippetFromFiles(
+      ~uniqueId,
+      ~fileType=model.fileType,
+      ~filePaths,
+      toMsg,
+    );
   };
 };
 

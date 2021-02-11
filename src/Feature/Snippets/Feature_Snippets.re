@@ -621,7 +621,8 @@ let update =
              let filePaths =
                Feature_Extensions.snippetFilePaths(~fileType, extensions);
              Effect(
-               Service_Snippets.Effect.snippetFromFiles(~filePaths, snippets =>
+               Service_Snippets.Effect.snippetFromFiles(
+                 ~filePaths, ~fileType, snippets =>
                  SnippetsLoadedForPicker(snippets)
                ),
              );

@@ -24,6 +24,7 @@ module SnippetFileMetadata: {
 module Effect: {
   let snippetFromFiles:
     (
+      ~fileType: string,
       ~filePaths: list(Fp.t(Fp.absolute)),
       list(SnippetWithMetadata.t) => 'msg
     ) =>
@@ -41,6 +42,7 @@ module Sub: {
   let snippetFromFiles:
     (
       ~uniqueId: string,
+      ~fileType: string,
       ~filePaths: list(Fp.t(Fp.absolute)),
       list(SnippetWithMetadata.t) => 'msg
     ) =>
