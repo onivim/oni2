@@ -1184,12 +1184,19 @@ let update =
           extHostClient,
         );
 
+      let clearSnippetCacheEffect = 
+      buffer
+      |> Buffer.getFilePath
+      |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
+      |> Option.map(filePath => Service_Snippets.Effect.clearCachedSnippets(~filePath))
+      |> Option.value(~default=Isolinear.Effect.none);
+
       let modelSavedEff =
         Service_Exthost.Effects.Documents.modelSaved(
           ~uri=Buffer.getUri(buffer), extHostClient, () =>
           Noop
         );
-      (state, Isolinear.Effect.batch([eff, modelSavedEff]));
+      (state, Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]));
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
       let fileType =

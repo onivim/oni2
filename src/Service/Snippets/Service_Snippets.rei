@@ -23,6 +23,8 @@ module SnippetFileMetadata: {
 };
 
 module Effect: {
+  let clearCachedSnippets: (~filePath: Fp.t(Fp.absolute)) => Isolinear.Effect.t(_);
+
   let snippetFromFiles:
     (
       ~fileType: string,

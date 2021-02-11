@@ -106,6 +106,10 @@ module Cache = {
   let fileToPromise: Hashtbl.t(string, Lwt.t(list(SnippetWithMetadata.t))) =
     Hashtbl.create(16);
 
+  let clear = (filePath: string) => {
+      Hashtbl.remove(fileToPromise, filePath);
+  };
+
   let get = (filePath: string) => {
     switch (Hashtbl.find_opt(fileToPromise, filePath)) {
     | Some(promise) =>
@@ -195,6 +199,13 @@ module Internal = {
 };
 
 module Effect = {
+  let clearCachedSnippets = (~filePath) => {
+    Isolinear.Effect.create(
+      ~name="Service_Snippets.clearCachedSnippets",
+      () => {
+        Cache.clear(Fp.toString(filePath));
+      });
+  };
   let snippetFromFiles = (~fileType, ~filePaths, toMsg) =>
     Isolinear.Effect.createWithDispatch(
       ~name="Service_Snippets.Effect.snippetFromFiles", dispatch => {
