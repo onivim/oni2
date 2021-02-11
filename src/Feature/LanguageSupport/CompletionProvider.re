@@ -331,12 +331,7 @@ module SnippetCompletionProvider =
     ignore(location);
 
     let sortOrder = CompletionConfig.snippetSuggestions.get(config);
-    if (!
-          Feature_Configuration.GlobalConfiguration.Experimental.Snippets.enabled.
-            get(
-            config,
-          )
-        || sortOrder == `Hidden) {
+    if (sortOrder == `Hidden) {
       None;
     } else {
       let fileType = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
