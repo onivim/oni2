@@ -34,6 +34,7 @@
 - #3121 - Snippets: Add support for the $TM_SELECTED_TEXT snippet variable
 - #3122 - Signature Help: Close signature help when traversing snippet placeholders
 - #3123 - Extensions: Fix failure to install extensions over 10MB from open-vsx
+- #3054 - Extensions: Completion - Implement 'isIncomplete' handler (fixes #3022, #2359)
 
 ### Performance
 

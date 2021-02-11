@@ -2,6 +2,10 @@ open Oni_Core;
 open Utility;
 open EditorCoreTypes;
 
+type completionState =
+  | Complete
+  | Incomplete;
+
 module type S = {
   type msg;
   type model;
@@ -24,13 +28,14 @@ module type S = {
     ) =>
     option(model);
 
-  let items: model => list(CompletionItem.t);
+  let items: model => (completionState, list(CompletionItem.t));
 
   let handle: unit => option(int);
 
   let sub:
     (
       ~client: Exthost.Client.t,
+      ~context: Exthost.CompletionContext.t,
       ~position: CharacterPosition.t,
       ~buffer: Oni_Core.Buffer.t,
       ~selectedItem: option(CompletionItem.t),
@@ -42,7 +47,11 @@ module type S = {
 type provider('model, 'msg) = (module S with
                                   type model = 'model and type msg = 'msg);
 
-type exthostModel = list(CompletionItem.t);
+type exthostModel = {
+  isComplete: bool,
+  completions: list(CompletionItem.t),
+};
+
 [@deriving show]
 type exthostMsg =
   | ResultAvailable({
@@ -94,24 +103,24 @@ module ExthostCompletionProvider =
     if (!Exthost.DocumentSelector.matchesBuffer(~buffer, Config.selector)) {
       None;
     } else {
-      Some([]);
+      Some({completions: [], isComplete: true});
     };
 
   let handle = () => Some(providerHandle);
 
   let update = (~isFuzzyMatching, msg, model) =>
     switch (msg) {
-    // TODO: Handle incomplete result
     | ResultAvailable({handle, result}) when handle == providerHandle =>
+      let isComplete = !result.isIncomplete;
       let completions =
         Exthost.SuggestResult.(result.completions)
         |> List.map(
              CompletionItem.create(~isFuzzyMatching, ~handle=providerHandle),
            );
-      (completions, Nothing);
+      ({isComplete, completions}, Nothing);
     | DetailsAvailable({handle, item}) when handle == providerHandle =>
-      let model' =
-        model
+      let completions' =
+        model.completions
         |> List.map((previousItem: CompletionItem.t) =>
              if (previousItem.chainedCacheId == item.chainedCacheId) {
                CompletionItem.create(
@@ -123,7 +132,7 @@ module ExthostCompletionProvider =
                previousItem;
              }
            );
-      (model', Nothing);
+      ({...model, completions: completions'}, Nothing);
     | DetailsError({handle, errorMsg}) when handle == providerHandle => (
         model,
         ProviderError(errorMsg),
@@ -135,11 +144,15 @@ module ExthostCompletionProvider =
     | _ => (model, Nothing)
     };
 
-  let items = model => model;
+  let items = ({isComplete, completions}) => (
+    isComplete ? Complete : Incomplete,
+    completions,
+  );
 
   let sub =
       (
         ~client,
+        ~context,
         ~position,
         ~buffer,
         ~selectedItem: option(CompletionItem.t),
@@ -147,12 +160,7 @@ module ExthostCompletionProvider =
       ) => {
     let itemsSub =
       Service_Exthost.Sub.completionItems(
-        // TODO: proper trigger kind
-        ~context=
-          Exthost.CompletionContext.{
-            triggerKind: Invoke,
-            triggerCharacter: None,
-          },
+        ~context,
         ~handle=providerHandle,
         ~buffer,
         ~position,
@@ -268,10 +276,17 @@ module KeywordCompletionProvider =
     Nothing,
   );
 
-  let items = model => model;
+  let items = model => (Complete, model);
 
   let sub =
-      (~client as _, ~position as _, ~buffer as _, ~selectedItem as _, _model) => Isolinear.Sub.none;
+      (
+        ~client as _,
+        ~context as _,
+        ~position as _,
+        ~buffer as _,
+        ~selectedItem as _,
+        _model,
+      ) => Isolinear.Sub.none;
 };
 
 let keyword: provider(keywordModel, keywordMsg) = {
@@ -356,10 +371,20 @@ module SnippetCompletionProvider =
     );
   };
 
-  let items = ({items, _}: model) => items;
+  let items = ({items, isComplete, _}: model) => (
+    isComplete ? Complete : Incomplete,
+    items,
+  );
 
   let sub =
-      (~client as _, ~position as _, ~buffer as _, ~selectedItem as _, model) => {
+      (
+        ~client as _,
+        ~context as _,
+        ~position as _,
+        ~buffer as _,
+        ~selectedItem as _,
+        model,
+      ) => {
     let filePaths = model.filePaths;
     let uniqueId = "Feature_LanguageSupport.SnippetCompletionProvider";
 
