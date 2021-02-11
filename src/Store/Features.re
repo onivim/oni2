@@ -590,7 +590,7 @@ let update =
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
-      | InsertSnippet({meetColumn, snippet, additionalEdits}) =>
+      | InsertSnippet({meetColumn, snippet, _}) =>
         let editor = Feature_Layout.activeEditor(state.layout);
         let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
         let characterPosition =
