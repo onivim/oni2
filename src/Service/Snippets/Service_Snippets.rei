@@ -23,7 +23,15 @@ module SnippetFileMetadata: {
 };
 
 module Effect: {
-  let clearCachedSnippets: (~filePath: Fp.t(Fp.absolute)) => Isolinear.Effect.t(_);
+  let createSnippetFile:
+    (
+      ~filePath: Fp.t(Fp.absolute),
+      result(Fp.t(Fp.absolute), string) => 'msg
+    ) =>
+    Isolinear.Effect.t('msg);
+
+  let clearCachedSnippets:
+    (~filePath: Fp.t(Fp.absolute)) => Isolinear.Effect.t(_);
 
   let snippetFromFiles:
     (

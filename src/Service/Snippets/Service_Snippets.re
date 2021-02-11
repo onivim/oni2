@@ -107,7 +107,7 @@ module Cache = {
     Hashtbl.create(16);
 
   let clear = (filePath: string) => {
-      Hashtbl.remove(fileToPromise, filePath);
+    Hashtbl.remove(fileToPromise, filePath);
   };
 
   let get = (filePath: string) => {
@@ -140,7 +140,6 @@ module Cache = {
 };
 
 module Internal = {
-
   let join = (a, b) => a @ b;
 
   let loadSnippetsFromFolder = (~fileType, folder) => {
@@ -199,12 +198,32 @@ module Internal = {
 };
 
 module Effect = {
+  let createSnippetFile = (~filePath, toMsg) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Service_Snippets.createSnippetFile", dispatch => {
+      let filePathString = Fp.toString(filePath);
+      let statPromise = Service_OS.Api.stat(filePathString);
+      Lwt.on_any(
+        statPromise,
+        (stat: Luv.File.Stat.t) => {dispatch(toMsg(Ok(filePath)))},
+        exn => {
+          // File not created yet, let's create it
+          let contents = "Hello, world" |> Bytes.of_string;
+          let writePromise =
+            Service_OS.Api.writeFile(~contents, filePathString);
+          Lwt.on_any(
+            writePromise,
+            () => {dispatch(toMsg(Ok(filePath)))},
+            exn => {dispatch(toMsg(Error(Printexc.to_string(exn))))},
+          );
+        },
+      );
+    });
+  };
   let clearCachedSnippets = (~filePath) => {
-    Isolinear.Effect.create(
-      ~name="Service_Snippets.clearCachedSnippets",
-      () => {
-        Cache.clear(Fp.toString(filePath));
-      });
+    Isolinear.Effect.create(~name="Service_Snippets.clearCachedSnippets", () => {
+      Cache.clear(Fp.toString(filePath))
+    });
   };
   let snippetFromFiles = (~fileType, ~filePaths, toMsg) =>
     Isolinear.Effect.createWithDispatch(

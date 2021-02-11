@@ -344,10 +344,18 @@ type msg =
   | SnippetInserted([@opaque] Session.t)
   | SnippetInsertionError(string)
   | SnippetsLoadedForPicker(list(Service_Snippets.SnippetWithMetadata.t))
-  | InsertInternal({snippetString: string});
+  | InsertInternal({snippetString: string})
+  | EditSnippetFileRequested({
+      snippetFile: Service_Snippets.SnippetFileMetadata.t,
+    })
+  | SnippetFileCreatedSuccessfully([@opaque] Fp.t(Fp.absolute))
+  | SnippetFileCreationError(string);
 
 module Msg = {
   let insert = (~snippet) => InsertInternal({snippetString: snippet});
+
+  let editSnippetFile = (~snippetFile: Service_Snippets.SnippetFileMetadata.t) =>
+    EditSnippetFileRequested({snippetFile: snippetFile});
 };
 
 type model = {maybeSession: option(Session.t)};
@@ -600,8 +608,23 @@ let update =
       |> Option.value(~default=Nothing);
     (model, eff);
 
-  | Command(EditUserSnippets) =>
-    (model, ShowFilePicker([]))
+  | Command(EditUserSnippets) => (model, ShowFilePicker([]))
+
+  | EditSnippetFileRequested({snippetFile}) =>
+    let eff =
+      Service_Snippets.Effect.createSnippetFile(
+        ~filePath=snippetFile.filePath,
+        fun
+        | Ok(filePath) => SnippetFileCreatedSuccessfully(filePath)
+        | Error(msg) => SnippetFileCreationError(msg),
+      );
+    (model, Effect(eff));
+
+  | SnippetFileCreatedSuccessfully(_) =>
+    // TODO
+    failwith("Not yet implemented")
+
+  | SnippetFileCreationError(msg) => (model, ErrorMessage(msg))
 
   | SnippetsLoadedForPicker(snippetsWithMetadata) => (
       model,

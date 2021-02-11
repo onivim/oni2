@@ -277,11 +277,10 @@ let start = () => {
         |> List.map((snippetFile: Service_Snippets.SnippetFileMetadata.t) => {
              Actions.{
                category: Fp.baseName(snippetFile.filePath),
-               name: snippetFile.language |> Option.value(~default="(global)"),
+               name:
+                 snippetFile.language |> Option.value(~default="(global)"),
                command: () =>
-                 Snippets(
-                   Feature_Snippets.Msg.insert(~snippet="abc"),
-                 ),
+                 Snippets(Feature_Snippets.Msg.insert(~snippet="abc")),
                icon: None,
                highlight: [],
                handle: None,
@@ -290,7 +289,10 @@ let start = () => {
         |> Array.of_list;
 
       (
-        Some({...Quickmenu.defaults(SnippetFilePicker(snippetFiles)), items}),
+        Some({
+          ...Quickmenu.defaults(SnippetFilePicker(snippetFiles)),
+          items,
+        }),
         Isolinear.Effect.none,
       );
 
