@@ -30,7 +30,7 @@ let draw =
     Skia.Paint.setColor(snippetPaint, color |> Revery.Color.toSkia);
     Skia.Paint.setAlpha(
       snippetPaint,
-      0.175 *. (color |> Revery.Color.getAlpha),
+      0.07 *. (color |> Revery.Color.getAlpha),
     );
     let width = float(context.width);
     let height = float(context.height);
