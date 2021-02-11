@@ -1,7 +1,7 @@
 ### Features 
 
 - #3024 - Snippet Support - Multi-select handler
-- #3047, #3052, #3056, #3059, #3061, #3064 - Snippets: Core Feature Work
+- #3047, #3052, #3056, #3059, #3061, #3064, #3105 - Snippets: Core Feature Work
 - #3067 - Snippets: Integrate snippets provided by extensions
 - #3090 - Snippets: Add insert snippet command
 - #3105 - Snippets: Implement configuration setting
@@ -34,6 +34,7 @@
 - #3121 - Snippets: Add support for the $TM_SELECTED_TEXT snippet variable
 - #3122 - Signature Help: Close signature help when traversing snippet placeholders
 - #3123 - Extensions: Fix failure to install extensions over 10MB from open-vsx
+- #3054 - Extensions: Completion - Implement 'isIncomplete' handler (fixes #3022, #2359)
 - #3129 - Snippets: Replace visual/select range on insert
 
 ### Performance

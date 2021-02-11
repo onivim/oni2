@@ -591,44 +591,25 @@ let update =
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
       | InsertSnippet({meetColumn, snippet, additionalEdits}) =>
-        if (!
-              Feature_Configuration.GlobalConfiguration.Experimental.Snippets.enabled.
-                get(
-                config,
-              )) {
-          let additionalEdits =
-            additionalEdits |> List.map(exthostEditToVimEdit);
-          let insertText = Feature_Snippets.snippetToInsert(~snippet);
-          (
-            state,
-            Feature_Vim.Effects.applyCompletion(
-              ~additionalEdits,
-              ~meetColumn,
-              ~insertText,
-            )
-            |> Isolinear.Effect.map(msg => Vim(msg)),
+        let editor = Feature_Layout.activeEditor(state.layout);
+        let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
+        let characterPosition =
+          CharacterPosition.{line: cursor.line, character: meetColumn};
+        let rangeToReplace =
+          CharacterRange.{start: characterPosition, stop: cursor};
+        let maybeReplaceRange =
+          Feature_Editor.Editor.characterRangeToByteRange(
+            rangeToReplace,
+            editor,
           );
-        } else {
-          let editor = Feature_Layout.activeEditor(state.layout);
-          let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
-          let characterPosition =
-            CharacterPosition.{line: cursor.line, character: meetColumn};
-          let rangeToReplace =
-            CharacterRange.{start: characterPosition, stop: cursor};
-          let maybeReplaceRange =
-            Feature_Editor.Editor.characterRangeToByteRange(
-              rangeToReplace,
-              editor,
-            );
-          (
-            state,
-            Feature_Snippets.Effects.insertSnippet(
-              ~replaceRange=maybeReplaceRange,
-              ~snippet,
-            )
-            |> Isolinear.Effect.map(msg => Snippets(msg)),
-          );
-        }
+        (
+          state,
+          Feature_Snippets.Effects.insertSnippet(
+            ~replaceRange=maybeReplaceRange,
+            ~snippet,
+          )
+          |> Isolinear.Effect.map(msg => Snippets(msg)),
+        );
       | OpenFile({filePath, location}) => (
           state,
           Internal.openFileEffect(~position=location, filePath),
