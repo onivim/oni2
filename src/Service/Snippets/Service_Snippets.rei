@@ -29,10 +29,12 @@ module Effect: {
     ) =>
     Isolinear.Effect.t('msg);
 
-  let getUserSnippetFiles: (
-    ~languageInfo: Exthost.LanguageInfo.t,
-    list(SnippetFileMetadata.t) => 'msg
-  ) => Isolinear.Effect.t('msg);
+  let getUserSnippetFiles:
+    (
+      ~languageInfo: Exthost.LanguageInfo.t,
+      list(SnippetFileMetadata.t) => 'msg
+    ) =>
+    Isolinear.Effect.t('msg);
 };
 
 module Sub: {

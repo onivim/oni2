@@ -99,9 +99,30 @@ module Internal = {
     // Load all files
     // Coalesce all promises
     let promises = filePaths |> List.map(Fp.toString) |> List.map(Cache.get);
-
     let join = (a, b) => a @ b;
-    let promise = LwtEx.some(~default=[], join, promises);
+
+    let userPromise: Lwt.t(list(SnippetWithMetadata.t)) =
+      Filesystem.getSnippetsFolder()
+      |> Result.map(snippetDirectory => {
+           snippetDirectory
+           |> Fp.toString
+           |> Service_OS.Api.readdir
+           |> LwtEx.flatMap(dirents => {
+                prerr_endline("HERE");
+                dirents
+                |> List.map((dirent: Luv.File.Dirent.t) =>
+                     Fp.At.(snippetDirectory / dirent.name)
+                   )
+                |> List.map((dir: Fp.t(Fp.absolute)) => {
+                     let str = Fp.toString(dir);
+                     prerr_endline(str);
+                     Cache.get(str);
+                   })
+                |> LwtEx.some(~default=[], join);
+              })
+         })
+      |> ResultEx.value(~default=Lwt.return([]));
+    let promise = LwtEx.some(~default=[], join, [userPromise, ...promises]);
 
     Lwt.on_success(
       promise,
@@ -134,8 +155,8 @@ module Effect = {
 
   let getUserSnippetFiles = (~languageInfo as _, _) => {
     // TODO
-    Isolinear.Effect.none
-  }
+    Isolinear.Effect.none;
+  };
 };
 
 module Sub = {

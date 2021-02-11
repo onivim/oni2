@@ -630,9 +630,9 @@ let update =
       |> Option.value(~default=Nothing);
     (model, eff);
 
-  | Command(EditUserSnippets) => 
-  // TODO
-  failwith ("Not implemented yet");
+  | Command(EditUserSnippets) =>
+    // TODO
+    failwith("Not implemented yet")
 
   | SnippetsLoadedForPicker(snippetsWithMetadata) => (
       model,
@@ -662,7 +662,6 @@ let update =
       |> Option.value(~default=Nothing);
 
     (model, eff);
-
   };
 
 module Commands = {
@@ -744,7 +743,12 @@ module ContextKeys = {
 
 module Contributions = {
   let commands =
-    Commands.[nextPlaceholder, previousPlaceholder, insertSnippet, editUserSnippets];
+    Commands.[
+      nextPlaceholder,
+      previousPlaceholder,
+      insertSnippet,
+      editUserSnippets,
+    ];
 
   let contextKeys = model => {
     WhenExpr.ContextKeys.(

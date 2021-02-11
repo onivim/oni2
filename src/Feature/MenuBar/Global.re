@@ -40,13 +40,22 @@ module Items = {
         item(~title="Change Theme", ~command="workbench.action.selectTheme");
 
       let userSnippets =
-        item(~title="Configure user snippets", ~command="workbench.action.openSnippets");
+        item(
+          ~title="Configure user snippets",
+          ~command="workbench.action.openSnippets",
+        );
 
       let submenu =
         submenu(
           ~title="Preferences",
-          [group(~order=1, ~parent=file, [configuration, keybindings, selectTheme]),
-          group(~order=2, ~parent=file, [userSnippets])]
+          [
+            group(
+              ~order=1,
+              ~parent=file,
+              [configuration, keybindings, selectTheme],
+            ),
+            group(~order=2, ~parent=file, [userSnippets]),
+          ],
         );
     };
   };
