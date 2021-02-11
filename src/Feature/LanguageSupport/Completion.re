@@ -551,26 +551,49 @@ let recomputeAllItems = (~snippetSortOrder, providers: list(Session.t)) => {
   |> List.fold_left(
        (acc, session) => {
          let itemMap = session |> Session.filteredItems;
+
          // When we have the same key coming from different providers, need to decide between them
-         StringMap.union(
+         StringMap.merge(
            (
              _key,
-             (locA, itemA: Filter.result(CompletionItem.t)),
-             (locB, itemB: Filter.result(CompletionItem.t)),
+             maybeA:
+               option(
+                 (CharacterPosition.t, Filter.result(CompletionItem.t)),
+               ),
+             maybeB:
+               option(
+                 list(
+                   (CharacterPosition.t, Filter.result(CompletionItem.t)),
+                 ),
+               ),
            ) =>
-             if (CompletionItem.prefer(itemA.item, itemB.item) < 0) {
-               Some((locA, itemA));
-             } else {
-               Some((locB, itemB));
+             switch (maybeA, maybeB) {
+             | (None, None) => None
+             | (Some(a), None) => Some([a])
+             | (None, Some(_) as b) => b
+             | (Some(a), Some(b)) => Some([a, ...b])
              },
-           acc,
            itemMap,
+           acc,
          );
        },
        StringMap.empty,
      )
+  |> StringMap.map(items => {
+       switch (items) {
+       // If one or zero items, just keep as-is
+       | [] => []
+       | [item] => [item]
+       // If multiple - remove keywords
+       | items =>
+         items
+         |> List.filter(item =>
+              !(Filter.(snd(item).item) |> CompletionItem.isKeyword)
+            )
+       }
+     })
   |> StringMap.bindings
-  |> List.map(snd)
+  |> List.concat_map(snd)
   |> List.fast_sort(((_loc, a), (_loc, b)) =>
        CompletionItemSorter.compare(~snippetSortOrder, a, b)
      )
