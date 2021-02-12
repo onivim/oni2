@@ -98,6 +98,8 @@ module Session = {
         Session({...session, state: state'});
       };
 
+  let cancel = complete([]);
+
   let start =
     fun
     | Session(session) => Session({...session, state: NotStarted});
@@ -643,6 +645,13 @@ let startInsertMode = model => {
 
 let stopInsertMode = model => {
   {...model, isInsertMode: false} |> reset;
+};
+
+let cancel = model => {
+  ...model,
+  providers: model.providers |> List.map(Session.cancel),
+  allItems: [||],
+  selection: None,
 };
 
 // There are some bugs with completion in snippet mode -
