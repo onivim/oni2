@@ -4,23 +4,67 @@ type model;
 
 let initial: model;
 
-let mode: model => Vim.Mode.t;
+let recordingMacro: model => option(char);
+
+let subMode: model => Vim.SubMode.t;
 
 // MSG
 
 [@deriving show]
 type msg =
-  | ModeChanged([@opaque] Vim.Mode.t)
-  | PasteCompleted({cursors: [@opaque] list(Vim.Cursor.t)})
-  | Pasted(string);
+  | ModeChanged({
+      allowAnimation: bool,
+      mode: [@opaque] Vim.Mode.t,
+      subMode: [@opaque] Vim.SubMode.t,
+      effects: list(Vim.Effect.t),
+    })
+  | PasteCompleted({mode: [@opaque] Vim.Mode.t})
+  | Pasted(string)
+  | SettingChanged(Vim.Setting.t)
+  | MacroRecordingStarted({register: char})
+  | MacroRecordingStopped
+  | Output({
+      cmd: string,
+      output: option(string),
+    });
 
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | CursorsUpdated(list(Vim.Cursor.t));
+  | SettingsChanged
+  | ModeDidChange({
+      allowAnimation: bool,
+      mode: Vim.Mode.t,
+      effects: list(Vim.Effect.t),
+    })
+  | Output({
+      cmd: string,
+      output: option(string),
+    });
 
 // UPDATE
 
 let update: (msg, model) => (model, outmsg);
 
 module CommandLine: {let getCompletionMeet: string => option(int);};
+
+module Effects: {
+  let applyCompletion:
+    (
+      ~meetColumn: EditorCoreTypes.CharacterIndex.t,
+      ~insertText: string,
+      ~additionalEdits: list(Vim.Edit.t)
+    ) =>
+    Isolinear.Effect.t(msg);
+};
+
+// CONFIGURATION
+
+module Configuration: {
+  type resolver = string => option(Vim.Setting.value);
+
+  let resolver: model => resolver;
+};
+
+module Contributions: {let keybindings: list(Feature_Input.Schema.keybinding);
+};

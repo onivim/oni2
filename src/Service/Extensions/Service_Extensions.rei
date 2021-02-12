@@ -2,6 +2,7 @@ open Oni_Core;
 
 module Catalog: {
   module Identifier: {
+    [@deriving show]
     type t = {
       publisher: string,
       name: string,
@@ -12,31 +13,41 @@ module Catalog: {
   };
 
   module VersionInfo: {
+    [@deriving show]
     type t = {
-      version: string,
+      version: Semver.t,
       url: string,
     };
   };
 
   module Details: {
+    [@deriving show]
     type t = {
       downloadUrl: string,
-      repositoryUrl: string,
+      repositoryUrl: option(string),
       homepageUrl: string,
       manifestUrl: string,
       iconUrl: option(string),
-      readmeUrl: string,
+      readmeUrl: option(string),
       licenseName: option(string),
       //      licenseUrl: string,
       name: string,
       namespace: string,
+      isPublicNamespace: bool,
       //      downloadCount: int,
       displayName: option(string),
-      description: string,
+      description: option(string),
       //      categories: list(string),
-      version: string,
+      version: option(Semver.t),
       versions: list(VersionInfo.t),
+      downloadCount: option(int),
+      averageRating: option(float),
+      reviewCount: option(int),
     };
+
+    let downloadCount: t => int;
+    let averageRating: t => float;
+    let reviewCount: t => int;
 
     let toString: t => string;
   };
@@ -47,11 +58,11 @@ module Catalog: {
       url: string,
       downloadUrl: string,
       iconUrl: option(string),
-      version: string,
+      version: option(Semver.t),
       name: string,
       namespace: string,
       displayName: option(string),
-      description: string,
+      description: option(string),
     };
 
     let name: t => string;
@@ -78,12 +89,14 @@ module Catalog: {
 
 module Management: {
   let install:
-    (~setup: Setup.t, ~extensionsFolder: string=?, string) => Lwt.t(unit);
+    (~setup: Setup.t, ~extensionsFolder: Fp.t(Fp.absolute)=?, string) =>
+    Lwt.t(unit);
 
-  let uninstall: (~extensionsFolder: string=?, string) => Lwt.t(unit);
+  let uninstall:
+    (~extensionsFolder: Fp.t(Fp.absolute)=?, string) => Lwt.t(unit);
 
   let get:
-    (~extensionsFolder: string=?, unit) =>
+    (~extensionsFolder: Fp.t(Fp.absolute)=?, unit) =>
     Lwt.t(list(Exthost.Extension.Scanner.ScanResult.t));
 };
 
@@ -101,7 +114,7 @@ module Query: {
 module Effects: {
   let uninstall:
     (
-      ~extensionsFolder: option(string),
+      ~extensionsFolder: option(Fp.t(Fp.absolute)),
       ~toMsg: result(unit, string) => 'a,
       string
     ) =>
@@ -109,19 +122,35 @@ module Effects: {
 
   let install:
     (
-      ~extensionsFolder: option(string),
+      ~extensionsFolder: option(Fp.t(Fp.absolute)),
       ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'a,
       string
     ) =>
+    Isolinear.Effect.t('a);
+
+  let update:
+    (
+      ~extensionsFolder: option(Fp.t(Fp.absolute)),
+      ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'msg,
+      string
+    ) =>
+    Isolinear.Effect.t('msg);
+
+  let details:
+    (~extensionId: string, ~toMsg: result(Catalog.Details.t, string) => 'a) =>
     Isolinear.Effect.t('a);
 };
 
 module Sub: {
   let search:
+    (~setup: Setup.t, ~query: Query.t, ~toMsg: result(Query.t, exn) => 'a) =>
+    Isolinear.Sub.t('a);
+
+  let details:
     (
       ~setup: Setup.t,
-      ~query: Query.t,
-      ~toMsg: result(Query.t, string) => 'a
+      ~extensionId: string,
+      ~toMsg: result(Catalog.Details.t, string) => 'a
     ) =>
     Isolinear.Sub.t('a);
 };

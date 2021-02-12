@@ -4,8 +4,8 @@ steps:
   - task: NodeTool@0
     inputs:
       versionSpec: "12.17.0"
-  - script: npm install -g esy@0.6.6
-    displayName: 'npm install -g esy@0.6.6'
+  - script: npm install -g esy@0.6.7
+    displayName: 'npm install -g esy@0.6.7'
   - script: npm install -g yarn
     displayName: 'npm install -g yarn'
   - script: npm install -g prettier
@@ -40,6 +40,8 @@ steps:
     displayName: esy format
   - script: git diff --exit-code
     displayName: 'check that formatting is correct. If this fails, run `esy format` and re-submit PR.'
+  - script: esy lint
+    displayName: esy lint
   - script: yarn audit
     workingDirectory: node
     displayName: 'yarn audit: node'

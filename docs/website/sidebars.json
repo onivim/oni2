@@ -4,6 +4,8 @@
       "getting-started/why-onivim",
       "getting-started/installation",
       "getting-started/vim-differences",
+      "getting-started/vim-tips",
+      "getting-started/vscode-tips",
       "getting-started/modal-editing-101"
     ],
     "Basic Usage": [
@@ -25,13 +27,16 @@
       "languages/python",
       "languages/go",
       "languages/java",
-      "languages/c"
+      "languages/c",
+      "languages/c-sharp",
+      "languages/rust"
     ],
     "For Developers": [
       "for-developers/architecture",
       "for-developers/building",
       "for-developers/contributing",
-      "for-developers/style-guide"
+      "for-developers/style-guide",
+      "for-developers/free-license"
     ],
     "Other": [
       "other/faq",

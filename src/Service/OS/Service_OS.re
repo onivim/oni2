@@ -44,13 +44,17 @@ module Api = {
   };
 
   let readdir = path => {
+    Log.infof(m => m("readdir called for: %s", path));
     path
     |> Internal.opendir
     |> bind(dir => {
          Internal.readdir(dir) |> Lwt.map(items => (dir, items))
        })
     |> bind(((dir, results: array(Luv.File.Dirent.t))) => {
-         Internal.closedir(dir) |> Lwt.map(() => results |> Array.to_list)
+         Log.infof(m =>
+           m("readdir returned %d items", Array.length(results))
+         );
+         Internal.closedir(dir) |> Lwt.map(() => results |> Array.to_list);
        });
   };
 
@@ -241,6 +245,8 @@ module Api = {
     };
 };
 
+// EFFECTS
+
 module Effect = {
   let openURL = url =>
     Isolinear.Effect.create(~name="os.openurl", () =>
@@ -259,4 +265,71 @@ module Effect = {
         paths,
       )
     );
+
+  module Dialog = {
+    let openFolder = (~initialDirectory=?, toMsg) => {
+      Isolinear.Effect.createWithDispatch(
+        ~name="os.dialog.openFolder", dispatch => {
+        let maybeFolders =
+          Revery_Native.Dialog.openFiles(
+            ~startDirectory=?initialDirectory,
+            ~canChooseDirectories=true,
+            ~canChooseFiles=false,
+            ~title="Open Folder",
+            (),
+          );
+
+        let selectedFolders = maybeFolders |> Option.value(~default=[||]);
+
+        if (Array.length(selectedFolders) > 0) {
+          selectedFolders[0] |> Fp.absoluteCurrentPlatform |> toMsg |> dispatch;
+        } else {
+          None |> toMsg |> dispatch;
+        };
+      });
+    };
+  };
+};
+
+// SUBSCRIPTIONS
+
+module Sub = {
+  type dirParams = {
+    id: string,
+    cwd: string,
+  };
+  module DirSub =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(list(Luv.File.Dirent.t), string);
+
+      type nonrec params = dirParams;
+
+      type state = unit;
+
+      let name = "Service_OS.Sub.dir";
+      let id = ({id, cwd}) => id ++ cwd;
+
+      let init = (~params, ~dispatch) => {
+        let promise = Api.readdir(params.cwd);
+
+        Lwt.on_success(promise, dirItems => dispatch(Ok(dirItems)));
+
+        Lwt.on_failure(promise, exn =>
+          dispatch(Error(Printexc.to_string(exn)))
+        );
+
+        ();
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => {
+        state;
+      };
+
+      let dispose = (~params as _, ~state as _) => {
+        ();
+      };
+    });
+  let dir = (~uniqueId, ~toMsg, path) => {
+    DirSub.create({id: uniqueId, cwd: path}) |> Isolinear.Sub.map(toMsg);
+  };
 };

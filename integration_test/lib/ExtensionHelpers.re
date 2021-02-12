@@ -7,7 +7,6 @@ module Log = (val Core.Log.withNamespace("IntegrationTest.ExtensionHelpers"));
 module Model = Oni_Model;
 
 module State = Model.State;
-module LanguageFeatures = Feature_LanguageSupport.LanguageFeatures;
 
 let waitForExtensionToActivate =
     (~extensionId, waitForState: Types.waitForState) => {

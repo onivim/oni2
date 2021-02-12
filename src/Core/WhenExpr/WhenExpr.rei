@@ -28,13 +28,16 @@ module ContextKeys: {
 
   type t;
 
+  let empty: t;
+
   let fromList: list((string, Value.t)) => t;
-  let fromSchema: (Schema.t('model), 'model) => t;
+  let fromSchema: ('model, Schema.t('model)) => t;
 
   let union: (t, t) => t;
   let unionMany: list(t) => t;
 
   let getValue: (t, string) => Value.t;
+  let values: t => list((string, Value.t));
 };
 
 [@deriving show]

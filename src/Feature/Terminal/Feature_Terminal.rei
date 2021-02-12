@@ -5,8 +5,7 @@ open Oni_Core;
 type terminal =
   pri {
     id: int,
-    cmd: string,
-    arguments: list(string),
+    launchConfig: Exthost.ShellLaunchConfig.t,
     rows: int,
     columns: int,
     pid: option(int),
@@ -52,6 +51,10 @@ type msg =
   | KeyPressed({
       id: int,
       key: string,
+    })
+  | Pasted({
+      id: int,
+      text: string,
     })
   | Service(Service_Terminal.msg);
 
@@ -139,4 +142,5 @@ module Contributions: {
   let colors: list(ColorTheme.Schema.definition);
   let commands: list(Command.t(msg));
   let configuration: list(Config.Schema.spec);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };

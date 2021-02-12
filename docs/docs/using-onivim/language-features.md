@@ -26,7 +26,7 @@ Hover shows detailed information about a variable or identifier, as well as any 
 
 __Keybindings__
 
-- <kbd>g</kbd><kbd>d</kbd> _normal mode_ - open hover
+- <kbd>g</kbd><kbd>h</kbd> _normal mode_ - open hover
 - <kbd>Escape</kbd> - close open hover
 
 ## Signature Help
@@ -62,3 +62,7 @@ Onivim will automatically insert closing pairs, based on the language configurat
 For example, if the language defines `(` and `)` as closing pairs, typing `(` will insert `(|)`.
 
 Typing the closing pair will result in the cursor 'passing through'. Pressing <kbd>Backspace</kbd> in a closing pair will remove both the opening and closing pair.
+
+## Symbol Outline
+
+If the language extension supports it, `gO` can be used to navigate to the symbol outline.

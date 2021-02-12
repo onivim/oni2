@@ -336,6 +336,7 @@ module View = {
                     ~onClick=() => (),
                     ~onRightClick=() => (),
                     ~onAnyClick=_ => (),
+                    ~onDoubleClick=() => (),
                     ~onSneak=?,
                     ~onBlur=?,
                     ~onFocus=?,
@@ -372,6 +373,7 @@ module View = {
         onClick
         onRightClick
         onAnyClick
+        onDoubleClick
         onBoundingBoxChanged={bbox => bboxRef := Some(bbox)}
         ?onBlur
         ?onFocus

@@ -107,19 +107,21 @@ let animation =
 
 let cmdOrCtrl =
   switch (Revery.Environment.os) {
-  | Mac => "Cmd"
+  | Mac(_) => "Cmd"
   | _ => "Ctrl"
   };
 
-let%component make = (~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
+let%component make = (~isDark, ~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
   let%hook (transition, _animationState, _reset) =
-    Hooks.animation(animation, ~active=true);
+    Hooks.animation(~name="WelcomeView transition", animation, ~active=true);
+
+  let logoFile = isDark ? "title-logo.png" : "title-logo-light.png";
 
   <View style={Styles.container(~theme)}>
     <Opacity opacity=transition>
       <View style=Styles.header>
         <Image
-          src={`File("./title-logo.png")}
+          src={`File(logoFile)}
           width=456
           height=250
           opacity=transition
@@ -134,7 +136,11 @@ let%component make = (~theme, ~uiFont: UiFont.t, ~editorFont, ()) => {
           style={Styles.version(~theme)}
           fontFamily={uiFont.family}
           fontSize=12.
-          text={Printf.sprintf("Version %s", Oni_Core.BuildInfo.version)}
+          text={Printf.sprintf(
+            "Version %s | %s",
+            Oni_Core.BuildInfo.version,
+            Oni_Core.BuildInfo.commitId,
+          )}
         />
       </View>
       <View style=Styles.controls>

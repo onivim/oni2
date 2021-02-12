@@ -21,7 +21,7 @@ describe("Clipboard", ({describe, _}) => {
       input("y");
       input("p");
 
-      let line = Buffer.getLine(buf, Index.fromZeroBased(1));
+      let line = Buffer.getLine(buf, LineNumber.ofZeroBased(1));
 
       expect.string(line).toEqual("This is the first line of a test file");
     });
@@ -35,7 +35,7 @@ describe("Clipboard", ({describe, _}) => {
       input("y");
       input("P");
 
-      let line = Buffer.getLine(buf, Index.zero);
+      let line = Buffer.getLine(buf, LineNumber.zero);
 
       expect.string(line).toEqual("a");
     });
@@ -51,7 +51,7 @@ describe("Clipboard", ({describe, _}) => {
       input("y");
       input("p");
 
-      let line = Buffer.getLine(buf, Index.zero);
+      let line = Buffer.getLine(buf, LineNumber.zero);
 
       expect.string(line).toEqual("Tahis is the first line of a test file");
     });
@@ -67,8 +67,8 @@ describe("Clipboard", ({describe, _}) => {
       input("y");
       input("p");
 
-      let line0 = Buffer.getLine(buf, Index.zero);
-      let line1 = Buffer.getLine(buf, Index.(zero + 1));
+      let line0 = Buffer.getLine(buf, LineNumber.zero);
+      let line1 = Buffer.getLine(buf, LineNumber.(zero + 1));
 
       expect.string(line0).toEqual("Ta");
       expect.string(line1).toEqual("bhis is the first line of a test file");
@@ -85,10 +85,10 @@ describe("Clipboard", ({describe, _}) => {
       input("y");
       input("P");
 
-      let line1 = Buffer.getLine(buf, Index.zero);
-      let line2 = Buffer.getLine(buf, Index.(zero + 1));
-      let line3 = Buffer.getLine(buf, Index.(zero + 2));
-      let line4 = Buffer.getLine(buf, Index.(zero + 3));
+      let line1 = Buffer.getLine(buf, LineNumber.zero);
+      let line2 = Buffer.getLine(buf, LineNumber.(zero + 1));
+      let line3 = Buffer.getLine(buf, LineNumber.(zero + 2));
+      let line4 = Buffer.getLine(buf, LineNumber.(zero + 3));
 
       expect.string(line1).toEqual("a");
       expect.string(line2).toEqual("b");

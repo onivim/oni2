@@ -1,7 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
 open Utility;
-open Exthost;
 
 [@deriving show]
 type command =
@@ -11,33 +10,17 @@ type command =
   | TriggerSuggest;
 
 [@deriving show]
-type msg =
-  | Command(command)
-  | CompletionResultAvailable({
-      handle: int,
-      suggestResult: Exthost.SuggestResult.t,
-    })
-  | CompletionError({
-      handle: int,
-      errorMsg: string,
-    })
-  | CompletionDetailsAvailable({
-      handle: int,
-      suggestItem: Exthost.SuggestItem.t,
-    })
-  | CompletionDetailsError({
-      handle: int,
-      errorMsg: string,
-    });
+type providerMsg =
+  | Exthost(CompletionProvider.exthostMsg)
+  | Keyword(CompletionProvider.keywordMsg)
+  | Snippet(CompletionProvider.snippetMsg);
 
 [@deriving show]
-type provider = {
-  handle: int,
-  selector: DocumentSelector.t,
-  triggerCharacters: [@opaque] list(Uchar.t),
-  supportsResolveDetails: bool,
-  extensionId: string,
-};
+type msg =
+  | Command(command)
+  | Provider(providerMsg);
+
+type exthostMsg;
 
 module Internal = {
   let stringsToUchars: list(string) => list(Uchar.t) =
@@ -53,261 +36,440 @@ module Internal = {
     };
 };
 
-// CONFIGURATION
-
-module QuickSuggestionsSetting = {
-  [@deriving show]
-  type t = {
-    comments: bool,
-    strings: bool,
-    other: bool,
-  };
-
-  let initial = {comments: false, strings: false, other: true};
-
-  let enabledFor = (~syntaxScope: SyntaxScope.t, {comments, strings, other}) => {
-    let isCommentAndAllowed = syntaxScope.isComment && comments;
-
-    let isStringAndAllowed = syntaxScope.isString && strings;
-
-    let isOtherAndAllowed =
-      !syntaxScope.isComment && !syntaxScope.isString && other;
-
-    isCommentAndAllowed || isStringAndAllowed || isOtherAndAllowed;
-  };
-
-  module Decode = {
-    open Json.Decode;
-    let decodeBool =
-      bool
-      |> map(
-           fun
-           | false => {comments: false, strings: false, other: false}
-           | true => {comments: true, strings: true, other: true},
-         );
-
-    let decodeObj =
-      obj(({field, _}) =>
-        {
-          comments: field.withDefault("comments", initial.comments, bool),
-          strings: field.withDefault("strings", initial.strings, bool),
-          other: field.withDefault("other", initial.other, bool),
-        }
-      );
-
-    let decode = one_of([("bool", decodeBool), ("obj", decodeObj)]);
-  };
-
-  let decode = Decode.decode;
-
-  let encode = setting =>
-    Json.Encode.(
-      {
-        obj([
-          ("comments", setting.comments |> bool),
-          ("strings", setting.strings |> bool),
-          ("other", setting.other |> bool),
-        ]);
-      }
-    );
-};
-
-// CONFIGURATION
-
-module Configuration = {
-  open Config.Schema;
-
-  let quickSuggestions =
-    setting(
-      "editor.quickSuggestions",
-      custom(
-        ~decode=QuickSuggestionsSetting.decode,
-        ~encode=QuickSuggestionsSetting.encode,
-      ),
-      ~default=QuickSuggestionsSetting.initial,
-    );
-};
-
-module CompletionItem = {
-  [@deriving show]
-  type t = {
-    chainedCacheId: option(Exthost.ChainedCacheId.t),
-    handle: int,
-    label: string,
-    kind: Exthost.CompletionKind.t,
-    detail: option(string),
-    documentation: option(Exthost.MarkdownString.t),
-    insertText: string,
-    insertTextRules: Exthost.SuggestItem.InsertTextRules.t,
-    sortText: string,
-    suggestRange: option(Exthost.SuggestItem.SuggestRange.t),
-    commitCharacters: list(string),
-    additionalTextEdits: list(Exthost.Edit.SingleEditOperation.t),
-    command: option(Exthost.Command.t),
-  };
-
-  let create = (~handle, item: Exthost.SuggestItem.t) => {
-    chainedCacheId: item.chainedCacheId,
-    handle,
-    label: item.label,
-    kind: item.kind,
-    detail: item.detail,
-    documentation: item.documentation,
-    insertText: item |> Exthost.SuggestItem.insertText,
-    insertTextRules: item.insertTextRules,
-    sortText: item |> Exthost.SuggestItem.sortText,
-    suggestRange: item.suggestRange,
-    commitCharacters: item.commitCharacters,
-    additionalTextEdits: item.additionalTextEdits,
-    command: item.command,
-  };
-};
-
 module Session = {
   [@deriving show]
-  type state =
-    | Waiting
-    | Completed({
-        allItems: list(Exthost.SuggestItem.t),
-        filteredItems: [@opaque] list(Filter.result(Exthost.SuggestItem.t)),
+  type state('model) =
+    | NotStarted
+    | Pending({
+        providerModel: [@opaque] 'model,
+        meet: CompletionMeet.t,
       })
-    // TODO
-    //| Incomplete(list(Exthost.SuggestItem.t))
+    | Partial({
+        providerModel: [@opaque] 'model,
+        meet: CompletionMeet.t,
+        cursor: CharacterPosition.t,
+        currentItems: list(CompletionItem.t),
+        filteredItems: [@opaque] list(Filter.result(CompletionItem.t)),
+      })
+    | Completed({
+        providerModel: [@opaque] 'model,
+        meet: CompletionMeet.t,
+        allItems: list(CompletionItem.t),
+        filteredItems: [@opaque] list(Filter.result(CompletionItem.t)),
+      })
     | Failure(string)
-    | Accepted;
+    | Accepted({meet: CompletionMeet.t});
 
   [@deriving show]
-  type t = {
-    state,
-    buffer: [@opaque] Oni_Core.Buffer.t,
-    base: string,
-    location: EditorCoreTypes.Location.t,
-    supportsResolve: bool,
+  type session('model, 'msg) = {
+    state: state('model),
+    triggerCharacters: [@opaque] list(Uchar.t),
+    provider: [@opaque] CompletionProvider.provider('model, 'msg),
+    providerMapper: 'msg => providerMsg,
+    revMapper: providerMsg => option('msg),
   };
 
-  let complete = session => {...session, state: Accepted};
+  type t =
+    | Session(session('model, 'msg)): t;
+
+  let handle =
+    fun
+    | Session({provider, _}) => {
+        let (module ProviderImpl) = provider;
+        ProviderImpl.handle;
+      };
+
+  let complete = additionalEdits =>
+    fun
+    | Session({state, _} as session) => {
+        let state' =
+          switch (state) {
+          | NotStarted => NotStarted
+          | Pending({meet, _})
+          | Partial({meet, _})
+          | Completed({meet, _})
+          | Accepted({meet}) =>
+            let meet' =
+              CompletionMeet.shiftMeet(~edits=additionalEdits, meet);
+            Accepted({meet: meet'});
+          | Failure(_) as failure => failure
+          };
+
+        Session({...session, state: state'});
+      };
+
+  let start =
+    fun
+    | Session(session) => Session({...session, state: NotStarted});
+
+  let stop =
+    fun
+    | Session(session) => Session({...session, state: NotStarted});
+
+  let cursorMoved = (~position: CharacterPosition.t) =>
+    fun
+    | Session({state, _} as prevState) => {
+        let isCompletionMeetStillValid = (meet: CompletionMeet.t) => {
+          // If the line changed, the meet is no longer valid
+          meet.location.line == position.line
+          // If the cursor moved before the meet, on the same line,
+          // it is no longer valid. The after case is a bit trickier -
+          // the cursor moves first, before we get the buffer update,
+          // so the meet may not be valid until the buffer update comes through.
+          // We'll allow cursor moves after the meet, for now.
+          && CharacterIndex.toInt(meet.location.character)
+          <= CharacterIndex.toInt(position.character);
+        };
+        let state' =
+          switch (state) {
+          | Pending({meet, _}) as prev when isCompletionMeetStillValid(meet) => prev
+          | Pending(_) => NotStarted
+          | Partial(_) as prev => prev
+          | Completed({meet, _}) as prev
+              when isCompletionMeetStillValid(meet) => prev
+          | Completed(_) => NotStarted
+          | Accepted({meet, _}) as prev when isCompletionMeetStillValid(meet) => prev
+          | Accepted(_) => NotStarted
+          | prev => prev
+          };
+
+        Session({...prevState, state: state'});
+      };
 
   let filter:
-    (~query: string, list(Exthost.SuggestItem.t)) =>
-    list(Filter.result(Exthost.SuggestItem.t)) =
+    (~query: string, list(CompletionItem.t)) =>
+    list(Filter.result(CompletionItem.t)) =
     (~query, items) => {
-      let toString = (item: Exthost.SuggestItem.t, ~shouldLower) =>
+      let toString = (item: CompletionItem.t, ~shouldLower) =>
         shouldLower ? String.lowercase_ascii(item.label) : item.label;
 
       let explodedQuery = Zed_utf8.explode(query);
 
-      items
-      |> List.filter((item: Exthost.SuggestItem.t) => {
-           let filterText = Exthost.SuggestItem.filterText(item);
-           if (String.length(filterText) <= String.length(query)) {
-             false;
-           } else {
-             Filter.fuzzyMatches(explodedQuery, filterText);
-           };
-         })
-      |> Filter.rank(query, toString);
-    };
-
-  let filteredItems = ({state, _}) => {
-    switch (state) {
-    | Accepted => []
-    | Waiting => []
-    | Failure(_) => []
-    | Completed({filteredItems, _}) => filteredItems
-    };
-  };
-
-  let updateItem = (~item: Exthost.SuggestItem.t, {state, _} as model) => {
-    switch (state) {
-    | Waiting
-    | Failure(_)
-    | Accepted => model
-    | Completed({allItems, _}) =>
-      let allItems =
-        allItems
-        |> List.map((previousItem: Exthost.SuggestItem.t) =>
-             if (previousItem.chainedCacheId == item.chainedCacheId) {
-               item;
+      let items' =
+        items
+        |> List.filter((item: CompletionItem.t) =>
+             if (String.length(item.filterText) < String.length(query)) {
+               false;
              } else {
-               previousItem;
+               Filter.fuzzyMatches(explodedQuery, item.filterText);
+             }
+           )
+        |> Filter.rank(query, toString);
+
+      // Tag as fuzzy matched
+      if (explodedQuery != []) {
+        items'
+        |> List.map((filterItem: Filter.result(CompletionItem.t)) =>
+             {
+               ...filterItem,
+               item: {
+                 ...filterItem.item,
+                 isFuzzyMatching: true,
+               },
              }
            );
-
-      let filteredItems = filter(~query=model.base, allItems);
-      {...model, state: Completed({filteredItems, allItems})};
-    };
-  };
-
-  let isActive = ({state, _}) => {
-    switch (state) {
-    | Accepted => false
-    | Waiting => true
-    | Failure(_) => false
-    | Completed(_) => true
-    };
-  };
-
-  let create = (~buffer, ~base, ~location, ~supportsResolve) => {
-    state: Waiting,
-    buffer,
-    base,
-    location,
-    supportsResolve,
-  };
-
-  let refine = (~base, current) => {
-    let state' =
-      switch (current.state) {
-      | Accepted => Accepted
-      | Waiting => Waiting
-      | Failure(_) as failure => failure
-      | Completed({allItems, _}) =>
-        Completed({allItems, filteredItems: filter(~query=base, allItems)})
-      };
-
-    {...current, base, state: state'};
-  };
-
-  let receivedItems = (items: list(Exthost.SuggestItem.t), model) =>
-    if (model.state == Accepted) {
-      model;
-    } else {
-      {
-        ...model,
-        state:
-          Completed({
-            allItems: items,
-            filteredItems: filter(~query=model.base, items),
-          }),
-      };
-    };
-
-  let error = (~errorMsg: string, model) => {
-    ...model,
-    state: Failure(errorMsg),
-  };
-
-  let update = (~createNew, ~buffer, ~base, ~location, previous) =>
-    // If different buffer or location... start over!
-    if (Oni_Core.Buffer.getId(buffer)
-        != Oni_Core.Buffer.getId(previous.buffer)
-        || location != previous.location) {
-      if (createNew) {
-        Some(
-          create(
-            ~buffer,
-            ~base,
-            ~location,
-            ~supportsResolve=previous.supportsResolve,
-          ),
-        );
       } else {
-        None;
+        items';
       };
-    } else {
-      // Refine results
-      Some(refine(~base, previous));
     };
+
+  let filteredItems =
+    fun
+    | Session({state, _}) => {
+        switch (state) {
+        | NotStarted => StringMap.empty
+        | Accepted(_) => StringMap.empty
+        | Pending(_) => StringMap.empty
+        | Failure(_) => StringMap.empty
+        | Partial({filteredItems, meet, _})
+        | Completed({filteredItems, meet, _}) =>
+          filteredItems
+          |> List.fold_left(
+               (acc, item: Filter.result(CompletionItem.t)) => {
+                 StringMap.add(item.item.label, (meet.location, item), acc)
+               },
+               StringMap.empty,
+             )
+        };
+      };
+
+  let update = msg =>
+    fun
+    | Session({provider, revMapper, state, _} as session) => {
+        revMapper(msg)
+        |> Option.map(internalMsg => {
+             let (module ProviderImpl) = provider;
+
+             let handleNewItems =
+                 (~providerModel, ~meet: CompletionMeet.t, ~cursor) => {
+               // TODO: What to do with the error `_outmsg` case?
+               let (providerModel', _outmsg) =
+                 ProviderImpl.update(
+                   ~isFuzzyMatching=meet.base != "",
+                   internalMsg,
+                   providerModel,
+                 );
+               let (completionState, items) =
+                 ProviderImpl.items(providerModel');
+               switch (completionState, items) {
+               | (_, []) => Pending({meet, providerModel: providerModel'})
+               | (Incomplete, items) =>
+                 Partial({
+                   meet,
+                   cursor,
+                   currentItems: items,
+                   filteredItems: filter(~query=meet.base, items),
+                   providerModel: providerModel',
+                 })
+               | (Complete, items) =>
+                 Completed({
+                   meet,
+                   allItems: items,
+                   filteredItems: filter(~query=meet.base, items),
+                   providerModel: providerModel',
+                 })
+               };
+             };
+
+             let state' =
+               switch (state) {
+               | Partial({providerModel, meet, cursor, _}) =>
+                 handleNewItems(~providerModel, ~meet, ~cursor)
+
+               | Completed({providerModel, meet, _})
+               | Pending({providerModel, meet, _}) =>
+                 handleNewItems(~providerModel, ~meet, ~cursor=meet.location)
+
+               | _ => state
+               };
+
+             Session({...session, state: state'});
+           })
+        |> Option.value(~default=Session(session));
+      };
+
+  let sub = (~activeBuffer, ~selectedItem, ~client) =>
+    fun
+    | Session({state, provider, providerMapper, _}) => {
+        switch (state) {
+        | Partial({providerModel, cursor, _}) =>
+          let (module ProviderImpl) = provider;
+          ProviderImpl.sub(
+            ~client,
+            ~context=
+              Exthost.CompletionContext.{
+                triggerKind: Exthost.CompletionContext.TriggerForIncompleteCompletions,
+                triggerCharacter: None,
+              },
+            ~buffer=activeBuffer,
+            ~position=cursor,
+            ~selectedItem,
+            providerModel,
+          )
+          |> Isolinear.Sub.map(msg => Provider(providerMapper(msg)));
+        | Pending({providerModel, meet, _})
+        | Completed({providerModel, meet, _}) =>
+          let (module ProviderImpl) = provider;
+          ProviderImpl.sub(
+            ~client,
+            // TODO: Proper completion context
+            ~context=
+              Exthost.CompletionContext.{
+                triggerKind: Invoke,
+                triggerCharacter: None,
+              },
+            ~buffer=activeBuffer,
+            ~position=CompletionMeet.(meet.location),
+            ~selectedItem,
+            providerModel,
+          )
+          |> Isolinear.Sub.map(msg => Provider(providerMapper(msg)));
+        | _ => Isolinear.Sub.none
+        };
+      };
+
+  let create =
+      (
+        ~provider: CompletionProvider.provider('model, 'msg),
+        ~mapper: 'msg => providerMsg,
+        ~revMapper: providerMsg => option('msg),
+        ~triggerCharacters,
+      ) => {
+    Session({
+      triggerCharacters,
+      state: NotStarted,
+      provider,
+      providerMapper: mapper,
+      revMapper,
+    });
+  };
+
+  let refine = (~languageConfiguration, ~buffer, ~position) =>
+    fun
+    | Session(current) => {
+        let maybeMeet =
+          CompletionMeet.fromBufferPosition(
+            ~languageConfiguration,
+            ~triggerCharacters=current.triggerCharacters,
+            ~position,
+            buffer,
+          );
+
+        let state' =
+          maybeMeet
+          |> Option.map(newMeet => {
+               switch (current.state) {
+               | NotStarted => NotStarted
+               | Accepted(_) as accepted => accepted
+               | Pending(_) as pending => pending
+               | Failure(_) as failure => failure
+               | Partial({currentItems, _} as prev) =>
+                 Partial({
+                   ...prev,
+                   meet: newMeet,
+                   cursor: position,
+                   filteredItems:
+                     filter(
+                       ~query=CompletionMeet.(newMeet.base),
+                       currentItems,
+                     ),
+                 })
+               | Completed({allItems, meet, _} as prev)
+                   when CompletionMeet.matches(meet, newMeet) =>
+                 Completed({
+                   ...prev,
+                   meet: newMeet,
+                   filteredItems:
+                     filter(~query=CompletionMeet.(newMeet.base), allItems),
+                 })
+               // The meet changed on us - reset
+               | Completed(_) => NotStarted
+               }
+             })
+          |> Option.value(~default=NotStarted);
+
+        Session({...current, state: state'});
+      };
+
+  let tryInvoke =
+      (
+        ~config,
+        ~extensions,
+        ~languageConfiguration,
+        ~trigger,
+        ~buffer,
+        ~location,
+      ) =>
+    fun
+    | Session({provider, _} as session) as original => {
+        let (module ProviderImpl) = provider;
+        let maybeMeet =
+          CompletionMeet.fromBufferPosition(
+            ~languageConfiguration,
+            ~triggerCharacters=session.triggerCharacters,
+            ~position=location,
+            buffer,
+          );
+        maybeMeet
+        |> OptionEx.flatMap((meet: CompletionMeet.t) => {
+             ProviderImpl.create(
+               ~config,
+               ~extensions,
+               ~languageConfiguration,
+               ~base=meet.base,
+               ~trigger,
+               ~buffer,
+               ~location=meet.location,
+             )
+             |> Option.map(model => (meet, model))
+           })
+        |> Option.map(((meet, model)) => {
+             let state =
+               switch (session.state) {
+               | Partial(partial) =>
+                 Partial({...partial, meet, cursor: location})
+               | _ =>
+                 let (_isComplete, items) = ProviderImpl.items(model);
+                 switch (items) {
+                 | [] => Pending({meet, providerModel: model})
+                 | items =>
+                   Completed({
+                     meet,
+                     allItems: items,
+                     filteredItems: filter(~query=meet.base, items),
+                     providerModel: model,
+                   })
+                 };
+               };
+
+             Session({...session, state});
+           })
+        |> Option.value(~default=original);
+      };
+
+  let reinvoke =
+      (
+        ~config,
+        ~extensions,
+        ~languageConfiguration,
+        ~trigger,
+        ~buffer,
+        ~activeCursor,
+      ) =>
+    fun
+    | Session(previous) as model => {
+        let maybeMeet =
+          CompletionMeet.fromBufferPosition(
+            ~languageConfiguration,
+            ~triggerCharacters=previous.triggerCharacters,
+            ~position=activeCursor,
+            buffer,
+          );
+
+        maybeMeet
+        |> Option.map(({location, _}: CompletionMeet.t)
+             // If different buffer or location... start over!
+             =>
+               switch (previous.state) {
+               | Accepted({meet})
+               | Completed({meet, _}) =>
+                 if (Oni_Core.Buffer.getId(buffer)
+                     != CompletionMeet.(meet.bufferId)
+                     || location != CompletionMeet.(meet.location)) {
+                   // try to complete
+                   tryInvoke(
+                     ~config,
+                     ~extensions,
+                     ~languageConfiguration,
+                     ~trigger,
+                     ~buffer,
+                     ~location=activeCursor,
+                     model,
+                   );
+                 } else {
+                   // The base and location are the same
+                   // Just refine existing query
+                   refine(
+                     ~languageConfiguration,
+                     ~buffer,
+                     ~position=activeCursor,
+                     model,
+                   );
+                 }
+               | _incomplete =>
+                 tryInvoke(
+                   ~config,
+                   ~extensions,
+                   ~languageConfiguration,
+                   ~trigger,
+                   ~buffer,
+                   ~location=activeCursor,
+                   model,
+                 )
+               }
+             )
+        |> Option.value(~default=model |> stop);
+      };
 };
 
 module Selection = {
@@ -335,45 +497,106 @@ module Selection = {
 };
 
 type model = {
-  handleToSession: IntMap.t(Session.t),
-  providers: list(provider),
-  allItems: array(Filter.result(CompletionItem.t)),
+  providers: list(Session.t),
+  allItems: array((CharacterPosition.t, Filter.result(CompletionItem.t))),
   selection: Selection.t,
+  isInsertMode: bool,
+  isSnippetMode: bool,
+  acceptOnEnter: bool,
+  snippetSortOrder: [ | `Bottom | `Hidden | `Inline | `Top],
 };
 
 let initial = {
-  handleToSession: IntMap.empty,
-  providers: [],
+  isInsertMode: false,
+  isSnippetMode: false,
+  acceptOnEnter: false,
+  providers: [
+    Session.create(
+      ~triggerCharacters=[],
+      ~provider=CompletionProvider.keyword,
+      ~mapper=msg => Keyword(msg),
+      ~revMapper=
+        fun
+        | Keyword(msg) => Some(msg)
+        | _ => None,
+    ),
+    Session.create(
+      ~triggerCharacters=[],
+      ~provider=CompletionProvider.snippet,
+      ~mapper=msg => Snippet(msg),
+      ~revMapper=
+        fun
+        | Snippet(msg) => Some(msg)
+        | _ => None,
+    ),
+  ],
   allItems: [||],
   selection: Selection.initial,
+  snippetSortOrder: `Inline,
 };
 
-let providerCount = ({providers, _}) => List.length(providers);
+let configurationChanged = (~config, model) => {
+  {
+    ...model,
+    acceptOnEnter: CompletionConfig.acceptSuggestionOnEnter.get(config),
+    snippetSortOrder: CompletionConfig.snippetSuggestions.get(config),
+  };
+};
+
+let providerCount = ({providers, _}) => List.length(providers) - 1;
 let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
 
-let getMeetLocation = (~handle, model) => {
-  IntMap.find_opt(handle, model.handleToSession)
-  |> Option.map(({location, _}: Session.t) => location);
-};
+let recomputeAllItems = (~snippetSortOrder, providers: list(Session.t)) => {
+  providers
+  |> List.fold_left(
+       (acc, session) => {
+         let itemMap = session |> Session.filteredItems;
 
-let recomputeAllItems = (sessions: IntMap.t(Session.t)) => {
-  let compare =
-      (
-        a: Filter.result(CompletionItem.t),
-        b: Filter.result(CompletionItem.t),
-      ) => {
-    String.compare(a.item.sortText, b.item.sortText);
-  };
-
-  sessions
-  |> IntMap.bindings
-  |> List.map(((handle, session)) => {
-       session
-       |> Session.filteredItems
-       |> List.map(Filter.map(CompletionItem.create(~handle)))
+         // When we have the same key coming from different providers, need to decide between them
+         StringMap.merge(
+           (
+             _key,
+             maybeA:
+               option(
+                 (CharacterPosition.t, Filter.result(CompletionItem.t)),
+               ),
+             maybeB:
+               option(
+                 list(
+                   (CharacterPosition.t, Filter.result(CompletionItem.t)),
+                 ),
+               ),
+           ) =>
+             switch (maybeA, maybeB) {
+             | (None, None) => None
+             | (Some(a), None) => Some([a])
+             | (None, Some(_) as b) => b
+             | (Some(a), Some(b)) => Some([a, ...b])
+             },
+           itemMap,
+           acc,
+         );
+       },
+       StringMap.empty,
+     )
+  |> StringMap.map(items => {
+       switch (items) {
+       // If one or zero items, just keep as-is
+       | [] => []
+       | [item] => [item]
+       // If multiple - remove keywords
+       | items =>
+         items
+         |> List.filter(item =>
+              !(Filter.(snd(item).item) |> CompletionItem.isKeyword)
+            )
+       }
      })
-  |> List.flatten
-  |> List.fast_sort(compare)
+  |> StringMap.bindings
+  |> List.concat_map(snd)
+  |> List.fast_sort(((_loc, a), (_loc, b)) =>
+       CompletionItemSorter.compare(~snippetSortOrder, a, b)
+     )
   |> Array.of_list;
 };
 
@@ -391,51 +614,46 @@ let focused = ({allItems, selection, _}) => {
 };
 
 let isActive = (model: model) => {
-  model.allItems |> Array.length > 0;
+  model.isInsertMode
+  && !model.isSnippetMode
+  && model.allItems
+  |> Array.length > 0;
+};
+
+let reset = model =>
+  if (model.isInsertMode && !model.isSnippetMode) {
+    {
+      ...model,
+      providers: model.providers |> List.map(Session.start),
+      allItems: [||],
+      selection: None,
+    };
+  } else {
+    {
+      ...model,
+      providers: model.providers |> List.map(Session.stop),
+      allItems: [||],
+      selection: None,
+    };
+  };
+
+let startInsertMode = model => {
+  {...model, isInsertMode: true} |> reset;
 };
 
 let stopInsertMode = model => {
-  ...model,
-  handleToSession: IntMap.empty,
-  allItems: [||],
-  selection: None,
+  {...model, isInsertMode: false} |> reset;
 };
 
-let cursorMoved =
-    (~previous as _, ~current: EditorCoreTypes.Location.t, model) => {
-  // Filter providers, such that the completion meets are still
-  // valid in the context of the new cursor position
-
-  let isCompletionMeetStillValid = (meetLocation: EditorCoreTypes.Location.t) => {
-    // If the line changed, the meet is no longer valid
-    meetLocation.line == current.line
-    // If the cursor moved before the meet, on the same line,
-    // it is no longer valid. The after case is a bit trickier -
-    // the cursor moves first, before we get the buffer update,
-    // so the meet may not be valid until the buffer update comes through.
-    // We'll allow cursor moves after the meet, for now.
-    && Index.toZeroBased(meetLocation.column)
-    <= Index.toZeroBased(current.column);
-  };
-
-  let handleToSession =
-    IntMap.filter(
-      (_key, session: Session.t) => {
-        isCompletionMeetStillValid(Session.(session.location))
-      },
-      model.handleToSession,
-    );
-
-  let allItems = recomputeAllItems(handleToSession);
-
-  let count = Array.length(allItems);
-
-  {
-    ...model,
-    handleToSession,
-    allItems,
-    selection: Selection.ensureValidFocus(~count, model.selection),
-  };
+// There are some bugs with completion in snippet mode -
+// including the 'tab' key being overloaded. Need to fix
+// these and gate with a configuration setting, like:
+// `editor.suggest.snippetsPreventQuickSuggestions`
+let startSnippet = model => {
+  {...model, isSnippetMode: true} |> reset;
+};
+let stopSnippet = model => {
+  {...model, isSnippetMode: false} |> reset;
 };
 
 let register =
@@ -444,132 +662,228 @@ let register =
       ~selector,
       ~triggerCharacters,
       ~supportsResolveDetails,
-      ~extensionId,
+      ~extensionId as _,
       model,
     ) => {
-  ...model,
-  providers: [
-    {
-      handle,
-      selector,
-      triggerCharacters: Internal.stringsToUchars(triggerCharacters),
-      supportsResolveDetails,
-      extensionId,
-    },
-    ...model.providers,
-  ],
+  let triggerCharacters = Internal.stringsToUchars(triggerCharacters);
+
+  {
+    ...model,
+    providers: [
+      Session.create(
+        ~triggerCharacters,
+        ~provider=
+          CompletionProvider.exthost(
+            ~selector,
+            ~handle,
+            ~supportsResolve=supportsResolveDetails,
+          ),
+        ~mapper=msg => Exthost(msg),
+        ~revMapper=
+          fun
+          | Exthost(msg) => Some(msg)
+          | _ => None,
+      ),
+      ...model.providers,
+    ],
+  };
 };
 
 let unregister = (~handle, model) => {
   ...model,
-  providers: List.filter(prov => prov.handle != handle, model.providers),
+  providers:
+    List.filter(
+      session => Session.handle(session, ()) != Some(handle),
+      model.providers,
+    ),
 };
 
-let startCompletion = (~startNewSession, ~buffer, ~activeCursor, model) => {
-  let candidateProviders =
-    model.providers
-    |> List.filter(prov =>
-         Exthost.DocumentSelector.matchesBuffer(~buffer, prov.selector)
-       );
-
-  let handleToSession =
-    List.fold_left(
-      (acc: IntMap.t(Session.t), curr: provider) => {
-        let maybeMeet =
-          CompletionMeet.fromBufferLocation(
-            ~triggerCharacters=curr.triggerCharacters,
-            ~location=activeCursor,
-            buffer,
-          );
-
-        switch (maybeMeet) {
-        | None => acc |> IntMap.remove(curr.handle)
-        | Some({base, location, _}) =>
-          acc
-          |> IntMap.update(
-               curr.handle,
-               fun
-               | None => {
-                   startNewSession
-                     ? Some(
-                         Session.create(
-                           ~buffer,
-                           ~base,
-                           ~location,
-                           ~supportsResolve=curr.supportsResolveDetails,
-                         ),
-                       )
-                     : None;
-                 }
-               | Some(previous) => {
-                   Session.update(
-                     ~createNew=startNewSession,
-                     ~buffer,
-                     ~base,
-                     ~location,
-                     previous,
-                   );
-                 },
-             )
-        };
-      },
-      model.handleToSession,
-      candidateProviders,
-    );
-
-  let allItems = recomputeAllItems(handleToSession);
+let updateSessions = (providers, model) => {
+  let allItems =
+    recomputeAllItems(~snippetSortOrder=model.snippetSortOrder, providers);
   let selection =
     Selection.ensureValidFocus(
       ~count=Array.length(allItems),
       model.selection,
     );
+  {...model, providers, allItems, selection};
+};
 
-  {...model, handleToSession, allItems, selection};
+let cursorMoved =
+    (~previous as _, ~current: EditorCoreTypes.CharacterPosition.t, model) => {
+  // Filter providers, such that the completion meets are still
+  // valid in the context of the new cursor position
+
+  let providers' =
+    model.providers |> List.map(Session.cursorMoved(~position=current));
+
+  model |> updateSessions(providers');
+};
+
+let invokeCompletion =
+    (
+      ~config,
+      ~extensions,
+      ~languageConfiguration,
+      ~trigger,
+      ~buffer,
+      ~activeCursor,
+      model,
+    ) => {
+  let providers' =
+    model.providers
+    |> List.map(
+         Session.reinvoke(
+           ~config,
+           ~extensions,
+           ~languageConfiguration,
+           ~trigger,
+           ~buffer,
+           ~activeCursor,
+         ),
+       );
+
+  model |> updateSessions(providers');
+};
+
+let refine = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
+  let providers' =
+    model.providers
+    |> List.map(
+         Session.refine(
+           ~languageConfiguration,
+           ~buffer,
+           ~position=activeCursor,
+         ),
+       );
+
+  model |> updateSessions(providers');
 };
 
 let bufferUpdated =
-    (~buffer, ~config, ~activeCursor, ~syntaxScope, ~triggerKey, model) => {
-  let quickSuggestionsSetting = Configuration.quickSuggestions.get(config);
+    (
+      ~languageConfiguration,
+      ~extensions,
+      ~buffer,
+      ~config,
+      ~activeCursor,
+      ~syntaxScope,
+      ~triggerKey,
+      model,
+    ) => {
+  let quickSuggestionsSetting = CompletionConfig.quickSuggestions.get(config);
 
-  let anySessionsActive =
-    model.handleToSession
-    |> IntMap.exists((_key, session) => session |> Session.isActive);
-
-  // TODO: Account for trigger key
-  ignore(triggerKey);
+  let trigger =
+    Exthost.CompletionContext.{
+      triggerKind: TriggerCharacter,
+      triggerCharacter: triggerKey,
+    };
 
   if (!
-        QuickSuggestionsSetting.enabledFor(
+        CompletionConfig.QuickSuggestionsSetting.enabledFor(
           ~syntaxScope,
           quickSuggestionsSetting,
         )) {
     // If we already had started a session (ie, manually triggered) -
     // make sure to continue, even if suggestions are off
-    if (anySessionsActive) {
-      startCompletion(~startNewSession=false, ~buffer, ~activeCursor, model);
-    } else {
-      model;
-    };
+    model |> refine(~languageConfiguration, ~buffer, ~activeCursor);
   } else {
-    startCompletion(~startNewSession=true, ~buffer, ~activeCursor, model);
+    model
+    |> invokeCompletion(
+         ~config,
+         ~extensions,
+         ~languageConfiguration,
+         ~trigger,
+         ~buffer,
+         ~activeCursor,
+       );
   };
 };
 
-let update = (~maybeBuffer, ~activeCursor, msg, model) => {
+let selected = model => {
+  switch (model.selection) {
+  | None => None
+  | Some(focusedIndex) =>
+    let (_: CharacterPosition.t, result: Filter.result(CompletionItem.t)) = model.
+                                                                    allItems[focusedIndex];
+    Some(result.item);
+  };
+};
+
+let tryToMaintainSelected = (~previousIndex, ~previousLabel, model) => {
+  let len = Array.length(model.allItems);
+  let idxToReplace = min(Array.length(model.allItems) - 1, previousIndex);
+
+  let getItemAtIndex = idx => {
+    let (_position, filterResult: Filter.result(CompletionItem.t)) = model.
+                                                                    allItems[idx];
+    filterResult.item;
+  };
+
+  // Sanity check - make sure there is a valid position.
+  // Completions list might be empty...
+  if (idxToReplace >= len || len == 0) {
+    model;
+  } else if
+    // Nothing to do - still in a good spot!
+    (getItemAtIndex(idxToReplace).label == previousLabel) {
+    model;
+  } else {
+    let idx = ref(-1);
+    let foundCurrent = ref(None);
+    while (idx^ < len - 1 && foundCurrent^ == None) {
+      incr(idx);
+      if (getItemAtIndex(idx^).label == previousLabel) {
+        foundCurrent := Some(idx^);
+      };
+    };
+
+    switch (foundCurrent^) {
+    | Some(idx) when idx == idxToReplace => model
+    | Some(idx) =>
+      // Swap idx and idx to replace, to maintain selected
+      let a = model.allItems[idxToReplace];
+      let b = model.allItems[idx];
+      model.allItems[idx] = a;
+      model.allItems[idxToReplace] = b;
+      model;
+    | None => model
+    };
+  };
+};
+
+let update =
+    (
+      ~config,
+      ~extensions,
+      ~languageConfiguration,
+      ~maybeBuffer,
+      ~activeCursor,
+      msg,
+      model,
+    ) => {
   let default = (model, Outmsg.Nothing);
   switch (msg) {
   | Command(TriggerSuggest) =>
     maybeBuffer
     |> Option.map(buffer => {
+         let trigger =
+           Exthost.CompletionContext.{
+             triggerKind: Invoke,
+             triggerCharacter: None,
+           };
          (
-           startCompletion(
-             ~startNewSession=true,
+           invokeCompletion(
+             ~config,
+             ~extensions,
+             ~languageConfiguration,
+             ~trigger,
              ~buffer,
              ~activeCursor,
              model,
            ),
            Outmsg.Nothing,
-         )
+         );
        })
     |> Option.value(~default)
 
@@ -582,53 +896,55 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
       switch (model.selection) {
       | None => default
       | Some(focusedIndex) =>
-        let result: Filter.result(CompletionItem.t) = allItems[focusedIndex];
+        let (
+          location: CharacterPosition.t,
+          result: Filter.result(CompletionItem.t),
+        ) = allItems[focusedIndex];
 
-        let handle = result.item.handle;
+        let meetColumn =
+          Exthost.SuggestItem.(
+            switch (result.item.suggestRange) {
+            | Some(SuggestRange.Single({startColumn, _})) =>
+              startColumn - 1 |> CharacterIndex.ofInt
+            | Some(SuggestRange.Combo({insert, _})) =>
+              Exthost.OneBasedRange.(
+                insert.startColumn - 1 |> CharacterIndex.ofInt
+              )
+            | None => location.character
+            }
+          );
 
-        getMeetLocation(~handle, model)
-        |> Option.map((location: EditorCoreTypes.Location.t) => {
-             let meetColumn =
-               Exthost.SuggestItem.(
-                 switch (result.item.suggestRange) {
-                 | Some(SuggestRange.Single({startColumn, _})) =>
-                   startColumn |> Index.fromOneBased
-                 | Some(SuggestRange.Combo({insert, _})) =>
-                   Exthost.OneBasedRange.(
-                     insert.startColumn |> Index.fromOneBased
-                   )
-                 | None => location.column
-                 }
-               );
+        let effect =
+          Exthost.SuggestItem.InsertTextRules.(
+            matches(~rule=InsertAsSnippet, result.item.insertTextRules)
+          )
+            ? Outmsg.InsertSnippet({
+                meetColumn,
+                snippet: result.item.insertText,
+                additionalEdits: result.item.additionalTextEdits,
+              })
+            : Outmsg.ApplyCompletion({
+                meetColumn,
+                insertText: result.item.insertText,
+                additionalEdits: result.item.additionalTextEdits,
+              });
 
-             let effect =
-               Exthost.SuggestItem.InsertTextRules.(
-                 matches(~rule=InsertAsSnippet, result.item.insertTextRules)
-               )
-                 ? Outmsg.InsertSnippet({
-                     meetColumn,
-                     snippet: result.item.insertText,
-                   })
-                 : Outmsg.ApplyCompletion({
-                     meetColumn,
-                     insertText: result.item.insertText,
-                   });
-
-             (
-               {
-                 ...model,
-                 handleToSession:
-                   IntMap.map(
-                     session => {session |> Session.complete},
-                     model.handleToSession,
-                   ),
-                 allItems: [||],
-                 selection: None,
-               },
-               effect,
-             );
-           })
-        |> Option.value(~default);
+        (
+          {
+            ...model,
+            providers:
+              List.map(
+                provider => {
+                  provider
+                  |> Session.complete(result.item.additionalTextEdits)
+                },
+                model.providers,
+              ),
+            allItems: [||],
+            selection: None,
+          },
+          effect,
+        );
       };
     };
 
@@ -646,125 +962,57 @@ let update = (~maybeBuffer, ~activeCursor, msg, model) => {
       Nothing,
     );
 
-  | CompletionResultAvailable({handle, suggestResult}) =>
-    let handleToSession =
-      IntMap.update(
-        handle,
-        Option.map(prev =>
-          Session.receivedItems(
-            Exthost.SuggestResult.(suggestResult.completions),
-            prev,
-          )
-        ),
-        model.handleToSession,
+  | Provider(msg) =>
+    // Before updating any items, check to see if there is already
+    // a selected item. We don't want to surprise the user
+    // and change the selected underneath them when populating!
+    let maybeCurrentSelection =
+      switch (model.selection) {
+      | None => None
+      | Some(idx) => selected(model) |> Option.map(item => (idx, item))
+      };
+
+    let providers =
+      model.providers |> List.map(provider => Session.update(msg, provider));
+    let allItems =
+      recomputeAllItems(~snippetSortOrder=model.snippetSortOrder, providers);
+    let selection =
+      Selection.ensureValidFocus(
+        ~count=Array.length(allItems),
+        // If we 'pinned' an item, make sure it's selected
+        model.selection,
       );
-    let allItems = recomputeAllItems(handleToSession);
-    (
-      {
-        ...model,
-        handleToSession,
-        allItems,
-        selection:
-          Selection.ensureValidFocus(
-            ~count=Array.length(allItems) - 1,
-            model.selection,
-          ),
-      },
-      Outmsg.Nothing,
-    );
-  | CompletionError({handle, errorMsg}) => (
-      {
-        ...model,
-        handleToSession:
-          IntMap.update(
-            handle,
-            Option.map(prev => Session.error(~errorMsg, prev)),
-            model.handleToSession,
-          ),
-      },
-      Outmsg.Nothing,
-    )
 
-  | CompletionDetailsAvailable({handle, suggestItem}) =>
-    let handleToSession =
-      model.handleToSession
-      |> IntMap.update(
-           handle,
-           Option.map(prev => Session.updateItem(~item=suggestItem, prev)),
-         );
+    let model' = {...model, providers, allItems, selection};
 
-    let allItems = recomputeAllItems(handleToSession);
-    ({...model, handleToSession, allItems}, Outmsg.Nothing);
+    let model'' =
+      switch (maybeCurrentSelection) {
+      | Some((previousIndex, previousItem)) =>
+        model'
+        |> tryToMaintainSelected(
+             ~previousIndex,
+             ~previousLabel=previousItem.label,
+           )
+      | None => model'
+      };
 
-  | CompletionDetailsError(_) => (model, Outmsg.Nothing)
+    // If the current selection is different than the one we had before...
+    (model'', Nothing);
   };
 };
 
-let sub = (~client, model) => {
+let sub = (~activeBuffer, ~client, model) =>
   // Subs for each pending handle..
-  let handleSubs =
-    model.handleToSession
-    |> IntMap.bindings
-    |> List.map(((handle: int, meet: Session.t)) => {
-         Service_Exthost.Sub.completionItems(
-           // TODO: proper trigger kind
-           ~context=
-             Exthost.CompletionContext.{
-               triggerKind: Invoke,
-               triggerCharacter: None,
-             },
-           ~handle,
-           ~buffer=meet.buffer,
-           ~position=meet.location,
-           ~toMsg=
-             suggestResult => {
-               switch (suggestResult) {
-               | Ok(v) =>
-                 CompletionResultAvailable({handle, suggestResult: v})
-               | Error(errorMsg) => CompletionError({handle, errorMsg})
-               }
-             },
-           client,
-         )
-       });
-
-  // And subs for the current item, if the handle supports resolution
-  let resolveSub =
-    model
-    |> focused
-    |> OptionEx.flatMap((focusedItem: Filter.result(CompletionItem.t)) => {
-         let handle = focusedItem.item.handle;
-
-         model.handleToSession
-         |> IntMap.find_opt(handle)
-         |> OptionEx.flatMap(
-              ({supportsResolve, buffer, location, _}: Session.t) =>
-              if (supportsResolve) {
-                focusedItem.item.chainedCacheId
-                |> Option.map(chainedCacheId => {
-                     Service_Exthost.Sub.completionItem(
-                       ~handle,
-                       ~chainedCacheId,
-                       ~buffer,
-                       ~position=location,
-                       ~toMsg=
-                         fun
-                         | Ok(suggestItem) =>
-                           CompletionDetailsAvailable({handle, suggestItem})
-                         | Error(errorMsg) =>
-                           CompletionDetailsError({handle, errorMsg}),
-                       client,
-                     )
-                   });
-              } else {
-                None;
-              }
-            );
+  if (model.isInsertMode) {
+    let selectedItem = selected(model);
+    model.providers
+    |> List.map((meet: Session.t) => {
+         Session.sub(~activeBuffer, ~client, ~selectedItem, meet)
        })
-    |> Option.value(~default=Isolinear.Sub.none);
-
-  [resolveSub, ...handleSubs] |> Isolinear.Sub.batch;
-};
+    |> Isolinear.Sub.batch;
+  } else {
+    Isolinear.Sub.none;
+  };
 
 // COMMANDS
 
@@ -790,12 +1038,15 @@ module ContextKeys = {
   open WhenExpr.ContextKeys.Schema;
 
   let suggestWidgetVisible = bool("suggestWidgetVisible", isActive);
+
+  let acceptSuggestionOnEnter =
+    bool("acceptSuggestionOnEnter", model => model.acceptOnEnter);
 };
 
 // KEYBINDINGS
 
 module KeyBindings = {
-  open Oni_Input.Keybindings;
+  open Feature_Input.Schema;
 
   let suggestWidgetVisible =
     "editorTextFocus && suggestWidgetVisible" |> WhenExpr.parse;
@@ -806,74 +1057,91 @@ module KeyBindings = {
   let triggerSuggestCondition =
     "editorTextFocus && insertMode && !suggestWidgetVisible" |> WhenExpr.parse;
 
-  let triggerSuggestControlSpace = {
-    key: "<C-Space>",
-    command: Commands.triggerSuggest.id,
-    condition: triggerSuggestCondition,
-  };
-  let triggerSuggestControlN = {
-    key: "<C-N>",
-    command: Commands.triggerSuggest.id,
-    condition: triggerSuggestCondition,
-  };
-  let triggerSuggestControlP = {
-    key: "<C-N>",
-    command: Commands.triggerSuggest.id,
-    condition: triggerSuggestCondition,
-  };
+  let triggerSuggestControlSpace =
+    bind(
+      ~key="<C-Space>",
+      ~command=Commands.triggerSuggest.id,
+      ~condition=triggerSuggestCondition,
+    );
+  let triggerSuggestControlN =
+    bind(
+      ~key="<C-N>",
+      ~command=Commands.triggerSuggest.id,
+      ~condition=triggerSuggestCondition,
+    );
+  let triggerSuggestControlP =
+    bind(
+      ~key="<C-P>",
+      ~command=Commands.triggerSuggest.id,
+      ~condition=triggerSuggestCondition,
+    );
 
-  let nextSuggestion = {
-    key: "<C-N>",
-    command: Commands.selectNextSuggestion.id,
-    condition: suggestWidgetVisible,
-  };
+  let nextSuggestion =
+    bind(
+      ~key="<C-N>",
+      ~command=Commands.selectNextSuggestion.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let nextSuggestionArrow = {
-    key: "<DOWN>",
-    command: Commands.selectNextSuggestion.id,
-    condition: suggestWidgetVisible,
-  };
+  let nextSuggestionArrow =
+    bind(
+      ~key="<DOWN>",
+      ~command=Commands.selectNextSuggestion.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let previousSuggestion = {
-    key: "<C-P>",
-    command: Commands.selectPrevSuggestion.id,
-    condition: suggestWidgetVisible,
-  };
-  let previousSuggestionArrow = {
-    key: "<UP>",
-    command: Commands.selectPrevSuggestion.id,
-    condition: suggestWidgetVisible,
-  };
+  let previousSuggestion =
+    bind(
+      ~key="<C-P>",
+      ~command=Commands.selectPrevSuggestion.id,
+      ~condition=suggestWidgetVisible,
+    );
+  let previousSuggestionArrow =
+    bind(
+      ~key="<UP>",
+      ~command=Commands.selectPrevSuggestion.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let acceptSuggestionEnter = {
-    key: "<CR>",
-    command: Commands.acceptSelected.id,
-    condition: acceptOnEnter,
-  };
+  let acceptSuggestionEnter =
+    bind(
+      ~key="<CR>",
+      ~command=Commands.acceptSelected.id,
+      ~condition=acceptOnEnter,
+    );
 
-  let acceptSuggestionTab = {
-    key: "<TAB>",
-    command: Commands.acceptSelected.id,
-    condition: suggestWidgetVisible,
-  };
+  let acceptSuggestionTab =
+    bind(
+      ~key="<TAB>",
+      ~command=Commands.acceptSelected.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let acceptSuggestionShiftTab = {
-    key: "<S-TAB>",
-    command: Commands.acceptSelected.id,
-    condition: suggestWidgetVisible,
-  };
+  let acceptSuggestionShiftTab =
+    bind(
+      ~key="<S-TAB>",
+      ~command=Commands.acceptSelected.id,
+      ~condition=suggestWidgetVisible,
+    );
 
-  let acceptSuggestionShiftEnter = {
-    key: "<S-TAB>",
-    command: Commands.acceptSelected.id,
-    condition: suggestWidgetVisible,
-  };
+  let acceptSuggestionShiftEnter =
+    bind(
+      ~key="<S-CR>",
+      ~command=Commands.acceptSelected.id,
+      ~condition=suggestWidgetVisible,
+    );
 };
 
 module Contributions = {
   let colors = [];
 
-  let configuration = Configuration.[quickSuggestions.spec];
+  let configuration =
+    CompletionConfig.[
+      quickSuggestions.spec,
+      wordBasedSuggestions.spec,
+      acceptSuggestionOnEnter.spec,
+      snippetSuggestions.spec,
+    ];
 
   let commands =
     Commands.[
@@ -883,7 +1151,8 @@ module Contributions = {
       triggerSuggest,
     ];
 
-  let contextKeys = ContextKeys.[suggestWidgetVisible];
+  let contextKeys =
+    ContextKeys.[acceptSuggestionOnEnter, suggestWidgetVisible];
 
   let keybindings =
     KeyBindings.[
@@ -947,23 +1216,42 @@ module View = {
     | TypeParameter => Codicon.symbolTypeParameter
     | User => Codicon.symbolMisc
     | Issue => Codicon.symbolMisc
-    | Snippet => Codicon.symbolText;
+    | Snippet => Codicon.symbolSnippet;
 
-  let kindToColor = (tokenTheme: TokenTheme.t) =>
-    fun
-    | Text => Some(tokenTheme.textColor)
-    | Method => Some(tokenTheme.functionColor)
-    | Function => Some(tokenTheme.functionColor)
-    | Constructor => Some(tokenTheme.entityColor)
-    | Struct => Some(tokenTheme.typeColor)
-    | Module => Some(tokenTheme.entityColor)
-    | Unit => Some(tokenTheme.entityColor)
-    | Keyword => Some(tokenTheme.keywordColor)
-    | Enum => Some(tokenTheme.entityColor)
-    | Constant => Some(tokenTheme.constantColor)
-    | Property => Some(tokenTheme.entityColor)
-    | Interface => Some(tokenTheme.entityColor)
-    | _ => None;
+  let kindToColor = (colors: Oni_Core.ColorTheme.Colors.t) =>
+    Feature_Theme.Colors.SymbolIcon.(
+      {
+        fun
+        | Method => methodForeground.from(colors)
+        | Function => functionForeground.from(colors)
+        | Constructor => constructorForeground.from(colors)
+        | Field => fieldForeground.from(colors)
+        | Variable => variableForeground.from(colors)
+        | Class => classForeground.from(colors)
+        | Struct => structForeground.from(colors)
+        | Interface => interfaceForeground.from(colors)
+        | Module => moduleForeground.from(colors)
+        | Property => propertyForeground.from(colors)
+        | Event => eventForeground.from(colors)
+        | Operator => operatorForeground.from(colors)
+        | Unit => unitForeground.from(colors)
+        | Value
+        | Constant => constantForeground.from(colors)
+        | Enum => enumeratorForeground.from(colors)
+        | EnumMember => enumeratorMemberForeground.from(colors)
+        | Keyword => keywordForeground.from(colors)
+        | Text => textForeground.from(colors)
+        | Color => colorForeground.from(colors)
+        | File => fileForeground.from(colors)
+        | Reference => referenceForeground.from(colors)
+        | Customcolor => colorForeground.from(colors)
+        | Folder => folderForeground.from(colors)
+        | TypeParameter => typeParameterForeground.from(colors)
+        | User => nullForeground.from(colors)
+        | Issue => nullForeground.from(colors)
+        | Snippet => snippetForeground.from(colors);
+      }
+    );
 
   module Colors = {
     type t = {
@@ -1048,17 +1336,14 @@ module View = {
         ~text,
         ~kind,
         ~highlight,
+        ~theme: Oni_Core.ColorTheme.Colors.t,
         ~colors: Colors.t,
-        ~tokenTheme,
         ~editorFont: Service_Font.font,
         (),
       ) => {
     let icon = kind |> kindToIcon;
 
-    let iconColor =
-      kind
-      |> kindToColor(tokenTheme)
-      |> Option.value(~default=colors.editorForeground);
+    let iconColor = kind |> kindToColor(theme);
 
     <View style={Styles.item(~isFocused, ~colors)}>
       <View style={Styles.icon(~color=iconColor)}>
@@ -1136,7 +1421,7 @@ module View = {
     let maxWidth =
       items
       |> Array.fold_left(
-           (maxWidth, this: Filter.result(CompletionItem.t)) => {
+           (maxWidth, (_loc, this: Filter.result(CompletionItem.t))) => {
              let textWidth =
                Service_Font.measure(~text=this.item.label, editorFont);
              let thisWidth =
@@ -1153,7 +1438,7 @@ module View = {
     let detail =
       switch (focused) {
       | Some(index) =>
-        let focused: Filter.result(CompletionItem.t) = items[index];
+        let focused: Filter.result(CompletionItem.t) = items[index] |> snd;
         switch (focused.item.detail) {
         | Some(text) =>
           <detailView text width lineHeight colors tokenTheme editorFont />
@@ -1173,15 +1458,15 @@ module View = {
             theme
             focused>
             ...{index => {
-              let Filter.{highlight, item} = items[index];
+              let Filter.{highlight, item, _} = items[index] |> snd;
               let CompletionItem.{label: text, kind, _} = item;
               <itemView
                 isFocused={Some(index) == focused}
                 text
                 kind
                 highlight
+                theme
                 colors
-                tokenTheme
                 editorFont
               />;
             }}

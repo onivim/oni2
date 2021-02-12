@@ -9,6 +9,8 @@ module Colors = Feature_Theme.Colors.ActivityBar;
 module BadgeColors = Feature_Theme.Colors.ActivityBarBadge;
 module Sneakable = Feature_Sneak.View.Sneakable;
 
+open Feature_SideBar;
+
 type notification =
   | InProgress
   | Count(int);
@@ -16,28 +18,35 @@ type notification =
 module Styles = {
   open Style;
 
-  let container = (~theme, ~offsetX) => [
+  let container = (~theme) => [
     top(0),
     bottom(0),
     backgroundColor(Colors.background.from(theme)),
     alignItems(`Center),
-    transform(Transform.[TranslateX(offsetX)]),
   ];
 
-  let item = (~isHovered, ~isActive, ~theme) => [
-    position(`Relative),
-    height(50),
-    width(50),
-    justifyContent(`Center),
-    alignItems(`Center),
-    borderLeft(
-      ~width=2,
-      ~color=(isActive ? Colors.activeBorder : Colors.border).from(theme),
-    ),
-    backgroundColor(
-      theme |> (isHovered ? Colors.activeBackground : Colors.background).from,
-    ),
-  ];
+  let item = (~isHovered, ~isActive, ~theme, ~sideBar) => {
+    let borderFn =
+      switch (Feature_SideBar.location(sideBar)) {
+      | Feature_SideBar.Right => borderRight
+      | Feature_SideBar.Left => borderLeft
+      };
+
+    [
+      position(`Relative),
+      height(50),
+      width(50),
+      justifyContent(`Center),
+      alignItems(`Center),
+      borderFn(
+        ~width=2,
+        ~color=(isActive ? Colors.activeBorder : Colors.border).from(theme),
+      ),
+      backgroundColor(
+        theme |> (isHovered ? Colors.activeBackground : Colors.background).from,
+      ),
+    ];
+  };
 
   let notification = (~scale, ~theme, ~padding) => [
     position(`Absolute),
@@ -79,16 +88,16 @@ module Notification = {
         );
       | InProgress => (
           3,
-          <Oni_Components.Codicon
-            icon=Oni_Components.Codicon.clock
-            fontSize=10.
-            color=foregroundColor
-          />,
+          <Codicon icon=Codicon.clock fontSize=10. color=foregroundColor />,
         )
       };
 
     let%hook (scale, _state, _reset) =
-      Hooks.animation(Animations.appear, ~active=true);
+      Hooks.animation(
+        ~name="Notification Appear",
+        Animations.appear,
+        ~active=true,
+      );
     <View style={Styles.notification(~scale, ~theme, ~padding)}>
       inner
     </View>;
@@ -99,6 +108,7 @@ let%component item =
               (
                 ~notification: option(notification)=?,
                 ~onClick,
+                ~sideBar,
                 ~theme,
                 ~isActive,
                 ~icon,
@@ -131,7 +141,7 @@ let%component item =
     <Sneakable
       sneakId="item"
       onClick
-      style={Styles.item(~isHovered, ~isActive, ~theme)}>
+      style={Styles.item(~isHovered, ~isActive, ~theme, ~sideBar)}>
       <icon />
       notificationElement
     </Sneakable>
@@ -139,50 +149,39 @@ let%component item =
 };
 
 let onExplorerClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(FileExplorerClick));
+  GlobalContext.current().dispatch(Actions.SideBar(FileExplorerClicked));
 };
 
 let onSearchClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(SearchClick));
+  GlobalContext.current().dispatch(Actions.SideBar(SearchClicked));
 };
 
 let onSCMClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(SCMClick));
+  GlobalContext.current().dispatch(Actions.SideBar(SCMClicked));
 };
 
 let onExtensionsClick = _ => {
-  GlobalContext.current().dispatch(Actions.ActivityBar(ExtensionsClick));
+  GlobalContext.current().dispatch(Actions.SideBar(ExtensionsClicked));
 };
 
-let animation =
-  Revery.UI.Animation.(
-    animate(Revery.Time.milliseconds(150))
-    |> ease(Easing.ease)
-    |> tween(-50.0, 0.)
-    |> delay(Revery.Time.milliseconds(75))
-  );
-
-let%component make =
-              (
-                ~theme: ColorTheme.Colors.t,
-                ~sideBar: Feature_SideBar.model,
-                ~pane: Feature_Pane.model,
-                ~extensions: Feature_Extensions.model,
-                ~font: UiFont.t,
-                (),
-              ) => {
-  let%hook (offsetX, _animationState, _reset) = Hooks.animation(animation);
-
+let make =
+    (
+      ~theme: ColorTheme.Colors.t,
+      ~sideBar: Feature_SideBar.model,
+      ~extensions: Feature_Extensions.model,
+      ~font: UiFont.t,
+      (),
+    ) => {
   let isSidebarVisible = it => Feature_SideBar.isVisible(it, sideBar);
-  let isPaneVisible = it => Feature_Pane.isVisible(it, pane);
 
   let extensionNotification =
     Feature_Extensions.isBusy(extensions) ? Some(InProgress) : None;
 
-  <View style={Styles.container(~theme, ~offsetX)}>
+  <View style={Styles.container(~theme)}>
     <item
       font
       onClick=onExplorerClick
+      sideBar
       theme
       isActive={isSidebarVisible(FileExplorer)}
       icon=FontAwesome.copy
@@ -191,13 +190,15 @@ let%component make =
     <item
       font
       onClick=onSearchClick
+      sideBar
       theme
-      isActive={isPaneVisible(Search)}
+      isActive={isSidebarVisible(Search)}
       icon=FontAwesome.search
     />
     <item
       font
       onClick=onSCMClick
+      sideBar
       theme
       isActive={isSidebarVisible(SCM)}
       icon=FontAwesome.codeBranch
@@ -205,6 +206,7 @@ let%component make =
     <item
       font
       onClick=onExtensionsClick
+      sideBar
       theme
       isActive={isSidebarVisible(Extensions)}
       icon=FontAwesome.thLarge

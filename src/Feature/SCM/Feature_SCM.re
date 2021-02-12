@@ -1,6 +1,5 @@
 open Oni_Core;
 open Utility;
-open Oni_Components;
 
 // MODEL
 
@@ -14,6 +13,7 @@ module ResourceGroup = {
     label: string,
     hideWhenEmpty: bool,
     resources: list(Resource.t),
+    viewModel: Component_VimList.model(Resource.t),
   };
 };
 
@@ -34,7 +34,7 @@ module Provider = {
     acceptInputCommand: option(command),
     inputVisible: bool,
     validationEnabled: bool,
-    statusBarCommands: list(Exthost.Command.t),
+    statusBarCommands: list(command),
   };
 
   let initial = (~handle, ~id, ~label, ~rootUri) => {
@@ -51,44 +51,233 @@ module Provider = {
     validationEnabled: false,
     statusBarCommands: [],
   };
+
+  let appliesToPath = (~path: string, {rootUri, _}) => {
+    let maybePath =
+      path
+      |> Oni_Core.Uri.fromPath
+      |> Oni_Core.Uri.toFileSystemPath
+      |> Fp.absoluteCurrentPlatform;
+
+    let maybeScmPath =
+      rootUri
+      |> Option.map(Oni_Core.Uri.toFileSystemPath)
+      |> OptionEx.flatMap(Fp.absoluteCurrentPlatform);
+
+    OptionEx.map2(
+      (path, scmPath) => {Fp.isDescendent(~ofPath=scmPath, path)},
+      maybePath,
+      maybeScmPath,
+    )
+    |> Option.value(~default=false);
+  };
+
+  let%test_module "Provider" =
+    (module
+     {
+       let make = (~rootUri) => {
+         initial(~handle=0, ~id="test-id", ~label="test", ~rootUri);
+       };
+       module Uri = Oni_Core.Uri;
+       let%test "appliesToPath -no path should be false" = {
+         let provider = make(~rootUri=None);
+         appliesToPath(~path="/test", provider) == false;
+       };
+
+       let%test "appliesToPath - same path should be true" =
+         if (Sys.win32) {
+           let provider = make(~rootUri=Some("D:/test" |> Uri.fromPath));
+           appliesToPath(~path="D:/test", provider) == true;
+         } else {
+           let provider = make(~rootUri=Some("/test" |> Uri.fromPath));
+           appliesToPath(~path="/test", provider) == true;
+         };
+       let%test "appliesToPath - nested path should be true" =
+         if (Sys.win32) {
+           let provider = make(~rootUri=Some("D:/test" |> Uri.fromPath));
+           appliesToPath(~path="D:/test/dir", provider) == true;
+         } else {
+           let provider = make(~rootUri=Some("/test" |> Uri.fromPath));
+           appliesToPath(~path="/test/dir", provider) == true;
+         };
+       let%test "appliesToPath - root path should be false" =
+         if (Sys.win32) {
+           let provider =
+             make(~rootUri=Some("D:/test/project" |> Uri.fromPath));
+           appliesToPath(~path="D:/test/", provider) == false;
+         } else {
+           let provider =
+             make(~rootUri=Some("/test/project" |> Uri.fromPath));
+           appliesToPath(~path="/test", provider) == false;
+         };
+     });
 };
+
+[@deriving show({with_path: false})]
+module Focus = {
+  [@deriving show]
+  type t =
+    | CommitText
+    | Group({
+        providerHandle: int,
+        handle: int,
+        id: string,
+      });
+
+  let initial = CommitText;
+
+  let idx = (~handle, ~id, visibleGroups) => {
+    let rec loop = (currentIndex, remainingGroups) => {
+      switch (remainingGroups) {
+      | [] => None
+      | [(_provider, group), ...tail] =>
+        ResourceGroup.(
+          if (group.handle == handle && group.id == id) {
+            Some(currentIndex);
+          } else {
+            loop(currentIndex + 1, tail);
+          }
+        )
+      };
+    };
+
+    loop(0, visibleGroups);
+  };
+
+  let group = (~idx, visibleGroups) => {
+    let (provider: Provider.t, group: ResourceGroup.t) =
+      List.nth(visibleGroups, idx);
+    Group({
+      providerHandle: provider.handle,
+      handle: group.handle,
+      id: group.id,
+    });
+  };
+
+  let focusUp = (visibleGroups, focus) => {
+    switch (focus) {
+    | CommitText => None
+
+    | Group({handle, id, _}) =>
+      let maybeIdx = idx(~handle, ~id, visibleGroups);
+
+      switch (maybeIdx) {
+      // Somehow, our group isn't visible.. focus commit text
+      | None => Some(CommitText)
+
+      // Below top - focus group up
+      | Some(idx) when idx >= 1 => Some(group(~idx=idx - 1, visibleGroups))
+
+      // At top, focus text now
+      | Some(_) => Some(CommitText)
+      };
+    };
+  };
+
+  let focusDown = (visibleGroups, focus) => {
+    let groupCount = List.length(visibleGroups);
+    switch (focus) {
+    | CommitText when groupCount >= 1 => Some(group(~idx=0, visibleGroups))
+
+    | CommitText => None
+
+    | Group({handle, id, _}) =>
+      let maybeIdx = idx(~handle, ~id, visibleGroups);
+
+      switch (maybeIdx) {
+      | None when groupCount >= 1 => Some(group(~idx=0, visibleGroups))
+
+      // No groups, unhandled
+      | None => None
+
+      // Not at bottom - focus downward
+      | Some(idx) when idx < groupCount - 1 =>
+        Some(group(~idx=idx + 1, visibleGroups))
+
+      // At bottom, unhandled
+      | Some(_) => None
+      };
+    };
+  };
+
+  let isGroupFocused = (group: ResourceGroup.t, focus) => {
+    switch (focus) {
+    | CommitText => false
+    | Group({handle, id, _}) => group.handle == handle && group.id == id
+    };
+  };
+};
+
+open Focus;
 
 [@deriving show({with_path: false})]
 type model = {
   providers: list(Provider.t),
-  inputBox: Feature_InputText.model,
+  inputBox: Component_InputText.model,
+  textContentProviders: list((int, string)),
+  vimWindowNavigation: Component_VimWindows.model,
+  focus: Focus.t,
 };
+
+let resetFocus = model => {...model, focus: Focus.initial};
 
 let initial = {
   providers: [],
-  inputBox: Feature_InputText.create(~placeholder="Do the commit thing!"),
+  inputBox: Component_InputText.create(~placeholder="Do the commit thing!"),
+  textContentProviders: [],
+  vimWindowNavigation: Component_VimWindows.initial,
+  focus: Focus.initial,
 };
 
-let statusBarCommands = ({providers, _}: model) => {
+let visibleGroups = ({providers, _}) => {
+  let groups = {
+    open Base.List.Let_syntax;
+
+    let%bind provider = providers;
+    let%bind group = provider.resourceGroups;
+    return((provider, group));
+  };
+
+  groups
+  |> List.filter(((_provider, group: ResourceGroup.t)) => {
+       !(group.resources == [] && group.hideWhenEmpty)
+     });
+};
+
+let selectedGroup = model => {
+  switch (model.focus) {
+  | CommitText => None
+  | Group({providerHandle, handle, _}) =>
+    visibleGroups(model)
+    |> List.filter(((provider: Provider.t, group: ResourceGroup.t)) => {
+         provider.handle == providerHandle && group.handle == handle
+       })
+    |> (list => List.nth_opt(list, 0))
+  };
+};
+
+let statusBarCommands = (~workingDirectory, {providers, _}: model) => {
   providers
+  |> List.filter(provider => {
+       Provider.appliesToPath(~path=workingDirectory, provider)
+     })
   |> List.map(({statusBarCommands, _}: Provider.t) => statusBarCommands)
   |> List.flatten;
-};
-
-// EFFECTS
-
-module Effects = {
-  let getOriginalUri = (extHostClient, model, path, toMsg) => {
-    let handles =
-      model.providers |> List.map((provider: Provider.t) => provider.handle);
-    Service_Exthost.Effects.SCM.provideOriginalResource(
-      ~handles,
-      extHostClient,
-      path,
-      toMsg,
-    );
-  };
 };
 
 // UPDATE
 
 [@deriving show({with_path: false})]
 type msg =
+  | GotOriginalUri({
+      bufferId: int,
+      uri: Uri.t,
+    })
+  | GotOriginalContent({
+      bufferId: int,
+      lines: array(string),
+    })
+  | GetOriginalContentFailed({bufferId: int})
   | NewProvider({
       handle: int,
       id: string,
@@ -96,11 +285,10 @@ type msg =
       rootUri: option(Uri.t),
     })
   | LostProvider({handle: int})
-  | NewResourceGroup({
+  | NewResourceGroups({
       provider: int,
-      handle: int,
-      id: string,
-      label: string,
+      groups: list(Exthost.SCM.Group.t),
+      splices: [@opaque] list(Exthost.SCM.Resource.Splices.t),
     })
   | GroupHideWhenEmptyChanged({
       provider: int,
@@ -116,12 +304,9 @@ type msg =
       provider: int,
       handle: int,
     })
-  | ResourceStatesChanged({
-      provider: int,
-      group: int,
-      spliceStart: int,
-      deleteCount: int,
-      additions: list(Resource.t),
+  | SpliceResourceStates({
+      handle: int,
+      splices: [@opaque] list(Exthost.SCM.Resource.Splices.t),
     })
   | CountChanged({
       handle: int,
@@ -133,7 +318,7 @@ type msg =
     })
   | StatusBarCommandsChanged({
       handle: int,
-      statusBarCommands: list(Exthost.Command.t),
+      statusBarCommands: list(Exthost.SCM.command),
     })
   | CommitTemplateChanged({
       handle: int,
@@ -157,17 +342,76 @@ type msg =
     })
   | KeyPressed({key: string})
   | Pasted({text: string})
-  | InputBox(Feature_InputText.msg);
+  | DocumentContentProvider(Exthost.Msg.DocumentContentProvider.msg)
+  | InputBox(Component_InputText.msg)
+  | VimWindowNav(Component_VimWindows.msg)
+  | List({
+      provider: int,
+      group: int,
+      msg: Component_VimList.msg,
+    });
 
 module Msg = {
   let paste = text => Pasted({text: text});
   let keyPressed = key => KeyPressed({key: key});
+
+  let documentContentProvider = msg => DocumentContentProvider(msg);
 };
 
 type outmsg =
   | Effect(Isolinear.Effect.t(msg))
+  | EffectAndFocus(Isolinear.Effect.t(msg))
   | Focus
+  | OpenFile(string)
+  | PreviewFile(string)
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | OriginalContentLoaded({
+      bufferId: int,
+      originalLines: array(string),
+    })
   | Nothing;
+
+module Effects = {
+  let getOriginalContent = (fileSystem, bufferId, uri, providers, client) => {
+    let scheme = uri |> Uri.getScheme |> Uri.Scheme.toString;
+
+    // Is there a file system provider?
+
+    let maybeFileSystem =
+      Feature_FileSystem.getFileSystem(~scheme, fileSystem);
+    switch (maybeFileSystem) {
+    // No file system - fall back to text content provider,
+    // if available...
+    | None =>
+      providers
+      |> List.find_opt(((_, providerScheme)) => providerScheme == scheme)
+      |> Option.map(provider => {
+           let (handle, _) = provider;
+           Service_Exthost.Effects.SCM.getOriginalContent(
+             ~handle,
+             ~uri,
+             ~toMsg=lines => GotOriginalContent({bufferId, lines}),
+             client,
+           );
+         })
+      |> Option.value(~default=Isolinear.Effect.none)
+
+    | Some(handle) =>
+      Feature_FileSystem.Effects.readFile(
+        ~handle,
+        ~uri,
+        ~toMsg=
+          resultLines =>
+            switch (resultLines) {
+            | Error(_) => GetOriginalContentFailed({bufferId: bufferId})
+            | Ok(lines) => GotOriginalContent({bufferId, lines})
+            },
+        fileSystem,
+        client,
+      )
+    };
+  };
+};
 
 module Internal = {
   let updateProvider = (~handle, f, model) => {
@@ -203,8 +447,66 @@ module Internal = {
   };
 };
 
-let update = (extHostClient: Exthost.Client.t, model, msg) =>
+let update =
+    (
+      ~previewEnabled,
+      ~fileSystem: Feature_FileSystem.model,
+      extHostClient: Exthost.Client.t,
+      model,
+      msg,
+    ) =>
   switch (msg) {
+  | DocumentContentProvider(documentContentProviderMsg) =>
+    Exthost.Msg.DocumentContentProvider.(
+      {
+        switch (documentContentProviderMsg) {
+        | RegisterTextContentProvider({handle, scheme}) => (
+            {
+              ...model,
+              textContentProviders: [
+                (handle, scheme),
+                ...model.textContentProviders,
+              ],
+            },
+            Nothing,
+          )
+
+        | UnregisterTextContentProvider({handle}) => (
+            {
+              ...model,
+              textContentProviders:
+                List.filter(
+                  ((h, _)) => h != handle,
+                  model.textContentProviders,
+                ),
+            },
+            Nothing,
+          )
+        | VirtualDocumentChange(_) => (model, Nothing)
+        };
+      }
+    )
+
+  | GotOriginalUri({bufferId, uri}) => (
+      model,
+      Effect(
+        Effects.getOriginalContent(
+          fileSystem,
+          bufferId,
+          uri,
+          model.textContentProviders,
+          extHostClient,
+        ),
+      ),
+    )
+
+  | GotOriginalContent({bufferId, lines}) => (
+      model,
+      OriginalContentLoaded({bufferId, originalLines: lines}),
+    )
+
+  | GetOriginalContentFailed(_) => (model, Nothing)
+
   | NewProvider({handle, id, label, rootUri}) => (
       {
         ...model,
@@ -247,7 +549,7 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
   //      {
   //        ...model,
   //        inputBox:
-  //          Feature_InputText.setPlaceholder(~placeholder, model.inputBox),
+  //          Component_InputText.setPlaceholder(~placeholder, model.inputBox),
   //      },
   //      Nothing,
   //    )
@@ -287,25 +589,73 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       Nothing,
     )
 
-  | NewResourceGroup({provider, handle, id, label}) => (
-      model
-      |> Internal.updateProvider(~handle=provider, p =>
-           {
-             ...p,
-             resourceGroups: [
-               ResourceGroup.{
-                 handle,
-                 id,
-                 label,
-                 hideWhenEmpty: false,
-                 resources: [],
-               },
-               ...p.resourceGroups,
-             ],
-           }
-         ),
-      Nothing,
-    )
+  | NewResourceGroups({provider, groups, splices}) =>
+    let model' =
+      groups
+      |> List.fold_left(
+           (acc, group: Exthost.SCM.Group.t) => {
+             acc
+             |> Internal.updateProvider(~handle=provider, p =>
+                  {
+                    ...p,
+                    resourceGroups: [
+                      ResourceGroup.{
+                        handle: group.handle,
+                        id: group.id,
+                        label: group.label,
+                        hideWhenEmpty:
+                          Exthost.SCM.GroupFeatures.(
+                            group.features.hideWhenEmpty
+                          ),
+                        resources: [],
+                        viewModel: Component_VimList.create(~rowHeight=20),
+                      },
+                      ...p.resourceGroups,
+                    ],
+                  }
+                )
+           },
+           model,
+         );
+
+    let model'' =
+      splices
+      |> List.fold_left(
+           (acc, {handle: group, resourceSplices}: Resource.Splices.t) => {
+             resourceSplices
+             |> List.fold_left(
+                  (
+                    innerAcc,
+                    {start, deleteCount, resources}: Resource.Splice.t,
+                  ) => {
+                    innerAcc
+                    |> Internal.updateResourceGroup(
+                         ~provider,
+                         ~group,
+                         g => {
+                           let resources =
+                             ListEx.splice(
+                               ~start,
+                               ~deleteCount,
+                               ~additions=resources,
+                               g.resources,
+                             );
+
+                           let viewModel =
+                             Component_VimList.set(
+                               resources |> Array.of_list,
+                               g.viewModel,
+                             );
+                           {...g, resources, viewModel};
+                         },
+                       )
+                  },
+                  acc,
+                )
+           },
+           model',
+         );
+    (model'', Nothing);
 
   | LostResourceGroup({provider, handle}) => (
       model
@@ -338,32 +688,51 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       Nothing,
     )
 
-  | ResourceStatesChanged({
-      provider,
-      group,
-      spliceStart,
-      deleteCount,
-      additions,
-    }) => (
-      model
-      |> Internal.updateResourceGroup(~provider, ~group, g =>
-           {
-             ...g,
-             resources:
-               ListEx.splice(
-                 ~start=spliceStart,
-                 ~deleteCount,
-                 ~additions,
-                 g.resources,
-               ),
-           }
-         ),
-      Nothing,
-    )
+  | SpliceResourceStates({handle, splices}) =>
+    let provider = handle;
+    open Exthost.SCM;
+    let model' =
+      splices
+      |> List.fold_left(
+           (acc, {handle: group, resourceSplices}: Resource.Splices.t) => {
+             resourceSplices
+             |> List.fold_left(
+                  (
+                    innerAcc,
+                    {start, deleteCount, resources}: Resource.Splice.t,
+                  ) => {
+                    innerAcc
+                    |> Internal.updateResourceGroup(
+                         ~provider,
+                         ~group,
+                         g => {
+                           let resources =
+                             ListEx.splice(
+                               ~start,
+                               ~deleteCount,
+                               ~additions=resources,
+                               g.resources,
+                             );
+
+                           let viewModel =
+                             Component_VimList.set(
+                               resources |> Array.of_list,
+                               g.viewModel,
+                             );
+                           {...g, resources, viewModel};
+                         },
+                       )
+                  },
+                  acc,
+                )
+           },
+           model,
+         );
+    (model', Nothing);
 
   | KeyPressed({key: "<CR>"}) => (
       model,
-      Effect(
+      EffectAndFocus(
         Isolinear.Effect.batch(
           model.providers
           |> List.map((provider: Provider.t) =>
@@ -384,16 +753,16 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     )
 
   | KeyPressed({key}) =>
-    let inputBox = Feature_InputText.handleInput(~key, model.inputBox);
+    let inputBox = Component_InputText.handleInput(~key, model.inputBox);
     (
       {...model, inputBox},
-      Effect(
+      EffectAndFocus(
         Isolinear.Effect.batch(
           model.providers
           |> List.map((provider: Provider.t) =>
                Service_Exthost.Effects.SCM.onInputBoxValueChange(
                  ~handle=provider.handle,
-                 ~value=inputBox |> Feature_InputText.value,
+                 ~value=inputBox |> Component_InputText.value,
                  extHostClient,
                )
              ),
@@ -402,16 +771,16 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
     );
 
   | Pasted({text}) =>
-    let inputBox = Feature_InputText.paste(~text, model.inputBox);
+    let inputBox = Component_InputText.paste(~text, model.inputBox);
     (
       {...model, inputBox},
-      Effect(
+      EffectAndFocus(
         Isolinear.Effect.batch(
           model.providers
           |> List.map((provider: Provider.t) =>
                Service_Exthost.Effects.SCM.onInputBoxValueChange(
                  ~handle=provider.handle,
-                 ~value=inputBox |> Feature_InputText.value,
+                 ~value=inputBox |> Component_InputText.value,
                  extHostClient,
                )
              ),
@@ -419,10 +788,82 @@ let update = (extHostClient: Exthost.Client.t, model, msg) =>
       ),
     );
 
-  | InputBox(msg) => (
-      {...model, inputBox: Feature_InputText.update(msg, model.inputBox)},
-      Focus,
-    )
+  | InputBox(msg) =>
+    let (inputBox', inputOutmsg) =
+      Component_InputText.update(msg, model.inputBox);
+    let outmsg =
+      switch (inputOutmsg) {
+      | Component_InputText.Nothing => Nothing
+      | Component_InputText.Focus => Focus
+      };
+
+    ({...model, inputBox: inputBox'}, outmsg);
+
+  | VimWindowNav(navMsg) =>
+    let (windowNav, outmsg) =
+      Component_VimWindows.update(navMsg, model.vimWindowNavigation);
+
+    let model' = {...model, vimWindowNavigation: windowNav};
+    let (focus, outmsg) =
+      switch (outmsg) {
+      | Nothing => (model'.focus, Nothing)
+      | FocusLeft => (model'.focus, UnhandledWindowMovement(outmsg))
+      | FocusRight => (model'.focus, UnhandledWindowMovement(outmsg))
+      | FocusDown =>
+        switch (Focus.focusDown(visibleGroups(model'), model'.focus)) {
+        | None => (model'.focus, UnhandledWindowMovement(outmsg))
+        | Some(focus) => (focus, Nothing)
+        }
+      | FocusUp =>
+        switch (Focus.focusUp(visibleGroups(model'), model'.focus)) {
+        | None => (model'.focus, UnhandledWindowMovement(outmsg))
+        | Some(focus) => (focus, Nothing)
+        }
+
+      | PreviousTab
+      | NextTab => (model'.focus, Nothing)
+      };
+    ({...model', focus}, outmsg);
+
+  | List({provider, group, msg}) =>
+    // DIRTY IMPURE HACK: Capture the outmsg during the update
+    // This assumes that there is a unique (provider, group).
+    let capturedOutmsg = ref(None);
+
+    let model =
+      model
+      |> Internal.updateResourceGroup(
+           ~provider,
+           ~group,
+           g => {
+             let (viewModel, outmsg) =
+               Component_VimList.update(msg, g.viewModel);
+
+             let outmsg =
+               switch (outmsg) {
+               | Component_VimList.Nothing => Some(Nothing)
+               | Component_VimList.Touched({index}) =>
+                 Component_VimList.get(index, viewModel)
+                 |> Option.map((item: Resource.t) =>
+                      previewEnabled
+                        ? PreviewFile(
+                            item.uri |> Oni_Core.Uri.toFileSystemPath,
+                          )
+                        : OpenFile(item.uri |> Oni_Core.Uri.toFileSystemPath)
+                    )
+               | Component_VimList.Selected({index}) =>
+                 Component_VimList.get(index, viewModel)
+                 |> Option.map((item: Resource.t) =>
+                      OpenFile(item.uri |> Oni_Core.Uri.toFileSystemPath)
+                    )
+               };
+
+             capturedOutmsg := outmsg;
+             {...g, viewModel};
+           },
+         );
+
+    (model, capturedOutmsg^ |> Option.value(~default=Nothing));
   };
 
 let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
@@ -433,8 +874,8 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
   | UnregisterSourceControl({handle}) =>
     dispatch(LostProvider({handle: handle}))
 
-  | RegisterSCMResourceGroup({provider, handle, id, label}) =>
-    dispatch(NewResourceGroup({provider, handle, id, label}))
+  | RegisterSCMResourceGroups({provider, groups, splices}) =>
+    dispatch(NewResourceGroups({provider, groups, splices}))
 
   | UnregisterSCMResourceGroup({provider, handle}) =>
     dispatch(LostResourceGroup({provider, handle}))
@@ -454,26 +895,8 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
     dispatch(GroupLabelChanged({provider, handle, label}))
 
   | SpliceSCMResourceStates({handle, splices}) =>
-    open Exthost.SCM;
+    dispatch(SpliceResourceStates({handle, splices}))
 
-    let provider = handle;
-    splices
-    |> List.iter(({handle as group, resourceSplices}: Resource.Splices.t) => {
-         ignore(handle);
-
-         resourceSplices
-         |> List.iter(({start, deleteCount, resources}: Resource.Splice.t) => {
-              dispatch(
-                ResourceStatesChanged({
-                  provider,
-                  group,
-                  spliceStart: start,
-                  deleteCount,
-                  additions: resources,
-                }),
-              )
-            });
-       });
   | UpdateSourceControl({handle, features}) =>
     let {
       hasQuickDiffProvider,
@@ -495,7 +918,12 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
       acceptInputCommand,
     );
 
-    dispatch(StatusBarCommandsChanged({handle, statusBarCommands}));
+    Option.iter(
+      statusBarCommands => {
+        dispatch(StatusBarCommandsChanged({handle, statusBarCommands}))
+      },
+      statusBarCommands,
+    );
 
   | SetInputBoxPlaceholder(_) =>
     // TODO: Set up replacement for '{0}'
@@ -509,11 +937,31 @@ let handleExtensionMessage = (~dispatch, msg: Exthost.Msg.SCM.msg) =>
     )
   };
 
+// SUBSCRIPTION
+
+let sub = (~activeBuffer, ~client, model) => {
+  let filePath =
+    activeBuffer |> Oni_Core.Buffer.getUri |> Oni_Core.Uri.toFileSystemPath;
+
+  let bufferId = activeBuffer |> Oni_Core.Buffer.getId;
+
+  model.providers
+  |> List.filter(Provider.appliesToPath(~path=filePath))
+  |> List.map((provider: Provider.t) =>
+       Service_Exthost.Sub.SCM.originalUri(
+         ~handle=provider.handle,
+         ~filePath,
+         ~toMsg=uri => GotOriginalUri({bufferId, uri}),
+         client,
+       )
+     )
+  |> Isolinear.Sub.batch;
+};
+
 // VIEW
 
 open Revery;
 open Revery.UI;
-open Revery.UI.Components;
 
 module Colors = Feature_Theme.Colors;
 
@@ -523,38 +971,34 @@ module Pane = {
 
     let container = [flexGrow(1)];
 
+    let inputContainer = [margin(12)];
+
     let text = (~theme) => [
       color(Colors.SideBar.foreground.from(theme)),
       textWrap(TextWrapping.NoWrap),
       textOverflow(`Ellipsis),
     ];
 
-    let input = [flexGrow(1), margin(12)];
-
-    let item = (~isHovered, ~theme) => [
-      isHovered
-        ? backgroundColor(Colors.List.hoverBackground.from(theme))
-        : backgroundColor(Colors.SideBar.background.from(theme)),
+    let item = [
+      flexDirection(`Row),
       paddingVertical(2),
       marginLeft(6),
       cursor(MouseCursors.pointer),
     ];
   };
 
-  let%component itemView =
-                (
-                  ~provider: Provider.t,
-                  ~resource: Resource.t,
-                  ~theme,
-                  ~font: UiFont.t,
-                  ~workingDirectory,
-                  ~onClick,
-                  (),
-                ) => {
+  let itemView =
+      (
+        ~provider: Provider.t,
+        ~resource: Resource.t,
+        ~theme,
+        ~iconTheme,
+        ~languageInfo,
+        ~font: UiFont.t,
+        ~workingDirectory,
+        (),
+      ) => {
     open Base;
-    let%hook (isHovered, setHovered) = Hooks.state(false);
-    let onMouseOver = _ => setHovered(_ => true);
-    let onMouseOut = _ => setHovered(_ => false);
 
     let base =
       provider.rootUri
@@ -564,15 +1008,14 @@ module Pane = {
     let path = Uri.toFileSystemPath(resource.uri);
     let displayName = Path.toRelative(~base, path);
 
-    <View style={Styles.item(~isHovered, ~theme)} onMouseOver onMouseOut>
-      <Clickable onClick>
-        <Text
-          style={Styles.text(~theme)}
-          text=displayName
-          fontFamily={font.family}
-          fontSize={font.size}
-        />
-      </Clickable>
+    <View style=Styles.item>
+      <Oni_Components.FileIcon font iconTheme languageInfo path />
+      <Text
+        style={Styles.text(~theme)}
+        text=displayName
+        fontFamily={font.family}
+        fontSize={font.size}
+      />
     </View>;
   };
 
@@ -580,36 +1023,48 @@ module Pane = {
       (
         ~provider,
         ~group: ResourceGroup.t,
+        ~iconTheme,
+        ~languageInfo,
         ~theme,
+        ~isFocused: bool,
         ~font: UiFont.t,
+        ~dispatch,
         ~workingDirectory,
-        ~onItemClick,
         ~onTitleClick,
         ~expanded,
         (),
       ) => {
     let label = group.label;
-    let items = Array.of_list(group.resources);
-    let renderItem = (items, idx) => {
-      let resource = items[idx];
+    let renderItem =
+        (
+          ~availableWidth as _,
+          ~index as _,
+          ~hovered as _,
+          ~selected as _,
+          item,
+        ) => {
       <itemView
         provider
-        resource
+        resource=item
+        iconTheme
+        languageInfo
         theme
         font
         workingDirectory
-        onClick={() => onItemClick(resource)}
       />;
     };
-    <Accordion
+    <Component_Accordion.VimList
       title=label
       expanded
       uiFont=font
-      rowHeight=20
-      count={Array.length(items)}
-      renderItem={renderItem(items)}
-      focused=None
+      model={group.viewModel}
+      dispatch={msg =>
+        dispatch(List({provider: provider.handle, group: group.handle, msg}))
+      }
+      isFocused
+      render=renderItem
       theme
+      //focused=None
       onClick=onTitleClick
     />;
   };
@@ -618,21 +1073,15 @@ module Pane = {
                 (
                   ~model,
                   ~workingDirectory,
-                  ~onItemClick,
                   ~isFocused,
+                  ~iconTheme,
+                  ~languageInfo,
                   ~theme,
                   ~font: UiFont.t,
                   ~dispatch,
                   (),
                 ) => {
-    let groups = {
-      open Base.List.Let_syntax;
-
-      let%bind provider = model.providers;
-      let%bind group = provider.resourceGroups;
-
-      return((provider, group));
-    };
+    let groups = visibleGroups(model);
 
     let%hook (localState, localDispatch) =
       Hooks.reducer(~initialState=StringMap.empty, (msg, model) => {
@@ -647,39 +1096,87 @@ module Pane = {
       });
 
     <View style=Styles.container>
-      <Feature_InputText.View
-        style=Styles.input
-        model={model.inputBox}
-        isFocused
-        fontFamily={font.family}
-        fontSize={font.size}
-        dispatch={msg => dispatch(InputBox(msg))}
-        theme
-      />
+      <View style=Styles.inputContainer>
+        <Component_InputText.View
+          model={model.inputBox}
+          isFocused={isFocused && model.focus == CommitText}
+          fontFamily={font.family}
+          fontSize={font.size}
+          dispatch={msg => dispatch(InputBox(msg))}
+          theme
+        />
+      </View>
       {groups
-       |> List.filter_map(((provider, group: ResourceGroup.t)) => {
+       |> List.map(((provider, group: ResourceGroup.t)) => {
             let expanded =
               StringMap.find_opt(group.label, localState)
               |> Option.value(~default=true);
 
-            if (group.resources == [] && group.hideWhenEmpty) {
-              None;
-            } else {
-              Some(
-                <groupView
-                  provider
-                  expanded
-                  group
-                  theme
-                  font
-                  workingDirectory
-                  onItemClick
-                  onTitleClick={() => localDispatch(group.label)}
-                />,
-              );
-            };
+            <groupView
+              provider
+              expanded
+              group
+              dispatch
+              isFocused={isFocused && isGroupFocused(group, model.focus)}
+              iconTheme
+              languageInfo
+              theme
+              font
+              workingDirectory
+              onTitleClick={() => localDispatch(group.label)}
+            />;
           })
        |> React.listToElement}
     </View>;
+  };
+};
+
+module Contributions = {
+  let commands = (~isFocused, model) => {
+    let listCommands =
+      switch (model.focus) {
+      | CommitText => []
+      | Group({providerHandle, handle, _}) =>
+        Component_VimList.Contributions.commands
+        |> List.map(
+             Oni_Core.Command.map(msg =>
+               List({provider: providerHandle, group: handle, msg})
+             ),
+           )
+      };
+
+    !isFocused
+      ? []
+      : (
+          Component_VimWindows.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
+        )
+        @ listCommands;
+  };
+
+  let contextKeys = (~isFocused, model) => {
+    open WhenExpr.ContextKeys;
+    let inputKeys =
+      isFocused && model.focus == CommitText
+        ? Component_InputText.Contributions.contextKeys(model.inputBox)
+        : empty;
+
+    let listKeys =
+      isFocused && model.focus != CommitText
+        ? selectedGroup(model)
+          |> Option.map(((_provider, group: ResourceGroup.t)) => {
+               Component_VimList.Contributions.contextKeys(group.viewModel)
+             })
+          |> Option.value(~default=empty)
+        : empty;
+
+    let vimNavKeys =
+      isFocused
+        ? Component_VimWindows.Contributions.contextKeys(
+            model.vimWindowNavigation,
+          )
+        : empty;
+
+    [inputKeys, listKeys, vimNavKeys] |> unionMany;
   };
 };

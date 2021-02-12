@@ -12,12 +12,15 @@
 
 [@deriving show({with_path: false})]
 type t =
+  | DebugInput
   | Editor
   | Welcome
   | Version
   | FullChangelog
-  | UpdateChangelog({since: string})
-  | Terminal(Feature_Terminal.rendererState);
+  | Image
+  | UpdateChangelog
+  | Terminal(Feature_Terminal.rendererState)
+  | ExtensionDetails;
 
 [@deriving show({with_path: false})]
 type action =

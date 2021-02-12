@@ -8,6 +8,8 @@ module OptionEx = Utility.OptionEx;
 
 type t =
   | Changelog
+  | DebugInput
+  | Image
   | FilePath(string)
   | Terminal({
       bufferId: int,
@@ -15,16 +17,26 @@ type t =
     })
   | UpdateChangelog
   | Welcome
-  | Version;
+  | Version
+  | ExtensionDetails;
 
 let changelog = "oni://Changelog";
+let debugInput = "oni://DebugInput";
 let updateChangelog = "oni://UpdateChangelog";
 let welcome = "oni://Welcome";
 let version = "oni://Version";
+let extensionDetails = "oni://ExtensionDetails";
 let terminalRegex = OnigRegExp.create("oni://terminal/([0-9]*)/(.*)");
 
-let parse = bufferPath =>
-  if (String.equal(bufferPath, welcome)) {
+let imageExtensions = [".png", ".bmp", ".gif", ".tga", ".jpg", ".jpeg"];
+let isImageExtension = ext =>
+  List.exists(imageExt => imageExt == ext, imageExtensions);
+
+let parse = bufferPath => {
+  let extension = bufferPath |> Utility.Path.getExtension;
+  if (isImageExtension(extension)) {
+    Image;
+  } else if (String.equal(bufferPath, welcome)) {
     Welcome;
   } else if (String.equal(bufferPath, version)) {
     Version;
@@ -32,6 +44,10 @@ let parse = bufferPath =>
     Changelog;
   } else if (String.equal(bufferPath, updateChangelog)) {
     UpdateChangelog;
+  } else if (String.equal(bufferPath, extensionDetails)) {
+    ExtensionDetails;
+  } else if (String.equal(bufferPath, debugInput)) {
+    DebugInput;
   } else {
     terminalRegex
     |> Result.to_option
@@ -49,3 +65,4 @@ let parse = bufferPath =>
        })
     |> Option.value(~default=FilePath(bufferPath));
   };
+};

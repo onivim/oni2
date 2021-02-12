@@ -14,6 +14,8 @@ module InsertTextRules = {
 
   let none = [];
 
+  let insertAsSnippet = [InsertAsSnippet];
+
   let ofInt = ruleAsInt => {
     let keepWhitespace = ruleAsInt land 0b001 == 0b001;
     let insertAsSnippet = ruleAsInt land 0b100 == 0b100;
@@ -135,9 +137,15 @@ module Dto = {
         let label = field.required("a", string);
 
         let kind =
-          field.required("b", int)
-          |> CompletionKind.ofInt
-          |> Option.value(~default=CompletionKind.Method);
+          field.withDefault(
+            "b",
+            CompletionKind.Property,
+            int
+            |> map(i =>
+                 CompletionKind.ofInt(i)
+                 |> Option.value(~default=CompletionKind.Property)
+               ),
+          );
 
         let detail = field.optional("c", string);
         let documentation = field.optional("d", MarkdownString.decode);

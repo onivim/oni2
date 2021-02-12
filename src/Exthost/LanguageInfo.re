@@ -4,7 +4,6 @@
 
 open Oni_Core;
 open Oni_Core.Utility;
-open Rench;
 
 open Exthost_Extension;
 open Scanner.ScanResult;
@@ -32,6 +31,30 @@ type t = {
   languageToScope: [@opaque] StringMap.t(string),
 };
 
+let defaultExtensionTypes =
+  [
+    (".png", "image"),
+    (".gif", "image"),
+    (".tga", "image"),
+    (".jpg", "image"),
+    (".jpeg", "image"),
+    (".bmp", "image"),
+  ]
+  |> List.to_seq
+  |> StringMap.of_seq;
+
+let languages = ({languages, _}) => {
+  languages
+  |> List.fold_left(
+       (acc, {id, _}: Contributions.Language.t) => {
+         acc |> StringMap.add(id, ())
+       },
+       StringMap.empty,
+     )
+  |> StringMap.bindings
+  |> List.map(fst);
+};
+
 let toString = languageInfo => {
   show(languageInfo);
 };
@@ -51,13 +74,13 @@ let initial = {
   languageToScope: StringMap.empty,
 };
 
-let defaultLanguage = "plaintext";
+let defaultLanguage = Oni_Core.Buffer.FileType.default;
 
 let getLanguageFromExtension = (li: t, ext: string) => {
-  switch (StringMap.find_opt(ext, li.extToLanguage)) {
-  | Some(v) => v
-  | None => defaultLanguage
-  };
+  li.extToLanguage
+  |> StringMap.find_opt(ext)
+  |> OptionEx.or_lazy(() => StringMap.find_opt(ext, defaultExtensionTypes))
+  |> Option.value(~default=defaultLanguage);
 };
 
 let getLanguageFromFileNamePattern = (li: t, fileName: string) =>
@@ -121,7 +144,7 @@ let getLanguageFromFirstLine = (li: t, buffer: Buffer.t) => {
 };
 
 let getLanguageFromFilePath = (li: t, fp: string) => {
-  let fileName = Path.filename(fp);
+  let fileName = Utility.Path.filename(fp);
   let extension = Utility.Path.getExtension(fp);
 
   let updateIfDefault = (f, res) =>

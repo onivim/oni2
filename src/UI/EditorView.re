@@ -7,7 +7,6 @@
  */
 
 open Revery.UI;
-open Rench;
 open Oni_Core;
 open Oni_Model;
 module OptionEx = Oni_Core.Utility.OptionEx;
@@ -21,28 +20,22 @@ module Parts = {
     let make =
         (
           ~editor,
+          ~buffer,
           ~state: State.t,
           ~theme,
           ~isActive,
           ~backgroundColor=?,
           ~foregroundColor=?,
           ~showDiffMarkers=true,
-          ~renderOverlays,
           ~dispatch,
+          ~renderOverlays,
           (),
         ) => {
-      let buffer =
-        Selectors.getBufferForEditor(state.buffers, editor)
-        |> Option.value(~default=Buffer.initial);
-
       let languageConfiguration =
         buffer
         |> Oni_Core.Buffer.getFileType
-        |> OptionEx.flatMap(
-             Exthost.LanguageInfo.getLanguageConfiguration(
-               state.languageInfo,
-             ),
-           )
+        |> Oni_Core.Buffer.FileType.toString
+        |> Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo)
         |> Option.value(~default=LanguageConfiguration.default);
 
       let editorDispatch = msg =>
@@ -51,8 +44,6 @@ module Parts = {
         );
       let onEditorSizeChanged = (editorId, pixelWidth, pixelHeight) =>
         dispatch(EditorSizeChanged({id: editorId, pixelWidth, pixelHeight}));
-      let onCursorChange = cursor =>
-        editorDispatch(CursorsChanged([cursor]));
 
       <EditorSurface
         key={editor |> Feature_Editor.Editor.key}
@@ -63,18 +54,24 @@ module Parts = {
         isActiveSplit=isActive
         editor
         buffer
+        uiFont={state.uiFont}
         languageConfiguration
-        onCursorChange
+        languageInfo={state.languageInfo}
+        grammarRepository={state.grammarRepository}
         onEditorSizeChanged
         theme
-        mode={Feature_Vim.mode(state.vim)}
         bufferHighlights={state.bufferHighlights}
         bufferSyntaxHighlights={state.syntaxHighlights}
         diagnostics={state.diagnostics}
+        buffers={state.buffers}
+        snippets={state.snippets}
         tokenTheme={state.tokenTheme}
         languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
-        config={Feature_Configuration.resolver(state.config)}
+        perFileTypeConfig={Feature_Configuration.resolver(
+          state.config,
+          state.vim,
+        )}
         renderOverlays
       />;
     };
@@ -102,37 +99,12 @@ module Parts = {
 
       let buffer =
         Selectors.getBufferForEditor(state.buffers, editor)
-        |> Option.value(~default=Buffer.initial);
-      let renderOverlays = (~gutterWidth) =>
-        [
-          <Feature_Hover.View
-            colorTheme=theme
-            tokenTheme={state.tokenTheme}
-            model={state.hover}
-            uiFont={state.uiFont}
-            editorFont={state.editorFont}
-            languageInfo={state.languageInfo}
-            grammars={state.grammarRepository}
-            diagnostics={state.diagnostics}
-            editor
-            buffer
-            gutterWidth
-          />,
-          <Feature_SignatureHelp.View
-            colorTheme=theme
-            tokenTheme={state.tokenTheme}
-            model={state.signatureHelp}
-            uiFont={state.uiFont}
-            editorFont={state.editorFont}
-            languageInfo={state.languageInfo}
-            grammars={state.grammarRepository}
-            editor
-            gutterWidth
-            buffer
-            dispatch={msg => dispatch(SignatureHelp(msg))}
-          />,
-        ]
-        |> React.listToElement;
+        |> OptionEx.value_or_lazy(() => Buffer.empty(~font=state.editorFont));
+
+      let renderOverlays = (~gutterWidth as _) => React.empty;
+
+      let isDark =
+        state.colorTheme |> Feature_Theme.variant != ColorTheme.Light;
 
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
@@ -141,6 +113,7 @@ module Parts = {
 
         <Editor
           editor
+          buffer
           state
           theme
           isActive
@@ -151,18 +124,31 @@ module Parts = {
           renderOverlays
         />;
 
+      | Image =>
+        buffer
+        |> Oni_Core.Buffer.getFilePath
+        |> Option.map(filePath => {<Feature_ImagePreview.View filePath />})
+        |> Option.value(~default=<Text text="Unable to load." />)
+
       | Terminal({id, _}) =>
         state.terminals
         |> Feature_Terminal.getTerminalOpt(id)
         |> Option.map(terminal => {
-             <TerminalView theme font={state.terminalFont} terminal />
+             let config = Selectors.configResolver(state);
+             <TerminalView
+               config
+               isActive
+               theme
+               font={state.terminalFont}
+               terminal
+             />;
            })
         |> Option.value(~default=React.empty)
 
       | Editor =>
-        <Editor editor state theme isActive dispatch renderOverlays />
+        <Editor editor buffer state theme isActive dispatch renderOverlays />
 
-      | Welcome => <WelcomeView theme uiFont editorFont />
+      | Welcome => <WelcomeView isDark theme uiFont editorFont />
 
       | Version => <VersionView theme uiFont editorFont />
 
@@ -174,8 +160,18 @@ module Parts = {
           uiFont
         />
 
-      | UpdateChangelog({since}) =>
-        <Feature_Changelog.View.Update since theme uiFont />
+      | ExtensionDetails =>
+        <Feature_Extensions.DetailsView
+          model={state.extensions}
+          tokenTheme={state.tokenTheme}
+          theme
+          font=uiFont
+          dispatch={msg => dispatch(Actions.Extensions(msg))}
+        />
+
+      | DebugInput => <DebugInputView state />
+
+      | UpdateChangelog => <Feature_Changelog.View.Update theme uiFont />
       };
     };
   };
@@ -219,9 +215,11 @@ let make =
            };
          };
 
+    let preview = editor => Editor.getPreview(editor);
+
     let title = editor => {
       let (_, title, _) =
-        Buffers.getBuffer(Editor.getBufferId(editor), state.buffers)
+        Feature_Buffers.get(Editor.getBufferId(editor), state.buffers)
         |> getBufferMetadata;
 
       let renderer =
@@ -233,13 +231,31 @@ let make =
       switch (renderer) {
       | Welcome => "Welcome"
       | Terminal({title, _}) => title
-      | _ => Path.filename(title)
+      | _ => Utility.Path.filename(title)
+      };
+    };
+
+    let tooltip = editor => {
+      let (_, _, filePath) =
+        Feature_Buffers.get(Editor.getBufferId(editor), state.buffers)
+        |> getBufferMetadata;
+
+      let renderer =
+        BufferRenderers.getById(
+          Editor.getBufferId(editor),
+          state.bufferRenderers,
+        );
+
+      switch (renderer) {
+      | Welcome => "Welcome"
+      | Terminal({title, _}) => title
+      | _ => filePath
       };
     };
 
     let isModified = editor => {
       let (modified, _, _) =
-        Buffers.getBuffer(Editor.getBufferId(editor), state.buffers)
+        Feature_Buffers.get(Editor.getBufferId(editor), state.buffers)
         |> getBufferMetadata;
 
       modified;
@@ -247,17 +263,15 @@ let make =
 
     let icon = editor => {
       let buffer =
-        Buffers.getBuffer(Editor.getBufferId(editor), state.buffers);
+        Feature_Buffers.get(Editor.getBufferId(editor), state.buffers);
       let (_, _, filePath) = getBufferMetadata(buffer);
 
       let language =
         switch (buffer) {
         | Some(buf) =>
-          switch (Oni_Core.Buffer.getFileType(buf)) {
-          | Some(ft) => ft
-          | None => Exthost.LanguageInfo.defaultLanguage
-          }
-        | None => Exthost.LanguageInfo.defaultLanguage
+          Oni_Core.Buffer.getFileType(buf)
+          |> Oni_Core.Buffer.FileType.toString
+        | None => Oni_Core.Buffer.FileType.default
         };
 
       IconTheme.getIconForFile(state.iconTheme, filePath, language);
@@ -269,25 +283,27 @@ let make =
 
   let editorShowTabs =
     state.configuration
-    |> Configuration.getValue(c => c.workbenchEditorShowTabs);
+    |> Oni_Core.Configuration.getValue(c => c.workbenchEditorShowTabs);
 
   let hideZenModeTabs =
-    state.configuration |> Configuration.getValue(c => c.zenModeHideTabs);
+    state.configuration
+    |> Oni_Core.Configuration.getValue(c => c.zenModeHideTabs);
 
   let showTabs = editorShowTabs && (!state.zenMode || !hideZenModeTabs);
 
+  let isFocused = FocusManager.current(state) |> Focus.isLayoutFocused;
+
   <View onFileDropped style={Styles.container(theme)}>
-    <View style={Styles.container(theme)}>
-      <Feature_Layout.View
-        uiFont={state.uiFont}
-        theme
-        isZenMode={state.zenMode}
-        showTabs
-        model={state.layout}
-        config={Feature_Configuration.resolver(state.config)}
-        dispatch={msg => dispatch(Actions.Layout(msg))}>
-        ...(module ContentProvider)
-      </Feature_Layout.View>
-    </View>
+    <Feature_Layout.View
+      uiFont={state.uiFont}
+      theme
+      isFocused
+      isZenMode={state.zenMode}
+      showTabs
+      model={state.layout}
+      config={Selectors.configResolver(state)}
+      dispatch={msg => dispatch(Actions.Layout(msg))}>
+      ...(module ContentProvider)
+    </Feature_Layout.View>
   </View>;
 };

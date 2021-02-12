@@ -10,6 +10,9 @@ type t = {
   findMatchBackground: Color.t,
   cursorBackground: Color.t,
   cursorForeground: Color.t,
+  hintForeground: Color.t,
+  infoForeground: Color.t,
+  warningForeground: Color.t,
   errorForeground: Color.t,
   gutterBackground: Color.t,
   gutterModifiedBackground: Color.t,
@@ -34,6 +37,8 @@ type t = {
   minimapSliderBackground: Color.t,
   minimapSliderHoverBackground: Color.t,
   minimapSelectionHighlight: Color.t,
+  wordHighlightBackground: Color.t,
+  shadow: Color.t,
 };
 
 let precompute = theme => {
@@ -44,6 +49,9 @@ let precompute = theme => {
   lineHighlightBackground: Editor.lineHighlightBackground.from(theme),
   cursorBackground: EditorCursor.background.from(theme),
   cursorForeground: EditorCursor.foreground.from(theme),
+  hintForeground: EditorHint.foreground.from(theme),
+  infoForeground: EditorInfo.foreground.from(theme),
+  warningForeground: EditorWarning.foreground.from(theme),
   errorForeground: EditorError.foreground.from(theme),
   gutterBackground: EditorGutter.background.from(theme),
   indentGuideBackground: EditorIndentGuide.background.from(theme),
@@ -68,4 +76,6 @@ let precompute = theme => {
   minimapSliderHoverBackground: MinimapSlider.hoverBackground.from(theme),
   minimapSelectionHighlight: Colors.Minimap.selectionHighlight.from(theme),
   minimapBackground: Colors.Minimap.background.from(theme),
+  wordHighlightBackground: Editor.wordHighlightBackground.from(theme),
+  shadow: shadow.from(theme),
 };

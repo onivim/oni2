@@ -48,18 +48,11 @@ bindings: [
 |}
   |> Yojson.Safe.from_string;
 
-let getKeyFromSDL: string => EditorInput.KeyPress.t =
-  key => {
-    let scancode = Sdl2.Scancode.ofName(key);
-    let keycode = Sdl2.Keycode.ofName(key);
-    {keycode, scancode, modifiers: EditorInput.Modifiers.none};
-  };
-
 let contextWithEditorTextFocus =
   WhenExpr.ContextKeys.(
     fromSchema(
-      Schema.fromList(Schema.[bool("editorTextFocus", () => true)]),
       (),
+      Schema.fromList(Schema.[bool("editorTextFocus", () => true)]),
     )
   );
 
@@ -71,7 +64,7 @@ let isOk = v =>
 
 let bindingCount = v =>
   switch (v) {
-  | Ok((bindings, _)) => count(bindings)
+  | Ok((bindings, _)) => List.length(bindings)
   | Error(_) => 0
   };
 
@@ -124,14 +117,41 @@ describe("Keybindings", ({describe, _}) => {
       result
       |> Utility.ResultEx.tapError(err => failwith(err))
       |> Result.iter(((bindings, _)) => {
-           let (_bindings, effects) =
-             keyDown(
-               ~context=contextWithEditorTextFocus,
-               ~key=getKeyFromSDL("F2"),
+           let input =
+             List.fold_left(
+               (acc, binding) => {
+                 let (acc', _uniqueId) =
+                   Feature_Input.addKeyBinding(~binding, acc);
+                 acc';
+               },
+               Feature_Input.initial([]),
                bindings,
              );
+           let (_bindings, effects) =
+             Feature_Input.keyDown(
+               ~time=Revery.Time.zero,
+               ~config=Oni_Core.Config.emptyResolver,
+               ~context=contextWithEditorTextFocus,
+               ~scancode=101,
+               ~key=
+                 EditorInput.(
+                   KeyPress.PhysicalKey({
+                     key: Key.Function(2),
+                     modifiers: Modifiers.none,
+                   })
+                   |> KeyCandidate.ofKeyPress
+                 ),
+               input,
+             );
 
-           expect.equal(effects, [Execute("explorer.toggle")]);
+           expect.equal(
+             effects,
+             [
+               Execute(
+                 NamedCommand({command: "explorer.toggle", arguments: `Null}),
+               ),
+             ],
+           );
          });
     });
     test("regression test: #1160 (legacy binding)", ({expect, _}) => {
@@ -143,42 +163,66 @@ describe("Keybindings", ({describe, _}) => {
       let validateKeyResultsInCommand = ((key, modifiers, cmd)) => {
         result
         |> Result.iter(((bindings, _)) => {
-             let key = {...getKeyFromSDL(key), modifiers};
+             let input =
+               List.fold_left(
+                 (acc, binding) => {
+                   let (acc', _uniqueId) =
+                     Feature_Input.addKeyBinding(~binding, acc);
+                   acc';
+                 },
+                 Feature_Input.initial([]),
+                 bindings,
+               );
              let (_bindings, effects) =
-               keyDown(~context=contextWithEditorTextFocus, ~key, bindings);
-             expect.equal(effects, [Execute(cmd)]);
+               Feature_Input.keyDown(
+                 ~time=Revery.Time.zero,
+                 ~config=Oni_Core.Config.emptyResolver,
+                 ~scancode=1,
+                 ~context=contextWithEditorTextFocus,
+                 ~key=
+                   EditorInput.(
+                     KeyPress.PhysicalKey({key, modifiers})
+                     |> KeyCandidate.ofKeyPress
+                   ),
+                 input,
+               );
+             expect.equal(
+               effects,
+               [Execute(NamedCommand({command: cmd, arguments: `Null}))],
+             );
            });
       };
 
-      let modifier = (~control, ~shift, ~meta) => {
+      let modifier = (~control, ~shift, ~super) => {
         ...EditorInput.Modifiers.none,
         control,
         shift,
-        meta,
+        super,
       };
 
-      let cases = [
-        (
-          "p",
-          modifier(~control=true, ~shift=false, ~meta=false),
-          "workbench.action.quickOpen",
-        ),
-        (
-          "p",
-          modifier(~control=false, ~shift=false, ~meta=true),
-          "workbench.action.quickOpen",
-        ),
-        (
-          "p",
-          modifier(~control=true, ~shift=true, ~meta=false),
-          "workbench.action.showCommands",
-        ),
-        (
-          "p",
-          modifier(~control=false, ~shift=true, ~meta=true),
-          "workbench.action.showCommands",
-        ),
-      ];
+      let cases =
+        EditorInput.[
+          (
+            Key.Character(Uchar.of_char('p')),
+            modifier(~control=true, ~shift=false, ~super=false),
+            "workbench.action.quickOpen",
+          ),
+          (
+            Key.Character(Uchar.of_char('p')),
+            modifier(~control=false, ~shift=false, ~super=true),
+            "workbench.action.quickOpen",
+          ),
+          (
+            Key.Character(Uchar.of_char('p')),
+            modifier(~control=true, ~shift=true, ~super=false),
+            "workbench.action.showCommands",
+          ),
+          (
+            Key.Character(Uchar.of_char('p')),
+            modifier(~control=false, ~shift=true, ~super=true),
+            "workbench.action.showCommands",
+          ),
+        ];
 
       cases |> List.iter(validateKeyResultsInCommand);
     });

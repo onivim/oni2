@@ -1,0 +1,49 @@
+# emoji-test.txt
+# Date: 2020-09-12, 22:19:50 GMT
+# © 2020 Unicode®, Inc.
+# Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+# For terms of use, see http://www.unicode.org/terms_of_use.html
+#
+# Emoji Keyboard/Display Test Data for UTS #51
+# Version: 13.1
+#
+# For documentation and usage, see http://www.unicode.org/reports/tr51
+#
+# This file provides data for testing which emoji forms should be in keyboards and which should also be displayed/processed.
+# Format: code points; status # emoji name
+#     Code points — list of one or more hex code points, separated by spaces
+#     Status
+#       component           — an Emoji_Component,
+#                             excluding Regional_Indicators, ASCII, and non-Emoji.
+#       fully-qualified     — a fully-qualified emoji (see ED-18 in UTS #51),
+#                             excluding Emoji_Component
+#       minimally-qualified — a minimally-qualified emoji (see ED-18a in UTS #51)
+#       unqualified         — a unqualified emoji (See ED-19 in UTS #51)
+# Notes:
+#   • This includes the emoji components that need emoji presentation (skin tone and hair)
+#     when isolated, but omits the components that need not have an emoji
+#     presentation when isolated.
+#   • The RGI set is covered by the listed fully-qualified emoji. 
+#   • The listed minimally-qualified and unqualified cover all cases where an
+#     element of the RGI set is missing one or more emoji presentation selectors.
+#   • The file is in CLDR order, not codepoint order. This is recommended (but not required!) for keyboard palettes.
+#   • The groups and subgroups are illustrative. See the Emoji Order chart for more information.
+
+
+# group: Smileys & Emotion
+
+# subgroup: face-smiling
+1F600                                                  ; fully-qualified     # 😀 E1.0 grinning face
+1F603                                                  ; fully-qualified     # 😃 E0.6 grinning face with big eyes
+1F604                                                  ; fully-qualified     # 😄 E0.6 grinning face with smiling eyes
+1F601                                                  ; fully-qualified     # 😁 E0.6 beaming face with smiling eyes
+1F606                                                  ; fully-qualified     # 😆 E0.6 grinning squinting face
+1F605                                                  ; fully-qualified     # 😅 E0.6 grinning face with sweat
+1F923                                                  ; fully-qualified     # 🤣 E3.0 rolling on the floor laughing
+1F602                                                  ; fully-qualified     # 😂 E0.6 face with tears of joy
+1F642                                                  ; fully-qualified     # 🙂 E1.0 slightly smiling face
+1F643                                                  ; fully-qualified     # 🙃 E1.0 upside-down face
+1F609                                                  ; fully-qualified     # 😉 E0.6 winking face
+1F60A                                                  ; fully-qualified     # 😊 E0.6 smiling face with smiling eyes
+1F607                                                  ; fully-qualified     # 😇 E1.0 smiling face with halo
+

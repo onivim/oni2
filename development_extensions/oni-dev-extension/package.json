@@ -37,6 +37,10 @@
 				"title": "Onivim - Developer: Show Visible Editors"
 			},
 			{
+				"command": "developer.oni.tryOpenDocument",
+				"title": "Onivim - Developer: Try Open Document (package.json)"
+			},
+			{
 				"command": "developer.oni.showWorkspaceRootPath",
 				"title": "Onivim - Developer: Show Workspace Root Path"
 			},
@@ -47,6 +51,14 @@
 			{
 				"command": "developer.oni.showQuickPick",
 				"title": "Onivim - Developer: Show Quick Pick"
+			},
+			{
+				"command": "developer.oni.showStatusBar",
+				"title": "Onivim - Developer: Show Status Bar Item"
+			},
+			{
+				"command": "developer.oni.hideStatusBar",
+				"title": "Onivim - Developer: Hide Status Bar Item"
 			},
 			{
 				"command": "developer.oni.setGlobalMemento",

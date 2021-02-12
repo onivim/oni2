@@ -26,9 +26,11 @@ describe("Window", ({describe, _}) => {
 
       Window.setWidth(3);
       Window.setHeight(3);
-      Cursor.setLocation(
-        ~line=Index.fromOneBased(2),
-        ~column=Index.fromZeroBased(4),
+      Cursor.set(
+        BytePosition.{
+          line: LineNumber.ofOneBased(2),
+          byte: ByteIndex.ofInt(4),
+        },
       );
       Window.setTopLeft(2, 3);
 
@@ -37,161 +39,171 @@ describe("Window", ({describe, _}) => {
     })
   );
 
-  describe("onLeftColumnChanged", ({test, _}) =>
-    test("dispatches on change", ({expect, _}) => {
-      let _ = resetBuffer();
+  describe("tabpages", ({describe, _}) => {
+    describe(":tabnew", ({test, _}) => {
+      test("tabnew w/o file creates new tabpage", ({expect, _}) => {
+        let _ = resetBuffer();
 
-      Window.setWidth(3);
-      Window.setHeight(3);
+        let (_context: Context.t, effects: list(Vim.Effect.t)) =
+          command("tabnew");
 
-      let leftColumnChanges: ref(list(int)) = ref([]);
-      let dispose =
-        Window.onLeftColumnChanged(tl =>
-          leftColumnChanges := [tl, ...leftColumnChanges^]
+        expect.equal(effects, [WindowSplit(Split.NewTabPage)]);
+      });
+      test("tabnew w/ file creates tabpage pointing to file", ({expect, _}) => {
+        let _ = resetBuffer();
+
+        let (_context: Context.t, effects: list(Vim.Effect.t)) =
+          command("tabnew new-file-in-tab.txt");
+
+        expect.equal(
+          effects,
+          [
+            WindowSplit(
+              Split.TabPage({filePath: Some("new-file-in-tab.txt")}),
+            ),
+          ],
         );
+      });
+      test("tabe creates new tab pages", ({expect, _}) => {
+        let _ = resetBuffer();
 
-      input("$");
+        let (_context: Context.t, effects: list(Vim.Effect.t)) =
+          command("tabe newtab.txt");
 
-      expect.int(List.length(leftColumnChanges^)).toBe(1);
-      expect.int(List.hd(leftColumnChanges^)).toBe(4);
-
-      input("0");
-      expect.int(List.length(leftColumnChanges^)).toBe(2);
-      expect.int(List.hd(leftColumnChanges^)).toBe(0);
-
-      dispose();
+        expect.equal(
+          effects,
+          [WindowSplit(Split.TabPage({filePath: Some("newtab.txt")}))],
+        );
+      });
     })
-  );
+  });
 
-  describe("onTopLineChanged", ({test, _}) =>
-    test("dispatches on change", ({expect, _}) => {
-      let _ = resetBuffer();
+  describe("splits", ({describe, test, _}) => {
+    describe(":new", ({test, _}) => {
+      test("new creates new horizontal split", ({expect, _}) => {
+        let _ = resetBuffer();
 
-      Window.setWidth(50);
-      Window.setHeight(20);
+        let (_context: Context.t, effects: list(Vim.Effect.t)) =
+          command("new");
 
-      let topLineChanges: ref(list(int)) = ref([]);
-      let dispose =
-        Window.onTopLineChanged(tl =>
-          topLineChanges := [tl, ...topLineChanges^]
+        expect.equal(effects, [WindowSplit(Split.NewHorizontal)]);
+      });
+
+      test("new w/ path creates horizontal split", ({expect, _}) => {
+        let _ = resetBuffer();
+
+        let (_context: Context.t, effects: list(Vim.Effect.t)) =
+          command("new testnew.txt");
+
+        expect.equal(
+          effects,
+          [WindowSplit(Split.Horizontal({filePath: Some("testnew.txt")}))],
         );
-
-      input(":");
-      input("5");
-      input("0");
-      key("<cr>");
-
-      input("z");
-      input("z");
-
-      expect.int(List.length(topLineChanges^)).toBe(1);
-      expect.int(List.hd(topLineChanges^)).toBe(41);
-
-      input("z");
-      input("b");
-
-      expect.int(List.length(topLineChanges^)).toBe(2);
-      expect.int(List.hd(topLineChanges^)).toBe(31);
-
-      input("z");
-      input("t");
-
-      expect.int(List.length(topLineChanges^)).toBe(3);
-      expect.int(List.hd(topLineChanges^)).toBe(50);
-
-      dispose();
-    })
-  );
-
-  describe("onSplit", ({test, _}) => {
-    test("vsp creates split", ({expect, _}) => {
-      let _ = resetBuffer();
-
-      let splits = ref([]);
-      let dispose =
-        Window.onSplit((splitType, name) =>
-          splits := [(splitType, name), ...splits^]
-        );
-
-      let _context: Context.t = command("vsp test.txt");
-
-      expect.int(List.length(splits^)).toBe(1);
-
-      let (splitType, name) = List.hd(splits^);
-
-      expect.bool(splitType == Types.Vertical).toBe(true);
-      expect.string(name).toEqual("test.txt");
-
-      dispose();
+      });
     });
 
-    test("sp creates split", ({expect, _}) => {
-      let _ = resetBuffer();
+    describe(":vnew", ({test, _}) => {
+      test("vnew creates new vertical split", ({expect, _}) => {
+        let _ = resetBuffer();
 
-      let splits = ref([]);
-      let dispose =
-        Window.onSplit((splitType, name) =>
-          splits := [(splitType, name), ...splits^]
+        let (_context: Context.t, effects: list(Vim.Effect.t)) =
+          command("vnew");
+
+        expect.equal(effects, [WindowSplit(Split.NewVertical)]);
+      });
+
+      test("vnew w/ path creates horizontal split", ({expect, _}) => {
+        let _ = resetBuffer();
+
+        let (_context: Context.t, effects: list(Vim.Effect.t)) =
+          command("vnew testvnew.txt");
+
+        expect.equal(
+          effects,
+          [WindowSplit(Split.Vertical({filePath: Some("testvnew.txt")}))],
         );
+      });
+    });
 
-      let _context: Context.t = command("sp test2.txt");
+    describe(":vsp", ({test, _}) => {
+      test("vsp w/ argument creates split", ({expect, _}) => {
+        let _ = resetBuffer();
 
-      expect.int(List.length(splits^)).toBe(1);
+        let (_context: Context.t, effects: list(Vim.Effect.t)) =
+          command("vsp test.txt");
 
-      let (splitType, name) = List.hd(splits^);
+        expect.equal(
+          effects,
+          [WindowSplit(Split.Vertical({filePath: Some("test.txt")}))],
+        );
+      });
+      test("vsp w/o argument creates split", ({expect, _}) => {
+        let _ = resetBuffer();
 
-      expect.bool(splitType == Types.Horizontal).toBe(true);
-      expect.string(name).toEqual("test2.txt");
+        let (_context: Context.t, effects: list(Vim.Effect.t)) =
+          command("vsp");
 
-      dispose();
+        expect.equal(
+          effects,
+          [WindowSplit(Split.Vertical({filePath: None}))],
+        );
+      });
+    });
+
+    describe(":sp", ({test, _}) => {
+      test("sp creates split", ({expect, _}) => {
+        let _ = resetBuffer();
+
+        let (_context: Context.t, effects: list(Vim.Effect.t)) =
+          command("sp test2.txt");
+        expect.equal(
+          effects,
+          [WindowSplit(Split.Horizontal({filePath: Some("test2.txt")}))],
+        );
+      });
+      test("sp w/o argument creates split", ({expect, _}) => {
+        let _ = resetBuffer();
+
+        let (_context: Context.t, effects: list(Vim.Effect.t)) =
+          command("sp");
+        expect.equal(
+          effects,
+          [WindowSplit(Split.Horizontal({filePath: None}))],
+        );
+      });
     });
 
     test("<C-w>v creates split, with same buffer", ({expect, _}) => {
       let buf = resetBuffer();
 
-      let splits = ref([]);
-      let dispose =
-        Window.onSplit((splitType, name) =>
-          splits := [(splitType, name), ...splits^]
-        );
+      let filePath = Buffer.getFilename(buf);
 
       key("<c-w>");
-      input("v");
-
-      expect.int(List.length(splits^)).toBe(1);
-
-      let (splitType, _) = List.hd(splits^);
+      let (_context: Context.t, effects) = Vim.input("v");
+      expect.equal(
+        effects,
+        [WindowSplit(Split.Vertical({filePath: filePath}))],
+      );
 
       let newBuf = Vim.Buffer.getCurrent();
 
-      expect.bool(splitType == Types.Vertical).toBe(true);
       expect.int(Vim.Buffer.getId(newBuf)).toBe(Vim.Buffer.getId(buf));
-
-      dispose();
     });
 
     test("<C-w>s creates split, with same buffer", ({expect, _}) => {
       let buf = resetBuffer();
-
-      let splits = ref([]);
-      let dispose =
-        Window.onSplit((splitType, name) =>
-          splits := [(splitType, name), ...splits^]
-        );
+      let filePath = Buffer.getFilename(buf);
 
       key("<c-w>");
-      input("s");
+      let (_context, effects) = Vim.input("s");
 
-      expect.int(List.length(splits^)).toBe(1);
-
-      let (splitType, _) = List.hd(splits^);
+      expect.equal(
+        effects,
+        [WindowSplit(Split.Horizontal({filePath: filePath}))],
+      );
 
       let newBuf = Vim.Buffer.getCurrent();
-
-      expect.bool(splitType == Types.Horizontal).toBe(true);
       expect.int(Vim.Buffer.getId(newBuf)).toBe(Vim.Buffer.getId(buf));
-
-      dispose();
     });
   });
 });

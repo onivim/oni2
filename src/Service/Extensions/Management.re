@@ -21,7 +21,9 @@ module Internal = {
     getUserExtensionsDirectory(~overriddenExtensionsDir)
     |> Option.map(
          FunEx.tap(p =>
-           Log.infof(m => m("Searching for user extensions in: %s", p))
+           Log.infof(m =>
+             m("Searching for user extensions in: %s", p |> Fp.toString)
+           )
          ),
        )
     |> Option.map(Exthost.Extension.Scanner.scan(~category=User))
@@ -43,13 +45,17 @@ module Internal = {
         };
 
       Log.debugf(m =>
-        m("Installing extension %s to %s", name, extensionsFolder)
+        m(
+          "Installing extension %s to %s",
+          name,
+          extensionsFolder |> Fp.toString,
+        )
       );
 
       NodeTask.run(
         ~name="Install",
         ~setup,
-        ~args=[absolutePath, extensionsFolder, folderName],
+        ~args=[absolutePath, extensionsFolder |> Fp.toString, folderName],
         "install-extension.js",
       );
     };
@@ -85,7 +91,14 @@ module Internal = {
          Service_Net.Request.download(~setup, downloadUrl)
          |> Lwt.map(downloadPath => {
               let folderName =
-                Printf.sprintf("%s.%s-%s", namespace, name, version);
+                Printf.sprintf(
+                  "%s.%s-%s",
+                  namespace,
+                  name,
+                  version
+                  |> Option.map(Semver.to_string)
+                  |> Option.value(~default="0.0.0"),
+                );
 
               (downloadPath, folderName);
             });
@@ -171,6 +184,13 @@ let uninstall = (~extensionsFolder=?, extensionId) => {
 
     promise;
   };
+};
+
+let update = (~setup, ~extensionsFolder=?, extensionId) => {
+  let uninstallPromise = uninstall(~extensionsFolder?, extensionId);
+  Lwt.bind(uninstallPromise, () => {
+    Internal.installFromOpenVSX(~setup, ~extensionsFolder, extensionId)
+  });
 };
 
 let get = (~extensionsFolder=?, ()) => {

@@ -21,10 +21,16 @@ type t;
 
 let empty: t;
 
-let getTokens: (~bufferId: int, ~line: Index.t, t) => list(ThemeToken.t);
+let getTokens:
+  (~bufferId: int, ~line: EditorCoreTypes.LineNumber.t, t) =>
+  list(ThemeToken.t);
 
 let getSyntaxScope:
-  (~bufferId: int, ~line: Index.t, ~bytePosition: int, t) => SyntaxScope.t;
+  (~bytePosition: BytePosition.t, ~bufferId: int, t) => SyntaxScope.t;
+
+let getAt:
+  (~bufferId: int, ~bytePosition: EditorCoreTypes.BytePosition.t, t) =>
+  option(ThemeToken.t);
 
 let setTokensForLine:
   (~bufferId: int, ~line: int, ~tokens: list(ThemeToken.t), t) => t;
@@ -48,6 +54,11 @@ let isSyntaxServerRunning: t => bool;
 // The only syntax highlight adjustment will come from explicit
 // calls to [setTokensForLine];
 let ignore: (~bufferId: int, t) => t;
+
+module Tokens: {
+  let getAt:
+    (~byteIndex: ByteIndex.t, list(ThemeToken.t)) => option(ThemeToken.t);
+};
 
 module Effect: {
   let bufferUpdate:

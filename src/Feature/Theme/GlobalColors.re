@@ -34,6 +34,16 @@ let activeContrastBorder =
     {light: unspecified, dark: unspecified, hc: ref(focusBorder)},
   );
 
+let shadow =
+  define(
+    "shadow",
+    {
+      light: transparent(0.16, hex("#000F")),
+      dark: transparent(0.4, hex("#000F")),
+      hc: unspecified,
+    },
+  );
+
 module ActivityBar = {
   let background =
     define(
@@ -103,7 +113,36 @@ module Button = {
       {dark: ref(background), light: ref(background), hc: unspecified},
     );
 
-  let defaults = [background, foreground, hoverBackground];
+  let secondaryForeground =
+    define(
+      "button.secondaryForeground",
+      {dark: hex("#FFF"), light: hex("#FFF"), hc: hex("#FFF")},
+    );
+
+  let secondaryBackground =
+    define(
+      "button.secondaryBackground",
+      {dark: hex("#0E639C"), light: hex("#007ACC"), hc: unspecified},
+    );
+
+  let secondaryHoverBackground =
+    define(
+      "button.secondaryHoverBackground",
+      {
+        dark: ref(secondaryBackground),
+        light: ref(secondaryBackground),
+        hc: unspecified,
+      },
+    );
+
+  let defaults = [
+    background,
+    foreground,
+    hoverBackground,
+    secondaryForeground,
+    secondaryBackground,
+    secondaryHoverBackground,
+  ];
 };
 
 module Dropdown = {
@@ -156,6 +195,11 @@ module Editor = {
       {light: hex("#ADD6FF"), dark: hex("#264F78"), hc: hex("#f3f518")},
     );
 
+  let wordHighlightBackground =
+    define(
+      "editor.wordHighlightBackground",
+      {light: hex("#57575740"), dark: hex("#575757B8"), hc: unspecified},
+    );
   let defaults = [
     background,
     foreground,
@@ -164,6 +208,7 @@ module Editor = {
     findMatchHighlightsBackground,
     lineHighlightBackground,
     selectionBackground,
+    wordHighlightBackground,
   ];
 };
 
@@ -453,6 +498,13 @@ module List = {
       "list.focusBackground",
       {dark: hex("#062F4A"), light: hex("#D6EBFF"), hc: unspecified},
     );
+
+  let inactiveFocusBackground =
+    define(
+      "list.inactiveFocusBackground",
+      all(ref(focusBackground) |> transparent(0.75)),
+    );
+
   let focusForeground =
     define("list.focusForeground", all(ref(foreground))); // actually: unspecified
   let activeSelectionBackground =
@@ -465,6 +517,18 @@ module List = {
       "list.activeSelectionForeground",
       {dark: hex("#FFF"), light: hex("#FFF"), hc: unspecified},
     );
+
+  let inactiveSelectionBackground =
+    define(
+      "list.inactiveSelectionBackground",
+      all(ref(activeSelectionBackground) |> transparent(0.25)),
+    );
+  let inactiveSelectionForeground =
+    define(
+      "list.inactiveSelectionForeground",
+      all(ref(activeSelectionForeground)),
+    );
+
   let hoverBackground =
     define(
       "list.hoverBackground",
@@ -477,6 +541,27 @@ module List = {
       {dark: hex("#0097fb"), light: hex("#0066BF"), hc: ref(focusBorder)},
     );
 
+  let deemphasizedForeground =
+    define("list.deemphasizedForeground", all(ref(foreground)));
+
+  let activeIndentGuide =
+    define(
+      "tree.indentGuidesStroke",
+      all(ref(foreground) |> transparent(0.5)),
+    );
+
+  let inactiveIndentGuide =
+    define(
+      "tree.inactive.indentGuidesStroke",
+      all(ref(activeIndentGuide) |> transparent(0.5)),
+    );
+
+  let filterMatchBackground =
+    define("list.filterMatchBackground", all(ref(hoverBackground)));
+
+  let filterMatchBorder =
+    define("list.filterMatchBorder", all(ref(hoverForeground)));
+
   let defaults = [
     focusBackground,
     focusForeground,
@@ -485,6 +570,11 @@ module List = {
     hoverBackground,
     hoverForeground,
     highlightForeground,
+    deemphasizedForeground,
+    activeIndentGuide,
+    inactiveIndentGuide,
+    filterMatchBackground,
+    filterMatchBorder,
   ];
 };
 
@@ -597,30 +687,32 @@ module Oni = {
 
   let backgroundFor = (mode: Mode.t) =>
     switch (mode) {
-    | Select
-    | TerminalVisual
-    | Visual => visualModeBackground
+    | Select(_)
+    | TerminalVisual(_)
+    | Visual(_) => visualModeBackground
     | CommandLine => commandlineModeBackground
-    | Operator => operatorModeBackground
+    | Operator(_) => operatorModeBackground
+    | Snippet
     | TerminalInsert
-    | Insert => insertModeBackground
-    | Replace => replaceModeBackground
+    | Insert(_) => insertModeBackground
+    | Replace(_) => replaceModeBackground
     | TerminalNormal
-    | Normal => normalModeBackground
+    | Normal(_) => normalModeBackground
     };
 
   let foregroundFor = (mode: Mode.t) =>
     switch (mode) {
-    | Select
-    | TerminalVisual
-    | Visual => visualModeForeground
+    | Select(_)
+    | TerminalVisual(_)
+    | Visual(_) => visualModeForeground
     | CommandLine => commandlineModeForeground
-    | Operator => operatorModeForeground
+    | Operator(_) => operatorModeForeground
+    | Snippet
     | TerminalInsert
-    | Insert => insertModeForeground
-    | Replace => replaceModeForeground
+    | Insert(_) => insertModeForeground
+    | Replace(_) => replaceModeForeground
     | TerminalNormal
-    | Normal => normalModeForeground
+    | Normal(_) => normalModeForeground
     };
 
   let defaults = [
@@ -643,9 +735,8 @@ module Oni = {
     let background =
       define("oni.modal.background", all(ref(Notifications.background)));
     let foreground =
-      define("oni.modal.foreground", all(ref(Notifications.border)));
-    let border =
-      define("oni.modal.border", all(ref(Notifications.background)));
+      define("oni.modal.foreground", all(ref(Notifications.foreground)));
+    let border = define("oni.modal.border", all(ref(Notifications.border)));
     let shortcutForeground =
       define(
         "oni.modal.shortcutForeground",
@@ -911,11 +1002,153 @@ module StatusBar = {
   let background =
     define(
       "statusBar.background",
-      {dark: hex("#007ACC"), light: hex("#007ACC"), hc: unspecified},
+      {dark: hex("#000000AA"), light: hex("#FFFFFFAA"), hc: unspecified},
     );
   let foreground = define("statusBar.foreground", all(hex("#FFF")));
 
-  let defaults = [background, foreground];
+  let errorItemBackground =
+    define("statusBarItem.errorBackground", all(hex("#FF0000FF")));
+
+  let errorItemForeground =
+    define("statusBarItem.errorForeground", all(ref(foreground)));
+
+  let defaults = [
+    background,
+    foreground,
+    errorItemBackground,
+    errorItemForeground,
+  ];
+};
+
+module SymbolIcon = {
+  let arrayForeground =
+    define("symbolIcon.arrayForeground", all(ref(foreground)));
+  let booleanForeground =
+    define("symbolIcon.booleanForeground", all(ref(foreground)));
+  let classForeground =
+    define(
+      "symbolIcon.classForeground",
+      {dark: hex("#EE9D28"), light: hex("#D67E00"), hc: hex("#EE9D28")},
+    );
+  let colorForeground =
+    define("symbolIcon.colorForeground", all(ref(foreground)));
+  let constantForeground =
+    define("symbolIcon.constantForeground", all(ref(foreground)));
+  let constructorForeground =
+    define(
+      "symbolIcon.constructorForeground",
+      {dark: hex("#B180D7"), light: hex("#652D90"), hc: hex("#B180D7")},
+    );
+  let enumeratorForeground =
+    define(
+      "symbolIcon.enumeratorForeground",
+      {dark: hex("#EE9D28"), light: hex("#D67E00"), hc: hex("#EE9D28")},
+    );
+  let enumeratorMemberForeground =
+    define(
+      "symbolIcon.enumeratorMemberForeground",
+      {dark: hex("#75BEFF"), light: hex("#007ACC"), hc: hex("#75BEFF")},
+    );
+  let eventForeground =
+    define(
+      "symbolIcon.eventForeground",
+      {dark: hex("#EE9D28"), light: hex("#D67E00"), hc: hex("#EE9D28")},
+    );
+  let fieldForeground =
+    define(
+      "symbolIcon.fieldForeground",
+      {dark: hex("#75BEFF"), light: hex("#007ACC"), hc: hex("#75BEFF")},
+    );
+  let fileForeground =
+    define("symbolIcon.fileForeground", all(ref(foreground)));
+  let folderForeground =
+    define("symbolIcon.folderForeground", all(ref(foreground)));
+  let functionForeground =
+    define(
+      "symbolIcon.functionForeground",
+      {dark: hex("#B180D7"), light: hex("#652D90"), hc: hex("#B180D7")},
+    );
+  let interfaceForeground =
+    define(
+      "symbolIcon.interfaceForeground",
+      {dark: hex("#75BEFF"), light: hex("#007ACC"), hc: hex("#75BEFF")},
+    );
+  let keyForeground =
+    define("symbolIcon.keyForeground", all(ref(foreground)));
+  let keywordForeground =
+    define("symbolIcon.keywordForeground", all(ref(foreground)));
+  let methodForeground =
+    define(
+      "symbolIcon.methodForeground",
+      {dark: hex("#B180D7"), light: hex("#652D90"), hc: hex("#B180D7")},
+    );
+  let moduleForeground =
+    define("symbolIcon.moduleForeground", all(ref(foreground)));
+  let namespaceForeground =
+    define("symbolIcon.namespaceForeground", all(ref(foreground)));
+  let nullForeground =
+    define("symbolIcon.nullForeground", all(ref(foreground)));
+  let objectForeground =
+    define("symbolIcon.objectForeground", all(ref(foreground)));
+  let operatorForeground =
+    define("symbolIcon.operatorForeground", all(ref(foreground)));
+  let packageForeground =
+    define("symbolIcon.packageForeground", all(ref(foreground)));
+  let propertyForeground =
+    define("symbolIcon.propertyForeground", all(ref(foreground)));
+  let referenceForeground =
+    define("symbolIcon.referenceForeground", all(ref(foreground)));
+  let snippetForeground =
+    define("symbolIcon.snippetForeground", all(ref(foreground)));
+  let stringForeground =
+    define("symbolIcon.stringForeground", all(ref(foreground)));
+  let structForeground =
+    define("symbolIcon.structForeground", all(ref(foreground)));
+  let textForeground =
+    define("symbolIcon.textForeground", all(ref(foreground)));
+  let typeParameterForeground =
+    define("symbolIcon.typeParameterForeground", all(ref(foreground)));
+  let unitForeground =
+    define("symbolIcon.unitForeground", all(ref(foreground)));
+  let variableForeground =
+    define(
+      "symbolIcon.variableForeground",
+      {dark: hex("#75BEFF"), light: hex("#007ACC"), hc: hex("#75BEFF")},
+    );
+
+  let defaults = [
+    arrayForeground,
+    booleanForeground,
+    classForeground,
+    colorForeground,
+    constantForeground,
+    constructorForeground,
+    enumeratorForeground,
+    enumeratorMemberForeground,
+    eventForeground,
+    fieldForeground,
+    fileForeground,
+    folderForeground,
+    functionForeground,
+    interfaceForeground,
+    keyForeground,
+    keywordForeground,
+    methodForeground,
+    moduleForeground,
+    namespaceForeground,
+    nullForeground,
+    objectForeground,
+    packageForeground,
+    propertyForeground,
+    referenceForeground,
+    snippetForeground,
+    stringForeground,
+    structForeground,
+    textForeground,
+    typeParameterForeground,
+    unitForeground,
+    variableForeground,
+  ];
 };
 
 module Tab = {
@@ -1089,6 +1322,103 @@ module Tab = {
   ];
 };
 
+module Terminal = {
+  open Revery;
+  let background =
+    define("terminal.background", color(Color.rgb_int(0, 0, 0)) |> all);
+  let foreground =
+    define(
+      "terminal.foreground",
+      color(Color.rgb_int(233, 235, 235)) |> all,
+    );
+  let ansiBlack =
+    define("terminal.ansiBlack", color(Color.rgb_int(0, 0, 0)) |> all);
+  let ansiRed =
+    define("terminal.ansiRed", color(Color.rgb_int(194, 54, 33)) |> all);
+  let ansiGreen =
+    define("terminal.ansiGreen", color(Color.rgb_int(37, 188, 36)) |> all);
+  let ansiYellow =
+    define(
+      "terminal.ansiYellow",
+      color(Color.rgb_int(173, 173, 39)) |> all,
+    );
+  let ansiBlue =
+    define("terminal.ansiBlue", color(Color.rgb_int(73, 46, 225)) |> all);
+  let ansiMagenta =
+    define(
+      "terminal.ansiMagenta",
+      color(Color.rgb_int(211, 56, 211)) |> all,
+    );
+  let ansiCyan =
+    define("terminal.ansiCyan", color(Color.rgb_int(51, 197, 200)) |> all);
+  let ansiWhite =
+    define(
+      "terminal.ansiWhite",
+      color(Color.rgb_int(203, 204, 205)) |> all,
+    );
+  let ansiBrightBlack =
+    define(
+      "terminal.ansiBrightBlack",
+      color(Color.rgb_int(129, 131, 131)) |> all,
+    );
+  let ansiBrightRed =
+    define(
+      "terminal.ansiBrightRed",
+      color(Color.rgb_int(252, 57, 31)) |> all,
+    );
+  let ansiBrightGreen =
+    define(
+      "terminal.ansiBrightGreen",
+      color(Color.rgb_int(49, 231, 34)) |> all,
+    );
+  let ansiBrightYellow =
+    define(
+      "terminal.ansiBrightYellow",
+      color(Color.rgb_int(234, 236, 35)) |> all,
+    );
+  let ansiBrightBlue =
+    define(
+      "terminal.ansiBrightBlue",
+      color(Color.rgb_int(88, 51, 255)) |> all,
+    );
+  let ansiBrightMagenta =
+    define(
+      "terminal.ansiBrightMagenta",
+      color(Color.rgb_int(20, 240, 240)) |> all,
+    );
+  let ansiBrightCyan =
+    define(
+      "terminal.ansiBrightCyan",
+      color(Color.rgb_int(20, 240, 240)) |> all,
+    );
+  let ansiBrightWhite =
+    define(
+      "terminal.ansiBrightWhite",
+      color(Color.rgb_int(233, 235, 235)) |> all,
+    );
+
+  let defaults = [
+    background,
+    foreground,
+    ansiBlack,
+    ansiRed,
+    ansiGreen,
+    ansiYellow,
+    ansiBlue,
+    ansiMagenta,
+    ansiCyan,
+    ansiWhite,
+    ansiBrightBlack,
+    ansiBrightRed,
+    ansiBrightGreen,
+    ansiBrightYellow,
+    ansiBrightBlue,
+    ansiBrightMagenta,
+    ansiBrightCyan,
+    ansiBrightWhite,
+  ];
+};
+
 module TextLink = {
   let foreground =
     define(
@@ -1167,4 +1497,4 @@ module TitleBar = {
   ];
 };
 
-let defaults = [foreground, contrastBorder];
+let defaults = [foreground, contrastBorder, shadow];

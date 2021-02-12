@@ -37,7 +37,7 @@ module VersionView = {
       justifyContent(`Center),
       alignItems(`Center),
       height(18),
-      maxWidth(400),
+      maxWidth(500),
       minWidth(150),
       flexGrow(0),
       borderBottom(~color=Revery.Color.rgba(1.0, 1.0, 1.0, 0.2), ~width=1),
@@ -81,15 +81,6 @@ module VersionView = {
   };
 };
 
-let osString =
-  Revery.Environment.os
-  |> (
-    fun
-    | Windows => "Windows"
-    | Mac => "OSX"
-    | _ => "Linux"
-  );
-
 let sdlVersionToString = ({major, minor, patch}: Sdl2.Version.t) => {
   Printf.sprintf("%d.%d.%d", major, minor, patch);
 };
@@ -115,6 +106,9 @@ let make = (~theme, ~uiFont, ~editorFont, ()) => {
     <header text="Onivim 2" />
     <version name="Version" version=Oni_Core.BuildInfo.version />
     <version name="Commit" version=Oni_Core.BuildInfo.commitId />
+    // spacer
+    <header text="Extension Host" />
+    <version name="Version " version=Oni_Core.BuildInfo.extensionHostVersion />
     // spacer
     <header text="OCaml" />
     <version name="Compiler Version " version=Sys.ocaml_version />

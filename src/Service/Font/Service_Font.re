@@ -7,6 +7,7 @@ module Log = (val Log.withNamespace("Oni2.Service.Font"));
 type font =
   Oni_Core.Font.t = {
     fontFamily: [@opaque] Revery.Font.Family.t,
+    fontWeight: [@opaque] Revery.Font.Weight.t,
     fontSize: float,
     spaceWidth: float,
     underscoreWidth: float,
@@ -16,6 +17,7 @@ type font =
     descenderHeight: float,
     smoothing: [@opaque] Revery.Font.Smoothing.t,
     features: [@opaque] list(Revery.Font.Feature.t),
+    measurementCache: [@opaque] FontMeasurementCache.t,
   };
 
 let toString = show_font;
@@ -50,6 +52,7 @@ let setFont =
       ~fontFamily as familyString,
       ~fontSize,
       ~fontLigatures,
+      ~fontWeight,
       ~smoothing,
       ~dispatch,
     ) => {
@@ -58,7 +61,15 @@ let setFont =
   incr(requestId);
   let req = requestId^;
 
-  Log.infof(m => m("Loading font: %s %f %d", familyString, fontSize, req));
+  Log.infof(m =>
+    m(
+      "Loading font: %s %s %f %d",
+      familyString,
+      Revery.Font.Weight.show(fontWeight),
+      fontSize,
+      req,
+    )
+  );
 
   // We load the font asynchronously
   ThreadHelper.create(
@@ -103,6 +114,7 @@ let setFont =
           ~requestId=req,
           ~smoothing,
           ~family,
+          ~weight=fontWeight,
           ~fontCache,
           fontSize,
         );
@@ -119,6 +131,7 @@ let setFont =
           reqId,
           {
             fontFamily,
+            fontWeight,
             fontSize,
             spaceWidth,
             underscoreWidth,
@@ -134,6 +147,7 @@ let setFont =
           dispatch(
             FontLoaded({
               fontFamily,
+              fontWeight,
               fontSize,
               spaceWidth,
               underscoreWidth,
@@ -143,6 +157,14 @@ let setFont =
               descenderHeight,
               smoothing,
               features,
+              measurementCache:
+                FontMeasurementCache.create(
+                  ~fontFamily,
+                  ~fontWeight,
+                  ~fontSize,
+                  ~features,
+                  ~smoothing,
+                ),
             }),
           );
         }
@@ -159,6 +181,7 @@ module Sub = {
     fontSize: float,
     fontLigatures: ConfigurationValues.fontLigatures,
     fontSmoothing: ConfigurationValues.fontSmoothing,
+    fontWeight: Revery.Font.Weight.t,
     uniqueId: string,
   };
 
@@ -169,6 +192,7 @@ module Sub = {
         fontSize: float,
         fontLigatures: ConfigurationValues.fontLigatures,
         fontSmoothing: ConfigurationValues.fontSmoothing,
+        fontWeight: Revery.Font.Weight.t,
         requestId: ref(int),
       };
       type nonrec msg = msg;
@@ -197,6 +221,7 @@ module Sub = {
           ~fontFamily=params.fontFamily,
           ~fontSize=params.fontSize,
           ~fontLigatures=params.fontLigatures,
+          ~fontWeight=params.fontWeight,
           ~smoothing=reveryFontSmoothing,
           ~dispatch,
         );
@@ -206,6 +231,7 @@ module Sub = {
           fontSize: params.fontSize,
           fontSmoothing: params.fontSmoothing,
           fontLigatures: params.fontLigatures,
+          fontWeight: params.fontWeight,
           requestId,
         };
       };
@@ -214,7 +240,8 @@ module Sub = {
         if (params.fontFamily != state.fontFamily
             || !Float.equal(params.fontSize, state.fontSize)
             || params.fontSmoothing != state.fontSmoothing
-            || params.fontLigatures != state.fontLigatures) {
+            || params.fontLigatures != state.fontLigatures
+            || params.fontWeight != state.fontWeight) {
           let reveryFontSmoothing =
             getReveryFontSmoothing(params.fontSmoothing);
           setFont(
@@ -223,12 +250,14 @@ module Sub = {
             ~fontSize=params.fontSize,
             ~smoothing=reveryFontSmoothing,
             ~fontLigatures=params.fontLigatures,
+            ~fontWeight=params.fontWeight,
             ~dispatch,
           );
           {
             ...state,
             fontFamily: params.fontFamily,
             fontSize: params.fontSize,
+            fontWeight: params.fontWeight,
             fontSmoothing: params.fontSmoothing,
             fontLigatures: params.fontLigatures,
           };
@@ -243,11 +272,19 @@ module Sub = {
     });
 
   let font =
-      (~uniqueId, ~fontFamily, ~fontSize, ~fontLigatures, ~fontSmoothing) => {
+      (
+        ~uniqueId,
+        ~fontFamily,
+        ~fontSize,
+        ~fontWeight,
+        ~fontLigatures,
+        ~fontSmoothing,
+      ) => {
     FontSubscription.create({
       uniqueId,
       fontFamily,
       fontSize,
+      fontWeight,
       fontSmoothing,
       fontLigatures,
     });

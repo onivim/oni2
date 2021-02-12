@@ -1,19 +1,15 @@
+open EditorCoreTypes;
 open Oni_Core;
-type position = {
-  line: int,
-  index: int,
-};
 
 type pair = {
-  start: position,
-  stop: position,
+  start: CharacterPosition.t,
+  stop: CharacterPosition.t,
 };
 
 let find:
   (
     ~buffer: EditorBuffer.t,
-    ~line: int,
-    ~index: int,
+    ~characterPosition: CharacterPosition.t,
     ~start: Uchar.t,
     ~stop: Uchar.t
   ) =>
@@ -22,8 +18,7 @@ let find:
 let findFirst:
   (
     ~buffer: EditorBuffer.t,
-    ~line: int,
-    ~index: int,
+    ~characterPosition: CharacterPosition.t,
     ~pairs: list(LanguageConfiguration.BracketPair.t)
   ) =>
   option(pair);

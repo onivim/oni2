@@ -12,6 +12,8 @@ type model = {
   theme: ColorTheme.t,
 };
 
+let variant = ({theme, _}) => theme.variant;
+
 let defaults =
   [
     Colors.ActivityBar.defaults,
@@ -52,6 +54,7 @@ let defaults =
     Colors.SideBar.defaults,
     Colors.SideBarSectionHeader.defaults,
     Colors.StatusBar.defaults,
+    Colors.SymbolIcon.defaults,
     Colors.Tab.defaults,
     Colors.TextLink.defaults,
     Colors.TitleBar.defaults,
@@ -124,30 +127,34 @@ type msg =
   | Command(command)
   | TextmateThemeLoaded(ColorTheme.variant, [@opaque] Textmate.ColorTheme.t);
 
+module Msg = {
+  let openThemePicker = Command(SelectTheme);
+};
+
 type outmsg =
   | Nothing
-  | OpenThemePicker(list(theme));
+  | OpenThemePicker(list(theme))
+  | ThemeChanged(ColorTheme.Colors.t);
 
 let update = (model, msg) => {
   switch (msg) {
-  | TextmateThemeLoaded(variant, colors) => (
-      {
-        ...model,
-        theme: {
-          variant,
-          colors:
-            Textmate.ColorTheme.fold(
-              (key, color, acc) =>
-                color == ""
-                  ? acc : [(ColorTheme.key(key), Color.hex(color)), ...acc],
-              colors,
-              [],
-            )
-            |> ColorTheme.Colors.fromList,
-        },
-      },
-      Nothing,
-    )
+  | TextmateThemeLoaded(variant, colors) =>
+    let colors =
+      Textmate.ColorTheme.fold(
+        (key, color, acc) =>
+          color == ""
+            ? acc : [(ColorTheme.key(key), Color.hex(color)), ...acc],
+        colors,
+        [],
+      )
+      |> ColorTheme.Colors.fromList;
+    ({
+       ...model,
+       theme: {
+         variant,
+         colors,
+       },
+     }, ThemeChanged(colors));
   | Command(SelectTheme) => (model, OpenThemePicker([]))
   };
 };

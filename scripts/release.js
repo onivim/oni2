@@ -7,6 +7,11 @@ let curBin = process.env["cur__bin"]
 console.log("Bin folder: " + curBin)
 console.log("Working directory: " + process.cwd())
 
+let scriptArgs = process.argv.slice(2)
+console.log("Arguments: " + scriptArgs)
+
+let codesign = scriptArgs.indexOf("--codesign") != -1
+
 const rootDirectory = process.cwd()
 const vendorDirectory = path.join(rootDirectory, "vendor")
 const releaseDirectory = path.join(rootDirectory, "_release")
@@ -21,6 +26,15 @@ const extensionsSourceDirectory = path.join(process.cwd(), "extensions")
 
 const eulaFile = path.join(process.cwd(), "Outrun-Labs-EULA-v1.1.md")
 const thirdPartyFile = path.join(process.cwd(), "ThirdPartyLicenses.txt")
+const sparkleFramework = path.join(rootDirectory, "vendor", "Sparkle-1.23.0", "Sparkle.framework")
+const winSparkleDLL = path.join(
+    rootDirectory,
+    "vendor",
+    "WinSparkle-0.7.0",
+    "x64",
+    "Release",
+    "WinSparkle.dll",
+)
 
 const copy = (source, dest) => {
     console.log(`Copying from ${source} to ${dest}`)
@@ -37,6 +51,16 @@ const shell = (cmd) => {
     const out = cp.execSync(cmd)
     console.log(`[shell - output]: ${out.toString("utf8")}`)
     return out.toString("utf8")
+}
+
+const winShell = (cmd) => {
+    let oldEnv = process.env
+    process.env = {
+        PATH: process.env.PATH,
+    }
+    const res = shell(cmd)
+    process.env = oldEnv
+    return res
 }
 
 const getRipgrepPath = () => {
@@ -84,6 +108,7 @@ const updateIcon = (rcedit, exe, iconFile) => {
     process.env = {
         PATH: process.env.PATH,
     }
+    fs.chmodSync(exe, 0755)
     rcedit(exe, {
         icon: iconFile,
     })
@@ -93,7 +118,7 @@ const updateIcon = (rcedit, exe, iconFile) => {
 }
 
 if (process.platform == "linux") {
-    const result = cp.spawnSync("esy", ["scripts/linux/package-linux.sh"], {
+    const result = cp.spawnSync("esy", ["bash", "-c", "scripts/linux/package-linux.sh"], {
         cwd: process.cwd(),
         env: process.env,
         stdio: "inherit",
@@ -114,26 +139,38 @@ if (process.platform == "linux") {
 
     const plistFile = path.join(contentsDirectory, "Info.plist")
 
+    const numCommits = shell("git rev-list --count origin/master").replace(/(\r\n|\n|\r)/gm, "")
+    const semvers = package.version.split(".")
+    const bundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
+
     const plistContents = {
-        CFBundleName: "Onivim2",
+        CFBundleName: "Onivim 2",
         CFBundleDisplayName: "Onivim 2",
         CFBundleIdentifier: "com.outrunlabs.onivim2",
         CFBundleIconFile: "Onivim2",
-        CFBundleVersion: `${package.version}`,
+        CFBundleVersion: bundleVersion,
+        CFBundleShortVersionString: `${package.version}`,
         CFBundlePackageType: "APPL",
         CFBundleSignature: "????",
         CFBundleExecutable: "Oni2_editor",
         NSHighResolutionCapable: true,
+        NSSupportsAutomaticGraphicsSwitching: true,
         CFBundleDocumentTypes: package.build.fileAssociations.map((fileAssoc) => {
             return {
                 CFBundleTypeExtensions: fileAssoc.ext.map((ext) => ext.substr(1)),
                 CFBundleTypeName: fileAssoc.name,
                 CFBundleTypeRole: fileAssoc.role,
+                CFBundleTypeOSTypes: ["TEXT", "utxt", "TUTX", "****"],
                 CFBundleTypeIconFile: "macDocumentIcons/" + fileAssoc.icon.mac,
             }
         }),
         LSEnvironment: {
             ONI2_BUNDLED: "1",
+            ONI2_LAUNCHED_FROM_FINDER: "1",
+        },
+        SUFeedURL: process.env.ONI2_APPCAST_BASEURL,
+        NSAppTransportSecurity: {
+            NSAllowsLocalNetworking: true,
         },
     }
 
@@ -169,6 +206,8 @@ if (process.platform == "linux") {
     // Remove setup.json prior to remapping bundled files,
     // so it doesn't get symlinked.
     fs.removeSync(path.join(binaryDirectory, "setup.json"))
+    // Remove development plist file
+    fs.removeSync(path.join(binaryDirectory, "Info.plist"))
 
     // We need to remap the binary files - we end up with font files, images, and configuration files in the bin folder
     // These should be in 'Resources' instead. Move everything that is _not_ a binary out, and symlink back in.
@@ -195,6 +234,10 @@ if (process.platform == "linux") {
     // Copy icon
     copy(iconSourcePath, path.join(resourcesDirectory, "Onivim2.icns"))
 
+    // fs.copySync(sparkleFramework, path.join(frameworksDirectory, "Sparkle.framework"));
+
+    shell(`cp -R "${sparkleFramework}" "${path.join(frameworksDirectory, "Sparkle.framework")}"`)
+
     shell(
         `dylibbundler -b -x "${path.join(
             binaryDirectory,
@@ -207,7 +250,7 @@ if (process.platform == "linux") {
     // Make sure these are codesigned as well in codesign.sh
     // Must be kept in sync with:
     // src/scripts/osx/codesign.sh
-    const frameworksWhiteList = ["libcrypto.1.1.dylib", "libssl.1.1.dylib"]
+    const frameworksWhiteList = ["Sparkle.framework"]
 
     const disallowedFrameworks = frameworks.filter(
         (framework) =>
@@ -234,6 +277,14 @@ if (process.platform == "linux") {
         "com.apple.security.cs.allow-dyld-environment-variables": true,
     }
     fs.writeFileSync(entitlementsPath, require("plist").build(entitlementsContents))
+
+    if (codesign) {
+        const cert = fs.readFileSync("./scripts/osx/test-certificate.p12", { encoding: "base64" })
+
+        shell(
+            `OSX_P12_CERTIFICATE="${cert}" CODESIGN_PASSWORD="OutrunLabs" CERTIFICATE_NAME="Oni2" ./scripts/osx/codesign.sh`,
+        )
+    }
 
     const dmgPath = path.join(releaseDirectory, "Onivim2.dmg")
     const dmgJsonPath = path.join(releaseDirectory, "appdmg.json")
@@ -284,14 +335,28 @@ if (process.platform == "linux") {
         getRlsPath(),
         path.join(platformReleaseDirectory, process.platform == "win32" ? "rls.exe" : "rls"),
     )
+    if (process.platform == "win32") {
+        const numCommits = winShell(
+            '"C:\\Program Files\\Git\\cmd\\git.exe" rev-list --count origin/master',
+        ).replace(/(\r\n|\n|\r)/gm, "")
+        const semvers = package.version.split(".")
+        const bundleVersion = `${semvers[0]}.${semvers[1]}.${numCommits}`
+
+        const oni2Ini = `
+        [Application]
+        Version = ${bundleVersion}
+        `
+        fs.writeFileSync(path.join(platformReleaseDirectory, "Oni2.ini"), oni2Ini)
+        copy(winSparkleDLL, path.join(platformReleaseDirectory, "WinSparkle.dll"))
+    }
     const imageSourceDirectory = path.join(rootDirectory, "assets", "images")
     const iconFile = path.join(imageSourceDirectory, "oni2.ico")
     fs.copySync(iconFile, path.join(platformReleaseDirectory, "oni2.ico"))
     fs.copySync(eulaFile, path.join(platformReleaseDirectory, "EULA.md"))
     fs.copySync(thirdPartyFile, path.join(platformReleaseDirectory, "ThirdPartyLicenses.txt"))
-    fs.copySync(curBin, platformReleaseDirectory, { deference: true })
-    fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, { deference: true })
-    fs.copySync(nodeScriptSourceDirectory, nodeScriptDestDirectory, { deference: true })
+    fs.copySync(curBin, platformReleaseDirectory, { dereference: true })
+    fs.copySync(extensionsSourceDirectory, extensionsDestDirectory, { dereference: true })
+    fs.copySync(nodeScriptSourceDirectory, nodeScriptDestDirectory, { dereference: true })
     fs.removeSync(path.join(platformReleaseDirectory, "setup.json"))
 
     // Now that we've copied set the app icon up correctly.

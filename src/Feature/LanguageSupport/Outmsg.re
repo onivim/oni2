@@ -3,19 +3,33 @@ open EditorCoreTypes;
 type internalMsg('a) =
   | Nothing
   | ApplyCompletion({
-      meetColumn: Index.t,
+      meetColumn: CharacterIndex.t,
       insertText: string,
+      additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | InsertSnippet({
-      meetColumn: Index.t,
+      meetColumn: CharacterIndex.t,
       snippet: string,
+      additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | OpenFile({
       filePath: string,
-      location: option(Location.t),
+      location: option(CharacterPosition.t),
     })
+  | ReferencesAvailable
   | NotifySuccess(string)
   | NotifyFailure(string)
+  | CodeLensesChanged({
+      handle: int,
+      bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
+      lenses: list(CodeLens.codeLens),
+    })
+  | SetSelections({
+      editorId: int,
+      ranges: list(CharacterRange.t),
+    })
   | Effect(Isolinear.Effect.t('a));
 
 let map = f =>

@@ -27,9 +27,6 @@ Service_Clipboard.Testing.setClipboardProvider(~get=() => _currentClipboard^);
 
 let setTime = v => _currentTime := v;
 
-let setTitle = title => _currentTitle := title;
-let getTitle = () => _currentTitle^;
-
 let setZoom = v => _currentZoom := v;
 let getZoom = () => _currentZoom^;
 
@@ -95,21 +92,21 @@ let runTest =
       test: testCallback,
     ) => {
   // Disable colors on windows to prevent hanging on CI
-  if (Sys.win32) {
-    Timber.App.disableColors();
-  };
 
   Revery.App.initConsole();
 
   Core.Log.enableDebug();
-  Timber.App.enable();
   Timber.App.setLevel(Timber.Level.trace);
+  Oni_Core.Log.init();
 
   Internal.prepareEnvironment();
 
   switch (Sys.getenv_opt("ONI2_LOG_FILE")) {
-  | None => ()
-  | Some(logFile) => Timber.App.setLogFile(logFile)
+  | None => Timber.App.enable(Timber.Reporter.console())
+  | Some(logFile) =>
+    let fileReporter = Timber.Reporter.file(logFile);
+    let reporters = Timber.Reporter.(combine(console(), fileReporter));
+    Timber.App.enable(reporters);
   };
 
   Log.info("Starting test... Working directory: " ++ Sys.getcwd());
@@ -128,12 +125,20 @@ let runTest =
   let getUserSettings = () => Ok(currentUserSettings^);
 
   Vim.init();
+  Oni2_KeyboardLayout.init();
+  Log.infof(m =>
+    m(
+      "Keyboard Language: %s Layout: %s",
+      Oni2_KeyboardLayout.getCurrentLanguage(),
+      Oni2_KeyboardLayout.getCurrentLayout(),
+    )
+  );
 
   let initialBuffer = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
       Vim.Buffer.openFile("untitled") |> Vim.BufferMetadata.ofBuffer;
     Core.Buffer.ofMetadata(
-      ~font=Oni_Core.Font.default,
+      ~font=Oni_Core.Font.default(),
       ~id,
       ~version,
       ~filePath,
@@ -144,14 +149,20 @@ let runTest =
   let currentState =
     ref(
       Model.State.initial(
+        ~cli=Oni_CLI.default,
         ~initialBuffer,
         ~initialBufferRenderers=Model.BufferRenderers.initial,
         ~getUserSettings,
         ~contributedCommands=[],
+        ~maybeWorkspace=None,
         ~workingDirectory=Sys.getcwd(),
         ~extensionsFolder=None,
         ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
         ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
+        ~licenseKeyPersistence=None,
+        ~titlebarHeight=0.,
+        ~setZoom,
+        ~getZoom,
       ),
     );
 
@@ -168,6 +179,7 @@ let runTest =
 
   let _: unit => unit =
     Revery.Tick.interval(
+      ~name="Integration Test Ticker",
       _ => {
         let state = currentState^;
         Revery.Utility.HeadlessWindow.render(
@@ -175,10 +187,10 @@ let runTest =
           <Oni_UI.Root state dispatch=uiDispatch^ />,
         );
       },
-      //      Revery.Utility.HeadlessWindow.takeScreenshot(
-      //        headlessWindow,
-      //        "screenshot.png",
-      //      );
+      // Revery.Utility.HeadlessWindow.takeScreenshot(
+      //   headlessWindow,
+      //   "screenshot.png",
+      // );
       Revery.Time.zero,
     );
 
@@ -196,7 +208,7 @@ let runTest =
       |> Printf.fprintf(oc, "%s\n");
 
     close_out(oc);
-    tempFilePath;
+    tempFilePath |> Fp.absoluteCurrentPlatform |> Option.get;
   };
 
   let configurationFilePath =
@@ -212,9 +224,6 @@ let runTest =
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
-      ~setTitle,
-      ~getZoom,
-      ~setZoom,
       ~setVsync,
       ~maximize,
       ~minimize,
@@ -282,35 +291,69 @@ let runTest =
     };
   };
 
+  let staysTrue = (~name, ~timeout, waiter) => {
+    let logWaiter = msg => Log.info(" STAYS TRUE (" ++ name ++ "): " ++ msg);
+    let startTime = Unix.gettimeofday();
+    let maxWaitTime = timeout;
+    let iteration = ref(0);
+
+    logWaiter("Starting");
+    while (waiter(currentState^)
+           && Unix.gettimeofday()
+           -. maxWaitTime < startTime) {
+      logWaiter("Iteration: " ++ string_of_int(iteration^));
+      incr(iteration);
+
+      // Flush any queued calls from `Revery.App.runOnMainThread`
+      Revery.App.flushPendingCallbacks();
+      Revery.Tick.pump();
+
+      for (_ in 1 to 100) {
+        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
+      };
+
+      // Flush any pending effects
+      runEffects();
+
+      Unix.sleepf(0.1);
+      Thread.yield();
+    };
+
+    let result = waiter(currentState^);
+
+    logWaiter("Finished - result: " ++ string_of_bool(result));
+
+    if (!result) {
+      logWaiter("FAILED: " ++ Sys.executable_name);
+      assert(false == true);
+    };
+  };
+
+  let key = (~modifiers=EditorInput.Modifiers.none, key) => {
+    let keyPress =
+      EditorInput.KeyPress.physicalKey(~key, ~modifiers)
+      |> EditorInput.KeyCandidate.ofKeyPress;
+    let time = Revery.Time.now();
+    dispatch(Model.Actions.KeyDown({key: keyPress, scancode: 1, time}));
+    dispatch(Model.Actions.KeyUp({scancode: 1, time}));
+    runEffects();
+  };
+
+  let input = (~modifiers=EditorInput.Modifiers.none, str) => {
+    str
+    |> Zed_utf8.explode
+    |> List.iter(uchar => {
+         key(~modifiers, EditorInput.Key.Character(uchar))
+       });
+  };
+
+  let ctx = {dispatch, wait: waitForState, runEffects, input, key, staysTrue};
+
   Log.info("--- Starting test: " ++ name);
-  test(dispatch, waitForState, runEffects);
+  test(ctx);
   Log.info("--- TEST COMPLETE: " ++ name);
 
   dispatch(Model.Actions.Quit(true));
-};
-
-let runTestWithInput =
-    (
-      ~configuration=?,
-      ~keybindings=?,
-      ~name,
-      ~onAfterDispatch=?,
-      f: testCallbackWithInput,
-    ) => {
-  runTest(
-    ~name,
-    ~configuration?,
-    ~keybindings?,
-    ~onAfterDispatch?,
-    (dispatch, wait, runEffects) => {
-      let input = key => {
-        dispatch(Model.Actions.KeyboardInput({isText: false, input: key}));
-        runEffects();
-      };
-
-      f(input, dispatch, wait, runEffects);
-    },
-  );
 };
 
 let runCommand = (~dispatch, command: Core.Command.t(_)) =>

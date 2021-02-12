@@ -1,6 +1,7 @@
 (library
-    (name Exthost_TestLib)
-    (flags (:standard (-w -39)))
-    (ocamlopt_flags -linkall -g)
-    (libraries rely.lib Oni2.exthost)
-)
+ (name Exthost_TestLib)
+ (flags
+  (:standard
+   (-w -39)))
+ (ocamlopt_flags -linkall -g)
+ (libraries rely.lib Oni2.exthost))

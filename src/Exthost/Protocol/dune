@@ -1,5 +1,7 @@
 (library
-    (name Exthost_Protocol)
-    (public_name Oni2.exthost.protocol)
-    (libraries luv Oni2.exthost.extension Oni2.exthost.transport Oni2.core yojson decoders-yojson)
-    (preprocess (pps ppx_deriving.show ppx_deriving_yojson)))
+ (name Exthost_Protocol)
+ (public_name Oni2.exthost.protocol)
+ (libraries luv Oni2.exthost.extension Oni2.exthost.transport Oni2.core
+   yojson decoders-yojson)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving_yojson)))

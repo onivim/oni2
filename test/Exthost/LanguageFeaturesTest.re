@@ -82,40 +82,44 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get code lenses items",
            ~validate=
-             (codeLenses: option(list(Exthost.CodeLens.t))) => {
-               expect.equal(
-                 codeLenses,
-                 Some([
-                   CodeLens.{
-                     cacheId: Some([1, 0]),
-                     range: range1,
-                     command:
-                       Some(
-                         Exthost.Command.{
-                           label:
-                             Some(
-                               Exthost.Label.ofString("codelens: command1"),
-                             ),
-                           id: "codelens.command1",
-                         },
-                       ),
-                   },
-                   CodeLens.{
-                     cacheId: Some([1, 1]),
-                     range: range2,
-                     command:
-                       Some(
-                         Exthost.Command.{
-                           label:
-                             Some(
-                               Exthost.Label.ofString("codelens: command2"),
-                             ),
-                           id: "codelens.command2",
-                         },
-                       ),
-                   },
-                 ]),
-               );
+             (codeLenses: option(Exthost.CodeLens.List.t)) => {
+               switch (codeLenses) {
+               | None => expect.equal(false, true)
+               | Some({lenses, _}) =>
+                 expect.equal(
+                   lenses,
+                   [
+                     CodeLens.{
+                       cacheId: Some([1, 0]),
+                       range: range1,
+                       command:
+                         Some(
+                           Exthost.Command.{
+                             label:
+                               Some(
+                                 Exthost.Label.ofString("codelens: command1"),
+                               ),
+                             id: Some("codelens.command1"),
+                           },
+                         ),
+                     },
+                     CodeLens.{
+                       cacheId: Some([1, 1]),
+                       range: range2,
+                       command:
+                         Some(
+                           Exthost.Command.{
+                             label:
+                               Some(
+                                 Exthost.Label.ofString("codelens: command2"),
+                               ),
+                             id: Some("codelens.command2"),
+                           },
+                         ),
+                     },
+                   ],
+                 )
+               };
                true;
              },
            getCodeLenses,
@@ -160,7 +164,7 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
            ~name="Get completion items",
            ~validate=
              (suggestResult: Exthost.SuggestResult.t) => {
-               let {completions, isIncomplete}: Exthost.SuggestResult.t = suggestResult;
+               let {completions, isIncomplete, _}: Exthost.SuggestResult.t = suggestResult;
                expect.int(List.length(completions)).toBe(2);
                expect.bool(isIncomplete).toBe(false);
 
@@ -311,7 +315,8 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get highlights",
            ~validate=
-             (highlights: list(Exthost.DocumentHighlight.t)) => {
+             (maybeHighlights: option(list(Exthost.DocumentHighlight.t))) => {
+               let highlights = Option.get(maybeHighlights);
                expect.int(List.length(highlights)).toBe(2);
                let highlight0: Exthost.DocumentHighlight.t =
                  List.nth(highlights, 0);
@@ -424,7 +429,9 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get symbols",
            ~validate=
-             (symbols: list(Exthost.DocumentSymbol.t)) => {
+             (maybeSymbols: option(list(Exthost.DocumentSymbol.t))) => {
+               expect.equal(Option.is_some(maybeSymbols), true);
+               let symbols = Option.get(maybeSymbols);
                expect.int(List.length(symbols)).toBe(2);
                let symbol0: Exthost.DocumentSymbol.t = List.nth(symbols, 0);
                let symbol1: Exthost.DocumentSymbol.t = List.nth(symbols, 1);
@@ -541,14 +548,15 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
       |> Test.withClientRequest(
            ~name="Get signature help",
            ~validate=
-             (signatureHelp: option(Exthost.SignatureHelp.Response.t)) => {
+             (maybeSignatureHelp: option(Exthost.SignatureHelp.Response.t)) => {
                open Exthost.SignatureHelp;
 
-               expect.equal(
-                 signatureHelp,
-                 Some({
-                   id: 1,
-                   signatures: [
+               switch (maybeSignatureHelp) {
+               | None => failwith("No signature help returned")
+               | Some({signatures, activeSignature, activeParameter, _}) =>
+                 expect.equal(
+                   signatures,
+                   [
                      Signature.{
                        label: "signature 1",
                        documentation:
@@ -570,11 +578,10 @@ describe("LanguageFeaturesTest", ({describe, _}) => {
                        ],
                      },
                    ],
-                   activeSignature: 0,
-                   activeParameter: 0,
-                 }),
-               );
-
+                 );
+                 expect.equal(activeSignature, 0);
+                 expect.equal(activeParameter, 0);
+               };
                true;
              },
            getSignatureHelp,

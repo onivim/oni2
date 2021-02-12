@@ -71,21 +71,41 @@ module Menu = {
 
     let whenExpression = string |> map(WhenExpr.parse);
 
-    let item =
+    let command =
       obj(({field, _}) =>
-        Menu.Schema.{
-          command: field.required("command", string),
-          alt: field.optional("alt", string),
-          group: field.optional("group", string),
-          index: None,
-          isVisibleWhen:
-            field.withDefault(
-              "when",
-              WhenExpr.Value(True),
-              string |> map(WhenExpr.parse),
-            ),
-        }
+        Menu.Schema.(
+          Command({
+            command: field.required("command", string),
+            alt: field.optional("alt", string),
+            group: field.optional("group", string),
+            index: None,
+            isVisibleWhen:
+              field.withDefault(
+                "when",
+                WhenExpr.Value(True),
+                string |> map(WhenExpr.parse),
+              ),
+          })
+        )
       );
+
+    let submenu =
+      obj(({field, _}) =>
+        Menu.Schema.(
+          Submenu({
+            submenu: field.required("submenu", string),
+            group: field.optional("group", string),
+            isVisibleWhen:
+              field.withDefault(
+                "when",
+                WhenExpr.Value(True),
+                string |> map(WhenExpr.parse),
+              ),
+          })
+        )
+      );
+
+    let item = one_of([("command", command), ("submenu", submenu)]);
 
     let menus =
       key_value_pairs(list(item))
@@ -118,7 +138,7 @@ module Configuration = {
     module Decode = {
       open Json.Decode;
 
-      let list = list(string) |> map(_ => Unknown);
+      let list = list(nullable(string)) |> map(_ => Unknown);
 
       let single =
         string
@@ -439,11 +459,10 @@ module Grammar = {
   };
 };
 
-module Theme = {
+module Snippet = {
   [@deriving show]
   type t = {
-    label: string,
-    uiTheme: string,
+    language: option(string),
     path: string,
   };
 
@@ -451,7 +470,52 @@ module Theme = {
     Json.Decode.(
       obj(({field, _}) =>
         {
-          label: field.required("label", string),
+          language: field.optional("language", string),
+          path: field.required("path", string),
+        }
+      )
+    );
+
+  let encode = snippet =>
+    Json.Encode.(
+      obj([
+        ("language", snippet.language |> nullable(string)),
+        ("path", snippet.path |> string),
+      ])
+    );
+
+  let toAbsolutePath = (base: string, snippet) => {
+    let path = Path.join(base, snippet.path);
+
+    {...snippet, path};
+  };
+};
+
+module Theme = {
+  [@deriving show]
+  type t = {
+    id: option(string),
+    label: LocalizedToken.t,
+    uiTheme: string,
+    path: string,
+  };
+
+  let localize = (loc: LocalizationDictionary.t, theme) => {
+    ...theme,
+    label: LocalizedToken.localize(loc, theme.label),
+  };
+
+  let id = ({id, label, _}) =>
+    id |> Option.value(~default=LocalizedToken.toString(label));
+
+  let label = ({label, _}) => LocalizedToken.toString(label);
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          id: field.optional("id", string),
+          label: field.required("label", LocalizedToken.decode),
           uiTheme: field.required("uiTheme", string),
           path: field.required("path", string),
         }
@@ -461,7 +525,8 @@ module Theme = {
   let encode = theme =>
     Json.Encode.(
       obj([
-        ("label", theme.label |> string),
+        ("id", theme.id |> nullable(string)),
+        ("label", theme.label |> LocalizedToken.encode),
         ("uiTheme", theme.uiTheme |> string),
         ("path", theme.path |> string),
       ])
@@ -505,6 +570,7 @@ type t = {
   menus: list(Menu.t),
   languages: list(Language.t),
   grammars: list(Grammar.t),
+  snippets: list(Snippet.t),
   themes: list(Theme.t),
   iconThemes: list(IconTheme.t),
   configuration: Configuration.t,
@@ -519,6 +585,7 @@ let default = {
   iconThemes: [],
   configuration: [],
   debuggers: [],
+  snippets: [],
   breakpoints: [],
 };
 
@@ -538,6 +605,7 @@ let decode =
         debuggers: field.withDefault("debuggers", [], list(Debugger.decode)),
         breakpoints:
           field.withDefault("breakpoints", [], list(Breakpoint.decode)),
+        snippets: field.withDefault("snippets", [], list(Snippet.decode)),
       }
     )
   );
@@ -554,6 +622,7 @@ let encode = data =>
       ("configuration", null),
       ("debuggers", data.debuggers |> list(Debugger.encode)),
       ("breakpoints", data.breakpoints |> list(Breakpoint.encode)),
+      ("snippets", data.snippets |> list(Snippet.encode)),
     ])
   );
 let to_yojson = contributes => {
@@ -568,6 +637,10 @@ let of_yojson = json => {
 
 let _remapGrammars = (path: string, grammars: list(Grammar.t)) => {
   List.map(g => Grammar.toAbsolutePath(path, g), grammars);
+};
+
+let _remapSnippets = (path: string, snippets: list(Snippet.t)) => {
+  List.map(g => Snippet.toAbsolutePath(path, g), snippets);
 };
 
 let _remapThemes = (path: string, themes: list(Theme.t)) => {
@@ -598,15 +671,21 @@ let _localizeCommands = (loc, cmds) => {
      );
 };
 
+let _localizeThemes = (loc, themes) => {
+  themes |> List.map(theme => Theme.localize(loc, theme));
+};
+
 let remapPaths = (path: string, contributions: t) => {
   ...contributions,
   grammars: _remapGrammars(path, contributions.grammars),
   themes: _remapThemes(path, contributions.themes),
   languages: _remapLanguages(path, contributions.languages),
   iconThemes: _remapIconThemes(path, contributions.iconThemes),
+  snippets: _remapSnippets(path, contributions.snippets),
 };
 
 let localize = (locDictionary: LocalizationDictionary.t, contributions: t) => {
   ...contributions,
   commands: _localizeCommands(locDictionary, contributions.commands),
+  themes: _localizeThemes(locDictionary, contributions.themes),
 };

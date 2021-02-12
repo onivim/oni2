@@ -3,7 +3,7 @@ open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="ClipboardyypTest", (dispatch, wait, runEffects) => {
+runTest(~name="ClipboardyypTest", ({dispatch, wait, runEffects, _}) => {
   wait(
     ~name="Set configuration to always yank to clipboard", (state: State.t) => {
     let configuration = state.configuration;

@@ -7,30 +7,115 @@ let input = s => ignore(Vim.input(s));
 let key = s => ignore(Vim.key(s));
 
 describe("CommandLine", ({describe, _}) => {
+  let context = colorSchemeProvider => {
+    ...Vim.Context.current(),
+    colorSchemeProvider,
+  };
+  let getCompletions = CommandLine.getCompletions;
   describe("getType", ({test, _}) =>
     test("simple command line", ({expect, _}) => {
       let _ = reset();
-      input(":");
-      expect.bool(CommandLine.getType() == Types.Ex).toBe(true);
+      let ({mode, _}: Vim.Context.t, _) = Vim.input(":");
+
+      let getType =
+        fun
+        | Vim.Mode.CommandLine({commandType, _}) => Some(commandType)
+        | _ => None;
+
+      expect.equal(getType(mode), Some(Types.Ex));
       key("<esc>");
 
-      input("/");
-      expect.bool(CommandLine.getType() == Types.SearchForward).toBe(true);
+      let ({mode, _}: Vim.Context.t, _) = Vim.input("/");
+      expect.equal(getType(mode), Some(Types.SearchForward));
       key("<esc>");
 
-      input("?");
-      expect.bool(CommandLine.getType() == Types.SearchReverse).toBe(true);
+      let ({mode, _}: Vim.Context.t, _) = Vim.input("?");
+      expect.equal(getType(mode), Some(Types.SearchReverse));
       key("<esc>");
     })
   );
 
-  describe("getCompletions", ({test, _}) => {
+  describe("getCompletions", ({describe, test, _}) => {
+    describe("ColorSchemes", ({test, _}) => {
+      test("gc stress test", ({expect, _}) => {
+        let _ = reset();
+
+        input(":colorscheme ");
+        let colorSchemeProvider = _ => {
+          Gc.compact();
+          Array.make(10000, String.make(1000, 'a'));
+        };
+
+        expect.int(
+          Array.length(
+            CommandLine.getCompletions(
+              ~context=context(colorSchemeProvider),
+              (),
+            ),
+          ),
+        ).
+          toBe(
+          10000,
+        );
+      });
+      test("pattern gets set", ({expect, _}) => {
+        let _ = reset();
+
+        let lastPattern = ref(None);
+        input(":colorscheme ");
+        let colorSchemeProvider = pattern => {
+          lastPattern := Some(pattern);
+          [|"a"|];
+        };
+
+        expect.int(
+          Array.length(
+            CommandLine.getCompletions(
+              ~context=context(colorSchemeProvider),
+              (),
+            ),
+          ),
+        ).
+          toBe(
+          1,
+        );
+        expect.equal(lastPattern^, Some(""));
+
+        input("a");
+        expect.int(
+          Array.length(
+            CommandLine.getCompletions(
+              ~context=context(colorSchemeProvider),
+              (),
+            ),
+          ),
+        ).
+          toBe(
+          1,
+        );
+        expect.equal(lastPattern^, Some("a"));
+
+        input("b");
+        expect.int(
+          Array.length(
+            CommandLine.getCompletions(
+              ~context=context(colorSchemeProvider),
+              (),
+            ),
+          ),
+        ).
+          toBe(
+          1,
+        );
+        expect.equal(lastPattern^, Some("ab"));
+      });
+    });
     test("basic completion test", ({expect, _}) => {
       let _ = reset();
       input(":");
       input("e");
 
-      expect.int(Array.length(CommandLine.getCompletions())).toBe(20);
+      expect.int(Array.length(getCompletions())).toBe(20);
     });
 
     test("request completions multiple times", ({expect, _}) => {
@@ -38,10 +123,10 @@ describe("CommandLine", ({describe, _}) => {
       input(":");
       input("e");
 
-      expect.int(Array.length(CommandLine.getCompletions())).toBe(20);
-      expect.int(Array.length(CommandLine.getCompletions())).toBe(20);
+      expect.int(Array.length(getCompletions())).toBe(20);
+      expect.int(Array.length(getCompletions())).toBe(20);
 
-      let completions = CommandLine.getCompletions();
+      let completions = getCompletions();
       expect.string(completions[0]).toEqual("earlier");
     });
 
@@ -51,7 +136,7 @@ describe("CommandLine", ({describe, _}) => {
       input("e");
       input("h");
 
-      expect.int(Array.length(CommandLine.getCompletions())).toBe(0);
+      expect.int(Array.length(getCompletions())).toBe(0);
     });
   });
 
@@ -150,9 +235,9 @@ describe("CommandLine", ({describe, _}) => {
       input("g");
       key("<cr>");
 
-      expect.bool(Mode.getCurrent() == Normal).toBe(true);
+      expect.bool(Vim.Mode.isNormal(Mode.current())).toBe(true);
 
-      let line = Buffer.getLine(buffer, Index.fromOneBased(3));
+      let line = Buffer.getLine(buffer, LineNumber.ofOneBased(3));
       expect.string(line).toEqual("Dhis is the third line of a test file");
     });
 
@@ -162,7 +247,10 @@ describe("CommandLine", ({describe, _}) => {
       input("3");
       key("<cr>");
 
-      expect.int((Cursor.getLine() :> int)).toBe(2);
+      expect.int(Cursor.get() |> BytePosition.line |> LineNumber.toZeroBased).
+        toBe(
+        2,
+      );
     });
 
     test(":intro", ({expect, _}) => {
@@ -195,26 +283,20 @@ describe("CommandLine", ({describe, _}) => {
       let _ = reset();
 
       input(":");
-      input("a");
+      let ({mode, _}: Vim.Context.t, _) = Vim.input("a");
 
-      switch (CommandLine.getText()) {
-      | Some(v) => expect.string(v).toEqual("a")
-      | None => expect.int(0).toBe(1)
-      };
+      let getText =
+        fun
+        | Vim.Mode.CommandLine({text, _}) => Some(text)
+        | _ => None;
 
-      input("b");
+      expect.equal(getText(mode), Some("a"));
 
-      switch (CommandLine.getText()) {
-      | Some(v) => expect.string(v).toEqual("ab")
-      | None => expect.int(0).toBe(1)
-      };
+      let ({mode, _}: Vim.Context.t, _) = Vim.input("b");
+      expect.equal(getText(mode), Some("ab"));
 
-      input("c");
-
-      switch (CommandLine.getText()) {
-      | Some(v) => expect.string(v).toEqual("abc")
-      | None => expect.int(0).toBe(1)
-      };
+      let ({mode, _}: Vim.Context.t, _) = Vim.input("c");
+      expect.equal(getText(mode), Some("abc"));
     })
   );
 

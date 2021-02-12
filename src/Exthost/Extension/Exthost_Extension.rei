@@ -106,13 +106,26 @@ module Contributions: {
     };
   };
 
+  module Snippet: {
+    [@deriving show]
+    type t = {
+      language: option(string),
+      path: string,
+    };
+  };
+
   module Theme: {
     [@deriving show]
     type t = {
-      label: string,
+      id: option(string),
+      label: LocalizedToken.t,
       uiTheme: string,
       path: string,
     };
+
+    let id: t => string;
+
+    let label: t => string;
   };
 
   module IconTheme: {
@@ -132,6 +145,7 @@ module Contributions: {
     menus: list(Menu.t),
     languages: list(Language.t),
     grammars: list(Grammar.t),
+    snippets: list(Snippet.t),
     themes: list(Theme.t),
     iconThemes: list(IconTheme.t),
     configuration: Configuration.t,
@@ -150,7 +164,7 @@ module Manifest: {
   [@deriving show]
   type t = {
     name: string,
-    version: string,
+    version: option(Semver.t),
     author: string,
     displayName: option(LocalizedToken.t),
     description: option(string),
@@ -173,6 +187,7 @@ module Manifest: {
   let decode: Oni_Core.Json.decoder(t);
 
   let identifier: t => string;
+  let publisher: t => string;
   let getDisplayName: t => string;
 };
 
@@ -188,11 +203,12 @@ module Scanner: {
       category,
       manifest: Manifest.t,
       path: string,
+      rawPackageJson: Yojson.Safe.t,
     };
   };
 
   let load: (~category: category, string) => option(ScanResult.t);
-  let scan: (~category: category, string) => list(ScanResult.t);
+  let scan: (~category: category, Fp.t(Fp.absolute)) => list(ScanResult.t);
 };
 
 module InitData: {
@@ -202,11 +218,21 @@ module InitData: {
     let fromString: string => t;
   };
 
+  module StaticWorkspaceData: {
+    [@deriving (show, yojson({strict: false}))]
+    type t = {
+      id: string,
+      name: string,
+    };
+
+    let global: t;
+  };
+
   module Extension: {
     [@deriving (show, yojson({strict: false}))]
     type t;
 
-    let ofManifestAndPath: (Manifest.t, string) => t;
+    let ofScanResult: Scanner.ScanResult.t => t;
   };
 
   module Environment: {
@@ -217,14 +243,15 @@ module InitData: {
       appLanguage: string,
       appRoot: Oni_Core.Uri.t,
       globalStorageHome: option(Oni_Core.Uri.t),
+      workspaceStorageHome: option(Oni_Core.Uri.t),
       userHome: option(Oni_Core.Uri.t),
+      webviewResourceRoot: string,
+      webviewCspSource: string,
       // TODO
       /*
        appLanguage: string,
        appUriScheme: string,
        appSettingsHome: option(Uri.t),
-       webviewResourceRoot: string,
-       webviewCspSource: string,
        useHostProxy: boolean,
        */
     };
@@ -270,6 +297,7 @@ module InitData: {
     autoStart: bool,
     remote: Remote.t,
     telemetryInfo: TelemetryInfo.t,
+    workspace: StaticWorkspaceData.t,
   };
 
   let create:
@@ -283,6 +311,7 @@ module InitData: {
       ~autoStart: bool=?,
       ~remote: Remote.t=?,
       ~telemetryInfo: TelemetryInfo.t=?,
+      ~workspace: StaticWorkspaceData.t=?,
       list(Extension.t)
     ) =>
     t;

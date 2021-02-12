@@ -8,6 +8,8 @@ type theme = Exthost.Extension.Contributions.Theme.t;
 
 let initial: list(list(ColorTheme.Schema.definition)) => model;
 
+let variant: model => Oni_Core.ColorTheme.variant;
+
 [@deriving show]
 type command;
 
@@ -16,9 +18,12 @@ type msg =
   | Command(command)
   | TextmateThemeLoaded(ColorTheme.variant, [@opaque] Textmate.ColorTheme.t);
 
+module Msg: {let openThemePicker: msg;};
+
 type outmsg =
   | Nothing
-  | OpenThemePicker(list(theme));
+  | OpenThemePicker(list(theme))
+  | ThemeChanged(ColorTheme.Colors.t);
 
 let update: (model, msg) => (model, outmsg);
 

@@ -16,7 +16,11 @@ module Global = {
       define("version", string, BuildInfo.commitId, _ => BuildInfo.commitId);
     let workspace =
       define("workspace", option(string), None, state =>
-        Some(state.workspace.workingDirectory)
+        Feature_Workspace.openedFolder(state.workspace)
+      );
+    let licenseKey =
+      define("licenseKey", option(string), None, state =>
+        state.registration.licenseKey
       );
   };
 
@@ -26,7 +30,12 @@ module Global = {
     lazy(
       {
         instantiate("global", () =>
-          Schema.[entry(version), entry(workspace), entry(extensionValues)]
+          Schema.[
+            entry(version),
+            entry(workspace),
+            entry(extensionValues),
+            entry(licenseKey),
+          ]
         );
       }
     );
@@ -34,6 +43,7 @@ module Global = {
   let extensionValues = () => get(Schema.extensionValues, Lazy.force(store));
   let version = () => get(Schema.version, Lazy.force(store));
   let workspace = () => get(Schema.workspace, Lazy.force(store));
+  let licenseKey = () => get(Schema.licenseKey, Lazy.force(store));
 
   let persist = state => persist(state, Lazy.force(store));
 };
@@ -44,13 +54,13 @@ module Workspace = {
     open Persistence.Schema;
 
     let windowX =
-      define("windowX", option(int), None, ((_state, window)) =>
-        Some(Window.getPosition(window) |> fst)
-      );
+      define("windowX", option(int), None, ((_state, window))
+        // TODO: We should check if window is minimized
+        => Some(Window.getPosition(window) |> fst));
     let windowY =
-      define("windowY", option(int), None, ((_state, window)) =>
-        Some(Window.getPosition(window) |> snd)
-      );
+      define("windowY", option(int), None, ((_state, window))
+        // TODO: We should check if window is minimized
+        => Some(Window.getPosition(window) |> snd));
     let windowWidth =
       define("windowWidth", int, 800, ((_state, window)) =>
         Window.getSize(window).width

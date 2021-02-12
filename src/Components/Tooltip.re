@@ -84,6 +84,7 @@ module Overlay: {
       | Some(tooltip) =>
         clearTimeout :=
           Tick.timeout(
+            ~name="Tooltip Timeout",
             () => internalSetTooltip^(_ => Some(tooltip)),
             Constants.delay,
           )

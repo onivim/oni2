@@ -6,11 +6,11 @@ open Oni_IntegrationTestLib;
 // https://github.com/onivim/oni2/issues/600
 //
 // Verify some simple cases around the file modified flag
-runTestWithInput(
+runTest(
   ~name="RegressionFileModifiedIndication",
-  (input, dispatch, wait, runEffects) => {
+  ({input, dispatch, wait, runEffects, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   let initialBuffer = Vim.Buffer.getCurrent();

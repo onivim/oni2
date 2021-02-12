@@ -1,5 +1,4 @@
 open Oni_Core;
-open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
@@ -9,10 +8,9 @@ module TS = TextSynchronization;
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, the buffer received by the extension host
 // is in sync with the buffer in the main process
-runTestWithInput(
-  ~name="ExtHostBufferUpdates", (input, dispatch, wait, _runEffects) => {
-  wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+runTest(~name="ExtHostBufferUpdates", ({input, dispatch, wait, key, _}) => {
+  wait(~timeout=30.0, ~name="Exthost is initialized", (state: State.t) =>
+    Feature_Exthost.isInitialized(state.exthost)
   );
 
   // Wait until the extension is activated
@@ -37,12 +35,10 @@ runTestWithInput(
     (state: State.t) => {
       let fileType =
         Selectors.getActiveBuffer(state)
-        |> OptionEx.flatMap(Buffer.getFileType);
+        |> Option.map(Buffer.getFileType)
+        |> Option.map(Buffer.FileType.toString);
 
-      switch (fileType) {
-      | Some("oni-dev") => true
-      | _ => false
-      };
+      fileType == Some("oni-dev");
     },
   );
 
@@ -50,13 +46,13 @@ runTestWithInput(
   input("i");
 
   input("a");
-  input("<CR>");
+  key(EditorInput.Key.Return);
 
   input("b");
-  input("<CR>");
+  key(EditorInput.Key.Return);
 
   input("c");
-  input("<esc>");
+  key(EditorInput.Key.Escape);
 
   // TODO: Do we need to wait to ensure the buffer update gets sent?
   TS.validateTextIsSynchronized(

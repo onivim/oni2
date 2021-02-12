@@ -2,6 +2,9 @@ open Oni_Core;
 
 module Log = (val Log.withNamespace("Oni2.Service.Net"));
 
+exception ConnectionFailed;
+exception ResponseParseFailed;
+
 module Internal = {
   let getTemporaryFilePath = () => {
     open Base.Result.Let_syntax;
@@ -37,9 +40,8 @@ module Cache = {
 
 module Request = {
   let json = (~setup, ~decoder: Json.decoder('a), url) => {
-    let promise = NodeTask.run(~args=[url], ~setup, "request.js");
-    Lwt.bind(
-      promise,
+    Lwt.try_bind(
+      () => NodeTask.run(~args=[url], ~setup, "request.js"),
       (output: string) => {
         let result: result('a, string) =
           output
@@ -49,9 +51,10 @@ module Request = {
 
         switch (result) {
         | Ok(v) => Lwt.return(v)
-        | Error(msg) => Lwt.fail_with(msg)
+        | Error(_msg) => Lwt.fail(ResponseParseFailed)
         };
       },
+      _exn => Lwt.fail(ConnectionFailed),
     );
   };
 

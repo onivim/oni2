@@ -1,15 +1,13 @@
 open Oni_Core;
-open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
 // This test validates:
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, we get some completion results
-runTestWithInput(
-  ~name="ExtHostCompletionTest", (input, dispatch, wait, _runEffects) => {
-  wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+runTest(~name="ExtHostCompletionTest", ({input, dispatch, wait, _}) => {
+  wait(~timeout=30.0, ~name="Exthost is initialized", (state: State.t) =>
+    Feature_Exthost.isInitialized(state.exthost)
   );
 
   // Wait until the extension is activated
@@ -34,12 +32,10 @@ runTestWithInput(
     (state: State.t) => {
       let fileType =
         Selectors.getActiveBuffer(state)
-        |> OptionEx.flatMap(Buffer.getFileType);
+        |> Option.map(Buffer.getFileType)
+        |> Option.map(Buffer.FileType.toString);
 
-      switch (fileType) {
-      | Some("oni-dev") => true
-      | _ => false
-      };
+      fileType == Some("oni-dev");
     },
   );
 

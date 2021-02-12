@@ -1,0 +1,15 @@
+# emoji-test.txt
+# Date: 2020-09-12, 22:19:50 GMT
+# © 2020 Unicode®, Inc.
+# Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
+# For terms of use, see http://www.unicode.org/terms_of_use.html
+#
+# Emoji Keyboard/Display Test Data for UTS #51
+# Version: 13.1
+#
+
+# subgroup: emotion
+2764 FE0F 200D 1F525                                   ; fully-qualified     # ❤️‍🔥 E13.1 heart on fire
+2764 200D 1F525                                        ; unqualified         # ❤‍🔥 E13.1 heart on fire
+2764 FE0F 200D 1FA79                                   ; fully-qualified     # ❤️‍🩹 E13.1 mending heart
+2764 200D 1FA79                                        ; unqualified         # ❤‍🩹 E13.1 mending heart

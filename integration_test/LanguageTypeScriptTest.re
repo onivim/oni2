@@ -1,13 +1,10 @@
 open Oni_Core;
-open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
-open Feature_LanguageSupport;
 
-runTestWithInput(
-  ~name="LanguageTypeScriptTest", (input, dispatch, wait, _runEffects) => {
+runTest(~name="LanguageTypeScriptTest", ({input, dispatch, wait, _}) => {
   wait(~name="Capture initial state", (state: State.t) =>
-    Feature_Vim.mode(state.vim) == Vim.Types.Normal
+    Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   ExtensionHelpers.waitForExtensionToActivate(
@@ -27,12 +24,10 @@ runTestWithInput(
         (state: State.t) => {
           let fileType =
             Selectors.getActiveBuffer(state)
-            |> OptionEx.flatMap(Buffer.getFileType);
+            |> Option.map(Buffer.getFileType)
+            |> Option.map(Buffer.FileType.toString);
 
-          switch (fileType) {
-          | Some("typescript") => true
-          | _ => false
-          };
+          fileType == Some("typescript");
         },
       );
       ExtensionHelpers.waitForExtensionToActivate(
@@ -71,7 +66,8 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags =
+          Feature_Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) > 0;
       | _ => false
       };
@@ -98,7 +94,8 @@ runTestWithInput(
 
       switch (bufferOpt) {
       | Some(buffer) =>
-        let diags = Diagnostics.getDiagnostics(state.diagnostics, buffer);
+        let diags =
+          Feature_Diagnostics.getDiagnostics(state.diagnostics, buffer);
         List.length(diags) == 0;
       | _ => false
       };

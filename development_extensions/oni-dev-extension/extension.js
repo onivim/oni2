@@ -14,6 +14,8 @@ function activate(context) {
     // Create a simple status bar
     let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000)
     item.color = new vscode.ThemeColor("foreground")
+    // TODO: Bring back
+    // item.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground")
     item.command = "developer.oni.statusBarClicked"
     item.text = "$(wrench) Developer"
     item.tooltip = "Hello from oni-dev-extension!"
@@ -24,6 +26,30 @@ function activate(context) {
     cleanup(
         vscode.commands.registerCommand("developer.oni.statusBarClicked", () => {
             vscode.window.showWarningMessage("You clicked developer", [])
+        }),
+    )
+    
+    cleanup(
+        vscode.commands.registerCommand("developer.oni.hideStatusBar", () => {
+            item.hide();
+        }),
+    )
+
+    cleanup(
+        vscode.commands.registerCommand("developer.oni.tryOpenDocument", () => {
+            vscode.workspace.openTextDocument(vscode.Uri.file("package.json"))
+            .then((document) => {
+                let text = document.getText();
+                vscode.window.showInformationMessage("Got text document: " + text);
+            }, err => {
+                vscode.window.showErrorMessage("Failed to get text document: " + err.toString());
+            })
+        }),
+    )
+    
+    cleanup(
+        vscode.commands.registerCommand("developer.oni.showStatusBar", () => {
+            item.show();
         }),
     )
 
@@ -52,9 +78,57 @@ function activate(context) {
     cleanup(
         vscode.languages.registerCompletionItemProvider("oni-dev", {
             provideCompletionItems: (document, position, token, context) => {
-                return [vscode.CompletionItem("ReasonML"), vscode.CompletionItem("OCaml")]
+                const itemWithAdditionalEdit = vscode.CompletionItem("ReasonML1");
+                itemWithAdditionalEdit.detail = "(Inserts line at top too)";
+                const range0 = new vscode.Range(0, 0, 0, 0);
+                const edit0 = new vscode.TextEdit(range0, "Insert line up top!\n");
+                itemWithAdditionalEdit.additionalTextEdits = [
+                    edit0
+                ];
+
+                const itemWithAdditionalEditAfter = vscode.CompletionItem("OCaml");
+                itemWithAdditionalEditAfter.detail = "(Inserts line at line 10, too)";
+                const range1 = new vscode.Range(11, 0, 11, 0);
+                const edit1 = new vscode.TextEdit(range1, "Insert line at line 10\n");
+                itemWithAdditionalEditAfter.additionalTextEdits = [
+                    edit1
+                ];
+                return [itemWithAdditionalEdit, itemWithAdditionalEditAfter];
             },
         }),
+    )
+
+    // SLOW completion provider
+    cleanup(
+        vscode.languages.registerCompletionItemProvider("oni-dev", {
+            provideCompletionItems: (document, position, token, context) => {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve([
+                        vscode.CompletionItem("ReasonML0"),
+                        vscode.CompletionItem("OCaml0"),
+                        vscode.CompletionItem("ReasonML2"),
+                        vscode.CompletionItem("OCaml2"),
+                        ])
+                    }, 500);
+                });
+            },
+        }),
+    )
+
+    // INCOMPLETE completion provider
+    cleanup(
+        vscode.languages.registerCompletionItemProvider("oni-dev", {
+            provideCompletionItems: (document, position, token, context) => {
+                        const items = [
+                            vscode.CompletionItem("Incomplete" + Date.now().toString()),
+                        ];
+                        return {
+                            isIncomplete: true,
+                            items,
+                        };
+                },
+            }),
     )
 
     const output = vscode.window.createOutputChannel("oni-dev")
@@ -64,19 +138,23 @@ function activate(context) {
     output2.append("Hello output channel!")
 
     const collection = vscode.languages.createDiagnosticCollection("test")
+    
+    let latestText = ""
 
     cleanup(
-        vscode.workspace.onDidOpenTextDocument((e) => {
+        vscode.workspace.onDidOpenTextDocument((document) => {
             // TODO:
             // Add command / option to toggle this
             // showData({
             //     type: "workspace.onDidOpenTextDocument",
             //     filename: e.fileName,
             // });
+
+            if (document) {
+                latestText = document.getText().split(os.EOL).join("|")
+            }
         }),
     )
-
-    let latestText = ""
 
     cleanup(
         vscode.workspace.onDidChangeTextDocument((e) => {
@@ -144,6 +222,7 @@ function activate(context) {
     cleanup(
         vscode.commands.registerCommand("developer.oni.showWorkspaceRootPath", () => {
             vscode.window.showInformationMessage("Workspace rootPath: " + vscode.workspace.rootPath)
+            vscode.window.showInformationMessage("Workspace storagePath: " + context.storagePath)
         }),
     )
 
@@ -229,36 +308,38 @@ function activate(context) {
         }),
     )
 
-    function createResourceUri(relativePath) {
-        const absolutePath = path.join(vscode.workspace.rootPath, relativePath)
-        return vscode.Uri.file(absolutePath)
-    }
+    if (vscode.workspace.rootPath) {
+        function createResourceUri(relativePath) {
+            const absolutePath = path.join(vscode.workspace.rootPath, relativePath)
+            return vscode.Uri.file(absolutePath)
+        }
 
-    // Test SCM
+        // Test SCM
 
-    const testSCM = vscode.scm.createSourceControl("test", "Test")
+        const testSCM = vscode.scm.createSourceControl("test", "Test")
 
-    const index = testSCM.createResourceGroup("index", "Index")
-    index.resourceStates = [
-        { resourceUri: createResourceUri("README.md") },
-        { resourceUri: createResourceUri("src/test/api.ts") },
-    ]
+        const index = testSCM.createResourceGroup("index", "Index")
+        index.resourceStates = [
+            { resourceUri: createResourceUri("README.md") },
+            { resourceUri: createResourceUri("src/test/api.ts") },
+        ]
 
-    const workingTree = testSCM.createResourceGroup("workingTree", "Changes")
-    workingTree.resourceStates = [
-        { resourceUri: createResourceUri(".travis.yml") },
-        { resourceUri: createResourceUri("README.md") },
-    ]
+        const workingTree = testSCM.createResourceGroup("workingTree", "Changes")
+        workingTree.resourceStates = [
+            { resourceUri: createResourceUri(".travis.yml") },
+            { resourceUri: createResourceUri("README.md") },
+        ]
 
-    testSCM.count = 13
+        testSCM.count = 13
 
-    testSCM.quickDiffProvider = {
-        provideOriginalResource: (uri, _token) => {
-            return vscode.Uri.file("README.md.old")
-        },
-    }
+        testSCM.quickDiffProvider = {
+            provideOriginalResource: (uri, _token) => {
+                return vscode.Uri.file("README.md.old")
+            },
+        }
 
-    testSCM.dispose()
+        testSCM.dispose()
+    };
 
     // Text Document Content Provider
 
@@ -273,6 +354,8 @@ function activate(context) {
         textContentProvider,
     )
     disposable.dispose()
+
+    console.log("Storage path available: " + context.storagePath);
 
     // Configuration
 

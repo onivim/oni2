@@ -1,15 +1,18 @@
 [@deriving show]
 type focusable =
   | Editor
-  | Extensions
   | Wildmenu
   | Quickmenu
-  | Search
+  // Sidebar
+  | Extensions
   | FileExplorer
   | SCM
+  | Search
+  | Pane
   | Sneak
   | Modal
   | InsertRegister
+  | LicenseKey
   | LanguageSupport
   | Terminal(int);
 
@@ -21,3 +24,5 @@ let push: (focusable, stack) => stack;
 let pop: (focusable, stack) => stack;
 
 let current: stack => option(focusable);
+
+let isLayoutFocused: focusable => bool;

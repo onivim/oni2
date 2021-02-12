@@ -3,6 +3,7 @@ open Exthost_Extension;
 open Exthost;
 open Exthost_TestLib;
 open Oni_Core;
+open Oni_Core.Utility;
 
 module Log = (val Timber.Log.withNamespace("Test"));
 
@@ -29,9 +30,7 @@ let getExtensionManifest =
     p =>
       Rench.Path.join(p, "package.json")
       |> Scanner.load(~category=Scanner.Bundled)
-      |> Option.map(({manifest, path, _}: Extension.Scanner.ScanResult.t) => {
-           InitData.Extension.ofManifestAndPath(manifest, path)
-         })
+      |> Option.map(InitData.Extension.ofScanResult)
       |> Option.get
   );
 };
@@ -45,6 +44,7 @@ let startWithExtensions =
       ~onError=noopErrorHandler,
       extensions,
     ) => {
+  Log.info("Starting test!");
   let messages = ref([]);
 
   let errorHandler = err => {
@@ -58,7 +58,8 @@ let startWithExtensions =
     handler(msg);
   };
 
-  Timber.App.enable();
+  Timber.App.enable(Timber.Reporter.console());
+  Oni_Core.Log.init();
 
   let extensions =
     extensions
@@ -66,14 +67,20 @@ let startWithExtensions =
     |> List.map(p => Rench.Path.join(p, "package.json"))
     |> List.map(Scanner.load(~category=Scanner.Bundled))
     |> List.filter_map(v => v)
-    |> List.map((Extension.Scanner.ScanResult.{manifest, path, _}) => {
-         InitData.Extension.ofManifestAndPath(manifest, path)
-       });
+    |> List.map(InitData.Extension.ofScanResult);
 
   extensions |> List.iter(m => m |> InitData.Extension.show |> prerr_endline);
 
-  let logsLocation = Filename.temp_file("test", "log") |> Uri.fromPath;
-  let logFile = Filename.get_temp_dir_name() |> Uri.fromPath;
+  let logFile = Filename.temp_file("test", "log") |> Uri.fromPath;
+  let logsLocation = Filename.get_temp_dir_name() |> Uri.fromPath;
+
+  Log.errorf(m =>
+    m(
+      "Log location: %s Log file: %s",
+      logFile |> Uri.toString,
+      logsLocation |> Uri.toString,
+    )
+  );
 
   let parentPid = pid;
 
@@ -81,6 +88,7 @@ let startWithExtensions =
     InitData.create(
       ~version="9.9.9",
       ~parentPid,
+      ~logLevel=1, // DEBUG
       ~logsLocation,
       ~logFile,
       extensions,
@@ -96,7 +104,7 @@ let startWithExtensions =
       ~onError=errorHandler,
       (),
     )
-    |> ResultEx.tap_error(msg => prerr_endline(msg))
+    |> ResultEx.tapError(msg => prerr_endline(msg))
     |> Result.get_ok;
 
   let processHasExited = ref(false);
@@ -119,9 +127,11 @@ let startWithExtensions =
       ~env=[
         ("PATH", Oni_Core.ShellUtility.getPathFromEnvironment()),
         (
-          "AMD_ENTRYPOINT",
+          "VSCODE_AMD_ENTRYPOINT",
           "vs/workbench/services/extensions/node/extensionHostProcess",
         ),
+        ("PIPE_LOGGING", "true"), // Pipe logging to parent
+        ("VERBOSE_LOGGING", "true"), // Pipe logging to parent
         ("VSCODE_IPC_HOOK_EXTHOST", pipeStr),
         ("VSCODE_PARENT_PID", parentPid |> string_of_int),
       ],
@@ -150,14 +160,20 @@ let executeContributedCommand = (~command, context) => {
   context;
 };
 
+let fail = (~name, msg) => {
+  prerr_endline(Printf.sprintf("== CONDITION %s FAILED: %s", name, msg));
+  exit(2);
+};
+
 let waitForProcessClosed = ({processHasExited, _}) => {
-  Waiter.wait(~timeout=15.0, ~name="Wait for node process to close", () =>
+  Waiter.wait(
+    ~onFail=fail, ~timeout=15.0, ~name="Wait for node process to close", () =>
     processHasExited^
   );
 };
 
 let waitForMessage = (~name, f, {messages, _} as context) => {
-  Waiter.wait(~name="Wait for message: " ++ name, () =>
+  Waiter.wait(~onFail=fail, ~name="Wait for message: " ++ name, () =>
     List.exists(f, messages^)
   );
 
@@ -196,19 +212,14 @@ let withClientRequest = (~name, ~validate, f, context) => {
 
   let validator = returnValue => {
     if (!validate(returnValue)) {
-      failwith("Validation failed: " ++ name);
+      fail(~name, "Validation failed");
     };
     hasValidated := true;
   };
   let () = Lwt.on_success(response, validator);
-  Waiter.wait(
-    ~timeout=10.0,
-    ~name="Waiter: " ++ name,
-    () => {
-      prerr_endline("Waiting...");
-      hasValidated^;
-    },
-  );
+  Waiter.wait(~onFail=fail, ~timeout=10.0, ~name="Waiter: " ++ name, () => {
+    hasValidated^
+  });
 
   context;
 };
@@ -224,7 +235,7 @@ let activate = (~extensionId, ~reason, context) => {
 
 let validateNoPendingRequests = context => {
   if (Client.Testing.getPendingRequestCount(context.client) > 0) {
-    failwith("There are still pending requests");
+    fail(~name="Pending Requests", "There are still pending requests");
   };
   context;
 };

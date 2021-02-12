@@ -1,13 +1,22 @@
 type t = {
+  gpuAcceleration: [ | `Auto | `ForceSoftware | `ForceHardware],
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
-  overriddenExtensionsDir: option(string),
-  shouldClose: bool,
+  overriddenExtensionsDir: option(Fp.t(Fp.absolute)),
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,
   shouldSyntaxHighlight: bool,
+  attachToForeground: bool,
+  logLevel: option(Timber.Level.t),
+  logFile: option(string),
+  logFilter: option(string),
+  logColorsEnabled: option(bool),
+  needsConsole: bool,
+  vimExCommands: list(string),
 };
+
+let default: t;
 
 type eff =
   | PrintVersion
@@ -22,4 +31,4 @@ type eff =
     })
   | Run;
 
-let parse: array(string) => (t, eff);
+let parse: (~getenv: string => option(string), array(string)) => (t, eff);

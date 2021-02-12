@@ -16,6 +16,7 @@ let passthroughStringAndStayAttached = Arg.String(_ => stayAttached := true);
 
 let spec =
   Arg.align([
+    ("-c", passthroughString, "Execute an :ex command after loading files"),
     (
       "-f",
       Arg.Set(stayAttached),
@@ -48,6 +49,17 @@ let spec =
       "--disable-configuration",
       passthrough,
       " Do not load user configuration (use default configuration).",
+    ),
+    (
+      "--gpu-acceleration",
+      passthroughString,
+      " Override default renderer strategy - one of: "
+      ++ {|
+
+      - auto: automatically choose between software / hardware rendering (default)
+      - hardware: force hardware renderer
+      - software: force software renderer
+      |},
     ),
     (
       "--install-extension",

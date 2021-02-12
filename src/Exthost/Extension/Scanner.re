@@ -20,6 +20,7 @@ module ScanResult = {
     category,
     manifest: Manifest.t,
     path: string,
+    rawPackageJson: Yojson.Safe.t,
   };
 };
 
@@ -54,7 +55,9 @@ let load = (~category, packageFile) => {
   | Ok(parsedManifest) =>
     let manifest = parsedManifest |> remapManifest(directory) |> localize;
 
-    Some(ScanResult.{category, manifest, path: directory});
+    Some(
+      ScanResult.{category, manifest, path: directory, rawPackageJson: json},
+    );
 
   | Error(err) =>
     Log.errorf(m =>
@@ -68,10 +71,12 @@ let load = (~category, packageFile) => {
   };
 };
 
-let scan = (~category, directory: string) => {
-  Sys.readdir(directory)
+let scan = (~category, directory: Fp.t(Fp.absolute)) => {
+  let dirString = directory |> Fp.toString;
+  dirString
+  |> Sys.readdir
   |> Array.to_list
-  |> List.map(Path.join(directory))
+  |> List.map(Path.join(dirString))
   |> List.filter(Sys.is_directory)
   |> List.map(dir => Path.join(dir, "package.json"))
   |> List.filter(Sys.file_exists)
