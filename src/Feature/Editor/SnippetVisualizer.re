@@ -23,7 +23,9 @@ let draw =
   let isShadowEnabled =
     Feature_Configuration.GlobalConfiguration.shadows.get(config);
 
-  let isCurrentEditor = Editor.getId(context.editor) == Feature_Snippets.Session.editorId(session);
+  let isCurrentEditor =
+    Editor.getId(context.editor)
+    == Feature_Snippets.Session.editorId(session);
 
   if (!isShadowEnabled || !isCurrentEditor) {
     ();
