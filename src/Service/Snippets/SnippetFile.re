@@ -93,7 +93,7 @@ let ensureCreated = (snippetFile: t) => {
       |> Service_OS.Api.stat
       |> Lwt.map(_ => snippetFile)
     },
-    exn => {
+    _exn => {
       let maybeContents =
         scope(snippetFile)
         |> Option.map(

@@ -1797,7 +1797,10 @@ let update =
           });
         (state.layout, eff);
 
-      | OpenFile(filePath) => (state.layout, Internal.openFileEffect(Fp.toString(filePath)))
+      | OpenFile(filePath) => (
+          state.layout,
+          Internal.openFileEffect(Fp.toString(filePath)),
+        )
 
       | Effect(eff) => (
           state.layout,

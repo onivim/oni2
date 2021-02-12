@@ -280,7 +280,9 @@ let start = () => {
                name:
                  snippetFile.language |> Option.value(~default="(global)"),
                command: () =>
-                 Snippets(Feature_Snippets.Msg.editSnippetFile(~snippetFile)),
+                 Snippets(
+                   Feature_Snippets.Msg.editSnippetFile(~snippetFile),
+                 ),
                icon: None,
                highlight: [],
                handle: None,

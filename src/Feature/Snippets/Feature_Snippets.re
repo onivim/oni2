@@ -726,8 +726,7 @@ let update =
       );
     (model, Effect(eff));
 
-  | SnippetFileCreatedSuccessfully(filePath) =>
-    (model, OpenFile(filePath))
+  | SnippetFileCreatedSuccessfully(filePath) => (model, OpenFile(filePath))
 
   | SnippetFileCreationError(msg) => (model, ErrorMessage(msg))
 
