@@ -1797,6 +1797,8 @@ let update =
           });
         (state.layout, eff);
 
+      | OpenFile(filePath) => (state.layout, Internal.openFileEffect(Fp.toString(filePath)))
+
       | Effect(eff) => (
           state.layout,
           eff |> Isolinear.Effect.map(msg => Actions.Snippets(msg)),

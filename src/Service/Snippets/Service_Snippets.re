@@ -102,13 +102,19 @@ module Cache = {
         Lwt.bind(
           Service_OS.Api.readFile(filePath),
           bytes => {
+            Log.infof (m => m("Reading json for: %s", filePath));
             let json = bytes |> Bytes.to_string |> Yojson.Safe.from_string;
 
             let parseResult = Json.Decode.decode_value(Decode.decode, json);
 
             switch (parseResult) {
-            | Ok(snippets) => Lwt.return(snippets)
-            | Error(msg) => Lwt.fail_with(Json.Decode.string_of_error(msg))
+            | Ok(snippets) =>
+            Log.infof (m => m("Read %d snippets from %s", List.length(snippets), filePath));
+            Lwt.return(snippets)
+            | Error(msg) => 
+            let msgStr = Json.Decode.string_of_error(msg);
+            Log.errorf(m => m("Parsing snippet file %s failed with: %s", filePath, msgStr));
+            Lwt.fail_with(msgStr);
             };
           },
         );
@@ -125,13 +131,12 @@ module Internal = {
     folder
     |> Fp.toString
     |> Service_OS.Api.readdir
-    |> LwtEx.flatMap(dirents => {
+    |> Lwt.map(dirents => {
          dirents
          |> List.map((dirent: Luv.File.Dirent.t) =>
               Fp.At.(folder / dirent.name)
             )
          |> List.filter(file => SnippetFile.scope(file) != None)
-         |> Lwt.return
        });
   };
 
@@ -199,6 +204,7 @@ module Effect = {
   };
   let clearCachedSnippets = (~filePath) => {
     Isolinear.Effect.create(~name="Service_Snippets.clearCachedSnippets", () => {
+      Log.tracef(m => m("Clearing snippet cache for file: %s", filePath |> Fp.toString));
       Cache.clear(Fp.toString(filePath))
     });
   };

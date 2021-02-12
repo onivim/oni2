@@ -393,6 +393,7 @@ type outmsg =
   | SetSelections(list(ByteRange.t))
   | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
   | ShowFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
+  | OpenFile(Fp.t(Fp.absolute))
   | Nothing;
 
 module Effects = {
@@ -725,9 +726,8 @@ let update =
       );
     (model, Effect(eff));
 
-  | SnippetFileCreatedSuccessfully(_) =>
-    // TODO
-    failwith("Not yet implemented")
+  | SnippetFileCreatedSuccessfully(filePath) =>
+    (model, OpenFile(filePath))
 
   | SnippetFileCreationError(msg) => (model, ErrorMessage(msg))
 
