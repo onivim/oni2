@@ -38,6 +38,7 @@
 - #3129 - Snippets: Replace visual/select range on insert
 - #3057 - Theming: Turn down shadow intensity for light themes (related #3095)
 - #3133 - Completion: Implement shift+escape to close all popups w/o switching modes (fixes #3120)
+- #3134 - Snippets: Only show snippet visualizer for active editor
 
 ### Performance
 

@@ -23,6 +23,8 @@ module Session: {
 
   let startLine: t => EditorCoreTypes.LineNumber.t;
   let stopLine: t => EditorCoreTypes.LineNumber.t;
+
+  let editorId: t => int;
 };
 
 let session: model => option(Session.t);
