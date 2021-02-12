@@ -573,6 +573,7 @@ module Internal = {
 
 let update =
     (
+      ~languageInfo as _,
       ~resolverFactory,
       ~selections,
       ~maybeBuffer,

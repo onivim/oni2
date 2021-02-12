@@ -201,7 +201,7 @@ module Effect = {
       )
     });
 
-  let getUserSnippetFiles = (~languageInfo as _, _) => {
+  let getUserSnippetFiles = (_) => {
     // TODO
     Isolinear.Effect.none;
   };

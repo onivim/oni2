@@ -1682,6 +1682,7 @@ let update =
 
     let (snippets', outmsg) =
       Feature_Snippets.update(
+        ~languageInfo=state.languageInfo,
         ~resolverFactory,
         ~selections,
         ~maybeBuffer,

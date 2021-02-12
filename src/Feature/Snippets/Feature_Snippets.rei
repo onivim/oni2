@@ -40,6 +40,7 @@ let modeChanged: (~mode: Vim.Mode.t, model) => model;
 
 let update:
   (
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~resolverFactory: (unit, string) => option(string),
     ~selections: list(VisualRange.t),
     ~maybeBuffer: option(Buffer.t),
