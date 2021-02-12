@@ -334,7 +334,7 @@ type command =
   | InsertSnippet({
       // If no snippet is provided - we should open the snippet menu
       maybeSnippet: [@opaque] option(Snippet.t),
-      maybeMeetColumn: option(CharacterIndex.t),
+      maybeReplaceRange: option(ByteRange.t),
     });
 
 [@deriving show]
@@ -385,7 +385,7 @@ type outmsg =
 module Effects = {
   let startSession =
       (
-        ~maybeMeetColumn: option(CharacterIndex.t),
+        ~maybeReplaceRange: option(ByteRange.t),
         ~resolverFactory,
         ~buffer,
         ~editorId,
@@ -400,27 +400,44 @@ module Effects = {
       |> Oni_Core.Buffer.getLine(position.line |> LineNumber.toZeroBased)
       |> Oni_Core.BufferLine.raw;
 
+    let maybeReplaceRange =
+      maybeReplaceRange |> Option.map(range => range |> ByteRange.normalize);
+
+    let position =
+      switch (maybeReplaceRange) {
+      | None => position
+      | Some(range) => range.stop
+      };
+
     let (prefix, postfix) =
       Utility.StringEx.splitAt(~byte=ByteIndex.toInt(position.byte), line);
 
     // Handle the 'meet column' - if we a meet column was provided,
     // as in the case of completion, we may need to remove some characters
     // from the prefix.
-    let prefix =
-      switch (maybeMeetColumn) {
-      | None => prefix
-      | Some(column) =>
+    let (prefix, replaceStartLine) =
+      switch (maybeReplaceRange) {
+      | None => (prefix, position.line)
+      | Some(range) =>
+        let replaceFromPosition = range.start;
+        let replaceStartLine =
+          buffer
+          |> Oni_Core.Buffer.getLine(
+               replaceFromPosition.line |> LineNumber.toZeroBased,
+             )
+          |> Oni_Core.BufferLine.raw;
         // First, see how many characters we're working with...
-        let characterCount = Zed_utf8.length(prefix);
 
-        let columnIdx = CharacterIndex.toInt(column);
-        if (columnIdx == 0) {
-          "";
-        } else if (columnIdx >= characterCount) {
-          prefix;
-        } else {
-          Zed_utf8.sub(prefix, 0, columnIdx);
-        };
+        let byteIdx = replaceFromPosition.byte |> ByteIndex.toInt;
+        let prefix =
+          if (byteIdx == 0) {
+            "";
+          } else if (byteIdx >= String.length(replaceStartLine)) {
+            prefix;
+          } else {
+            String.sub(replaceStartLine, 0, byteIdx);
+          };
+        (prefix, replaceFromPosition.line);
       };
 
     let resolvedSnippet =
@@ -434,9 +451,19 @@ module Effects = {
 
     let lines = ResolvedSnippet.toLines(resolvedSnippet);
 
+    let sessionPosition =
+      BytePosition.{
+        line: replaceStartLine,
+        byte: String.length(prefix) |> ByteIndex.ofInt,
+      };
+
     if (Array.length(lines) > 0) {
       let session =
-        Session.start(~editorId, ~snippet=resolvedSnippet, ~position);
+        Session.start(
+          ~editorId,
+          ~snippet=resolvedSnippet,
+          ~position=sessionPosition,
+        );
 
       let toMsg =
         fun
@@ -445,7 +472,7 @@ module Effects = {
 
       Service_Vim.Effects.setLines(
         ~bufferId,
-        ~start=position.line,
+        ~start=replaceStartLine,
         ~stop=LineNumber.(position.line + 1),
         ~lines,
         toMsg,
@@ -455,7 +482,7 @@ module Effects = {
     };
   };
 
-  let insertSnippet = (~meetColumn: CharacterIndex.t, ~snippet: string) => {
+  let insertSnippet = (~replaceRange: option(ByteRange.t), ~snippet: string) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Snippets.insertSnippet", dispatch => {
       switch (Snippet.parse(snippet)) {
@@ -464,7 +491,7 @@ module Effects = {
           Command(
             InsertSnippet({
               maybeSnippet: Some(resolvedSnippet),
-              maybeMeetColumn: Some(meetColumn),
+              maybeReplaceRange: replaceRange,
             }),
           ),
         )
@@ -474,9 +501,68 @@ module Effects = {
   };
 };
 
+module Internal = {
+  // Helper function to calculate a start position given a range of selections.
+  let getReplaceRangeFromSelections = (~buffer, selections) => {
+    List.nth_opt(selections, 0)
+    |> OptionEx.flatMap((selection: VisualRange.t) => {
+         let normalizedRange = selection.range |> ByteRange.normalize;
+
+         let stopLineIdx =
+           normalizedRange.stop.line |> EditorCoreTypes.LineNumber.toZeroBased;
+         let stopLineBytes =
+           Buffer.getLine(stopLineIdx, buffer) |> BufferLine.raw;
+         switch (selection.mode) {
+         | Vim.Types.Line =>
+           Some(
+             ByteRange.{
+               start:
+                 BytePosition.{
+                   line: normalizedRange.start.line,
+                   byte: ByteIndex.zero,
+                 },
+               stop:
+                 BytePosition.{
+                   line: normalizedRange.stop.line,
+                   byte: String.length(stopLineBytes) |> ByteIndex.ofInt,
+                 },
+             },
+           )
+
+         | Vim.Types.Character =>
+           // The Vim selection range is inclusive, but the snippets expect
+           // an exclusive range - so we need to bump the 'stop' character
+           // out a byte.
+
+           Some(
+             {
+               ByteRange.{
+                 start: normalizedRange.start,
+                 stop:
+                   BytePosition.{
+                     line: normalizedRange.stop.line,
+                     byte:
+                       ByteIndex.next(
+                         stopLineBytes,
+                         normalizedRange.stop.byte,
+                       ),
+                   },
+               };
+             },
+           )
+
+         // No-op for now
+         | Vim.Types.Block
+         | Vim.Types.None => None
+         };
+       });
+  };
+};
+
 let update =
     (
       ~resolverFactory,
+      ~selections,
       ~maybeBuffer,
       ~editorId,
       ~cursorPosition,
@@ -565,7 +651,7 @@ let update =
        })
     |> Option.value(~default=(model, Nothing))
 
-  | Command(InsertSnippet({maybeSnippet, maybeMeetColumn})) =>
+  | Command(InsertSnippet({maybeSnippet, maybeReplaceRange})) =>
     let eff =
       maybeBuffer
       |> Option.map(buffer => {
@@ -573,7 +659,14 @@ let update =
            | Some(snippet) =>
              Effect(
                Effects.startSession(
-                 ~maybeMeetColumn,
+                 ~maybeReplaceRange=
+                   maybeReplaceRange
+                   |> OptionEx.or_lazy(() =>
+                        Internal.getReplaceRangeFromSelections(
+                          ~buffer,
+                          selections,
+                        )
+                      ),
                  ~resolverFactory,
                  ~buffer,
                  ~editorId,
@@ -610,8 +703,11 @@ let update =
            | Ok(snippet) =>
              Effect(
                Effects.startSession(
-                 // TODO: Handle selection
-                 ~maybeMeetColumn=None,
+                 ~maybeReplaceRange=
+                   Internal.getReplaceRangeFromSelections(
+                     ~buffer,
+                     selections,
+                   ),
                  ~resolverFactory,
                  ~buffer,
                  ~editorId,
@@ -676,7 +772,9 @@ module Commands = {
 
     switch (snippetResult) {
     | Ok(snippet) =>
-      Command(InsertSnippet({maybeSnippet: snippet, maybeMeetColumn: None}))
+      Command(
+        InsertSnippet({maybeSnippet: snippet, maybeReplaceRange: None}),
+      )
     | Error(msg) => SnippetInsertionError(string_of_error(msg))
     };
   };

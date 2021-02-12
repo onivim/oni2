@@ -28,6 +28,7 @@ type cmdline = {
   position: int,
 };
 
+[@deriving show]
 type visualType =
   | Character
   | Line
