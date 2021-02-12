@@ -137,6 +137,13 @@ module Internal = {
 
   let ensureSelect = visualType =>
     if (!isSelect(current())) {
+      // NOTE: Just calling `ensureVisual` isn't always enough,
+      // in the case where the 'visual type' has changed - for example,
+      // going from linewise-visual mode to characterwise-select (as can happen with snippet insertion)
+      // - so if we need to switch to select, make sure to fully reset.
+      Native.vimKey("<ESC>");
+      Native.vimKey("<ESC>");
+
       ensureVisual(visualType);
       Native.vimKey("<c-g>");
     };

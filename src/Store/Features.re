@@ -590,11 +590,26 @@ let update =
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
-      | InsertSnippet({meetColumn, snippet, _}) => (
+      | InsertSnippet({meetColumn, snippet, _}) =>
+        let editor = Feature_Layout.activeEditor(state.layout);
+        let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
+        let characterPosition =
+          CharacterPosition.{line: cursor.line, character: meetColumn};
+        let rangeToReplace =
+          CharacterRange.{start: characterPosition, stop: cursor};
+        let maybeReplaceRange =
+          Feature_Editor.Editor.characterRangeToByteRange(
+            rangeToReplace,
+            editor,
+          );
+        (
           state,
-          Feature_Snippets.Effects.insertSnippet(~meetColumn, ~snippet)
+          Feature_Snippets.Effects.insertSnippet(
+            ~replaceRange=maybeReplaceRange,
+            ~snippet,
+          )
           |> Isolinear.Effect.map(msg => Snippets(msg)),
-        )
+        );
       | OpenFile({filePath, location}) => (
           state,
           Internal.openFileEffect(~position=location, filePath),
@@ -1651,9 +1666,12 @@ let update =
 
     let wasSnippetActive = Feature_Snippets.isActive(state.snippets);
 
+    let selections = Feature_Editor.Editor.selections(editor);
+
     let (snippets', outmsg) =
       Feature_Snippets.update(
         ~resolverFactory,
+        ~selections,
         ~maybeBuffer,
         ~editorId,
         ~cursorPosition,
