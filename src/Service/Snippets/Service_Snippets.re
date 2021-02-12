@@ -9,14 +9,15 @@ module SnippetWithMetadata = {
     snippet: string,
     prefix: string,
     description: string,
-    scope: option(string),
+    scopes: list(string),
   };
 
-  let matchesFileType = (~fileType, {scope, _}) => {
-    scope
-    |> Option.map(String.equal(fileType))
-    // If no scope is defined, it's assumed to be global
-    |> Option.value(~default=true);
+  let matchesFileType = (~fileType, {scopes, _}) => {
+    // If no scope is defined, or empty, it's assumed to be global
+    scopes == []
+    || scopes == [""]
+    || scopes
+    |> List.exists(String.equal(fileType));
   };
 };
 
@@ -36,7 +37,7 @@ module SnippetFile = {
     | [_] => None
     | [_file, fileType, extension] when extension == "json" =>
       Some(Language(fileType))
-    | [file, extension] when extension == "code-snippets" => Some(Global)
+    | [_file, extension] when extension == "code-snippets" => Some(Global)
     | _ => None
     };
   };
@@ -70,7 +71,7 @@ module Decode = {
     type t = {
       prefix: option(string),
       body: string,
-      scope: option(string),
+      scopes: list(string),
     };
 
     let decode =
@@ -78,7 +79,15 @@ module Decode = {
         {
           prefix: field.optional("prefix", string),
           body: field.required("body", snippetLines),
-          scope: field.optional("scope", string),
+          scopes:
+            field.withDefault(
+              "scopes",
+              [],
+              string
+              |> map(str =>
+                   str |> String.split_on_char(',') |> List.map(String.trim)
+                 ),
+            ),
         }
       );
   };
@@ -95,7 +104,7 @@ module Decode = {
                prefix,
                description,
                snippet: prefixAndBody.body,
-               scope: prefixAndBody.scope,
+               scopes: prefixAndBody.scopes,
              };
            }),
          )
@@ -205,8 +214,8 @@ module Effect = {
       let statPromise = Service_OS.Api.stat(filePathString);
       Lwt.on_any(
         statPromise,
-        (stat: Luv.File.Stat.t) => {dispatch(toMsg(Ok(filePath)))},
-        exn => {
+        (_stat: Luv.File.Stat.t) => {dispatch(toMsg(Ok(filePath)))},
+        _exn => {
           // File not created yet, let's create it
           let contents = "Hello, world" |> Bytes.of_string;
           let writePromise =

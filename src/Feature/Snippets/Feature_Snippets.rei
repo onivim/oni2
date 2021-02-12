@@ -4,7 +4,10 @@ open EditorCoreTypes;
 [@deriving show]
 type msg;
 
-module Msg: {let insert: (~snippet: string) => msg;};
+module Msg: {
+  let insert: (~snippet: string) => msg;
+  let editSnippetFile: (~snippetFile: Service_Snippets.SnippetFileMetadata.t) => msg;
+};
 
 type model;
 
