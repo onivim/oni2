@@ -106,6 +106,14 @@ module Contributions: {
     };
   };
 
+  module Snippet: {
+    [@deriving show]
+    type t = {
+      language: option(string),
+      path: string,
+    };
+  };
+
   module Theme: {
     [@deriving show]
     type t = {
@@ -137,6 +145,7 @@ module Contributions: {
     menus: list(Menu.t),
     languages: list(Language.t),
     grammars: list(Grammar.t),
+    snippets: list(Snippet.t),
     themes: list(Theme.t),
     iconThemes: list(IconTheme.t),
     configuration: Configuration.t,
@@ -209,6 +218,16 @@ module InitData: {
     let fromString: string => t;
   };
 
+  module StaticWorkspaceData: {
+    [@deriving (show, yojson({strict: false}))]
+    type t = {
+      id: string,
+      name: string,
+    };
+
+    let global: t;
+  };
+
   module Extension: {
     [@deriving (show, yojson({strict: false}))]
     type t;
@@ -224,14 +243,15 @@ module InitData: {
       appLanguage: string,
       appRoot: Oni_Core.Uri.t,
       globalStorageHome: option(Oni_Core.Uri.t),
+      workspaceStorageHome: option(Oni_Core.Uri.t),
       userHome: option(Oni_Core.Uri.t),
+      webviewResourceRoot: string,
+      webviewCspSource: string,
       // TODO
       /*
        appLanguage: string,
        appUriScheme: string,
        appSettingsHome: option(Uri.t),
-       webviewResourceRoot: string,
-       webviewCspSource: string,
        useHostProxy: boolean,
        */
     };
@@ -277,6 +297,7 @@ module InitData: {
     autoStart: bool,
     remote: Remote.t,
     telemetryInfo: TelemetryInfo.t,
+    workspace: StaticWorkspaceData.t,
   };
 
   let create:
@@ -290,6 +311,7 @@ module InitData: {
       ~autoStart: bool=?,
       ~remote: Remote.t=?,
       ~telemetryInfo: TelemetryInfo.t=?,
+      ~workspace: StaticWorkspaceData.t=?,
       list(Extension.t)
     ) =>
     t;

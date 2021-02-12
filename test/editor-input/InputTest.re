@@ -297,6 +297,44 @@ describe("EditorInput", ({describe, _}) => {
       expect.equal(effects, []);
     });
 
+    test(
+      "#3048: text with new keydown after successful binding should be dispatched",
+      ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers]),
+             _ => true,
+             "commandA",
+           );
+
+      let (bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(aKeyNoModifiers),
+          bindings,
+        );
+
+      // Keydown should trigger command...
+      expect.equal(effects, [Execute("commandA")]);
+
+      let (bindings, _effects) = Input.text(~text="a", bindings);
+
+      let (bindings, _effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=bKeyScancode,
+          ~key=candidate(bKeyNoModifiers),
+          bindings,
+        );
+
+      let (_bindings, effects) = Input.text(~text="b", bindings);
+
+      // Subsequent text input should be triggered, even though we haven't had a KeyUp for "a" yet
+      expect.equal(effects, [Text("b")]);
+    });
+
     test("text not dispatched in sequence", ({expect, _}) => {
       let (bindings, _id) =
         Input.empty
@@ -968,6 +1006,7 @@ describe("EditorInput", ({describe, _}) => {
       expect.equal(effects, [Execute("command2"), Execute("command3")]);
     });
   });
+
   describe("enable / disable", ({test, _}) => {
     test("unhandled when bindings are disabled", ({expect, _}) => {
       let alwaysTrue = _ => true;
@@ -1000,5 +1039,97 @@ describe("EditorInput", ({describe, _}) => {
         ],
       );
     })
+  });
+
+  describe("timeout", ({test, _}) => {
+    test("timeout with partial match", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers, cKeyNoModifiers]),
+             _ => true,
+             "commandAC",
+           );
+
+      let (bindings, _id) =
+        bindings
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers]),
+             _ => true,
+             "commandA",
+           );
+
+      let (bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(aKeyNoModifiers),
+          bindings,
+        );
+
+      expect.equal(effects, []);
+
+      let (_bindings, effects) = Input.timeout(~context=true, bindings);
+
+      expect.equal(effects, [Execute("commandA")]);
+    });
+    test("timeout with no match", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers, cKeyNoModifiers]),
+             _ => true,
+             "commandAC",
+           );
+
+      let (bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(aKeyNoModifiers),
+          bindings,
+        );
+
+      expect.equal(effects, []);
+
+      let (_bindings, effects) = Input.timeout(~context=true, bindings);
+
+      expect.equal(
+        effects,
+        [
+          Unhandled({
+            key: candidate(aKeyNoModifiers),
+            isProducedByRemap: false,
+          }),
+        ],
+      );
+    });
+    test("timeout with no match, but prior text event", ({expect, _}) => {
+      let (bindings, _id) =
+        Input.empty
+        |> Input.addBinding(
+             Sequence([aKeyNoModifiers, cKeyNoModifiers]),
+             _ => true,
+             "commandAC",
+           );
+
+      let (bindings, effects) =
+        Input.keyDown(
+          ~context=true,
+          ~scancode=aKeyScancode,
+          ~key=candidate(aKeyNoModifiers),
+          bindings,
+        );
+
+      expect.equal(effects, []);
+
+      let (bindings, effects) = Input.text(~text="a", bindings);
+
+      expect.equal(effects, []);
+
+      let (_bindings, effects) = Input.timeout(~context=true, bindings);
+
+      expect.equal(effects, [Text("a")]);
+    });
   });
 });

@@ -22,21 +22,23 @@ describe("Mode", ({describe, _}) => {
           ~context={
             ...Vim.Context.current(),
             mode:
-              Mode.Select(
-                VisualRange.{
-                  cursor:
-                    BytePosition.{
-                      line: LineNumber.zero,
-                      byte: ByteIndex.zero,
-                    },
-                  anchor:
-                    BytePosition.{
-                      line: LineNumber.ofZeroBased(1),
-                      byte: ByteIndex.zero,
-                    },
-                  visualType: Vim.Types.Line,
-                },
-              ),
+              Mode.Select({
+                ranges: [
+                  VisualRange.{
+                    cursor:
+                      BytePosition.{
+                        line: LineNumber.zero,
+                        byte: ByteIndex.zero,
+                      },
+                    anchor:
+                      BytePosition.{
+                        line: LineNumber.ofZeroBased(1),
+                        byte: ByteIndex.zero,
+                      },
+                    visualType: Vim.Types.Line,
+                  },
+                ],
+              }),
           },
           "a",
         );

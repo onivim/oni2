@@ -36,7 +36,10 @@ describe("Editor", ({describe, _}) => {
     |> Editor.setSize(
          ~pixelWidth=
            int_of_float(
-             3. *. aWidth +. 1.0 +. float(Constants.scrollBarThickness),
+             3.
+             *. aWidth
+             +. 1.0
+             +. float(Editor.verticalScrollbarThickness(editor)),
            ),
          ~pixelHeight=500,
        )
@@ -332,5 +335,48 @@ describe("Editor", ({describe, _}) => {
 
       expect.equal(Editor.getCharacterUnderMouse(editor'), None);
     })
+  });
+
+  describe("singleLineSelectedText", ({test, _}) => {
+    test("no selection in normal mode", ({expect, _}) => {
+      let (editor, _buffer) = create([|"abc"|]);
+
+      let maybeSelectedText =
+        editor
+        |> Editor.setMode(Vim.Mode.Normal({cursor: BytePosition.zero}))
+        |> Editor.singleLineSelectedText;
+
+      expect.option(maybeSelectedText).toBeNone();
+    });
+    test("select single character", ({expect, _}) => {
+      let (editor, _buffer) = create([|"abc"|]);
+
+      let maybeSelectedText =
+        editor
+        |> Editor.setSelections([ByteRange.zero])
+        |> Editor.singleLineSelectedText;
+
+      expect.equal(maybeSelectedText, Some("a"));
+    });
+    test("select past entire line", ({expect, _}) => {
+      let (editor, _buffer) = create([|"abc"|]);
+
+      let maybeSelectedText =
+        editor
+        |> Editor.setSelections([
+             ByteRange.{
+               start:
+                 BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+               stop:
+                 BytePosition.{
+                   line: LineNumber.zero,
+                   byte: ByteIndex.(zero + 100),
+                 },
+             },
+           ])
+        |> Editor.singleLineSelectedText;
+
+      expect.equal(maybeSelectedText, Some("abc"));
+    });
   });
 });

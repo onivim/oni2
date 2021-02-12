@@ -197,6 +197,7 @@ let all = (state: State.t) => {
     |> Schema.map((state: State.t) => state.quickmenu)
     |> fromSchema(state),
     editors(~isFocused=isEditorFocused) |> fromSchema(state),
+    Feature_Snippets.Contributions.contextKeys(state.snippets),
     other |> fromSchema(state),
   ]);
 };

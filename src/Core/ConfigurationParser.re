@@ -13,18 +13,6 @@ let parseBool = json =>
   | _ => false
   };
 
-let parseInt = (~default=0, json) =>
-  switch (json) {
-  | `Int(v) => v
-  | `Float(v) => int_of_float(v +. 0.5)
-  | `String(str) =>
-    switch (int_of_string_opt(str)) {
-    | None => default
-    | Some(v) => v
-    }
-  | _ => default
-  };
-
 let parseFloat = (~default=0., json) =>
   switch (json) {
   | `Int(v) => float_of_int(v)
@@ -266,14 +254,9 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, zenModeHideTabs: parseBool(json)},
   ),
   (
-    "workbench.tree.indent",
-    (config, json) => {...config, workbenchTreeIndent: parseInt(json)},
-  ),
-  (
     "editor.zenMode.singleFile",
     (config, json) => {...config, zenModeSingleFile: parseBool(json)},
   ),
-  ("ui.zoom", (config, json) => {...config, uiZoom: parseFloat(json)}),
   (
     "vim.useSystemClipboard",
     (config, json) => {

@@ -156,14 +156,23 @@ let update = (~config: Config.resolver, model: t, msg) => {
       | _ => []
       };
 
+    let defaultEnvVariables =
+      [
+        ("ONIVIM_TERMINAL", BuildInfo.version),
+        // TODO:
+        // ("ONIVIM_SERVERNAME", ...)
+      ]
+      |> List.to_seq
+      |> StringMap.of_seq;
+
     let env =
       Exthost.ShellLaunchConfig.(
         switch (Revery.Environment.os) {
         // Windows - simply inherit from the running process
-        | Windows(_) => Inherit
+        | Windows(_) => Additive(defaultEnvVariables)
 
         // Mac - inherit (we rely on the '-l' flag to pick up user config)
-        | Mac(_) => Inherit
+        | Mac(_) => Additive(defaultEnvVariables)
 
         // For Linux, there's a few stray variables that may come in from the AppImage
         // for example - LD_LIBRARY_PATH in issue #2040. We need to clear those out.
@@ -179,13 +188,27 @@ let update = (~config: Config.resolver, model: t, msg) => {
               |> List.to_seq
               |> StringMap.of_seq;
 
-            Additive(envVariables);
+            let merge = (maybeA, maybeB) =>
+              switch (maybeA, maybeB) {
+              | (Some(_) as a, Some(_)) => a
+              | (Some(_) as a, _) => a
+              | (None, Some(_) as b) => b
+              | (None, None) => None
+              };
+            let allVariables =
+              StringMap.merge(
+                _key => merge,
+                envVariables,
+                defaultEnvVariables,
+              );
+
+            Additive(allVariables);
 
           // All other cases - just inherit. Maybe not running from AppImage.
-          | _ => Inherit
+          | _ => Additive(defaultEnvVariables)
           }
 
-        | _ => Inherit
+        | _ => Additive(defaultEnvVariables)
         }
       );
 

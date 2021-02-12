@@ -215,7 +215,6 @@ type model = {
   providers: list(Provider.t),
   inputBox: Component_InputText.model,
   textContentProviders: list((int, string)),
-  originalLines: [@opaque] IntMap.t(array(string)),
   vimWindowNavigation: Component_VimWindows.model,
   focus: Focus.t,
 };
@@ -226,7 +225,6 @@ let initial = {
   providers: [],
   inputBox: Component_InputText.create(~placeholder="Do the commit thing!"),
   textContentProviders: [],
-  originalLines: IntMap.empty,
   vimWindowNavigation: Component_VimWindows.initial,
   focus: Focus.initial,
 };
@@ -265,18 +263,6 @@ let statusBarCommands = (~workingDirectory, {providers, _}: model) => {
      })
   |> List.map(({statusBarCommands, _}: Provider.t) => statusBarCommands)
   |> List.flatten;
-};
-
-let getOriginalLines = (buffer, model) => {
-  let bufferId = buffer |> Oni_Core.Buffer.getId;
-
-  IntMap.find_opt(bufferId, model.originalLines);
-};
-
-let setOriginalLines = (buffer, lines, model) => {
-  let bufferId = buffer |> Oni_Core.Buffer.getId;
-  let originalLines = IntMap.add(bufferId, lines, model.originalLines);
-  {...model, originalLines};
 };
 
 // UPDATE
@@ -379,6 +365,10 @@ type outmsg =
   | OpenFile(string)
   | PreviewFile(string)
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | OriginalContentLoaded({
+      bufferId: int,
+      originalLines: array(string),
+    })
   | Nothing;
 
 module Effects = {
@@ -511,11 +501,8 @@ let update =
     )
 
   | GotOriginalContent({bufferId, lines}) => (
-      {
-        ...model,
-        originalLines: IntMap.add(bufferId, lines, model.originalLines),
-      },
-      Nothing,
+      model,
+      OriginalContentLoaded({bufferId, originalLines: lines}),
     )
 
   | GetOriginalContentFailed(_) => (model, Nothing)

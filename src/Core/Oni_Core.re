@@ -21,6 +21,7 @@ module ConfigurationTransformer = ConfigurationTransformer;
 module ConfigurationValues = ConfigurationValues;
 module Constants = Constants;
 module Diff = Diff;
+module DiffMarkers = DiffMarkers;
 module EnvironmentVariables = Kernel.EnvironmentVariables;
 module Filesystem = Filesystem;
 module Filter = Filter;

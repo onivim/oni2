@@ -24,12 +24,15 @@ module Keybinding = {
 
     let binding =
       obj(({field, _}) => {
-        Feature_Input.Schema.bind(
+        let arguments =
+          field.optional("args", value) |> Option.value(~default=`Null);
+        Feature_Input.Schema.bindWithArgs(
+          ~arguments,
           ~key=field.required("key", string),
           ~command=field.required("command", string),
           ~condition=
             field.withDefault("when", WhenExpr.Value(True), condition),
-        )
+        );
       });
   };
 

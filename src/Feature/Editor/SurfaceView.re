@@ -57,6 +57,7 @@ let%component make =
                 ~bufferSyntaxHighlights,
                 ~maybeYankHighlights,
                 ~mode,
+                ~snippets: Feature_Snippets.model,
                 ~isActiveSplit,
                 ~gutterWidth,
                 ~bufferPixelWidth,
@@ -234,6 +235,10 @@ let%component make =
           );
         };
 
+        snippets
+        |> Feature_Snippets.session
+        |> Option.iter(SnippetVisualizer.draw(~colors, ~config, ~context));
+
         ContentView.render(
           ~context,
           ~buffer,
@@ -253,12 +258,14 @@ let%component make =
         if (Config.scrollShadow.get(config)) {
           let () =
             ScrollShadow.renderVertical(
+              ~color=colors.shadow,
               ~editor,
               ~width=float(bufferPixelWidth),
               ~context,
             );
           let () =
             ScrollShadow.renderHorizontal(
+              ~color=colors.shadow,
               ~editor,
               ~width=float(bufferPixelWidth),
               ~context,

@@ -27,6 +27,10 @@ let initial = {
 };
 
 [@deriving show]
+type command =
+  | CloseAllLanguagePopups;
+
+[@deriving show]
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
   | Completion(Completion.msg)
@@ -40,6 +44,7 @@ type msg =
   | CodeLens(CodeLens.msg)
   | KeyPressed(string)
   | SignatureHelp(SignatureHelp.msg)
+  | Command(command)
   | Pasted(string);
 
 type outmsg =
@@ -68,6 +73,10 @@ type outmsg =
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.codeLens),
+    })
+  | SetSelections({
+      editorId: int,
+      ranges: list(CharacterRange.t),
     });
 
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
@@ -90,7 +99,9 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
         startLine,
         stopLine,
       }) =>
-      CodeLensesChanged({handle, bufferId, lenses, startLine, stopLine});
+      CodeLensesChanged({handle, bufferId, lenses, startLine, stopLine})
+    | Outmsg.SetSelections({editorId, ranges}) =>
+      SetSelections({editorId, ranges});
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -119,6 +130,7 @@ let update =
     (
       ~config,
       ~configuration,
+      ~extensions,
       ~languageConfiguration,
       ~maybeSelection,
       ~maybeBuffer,
@@ -280,6 +292,7 @@ let update =
     let (completion', outmsg) =
       Completion.update(
         ~config,
+        ~extensions,
         ~languageConfiguration,
         ~maybeBuffer,
         ~activeCursor=cursorLocation,
@@ -301,12 +314,18 @@ let update =
     );
 
   | DocumentHighlights(documentHighlightsMsg) =>
-    let documentHighlights' =
+    let (documentHighlights', outmsg) =
       DocumentHighlights.update(
+        ~maybeBuffer,
+        ~editorId,
         documentHighlightsMsg,
         model.documentHighlights,
       );
-    ({...model, documentHighlights: documentHighlights'}, Nothing);
+
+    (
+      {...model, documentHighlights: documentHighlights'},
+      outmsg |> map(msg => DocumentHighlights(msg)),
+    );
 
   | DocumentSymbols(documentSymbolsMsg) =>
     let documentSymbols' =
@@ -399,6 +418,15 @@ let update =
       | SignatureHelp.Error(msg) => NotifyFailure(msg)
       };
     ({...model, signatureHelp: sigHelp'}, outmsg');
+
+  | Command(CloseAllLanguagePopups) => (
+      {
+        ...model,
+        signatureHelp: SignatureHelp.cancel(model.signatureHelp),
+        completion: Completion.cancel(model.completion),
+      },
+      Nothing,
+    )
   };
 
 let bufferUpdated =
@@ -406,6 +434,7 @@ let bufferUpdated =
       ~languageConfiguration,
       ~buffer,
       ~config,
+      ~extensions,
       ~activeCursor,
       ~syntaxScope,
       ~triggerKey,
@@ -414,6 +443,7 @@ let bufferUpdated =
   let completion =
     Completion.bufferUpdated(
       ~languageConfiguration,
+      ~extensions,
       ~buffer,
       ~config,
       ~activeCursor,
@@ -456,7 +486,10 @@ let cursorMoved = (~maybeBuffer, ~previous, ~current, model) => {
          )
        )
     |> Option.value(~default=model.documentHighlights);
-  {...model, completion, documentHighlights};
+
+  let signatureHelp =
+    SignatureHelp.cursorMoved(~previous, ~current, model.signatureHelp);
+  {...model, completion, documentHighlights, signatureHelp};
 };
 
 let startInsertMode = (~config, ~maybeBuffer, model) => {
@@ -476,7 +509,40 @@ let stopInsertMode = model => {
   };
 };
 
+let startSnippet = model => {
+  ...model,
+  completion: Completion.startSnippet(model.completion),
+};
+
+let stopSnippet = model => {
+  ...model,
+  completion: Completion.stopSnippet(model.completion),
+};
+
 let isFocused = ({rename, _}) => Rename.isFocused(rename);
+
+module Commands = {
+  open Feature_Commands.Schema;
+  let close =
+    define("closeAllLanguagePopups", Command(CloseAllLanguagePopups));
+};
+
+module Keybindings = {
+  open Feature_Input.Schema;
+  let close =
+    bind(
+      ~key="<S-ESC>",
+      ~command=Commands.close.id,
+      ~condition=
+        WhenExpr.And([
+          WhenExpr.Defined("editorTextFocus"),
+          WhenExpr.Or([
+            WhenExpr.Defined("parameterHintsVisible"),
+            WhenExpr.Defined("suggestWidgetVisible"),
+          ]),
+        ]),
+    );
+};
 
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
@@ -484,7 +550,8 @@ module Contributions = {
   let colors = CodeLens.Contributions.colors @ Completion.Contributions.colors;
 
   let commands =
-    (
+    [Commands.close]
+    @ (
       Completion.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Completion(msg)))
     )
@@ -495,6 +562,10 @@ module Contributions = {
     @ (
       Definition.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Definition(msg)))
+    )
+    @ (
+      DocumentHighlights.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => DocumentHighlights(msg)))
     )
     @ (
       Hover.Contributions.commands
@@ -534,9 +605,11 @@ module Contributions = {
     |> unionMany;
 
   let keybindings =
-    Rename.Contributions.keybindings
+    Keybindings.[close]
+    @ Rename.Contributions.keybindings
     @ Completion.Contributions.keybindings
     @ Definition.Contributions.keybindings
+    @ DocumentHighlights.Contributions.keybindings
     @ References.Contributions.keybindings
     @ SignatureHelp.Contributions.keybindings;
 };

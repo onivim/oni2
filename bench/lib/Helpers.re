@@ -37,6 +37,8 @@ let simpleState = {
       ~extensionsFolder=None,
       ~licenseKeyPersistence=None,
       ~titlebarHeight=0.,
+      ~getZoom=() => 1.0,
+      ~setZoom=_zoom => (),
     );
 
   Reducer.reduce(

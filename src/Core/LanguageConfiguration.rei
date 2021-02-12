@@ -28,6 +28,7 @@ let default: t;
 
 let brackets: t => list(BracketPair.t);
 let lineComment: t => option(string);
+let blockComment: t => option((string, string));
 
 let isWordCharacter: (Uchar.t, t) => bool;
 

@@ -117,6 +117,8 @@ type t = {
   wrapMode: WrapMode.t,
   wrapState: WrapState.t,
   preview: bool,
+  scrollbarVerticalWidth: int,
+  scrollbarHorizontalWidth: int,
   wrapPadding: option(float),
   // Number of lines to preserve before or after the cursor, when scrolling.
   // Like the `scrolloff` vim setting or the `editor.cursorSurroundingLines` VSCode setting.
@@ -134,12 +136,17 @@ type t = {
   animationNonce: int,
 };
 
+let verticalScrollbarThickness = ({scrollbarVerticalWidth, _}) => scrollbarVerticalWidth;
+let horizontalScrollbarThickness = ({scrollbarHorizontalWidth, _}) => scrollbarHorizontalWidth;
+
 let key = ({key, _}) => key;
-let selection = ({mode, _}) =>
+// TODO: Handle multiple ranges
+let selections = ({mode, _}) =>
   switch (mode) {
-  | Visual(range) => Some(Oni_Core.VisualRange.ofVim(range))
-  | Select(range) => Some(Oni_Core.VisualRange.ofVim(range))
-  | _ => None
+  | Visual(range) => [Oni_Core.VisualRange.ofVim(range)]
+
+  | Select({ranges}) => ranges |> List.map(Oni_Core.VisualRange.ofVim)
+  | _ => []
   };
 let visiblePixelWidth = ({pixelWidth, _}) => pixelWidth;
 let visiblePixelHeight = ({pixelHeight, _}) => pixelHeight;
@@ -205,10 +212,24 @@ let bufferBytePositionToPixelInternal =
     };
   let lineCount = EditorBuffer.numberOfLines(buffer);
   let line = position.line |> EditorCoreTypes.LineNumber.toZeroBased;
-  if (line < 0 || line >= lineCount) {
+  let wrapping = wrapState |> WrapState.wrapping;
+  if (line < 0) {
     ({x: 0., y: 0.}: PixelPosition.t, 0.);
+  } else if (line >= lineCount) {
+    let pixelY =
+      // Get total offset for view lines
+      float(Wrapping.numberOfLines(wrapping))
+      *. lineHeightInPixels(editor)
+      // Add in codelens / inline elements
+      +. InlineElements.getReservedSpace(
+           position.line,
+           editor.inlineElements,
+         )
+      -. scrollY
+      +. 0.5;
+
+    ({x: 0., y: pixelY}: PixelPosition.t, 0.);
   } else {
-    let wrapping = wrapState |> WrapState.wrapping;
     let bufferLine = buffer |> EditorBuffer.line(line);
 
     let viewLine =
@@ -292,6 +313,7 @@ let getLayout = editor => {
     isMinimapEnabled,
     lineNumbers,
     minimapMaxColumnWidth,
+    scrollbarVerticalWidth,
     _,
   } = editor;
   let layout: EditorLayout.t =
@@ -304,6 +326,7 @@ let getLayout = editor => {
       ~characterWidth=getCharacterWidth(editor),
       ~characterHeight=lineHeightInPixels(editor),
       ~bufferLineCount=editor |> totalViewLines,
+      ~verticalScrollBarWidth=scrollbarVerticalWidth,
       (),
     );
 
@@ -462,6 +485,14 @@ let configure = (~config, editor) => {
   let yankHighlightDuration =
     EditorConfiguration.yankHighlightDuration.get(config);
 
+  let scrollbarVerticalWidth =
+    EditorConfiguration.verticalScrollbarSize.get(config)
+    |> IntEx.clamp(~hi=100, ~lo=1);
+
+  let scrollbarHorizontalWidth =
+    EditorConfiguration.horizontalScrollbarSize.get(config)
+    |> IntEx.clamp(~hi=100, ~lo=1);
+
   // If codelens is turned off, remove all codelens keys
 
   let inlineElements =
@@ -479,6 +510,8 @@ let configure = (~config, editor) => {
     inlineElements,
     isAnimated,
     isScrollAnimated,
+    scrollbarVerticalWidth,
+    scrollbarHorizontalWidth,
     yankHighlightDuration,
   }
   |> setVerticalScrollMargin(~lines=scrolloff)
@@ -556,6 +589,9 @@ let create = (~config, ~buffer, ~preview: bool, ()) => {
     // Animation
     isAnimationOverride: None,
     animationNonce: 0,
+
+    scrollbarHorizontalWidth: 8,
+    scrollbarVerticalWidth: 15,
   }
   |> configure(~config);
 };
@@ -707,6 +743,53 @@ let characterToByte = (position: CharacterPosition.t, editor) => {
   };
 };
 
+let singleLineSelectedText = editor => {
+  let maybeSelection = editor |> selections |> (l => List.nth_opt(l, 0));
+
+  let maybeByteRange =
+    maybeSelection
+    |> OptionEx.filter((selection: VisualRange.t) =>
+         ByteRange.isSingleLine(selection.range)
+       )
+    |> OptionEx.flatMap((selection: VisualRange.t) => {
+         switch (selection.mode) {
+         | Vim.Types.Line
+         | Vim.Types.Character => Some(selection.range)
+
+         // TODO: Implement block range
+         | Vim.Types.Block
+         | Vim.Types.None => None
+         }
+       });
+
+  maybeByteRange
+  |> Option.map(ByteRange.normalize)
+  |> OptionEx.flatMap(byteRange =>
+       byteRangeToCharacterRange(byteRange, editor)
+     )
+  |> OptionEx.flatMap((characterRange: CharacterRange.t) => {
+       let lineNumber = characterRange.start.line;
+       let lineIdx = lineNumber |> EditorCoreTypes.LineNumber.toZeroBased;
+
+       let buffer = editor.buffer;
+       if (EditorBuffer.hasLine(lineNumber, buffer)) {
+         let startIdx = characterRange.start.character |> CharacterIndex.toInt;
+         let stopIdx = characterRange.stop.character |> CharacterIndex.toInt;
+
+         let lineStr = EditorBuffer.line(lineIdx, buffer) |> BufferLine.raw;
+
+         let len = ZedBundled.length(lineStr);
+         let maxLength = len - startIdx;
+         let desiredLength = stopIdx - startIdx + 1;
+         let clampedLength = min(desiredLength, maxLength);
+         let str = ZedBundled.sub(lineStr, startIdx, clampedLength);
+         Some(str);
+       } else {
+         None;
+       };
+     });
+};
+
 let characterRangeToByteRange = ({start, stop}: CharacterRange.t, editor) => {
   let maybeByteStart = characterToByte(start, editor);
   let maybeByteStop = characterToByte(stop, editor);
@@ -808,6 +891,35 @@ let getPrimaryCursorByte = editor =>
   | [] =>
     BytePosition.{line: EditorCoreTypes.LineNumber.zero, byte: ByteIndex.zero}
   };
+
+let setCursors = (cursors, editor) => {
+  {...editor, mode: Insert({cursors: cursors})};
+};
+
+let setSelections = (selections: list(ByteRange.t), editor) => {
+  let mapRange = (r: ByteRange.t) => {
+    open ByteRange;
+    open Vim.VisualRange;
+    let {start, stop}: ByteRange.t = r;
+    {anchor: start, cursor: stop, visualType: Vim.Types.Character};
+  };
+  // Try to preserve the existing cursor, if we can
+  let primaryCursor = getPrimaryCursorByte(editor);
+  let primaryRanges =
+    selections
+    |> List.filter(range => ByteRange.contains(primaryCursor, range))
+    |> List.map(mapRange);
+
+  let secondaryRanges =
+    selections
+    |> List.filter(range => !ByteRange.contains(primaryCursor, range))
+    |> List.map(mapRange);
+
+  // Make sure primary ranges (ranges on the existing cursor) are first
+  let ranges = primaryRanges @ secondaryRanges;
+
+  {...editor, mode: Select({ranges: ranges})};
+};
 
 let withSteadyCursor = (f, editor) => {
   let bytePosition = getPrimaryCursorByte(editor);
@@ -942,8 +1054,8 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
 };
 
 let selectionOrCursorRange = editor => {
-  switch (selection(editor)) {
-  | None =>
+  switch (selections(editor)) {
+  | [] =>
     let pos = getPrimaryCursorByte(editor);
     ByteRange.{
       start: BytePosition.{line: pos.line, byte: ByteIndex.zero},
@@ -953,7 +1065,7 @@ let selectionOrCursorRange = editor => {
           byte: ByteIndex.zero,
         },
     };
-  | Some(selection) => selection.range
+  | [selection, ..._tail] => selection.range
   };
 };
 
@@ -1041,7 +1153,7 @@ let isScrollAnimated = ({isScrollAnimated, isAnimationOverride, _}) => {
   };
 };
 
-let exposePrimaryCursor = editor =>
+let exposePrimaryCursor = (~disableAnimation=false, editor) =>
   if (!hasSetSize(editor)) {
     // If the size hasn't been set yet - don't try to expose the cursor.
     // We don't know about the viewport to do a good job.
@@ -1098,23 +1210,18 @@ let exposePrimaryCursor = editor =>
           0.,
         );
 
-      let isSmallJump =
-        !Spring.isActive(editor.scrollY)
-        && Float.abs(adjustedScrollY -. scrollY) < lineHeightInPixels(editor)
-        *. 1.1;
-
       let animated = editor |> isScrollAnimated;
       {
         ...editor,
         scrollX:
           Spring.set(
-            ~instant=!animated,
+            ~instant=!animated || disableAnimation,
             ~position=adjustedScrollX,
             editor.scrollX,
           ),
         scrollY:
           Spring.set(
-            ~instant=!animated || isSmallJump,
+            ~instant=!animated || disableAnimation,
             ~position=adjustedScrollY,
             editor.scrollY,
           ),
@@ -1142,7 +1249,41 @@ let isCursorFullyVisible = editor => {
 let mode = ({mode, _}) => mode;
 
 let setMode = (mode, editor) => {
-  {...editor, mode} |> exposePrimaryCursor;
+  open EditorCoreTypes;
+  let previousCursor = getPrimaryCursor(editor);
+  let editor' = {...editor, mode};
+  let newCursor = getPrimaryCursor(editor');
+
+  if (CharacterPosition.equals(previousCursor, newCursor)) {
+    editor';
+  } else {
+    // Check if we should animate the cursor.
+    // The animation should be disabled for 'small jumps', ie:
+    // - Single line movement
+    // - Single character movement
+
+    let lineDelta =
+      CharacterPosition.(
+        abs(
+          LineNumber.toZeroBased(previousCursor.line)
+          - LineNumber.toZeroBased(newCursor.line),
+        )
+      );
+    let isSmallJumpLineWise = lineDelta <= 1;
+
+    let isSmallJumpCharacterWise =
+      previousCursor.line == newCursor.line
+      && abs(
+           CharacterIndex.toInt(previousCursor.character)
+           - CharacterIndex.toInt(newCursor.character),
+         )
+      <= 1;
+    let isSmallJump = isSmallJumpLineWise || isSmallJumpCharacterWise;
+
+    // If it was a 'small jump', don't animate
+    let disableAnimation = isSmallJump;
+    editor' |> exposePrimaryCursor(~disableAnimation);
+  };
 };
 
 let getLeftVisibleColumn = view => {
@@ -1328,12 +1469,12 @@ let mapCursor = (~f, editor) => {
     // When scrolling in operator pending, cancel the pending operator
     | Operator({cursor, _}) => Vim.Mode.Normal({cursor: f(cursor)})
     // Don't do anything for command line mode
-    | CommandLine => CommandLine
+    | CommandLine({cursor, text, commandCursor, commandType}) =>
+      CommandLine({text, commandCursor, commandType, cursor: f(cursor)})
     | Normal({cursor}) => Normal({cursor: f(cursor)})
     | Visual(curr) =>
       Visual(Vim.VisualRange.{...curr, cursor: f(curr.cursor)})
-    | Select(curr) =>
-      Select(Vim.VisualRange.{...curr, cursor: f(curr.cursor)})
+    | Select({ranges}) => Select({ranges: ranges})
     | Replace({cursor}) => Replace({cursor: f(cursor)})
     | Insert({cursors}) => Insert({cursors: List.map(f, cursors)})
     };
@@ -1713,7 +1854,7 @@ let mouseUp = (~altKey, ~time, ~pixelX, ~pixelY, editor) => {
              };
 
            if (isInsertMode) {
-             Vim.Mode.Select(visualRange);
+             Vim.Mode.Select({ranges: [visualRange]});
            } else {
              Vim.Mode.Visual(visualRange);
            };
@@ -1765,7 +1906,7 @@ let mouseMove = (~time, ~pixelX, ~pixelY, editor) => {
            if (newPosition == pos) {
              Vim.Mode.Insert({cursors: [newPosition]});
            } else {
-             Vim.Mode.Select(visualRange);
+             Vim.Mode.Select({ranges: [visualRange]});
            };
          } else if (newPosition == pos) {
            Vim.Mode.Normal({cursor: newPosition});

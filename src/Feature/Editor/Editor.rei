@@ -92,6 +92,12 @@ let getHorizontalScrollbarMetrics: (t, int) => scrollbarMetrics;
 let getCursors: t => list(BytePosition.t);
 let setWrapMode: (~wrapMode: WrapMode.t, t) => t;
 
+let setCursors: (list(BytePosition.t), t) => t;
+let setSelections: (list(ByteRange.t), t) => t;
+
+let horizontalScrollbarThickness: t => int;
+let verticalScrollbarThickness: t => int;
+
 // Get the horizontal width in pixels of the tab/space whitespace in front of a line.
 let getLeadingWhitespacePixels: (EditorCoreTypes.LineNumber.t, t) => float;
 
@@ -137,7 +143,7 @@ let setLineNumbers:
 let lineNumbers: t => [ | `Off | `On | `Relative | `RelativeOnly];
 
 // [exposePrimaryCursor(editor)] ensures the primary cursor is visible - adjusting the scroll if it isnot.
-let exposePrimaryCursor: t => t;
+let exposePrimaryCursor: (~disableAnimation: bool=?, t) => t;
 
 let getNearestMatchingPair:
   (
@@ -165,7 +171,7 @@ let linePaddingInPixels: t => float;
 let setLineHeight: (~lineHeight: LineHeight.t, t) => t;
 let characterWidthInPixels: t => float;
 
-let selection: t => option(VisualRange.t);
+let selections: t => list(VisualRange.t);
 
 let selectionOrCursorRange: t => ByteRange.t;
 
@@ -191,6 +197,8 @@ let scrollPage: (~count: int, t) => t;
 
 let getCharacterWidth: t => float;
 
+let singleLineSelectedText: t => option(string);
+
 // Given a start position and a delta screen lines,
 // figure out a destination byte position.
 let moveScreenLines:
@@ -201,6 +209,7 @@ let byteToCharacter: (BytePosition.t, t) => option(CharacterPosition.t);
 let characterToByte: (CharacterPosition.t, t) => option(BytePosition.t);
 
 let byteRangeToCharacterRange: (ByteRange.t, t) => option(CharacterRange.t);
+let characterRangeToByteRange: (CharacterRange.t, t) => option(ByteRange.t);
 
 // VIEW-SPACE CONVERSION
 

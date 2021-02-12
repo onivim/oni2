@@ -177,6 +177,12 @@ let getGlobalStorageFolder = () =>
   |> Result.map(dir => Fp.append(dir, "global"))
   |> ResultEx.flatMap(mkdirp);
 
+let getWorkspaceStorageFolder = () =>
+  getUserDataDirectory()
+  |> ResultEx.flatMap(getOniDirectory)
+  |> Result.map(dir => Fp.append(dir, "workspace"))
+  |> ResultEx.flatMap(mkdirp);
+
 let rec getOrCreateConfigFile = (~overridePath=?, filename) => {
   switch (overridePath) {
   | Some(path) =>

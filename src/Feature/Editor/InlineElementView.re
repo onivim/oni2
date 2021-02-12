@@ -129,12 +129,12 @@ module Container = {
         ? <View
             style={Styles.shadowContainer(~height=int_of_float(totalHeight))}>
             <Oni_Components.ScrollShadow.Top
-              opacity={maxOpacity *. 0.8}
+              opacity={maxOpacity *. 1.0}
               height=5
               theme
             />
             <Oni_Components.ScrollShadow.Bottom
-              opacity={maxOpacity *. 0.8}
+              opacity={maxOpacity *. 1.0}
               height=5
               theme
             />

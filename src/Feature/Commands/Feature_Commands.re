@@ -11,6 +11,18 @@ module Schema = {
         msg,
       ) =>
     Command.{id, title, category, icon, isEnabledWhen, msg: `Arg0(msg)};
+
+  let defineWithArgs =
+      (
+        ~category=?,
+        ~title=?,
+        ~icon=?,
+        ~isEnabledWhen=WhenExpr.Value(True),
+        id,
+        toMsg,
+      ) => {
+    Command.{id, title, category, icon, isEnabledWhen, msg: `Arg1(toMsg)};
+  };
 };
 
 // MODEL
