@@ -23,6 +23,8 @@ module Session = {
   let stopLine = ({startLine, lineCount, _}) =>
     EditorCoreTypes.LineNumber.(startLine + lineCount);
 
+  let editorId = ({editorId, _}) => editorId;
+
   let start = (~editorId, ~position: BytePosition.t, ~snippet) => {
     let lines = ResolvedSnippet.toLines(snippet);
     let placeholders = ResolvedSnippet.placeholders(snippet);

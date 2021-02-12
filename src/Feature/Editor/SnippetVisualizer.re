@@ -18,7 +18,9 @@ let draw =
   let isShadowEnabled =
     Feature_Configuration.GlobalConfiguration.shadows.get(config);
 
-  if (!isShadowEnabled) {
+  let isCurrentEditor = Editor.getId(context.editor) == Feature_Snippets.Session.editorId(session);
+
+  if (!isShadowEnabled || !isCurrentEditor) {
     ();
   } else {
     let color = Revery.Color.toSkia(Revery.Color.rgba(0., 0., 0., 0.1));
