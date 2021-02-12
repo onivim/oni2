@@ -1397,7 +1397,7 @@ module View = {
           ~fontFamily=uiFont.family,
           ~colorTheme,
           ~tokenTheme,
-          ~languageInfo=LanguageInfo.initial,
+          ~languageInfo=Exthost.LanguageInfo.initial,
           ~defaultLanguage="reason",
           ~codeFontFamily=editorFont.fontFamily,
           ~grammars=Oni_Syntax.GrammarRepository.empty,
