@@ -414,7 +414,6 @@ module Gradient = {
 };
 
 module Shadow = {
-  let shadowStartColor = Revery.Color.rgba(0., 0., 0., 0.22);
   let shadowStopColor = Revery.Color.rgba(0., 0., 0., 0.);
 
   type direction =
@@ -423,11 +422,11 @@ module Shadow = {
     | Down
     | Up;
 
-  let render = (~direction, ~x, ~y, ~width, ~height, ~context) => {
+  let render = (~color, ~direction, ~x, ~y, ~width, ~height, ~context) => {
     switch (direction) {
     | Right =>
       Gradient.drawLeftToRight(
-        ~leftColor=shadowStartColor,
+        ~leftColor=color,
         ~rightColor=shadowStopColor,
         ~x,
         ~y,
@@ -438,7 +437,7 @@ module Shadow = {
     | Left =>
       Gradient.drawLeftToRight(
         ~leftColor=shadowStopColor,
-        ~rightColor=shadowStartColor,
+        ~rightColor=color,
         ~x,
         ~y,
         ~width,
@@ -447,7 +446,7 @@ module Shadow = {
       )
     | Down =>
       Gradient.drawTopToBottom(
-        ~topColor=shadowStartColor,
+        ~topColor=color,
         ~bottomColor=shadowStopColor,
         ~x,
         ~y,
@@ -458,7 +457,7 @@ module Shadow = {
     | Up =>
       Gradient.drawTopToBottom(
         ~topColor=shadowStopColor,
-        ~bottomColor=shadowStartColor,
+        ~bottomColor=color,
         ~x,
         ~y,
         ~width,

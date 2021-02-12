@@ -38,6 +38,7 @@ type t = {
   minimapSliderHoverBackground: Color.t,
   minimapSelectionHighlight: Color.t,
   wordHighlightBackground: Color.t,
+  shadow: Color.t,
 };
 
 let precompute = theme => {
@@ -76,4 +77,5 @@ let precompute = theme => {
   minimapSelectionHighlight: Colors.Minimap.selectionHighlight.from(theme),
   minimapBackground: Colors.Minimap.background.from(theme),
   wordHighlightBackground: Editor.wordHighlightBackground.from(theme),
+  shadow: shadow.from(theme),
 };

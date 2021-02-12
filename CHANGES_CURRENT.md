@@ -35,6 +35,8 @@
 - #3122 - Signature Help: Close signature help when traversing snippet placeholders
 - #3123 - Extensions: Fix failure to install extensions over 10MB from open-vsx
 - #3054 - Extensions: Completion - Implement 'isIncomplete' handler (fixes #3022, #2359)
+- #3129 - Snippets: Replace visual/select range on insert
+- #3057 - Theming: Turn down shadow intensity for light themes (related #3095)
 - #3133 - Completion: Implement shift+escape to close all popups without switching modes
 
 ### Performance
