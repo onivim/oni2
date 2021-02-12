@@ -27,6 +27,10 @@ let initial = {
 };
 
 [@deriving show]
+type command =
+  | CloseAllLanguagePopups;
+
+[@deriving show]
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
   | Completion(Completion.msg)
@@ -40,6 +44,7 @@ type msg =
   | CodeLens(CodeLens.msg)
   | KeyPressed(string)
   | SignatureHelp(SignatureHelp.msg)
+  | Command(command)
   | Pasted(string);
 
 type outmsg =
@@ -413,6 +418,15 @@ let update =
       | SignatureHelp.Error(msg) => NotifyFailure(msg)
       };
     ({...model, signatureHelp: sigHelp'}, outmsg');
+
+  | Command(CloseAllLanguagePopups) => (
+      {
+        ...model,
+        signatureHelp: SignatureHelp.cancel(model.signatureHelp),
+        completion: Completion.cancel(model.completion),
+      },
+      Nothing,
+    )
   };
 
 let bufferUpdated =
@@ -507,13 +521,37 @@ let stopSnippet = model => {
 
 let isFocused = ({rename, _}) => Rename.isFocused(rename);
 
+module Commands = {
+  open Feature_Commands.Schema;
+  let close =
+    define("closeAllLanguagePopups", Command(CloseAllLanguagePopups));
+};
+
+module Keybindings = {
+  open Feature_Input.Schema;
+  let close =
+    bind(
+      ~key="<S-ESC>",
+      ~command=Commands.close.id,
+      ~condition=
+        WhenExpr.And([
+          WhenExpr.Defined("editorTextFocus"),
+          WhenExpr.Or([
+            WhenExpr.Defined("parameterHintsVisible"),
+            WhenExpr.Defined("suggestWidgetVisible"),
+          ]),
+        ]),
+    );
+};
+
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
 
   let colors = CodeLens.Contributions.colors @ Completion.Contributions.colors;
 
   let commands =
-    (
+    [Commands.close]
+    @ (
       Completion.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Completion(msg)))
     )
@@ -567,7 +605,8 @@ module Contributions = {
     |> unionMany;
 
   let keybindings =
-    Rename.Contributions.keybindings
+    Keybindings.[close]
+    @ Rename.Contributions.keybindings
     @ Completion.Contributions.keybindings
     @ Definition.Contributions.keybindings
     @ DocumentHighlights.Contributions.keybindings
