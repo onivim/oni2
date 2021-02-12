@@ -6,7 +6,8 @@ type msg;
 
 module Msg: {
   let insert: (~snippet: string) => msg;
-  let editSnippetFile: (~snippetFile: Service_Snippets.SnippetFileMetadata.t) => msg;
+  let editSnippetFile:
+    (~snippetFile: Service_Snippets.SnippetFileMetadata.t) => msg;
 };
 
 type model;
