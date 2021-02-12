@@ -41,6 +41,7 @@
 - #3133 - Completion: Implement shift+escape to close all popups w/o switching modes (fixes #3120)
 - #3134 - Snippets: Only show snippet visualizer for active editor
 - #3135 - Snippets: Convert choices to placeholders
+- #3137 - Snippets: Fix error parsing some snippets in the React TS/JS extensions
 
 ### Performance
 
