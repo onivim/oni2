@@ -9,6 +9,24 @@ module SnippetWithMetadata = {
     snippet: string,
     prefix: string,
     description: string,
+    scopes: list(string),
+  };
+
+  let matchesFileType = (~fileType, {scopes, _}) => {
+    // If no scope is defined, or empty, it's assumed to be global
+    scopes == []
+    || scopes == [""]
+    || scopes
+    |> List.exists(String.equal(fileType));
+  };
+};
+
+module SnippetFileMetadata = {
+  [@deriving show]
+  type t = {
+    language: option(string),
+    filePath: [@opaque] Fp.t(Fp.absolute),
+    isCreated: bool,
   };
 };
 
@@ -23,6 +41,7 @@ module Decode = {
     type t = {
       prefix: option(string),
       body: string,
+      scopes: list(string),
     };
 
     let decode =
@@ -30,6 +49,15 @@ module Decode = {
         {
           prefix: field.optional("prefix", string),
           body: field.required("body", snippetLines),
+          scopes:
+            field.withDefault(
+              "scopes",
+              [],
+              string
+              |> map(str =>
+                   str |> String.split_on_char(',') |> List.map(String.trim)
+                 ),
+            ),
         }
       );
   };
@@ -46,6 +74,7 @@ module Decode = {
                prefix,
                description,
                snippet: prefixAndBody.body,
+               scopes: prefixAndBody.scopes,
              };
            }),
          )
@@ -55,6 +84,10 @@ module Decode = {
 module Cache = {
   let fileToPromise: Hashtbl.t(string, Lwt.t(list(SnippetWithMetadata.t))) =
     Hashtbl.create(16);
+
+  let clear = (filePath: string) => {
+    Hashtbl.remove(fileToPromise, filePath);
+  };
 
   let get = (filePath: string) => {
     switch (Hashtbl.find_opt(fileToPromise, filePath)) {
@@ -69,13 +102,27 @@ module Cache = {
         Lwt.bind(
           Service_OS.Api.readFile(filePath),
           bytes => {
+            Log.infof(m => m("Reading json for: %s", filePath));
             let json = bytes |> Bytes.to_string |> Yojson.Safe.from_string;
 
             let parseResult = Json.Decode.decode_value(Decode.decode, json);
 
             switch (parseResult) {
-            | Ok(snippets) => Lwt.return(snippets)
-            | Error(msg) => Lwt.fail_with(Json.Decode.string_of_error(msg))
+            | Ok(snippets) =>
+              Log.infof(m =>
+                m(
+                  "Read %d snippets from %s",
+                  List.length(snippets),
+                  filePath,
+                )
+              );
+              Lwt.return(snippets);
+            | Error(msg) =>
+              let msgStr = Json.Decode.string_of_error(msg);
+              Log.errorf(m =>
+                m("Parsing snippet file %s failed with: %s", filePath, msgStr)
+              );
+              Lwt.fail_with(msgStr);
             };
           },
         );
@@ -86,13 +133,50 @@ module Cache = {
 };
 
 module Internal = {
-  let loadSnippetsFromFiles = (~filePaths, dispatch) => {
+  let join = (a, b) => a @ b;
+
+  let readSnippetFilesFromFolder = folder => {
+    folder
+    |> Fp.toString
+    |> Service_OS.Api.readdir
+    |> Lwt.map(dirents => {
+         dirents
+         |> List.map((dirent: Luv.File.Dirent.t) =>
+              Fp.At.(folder / dirent.name)
+            )
+         |> List.filter(file => SnippetFile.scope(file) != None)
+       });
+  };
+
+  let loadSnippetsFromFolder = (~fileType, folder) => {
+    readSnippetFilesFromFolder(folder)
+    |> LwtEx.flatMap(snippetFiles => {
+         snippetFiles
+         |> List.filter(SnippetFile.matches(~fileType))
+         |> List.map((dir: Fp.t(Fp.absolute)) => {
+              let str = Fp.toString(dir);
+              Cache.get(str)
+              |> Lwt.map(
+                   List.filter(
+                     SnippetWithMetadata.matchesFileType(~fileType),
+                   ),
+                 );
+            })
+         |> LwtEx.some(~default=[], join)
+       });
+  };
+
+  let loadSnippetsFromFiles = (~filePaths, ~fileType, dispatch) => {
     // Load all files
     // Coalesce all promises
     let promises = filePaths |> List.map(Fp.toString) |> List.map(Cache.get);
 
-    let join = (a, b) => a @ b;
-    let promise = LwtEx.some(~default=[], join, promises);
+    let userPromise: Lwt.t(list(SnippetWithMetadata.t)) =
+      Filesystem.getSnippetsFolder()
+      |> Result.map(loadSnippetsFromFolder(~fileType))
+      |> ResultEx.value(~default=Lwt.return([]));
+
+    let promise = LwtEx.some(~default=[], join, [userPromise, ...promises]);
 
     Lwt.on_success(
       promise,
@@ -115,19 +199,124 @@ module Internal = {
 };
 
 module Effect = {
-  let snippetFromFiles = (~filePaths, toMsg) =>
+  let createSnippetFile = (~filePath, toMsg) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Service_Snippets.createSnippetFile", dispatch => {
+      let createPromise = SnippetFile.ensureCreated(filePath);
+      Lwt.on_any(
+        createPromise,
+        filePath => {dispatch(toMsg(Ok(filePath)))},
+        exn => {dispatch(toMsg(Error(Printexc.to_string(exn))))},
+      );
+    });
+  };
+  let clearCachedSnippets = (~filePath) => {
+    Isolinear.Effect.create(~name="Service_Snippets.clearCachedSnippets", () => {
+      Log.tracef(m =>
+        m("Clearing snippet cache for file: %s", filePath |> Fp.toString)
+      );
+      Cache.clear(Fp.toString(filePath));
+    });
+  };
+  let snippetFromFiles = (~fileType, ~filePaths, toMsg) =>
     Isolinear.Effect.createWithDispatch(
       ~name="Service_Snippets.Effect.snippetFromFiles", dispatch => {
-      Internal.loadSnippetsFromFiles(~filePaths, snippets =>
+      Internal.loadSnippetsFromFiles(~filePaths, ~fileType, snippets =>
         dispatch(toMsg(snippets))
       )
     });
+
+  let getUserSnippetFiles = (~languageInfo, toMsg) => {
+    // TODO
+    Isolinear.Effect.createWithDispatch(
+      ~name="Service_Snippets.Effect.getUserSnippetFiles", dispatch => {
+      switch (Filesystem.getSnippetsFolder()) {
+      // TODO: Error logging
+      | Error(_) => dispatch(toMsg([]))
+      | Ok(userSnippetsFolder) =>
+        let userSnippetsPromise =
+          Internal.readSnippetFilesFromFolder(userSnippetsFolder);
+
+        let promise =
+          userSnippetsPromise
+          |> Lwt.map(userSnippets => {
+               let alreadyCreatedLanguages =
+                 userSnippets
+                 |> List.fold_left(
+                      (set, file) => {
+                        switch (SnippetFile.scope(file)) {
+                        | Some(Language(languageId)) =>
+                          StringSet.add(languageId, set)
+                        | Some(Global)
+                        | None => set
+                        }
+                      },
+                      StringSet.empty,
+                    );
+
+               // Get a list of candidate snippets
+               let candidateSnippets =
+                 Exthost.LanguageInfo.languages(languageInfo)
+                 |> List.map(fileType =>
+                      SnippetFile.language(~fileType, userSnippetsFolder)
+                    )
+                 |> List.filter(candidateFile => {
+                      switch (SnippetFile.scope(candidateFile)) {
+                      | Some(Global) => true
+                      | Some(Language(language)) =>
+                        !StringSet.mem(language, alreadyCreatedLanguages)
+                      | None => false
+                      }
+                    });
+
+               // Do we already have a global snippet?
+               let hasGlobalSnippet =
+                 userSnippets |> List.exists(SnippetFile.isGlobal);
+
+               let toMetadata = (~isCreated, snippetFile) => {
+                 let language =
+                   switch (SnippetFile.scope(snippetFile)) {
+                   | Some(Language(language)) => Some(language)
+                   | Some(Global)
+                   | None => None
+                   };
+                 SnippetFileMetadata.{
+                   isCreated,
+                   filePath: snippetFile,
+                   language,
+                 };
+               };
+
+               let existingSnippets =
+                 userSnippets |> List.map(toMetadata(~isCreated=true));
+
+               let newSnippets =
+                 (
+                   hasGlobalSnippet
+                     ? candidateSnippets
+                     : [
+                       SnippetFile.global(userSnippetsFolder),
+                       ...candidateSnippets,
+                     ]
+                 )
+                 |> List.map(toMetadata(~isCreated=false));
+               existingSnippets @ newSnippets;
+             });
+
+        Lwt.on_success(promise, snippetFiles =>
+          dispatch(toMsg(snippetFiles))
+        );
+        Lwt.on_failure(promise, _exn => dispatch(toMsg([])));
+      }
+    });
+  };
 };
 
 module Sub = {
   type snippetFileParams = {
     uniqueId: string,
     filePaths: list(Fp.t(Fp.absolute)),
+    fileType: string,
   };
   module SnippetFileSubscription =
     Isolinear.Sub.Make({
@@ -140,7 +329,11 @@ module Sub = {
       let id = ({uniqueId, _}) => uniqueId;
 
       let init = (~params, ~dispatch) => {
-        Internal.loadSnippetsFromFiles(~filePaths=params.filePaths, dispatch);
+        Internal.loadSnippetsFromFiles(
+          ~fileType=params.fileType,
+          ~filePaths=params.filePaths,
+          dispatch,
+        );
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
@@ -149,8 +342,8 @@ module Sub = {
         ();
       };
     });
-  let snippetFromFiles = (~uniqueId, ~filePaths, toMsg) => {
-    SnippetFileSubscription.create({uniqueId, filePaths})
+  let snippetFromFiles = (~uniqueId, ~fileType, ~filePaths, toMsg) => {
+    SnippetFileSubscription.create({uniqueId, filePaths, fileType})
     |> Isolinear.Sub.map(toMsg);
   };
 };

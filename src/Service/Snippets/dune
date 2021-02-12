@@ -2,7 +2,7 @@
  (name Service_Snippets)
  (public_name Oni2.service.snippets)
  (inline_tests)
- (libraries Oni2.editor-core-types Oni2.core Oni2.service.os Revery isolinear
-   fp base)
+ (libraries Oni2.editor-core-types Oni2.core Oni2.exthost Oni2.service.os
+   Revery isolinear fp base)
  (preprocess
   (pps ppx_let ppx_deriving.show ppx_inline_test)))

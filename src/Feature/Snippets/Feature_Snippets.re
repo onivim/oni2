@@ -23,6 +23,8 @@ module Session = {
   let stopLine = ({startLine, lineCount, _}) =>
     EditorCoreTypes.LineNumber.(startLine + lineCount);
 
+  let editorId = ({editorId, _}) => editorId;
+
   let start = (~editorId, ~position: BytePosition.t, ~snippet) => {
     let lines = ResolvedSnippet.toLines(snippet);
     let placeholders = ResolvedSnippet.placeholders(snippet);
@@ -331,6 +333,7 @@ module Session = {
 type command =
   | JumpToNextPlaceholder
   | JumpToPreviousPlaceholder
+  | EditUserSnippets
   | InsertSnippet({
       // If no snippet is provided - we should open the snippet menu
       maybeSnippet: [@opaque] option(Snippet.t),
@@ -343,10 +346,19 @@ type msg =
   | SnippetInserted([@opaque] Session.t)
   | SnippetInsertionError(string)
   | SnippetsLoadedForPicker(list(Service_Snippets.SnippetWithMetadata.t))
-  | InsertInternal({snippetString: string});
+  | InsertInternal({snippetString: string})
+  | SnippetFilesLoadedForPicker(list(Service_Snippets.SnippetFileMetadata.t))
+  | EditSnippetFileRequested({
+      snippetFile: Service_Snippets.SnippetFileMetadata.t,
+    })
+  | SnippetFileCreatedSuccessfully([@opaque] Fp.t(Fp.absolute))
+  | SnippetFileCreationError(string);
 
 module Msg = {
   let insert = (~snippet) => InsertInternal({snippetString: snippet});
+
+  let editSnippetFile = (~snippetFile: Service_Snippets.SnippetFileMetadata.t) =>
+    EditSnippetFileRequested({snippetFile: snippetFile});
 };
 
 type model = {maybeSession: option(Session.t)};
@@ -380,6 +392,8 @@ type outmsg =
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
   | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
+  | ShowFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
+  | OpenFile(Fp.t(Fp.absolute))
   | Nothing;
 
 module Effects = {
@@ -561,6 +575,7 @@ module Internal = {
 
 let update =
     (
+      ~languageInfo,
       ~resolverFactory,
       ~selections,
       ~maybeBuffer,
@@ -681,7 +696,8 @@ let update =
              let filePaths =
                Feature_Extensions.snippetFilePaths(~fileType, extensions);
              Effect(
-               Service_Snippets.Effect.snippetFromFiles(~filePaths, snippets =>
+               Service_Snippets.Effect.snippetFromFiles(
+                 ~filePaths, ~fileType, snippets =>
                  SnippetsLoadedForPicker(snippets)
                ),
              );
@@ -690,9 +706,38 @@ let update =
       |> Option.value(~default=Nothing);
     (model, eff);
 
+  | Command(EditUserSnippets) => (
+      model,
+      Effect(
+        Service_Snippets.Effect.getUserSnippetFiles(
+          ~languageInfo, snippetFiles =>
+          SnippetFilesLoadedForPicker(snippetFiles)
+        ),
+      ),
+    )
+
+  | EditSnippetFileRequested({snippetFile}) =>
+    let eff =
+      Service_Snippets.Effect.createSnippetFile(
+        ~filePath=snippetFile.filePath,
+        fun
+        | Ok(filePath) => SnippetFileCreatedSuccessfully(filePath)
+        | Error(msg) => SnippetFileCreationError(msg),
+      );
+    (model, Effect(eff));
+
+  | SnippetFileCreatedSuccessfully(filePath) => (model, OpenFile(filePath))
+
+  | SnippetFileCreationError(msg) => (model, ErrorMessage(msg))
+
   | SnippetsLoadedForPicker(snippetsWithMetadata) => (
       model,
       ShowPicker(snippetsWithMetadata),
+    )
+
+  | SnippetFilesLoadedForPicker(snippetFiles) => (
+      model,
+      ShowFilePicker(snippetFiles),
     )
 
   | InsertInternal({snippetString}) =>
@@ -786,6 +831,14 @@ module Commands = {
       "editor.action.insertSnippet",
       snippetCommandParser,
     );
+
+  let editUserSnippets =
+    define(
+      ~category="Snippets",
+      ~title="Configure user snippets",
+      "workbench.action.openSnippets",
+      Command(EditUserSnippets),
+    );
 };
 
 module ContextKeys = {
@@ -796,7 +849,12 @@ module ContextKeys = {
 
 module Contributions = {
   let commands =
-    Commands.[nextPlaceholder, previousPlaceholder, insertSnippet];
+    Commands.[
+      nextPlaceholder,
+      previousPlaceholder,
+      insertSnippet,
+      editUserSnippets,
+    ];
 
   let contextKeys = model => {
     WhenExpr.ContextKeys.(

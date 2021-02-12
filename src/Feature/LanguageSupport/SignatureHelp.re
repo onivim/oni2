@@ -392,13 +392,6 @@ module Keybindings = {
       ~command=Commands.incrementSignature.id,
       ~condition="editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
     );
-
-  let close =
-    bind(
-      ~key="<S-ESC>",
-      ~command=Commands.close.id,
-      ~condition="editorTextFocus && parameterHintsVisible" |> WhenExpr.parse,
-    );
 };
 
 module ContextKeys = {
@@ -413,8 +406,7 @@ module Contributions = {
 
   let contextKeys = ContextKeys.[parameterHintsVisible];
 
-  let keybindings =
-    Keybindings.[incrementSignature, decrementSignature, close];
+  let keybindings = Keybindings.[incrementSignature, decrementSignature];
 
   let configuration = Configuration.[enabled.spec];
 };
@@ -431,6 +423,11 @@ let sub = (~buffer, ~isInsertMode, ~activePosition as _, ~client, model) =>
        })
     |> Isolinear.Sub.batch;
   };
+
+let cancel = model => {
+  let sessions' = model.sessions |> List.map(Session.close);
+  {...model, sessions: sessions'};
+};
 
 let update = (~maybeBuffer, ~cursor, model, msg) =>
   switch (msg) {
@@ -454,9 +451,7 @@ let update = (~maybeBuffer, ~cursor, model, msg) =>
     | None => (model, Nothing)
     }
 
-  | Command(Close) =>
-    let sessions' = model.sessions |> List.map(Session.close);
-    ({...model, sessions: sessions'}, Nothing);
+  | Command(Close) => (cancel(model), Nothing)
 
   | Session({handle, msg}) =>
     let sessions' =

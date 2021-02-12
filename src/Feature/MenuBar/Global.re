@@ -26,23 +26,36 @@ module Items = {
     let quit = item(~title="Quit", ~command=":qa");
 
     module Preferences = {
-      let test1 =
+      let configuration =
         item(
           ~title="Configuration",
           ~command="workbench.action.openSettings",
         );
-      let test2 =
+      let keybindings =
         item(
           ~title="Keybindings",
           ~command="workbench.action.openDefaultKeybindingsFile",
         );
-      let test3 =
+      let selectTheme =
         item(~title="Change Theme", ~command="workbench.action.selectTheme");
+
+      let userSnippets =
+        item(
+          ~title="User Snippets",
+          ~command="workbench.action.openSnippets",
+        );
 
       let submenu =
         submenu(
           ~title="Preferences",
-          [group(~order=1, ~parent=file, [test1, test2, test3])],
+          [
+            group(
+              ~order=1,
+              ~parent=file,
+              [configuration, keybindings, selectTheme],
+            ),
+            group(~order=2, ~parent=file, [userSnippets]),
+          ],
         );
     };
   };

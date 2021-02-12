@@ -5,6 +5,7 @@
 - #3067 - Snippets: Integrate snippets provided by extensions
 - #3090 - Snippets: Add insert snippet command
 - #3105 - Snippets: Implement configuration setting
+- #3132 - Snippets: User snippet editing
 
 ### Bug Fixes
 
@@ -37,6 +38,10 @@
 - #3054 - Extensions: Completion - Implement 'isIncomplete' handler (fixes #3022, #2359)
 - #3129 - Snippets: Replace visual/select range on insert
 - #3057 - Theming: Turn down shadow intensity for light themes (related #3095)
+- #3133 - Completion: Implement shift+escape to close all popups w/o switching modes (fixes #3120)
+- #3134 - Snippets: Only show snippet visualizer for active editor
+- #3135 - Snippets: Convert choices to placeholders
+- #3137 - Snippets: Fix error parsing some snippets in the React TS/JS extensions
 
 ### Performance
 
