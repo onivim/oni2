@@ -183,6 +183,12 @@ let getWorkspaceStorageFolder = () =>
   |> Result.map(dir => Fp.append(dir, "workspace"))
   |> ResultEx.flatMap(mkdirp);
 
+let getSnippetsFolder = () =>
+  getUserDataDirectory()
+  |> ResultEx.flatMap(getOniDirectory)
+  |> Result.map(dir => Fp.append(dir, "snippets"))
+  |> ResultEx.flatMap(mkdirp);
+
 let rec getOrCreateConfigFile = (~overridePath=?, filename) => {
   switch (overridePath) {
   | Some(path) =>

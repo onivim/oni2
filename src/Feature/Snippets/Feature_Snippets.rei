@@ -4,7 +4,11 @@ open EditorCoreTypes;
 [@deriving show]
 type msg;
 
-module Msg: {let insert: (~snippet: string) => msg;};
+module Msg: {
+  let insert: (~snippet: string) => msg;
+  let editSnippetFile:
+    (~snippetFile: Service_Snippets.SnippetFileMetadata.t) => msg;
+};
 
 type model;
 
@@ -16,6 +20,8 @@ type outmsg =
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
   | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
+  | ShowFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
+  | OpenFile(Fp.t(Fp.absolute))
   | Nothing;
 
 module Session: {
@@ -35,6 +41,7 @@ let modeChanged: (~mode: Vim.Mode.t, model) => model;
 
 let update:
   (
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~resolverFactory: (unit, string) => option(string),
     ~selections: list(VisualRange.t),
     ~maybeBuffer: option(Buffer.t),

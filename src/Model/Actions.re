@@ -210,6 +210,7 @@ and quickmenuVariant =
   | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | SnippetPicker(list(Service_Snippets.SnippetWithMetadata.t))
+  | SnippetFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | FileTypesPicker({
       bufferId: int,

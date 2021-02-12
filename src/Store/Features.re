@@ -1199,12 +1199,24 @@ let update =
           extHostClient,
         );
 
+      let clearSnippetCacheEffect =
+        buffer
+        |> Buffer.getFilePath
+        |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
+        |> Option.map(filePath =>
+             Service_Snippets.Effect.clearCachedSnippets(~filePath)
+           )
+        |> Option.value(~default=Isolinear.Effect.none);
+
       let modelSavedEff =
         Service_Exthost.Effects.Documents.modelSaved(
           ~uri=Buffer.getUri(buffer), extHostClient, () =>
           Noop
         );
-      (state, Isolinear.Effect.batch([eff, modelSavedEff]));
+      (
+        state,
+        Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
+      );
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
       let fileType =
@@ -1670,6 +1682,7 @@ let update =
 
     let (snippets', outmsg) =
       Feature_Snippets.update(
+        ~languageInfo=state.languageInfo,
         ~resolverFactory,
         ~selections,
         ~maybeBuffer,
@@ -1767,6 +1780,14 @@ let update =
              );
         (layout', Isolinear.Effect.none);
 
+      | ShowFilePicker(snippetFiles) =>
+        let eff =
+          Isolinear.Effect.createWithDispatch(
+            ~name="snippet.fileMenu", dispatch => {
+            dispatch(Actions.QuickmenuShow(SnippetFilePicker(snippetFiles)))
+          });
+        (state.layout, eff);
+
       | ShowPicker(snippetsWithMetadata) =>
         let eff =
           Isolinear.Effect.createWithDispatch(~name="snippet.menu", dispatch => {
@@ -1775,6 +1796,11 @@ let update =
             )
           });
         (state.layout, eff);
+
+      | OpenFile(filePath) => (
+          state.layout,
+          Internal.openFileEffect(Fp.toString(filePath)),
+        )
 
       | Effect(eff) => (
           state.layout,

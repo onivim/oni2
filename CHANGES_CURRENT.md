@@ -5,6 +5,7 @@
 - #3067 - Snippets: Integrate snippets provided by extensions
 - #3090 - Snippets: Add insert snippet command
 - #3105 - Snippets: Implement configuration setting
+- #3132 - Snippets: User snippet editing
 
 ### Bug Fixes
 
