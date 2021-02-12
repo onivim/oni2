@@ -21,36 +21,6 @@ module SnippetWithMetadata = {
   };
 };
 
-module SnippetFile = {
-  type t = Fp.t(Fp.absolute);
-
-  type scope =
-    | Global
-    | Language(string);
-
-  let scope = (path: t) => {
-    let splitPath =
-      path |> Fp.toString |> Filename.basename |> String.split_on_char('.');
-
-    switch (splitPath) {
-    | [] => None
-    | [_] => None
-    | [_file, fileType, extension] when extension == "json" =>
-      Some(Language(fileType))
-    | [_file, extension] when extension == "code-snippets" => Some(Global)
-    | _ => None
-    };
-  };
-
-  let matches = (~fileType, snippetFile: t) => {
-    switch (scope(snippetFile)) {
-    | None => false
-    | Some(Global) => true
-    | Some(Language(languageId)) => languageId == fileType
-    };
-  };
-};
-
 module SnippetFileMetadata = {
   [@deriving show]
   type t = {
