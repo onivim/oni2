@@ -24,6 +24,8 @@ module Session: {
 
   let startLine: t => EditorCoreTypes.LineNumber.t;
   let stopLine: t => EditorCoreTypes.LineNumber.t;
+
+  let editorId: t => int;
 };
 
 let session: model => option(Session.t);
@@ -35,6 +37,7 @@ let modeChanged: (~mode: Vim.Mode.t, model) => model;
 let update:
   (
     ~resolverFactory: (unit, string) => option(string),
+    ~selections: list(VisualRange.t),
     ~maybeBuffer: option(Buffer.t),
     ~editorId: int,
     ~cursorPosition: BytePosition.t,
@@ -46,7 +49,7 @@ let update:
 
 module Effects: {
   let insertSnippet:
-    (~meetColumn: CharacterIndex.t, ~snippet: string) =>
+    (~replaceRange: option(ByteRange.t), ~snippet: string) =>
     Isolinear.Effect.t(msg);
 };
 
