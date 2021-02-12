@@ -274,19 +274,29 @@ let start = () => {
     | QuickmenuShow(SnippetFilePicker(snippetFiles)) =>
       let items =
         snippetFiles
-        |> List.map((snippetFile: Service_Snippets.SnippetFileMetadata.t) => {
-             Actions.{
-               category: Fp.baseName(snippetFile.filePath),
-               name:
-                 snippetFile.language |> Option.value(~default="(global)"),
-               command: () =>
-                 Snippets(
-                   Feature_Snippets.Msg.editSnippetFile(~snippetFile),
-                 ),
-               icon: None,
-               highlight: [],
-               handle: None,
-             }
+        |> List.filter_map(
+             (snippetFile: Service_Snippets.SnippetFileMetadata.t) => {
+             Fp.baseName(snippetFile.filePath)
+             |> Option.map(filePath => {
+                  Actions.{
+                    category:
+                      Some(
+                        snippetFile.language
+                        |> Option.value(~default="global"),
+                      ),
+                    name:
+                      snippetFile.isCreated
+                        ? Printf.sprintf("Edit %s", filePath)
+                        : Printf.sprintf("Create %s", filePath),
+                    command: () =>
+                      Snippets(
+                        Feature_Snippets.Msg.editSnippetFile(~snippetFile),
+                      ),
+                    icon: None,
+                    highlight: [],
+                    handle: None,
+                  }
+                })
            })
         |> Array.of_list;
 

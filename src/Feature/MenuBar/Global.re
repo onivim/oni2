@@ -41,7 +41,7 @@ module Items = {
 
       let userSnippets =
         item(
-          ~title="Configure user snippets",
+          ~title="User Snippets",
           ~command="workbench.action.openSnippets",
         );
 
