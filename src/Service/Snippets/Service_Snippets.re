@@ -180,22 +180,11 @@ module Effect = {
   let createSnippetFile = (~filePath, toMsg) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Service_Snippets.createSnippetFile", dispatch => {
-      let filePathString = Fp.toString(filePath);
-      let statPromise = Service_OS.Api.stat(filePathString);
+      let createPromise = SnippetFile.ensureCreated(filePath);
       Lwt.on_any(
-        statPromise,
-        (_stat: Luv.File.Stat.t) => {dispatch(toMsg(Ok(filePath)))},
-        _exn => {
-          // File not created yet, let's create it
-          let contents = "Hello, world" |> Bytes.of_string;
-          let writePromise =
-            Service_OS.Api.writeFile(~contents, filePathString);
-          Lwt.on_any(
-            writePromise,
-            () => {dispatch(toMsg(Ok(filePath)))},
-            exn => {dispatch(toMsg(Error(Printexc.to_string(exn))))},
-          );
-        },
+        createPromise,
+        filePath => {dispatch(toMsg(Ok(filePath)))},
+        exn => {dispatch(toMsg(Error(Printexc.to_string(exn))))},
       );
     });
   };

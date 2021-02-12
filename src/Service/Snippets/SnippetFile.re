@@ -75,13 +75,13 @@ module Defaults = {
   };
 };
 
-let create = (snippetFile: t) => {
+let ensureCreated = (snippetFile: t) => {
   Lwt.catch(
     () => {
       snippetFile
       |> Fp.toString
       |> Service_OS.Api.stat
-      |> Lwt.map(_ => Ok(snippetFile))
+      |> Lwt.map(_ => snippetFile)
     },
     exn => {
       let maybeContents =
@@ -99,17 +99,15 @@ let create = (snippetFile: t) => {
              () => {
                // File not created yet, let's create it
                Service_OS.Api.writeFile(~contents, Fp.toString(snippetFile))
-               |> Lwt.map(() => Ok(snippetFile))
+               |> Lwt.map(() => snippetFile)
              },
-             exn => Lwt.return(Error(Printexc.to_string(exn))),
+             exn => Lwt.fail_with(Printexc.to_string(exn)),
            )
          })
       |> Option.value(
            ~default=
-             Lwt.return(
-               Error(
-                 "Invalid snippet file path: " ++ Fp.toString(snippetFile),
-               ),
+             Lwt.fail_with(
+               "Invalid snippet file path: " ++ Fp.toString(snippetFile),
              ),
          );
     },
