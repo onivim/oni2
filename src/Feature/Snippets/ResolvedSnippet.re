@@ -441,6 +441,23 @@ let resolve =
     | [nonVariable, ...tail] => [nonVariable, ...resolveVariables(tail)]
     };
 
+  // Until we fully support choice w/ a contextual menu -
+  // convert them into placeholders so we get a proper tab-through experience.
+  let rec convertChoicesToPlaceholders = segments =>
+    switch (segments) {
+    | [] => []
+    | [Choice({index, choices}), ...tail] =>
+      let text = List.nth_opt(choices, 0) |> Option.value(~default="");
+      [
+        Placeholder({index, contents: [Text(text)]}),
+        ...convertChoicesToPlaceholders(tail),
+      ];
+    | [nonChoice, ...tail] => [
+        nonChoice,
+        ...convertChoicesToPlaceholders(tail),
+      ]
+    };
+
   let normalizeWhitespace = segments =>
     switch (segments) {
     | [Text(text), ...tail] => [
@@ -458,6 +475,7 @@ let resolve =
   snippet
   // Iterate through the lines and resolve all variables like `$BLOCK_COMMENT_START`
   |> List.map(resolveVariables)
+  |> List.map(convertChoicesToPlaceholders)
   |> List.mapi((idx, line) => {
        let isFirst = idx == 0;
        let isLast = idx == lines - 1;
