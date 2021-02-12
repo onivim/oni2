@@ -1,11 +1,15 @@
 open Oni_Core;
+open Utility;
 
 type model = {
   automaticallyChecksForUpdates: bool,
-  releaseChannel: [ | `Nightly | `Master | `Test],
+  releaseChannel: string,
 };
 
-let initial = {automaticallyChecksForUpdates: true, releaseChannel: `Master};
+let initial = {
+  automaticallyChecksForUpdates: true,
+  releaseChannel: Oni_Core.BuildInfo.defaultUpdateChannel,
+};
 
 [@deriving show({with_path: false})]
 type command =
@@ -18,19 +22,14 @@ type msg =
 
 type outmsg =
   | Nothing
-  | Effect(Isolinear.Effect.t(msg));
-
-let releaseChannelToString =
-  fun
-  | `Nightly => "nightly"
-  | `Master => "master"
-  | `Test => "test-update";
+  | Effect(Isolinear.Effect.t(msg))
+  | ErrorMessage(string);
 
 let platformStr =
   switch (Revery.Environment.os) {
-  | Mac => "macos"
-  | Linux => "linux"
-  | Windows => "windows"
+  | Mac(_) => "macos"
+  | Linux(_) => "linux"
+  | Windows(_) => "windows"
   | _ => ""
   };
 
@@ -41,33 +40,13 @@ module Configuration = {
     setting("oni.app.automaticallyChecksForUpdates", bool, ~default=true);
 
   let releaseChannelCodec =
-    custom(
-      ~decode=
-        Json.Decode.(
-          string
-          |> map(
-               fun
-               | "nightly" => `Nightly
-               | "test-update"
-               | "test" => `Test
-               | "master"
-               | _ => `Master,
-             )
-        ),
-      ~encode=
-        Json.Encode.(
-          fun
-          | `Nightly => string("nightly")
-          | `Master => string("master")
-          | `Test => string("test-update")
-        ),
-    );
+    custom(~decode=Json.Decode.(string), ~encode=Json.Encode.(string));
 
   let releaseChannel =
     setting(
       "oni.app.updateReleaseChannel",
       releaseChannelCodec,
-      ~default=`Master,
+      ~default=Oni_Core.BuildInfo.defaultUpdateChannel,
     );
 };
 
@@ -76,7 +55,7 @@ module Commands = {
 
   let checkForUpdates =
     define(
-      ~category="Oni2",
+      ~category="Auto-Update",
       ~title="Check for updates",
       "oni.app.checkForUpdates",
       Command(CheckForUpdates),
@@ -124,7 +103,7 @@ let update = (~getLicenseKey, model, msg) =>
         Service_AutoUpdate.Effect.setFeed(
           ~updater=Oni2_Sparkle.Updater.getInstance(),
           ~licenseKey=getLicenseKey(),
-          ~releaseChannel=releaseChannelToString(newModel.releaseChannel),
+          ~releaseChannel=newModel.releaseChannel,
           ~platform=platformStr,
         ),
       ),
@@ -135,17 +114,27 @@ let update = (~getLicenseKey, model, msg) =>
         Service_AutoUpdate.Effect.setFeed(
           ~updater=Oni2_Sparkle.Updater.getInstance(),
           ~licenseKey,
-          ~releaseChannel=releaseChannelToString(model.releaseChannel),
+          ~releaseChannel=model.releaseChannel,
           ~platform=platformStr,
         ),
       ),
     )
-  | Command(CheckForUpdates) => (
-      model,
-      Effect(
-        Service_AutoUpdate.Effect.checkForUpdates(
-          ~updater=Oni2_Sparkle.Updater.getInstance(),
+  | Command(CheckForUpdates) =>
+    if (StringEx.isEmpty(getLicenseKey())) {
+      (
+        model,
+        ErrorMessage(
+          "A valid license key is needed to check for updates. Please register and try again.",
         ),
-      ),
-    )
+      );
+    } else {
+      (
+        model,
+        Effect(
+          Service_AutoUpdate.Effect.checkForUpdates(
+            ~updater=Oni2_Sparkle.Updater.getInstance(),
+          ),
+        ),
+      );
+    }
   };

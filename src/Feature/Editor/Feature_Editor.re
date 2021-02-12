@@ -99,16 +99,20 @@ let update = (editor, msg) => {
   | HorizontalScrollbarMouseRelease
   | VerticalScrollbarMouseRelease
   | VerticalScrollbarMouseDown => (editor, Nothing)
-  | EditorMouseDown({time, pixelX, pixelY}) => (
-      editor |> Editor.mouseDown(~time, ~pixelX, ~pixelY),
+  | EditorMouseDown({altKey, time, pixelX, pixelY}) => (
+      editor |> Editor.mouseDown(~altKey, ~time, ~pixelX, ~pixelY),
       Nothing,
     )
-  | EditorMouseUp({time, pixelX, pixelY}) => (
-      editor |> Editor.mouseUp(~time, ~pixelX, ~pixelY),
+  | EditorMouseUp({altKey, time, pixelX, pixelY}) => (
+      editor |> Editor.mouseUp(~altKey, ~time, ~pixelX, ~pixelY),
       Nothing,
     )
-  | InlineElementSizeChanged({key, uniqueId, height}) => (
-      Editor.setInlineElementSize(~key, ~uniqueId, ~height, editor),
+  | InlineElementSizeChanged({key, line, uniqueId, height}) => (
+      Editor.setInlineElementSize(~key, ~line, ~uniqueId, ~height, editor),
+      Nothing,
+    )
+  | PreviewChanged(preview) => (
+      Editor.setPreview(~preview, editor),
       Nothing,
     )
   | Internal(msg) => (Editor.update(msg, editor), Nothing)
@@ -123,17 +127,8 @@ let update = (editor, msg) => {
   | MouseHovered =>
     let maybeCharacter = Editor.getCharacterUnderMouse(editor);
     (editor, MouseHovered(maybeCharacter));
-  //  | MouseMoved({bytePosition}) => (
-  //      editor,
-  //      {
-  //        Editor.byteToCharacter(bytePosition, editor)
-  //        |> Option.map(characterPosition => {
-  //             MouseMoved({bytePosition, characterPosition})
-  //           })
-  //        |> Option.value(~default=Nothing);
-  //      },
-  //    )
-  | ModeChanged({mode, effects}) =>
+
+  | ModeChanged({allowAnimation, mode, effects}) =>
     let handleScrollEffect = (~count, ~direction, editor) => {
       let count = max(count, 1);
       Vim.Scroll.(
@@ -153,6 +148,14 @@ let update = (editor, msg) => {
       );
     };
 
+    // Apply animation override, if disabled
+    let editor =
+      if (!allowAnimation) {
+        editor |> Editor.overrideAnimation(~animated=Some(false));
+      } else {
+        editor;
+      };
+
     let editor' = Editor.setMode(mode, editor);
     let editor'' =
       effects
@@ -165,7 +168,8 @@ let update = (editor, msg) => {
              }
            },
            editor',
-         );
+         )
+      |> Editor.overrideAnimation(~animated=None);
     (editor'', Nothing);
   };
 };
@@ -177,13 +181,15 @@ module Sub = {
       switch (Editor.lastMouseMoveTime(editor)) {
       | Some(time) when hoverEnabled && !Editor.isMouseDown(editor) =>
         let delay = EditorConfiguration.Hover.delay.get(config);
-        Service_Time.Sub.once(
-          ~uniqueId={
-            string_of_int(Editor.getId(editor))
-            ++ string_of_float(Revery.Time.toFloatSeconds(time));
-          },
-          ~delay,
-          ~msg=(~current as _) =>
+        let uniqueId =
+          Printf.sprintf(
+            "editor:%d.%f.%f.%f",
+            Editor.getId(editor),
+            Revery.Time.toFloatSeconds(time),
+            Editor.scrollX(editor),
+            Editor.scrollY(editor),
+          );
+        Service_Time.Sub.once(~uniqueId, ~delay, ~msg=(~current as _) =>
           Msg.MouseHovered
         );
       | Some(_) => Isolinear.Sub.none

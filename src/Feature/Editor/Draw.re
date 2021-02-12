@@ -10,6 +10,7 @@ type context = {
   height: int,
   editor: Editor.t,
   fontFamily: Revery.Font.Family.t,
+  fontWeight: Revery.Font.Weight.t,
   fontSize: float,
   charWidth: float,
   charHeight: float,
@@ -31,6 +32,7 @@ let createContext =
     height,
     editor,
     fontFamily: editorFont.fontFamily,
+    fontWeight: editorFont.fontWeight,
     fontSize: editorFont.fontSize,
     charWidth: editorFont.spaceWidth,
     charHeight: editorFont.measuredHeight,
@@ -86,7 +88,7 @@ let drawShapedText = {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
+        bold ? Oni_Core.Font.bolder(context.fontWeight) : context.fontWeight,
         context.fontFamily,
       );
     let text =
@@ -124,7 +126,7 @@ let drawUtf8Text = {
     let font =
       Service_Font.resolveWithFallback(
         ~italic,
-        bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
+        bold ? Oni_Core.Font.bolder(context.fontWeight) : context.fontWeight,
         context.fontFamily,
       );
     Revery.Font.Smoothing.setPaint(~smoothing=context.smoothing, paint);
@@ -225,7 +227,7 @@ let rangeByte =
       if (idx == stopViewLine) {
         stopPixelX;
       } else {
-        float(Editor.getTotalWidthInPixels(context.editor));
+        Editor.getTotalWidthInPixels(context.editor);
       };
 
     drawRect(
@@ -251,7 +253,8 @@ let token =
   let font =
     Service_Font.resolveWithFallback(
       ~italic=token.italic,
-      token.bold ? Revery.Font.Weight.Bold : Revery.Font.Weight.Normal,
+      token.bold
+        ? Oni_Core.Font.bolder(context.fontWeight) : context.fontWeight,
       context.fontFamily,
     );
 
@@ -411,7 +414,6 @@ module Gradient = {
 };
 
 module Shadow = {
-  let shadowStartColor = Revery.Color.rgba(0., 0., 0., 0.22);
   let shadowStopColor = Revery.Color.rgba(0., 0., 0., 0.);
 
   type direction =
@@ -420,11 +422,11 @@ module Shadow = {
     | Down
     | Up;
 
-  let render = (~direction, ~x, ~y, ~width, ~height, ~context) => {
+  let render = (~color, ~direction, ~x, ~y, ~width, ~height, ~context) => {
     switch (direction) {
     | Right =>
       Gradient.drawLeftToRight(
-        ~leftColor=shadowStartColor,
+        ~leftColor=color,
         ~rightColor=shadowStopColor,
         ~x,
         ~y,
@@ -435,7 +437,7 @@ module Shadow = {
     | Left =>
       Gradient.drawLeftToRight(
         ~leftColor=shadowStopColor,
-        ~rightColor=shadowStartColor,
+        ~rightColor=color,
         ~x,
         ~y,
         ~width,
@@ -444,7 +446,7 @@ module Shadow = {
       )
     | Down =>
       Gradient.drawTopToBottom(
-        ~topColor=shadowStartColor,
+        ~topColor=color,
         ~bottomColor=shadowStopColor,
         ~x,
         ~y,
@@ -455,7 +457,7 @@ module Shadow = {
     | Up =>
       Gradient.drawTopToBottom(
         ~topColor=shadowStopColor,
-        ~bottomColor=shadowStartColor,
+        ~bottomColor=color,
         ~x,
         ~y,
         ~width,

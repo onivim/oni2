@@ -13,6 +13,7 @@ type t = {
   logFilter: option(string),
   logColorsEnabled: option(bool),
   needsConsole: bool,
+  vimExCommands: list(string),
 };
 
 let default: t;

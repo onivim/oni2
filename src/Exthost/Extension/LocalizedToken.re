@@ -31,6 +31,8 @@ let localize = (dictionary: LocalizationDictionary.t, {raw, token, _}: t) => {
 
 let decode = Json.Decode.(string |> map(parse));
 
+let encode = ({raw, _}) => Json.Encode.(raw |> string);
+
 let toString = ({raw, localized, _}: t) => {
   Option.value(~default=raw, localized);
 };

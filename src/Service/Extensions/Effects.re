@@ -36,6 +36,23 @@ let install = (~extensionsFolder, ~toMsg, extensionId) =>
   })
   |> Isolinear.Effect.map(toMsg);
 
+let update = (~extensionsFolder, ~toMsg, extensionId) =>
+  Isolinear.Effect.createWithDispatch(
+    ~name="Service_Extensions.Effect.update", dispatch => {
+    let promise =
+      Management.update(
+        ~setup=Oni_Core.Setup.init(),
+        ~extensionsFolder?,
+        extensionId,
+      );
+
+    Lwt.on_success(promise, scanResult => dispatch(Ok(scanResult)));
+    Lwt.on_failure(promise, exn => {
+      dispatch(Error(Internal.exceptionToString(exn)))
+    });
+  })
+  |> Isolinear.Effect.map(toMsg);
+
 let details = (~extensionId, ~toMsg) =>
   Isolinear.Effect.createWithDispatch(
     ~name="Service_Extensions.Effect.details", dispatch => {

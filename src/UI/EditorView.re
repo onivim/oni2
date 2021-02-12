@@ -63,7 +63,8 @@ module Parts = {
         bufferHighlights={state.bufferHighlights}
         bufferSyntaxHighlights={state.syntaxHighlights}
         diagnostics={state.diagnostics}
-        scm={state.scm}
+        buffers={state.buffers}
+        snippets={state.snippets}
         tokenTheme={state.tokenTheme}
         languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
@@ -99,23 +100,11 @@ module Parts = {
       let buffer =
         Selectors.getBufferForEditor(state.buffers, editor)
         |> OptionEx.value_or_lazy(() => Buffer.empty(~font=state.editorFont));
-      let renderOverlays = (~gutterWidth) =>
-        [
-          <Feature_SignatureHelp.View
-            colorTheme=theme
-            tokenTheme={state.tokenTheme}
-            model={state.signatureHelp}
-            uiFont={state.uiFont}
-            editorFont={state.editorFont}
-            languageInfo={state.languageInfo}
-            grammars={state.grammarRepository}
-            editor
-            gutterWidth
-            buffer
-            dispatch={msg => dispatch(SignatureHelp(msg))}
-          />,
-        ]
-        |> React.listToElement;
+
+      let renderOverlays = (~gutterWidth as _) => React.empty;
+
+      let isDark =
+        state.colorTheme |> Feature_Theme.variant != ColorTheme.Light;
 
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
@@ -159,7 +148,7 @@ module Parts = {
       | Editor =>
         <Editor editor buffer state theme isActive dispatch renderOverlays />
 
-      | Welcome => <WelcomeView theme uiFont editorFont />
+      | Welcome => <WelcomeView isDark theme uiFont editorFont />
 
       | Version => <VersionView theme uiFont editorFont />
 
@@ -182,8 +171,7 @@ module Parts = {
 
       | DebugInput => <DebugInputView state />
 
-      | UpdateChangelog({since}) =>
-        <Feature_Changelog.View.Update since theme uiFont />
+      | UpdateChangelog => <Feature_Changelog.View.Update theme uiFont />
       };
     };
   };
@@ -226,6 +214,8 @@ let make =
              };
            };
          };
+
+    let preview = editor => Editor.getPreview(editor);
 
     let title = editor => {
       let (_, title, _) =

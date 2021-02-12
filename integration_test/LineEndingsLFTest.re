@@ -3,7 +3,7 @@ open Oni_Core.Utility;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="LineEndingsLFTest", (dispatch, wait, _runEffects) => {
+runTest(~name="LineEndingsLFTest", ({dispatch, wait, _}) => {
   wait(~name="Capture initial state", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
@@ -30,7 +30,9 @@ runTest(~name="LineEndingsLFTest", (dispatch, wait, _runEffects) => {
   });
 
   // Switch line endings
-  dispatch(Actions.VimExecuteCommand("set ff=dos"));
+  dispatch(
+    Actions.VimExecuteCommand({allowAnimation: true, command: "set ff=dos"}),
+  );
 
   wait(
     ~name="Verify buffer is switched to CRLF", ~timeout=10.0, (state: State.t) => {

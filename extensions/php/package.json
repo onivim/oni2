@@ -40,7 +40,7 @@
 		"snippets": [
 			{
 				"language": "php",
-				"path": "./snippets/php.snippets.json"
+				"path": "./snippets/php.code-snippets"
 			}
 		]
 	},

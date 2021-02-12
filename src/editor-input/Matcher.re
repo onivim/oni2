@@ -4,7 +4,7 @@ type t =
 
 type sequence = list(t);
 
-let parse = (~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, str) => {
+let parse = (~explicitShiftKeyNeeded, str) => {
   let parse = lexbuf =>
     switch (Matcher_parser.main(Matcher_lexer.token, lexbuf)) {
     | exception Matcher_lexer.Error => Error("Error parsing binding: " ++ str)
@@ -24,13 +24,8 @@ let parse = (~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, str) => {
     | Matcher_internal.AllKeysReleased => Ok(AllKeysReleased)
     | Matcher_internal.Sequence(keys) =>
       keys
-      |> List.map(
-           KeyPress.ofInternal(
-             ~addShiftKeyToCapital,
-             ~getKeycode,
-             ~getScancode,
-           ),
-         )
+      |> KeyPress.combineUnmatchedStrings
+      |> List.map(KeyPress.ofInternal(~addShiftKeyToCapital))
       |> List.flatten
       |> Base.Result.all
       |> Result.map(keys => Sequence(keys))
@@ -39,3 +34,12 @@ let parse = (~explicitShiftKeyNeeded, ~getKeycode, ~getScancode, str) => {
 
   str |> Lexing.from_string |> parse |> flatMap(finish);
 };
+
+let toString =
+  fun
+  | AllKeysReleased => "<AllKeysReleased>"
+  | Sequence(keyPresses) => {
+      let keyString =
+        keyPresses |> List.map(KeyPress.toString) |> String.concat(",");
+      Printf.sprintf("Sequence(%s)", keyString);
+    };

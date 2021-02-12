@@ -18,24 +18,24 @@ let configuration =
 
 let expectedShellCmd =
   switch (Revery.Environment.os) {
-  | Windows => "win-shell"
-  | Mac => "osx-shell"
-  | Linux => "linux-shell"
+  | Windows(_) => "win-shell"
+  | Mac(_) => "osx-shell"
+  | Linux(_) => "linux-shell"
   | _ => failwith("Unsupported os")
   };
 
 let expectedShellArgs =
   switch (Revery.Environment.os) {
-  | Windows => ["win-arg"]
-  | Mac => ["osx-arg"]
-  | Linux => ["linux-arg"]
+  | Windows(_) => ["win-arg"]
+  | Mac(_) => ["osx-arg"]
+  | Linux(_) => ["linux-arg"]
   | _ => failwith("Unsupported os")
   };
 
 runTest(
   ~configuration,
   ~name="TerminalConfigurationTest",
-  (dispatch, wait, _) => {
+  ({dispatch, wait, _}) => {
     // Wait until the extension is activated
     // Give some time for the exthost to start
     wait(

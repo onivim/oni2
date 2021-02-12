@@ -19,6 +19,7 @@ module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
 let start =
     (
+      ~showUpdateChangelog: bool,
       languageInfo: Exthost.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
@@ -90,6 +91,28 @@ let start =
       };
     });
 
+  let handleSplit = (split: Vim.Split.t) => {
+    let currentBufferId = Vim.Buffer.getId(Vim.Buffer.getCurrent());
+
+    let actionForFilePath = (filePath, direction) => {
+      switch (filePath) {
+      | Some(fp) => Actions.OpenFileByPath(fp, Some(direction), None)
+      // No file path specified, so let's use the current buffer
+      | None => Actions.OpenBufferById({bufferId: currentBufferId, direction})
+      };
+    };
+    Vim.Split.(
+      switch (split) {
+      | NewHorizontal => Actions.NewBuffer({direction: `Horizontal})
+      | NewVertical => Actions.NewBuffer({direction: `Vertical})
+      | NewTabPage => Actions.NewBuffer({direction: `NewTab})
+      | Vertical({filePath}) => actionForFilePath(filePath, `Vertical)
+      | Horizontal({filePath}) => actionForFilePath(filePath, `Horizontal)
+      | TabPage({filePath}) => actionForFilePath(filePath, `NewTab)
+      }
+    );
+  };
+
   let handleGoto = gotoType => {
     switch (gotoType) {
     | Vim.Goto.Hover =>
@@ -147,6 +170,11 @@ let start =
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
 
+      // TODO: Move internal to Feature_Vim
+      | Output({cmd, output}) => {
+          dispatch(Actions.Vim(Feature_Vim.Output({cmd, output})));
+        }
+
       | Clear({target, count}) =>
         Vim.Clear.(
           {
@@ -186,8 +214,7 @@ let start =
       | ColorSchemeChanged(maybeColorScheme) =>
         switch (maybeColorScheme) {
         | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker))
-        | Some(colorScheme) =>
-          dispatch(Actions.ThemeLoadByName(colorScheme))
+        | Some(colorScheme) => dispatch(Actions.ThemeLoadById(colorScheme))
         }
 
       | MacroRecordingStarted({register}) =>
@@ -198,7 +225,9 @@ let start =
         )
 
       | MacroRecordingStopped(_) =>
-        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped)),
+        dispatch(Actions.Vim(Feature_Vim.MacroRecordingStopped))
+
+      | WindowSplit(split) => handleSplit(split) |> dispatch,
     );
 
   let _: unit => unit =
@@ -364,33 +393,6 @@ let start =
     });
 
   let _: unit => unit =
-    Vim.Window.onSplit((splitType, buf) => {
-      /* If buf wasn't specified, use the filepath from the current buffer */
-      let buf =
-        switch (buf) {
-        | "" =>
-          switch (Vim.Buffer.getFilename(Vim.Buffer.getCurrent())) {
-          | None => ""
-          | Some(v) => v
-          }
-        | v => v
-        };
-
-      Log.trace("Vim.Window.onSplit: " ++ buf);
-
-      let command =
-        switch (splitType) {
-        | Vim.Types.Vertical =>
-          Actions.OpenFileByPath(buf, Some(`Vertical), None)
-        | Vim.Types.Horizontal =>
-          Actions.OpenFileByPath(buf, Some(`Horizontal), None)
-        | Vim.Types.TabPage =>
-          Actions.OpenFileByPath(buf, Some(`NewTab), None)
-        };
-      dispatch(command);
-    });
-
-  let _: unit => unit =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
       Log.debugf(m => m("Buffer update: %n", update.id));
@@ -484,55 +486,53 @@ let start =
   let lastCompletionMeet = ref(None);
   let isCompleting = ref(false);
 
-  let checkCommandLineCompletions = () => {
+  let checkCommandLineCompletions = (~text: string, ~position: int) => {
     Log.debug("checkCommandLineCompletions");
 
-    let position = Vim.CommandLine.getPosition();
-    Vim.CommandLine.getText()
-    |> Option.iter(commandStr =>
-         if (position == String.length(commandStr)) {
-           let context = Oni_Model.VimContext.current(getState());
-           let completions = Vim.CommandLine.getCompletions(~context, ());
+    if (position == String.length(text) && !StringEx.isEmpty(text)) {
+      let context = Oni_Model.VimContext.current(getState());
+      let completions = Vim.CommandLine.getCompletions(~context, ());
 
-           Log.debugf(m =>
-             m("  got %n completions.", Array.length(completions))
-           );
+      let completions =
+        if (StringEx.startsWith(~prefix="set no", text)) {
+          completions |> Array.map(name => "no" ++ name);
+        } else {
+          completions;
+        };
 
-           let items =
-             Array.map(
-               name =>
-                 Actions.{
-                   name,
-                   category: None,
-                   icon: None,
-                   command: () => Noop,
-                   highlight: [],
-                   handle: None,
-                 },
-               completions,
-             );
+      Log.debugf(m => m("  got %n completions.", Array.length(completions)));
 
-           dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
-         }
-       );
+      let items =
+        Array.map(
+          name => {
+            Actions.{
+              name,
+              category: None,
+              icon: None,
+              command: () => Noop,
+              highlight: [],
+              handle: None,
+            }
+          },
+          completions,
+        );
+
+      dispatch(Actions.QuickmenuUpdateFilterProgress(items, Complete));
+    };
   };
 
   let _: unit => unit =
-    Vim.CommandLine.onUpdate(({text, position: cursorPosition, _}) => {
+    Vim.CommandLine.onUpdate(({text, position: cursorPosition, cmdType}) => {
       dispatch(Actions.QuickmenuCommandlineUpdated(text, cursorPosition));
 
-      let cmdlineType = Vim.CommandLine.getType();
+      let cmdlineType = cmdType;
       switch (cmdlineType) {
       | Ex =>
-        let text =
-          switch (Vim.CommandLine.getText()) {
-          | Some(v) => v
-          | None => ""
-          };
         let meet = Feature_Vim.CommandLine.getCompletionMeet(text);
         lastCompletionMeet := meet;
 
-        isCompleting^ ? () : checkCommandLineCompletions();
+        isCompleting^
+          ? () : checkCommandLineCompletions(~position=cursorPosition, ~text);
 
       | SearchForward
       | SearchReverse =>
@@ -561,11 +561,22 @@ let start =
 
   let initEffect =
     Isolinear.Effect.create(~name="vim.init", () => {
-      libvimHasInitialized := true
+      if (showUpdateChangelog
+          && Core.BuildInfo.commitId != Persistence.Global.version()) {
+        dispatch(
+          Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
+        );
+      };
+      libvimHasInitialized := true;
     });
 
-  let updateActiveEditorMode = (mode, effects) => {
-    dispatch(Actions.Vim(Feature_Vim.ModeChanged({mode, effects})));
+  let updateActiveEditorMode = (~allowAnimation=true, subMode, mode, effects) => {
+    dispatch(
+      // TODO
+      Actions.Vim(
+        Feature_Vim.ModeChanged({allowAnimation, subMode, mode, effects}),
+      ),
+    );
   };
 
   let isVimKey = key => {
@@ -581,16 +592,26 @@ let start =
     && !String.equal(key, "<S-C->");
   };
 
-  let commandEffect = cmd => {
+  let commandEffect = (~allowAnimation, cmd) => {
     Isolinear.Effect.create(~name="vim.command", () => {
       let state = getState();
       let prevContext = Oni_Model.VimContext.current(state);
       let (newContext, effects) = Vim.command(~context=prevContext, cmd);
 
       if (newContext.bufferId != prevContext.bufferId) {
-        dispatch(Actions.OpenBufferById({bufferId: newContext.bufferId}));
+        dispatch(
+          Actions.OpenBufferById({
+            bufferId: newContext.bufferId,
+            direction: `Current,
+          }),
+        );
       } else {
-        updateActiveEditorMode(newContext.mode, effects);
+        updateActiveEditorMode(
+          ~allowAnimation,
+          newContext.subMode,
+          newContext.mode,
+          effects,
+        );
       };
     });
   };
@@ -607,16 +628,16 @@ let start =
         let previousBufferId = context.bufferId;
 
         currentTriggerKey := Some(key);
-        let ({mode, bufferId, _}: Vim.Context.t, effects) =
+        let ({mode, bufferId, subMode, _}: Vim.Context.t, effects) =
           isText ? Vim.input(~context, key) : Vim.key(~context, key);
         currentTriggerKey := None;
 
         // If we switched buffer, open it in current editor
         if (previousBufferId != bufferId) {
-          dispatch(Actions.OpenBufferById({bufferId: bufferId}));
+          dispatch(Actions.OpenBufferById({bufferId, direction: `Current}));
         };
 
-        updateActiveEditorMode(mode, effects);
+        updateActiveEditorMode(subMode, mode, effects);
         Log.debug("handled key: " ++ key);
       }
     );
@@ -652,7 +673,11 @@ let start =
           completion |> Path.trimTrailingSeparator |> StringEx.escapeSpaces;
         let (latestContext: Vim.Context.t, effects) =
           Core.VimEx.inputString(completion);
-        updateActiveEditorMode(latestContext.mode, effects);
+        updateActiveEditorMode(
+          latestContext.subMode,
+          latestContext.mode,
+          effects,
+        );
         isCompleting := false;
       }
     );
@@ -688,8 +713,8 @@ let start =
     Isolinear.Effect.create(~name="vim.undo", () => {
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
-      let ({mode, _}: Vim.Context.t, effects) = Vim.key("u");
-      updateActiveEditorMode(mode, effects);
+      let ({subMode, mode, _}: Vim.Context.t, effects) = Vim.key("u");
+      updateActiveEditorMode(subMode, mode, effects);
       ();
     });
 
@@ -697,8 +722,8 @@ let start =
     Isolinear.Effect.create(~name="vim.redo", () => {
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
       let _: (Vim.Context.t, list(Vim.Effect.t)) = Vim.key("<esc>");
-      let ({mode, _}: Vim.Context.t, effects) = Vim.key("<c-r>");
-      updateActiveEditorMode(mode, effects);
+      let ({subMode, mode, _}: Vim.Context.t, effects) = Vim.key("<c-r>");
+      updateActiveEditorMode(subMode, mode, effects);
       ();
     });
 
@@ -714,8 +739,8 @@ let start =
 
   let escapeEffect =
     Isolinear.Effect.create(~name="vim.esc", () => {
-      let ({mode, _}: Vim.Context.t, effects) = Vim.key("<esc>");
-      updateActiveEditorMode(mode, effects);
+      let ({subMode, mode, _}: Vim.Context.t, effects) = Vim.key("<esc>");
+      updateActiveEditorMode(subMode, mode, effects);
       ();
     });
 
@@ -758,7 +783,12 @@ let start =
 
       // Update the editor, which is the source of truth for cursor position
       let scope = EditorScope.Editor(editorId);
-      dispatch(Actions.Editor({scope, msg: ModeChanged({mode, effects})}));
+      dispatch(
+        Actions.Editor({
+          scope,
+          msg: ModeChanged({allowAnimation: true, mode, effects}),
+        }),
+      );
     });
   };
 
@@ -769,16 +799,23 @@ let start =
         synchronizeViml(configuration),
       )
 
-    | Command("undo") => (state, undoEffect)
-    | Command("redo") => (state, redoEffect)
-    | Command("workbench.action.files.save") => (state, saveEffect)
-    | Command("indent") => (state, indentEffect)
-    | Command("outdent") => (state, outdentEffect)
-    | Command("editor.action.indentLines") => (state, indentEffect)
-    | Command("editor.action.outdentLines") => (state, outdentEffect)
-    | Command("vim.esc") => (state, escapeEffect)
-    | Command("vim.tutor") => (state, openTutorEffect)
-    | VimExecuteCommand(cmd) => (state, commandEffect(cmd))
+    | CommandInvoked({command, _}) =>
+      switch (command) {
+      | "undo" => (state, undoEffect)
+      | "redo" => (state, redoEffect)
+      | "workbench.action.files.save" => (state, saveEffect)
+      | "indent" => (state, indentEffect)
+      | "outdent" => (state, outdentEffect)
+      | "editor.action.indentLines" => (state, indentEffect)
+      | "editor.action.outdentLines" => (state, outdentEffect)
+      | "vim.esc" => (state, escapeEffect)
+      | "vim.tutor" => (state, openTutorEffect)
+      | _ => (state, Isolinear.Effect.none)
+      }
+    | VimExecuteCommand({allowAnimation, command}) => (
+        state,
+        commandEffect(~allowAnimation, command),
+      )
 
     | ListFocusUp
     | ListFocusDown
@@ -795,7 +832,6 @@ let start =
       (state, eff);
 
     | Init => (state, initEffect)
-
     | Terminal(Command(NormalMode)) =>
       let maybeBufferId =
         state

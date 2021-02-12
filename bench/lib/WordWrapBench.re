@@ -14,7 +14,8 @@ bench(
   ~f=
     longBufferLine => {
       let wrap = WordWrap.fixed(~pixels=100.);
-      let _: array(WordWrap.lineWrap) = wrap(longBufferLine);
+      let (_: array(WordWrap.lineWrap), _size: float) =
+        wrap(longBufferLine);
       ();
     },
   (),

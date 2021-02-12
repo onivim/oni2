@@ -19,7 +19,10 @@ describe("Editor", ({describe, _}) => {
 
     let editorBuffer = buffer |> EditorBuffer.ofBuffer;
 
-    (Editor.create(~config, ~buffer=editorBuffer, ()), buffer);
+    (
+      Editor.create(~config, ~buffer=editorBuffer, ~preview=false, ()),
+      buffer,
+    );
   };
 
   let (_editor, measureBuffer) = create([||]);
@@ -33,20 +36,35 @@ describe("Editor", ({describe, _}) => {
     |> Editor.setSize(
          ~pixelWidth=
            int_of_float(
-             3. *. aWidth +. 1.0 +. float(Constants.scrollBarThickness),
+             3.
+             *. aWidth
+             +. 1.0
+             +. float(Editor.verticalScrollbarThickness(editor)),
            ),
          ~pixelHeight=500,
        )
     |> Editor.setWrapMode(~wrapMode=WrapMode.Viewport);
   };
 
-  let inlineElement = lineIdx =>
-    Editor.makeInlineElement(
-      ~key="test-inline-element",
-      ~uniqueId=string_of_int(lineIdx),
-      ~lineNumber=LineNumber.ofZeroBased(lineIdx),
-      ~view=(~theme as _, ~uiFont as _, ()) =>
-      Revery.UI.React.listToElement([])
+  let codeLens = (~uniqueId, lineIdx) =>
+    Exthost.(
+      CodeLens.{
+        cacheId: None,
+        range:
+          OneBasedRange.{
+            startLineNumber: lineIdx + 1,
+            endLineNumber: lineIdx + 1,
+            startColumn: 0,
+            endColumn: 0,
+          },
+        command:
+          Some(
+            Command.{
+              id: Some(uniqueId),
+              label: Some(Label.ofString(uniqueId)),
+            },
+          ),
+      }
     );
 
   let colorizer = (~startByte as _, _) => {
@@ -63,20 +81,24 @@ describe("Editor", ({describe, _}) => {
       line: LineNumber.ofZeroBased(lnum),
       byte: ByteIndex.ofInt(byteNum),
     };
-  describe("inline elements", ({test, _}) => {
-    test("inline element at top", ({expect, _}) => {
+  describe("codelens", ({test, _}) => {
+    test("codelens at top", ({expect, _}) => {
       let (editor, _buffer) = create([|"aaa"|]);
-      let inlineElement0 = inlineElement(0);
+      let codeLens0 = codeLens(~uniqueId="0", 0);
       let editor =
         editor
         |> Editor.setWrapMode(~wrapMode=WrapMode.NoWrap)
         |> Editor.setSize(~pixelWidth=500, ~pixelHeight=500)
-        |> Editor.setInlineElements(
-             ~key="test-inline-element",
-             ~elements=[inlineElement0],
+        |> Editor.setCodeLens(
+             ~startLine=EditorCoreTypes.LineNumber.zero,
+             ~stopLine=EditorCoreTypes.LineNumber.(zero + 1),
+             ~handle=0,
+             ~lenses=[codeLens0],
            )
         |> Editor.setInlineElementSize(
-             ~key="test-inline-element",
+             ~allowAnimation=false,
+             ~line=LineNumber.zero,
+             ~key="codelens:0",
              ~uniqueId="0",
              ~height=25,
            );
@@ -86,17 +108,55 @@ describe("Editor", ({describe, _}) => {
       expect.float(pixelY).toBeCloseTo(25.);
     });
 
-    test("inline element after wrapping", ({expect, _}) => {
-      let editor = createThreeWideWithWrapping([|"aaaaaa", "aaaaaa"|]);
-      let inlineElement1 = inlineElement(1);
+    test("multiple inline elements", ({expect, _}) => {
+      let (editor, _buffer) = create([|"aaa"|]);
+      let codeLens00 = codeLens(~uniqueId="00", 0);
+      let codeLens01 = codeLens(~uniqueId="01", 0);
       let editor =
         editor
-        |> Editor.setInlineElements(
-             ~key="test-inline-element",
-             ~elements=[inlineElement1],
+        |> Editor.setWrapMode(~wrapMode=WrapMode.NoWrap)
+        |> Editor.setSize(~pixelWidth=500, ~pixelHeight=500)
+        |> Editor.setCodeLens(
+             ~startLine=EditorCoreTypes.LineNumber.zero,
+             ~stopLine=EditorCoreTypes.LineNumber.(zero + 1),
+             ~handle=0,
+             ~lenses=[codeLens00, codeLens01],
            )
         |> Editor.setInlineElementSize(
-             ~key="test-inline-element",
+             ~allowAnimation=false,
+             ~line=LineNumber.zero,
+             ~key="codelens:0",
+             ~uniqueId="00",
+             ~height=25,
+           )
+        |> Editor.setInlineElementSize(
+             ~allowAnimation=false,
+             ~line=LineNumber.zero,
+             ~key="codelens:0",
+             ~uniqueId="01",
+             ~height=35,
+           );
+
+      let pixelY = Editor.viewLineToPixelY(0, editor);
+
+      expect.float(pixelY).toBeCloseTo(60.);
+    });
+
+    test("codeLens after wrapping", ({expect, _}) => {
+      let editor = createThreeWideWithWrapping([|"aaaaaa", "aaaaaa"|]);
+      let codeLens1 = codeLens(~uniqueId="1", 1);
+      let editor =
+        editor
+        |> Editor.setCodeLens(
+             ~startLine=EditorCoreTypes.LineNumber.zero,
+             ~stopLine=EditorCoreTypes.LineNumber.(zero + 2),
+             ~handle=0,
+             ~lenses=[codeLens1],
+           )
+        |> Editor.setInlineElementSize(
+             ~allowAnimation=false,
+             ~line=LineNumber.(zero + 1),
+             ~key="codelens:0",
              ~uniqueId="1",
              ~height=25,
            );
@@ -258,5 +318,65 @@ describe("Editor", ({describe, _}) => {
         },
       );
     })
+  });
+
+  describe("getCharacterUnderMouse", ({test, _}) => {
+    test("#2800 - should not crash on empty buffer", ({expect, _}) => {
+      let (editor, _buffer) = create([||]);
+
+      // Mouse needs to be moved to reproduce #2800
+      let editor' =
+        editor
+        |> Editor.mouseMove(
+             ~time=Revery.Time.zero,
+             ~pixelX=500.,
+             ~pixelY=500.,
+           );
+
+      expect.equal(Editor.getCharacterUnderMouse(editor'), None);
+    })
+  });
+
+  describe("singleLineSelectedText", ({test, _}) => {
+    test("no selection in normal mode", ({expect, _}) => {
+      let (editor, _buffer) = create([|"abc"|]);
+
+      let maybeSelectedText =
+        editor
+        |> Editor.setMode(Vim.Mode.Normal({cursor: BytePosition.zero}))
+        |> Editor.singleLineSelectedText;
+
+      expect.option(maybeSelectedText).toBeNone();
+    });
+    test("select single character", ({expect, _}) => {
+      let (editor, _buffer) = create([|"abc"|]);
+
+      let maybeSelectedText =
+        editor
+        |> Editor.setSelections([ByteRange.zero])
+        |> Editor.singleLineSelectedText;
+
+      expect.equal(maybeSelectedText, Some("a"));
+    });
+    test("select past entire line", ({expect, _}) => {
+      let (editor, _buffer) = create([|"abc"|]);
+
+      let maybeSelectedText =
+        editor
+        |> Editor.setSelections([
+             ByteRange.{
+               start:
+                 BytePosition.{line: LineNumber.zero, byte: ByteIndex.zero},
+               stop:
+                 BytePosition.{
+                   line: LineNumber.zero,
+                   byte: ByteIndex.(zero + 100),
+                 },
+             },
+           ])
+        |> Editor.singleLineSelectedText;
+
+      expect.equal(maybeSelectedText, Some("abc"));
+    });
   });
 });

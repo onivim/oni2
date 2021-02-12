@@ -34,6 +34,16 @@ let activeContrastBorder =
     {light: unspecified, dark: unspecified, hc: ref(focusBorder)},
   );
 
+let shadow =
+  define(
+    "shadow",
+    {
+      light: transparent(0.16, hex("#000F")),
+      dark: transparent(0.4, hex("#000F")),
+      hc: unspecified,
+    },
+  );
+
 module ActivityBar = {
   let background =
     define(
@@ -103,7 +113,36 @@ module Button = {
       {dark: ref(background), light: ref(background), hc: unspecified},
     );
 
-  let defaults = [background, foreground, hoverBackground];
+  let secondaryForeground =
+    define(
+      "button.secondaryForeground",
+      {dark: hex("#FFF"), light: hex("#FFF"), hc: hex("#FFF")},
+    );
+
+  let secondaryBackground =
+    define(
+      "button.secondaryBackground",
+      {dark: hex("#0E639C"), light: hex("#007ACC"), hc: unspecified},
+    );
+
+  let secondaryHoverBackground =
+    define(
+      "button.secondaryHoverBackground",
+      {
+        dark: ref(secondaryBackground),
+        light: ref(secondaryBackground),
+        hc: unspecified,
+      },
+    );
+
+  let defaults = [
+    background,
+    foreground,
+    hoverBackground,
+    secondaryForeground,
+    secondaryBackground,
+    secondaryHoverBackground,
+  ];
 };
 
 module Dropdown = {
@@ -156,6 +195,11 @@ module Editor = {
       {light: hex("#ADD6FF"), dark: hex("#264F78"), hc: hex("#f3f518")},
     );
 
+  let wordHighlightBackground =
+    define(
+      "editor.wordHighlightBackground",
+      {light: hex("#57575740"), dark: hex("#575757B8"), hc: unspecified},
+    );
   let defaults = [
     background,
     foreground,
@@ -164,6 +208,7 @@ module Editor = {
     findMatchHighlightsBackground,
     lineHighlightBackground,
     selectionBackground,
+    wordHighlightBackground,
   ];
 };
 
@@ -647,6 +692,7 @@ module Oni = {
     | Visual(_) => visualModeBackground
     | CommandLine => commandlineModeBackground
     | Operator(_) => operatorModeBackground
+    | Snippet
     | TerminalInsert
     | Insert(_) => insertModeBackground
     | Replace(_) => replaceModeBackground
@@ -661,6 +707,7 @@ module Oni = {
     | Visual(_) => visualModeForeground
     | CommandLine => commandlineModeForeground
     | Operator(_) => operatorModeForeground
+    | Snippet
     | TerminalInsert
     | Insert(_) => insertModeForeground
     | Replace(_) => replaceModeForeground
@@ -959,7 +1006,18 @@ module StatusBar = {
     );
   let foreground = define("statusBar.foreground", all(hex("#FFF")));
 
-  let defaults = [background, foreground];
+  let errorItemBackground =
+    define("statusBarItem.errorBackground", all(hex("#FF0000FF")));
+
+  let errorItemForeground =
+    define("statusBarItem.errorForeground", all(ref(foreground)));
+
+  let defaults = [
+    background,
+    foreground,
+    errorItemBackground,
+    errorItemForeground,
+  ];
 };
 
 module SymbolIcon = {
@@ -1264,6 +1322,103 @@ module Tab = {
   ];
 };
 
+module Terminal = {
+  open Revery;
+  let background =
+    define("terminal.background", color(Color.rgb_int(0, 0, 0)) |> all);
+  let foreground =
+    define(
+      "terminal.foreground",
+      color(Color.rgb_int(233, 235, 235)) |> all,
+    );
+  let ansiBlack =
+    define("terminal.ansiBlack", color(Color.rgb_int(0, 0, 0)) |> all);
+  let ansiRed =
+    define("terminal.ansiRed", color(Color.rgb_int(194, 54, 33)) |> all);
+  let ansiGreen =
+    define("terminal.ansiGreen", color(Color.rgb_int(37, 188, 36)) |> all);
+  let ansiYellow =
+    define(
+      "terminal.ansiYellow",
+      color(Color.rgb_int(173, 173, 39)) |> all,
+    );
+  let ansiBlue =
+    define("terminal.ansiBlue", color(Color.rgb_int(73, 46, 225)) |> all);
+  let ansiMagenta =
+    define(
+      "terminal.ansiMagenta",
+      color(Color.rgb_int(211, 56, 211)) |> all,
+    );
+  let ansiCyan =
+    define("terminal.ansiCyan", color(Color.rgb_int(51, 197, 200)) |> all);
+  let ansiWhite =
+    define(
+      "terminal.ansiWhite",
+      color(Color.rgb_int(203, 204, 205)) |> all,
+    );
+  let ansiBrightBlack =
+    define(
+      "terminal.ansiBrightBlack",
+      color(Color.rgb_int(129, 131, 131)) |> all,
+    );
+  let ansiBrightRed =
+    define(
+      "terminal.ansiBrightRed",
+      color(Color.rgb_int(252, 57, 31)) |> all,
+    );
+  let ansiBrightGreen =
+    define(
+      "terminal.ansiBrightGreen",
+      color(Color.rgb_int(49, 231, 34)) |> all,
+    );
+  let ansiBrightYellow =
+    define(
+      "terminal.ansiBrightYellow",
+      color(Color.rgb_int(234, 236, 35)) |> all,
+    );
+  let ansiBrightBlue =
+    define(
+      "terminal.ansiBrightBlue",
+      color(Color.rgb_int(88, 51, 255)) |> all,
+    );
+  let ansiBrightMagenta =
+    define(
+      "terminal.ansiBrightMagenta",
+      color(Color.rgb_int(20, 240, 240)) |> all,
+    );
+  let ansiBrightCyan =
+    define(
+      "terminal.ansiBrightCyan",
+      color(Color.rgb_int(20, 240, 240)) |> all,
+    );
+  let ansiBrightWhite =
+    define(
+      "terminal.ansiBrightWhite",
+      color(Color.rgb_int(233, 235, 235)) |> all,
+    );
+
+  let defaults = [
+    background,
+    foreground,
+    ansiBlack,
+    ansiRed,
+    ansiGreen,
+    ansiYellow,
+    ansiBlue,
+    ansiMagenta,
+    ansiCyan,
+    ansiWhite,
+    ansiBrightBlack,
+    ansiBrightRed,
+    ansiBrightGreen,
+    ansiBrightYellow,
+    ansiBrightBlue,
+    ansiBrightMagenta,
+    ansiBrightCyan,
+    ansiBrightWhite,
+  ];
+};
+
 module TextLink = {
   let foreground =
     define(
@@ -1342,4 +1497,4 @@ module TitleBar = {
   ];
 };
 
-let defaults = [foreground, contrastBorder];
+let defaults = [foreground, contrastBorder, shadow];

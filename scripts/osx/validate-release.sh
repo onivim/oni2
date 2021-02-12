@@ -1,3 +1,6 @@
+set -e
+set -o pipefail
+
 echo "** Validating raw app **"
 mkdir -p _unpacked
 

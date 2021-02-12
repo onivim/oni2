@@ -18,7 +18,7 @@ module Internal = {
   let getUserDataDirectoryExn = () =>
     Revery.(
       switch (Environment.os) {
-      | Environment.Windows =>
+      | Environment.Windows(_) =>
         Sys.getenv_opt("LOCALAPPDATA")
         |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
         |> Option.get
@@ -116,7 +116,7 @@ let mkdirp = path => {
 let getOniDirectory = dataDirectory =>
   Revery.(
     switch (Environment.os) {
-    | Environment.Windows => Fp.append(dataDirectory, "Oni2") |> return
+    | Environment.Windows(_) => Fp.append(dataDirectory, "Oni2") |> return
     | _ => Fp.At.(dataDirectory / ".config" / "oni2") |> return
     }
   );
@@ -175,6 +175,18 @@ let getGlobalStorageFolder = () =>
   getUserDataDirectory()
   |> ResultEx.flatMap(getOniDirectory)
   |> Result.map(dir => Fp.append(dir, "global"))
+  |> ResultEx.flatMap(mkdirp);
+
+let getWorkspaceStorageFolder = () =>
+  getUserDataDirectory()
+  |> ResultEx.flatMap(getOniDirectory)
+  |> Result.map(dir => Fp.append(dir, "workspace"))
+  |> ResultEx.flatMap(mkdirp);
+
+let getSnippetsFolder = () =>
+  getUserDataDirectory()
+  |> ResultEx.flatMap(getOniDirectory)
+  |> Result.map(dir => Fp.append(dir, "snippets"))
   |> ResultEx.flatMap(mkdirp);
 
 let rec getOrCreateConfigFile = (~overridePath=?, filename) => {

@@ -14,6 +14,8 @@ function activate(context) {
     // Create a simple status bar
     let item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1000)
     item.color = new vscode.ThemeColor("foreground")
+    // TODO: Bring back
+    // item.backgroundColor = new vscode.ThemeColor("statusBarItem.errorBackground")
     item.command = "developer.oni.statusBarClicked"
     item.text = "$(wrench) Developer"
     item.tooltip = "Hello from oni-dev-extension!"
@@ -114,6 +116,21 @@ function activate(context) {
         }),
     )
 
+    // INCOMPLETE completion provider
+    cleanup(
+        vscode.languages.registerCompletionItemProvider("oni-dev", {
+            provideCompletionItems: (document, position, token, context) => {
+                        const items = [
+                            vscode.CompletionItem("Incomplete" + Date.now().toString()),
+                        ];
+                        return {
+                            isIncomplete: true,
+                            items,
+                        };
+                },
+            }),
+    )
+
     const output = vscode.window.createOutputChannel("oni-dev")
     output.appendLine("Hello output channel!")
 
@@ -205,6 +222,7 @@ function activate(context) {
     cleanup(
         vscode.commands.registerCommand("developer.oni.showWorkspaceRootPath", () => {
             vscode.window.showInformationMessage("Workspace rootPath: " + vscode.workspace.rootPath)
+            vscode.window.showInformationMessage("Workspace storagePath: " + context.storagePath)
         }),
     )
 
@@ -336,6 +354,8 @@ function activate(context) {
         textContentProvider,
     )
     disposable.dispose()
+
+    console.log("Storage path available: " + context.storagePath);
 
     // Configuration
 

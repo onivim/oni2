@@ -45,63 +45,60 @@ let editors = (~isFocused) => {
   Schema.(
     fromList(
       isFocused
-        ? State.[
-            bool("editorTextFocus", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalInsert
-              | TerminalNormal
-              | TerminalVisual(_) => false
-              | _ => true
-              }
-            ),
-            bool("terminalFocus", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalInsert
-              | TerminalNormal
-              | TerminalVisual(_) => true
-              | _ => false
-              }
-            ),
-            bool("commandLineFocus", state =>
-              ModeManager.current(state) == CommandLine
-            ),
-            bool("insertMode", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalInsert
-              | Insert(_) => true
-              | _ => false
-              }
-            ),
-            bool("normalMode", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalNormal
-              | Normal(_) => true
-              | _ => false
-              }
-            ),
-            bool("visualMode", state =>
-              switch (ModeManager.current(state)) {
-              | TerminalVisual(_)
-              | Visual(_) => true
-              | _ => false
-              }
-            ),
-            bool("selectMode", state =>
-              switch (ModeManager.current(state)) {
-              | Select(_) => true
-              | _ => false
-              }
-            ),
-            bool("operatorPending", state =>
-              switch (ModeManager.current(state)) {
-              | Operator(_) => true
-              | _ => false
-              }
-            ),
-            bool("parameterHintsVisible", state =>
-              Feature_SignatureHelp.isShown(state.signatureHelp)
-            ),
-          ]
+        ? [
+          bool("editorTextFocus", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalInsert
+            | TerminalNormal
+            | TerminalVisual(_) => false
+            | _ => true
+            }
+          ),
+          bool("terminalFocus", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalInsert
+            | TerminalNormal
+            | TerminalVisual(_) => true
+            | _ => false
+            }
+          ),
+          bool("commandLineFocus", state =>
+            ModeManager.current(state) == CommandLine
+          ),
+          bool("insertMode", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalInsert
+            | Insert(_) => true
+            | _ => false
+            }
+          ),
+          bool("normalMode", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalNormal
+            | Normal(_) => true
+            | _ => false
+            }
+          ),
+          bool("visualMode", state =>
+            switch (ModeManager.current(state)) {
+            | TerminalVisual(_)
+            | Visual(_) => true
+            | _ => false
+            }
+          ),
+          bool("selectMode", state =>
+            switch (ModeManager.current(state)) {
+            | Select(_) => true
+            | _ => false
+            }
+          ),
+          bool("operatorPending", state =>
+            switch (ModeManager.current(state)) {
+            | Operator(_) => true
+            | _ => false
+            }
+          ),
+        ]
         : [],
     )
   );
@@ -111,15 +108,9 @@ let other = {
   Schema.(
     fromList(
       State.[
-        bool("isLinux", _state =>
-          Revery.Environment.os == Revery.Environment.Linux
-        ),
-        bool("isMac", _state =>
-          Revery.Environment.os == Revery.Environment.Mac
-        ),
-        bool("isWin", _state =>
-          Revery.Environment.os == Revery.Environment.Windows
-        ),
+        bool("isLinux", _state => Revery.Environment.isLinux),
+        bool("isMac", _state => Revery.Environment.isMac),
+        bool("isWin", _state => Revery.Environment.isWindows),
         bool("sneakMode", state => Feature_Sneak.isActive(state.sneak)),
         bool("zenMode", state => state.zenMode),
       ],
@@ -206,6 +197,7 @@ let all = (state: State.t) => {
     |> Schema.map((state: State.t) => state.quickmenu)
     |> fromSchema(state),
     editors(~isFocused=isEditorFocused) |> fromSchema(state),
+    Feature_Snippets.Contributions.contextKeys(state.snippets),
     other |> fromSchema(state),
   ]);
 };

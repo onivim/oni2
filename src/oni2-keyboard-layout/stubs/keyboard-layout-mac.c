@@ -167,9 +167,16 @@ CAMLprim value oni2_KeyboardLayoutPopulateCurrentKeymap(value keymap, value Hash
 
   TISInputSourceRef source = TISCopyCurrentKeyboardInputSource();
   CFDataRef layoutData = (CFDataRef)TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData);
-
   if (layoutData == NULL) {
-    CAMLreturn(Val_unit);
+    // TISGetInputSourceProperty returns null with  Japanese keyboard layout.
+    // Using TISCopyCurrentKeyboardLayoutInputSource to fix NULL return.
+    // From: https://github.com/microsoft/node-native-keymap/blob/308e260b26d7f6ab8b20380c3d6dd26d86a570e5/src/keyboard_mac.mm#L88
+    source = TISCopyCurrentKeyboardLayoutInputSource();
+    layoutData = (CFDataRef)((TISGetInputSourceProperty(source, kTISPropertyUnicodeKeyLayoutData)));
+
+    if (layoutData == NULL) {
+      CAMLreturn(Val_unit);
+    }
   }
 
   const UCKeyboardLayout *keyboardLayout = (UCKeyboardLayout *)CFDataGetBytePtr(layoutData);

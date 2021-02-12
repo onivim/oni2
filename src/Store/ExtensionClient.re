@@ -27,7 +27,14 @@ let create =
         dispatch(Actions.Exthost(Feature_Exthost.Msg.initialized));
         Lwt.return(Reply.okEmpty);
       | DownloadService(msg) => Middleware.download(msg)
-      | FileSystem(msg) => Middleware.filesystem(msg)
+
+      | FileSystem(msg) =>
+        let (promise, resolver) = Lwt.task();
+
+        let fileSystemMsg = Feature_FileSystem.Msg.exthost(~resolver, msg);
+        dispatch(FileSystem(fileSystemMsg));
+        promise;
+
       | SCM(msg) =>
         Feature_SCM.handleExtensionMessage(
           ~dispatch=msg => dispatch(Actions.SCM(msg)),
@@ -42,6 +49,11 @@ let create =
         dispatch(Extensions(storageMsg));
 
         promise;
+
+      | Commands(ExecuteCommand({command, args, _})) =>
+        // TODO: Is this really the right action?
+        dispatch(Actions.CommandInvoked({command, arguments: `List(args)}));
+        Lwt.return(Reply.okEmpty);
 
       | Configuration(RemoveConfigurationOption({key, _})) =>
         dispatch(
@@ -102,20 +114,6 @@ let create =
         );
         Lwt.return(Reply.okEmpty);
 
-      | LanguageFeatures(
-          RegisterSignatureHelpProvider({handle, selector, metadata}),
-        ) =>
-        dispatch(
-          Actions.SignatureHelp(
-            Feature_SignatureHelp.ProviderRegistered({
-              handle,
-              selector,
-              metadata,
-            }),
-          ),
-        );
-        Lwt.return(Reply.okEmpty);
-
       | Languages(msg) =>
         let (promise, resolver) = Lwt.task();
 
@@ -173,6 +171,7 @@ let create =
             label,
             alignment,
             priority,
+            backgroundColor,
             color,
             command,
             tooltip,
@@ -180,13 +179,14 @@ let create =
           }),
         ) =>
         let command =
-          command |> Option.map(({id, _}: Exthost.Command.t) => id);
+          command |> OptionEx.flatMap(({id, _}: Exthost.Command.t) => id);
         dispatch(
           Actions.StatusBar(
             Feature_StatusBar.ItemAdded(
               Feature_StatusBar.Item.create(
                 ~command?,
                 ~color?,
+                ~backgroundColor?,
                 ~tooltip?,
                 ~id,
                 ~label,
@@ -249,12 +249,45 @@ let create =
     Filename.temp_file(~temp_dir=tempDir, "onivim2", "exthost.log")
     |> Uri.fromPath;
 
+  let extHostVersion = {
+    // The @onivim/vscode-exthost has an adjusted patch version number -
+    // @onivim/vscode-exthost at 1.51.1000 corresponds to 1.51.1 of the vscode extension host
+    let originalVersion = Oni_Core.BuildInfo.extensionHostVersion;
+
+    originalVersion
+    |> Semver.of_string
+    |> OptionEx.flatMap((ver: Semver.t) => {
+         Semver.from_parts(
+           ver.major,
+           ver.minor,
+           ver.patch / 1000,
+           ver.prerelease,
+           ver.build,
+         )
+       })
+    |> Option.map(Semver.to_string)
+    |> OptionEx.tapNone(() =>
+         Log.errorf(m => m("Unable to adjust version: %s", originalVersion))
+       )
+    |> Option.value(~default=originalVersion);
+  };
+
+  let staticWorkspace =
+    initialWorkspace
+    |> Option.map(({id, name, _}: Exthost.WorkspaceData.t) => {
+         Exthost.Extension.InitData.StaticWorkspaceData.{id, name}
+       })
+    |> Option.value(
+         ~default=Exthost.Extension.InitData.StaticWorkspaceData.global,
+       );
+
   let initData =
     InitData.create(
-      ~version="1.50.1", // TODO: How to keep in sync with bundled version?
+      ~version=extHostVersion,
       ~parentPid,
       ~logsLocation,
       ~logFile,
+      ~workspace=staticWorkspace,
       extensionInfo,
     );
 
@@ -300,7 +333,7 @@ let create =
        );
   let environment = [
     (
-      "AMD_ENTRYPOINT",
+      "VSCODE_AMD_ENTRYPOINT",
       "vs/workbench/services/extensions/node/extensionHostProcess",
     ),
     ("VSCODE_IPC_HOOK_EXTHOST", pipeStr),

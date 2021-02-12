@@ -126,6 +126,13 @@ let runTest =
 
   Vim.init();
   Oni2_KeyboardLayout.init();
+  Log.infof(m =>
+    m(
+      "Keyboard Language: %s Layout: %s",
+      Oni2_KeyboardLayout.getCurrentLanguage(),
+      Oni2_KeyboardLayout.getCurrentLayout(),
+    )
+  );
 
   let initialBuffer = {
     let Vim.BufferMetadata.{id, version, filePath, modified, _} =
@@ -154,6 +161,8 @@ let runTest =
         ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
         ~licenseKeyPersistence=None,
         ~titlebarHeight=0.,
+        ~setZoom,
+        ~getZoom,
       ),
     );
 
@@ -178,10 +187,10 @@ let runTest =
           <Oni_UI.Root state dispatch=uiDispatch^ />,
         );
       },
-      //      Revery.Utility.HeadlessWindow.takeScreenshot(
-      //        headlessWindow,
-      //        "screenshot.png",
-      //      );
+      // Revery.Utility.HeadlessWindow.takeScreenshot(
+      //   headlessWindow,
+      //   "screenshot.png",
+      // );
       Revery.Time.zero,
     );
 
@@ -209,13 +218,12 @@ let runTest =
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
+      ~showUpdateChangelog=false,
       ~getUserSettings,
       ~setup,
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
       ~setClipboardText=text => setClipboard(Some(text)),
-      ~getZoom,
-      ~setZoom,
       ~setVsync,
       ~maximize,
       ~minimize,
@@ -283,35 +291,69 @@ let runTest =
     };
   };
 
+  let staysTrue = (~name, ~timeout, waiter) => {
+    let logWaiter = msg => Log.info(" STAYS TRUE (" ++ name ++ "): " ++ msg);
+    let startTime = Unix.gettimeofday();
+    let maxWaitTime = timeout;
+    let iteration = ref(0);
+
+    logWaiter("Starting");
+    while (waiter(currentState^)
+           && Unix.gettimeofday()
+           -. maxWaitTime < startTime) {
+      logWaiter("Iteration: " ++ string_of_int(iteration^));
+      incr(iteration);
+
+      // Flush any queued calls from `Revery.App.runOnMainThread`
+      Revery.App.flushPendingCallbacks();
+      Revery.Tick.pump();
+
+      for (_ in 1 to 100) {
+        ignore(Luv.Loop.run(~mode=`NOWAIT, ()): bool);
+      };
+
+      // Flush any pending effects
+      runEffects();
+
+      Unix.sleepf(0.1);
+      Thread.yield();
+    };
+
+    let result = waiter(currentState^);
+
+    logWaiter("Finished - result: " ++ string_of_bool(result));
+
+    if (!result) {
+      logWaiter("FAILED: " ++ Sys.executable_name);
+      assert(false == true);
+    };
+  };
+
+  let key = (~modifiers=EditorInput.Modifiers.none, key) => {
+    let keyPress =
+      EditorInput.KeyPress.physicalKey(~key, ~modifiers)
+      |> EditorInput.KeyCandidate.ofKeyPress;
+    let time = Revery.Time.now();
+    dispatch(Model.Actions.KeyDown({key: keyPress, scancode: 1, time}));
+    dispatch(Model.Actions.KeyUp({scancode: 1, time}));
+    runEffects();
+  };
+
+  let input = (~modifiers=EditorInput.Modifiers.none, str) => {
+    str
+    |> Zed_utf8.explode
+    |> List.iter(uchar => {
+         key(~modifiers, EditorInput.Key.Character(uchar))
+       });
+  };
+
+  let ctx = {dispatch, wait: waitForState, runEffects, input, key, staysTrue};
+
   Log.info("--- Starting test: " ++ name);
-  test(dispatch, waitForState, runEffects);
+  test(ctx);
   Log.info("--- TEST COMPLETE: " ++ name);
 
   dispatch(Model.Actions.Quit(true));
-};
-
-let runTestWithInput =
-    (
-      ~configuration=?,
-      ~keybindings=?,
-      ~name,
-      ~onAfterDispatch=?,
-      f: testCallbackWithInput,
-    ) => {
-  runTest(
-    ~name,
-    ~configuration?,
-    ~keybindings?,
-    ~onAfterDispatch?,
-    (dispatch, wait, runEffects) => {
-      let input = key => {
-        dispatch(Model.Actions.KeyboardInput({isText: false, input: key}));
-        runEffects();
-      };
-
-      f(input, dispatch, wait, runEffects);
-    },
-  );
 };
 
 let runCommand = (~dispatch, command: Core.Command.t(_)) =>

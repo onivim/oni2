@@ -48,6 +48,7 @@ module View: {
         ~onClick: unit => unit=?,
         ~onRightClick: unit => unit=?,
         ~onAnyClick: Revery_UI.NodeEvents.mouseButtonEventParams => unit=?,
+        ~onDoubleClick: unit => unit=?,
         ~onSneak: unit => unit=?,
         ~onBlur: Revery_UI.NodeEvents.focusHandler=?,
         ~onFocus: Revery_UI.NodeEvents.focusHandler=?,

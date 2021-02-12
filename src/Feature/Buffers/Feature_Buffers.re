@@ -6,18 +6,70 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Model.Buffers"));
 
-type model = IntMap.t(Buffer.t);
+type model = {
+  buffers: IntMap.t(Buffer.t),
+  originalLines: IntMap.t(array(string)),
+  computedDiffs: IntMap.t(DiffMarkers.t),
+};
 
-let empty = IntMap.empty;
+let empty = {
+  buffers: IntMap.empty,
+  originalLines: IntMap.empty,
+  computedDiffs: IntMap.empty,
+};
 
-let map = IntMap.map;
+module Internal = {
+  let recomputeDiff = (~bufferId, model) => {
+    let computedDiffs' =
+      OptionEx.map2(
+        (buffer, originalLines) =>
+          if (Oni_Core.Buffer.getNumberOfLines(buffer)
+              > Constants.diffMarkersMaxLineCount
+              || Array.length(originalLines)
+              > Constants.diffMarkersMaxLineCount) {
+            IntMap.remove(bufferId, model.computedDiffs);
+          } else {
+            let newMarkers = DiffMarkers.generate(~originalLines, buffer);
 
-let get = (id, model) => IntMap.find_opt(id, model);
+            IntMap.add(bufferId, newMarkers, model.computedDiffs);
+          },
+        IntMap.find_opt(bufferId, model.buffers),
+        IntMap.find_opt(bufferId, model.originalLines),
+      )
+      |> Option.value(~default=model.computedDiffs);
 
-let anyModified = (buffers: model) => {
+    {...model, computedDiffs: computedDiffs'};
+  };
+};
+
+let setOriginalLines = (~bufferId, ~originalLines, model) => {
+  {
+    ...model,
+    originalLines: IntMap.add(bufferId, originalLines, model.originalLines),
+  }
+  |> Internal.recomputeDiff(~bufferId);
+};
+
+let getOriginalDiff = (~bufferId, model) => {
+  IntMap.find_opt(bufferId, model.computedDiffs);
+};
+
+let map = (f, {buffers, _} as model) => {
+  ...model,
+  buffers: IntMap.map(f, buffers),
+};
+
+let get = (id, {buffers, _}) => IntMap.find_opt(id, buffers);
+
+let update = (id, updater, {buffers, _} as model) => {
+  {...model, buffers: IntMap.update(id, updater, buffers)};
+};
+
+let anyModified = ({buffers, _}: model) => {
   IntMap.fold(
     (_key, v, prev) => Buffer.isModified(v) || prev,
     buffers,
@@ -26,18 +78,21 @@ let anyModified = (buffers: model) => {
 };
 
 let add = (buffer, model) => {
-  model |> IntMap.add(Buffer.getId(buffer), buffer);
+  {
+    ...model,
+    buffers: model.buffers |> IntMap.add(Buffer.getId(buffer), buffer),
+  };
 };
 
-let filter = (f, model) => {
-  model |> IntMap.to_seq |> Seq.map(snd) |> Seq.filter(f) |> List.of_seq;
+let filter = (f, {buffers, _}) => {
+  buffers |> IntMap.to_seq |> Seq.map(snd) |> Seq.filter(f) |> List.of_seq;
 };
 
-let all = model => {
-  model |> IntMap.to_seq |> Seq.map(snd) |> List.of_seq;
+let all = ({buffers, _}) => {
+  buffers |> IntMap.to_seq |> Seq.map(snd) |> List.of_seq;
 };
 
-let isModifiedByPath = (buffers: model, filePath: string) => {
+let isModifiedByPath = ({buffers, _}: model, filePath: string) => {
   IntMap.exists(
     (_id, v) => {
       let bufferPath = Buffer.getFilePath(v);
@@ -63,7 +118,7 @@ let setLineEndings = le =>
   Option.map(buffer => Buffer.setLineEndings(le, buffer));
 
 let modified = model => {
-  model
+  model.buffers
   |> IntMap.to_seq
   |> Seq.map(snd)
   |> Seq.filter(Buffer.isModified)
@@ -84,7 +139,9 @@ type outmsg =
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       position: option(BytePosition.t),
       grabFocus: bool,
-    });
+      preview: bool,
+    })
+  | BufferModifiedSet(int, bool);
 
 [@deriving show]
 type command =
@@ -98,12 +155,14 @@ type msg =
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       position: option(CharacterPosition.t),
       grabFocus: bool,
+      preview: bool,
     })
   | NewBufferAndEditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
       split: [ | `Current | `Horizontal | `Vertical | `NewTab],
       position: option(CharacterPosition.t),
       grabFocus: bool,
+      preview: bool,
     })
   //  | SyntaxHighlightingDisabled(int)
   | FileTypeChanged({
@@ -212,8 +271,8 @@ let guessIndentation = (~config, buffer) => {
 
 let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   switch (msg) {
-  | EditorRequested({buffer, split, position, grabFocus}) => (
-      IntMap.add(Buffer.getId(buffer), buffer, model),
+  | EditorRequested({buffer, split, position, grabFocus, preview}) => (
+      add(buffer, model),
       CreateEditor({
         buffer,
         split,
@@ -223,6 +282,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
                Buffer.characterToBytePosition(pos, buffer)
              ),
         grabFocus,
+        preview,
       }),
     )
 
@@ -231,6 +291,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       split,
       position,
       grabFocus,
+      preview,
     }) =>
     let fileType =
       Buffer.getFileType(originalBuffer) |> Oni_Core.Buffer.FileType.toString;
@@ -249,7 +310,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       };
 
     (
-      IntMap.add(Buffer.getId(buffer), buffer, model),
+      add(buffer, model),
       CreateEditor({
         buffer,
         split,
@@ -259,6 +320,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
                Buffer.characterToBytePosition(pos, buffer)
              ),
         grabFocus,
+        preview,
       }),
     );
 
@@ -275,15 +337,15 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         |> Option.some
       | None => None
     );
-    (IntMap.update(id, updater, model), Nothing);
+    (update(id, updater, model), Nothing);
 
   | ModifiedSet(id, isModified) => (
-      IntMap.update(id, setModified(isModified), model),
-      Nothing,
+      update(id, setModified(isModified), model),
+      BufferModifiedSet(id, isModified),
     )
 
   | LineEndingsChanged({id, lineEndings}) => (
-      IntMap.update(id, setLineEndings(lineEndings), model),
+      update(id, setLineEndings(lineEndings), model),
       Nothing,
     )
 
@@ -300,20 +362,20 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         newBuffer;
       };
     (
-      IntMap.add(update.id, buffer, model),
+      add(buffer, model) |> Internal.recomputeDiff(~bufferId=update.id),
       BufferUpdated({update, newBuffer: buffer, oldBuffer, triggerKey}),
     );
 
   | FileTypeChanged({id, fileType}) => (
-      IntMap.update(id, Option.map(Buffer.setFileType(fileType)), model),
+      update(id, Option.map(Buffer.setFileType(fileType)), model),
       Nothing,
     )
 
   | Saved(bufferId) =>
     let model' =
-      IntMap.update(bufferId, Option.map(Buffer.incrementSaveTick), model);
+      update(bufferId, Option.map(Buffer.incrementSaveTick), model);
     let eff =
-      IntMap.find_opt(bufferId, model)
+      IntMap.find_opt(bufferId, model.buffers)
       |> Option.map(buffer => BufferSaved(buffer))
       |> Option.value(~default=Nothing);
     (model', eff);
@@ -321,7 +383,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   | Command(command) =>
     switch (command) {
     | DetectIndentation =>
-      let maybeBuffer = IntMap.find_opt(activeBufferId, model);
+      let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
 
       switch (maybeBuffer) {
       // This shouldn't happen...
@@ -332,7 +394,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         let config = config(~fileType);
         let indentation = guessIndentation(~config, buffer);
         let updatedBuffer = Buffer.setIndentation(indentation, buffer);
-        (IntMap.add(activeBufferId, updatedBuffer, model), Nothing);
+        (add(updatedBuffer, model), Nothing);
       };
     }
   };
@@ -342,7 +404,7 @@ module Effects = {
   let openCommon = (~vimBuffer, ~font, ~languageInfo, ~model, f) => {
     let bufferId = Vim.Buffer.getId(vimBuffer);
 
-    switch (IntMap.find_opt(bufferId, model)) {
+    switch (IntMap.find_opt(bufferId, model.buffers)) {
     // We already have this buffer loaded - so just ask for an editor!
     | Some(buffer) =>
       buffer |> Buffer.stampLastUsed |> f(~alreadyLoaded=true)
@@ -396,6 +458,7 @@ module Effects = {
         ~position=None,
         ~grabFocus=true,
         ~filePath,
+        ~preview=false,
         model,
       ) => {
     Isolinear.Effect.createWithDispatch(
@@ -404,10 +467,18 @@ module Effects = {
 
       let handler = (~alreadyLoaded, buffer) =>
         if (alreadyLoaded) {
-          dispatch(EditorRequested({buffer, split, position, grabFocus}));
+          dispatch(
+            EditorRequested({buffer, split, position, grabFocus, preview}),
+          );
         } else {
           dispatch(
-            NewBufferAndEditorRequested({buffer, split, position, grabFocus}),
+            NewBufferAndEditorRequested({
+              buffer,
+              split,
+              position,
+              grabFocus,
+              preview,
+            }),
           );
         };
 
@@ -415,19 +486,46 @@ module Effects = {
     });
   };
 
-  let openBufferInEditor = (~font, ~languageInfo, ~bufferId, model) => {
+  let openNewBuffer = (~font, ~languageInfo, ~split, model) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Buffers.openNewBuffer", dispatch => {
+      let buffer = Vim.Buffer.make();
+
+      let handler = (~alreadyLoaded as _, buffer) =>
+        dispatch(
+          NewBufferAndEditorRequested({
+            buffer,
+            split,
+            position: None,
+            grabFocus: true,
+            preview: false,
+          }),
+        );
+
+      openCommon(~vimBuffer=buffer, ~languageInfo, ~font, ~model, handler);
+    });
+  };
+
+  let openBufferInEditor = (~font, ~languageInfo, ~split, ~bufferId, model) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Buffers.openBufferInEditor", dispatch => {
       switch (Vim.Buffer.getById(bufferId)) {
       | None => Log.warnf(m => m("Unable to open buffer: %d", bufferId))
       | Some(vimBuffer) =>
         let handler = (~alreadyLoaded, buffer) => {
-          let split = `Current;
           let position = None;
           let grabFocus = true;
 
           if (alreadyLoaded) {
-            dispatch(EditorRequested({buffer, split, position, grabFocus}));
+            dispatch(
+              EditorRequested({
+                buffer,
+                split,
+                position,
+                grabFocus,
+                preview: false,
+              }),
+            );
           } else {
             dispatch(
               NewBufferAndEditorRequested({
@@ -435,6 +533,7 @@ module Effects = {
                 split,
                 position,
                 grabFocus,
+                preview: false,
               }),
             );
           };
@@ -468,4 +567,23 @@ module Contributions = {
     ];
 
   let commands = Commands.[detectIndentation] |> Command.Lookup.fromList;
+
+  let keybindings =
+    Feature_Input.Schema.[
+      bind(
+        ~key="<D-N>",
+        ~command=":enew",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S>",
+        ~command=":w!",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S-S>",
+        ~command=":wa!",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+    ];
 };

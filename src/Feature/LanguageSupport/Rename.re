@@ -123,20 +123,22 @@ module Keybindings = {
 
   let condition = "normalMode" |> WhenExpr.parse;
 
-  let rename = {key: "<F2>", command: Commands.rename.id, condition};
+  let rename = bind(~key="<F2>", ~command=Commands.rename.id, ~condition);
 
   let activeCondition = "renameInputVisible" |> WhenExpr.parse;
 
-  let cancel = {
-    key: "<ESC>",
-    command: Commands.cancel.id,
-    condition: activeCondition,
-  };
-  let commit = {
-    key: "<CR>",
-    command: Commands.commit.id,
-    condition: activeCondition,
-  };
+  let cancel =
+    bind(
+      ~key="<ESC>",
+      ~command=Commands.cancel.id,
+      ~condition=activeCondition,
+    );
+  let commit =
+    bind(
+      ~key="<CR>",
+      ~command=Commands.commit.id,
+      ~condition=activeCondition,
+    );
 };
 
 module Contributions = {

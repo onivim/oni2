@@ -42,18 +42,24 @@ module Identifier = {
 module VersionInfo = {
   [@deriving show]
   type t = {
-    version: string,
+    version: [@opaque] Semver.t,
     url: string,
   };
 
   let decode =
     Json.Decode.(
       key_value_pairs(string)
-      |> map(List.map(((version, url)) => {version, url}))
+      |> map(
+           List.filter_map(((maybeVersion, url)) => {
+             maybeVersion
+             |> Semver.of_string
+             |> Option.map(version => {version, url})
+           }),
+         )
     );
 
   let toString = ({version, url}) =>
-    Printf.sprintf(" - Version %s: %s", version, url);
+    Printf.sprintf(" - Version %s: %s", Semver.to_string(version), url);
 };
 
 module Details = {
@@ -69,12 +75,16 @@ module Details = {
     //      licenseUrl: string,
     name: string,
     namespace: string,
+    isPublicNamespace: bool,
     //      downloadCount: int,
     displayName: option(string),
     description: option(string),
     //      categories: list(string),
-    version: string,
+    version: [@opaque] option(Semver.t),
     versions: list(VersionInfo.t),
+    downloadCount: option(int),
+    averageRating: option(float),
+    reviewCount: option(int),
   };
 
   let id = ({namespace, name, _}) => {
@@ -84,6 +94,15 @@ module Details = {
   let displayName = ({displayName, _} as details) => {
     displayName |> Option.value(~default=id(details));
   };
+
+  let averageRating = ({averageRating, _}) =>
+    averageRating |> Option.value(~default=0.);
+
+  let downloadCount = ({downloadCount, _}) =>
+    downloadCount |> Option.value(~default=0);
+
+  let reviewCount = ({reviewCount, _}) =>
+    reviewCount |> Option.value(~default=0);
 
   let toString =
       ({downloadUrl, description, homepageUrl, versions, _} as details) => {
@@ -129,9 +148,23 @@ module Details = {
           licenseName: field.optional("license", string),
           displayName: field.optional("displayName", string),
           description: field.optional("description", string),
+          downloadCount: field.optional("downloadCount", int),
+          averageRating: field.optional("averageRating", float),
+          reviewCount: field.optional("reviewCount", int),
+          isPublicNamespace:
+            field.withDefault(
+              "namespaceAccess",
+              true,
+              string |> map(str => {String.lowercase_ascii(str) == "public"}),
+            ),
           name: field.required("name", string),
           namespace: field.required("namespace", string),
-          version: field.required("version", string),
+          version:
+            field.withDefault(
+              "version",
+              None,
+              string |> map(Semver.of_string),
+            ),
           versions: field.withDefault("allVersions", [], VersionInfo.decode),
         }
       );
@@ -149,7 +182,7 @@ module Summary = {
     url: string,
     downloadUrl: string,
     iconUrl: option(string),
-    version: string,
+    version: [@opaque] option(Semver.t),
     name: string,
     namespace: string,
     displayName: option(string),
@@ -176,7 +209,12 @@ module Summary = {
         url: field.required("url", string),
         downloadUrl: whatever(downloadUrl),
         iconUrl: whatever(iconUrl),
-        version: field.required("version", string),
+        version:
+          field.withDefault(
+            "version",
+            None,
+            string |> map(Semver.of_string),
+          ),
         name: field.required("name", string),
         namespace: field.required("namespace", string),
         displayName: field.optional("displayName", string),
@@ -199,7 +237,9 @@ module Summary = {
       displayName |> Option.value(~default="(null)"),
       description |> Option.value(~default="(null)"),
       url,
-      version,
+      version
+      |> Option.map(Semver.to_string)
+      |> Option.value(~default="(null)"),
     );
   };
 };

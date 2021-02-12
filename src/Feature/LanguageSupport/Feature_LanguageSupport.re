@@ -10,6 +10,7 @@ type model = {
   hover: Hover.model,
   rename: Rename.model,
   references: References.model,
+  signatureHelp: SignatureHelp.model,
 };
 
 let initial = {
@@ -22,7 +23,12 @@ let initial = {
   hover: Hover.initial,
   rename: Rename.initial,
   references: References.initial,
+  signatureHelp: SignatureHelp.initial,
 };
+
+[@deriving show]
+type command =
+  | CloseAllLanguagePopups;
 
 [@deriving show]
 type msg =
@@ -37,6 +43,8 @@ type msg =
   | Rename(Rename.msg)
   | CodeLens(CodeLens.msg)
   | KeyPressed(string)
+  | SignatureHelp(SignatureHelp.msg)
+  | Command(command)
   | Pasted(string);
 
 type outmsg =
@@ -60,8 +68,15 @@ type outmsg =
   | NotifyFailure(string)
   | Effect(Isolinear.Effect.t(msg))
   | CodeLensesChanged({
+      handle: int,
       bufferId: int,
+      startLine: EditorCoreTypes.LineNumber.t,
+      stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.codeLens),
+    })
+  | SetSelections({
+      editorId: int,
+      ranges: list(CharacterRange.t),
     });
 
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
@@ -77,8 +92,16 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     | Outmsg.ReferencesAvailable => ReferencesAvailable
     | Outmsg.OpenFile({filePath, location}) => OpenFile({filePath, location})
     | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
-    | Outmsg.CodeLensesChanged({bufferId, lenses}) =>
-      CodeLensesChanged({bufferId, lenses});
+    | Outmsg.CodeLensesChanged({
+        handle,
+        bufferId,
+        lenses,
+        startLine,
+        stopLine,
+      }) =>
+      CodeLensesChanged({handle, bufferId, lenses, startLine, stopLine})
+    | Outmsg.SetSelections({editorId, ranges}) =>
+      SetSelections({editorId, ranges});
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -107,6 +130,7 @@ let update =
     (
       ~config,
       ~configuration,
+      ~extensions,
       ~languageConfiguration,
       ~maybeSelection,
       ~maybeBuffer,
@@ -123,8 +147,18 @@ let update =
     )
   | Pasted(_) => (model, Nothing)
 
-  | Exthost(RegisterCodeLensSupport({handle, selector, _})) =>
-    let codeLens' = CodeLens.register(~handle, ~selector, model.codeLens);
+  | Exthost(EmitCodeLensEvent({eventHandle, _})) =>
+    let codeLens' = CodeLens.emit(~eventHandle, model.codeLens);
+    ({...model, codeLens: codeLens'}, Nothing);
+
+  | Exthost(RegisterCodeLensSupport({handle, selector, eventHandle})) =>
+    let codeLens' =
+      CodeLens.register(
+        ~handle,
+        ~selector,
+        ~maybeEventHandle=eventHandle,
+        model.codeLens,
+      );
     ({...model, codeLens: codeLens'}, Nothing);
 
   | Exthost(RegisterDefinitionSupport({handle, selector})) =>
@@ -150,6 +184,16 @@ let update =
     let references' =
       References.register(~handle, ~selector, model.references);
     ({...model, references: references'}, Nothing);
+
+  | Exthost(RegisterSignatureHelpProvider({handle, selector, metadata})) =>
+    let sigHelp' =
+      SignatureHelp.register(
+        ~handle,
+        ~selector,
+        ~metadata,
+        model.signatureHelp,
+      );
+    ({...model, signatureHelp: sigHelp'}, Nothing);
 
   | Exthost(
       RegisterSuggestSupport({
@@ -213,6 +257,7 @@ let update =
         hover: Hover.unregister(~handle, model.hover),
         references: References.unregister(~handle, model.references),
         rename: Rename.unregister(~handle, model.rename),
+        signatureHelp: SignatureHelp.unregister(~handle, model.signatureHelp),
       },
       Nothing,
     )
@@ -226,8 +271,20 @@ let update =
     let outmsg =
       switch (eff) {
       | CodeLens.Nothing => Outmsg.Nothing
-      | CodeLens.CodeLensesChanged({bufferId, lenses}) =>
-        Outmsg.CodeLensesChanged({bufferId, lenses})
+      | CodeLens.CodeLensesChanged({
+          handle,
+          bufferId,
+          startLine,
+          stopLine,
+          lenses,
+        }) =>
+        Outmsg.CodeLensesChanged({
+          handle,
+          bufferId,
+          startLine,
+          stopLine,
+          lenses,
+        })
       };
     ({...model, codeLens: codeLens'}, outmsg |> map(msg => CodeLens(msg)));
 
@@ -235,6 +292,7 @@ let update =
     let (completion', outmsg) =
       Completion.update(
         ~config,
+        ~extensions,
         ~languageConfiguration,
         ~maybeBuffer,
         ~activeCursor=cursorLocation,
@@ -256,12 +314,18 @@ let update =
     );
 
   | DocumentHighlights(documentHighlightsMsg) =>
-    let documentHighlights' =
+    let (documentHighlights', outmsg) =
       DocumentHighlights.update(
+        ~maybeBuffer,
+        ~editorId,
         documentHighlightsMsg,
         model.documentHighlights,
       );
-    ({...model, documentHighlights: documentHighlights'}, Nothing);
+
+    (
+      {...model, documentHighlights: documentHighlights'},
+      outmsg |> map(msg => DocumentHighlights(msg)),
+    );
 
   | DocumentSymbols(documentSymbolsMsg) =>
     let documentSymbols' =
@@ -337,6 +401,32 @@ let update =
   | Rename(renameMsg) =>
     let (rename', outmsg) = Rename.update(renameMsg, model.rename);
     ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
+
+  | SignatureHelp(sigHelpMsg) =>
+    let (sigHelp', outmsg) =
+      SignatureHelp.update(
+        ~maybeBuffer,
+        ~cursor=cursorLocation,
+        model.signatureHelp,
+        sigHelpMsg,
+      );
+    let outmsg' =
+      switch (outmsg) {
+      | SignatureHelp.Nothing => Nothing
+      | SignatureHelp.Effect(eff) =>
+        Effect(eff |> Isolinear.Effect.map(msg => SignatureHelp(msg)))
+      | SignatureHelp.Error(msg) => NotifyFailure(msg)
+      };
+    ({...model, signatureHelp: sigHelp'}, outmsg');
+
+  | Command(CloseAllLanguagePopups) => (
+      {
+        ...model,
+        signatureHelp: SignatureHelp.cancel(model.signatureHelp),
+        completion: Completion.cancel(model.completion),
+      },
+      Nothing,
+    )
   };
 
 let bufferUpdated =
@@ -344,6 +434,7 @@ let bufferUpdated =
       ~languageConfiguration,
       ~buffer,
       ~config,
+      ~extensions,
       ~activeCursor,
       ~syntaxScope,
       ~triggerKey,
@@ -352,6 +443,7 @@ let bufferUpdated =
   let completion =
     Completion.bufferUpdated(
       ~languageConfiguration,
+      ~extensions,
       ~buffer,
       ~config,
       ~activeCursor,
@@ -359,24 +451,98 @@ let bufferUpdated =
       ~triggerKey,
       model.completion,
     );
-  {...model, completion};
+
+  let signatureHelp =
+    SignatureHelp.bufferUpdated(
+      ~languageConfiguration,
+      ~buffer,
+      ~activeCursor,
+      model.signatureHelp,
+    );
+  {...model, completion, signatureHelp};
 };
 
-let cursorMoved = (~previous, ~current, model) => {
+let configurationChanged = (~config, model) => {
+  ...model,
+  completion: Completion.configurationChanged(~config, model.completion),
+  documentHighlights:
+    DocumentHighlights.configurationChanged(
+      ~config,
+      model.documentHighlights,
+    ),
+};
+
+let cursorMoved = (~maybeBuffer, ~previous, ~current, model) => {
   let completion =
     Completion.cursorMoved(~previous, ~current, model.completion);
-  {...model, completion};
+
+  let documentHighlights =
+    maybeBuffer
+    |> Option.map(buffer =>
+         DocumentHighlights.cursorMoved(
+           ~buffer,
+           ~cursor=current,
+           model.documentHighlights,
+         )
+       )
+    |> Option.value(~default=model.documentHighlights);
+
+  let signatureHelp =
+    SignatureHelp.cursorMoved(~previous, ~current, model.signatureHelp);
+  {...model, completion, documentHighlights, signatureHelp};
 };
 
-let startInsertMode = model => {
-  {...model, completion: Completion.startInsertMode(model.completion)};
+let startInsertMode = (~config, ~maybeBuffer, model) => {
+  {
+    ...model,
+    completion: Completion.startInsertMode(model.completion),
+    signatureHelp:
+      SignatureHelp.startInsert(~config, ~maybeBuffer, model.signatureHelp),
+  };
 };
 
 let stopInsertMode = model => {
-  {...model, completion: Completion.stopInsertMode(model.completion)};
+  {
+    ...model,
+    completion: Completion.stopInsertMode(model.completion),
+    signatureHelp: SignatureHelp.stopInsert(model.signatureHelp),
+  };
+};
+
+let startSnippet = model => {
+  ...model,
+  completion: Completion.startSnippet(model.completion),
+};
+
+let stopSnippet = model => {
+  ...model,
+  completion: Completion.stopSnippet(model.completion),
 };
 
 let isFocused = ({rename, _}) => Rename.isFocused(rename);
+
+module Commands = {
+  open Feature_Commands.Schema;
+  let close =
+    define("closeAllLanguagePopups", Command(CloseAllLanguagePopups));
+};
+
+module Keybindings = {
+  open Feature_Input.Schema;
+  let close =
+    bind(
+      ~key="<S-ESC>",
+      ~command=Commands.close.id,
+      ~condition=
+        WhenExpr.And([
+          WhenExpr.Defined("editorTextFocus"),
+          WhenExpr.Or([
+            WhenExpr.Defined("parameterHintsVisible"),
+            WhenExpr.Defined("suggestWidgetVisible"),
+          ]),
+        ]),
+    );
+};
 
 module Contributions = {
   open WhenExpr.ContextKeys.Schema;
@@ -384,7 +550,8 @@ module Contributions = {
   let colors = CodeLens.Contributions.colors @ Completion.Contributions.colors;
 
   let commands =
-    (
+    [Commands.close]
+    @ (
       Completion.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Completion(msg)))
     )
@@ -397,6 +564,10 @@ module Contributions = {
       |> List.map(Oni_Core.Command.map(msg => Definition(msg)))
     )
     @ (
+      DocumentHighlights.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => DocumentHighlights(msg)))
+    )
+    @ (
       Hover.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Hover(msg)))
     )
@@ -407,11 +578,17 @@ module Contributions = {
     @ (
       Formatting.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Formatting(msg)))
+    )
+    @ (
+      SignatureHelp.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => SignatureHelp(msg)))
     );
 
   let configuration =
     CodeLens.Contributions.configuration
-    @ Completion.Contributions.configuration;
+    @ Completion.Contributions.configuration
+    @ DocumentHighlights.Contributions.configuration
+    @ SignatureHelp.Contributions.configuration;
 
   let contextKeys =
     [
@@ -421,19 +598,26 @@ module Contributions = {
       Completion.Contributions.contextKeys
       |> fromList
       |> map(({completion, _}: model) => completion),
+      SignatureHelp.Contributions.contextKeys
+      |> fromList
+      |> map(({signatureHelp, _}: model) => signatureHelp),
     ]
     |> unionMany;
 
   let keybindings =
-    Rename.Contributions.keybindings
+    Keybindings.[close]
+    @ Rename.Contributions.keybindings
     @ Completion.Contributions.keybindings
     @ Definition.Contributions.keybindings
-    @ References.Contributions.keybindings;
+    @ DocumentHighlights.Contributions.keybindings
+    @ References.Contributions.keybindings
+    @ SignatureHelp.Contributions.keybindings;
 };
 
 module OldCompletion = Completion;
 module OldDefinition = Definition;
 module OldHighlights = DocumentHighlights;
+module OldSignatureHelp = SignatureHelp;
 
 module Completion = {
   let isActive = ({completion, _}: model) =>
@@ -456,6 +640,44 @@ module Completion = {
         ~tokenTheme,
         ~editorFont,
         ~completions=model.completion,
+        (),
+      );
+    };
+  };
+};
+
+module SignatureHelp = {
+  let isActive = ({signatureHelp, _}: model) =>
+    OldSignatureHelp.isShown(signatureHelp);
+
+  module View = {
+    let make =
+        (
+          ~x,
+          ~y,
+          ~theme,
+          ~tokenTheme,
+          ~editorFont,
+          ~uiFont,
+          ~languageInfo,
+          ~buffer,
+          ~grammars,
+          ~dispatch,
+          ~model,
+          (),
+        ) => {
+      OldSignatureHelp.View.make(
+        ~x,
+        ~y,
+        ~colorTheme=theme,
+        ~tokenTheme,
+        ~editorFont,
+        ~uiFont,
+        ~languageInfo,
+        ~buffer,
+        ~grammars,
+        ~dispatch=msg => dispatch(SignatureHelp(msg)),
+        ~model=model.signatureHelp,
         (),
       );
     };
@@ -538,12 +760,9 @@ module ShadowedCodeLens = CodeLens;
 module CodeLens = {
   type t = ShadowedCodeLens.codeLens;
 
-  let get = (~bufferId, model) => {
-    ShadowedCodeLens.get(~bufferId, model.codeLens);
-  };
-
   let lineNumber = codeLens => ShadowedCodeLens.lineNumber(codeLens);
-  let uniqueId = codeLens => ShadowedCodeLens.uniqueId(codeLens);
+
+  let text = codeLens => ShadowedCodeLens.text(codeLens);
 
   module View = ShadowedCodeLens.View;
 };
@@ -552,8 +771,11 @@ let sub =
     (
       ~config,
       ~isInsertMode,
+      ~isAnimatingScroll,
       ~activeBuffer,
       ~activePosition,
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
       ~visibleBuffers,
       ~client,
       {
@@ -562,11 +784,20 @@ let sub =
         completion,
         documentHighlights,
         documentSymbols,
+        signatureHelp,
         _,
       },
     ) => {
   let codeLensSub =
-    ShadowedCodeLens.sub(~config, ~visibleBuffers, ~client, codeLens)
+    ShadowedCodeLens.sub(
+      ~config,
+      ~isAnimatingScroll,
+      ~visibleBuffers,
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
+      ~client,
+      codeLens,
+    )
     |> Isolinear.Sub.map(msg => CodeLens(msg));
 
   let definitionSub =
@@ -592,6 +823,8 @@ let sub =
 
   let documentHighlightsSub =
     OldHighlights.sub(
+      ~isInsertMode,
+      ~config,
       ~buffer=activeBuffer,
       ~location=activePosition,
       ~client,
@@ -599,12 +832,23 @@ let sub =
     )
     |> Isolinear.Sub.map(msg => DocumentHighlights(msg));
 
+  let signatureHelpSub =
+    OldSignatureHelp.sub(
+      ~isInsertMode,
+      ~buffer=activeBuffer,
+      ~activePosition,
+      ~client,
+      signatureHelp,
+    )
+    |> Isolinear.Sub.map(msg => SignatureHelp(msg));
+
   [
     codeLensSub,
     completionSub,
     definitionSub,
     documentHighlightsSub,
     documentSymbolsSub,
+    signatureHelpSub,
   ]
   |> Isolinear.Sub.batch;
 };

@@ -11,7 +11,7 @@ sidebar_label: Building from Source
 - Install [Git](https://git-scm.com/)
 - Install [Node](https://nodejs.org/en)
 - Install [Esy](https://esy.sh) (__0.6.2__ or above is required, but the latest version is recommened: `npm install -g esy@latest`)
-> __NOTE:__ **Linux-only**: if you need to install using `sudo npm -g esy@latest` then your NPM installation **might be broken** follow [the instruction here to fix it](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally) this is related to this issue [esy/esy#1099.](https://github.com/esy/esy/issues/1099)
+> __NOTE:__ **Linux-only**: if you need to install using `sudo npm install -g esy@latest` then your NPM installation **might be broken** follow [the instruction here to fix it](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally) this is related to this issue [esy/esy#1099.](https://github.com/esy/esy/issues/1099)
 
 - __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
 - Install any other system packages required by Oni2 dependencies, as outlined below.
@@ -33,10 +33,30 @@ Requires `libtool` and `gettext` from homebrew: `brew install libtool gettext`.
 
 Some Linux distributions may need other packages:
 
- - Ubuntu : `libacl1-dev`, `libncurses-dev` for `libvim`.
+ - Ubuntu : `nasm`,`libacl1-dev`, `libncurses-dev` latter two for `libvim`.
  - Fedora/CentOS : `libXt-devel`, `libSM-devel`, `libICE-devel`, `libacl-devel` and `ncurses-devel ` for `libvim`
+ - Xorg related libraries: `libglu1-mesa-dev`, `libxxf86vm-dev` and `libxkbfile-dev`.
+
 
 ## Build and Run
+
+### Clone repository
+
+```sh
+git clone https://github.com/onivim/oni2
+cd oni2
+```
+
+### Install node dependencies
+
+```sh
+npm install -g node-gyp
+node install-node-deps.js
+```
+
+> __NOTE:__ The non-standard `node install-node-deps.js` step instead of `npm install` is necessary because the script picks up our _vendored_ node binary.
+
+> __NOTE:__ The `node install-node-deps.js` command will need to be re-run whenever the extension host is upgraded.
 
 ### Build the front-end
 
@@ -45,9 +65,6 @@ Some Linux distributions may need other packages:
 > __NOTE:__ On macOS, if you receive an `error: Too many open files`, you can run `ulimit -Sn 4096` to increase the file limit. More info at [esy/esy#1057](https://github.com/esy/esy/issues/1057)
 
 ```sh
-git clone https://github.com/onivim/oni2
-cd oni2
-
 # Install dependencies in package.json
 esy install
 
@@ -59,15 +76,6 @@ esy bootstrap
 # Finish up remaining parts of building. Should be quick.
 esy build
 ```
-
-### Install node dependencies
-
-```sh
-npm install -g node-gyp
-node install-node-deps.js
-```
-
-> __NOTE:__ The non-standard `node install-node-deps.js` step instead of `npm install` is necessary because the script picks up our _vendored_ node binary.
 
 ### Run health-check
 

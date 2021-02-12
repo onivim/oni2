@@ -210,6 +210,20 @@ module ExtensionService = {
   };
 };
 
+module FileSystem = {
+  open Json.Encode;
+
+  let readFile = (~handle, ~uri, client) => {
+    Client.request(
+      ~decoder=Json.Decode.string,
+      ~rpcName="ExtHostFileSystem",
+      ~method="$readFile",
+      ~args=`List([`Int(handle), uri |> encode_value(Uri.encode)]),
+      client,
+    );
+  };
+};
+
 module FileSystemEventService = {
   open Json.Encode;
 
@@ -236,6 +250,33 @@ module LanguageFeatures = {
       client,
     );
   };
+
+  let resolveCodeLens = (~handle: int, ~codeLens: CodeLens.lens, client) => {
+    let decoder = Json.Decode.(nullable(CodeLens.decode));
+    Client.request(
+      ~decoder,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$resolveCodeLens",
+      ~args=
+        `List([
+          `Int(handle),
+          codeLens |> Json.Encode.encode_value(CodeLens.encode),
+        ]),
+      client,
+    );
+  };
+
+  let releaseCodeLenses = (~handle: int, ~cacheId, client) => {
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$releaseCodeLenses",
+      ~args=`List([`Int(handle), `Int(cacheId)]),
+      client,
+    );
+  };
+
   let provideCompletionItems =
       (
         ~handle: int,
@@ -285,6 +326,16 @@ module LanguageFeatures = {
           `Int(handle),
           chainedCacheId |> Json.Encode.encode_value(ChainedCacheId.encode),
         ]),
+      client,
+    );
+  };
+
+  let releaseCompletionItems = (~handle: int, ~cacheId, client) => {
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$releaseCompletionItems",
+      ~args=`List([`Int(handle), `Int(cacheId)]),
       client,
     );
   };
@@ -418,7 +469,7 @@ module LanguageFeatures = {
     );
   };
 
-  let releaseSignatureHelp = (~handle, ~id, client) =>
+  let releaseSignatureHelp = (~handle, ~cacheId, client) =>
     Client.notify(
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$releaseSignatureHelp",
@@ -426,7 +477,7 @@ module LanguageFeatures = {
         `List(
           Json.Encode.[
             handle |> encode_value(int),
-            id |> encode_value(int),
+            cacheId |> encode_value(int),
           ],
         ),
       client,

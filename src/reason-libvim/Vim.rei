@@ -102,18 +102,25 @@ module Mode: {
   type t =
     | Normal({cursor: BytePosition.t})
     | Insert({cursors: list(BytePosition.t)})
-    | CommandLine
+    | CommandLine({
+        text: string,
+        commandCursor: ByteIndex.t,
+        commandType: Types.cmdlineType,
+        cursor: BytePosition.t,
+      })
     | Replace({cursor: BytePosition.t})
     | Visual(VisualRange.t)
     | Operator({
         cursor: BytePosition.t,
         pending: Operator.pending,
       })
-    | Select(VisualRange.t);
+    | Select({ranges: list(VisualRange.t)});
 
   let current: unit => t;
 
+  let isCommandLine: t => bool;
   let isInsert: t => bool;
+  let isInsertOrSelect: t => bool;
   let isNormal: t => bool;
   let isVisual: t => bool;
   let isSelect: t => bool;
@@ -121,6 +128,24 @@ module Mode: {
   let isOperatorPending: t => bool;
 
   let cursors: t => list(BytePosition.t);
+
+  let show: t => string;
+};
+
+module Split: {
+  type t =
+    | NewHorizontal
+    | Horizontal({filePath: option(string)})
+    | NewVertical
+    | Vertical({filePath: option(string)})
+    | NewTabPage
+    | TabPage({filePath: option(string)});
+};
+
+module SubMode: {
+  type t =
+    | None
+    | InsertLiteral;
 };
 
 module Functions: {
@@ -160,6 +185,7 @@ module Context: {
     leftColumn: int,
     topLine: int,
     mode: Mode.t,
+    subMode: SubMode.t,
     tabSize: int,
     insertSpaces: bool,
     functionGetChar: Functions.GetChar.t,
@@ -172,9 +198,8 @@ module CommandLine: {
   type t = Types.cmdline;
 
   let getCompletions: (~context: Context.t=?, unit) => array(string);
-  let getText: unit => option(string);
+
   let getPosition: unit => int;
-  let getType: unit => Types.cmdlineType;
 
   let onEnter: (Event.handler(t), unit) => unit;
   let onLeave: (Event.handler(unit), unit) => unit;
@@ -209,6 +234,8 @@ module Buffer: {
   [openFile(path)] opens a file, sets it as the active buffer, and returns a handle to the buffer.
   */
   let openFile: string => t;
+
+  let make: unit => t;
 
   /**
   [loadFile(path)] opens a file and returns a handle to the buffer.
@@ -290,6 +317,7 @@ module Buffer: {
   */
   let setLines:
     (
+      ~undoable: bool=?,
       ~start: LineNumber.t=?,
       ~stop: LineNumber.t=?,
       ~lines: array(string),
@@ -443,7 +471,7 @@ module Mapping: {
     | Operator // omap, onoremap
     | Terminal // tmap, tnoremap
     | InsertAndCommandLine // :map!
-    | All; // :map;
+    | NormalAndVisualAndSelectAndOperator; // :map;
 
   module ScriptId: {
     [@deriving show]
@@ -485,7 +513,12 @@ module Effect: {
         mode: Mapping.mode,
         keys: option(string),
       })
-    | Clear(Clear.t);
+    | Clear(Clear.t)
+    | Output({
+        cmd: string,
+        output: option(string),
+      })
+    | WindowSplit(Split.t);
 };
 
 /**

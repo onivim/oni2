@@ -2,7 +2,7 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 module Editor = Feature_Editor.Editor;
 
-runTest(~name="RegressionVspEmpty", (dispatch, wait, _) => {
+runTest(~name="RegressionVspEmpty", ({dispatch, wait, _}) => {
   let originalBuffer = ref(None);
   wait(~name="Wait for split to be created 1", (state: State.t) => {
     let splitCount =
@@ -12,7 +12,9 @@ runTest(~name="RegressionVspEmpty", (dispatch, wait, _) => {
     splitCount == 1;
   });
 
-  dispatch(Actions.VimExecuteCommand("e test.txt"));
+  dispatch(
+    Actions.VimExecuteCommand({allowAnimation: true, command: "e test.txt"}),
+  );
   wait(~name="Wait for file to get editor", (state: State.t) => {
     let currentBuffer =
       state.layout |> Feature_Layout.activeEditor |> Editor.getBufferId;
@@ -21,7 +23,9 @@ runTest(~name="RegressionVspEmpty", (dispatch, wait, _) => {
   });
 
   /* :vsp with no arguments should create a second split w/ same buffer */
-  dispatch(Actions.VimExecuteCommand("vsp"));
+  dispatch(
+    Actions.VimExecuteCommand({allowAnimation: true, command: "vsp"}),
+  );
 
   wait(~name="Wait for split to be created", (state: State.t) => {
     let splitCount =

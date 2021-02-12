@@ -18,7 +18,7 @@ type t =
   | Version
   | FullChangelog
   | Image
-  | UpdateChangelog({since: string})
+  | UpdateChangelog
   | Terminal(Feature_Terminal.rendererState)
   | ExtensionDetails;
 

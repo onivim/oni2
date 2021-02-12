@@ -19,15 +19,25 @@ type outmsg =
       filePath: string,
       location: CharacterPosition.t,
     })
+  | PreviewFile({
+      filePath: string,
+      location: CharacterPosition.t,
+    })
   | Focus
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
-let update: (model, msg) => (model, option(outmsg));
+let update: (~previewEnabled: bool, model, msg) => (model, option(outmsg));
 
 let resetFocus: model => model;
 
 let subscriptions:
-  (~workingDirectory: string, Ripgrep.t, msg => unit, model) =>
+  (
+    ~config: Oni_Core.Config.resolver,
+    ~workingDirectory: string,
+    Ripgrep.t,
+    msg => unit,
+    model
+  ) =>
   list(Subscription.t(msg));
 
 let make:
@@ -47,4 +57,5 @@ let make:
 module Contributions: {
   let commands: (~isFocused: bool) => list(Command.t(msg));
   let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
+  let configuration: list(Config.Schema.spec);
 };

@@ -1,8 +1,55 @@
-open KeyResolver;
-
 open Oni_Core;
 open Utility;
 module Log = (val Log.withNamespace("Oni2.Feature.Input"));
+
+// TODO: Move to Service_Input
+module ReveryKeyConverter = ReveryKeyConverter;
+
+let keyPressToString = key => {
+  key |> EditorInput.KeyPress.toString(~keyToString=EditorInput.Key.toString);
+};
+
+let keyCandidateToString = keyCandidate => {
+  keyCandidate
+  |> EditorInput.KeyCandidate.toList
+  // TODO: Alternate strategy - maybe choose shortest option from list?
+  |> (
+    list =>
+      List.nth_opt(list, 0)
+      |> Option.map(keyPressToString)
+      |> Option.value(~default="?Unknown key?")
+  );
+};
+
+type timeout =
+  | NoTimeout
+  | Timeout(Revery.Time.t);
+
+// VIM SETTINGS
+
+module VimSettings = {
+  open Config.Schema;
+  open VimSetting.Schema;
+
+  let timeout =
+    vim2("timeout", "timeoutlen", (maybeTimeout, maybeTimeoutLen) => {
+      let maybeTimeoutBool =
+        maybeTimeout |> OptionEx.flatMap(VimSetting.decode_value_opt(bool));
+      let maybeTimeoutLenInt =
+        maybeTimeoutLen |> OptionEx.flatMap(VimSetting.decode_value_opt(int));
+      switch (maybeTimeoutBool, maybeTimeoutLenInt) {
+      | (None, Some(timeoutLength))
+      | (Some(true), Some(timeoutLength)) =>
+        Some(Timeout(Revery.Time.milliseconds(timeoutLength)))
+
+      | (Some(true), None) => Some(Timeout(Revery.Time.seconds(1)))
+
+      | (Some(false), _) => Some(NoTimeout)
+
+      | (None, None) => None
+      };
+    });
+};
 
 // CONFIGURATION
 module Configuration = {
@@ -24,8 +71,6 @@ module Configuration = {
                        // When parsing from JSON - use VSCode style parsing
                        // where an explicit shift key is required.
                        ~explicitShiftKeyNeeded=true,
-                       ~getKeycode,
-                       ~getScancode,
                        keyString,
                      )
                    ) {
@@ -53,7 +98,7 @@ module Configuration = {
               switch (maybeKey) {
               | Some(key) =>
                 EditorInput.KeyPress.toString(
-                  ~keyCodeToString=Sdl2.Keycode.getName,
+                  //~keyCodeToString=Sdl2.Keycode.getName,
                   EditorInput.KeyPress.PhysicalKey(key),
                 )
                 |> string
@@ -62,10 +107,60 @@ module Configuration = {
             }
           ),
       );
+
+    module Timeout = {
+      let decode =
+        Json.Decode.(
+          one_of([
+            (
+              "bool",
+              bool
+              |> map(
+                   fun
+                   | true => Timeout(Revery.Time.seconds(1))
+                   | false => NoTimeout,
+                 ),
+            ),
+            (
+              "int",
+              int
+              |> map(
+                   fun
+                   | 0 => NoTimeout
+                   | milliseconds =>
+                     Timeout(Revery.Time.milliseconds(milliseconds)),
+                 ),
+            ),
+          ])
+        );
+
+      let encode =
+        Json.Encode.(
+          fun
+          | NoTimeout => bool(false)
+          | Timeout(time) =>
+            int(
+              time
+              |> Revery.Time.toFloatSeconds
+              |> (t => t *. 1000.)
+              |> int_of_float,
+            )
+        );
+    };
+
+    let timeout = custom(~decode=Timeout.decode, ~encode=Timeout.encode);
   };
 
   let leaderKey =
     setting("vim.leader", CustomDecoders.physicalKey, ~default=None);
+
+  let timeout =
+    setting(
+      ~vim=VimSettings.timeout,
+      "vim.timeout",
+      CustomDecoders.timeout,
+      ~default=Timeout(Revery.Time.seconds(1)),
+    );
 };
 
 // MSG
@@ -77,26 +172,89 @@ type outmsg =
       fromKeys: string,
       toKeys: string,
       error: string,
-    });
+    })
+  | TimedOut;
 
 type execute =
-  InputStateMachine.execute = | NamedCommand(string) | VimExCommand(string);
+  InputStateMachine.execute =
+    | NamedCommand({
+        command: string,
+        arguments: Yojson.Safe.t,
+      })
+    | VimExCommand(string);
 
 module Schema = {
   [@deriving show]
-  type keybinding = {
-    key: string,
-    command: string,
-    condition: WhenExpr.t,
+  type keybinding =
+    | Binding({
+        key: string,
+        command: string,
+        arguments: Yojson.Safe.t,
+        condition: WhenExpr.t,
+      })
+    | Remap({
+        allowRecursive: bool,
+        fromKeys: string,
+        toKeys: string,
+        condition: WhenExpr.t,
+      });
+
+  type resolvedKeybinding =
+    | ResolvedBinding({
+        matcher: EditorInput.Matcher.t,
+        command: InputStateMachine.execute,
+        condition: WhenExpr.ContextKeys.t => bool,
+        rawCondition: WhenExpr.t,
+      })
+    | ResolvedRemap({
+        allowRecursive: bool,
+        matcher: EditorInput.Matcher.t,
+        toKeys: list(EditorInput.KeyPress.t),
+        condition: WhenExpr.ContextKeys.t => bool,
+        rawCondition: WhenExpr.t,
+      });
+
+  let resolvedToString =
+    fun
+    | ResolvedBinding({matcher, command, rawCondition, _}) => {
+        Printf.sprintf(
+          "Binding - command: %s matcher: %s when: %s",
+          InputStateMachine.executeToString(command),
+          EditorInput.Matcher.toString(matcher),
+          WhenExpr.show(rawCondition),
+        );
+      }
+    | ResolvedRemap({allowRecursive, matcher, toKeys, rawCondition, _}) => {
+        Printf.sprintf(
+          "Remap - rec: %b, matcher: %s to: %s when: %s",
+          allowRecursive,
+          EditorInput.Matcher.toString(matcher),
+          toKeys
+          |> List.map(EditorInput.KeyPress.toString)
+          |> String.concat(","),
+          WhenExpr.show(rawCondition),
+        );
+      };
+
+  let bind = (~key, ~command, ~condition) =>
+    Binding({key, command, arguments: `Null, condition});
+
+  let bindWithArgs = (~arguments, ~key, ~command, ~condition) =>
+    Binding({key, command, arguments, condition});
+
+  let mapCommand = (~f, keybinding: keybinding) => {
+    switch (keybinding) {
+    | Binding(binding) => Binding({...binding, command: f(binding.command)})
+    | Remap(_) as remap => remap
+    };
   };
 
-  type resolvedKeybinding = {
-    matcher: EditorInput.Matcher.t,
-    command: InputStateMachine.execute,
-    condition: WhenExpr.ContextKeys.t => bool,
-  };
+  let clear = (~key as _) => failwith("Not implemented");
 
-  let resolve = ({key, command, condition}) => {
+  let remap = (~allowRecursive, ~fromKeys, ~toKeys, ~condition) =>
+    Remap({allowRecursive, fromKeys, toKeys, condition});
+
+  let resolve = keybinding => {
     let evaluateCondition = (whenExpr, contextKeys) => {
       WhenExpr.evaluate(
         whenExpr,
@@ -104,21 +262,48 @@ module Schema = {
       );
     };
 
-    let maybeMatcher =
-      EditorInput.Matcher.parse(
-        ~explicitShiftKeyNeeded=true,
-        ~getKeycode,
-        ~getScancode,
-        key,
+    switch (keybinding) {
+    | Binding({key, command, arguments, condition}) =>
+      let maybeMatcher =
+        EditorInput.Matcher.parse(~explicitShiftKeyNeeded=true, key);
+      maybeMatcher
+      |> Stdlib.Result.map(matcher => {
+           ResolvedBinding({
+             matcher,
+             command: InputStateMachine.NamedCommand({command, arguments}),
+             condition: evaluateCondition(condition),
+             rawCondition: condition,
+           })
+         });
+
+    | Remap({allowRecursive, fromKeys, condition, toKeys}) =>
+      let evaluateCondition = (whenExpr, contextKeys) => {
+        WhenExpr.evaluate(
+          whenExpr,
+          WhenExpr.ContextKeys.getValue(contextKeys),
+        );
+      };
+
+      let maybeMatcher =
+        EditorInput.Matcher.parse(~explicitShiftKeyNeeded=true, fromKeys);
+
+      let maybeKeys =
+        EditorInput.KeyPress.parse(~explicitShiftKeyNeeded=true, toKeys);
+
+      ResultEx.map2(
+        (matcher, toKeys) => {
+          ResolvedRemap({
+            allowRecursive,
+            matcher,
+            condition: evaluateCondition(condition),
+            toKeys,
+            rawCondition: condition,
+          })
+        },
+        maybeMatcher,
+        maybeKeys,
       );
-    maybeMatcher
-    |> Stdlib.Result.map(matcher => {
-         {
-           matcher,
-           command: InputStateMachine.NamedCommand(command),
-           condition: evaluateCondition(condition),
-         }
-       });
+    };
   };
 };
 
@@ -137,7 +322,8 @@ type msg =
       mode: Vim.Mapping.mode,
       maybeKeys: option(string),
     })
-  | KeyDisplayer([@opaque] KeyDisplayer.msg);
+  | KeyDisplayer([@opaque] KeyDisplayer.msg)
+  | Timeout;
 
 module Msg = {
   let keybindingsUpdated = keybindings => KeybindingsUpdated(keybindings);
@@ -151,9 +337,17 @@ type model = {
   userBindings: list(InputStateMachine.uniqueId),
   inputStateMachine: InputStateMachine.t,
   keyDisplayer: option(KeyDisplayer.t),
+  // Keep track of the input tick - an incrementing number on every input event -
+  // such that we can provide a unique id for the timer to flush on timeout.
+  inputTick: int,
 };
 
 type uniqueId = InputStateMachine.uniqueId;
+
+let incrementTick = ({inputTick, _} as model) => {
+  ...model,
+  inputTick: inputTick + 1,
+};
 
 let initial = keybindings => {
   open Schema;
@@ -171,46 +365,67 @@ let initial = keybindings => {
                )
              );
              ism;
-           | Ok({matcher, condition, command}) =>
+
+           | Ok(ResolvedBinding({matcher, condition, command, _})) =>
              let (ism, _bindingId) =
                InputStateMachine.addBinding(matcher, condition, command, ism);
+             ism;
+
+           | Ok(
+               ResolvedRemap({allowRecursive, matcher, condition, toKeys, _}),
+             ) =>
+             let (ism, _bindingId) =
+               InputStateMachine.addMapping(
+                 ~allowRecursive,
+                 matcher,
+                 condition,
+                 toKeys,
+                 ism,
+               );
              ism;
            }
          },
          InputStateMachine.empty,
        );
-  {inputStateMachine, userBindings: [], keyDisplayer: None};
+  {inputStateMachine, userBindings: [], keyDisplayer: None, inputTick: 0};
 };
 
 type effect =
   InputStateMachine.effect =
     | Execute(InputStateMachine.command)
     | Text(string)
-    | Unhandled(EditorInput.KeyPress.t)
+    | Unhandled({
+        key: EditorInput.KeyCandidate.t,
+        isProducedByRemap: bool,
+      })
     | RemapRecursionLimitHit;
-
-let keyCodeToString = Sdl2.Keycode.getName;
-
-let keyPressToString = EditorInput.KeyPress.toString(~keyCodeToString);
 
 let keyDown =
     (
       ~config,
+      ~scancode,
       ~key,
       ~context,
       ~time,
       {inputStateMachine, keyDisplayer, _} as model,
     ) => {
   let leaderKey = Configuration.leaderKey.get(config);
+
   let (inputStateMachine', effects) =
-    InputStateMachine.keyDown(~leaderKey, ~key, ~context, inputStateMachine);
+    InputStateMachine.keyDown(
+      ~leaderKey,
+      ~scancode,
+      ~key,
+      ~context,
+      inputStateMachine,
+    );
 
   let keyDisplayer' =
     keyDisplayer
     |> Option.map(kd => {
          KeyDisplayer.keyPress(
            ~time=Revery.Time.toFloatSeconds(time),
-           keyPressToString(key),
+           keyCandidateToString(key),
            kd,
          )
        });
@@ -219,9 +434,20 @@ let keyDown =
       ...model,
       inputStateMachine: inputStateMachine',
       keyDisplayer: keyDisplayer',
-    },
+    }
+    |> incrementTick,
     effects,
   );
+};
+
+let disable = ({inputStateMachine, _} as model) => {
+  ...model,
+  inputStateMachine: InputStateMachine.disable(inputStateMachine),
+};
+
+let enable = ({inputStateMachine, _} as model) => {
+  ...model,
+  inputStateMachine: InputStateMachine.enable(inputStateMachine),
 };
 
 let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
@@ -242,28 +468,87 @@ let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
       ...model,
       inputStateMachine: inputStateMachine',
       keyDisplayer: keyDisplayer',
-    },
+    }
+    |> incrementTick,
     effects,
   );
 };
 
-let keyUp = (~config, ~key, ~context, {inputStateMachine, _} as model) => {
+let keyUp = (~config, ~scancode, ~context, {inputStateMachine, _} as model) => {
   let leaderKey = Configuration.leaderKey.get(config);
   let (inputStateMachine', effects) =
-    InputStateMachine.keyUp(~leaderKey, ~key, ~context, inputStateMachine);
+    InputStateMachine.keyUp(
+      ~leaderKey,
+      ~scancode,
+      ~context,
+      inputStateMachine,
+    );
+  (
+    {...model, inputStateMachine: inputStateMachine'} |> incrementTick,
+    effects,
+  );
+};
+
+let timeout = (~context, {inputStateMachine, _} as model) => {
+  let (inputStateMachine', effects) =
+    InputStateMachine.timeout(~context, inputStateMachine);
   ({...model, inputStateMachine: inputStateMachine'}, effects);
 };
 
+let candidates = (~config, ~context, {inputStateMachine, _}) => {
+  let leaderKey = Configuration.leaderKey.get(config);
+  InputStateMachine.candidates(~leaderKey, ~context, inputStateMachine);
+};
+
+let commandToAvailableBindings = (~command, ~config, ~context, model) => {
+  let allCandidates = candidates(~config, ~context, model);
+
+  if (String.length(command) <= 0) {
+    [];
+  } else {
+    allCandidates
+    |> List.filter_map(((matcher: EditorInput.Matcher.t, ex: execute)) =>
+         switch (ex) {
+         | NamedCommand({command: namedCommand, _})
+             when command == namedCommand =>
+           switch (matcher) {
+           | Sequence(keys) => Some(keys)
+           | AllKeysReleased => None
+           }
+         | _ => None
+         }
+       );
+  };
+};
+
+let consumedKeys = ({inputStateMachine, _}) =>
+  inputStateMachine |> InputStateMachine.consumedKeys;
+
 let addKeyBinding = (~binding, {inputStateMachine, _} as model) => {
-  open Schema;
-  let (inputStateMachine', uniqueId) =
-    InputStateMachine.addBinding(
-      binding.matcher,
-      binding.condition,
-      binding.command,
-      inputStateMachine,
-    );
-  ({...model, inputStateMachine: inputStateMachine'}, uniqueId);
+  Schema.(
+    switch (binding) {
+    | ResolvedBinding(binding) =>
+      let (inputStateMachine', uniqueId) =
+        InputStateMachine.addBinding(
+          binding.matcher,
+          binding.condition,
+          binding.command,
+          inputStateMachine,
+        );
+      ({...model, inputStateMachine: inputStateMachine'}, uniqueId);
+
+    | ResolvedRemap(remap) =>
+      let (inputStateMachine', uniqueId) =
+        InputStateMachine.addMapping(
+          ~allowRecursive=remap.allowRecursive,
+          remap.matcher,
+          remap.condition,
+          remap.toKeys,
+          inputStateMachine,
+        );
+      ({...model, inputStateMachine: inputStateMachine'}, uniqueId);
+    }
+  );
 };
 
 let remove = (uniqueId, {inputStateMachine, _} as model) => {
@@ -298,7 +583,9 @@ module Internal = {
              | Terminal => "terminalFocus" |> parse
              | InsertAndCommandLine =>
                "insertMode || commandLineFocus" |> parse
-             | All => WhenExpr.Value(True);
+             | NormalAndVisualAndSelectAndOperator =>
+               "selectMode || normalMode || visualMode || operatorPending"
+               |> parse;
            }
          );
 
@@ -321,12 +608,30 @@ module Internal = {
            (acc, resolvedBinding: Schema.resolvedKeybinding) => {
              let (ism, bindings) = acc;
              let (ism', bindingId) =
-               InputStateMachine.addBinding(
-                 resolvedBinding.matcher,
-                 resolvedBinding.condition,
-                 resolvedBinding.command,
-                 ism,
-               );
+               switch (resolvedBinding) {
+               | ResolvedBinding({matcher, condition, command, _}) =>
+                 InputStateMachine.addBinding(
+                   matcher,
+                   condition,
+                   command,
+                   ism,
+                 )
+
+               | ResolvedRemap({
+                   allowRecursive,
+                   matcher,
+                   condition,
+                   toKeys,
+                   _,
+                 }) =>
+                 InputStateMachine.addMapping(
+                   ~allowRecursive,
+                   matcher,
+                   condition,
+                   toKeys,
+                   ism,
+                 )
+               };
              (ism', [bindingId, ...bindings]);
            },
            (inputStateMachine', []),
@@ -356,30 +661,21 @@ let update = (msg, model) => {
     // In other words - characters like 'J' should resolve to 'Shift+j'
     let explicitShiftKeyNeeded = false;
     let maybeMatcher =
-      EditorInput.Matcher.parse(
-        ~explicitShiftKeyNeeded,
-        ~getKeycode,
-        ~getScancode,
-        mapping.fromKeys,
-      );
+      EditorInput.Matcher.parse(~explicitShiftKeyNeeded, mapping.fromKeys);
     let (model, eff) =
       switch (
         VimCommandParser.parse(~scriptId=mapping.scriptId, mapping.toValue)
       ) {
       | KeySequence(toValue) =>
         let maybeKeys =
-          EditorInput.KeyPress.parse(
-            ~explicitShiftKeyNeeded,
-            ~getKeycode,
-            ~getScancode,
-            toValue,
-          );
+          EditorInput.KeyPress.parse(~explicitShiftKeyNeeded, toValue);
 
         let maybeModel =
           ResultEx.map2(
             (matcher, keys) => {
               let (inputStateMachine', _mappingId) =
                 InputStateMachine.addMapping(
+                  ~allowRecursive=mapping.recursive,
                   matcher,
                   Internal.vimMapModeToWhenExpr(mapping.mode),
                   keys,
@@ -430,6 +726,8 @@ let update = (msg, model) => {
       Nothing,
     )
 
+  | Timeout => (model, TimedOut)
+
   | KeyDisplayer(msg) =>
     let keyDisplayer' =
       model.keyDisplayer |> Option.map(KeyDisplayer.update(msg));
@@ -471,12 +769,31 @@ module Commands = {
 
 // SUBSCRIPTION
 
-let sub = ({keyDisplayer, _}) => {
-  switch (keyDisplayer) {
-  | None => Isolinear.Sub.none
-  | Some(kd) =>
-    KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
-  };
+let sub = (~config, {keyDisplayer, inputTick, inputStateMachine, _}) => {
+  let keyDisplayerSub =
+    switch (keyDisplayer) {
+    | None => Isolinear.Sub.none
+    | Some(kd) =>
+      KeyDisplayer.sub(kd) |> Isolinear.Sub.map(msg => KeyDisplayer(msg))
+    };
+
+  let timeoutSub =
+    switch (Configuration.timeout.get(config)) {
+    | NoTimeout => Isolinear.Sub.none
+    | Timeout(delay) =>
+      if (InputStateMachine.isPending(inputStateMachine)) {
+        Service_Time.Sub.once(
+          ~uniqueId="Feature_Input.keyExpirer:" ++ string_of_int(inputTick),
+          ~delay,
+          ~msg=(~current as _) => {
+          Timeout
+        });
+      } else {
+        Isolinear.Sub.none;
+      }
+    };
+
+  [keyDisplayerSub, timeoutSub] |> Isolinear.Sub.batch;
 };
 
 module ContextKeys = {
@@ -490,7 +807,7 @@ module Contributions = {
   let commands =
     Commands.[showInputState, enableKeyDisplayer, disableKeyDisplayer];
 
-  let configuration = Configuration.[leaderKey.spec];
+  let configuration = Configuration.[leaderKey.spec, timeout.spec];
 
   let contextKeys = model => {
     WhenExpr.ContextKeys.(
@@ -512,6 +829,20 @@ module View = {
       | None => React.empty
       | Some(keyDisplayer) =>
         <KeyDisplayer model=keyDisplayer uiFont bottom right />
+      };
+    };
+  };
+
+  module Matcher = {
+    open EditorInput;
+    open EditorInput.Matcher;
+    let make = (~matcher: EditorInput.Matcher.t, ~font: UiFont.t, ()) => {
+      switch (matcher) {
+      | AllKeysReleased => React.empty
+      | Sequence(matchers) =>
+        let text =
+          matchers |> List.map(KeyPress.toString) |> String.concat(", ");
+        <Text text fontFamily={font.family} fontSize={font.size} />;
       };
     };
   };

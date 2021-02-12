@@ -4,6 +4,7 @@ open Oni_Core;
 type font =
   Oni_Core.Font.t = {
     fontFamily: [@opaque] Revery.Font.Family.t,
+    fontWeight: [@opaque] Revery.Font.Weight.t,
     fontSize: float,
     spaceWidth: float,
     underscoreWidth: float,
@@ -39,6 +40,7 @@ module Sub: {
       ~uniqueId: string,
       ~fontFamily: string,
       ~fontSize: float,
+      ~fontWeight: Revery.Font.Weight.t,
       ~fontLigatures: ConfigurationValues.fontLigatures,
       ~fontSmoothing: ConfigurationValues.fontSmoothing
     ) =>

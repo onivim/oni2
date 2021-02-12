@@ -720,6 +720,33 @@ void onCursorMoveScreenLine(screenLineMotion_T motion, int count, linenr_T start
    Val_int(count), Val_int(startLine));
    *outLine = Int_val(valDestLine);
    CAMLreturn0;
+
+}
+
+void onOutput(char_u *cmd, char_u* output) {
+  CAMLparam0();
+  CAMLlocal2(vStr, vMaybeOutput);
+
+  // `cmd` shouldn't be NULL, but if it is, don't bother calling back..
+  if (cmd == NULL) {
+    CAMLreturn0;
+  }
+
+  vStr = caml_copy_string((const char*) cmd);
+
+  if (output == NULL) {
+    vMaybeOutput = Val_none;
+  } else {
+    vMaybeOutput = Val_some(caml_copy_string((const char *)output));
+  }
+
+   static const value *lv_onOutput = NULL;
+   if (lv_onOutput == NULL) {
+     lv_onOutput = caml_named_value("lv_onOutput");
+   }
+  caml_callback2(*lv_onOutput, vStr, vMaybeOutput);
+
+  CAMLreturn0;
 }
 
 int onToggleComments(buf_T *buf, linenr_T start, linenr_T end,
@@ -795,6 +822,19 @@ colnr_T srcColumn, colnr_T wantColumn, linenr_T *destLine, colnr_T *destColumn) 
   }
 
    CAMLreturn0;
+}
+
+void onCursorAdd(pos_T newCursorPosition) {
+   CAMLparam0();
+   static const value *lv_onCursorAdd = NULL;
+   if (lv_onCursorAdd == NULL) {
+     lv_onCursorAdd = caml_named_value("lv_onCursorAdd");
+   }
+    caml_callback2(*lv_onCursorAdd,
+    Val_int(newCursorPosition.lnum),
+    Val_int(newCursorPosition.col)
+    );
+  CAMLreturn0;
 }
 
 void onScrollCallback(scrollDirection_T dir, long count) {
@@ -894,8 +934,9 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetInputMapCallback(&onInputMap);
   vimSetInputUnmapCallback(&onInputUnmap);
   vimSetToggleCommentsCallback(&onToggleComments);
+  vimSetCursorAddCallback(&onCursorAdd);
   vimSetFunctionGetCharCallback(&onGetChar);
-
+  vimSetOutputCallback(&onOutput);
   char *args[0];
   vimInit(0, args);
   return Val_unit;
@@ -964,6 +1005,26 @@ CAMLprim value libvim_vimGetMode(value unit) {
   return Val_int(val);
 }
 
+CAMLprim value libvim_vimGetSubMode(value unit) {
+  CAMLparam0();
+  subMode_T submode = vimGetSubMode();
+
+  int val = 0;
+  switch (submode) {
+    case SM_NONE:
+      val = 0;
+      break;
+    case SM_INSERT_LITERAL:
+      val = 1;
+      break;
+    default:
+      val = 0;
+      break;
+  }
+
+  CAMLreturn(Val_int(val));
+}
+
 CAMLprim value libvim_vimBufferGetId(value v) {
   buf_T *buf = (buf_T *)v;
   int id = vimBufferGetId(buf);
@@ -1028,6 +1089,14 @@ CAMLprim value libvim_vimBufferLoad(value v) {
   char_u *s;
   s = (char_u *)String_val(v);
   buf_T *buf = vimBufferLoad(s, 1, 0);
+  value vbuf = (value)buf;
+  CAMLreturn(vbuf);
+}
+
+CAMLprim value libvim_vimBufferNew(value vUnit) {
+  CAMLparam1(vUnit);
+
+  buf_T *buf = vimBufferNew(BLN_NEW);
   value vbuf = (value)buf;
   CAMLreturn(vbuf);
 }

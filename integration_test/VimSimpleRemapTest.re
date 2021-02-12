@@ -1,28 +1,16 @@
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
-runTest(~name="VimSimpleRemapTest", (dispatch, wait, runEffects) => {
+runTest(~name="VimSimpleRemapTest", ({dispatch, wait, runEffects, input, _}) => {
   wait(~name="Initial mode is normal", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
 
   // Use inoremap to set up jj -> <ESC> binding
-  dispatch(VimExecuteCommand("inoremap jj <ESC>"));
+  dispatch(
+    VimExecuteCommand({allowAnimation: true, command: "inoremap jj <ESC>"}),
+  );
   runEffects();
-
-  let input = key => {
-    let scancode = Sdl2.Scancode.ofName(key);
-    let keycode = Sdl2.Keycode.ofName(key);
-    let modifiers = EditorInput.Modifiers.none;
-
-    let keyPress: EditorInput.KeyPress.t =
-      EditorInput.KeyPress.physicalKey(~scancode, ~keycode, ~modifiers);
-    let time = Revery.Time.now();
-
-    dispatch(Model.Actions.KeyDown(keyPress, time));
-    dispatch(Model.Actions.KeyUp(keyPress, time));
-    runEffects();
-  };
 
   input("i");
   wait(~name="Mode is now insert", (state: State.t) =>

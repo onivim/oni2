@@ -29,6 +29,17 @@ let initial = {
   resultsTree: Component_VimTree.create(~rowHeight=25),
 };
 
+module Configuration = {
+  open Config.Schema;
+  let searchExclude = setting("search.exclude", list(string), ~default=[]);
+  let filesExclude =
+    setting(
+      "files.exclude",
+      list(string),
+      ~default=["_esy", ".git", "node_modules"],
+    );
+};
+
 let matchToLocListItem = (hit: Ripgrep.Match.t) =>
   LocationListItem.{
     file: hit.file,
@@ -85,10 +96,14 @@ type outmsg =
       filePath: string,
       location: CharacterPosition.t,
     })
+  | PreviewFile({
+      filePath: string,
+      location: CharacterPosition.t,
+    })
   | Focus
   | UnhandledWindowMovement(Component_VimWindows.outmsg);
 
-let update = (model, msg) => {
+let update = (~previewEnabled, model, msg) => {
   switch (msg) {
   | Input(key) =>
     switch (model.focus) {
@@ -175,16 +190,20 @@ let update = (model, msg) => {
       Component_VimTree.update(listMsg, model.resultsTree);
 
     let eff =
-      Component_VimTree.(
-        switch (outmsg) {
-        | Nothing => None
-        | Selected(item) =>
-          Some(OpenFile({filePath: item.file, location: item.location}))
-        // TODO
-        | Collapsed(_) => None
-        | Expanded(_) => None
-        }
-      );
+      switch (outmsg) {
+      | Component_VimTree.Nothing => None
+      | Component_VimTree.Touched(item) =>
+        Some(
+          previewEnabled
+            ? PreviewFile({filePath: item.file, location: item.location})
+            : OpenFile({filePath: item.file, location: item.location}),
+        )
+      | Component_VimTree.Selected(item) =>
+        Some(OpenFile({filePath: item.file, location: item.location}))
+      // TODO
+      | Component_VimTree.Collapsed(_) => None
+      | Component_VimTree.Expanded(_) => None
+      };
 
     ({...model, resultsTree}, eff);
 
@@ -201,11 +220,17 @@ module SearchSubscription =
     type action = msg;
   });
 
-let subscriptions = (~workingDirectory, ripgrep, dispatch) => {
+let subscriptions =
+    (~config: Oni_Core.Config.resolver, ~workingDirectory, ripgrep, dispatch) => {
+  let searchExclude =
+    Configuration.searchExclude.get(config)
+    |> List.append(Configuration.filesExclude.get(config));
+
   let search = query => {
     SearchSubscription.create(
       ~id="workspace-search",
       ~query,
+      ~searchExclude,
       ~directory=workingDirectory,
       ~ripgrep,
       ~onUpdate=items => dispatch(Update(items)),
@@ -373,4 +398,5 @@ module Contributions = {
 
     [inputTextKeys, vimNavKeys, vimTreeKeys] |> unionMany;
   };
+  let configuration = Configuration.[searchExclude.spec, filesExclude.spec];
 };

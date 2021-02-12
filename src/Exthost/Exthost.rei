@@ -17,7 +17,9 @@ module Label: {
     | Icon(string);
 
   [@deriving show]
-  type t = list(segment);
+  type t;
+
+  let segments: t => list(segment);
 
   let ofString: string => t;
   let toString: t => string;
@@ -28,7 +30,7 @@ module Label: {
 module Command: {
   [@deriving show]
   type t = {
-    id: string,
+    id: option(string),
     label: option(Label.t),
   };
 
@@ -98,15 +100,26 @@ module OneBasedRange: {
 
 module CodeLens: {
   [@deriving show]
-  type t = {
+  type lens = {
     cacheId: option(list(int)),
     range: OneBasedRange.t,
     command: option(Command.t),
   };
 
-  let decode: Json.decoder(t);
+  module List: {
+    [@deriving show]
+    type cacheId;
 
-  module List: {let decode: Json.decoder(list(t));};
+    [@deriving show]
+    type t = {
+      cacheId: option(cacheId),
+      lenses: list(lens),
+    };
+
+    let default: t;
+
+    let decode: Json.decoder(t);
+  };
 };
 
 module Location: {
@@ -144,6 +157,15 @@ module Edit: {
   };
 };
 
+module ExtensionActivationError: {
+  [@deriving show]
+  type t =
+    | Message(string)
+    | MissingDependency(ExtensionId.t);
+
+  let toString: t => string;
+};
+
 module ExtensionActivationReason: {
   type t;
 
@@ -156,6 +178,8 @@ module ExtensionActivationReason: {
 module ExtensionId: {
   [@deriving show]
   type t = string;
+
+  let toString: t => string;
 
   let decode: Json.decoder(t);
 };
@@ -171,17 +195,6 @@ module DefinitionLink: {
 
   let decode: Json.decoder(t);
 };
-
-// module DocumentFilter: {
-//   [@deriving show]
-//   type t;
-
-//   let matches: (~filetype: string, t) => bool;
-
-//   let decode: Json.decoder(t);
-
-//   let toString: t => string;
-// };
 
 module DocumentSelector: {
   [@deriving show]
@@ -268,6 +281,8 @@ module SuggestItem: {
     type t;
 
     let none: t;
+
+    let insertAsSnippet: t;
 
     let matches: (~rule: rule, t) => bool;
   };
@@ -591,9 +606,11 @@ module SignatureHelp: {
     let decode: Json.decoder(t);
   };
 
+  type cacheId;
+
   module Response: {
     type t = {
-      id: int,
+      cacheId,
       signatures: list(Signature.t),
       activeSignature: int,
       activeParameter: int,
@@ -604,10 +621,15 @@ module SignatureHelp: {
 };
 
 module SuggestResult: {
+  [@deriving show];
+
+  type cacheId;
+
   [@deriving show]
   type t = {
     completions: list(SuggestItem.t),
     isIncomplete: bool,
+    cacheId: option(cacheId),
   };
 
   let empty: t;
@@ -861,6 +883,12 @@ module Files: {
     let encode: Json.encoder(t);
   };
 
+  module ReadDirResult: {
+    type t = (string, FileType.t);
+
+    let encode: Json.encoder(t);
+  };
+
   module FileSystemEvents: {
     type t = {
       created: list(Oni_Core.Uri.t),
@@ -1038,7 +1066,7 @@ module WorkspaceData: {
     isUntitled: bool,
   };
 
-  let fromUri: (~name: string, ~id: string, Uri.t) => t;
+  let fromUri: (~name: string, Uri.t) => t;
   let fromPath: string => t;
 
   let encode: Json.encoder(t);
@@ -1212,12 +1240,14 @@ module Msg: {
           activateCallTime: int,
           activateResolvedTime: int,
         })
-      //activationEvent: option(string),
       | ExtensionActivationError({
           extensionId: ExtensionId.t,
-          errorMessage: string,
+          error: ExtensionActivationError.t,
         })
-      | ExtensionRuntimeError({extensionId: ExtensionId.t});
+      | ExtensionRuntimeError({
+          extensionId: ExtensionId.t,
+          errorsJson: list(Yojson.Safe.t),
+        });
   };
 
   module FileSystem: {
@@ -1541,6 +1571,7 @@ module Msg: {
           alignment,
           command: option(Command.t),
           color: option(Color.t),
+          backgroundColor: option(Color.t),
           tooltip: option(string),
           priority: int,
         })
@@ -1625,10 +1656,7 @@ module Reply: {
   let okBuffer: Bytes.t => t;
 };
 
-module Middleware: {
-  let download: Msg.DownloadService.msg => Lwt.t(Reply.t);
-  let filesystem: Msg.FileSystem.msg => Lwt.t(Reply.t);
-};
+module Middleware: {let download: Msg.DownloadService.msg => Lwt.t(Reply.t);};
 
 module Client: {
   type t;
@@ -1736,6 +1764,10 @@ module Request: {
       Lwt.t(unit);
   };
 
+  module FileSystem: {
+    let readFile: (~handle: int, ~uri: Uri.t, Client.t) => Lwt.t(string);
+  };
+
   module FileSystemEventService: {
     let onFileEvent: (~events: Files.FileSystemEvents.t, Client.t) => unit;
     // TODO
@@ -1746,7 +1778,14 @@ module Request: {
   module LanguageFeatures: {
     let provideCodeLenses:
       (~handle: int, ~resource: Uri.t, Client.t) =>
-      Lwt.t(option(list(CodeLens.t)));
+      Lwt.t(option(CodeLens.List.t));
+
+    let resolveCodeLens:
+      (~handle: int, ~codeLens: CodeLens.lens, Client.t) =>
+      Lwt.t(option(CodeLens.lens));
+
+    let releaseCodeLenses:
+      (~handle: int, ~cacheId: CodeLens.List.cacheId, Client.t) => unit;
 
     let provideCompletionItems:
       (
@@ -1761,6 +1800,9 @@ module Request: {
     let resolveCompletionItem:
       (~handle: int, ~chainedCacheId: ChainedCacheId.t, Client.t) =>
       Lwt.t(SuggestItem.t);
+
+    let releaseCompletionItems:
+      (~handle: int, ~cacheId: SuggestResult.cacheId, Client.t) => unit;
 
     let provideDocumentHighlights:
       (
@@ -1859,6 +1901,9 @@ module Request: {
       ) =>
       Lwt.t(option(SignatureHelp.Response.t));
 
+    let releaseSignatureHelp:
+      (~handle: int, ~cacheId: SignatureHelp.cacheId, Client.t) => unit;
+
     let provideDocumentFormattingEdits:
       (
         ~handle: int,
@@ -1888,8 +1933,6 @@ module Request: {
         Client.t
       ) =>
       Lwt.t(option(list(Edit.SingleEditOperation.t)));
-
-    let releaseSignatureHelp: (~handle: int, ~id: int, Client.t) => unit;
   };
 
   module SCM: {

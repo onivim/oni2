@@ -46,6 +46,37 @@ let completionsView =
       />
     : React.empty;
 
+let signatureHelpView =
+    (
+      ~cursorPixelX,
+      ~cursorPixelY,
+      ~languageSupport,
+      ~theme,
+      ~tokenTheme,
+      ~editorFont: Service_Font.font,
+      ~uiFont: UiFont.t,
+      ~languageInfo,
+      ~buffer,
+      ~grammars,
+      ~dispatch,
+      (),
+    ) =>
+  Feature_LanguageSupport.SignatureHelp.isActive(languageSupport)
+    ? <Feature_LanguageSupport.SignatureHelp.View
+        x=cursorPixelX
+        y=cursorPixelY
+        theme
+        tokenTheme
+        editorFont
+        uiFont
+        languageInfo
+        buffer
+        grammars
+        dispatch
+        model=languageSupport
+      />
+    : React.empty;
+
 let make =
     (
       ~isActiveSplit,
@@ -56,6 +87,10 @@ let make =
       ~tokenTheme,
       ~languageSupport,
       ~editorFont: Service_Font.font,
+      ~uiFont,
+      ~buffer,
+      ~languageInfo,
+      ~grammars,
       (),
     ) => {
   let ({x: pixelX, y: pixelY}: PixelPosition.t, _) =
@@ -73,6 +108,19 @@ let make =
           theme
           tokenTheme
           editorFont
+        />
+        <signatureHelpView
+          languageSupport
+          cursorPixelX
+          cursorPixelY
+          theme
+          tokenTheme
+          editorFont
+          uiFont
+          buffer
+          languageInfo
+          dispatch={_ => ()}
+          grammars
         />
       </View>
     : React.empty;

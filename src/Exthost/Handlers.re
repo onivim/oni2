@@ -114,6 +114,7 @@ let handlers =
     ),
     mainNotImplemented("MainThreadTextEditors"),
     mainNotImplemented("MainThreadEditorInsets"),
+    mainNotImplemented("MainThreadEditorTabs"),
     main(
       ~handler=Msg.Errors.handle,
       ~mapper=msg => Msg.Errors(msg),
@@ -162,6 +163,7 @@ let handlers =
       ~mapper=msg => Msg.StatusBar(msg),
       "MainThreadStatusBar",
     ),
+    mainNotImplemented("MainThreadSecretStaet"),
     main(
       ~handler=Msg.Storage.handle,
       ~mapper=msg => Msg.Storage(msg),
@@ -182,6 +184,7 @@ let handlers =
     mainNotImplemented("MainThreadWebviewViews"),
     mainNotImplemented("MainThreadCustomEditors"),
     mainNotImplemented("MainThreadUrls"),
+    mainNotImplemented("MainThreadUriOpeners"),
     main(
       ~handler=Msg.Workspace.handle,
       ~mapper=msg => Msg.Workspace(msg),
@@ -214,6 +217,7 @@ let handlers =
     mainNotImplemented("MainThreadTheming"),
     mainNotImplemented("MainThreadTunnelService"),
     mainNotImplemented("MainThreadTimeline"),
+    mainNotImplemented("MainThreadTesting"),
     ext("ExtHostCommands"),
     ext("ExtHostConfiguration"),
     ext("ExtHostDiagnostics"),
@@ -245,8 +249,10 @@ let handlers =
     ext("ExtHostEditorInsets"),
     ext("ExtHostProgress"),
     ext("ExtHostComments"),
+    ext("ExtHostSecretState"),
     ext("ExtHostStorage"),
     ext("ExtHostUrls"),
+    ext("ExtHostUriOpeners"),
     ext("ExtHostOutputService"),
     ext("ExtHosLabelService"), // SIC
     ext("ExtHostNotebook"),
@@ -254,6 +260,7 @@ let handlers =
     ext("ExtHostTunnelService"),
     ext("ExtHostAuthentication"),
     ext("ExtHostTimeline"),
+    ext("ExtHostTesting"),
   ]
   |> List.mapi((idx, v) => setId(~id=idx + 1, v));
 

@@ -43,13 +43,14 @@ let pick = (f, {extensions, _}) => {
      });
 };
 
-let themeByName = (~name, model) => {
+let themeById = (~id, model) => {
   model
   |> pick(manifest => manifest.contributes.themes)
   |> List.flatten
   |> List.fold_left(
        (acc, curr: Contributions.Theme.t) =>
-         if (curr.label == name) {
+         if (Contributions.Theme.id(curr) == id
+             || Contributions.Theme.label(curr) == id) {
            Some(curr);
          } else {
            acc;
@@ -64,16 +65,33 @@ let themesByName = (~filter: string, model) => {
        Exthost.Extension.Contributions.(manifest.contributes.themes)
      })
   |> List.flatten
-  |> List.map(({label, _}: Exthost.Extension.Contributions.Theme.t) =>
-       label
-     )
+  |> List.map(theme => Contributions.Theme.label(theme))
   |> List.filter(label => Utility.StringEx.contains(filter, label));
+};
+
+let snippetFilePaths = (~fileType, model) => {
+  Exthost.Extension.(
+    model
+    |> pick((manifest: Manifest.t) => {
+         Contributions.(manifest.contributes.snippets)
+       })
+    |> List.flatten
+    |> List.filter(({language, _}: Contributions.Snippet.t) => {
+         switch (language) {
+         | None => true
+         | Some(languageId) => fileType == languageId
+         }
+       })
+    |> List.filter_map(({path, _}: Contributions.Snippet.t) =>
+         Fp.absoluteCurrentPlatform(path)
+       )
+  );
 };
 
 module ListView = ListView;
 module DetailsView = DetailsView;
 
-let sub = (~setup, model) => {
+let sub = (~isVisible, ~setup, model) => {
   let toMsg =
     fun
     | Ok(query) => SearchQueryResults(query)
@@ -91,12 +109,37 @@ let sub = (~setup, model) => {
         SearchQueryError("Unknown error: " ++ Printexc.to_string(_exn))
       };
 
-  switch (model.latestQuery) {
-  | Some(query) when !Service_Extensions.Query.isComplete(query) =>
-    Service_Extensions.Sub.search(~setup, ~query, ~toMsg)
-  | Some(_)
-  | None => Isolinear.Sub.none
-  };
+  let querySub =
+    switch (model.latestQuery) {
+    | Some(query) when !Service_Extensions.Query.isComplete(query) =>
+      Service_Extensions.Sub.search(~setup, ~query, ~toMsg)
+    | Some(_)
+    | None => Isolinear.Sub.none
+    };
+
+  let updateCheckSub =
+    !isVisible
+      ? Isolinear.Sub.none
+      : (
+        switch (model.extensionsToCheckForUpdates) {
+        | [] => Isolinear.Sub.none
+        | [extensionId, ..._] =>
+          Service_Extensions.Sub.details(
+            ~setup,
+            ~extensionId,
+            ~toMsg=
+              fun
+              | Ok(details) =>
+                UpdateCheckSucceeded({
+                  extensionId,
+                  latestVersion: details.version,
+                })
+              | Error(msg) => UpdateCheckFailed({extensionId, msg}),
+          )
+        }
+      );
+
+  [querySub, updateCheckSub] |> Isolinear.Sub.batch;
 };
 
 module Contributions = {

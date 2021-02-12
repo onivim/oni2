@@ -11,25 +11,10 @@ let keybindings =
 runTest(
   ~keybindings,
   ~name="KeySequenceJJTest",
-  (dispatch, wait, runEffects) => {
+  ({wait, input, _}) => {
     wait(~name="Initial mode is normal", (state: State.t) =>
       Selectors.mode(state) |> Vim.Mode.isNormal
     );
-
-    let input = key => {
-      let scancode = Sdl2.Scancode.ofName(key);
-      let keycode = Sdl2.Keycode.ofName(key);
-      let modifiers = EditorInput.Modifiers.none;
-
-      let keyPress: EditorInput.KeyPress.t =
-        EditorInput.KeyPress.physicalKey(~keycode, ~scancode, ~modifiers);
-      let time = Revery.Time.now();
-
-      dispatch(Model.Actions.KeyDown(keyPress, time));
-      //dispatch(Model.Actions.TextInput(key));
-      dispatch(Model.Actions.KeyUp(keyPress, time));
-      runEffects();
-    };
 
     input("i");
     wait(~name="Mode is now insert", (state: State.t) =>

@@ -5,6 +5,7 @@ module Gradient = {
 
   let drawLeftToRight =
       (
+        ~opacity,
         ~leftColor: Revery.Color.t,
         ~rightColor: Revery.Color.t,
         ~x,
@@ -27,12 +28,14 @@ module Gradient = {
       );
 
     Skia.Paint.setShader(paint, gradient);
+    Skia.Paint.setAlpha(paint, opacity);
 
     Skia.Canvas.drawRectLtwh(context, left, top, width, height, paint);
   };
 
   let drawTopToBottom =
       (
+        ~opacity,
         ~topColor: Revery.Color.t,
         ~bottomColor: Revery.Color.t,
         ~x,
@@ -55,6 +58,7 @@ module Gradient = {
       );
 
     Skia.Paint.setShader(paint, gradient);
+    Skia.Paint.setAlpha(paint, opacity);
 
     Skia.Canvas.drawRectLtwh(context, left, top, width, height, paint);
   };
@@ -70,11 +74,23 @@ module Shadow = {
     | Down
     | Up;
 
-  let render = (~direction, ~x, ~y, ~width, ~height, ~context) => {
+  let render =
+      (
+        ~color=shadowStartColor,
+        ~opacity,
+        ~direction,
+        ~x,
+        ~y,
+        ~width,
+        ~height,
+        ~context,
+      ) => {
+    let opacity = Revery.Color.getAlpha(color) *. opacity;
     switch (direction) {
     | Right =>
       Gradient.drawLeftToRight(
-        ~leftColor=shadowStartColor,
+        ~opacity,
+        ~leftColor=color,
         ~rightColor=shadowStopColor,
         ~x,
         ~y,
@@ -84,8 +100,9 @@ module Shadow = {
       )
     | Left =>
       Gradient.drawLeftToRight(
+        ~opacity,
         ~leftColor=shadowStopColor,
-        ~rightColor=shadowStartColor,
+        ~rightColor=color,
         ~x,
         ~y,
         ~width,
@@ -94,7 +111,8 @@ module Shadow = {
       )
     | Down =>
       Gradient.drawTopToBottom(
-        ~topColor=shadowStartColor,
+        ~opacity,
+        ~topColor=color,
         ~bottomColor=shadowStopColor,
         ~x,
         ~y,
@@ -104,8 +122,9 @@ module Shadow = {
       )
     | Up =>
       Gradient.drawTopToBottom(
+        ~opacity,
         ~topColor=shadowStopColor,
-        ~bottomColor=shadowStartColor,
+        ~bottomColor=color,
         ~x,
         ~y,
         ~width,
@@ -117,18 +136,21 @@ module Shadow = {
 };
 
 module Top = {
-  let make = () => {
+  let make = (~theme, ~opacity=1.0, ~height as h=12, ()) => {
+    let destColor = Feature_Theme.Colors.shadow.from(theme);
     <Canvas
       style=Style.[
         position(`Absolute),
         top(0),
         left(0),
         right(0),
-        height(12),
+        height(h),
         pointerEvents(`Ignore),
       ]
       render={(canvasContext, dimensions) => {
         Shadow.render(
+          ~opacity,
+          ~color=destColor,
           ~direction=Shadow.Down,
           ~x=0.,
           ~y=0.,
@@ -142,18 +164,21 @@ module Top = {
 };
 
 module Bottom = {
-  let make = () => {
+  let make = (~theme, ~opacity=1.0, ~height as h=12, ()) => {
+    let destColor = Feature_Theme.Colors.shadow.from(theme);
     <Canvas
       style=Style.[
         position(`Absolute),
         bottom(0),
         left(0),
         right(0),
-        height(12),
+        height(h),
         pointerEvents(`Ignore),
       ]
       render={(canvasContext, dimensions) => {
         Shadow.render(
+          ~opacity,
+          ~color=destColor,
           ~direction=Shadow.Up,
           ~x=0.,
           ~y=0.,

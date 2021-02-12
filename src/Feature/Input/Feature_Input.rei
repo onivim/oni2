@@ -1,6 +1,9 @@
 open Oni_Core;
 open EditorInput;
 
+// TODO: Move to Service_Input
+module ReveryKeyConverter = ReveryKeyConverter;
+
 type outmsg =
   | Nothing
   | DebugInputShown
@@ -8,7 +11,8 @@ type outmsg =
       fromKeys: string,
       toKeys: string,
       error: string,
-    });
+    })
+  | TimedOut;
 
 [@deriving show]
 type command;
@@ -16,13 +20,40 @@ type command;
 // MODEL
 
 module Schema: {
-  type keybinding = {
-    key: string,
-    command: string,
-    condition: WhenExpr.t,
-  };
+  type keybinding;
+
+  // Bind a key to a command
+  let bind:
+    (~key: string, ~command: string, ~condition: WhenExpr.t) => keybinding;
+
+  // Bind a key to a command, with arguments
+  let bindWithArgs:
+    (
+      ~arguments: Yojson.Safe.t,
+      ~key: string,
+      ~command: string,
+      ~condition: WhenExpr.t
+    ) =>
+    keybinding;
+
+  // Clear all bindings for a key
+  let clear: (~key: string) => keybinding;
+
+  // Remap a key -> to another key
+  let remap:
+    (
+      ~allowRecursive: bool,
+      ~fromKeys: string,
+      ~toKeys: string,
+      ~condition: WhenExpr.t
+    ) =>
+    keybinding;
+
+  let mapCommand: (~f: string => string, keybinding) => keybinding;
 
   type resolvedKeybinding;
+
+  let resolvedToString: resolvedKeybinding => string;
 
   let resolve: keybinding => result(resolvedKeybinding, string);
 };
@@ -41,32 +72,60 @@ type model;
 let initial: list(Schema.keybinding) => model;
 
 type execute =
-  | NamedCommand(string)
+  | NamedCommand({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | VimExCommand(string);
 
 type effect =
   | Execute(execute)
   | Text(string)
-  | Unhandled(KeyPress.t)
+  | Unhandled({
+      key: KeyCandidate.t,
+      isProducedByRemap: bool,
+    })
   | RemapRecursionLimitHit;
 
 let keyDown:
   (
     ~config: Config.resolver,
-    ~key: KeyPress.t,
+    ~scancode: int,
+    ~key: KeyCandidate.t,
     ~context: WhenExpr.ContextKeys.t,
     ~time: Revery.Time.t,
     model
   ) =>
   (model, list(effect));
 
+let timeout:
+  (~context: WhenExpr.ContextKeys.t, model) => (model, list(effect));
+
 let text:
   (~text: string, ~time: Revery.Time.t, model) => (model, list(effect));
+
+let candidates:
+  (~config: Config.resolver, ~context: WhenExpr.ContextKeys.t, model) =>
+  list((EditorInput.Matcher.t, execute));
+
+let commandToAvailableBindings:
+  (
+    ~command: string,
+    ~config: Config.resolver,
+    ~context: WhenExpr.ContextKeys.t,
+    model
+  ) =>
+  list(list(EditorInput.KeyPress.t));
+
+let keyPressToString: EditorInput.KeyPress.t => string;
+let keyCandidateToString: EditorInput.KeyCandidate.t => string;
+
+let consumedKeys: model => list(EditorInput.KeyCandidate.t);
 
 let keyUp:
   (
     ~config: Config.resolver,
-    ~key: KeyPress.t,
+    ~scancode: int,
     ~context: WhenExpr.ContextKeys.t,
     model
   ) =>
@@ -79,13 +138,16 @@ let addKeyBinding:
 
 let remove: (uniqueId, model) => model;
 
+let enable: model => model;
+let disable: model => model;
+
 // UPDATE
 
 let update: (msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
-let sub: model => Isolinear.Sub.t(msg);
+let sub: (~config: Config.resolver, model) => Isolinear.Sub.t(msg);
 
 // CONTRIBUTIONS
 
@@ -101,6 +163,12 @@ module View: {
   module Overlay: {
     let make:
       (~input: model, ~uiFont: UiFont.t, ~bottom: int, ~right: int, unit) =>
+      Revery.UI.element;
+  };
+
+  module Matcher: {
+    let make:
+      (~matcher: EditorInput.Matcher.t, ~font: UiFont.t, unit) =>
       Revery.UI.element;
   };
 };

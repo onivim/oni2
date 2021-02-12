@@ -69,11 +69,30 @@ module Internal = {
 module Effects = {
   let load = (directory, configuration, ~onComplete) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
+      Log.infof(m => m("Loading nodes for directory: %s", directory));
       let ignored =
         Configuration.getValue(c => c.filesExclude, configuration);
       let promise = Internal.getDirectoryTree(directory, ignored);
 
-      Lwt.on_success(promise, tree => {dispatch(onComplete(tree))});
+      Lwt.on_success(
+        promise,
+        tree => {
+          Log.infof(m =>
+            m("Successfully loaded nodes for directory: %s", directory)
+          );
+          dispatch(onComplete(tree));
+        },
+      );
+
+      Lwt.on_failure(promise, exn => {
+        Log.errorf(m =>
+          m(
+            "Error loading directory %s: %s",
+            directory,
+            Printexc.to_string(exn),
+          )
+        )
+      });
     });
   };
 };
@@ -84,6 +103,7 @@ type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
+  | PreviewFile(string)
   | GrabFocus;
 
 let setTree = (tree, model) => {
@@ -242,7 +262,7 @@ let update = (~configuration, msg, model) => {
 
     let model = {...model, treeView};
     switch (outmsg) {
-    | Expanded(node) => (
+    | Component_VimTree.Expanded(node) => (
         model,
         Effect(
           Effects.load(node.path, configuration, ~onComplete=newNode =>
@@ -250,11 +270,21 @@ let update = (~configuration, msg, model) => {
           ),
         ),
       )
-    | Collapsed(_) => (model, Nothing)
-    | Selected(node) =>
+    | Component_VimTree.Collapsed(_) => (model, Nothing)
+    | Component_VimTree.Touched(node) =>
+      // Set active here to avoid scrolling in BufferEnter
+      (
+        model |> setActive(Some(node.path)),
+        Oni_Core.Configuration.getValue(
+          c => c.workbenchEditorEnablePreview,
+          configuration,
+        )
+          ? PreviewFile(node.path) : OpenFile(node.path),
+      )
+    | Component_VimTree.Selected(node) =>
       // Set active here to avoid scrolling in BufferEnter
       (model |> setActive(Some(node.path)), OpenFile(node.path))
-    | Nothing => (model, Nothing)
+    | Component_VimTree.Nothing => (model, Nothing)
     };
   };
 };

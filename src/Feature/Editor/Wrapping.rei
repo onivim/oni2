@@ -17,4 +17,5 @@ let bufferBytePositionToViewLine: (~bytePosition: BytePosition.t, t) => int;
 let viewLineToBufferPosition: (~line: int, t) => bufferPosition;
 
 let numberOfLines: t => int;
-let maxLineLength: t => int;
+
+let maxLineLengthInPixels: t => float;
