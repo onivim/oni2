@@ -43,6 +43,7 @@ module Effect: {
 
   let getUserSnippetFiles:
     (
+      ~languageInfo: Exthost.LanguageInfo.t,
       list(SnippetFileMetadata.t) => 'msg
     ) =>
     Isolinear.Effect.t('msg);

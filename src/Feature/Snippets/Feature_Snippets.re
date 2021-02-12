@@ -347,6 +347,7 @@ type msg =
   | SnippetInsertionError(string)
   | SnippetsLoadedForPicker(list(Service_Snippets.SnippetWithMetadata.t))
   | InsertInternal({snippetString: string})
+  | SnippetFilesLoadedForPicker(list(Service_Snippets.SnippetFileMetadata.t))
   | EditSnippetFileRequested({
       snippetFile: Service_Snippets.SnippetFileMetadata.t,
     })
@@ -573,7 +574,7 @@ module Internal = {
 
 let update =
     (
-      ~languageInfo as _,
+      ~languageInfo,
       ~resolverFactory,
       ~selections,
       ~maybeBuffer,
@@ -704,7 +705,15 @@ let update =
       |> Option.value(~default=Nothing);
     (model, eff);
 
-  | Command(EditUserSnippets) => (model, ShowFilePicker([]))
+  | Command(EditUserSnippets) => (
+      model,
+      Effect(
+        Service_Snippets.Effect.getUserSnippetFiles(
+          ~languageInfo, snippetFiles =>
+          SnippetFilesLoadedForPicker(snippetFiles)
+        ),
+      ),
+    )
 
   | EditSnippetFileRequested({snippetFile}) =>
     let eff =
@@ -725,6 +734,11 @@ let update =
   | SnippetsLoadedForPicker(snippetsWithMetadata) => (
       model,
       ShowPicker(snippetsWithMetadata),
+    )
+
+  | SnippetFilesLoadedForPicker(snippetFiles) => (
+      model,
+      ShowFilePicker(snippetFiles),
     )
 
   | InsertInternal({snippetString}) =>

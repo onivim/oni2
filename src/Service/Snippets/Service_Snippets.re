@@ -121,7 +121,7 @@ module Cache = {
 module Internal = {
   let join = (a, b) => a @ b;
 
-  let loadSnippetsFromFolder = (~fileType, folder) => {
+  let readSnippetFilesFromFolder = folder => {
     folder
     |> Fp.toString
     |> Service_OS.Api.readdir
@@ -130,6 +130,15 @@ module Internal = {
          |> List.map((dirent: Luv.File.Dirent.t) =>
               Fp.At.(folder / dirent.name)
             )
+         |> List.filter(file => SnippetFile.scope(file) != None)
+         |> Lwt.return
+       });
+  };
+
+  let loadSnippetsFromFolder = (~fileType, folder) => {
+    readSnippetFilesFromFolder(folder)
+    |> LwtEx.flatMap(snippetFiles => {
+         snippetFiles
          |> List.filter(SnippetFile.matches(~fileType))
          |> List.map((dir: Fp.t(Fp.absolute)) => {
               let str = Fp.toString(dir);
@@ -201,9 +210,89 @@ module Effect = {
       )
     });
 
-  let getUserSnippetFiles = (_) => {
+  let getUserSnippetFiles = (~languageInfo, toMsg) => {
     // TODO
-    Isolinear.Effect.none;
+    Isolinear.Effect.createWithDispatch(
+      ~name="Service_Snippets.Effect.getUserSnippetFiles", dispatch => {
+      switch (Filesystem.getSnippetsFolder()) {
+      // TODO: Error logging
+      | Error(_) => dispatch(toMsg([]))
+      | Ok(userSnippetsFolder) =>
+        let userSnippetsPromise =
+          Internal.readSnippetFilesFromFolder(userSnippetsFolder);
+
+        let promise =
+          userSnippetsPromise
+          |> Lwt.map(userSnippets => {
+               let alreadyCreatedLanguages =
+                 userSnippets
+                 |> List.fold_left(
+                      (set, file) => {
+                        switch (SnippetFile.scope(file)) {
+                        | Some(Language(languageId)) =>
+                          StringSet.add(languageId, set)
+                        | Some(Global)
+                        | None => set
+                        }
+                      },
+                      StringSet.empty,
+                    );
+
+               // Get a list of candidate snippets
+               let candidateSnippets =
+                 Exthost.LanguageInfo.languages(languageInfo)
+                 |> List.map(fileType =>
+                      SnippetFile.language(~fileType, userSnippetsFolder)
+                    )
+                 |> List.filter(candidateFile => {
+                      switch (SnippetFile.scope(candidateFile)) {
+                      | Some(Global) => true
+                      | Some(Language(language)) =>
+                        !StringSet.mem(language, alreadyCreatedLanguages)
+                      | None => false
+                      }
+                    });
+
+               // Do we already have a global snippet?
+               let hasGlobalSnippet =
+                 userSnippets |> List.exists(SnippetFile.isGlobal);
+
+               let toMetadata = (~isCreated, snippetFile) => {
+                 let language =
+                   switch (SnippetFile.scope(snippetFile)) {
+                   | Some(Language(language)) => Some(language)
+                   | Some(Global)
+                   | None => None
+                   };
+                 SnippetFileMetadata.{
+                   isCreated,
+                   filePath: snippetFile,
+                   language,
+                 };
+               };
+
+               let existingSnippets =
+                 userSnippets |> List.map(toMetadata(~isCreated=true));
+
+               let newSnippets =
+                 (
+                   hasGlobalSnippet
+                     ? candidateSnippets
+                     : [
+                       SnippetFile.global(userSnippetsFolder),
+                       ...candidateSnippets,
+                     ]
+                 )
+                 |> List.map(toMetadata(~isCreated=false));
+               existingSnippets @ newSnippets;
+             });
+
+        Lwt.on_success(promise, snippetFiles =>
+          dispatch(toMsg(snippetFiles))
+        );
+        Lwt.on_failure(promise, _exn => dispatch(toMsg([])));
+      }
+    });
   };
 };
 

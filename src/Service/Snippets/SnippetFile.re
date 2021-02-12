@@ -4,6 +4,15 @@ type scope =
   | Global
   | Language(string);
 
+let global = (folder: Fp.t(Fp.absolute)) => {
+  Fp.At.(folder / "global.code-snippets");
+};
+
+let language = (~fileType: string, folder: Fp.t(Fp.absolute)) => {
+  let fileName = fileType ++ ".json";
+  Fp.At.(folder / fileName);
+};
+
 let scope = (path: t) => {
   let splitPath =
     path |> Fp.toString |> Filename.basename |> String.split_on_char('.');
@@ -11,12 +20,14 @@ let scope = (path: t) => {
   switch (splitPath) {
   | [] => None
   | [_] => None
-  | [_file, fileType, extension] when extension == "json" =>
+  | [fileType, extension] when extension == "json" =>
     Some(Language(fileType))
   | [_file, extension] when extension == "code-snippets" => Some(Global)
   | _ => None
   };
 };
+
+let isGlobal = (path: t) => scope(path) == Some(Global);
 
 let matches = (~fileType, snippetFile: t) => {
   switch (scope(snippetFile)) {
