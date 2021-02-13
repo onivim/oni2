@@ -6,6 +6,7 @@
 - #3090 - Snippets: Add insert snippet command
 - #3105 - Snippets: Implement configuration setting
 - #3132 - Snippets: User snippet editing
+- #2244 - Extension: Emmet support (fixes #1948)
 
 ### Bug Fixes
 
