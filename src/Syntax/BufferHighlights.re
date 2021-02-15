@@ -18,13 +18,17 @@ type t = IntMap.t(highlights);
 let initial = IntMap.empty;
 
 let setSearchHighlights = (bufferId, ranges, state) => {
+  prerr_endline("setSearchHighlights - start");
   let searchHighlightsByLine = RangeEx.toByteLineMap(ranges);
 
-  IntMap.add(
-    bufferId,
-    {searchHighlightsByLine: searchHighlightsByLine},
-    state,
-  );
+  let ret =
+    IntMap.add(
+      bufferId,
+      {searchHighlightsByLine: searchHighlightsByLine},
+      state,
+    );
+  prerr_endline("setSearchHighlights - stop");
+  ret;
 };
 
 let getSearchHighlights = (~bufferId, ~line, state) => {

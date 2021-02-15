@@ -544,8 +544,8 @@ let start =
         let buffer = Vim.Buffer.getCurrent();
         let id = Vim.Buffer.getId(buffer);
 
-        let highlightList = highlights
-        |> ArrayEx.filterToList(sameLineFilter);
+        let highlightList =
+          highlights |> ArrayEx.filterToList(sameLineFilter);
 
         dispatch(SearchSetHighlights(id, highlightList));
 
@@ -794,6 +794,10 @@ let start =
   };
 
   let updater = (state: State.t, action: Actions.t) => {
+    prerr_endline(
+      "SEARCH STRING: "
+      ++ (Vim.Search.getSearchPattern() |> Option.value(~default="NONE")),
+    );
     switch (action) {
     | ConfigurationSet(configuration) => (
         state,

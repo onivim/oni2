@@ -267,33 +267,60 @@ module Vertical = {
     |> Option.value(~default=React.empty);
   };
 
-  let searchMarkers =
-      (~bufferHighlights, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
-    let searchMatches = t =>
-      Style.[
-        position(`Absolute),
-        top(t - 3),
-        left(4),
-        right(4),
-        height(8),
-        backgroundColor(colors.findMatchBackground),
-      ];
+  let searchMarkers = {
+    let paint = Skia.Paint.make();
+    (~bufferHighlights, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
+      let canvasStyle =
+        Style.[
+          position(`Absolute),
+          top(0),
+          left(0),
+          right(0),
+          bottom(0),
+        ];
+      <Canvas
+        style=canvasStyle
+        render={(canvasContext, dimensions) => {
+          Skia.Paint.setColor(
+            paint,
+            colors.findMatchBackground |> Revery.Color.toSkia,
+          );
 
-    let searchHighlightToElement = line => {
-      let position =
-        Editor.projectLine(~line, ~pixelHeight=totalHeight, editor)
-        |> int_of_float;
-      <View style={searchMatches(position)} />;
+          let allHighlights =
+            BufferHighlights.getHighlights(
+              ~bufferId=Editor.getBufferId(editor),
+              bufferHighlights,
+            );
+
+          let len = Utility.ListEx.boundedLength(~max=500, allHighlights);
+          if (len == 500) {
+            ();
+          } else {
+            allHighlights
+            |> List.iter(line => {
+                 let position =
+                   Editor.projectLine(
+                     ~line,
+                     ~pixelHeight=totalHeight,
+                     editor,
+                   );
+                 let rect =
+                   Skia.Rect.makeLtrb(
+                     0.,
+                     position -. 3.,
+                     float(dimensions.width),
+                     position +. 3.,
+                   );
+                 Revery.Draw.CanvasContext.drawRect(
+                   ~rect,
+                   ~paint,
+                   canvasContext,
+                 );
+               });
+          };
+        }}
+      />;
     };
-
-    // BufferHighlights.getHighlights(
-    //   ~bufferId=Editor.getBufferId(editor),
-    //   bufferHighlights,
-    // )
-    // |> List.map(searchHighlightToElement)
-    // |> React.listToElement;
-
-    React.empty;
   };
 
   let documentHighlightMarkers =

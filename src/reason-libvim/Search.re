@@ -20,6 +20,8 @@ let getHighlightsInRange = (startLine, stopLine) => {
   );
 };
 
+let getSearchPattern = () => Native.vimSearchGetPattern();
+
 let getHighlights = () => {
   getHighlightsInRange(0, 0);
 };

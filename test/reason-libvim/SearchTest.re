@@ -11,6 +11,50 @@ let lineNumberToInt = lnum => lnum |> EditorCoreTypes.LineNumber.toZeroBased;
 let byteToInt = byte => byte |> ByteIndex.toInt;
 
 describe("Search", ({describe, _}) => {
+  describe("getSearchPattern", ({test, _}) => {
+    test("search with /", ({expect, _}) => {
+      let _ = reset();
+      let _ = Vim.command("nohl");
+
+      input("/");
+      input("e");
+
+      expect.equal(Search.getSearchPattern(), Some("e"));
+
+      input("f");
+
+      expect.equal(Search.getSearchPattern(), Some("ef"));
+    });
+
+    test("search with ?", ({expect, _}) => {
+      let _ = reset();
+      let _ = Vim.command("nohl");
+
+      input("?");
+      input("a");
+
+      expect.equal(Search.getSearchPattern(), Some("a"));
+
+      input("b");
+
+      expect.equal(Search.getSearchPattern(), Some("ab"));
+    });
+
+    test("search with /, unicode", ({expect, _}) => {
+      let _ = reset();
+      let _ = Vim.command("nohl");
+
+      input("?");
+      input("κ");
+
+      expect.equal(Search.getSearchPattern(), Some("κ"));
+
+      input("ό");
+
+      expect.equal(Search.getSearchPattern(), Some("κό"));
+    });
+  });
+
   describe("getSearchHighlights", ({test, _}) => {
     test("gets highlights", ({expect, _}) => {
       let _ = reset();

@@ -1247,6 +1247,22 @@ CAMLprim value libvim_vimSearchGetHighlights(value startLine, value endLine) {
   CAMLreturn(ret);
 }
 
+CAMLprim value libvim_vimSearchGetPattern(value unit) {
+  CAMLparam0();
+  CAMLlocal2(ret, v);
+
+  char_u *szSearchPattern = vimSearchGetPattern();
+
+  if (szSearchPattern == NULL) {
+    ret = Val_none;
+  } else {
+    v = caml_copy_string((char *)szSearchPattern);
+    ret = Val_some(v);
+  }
+
+  CAMLreturn(ret);
+}
+
 CAMLprim value libvim_vimSearchGetMatchingPair(value unit) {
   CAMLparam0();
   CAMLlocal2(ret, v);
