@@ -170,8 +170,8 @@ let start =
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
       | SearchStringChanged(_) => {
-        prerr_endline ("Search string changed?");
-      }
+          prerr_endline("Search string changed?");
+        }
 
       // TODO: Move internal to Feature_Vim
       | Output({cmd, output}) => {

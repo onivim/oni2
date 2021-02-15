@@ -211,7 +211,7 @@ let runWith = (~context: Context.t, f) => {
   let newSearchString = Search.getSearchPattern();
 
   if (newSearchString != prevSearchString) {
-    queueEffect(SearchStringChanged(newSearchString))
+    queueEffect(SearchStringChanged(newSearchString));
   };
 
   // Apply additional cursors

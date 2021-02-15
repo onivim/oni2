@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 // MODEL
 
 type model;
@@ -45,6 +47,17 @@ type outmsg =
 // UPDATE
 
 let update: (msg, model) => (model, outmsg);
+
+// SUBSCRIPTION
+
+let sub:
+  (
+    ~bufferId: int,
+    ~topVisibleLine: LineNumber.t,
+    ~bottomVisibleLine: LineNumber.t,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
 
 module CommandLine: {let getCompletionMeet: string => option(int);};
 

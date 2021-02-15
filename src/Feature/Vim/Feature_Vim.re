@@ -58,17 +58,16 @@ type outmsg =
 let handleEffect = (model, effect: Vim.Effect.t) => {
   switch (effect) {
   | Vim.Effect.SearchStringChanged(maybeSearchString) => {
-    ...model,
-    searchPattern: maybeSearchString,
-  }
-  | _ => model;
-  }
+      ...model,
+      searchPattern: maybeSearchString,
+    }
+  | _ => model
+  };
 };
 
 let handleEffects = (effects, model) => {
-  effects
-  |> List.fold_left(handleEffect, model);
-}
+  effects |> List.fold_left(handleEffect, model);
+};
 
 let update = (msg, model: model) => {
   switch (msg) {
@@ -156,6 +155,10 @@ module Effects = {
     );
   };
 };
+
+// SUBSCRIPTION
+
+let sub = (~bufferId, ~topVisibleLine, ~bottomVisibleLine, model) => Isolinear.Sub.none;
 
 module Configuration = {
   type resolver = string => option(Vim.Setting.value);
