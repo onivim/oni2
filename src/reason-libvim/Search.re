@@ -22,7 +22,7 @@ let getHighlightsInRange = (buffer, startLine, stopLine) => {
 
 let getSearchPattern = () => Native.vimSearchGetPattern();
 
-let getHighlights = (buffer) => {
+let getHighlights = buffer => {
   getHighlightsInRange(buffer, 0, 0);
 };
 

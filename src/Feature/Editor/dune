@@ -6,7 +6,7 @@
    Oni2.component.animation Oni2.syntax Oni2.feature.buffers
    Oni2.feature.configuration Oni2.feature.diagnostics Oni2.feature.scm
    Oni2.feature.theme Oni2.feature.language_support Oni2.feature.snippets
-   Oni2.feature.syntax Oni2.service.font Oni2.service.os Oni2.service.time
-   Revery libvim)
+   Oni2.feature.syntax Oni2.feature.vim Oni2.service.font Oni2.service.os
+   Oni2.service.time Revery libvim)
  (preprocess
   (pps ppx_deriving.show brisk-reconciler.ppx ppx_inline_test)))

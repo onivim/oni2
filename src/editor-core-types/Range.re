@@ -57,62 +57,58 @@ let toHash = ranges => {
 };
 
 let minLine = ranges => {
-
   let locationToLine = (location: Location.t) => {
-    location.line
-    |> Index.toZeroBased
-    |> LineNumber.ofZeroBased;
-  }
+    location.line |> Index.toZeroBased |> LineNumber.ofZeroBased;
+  };
 
   let minOr = (location: Location.t, maybeCandidate) => {
-      let candidate = location |> locationToLine;
+    let candidate = location |> locationToLine;
     switch (maybeCandidate) {
     | None => Some(candidate)
-    | Some(existing) as cur => 
+    | Some(existing) as cur =>
       if (LineNumber.(candidate < existing)) {
-        Some(candidate)
+        Some(candidate);
       } else {
-        cur
+        cur;
       }
-    }
+    };
   };
 
   ranges
-  |> List.fold_left((maybeMin, range) => {
-      maybeMin
-      |> minOr(range.start)
-      |> minOr(range.stop);
-  }, None);
-}
+  |> List.fold_left(
+       (maybeMin, range) => {
+         maybeMin |> minOr(range.start) |> minOr(range.stop)
+       },
+       None,
+     );
+};
 
 let maxLine = ranges => {
-
   let locationToLine = (location: Location.t) => {
-    location.line
-    |> Index.toZeroBased
-    |> LineNumber.ofZeroBased;
-  }
+    location.line |> Index.toZeroBased |> LineNumber.ofZeroBased;
+  };
 
   let maxOr = (location: Location.t, maybeCandidate) => {
-      let candidate = location |> locationToLine;
+    let candidate = location |> locationToLine;
     switch (maybeCandidate) {
     | None => Some(candidate)
-    | Some(existing) as cur => 
+    | Some(existing) as cur =>
       if (LineNumber.(candidate > existing)) {
-        Some(candidate)
+        Some(candidate);
       } else {
-        cur
+        cur;
       }
-    }
+    };
   };
 
   ranges
-  |> List.fold_left((maybeMin, range) => {
-      maybeMin
-      |> maxOr(range.start)
-      |> maxOr(range.stop);
-  }, None);
-}
+  |> List.fold_left(
+       (maybeMin, range) => {
+         maybeMin |> maxOr(range.start) |> maxOr(range.stop)
+       },
+       None,
+     );
+};
 
 let equals = (a, b) => Location.(a.start == b.start && a.stop == b.stop);
 

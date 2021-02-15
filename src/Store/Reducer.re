@@ -12,8 +12,6 @@ let reduce: (State.t, Actions.t) => State.t =
     | a =>
       let s = {
         ...s,
-        bufferHighlights:
-          BufferHighlightsReducer.reduce(s.bufferHighlights, a),
         bufferRenderers: BufferRendererReducer.reduce(s.bufferRenderers, a),
         lifecycle: Lifecycle.reduce(s.lifecycle, a),
       };

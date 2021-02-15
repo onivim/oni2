@@ -388,7 +388,6 @@ type windowDisplayMode =
 type t = {
   buffers: Feature_Buffers.model,
   bufferRenderers: BufferRenderers.t,
-  bufferHighlights: BufferHighlights.t,
   changelog: Feature_Changelog.model,
   cli: Oni_CLI.t,
   clipboard: Feature_Clipboard.model,
@@ -498,7 +497,6 @@ let initial =
 
   {
     buffers: Feature_Buffers.empty |> Feature_Buffers.add(initialBuffer),
-    bufferHighlights: BufferHighlights.initial,
     bufferRenderers: initialBufferRenderers,
     changelog: Feature_Changelog.initial,
     cli,

@@ -22,7 +22,10 @@ type msg =
     })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
-  | SearchHighlightsAvailable({bufferId: int, highlights: array(ByteRange.t)})
+  | SearchHighlightsAvailable({
+      bufferId: int,
+      highlights: array(ByteRange.t),
+    })
   | SettingChanged(Vim.Setting.t)
   | MacroRecordingStarted({register: char})
   | MacroRecordingStopped
@@ -48,6 +51,9 @@ type outmsg =
 // UPDATE
 
 let update: (msg, model) => (model, outmsg);
+
+let getSearchHighlightsByLine:
+  (~bufferId: int, ~line: LineNumber.t, model) => list(ByteRange.t);
 
 // SUBSCRIPTION
 

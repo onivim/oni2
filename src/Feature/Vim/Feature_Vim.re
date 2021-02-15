@@ -9,6 +9,7 @@ type model = {
   recordingMacro: option(char),
   subMode: Vim.SubMode.t,
   searchPattern: option(string),
+  searchHighlights: SearchHighlights.t,
 };
 
 let initial = {
@@ -16,6 +17,7 @@ let initial = {
   recordingMacro: None,
   subMode: Vim.SubMode.None,
   searchPattern: None,
+  searchHighlights: SearchHighlights.initial,
 };
 
 let recordingMacro = ({recordingMacro, _}) => recordingMacro;
@@ -34,7 +36,10 @@ type msg =
     })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
-  | SearchHighlightsAvailable({bufferId: int, highlights: array(ByteRange.t)})
+  | SearchHighlightsAvailable({
+      bufferId: int,
+      highlights: array(ByteRange.t),
+    })
   | SettingChanged(Vim.Setting.t)
   | MacroRecordingStarted({register: char})
   | MacroRecordingStopped
@@ -56,6 +61,10 @@ type outmsg =
       cmd: string,
       output: option(string),
     });
+
+let getSearchHighlightsByLine = (~bufferId, ~line, {searchHighlights, _}) => {
+  SearchHighlights.getHighlightsByLine(~bufferId, ~line, searchHighlights);
+};
 
 let handleEffect = (model, effect: Vim.Effect.t) => {
   switch (effect) {
@@ -100,9 +109,21 @@ let update = (msg, model: model) => {
 
   | Output({cmd, output}) => (model, Output({cmd, output}))
 
-  | SearchHighlightsAvailable({bufferId, highlights}) => 
-  (model, Nothing)
-    
+  | SearchHighlightsAvailable({bufferId, highlights}) =>
+    let newHighlights =
+      highlights |> ArrayEx.filterToList(ByteRange.isSingleLine);
+    (
+      {
+        ...model,
+        searchHighlights:
+          SearchHighlights.setSearchHighlights(
+            bufferId,
+            newHighlights,
+            model.searchHighlights,
+          ),
+      },
+      Nothing,
+    );
   };
 };
 
@@ -169,17 +190,16 @@ let sub = (~buffer, ~topVisibleLine, ~bottomVisibleLine, model) => {
   let version = Oni_Core.Buffer.getVersion(buffer);
   model.searchPattern
   |> Option.map(searchPattern => {
-    Service_Vim.Sub.searchHighlights(
-      ~bufferId,
-      ~version,
-      ~topVisibleLine,
-      ~bottomVisibleLine,
-      ~searchPattern,
-      ranges => {
-        SearchHighlightsAvailable({bufferId, highlights: ranges})
-      }
-    )
-  })
+       Service_Vim.Sub.searchHighlights(
+         ~bufferId,
+         ~version,
+         ~topVisibleLine,
+         ~bottomVisibleLine,
+         ~searchPattern,
+         ranges => {
+         SearchHighlightsAvailable({bufferId, highlights: ranges})
+       })
+     })
   |> Option.value(~default=Isolinear.Sub.none);
 };
 

@@ -20,11 +20,11 @@ let initial = IntMap.empty;
 let setSearchHighlights = (bufferId, ranges, state) => {
   let searchHighlightsByLine = RangeEx.toByteLineMap(ranges);
 
-    IntMap.add(
-      bufferId,
-      {searchHighlightsByLine: searchHighlightsByLine},
-      state,
-    );
+  IntMap.add(
+    bufferId,
+    {searchHighlightsByLine: searchHighlightsByLine},
+    state,
+  );
 };
 
 let getSearchHighlights = (~bufferId, ~line, state) => {

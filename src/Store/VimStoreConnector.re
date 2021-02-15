@@ -550,7 +550,7 @@ let start =
         //   highlights |> ArrayEx.filterToList(sameLineFilter);
 
         //dispatch(SearchSetHighlights(id, highlightList));
-        ();
+        ()
 
       | _ => ()
       };

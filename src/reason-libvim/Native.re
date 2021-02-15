@@ -137,7 +137,8 @@ external vimRegisterGet: int => option(array(string)) =
 external vimSearchGetMatchingPair: unit => option((int, int)) =
   "libvim_vimSearchGetMatchingPair";
 
-external vimSearchGetHighlights: (buffer, int, int) => array((int, int, int, int)) =
+external vimSearchGetHighlights:
+  (buffer, int, int) => array((int, int, int, int)) =
   "libvim_vimSearchGetHighlights";
 
 external vimSearchGetPattern: unit => option(string) =

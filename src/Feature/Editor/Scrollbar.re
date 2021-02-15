@@ -7,7 +7,6 @@ open Revery.UI;
 
 open Oni_Core;
 
-module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Styles = {
@@ -214,15 +213,8 @@ module Vertical = {
   };
 
   let matchingPairMarkers =
-      (
-        ~matchingPair,
-        ~bufferHighlights,
-        ~totalHeight,
-        ~editor,
-        ~colors: Colors.t,
-        (),
-      ) => {
-    ignore(bufferHighlights);
+      (~matchingPair, ~vim, ~totalHeight, ~editor, ~colors: Colors.t, ()) => {
+    ignore(vim);
     ignore(totalHeight);
     ignore(editor);
 
@@ -343,7 +335,7 @@ module Vertical = {
         ~width as totalWidth,
         ~diagnostics: IntMap.t(list(Diagnostic.t)),
         ~colors: Colors.t,
-        ~bufferHighlights,
+        ~vim,
         ~languageSupport,
         (),
       ) => {
@@ -433,13 +425,7 @@ module Vertical = {
               diagnostics
               colors
             />
-            <matchingPairMarkers
-              matchingPair
-              bufferHighlights
-              editor
-              totalHeight
-              colors
-            />
+            <matchingPairMarkers matchingPair vim editor totalHeight colors />
             <documentHighlightMarkers
               languageSupport
               editor
