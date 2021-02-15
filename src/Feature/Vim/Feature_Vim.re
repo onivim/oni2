@@ -101,7 +101,6 @@ let update = (msg, model: model) => {
   | Output({cmd, output}) => (model, Output({cmd, output}))
 
   | SearchHighlightsAvailable({bufferId, highlights}) => 
-  prerr_endline ("GOT RANGES: " ++ string_of_int(Array.length(highlights)));
   (model, Nothing)
     
   };

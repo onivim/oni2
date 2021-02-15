@@ -62,11 +62,11 @@ describe("Search", ({describe, _}) => {
       input("/");
       input("e");
 
-      let highlights = Search.getHighlights();
+      let highlights = Search.getHighlights(Vim.Buffer.getCurrent());
       expect.int(Array.length(highlights)).toBe(13);
 
       input("s");
-      let highlights = Search.getHighlights();
+      let highlights = Search.getHighlights(Vim.Buffer.getCurrent());
       expect.int(Array.length(highlights)).toBe(3);
 
       let secondHighlight = highlights[1];
@@ -82,11 +82,11 @@ describe("Search", ({describe, _}) => {
       input("/");
       input("e");
 
-      let highlights = Search.getHighlightsInRange(1, 1);
+      let highlights = Search.getHighlightsInRange(Vim.Buffer.getCurrent(), 1, 1);
       expect.int(Array.length(highlights)).toBe(4);
 
       input("s");
-      let highlights = Search.getHighlightsInRange(1, 1);
+      let highlights = Search.getHighlightsInRange(Vim.Buffer.getCurrent(), 1, 1);
       expect.int(Array.length(highlights)).toBe(1);
     });
   });
