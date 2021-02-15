@@ -539,18 +539,20 @@ let start =
 
       | SearchForward
       | SearchReverse =>
-        let highlights = Vim.Search.getHighlights();
+        //let highlights = Vim.Search.getHighlights();
 
-        let sameLineFilter = (range: ByteRange.t) =>
-          EditorCoreTypes.LineNumber.(range.start.line == range.stop.line);
+        // let sameLineFilter = (range: ByteRange.t) =>
+        //   EditorCoreTypes.LineNumber.(range.start.line == range.stop.line);
 
-        let buffer = Vim.Buffer.getCurrent();
-        let id = Vim.Buffer.getId(buffer);
+        // let buffer = Vim.Buffer.getCurrent();
+        // let id = Vim.Buffer.getId(buffer);
 
-        let highlightList =
-          highlights |> ArrayEx.filterToList(sameLineFilter);
+        // TODO: Port elsewhere...
+        // let highlightList =
+        //   highlights |> ArrayEx.filterToList(sameLineFilter);
 
-        dispatch(SearchSetHighlights(id, highlightList));
+        //dispatch(SearchSetHighlights(id, highlightList));
+        ();
 
       | _ => ()
       };
