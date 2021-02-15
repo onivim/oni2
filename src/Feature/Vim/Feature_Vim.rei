@@ -22,6 +22,7 @@ type msg =
     })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
+  | SearchHighlightsAvailable({bufferId: int, highlights: array(ByteRange.t)})
   | SettingChanged(Vim.Setting.t)
   | MacroRecordingStarted({register: char})
   | MacroRecordingStopped
@@ -52,7 +53,7 @@ let update: (msg, model) => (model, outmsg);
 
 let sub:
   (
-    ~bufferId: int,
+    ~buffer: Oni_Core.Buffer.t,
     ~topVisibleLine: LineNumber.t,
     ~bottomVisibleLine: LineNumber.t,
     model

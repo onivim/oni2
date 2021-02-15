@@ -232,12 +232,72 @@ module Sub = {
     EvalSubscription.create(expression) |> Isolinear.Sub.map(toMsg);
   };
 
+  type searchHighlightParams = {
+    bufferId: int,
+    version: int,
+    searchPattern: string,
+    topVisibleLine: EditorCoreTypes.LineNumber.t,
+    bottomVisibleLine: EditorCoreTypes.LineNumber.t
+  };
+
+  module SearchHighlightsSubscription =
+    Isolinear.Sub.Make({
+      type state = unit => unit;
+      type nonrec params = searchHighlightParams;
+      type msg = array(ByteRange.t);
+      let name = "Vim.Sub.SearchHighlights";
+      let id = ({bufferId, version, searchPattern, topVisibleLine, bottomVisibleLine}) => {
+        Printf.sprintf("%d.%d/%s:%d-%d", bufferId, version, searchPattern, 
+        topVisibleLine |> EditorCoreTypes.LineNumber.toZeroBased,
+        bottomVisibleLine |> EditorCoreTypes.LineNumber.toZeroBased);
+      };
+      let init = (~params, ~dispatch) => {
+        let len = params.searchPattern |> String.length;
+        let debounceTime = len == 1 ? Constants.lowPriorityDebounceTime : Constants.mediumPriorityDebounceTime;
+          
+        Revery.Tick.timeout(
+          ~name="Service_Vim.Timeout.searchHighlights", 
+          _ => {
+          let maybeBuffer = Vim.Buffer.getById(params.bufferId);
+          switch (maybeBuffer) {
+          | None => ()
+          | Some(buffer) => 
+            let topLine = params.topVisibleLine |> EditorCoreTypes.LineNumber.toOneBased;
+            let bottomLine = params.bottomVisibleLine |> EditorCoreTypes.LineNumber.toOneBased;
+            Log.infof(
+            m => m("Getting highlights for buffer: %d (%d-%d)",
+            params.bufferId,
+            topLine,
+            bottomLine));
+            let ranges = Vim.Search.getHighlightsInRange(
+            buffer,
+            topLine,
+            bottomLine
+          );
+            dispatch(ranges);
+          };
+        }, debounceTime);
+      };
+      let update = (~params as _, ~state, ~dispatch as _) => {
+        state
+      };
+      let dispose = (~params as _, ~state as dispose) => {
+        dispose();
+      };
+    });
+
   let searchHighlights = (
     ~bufferId,
-    ~bufferChangetick,
+    ~version,
     ~searchPattern,
     ~topVisibleLine,
     ~bottomVisibleLine,
     toMsg
-  ) => Isolinear.Sub.none;
+  ) => SearchHighlightsSubscription.create({
+    bufferId,
+    version,
+    searchPattern,
+    topVisibleLine,
+    bottomVisibleLine,
+  }) |> Isolinear.Sub.map(msg => toMsg(msg));
 };

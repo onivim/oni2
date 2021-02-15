@@ -451,9 +451,13 @@ let start =
       let maybeTopVisibleLine = ranges |> EditorCoreTypes.Range.minLine;
       let maybeBottomVisibleLine = ranges |> EditorCoreTypes.Range.maxLine;
 
+      
+      switch (Feature_Buffers.get(bufferId, state.buffers)) {
+      | None => Isolinear.Sub.none
+      | Some(buffer) =>
       Utility.OptionEx.map2((topVisibleLine, bottomVisibleLine) => {
       Feature_Vim.sub(
-        ~bufferId,
+        ~buffer,
         ~topVisibleLine,
         ~bottomVisibleLine,
         state.vim,
@@ -461,6 +465,7 @@ let start =
       |> Isolinear.Sub.map(msg => Model.Actions.Vim(msg));
       }, maybeTopVisibleLine, maybeBottomVisibleLine)
       |> Option.value(~default=Isolinear.Sub.none);
+      };
     })
     |> Isolinear.Sub.batch;
 

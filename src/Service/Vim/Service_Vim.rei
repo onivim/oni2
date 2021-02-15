@@ -51,7 +51,7 @@ module Sub: {
 
   let searchHighlights: (
     ~bufferId: int,
-    ~bufferChangetick: int,
+    ~version: int,
     ~searchPattern: string,
     ~topVisibleLine: LineNumber.t,
     ~bottomVisibleLine: LineNumber.t,

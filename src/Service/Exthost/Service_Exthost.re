@@ -2,11 +2,6 @@ open Oni_Core;
 
 module Log = (val Log.withNamespace("Service_Exthost"));
 
-module Constants = {
-  let highPriorityDebounceTime = Revery.Time.milliseconds(50);
-  let lowPriorityDebounceTime = Revery.Time.milliseconds(500);
-};
-
 // EFFECTS
 
 module Effects = {

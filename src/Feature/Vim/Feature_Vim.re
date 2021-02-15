@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
@@ -33,6 +34,7 @@ type msg =
     })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
+  | SearchHighlightsAvailable({bufferId: int, highlights: array(ByteRange.t)})
   | SettingChanged(Vim.Setting.t)
   | MacroRecordingStarted({register: char})
   | MacroRecordingStopped
@@ -97,6 +99,11 @@ let update = (msg, model: model) => {
   | MacroRecordingStopped => ({...model, recordingMacro: None}, Nothing)
 
   | Output({cmd, output}) => (model, Output({cmd, output}))
+
+  | SearchHighlightsAvailable({bufferId, highlights}) => 
+  prerr_endline ("GOT RANGES: " ++ string_of_int(Array.length(highlights)));
+  (model, Nothing)
+    
   };
 };
 
@@ -158,7 +165,24 @@ module Effects = {
 
 // SUBSCRIPTION
 
-let sub = (~bufferId, ~topVisibleLine, ~bottomVisibleLine, model) => Isolinear.Sub.none;
+let sub = (~buffer, ~topVisibleLine, ~bottomVisibleLine, model) => {
+  let bufferId = Oni_Core.Buffer.getId(buffer);
+  let version = Oni_Core.Buffer.getVersion(buffer);
+  model.searchPattern
+  |> Option.map(searchPattern => {
+    Service_Vim.Sub.searchHighlights(
+      ~bufferId,
+      ~version,
+      ~topVisibleLine,
+      ~bottomVisibleLine,
+      ~searchPattern,
+      ranges => {
+        SearchHighlightsAvailable({bufferId, highlights: ranges})
+      }
+    )
+  })
+  |> Option.value(~default=Isolinear.Sub.none);
+};
 
 module Configuration = {
   type resolver = string => option(Vim.Setting.value);
