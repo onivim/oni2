@@ -23,18 +23,21 @@ module WatchSubscription =
     let id = Fun.id;
 
     let init = (~params as path, ~dispatch) => {
+      prerr_endline(Printf.sprintf("Starting file watcher for %s", path));
       Log.tracef(m => m("Starting file watcher for %s", path));
 
       switch (Luv.FS_event.init()) {
       | Ok(watcher) =>
         let onEvent = (
           fun
-          | Ok((_file, events)) =>
+          | Ok((_file, events)) => {
+            prerr_endline(Printf.sprintf("Got event: %s", path));
             dispatch({
               path,
               hasRenamed: List.mem(`RENAME, events),
               hasChanged: List.mem(`CHANGE, events),
             })
+            }
           | Error(error) =>
             Log.errorf(m => m("'%s': %s", path, Luv.Error.strerror(error)))
         );
@@ -46,6 +49,7 @@ module WatchSubscription =
       | Error(error) =>
         let message = Luv.Error.strerror(error);
         Log.errorf(m => m("init failed for '%s': %s", path, message));
+        prerr_endline(Printf.sprintf("init failed for '%s': %s", path, message));
 
         {path, watcher: None};
       };

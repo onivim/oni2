@@ -32,12 +32,14 @@ let start =
   let reloadConfigOnWritePost = (~configPath, dispatch) => {
     let _: unit => unit =
       Vim.AutoCommands.onDispatch((cmd, buffer) => {
+
         let bufferFileName =
           switch (Vim.Buffer.getFilename(buffer)) {
           | None => ""
           | Some(fileName) => fileName
           };
         if (bufferFileName == configPath && cmd == Vim.Types.BufWritePost) {
+          prerr_endline ("Reloading from here!");
           dispatch(Actions.ConfigurationReload);
         };
       });
@@ -84,6 +86,7 @@ let start =
 
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
+      prerr_endline ("Reload configuration?");
       dispatch(Actions.Configuration(UserSettingsChanged));
       defaultConfigurationFileName
       |> getConfigurationFile
