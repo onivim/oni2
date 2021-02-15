@@ -544,8 +544,9 @@ let start =
         let buffer = Vim.Buffer.getCurrent();
         let id = Vim.Buffer.getId(buffer);
 
-        let highlightList =
-          highlights |> Array.to_list |> List.filter(sameLineFilter);
+        let highlightList = highlights
+        |> ArrayEx.filterToList(sameLineFilter);
+
         dispatch(SearchSetHighlights(id, highlightList));
 
       | _ => ()

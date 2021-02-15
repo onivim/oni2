@@ -286,12 +286,14 @@ module Vertical = {
       <View style={searchMatches(position)} />;
     };
 
-    BufferHighlights.getHighlights(
-      ~bufferId=Editor.getBufferId(editor),
-      bufferHighlights,
-    )
-    |> List.map(searchHighlightToElement)
-    |> React.listToElement;
+    // BufferHighlights.getHighlights(
+    //   ~bufferId=Editor.getBufferId(editor),
+    //   bufferHighlights,
+    // )
+    // |> List.map(searchHighlightToElement)
+    // |> React.listToElement;
+
+    React.empty;
   };
 
   let documentHighlightMarkers =
