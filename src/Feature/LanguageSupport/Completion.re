@@ -143,8 +143,9 @@ module Session = {
     list(Filter.result(CompletionItem.t)) =
     (~query, items) => {
       let toString = (item: CompletionItem.t, ~shouldLower) =>
-        shouldLower ? String.lowercase_ascii(item.label) : item.label;
+        shouldLower ? String.lowercase_ascii(item.label) : String.lowercase_ascii(item.label);
 
+      let query = String.lowercase_ascii(query);
       let explodedQuery = Zed_utf8.explode(query);
 
       let items' =
@@ -153,7 +154,7 @@ module Session = {
              if (String.length(item.filterText) < String.length(query)) {
                false;
              } else {
-               Filter.fuzzyMatches(explodedQuery, item.filterText);
+               Filter.fuzzyMatches(explodedQuery, String.lowercase_ascii(item.filterText));
              }
            )
         |> Filter.rank(query, toString);
