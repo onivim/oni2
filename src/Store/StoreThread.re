@@ -443,6 +443,27 @@ let start =
       |> Feature_Notification.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Notification(msg));
 
+    let vimBufferSub = visibleBuffersAndRanges
+    |> List.map(bufferAndRanges => {
+
+      let (bufferId, ranges)= bufferAndRanges;
+
+      let maybeTopVisibleLine = ranges |> EditorCoreTypes.Range.minLine;
+      let maybeBottomVisibleLine = ranges |> EditorCoreTypes.Range.maxLine;
+
+      Utility.OptionEx.map2((topVisibleLine, bottomVisibleLine) => {
+      Feature_Vim.sub(
+        ~bufferId,
+        ~topVisibleLine,
+        ~bottomVisibleLine,
+        state.vim,
+      )
+      |> Isolinear.Sub.map(msg => Model.Actions.Vim(msg));
+      }, maybeTopVisibleLine, maybeBottomVisibleLine)
+      |> Option.value(~default=Isolinear.Sub.none);
+    })
+    |> Isolinear.Sub.batch;
+
     [
       menuBarSub,
       extHostSubscription,
@@ -461,6 +482,7 @@ let start =
       visibleEditorsSubscription,
       inputSubscription,
       notificationSub,
+      vimBufferSub,
     ]
     |> Isolinear.Sub.batch;
   };
