@@ -231,4 +231,13 @@ module Sub = {
   let eval = (~toMsg, expression) => {
     EvalSubscription.create(expression) |> Isolinear.Sub.map(toMsg);
   };
+
+  let searchHighlights = (
+    ~bufferId,
+    ~bufferChangetick,
+    ~searchPattern,
+    ~topVisibleLine,
+    ~bottomVisibleLine,
+    toMsg
+  ) => Isolinear.Sub.none;
 };

@@ -1,7 +1,7 @@
 open EditorCoreTypes;
 
-let getHighlightsInRange = (startLine, stopLine) => {
-  let highlights = Native.vimSearchGetHighlights(startLine, stopLine);
+let getHighlightsInRange = (buffer, startLine, stopLine) => {
+  let highlights = Native.vimSearchGetHighlights(buffer, startLine, stopLine);
   Array.map(
     ((startLine, startColumn, stopLine, stopColumn)) =>
       ByteRange.{
@@ -22,8 +22,8 @@ let getHighlightsInRange = (startLine, stopLine) => {
 
 let getSearchPattern = () => Native.vimSearchGetPattern();
 
-let getHighlights = () => {
-  getHighlightsInRange(0, 0);
+let getHighlights = (buffer) => {
+  getHighlightsInRange(buffer, 0, 0);
 };
 
 let onStopSearchHighlight = f => Event.add(f, Listeners.stopSearchHighlight);
