@@ -508,6 +508,7 @@ module Effect: {
         count: int,
         direction: Scroll.direction,
       })
+    | SearchStringChanged(option(string))
     | Map(Mapping.t)
     | Unmap({
         mode: Mapping.mode,

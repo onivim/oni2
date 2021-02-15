@@ -169,6 +169,9 @@ let start =
       // This is handled by the returned `effects` list -
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
+      | SearchStringChanged(_) => {
+        prerr_endline ("Search string changed?");
+      }
 
       // TODO: Move internal to Feature_Vim
       | Output({cmd, output}) => {
@@ -794,10 +797,6 @@ let start =
   };
 
   let updater = (state: State.t, action: Actions.t) => {
-    prerr_endline(
-      "SEARCH STRING: "
-      ++ (Vim.Search.getSearchPattern() |> Option.value(~default="NONE")),
-    );
     switch (action) {
     | ConfigurationSet(configuration) => (
         state,

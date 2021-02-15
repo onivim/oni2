@@ -7,12 +7,14 @@ type model = {
   settings: StringMap.t(Vim.Setting.value),
   recordingMacro: option(char),
   subMode: Vim.SubMode.t,
+  searchPattern: option(string),
 };
 
 let initial = {
   settings: StringMap.empty,
   recordingMacro: None,
   subMode: Vim.SubMode.None,
+  searchPattern: None,
 };
 
 let recordingMacro = ({recordingMacro, _}) => recordingMacro;
@@ -53,10 +55,25 @@ type outmsg =
       output: option(string),
     });
 
+let handleEffect = (model, effect: Vim.Effect.t) => {
+  switch (effect) {
+  | Vim.Effect.SearchStringChanged(maybeSearchString) => {
+    ...model,
+    searchPattern: maybeSearchString,
+  }
+  | _ => model;
+  }
+};
+
+let handleEffects = (effects, model) => {
+  effects
+  |> List.fold_left(handleEffect, model);
+}
+
 let update = (msg, model: model) => {
   switch (msg) {
   | ModeChanged({allowAnimation, mode, effects, subMode}) => (
-      {...model, subMode},
+      {...model, subMode} |> handleEffects(effects),
       ModeDidChange({allowAnimation, mode, effects}),
     )
   | Pasted(text) =>
