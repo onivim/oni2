@@ -76,7 +76,6 @@ let start =
       ~showUpdateChangelog=true,
       ~getUserSettings,
       ~configurationFilePath=None,
-      ~keybindingsFilePath=None,
       ~onAfterDispatch=_ => (),
       ~setup: Core.Setup.t,
       ~executingDirectory,
@@ -169,8 +168,7 @@ let start =
       ~shouldLoadConfiguration,
       ~filesToOpen,
     );
-  let keyBindingsUpdater =
-    KeyBindingsStoreConnector.start(keybindingsFilePath);
+  let keyBindingsUpdater = KeyBindingsStoreConnector.start();
 
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
 

@@ -490,6 +490,12 @@ let update =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
       | DebugInputShown => Internal.openFileEffect("oni://DebugInput")
+
+      | ErrorNotifications(errorMessages) =>
+        errorMessages
+        |> List.map(msg => Internal.notificationEffect(~kind=Error, msg))
+        |> Isolinear.Effect.batch
+
       | MapParseError({fromKeys, toKeys, error}) =>
         Internal.notificationEffect(
           ~kind=Error,
@@ -1199,10 +1205,13 @@ let update =
           extHostClient,
         );
 
-      let clearSnippetCacheEffect =
+      let maybeFullPath =
         buffer
         |> Buffer.getFilePath
-        |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
+        |> OptionEx.flatMap(Fp.absoluteCurrentPlatform);
+
+      let clearSnippetCacheEffect =
+        maybeFullPath
         |> Option.map(filePath =>
              Service_Snippets.Effect.clearCachedSnippets(~filePath)
            )
@@ -1213,8 +1222,14 @@ let update =
           ~uri=Buffer.getUri(buffer), extHostClient, () =>
           Noop
         );
+
+      let input' =
+        maybeFullPath
+        |> Option.map(fp => Feature_Input.notifyFileSaved(fp, state.input))
+        |> Option.value(~default=state.input);
+
       (
-        state,
+        {...state, input: input'},
         Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
       );
 

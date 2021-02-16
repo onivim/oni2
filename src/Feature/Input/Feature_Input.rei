@@ -7,6 +7,7 @@ module ReveryKeyConverter = ReveryKeyConverter;
 type outmsg =
   | Nothing
   | DebugInputShown
+  | ErrorNotifications(list(string))
   | MapParseError({
       fromKeys: string,
       toKeys: string,
@@ -58,6 +59,16 @@ module Schema: {
   let resolve: keybinding => result(resolvedKeybinding, string);
 };
 
+// LOADER
+
+module KeybindingsLoader: {
+  type t;
+
+  let none: t;
+
+  let file: Fp.t(Fp.absolute) => t;
+};
+
 [@deriving show]
 type msg;
 
@@ -69,7 +80,7 @@ module Msg: {
 
 type model;
 
-let initial: list(Schema.keybinding) => model;
+let initial: (~loader: KeybindingsLoader.t, list(Schema.keybinding)) => model;
 
 type execute =
   | NamedCommand({
@@ -140,6 +151,8 @@ let remove: (uniqueId, model) => model;
 
 let enable: model => model;
 let disable: model => model;
+
+let notifyFileSaved: (Fp.t(Fp.absolute), model) => model;
 
 // UPDATE
 
