@@ -119,7 +119,7 @@ switch (eff) {
 
     // The directory that was persisted is a valid workspace, so we can use it
     if (couldChangeDirectory^) {
-      maybePath;
+      maybePath |> OptionEx.flatMap(Fp.absoluteCurrentPlatform);
     } else {
       None;
     };
@@ -142,7 +142,7 @@ switch (eff) {
       Store.Persistence.Workspace.(
         maybeWorkspace
         |> Option.map(workspace => {
-             let store = storeFor(workspace);
+             let store = storeFor(Fp.toString(workspace));
              (
                windowX(store)
                |> OptionEx.tap(x =>
@@ -245,7 +245,9 @@ switch (eff) {
     let initialWorkingDirectory = Sys.getcwd();
     let maybeWorkspace = initWorkspace();
     let workingDirectory =
-      maybeWorkspace |> Option.value(~default=initialWorkingDirectory);
+      maybeWorkspace
+      |> Option.map(Fp.toString)
+      |> Option.value(~default=initialWorkingDirectory);
 
     let window =
       createWindow(

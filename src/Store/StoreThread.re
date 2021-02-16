@@ -352,10 +352,16 @@ let start =
     // TODO: Move sub inside Explorer feature
     let fileExplorerActiveFileSub =
       Model.Sub.activeFile(
-        ~id="activeFile.fileExplorer", ~state, ~toMsg=maybeFilePath =>
-        Model.Actions.FileExplorer(
-          Feature_Explorer.Msg.activeFileChanged(maybeFilePath),
-        )
+        ~id="activeFile.fileExplorer",
+        ~state,
+        ~toMsg=maybeFilePathStr => {
+          let maybeFilePath =
+            maybeFilePathStr
+            |> Utility.OptionEx.flatMap(Fp.absoluteCurrentPlatform);
+          Model.Actions.FileExplorer(
+            Feature_Explorer.Msg.activeFileChanged(maybeFilePath),
+          );
+        },
       );
 
     let fileExplorerSub =

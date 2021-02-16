@@ -2020,9 +2020,11 @@ let update =
       )
 
     | WorkspaceChanged(maybeWorkspaceFolder) =>
+      let maybeExplorerFolder =
+        maybeWorkspaceFolder |> OptionEx.flatMap(Fp.absoluteCurrentPlatform);
       let fileExplorer =
         Feature_Explorer.setRoot(
-          ~rootPath=maybeWorkspaceFolder,
+          ~rootPath=maybeExplorerFolder,
           state.fileExplorer,
         );
 
