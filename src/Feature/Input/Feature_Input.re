@@ -214,9 +214,6 @@ module Msg = {
   let keybindingsUpdated = keybindings => KeybindingsUpdated(keybindings);
   let vimMap = mapping => VimMap(mapping);
   let vimUnmap = (mode, maybeKeys) => VimUnmap({mode, maybeKeys});
-
-  // TEMPORARY
-  let keybindingsParseError = msg => KeybindingsParseError(msg);
 };
 
 // MODEL

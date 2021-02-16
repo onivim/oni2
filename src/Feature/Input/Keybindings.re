@@ -170,35 +170,6 @@ bindings: [{key: "<C-V>", command: "quickOpen.show", when: "editorTextFocus"}]
 |}
        |> Yojson.Safe.from_string;
 
-     // let regressionTest1152 =
-     //   {|
-     // {
-     // bindings: [{key: "<F2>", command: "explorer.toggle", when: [["editorTextFocus"]]}]
-     // }
-     // |}
-     //   |> Yojson.Safe.from_string;
-
-     // let regressionTest1160 =
-     //   {|
-     // {
-     // bindings: [
-     //   {key: "<C-P>", command: "quickOpen.open", when: [["editorTextFocus"]]},
-     //   {key: "<D-P>", command: "quickOpen.open", when: [["editorTextFocus"]]},
-     //   {key: "<S-C-P>", command: "commandPalette.open", when: [["editorTextFocus"]]},
-     //   {key: "<D-S-P>", command: "commandPalette.open", when: [["editorTextFocus"]]}
-     // ]
-     // }
-     // |}
-     //   |> Yojson.Safe.from_string;
-
-     // let contextWithEditorTextFocus =
-     //   WhenExpr.ContextKeys.(
-     //     fromSchema(
-     //       (),
-     //       Schema.fromList(Schema.[bool("editorTextFocus", () => true)]),
-     //     )
-     //   );
-
      let isOk = v =>
        switch (v) {
        | Ok(_) => true

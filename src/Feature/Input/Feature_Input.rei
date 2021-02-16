@@ -76,9 +76,6 @@ module Msg: {
   let keybindingsUpdated: list(Schema.resolvedKeybinding) => msg;
   let vimMap: Vim.Mapping.t => msg;
   let vimUnmap: (Vim.Mapping.mode, option(string)) => msg;
-
-  // TEMPORARY
-  let keybindingsParseError: string => msg;
 };
 
 type model;
