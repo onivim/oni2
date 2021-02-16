@@ -22,13 +22,13 @@ module Constants = {
 type command =
   | ToggleProblems
   | ToggleMessages
-  | ClearAllMessages
   | ClosePane;
 
 [@deriving show({with_path: false})]
 type msg =
   | TabClicked(pane)
   | CloseButtonClicked
+  | PaneButtonClicked(pane)
   | Command(command)
   | ResizeHandleDragged(int)
   | ResizeCommitted
@@ -67,7 +67,7 @@ module Effects = {
 
 type outmsg =
   | Nothing
-  | ClearAllMessages(pane)
+  | PaneButton(pane)
   | OpenFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
@@ -364,12 +364,7 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
       (show(~pane=Diagnostics, model), Nothing);
     }
 
-  | Command(ClearAllMessages) =>
-    if (model.selected == Notifications) {
-      (model, ClearAllMessages(Notifications));
-    } else {
-      (model, Nothing);
-    }
+  | PaneButtonClicked(pane) => (model, PaneButton(pane))
 
   | Command(ToggleMessages) =>
     if (!model.isOpen) {
@@ -769,21 +764,26 @@ module View = {
     </Sneakable>;
   };
 
-  let clearAllButton = (~theme, ~dispatch, ~isNotification, ()) =>
-    isNotification
-      ? {
-        <Sneakable
-          sneakId="clearAll"
-          onClick={() => dispatch(Command(ClearAllMessages))}
-          style=Styles.clearAllButton>
-          <FontIcon
-            icon=FontAwesome.bellSlash
-            color={Colors.Tab.activeForeground.from(theme)}
-            fontSize=12.
-          />
-        </Sneakable>;
-      }
-      : React.empty;
+  let clearAllButton = (~theme, ~dispatch, ~pane, ()) =>
+    switch (pane) {
+    | Notifications =>
+      <Sneakable
+        sneakId="clearAll"
+        onClick={() => dispatch(PaneButtonClicked(pane))}
+        style=Styles.clearAllButton>
+        <FontIcon
+          icon={
+            switch (pane) {
+            | Notifications => FontAwesome.bellSlash
+            | _ => FontAwesome.cross
+            }
+          }
+          color={Colors.Tab.activeForeground.from(theme)}
+          fontSize=12.
+        />
+      </Sneakable>
+    | _ => React.empty
+    };
   let%component make =
                 (
                   ~config,
@@ -827,8 +827,6 @@ module View = {
       );
 
     let height = springHeight < 20. ? 0 : int_of_float(springHeight);
-
-    let isNotification = pane.selected == Notifications;
 
     let opacity =
       isFocused
@@ -877,7 +875,7 @@ module View = {
           />
         </View>
         <View style=Styles.buttons>
-          <clearAllButton dispatch theme isNotification />
+          <clearAllButton dispatch theme pane={pane.selected} />
           <closeButton dispatch theme />
         </View>
       </View>

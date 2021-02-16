@@ -762,7 +762,7 @@ let update =
         |> Isolinear.Effect.map(msg => Notification(msg)),
       )
 
-    | ClearAllMessages(pane) =>
+    | PaneButton(pane) =>
       switch (pane) {
       | Notifications => (
           state,
