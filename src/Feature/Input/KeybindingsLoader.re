@@ -1,6 +1,5 @@
-// type t = {
-//     //maybeStaticKeybindings: option(list(Schema.keybinding))
-// };
+
+module Log = (val Oni_Core.Log.withNamespace("Oni2.Feature.Input.KeybindingsLoader"));
 
 module File = {
   let loadKeybindings = (path: Fp.t(Fp.absolute)) => {
@@ -31,7 +30,9 @@ module File = {
         Fp.toString(filePath) ++ string_of_int(tick);
 
       let init = (~params, ~dispatch) => {
-        prerr_endline("Reloading: " ++ Fp.toString(params.filePath));
+        Log.infof(m =>
+          m("Reloading keybindings file: %s", Fp.toString(params.filePath))
+        );
         dispatch(loadKeybindings(params.filePath));
         ();
       };
@@ -64,7 +65,6 @@ let notifyFileSaved = path =>
   | None => None
   | File({filePath, saveTick}) as orig =>
     if (Fp.eq(filePath, path)) {
-      prerr_endline("Bump tick!");
       File({filePath, saveTick: saveTick + 1});
     } else {
       orig;
