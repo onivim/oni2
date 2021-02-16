@@ -3,7 +3,7 @@ open Revery.UI;
 
 module Colors = Feature_Theme.Colors;
 
-let make = (~children, ~theme, ~config, ()) => {
+let make = (~style=[], ~children, ~theme, ~config, ()) => {
   let useBoxShadow =
     Feature_Configuration.GlobalConfiguration.shadows.get(config);
 
@@ -19,6 +19,7 @@ let make = (~children, ~theme, ~config, ()) => {
           ~spreadRadius=0.,
           ~color,
         ),
+        ...style,
       ]>
       ...children
     </View>;
@@ -26,6 +27,7 @@ let make = (~children, ~theme, ~config, ()) => {
     <View
       style=Style.[
         border(~color=Colors.Editor.background.from(theme), ~width=1),
+        ...style,
       ]>
       ...children
     </View>;
