@@ -17,10 +17,10 @@ module PathHasher = {
   // type t = list(string);
 
   let make = (~base, path) => {
-    switch(Fp.relativize(~source=base, ~dest=path)) {
+    switch (Fp.relativize(~source=base, ~dest=path)) {
     | Ok(relativePath) => FpEx.explode(relativePath) |> List.map(hash)
     | Error(_) => []
-    }
+    };
   };
 
   let%test "equivalent paths" = {
