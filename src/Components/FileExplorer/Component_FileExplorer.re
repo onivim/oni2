@@ -21,7 +21,8 @@ module Internal = {
   };
 
   let luvDirentToFsTree = (~cwd, {name, kind}: Luv.File.Dirent.t) => {
-    let path = Filename.concat(cwd, name);
+    let path = Fp.At.(cwd / name);
+
     if (kind == `FILE || kind == `LINK) {
       Some(FsTreeNode.file(path));
     } else if (kind == `DIR) {
@@ -31,7 +32,7 @@ module Internal = {
     };
   };
 
-  let luvDirentsToFsTree = (~cwd, ~ignored, dirents) => {
+  let luvDirentsToFsTree = (~cwd: Fp.t(Fp.absolute), ~ignored, dirents) => {
     dirents
     |> List.filter(({name, _}: Luv.File.Dirent.t) =>
          name != ".." && name != "." && !List.mem(name, ignored)
@@ -52,11 +53,12 @@ module Internal = {
    */
   let getFilesAndFolders = (~ignored, cwd) => {
     cwd
+    |> Fp.toString
     |> Service_OS.Api.readdir
     |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd));
   };
 
-  let getDirectoryTree = (cwd, ignored) => {
+  let getDirectoryTree = (cwd: Fp.t(Fp.absolute), ignored) => {
     let childrenPromise = getFilesAndFolders(~ignored, cwd);
 
     childrenPromise
@@ -69,7 +71,8 @@ module Internal = {
 module Effects = {
   let load = (directory, configuration, ~onComplete) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
-      Log.infof(m => m("Loading nodes for directory: %s", directory));
+      let directoryStr = Fp.toString(directory);
+      Log.infof(m => m("Loading nodes for directory: %s", directoryStr));
       let ignored =
         Configuration.getValue(c => c.filesExclude, configuration);
       let promise = Internal.getDirectoryTree(directory, ignored);
@@ -78,7 +81,7 @@ module Effects = {
         promise,
         tree => {
           Log.infof(m =>
-            m("Successfully loaded nodes for directory: %s", directory)
+            m("Successfully loaded nodes for directory: %s", directoryStr)
           );
           dispatch(onComplete(tree));
         },
@@ -88,7 +91,7 @@ module Effects = {
         Log.errorf(m =>
           m(
             "Error loading directory %s: %s",
-            directory,
+            directoryStr,
             Printexc.to_string(exn),
           )
         )
@@ -107,7 +110,7 @@ type outmsg =
   | GrabFocus;
 
 let setTree = (tree, model) => {
-  let uniqueId = (data: FsTreeNode.metadata) => data.path;
+  let uniqueId = (data: FsTreeNode.metadata) => Fp.toString(data.path);
   let (rootName, firstLevelChildren) =
     switch (tree) {
     | Tree.Leaf(_) => ("", [])
@@ -279,11 +282,15 @@ let update = (~configuration, msg, model) => {
           c => c.workbenchEditorEnablePreview,
           configuration,
         )
-          ? PreviewFile(node.path) : OpenFile(node.path),
+          ? PreviewFile(Fp.toString(node.path))
+          : OpenFile(Fp.toString(node.path)),
       )
     | Component_VimTree.Selected(node) =>
       // Set active here to avoid scrolling in BufferEnter
-      (model |> setActive(Some(node.path)), OpenFile(node.path))
+      (
+        model |> setActive(Some(node.path)),
+        OpenFile(Fp.toString(node.path)),
+      )
     | Component_VimTree.Nothing => (model, Nothing)
     };
   };
@@ -303,7 +310,11 @@ let sub = (~configuration, {rootPath, _}) => {
       }
     | Error(msg) => TreeLoadError(msg);
 
-  Service_OS.Sub.dir(~uniqueId="FileExplorerSideBar", ~toMsg, rootPath);
+  Service_OS.Sub.dir(
+    ~uniqueId="FileExplorerSideBar",
+    ~toMsg,
+    Fp.toString(rootPath),
+  );
 };
 
 module Contributions = {

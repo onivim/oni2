@@ -29,6 +29,7 @@ let simpleState = {
       ~initialBuffer,
       ~initialBufferRenderers=BufferRenderers.initial,
       ~getUserSettings=() => Ok(Config.Settings.empty),
+      ~keybindingsLoader=Feature_Input.KeybindingsLoader.none,
       ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
       ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
       ~contributedCommands=[],

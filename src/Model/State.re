@@ -454,6 +454,7 @@ let initial =
       ~extensionGlobalPersistence,
       ~extensionWorkspacePersistence,
       ~getUserSettings,
+      ~keybindingsLoader,
       ~contributedCommands,
       ~workingDirectory,
       ~maybeWorkspace,
@@ -514,7 +515,8 @@ let initial =
     configuration: Configuration.default,
     decorations: Feature_Decorations.initial,
     diagnostics: Feature_Diagnostics.initial,
-    input: Feature_Input.initial(defaultKeyBindings),
+    input:
+      Feature_Input.initial(~loader=keybindingsLoader, defaultKeyBindings),
     quickmenu: None,
     editorFont: defaultEditorFont,
     terminalFont: defaultEditorFont,
@@ -558,7 +560,7 @@ let initial =
     titlebarHeight,
     workspace:
       Feature_Workspace.initial(
-        ~openedFolder=maybeWorkspace,
+        ~openedFolder=maybeWorkspace |> Option.map(Fp.toString),
         workingDirectory,
       ),
     fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),
