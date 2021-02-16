@@ -46,6 +46,8 @@ let defaultTerminalFontSize = 12.;
 
 let defaultTheme = "LaserWave Italic";
 
+let diffMarkersMaxLineCount = 2000;
+
 let syntaxEagerMaxLines = 500;
 let syntaxEagerMaxLineLength = 1000;
 let syntaxEagerBudget = 0.25; /* 250 milliseconds */

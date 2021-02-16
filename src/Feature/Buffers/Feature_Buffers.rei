@@ -23,6 +23,11 @@ let map: (Buffer.t => Buffer.t, model) => model;
 
 let filter: (Buffer.t => bool, model) => list(Buffer.t);
 
+let setOriginalLines:
+  (~bufferId: int, ~originalLines: array(string), model) => model;
+
+let getOriginalDiff: (~bufferId: int, model) => option(DiffMarkers.t);
+
 // MSG
 
 [@deriving show]

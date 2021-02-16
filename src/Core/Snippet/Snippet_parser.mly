@@ -36,6 +36,7 @@ expr_nested:
 additionalChoices }) }
 | DOLLAR; var = VARIABLE; { Variable({name = var; default = None }) }
 | DOLLAR; LB; var = VARIABLE; COLON; default = string; RB { Variable({name = var; default = Some(default) }) }
+| DOLLAR; LB; text = TEXT; { Text("${" ^ text) }
 | text = TEXT { Text(text) }
 | numberAsText = NUMBER { Text(string_of_int(numberAsText)) }
 | variableAsText = VARIABLE { Snippet_internal.Text(variableAsText) }

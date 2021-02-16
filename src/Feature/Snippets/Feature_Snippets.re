@@ -1,38 +1,6 @@
 open Oni_Core;
 open Utility;
 open EditorCoreTypes;
-open Oniguruma;
-
-let placeholderRegex = OnigRegExp.create("\\$\\{[0-9]+.*\\}|\\$[0-9]*");
-
-// TODO: This is just a stub for now -
-// We need full snippet state management around placeholders, UX, etc.
-let snippetToInsert = (~snippet: string) => {
-  placeholderRegex
-  |> Result.map(regex => {
-       let firstMatch = OnigRegExp.Fast.search(snippet, 0, regex);
-       if (firstMatch < 0) {
-         snippet;
-       } else if (firstMatch < String.length(snippet)) {
-         String.sub(snippet, 0, firstMatch);
-       } else {
-         snippet;
-       };
-     })
-  |> Result.value(~default=snippet);
-};
-
-let%test "pass-through with no placeholders" = {
-  snippetToInsert(~snippet="Hello, world") == "Hello, world";
-};
-
-let%test "clips at first placeholder" = {
-  snippetToInsert(~snippet="Hello ($1)") == "Hello (";
-};
-
-let%test "clips at first placeholder w/ default" = {
-  snippetToInsert(~snippet="Hello (${1:expr})") == "Hello (";
-};
 
 module Session = {
   type placeholder = {
@@ -54,6 +22,8 @@ module Session = {
   let startLine = ({startLine, _}) => startLine;
   let stopLine = ({startLine, lineCount, _}) =>
     EditorCoreTypes.LineNumber.(startLine + lineCount);
+
+  let editorId = ({editorId, _}) => editorId;
 
   let start = (~editorId, ~position: BytePosition.t, ~snippet) => {
     let lines = ResolvedSnippet.toLines(snippet);
@@ -363,10 +333,11 @@ module Session = {
 type command =
   | JumpToNextPlaceholder
   | JumpToPreviousPlaceholder
+  | EditUserSnippets
   | InsertSnippet({
       // If no snippet is provided - we should open the snippet menu
       maybeSnippet: [@opaque] option(Snippet.t),
-      maybeMeetColumn: option(CharacterIndex.t),
+      maybeReplaceRange: option(ByteRange.t),
     });
 
 [@deriving show]
@@ -375,10 +346,19 @@ type msg =
   | SnippetInserted([@opaque] Session.t)
   | SnippetInsertionError(string)
   | SnippetsLoadedForPicker(list(Service_Snippets.SnippetWithMetadata.t))
-  | InsertInternal({snippetString: string});
+  | InsertInternal({snippetString: string})
+  | SnippetFilesLoadedForPicker(list(Service_Snippets.SnippetFileMetadata.t))
+  | EditSnippetFileRequested({
+      snippetFile: Service_Snippets.SnippetFileMetadata.t,
+    })
+  | SnippetFileCreatedSuccessfully([@opaque] Fp.t(Fp.absolute))
+  | SnippetFileCreationError(string);
 
 module Msg = {
   let insert = (~snippet) => InsertInternal({snippetString: snippet});
+
+  let editSnippetFile = (~snippetFile: Service_Snippets.SnippetFileMetadata.t) =>
+    EditSnippetFileRequested({snippetFile: snippetFile});
 };
 
 type model = {maybeSession: option(Session.t)};
@@ -412,12 +392,14 @@ type outmsg =
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
   | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
+  | ShowFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
+  | OpenFile(Fp.t(Fp.absolute))
   | Nothing;
 
 module Effects = {
   let startSession =
       (
-        ~maybeMeetColumn: option(CharacterIndex.t),
+        ~maybeReplaceRange: option(ByteRange.t),
         ~resolverFactory,
         ~buffer,
         ~editorId,
@@ -432,27 +414,44 @@ module Effects = {
       |> Oni_Core.Buffer.getLine(position.line |> LineNumber.toZeroBased)
       |> Oni_Core.BufferLine.raw;
 
+    let maybeReplaceRange =
+      maybeReplaceRange |> Option.map(range => range |> ByteRange.normalize);
+
+    let position =
+      switch (maybeReplaceRange) {
+      | None => position
+      | Some(range) => range.stop
+      };
+
     let (prefix, postfix) =
       Utility.StringEx.splitAt(~byte=ByteIndex.toInt(position.byte), line);
 
     // Handle the 'meet column' - if we a meet column was provided,
     // as in the case of completion, we may need to remove some characters
     // from the prefix.
-    let prefix =
-      switch (maybeMeetColumn) {
-      | None => prefix
-      | Some(column) =>
+    let (prefix, replaceStartLine) =
+      switch (maybeReplaceRange) {
+      | None => (prefix, position.line)
+      | Some(range) =>
+        let replaceFromPosition = range.start;
+        let replaceStartLine =
+          buffer
+          |> Oni_Core.Buffer.getLine(
+               replaceFromPosition.line |> LineNumber.toZeroBased,
+             )
+          |> Oni_Core.BufferLine.raw;
         // First, see how many characters we're working with...
-        let characterCount = Zed_utf8.length(prefix);
 
-        let columnIdx = CharacterIndex.toInt(column);
-        if (columnIdx == 0) {
-          "";
-        } else if (columnIdx >= characterCount) {
-          prefix;
-        } else {
-          Zed_utf8.sub(prefix, 0, columnIdx);
-        };
+        let byteIdx = replaceFromPosition.byte |> ByteIndex.toInt;
+        let prefix =
+          if (byteIdx == 0) {
+            "";
+          } else if (byteIdx >= String.length(replaceStartLine)) {
+            prefix;
+          } else {
+            String.sub(replaceStartLine, 0, byteIdx);
+          };
+        (prefix, replaceFromPosition.line);
       };
 
     let resolvedSnippet =
@@ -466,9 +465,19 @@ module Effects = {
 
     let lines = ResolvedSnippet.toLines(resolvedSnippet);
 
+    let sessionPosition =
+      BytePosition.{
+        line: replaceStartLine,
+        byte: String.length(prefix) |> ByteIndex.ofInt,
+      };
+
     if (Array.length(lines) > 0) {
       let session =
-        Session.start(~editorId, ~snippet=resolvedSnippet, ~position);
+        Session.start(
+          ~editorId,
+          ~snippet=resolvedSnippet,
+          ~position=sessionPosition,
+        );
 
       let toMsg =
         fun
@@ -477,7 +486,7 @@ module Effects = {
 
       Service_Vim.Effects.setLines(
         ~bufferId,
-        ~start=position.line,
+        ~start=replaceStartLine,
         ~stop=LineNumber.(position.line + 1),
         ~lines,
         toMsg,
@@ -487,7 +496,7 @@ module Effects = {
     };
   };
 
-  let insertSnippet = (~meetColumn: CharacterIndex.t, ~snippet: string) => {
+  let insertSnippet = (~replaceRange: option(ByteRange.t), ~snippet: string) => {
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Snippets.insertSnippet", dispatch => {
       switch (Snippet.parse(snippet)) {
@@ -496,7 +505,7 @@ module Effects = {
           Command(
             InsertSnippet({
               maybeSnippet: Some(resolvedSnippet),
-              maybeMeetColumn: Some(meetColumn),
+              maybeReplaceRange: replaceRange,
             }),
           ),
         )
@@ -506,9 +515,69 @@ module Effects = {
   };
 };
 
+module Internal = {
+  // Helper function to calculate a start position given a range of selections.
+  let getReplaceRangeFromSelections = (~buffer, selections) => {
+    List.nth_opt(selections, 0)
+    |> OptionEx.flatMap((selection: VisualRange.t) => {
+         let normalizedRange = selection.range |> ByteRange.normalize;
+
+         let stopLineIdx =
+           normalizedRange.stop.line |> EditorCoreTypes.LineNumber.toZeroBased;
+         let stopLineBytes =
+           Buffer.getLine(stopLineIdx, buffer) |> BufferLine.raw;
+         switch (selection.mode) {
+         | Vim.Types.Line =>
+           Some(
+             ByteRange.{
+               start:
+                 BytePosition.{
+                   line: normalizedRange.start.line,
+                   byte: ByteIndex.zero,
+                 },
+               stop:
+                 BytePosition.{
+                   line: normalizedRange.stop.line,
+                   byte: String.length(stopLineBytes) |> ByteIndex.ofInt,
+                 },
+             },
+           )
+
+         | Vim.Types.Character =>
+           // The Vim selection range is inclusive, but the snippets expect
+           // an exclusive range - so we need to bump the 'stop' character
+           // out a byte.
+
+           Some(
+             {
+               ByteRange.{
+                 start: normalizedRange.start,
+                 stop:
+                   BytePosition.{
+                     line: normalizedRange.stop.line,
+                     byte:
+                       ByteIndex.next(
+                         stopLineBytes,
+                         normalizedRange.stop.byte,
+                       ),
+                   },
+               };
+             },
+           )
+
+         // No-op for now
+         | Vim.Types.Block
+         | Vim.Types.None => None
+         };
+       });
+  };
+};
+
 let update =
     (
+      ~languageInfo,
       ~resolverFactory,
+      ~selections,
       ~maybeBuffer,
       ~editorId,
       ~cursorPosition,
@@ -597,7 +666,7 @@ let update =
        })
     |> Option.value(~default=(model, Nothing))
 
-  | Command(InsertSnippet({maybeSnippet, maybeMeetColumn})) =>
+  | Command(InsertSnippet({maybeSnippet, maybeReplaceRange})) =>
     let eff =
       maybeBuffer
       |> Option.map(buffer => {
@@ -605,7 +674,14 @@ let update =
            | Some(snippet) =>
              Effect(
                Effects.startSession(
-                 ~maybeMeetColumn,
+                 ~maybeReplaceRange=
+                   maybeReplaceRange
+                   |> OptionEx.or_lazy(() =>
+                        Internal.getReplaceRangeFromSelections(
+                          ~buffer,
+                          selections,
+                        )
+                      ),
                  ~resolverFactory,
                  ~buffer,
                  ~editorId,
@@ -620,7 +696,8 @@ let update =
              let filePaths =
                Feature_Extensions.snippetFilePaths(~fileType, extensions);
              Effect(
-               Service_Snippets.Effect.snippetFromFiles(~filePaths, snippets =>
+               Service_Snippets.Effect.snippetFromFiles(
+                 ~filePaths, ~fileType, snippets =>
                  SnippetsLoadedForPicker(snippets)
                ),
              );
@@ -629,9 +706,38 @@ let update =
       |> Option.value(~default=Nothing);
     (model, eff);
 
+  | Command(EditUserSnippets) => (
+      model,
+      Effect(
+        Service_Snippets.Effect.getUserSnippetFiles(
+          ~languageInfo, snippetFiles =>
+          SnippetFilesLoadedForPicker(snippetFiles)
+        ),
+      ),
+    )
+
+  | EditSnippetFileRequested({snippetFile}) =>
+    let eff =
+      Service_Snippets.Effect.createSnippetFile(
+        ~filePath=snippetFile.filePath,
+        fun
+        | Ok(filePath) => SnippetFileCreatedSuccessfully(filePath)
+        | Error(msg) => SnippetFileCreationError(msg),
+      );
+    (model, Effect(eff));
+
+  | SnippetFileCreatedSuccessfully(filePath) => (model, OpenFile(filePath))
+
+  | SnippetFileCreationError(msg) => (model, ErrorMessage(msg))
+
   | SnippetsLoadedForPicker(snippetsWithMetadata) => (
       model,
       ShowPicker(snippetsWithMetadata),
+    )
+
+  | SnippetFilesLoadedForPicker(snippetFiles) => (
+      model,
+      ShowFilePicker(snippetFiles),
     )
 
   | InsertInternal({snippetString}) =>
@@ -642,8 +748,11 @@ let update =
            | Ok(snippet) =>
              Effect(
                Effects.startSession(
-                 // TODO: Handle selection
-                 ~maybeMeetColumn=None,
+                 ~maybeReplaceRange=
+                   Internal.getReplaceRangeFromSelections(
+                     ~buffer,
+                     selections,
+                   ),
                  ~resolverFactory,
                  ~buffer,
                  ~editorId,
@@ -708,7 +817,9 @@ module Commands = {
 
     switch (snippetResult) {
     | Ok(snippet) =>
-      Command(InsertSnippet({maybeSnippet: snippet, maybeMeetColumn: None}))
+      Command(
+        InsertSnippet({maybeSnippet: snippet, maybeReplaceRange: None}),
+      )
     | Error(msg) => SnippetInsertionError(string_of_error(msg))
     };
   };
@@ -720,6 +831,14 @@ module Commands = {
       "editor.action.insertSnippet",
       snippetCommandParser,
     );
+
+  let editUserSnippets =
+    define(
+      ~category="Snippets",
+      ~title="Configure user snippets",
+      "workbench.action.openSnippets",
+      Command(EditUserSnippets),
+    );
 };
 
 module ContextKeys = {
@@ -730,7 +849,12 @@ module ContextKeys = {
 
 module Contributions = {
   let commands =
-    Commands.[nextPlaceholder, previousPlaceholder, insertSnippet];
+    Commands.[
+      nextPlaceholder,
+      previousPlaceholder,
+      insertSnippet,
+      editUserSnippets,
+    ];
 
   let contextKeys = model => {
     WhenExpr.ContextKeys.(

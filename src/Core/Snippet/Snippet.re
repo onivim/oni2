@@ -147,4 +147,10 @@ let%test_module "parse" =
      let%test "colon in snippet" = {
        parse("a:b") == Ok([[Text("a:b")]]);
      };
+
+     // Test case to exercise a failure to parse snippets like:
+     // https://github.com/Tom-xacademy/xa-js-snippets/blob/39bc330b9167635d44b0573e06cc1e10ccf8e891/snippets/snippets.json#L104
+     let%test "non-placeholder special case" = {
+       parse("${ data }") == Ok([[Text("${ data }")]]);
+     };
    });

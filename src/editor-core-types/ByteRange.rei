@@ -30,3 +30,5 @@ let compare: (t, t) => int;
  * or equal to the [stop]
  */
 let normalize: t => t;
+
+let isSingleLine: t => bool;

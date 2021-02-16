@@ -14,15 +14,28 @@ module Constants = {
 let snippetPaint = Skia.Paint.make();
 
 let draw =
-    (~config, ~context: Draw.context, session: Feature_Snippets.Session.t) => {
+    (
+      ~config,
+      ~colors: Colors.t,
+      ~context: Draw.context,
+      session: Feature_Snippets.Session.t,
+    ) => {
   let isShadowEnabled =
     Feature_Configuration.GlobalConfiguration.shadows.get(config);
 
-  if (!isShadowEnabled) {
+  let isCurrentEditor =
+    Editor.getId(context.editor)
+    == Feature_Snippets.Session.editorId(session);
+
+  if (!isShadowEnabled || !isCurrentEditor) {
     ();
   } else {
-    let color = Revery.Color.toSkia(Revery.Color.rgba(0., 0., 0., 0.1));
-    Skia.Paint.setColor(snippetPaint, color);
+    let color = colors.shadow;
+    Skia.Paint.setColor(snippetPaint, color |> Revery.Color.toSkia);
+    Skia.Paint.setAlpha(
+      snippetPaint,
+      0.07 *. (color |> Revery.Color.getAlpha),
+    );
     let width = float(context.width);
     let height = float(context.height);
 
@@ -48,7 +61,7 @@ let draw =
     );
 
     Oni_Components.ScrollShadow.Shadow.render(
-      ~color=Revery.Color.rgba(0., 0., 0., 0.1),
+      ~color,
       ~opacity=1.0,
       ~direction=Up,
       ~x=0.,
@@ -79,7 +92,7 @@ let draw =
       context.canvasContext,
     );
     Oni_Components.ScrollShadow.Shadow.render(
-      ~color=Revery.Color.rgba(0., 0., 0., 0.22),
+      ~color,
       ~opacity=1.0,
       ~direction=Down,
       ~x=0.,
