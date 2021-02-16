@@ -241,6 +241,19 @@ describe("CommandLine", ({describe, _}) => {
       expect.string(line).toEqual("Dhis is the third line of a test file");
     });
 
+    test(
+      "#1159 - substitution command, with confirm flag - should be a no-op",
+      ({expect, _}) => {
+      let buffer = reset();
+      input(":%s!T!D!gc");
+      key("<cr>");
+
+      expect.bool(Vim.Mode.isNormal(Mode.current())).toBe(true);
+
+      let line = Buffer.getLine(buffer, LineNumber.ofOneBased(3));
+      expect.string(line).toEqual("This is the third line of a test file");
+    });
+
     test("move to line", ({expect, _}) => {
       let _ = reset();
       input(":");

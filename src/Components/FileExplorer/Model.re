@@ -2,7 +2,7 @@
 
 [@deriving show]
 type msg =
-  | ActiveFilePathChanged(option(string))
+  | ActiveFilePathChanged([@opaque] option(Fp.t(Fp.absolute)))
   | TreeLoaded(FsTreeNode.t)
   | TreeLoadError(string)
   | NodeLoaded(FsTreeNode.t)
@@ -16,14 +16,14 @@ module Msg = {
 };
 
 type model = {
-  rootPath: string,
+  rootPath: Fp.t(Fp.absolute),
   rootName: string,
   tree: option(FsTreeNode.t),
   treeView: Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
-  active: option(string), // path
-  focus: option(string) // path
+  active: option(Fp.t(Fp.absolute)),
+  focus: option(Fp.t(Fp.absolute)) // path
 };
 
 let initial = (~rootPath) => {
