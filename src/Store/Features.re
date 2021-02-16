@@ -1205,10 +1205,13 @@ let update =
           extHostClient,
         );
 
-      let clearSnippetCacheEffect =
+      let maybeFullPath =
         buffer
         |> Buffer.getFilePath
-        |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
+        |> OptionEx.flatMap(Fp.absoluteCurrentPlatform);
+
+      let clearSnippetCacheEffect =
+        maybeFullPath
         |> Option.map(filePath =>
              Service_Snippets.Effect.clearCachedSnippets(~filePath)
            )
@@ -1219,8 +1222,14 @@ let update =
           ~uri=Buffer.getUri(buffer), extHostClient, () =>
           Noop
         );
+
+      let input' =
+        maybeFullPath
+        |> Option.map(fp => Feature_Input.notifyFileSaved(fp, state.input))
+        |> Option.value(~default=state.input);
+
       (
-        state,
+        {...state, input: input'},
         Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
       );
 

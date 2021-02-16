@@ -64,13 +64,9 @@ module Schema: {
 module KeybindingsLoader: {
   type t;
 
-  // module Make: {
-  let static: list(Schema.keybinding) => t;
+  let none: t;
 
   let file: Fp.t(Fp.absolute) => t;
-  // };
-  // let notifyFileSaved: (~filePath: Fp.t(Fp.absolute), t) => t;
-  // let sub: t => Isolinear.Sub.t((list(Schema.keybinding), list(string)));
 };
 
 [@deriving show]
@@ -87,7 +83,7 @@ module Msg: {
 
 type model;
 
-let initial: list(Schema.keybinding) => model;
+let initial: (~loader: KeybindingsLoader.t, list(Schema.keybinding)) => model;
 
 type execute =
   | NamedCommand({
