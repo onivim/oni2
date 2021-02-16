@@ -33,8 +33,6 @@ Oni_Core_Test.TestFramework.run |> initializeRunConfig;
 
 Oni_Core_Utility_Test.TestFramework.run |> initializeRunConfig;
 
-Oni_Input_Test.TestFramework.run |> initializeRunConfig;
-
 Oni_Model_Test.TestFramework.run |> initializeRunConfig;
 
 Oni_Syntax_Test.TestFramework.run |> initializeRunConfig;

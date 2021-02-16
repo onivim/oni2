@@ -141,3 +141,101 @@ let of_yojson_with_errors = json => {
        evaluateBindings(bindings, errors)
      });
 };
+
+let%test_module "keybinding parsing" = (module {
+  
+let keybindingsJSON =
+  {|
+[
+  {key: "<C-V>", command: "quickOpen.show", when: "editorTextFocus"}
+]
+|}
+  |> Yojson.Safe.from_string;
+
+let keybindingsJSONWithComment =
+  {|
+[
+  // show quickopen
+  {key: "<C-V>", command: "quickOpen.show", when: "editorTextFocus"}
+]
+|}
+  |> Yojson.Safe.from_string;
+
+let legacyKeyBindingsWithNewExpressionJSON =
+  {|
+{
+bindings: [{key: "<C-V>", command: "quickOpen.show", when: "editorTextFocus"}]
+}
+|}
+  |> Yojson.Safe.from_string;
+
+// let regressionTest1152 =
+//   {|
+// {
+// bindings: [{key: "<F2>", command: "explorer.toggle", when: [["editorTextFocus"]]}]
+// }
+// |}
+//   |> Yojson.Safe.from_string;
+
+// let regressionTest1160 =
+//   {|
+// {
+// bindings: [
+//   {key: "<C-P>", command: "quickOpen.open", when: [["editorTextFocus"]]},
+//   {key: "<D-P>", command: "quickOpen.open", when: [["editorTextFocus"]]},
+//   {key: "<S-C-P>", command: "commandPalette.open", when: [["editorTextFocus"]]},
+//   {key: "<D-S-P>", command: "commandPalette.open", when: [["editorTextFocus"]]}
+// ]
+// }
+// |}
+//   |> Yojson.Safe.from_string;
+
+// let contextWithEditorTextFocus =
+//   WhenExpr.ContextKeys.(
+//     fromSchema(
+//       (),
+//       Schema.fromList(Schema.[bool("editorTextFocus", () => true)]),
+//     )
+//   );
+
+let isOk = v =>
+  switch (v) {
+  | Ok(_) => true
+  | Error(_) => false
+  };
+
+let bindingCount = v =>
+  switch (v) {
+  | Ok((bindings, _)) => List.length(bindings)
+  | Error(_) => 0
+  };
+
+let errorCount = v =>
+  switch (v) {
+  | Ok((_, errors)) => List.length(errors)
+  | Error(_) => 0
+  };
+
+
+    let%test "basic key binding" = {
+      let result = of_yojson_with_errors(keybindingsJSON);
+      isOk(result) == true
+      && bindingCount(result) == 1
+      && errorCount(result) == 0
+    };
+
+    let%test "basic key binding with comment" = {
+      let result = of_yojson_with_errors(keybindingsJSONWithComment);
+      isOk(result) == true
+      && bindingCount(result) == 1
+      && errorCount(result) == 0
+    };
+
+    let%test "legacy keybinding with new expression" = {
+      let result =
+        of_yojson_with_errors(legacyKeyBindingsWithNewExpressionJSON);
+      isOk(result) == true
+      && bindingCount(result) == 1
+      && errorCount(result) == 0;
+    };
+})
