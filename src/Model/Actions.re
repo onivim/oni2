@@ -46,7 +46,7 @@ type t =
     })
   // Reload keybindings from configuration
   | KeyBindingsReload
-  | KeyBindingsParseError(string)
+  // | KeyBindingsParseError(string)
   | KeyDown({
       key: EditorInput.KeyCandidate.t,
       scancode: int,

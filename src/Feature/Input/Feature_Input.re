@@ -171,6 +171,7 @@ module Configuration = {
 type outmsg =
   | Nothing
   | DebugInputShown
+  | ErrorNotifications(list(string))
   | MapParseError({
       fromKeys: string,
       toKeys: string,
@@ -196,6 +197,11 @@ type command =
 type msg =
   | Command(command)
   | KeybindingsUpdated([@opaque] list(Schema.resolvedKeybinding))
+  | KeybindingsReloaded({
+      bindings: [@opaque] list(Schema.resolvedKeybinding),
+      errors: list(string),
+    })
+  | KeybindingsParseError(string)
   | VimMap(Vim.Mapping.t)
   | VimUnmap({
       mode: Vim.Mapping.mode,
@@ -208,6 +214,9 @@ module Msg = {
   let keybindingsUpdated = keybindings => KeybindingsUpdated(keybindings);
   let vimMap = mapping => VimMap(mapping);
   let vimUnmap = (mode, maybeKeys) => VimUnmap({mode, maybeKeys});
+
+  // TEMPORARY
+  let keybindingsParseError = msg => KeybindingsParseError(msg);
 };
 
 // MODEL
@@ -219,6 +228,7 @@ type model = {
   // Keep track of the input tick - an incrementing number on every input event -
   // such that we can provide a unique id for the timer to flush on timeout.
   inputTick: int,
+  keybindingLoader: KeybindingsLoader.t,
 };
 
 type uniqueId = InputStateMachine.uniqueId;
@@ -228,7 +238,7 @@ let incrementTick = ({inputTick, _} as model) => {
   inputTick: inputTick + 1,
 };
 
-let initial = keybindings => {
+let initial = (~loader, keybindings) => {
   open Schema;
   let inputStateMachine =
     keybindings
@@ -266,7 +276,13 @@ let initial = keybindings => {
          },
          InputStateMachine.empty,
        );
-  {inputStateMachine, userBindings: [], keyDisplayer: None, inputTick: 0};
+  {
+    inputStateMachine,
+    userBindings: [],
+    keyDisplayer: None,
+    inputTick: 0,
+    keybindingLoader: loader,
+  };
 };
 
 type effect =
@@ -327,6 +343,11 @@ let disable = ({inputStateMachine, _} as model) => {
 let enable = ({inputStateMachine, _} as model) => {
   ...model,
   inputStateMachine: InputStateMachine.enable(inputStateMachine),
+};
+
+let notifyFileSaved = (path, {keybindingLoader, _} as model) => {
+  ...model,
+  keybindingLoader: KeybindingsLoader.notifyFileSaved(path, keybindingLoader),
 };
 
 let text = (~text, ~time, {inputStateMachine, keyDisplayer, _} as model) => {
@@ -605,6 +626,16 @@ let update = (msg, model) => {
       Nothing,
     )
 
+  | KeybindingsReloaded({bindings, errors}) =>
+    let outmsg =
+      switch (errors) {
+      | [] => Nothing
+      | errors => ErrorNotifications(errors)
+      };
+    (Internal.updateKeybindings(bindings, model), outmsg);
+
+  | KeybindingsParseError(msg) => (model, ErrorNotifications([msg]))
+
   | Timeout => (model, TimedOut)
 
   | KeyDisplayer(msg) =>
@@ -648,7 +679,11 @@ module Commands = {
 
 // SUBSCRIPTION
 
-let sub = (~config, {keyDisplayer, inputTick, inputStateMachine, _}) => {
+let sub =
+    (
+      ~config,
+      {keyDisplayer, inputTick, inputStateMachine, keybindingLoader, _},
+    ) => {
   let keyDisplayerSub =
     switch (keyDisplayer) {
     | None => Isolinear.Sub.none
@@ -672,7 +707,13 @@ let sub = (~config, {keyDisplayer, inputTick, inputStateMachine, _}) => {
       }
     };
 
-  [keyDisplayerSub, timeoutSub] |> Isolinear.Sub.batch;
+  let loaderSub =
+    KeybindingsLoader.sub(keybindingLoader)
+    |> Isolinear.Sub.map(((bindings, errors)) => {
+         KeybindingsReloaded({bindings, errors})
+       });
+
+  [keyDisplayerSub, timeoutSub, loaderSub] |> Isolinear.Sub.batch;
 };
 
 module ContextKeys = {

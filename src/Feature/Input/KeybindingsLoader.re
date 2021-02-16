@@ -4,6 +4,10 @@
 
 type t = unit;
 
-let static = (_keybindings) => ();
+let static = _keybindings => ();
 
-let file = (_path) => ();
+let file = _path => ();
+
+let notifyFileSaved = (_path, loader) => loader;
+
+let sub = loader => Isolinear.Sub.none;

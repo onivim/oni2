@@ -490,6 +490,12 @@ let update =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
       | DebugInputShown => Internal.openFileEffect("oni://DebugInput")
+
+      | ErrorNotifications(errorMessages) =>
+        errorMessages
+        |> List.map(msg => Internal.notificationEffect(~kind=Error, msg))
+        |> Isolinear.Effect.batch
+
       | MapParseError({fromKeys, toKeys, error}) =>
         Internal.notificationEffect(
           ~kind=Error,

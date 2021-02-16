@@ -51,7 +51,11 @@ let start = maybeKeyBindingsFilePath => {
            let onError = msg => {
              let errorMsg = "Error parsing keybindings: " ++ msg;
              Log.error(errorMsg);
-             dispatch(Actions.KeyBindingsParseError(errorMsg));
+             dispatch(
+               Actions.Input(
+                 Feature_Input.Msg.keybindingsParseError(errorMsg),
+               ),
+             );
            };
 
            let (keyBindings, individualErrors) =
@@ -111,11 +115,11 @@ let start = maybeKeyBindingsFilePath => {
 
     | KeyBindingsReload => (state, loadKeyBindingsEffect(false))
 
-    | KeyBindingsParseError(msg) => (
-        state,
-        Feature_Notification.Effects.create(~kind=Error, msg)
-        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
-      )
+    // | KeyBindingsParseError(msg) => (
+    //     state,
+    //     Feature_Notification.Effects.create(~kind=Error, msg)
+    //     |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
+    //   )
 
     | KeybindingInvoked({command, arguments}) =>
       if (command |> Utility.StringEx.startsWith(~prefix=":")) {
