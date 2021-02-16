@@ -4,14 +4,15 @@ module Log = (
 
 module File = {
   let loadKeybindings = (path: Fp.t(Fp.absolute)) => {
-    let loadResult =path
-    |> Fp.toString
-    |> Utility.JsonEx.from_file
-    |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors);
+    let loadResult =
+      path
+      |> Fp.toString
+      |> Utility.JsonEx.from_file
+      |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors);
 
     switch (loadResult) {
     | Ok((bindings, errors)) => (bindings, errors)
-    | Error(msg) => ([], [msg]);
+    | Error(msg) => ([], [msg])
     };
   };
 
