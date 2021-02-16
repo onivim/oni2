@@ -2,6 +2,8 @@
 
 ### Bug Fixes
 
+- #3145 - Vim: Don't crash on confirm flag with substitute ex command (fixes #1159, related #2965)
+
 ### Performance
 
 ### Documentation
