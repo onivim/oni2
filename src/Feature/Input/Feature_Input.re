@@ -201,7 +201,6 @@ type msg =
       bindings: [@opaque] list(Schema.resolvedKeybinding),
       errors: list(string),
     })
-  | KeybindingsParseError(string)
   | VimMap(Vim.Mapping.t)
   | VimUnmap({
       mode: Vim.Mapping.mode,
@@ -630,8 +629,6 @@ let update = (msg, model) => {
       | errors => ErrorNotifications(errors)
       };
     (Internal.updateKeybindings(bindings, model), outmsg);
-
-  | KeybindingsParseError(msg) => (model, ErrorNotifications([msg]))
 
   | Timeout => (model, TimedOut)
 
