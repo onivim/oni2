@@ -35,10 +35,10 @@ runTest(~name="ExtConfigurationChangedTest", ({dispatch, wait, _}) => {
   wait(
     ~timeout=10.0,
     ~name="Validate we get message from the 'oni-dev' extension",
-    (state: State.t) =>
+    (state: State.t) => {
     switch (Feature_Notification.all(state.notifications)) {
-    | [{message, _}, _] => message == "Setting changed: 42"
+    | [{message, _}, ..._] => String.equal(message, "Setting changed: 42")
     | _ => false
     }
-  );
+  });
 });

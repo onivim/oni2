@@ -145,6 +145,26 @@ let runTest =
       ~modified,
     );
   };
+  let writeConfigurationFile = (name, jsonStringOpt) => {
+    let tempFilePath = Filename.temp_file(name, ".json");
+    let oc = open_out(tempFilePath);
+
+    InitLog.info("Writing configuration file: " ++ tempFilePath);
+
+    let () =
+      jsonStringOpt
+      |> Option.value(~default="{}")
+      |> Printf.fprintf(oc, "%s\n");
+
+    close_out(oc);
+    tempFilePath |> Fp.absoluteCurrentPlatform |> Option.get;
+  };
+
+  let keybindingsFilePath =
+    writeConfigurationFile("keybindings", keybindings);
+
+  let keybindingsLoader =
+    Feature_Input.KeybindingsLoader.file(keybindingsFilePath);
 
   let currentState =
     ref(
@@ -153,6 +173,7 @@ let runTest =
         ~initialBuffer,
         ~initialBufferRenderers=Model.BufferRenderers.initial,
         ~getUserSettings,
+        ~keybindingsLoader,
         ~contributedCommands=[],
         ~maybeWorkspace=None,
         ~workingDirectory=Sys.getcwd(),
@@ -196,25 +217,8 @@ let runTest =
 
   InitLog.info("Starting store...");
 
-  let writeConfigurationFile = (name, jsonStringOpt) => {
-    let tempFilePath = Filename.temp_file(name, ".json");
-    let oc = open_out(tempFilePath);
-
-    InitLog.info("Writing configuration file: " ++ tempFilePath);
-
-    let () =
-      jsonStringOpt
-      |> Option.value(~default="{}")
-      |> Printf.fprintf(oc, "%s\n");
-
-    close_out(oc);
-    tempFilePath |> Fp.absoluteCurrentPlatform |> Option.get;
-  };
-
   let configurationFilePath =
     writeConfigurationFile("configuration", configuration);
-  let keybindingsFilePath =
-    writeConfigurationFile("keybindings", keybindings);
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(
@@ -234,7 +238,6 @@ let runTest =
       ~getState=() => currentState^,
       ~onStateChanged,
       ~configurationFilePath=Some(configurationFilePath),
-      ~keybindingsFilePath=Some(keybindingsFilePath),
       ~quit,
       ~window=None,
       ~filesToOpen,

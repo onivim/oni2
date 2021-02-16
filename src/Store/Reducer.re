@@ -23,7 +23,6 @@ let reduce: (State.t, Actions.t) => State.t =
       | OpenFileByPath(_, Some(_), _) => {...s, zenMode: false}
       | PreviewFileByPath(_, Some(_), _) => {...s, zenMode: false}
       // TODO:
-      // | KeyBindingsSet(keyBindings) => {...s, keyBindings}
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetGrammarRepository(grammarRepository) => {...s, grammarRepository}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
