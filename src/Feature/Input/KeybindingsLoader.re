@@ -1,5 +1,6 @@
-
-module Log = (val Oni_Core.Log.withNamespace("Oni2.Feature.Input.KeybindingsLoader"));
+module Log = (
+  val Oni_Core.Log.withNamespace("Oni2.Feature.Input.KeybindingsLoader")
+);
 
 module File = {
   let loadKeybindings = (path: Fp.t(Fp.absolute)) => {
