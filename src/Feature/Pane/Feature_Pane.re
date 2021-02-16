@@ -22,6 +22,7 @@ module Constants = {
 type command =
   | ToggleProblems
   | ToggleMessages
+  | ClearAllMessages
   | ClosePane;
 
 [@deriving show({with_path: false})]
@@ -66,6 +67,7 @@ module Effects = {
 
 type outmsg =
   | Nothing
+  | ClearAllMessages(pane)
   | OpenFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
@@ -362,6 +364,13 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
       (show(~pane=Diagnostics, model), Nothing);
     }
 
+  | Command(ClearAllMessages) =>
+    if (model.selected == Notifications) {
+      (model, ClearAllMessages(Notifications));
+    } else {
+      (model, Nothing);
+    }
+
   | Command(ToggleMessages) =>
     if (!model.isOpen) {
       (show(~pane=Notifications, model), GrabFocus);
@@ -651,9 +660,17 @@ module View = {
 
     let header = [flexDirection(`Row), justifyContent(`SpaceBetween)];
 
+    let buttons = [flexDirection(`Row), justifyContent(`FlexEnd)];
+
     let tabs = [flexDirection(`Row)];
 
     let closeButton = [
+      width(32),
+      alignItems(`Center),
+      justifyContent(`Center),
+    ];
+
+    let clearAllButton = [
       width(32),
       alignItems(`Center),
       justifyContent(`Center),
@@ -751,6 +768,22 @@ module View = {
       />
     </Sneakable>;
   };
+
+  let clearAllButton = (~theme, ~dispatch, ~isNotification, ()) =>
+    isNotification
+      ? {
+        <Sneakable
+          sneakId="clearAll"
+          onClick={() => dispatch(Command(ClearAllMessages))}
+          style=Styles.clearAllButton>
+          <FontIcon
+            icon=FontAwesome.bellSlash
+            color={Colors.Tab.activeForeground.from(theme)}
+            fontSize=12.
+          />
+        </Sneakable>;
+      }
+      : React.empty;
   let%component make =
                 (
                   ~config,
@@ -794,6 +827,8 @@ module View = {
       );
 
     let height = springHeight < 20. ? 0 : int_of_float(springHeight);
+
+    let isNotification = pane.selected == Notifications;
 
     let opacity =
       isFocused
@@ -841,7 +876,10 @@ module View = {
             isActive={isSelected(Output, pane)}
           />
         </View>
-        <closeButton dispatch theme />
+        <View style=Styles.buttons>
+          <clearAllButton dispatch theme isNotification />
+          <closeButton dispatch theme />
+        </View>
       </View>
       <View style=Styles.content>
         <content
