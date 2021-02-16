@@ -297,6 +297,14 @@ switch (eff) {
 
     let setZoom = zoomFactor => Window.setZoom(window, zoomFactor);
 
+    let keybindingsLoader =
+      Oni_Core.Filesystem.getOrCreateConfigFile("keybindings.json")
+      |> Result.map(Feature_Input.KeybindingsLoader.file)
+      |> Oni_Core.Utility.ResultEx.tapError(msg =>
+           Log.errorf(m => m("Error initializing keybindings file: %s", msg))
+         )
+      |> Result.value(~default=Feature_Input.KeybindingsLoader.none);
+
     let currentState =
       ref(
         Model.State.initial(
@@ -304,6 +312,7 @@ switch (eff) {
           ~initialBuffer,
           ~initialBufferRenderers,
           ~getUserSettings,
+          ~keybindingsLoader,
           ~extensionGlobalPersistence,
           ~extensionWorkspacePersistence,
           ~contributedCommands=[], // TODO

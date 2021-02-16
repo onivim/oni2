@@ -1,4 +1,4 @@
-open Feature_Input.Schema;
+open Schema;
 
 module Json = Oni_Core.Json;
 
@@ -26,7 +26,7 @@ module Keybinding = {
       obj(({field, _}) => {
         let arguments =
           field.optional("args", value) |> Option.value(~default=`Null);
-        Feature_Input.Schema.bindWithArgs(
+        Schema.bindWithArgs(
           ~arguments,
           ~key=field.required("key", string),
           ~command=field.required("command", string),
@@ -45,8 +45,7 @@ module Keybinding = {
 
 module Internal = {
   let of_yojson_with_errors:
-    list(Yojson.Safe.t) =>
-    (list(Feature_Input.Schema.keybinding), list(string)) =
+    list(Yojson.Safe.t) => (list(Schema.keybinding), list(string)) =
     bindingsJson => {
       let parsedBindings =
         bindingsJson
@@ -82,11 +81,9 @@ module Internal = {
 // Old version of keybindings - the legacy format:
 // { bindings: [ ..bindings. ] }
 module Legacy = {
-  let upgrade:
-    list(Feature_Input.Schema.keybinding) =>
-    list(Feature_Input.Schema.keybinding) =
+  let upgrade: list(Schema.keybinding) => list(Schema.keybinding) =
     keys => {
-      let upgradeBinding = (binding: Feature_Input.Schema.keybinding) => {
+      let upgradeBinding = (binding: Schema.keybinding) => {
         let f = cmd =>
           switch (cmd) {
           | "quickOpen.open" => "workbench.action.quickOpen"
@@ -94,7 +91,7 @@ module Legacy = {
           | str => str
           };
 
-        Feature_Input.Schema.mapCommand(~f, binding);
+        Schema.mapCommand(~f, binding);
       };
 
       keys |> List.map(upgradeBinding);
@@ -105,7 +102,7 @@ let evaluateBindings = (bindings: list(keybinding), errors) => {
   let rec loop = (bindings, errors, currentBindings) => {
     switch (bindings) {
     | [hd, ...tail] =>
-      switch (Feature_Input.Schema.resolve(hd)) {
+      switch (Schema.resolve(hd)) {
       | Ok(newBinding) =>
         loop(tail, errors, [newBinding, ...currentBindings])
       | Error(msg) => loop(tail, [msg, ...errors], currentBindings)
@@ -144,3 +141,72 @@ let of_yojson_with_errors = json => {
        evaluateBindings(bindings, errors)
      });
 };
+
+let%test_module "keybinding parsing" =
+  (module
+   {
+     let keybindingsJSON =
+       {|
+[
+  {key: "<C-V>", command: "quickOpen.show", when: "editorTextFocus"}
+]
+|}
+       |> Yojson.Safe.from_string;
+
+     let keybindingsJSONWithComment =
+       {|
+[
+  // show quickopen
+  {key: "<C-V>", command: "quickOpen.show", when: "editorTextFocus"}
+]
+|}
+       |> Yojson.Safe.from_string;
+
+     let legacyKeyBindingsWithNewExpressionJSON =
+       {|
+{
+bindings: [{key: "<C-V>", command: "quickOpen.show", when: "editorTextFocus"}]
+}
+|}
+       |> Yojson.Safe.from_string;
+
+     let isOk = v =>
+       switch (v) {
+       | Ok(_) => true
+       | Error(_) => false
+       };
+
+     let bindingCount = v =>
+       switch (v) {
+       | Ok((bindings, _)) => List.length(bindings)
+       | Error(_) => 0
+       };
+
+     let errorCount = v =>
+       switch (v) {
+       | Ok((_, errors)) => List.length(errors)
+       | Error(_) => 0
+       };
+
+     let%test "basic key binding" = {
+       let result = of_yojson_with_errors(keybindingsJSON);
+       isOk(result) == true
+       && bindingCount(result) == 1
+       && errorCount(result) == 0;
+     };
+
+     let%test "basic key binding with comment" = {
+       let result = of_yojson_with_errors(keybindingsJSONWithComment);
+       isOk(result) == true
+       && bindingCount(result) == 1
+       && errorCount(result) == 0;
+     };
+
+     let%test "legacy keybinding with new expression" = {
+       let result =
+         of_yojson_with_errors(legacyKeyBindingsWithNewExpressionJSON);
+       isOk(result) == true
+       && bindingCount(result) == 1
+       && errorCount(result) == 0;
+     };
+   });
