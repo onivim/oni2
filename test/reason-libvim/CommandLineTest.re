@@ -241,7 +241,9 @@ describe("CommandLine", ({describe, _}) => {
       expect.string(line).toEqual("Dhis is the third line of a test file");
     });
 
-    test("#1159 - substitution command, with confirm flag - should be a no-op", ({expect, _}) => {
+    test(
+      "#1159 - substitution command, with confirm flag - should be a no-op",
+      ({expect, _}) => {
       let buffer = reset();
       input(":%s!T!D!gc");
       key("<cr>");
