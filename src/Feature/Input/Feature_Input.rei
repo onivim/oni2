@@ -58,6 +58,22 @@ module Schema: {
   let resolve: keybinding => result(resolvedKeybinding, string);
 };
 
+// LOADER
+
+module KeybindingsLoader: {
+  type t;
+
+  // module Make: {
+  let static: list(Schema.keybinding) => t;
+
+  let file: Fp.t(Fp.absolute) => t;
+  // };
+
+  // let notifyFileSaved: (~filePath: Fp.t(Fp.absolute), t) => t;
+
+  // let sub: t => Isolinear.Sub.t((list(Schema.keybinding), list(string)));
+};
+
 [@deriving show]
 type msg;
 
