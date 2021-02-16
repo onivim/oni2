@@ -17,22 +17,23 @@ module PathHasher = {
   // type t = list(string);
 
   let make = (~base, path) => {
-    let base = Fp.toString(base);
-    let path = Fp.toString(path);
-    path |> Path.toRelative(~base) |> Path.explode |> List.map(hash);
+    switch(Fp.relativize(~source=base, ~dest=path)) {
+    | Ok(relativePath) => FpEx.explode(relativePath) |> List.map(hash)
+    | Error(_) => []
+    }
   };
 
   let%test "equivalent paths" = {
     // TODO: Is this case even correct?
-    make(~base=Fp.At(root), Fp.At(root)) == [0];
+    make(~base=Fp.(root), Fp.(root)) == [];
   };
 
   let%test "simple path" = {
-    make(~base=Fp.At(root), Fp.At(root / "abc")) == [hash("abc")];
+    make(~base=Fp.(root), Fp.(At.(root / "abc"))) == [hash("abc")];
   };
 
   let%test "multiple paths" = {
-    make(~base=Fp.At(root), Fp.At(root / "abc" / "def"))
+    make(~base=Fp.(root), Fp.(At.(root / "abc" / "def")))
     == [hash("abc"), hash("def")];
   };
 };
