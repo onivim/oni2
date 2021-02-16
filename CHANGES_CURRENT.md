@@ -2,7 +2,7 @@
 
 ### Bug Fixes
 
-- #XXXX - Windows: Reload keybindings on save
+- #3141 - Windows: Reload keybindings on save
 
 ### Performance
 
