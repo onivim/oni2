@@ -3,7 +3,7 @@ open Utility;
 
 [@deriving show({with_path: false})]
 type metadata = {
-  path: string,
+  path: [@opaque] Fp.t(Fp.absolute),
   displayName: string,
   hash: int // hash of basename, so only comparable locally
 };
@@ -16,31 +16,35 @@ module PathHasher = {
 
   // type t = list(string);
 
-  let make = (~base, path) =>
-  path |> Path.toRelative(~base) |> Path.explode |> List.map(hash);
+  let make = (~base, path) => {
+    let base = Fp.toString(base);
+    let path = Fp.toString(path);
+    path |> Path.toRelative(~base) |> Path.explode |> List.map(hash);
+  };
 
   let%test "equivalent paths" = {
     // TODO: Is this case even correct?
-    make(~base="/", "/") == [0]
-  }
+    make(~base=Fp.At(root), Fp.At(root)) == [0];
+  };
 
   let%test "simple path" = {
-    make(~base="/", "/abc") == [hash("abc")]
-  }
+    make(~base=Fp.At(root), Fp.At(root / "abc")) == [hash("abc")];
+  };
 
   let%test "multiple paths" = {
-    make(~base="/", "/abc/def") == [hash("abc"), hash("def")]
-  }
+    make(~base=Fp.At(root), Fp.At(root / "abc" / "def"))
+    == [hash("abc"), hash("def")];
+  };
 };
 
 let file = path => {
-  let basename = Filename.basename(path);
+  let basename = Fp.baseName(path) |> Option.value(~default="(empty)");
 
   Tree.leaf({path, hash: PathHasher.hash(basename), displayName: basename});
 };
 
 let directory = (~isOpen=false, path, ~children) => {
-  let basename = Filename.basename(path);
+  let basename = Fp.baseName(path) |> Option.value(~default="(empty)");
 
   Tree.node(
     ~expanded=isOpen,
@@ -134,10 +138,7 @@ let replace = (~replacement, tree) => {
     };
 
   loop(
-    PathHasher.make(
-      ~base=Filename.dirname(getPath(tree)),
-      getPath(replacement),
-    ),
+    PathHasher.make(~base=Fp.dirName(getPath(tree)), getPath(replacement)),
     tree,
   );
 };
@@ -165,7 +166,7 @@ let updateNodesInPath =
     | _ => node
     };
 
-  loop(PathHasher.make(~base=Filename.dirname(getPath(tree)), path), tree);
+  loop(PathHasher.make(~base=Fp.dirName(getPath(tree)), path), tree);
 };
 
 let toggleOpen =

@@ -2,7 +2,7 @@ open Oni_Core;
 
 [@deriving show({with_path: false})]
 type metadata = {
-  path: string,
+  path: Fp.t(Fp.absolute),
   displayName: string,
   hash: int // hash of basename, so only comparable locally
 };
@@ -10,18 +10,18 @@ type metadata = {
 [@deriving show({with_path: false})]
 type t = Tree.t(metadata, metadata);
 
-let file: string => t;
-let directory: (~isOpen: bool=?, string, ~children: list(t)) => t;
+let file: Fp.t(Fp.absolute) => t;
+let directory: (~isOpen: bool=?, Fp.t(Fp.absolute), ~children: list(t)) => t;
 
-let getPath: t => string;
+let getPath: t => Fp.t(Fp.absolute);
 let displayName: t => string;
 
 let findNodesByPath:
-  (string, t) => [ | `Success(list(t)) | `Partial(t) | `Failed];
-let findByPath: (string, t) => option(t);
+  (Fp.t(Fp.absolute), t) => [ | `Success(list(t)) | `Partial(t) | `Failed];
+let findByPath: (Fp.t(Fp.absolute), t) => option(t);
 
 let replace: (~replacement: t, t) => t;
-let updateNodesInPath: (t => t, string, t) => t;
+let updateNodesInPath: (t => t, Fp.t(Fp.absolute), t) => t;
 let toggleOpen: t => t;
 let setOpen: t => t;
 
