@@ -7,6 +7,7 @@
 - #3142 - Windows: Explorer - Directory nodes not expanding (fixes #3092, #2213)
 - #3147 - Editor: Fix minimap scroll synchronization for large files
 - #3077 - Terminal: Use editor font as default (related #3062)
+- #3148 - Editor: Fix crash when opening large files (related #1670)
 
 ### Performance
 
