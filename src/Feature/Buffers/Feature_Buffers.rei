@@ -86,6 +86,8 @@ let update:
   (~activeBufferId: int, ~config: Config.fileTypeResolver, msg, model) =>
   (model, outmsg);
 
+let configurationChanged: (~config: Config.resolver, model) => model;
+
 // EFFECTS
 
 module Effects: {

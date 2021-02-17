@@ -14,12 +14,16 @@ type model = {
   buffers: IntMap.t(Buffer.t),
   originalLines: IntMap.t(array(string)),
   computedDiffs: IntMap.t(DiffMarkers.t),
+
+  checkForLargeFiles: bool,
 };
 
 let empty = {
   buffers: IntMap.empty,
   originalLines: IntMap.empty,
   computedDiffs: IntMap.empty,
+
+  checkForLargeFiles: true,
 };
 
 module Internal = {
@@ -69,6 +73,11 @@ let update = (id, updater, {buffers, _} as model) => {
   {...model, buffers: IntMap.update(id, updater, buffers)};
 };
 
+let configurationChanged = (~config, model) => {
+  ...model,
+  checkForLargeFiles: Feature_Configuration.GlobalConfiguration.Editor.largeFileOptimizations.get(config),
+};
+
 let anyModified = ({buffers, _}: model) => {
   IntMap.fold(
     (_key, v, prev) => Buffer.isModified(v) || prev,
@@ -108,10 +117,11 @@ let isModifiedByPath = ({buffers, _}: model, filePath: string) => {
 };
 
 let isLargeFile = (model, buffer) => {
-  model.buffers
+  model.checkForLargeFiles &&
+  (model.buffers
   |> IntMap.find_opt(Oni_Core.Buffer.getId(buffer))
   |> Option.map(buffer => Buffer.getNumberOfLines(buffer) > 1000)
-  |> Option.value(~default=false);
+  |> Option.value(~default=false));
 }
 
 // TODO: When do we use this?

@@ -174,6 +174,11 @@ module Internal = {
              ~config=resolver,
            );
 
+      let buffers = state.buffers
+        |> Feature_Buffers.configurationChanged(
+          ~config=resolver
+        );
+
       let languageSupport =
         state.languageSupport
         |> Feature_LanguageSupport.configurationChanged(~config=resolver);
@@ -195,7 +200,7 @@ module Internal = {
       let (zoom, zoomEffect) =
         Feature_Zoom.configurationChanged(~config=resolver, state.zoom);
       let eff = zoomEffect |> Isolinear.Effect.map(msg => Actions.Zoom(msg));
-      ({...state, languageSupport, sideBar, layout, zoom}, eff);
+      ({...state, buffers, languageSupport, sideBar, layout, zoom}, eff);
     };
 
   let updateMode =
