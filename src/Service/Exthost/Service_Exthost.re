@@ -280,7 +280,10 @@ module Internal = {
         [""];
       } else {
         // There needs to be an empty line at the end of the buffer to sync changes at the end
-        lines @ [""];
+        lines
+        |> List.rev
+        |> List.append([""])
+        |> List.rev
       };
 
     maybeFilePath
