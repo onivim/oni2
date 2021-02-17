@@ -3,34 +3,37 @@ open Oni_Core;
 module Log = (val Log.withNamespace("Service_Exthost"));
 
 module BufferTracker = {
-  
   let _bufferTracker: ref(IntMap.t(int)) = ref(IntMap.empty);
 
-  let startTracking = (bufferId) => {
-    _bufferTracker := _bufferTracker^
-    |> IntMap.update(bufferId, 
-    fun
-    | None => Some(1)
-    | Some(count) => Some(count + 1)
-    );
-  }
+  let startTracking = bufferId => {
+    _bufferTracker :=
+      _bufferTracker^
+      |> IntMap.update(
+           bufferId,
+           fun
+           | None => Some(1)
+           | Some(count) => Some(count + 1),
+         );
+  };
 
-  let stopTracking = (bufferId) => {
-    _bufferTracker := _bufferTracker^
-    |> IntMap.update(bufferId, 
-    fun
-    | None => Some(0)
-    | Some(count) => Some(count - 1)
-    );
-  }
+  let stopTracking = bufferId => {
+    _bufferTracker :=
+      _bufferTracker^
+      |> IntMap.update(
+           bufferId,
+           fun
+           | None => Some(0)
+           | Some(count) => Some(count - 1),
+         );
+  };
 
-  let isTracking = (bufferId) => {
+  let isTracking = bufferId => {
     _bufferTracker^
     |> IntMap.find_opt(bufferId)
     |> Option.map(count => count >= 1)
     |> Option.value(~default=false);
-  }
-}
+  };
+};
 
 module Constants = {
   let highPriorityDebounceTime = Revery.Time.milliseconds(50);
@@ -77,34 +80,33 @@ module Effects = {
         ) =>
       Isolinear.Effect.createWithDispatch(
         ~name="exthost.bufferUpdate", dispatch =>
-        Oni_Core.Log.perf("exthost.bufferUpdate", () => {
-
+        Oni_Core.Log.perf("exthost.bufferUpdate", () =>
           if (BufferTracker.isTracking(Buffer.getId(buffer))) {
-          let modelContentChange =
-            Exthost.ModelContentChange.ofBufferUpdate(
-              ~previousBuffer,
-              update,
-              Exthost.Eol.default,
-            );
-          let modelChangedEvent =
-            Exthost.ModelChangedEvent.{
-              changes: [modelContentChange],
-              eol: Exthost.Eol.default,
-              versionId: update.version,
-            };
+            let modelContentChange =
+              Exthost.ModelContentChange.ofBufferUpdate(
+                ~previousBuffer,
+                update,
+                Exthost.Eol.default,
+              );
+            let modelChangedEvent =
+              Exthost.ModelChangedEvent.{
+                changes: [modelContentChange],
+                eol: Exthost.Eol.default,
+                versionId: update.version,
+              };
 
-          Exthost.Request.Documents.acceptModelChanged(
-            ~uri=Buffer.getUri(buffer),
-            ~modelChangedEvent,
-            ~isDirty=Buffer.isModified(buffer),
-            client,
-          );
-          dispatch(toMsg());
+            Exthost.Request.Documents.acceptModelChanged(
+              ~uri=Buffer.getUri(buffer),
+              ~modelChangedEvent,
+              ~isDirty=Buffer.isModified(buffer),
+              client,
+            );
+            dispatch(toMsg());
           } else {
-            // TODO: Warn
             ();
+              // TODO: Warn
           }
-        })
+        )
       );
 
     let modelSaved = (~uri, client, toMsg) => {
@@ -280,10 +282,7 @@ module Internal = {
         [""];
       } else {
         // There needs to be an empty line at the end of the buffer to sync changes at the end
-        lines
-        |> List.rev
-        |> List.append([""])
-        |> List.rev
+        lines |> List.rev |> List.append([""]) |> List.rev;
       };
 
     maybeFilePath
@@ -467,7 +466,7 @@ module Sub = {
                );
              });
         };
-        };
+      };
     });
 
   let buffer = (~buffer, ~client, ~toMsg) =>

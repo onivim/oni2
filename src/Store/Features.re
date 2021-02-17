@@ -174,10 +174,9 @@ module Internal = {
              ~config=resolver,
            );
 
-      let buffers = state.buffers
-        |> Feature_Buffers.configurationChanged(
-          ~config=resolver
-        );
+      let buffers =
+        state.buffers
+        |> Feature_Buffers.configurationChanged(~config=resolver);
 
       let languageSupport =
         state.languageSupport

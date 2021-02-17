@@ -14,7 +14,6 @@ type model = {
   buffers: IntMap.t(Buffer.t),
   originalLines: IntMap.t(array(string)),
   computedDiffs: IntMap.t(DiffMarkers.t),
-
   checkForLargeFiles: bool,
 };
 
@@ -75,7 +74,10 @@ let update = (id, updater, {buffers, _} as model) => {
 
 let configurationChanged = (~config, model) => {
   ...model,
-  checkForLargeFiles: Feature_Configuration.GlobalConfiguration.Editor.largeFileOptimizations.get(config),
+  checkForLargeFiles:
+    Feature_Configuration.GlobalConfiguration.Editor.largeFileOptimizations.get(
+      config,
+    ),
 };
 
 let anyModified = ({buffers, _}: model) => {
@@ -117,12 +119,14 @@ let isModifiedByPath = ({buffers, _}: model, filePath: string) => {
 };
 
 let isLargeFile = (model, buffer) => {
-  model.checkForLargeFiles &&
-  (model.buffers
+  model.checkForLargeFiles
+  && model.buffers
   |> IntMap.find_opt(Oni_Core.Buffer.getId(buffer))
-  |> Option.map(buffer => Buffer.getNumberOfLines(buffer) > Constants.largeFileLineCountThreshold)
-  |> Option.value(~default=false));
-}
+  |> Option.map(buffer =>
+       Buffer.getNumberOfLines(buffer) > Constants.largeFileLineCountThreshold
+     )
+  |> Option.value(~default=false);
+};
 
 let setModified = modified =>
   Option.map(buffer => Buffer.setModified(modified, buffer));
