@@ -5,25 +5,11 @@
  */
 open Kernel;
 open ConfigurationValues;
-open Utility;
 
 let parseBool = json =>
   switch (json) {
   | `Bool(v) => v
   | _ => false
-  };
-
-let parseFloat = (~default=0., json) =>
-  switch (json) {
-  | `Int(v) => float_of_int(v)
-  | `Float(v) => v
-  | `String(str) =>
-    let floatMaybe = float_of_string_opt(str);
-    let floatFromIntMaybe =
-      int_of_string_opt(str) |> Option.map(float_of_int);
-
-    floatMaybe |> OptionEx.or_(floatFromIntMaybe) |> Option.value(~default);
-  | _ => default
   };
 
 let parseStringList = json => {
@@ -66,28 +52,6 @@ let parseVimUseSystemClipboardSetting = json => {
   };
 };
 
-let parseEditorFontSize = (~default=Constants.defaultFontSize, json) =>
-  json
-  |> parseFloat(~default)
-  |> (
-    result =>
-      result > Constants.minimumFontSize ? result : Constants.minimumFontSize
-  );
-
-let parseFontSmoothing: Yojson.Safe.t => ConfigurationValues.fontSmoothing =
-  json =>
-    switch (json) {
-    | `String(smoothing) =>
-      let smoothing = String.lowercase_ascii(smoothing);
-      switch (smoothing) {
-      | "none" => None
-      | "antialiased" => Antialiased
-      | "subpixel-antialiased" => SubpixelAntialiased
-      | _ => Default
-      };
-    | _ => Default
-    };
-
 let parseAutoClosingBrackets:
   Yojson.Safe.t => ConfigurationValues.autoClosingBrackets =
   json =>
@@ -108,36 +72,6 @@ let parseString = (~default="", json) =>
   switch (json) {
   | `String(v) => v
   | _ => default
-  };
-
-let parseFontLigatures = json =>
-  switch (json) {
-  | `Bool(_) as bool => bool
-  | `String(str) =>
-    open Angstrom;
-
-    let quoted = p => char('\'') *> p <* char('\'');
-
-    let isAlphaNumeric = (
-      fun
-      | 'a'..'z'
-      | 'A'..'Z'
-      | '0'..'9' => true
-      | _ => false
-    );
-
-    let alphaString = take_while1(isAlphaNumeric);
-
-    let feature = quoted(alphaString);
-    let spaces = many(char(' '));
-
-    let parse = sep_by(char(',') <* spaces, feature);
-
-    switch (Angstrom.parse_string(~consume=All, parse, str)) {
-    | Ok(list) => `List(list)
-    | Error(_) => `Bool(true)
-    };
-  | _ => `Bool(true)
   };
 
 let parseAutoReveal = json =>
@@ -162,20 +96,6 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.fontSmoothing",
-    (config, json) => {
-      ...config,
-      editorFontSmoothing: parseFontSmoothing(json),
-    },
-  ),
-  (
-    "editor.fontLigatures",
-    (config, json) => {
-      ...config,
-      editorFontLigatures: parseFontLigatures(json),
-    },
-  ),
-  (
     "editor.largeFileOptimizations",
     (config, json) => {
       ...config,
@@ -192,29 +112,6 @@ let configurationParsers: list(configurationTuple) = [
   (
     "files.exclude",
     (config, json) => {...config, filesExclude: parseStringList(json)},
-  ),
-  (
-    "terminal.integrated.fontFamily",
-    (config, json) => {
-      ...config,
-      terminalIntegratedFontFile:
-        parseString(~default=Constants.defaultFontFile, json),
-    },
-  ),
-  (
-    "terminal.integrated.fontSize",
-    (config, json) => {
-      ...config,
-      terminalIntegratedFontSize:
-        parseEditorFontSize(~default=Constants.defaultTerminalFontSize, json),
-    },
-  ),
-  (
-    "terminal.integrated.fontSmoothing",
-    (config, json) => {
-      ...config,
-      terminalIntegratedFontSmoothing: parseFontSmoothing(json),
-    },
   ),
   (
     "workbench.activityBar.visible",

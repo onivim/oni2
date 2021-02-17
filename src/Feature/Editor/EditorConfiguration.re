@@ -9,8 +9,6 @@ module CustomDecoders: {
   let lineNumbers:
     Config.Schema.codec([ | `On | `Relative | `RelativeOnly | `Off]);
   let time: Config.Schema.codec(Time.t);
-  let fontSize: Config.Schema.codec(float);
-  let fontWeight: Config.Schema.codec(Revery.Font.Weight.t);
   let color: Config.Schema.codec(Revery.Color.t);
   let wordWrap: Config.Schema.codec([ | `Off | `On]);
 } = {
@@ -97,73 +95,6 @@ module CustomDecoders: {
           | `Boundary => string("boundary")
           | `Selection => string("selection")
           | `All => string("all")
-        ),
-    );
-
-  let fontSize =
-    custom(
-      ~decode=
-        Json.Decode.(
-          float
-          |> map(size => {
-               size < Constants.minimumFontSize
-                 ? Constants.minimumFontSize : size
-             })
-        ),
-      ~encode=Json.Encode.float,
-    );
-  let fontWeightDecoder =
-    Json.Decode.(
-      one_of([
-        (
-          "fontWeight.int",
-          int
-          |> map(
-               fun
-               | 100 => Revery.Font.Weight.Thin
-               | 200 => Revery.Font.Weight.UltraLight
-               | 300 => Revery.Font.Weight.Light
-               | 400 => Revery.Font.Weight.Normal
-               | 500 => Revery.Font.Weight.Medium
-               | 600 => Revery.Font.Weight.SemiBold
-               | 700 => Revery.Font.Weight.Bold
-               | 800 => Revery.Font.Weight.UltraBold
-               | 900 => Revery.Font.Weight.Heavy
-               | _ => Revery.Font.Weight.Normal,
-             ),
-        ),
-        (
-          "fontWeight.string",
-          string
-          |> map(
-               fun
-               | "100" => Revery.Font.Weight.Thin
-               | "200" => Revery.Font.Weight.UltraLight
-               | "300" => Revery.Font.Weight.Light
-               | "400"
-               | "normal" => Revery.Font.Weight.Normal
-               | "500" => Revery.Font.Weight.Medium
-               | "600" => Revery.Font.Weight.SemiBold
-               | "700"
-               | "bold" => Revery.Font.Weight.Bold
-               | "800" => Revery.Font.Weight.UltraBold
-               | "900" => Revery.Font.Weight.Heavy
-               | _ => Revery.Font.Weight.Normal,
-             ),
-        ),
-      ])
-    );
-  let fontWeight =
-    custom(
-      ~decode=fontWeightDecoder,
-      ~encode=
-        Json.Encode.(
-          t =>
-            switch (t) {
-            | Revery.Font.Weight.Normal => string("normal")
-            | Revery.Font.Weight.Bold => string("bold")
-            | _ => string(string_of_int(Revery.Font.Weight.toInt(t)))
-            }
         ),
     );
 
@@ -294,6 +225,8 @@ module VimSettings = {
 
 open CustomDecoders;
 
+module Codecs = Feature_Configuration.GlobalConfiguration.Codecs;
+
 let detectIndentation =
   setting("editor.detectIndentation", bool, ~default=true);
 
@@ -304,12 +237,25 @@ let fontFamily =
     string,
     ~default=Constants.defaultFontFile,
   );
-let fontLigatures = setting("editor.fontLigatures", bool, ~default=true);
-let fontSize = setting("editor.fontSize", fontSize, ~default=14.);
+
+let fontSmoothing =
+  setting(
+    "editor.fontSmoothing",
+    custom(~encode=FontSmoothing.encode, ~decode=FontSmoothing.decode),
+    ~default=FontSmoothing.Default,
+  );
+
+let fontLigatures =
+  setting(
+    "editor.fontLigatures",
+    Codecs.fontLigatures,
+    ~default=FontLigatures.enabled,
+  );
+let fontSize = setting("editor.fontSize", Codecs.fontSize, ~default=14.);
 let fontWeight =
   setting(
     "editor.fontWeight",
-    fontWeight,
+    Codecs.fontWeight,
     ~default=Revery.Font.Weight.Normal,
   );
 let lineHeight =
@@ -418,6 +364,7 @@ let contributions = [
   fontFamily.spec,
   fontLigatures.spec,
   fontSize.spec,
+  fontSmoothing.spec,
   fontWeight.spec,
   lineHeight.spec,
   largeFileOptimization.spec,
