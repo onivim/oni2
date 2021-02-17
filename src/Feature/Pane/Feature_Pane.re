@@ -665,7 +665,7 @@ module View = {
       justifyContent(`Center),
     ];
 
-    let clearAllButton = [
+    let paneButton = [
       width(32),
       alignItems(`Center),
       justifyContent(`Center),
@@ -764,13 +764,13 @@ module View = {
     </Sneakable>;
   };
 
-  let clearAllButton = (~theme, ~dispatch, ~pane, ()) =>
+  let paneButton = (~theme, ~dispatch, ~pane, ()) =>
     switch (pane) {
     | Notifications =>
       <Sneakable
-        sneakId="clearAll"
+        sneakId="paneButton"
         onClick={() => dispatch(PaneButtonClicked(pane))}
-        style=Styles.clearAllButton>
+        style=Styles.paneButton>
         <FontIcon
           icon={
             switch (pane) {
@@ -875,7 +875,7 @@ module View = {
           />
         </View>
         <View style=Styles.buttons>
-          <clearAllButton dispatch theme pane={pane.selected} />
+          <paneButton dispatch theme pane={pane.selected} />
           <closeButton dispatch theme />
         </View>
       </View>
