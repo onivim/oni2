@@ -120,13 +120,9 @@ let isLargeFile = (model, buffer) => {
   model.checkForLargeFiles &&
   (model.buffers
   |> IntMap.find_opt(Oni_Core.Buffer.getId(buffer))
-  |> Option.map(buffer => Buffer.getNumberOfLines(buffer) > 1000)
+  |> Option.map(buffer => Buffer.getNumberOfLines(buffer) > Constants.largeFileLineCountThreshold)
   |> Option.value(~default=false));
 }
-
-// TODO: When do we use this?
-//let disableSyntaxHighlighting =
-//  Option.map(buffer => Buffer.disableSyntaxHighlighting(buffer));
 
 let setModified = modified =>
   Option.map(buffer => Buffer.setModified(modified, buffer));
