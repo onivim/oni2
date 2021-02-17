@@ -178,6 +178,9 @@ module Editor = {
       ),
       ~default=`None,
     );
+
+  let largeFileOptimizations =
+    setting("editor.largeFileOptimizations", bool, ~default=true);
 };
 
 let contributions = [
@@ -185,5 +188,6 @@ let contributions = [
   animation.spec,
   shadows.spec,
   Editor.codeLensEnabled.spec,
+  Editor.largeFileOptimizations.spec,
   Editor.snippetSuggestions.spec,
 ];
