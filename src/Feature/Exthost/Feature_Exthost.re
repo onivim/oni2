@@ -144,6 +144,8 @@ let subscription =
       ~client,
       model,
     ) => {
+
+  if (isInitialized(model)) {
   let visibleBuffers: list(Oni_Core.Buffer.t) =
     editors
     |> List.map(Feature_Editor.Editor.getBufferId)
@@ -175,6 +177,7 @@ let subscription =
 
   let bufferSubscriptions =
     visibleBuffers
+    |> List.filter(buf => !Feature_Buffers.isLargeFile(buffers, buf))
     |> List.map(buffer => {
          Service_Exthost.Sub.buffer(
            ~buffer,
@@ -189,6 +192,7 @@ let subscription =
 
   let tryOpenedBufferSubscriptions =
     tryOpenedBuffers
+    |> List.filter(buf => !Feature_Buffers.isLargeFile(buffers, buf))
     |> List.map(buffer => {
          Service_Exthost.Sub.buffer(
            ~buffer,
@@ -229,4 +233,7 @@ let subscription =
     editorSubscriptions,
     activeEditorSubscription,
   ]);
+  } else {
+    Isolinear.Sub.none
+  }
 };

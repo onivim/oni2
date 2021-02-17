@@ -23,6 +23,8 @@ let map: (Buffer.t => Buffer.t, model) => model;
 
 let filter: (Buffer.t => bool, model) => list(Buffer.t);
 
+let isLargeFile: (model, Buffer.t) => bool;
+
 let setOriginalLines:
   (~bufferId: int, ~originalLines: array(string), model) => model;
 

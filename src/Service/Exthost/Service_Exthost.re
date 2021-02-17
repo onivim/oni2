@@ -2,6 +2,36 @@ open Oni_Core;
 
 module Log = (val Log.withNamespace("Service_Exthost"));
 
+module BufferTracker = {
+  
+  let _bufferTracker: ref(IntMap.t(int)) = ref(IntMap.empty);
+
+  let startTracking = (bufferId) => {
+    _bufferTracker := _bufferTracker^
+    |> IntMap.update(bufferId, 
+    fun
+    | None => Some(1)
+    | Some(count) => Some(count + 1)
+    );
+  }
+
+  let stopTracking = (bufferId) => {
+    _bufferTracker := _bufferTracker^
+    |> IntMap.update(bufferId, 
+    fun
+    | None => Some(0)
+    | Some(count) => Some(count - 1)
+    );
+  }
+
+  let isTracking = (bufferId) => {
+    _bufferTracker^
+    |> IntMap.find_opt(bufferId)
+    |> Option.map(count => count >= 1)
+    |> Option.value(~default=false);
+  }
+}
+
 module Constants = {
   let highPriorityDebounceTime = Revery.Time.milliseconds(50);
   let lowPriorityDebounceTime = Revery.Time.milliseconds(500);
@@ -48,6 +78,8 @@ module Effects = {
       Isolinear.Effect.createWithDispatch(
         ~name="exthost.bufferUpdate", dispatch =>
         Oni_Core.Log.perf("exthost.bufferUpdate", () => {
+
+          if (BufferTracker.isTracking(Buffer.getId(buffer))) {
           let modelContentChange =
             Exthost.ModelContentChange.ofBufferUpdate(
               ~previousBuffer,
@@ -68,6 +100,10 @@ module Effects = {
             client,
           );
           dispatch(toMsg());
+          } else {
+            // TODO: Warn
+            ();
+          }
         })
       );
 
@@ -346,6 +382,7 @@ module Sub = {
       };
 
       let init = (~params, ~dispatch) => {
+        BufferTracker.startTracking(Oni_Core.Buffer.getId(params.buffer));
         let bufferId = Oni_Core.Buffer.getId(params.buffer);
 
         let fileType =
@@ -374,6 +411,7 @@ module Sub = {
             params.client,
           );
           dispatch(`Added);
+          BufferTracker.startTracking(Oni_Core.Buffer.getId(params.buffer));
           {lastFileType: fileType, didAdd: true};
         | None => {lastFileType: fileType, didAdd: false}
         };
@@ -408,7 +446,8 @@ module Sub = {
         {...state, lastFileType: newFileType};
       };
 
-      let dispose = (~params, ~state) =>
+      let dispose = (~params, ~state) => {
+        BufferTracker.stopTracking(Oni_Core.Buffer.getId(params.buffer));
         if (state.didAdd) {
           params.buffer
           |> Oni_Core.Buffer.getFilePath
@@ -424,6 +463,7 @@ module Sub = {
                  params.client,
                );
              });
+        };
         };
     });
 

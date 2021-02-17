@@ -107,6 +107,13 @@ let isModifiedByPath = ({buffers, _}: model, filePath: string) => {
   );
 };
 
+let isLargeFile = (model, buffer) => {
+  model.buffers
+  |> IntMap.find_opt(Oni_Core.Buffer.getId(buffer))
+  |> Option.map(buffer => Buffer.getNumberOfLines(buffer) > 1000)
+  |> Option.value(~default=false);
+}
+
 // TODO: When do we use this?
 //let disableSyntaxHighlighting =
 //  Option.map(buffer => Buffer.disableSyntaxHighlighting(buffer));
