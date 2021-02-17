@@ -273,18 +273,11 @@ let start =
     let fontFamily = Feature_Editor.Configuration.fontFamily.get(config);
     let fontSize = Feature_Editor.Configuration.fontSize.get(config);
     let fontWeight = Feature_Editor.Configuration.fontWeight.get(config);
-
     let fontLigatures =
-      Oni_Core.Configuration.getValue(
-        c => c.editorFontLigatures,
-        state.configuration,
-      );
+      Feature_Editor.Configuration.fontLigatures.get(config);
 
     let fontSmoothing =
-      Oni_Core.Configuration.getValue(
-        c => c.editorFontSmoothing,
-        state.configuration,
-      );
+      Feature_Editor.Configuration.fontSmoothing.get(config);
 
     let editorFontSubscription =
       Service_Font.Sub.font(
@@ -298,26 +291,24 @@ let start =
       |> Isolinear.Sub.map(msg => Model.Actions.EditorFont(msg));
 
     let terminalFontFamily =
-      Oni_Core.Configuration.getValue(
-        c => c.terminalIntegratedFontFile,
-        state.configuration,
-      );
+      Feature_Terminal.Configuration.fontFamily.get(config)
+      |> Option.value(~default=fontFamily);
+
     let terminalFontSize =
-      Oni_Core.Configuration.getValue(
-        c => c.terminalIntegratedFontSize,
-        state.configuration,
-      );
-    let terminalFontSmoothing =
-      Oni_Core.Configuration.getValue(
-        c => c.terminalIntegratedFontSmoothing,
-        state.configuration,
-      );
+      Feature_Terminal.Configuration.fontSize.get(config)
+      |> Option.value(~default=fontSize);
 
     let terminalFontWeight =
-      Oni_Core.Configuration.getValue(
-        c => c.terminalIntegratedFontWeight,
-        state.configuration,
-      );
+      Feature_Terminal.Configuration.fontWeight.get(config)
+      |> Option.value(~default=fontWeight);
+
+    let terminalFontLigatures =
+      Feature_Terminal.Configuration.fontLigatures.get(config)
+      |> Option.value(~default=fontLigatures);
+
+    let terminalFontSmoothing =
+      Feature_Terminal.Configuration.fontSmoothing.get(config)
+      |> Option.value(~default=fontSmoothing);
 
     let terminalFontSubscription =
       Service_Font.Sub.font(
@@ -326,7 +317,7 @@ let start =
         ~fontSize=terminalFontSize,
         ~fontWeight=terminalFontWeight,
         ~fontSmoothing=terminalFontSmoothing,
-        ~fontLigatures,
+        ~fontLigatures=terminalFontLigatures,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.TerminalFont(msg));
 

@@ -16,27 +16,12 @@ type autoClosingBrackets =
   | Never
   | LanguageDefined;
 
-[@deriving show({with_path: false})]
-type fontSmoothing =
-  | Default
-  | None
-  | Antialiased
-  | SubpixelAntialiased;
-
-type fontLigatures = [ | `Bool(bool) | `List(list(string))];
-
 type autoReveal = [ | `HighlightAndScroll | `HighlightOnly | `NoReveal];
 
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
-  editorFontLigatures: fontLigatures,
-  editorFontSmoothing: fontSmoothing,
   editorLargeFileOptimizations: bool,
   explorerAutoReveal: autoReveal,
-  terminalIntegratedFontFile: string,
-  terminalIntegratedFontSize: float,
-  terminalIntegratedFontWeight: Revery.Font.Weight.t,
-  terminalIntegratedFontSmoothing: fontSmoothing,
   workbenchActivityBarVisible: bool,
   workbenchColorTheme: string,
   workbenchIconTheme: string,
@@ -57,14 +42,8 @@ type t = {
 
 let default = {
   editorAutoClosingBrackets: LanguageDefined,
-  editorFontSmoothing: Default,
-  editorFontLigatures: `Bool(true),
   editorLargeFileOptimizations: true,
   explorerAutoReveal: `HighlightAndScroll,
-  terminalIntegratedFontFile: Constants.defaultFontFile,
-  terminalIntegratedFontSize: Constants.defaultTerminalFontSize,
-  terminalIntegratedFontWeight: Revery.Font.Weight.Normal,
-  terminalIntegratedFontSmoothing: Default,
   workbenchActivityBarVisible: true,
   workbenchColorTheme: Constants.defaultTheme,
   workbenchEditorShowTabs: true,

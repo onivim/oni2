@@ -141,6 +141,11 @@ module Schema = {
       encode: Json.Encode.list(valueCodec.encode),
     };
 
+    let nullable = valueCodec => {
+      decode: Json.Decode.nullable(valueCodec.decode),
+      encode: Json.Encode.nullable(valueCodec.encode),
+    };
+
     let custom = (~decode, ~encode) => {decode, encode};
 
     type vimSetting('a) = resolver => option('a);

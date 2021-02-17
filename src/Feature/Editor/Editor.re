@@ -1153,6 +1153,29 @@ let isScrollAnimated = ({isScrollAnimated, isAnimationOverride, _}) => {
   };
 };
 
+let synchronizeMinimapScroll = (~animated, editor) => {
+  // Set up minimap scroll
+  let newScrollY =
+    animated ? Spring.get(editor.scrollY) : Spring.getTarget(editor.scrollY);
+  let {pixelHeight, _} = editor;
+  let viewLines = editor |> totalViewLines;
+  let availableScroll =
+    max(float_of_int(viewLines - 1), 0.)
+    *. lineHeightInPixels(editor)
+    +. InlineElements.getAllReservedSpace(editor.inlineElements);
+  let scrollPercentage =
+    newScrollY /. (availableScroll -. float_of_int(pixelHeight));
+  let minimapLineSize =
+    Constants.minimapCharacterWidth + Constants.minimapCharacterHeight;
+  let linesInMinimap = pixelHeight / minimapLineSize;
+  let availableMinimapScroll =
+    max(viewLines - linesInMinimap, 0) * minimapLineSize;
+  let minimapScrollY =
+    scrollPercentage *. float_of_int(availableMinimapScroll);
+
+  {...editor, minimapScrollY};
+};
+
 let exposePrimaryCursor = (~disableAnimation=false, editor) =>
   if (!hasSetSize(editor)) {
     // If the size hasn't been set yet - don't try to expose the cursor.
@@ -1227,7 +1250,8 @@ let exposePrimaryCursor = (~disableAnimation=false, editor) =>
           ),
         animationNonce:
           animated ? editor.animationNonce + 1 : editor.animationNonce,
-      };
+      }
+      |> synchronizeMinimapScroll(~animated=animated && !disableAnimation);
 
     | _ => editor
     };
@@ -1334,7 +1358,6 @@ let getContentPixelWidth = editor => {
 let scrollToPixelY = (~animated, ~pixelY as newScrollY, editor) => {
   let originalScrollY = Spring.getTarget(editor.scrollY);
   let animated = editor |> isScrollAnimated && animated;
-  let {pixelHeight, _} = editor;
   let viewLines = editor |> totalViewLines;
   let newScrollY = max(0., newScrollY);
   let availableScroll =
@@ -1342,16 +1365,6 @@ let scrollToPixelY = (~animated, ~pixelY as newScrollY, editor) => {
     *. lineHeightInPixels(editor)
     +. InlineElements.getAllReservedSpace(editor.inlineElements);
   let newScrollY = min(newScrollY, availableScroll);
-
-  let scrollPercentage =
-    newScrollY /. (availableScroll -. float_of_int(pixelHeight));
-  let minimapLineSize =
-    Constants.minimapCharacterWidth + Constants.minimapCharacterHeight;
-  let linesInMinimap = pixelHeight / minimapLineSize;
-  let availableMinimapScroll =
-    max(viewLines - linesInMinimap, 0) * minimapLineSize;
-  let newMinimapScroll =
-    scrollPercentage *. float_of_int(availableMinimapScroll);
 
   // For small  jumps - ie, a single line, just teleport.
   let isSmallJump =
@@ -1364,9 +1377,9 @@ let scrollToPixelY = (~animated, ~pixelY as newScrollY, editor) => {
     ...editor,
     animationNonce:
       instant ? editor.animationNonce : editor.animationNonce + 1,
-    minimapScrollY: newMinimapScroll,
     scrollY: Spring.set(~instant, ~position=newScrollY, editor.scrollY),
-  };
+  }
+  |> synchronizeMinimapScroll(~animated=!instant);
 };
 
 let scrollToLine = (~line, view) => {
@@ -2005,13 +2018,15 @@ let update = (msg, editor) => {
            };
          });
 
-    let editor' = {
-      ...editor,
-      scrollX: Spring.update(msg, editor.scrollX),
-      scrollY: Spring.update(msg, editor.scrollY),
-      yankHighlight: yankHighlight',
-      animationNonce: editor.animationNonce + 1,
-    };
+    let editor' =
+      {
+        ...editor,
+        scrollX: Spring.update(msg, editor.scrollX),
+        scrollY: Spring.update(msg, editor.scrollY),
+        yankHighlight: yankHighlight',
+        animationNonce: editor.animationNonce + 1,
+      }
+      |> synchronizeMinimapScroll(~animated=true);
 
     editor'
     |> withSteadyCursor(e =>

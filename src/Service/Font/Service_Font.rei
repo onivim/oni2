@@ -41,8 +41,8 @@ module Sub: {
       ~fontFamily: string,
       ~fontSize: float,
       ~fontWeight: Revery.Font.Weight.t,
-      ~fontLigatures: ConfigurationValues.fontLigatures,
-      ~fontSmoothing: ConfigurationValues.fontSmoothing
+      ~fontLigatures: FontLigatures.t,
+      ~fontSmoothing: FontSmoothing.t
     ) =>
     Isolinear.Sub.t(msg);
 };
