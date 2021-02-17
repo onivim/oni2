@@ -59,6 +59,79 @@ module Encoders = {
       };
 };
 
+module Codecs = {
+  let fontWeightDecoder =
+    Json.Decode.(
+      one_of([
+        (
+          "fontWeight.int",
+          int
+          |> map(
+               fun
+               | 100 => Revery.Font.Weight.Thin
+               | 200 => Revery.Font.Weight.UltraLight
+               | 300 => Revery.Font.Weight.Light
+               | 400 => Revery.Font.Weight.Normal
+               | 500 => Revery.Font.Weight.Medium
+               | 600 => Revery.Font.Weight.SemiBold
+               | 700 => Revery.Font.Weight.Bold
+               | 800 => Revery.Font.Weight.UltraBold
+               | 900 => Revery.Font.Weight.Heavy
+               | _ => Revery.Font.Weight.Normal,
+             ),
+        ),
+        (
+          "fontWeight.string",
+          string
+          |> map(
+               fun
+               | "100" => Revery.Font.Weight.Thin
+               | "200" => Revery.Font.Weight.UltraLight
+               | "300" => Revery.Font.Weight.Light
+               | "400"
+               | "normal" => Revery.Font.Weight.Normal
+               | "500" => Revery.Font.Weight.Medium
+               | "600" => Revery.Font.Weight.SemiBold
+               | "700"
+               | "bold" => Revery.Font.Weight.Bold
+               | "800" => Revery.Font.Weight.UltraBold
+               | "900" => Revery.Font.Weight.Heavy
+               | _ => Revery.Font.Weight.Normal,
+             ),
+        ),
+      ])
+    );
+  let fontWeight =
+    custom(
+      ~decode=fontWeightDecoder,
+      ~encode=
+        Json.Encode.(
+          t =>
+            switch (t) {
+            | Revery.Font.Weight.Normal => string("normal")
+            | Revery.Font.Weight.Bold => string("bold")
+            | _ => string(string_of_int(Revery.Font.Weight.toInt(t)))
+            }
+        ),
+    );
+
+  let fontSize =
+    custom(
+      ~decode=
+        Json.Decode.(
+          float
+          |> map(size => {
+               size < Constants.minimumFontSize
+                 ? Constants.minimumFontSize : size
+             })
+        ),
+      ~encode=Json.Encode.float,
+    );
+
+  let fontLigatures =
+    custom(~decode=FontLigatures.decode, ~encode=FontLigatures.encode);
+};
+
 module Custom = {
   let inactiveWindowOpacity =
     custom(~decode=Decoders.inactiveWindowOpacity, ~encode=Json.Encode.float);
