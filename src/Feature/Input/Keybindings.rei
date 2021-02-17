@@ -5,7 +5,4 @@
  */
 let of_yojson_with_errors:
   Yojson.Safe.t =>
-  result(
-    (list(Feature_Input.Schema.resolvedKeybinding), list(string)),
-    string,
-  );
+  result((list(Schema.resolvedKeybinding), list(string)), string);
