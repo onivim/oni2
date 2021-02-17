@@ -96,13 +96,6 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.largeFileOptimizations",
-    (config, json) => {
-      ...config,
-      editorLargeFileOptimizations: parseBool(json),
-    },
-  ),
-  (
     "explorer.autoReveal",
     (config, json) => {
       ...config,
