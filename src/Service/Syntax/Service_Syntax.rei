@@ -12,6 +12,11 @@ type serverMsg =
 type bufferMsg =
   | ReceivedHighlights(list(Oni_Syntax.Protocol.TokenUpdate.t));
 
+module Effect: {
+  let bufferUpdate:
+    (~client: Oni_Syntax_Client.t, ~bufferUpdate: BufferUpdate.t) => Isolinear.Effect.t(_);
+};
+
 module Sub: {
   let server:
     (

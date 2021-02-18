@@ -257,3 +257,11 @@ module Sub = {
     BufferSubscription.create({client, buffer, scope, visibleRanges});
   };
 };
+
+module Effect = {
+  let bufferUpdate = (~client, ~bufferUpdate, ) => {
+    Isolinear.Effect.create(~name="service.syntax.bufferUpdate", () => {
+           Oni_Syntax_Client.notifyBufferUpdate(~bufferUpdate, client)
+    });
+  };
+};
