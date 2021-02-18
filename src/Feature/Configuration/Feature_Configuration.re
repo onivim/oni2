@@ -17,6 +17,7 @@ type model = {
   schema: Config.Schema.t,
   user: Config.Settings.t,
   merged: Config.Settings.t,
+  //legacyConfiguration: LegacyConfiguration.default,
 };
 
 let merge = model => {

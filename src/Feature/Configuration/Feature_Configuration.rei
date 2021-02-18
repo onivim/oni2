@@ -5,11 +5,7 @@ module UserSettingsProvider: {
   let getSettings: unit => result(Config.Settings.t, string);
 };
 
-type model = {
-  schema: Config.Schema.t,
-  user: Config.Settings.t,
-  merged: Config.Settings.t,
-};
+type model;
 
 let initial:
   (
