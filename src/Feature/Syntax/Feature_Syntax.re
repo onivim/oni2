@@ -313,6 +313,7 @@ let update: (t, msg) => (t, outmsg) =
 
 let subscription =
     (
+      ~buffers: Feature_Buffers.model,
       ~config: Config.resolver,
       ~grammarInfo,
       ~languageInfo,
@@ -325,6 +326,7 @@ let subscription =
     bufferVisibility
     |> List.filter(((buffer, _)) =>
          !BufferMap.mem(Oni_Core.Buffer.getId(buffer), ignoredBuffers)
+         && !Feature_Buffers.isLargeFile(buffers, buffer)
        )
     |> List.map(((buffer, visibleRanges)) => {
          Service_Syntax.Sub.buffer(
