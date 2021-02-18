@@ -14,7 +14,8 @@ type bufferMsg =
 
 module Effect: {
   let bufferUpdate:
-    (~client: Oni_Syntax_Client.t, ~bufferUpdate: BufferUpdate.t) => Isolinear.Effect.t(_);
+    (~client: Oni_Syntax_Client.t, ~bufferUpdate: BufferUpdate.t) =>
+    Isolinear.Effect.t(_);
 };
 
 module Sub: {

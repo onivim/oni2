@@ -7,6 +7,7 @@
 module Buffer = Buffer;
 module BufferLine = BufferLine;
 module BufferPath = BufferPath;
+module BufferTracker = BufferTracker;
 module BufferUpdate = BufferUpdate;
 module BuildInfo = BuildInfo;
 module ThemeToken = ThemeToken;

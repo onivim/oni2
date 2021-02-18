@@ -369,13 +369,10 @@ let subscription =
 
 module Effect = {
   let bufferUpdate = (~bufferUpdate, {maybeSyntaxClient, _}) => {
-      maybeSyntaxClient
-      |> Option.map(client => {
-           Service_Syntax.Effect.bufferUpdate(
-            ~client,
-            ~bufferUpdate
-           )
-         })
-      |> Option.value(~default=Isolinear.Effect.none);
+    maybeSyntaxClient
+    |> Option.map(client => {
+         Service_Syntax.Effect.bufferUpdate(~client, ~bufferUpdate)
+       })
+    |> Option.value(~default=Isolinear.Effect.none);
   };
 };
