@@ -20,7 +20,6 @@ type autoReveal = [ | `HighlightAndScroll | `HighlightOnly | `NoReveal];
 
 type t = {
   editorAutoClosingBrackets: autoClosingBrackets,
-  editorLargeFileOptimizations: bool,
   explorerAutoReveal: autoReveal,
   workbenchActivityBarVisible: bool,
   workbenchColorTheme: string,
@@ -42,7 +41,6 @@ type t = {
 
 let default = {
   editorAutoClosingBrackets: LanguageDefined,
-  editorLargeFileOptimizations: true,
   explorerAutoReveal: `HighlightAndScroll,
   workbenchActivityBarVisible: true,
   workbenchColorTheme: Constants.defaultTheme,

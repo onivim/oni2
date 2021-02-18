@@ -313,6 +313,7 @@ let update: (t, msg) => (t, outmsg) =
 
 let subscription =
     (
+      ~buffers: Feature_Buffers.model,
       ~config: Config.resolver,
       ~grammarInfo,
       ~languageInfo,
@@ -325,6 +326,7 @@ let subscription =
     bufferVisibility
     |> List.filter(((buffer, _)) =>
          !BufferMap.mem(Oni_Core.Buffer.getId(buffer), ignoredBuffers)
+         && !Feature_Buffers.isLargeFile(buffers, buffer)
        )
     |> List.map(((buffer, visibleRanges)) => {
          Service_Syntax.Sub.buffer(
@@ -369,11 +371,10 @@ let subscription =
 
 module Effect = {
   let bufferUpdate = (~bufferUpdate, {maybeSyntaxClient, _}) => {
-    Isolinear.Effect.create(~name="feature.syntax.bufferUpdate", () => {
-      maybeSyntaxClient
-      |> Option.iter(syntaxClient => {
-           Oni_Syntax_Client.notifyBufferUpdate(~bufferUpdate, syntaxClient)
-         })
-    });
+    maybeSyntaxClient
+    |> Option.map(client => {
+         Service_Syntax.Effect.bufferUpdate(~client, ~bufferUpdate)
+       })
+    |> Option.value(~default=Isolinear.Effect.none);
   };
 };

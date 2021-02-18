@@ -10,6 +10,8 @@
 
 ### Performance
 
+- #3148 - Large Files: Improve performance & fix crash when opening large files (related #1670)
+
 ### Documentation
 
 ### Infrastructure / Refactoring
