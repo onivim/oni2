@@ -45,6 +45,7 @@ module Mode = Mode;
 module NodeTask = NodeTask;
 module Ripgrep = Ripgrep;
 module Scheduler = Scheduler;
+module SubEx = SubEx;
 module Decoration = Decoration;
 module Persistence = Persistence;
 module Setup = Setup;
