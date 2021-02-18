@@ -96,7 +96,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `editor.wordBasedSuggestions` __(_bool_ default: `true`)__ When `true`, keywords are provided as completion suggestions.
 
-- `editor.wordWrap` __(_bool_ default: `false`)__ When `true`, Onivim will soft-wrap lines at the viewport boundary.
+- `editor.wordWrap` __(_bool_ default: `true`)__ When `true`, Onivim will soft-wrap lines at the viewport boundary.
 
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
