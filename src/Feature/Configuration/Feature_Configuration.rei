@@ -35,6 +35,16 @@ let toExtensionConfiguration:
   (model, list(Extension.Scanner.ScanResult.t), Setup.t) =>
   Exthost.Configuration.t;
 
+// LOADER
+
+module ConfigurationLoader: {
+  type t;
+
+  let none: t;
+
+  let file: Fp.t(Fp.absolute) => t;
+};
+
 [@deriving show]
 type msg =
   | UserSettingsChanged;

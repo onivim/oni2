@@ -5,6 +5,8 @@ module Log = (val Oni_Core.Log.withNamespace("Oni2.Feature.Configuration"));
 
 module GlobalConfiguration = GlobalConfiguration;
 
+module ConfigurationLoader = ConfigurationLoader;
+
 module UserSettingsProvider = {
   let defaultConfigurationFileName = "configuration.json";
 
