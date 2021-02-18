@@ -422,7 +422,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   let outmsg = maybeFilename
   |> Option.map(fileName => {
     
-    let msg = Printf.sprintf("Syntax highlighting and other features have been turned off for the large file '%s'.", fileName);
+    let msg = Printf.sprintf("Syntax highlighting and other features have been turned off for the large file '%s'. These optimizations can be disabled by setting 'editor.largeFileOptimizations' to false.", fileName);
     NotifyInfo(msg)
   })
   |> Option.value(~default=Nothing);
@@ -586,6 +586,19 @@ module Commands = {
       Command(DetectIndentation),
     );
 };
+
+let sub = (model) => {
+  if (!model.checkForLargeFiles) {
+    Isolinear.Sub.none
+  } else {
+    model.buffers
+    |> IntMap.bindings
+    |> List.map(snd)
+    |> List.filter((buffer: Buffer.t) => isLargeFile(model, buffer))
+    |> List.map(buffer => SubEx.value(~uniqueId="Feature_Buffers.largeFile:" ++ string_of_int(Buffer.getId(buffer)), LargeFileOptimizationsApplied({buffer: buffer})))
+    |> Isolinear.Sub.batch;
+  }
+}
 
 module Contributions = {
   let configuration =

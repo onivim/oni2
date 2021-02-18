@@ -439,6 +439,11 @@ let start =
       |> Feature_Notification.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Notification(msg));
 
+    let bufferSub =
+      state.buffers
+      |> Feature_Buffers.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
+
     [
       menuBarSub,
       extHostSubscription,
@@ -457,6 +462,7 @@ let start =
       visibleEditorsSubscription,
       inputSubscription,
       notificationSub,
+      bufferSub,
     ]
     |> Isolinear.Sub.batch;
   };
