@@ -5,7 +5,7 @@ module Log = (
 module File = {
   let loadKeybindings = (loadResult: result(Yojson.Safe.t, string)) => {
     let parseResult =
-    loadResult
+      loadResult
       |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors);
 
     switch (parseResult) {
@@ -18,7 +18,7 @@ module File = {
     Oni_Core.SubEx.jsonFile(
       ~uniqueId="Feature_Input.KeybindingsLoader",
       ~filePath,
-      ~tick=saveTick
+      ~tick=saveTick,
     )
     |> Isolinear.Sub.map(loadKeybindings);
   };

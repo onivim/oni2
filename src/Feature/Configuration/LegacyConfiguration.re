@@ -18,7 +18,11 @@ let default = {
 };
 
 let getValue =
-    (~fileType=?, selector: LegacyConfigurationValues.t => 'a, configuration: t) => {
+    (
+      ~fileType=?,
+      selector: LegacyConfigurationValues.t => 'a,
+      configuration: t,
+    ) => {
   let defaultValue = selector(configuration.default);
 
   switch (fileType) {

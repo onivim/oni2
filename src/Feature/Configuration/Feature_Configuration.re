@@ -7,19 +7,21 @@ module GlobalConfiguration = GlobalConfiguration;
 
 module ConfigurationLoader = ConfigurationLoader;
 
-module UserSettingsProvider = {
-  let defaultConfigurationFileName = "configuration.json";
+// Port over to new system
+// module UserSettingsProvider = {
+//   let defaultConfigurationFileName = "configuration.json";
 
-  let getSettings = () =>
-    Filesystem.getOrCreateConfigFile(defaultConfigurationFileName)
-    |> Result.map(Config.Settings.fromFile);
-};
+//   let getSettings = () =>
+//     Filesystem.getOrCreateConfigFile(defaultConfigurationFileName)
+//     |> Result.map(Config.Settings.fromFile);
+// };
 
 type model = {
   schema: Config.Schema.t,
   user: Config.Settings.t,
   merged: Config.Settings.t,
   legacyConfiguration: LegacyConfiguration.t,
+  loader: ConfigurationLoader.t,
 };
 
 // DEPRECATED way of working with configuration
@@ -31,18 +33,11 @@ module Legacy = {
   let configuration = ({legacyConfiguration, _}) => legacyConfiguration;
 
   let getValue = (~fileType=?, selector, {legacyConfiguration, _}) => {
-    LegacyConfiguration.getValue(
-      ~fileType?,
-      selector,
-      legacyConfiguration
-    );
-  }
-
-  let set = (legacyConfiguration, model) => {
-    ...model,
-    legacyConfiguration
+    LegacyConfiguration.getValue(~fileType?, selector, legacyConfiguration);
   };
-}
+
+  let set = (legacyConfiguration, model) => {...model, legacyConfiguration};
+};
 
 let merge = model => {
   ...model,
@@ -50,17 +45,28 @@ let merge = model => {
     Config.Settings.union(Config.Schema.defaults(model.schema), model.user),
 };
 
-let initial = (~getUserSettings, contributions) =>
-  merge({
+let initialLoad = model => {
+  ConfigurationLoader.loadImmediate(model.loader)
+  |> Result.map(((user, legacyConfiguration)) => {
+       {...model, user, legacyConfiguration}
+     })
+  |> Result.value(~default=model);
+};
+
+let initial = (~loader, contributions) =>
+  {
     schema:
       Config.Schema.unionMany(
         [GlobalConfiguration.contributions, ...contributions]
         |> List.map(Config.Schema.fromList),
       ),
-    user: getUserSettings() |> Result.value(~default=Config.Settings.empty),
+    user: Config.Settings.empty,
     merged: Config.Settings.empty,
     legacyConfiguration: LegacyConfiguration.default,
-  });
+    loader,
+  }
+  |> initialLoad
+  |> merge;
 
 let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
   open Exthost.Extension;
@@ -96,24 +102,28 @@ type outmsg =
   | ConfigurationChanged({changed: Config.Settings.t})
   | Nothing;
 
-let update = (~getUserSettings, model, msg) =>
+let update = (model, msg) =>
   switch (msg) {
   | UserSettingsChanged =>
-    let previous = model;
-    let updated =
-      switch (getUserSettings()) {
-      | Ok(user) when user == Config.Settings.empty => model // TODO: Not sure why this is needed
-      | Ok(user) => merge({...model, user})
-      | Error(_) => model
-      };
+    // let previous = model;
+    // let updated =
+    //   switch (getUserSettings()) {
+    //   | Ok(user) when user == Config.Settings.empty => model // TODO: Not sure why this is needed
+    //   | Ok(user) => merge({...model, user})
+    //   | Error(_) => model
+    //   };
 
-    let changed = Config.Settings.changed(previous.merged, updated.merged);
+    // let changed = Config.Settings.changed(previous.merged, updated.merged);
 
-    (updated, ConfigurationChanged({changed: changed}));
+    // (updated, ConfigurationChanged({changed: changed}));
+    (model, Nothing)
   };
 
 // TODO:
-let notifyFileSaved = (_path, model) => model;
+let notifyFileSaved = (path, model) => {
+  ...model,
+  loader: ConfigurationLoader.notifyFileSaved(path, model.loader),
+};
 
 let vimToCoreSetting =
   fun
@@ -146,4 +156,10 @@ let resolver = (~fileType: string, model, vimModel, ~vimSetting, key) => {
           });
      })
   |> Option.value(~default=Config.NotSet);
+};
+
+let sub = ({loader, _}) => {
+  // TODO
+  // ConfigurationLoader.sub(loader)
+  Isolinear.Sub.none;
 };

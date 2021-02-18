@@ -452,7 +452,7 @@ let initial =
       ~initialBufferRenderers,
       ~extensionGlobalPersistence,
       ~extensionWorkspacePersistence,
-      ~getUserSettings,
+      ~configurationLoader,
       ~keybindingsLoader,
       ~contributedCommands,
       ~workingDirectory,
@@ -465,7 +465,7 @@ let initial =
     ) => {
   let config =
     Feature_Configuration.initial(
-      ~getUserSettings,
+      ~loader=configurationLoader,
       [
         Feature_AutoUpdate.Contributions.configuration,
         Feature_Buffers.Contributions.configuration,

@@ -163,8 +163,14 @@ let runTest =
   let keybindingsFilePath =
     writeConfigurationFile("keybindings", keybindings);
 
+  let configurationFilePath =
+    writeConfigurationFile("configuration", configuration);
+
   let keybindingsLoader =
     Feature_Input.KeybindingsLoader.file(keybindingsFilePath);
+
+  let configurationLoader =
+    Feature_Configuration.ConfigurationLoader.file(configurationFilePath);
 
   let currentState =
     ref(
@@ -172,7 +178,7 @@ let runTest =
         ~cli=Oni_CLI.default,
         ~initialBuffer,
         ~initialBufferRenderers=Model.BufferRenderers.initial,
-        ~getUserSettings,
+        ~configurationLoader,
         ~keybindingsLoader,
         ~contributedCommands=[],
         ~maybeWorkspace=None,
@@ -216,9 +222,6 @@ let runTest =
     );
 
   InitLog.info("Starting store...");
-
-  let configurationFilePath =
-    writeConfigurationFile("configuration", configuration);
 
   let (dispatch, runEffects) =
     Store.StoreThread.start(

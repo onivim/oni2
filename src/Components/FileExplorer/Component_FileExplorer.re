@@ -74,7 +74,10 @@ module Effects = {
       let directoryStr = Fp.toString(directory);
       Log.infof(m => m("Loading nodes for directory: %s", directoryStr));
       let ignored =
-        Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
+        Feature_Configuration.Legacy.getValue(
+          c => c.filesExclude,
+          configuration,
+        );
       let promise = Internal.getDirectoryTree(directory, ignored);
 
       Lwt.on_success(
@@ -299,7 +302,8 @@ let update = (~configuration, msg, model) => {
 module View = View;
 
 let sub = (~configuration, {rootPath, _}) => {
-  let ignored = Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
+  let ignored =
+    Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
 
   let toMsg =
     fun

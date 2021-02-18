@@ -288,7 +288,6 @@ let update =
     (
       ~grammarRepository: Oni_Syntax.GrammarRepository.t,
       ~extHostClient: Exthost.Client.t,
-      ~getUserSettings,
       ~setup,
       ~maximize,
       ~minimize,
@@ -1229,7 +1228,9 @@ let update =
 
       let config' =
         maybeFullPath
-        |> Option.map(fp => Feature_Configuration.notifyFileSaved(fp, state.config))
+        |> Option.map(fp =>
+             Feature_Configuration.notifyFileSaved(fp, state.config)
+           )
         |> Option.value(~default=state.config);
 
       (
@@ -1325,8 +1326,7 @@ let update =
     )
 
   | Configuration(msg) =>
-    let (config, outmsg) =
-      Feature_Configuration.update(~getUserSettings, state.config, msg);
+    let (config, outmsg) = Feature_Configuration.update(state.config, msg);
     let state = {...state, config};
     switch (outmsg) {
     | ConfigurationChanged({changed}) =>

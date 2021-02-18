@@ -1,12 +1,8 @@
-module Log = (
-  val Kernel.Log.withNamespace("Core.SubEx")
-);
+module Log = (val Kernel.Log.withNamespace("Core.SubEx"));
 
 module JsonFile = {
   let loadJson = (path: Fp.t(Fp.absolute)) => {
-      path
-      |> Fp.toString
-      |> Utility.JsonEx.from_file;
+    path |> Fp.toString |> Utility.JsonEx.from_file;
   };
 
   type params = {
@@ -30,7 +26,11 @@ module JsonFile = {
 
       let init = (~params, ~dispatch) => {
         Log.infof(m =>
-          m("Reloading json file (%s): %s", params.uniqueId, Fp.toString(params.filePath))
+          m(
+            "Reloading json file (%s): %s",
+            params.uniqueId,
+            Fp.toString(params.filePath),
+          )
         );
         dispatch(loadJson(params.filePath));
         ();
@@ -44,8 +44,5 @@ module JsonFile = {
     });
 };
 
-let jsonFile = (~uniqueId, ~filePath, ~tick) => JsonFile.Sub.create({
-  uniqueId,
-  filePath,
-  tick
-});
+let jsonFile = (~uniqueId, ~filePath, ~tick) =>
+  JsonFile.Sub.create({uniqueId, filePath, tick});

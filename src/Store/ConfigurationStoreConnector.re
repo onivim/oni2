@@ -90,7 +90,10 @@ let start =
       |> Result.map(Fp.toString)
       |> (
         result =>
-          Stdlib.Result.bind(result, Feature_Configuration.LegacyConfigurationParser.ofFile)
+          Stdlib.Result.bind(
+            result,
+            Feature_Configuration.LegacyConfigurationParser.ofFile,
+          )
           |> (
             fun
             | Ok(config) => {
@@ -145,10 +148,16 @@ let start =
         |> ResultEx.tap(configPath =>
              reloadConfigOnWritePost(~configPath, dispatch)
            )
-        |> ResultEx.flatMap(Feature_Configuration.LegacyConfigurationParser.ofFile)
+        |> ResultEx.flatMap(
+             Feature_Configuration.LegacyConfigurationParser.ofFile,
+           )
         |> ResultEx.tapError(err => {
              onError(~dispatch, err);
-             dispatch(Actions.ConfigurationSet(Feature_Configuration.LegacyConfiguration.default));
+             dispatch(
+               Actions.ConfigurationSet(
+                 Feature_Configuration.LegacyConfiguration.default,
+               ),
+             );
            })
         |> Result.iter(configuration => {
              dispatch(Actions.ConfigurationSet(configuration));
@@ -182,7 +191,8 @@ let start =
   let vsync = ref(Revery.Vsync.Immediate);
   let synchronizeConfigurationEffect = configuration =>
     Isolinear.Effect.create(~name="configuration.synchronize", () => {
-      let vsyncValue = Feature_Configuration.Legacy.getValue(c => c.vsync, configuration);
+      let vsyncValue =
+        Feature_Configuration.Legacy.getValue(c => c.vsync, configuration);
       if (vsyncValue != vsync^) {
         Log.info("Setting vsync: " ++ Revery.Vsync.toString(vsyncValue));
         setVsync(vsyncValue);
@@ -197,12 +207,10 @@ let start =
         state,
         transformConfigurationEffect(file, state.buffers, transformer),
       )
-    | Actions.ConfigurationSet(configuration) => 
-    let config = Feature_Configuration.Legacy.set(configuration, state.config);
-      (
-        {...state, config },
-        synchronizeConfigurationEffect(config),
-      )
+    | Actions.ConfigurationSet(configuration) =>
+      let config =
+        Feature_Configuration.Legacy.set(configuration, state.config);
+      ({...state, config}, synchronizeConfigurationEffect(config));
     | Actions.ConfigurationParseError(msg) => (
         state,
         Feature_Notification.Effects.create(~kind=Error, msg)

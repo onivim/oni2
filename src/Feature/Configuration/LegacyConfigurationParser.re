@@ -3,7 +3,7 @@
  *
  * Resilient parsing for Configuration
  */
-open Oni_Core
+open Oni_Core;
 open LegacyConfigurationValues;
 
 let parseBool = json =>

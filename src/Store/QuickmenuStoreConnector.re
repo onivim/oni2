@@ -620,7 +620,10 @@ let subscriptions = (ripgrep, dispatch) => {
 
   let ripgrep = (workspace, languageInfo, iconTheme, configuration) => {
     let filesExclude =
-      Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
+      Feature_Configuration.Legacy.getValue(
+        c => c.filesExclude,
+        configuration,
+      );
 
     switch (Feature_Workspace.openedFolder(workspace)) {
     | None =>

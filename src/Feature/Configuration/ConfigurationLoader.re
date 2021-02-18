@@ -1,25 +1,38 @@
+open Oni_Core;
+open Utility;
+
 module Log = (
-  val Oni_Core.Log.withNamespace("Oni2.Feature.Configuration.ConfigurationLoader")
+  val Oni_Core.Log.withNamespace(
+        "Oni2.Feature.Configuration.ConfigurationLoader",
+      )
 );
 
+let loadConfiguration = (loadResult: result(Yojson.Safe.t, string)) => {
+  // let parseResult =
+  // loadResult
+  //   |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors);
+  // switch (parseResult) {
+  // | Ok((bindings, errors)) => (bindings, errors)
+  // | Error(msg) => ([], [msg])
+  //};
+  loadResult
+  |> ResultEx.flatMap(json => {
+       let legacyConfigParseResult = LegacyConfigurationParser.ofJson(json);
+       legacyConfigParseResult
+       |> Result.map(legacyConfig => (json, legacyConfig));
+     })
+  |> Result.map(((json, legacyConfig)) => {
+       let config = Config.Settings.fromJson(json);
+       (config, legacyConfig);
+     });
+};
+
 module File = {
-  let loadConfiguration = (loadResult: result(Yojson.Safe.t, string)) => {
-    // let parseResult =
-    // loadResult
-    //   |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors);
-
-    // switch (parseResult) {
-    // | Ok((bindings, errors)) => (bindings, errors)
-    // | Error(msg) => ([], [msg])
-    //};
-    loadResult
-  };
-
   let sub = (~filePath, ~saveTick) => {
     Oni_Core.SubEx.jsonFile(
       ~uniqueId="Feature_Configuration.ConfigurationLoader",
       ~filePath,
-      ~tick=saveTick
+      ~tick=saveTick,
     )
     |> Isolinear.Sub.map(loadConfiguration);
   };
@@ -50,3 +63,10 @@ let sub =
   fun
   | None => Isolinear.Sub.none
   | File({saveTick, filePath}) => File.sub(~filePath, ~saveTick);
+
+let loadImmediate =
+  fun
+  | None => Error("No file to load")
+  | File({filePath, _}) => {
+      filePath |> Fp.toString |> JsonEx.from_file |> loadConfiguration;
+    };

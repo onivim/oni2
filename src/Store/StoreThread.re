@@ -74,7 +74,6 @@ let registerCommands = (~dispatch, commands) => {
 let start =
     (
       ~showUpdateChangelog=true,
-      ~getUserSettings,
       ~configurationFilePath=None,
       ~onAfterDispatch=_ => (),
       ~setup: Core.Setup.t,
@@ -190,7 +189,6 @@ let start =
       Features.update(
         ~grammarRepository,
         ~extHostClient,
-        ~getUserSettings,
         ~setup,
         ~maximize,
         ~minimize,
@@ -356,10 +354,7 @@ let start =
       );
 
     let fileExplorerSub =
-      Feature_Explorer.sub(
-        ~configuration=state.config,
-        state.fileExplorer,
-      )
+      Feature_Explorer.sub(~configuration=state.config, state.fileExplorer)
       |> Isolinear.Sub.map(msg => Model.Actions.FileExplorer(msg));
 
     let languageSupportSub =
