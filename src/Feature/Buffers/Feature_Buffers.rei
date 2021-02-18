@@ -78,7 +78,8 @@ type outmsg =
       grabFocus: bool,
       preview: bool,
     })
-  | BufferModifiedSet(int, bool);
+  | BufferModifiedSet(int, bool)
+  | NotifyInfo(string);
 
 // UPDATE
 

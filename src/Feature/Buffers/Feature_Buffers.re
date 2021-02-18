@@ -158,7 +158,8 @@ type outmsg =
       grabFocus: bool,
       preview: bool,
     })
-  | BufferModifiedSet(int, bool);
+  | BufferModifiedSet(int, bool)
+  | NotifyInfo(string);
 
 [@deriving show]
 type command =
@@ -204,7 +205,8 @@ type msg =
       lineEndings: [@opaque] Vim.lineEnding,
     })
   | Saved(int)
-  | ModifiedSet(int, bool);
+  | ModifiedSet(int, bool)
+  | LargeFileOptimizationsApplied({[@opaque] buffer: Buffer.t});
 
 module Msg = {
   let fileTypeChanged = (~bufferId, ~fileType) => {
@@ -414,6 +416,17 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         (add(updatedBuffer, model), Nothing);
       };
     }
+
+  | LargeFileOptimizationsApplied({buffer}) =>
+  let maybeFilename = Oni_Core.Buffer.getShortFriendlyName(buffer);
+  let outmsg = maybeFilename
+  |> Option.map(fileName => {
+    
+    let msg = Printf.sprintf("Syntax highlighting and other features have been turned off for the large file '%s'.", fileName);
+    NotifyInfo(msg)
+  })
+  |> Option.value(~default=Nothing);
+  (model, outmsg);
   };
 };
 

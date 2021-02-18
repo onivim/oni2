@@ -1051,6 +1051,12 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Effect.none)
+
+    | NotifyInfo(msg) => (state, Internal.notificationEffect(
+      ~kind=Info,
+      msg
+    ))
+
     | BufferModifiedSet(id, _) =>
       open Feature_Editor;
 
