@@ -7,6 +7,7 @@
 module Buffer = Buffer;
 module BufferLine = BufferLine;
 module BufferPath = BufferPath;
+module BufferTracker = BufferTracker;
 module BufferUpdate = BufferUpdate;
 module BuildInfo = BuildInfo;
 module ThemeToken = ThemeToken;
@@ -54,6 +55,7 @@ module Setup = Setup;
 module ShellUtility = ShellUtility;
 module StringMap = Kernel.StringMap;
 module StringSet = Kernel.StringSet;
+module SubEx = SubEx;
 module Subscription = Subscription;
 module SyntaxScope = SyntaxScope;
 module ColorTheme = ColorTheme;

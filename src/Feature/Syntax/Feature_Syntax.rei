@@ -67,6 +67,7 @@ module Effect: {
 
 let subscription:
   (
+    ~buffers: Feature_Buffers.model,
     ~config: Config.resolver,
     ~grammarInfo: Exthost.GrammarInfo.t,
     ~languageInfo: Exthost.LanguageInfo.t,

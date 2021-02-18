@@ -11,7 +11,10 @@
 
 ### Performance
 
+- #3148 - Large Files: Improve performance & fix crash when opening large files (related #1670)
+
 ### Documentation
 
 ### Infrastructure / Refactoring
 
+- #3156 - Dependency: reason-native (dir/fp/fs) -> e16590c
