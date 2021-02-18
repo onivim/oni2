@@ -395,7 +395,6 @@ type t = {
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   config: Feature_Configuration.model,
-  configuration: Configuration.t,
   decorations: Feature_Decorations.model,
   diagnostics: Feature_Diagnostics.model,
   editorFont: Service_Font.font,
@@ -512,7 +511,6 @@ let initial =
       ]),
     commands: Feature_Commands.initial(contributedCommands),
     config,
-    configuration: Configuration.default,
     decorations: Feature_Decorations.initial,
     diagnostics: Feature_Diagnostics.initial,
     input:
