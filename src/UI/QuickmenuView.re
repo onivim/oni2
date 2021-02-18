@@ -22,6 +22,7 @@ module Styles = {
     color(Colors.Menu.foreground.from(theme)),
     width(Constants.menuWidth),
     marginTop(25),
+    //pointerEvents(`Ignore),
   ];
 
   let inputContainer = [padding(5)];
@@ -195,6 +196,8 @@ let make =
     GlobalContext.current().dispatch(Actions.QuickmenuClose);
   };
 
+  let innerClicked = ref(false);
+
   <View
     style=Style.[
       position(`Absolute),
@@ -206,8 +209,19 @@ let make =
       pointerEvents(`Allow),
       alignItems(`Center),
     ]
-    onMouseDown={_ => onClickBackground()}>
-    <OniBoxShadow style={Styles.container(theme)} config theme>
+    onMouseDown={_ =>
+      // HACK: This callback would be called last, after the 'inner' callback being called.
+      // We don't want to execute the `onClickBackground` function if we're clicking inside the menu.
+      // A better mechanism would be a robust way to stop propagationnn of the mouse event.
+      if (! innerClicked^) {
+        onClickBackground();
+      }
+    }>
+    <OniBoxShadow
+      onMouseDown={_ => {innerClicked := true}}
+      style={Styles.container(theme)}
+      config
+      theme>
       {switch (variant) {
        | EditorsPicker => React.empty
        | _ => <input />
