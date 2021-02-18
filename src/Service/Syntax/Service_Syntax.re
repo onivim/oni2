@@ -6,7 +6,8 @@ module OptionEx = Core.Utility.OptionEx;
 
 module Log = (val Core.Log.withNamespace("Oni2.Service_Syntax"));
 
-module BufferTracker = Oni_Core.BufferTracker.Make();
+module BufferTracker =
+  Oni_Core.BufferTracker.Make({});
 
 module Constants = {
   let defaultScope = "source.text";
@@ -267,10 +268,10 @@ module Effect = {
     Isolinear.Effect.create(~name="service.syntax.bufferUpdate", () => {
       let bufferId = bufferUpdate.id;
       if (BufferTracker.isTracking(bufferId)) {
-        Oni_Syntax_Client.notifyBufferUpdate(~bufferUpdate, client)
+        Oni_Syntax_Client.notifyBufferUpdate(~bufferUpdate, client);
       } else {
         ();
-      }
+      };
     });
   };
 };

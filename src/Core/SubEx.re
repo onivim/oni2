@@ -1,29 +1,29 @@
 // SubEx.re - additional utilities for Isolinear.Sub
 
-  type unitParams = { uniqueId: string } ;
-  module UnitSubscription =
-    Isolinear.Sub.Make({
-      type nonrec msg = unit;
+type unitParams = {uniqueId: string};
+module UnitSubscription =
+  Isolinear.Sub.Make({
+    type nonrec msg = unit;
 
-      type nonrec params = unitParams;
+    type nonrec params = unitParams;
 
-      type state = unit;
+    type state = unit;
 
-      let name = "Oni_Core.SubEx.UnitSubscription";
-      let id = params => params.uniqueId;
+    let name = "Oni_Core.SubEx.UnitSubscription";
+    let id = params => params.uniqueId;
 
-      let init = (~params, ~dispatch) => {
-        dispatch(());
-      };
+    let init = (~params as _, ~dispatch) => {
+      dispatch();
+    };
 
-      let update = (~params, ~state, ~dispatch as _) => {
-        state
-      };
+    let update = (~params as _, ~state, ~dispatch as _) => {
+      state;
+    };
 
-      let dispose = (~params as _, ~state as _) => {
-        ();
-      };
-    });
+    let dispose = (~params as _, ~state as _) => {
+      ();
+    };
+  });
 
 let unit = (~uniqueId) => UnitSubscription.create({uniqueId: uniqueId});
 

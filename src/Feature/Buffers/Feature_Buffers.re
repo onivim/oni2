@@ -206,7 +206,10 @@ type msg =
     })
   | Saved(int)
   | ModifiedSet(int, bool)
-  | LargeFileOptimizationsApplied({[@opaque] buffer: Buffer.t});
+  | LargeFileOptimizationsApplied({
+      [@opaque]
+      buffer: Buffer.t,
+    });
 
 module Msg = {
   let fileTypeChanged = (~bufferId, ~fileType) => {
@@ -418,15 +421,19 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
     }
 
   | LargeFileOptimizationsApplied({buffer}) =>
-  let maybeFilename = Oni_Core.Buffer.getShortFriendlyName(buffer);
-  let outmsg = maybeFilename
-  |> Option.map(fileName => {
-    
-    let msg = Printf.sprintf("Syntax highlighting and other features have been turned off for the large file '%s'. These optimizations can be disabled by setting 'editor.largeFileOptimizations' to false.", fileName);
-    NotifyInfo(msg)
-  })
-  |> Option.value(~default=Nothing);
-  (model, outmsg);
+    let maybeFilename = Oni_Core.Buffer.getShortFriendlyName(buffer);
+    let outmsg =
+      maybeFilename
+      |> Option.map(fileName => {
+           let msg =
+             Printf.sprintf(
+               "Syntax highlighting and other features have been turned off for the large file '%s'. These optimizations can be disabled by setting 'editor.largeFileOptimizations' to false.",
+               fileName,
+             );
+           NotifyInfo(msg);
+         })
+      |> Option.value(~default=Nothing);
+    (model, outmsg);
   };
 };
 
@@ -587,18 +594,24 @@ module Commands = {
     );
 };
 
-let sub = (model) => {
+let sub = model =>
   if (!model.checkForLargeFiles) {
-    Isolinear.Sub.none
+    Isolinear.Sub.none;
   } else {
     model.buffers
     |> IntMap.bindings
     |> List.map(snd)
     |> List.filter((buffer: Buffer.t) => isLargeFile(model, buffer))
-    |> List.map(buffer => SubEx.value(~uniqueId="Feature_Buffers.largeFile:" ++ string_of_int(Buffer.getId(buffer)), LargeFileOptimizationsApplied({buffer: buffer})))
+    |> List.map(buffer =>
+         SubEx.value(
+           ~uniqueId=
+             "Feature_Buffers.largeFile:"
+             ++ string_of_int(Buffer.getId(buffer)),
+           LargeFileOptimizationsApplied({buffer: buffer}),
+         )
+       )
     |> Isolinear.Sub.batch;
-  }
-}
+  };
 
 module Contributions = {
   let configuration =
