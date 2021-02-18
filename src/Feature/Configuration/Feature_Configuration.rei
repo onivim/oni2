@@ -57,6 +57,8 @@ let update:
   (~getUserSettings: unit => result(Config.Settings.t, string), model, msg) =>
   (model, outmsg);
 
+let notifyFileSaved: (Fp.t(Fp.absolute), model) => model;
+
 let resolver:
   (
     ~fileType: string,

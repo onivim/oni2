@@ -112,6 +112,9 @@ let update = (~getUserSettings, model, msg) =>
     (updated, ConfigurationChanged({changed: changed}));
   };
 
+// TODO:
+let notifyFileSaved = (_path, model) => model;
+
 let vimToCoreSetting =
   fun
   | Vim.Setting.String(str) => VimSetting.String(str)

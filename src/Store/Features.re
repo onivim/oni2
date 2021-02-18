@@ -1227,8 +1227,13 @@ let update =
         |> Option.map(fp => Feature_Input.notifyFileSaved(fp, state.input))
         |> Option.value(~default=state.input);
 
+      let config' =
+        maybeFullPath
+        |> Option.map(fp => Feature_Configuration.notifyFileSaved(fp, state.config))
+        |> Option.value(~default=state.config);
+
       (
-        {...state, input: input'},
+        {...state, input: input', config: config'},
         Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
       );
 
