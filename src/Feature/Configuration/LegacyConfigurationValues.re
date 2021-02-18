@@ -3,6 +3,7 @@
  *
  * Configuration settings for the editor
  */
+  open Oni_Core;
 
 [@deriving show({with_path: false})]
 type vimUseSystemClipboard = {

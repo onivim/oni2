@@ -415,7 +415,7 @@ let update =
   | FileExplorer(msg) =>
     let (model, outmsg) =
       Feature_Explorer.update(
-        ~configuration=state.configuration,
+        ~configuration=state.config,
         msg,
         state.fileExplorer,
       );
@@ -542,7 +542,6 @@ let update =
         ~config,
         ~languageConfiguration,
         ~extensions=state.extensions,
-        ~configuration=state.configuration,
         ~maybeBuffer,
         ~maybeSelection=characterSelection,
         ~editorId,
@@ -729,9 +728,9 @@ let update =
         ~languageInfo=state.languageInfo,
         ~buffers=state.buffers,
         ~previewEnabled=
-          Oni_Core.Configuration.getValue(
+          Feature_Configuration.Legacy.getValue(
             c => c.workbenchEditorEnablePreview,
-            state.configuration,
+            state.config,
           ),
         msg,
         state.pane,
@@ -819,9 +818,9 @@ let update =
     let (model, maybeOutmsg) =
       Feature_Search.update(
         ~previewEnabled=
-          Oni_Core.Configuration.getValue(
+          Feature_Configuration.Legacy.getValue(
             c => c.workbenchEditorEnablePreview,
-            state.configuration,
+            state.config,
           ),
         state.searchPane,
         msg,
@@ -854,9 +853,9 @@ let update =
     let (model, maybeOutmsg) =
       Feature_SCM.update(
         ~previewEnabled=
-          Oni_Core.Configuration.getValue(
+          Feature_Configuration.Legacy.getValue(
             c => c.workbenchEditorEnablePreview,
-            state.configuration,
+            state.config,
           ),
         ~fileSystem=state.fileSystem,
         extHostClient,

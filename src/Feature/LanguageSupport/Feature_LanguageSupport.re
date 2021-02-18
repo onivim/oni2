@@ -129,7 +129,6 @@ module Msg = {
 let update =
     (
       ~config,
-      ~configuration,
       ~extensions,
       ~languageConfiguration,
       ~maybeSelection,
@@ -351,7 +350,6 @@ let update =
     let (formatting', outMsg) =
       Formatting.update(
         ~languageConfiguration,
-        ~configuration,
         ~maybeSelection,
         ~maybeBuffer,
         ~extHostClient=client,

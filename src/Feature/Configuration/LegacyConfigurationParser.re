@@ -3,8 +3,8 @@
  *
  * Resilient parsing for Configuration
  */
-open Kernel;
-open ConfigurationValues;
+open Oni_Core
+open LegacyConfigurationValues;
 
 let parseBool = json =>
   switch (json) {
@@ -53,7 +53,7 @@ let parseVimUseSystemClipboardSetting = json => {
 };
 
 let parseAutoClosingBrackets:
-  Yojson.Safe.t => ConfigurationValues.autoClosingBrackets =
+  Yojson.Safe.t => LegacyConfigurationValues.autoClosingBrackets =
   json =>
     switch (json) {
     | `Bool(true) => LanguageDefined
@@ -83,7 +83,7 @@ let parseAutoReveal = json =>
   };
 
 type parseFunction =
-  (ConfigurationValues.t, Yojson.Safe.t) => ConfigurationValues.t;
+  (LegacyConfigurationValues.t, Yojson.Safe.t) => LegacyConfigurationValues.t;
 
 type configurationTuple = (string, parseFunction);
 
@@ -188,7 +188,7 @@ let keyToParser: Hashtbl.t(string, parseFunction) =
 
 type parseResult = {
   nestedConfigurations: list((string, Yojson.Safe.t)),
-  configurationValues: ConfigurationValues.t,
+  configurationValues: LegacyConfigurationValues.t,
 };
 
 let isFiletype = (str: string) => {
@@ -237,13 +237,13 @@ let parse: list((string, Yojson.Safe.t)) => parseResult =
       },
       {
         nestedConfigurations: [],
-        configurationValues: ConfigurationValues.default,
+        configurationValues: LegacyConfigurationValues.default,
       },
       items,
     );
   };
 
-let parseNested = (json: Yojson.Safe.t, default: ConfigurationValues.t) => {
+let parseNested = (json: Yojson.Safe.t, default: LegacyConfigurationValues.t) => {
   switch (json) {
   | `Assoc(items) =>
     List.fold_left(
@@ -282,7 +282,7 @@ let ofJson = json => {
       );
 
     let configuration =
-      Configuration.{default: configurationValues, perFiletype};
+      LegacyConfiguration.{default: configurationValues, perFiletype};
     Ok(configuration);
   | _ => Error("Incorrect JSON format for configuration")
   };

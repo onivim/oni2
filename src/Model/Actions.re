@@ -25,7 +25,7 @@ type t =
   | Configuration(Feature_Configuration.msg)
   | ConfigurationParseError(string)
   | ConfigurationReload
-  | ConfigurationSet([@opaque] Configuration.t)
+  | ConfigurationSet([@opaque] Feature_Configuration.LegacyConfiguration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
   // opens the file [fileName] and applies [f] to the loaded JSON.
   | ConfigurationTransform(string, configurationTransformer)

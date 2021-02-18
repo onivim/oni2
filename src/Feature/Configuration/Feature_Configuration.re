@@ -20,6 +20,28 @@ type model = {
   legacyConfiguration: LegacyConfiguration.t,
 };
 
+// DEPRECATED way of working with configuration
+module LegacyConfiguration = LegacyConfiguration;
+module LegacyConfigurationValues = LegacyConfigurationValues;
+module LegacyConfigurationParser = LegacyConfigurationParser;
+
+module Legacy = {
+  let configuration = ({legacyConfiguration, _}) => legacyConfiguration;
+
+  let getValue = (~fileType=?, selector, {legacyConfiguration, _}) => {
+    LegacyConfiguration.getValue(
+      ~fileType?,
+      selector,
+      legacyConfiguration
+    );
+  }
+
+  let set = (legacyConfiguration, model) => {
+    ...model,
+    legacyConfiguration
+  };
+}
+
 let merge = model => {
   ...model,
   merged:

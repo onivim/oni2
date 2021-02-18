@@ -694,7 +694,7 @@ let start =
   let synchronizeViml = configuration =>
     Isolinear.Effect.create(~name="vim.synchronizeViml", () => {
       let lines =
-        Core.Configuration.getValue(c => c.experimentalVimL, configuration);
+        Feature_Configuration.LegacyConfiguration.getValue(c => c.experimentalVimL, configuration);
 
       if (prevViml^ !== lines) {
         List.iter(

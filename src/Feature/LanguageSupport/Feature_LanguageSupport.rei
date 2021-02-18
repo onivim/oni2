@@ -85,7 +85,6 @@ type outmsg =
 let update:
   (
     ~config: Oni_Core.Config.resolver,
-    ~configuration: Oni_Core.Configuration.t,
     ~extensions: Feature_Extensions.model,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~maybeSelection: option(CharacterRange.t),

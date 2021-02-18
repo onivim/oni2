@@ -282,12 +282,12 @@ let make =
   };
 
   let editorShowTabs =
-    state.configuration
-    |> Oni_Core.Configuration.getValue(c => c.workbenchEditorShowTabs);
+    state.config
+    |> Feature_Configuration.Legacy.getValue(c => c.workbenchEditorShowTabs);
 
   let hideZenModeTabs =
-    state.configuration
-    |> Oni_Core.Configuration.getValue(c => c.zenModeHideTabs);
+    state.config
+    |> Feature_Configuration.Legacy.getValue(c => c.zenModeHideTabs);
 
   let showTabs = editorShowTabs && (!state.zenMode || !hideZenModeTabs);
 

@@ -1,11 +1,28 @@
 open Oni_Core;
 open Exthost;
 
+
 module UserSettingsProvider: {
   let getSettings: unit => result(Config.Settings.t, string);
 };
 
 type model;
+
+// DEPRECATED strategy for working with configuration
+module LegacyConfiguration = LegacyConfiguration;
+module LegacyConfigurationValues = LegacyConfigurationValues;
+module LegacyConfigurationParser = LegacyConfigurationParser;
+
+module Legacy:  {
+  let configuration: model => LegacyConfiguration.t;
+  let getValue: (
+    ~fileType: string=?,
+    LegacyConfigurationValues.t => 'a,
+    model,
+  ) => 'a;
+
+  let set: (LegacyConfiguration.t, model) => model;
+};
 
 let initial:
   (

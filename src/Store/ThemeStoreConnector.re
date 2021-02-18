@@ -11,7 +11,7 @@ open Oni_Syntax;
 module Log = (val Log.withNamespace("Oni2.Store.Theme"));
 
 let configurationWatcher =
-    (configurationSelector: ConfigurationValues.t => 'a, f) => {
+    (configurationSelector: Feature_Configuration.LegacyConfigurationValues.t => 'a, f) => {
   let oldValue: ref(option('a)) = ref(None);
   let configurationWatchEffect = (newValue: 'a) =>
     Isolinear.Effect.createWithDispatch(
@@ -32,7 +32,7 @@ let configurationWatcher =
     | Actions.ConfigurationSet(config) => (
         state,
         configurationWatchEffect(
-          Configuration.getValue(configurationSelector, config),
+          Feature_Configuration.LegacyConfiguration.getValue(configurationSelector, config),
         ),
       )
     | _ => oldUpdater(state, action)

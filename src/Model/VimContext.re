@@ -69,9 +69,9 @@ module Internal = {
 
   let autoClosingPairs = (~syntaxScope, ~maybeLanguageConfig, state: State.t) => {
     let acpEnabled =
-      Oni_Core.Configuration.getValue(
+      Feature_Configuration.Legacy.getValue(
         c => c.editorAutoClosingBrackets,
-        state.configuration,
+        state.config,
       )
       |> (
         fun

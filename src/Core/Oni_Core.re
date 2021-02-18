@@ -14,6 +14,7 @@ module Codicon = Codicon;
 module Command = Command;
 module Comments = Comments;
 module Config = Config;
+module ConfigurationDefaults = ConfigurationDefaults;
 module ConfigurationTransformer = ConfigurationTransformer;
 module Constants = Constants;
 module Diff = Diff;

@@ -357,7 +357,7 @@ let start =
 
     let fileExplorerSub =
       Feature_Explorer.sub(
-        ~configuration=state.configuration,
+        ~configuration=state.config,
         state.fileExplorer,
       )
       |> Isolinear.Sub.map(msg => Model.Actions.FileExplorer(msg));

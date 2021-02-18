@@ -33,12 +33,12 @@ type outmsg =
   | PickFolder;
 
 let update:
-  (~configuration: Oni_Core.Configuration.t, msg, model) => (model, outmsg);
+  (~configuration: Feature_Configuration.model, msg, model) => (model, outmsg);
 
 // SUBSCRIPTION
 
 let sub:
-  (~configuration: Oni_Core.Configuration.t, model) => Isolinear.Sub.t(msg);
+  (~configuration: Feature_Configuration.model, model) => Isolinear.Sub.t(msg);
 
 // VIEW
 

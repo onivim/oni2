@@ -8,17 +8,17 @@
 open Oni_Core;
 
 type t = {
-  default: ConfigurationValues.t,
-  perFiletype: StringMap.t(ConfigurationValues.t),
+  default: LegacyConfigurationValues.t,
+  perFiletype: StringMap.t(LegacyConfigurationValues.t),
 };
 
 let default = {
-  default: ConfigurationValues.default,
+  default: LegacyConfigurationValues.default,
   perFiletype: StringMap.empty,
 };
 
 let getValue =
-    (~fileType=?, selector: ConfigurationValues.t => 'a, configuration: t) => {
+    (~fileType=?, selector: LegacyConfigurationValues.t => 'a, configuration: t) => {
   let defaultValue = selector(configuration.default);
 
   switch (fileType) {
