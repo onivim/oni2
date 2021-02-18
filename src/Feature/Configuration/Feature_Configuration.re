@@ -17,7 +17,7 @@ type model = {
   schema: Config.Schema.t,
   user: Config.Settings.t,
   merged: Config.Settings.t,
-  //legacyConfiguration: LegacyConfiguration.default,
+  legacyConfiguration: LegacyConfiguration.t,
 };
 
 let merge = model => {
@@ -35,6 +35,7 @@ let initial = (~getUserSettings, contributions) =>
       ),
     user: getUserSettings() |> Result.value(~default=Config.Settings.empty),
     merged: Config.Settings.empty,
+    legacyConfiguration: LegacyConfiguration.default,
   });
 
 let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
