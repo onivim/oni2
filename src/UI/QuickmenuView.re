@@ -213,10 +213,11 @@ let make =
       // HACK: This callback would be called last, after the 'inner' callback being called.
       // We don't want to execute the `onClickBackground` function if we're clicking inside the menu.
       // A better mechanism would be a robust way to stop propagationnn of the mouse event.
-      if (! innerClicked^) {
-        onClickBackground();
-      }
-    }>
+
+        if (! innerClicked^) {
+          onClickBackground();
+        }
+      }>
     <OniBoxShadow
       onMouseDown={_ => {innerClicked := true}}
       style={Styles.container(theme)}
