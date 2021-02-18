@@ -282,6 +282,8 @@ module Internal = {
         [""];
       } else {
         // There needs to be an empty line at the end of the buffer to sync changes at the end
+        // TODO: How does this compare with an alternative approach to the same ends, like
+        // converting from an array back to a list?
         lines |> List.rev |> List.append([""]) |> List.rev;
       };
 
