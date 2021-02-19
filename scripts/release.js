@@ -87,18 +87,6 @@ const getNodePath = () => {
     }
 }
 
-const getRlsPath = () => {
-    const rlsDir = "reason-language-server"
-
-    if (process.platform == "darwin") {
-        return path.join(vendorDirectory, rlsDir, "bin.native")
-    } else if (process.platform == "win32") {
-        return path.join(vendorDirectory, rlsDir, "bin.native.exe")
-    } else {
-        return path.join(vendorDirectory, rlsDir, "bin.native.linux")
-    }
-}
-
 const updateIcon = (rcedit, exe, iconFile) => {
     console.log(`Updating ${exe} icon`)
 
