@@ -2031,7 +2031,8 @@ let update =
 
     | WorkspaceChanged(maybeWorkspaceFolder) =>
       let maybeExplorerFolder =
-        maybeWorkspaceFolder |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
+        maybeWorkspaceFolder
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
       let fileExplorer =
         Feature_Explorer.setRoot(
           ~rootPath=maybeExplorerFolder,

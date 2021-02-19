@@ -110,7 +110,10 @@ let ensureCreated = (snippetFile: t) => {
            Lwt.catch(
              () => {
                // File not created yet, let's create it
-               Service_OS.Api.writeFile(~contents, FpExp.toString(snippetFile))
+               Service_OS.Api.writeFile(
+                 ~contents,
+                 FpExp.toString(snippetFile),
+               )
                |> Lwt.map(() => snippetFile)
              },
              exn => Lwt.fail_with(Printexc.to_string(exn)),

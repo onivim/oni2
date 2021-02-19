@@ -139,7 +139,10 @@ let replace = (~replacement, tree) => {
     };
 
   loop(
-    PathHasher.make(~base=FpExp.dirName(getPath(tree)), getPath(replacement)),
+    PathHasher.make(
+      ~base=FpExp.dirName(getPath(tree)),
+      getPath(replacement),
+    ),
     tree,
   );
 };

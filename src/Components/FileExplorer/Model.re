@@ -65,6 +65,5 @@ let getIndex = (path, model) => {
 };
 
 let getFocusedIndex = model => {
-  model.active
-  |> Utility.OptionEx.flatMap(path => getIndex(path, model));
+  model.active |> Utility.OptionEx.flatMap(path => getIndex(path, model));
 };

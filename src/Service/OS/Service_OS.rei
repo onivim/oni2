@@ -40,7 +40,10 @@ module Effect: {
 
   module Dialog: {
     let openFolder:
-      (~initialDirectory: string=?, option(FpExp.t(FpExp.absolute)) => 'msg) =>
+      (
+        ~initialDirectory: string=?,
+        option(FpExp.t(FpExp.absolute)) => 'msg
+      ) =>
       Isolinear.Effect.t('msg);
   };
 };

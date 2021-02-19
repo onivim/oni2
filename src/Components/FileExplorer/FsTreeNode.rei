@@ -11,13 +11,15 @@ type metadata = {
 type t = Tree.t(metadata, metadata);
 
 let file: FpExp.t(FpExp.absolute) => t;
-let directory: (~isOpen: bool=?, FpExp.t(FpExp.absolute), ~children: list(t)) => t;
+let directory:
+  (~isOpen: bool=?, FpExp.t(FpExp.absolute), ~children: list(t)) => t;
 
 let getPath: t => FpExp.t(FpExp.absolute);
 let displayName: t => string;
 
 let findNodesByPath:
-  (FpExp.t(FpExp.absolute), t) => [ | `Success(list(t)) | `Partial(t) | `Failed];
+  (FpExp.t(FpExp.absolute), t) =>
+  [ | `Success(list(t)) | `Partial(t) | `Failed];
 let findByPath: (FpExp.t(FpExp.absolute), t) => option(t);
 
 let replace: (~replacement: t, t) => t;

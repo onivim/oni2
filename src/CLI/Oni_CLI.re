@@ -3,7 +3,7 @@
  *
  * Module for handling command-line arguments for Oni2
  */
-  open Oni_Core;
+open Oni_Core;
 open Kernel;
 open Rench;
 
@@ -272,7 +272,8 @@ let parse = (~getenv: string => option(string), args) => {
     forceScaleFactor: scaleFactor^,
     gpuAcceleration: gpuAcceleration^,
     overriddenExtensionsDir:
-      extensionsDir^ |> Utility.OptionEx.flatMap(FpExp.absoluteCurrentPlatform),
+      extensionsDir^
+      |> Utility.OptionEx.flatMap(FpExp.absoluteCurrentPlatform),
     shouldLoadExtensions: shouldLoadExtensions^,
     shouldLoadConfiguration: shouldLoadConfiguration^,
     shouldSyntaxHighlight: shouldSyntaxHighlight^,

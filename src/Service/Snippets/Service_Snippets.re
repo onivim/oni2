@@ -169,7 +169,8 @@ module Internal = {
   let loadSnippetsFromFiles = (~filePaths, ~fileType, dispatch) => {
     // Load all files
     // Coalesce all promises
-    let promises = filePaths |> List.map(FpExp.toString) |> List.map(Cache.get);
+    let promises =
+      filePaths |> List.map(FpExp.toString) |> List.map(Cache.get);
 
     let userPromise: Lwt.t(list(SnippetWithMetadata.t)) =
       Filesystem.getSnippetsFolder()

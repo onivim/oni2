@@ -38,7 +38,10 @@ module File = {
 
       let init = (~params, ~dispatch) => {
         Log.infof(m =>
-          m("Reloading keybindings file: %s", FpExp.toString(params.filePath))
+          m(
+            "Reloading keybindings file: %s",
+            FpExp.toString(params.filePath),
+          )
         );
         dispatch(loadKeybindings(params.filePath));
         ();

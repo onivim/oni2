@@ -210,7 +210,8 @@ module Scanner: {
   };
 
   let load: (~category: category, string) => option(ScanResult.t);
-  let scan: (~category: category, FpExp.t(FpExp.absolute)) => list(ScanResult.t);
+  let scan:
+    (~category: category, FpExp.t(FpExp.absolute)) => list(ScanResult.t);
 };
 
 module InitData: {
