@@ -265,8 +265,6 @@ let lineHeight =
     custom(~decode=LineHeight.decode, ~encode=LineHeight.encode),
     ~default=LineHeight.default,
   );
-let largeFileOptimization =
-  setting("editor.largeFileOptimizations", bool, ~default=true);
 let enablePreview =
   setting("workbench.editor.enablePreview", bool, ~default=true);
 let highlightActiveIndentGuide =
@@ -367,7 +365,6 @@ let contributions = [
   fontSmoothing.spec,
   fontWeight.spec,
   lineHeight.spec,
-  largeFileOptimization.spec,
   enablePreview.spec,
   highlightActiveIndentGuide.spec,
   horizontalScrollbarSize.spec,

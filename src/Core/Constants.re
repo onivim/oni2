@@ -79,7 +79,7 @@ let notificationWidth = 300;
  * because our current textmate highlighting strategy is very slow.
  * We'll switch to a native strategy, and bump this up.
  */
-let largeFileLineCountThreshold = 1000;
+let largeFileLineCountThreshold = 300 * 1000;
 
 let doubleClickTime = Revery.Time.milliseconds(500);
 

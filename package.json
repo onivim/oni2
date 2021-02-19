@@ -258,9 +258,9 @@
     "rench": "bryphe/rench#a976fe5",
     "isolinear": "revery-ui/isolinear#53fc4eb",
     "revery-terminal": "revery-ui/revery-terminal#a9cb168",
-    "@opam/fs": "bryphe/reason-native:fs.opam#5a7a756",
-    "@opam/fp": "bryphe/reason-native:fp.opam#5a7a756",
-    "@opam/dir": "bryphe/reason-native:dir.opam#5a7a756",
+    "@opam/fs": "bryphe/reason-native:fs.opam#e16590c",
+    "@opam/fp": "bryphe/reason-native:fp.opam#e16590c",
+    "@opam/dir": "bryphe/reason-native:dir.opam#e16590c",
     "@opam/conf-pkg-config": "1.2",
     "@opam/yojson": "onivim/yojson:yojson.opam#f480aef",
     "flex": "bryphe/flex#5e19b05"
