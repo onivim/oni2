@@ -26,7 +26,7 @@ module Effects = {
       Log.warn("Switching to trace file; further logging will be to file.");
       let logFileName = "onivim2-trace.log";
       let maybeWorkingDirectory = Luv.Path.cwd();
-      let maybeLogPath  =
+      let maybeLogPath =
         maybeWorkingDirectory
         |> Result.to_option
         |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform)
@@ -34,10 +34,10 @@ module Effects = {
 
       maybeLogPath
       |> Option.iter(logPath => {
-        Timber.App.enable(Timber.Reporter.file(FpExp.toString(logPath)));
-        Timber.App.setLevel(Timber.Level.trace);
-        dispatch(toMsg(logPath));
-      })
+           Timber.App.enable(Timber.Reporter.file(FpExp.toString(logPath)));
+           Timber.App.setLevel(Timber.Level.trace);
+           dispatch(toMsg(logPath));
+         });
     });
 };
 
@@ -58,7 +58,9 @@ let update = (msg, _model) =>
     }
   | LogFileStarted(filePath) => (
       (),
-      ShowInfoNotification(Printf.sprintf("Logging to: %s", FpExp.toString(filePath))),
+      ShowInfoNotification(
+        Printf.sprintf("Logging to: %s", FpExp.toString(filePath)),
+      ),
     )
   };
 
