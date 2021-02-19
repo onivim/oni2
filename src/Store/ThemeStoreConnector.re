@@ -10,38 +10,6 @@ open Oni_Syntax;
 
 module Log = (val Log.withNamespace("Oni2.Store.Theme"));
 
-let configurationWatcher =
-    (configurationSelector: ConfigurationValues.t => 'a, f) => {
-  let oldValue: ref(option('a)) = ref(None);
-  let configurationWatchEffect = (newValue: 'a) =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="configuration watcher", dispatch => {
-      switch (oldValue^) {
-      // If a === b, nothing changed - no need to call callback.
-      | Some(a) when a == newValue => ()
-      // Something changed, or this is the first time we're running.
-      | _ =>
-        f(newValue, dispatch);
-        oldValue := Some(newValue);
-        ();
-      }
-    });
-
-  let newUpdater = (oldUpdater, state, action) => {
-    switch (action) {
-    | Actions.ConfigurationSet(config) => (
-        state,
-        configurationWatchEffect(
-          Configuration.getValue(configurationSelector, config),
-        ),
-      )
-    | _ => oldUpdater(state, action)
-    };
-  };
-
-  newUpdater;
-};
-
 let start = () => {
   let loadThemeByPathEffect = (uiTheme, themePath) =>
     Isolinear.Effect.createWithDispatch(
@@ -121,10 +89,10 @@ let start = () => {
       )
     );
 
-  let onChanged = (newTheme, dispatch) =>
-    dispatch(Actions.ThemeChanged(newTheme));
-  let withWatcher =
-    configurationWatcher(c => c.workbenchColorTheme, onChanged);
+  // let onChanged = (newTheme, dispatch) =>
+  //   dispatch(Actions.ThemeChanged(newTheme));
+  // let withWatcher =
+  //   configurationWatcher(c => c.workbenchColorTheme, onChanged);
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
@@ -168,5 +136,5 @@ let start = () => {
     };
   };
 
-  updater |> withWatcher;
+  updater;
 };

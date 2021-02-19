@@ -91,10 +91,6 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "workbench.colorTheme",
-    (config, json) => {...config, workbenchColorTheme: parseString(json)},
-  ),
-  (
     "workbench.iconTheme",
     (config, json) => {...config, workbenchIconTheme: parseString(json)},
   ),

@@ -171,6 +171,13 @@ let update = (model, msg) => {
   };
 };
 
+module Configuration = {
+  open Oni_Core;
+  open Config.Schema;
+
+  let colorTheme = setting("workbench.colorTheme", string, Constants.defaultTheme);
+};
+
 module Commands = {
   open Feature_Commands.Schema;
 
@@ -186,5 +193,5 @@ module Commands = {
 module Contributions = {
   let commands = [Commands.selectTheme];
 
-  let configuration = [];
+  let configuration = Configuration.[colorTheme.spec];
 };
