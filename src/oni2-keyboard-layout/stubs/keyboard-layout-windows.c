@@ -87,7 +87,7 @@ CAMLprim value oni2_KeyboardLayoutInit() {
 int keyboardCharacterToUTF8(UINT keycode, UINT scancode, BYTE *keyboardState, char* dest, int destSize, HKL keyboardLayout) {
   wchar_t destUtf16[UTF16_BUFFER_SIZE];
 
-  int utf16Count = ToUnicodeEx(keycode, scancode, keyboardState, destUtf16, UTF16_BUFFER_SIZE, 0, keyboardLayout);
+  int utf16Count = ToUnicodeEx(keycode, scancode, keyboardState, destUtf16, UTF16_BUFFER_SIZE, 4, keyboardLayout);
 
   if (utf16Count == -1) {
     return -1;
