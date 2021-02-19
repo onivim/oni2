@@ -175,7 +175,7 @@ module Configuration = {
   open Oni_Core;
   open Config.Schema;
 
-  let colorTheme = setting("workbench.colorTheme", string, Constants.defaultTheme);
+  let colorTheme = setting("workbench.colorTheme", string, ~default=Constants.defaultTheme);
 };
 
 module Commands = {
