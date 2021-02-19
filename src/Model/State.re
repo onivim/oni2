@@ -475,6 +475,7 @@ let initial =
         Feature_SideBar.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
+        Feature_Theme.Contributions.configuration,
         Feature_LanguageSupport.Contributions.configuration,
         Feature_Layout.Contributions.configuration,
         Feature_TitleBar.Contributions.configuration,

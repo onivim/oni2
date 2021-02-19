@@ -185,4 +185,6 @@ module Commands = {
 
 module Contributions = {
   let commands = [Commands.selectTheme];
+
+  let configuration = [];
 };

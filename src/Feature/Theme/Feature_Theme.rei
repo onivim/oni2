@@ -43,4 +43,7 @@ let tokenColors: model => Oni_Syntax.TokenTheme.t;
 
 module Commands: {let selectTheme: Command.t(msg);};
 
-module Contributions: {let commands: list(Command.t(msg));};
+module Contributions: {
+  let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
+};
