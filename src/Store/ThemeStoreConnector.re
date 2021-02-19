@@ -60,19 +60,18 @@ let start = () => {
              let colors = Textmate.Theme.getColors(theme);
              let isDark = Textmate.Theme.isDark(theme);
 
+
+             let tokenColors =
+               theme |> Textmate.Theme.getTokenColors |> TokenTheme.create;
              dispatch(
                Actions.Theme(
-                 Feature_Theme.TextmateThemeLoaded(
-                   isDark ? ColorTheme.Dark : ColorTheme.Light,
+                 Feature_Theme.TextmateThemeLoaded({
+                   variant: isDark ? ColorTheme.Dark : ColorTheme.Light,
                    colors,
-                 ),
+                   tokenColors,
+                 }),
                ),
              );
-
-             let tokenTheme =
-               theme |> Textmate.Theme.getTokenColors |> TokenTheme.create;
-
-             dispatch(Actions.TokenThemeLoaded(tokenTheme));
            });
       })
     });

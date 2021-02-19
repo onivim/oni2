@@ -16,7 +16,11 @@ type command;
 [@deriving show]
 type msg =
   | Command(command)
-  | TextmateThemeLoaded(ColorTheme.variant, [@opaque] Textmate.ColorTheme.t);
+  | TextmateThemeLoaded(
+    {
+    variant: ColorTheme.variant, 
+    colors: [@opaque] Textmate.ColorTheme.t,
+    tokenColors: [@opaque] Oni_Syntax.TokenTheme.t });
 
 module Msg: {let openThemePicker: msg;};
 
@@ -34,6 +38,8 @@ let colors:
     model
   ) =>
   ColorTheme.Colors.t;
+
+let tokenColors: model => Oni_Syntax.TokenTheme.t;
 
 module Commands: {let selectTheme: Command.t(msg);};
 

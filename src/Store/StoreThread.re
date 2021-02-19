@@ -254,7 +254,7 @@ let start =
             ~grammarInfo,
             ~languageInfo,
             ~setup,
-            ~tokenTheme=state.tokenTheme,
+            ~tokenTheme=state.colorTheme |> Feature_Theme.tokenColors,
             ~bufferVisibility=visibleRanges,
             state.syntaxHighlights,
           )

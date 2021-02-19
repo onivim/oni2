@@ -1263,7 +1263,7 @@ let update =
               state.config,
               state.vim,
             ),
-          ~theme=state.tokenTheme,
+          ~theme=state.colorTheme |> Feature_Theme.tokenColors,
           update,
           state.syntaxHighlights,
         );

@@ -139,7 +139,6 @@ type t =
   | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
-  | TokenThemeLoaded([@opaque] TokenTheme.t)
   | ThemeLoadError(string)
   | EnableZenMode
   | DisableZenMode

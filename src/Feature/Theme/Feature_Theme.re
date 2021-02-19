@@ -10,6 +10,7 @@ type theme = Exthost.Extension.Contributions.Theme.t;
 type model = {
   schema: ColorTheme.Schema.t,
   theme: ColorTheme.t,
+  tokenColors: Oni_Syntax.TokenTheme.t,
 };
 
 let variant = ({theme, _}) => theme.variant;
@@ -70,7 +71,10 @@ let initial = contributions => {
       ...List.map(ColorTheme.Schema.fromList, contributions),
     ]),
   theme: ColorTheme.{variant: Dark, colors: ColorTheme.Colors.empty},
+  tokenColors: Oni_Syntax.TokenTheme.empty,
 };
+
+let tokenColors = ({tokenColors, _}) => tokenColors;
 
 let colors =
     (
@@ -125,7 +129,9 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
-  | TextmateThemeLoaded(ColorTheme.variant, [@opaque] Textmate.ColorTheme.t);
+  | TextmateThemeLoaded(
+  { variant: ColorTheme.variant, colors: [@opaque] Textmate.ColorTheme.t,
+  tokenColors: [@opaque] Oni_Syntax.TokenTheme.t});
 
 module Msg = {
   let openThemePicker = Command(SelectTheme);
@@ -138,7 +144,7 @@ type outmsg =
 
 let update = (model, msg) => {
   switch (msg) {
-  | TextmateThemeLoaded(variant, colors) =>
+  | TextmateThemeLoaded({variant, colors, tokenColors }) =>
     let colors =
       Textmate.ColorTheme.fold(
         (key, color, acc) =>
@@ -154,6 +160,7 @@ let update = (model, msg) => {
          variant,
          colors,
        },
+       tokenColors,
      }, ThemeChanged(colors));
   | Command(SelectTheme) => (model, OpenThemePicker([]))
   };

@@ -408,8 +408,6 @@ type t = {
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
   sideBar: Feature_SideBar.model,
-  // Token theme is theming for syntax highlights
-  tokenTheme: TokenTheme.t,
   extensions: Feature_Extensions.model,
   exthost: Feature_Exthost.model,
   iconTheme: IconTheme.t,
@@ -534,7 +532,6 @@ let initial =
     messages: Feature_Messages.initial,
     uiFont: UiFont.default,
     sideBar: Feature_SideBar.initial,
-    tokenTheme: TokenTheme.empty,
     help: Feature_Help.initial,
     iconTheme: IconTheme.create(),
     isQuitting: false,

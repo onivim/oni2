@@ -26,7 +26,6 @@ let reduce: (State.t, Actions.t) => State.t =
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetGrammarRepository(grammarRepository) => {...s, grammarRepository}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
-      | TokenThemeLoaded(tokenTheme) => {...s, tokenTheme}
       | EnableZenMode => {...s, zenMode: true}
       | DisableZenMode => {...s, zenMode: false}
       | ReallyQuitting => {...s, isQuitting: true}
