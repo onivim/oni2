@@ -41,7 +41,7 @@ module File = {
 type t =
   | None
   | File({
-      filePath: Fp.t(Fp.absolute),
+      filePath: FpExp.t(FpExp.absolute),
       saveTick: int,
     });
 
@@ -53,7 +53,7 @@ let notifyFileSaved = path =>
   fun
   | None => None
   | File({filePath, saveTick}) as orig =>
-    if (Fp.eq(filePath, path)) {
+    if (FpExp.eq(filePath, path)) {
       File({filePath, saveTick: saveTick + 1});
     } else {
       orig;
@@ -68,5 +68,5 @@ let loadImmediate =
   fun
   | None => Error("No file to load")
   | File({filePath, _}) => {
-      filePath |> Fp.toString |> JsonEx.from_file |> loadConfiguration;
+      filePath |> FpExp.toString |> JsonEx.from_file |> loadConfiguration;
     };

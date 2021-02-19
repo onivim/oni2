@@ -14,12 +14,15 @@ type model = {
   buffers: IntMap.t(Buffer.t),
   originalLines: IntMap.t(array(string)),
   computedDiffs: IntMap.t(DiffMarkers.t),
+  checkForLargeFiles: bool,
 };
 
 let empty = {
   buffers: IntMap.empty,
   originalLines: IntMap.empty,
   computedDiffs: IntMap.empty,
+
+  checkForLargeFiles: true,
 };
 
 module Internal = {
@@ -69,6 +72,14 @@ let update = (id, updater, {buffers, _} as model) => {
   {...model, buffers: IntMap.update(id, updater, buffers)};
 };
 
+let configurationChanged = (~config, model) => {
+  ...model,
+  checkForLargeFiles:
+    Feature_Configuration.GlobalConfiguration.Editor.largeFileOptimizations.get(
+      config,
+    ),
+};
+
 let anyModified = ({buffers, _}: model) => {
   IntMap.fold(
     (_key, v, prev) => Buffer.isModified(v) || prev,
@@ -107,9 +118,15 @@ let isModifiedByPath = ({buffers, _}: model, filePath: string) => {
   );
 };
 
-// TODO: When do we use this?
-//let disableSyntaxHighlighting =
-//  Option.map(buffer => Buffer.disableSyntaxHighlighting(buffer));
+let isLargeFile = (model, buffer) => {
+  model.checkForLargeFiles
+  && model.buffers
+  |> IntMap.find_opt(Oni_Core.Buffer.getId(buffer))
+  |> Option.map(buffer =>
+       Buffer.getNumberOfLines(buffer) > Constants.largeFileLineCountThreshold
+     )
+  |> Option.value(~default=false);
+};
 
 let setModified = modified =>
   Option.map(buffer => Buffer.setModified(modified, buffer));
@@ -141,7 +158,8 @@ type outmsg =
       grabFocus: bool,
       preview: bool,
     })
-  | BufferModifiedSet(int, bool);
+  | BufferModifiedSet(int, bool)
+  | NotifyInfo(string);
 
 [@deriving show]
 type command =
@@ -187,7 +205,11 @@ type msg =
       lineEndings: [@opaque] Vim.lineEnding,
     })
   | Saved(int)
-  | ModifiedSet(int, bool);
+  | ModifiedSet(int, bool)
+  | LargeFileOptimizationsApplied({
+      [@opaque]
+      buffer: Buffer.t,
+    });
 
 module Msg = {
   let fileTypeChanged = (~bufferId, ~fileType) => {
@@ -397,6 +419,21 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         (add(updatedBuffer, model), Nothing);
       };
     }
+
+  | LargeFileOptimizationsApplied({buffer}) =>
+    let maybeFilename = Oni_Core.Buffer.getShortFriendlyName(buffer);
+    let outmsg =
+      maybeFilename
+      |> Option.map(fileName => {
+           let msg =
+             Printf.sprintf(
+               "Syntax highlighting and other features have been turned off for the large file '%s'. These optimizations can be disabled by setting 'editor.largeFileOptimizations' to false.",
+               fileName,
+             );
+           NotifyInfo(msg);
+         })
+      |> Option.value(~default=Nothing);
+    (model, outmsg);
   };
 };
 
@@ -556,6 +593,25 @@ module Commands = {
       Command(DetectIndentation),
     );
 };
+
+let sub = model =>
+  if (!model.checkForLargeFiles) {
+    Isolinear.Sub.none;
+  } else {
+    model.buffers
+    |> IntMap.bindings
+    |> List.map(snd)
+    |> List.filter((buffer: Buffer.t) => isLargeFile(model, buffer))
+    |> List.map(buffer =>
+         SubEx.value(
+           ~uniqueId=
+             "Feature_Buffers.largeFile:"
+             ++ string_of_int(Buffer.getId(buffer)),
+           LargeFileOptimizationsApplied({buffer: buffer}),
+         )
+       )
+    |> Isolinear.Sub.batch;
+  };
 
 module Contributions = {
   let configuration =

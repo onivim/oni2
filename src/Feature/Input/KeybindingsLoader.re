@@ -1,3 +1,5 @@
+open Oni_Core;
+
 module Log = (
   val Oni_Core.Log.withNamespace("Oni2.Feature.Input.KeybindingsLoader")
 );
@@ -27,7 +29,7 @@ module File = {
 type t =
   | None
   | File({
-      filePath: Fp.t(Fp.absolute),
+      filePath: FpExp.t(FpExp.absolute),
       saveTick: int,
     });
 
@@ -39,7 +41,7 @@ let notifyFileSaved = path =>
   fun
   | None => None
   | File({filePath, saveTick}) as orig =>
-    if (Fp.eq(filePath, path)) {
+    if (FpExp.eq(filePath, path)) {
       File({filePath, saveTick: saveTick + 1});
     } else {
       orig;

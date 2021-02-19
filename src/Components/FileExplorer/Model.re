@@ -1,8 +1,9 @@
+open Oni_Core;
 // MODEL
 
 [@deriving show]
 type msg =
-  | ActiveFilePathChanged([@opaque] option(Fp.t(Fp.absolute)))
+  | ActiveFilePathChanged([@opaque] option(FpExp.t(FpExp.absolute)))
   | TreeLoaded(FsTreeNode.t)
   | TreeLoadError(string)
   | NodeLoaded(FsTreeNode.t)
@@ -16,14 +17,14 @@ module Msg = {
 };
 
 type model = {
-  rootPath: Fp.t(Fp.absolute),
+  rootPath: FpExp.t(FpExp.absolute),
   rootName: string,
   tree: option(FsTreeNode.t),
   treeView: Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
-  active: option(Fp.t(Fp.absolute)),
-  focus: option(Fp.t(Fp.absolute)) // path
+  active: option(FpExp.t(FpExp.absolute)),
+  focus: option(FpExp.t(FpExp.absolute)) // path
 };
 
 let initial = (~rootPath) => {
@@ -64,6 +65,5 @@ let getIndex = (path, model) => {
 };
 
 let getFocusedIndex = model => {
-  model.active
-  |> Oni_Core.Utility.OptionEx.flatMap(path => getIndex(path, model));
+  model.active |> Utility.OptionEx.flatMap(path => getIndex(path, model));
 };

@@ -276,7 +276,7 @@ let start = () => {
         snippetFiles
         |> List.filter_map(
              (snippetFile: Service_Snippets.SnippetFileMetadata.t) => {
-             Fp.baseName(snippetFile.filePath)
+             FpExp.baseName(snippetFile.filePath)
              |> Option.map(filePath => {
                   Actions.{
                     category:

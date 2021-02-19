@@ -297,7 +297,7 @@ let keyword: provider(keywordModel, keywordMsg) = {
 type snippetModel = {
   items: list(CompletionItem.t),
   isComplete: bool,
-  filePaths: list(Fp.t(Fp.absolute)),
+  filePaths: list(FpExp.t(FpExp.absolute)),
   fileType: string,
   sortOrder: [ | `Top | `Inline | `Bottom | `Hidden],
 };

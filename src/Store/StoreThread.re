@@ -8,6 +8,7 @@
  */
 
 module Core = Oni_Core;
+module FpExp = Oni_Core.FpExp;
 
 module Model = Oni_Model;
 
@@ -23,7 +24,7 @@ let discoverExtensions =
       Core.Log.perf("Discover extensions", () => {
         let extensions =
           setup.bundledExtensionsPath
-          |> Fp.absoluteCurrentPlatform
+          |> FpExp.absoluteCurrentPlatform
           |> Option.map(
                Scanner.scan(
                  // The extension host assumes bundled extensions start with 'vscode.'
@@ -34,7 +35,7 @@ let discoverExtensions =
 
         let developmentExtensions =
           setup.developmentExtensionsPath
-          |> Core.Utility.OptionEx.flatMap(Fp.absoluteCurrentPlatform)
+          |> Core.Utility.OptionEx.flatMap(FpExp.absoluteCurrentPlatform)
           |> Option.map(Scanner.scan(~category=Development))
           |> Option.value(~default=[]);
 
@@ -246,6 +247,7 @@ let start =
     let syntaxSubscription =
       shouldSyntaxHighlight && !state.isQuitting
         ? Feature_Syntax.subscription(
+            ~buffers=state.buffers,
             ~config,
             ~grammarInfo,
             ~languageInfo,
@@ -346,7 +348,7 @@ let start =
         ~toMsg=maybeFilePathStr => {
           let maybeFilePath =
             maybeFilePathStr
-            |> Utility.OptionEx.flatMap(Fp.absoluteCurrentPlatform);
+            |> Utility.OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
           Model.Actions.FileExplorer(
             Feature_Explorer.Msg.activeFileChanged(maybeFilePath),
           );
@@ -433,6 +435,11 @@ let start =
       |> Feature_Notification.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Notification(msg));
 
+    let bufferSub =
+      state.buffers
+      |> Feature_Buffers.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
+
     [
       menuBarSub,
       extHostSubscription,
@@ -451,6 +458,7 @@ let start =
       visibleEditorsSubscription,
       inputSubscription,
       notificationSub,
+      bufferSub,
     ]
     |> Isolinear.Sub.batch;
   };

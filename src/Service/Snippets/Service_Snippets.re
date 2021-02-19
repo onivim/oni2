@@ -25,7 +25,7 @@ module SnippetFileMetadata = {
   [@deriving show]
   type t = {
     language: option(string),
-    filePath: [@opaque] Fp.t(Fp.absolute),
+    filePath: [@opaque] FpExp.t(FpExp.absolute),
     isCreated: bool,
   };
 };
@@ -137,12 +137,12 @@ module Internal = {
 
   let readSnippetFilesFromFolder = folder => {
     folder
-    |> Fp.toString
+    |> FpExp.toString
     |> Service_OS.Api.readdir
     |> Lwt.map(dirents => {
          dirents
          |> List.map((dirent: Luv.File.Dirent.t) =>
-              Fp.At.(folder / dirent.name)
+              FpExp.At.(folder / dirent.name)
             )
          |> List.filter(file => SnippetFile.scope(file) != None)
        });
@@ -153,8 +153,8 @@ module Internal = {
     |> LwtEx.flatMap(snippetFiles => {
          snippetFiles
          |> List.filter(SnippetFile.matches(~fileType))
-         |> List.map((dir: Fp.t(Fp.absolute)) => {
-              let str = Fp.toString(dir);
+         |> List.map((dir: FpExp.t(FpExp.absolute)) => {
+              let str = FpExp.toString(dir);
               Cache.get(str)
               |> Lwt.map(
                    List.filter(
@@ -169,7 +169,8 @@ module Internal = {
   let loadSnippetsFromFiles = (~filePaths, ~fileType, dispatch) => {
     // Load all files
     // Coalesce all promises
-    let promises = filePaths |> List.map(Fp.toString) |> List.map(Cache.get);
+    let promises =
+      filePaths |> List.map(FpExp.toString) |> List.map(Cache.get);
 
     let userPromise: Lwt.t(list(SnippetWithMetadata.t)) =
       Filesystem.getSnippetsFolder()
@@ -213,9 +214,9 @@ module Effect = {
   let clearCachedSnippets = (~filePath) => {
     Isolinear.Effect.create(~name="Service_Snippets.clearCachedSnippets", () => {
       Log.tracef(m =>
-        m("Clearing snippet cache for file: %s", filePath |> Fp.toString)
+        m("Clearing snippet cache for file: %s", filePath |> FpExp.toString)
       );
-      Cache.clear(Fp.toString(filePath));
+      Cache.clear(FpExp.toString(filePath));
     });
   };
   let snippetFromFiles = (~fileType, ~filePaths, toMsg) =>
@@ -315,7 +316,7 @@ module Effect = {
 module Sub = {
   type snippetFileParams = {
     uniqueId: string,
-    filePaths: list(Fp.t(Fp.absolute)),
+    filePaths: list(FpExp.t(FpExp.absolute)),
     fileType: string,
   };
   module SnippetFileSubscription =

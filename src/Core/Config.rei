@@ -23,7 +23,7 @@ module Settings: {
 
   let fromList: list((string, Json.t)) => t;
   let fromJson: Json.t => t;
-  let fromFile: Fp.t(Fp.absolute) => t;
+  let fromFile: FpExp.t(FpExp.absolute) => t;
 
   let get: (key, t) => option(Json.t);
 

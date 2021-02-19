@@ -92,7 +92,7 @@ module Internal = {
       dispatch(Actions.Quit(true))
     );
 
-  let chdir = (path: Fp.t(Fp.absolute)) =>
+  let chdir = (path: FpExp.t(FpExp.absolute)) =>
     Feature_Workspace.Effects.changeDirectory(path)
     |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
 
@@ -174,6 +174,10 @@ module Internal = {
              ~config=resolver,
            );
 
+      let buffers =
+        state.buffers
+        |> Feature_Buffers.configurationChanged(~config=resolver);
+
       let languageSupport =
         state.languageSupport
         |> Feature_LanguageSupport.configurationChanged(~config=resolver);
@@ -195,7 +199,7 @@ module Internal = {
       let (zoom, zoomEffect) =
         Feature_Zoom.configurationChanged(~config=resolver, state.zoom);
       let eff = zoomEffect |> Isolinear.Effect.map(msg => Actions.Zoom(msg));
-      ({...state, languageSupport, sideBar, layout, zoom}, eff);
+      ({...state, buffers, languageSupport, sideBar, layout, zoom}, eff);
     };
 
   let updateMode =
@@ -1045,6 +1049,12 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Effect.none)
+
+    | NotifyInfo(msg) => (
+        state,
+        Internal.notificationEffect(~kind=Info, msg),
+      )
+
     | BufferModifiedSet(id, _) =>
       open Feature_Editor;
 
@@ -1206,7 +1216,7 @@ let update =
       let maybeFullPath =
         buffer
         |> Buffer.getFilePath
-        |> OptionEx.flatMap(Fp.absoluteCurrentPlatform);
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
 
       let clearSnippetCacheEffect =
         maybeFullPath
@@ -1818,7 +1828,7 @@ let update =
 
       | OpenFile(filePath) => (
           state.layout,
-          Internal.openFileEffect(Fp.toString(filePath)),
+          Internal.openFileEffect(FpExp.toString(filePath)),
         )
 
       | Effect(eff) => (
@@ -2025,7 +2035,8 @@ let update =
 
     | WorkspaceChanged(maybeWorkspaceFolder) =>
       let maybeExplorerFolder =
-        maybeWorkspaceFolder |> OptionEx.flatMap(Fp.absoluteCurrentPlatform);
+        maybeWorkspaceFolder
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
       let fileExplorer =
         Feature_Explorer.setRoot(
           ~rootPath=maybeExplorerFolder,

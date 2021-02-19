@@ -3,6 +3,7 @@
  *
  * Module for handling command-line arguments for Oni2
  */
+open Oni_Core;
 open Kernel;
 open Rench;
 
@@ -14,7 +15,7 @@ type t = {
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
-  overriddenExtensionsDir: option(Fp.t(Fp.absolute)),
+  overriddenExtensionsDir: option(FpExp.t(FpExp.absolute)),
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,
   shouldSyntaxHighlight: bool,
@@ -271,7 +272,8 @@ let parse = (~getenv: string => option(string), args) => {
     forceScaleFactor: scaleFactor^,
     gpuAcceleration: gpuAcceleration^,
     overriddenExtensionsDir:
-      extensionsDir^ |> Utility.OptionEx.flatMap(Fp.absoluteCurrentPlatform),
+      extensionsDir^
+      |> Utility.OptionEx.flatMap(FpExp.absoluteCurrentPlatform),
     shouldLoadExtensions: shouldLoadExtensions^,
     shouldLoadConfiguration: shouldLoadConfiguration^,
     shouldSyntaxHighlight: shouldSyntaxHighlight^,

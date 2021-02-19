@@ -1,4 +1,5 @@
 module Core = Oni_Core;
+module FpExp = Core.FpExp;
 module Utility = Core.Utility;
 
 module Model = Oni_Model;
@@ -157,7 +158,7 @@ let runTest =
       |> Printf.fprintf(oc, "%s\n");
 
     close_out(oc);
-    tempFilePath |> Fp.absoluteCurrentPlatform |> Option.get;
+    tempFilePath |> FpExp.absoluteCurrentPlatform |> Option.get;
   };
 
   let keybindingsFilePath =

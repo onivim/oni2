@@ -215,6 +215,21 @@ __Pass:__
 - [ ] OSX
 - [ ] Linux
 
+## 8.2 Windows-style path handling
+
+### 8.2.1 Verify can `:cd` into a UNC path
+
+Regression test for #3151
+
+- Open Onivim 2
+- `:cd` into a UNC path - for example: `\\\\LOCALHOST\\c$\\oni2`
+- Verify the explorer is refreshed
+- Verify directory nodes can be expanded
+- Verify files can be opened
+
+__Pass:__
+- [ ] Win
+
 # 9. Terminal
 
 ## 9.1 Check that `ONIVIM_TERMINAL` is set
@@ -253,6 +268,40 @@ __Pass:__
 - Go to extensions pane (Command+Shift+X / Control+Shift+X)
 - Install `redhat.java` 
 - Validate installation is successful
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+# 11. Buffers
+
+## 11.1 Large Files
+
+### 11.1.1 Large file should show notification (#1670)
+
+_Setup:_
+- Download test file: https://mdq-preview.incommon.org/entities/idps/all
+
+- Open Onivim 2 with default settings
+- Open test file (`:e /path/to/all`)
+- Verify file opens, and a large-file notification is shown
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+### 11.1.2 Disabling `"editor.largeFileOptimizations"` should still load files
+
+_Setup:_
+- Download test file: https://mdq-preview.incommon.org/entities/idps/all
+
+- Open Onivim 2 with default settings
+- Open test file (`:e /path/to/all`)
+- Verify file opens
+- Verify no large-file notification is shown
+- Verify syntax highlighting shows up
 
 __Pass:__
 - [ ] Win

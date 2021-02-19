@@ -351,7 +351,7 @@ type msg =
   | EditSnippetFileRequested({
       snippetFile: Service_Snippets.SnippetFileMetadata.t,
     })
-  | SnippetFileCreatedSuccessfully([@opaque] Fp.t(Fp.absolute))
+  | SnippetFileCreatedSuccessfully([@opaque] FpExp.t(FpExp.absolute))
   | SnippetFileCreationError(string);
 
 module Msg = {
@@ -393,7 +393,7 @@ type outmsg =
   | SetSelections(list(ByteRange.t))
   | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
   | ShowFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
-  | OpenFile(Fp.t(Fp.absolute))
+  | OpenFile(FpExp.t(FpExp.absolute))
   | Nothing;
 
 module Effects = {

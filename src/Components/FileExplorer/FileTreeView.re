@@ -73,8 +73,8 @@ let nodeView =
     let path = node.path;
     switch (decoration) {
     | Some((decoration: Feature_Decorations.Decoration.t)) =>
-      Fp.toString(path) ++ " • " ++ decoration.tooltip
-    | None => Fp.toString(path)
+      FpExp.toString(path) ++ " • " ++ decoration.tooltip
+    | None => FpExp.toString(path)
     };
   };
 
@@ -100,7 +100,7 @@ let make =
       ~focusedIndex,
       ~treeView:
          Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
-      ~active: option(Fp.t(Fp.absolute)),
+      ~active: option(FpExp.t(FpExp.absolute)),
       ~theme,
       ~decorations: Feature_Decorations.model,
       ~font: UiFont.t,
@@ -136,14 +136,14 @@ let make =
               font
               iconTheme
               languageInfo
-              path={Fp.toString(data.path)}
+              path={FpExp.toString(data.path)}
             />,
             data,
           )
         };
       let decorations =
         Feature_Decorations.getDecorations(
-          ~path=Fp.toString(data.path),
+          ~path=FpExp.toString(data.path),
           decorations,
         );
       <nodeView

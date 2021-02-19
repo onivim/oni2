@@ -1,13 +1,13 @@
 module Log = (val Kernel.Log.withNamespace("Core.SubEx"));
 
 module JsonFile = {
-  let loadJson = (path: Fp.t(Fp.absolute)) => {
-    path |> Fp.toString |> Utility.JsonEx.from_file;
+  let loadJson = (path: FpExp.t(FpExp.absolute)) => {
+    path |> FpExp.toString |> Utility.JsonEx.from_file;
   };
 
   type params = {
     uniqueId: string,
-    filePath: Fp.t(Fp.absolute),
+    filePath: FpExp.t(FpExp.absolute),
     tick: int,
   };
   // TODO: Once we've fixed the issue with the Service_OS.FileWatcher,
@@ -22,14 +22,14 @@ module JsonFile = {
       let name = "SubEx.FileSubscription";
 
       let id = ({uniqueId, filePath, tick}) =>
-        uniqueId ++ Fp.toString(filePath) ++ string_of_int(tick);
+        uniqueId ++ FpExp.toString(filePath) ++ string_of_int(tick);
 
       let init = (~params, ~dispatch) => {
         Log.infof(m =>
           m(
             "Reloading json file (%s): %s",
             params.uniqueId,
-            Fp.toString(params.filePath),
+            FpExp.toString(params.filePath),
           )
         );
         dispatch(loadJson(params.filePath));
@@ -46,3 +46,33 @@ module JsonFile = {
 
 let jsonFile = (~uniqueId, ~filePath, ~tick) =>
   JsonFile.Sub.create({uniqueId, filePath, tick});
+
+type unitParams = {uniqueId: string};
+module UnitSubscription =
+  Isolinear.Sub.Make({
+    type nonrec msg = unit;
+
+    type nonrec params = unitParams;
+
+    type state = unit;
+
+    let name = "Oni_Core.SubEx.UnitSubscription";
+    let id = params => params.uniqueId;
+
+    let init = (~params as _, ~dispatch) => {
+      dispatch();
+    };
+
+    let update = (~params as _, ~state, ~dispatch as _) => {
+      state;
+    };
+
+    let dispose = (~params as _, ~state as _) => {
+      ();
+    };
+  });
+
+let unit = (~uniqueId) => UnitSubscription.create({uniqueId: uniqueId});
+
+// TODO: This should be in `Isolinear.Sub`
+let value = (~uniqueId, v) => unit(~uniqueId) |> Isolinear.Sub.map(() => v);

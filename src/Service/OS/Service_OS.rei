@@ -1,3 +1,5 @@
+open Oni_Core;
+
 module Api: {
   let fold:
     (
@@ -38,7 +40,10 @@ module Effect: {
 
   module Dialog: {
     let openFolder:
-      (~initialDirectory: string=?, option(Fp.t(Fp.absolute)) => 'msg) =>
+      (
+        ~initialDirectory: string=?,
+        option(FpExp.t(FpExp.absolute)) => 'msg
+      ) =>
       Isolinear.Effect.t('msg);
   };
 };

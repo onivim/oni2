@@ -23,7 +23,7 @@ module ConfigurationLoader: {
 
   let none: t;
 
-  let file: Fp.t(Fp.absolute) => t;
+  let file: FpExp.t(FpExp.absolute) => t;
 };
 
 let initial:
@@ -43,7 +43,7 @@ type outmsg =
 
 let update: (model, msg) => (model, outmsg);
 
-let notifyFileSaved: (Fp.t(Fp.absolute), model) => model;
+let notifyFileSaved: (FpExp.t(FpExp.absolute), model) => model;
 
 let resolver:
   (
