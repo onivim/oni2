@@ -95,7 +95,6 @@ let start =
       ~overriddenExtensionsDir=None,
       ~shouldLoadExtensions=true,
       ~shouldSyntaxHighlight=true,
-      ~shouldLoadConfiguration=true,
       (),
     ) => {
   ignore(executingDirectory);
@@ -165,7 +164,6 @@ let start =
     ConfigurationStoreConnector.start(
       ~configurationFilePath,
       ~setVsync,
-      ~shouldLoadConfiguration,
       ~filesToOpen,
     );
   let keyBindingsUpdater = KeyBindingsStoreConnector.start();

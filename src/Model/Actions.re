@@ -23,7 +23,8 @@ type t =
     })
   | Commands(Feature_Commands.msg(t))
   | Configuration(Feature_Configuration.msg)
-  | ConfigurationParseError(string)
+  // | ConfigurationParseError(string)
+  // TODO: Move to command in feature configuration
   | ConfigurationReload
   | ConfigurationSet([@opaque] Feature_Configuration.LegacyConfiguration.t)
   // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer

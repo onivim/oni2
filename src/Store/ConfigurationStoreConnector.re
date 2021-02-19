@@ -17,7 +17,6 @@ let start =
     (
       ~configurationFilePath: option(FpExp.t(FpExp.absolute)),
       ~setVsync,
-      ~shouldLoadConfiguration,
       ~filesToOpen,
     ) => {
 

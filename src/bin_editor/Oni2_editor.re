@@ -306,15 +306,18 @@ switch (eff) {
          )
       |> Result.value(~default=Feature_Input.KeybindingsLoader.none);
 
-    let configurationLoader =
+    let configurationLoader = Feature_Configuration.(if (!cliOptions.shouldLoadConfiguration) {
+      ConfigurationLoader.none
+    } else {
       Oni_Core.Filesystem.getOrCreateConfigFile("configuration.json")
-      |> Result.map(Feature_Configuration.ConfigurationLoader.file)
+      |> Result.map(ConfigurationLoader.file)
       |> Oni_Core.Utility.ResultEx.tapError(msg =>
            Log.errorf(m =>
              m("Error initializing configurationj file: %s", msg)
            )
          )
-      |> Result.value(~default=Feature_Configuration.ConfigurationLoader.none);
+      |> Result.value(~default=ConfigurationLoader.none);
+    });
 
     let currentState =
       ref(
@@ -455,7 +458,6 @@ switch (eff) {
         ~filesToOpen=cliOptions.filesToOpen,
         ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
         ~shouldSyntaxHighlight=cliOptions.shouldSyntaxHighlight,
-        ~shouldLoadConfiguration=cliOptions.shouldLoadConfiguration,
         ~overriddenExtensionsDir=cliOptions.overriddenExtensionsDir,
         ~quit,
         (),
