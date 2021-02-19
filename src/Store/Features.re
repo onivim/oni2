@@ -167,6 +167,8 @@ module Internal = {
     state => {
       let resolver = Selectors.configResolver(state);
       let maybeRoot = Feature_Explorer.root(state.fileExplorer);
+      let newFontSize = Feature_Editor.Configuration.fontSize.get(resolver);
+      prerr_endline ("!! FONT SIZE: " ++ string_of_float(newFontSize));
       let sideBar =
         state.sideBar
         |> Feature_SideBar.configurationChanged(

@@ -7,15 +7,6 @@ module GlobalConfiguration = GlobalConfiguration;
 
 module ConfigurationLoader = ConfigurationLoader;
 
-// Port over to new system
-// module UserSettingsProvider = {
-//   let defaultConfigurationFileName = "configuration.json";
-
-//   let getSettings = () =>
-//     Filesystem.getOrCreateConfigFile(defaultConfigurationFileName)
-//     |> Result.map(Config.Settings.fromFile);
-// };
-
 type model = {
   schema: Config.Schema.t,
   user: Config.Settings.t,
@@ -109,10 +100,13 @@ type outmsg =
 let update = (model, msg) =>
   switch (msg) {
   | UserSettingsChanged({config: user, legacyConfiguration}) =>
+      //prerr_endline ("!!USER SETTINGS CHANGED");
       let previous = model;
       let updated = if (user == Config.Settings.empty) {
+        //prerr_endline ("Empty :(");
         model
       } else {
+        //prerr_endline ("MERGING :(");
         merge({...model, user})
       };
 
