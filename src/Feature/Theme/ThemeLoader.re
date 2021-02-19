@@ -14,9 +14,11 @@ module ThemeLoaderSub =
     type state = unit;
 
     let name = "Feature_Theme.LoaderSub";
-    let id = params => params.theme.path;
+    let id = (params: Theme.t) => params.path;
 
-    let init = (~params as _, ~dispatch) => {
+    let init = (~params, ~dispatch) => {
+      let { uiTheme, path, _}: Theme.t = params;
+      let dark = uiTheme == "vs-dark" || uiTheme == "hc-black";
       dispatch(Error("No theme"));
     };
 
