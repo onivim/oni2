@@ -30,7 +30,8 @@ describe("Persistence", ({test, _}) => {
       |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform)
       |> Option.get;
     prerr_endline(
-      "Persistence.setup - created storeFolder: " ++ FpExp.toString(storeFolder),
+      "Persistence.setup - created storeFolder: "
+      ++ FpExp.toString(storeFolder),
     );
 
     let instantiate = Store.instantiate(~storeFolder);
