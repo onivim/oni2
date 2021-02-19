@@ -215,6 +215,21 @@ __Pass:__
 - [ ] OSX
 - [ ] Linux
 
+## 8.2 Windows-style path handling
+
+### 8.2.1 Verify can `:cd` into a UNC path
+
+Regression test for #3151
+
+- Open Onivim 2
+- `:cd` into a UNC path - for example: `\\\\LOCALHOST\\c$\\oni2`
+- Verify the explorer is refreshed
+- Verify directory nodes can be expanded
+- Verify files can be opened
+
+__Pass:__
+- [ ] Win
+
 # 9. Terminal
 
 ## 9.1 Check that `ONIVIM_TERMINAL` is set
