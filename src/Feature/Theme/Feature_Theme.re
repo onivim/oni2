@@ -82,7 +82,7 @@ let colors =
       ~customizations=ColorTheme.Colors.empty, // TODO
       model,
     ) => {
-  let {schema, theme} = model;
+  let {schema, theme, _} = model;
 
   let rec resolve = key => {
     switch (ColorTheme.Colors.get(key, customizations)) {
@@ -129,9 +129,11 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
-  | TextmateThemeLoaded(
-  { variant: ColorTheme.variant, colors: [@opaque] Textmate.ColorTheme.t,
-  tokenColors: [@opaque] Oni_Syntax.TokenTheme.t});
+  | TextmateThemeLoaded({
+      variant: ColorTheme.variant,
+      colors: [@opaque] Textmate.ColorTheme.t,
+      tokenColors: [@opaque] Oni_Syntax.TokenTheme.t,
+    });
 
 module Msg = {
   let openThemePicker = Command(SelectTheme);
@@ -144,7 +146,7 @@ type outmsg =
 
 let update = (model, msg) => {
   switch (msg) {
-  | TextmateThemeLoaded({variant, colors, tokenColors }) =>
+  | TextmateThemeLoaded({variant, colors, tokenColors}) =>
     let colors =
       Textmate.ColorTheme.fold(
         (key, color, acc) =>
@@ -154,14 +156,17 @@ let update = (model, msg) => {
         [],
       )
       |> ColorTheme.Colors.fromList;
-    ({
-       ...model,
-       theme: {
-         variant,
-         colors,
-       },
-       tokenColors,
-     }, ThemeChanged(colors));
+    (
+      {
+        ...model,
+        theme: {
+          variant,
+          colors,
+        },
+        tokenColors,
+      },
+      ThemeChanged(colors),
+    );
   | Command(SelectTheme) => (model, OpenThemePicker([]))
   };
 };

@@ -60,7 +60,6 @@ let start = () => {
              let colors = Textmate.Theme.getColors(theme);
              let isDark = Textmate.Theme.isDark(theme);
 
-
              let tokenColors =
                theme |> Textmate.Theme.getTokenColors |> TokenTheme.create;
              dispatch(
