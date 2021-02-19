@@ -92,7 +92,7 @@ int keyboardCharacterToUTF8(UINT keycode, UINT scancode, BYTE *keyboardState, ch
 
   // CAREFUL: ToUnicodeEx has the side-effect of resetting dead key state, as well as others - see:
   // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-tounicodeex#remarks
-  // Fix #3157, for Windows 10 >1607 by passing bit 2 to `wFlags
+  // Fix #3157, for Windows 10 >1607 by passing bit 2 to `wFlags`
   int utf16Count = ToUnicodeEx(keycode, scancode, keyboardState, destUtf16, UTF16_BUFFER_SIZE, DONT_CHANGE_KEYBOARD_STATE, keyboardLayout);
 
   if (utf16Count == -1) {
