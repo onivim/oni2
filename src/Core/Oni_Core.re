@@ -26,6 +26,7 @@ module DiffMarkers = DiffMarkers;
 module EnvironmentVariables = Kernel.EnvironmentVariables;
 module Filesystem = Filesystem;
 module Filter = Filter;
+module FpExp = FpExp;
 module Font = Font;
 module FontLigatures = FontLigatures;
 module FontSmoothing = FontSmoothing;

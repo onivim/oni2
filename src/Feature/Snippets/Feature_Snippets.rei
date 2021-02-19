@@ -21,7 +21,7 @@ type outmsg =
   | SetSelections(list(ByteRange.t))
   | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
   | ShowFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
-  | OpenFile(Fp.t(Fp.absolute))
+  | OpenFile(FpExp.t(FpExp.absolute))
   | Nothing;
 
 module Session: {

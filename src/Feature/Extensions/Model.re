@@ -256,7 +256,7 @@ type model = {
   extensions: list(Scanner.ScanResult.t),
   searchText: Component_InputText.model,
   latestQuery: option(Service_Extensions.Query.t),
-  extensionsFolder: option(Fp.t(Fp.absolute)),
+  extensionsFolder: option(FpExp.t(FpExp.absolute)),
   pendingInstalls: list(string),
   pendingUninstalls: list(string),
   globalValues: Yojson.Safe.t,

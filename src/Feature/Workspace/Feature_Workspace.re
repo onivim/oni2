@@ -21,7 +21,7 @@ type command =
 type msg =
   | Command(command)
   | FolderSelectionCanceled
-  | FolderPicked([@opaque] Fp.t(Fp.absolute))
+  | FolderPicked([@opaque] FpExp.t(FpExp.absolute))
   | WorkingDirectoryChanged(string)
   | Noop;
 
@@ -54,10 +54,10 @@ type outmsg =
   | WorkspaceChanged(option(string));
 
 module Effects = {
-  let changeDirectory = (path: Fp.t(Fp.absolute)) =>
+  let changeDirectory = (path: FpExp.t(FpExp.absolute)) =>
     Isolinear.Effect.createWithDispatch(
       ~name="Feature_Workspace.changeDirectory", dispatch => {
-      let newDirectory = Fp.toString(path);
+      let newDirectory = FpExp.toString(path);
       switch (Luv.Path.chdir(newDirectory)) {
       | Ok () => dispatch(WorkingDirectoryChanged(newDirectory))
       | Error(msg) =>
@@ -131,7 +131,7 @@ module Commands = {
         |> Json.Decode.decode_value(Uri.decode)
         |> Result.map(Uri.toFileSystemPath)
         |> Result.to_option
-        |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform)
         |> Option.map(fp => FolderPicked(fp))
         |> Option.value(~default=Noop)
       | _ => Noop,

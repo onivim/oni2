@@ -560,7 +560,7 @@ let initial =
     titlebarHeight,
     workspace:
       Feature_Workspace.initial(
-        ~openedFolder=maybeWorkspace |> Option.map(Fp.toString),
+        ~openedFolder=maybeWorkspace |> Option.map(FpExp.toString),
         workingDirectory,
       ),
     fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),

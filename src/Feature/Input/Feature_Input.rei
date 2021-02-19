@@ -66,7 +66,7 @@ module KeybindingsLoader: {
 
   let none: t;
 
-  let file: Fp.t(Fp.absolute) => t;
+  let file: FpExp.t(FpExp.absolute) => t;
 };
 
 [@deriving show]
@@ -152,7 +152,7 @@ let remove: (uniqueId, model) => model;
 let enable: model => model;
 let disable: model => model;
 
-let notifyFileSaved: (Fp.t(Fp.absolute), model) => model;
+let notifyFileSaved: (FpExp.t(FpExp.absolute), model) => model;
 
 // UPDATE
 

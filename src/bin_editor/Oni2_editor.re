@@ -10,6 +10,7 @@ open Oni_CLI;
 open Oni_UI;
 
 module Core = Oni_Core;
+module FpExp = Oni_Core.FpExp;
 module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
@@ -119,7 +120,7 @@ switch (eff) {
 
     // The directory that was persisted is a valid workspace, so we can use it
     if (couldChangeDirectory^) {
-      maybePath |> OptionEx.flatMap(Fp.absoluteCurrentPlatform);
+      maybePath |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
     } else {
       None;
     };
@@ -142,7 +143,7 @@ switch (eff) {
       Store.Persistence.Workspace.(
         maybeWorkspace
         |> Option.map(workspace => {
-             let store = storeFor(Fp.toString(workspace));
+             let store = storeFor(FpExp.toString(workspace));
              (
                windowX(store)
                |> OptionEx.tap(x =>
@@ -246,7 +247,7 @@ switch (eff) {
     let maybeWorkspace = initWorkspace();
     let workingDirectory =
       maybeWorkspace
-      |> Option.map(Fp.toString)
+      |> Option.map(FpExp.toString)
       |> Option.value(~default=initialWorkingDirectory);
 
     let window =
@@ -320,7 +321,7 @@ switch (eff) {
           ~contributedCommands=[], // TODO
           ~workingDirectory,
           ~maybeWorkspace,
-          // TODO: Use `Fp.t` all the way down
+          // TODO: Use `FpExp.t` all the way down
           ~extensionsFolder=cliOptions.overriddenExtensionsDir,
           ~licenseKeyPersistence,
           ~titlebarHeight=Revery.Window.getTitlebarHeight(window),

@@ -7,16 +7,16 @@ type msg;
 
 module Msg: {
   let keyPressed: string => msg;
-  let activeFileChanged: option(Fp.t(Fp.absolute)) => msg;
+  let activeFileChanged: option(FpExp.t(FpExp.absolute)) => msg;
 };
 
 type model;
 
-let initial: (~rootPath: option(Fp.t(Fp.absolute))) => model;
+let initial: (~rootPath: option(FpExp.t(FpExp.absolute))) => model;
 
-let setRoot: (~rootPath: option(Fp.t(Fp.absolute)), model) => model;
+let setRoot: (~rootPath: option(FpExp.t(FpExp.absolute)), model) => model;
 
-let root: model => option(Fp.t(Fp.absolute));
+let root: model => option(FpExp.t(FpExp.absolute));
 
 let focusOutline: model => model;
 
