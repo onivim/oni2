@@ -54,6 +54,7 @@ let notifyFileSaved = path =>
   | None => None
   | File({filePath, saveTick}) as orig =>
     if (FpExp.eq(filePath, path)) {
+      prerr_endline ("File saved?");
       File({filePath, saveTick: saveTick + 1});
     } else {
       orig;

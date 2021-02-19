@@ -440,6 +440,11 @@ let start =
       |> Feature_Buffers.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
 
+    let configurationSub =
+      state.config
+      |> Feature_Configuration.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Configuration(msg));
+
     [
       menuBarSub,
       extHostSubscription,
@@ -459,6 +464,7 @@ let start =
       inputSubscription,
       notificationSub,
       bufferSub,
+      configurationSub,
     ]
     |> Isolinear.Sub.batch;
   };

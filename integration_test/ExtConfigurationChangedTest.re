@@ -29,7 +29,8 @@ runTest(~name="ExtConfigurationChangedTest", ({dispatch, wait, _}) => {
       ("developer.oni.test", Json.Encode.string("42")),
     ]),
   );
-  dispatch(Actions.Configuration(UserSettingsChanged));
+  // TODO: Use 'transform' mechanism
+  //dispatch(Actions.Configuration(UserSettingsChanged));
 
   // Should get completions
   wait(

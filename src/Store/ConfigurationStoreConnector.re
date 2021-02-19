@@ -84,7 +84,7 @@ let start =
 
   let reloadConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.reload", dispatch => {
-      dispatch(Actions.Configuration(UserSettingsChanged));
+      //dispatch(Actions.Configuration(UserSettingsChanged));
       defaultConfigurationFileName
       |> getConfigurationFile
       |> Result.map(FpExp.toString)
@@ -139,7 +139,7 @@ let start =
   let initConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch =>
       if (shouldLoadConfiguration) {
-        dispatch(Actions.Configuration(UserSettingsChanged));
+        //dispatch(Actions.Configuration(UserSettingsChanged));
 
         defaultConfigurationFileName
         |> getConfigurationFile

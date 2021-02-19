@@ -34,8 +34,7 @@ let toExtensionConfiguration:
   Exthost.Configuration.t;
 
 [@deriving show]
-type msg =
-  | UserSettingsChanged;
+type msg;
 
 type outmsg =
   | ConfigurationChanged({changed: Config.Settings.t})

@@ -96,7 +96,11 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
 
 [@deriving show({with_path: false})]
 type msg =
-  | UserSettingsChanged;
+  | UserSettingsChanged({
+    config: [@opaque] Config.Settings.t,
+    legacyConfiguration: [@opaque] LegacyConfiguration.t,
+  })
+  | ConfigurationParseError(string);
 
 type outmsg =
   | ConfigurationChanged({changed: Config.Settings.t})
@@ -104,19 +108,21 @@ type outmsg =
 
 let update = (model, msg) =>
   switch (msg) {
-  | UserSettingsChanged =>
-    // let previous = model;
-    // let updated =
-    //   switch (getUserSettings()) {
-    //   | Ok(user) when user == Config.Settings.empty => model // TODO: Not sure why this is needed
-    //   | Ok(user) => merge({...model, user})
-    //   | Error(_) => model
-    //   };
+  | UserSettingsChanged({config: user, legacyConfiguration}) =>
+      let previous = model;
+      let updated = if (user == Config.Settings.empty) {
+        model
+      } else {
+        merge({...model, user})
+      };
 
-    // let changed = Config.Settings.changed(previous.merged, updated.merged);
+    let changed = Config.Settings.changed(previous.merged, updated.merged);
 
-    // (updated, ConfigurationChanged({changed: changed}));
-    (model, Nothing)
+    ({...updated, legacyConfiguration }, ConfigurationChanged({changed: changed}));
+
+  | ConfigurationParseError(_) => 
+    // TODO: Bring back diagnostics
+    (model, Nothing);
   };
 
 // TODO:
@@ -159,7 +165,8 @@ let resolver = (~fileType: string, model, vimModel, ~vimSetting, key) => {
 };
 
 let sub = ({loader, _}) => {
-  // TODO
-  // ConfigurationLoader.sub(loader)
-  Isolinear.Sub.none;
+  ConfigurationLoader.sub(loader)
+  |> Isolinear.Sub.map(fun
+  | Ok((config, legacyConfiguration)) => UserSettingsChanged({config: config, legacyConfiguration})
+  | Error(msg) => ConfigurationParseError(msg));
 };
