@@ -11,15 +11,9 @@ type vimUseSystemClipboard = {
   paste: bool,
 };
 
-[@deriving show({with_path: false})]
-type autoClosingBrackets =
-  | Never
-  | LanguageDefined;
-
 type autoReveal = [ | `HighlightAndScroll | `HighlightOnly | `NoReveal];
 
 type t = {
-  editorAutoClosingBrackets: autoClosingBrackets,
   explorerAutoReveal: autoReveal,
   workbenchActivityBarVisible: bool,
   workbenchColorTheme: string,
@@ -40,7 +34,6 @@ type t = {
 };
 
 let default = {
-  editorAutoClosingBrackets: LanguageDefined,
   explorerAutoReveal: `HighlightAndScroll,
   workbenchActivityBarVisible: true,
   workbenchColorTheme: Constants.defaultTheme,
