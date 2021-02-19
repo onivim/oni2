@@ -3,7 +3,7 @@ open Utility;
 
 [@deriving show({with_path: false})]
 type metadata = {
-  path: [@opaque] Fp.t(Fp.absolute),
+  path: [@opaque] FpExp.t(FpExp.absolute),
   displayName: string,
   hash: int // hash of basename, so only comparable locally
 };
@@ -17,7 +17,7 @@ module PathHasher = {
   // type t = list(string);
 
   let make = (~base, path) => {
-    switch (Fp.relativize(~source=base, ~dest=path)) {
+    switch (FpExp.relativize(~source=base, ~dest=path)) {
     | Ok(relativePath) => FpEx.explode(relativePath) |> List.map(hash)
     | Error(_) => []
     };
@@ -25,27 +25,27 @@ module PathHasher = {
 
   let%test "equivalent paths" = {
     // TODO: Is this case even correct?
-    make(~base=Fp.(root), Fp.(root)) == [];
+    make(~base=FpExp.(root), FpExp.(root)) == [];
   };
 
   let%test "simple path" = {
-    make(~base=Fp.(root), Fp.(At.(root / "abc"))) == [hash("abc")];
+    make(~base=FpExp.(root), FpExp.(At.(root / "abc"))) == [hash("abc")];
   };
 
   let%test "multiple paths" = {
-    make(~base=Fp.(root), Fp.(At.(root / "abc" / "def")))
+    make(~base=FpExp.(root), FpExp.(At.(root / "abc" / "def")))
     == [hash("abc"), hash("def")];
   };
 };
 
 let file = path => {
-  let basename = Fp.baseName(path) |> Option.value(~default="(empty)");
+  let basename = FpExp.baseName(path) |> Option.value(~default="(empty)");
 
   Tree.leaf({path, hash: PathHasher.hash(basename), displayName: basename});
 };
 
 let directory = (~isOpen=false, path, ~children) => {
-  let basename = Fp.baseName(path) |> Option.value(~default="(empty)");
+  let basename = FpExp.baseName(path) |> Option.value(~default="(empty)");
 
   Tree.node(
     ~expanded=isOpen,
@@ -139,7 +139,10 @@ let replace = (~replacement, tree) => {
     };
 
   loop(
-    PathHasher.make(~base=Fp.dirName(getPath(tree)), getPath(replacement)),
+    PathHasher.make(
+      ~base=FpExp.dirName(getPath(tree)),
+      getPath(replacement),
+    ),
     tree,
   );
 };
@@ -167,7 +170,7 @@ let updateNodesInPath =
     | _ => node
     };
 
-  loop(PathHasher.make(~base=Fp.dirName(getPath(tree)), path), tree);
+  loop(PathHasher.make(~base=FpExp.dirName(getPath(tree)), path), tree);
 };
 
 let toggleOpen =

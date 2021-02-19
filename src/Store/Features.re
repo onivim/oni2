@@ -92,7 +92,7 @@ module Internal = {
       dispatch(Actions.Quit(true))
     );
 
-  let chdir = (path: Fp.t(Fp.absolute)) =>
+  let chdir = (path: FpExp.t(FpExp.absolute)) =>
     Feature_Workspace.Effects.changeDirectory(path)
     |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
 
@@ -1218,7 +1218,7 @@ let update =
       let maybeFullPath =
         buffer
         |> Buffer.getFilePath
-        |> OptionEx.flatMap(Fp.absoluteCurrentPlatform);
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
 
       let clearSnippetCacheEffect =
         maybeFullPath
@@ -1824,7 +1824,7 @@ let update =
 
       | OpenFile(filePath) => (
           state.layout,
-          Internal.openFileEffect(Fp.toString(filePath)),
+          Internal.openFileEffect(FpExp.toString(filePath)),
         )
 
       | Effect(eff) => (
@@ -2031,7 +2031,8 @@ let update =
 
     | WorkspaceChanged(maybeWorkspaceFolder) =>
       let maybeExplorerFolder =
-        maybeWorkspaceFolder |> OptionEx.flatMap(Fp.absoluteCurrentPlatform);
+        maybeWorkspaceFolder
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
       let fileExplorer =
         Feature_Explorer.setRoot(
           ~rootPath=maybeExplorerFolder,

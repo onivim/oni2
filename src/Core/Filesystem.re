@@ -20,11 +20,11 @@ module Internal = {
       switch (Environment.os) {
       | Environment.Windows(_) =>
         Sys.getenv_opt("LOCALAPPDATA")
-        |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform)
         |> Option.get
       | _ =>
         switch (Sys.getenv_opt("HOME")) {
-        | Some(dir) => Fp.absoluteCurrentPlatform(dir) |> Option.get
+        | Some(dir) => FpExp.absoluteCurrentPlatform(dir) |> Option.get
         | None => failwith("Could not find user data directory")
         }
       }
@@ -47,7 +47,7 @@ let userReadWriteExecute = 0o777;
 
 let stat = path =>
   Unix.(
-    try(Some(stat(path |> Fp.toString))) {
+    try(Some(stat(path |> FpExp.toString))) {
     | Unix_error(ENOENT, _, _) => None
     }
   );
@@ -85,11 +85,11 @@ let isDir = path =>
 */
 let mkdir = (path, ~perm=userReadWriteExecute, ()) =>
   Unix.(
-    try(mkdir(path |> Fp.toString, perm) |> return) {
+    try(mkdir(path |> FpExp.toString, perm) |> return) {
     | Unix_error(err, _, _) =>
       error(
         "can't create directory '%s' because '%s",
-        path |> Fp.toString,
+        path |> FpExp.toString,
         error_message(err),
       )
     }
@@ -101,13 +101,13 @@ let mkdirp = path => {
       Ok();
     } else if (isFile(curr)) {
       Error(
-        "Can't create directory because file exists: " ++ Fp.toString(curr),
+        "Can't create directory because file exists: " ++ FpExp.toString(curr),
       );
-    } else if (!Fp.hasParentDir(curr)) {
+    } else if (!FpExp.hasParentDir(curr)) {
       Ok();
     } else {
       // Create parent directory, if necesssary
-      loop(Fp.dirName(curr)) |> ResultEx.flatMap(mkdir(curr));
+      loop(FpExp.dirName(curr)) |> ResultEx.flatMap(mkdir(curr));
     };
 
   loop(path) |> Result.map(_ => path);
@@ -116,8 +116,8 @@ let mkdirp = path => {
 let getOniDirectory = dataDirectory =>
   Revery.(
     switch (Environment.os) {
-    | Environment.Windows(_) => Fp.append(dataDirectory, "Oni2") |> return
-    | _ => Fp.At.(dataDirectory / ".config" / "oni2") |> return
+    | Environment.Windows(_) => FpExp.append(dataDirectory, "Oni2") |> return
+    | _ => FpExp.At.(dataDirectory / ".config" / "oni2") |> return
     }
   );
 
@@ -133,11 +133,11 @@ let getUserDataDirectory = () =>
 let getOrCreateOniConfiguration = (~configDir, ~file) => {
   mkdirp(configDir)
   |> ResultEx.flatMap(_ =>
-       if (isFile(Fp.append(configDir, file))) {
+       if (isFile(FpExp.append(configDir, file))) {
          // Already created
          Ok();
        } else {
-         let userConfigPath = Fp.append(configDir, file) |> Fp.toString;
+         let userConfigPath = FpExp.append(configDir, file) |> FpExp.toString;
 
          let configFile = open_out(userConfigPath);
          let configString =
@@ -162,37 +162,37 @@ let getOrCreateConfigFolder = mkdirp;
 let getExtensionsFolder = () =>
   getUserDataDirectory()
   |> ResultEx.flatMap(getOniDirectory)
-  |> Result.map(dir => Fp.append(dir, "extensions"))
+  |> Result.map(dir => FpExp.append(dir, "extensions"))
   |> ResultEx.flatMap(mkdirp);
 
 let getStoreFolder = () =>
   getUserDataDirectory()
   |> ResultEx.flatMap(getOniDirectory)
-  |> Result.map(dir => Fp.append(dir, "store"))
+  |> Result.map(dir => FpExp.append(dir, "store"))
   |> ResultEx.flatMap(mkdirp);
 
 let getGlobalStorageFolder = () =>
   getUserDataDirectory()
   |> ResultEx.flatMap(getOniDirectory)
-  |> Result.map(dir => Fp.append(dir, "global"))
+  |> Result.map(dir => FpExp.append(dir, "global"))
   |> ResultEx.flatMap(mkdirp);
 
 let getWorkspaceStorageFolder = () =>
   getUserDataDirectory()
   |> ResultEx.flatMap(getOniDirectory)
-  |> Result.map(dir => Fp.append(dir, "workspace"))
+  |> Result.map(dir => FpExp.append(dir, "workspace"))
   |> ResultEx.flatMap(mkdirp);
 
 let getSnippetsFolder = () =>
   getUserDataDirectory()
   |> ResultEx.flatMap(getOniDirectory)
-  |> Result.map(dir => Fp.append(dir, "snippets"))
+  |> Result.map(dir => FpExp.append(dir, "snippets"))
   |> ResultEx.flatMap(mkdirp);
 
 let rec getOrCreateConfigFile = (~overridePath=?, filename) => {
   switch (overridePath) {
   | Some(path) =>
-    let pathString = path |> Fp.toString;
+    let pathString = path |> FpExp.toString;
     switch (Sys.file_exists(pathString)) {
     | exception ex =>
       Log.error("Error loading configuration file at: " ++ pathString);
@@ -211,7 +211,7 @@ let rec getOrCreateConfigFile = (~overridePath=?, filename) => {
     |> ResultEx.flatMap(getOniDirectory)
     |> ResultEx.flatMap(configDir =>
          getOrCreateOniConfiguration(~configDir, ~file=filename)
-         |> Result.map(() => Fp.append(configDir, filename))
+         |> Result.map(() => FpExp.append(configDir, filename))
        )
   };
 };

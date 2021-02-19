@@ -282,7 +282,10 @@ module Effect = {
         let selectedFolders = maybeFolders |> Option.value(~default=[||]);
 
         if (Array.length(selectedFolders) > 0) {
-          selectedFolders[0] |> Fp.absoluteCurrentPlatform |> toMsg |> dispatch;
+          selectedFolders[0]
+          |> FpExp.absoluteCurrentPlatform
+          |> toMsg
+          |> dispatch;
         } else {
           None |> toMsg |> dispatch;
         };

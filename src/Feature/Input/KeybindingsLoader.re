@@ -1,12 +1,14 @@
+open Oni_Core;
+
 module Log = (
   val Oni_Core.Log.withNamespace("Oni2.Feature.Input.KeybindingsLoader")
 );
 
 module File = {
-  let loadKeybindings = (path: Fp.t(Fp.absolute)) => {
+  let loadKeybindings = (path: FpExp.t(FpExp.absolute)) => {
     let loadResult =
       path
-      |> Fp.toString
+      |> FpExp.toString
       |> Utility.JsonEx.from_file
       |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors);
 
@@ -17,7 +19,7 @@ module File = {
   };
 
   type params = {
-    filePath: Fp.t(Fp.absolute),
+    filePath: FpExp.t(FpExp.absolute),
     tick: int,
   };
   // TODO: Once we've fixed the issue with the Service_OS.FileWatcher,
@@ -32,11 +34,14 @@ module File = {
       let name = "Feature_Input.KeybindingsLoader.FileSubscription";
 
       let id = ({filePath, tick}) =>
-        Fp.toString(filePath) ++ string_of_int(tick);
+        FpExp.toString(filePath) ++ string_of_int(tick);
 
       let init = (~params, ~dispatch) => {
         Log.infof(m =>
-          m("Reloading keybindings file: %s", Fp.toString(params.filePath))
+          m(
+            "Reloading keybindings file: %s",
+            FpExp.toString(params.filePath),
+          )
         );
         dispatch(loadKeybindings(params.filePath));
         ();
@@ -57,7 +62,7 @@ module File = {
 type t =
   | None
   | File({
-      filePath: Fp.t(Fp.absolute),
+      filePath: FpExp.t(FpExp.absolute),
       saveTick: int,
     });
 
@@ -69,7 +74,7 @@ let notifyFileSaved = path =>
   fun
   | None => None
   | File({filePath, saveTick}) as orig =>
-    if (Fp.eq(filePath, path)) {
+    if (FpExp.eq(filePath, path)) {
       File({filePath, saveTick: saveTick + 1});
     } else {
       orig;
