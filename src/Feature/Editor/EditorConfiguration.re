@@ -401,6 +401,7 @@ module Experimental = {
 };
 
 let contributions = [
+  autoClosingPairs.spec,
   detectIndentation.spec,
   fontFamily.spec,
   fontLigatures.spec,
