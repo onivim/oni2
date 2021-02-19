@@ -7,6 +7,8 @@
 - #3142 - Windows: Explorer - Directory nodes not expanding (fixes #3092, #2213)
 - #3147 - Editor: Fix minimap scroll synchronization for large files
 - #3077 - Terminal: Use editor font as default (related #3062)
+- #3146 - Vim: Fix command-line staying open when clicking the editor or file explorer (fixes #3031)
+- #3161 - Configuration: Turn soft word-wrap on by default (fixes #3161)
 - #3162 - Windows: Support opening UNC paths (fixes #3151)
 
 ### Performance

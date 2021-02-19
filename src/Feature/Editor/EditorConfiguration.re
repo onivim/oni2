@@ -310,7 +310,7 @@ let smoothScroll =
 let tabSize = setting("editor.tabSize", int, ~default=4);
 
 let wordWrap =
-  setting("editor.wordWrap", ~vim=VimSettings.wrap, wordWrap, ~default=`Off);
+  setting("editor.wordWrap", ~vim=VimSettings.wrap, wordWrap, ~default=`On);
 
 let wordWrapColumn = setting("editor.wordWrapColumn", int, ~default=80);
 
