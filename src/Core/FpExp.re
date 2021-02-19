@@ -19,6 +19,8 @@ let absolutePlatform = (~fromPlatform, str) => {
   str |> Fp.absolutePlatform(~fromPlatform);
 };
 
+let root = Path(Fp.root);
+
 let absoluteCurrentPlatform = str => {
   switch (Revery.Environment.os) {
   | Revery.Environment.Windows(_) =>
@@ -52,7 +54,7 @@ let isDescendent = (~ofPath, path) => {
 let relativize = (~source, ~dest) => {
   switch (source, dest) {
   | (UNC({path: source, _}), UNC({path: dest, _})) =>
-    Fp.relativize(source, dest)
+    Fp.relativize(~source, ~dest)
   | (Path(source), Path(dest)) => Fp.relativize(~source, ~dest)
   | _ => Error(Invalid_argument("Not matching path types"))
   };
