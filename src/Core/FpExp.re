@@ -1,6 +1,8 @@
 // Experimental utilities on top of Fp -
 // could potentially be merged into Fp when stable
 
+open Utility;
+
 type relative = Fp.relative;
 type absolute = Fp.absolute;
 
@@ -15,8 +17,75 @@ type t('kind) =
     : t(absolute)
   | Path(Fp.t('kind)): t('kind);
 
+module UNCParser = {
+ type t = {
+  server: string,
+  share: string,
+  path: string,
+ } 
+
+ let parse = (str) => {
+  let len = String.length(str);
+
+  if (len <= 3) {
+    None
+  } else if (str.[0] == '\\' && str.[1] == '\\') {
+    // At least the start of a unc path...
+    let remainder = String.sub(str, 2, len - 2);
+
+    switch (String.split_on_char('\\', remainder)) {
+    | [] => None
+    | [server, share, ...remainingElements] => Some({
+      server,
+      share,
+      path: String.concat("\\", remainingElements)
+    })
+    | _ => None
+    }
+  } else {
+    None
+  }
+ };
+
+let%test_module "UNC Parser" = (module {
+  let cases = [
+            ("c:\\temp\\test-file.txt", None),
+            ("\\\\127.0.0.1\\c$\\temp\\test-file.txt", Some({
+              server: "127.0.0.1",
+              share: "c$",
+              path: "temp\\test-file.txt"
+            })),
+            // "\\\\LOCALHOST\\c$\\temp\\test-file.txt",
+            // "\\\\.\\c:\\temp\\test-file.txt",
+            // "\\\\?\\c:\\temp\\test-file.txt",
+            // "\\\\.\\UNC\\LOCALHOST\\c$\\temp\\test-file.txt",
+            // "\\\\127.0.0.1\\c$\\temp\\test-file.txt",
+    ]
+  let%test "unc paths should parse when platform is windows" = {
+    cases
+    |> List.for_all(((path, expected)) => parse(path) == expected)
+  };
+});
+};
+
 let absolutePlatform = (~fromPlatform, str) => {
-  str |> Fp.absolutePlatform(~fromPlatform);
+  // If we're on Windows - try parsing as a UNC path
+  if (fromPlatform == Fp.Windows(Win32)) {
+    str
+    |> UNCParser.parse
+    |> OptionEx.flatMap(({server, share, path}: UNCParser.t) => {
+      let fpPath = Fp.absolutePlatform(~fromPlatform, "\\" ++ path);
+      fpPath
+      |> Option.map(path => {
+        UNC({path: path, server, share})
+      })
+    })
+    // If not a UNC path... switch back to 
+    |> OptionEx.or_lazy(() => str |> Fp.absolutePlatform(~fromPlatform) |> Option.map(path => Path(path)));
+  } else {
+    str |> Fp.absolutePlatform(~fromPlatform)
+    |> Option.map(path => Path(path))
+  }
 };
 
 let root = Path(Fp.root);
@@ -25,12 +94,10 @@ let absoluteCurrentPlatform = str => {
   switch (Revery.Environment.os) {
   | Revery.Environment.Windows(_) =>
     str
-    |> Fp.absolutePlatform(~fromPlatform=Fp.Windows(Win32))
-    |> Option.map(fp => Path(fp))
+    |> absolutePlatform(~fromPlatform=Fp.Windows(Win32))
   | _ =>
     str
-    |> Fp.absolutePlatform(~fromPlatform=Fp.Posix)
-    |> Option.map(fp => Path(fp))
+    |> absolutePlatform(~fromPlatform=Fp.Posix)
   };
 };
 
@@ -38,9 +105,36 @@ let absoluteCurrentPlatform = str => {
 let toString =
   fun
   | Path(path) => Fp.toString(path)
-  | UNC({path, _}) =>
-    // TODO
-    Fp.toString(path);
+  | UNC({path, server, share}) =>
+    Printf.sprintf("\\\\%s\\%s%s", server, share, 
+    Fp.toString(path)
+    |> String.split_on_char('/')
+    |> String.concat("\\")
+    );
+
+let%test_module "UNC Paths" = (module {
+  let fromPlatform = Fp.Windows(Win32);
+  let cases = [
+            "\\\\127.0.0.1\\c$\\temp\\test-file.txt",
+            "\\\\LOCALHOST\\c$\\temp\\test-file.txt",
+            "\\\\.\\c:\\temp\\test-file.txt",
+            "\\\\?\\c:\\temp\\test-file.txt",
+            "\\\\.\\UNC\\LOCALHOST\\c$\\temp\\test-file.txt",
+            "\\\\127.0.0.1\\c$\\temp\\test-file.txt",
+    ]
+  let%test "unc paths should parse when platform is windows" = {
+    cases
+    |> List.for_all(path => absolutePlatform(~fromPlatform, path) |> Option.is_some );
+  };
+
+  let%test "unc paths round-trip with current brackets on windows" = {
+    cases
+    |> List.for_all(path => {
+    let actual = absolutePlatform(~fromPlatform, path) |> Option.get |> toString;
+    String.equal(path, actual) });
+  }
+});
+
 
 let isDescendent = (~ofPath, path) => {
   switch (ofPath, path) {
