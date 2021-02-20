@@ -56,3 +56,4 @@
 - #3096 - OS: Add logging for `readdir` path (related #3092)
 - #3097 - Configuration: Remove unused `workbench.tree.indent` setting
 - #3115 - Dependency: vscode-exthost -> 1.53.0
+- #3168 - Diagnostics: Add additional build-information logging
