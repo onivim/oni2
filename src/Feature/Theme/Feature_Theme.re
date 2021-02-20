@@ -183,6 +183,11 @@ let update = (model, msg) => {
   };
 };
 
+let setTheme = (~themeId, model) => {
+  ...model,
+  selectedThemeId: Some(themeId)
+};
+
 // SUBSCRIPTION
 
 let sub = (~getThemeContribution, {selectedThemeId, }) => {

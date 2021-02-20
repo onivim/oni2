@@ -68,29 +68,30 @@ let start = () => {
       | Some({variant: ThemesPicker(_), focused: Some(focused), items, _}) =>
         let focusedItem = items[focused];
         (
-          state,
-          loadThemeByIdEffect(~extensions=state.extensions, focusedItem.name),
+          {
+            ...state,
+            colorTheme: Feature_Theme.setTheme(~themeId=focusedItem.name, state.colorTheme)
+          },
+          Isolinear.Effect.none
         );
       | _ => (state, Isolinear.Effect.none)
       }
 
-    // | Actions.ThemeLoadByPath(uiTheme, themePath) => (
-    //     state,
-    //     loadThemeByPathEffect(uiTheme, themePath),
-    //   )
-
-    | Actions.ThemeLoadById(id) => (
-        state,
+    | Actions.ThemeSelected(themeId) => (
+        {
+          ...state,
+          colorTheme: Feature_Theme.setTheme(~themeId, state.colorTheme)
+        },
         Isolinear.Effect.batch([
-          persistThemeEffect(id),
-          loadThemeByIdEffect(~extensions=state.extensions, id),
+          persistThemeEffect(themeId),
         ]),
       )
 
-    | ThemeChanged(id) => (
-        state,
-        loadThemeByIdEffect(~extensions=state.extensions, id),
-      )
+    // TODO: Remove once wired up to syntax
+    // | ThemeChanged(id) => (
+    //     state,
+    //     loadThemeByIdEffect(~extensions=state.extensions, id),
+    //   )
 
     | _ => (state, Isolinear.Effect.none)
     };

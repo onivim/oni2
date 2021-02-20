@@ -33,6 +33,8 @@ type outmsg =
 
 let update: (model, msg) => (model, outmsg);
 
+let setTheme: (~themeId: string, model) => model;
+
 let configurationChanged:
   (
     ~resolver: Config.resolver,
