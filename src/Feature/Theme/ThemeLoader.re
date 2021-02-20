@@ -24,7 +24,9 @@ module ThemeLoaderSub =
     let init = (~params, ~dispatch) => {
       let () =
         params.idToContribution(params.id)
-        |> Option.iter(contribution => {
+        |> Option.to_result(~none="Unable to load theme: " ++ params.id)
+        |> Utility.ResultEx.tapError(err => dispatch(Error(err)))
+        |> Result.iter(contribution => {
              let {uiTheme, path, _}: Contributions.Theme.t = contribution;
              let isDark = uiTheme == "vs-dark" || uiTheme == "hc-black";
 
