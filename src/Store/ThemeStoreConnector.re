@@ -32,6 +32,8 @@ let start = () => {
       | Some({variant: ThemesPicker(_), focused: Some(focused), items, _}) =>
         let focusedItem = items[focused];
         (
+          // While iterating through the menu, don't persist the theme
+          // to configuration...
           {
             ...state,
             colorTheme:
@@ -46,11 +48,12 @@ let start = () => {
       }
 
     | Actions.ThemeSelected(themeId) => (
-        {
-          ...state,
-          colorTheme: Feature_Theme.setTheme(~themeId, state.colorTheme),
-        },
-        Isolinear.Effect.batch([persistThemeEffect(themeId)]),
+        state,
+        Isolinear.Effect.batch([
+          // Persisting the theme will trigger a configuration changed,
+          // which will cause the new theme to be picked up.
+          persistThemeEffect(themeId),
+        ]),
       )
 
     | _ => (state, Isolinear.Effect.none)
