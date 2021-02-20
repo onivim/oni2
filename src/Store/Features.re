@@ -772,6 +772,16 @@ let update =
         |> Isolinear.Effect.map(msg => Notification(msg)),
       )
 
+    | PaneButton(pane) =>
+      switch (pane) {
+      | Notifications => (
+          state,
+          Feature_Notification.Effects.clear()
+          |> Isolinear.Effect.map(msg => Notification(msg)),
+        )
+      | _ => (state, Isolinear.Effect.none)
+      }
+
     | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
     };
 

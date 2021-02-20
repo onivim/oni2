@@ -60,6 +60,7 @@ module Effects: {
   let create:
     (~kind: kind=?, ~source: string=?, string) => Isolinear.Effect.t(msg);
   let dismiss: notification => Isolinear.Effect.t(msg);
+  let clear: unit => Isolinear.Effect.t(msg);
 };
 
 // SUBSCRIPTION

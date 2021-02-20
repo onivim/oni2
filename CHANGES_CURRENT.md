@@ -1,5 +1,7 @@
 ### Features 
 
+- #3163 - UX: Add clear notification button (thanks @andr3h3nriqu3s11 !)
+
 ### Bug Fixes
 
 - #3141 - Windows: Reload keybindings on save
