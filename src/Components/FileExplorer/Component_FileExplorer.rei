@@ -32,7 +32,13 @@ type outmsg =
   | GrabFocus;
 
 let update:
-  (~configuration: Oni_Core.Configuration.t, msg, model) => (model, outmsg);
+  (
+    ~config: Config.resolver,
+    ~configuration: Oni_Core.Configuration.t,
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 // SUBSCRIPTION
 

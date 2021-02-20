@@ -25,6 +25,6 @@
 ### Infrastructure / Refactoring
 
 - #3156 - Dependency: reason-native (dir/fp/fs) -> e16590c
-- #3164 - Configuration: Move "editor.autoClosingBrackets" to new model
+- #3164, #3171 - Configuration: Move legacy configuration parsers to new model
 - #3169 - Extensions: Remove some unused static assets from One Dark Pro
 - #3168 - Diagnostics: Add additional build-information logging
