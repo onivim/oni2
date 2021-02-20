@@ -174,6 +174,13 @@ module Internal = {
              ~config=resolver,
            );
 
+      let getContributedTheme = id =>
+        Feature_Extensions.themeById(~id, state.extensions);
+
+      let colorTheme =
+        state.colorTheme
+        |> Feature_Theme.configurationChanged(~resolver, ~getContributedTheme);
+
       let buffers =
         state.buffers
         |> Feature_Buffers.configurationChanged(~config=resolver);
@@ -199,7 +206,18 @@ module Internal = {
       let (zoom, zoomEffect) =
         Feature_Zoom.configurationChanged(~config=resolver, state.zoom);
       let eff = zoomEffect |> Isolinear.Effect.map(msg => Actions.Zoom(msg));
-      ({...state, buffers, languageSupport, sideBar, layout, zoom}, eff);
+      (
+        {
+          ...state,
+          buffers,
+          languageSupport,
+          sideBar,
+          layout,
+          zoom,
+          colorTheme,
+        },
+        eff,
+      );
     };
 
   let updateMode =

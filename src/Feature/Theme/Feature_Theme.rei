@@ -31,6 +31,14 @@ type outmsg =
 
 let update: (model, msg) => (model, outmsg);
 
+let configurationChanged:
+  (
+    ~resolver: Config.resolver,
+    ~getContributedTheme: string => option(theme),
+    model
+  ) =>
+  model;
+
 let colors:
   (
     ~extensionDefaults: list(ColorTheme.Defaults.t)=?,

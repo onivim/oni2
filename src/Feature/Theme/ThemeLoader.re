@@ -1,14 +1,13 @@
 open Oni_Core;
-open Utility;
 open Exthost.Extension;
 
 module ThemeLoaderSub =
   Isolinear.Sub.Make({
-    type nonrec msg = result(
-      (ColorTheme.variant,
-      Textmate.ColorTheme.t,
-      Oni_Syntax.TokenTheme.t,
-    ), string);
+    type nonrec msg =
+      result(
+        (ColorTheme.variant, Textmate.ColorTheme.t, Oni_Syntax.TokenTheme.t),
+        string,
+      );
 
     type nonrec params = Contributions.Theme.t;
 
@@ -18,23 +17,27 @@ module ThemeLoaderSub =
     let id = (params: Contributions.Theme.t) => params.path;
 
     let init = (~params, ~dispatch) => {
-      let { uiTheme, path, _}: Contributions.Theme.t = params;
+      let {uiTheme, path, _}: Contributions.Theme.t = params;
       let isDark = uiTheme == "vs-dark" || uiTheme == "hc-black";
 
-      let loadResult: msg = path
-      |> Textmate.Theme.from_file(~isDark)
-      |> Result.map((theme) => {
-           let colors = Textmate.Theme.getColors(theme);
-           let isDark = Textmate.Theme.isDark(theme);
+      let loadResult: msg =
+        path
+        |> Textmate.Theme.from_file(~isDark)
+        |> Result.map(theme => {
+             let colors = Textmate.Theme.getColors(theme);
+             let isDark = Textmate.Theme.isDark(theme);
 
-           let variant = isDark ? ColorTheme.Dark : ColorTheme.Light;
-           let tokenColors =
-             theme |> Textmate.Theme.getTokenColors |> Oni_Syntax.TokenTheme.create;
+             let variant = isDark ? ColorTheme.Dark : ColorTheme.Light;
+             let tokenColors =
+               theme
+               |> Textmate.Theme.getTokenColors
+               |> Oni_Syntax.TokenTheme.create;
 
-           (variant, colors, tokenColors);
-         });
+             (variant, colors, tokenColors);
+           });
 
-       let () = dispatch(loadResult);
+      let () = dispatch(loadResult);
+      ();
     };
 
     let update = (~params as _, ~state, ~dispatch as _) => {
@@ -46,7 +49,4 @@ module ThemeLoaderSub =
     };
   });
 
-
-let sub = (theme) => ThemeLoaderSub.create(
-  theme
-);
+let sub = theme => ThemeLoaderSub.create(theme);

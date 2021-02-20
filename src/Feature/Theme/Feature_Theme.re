@@ -171,15 +171,22 @@ let update = (model, msg) => {
   };
 };
 
+let configurationChanged = (~resolver, ~getContributedTheme, model) => {
+  ignore(resolver);
+  ignore(getContributedTheme);
+  model;
+};
+
 // SUBSCRIPTION
 
-let sub = (_model) => Isolinear.Sub.none;
+let sub = _model => Isolinear.Sub.none;
 
 module Configuration = {
   open Oni_Core;
   open Config.Schema;
 
-  let colorTheme = setting("workbench.colorTheme", string, ~default=Constants.defaultTheme);
+  let colorTheme =
+    setting("workbench.colorTheme", string, ~default=Constants.defaultTheme);
 };
 
 module Commands = {

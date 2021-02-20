@@ -89,11 +89,6 @@ let start = () => {
       )
     );
 
-  // let onChanged = (newTheme, dispatch) =>
-  //   dispatch(Actions.ThemeChanged(newTheme));
-  // let withWatcher =
-  //   configurationWatcher(c => c.workbenchColorTheme, onChanged);
-
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
     | Actions.ListFocusUp
