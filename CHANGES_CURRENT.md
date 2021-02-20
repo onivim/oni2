@@ -13,6 +13,7 @@
 - #3161 - Configuration: Turn soft word-wrap on by default (fixes #3161)
 - #3162 - Windows: Support opening UNC paths (fixes #3151)
 - #3166 - Windows: Fix dead key input (fixes #3157)
+- #3167 - Diagnostics: Show full path to trace file
 
 ### Performance
 
