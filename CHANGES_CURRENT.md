@@ -12,6 +12,7 @@
 - #3146 - Vim: Fix command-line staying open when clicking the editor or file explorer (fixes #3031)
 - #3161 - Configuration: Turn soft word-wrap on by default (fixes #3161)
 - #3162 - Windows: Support opening UNC paths (fixes #3151)
+- #3166 - Windows: Fix dead key input (fixes #3157)
 
 ### Performance
 
