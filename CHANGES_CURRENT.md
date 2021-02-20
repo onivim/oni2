@@ -14,6 +14,7 @@
 - #3162 - Windows: Support opening UNC paths (fixes #3151)
 - #3166 - Windows: Fix dead key input (fixes #3157)
 - #3167 - Diagnostics: Show full path to trace file
+- #3170 - CLI - Windows: Allocate console with `-f --silent`
 
 ### Performance
 
