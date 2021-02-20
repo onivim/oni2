@@ -1,5 +1,7 @@
 ### Features 
 
+- #3163 - UX: Add clear notification button (thanks @andr3h3nriqu3s11 !)
+
 ### Bug Fixes
 
 - #3141 - Windows: Reload keybindings on save
@@ -10,6 +12,7 @@
 - #3146 - Vim: Fix command-line staying open when clicking the editor or file explorer (fixes #3031)
 - #3161 - Configuration: Turn soft word-wrap on by default (fixes #3161)
 - #3162 - Windows: Support opening UNC paths (fixes #3151)
+- #3166 - Windows: Fix dead key input (fixes #3157)
 
 ### Performance
 
@@ -21,3 +24,4 @@
 
 - #3156 - Dependency: reason-native (dir/fp/fs) -> e16590c
 - #3164 - Configuration: Move "editor.autoClosingBrackets" to new model
+- #3169 - Extensions: Remove some unused static assets from One Dark Pro
