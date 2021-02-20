@@ -213,7 +213,7 @@ let revealAndFocusPath = (~configuration, path, model: model) => {
   };
 };
 
-let update = (~configuration, msg, model) => {
+let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
   | ActiveFilePathChanged(maybeFilePath) =>
     switch (model) {
@@ -221,9 +221,8 @@ let update = (~configuration, msg, model) => {
       switch (maybeFilePath) {
       | Some(path) =>
         let autoReveal =
-          Oni_Core.Configuration.getValue(
-            c => c.explorerAutoReveal,
-            configuration,
+          Feature_Configuration.GlobalConfiguration.Explorer.autoReveal.get(
+            config,
           );
         switch (autoReveal) {
         | `HighlightAndScroll =>

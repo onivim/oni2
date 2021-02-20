@@ -115,7 +115,7 @@ type outmsg =
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
   | PickFolder;
 
-let update = (~configuration, msg, model) => {
+let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
   | KeyboardInput(key) =>
     if (model.focus == FileExplorer) {
@@ -154,6 +154,7 @@ let update = (~configuration, msg, model) => {
     |> Option.map(fileExplorer => {
          let (fileExplorer, outmsg) =
            Component_FileExplorer.update(
+             ~config,
              ~configuration,
              fileExplorerMsg,
              fileExplorer,
