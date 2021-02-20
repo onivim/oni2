@@ -14,14 +14,7 @@ let variant: model => Oni_Core.ColorTheme.variant;
 type command;
 
 [@deriving show]
-type msg =
-  | Command(command)
-  | TextmateThemeLoaded({
-      variant: ColorTheme.variant,
-      colors: [@opaque] Textmate.ColorTheme.t,
-      tokenColors: [@opaque] Oni_Syntax.TokenTheme.t,
-    })
-  | TextmateThemeLoadingError(string);
+type msg;
 
 module Msg: {let openThemePicker: msg;};
 

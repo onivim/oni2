@@ -25,3 +25,4 @@
 - #3156 - Dependency: reason-native (dir/fp/fs) -> e16590c
 - #3164 - Configuration: Move "editor.autoClosingBrackets" to new model
 - #3169 - Extensions: Remove some unused static assets from One Dark Pro
+- #3172 - Theme: Move theme loader to subscription (unblocks #3160)
