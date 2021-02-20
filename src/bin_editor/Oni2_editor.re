@@ -219,9 +219,11 @@ switch (eff) {
   };
   Log.infof(m =>
     m(
-      "Starting Onivim 2.%s (%s)",
+      "Starting Onivim 2 (%s / %s / %s / %s)",
       Core.BuildInfo.version,
       Core.BuildInfo.commitId,
+      Core.BuildInfo.defaultUpdateChannel,
+      Core.BuildInfo.extensionHostVersion,
     )
   );
 
