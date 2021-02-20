@@ -11,7 +11,6 @@ type model = {
   schema: ColorTheme.Schema.t,
   theme: ColorTheme.t,
   tokenColors: Oni_Syntax.TokenTheme.t,
-
   selectedThemeId: option(string),
 };
 
@@ -173,11 +172,10 @@ let update = (model, msg) => {
       ThemeChanged(colors),
     );
 
-  | TextmateThemeLoadingError(msg) =>
-    ({
-      ...model,
-      selectedThemeId: Some(Constants.defaultTheme)
-    }, NotifyError(msg));
+  | TextmateThemeLoadingError(msg) => (
+      {...model, selectedThemeId: Some(Constants.defaultTheme)},
+      NotifyError(msg),
+    )
 
   | Command(SelectTheme) => (model, OpenThemePicker([]))
   };
@@ -185,27 +183,24 @@ let update = (model, msg) => {
 
 let setTheme = (~themeId, model) => {
   ...model,
-  selectedThemeId: Some(themeId)
+  selectedThemeId: Some(themeId),
 };
 
 // SUBSCRIPTION
 
-let sub = (~getThemeContribution, {selectedThemeId, }) => {
+let sub = (~getThemeContribution, {selectedThemeId, _}) => {
   selectedThemeId
   |> Option.map(themeId => {
-    
-  ThemeLoader.sub(~themeId, ~getThemeContribution)
-  |> Isolinear.Sub.map(
-    fun
-    | Ok((variant, colors, tokenColors)) => TextmateThemeLoaded({
-      variant,
-      colors,
-      tokenColors
-    })
-    | Error(msg) => {
-      TextmateThemeLoadingError(msg)
-    })
-  })
+       ThemeLoader.sub(~themeId, ~getThemeContribution)
+       |> Isolinear.Sub.map(
+            fun
+            | Ok((variant, colors, tokenColors)) =>
+              TextmateThemeLoaded({variant, colors, tokenColors})
+            | Error(msg) => {
+                TextmateThemeLoadingError(msg);
+              },
+          )
+     })
   |> Option.value(~default=Isolinear.Sub.none);
 };
 
@@ -217,12 +212,8 @@ module Configuration = {
     setting("workbench.colorTheme", string, ~default=Constants.defaultTheme);
 };
 
-
 let configurationChanged = (~resolver, model) => {
-  {
-    ...model,
-    selectedThemeId: Some(Configuration.colorTheme.get(resolver))
-  }
+  {...model, selectedThemeId: Some(Configuration.colorTheme.get(resolver))};
 };
 
 module Commands = {

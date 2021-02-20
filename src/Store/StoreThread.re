@@ -445,8 +445,8 @@ let start =
       |> Feature_Buffers.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
 
-    let getThemeContribution = (themeId) => 
-    Feature_Extensions.themeById(~id=themeId, state.extensions);
+    let getThemeContribution = themeId =>
+      Feature_Extensions.themeById(~id=themeId, state.extensions);
 
     let themeSub =
       state.colorTheme

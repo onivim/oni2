@@ -134,7 +134,6 @@ type t =
   | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
   | ThemeSelected(string)
-  | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
   | EnableZenMode

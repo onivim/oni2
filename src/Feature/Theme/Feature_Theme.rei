@@ -35,12 +35,7 @@ let update: (model, msg) => (model, outmsg);
 
 let setTheme: (~themeId: string, model) => model;
 
-let configurationChanged:
-  (
-    ~resolver: Config.resolver,
-    model
-  ) =>
-  model;
+let configurationChanged: (~resolver: Config.resolver, model) => model;
 
 let colors:
   (
@@ -54,7 +49,13 @@ let tokenColors: model => Oni_Syntax.TokenTheme.t;
 
 // SUBSCRIPTION
 
-let sub: (~getThemeContribution: string => option(Exthost.Extension.Contributions.Theme.t), model) => Isolinear.Sub.t(msg);
+let sub:
+  (
+    ~getThemeContribution: string =>
+                           option(Exthost.Extension.Contributions.Theme.t),
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
 
 module Commands: {let selectTheme: Command.t(msg);};
 
