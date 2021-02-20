@@ -58,9 +58,8 @@ describe("CLI", ({describe, test, _}) => {
   });
   describe("log level", ({test, _}) => {
     test("--silent should still require a console", ({expect, _}) => {
-      let (options, _eff) = Oni_CLI.parse(
-        ~getenv=noenv, [|"Oni2_editor", "-f", "--silent"|],
-      );
+      let (options, _eff) =
+        Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "-f", "--silent"|]);
       expect.equal(options.logLevel, None);
       expect.equal(options.needsConsole, true);
     });

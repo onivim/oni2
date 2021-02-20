@@ -143,7 +143,16 @@ let parse = (~getenv: string => option(string), args) => {
       ("--debug", Unit(() => logLevel := Some(Timber.Level.debug)), ""),
       ("--trace", Unit(() => logLevel := Some(Timber.Level.trace)), ""),
       ("--quiet", Unit(() => logLevel := Some(Timber.Level.warn)), ""),
-      ("--silent", Unit(() => { logLevel := None; isSilent := true }), ""),
+      (
+        "--silent",
+        Unit(
+          () => {
+            logLevel := None;
+            isSilent := true;
+          },
+        ),
+        "",
+      ),
       ("--version", setEffect(PrintVersion), ""),
       ("--no-log-colors", Unit(() => logColorsEnabled := Some(false)), ""),
       ("--disable-extensions", Unit(disableExtensionLoading), ""),
