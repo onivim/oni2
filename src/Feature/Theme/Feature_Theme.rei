@@ -41,6 +41,10 @@ let colors:
 
 let tokenColors: model => Oni_Syntax.TokenTheme.t;
 
+// SUBSCRIPTION
+
+let sub: model => Isolinear.Sub.t(msg);
+
 module Commands: {let selectTheme: Command.t(msg);};
 
 module Contributions: {

@@ -171,6 +171,10 @@ let update = (model, msg) => {
   };
 };
 
+// SUBSCRIPTION
+
+let sub = (_model) => Isolinear.Sub.none;
+
 module Configuration = {
   open Oni_Core;
   open Config.Schema;

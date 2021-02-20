@@ -445,6 +445,11 @@ let start =
       |> Feature_Buffers.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
 
+    let themeSub =
+      state.colorTheme
+      |> Feature_Theme.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Theme(msg));
+
     [
       menuBarSub,
       extHostSubscription,
@@ -464,6 +469,7 @@ let start =
       inputSubscription,
       notificationSub,
       bufferSub,
+      themeSub,
     ]
     |> Isolinear.Sub.batch;
   };
