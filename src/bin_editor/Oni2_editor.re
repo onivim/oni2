@@ -28,8 +28,6 @@ if (cliOptions.needsConsole) {
   Revery.App.initConsole();
 };
 
-prerr_endline("HELLO!");
-
 let initializeLogging = () => {
   // Turn on logging, if necessary
   let loggingToConsole =
