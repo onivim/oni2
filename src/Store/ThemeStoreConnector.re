@@ -11,69 +11,39 @@ open Oni_Syntax;
 module Log = (val Log.withNamespace("Oni2.Store.Theme"));
 
 let start = () => {
-  let loadThemeByPathEffect = (uiTheme, themePath) =>
-    Isolinear.Effect.createWithDispatch(
-      ~name="theme.loadThemeByPath", dispatch => {
-      Oni_Core.Log.perf("theme.load", () => {
-        let dark = uiTheme == "vs-dark" || uiTheme == "hc-black";
-
-        Log.infof(m => m("Loading theme: %s", themePath));
-
-        themePath
-        |> Textmate.Theme.from_file(~isDark=dark)
-        |> Utility.ResultEx.tapError(err => {
-             dispatch(Actions.ThemeLoadError(err))
-           })
-        |> Result.iter(theme => {
-             let colors = Textmate.Theme.getColors(theme);
-             let isDark = Textmate.Theme.isDark(theme);
-
-             let tokenColors =
-               theme |> Textmate.Theme.getTokenColors |> TokenTheme.create;
-             dispatch(
-               Actions.Theme(
-                 Feature_Theme.TextmateThemeLoaded({
-                   variant: isDark ? ColorTheme.Dark : ColorTheme.Light,
-                   colors,
-                   tokenColors,
-                 }),
-               ),
-             );
-           });
-      })
-    });
 
   let loadThemeByIdEffect = (~extensions, themeId) => {
     Log.infof(m => m("Loading theme by id: %s", themeId));
-    let maybeTheme = Feature_Extensions.themeById(~id=themeId, extensions);
+    Isolinear.Effect.none;
+    // let maybeTheme = Feature_Extensions.themeById(~id=themeId, extensions);
 
-    let errorEffect =
-      switch (maybeTheme) {
-      | Some(_) => Isolinear.Effect.none
-      | None =>
-        Feature_Notification.Effects.create(
-          ~kind=Error,
-          "Unable to find theme: " ++ themeId,
-        )
-        |> Isolinear.Effect.map(msg => Actions.Notification(msg))
-      };
+    // let errorEffect =
+    //   switch (maybeTheme) {
+    //   | Some(_) => Isolinear.Effect.none
+    //   | None =>
+    //     Feature_Notification.Effects.create(
+    //       ~kind=Error,
+    //       "Unable to find theme: " ++ themeId,
+    //     )
+    //     |> Isolinear.Effect.map(msg => Actions.Notification(msg))
+    //   };
 
-    let loadThemeEffect =
-      maybeTheme
-      |> Utility.OptionEx.or_lazy(() => {
+    // let loadThemeEffect =
+    //   maybeTheme
+    //   |> Utility.OptionEx.or_lazy(() => {
            // If we were unable to load, fall back to the default
-           Feature_Extensions.themeById(
-             ~id=Constants.defaultTheme,
-             extensions,
-           )
-         })
-      |> Option.map(
-           ({uiTheme, path, _}: Exthost.Extension.Contributions.Theme.t) =>
-           loadThemeByPathEffect(uiTheme, path)
-         )
-      |> Option.value(~default=Isolinear.Effect.none);
+    //        Feature_Extensions.themeById(
+    //          ~id=Constants.defaultTheme,
+    //          extensions,
+    //        )
+    //      })
+    //   |> Option.map(
+    //        ({uiTheme, path, _}: Exthost.Extension.Contributions.Theme.t) =>
+    //        loadThemeByPathEffect(uiTheme, path)
+    //      )
+    //   |> Option.value(~default=Isolinear.Effect.none);
 
-    [errorEffect, loadThemeEffect] |> Isolinear.Effect.batch;
+    // [errorEffect, loadThemeEffect] |> Isolinear.Effect.batch;
   };
 
   let persistThemeEffect = name =>
@@ -104,10 +74,10 @@ let start = () => {
       | _ => (state, Isolinear.Effect.none)
       }
 
-    | Actions.ThemeLoadByPath(uiTheme, themePath) => (
-        state,
-        loadThemeByPathEffect(uiTheme, themePath),
-      )
+    // | Actions.ThemeLoadByPath(uiTheme, themePath) => (
+    //     state,
+    //     loadThemeByPathEffect(uiTheme, themePath),
+    //   )
 
     | Actions.ThemeLoadById(id) => (
         state,
@@ -122,11 +92,6 @@ let start = () => {
         loadThemeByIdEffect(~extensions=state.extensions, id),
       )
 
-    | Actions.ThemeLoadError(errorMsg) => (
-        state,
-        Feature_Notification.Effects.create(~kind=Error, errorMsg)
-        |> Isolinear.Effect.map(msg => Actions.Notification(msg)),
-      )
     | _ => (state, Isolinear.Effect.none)
     };
   };

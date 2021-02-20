@@ -133,12 +133,10 @@ type t =
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
-  | ThemeLoadByPath(string, string)
   | ThemeLoadById(string)
   | ThemeChanged(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
-  | ThemeLoadError(string)
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard

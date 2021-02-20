@@ -11,6 +11,8 @@ type model = {
   schema: ColorTheme.Schema.t,
   theme: ColorTheme.t,
   tokenColors: Oni_Syntax.TokenTheme.t,
+
+  selectedThemeId: option(string),
 };
 
 let variant = ({theme, _}) => theme.variant;
@@ -72,6 +74,7 @@ let initial = contributions => {
     ]),
   theme: ColorTheme.{variant: Dark, colors: ColorTheme.Colors.empty},
   tokenColors: Oni_Syntax.TokenTheme.empty,
+  selectedThemeId: None,
 };
 
 let tokenColors = ({tokenColors, _}) => tokenColors;
@@ -133,7 +136,8 @@ type msg =
       variant: ColorTheme.variant,
       colors: [@opaque] Textmate.ColorTheme.t,
       tokenColors: [@opaque] Oni_Syntax.TokenTheme.t,
-    });
+    })
+  | TextmateThemeLoadingError(string);
 
 module Msg = {
   let openThemePicker = Command(SelectTheme);
@@ -142,7 +146,8 @@ module Msg = {
 type outmsg =
   | Nothing
   | OpenThemePicker(list(theme))
-  | ThemeChanged(ColorTheme.Colors.t);
+  | ThemeChanged(ColorTheme.Colors.t)
+  | NotifyError(string);
 
 let update = (model, msg) => {
   switch (msg) {
@@ -167,19 +172,37 @@ let update = (model, msg) => {
       },
       ThemeChanged(colors),
     );
+
+  | TextmateThemeLoadingError(msg) =>
+    ({
+      ...model,
+      selectedThemeId: Some(Constants.defaultTheme)
+    }, NotifyError(msg));
+
   | Command(SelectTheme) => (model, OpenThemePicker([]))
   };
 };
 
-let configurationChanged = (~resolver, ~getContributedTheme, model) => {
-  ignore(resolver);
-  ignore(getContributedTheme);
-  model;
-};
-
 // SUBSCRIPTION
 
-let sub = _model => Isolinear.Sub.none;
+let sub = (~getThemeContribution, {selectedThemeId, }) => {
+  selectedThemeId
+  |> Option.map(themeId => {
+    
+  ThemeLoader.sub(~themeId, ~getThemeContribution)
+  |> Isolinear.Sub.map(
+    fun
+    | Ok((variant, colors, tokenColors)) => TextmateThemeLoaded({
+      variant,
+      colors,
+      tokenColors
+    })
+    | Error(msg) => {
+      TextmateThemeLoadingError(msg)
+    })
+  })
+  |> Option.value(~default=Isolinear.Sub.none);
+};
 
 module Configuration = {
   open Oni_Core;
@@ -187,6 +210,14 @@ module Configuration = {
 
   let colorTheme =
     setting("workbench.colorTheme", string, ~default=Constants.defaultTheme);
+};
+
+
+let configurationChanged = (~resolver, model) => {
+  {
+    ...model,
+    selectedThemeId: Some(Configuration.colorTheme.get(resolver))
+  }
 };
 
 module Commands = {

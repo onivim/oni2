@@ -1,6 +1,11 @@
 open Oni_Core;
 open Exthost.Extension;
 
+type params = {
+  id: string,
+  idToContribution: string => option(Exthost.Extension.Contributions.Theme.t),
+};
+
 module ThemeLoaderSub =
   Isolinear.Sub.Make({
     type nonrec msg =
@@ -9,15 +14,20 @@ module ThemeLoaderSub =
         string,
       );
 
-    type nonrec params = Contributions.Theme.t;
+    type nonrec params = params;
 
     type state = unit;
 
     let name = "Feature_Theme.LoaderSub";
-    let id = (params: Contributions.Theme.t) => params.path;
+    let id = (params) => params.id;
 
     let init = (~params, ~dispatch) => {
-      let {uiTheme, path, _}: Contributions.Theme.t = params;
+
+      let () = params.idToContribution(params.id)
+      |> Option.iter(contribution => {
+        
+      
+      let {uiTheme, path, _}: Contributions.Theme.t = contribution;
       let isDark = uiTheme == "vs-dark" || uiTheme == "hc-black";
 
       let loadResult: msg =
@@ -36,8 +46,8 @@ module ThemeLoaderSub =
              (variant, colors, tokenColors);
            });
 
-      let () = dispatch(loadResult);
-      ();
+        let () = dispatch(loadResult);
+      });
     };
 
     let update = (~params as _, ~state, ~dispatch as _) => {
@@ -49,4 +59,7 @@ module ThemeLoaderSub =
     };
   });
 
-let sub = theme => ThemeLoaderSub.create(theme);
+let sub = (~themeId, ~getThemeContribution) => ThemeLoaderSub.create({
+  id: themeId,
+  idToContribution: getThemeContribution,
+});

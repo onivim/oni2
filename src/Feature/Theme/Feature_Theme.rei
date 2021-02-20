@@ -20,21 +20,22 @@ type msg =
       variant: ColorTheme.variant,
       colors: [@opaque] Textmate.ColorTheme.t,
       tokenColors: [@opaque] Oni_Syntax.TokenTheme.t,
-    });
+    })
+  | TextmateThemeLoadingError(string);
 
 module Msg: {let openThemePicker: msg;};
 
 type outmsg =
   | Nothing
   | OpenThemePicker(list(theme))
-  | ThemeChanged(ColorTheme.Colors.t);
+  | ThemeChanged(ColorTheme.Colors.t)
+  | NotifyError(string);
 
 let update: (model, msg) => (model, outmsg);
 
 let configurationChanged:
   (
     ~resolver: Config.resolver,
-    ~getContributedTheme: string => option(theme),
     model
   ) =>
   model;
@@ -51,7 +52,7 @@ let tokenColors: model => Oni_Syntax.TokenTheme.t;
 
 // SUBSCRIPTION
 
-let sub: model => Isolinear.Sub.t(msg);
+let sub: (~getThemeContribution: string => option(Exthost.Extension.Contributions.Theme.t), model) => Isolinear.Sub.t(msg);
 
 module Commands: {let selectTheme: Command.t(msg);};
 

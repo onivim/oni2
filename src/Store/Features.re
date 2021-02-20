@@ -174,12 +174,9 @@ module Internal = {
              ~config=resolver,
            );
 
-      let getContributedTheme = id =>
-        Feature_Extensions.themeById(~id, state.extensions);
-
       let colorTheme =
         state.colorTheme
-        |> Feature_Theme.configurationChanged(~resolver, ~getContributedTheme);
+        |> Feature_Theme.configurationChanged(~resolver);
 
       let buffers =
         state.buffers
@@ -1595,6 +1592,11 @@ let update =
 
     let state = {...state, colorTheme: model'};
     switch (outmsg) {
+    | NotifyError(msg) => (state, Internal.notificationEffect(
+      ~kind=Error,
+      msg
+    ))
+
     | OpenThemePicker(_) =>
       let themes =
         state.extensions
