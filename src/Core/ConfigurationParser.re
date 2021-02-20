@@ -58,27 +58,12 @@ let parseString = (~default="", json) =>
   | _ => default
   };
 
-let parseAutoReveal = json =>
-  switch (json) {
-  | `Bool(true) => `HighlightAndScroll
-  | `Bool(false) => `NoReveal
-  | `String("focusNoScroll") => `HighlightOnly
-  | _ => `NoReveal
-  };
-
 type parseFunction =
   (ConfigurationValues.t, Yojson.Safe.t) => ConfigurationValues.t;
 
 type configurationTuple = (string, parseFunction);
 
 let configurationParsers: list(configurationTuple) = [
-  (
-    "explorer.autoReveal",
-    (config, json) => {
-      ...config,
-      explorerAutoReveal: parseAutoReveal(json),
-    },
-  ),
   (
     "files.exclude",
     (config, json) => {...config, filesExclude: parseStringList(json)},

@@ -92,6 +92,7 @@ let parse = (~getenv: string => option(string), args) => {
 
   let attachToForeground = ref(false);
   let logLevel = ref(None);
+  let isSilent = ref(false);
   let logFile = ref(None);
   let logFilter = ref(None);
   let logColorsEnabled = ref(None);
@@ -142,7 +143,16 @@ let parse = (~getenv: string => option(string), args) => {
       ("--debug", Unit(() => logLevel := Some(Timber.Level.debug)), ""),
       ("--trace", Unit(() => logLevel := Some(Timber.Level.trace)), ""),
       ("--quiet", Unit(() => logLevel := Some(Timber.Level.warn)), ""),
-      ("--silent", Unit(() => logLevel := None), ""),
+      (
+        "--silent",
+        Unit(
+          () => {
+            logLevel := None;
+            isSilent := true;
+          },
+        ),
+        "",
+      ),
       ("--version", setEffect(PrintVersion), ""),
       ("--no-log-colors", Unit(() => logColorsEnabled := Some(false)), ""),
       ("--disable-extensions", Unit(disableExtensionLoading), ""),
@@ -193,7 +203,7 @@ let parse = (~getenv: string => option(string), args) => {
     };
 
   let needsConsole =
-    Option.is_some(logLevel^)
+    (isSilent^ || Option.is_some(logLevel^))
     && attachToForeground^
     || shouldAlwaysAllocateConsole;
 

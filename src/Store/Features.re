@@ -431,8 +431,10 @@ let update =
     (state', effect);
 
   | FileExplorer(msg) =>
+    let config = Selectors.configResolver(state);
     let (model, outmsg) =
       Feature_Explorer.update(
+        ~config,
         ~configuration=state.configuration,
         msg,
         state.fileExplorer,
