@@ -49,7 +49,7 @@ module Internal = {
       Isolinear.Effect.createWithDispatch(
         ~name="feature.extensions.selectTheme", dispatch => {
         dispatch(
-          ThemeLoadById(Exthost.Extension.Contributions.Theme.id(theme)),
+          ThemeSelected(Exthost.Extension.Contributions.Theme.id(theme)),
         )
       })
     | themes =>
@@ -174,6 +174,9 @@ module Internal = {
              ~config=resolver,
            );
 
+      let colorTheme =
+        state.colorTheme |> Feature_Theme.configurationChanged(~resolver);
+
       let buffers =
         state.buffers
         |> Feature_Buffers.configurationChanged(~config=resolver);
@@ -199,7 +202,18 @@ module Internal = {
       let (zoom, zoomEffect) =
         Feature_Zoom.configurationChanged(~config=resolver, state.zoom);
       let eff = zoomEffect |> Isolinear.Effect.map(msg => Actions.Zoom(msg));
-      ({...state, buffers, languageSupport, sideBar, layout, zoom}, eff);
+      (
+        {
+          ...state,
+          buffers,
+          languageSupport,
+          sideBar,
+          layout,
+          zoom,
+          colorTheme,
+        },
+        eff,
+      );
     };
 
   let updateMode =
@@ -1275,7 +1289,7 @@ let update =
               state.config,
               state.vim,
             ),
-          ~theme=state.tokenTheme,
+          ~theme=state.colorTheme |> Feature_Theme.tokenColors,
           update,
           state.syntaxHighlights,
         );
@@ -1579,6 +1593,11 @@ let update =
 
     let state = {...state, colorTheme: model'};
     switch (outmsg) {
+    | NotifyError(msg) => (
+        state,
+        Internal.notificationEffect(~kind=Error, msg),
+      )
+
     | OpenThemePicker(_) =>
       let themes =
         state.extensions
