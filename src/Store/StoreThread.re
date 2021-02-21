@@ -445,6 +445,11 @@ let start =
       |> Feature_Buffers.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
 
+    let quickmenuSub =
+      state.newQuickmenu
+      |> Feature_Quickmenu.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Quickmenu(msg));
+
     [
       menuBarSub,
       extHostSubscription,
@@ -464,6 +469,7 @@ let start =
       inputSubscription,
       notificationSub,
       bufferSub,
+      quickmenuSub,
     ]
     |> Isolinear.Sub.batch;
   };
