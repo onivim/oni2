@@ -435,6 +435,7 @@ type t = {
   zenMode: bool,
   // State of the bottom pane
   pane: Feature_Pane.model,
+  newQuickmenu: Feature_Quickmenu.model(Actions.t),
   searchPane: Feature_Search.model,
   focus: Focus.stack,
   modal: option(Feature_Modals.model),
@@ -566,6 +567,7 @@ let initial =
     fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),
     zenMode: false,
     pane: Feature_Pane.initial,
+    newQuickmenu: Feature_Quickmenu.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,
