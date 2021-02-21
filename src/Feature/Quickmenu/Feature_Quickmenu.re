@@ -29,3 +29,7 @@ type outmsg('action) =
 | Nothing;
 
 let update = (_msg, model) => (model, Nothing)
+
+// SUBSCRIPTION
+
+let sub = (_model) => Isolinear.Sub.none;
