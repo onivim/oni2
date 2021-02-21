@@ -10,6 +10,7 @@ module BufferPath = BufferPath;
 module BufferTracker = BufferTracker;
 module BufferUpdate = BufferUpdate;
 module BuildInfo = BuildInfo;
+module EffectEx = EffectEx;
 module ThemeToken = ThemeToken;
 module Codicon = Codicon;
 module Command = Command;

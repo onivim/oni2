@@ -1701,6 +1701,19 @@ let update =
       Internal.notificationEffect(~kind=Error, message),
     )
 
+  | Quickmenu(msg) =>
+    
+    let (quickmenu', outmsg) = Feature_Quickmenu.update(msg, state.newQuickmenu);
+    let eff = switch (outmsg) {
+  
+    | Nothing => Isolinear.Effect.none
+
+    | Action(action) => EffectEx.of_(~name="Feature_Quickmenu.action", action)
+
+    };
+
+    ({...state, newQuickmenu: quickmenu'}, eff);
+
   | Snippets(msg) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
