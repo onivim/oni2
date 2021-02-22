@@ -1,4 +1,3 @@
-
 [@deriving show]
 type msg =
   | KeyPressed(string)
@@ -10,15 +9,13 @@ module Msg = {
   let pasted = key => Pasted(key);
 };
 
-type progress = 
-| Loading
-| InProgress(float)
-| Complete;
+type progress =
+  | Loading
+  | InProgress(float)
+  | Complete;
 
 module Instance = {
-  type t('outmsg) = {
-    schema: Schema.menu('outmsg),
-  }
+  type t('outmsg) = {schema: Schema.menu('outmsg)};
 };
 
 type model('outmsg) = {menus: list(Schema.menu('outmsg))};

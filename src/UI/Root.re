@@ -229,7 +229,8 @@ let make = (~dispatch, ~state: State.t, ()) => {
         config
         model={state.newQuickmenu}
         dispatch={msg => dispatch(Actions.Quickmenu(msg))}
-        font />
+        font
+      />
       {switch (state.quickmenu) {
        | None => React.empty
        | Some(quickmenu) =>

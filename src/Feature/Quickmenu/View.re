@@ -61,9 +61,9 @@ module Styles = {
 // let onFocusedChange = index =>
 //   GlobalContext.current().dispatch(ListFocus(index));
 
-let onFocusedChange = (_:int) => ();
+let onFocusedChange = (_: int) => ();
 
-let onSelect = (_:int) => ();
+let onSelect = (_: int) => ();
 
 let progressBar = (~progress, ~theme, ()) => {
   let indicator = () => {
@@ -107,128 +107,132 @@ let make =
       ~model: Model.model(_),
       ~dispatch,
       (),
-    ) => component(hooks => {
-  let items = [||];
-  let filterProgress = Complete;
-  let ripgrepProgress = Complete;
-  let focused = None;
-  let inputText = Component_InputText.empty;
-  let prefix = Some("abc");
-  // let Quickmenu.{
-  //       items,
-  //       filterProgress,
-  //       ripgrepProgress,
-  //       focused,
-  //       inputText,
-  //       prefix,
-  //       variant,
-  //       _,
-  //     } = state;
+    ) =>
+  component(hooks => {
+    let items = [||];
+    let filterProgress = Complete;
+    let ripgrepProgress = Complete;
+    let focused = None;
+    let inputText = Component_InputText.empty;
+    let prefix = Some("abc");
+    // let Quickmenu.{
+    //       items,
+    //       filterProgress,
+    //       ripgrepProgress,
+    //       focused,
+    //       inputText,
+    //       prefix,
+    //       variant,
+    //       _,
+    //     } = state;
 
-  let progress =
-    Model.(
-      switch (filterProgress, ripgrepProgress) {
-      // Evaluate ripgrep progress first, because it could still be processing jobs
-      // while the filter job is 'complete'.
-      | (_, Loading)
-      | (Loading, _) => Loading
-      | (InProgress(a), InProgress(b)) => InProgress((a +. b) /. 2.)
+    let progress =
+      Model.(
+        switch (filterProgress, ripgrepProgress) {
+        // Evaluate ripgrep progress first, because it could still be processing jobs
+        // while the filter job is 'complete'.
+        | (_, Loading)
+        | (Loading, _) => Loading
+        | (InProgress(a), InProgress(b)) => InProgress((a +. b) /. 2.)
 
-      | (InProgress(value), _)
-      | (_, InProgress(value)) => InProgress(value)
+        | (InProgress(value), _)
+        | (_, InProgress(value)) => InProgress(value)
 
-      | (Complete, Complete) => Complete
-      }
-    );
-
-  let renderItem = index => {
-    let item = items[index];
-    let isFocused = Some(index) == focused;
-
-    let style = Styles.label(~theme);
-    // TODO:
-    let text = "test";
-    //let text = Quickmenu.getLabel(item);
-    //let highlights = item.highlight;
-    let highlights = [];
-    let normalStyle = style(~highlighted=false);
-    let highlightStyle = style(~highlighted=true);
-    let labelView =
-      <HighlightText
-        fontFamily={font.family}
-        fontSize=12.
-        style=normalStyle
-        highlightStyle
-        text
-        highlights
-      />;
-
-    <MenuItem
-      onClick={() => onSelect(index)}
-      theme
-      style=Styles.menuItem
-      label={`Custom(labelView)}
-      // icon={item.icon}
-      font
-      fontSize=14.
-      onMouseOver={() => onFocusedChange(index)}
-      isFocused
-    />;
-  };
-
-  let input = () =>
-    <View style=Styles.inputContainer>
-      <Component_InputText.View
-        ?prefix
-        fontFamily={font.family}
-        fontSize=14.
-        isFocused=true
-        dispatch={msg => dispatch(Model.Input(msg))}
-        model=inputText
-        theme
-      />
-    </View>;
-
-  let onClickBackground = () => {
-    prerr_endline ("Clicked background");
-    // TODO:
-    //GlobalContext.current().dispatch(Actions.QuickmenuClose);
-  };
-
-  let innerClicked = ref(false);
-
-  // TODO: Bring back oni box shadow
-  (
-  <View
-    style=Style.[
-      position(`Absolute),
-      top(0),
-      left(0),
-      right(0),
-      bottom(0),
-      backgroundColor(Revery.Color.rgba(0., 0., 0., 0.2)),
-      pointerEvents(`Allow),
-      alignItems(`Center),
-    ]
-    onMouseDown={_ =>
-      // HACK: This callback would be called last, after the 'inner' callback being called.
-      // We don't want to execute the `onClickBackground` function if we're clicking inside the menu.
-      // A better mechanism would be a robust way to stop propagationnn of the mouse event.
-
-        if (! innerClicked^) {
-          onClickBackground();
+        | (Complete, Complete) => Complete
         }
-      }>
-    <View
-      onMouseDown={_ => {innerClicked := true}}
-      style={Styles.container(theme)}
-      >
-      <input />
-      {switch (progress) {
-       | Complete => <progressBar progress=0. theme /> // TODO: SHould be REact.empty, but a reconciliation bug then prevents the progress bar from rendering
-       | InProgress(progress) => <progressBar progress theme />
-       | Loading => <busyBar theme />
-       }}
-    </View>
-  </View>, hooks);
-});
+      );
+
+    let renderItem = index => {
+      let item = items[index];
+      let isFocused = Some(index) == focused;
+
+      let style = Styles.label(~theme);
+      // TODO:
+      let text = "test";
+      //let text = Quickmenu.getLabel(item);
+      //let highlights = item.highlight;
+      let highlights = [];
+      let normalStyle = style(~highlighted=false);
+      let highlightStyle = style(~highlighted=true);
+      let labelView =
+        <HighlightText
+          fontFamily={font.family}
+          fontSize=12.
+          style=normalStyle
+          highlightStyle
+          text
+          highlights
+        />;
+
+      <MenuItem
+        onClick={() => onSelect(index)}
+        theme
+        style=Styles.menuItem
+        label={`Custom(labelView)}
+        font
+        // icon={item.icon}
+        fontSize=14.
+        onMouseOver={() => onFocusedChange(index)}
+        isFocused
+      />;
+    };
+
+    let input = () =>
+      <View style=Styles.inputContainer>
+        <Component_InputText.View
+          ?prefix
+          fontFamily={font.family}
+          fontSize=14.
+          isFocused=true
+          dispatch={msg => dispatch(Model.Input(msg))}
+          model=inputText
+          theme
+        />
+      </View>;
+
+    let onClickBackground = () => {
+      prerr_endline(
+        "Clicked background",
+        // TODO:
+        //GlobalContext.current().dispatch(Actions.QuickmenuClose);
+      );
+    };
+
+    let innerClicked = ref(false);
+
+    // TODO: Bring back oni box shadow
+    (
+      <View
+        style=Style.[
+          position(`Absolute),
+          top(0),
+          left(0),
+          right(0),
+          bottom(0),
+          backgroundColor(Revery.Color.rgba(0., 0., 0., 0.2)),
+          pointerEvents(`Allow),
+          alignItems(`Center),
+        ]
+        onMouseDown={_ =>
+          // HACK: This callback would be called last, after the 'inner' callback being called.
+          // We don't want to execute the `onClickBackground` function if we're clicking inside the menu.
+          // A better mechanism would be a robust way to stop propagationnn of the mouse event.
+
+            if (! innerClicked^) {
+              onClickBackground();
+            }
+          }>
+        <View
+          onMouseDown={_ => {innerClicked := true}}
+          style={Styles.container(theme)}>
+          <input />
+          {switch (progress) {
+           | Complete => <progressBar progress=0. theme /> // TODO: SHould be REact.empty, but a reconciliation bug then prevents the progress bar from rendering
+           | InProgress(progress) => <progressBar progress theme />
+           | Loading => <busyBar theme />
+           }}
+        </View>
+      </View>,
+      hooks,
+    );
+  });

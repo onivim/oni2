@@ -5,4 +5,3 @@ let menu =
   ();
 
 let map = (f, model) => model;
-

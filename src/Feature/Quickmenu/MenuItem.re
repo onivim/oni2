@@ -83,12 +83,12 @@ let make =
   let labelView =
     switch (label) {
     // | `Text(text) =>
-      // <Text
-      //   style={Styles.label(~theme, ~isFocused, ~custom=style)}
-      //   fontFamily={font.family}
-      //   fontSize
-      //   text
-      // />;
+    // <Text
+    //   style={Styles.label(~theme, ~isFocused, ~custom=style)}
+    //   fontFamily={font.family}
+    //   fontSize
+    //   text
+    // />;
     | `Custom(view) => view
     };
 
