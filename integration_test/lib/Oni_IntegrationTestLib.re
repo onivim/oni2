@@ -175,7 +175,6 @@ let runTest =
         ~initialBufferRenderers=Model.BufferRenderers.initial,
         ~getUserSettings,
         ~keybindingsLoader,
-        ~contributedCommands=[],
         ~maybeWorkspace=None,
         ~workingDirectory=Sys.getcwd(),
         ~extensionsFolder=None,

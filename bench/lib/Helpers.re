@@ -32,7 +32,6 @@ let simpleState = {
       ~keybindingsLoader=Feature_Input.KeybindingsLoader.none,
       ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
       ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
-      ~contributedCommands=[],
       ~maybeWorkspace=None,
       ~workingDirectory=Sys.getcwd(),
       ~extensionsFolder=None,

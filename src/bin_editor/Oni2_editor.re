@@ -320,7 +320,6 @@ switch (eff) {
           ~keybindingsLoader,
           ~extensionGlobalPersistence,
           ~extensionWorkspacePersistence,
-          ~contributedCommands=[], // TODO
           ~workingDirectory,
           ~maybeWorkspace,
           // TODO: Use `FpExp.t` all the way down
