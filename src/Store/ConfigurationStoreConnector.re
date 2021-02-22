@@ -14,11 +14,7 @@ module Constants = {
 };
 
 let start =
-    (
-      ~configurationFilePath: option(FpExp.t(FpExp.absolute)),
-      ~setVsync,
-      ~filesToOpen,
-    ) => {
+    (~configurationFilePath: option(FpExp.t(FpExp.absolute)), ~filesToOpen) => {
   // TODO: Port over
   // let onError = (~dispatch, err: string) => {
   //   Log.error("Error loading configuration file: " ++ err);
@@ -157,17 +153,17 @@ let start =
   //   );
 
   // Synchronize miscellaneous configuration settings
-  let vsync = ref(Revery.Vsync.Immediate);
-  let synchronizeConfigurationEffect = configuration =>
-    Isolinear.Effect.create(~name="configuration.synchronize", () => {
-      let vsyncValue =
-        Feature_Configuration.Legacy.getValue(c => c.vsync, configuration);
-      if (vsyncValue != vsync^) {
-        Log.info("Setting vsync: " ++ Revery.Vsync.toString(vsyncValue));
-        setVsync(vsyncValue);
-        vsync := vsyncValue;
-      };
-    });
+  // let vsync = ref(Revery.Vsync.Immediate);
+  // let synchronizeConfigurationEffect = configuration =>
+  //   Isolinear.Effect.create(~name="configuration.synchronize", () => {
+  //     let vsyncValue =
+  //       Feature_Configuration.Legacy.getValue(c => c.vsync, configuration);
+  //     if (vsyncValue != vsync^) {
+  //       Log.info("Setting vsync: " ++ Revery.Vsync.toString(vsyncValue));
+  //       setVsync(vsyncValue);
+  //       vsync := vsyncValue;
+  //     };
+  //   });
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {

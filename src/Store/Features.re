@@ -312,6 +312,7 @@ let update =
       ~minimize,
       ~close,
       ~restore,
+      ~setVsync,
       state: State.t,
       action: Actions.t,
     ) =>
@@ -1384,9 +1385,24 @@ let update =
           );
         });
 
+      let vsyncEffect =
+        if (Config.Settings.get(Config.key("vsync"), changed) != None) {
+          Isolinear.Effect.create("Features.setVsync", () => {
+            let resolver = Selectors.configResolver(state);
+            setVsync(
+              Feature_Configuration.GlobalConfiguration.vsync.get(resolver),
+            );
+          });
+        } else {
+          Isolinear.Effect.none;
+        };
+
       let (state', configurationEffect) =
         state |> Internal.updateConfiguration;
-      (state', Isolinear.Effect.batch([eff, configurationEffect]));
+      (
+        state',
+        Isolinear.Effect.batch([eff, configurationEffect, vsyncEffect]),
+      );
 
     | OpenFile(fp) => (state, Internal.openFileEffect(FpExp.toString(fp)))
 

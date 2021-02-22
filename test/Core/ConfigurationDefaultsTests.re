@@ -1,6 +1,6 @@
-open TestFramework;
+// open TestFramework;
 
-open Oni_Core.ConfigurationDefaults;
+// open Oni_Core.ConfigurationDefaults;
 
 // TODO: Move to integration test?
 

@@ -161,11 +161,7 @@ let start =
   let quickmenuUpdater = QuickmenuStoreConnector.start();
 
   let configurationUpdater =
-    ConfigurationStoreConnector.start(
-      ~configurationFilePath,
-      ~setVsync,
-      ~filesToOpen,
-    );
+    ConfigurationStoreConnector.start(~configurationFilePath, ~filesToOpen);
   let keyBindingsUpdater = KeyBindingsStoreConnector.start();
 
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
@@ -193,6 +189,7 @@ let start =
         ~minimize,
         ~close,
         ~restore,
+        ~setVsync,
       ),
     ]);
 
