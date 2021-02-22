@@ -75,82 +75,82 @@ let setFont =
   // ThreadHelper.create(
   //   ~name="FontStore.loadThread",
   //   () => {
-      prerr_endline ("!!-- Starting load font...");
-      let fontSize = max(fontSize, Constants.minimumFontSize);
+  prerr_endline("!!-- Starting load font...");
+  let fontSize = max(fontSize, Constants.minimumFontSize);
 
-      let family =
-        if (familyString == Constants.defaultFontFile) {
-          Constants.defaultFontFamily;
-        } else if (Rench.Path.isAbsolute(familyString)) {
-          Revery_Font.Family.fromFile(familyString);
-        } else {
-          Revery_Font.Family.system(familyString);
-        };
+  let family =
+    if (familyString == Constants.defaultFontFile) {
+      Constants.defaultFontFamily;
+    } else if (Rench.Path.isAbsolute(familyString)) {
+      Revery_Font.Family.fromFile(familyString);
+    } else {
+      Revery_Font.Family.system(familyString);
+    };
 
-      let features = fontLigatures |> FontLigatures.toHarfbuzzFeatures;
+  let features = fontLigatures |> FontLigatures.toHarfbuzzFeatures;
 
-      let res =
-        FontLoader.loadAndValidateEditorFont(
-          ~requestId=req,
-          ~smoothing,
-          ~family,
-          ~weight=fontWeight,
-          ~fontCache,
+  let res =
+    FontLoader.loadAndValidateEditorFont(
+      ~requestId=req,
+      ~smoothing,
+      ~family,
+      ~weight=fontWeight,
+      ~fontCache,
+      fontSize,
+    );
+
+  prerr_endline("!!-- Finished loading font?");
+
+  switch (res) {
+  | Error(msg) =>
+    Log.errorf(m => m("Error loading font: %s %s", familyString, msg));
+    dispatch(
+      FontLoadError(
+        Printf.sprintf("Unable to load font: %s: %s", familyString, msg),
+      ),
+    );
+  | Ok((
+      reqId,
+      {
+        fontFamily,
+        fontWeight,
+        fontSize,
+        spaceWidth,
+        underscoreWidth,
+        avgCharWidth,
+        maxCharWidth,
+        measuredHeight,
+        descenderHeight,
+        smoothing,
+        _,
+      },
+    )) =>
+    if (reqId == requestId^) {
+      dispatch(
+        FontLoaded({
+          fontFamily,
+          fontWeight,
           fontSize,
-        );
-
-      prerr_endline ("!!-- Finished loading font?");
-
-      switch (res) {
-      | Error(msg) =>
-        Log.errorf(m => m("Error loading font: %s %s", familyString, msg));
-        dispatch(
-          FontLoadError(
-            Printf.sprintf("Unable to load font: %s: %s", familyString, msg),
-          ),
-        );
-      | Ok((
-          reqId,
-          {
-            fontFamily,
-            fontWeight,
-            fontSize,
-            spaceWidth,
-            underscoreWidth,
-            avgCharWidth,
-            maxCharWidth,
-            measuredHeight,
-            descenderHeight,
-            smoothing,
-            _,
-          },
-        )) =>
-        if (reqId == requestId^) {
-          dispatch(
-            FontLoaded({
-              fontFamily,
-              fontWeight,
-              fontSize,
-              spaceWidth,
-              underscoreWidth,
-              avgCharWidth,
-              maxCharWidth,
-              measuredHeight,
-              descenderHeight,
-              smoothing,
-              features,
-              measurementCache:
-                FontMeasurementCache.create(
-                  ~fontFamily,
-                  ~fontWeight,
-                  ~fontSize,
-                  ~features,
-                  ~smoothing,
-                ),
-            }),
-          );
-        }
-      };
+          spaceWidth,
+          underscoreWidth,
+          avgCharWidth,
+          maxCharWidth,
+          measuredHeight,
+          descenderHeight,
+          smoothing,
+          features,
+          measurementCache:
+            FontMeasurementCache.create(
+              ~fontFamily,
+              ~fontWeight,
+              ~fontSize,
+              ~features,
+              ~smoothing,
+            ),
+        }),
+      );
+    }
+  };
   //   },
   //   (),
   // )
@@ -223,7 +223,7 @@ module Sub = {
             || params.fontSmoothing != state.fontSmoothing
             || params.fontLigatures != state.fontLigatures
             || params.fontWeight != state.fontWeight) {
-              prerr_endline ("!!! RELOADING FONT");
+          prerr_endline("!!! RELOADING FONT");
           let reveryFontSmoothing =
             getReveryFontSmoothing(params.fontSmoothing);
           setFont(

@@ -88,9 +88,9 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
 [@deriving show({with_path: false})]
 type msg =
   | UserSettingsChanged({
-    config: [@opaque] Config.Settings.t,
-    legacyConfiguration: [@opaque] LegacyConfiguration.t,
-  })
+      config: [@opaque] Config.Settings.t,
+      legacyConfiguration: [@opaque] LegacyConfiguration.t,
+    })
   | ConfigurationParseError(string);
 
 type outmsg =
@@ -100,23 +100,27 @@ type outmsg =
 let update = (model, msg) =>
   switch (msg) {
   | UserSettingsChanged({config: user, legacyConfiguration}) =>
-      //prerr_endline ("!!USER SETTINGS CHANGED");
-      let previous = model;
-      let updated = if (user == Config.Settings.empty) {
+    //prerr_endline ("!!USER SETTINGS CHANGED");
+    let previous = model;
+    let updated =
+      if (user == Config.Settings.empty) {
         //prerr_endline ("Empty :(");
-        model
+        model;
       } else {
         //prerr_endline ("MERGING :(");
-        merge({...model, user})
+        merge({...model, user});
       };
 
     let changed = Config.Settings.changed(previous.merged, updated.merged);
 
-    ({...updated, legacyConfiguration }, ConfigurationChanged({changed: changed}));
+    (
+      {...updated, legacyConfiguration},
+      ConfigurationChanged({changed: changed}),
+    );
 
-  | ConfigurationParseError(_) => 
+  | ConfigurationParseError(_) =>
     // TODO: Bring back diagnostics
-    (model, Nothing);
+    (model, Nothing)
   };
 
 // TODO:
@@ -160,7 +164,10 @@ let resolver = (~fileType: string, model, vimModel, ~vimSetting, key) => {
 
 let sub = ({loader, _}) => {
   ConfigurationLoader.sub(loader)
-  |> Isolinear.Sub.map(fun
-  | Ok((config, legacyConfiguration)) => UserSettingsChanged({config: config, legacyConfiguration})
-  | Error(msg) => ConfigurationParseError(msg));
+  |> Isolinear.Sub.map(
+       fun
+       | Ok((config, legacyConfiguration)) =>
+         UserSettingsChanged({config, legacyConfiguration})
+       | Error(msg) => ConfigurationParseError(msg),
+     );
 };

@@ -32,7 +32,13 @@ type outmsg =
   | GrabFocus;
 
 let update:
-  (~configuration: Feature_Configuration.model, msg, model) => (model, outmsg);
+  (
+    ~config: Config.resolver,
+    ~configuration: Feature_Configuration.model,
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 // SUBSCRIPTION
 

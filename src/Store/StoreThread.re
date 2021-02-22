@@ -250,7 +250,7 @@ let start =
             ~grammarInfo,
             ~languageInfo,
             ~setup,
-            ~tokenTheme=state.tokenTheme,
+            ~tokenTheme=state.colorTheme |> Feature_Theme.tokenColors,
             ~bufferVisibility=visibleRanges,
             state.syntaxHighlights,
           )
@@ -443,6 +443,14 @@ let start =
       |> Feature_Configuration.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Configuration(msg));
 
+    let getThemeContribution = themeId =>
+      Feature_Extensions.themeById(~id=themeId, state.extensions);
+
+    let themeSub =
+      state.colorTheme
+      |> Feature_Theme.sub(~getThemeContribution)
+      |> Isolinear.Sub.map(msg => Model.Actions.Theme(msg));
+
     [
       menuBarSub,
       extHostSubscription,
@@ -463,6 +471,7 @@ let start =
       notificationSub,
       bufferSub,
       configurationSub,
+      themeSub,
     ]
     |> Isolinear.Sub.batch;
   };

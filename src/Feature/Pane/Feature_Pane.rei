@@ -17,6 +17,7 @@ type msg;
 
 type outmsg =
   | Nothing
+  | PaneButton(pane)
   | OpenFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,

@@ -17,7 +17,7 @@ let loadConfiguration = (loadResult: result(Yojson.Safe.t, string)) => {
   //};
   loadResult
   |> ResultEx.flatMap(json => {
-      prerr_endline ("Reading new JSON: " ++ Yojson.Safe.to_string(json));
+       prerr_endline("Reading new JSON: " ++ Yojson.Safe.to_string(json));
        let legacyConfigParseResult = LegacyConfigurationParser.ofJson(json);
        legacyConfigParseResult
        |> Result.map(legacyConfig => (json, legacyConfig));
@@ -55,7 +55,7 @@ let notifyFileSaved = path =>
   | None => None
   | File({filePath, saveTick}) as orig =>
     if (FpExp.eq(filePath, path)) {
-      prerr_endline ("File saved?");
+      prerr_endline("File saved?");
       File({filePath, saveTick: saveTick + 1});
     } else {
       orig;

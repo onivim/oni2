@@ -19,7 +19,6 @@ let start =
       ~setVsync,
       ~filesToOpen,
     ) => {
-
   let clearDiagnostics = (~dispatch) => {
     dispatch(
       Actions.Diagnostics(
@@ -90,7 +89,7 @@ let start =
   //     Log.error("Unable to load configuration: " ++ msg);
   //     Isolinear.Effect.none;
   //   | Ok(configPath) =>
-      // TODO: FpExp.t all the way...
+  // TODO: FpExp.t all the way...
   //     let configPath = FpExp.toString(configPath);
   //     if (!Feature_Buffers.isModifiedByPath(buffers, configPath)) {
   //       Oni_Core.Log.perf("Apply configuration transform", () => {
@@ -122,7 +121,7 @@ let start =
   //       defaultConfigurationFileName
   //       |> getConfigurationFile
   //       |> Result.map(FpExp.toString)
-        // Once we know the path - register a listener to reload
+  // Once we know the path - register a listener to reload
   //       |> ResultEx.tap(configPath =>
   //            reloadConfigOnWritePost(~configPath, dispatch)
   //          )

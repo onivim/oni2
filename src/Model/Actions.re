@@ -6,7 +6,6 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Syntax;
 
 [@deriving show({with_path: false})]
 type t =
@@ -135,13 +134,9 @@ type t =
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
-  | ThemeLoadByPath(string, string)
-  | ThemeLoadById(string)
-  | ThemeChanged(string)
+  | ThemeSelected(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
-  | TokenThemeLoaded([@opaque] TokenTheme.t)
-  | ThemeLoadError(string)
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard

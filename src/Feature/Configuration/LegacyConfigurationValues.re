@@ -17,7 +17,6 @@ type autoReveal = [ | `HighlightAndScroll | `HighlightOnly | `NoReveal];
 type t = {
   explorerAutoReveal: autoReveal,
   workbenchActivityBarVisible: bool,
-  workbenchColorTheme: string,
   workbenchIconTheme: string,
   workbenchEditorShowTabs: bool,
   workbenchEditorEnablePreview: bool,
@@ -37,7 +36,6 @@ type t = {
 let default = {
   explorerAutoReveal: `HighlightAndScroll,
   workbenchActivityBarVisible: true,
-  workbenchColorTheme: Constants.defaultTheme,
   workbenchEditorShowTabs: true,
   workbenchEditorEnablePreview: true,
   workbenchStatusBarVisible: true,
