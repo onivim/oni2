@@ -85,8 +85,13 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
   Exthost.Configuration.create(~defaults, ~user, ());
 };
 
+[@deriving show]
+type command =
+  | OpenConfigurationFile;
+
 [@deriving show({with_path: false})]
 type msg =
+  | Command(command)
   | UserSettingsChanged({
       config: [@opaque] Config.Settings.t,
       legacyConfiguration: [@opaque] LegacyConfiguration.t,
@@ -95,6 +100,7 @@ type msg =
 
 type outmsg =
   | ConfigurationChanged({changed: Config.Settings.t})
+  | OpenFile(FpExp.t(FpExp.absolute))
   | Nothing;
 
 let update = (model, msg) =>
@@ -117,6 +123,15 @@ let update = (model, msg) =>
       {...updated, legacyConfiguration},
       ConfigurationChanged({changed: changed}),
     );
+
+  | Command(OpenConfigurationFile) =>
+    let outmsg =
+      switch (ConfigurationLoader.getFilePath(model.loader)) {
+      | None => Nothing
+      | Some(fp) => OpenFile(fp)
+      };
+
+    (model, outmsg);
 
   | ConfigurationParseError(_) =>
     // TODO: Bring back diagnostics
@@ -170,4 +185,24 @@ let sub = ({loader, _}) => {
          UserSettingsChanged({config, legacyConfiguration})
        | Error(msg) => ConfigurationParseError(msg),
      );
+};
+
+// COMMANDS
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let openConfigurationFile =
+    define(
+      ~category="Preferences",
+      ~title="Open configuration file",
+      "workbench.action.openSettings",
+      Command(OpenConfigurationFile),
+    );
+};
+
+// CONTRIBUTIONS
+
+module Contributions = {
+  let commands = Commands.[openConfigurationFile];
 };

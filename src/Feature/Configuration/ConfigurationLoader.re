@@ -46,6 +46,11 @@ type t =
       saveTick: int,
     });
 
+let getFilePath: t => option(FpExp.t(FpExp.absolute)) =
+  fun
+  | None => None
+  | File({filePath, _}) => Some(filePath);
+
 let none = None;
 
 let file = filePath => File({filePath, saveTick: 0});

@@ -38,6 +38,7 @@ type msg;
 
 type outmsg =
   | ConfigurationChanged({changed: Config.Settings.t})
+  | OpenFile(FpExp.t(FpExp.absolute))
   | Nothing;
 
 let update: (model, msg) => (model, outmsg);
@@ -57,3 +58,7 @@ let resolver:
 let sub: model => Isolinear.Sub.t(msg);
 
 module GlobalConfiguration = GlobalConfiguration;
+
+// CONTRIBUTIONS
+
+module Contributions: {let commands: list(Oni_Core.Command.t(msg));};

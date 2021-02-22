@@ -128,14 +128,6 @@ module Oni = {
 
 module Workbench = {
   module Action = {
-    let openSettings =
-      register(
-        ~category="Preferences",
-        ~title="Open configuration file",
-        "workbench.action.openSettings",
-        OpenConfigFile("configuration.json"),
-      );
-
     let openDefaultKeybindingsFile =
       register(
         ~category="Preferences",

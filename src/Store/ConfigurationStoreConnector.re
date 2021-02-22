@@ -19,14 +19,6 @@ let start =
       ~setVsync,
       ~filesToOpen,
     ) => {
-  let clearDiagnostics = (~dispatch) => {
-    dispatch(
-      Actions.Diagnostics(
-        Feature_Diagnostics.Msg.clear(~owner=Constants.diagnosticsKey),
-      ),
-    );
-  };
-
   // TODO: Port over
   // let onError = (~dispatch, err: string) => {
   //   Log.error("Error loading configuration file: " ++ err);

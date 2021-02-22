@@ -1388,6 +1388,9 @@ let update =
       let (state', configurationEffect) =
         state |> Internal.updateConfiguration;
       (state', Isolinear.Effect.batch([eff, configurationEffect]));
+
+    | OpenFile(fp) => (state, Internal.openFileEffect(FpExp.toString(fp)))
+
     | Nothing => (state, Effect.none)
     };
 
