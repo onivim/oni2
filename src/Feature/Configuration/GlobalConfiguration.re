@@ -236,7 +236,7 @@ let vsync =
           | Revery.Vsync.Immediate => bool(false)
         ),
     ),
-    Revery.Vsync.Immediate,
+    ~default=Revery.Vsync.Immediate,
   );
 
 module Explorer = {
