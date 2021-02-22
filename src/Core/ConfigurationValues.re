@@ -11,10 +11,7 @@ type vimUseSystemClipboard = {
   paste: bool,
 };
 
-type autoReveal = [ | `HighlightAndScroll | `HighlightOnly | `NoReveal];
-
 type t = {
-  explorerAutoReveal: autoReveal,
   workbenchActivityBarVisible: bool,
   workbenchIconTheme: string,
   workbenchEditorShowTabs: bool,
@@ -33,7 +30,6 @@ type t = {
 };
 
 let default = {
-  explorerAutoReveal: `HighlightAndScroll,
   workbenchActivityBarVisible: true,
   workbenchEditorShowTabs: true,
   workbenchEditorEnablePreview: true,
