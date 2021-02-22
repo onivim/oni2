@@ -1371,6 +1371,7 @@ let update =
       let eff =
         Isolinear.Effect.create(
           ~name="features.configuration$acceptConfigurationChanged", () => {
+          prerr_endline("Sending configuration changed...");
           let configuration =
             Feature_Configuration.toExtensionConfiguration(
               config,
