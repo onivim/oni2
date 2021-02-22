@@ -599,3 +599,12 @@ module View = {
     </View>;
   };
 };
+
+module Configuration = {
+  open Config.Schema;
+  let visible = setting("workbench.statusBar.visible", bool, ~default=true);
+};
+
+module Contributions = {
+  let configuration = Configuration.[visible.spec];
+};

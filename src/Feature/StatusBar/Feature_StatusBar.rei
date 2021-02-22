@@ -3,7 +3,6 @@ open Exthost.Msg.StatusBar;
 
 module Item: {
   type t;
-
   let create:
     (
       ~color: Exthost.Color.t=?,
@@ -67,3 +66,11 @@ module View: {
     ) =>
     Revery.UI.element;
 };
+
+// CONFIGURATION
+
+module Configuration: {let visible: Config.Schema.setting(bool);};
+
+// CONTRIBUTIONS
+
+module Contributions: {let configuration: list(Config.Schema.spec);};
