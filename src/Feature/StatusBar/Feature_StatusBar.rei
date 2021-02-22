@@ -1,5 +1,4 @@
 open Oni_Core;
-open Exthost.Msg.StatusBar;
 
 module Item: {
   type t;

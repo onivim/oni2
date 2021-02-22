@@ -346,8 +346,6 @@ let diagnosticCount = (~font: UiFont.t, ~theme, ~diagnostics, ~dispatch, ()) => 
 };
 
 module ModeIndicator = {
-  let transitionDuration = Revery.Time.milliseconds(300);
-
   let make = (~key=?, ~font: UiFont.t, ~theme, ~mode, ~subMode, ()) => {
     let background = Colors.Oni.backgroundFor(mode).from(theme);
     let foreground = Colors.Oni.foregroundFor(mode).from(theme);
@@ -369,11 +367,6 @@ module ModeIndicator = {
     </item>;
   };
 };
-
-let transitionAnimation =
-  Animation.(
-    animate(Time.ms(150)) |> ease(Easing.ease) |> tween(50.0, 0.)
-  );
 
 let indentationToString = (indentation: IndentationSettings.t) => {
   switch (indentation.mode) {

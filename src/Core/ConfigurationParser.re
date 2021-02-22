@@ -91,13 +91,6 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "workbench.statusBar.visible",
-    (config, json) => {
-      ...config,
-      workbenchStatusBarVisible: parseBool(json),
-    },
-  ),
-  (
     "editor.zenMode.hideTabs",
     (config, json) => {...config, zenModeHideTabs: parseBool(json)},
   ),

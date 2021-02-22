@@ -16,7 +16,6 @@ type t = {
   workbenchIconTheme: string,
   workbenchEditorShowTabs: bool,
   workbenchEditorEnablePreview: bool,
-  workbenchStatusBarVisible: bool,
   filesExclude: list(string),
   vsync: Revery.Vsync.t,
   vimUseSystemClipboard,
@@ -33,7 +32,6 @@ let default = {
   workbenchActivityBarVisible: true,
   workbenchEditorShowTabs: true,
   workbenchEditorEnablePreview: true,
-  workbenchStatusBarVisible: true,
   workbenchIconTheme: "vs-seti",
   filesExclude: ["_esy", "node_modules", ".git"],
   vimUseSystemClipboard: {
