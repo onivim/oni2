@@ -231,13 +231,14 @@ let start =
     );
 
   let _: unit => unit =
-    Vim.onDirectoryChanged(newDir =>
+    Vim.onDirectoryChanged(newDir => {
+      prerr_endline("NEWDIR: " ++ newDir);
       dispatch(
         Actions.Workspace(
           Feature_Workspace.Msg.workingDirectoryChanged(newDir),
         ),
-      )
-    );
+      );
+    });
 
   let _: unit => unit =
     Vim.onMessage((priority, title, message) => {
