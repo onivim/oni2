@@ -54,8 +54,8 @@ module View: {
       ~font: UiFont.t,
       ~theme: ColorTheme.Colors.t,
       ~config: Config.resolver,
-      ~model: model('outmsg),
-      ~dispatch: 'msg => unit,
+      ~model: model(_),
+      ~dispatch: msg => unit,
       unit
     ) =>
     Revery.UI.element;
