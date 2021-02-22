@@ -167,7 +167,6 @@ module Internal = {
     state => {
       let resolver = Selectors.configResolver(state);
       let maybeRoot = Feature_Explorer.root(state.fileExplorer);
-      let newFontSize = Feature_Editor.Configuration.fontSize.get(resolver);
 
       let sideBar =
         state.sideBar

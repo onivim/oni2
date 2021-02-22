@@ -443,13 +443,18 @@ let start =
       |> Feature_Configuration.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Configuration(msg));
 
-    let getThemeContribution = themeId =>
-      Feature_Extensions.themeById(~id=themeId, state.extensions);
-
     let themeSub =
-      state.colorTheme
-      |> Feature_Theme.sub(~getThemeContribution)
-      |> Isolinear.Sub.map(msg => Model.Actions.Theme(msg));
+      if (Feature_Extensions.hasCompletedDiscovery(state.extensions)) {
+        // If discovery hasn't been completed, theme contributions aren't meaningful.
+        let getThemeContribution = themeId =>
+          Feature_Extensions.themeById(~id=themeId, state.extensions);
+
+        state.colorTheme
+        |> Feature_Theme.sub(~getThemeContribution)
+        |> Isolinear.Sub.map(msg => Model.Actions.Theme(msg));
+      } else {
+        Isolinear.Sub.none;
+      };
 
     [
       menuBarSub,

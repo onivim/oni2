@@ -42,6 +42,10 @@ let themesByName: (~filter: string, model) => list(string);
 let snippetFilePaths:
   (~fileType: string, model) => list(FpExp.t(FpExp.absolute));
 
+// [hasCompletedDiscovery(model)] returns [true] if all
+// local extensions have been identified.
+let hasCompletedDiscovery: model => bool;
+
 let isBusy: model => bool;
 let isSearchInProgress: model => bool;
 

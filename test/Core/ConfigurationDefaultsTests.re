@@ -2,22 +2,24 @@ open TestFramework;
 
 open Oni_Core.ConfigurationDefaults;
 
-module Configuration = Oni_Core.Configuration;
-module ConfigurationParser = Oni_Core.ConfigurationParser;
+// TODO: Move to integration test?
 
-describe("ConfigurationDefaults", ({test, _}) =>
-  test("configuration.json matches", ({expect, _}) => {
-    let configJsonString =
-      switch (getDefaultConfigString("configuration.json")) {
-      | Some(c) => c
-      | None => ""
-      };
+// module Configuration = Feature_Configuration.LegacyConf
+// module ConfigurationParser = Oni_Core.ConfigurationParser;
 
-    let defaultConfig = Oni_Core.Configuration.default;
+// describe("ConfigurationDefaults", ({test, _}) =>
+//   test("configuration.json matches", ({expect, _}) => {
+//     let configJsonString =
+//       switch (getDefaultConfigString("configuration.json")) {
+//       | Some(c) => c
+//       | None => ""
+//       };
 
-    switch (ConfigurationParser.ofString(configJsonString)) {
-    | Error(_) => expect.int(1).toBe(2)
-    | Ok(loadedConfig) => expect.equal(defaultConfig, loadedConfig)
-    };
-  })
-);
+//     let defaultConfig = Oni_Core.Configuration.default;
+
+//     switch (ConfigurationParser.ofString(configJsonString)) {
+//     | Error(_) => expect.int(1).toBe(2)
+//     | Ok(loadedConfig) => expect.equal(defaultConfig, loadedConfig)
+//     };
+//   })
+// );
