@@ -14,18 +14,21 @@ let variant: model => Oni_Core.ColorTheme.variant;
 type command;
 
 [@deriving show]
-type msg =
-  | Command(command)
-  | TextmateThemeLoaded(ColorTheme.variant, [@opaque] Textmate.ColorTheme.t);
+type msg;
 
 module Msg: {let openThemePicker: msg;};
 
 type outmsg =
   | Nothing
   | OpenThemePicker(list(theme))
-  | ThemeChanged(ColorTheme.Colors.t);
+  | ThemeChanged(ColorTheme.Colors.t)
+  | NotifyError(string);
 
 let update: (model, msg) => (model, outmsg);
+
+let setTheme: (~themeId: string, model) => model;
+
+let configurationChanged: (~resolver: Config.resolver, model) => model;
 
 let colors:
   (
@@ -35,6 +38,21 @@ let colors:
   ) =>
   ColorTheme.Colors.t;
 
+let tokenColors: model => Oni_Syntax.TokenTheme.t;
+
+// SUBSCRIPTION
+
+let sub:
+  (
+    ~getThemeContribution: string =>
+                           option(Exthost.Extension.Contributions.Theme.t),
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
+
 module Commands: {let selectTheme: Command.t(msg);};
 
-module Contributions: {let commands: list(Command.t(msg));};
+module Contributions: {
+  let commands: list(Command.t(msg));
+  let configuration: list(Config.Schema.spec);
+};

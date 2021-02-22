@@ -65,7 +65,7 @@ module Parts = {
         diagnostics={state.diagnostics}
         buffers={state.buffers}
         snippets={state.snippets}
-        tokenTheme={state.tokenTheme}
+        tokenTheme={state.colorTheme |> Feature_Theme.tokenColors}
         languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
         perFileTypeConfig={Feature_Configuration.resolver(
@@ -163,7 +163,7 @@ module Parts = {
       | ExtensionDetails =>
         <Feature_Extensions.DetailsView
           model={state.extensions}
-          tokenTheme={state.tokenTheme}
+          tokenTheme={state.colorTheme |> Feature_Theme.tokenColors}
           theme
           font=uiFont
           dispatch={msg => dispatch(Actions.Extensions(msg))}

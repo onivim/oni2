@@ -235,7 +235,7 @@ let start = () => {
                category: Some("Theme"),
                name: ExtensionContributions.Theme.label(theme),
                command: () =>
-                 ThemeLoadById(ExtensionContributions.Theme.id(theme)),
+                 ThemeSelected(ExtensionContributions.Theme.id(theme)),
                icon: None,
                highlight: [],
                handle: None,
