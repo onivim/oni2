@@ -58,6 +58,11 @@ type msg =
   | NotificationsCountRightClicked
   | ContributedItemClicked({command: string});
 
+module Msg = {
+  let itemAdded = item => ItemAdded(item);
+  let itemDisposed = str => ItemDisposed(str);
+};
+
 // TODO: Wire these up to Pane / ContextMenu
 type outmsg =
   | Nothing
