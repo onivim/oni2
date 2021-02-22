@@ -86,10 +86,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
   };
 
   let statusBar = () =>
-    if (Selectors.getActiveConfigurationValue(state, c =>
-          c.workbenchStatusBarVisible
-        )
-        && !zenMode) {
+    if (Feature_StatusBar.Configuration.visible.get(config) && !zenMode) {
       <View style=Styles.statusBar>
         <Feature_StatusBar.View
           mode
