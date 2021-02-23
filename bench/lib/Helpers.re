@@ -28,7 +28,7 @@ let simpleState = {
       ~cli=Oni_CLI.default,
       ~initialBuffer,
       ~initialBufferRenderers=BufferRenderers.initial,
-      ~getUserSettings=() => Ok(Config.Settings.empty),
+      ~configurationLoader=Feature_Configuration.ConfigurationLoader.none,
       ~keybindingsLoader=Feature_Input.KeybindingsLoader.none,
       ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
       ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,

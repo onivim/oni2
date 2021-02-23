@@ -240,10 +240,8 @@ let runTest =
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~getState=() => currentState^,
       ~onStateChanged,
-      ~configurationFilePath=Some(configurationFilePath),
       ~quit,
       ~window=None,
-      ~filesToOpen,
       (),
     );
 

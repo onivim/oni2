@@ -75,7 +75,6 @@ let registerCommands = (~dispatch, commands) => {
 let start =
     (
       ~showUpdateChangelog=true,
-      ~configurationFilePath=None,
       ~onAfterDispatch=_ => (),
       ~setup: Core.Setup.t,
       ~executingDirectory,
@@ -91,7 +90,6 @@ let start =
       ~restore,
       ~raiseWindow,
       ~window: option(Revery.Window.t),
-      ~filesToOpen=[],
       ~overriddenExtensionsDir=None,
       ~shouldLoadExtensions=true,
       ~shouldSyntaxHighlight=true,
@@ -161,7 +159,7 @@ let start =
   let quickmenuUpdater = QuickmenuStoreConnector.start();
 
   let configurationUpdater =
-    ConfigurationStoreConnector.start(~configurationFilePath, ~filesToOpen);
+    ConfigurationStoreConnector.start();
   let keyBindingsUpdater = KeyBindingsStoreConnector.start();
 
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);

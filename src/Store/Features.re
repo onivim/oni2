@@ -1389,7 +1389,7 @@ let update =
 
       let vsyncEffect =
         if (Config.Settings.get(Config.key("vsync"), changed) != None) {
-          Isolinear.Effect.create("Features.setVsync", () => {
+          Isolinear.Effect.create(~name="Features.setVsync", () => {
             let resolver = Selectors.configResolver(state);
             setVsync(
               Feature_Configuration.GlobalConfiguration.vsync.get(resolver),

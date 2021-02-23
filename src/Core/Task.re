@@ -55,7 +55,7 @@ module TaskSub = {
 
       let name = "Task.subscription";
 
-      let id = ({instanceId, taskId}) => {
+      let id = ({instanceId, taskId, _}) => {
         Printf.sprintf("%s.%d", instanceId, taskId);
       };
 

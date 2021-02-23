@@ -14,7 +14,7 @@ module Constants = {
 };
 
 let start =
-    (~configurationFilePath: option(FpExp.t(FpExp.absolute)), ~filesToOpen) => {
+    () => {
   // TODO: Port over
   // let onError = (~dispatch, err: string) => {
   //   Log.error("Error loading configuration file: " ++ err);

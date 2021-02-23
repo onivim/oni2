@@ -459,7 +459,6 @@ switch (eff) {
         ~raiseWindow,
         ~close,
         ~window=Some(window),
-        ~filesToOpen=cliOptions.filesToOpen,
         ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
         ~shouldSyntaxHighlight=cliOptions.shouldSyntaxHighlight,
         ~overriddenExtensionsDir=cliOptions.overriddenExtensionsDir,
