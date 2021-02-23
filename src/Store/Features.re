@@ -92,9 +92,10 @@ module Internal = {
       dispatch(Actions.Quit(true))
     );
 
-  let chdir = (path: FpExp.t(FpExp.absolute)) =>
+  let chdir = (path: FpExp.t(FpExp.absolute)) => {
     Feature_Workspace.Effects.changeDirectory(path)
     |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
+  };
 
   let updateEditor = (~editorId, ~msg, layout) => {
     switch (Feature_Layout.editorById(editorId, layout)) {
