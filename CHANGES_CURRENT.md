@@ -16,6 +16,7 @@
 - #3167 - Diagnostics: Show full path to trace file
 - #3170 - CLI - Windows: Allocate console with `-f --silent`
 - #3180 - Explorer: Fix explorer disappearing when changing into current path
+- #3183 - Auto-update: Default auto-update channel should match source build
 
 ### Performance
 
