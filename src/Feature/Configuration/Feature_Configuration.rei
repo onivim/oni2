@@ -45,6 +45,8 @@ let update: (model, msg) => (model, outmsg);
 
 let notifyFileSaved: (FpExp.t(FpExp.absolute), model) => model;
 
+let queueTransform: (~transformer: ConfigurationTransformer.t, model) => model;
+
 let resolver:
   (
     ~fileType: string,

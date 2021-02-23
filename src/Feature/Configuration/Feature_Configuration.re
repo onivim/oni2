@@ -13,6 +13,7 @@ type model = {
   merged: Config.Settings.t,
   legacyConfiguration: LegacyConfiguration.t,
   loader: ConfigurationLoader.t,
+  transformTasks: Task.model,
 };
 
 // DEPRECATED way of working with configuration
@@ -55,6 +56,7 @@ let initial = (~loader, contributions) =>
     merged: Config.Settings.empty,
     legacyConfiguration: LegacyConfiguration.default,
     loader,
+    transformTasks: Task.initial(),
   }
   |> initialLoad
   |> merge;
@@ -92,6 +94,7 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
+  | TransformTask(Task.msg)
   | UserSettingsChanged({
       config: [@opaque] Config.Settings.t,
       legacyConfiguration: [@opaque] LegacyConfiguration.t,
@@ -133,15 +136,28 @@ let update = (model, msg) =>
 
     (model, outmsg);
 
-  | ConfigurationParseError(_) =>
-    // TODO: Bring back diagnostics
-    (model, Nothing)
+  | ConfigurationParseError(_) => (model, Nothing)
+
+  | TransformTask(taskMsg) => (
+      {
+        ...model,
+        loader: ConfigurationLoader.reload(model.loader),
+        transformTasks: Task.update(taskMsg, model.transformTasks),
+      },
+      Nothing,
+    )
   };
 
 // TODO:
 let notifyFileSaved = (path, model) => {
   ...model,
   loader: ConfigurationLoader.notifyFileSaved(path, model.loader),
+};
+
+let queueTransform = (~transformer, model) => {
+  let task = ConfigurationLoader.transformTask(~transformer, model.loader);
+
+  {...model, transformTasks: Task.queueTask(~task, model.transformTasks)};
 };
 
 let vimToCoreSetting =
@@ -177,14 +193,20 @@ let resolver = (~fileType: string, model, vimModel, ~vimSetting, key) => {
   |> Option.value(~default=Config.NotSet);
 };
 
-let sub = ({loader, _}) => {
-  ConfigurationLoader.sub(loader)
-  |> Isolinear.Sub.map(
-       fun
-       | Ok((config, legacyConfiguration)) =>
-         UserSettingsChanged({config, legacyConfiguration})
-       | Error(msg) => ConfigurationParseError(msg),
-     );
+let sub = ({loader, transformTasks, _}) => {
+  let loaderSub =
+    ConfigurationLoader.sub(loader)
+    |> Isolinear.Sub.map(
+         fun
+         | Ok((config, legacyConfiguration)) =>
+           UserSettingsChanged({config, legacyConfiguration})
+         | Error(msg) => ConfigurationParseError(msg),
+       );
+
+  let transformTaskSub =
+    Task.sub(transformTasks) |> Isolinear.Sub.map(msg => TransformTask(msg));
+
+  Isolinear.Sub.batch([loaderSub, transformTaskSub]);
 };
 
 // COMMANDS

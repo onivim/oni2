@@ -51,6 +51,21 @@ let getFilePath: t => option(FpExp.t(FpExp.absolute)) =
   | None => None
   | File({filePath, _}) => Some(filePath);
 
+let transformTask = (~transformer, model, ()) => {
+  switch (model) {
+  | None => ()
+  | File({filePath, _}) =>
+    let configPath = FpExp.toString(filePath);
+    Oni_Core.Log.perf("Apply configuration transform", () => {
+      let parsedJson = Yojson.Safe.from_file(configPath);
+      let newJson = transformer(parsedJson);
+      let oc = open_out(configPath);
+      Yojson.Safe.pretty_to_channel(oc, newJson);
+      close_out(oc);
+    });
+  };
+};
+
 let none = None;
 
 let file = filePath => File({filePath, saveTick: 0});
@@ -66,10 +81,15 @@ let notifyFileSaved = path =>
       orig;
     };
 
+let reload =
+  fun
+  | None => None
+  | File({saveTick, _} as orig) => File({...orig, saveTick: saveTick + 1});
+
 let sub =
   fun
   | None => Isolinear.Sub.none
-  | File({saveTick, filePath}) => File.sub(~filePath, ~saveTick);
+  | File({saveTick, filePath, _}) => File.sub(~filePath, ~saveTick);
 
 let loadImmediate =
   fun

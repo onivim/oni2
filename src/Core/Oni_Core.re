@@ -57,6 +57,7 @@ module SubEx = SubEx;
 module Subscription = Subscription;
 module SyntaxScope = SyntaxScope;
 module ColorTheme = ColorTheme;
+module Task = Task;
 module ThreadHelper = Kernel.ThreadHelper;
 module Tree = Tree;
 module TreeList = TreeList;
