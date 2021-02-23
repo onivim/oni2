@@ -16,6 +16,8 @@ let exitZenMode: model => model;
 
 let update: (msg, model) => model;
 
+let configurationChanged: (Config.resolver, model) => model;
+
 // CONTRIBUTIONS
 
 module Contributions: {

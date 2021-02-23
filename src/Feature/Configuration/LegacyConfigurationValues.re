@@ -17,8 +17,6 @@ type t = {
   workbenchEditorEnablePreview: bool,
   filesExclude: list(string),
   vimUseSystemClipboard,
-  zenModeHideTabs: bool,
-  zenModeSingleFile: bool,
   // Experimental feature flags
   // These are 'use-at-your-own-risk' features
   // Turn on tree-sitter for supported filetypes:
@@ -37,7 +35,5 @@ let default = {
     delete: false,
     paste: false,
   },
-  zenModeHideTabs: true,
-  zenModeSingleFile: true,
   experimentalVimL: [],
 };

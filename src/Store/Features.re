@@ -160,6 +160,7 @@ module Internal = {
       let resolver = Selectors.configResolver(state);
       let maybeRoot = Feature_Explorer.root(state.fileExplorer);
 
+      let zen = Feature_Zen.configurationChanged(resolver, state.zen);
       let sideBar =
         state.sideBar
         |> Feature_SideBar.configurationChanged(
@@ -199,11 +200,12 @@ module Internal = {
         {
           ...state,
           buffers,
+          colorTheme,
           languageSupport,
           sideBar,
           layout,
+          zen,
           zoom,
-          colorTheme,
         },
         eff,
       );

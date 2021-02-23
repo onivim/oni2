@@ -91,14 +91,6 @@ let configurationParsers: list(configurationTuple) = [
     },
   ),
   (
-    "editor.zenMode.hideTabs",
-    (config, json) => {...config, zenModeHideTabs: parseBool(json)},
-  ),
-  (
-    "editor.zenMode.singleFile",
-    (config, json) => {...config, zenModeSingleFile: parseBool(json)},
-  ),
-  (
     "vim.useSystemClipboard",
     (config, json) => {
       ...config,

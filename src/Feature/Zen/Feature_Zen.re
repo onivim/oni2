@@ -1,5 +1,15 @@
 open Oni_Core;
 
+// CONFIGURATION
+
+module Configuration = {
+  open Config.Schema;
+
+  let hideTabs = setting("editor.zenMode.hideTabs", bool, ~default=true);
+
+  let singleFile = setting("editor.zenMode.singleFile", bool, ~default=true);
+};
+
 [@deriving show]
 type command =
   | EnableZenMode
@@ -10,22 +20,45 @@ type msg =
   | Command(command);
 
 type model = {
+  // Keep track of the first configuration change...
+  // When the configuration is first changed, we should
+  // apply 'single-file' zen mode, if applicable.
+  hasGottenFirstConfigurationChange: bool,
   isSingleFile: bool,
   isZenMode: bool,
-  shouldShowTabsInZenMode: bool,
+  shouldHideTabsInZenMode: bool,
 };
 
 let initial = (~isSingleFile) => {
+  hasGottenFirstConfigurationChange: false,
   isSingleFile,
-  isZenMode: true,
-  shouldShowTabsInZenMode: false,
+  isZenMode: false,
+  shouldHideTabsInZenMode: false,
 };
 
 let isZen = ({isZenMode, _}) => isZenMode;
 
-let shouldShowTabsInZenMode = ({shouldShowTabsInZenMode, _}) => shouldShowTabsInZenMode;
+let shouldShowTabsInZenMode = ({shouldHideTabsInZenMode, _}) =>
+  !shouldHideTabsInZenMode;
 
 let exitZenMode = model => {...model, isZenMode: false};
+
+let configurationChanged = (config, model) => {
+  let isSingleFileAllowed = Configuration.singleFile.get(config);
+
+  let model' = {
+    ...model,
+    hasGottenFirstConfigurationChange: true,
+    shouldHideTabsInZenMode: Configuration.hideTabs.get(config),
+  };
+  if (isSingleFileAllowed
+      && !model.hasGottenFirstConfigurationChange
+      && model.isSingleFile) {
+    {...model', isZenMode: true};
+  } else {
+    model';
+  };
+};
 
 let update = (msg, model) =>
   switch (msg) {
@@ -41,6 +74,8 @@ module ContextKeys = {
 
   let inZenMode = bool("zenMode", isZen);
 };
+
+// COMMANDS
 
 module Commands = {
   open Feature_Commands.Schema;
@@ -68,7 +103,7 @@ module Commands = {
 module Contributions = {
   let commands = Commands.[enable, disable];
 
-  let configuration = [];
+  let configuration = Configuration.[hideTabs.spec, singleFile.spec];
 
   let contextKeys = model => {
     WhenExpr.ContextKeys.(
