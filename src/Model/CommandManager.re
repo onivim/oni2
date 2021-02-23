@@ -24,6 +24,9 @@ let current = {
       Feature_Help.Contributions.commands
       |> Command.Lookup.fromList
       |> Command.Lookup.map(msg => Actions.Help(msg)),
+      Feature_Zen.Contributions.commands
+      |> Command.Lookup.fromList
+      |> Command.Lookup.map(msg => Actions.Zen(msg)),
     ]);
 
   state => {

@@ -169,6 +169,7 @@ type t =
   | Vim(Feature_Vim.msg)
   | TabPage(Vim.TabPage.effect)
   | Yank({range: [@opaque] VisualRange.t})
+  | Zen(Feature_Zen.msg)
   | Zoom(Feature_Zoom.msg)
   | Noop
 and command = {

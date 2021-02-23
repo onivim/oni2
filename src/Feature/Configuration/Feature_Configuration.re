@@ -159,15 +159,14 @@ let update = (model, msg) =>
     )
 
   | Exthost(exthostMsg) =>
-    
-      switch (exthostMsg) {
-      | RemoveConfigurationOption({key, _}) =>
-        let transformer = ConfigurationTransformer.removeField(key);
-        (model |> queueTransform(~transformer), Nothing);
-      | UpdateConfigurationOption({key, value, _}) =>
-        let transformer = ConfigurationTransformer.setField(key, value);
-        (model |> queueTransform(~transformer), Nothing);
-      }
+    switch (exthostMsg) {
+    | RemoveConfigurationOption({key, _}) =>
+      let transformer = ConfigurationTransformer.removeField(key);
+      (model |> queueTransform(~transformer), Nothing);
+    | UpdateConfigurationOption({key, value, _}) =>
+      let transformer = ConfigurationTransformer.setField(key, value);
+      (model |> queueTransform(~transformer), Nothing);
+    }
   };
 
 // TODO:

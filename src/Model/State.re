@@ -429,7 +429,7 @@ type t = {
   windowDisplayMode,
   titlebarHeight: float,
   workspace: Feature_Workspace.model,
-  zenMode: bool,
+  zen: Feature_Zen.model,
   // State of the bottom pane
   pane: Feature_Pane.model,
   searchPane: Feature_Search.model,
@@ -478,6 +478,7 @@ let initial =
         Feature_Layout.Contributions.configuration,
         Feature_StatusBar.Contributions.configuration,
         Feature_TitleBar.Contributions.configuration,
+        Feature_Zen.Contributions.configuration,
         Feature_Zoom.Contributions.configuration,
       ],
     );
@@ -560,7 +561,8 @@ let initial =
         workingDirectory,
       ),
     fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),
-    zenMode: false,
+    zen:
+      Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
     pane: Feature_Pane.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,

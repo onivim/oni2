@@ -285,11 +285,10 @@ let make =
     state.config
     |> Feature_Configuration.Legacy.getValue(c => c.workbenchEditorShowTabs);
 
-  let hideZenModeTabs =
-    state.config
-    |> Feature_Configuration.Legacy.getValue(c => c.zenModeHideTabs);
+  let hideZenModeTabs = !Feature_Zen.shouldShowTabsInZenMode(state.zen);
+  let isZenMode = Feature_Zen.isZen(state.zen);
 
-  let showTabs = editorShowTabs && (!state.zenMode || !hideZenModeTabs);
+  let showTabs = editorShowTabs && (!isZenMode || !hideZenModeTabs);
 
   let isFocused = FocusManager.current(state) |> Focus.isLayoutFocused;
 
@@ -298,7 +297,7 @@ let make =
       uiFont={state.uiFont}
       theme
       isFocused
-      isZenMode={state.zenMode}
+      isZenMode
       showTabs
       model={state.layout}
       config={Selectors.configResolver(state)}

@@ -58,7 +58,7 @@ module Styles = {
 };
 
 let make = (~dispatch, ~state: State.t, ()) => {
-  let State.{uiFont as font, sideBar, zenMode, buffers, editorFont, _} = state;
+  let State.{uiFont as font, sideBar, buffers, editorFont, zen, _} = state;
 
   let theme = Feature_Theme.colors(state.colorTheme);
 
@@ -75,6 +75,8 @@ let make = (~dispatch, ~state: State.t, ()) => {
 
   let statusBarDispatch = msg => dispatch(Actions.StatusBar(msg));
   let messagesDispatch = msg => dispatch(Actions.Messages(msg));
+
+  let zenMode = Feature_Zen.isZen(zen);
 
   let messages = () => {
     <Feature_Messages.View

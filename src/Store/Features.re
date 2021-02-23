@@ -964,7 +964,7 @@ let update =
         {
           ...state',
           // When the sidebar acquires focus, zen-mode should be disabled
-          zenMode: false,
+          zen: Feature_Zen.exitZenMode(state.zen),
         },
         Effect.none,
       );
@@ -1483,7 +1483,10 @@ let update =
 
     | Focus(Bottom) => (state |> FocusManager.push(Pane), Effect.none)
 
-    | SplitAdded => ({...state, zenMode: false}, Effect.none)
+    | SplitAdded => (
+        {...state, zen: Feature_Zen.exitZenMode(state.zen)},
+        Effect.none,
+      )
 
     | RemoveLastWasBlocked => (state, Internal.quitEffect)
 
@@ -2110,6 +2113,10 @@ let update =
         |> FocusManager.push(Focus.FileExplorer);
       (state', eff);
     };
+
+  | Zen(msg) =>
+    let zen' = Feature_Zen.update(msg, state.zen);
+    ({...state, zen: zen'}, Isolinear.Effect.none);
 
   | Zoom(msg) =>
     let (zoom', outmsg) = Feature_Zoom.update(msg, state.zoom);
