@@ -94,6 +94,7 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
+  | Exthost(Exthost.Msg.Configuration.msg)
   | TransformTask(Task.msg)
   | UserSettingsChanged({
       config: [@opaque] Config.Settings.t,
@@ -101,10 +102,20 @@ type msg =
     })
   | ConfigurationParseError(string);
 
+module Msg = {
+  let exthost = msg => Exthost(msg);
+};
+
 type outmsg =
   | ConfigurationChanged({changed: Config.Settings.t})
   | OpenFile(FpExp.t(FpExp.absolute))
   | Nothing;
+
+let queueTransform = (~transformer, model) => {
+  let task = ConfigurationLoader.transformTask(~transformer, model.loader);
+
+  {...model, transformTasks: Task.queueTask(~task, model.transformTasks)};
+};
 
 let update = (model, msg) =>
   switch (msg) {
@@ -146,18 +157,23 @@ let update = (model, msg) =>
       },
       Nothing,
     )
+
+  | Exthost(exthostMsg) =>
+    
+      switch (exthostMsg) {
+      | RemoveConfigurationOption({key, _}) =>
+        let transformer = ConfigurationTransformer.removeField(key);
+        (model |> queueTransform(~transformer), Nothing);
+      | UpdateConfigurationOption({key, value, _}) =>
+        let transformer = ConfigurationTransformer.setField(key, value);
+        (model |> queueTransform(~transformer), Nothing);
+      }
   };
 
 // TODO:
 let notifyFileSaved = (path, model) => {
   ...model,
   loader: ConfigurationLoader.notifyFileSaved(path, model.loader),
-};
-
-let queueTransform = (~transformer, model) => {
-  let task = ConfigurationLoader.transformTask(~transformer, model.loader);
-
-  {...model, transformTasks: Task.queueTask(~task, model.transformTasks)};
 };
 
 let vimToCoreSetting =

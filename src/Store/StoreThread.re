@@ -158,8 +158,7 @@ let start =
 
   let quickmenuUpdater = QuickmenuStoreConnector.start();
 
-  let configurationUpdater =
-    ConfigurationStoreConnector.start();
+  let configurationUpdater = ConfigurationStoreConnector.start();
   let keyBindingsUpdater = KeyBindingsStoreConnector.start();
 
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);

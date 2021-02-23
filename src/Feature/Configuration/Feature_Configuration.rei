@@ -36,6 +36,8 @@ let toExtensionConfiguration:
 [@deriving show]
 type msg;
 
+module Msg: {let exthost: Exthost.Msg.Configuration.msg => msg;};
+
 type outmsg =
   | ConfigurationChanged({changed: Config.Settings.t})
   | OpenFile(FpExp.t(FpExp.absolute))

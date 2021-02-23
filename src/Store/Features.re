@@ -32,15 +32,6 @@ module Internal = {
     );
   };
 
-  let updateConfigurationEffect = transformer => {
-    Isolinear.Effect.createWithDispatch(
-      ~name="features.updateConfiguration", dispatch => {
-      dispatch(
-        Actions.ConfigurationTransform("configuration.json", transformer),
-      )
-    });
-  };
-
   let setThemesEffect =
       (~themes: list(Exthost.Extension.Contributions.Theme.t)) => {
     switch (themes) {

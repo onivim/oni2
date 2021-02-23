@@ -26,9 +26,6 @@ type t =
   // TODO: Move to command in feature configuration
   | ConfigurationReload
   | ConfigurationSet([@opaque] Feature_Configuration.LegacyConfiguration.t)
-  // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
-  // opens the file [fileName] and applies [f] to the loaded JSON.
-  | ConfigurationTransform(string, configurationTransformer)
   | Decorations(Feature_Decorations.msg)
   | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)

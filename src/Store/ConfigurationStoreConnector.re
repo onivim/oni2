@@ -13,8 +13,7 @@ module Constants = {
   let diagnosticsKey = "onivim.configuration";
 };
 
-let start =
-    () => {
+let start = () => {
   // TODO: Port over
   // let onError = (~dispatch, err: string) => {
   //   Log.error("Error loading configuration file: " ++ err);
