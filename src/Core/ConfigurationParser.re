@@ -73,10 +73,6 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, workbenchIconTheme: parseString(json)},
   ),
   (
-    "workbench.editor.showTabs",
-    (config, json) => {...config, workbenchEditorShowTabs: parseBool(json)},
-  ),
-  (
     "workbench.editor.enablePreview",
     (config, json) => {
       ...config,
