@@ -1,15 +1,15 @@
 open Oni_Core;
 open Utility;
 
-let defaultUpdateChannel = {
+let defaultUpdateChannel =
   if (Oni_Core.BuildInfo.version |> StringEx.endsWith(~postfix="-staging")) {
-    "staging"
-  } else if (Oni_Core.BuildInfo.version |> StringEx.endsWith(~postfix="-nightly")) {
-    "master"
+    "staging";
+  } else if (Oni_Core.BuildInfo.version
+             |> StringEx.endsWith(~postfix="-nightly")) {
+    "master";
   } else {
-    "stable"
-  }
-};
+    "stable";
+  };
 
 type model = {
   automaticallyChecksForUpdates: bool,
@@ -42,7 +42,6 @@ let platformStr =
   | Windows(_) => "windows"
   | _ => ""
   };
-
 
 module Configuration = {
   open Config.Schema;
