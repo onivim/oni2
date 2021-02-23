@@ -199,6 +199,8 @@ let scrollPage: (~count: int, t) => t;
 
 let getCharacterWidth: t => float;
 
+let singleLineSelectedText: t => option(string);
+
 // Given a start position and a delta screen lines,
 // figure out a destination byte position.
 let moveScreenLines:

@@ -127,7 +127,7 @@ let startWithExtensions =
       ~env=[
         ("PATH", Oni_Core.ShellUtility.getPathFromEnvironment()),
         (
-          "AMD_ENTRYPOINT",
+          "VSCODE_AMD_ENTRYPOINT",
           "vs/workbench/services/extensions/node/extensionHostProcess",
         ),
         ("PIPE_LOGGING", "true"), // Pipe logging to parent

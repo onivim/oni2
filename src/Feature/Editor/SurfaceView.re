@@ -250,7 +250,7 @@ let%component make =
 
         snippets
         |> Feature_Snippets.session
-        |> Option.iter(SnippetVisualizer.draw(~config, ~context));
+        |> Option.iter(SnippetVisualizer.draw(~colors, ~config, ~context));
 
         ContentView.render(
           ~context,
@@ -271,12 +271,14 @@ let%component make =
         if (Config.scrollShadow.get(config)) {
           let () =
             ScrollShadow.renderVertical(
+              ~color=colors.shadow,
               ~editor,
               ~width=float(bufferPixelWidth),
               ~context,
             );
           let () =
             ScrollShadow.renderHorizontal(
+              ~color=colors.shadow,
               ~editor,
               ~width=float(bufferPixelWidth),
               ~context,

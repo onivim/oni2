@@ -71,3 +71,5 @@ let toHash = ranges => {
 };
 
 let equals = (a, b) => BytePosition.(a.start == b.start && a.stop == b.stop);
+
+let isSingleLine = range => range.start.line == range.stop.line;

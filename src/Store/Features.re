@@ -28,7 +28,7 @@ module Internal = {
   let executeCommandEffect = (command, arguments) => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.executeCommand", dispatch =>
-      dispatch(Actions.CommandInvoked({command, arguments}))
+      dispatch(Actions.KeybindingInvoked({command, arguments}))
     );
   };
 
@@ -49,7 +49,7 @@ module Internal = {
       Isolinear.Effect.createWithDispatch(
         ~name="feature.extensions.selectTheme", dispatch => {
         dispatch(
-          ThemeLoadById(Exthost.Extension.Contributions.Theme.id(theme)),
+          ThemeSelected(Exthost.Extension.Contributions.Theme.id(theme)),
         )
       })
     | themes =>
@@ -92,9 +92,10 @@ module Internal = {
       dispatch(Actions.Quit(true))
     );
 
-  let chdir = (path: Fp.t(Fp.absolute)) =>
+  let chdir = (path: FpExp.t(FpExp.absolute)) => {
     Feature_Workspace.Effects.changeDirectory(path)
     |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
+  };
 
   let updateEditor = (~editorId, ~msg, layout) => {
     switch (Feature_Layout.editorById(editorId, layout)) {
@@ -174,6 +175,13 @@ module Internal = {
              ~config=resolver,
            );
 
+      let colorTheme =
+        state.colorTheme |> Feature_Theme.configurationChanged(~resolver);
+
+      let buffers =
+        state.buffers
+        |> Feature_Buffers.configurationChanged(~config=resolver);
+
       let languageSupport =
         state.languageSupport
         |> Feature_LanguageSupport.configurationChanged(~config=resolver);
@@ -195,7 +203,18 @@ module Internal = {
       let (zoom, zoomEffect) =
         Feature_Zoom.configurationChanged(~config=resolver, state.zoom);
       let eff = zoomEffect |> Isolinear.Effect.map(msg => Actions.Zoom(msg));
-      ({...state, languageSupport, sideBar, layout, zoom}, eff);
+      (
+        {
+          ...state,
+          buffers,
+          languageSupport,
+          sideBar,
+          layout,
+          zoom,
+          colorTheme,
+        },
+        eff,
+      );
     };
 
   let updateMode =
@@ -413,8 +432,10 @@ let update =
     (state', effect);
 
   | FileExplorer(msg) =>
+    let config = Selectors.configResolver(state);
     let (model, outmsg) =
       Feature_Explorer.update(
+        ~config,
         ~configuration=state.configuration,
         msg,
         state.fileExplorer,
@@ -490,6 +511,12 @@ let update =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
       | DebugInputShown => Internal.openFileEffect("oni://DebugInput")
+
+      | ErrorNotifications(errorMessages) =>
+        errorMessages
+        |> List.map(msg => Internal.notificationEffect(~kind=Error, msg))
+        |> Isolinear.Effect.batch
+
       | MapParseError({fromKeys, toKeys, error}) =>
         Internal.notificationEffect(
           ~kind=Error,
@@ -590,31 +617,26 @@ let update =
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
-      | InsertSnippet({meetColumn, snippet, additionalEdits}) =>
-        if (!
-              Feature_Configuration.GlobalConfiguration.Experimental.Snippets.enabled.
-                get(
-                config,
-              )) {
-          let additionalEdits =
-            additionalEdits |> List.map(exthostEditToVimEdit);
-          let insertText = Feature_Snippets.snippetToInsert(~snippet);
-          (
-            state,
-            Feature_Vim.Effects.applyCompletion(
-              ~additionalEdits,
-              ~meetColumn,
-              ~insertText,
-            )
-            |> Isolinear.Effect.map(msg => Vim(msg)),
+      | InsertSnippet({meetColumn, snippet, _}) =>
+        let editor = Feature_Layout.activeEditor(state.layout);
+        let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
+        let characterPosition =
+          CharacterPosition.{line: cursor.line, character: meetColumn};
+        let rangeToReplace =
+          CharacterRange.{start: characterPosition, stop: cursor};
+        let maybeReplaceRange =
+          Feature_Editor.Editor.characterRangeToByteRange(
+            rangeToReplace,
+            editor,
           );
-        } else {
-          (
-            state,
-            Feature_Snippets.Effects.insertSnippet(~meetColumn, ~snippet)
-            |> Isolinear.Effect.map(msg => Snippets(msg)),
-          );
-        }
+        (
+          state,
+          Feature_Snippets.Effects.insertSnippet(
+            ~replaceRange=maybeReplaceRange,
+            ~snippet,
+          )
+          |> Isolinear.Effect.map(msg => Snippets(msg)),
+        );
       | OpenFile({filePath, location}) => (
           state,
           Internal.openFileEffect(~position=location, filePath),
@@ -767,6 +789,16 @@ let update =
         |> Isolinear.Effect.map(msg => Notification(msg)),
       )
 
+    | PaneButton(pane) =>
+      switch (pane) {
+      | Notifications => (
+          state,
+          Feature_Notification.Effects.clear()
+          |> Isolinear.Effect.map(msg => Notification(msg)),
+        )
+      | _ => (state, Isolinear.Effect.none)
+      }
+
     | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
     };
 
@@ -874,6 +906,20 @@ let update =
 
     | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
     | PreviewFile(filePath) => (state, Internal.previewFileEffect(filePath))
+
+    | OriginalContentLoaded({bufferId, originalLines}) => (
+        {
+          ...state,
+          buffers:
+            Feature_Buffers.setOriginalLines(
+              ~bufferId,
+              ~originalLines,
+              state.buffers,
+            ),
+        },
+        Isolinear.Effect.none,
+      )
+
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -1032,6 +1078,12 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Effect.none)
+
+    | NotifyInfo(msg) => (
+        state,
+        Internal.notificationEffect(~kind=Info, msg),
+      )
+
     | BufferModifiedSet(id, _) =>
       open Feature_Editor;
 
@@ -1190,12 +1242,33 @@ let update =
           extHostClient,
         );
 
+      let maybeFullPath =
+        buffer
+        |> Buffer.getFilePath
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
+
+      let clearSnippetCacheEffect =
+        maybeFullPath
+        |> Option.map(filePath =>
+             Service_Snippets.Effect.clearCachedSnippets(~filePath)
+           )
+        |> Option.value(~default=Isolinear.Effect.none);
+
       let modelSavedEff =
         Service_Exthost.Effects.Documents.modelSaved(
           ~uri=Buffer.getUri(buffer), extHostClient, () =>
           Noop
         );
-      (state, Isolinear.Effect.batch([eff, modelSavedEff]));
+
+      let input' =
+        maybeFullPath
+        |> Option.map(fp => Feature_Input.notifyFileSaved(fp, state.input))
+        |> Option.value(~default=state.input);
+
+      (
+        {...state, input: input'},
+        Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
+      );
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
       let fileType =
@@ -1217,7 +1290,7 @@ let update =
               state.config,
               state.vim,
             ),
-          ~theme=state.tokenTheme,
+          ~theme=state.colorTheme |> Feature_Theme.tokenColors,
           update,
           state.syntaxHighlights,
         );
@@ -1521,6 +1594,11 @@ let update =
 
     let state = {...state, colorTheme: model'};
     switch (outmsg) {
+    | NotifyError(msg) => (
+        state,
+        Internal.notificationEffect(~kind=Error, msg),
+      )
+
     | OpenThemePicker(_) =>
       let themes =
         state.extensions
@@ -1657,9 +1735,13 @@ let update =
 
     let wasSnippetActive = Feature_Snippets.isActive(state.snippets);
 
+    let selections = Feature_Editor.Editor.selections(editor);
+
     let (snippets', outmsg) =
       Feature_Snippets.update(
+        ~languageInfo=state.languageInfo,
         ~resolverFactory,
+        ~selections,
         ~maybeBuffer,
         ~editorId,
         ~cursorPosition,
@@ -1755,6 +1837,14 @@ let update =
              );
         (layout', Isolinear.Effect.none);
 
+      | ShowFilePicker(snippetFiles) =>
+        let eff =
+          Isolinear.Effect.createWithDispatch(
+            ~name="snippet.fileMenu", dispatch => {
+            dispatch(Actions.QuickmenuShow(SnippetFilePicker(snippetFiles)))
+          });
+        (state.layout, eff);
+
       | ShowPicker(snippetsWithMetadata) =>
         let eff =
           Isolinear.Effect.createWithDispatch(~name="snippet.menu", dispatch => {
@@ -1763,6 +1853,11 @@ let update =
             )
           });
         (state.layout, eff);
+
+      | OpenFile(filePath) => (
+          state.layout,
+          Internal.openFileEffect(FpExp.toString(filePath)),
+        )
 
       | Effect(eff) => (
           state.layout,
@@ -1967,9 +2062,12 @@ let update =
       )
 
     | WorkspaceChanged(maybeWorkspaceFolder) =>
+      let maybeExplorerFolder =
+        maybeWorkspaceFolder
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
       let fileExplorer =
         Feature_Explorer.setRoot(
-          ~rootPath=maybeWorkspaceFolder,
+          ~rootPath=maybeExplorerFolder,
           state.fileExplorer,
         );
 

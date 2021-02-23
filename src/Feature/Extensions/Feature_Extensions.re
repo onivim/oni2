@@ -83,7 +83,7 @@ let snippetFilePaths = (~fileType, model) => {
          }
        })
     |> List.filter_map(({path, _}: Contributions.Snippet.t) =>
-         Fp.absoluteCurrentPlatform(path)
+         FpExp.absoluteCurrentPlatform(path)
        )
   );
 };

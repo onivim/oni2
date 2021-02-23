@@ -148,10 +148,10 @@ module Store = {
       };
     let maybeFilePath =
       storeFolderResult
-      |> Result.map(storeFolder => Fp.append(storeFolder, hash))
+      |> Result.map(storeFolder => FpExp.append(storeFolder, hash))
       |> ResultEx.flatMap(Filesystem.getOrCreateConfigFolder)
-      |> Result.map(folder => Fp.append(folder, "store.json"))
-      |> Result.map(Fp.toString)
+      |> Result.map(folder => FpExp.append(folder, "store.json"))
+      |> Result.map(FpExp.toString)
       |> Result.fold(
            ~ok=Option.some,
            ~error=message => {

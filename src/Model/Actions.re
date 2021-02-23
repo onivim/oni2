@@ -6,7 +6,6 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Syntax;
 
 [@deriving show({with_path: false})]
 type t =
@@ -39,14 +38,10 @@ type t =
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
   | FileSystem(Feature_FileSystem.msg)
-  | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
   | KeybindingInvoked({
       command: string,
       arguments: Yojson.Safe.t,
     })
-  // Reload keybindings from configuration
-  | KeyBindingsReload
-  | KeyBindingsParseError(string)
   | KeyDown({
       key: EditorInput.KeyCandidate.t,
       scancode: int,
@@ -138,13 +133,9 @@ type t =
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
-  | ThemeLoadByPath(string, string)
-  | ThemeLoadById(string)
-  | ThemeChanged(string)
+  | ThemeSelected(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
-  | TokenThemeLoaded([@opaque] TokenTheme.t)
-  | ThemeLoadError(string)
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
@@ -210,6 +201,7 @@ and quickmenuVariant =
   | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | SnippetPicker(list(Service_Snippets.SnippetWithMetadata.t))
+  | SnippetFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | FileTypesPicker({
       bufferId: int,

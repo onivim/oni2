@@ -192,6 +192,24 @@ __Pass:__
 - [ ] OSX
 - [ ] Linux
 
+## 7.4 Dead Keys
+
+Regresion test for #3157
+
+Prerequisite:
+- Install ENG-INTL keyboard layout
+
+- Switch keyboard layout to English (International)
+- Run Onivim 2
+- Enter dead key (') followed by space -> should type key
+- Press dead key twice (") - platform dependent, should output one or two instances of the key
+- Enter dead key (') followed by composing character (like a) - should get à
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
 # 8. Workspace
 
 ## 8.1 Open Workspace via Command Palette
@@ -215,6 +233,21 @@ __Pass:__
 - [ ] OSX
 - [ ] Linux
 
+## 8.2 Windows-style path handling
+
+### 8.2.1 Verify can `:cd` into a UNC path
+
+Regression test for #3151
+
+- Open Onivim 2
+- `:cd` into a UNC path - for example: `\\\\LOCALHOST\\c$\\oni2`
+- Verify the explorer is refreshed
+- Verify directory nodes can be expanded
+- Verify files can be opened
+
+__Pass:__
+- [ ] Win
+
 # 9. Terminal
 
 ## 9.1 Check that `ONIVIM_TERMINAL` is set
@@ -224,6 +257,69 @@ __Pass:__
 - On OSX, Linux - run `echo $ONIVIM_TERMINAL`
 - On Windows Powershell - run `$env:ONIVIM_TERMINAL`
 - Validate version string is displayed
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+# 10. Menubar
+
+## 10.1 Verify simple command 
+
+Regression test for #3108
+
+- Open Onivim 2
+- Click on File -> Open Folder
+- Verify Open Folder dialog is shown
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+# 10. Extension Management
+
+# 10.1 Install large extension (`redhat.java`)
+
+- Open Onivim 2
+- Go to extensions pane (Command+Shift+X / Control+Shift+X)
+- Install `redhat.java` 
+- Validate installation is successful
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+# 11. Buffers
+
+## 11.1 Large Files
+
+### 11.1.1 Large file should show notification (#1670)
+
+_Setup:_
+- Download test file: https://mdq-preview.incommon.org/entities/idps/all
+
+- Open Onivim 2 with default settings
+- Open test file (`:e /path/to/all`)
+- Verify file opens, and a large-file notification is shown
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+### 11.1.2 Disabling `"editor.largeFileOptimizations"` should still load files
+
+_Setup:_
+- Download test file: https://mdq-preview.incommon.org/entities/idps/all
+
+- Open Onivim 2 with default settings
+- Open test file (`:e /path/to/all`)
+- Verify file opens
+- Verify no large-file notification is shown
+- Verify syntax highlighting shows up
 
 __Pass:__
 - [ ] Win

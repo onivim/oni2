@@ -214,7 +214,7 @@ let start =
       | ColorSchemeChanged(maybeColorScheme) =>
         switch (maybeColorScheme) {
         | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker))
-        | Some(colorScheme) => dispatch(Actions.ThemeLoadById(colorScheme))
+        | Some(colorScheme) => dispatch(Actions.ThemeSelected(colorScheme))
         }
 
       | MacroRecordingStarted({register}) =>
@@ -231,13 +231,13 @@ let start =
     );
 
   let _: unit => unit =
-    Vim.onDirectoryChanged(newDir =>
+    Vim.onDirectoryChanged(newDir => {
       dispatch(
         Actions.Workspace(
           Feature_Workspace.Msg.workingDirectoryChanged(newDir),
         ),
       )
-    );
+    });
 
   let _: unit => unit =
     Vim.onMessage((priority, title, message) => {

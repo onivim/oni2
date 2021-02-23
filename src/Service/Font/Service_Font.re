@@ -86,28 +86,7 @@ let setFont =
           Revery_Font.Family.system(familyString);
         };
 
-      // This is formatted this way to accomodate other future features
-      let features =
-        switch (fontLigatures) {
-        | `Bool(true) => []
-        | `Bool(false) => [
-            Revery.Font.Feature.make(
-              ~tag=Revery.Font.Features.contextualAlternates,
-              ~value=0,
-            ),
-            Revery.Font.Feature.make(
-              ~tag=Revery.Font.Features.standardLigatures,
-              ~value=0,
-            ),
-          ]
-        | `List(list) =>
-          list
-          |> List.map(tag => {
-               Log.infof(m => m("Enabling font feature: %s", tag));
-               let tag = Revery_Font.Feature.customTag(tag);
-               Revery.Font.Feature.make(~tag, ~value=1);
-             })
-        };
+      let features = fontLigatures |> FontLigatures.toHarfbuzzFeatures;
 
       let res =
         FontLoader.loadAndValidateEditorFont(
@@ -179,8 +158,8 @@ module Sub = {
   type params = {
     fontFamily: string,
     fontSize: float,
-    fontLigatures: ConfigurationValues.fontLigatures,
-    fontSmoothing: ConfigurationValues.fontSmoothing,
+    fontLigatures: FontLigatures.t,
+    fontSmoothing: FontSmoothing.t,
     fontWeight: Revery.Font.Weight.t,
     uniqueId: string,
   };
@@ -190,8 +169,8 @@ module Sub = {
       type state = {
         fontFamily: string,
         fontSize: float,
-        fontLigatures: ConfigurationValues.fontLigatures,
-        fontSmoothing: ConfigurationValues.fontSmoothing,
+        fontLigatures: FontLigatures.t,
+        fontSmoothing: FontSmoothing.t,
         fontWeight: Revery.Font.Weight.t,
         requestId: ref(int),
       };
@@ -202,8 +181,7 @@ module Sub = {
 
       let id = ({uniqueId, _}) => uniqueId;
 
-      let getReveryFontSmoothing:
-        ConfigurationValues.fontSmoothing => Revery.Font.Smoothing.t =
+      let getReveryFontSmoothing: FontSmoothing.t => Revery.Font.Smoothing.t =
         fun
         | None => Revery.Font.Smoothing.None
         | Antialiased => Revery.Font.Smoothing.Antialiased

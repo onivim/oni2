@@ -46,6 +46,8 @@ let defaultTerminalFontSize = 12.;
 
 let defaultTheme = "LaserWave Italic";
 
+let diffMarkersMaxLineCount = 2000;
+
 let syntaxEagerMaxLines = 500;
 let syntaxEagerMaxLineLength = 1000;
 let syntaxEagerBudget = 0.25; /* 250 milliseconds */
@@ -77,7 +79,7 @@ let notificationWidth = 300;
  * because our current textmate highlighting strategy is very slow.
  * We'll switch to a native strategy, and bump this up.
  */
-let largeFileLineCountThreshold = 1000;
+let largeFileLineCountThreshold = 300 * 1000;
 
 let doubleClickTime = Revery.Time.milliseconds(500);
 

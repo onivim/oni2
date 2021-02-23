@@ -29,7 +29,7 @@ let update: (msg, model) => (model, outmsg);
 // EFFECTS
 
 module Effects: {
-  let changeDirectory: Fp.t(Fp.absolute) => Isolinear.Effect.t(msg);
+  let changeDirectory: FpExp.t(FpExp.absolute) => Isolinear.Effect.t(msg);
   let pickFolder: Isolinear.Effect.t(msg);
 };
 

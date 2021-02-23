@@ -22,7 +22,7 @@ module Internal = {
     |> Option.map(
          FunEx.tap(p =>
            Log.infof(m =>
-             m("Searching for user extensions in: %s", p |> Fp.toString)
+             m("Searching for user extensions in: %s", p |> FpExp.toString)
            )
          ),
        )
@@ -48,14 +48,14 @@ module Internal = {
         m(
           "Installing extension %s to %s",
           name,
-          extensionsFolder |> Fp.toString,
+          extensionsFolder |> FpExp.toString,
         )
       );
 
       NodeTask.run(
         ~name="Install",
         ~setup,
-        ~args=[absolutePath, extensionsFolder |> Fp.toString, folderName],
+        ~args=[absolutePath, extensionsFolder |> FpExp.toString, folderName],
         "install-extension.js",
       );
     };

@@ -21,7 +21,8 @@ module Internal = {
   };
 
   let luvDirentToFsTree = (~cwd, {name, kind}: Luv.File.Dirent.t) => {
-    let path = Filename.concat(cwd, name);
+    let path = FpExp.At.(cwd / name);
+
     if (kind == `FILE || kind == `LINK) {
       Some(FsTreeNode.file(path));
     } else if (kind == `DIR) {
@@ -31,7 +32,7 @@ module Internal = {
     };
   };
 
-  let luvDirentsToFsTree = (~cwd, ~ignored, dirents) => {
+  let luvDirentsToFsTree = (~cwd: FpExp.t(FpExp.absolute), ~ignored, dirents) => {
     dirents
     |> List.filter(({name, _}: Luv.File.Dirent.t) =>
          name != ".." && name != "." && !List.mem(name, ignored)
@@ -52,11 +53,12 @@ module Internal = {
    */
   let getFilesAndFolders = (~ignored, cwd) => {
     cwd
+    |> FpExp.toString
     |> Service_OS.Api.readdir
     |> Lwt.map(luvDirentsToFsTree(~ignored, ~cwd));
   };
 
-  let getDirectoryTree = (cwd, ignored) => {
+  let getDirectoryTree = (cwd: FpExp.t(FpExp.absolute), ignored) => {
     let childrenPromise = getFilesAndFolders(~ignored, cwd);
 
     childrenPromise
@@ -69,7 +71,8 @@ module Internal = {
 module Effects = {
   let load = (directory, configuration, ~onComplete) => {
     Isolinear.Effect.createWithDispatch(~name="explorer.load", dispatch => {
-      Log.infof(m => m("Loading nodes for directory: %s", directory));
+      let directoryStr = FpExp.toString(directory);
+      Log.infof(m => m("Loading nodes for directory: %s", directoryStr));
       let ignored =
         Configuration.getValue(c => c.filesExclude, configuration);
       let promise = Internal.getDirectoryTree(directory, ignored);
@@ -78,7 +81,7 @@ module Effects = {
         promise,
         tree => {
           Log.infof(m =>
-            m("Successfully loaded nodes for directory: %s", directory)
+            m("Successfully loaded nodes for directory: %s", directoryStr)
           );
           dispatch(onComplete(tree));
         },
@@ -88,7 +91,7 @@ module Effects = {
         Log.errorf(m =>
           m(
             "Error loading directory %s: %s",
-            directory,
+            directoryStr,
             Printexc.to_string(exn),
           )
         )
@@ -107,7 +110,7 @@ type outmsg =
   | GrabFocus;
 
 let setTree = (tree, model) => {
-  let uniqueId = (data: FsTreeNode.metadata) => data.path;
+  let uniqueId = (data: FsTreeNode.metadata) => FpExp.toString(data.path);
   let (rootName, firstLevelChildren) =
     switch (tree) {
     | Tree.Leaf(_) => ("", [])
@@ -210,7 +213,7 @@ let revealAndFocusPath = (~configuration, path, model: model) => {
   };
 };
 
-let update = (~configuration, msg, model) => {
+let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
   | ActiveFilePathChanged(maybeFilePath) =>
     switch (model) {
@@ -218,9 +221,8 @@ let update = (~configuration, msg, model) => {
       switch (maybeFilePath) {
       | Some(path) =>
         let autoReveal =
-          Oni_Core.Configuration.getValue(
-            c => c.explorerAutoReveal,
-            configuration,
+          Feature_Configuration.GlobalConfiguration.Explorer.autoReveal.get(
+            config,
           );
         switch (autoReveal) {
         | `HighlightAndScroll =>
@@ -279,11 +281,15 @@ let update = (~configuration, msg, model) => {
           c => c.workbenchEditorEnablePreview,
           configuration,
         )
-          ? PreviewFile(node.path) : OpenFile(node.path),
+          ? PreviewFile(FpExp.toString(node.path))
+          : OpenFile(FpExp.toString(node.path)),
       )
     | Component_VimTree.Selected(node) =>
       // Set active here to avoid scrolling in BufferEnter
-      (model |> setActive(Some(node.path)), OpenFile(node.path))
+      (
+        model |> setActive(Some(node.path)),
+        OpenFile(FpExp.toString(node.path)),
+      )
     | Component_VimTree.Nothing => (model, Nothing)
     };
   };
@@ -303,7 +309,11 @@ let sub = (~configuration, {rootPath, _}) => {
       }
     | Error(msg) => TreeLoadError(msg);
 
-  Service_OS.Sub.dir(~uniqueId="FileExplorerSideBar", ~toMsg, rootPath);
+  Service_OS.Sub.dir(
+    ~uniqueId="FileExplorerSideBar",
+    ~toMsg,
+    FpExp.toString(rootPath),
+  );
 };
 
 module Contributions = {
