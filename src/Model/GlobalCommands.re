@@ -104,24 +104,6 @@ module Oni = {
           ConfigurationReload,
         );
 
-      let enableZenMode =
-        register(
-          ~category="View",
-          ~title="Enable Zen Mode",
-          ~isEnabledWhen=WhenExpr.parse("!zenMode"),
-          "workbench.action.enableZenMode", // use workbench.action.toggleZenMode?
-          //~isEnabled=() => !getState().zenMode,
-          EnableZenMode,
-        );
-
-      let disableZenMode =
-        register(
-          ~category="View",
-          ~title="Disable Zen Mode",
-          ~isEnabledWhen=WhenExpr.parse("zenMode"),
-          "workbench.action.disableZenMode", // use workbench.action.toggleZenMode?
-          DisableZenMode,
-        );
     };
   };
 };

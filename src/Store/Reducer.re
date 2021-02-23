@@ -28,13 +28,9 @@ let reduce: (State.t, Actions.t) => State.t =
           ...s,
           zen: Feature_Zen.exitZenMode(s.zen),
         }
-      // TODO:
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetGrammarRepository(grammarRepository) => {...s, grammarRepository}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
-      // TODO: Port to feature zen
-      // | EnableZenMode => {...s, zenMode: true}
-      // | DisableZenMode => {...s, zenMode: false}
       | ReallyQuitting => {...s, isQuitting: true}
       | WindowFocusGained => {...s, windowIsFocused: true}
       | WindowFocusLost => {...s, windowIsFocused: false}

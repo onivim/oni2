@@ -42,10 +42,29 @@ module ContextKeys = {
   let inZenMode = bool("zenMode", isZen);
 };
 
+module Commands = {
+    open Feature_Commands.Schema;
+    let enable = define(
+        ~category="View",
+        ~title="Enable Zen Mode",
+        ~isEnabledWhen=WhenExpr.parse("!zenMode"),
+        "workbench.action.enableZenMode",
+        Command(EnableZenMode)
+    );
+
+    let disable = define(
+        ~category="View",
+        ~title="Disable Zen Mode",
+        ~isEnabledWhen=WhenExpr.parse("zenMode"),
+        "workbench.action.disableZenMode",
+        Command(DisableZenMode)
+    );
+}
+
 // CONTRIBUTIONS
 
 module Contributions = {
-  let commands = [];
+  let commands = Commands.[enable, disable];
 
   let configuration = [];
 

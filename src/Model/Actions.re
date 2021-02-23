@@ -134,8 +134,6 @@ type t =
   | ThemeSelected(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
-  | EnableZenMode
-  | DisableZenMode
   | CopyActiveFilepathToClipboard
   | SCM(Feature_SCM.msg)
   | Search(Feature_Search.msg)
