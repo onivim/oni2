@@ -103,7 +103,6 @@ module Oni = {
           "workbench.action.reloadSettings",
           ConfigurationReload,
         );
-
     };
   };
 };

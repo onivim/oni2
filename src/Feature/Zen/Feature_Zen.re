@@ -43,23 +43,25 @@ module ContextKeys = {
 };
 
 module Commands = {
-    open Feature_Commands.Schema;
-    let enable = define(
-        ~category="View",
-        ~title="Enable Zen Mode",
-        ~isEnabledWhen=WhenExpr.parse("!zenMode"),
-        "workbench.action.enableZenMode",
-        Command(EnableZenMode)
+  open Feature_Commands.Schema;
+  let enable =
+    define(
+      ~category="View",
+      ~title="Enable Zen Mode",
+      ~isEnabledWhen=WhenExpr.parse("!zenMode"),
+      "workbench.action.enableZenMode",
+      Command(EnableZenMode),
     );
 
-    let disable = define(
-        ~category="View",
-        ~title="Disable Zen Mode",
-        ~isEnabledWhen=WhenExpr.parse("zenMode"),
-        "workbench.action.disableZenMode",
-        Command(DisableZenMode)
+  let disable =
+    define(
+      ~category="View",
+      ~title="Disable Zen Mode",
+      ~isEnabledWhen=WhenExpr.parse("zenMode"),
+      "workbench.action.disableZenMode",
+      Command(DisableZenMode),
     );
-}
+};
 
 // CONTRIBUTIONS
 
