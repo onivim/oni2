@@ -225,6 +225,11 @@ module Explorer = {
     );
 };
 
+module Workbench = {
+  let activityBarVisible =
+    setting("workbench.activityBar.visible", bool, ~default=true);
+};
+
 let contributions = [
   inactiveWindowOpacity.spec,
   animation.spec,

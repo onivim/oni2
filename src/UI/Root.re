@@ -112,8 +112,9 @@ let make = (~dispatch, ~state: State.t, ()) => {
     };
 
   let activityBar = () =>
-    if (Selectors.getActiveConfigurationValue(state, c =>
-          c.workbenchActivityBarVisible
+    if (Feature_Configuration.GlobalConfiguration.Workbench.activityBarVisible.
+          get(
+          config,
         )
         && !zenMode) {
       <Dock font={state.uiFont} theme sideBar extensions={state.extensions} />;

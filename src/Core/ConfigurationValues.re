@@ -12,7 +12,6 @@ type vimUseSystemClipboard = {
 };
 
 type t = {
-  workbenchActivityBarVisible: bool,
   workbenchIconTheme: string,
   workbenchEditorShowTabs: bool,
   workbenchEditorEnablePreview: bool,
@@ -29,7 +28,6 @@ type t = {
 };
 
 let default = {
-  workbenchActivityBarVisible: true,
   workbenchEditorShowTabs: true,
   workbenchEditorEnablePreview: true,
   workbenchIconTheme: "vs-seti",
