@@ -27,19 +27,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     });
   });
 
-  test("empty configuration", ({expect, _}) => {
-    let emptyConfiguration = "{}";
-
-    switch (ConfigurationParser.ofString(emptyConfiguration)) {
-    | Ok(v) =>
-      expect.string(Configuration.getValue(c => c.workbenchIconTheme, v)).
-        toEqual(
-        "vs-seti",
-      )
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
   test("vimUseSystemClipboard value", ({expect, _}) => {
     let configuration = {|
       { "vim.useSystemClipboard": [] }
