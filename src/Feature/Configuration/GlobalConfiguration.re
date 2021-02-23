@@ -231,6 +231,9 @@ module Workbench = {
 
   let editorShowTabs =
     setting("workbench.editor.showTabs", bool, ~default=true);
+
+  let editorEnablePreview =
+    setting("workbench.editor.enablePreview", bool, ~default=true);
 };
 
 let contributions = [
@@ -243,4 +246,5 @@ let contributions = [
   Explorer.autoReveal.spec,
   Workbench.activityBarVisible.spec,
   Workbench.editorShowTabs.spec,
+  Workbench.editorEnablePreview.spec,
 ];
