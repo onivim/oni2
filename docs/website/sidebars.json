@@ -15,7 +15,8 @@
       "using-onivim/visual-mode",
       "using-onivim/working-with-files",
       "using-onivim/command-line",
-      "using-onivim/integrated-terminal"
+      "using-onivim/integrated-terminal",
+      "using-onivim/snippets"
     ],
     "Configuration": [
       "configuration/settings",
