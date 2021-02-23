@@ -2122,15 +2122,27 @@ let update =
 
   | Zoom(msg) =>
     let (zoom', outmsg) = Feature_Zoom.update(msg, state.zoom);
-    let eff =
+    let state' = {...state, zoom: zoom'};
+    let (state'', eff) =
       switch (outmsg) {
-      | Feature_Zoom.Nothing => Isolinear.Effect.none
-      | Feature_Zoom.UpdateConfiguration(transformer) =>
-        Internal.updateConfigurationEffect(transformer)
-      | Feature_Zoom.Effect(eff) =>
-        eff |> Isolinear.Effect.map(msg => Actions.Zoom(msg))
+      | Feature_Zoom.Nothing => (state', Isolinear.Effect.none)
+      | Feature_Zoom.UpdateConfiguration(transformer) => (
+          {
+            ...state',
+            config:
+              Feature_Configuration.queueTransform(
+                ~transformer,
+                state'.config,
+              ),
+          },
+          Isolinear.Effect.none,
+        )
+      | Feature_Zoom.Effect(eff) => (
+          state',
+          eff |> Isolinear.Effect.map(msg => Actions.Zoom(msg)),
+        )
       };
-    ({...state, zoom: zoom'}, eff);
+    (state'', eff);
 
   | AutoUpdate(msg) =>
     let getLicenseKey = () =>
