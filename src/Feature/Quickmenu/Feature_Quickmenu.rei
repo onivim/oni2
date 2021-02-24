@@ -8,9 +8,10 @@ module Schema: {
   let menu:
     (
       ~onItemFocused: 'item => 'outmsg=?,
-      ~onItemSelected: 'item' => 'outmsg=?,
+      ~onItemSelected: 'item => 'outmsg=?,
       ~onCancelled: unit => 'outmsg=?,
-      ~initialItems: list('item)
+      ~toString: 'item => string,
+      list('item)
     ) =>
     menu('outmsg);
 

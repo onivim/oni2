@@ -109,11 +109,11 @@ let make =
       (),
     ) =>
   component(hooks => {
-    let items = [||];
+    let current = Model.current(model) |> Option.get;
     let filterProgress = Complete;
     let ripgrepProgress = Complete;
     let focused = None;
-    let inputText = Component_InputText.empty;
+    let inputText = current |> Schema.Instance.text;
     let prefix = Some("abc");
     // let Quickmenu.{
     //       items,
@@ -142,39 +142,40 @@ let make =
         }
       );
 
+    let count = Schema.Instance.count(current);
+
     let renderItem = index => {
-      let item = items[index];
-      let isFocused = Some(index) == focused;
+      switch (Schema.Instance.itemAndHighlights(~index, current)) {
+      | None => React.empty
+      | Some((text, highlights)) =>
+        let isFocused = Some(index) == focused;
 
-      let style = Styles.label(~theme);
-      // TODO:
-      let text = "test";
-      //let text = Quickmenu.getLabel(item);
-      //let highlights = item.highlight;
-      let highlights = [];
-      let normalStyle = style(~highlighted=false);
-      let highlightStyle = style(~highlighted=true);
-      let labelView =
-        <HighlightText
-          fontFamily={font.family}
-          fontSize=12.
-          style=normalStyle
-          highlightStyle
-          text
-          highlights
+        let style = Styles.label(~theme);
+        // TODO:
+        let normalStyle = style(~highlighted=false);
+        let highlightStyle = style(~highlighted=true);
+        let labelView =
+          <HighlightText
+            fontFamily={font.family}
+            fontSize=12.
+            style=normalStyle
+            highlightStyle
+            text
+            highlights
+          />;
+
+        <MenuItem
+          onClick={() => onSelect(index)}
+          theme
+          style=Styles.menuItem
+          label={`Custom(labelView)}
+          font
+          // icon={item.icon}
+          fontSize=14.
+          onMouseOver={() => onFocusedChange(index)}
+          isFocused
         />;
-
-      <MenuItem
-        onClick={() => onSelect(index)}
-        theme
-        style=Styles.menuItem
-        label={`Custom(labelView)}
-        font
-        // icon={item.icon}
-        fontSize=14.
-        onMouseOver={() => onFocusedChange(index)}
-        isFocused
-      />;
+      };
     };
 
     let input = () =>
@@ -188,6 +189,13 @@ let make =
           model=inputText
           theme
         />
+      </View>;
+
+    let dropdown = () =>
+      <View style={Styles.dropdown(~numItems=count)}>
+        <FlatList rowHeight=Constants.rowHeight count focused theme>
+          ...renderItem
+        </FlatList>
       </View>;
 
     let onClickBackground = () => {
@@ -226,6 +234,7 @@ let make =
           onMouseDown={_ => {innerClicked := true}}
           style={Styles.container(theme)}>
           <input />
+          <dropdown />
           {switch (progress) {
            | Complete => <progressBar progress=0. theme /> // TODO: SHould be REact.empty, but a reconciliation bug then prevents the progress bar from rendering
            | InProgress(progress) => <progressBar progress theme />

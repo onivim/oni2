@@ -14,18 +14,26 @@ type progress =
   | InProgress(float)
   | Complete;
 
-module Instance = {
-  type t('outmsg) = {schema: Schema.menu('outmsg)};
+type model('outmsg) = {menus: list(Schema.Instance.t('outmsg))};
+
+let initial = {
+  menus:
+    [],
+      //Schema.menu([]) |> Schema.instantiate
 };
 
-type model('outmsg) = {menus: list(Schema.menu('outmsg))};
+let isMenuOpen = ({menus}) => menus != [];
 
-let initial = {menus: []};
+let show = (~menu, model) => {
+  menus: [Schema.instantiate(menu), ...model.menus],
+};
 
-//let isMenuOpen = ({menus}) => menus != [];
-let isMenuOpen = _ => true;
-
-let show = (~menu, model) => {menus: [menu, ...model.menus]};
+let current = model => {
+  switch (model.menus) {
+  | [] => None
+  | [hd, ..._] => Some(hd)
+  };
+};
 
 // UPDATE
 
@@ -33,7 +41,32 @@ type outmsg('action) =
   | Action('action)
   | Nothing;
 
+let updateCurrentMenu = (f, model) => {
+  let menus' =
+    switch (model.menus) {
+    | [] => []
+    | [current, ...others] => [f(current), ...others]
+    };
+  {...model, menus: menus'};
+};
+
 let update = (msg, model) => {
-  prerr_endline("MSG: " ++ show_msg(msg));
-  (model, Nothing);
+  Schema.Instance.(
+    switch (msg) {
+    | Pasted(text) => (
+        model |> updateCurrentMenu(Schema.Instance.paste(~text)),
+        Nothing,
+      )
+
+    | KeyPressed(key) => (
+        model |> updateCurrentMenu(Schema.Instance.key(~key)),
+        Nothing,
+      )
+
+    | Input(msg) => (
+        model |> updateCurrentMenu(Schema.Instance.input(msg)),
+        Nothing,
+      )
+    }
+  );
 };
