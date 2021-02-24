@@ -1,6 +1,16 @@
 open Oni_Core;
 open Utility;
 
+let defaultUpdateChannel =
+  if (Oni_Core.BuildInfo.version |> StringEx.endsWith(~postfix="-staging")) {
+    "staging";
+  } else if (Oni_Core.BuildInfo.version
+             |> StringEx.endsWith(~postfix="-nightly")) {
+    "master";
+  } else {
+    "stable";
+  };
+
 type model = {
   automaticallyChecksForUpdates: bool,
   releaseChannel: string,
@@ -8,7 +18,7 @@ type model = {
 
 let initial = {
   automaticallyChecksForUpdates: true,
-  releaseChannel: Oni_Core.BuildInfo.defaultUpdateChannel,
+  releaseChannel: defaultUpdateChannel,
 };
 
 [@deriving show({with_path: false})]
@@ -46,7 +56,7 @@ module Configuration = {
     setting(
       "oni.app.updateReleaseChannel",
       releaseChannelCodec,
-      ~default=Oni_Core.BuildInfo.defaultUpdateChannel,
+      ~default=defaultUpdateChannel,
     );
 };
 
