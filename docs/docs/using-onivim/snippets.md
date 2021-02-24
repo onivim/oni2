@@ -41,7 +41,7 @@ Onivim's snippet syntax follows the same [snippet syntax as Code](https://code.v
 
 - __Variables:__ `$name` specifies a variable that can be inserted, such as `$CURRENT_YEAR`.
 
-## Customizing user snippets
+## Customizing snippets
 
 ![snippet-user-config](https://user-images.githubusercontent.com/13532591/109041574-082f2480-7684-11eb-9ee4-bc7bcbc89a2c.gif)
 
