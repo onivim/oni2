@@ -52,12 +52,6 @@ let parseVimUseSystemClipboardSetting = json => {
   };
 };
 
-let parseString = (~default="", json) =>
-  switch (json) {
-  | `String(v) => v
-  | _ => default
-  };
-
 type parseFunction =
   (LegacyConfigurationValues.t, Yojson.Safe.t) => LegacyConfigurationValues.t;
 
@@ -74,10 +68,6 @@ let configurationParsers: list(configurationTuple) = [
       ...config,
       workbenchActivityBarVisible: parseBool(json),
     },
-  ),
-  (
-    "workbench.iconTheme",
-    (config, json) => {...config, workbenchIconTheme: parseString(json)},
   ),
   (
     "workbench.editor.showTabs",

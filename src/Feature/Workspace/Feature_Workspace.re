@@ -34,12 +34,14 @@ type model = {
   workingDirectory: string,
   openedFolder: option(string),
   rootName: string,
+  lastPickFromFilePicker: bool,
 };
 
 let initial = (~openedFolder: option(string), workingDirectory) => {
   workingDirectory,
   openedFolder,
   rootName: Filename.basename(workingDirectory),
+  lastPickFromFilePicker: false,
 };
 
 let openedFolder = ({openedFolder, _}) => openedFolder;
@@ -51,7 +53,10 @@ let rootName = ({rootName, _}) => rootName;
 type outmsg =
   | Nothing
   | Effect(Isolinear.Effect.t(msg))
-  | WorkspaceChanged(option(string));
+  | WorkspaceChanged({
+      path: option(string),
+      shouldFocusExplorer: bool,
+    });
 
 module Effects = {
   let changeDirectory = (path: FpExp.t(FpExp.absolute)) =>
@@ -84,18 +89,28 @@ let update = (msg, model) => {
         workingDirectory,
         rootName: Filename.basename(workingDirectory),
         openedFolder: Some(workingDirectory),
+        // Reset lastPickFromFilePicker once we've actually changed
+        lastPickFromFilePicker: false,
       },
-      WorkspaceChanged(Some(workingDirectory)),
+      WorkspaceChanged({
+        path: Some(workingDirectory),
+        // If the workspace change came from the open-folder dialog,
+        // focus the explorer.
+        shouldFocusExplorer: model.lastPickFromFilePicker,
+      }),
     )
 
   | Command(CloseFolder) => (
       {...model, rootName: "", openedFolder: None},
-      WorkspaceChanged(None),
+      WorkspaceChanged({path: None, shouldFocusExplorer: false}),
     )
 
   | Command(OpenFolder) => (model, Effect(Effects.pickFolder))
 
-  | FolderPicked(path) => (model, Effect(Effects.changeDirectory(path)))
+  | FolderPicked(path) => (
+      {...model, lastPickFromFilePicker: true},
+      Effect(Effects.changeDirectory(path)),
+    )
 
   | Noop => (model, Nothing)
   };
