@@ -6,7 +6,6 @@
 
 open EditorCoreTypes;
 open Oni_Core;
-open Oni_Syntax;
 
 [@deriving show({with_path: false})]
 type t =
@@ -16,9 +15,11 @@ type t =
   | Clipboard(Feature_Clipboard.msg)
   | Exthost(Feature_Exthost.msg)
   | Syntax(Feature_Syntax.msg)
-  | SignatureHelp(Feature_SignatureHelp.msg)
   | Changelog(Feature_Changelog.msg)
-  | Command(string)
+  | CommandInvoked({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | Commands(Feature_Commands.msg(t))
   | Configuration(Feature_Configuration.msg)
   | ConfigurationParseError(string)
@@ -37,23 +38,22 @@ type t =
   | ExtensionBufferUpdateQueued({triggerKey: option(string)})
   | FileChanged(Service_FileWatcher.event)
   | FileSystem(Feature_FileSystem.msg)
-  | KeyBindingsSet([@opaque] list(Feature_Input.Schema.resolvedKeybinding))
-  // Reload keybindings from configuration
-  | KeyBindingsReload
-  | KeyBindingsParseError(string)
-  | KeybindingInvoked({command: string})
+  | KeybindingInvoked({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | KeyDown({
-      key: EditorInput.KeyPress.t,
+      key: EditorInput.KeyCandidate.t,
       scancode: int,
       time: [@opaque] Revery.Time.t,
     })
-  | KeyUp({
-      key: EditorInput.KeyPress.t,
-      scancode: int,
-      time: [@opaque] Revery.Time.t,
-    })
-  | Logging(Feature_Logging.msg)
   | TextInput(string, [@opaque] Revery.Time.t)
+  | KeyUp({
+      scancode: int,
+      time: [@opaque] Revery.Time.t,
+    })
+  | KeyTimeout
+  | Logging(Feature_Logging.msg)
   // TODO: This should be a function call - wired up from an input feature
   // directly to the consumer of the keyboard action.
   // In addition, in the 'not-is-text' case, we should strongly type the keys.
@@ -133,13 +133,9 @@ type t =
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
-  | ThemeLoadByPath(string, string)
-  | ThemeLoadById(string)
-  | ThemeChanged(string)
+  | ThemeSelected(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
-  | TokenThemeLoaded([@opaque] TokenTheme.t)
-  | ThemeLoadError(string)
   | EnableZenMode
   | DisableZenMode
   | CopyActiveFilepathToClipboard
@@ -147,6 +143,7 @@ type t =
   | Search(Feature_Search.msg)
   | SideBar(Feature_SideBar.msg)
   | Sneak(Feature_Sneak.msg)
+  | Snippets(Feature_Snippets.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
   | Pane(Feature_Pane.msg)
@@ -174,6 +171,7 @@ type t =
   | Vim(Feature_Vim.msg)
   | TabPage(Vim.TabPage.effect)
   | Yank({range: [@opaque] VisualRange.t})
+  | Zoom(Feature_Zoom.msg)
   | Noop
 and command = {
   commandCategory: option(string),
@@ -202,6 +200,8 @@ and quickmenuVariant =
   | FilesPicker
   | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
+  | SnippetPicker(list(Service_Snippets.SnippetWithMetadata.t))
+  | SnippetFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | FileTypesPicker({
       bufferId: int,

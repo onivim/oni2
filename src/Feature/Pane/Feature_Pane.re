@@ -28,6 +28,7 @@ type command =
 type msg =
   | TabClicked(pane)
   | CloseButtonClicked
+  | PaneButtonClicked(pane)
   | Command(command)
   | ResizeHandleDragged(int)
   | ResizeCommitted
@@ -66,6 +67,7 @@ module Effects = {
 
 type outmsg =
   | Nothing
+  | PaneButton(pane)
   | OpenFile({
       filePath: string,
       position: EditorCoreTypes.CharacterPosition.t,
@@ -362,6 +364,8 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
       (show(~pane=Diagnostics, model), Nothing);
     }
 
+  | PaneButtonClicked(pane) => (model, PaneButton(pane))
+
   | Command(ToggleMessages) =>
     if (!model.isOpen) {
       (show(~pane=Notifications, model), GrabFocus);
@@ -651,9 +655,17 @@ module View = {
 
     let header = [flexDirection(`Row), justifyContent(`SpaceBetween)];
 
+    let buttons = [flexDirection(`Row), justifyContent(`FlexEnd)];
+
     let tabs = [flexDirection(`Row)];
 
     let closeButton = [
+      width(32),
+      alignItems(`Center),
+      justifyContent(`Center),
+    ];
+
+    let paneButton = [
       width(32),
       alignItems(`Center),
       justifyContent(`Center),
@@ -751,6 +763,27 @@ module View = {
       />
     </Sneakable>;
   };
+
+  let paneButton = (~theme, ~dispatch, ~pane, ()) =>
+    switch (pane) {
+    | Notifications =>
+      <Sneakable
+        sneakId="paneButton"
+        onClick={() => dispatch(PaneButtonClicked(pane))}
+        style=Styles.paneButton>
+        <FontIcon
+          icon={
+            switch (pane) {
+            | Notifications => FontAwesome.bellSlash
+            | _ => FontAwesome.cross
+            }
+          }
+          color={Colors.Tab.activeForeground.from(theme)}
+          fontSize=12.
+        />
+      </Sneakable>
+    | _ => React.empty
+    };
   let%component make =
                 (
                   ~config,
@@ -841,7 +874,10 @@ module View = {
             isActive={isSelected(Output, pane)}
           />
         </View>
-        <closeButton dispatch theme />
+        <View style=Styles.buttons>
+          <paneButton dispatch theme pane={pane.selected} />
+          <closeButton dispatch theme />
+        </View>
       </View>
       <View style=Styles.content>
         <content

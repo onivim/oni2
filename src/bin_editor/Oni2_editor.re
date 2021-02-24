@@ -10,6 +10,7 @@ open Oni_CLI;
 open Oni_UI;
 
 module Core = Oni_Core;
+module FpExp = Oni_Core.FpExp;
 module Input = Oni_Input;
 module Model = Oni_Model;
 module Store = Oni_Store;
@@ -119,7 +120,7 @@ switch (eff) {
 
     // The directory that was persisted is a valid workspace, so we can use it
     if (couldChangeDirectory^) {
-      maybePath;
+      maybePath |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
     } else {
       None;
     };
@@ -142,7 +143,7 @@ switch (eff) {
       Store.Persistence.Workspace.(
         maybeWorkspace
         |> Option.map(workspace => {
-             let store = storeFor(workspace);
+             let store = storeFor(FpExp.toString(workspace));
              (
                windowX(store)
                |> OptionEx.tap(x =>
@@ -218,9 +219,11 @@ switch (eff) {
   };
   Log.infof(m =>
     m(
-      "Starting Onivim 2.%s (%s)",
+      "Starting Onivim 2 (%s / %s / %s / %s)",
       Core.BuildInfo.version,
       Core.BuildInfo.commitId,
+      Feature_AutoUpdate.defaultUpdateChannel,
+      Core.BuildInfo.extensionHostVersion,
     )
   );
 
@@ -232,12 +235,22 @@ switch (eff) {
     Oni2_KeyboardLayout.init();
     Oni2_Sparkle.init();
 
+    Log.infof(m =>
+      m(
+        "Keyboard Language: %s Layout: %s",
+        Oni2_KeyboardLayout.getCurrentLanguage(),
+        Oni2_KeyboardLayout.getCurrentLayout(),
+      )
+    );
+
     // Grab initial working directory prior to trying to set it -
     // in some cases, a directory that does not have permissions may be persisted (ie #2742)
     let initialWorkingDirectory = Sys.getcwd();
     let maybeWorkspace = initWorkspace();
     let workingDirectory =
-      maybeWorkspace |> Option.value(~default=initialWorkingDirectory);
+      maybeWorkspace
+      |> Option.map(FpExp.toString)
+      |> Option.value(~default=initialWorkingDirectory);
 
     let window =
       createWindow(
@@ -283,6 +296,20 @@ switch (eff) {
     let extensionWorkspacePersistence =
       Store.Persistence.Workspace.extensionValues(initialWorkspaceStore);
 
+    let getZoom = () => {
+      Window.getZoom(window);
+    };
+
+    let setZoom = zoomFactor => Window.setZoom(window, zoomFactor);
+
+    let keybindingsLoader =
+      Oni_Core.Filesystem.getOrCreateConfigFile("keybindings.json")
+      |> Result.map(Feature_Input.KeybindingsLoader.file)
+      |> Oni_Core.Utility.ResultEx.tapError(msg =>
+           Log.errorf(m => m("Error initializing keybindings file: %s", msg))
+         )
+      |> Result.value(~default=Feature_Input.KeybindingsLoader.none);
+
     let currentState =
       ref(
         Model.State.initial(
@@ -290,15 +317,17 @@ switch (eff) {
           ~initialBuffer,
           ~initialBufferRenderers,
           ~getUserSettings,
+          ~keybindingsLoader,
           ~extensionGlobalPersistence,
           ~extensionWorkspacePersistence,
-          ~contributedCommands=[], // TODO
           ~workingDirectory,
           ~maybeWorkspace,
-          // TODO: Use `Fp.t` all the way down
+          // TODO: Use `FpExp.t` all the way down
           ~extensionsFolder=cliOptions.overriddenExtensionsDir,
           ~licenseKeyPersistence,
           ~titlebarHeight=Revery.Window.getTitlebarHeight(window),
+          ~setZoom,
+          ~getZoom,
         ),
       );
 
@@ -371,12 +400,6 @@ switch (eff) {
     let _: unit => unit =
       Tick.interval(~name="Oni2_Editor Apploop", tick, Time.zero);
 
-    let getZoom = () => {
-      Window.getZoom(window);
-    };
-
-    let setZoom = zoomFactor => Window.setZoom(window, zoomFactor);
-
     let maximize = () => {
       Window.maximize(window);
     };
@@ -416,8 +439,6 @@ switch (eff) {
         ~executingDirectory=Revery.Environment.executingDirectory,
         ~getState=() => currentState^,
         ~onStateChanged,
-        ~getZoom,
-        ~setZoom,
         ~setVsync,
         ~maximize,
         ~minimize,

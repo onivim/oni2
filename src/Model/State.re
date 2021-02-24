@@ -137,6 +137,7 @@ let defaultKeyBindings =
     ]
   @ Feature_Registers.Contributions.keybindings
   @ Feature_LanguageSupport.Contributions.keybindings
+  @ Feature_Buffers.Contributions.keybindings
   @ Feature_Input.Schema.[
       bind(
         ~key="<CR>",
@@ -231,37 +232,8 @@ let defaultKeyBindings =
         ~command=Feature_Layout.Commands.previousEditor.id,
         ~condition=isMacCondition,
       ),
-      bind(
-        ~key="<D-=>",
-        ~command="workbench.action.zoomIn",
-        ~condition=isMacCondition,
-      ),
-      bind(
-        ~key="<C-=>",
-        ~command="workbench.action.zoomIn",
-        ~condition=WhenExpr.Value(True),
-      ),
-      bind(
-        ~key="<D-->",
-        ~command="workbench.action.zoomOut",
-        ~condition=isMacCondition,
-      ),
-      bind(
-        ~key="<C-->",
-        ~command="workbench.action.zoomOut",
-        ~condition=WhenExpr.Value(True),
-      ),
-      bind(
-        ~key="<D-0>",
-        ~command="workbench.action.zoomReset",
-        ~condition=isMacCondition,
-      ),
-      bind(
-        ~key="<C-0>",
-        ~command="workbench.action.zoomReset",
-        ~condition=WhenExpr.Value(True),
-      ),
     ]
+  @ Feature_Zoom.Contributions.keybindings
   @ Feature_Terminal.Contributions.keybindings
   //LAYOUT
   @ Feature_Input.Schema.[
@@ -365,19 +337,18 @@ let defaultKeyBindings =
         ~command=Feature_Layout.Commands.decreaseVerticalSize.id,
         ~condition=windowCommandCondition,
       ),
-      //      TODO: Does not work, blocked by bug in editor-input
-      //      {
-      //        key: "<C-W>+",
-      //        command: Feature_Layout.Commands.increaseVerticalSize.id,
-      //        condition: "!insertMode" |> WhenExpr.parse
-      //      },
       bind(
-        ~key="<C-W><S-,>", // TODO: Does not work and should be `<`, but blocked by bugs in editor-input,
+        ~key="<C-W>+",
+        ~command=Feature_Layout.Commands.increaseVerticalSize.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><LT>",
         ~command=Feature_Layout.Commands.increaseHorizontalSize.id,
         ~condition=windowCommandCondition,
       ),
       bind(
-        ~key="<C-W><S-.>", // TODO: Does not work and should be `>`, but blocked by bugs in editor-input
+        ~key="<C-W><GT>",
         ~command=Feature_Layout.Commands.decreaseHorizontalSize.id,
         ~condition=windowCommandCondition,
       ),
@@ -386,28 +357,26 @@ let defaultKeyBindings =
         ~command=Feature_Layout.Commands.resetSizes.id,
         ~condition=windowCommandCondition,
       ),
-      // TODO: Fails to parse
-      // {
-      //   key: "<C-W>_",
-      //   command: Feature_Layout.Commands.maximizeVertical.id,
-      //   condition: windowCommandCondition,
-      // },
-      // TODO: Fails to parse
-      // {
-      //   key: "<C-W>|",
-      //   command: Feature_Layout.Commands.maximizeHorizontal.id,
-      //   condition: windowCommandCondition,
-      // },
+      bind(
+        ~key="<C-W>_",
+        ~command=Feature_Layout.Commands.maximizeVertical.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>|",
+        ~command=Feature_Layout.Commands.maximizeHorizontal.id,
+        ~condition=windowCommandCondition,
+      ),
       bind(
         ~key="<C-W>o",
         ~command=Feature_Layout.Commands.toggleMaximize.id,
         ~condition=windowCommandCondition,
       ),
     ]
-  @ Feature_SignatureHelp.Contributions.keybindings
   @ Component_VimWindows.Contributions.keybindings
   @ Component_VimList.Contributions.keybindings
   @ Component_VimTree.Contributions.keybindings
+  @ Feature_Snippets.Contributions.keybindings
   @ Feature_Vim.Contributions.keybindings;
 
 type windowDisplayMode =
@@ -439,8 +408,6 @@ type t = {
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
   sideBar: Feature_SideBar.model,
-  // Token theme is theming for syntax highlights
-  tokenTheme: TokenTheme.t,
   extensions: Feature_Extensions.model,
   exthost: Feature_Exthost.model,
   iconTheme: IconTheme.t,
@@ -459,7 +426,6 @@ type t = {
   terminals: Feature_Terminal.t,
   layout: Feature_Layout.model,
   fileExplorer: Feature_Explorer.model,
-  signatureHelp: Feature_SignatureHelp.model,
   windowIsFocused: bool,
   windowDisplayMode,
   titlebarHeight: float,
@@ -470,8 +436,10 @@ type t = {
   searchPane: Feature_Search.model,
   focus: Focus.stack,
   modal: option(Feature_Modals.model),
+  snippets: Feature_Snippets.model,
   textContentProviders: list((int, string)),
   vim: Feature_Vim.model,
+  zoom: Feature_Zoom.model,
   autoUpdate: Feature_AutoUpdate.model,
   registration: Feature_Registration.model,
 };
@@ -484,12 +452,14 @@ let initial =
       ~extensionGlobalPersistence,
       ~extensionWorkspacePersistence,
       ~getUserSettings,
-      ~contributedCommands,
+      ~keybindingsLoader,
       ~workingDirectory,
       ~maybeWorkspace,
       ~extensionsFolder,
       ~licenseKeyPersistence,
       ~titlebarHeight,
+      ~getZoom,
+      ~setZoom,
     ) => {
   let config =
     Feature_Configuration.initial(
@@ -500,13 +470,16 @@ let initial =
         Feature_Editor.Contributions.configuration,
         Feature_Input.Contributions.configuration,
         Feature_MenuBar.Contributions.configuration,
+        Feature_Search.Contributions.configuration,
         Feature_SideBar.Contributions.configuration,
-        Feature_SignatureHelp.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
+        Feature_Theme.Contributions.configuration,
         Feature_LanguageSupport.Contributions.configuration,
         Feature_Layout.Contributions.configuration,
+        Feature_StatusBar.Contributions.configuration,
         Feature_TitleBar.Contributions.configuration,
+        Feature_Zoom.Contributions.configuration,
       ],
     );
   let initialEditor = {
@@ -536,12 +509,13 @@ let initial =
         Feature_Terminal.Contributions.colors,
         Feature_Notification.Contributions.colors,
       ]),
-    commands: Feature_Commands.initial(contributedCommands),
+    commands: Feature_Commands.initial([]),
     config,
     configuration: Configuration.default,
     decorations: Feature_Decorations.initial,
     diagnostics: Feature_Diagnostics.initial,
-    input: Feature_Input.initial(defaultKeyBindings),
+    input:
+      Feature_Input.initial(~loader=keybindingsLoader, defaultKeyBindings),
     quickmenu: None,
     editorFont: defaultEditorFont,
     terminalFont: defaultEditorFont,
@@ -559,7 +533,6 @@ let initial =
     messages: Feature_Messages.initial,
     uiFont: UiFont.default,
     sideBar: Feature_SideBar.initial,
-    tokenTheme: TokenTheme.empty,
     help: Feature_Help.initial,
     iconTheme: IconTheme.create(),
     isQuitting: false,
@@ -585,19 +558,20 @@ let initial =
     titlebarHeight,
     workspace:
       Feature_Workspace.initial(
-        ~openedFolder=maybeWorkspace,
+        ~openedFolder=maybeWorkspace |> Option.map(FpExp.toString),
         workingDirectory,
       ),
     fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),
-    signatureHelp: Feature_SignatureHelp.initial,
     zenMode: false,
     pane: Feature_Pane.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,
+    snippets: Feature_Snippets.initial,
     terminals: Feature_Terminal.initial,
     textContentProviders: [],
     vim: Feature_Vim.initial,
+    zoom: Feature_Zoom.initial(~getZoom, ~setZoom),
     autoUpdate: Feature_AutoUpdate.initial,
     registration: Feature_Registration.initial(licenseKeyPersistence),
   };

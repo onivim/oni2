@@ -63,8 +63,9 @@ module Parts = {
         bufferHighlights={state.bufferHighlights}
         bufferSyntaxHighlights={state.syntaxHighlights}
         diagnostics={state.diagnostics}
-        scm={state.scm}
-        tokenTheme={state.tokenTheme}
+        buffers={state.buffers}
+        snippets={state.snippets}
+        tokenTheme={state.colorTheme |> Feature_Theme.tokenColors}
         languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
         perFileTypeConfig={Feature_Configuration.resolver(
@@ -100,23 +101,10 @@ module Parts = {
         Selectors.getBufferForEditor(state.buffers, editor)
         |> OptionEx.value_or_lazy(() => Buffer.empty(~font=state.editorFont));
 
-      // TODO: Move to overlays view
-      let renderOverlays = (~gutterWidth) =>
-        isActive
-          ? <Feature_SignatureHelp.View
-              colorTheme=theme
-              tokenTheme={state.tokenTheme}
-              model={state.signatureHelp}
-              uiFont={state.uiFont}
-              editorFont={state.editorFont}
-              languageInfo={state.languageInfo}
-              grammars={state.grammarRepository}
-              editor
-              gutterWidth
-              buffer
-              dispatch={msg => dispatch(SignatureHelp(msg))}
-            />
-          : React.empty;
+      let renderOverlays = (~gutterWidth as _) => React.empty;
+
+      let isDark =
+        state.colorTheme |> Feature_Theme.variant != ColorTheme.Light;
 
       switch (renderer) {
       | Terminal({insertMode, _}) when !insertMode =>
@@ -160,7 +148,7 @@ module Parts = {
       | Editor =>
         <Editor editor buffer state theme isActive dispatch renderOverlays />
 
-      | Welcome => <WelcomeView theme uiFont editorFont />
+      | Welcome => <WelcomeView isDark theme uiFont editorFont />
 
       | Version => <VersionView theme uiFont editorFont />
 
@@ -175,7 +163,7 @@ module Parts = {
       | ExtensionDetails =>
         <Feature_Extensions.DetailsView
           model={state.extensions}
-          tokenTheme={state.tokenTheme}
+          tokenTheme={state.colorTheme |> Feature_Theme.tokenColors}
           theme
           font=uiFont
           dispatch={msg => dispatch(Actions.Extensions(msg))}

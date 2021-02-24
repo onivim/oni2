@@ -29,14 +29,16 @@ let simpleState = {
       ~initialBuffer,
       ~initialBufferRenderers=BufferRenderers.initial,
       ~getUserSettings=() => Ok(Config.Settings.empty),
+      ~keybindingsLoader=Feature_Input.KeybindingsLoader.none,
       ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
       ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
-      ~contributedCommands=[],
       ~maybeWorkspace=None,
       ~workingDirectory=Sys.getcwd(),
       ~extensionsFolder=None,
       ~licenseKeyPersistence=None,
       ~titlebarHeight=0.,
+      ~getZoom=() => 1.0,
+      ~setZoom=_zoom => (),
     );
 
   Reducer.reduce(

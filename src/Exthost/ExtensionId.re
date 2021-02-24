@@ -15,3 +15,5 @@ let decode =
   );
 
 let encode = Json.Encode.string;
+
+let toString = Fun.id;

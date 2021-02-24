@@ -16,13 +16,16 @@
 	"c-", MODIFIER (Control);
 	"s-", MODIFIER (Shift);
 	"a-", MODIFIER (Alt);
-	"d-", MODIFIER (Meta);
+	(* For Vim-style keybindings, a- and m- are equivalent modifiers *)
+	"m-", MODIFIER (Alt);
+	"d-", MODIFIER (Super);
 	"ctrl+", MODIFIER (Control);
 	"shift+", MODIFIER (Shift);
 	"alt+", MODIFIER (Alt);
-	"meta+", MODIFIER (Meta);
-	"win+", MODIFIER (Meta);
-	"cmd+", MODIFIER (Meta);
+	(* For Code-style bindings, meta+ refers to the 'super' key on Linux *)
+	"meta+", MODIFIER (Super);
+	"win+", MODIFIER (Super);
+	"cmd+", MODIFIER (Super);
 	]
 
 	let _ = List.iter(fun (name, keyword) ->
@@ -60,6 +63,9 @@
 	"numpad_multiply", BINDING(Physical(NumpadMultiply));
 	"leader", BINDING(Special(Leader));
 	"plug", BINDING(Special(Plug));
+	"lt", BINDING(Physical(Character(Uchar.of_char '<')));
+	"gt", BINDING(Physical(Character(Uchar.of_char '>')));
+	"plus", BINDING(Physical(Character(Uchar.of_char '+')));
 	]
 }
 
@@ -97,7 +103,7 @@ rule token = parse
 | ['f' 'F'] '1' (['0'-'9'] as m) { BINDING ( Physical (Function(int_of_string ("1" ^ (String.make 1 m))) ) ) }
 | white { token lexbuf }
 | binding as i
- { BINDING (Physical(Character (i))) }
+ { BINDING (Physical(Character (Uchar.of_char i))) }
 | '<' { LT }
 | '>' { GT }
 | eof { EOF }

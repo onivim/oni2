@@ -25,11 +25,20 @@ module Internal = {
     );
   };
 
-  let executeCommandEffect = command => {
+  let executeCommandEffect = (command, arguments) => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.executeCommand", dispatch =>
-      dispatch(Actions.KeybindingInvoked({command: command}))
+      dispatch(Actions.KeybindingInvoked({command, arguments}))
     );
+  };
+
+  let updateConfigurationEffect = transformer => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="features.updateConfiguration", dispatch => {
+      dispatch(
+        Actions.ConfigurationTransform("configuration.json", transformer),
+      )
+    });
   };
 
   let setThemesEffect =
@@ -40,7 +49,7 @@ module Internal = {
       Isolinear.Effect.createWithDispatch(
         ~name="feature.extensions.selectTheme", dispatch => {
         dispatch(
-          ThemeLoadById(Exthost.Extension.Contributions.Theme.id(theme)),
+          ThemeSelected(Exthost.Extension.Contributions.Theme.id(theme)),
         )
       })
     | themes =>
@@ -83,9 +92,10 @@ module Internal = {
       dispatch(Actions.Quit(true))
     );
 
-  let chdir = (path: Fp.t(Fp.absolute)) =>
+  let chdir = (path: FpExp.t(FpExp.absolute)) => {
     Feature_Workspace.Effects.changeDirectory(path)
     |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
+  };
 
   let updateEditor = (~editorId, ~msg, layout) => {
     switch (Feature_Layout.editorById(editorId, layout)) {
@@ -153,7 +163,8 @@ module Internal = {
     };
   };
 
-  let updateConfiguration: State.t => State.t =
+  let updateConfiguration:
+    State.t => (State.t, Isolinear.Effect.t(Actions.t)) =
     state => {
       let resolver = Selectors.configResolver(state);
       let maybeRoot = Feature_Explorer.root(state.fileExplorer);
@@ -163,6 +174,13 @@ module Internal = {
              ~hasWorkspace=maybeRoot != None,
              ~config=resolver,
            );
+
+      let colorTheme =
+        state.colorTheme |> Feature_Theme.configurationChanged(~resolver);
+
+      let buffers =
+        state.buffers
+        |> Feature_Buffers.configurationChanged(~config=resolver);
 
       let languageSupport =
         state.languageSupport
@@ -181,7 +199,22 @@ module Internal = {
           },
           state.layout,
         );
-      {...state, languageSupport, sideBar, layout};
+
+      let (zoom, zoomEffect) =
+        Feature_Zoom.configurationChanged(~config=resolver, state.zoom);
+      let eff = zoomEffect |> Isolinear.Effect.map(msg => Actions.Zoom(msg));
+      (
+        {
+          ...state,
+          buffers,
+          languageSupport,
+          sideBar,
+          layout,
+          zoom,
+          colorTheme,
+        },
+        eff,
+      );
     };
 
   let updateMode =
@@ -193,11 +226,10 @@ module Internal = {
 
     let config = Selectors.configResolver(state);
     let editor = Feature_Layout.activeEditor(state.layout);
-    let signatureHelp = state.signatureHelp;
     let maybeBuffer = Selectors.getActiveBuffer(state);
 
     let wasInInsertMode =
-      Vim.Mode.isInsert(
+      Vim.Mode.isInsertOrSelect(
         state.layout
         |> Feature_Layout.activeEditor
         |> Feature_Editor.Editor.mode,
@@ -211,7 +243,7 @@ module Internal = {
     let (layout, editorEffect) = updateEditors(~scope, ~msg, state.layout);
 
     let isInInsertMode =
-      Vim.Mode.isInsert(
+      Vim.Mode.isInsertOrSelect(
         layout |> Feature_Layout.activeEditor |> Feature_Editor.Editor.mode,
       );
 
@@ -232,30 +264,38 @@ module Internal = {
         state.languageSupport;
       };
 
-    // TODO: Bring signature help into language support
-    let (languageSupport', signatureHelp') =
+    let wasInSnippetMode = Feature_Snippets.isActive(state.snippets);
+    let snippets' = Feature_Snippets.modeChanged(~mode, state.snippets);
+    let isInSnippetMode = Feature_Snippets.isActive(snippets');
+
+    let languageSupport' =
       if (isInInsertMode != wasInInsertMode) {
         if (isInInsertMode) {
-          (
-            languageSupport |> Feature_LanguageSupport.startInsertMode,
-            signatureHelp
-            |> Feature_SignatureHelp.startInsert(~config, ~maybeBuffer),
-          );
+          languageSupport
+          |> Feature_LanguageSupport.startInsertMode(~config, ~maybeBuffer);
         } else {
-          (
-            languageSupport |> Feature_LanguageSupport.stopInsertMode,
-            signatureHelp |> Feature_SignatureHelp.stopInsert,
-          );
+          languageSupport |> Feature_LanguageSupport.stopInsertMode;
         };
       } else {
-        (languageSupport, signatureHelp);
+        languageSupport;
+      };
+
+    let languageSupport'' =
+      if (wasInSnippetMode != isInSnippetMode) {
+        if (isInSnippetMode) {
+          Feature_LanguageSupport.startSnippet(languageSupport');
+        } else {
+          Feature_LanguageSupport.stopSnippet(languageSupport');
+        };
+      } else {
+        languageSupport';
       };
 
     let state = {
       ...state,
       layout,
-      signatureHelp: signatureHelp',
-      languageSupport: languageSupport',
+      languageSupport: languageSupport'',
+      snippets: snippets',
     };
     (state, editorEffect);
   };
@@ -392,8 +432,10 @@ let update =
     (state', effect);
 
   | FileExplorer(msg) =>
+    let config = Selectors.configResolver(state);
     let (model, outmsg) =
       Feature_Explorer.update(
+        ~config,
         ~configuration=state.configuration,
         msg,
         state.fileExplorer,
@@ -469,6 +511,12 @@ let update =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
       | DebugInputShown => Internal.openFileEffect("oni://DebugInput")
+
+      | ErrorNotifications(errorMessages) =>
+        errorMessages
+        |> List.map(msg => Internal.notificationEffect(~kind=Error, msg))
+        |> Isolinear.Effect.batch
+
       | MapParseError({fromKeys, toKeys, error}) =>
         Internal.notificationEffect(
           ~kind=Error,
@@ -478,6 +526,10 @@ let update =
             toKeys,
             error,
           ),
+        )
+      | TimedOut =>
+        Isolinear.Effect.createWithDispatch(~name="Input.timeout", dispatch =>
+          dispatch(KeyTimeout)
         )
       };
 
@@ -510,6 +562,7 @@ let update =
       Feature_LanguageSupport.update(
         ~config,
         ~languageConfiguration,
+        ~extensions=state.extensions,
         ~configuration=state.configuration,
         ~maybeBuffer,
         ~maybeSelection=characterSelection,
@@ -564,19 +617,25 @@ let update =
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
-      | InsertSnippet({meetColumn, snippet, additionalEdits}) =>
-        // TODO: Full snippet integration!
-        let additionalEdits =
-          additionalEdits |> List.map(exthostEditToVimEdit);
-        let insertText = Feature_Snippets.snippetToInsert(~snippet);
+      | InsertSnippet({meetColumn, snippet, _}) =>
+        let editor = Feature_Layout.activeEditor(state.layout);
+        let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
+        let characterPosition =
+          CharacterPosition.{line: cursor.line, character: meetColumn};
+        let rangeToReplace =
+          CharacterRange.{start: characterPosition, stop: cursor};
+        let maybeReplaceRange =
+          Feature_Editor.Editor.characterRangeToByteRange(
+            rangeToReplace,
+            editor,
+          );
         (
           state,
-          Feature_Vim.Effects.applyCompletion(
-            ~additionalEdits,
-            ~meetColumn,
-            ~insertText,
+          Feature_Snippets.Effects.insertSnippet(
+            ~replaceRange=maybeReplaceRange,
+            ~snippet,
           )
-          |> Isolinear.Effect.map(msg => Vim(msg)),
+          |> Isolinear.Effect.map(msg => Snippets(msg)),
         );
       | OpenFile({filePath, location}) => (
           state,
@@ -595,45 +654,43 @@ let update =
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
         )
       | CodeLensesChanged({handle, bufferId, startLine, stopLine, lenses}) =>
-        let inlineElements = editor =>
-          lenses
-          |> List.map(lens => {
-               let lineNumber =
-                 Feature_LanguageSupport.CodeLens.lineNumber(lens)
-                 |> EditorCoreTypes.LineNumber.ofZeroBased;
-               let uniqueId = Feature_LanguageSupport.CodeLens.text(lens);
-               let leftMargin =
-                 Feature_Editor.Editor.getLeadingWhitespacePixels(
-                   lineNumber,
-                   editor,
-                 )
-                 |> int_of_float;
-               let view =
-                 Feature_LanguageSupport.CodeLens.View.make(
-                   ~leftMargin,
-                   ~codeLens=lens,
-                 );
-               Feature_Editor.Editor.makeInlineElement(
-                 ~key="codelens:" ++ string_of_int(handle),
-                 ~uniqueId,
-                 ~lineNumber,
-                 ~view,
-               );
-             });
         let layout' =
           state.layout
           |> Feature_Layout.map(editor =>
                if (Feature_Editor.Editor.getBufferId(editor) == bufferId) {
-                 Feature_Editor.Editor.replaceInlineElements(
+                 Feature_Editor.Editor.setCodeLens(
                    ~startLine,
                    ~stopLine,
-                   ~key="codelens:" ++ string_of_int(handle),
-                   ~elements=inlineElements(editor),
+                   ~handle,
+                   ~lenses,
                    editor,
                  );
                } else {
                  editor;
                }
+             );
+        ({...state, layout: layout'}, Isolinear.Effect.none);
+
+      | SetSelections({editorId, ranges}) =>
+        let layout' =
+          state.layout
+          |> Feature_Layout.map(editor =>
+               Feature_Editor.(
+                 if (Editor.getId(editor) == editorId) {
+                   let byteRanges =
+                     ranges
+                     |> List.filter_map(characterRange =>
+                          Editor.characterRangeToByteRange(
+                            characterRange,
+                            editor,
+                          )
+                        );
+
+                   Editor.setSelections(byteRanges, editor);
+                 } else {
+                   editor;
+                 }
+               )
              );
         ({...state, layout: layout'}, Isolinear.Effect.none);
       }
@@ -665,7 +722,8 @@ let update =
     let eff =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
-      | ExecuteCommand({command}) => Internal.executeCommandEffect(command)
+      | ExecuteCommand({command}) =>
+        Internal.executeCommandEffect(command, `Null)
       };
     ({...state, menuBar: menuBar'}, eff);
 
@@ -730,6 +788,16 @@ let update =
         Feature_Notification.Effects.dismiss(notification)
         |> Isolinear.Effect.map(msg => Notification(msg)),
       )
+
+    | PaneButton(pane) =>
+      switch (pane) {
+      | Notifications => (
+          state,
+          Feature_Notification.Effects.clear()
+          |> Isolinear.Effect.map(msg => Notification(msg)),
+        )
+      | _ => (state, Isolinear.Effect.none)
+      }
 
     | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
     };
@@ -838,6 +906,20 @@ let update =
 
     | OpenFile(filePath) => (state, Internal.openFileEffect(filePath))
     | PreviewFile(filePath) => (state, Internal.previewFileEffect(filePath))
+
+    | OriginalContentLoaded({bufferId, originalLines}) => (
+        {
+          ...state,
+          buffers:
+            Feature_Buffers.setOriginalLines(
+              ~bufferId,
+              ~originalLines,
+              state.buffers,
+            ),
+        },
+        Isolinear.Effect.none,
+      )
+
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -996,6 +1078,12 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Effect.none)
+
+    | NotifyInfo(msg) => (
+        state,
+        Internal.notificationEffect(~kind=Info, msg),
+      )
+
     | BufferModifiedSet(id, _) =>
       open Feature_Editor;
 
@@ -1023,16 +1111,8 @@ let update =
 
       let bufferId = EditorBuffer.id(editorBuffer);
 
-      let layout =
-        switch (split) {
-        | `Current => state.layout
-        | `Horizontal => Feature_Layout.split(`Horizontal, state.layout)
-        | `Vertical => Feature_Layout.split(`Vertical, state.layout)
-        | `NewTab => Feature_Layout.addLayoutTab(state.layout)
-        };
-
       let existingEditor =
-        Feature_Layout.activeGroupEditors(layout)
+        Feature_Layout.activeGroupEditors(state.layout)
         |> List.find_opt(editor => Editor.getBufferId(editor) == bufferId);
 
       let (isPreview, editor) =
@@ -1040,7 +1120,18 @@ let update =
         | Some(ed) =>
           let isPreview = Editor.getPreview(ed) && preview;
 
-          (isPreview, Editor.setPreview(~preview=isPreview, ed));
+          let editor' =
+            switch (split) {
+            // If we're in the same split, just re-use current editor
+            | `Current => ed
+
+            // However, if we're splitting, we need to clone the editor
+            | `Horizontal
+            | `Vertical
+            | `NewTab => Editor.copy(ed)
+            };
+
+          (isPreview, Editor.setPreview(~preview=isPreview, editor'));
         | None => (
             preview,
             Editor.create(
@@ -1050,6 +1141,15 @@ let update =
               (),
             ),
           )
+        };
+
+      let layout =
+        switch (split) {
+        | `Current => state.layout
+        | `Horizontal =>
+          Feature_Layout.split(~editor, `Horizontal, state.layout)
+        | `Vertical => Feature_Layout.split(~editor, `Vertical, state.layout)
+        | `NewTab => Feature_Layout.addLayoutTab(state.layout)
         };
 
       let editor' =
@@ -1141,7 +1241,34 @@ let update =
             },
           extHostClient,
         );
-      (state, eff);
+
+      let maybeFullPath =
+        buffer
+        |> Buffer.getFilePath
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
+
+      let clearSnippetCacheEffect =
+        maybeFullPath
+        |> Option.map(filePath =>
+             Service_Snippets.Effect.clearCachedSnippets(~filePath)
+           )
+        |> Option.value(~default=Isolinear.Effect.none);
+
+      let modelSavedEff =
+        Service_Exthost.Effects.Documents.modelSaved(
+          ~uri=Buffer.getUri(buffer), extHostClient, () =>
+          Noop
+        );
+
+      let input' =
+        maybeFullPath
+        |> Option.map(fp => Feature_Input.notifyFileSaved(fp, state.input))
+        |> Option.value(~default=state.input);
+
+      (
+        {...state, input: input'},
+        Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
+      );
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
       let fileType =
@@ -1163,7 +1290,7 @@ let update =
               state.config,
               state.vim,
             ),
-          ~theme=state.tokenTheme,
+          ~theme=state.colorTheme |> Feature_Theme.tokenColors,
           update,
           state.syntaxHighlights,
         );
@@ -1252,7 +1379,10 @@ let update =
             extHostClient,
           );
         });
-      (state |> Internal.updateConfiguration, eff);
+
+      let (state', configurationEffect) =
+        state |> Internal.updateConfiguration;
+      (state', Isolinear.Effect.batch([eff, configurationEffect]));
     | Nothing => (state, Effect.none)
     };
 
@@ -1464,6 +1594,11 @@ let update =
 
     let state = {...state, colorTheme: model'};
     switch (outmsg) {
+    | NotifyError(msg) => (
+        state,
+        Internal.notificationEffect(~kind=Error, msg),
+      )
+
     | OpenThemePicker(_) =>
       let themes =
         state.extensions
@@ -1586,6 +1721,162 @@ let update =
       Internal.notificationEffect(~kind=Error, message),
     )
 
+  | Snippets(msg) =>
+    let maybeBuffer = Selectors.getActiveBuffer(state);
+    let editor = Feature_Layout.activeEditor(state.layout);
+    let editorId = editor |> Feature_Editor.Editor.getId;
+
+    let config = Selectors.configResolver(state);
+    let cursorPosition = editor |> Feature_Editor.Editor.getPrimaryCursorByte;
+
+    let resolverFactory = () => {
+      Oni_Model.SnippetVariables.current(state);
+    };
+
+    let wasSnippetActive = Feature_Snippets.isActive(state.snippets);
+
+    let selections = Feature_Editor.Editor.selections(editor);
+
+    let (snippets', outmsg) =
+      Feature_Snippets.update(
+        ~languageInfo=state.languageInfo,
+        ~resolverFactory,
+        ~selections,
+        ~maybeBuffer,
+        ~editorId,
+        ~cursorPosition,
+        ~extensions=state.extensions,
+        msg,
+        state.snippets,
+      );
+
+    let isSnippetActive = Feature_Snippets.isActive(snippets');
+
+    let updateLanguageSupport = (languageSupport, oldLayout, newLayout) => {
+      let originalEditor = Feature_Layout.activeEditor(oldLayout);
+      let originalCursor =
+        originalEditor |> Feature_Editor.Editor.getPrimaryCursor;
+
+      let originalMode = originalEditor |> Feature_Editor.Editor.mode;
+      let wasInInsert = Vim.Mode.isInsertOrSelect(originalMode);
+
+      let newEditor = Feature_Layout.activeEditor(newLayout);
+      let newCursor = newEditor |> Feature_Editor.Editor.getPrimaryCursor;
+      let newMode = newEditor |> Feature_Editor.Editor.mode;
+      let isInInsert = Vim.Mode.isInsertOrSelect(newMode);
+
+      let languageSupport' =
+        if (originalCursor != newCursor) {
+          Feature_LanguageSupport.cursorMoved(
+            ~maybeBuffer,
+            ~previous=originalCursor,
+            ~current=newCursor,
+            languageSupport,
+          );
+        } else {
+          languageSupport;
+        };
+
+      let languageSupport'' =
+        if (wasInInsert != isInInsert) {
+          if (isInInsert) {
+            Feature_LanguageSupport.startInsertMode(
+              ~config,
+              ~maybeBuffer,
+              languageSupport',
+            );
+          } else {
+            Feature_LanguageSupport.stopInsertMode(languageSupport');
+          };
+        } else {
+          languageSupport';
+        };
+
+      if (wasSnippetActive != isSnippetActive) {
+        if (isSnippetActive) {
+          Feature_LanguageSupport.startSnippet(languageSupport'');
+        } else {
+          Feature_LanguageSupport.stopSnippet(languageSupport'');
+        };
+      } else {
+        languageSupport'';
+      };
+    };
+
+    let (layout', eff) =
+      switch (outmsg) {
+      | Nothing => (state.layout, Isolinear.Effect.none)
+      | ErrorMessage(msg) => (
+          state.layout,
+          Internal.notificationEffect(~kind=Error, msg),
+        )
+      | SetCursors(cursors) =>
+        let layout' =
+          state.layout
+          |> Feature_Layout.map(editor =>
+               Feature_Editor.(
+                 if (Editor.getId(editor) == editorId) {
+                   Editor.setCursors(cursors, editor);
+                 } else {
+                   editor;
+                 }
+               )
+             );
+        (layout', Isolinear.Effect.none);
+      | SetSelections(ranges) =>
+        let layout' =
+          state.layout
+          |> Feature_Layout.map(editor =>
+               Feature_Editor.(
+                 if (Editor.getId(editor) == editorId) {
+                   Editor.setSelections(ranges, editor);
+                 } else {
+                   editor;
+                 }
+               )
+             );
+        (layout', Isolinear.Effect.none);
+
+      | ShowFilePicker(snippetFiles) =>
+        let eff =
+          Isolinear.Effect.createWithDispatch(
+            ~name="snippet.fileMenu", dispatch => {
+            dispatch(Actions.QuickmenuShow(SnippetFilePicker(snippetFiles)))
+          });
+        (state.layout, eff);
+
+      | ShowPicker(snippetsWithMetadata) =>
+        let eff =
+          Isolinear.Effect.createWithDispatch(~name="snippet.menu", dispatch => {
+            dispatch(
+              Actions.QuickmenuShow(SnippetPicker(snippetsWithMetadata)),
+            )
+          });
+        (state.layout, eff);
+
+      | OpenFile(filePath) => (
+          state.layout,
+          Internal.openFileEffect(FpExp.toString(filePath)),
+        )
+
+      | Effect(eff) => (
+          state.layout,
+          eff |> Isolinear.Effect.map(msg => Actions.Snippets(msg)),
+        )
+      };
+
+    let languageSupport' =
+      updateLanguageSupport(state.languageSupport, state.layout, layout');
+    (
+      {
+        ...state,
+        layout: layout',
+        languageSupport: languageSupport',
+        snippets: snippets',
+      },
+      eff,
+    );
+
   // TODO: This should live in the terminal feature project
   | TerminalFont(Service_Font.FontLoaded(font)) => (
       {...state, terminalFont: font},
@@ -1613,29 +1904,6 @@ let update =
 
     (state, eff |> Isolinear.Effect.map(msg => TitleBar(msg)));
 
-  | SignatureHelp(msg) =>
-    let maybeBuffer = Selectors.getActiveBuffer(state);
-    let editor = Feature_Layout.activeEditor(state.layout);
-    let (model', eff) =
-      Feature_SignatureHelp.update(
-        ~maybeBuffer,
-        ~maybeEditor=Some(editor),
-        state.signatureHelp,
-        msg,
-      );
-    let effect =
-      switch (eff) {
-      | Feature_SignatureHelp.Nothing => Effect.none
-      | Feature_SignatureHelp.Effect(eff) =>
-        Effect.map(msg => Actions.SignatureHelp(msg), eff)
-      | Feature_SignatureHelp.Error(str) =>
-        Internal.notificationEffect(
-          ~kind=Error,
-          "Signature help error: " ++ str,
-        )
-      };
-    ({...state, signatureHelp: model'}, effect);
-
   | ExtensionBufferUpdateQueued({triggerKey}) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
@@ -1643,7 +1911,7 @@ let update =
     let activeCursorByte =
       editor |> Feature_Editor.Editor.getPrimaryCursorByte;
 
-    let (languageSupport', signatureHelp') =
+    let languageSupport' =
       maybeBuffer
       |> Option.map(buffer => {
            let syntaxScope =
@@ -1666,6 +1934,7 @@ let update =
            let languageSupport =
              Feature_LanguageSupport.bufferUpdated(
                ~languageConfiguration,
+               ~extensions=state.extensions,
                ~buffer,
                ~config,
                ~activeCursor,
@@ -1674,25 +1943,11 @@ let update =
                state.languageSupport,
              );
 
-           let signatureHelp =
-             Feature_SignatureHelp.bufferUpdated(
-               ~languageConfiguration,
-               ~buffer,
-               ~activeCursor,
-               state.signatureHelp,
-             );
-           (languageSupport, signatureHelp);
+           languageSupport;
          })
-      |> Option.value(~default=(state.languageSupport, state.signatureHelp));
+      |> Option.value(~default=state.languageSupport);
 
-    (
-      {
-        ...state,
-        signatureHelp: signatureHelp',
-        languageSupport: languageSupport',
-      },
-      Isolinear.Effect.none,
-    );
+    ({...state, languageSupport: languageSupport'}, Isolinear.Effect.none);
 
   | Yank({range}) =>
     open EditorCoreTypes;
@@ -1783,10 +2038,7 @@ let update =
         state,
         e |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
       )
-    | SettingsChanged => (
-        state |> Internal.updateConfiguration,
-        Isolinear.Effect.none,
-      )
+    | SettingsChanged => state |> Internal.updateConfiguration
     | ModeDidChange({allowAnimation, mode, effects}) =>
       Internal.updateMode(~allowAnimation, state, mode, effects)
     | Output({cmd, output}) =>
@@ -1810,9 +2062,12 @@ let update =
       )
 
     | WorkspaceChanged(maybeWorkspaceFolder) =>
+      let maybeExplorerFolder =
+        maybeWorkspaceFolder
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
       let fileExplorer =
         Feature_Explorer.setRoot(
-          ~rootPath=maybeWorkspaceFolder,
+          ~rootPath=maybeExplorerFolder,
           state.fileExplorer,
         );
 
@@ -1840,6 +2095,18 @@ let update =
       (state', eff);
     };
 
+  | Zoom(msg) =>
+    let (zoom', outmsg) = Feature_Zoom.update(msg, state.zoom);
+    let eff =
+      switch (outmsg) {
+      | Feature_Zoom.Nothing => Isolinear.Effect.none
+      | Feature_Zoom.UpdateConfiguration(transformer) =>
+        Internal.updateConfigurationEffect(transformer)
+      | Feature_Zoom.Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.Zoom(msg))
+      };
+    ({...state, zoom: zoom'}, eff);
+
   | AutoUpdate(msg) =>
     let getLicenseKey = () =>
       Feature_Registration.getLicenseKey(state.registration);
@@ -1847,13 +2114,12 @@ let update =
       Feature_AutoUpdate.update(~getLicenseKey, state.autoUpdate, msg);
 
     let eff =
-      (
-        switch (outmsg) {
-        | Nothing => Isolinear.Effect.none
-        | Effect(eff) => eff
-        }
-      )
-      |> Isolinear.Effect.map(msg => Actions.AutoUpdate(msg));
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+      | Effect(eff) =>
+        eff |> Isolinear.Effect.map(msg => Actions.AutoUpdate(msg))
+      | ErrorMessage(msg) => Internal.notificationEffect(~kind=Error, msg)
+      };
 
     ({...state, autoUpdate: state'}, eff);
 
@@ -1888,7 +2154,13 @@ let updateSubscriptions = (setup: Setup.t) => {
     |> QuickmenuSubscriptionRunner.run(~dispatch);
 
     let searchDispatch = msg => dispatch(Search(msg));
-    searchSubscriptions(~workingDirectory, searchDispatch, state.searchPane)
+    let config = Selectors.configResolver(state);
+    searchSubscriptions(
+      ~config,
+      ~workingDirectory,
+      searchDispatch,
+      state.searchPane,
+    )
     |> SearchSubscriptionRunner.run(~dispatch=searchDispatch);
   };
 };

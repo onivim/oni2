@@ -6,18 +6,81 @@
 
 open EditorCoreTypes;
 open Oni_Core;
+open Utility;
 
 module Log = (val Log.withNamespace("Oni2.Model.Buffers"));
 
-type model = IntMap.t(Buffer.t);
+type model = {
+  buffers: IntMap.t(Buffer.t),
+  originalLines: IntMap.t(array(string)),
+  computedDiffs: IntMap.t(DiffMarkers.t),
+  checkForLargeFiles: bool,
+};
 
-let empty = IntMap.empty;
+let empty = {
+  buffers: IntMap.empty,
+  originalLines: IntMap.empty,
+  computedDiffs: IntMap.empty,
 
-let map = IntMap.map;
+  checkForLargeFiles: true,
+};
 
-let get = (id, model) => IntMap.find_opt(id, model);
+module Internal = {
+  let recomputeDiff = (~bufferId, model) => {
+    let computedDiffs' =
+      OptionEx.map2(
+        (buffer, originalLines) =>
+          if (Oni_Core.Buffer.getNumberOfLines(buffer)
+              > Constants.diffMarkersMaxLineCount
+              || Array.length(originalLines)
+              > Constants.diffMarkersMaxLineCount) {
+            IntMap.remove(bufferId, model.computedDiffs);
+          } else {
+            let newMarkers = DiffMarkers.generate(~originalLines, buffer);
 
-let anyModified = (buffers: model) => {
+            IntMap.add(bufferId, newMarkers, model.computedDiffs);
+          },
+        IntMap.find_opt(bufferId, model.buffers),
+        IntMap.find_opt(bufferId, model.originalLines),
+      )
+      |> Option.value(~default=model.computedDiffs);
+
+    {...model, computedDiffs: computedDiffs'};
+  };
+};
+
+let setOriginalLines = (~bufferId, ~originalLines, model) => {
+  {
+    ...model,
+    originalLines: IntMap.add(bufferId, originalLines, model.originalLines),
+  }
+  |> Internal.recomputeDiff(~bufferId);
+};
+
+let getOriginalDiff = (~bufferId, model) => {
+  IntMap.find_opt(bufferId, model.computedDiffs);
+};
+
+let map = (f, {buffers, _} as model) => {
+  ...model,
+  buffers: IntMap.map(f, buffers),
+};
+
+let get = (id, {buffers, _}) => IntMap.find_opt(id, buffers);
+
+let update = (id, updater, {buffers, _} as model) => {
+  {...model, buffers: IntMap.update(id, updater, buffers)};
+};
+
+let configurationChanged = (~config, model) => {
+  ...model,
+  checkForLargeFiles:
+    Feature_Configuration.GlobalConfiguration.Editor.largeFileOptimizations.get(
+      config,
+    ),
+};
+
+let anyModified = ({buffers, _}: model) => {
   IntMap.fold(
     (_key, v, prev) => Buffer.isModified(v) || prev,
     buffers,
@@ -26,18 +89,21 @@ let anyModified = (buffers: model) => {
 };
 
 let add = (buffer, model) => {
-  model |> IntMap.add(Buffer.getId(buffer), buffer);
+  {
+    ...model,
+    buffers: model.buffers |> IntMap.add(Buffer.getId(buffer), buffer),
+  };
 };
 
-let filter = (f, model) => {
-  model |> IntMap.to_seq |> Seq.map(snd) |> Seq.filter(f) |> List.of_seq;
+let filter = (f, {buffers, _}) => {
+  buffers |> IntMap.to_seq |> Seq.map(snd) |> Seq.filter(f) |> List.of_seq;
 };
 
-let all = model => {
-  model |> IntMap.to_seq |> Seq.map(snd) |> List.of_seq;
+let all = ({buffers, _}) => {
+  buffers |> IntMap.to_seq |> Seq.map(snd) |> List.of_seq;
 };
 
-let isModifiedByPath = (buffers: model, filePath: string) => {
+let isModifiedByPath = ({buffers, _}: model, filePath: string) => {
   IntMap.exists(
     (_id, v) => {
       let bufferPath = Buffer.getFilePath(v);
@@ -52,9 +118,15 @@ let isModifiedByPath = (buffers: model, filePath: string) => {
   );
 };
 
-// TODO: When do we use this?
-//let disableSyntaxHighlighting =
-//  Option.map(buffer => Buffer.disableSyntaxHighlighting(buffer));
+let isLargeFile = (model, buffer) => {
+  model.checkForLargeFiles
+  && model.buffers
+  |> IntMap.find_opt(Oni_Core.Buffer.getId(buffer))
+  |> Option.map(buffer =>
+       Buffer.getNumberOfLines(buffer) > Constants.largeFileLineCountThreshold
+     )
+  |> Option.value(~default=false);
+};
 
 let setModified = modified =>
   Option.map(buffer => Buffer.setModified(modified, buffer));
@@ -63,7 +135,7 @@ let setLineEndings = le =>
   Option.map(buffer => Buffer.setLineEndings(le, buffer));
 
 let modified = model => {
-  model
+  model.buffers
   |> IntMap.to_seq
   |> Seq.map(snd)
   |> Seq.filter(Buffer.isModified)
@@ -86,7 +158,8 @@ type outmsg =
       grabFocus: bool,
       preview: bool,
     })
-  | BufferModifiedSet(int, bool);
+  | BufferModifiedSet(int, bool)
+  | NotifyInfo(string);
 
 [@deriving show]
 type command =
@@ -132,7 +205,11 @@ type msg =
       lineEndings: [@opaque] Vim.lineEnding,
     })
   | Saved(int)
-  | ModifiedSet(int, bool);
+  | ModifiedSet(int, bool)
+  | LargeFileOptimizationsApplied({
+      [@opaque]
+      buffer: Buffer.t,
+    });
 
 module Msg = {
   let fileTypeChanged = (~bufferId, ~fileType) => {
@@ -217,7 +294,7 @@ let guessIndentation = (~config, buffer) => {
 let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   switch (msg) {
   | EditorRequested({buffer, split, position, grabFocus, preview}) => (
-      IntMap.add(Buffer.getId(buffer), buffer, model),
+      add(buffer, model),
       CreateEditor({
         buffer,
         split,
@@ -255,7 +332,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       };
 
     (
-      IntMap.add(Buffer.getId(buffer), buffer, model),
+      add(buffer, model),
       CreateEditor({
         buffer,
         split,
@@ -282,15 +359,15 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         |> Option.some
       | None => None
     );
-    (IntMap.update(id, updater, model), Nothing);
+    (update(id, updater, model), Nothing);
 
   | ModifiedSet(id, isModified) => (
-      IntMap.update(id, setModified(isModified), model),
+      update(id, setModified(isModified), model),
       BufferModifiedSet(id, isModified),
     )
 
   | LineEndingsChanged({id, lineEndings}) => (
-      IntMap.update(id, setLineEndings(lineEndings), model),
+      update(id, setLineEndings(lineEndings), model),
       Nothing,
     )
 
@@ -307,20 +384,20 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         newBuffer;
       };
     (
-      IntMap.add(update.id, buffer, model),
+      add(buffer, model) |> Internal.recomputeDiff(~bufferId=update.id),
       BufferUpdated({update, newBuffer: buffer, oldBuffer, triggerKey}),
     );
 
   | FileTypeChanged({id, fileType}) => (
-      IntMap.update(id, Option.map(Buffer.setFileType(fileType)), model),
+      update(id, Option.map(Buffer.setFileType(fileType)), model),
       Nothing,
     )
 
   | Saved(bufferId) =>
     let model' =
-      IntMap.update(bufferId, Option.map(Buffer.incrementSaveTick), model);
+      update(bufferId, Option.map(Buffer.incrementSaveTick), model);
     let eff =
-      IntMap.find_opt(bufferId, model)
+      IntMap.find_opt(bufferId, model.buffers)
       |> Option.map(buffer => BufferSaved(buffer))
       |> Option.value(~default=Nothing);
     (model', eff);
@@ -328,7 +405,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   | Command(command) =>
     switch (command) {
     | DetectIndentation =>
-      let maybeBuffer = IntMap.find_opt(activeBufferId, model);
+      let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
 
       switch (maybeBuffer) {
       // This shouldn't happen...
@@ -339,9 +416,24 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         let config = config(~fileType);
         let indentation = guessIndentation(~config, buffer);
         let updatedBuffer = Buffer.setIndentation(indentation, buffer);
-        (IntMap.add(activeBufferId, updatedBuffer, model), Nothing);
+        (add(updatedBuffer, model), Nothing);
       };
     }
+
+  | LargeFileOptimizationsApplied({buffer}) =>
+    let maybeFilename = Oni_Core.Buffer.getShortFriendlyName(buffer);
+    let outmsg =
+      maybeFilename
+      |> Option.map(fileName => {
+           let msg =
+             Printf.sprintf(
+               "Syntax highlighting and other features have been turned off for the large file '%s'. These optimizations can be disabled by setting 'editor.largeFileOptimizations' to false.",
+               fileName,
+             );
+           NotifyInfo(msg);
+         })
+      |> Option.value(~default=Nothing);
+    (model, outmsg);
   };
 };
 
@@ -349,7 +441,7 @@ module Effects = {
   let openCommon = (~vimBuffer, ~font, ~languageInfo, ~model, f) => {
     let bufferId = Vim.Buffer.getId(vimBuffer);
 
-    switch (IntMap.find_opt(bufferId, model)) {
+    switch (IntMap.find_opt(bufferId, model.buffers)) {
     // We already have this buffer loaded - so just ask for an editor!
     | Some(buffer) =>
       buffer |> Buffer.stampLastUsed |> f(~alreadyLoaded=true)
@@ -502,6 +594,25 @@ module Commands = {
     );
 };
 
+let sub = model =>
+  if (!model.checkForLargeFiles) {
+    Isolinear.Sub.none;
+  } else {
+    model.buffers
+    |> IntMap.bindings
+    |> List.map(snd)
+    |> List.filter((buffer: Buffer.t) => isLargeFile(model, buffer))
+    |> List.map(buffer =>
+         SubEx.value(
+           ~uniqueId=
+             "Feature_Buffers.largeFile:"
+             ++ string_of_int(Buffer.getId(buffer)),
+           LargeFileOptimizationsApplied({buffer: buffer}),
+         )
+       )
+    |> Isolinear.Sub.batch;
+  };
+
 module Contributions = {
   let configuration =
     Configuration.[
@@ -512,4 +623,23 @@ module Contributions = {
     ];
 
   let commands = Commands.[detectIndentation] |> Command.Lookup.fromList;
+
+  let keybindings =
+    Feature_Input.Schema.[
+      bind(
+        ~key="<D-N>",
+        ~command=":enew",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S>",
+        ~command=":w!",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+      bind(
+        ~key="<D-S-S>",
+        ~command=":wa!",
+        ~condition="isMac" |> WhenExpr.parse,
+      ),
+    ];
 };

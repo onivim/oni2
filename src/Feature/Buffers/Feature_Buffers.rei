@@ -23,6 +23,13 @@ let map: (Buffer.t => Buffer.t, model) => model;
 
 let filter: (Buffer.t => bool, model) => list(Buffer.t);
 
+let isLargeFile: (model, Buffer.t) => bool;
+
+let setOriginalLines:
+  (~bufferId: int, ~originalLines: array(string), model) => model;
+
+let getOriginalDiff: (~bufferId: int, model) => option(DiffMarkers.t);
+
 // MSG
 
 [@deriving show]
@@ -71,13 +78,16 @@ type outmsg =
       grabFocus: bool,
       preview: bool,
     })
-  | BufferModifiedSet(int, bool);
+  | BufferModifiedSet(int, bool)
+  | NotifyInfo(string);
 
 // UPDATE
 
 let update:
   (~activeBufferId: int, ~config: Config.fileTypeResolver, msg, model) =>
   (model, outmsg);
+
+let configurationChanged: (~config: Config.resolver, model) => model;
 
 // EFFECTS
 
@@ -125,7 +135,10 @@ module Effects: {
     Isolinear.Effect.t(msg);
 };
 
+let sub: model => Isolinear.Sub.t(msg);
+
 module Contributions: {
   let commands: Command.Lookup.t(msg);
   let configuration: list(Config.Schema.spec);
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };

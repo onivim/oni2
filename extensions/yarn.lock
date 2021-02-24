@@ -2,6 +2,44 @@
 # yarn lockfile v1
 
 
+"@emmetio/css-parser@ramya-rao-a/css-parser#vscode":
+  version "0.4.0"
+  resolved "https://codeload.github.com/ramya-rao-a/css-parser/tar.gz/370c480ac103bd17c7bcfb34bf5d577dc40d3660"
+  dependencies:
+    "@emmetio/stream-reader" "^2.2.0"
+    "@emmetio/stream-reader-utils" "^0.1.0"
+
+"@emmetio/extract-abbreviation@0.1.6":
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/@emmetio/extract-abbreviation/-/extract-abbreviation-0.1.6.tgz#e4a9856c1057f0aff7d443b8536477c243abe28c"
+  integrity sha512-Ce3xE2JvTSEbASFbRbA1gAIcMcZWdS2yUYRaQbeM0nbOzaZrUYfa3ePtcriYRZOZmr+CkKA+zbjhvTpIOAYVcw==
+
+"@emmetio/html-matcher@^0.3.3":
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/@emmetio/html-matcher/-/html-matcher-0.3.3.tgz#0bbdadc0882e185950f03737dc6dbf8f7bd90728"
+  integrity sha1-C72twIguGFlQ8Dc33G2/j3vZByg=
+  dependencies:
+    "@emmetio/stream-reader" "^2.0.0"
+    "@emmetio/stream-reader-utils" "^0.1.0"
+
+"@emmetio/math-expression@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@emmetio/math-expression/-/math-expression-0.1.1.tgz#1ff2c7f05800f64c57ca89038ee18bce9f5776dc"
+  integrity sha1-H/LH8FgA9kxXyokDjuGLzp9Xdtw=
+  dependencies:
+    "@emmetio/stream-reader" "^2.0.1"
+    "@emmetio/stream-reader-utils" "^0.1.0"
+
+"@emmetio/stream-reader-utils@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@emmetio/stream-reader-utils/-/stream-reader-utils-0.1.0.tgz#244cb02c77ec2e74f78a9bd318218abc9c500a61"
+  integrity sha1-JEywLHfsLnT3ipvTGCGKvJxQCmE=
+
+"@emmetio/stream-reader@^2.0.0", "@emmetio/stream-reader@^2.0.1", "@emmetio/stream-reader@^2.2.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@emmetio/stream-reader/-/stream-reader-2.2.0.tgz#46cffea119a0a003312a21c2d9b5628cb5fcd442"
+  integrity sha1-Rs/+oRmgoAMxKiHC2bVijLX81EI=
+
 agent-base@4, agent-base@^4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/agent-base/-/agent-base-4.3.0.tgz#8165f01c436009bccad0b1d122f05ed770efc6ee"
@@ -152,6 +190,11 @@ iconv-lite-umd@0.6.8:
   resolved "https://registry.yarnpkg.com/iconv-lite-umd/-/iconv-lite-umd-0.6.8.tgz#5ad310ec126b260621471a2d586f7f37b9958ec0"
   integrity sha512-zvXJ5gSwMC9JD3wDzH8CoZGc1pbiJn12Tqjk8BXYCnYz3hYL5GRjHW8LEykjXhV9WgNGI4rgpgHcbIiBfrRq6A==
 
+image-size@^0.5.2:
+  version "0.5.5"
+  resolved "https://registry.yarnpkg.com/image-size/-/image-size-0.5.5.tgz#09dfd4ab9d20e29eb1c3e80b8990378df9e3cb9c"
+  integrity sha1-Cd/Uq50g4p6xw+gLiZA3jfnjy5w=
+
 inflight@^1.0.4:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/inflight/-/inflight-1.0.6.tgz#49bd6331d7d02d0c09bc910a1075ba8165b56df9"
@@ -175,7 +218,7 @@ jschardet@2.2.1:
   resolved "https://registry.yarnpkg.com/jschardet/-/jschardet-2.2.1.tgz#03b0264669a90c7a5c436a68c5a7d4e4cb0c9823"
   integrity sha512-Ks2JNuUJoc7PGaZ7bVFtSEvOcr0rBq6Q1J5/7+zKWLT+g+4zziL63O0jg7y2jxhzIa1LVsHUbPXrbaWmz9iwDw==
 
-jsonc-parser@^3.0.0:
+jsonc-parser@3.0.0, jsonc-parser@^1.0.0, jsonc-parser@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/jsonc-parser/-/jsonc-parser-3.0.0.tgz#abdd785701c7e7eaca8a9ec8cf070ca51a745a22"
   integrity sha512-fQzRfAbIBnR0IQvftw9FJveWiHp72Fg20giDrHz6TdfB12UH/uue0D3hm57UB5KgAVuniLMCaS8P1IMj9NR7cA==
@@ -309,6 +352,15 @@ vscode-css-languageservice@^4.4.0:
     vscode-nls "^5.0.0"
     vscode-uri "^2.1.2"
 
+vscode-emmet-helper@^1.2.17:
+  version "1.2.17"
+  resolved "https://registry.yarnpkg.com/vscode-emmet-helper/-/vscode-emmet-helper-1.2.17.tgz#f0c6bfcebc4285d081fb2618e6e5b9a08c567afa"
+  integrity sha512-X4pzcrJ8dE7M3ArFuySF5fgipKDd/EauXkiJwtjBIVRWpVNq0tF9+lNCyuC7iDUwP3Oq7ow/TGssD3GdG96Jow==
+  dependencies:
+    "@emmetio/extract-abbreviation" "0.1.6"
+    jsonc-parser "^1.0.0"
+    vscode-languageserver-types "^3.6.0-next.1"
+
 vscode-extension-telemetry@0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/vscode-extension-telemetry/-/vscode-extension-telemetry-0.1.1.tgz#91387e06b33400c57abd48979b0e790415ae110b"
@@ -363,7 +415,7 @@ vscode-languageserver-textdocument@^1.0.1:
   resolved "https://registry.yarnpkg.com/vscode-languageserver-textdocument/-/vscode-languageserver-textdocument-1.0.1.tgz#178168e87efad6171b372add1dea34f53e5d330f"
   integrity sha512-UIcJDjX7IFkck7cSkNNyzIz5FyvpQfY7sdzVy+wkKN/BLaD4DQ0ppXQrKePomCxTS7RrolK1I0pey0bG9eh8dA==
 
-vscode-languageserver-types@3.16.0-next.2:
+vscode-languageserver-types@3.16.0-next.2, vscode-languageserver-types@^3.6.0-next.1:
   version "3.16.0-next.2"
   resolved "https://registry.yarnpkg.com/vscode-languageserver-types/-/vscode-languageserver-types-3.16.0-next.2.tgz#940bd15c992295a65eae8ab6b8568a1e8daa3083"
   integrity sha512-QjXB7CKIfFzKbiCJC4OWC8xUncLsxo19FzGVp/ADFvvi87PlmBSCAtZI5xwGjF5qE0xkLf0jjKUn3DzmpDP52Q==

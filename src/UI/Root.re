@@ -86,10 +86,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
   };
 
   let statusBar = () =>
-    if (Selectors.getActiveConfigurationValue(state, c =>
-          c.workbenchStatusBarVisible
-        )
-        && !zenMode) {
+    if (Feature_StatusBar.Configuration.visible.get(config) && !zenMode) {
       <View style=Styles.statusBar>
         <Feature_StatusBar.View
           mode
@@ -189,6 +186,10 @@ let make = (~dispatch, ~state: State.t, ()) => {
     | `hidden => React.empty
     };
 
+  let zoom = Feature_Zoom.zoom(state.zoom);
+  // Correct for zoom in title bar height
+  let titlebarHeight = state.titlebarHeight /. zoom;
+
   <View style={Styles.root(theme, state.windowDisplayMode)}>
     <Feature_TitleBar.View
       menuBar=menuBarElement
@@ -203,7 +204,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
       theme
       dispatch=titleDispatch
       registrationDispatch
-      height={state.titlebarHeight}
+      height=titlebarHeight
     />
     <View style=Styles.workspace>
       <View style=Styles.surface>

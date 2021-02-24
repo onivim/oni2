@@ -15,9 +15,7 @@ module Constants = {
 
 let start =
     (
-      ~configurationFilePath: option(Fp.t(Fp.absolute)),
-      ~getZoom,
-      ~setZoom,
+      ~configurationFilePath: option(FpExp.t(FpExp.absolute)),
       ~setVsync,
       ~shouldLoadConfiguration,
       ~filesToOpen,
@@ -44,37 +42,6 @@ let start =
         };
       });
     ();
-  };
-
-  let transformConfigurationEffect = (fileName, buffers, transformer) => {
-    let configPath = getConfigurationFile(fileName);
-    switch (configPath) {
-    | Error(msg) =>
-      Log.error("Unable to load configuration: " ++ msg);
-      Isolinear.Effect.none;
-    | Ok(configPath) =>
-      // TODO: Fp.t all the way...
-      let configPath = Fp.toString(configPath);
-      if (!Feature_Buffers.isModifiedByPath(buffers, configPath)) {
-        Oni_Core.Log.perf("Apply configuration transform", () => {
-          let parsedJson = Yojson.Safe.from_file(configPath);
-          let newJson = transformer(parsedJson);
-          let oc = open_out(configPath);
-          Yojson.Safe.pretty_to_channel(oc, newJson);
-          close_out(oc);
-        });
-
-        Isolinear.Effect.none;
-      } else {
-        {
-          Feature_Notification.Effects.create(
-            ~kind=Error,
-            "Unable to save theme selection to configuration; configuration file is modified.",
-          );
-        }
-        |> Isolinear.Effect.map(msg => Actions.Notification(msg));
-      };
-    };
   };
 
   let clearDiagnostics = (~dispatch) => {
@@ -120,7 +87,7 @@ let start =
       dispatch(Actions.Configuration(UserSettingsChanged));
       defaultConfigurationFileName
       |> getConfigurationFile
-      |> Result.map(Fp.toString)
+      |> Result.map(FpExp.toString)
       |> (
         result =>
           Stdlib.Result.bind(result, ConfigurationParser.ofFile)
@@ -135,6 +102,37 @@ let start =
       );
     });
 
+  let transformConfigurationEffect = (fileName, buffers, transformer) => {
+    let configPath = getConfigurationFile(fileName);
+    switch (configPath) {
+    | Error(msg) =>
+      Log.error("Unable to load configuration: " ++ msg);
+      Isolinear.Effect.none;
+    | Ok(configPath) =>
+      // TODO: FpExp.t all the way...
+      let configPath = FpExp.toString(configPath);
+      if (!Feature_Buffers.isModifiedByPath(buffers, configPath)) {
+        Oni_Core.Log.perf("Apply configuration transform", () => {
+          let parsedJson = Yojson.Safe.from_file(configPath);
+          let newJson = transformer(parsedJson);
+          let oc = open_out(configPath);
+          Yojson.Safe.pretty_to_channel(oc, newJson);
+          close_out(oc);
+        });
+
+        reloadConfigurationEffect;
+      } else {
+        {
+          Feature_Notification.Effects.create(
+            ~kind=Error,
+            "Unable to save theme selection to configuration; configuration file is modified.",
+          );
+        }
+        |> Isolinear.Effect.map(msg => Actions.Notification(msg));
+      };
+    };
+  };
+
   let initConfigurationEffect =
     Isolinear.Effect.createWithDispatch(~name="configuration.init", dispatch =>
       if (shouldLoadConfiguration) {
@@ -142,7 +140,7 @@ let start =
 
         defaultConfigurationFileName
         |> getConfigurationFile
-        |> Result.map(Fp.toString)
+        |> Result.map(FpExp.toString)
         // Once we know the path - register a listener to reload
         |> ResultEx.tap(configPath =>
              reloadConfigOnWritePost(~configPath, dispatch)
@@ -175,23 +173,15 @@ let start =
       ~name="configuration.openFile", dispatch =>
       switch (Filesystem.getOrCreateConfigFile(filePath)) {
       | Ok(path) =>
-        dispatch(Actions.OpenFileByPath(path |> Fp.toString, None, None))
+        dispatch(Actions.OpenFileByPath(path |> FpExp.toString, None, None))
       | Error(e) => onError(~dispatch, e)
       }
     );
 
   // Synchronize miscellaneous configuration settings
-  let zoom = ref(getZoom());
   let vsync = ref(Revery.Vsync.Immediate);
   let synchronizeConfigurationEffect = configuration =>
     Isolinear.Effect.create(~name="configuration.synchronize", () => {
-      let zoomValue = Configuration.getValue(c => c.uiZoom, configuration);
-      if (zoomValue != zoom^) {
-        Log.infof(m => m("Setting zoom: %f", zoomValue));
-        setZoom(zoomValue);
-        zoom := zoomValue;
-      };
-
       let vsyncValue = Configuration.getValue(c => c.vsync, configuration);
       if (vsyncValue != vsync^) {
         Log.info("Setting vsync: " ++ Revery.Vsync.toString(vsyncValue));

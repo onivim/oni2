@@ -74,6 +74,10 @@ type outmsg =
   | OpenFile(string)
   | PreviewFile(string)
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | OriginalContentLoaded({
+      bufferId: int,
+      originalLines: array(string),
+    })
   | Nothing;
 
 let update:
@@ -85,9 +89,6 @@ let update:
     msg
   ) =>
   (model, outmsg);
-
-let getOriginalLines: (Oni_Core.Buffer.t, model) => option(array(string));
-let setOriginalLines: (Oni_Core.Buffer.t, array(string), model) => model;
 
 let handleExtensionMessage:
   (~dispatch: msg => unit, Exthost.Msg.SCM.msg) => unit;

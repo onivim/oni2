@@ -32,7 +32,7 @@ module Msg: {
 };
 
 module CodeLens: {
-  type t;
+  type t = Exthost.CodeLens.lens;
 
   let lineNumber: t => int;
   let text: t => string;
@@ -76,12 +76,17 @@ type outmsg =
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.t),
+    })
+  | SetSelections({
+      editorId: int,
+      ranges: list(CharacterRange.t),
     });
 
 let update:
   (
     ~config: Oni_Core.Config.resolver,
     ~configuration: Oni_Core.Configuration.t,
+    ~extensions: Feature_Extensions.model,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~maybeSelection: option(CharacterRange.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),
@@ -98,6 +103,7 @@ let bufferUpdated:
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~buffer: Oni_Core.Buffer.t,
     ~config: Oni_Core.Config.resolver,
+    ~extensions: Feature_Extensions.model,
     ~activeCursor: CharacterPosition.t,
     ~syntaxScope: Oni_Core.SyntaxScope.t,
     ~triggerKey: option(string),
@@ -115,8 +121,20 @@ let cursorMoved:
     model
   ) =>
   model;
-let startInsertMode: model => model;
+
+let startInsertMode:
+  (
+    ~config: Oni_Core.Config.resolver,
+    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    model
+  ) =>
+  model;
+
 let stopInsertMode: model => model;
+
+let startSnippet: model => model;
+let stopSnippet: model => model;
+
 let isFocused: model => bool;
 
 let sub:
@@ -150,6 +168,29 @@ module Completion: {
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~editorFont: Service_Font.font,
+        ~model: model,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
+
+module SignatureHelp: {
+  let isActive: model => bool;
+
+  module View: {
+    let make:
+      (
+        ~x: int,
+        ~y: int,
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~tokenTheme: Oni_Syntax.TokenTheme.t,
+        ~editorFont: Service_Font.font,
+        ~uiFont: Oni_Core.UiFont.t,
+        ~languageInfo: Exthost.LanguageInfo.t,
+        ~buffer: Oni_Core.Buffer.t,
+        ~grammars: Oni_Syntax.GrammarRepository.t,
+        ~dispatch: msg => unit,
         ~model: model,
         unit
       ) =>

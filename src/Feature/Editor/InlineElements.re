@@ -386,10 +386,17 @@ let replace =
   keyToElements' |> makeConsistent;
 };
 
-let clear = (~key, model) => {
+// Clear any key that starts with the prefix [key].
+// For example, [clearMatching(~key="codelens", model)] will delete keys "codelens6", "codelens100", etc
+let clearMatching = (~key, model) => {
   let keyToElements' =
     model.keyToElements
-    |> IntMap.map(keyToElements => {StringMap.remove(key, keyToElements)});
+    |> IntMap.map(keyToElements => {
+         keyToElements
+         |> StringMap.filter((keyOnLine, _v) =>
+              !StringEx.startsWith(~prefix=key, keyOnLine)
+            )
+       });
 
   keyToElements' |> makeConsistent;
 };

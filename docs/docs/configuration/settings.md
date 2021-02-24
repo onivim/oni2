@@ -23,7 +23,11 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 ### Editor
 
+- `editor.acceptSuggestionOnEnter` __(_bool_ default: `false`)__ - When `true`, the enter key can be used to select a suggestion. By default, the enter key will not be used, so as not to interfere with creating a new line.
+
 - `editor.autoClosingBrackets` __(_"LanguageDefined"|"Never"_ default: `"LanguageDefined"`)__ - When set to `"LanguageDefined"`, Onivim will automatically close brackets and pairs, based on language configuration.
+
+- `editor.codeLens` __(_bool_ default: `true`)__ - Whether to show codelens, when available from a language extension.
 
 - `editor.cursorSurroundingLines` __(_int_ default: `1`)__ - The number of view lines to keep visible above and below the cursor when scrolling. Equivalent to the Vim `scrolloff` setting.
 
@@ -80,9 +84,19 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
     - _"selection"_ - Render whitespace characters in visual mode selected text
     - _"none"_ - Don't render whitespace at all
 
+- `editor.scrollbar.horizontalScrollbarSize` __(_int_ default: `8`)__ - The size, in pixels, of the horizontal scroll bar on the editor surface.
+
+- `editor.scrollbar.verticalScrollbarSize` __(_int_ default: `15`)__ - The size, in pixels, of the vertical scroll bar on the editor surface.
+
+- `editor.snippetSuggestions` __(_string_ default: `"inline"`) - controls how snippets are presented in the suggestion UI:
+    - _"top"_ - Show snippets at the top of the suggestion list
+    - _"bottom"_ - Show snippets at the bottom of the suggestion list
+    - _"inline"_ - Show snippets sorted in-line with other suggestion items
+    - _"hidden"_ - Don't show snippet suggestions at all
+
 - `editor.wordBasedSuggestions` __(_bool_ default: `true`)__ When `true`, keywords are provided as completion suggestions.
 
-- `editor.wordWrap` __(_bool_ default: `false`)__ When `true`, Onivim will soft-wrap lines at the viewport boundary.
+- `editor.wordWrap` __(_bool_ default: `true`)__ When `true`, Onivim will soft-wrap lines at the viewport boundary.
 
 - `editor.rulers` __(_list of int_ default: `[]`)__ - Render vertical rulers at given columns.
 
@@ -95,6 +109,10 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `editor.zenMode.singleFile` __(_bool_ default: `true`)__ - When `true`, the Onivim will automatically enter zen mode when started up with a single file. Zen mode hides most of the UI until disabled via the command pallette.
 
 - `editor.zenMode.hideTabs` __(_bool_ default: `true`)__ - When `true`, the Onivim will hide the buffer tabs from the user whilst in zen mode. Zen mode can be toggled in the command pallette, or automatically enabled with the `editor.zenMode.singleFile` configuration option.
+
+- `files.exclude` __(_list of string_ default: `[".git", "_esy", "node_modules"]`)__ - When using `Quick Open` or `Find in files`, Onivim will ignore the files inside the directories listed here 
+
+- `search.exclude` __(_list of string_ default: `[]`)__ - When using `Find in files` Onivim will not look at files located at the directories listed here, this inherit all the values from `files.exclude`
 
 - `workbench.colorTheme` __(_string_ default:`"One Dark Pro"`)__ - Color theme to use.
 
@@ -111,6 +129,8 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 ### Input
 
 - `vim.leader` __(_string_)__ - Specify a custom [leader key](./key-bindings#leader-key).
+
+- `vim.timeout` __(_int_ default: `1000`)__ Sets the timeout, in milliseconds, when Onivim is waiting for a pending chord. When the timeout is reached, any pending keys that are partially mapped will be flushed. Equivalent to the `timeoutlen` Vim setting. Can be set to `0` to disable the timeout entirely.
 
 ### Layout
 

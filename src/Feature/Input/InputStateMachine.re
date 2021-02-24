@@ -4,8 +4,16 @@
 // State management for input (keys pressed, potential bindings, etc)
 
 type execute =
-  | NamedCommand(string)
+  | NamedCommand({
+      command: string,
+      arguments: Yojson.Safe.t,
+    })
   | VimExCommand(string);
+
+let executeToString =
+  fun
+  | NamedCommand({command, _}) => command
+  | VimExCommand(command) => command;
 
 module Input =
   EditorInput.Make({
@@ -20,7 +28,7 @@ type effect =
     | Execute(execute)
     | Text(string)
     | Unhandled({
-        key: EditorInput.KeyPress.t,
+        key: EditorInput.KeyCandidate.t,
         isProducedByRemap: bool,
       })
     | RemapRecursionLimitHit;

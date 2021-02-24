@@ -85,6 +85,7 @@ module Shadow = {
         ~height,
         ~context,
       ) => {
+    let opacity = Revery.Color.getAlpha(color) *. opacity;
     switch (direction) {
     | Right =>
       Gradient.drawLeftToRight(

@@ -1,6 +1,6 @@
 module Key: {
   type t =
-    | Character(char)
+    | Character(Uchar.t)
     | Function(int)
     | NumpadDigit(int)
     | Escape
@@ -39,7 +39,7 @@ module Modifiers: {
     alt: bool,
     altGr: bool,
     shift: bool,
-    meta: bool,
+    super: bool,
   };
 
   let none: t;
@@ -76,8 +76,8 @@ module KeyPress: {
     | SpecialKey(SpecialKey.t);
 
   let toString:
-    // The name of the 'meta' key. Defaults to "Meta".
-    (~meta: string=?, ~keyToString: Key.t => string=?, t) => string;
+    // The name of the 'super' key. Defaults to "Super".
+    (~super: string=?, ~keyToString: Key.t => string=?, t) => string;
 
   let physicalKey: (~key: Key.t, ~modifiers: Modifiers.t) => t;
 
@@ -96,6 +96,26 @@ module KeyPress: {
     (~explicitShiftKeyNeeded: bool, string) => result(list(t), string);
 };
 
+module KeyCandidate: {
+  // A KeyCandidate is a list of potential key-presses that could match.
+  // For example, on a US keyboard, a `Shift+=` key could be interpreted multiple ways:
+  // - `<S-=>`
+  // - `+`
+  // We should be able to handle bindings of either type, but the burden is on the consumer
+  // to provide the potential match candidates.
+  [@deriving show]
+  type t;
+
+  // [ofKeyPress(keyPress)] creates a candidate of a single key press
+  let ofKeyPress: KeyPress.t => t;
+
+  // [ofList(keyPresses)] creates a candidate from multiple key presses
+  let ofList: list(KeyPress.t) => t;
+
+  // [toList(candidate)] returns a list of key presses associate with the candidate
+  let toList: t => list(KeyPress.t);
+};
+
 module Matcher: {
   type t =
     | Sequence(list(KeyPress.t))
@@ -110,6 +130,8 @@ module Matcher: {
     // - 's' would get resolved as 's', 'S' would get resolved as 'Shift+s'
     // (Vim style parsing)
     (~explicitShiftKeyNeeded: bool, string) => result(t, string);
+
+  let toString: t => string;
 };
 
 module type Input = {
@@ -147,7 +169,7 @@ module type Input = {
     // The `Unhandled` effect occurs when an unhandled `keyDown` input event occurs.
     // This can happen if there is no binding associated with a key.
     | Unhandled({
-        key: KeyPress.t,
+        key: KeyCandidate.t,
         isProducedByRemap: bool,
       })
     // RemapRecursionLimitHit is produced if there is a recursive loop
@@ -159,11 +181,13 @@ module type Input = {
       ~leaderKey: option(PhysicalKey.t)=?,
       ~context: context,
       ~scancode: int,
-      ~key: KeyPress.t,
+      ~key: KeyCandidate.t,
       t
     ) =>
     (t, list(effect));
+
   let text: (~text: string, t) => (t, list(effect));
+
   let keyUp:
     (
       ~leaderKey: option(PhysicalKey.t)=?,
@@ -173,6 +197,8 @@ module type Input = {
     ) =>
     (t, list(effect));
 
+  let timeout: (~context: context, t) => (t, list(effect));
+
   // [candidates] returns a list of available matcher / command
   // candidates, based on the current context and input state.
   let candidates:
@@ -181,7 +207,7 @@ module type Input = {
 
   // [consumedKeys(model)] returns a list of keys
   // that are currently consumed by the state machine.
-  let consumedKeys: t => list(KeyPress.t);
+  let consumedKeys: t => list(KeyCandidate.t);
 
   let remove: (uniqueId, t) => t;
 

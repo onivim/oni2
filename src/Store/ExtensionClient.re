@@ -50,6 +50,11 @@ let create =
 
         promise;
 
+      | Commands(ExecuteCommand({command, args, _})) =>
+        // TODO: Is this really the right action?
+        dispatch(Actions.CommandInvoked({command, arguments: `List(args)}));
+        Lwt.return(Reply.okEmpty);
+
       | Configuration(RemoveConfigurationOption({key, _})) =>
         dispatch(
           Actions.ConfigurationTransform(
@@ -106,20 +111,6 @@ let create =
         Log.infof(m => m("ExtensionService: %s", Exthost.Msg.show(msg)));
         dispatch(
           Actions.Extensions(Feature_Extensions.Msg.exthost(extMsg)),
-        );
-        Lwt.return(Reply.okEmpty);
-
-      | LanguageFeatures(
-          RegisterSignatureHelpProvider({handle, selector, metadata}),
-        ) =>
-        dispatch(
-          Actions.SignatureHelp(
-            Feature_SignatureHelp.Msg.providerAvailable({
-              handle,
-              selector,
-              metadata,
-            }),
-          ),
         );
         Lwt.return(Reply.okEmpty);
 
@@ -188,10 +179,10 @@ let create =
           }),
         ) =>
         let command =
-          command |> Option.map(({id, _}: Exthost.Command.t) => id);
+          command |> OptionEx.flatMap(({id, _}: Exthost.Command.t) => id);
         dispatch(
           Actions.StatusBar(
-            Feature_StatusBar.ItemAdded(
+            Feature_StatusBar.Msg.itemAdded(
               Feature_StatusBar.Item.create(
                 ~command?,
                 ~color?,
@@ -209,7 +200,11 @@ let create =
         Lwt.return(Reply.okEmpty);
 
       | StatusBar(Dispose({id})) =>
-        dispatch(Actions.StatusBar(ItemDisposed(id |> string_of_int)));
+        dispatch(
+          Actions.StatusBar(
+            Feature_StatusBar.Msg.itemDisposed(id |> string_of_int),
+          ),
+        );
         Lwt.return(Reply.okEmpty);
 
       | TerminalService(msg) =>
@@ -281,12 +276,22 @@ let create =
     |> Option.value(~default=originalVersion);
   };
 
+  let staticWorkspace =
+    initialWorkspace
+    |> Option.map(({id, name, _}: Exthost.WorkspaceData.t) => {
+         Exthost.Extension.InitData.StaticWorkspaceData.{id, name}
+       })
+    |> Option.value(
+         ~default=Exthost.Extension.InitData.StaticWorkspaceData.global,
+       );
+
   let initData =
     InitData.create(
       ~version=extHostVersion,
       ~parentPid,
       ~logsLocation,
       ~logFile,
+      ~workspace=staticWorkspace,
       extensionInfo,
     );
 
@@ -332,7 +337,7 @@ let create =
        );
   let environment = [
     (
-      "AMD_ENTRYPOINT",
+      "VSCODE_AMD_ENTRYPOINT",
       "vs/workbench/services/extensions/node/extensionHostProcess",
     ),
     ("VSCODE_IPC_HOOK_EXTHOST", pipeStr),
