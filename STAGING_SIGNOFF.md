@@ -8,7 +8,7 @@
 - Validate full shell path is available
 
 __Pass:__
-- [ ] OSX
+- [x] OSX
 
 ## 1.2 Validate launches from dock in OSX (#2659)
 
@@ -18,7 +18,7 @@ __Pass:__
 - Validate Onivim 2 launches and PATH is correct
 
 __Pass:__
-- [ ] OSX
+- [x] OSX
 
 # 2. First-run Experience
 
@@ -34,7 +34,7 @@ Test cases covering launching and using Onivim without any persistence or config
 
 __Pass:__
 - [ ] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 2.2 Home directory set [OSX]
@@ -52,7 +52,7 @@ not have permission to read that folder.
 - Verify Control+Shift+P/Command+Shift+P shows the command palette
 
 __Pass:__
-- [ ] OSX
+- [x] OSX
 
 # 3. SCM
 
@@ -64,7 +64,7 @@ __Pass:__
 
 __Pass:__
 - [ ] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 4. Editing
@@ -84,7 +84,7 @@ __Pass:__
 
 __Pass:__
 - [ ] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 4.2 Verify horizontal scroll
@@ -99,7 +99,7 @@ __Pass:__
 
 __Pass:__
 - [ ] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 5. File Preview
@@ -117,7 +117,7 @@ __Pass:__
 
 __Pass:__
 - [ ] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 6. Font Rendering
@@ -134,7 +134,7 @@ Prerequisite:
 
 __Pass:__
 - [ ] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 7. Input
@@ -155,7 +155,7 @@ Prerequisite:
 
 __Pass:__
 - [ ] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 ## 7.2 Leader Key
@@ -172,7 +172,7 @@ Prerequisite:
 
 __Pass:__
 - [ ] Windows
-- [ ] OSX
+- [x] OSX
 - [x] LInux
 
 ## 7.3 Japanese / Romanji layout
@@ -189,7 +189,7 @@ Prerequisite:
 
 __Pass:__
 - [ ] Win
-- [ ] OSX
+- [x] OSX
 - [-] Linux
 
 # 8. Workspace
@@ -212,7 +212,7 @@ Prerequisite:
 
 __Pass:__
 - [ ] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 9. Terminal
@@ -227,7 +227,7 @@ __Pass:__
 
 __Pass:__
 - [ ] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 10. Menubar
@@ -242,7 +242,7 @@ Regression test for #3108
 
 __Pass:__
 - [ ] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
 
 # 10. Extension Management
@@ -256,5 +256,5 @@ __Pass:__
 
 __Pass:__
 - [ ] Win
-- [ ] OSX
+- [x] OSX
 - [x] Linux
