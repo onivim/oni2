@@ -13,7 +13,6 @@ type vimUseSystemClipboard = {
 
 type t = {
   workbenchActivityBarVisible: bool,
-  workbenchIconTheme: string,
   workbenchEditorShowTabs: bool,
   workbenchEditorEnablePreview: bool,
   filesExclude: list(string),
@@ -32,7 +31,6 @@ let default = {
   workbenchActivityBarVisible: true,
   workbenchEditorShowTabs: true,
   workbenchEditorEnablePreview: true,
-  workbenchIconTheme: "vs-seti",
   filesExclude: ["_esy", "node_modules", ".git"],
   vimUseSystemClipboard: {
     yank: true,
