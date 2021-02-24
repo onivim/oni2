@@ -140,25 +140,23 @@ runTest(
 
   // Test if the configuration is set - paste from unnamed register will pull from the keyboard
   setClipboard(Some("jkl\n"));
-
-  wait(~name="Set configuration to pull clipboard on paste", (state: State.t) => {
-    let configuration = state.configuration;
+  wait(~name="Set clipboard to pull clipboard on paste", _ => {
+    let transformer =
+      ConfigurationTransformer.setField(
+        "vim.useSystemClipboard",
+        `Assoc([
+          ("yank", `Bool(false)),
+          ("delete", `Bool(false)),
+          ("paste", `Bool(true)),
+        ]),
+      );
     dispatch(
-      ConfigurationSet({
-        ...configuration,
-        default: {
-          ...configuration.default,
-          vimUseSystemClipboard: {
-            yank: false,
-            delete: false,
-            paste: true,
-          },
-        },
-      }),
+      Configuration(Feature_Configuration.Testing.transform(transformer)),
     );
     runEffects();
     true;
   });
+
   input("y");
   input("y");
   input("P");
@@ -180,20 +178,18 @@ runTest(
   // Set configuration back (paste=false), and it should not pull from clipboard
   setClipboard(Some("mno\n"));
 
-  wait(~name="Set configuration to pull clipboard on paste", (state: State.t) => {
-    let configuration = state.configuration;
+  wait(~name="Set clipboard to not pull clipboard on paste", _ => {
+    let transformer =
+      ConfigurationTransformer.setField(
+        "vim.useSystemClipboard",
+        `Assoc([
+          ("yank", `Bool(false)),
+          ("delete", `Bool(false)),
+          ("paste", `Bool(false)),
+        ]),
+      );
     dispatch(
-      ConfigurationSet({
-        ...configuration,
-        default: {
-          ...configuration.default,
-          vimUseSystemClipboard: {
-            yank: false,
-            delete: false,
-            paste: false,
-          },
-        },
-      }),
+      Configuration(Feature_Configuration.Testing.transform(transformer)),
     );
     runEffects();
     true;

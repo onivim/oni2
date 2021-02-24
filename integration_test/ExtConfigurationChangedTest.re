@@ -29,8 +29,17 @@ runTest(~name="ExtConfigurationChangedTest", ({dispatch, wait, _}) => {
       ("developer.oni.test", Json.Encode.string("42")),
     ]),
   );
-  // TODO: Use 'transform' mechanism
-  //dispatch(Actions.Configuration(UserSettingsChanged));
+
+  dispatch(
+    Actions.Configuration(
+      Feature_Configuration.Testing.transform(
+        ConfigurationTransformer.setField(
+          "developer.onit.test",
+          `String("42"),
+        ),
+      ),
+    ),
+  );
 
   // Should get completions
   wait(

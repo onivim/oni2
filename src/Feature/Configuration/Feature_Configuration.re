@@ -91,9 +91,14 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
 type command =
   | OpenConfigurationFile;
 
+[@deriving show]
+type testing =
+  | Transform([@opaque] ConfigurationTransformer.t);
+
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
+  | Testing(testing)
   | Exthost(Exthost.Msg.Configuration.msg)
   | TransformTask(Task.msg)
   | UserSettingsChanged({
@@ -104,6 +109,10 @@ type msg =
 
 module Msg = {
   let exthost = msg => Exthost(msg);
+};
+
+module Testing = {
+  let transform = transformer => Testing(Transform(transformer));
 };
 
 type outmsg =
@@ -167,6 +176,11 @@ let update = (model, msg) =>
       let transformer = ConfigurationTransformer.setField(key, value);
       (model |> queueTransform(~transformer), Nothing);
     }
+
+  | Testing(Transform(transformer)) => (
+      model |> queueTransform(~transformer),
+      Nothing,
+    )
   };
 
 // TODO:

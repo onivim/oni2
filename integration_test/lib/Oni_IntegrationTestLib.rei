@@ -9,7 +9,6 @@ let runTest:
   (
     ~configuration: option(string)=?,
     ~keybindings: option(string)=?,
-    ~filesToOpen: list(string)=?,
     ~name: string=?,
     ~onAfterDispatch: Model.Actions.t => unit=?,
     testCallback

@@ -61,7 +61,6 @@ let getAssetPath = path =>
   };
 
 let currentUserSettings = ref(Core.Config.Settings.empty);
-let setUserSettings = settings => currentUserSettings := settings;
 
 module Internal = {
   let prepareEnvironment = () => {
@@ -87,7 +86,6 @@ let runTest =
     (
       ~configuration=None,
       ~keybindings=None,
-      ~filesToOpen=[],
       ~name="AnonymousTest",
       ~onAfterDispatch=_ => (),
       test: testCallback,
@@ -122,8 +120,6 @@ let runTest =
       | None => Core.Config.Settings.empty
       }
     );
-
-  let getUserSettings = () => Ok(currentUserSettings^);
 
   Vim.init();
   Oni2_KeyboardLayout.init();
