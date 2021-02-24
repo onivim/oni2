@@ -381,12 +381,6 @@ module View = {
               majorVersion
             />
           </View>
-          <Feature_Registration.View.TitleBar.Mac
-            theme
-            registration
-            dispatch=registrationDispatch
-            font
-          />
         </Clickable>;
       };
   };

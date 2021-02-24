@@ -182,7 +182,13 @@ let toString = (~super=defaultSuper, ~keyToString=Key.toString, key) => {
       Buffer.add_string(buffer, "Alt" ++ separator);
     };
 
-    if ((modifiers.super || modifiers.control || modifiers.alt)
+    // Make sure Shift+Tab gets shown
+    let shouldShowShift = switch (key) {
+    | Character(_) => false
+    | _ => true
+    };
+
+    if ((modifiers.super || modifiers.control || modifiers.alt || shouldShowShift)
         && modifiers.shift) {
       Buffer.add_string(buffer, "Shift" ++ separator);
     };

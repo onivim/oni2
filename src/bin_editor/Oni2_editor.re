@@ -198,9 +198,9 @@ switch (eff) {
           WindowCreateOptions.create(
             ~forceScaleFactor,
             ~acceleration=cliOptions.gpuAcceleration,
-            ~maximized,
-            ~width=640,
-            ~height=480,
+            ~maximized=false,
+            ~width=480,
+            ~height=320,
             ~vsync=Vsync.Immediate,
             ~icon,
             ~titlebarStyle=WindowStyles.Transparent,
