@@ -105,6 +105,7 @@ module Pane: {
   let make:
     (
       ~key: Brisk_reconciler.Key.t=?,
+      ~config: Oni_Core.Config.resolver,
       ~model: model,
       ~workingDirectory: string,
       ~isFocused: bool,

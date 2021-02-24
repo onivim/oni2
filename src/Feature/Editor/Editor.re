@@ -131,9 +131,24 @@ type t = {
   lastMouseScreenPosition: option(PixelPosition.t),
   lastMouseMoveTime: [@opaque] option(Revery.Time.t),
   lastMouseUpTime: [@opaque] option(Revery.Time.t),
+  // Layers
+  renderNonce: int,
   // Animation
   isAnimationOverride: option(bool),
   animationNonce: int,
+};
+
+let shouldRender = (editorA, editorB) => {
+  // TODO: View lines different?
+  // TODO: Diagnostics different?
+  // TODO: Wrapping different?
+  // TODO: Move cursor rendering
+  // TODO: Move definition rendering
+  editorA.key !== editorB.key
+  || editorA.renderNonce != editorB.renderNonce
+  || editorA.scrollX != editorB.scrollX
+  || editorA.scrollY != editorB.scrollY
+  || editorA.buffer !== editorB.buffer;
 };
 
 let verticalScrollbarThickness = ({scrollbarVerticalWidth, _}) => scrollbarVerticalWidth;
@@ -578,6 +593,7 @@ let create = (~config, ~buffer, ~preview: bool, ()) => {
     preview,
     wrapPadding: None,
     verticalScrollMargin: 1,
+
     inlineElements: InlineElements.initial,
     isMouseDown: false,
     hasMouseEntered: false,
@@ -585,6 +601,8 @@ let create = (~config, ~buffer, ~preview: bool, ()) => {
     mouseDownBytePosition: None,
     lastMouseScreenPosition: None,
     lastMouseUpTime: None,
+
+    renderNonce: 0,
 
     // Animation
     isAnimationOverride: None,
@@ -680,7 +698,7 @@ let copy = editor => {
   let id = GlobalState.generateId();
   let key = Brisk_reconciler.Key.create();
 
-  {...editor, key, editorId: id};
+  {...editor, renderNonce: 0, key, editorId: id};
 };
 
 type scrollbarMetrics = {

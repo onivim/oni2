@@ -40,6 +40,15 @@ let renderRulers = (~context: Draw.context, ~colors: Colors.t, rulers) => {
   |> List.iter(Draw.ruler(~context, ~color=colors.rulerForeground));
 };
 
+let layerCondition =
+  Revery.UI.Layer.Condition.make((previousEditor, newEditor) =>
+    if (Editor.shouldRender(previousEditor, newEditor)) {
+      true;
+    } else {
+      false;
+    }
+  );
+
 let%component make =
               (
                 ~buffer,
@@ -187,12 +196,16 @@ let%component make =
        })
     |> React.listToElement;
 
-  <View
-    onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
+  <Oni_Components.OniLayer
+    config
+    key={Editor.key(editor)}
+    backgroundColor=Colors.(colors.editorBackground)
+    condition={layerCondition(editor)}
     style={Styles.bufferViewClipped(
       gutterWidth,
       float(pixelWidth) -. gutterWidth,
     )}
+    onBoundingBoxChanged={bbox => maybeBbox := Some(bbox)}
     onMouseDown
     onMouseUp
     onMouseMove
@@ -277,5 +290,5 @@ let%component make =
     {lensElements |> React.listToElement}
     yankHighlightElement
     cursors
-  </View>;
+  </Oni_Components.OniLayer>;
 };

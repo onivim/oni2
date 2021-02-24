@@ -81,6 +81,7 @@ module ListView: {
   let make:
     (
       ~key: Brisk_reconciler.Key.t=?,
+      ~config: Oni_Core.Config.resolver,
       ~model: model,
       ~theme: ColorTheme.Colors.t,
       ~font: UiFont.t,

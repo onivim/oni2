@@ -78,6 +78,7 @@ module Contributions: {
 module View: {
   let make:
     (
+      ~config: Oni_Core.Config.resolver,
       ~isActive: bool,
       ~font: UiFont.t,
       ~focusedIndex: option(int),

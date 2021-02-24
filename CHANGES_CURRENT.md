@@ -22,6 +22,7 @@
 ### Performance
 
 - #3148 - Large Files: Improve performance & fix crash when opening large files (related #1670)
+- #2798 - Improve rendering performance with layers (experimental)
 
 ### Documentation
 

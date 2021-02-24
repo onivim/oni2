@@ -45,6 +45,7 @@ module View: {
       ~editorFont: Service_Font.font,
       ~uiFont: UiFont.t,
       ~theme: ColorTheme.Colors.t,
+      ~config: Config.resolver,
       ~model: model,
       ~dispatch: msg => unit,
       unit

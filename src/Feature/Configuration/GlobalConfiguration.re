@@ -179,6 +179,8 @@ let inactiveWindowOpacity =
 
 let animation = setting("ui.animation", bool, ~default=true);
 
+let layers = setting("experimental.ui.layers", bool, ~default=false);
+
 let shadows = setting("ui.shadows", bool, ~default=true);
 
 module VimSettings = {
@@ -229,6 +231,7 @@ let contributions = [
   inactiveWindowOpacity.spec,
   animation.spec,
   shadows.spec,
+  layers.spec,
   Editor.codeLensEnabled.spec,
   Editor.largeFileOptimizations.spec,
   Editor.snippetSuggestions.spec,

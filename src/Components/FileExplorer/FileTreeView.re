@@ -93,6 +93,7 @@ let getFileIcon = Model.getFileIcon;
 
 let make =
     (
+      ~config,
       ~rootName,
       ~isFocused,
       ~iconTheme,
@@ -110,6 +111,7 @@ let make =
       (),
     ) => {
   <Component_Accordion.VimTree
+    config
     title=rootName
     showCount=false
     isFocused

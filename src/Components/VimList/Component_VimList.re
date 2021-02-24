@@ -5,6 +5,7 @@ open Utility;
 
 [@deriving show]
 type model('item) = {
+  key: [@opaque] Brisk_reconciler.Key.t,
   scrollY: float,
   rowHeight: int,
   items: array('item),
@@ -24,6 +25,7 @@ type model('item) = {
 };
 
 let create = (~rowHeight) => {
+  key: Brisk_reconciler.Key.create(),
   scrollY: 0.,
   rowHeight,
   items: [||],
@@ -760,6 +762,22 @@ module View = {
       Spring.Options.create(~stiffness=310., ~damping=30., ());
   };
 
+  module LayerConditions = {
+    let root =
+      Revery.UI.Layer.Condition.make(
+        (
+          previous: (ColorTheme.Colors.t, float, Obj.t),
+          newObj: (ColorTheme.Colors.t, float, Obj.t),
+        ) => {
+        let (previousTheme, previousScrollY, previousModel) = previous;
+        let (newTheme, newScrollY, newModel) = newObj;
+
+        newModel != previousModel
+        || newScrollY != previousScrollY
+        || !ColorTheme.Colors.equal(previousTheme, newTheme);
+      });
+  };
+
   module Styles = {
     open Style;
 
@@ -897,6 +915,7 @@ module View = {
   let component = React.Expert.component("Component_VimList");
   let make:
     (
+      ~config: Oni_Core.Config.resolver,
       ~isActive: bool,
       ~font: UiFont.t,
       ~focusedIndex: option(int),
@@ -914,7 +933,17 @@ module View = {
       unit
     ) =>
     _ =
-    (~isActive, ~font, ~focusedIndex, ~theme, ~model, ~dispatch, ~render, ()) => {
+    (
+      ~config,
+      ~isActive,
+      ~font,
+      ~focusedIndex,
+      ~theme,
+      ~model,
+      ~dispatch,
+      ~render,
+      (),
+    ) => {
       component(hooks => {
         let {rowHeight, viewportWidth, viewportHeight, _} = model;
 
@@ -1034,7 +1063,18 @@ module View = {
             ? <Oni_Components.ScrollShadow.Bottom theme /> : React.empty;
 
         (
-          <View style=Style.[flexGrow(1), flexDirection(`Column)]>
+          <Oni_Components.OniLayer
+            key={model.key}
+            style=Style.[flexGrow(1), flexDirection(`Column)]
+            condition={LayerConditions.root((
+              theme,
+              scrollY,
+              Obj.repr(model),
+            ))}
+            backgroundColor={
+              Feature_Theme.Colors.SideBar.background.from(theme)
+            }
+            config>
             <View
               style=Style.[flexGrow(1), position(`Relative)]
               onDimensionsChanged={({height, width}) => {
@@ -1071,7 +1111,7 @@ module View = {
               dispatch={msg => dispatch(SearchContext(msg))}
               theme
             />
-          </View>,
+          </Oni_Components.OniLayer>,
           hooks,
         );
       });

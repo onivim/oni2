@@ -1021,6 +1021,7 @@ module Pane = {
 
   let groupView =
       (
+        ~config,
         ~provider,
         ~group: ResourceGroup.t,
         ~iconTheme,
@@ -1054,6 +1055,7 @@ module Pane = {
       />;
     };
     <Component_Accordion.VimList
+      config
       title=label
       expanded
       uiFont=font
@@ -1071,6 +1073,7 @@ module Pane = {
 
   let%component make =
                 (
+                  ~config,
                   ~model,
                   ~workingDirectory,
                   ~isFocused,
@@ -1113,6 +1116,7 @@ module Pane = {
               |> Option.value(~default=true);
 
             <groupView
+              config
               provider
               expanded
               group

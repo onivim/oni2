@@ -122,7 +122,15 @@ let versionToString: option(Semver.t) => string =
   };
 
 let%component make =
-              (~model, ~theme, ~font: UiFont.t, ~isFocused, ~dispatch, ()) => {
+              (
+                ~config,
+                ~model,
+                ~theme,
+                ~font: UiFont.t,
+                ~isFocused,
+                ~dispatch,
+                (),
+              ) => {
   let%hook ({width, installedExpanded, bundledExpanded}, localDispatch) =
     Hooks.reducer(~initialState=default, reduce);
 
@@ -209,6 +217,7 @@ let%component make =
     if (Component_InputText.isEmpty(model.searchText)) {
       [
         <Component_Accordion.VimList
+          config
           title="Installed"
           expanded={installedExpanded || isInstalledFocused}
           model={Model.ViewModel.installed(model.viewModel)}
@@ -222,6 +231,7 @@ let%component make =
           onClick={_ => localDispatch(InstalledTitleClicked)}
         />,
         <Component_Accordion.VimList
+          config
           title="Bundled"
           expanded={bundledExpanded || isBundledFocused}
           model={Model.ViewModel.bundled(model.viewModel)}
@@ -239,6 +249,7 @@ let%component make =
     } else {
       let resultsList =
         <Component_VimList.View
+          config
           isActive={isInstalledFocused || isBundledFocused}
           font
           focusedIndex=None

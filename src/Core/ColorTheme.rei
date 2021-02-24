@@ -19,6 +19,8 @@ module Colors: {
 
   let get: (key, t) => option(Revery.Color.t);
 
+  let equal: (t, t) => bool;
+
   let union: (t, t) => t;
   let unionMany: list(t) => t;
 };
