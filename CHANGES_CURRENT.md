@@ -43,6 +43,7 @@
 - #3134 - Snippets: Only show snippet visualizer for active editor
 - #3135 - Snippets: Convert choices to placeholders
 - #3137 - Snippets: Fix error parsing some snippets in the React TS/JS extensions
+- #3183 - Auto-update: Default auto-update channel should match source build
 
 ### Performance
 
