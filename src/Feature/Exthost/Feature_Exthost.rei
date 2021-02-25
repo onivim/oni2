@@ -20,7 +20,14 @@ type outmsg =
 
 let update: (msg, model) => (model, outmsg);
 
-let configurationChanged: (Exthost.Configuration.t, model) => model;
+let configurationChanged:
+  (
+    ~client: Exthost.Client.t,
+    ~configuration: Exthost.Configuration.t,
+    ~changed: Exthost.Configuration.Model.t,
+    model
+  ) =>
+  model;
 
 // SUBSCRIPTION
 

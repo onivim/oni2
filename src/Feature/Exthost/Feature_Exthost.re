@@ -48,6 +48,7 @@ module Internal = {
 type msg =
   | Noop
   | DocumentAdded({uri: Oni_Core.Uri.t})
+  | ConfigurationTask(Task.msg)
   | ExthostDocuments({
       msg: Exthost.Msg.Documents.msg,
       resolver: [@opaque] Lwt.u(Exthost.Reply.t),
@@ -69,13 +70,32 @@ type outmsg =
 type model = {
   isInitialized: bool,
   pendingResolutions: StringMap.t(list(Lwt.u(Exthost.Reply.t))),
+  configurationChangeTasks: Task.model,
 };
 
-let initial = {pendingResolutions: StringMap.empty, isInitialized: false};
+let initial = {
+  pendingResolutions: StringMap.empty,
+  isInitialized: false,
+  configurationChangeTasks: Task.initial(),
+};
 
 let isInitialized = ({isInitialized, _}) => isInitialized;
 
-let configurationChanged = (_config, model) => model;
+let configurationChanged = (~client, ~configuration, ~changed, model) => {
+  let task = () => {
+    prerr_endline("RUNNING CONFIGURATION CHANGED:");
+    Exthost.Request.Configuration.acceptConfigurationChanged(
+      ~configuration,
+      ~changed,
+      client,
+    );
+  };
+  {
+    ...model,
+    configurationChangeTasks:
+      Task.queueTask(~task, model.configurationChangeTasks),
+  };
+};
 
 module Effects = {
   let resolve = resolver => {
@@ -134,6 +154,15 @@ let update = (msg: msg, model) =>
       Log.warn("TryCreateDocument is not yet implemented.");
       (model, Effect(Effects.resolve(resolver)));
     }
+
+  | ConfigurationTask(taskMsg) => (
+      {
+        ...model,
+        configurationChangeTasks:
+          Task.update(taskMsg, model.configurationChangeTasks),
+      },
+      Nothing,
+    )
 
   | Initialized => ({...model, isInitialized: true}, Nothing)
   };
@@ -228,11 +257,18 @@ let subscription =
         |> Isolinear.Sub.map(() => Noop)
       };
 
+    let configurationChangedSub =
+      model.isInitialized
+        ? Task.sub(model.configurationChangeTasks)
+          |> Isolinear.Sub.map(msg => ConfigurationTask(msg))
+        : Isolinear.Sub.none;
+
     Isolinear.Sub.batch([
       bufferSubscriptions,
       tryOpenedBufferSubscriptions,
       editorSubscriptions,
       activeEditorSubscription,
+      configurationChangedSub,
     ]);
   } else {
     Isolinear.Sub.none;
