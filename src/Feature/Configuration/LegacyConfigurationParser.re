@@ -6,12 +6,6 @@
 open Oni_Core;
 open LegacyConfigurationValues;
 
-let parseBool = json =>
-  switch (json) {
-  | `Bool(v) => v
-  | _ => false
-  };
-
 let parseStringList = json => {
   switch (json) {
   | `List(items) =>
