@@ -402,6 +402,12 @@ let update =
             Internal.unhandledWindowMotionEffect(movement),
           )
 
+        | NewExtensions(extensions) =>
+          prerr_endline(
+            "-- EXTENSIONS: " ++ string_of_int(List.length(extensions)),
+          );
+          (state, Isolinear.Effect.none);
+
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =
             Internal.notificationEffect(

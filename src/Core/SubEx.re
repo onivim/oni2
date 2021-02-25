@@ -74,5 +74,38 @@ module UnitSubscription =
 
 let unit = (~uniqueId) => UnitSubscription.create({uniqueId: uniqueId});
 
+type taskParams = {
+  name: string,
+  uniqueId: string,
+  task: unit => unit,
+};
+module TaskSubscription =
+  Isolinear.Sub.Make({
+    type nonrec msg = unit;
+
+    type nonrec params = taskParams;
+
+    type state = unit;
+
+    let name = "Oni_Core.SubEx.TaskSubscription";
+    let id = params => params.name ++ "." ++ params.uniqueId;
+
+    let init = (~params, ~dispatch) => {
+      params.task();
+      dispatch();
+    };
+
+    let update = (~params as _, ~state, ~dispatch as _) => {
+      state;
+    };
+
+    let dispose = (~params as _, ~state as _) => {
+      ();
+    };
+  });
+
+let task = (~name, ~uniqueId, ~task) =>
+  TaskSubscription.create({name, uniqueId, task});
+
 // TODO: This should be in `Isolinear.Sub`
 let value = (~uniqueId, v) => unit(~uniqueId) |> Isolinear.Sub.map(() => v);
