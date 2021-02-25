@@ -12,7 +12,6 @@ type vimUseSystemClipboard = {
 };
 
 type t = {
-  workbenchIconTheme: string,
   filesExclude: list(string),
   vsync: Revery.Vsync.t,
   vimUseSystemClipboard,
@@ -26,7 +25,6 @@ type t = {
 };
 
 let default = {
-  workbenchIconTheme: "vs-seti",
   filesExclude: ["_esy", "node_modules", ".git"],
   vimUseSystemClipboard: {
     yank: true,

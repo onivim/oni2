@@ -2064,7 +2064,7 @@ let update =
         eff |> Isolinear.Effect.map(msg => Workspace(msg)),
       )
 
-    | WorkspaceChanged(maybeWorkspaceFolder) =>
+    | WorkspaceChanged({path: maybeWorkspaceFolder, shouldFocusExplorer}) =>
       let maybeExplorerFolder =
         maybeWorkspaceFolder
         |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
@@ -2093,8 +2093,12 @@ let update =
         );
 
       let state' =
-        {...state, fileExplorer, sideBar}
-        |> FocusManager.push(Focus.FileExplorer);
+        if (shouldFocusExplorer) {
+          {...state, fileExplorer, sideBar}
+          |> FocusManager.push(Focus.FileExplorer);
+        } else {
+          {...state, fileExplorer, sideBar};
+        };
       (state', eff);
     };
 
