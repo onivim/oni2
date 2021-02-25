@@ -17,7 +17,6 @@ type t = {
   // These are 'use-at-your-own-risk' features
   // Turn on tree-sitter for supported filetypes:
   // - JSON
-  experimentalVimL: list(string),
 };
 
 let default = {
@@ -27,5 +26,4 @@ let default = {
     delete: false,
     paste: false,
   },
-  experimentalVimL: [],
 };

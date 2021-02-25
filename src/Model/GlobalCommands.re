@@ -93,18 +93,6 @@ module Oni = {
         command("vim.tutor"),
       );
   };
-
-  module Workbench = {
-    module Action = {
-      let reloadSettings =
-        register(
-          ~category="Preferences",
-          ~title="Reload configuration",
-          "workbench.action.reloadSettings",
-          ConfigurationReload,
-        );
-    };
-  };
 };
 
 module Workbench = {

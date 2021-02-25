@@ -63,10 +63,6 @@ let configurationParsers: list(configurationTuple) = [
       vimUseSystemClipboard: parseVimUseSystemClipboardSetting(json),
     },
   ),
-  (
-    "experimental.viml",
-    (config, json) => {...config, experimentalVimL: parseStringList(json)},
-  ),
 ];
 
 let keyToParser: Hashtbl.t(string, parseFunction) =

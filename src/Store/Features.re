@@ -193,6 +193,15 @@ module Internal = {
           state.layout,
         );
 
+      let vim = Feature_Vim.configurationChanged(~config=resolver, state.vim);
+      let vimEffect =
+        Oni_Core.EffectEx.value(
+          ~name="Feature_vim.sychronizeExperimentalViml",
+          Oni_Model.Actions.SynchronizeExperimentalViml(
+            Feature_Vim.experimentalViml(vim),
+          ),
+        );
+
       let (zoom, zoomEffect) =
         Feature_Zoom.configurationChanged(~config=resolver, state.zoom);
       let eff = zoomEffect |> Isolinear.Effect.map(msg => Actions.Zoom(msg));
@@ -204,10 +213,11 @@ module Internal = {
           languageSupport,
           sideBar,
           layout,
+          vim,
           zen,
           zoom,
         },
-        eff,
+        Isolinear.Effect.batch([eff, vimEffect]),
       );
     };
 

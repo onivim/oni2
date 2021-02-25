@@ -478,6 +478,7 @@ let initial =
         Feature_Layout.Contributions.configuration,
         Feature_StatusBar.Contributions.configuration,
         Feature_TitleBar.Contributions.configuration,
+        Feature_Vim.Contributions.configuration,
         Feature_Zen.Contributions.configuration,
         Feature_Zoom.Contributions.configuration,
       ],

@@ -22,8 +22,6 @@ type t =
     })
   | Commands(Feature_Commands.msg(t))
   | Configuration(Feature_Configuration.msg)
-  | ConfigurationReload
-  | ConfigurationSet([@opaque] Feature_Configuration.LegacyConfiguration.t)
   | Decorations(Feature_Decorations.msg)
   | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)
@@ -167,6 +165,8 @@ type t =
   | Yank({range: [@opaque] VisualRange.t})
   | Zen(Feature_Zen.msg)
   | Zoom(Feature_Zoom.msg)
+  // TEMPORARY imperative actions
+  | SynchronizeExperimentalViml(list(string))
   | Noop
 and command = {
   commandCategory: option(string),

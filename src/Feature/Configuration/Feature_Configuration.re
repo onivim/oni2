@@ -119,7 +119,8 @@ let toExtensionConfiguration = (~additionalExtensions, ~setup: Setup.t, model) =
 
 [@deriving show]
 type command =
-  | OpenConfigurationFile;
+  | OpenConfigurationFile
+  | Reload;
 
 [@deriving show]
 type testing =
@@ -192,6 +193,11 @@ let update = (model, msg) =>
       };
 
     (model, outmsg);
+
+  | Command(Reload) => (
+      {...model, loader: ConfigurationLoader.reload(model.loader)},
+      Nothing,
+    )
 
   | ConfigurationParseError(_) => (model, Nothing)
 
@@ -323,10 +329,18 @@ module Commands = {
       "workbench.action.openSettings",
       Command(OpenConfigurationFile),
     );
+
+  let reload =
+    define(
+      ~category="Preferences",
+      ~title="Reload configuration",
+      "workbench.action.reloadSettings",
+      Command(Reload),
+    );
 };
 
 // CONTRIBUTIONS
 
 module Contributions = {
-  let commands = Commands.[openConfigurationFile];
+  let commands = Commands.[openConfigurationFile, reload];
 };

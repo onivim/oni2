@@ -452,6 +452,10 @@ let start =
         Isolinear.Sub.none;
       };
 
+    let vimSub =
+      Feature_Vim.sub(state.vim)
+      |> Isolinear.Sub.map(msg => Model.Actions.Vim(msg));
+
     [
       menuBarSub,
       extHostSubscription,
@@ -473,6 +477,7 @@ let start =
       bufferSub,
       configurationSub,
       themeSub,
+      vimSub,
     ]
     |> Isolinear.Sub.batch;
   };
