@@ -26,6 +26,7 @@
 ### Documentation
 
 - #3181 - Snippets: Initial snippets section
+- #3185 - Emmet: Initial emmet section
 
 ### Infrastructure / Refactoring
 
@@ -34,4 +35,4 @@
 - #3169 - Extensions: Remove some unused static assets from One Dark Pro
 - #3168 - Diagnostics: Add additional build-information logging
 - #3172 - Theme: Move theme loader to subscription (unblocks #3160)
-- #3178 - Commands: Remove unused contributedCommands argumetn
+- #3178 - Commands: Remove unused contributedCommands argument

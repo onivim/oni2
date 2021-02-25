@@ -16,6 +16,7 @@
       "using-onivim/working-with-files",
       "using-onivim/command-line",
       "using-onivim/integrated-terminal",
+      "using-onivim/emmet",
       "using-onivim/snippets"
     ],
     "Configuration": [
