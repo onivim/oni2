@@ -24,6 +24,7 @@ let create =
     msg => {
       switch (msg) {
       | Initialized =>
+        prerr_endline("-- INITIALIZED");
         dispatch(Actions.Exthost(Feature_Exthost.Msg.initialized));
         Lwt.return(Reply.okEmpty);
       | DownloadService(msg) => Middleware.download(msg)

@@ -14,6 +14,7 @@ type model = {
   legacyConfiguration: LegacyConfiguration.t,
   loader: ConfigurationLoader.t,
   transformTasks: Task.model,
+  extHostSyncTick: int,
 };
 
 // DEPRECATED way of working with configuration
@@ -57,6 +58,7 @@ let initial = (~loader, contributions) =>
     legacyConfiguration: LegacyConfiguration.default,
     loader,
     transformTasks: Task.initial(),
+    extHostSyncTick: 0,
   }
   |> initialLoad
   |> merge;
@@ -91,10 +93,16 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
 type command =
   | OpenConfigurationFile;
 
+[@deriving show]
+type testing =
+  | Transform([@opaque] ConfigurationTransformer.t);
+
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
+  | Testing(testing)
   | Exthost(Exthost.Msg.Configuration.msg)
+  | ExthostSyncDispatched
   | TransformTask(Task.msg)
   | UserSettingsChanged({
       config: [@opaque] Config.Settings.t,
@@ -104,6 +112,10 @@ type msg =
 
 module Msg = {
   let exthost = msg => Exthost(msg);
+};
+
+module Testing = {
+  let transform = transformer => Testing(Transform(transformer));
 };
 
 type outmsg =
@@ -119,6 +131,8 @@ let queueTransform = (~transformer, model) => {
 
 let update = (model, msg) =>
   switch (msg) {
+  | ExthostSyncDispatched => (model, Nothing)
+
   | UserSettingsChanged({config: user, legacyConfiguration}) =>
     //prerr_endline ("!!USER SETTINGS CHANGED");
     let previous = model;
@@ -134,7 +148,11 @@ let update = (model, msg) =>
     let changed = Config.Settings.changed(previous.merged, updated.merged);
 
     (
-      {...updated, legacyConfiguration},
+      {
+        ...updated,
+        legacyConfiguration,
+        extHostSyncTick: model.extHostSyncTick + 1,
+      },
       ConfigurationChanged({changed: changed}),
     );
 
@@ -167,6 +185,11 @@ let update = (model, msg) =>
       let transformer = ConfigurationTransformer.setField(key, value);
       (model |> queueTransform(~transformer), Nothing);
     }
+
+  | Testing(Transform(transformer)) => (
+      model |> queueTransform(~transformer),
+      Nothing,
+    )
   };
 
 // TODO:
@@ -208,7 +231,7 @@ let resolver = (~fileType: string, model, vimModel, ~vimSetting, key) => {
   |> Option.value(~default=Config.NotSet);
 };
 
-let sub = ({loader, transformTasks, _}) => {
+let sub = ({loader, transformTasks, extHostSyncTick, _}) => {
   let loaderSub =
     ConfigurationLoader.sub(loader)
     |> Isolinear.Sub.map(
@@ -218,10 +241,18 @@ let sub = ({loader, transformTasks, _}) => {
          | Error(msg) => ConfigurationParseError(msg),
        );
 
+  let extHostSyncTick =
+    SubEx.task(
+      ~name="Feature_Configuration.Sub.ExtHostSync",
+      ~uniqueId=extHostSyncTick |> string_of_int,
+      ~task=() =>
+      prerr_endline("SYNCING!")
+    )
+    |> Isolinear.Sub.map(() => ExthostSyncDispatched);
   let transformTaskSub =
     Task.sub(transformTasks) |> Isolinear.Sub.map(msg => TransformTask(msg));
 
-  Isolinear.Sub.batch([loaderSub, transformTaskSub]);
+  Isolinear.Sub.batch([loaderSub, transformTaskSub, extHostSyncTick]);
 };
 
 // COMMANDS

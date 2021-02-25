@@ -15,6 +15,17 @@ module Commands = {
 module Configuration = {
   open Json.Encode;
   let acceptConfigurationChanged = (~configuration, ~changed, client) => {
+    prerr_endline(
+      Printf.sprintf(
+        "$acceptConfigurationChanged:\n configuration: %s\n changed: %s",
+        configuration
+        |> encode_value(ExtConfig.encode)
+        |> Yojson.Safe.to_string,
+        changed
+        |> encode_value(ExtConfig.Model.encode)
+        |> Yojson.Safe.to_string,
+      ),
+    );
     Client.notify(
       ~rpcName="ExtHostConfiguration",
       ~method="$acceptConfigurationChanged",

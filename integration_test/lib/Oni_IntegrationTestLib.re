@@ -61,7 +61,6 @@ let getAssetPath = path =>
   };
 
 let currentUserSettings = ref(Core.Config.Settings.empty);
-let setUserSettings = settings => currentUserSettings := settings;
 
 module Internal = {
   let prepareEnvironment = () => {
@@ -85,9 +84,9 @@ module Internal = {
 
 let runTest =
     (
+      ~cli=Oni_CLI.default,
       ~configuration=None,
       ~keybindings=None,
-      ~filesToOpen=[],
       ~name="AnonymousTest",
       ~onAfterDispatch=_ => (),
       test: testCallback,
@@ -97,7 +96,7 @@ let runTest =
   Revery.App.initConsole();
 
   Core.Log.enableDebug();
-  Timber.App.setLevel(Timber.Level.trace);
+  //Timber.App.setLevel(Timber.Level.trace);
   Oni_Core.Log.init();
 
   Internal.prepareEnvironment();
@@ -122,8 +121,6 @@ let runTest =
       | None => Core.Config.Settings.empty
       }
     );
-
-  let getUserSettings = () => Ok(currentUserSettings^);
 
   Vim.init();
   Oni2_KeyboardLayout.init();
@@ -176,7 +173,7 @@ let runTest =
   let currentState =
     ref(
       Model.State.initial(
-        ~cli=Oni_CLI.default,
+        ~cli,
         ~initialBuffer,
         ~initialBufferRenderers=Model.BufferRenderers.initial,
         ~configurationLoader,

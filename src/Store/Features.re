@@ -402,6 +402,12 @@ let update =
             Internal.unhandledWindowMotionEffect(movement),
           )
 
+        | NewExtensions(extensions) =>
+          prerr_endline(
+            "-- EXTENSIONS: " ++ string_of_int(List.length(extensions)),
+          );
+          (state, Isolinear.Effect.none);
+
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =
             Internal.notificationEffect(
@@ -1362,23 +1368,21 @@ let update =
     let state = {...state, config};
     switch (outmsg) {
     | ConfigurationChanged({changed}) =>
-      let eff =
-        Isolinear.Effect.create(
-          ~name="features.configuration$acceptConfigurationChanged", () => {
-          prerr_endline("Sending configuration changed...");
-          let configuration =
-            Feature_Configuration.toExtensionConfiguration(
-              config,
-              Feature_Extensions.all(state.extensions),
-              setup,
-            );
-          let changed = Exthost.Configuration.Model.fromSettings(changed);
-          Exthost.Request.Configuration.acceptConfigurationChanged(
-            ~configuration,
-            ~changed,
-            extHostClient,
-          );
-        });
+      prerr_endline("Configuration - configuration changed...");
+      let extHostConfiguration =
+        Feature_Configuration.toExtensionConfiguration(
+          config,
+          Feature_Extensions.all(state.extensions),
+          setup,
+        );
+      let exthostChanged = Exthost.Configuration.Model.fromSettings(changed);
+      let exthost =
+        Feature_Exthost.configurationChanged(
+          ~client=extHostClient,
+          ~configuration=extHostConfiguration,
+          ~changed=exthostChanged,
+          state.exthost,
+        );
 
       let vsyncEffect =
         if (Config.Settings.get(Config.key("vsync"), changed) != None) {
@@ -1393,11 +1397,8 @@ let update =
         };
 
       let (state', configurationEffect) =
-        state |> Internal.updateConfiguration;
-      (
-        state',
-        Isolinear.Effect.batch([eff, configurationEffect, vsyncEffect]),
-      );
+        {...state, exthost} |> Internal.updateConfiguration;
+      (state', Isolinear.Effect.batch([configurationEffect, vsyncEffect]));
 
     | OpenFile(fp) => (state, Internal.openFileEffect(FpExp.toString(fp)))
 

@@ -158,7 +158,6 @@ let start =
 
   let quickmenuUpdater = QuickmenuStoreConnector.start();
 
-  let configurationUpdater = ConfigurationStoreConnector.start();
   let keyBindingsUpdater = KeyBindingsStoreConnector.start();
 
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
@@ -173,7 +172,6 @@ let start =
       quickmenuUpdater,
       vimUpdater,
       extHostUpdater,
-      configurationUpdater,
       keyBindingsUpdater,
       commandUpdater,
       lifecycleUpdater,
