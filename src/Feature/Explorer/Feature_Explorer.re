@@ -106,7 +106,15 @@ let setRoot = (~rootPath, model) =>
       ...model,
       fileExplorer:
         rootPath
-        |> Option.map(rootPath => Component_FileExplorer.initial(~rootPath)),
+        |> Option.map(rootPath =>
+             model.fileExplorer
+             |> Option.map(explorer =>
+                  Component_FileExplorer.setRoot(~rootPath, explorer)
+                )
+             |> Option.value(
+                  ~default=Component_FileExplorer.initial(~rootPath),
+                )
+           ),
     };
   };
 

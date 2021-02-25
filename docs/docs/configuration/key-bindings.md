@@ -116,6 +116,7 @@ Common contexts with VSCode:
 | Context Name | True When | 
 | --- | --- |
 | `editorTextFocus` | An editor has focus |
+| `inSnippetMode` | A snippet session is currently active |
 | `textInputFocus` | A text input area has focus |
 | `terminalFocus` | A terminal has focus |
 | `suggestWidgetVisible` | The suggest widget (auto-completion) is visible |
@@ -170,6 +171,13 @@ Onivim-specific contexts:
 | Control+Shift+G | Focus Source Control | `workbench.view.scm` |
 | Control+W, Control+J | Navigate down a section | `vim.window.moveDown` |
 | Control+W, Control+K | Navigate up a section | `vim.window.moveUp` |
+
+### Snippets
+
+| Default Key Binding | Description | Command | 
+| --- | --- | --- |
+| n/a | Insert a Snippet | `editor.action.insertSnippet` |
+| n/a | Configure user snippets | `workbench.action.openSnippets` |
 
 ### Window Management
 

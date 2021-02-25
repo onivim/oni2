@@ -17,6 +17,7 @@
 - #3170 - CLI - Windows: Allocate console with `-f --silent`
 - #3180 - Explorer: Fix explorer disappearing when changing into current path
 - #3183 - Auto-update: Default auto-update channel should match source build
+- #3184 - Explorer: Fix shrinking when changing paths
 - #3160 - Windows: Reload configuration on save
 
 ### Performance
@@ -25,6 +26,9 @@
 
 ### Documentation
 
+- #3181 - Snippets: Initial snippets section
+- #3185 - Emmet: Initial emmet section
+
 ### Infrastructure / Refactoring
 
 - #3156 - Dependency: reason-native (dir/fp/fs) -> e16590c
@@ -32,4 +36,4 @@
 - #3169 - Extensions: Remove some unused static assets from One Dark Pro
 - #3168 - Diagnostics: Add additional build-information logging
 - #3172 - Theme: Move theme loader to subscription (unblocks #3160)
-- #3178 - Commands: Remove unused contributedCommands argumetn
+- #3178 - Commands: Remove unused contributedCommands argument
