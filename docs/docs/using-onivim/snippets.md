@@ -4,32 +4,31 @@ title: Snippets in Onivim 2
 sidebar_label: Snippets
 ---
 
-Snippets are text templates that simplify entering code patterns,
-and are especially useful for code blocks that are used repeatedly, with minor variations.
+Snippets are text templates that simplify entering blocks of source code. Snippets are especially useful for code blocks that are repeated frequently with minor variations.
 
 ![snippet-demo](https://user-images.githubusercontent.com/13532591/109021934-3276e700-7670-11eb-84d3-3637dc290016.gif)
 
-Onivim shows available snippets along with completion items as you type in insert mode.
+In insert mode, as you type, Onivim shows available snippets alongside completion items.
 
-The snippet syntax follows the [Code Snippet Syntax](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_snippet-syntax) (which is a subset of the [TextMate Snippet Syntax](https://manual.macromates.com/en/snippets)). In addition, Onivim supports many of the same configuration options as Visual Studio code.
+The snippet syntax follows the [Code Snippet Syntax](https://code.visualstudio.com/docs/editor/userdefinedsnippets#_snippet-syntax) (which is a subset of the [TextMate Snippet Syntax](https://manual.macromates.com/en/snippets)). In addition, Onivim supports many of the same snippet configuration options as Visual Studio code, such as `"editor.snippetSuggestions"`.
 
 ## Using snippets
 
-When a snippet is available in the completion, pressing <kbd>Tab</kbd> will expand the snippet.
+When a snippet is selected in the completion pop-up, pressing <kbd>Tab</kbd> will expand the snippet.
 
-While a snippet is active, the mode will show as `Snippet` in the statusbar. Pressing <kbd>Tab</kbd> while a snippet is active will move the cursor to the next placeholder, while pressing <kbd>Shift</kbd>+<kbd>Tab</kbd> will move to the previous placeholder.
+While a snippet is active, the mode will show as `Snippet` in the bottom-right, on the status bar. Pressing <kbd>Tab</kbd> while a snippet is active will move the cursor to the next placeholder, while pressing <kbd>Shift</kbd>+<kbd>Tab</kbd> will move the cursor to the previous placeholder. 
 
-Once the cursor has been moved to the final placeholder, snippet mode will deactivate.
+Once the cursor has been moved to the final placeholder, snippet mode will deactivate, and the editor will be returned to insert mode..
 
 ## Installing snippets
 
-Onivim 2 comes with bundled snippets for several languages, including JavaScript, TypeScript, Reason, and others.
+Onivim 2 comes bundled with snippets for several languages, including JavaScript, TypeScript, Reason, and others.
 
-Extensions from [open-vsx](https://open-vsx.org/) can provide additional snippets:
+Extensions from [open-vsx](https://open-vsx.org/) can be installed to provide additional snippets:
 
 ![snippet-installation](https://user-images.githubusercontent.com/13532591/109021939-33a81400-7670-11eb-97d3-ebbcfa18c3cc.gif)
 
-You can explore extensions that provide snippets by using the `@category:"snippets"` search filter.
+You can explore extensions that provide snippets by using the `@category:"snippets"` search filter in the extensions pane.
 
 ## Snippet syntax
 
@@ -45,9 +44,9 @@ Onivim's snippet syntax follows the same [snippet syntax as Code](https://code.v
 
 ![snippet-user-config](https://user-images.githubusercontent.com/13532591/109041574-082f2480-7684-11eb-9ee4-bc7bcbc89a2c.gif)
 
-Snippets can be customized globally or per-filetype - these are stored in the user `snippets` folder:
-- If the filetype ends in `.json`, the filename is the relevant filetype - for example, `bat.json` provides snippets for .bat files.
-- If the filetype ends in `.code-snippets`, the snippets file applies globally.
+Snippets may be customized globally or per-filetype - these are stored in the user `snippets` folder:
+- If the snippet file ends with extension `.json`, the filename is the relevant filetype - for example, `bat.json` provides snippets for the `bat` filetype.
+- If the snippet file ends with extension `.code-snippets`, the snippets file applies globally, to all filetypes.
 
 To configure your snippets:
 - Open the command palette (<kbd>Control</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> / <kbd>Command</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd>)
