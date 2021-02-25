@@ -75,6 +75,8 @@ let initial = {pendingResolutions: StringMap.empty, isInitialized: false};
 
 let isInitialized = ({isInitialized, _}) => isInitialized;
 
+let configurationChanged = (_config, model) => model;
+
 module Effects = {
   let resolve = resolver => {
     Isolinear.Effect.create(~name="resolve", () => {
