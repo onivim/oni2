@@ -8,11 +8,7 @@ runTest(~name="ClipboardChangeTest", ({dispatch, wait, runEffects, _}) => {
     let transformer =
       ConfigurationTransformer.setField(
         "vim.useSystemClipboard",
-        `Assoc([
-          ("yank", `Bool(true)),
-          ("delete", `Bool(false)),
-          ("paste", `Bool(false)),
-        ]),
+        `List([`String("yank")]),
       );
     dispatch(
       Configuration(Feature_Configuration.Testing.transform(transformer)),
@@ -21,7 +17,7 @@ runTest(~name="ClipboardChangeTest", ({dispatch, wait, runEffects, _}) => {
     true;
   });
 
-  wait(~name="Wait for configuration to update", (state: State.t) => {
+  wait(~name="Wait for configuration to update (1)", (state: State.t) => {
     Feature_Configuration.Legacy.getValue(
       c => c.vimUseSystemClipboard,
       state.config,
@@ -84,17 +80,25 @@ runTest(~name="ClipboardChangeTest", ({dispatch, wait, runEffects, _}) => {
     let transformer =
       ConfigurationTransformer.setField(
         "vim.useSystemClipboard",
-        `Assoc([
-          ("yank", `Bool(false)),
-          ("delete", `Bool(true)),
-          ("paste", `Bool(false)),
-        ]),
+        `List([`String("delete")]),
       );
     dispatch(
       Configuration(Feature_Configuration.Testing.transform(transformer)),
     );
     runEffects();
     true;
+  });
+
+  wait(~name="Wait for configuration to update (2)", (state: State.t) => {
+    Feature_Configuration.Legacy.getValue(
+      c => c.vimUseSystemClipboard,
+      state.config,
+    )
+    == Feature_Configuration.LegacyConfigurationValues.{
+         yank: false,
+         delete: true,
+         paste: false,
+       }
   });
 
   setClipboard(None);

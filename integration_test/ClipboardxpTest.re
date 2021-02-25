@@ -8,11 +8,7 @@ runTest(~name="ClipboardyypTest", ({dispatch, wait, runEffects, _}) => {
     let transformer =
       ConfigurationTransformer.setField(
         "vim.useSystemClipboard",
-        `Assoc([
-          ("yank", `Bool(true)),
-          ("delete", `Bool(true)),
-          ("paste", `Bool(true)),
-        ]),
+        `List([`String("yank"), `String("delete"), `String("paste")]),
       );
     dispatch(
       Configuration(Feature_Configuration.Testing.transform(transformer)),

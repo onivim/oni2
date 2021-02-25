@@ -20,11 +20,7 @@ runTest(~name="ClipboardYankTest", ({dispatch, wait, runEffects, _}) => {
     let transformer =
       ConfigurationTransformer.setField(
         "vim.useSystemClipboard",
-        `Assoc([
-          ("yank", `Bool(true)),
-          ("delete", `Bool(false)),
-          ("paste", `Bool(false)),
-        ]),
+        `List([`String("yank")]),
       );
     dispatch(
       Configuration(Feature_Configuration.Testing.transform(transformer)),
@@ -82,11 +78,7 @@ runTest(~name="ClipboardYankTest", ({dispatch, wait, runEffects, _}) => {
     let transformer =
       ConfigurationTransformer.setField(
         "vim.useSystemClipboard",
-        `Assoc([
-          ("yank", `Bool(false)),
-          ("delete", `Bool(false)),
-          ("paste", `Bool(false)),
-        ]),
+        `Bool(false),
       );
     dispatch(
       Configuration(Feature_Configuration.Testing.transform(transformer)),

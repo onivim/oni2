@@ -35,7 +35,7 @@ runTest(~name="ExtConfigurationChangedTest", ({dispatch, wait, _}) => {
     Actions.Configuration(
       Feature_Configuration.Testing.transform(
         ConfigurationTransformer.setField(
-          "developer.onit.test",
+          "developer.oni.test",
           `String("42"),
         ),
       ),

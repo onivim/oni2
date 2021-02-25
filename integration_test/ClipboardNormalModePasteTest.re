@@ -144,17 +144,25 @@ runTest(
     let transformer =
       ConfigurationTransformer.setField(
         "vim.useSystemClipboard",
-        `Assoc([
-          ("yank", `Bool(false)),
-          ("delete", `Bool(false)),
-          ("paste", `Bool(true)),
-        ]),
+        `List([`String("paste")]),
       );
     dispatch(
       Configuration(Feature_Configuration.Testing.transform(transformer)),
     );
     runEffects();
     true;
+  });
+
+  wait(~name="Wait for configuration to update (1)", (state: State.t) => {
+    Feature_Configuration.Legacy.getValue(
+      c => c.vimUseSystemClipboard,
+      state.config,
+    )
+    == Feature_Configuration.LegacyConfigurationValues.{
+         yank: false,
+         delete: false,
+         paste: true,
+       }
   });
 
   input("y");
