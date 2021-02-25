@@ -23,14 +23,6 @@ runTest(~name="ExtConfigurationChangedTest", ({dispatch, wait, _}) => {
     )
   );
 
-  // TODO: Transformer
-  // Change setting
-  // setUserSettings(
-  //   Config.Settings.fromList([
-  //     ("developer.oni.test", Json.Encode.string("42")),
-  //   ]),
-  // );
-
   dispatch(
     Actions.Configuration(
       Feature_Configuration.Testing.transform(

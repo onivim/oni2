@@ -22,8 +22,6 @@ type t =
     })
   | Commands(Feature_Commands.msg(t))
   | Configuration(Feature_Configuration.msg)
-  // | ConfigurationParseError(string)
-  // TODO: Move to command in feature configuration
   | ConfigurationReload
   | ConfigurationSet([@opaque] Feature_Configuration.LegacyConfiguration.t)
   | Decorations(Feature_Decorations.msg)

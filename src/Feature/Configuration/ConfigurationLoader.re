@@ -8,13 +8,6 @@ module Log = (
 );
 
 let loadConfiguration = (loadResult: result(Yojson.Safe.t, string)) => {
-  // let parseResult =
-  // loadResult
-  //   |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors);
-  // switch (parseResult) {
-  // | Ok((bindings, errors)) => (bindings, errors)
-  // | Error(msg) => ([], [msg])
-  //};
   loadResult
   |> ResultEx.flatMap(json => {
        let legacyConfigParseResult = LegacyConfigurationParser.ofJson(json);
