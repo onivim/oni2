@@ -15,6 +15,7 @@ module Commands = {
 module Configuration = {
   open Json.Encode;
   let acceptConfigurationChanged = (~configuration, ~changed, client) => {
+<<<<<<< Updated upstream
     prerr_endline(
       Printf.sprintf(
         "$acceptConfigurationChanged:\n configuration: %s\n changed: %s",
@@ -26,6 +27,14 @@ module Configuration = {
         |> Yojson.Safe.to_string,
       ),
     );
+=======
+          prerr_endline (Printf.sprintf(
+            "$acceptConfigurationChanged:\n config:%s\n, changed: %s\n"
+          ,
+          configuration |> encode_value(ExtConfig.encode) |> Yojson.Safe.to_string,
+          changed |> encode_value(ExtConfig.Model.encode) |> Yojson.Safe.to_string,
+          ));
+>>>>>>> Stashed changes
     Client.notify(
       ~rpcName="ExtHostConfiguration",
       ~method="$acceptConfigurationChanged",

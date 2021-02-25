@@ -676,7 +676,7 @@ let update = (~extHostClient, msg, model) => {
       (model', Effect(eff));
     }
 
-  | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
+  | Discovered(extensions) => (Internal.add(extensions, model), NewExtensions(extensions))
 
   | ExecuteCommand({command, arguments}) => (
       model,
