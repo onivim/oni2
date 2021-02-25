@@ -84,6 +84,7 @@ module Internal = {
 
 let runTest =
     (
+      ~cli=Oni_CLI.default,
       ~configuration=None,
       ~keybindings=None,
       ~name="AnonymousTest",
@@ -172,7 +173,7 @@ let runTest =
   let currentState =
     ref(
       Model.State.initial(
-        ~cli=Oni_CLI.default,
+        ~cli,
         ~initialBuffer,
         ~initialBufferRenderers=Model.BufferRenderers.initial,
         ~configurationLoader,

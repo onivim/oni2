@@ -111,3 +111,9 @@ module Contributions = {
     );
   };
 };
+
+// TESTING
+
+module Testing = {
+  let enableZenMode = Command(EnableZenMode);
+};

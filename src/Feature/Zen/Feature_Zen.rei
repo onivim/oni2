@@ -26,3 +26,7 @@ module Contributions: {
   let contextKeys: model => WhenExpr.ContextKeys.t;
   //let keybindings: list(Feature_Input.Schema.keybinding);
 };
+
+// TESTING
+
+module Testing: {let enableZenMode: msg;};

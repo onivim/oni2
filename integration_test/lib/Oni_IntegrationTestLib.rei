@@ -7,6 +7,7 @@ open Types;
 
 let runTest:
   (
+    ~cli: Oni_CLI.t=?,
     ~configuration: option(string)=?,
     ~keybindings: option(string)=?,
     ~name: string=?,
@@ -15,7 +16,6 @@ let runTest:
   ) =>
   unit;
 
-let setUserSettings: Core.Config.Settings.t => unit;
 let setClipboard: option(string) => unit;
 let getClipboard: unit => option(string);
 let setTime: float => unit;

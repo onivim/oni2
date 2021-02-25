@@ -2,10 +2,10 @@ open Oni_Model;
 open Oni_IntegrationTestLib;
 
 runTest(~name="ZenModeSplitTest", ({dispatch, wait, _}) => {
-  dispatch(Actions.EnableZenMode);
+  dispatch(Actions.Zen(Feature_Zen.Testing.enableZenMode));
 
   wait(~name="Wait until ZenMode is enabled", (state: State.t) =>
-    state.zenMode == true
+    Feature_Zen.isZen(state.zen)
   );
 
   runCommand(
@@ -15,6 +15,6 @@ runTest(~name="ZenModeSplitTest", ({dispatch, wait, _}) => {
   );
 
   wait(~name="Wait until Split is created", (state: State.t) =>
-    state.zenMode == false
+    !Feature_Zen.isZen(state.zen)
   );
 });
