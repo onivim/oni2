@@ -301,7 +301,6 @@ let update =
     (
       ~grammarRepository: Oni_Syntax.GrammarRepository.t,
       ~extHostClient: Exthost.Client.t,
-      ~setup,
       ~maximize,
       ~minimize,
       ~close,
@@ -403,9 +402,6 @@ let update =
           )
 
         | NewExtensions(extensions) =>
-          prerr_endline(
-            "-- EXTENSIONS: " ++ string_of_int(List.length(extensions)),
-          );
           let newExtensionConfigurations =
             extensions
             |> List.map((ext: Exthost.Extension.Scanner.ScanResult.t) => {
@@ -1385,22 +1381,6 @@ let update =
     let state = {...state, config};
     switch (outmsg) {
     | ConfigurationChanged({changed}) =>
-      prerr_endline("Configuration - configuration changed...");
-      // let extHostConfiguration =
-      //   Feature_Configuration.toExtensionConfiguration(
-      //     config,
-      //     Feature_Extensions.all(state.extensions),
-      //     setup,
-      //   );
-      // let exthostChanged = Exthost.Configuration.Model.fromSettings(changed);
-      // let exthost =
-      //   Feature_Exthost.configurationChanged(
-      //     ~client=extHostClient,
-      //     ~configuration=extHostConfiguration,
-      //     ~changed=exthostChanged,
-      //     state.exthost,
-      //   );
-
       let vsyncEffect =
         if (Config.Settings.get(Config.key("vsync"), changed) != None) {
           Isolinear.Effect.create(~name="Features.setVsync", () => {

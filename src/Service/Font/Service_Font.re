@@ -71,11 +71,6 @@ let setFont =
     )
   );
 
-  // We load the font asynchronously
-  // ThreadHelper.create(
-  //   ~name="FontStore.loadThread",
-  //   () => {
-  prerr_endline("!!-- Starting load font...");
   let fontSize = max(fontSize, Constants.minimumFontSize);
 
   let family =
@@ -98,8 +93,6 @@ let setFont =
       ~fontCache,
       fontSize,
     );
-
-  prerr_endline("!!-- Finished loading font?");
 
   switch (res) {
   | Error(msg) =>
@@ -151,10 +144,6 @@ let setFont =
       );
     }
   };
-  //   },
-  //   (),
-  // )
-  // |> ignore;
 };
 
 module Sub = {
@@ -223,7 +212,6 @@ module Sub = {
             || params.fontSmoothing != state.fontSmoothing
             || params.fontLigatures != state.fontLigatures
             || params.fontWeight != state.fontWeight) {
-          prerr_endline("!!! RELOADING FONT");
           let reveryFontSmoothing =
             getReveryFontSmoothing(params.fontSmoothing);
           setFont(

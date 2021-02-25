@@ -51,13 +51,10 @@ let start =
   let dispatch = msg => {
     Protocol.Message.(
       switch (msg) {
-      | Incoming.Connected =>
-        Log.info("Connected");
-        prerr_endline("Connected");
+      | Incoming.Connected => Log.info("Connected")
       | Incoming.Ready =>
         Log.info("Ready");
 
-        prerr_endline("Ready");
         incr(lastRequestId);
         send(Outgoing.Initialize({requestId: lastRequestId^, initData}));
         ignore(handler(Ready): Lwt.t(Reply.t));
@@ -68,7 +65,6 @@ let start =
         let rpcId =
           "ExtHostConfiguration" |> Handlers.stringToId |> Option.get;
 
-        prerr_endline("Sending $initializeConfiguration");
         incr(lastRequestId);
         send(
           Outgoing.RequestJSONArgs({

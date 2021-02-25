@@ -179,7 +179,6 @@ let start =
       Features.update(
         ~grammarRepository,
         ~extHostClient,
-        ~setup,
         ~maximize,
         ~minimize,
         ~close,

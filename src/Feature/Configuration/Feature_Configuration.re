@@ -165,14 +165,11 @@ let update = (model, msg) =>
     )
 
   | UserSettingsChanged({config: user, legacyConfiguration}) =>
-    //prerr_endline ("!!USER SETTINGS CHANGED");
     let previous = model;
     let updated =
       if (user == Config.Settings.empty) {
-        //prerr_endline ("Empty :(");
         model;
       } else {
-        //prerr_endline ("MERGING :(");
         merge({...model, user});
       };
 
@@ -293,7 +290,6 @@ let sub =
               |> Option.value(~default=Config.Settings.empty)
               |> Exthost.Configuration.Model.fromSettings;
 
-            prerr_endline("SYNCING!");
             Exthost.Request.Configuration.acceptConfigurationChanged(
               ~configuration=
                 toExtensionConfiguration(
