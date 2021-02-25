@@ -280,9 +280,9 @@ let update = (~config, ~configuration, msg, model) => {
       // Set active here to avoid scrolling in BufferEnter
       (
         model |> setActive(Some(node.path)),
-        Feature_Configuration.Legacy.getValue(
-          c => c.workbenchEditorEnablePreview,
-          configuration,
+        Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+          get(
+          config,
         )
           ? PreviewFile(FpExp.toString(node.path))
           : OpenFile(FpExp.toString(node.path)),

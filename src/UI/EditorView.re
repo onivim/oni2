@@ -281,9 +281,12 @@ let make =
       <Parts.EditorContainer editor state theme isActive dispatch />;
   };
 
+  let config = Selectors.configResolver(state);
+
   let editorShowTabs =
-    state.config
-    |> Feature_Configuration.Legacy.getValue(c => c.workbenchEditorShowTabs);
+    Feature_Configuration.GlobalConfiguration.Workbench.editorShowTabs.get(
+      config,
+    );
 
   let hideZenModeTabs = !Feature_Zen.shouldShowTabsInZenMode(state.zen);
   let isZenMode = Feature_Zen.isZen(state.zen);
@@ -300,7 +303,7 @@ let make =
       isZenMode
       showTabs
       model={state.layout}
-      config={Selectors.configResolver(state)}
+      config
       dispatch={msg => dispatch(Actions.Layout(msg))}>
       ...(module ContentProvider)
     </Feature_Layout.View>
