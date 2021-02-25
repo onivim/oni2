@@ -61,6 +61,8 @@ let keysToIgnore = [
   "Left Command",
   "Left Ctrl",
   "Right Ctrl",
+  "LeftControl",
+  "RightControl",
 ];
 
 let shouldIgnore = key => {
