@@ -29,8 +29,16 @@ module ConfigurationLoader: {
 let initial:
   (~loader: ConfigurationLoader.t, list(list(Config.Schema.spec))) => model;
 
+let registerExtensionConfigurations:
+  (~configurations: list(Extension.Contributions.Configuration.t), model) =>
+  model;
+
 let toExtensionConfiguration:
-  (model, list(Extension.Scanner.ScanResult.t), Setup.t) =>
+  (
+    ~additionalExtensions: list(Exthost.Extension.Scanner.ScanResult.t),
+    ~setup: Setup.t,
+    model
+  ) =>
   Exthost.Configuration.t;
 
 [@deriving show]
@@ -59,7 +67,14 @@ let resolver:
   ) =>
   Config.rawValue;
 
-let sub: model => Isolinear.Sub.t(msg);
+let sub:
+  (
+    ~setup: Setup.t,
+    ~client: Exthost.Client.t,
+    ~isExthostInitialized: bool,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
 
 module GlobalConfiguration = GlobalConfiguration;
 

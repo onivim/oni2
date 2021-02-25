@@ -188,7 +188,7 @@ let start =
       ),
     ]);
 
-  let subscriptions = (state: Model.State.t) => {
+  let subscriptions = (~setup, state: Model.State.t) => {
     let config = Model.Selectors.configResolver(state);
     let contextKeys = Model.ContextKeys.all(state);
     let commands = Model.CommandManager.current(state);
@@ -430,9 +430,14 @@ let start =
       |> Feature_Buffers.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
 
+    let isExthostInitialized = Feature_Exthost.isInitialized(state.exthost);
     let configurationSub =
       state.config
-      |> Feature_Configuration.sub
+      |> Feature_Configuration.sub(
+           ~setup,
+           ~client=extHostClient,
+           ~isExthostInitialized,
+         )
       |> Isolinear.Sub.map(msg => Model.Actions.Configuration(msg));
 
     let themeSub =
@@ -480,7 +485,7 @@ let start =
 
       let initial = getState();
       let updater = updater;
-      let subscriptions = subscriptions;
+      let subscriptions = subscriptions(~setup);
     });
 
   let _unsubscribe: unit => unit = Store.onModelChanged(onStateChanged);

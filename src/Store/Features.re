@@ -406,7 +406,21 @@ let update =
           prerr_endline(
             "-- EXTENSIONS: " ++ string_of_int(List.length(extensions)),
           );
-          (state, Isolinear.Effect.none);
+          let newExtensionConfigurations =
+            extensions
+            |> List.map((ext: Exthost.Extension.Scanner.ScanResult.t) => {
+                 Exthost.Extension.Manifest.(
+                   ext.manifest.contributes.configuration
+                 )
+               });
+
+          let config =
+            Feature_Configuration.registerExtensionConfigurations(
+              ~configurations=newExtensionConfigurations,
+              state.config,
+            );
+
+          ({...state, config}, Isolinear.Effect.none);
 
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =
@@ -1372,20 +1386,20 @@ let update =
     switch (outmsg) {
     | ConfigurationChanged({changed}) =>
       prerr_endline("Configuration - configuration changed...");
-      let extHostConfiguration =
-        Feature_Configuration.toExtensionConfiguration(
-          config,
-          Feature_Extensions.all(state.extensions),
-          setup,
-        );
-      let exthostChanged = Exthost.Configuration.Model.fromSettings(changed);
-      let exthost =
-        Feature_Exthost.configurationChanged(
-          ~client=extHostClient,
-          ~configuration=extHostConfiguration,
-          ~changed=exthostChanged,
-          state.exthost,
-        );
+      // let extHostConfiguration =
+      //   Feature_Configuration.toExtensionConfiguration(
+      //     config,
+      //     Feature_Extensions.all(state.extensions),
+      //     setup,
+      //   );
+      // let exthostChanged = Exthost.Configuration.Model.fromSettings(changed);
+      // let exthost =
+      //   Feature_Exthost.configurationChanged(
+      //     ~client=extHostClient,
+      //     ~configuration=extHostConfiguration,
+      //     ~changed=exthostChanged,
+      //     state.exthost,
+      //   );
 
       let vsyncEffect =
         if (Config.Settings.get(Config.key("vsync"), changed) != None) {
@@ -1400,7 +1414,7 @@ let update =
         };
 
       let (state', configurationEffect) =
-        {...state, exthost} |> Internal.updateConfiguration;
+        state |> Internal.updateConfiguration;
       (state', Isolinear.Effect.batch([configurationEffect, vsyncEffect]));
 
     | OpenFile(fp) => (state, Internal.openFileEffect(FpExp.toString(fp)))

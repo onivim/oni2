@@ -9,12 +9,17 @@ module ConfigurationLoader = ConfigurationLoader;
 
 type model = {
   schema: Config.Schema.t,
+  defaults: Config.Settings.t,
   user: Config.Settings.t,
   merged: Config.Settings.t,
   legacyConfiguration: LegacyConfiguration.t,
   loader: ConfigurationLoader.t,
   transformTasks: Task.model,
+  // Keep track of when a synchronization with the extension host is required
   extHostSyncTick: int,
+  // ...and the last settings we merged, so we can determine the right set of
+  // changed keys.
+  extHostLastConfig: option(Config.Settings.t),
 };
 
 // DEPRECATED way of working with configuration
@@ -34,8 +39,7 @@ module Legacy = {
 
 let merge = model => {
   ...model,
-  merged:
-    Config.Settings.union(Config.Schema.defaults(model.schema), model.user),
+  merged: Config.Settings.union(model.defaults, model.user),
 };
 
 let initialLoad = model => {
@@ -46,34 +50,58 @@ let initialLoad = model => {
   |> Result.value(~default=model);
 };
 
-let initial = (~loader, contributions) =>
+let initial = (~loader, contributions) => {
+  let schema =
+    Config.Schema.unionMany(
+      [GlobalConfiguration.contributions, ...contributions]
+      |> List.map(Config.Schema.fromList),
+    );
+  let defaults = Config.Schema.defaults(schema);
   {
-    schema:
-      Config.Schema.unionMany(
-        [GlobalConfiguration.contributions, ...contributions]
-        |> List.map(Config.Schema.fromList),
-      ),
+    schema,
+    defaults,
     user: Config.Settings.empty,
     merged: Config.Settings.empty,
     legacyConfiguration: LegacyConfiguration.default,
     loader,
     transformTasks: Task.initial(),
+
     extHostSyncTick: 0,
+    extHostLastConfig: None,
   }
   |> initialLoad
   |> merge;
+};
 
-let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
+let registerExtensionConfigurations =
+    (
+      ~configurations: list(Exthost_Extension.Contributions.Configuration.t),
+      model,
+    ) => {
+  let defaults =
+    configurations
+    |> List.map(Exthost_Extension.Contributions.Configuration.toSettings)
+    |> Config.Settings.unionMany
+    |> Config.Settings.union(model.defaults);
+
+  {...model, defaults, extHostSyncTick: model.extHostSyncTick + 1} |> merge;
+};
+
+let toExtensionConfiguration = (~additionalExtensions, ~setup: Setup.t, model) => {
   open Exthost.Extension;
   open Scanner.ScanResult;
 
-  let defaults =
-    extensions
-    |> List.map(ext => ext.manifest.contributes.configuration)
-    |> List.map(Contributions.Configuration.toSettings)
-    |> Config.Settings.unionMany
-    |> Config.Settings.union(Config.Schema.defaults(config.schema))
-    |> Exthost.Configuration.Model.fromSettings;
+  let configurations =
+    additionalExtensions
+    |> List.map((extension: Exthost.Extension.Scanner.ScanResult.t) => {
+         Exthost.Extension.Manifest.(
+           extension.manifest.contributes.configuration
+         )
+       });
+
+  let model = model |> registerExtensionConfigurations(~configurations);
+
+  let defaults = model.defaults |> Exthost.Configuration.Model.fromSettings;
 
   let user =
     Config.Settings.fromList([
@@ -83,7 +111,7 @@ let toExtensionConfiguration = (config, extensions, setup: Setup.t) => {
       ("terminal.integrated.env.linux", Json.Encode.null),
       ("terminal.integrated.env.osx", Json.Encode.null),
     ])
-    |> Config.Settings.union(config.user)
+    |> Config.Settings.union(model.user)
     |> Exthost.Configuration.Model.fromSettings;
 
   Exthost.Configuration.create(~defaults, ~user, ());
@@ -102,7 +130,7 @@ type msg =
   | Command(command)
   | Testing(testing)
   | Exthost(Exthost.Msg.Configuration.msg)
-  | ExthostSyncDispatched
+  | ExthostSyncDispatched({mergedConfig: [@opaque] Config.Settings.t})
   | TransformTask(Task.msg)
   | UserSettingsChanged({
       config: [@opaque] Config.Settings.t,
@@ -131,7 +159,10 @@ let queueTransform = (~transformer, model) => {
 
 let update = (model, msg) =>
   switch (msg) {
-  | ExthostSyncDispatched => (model, Nothing)
+  | ExthostSyncDispatched({mergedConfig}) => (
+      {...model, extHostLastConfig: Some(mergedConfig)},
+      Nothing,
+    )
 
   | UserSettingsChanged({config: user, legacyConfiguration}) =>
     //prerr_endline ("!!USER SETTINGS CHANGED");
@@ -231,7 +262,13 @@ let resolver = (~fileType: string, model, vimModel, ~vimSetting, key) => {
   |> Option.value(~default=Config.NotSet);
 };
 
-let sub = ({loader, transformTasks, extHostSyncTick, _}) => {
+let sub =
+    (
+      ~setup,
+      ~client,
+      ~isExthostInitialized: bool,
+      {loader, transformTasks, merged, extHostSyncTick, extHostLastConfig, _} as model,
+    ) => {
   let loaderSub =
     ConfigurationLoader.sub(loader)
     |> Isolinear.Sub.map(
@@ -242,13 +279,36 @@ let sub = ({loader, transformTasks, extHostSyncTick, _}) => {
        );
 
   let extHostSyncTick =
-    SubEx.task(
-      ~name="Feature_Configuration.Sub.ExtHostSync",
-      ~uniqueId=extHostSyncTick |> string_of_int,
-      ~task=() =>
-      prerr_endline("SYNCING!")
-    )
-    |> Isolinear.Sub.map(() => ExthostSyncDispatched);
+    !isExthostInitialized
+      ? Isolinear.Sub.none
+      : SubEx.task(
+          ~name="Feature_Configuration.Sub.ExtHostSync",
+          ~uniqueId=extHostSyncTick |> string_of_int,
+          ~task=() => {
+            let changed =
+              extHostLastConfig
+              |> Option.map(previous => {
+                   Config.Settings.changed(previous, merged)
+                 })
+              |> Option.value(~default=Config.Settings.empty)
+              |> Exthost.Configuration.Model.fromSettings;
+
+            prerr_endline("SYNCING!");
+            Exthost.Request.Configuration.acceptConfigurationChanged(
+              ~configuration=
+                toExtensionConfiguration(
+                  ~additionalExtensions=[],
+                  ~setup,
+                  model,
+                ),
+              ~changed,
+              client,
+            );
+          },
+        )
+        |> Isolinear.Sub.map(() =>
+             ExthostSyncDispatched({mergedConfig: model.merged})
+           );
   let transformTaskSub =
     Task.sub(transformTasks) |> Isolinear.Sub.map(msg => TransformTask(msg));
 
