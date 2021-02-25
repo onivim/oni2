@@ -1362,23 +1362,25 @@ let update =
     let state = {...state, config};
     switch (outmsg) {
     | ConfigurationChanged({changed}) =>
+      prerr_endline("Configuration - configuration changed...");
       let eff =
-        Isolinear.Effect.create(
-          ~name="features.configuration$acceptConfigurationChanged", () => {
-          prerr_endline("Sending configuration changed...");
-          let configuration =
-            Feature_Configuration.toExtensionConfiguration(
-              config,
-              Feature_Extensions.all(state.extensions),
-              setup,
-            );
-          let changed = Exthost.Configuration.Model.fromSettings(changed);
-          Exthost.Request.Configuration.acceptConfigurationChanged(
-            ~configuration,
-            ~changed,
-            extHostClient,
-          );
-        });
+         Isolinear.Effect.none;
+        // Isolinear.Effect.create(
+        //   ~name="features.configuration$acceptConfigurationChanged", () => {
+        //   prerr_endline("Sending configuration changed...");
+        //   let configuration =
+        //     Feature_Configuration.toExtensionConfiguration(
+        //       config,
+        //       Feature_Extensions.all(state.extensions),
+        //       setup,
+        //     );
+        //   let changed = Exthost.Configuration.Model.fromSettings(changed);
+        //   Exthost.Request.Configuration.acceptConfigurationChanged(
+        //     ~configuration,
+        //     ~changed,
+        //     extHostClient,
+        //   );
+        // });
 
       let vsyncEffect =
         if (Config.Settings.get(Config.key("vsync"), changed) != None) {
