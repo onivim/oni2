@@ -744,15 +744,16 @@ let update =
     (state, eff);
 
   | Pane(msg) =>
+    let config = Selectors.configResolver(state);
     let (model, outmsg) =
       Feature_Pane.update(
         ~font=state.editorFont,
         ~languageInfo=state.languageInfo,
         ~buffers=state.buffers,
         ~previewEnabled=
-          Oni_Core.Configuration.getValue(
-            c => c.workbenchEditorEnablePreview,
-            state.configuration,
+          Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+            get(
+            config,
           ),
         msg,
         state.pane,
@@ -847,12 +848,13 @@ let update =
     ({...state, registration: state'}, effect);
 
   | Search(msg) =>
+    let config = Selectors.configResolver(state);
     let (model, maybeOutmsg) =
       Feature_Search.update(
         ~previewEnabled=
-          Oni_Core.Configuration.getValue(
-            c => c.workbenchEditorEnablePreview,
-            state.configuration,
+          Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+            get(
+            config,
           ),
         state.searchPane,
         msg,
@@ -882,12 +884,13 @@ let update =
     };
 
   | SCM(msg) =>
+    let config = Selectors.configResolver(state);
     let (model, maybeOutmsg) =
       Feature_SCM.update(
         ~previewEnabled=
-          Oni_Core.Configuration.getValue(
-            c => c.workbenchEditorEnablePreview,
-            state.configuration,
+          Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+            get(
+            config,
           ),
         ~fileSystem=state.fileSystem,
         extHostClient,

@@ -63,24 +63,6 @@ let configurationParsers: list(configurationTuple) = [
     (config, json) => {...config, filesExclude: parseStringList(json)},
   ),
   (
-    "workbench.activityBar.visible",
-    (config, json) => {
-      ...config,
-      workbenchActivityBarVisible: parseBool(json),
-    },
-  ),
-  (
-    "workbench.editor.showTabs",
-    (config, json) => {...config, workbenchEditorShowTabs: parseBool(json)},
-  ),
-  (
-    "workbench.editor.enablePreview",
-    (config, json) => {
-      ...config,
-      workbenchEditorEnablePreview: parseBool(json),
-    },
-  ),
-  (
     "editor.zenMode.hideTabs",
     (config, json) => {...config, zenModeHideTabs: parseBool(json)},
   ),

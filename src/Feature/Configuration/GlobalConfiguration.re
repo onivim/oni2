@@ -225,6 +225,17 @@ module Explorer = {
     );
 };
 
+module Workbench = {
+  let activityBarVisible =
+    setting("workbench.activityBar.visible", bool, ~default=true);
+
+  let editorShowTabs =
+    setting("workbench.editor.showTabs", bool, ~default=true);
+
+  let editorEnablePreview =
+    setting("workbench.editor.enablePreview", bool, ~default=true);
+};
+
 let contributions = [
   inactiveWindowOpacity.spec,
   animation.spec,
@@ -233,4 +244,7 @@ let contributions = [
   Editor.largeFileOptimizations.spec,
   Editor.snippetSuggestions.spec,
   Explorer.autoReveal.spec,
+  Workbench.activityBarVisible.spec,
+  Workbench.editorShowTabs.spec,
+  Workbench.editorEnablePreview.spec,
 ];

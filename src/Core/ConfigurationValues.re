@@ -12,9 +12,6 @@ type vimUseSystemClipboard = {
 };
 
 type t = {
-  workbenchActivityBarVisible: bool,
-  workbenchEditorShowTabs: bool,
-  workbenchEditorEnablePreview: bool,
   filesExclude: list(string),
   vsync: Revery.Vsync.t,
   vimUseSystemClipboard,
@@ -28,9 +25,6 @@ type t = {
 };
 
 let default = {
-  workbenchActivityBarVisible: true,
-  workbenchEditorShowTabs: true,
-  workbenchEditorEnablePreview: true,
   filesExclude: ["_esy", "node_modules", ".git"],
   vimUseSystemClipboard: {
     yank: true,

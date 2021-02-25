@@ -281,9 +281,12 @@ let make =
       <Parts.EditorContainer editor state theme isActive dispatch />;
   };
 
+  let config = Selectors.configResolver(state);
+
   let editorShowTabs =
-    state.configuration
-    |> Oni_Core.Configuration.getValue(c => c.workbenchEditorShowTabs);
+    Feature_Configuration.GlobalConfiguration.Workbench.editorShowTabs.get(
+      config,
+    );
 
   let hideZenModeTabs =
     state.configuration
@@ -301,7 +304,7 @@ let make =
       isZenMode={state.zenMode}
       showTabs
       model={state.layout}
-      config={Selectors.configResolver(state)}
+      config
       dispatch={msg => dispatch(Actions.Layout(msg))}>
       ...(module ContentProvider)
     </Feature_Layout.View>
