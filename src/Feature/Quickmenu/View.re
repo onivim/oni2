@@ -112,7 +112,7 @@ let make =
     let current = Model.current(model) |> Option.get;
     let filterProgress = Complete;
     let ripgrepProgress = Complete;
-    let focused = None;
+    let focused = current |> Schema.Instance.focused;
     let inputText = current |> Schema.Instance.text;
     let prefix = Some("abc");
     // let Quickmenu.{

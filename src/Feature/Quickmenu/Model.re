@@ -1,3 +1,5 @@
+open Oni_Core;
+
 [@deriving show]
 type msg =
   | KeyPressed(string)
@@ -16,40 +18,12 @@ type progress =
 
 type model('outmsg) = {menus: list(Schema.Instance.t('outmsg))};
 
-let initial = {
-  menus: [],
-  //Schema.menu([]) |> Schema.instantiate
-};
+let initial = {menus: []};
 
 let isMenuOpen = ({menus}) => menus != [];
 
 let show = (~menu, model) => {
   menus: [Schema.instantiate(menu), ...model.menus],
-};
-
-let focus = (~index, model) => {
-  prerr_endline("!! FOCUS");
-  model;
-};
-
-let next = model => {
-  prerr_endline("!! NEXT");
-  model;
-};
-
-let prev = model => {
-  prerr_endline("!! PREV");
-  model;
-};
-
-let cancel = model => {
-  prerr_endline("!! CANCEL");
-  model;
-};
-
-let select = model => {
-  prerr_endline("!! SELECT");
-  (model, Isolinear.Effect.none);
 };
 
 let current = model => {
@@ -72,6 +46,42 @@ let updateCurrentMenu = (f, model) => {
     | [current, ...others] => [f(current), ...others]
     };
   {...model, menus: menus'};
+};
+
+let currentMenu = model => {
+  switch (model.menus) {
+  | [] => None
+  | [current, ..._] => Some(current)
+  };
+};
+
+let focus = (~index, model) => {
+  prerr_endline("!! FOCUS");
+  model;
+};
+
+let next = model => {
+  updateCurrentMenu(Schema.Instance.next, model);
+};
+
+let prev = model => {
+  updateCurrentMenu(Schema.Instance.previous, model);
+};
+
+let cancel = _model => {menus: []};
+
+let select = model => {
+  let eff =
+    model
+    |> currentMenu
+    |> Utility.OptionEx.flatMap(menu => Schema.Instance.select(menu))
+    |> Option.map(msg => {
+         prerr_endline("CREATING VALUE");
+         EffectEx.value(~name="Feature_Quickmenu.select", msg);
+       })
+    |> Option.value(~default=Isolinear.Effect.none);
+
+  ({menus: []}, eff);
 };
 
 let update = (msg, model) => {

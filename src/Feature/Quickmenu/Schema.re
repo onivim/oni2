@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 
 type internal('item, 'outmsg) = {
   onItemFocused: option('item => 'outmsg),
@@ -60,6 +61,7 @@ module Instance = {
         text: Component_InputText.model,
         allItems: list('item),
         filteredItems: array(Filter.result('item)),
+        focused: option(int),
       })
       : t('outmsg);
 
@@ -126,6 +128,48 @@ module Instance = {
         };
       };
 
+  let next =
+    fun
+    | Instance({filteredItems, focused, _} as orig) => {
+        let focused' =
+          focused
+          |> Utility.IndexEx.nextRollOverOpt(
+               ~last=Array.length(filteredItems) - 1,
+             );
+        Instance({...orig, focused: focused'});
+      };
+
+  let previous =
+    fun
+    | Instance({filteredItems, focused, _} as orig) => {
+        let focused' =
+          focused
+          |> Utility.IndexEx.prevRollOverOpt(
+               ~last=Array.length(filteredItems) - 1,
+             );
+        Instance({...orig, focused: focused'});
+      };
+
+  let select: t('a) => option('a) =
+    fun
+    | Instance({schema, filteredItems, focused, _}) => {
+        let len = Array.length(filteredItems);
+        focused
+        |> OptionEx.flatMap(focusedIndex =>
+             if (focusedIndex >= 0 && focusedIndex < len) {
+               let item = filteredItems[focusedIndex];
+               prerr_endline("Trying onItemSelected");
+               schema.onItemSelected |> Option.map(f => f(item.item));
+             } else {
+               None;
+             }
+           );
+      };
+
+  let focused =
+    fun
+    | Instance({focused, _}) => focused;
+
   let sub = model => {
     Isolinear.Sub.none;
   };
@@ -139,5 +183,6 @@ let instantiate: menu('outmsg) => Instance.t('outmsg) =
       text: Component_InputText.empty,
       allItems: internal.items,
       filteredItems: [||],
+      focused: None,
     })
     |> Instance.updateFilteredItems;
