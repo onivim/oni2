@@ -248,43 +248,6 @@ let start = () => {
         Isolinear.Effect.none,
       );
 
-    | QuickmenuShow(SnippetFilePicker(snippetFiles)) =>
-      let items =
-        snippetFiles
-        |> List.filter_map(
-             (snippetFile: Service_Snippets.SnippetFileMetadata.t) => {
-             FpExp.baseName(snippetFile.filePath)
-             |> Option.map(filePath => {
-                  Actions.{
-                    category:
-                      Some(
-                        snippetFile.language
-                        |> Option.value(~default="global"),
-                      ),
-                    name:
-                      snippetFile.isCreated
-                        ? Printf.sprintf("Edit %s", filePath)
-                        : Printf.sprintf("Create %s", filePath),
-                    command: () =>
-                      Snippets(
-                        Feature_Snippets.Msg.editSnippetFile(~snippetFile),
-                      ),
-                    icon: None,
-                    highlight: [],
-                    handle: None,
-                  }
-                })
-           })
-        |> Array.of_list;
-
-      (
-        Some({
-          ...Quickmenu.defaults(SnippetFilePicker(snippetFiles)),
-          items,
-        }),
-        Isolinear.Effect.none,
-      );
-
     | QuickmenuShow(OpenBuffersPicker) =>
       let items =
         makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
@@ -687,7 +650,6 @@ let subscriptions = (ripgrep, dispatch) => {
       | EditorsPicker
       | OpenBuffersPicker => [filter(query, quickmenu.items)]
       | ThemesPicker(_) => [filter(query, quickmenu.items)]
-      | SnippetFilePicker(_) => [filter(query, quickmenu.items)]
 
       | Extension({hasItems, _}) =>
         hasItems ? [filter(query, quickmenu.items)] : []

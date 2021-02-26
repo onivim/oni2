@@ -392,7 +392,6 @@ type outmsg =
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
   | ShowMenu(Feature_Quickmenu.Schema.menu(msg))
-  | ShowFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
   | OpenFile(FpExp.t(FpExp.absolute))
   | Nothing;
 

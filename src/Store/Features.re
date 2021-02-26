@@ -1886,15 +1886,6 @@ let update =
         let quickmenu' = Feature_Quickmenu.show(~menu, state.newQuickmenu);
         (quickmenu', state.layout, Isolinear.Effect.none);
         
-
-      | ShowFilePicker(snippetFiles) =>
-        let eff =
-          Isolinear.Effect.createWithDispatch(
-            ~name="snippet.fileMenu", dispatch => {
-            dispatch(Actions.QuickmenuShow(SnippetFilePicker(snippetFiles)))
-          });
-        (state.newQuickmenu, state.layout, eff);
-
       | OpenFile(filePath) => (
           state.newQuickmenu,
           state.layout,
