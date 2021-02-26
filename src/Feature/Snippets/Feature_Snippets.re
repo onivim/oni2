@@ -741,9 +741,30 @@ let update =
       ShowMenu(menu)
     )
 
-  | SnippetFilesLoadedForPicker(snippetFiles) => (
+  | SnippetFilesLoadedForPicker(snippetFiles) => 
+
+    let filesAndPaths = snippetFiles
+    |> List.filter_map((snippetFile: Service_Snippets.SnippetFileMetadata.t) => {
+      FpExp.baseName(snippetFile.filePath)
+      |> Option.map(filePath => {
+        let language = snippetFile.language |> Option.value(~default="global");
+        let name = snippetFile.isCreated
+        ? Printf.sprintf("Edit %s", filePath)
+        : Printf.sprintf("Create %s", filePath);
+        let title = Printf.sprintf("%s: %s", language, name);
+        (title, snippetFile)
+      })
+    });
+
+    let menu = Feature_Quickmenu.Schema.menu(
+      ~onItemSelected=item => EditSnippetFileRequested({snippetFile: item |> snd}),
+      ~toString=item => fst(item),
+      filesAndPaths
+    );
+
+    (
       model,
-      ShowFilePicker(snippetFiles),
+      ShowMenu(menu),
     )
 
   | InsertInternal({snippetString}) =>
