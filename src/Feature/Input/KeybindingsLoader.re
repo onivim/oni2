@@ -5,57 +5,24 @@ module Log = (
 );
 
 module File = {
-  let loadKeybindings = (path: FpExp.t(FpExp.absolute)) => {
-    let loadResult =
-      path
-      |> FpExp.toString
-      |> Utility.JsonEx.from_file
+  let loadKeybindings = (loadResult: result(Yojson.Safe.t, string)) => {
+    let parseResult =
+      loadResult
       |> Utility.ResultEx.flatMap(Keybindings.of_yojson_with_errors);
 
-    switch (loadResult) {
+    switch (parseResult) {
     | Ok((bindings, errors)) => (bindings, errors)
     | Error(msg) => ([], [msg])
     };
   };
 
-  type params = {
-    filePath: FpExp.t(FpExp.absolute),
-    tick: int,
-  };
-  // TODO: Once we've fixed the issue with the Service_OS.FileWatcher,
-  // this could be mostly replaced with it (and then there'd no longer
-  // need to be an awkward 'notifyFileSaved' on the public interface)
-  module Sub =
-    Isolinear.Sub.Make({
-      type nonrec msg = (list(Schema.resolvedKeybinding), list(string));
-      type nonrec params = params;
-      type state = unit;
-
-      let name = "Feature_Input.KeybindingsLoader.FileSubscription";
-
-      let id = ({filePath, tick}) =>
-        FpExp.toString(filePath) ++ string_of_int(tick);
-
-      let init = (~params, ~dispatch) => {
-        Log.infof(m =>
-          m(
-            "Reloading keybindings file: %s",
-            FpExp.toString(params.filePath),
-          )
-        );
-        dispatch(loadKeybindings(params.filePath));
-        ();
-      };
-
-      let update = (~params as _, ~state, ~dispatch as _) => {
-        state;
-      };
-
-      let dispose = (~params as _, ~state as _) => ();
-    });
-
   let sub = (~filePath, ~saveTick) => {
-    Sub.create({filePath, tick: saveTick});
+    Oni_Core.SubEx.jsonFile(
+      ~uniqueId="Feature_Input.KeybindingsLoader",
+      ~filePath,
+      ~tick=saveTick,
+    )
+    |> Isolinear.Sub.map(loadKeybindings);
   };
 };
 

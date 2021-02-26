@@ -74,7 +74,10 @@ module Effects = {
       let directoryStr = FpExp.toString(directory);
       Log.infof(m => m("Loading nodes for directory: %s", directoryStr));
       let ignored =
-        Configuration.getValue(c => c.filesExclude, configuration);
+        Feature_Configuration.Legacy.getValue(
+          c => c.filesExclude,
+          configuration,
+        );
       let promise = Internal.getDirectoryTree(directory, ignored);
 
       Lwt.on_success(
@@ -213,7 +216,7 @@ let revealAndFocusPath = (~configuration, path, model: model) => {
   };
 };
 
-let update = (~configuration, msg, model) => {
+let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
   | ActiveFilePathChanged(maybeFilePath) =>
     switch (model) {
@@ -221,9 +224,8 @@ let update = (~configuration, msg, model) => {
       switch (maybeFilePath) {
       | Some(path) =>
         let autoReveal =
-          Oni_Core.Configuration.getValue(
-            c => c.explorerAutoReveal,
-            configuration,
+          Feature_Configuration.GlobalConfiguration.Explorer.autoReveal.get(
+            config,
           );
         switch (autoReveal) {
         | `HighlightAndScroll =>
@@ -278,9 +280,9 @@ let update = (~configuration, msg, model) => {
       // Set active here to avoid scrolling in BufferEnter
       (
         model |> setActive(Some(node.path)),
-        Oni_Core.Configuration.getValue(
-          c => c.workbenchEditorEnablePreview,
-          configuration,
+        Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+          get(
+          config,
         )
           ? PreviewFile(FpExp.toString(node.path))
           : OpenFile(FpExp.toString(node.path)),
@@ -299,7 +301,8 @@ let update = (~configuration, msg, model) => {
 module View = View;
 
 let sub = (~configuration, {rootPath, _}) => {
-  let ignored = Configuration.getValue(c => c.filesExclude, configuration);
+  let ignored =
+    Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
 
   let toMsg =
     fun

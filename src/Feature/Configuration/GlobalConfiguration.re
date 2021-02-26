@@ -60,6 +60,39 @@ module Encoders = {
 };
 
 module Codecs = {
+  let autoReveal =
+    custom(
+      ~decode=
+        Json.Decode.(
+          one_of([
+            (
+              "autoReveal.bool",
+              bool
+              |> map(
+                   fun
+                   | true => `HighlightAndScroll
+                   | false => `NoReveal,
+                 ),
+            ),
+            (
+              "autoReveal.string",
+              string
+              |> map(
+                   fun
+                   | "focusNoScroll" => `HighlightOnly
+                   | _ => `NoReveal,
+                 ),
+            ),
+          ])
+        ),
+      ~encode=
+        Json.Encode.(
+          fun
+          | `HighlightAndScroll => bool(true)
+          | `NoReveal => bool(false)
+          | `HighlightOnly => string("focusNoScroll")
+        ),
+    );
   let fontWeightDecoder =
     Json.Decode.(
       one_of([
@@ -183,11 +216,59 @@ module Editor = {
     setting("editor.largeFileOptimizations", bool, ~default=true);
 };
 
+let vsync =
+  setting(
+    "vsync",
+    custom(
+      ~decode=
+        Json.Decode.(
+          bool
+          |> map(
+               fun
+               | true => Revery.Vsync.Synchronized
+               | false => Revery.Vsync.Immediate,
+             )
+        ),
+      ~encode=
+        Json.Encode.(
+          fun
+          | Revery.Vsync.Synchronized => bool(true)
+          | Revery.Vsync.Immediate => bool(false)
+        ),
+    ),
+    ~default=Revery.Vsync.Immediate,
+  );
+
+module Explorer = {
+  let autoReveal =
+    setting(
+      "explorer.autoReveal",
+      Codecs.autoReveal,
+      ~default=`HighlightAndScroll,
+    );
+};
+
+module Workbench = {
+  let activityBarVisible =
+    setting("workbench.activityBar.visible", bool, ~default=true);
+
+  let editorShowTabs =
+    setting("workbench.editor.showTabs", bool, ~default=true);
+
+  let editorEnablePreview =
+    setting("workbench.editor.enablePreview", bool, ~default=true);
+};
+
 let contributions = [
   inactiveWindowOpacity.spec,
   animation.spec,
   shadows.spec,
+  vsync.spec,
   Editor.codeLensEnabled.spec,
   Editor.largeFileOptimizations.spec,
   Editor.snippetSuggestions.spec,
+  Explorer.autoReveal.spec,
+  Workbench.activityBarVisible.spec,
+  Workbench.editorShowTabs.spec,
+  Workbench.editorEnablePreview.spec,
 ];

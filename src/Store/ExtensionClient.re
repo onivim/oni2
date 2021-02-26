@@ -55,21 +55,9 @@ let create =
         dispatch(Actions.CommandInvoked({command, arguments: `List(args)}));
         Lwt.return(Reply.okEmpty);
 
-      | Configuration(RemoveConfigurationOption({key, _})) =>
+      | Configuration(msg) =>
         dispatch(
-          Actions.ConfigurationTransform(
-            "configuration.json",
-            ConfigurationTransformer.removeField(key),
-          ),
-        );
-        Lwt.return(Reply.okEmpty);
-
-      | Configuration(UpdateConfigurationOption({key, value, _})) =>
-        dispatch(
-          Actions.ConfigurationTransform(
-            "configuration.json",
-            ConfigurationTransformer.setField(key, value),
-          ),
+          Actions.Configuration(Feature_Configuration.Msg.exthost(msg)),
         );
         Lwt.return(Reply.okEmpty);
 
@@ -182,7 +170,7 @@ let create =
           command |> OptionEx.flatMap(({id, _}: Exthost.Command.t) => id);
         dispatch(
           Actions.StatusBar(
-            Feature_StatusBar.ItemAdded(
+            Feature_StatusBar.Msg.itemAdded(
               Feature_StatusBar.Item.create(
                 ~command?,
                 ~color?,
@@ -200,7 +188,11 @@ let create =
         Lwt.return(Reply.okEmpty);
 
       | StatusBar(Dispose({id})) =>
-        dispatch(Actions.StatusBar(ItemDisposed(id |> string_of_int)));
+        dispatch(
+          Actions.StatusBar(
+            Feature_StatusBar.Msg.itemDisposed(id |> string_of_int),
+          ),
+        );
         Lwt.return(Reply.okEmpty);
 
       | TerminalService(msg) =>
@@ -299,9 +291,9 @@ let create =
     Exthost.Client.start(
       ~initialConfiguration=
         Feature_Configuration.toExtensionConfiguration(
+          ~setup,
+          ~additionalExtensions=extensions,
           config,
-          extensions,
-          setup,
         ),
       ~initialWorkspace,
       ~namedPipe,

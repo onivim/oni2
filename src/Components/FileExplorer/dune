@@ -3,7 +3,7 @@
  (public_name Oni2.component.fileExplorer)
  (inline_tests)
  (libraries Oni2.component.vimTree Oni2.component.accordion Oni2.core
-   Oni2.exthost Oni2.feature.decorations Oni2.feature.theme Oni2.components
-   Revery isolinear)
+   Oni2.exthost Oni2.feature.configuration Oni2.feature.decorations
+   Oni2.feature.theme Oni2.components Revery isolinear)
  (preprocess
   (pps ppx_inline_test ppx_let lwt_ppx ppx_deriving.show brisk-reconciler.ppx)))

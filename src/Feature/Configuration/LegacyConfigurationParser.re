@@ -3,14 +3,8 @@
  *
  * Resilient parsing for Configuration
  */
-open Kernel;
-open ConfigurationValues;
-
-let parseBool = json =>
-  switch (json) {
-  | `Bool(v) => v
-  | _ => false
-  };
+open Oni_Core;
+open LegacyConfigurationValues;
 
 let parseStringList = json => {
   switch (json) {
@@ -52,77 +46,15 @@ let parseVimUseSystemClipboardSetting = json => {
   };
 };
 
-let parseString = (~default="", json) =>
-  switch (json) {
-  | `String(v) => v
-  | _ => default
-  };
-
-let parseAutoReveal = json =>
-  switch (json) {
-  | `Bool(true) => `HighlightAndScroll
-  | `Bool(false) => `NoReveal
-  | `String("focusNoScroll") => `HighlightOnly
-  | _ => `NoReveal
-  };
-
 type parseFunction =
-  (ConfigurationValues.t, Yojson.Safe.t) => ConfigurationValues.t;
+  (LegacyConfigurationValues.t, Yojson.Safe.t) => LegacyConfigurationValues.t;
 
 type configurationTuple = (string, parseFunction);
 
 let configurationParsers: list(configurationTuple) = [
   (
-    "explorer.autoReveal",
-    (config, json) => {
-      ...config,
-      explorerAutoReveal: parseAutoReveal(json),
-    },
-  ),
-  (
     "files.exclude",
     (config, json) => {...config, filesExclude: parseStringList(json)},
-  ),
-  (
-    "workbench.activityBar.visible",
-    (config, json) => {
-      ...config,
-      workbenchActivityBarVisible: parseBool(json),
-    },
-  ),
-  (
-    "workbench.colorTheme",
-    (config, json) => {...config, workbenchColorTheme: parseString(json)},
-  ),
-  (
-    "workbench.iconTheme",
-    (config, json) => {...config, workbenchIconTheme: parseString(json)},
-  ),
-  (
-    "workbench.editor.showTabs",
-    (config, json) => {...config, workbenchEditorShowTabs: parseBool(json)},
-  ),
-  (
-    "workbench.editor.enablePreview",
-    (config, json) => {
-      ...config,
-      workbenchEditorEnablePreview: parseBool(json),
-    },
-  ),
-  (
-    "workbench.statusBar.visible",
-    (config, json) => {
-      ...config,
-      workbenchStatusBarVisible: parseBool(json),
-    },
-  ),
-  (
-    "editor.zenMode.hideTabs",
-    (config, json) => {...config, zenModeHideTabs: parseBool(json)},
-  ),
-  (
-    "editor.zenMode.singleFile",
-    (config, json) => {...config, zenModeSingleFile: parseBool(json)},
   ),
   (
     "vim.useSystemClipboard",
@@ -130,18 +62,6 @@ let configurationParsers: list(configurationTuple) = [
       ...config,
       vimUseSystemClipboard: parseVimUseSystemClipboardSetting(json),
     },
-  ),
-  (
-    "vsync",
-    (config, json) => {
-      ...config,
-      vsync:
-        parseBool(json) ? Revery.Vsync.Synchronized : Revery.Vsync.Immediate,
-    },
-  ),
-  (
-    "experimental.viml",
-    (config, json) => {...config, experimentalVimL: parseStringList(json)},
   ),
 ];
 
@@ -158,7 +78,7 @@ let keyToParser: Hashtbl.t(string, parseFunction) =
 
 type parseResult = {
   nestedConfigurations: list((string, Yojson.Safe.t)),
-  configurationValues: ConfigurationValues.t,
+  configurationValues: LegacyConfigurationValues.t,
 };
 
 let isFiletype = (str: string) => {
@@ -207,13 +127,13 @@ let parse: list((string, Yojson.Safe.t)) => parseResult =
       },
       {
         nestedConfigurations: [],
-        configurationValues: ConfigurationValues.default,
+        configurationValues: LegacyConfigurationValues.default,
       },
       items,
     );
   };
 
-let parseNested = (json: Yojson.Safe.t, default: ConfigurationValues.t) => {
+let parseNested = (json: Yojson.Safe.t, default: LegacyConfigurationValues.t) => {
   switch (json) {
   | `Assoc(items) =>
     List.fold_left(
@@ -252,7 +172,7 @@ let ofJson = json => {
       );
 
     let configuration =
-      Configuration.{default: configurationValues, perFiletype};
+      LegacyConfiguration.{default: configurationValues, perFiletype};
     Ok(configuration);
   | _ => Error("Incorrect JSON format for configuration")
   };
