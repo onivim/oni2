@@ -174,6 +174,8 @@ let all = (state: State.t) => {
   let inputContextKeys = Feature_Input.Contributions.contextKeys(state.input);
 
   let zenContextKeys = Feature_Zen.Contributions.contextKeys(state.zen);
+  let newQuickmenuContextKeys =
+    Feature_Quickmenu.Contributions.contextKeys(state.newQuickmenu);
 
   unionMany([
     Feature_Registers.Contributions.contextKeys(
@@ -199,6 +201,7 @@ let all = (state: State.t) => {
     |> fromSchema(state),
     editors(~isFocused=isEditorFocused) |> fromSchema(state),
     zenContextKeys,
+    newQuickmenuContextKeys,
     Feature_Snippets.Contributions.contextKeys(state.snippets),
     other |> fromSchema(state),
   ]);

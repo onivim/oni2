@@ -1751,15 +1751,15 @@ let update =
     )
 
   | Quickmenu(msg) =>
-    
-    let (quickmenu', outmsg) = Feature_Quickmenu.update(msg, state.newQuickmenu);
-    let eff = switch (outmsg) {
-  
-    | Nothing => Isolinear.Effect.none
+    let (quickmenu', outmsg) =
+      Feature_Quickmenu.update(msg, state.newQuickmenu);
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
 
-    | Action(action) => EffectEx.value(~name="Feature_Quickmenu.action", action)
-
-    };
+      | Action(action) =>
+        EffectEx.value(~name="Feature_Quickmenu.action", action)
+      };
 
     ({...state, newQuickmenu: quickmenu'}, eff);
 

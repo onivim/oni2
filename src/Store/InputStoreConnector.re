@@ -56,6 +56,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     | Quickmenu => [Actions.QuickmenuInput(k)]
 
+    | NewQuickmenu => [
+        Actions.Quickmenu(Feature_Quickmenu.Msg.keyPressed(k)),
+      ]
+
     | Sneak => [Actions.Sneak(Feature_Sneak.KeyboardInput(k))]
 
     | FileExplorer => [
@@ -96,6 +100,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         | Editor => Actions.Vim(Feature_Vim.Pasted(rawText))
         | Wildmenu => Actions.Vim(Feature_Vim.Pasted(firstLine))
         | Quickmenu => Actions.QuickmenuPaste(firstLine)
+        | NewQuickmenu =>
+          Actions.Quickmenu(Feature_Quickmenu.Msg.pasted(firstLine))
         | Extensions =>
           Actions.Extensions(Feature_Extensions.Msg.pasted(firstLine))
         | SCM => Actions.SCM(Feature_SCM.Msg.paste(firstLine))

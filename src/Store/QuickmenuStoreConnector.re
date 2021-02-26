@@ -568,22 +568,55 @@ let start = () => {
     };
   };
 
-  let updater = (state: State.t, action: Actions.t) => {
-    let (menuState, menuEffect) =
-      menuUpdater(
-        state.quickmenu,
-        action,
-        state.buffers,
-        state.languageInfo,
-        state.iconTheme,
-        state.workspace,
-        CommandManager.current(state),
-        MenuManager.current(state),
-        ContextKeys.all(state),
-      );
+  let updater = (state: State.t, action: Actions.t) =>
+    // Transition menus to this new-style quickmenu
+    if (Feature_Quickmenu.isMenuOpen(state.newQuickmenu)) {
+      prerr_endline("isMenuOpen: true");
+      switch (action) {
+      | ListFocusUp => (
+          {
+            ...state,
+            newQuickmenu: Feature_Quickmenu.prev(state.newQuickmenu),
+          },
+          Isolinear.Effect.none,
+        )
+      | ListFocusDown => (
+          {
+            ...state,
+            newQuickmenu: Feature_Quickmenu.next(state.newQuickmenu),
+          },
+          Isolinear.Effect.none,
+        )
+      | ListSelect =>
+        let (newQuickmenu, eff) =
+          Feature_Quickmenu.select(state.newQuickmenu);
+        ({...state, newQuickmenu}, eff);
+      | QuickmenuClose => (
+          {
+            ...state,
+            newQuickmenu: Feature_Quickmenu.cancel(state.newQuickmenu),
+          },
+          Isolinear.Effect.none,
+        )
+      | _ => (state, Isolinear.Effect.none)
+      };
+    } else {
+      prerr_endline("isMenuOpen: false");
+      let (menuState, menuEffect) =
+        menuUpdater(
+          state.quickmenu,
+          action,
+          state.buffers,
+          state.languageInfo,
+          state.iconTheme,
+          state.workspace,
+          CommandManager.current(state),
+          MenuManager.current(state),
+          ContextKeys.all(state),
+        );
 
-    ({...state, quickmenu: menuState}, menuEffect);
-  };
+      ({...state, quickmenu: menuState}, menuEffect);
+    };
 
   updater;
 };

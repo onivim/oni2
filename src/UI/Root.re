@@ -227,6 +227,17 @@ let make = (~dispatch, ~state: State.t, ()) => {
       />
     </View>
     <Overlay>
+      {if (Feature_Quickmenu.isMenuOpen(state.newQuickmenu)) {
+         <Feature_Quickmenu.View
+           theme
+           config
+           model={state.newQuickmenu}
+           dispatch={msg => dispatch(Actions.Quickmenu(msg))}
+           font
+         />;
+       } else {
+         React.empty;
+       }}
       {switch (state.quickmenu) {
        | None => React.empty
        | Some(quickmenu) =>
