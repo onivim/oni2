@@ -732,6 +732,7 @@ let update =
 
   | SnippetsLoadedForPicker(snippetsWithMetadata) => 
   let menu = Feature_Quickmenu.Schema.menu(
+    ~onItemSelected=(item: Service_Snippets.SnippetWithMetadata.t) => InsertInternal({snippetString: item.snippet}),
     ~toString=(snippet: Service_Snippets.SnippetWithMetadata.t) => {snippet.prefix ++ ":" ++ snippet.description},
     snippetsWithMetadata,
   );
