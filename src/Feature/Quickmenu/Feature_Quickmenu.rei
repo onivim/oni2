@@ -24,6 +24,15 @@ let initial: model(_);
 
 let show: (~menu: Schema.menu('outmsg), model('outmsg)) => model('outmsg);
 
+let focus: (~index: int, model('outmsg)) => model('outmsg);
+
+let next: model('outmsg) => model('outmsg);
+let prev: model('outmsg) => model('outmsg);
+
+let cancel: model('outmsg) => model('outmsg);
+
+let select: model('outmsg) => (model('outmsg), Isolinear.Effect.t('outmsg));
+
 // UPDATE
 
 type outmsg('action) = 

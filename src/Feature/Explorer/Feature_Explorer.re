@@ -94,12 +94,29 @@ let focusOutline = model => {
     ExpandedState.implicitlyOpen(model.isSymbolOutlineExpanded),
 };
 
-let setRoot = (~rootPath, model) => {
-  ...model,
-  fileExplorer:
-    rootPath
-    |> Option.map(rootPath => Component_FileExplorer.initial(~rootPath)),
-};
+let setRoot = (~rootPath, model) =>
+  if (Option.equal(
+        FpExp.eq,
+        rootPath,
+        model.fileExplorer |> Option.map(Component_FileExplorer.root),
+      )) {
+    model;
+  } else {
+    {
+      ...model,
+      fileExplorer:
+        rootPath
+        |> Option.map(rootPath =>
+             model.fileExplorer
+             |> Option.map(explorer =>
+                  Component_FileExplorer.setRoot(~rootPath, explorer)
+                )
+             |> Option.value(
+                  ~default=Component_FileExplorer.initial(~rootPath),
+                )
+           ),
+    };
+  };
 
 let root = ({fileExplorer, _}) => {
   fileExplorer |> Option.map(Component_FileExplorer.root);

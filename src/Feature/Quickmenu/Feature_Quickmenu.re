@@ -22,6 +22,31 @@ let initial = ();
 
 let show = (~menu, model) => model;
 
+let focus = (~index, model) => {
+    prerr_endline ("!! FOCUS");
+    model
+};
+
+let next = (model) => {
+    prerr_endline("!! NEXT");
+    model
+};
+
+let prev = (model) => {
+    prerr_endline("!! PREV");
+    model;
+}
+
+let cancel = (model) => {
+    prerr_endline ("!! CANCEL");
+    model;
+}
+
+let select = (model) => {
+    prerr_endline ("!! SELECT");
+    (model, Isolinear.Effect.none);
+}
+
 // UPDATE
 
 type outmsg('action) = 
