@@ -18,6 +18,7 @@
 - #3180 - Explorer: Fix explorer disappearing when changing into current path
 - #3183 - Auto-update: Default auto-update channel should match source build
 - #3184 - Explorer: Fix shrinking when changing paths
+- #3160 - Windows: Reload configuration on save
 
 ### Performance
 

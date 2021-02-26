@@ -112,7 +112,6 @@ let other = {
         bool("isMac", _state => Revery.Environment.isMac),
         bool("isWin", _state => Revery.Environment.isWindows),
         bool("sneakMode", state => Feature_Sneak.isActive(state.sneak)),
-        bool("zenMode", state => state.zenMode),
       ],
     )
   );
@@ -174,6 +173,8 @@ let all = (state: State.t) => {
 
   let inputContextKeys = Feature_Input.Contributions.contextKeys(state.input);
 
+  let zenContextKeys = Feature_Zen.Contributions.contextKeys(state.zen);
+
   unionMany([
     Feature_Registers.Contributions.contextKeys(
       ~isFocused=focus == Focus.InsertRegister,
@@ -197,6 +198,7 @@ let all = (state: State.t) => {
     |> Schema.map((state: State.t) => state.quickmenu)
     |> fromSchema(state),
     editors(~isFocused=isEditorFocused) |> fromSchema(state),
+    zenContextKeys,
     Feature_Snippets.Contributions.contextKeys(state.snippets),
     other |> fromSchema(state),
   ]);

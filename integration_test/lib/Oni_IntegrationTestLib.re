@@ -61,7 +61,6 @@ let getAssetPath = path =>
   };
 
 let currentUserSettings = ref(Core.Config.Settings.empty);
-let setUserSettings = settings => currentUserSettings := settings;
 
 module Internal = {
   let prepareEnvironment = () => {
@@ -85,9 +84,9 @@ module Internal = {
 
 let runTest =
     (
+      ~cli=Oni_CLI.default,
       ~configuration=None,
       ~keybindings=None,
-      ~filesToOpen=[],
       ~name="AnonymousTest",
       ~onAfterDispatch=_ => (),
       test: testCallback,
@@ -122,8 +121,6 @@ let runTest =
       | None => Core.Config.Settings.empty
       }
     );
-
-  let getUserSettings = () => Ok(currentUserSettings^);
 
   Vim.init();
   Oni2_KeyboardLayout.init();
@@ -164,16 +161,22 @@ let runTest =
   let keybindingsFilePath =
     writeConfigurationFile("keybindings", keybindings);
 
+  let configurationFilePath =
+    writeConfigurationFile("configuration", configuration);
+
   let keybindingsLoader =
     Feature_Input.KeybindingsLoader.file(keybindingsFilePath);
+
+  let configurationLoader =
+    Feature_Configuration.ConfigurationLoader.file(configurationFilePath);
 
   let currentState =
     ref(
       Model.State.initial(
-        ~cli=Oni_CLI.default,
+        ~cli,
         ~initialBuffer,
         ~initialBufferRenderers=Model.BufferRenderers.initial,
-        ~getUserSettings,
+        ~configurationLoader,
         ~keybindingsLoader,
         ~maybeWorkspace=None,
         ~workingDirectory=Sys.getcwd(),
@@ -217,13 +220,9 @@ let runTest =
 
   InitLog.info("Starting store...");
 
-  let configurationFilePath =
-    writeConfigurationFile("configuration", configuration);
-
   let (dispatch, runEffects) =
     Store.StoreThread.start(
       ~showUpdateChangelog=false,
-      ~getUserSettings,
       ~setup,
       ~onAfterDispatch,
       ~getClipboardText=() => _currentClipboard^,
@@ -237,10 +236,8 @@ let runTest =
       ~executingDirectory=Revery.Environment.getExecutingDirectory(),
       ~getState=() => currentState^,
       ~onStateChanged,
-      ~configurationFilePath=Some(configurationFilePath),
       ~quit,
       ~window=None,
-      ~filesToOpen,
       (),
     );
 

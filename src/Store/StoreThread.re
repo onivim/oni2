@@ -75,8 +75,6 @@ let registerCommands = (~dispatch, commands) => {
 let start =
     (
       ~showUpdateChangelog=true,
-      ~getUserSettings,
-      ~configurationFilePath=None,
       ~onAfterDispatch=_ => (),
       ~setup: Core.Setup.t,
       ~executingDirectory,
@@ -92,11 +90,9 @@ let start =
       ~restore,
       ~raiseWindow,
       ~window: option(Revery.Window.t),
-      ~filesToOpen=[],
       ~overriddenExtensionsDir=None,
       ~shouldLoadExtensions=true,
       ~shouldSyntaxHighlight=true,
-      ~shouldLoadConfiguration=true,
       (),
     ) => {
   ignore(executingDirectory);
@@ -162,13 +158,6 @@ let start =
 
   let quickmenuUpdater = QuickmenuStoreConnector.start();
 
-  let configurationUpdater =
-    ConfigurationStoreConnector.start(
-      ~configurationFilePath,
-      ~setVsync,
-      ~shouldLoadConfiguration,
-      ~filesToOpen,
-    );
   let keyBindingsUpdater = KeyBindingsStoreConnector.start();
 
   let lifecycleUpdater = LifecycleStoreConnector.start(~quit, ~raiseWindow);
@@ -183,7 +172,6 @@ let start =
       quickmenuUpdater,
       vimUpdater,
       extHostUpdater,
-      configurationUpdater,
       keyBindingsUpdater,
       commandUpdater,
       lifecycleUpdater,
@@ -191,16 +179,15 @@ let start =
       Features.update(
         ~grammarRepository,
         ~extHostClient,
-        ~getUserSettings,
-        ~setup,
         ~maximize,
         ~minimize,
         ~close,
         ~restore,
+        ~setVsync,
       ),
     ]);
 
-  let subscriptions = (state: Model.State.t) => {
+  let subscriptions = (~setup, state: Model.State.t) => {
     let config = Model.Selectors.configResolver(state);
     let contextKeys = Model.ContextKeys.all(state);
     let commands = Model.CommandManager.current(state);
@@ -358,10 +345,7 @@ let start =
       );
 
     let fileExplorerSub =
-      Feature_Explorer.sub(
-        ~configuration=state.configuration,
-        state.fileExplorer,
-      )
+      Feature_Explorer.sub(~configuration=state.config, state.fileExplorer)
       |> Isolinear.Sub.map(msg => Model.Actions.FileExplorer(msg));
 
     let languageSupportSub =
@@ -445,13 +429,32 @@ let start =
       |> Feature_Buffers.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
 
-    let getThemeContribution = themeId =>
-      Feature_Extensions.themeById(~id=themeId, state.extensions);
+    let isExthostInitialized = Feature_Exthost.isInitialized(state.exthost);
+    let configurationSub =
+      state.config
+      |> Feature_Configuration.sub(
+           ~setup,
+           ~client=extHostClient,
+           ~isExthostInitialized,
+         )
+      |> Isolinear.Sub.map(msg => Model.Actions.Configuration(msg));
 
     let themeSub =
-      state.colorTheme
-      |> Feature_Theme.sub(~getThemeContribution)
-      |> Isolinear.Sub.map(msg => Model.Actions.Theme(msg));
+      if (Feature_Extensions.hasCompletedDiscovery(state.extensions)) {
+        // If discovery hasn't been completed, theme contributions aren't meaningful.
+        let getThemeContribution = themeId =>
+          Feature_Extensions.themeById(~id=themeId, state.extensions);
+
+        state.colorTheme
+        |> Feature_Theme.sub(~getThemeContribution)
+        |> Isolinear.Sub.map(msg => Model.Actions.Theme(msg));
+      } else {
+        Isolinear.Sub.none;
+      };
+
+    let vimSub =
+      Feature_Vim.sub(state.vim)
+      |> Isolinear.Sub.map(msg => Model.Actions.Vim(msg));
 
     [
       menuBarSub,
@@ -472,7 +475,9 @@ let start =
       inputSubscription,
       notificationSub,
       bufferSub,
+      configurationSub,
       themeSub,
+      vimSub,
     ]
     |> Isolinear.Sub.batch;
   };
@@ -484,7 +489,7 @@ let start =
 
       let initial = getState();
       let updater = updater;
-      let subscriptions = subscriptions;
+      let subscriptions = subscriptions(~setup);
     });
 
   let _unsubscribe: unit => unit = Store.onModelChanged(onStateChanged);

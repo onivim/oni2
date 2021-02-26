@@ -1,23 +1,46 @@
 open Oni_Core;
 open Oni_Core.Utility;
 
+module Log = (val Oni_Core.Log.withNamespace("Feature_Vim"));
+
 // MODEL
 
 type model = {
   settings: StringMap.t(Vim.Setting.value),
   recordingMacro: option(char),
   subMode: Vim.SubMode.t,
+  experimentalViml: list(string),
 };
 
 let initial = {
   settings: StringMap.empty,
   recordingMacro: None,
   subMode: Vim.SubMode.None,
+  experimentalViml: [],
+};
+
+module Configuration = {
+  type resolver = string => option(Vim.Setting.value);
+
+  let resolver = ({settings, _}, settingName) => {
+    settings |> StringMap.find_opt(settingName);
+  };
+
+  open Config.Schema;
+
+  let experimentalViml =
+    setting("experimental.viml", list(string), ~default=[]);
+};
+
+let configurationChanged = (~config, model) => {
+  {...model, experimentalViml: Configuration.experimentalViml.get(config)};
 };
 
 let recordingMacro = ({recordingMacro, _}) => recordingMacro;
 
 let subMode = ({subMode, _}) => subMode;
+
+let experimentalViml = ({experimentalViml, _}) => experimentalViml;
 
 // MSG
 
@@ -37,7 +60,8 @@ type msg =
   | Output({
       cmd: string,
       output: option(string),
-    });
+    })
+  | Noop;
 
 type outmsg =
   | Nothing
@@ -53,6 +77,23 @@ type outmsg =
       output: option(string),
     });
 
+module Effects = {
+  let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
+    let toMsg = mode =>
+      ModeChanged({
+        allowAnimation: true,
+        subMode: Vim.SubMode.None,
+        mode,
+        effects: [],
+      });
+    Service_Vim.Effects.applyCompletion(
+      ~meetColumn,
+      ~insertText,
+      ~additionalEdits,
+      ~toMsg,
+    );
+  };
+};
 let update = (msg, model: model) => {
   switch (msg) {
   | ModeChanged({allowAnimation, mode, effects, subMode}) => (
@@ -81,6 +122,8 @@ let update = (msg, model: model) => {
   | MacroRecordingStopped => ({...model, recordingMacro: None}, Nothing)
 
   | Output({cmd, output}) => (model, Output({cmd, output}))
+
+  | Noop => (model, Nothing)
   };
 };
 
@@ -122,30 +165,10 @@ module CommandLine = {
   };
 };
 
-module Effects = {
-  let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
-    let toMsg = mode =>
-      ModeChanged({
-        allowAnimation: true,
-        subMode: Vim.SubMode.None,
-        mode,
-        effects: [],
-      });
-    Service_Vim.Effects.applyCompletion(
-      ~meetColumn,
-      ~insertText,
-      ~additionalEdits,
-      ~toMsg,
-    );
-  };
-};
+// SUBSCRIPTION
 
-module Configuration = {
-  type resolver = string => option(Vim.Setting.value);
-
-  let resolver = ({settings, _}, settingName) => {
-    settings |> StringMap.find_opt(settingName);
-  };
+let sub = _model => {
+  Isolinear.Sub.none;
 };
 
 module Keybindings = {
@@ -161,4 +184,6 @@ module Keybindings = {
 
 module Contributions = {
   let keybindings = Keybindings.[controlSquareBracketRemap];
+
+  let configuration = Configuration.[experimentalViml.spec];
 };

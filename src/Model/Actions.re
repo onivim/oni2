@@ -22,12 +22,6 @@ type t =
     })
   | Commands(Feature_Commands.msg(t))
   | Configuration(Feature_Configuration.msg)
-  | ConfigurationParseError(string)
-  | ConfigurationReload
-  | ConfigurationSet([@opaque] Configuration.t)
-  // ConfigurationTransform(fileName, f) where [f] is a configurationTransformer
-  // opens the file [fileName] and applies [f] to the loaded JSON.
-  | ConfigurationTransform(string, configurationTransformer)
   | Decorations(Feature_Decorations.msg)
   | Diagnostics(Feature_Diagnostics.msg)
   | EditorFont(Service_Font.msg)
@@ -136,8 +130,6 @@ type t =
   | ThemeSelected(string)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
-  | EnableZenMode
-  | DisableZenMode
   | CopyActiveFilepathToClipboard
   | SCM(Feature_SCM.msg)
   | Search(Feature_Search.msg)
@@ -171,7 +163,10 @@ type t =
   | Vim(Feature_Vim.msg)
   | TabPage(Vim.TabPage.effect)
   | Yank({range: [@opaque] VisualRange.t})
+  | Zen(Feature_Zen.msg)
   | Zoom(Feature_Zoom.msg)
+  // TEMPORARY imperative actions
+  | SynchronizeExperimentalViml(list(string))
   | Noop
 and command = {
   commandCategory: option(string),

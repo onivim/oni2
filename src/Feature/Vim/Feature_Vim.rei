@@ -8,6 +8,8 @@ let recordingMacro: model => option(char);
 
 let subMode: model => Vim.SubMode.t;
 
+let experimentalViml: model => list(string);
+
 // MSG
 
 [@deriving show]
@@ -26,7 +28,8 @@ type msg =
   | Output({
       cmd: string,
       output: option(string),
-    });
+    })
+  | Noop;
 
 type outmsg =
   | Nothing
@@ -58,7 +61,13 @@ module Effects: {
     Isolinear.Effect.t(msg);
 };
 
+// SUBSCRIPTION
+
+let sub: model => Isolinear.Sub.t(msg);
+
 // CONFIGURATION
+
+let configurationChanged: (~config: Oni_Core.Config.resolver, model) => model;
 
 module Configuration: {
   type resolver = string => option(Vim.Setting.value);
@@ -66,5 +75,7 @@ module Configuration: {
   let resolver: model => resolver;
 };
 
-module Contributions: {let keybindings: list(Feature_Input.Schema.keybinding);
+module Contributions: {
+  let keybindings: list(Feature_Input.Schema.keybinding);
+  let configuration: list(Oni_Core.Config.Schema.spec);
 };

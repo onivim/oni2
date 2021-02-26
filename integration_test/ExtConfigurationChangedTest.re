@@ -23,13 +23,16 @@ runTest(~name="ExtConfigurationChangedTest", ({dispatch, wait, _}) => {
     )
   );
 
-  // Change setting
-  setUserSettings(
-    Config.Settings.fromList([
-      ("developer.oni.test", Json.Encode.string("42")),
-    ]),
+  dispatch(
+    Actions.Configuration(
+      Feature_Configuration.Testing.transform(
+        ConfigurationTransformer.setField(
+          "developer.oni.test",
+          `String("42"),
+        ),
+      ),
+    ),
   );
-  dispatch(Actions.Configuration(UserSettingsChanged));
 
   // Should get completions
   wait(

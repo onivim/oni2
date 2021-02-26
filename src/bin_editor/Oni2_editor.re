@@ -262,8 +262,6 @@ switch (eff) {
     Log.debug("Initializing setup.");
     let setup = Core.Setup.init();
 
-    let getUserSettings = Feature_Configuration.UserSettingsProvider.getSettings;
-
     let initialBuffer = {
       let Vim.BufferMetadata.{id, version, filePath, modified, _} =
         Vim.Buffer.openFile(Core.BufferPath.welcome)
@@ -310,13 +308,29 @@ switch (eff) {
          )
       |> Result.value(~default=Feature_Input.KeybindingsLoader.none);
 
+    let configurationLoader =
+      Feature_Configuration.(
+        if (!cliOptions.shouldLoadConfiguration) {
+          ConfigurationLoader.none;
+        } else {
+          Oni_Core.Filesystem.getOrCreateConfigFile("configuration.json")
+          |> Result.map(ConfigurationLoader.file)
+          |> Oni_Core.Utility.ResultEx.tapError(msg =>
+               Log.errorf(m =>
+                 m("Error initializing configurationj file: %s", msg)
+               )
+             )
+          |> Result.value(~default=ConfigurationLoader.none);
+        }
+      );
+
     let currentState =
       ref(
         Model.State.initial(
           ~cli=cliOptions,
           ~initialBuffer,
           ~initialBufferRenderers,
-          ~getUserSettings,
+          ~configurationLoader,
           ~keybindingsLoader,
           ~extensionGlobalPersistence,
           ~extensionWorkspacePersistence,
@@ -432,7 +446,6 @@ switch (eff) {
     Log.debug("Startup: Starting StoreThread");
     let (dispatch, runEffects) =
       Store.StoreThread.start(
-        ~getUserSettings,
         ~setup,
         ~getClipboardText=() => Sdl2.Clipboard.getText(),
         ~setClipboardText=text => Sdl2.Clipboard.setText(text),
@@ -446,10 +459,8 @@ switch (eff) {
         ~raiseWindow,
         ~close,
         ~window=Some(window),
-        ~filesToOpen=cliOptions.filesToOpen,
         ~shouldLoadExtensions=cliOptions.shouldLoadConfiguration,
         ~shouldSyntaxHighlight=cliOptions.shouldSyntaxHighlight,
-        ~shouldLoadConfiguration=cliOptions.shouldLoadConfiguration,
         ~overriddenExtensionsDir=cliOptions.overriddenExtensionsDir,
         ~quit,
         (),

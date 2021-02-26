@@ -20,14 +20,17 @@ let reduce: (State.t, Actions.t) => State.t =
 
       switch (a) {
       // Turn off zenMode with :vsp/:sp
-      | OpenFileByPath(_, Some(_), _) => {...s, zenMode: false}
-      | PreviewFileByPath(_, Some(_), _) => {...s, zenMode: false}
-      // TODO:
+      | OpenFileByPath(_, Some(_), _) => {
+          ...s,
+          zen: Feature_Zen.exitZenMode(s.zen),
+        }
+      | PreviewFileByPath(_, Some(_), _) => {
+          ...s,
+          zen: Feature_Zen.exitZenMode(s.zen),
+        }
       | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetGrammarRepository(grammarRepository) => {...s, grammarRepository}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
-      | EnableZenMode => {...s, zenMode: true}
-      | DisableZenMode => {...s, zenMode: false}
       | ReallyQuitting => {...s, isQuitting: true}
       | WindowFocusGained => {...s, windowIsFocused: true}
       | WindowFocusLost => {...s, windowIsFocused: false}

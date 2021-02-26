@@ -55,21 +55,9 @@ let create =
         dispatch(Actions.CommandInvoked({command, arguments: `List(args)}));
         Lwt.return(Reply.okEmpty);
 
-      | Configuration(RemoveConfigurationOption({key, _})) =>
+      | Configuration(msg) =>
         dispatch(
-          Actions.ConfigurationTransform(
-            "configuration.json",
-            ConfigurationTransformer.removeField(key),
-          ),
-        );
-        Lwt.return(Reply.okEmpty);
-
-      | Configuration(UpdateConfigurationOption({key, value, _})) =>
-        dispatch(
-          Actions.ConfigurationTransform(
-            "configuration.json",
-            ConfigurationTransformer.setField(key, value),
-          ),
+          Actions.Configuration(Feature_Configuration.Msg.exthost(msg)),
         );
         Lwt.return(Reply.okEmpty);
 
@@ -303,9 +291,9 @@ let create =
     Exthost.Client.start(
       ~initialConfiguration=
         Feature_Configuration.toExtensionConfiguration(
+          ~setup,
+          ~additionalExtensions=extensions,
           config,
-          extensions,
-          setup,
         ),
       ~initialWorkspace,
       ~namedPipe,

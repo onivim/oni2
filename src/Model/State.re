@@ -395,7 +395,6 @@ type t = {
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   config: Feature_Configuration.model,
-  configuration: Configuration.t,
   decorations: Feature_Decorations.model,
   diagnostics: Feature_Diagnostics.model,
   editorFont: Service_Font.font,
@@ -430,7 +429,7 @@ type t = {
   windowDisplayMode,
   titlebarHeight: float,
   workspace: Feature_Workspace.model,
-  zenMode: bool,
+  zen: Feature_Zen.model,
   // State of the bottom pane
   pane: Feature_Pane.model,
   searchPane: Feature_Search.model,
@@ -451,7 +450,7 @@ let initial =
       ~initialBufferRenderers,
       ~extensionGlobalPersistence,
       ~extensionWorkspacePersistence,
-      ~getUserSettings,
+      ~configurationLoader,
       ~keybindingsLoader,
       ~workingDirectory,
       ~maybeWorkspace,
@@ -463,7 +462,7 @@ let initial =
     ) => {
   let config =
     Feature_Configuration.initial(
-      ~getUserSettings,
+      ~loader=configurationLoader,
       [
         Feature_AutoUpdate.Contributions.configuration,
         Feature_Buffers.Contributions.configuration,
@@ -479,6 +478,8 @@ let initial =
         Feature_Layout.Contributions.configuration,
         Feature_StatusBar.Contributions.configuration,
         Feature_TitleBar.Contributions.configuration,
+        Feature_Vim.Contributions.configuration,
+        Feature_Zen.Contributions.configuration,
         Feature_Zoom.Contributions.configuration,
       ],
     );
@@ -511,7 +512,6 @@ let initial =
       ]),
     commands: Feature_Commands.initial([]),
     config,
-    configuration: Configuration.default,
     decorations: Feature_Decorations.initial,
     diagnostics: Feature_Diagnostics.initial,
     input:
@@ -562,7 +562,8 @@ let initial =
         workingDirectory,
       ),
     fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),
-    zenMode: false,
+    zen:
+      Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
     pane: Feature_Pane.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,

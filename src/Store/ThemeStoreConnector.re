@@ -10,17 +10,10 @@ open Oni_Model;
 module Log = (val Log.withNamespace("Oni2.Store.Theme"));
 
 let start = () => {
-  let persistThemeEffect = name =>
-    Isolinear.Effect.createWithDispatch(~name="theme.persistTheme", dispatch =>
-      dispatch(
-        Actions.ConfigurationTransform(
-          "configuration.json",
-          Oni_Core.ConfigurationTransformer.setField(
-            "workbench.colorTheme",
-            `String(name),
-          ),
-        ),
-      )
+  let themeTransformer = name =>
+    Oni_Core.ConfigurationTransformer.setField(
+      "workbench.colorTheme",
+      `String(name),
     );
 
   let updater = (state: State.t, action: Actions.t) => {
@@ -48,12 +41,15 @@ let start = () => {
       }
 
     | Actions.ThemeSelected(themeId) => (
-        state,
-        Isolinear.Effect.batch([
-          // Persisting the theme will trigger a configuration changed,
-          // which will cause the new theme to be picked up.
-          persistThemeEffect(themeId),
-        ]),
+        {
+          ...state,
+          config:
+            Feature_Configuration.queueTransform(
+              ~transformer=themeTransformer(themeId),
+              state.config,
+            ),
+        },
+        Isolinear.Effect.none,
       )
 
     | _ => (state, Isolinear.Effect.none)

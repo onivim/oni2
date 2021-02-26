@@ -35,7 +35,7 @@ type outmsg =
 let update:
   (
     ~config: Config.resolver,
-    ~configuration: Oni_Core.Configuration.t,
+    ~configuration: Feature_Configuration.model,
     msg,
     model
   ) =>
@@ -44,7 +44,7 @@ let update:
 // SUBSCRIPTION
 
 let sub:
-  (~configuration: Oni_Core.Configuration.t, model) => Isolinear.Sub.t(msg);
+  (~configuration: Feature_Configuration.model, model) => Isolinear.Sub.t(msg);
 
 // VIEW
 

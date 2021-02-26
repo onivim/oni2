@@ -216,6 +216,29 @@ module Editor = {
     setting("editor.largeFileOptimizations", bool, ~default=true);
 };
 
+let vsync =
+  setting(
+    "vsync",
+    custom(
+      ~decode=
+        Json.Decode.(
+          bool
+          |> map(
+               fun
+               | true => Revery.Vsync.Synchronized
+               | false => Revery.Vsync.Immediate,
+             )
+        ),
+      ~encode=
+        Json.Encode.(
+          fun
+          | Revery.Vsync.Synchronized => bool(true)
+          | Revery.Vsync.Immediate => bool(false)
+        ),
+    ),
+    ~default=Revery.Vsync.Immediate,
+  );
+
 module Explorer = {
   let autoReveal =
     setting(
@@ -240,6 +263,7 @@ let contributions = [
   inactiveWindowOpacity.spec,
   animation.spec,
   shadows.spec,
+  vsync.spec,
   Editor.codeLensEnabled.spec,
   Editor.largeFileOptimizations.spec,
   Editor.snippetSuggestions.spec,

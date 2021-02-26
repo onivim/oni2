@@ -88,6 +88,12 @@ let snippetFilePaths = (~fileType, model) => {
   );
 };
 
+let hasCompletedDiscovery = ({extensions, _}) => {
+  // TODO: This logic will need to be updated when async
+  // discovery is implemented
+  extensions != [];
+};
+
 module ListView = ListView;
 module DetailsView = DetailsView;
 
