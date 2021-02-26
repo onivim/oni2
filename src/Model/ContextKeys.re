@@ -174,8 +174,8 @@ let all = (state: State.t) => {
   let inputContextKeys = Feature_Input.Contributions.contextKeys(state.input);
 
   let zenContextKeys = Feature_Zen.Contributions.contextKeys(state.zen);
-  let newQuickmenuContextKeys =
-    Feature_Quickmenu.Contributions.contextKeys(state.newQuickmenu);
+  // let newQuickmenuContextKeys =
+  //   Feature_Quickmenu.Contributions.contextKeys(state.newQuickmenu);
 
   unionMany([
     Feature_Registers.Contributions.contextKeys(
@@ -196,12 +196,12 @@ let all = (state: State.t) => {
     Feature_LanguageSupport.Contributions.contextKeys
     |> Schema.map(({languageSupport, _}: State.t) => languageSupport)
     |> fromSchema(state),
-    menus(~isFocused=focus == Focus.Quickmenu || focus == Focus.Wildmenu)
+    menus(~isFocused=focus == Focus.Quickmenu || focus == Focus.Wildmenu || focus == Focus.NewQuickmenu)
     |> Schema.map((state: State.t) => state.quickmenu)
     |> fromSchema(state),
     editors(~isFocused=isEditorFocused) |> fromSchema(state),
     zenContextKeys,
-    newQuickmenuContextKeys,
+    //newQuickmenuContextKeys,
     Feature_Snippets.Contributions.contextKeys(state.snippets),
     other |> fromSchema(state),
   ]);

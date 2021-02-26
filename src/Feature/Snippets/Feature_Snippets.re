@@ -391,7 +391,7 @@ type outmsg =
   | ErrorMessage(string)
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
-  | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
+  | ShowMenu(Feature_Quickmenu.Schema.menu(msg))
   | ShowFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
   | OpenFile(FpExp.t(FpExp.absolute))
   | Nothing;
@@ -730,9 +730,14 @@ let update =
 
   | SnippetFileCreationError(msg) => (model, ErrorMessage(msg))
 
-  | SnippetsLoadedForPicker(snippetsWithMetadata) => (
+  | SnippetsLoadedForPicker(snippetsWithMetadata) => 
+  let menu = Feature_Quickmenu.Schema.menu(
+    ~toString=(snippet: Service_Snippets.SnippetWithMetadata.t) => {snippet.prefix ++ ":" ++ snippet.description},
+    snippetsWithMetadata,
+  );
+    (
       model,
-      ShowPicker(snippetsWithMetadata),
+      ShowMenu(menu)
     )
 
   | SnippetFilesLoadedForPicker(snippetFiles) => (

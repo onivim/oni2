@@ -2,7 +2,7 @@
  (name Feature_Snippets)
  (public_name Oni2.feature.snippets)
  (inline_tests)
- (libraries Oni2.core Oni2.components Oni2.feature.menubar Oni2.feature.theme
+ (libraries Oni2.core Oni2.components Oni2.feature.menubar Oni2.feature.quickmenu Oni2.feature.theme
    Oni2.service.os Oni2.feature.extensions Oni2.service.snippets
    Oni2.service.vim Revery isolinear)
  (preprocess

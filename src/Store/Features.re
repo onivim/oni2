@@ -1845,10 +1845,11 @@ let update =
       };
     };
 
-    let (layout', eff) =
+    let (quickmenu', layout', eff) =
       switch (outmsg) {
-      | Nothing => (state.layout, Isolinear.Effect.none)
+      | Nothing => (state.newQuickmenu, state.layout, Isolinear.Effect.none)
       | ErrorMessage(msg) => (
+          state.newQuickmenu,
           state.layout,
           Internal.notificationEffect(~kind=Error, msg),
         )
@@ -1864,7 +1865,7 @@ let update =
                  }
                )
              );
-        (layout', Isolinear.Effect.none);
+        (state.newQuickmenu, layout', Isolinear.Effect.none);
       | SetSelections(ranges) =>
         let layout' =
           state.layout
@@ -1877,7 +1878,14 @@ let update =
                  }
                )
              );
-        (layout', Isolinear.Effect.none);
+        (state.newQuickmenu, layout', Isolinear.Effect.none);
+
+      | ShowMenu(snippetMenu) =>
+        let menu = snippetMenu
+        |> Feature_Quickmenu.Schema.map(msg => Actions.Snippets(msg));
+        let quickmenu' = Feature_Quickmenu.show(~menu, state.newQuickmenu);
+        (quickmenu', state.layout, Isolinear.Effect.none);
+        
 
       | ShowFilePicker(snippetFiles) =>
         let eff =
@@ -1885,23 +1893,16 @@ let update =
             ~name="snippet.fileMenu", dispatch => {
             dispatch(Actions.QuickmenuShow(SnippetFilePicker(snippetFiles)))
           });
-        (state.layout, eff);
-
-      | ShowPicker(snippetsWithMetadata) =>
-        let eff =
-          Isolinear.Effect.createWithDispatch(~name="snippet.menu", dispatch => {
-            dispatch(
-              Actions.QuickmenuShow(SnippetPicker(snippetsWithMetadata)),
-            )
-          });
-        (state.layout, eff);
+        (state.newQuickmenu, state.layout, eff);
 
       | OpenFile(filePath) => (
+          state.newQuickmenu,
           state.layout,
           Internal.openFileEffect(FpExp.toString(filePath)),
         )
 
       | Effect(eff) => (
+          state.newQuickmenu,
           state.layout,
           eff |> Isolinear.Effect.map(msg => Actions.Snippets(msg)),
         )
@@ -1914,6 +1915,7 @@ let update =
         ...state,
         layout: layout',
         languageSupport: languageSupport',
+        newQuickmenu: quickmenu',
         snippets: snippets',
       },
       eff,
