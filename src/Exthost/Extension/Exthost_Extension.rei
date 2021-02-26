@@ -1,3 +1,5 @@
+open Oni_Core;
+
 module LocalizationDictionary: {
   type t;
 
@@ -208,7 +210,8 @@ module Scanner: {
   };
 
   let load: (~category: category, string) => option(ScanResult.t);
-  let scan: (~category: category, Fp.t(Fp.absolute)) => list(ScanResult.t);
+  let scan:
+    (~category: category, FpExp.t(FpExp.absolute)) => list(ScanResult.t);
 };
 
 module InitData: {
@@ -245,13 +248,13 @@ module InitData: {
       globalStorageHome: option(Oni_Core.Uri.t),
       workspaceStorageHome: option(Oni_Core.Uri.t),
       userHome: option(Oni_Core.Uri.t),
+      webviewResourceRoot: string,
+      webviewCspSource: string,
       // TODO
       /*
        appLanguage: string,
        appUriScheme: string,
        appSettingsHome: option(Uri.t),
-       webviewResourceRoot: string,
-       webviewCspSource: string,
        useHostProxy: boolean,
        */
     };

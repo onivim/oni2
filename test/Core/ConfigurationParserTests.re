@@ -27,19 +27,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
     });
   });
 
-  test("empty configuration", ({expect, _}) => {
-    let emptyConfiguration = "{}";
-
-    switch (ConfigurationParser.ofString(emptyConfiguration)) {
-    | Ok(v) =>
-      expect.string(Configuration.getValue(c => c.workbenchIconTheme, v)).
-        toEqual(
-        "vs-seti",
-      )
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
   test("vimUseSystemClipboard value", ({expect, _}) => {
     let configuration = {|
       { "vim.useSystemClipboard": [] }
@@ -118,102 +105,6 @@ describe("ConfigurationParser", ({test, describe, _}) => {
         "second thing",
         "third thing",
       ])
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
-  test("font ligatures (list)", ({expect, _}) => {
-    let configuration = {|
-    { "editor.fontLigatures": "'ss01', 'ss02', 'calt'" }
-    |};
-    let expected = `List(["ss01", "ss02", "calt"]);
-
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(v) =>
-      expect.equal(
-        expected,
-        Configuration.getValue(c => c.editorFontLigatures, v),
-      )
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
-  test("font ligatures (list, malformed)", ({expect, _}) => {
-    let configuration = {|
-    { "editor.fontLigatures": "'ss01', 'ss02' 'calt'" }
-    |};
-    let expected = `Bool(true);
-
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(v) =>
-      expect.equal(
-        expected,
-        Configuration.getValue(c => c.editorFontLigatures, v),
-      )
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
-  test("autoReveal bool(true) setting", ({expect, _}) => {
-    let configuration = {|
-    { "explorer.autoReveal": true }
-    |};
-    let expected = `HighlightAndScroll;
-
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(v) =>
-      expect.equal(
-        expected,
-        Configuration.getValue(c => c.explorerAutoReveal, v),
-      )
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
-  test("autoReveal bool(false) setting", ({expect, _}) => {
-    let configuration = {|
-    { "explorer.autoReveal": false }
-    |};
-    let expected = `NoReveal;
-
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(v) =>
-      expect.equal(
-        expected,
-        Configuration.getValue(c => c.explorerAutoReveal, v),
-      )
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
-  test("autoReveal focusNoScroll string setting", ({expect, _}) => {
-    let configuration = {|
-    { "explorer.autoReveal": "focusNoScroll" }
-    |};
-    let expected = `HighlightOnly;
-
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(v) =>
-      expect.equal(
-        expected,
-        Configuration.getValue(c => c.explorerAutoReveal, v),
-      )
-    | Error(_) => expect.bool(false).toBe(true)
-    };
-  });
-
-  test("autoReveal 'bad string' setting", ({expect, _}) => {
-    let configuration = {|
-    { "explorer.autoReveal": "rocinante" }
-    |};
-    let expected = `NoReveal;
-
-    switch (ConfigurationParser.ofString(configuration)) {
-    | Ok(v) =>
-      expect.equal(
-        expected,
-        Configuration.getValue(c => c.explorerAutoReveal, v),
-      )
     | Error(_) => expect.bool(false).toBe(true)
     };
   });

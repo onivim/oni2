@@ -198,7 +198,19 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     let newState = {...state, input};
 
-    updateFromInput(newState, /*Some("Text: " ++ text),*/ actions);
+    updateFromInput(newState, actions);
+  };
+
+  let handleTimeout = (state: State.t) => {
+    let context = Model.ContextKeys.all(state);
+    let (input, effects) = Feature_Input.timeout(~context, state.input);
+
+    let actions =
+      effects |> List.map(effectToActions(state)) |> List.flatten;
+
+    let newState = {...state, input};
+
+    updateFromInput(newState, actions);
   };
 
   let handleKeyUp = (~scancode, state: State.t) => {
@@ -223,6 +235,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       handleKeyPress(~scancode, state, time, key)
 
     | KeyUp({scancode, _}) => handleKeyUp(~scancode, state)
+
+    | KeyTimeout => handleTimeout(state)
 
     | TextInput(text, time) => handleTextInput(state, time, text)
 

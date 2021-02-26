@@ -329,6 +329,11 @@ module Effects = {
     Isolinear.Effect.createWithDispatch(~name="notification.dismiss", dispatch =>
       dispatch(Dismissed({id: notification.id}))
     );
+
+  let clear = () =>
+    Isolinear.Effect.createWithDispatch(~name="notification.clear", dispatch =>
+      dispatch(Clear({count: 0}))
+    );
 };
 
 let sub = (model: model) => {

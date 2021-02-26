@@ -44,13 +44,17 @@ module Api = {
   };
 
   let readdir = path => {
+    Log.infof(m => m("readdir called for: %s", path));
     path
     |> Internal.opendir
     |> bind(dir => {
          Internal.readdir(dir) |> Lwt.map(items => (dir, items))
        })
     |> bind(((dir, results: array(Luv.File.Dirent.t))) => {
-         Internal.closedir(dir) |> Lwt.map(() => results |> Array.to_list)
+         Log.infof(m =>
+           m("readdir returned %d items", Array.length(results))
+         );
+         Internal.closedir(dir) |> Lwt.map(() => results |> Array.to_list);
        });
   };
 
@@ -278,7 +282,10 @@ module Effect = {
         let selectedFolders = maybeFolders |> Option.value(~default=[||]);
 
         if (Array.length(selectedFolders) > 0) {
-          selectedFolders[0] |> Fp.absoluteCurrentPlatform |> toMsg |> dispatch;
+          selectedFolders[0]
+          |> FpExp.absoluteCurrentPlatform
+          |> toMsg
+          |> dispatch;
         } else {
           None |> toMsg |> dispatch;
         };

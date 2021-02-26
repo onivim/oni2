@@ -23,7 +23,7 @@ module Settings: {
 
   let fromList: list((string, Json.t)) => t;
   let fromJson: Json.t => t;
-  let fromFile: Fp.t(Fp.absolute) => t;
+  let fromFile: FpExp.t(FpExp.absolute) => t;
 
   let get: (key, t) => option(Json.t);
 
@@ -69,6 +69,7 @@ module Schema: {
     let float: codec(float);
     let string: codec(string);
     let list: codec('a) => codec(list('a));
+    let nullable: codec('a) => codec(option('a));
 
     let custom:
       (~decode: Json.decoder('a), ~encode: Json.encoder('a)) => codec('a);
@@ -92,6 +93,7 @@ module Schema: {
   let float: codec(float);
   let string: codec(string);
   let list: codec('a) => codec(list('a));
+  let nullable: codec('a) => codec(option('a));
 
   let vim: (string, VimSetting.t => 'a) => vimSetting('a);
   let vim2:

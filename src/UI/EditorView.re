@@ -63,9 +63,9 @@ module Parts = {
         bufferHighlights={state.bufferHighlights}
         bufferSyntaxHighlights={state.syntaxHighlights}
         diagnostics={state.diagnostics}
-        scm={state.scm}
+        buffers={state.buffers}
         snippets={state.snippets}
-        tokenTheme={state.tokenTheme}
+        tokenTheme={state.colorTheme |> Feature_Theme.tokenColors}
         languageSupport={state.languageSupport}
         windowIsFocused={state.windowIsFocused}
         perFileTypeConfig={Feature_Configuration.resolver(
@@ -163,7 +163,7 @@ module Parts = {
       | ExtensionDetails =>
         <Feature_Extensions.DetailsView
           model={state.extensions}
-          tokenTheme={state.tokenTheme}
+          tokenTheme={state.colorTheme |> Feature_Theme.tokenColors}
           theme
           font=uiFont
           dispatch={msg => dispatch(Actions.Extensions(msg))}
@@ -281,9 +281,12 @@ let make =
       <Parts.EditorContainer editor state theme isActive dispatch />;
   };
 
+  let config = Selectors.configResolver(state);
+
   let editorShowTabs =
-    state.configuration
-    |> Oni_Core.Configuration.getValue(c => c.workbenchEditorShowTabs);
+    Feature_Configuration.GlobalConfiguration.Workbench.editorShowTabs.get(
+      config,
+    );
 
   let hideZenModeTabs =
     state.configuration
@@ -301,7 +304,7 @@ let make =
       isZenMode={state.zenMode}
       showTabs
       model={state.layout}
-      config={Selectors.configResolver(state)}
+      config
       dispatch={msg => dispatch(Actions.Layout(msg))}>
       ...(module ContentProvider)
     </Feature_Layout.View>

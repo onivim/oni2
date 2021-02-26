@@ -30,11 +30,11 @@ let editor = (editor, buffer, state: State.t) => {
     bufferHighlights={state.bufferHighlights}
     bufferSyntaxHighlights={state.syntaxHighlights}
     diagnostics={state.diagnostics}
-    tokenTheme={state.tokenTheme}
+    tokenTheme={state.colorTheme |> Feature_Theme.tokenColors}
     languageSupport={state.languageSupport}
     theme={Feature_Theme.colors(state.colorTheme)}
     windowIsFocused=true
-    scm=Feature_SCM.initial
+    buffers=Feature_Buffers.empty
     perFileTypeConfig={configResolver(
       Config.Settings.empty,
       Feature_Vim.initial,

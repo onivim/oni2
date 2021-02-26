@@ -15,7 +15,7 @@ module Constants = {
 
 let start =
     (
-      ~configurationFilePath: option(Fp.t(Fp.absolute)),
+      ~configurationFilePath: option(FpExp.t(FpExp.absolute)),
       ~setVsync,
       ~shouldLoadConfiguration,
       ~filesToOpen,
@@ -87,7 +87,7 @@ let start =
       dispatch(Actions.Configuration(UserSettingsChanged));
       defaultConfigurationFileName
       |> getConfigurationFile
-      |> Result.map(Fp.toString)
+      |> Result.map(FpExp.toString)
       |> (
         result =>
           Stdlib.Result.bind(result, ConfigurationParser.ofFile)
@@ -109,8 +109,8 @@ let start =
       Log.error("Unable to load configuration: " ++ msg);
       Isolinear.Effect.none;
     | Ok(configPath) =>
-      // TODO: Fp.t all the way...
-      let configPath = Fp.toString(configPath);
+      // TODO: FpExp.t all the way...
+      let configPath = FpExp.toString(configPath);
       if (!Feature_Buffers.isModifiedByPath(buffers, configPath)) {
         Oni_Core.Log.perf("Apply configuration transform", () => {
           let parsedJson = Yojson.Safe.from_file(configPath);
@@ -140,7 +140,7 @@ let start =
 
         defaultConfigurationFileName
         |> getConfigurationFile
-        |> Result.map(Fp.toString)
+        |> Result.map(FpExp.toString)
         // Once we know the path - register a listener to reload
         |> ResultEx.tap(configPath =>
              reloadConfigOnWritePost(~configPath, dispatch)
@@ -173,7 +173,7 @@ let start =
       ~name="configuration.openFile", dispatch =>
       switch (Filesystem.getOrCreateConfigFile(filePath)) {
       | Ok(path) =>
-        dispatch(Actions.OpenFileByPath(path |> Fp.toString, None, None))
+        dispatch(Actions.OpenFileByPath(path |> FpExp.toString, None, None))
       | Error(e) => onError(~dispatch, e)
       }
     );

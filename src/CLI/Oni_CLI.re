@@ -3,6 +3,7 @@
  *
  * Module for handling command-line arguments for Oni2
  */
+open Oni_Core;
 open Kernel;
 open Rench;
 
@@ -14,7 +15,7 @@ type t = {
   folder: option(string),
   filesToOpen: list(string),
   forceScaleFactor: option(float),
-  overriddenExtensionsDir: option(Fp.t(Fp.absolute)),
+  overriddenExtensionsDir: option(FpExp.t(FpExp.absolute)),
   shouldLoadExtensions: bool,
   shouldLoadConfiguration: bool,
   shouldSyntaxHighlight: bool,
@@ -91,6 +92,7 @@ let parse = (~getenv: string => option(string), args) => {
 
   let attachToForeground = ref(false);
   let logLevel = ref(None);
+  let isSilent = ref(false);
   let logFile = ref(None);
   let logFilter = ref(None);
   let logColorsEnabled = ref(None);
@@ -141,7 +143,16 @@ let parse = (~getenv: string => option(string), args) => {
       ("--debug", Unit(() => logLevel := Some(Timber.Level.debug)), ""),
       ("--trace", Unit(() => logLevel := Some(Timber.Level.trace)), ""),
       ("--quiet", Unit(() => logLevel := Some(Timber.Level.warn)), ""),
-      ("--silent", Unit(() => logLevel := None), ""),
+      (
+        "--silent",
+        Unit(
+          () => {
+            logLevel := None;
+            isSilent := true;
+          },
+        ),
+        "",
+      ),
       ("--version", setEffect(PrintVersion), ""),
       ("--no-log-colors", Unit(() => logColorsEnabled := Some(false)), ""),
       ("--disable-extensions", Unit(disableExtensionLoading), ""),
@@ -192,7 +203,7 @@ let parse = (~getenv: string => option(string), args) => {
     };
 
   let needsConsole =
-    Option.is_some(logLevel^)
+    (isSilent^ || Option.is_some(logLevel^))
     && attachToForeground^
     || shouldAlwaysAllocateConsole;
 
@@ -271,7 +282,8 @@ let parse = (~getenv: string => option(string), args) => {
     forceScaleFactor: scaleFactor^,
     gpuAcceleration: gpuAcceleration^,
     overriddenExtensionsDir:
-      extensionsDir^ |> Utility.OptionEx.flatMap(Fp.absoluteCurrentPlatform),
+      extensionsDir^
+      |> Utility.OptionEx.flatMap(FpExp.absoluteCurrentPlatform),
     shouldLoadExtensions: shouldLoadExtensions^,
     shouldLoadConfiguration: shouldLoadConfiguration^,
     shouldSyntaxHighlight: shouldSyntaxHighlight^,

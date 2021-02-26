@@ -235,7 +235,7 @@ let start = () => {
                category: Some("Theme"),
                name: ExtensionContributions.Theme.label(theme),
                command: () =>
-                 ThemeLoadById(ExtensionContributions.Theme.id(theme)),
+                 ThemeSelected(ExtensionContributions.Theme.id(theme)),
                icon: None,
                highlight: [],
                handle: None,
@@ -268,6 +268,43 @@ let start = () => {
 
       (
         Some({...Quickmenu.defaults(SnippetPicker(snippets)), items}),
+        Isolinear.Effect.none,
+      );
+
+    | QuickmenuShow(SnippetFilePicker(snippetFiles)) =>
+      let items =
+        snippetFiles
+        |> List.filter_map(
+             (snippetFile: Service_Snippets.SnippetFileMetadata.t) => {
+             FpExp.baseName(snippetFile.filePath)
+             |> Option.map(filePath => {
+                  Actions.{
+                    category:
+                      Some(
+                        snippetFile.language
+                        |> Option.value(~default="global"),
+                      ),
+                    name:
+                      snippetFile.isCreated
+                        ? Printf.sprintf("Edit %s", filePath)
+                        : Printf.sprintf("Create %s", filePath),
+                    command: () =>
+                      Snippets(
+                        Feature_Snippets.Msg.editSnippetFile(~snippetFile),
+                      ),
+                    icon: None,
+                    highlight: [],
+                    handle: None,
+                  }
+                })
+           })
+        |> Array.of_list;
+
+      (
+        Some({
+          ...Quickmenu.defaults(SnippetFilePicker(snippetFiles)),
+          items,
+        }),
         Isolinear.Effect.none,
       );
 
@@ -638,6 +675,7 @@ let subscriptions = (ripgrep, dispatch) => {
       | OpenBuffersPicker => [filter(query, quickmenu.items)]
       | ThemesPicker(_) => [filter(query, quickmenu.items)]
       | SnippetPicker(_) => [filter(query, quickmenu.items)]
+      | SnippetFilePicker(_) => [filter(query, quickmenu.items)]
 
       | Extension({hasItems, _}) =>
         hasItems ? [filter(query, quickmenu.items)] : []

@@ -1,13 +1,14 @@
 open Oni_Core;
 open EditorCoreTypes;
 
-// Placeholder until full snippet support: Break snippet at first placeholder
-let snippetToInsert: (~snippet: string) => string;
-
 [@deriving show]
 type msg;
 
-module Msg: {let insert: (~snippet: string) => msg;};
+module Msg: {
+  let insert: (~snippet: string) => msg;
+  let editSnippetFile:
+    (~snippetFile: Service_Snippets.SnippetFileMetadata.t) => msg;
+};
 
 type model;
 
@@ -19,6 +20,8 @@ type outmsg =
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
   | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
+  | ShowFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
+  | OpenFile(FpExp.t(FpExp.absolute))
   | Nothing;
 
 module Session: {
@@ -26,6 +29,8 @@ module Session: {
 
   let startLine: t => EditorCoreTypes.LineNumber.t;
   let stopLine: t => EditorCoreTypes.LineNumber.t;
+
+  let editorId: t => int;
 };
 
 let session: model => option(Session.t);
@@ -36,7 +41,9 @@ let modeChanged: (~mode: Vim.Mode.t, model) => model;
 
 let update:
   (
+    ~languageInfo: Exthost.LanguageInfo.t,
     ~resolverFactory: (unit, string) => option(string),
+    ~selections: list(VisualRange.t),
     ~maybeBuffer: option(Buffer.t),
     ~editorId: int,
     ~cursorPosition: BytePosition.t,
@@ -48,7 +55,7 @@ let update:
 
 module Effects: {
   let insertSnippet:
-    (~meetColumn: CharacterIndex.t, ~snippet: string) =>
+    (~replaceRange: option(ByteRange.t), ~snippet: string) =>
     Isolinear.Effect.t(msg);
 };
 

@@ -22,8 +22,6 @@ module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Constants = {
   include Constants;
-
-  let diffMarkersMaxLineCount = 2000;
   let diffMarkerWidth = 3.;
   let gutterMargin = 3.;
 };
@@ -153,7 +151,7 @@ let%component make =
                 ~diagnostics,
                 ~tokenTheme,
                 ~languageSupport,
-                ~scm,
+                ~buffers: Feature_Buffers.model,
                 ~snippets: Feature_Snippets.model,
                 ~windowIsFocused,
                 ~perFileTypeConfig: Oni_Core.Config.fileTypeResolver,
@@ -245,8 +243,15 @@ let%component make =
     |> ByteRange.toHash;
 
   let diffMarkers =
-    lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
-      ? EditorDiffMarkers.generate(~scm, buffer) : None;
+    // TODO: Port this
+    //lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
+    showDiffMarkers
+      ? Feature_Buffers.getOriginalDiff(
+          ~bufferId=Oni_Core.Buffer.getId(buffer),
+          buffers,
+        )
+      : None;
+  //) : None;
 
   let pixelHeight = Editor.getTotalHeightInPixels(editor);
 
