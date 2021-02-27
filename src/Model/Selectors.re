@@ -23,7 +23,7 @@ let getConfigurationValue = (state: State.t, buffer: Buffer.t, f) => {
       ~default=Exthost.LanguageInfo.defaultLanguage,
       Buffer.getFileType(buffer) |> Buffer.FileType.toOption,
     );
-  Configuration.getValue(~fileType, f, state.configuration);
+  Feature_Configuration.Legacy.getValue(~fileType, f, state.config);
 };
 
 let getActiveBuffer = (state: State.t) => {
@@ -45,11 +45,11 @@ let withActiveBufferAndFileType = (state: State.t, f) => {
 
 let getActiveConfigurationValue = (state: State.t, f) => {
   switch (getActiveBuffer(state)) {
-  | None => Configuration.getValue(f, state.configuration)
+  | None => Feature_Configuration.Legacy.getValue(f, state.config)
   | Some(buffer) =>
     let fileType = Buffer.getFileType(buffer) |> Buffer.FileType.toString;
 
-    Configuration.getValue(~fileType, f, state.configuration);
+    Feature_Configuration.Legacy.getValue(~fileType, f, state.config);
   };
 };
 

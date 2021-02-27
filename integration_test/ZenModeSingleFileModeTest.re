@@ -8,8 +8,8 @@ let configuration = {|
 |};
 
 runTest(
+  ~cli=Oni_CLI.{...default, filesToOpen: ["some-random-file.txt"]},
   ~configuration=Some(configuration),
-  ~filesToOpen=["some-random-file.txt"],
   ~name="ZenMode: Single-file mode works as expected",
   ({wait, _}) => {
     wait(~name="Wait for split to be created 1", (state: State.t) => {
@@ -20,7 +20,7 @@ runTest(
 
     // Verify we've entered zen-mode
     wait(~name="We should be in zen-mode", (state: State.t) =>
-      state.zenMode == true
+      Feature_Zen.isZen(state.zen)
     );
   },
 );

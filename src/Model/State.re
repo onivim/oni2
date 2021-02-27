@@ -5,7 +5,6 @@
  */
 
 open Oni_Core;
-open Oni_Syntax;
 
 module Commands = GlobalCommands;
 let windowCommandCondition = "!insertMode || terminalFocus" |> WhenExpr.parse;
@@ -394,7 +393,6 @@ type t = {
   colorTheme: Feature_Theme.model,
   commands: Feature_Commands.model(Actions.t),
   config: Feature_Configuration.model,
-  configuration: Configuration.t,
   decorations: Feature_Decorations.model,
   diagnostics: Feature_Diagnostics.model,
   editorFont: Service_Font.font,
@@ -407,8 +405,6 @@ type t = {
   uiFont: UiFont.t,
   quickmenu: option(Quickmenu.t),
   sideBar: Feature_SideBar.model,
-  // Token theme is theming for syntax highlights
-  tokenTheme: TokenTheme.t,
   extensions: Feature_Extensions.model,
   exthost: Feature_Exthost.model,
   iconTheme: IconTheme.t,
@@ -431,7 +427,7 @@ type t = {
   windowDisplayMode,
   titlebarHeight: float,
   workspace: Feature_Workspace.model,
-  zenMode: bool,
+  zen: Feature_Zen.model,
   // State of the bottom pane
   pane: Feature_Pane.model,
   searchPane: Feature_Search.model,
@@ -452,8 +448,8 @@ let initial =
       ~initialBufferRenderers,
       ~extensionGlobalPersistence,
       ~extensionWorkspacePersistence,
-      ~getUserSettings,
-      ~contributedCommands,
+      ~configurationLoader,
+      ~keybindingsLoader,
       ~workingDirectory,
       ~maybeWorkspace,
       ~extensionsFolder,
@@ -464,7 +460,7 @@ let initial =
     ) => {
   let config =
     Feature_Configuration.initial(
-      ~getUserSettings,
+      ~loader=configurationLoader,
       [
         Feature_AutoUpdate.Contributions.configuration,
         Feature_Buffers.Contributions.configuration,
@@ -475,9 +471,13 @@ let initial =
         Feature_SideBar.Contributions.configuration,
         Feature_Syntax.Contributions.configuration,
         Feature_Terminal.Contributions.configuration,
+        Feature_Theme.Contributions.configuration,
         Feature_LanguageSupport.Contributions.configuration,
         Feature_Layout.Contributions.configuration,
+        Feature_StatusBar.Contributions.configuration,
         Feature_TitleBar.Contributions.configuration,
+        Feature_Vim.Contributions.configuration,
+        Feature_Zen.Contributions.configuration,
         Feature_Zoom.Contributions.configuration,
       ],
     );
@@ -507,12 +507,12 @@ let initial =
         Feature_Terminal.Contributions.colors,
         Feature_Notification.Contributions.colors,
       ]),
-    commands: Feature_Commands.initial(contributedCommands),
+    commands: Feature_Commands.initial([]),
     config,
-    configuration: Configuration.default,
     decorations: Feature_Decorations.initial,
     diagnostics: Feature_Diagnostics.initial,
-    input: Feature_Input.initial(defaultKeyBindings),
+    input:
+      Feature_Input.initial(~loader=keybindingsLoader, defaultKeyBindings),
     quickmenu: None,
     editorFont: defaultEditorFont,
     terminalFont: defaultEditorFont,
@@ -530,7 +530,6 @@ let initial =
     messages: Feature_Messages.initial,
     uiFont: UiFont.default,
     sideBar: Feature_SideBar.initial,
-    tokenTheme: TokenTheme.empty,
     help: Feature_Help.initial,
     iconTheme: IconTheme.create(),
     isQuitting: false,
@@ -556,11 +555,12 @@ let initial =
     titlebarHeight,
     workspace:
       Feature_Workspace.initial(
-        ~openedFolder=maybeWorkspace,
+        ~openedFolder=maybeWorkspace |> Option.map(FpExp.toString),
         workingDirectory,
       ),
     fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),
-    zenMode: false,
+    zen:
+      Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
     pane: Feature_Pane.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,

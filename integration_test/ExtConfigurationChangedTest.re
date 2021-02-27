@@ -23,22 +23,25 @@ runTest(~name="ExtConfigurationChangedTest", ({dispatch, wait, _}) => {
     )
   );
 
-  // Change setting
-  setUserSettings(
-    Config.Settings.fromList([
-      ("developer.oni.test", Json.Encode.string("42")),
-    ]),
+  dispatch(
+    Actions.Configuration(
+      Feature_Configuration.Testing.transform(
+        ConfigurationTransformer.setField(
+          "developer.oni.test",
+          `String("42"),
+        ),
+      ),
+    ),
   );
-  dispatch(Actions.Configuration(UserSettingsChanged));
 
   // Should get completions
   wait(
     ~timeout=10.0,
     ~name="Validate we get message from the 'oni-dev' extension",
-    (state: State.t) =>
+    (state: State.t) => {
     switch (Feature_Notification.all(state.notifications)) {
-    | [{message, _}, _] => message == "Setting changed: 42"
+    | [{message, _}, ..._] => String.equal(message, "Setting changed: 42")
     | _ => false
     }
-  );
+  });
 });

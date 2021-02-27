@@ -1,5 +1,8 @@
 open Oni_Core;
 
+module BufferTracker =
+  BufferTracker.Make({});
+
 module Log = (val Log.withNamespace("Service_Exthost"));
 
 // EFFECTS
@@ -42,28 +45,33 @@ module Effects = {
         ) =>
       Isolinear.Effect.createWithDispatch(
         ~name="exthost.bufferUpdate", dispatch =>
-        Oni_Core.Log.perf("exthost.bufferUpdate", () => {
-          let modelContentChange =
-            Exthost.ModelContentChange.ofBufferUpdate(
-              ~previousBuffer,
-              update,
-              Exthost.Eol.default,
-            );
-          let modelChangedEvent =
-            Exthost.ModelChangedEvent.{
-              changes: [modelContentChange],
-              eol: Exthost.Eol.default,
-              versionId: update.version,
-            };
+        Oni_Core.Log.perf("exthost.bufferUpdate", () =>
+          if (BufferTracker.isTracking(Buffer.getId(buffer))) {
+            let modelContentChange =
+              Exthost.ModelContentChange.ofBufferUpdate(
+                ~previousBuffer,
+                update,
+                Exthost.Eol.default,
+              );
+            let modelChangedEvent =
+              Exthost.ModelChangedEvent.{
+                changes: [modelContentChange],
+                eol: Exthost.Eol.default,
+                versionId: update.version,
+              };
 
-          Exthost.Request.Documents.acceptModelChanged(
-            ~uri=Buffer.getUri(buffer),
-            ~modelChangedEvent,
-            ~isDirty=Buffer.isModified(buffer),
-            client,
-          );
-          dispatch(toMsg());
-        })
+            Exthost.Request.Documents.acceptModelChanged(
+              ~uri=Buffer.getUri(buffer),
+              ~modelChangedEvent,
+              ~isDirty=Buffer.isModified(buffer),
+              client,
+            );
+            dispatch(toMsg());
+          } else {
+            ();
+              // TODO: Warn
+          }
+        )
       );
 
     let modelSaved = (~uri, client, toMsg) => {
@@ -239,7 +247,9 @@ module Internal = {
         [""];
       } else {
         // There needs to be an empty line at the end of the buffer to sync changes at the end
-        lines @ [""];
+        // TODO: How does this compare with an alternative approach to the same ends, like
+        // converting from an array back to a list?
+        lines |> List.rev |> List.append([""]) |> List.rev;
       };
 
     maybeFilePath
@@ -341,6 +351,7 @@ module Sub = {
       };
 
       let init = (~params, ~dispatch) => {
+        BufferTracker.startTracking(Oni_Core.Buffer.getId(params.buffer));
         let bufferId = Oni_Core.Buffer.getId(params.buffer);
 
         let fileType =
@@ -369,6 +380,7 @@ module Sub = {
             params.client,
           );
           dispatch(`Added);
+          BufferTracker.startTracking(Oni_Core.Buffer.getId(params.buffer));
           {lastFileType: fileType, didAdd: true};
         | None => {lastFileType: fileType, didAdd: false}
         };
@@ -403,7 +415,8 @@ module Sub = {
         {...state, lastFileType: newFileType};
       };
 
-      let dispose = (~params, ~state) =>
+      let dispose = (~params, ~state) => {
+        BufferTracker.stopTracking(Oni_Core.Buffer.getId(params.buffer));
         if (state.didAdd) {
           params.buffer
           |> Oni_Core.Buffer.getFilePath
@@ -420,6 +433,7 @@ module Sub = {
                );
              });
         };
+      };
     });
 
   let buffer = (~buffer, ~client, ~toMsg) =>

@@ -276,7 +276,7 @@ module Sub = {
         //     ? Constants.mediumPriorityDebounceTime
         //     : Constants.highPriorityDebounceTime;
 
-        let debounceTime = Constants.lowPriorityDebounceTime;
+        let debounceTime = Constants.highPriorityDebounceTime;
         // len == 1
         //   ? Constants.mediumPriorityDebounceTime
         // : Constants.highPriorityDebounceTime;

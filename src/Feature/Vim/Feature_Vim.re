@@ -2,6 +2,8 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
+module Log = (val Oni_Core.Log.withNamespace("Feature_Vim"));
+
 // MODEL
 
 type model = {
@@ -10,6 +12,7 @@ type model = {
   subMode: Vim.SubMode.t,
   searchPattern: option(string),
   searchHighlights: SearchHighlights.t,
+  experimentalViml: list(string),
 };
 
 let initial = {
@@ -18,11 +21,31 @@ let initial = {
   subMode: Vim.SubMode.None,
   searchPattern: None,
   searchHighlights: SearchHighlights.initial,
+  experimentalViml: [],
+};
+
+module Configuration = {
+  type resolver = string => option(Vim.Setting.value);
+
+  let resolver = ({settings, _}, settingName) => {
+    settings |> StringMap.find_opt(settingName);
+  };
+
+  open Config.Schema;
+
+  let experimentalViml =
+    setting("experimental.viml", list(string), ~default=[]);
+};
+
+let configurationChanged = (~config, model) => {
+  {...model, experimentalViml: Configuration.experimentalViml.get(config)};
 };
 
 let recordingMacro = ({recordingMacro, _}) => recordingMacro;
 
 let subMode = ({subMode, _}) => subMode;
+
+let experimentalViml = ({experimentalViml, _}) => experimentalViml;
 
 // MSG
 
@@ -46,7 +69,8 @@ type msg =
   | Output({
       cmd: string,
       output: option(string),
-    });
+    })
+  | Noop;
 
 type outmsg =
   | Nothing
@@ -78,6 +102,24 @@ let handleEffect = (model, effect: Vim.Effect.t) => {
 
 let handleEffects = (effects, model) => {
   effects |> List.fold_left(handleEffect, model);
+};
+
+module Effects = {
+  let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
+    let toMsg = mode =>
+      ModeChanged({
+        allowAnimation: true,
+        subMode: Vim.SubMode.None,
+        mode,
+        effects: [],
+      });
+    Service_Vim.Effects.applyCompletion(
+      ~meetColumn,
+      ~insertText,
+      ~additionalEdits,
+      ~toMsg,
+    );
+  };
 };
 
 let update = (msg, model: model) => {
@@ -124,6 +166,8 @@ let update = (msg, model: model) => {
       },
       Nothing,
     );
+
+  | Noop => (model, Nothing)
   };
 };
 
@@ -165,24 +209,6 @@ module CommandLine = {
   };
 };
 
-module Effects = {
-  let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
-    let toMsg = mode =>
-      ModeChanged({
-        allowAnimation: true,
-        subMode: Vim.SubMode.None,
-        mode,
-        effects: [],
-      });
-    Service_Vim.Effects.applyCompletion(
-      ~meetColumn,
-      ~insertText,
-      ~additionalEdits,
-      ~toMsg,
-    );
-  };
-};
-
 // SUBSCRIPTION
 
 let sub = (~buffer, ~topVisibleLine, ~bottomVisibleLine, model) => {
@@ -203,14 +229,6 @@ let sub = (~buffer, ~topVisibleLine, ~bottomVisibleLine, model) => {
   |> Option.value(~default=Isolinear.Sub.none);
 };
 
-module Configuration = {
-  type resolver = string => option(Vim.Setting.value);
-
-  let resolver = ({settings, _}, settingName) => {
-    settings |> StringMap.find_opt(settingName);
-  };
-};
-
 module Keybindings = {
   open Feature_Input.Schema;
   let controlSquareBracketRemap =
@@ -224,4 +242,6 @@ module Keybindings = {
 
 module Contributions = {
   let keybindings = Keybindings.[controlSquareBracketRemap];
+
+  let configuration = Configuration.[experimentalViml.spec];
 };

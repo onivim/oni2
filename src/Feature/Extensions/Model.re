@@ -125,6 +125,7 @@ type outmsg =
   | Nothing
   | Focus
   | Effect(Isolinear.Effect.t(msg))
+  | NewExtensions(list(Scanner.ScanResult.t))
   | InstallSucceeded({
       extensionId: string,
       contributions: Exthost.Extension.Contributions.t,
@@ -256,7 +257,7 @@ type model = {
   extensions: list(Scanner.ScanResult.t),
   searchText: Component_InputText.model,
   latestQuery: option(Service_Extensions.Query.t),
-  extensionsFolder: option(Fp.t(Fp.absolute)),
+  extensionsFolder: option(FpExp.t(FpExp.absolute)),
   pendingInstalls: list(string),
   pendingUninstalls: list(string),
   globalValues: Yojson.Safe.t,
@@ -676,7 +677,10 @@ let update = (~extHostClient, msg, model) => {
       (model', Effect(eff));
     }
 
-  | Discovered(extensions) => (Internal.add(extensions, model), Nothing)
+  | Discovered(extensions) => (
+      Internal.add(extensions, model),
+      NewExtensions(extensions),
+    )
 
   | ExecuteCommand({command, arguments}) => (
       model,

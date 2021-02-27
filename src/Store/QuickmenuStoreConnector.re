@@ -235,7 +235,7 @@ let start = () => {
                category: Some("Theme"),
                name: ExtensionContributions.Theme.label(theme),
                command: () =>
-                 ThemeLoadById(ExtensionContributions.Theme.id(theme)),
+                 ThemeSelected(ExtensionContributions.Theme.id(theme)),
                icon: None,
                highlight: [],
                handle: None,
@@ -276,7 +276,7 @@ let start = () => {
         snippetFiles
         |> List.filter_map(
              (snippetFile: Service_Snippets.SnippetFileMetadata.t) => {
-             Fp.baseName(snippetFile.filePath)
+             FpExp.baseName(snippetFile.filePath)
              |> Option.map(filePath => {
                   Actions.{
                     category:
@@ -620,7 +620,10 @@ let subscriptions = (ripgrep, dispatch) => {
 
   let ripgrep = (workspace, languageInfo, iconTheme, configuration) => {
     let filesExclude =
-      Configuration.getValue(c => c.filesExclude, configuration);
+      Feature_Configuration.Legacy.getValue(
+        c => c.filesExclude,
+        configuration,
+      );
 
     switch (Feature_Workspace.openedFolder(workspace)) {
     | None =>
@@ -686,7 +689,7 @@ let subscriptions = (ripgrep, dispatch) => {
             state.workspace,
             state.languageInfo,
             state.iconTheme,
-            state.configuration,
+            state.config,
           )
 
       | FileTypesPicker(_) => [filter(query, quickmenu.items)]

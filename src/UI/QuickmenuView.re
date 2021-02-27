@@ -6,6 +6,8 @@ open Oni_Components;
 
 module Colors = Feature_Theme.Colors;
 
+module Clickable = Revery.UI.Components.Clickable;
+
 module Constants = {
   let menuWidth = 400;
   let menuHeight = 320;
@@ -19,6 +21,8 @@ module Styles = {
     backgroundColor(Colors.Menu.background.from(theme)),
     color(Colors.Menu.foreground.from(theme)),
     width(Constants.menuWidth),
+    marginTop(25),
+    //pointerEvents(`Ignore),
   ];
 
   let inputContainer = [padding(5)];
@@ -188,23 +192,50 @@ let make =
       </FlatList>
     </View>;
 
-  <AllowPointer>
-    <OniBoxShadow config theme>
-      <View style={Styles.container(theme)}>
-        {switch (variant) {
-         | EditorsPicker => React.empty
-         | _ => <input />
-         }}
-        {switch (variant) {
-         | Wildmenu(SearchForward | SearchReverse) => React.empty
-         | _ => <dropdown />
-         }}
-        {switch (progress) {
-         | Complete => <progressBar progress=0. theme /> // TODO: SHould be REact.empty, but a reconciliation bug then prevents the progress bar from rendering
-         | InProgress(progress) => <progressBar progress theme />
-         | Loading => <busyBar theme />
-         }}
-      </View>
+  let onClickBackground = () => {
+    GlobalContext.current().dispatch(Actions.QuickmenuClose);
+  };
+
+  let innerClicked = ref(false);
+
+  <View
+    style=Style.[
+      position(`Absolute),
+      top(0),
+      left(0),
+      right(0),
+      bottom(0),
+      backgroundColor(Revery.Color.rgba(0., 0., 0., 0.2)),
+      pointerEvents(`Allow),
+      alignItems(`Center),
+    ]
+    onMouseDown={_ =>
+      // HACK: This callback would be called last, after the 'inner' callback being called.
+      // We don't want to execute the `onClickBackground` function if we're clicking inside the menu.
+      // A better mechanism would be a robust way to stop propagationnn of the mouse event.
+
+        if (! innerClicked^) {
+          onClickBackground();
+        }
+      }>
+    <OniBoxShadow
+      onMouseDown={_ => {innerClicked := true}}
+      style={Styles.container(theme)}
+      config
+      theme>
+      {switch (variant) {
+       | EditorsPicker => React.empty
+       | _ => <input />
+       }}
+      {switch (variant) {
+       | Wildmenu(SearchForward | SearchReverse) => React.empty
+       | _ => <dropdown />
+       }}
+      {switch (progress) {
+       | Complete => <progressBar progress=0. theme /> // TODO: SHould be REact.empty, but a reconciliation bug then prevents the progress bar from rendering
+       | InProgress(progress) => <progressBar progress theme />
+       | Loading => <busyBar theme />
+       }}
     </OniBoxShadow>
-  </AllowPointer>;
+  </View>;
 };

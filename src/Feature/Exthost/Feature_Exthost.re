@@ -143,90 +143,95 @@ let subscription =
       ~activeEditorId,
       ~client,
       model,
-    ) => {
-  let visibleBuffers: list(Oni_Core.Buffer.t) =
-    editors
-    |> List.map(Feature_Editor.Editor.getBufferId)
-    |> List.filter_map(bufferId => Feature_Buffers.get(bufferId, buffers));
+    ) =>
+  if (isInitialized(model)) {
+    let visibleBuffers: list(Oni_Core.Buffer.t) =
+      editors
+      |> List.map(Feature_Editor.Editor.getBufferId)
+      |> List.filter_map(bufferId => Feature_Buffers.get(bufferId, buffers));
 
-  let bufferMap =
-    visibleBuffers
-    |> List.fold_left(
-         (acc, curr) => {
-           let id = Buffer.getId(curr);
-           IntMap.add(id, curr, acc);
-         },
-         IntMap.empty,
-       );
+    let bufferMap =
+      visibleBuffers
+      |> List.fold_left(
+           (acc, curr) => {
+             let id = Buffer.getId(curr);
+             IntMap.add(id, curr, acc);
+           },
+           IntMap.empty,
+         );
 
-  let tryOpenedBuffers: list(Oni_Core.Buffer.t) =
-    buffers
-    |> Feature_Buffers.filter(buf =>
-         StringMap.find_opt(
-           Oni_Core.Buffer.getUri(buf) |> Oni_Core.Uri.toFileSystemPath,
-           model.pendingResolutions,
+    let tryOpenedBuffers: list(Oni_Core.Buffer.t) =
+      buffers
+      |> Feature_Buffers.filter(buf =>
+           StringMap.find_opt(
+             Oni_Core.Buffer.getUri(buf) |> Oni_Core.Uri.toFileSystemPath,
+             model.pendingResolutions,
+           )
+           |> Option.is_some
          )
-         |> Option.is_some
-       )
-    |> List.filter(buffer =>
-         IntMap.find_opt(Oni_Core.Buffer.getId(buffer), bufferMap)
-         |> Option.is_none
-       );
+      |> List.filter(buffer =>
+           IntMap.find_opt(Oni_Core.Buffer.getId(buffer), bufferMap)
+           |> Option.is_none
+         );
 
-  let bufferSubscriptions =
-    visibleBuffers
-    |> List.map(buffer => {
-         Service_Exthost.Sub.buffer(
-           ~buffer,
-           ~client,
-           ~toMsg=
-             fun
-             | `Added =>
-               DocumentAdded({uri: buffer |> Oni_Core.Buffer.getUri}),
-         )
-       })
-    |> Isolinear.Sub.batch;
+    let bufferSubscriptions =
+      visibleBuffers
+      |> List.filter(buf => !Feature_Buffers.isLargeFile(buffers, buf))
+      |> List.map(buffer => {
+           Service_Exthost.Sub.buffer(
+             ~buffer,
+             ~client,
+             ~toMsg=
+               fun
+               | `Added =>
+                 DocumentAdded({uri: buffer |> Oni_Core.Buffer.getUri}),
+           )
+         })
+      |> Isolinear.Sub.batch;
 
-  let tryOpenedBufferSubscriptions =
-    tryOpenedBuffers
-    |> List.map(buffer => {
-         Service_Exthost.Sub.buffer(
-           ~buffer,
-           ~client,
-           ~toMsg=
-             fun
-             | `Added =>
-               DocumentAdded({uri: buffer |> Oni_Core.Buffer.getUri}),
-         )
-       })
-    |> Isolinear.Sub.batch;
+    let tryOpenedBufferSubscriptions =
+      tryOpenedBuffers
+      |> List.filter(buf => !Feature_Buffers.isLargeFile(buffers, buf))
+      |> List.map(buffer => {
+           Service_Exthost.Sub.buffer(
+             ~buffer,
+             ~client,
+             ~toMsg=
+               fun
+               | `Added =>
+                 DocumentAdded({uri: buffer |> Oni_Core.Buffer.getUri}),
+           )
+         })
+      |> Isolinear.Sub.batch;
 
-  let editors =
-    editors
-    |> List.map(Internal.editorToAddData(bufferMap))
-    |> OptionEx.values;
+    let editors =
+      editors
+      |> List.map(Internal.editorToAddData(bufferMap))
+      |> OptionEx.values;
 
-  let editorSubscriptions =
-    editors
-    |> List.map(editor => {Service_Exthost.Sub.editor(~editor, ~client)})
-    |> Isolinear.Sub.batch
-    |> Isolinear.Sub.map(() => Noop);
+    let editorSubscriptions =
+      editors
+      |> List.map(editor => {Service_Exthost.Sub.editor(~editor, ~client)})
+      |> Isolinear.Sub.batch
+      |> Isolinear.Sub.map(() => Noop);
 
-  let activeEditorSubscription =
-    switch (activeEditorId) {
-    | None => Isolinear.Sub.none
-    | Some(editorId) =>
-      Service_Exthost.Sub.activeEditor(
-        ~activeEditorId=Internal.getVscodeEditorId(editorId),
-        ~client,
-      )
-      |> Isolinear.Sub.map(() => Noop)
-    };
+    let activeEditorSubscription =
+      switch (activeEditorId) {
+      | None => Isolinear.Sub.none
+      | Some(editorId) =>
+        Service_Exthost.Sub.activeEditor(
+          ~activeEditorId=Internal.getVscodeEditorId(editorId),
+          ~client,
+        )
+        |> Isolinear.Sub.map(() => Noop)
+      };
 
-  Isolinear.Sub.batch([
-    bufferSubscriptions,
-    tryOpenedBufferSubscriptions,
-    editorSubscriptions,
-    activeEditorSubscription,
-  ]);
-};
+    Isolinear.Sub.batch([
+      bufferSubscriptions,
+      tryOpenedBufferSubscriptions,
+      editorSubscriptions,
+      activeEditorSubscription,
+    ]);
+  } else {
+    Isolinear.Sub.none;
+  };

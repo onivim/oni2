@@ -24,6 +24,7 @@ type outmsg =
   | Nothing
   | Focus
   | Effect(Isolinear.Effect.t(msg))
+  | NewExtensions(list(Scanner.ScanResult.t))
   | InstallSucceeded({
       extensionId: string,
       contributions: Exthost.Extension.Contributions.t,
@@ -39,7 +40,12 @@ let pick: (Exthost.Extension.Manifest.t => 'a, model) => list('a);
 let themeById: (~id: string, model) => option(Contributions.Theme.t);
 let themesByName: (~filter: string, model) => list(string);
 
-let snippetFilePaths: (~fileType: string, model) => list(Fp.t(Fp.absolute));
+let snippetFilePaths:
+  (~fileType: string, model) => list(FpExp.t(FpExp.absolute));
+
+// [hasCompletedDiscovery(model)] returns [true] if all
+// local extensions have been identified.
+let hasCompletedDiscovery: model => bool;
 
 let isBusy: model => bool;
 let isSearchInProgress: model => bool;
@@ -72,7 +78,7 @@ let initial:
   (
     ~workspacePersistence: Persistence.t,
     ~globalPersistence: Persistence.t,
-    ~extensionsFolder: option(Fp.t(Fp.absolute))
+    ~extensionsFolder: option(FpExp.t(FpExp.absolute))
   ) =>
   model;
 

@@ -215,7 +215,7 @@ let start =
       | ColorSchemeChanged(maybeColorScheme) =>
         switch (maybeColorScheme) {
         | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker))
-        | Some(colorScheme) => dispatch(Actions.ThemeLoadById(colorScheme))
+        | Some(colorScheme) => dispatch(Actions.ThemeSelected(colorScheme))
         }
 
       | MacroRecordingStarted({register}) =>
@@ -232,13 +232,13 @@ let start =
     );
 
   let _: unit => unit =
-    Vim.onDirectoryChanged(newDir =>
+    Vim.onDirectoryChanged(newDir => {
       dispatch(
         Actions.Workspace(
           Feature_Workspace.Msg.workingDirectoryChanged(newDir),
         ),
       )
-    );
+    });
 
   let _: unit => unit =
     Vim.onMessage((priority, title, message) => {
@@ -695,11 +695,8 @@ let start =
     );
 
   let prevViml = ref([]);
-  let synchronizeViml = configuration =>
-    Isolinear.Effect.create(~name="vim.synchronizeViml", () => {
-      let lines =
-        Core.Configuration.getValue(c => c.experimentalVimL, configuration);
-
+  let synchronizeViml = lines =>
+    Isolinear.Effect.create(~name="vim.synchronizeViml", () =>
       if (prevViml^ !== lines) {
         List.iter(
           l => {
@@ -710,8 +707,8 @@ let start =
           lines,
         );
         prevViml := lines;
-      };
-    });
+      }
+    );
 
   let undoEffect =
     Isolinear.Effect.create(~name="vim.undo", () => {
@@ -798,10 +795,7 @@ let start =
 
   let updater = (state: State.t, action: Actions.t) => {
     switch (action) {
-    | ConfigurationSet(configuration) => (
-        state,
-        synchronizeViml(configuration),
-      )
+    | SynchronizeExperimentalViml(lines) => (state, synchronizeViml(lines))
 
     | CommandInvoked({command, _}) =>
       switch (command) {

@@ -32,15 +32,6 @@ module Internal = {
     );
   };
 
-  let updateConfigurationEffect = transformer => {
-    Isolinear.Effect.createWithDispatch(
-      ~name="features.updateConfiguration", dispatch => {
-      dispatch(
-        Actions.ConfigurationTransform("configuration.json", transformer),
-      )
-    });
-  };
-
   let setThemesEffect =
       (~themes: list(Exthost.Extension.Contributions.Theme.t)) => {
     switch (themes) {
@@ -49,7 +40,7 @@ module Internal = {
       Isolinear.Effect.createWithDispatch(
         ~name="feature.extensions.selectTheme", dispatch => {
         dispatch(
-          ThemeLoadById(Exthost.Extension.Contributions.Theme.id(theme)),
+          ThemeSelected(Exthost.Extension.Contributions.Theme.id(theme)),
         )
       })
     | themes =>
@@ -92,9 +83,10 @@ module Internal = {
       dispatch(Actions.Quit(true))
     );
 
-  let chdir = (path: Fp.t(Fp.absolute)) =>
+  let chdir = (path: FpExp.t(FpExp.absolute)) => {
     Feature_Workspace.Effects.changeDirectory(path)
     |> Isolinear.Effect.map(msg => Actions.Workspace(msg));
+  };
 
   let updateEditor = (~editorId, ~msg, layout) => {
     switch (Feature_Layout.editorById(editorId, layout)) {
@@ -167,12 +159,21 @@ module Internal = {
     state => {
       let resolver = Selectors.configResolver(state);
       let maybeRoot = Feature_Explorer.root(state.fileExplorer);
+
+      let zen = Feature_Zen.configurationChanged(resolver, state.zen);
       let sideBar =
         state.sideBar
         |> Feature_SideBar.configurationChanged(
              ~hasWorkspace=maybeRoot != None,
              ~config=resolver,
            );
+
+      let colorTheme =
+        state.colorTheme |> Feature_Theme.configurationChanged(~resolver);
+
+      let buffers =
+        state.buffers
+        |> Feature_Buffers.configurationChanged(~config=resolver);
 
       let languageSupport =
         state.languageSupport
@@ -192,10 +193,32 @@ module Internal = {
           state.layout,
         );
 
+      let vim = Feature_Vim.configurationChanged(~config=resolver, state.vim);
+      let vimEffect =
+        Oni_Core.EffectEx.value(
+          ~name="Feature_vim.sychronizeExperimentalViml",
+          Oni_Model.Actions.SynchronizeExperimentalViml(
+            Feature_Vim.experimentalViml(vim),
+          ),
+        );
+
       let (zoom, zoomEffect) =
         Feature_Zoom.configurationChanged(~config=resolver, state.zoom);
       let eff = zoomEffect |> Isolinear.Effect.map(msg => Actions.Zoom(msg));
-      ({...state, languageSupport, sideBar, layout, zoom}, eff);
+      (
+        {
+          ...state,
+          buffers,
+          colorTheme,
+          languageSupport,
+          sideBar,
+          layout,
+          vim,
+          zen,
+          zoom,
+        },
+        Isolinear.Effect.batch([eff, vimEffect]),
+      );
     };
 
   let updateMode =
@@ -288,12 +311,11 @@ let update =
     (
       ~grammarRepository: Oni_Syntax.GrammarRepository.t,
       ~extHostClient: Exthost.Client.t,
-      ~getUserSettings,
-      ~setup,
       ~maximize,
       ~minimize,
       ~close,
       ~restore,
+      ~setVsync,
       state: State.t,
       action: Actions.t,
     ) =>
@@ -389,6 +411,23 @@ let update =
             Internal.unhandledWindowMotionEffect(movement),
           )
 
+        | NewExtensions(extensions) =>
+          let newExtensionConfigurations =
+            extensions
+            |> List.map((ext: Exthost.Extension.Scanner.ScanResult.t) => {
+                 Exthost.Extension.Manifest.(
+                   ext.manifest.contributes.configuration
+                 )
+               });
+
+          let config =
+            Feature_Configuration.registerExtensionConfigurations(
+              ~configurations=newExtensionConfigurations,
+              state.config,
+            );
+
+          ({...state, config}, Isolinear.Effect.none);
+
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =
             Internal.notificationEffect(
@@ -413,9 +452,11 @@ let update =
     (state', effect);
 
   | FileExplorer(msg) =>
+    let config = Selectors.configResolver(state);
     let (model, outmsg) =
       Feature_Explorer.update(
-        ~configuration=state.configuration,
+        ~config,
+        ~configuration=state.config,
         msg,
         state.fileExplorer,
       );
@@ -490,6 +531,12 @@ let update =
       switch (outmsg) {
       | Nothing => Isolinear.Effect.none
       | DebugInputShown => Internal.openFileEffect("oni://DebugInput")
+
+      | ErrorNotifications(errorMessages) =>
+        errorMessages
+        |> List.map(msg => Internal.notificationEffect(~kind=Error, msg))
+        |> Isolinear.Effect.batch
+
       | MapParseError({fromKeys, toKeys, error}) =>
         Internal.notificationEffect(
           ~kind=Error,
@@ -536,7 +583,6 @@ let update =
         ~config,
         ~languageConfiguration,
         ~extensions=state.extensions,
-        ~configuration=state.configuration,
         ~maybeBuffer,
         ~maybeSelection=characterSelection,
         ~editorId,
@@ -717,15 +763,16 @@ let update =
     (state, eff);
 
   | Pane(msg) =>
+    let config = Selectors.configResolver(state);
     let (model, outmsg) =
       Feature_Pane.update(
         ~font=state.editorFont,
         ~languageInfo=state.languageInfo,
         ~buffers=state.buffers,
         ~previewEnabled=
-          Oni_Core.Configuration.getValue(
-            c => c.workbenchEditorEnablePreview,
-            state.configuration,
+          Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+            get(
+            config,
           ),
         msg,
         state.pane,
@@ -761,6 +808,16 @@ let update =
         Feature_Notification.Effects.dismiss(notification)
         |> Isolinear.Effect.map(msg => Notification(msg)),
       )
+
+    | PaneButton(pane) =>
+      switch (pane) {
+      | Notifications => (
+          state,
+          Feature_Notification.Effects.clear()
+          |> Isolinear.Effect.map(msg => Notification(msg)),
+        )
+      | _ => (state, Isolinear.Effect.none)
+      }
 
     | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
     };
@@ -810,12 +867,13 @@ let update =
     ({...state, registration: state'}, effect);
 
   | Search(msg) =>
+    let config = Selectors.configResolver(state);
     let (model, maybeOutmsg) =
       Feature_Search.update(
         ~previewEnabled=
-          Oni_Core.Configuration.getValue(
-            c => c.workbenchEditorEnablePreview,
-            state.configuration,
+          Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+            get(
+            config,
           ),
         state.searchPane,
         msg,
@@ -845,12 +903,13 @@ let update =
     };
 
   | SCM(msg) =>
+    let config = Selectors.configResolver(state);
     let (model, maybeOutmsg) =
       Feature_SCM.update(
         ~previewEnabled=
-          Oni_Core.Configuration.getValue(
-            c => c.workbenchEditorEnablePreview,
-            state.configuration,
+          Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
+            get(
+            config,
           ),
         ~fileSystem=state.fileSystem,
         extHostClient,
@@ -936,7 +995,7 @@ let update =
         {
           ...state',
           // When the sidebar acquires focus, zen-mode should be disabled
-          zenMode: false,
+          zen: Feature_Zen.exitZenMode(state.zen),
         },
         Effect.none,
       );
@@ -1041,6 +1100,12 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Effect.none)
+
+    | NotifyInfo(msg) => (
+        state,
+        Internal.notificationEffect(~kind=Info, msg),
+      )
+
     | BufferModifiedSet(id, _) =>
       open Feature_Editor;
 
@@ -1199,10 +1264,13 @@ let update =
           extHostClient,
         );
 
-      let clearSnippetCacheEffect =
+      let maybeFullPath =
         buffer
         |> Buffer.getFilePath
-        |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
+
+      let clearSnippetCacheEffect =
+        maybeFullPath
         |> Option.map(filePath =>
              Service_Snippets.Effect.clearCachedSnippets(~filePath)
            )
@@ -1213,8 +1281,21 @@ let update =
           ~uri=Buffer.getUri(buffer), extHostClient, () =>
           Noop
         );
+
+      let input' =
+        maybeFullPath
+        |> Option.map(fp => Feature_Input.notifyFileSaved(fp, state.input))
+        |> Option.value(~default=state.input);
+
+      let config' =
+        maybeFullPath
+        |> Option.map(fp =>
+             Feature_Configuration.notifyFileSaved(fp, state.config)
+           )
+        |> Option.value(~default=state.config);
+
       (
-        state,
+        {...state, input: input', config: config'},
         Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
       );
 
@@ -1238,7 +1319,7 @@ let update =
               state.config,
               state.vim,
             ),
-          ~theme=state.tokenTheme,
+          ~theme=state.colorTheme |> Feature_Theme.tokenColors,
           update,
           state.syntaxHighlights,
         );
@@ -1306,31 +1387,28 @@ let update =
     )
 
   | Configuration(msg) =>
-    let (config, outmsg) =
-      Feature_Configuration.update(~getUserSettings, state.config, msg);
+    let (config, outmsg) = Feature_Configuration.update(state.config, msg);
     let state = {...state, config};
     switch (outmsg) {
     | ConfigurationChanged({changed}) =>
-      let eff =
-        Isolinear.Effect.create(
-          ~name="features.configuration$acceptConfigurationChanged", () => {
-          let configuration =
-            Feature_Configuration.toExtensionConfiguration(
-              config,
-              Feature_Extensions.all(state.extensions),
-              setup,
+      let vsyncEffect =
+        if (Config.Settings.get(Config.key("vsync"), changed) != None) {
+          Isolinear.Effect.create(~name="Features.setVsync", () => {
+            let resolver = Selectors.configResolver(state);
+            setVsync(
+              Feature_Configuration.GlobalConfiguration.vsync.get(resolver),
             );
-          let changed = Exthost.Configuration.Model.fromSettings(changed);
-          Exthost.Request.Configuration.acceptConfigurationChanged(
-            ~configuration,
-            ~changed,
-            extHostClient,
-          );
-        });
+          });
+        } else {
+          Isolinear.Effect.none;
+        };
 
       let (state', configurationEffect) =
         state |> Internal.updateConfiguration;
-      (state', Isolinear.Effect.batch([eff, configurationEffect]));
+      (state', Isolinear.Effect.batch([configurationEffect, vsyncEffect]));
+
+    | OpenFile(fp) => (state, Internal.openFileEffect(FpExp.toString(fp)))
+
     | Nothing => (state, Effect.none)
     };
 
@@ -1415,7 +1493,10 @@ let update =
 
     | Focus(Bottom) => (state |> FocusManager.push(Pane), Effect.none)
 
-    | SplitAdded => ({...state, zenMode: false}, Effect.none)
+    | SplitAdded => (
+        {...state, zen: Feature_Zen.exitZenMode(state.zen)},
+        Effect.none,
+      )
 
     | RemoveLastWasBlocked => (state, Internal.quitEffect)
 
@@ -1542,6 +1623,11 @@ let update =
 
     let state = {...state, colorTheme: model'};
     switch (outmsg) {
+    | NotifyError(msg) => (
+        state,
+        Internal.notificationEffect(~kind=Error, msg),
+      )
+
     | OpenThemePicker(_) =>
       let themes =
         state.extensions
@@ -1799,7 +1885,7 @@ let update =
 
       | OpenFile(filePath) => (
           state.layout,
-          Internal.openFileEffect(Fp.toString(filePath)),
+          Internal.openFileEffect(FpExp.toString(filePath)),
         )
 
       | Effect(eff) => (
@@ -2004,10 +2090,13 @@ let update =
         eff |> Isolinear.Effect.map(msg => Workspace(msg)),
       )
 
-    | WorkspaceChanged(maybeWorkspaceFolder) =>
+    | WorkspaceChanged({path: maybeWorkspaceFolder, shouldFocusExplorer}) =>
+      let maybeExplorerFolder =
+        maybeWorkspaceFolder
+        |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform);
       let fileExplorer =
         Feature_Explorer.setRoot(
-          ~rootPath=maybeWorkspaceFolder,
+          ~rootPath=maybeExplorerFolder,
           state.fileExplorer,
         );
 
@@ -2030,22 +2119,42 @@ let update =
         );
 
       let state' =
-        {...state, fileExplorer, sideBar}
-        |> FocusManager.push(Focus.FileExplorer);
+        if (shouldFocusExplorer) {
+          {...state, fileExplorer, sideBar}
+          |> FocusManager.push(Focus.FileExplorer);
+        } else {
+          {...state, fileExplorer, sideBar};
+        };
       (state', eff);
     };
 
+  | Zen(msg) =>
+    let zen' = Feature_Zen.update(msg, state.zen);
+    ({...state, zen: zen'}, Isolinear.Effect.none);
+
   | Zoom(msg) =>
     let (zoom', outmsg) = Feature_Zoom.update(msg, state.zoom);
-    let eff =
+    let state' = {...state, zoom: zoom'};
+    let (state'', eff) =
       switch (outmsg) {
-      | Feature_Zoom.Nothing => Isolinear.Effect.none
-      | Feature_Zoom.UpdateConfiguration(transformer) =>
-        Internal.updateConfigurationEffect(transformer)
-      | Feature_Zoom.Effect(eff) =>
-        eff |> Isolinear.Effect.map(msg => Actions.Zoom(msg))
+      | Feature_Zoom.Nothing => (state', Isolinear.Effect.none)
+      | Feature_Zoom.UpdateConfiguration(transformer) => (
+          {
+            ...state',
+            config:
+              Feature_Configuration.queueTransform(
+                ~transformer,
+                state'.config,
+              ),
+          },
+          Isolinear.Effect.none,
+        )
+      | Feature_Zoom.Effect(eff) => (
+          state',
+          eff |> Isolinear.Effect.map(msg => Actions.Zoom(msg)),
+        )
       };
-    ({...state, zoom: zoom'}, eff);
+    (state'', eff);
 
   | AutoUpdate(msg) =>
     let getLicenseKey = () =>

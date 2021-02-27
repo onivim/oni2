@@ -1,7 +1,6 @@
 open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
-open Oni_Syntax;
 
 runTest(
   ~name="InsertMode test - effects batched to runEffects",
@@ -35,7 +34,7 @@ runTest(
     | Some(buf) =>
       let bufferId = Buffer.getId(buf);
       let searchHighlightCount =
-        BufferHighlights.getHighlights(~bufferId, state.bufferHighlights)
+        Feature_Vim.getSearchHighlightsByLine(~bufferId, ~line=EditorCoreTypes.LineNumber.zero, state.vim)
         |> List.length;
       searchHighlightCount > 0;
     }
@@ -53,7 +52,7 @@ runTest(
     | Some(buf) =>
       let bufferId = Buffer.getId(buf);
       let searchHighlightCount =
-        BufferHighlights.getHighlights(~bufferId, state.bufferHighlights)
+        Feature_Vim.getSearchHighlightsByLine(~bufferId, ~line=EditorCoreTypes.LineNumber.zero, state.vim)
         |> List.length;
       searchHighlightCount == 0;
     }

@@ -6,7 +6,7 @@ module Store = Persistence.Store;
 open Persistence.Schema;
 
 type testContext = {
-  storeFolder: Fp.t(Fp.absolute),
+  storeFolder: FpExp.t(FpExp.absolute),
   store: Store.t(bool),
   testBool: item(bool, bool),
 };
@@ -27,10 +27,11 @@ describe("Persistence", ({test, _}) => {
       storeFolderTemplate
       |> Luv.File.Sync.mkdtemp
       |> Result.to_option
-      |> OptionEx.flatMap(Fp.absoluteCurrentPlatform)
+      |> OptionEx.flatMap(FpExp.absoluteCurrentPlatform)
       |> Option.get;
     prerr_endline(
-      "Persistence.setup - created storeFolder: " ++ Fp.toString(storeFolder),
+      "Persistence.setup - created storeFolder: "
+      ++ FpExp.toString(storeFolder),
     );
 
     let instantiate = Store.instantiate(~storeFolder);
@@ -52,7 +53,7 @@ describe("Persistence", ({test, _}) => {
 
     // We'll write out an empty file...
     let filePath =
-      Fp.At.(storeFolder / "global" / "store.json") |> Fp.toString;
+      FpExp.At.(storeFolder / "global" / "store.json") |> FpExp.toString;
     let oc = open_out(filePath);
     Printf.fprintf(oc, "\n");
     close_out(oc);

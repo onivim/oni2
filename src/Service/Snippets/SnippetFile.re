@@ -1,21 +1,23 @@
-type t = Fp.t(Fp.absolute);
+open Oni_Core;
+
+type t = FpExp.t(Fp.absolute);
 
 type scope =
   | Global
   | Language(string);
 
-let global = (folder: Fp.t(Fp.absolute)) => {
-  Fp.At.(folder / "global.code-snippets");
+let global = (folder: FpExp.t(Fp.absolute)) => {
+  FpExp.At.(folder / "global.code-snippets");
 };
 
-let language = (~fileType: string, folder: Fp.t(Fp.absolute)) => {
+let language = (~fileType: string, folder: FpExp.t(Fp.absolute)) => {
   let fileName = fileType ++ ".json";
-  Fp.At.(folder / fileName);
+  FpExp.At.(folder / fileName);
 };
 
 let scope = (path: t) => {
   let splitPath =
-    path |> Fp.toString |> Filename.basename |> String.split_on_char('.');
+    path |> FpExp.toString |> Filename.basename |> String.split_on_char('.');
 
   switch (splitPath) {
   | [] => None
@@ -89,7 +91,7 @@ let ensureCreated = (snippetFile: t) => {
   Lwt.catch(
     () => {
       snippetFile
-      |> Fp.toString
+      |> FpExp.toString
       |> Service_OS.Api.stat
       |> Lwt.map(_ => snippetFile)
     },
@@ -108,7 +110,10 @@ let ensureCreated = (snippetFile: t) => {
            Lwt.catch(
              () => {
                // File not created yet, let's create it
-               Service_OS.Api.writeFile(~contents, Fp.toString(snippetFile))
+               Service_OS.Api.writeFile(
+                 ~contents,
+                 FpExp.toString(snippetFile),
+               )
                |> Lwt.map(() => snippetFile)
              },
              exn => Lwt.fail_with(Printexc.to_string(exn)),
@@ -117,7 +122,7 @@ let ensureCreated = (snippetFile: t) => {
       |> Option.value(
            ~default=
              Lwt.fail_with(
-               "Invalid snippet file path: " ++ Fp.toString(snippetFile),
+               "Invalid snippet file path: " ++ FpExp.toString(snippetFile),
              ),
          );
     },
