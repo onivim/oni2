@@ -242,7 +242,12 @@ module Sub = {
 
   module SearchHighlightsSubscription =
     Isolinear.Sub.Make({
-      type state = unit => unit;
+      type state = {
+        dispose: unit => unit,
+        lastTopLine: EditorCoreTypes.LineNumber.t,
+        lastBottomLine: EditorCoreTypes.LineNumber.t,
+        lastVersion: int,
+      };
       type nonrec params = searchHighlightParams;
       type msg = array(ByteRange.t);
       let name = "Vim.Sub.SearchHighlights";
@@ -256,31 +261,10 @@ module Sub = {
               bottomVisibleLine,
             },
           ) => {
-        Printf.sprintf(
-          "%d.%d/%s:%d-%d",
-          bufferId,
-          version,
-          searchPattern,
-          topVisibleLine |> EditorCoreTypes.LineNumber.toZeroBased,
-          bottomVisibleLine |> EditorCoreTypes.LineNumber.toZeroBased,
-        );
+        Printf.sprintf("%d.%d/%s", bufferId, version, searchPattern);
       };
-      let init = (~params, ~dispatch) => {
-        // TODO: Set appropriate debounce
-        // Two scenarios to accomodate:
-        // - Typing / refining search
-        // - Re-querying highlights for buffer updates
-        //let len = params.searchPattern |> String.length;
-        // let debounceTime =
-        //   len == 1
-        //     ? Constants.mediumPriorityDebounceTime
-        //     : Constants.highPriorityDebounceTime;
 
-        let debounceTime = Constants.highPriorityDebounceTime;
-        // len == 1
-        //   ? Constants.mediumPriorityDebounceTime
-        // : Constants.highPriorityDebounceTime;
-
+      let queueSearchHighlights = (~debounceTime, params, dispatch) => {
         Revery.Tick.timeout(
           ~name="Service_Vim.Timeout.searchHighlights",
           _ => {
@@ -309,11 +293,60 @@ module Sub = {
           debounceTime,
         );
       };
-      let update = (~params as _, ~state, ~dispatch as _) => {
-        state;
+
+      let init = (~params, ~dispatch) => {
+        // TODO: Set appropriate debounce
+        // Two scenarios to accomodate:
+        // - Typing / refining search
+        // - Re-querying highlights for buffer updates
+        //let len = params.searchPattern |> String.length;
+        // let debounceTime =
+        //   len == 1
+        //     ? Constants.mediumPriorityDebounceTime
+        //     : Constants.highPriorityDebounceTime;
+
+        let debounceTime = Constants.highPriorityDebounceTime;
+        // len == 1
+        //   ? Constants.mediumPriorityDebounceTime
+        // : Constants.highPriorityDebounceTime;
+
+        let dispose = queueSearchHighlights(~debounceTime, params, dispatch);
+        {
+          dispose,
+          lastTopLine: params.topVisibleLine,
+          lastBottomLine: params.bottomVisibleLine,
+          lastVersion: params.version,
+        };
       };
-      let dispose = (~params as _, ~state as dispose) => {
-        dispose();
+
+      let update = (~params, ~state, ~dispatch) =>
+        if (!
+              EditorCoreTypes.LineNumber.equals(
+                params.topVisibleLine,
+                state.lastTopLine,
+              )
+            || !
+                 EditorCoreTypes.LineNumber.equals(
+                   params.bottomVisibleLine,
+                   state.lastBottomLine,
+                 )
+            || state.lastVersion != params.version) {
+          let debounceTime = Constants.mediumPriorityDebounceTime;
+          state.dispose();
+          let dispose =
+            queueSearchHighlights(~debounceTime, params, dispatch);
+          {
+            dispose,
+            lastTopLine: params.topVisibleLine,
+            lastBottomLine: params.bottomVisibleLine,
+            lastVersion: params.version,
+          };
+        } else {
+          state;
+        };
+
+      let dispose = (~params as _, ~state) => {
+        state.dispose();
       };
     });
 

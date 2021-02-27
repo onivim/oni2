@@ -43,7 +43,7 @@ let editor = (editor, buffer, state: State.t) => {
     uiFont=Oni_Core.UiFont.default
     snippets=Feature_Snippets.initial
     renderOverlays={(~gutterWidth as _) => <Revery.UI.View />}
-    vim=state.vim
+    vim={state.vim}
   />;
 };
 
