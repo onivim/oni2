@@ -251,17 +251,8 @@ module Sub = {
       type nonrec params = searchHighlightParams;
       type msg = array(ByteRange.t);
       let name = "Vim.Sub.SearchHighlights";
-      let id =
-          (
-            {
-              bufferId,
-              version,
-              searchPattern,
-              topVisibleLine,
-              bottomVisibleLine,
-            },
-          ) => {
-        Printf.sprintf("%d.%d/%s", bufferId, version, searchPattern);
+      let id = ({bufferId, searchPattern, _}) => {
+        Printf.sprintf("%d/%s", bufferId, searchPattern);
       };
 
       let queueSearchHighlights = (~debounceTime, params, dispatch) => {
