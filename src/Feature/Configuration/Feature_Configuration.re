@@ -87,7 +87,7 @@ let registerExtensionConfigurations =
   {...model, defaults, extHostSyncTick: model.extHostSyncTick + 1} |> merge;
 };
 
-let toExtensionConfiguration = (~additionalExtensions, ~setup: Setup.t, model) => {
+let toExtensionConfiguration = (~additionalExtensions, model) => {
   open Exthost.Extension;
   open Scanner.ScanResult;
 
@@ -266,7 +266,6 @@ let resolver = (~fileType: string, model, vimModel, ~vimSetting, key) => {
 
 let sub =
     (
-      ~setup,
       ~client,
       ~isExthostInitialized: bool,
       {loader, transformTasks, merged, extHostSyncTick, extHostLastConfig, _} as model,
@@ -297,11 +296,7 @@ let sub =
 
             Exthost.Request.Configuration.acceptConfigurationChanged(
               ~configuration=
-                toExtensionConfiguration(
-                  ~additionalExtensions=[],
-                  ~setup,
-                  model,
-                ),
+                toExtensionConfiguration(~additionalExtensions=[], model),
               ~changed,
               client,
             );

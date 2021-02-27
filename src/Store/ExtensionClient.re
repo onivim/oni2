@@ -291,7 +291,6 @@ let create =
     Exthost.Client.start(
       ~initialConfiguration=
         Feature_Configuration.toExtensionConfiguration(
-          ~setup,
           ~additionalExtensions=extensions,
           config,
         ),
