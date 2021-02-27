@@ -258,12 +258,25 @@ module Internal = {
 
     let languageSupport =
       if (prevCursor != newCursor) {
-        Feature_LanguageSupport.cursorMoved(
-          ~maybeBuffer,
-          ~previous=prevCursor,
-          ~current=newCursor,
-          state.languageSupport,
-        );
+        maybeBuffer
+        |> Option.map(buffer => {
+             let languageConfiguration =
+               buffer
+               |> Oni_Core.Buffer.getFileType
+               |> Oni_Core.Buffer.FileType.toString
+               |> Exthost.LanguageInfo.getLanguageConfiguration(
+                    state.languageInfo,
+                  )
+               |> Option.value(~default=LanguageConfiguration.default);
+             Feature_LanguageSupport.cursorMoved(
+               ~languageConfiguration,
+               ~buffer,
+               ~previous=prevCursor,
+               ~current=newCursor,
+               state.languageSupport,
+             );
+           })
+        |> Option.value(~default=state.languageSupport);
       } else {
         state.languageSupport;
       };
@@ -1796,12 +1809,25 @@ let update =
 
       let languageSupport' =
         if (originalCursor != newCursor) {
-          Feature_LanguageSupport.cursorMoved(
-            ~maybeBuffer,
-            ~previous=originalCursor,
-            ~current=newCursor,
-            languageSupport,
-          );
+          maybeBuffer
+          |> Option.map(buffer => {
+               let languageConfiguration =
+                 buffer
+                 |> Oni_Core.Buffer.getFileType
+                 |> Oni_Core.Buffer.FileType.toString
+                 |> Exthost.LanguageInfo.getLanguageConfiguration(
+                      state.languageInfo,
+                    )
+                 |> Option.value(~default=LanguageConfiguration.default);
+               Feature_LanguageSupport.cursorMoved(
+                 ~languageConfiguration,
+                 ~buffer,
+                 ~previous=originalCursor,
+                 ~current=newCursor,
+                 state.languageSupport,
+               );
+             })
+          |> Option.value(~default=state.languageSupport);
         } else {
           languageSupport;
         };
