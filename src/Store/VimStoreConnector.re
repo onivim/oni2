@@ -693,7 +693,7 @@ let start =
   let prevViml = ref([]);
   let synchronizeViml = lines =>
     Isolinear.Effect.create(~name="vim.synchronizeViml", () =>
-      if (prevViml^ !== lines) {
+      if (prevViml^ != lines) {
         List.iter(
           l => {
             Log.info("Running VimL from config: " ++ l);
