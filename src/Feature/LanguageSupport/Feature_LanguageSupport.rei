@@ -114,7 +114,8 @@ let configurationChanged: (~config: Config.resolver, model) => model;
 
 let cursorMoved:
   (
-    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
+    ~buffer: Oni_Core.Buffer.t,
     ~previous: CharacterPosition.t,
     ~current: CharacterPosition.t,
     model

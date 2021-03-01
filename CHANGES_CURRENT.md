@@ -19,6 +19,7 @@
 - #3183 - Auto-update: Default auto-update channel should match source build
 - #3184 - Explorer: Fix shrinking when changing paths
 - #3160 - Windows: Reload configuration on save
+- #3194 - Completion: Fix enter key deleting text after closing pairs (fixes #3191)
 
 ### Performance
 
