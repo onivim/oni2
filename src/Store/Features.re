@@ -1881,11 +1881,12 @@ let update =
         (state.newQuickmenu, layout', Isolinear.Effect.none);
 
       | ShowMenu(snippetMenu) =>
-        let menu = snippetMenu
-        |> Feature_Quickmenu.Schema.map(msg => Actions.Snippets(msg));
+        let menu =
+          snippetMenu
+          |> Feature_Quickmenu.Schema.map(msg => Actions.Snippets(msg));
         let quickmenu' = Feature_Quickmenu.show(~menu, state.newQuickmenu);
         (quickmenu', state.layout, Isolinear.Effect.none);
-        
+
       | OpenFile(filePath) => (
           state.newQuickmenu,
           state.layout,

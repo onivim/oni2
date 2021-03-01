@@ -55,6 +55,7 @@ let noop = () => ();
 let make =
     (
       ~style=[],
+      ~icon=None,
       ~font: UiFont.t,
       ~fontSize=12.,
       ~label,
@@ -64,21 +65,21 @@ let make =
       ~onMouseOver=noop,
       (),
     ) => {
-  // let iconView =
-  //   switch (icon) {
-  //   | Some(v) =>
-  //     IconTheme.IconDefinition.(
-  //       <Text
-  //         style={Styles.icon(v.fontColor)}
-  //         fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
-  //         fontSize=Constants.iconSize
-  //         text={FontIcon.codeToIcon(v.fontCharacter)}
-  //       />
-  //     )
+  let iconView =
+    switch (icon) {
+    | Some(v) =>
+      IconTheme.IconDefinition.(
+        <Text
+          style={Styles.icon(v.fontColor)}
+          fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
+          fontSize=Constants.iconSize
+          text={FontIcon.codeToIcon(v.fontCharacter)}
+        />
+      )
 
-  //   | None =>
-  //     <Text style={Styles.icon(Revery.Colors.transparentWhite)} text="" />
-  //   };
+    | None =>
+      <Text style={Styles.icon(Revery.Colors.transparentWhite)} text="" />
+    };
 
   let labelView =
     switch (label) {
@@ -96,6 +97,7 @@ let make =
     <View
       onMouseOver={_ => onMouseOver()}
       style={Styles.container(~theme, ~isFocused)}>
+      iconView
       labelView
     </View>
   </Sneakable>;
