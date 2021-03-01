@@ -170,6 +170,7 @@ let start =
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
       | SearchStringChanged(_) => ()
+      | SearchClearHighlights => ()
 
       // TODO: Move internal to Feature_Vim
       | Output({cmd, output}) => {
@@ -362,12 +363,12 @@ let start =
       dispatch(Actions.Buffers(Feature_Buffers.Msg.saved(~bufferId=id)))
     });
 
-  let _: unit => unit =
-    Vim.Search.onStopSearchHighlight(() => {
-      let buffer = Vim.Buffer.getCurrent();
-      let id = Vim.Buffer.getId(buffer);
-      dispatch(Actions.SearchClearHighlights(id));
-    });
+  // let _: unit => unit =
+  //   Vim.Search.onStopSearchHighlight(() => {
+  //     let buffer = Vim.Buffer.getCurrent();
+  //     let id = Vim.Buffer.getId(buffer);
+  //     dispatch(Actions.SearchClearHighlights(id));
+  //   });
 
   let _: unit => unit =
     Vim.onQuit((quitType, force) =>

@@ -344,7 +344,7 @@ let _onWriteFailure = (reason, buffer) => {
 };
 
 let _onStopSearch = () => {
-  queue(() => Event.dispatch((), Listeners.stopSearchHighlight));
+  queueEffect(Effect.SearchClearHighlights);
 };
 
 let _onUnhandledEscape = () => {

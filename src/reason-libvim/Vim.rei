@@ -509,6 +509,7 @@ module Effect: {
         direction: Scroll.direction,
       })
     | SearchStringChanged(option(string))
+    | SearchClearHighlights
     | Map(Mapping.t)
     | Unmap({
         mode: Mapping.mode,

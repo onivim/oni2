@@ -25,5 +25,3 @@ let getSearchPattern = () => Native.vimSearchGetPattern();
 let getHighlights = buffer => {
   getHighlightsInRange(buffer, 0, 0);
 };
-
-let onStopSearchHighlight = f => Event.add(f, Listeners.stopSearchHighlight);

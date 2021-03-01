@@ -93,22 +93,18 @@ describe("Search", ({describe, _}) => {
     });
   });
 
-  describe("onStopSearchHighlight", ({test, _}) =>
+  describe("SearchClearHighlights", ({test, _}) =>
     test(
-      "onStopSearchHighlight dispatches when nohlsearch is called",
+      "SearchClearHighlights effect is produced when nohlsearch is called",
       ({expect, _}) => {
       let _ = reset();
 
-      let callCount = ref(0);
-      let unsubscribe =
-        Vim.Search.onStopSearchHighlight(() => incr(callCount));
-
-      let (_context: Context.t, _effects: list(Vim.Effect.t)) =
+      let (_context: Context.t, effects: list(Vim.Effect.t)) =
         Vim.command("nohlsearch");
 
-      expect.int(callCount^).toBe(1);
-
-      unsubscribe();
+      let hasEffect =
+        effects |> List.exists(eff => eff == Vim.Effect.SearchClearHighlights);
+      expect.bool(hasEffect).toBe(true);
     })
   );
 });

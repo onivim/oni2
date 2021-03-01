@@ -96,6 +96,11 @@ let handleEffect = (model, effect: Vim.Effect.t) => {
       ...model,
       searchPattern: maybeSearchString,
     }
+  | Vim.Effect.SearchClearHighlights => {
+      ...model,
+      searchPattern: None,
+      searchHighlights: SearchHighlights.initial,
+    }
   | _ => model
   };
 };
