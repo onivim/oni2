@@ -58,12 +58,9 @@ module Styles = {
   ];
 };
 
-// let onFocusedChange = index =>
-//   GlobalContext.current().dispatch(ListFocus(index));
-
-let onFocusedChange = (_: int) => ();
-
-let onSelect = (_: int) => ();
+let onSelect = (i: int) => {
+  prerr_endline("onSelect: " ++ string_of_int(i));
+};
 
 let progressBar = (~progress, ~theme, ()) => {
   let indicator = () => {
@@ -144,6 +141,14 @@ let make =
 
     let count = Schema.Instance.count(current);
 
+    let onFocusedChange = index => {
+      dispatch(Model.ItemFocused(index));
+    };
+
+    let onSelect = index => {
+      dispatch(Model.ItemSelected(index));
+    };
+
     let renderItem = index => {
       switch (Schema.Instance.itemAndHighlights(~index, current)) {
       | None => React.empty
@@ -199,11 +204,7 @@ let make =
       </View>;
 
     let onClickBackground = () => {
-      prerr_endline(
-        "Clicked background",
-        // TODO:
-        //GlobalContext.current().dispatch(Actions.QuickmenuClose);
-      );
+      dispatch(Model.BackgroundClicked);
     };
 
     let innerClicked = ref(false);

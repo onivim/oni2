@@ -139,6 +139,18 @@ module Instance = {
         Instance({...orig, focused: focused'});
       };
 
+  let focus = index =>
+    fun
+    | Instance({filteredItems, _} as orig) => {
+        let focused' =
+          Utility.IntEx.clamp(
+            index,
+            ~lo=0,
+            ~hi=Array.length(filteredItems) - 1,
+          );
+        Instance({...orig, focused: Some(focused')});
+      };
+
   let previous =
     fun
     | Instance({filteredItems, focused, _} as orig) => {

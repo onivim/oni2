@@ -2,6 +2,9 @@ open Oni_Core;
 
 [@deriving show]
 type msg =
+  | BackgroundClicked
+  | ItemFocused(int)
+  | ItemSelected(int)
   | KeyPressed(string)
   | Pasted(string)
   | Input(Component_InputText.msg);
@@ -76,8 +79,7 @@ let select = model => {
     |> currentMenu
     |> Utility.OptionEx.flatMap(menu => Schema.Instance.select(menu))
     |> Option.map(msg => {
-         prerr_endline("CREATING VALUE");
-         EffectEx.value(~name="Feature_Quickmenu.select", msg);
+         EffectEx.value(~name="Feature_Quickmenu.select", msg)
        })
     |> Option.value(~default=Isolinear.Effect.none);
 
@@ -101,6 +103,24 @@ let update = (msg, model) => {
         model |> updateCurrentMenu(Schema.Instance.input(msg)),
         Nothing,
       )
+
+    | ItemFocused(index) => (
+        model |> updateCurrentMenu(Schema.Instance.focus(index)),
+        Nothing,
+      )
+
+    | ItemSelected(index) =>
+      let model' = model |> updateCurrentMenu(Schema.Instance.focus(index));
+      let eff =
+        model'
+        |> currentMenu
+        |> Utility.OptionEx.flatMap(menu => Schema.Instance.select(menu))
+        |> Option.map(action => Action(action))
+        |> Option.value(~default=Nothing);
+
+      ({menus: []}, eff);
+
+    | BackgroundClicked => (model |> cancel, Nothing)
     }
   );
 };
