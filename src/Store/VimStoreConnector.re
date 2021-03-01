@@ -535,23 +535,6 @@ let start =
         isCompleting^
           ? () : checkCommandLineCompletions(~position=cursorPosition, ~text);
 
-      | SearchForward
-      | SearchReverse =>
-        //let highlights = Vim.Search.getHighlights();
-
-        // let sameLineFilter = (range: ByteRange.t) =>
-        //   EditorCoreTypes.LineNumber.(range.start.line == range.stop.line);
-
-        // let buffer = Vim.Buffer.getCurrent();
-        // let id = Vim.Buffer.getId(buffer);
-
-        // TODO: Port elsewhere...
-        // let highlightList =
-        //   highlights |> ArrayEx.filterToList(sameLineFilter);
-
-        //dispatch(SearchSetHighlights(id, highlightList));
-        ()
-
       | _ => ()
       };
     });

@@ -286,20 +286,14 @@ module Sub = {
       };
 
       let init = (~params, ~dispatch) => {
-        // TODO: Set appropriate debounce
         // Two scenarios to accomodate:
         // - Typing / refining search
         // - Re-querying highlights for buffer updates
-        //let len = params.searchPattern |> String.length;
-        // let debounceTime =
-        //   len == 1
-        //     ? Constants.mediumPriorityDebounceTime
-        //     : Constants.highPriorityDebounceTime;
 
+        // Refining search needs to be fast, because we want to show new highlights
+        // real-time as the user types. However, re-querying highlights on buffer update
+        // doesn't need to be as quick, because in the general case we can just shift the existing highlights.
         let debounceTime = Constants.highPriorityDebounceTime;
-        // len == 1
-        //   ? Constants.mediumPriorityDebounceTime
-        // : Constants.highPriorityDebounceTime;
 
         let dispose = queueSearchHighlights(~debounceTime, params, dispatch);
         {
