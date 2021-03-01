@@ -48,7 +48,7 @@ let updateCurrentMenu = (f, model) => {
     | [] => []
     | [current, ...others] => [f(current), ...others]
     };
-  {...model, menus: menus'};
+  {menus: menus'};
 };
 
 let currentMenu = model => {
@@ -56,11 +56,6 @@ let currentMenu = model => {
   | [] => None
   | [current, ..._] => Some(current)
   };
-};
-
-let focus = (~index, model) => {
-  prerr_endline("!! FOCUS");
-  model;
 };
 
 let next = model => {
@@ -87,42 +82,40 @@ let select = model => {
 };
 
 let update = (msg, model) => {
-  Schema.Instance.(
-    switch (msg) {
-    | Pasted(text) => (
-        model |> updateCurrentMenu(Schema.Instance.paste(~text)),
-        Nothing,
-      )
+  switch (msg) {
+  | Pasted(text) => (
+      model |> updateCurrentMenu(Schema.Instance.paste(~text)),
+      Nothing,
+    )
 
-    | KeyPressed(key) => (
-        model |> updateCurrentMenu(Schema.Instance.key(~key)),
-        Nothing,
-      )
+  | KeyPressed(key) => (
+      model |> updateCurrentMenu(Schema.Instance.key(~key)),
+      Nothing,
+    )
 
-    | Input(msg) => (
-        model |> updateCurrentMenu(Schema.Instance.input(msg)),
-        Nothing,
-      )
+  | Input(msg) => (
+      model |> updateCurrentMenu(Schema.Instance.input(msg)),
+      Nothing,
+    )
 
-    | ItemFocused(index) => (
-        model |> updateCurrentMenu(Schema.Instance.focus(index)),
-        Nothing,
-      )
+  | ItemFocused(index) => (
+      model |> updateCurrentMenu(Schema.Instance.focus(index)),
+      Nothing,
+    )
 
-    | ItemSelected(index) =>
-      let model' = model |> updateCurrentMenu(Schema.Instance.focus(index));
-      let eff =
-        model'
-        |> currentMenu
-        |> Utility.OptionEx.flatMap(menu => Schema.Instance.select(menu))
-        |> Option.map(action => Action(action))
-        |> Option.value(~default=Nothing);
+  | ItemSelected(index) =>
+    let model' = model |> updateCurrentMenu(Schema.Instance.focus(index));
+    let eff =
+      model'
+      |> currentMenu
+      |> Utility.OptionEx.flatMap(menu => Schema.Instance.select(menu))
+      |> Option.map(action => Action(action))
+      |> Option.value(~default=Nothing);
 
-      ({menus: []}, eff);
+    ({menus: []}, eff);
 
-    | BackgroundClicked => (model |> cancel, Nothing)
-    }
-  );
+  | BackgroundClicked => (model |> cancel, Nothing)
+  };
 };
 
 let contextKeys = model => {

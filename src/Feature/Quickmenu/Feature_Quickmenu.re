@@ -1,8 +1,6 @@
 module Schema = Schema;
 module View = View;
 
-let initial = ();
-
 include Model;
 
 // SUBSCRIPTION

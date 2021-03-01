@@ -103,7 +103,7 @@ module Instance = {
 
   let input = msg =>
     fun
-    | Instance({text, _} as orig) => {
+    | Instance(orig) => {
         let (text', _outmsg) = Component_InputText.update(msg, orig.text);
         Instance({...orig, text: text'}) |> updateFilteredItems;
       };
@@ -170,7 +170,6 @@ module Instance = {
         |> OptionEx.flatMap(focusedIndex =>
              if (focusedIndex >= 0 && focusedIndex < len) {
                let item = filteredItems[focusedIndex];
-               prerr_endline("Trying onItemSelected");
                schema.onItemSelected |> Option.map(f => f(item.item));
              } else {
                None;
@@ -182,7 +181,7 @@ module Instance = {
     fun
     | Instance({focused, _}) => focused;
 
-  let sub = model => {
+  let sub = _model => {
     Isolinear.Sub.none;
   };
 };
@@ -192,7 +191,11 @@ let instantiate: menu('outmsg) => Instance.t('outmsg) =
   | Menu(internal) =>
     Instance.Instance({
       schema: internal,
-      text: Component_InputText.empty,
+      text:
+        Component_InputText.empty
+        |> Component_InputText.setPlaceholder(
+             ~placeholder="type to search...",
+           ),
       allItems: internal.items,
       filteredItems: [||],
       focused: None,

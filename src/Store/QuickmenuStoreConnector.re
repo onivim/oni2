@@ -511,7 +511,6 @@ let start = () => {
   let updater = (state: State.t, action: Actions.t) =>
     // Transition menus to this new-style quickmenu
     if (Feature_Quickmenu.isMenuOpen(state.newQuickmenu)) {
-      prerr_endline("isMenuOpen: true");
       switch (action) {
       | ListFocusUp => (
           {
@@ -541,7 +540,6 @@ let start = () => {
       | _ => (state, Isolinear.Effect.none)
       };
     } else {
-      prerr_endline("isMenuOpen: false");
       let (menuState, menuEffect) =
         menuUpdater(
           state.quickmenu,

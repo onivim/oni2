@@ -54,10 +54,7 @@ let noop = () => ();
 
 let make =
     (
-      ~style=[],
       ~icon=None,
-      ~font: UiFont.t,
-      ~fontSize=12.,
       ~label,
       ~isFocused,
       ~theme,

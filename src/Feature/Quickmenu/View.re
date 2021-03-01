@@ -58,10 +58,6 @@ module Styles = {
   ];
 };
 
-let onSelect = (i: int) => {
-  prerr_endline("onSelect: " ++ string_of_int(i));
-};
-
 let progressBar = (~progress, ~theme, ()) => {
   let indicator = () => {
     let width = int_of_float(float(Constants.menuWidth) *. progress);
@@ -111,17 +107,7 @@ let make =
     let ripgrepProgress = Complete;
     let focused = current |> Schema.Instance.focused;
     let inputText = current |> Schema.Instance.text;
-    let prefix = Some("abc");
-    // let Quickmenu.{
-    //       items,
-    //       filterProgress,
-    //       ripgrepProgress,
-    //       focused,
-    //       inputText,
-    //       prefix,
-    //       variant,
-    //       _,
-    //     } = state;
+    let prefix = None;
 
     let progress =
       Model.(
@@ -172,11 +158,8 @@ let make =
         <MenuItem
           onClick={() => onSelect(index)}
           theme
-          style=Styles.menuItem
           label={`Custom(labelView)}
-          font
           // icon={item.icon}
-          fontSize=14.
           onMouseOver={() => onFocusedChange(index)}
           isFocused
         />;
@@ -231,7 +214,9 @@ let make =
               onClickBackground();
             }
           }>
-        <View
+        <OniBoxShadow
+          theme
+          config
           onMouseDown={_ => {innerClicked := true}}
           style={Styles.container(theme)}>
           <input />
@@ -241,7 +226,7 @@ let make =
            | InProgress(progress) => <progressBar progress theme />
            | Loading => <busyBar theme />
            }}
-        </View>
+        </OniBoxShadow>
       </View>,
       hooks,
     );
