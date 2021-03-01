@@ -108,36 +108,6 @@ module Session = {
     fun
     | Session(session) => Session({...session, state: NotStarted});
 
-  let cursorMoved = (~position: CharacterPosition.t) =>
-    fun
-    | Session({state, _} as prevState) => {
-        let isCompletionMeetStillValid = (meet: CompletionMeet.t) => {
-          // If the line changed, the meet is no longer valid
-          meet.location.line == position.line
-          // If the cursor moved before the meet, on the same line,
-          // it is no longer valid. The after case is a bit trickier -
-          // the cursor moves first, before we get the buffer update,
-          // so the meet may not be valid until the buffer update comes through.
-          // We'll allow cursor moves after the meet, for now.
-          && CharacterIndex.toInt(meet.location.character)
-          <= CharacterIndex.toInt(position.character);
-        };
-        let state' =
-          switch (state) {
-          | Pending({meet, _}) as prev when isCompletionMeetStillValid(meet) => prev
-          | Pending(_) => NotStarted
-          | Partial(_) as prev => prev
-          | Completed({meet, _}) as prev
-              when isCompletionMeetStillValid(meet) => prev
-          | Completed(_) => NotStarted
-          | Accepted({meet, _}) as prev when isCompletionMeetStillValid(meet) => prev
-          | Accepted(_) => NotStarted
-          | prev => prev
-          };
-
-        Session({...prevState, state: state'});
-      };
-
   let filter:
     (~query: string, list(CompletionItem.t)) =>
     list(Filter.result(CompletionItem.t)) =
@@ -719,12 +689,20 @@ let updateSessions = (providers, model) => {
 };
 
 let cursorMoved =
-    (~previous as _, ~current: EditorCoreTypes.CharacterPosition.t, model) => {
+    (
+      ~languageConfiguration,
+      ~buffer,
+      ~current: EditorCoreTypes.CharacterPosition.t,
+      model,
+    ) => {
   // Filter providers, such that the completion meets are still
   // valid in the context of the new cursor position
 
   let providers' =
-    model.providers |> List.map(Session.cursorMoved(~position=current));
+    model.providers
+    |> List.map(
+         Session.refine(~languageConfiguration, ~buffer, ~position=current),
+       );
 
   model |> updateSessions(providers');
 };
