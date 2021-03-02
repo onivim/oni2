@@ -47,12 +47,12 @@ build: [
     "@doc" {with-doc}
   ]
 ]
-x-commit-hash: "19a2e7bc171a707059c73d78dd18e4e3ff03ac9b"
+x-commit-hash: "0e1b2044c8d1ff187c27cec3e46d9cde14892650"
 url {
   src:
-    "https://github.com/ocaml-dune/csexp/releases/download/1.3.2/csexp-1.3.2.tbz"
+    "https://github.com/ocaml-dune/csexp/releases/download/1.4.0/csexp-1.4.0.tbz"
   checksum: [
-    "sha256=f21f427b277f07e8bfd050e00c640a5893c1bf4b689147640fa383255dcf1c4a"
-    "sha512=ff1bd6a7c6bb3a73ca9ab0506c9ec1f357657deaa9ecc7eb32955817d9b0f266d976af3e2b8fc34c621cb0caf1fde55f9a609dd184e2054f500bf09afeb83026"
+    "sha256=8e3d6fca87f102a126dee8b72a2a0d146f10439c47218dfc149d51bf3edf364e"
+    "sha512=604a5094fbbf61f497b342ad0aa8ec25275b2a904cd0c1823fc40daa54a15796b360374ff495c0d8ca3b4c1e6723b2ce37e030857fae131222606de818fb8129"
   ]
 }
