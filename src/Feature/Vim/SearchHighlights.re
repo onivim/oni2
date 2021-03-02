@@ -50,19 +50,3 @@ let getHighlightsByLine = (~bufferId, ~line, state) => {
   let searchHighlights = getSearchHighlights(~bufferId, ~line, state);
   searchHighlights;
 };
-
-let getHighlights = (~bufferId, state) => {
-  let bindingToIndex = binding => {
-    let (line, _) = binding;
-    EditorCoreTypes.LineNumber.ofZeroBased(line);
-  };
-
-  let intMapToIndices = intMap =>
-    List.map(bindingToIndex, IntMap.bindings(intMap));
-
-  IntMap.find_opt(bufferId, state)
-  |> Option.map(highlights => {
-       highlights.searchHighlightsByLine |> intMapToIndices
-     })
-  |> Option.value(~default=[]);
-};

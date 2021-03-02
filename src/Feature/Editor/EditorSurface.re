@@ -16,7 +16,6 @@ module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 module Config = EditorConfiguration;
 
 module FontIcon = Oni_Components.FontIcon;
-module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostics = Feature_Diagnostics;
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
@@ -64,7 +63,7 @@ module Styles = {
 
 let minimap =
     (
-      ~bufferHighlights,
+      ~vim,
       ~cursorPosition: CharacterPosition.t,
       ~colors,
       ~config,
@@ -111,7 +110,7 @@ let minimap =
       diagnostics=diagnosticsMap
       getTokensForLine={getTokensForLine(
         ~editor,
-        ~bufferHighlights,
+        ~vim,
         ~cursorLine=
           EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
         ~colors,
@@ -122,7 +121,7 @@ let minimap =
       selection=selectionRanges
       showSlider=showMinimapSlider
       colors
-      bufferHighlights
+      vim
       diffMarkers
       languageSupport
     />
@@ -146,7 +145,7 @@ let%component make =
                 ~editor: Editor.t,
                 ~uiFont: Oni_Core.UiFont.t,
                 ~theme,
-                ~bufferHighlights,
+                ~vim,
                 ~bufferSyntaxHighlights,
                 ~diagnostics,
                 ~tokenTheme,
@@ -335,7 +334,7 @@ let%component make =
       selectionRanges
       matchingPairs
       maybeYankHighlights
-      bufferHighlights
+      vim
       languageSupport
       languageConfiguration
       bufferSyntaxHighlights
@@ -353,7 +352,7 @@ let%component make =
        ? <minimap
            editor
            diagnosticsMap
-           bufferHighlights
+           vim
            cursorPosition
            colors
            config
@@ -395,7 +394,7 @@ let%component make =
         height=pixelHeight
         diagnostics=diagnosticsMap
         colors
-        bufferHighlights
+        vim
         languageSupport
       />
     </View>

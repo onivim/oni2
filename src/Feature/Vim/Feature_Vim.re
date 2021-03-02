@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
@@ -9,6 +10,8 @@ type model = {
   settings: StringMap.t(Vim.Setting.value),
   recordingMacro: option(char),
   subMode: Vim.SubMode.t,
+  searchPattern: option(string),
+  searchHighlights: SearchHighlights.t,
   experimentalViml: list(string),
 };
 
@@ -16,6 +19,8 @@ let initial = {
   settings: StringMap.empty,
   recordingMacro: None,
   subMode: Vim.SubMode.None,
+  searchPattern: None,
+  searchHighlights: SearchHighlights.initial,
   experimentalViml: [],
 };
 
@@ -54,6 +59,10 @@ type msg =
     })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
+  | SearchHighlightsAvailable({
+      bufferId: int,
+      highlights: array(ByteRange.t),
+    })
   | SettingChanged(Vim.Setting.t)
   | MacroRecordingStarted({register: char})
   | MacroRecordingStopped
@@ -77,6 +86,29 @@ type outmsg =
       output: option(string),
     });
 
+let getSearchHighlightsByLine = (~bufferId, ~line, {searchHighlights, _}) => {
+  SearchHighlights.getHighlightsByLine(~bufferId, ~line, searchHighlights);
+};
+
+let handleEffect = (model, effect: Vim.Effect.t) => {
+  switch (effect) {
+  | Vim.Effect.SearchStringChanged(maybeSearchString) => {
+      ...model,
+      searchPattern: maybeSearchString,
+    }
+  | Vim.Effect.SearchClearHighlights => {
+      ...model,
+      searchPattern: None,
+      searchHighlights: SearchHighlights.initial,
+    }
+  | _ => model
+  };
+};
+
+let handleEffects = (effects, model) => {
+  effects |> List.fold_left(handleEffect, model);
+};
+
 module Effects = {
   let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
     let toMsg = mode =>
@@ -94,10 +126,11 @@ module Effects = {
     );
   };
 };
+
 let update = (msg, model: model) => {
   switch (msg) {
   | ModeChanged({allowAnimation, mode, effects, subMode}) => (
-      {...model, subMode},
+      {...model, subMode} |> handleEffects(effects),
       ModeDidChange({allowAnimation, mode, effects}),
     )
   | Pasted(text) =>
@@ -122,6 +155,22 @@ let update = (msg, model: model) => {
   | MacroRecordingStopped => ({...model, recordingMacro: None}, Nothing)
 
   | Output({cmd, output}) => (model, Output({cmd, output}))
+
+  | SearchHighlightsAvailable({bufferId, highlights}) =>
+    let newHighlights =
+      highlights |> ArrayEx.filterToList(ByteRange.isSingleLine);
+    (
+      {
+        ...model,
+        searchHighlights:
+          SearchHighlights.setSearchHighlights(
+            bufferId,
+            newHighlights,
+            model.searchHighlights,
+          ),
+      },
+      Nothing,
+    );
 
   | Noop => (model, Nothing)
   };
@@ -167,8 +216,22 @@ module CommandLine = {
 
 // SUBSCRIPTION
 
-let sub = _model => {
-  Isolinear.Sub.none;
+let sub = (~buffer, ~topVisibleLine, ~bottomVisibleLine, model) => {
+  let bufferId = Oni_Core.Buffer.getId(buffer);
+  let version = Oni_Core.Buffer.getVersion(buffer);
+  model.searchPattern
+  |> Option.map(searchPattern => {
+       Service_Vim.Sub.searchHighlights(
+         ~bufferId,
+         ~version,
+         ~topVisibleLine,
+         ~bottomVisibleLine,
+         ~searchPattern,
+         ranges => {
+         SearchHighlightsAvailable({bufferId, highlights: ranges})
+       })
+     })
+  |> Option.value(~default=Isolinear.Sub.none);
 };
 
 module Keybindings = {

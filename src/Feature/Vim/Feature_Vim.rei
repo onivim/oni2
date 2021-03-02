@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 // MODEL
 
 type model;
@@ -22,6 +24,10 @@ type msg =
     })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
+  | SearchHighlightsAvailable({
+      bufferId: int,
+      highlights: array(ByteRange.t),
+    })
   | SettingChanged(Vim.Setting.t)
   | MacroRecordingStarted({register: char})
   | MacroRecordingStopped
@@ -49,6 +55,20 @@ type outmsg =
 
 let update: (msg, model) => (model, outmsg);
 
+let getSearchHighlightsByLine:
+  (~bufferId: int, ~line: LineNumber.t, model) => list(ByteRange.t);
+
+// SUBSCRIPTION
+
+let sub:
+  (
+    ~buffer: Oni_Core.Buffer.t,
+    ~topVisibleLine: LineNumber.t,
+    ~bottomVisibleLine: LineNumber.t,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
+
 module CommandLine: {let getCompletionMeet: string => option(int);};
 
 module Effects: {
@@ -60,10 +80,6 @@ module Effects: {
     ) =>
     Isolinear.Effect.t(msg);
 };
-
-// SUBSCRIPTION
-
-let sub: model => Isolinear.Sub.t(msg);
 
 // CONFIGURATION
 

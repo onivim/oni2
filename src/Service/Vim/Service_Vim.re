@@ -231,4 +231,125 @@ module Sub = {
   let eval = (~toMsg, expression) => {
     EvalSubscription.create(expression) |> Isolinear.Sub.map(toMsg);
   };
+
+  type searchHighlightParams = {
+    bufferId: int,
+    version: int,
+    searchPattern: string,
+    topVisibleLine: EditorCoreTypes.LineNumber.t,
+    bottomVisibleLine: EditorCoreTypes.LineNumber.t,
+  };
+
+  module SearchHighlightsSubscription =
+    Isolinear.Sub.Make({
+      type state = {
+        dispose: unit => unit,
+        lastTopLine: EditorCoreTypes.LineNumber.t,
+        lastBottomLine: EditorCoreTypes.LineNumber.t,
+        lastVersion: int,
+      };
+      type nonrec params = searchHighlightParams;
+      type msg = array(ByteRange.t);
+      let name = "Vim.Sub.SearchHighlights";
+      let id = ({bufferId, searchPattern, _}) => {
+        Printf.sprintf("%d/%s", bufferId, searchPattern);
+      };
+
+      let queueSearchHighlights = (~debounceTime, params, dispatch) => {
+        Revery.Tick.timeout(
+          ~name="Service_Vim.Timeout.searchHighlights",
+          _ => {
+            let maybeBuffer = Vim.Buffer.getById(params.bufferId);
+            switch (maybeBuffer) {
+            | None => ()
+            | Some(buffer) =>
+              let topLine =
+                params.topVisibleLine |> EditorCoreTypes.LineNumber.toOneBased;
+              let bottomLine =
+                params.bottomVisibleLine
+                |> EditorCoreTypes.LineNumber.toOneBased;
+              Log.infof(m =>
+                m(
+                  "Getting highlights for buffer: %d (%d-%d)",
+                  params.bufferId,
+                  topLine,
+                  bottomLine,
+                )
+              );
+              let ranges =
+                Vim.Search.getHighlightsInRange(buffer, topLine, bottomLine);
+              dispatch(ranges);
+            };
+          },
+          debounceTime,
+        );
+      };
+
+      let init = (~params, ~dispatch) => {
+        // Two scenarios to accomodate:
+        // - Typing / refining search
+        // - Re-querying highlights for buffer updates
+
+        // Refining search needs to be fast, because we want to show new highlights
+        // real-time as the user types. However, re-querying highlights on buffer update
+        // doesn't need to be as quick, because in the general case we can just shift the existing highlights.
+        let debounceTime = Constants.highPriorityDebounceTime;
+
+        let dispose = queueSearchHighlights(~debounceTime, params, dispatch);
+        {
+          dispose,
+          lastTopLine: params.topVisibleLine,
+          lastBottomLine: params.bottomVisibleLine,
+          lastVersion: params.version,
+        };
+      };
+
+      let update = (~params, ~state, ~dispatch) =>
+        if (!
+              EditorCoreTypes.LineNumber.equals(
+                params.topVisibleLine,
+                state.lastTopLine,
+              )
+            || !
+                 EditorCoreTypes.LineNumber.equals(
+                   params.bottomVisibleLine,
+                   state.lastBottomLine,
+                 )
+            || state.lastVersion != params.version) {
+          let debounceTime = Constants.mediumPriorityDebounceTime;
+          state.dispose();
+          let dispose =
+            queueSearchHighlights(~debounceTime, params, dispatch);
+          {
+            dispose,
+            lastTopLine: params.topVisibleLine,
+            lastBottomLine: params.bottomVisibleLine,
+            lastVersion: params.version,
+          };
+        } else {
+          state;
+        };
+
+      let dispose = (~params as _, ~state) => {
+        state.dispose();
+      };
+    });
+
+  let searchHighlights =
+      (
+        ~bufferId,
+        ~version,
+        ~searchPattern,
+        ~topVisibleLine,
+        ~bottomVisibleLine,
+        toMsg,
+      ) =>
+    SearchHighlightsSubscription.create({
+      bufferId,
+      version,
+      searchPattern,
+      topVisibleLine,
+      bottomVisibleLine,
+    })
+    |> Isolinear.Sub.map(msg => toMsg(msg));
 };
