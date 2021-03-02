@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 
+[@deriving show]
 type movement =
   | ShiftLines({
       afterLine: LineNumber.t,
@@ -23,7 +24,10 @@ let create = (~update: BufferUpdate.t, ~original, ~updated) =>
     let endPos = update.endLine |> EditorCoreTypes.LineNumber.toZeroBased;
     let len = Array.length(update.lines);
     let delta = Array.length(update.lines) - (endPos - startPos);
-    if (delta == 0 && len == 1) {
+    if (delta == 0
+        && len == 1
+        && Buffer.getNumberOfLines(original) > startPos
+        && Buffer.getNumberOfLines(updated) > startPos) {
       // Single line was updated - we can adjust the bytes / characters in the line
       let originalLine =
         original |> Buffer.getLine(startPos) |> BufferLine.raw;
@@ -94,6 +98,7 @@ let apply = (~shiftLines, ~shiftCharacters, maybeMarkerUpdate, target) => {
         deltaBytes,
         deltaCharacters,
       }) =>
+      prerr_endline("SHIFTING CHARACTERS: " ++ show_movement(movement));
       shiftCharacters(
         ~line,
         ~afterByte,
@@ -101,7 +106,7 @@ let apply = (~shiftLines, ~shiftCharacters, maybeMarkerUpdate, target) => {
         ~afterCharacter,
         ~deltaCharacters,
         target,
-      )
+      );
     }
   };
 };

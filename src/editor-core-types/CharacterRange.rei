@@ -17,6 +17,9 @@ let contains: (CharacterPosition.t, t) => bool;
 
 let shiftLine: (~afterLine: LineNumber.t, ~delta: int, t) => t;
 
+let shiftCharacters:
+  (~line: LineNumber.t, ~afterCharacter: CharacterIndex.t, ~delta: int, t) => t;
+
 /**
  * [toHash(ranges)] takes a list [ranges] of [Range.t], and returns them as a
  * a hash table, where the key is the start line of the [Range.t],

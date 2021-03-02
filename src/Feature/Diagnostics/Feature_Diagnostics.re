@@ -279,13 +279,22 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model: model) => {
 
   let shiftCharacters =
       (
-        ~line as _,
+        ~line,
         ~afterByte as _,
         ~deltaBytes as _,
-        ~afterCharacter as _,
-        ~deltaCharacters as _,
+        ~afterCharacter,
+        ~deltaCharacters,
         model,
-      ) => model;
+      ) =>
+    model
+    |> Internal.mapRanges(
+         CharacterRange.shiftCharacters(
+           ~line,
+           ~afterCharacter,
+           ~delta=deltaCharacters,
+         ),
+         newBuffer,
+       );
 
   MarkerUpdate.apply(~shiftLines, ~shiftCharacters, markerUpdate, model);
 };

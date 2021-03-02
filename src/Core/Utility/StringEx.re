@@ -42,6 +42,8 @@ let firstDifference = (a, b) => {
       } else {
         Some(idx);
       };
+    } else if (a.[idx] != b.[idx]) {
+      Some(idx);
     } else {
       loop(idx + 1);
     };

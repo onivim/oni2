@@ -77,6 +77,27 @@ let shiftLine = (~afterLine: LineNumber.t, ~delta, range) => {
   );
 };
 
+let shiftCharacters = (~line, ~afterCharacter, ~delta, range) => {
+  CharacterIndex.(
+    {
+      let start' =
+        if (range.start.line == line && range.start.character >= afterCharacter) {
+          {...range.start, character: range.start.character + delta};
+        } else {
+          range.start;
+        };
+
+      let stop' =
+        if (range.stop.line == line && range.stop.character >= afterCharacter) {
+          {...range.stop, character: range.stop.character + delta};
+        } else {
+          range.stop;
+        };
+      {start: start', stop: stop'};
+    }
+  );
+};
+
 let toHash = ranges => {
   let hash = Hashtbl.create(100);
 
