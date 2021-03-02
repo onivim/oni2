@@ -1,6 +1,5 @@
 open EditorCoreTypes;
 
-[@deriving show]
 type movement =
   | ShiftLines({
       afterLine: LineNumber.t,
@@ -98,7 +97,6 @@ let apply = (~shiftLines, ~shiftCharacters, maybeMarkerUpdate, target) => {
         deltaBytes,
         deltaCharacters,
       }) =>
-      prerr_endline("SHIFTING CHARACTERS: " ++ show_movement(movement));
       shiftCharacters(
         ~line,
         ~afterByte,
@@ -106,7 +104,7 @@ let apply = (~shiftLines, ~shiftCharacters, maybeMarkerUpdate, target) => {
         ~afterCharacter,
         ~deltaCharacters,
         target,
-      );
+      )
     }
   };
 };
