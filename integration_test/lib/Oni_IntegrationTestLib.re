@@ -96,8 +96,8 @@ let runTest =
   Revery.App.initConsole();
 
   Core.Log.enableDebug();
-  Timber.App.setLevel(Timber.Level.error);
-  //Oni_Core.Log.init();
+  Timber.App.setLevel(Timber.Level.trace);
+  Oni_Core.Log.init();
 
   Internal.prepareEnvironment();
 
@@ -210,11 +210,11 @@ let runTest =
           headlessWindow,
           <Oni_UI.Root state dispatch=uiDispatch^ />,
         );
-        Revery.Utility.HeadlessWindow.takeScreenshot(
-          headlessWindow,
-          "screenshot.png",
-        );
       },
+      // Revery.Utility.HeadlessWindow.takeScreenshot(
+      //   headlessWindow,
+      //   "screenshot.png",
+      // );
       Revery.Time.zero,
     );
 
