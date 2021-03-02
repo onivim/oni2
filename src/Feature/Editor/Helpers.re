@@ -1,11 +1,9 @@
 open EditorCoreTypes;
 
-module BufferHighlights = Oni_Syntax.BufferHighlights;
-
 let getTokensForLine =
     (
       ~editor,
-      ~bufferHighlights,
+      ~vim,
       ~cursorLine,
       ~colors: Colors.t,
       ~matchingPairs,
@@ -34,11 +32,7 @@ let getTokensForLine =
 
     let idx = EditorCoreTypes.LineNumber.ofZeroBased(i);
     let searchHighlights =
-      BufferHighlights.getHighlightsByLine(
-        ~bufferId,
-        ~line=idx,
-        bufferHighlights,
-      );
+      Feature_Vim.getSearchHighlightsByLine(~bufferId, ~line=idx, vim);
 
     let matchingPairIndex =
       switch (matchingPairs) {

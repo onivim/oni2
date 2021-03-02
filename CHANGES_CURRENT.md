@@ -20,10 +20,12 @@
 - #3184 - Explorer: Fix shrinking when changing paths
 - #3160 - Windows: Reload configuration on save
 - #3194 - Completion: Fix enter key deleting text after closing pairs (fixes #3191)
+- #3197 - Vim: Fix hang when using the `experimental.viml` setting (fixes #3196 - thanks @amiralies!)
 
 ### Performance
 
 - #3148 - Large Files: Improve performance & fix crash when opening large files (related #1670)
+- #3139 - Large Files: Fix hang when using `/` search (fixes #1670)
 
 ### Documentation
 
@@ -38,3 +40,4 @@
 - #3168 - Diagnostics: Add additional build-information logging
 - #3172 - Theme: Move theme loader to subscription (unblocks #3160)
 - #3178 - Commands: Remove unused contributedCommands argument
+- #3202 - Dependency: revery -> 2a59280

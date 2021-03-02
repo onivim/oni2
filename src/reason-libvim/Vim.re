@@ -183,6 +183,7 @@ let runWith = (~context: Context.t, f) => {
   Options.setTabSize(context.tabSize);
   Options.setInsertSpaces(context.insertSpaces);
 
+  let prevSearchString = Search.getSearchPattern();
   let oldBuf = Buffer.getCurrent();
   let prevMode = Mode.trySet(context.mode);
   let prevModified = Buffer.isModified(oldBuf);
@@ -206,6 +207,12 @@ let runWith = (~context: Context.t, f) => {
   //let newMode = Mode.current();
   let newModified = Buffer.isModified(newBuf);
   let newLineEndings = Buffer.getLineEndings(newBuf);
+
+  let newSearchString = Search.getSearchPattern();
+
+  if (newSearchString != prevSearchString) {
+    queueEffect(SearchStringChanged(newSearchString));
+  };
 
   // Apply additional cursors
   let mode =
@@ -337,7 +344,7 @@ let _onWriteFailure = (reason, buffer) => {
 };
 
 let _onStopSearch = () => {
-  queue(() => Event.dispatch((), Listeners.stopSearchHighlight));
+  queueEffect(Effect.SearchClearHighlights);
 };
 
 let _onUnhandledEscape = () => {

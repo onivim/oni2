@@ -28,3 +28,6 @@ let equals: (t, t) => bool;
 let contains: (Location.t, t) => bool;
 
 let toString: t => string;
+
+let minLine: list(t) => option(LineNumber.t);
+let maxLine: list(t) => option(LineNumber.t);

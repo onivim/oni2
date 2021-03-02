@@ -15,4 +15,3 @@ let clearSearchHighlights: (int, t) => t;
 let getHighlightsByLine:
   (~bufferId: int, ~line: EditorCoreTypes.LineNumber.t, t) =>
   list(ByteRange.t);
-let getHighlights: (~bufferId: int, t) => list(LineNumber.t);

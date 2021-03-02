@@ -10,7 +10,6 @@ module OptionEx = Utility.OptionEx;
 open Revery.Draw;
 open Revery.UI;
 
-module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Constants = {
@@ -126,7 +125,7 @@ let%component make =
                    ),
                 ~showSlider,
                 ~colors: Colors.t,
-                ~bufferHighlights,
+                ~vim,
                 ~languageSupport,
                 ~diffMarkers,
                 (),
@@ -398,10 +397,10 @@ let%component make =
               let bufferId = Editor.getBufferId(editor);
 
               let searchHighlightRanges =
-                BufferHighlights.getHighlightsByLine(
+                Feature_Vim.getSearchHighlightsByLine(
                   ~bufferId,
                   ~line=index,
-                  bufferHighlights,
+                  vim,
                 )
                 |> List.filter_map(byteRange => {
                      Editor.byteRangeToCharacterRange(byteRange, editor)

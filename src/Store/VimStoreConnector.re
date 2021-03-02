@@ -169,6 +169,8 @@ let start =
       // This is handled by the returned `effects` list -
       // ideally, all the commands here could be factored to be handled in the same way
       | Scroll(_) => ()
+      | SearchStringChanged(_) => ()
+      | SearchClearHighlights => ()
 
       // TODO: Move internal to Feature_Vim
       | Output({cmd, output}) => {
@@ -362,13 +364,6 @@ let start =
     });
 
   let _: unit => unit =
-    Vim.Search.onStopSearchHighlight(() => {
-      let buffer = Vim.Buffer.getCurrent();
-      let id = Vim.Buffer.getId(buffer);
-      dispatch(Actions.SearchClearHighlights(id));
-    });
-
-  let _: unit => unit =
     Vim.onQuit((quitType, force) =>
       switch (quitType) {
       | QuitAll => dispatch(Quit(force))
@@ -533,20 +528,6 @@ let start =
 
         isCompleting^
           ? () : checkCommandLineCompletions(~position=cursorPosition, ~text);
-
-      | SearchForward
-      | SearchReverse =>
-        let highlights = Vim.Search.getHighlights();
-
-        let sameLineFilter = (range: ByteRange.t) =>
-          EditorCoreTypes.LineNumber.(range.start.line == range.stop.line);
-
-        let buffer = Vim.Buffer.getCurrent();
-        let id = Vim.Buffer.getId(buffer);
-
-        let highlightList =
-          highlights |> Array.to_list |> List.filter(sameLineFilter);
-        dispatch(SearchSetHighlights(id, highlightList));
 
       | _ => ()
       };
