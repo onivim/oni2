@@ -492,7 +492,7 @@ let cursorMoved =
   {...model, completion, documentHighlights, signatureHelp};
 };
 
-let moveMarkers = (~markerUpdate, model) => {
+let moveMarkers = (~markerUpdate as _, model) => {
   model;
 };
 
