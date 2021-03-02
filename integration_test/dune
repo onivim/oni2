@@ -23,6 +23,7 @@
    SyntaxHighlightTextMateTest SyntaxHighlightTreesitterTest
    AddRemoveSplitTest TerminalSetPidTitleTest TerminalConfigurationTest
    TypingBatchedTest TypingUnbatchedTest VimIncsearchScrollTest
+   VimExperimentalVimlTest
    VimRemapTimeoutTest VimSimpleRemapTest VimlRemapCmdlineTest
    ClipboardChangeTest VimScriptLocalFunctionTest ZenModeSingleFileModeTest
    ZenModeSplitTest)
@@ -61,6 +62,7 @@
    SyntaxServerParentPidCorrectTest.exe SyntaxServerReadExceptionTest.exe
    TerminalSetPidTitleTest.exe TerminalConfigurationTest.exe
    AddRemoveSplitTest.exe TypingBatchedTest.exe TypingUnbatchedTest.exe
+   VimExperimentalVimlTest.exe
    VimIncsearchScrollTest.exe VimScriptLocalFunctionTest.exe
    VimRemapTimeoutTest.exe VimSimpleRemapTest.exe VimlRemapCmdlineTest.exe
    ZenModeSingleFileModeTest.exe ZenModeSplitTest.exe ClipboardChangeTest.exe
