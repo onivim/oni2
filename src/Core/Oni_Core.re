@@ -42,6 +42,7 @@ module LanguageConfiguration = LanguageConfiguration;
 module LazyLoader = LazyLoader;
 module LineNumber = LineNumber;
 module Log = Kernel.Log;
+module MarkerUpdate = MarkerUpdate;
 module Menu = Menu;
 module MenuBar = MenuBar;
 module Mode = Mode;
