@@ -122,6 +122,12 @@ let cursorMoved:
   ) =>
   model;
 
+let moveMarkers:
+ (
+  ~markerUpdate: MarkerUpdate.t,
+  model
+ ) => model;
+
 let startInsertMode:
   (
     ~config: Oni_Core.Config.resolver,

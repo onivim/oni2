@@ -241,3 +241,9 @@ let maxSeverity = diagnostics => {
 
   loop(Hint, diagnostics);
 };
+
+let moveMarkers = (~markerUpdate, model) => {
+  // TODO: Shift markers for buffer
+  model
+};
+

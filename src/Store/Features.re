@@ -1312,7 +1312,7 @@ let update =
         Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
       );
 
-    | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
+    | BufferUpdated({update, newBuffer, oldBuffer, triggerKey, markerUpdate}) =>
       let fileType =
         newBuffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
@@ -1337,10 +1337,20 @@ let update =
           state.syntaxHighlights,
         );
 
+      let diagnostics = Feature_Diagnostics.moveMarkers(
+        ~markerUpdate,
+        state.diagnostics
+      );
+
+      let languageSupport = Feature_LanguageSupport.moveMarkers(
+        ~markerUpdate,
+        state.languageSupport
+      );
+
       let bufferRenderers =
         BufferRenderers.handleBufferUpdate(update, state.bufferRenderers);
 
-      let state' = {...state, bufferRenderers, syntaxHighlights};
+      let state' = {...state, bufferRenderers, syntaxHighlights, diagnostics, languageSupport};
 
       let syntaxEffect =
         Feature_Syntax.Effect.bufferUpdate(

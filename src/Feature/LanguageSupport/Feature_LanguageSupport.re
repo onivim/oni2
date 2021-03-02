@@ -492,6 +492,10 @@ let cursorMoved =
   {...model, completion, documentHighlights, signatureHelp};
 };
 
+let moveMarkers = (~markerUpdate, model) => {
+  model;
+};
+
 let startInsertMode = (~config, ~maybeBuffer, model) => {
   {
     ...model,
