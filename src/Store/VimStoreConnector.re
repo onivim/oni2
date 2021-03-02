@@ -363,13 +363,6 @@ let start =
       dispatch(Actions.Buffers(Feature_Buffers.Msg.saved(~bufferId=id)))
     });
 
-  // let _: unit => unit =
-  //   Vim.Search.onStopSearchHighlight(() => {
-  //     let buffer = Vim.Buffer.getCurrent();
-  //     let id = Vim.Buffer.getId(buffer);
-  //     dispatch(Actions.SearchClearHighlights(id));
-  //   });
-
   let _: unit => unit =
     Vim.onQuit((quitType, force) =>
       switch (quitType) {
