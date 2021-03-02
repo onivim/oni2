@@ -292,10 +292,26 @@ let handleUpdate =
                   ~line: EditorCoreTypes.LineNumber.t,
                   ~afterByte: ByteIndex.t,
                   ~deltaBytes: int,
-                  ~afterCharacter: CharacterIndex.t,
-                  ~deltaCharacters: int,
+                  ~afterCharacter as _,
+                  ~deltaCharacters as _,
                   lineMap,
-                ) => lineMap;
+                ) => {
+              lineMap
+              |> LineMap.update(
+                   line |> EditorCoreTypes.LineNumber.toZeroBased,
+                   Option.map(tokens => {
+                     let afterIndex = afterByte |> ByteIndex.toInt;
+                     tokens
+                     |> List.map((token: ThemeToken.t) =>
+                          if (token.index >= afterIndex) {
+                            {...token, index: token.index + deltaBytes};
+                          } else {
+                            token;
+                          }
+                        );
+                   }),
+                 );
+            };
 
             Some(
               MarkerUpdate.apply(

@@ -6,8 +6,6 @@ open Utility;
 exception TaskFailed;
 module Log = (val Kernel.Log.withNamespace("Oni2.Core.NodeTask"));
 
-let a = derp;
-
 module Internal = {
   let getFilteredEnvironment = () => {
     // Filter out some keys that aren't required
