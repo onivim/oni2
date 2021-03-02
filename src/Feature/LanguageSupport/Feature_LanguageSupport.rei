@@ -122,7 +122,8 @@ let cursorMoved:
   ) =>
   model;
 
-let moveMarkers: (~markerUpdate: MarkerUpdate.t, model) => model;
+let moveMarkers:
+  (~newBuffer: Buffer.t, ~markerUpdate: MarkerUpdate.t, model) => model;
 
 let startInsertMode:
   (

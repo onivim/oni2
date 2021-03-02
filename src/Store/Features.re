@@ -1347,6 +1347,7 @@ let update =
 
       let languageSupport =
         Feature_LanguageSupport.moveMarkers(
+          ~newBuffer,
           ~markerUpdate,
           state.languageSupport,
         );
