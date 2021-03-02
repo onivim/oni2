@@ -46,6 +46,10 @@ let clearSearchHighlights = (bufferId, state) => {
   );
 };
 
+let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
+  model;
+};
+
 let getHighlightsByLine = (~bufferId, ~line, state) => {
   let searchHighlights = getSearchHighlights(~bufferId, ~line, state);
   searchHighlights;
