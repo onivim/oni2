@@ -47,13 +47,14 @@ let subMode = ({subMode, _}) => subMode;
 
 let experimentalViml = ({experimentalViml, _}) => experimentalViml;
 
-let moveMarkers = (
-  ~newBuffer,
-  ~markerUpdate,
-  model
-) => {
+let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
   ...model,
-  searchHighlights: SearchHighlights.moveMarkers(~newBuffer, ~markerUpdate, model.searchHighlights),
+  searchHighlights:
+    SearchHighlights.moveMarkers(
+      ~newBuffer,
+      ~markerUpdate,
+      model.searchHighlights,
+    ),
 };
 
 // MSG

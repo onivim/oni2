@@ -1355,12 +1355,15 @@ let update =
       let bufferRenderers =
         BufferRenderers.handleBufferUpdate(update, state.bufferRenderers);
 
+      let vim = Feature_Vim.moveMarkers(~newBuffer, ~markerUpdate, state.vim);
+
       let state' = {
         ...state,
         bufferRenderers,
         syntaxHighlights,
         diagnostics,
         languageSupport,
+        vim,
       };
 
       let syntaxEffect =

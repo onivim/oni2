@@ -47,7 +47,39 @@ let clearSearchHighlights = (bufferId, state) => {
 };
 
 let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
-  model;
+  let bufferId = Oni_Core.Buffer.getId(newBuffer);
+  let shiftLines = (~afterLine, ~delta, searchHighlightsByLine) => {
+    let line = EditorCoreTypes.LineNumber.toZeroBased(afterLine);
+    searchHighlightsByLine
+    |> IntMap.shift(~startPos=line, ~endPos=line, ~delta);
+  };
+
+  let shiftCharacters =
+      (
+        ~line,
+        ~afterByte,
+        ~deltaBytes,
+        ~afterCharacter as _,
+        ~deltaCharacters as _,
+        searchHighlightsByLine,
+      ) => {
+    searchHighlightsByLine;
+  };
+
+  model
+  |> IntMap.update(
+       bufferId,
+       Option.map(({searchHighlightsByLine}) => {
+         let searchHighlightsByLine' =
+           MarkerUpdate.apply(
+             ~shiftLines,
+             ~shiftCharacters,
+             markerUpdate,
+             searchHighlightsByLine,
+           );
+         {searchHighlightsByLine: searchHighlightsByLine'};
+       }),
+     );
 };
 
 let getHighlightsByLine = (~bufferId, ~line, state) => {

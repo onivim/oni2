@@ -16,4 +16,6 @@ let getHighlightsByLine:
   (~bufferId: int, ~line: EditorCoreTypes.LineNumber.t, t) =>
   list(ByteRange.t);
 
-let moveMarkers : (~newBuffer: Oni_Core.Buffer.t, ~markerUpdate: Oni_Core.MarkerUpdate.t, t) => t;
+let moveMarkers:
+  (~newBuffer: Oni_Core.Buffer.t, ~markerUpdate: Oni_Core.MarkerUpdate.t, t) =>
+  t;
