@@ -56,7 +56,10 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
   };
 
   let clearLine = (~line, searchHighlightsByLine) => {
-    IntMap.remove(line |> EditorCoreTypes.LineNumber.toZeroBased, searchHighlightsByLine);
+    IntMap.remove(
+      line |> EditorCoreTypes.LineNumber.toZeroBased,
+      searchHighlightsByLine,
+    );
   };
 
   let shiftCharacters =
@@ -68,7 +71,13 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
         ~deltaCharacters as _,
         searchHighlightsByLine,
       ) => {
-    searchHighlightsByLine;
+    searchHighlightsByLine
+    |> IntMap.update(
+         line |> EditorCoreTypes.LineNumber.toZeroBased,
+         Option.map(spans => {
+           spans |> List.map(ByteSpan.shift(~afterByte, ~delta=deltaBytes))
+         }),
+       );
   };
 
   model

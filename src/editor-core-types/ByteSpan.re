@@ -20,3 +20,25 @@ let ofRange = (range: ByteRange.t) =>
   } else {
     Some({start: range.start.byte, stop: range.stop.byte});
   };
+
+let shift = (~afterByte, ~delta, span) => {
+  ByteIndex.(
+    {
+      let start' =
+        if (span.start >= afterByte) {
+          span.start + delta;
+        } else {
+          span.start;
+        };
+
+      let stop' =
+        if (span.stop >= afterByte) {
+          span.stop + delta;
+        } else {
+          span.stop;
+        };
+
+      {start: start', stop: stop'};
+    }
+  );
+};

@@ -83,7 +83,8 @@ let create = (~update: BufferUpdate.t, ~original, ~updated) =>
     };
   };
 
-let apply = (~clearLine, ~shiftLines, ~shiftCharacters, maybeMarkerUpdate, target) => {
+let apply =
+    (~clearLine, ~shiftLines, ~shiftCharacters, maybeMarkerUpdate, target) => {
   switch (maybeMarkerUpdate) {
   | None => target
   | Some(movement) =>

@@ -299,5 +299,11 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model: model) => {
          newBuffer,
        );
 
-  MarkerUpdate.apply(~clearLine, ~shiftLines, ~shiftCharacters, markerUpdate, model);
+  MarkerUpdate.apply(
+    ~clearLine,
+    ~shiftLines,
+    ~shiftCharacters,
+    markerUpdate,
+    model,
+  );
 };

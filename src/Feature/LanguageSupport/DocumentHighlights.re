@@ -107,9 +107,7 @@ let moveMarkers = (~buffer, ~markerUpdate, model) => {
     bufferToHighlights
     |> IntMap.update(
          bufferId,
-         Option.map(lineMap => {
-           IntMap.remove(lineIdx, lineMap)
-         }),
+         Option.map(lineMap => {IntMap.remove(lineIdx, lineMap)}),
        );
   };
 
