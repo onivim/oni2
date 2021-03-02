@@ -41,7 +41,8 @@ let handleUpdate:
     ~scope: string,
     ~theme: Oni_Syntax.TokenTheme.t,
     ~config: Config.resolver,
-    BufferUpdate.t,
+    ~bufferUpdate: BufferUpdate.t,
+    ~markerUpdate: MarkerUpdate.t,
     t
   ) =>
   t;

@@ -384,14 +384,17 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       } else {
         newBuffer;
       };
-    let markerUpdate = MarkerUpdate.create(
-      ~update,
-      ~original=oldBuffer,
-      ~updated=buffer
-    );
+    let markerUpdate =
+      MarkerUpdate.create(~update, ~original=oldBuffer, ~updated=buffer);
     (
       add(buffer, model) |> Internal.recomputeDiff(~bufferId=update.id),
-      BufferUpdated({update, newBuffer: buffer, oldBuffer, triggerKey, markerUpdate}),
+      BufferUpdated({
+        update,
+        newBuffer: buffer,
+        oldBuffer,
+        triggerKey,
+        markerUpdate,
+      }),
     );
 
   | FileTypeChanged({id, fileType}) => (

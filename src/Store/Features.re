@@ -1333,24 +1333,34 @@ let update =
               state.vim,
             ),
           ~theme=state.colorTheme |> Feature_Theme.tokenColors,
-          update,
+          ~bufferUpdate=update,
+          ~markerUpdate,
           state.syntaxHighlights,
         );
 
-      let diagnostics = Feature_Diagnostics.moveMarkers(
-        ~markerUpdate,
-        state.diagnostics
-      );
+      let diagnostics =
+        Feature_Diagnostics.moveMarkers(
+          ~newBuffer,
+          ~markerUpdate,
+          state.diagnostics,
+        );
 
-      let languageSupport = Feature_LanguageSupport.moveMarkers(
-        ~markerUpdate,
-        state.languageSupport
-      );
+      let languageSupport =
+        Feature_LanguageSupport.moveMarkers(
+          ~markerUpdate,
+          state.languageSupport,
+        );
 
       let bufferRenderers =
         BufferRenderers.handleBufferUpdate(update, state.bufferRenderers);
 
-      let state' = {...state, bufferRenderers, syntaxHighlights, diagnostics, languageSupport};
+      let state' = {
+        ...state,
+        bufferRenderers,
+        syntaxHighlights,
+        diagnostics,
+        languageSupport,
+      };
 
       let syntaxEffect =
         Feature_Syntax.Effect.bufferUpdate(

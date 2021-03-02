@@ -15,6 +15,8 @@ let explode: (LineNumber.t => int, t) => list(t);
 
 let contains: (CharacterPosition.t, t) => bool;
 
+let shiftLine: (~afterLine: LineNumber.t, ~delta: int, t) => t;
+
 /**
  * [toHash(ranges)] takes a list [ranges] of [Range.t], and returns them as a
  * a hash table, where the key is the start line of the [Range.t],
