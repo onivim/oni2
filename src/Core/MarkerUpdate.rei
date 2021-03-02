@@ -7,6 +7,7 @@ let create:
 
 let apply:
   (
+    ~clearLine: (~line: LineNumber.t, 'a) => 'a,
     ~shiftLines: (~afterLine: LineNumber.t, ~delta: int, 'a) => 'a,
     ~shiftCharacters: (
                         ~line: LineNumber.t,

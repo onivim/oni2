@@ -102,6 +102,17 @@ let moveMarkers = (~buffer, ~markerUpdate, model) => {
        );
   };
 
+  let clearLine = (~line, bufferToHighlights) => {
+    let lineIdx = line |> EditorCoreTypes.LineNumber.toZeroBased;
+    bufferToHighlights
+    |> IntMap.update(
+         bufferId,
+         Option.map(lineMap => {
+           IntMap.remove(lineIdx, lineMap)
+         }),
+       );
+  };
+
   let shiftCharacters =
       (
         ~line,
@@ -135,6 +146,7 @@ let moveMarkers = (~buffer, ~markerUpdate, model) => {
 
   let bufferToHighlights' =
     MarkerUpdate.apply(
+      ~clearLine,
       ~shiftLines,
       ~shiftCharacters,
       markerUpdate,

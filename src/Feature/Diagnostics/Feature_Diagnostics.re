@@ -277,6 +277,9 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model: model) => {
        );
   };
 
+  // TODO: Clear ranges
+  let clearLine = (~line, model) => model;
+
   let shiftCharacters =
       (
         ~line,
@@ -296,5 +299,5 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model: model) => {
          newBuffer,
        );
 
-  MarkerUpdate.apply(~shiftLines, ~shiftCharacters, markerUpdate, model);
+  MarkerUpdate.apply(~clearLine, ~shiftLines, ~shiftCharacters, markerUpdate, model);
 };

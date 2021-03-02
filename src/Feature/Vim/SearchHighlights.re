@@ -55,6 +55,10 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
     |> IntMap.shift(~startPos=line, ~endPos=line, ~delta);
   };
 
+  let clearLine = (~line, searchHighlightsByLine) => {
+    IntMap.remove(line |> EditorCoreTypes.LineNumber.toZeroBased, searchHighlightsByLine);
+  };
+
   let shiftCharacters =
       (
         ~line,
@@ -73,6 +77,7 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
        Option.map(({searchHighlightsByLine}) => {
          let searchHighlightsByLine' =
            MarkerUpdate.apply(
+             ~clearLine,
              ~shiftLines,
              ~shiftCharacters,
              markerUpdate,

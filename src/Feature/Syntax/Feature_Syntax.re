@@ -313,8 +313,11 @@ let handleUpdate =
                  );
             };
 
+            let clearLine = (~line, model) => model;
+
             Some(
               MarkerUpdate.apply(
+                ~clearLine,
                 ~shiftLines,
                 ~shiftCharacters,
                 markerUpdate,
