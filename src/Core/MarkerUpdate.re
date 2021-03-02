@@ -13,7 +13,7 @@ type movement =
       deltaCharacters: int,
     });
 
-type t = option(movement);
+type t = list(movement);
 
 let create = (~update: BufferUpdate.t, ~original, ~updated) =>
   if (update.isFull) {
@@ -37,7 +37,7 @@ let create = (~update: BufferUpdate.t, ~original, ~updated) =>
 
       // For now, we'll only handle insertions / deletions
       if (deltaBytes == 0) {
-        None;
+        [];
       } else {
         Utility.StringEx.firstDifference(originalLine, newLine)
         |> Option.map(firstDifferentByte => {
@@ -77,20 +77,21 @@ let create = (~update: BufferUpdate.t, ~original, ~updated) =>
       };
     } else if (delta != 0) {
       let afterLine = delta < 0 ? update.startLine : update.endLine;
-      Some(ShiftLines({afterLine, delta}));
+      [ShiftLines({afterLine, delta})];
     } else {
-      None;
+      []
     };
   };
 
 let apply =
-    (~clearLine, ~shiftLines, ~shiftCharacters, maybeMarkerUpdate, target) => {
-  switch (maybeMarkerUpdate) {
-  | None => target
-  | Some(movement) =>
+    (~clearLine, ~shiftLines, ~shiftCharacters, markerUpdate, target) => {
+
+  markerUpdate
+  |> List.fold_left((acc, movement) => {
     switch (movement) {
     | ShiftLines({afterLine, delta}) =>
-      shiftLines(~afterLine, ~delta, target)
+      shiftLines(~afterLine, ~delta, acc)
+
     | ShiftCharacters({
         line,
         afterByte,
@@ -104,8 +105,8 @@ let apply =
         ~deltaBytes,
         ~afterCharacter,
         ~deltaCharacters,
-        target,
+        acc,
       )
     }
-  };
+  }, target);
 };
