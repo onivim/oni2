@@ -76,7 +76,7 @@ let create = (~update: BufferUpdate.t, ~original, ~updated) =>
            });
       };
     } else if (delta != 0) {
-      let afterLine = update.endLine;
+      let afterLine = delta < 0 ? update.startLine : update.endLine;
       Some(ShiftLines({afterLine, delta}));
     } else {
       None;
