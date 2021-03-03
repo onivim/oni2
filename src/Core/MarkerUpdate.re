@@ -1,6 +1,7 @@
 open EditorCoreTypes;
 
 type movement =
+  | ClearLine({line: LineNumber.t})
   | ShiftLines({
       afterLine: LineNumber.t,
       delta: int,
@@ -15,9 +16,11 @@ type movement =
 
 type t = list(movement);
 
+let none = [];
+
 let create = (~update: BufferUpdate.t, ~original, ~updated) =>
   if (update.isFull) {
-    None;
+    none;
   } else {
     let startPos = update.startLine |> EditorCoreTypes.LineNumber.toZeroBased;
     let endPos = update.endLine |> EditorCoreTypes.LineNumber.toZeroBased;
@@ -37,7 +40,7 @@ let create = (~update: BufferUpdate.t, ~original, ~updated) =>
 
       // For now, we'll only handle insertions / deletions
       if (deltaBytes == 0) {
-        [];
+        none;
       } else {
         Utility.StringEx.firstDifference(originalLine, newLine)
         |> Option.map(firstDifferentByte => {
@@ -73,40 +76,56 @@ let create = (~update: BufferUpdate.t, ~original, ~updated) =>
                afterCharacter: CharacterIndex.ofInt(characterCount),
                deltaCharacters: deltaCharacterCount,
              });
-           });
+           })
+        |> Option.to_list;
       };
     } else if (delta != 0) {
       let afterLine = delta < 0 ? update.startLine : update.endLine;
-      [ShiftLines({afterLine, delta})];
+      let candidate = ShiftLines({afterLine, delta});
+
+      // Pure delete - let's clear out the lines in the update
+      if (delta < 0 && Array.length(update.lines) == 0) {
+        let linesToClear =
+          List.init(abs(delta), i =>
+            ClearLine({line: LineNumber.(update.startLine + i)})
+          );
+
+        [candidate, ...linesToClear] |> List.rev;
+      } else {
+        [candidate];
+      };
     } else {
-      []
+      none;
     };
   };
 
-let apply =
-    (~clearLine, ~shiftLines, ~shiftCharacters, markerUpdate, target) => {
-
+let apply = (~clearLine, ~shiftLines, ~shiftCharacters, markerUpdate, target) => {
   markerUpdate
-  |> List.fold_left((acc, movement) => {
-    switch (movement) {
-    | ShiftLines({afterLine, delta}) =>
-      shiftLines(~afterLine, ~delta, acc)
+  |> List.fold_left(
+       (acc, movement) => {
+         switch (movement) {
+         | ClearLine({line}) => clearLine(~line, acc)
 
-    | ShiftCharacters({
-        line,
-        afterByte,
-        afterCharacter,
-        deltaBytes,
-        deltaCharacters,
-      }) =>
-      shiftCharacters(
-        ~line,
-        ~afterByte,
-        ~deltaBytes,
-        ~afterCharacter,
-        ~deltaCharacters,
-        acc,
-      )
-    }
-  }, target);
+         | ShiftLines({afterLine, delta}) =>
+           shiftLines(~afterLine, ~delta, acc)
+
+         | ShiftCharacters({
+             line,
+             afterByte,
+             afterCharacter,
+             deltaBytes,
+             deltaCharacters,
+           }) =>
+           shiftCharacters(
+             ~line,
+             ~afterByte,
+             ~deltaBytes,
+             ~afterCharacter,
+             ~deltaCharacters,
+             acc,
+           )
+         }
+       },
+       target,
+     );
 };

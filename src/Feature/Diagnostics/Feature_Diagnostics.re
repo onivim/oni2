@@ -161,6 +161,26 @@ module Internal = {
 
     {...model, diagnosticsMap: diagnosticsMap'};
   };
+  let filterRanges = (f, buffer, model) => {
+    let bufferKey = getKeyForBuffer(buffer);
+
+    let diagnosticsMap' =
+      model.diagnosticsMap
+      |> StringMap.update(
+           bufferKey,
+           Option.map(diagKeyToRanges => {
+             diagKeyToRanges
+             |> StringMap.map(diagnostics => {
+                  diagnostics
+                  |> List.filter((diagnostic: Diagnostic.t) => {
+                       f(diagnostic.range)
+                     })
+                })
+           }),
+         );
+
+    {...model, diagnosticsMap: diagnosticsMap'};
+  };
 };
 
 let clear = (instance, key) => {
@@ -277,8 +297,17 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model: model) => {
        );
   };
 
-  // TODO: Clear ranges
-  let clearLine = (~line, model) => model;
+  let clearLine = (~line, model) => {
+    model
+    |> Internal.filterRanges(
+         (range: CharacterRange.t) =>
+           !
+             EditorCoreTypes.LineNumber.(
+               range.start.line == line && range.stop.line == line
+             ),
+         newBuffer,
+       );
+  };
 
   let shiftCharacters =
       (

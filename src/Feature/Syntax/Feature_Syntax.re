@@ -313,7 +313,7 @@ let handleUpdate =
                  );
             };
 
-            let clearLine = (~line, model) => model;
+            let clearLine = (~line as _, model) => model;
 
             Some(
               MarkerUpdate.apply(
