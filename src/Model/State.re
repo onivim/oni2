@@ -564,16 +564,6 @@ let initial =
       Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
     pane: Feature_Pane.initial,
     newQuickmenu: Feature_Quickmenu.initial,
-    // newQuickmenu:
-    //   Feature_Quickmenu.initial
-    //   |> Feature_Quickmenu.show(
-    //        ~menu=
-    //          Feature_Quickmenu.Schema.menu(
-    //            ~onItemSelected=_item => Actions.TESTING,
-    //            ~toString=Fun.id,
-    //            List.init(1000, i => string_of_int(i)),
-    //          ),
-    //      ),
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,
