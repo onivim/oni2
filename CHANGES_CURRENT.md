@@ -1,3 +1,10 @@
+### Breaking
+
+- #3193 - Reason: Remove `reason-language-server` executable
+
+> NOTE: For native Reason & OCaml, see: https://onivim.github.io/docs/languages/reason-ocaml
+> NOTE: For ReScript & BuckleScript, see: https://onivim.github.io/docs/languages/rescript
+
 ### Features 
 
 - #3163 - UX: Add clear notification button (thanks @andr3h3nriqu3s11 !)
