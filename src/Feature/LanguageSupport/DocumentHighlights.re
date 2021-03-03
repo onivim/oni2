@@ -88,6 +88,71 @@ let cursorMoved = (~buffer, ~cursor, model) => {
   };
 };
 
+let moveMarkers = (~buffer, ~markerUpdate, model) => {
+  let bufferId = Oni_Core.Buffer.getId(buffer);
+
+  let shiftLines = (~afterLine, ~delta, bufferToHighlights) => {
+    let line = afterLine |> EditorCoreTypes.LineNumber.toZeroBased;
+    bufferToHighlights
+    |> IntMap.update(
+         bufferId,
+         Option.map(lineMap => {
+           IntMap.shift(~startPos=line, ~endPos=line, ~delta, lineMap)
+         }),
+       );
+  };
+
+  let clearLine = (~line, bufferToHighlights) => {
+    let lineIdx = line |> EditorCoreTypes.LineNumber.toZeroBased;
+    bufferToHighlights
+    |> IntMap.update(
+         bufferId,
+         Option.map(lineMap => {IntMap.remove(lineIdx, lineMap)}),
+       );
+  };
+
+  let shiftCharacters =
+      (
+        ~line,
+        ~afterByte as _,
+        ~deltaBytes as _,
+        ~afterCharacter,
+        ~deltaCharacters,
+        bufferToHighlights,
+      ) => {
+    bufferToHighlights
+    |> IntMap.update(
+         bufferId,
+         Option.map(lineMap => {
+           lineMap
+           |> IntMap.update(
+                EditorCoreTypes.LineNumber.toZeroBased(line),
+                Option.map(ranges => {
+                  ranges
+                  |> List.map(
+                       CharacterRange.shiftCharacters(
+                         ~line,
+                         ~afterCharacter,
+                         ~delta=deltaCharacters,
+                       ),
+                     )
+                }),
+              )
+         }),
+       );
+  };
+
+  let bufferToHighlights' =
+    MarkerUpdate.apply(
+      ~clearLine,
+      ~shiftLines,
+      ~shiftCharacters,
+      markerUpdate,
+      model.bufferToHighlights,
+    );
+  {...model, bufferToHighlights: bufferToHighlights'};
+};
+
 let update = (~maybeBuffer, ~editorId, msg, model) => {
   switch (msg) {
   | DocumentHighlighted({bufferId, ranges}) =>

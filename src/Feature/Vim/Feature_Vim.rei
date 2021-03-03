@@ -58,6 +58,14 @@ let update: (msg, model) => (model, outmsg);
 let getSearchHighlightsByLine:
   (~bufferId: int, ~line: LineNumber.t, model) => list(ByteRange.t);
 
+let moveMarkers:
+  (
+    ~newBuffer: Oni_Core.Buffer.t,
+    ~markerUpdate: Oni_Core.MarkerUpdate.t,
+    model
+  ) =>
+  model;
+
 // SUBSCRIPTION
 
 let sub:

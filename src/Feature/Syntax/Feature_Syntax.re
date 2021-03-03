@@ -234,14 +234,15 @@ let handleUpdate =
       ~scope,
       ~theme,
       ~config: Config.resolver,
-      bufferUpdate: BufferUpdate.t,
+      ~bufferUpdate: BufferUpdate.t,
+      ~markerUpdate: MarkerUpdate.t,
       bufferHighlights,
     ) =>
   if (BufferMap.mem(bufferUpdate.id, bufferHighlights.ignoredBuffers)) {
     bufferHighlights;
   } else if (bufferUpdate.version == 1 && bufferUpdate.isFull) {
     // Eager syntax highlighting - on the very first buffer update,
-    // we'll synchronousyl calculate syntax highlights for an initial
+    // we'll synchronously calculate syntax highlights for an initial
     // chunk of the buffer.
     let newHighlights = ref(bufferHighlights);
     let highlights =
@@ -274,16 +275,52 @@ let handleUpdate =
         fun
         | None => None
         | Some(lineMap) => {
-            let startPos =
-              bufferUpdate.startLine |> EditorCoreTypes.LineNumber.toZeroBased;
-            let endPos =
-              bufferUpdate.endLine |> EditorCoreTypes.LineNumber.toZeroBased;
-            Some(
+            let shiftLines = (~afterLine, ~delta, lineMap) => {
+              let lineNumber =
+                EditorCoreTypes.LineNumber.toZeroBased(afterLine);
               LineMap.shift(
                 ~default=v => v,
-                ~startPos,
-                ~endPos,
-                ~delta=Array.length(bufferUpdate.lines) - (endPos - startPos),
+                ~startPos=lineNumber,
+                ~endPos=lineNumber,
+                ~delta,
+                lineMap,
+              );
+            };
+
+            let shiftCharacters =
+                (
+                  ~line: EditorCoreTypes.LineNumber.t,
+                  ~afterByte: ByteIndex.t,
+                  ~deltaBytes: int,
+                  ~afterCharacter as _,
+                  ~deltaCharacters as _,
+                  lineMap,
+                ) => {
+              lineMap
+              |> LineMap.update(
+                   line |> EditorCoreTypes.LineNumber.toZeroBased,
+                   Option.map(tokens => {
+                     let afterIndex = afterByte |> ByteIndex.toInt;
+                     tokens
+                     |> List.map((token: ThemeToken.t) =>
+                          if (token.index >= afterIndex) {
+                            {...token, index: token.index + deltaBytes};
+                          } else {
+                            token;
+                          }
+                        );
+                   }),
+                 );
+            };
+
+            let clearLine = (~line as _, model) => model;
+
+            Some(
+              MarkerUpdate.apply(
+                ~clearLine,
+                ~shiftLines,
+                ~shiftCharacters,
+                markerUpdate,
                 lineMap,
               ),
             );

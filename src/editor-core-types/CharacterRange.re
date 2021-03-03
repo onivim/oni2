@@ -56,6 +56,48 @@ let contains = (position: CharacterPosition.t, range) => {
   );
 };
 
+let shiftLine = (~afterLine: LineNumber.t, ~delta, range) => {
+  LineNumber.(
+    {
+      let start' =
+        if (range.start.line >= afterLine) {
+          {...range.start, line: range.start.line + delta};
+        } else {
+          range.start;
+        };
+
+      let stop' =
+        if (range.stop.line >= afterLine) {
+          {...range.stop, line: range.stop.line + delta};
+        } else {
+          range.stop;
+        };
+      {start: start', stop: stop'};
+    }
+  );
+};
+
+let shiftCharacters = (~line, ~afterCharacter, ~delta, range) => {
+  CharacterIndex.(
+    {
+      let start' =
+        if (range.start.line == line && range.start.character >= afterCharacter) {
+          {...range.start, character: range.start.character + delta};
+        } else {
+          range.start;
+        };
+
+      let stop' =
+        if (range.stop.line == line && range.stop.character >= afterCharacter) {
+          {...range.stop, character: range.stop.character + delta};
+        } else {
+          range.stop;
+        };
+      {start: start', stop: stop'};
+    }
+  );
+};
+
 let toHash = ranges => {
   let hash = Hashtbl.create(100);
 

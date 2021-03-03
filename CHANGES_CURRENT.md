@@ -21,6 +21,7 @@
 - #3160 - Windows: Reload configuration on save
 - #3194 - Completion: Fix enter key deleting text after closing pairs (fixes #3191)
 - #3197 - Vim: Fix hang when using the `experimental.viml` setting (fixes #3196 - thanks @amiralies!)
+- #3205 - Editor: Update highlights and diagnostics immediately on buffer update (fixes #2620, #1459)
 
 ### Performance
 

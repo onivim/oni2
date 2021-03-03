@@ -9,7 +9,7 @@ open EditorCoreTypes;
 open Oni_Core;
 open Oni_Core.Utility;
 
-type highlights = {searchHighlightsByLine: IntMap.t(list(ByteRange.t))};
+type highlights = {searchHighlightsByLine: IntMap.t(list(ByteSpan.t))};
 
 let default: highlights = {searchHighlightsByLine: IntMap.empty};
 
@@ -33,7 +33,8 @@ let getSearchHighlights = (~bufferId, ~line, state) => {
   |> OptionEx.flatMap(
        IntMap.find_opt(EditorCoreTypes.LineNumber.toZeroBased(line)),
      )
-  |> Option.value(~default=[]);
+  |> Option.value(~default=[])
+  |> List.map(ByteSpan.toRange(~line));
 };
 
 let clearSearchHighlights = (bufferId, state) => {
@@ -44,6 +45,56 @@ let clearSearchHighlights = (bufferId, state) => {
     | Some(_) => Some({searchHighlightsByLine: IntMap.empty}),
     state,
   );
+};
+
+let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
+  let bufferId = Oni_Core.Buffer.getId(newBuffer);
+  let shiftLines = (~afterLine, ~delta, searchHighlightsByLine) => {
+    let line = EditorCoreTypes.LineNumber.toZeroBased(afterLine);
+    searchHighlightsByLine
+    |> IntMap.shift(~startPos=line, ~endPos=line, ~delta);
+  };
+
+  let clearLine = (~line, searchHighlightsByLine) => {
+    IntMap.remove(
+      line |> EditorCoreTypes.LineNumber.toZeroBased,
+      searchHighlightsByLine,
+    );
+  };
+
+  let shiftCharacters =
+      (
+        ~line,
+        ~afterByte,
+        ~deltaBytes,
+        ~afterCharacter as _,
+        ~deltaCharacters as _,
+        searchHighlightsByLine,
+      ) => {
+    searchHighlightsByLine
+    |> IntMap.update(
+         line |> EditorCoreTypes.LineNumber.toZeroBased,
+         Option.map(spans => {
+           spans |> List.map(ByteSpan.shift(~afterByte, ~delta=deltaBytes))
+         }),
+       );
+  };
+
+  model
+  |> IntMap.update(
+       bufferId,
+       Option.map(({searchHighlightsByLine}) => {
+         let searchHighlightsByLine' =
+           MarkerUpdate.apply(
+             ~clearLine,
+             ~shiftLines,
+             ~shiftCharacters,
+             markerUpdate,
+             searchHighlightsByLine,
+           );
+         {searchHighlightsByLine: searchHighlightsByLine'};
+       }),
+     );
 };
 
 let getHighlightsByLine = (~bufferId, ~line, state) => {
