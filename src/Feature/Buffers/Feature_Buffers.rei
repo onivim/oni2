@@ -66,6 +66,7 @@ type outmsg =
   | Nothing
   | BufferUpdated({
       update: Oni_Core.BufferUpdate.t,
+      markerUpdate: Oni_Core.MarkerUpdate.t,
       newBuffer: Oni_Core.Buffer.t,
       oldBuffer: Oni_Core.Buffer.t,
       triggerKey: option(string),

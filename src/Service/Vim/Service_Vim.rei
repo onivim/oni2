@@ -48,4 +48,15 @@ module Effects: {
 module Sub: {
   let eval:
     (~toMsg: result(string, string) => 'msg, string) => Isolinear.Sub.t('msg);
+
+  let searchHighlights:
+    (
+      ~bufferId: int,
+      ~version: int,
+      ~searchPattern: string,
+      ~topVisibleLine: LineNumber.t,
+      ~bottomVisibleLine: LineNumber.t,
+      array(ByteRange.t) => 'msg
+    ) =>
+    Isolinear.Sub.t('msg);
 };

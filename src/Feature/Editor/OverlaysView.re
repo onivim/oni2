@@ -6,7 +6,6 @@ open Oni_Core;
 module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 
 module FontIcon = Oni_Components.FontIcon;
-module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostics = Feature_Diagnostics;
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 

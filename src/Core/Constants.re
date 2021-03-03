@@ -88,3 +88,7 @@ let mouseAutoScrollBorder = 75;
 let mouseAutoScrollSpeed = 75.;
 
 let mouseAutoScrollInterval = Revery.Time.milliseconds(50);
+
+let highPriorityDebounceTime = Revery.Time.milliseconds(50);
+let mediumPriorityDebounceTime = Revery.Time.milliseconds(100);
+let lowPriorityDebounceTime = Revery.Time.milliseconds(500);

@@ -124,7 +124,6 @@ type t =
   // to quit the app. This gives subscriptions the chance to clean up.
   | ReallyQuitting
   | RegisterQuitCleanup(unit => unit)
-  | SearchSetHighlights(int, list(ByteRange.t))
   | SearchClearHighlights(int)
   | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)

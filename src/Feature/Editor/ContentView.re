@@ -15,7 +15,7 @@ let renderLine =
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
-      ~bufferHighlights,
+      ~vim,
       ~languageSupport,
       viewLine,
       _offset,
@@ -82,11 +82,7 @@ let renderLine =
 
     let bufferId = Buffer.getId(buffer);
     /* Draw search highlights */
-    BufferHighlights.getHighlightsByLine(
-      ~bufferId,
-      ~line=index,
-      bufferHighlights,
-    )
+    Feature_Vim.getSearchHighlightsByLine(~bufferId, ~line=index, vim)
     |> List.iter(
          Draw.rangeByte(
            ~context,
@@ -119,7 +115,7 @@ let renderEmbellishments =
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
-      ~bufferHighlights,
+      ~vim,
       ~languageSupport,
     ) =>
   Draw.renderImmediate(
@@ -131,7 +127,7 @@ let renderEmbellishments =
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs,
-      ~bufferHighlights,
+      ~vim,
       ~languageSupport,
     ),
   );
@@ -206,7 +202,7 @@ let renderText =
       ~context,
       ~selectionRanges,
       ~editor,
-      ~bufferHighlights,
+      ~vim,
       ~cursorLine,
       ~colors,
       ~matchingPairs,
@@ -230,7 +226,7 @@ let renderText =
       let tokens =
         getTokensForLine(
           ~editor,
-          ~bufferHighlights,
+          ~vim,
           ~cursorLine,
           ~colors,
           ~matchingPairs,
@@ -260,7 +256,7 @@ let render =
       ~diagnosticsMap,
       ~selectionRanges,
       ~matchingPairs: option((CharacterPosition.t, CharacterPosition.t)),
-      ~bufferHighlights,
+      ~vim,
       ~cursorPosition: CharacterPosition.t,
       ~languageSupport,
       ~languageConfiguration,
@@ -274,7 +270,7 @@ let render =
     ~diagnosticsMap,
     ~selectionRanges,
     ~matchingPairs,
-    ~bufferHighlights,
+    ~vim,
     ~languageSupport,
   );
 
@@ -299,7 +295,7 @@ let render =
     ~context,
     ~selectionRanges,
     ~editor,
-    ~bufferHighlights,
+    ~vim,
     ~cursorLine=EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
     ~colors,
     ~matchingPairs,

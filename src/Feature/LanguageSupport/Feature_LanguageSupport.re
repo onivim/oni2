@@ -470,24 +470,38 @@ let configurationChanged = (~config, model) => {
     ),
 };
 
-let cursorMoved = (~maybeBuffer, ~previous, ~current, model) => {
+let cursorMoved =
+    (~languageConfiguration, ~buffer, ~previous, ~current, model) => {
   let completion =
-    Completion.cursorMoved(~previous, ~current, model.completion);
+    Completion.cursorMoved(
+      ~languageConfiguration,
+      ~buffer,
+      ~current,
+      model.completion,
+    );
 
   let documentHighlights =
-    maybeBuffer
-    |> Option.map(buffer =>
-         DocumentHighlights.cursorMoved(
-           ~buffer,
-           ~cursor=current,
-           model.documentHighlights,
-         )
-       )
-    |> Option.value(~default=model.documentHighlights);
+    DocumentHighlights.cursorMoved(
+      ~buffer,
+      ~cursor=current,
+      model.documentHighlights,
+    );
 
   let signatureHelp =
     SignatureHelp.cursorMoved(~previous, ~current, model.signatureHelp);
   {...model, completion, documentHighlights, signatureHelp};
+};
+
+let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
+  {
+    ...model,
+    documentHighlights:
+      DocumentHighlights.moveMarkers(
+        ~buffer=newBuffer,
+        ~markerUpdate,
+        model.documentHighlights,
+      ),
+  };
 };
 
 let startInsertMode = (~config, ~maybeBuffer, model) => {

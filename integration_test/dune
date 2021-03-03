@@ -23,9 +23,9 @@
    SyntaxHighlightTextMateTest SyntaxHighlightTreesitterTest
    AddRemoveSplitTest TerminalSetPidTitleTest TerminalConfigurationTest
    TypingBatchedTest TypingUnbatchedTest VimIncsearchScrollTest
-   VimRemapTimeoutTest VimSimpleRemapTest VimlRemapCmdlineTest
-   ClipboardChangeTest VimScriptLocalFunctionTest ZenModeSingleFileModeTest
-   ZenModeSplitTest)
+   VimExperimentalVimlTest VimRemapTimeoutTest VimSimpleRemapTest
+   VimlRemapCmdlineTest ClipboardChangeTest VimScriptLocalFunctionTest
+   ZenModeSingleFileModeTest ZenModeSplitTest)
  (libraries Oni_CLI Oni_IntegrationTestLib reason-native-crash-utils.asan))
 
 (install
@@ -61,8 +61,9 @@
    SyntaxServerParentPidCorrectTest.exe SyntaxServerReadExceptionTest.exe
    TerminalSetPidTitleTest.exe TerminalConfigurationTest.exe
    AddRemoveSplitTest.exe TypingBatchedTest.exe TypingUnbatchedTest.exe
-   VimIncsearchScrollTest.exe VimScriptLocalFunctionTest.exe
-   VimRemapTimeoutTest.exe VimSimpleRemapTest.exe VimlRemapCmdlineTest.exe
+   VimExperimentalVimlTest.exe VimIncsearchScrollTest.exe
+   VimScriptLocalFunctionTest.exe VimRemapTimeoutTest.exe
+   VimSimpleRemapTest.exe VimlRemapCmdlineTest.exe
    ZenModeSingleFileModeTest.exe ZenModeSplitTest.exe ClipboardChangeTest.exe
    large-c-file.c lsan.supp some-test-file.json some-test-file.txt test.crlf
    test.lf test-syntax.php utf8.txt utf8-test-file.htm

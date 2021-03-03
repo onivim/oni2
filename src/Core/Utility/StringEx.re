@@ -18,6 +18,39 @@ let contains = (query, str) => {
   };
 };
 
+let characterCount = (~startByte, ~endByte, str) => {
+  let len = String.length(str);
+
+  let rec loop = (count, idx) =>
+    if (idx >= endByte || idx >= len) {
+      count;
+    } else {
+      loop(count + 1, Zed_utf8.next(str, idx));
+    };
+
+  loop(0, startByte);
+};
+
+let firstDifference = (a, b) => {
+  let lenA = String.length(a);
+  let lenB = String.length(b);
+
+  let rec loop = idx =>
+    if (idx >= lenA || idx >= lenB) {
+      if (lenA == lenB) {
+        None;
+      } else {
+        Some(idx);
+      };
+    } else if (a.[idx] != b.[idx]) {
+      Some(idx);
+    } else {
+      loop(idx + 1);
+    };
+
+  loop(0);
+};
+
 let splitAt = (~byte: int, str) => {
   let len = String.length(str);
   if (byte <= 0) {
