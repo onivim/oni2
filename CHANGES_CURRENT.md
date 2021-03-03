@@ -1,3 +1,10 @@
+### Breaking
+
+- #3193 - Reason: Remove `reason-language-server` executable
+
+> NOTE: For native Reason & OCaml, see: https://onivim.github.io/docs/languages/reason-ocaml
+> NOTE: For ReScript & BuckleScript, see: https://onivim.github.io/docs/languages/rescript
+
 ### Features 
 
 - #3163 - UX: Add clear notification button (thanks @andr3h3nriqu3s11 !)
@@ -34,6 +41,7 @@
 
 - #3181 - Snippets: Initial snippets section
 - #3185 - Emmet: Initial emmet section
+- #3223 - Languages: Split out ReScript into separate section
 
 ### Infrastructure / Refactoring
 
