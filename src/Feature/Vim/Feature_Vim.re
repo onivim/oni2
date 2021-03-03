@@ -154,7 +154,7 @@ let update = (msg, model: model) => {
       model,
       ModeDidChange({allowAnimation: true, mode, effects: []}),
     )
-  | SettingChanged(({fullName, value, _}: Vim.Setting.t)) => (
+  | SettingChanged({fullName, value, _}: Vim.Setting.t) => (
       {...model, settings: model.settings |> StringMap.add(fullName, value)},
       SettingsChanged,
     )

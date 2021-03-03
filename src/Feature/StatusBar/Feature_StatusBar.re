@@ -224,7 +224,7 @@ module Styles = {
 
 let positionToString =
   fun
-  | Some((loc: CharacterPosition.t)) =>
+  | Some(loc: CharacterPosition.t) =>
     Printf.sprintf(
       "%n,%n",
       EditorCoreTypes.LineNumber.toOneBased(loc.line),

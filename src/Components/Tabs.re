@@ -21,10 +21,10 @@ let measureChildOffset: (int, option(node)) => option((int, int)) =
           fun
           | [] => None
 
-          | [(child: node), ..._] when i == index =>
+          | [child: node, ..._] when i == index =>
             Some((offset, child#measurements().width))
 
-          | [(child: node), ...rest] =>
+          | [child: node, ...rest] =>
             loop(i + 1, offset + child#measurements().width, rest)
         );
 
