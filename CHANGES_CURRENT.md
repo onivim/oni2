@@ -34,6 +34,7 @@
 
 - #3181 - Snippets: Initial snippets section
 - #3185 - Emmet: Initial emmet section
+- #3223 - Languages: Split out ReScript into separate section
 
 ### Infrastructure / Refactoring
 
