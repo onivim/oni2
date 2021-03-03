@@ -35,7 +35,7 @@ Test cases covering launching and using Onivim without any persistence or config
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 2.2 Home directory set [OSX]
 
@@ -65,7 +65,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 4. Editing
 
@@ -85,7 +85,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 4.2 Verify horizontal scroll
 
@@ -100,7 +100,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 5. File Preview
 
@@ -118,7 +118,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 6. Font Rendering
 
@@ -135,7 +135,7 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 7. Input
 
@@ -156,7 +156,7 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 ## 7.2 Leader Key
 
@@ -173,7 +173,7 @@ Prerequisite:
 __Pass:__
 - [ ] Windows
 - [ ] OSX
-- [ ] LInux
+- [x] LInux
 
 ## 7.3 Japanese / Romanji layout
 
@@ -190,7 +190,7 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [-] Linux
 
 # 8. Workspace
 
@@ -213,7 +213,7 @@ Prerequisite:
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 9. Terminal
 
@@ -228,7 +228,7 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 10. Menubar
 
@@ -243,7 +243,7 @@ Regression test for #3108
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
 
 # 10. Extension Management
 
@@ -257,4 +257,4 @@ __Pass:__
 __Pass:__
 - [ ] Win
 - [ ] OSX
-- [ ] Linux
+- [x] Linux
