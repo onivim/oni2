@@ -33,7 +33,7 @@ Test cases covering launching and using Onivim without any persistence or config
 - Verify Control+Shift+P/Command+P shows the command palette
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [x] OSX
 - [x] Linux
 
@@ -63,7 +63,7 @@ __Pass:__
 - Verify diff markers show 
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [x] OSX
 - [x] Linux
 
@@ -83,7 +83,7 @@ __Pass:__
 - In normal mode, verify `1000L` goes to the same position as `H`
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [x] OSX
 - [x] Linux
 
@@ -98,7 +98,7 @@ __Pass:__
 - Validate can no longer scroll horizontally, and no text overflows
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [x] OSX
 - [x] Linux
 
@@ -116,7 +116,7 @@ __Pass:__
 - Verify that a new editor is created for `CHANGES_CURRENT.md`
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [x] OSX
 - [x] Linux
 
@@ -133,7 +133,7 @@ Prerequisite:
 - Check that bold text is always effectively bolder than normal text.
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [x] OSX
 - [x] Linux
 
@@ -154,7 +154,7 @@ Prerequisite:
 - Verify character shows
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [x] OSX
 - [x] Linux
 
@@ -171,7 +171,7 @@ Prerequisite:
 - Verify quick open shows
 
 __Pass:__
-- [ ] Windows
+- [x] Windows
 - [x] OSX
 - [x] LInux
 
@@ -188,7 +188,7 @@ Prerequisite:
 - Verify can enter insert mode and type text
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [x] OSX
 - [-] Linux
 
@@ -211,7 +211,7 @@ Prerequisite:
 - Verify folder did not change
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [x] OSX
 - [x] Linux
 
@@ -226,7 +226,7 @@ __Pass:__
 - Validate version string is displayed
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [x] OSX
 - [x] Linux
 
@@ -241,7 +241,7 @@ Regression test for #3108
 - Verify Open Folder dialog is shown
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [x] OSX
 - [x] Linux
 
@@ -255,6 +255,6 @@ __Pass:__
 - Validate installation is successful
 
 __Pass:__
-- [ ] Win
+- [x] Win
 - [x] OSX
 - [x] Linux
