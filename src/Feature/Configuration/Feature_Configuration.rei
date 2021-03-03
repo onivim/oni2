@@ -36,7 +36,6 @@ let registerExtensionConfigurations:
 let toExtensionConfiguration:
   (
     ~additionalExtensions: list(Exthost.Extension.Scanner.ScanResult.t),
-    ~setup: Setup.t,
     model
   ) =>
   Exthost.Configuration.t;
@@ -68,12 +67,7 @@ let resolver:
   Config.rawValue;
 
 let sub:
-  (
-    ~setup: Setup.t,
-    ~client: Exthost.Client.t,
-    ~isExthostInitialized: bool,
-    model
-  ) =>
+  (~client: Exthost.Client.t, ~isExthostInitialized: bool, model) =>
   Isolinear.Sub.t(msg);
 
 module GlobalConfiguration = GlobalConfiguration;
