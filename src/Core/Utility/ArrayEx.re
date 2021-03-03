@@ -29,6 +29,19 @@ let slice = (~lines: array(_), ~start, ~length, ()) => {
   };
 };
 
+let filterToList = (f, array) => {
+  Array.fold_left(
+    (acc, cur) =>
+      if (f(cur)) {
+        [cur, ...acc];
+      } else {
+        acc;
+      },
+    [],
+    array,
+  );
+};
+
 let replace = (~replacement, ~start, ~stop, arr) =>
   if (Array.length(arr) == 0) {
     replacement;

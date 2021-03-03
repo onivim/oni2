@@ -258,12 +258,25 @@ module Internal = {
 
     let languageSupport =
       if (prevCursor != newCursor) {
-        Feature_LanguageSupport.cursorMoved(
-          ~maybeBuffer,
-          ~previous=prevCursor,
-          ~current=newCursor,
-          state.languageSupport,
-        );
+        maybeBuffer
+        |> Option.map(buffer => {
+             let languageConfiguration =
+               buffer
+               |> Oni_Core.Buffer.getFileType
+               |> Oni_Core.Buffer.FileType.toString
+               |> Exthost.LanguageInfo.getLanguageConfiguration(
+                    state.languageInfo,
+                  )
+               |> Option.value(~default=LanguageConfiguration.default);
+             Feature_LanguageSupport.cursorMoved(
+               ~languageConfiguration,
+               ~buffer,
+               ~previous=prevCursor,
+               ~current=newCursor,
+               state.languageSupport,
+             );
+           })
+        |> Option.value(~default=state.languageSupport);
       } else {
         state.languageSupport;
       };
@@ -1299,7 +1312,7 @@ let update =
         Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
       );
 
-    | BufferUpdated({update, newBuffer, oldBuffer, triggerKey}) =>
+    | BufferUpdated({update, newBuffer, oldBuffer, triggerKey, markerUpdate}) =>
       let fileType =
         newBuffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
@@ -1320,14 +1333,38 @@ let update =
               state.vim,
             ),
           ~theme=state.colorTheme |> Feature_Theme.tokenColors,
-          update,
+          ~bufferUpdate=update,
+          ~markerUpdate,
           state.syntaxHighlights,
+        );
+
+      let diagnostics =
+        Feature_Diagnostics.moveMarkers(
+          ~newBuffer,
+          ~markerUpdate,
+          state.diagnostics,
+        );
+
+      let languageSupport =
+        Feature_LanguageSupport.moveMarkers(
+          ~newBuffer,
+          ~markerUpdate,
+          state.languageSupport,
         );
 
       let bufferRenderers =
         BufferRenderers.handleBufferUpdate(update, state.bufferRenderers);
 
-      let state' = {...state, bufferRenderers, syntaxHighlights};
+      let vim = Feature_Vim.moveMarkers(~newBuffer, ~markerUpdate, state.vim);
+
+      let state' = {
+        ...state,
+        bufferRenderers,
+        syntaxHighlights,
+        diagnostics,
+        languageSupport,
+        vim,
+      };
 
       let syntaxEffect =
         Feature_Syntax.Effect.bufferUpdate(
@@ -1796,12 +1833,25 @@ let update =
 
       let languageSupport' =
         if (originalCursor != newCursor) {
-          Feature_LanguageSupport.cursorMoved(
-            ~maybeBuffer,
-            ~previous=originalCursor,
-            ~current=newCursor,
-            languageSupport,
-          );
+          maybeBuffer
+          |> Option.map(buffer => {
+               let languageConfiguration =
+                 buffer
+                 |> Oni_Core.Buffer.getFileType
+                 |> Oni_Core.Buffer.FileType.toString
+                 |> Exthost.LanguageInfo.getLanguageConfiguration(
+                      state.languageInfo,
+                    )
+                 |> Option.value(~default=LanguageConfiguration.default);
+               Feature_LanguageSupport.cursorMoved(
+                 ~languageConfiguration,
+                 ~buffer,
+                 ~previous=originalCursor,
+                 ~current=newCursor,
+                 state.languageSupport,
+               );
+             })
+          |> Option.value(~default=state.languageSupport);
         } else {
           languageSupport;
         };

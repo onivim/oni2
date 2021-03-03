@@ -1,14 +1,9 @@
 open Oni_Core;
 
-module Log = (val Log.withNamespace("Service_Exthost"));
-
 module BufferTracker =
-  Oni_Core.BufferTracker.Make({});
+  BufferTracker.Make({});
 
-module Constants = {
-  let highPriorityDebounceTime = Revery.Time.milliseconds(50);
-  let lowPriorityDebounceTime = Revery.Time.milliseconds(500);
-};
+module Log = (val Log.withNamespace("Service_Exthost"));
 
 // EFFECTS
 

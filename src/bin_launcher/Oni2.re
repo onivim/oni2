@@ -22,6 +22,12 @@ let spec =
       Arg.Set(stayAttached),
       " Stay attached to the foreground terminal.",
     ),
+    ("-v", passthroughAndStayAttached, " Print version information."),
+    (
+      "-f",
+      Arg.Set(stayAttached),
+      " Stay attached to the foreground terminal.",
+    ),
     (
       "--nofork",
       Arg.Set(stayAttached),

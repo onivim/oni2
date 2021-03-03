@@ -146,6 +146,7 @@ type outmsg =
   | Nothing
   | BufferUpdated({
       update: Oni_Core.BufferUpdate.t,
+      markerUpdate: Oni_Core.MarkerUpdate.t,
       newBuffer: Oni_Core.Buffer.t,
       oldBuffer: Oni_Core.Buffer.t,
       triggerKey: option(string),
@@ -383,9 +384,17 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       } else {
         newBuffer;
       };
+    let markerUpdate =
+      MarkerUpdate.create(~update, ~original=oldBuffer, ~updated=buffer);
     (
       add(buffer, model) |> Internal.recomputeDiff(~bufferId=update.id),
-      BufferUpdated({update, newBuffer: buffer, oldBuffer, triggerKey}),
+      BufferUpdated({
+        update,
+        newBuffer: buffer,
+        oldBuffer,
+        triggerKey,
+        markerUpdate,
+      }),
     );
 
   | FileTypeChanged({id, fileType}) => (

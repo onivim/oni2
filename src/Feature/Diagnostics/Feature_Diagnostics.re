@@ -93,50 +93,94 @@ let getKeyForBuffer = (b: Buffer.t) => {
   b |> Buffer.getUri |> Uri.toString;
 };
 
-let _updateDiagnosticsMap =
-    (
-      diagnosticsKey,
-      diagnostics,
-      diagnosticsMap: StringMap.t(list(Diagnostic.t)),
-    ) => {
-  StringMap.add(diagnosticsKey, diagnostics, diagnosticsMap);
-};
-
-let _explodeDiagnostics = (buffer, diagnostics) => {
-  let f = (prev, curr: Diagnostic.t) => {
-    IntMap.update(
-      EditorCoreTypes.LineNumber.toZeroBased(curr.range.start.line),
-      existing =>
-        switch (existing) {
-        | None => Some([curr])
-        | Some(v) => Some([curr, ...v])
-        },
-      prev,
-    );
+module Internal = {
+  let updateDiagnosticsMap =
+      (
+        diagnosticsKey,
+        diagnostics,
+        diagnosticsMap: StringMap.t(list(Diagnostic.t)),
+      ) => {
+    StringMap.add(diagnosticsKey, diagnostics, diagnosticsMap);
   };
 
-  ListEx.safeMap(Diagnostic.explode(buffer), diagnostics)
-  |> List.flatten
-  |> List.fold_left(f, IntMap.empty);
-};
+  let explodeDiagnostics = (buffer, diagnostics) => {
+    let f = (prev, curr: Diagnostic.t) => {
+      IntMap.update(
+        EditorCoreTypes.LineNumber.toZeroBased(curr.range.start.line),
+        existing =>
+          switch (existing) {
+          | None => Some([curr])
+          | Some(v) => Some([curr, ...v])
+          },
+        prev,
+      );
+    };
 
-let _recalculateCount = diagnostics => {
-  let foldKeys = keyMap => {
-    StringMap.fold(
-      (_key, curr, acc) => {acc + List.length(curr)},
-      keyMap,
-      0,
-    );
+    ListEx.safeMap(Diagnostic.explode(buffer), diagnostics)
+    |> List.flatten
+    |> List.fold_left(f, IntMap.empty);
   };
 
-  let count =
-    StringMap.fold(
-      (_key, keyMap, acc) => {acc + foldKeys(keyMap)},
-      diagnostics.diagnosticsMap,
-      0,
-    );
+  let recalculateCount = diagnostics => {
+    let foldKeys = keyMap => {
+      StringMap.fold(
+        (_key, curr, acc) => {acc + List.length(curr)},
+        keyMap,
+        0,
+      );
+    };
 
-  {...diagnostics, count};
+    let count =
+      StringMap.fold(
+        (_key, keyMap, acc) => {acc + foldKeys(keyMap)},
+        diagnostics.diagnosticsMap,
+        0,
+      );
+
+    {...diagnostics, count};
+  };
+
+  let mapRanges = (f, buffer, model) => {
+    let bufferKey = getKeyForBuffer(buffer);
+
+    let diagnosticsMap' =
+      model.diagnosticsMap
+      |> StringMap.update(
+           bufferKey,
+           Option.map(diagKeyToRanges => {
+             diagKeyToRanges
+             |> StringMap.map(diagnostics => {
+                  diagnostics
+                  |> List.map((diagnostic: Diagnostic.t) => {
+                       let range' = f(diagnostic.range);
+                       {...diagnostic, range: range'};
+                     })
+                })
+           }),
+         );
+
+    {...model, diagnosticsMap: diagnosticsMap'};
+  };
+  let filterRanges = (f, buffer, model) => {
+    let bufferKey = getKeyForBuffer(buffer);
+
+    let diagnosticsMap' =
+      model.diagnosticsMap
+      |> StringMap.update(
+           bufferKey,
+           Option.map(diagKeyToRanges => {
+             diagKeyToRanges
+             |> StringMap.map(diagnostics => {
+                  diagnostics
+                  |> List.filter((diagnostic: Diagnostic.t) => {
+                       f(diagnostic.range)
+                     })
+                })
+           }),
+         );
+
+    {...model, diagnosticsMap: diagnosticsMap'};
+  };
 };
 
 let clear = (instance, key) => {
@@ -145,7 +189,7 @@ let clear = (instance, key) => {
   };
 
   {...instance, diagnosticsMap: StringMap.map(f, instance.diagnosticsMap)}
-  |> _recalculateCount;
+  |> Internal.recalculateCount;
 };
 
 let change = (instance, uri, diagKey, diagnostics) => {
@@ -156,9 +200,11 @@ let change = (instance, uri, diagKey, diagnostics) => {
   let updateBufferMap =
       (bufferMap: option(StringMap.t(list(Diagnostic.t)))) => {
     switch (bufferMap) {
-    | Some(v) => Some(_updateDiagnosticsMap(diagKey, diagnostics, v))
+    | Some(v) => Some(Internal.updateDiagnosticsMap(diagKey, diagnostics, v))
     | None =>
-      Some(_updateDiagnosticsMap(diagKey, diagnostics, StringMap.empty))
+      Some(
+        Internal.updateDiagnosticsMap(diagKey, diagnostics, StringMap.empty),
+      )
     };
   };
 
@@ -168,7 +214,7 @@ let change = (instance, uri, diagKey, diagnostics) => {
     diagnosticsMap:
       StringMap.update(bufferKey, updateBufferMap, instance.diagnosticsMap),
   }
-  |> _recalculateCount;
+  |> Internal.recalculateCount;
 };
 
 let update = (msg, model) =>
@@ -224,7 +270,7 @@ let getDiagnosticsAtPosition = (instance, buffer, position) => {
 };
 
 let getDiagnosticsMap = (instance, buffer) => {
-  getDiagnostics(instance, buffer) |> _explodeDiagnostics(buffer);
+  getDiagnostics(instance, buffer) |> Internal.explodeDiagnostics(buffer);
 };
 
 let maxSeverity = diagnostics => {
@@ -240,4 +286,53 @@ let maxSeverity = diagnostics => {
     };
 
   loop(Hint, diagnostics);
+};
+
+let moveMarkers = (~newBuffer, ~markerUpdate, model: model) => {
+  let shiftLines = (~afterLine, ~delta, model: model) => {
+    model
+    |> Internal.mapRanges(
+         CharacterRange.shiftLine(~afterLine, ~delta),
+         newBuffer,
+       );
+  };
+
+  let clearLine = (~line, model) => {
+    model
+    |> Internal.filterRanges(
+         (range: CharacterRange.t) =>
+           !
+             EditorCoreTypes.LineNumber.(
+               range.start.line == line && range.stop.line == line
+             ),
+         newBuffer,
+       );
+  };
+
+  let shiftCharacters =
+      (
+        ~line,
+        ~afterByte as _,
+        ~deltaBytes as _,
+        ~afterCharacter,
+        ~deltaCharacters,
+        model,
+      ) =>
+    model
+    |> Internal.mapRanges(
+         CharacterRange.shiftCharacters(
+           ~line,
+           ~afterCharacter,
+           ~delta=deltaCharacters,
+         ),
+         newBuffer,
+       );
+
+  MarkerUpdate.apply(
+    ~clearLine,
+    ~shiftLines,
+    ~shiftCharacters,
+    markerUpdate,
+    model,
+  );
 };
