@@ -834,73 +834,75 @@ module View = {
         : Feature_Configuration.GlobalConfiguration.inactiveWindowOpacity.get(
             config,
           );
-    <View style={Styles.pane(~opacity, ~isFocused, ~theme, ~height)}>
-      <View style=Styles.resizer>
-        <ResizeHandle.Horizontal
-          onDrag={delta =>
-            dispatch(Msg.resizeHandleDragged(int_of_float(delta)))
-          }
-          onDragComplete={() => dispatch(Msg.resizeCommitted)}
-        />
-      </View>
-      <View style=Styles.header>
-        <View style=Styles.tabs>
-          <PaneTab
-            uiFont
-            theme
-            title="Problems"
-            onClick=problemsTabClicked
-            isActive={isSelected(Diagnostics, pane)}
-          />
-          <PaneTab
-            uiFont
-            theme
-            title="Notifications"
-            onClick=notificationsTabClicked
-            isActive={isSelected(Notifications, pane)}
-          />
-          <PaneTab
-            uiFont
-            theme
-            title="Locations"
-            onClick=locationsTabClicked
-            isActive={isSelected(Locations, pane)}
-          />
-          <PaneTab
-            uiFont
-            theme
-            title="Output"
-            onClick=outputTabClicked
-            isActive={isSelected(Output, pane)}
-          />
-        </View>
-        <View style=Styles.buttons>
-          <paneButton dispatch theme pane={pane.selected} />
-          <closeButton dispatch theme />
-        </View>
-      </View>
-      <View style=Styles.content>
-        <content
-          isFocused
-          iconTheme
-          languageInfo
-          diagnosticsList={pane.diagnosticsView}
-          locationsList={pane.locationsView}
-          notificationsList={pane.notificationsView}
-          selected={selected(pane)}
-          outputPane={pane.outputPane}
-          theme
-          dispatch
-          uiFont
-          editorFont
-          diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
-          locationsDispatch={msg => dispatch(LocationsList(msg))}
-          notificationsDispatch={msg => dispatch(NotificationsList(msg))}
-          outputDispatch={msg => dispatch(OutputPane(msg))}
-          workingDirectory
-        />
-      </View>
-    </View>;
+    height == 0
+      ? React.empty
+      : <View style={Styles.pane(~opacity, ~isFocused, ~theme, ~height)}>
+          <View style=Styles.resizer>
+            <ResizeHandle.Horizontal
+              onDrag={delta =>
+                dispatch(Msg.resizeHandleDragged(int_of_float(delta)))
+              }
+              onDragComplete={() => dispatch(Msg.resizeCommitted)}
+            />
+          </View>
+          <View style=Styles.header>
+            <View style=Styles.tabs>
+              <PaneTab
+                uiFont
+                theme
+                title="Problems"
+                onClick=problemsTabClicked
+                isActive={isSelected(Diagnostics, pane)}
+              />
+              <PaneTab
+                uiFont
+                theme
+                title="Notifications"
+                onClick=notificationsTabClicked
+                isActive={isSelected(Notifications, pane)}
+              />
+              <PaneTab
+                uiFont
+                theme
+                title="Locations"
+                onClick=locationsTabClicked
+                isActive={isSelected(Locations, pane)}
+              />
+              <PaneTab
+                uiFont
+                theme
+                title="Output"
+                onClick=outputTabClicked
+                isActive={isSelected(Output, pane)}
+              />
+            </View>
+            <View style=Styles.buttons>
+              <paneButton dispatch theme pane={pane.selected} />
+              <closeButton dispatch theme />
+            </View>
+          </View>
+          <View style=Styles.content>
+            <content
+              isFocused
+              iconTheme
+              languageInfo
+              diagnosticsList={pane.diagnosticsView}
+              locationsList={pane.locationsView}
+              notificationsList={pane.notificationsView}
+              selected={selected(pane)}
+              outputPane={pane.outputPane}
+              theme
+              dispatch
+              uiFont
+              editorFont
+              diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
+              locationsDispatch={msg => dispatch(LocationsList(msg))}
+              notificationsDispatch={msg => dispatch(NotificationsList(msg))}
+              outputDispatch={msg => dispatch(OutputPane(msg))}
+              workingDirectory
+            />
+          </View>
+        </View>;
   };
 };
 
