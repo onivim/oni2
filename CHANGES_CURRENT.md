@@ -49,8 +49,6 @@
 
 - #3116 - SCM: Recalculate diff markers less frequently (only on buffer updates)
 
-### Documentation
-
 ### Infrastructure / Refactoring
 
 - #3101 - Dependency: reason-fzy -> 485cae1
