@@ -23,6 +23,7 @@
 - #3197 - Vim: Fix hang when using the `experimental.viml` setting (fixes #3196 - thanks @amiralies!)
 - #3205 - Editor: Update highlights and diagnostics immediately on buffer update (fixes #2620, #1459)
 - #3207 - Status Bar: Fix ghost text in some themes with transparent statusbar colors
+- #3217 - CLI: Add -v version flag (fixes #3209)
 
 ### Performance
 
