@@ -40,6 +40,6 @@ Build your project, and then open Onivim in the directory of your project.
 
 The tooling depends on the project being built - so make sure your project is built before you open Onivim.
 
-### Why don't you bundle `ocaml-lsp` with Onivim?
+### Why isn't `ocaml-lsp` bundled with Onivim?
 
 The ocamllsp binary depends on Merlin, which is tightly coupled to the OCaml compiler version being used - therefore, we rely on the environment to supply the correct `ocamllsp` binary for the current compiler version.
