@@ -16,9 +16,9 @@ Onivim does not come with out-of-the-box support for [ReScript](https://rescript
 
 ![rescript-install](https://user-images.githubusercontent.com/13532591/109860695-4f349100-7c13-11eb-9ef4-aa2078a384bc.png)
 
-> Alternatively, can install from CLI with: `oni2 --install-extension chenglou92.rescript-vscode`
+> Alternatively, the extension can be installed via the CLI: `oni2 --install-extension chenglou92.rescript-vscode`
 
-3) Open Onivim in the root folder of your project
+3) Open Onivim in the root folder of your project.
 
 If everything goes well, the extension will prompt you to build your project:
 
