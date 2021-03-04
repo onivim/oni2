@@ -13,6 +13,7 @@ type outmsg =
       toKeys: string,
       error: string,
     })
+  | OpenFile(FpExp.t(FpExp.absolute))
   | TimedOut;
 
 [@deriving show]

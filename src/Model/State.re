@@ -430,6 +430,7 @@ type t = {
   zen: Feature_Zen.model,
   // State of the bottom pane
   pane: Feature_Pane.model,
+  newQuickmenu: Feature_Quickmenu.model(Actions.t),
   searchPane: Feature_Search.model,
   focus: Focus.stack,
   modal: option(Feature_Modals.model),
@@ -562,6 +563,7 @@ let initial =
     zen:
       Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
     pane: Feature_Pane.initial,
+    newQuickmenu: Feature_Quickmenu.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,
     modal: None,

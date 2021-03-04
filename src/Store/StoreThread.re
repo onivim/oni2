@@ -459,6 +459,11 @@ let start =
       |> Feature_Buffers.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
 
+    let quickmenuSub =
+      state.newQuickmenu
+      |> Feature_Quickmenu.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Quickmenu(msg));
+
     let isExthostInitialized = Feature_Exthost.isInitialized(state.exthost);
     let configurationSub =
       state.config
@@ -501,6 +506,7 @@ let start =
       notificationSub,
       bufferSub,
       configurationSub,
+      quickmenuSub,
       themeSub,
       vimBufferSub,
     ]

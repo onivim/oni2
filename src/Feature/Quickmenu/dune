@@ -1,0 +1,11 @@
+(library
+ (name Feature_Quickmenu)
+ (public_name Oni2.feature.quickmenu)
+ (inline_tests)
+ (libraries Oni2.editor-core-types Oni2.core Oni2.component.accordion
+   Oni2.feature.fileSystem Oni2.component.vimList Oni2.component.vimWindows
+   Oni2.component.inputText Oni2.feature.theme Oni2.components
+   Oni2.service.exthost Revery isolinear base fp)
+ (preprocess
+  (pps ppx_let ppx_deriving_yojson ppx_deriving.show brisk-reconciler.ppx
+    ppx_inline_test)))
