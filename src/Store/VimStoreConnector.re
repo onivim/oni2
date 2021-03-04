@@ -391,7 +391,6 @@ let start =
     Vim.Buffer.onUpdate(update => {
       open Vim.BufferUpdate;
       Log.debugf(m => m("Buffer update: %n", update.id));
-      prerr_endline ("!! Vim.BufferUpdate: " ++ Vim.BufferUpdate.show(update));
       open State;
 
       let isFull = update.endLine == (-1);
@@ -410,7 +409,6 @@ let start =
           update.endLine;
         };
 
-      prerr_endline ("LINES AT CREATION TIME: " ++ string_of_int(Array.length(update.lines)));
       let bu =
         Core.BufferUpdate.create(
           ~id=update.id,

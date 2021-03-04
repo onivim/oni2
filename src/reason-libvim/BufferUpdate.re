@@ -14,9 +14,11 @@ let show = (v: t) => {
     v.endLine,
     v.version,
   )
-  ++ "!---- " ++ string_of_int(Array.length(v.lines)) ++ "\n"
+  ++ "---- "
+  ++ string_of_int(Array.length(v.lines))
+  ++ "\n"
   ++ Array.fold_left((s, prev) => prev ++ "\n" ++ s, "", v.lines)
-  ++ "\n----!";
+  ++ "\n----";
 };
 
 let getAllLines = (buffer: Native.buffer) => {

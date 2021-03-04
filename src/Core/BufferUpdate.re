@@ -22,16 +22,17 @@ let create =
 };
 
 let toDebugString = ({isFull, version, startLine, endLine, lines, _}) => {
-  let lineStr = lines
-  |> Array.to_list
-  |> List.mapi((idx, str) => Printf.sprintf("Line %d: |%s|", idx, str))
-  |> String.concat("\n");
+  let lineStr =
+    lines
+    |> Array.to_list
+    |> List.mapi((idx, str) => Printf.sprintf("Line %d: |%s|", idx, str))
+    |> String.concat("\n");
   Printf.sprintf(
     "Core.BufferUpdate - version %d (full: %b) - startLine: %d endLine:%d\nLines:\n---\n%s\n---\n\n",
     version,
     isFull,
     startLine |> LineNumber.toZeroBased,
     endLine |> LineNumber.toZeroBased,
-    lineStr
+    lineStr,
   );
-}
+};
