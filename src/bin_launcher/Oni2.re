@@ -34,6 +34,11 @@ let spec =
       " Stay attached to the foreground terminal.",
     ),
     ("--debug", passthrough, " Enable debug logging."),
+    (
+      "--debug-exthost",
+      passthrough,
+      " Pipe exthost output to stdout/stderr.",
+    ),
     ("--trace", passthrough, " Enable trace logging."),
     ("--quiet", passthrough, " Print only error log messages."),
     ("--silent", passthrough, " Do not print any logging."),

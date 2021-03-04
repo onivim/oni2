@@ -57,6 +57,11 @@ describe("CLI", ({describe, test, _}) => {
     })
   });
   describe("log level", ({test, _}) => {
+    test("--debug-exthost should set logExthost", ({expect, _}) => {
+      let (options, _eff) =
+        Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "--debug-exthost"|]);
+      expect.equal(options.logExthost, true);
+    });
     test("--silent should still require a console", ({expect, _}) => {
       let (options, _eff) =
         Oni_CLI.parse(~getenv=noenv, [|"Oni2_editor", "-f", "--silent"|]);
