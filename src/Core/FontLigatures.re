@@ -47,9 +47,9 @@ let decode = {
 
          let isAlphaNumeric =
            fun
-           | 'a'..'z'
-           | 'A'..'Z'
-           | '0'..'9' => true
+           | 'a' .. 'z'
+           | 'A' .. 'Z'
+           | '0' .. '9' => true
            | _ => false;
 
          let alphaString = take_while1(isAlphaNumeric);

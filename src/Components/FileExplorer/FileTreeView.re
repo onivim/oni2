@@ -72,7 +72,7 @@ let nodeView =
   let tooltipText = {
     let path = node.path;
     switch (decoration) {
-    | Some((decoration: Feature_Decorations.Decoration.t)) =>
+    | Some(decoration: Feature_Decorations.Decoration.t) =>
       FpExp.toString(path) ++ " • " ++ decoration.tooltip
     | None => FpExp.toString(path)
     };
