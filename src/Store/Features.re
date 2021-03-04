@@ -560,6 +560,9 @@ let update =
             error,
           ),
         )
+
+      | OpenFile(fp) => Internal.openFileEffect(FpExp.toString(fp))
+
       | TimedOut =>
         Isolinear.Effect.createWithDispatch(~name="Input.timeout", dispatch =>
           dispatch(KeyTimeout)

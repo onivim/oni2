@@ -177,6 +177,7 @@ type outmsg =
       toKeys: string,
       error: string,
     })
+  | OpenFile(FpExp.t(FpExp.absolute))
   | TimedOut;
 
 type execute =
@@ -191,7 +192,8 @@ type execute =
 type command =
   | ShowDebugInput
   | EnableKeyDisplayer
-  | DisableKeyDisplayer;
+  | DisableKeyDisplayer
+  | OpenKeybindingsFile;
 
 [@deriving show]
 type msg =
@@ -543,6 +545,13 @@ module Internal = {
 
 let update = (msg, model) => {
   switch (msg) {
+  | Command(OpenKeybindingsFile) =>
+    let eff =
+      model.keybindingLoader
+      |> KeybindingsLoader.getFilePath
+      |> Option.map(path => OpenFile(path))
+      |> Option.value(~default=Nothing);
+    (model, eff);
   | Command(ShowDebugInput) => (model, DebugInputShown)
   | Command(DisableKeyDisplayer) => (
       {...model, keyDisplayer: None},
@@ -644,6 +653,14 @@ let update = (msg, model) => {
 module Commands = {
   open Feature_Commands.Schema;
 
+  let openDefaultKeybindingsFile =
+    define(
+      ~category="Preferences",
+      ~title="Open keybindings file",
+      "workbench.action.openDefaultKeybindingsFile",
+      Command(OpenKeybindingsFile),
+    );
+
   let showInputState =
     define(
       ~category="Debug",
@@ -719,7 +736,12 @@ module ContextKeys = {
 
 module Contributions = {
   let commands =
-    Commands.[showInputState, enableKeyDisplayer, disableKeyDisplayer];
+    Commands.[
+      showInputState,
+      enableKeyDisplayer,
+      disableKeyDisplayer,
+      openDefaultKeybindingsFile,
+    ];
 
   let configuration = Configuration.[leaderKey.spec, timeout.spec];
 
