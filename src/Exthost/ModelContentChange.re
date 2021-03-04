@@ -77,11 +77,16 @@ let ofBufferUpdate =
   let rangeLength = getRangeLengthFromEdit(~previousBuffer, ~eol, bu);
 
   let eolStr = Eol.toString(eol);
+  // let text =
+  //   isInsert
+  //   || String.length(text) > 0
+  //   && !Utility.StringEx.endsWith(~postfix=eolStr, text)
+  //     ? text ++ eolStr : text;
   let text =
-    isInsert
-    || String.length(text) > 0
-    && !Utility.StringEx.endsWith(~postfix=eolStr, text)
-      ? text ++ eolStr : text;
+    isInsert ? text ++ eolStr : text;
+    // || String.length(text) > 0
+    // && !Utility.StringEx.endsWith(~postfix=eolStr, text)
+    //   ? text ++ eolStr : text;
 
   {range: OneBasedRange.ofRange(range), text, rangeLength};
 };
