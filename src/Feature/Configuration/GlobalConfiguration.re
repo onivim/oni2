@@ -148,18 +148,33 @@ module Codecs = {
         ),
     );
 
-  let fontSize =
+  let fontSize = {
+    let clampSize = size => {
+      size < Constants.minimumFontSize ? Constants.minimumFontSize : size;
+    };
     custom(
       ~decode=
         Json.Decode.(
-          float
-          |> map(size => {
-               size < Constants.minimumFontSize
-                 ? Constants.minimumFontSize : size
-             })
+          one_of([
+            ("fontSize.float", float |> map(clampSize)),
+            (
+              "fontSize.string",
+              string
+              |> and_then(str => {
+                   str
+                   |> float_of_string_opt
+                   |> Option.map(clampSize)
+                   |> Option.map(succeed)
+                   |> Option.value(
+                        ~default=fail("Unable to parse font size"),
+                      )
+                 }),
+            ),
+          ])
         ),
       ~encode=Json.Encode.float,
     );
+  };
 
   let fontLigatures =
     custom(~decode=FontLigatures.decode, ~encode=FontLigatures.encode);
