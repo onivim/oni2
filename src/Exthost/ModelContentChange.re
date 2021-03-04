@@ -17,11 +17,39 @@ let create = (~rangeLength: int, ~range: CharacterRange.t, ~text: string, ()) =>
 };
 
 let joinLines = (separator: string, lines: list(string)) => {
-  String.concat(separator, lines);
+  let joined =String.concat(separator, lines);
+
+  if (lines != []) {
+    joined ++ separator
+  } else {
+    joined
+  }
+};
+
+let countNewLinesInArray: array(string) => int = (array) => {
+  let rec countNewLines = (count, idx, len, str) => {
+    if (idx >= len) {
+      count
+    } else {
+      if (str.[idx] == '\n') {
+        countNewLines(count + 1, idx + 1, len, str);
+      } else {
+        countNewLines(count, idx + 1, len, str)
+      }
+    }
+  };
+  array
+  |> Array.fold_left((acc, curr) => {
+   acc  + countNewLines(0, 0, String.length(curr), curr);
+  }, 0)
 };
 
 let getRangeFromEdit = (bu: BufferUpdate.t) => {
-  let newLines = Array.length(bu.lines);
+  let newLinesAsCharacter = countNewLinesInArray(bu.lines);
+  prerr_endline ("NEW LINES AS CHARACTER: " ++ string_of_int(newLinesAsCharacter));
+  let newLines = Array.length(bu.lines) + newLinesAsCharacter;
+
+
   let isInsert =
     EditorCoreTypes.(
       newLines >= LineNumber.toZeroBased(bu.endLine)
@@ -84,8 +112,8 @@ let ofBufferUpdate =
   //   || String.length(text) > 0
   //   && !Utility.StringEx.endsWith(~postfix=eolStr, text)
   //     ? text ++ eolStr : text;
-  let text =
-    isInsert ? text ++ eolStr : text;
+  let text = text;
+    // isInsert ? text ++ eolStr : text;
     // || String.length(text) > 0
     // && !Utility.StringEx.endsWith(~postfix=eolStr, text)
     //   ? text ++ eolStr : text;
