@@ -14,9 +14,9 @@ let show = (v: t) => {
     v.endLine,
     v.version,
   )
-  ++ "----"
-  ++ Array.fold_left((s, prev) => prev ++ s ++ "\n", "", v.lines)
-  ++ "----";
+  ++ "!----\n"
+  ++ Array.fold_left((s, prev) => prev ++ "\n" ++ s, "", v.lines)
+  ++ "\n----!";
 };
 
 let getAllLines = (buffer: Native.buffer) => {

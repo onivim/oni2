@@ -42,6 +42,7 @@ function activate(context) {
                     console.log({
                         type: "workspace.onDidChangeTextDocument",
                         filename: e.document.fileName,
+                        version: e.document.version,
                         contentChanges: e.contentChanges,
                         fullText: e.document.getText(),
                     });

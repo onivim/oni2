@@ -384,6 +384,8 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       } else {
         newBuffer;
       };
+
+    prerr_endline ("!!! New buffer: " ++ Oni_Core.Buffer.toDebugString(newBuffer));
     let markerUpdate =
       MarkerUpdate.create(~update, ~original=oldBuffer, ~updated=buffer);
     (

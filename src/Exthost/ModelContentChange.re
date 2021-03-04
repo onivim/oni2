@@ -72,6 +72,8 @@ let getRangeLengthFromEdit =
 
 let ofBufferUpdate =
     (~previousBuffer, bu: Oni_Core.BufferUpdate.t, eol: Eol.t) => {
+      prerr_endline ("-- ofBufferUpdate - line length: " ++ string_of_int(Array.length(bu.lines)));
+    prerr_endline ("--- Buffer Update: " ++ Oni_Core.BufferUpdate.toDebugString(bu));
   let (isInsert, range) = getRangeFromEdit(bu);
   let text = joinLines(Eol.toString(eol), bu.lines |> Array.to_list);
   let rangeLength = getRangeLengthFromEdit(~previousBuffer, ~eol, bu);
