@@ -170,6 +170,7 @@ let make =
       <View style=Styles.inputContainer>
         <Component_InputText.View
           ?prefix
+          shadowOpacity=0.1
           fontFamily={font.family}
           fontSize=14.
           isFocused=true
