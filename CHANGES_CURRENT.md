@@ -3,6 +3,7 @@
 - #3193 - Reason: Remove `reason-language-server` executable
 
 > NOTE: For native Reason & OCaml, see: https://onivim.github.io/docs/languages/reason-ocaml
+
 > NOTE: For ReScript & BuckleScript, see: https://onivim.github.io/docs/languages/rescript
 
 ### Features 
@@ -34,6 +35,7 @@
 - #3225 - Extension - C#: Fix language server not starting on Windows (fixes #3204)
 - #3226 - Keybindings: Fix issue opening keybindings.json from the command palette
 - #3227 - Configuration: Allow string numbers as font sizes
+- #3230 - Font: Treat "FiraCode-Regular.ttf" as default font
 
 ### Performance
 
