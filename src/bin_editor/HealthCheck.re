@@ -187,14 +187,6 @@ let mainChecks = [
     },
   ),
   (
-    "Verify bundled reason-language-server executable",
-    (setup: Setup.t) => {
-      let ret = Rench.ChildProcess.spawnSync(setup.rlsPath, [|"--help"|]);
-
-      ret.stdout |> String.trim |> StringEx.contains("Reason Language Server");
-    },
-  ),
-  (
     "Verify bundled syntax server",
     (setup: Setup.t) => {
       let connected = ref(false);

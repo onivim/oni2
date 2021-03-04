@@ -1,3 +1,10 @@
+### Breaking
+
+- #3193 - Reason: Remove `reason-language-server` executable
+
+> NOTE: For native Reason & OCaml, see: https://onivim.github.io/docs/languages/reason-ocaml
+> NOTE: For ReScript & BuckleScript, see: https://onivim.github.io/docs/languages/rescript
+
 ### Features 
 
 - #3163 - UX: Add clear notification button (thanks @andr3h3nriqu3s11 !)
@@ -45,3 +52,4 @@
 - #3172 - Theme: Move theme loader to subscription (unblocks #3160)
 - #3178 - Commands: Remove unused contributedCommands argument
 - #3202 - Dependency: revery -> 2a59280
+- #3220 - Dependency: revery -> 26e8b73 (Unblock OCaml 4.11)

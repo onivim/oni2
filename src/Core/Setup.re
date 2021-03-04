@@ -19,8 +19,6 @@ type t = {
   nodeScriptPath: string,
   [@key "rg"]
   rgPath: string,
-  [@key "rls"]
-  rlsPath: string,
 };
 
 let default = () => {
@@ -33,7 +31,6 @@ let default = () => {
       bundledExtensionsPath: execDir ++ "extensions",
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg.exe",
-      rlsPath: execDir ++ "rls.exe",
     }
   | Mac(_) => {
       nodePath: execDir ++ "node",
@@ -41,7 +38,6 @@ let default = () => {
       bundledExtensionsPath: execDir ++ "../Resources/extensions",
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg",
-      rlsPath: execDir ++ "rls",
     }
   | _ => {
       nodePath: execDir ++ "node",
@@ -49,7 +45,6 @@ let default = () => {
       bundledExtensionsPath: execDir ++ "extensions",
       developmentExtensionsPath: None,
       rgPath: execDir ++ "rg",
-      rlsPath: execDir ++ "rls",
     }
   };
 };

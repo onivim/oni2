@@ -175,7 +175,7 @@ module Tab = {
 
     let fileIconView =
       switch (icon) {
-      | Some((icon: IconTheme.IconDefinition.t)) =>
+      | Some(icon: IconTheme.IconDefinition.t) =>
         <FontIcon
           fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
           icon={icon.fontCharacter}

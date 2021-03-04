@@ -87,18 +87,6 @@ const getNodePath = () => {
     }
 }
 
-const getRlsPath = () => {
-    const rlsDir = "reason-language-server"
-
-    if (process.platform == "darwin") {
-        return path.join(vendorDirectory, rlsDir, "bin.native")
-    } else if (process.platform == "win32") {
-        return path.join(vendorDirectory, rlsDir, "bin.native.exe")
-    } else {
-        return path.join(vendorDirectory, rlsDir, "bin.native.linux")
-    }
-}
-
 const updateIcon = (rcedit, exe, iconFile) => {
     console.log(`Updating ${exe} icon`)
 
@@ -125,7 +113,7 @@ if (process.platform == "linux") {
     })
     console.log(result.output.toString())
 } else if (process.platform == "darwin") {
-    const executables = ["Oni2", "Oni2_editor", "rg", "rls", "node"]
+    const executables = ["Oni2", "Oni2_editor", "rg", "node"]
 
     const appDirectory = path.join(releaseDirectory, "Onivim2.app")
     const contentsDirectory = path.join(appDirectory, "Contents")
@@ -189,7 +177,6 @@ if (process.platform == "linux") {
     copy(documentIconSourcePath, resourcesDirectory)
     copy(getRipgrepPath(), path.join(binaryDirectory, "rg"))
     copy(getNodePath(), path.join(binaryDirectory, "node"))
-    copy(getRlsPath(), path.join(binaryDirectory, "rls"))
 
     // Folders to delete
     // TODO: Move this into our VSCode packaging, there are a lot of files we don't need to bundle at all
@@ -330,10 +317,6 @@ if (process.platform == "linux") {
     copy(
         getNodePath(),
         path.join(platformReleaseDirectory, process.platform == "win32" ? "node.exe" : "node"),
-    )
-    copy(
-        getRlsPath(),
-        path.join(platformReleaseDirectory, process.platform == "win32" ? "rls.exe" : "rls"),
     )
     if (process.platform == "win32") {
         const numCommits = winShell(
