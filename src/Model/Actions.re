@@ -109,7 +109,6 @@ type t =
       option([ | `Horizontal | `Vertical | `NewTab]),
       option(CharacterPosition.t),
     )
-  | OpenConfigFile(string)
   | Pasted({
       rawText: string,
       isMultiLine: bool,
