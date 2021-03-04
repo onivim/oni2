@@ -76,6 +76,7 @@ type t =
   | FileExplorer(Feature_Explorer.msg)
   | LanguageSupport(Feature_LanguageSupport.msg)
   | MenuBar(Feature_MenuBar.msg)
+  | Quickmenu(Feature_Quickmenu.msg)
   | QuickmenuPaste(string)
   | QuickmenuShow(quickmenuVariant)
   | QuickmenuInput(string)
@@ -193,8 +194,6 @@ and quickmenuVariant =
   | FilesPicker
   | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
-  | SnippetPicker(list(Service_Snippets.SnippetWithMetadata.t))
-  | SnippetFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
   | FileTypesPicker({
       bufferId: int,

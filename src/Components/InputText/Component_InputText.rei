@@ -38,6 +38,7 @@ module View: {
       ~model: model,
       ~theme: ColorTheme.Colors.t,
       ~fontSize: float=?,
+      ~shadowOpacity: float=?,
       ~fontFamily: Revery.Font.Family.t=?,
       ~placeholderColor: Revery.Color.t=?,
       ~cursorColor: Revery.Color.t=?,

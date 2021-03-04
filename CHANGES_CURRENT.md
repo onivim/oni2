@@ -56,3 +56,4 @@
 - #3178 - Commands: Remove unused contributedCommands argument
 - #3202 - Dependency: revery -> 2a59280
 - #3220 - Dependency: revery -> 26e8b73 (Unblock OCaml 4.11)
+- #3228 - Quickmenu: Initial feature implementation

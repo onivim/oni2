@@ -1790,6 +1790,19 @@ let update =
       Internal.notificationEffect(~kind=Error, message),
     )
 
+  | Quickmenu(msg) =>
+    let (quickmenu', outmsg) =
+      Feature_Quickmenu.update(msg, state.newQuickmenu);
+    let eff =
+      switch (outmsg) {
+      | Nothing => Isolinear.Effect.none
+
+      | Action(action) =>
+        EffectEx.value(~name="Feature_Quickmenu.action", action)
+      };
+
+    ({...state, newQuickmenu: quickmenu'}, eff);
+
   | Snippets(msg) =>
     let maybeBuffer = Selectors.getActiveBuffer(state);
     let editor = Feature_Layout.activeEditor(state.layout);
@@ -1885,10 +1898,11 @@ let update =
       };
     };
 
-    let (layout', eff) =
+    let (quickmenu', layout', eff) =
       switch (outmsg) {
-      | Nothing => (state.layout, Isolinear.Effect.none)
+      | Nothing => (state.newQuickmenu, state.layout, Isolinear.Effect.none)
       | ErrorMessage(msg) => (
+          state.newQuickmenu,
           state.layout,
           Internal.notificationEffect(~kind=Error, msg),
         )
@@ -1904,7 +1918,7 @@ let update =
                  }
                )
              );
-        (layout', Isolinear.Effect.none);
+        (state.newQuickmenu, layout', Isolinear.Effect.none);
       | SetSelections(ranges) =>
         let layout' =
           state.layout
@@ -1917,31 +1931,23 @@ let update =
                  }
                )
              );
-        (layout', Isolinear.Effect.none);
+        (state.newQuickmenu, layout', Isolinear.Effect.none);
 
-      | ShowFilePicker(snippetFiles) =>
-        let eff =
-          Isolinear.Effect.createWithDispatch(
-            ~name="snippet.fileMenu", dispatch => {
-            dispatch(Actions.QuickmenuShow(SnippetFilePicker(snippetFiles)))
-          });
-        (state.layout, eff);
-
-      | ShowPicker(snippetsWithMetadata) =>
-        let eff =
-          Isolinear.Effect.createWithDispatch(~name="snippet.menu", dispatch => {
-            dispatch(
-              Actions.QuickmenuShow(SnippetPicker(snippetsWithMetadata)),
-            )
-          });
-        (state.layout, eff);
+      | ShowMenu(snippetMenu) =>
+        let menu =
+          snippetMenu
+          |> Feature_Quickmenu.Schema.map(msg => Actions.Snippets(msg));
+        let quickmenu' = Feature_Quickmenu.show(~menu, state.newQuickmenu);
+        (quickmenu', state.layout, Isolinear.Effect.none);
 
       | OpenFile(filePath) => (
+          state.newQuickmenu,
           state.layout,
           Internal.openFileEffect(FpExp.toString(filePath)),
         )
 
       | Effect(eff) => (
+          state.newQuickmenu,
           state.layout,
           eff |> Isolinear.Effect.map(msg => Actions.Snippets(msg)),
         )
@@ -1954,6 +1960,7 @@ let update =
         ...state,
         layout: layout',
         languageSupport: languageSupport',
+        newQuickmenu: quickmenu',
         snippets: snippets',
       },
       eff,

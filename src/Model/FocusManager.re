@@ -31,6 +31,8 @@ let current = (state: State.t) =>
     Focus.LicenseKey;
   } else if (state.modal != None) {
     Focus.Modal;
+  } else if (state.newQuickmenu |> Feature_Quickmenu.isMenuOpen) {
+    Focus.NewQuickmenu;
   } else {
     switch (state.quickmenu) {
     | Some({variant: Actions.Wildmenu(_), _}) => Focus.Wildmenu
