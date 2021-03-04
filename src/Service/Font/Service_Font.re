@@ -74,7 +74,7 @@ let setFont =
   let fontSize = max(fontSize, Constants.minimumFontSize);
 
   let family =
-    if (familyString == Constants.defaultFontFile) {
+    if (Constants.isDefaultFont(familyString)) {
       Constants.defaultFontFamily;
     } else if (Rench.Path.isAbsolute(familyString)) {
       Revery_Font.Family.fromFile(familyString);
