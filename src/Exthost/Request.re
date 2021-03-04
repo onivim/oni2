@@ -142,6 +142,12 @@ module Documents = {
   };
 
   let acceptModelChanged = (~uri, ~modelChangedEvent, ~isDirty, client) => {
+    prerr_endline(
+      "--> Sending $acceptModelChanged: "
+      ++ Yojson.Safe.to_string(
+           ModelChangedEvent.to_yojson(modelChangedEvent),
+         ),
+    );
     Client.notify(
       ~rpcName="ExtHostDocuments",
       ~method="$acceptModelChanged",

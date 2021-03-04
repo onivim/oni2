@@ -76,7 +76,12 @@ let ofBufferUpdate =
   let text = joinLines(Eol.toString(eol), bu.lines |> Array.to_list);
   let rangeLength = getRangeLengthFromEdit(~previousBuffer, ~eol, bu);
 
-  let text = isInsert ? text ++ Eol.toString(eol) : text;
+  let eolStr = Eol.toString(eol);
+  let text =
+    isInsert
+    || String.length(text) > 0
+    && !Utility.StringEx.endsWith(~postfix=eolStr, text)
+      ? text ++ eolStr : text;
 
   {range: OneBasedRange.ofRange(range), text, rangeLength};
 };
