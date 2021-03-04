@@ -12,6 +12,7 @@ type session = {
 type documentFormatter = {
   handle: int,
   selector: DocumentSelector.t,
+  extensionId: ExtensionId.t,
   displayName: string,
 };
 
@@ -55,18 +56,18 @@ type msg =
       displayName: string,
     });
 
-let registerDocumentFormatter = (~handle, ~selector, ~displayName, model) => {
+let registerDocumentFormatter = (~handle, ~selector, ~extensionId, ~displayName, model) => {
   ...model,
   availableDocumentFormatters: [
-    {handle, selector, displayName},
+    {handle, selector, extensionId, displayName},
     ...model.availableDocumentFormatters,
   ],
 };
 
-let registerRangeFormatter = (~handle, ~selector, ~displayName, model) => {
+let registerRangeFormatter = (~handle, ~selector, ~extensionId, ~displayName, model) => {
   ...model,
   availableRangeFormatters: [
-    {handle, selector, displayName},
+    {handle, selector, extensionId, displayName},
     ...model.availableRangeFormatters,
   ],
 };
@@ -126,10 +127,15 @@ module Internal = {
     let startLine = EditorCoreTypes.LineNumber.toZeroBased(range.start.line);
     let stopLine = EditorCoreTypes.LineNumber.toZeroBased(range.stop.line);
 
+    prerr_endline (Printf.sprintf("StartLine: %d StopLine: %d Lines: %d",
+    startLine,
+    stopLine,
+    Array.length(lines)));
+
     if (startLine >= 0
         && startLine < Array.length(lines)
-        && stopLine < Array.length(lines)) {
-      let lines = Array.sub(lines, startLine, stopLine - startLine + 1);
+        && stopLine <= Array.length(lines)) {
+      let lines = Array.sub(lines, startLine, stopLine - startLine);
 
       let edits =
         DefaultFormatter.format(
@@ -202,7 +208,7 @@ module Internal = {
                switch (res) {
                | Ok(edits) =>
                  EditsReceived({
-                   displayName: formatter.displayName,
+                   displayName: ExtensionId.toString(formatter.extensionId),
                    sessionId,
                    edits: List.map(extHostEditToVimEdit, edits),
                  })

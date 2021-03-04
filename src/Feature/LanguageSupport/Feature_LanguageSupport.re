@@ -215,24 +215,26 @@ let update =
     ({...model, completion: completion'}, Nothing);
 
   | Exthost(
-      RegisterRangeFormattingSupport({handle, selector, displayName, _}),
+      RegisterRangeFormattingSupport({handle, selector, displayName, extensionId}),
     ) =>
     let formatting' =
       Formatting.registerRangeFormatter(
         ~handle,
         ~selector,
+        ~extensionId,
         ~displayName,
         model.formatting,
       );
     ({...model, formatting: formatting'}, Nothing);
 
   | Exthost(
-      RegisterDocumentFormattingSupport({handle, selector, displayName, _}),
+      RegisterDocumentFormattingSupport({handle, selector, displayName, extensionId}),
     ) =>
     let formatting' =
       Formatting.registerDocumentFormatter(
         ~handle,
         ~selector,
+        ~extensionId,
         ~displayName,
         model.formatting,
       );
