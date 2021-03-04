@@ -3,6 +3,7 @@
 - #3193 - Reason: Remove `reason-language-server` executable
 
 > NOTE: For native Reason & OCaml, see: https://onivim.github.io/docs/languages/reason-ocaml
+
 > NOTE: For ReScript & BuckleScript, see: https://onivim.github.io/docs/languages/rescript
 
 ### Features 
@@ -31,6 +32,7 @@
 - #3205 - Editor: Update highlights and diagnostics immediately on buffer update (fixes #2620, #1459)
 - #3207 - Status Bar: Fix ghost text in some themes with transparent statusbar colors
 - #3217 - CLI: Add -v version flag (fixes #3209)
+- #3230 - Font: Treat "FiraCode-Regular.ttf" as a default font
 
 ### Performance
 
