@@ -21,6 +21,8 @@ let copyFilePath =
     CopyActiveFilepathToClipboard,
   );
 
+let noop = register("noop", Noop);
+
 let command = cmd => CommandInvoked({command: cmd, arguments: `Null});
 
 let undo = register("undo", command("undo"));
@@ -97,14 +99,6 @@ module Oni = {
 
 module Workbench = {
   module Action = {
-    let openDefaultKeybindingsFile =
-      register(
-        ~category="Preferences",
-        ~title="Open keybindings file",
-        "workbench.action.openDefaultKeybindingsFile",
-        OpenConfigFile("keybindings.json"),
-      );
-
     let showCommands =
       register(
         ~title="Show All Commands",

@@ -107,7 +107,7 @@ module Api = {
       |> Option.map(filesGlobStr => {
            let regex =
              Re.Glob.glob(~expand_braces=true, filesGlobStr) |> Re.compile;
-           p => Re.execp(regex, p);
+           p => Re.execp(regex, Utility.Path.normalizeBackSlashes(p));
          })
       |> Option.value(~default=_ => true);
     let excludeDirectoryFn =
@@ -116,7 +116,7 @@ module Api = {
            let regex =
              Re.Glob.glob(~expand_braces=true, excludeDirectoryStr)
              |> Re.compile;
-           p => Re.execp(regex, p);
+           p => Re.execp(regex, Utility.Path.normalizeBackSlashes(p));
          })
       |> Option.value(~default=_ => false);
 

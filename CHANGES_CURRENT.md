@@ -31,6 +31,8 @@
 - #3205 - Editor: Update highlights and diagnostics immediately on buffer update (fixes #2620, #1459)
 - #3207 - Status Bar: Fix ghost text in some themes with transparent statusbar colors
 - #3217 - CLI: Add -v version flag (fixes #3209)
+- #3225 - Extension - C#: Fix language server not starting on Windows (fixes #3204)
+- #3226 - Keybindings: Fix issue opening keybindings.json from the command palette
 - #3227 - Configuration: Allow string numbers as font sizes
 
 ### Performance
