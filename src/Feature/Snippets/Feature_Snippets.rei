@@ -19,8 +19,7 @@ type outmsg =
   | ErrorMessage(string)
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
-  | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
-  | ShowFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
+  | ShowMenu(Feature_Quickmenu.Schema.menu(msg))
   | OpenFile(FpExp.t(FpExp.absolute))
   | Nothing;
 

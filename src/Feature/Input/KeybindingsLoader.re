@@ -47,6 +47,11 @@ let notifyFileSaved = path =>
       orig;
     };
 
+let getFilePath: t => option(FpExp.t(FpExp.absolute)) =
+  fun
+  | None => None
+  | File({filePath, _}) => Some(filePath);
+
 let sub =
   fun
   | None => Isolinear.Sub.none

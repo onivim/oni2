@@ -5,5 +5,5 @@
   (pps brisk-reconciler.ppx ppx_deriving.show))
  (libraries str bigarray Revery.zed lwt lwt.unix Oni2.core Oni2.input
    Oni2.syntax Oni2.exthost Oni2.service.font Oni2.service.net
-   Oni2.feature.sneak Oni2.feature.theme Rench Revery Oni2.editor-core-types
-   isolinear))
+   Oni2.feature.sneak Oni2.feature.configuration Oni2.feature.theme Rench
+   Revery Oni2.editor-core-types isolinear))

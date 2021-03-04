@@ -391,8 +391,7 @@ type outmsg =
   | ErrorMessage(string)
   | SetCursors(list(BytePosition.t))
   | SetSelections(list(ByteRange.t))
-  | ShowPicker(list(Service_Snippets.SnippetWithMetadata.t))
-  | ShowFilePicker(list(Service_Snippets.SnippetFileMetadata.t))
+  | ShowMenu(Feature_Quickmenu.Schema.menu(msg))
   | OpenFile(FpExp.t(FpExp.absolute))
   | Nothing;
 
@@ -730,15 +729,47 @@ let update =
 
   | SnippetFileCreationError(msg) => (model, ErrorMessage(msg))
 
-  | SnippetsLoadedForPicker(snippetsWithMetadata) => (
-      model,
-      ShowPicker(snippetsWithMetadata),
-    )
+  | SnippetsLoadedForPicker(snippetsWithMetadata) =>
+    let menu =
+      Feature_Quickmenu.Schema.menu(
+        ~onItemSelected=
+          (item: Service_Snippets.SnippetWithMetadata.t) =>
+            InsertInternal({snippetString: item.snippet}),
+        ~toString=
+          (snippet: Service_Snippets.SnippetWithMetadata.t) => {
+            snippet.prefix ++ ":" ++ snippet.description
+          },
+        snippetsWithMetadata,
+      );
+    (model, ShowMenu(menu));
 
-  | SnippetFilesLoadedForPicker(snippetFiles) => (
-      model,
-      ShowFilePicker(snippetFiles),
-    )
+  | SnippetFilesLoadedForPicker(snippetFiles) =>
+    let filesAndPaths =
+      snippetFiles
+      |> List.filter_map(
+           (snippetFile: Service_Snippets.SnippetFileMetadata.t) => {
+           FpExp.baseName(snippetFile.filePath)
+           |> Option.map(filePath => {
+                let language =
+                  snippetFile.language |> Option.value(~default="global");
+                let name =
+                  snippetFile.isCreated
+                    ? Printf.sprintf("Edit %s", filePath)
+                    : Printf.sprintf("Create %s", filePath);
+                let title = Printf.sprintf("%s: %s", language, name);
+                (title, snippetFile);
+              })
+         });
+
+    let menu =
+      Feature_Quickmenu.Schema.menu(
+        ~onItemSelected=
+          item => EditSnippetFileRequested({snippetFile: item |> snd}),
+        ~toString=item => fst(item),
+        filesAndPaths,
+      );
+
+    (model, ShowMenu(menu));
 
   | InsertInternal({snippetString}) =>
     let eff =
