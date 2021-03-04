@@ -21,6 +21,12 @@ let copyFilePath =
     CopyActiveFilepathToClipboard,
   );
 
+let noop =
+  register(
+    "noop",
+    Noop
+  );
+
 let command = cmd => CommandInvoked({command: cmd, arguments: `Null});
 
 let undo = register("undo", command("undo"));
