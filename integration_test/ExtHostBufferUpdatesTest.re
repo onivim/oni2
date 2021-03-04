@@ -97,7 +97,7 @@ runTest(~name="ExtHostBufferUpdates", ({input, dispatch, wait, key, _}) => {
   );
 
   // Insert multiple lines, and then undo
-  // This was a case discovered while investigating #2644
+  // This was a case discovered while investigating #2196
   input("gg");
   input("O");
   key(EditorInput.Key.Return);
