@@ -468,7 +468,6 @@ let start =
     let configurationSub =
       state.config
       |> Feature_Configuration.sub(
-           ~setup,
            ~client=extHostClient,
            ~isExthostInitialized,
          )

@@ -139,6 +139,7 @@ let parse = (~getenv: string => option(string), args) => {
     [
       ("-c", String(str => vimExCommands := [str, ...vimExCommands^]), ""),
       ("-f", Unit(setAttached), ""),
+      ("-v", setEffect(PrintVersion), ""),
       ("--nofork", Unit(setAttached), ""),
       ("--debug", Unit(() => logLevel := Some(Timber.Level.debug)), ""),
       ("--trace", Unit(() => logLevel := Some(Timber.Level.trace)), ""),

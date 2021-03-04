@@ -1,30 +1,19 @@
-
-# 1. Environment
-
-## 1.1 Validate PATH set correctly on OSX (#1161)
-
-- Run release Onivim from Finder (NOT terminal)
-- Run `:echo $PATH`
-- Validate full shell path is available
-
-__Pass:__
-- [ ] OSX
-
-## 1.2 Validate launches from dock in OSX (#2659)
-
-- Update .zshrc to have blocking input: (`read var`, `echo $var`)
-- Update .zshrc to have canary entry in `PATH`
-- Run Onivim 2 from dock
-- Validate Onivim 2 launches and PATH is correct
-
-__Pass:__
-- [ ] OSX
-
-# 2. First-run Experience
+# 1. First-run Experience
 
 Test cases covering launching and using Onivim without any persistence or configuration.
 
-## 2.1 No directory set [OSX|Win|Linux]
+## 1.1 Validate Welcome screen
+
+- Clear the Onivim 2 configuration folder (`rm -rf ~/.config/oni2`)
+- Launch Onivim
+- Validate Welcome screen shows correct version
+
+__Pass:__
+- [ ] Win
+- [ ] OSX
+- [ ] Linux
+
+## 1.2 No directory set [OSX|Win|Linux]
 
 - Clear the Onivim 2 configuration folder (`rm -rf ~/.config/oni2`)
 - Launch Onivim
@@ -37,7 +26,7 @@ __Pass:__
 - [ ] OSX
 - [ ] Linux
 
-## 2.2 Home directory set [OSX]
+## 1.3 Home directory set [OSX]
 
 This case is related to #2742 - previous builds of Onivim may have persisted
 the startup folder as `~/Documents`. This is problematic because Onivim may
@@ -50,6 +39,27 @@ not have permission to read that folder.
 - Verify explorer shows 'No folder opened'
 - Verify Control+P/Command+P shows only the 'Welcome' buffer
 - Verify Control+Shift+P/Command+Shift+P shows the command palette
+
+__Pass:__
+- [ ] OSX
+
+# 2. Environment
+
+## 2.1 Validate PATH set correctly on OSX (#1161)
+
+- Run release Onivim from Finder (NOT terminal)
+- Run `:echo $PATH`
+- Validate full shell path is available
+
+__Pass:__
+- [ ] OSX
+
+## 2.2 Validate launches from dock in OSX (#2659)
+
+- Update .zshrc to have blocking input: (`read var`, `echo $var`)
+- Update .zshrc to have canary entry in `PATH`
+- Run Onivim 2 from dock
+- Validate Onivim 2 launches and PATH is correct
 
 __Pass:__
 - [ ] OSX
@@ -173,16 +183,16 @@ Prerequisite:
 __Pass:__
 - [ ] Windows
 - [ ] OSX
-- [ ] LInux
+- [ ] Linux
 
-## 7.3 Japanese / Romanji layout
+## 7.3 Japanese / Romaji layout
 
 Regression test for #2924
 
 Prerequisite:
-- Install Romanji keyboard layout
+- Install Romaji keyboard layout
 
-- Switch keyboard layout to Romanji
+- Switch keyboard layout to Romaji
 - Run Onivim 2
 - Verify can open quickopen menu (Command+P/Control+P)
 - Verify can enter insert mode and type text

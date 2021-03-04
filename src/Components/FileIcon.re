@@ -28,7 +28,7 @@ let setiIcon = (~icon, ~fontSize, ~fg, ()) => {
 let make = (~font: UiFont.t, ~iconTheme, ~languageInfo, ~path, ()) => {
   switch (getFileIcon(~iconTheme, ~languageInfo, path)) {
   | None => React.empty
-  | Some((icon: IconTheme.IconDefinition.t)) =>
+  | Some(icon: IconTheme.IconDefinition.t) =>
     <setiIcon
       fontSize={font.size}
       fg={icon.fontColor}

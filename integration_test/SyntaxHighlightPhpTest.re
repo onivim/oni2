@@ -7,7 +7,8 @@ let uniqueColorCount: list(ThemeToken.t) => int =
     let rec loop = (uniqueCount, maybeLastForeground, tokens) => {
       switch (tokens) {
       | [] => uniqueCount
-      | [(hd: ThemeToken.t), ...tail] =>
+      | [hd, ...tail] =>
+        let hd: ThemeToken.t = hd;
         switch (maybeLastForeground) {
         | None => loop(uniqueCount + 1, Some(hd.foregroundColor), tail)
         | Some(color) =>
@@ -16,7 +17,7 @@ let uniqueColorCount: list(ThemeToken.t) => int =
           } else {
             loop(uniqueCount + 1, Some(hd.foregroundColor), tail);
           }
-        }
+        };
       };
     };
 

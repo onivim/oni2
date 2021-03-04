@@ -26,6 +26,7 @@
     ],
     "Languages": [
       "languages/reason-ocaml",
+      "languages/rescript",
       "languages/python",
       "languages/go",
       "languages/java",

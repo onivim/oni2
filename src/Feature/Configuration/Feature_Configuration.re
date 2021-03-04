@@ -87,7 +87,7 @@ let registerExtensionConfigurations =
   {...model, defaults, extHostSyncTick: model.extHostSyncTick + 1} |> merge;
 };
 
-let toExtensionConfiguration = (~additionalExtensions, ~setup: Setup.t, model) => {
+let toExtensionConfiguration = (~additionalExtensions, model) => {
   open Exthost.Extension;
   open Scanner.ScanResult;
 
@@ -105,7 +105,6 @@ let toExtensionConfiguration = (~additionalExtensions, ~setup: Setup.t, model) =
 
   let user =
     Config.Settings.fromList([
-      ("reason_language_server.location", Json.Encode.string(setup.rlsPath)),
       ("telemetry.enableTelemetry", Json.Encode.bool(false)),
       ("terminal.integrated.env.windows", Json.Encode.null),
       ("terminal.integrated.env.linux", Json.Encode.null),
@@ -267,7 +266,6 @@ let resolver = (~fileType: string, model, vimModel, ~vimSetting, key) => {
 
 let sub =
     (
-      ~setup,
       ~client,
       ~isExthostInitialized: bool,
       {loader, transformTasks, merged, extHostSyncTick, extHostLastConfig, _} as model,
@@ -298,11 +296,7 @@ let sub =
 
             Exthost.Request.Configuration.acceptConfigurationChanged(
               ~configuration=
-                toExtensionConfiguration(
-                  ~additionalExtensions=[],
-                  ~setup,
-                  model,
-                ),
+                toExtensionConfiguration(~additionalExtensions=[], model),
               ~changed,
               client,
             );
