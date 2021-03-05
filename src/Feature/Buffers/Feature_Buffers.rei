@@ -80,7 +80,7 @@ type outmsg =
       preview: bool,
     })
   | BufferModifiedSet(int, bool)
-  | ShowMenu(Feature_Quickmenu.Schema.menu(msg))
+  | ShowMenu(Exthost.LanguageInfo.t => Feature_Quickmenu.Schema.menu(msg))
   | NotifyInfo(string);
 
 // UPDATE

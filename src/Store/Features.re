@@ -1117,6 +1117,12 @@ let update =
     switch (outmsg) {
     | Nothing => (state, Effect.none)
 
+    | ShowMenu(menuFn) => 
+      let menu = menuFn(state.languageInfo)
+      |> Feature_Quickmenu.Schema.map(msg => Buffers(msg));
+      let quickmenu = Feature_Quickmenu.show(~menu, state.newQuickmenu);
+      ({...state, newQuickmenu: quickmenu}, Isolinear.Effect.none)
+
     | NotifyInfo(msg) => (
         state,
         Internal.notificationEffect(~kind=Info, msg),
