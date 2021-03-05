@@ -20,6 +20,7 @@ type t = {
   shouldLoadConfiguration: bool,
   shouldSyntaxHighlight: bool,
   attachToForeground: bool,
+  logExthost: bool,
   logLevel: option(Timber.Level.t),
   logFile: option(string),
   logFilter: option(string),
@@ -93,6 +94,7 @@ let parse = (~getenv: string => option(string), args) => {
   let attachToForeground = ref(false);
   let logLevel = ref(None);
   let isSilent = ref(false);
+  let logExthost = ref(false);
   let logFile = ref(None);
   let logFilter = ref(None);
   let logColorsEnabled = ref(None);
@@ -142,6 +144,7 @@ let parse = (~getenv: string => option(string), args) => {
       ("-v", setEffect(PrintVersion), ""),
       ("--nofork", Unit(setAttached), ""),
       ("--debug", Unit(() => logLevel := Some(Timber.Level.debug)), ""),
+      ("--debug-exthost", Unit(() => logExthost := true), ""),
       ("--trace", Unit(() => logLevel := Some(Timber.Level.trace)), ""),
       ("--quiet", Unit(() => logLevel := Some(Timber.Level.warn)), ""),
       (
@@ -290,6 +293,7 @@ let parse = (~getenv: string => option(string), args) => {
     shouldSyntaxHighlight: shouldSyntaxHighlight^,
     attachToForeground: attachToForeground^,
     logLevel: logLevel^,
+    logExthost: logExthost^,
     logFile: logFile^,
     logFilter: logFilter^,
     logColorsEnabled: logColorsEnabled^,

@@ -36,6 +36,7 @@
 - #3226 - Keybindings: Fix issue opening keybindings.json from the command palette
 - #3227 - Configuration: Allow string numbers as font sizes
 - #3230 - Font: Treat "FiraCode-Regular.ttf" as default font
+- #3233 - Formatting: Fix buffer de-sync when applying formatting edits (fixes #2196, #2820)
 
 ### Performance
 

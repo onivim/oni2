@@ -10,6 +10,7 @@ type t = {
   shouldLoadConfiguration: bool,
   shouldSyntaxHighlight: bool,
   attachToForeground: bool,
+  logExthost: bool,
   logLevel: option(Timber.Level.t),
   logFile: option(string),
   logFilter: option(string),

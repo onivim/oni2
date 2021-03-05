@@ -88,3 +88,5 @@ let setFont: (Font.t, t) => t;
 
 let getSaveTick: t => int;
 let incrementSaveTick: t => t;
+
+let toDebugString: t => string;
