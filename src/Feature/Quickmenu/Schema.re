@@ -2,19 +2,52 @@ open Oni_Core;
 open Utility;
 
 module Renderer = {
-  type t('item) =
-    (
-      ~theme: ColorTheme.Colors.t,
-      ~font: UiFont.t,
-      ~text: string,
-      ~highlights: list((int, int)),
-      'item
-    ) =>
-    Revery.UI.element;
+  open Revery;
+  open Revery.UI;
+  type t('item) = (
+    ~theme: ColorTheme.Colors.t,
+    ~font: UiFont.t,
+    ~text: string,
+    ~highlights: list((int, int)),
+    'item
+  ) => Revery.UI.element;
 
-  let default: t(_) =
-    (~theme as _, ~font as _, ~text as _, ~highlights as _, _item) => Revery.UI.React.empty;
-};
+  module Styles = {
+    open Style;
+    module Colors = Feature_Theme.Colors;
+
+    let label = (~theme, ~highlighted) => [
+      textOverflow(`Ellipsis),
+      color(
+        highlighted
+          ? Colors.Oni.normalModeBackground.from(theme)
+          : Colors.Menu.foreground.from(theme),
+      ),
+      textWrap(TextWrapping.NoWrap),
+    ];
+  }
+
+  let default: t(_) = (
+    ~theme,
+    ~font:UiFont.t,
+    ~text,
+    ~highlights,
+    _item
+  ) => {
+    
+    let style = Styles.label(~theme);
+    let normalStyle = style(~highlighted=false);
+    let highlightStyle = style(~highlighted=true);
+      <Oni_Components.HighlightText
+        fontFamily={font.family}
+        fontSize=12.
+        style=normalStyle
+        highlightStyle
+        text
+        highlights
+      />;
+  }
+}
 
 type internal('item, 'outmsg) = {
   onItemFocused: option('item => 'outmsg),
@@ -33,7 +66,7 @@ let menu:
     ~onItemFocused: 'item => 'outmsg=?,
     ~onItemSelected: 'item => 'outmsg=?,
     ~onCancelled: unit => 'outmsg=?,
-    ~itemRenderer: Renderer.t('item)=?,
+    ~itemRenderer: Renderer.t('item) = ?,
     ~toString: 'item => string,
     list('item)
   ) =>
@@ -54,7 +87,7 @@ let menu:
       toString,
       items: initialItems,
     });
-  };
+   };
 
 let mapFunction: ('a => 'b, 'item => 'a, 'item) => 'b =
   (f, orig, item) => {
@@ -132,7 +165,7 @@ module Instance = {
     fun
     | Instance({filteredItems, _}) => Array.length(filteredItems);
 
-  let itemAndHighlights = (~index: int) =>
+  let render = (~index, ~theme, ~font) => 
     fun
     | Instance({filteredItems, schema, _}) => {
         let len = Array.length(filteredItems);
@@ -142,7 +175,13 @@ module Instance = {
           let itemStr = schema.toString(item.item);
           let highlights = item.highlight;
 
-          Some((itemStr, highlights));
+          Some(schema.itemRenderer(
+            ~theme,
+            ~font,
+            ~text=itemStr,
+            ~highlights,
+            item.item,
+          ))
         } else {
           None;
         };
