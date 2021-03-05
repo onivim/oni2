@@ -82,7 +82,7 @@ type outmsg =
       ranges: list(CharacterRange.t),
     })
   | ShowMenu(Feature_Quickmenu.Schema.menu(msg))
-  | TransformConfiguration(ConfigurationTransformer.t)
+  | TransformConfiguration(ConfigurationTransformer.t);
 
 let update:
   (

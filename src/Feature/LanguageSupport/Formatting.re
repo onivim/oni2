@@ -35,11 +35,8 @@ let initial = {
 module Configuration = {
   open Config.Schema;
 
-  let defaultFormatter = setting(
-    "editor.defaultFormatter",
-    nullable(string),
-    ~default=None,
-  );
+  let defaultFormatter =
+    setting("editor.defaultFormatter", nullable(string), ~default=None);
 };
 
 [@deriving show]
@@ -50,6 +47,10 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
+  | DefaultFormatterSelected({
+      fileType: string,
+      extensionId: string,
+    })
   | FormatRange({
       startLine: EditorCoreTypes.LineNumber.t,
       endLine: EditorCoreTypes.LineNumber.t,
@@ -68,7 +69,8 @@ type msg =
       displayName: string,
     });
 
-let registerDocumentFormatter = (~handle, ~selector, ~extensionId, ~displayName, model) => {
+let registerDocumentFormatter =
+    (~handle, ~selector, ~extensionId, ~displayName, model) => {
   ...model,
   availableDocumentFormatters: [
     {handle, selector, extensionId, displayName},
@@ -76,7 +78,8 @@ let registerDocumentFormatter = (~handle, ~selector, ~extensionId, ~displayName,
   ],
 };
 
-let registerRangeFormatter = (~handle, ~selector, ~extensionId, ~displayName, model) => {
+let registerRangeFormatter =
+    (~handle, ~selector, ~extensionId, ~displayName, model) => {
   ...model,
   availableRangeFormatters: [
     {handle, selector, extensionId, displayName},
@@ -141,10 +144,14 @@ module Internal = {
     let startLine = EditorCoreTypes.LineNumber.toZeroBased(range.start.line);
     let stopLine = EditorCoreTypes.LineNumber.toZeroBased(range.stop.line);
 
-    prerr_endline (Printf.sprintf("StartLine: %d StopLine: %d Lines: %d",
-    startLine,
-    stopLine,
-    Array.length(lines)));
+    prerr_endline(
+      Printf.sprintf(
+        "StartLine: %d StopLine: %d Lines: %d",
+        startLine,
+        stopLine,
+        Array.length(lines),
+      ),
+    );
 
     if (startLine >= 0
         && startLine < Array.length(lines)
@@ -180,8 +187,23 @@ module Internal = {
     };
   };
 
+  let selectFormatterMenu = (~formatters: list(documentFormatter), toMsg) => {
+    let itemNames =
+      formatters
+      |> List.map(({extensionId, _}: documentFormatter) =>
+           ExtensionId.toString(extensionId)
+         );
+
+    Feature_Quickmenu.Schema.menu(
+      ~onItemSelected=toMsg,
+      ~toString=Fun.id,
+      itemNames,
+    );
+  };
+
   let runFormat =
       (
+        ~config,
         ~languageConfiguration,
         ~formatFn,
         ~model,
@@ -194,8 +216,9 @@ module Internal = {
 
     let indentation = Buffer.getIndentation(buf);
 
-    if (matchingFormatters == []) {
-      (
+    switch (matchingFormatters) {
+    // No matching formatters - use default
+    | [] => (
         model,
         fallBackToDefaultFormatter(
           ~indentation,
@@ -203,42 +226,110 @@ module Internal = {
           ~buffer=buf,
           range,
         ),
-      );
-    } else {
-      let effects =
-        matchingFormatters
-        |> List.map(formatter =>
-             formatFn(
-               ~handle=formatter.handle,
-               ~uri=Oni_Core.Buffer.getUri(buf),
-               ~options=
-                 Exthost.FormattingOptions.{
-                   tabSize: indentation.tabSize,
-                   insertSpaces:
-                     indentation.mode == Oni_Core.IndentationSettings.Spaces,
-                 },
-               extHostClient,
-               res => {
-               switch (res) {
-               | Ok(edits) =>
-                 EditsReceived({
-                   displayName: ExtensionId.toString(formatter.extensionId),
-                   sessionId,
-                   edits: List.map(extHostEditToVimEdit, edits),
-                 })
-               | Error(msg) => EditRequestFailed({sessionId, msg})
-               }
-             })
-           )
-        |> Isolinear.Effect.batch;
+      )
 
-      (model |> startSession(~sessionId, ~buffer=buf), Effect(effects));
+    // Single formatter - just use it
+    | [formatter] =>
+      prerr_endline("Single formatter found...");
+      (
+        model |> startSession(~sessionId, ~buffer=buf),
+        Effect(
+          formatFn(
+            ~handle=formatter.handle,
+            ~uri=Oni_Core.Buffer.getUri(buf),
+            ~options=
+              Exthost.FormattingOptions.{
+                tabSize: indentation.tabSize,
+                insertSpaces:
+                  indentation.mode == Oni_Core.IndentationSettings.Spaces,
+              },
+            extHostClient,
+            res => {
+            switch (res) {
+            | Ok(edits) =>
+              prerr_endline("Edits received");
+              EditsReceived({
+                displayName: ExtensionId.toString(formatter.extensionId),
+                sessionId,
+                edits: List.map(extHostEditToVimEdit, edits),
+              });
+            | Error(msg) =>
+              prerr_endline("Edit failed");
+              EditRequestFailed({sessionId, msg});
+            }
+          }),
+        ),
+      );
+
+    // Multiple formatters - we need to figure out which one to use
+    | multipleFormatters =>
+      // First, do we have a default specified?
+      switch (Configuration.defaultFormatter.get(config)) {
+      // No default formatter... let the user pick
+      | None =>
+        let menu =
+          selectFormatterMenu(~formatters=matchingFormatters, msg => {
+            DefaultFormatterSelected({
+              fileType: Buffer.getFileType(buf) |> Buffer.FileType.toString,
+              extensionId: msg,
+            })
+          });
+        (model, ShowMenu(menu));
+
+      // We have a default formatter
+      | Some(defaultFormatter) =>
+        let maybeFormatter =
+          multipleFormatters
+          |> List.filter(formatter =>
+               ExtensionId.toString(formatter.extensionId) == defaultFormatter
+             )
+          |> Utility.ListEx.nth_opt(0);
+
+        switch (maybeFormatter) {
+        | None => (
+            model,
+            FormatError(
+              Printf.sprintf(
+                "Formatter '%s' specified by editor.defaultFormatter was not found.",
+                defaultFormatter,
+              ),
+            ),
+          )
+        | Some(formatter) => (
+            model |> startSession(~sessionId, ~buffer=buf),
+            Effect(
+              formatFn(
+                ~handle=formatter.handle,
+                ~uri=Oni_Core.Buffer.getUri(buf),
+                ~options=
+                  Exthost.FormattingOptions.{
+                    tabSize: indentation.tabSize,
+                    insertSpaces:
+                      indentation.mode == Oni_Core.IndentationSettings.Spaces,
+                  },
+                extHostClient,
+                res => {
+                switch (res) {
+                | Ok(edits) =>
+                  EditsReceived({
+                    displayName: ExtensionId.toString(formatter.extensionId),
+                    sessionId,
+                    edits: List.map(extHostEditToVimEdit, edits),
+                  })
+                | Error(msg) => EditRequestFailed({sessionId, msg})
+                }
+              }),
+            ),
+          )
+        };
+      }
     };
   };
 };
 
 let update =
     (
+      ~config,
       ~languageConfiguration,
       ~maybeSelection,
       ~maybeBuffer,
@@ -257,7 +348,7 @@ let update =
             character: CharacterIndex.zero,
           },
           stop: {
-            line: endLine,
+            line: EditorCoreTypes.LineNumber.(endLine + 1),
             character: CharacterIndex.zero,
           },
         };
@@ -269,6 +360,7 @@ let update =
            );
 
       Internal.runFormat(
+        ~config,
         ~languageConfiguration,
         ~formatFn=
           Service_Exthost.Effects.LanguageFeatures.provideDocumentRangeFormattingEdits(
@@ -292,6 +384,7 @@ let update =
            );
 
       Internal.runFormat(
+        ~config,
         ~languageConfiguration,
         ~formatFn=
           Service_Exthost.Effects.LanguageFeatures.provideDocumentRangeFormattingEdits(
@@ -317,6 +410,7 @@ let update =
            );
 
       Internal.runFormat(
+        ~config,
         ~languageConfiguration,
         ~formatFn=Service_Exthost.Effects.LanguageFeatures.provideDocumentFormattingEdits,
         ~model,
@@ -340,6 +434,15 @@ let update =
           ),
       );
     }
+
+  | DefaultFormatterSelected({fileType, extensionId}) =>
+    let transformer =
+      ConfigurationTransformer.setFiletypeField(
+        ~fileType,
+        "editor.defaultFormatter",
+        `String(extensionId),
+      );
+    (model, TransformConfiguration(transformer));
 
   | EditsReceived({displayName, sessionId, edits}) =>
     switch (model.activeSession) {

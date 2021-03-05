@@ -104,9 +104,10 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
       CodeLensesChanged({handle, bufferId, lenses, startLine, stopLine})
     | Outmsg.SetSelections({editorId, ranges}) =>
       SetSelections({editorId, ranges})
-    | Outmsg.ShowMenu(menu) => ShowMenu(menu |> Feature_Quickmenu.Schema.map(f))
-    | Outmsg.TransformConfiguration(transformer) => TransformConfiguration(transformer)
-    ;
+    | Outmsg.ShowMenu(menu) =>
+      ShowMenu(menu |> Feature_Quickmenu.Schema.map(f))
+    | Outmsg.TransformConfiguration(transformer) =>
+      TransformConfiguration(transformer);
 
 module Msg = {
   let exthost = msg => Exthost(msg);
@@ -220,7 +221,12 @@ let update =
     ({...model, completion: completion'}, Nothing);
 
   | Exthost(
-      RegisterRangeFormattingSupport({handle, selector, displayName, extensionId}),
+      RegisterRangeFormattingSupport({
+        handle,
+        selector,
+        displayName,
+        extensionId,
+      }),
     ) =>
     let formatting' =
       Formatting.registerRangeFormatter(
@@ -233,7 +239,12 @@ let update =
     ({...model, formatting: formatting'}, Nothing);
 
   | Exthost(
-      RegisterDocumentFormattingSupport({handle, selector, displayName, extensionId}),
+      RegisterDocumentFormattingSupport({
+        handle,
+        selector,
+        displayName,
+        extensionId,
+      }),
     ) =>
     let formatting' =
       Formatting.registerDocumentFormatter(
@@ -356,6 +367,7 @@ let update =
   | Formatting(formatMsg) =>
     let (formatting', outMsg) =
       Formatting.update(
+        ~config,
         ~languageConfiguration,
         ~maybeSelection,
         ~maybeBuffer,
@@ -380,8 +392,8 @@ let update =
         )
       | Formatting.FormatError(errorMsg) => NotifyFailure(errorMsg)
       | Formatting.ShowMenu(menu) =>
-        let menu' = menu
-        |> Feature_Quickmenu.Schema.map(msg => Formatting(msg));
+        let menu' =
+          menu |> Feature_Quickmenu.Schema.map(msg => Formatting(msg));
         ShowMenu(menu');
 
       | Formatting.TransformConfiguration(transformer) =>
