@@ -80,6 +80,7 @@ type outmsg =
       preview: bool,
     })
   | BufferModifiedSet(int, bool)
+  | ShowMenu(Feature_Quickmenu.Schema.menu(msg))
   | NotifyInfo(string);
 
 // UPDATE

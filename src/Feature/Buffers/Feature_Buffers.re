@@ -142,28 +142,9 @@ let modified = model => {
   |> List.of_seq;
 };
 
-type outmsg =
-  | Nothing
-  | BufferUpdated({
-      update: Oni_Core.BufferUpdate.t,
-      markerUpdate: Oni_Core.MarkerUpdate.t,
-      newBuffer: Oni_Core.Buffer.t,
-      oldBuffer: Oni_Core.Buffer.t,
-      triggerKey: option(string),
-    })
-  | BufferSaved(Oni_Core.Buffer.t)
-  | CreateEditor({
-      buffer: Oni_Core.Buffer.t,
-      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
-      position: option(BytePosition.t),
-      grabFocus: bool,
-      preview: bool,
-    })
-  | BufferModifiedSet(int, bool)
-  | NotifyInfo(string);
-
 [@deriving show]
 type command =
+  | ChangeFiletype
   | DetectIndentation;
 
 [@deriving show({with_path: false})]
@@ -244,6 +225,28 @@ module Msg = {
     Update({update, oldBuffer, newBuffer, triggerKey});
   };
 };
+
+type outmsg =
+  | Nothing
+  | BufferUpdated({
+      update: Oni_Core.BufferUpdate.t,
+      markerUpdate: Oni_Core.MarkerUpdate.t,
+      newBuffer: Oni_Core.Buffer.t,
+      oldBuffer: Oni_Core.Buffer.t,
+      triggerKey: option(string),
+    })
+  | BufferSaved(Oni_Core.Buffer.t)
+  | CreateEditor({
+      buffer: Oni_Core.Buffer.t,
+      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      position: option(BytePosition.t),
+      grabFocus: bool,
+      preview: bool,
+    })
+  | BufferModifiedSet(int, bool)
+  | ShowMenu(Feature_Quickmenu.Schema.menu(msg))
+  | NotifyInfo(string);
+
 
 module Configuration = {
   open Config.Schema;
@@ -412,7 +415,11 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
     (model', eff);
 
   | Command(command) =>
+
     switch (command) {
+    | ChangeFiletype =>
+      (model, Nothing)
+
     | DetectIndentation =>
       let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
 
@@ -601,6 +608,14 @@ module Commands = {
       "editor.action.detectIndentation",
       Command(DetectIndentation),
     );
+
+  let changeFiletype =
+    define(
+      ~category="Editor",
+      ~title="Select file type",
+      "workbench.action.editor.changeLanguageMode",
+      Command(ChangeFiletype)
+    )
 };
 
 let sub = model =>
@@ -631,7 +646,7 @@ module Contributions = {
       indentSize.spec,
     ];
 
-  let commands = Commands.[detectIndentation] |> Command.Lookup.fromList;
+  let commands = Commands.[changeFiletype, detectIndentation] |> Command.Lookup.fromList;
 
   let keybindings =
     Feature_Input.Schema.[
