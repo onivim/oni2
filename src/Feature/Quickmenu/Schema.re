@@ -42,7 +42,7 @@ module Renderer = {
       ];
   };
 
-  let default: t(_) =
+  let common: t(_) =
     (~theme, ~font: UiFont.t, ~text, ~highlights, _item) => {
       let style = Styles.label(~theme);
       let normalStyle = style(~highlighted=false);
@@ -57,19 +57,33 @@ module Renderer = {
       />;
     };
 
+  let default = (~theme, ~font, ~text, ~highlights, item) => {
+    // Reserve the icon space to be consistent with menus w/ icons
+    [
+      <Text style={Styles.icon(Revery.Colors.transparentWhite)} text="" />,
+      common(~theme, ~font, ~text, ~highlights, item),
+    ]
+    |> React.listToElement;
+  };
+
   let defaultWithIcon =
       (iconSelector, ~theme, ~font, ~text, ~highlights, item) => {
-    let labelView = default(~theme, ~font, ~text, ~highlights, item);
+    let labelView = common(~theme, ~font, ~text, ~highlights, item);
     let icon = iconSelector(item);
     let iconView =
-      Oni_Core.IconTheme.IconDefinition.(
-        <Text
-          style={Styles.icon(icon.fontColor)}
-          fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
-          fontSize=Constants.iconSize
-          text={Oni_Components.FontIcon.codeToIcon(icon.fontCharacter)}
-        />
-      );
+      switch (icon) {
+      | Some(icon) =>
+        Oni_Core.IconTheme.IconDefinition.(
+          <Text
+            style={Styles.icon(icon.fontColor)}
+            fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
+            fontSize=Constants.iconSize
+            text={Oni_Components.FontIcon.codeToIcon(icon.fontCharacter)}
+          />
+        )
+      | None =>
+        <Text style={Styles.icon(Revery.Colors.transparentWhite)} text="" />
+      };
 
     [iconView, labelView] |> Revery.UI.React.listToElement;
   };

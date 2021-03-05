@@ -1122,7 +1122,7 @@ let update =
 
     | ShowMenu(menuFn) =>
       let menu =
-        menuFn(state.languageInfo)
+        menuFn(state.languageInfo, state.iconTheme)
         |> Feature_Quickmenu.Schema.map(msg => Buffers(msg));
       let quickmenu = Feature_Quickmenu.show(~menu, state.newQuickmenu);
       ({...state, newQuickmenu: quickmenu}, Isolinear.Effect.none);

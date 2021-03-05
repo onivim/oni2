@@ -247,7 +247,10 @@ type outmsg =
       preview: bool,
     })
   | BufferModifiedSet(int, bool)
-  | ShowMenu(Exthost.LanguageInfo.t => Feature_Quickmenu.Schema.menu(msg))
+  | ShowMenu(
+      (Exthost.LanguageInfo.t, IconTheme.t) =>
+      Feature_Quickmenu.Schema.menu(msg),
+    )
   | NotifyInfo(string);
 
 module Configuration = {
@@ -419,19 +422,30 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
   | Command(command) =>
     switch (command) {
     | ChangeFiletype({maybeBufferId}) =>
-      let menuFn = (languageInfo: Exthost.LanguageInfo.t) => {
+      let menuFn =
+          (languageInfo: Exthost.LanguageInfo.t, iconTheme: IconTheme.t) => {
         let bufferId = maybeBufferId |> Option.value(~default=activeBufferId);
-        let items = Exthost.LanguageInfo.languages(languageInfo);
+        let languages =
+          languageInfo
+          |> Exthost.LanguageInfo.languages
+          |> List.map(language =>
+               (
+                 language,
+                 Oni_Core.IconTheme.getIconForLanguage(iconTheme, language),
+               )
+             );
 
         Feature_Quickmenu.Schema.menu(
+          ~itemRenderer=
+            Feature_Quickmenu.Schema.Renderer.defaultWithIcon(snd),
           ~onItemSelected=
             language =>
               FileTypeChanged({
                 id: bufferId,
-                fileType: Buffer.FileType.explicit(language),
+                fileType: Buffer.FileType.explicit(fst(language)),
               }),
-          ~toString=Fun.id,
-          items,
+          ~toString=fst,
+          languages,
         );
       };
       (model, ShowMenu(menuFn));

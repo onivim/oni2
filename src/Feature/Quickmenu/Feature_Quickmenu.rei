@@ -17,7 +17,9 @@ module Schema: {
       Revery.UI.element;
 
     let default: t(_);
-    // let defaultWithIcon: ('item => IconTheme.IconDefinition.t) => t('item);
+
+    let defaultWithIcon:
+      ('item => option(IconTheme.IconDefinition.t)) => t('item);
   };
 
   let menu:
