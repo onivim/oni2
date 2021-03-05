@@ -123,10 +123,11 @@ let update = (msg, model) => {
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
 
   | Exthost(WriteFile({uri, bytes}), resolver) =>
+    let path = Uri.toFileSystemPath(uri); 
+    let directory = Path.dirname(path);
     let promise =
-      uri
-      |> Uri.toFileSystemPath
-      |> Service_OS.Api.writeFile(~contents=bytes)
+       Service_OS.Api.mkdir(directory)
+      |> LwtEx.flatMap(() => Service_OS.Api.writeFile(~contents=bytes, path))
       |> Lwt.map(() => Reply.okEmpty);
 
     (model, Effect(Internal.promiseAndResolverToEffect(promise, resolver)));
