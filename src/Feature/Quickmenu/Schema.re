@@ -11,11 +11,30 @@ type internal('item, 'outmsg) = {
 type menu('outmsg) =
   | Menu(internal('item, 'outmsg)): menu('outmsg);
 
+module Renderer = {
+  type t('item) = (
+    ~theme: ColorTheme.Colors.t,
+    ~font: UiFont.t,
+    ~text: string,
+    ~highlights: list((int, int)),
+    'item
+  ) => Revery.UI.element;
+
+  let default: t(_) = (
+    ~theme as _,
+    ~font as _,
+    ~text as _,
+    ~highlights as _,
+    _item
+  ) => Revery.UI.React.empty
+}
+
 let menu:
   (
     ~onItemFocused: 'item => 'outmsg=?,
     ~onItemSelected: 'item => 'outmsg=?,
     ~onCancelled: unit => 'outmsg=?,
+    ~itemRenderer: Renderer.t('item) = ?,
     ~toString: 'item => string,
     list('item)
   ) =>
@@ -24,9 +43,11 @@ let menu:
     ~onItemFocused=?,
     ~onItemSelected=?,
     ~onCancelled=?,
+    ~itemRenderer=Renderer.default,
     ~toString,
     initialItems,
-  ) =>
+  ) => {
+    ignore(itemRenderer);
     Menu({
       onItemFocused,
       onItemSelected,
@@ -34,6 +55,7 @@ let menu:
       toString,
       items: initialItems,
     });
+   };
 
 let mapFunction: ('a => 'b, 'item => 'a, 'item) => 'b =
   (f, orig, item) => {
