@@ -60,6 +60,8 @@ module Msg: {
       ~triggerKey: option(string)
     ) =>
     msg;
+
+  let selectFileTypeClicked: (~bufferId: int) => msg;
 };
 
 type outmsg =
