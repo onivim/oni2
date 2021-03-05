@@ -4,13 +4,19 @@ open Utility;
 module Renderer = {
   open Revery;
   open Revery.UI;
-  type t('item) = (
-    ~theme: ColorTheme.Colors.t,
-    ~font: UiFont.t,
-    ~text: string,
-    ~highlights: list((int, int)),
-    'item
-  ) => Revery.UI.element;
+  type t('item) =
+    (
+      ~theme: ColorTheme.Colors.t,
+      ~font: UiFont.t,
+      ~text: string,
+      ~highlights: list((int, int)),
+      'item
+    ) =>
+    Revery.UI.element;
+
+  module Constants = {
+    let iconSize = 20.;
+  };
 
   module Styles = {
     open Style;
@@ -25,19 +31,22 @@ module Renderer = {
       ),
       textWrap(TextWrapping.NoWrap),
     ];
-  }
 
-  let default: t(_) = (
-    ~theme,
-    ~font:UiFont.t,
-    ~text,
-    ~highlights,
-    _item
-  ) => {
-    
-    let style = Styles.label(~theme);
-    let normalStyle = style(~highlighted=false);
-    let highlightStyle = style(~highlighted=true);
+    let icon = fg =>
+      Style.[
+        color(fg),
+        width(int_of_float(Constants.iconSize *. 0.75)),
+        height(int_of_float(Constants.iconSize *. 0.85)),
+        textWrap(TextWrapping.NoWrap),
+        marginRight(10),
+      ];
+  };
+
+  let default: t(_) =
+    (~theme, ~font: UiFont.t, ~text, ~highlights, _item) => {
+      let style = Styles.label(~theme);
+      let normalStyle = style(~highlighted=false);
+      let highlightStyle = style(~highlighted=true);
       <Oni_Components.HighlightText
         fontFamily={font.family}
         fontSize=12.
@@ -46,8 +55,25 @@ module Renderer = {
         text
         highlights
       />;
-  }
-}
+    };
+
+  let defaultWithIcon =
+      (iconSelector, ~theme, ~font, ~text, ~highlights, item) => {
+    let labelView = default(~theme, ~font, ~text, ~highlights, item);
+    let icon = iconSelector(item);
+    let iconView =
+      Oni_Core.IconTheme.IconDefinition.(
+        <Text
+          style={Styles.icon(icon.fontColor)}
+          fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
+          fontSize=Constants.iconSize
+          text={Oni_Components.FontIcon.codeToIcon(icon.fontCharacter)}
+        />
+      );
+
+    [iconView, labelView] |> Revery.UI.React.listToElement;
+  };
+};
 
 type internal('item, 'outmsg) = {
   onItemFocused: option('item => 'outmsg),
@@ -66,7 +92,7 @@ let menu:
     ~onItemFocused: 'item => 'outmsg=?,
     ~onItemSelected: 'item => 'outmsg=?,
     ~onCancelled: unit => 'outmsg=?,
-    ~itemRenderer: Renderer.t('item) = ?,
+    ~itemRenderer: Renderer.t('item)=?,
     ~toString: 'item => string,
     list('item)
   ) =>
@@ -87,7 +113,7 @@ let menu:
       toString,
       items: initialItems,
     });
-   };
+  };
 
 let mapFunction: ('a => 'b, 'item => 'a, 'item) => 'b =
   (f, orig, item) => {
@@ -165,7 +191,7 @@ module Instance = {
     fun
     | Instance({filteredItems, _}) => Array.length(filteredItems);
 
-  let render = (~index, ~theme, ~font) => 
+  let render = (~index, ~theme, ~font) =>
     fun
     | Instance({filteredItems, schema, _}) => {
         let len = Array.length(filteredItems);
@@ -175,13 +201,15 @@ module Instance = {
           let itemStr = schema.toString(item.item);
           let highlights = item.highlight;
 
-          Some(schema.itemRenderer(
-            ~theme,
-            ~font,
-            ~text=itemStr,
-            ~highlights,
-            item.item,
-          ))
+          Some(
+            schema.itemRenderer(
+              ~theme,
+              ~font,
+              ~text=itemStr,
+              ~highlights,
+              item.item,
+            ),
+          );
         } else {
           None;
         };
