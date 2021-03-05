@@ -144,7 +144,7 @@ let modified = model => {
 
 [@deriving show]
 type command =
-  | ChangeFiletype({ maybeBufferId: option(int) })
+  | ChangeFiletype({maybeBufferId: option(int)})
   | DetectIndentation;
 
 [@deriving show({with_path: false})]
@@ -225,7 +225,8 @@ module Msg = {
     Update({update, oldBuffer, newBuffer, triggerKey});
   };
 
-  let selectFileTypeClicked = (~bufferId: int) => Command(ChangeFiletype({maybeBufferId: Some(bufferId)}));
+  let selectFileTypeClicked = (~bufferId: int) =>
+    Command(ChangeFiletype({maybeBufferId: Some(bufferId)}));
 };
 
 type outmsg =
@@ -248,7 +249,6 @@ type outmsg =
   | BufferModifiedSet(int, bool)
   | ShowMenu(Exthost.LanguageInfo.t => Feature_Quickmenu.Schema.menu(msg))
   | NotifyInfo(string);
-
 
 module Configuration = {
   open Config.Schema;
@@ -417,23 +417,24 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
     (model', eff);
 
   | Command(command) =>
-
     switch (command) {
     | ChangeFiletype({maybeBufferId}) =>
       let menuFn = (languageInfo: Exthost.LanguageInfo.t) => {
-        let bufferId = maybeBufferId |> Option.value(~default=activeBufferId); 
+        let bufferId = maybeBufferId |> Option.value(~default=activeBufferId);
         let items = Exthost.LanguageInfo.languages(languageInfo);
 
         Feature_Quickmenu.Schema.menu(
-          ~onItemSelected=(language) => FileTypeChanged({
-            id: bufferId,
-            fileType: Buffer.FileType.explicit(language),
-          }),
-         ~toString=Fun.id,
-         items
-        )
+          ~onItemSelected=
+            language =>
+              FileTypeChanged({
+                id: bufferId,
+                fileType: Buffer.FileType.explicit(language),
+              }),
+          ~toString=Fun.id,
+          items,
+        );
       };
-      (model, ShowMenu(menuFn))
+      (model, ShowMenu(menuFn));
 
     | DetectIndentation =>
       let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
@@ -629,8 +630,8 @@ module Commands = {
       ~category="Editor",
       ~title="Select file type",
       "workbench.action.editor.changeLanguageMode",
-      Command(ChangeFiletype({maybeBufferId: None}))
-    )
+      Command(ChangeFiletype({maybeBufferId: None})),
+    );
 };
 
 let sub = model =>
@@ -661,7 +662,8 @@ module Contributions = {
       indentSize.spec,
     ];
 
-  let commands = Commands.[changeFiletype, detectIndentation] |> Command.Lookup.fromList;
+  let commands =
+    Commands.[changeFiletype, detectIndentation] |> Command.Lookup.fromList;
 
   let keybindings =
     Feature_Input.Schema.[

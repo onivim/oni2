@@ -6,13 +6,15 @@ module Schema: {
   type menu('outmsg);
 
   module Renderer: {
-    type t('item) = (
-      ~theme: ColorTheme.Colors.t,
-      ~font: UiFont.t,
-      ~text: string,
-      ~highlights: list((int, int)),
-      'item
-    ) => Revery.UI.element;
+    type t('item) =
+      (
+        ~theme: ColorTheme.Colors.t,
+        ~font: UiFont.t,
+        ~text: string,
+        ~highlights: list((int, int)),
+        'item
+      ) =>
+      Revery.UI.element;
 
     let default: t(_);
   };
@@ -22,7 +24,7 @@ module Schema: {
       ~onItemFocused: 'item => 'outmsg=?,
       ~onItemSelected: 'item => 'outmsg=?,
       ~onCancelled: unit => 'outmsg=?,
-      ~itemRenderer: Renderer.t('item) =?,
+      ~itemRenderer: Renderer.t('item)=?,
       ~toString: 'item => string,
       list('item)
     ) =>

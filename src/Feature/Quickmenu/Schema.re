@@ -1,40 +1,39 @@
 open Oni_Core;
 open Utility;
 
+module Renderer = {
+  type t('item) =
+    (
+      ~theme: ColorTheme.Colors.t,
+      ~font: UiFont.t,
+      ~text: string,
+      ~highlights: list((int, int)),
+      'item
+    ) =>
+    Revery.UI.element;
+
+  let default: t(_) =
+    (~theme as _, ~font as _, ~text as _, ~highlights as _, _item) => Revery.UI.React.empty;
+};
+
 type internal('item, 'outmsg) = {
   onItemFocused: option('item => 'outmsg),
   onItemSelected: option('item => 'outmsg),
   onCancelled: option(unit => 'outmsg),
+  itemRenderer: Renderer.t('item),
   toString: 'item => string,
   items: list('item),
 };
+
 type menu('outmsg) =
   | Menu(internal('item, 'outmsg)): menu('outmsg);
-
-module Renderer = {
-  type t('item) = (
-    ~theme: ColorTheme.Colors.t,
-    ~font: UiFont.t,
-    ~text: string,
-    ~highlights: list((int, int)),
-    'item
-  ) => Revery.UI.element;
-
-  let default: t(_) = (
-    ~theme as _,
-    ~font as _,
-    ~text as _,
-    ~highlights as _,
-    _item
-  ) => Revery.UI.React.empty
-}
 
 let menu:
   (
     ~onItemFocused: 'item => 'outmsg=?,
     ~onItemSelected: 'item => 'outmsg=?,
     ~onCancelled: unit => 'outmsg=?,
-    ~itemRenderer: Renderer.t('item) = ?,
+    ~itemRenderer: Renderer.t('item)=?,
     ~toString: 'item => string,
     list('item)
   ) =>
@@ -47,15 +46,15 @@ let menu:
     ~toString,
     initialItems,
   ) => {
-    ignore(itemRenderer);
     Menu({
       onItemFocused,
       onItemSelected,
       onCancelled,
+      itemRenderer,
       toString,
       items: initialItems,
     });
-   };
+  };
 
 let mapFunction: ('a => 'b, 'item => 'a, 'item) => 'b =
   (f, orig, item) => {
@@ -65,13 +64,12 @@ let mapFunction: ('a => 'b, 'item => 'a, 'item) => 'b =
 let map: ('a => 'b, menu('a)) => menu('b) =
   (f, model) => {
     switch (model) {
-    | Menu({onItemFocused, onItemSelected, onCancelled, toString, items}) =>
+    | Menu({onItemFocused, onItemSelected, onCancelled, _} as orig) =>
       Menu({
+        ...orig,
         onItemFocused: onItemFocused |> Option.map(mapFunction(f)),
         onItemSelected: onItemSelected |> Option.map(mapFunction(f)),
         onCancelled: onCancelled |> Option.map(mapFunction(f)),
-        toString,
-        items,
       })
     };
   };
