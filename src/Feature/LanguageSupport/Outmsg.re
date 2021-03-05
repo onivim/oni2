@@ -31,6 +31,7 @@ type internalMsg('a) =
       ranges: list(CharacterRange.t),
     })
   | ShowMenu(Feature_Quickmenu.Schema.menu('a))
+  | TransformConfiguration(Oni_Core.ConfigurationTransformer.t)
   | Effect(Isolinear.Effect.t('a));
 
 let map = f =>

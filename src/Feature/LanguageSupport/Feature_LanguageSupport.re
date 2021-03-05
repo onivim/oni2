@@ -78,7 +78,8 @@ type outmsg =
       editorId: int,
       ranges: list(CharacterRange.t),
     })
-  | ShowMenu(Feature_Quickmenu.Schema.menu(msg));
+  | ShowMenu(Feature_Quickmenu.Schema.menu(msg))
+  | TransformConfiguration(Oni_Core.ConfigurationTransformer.t);
 
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
@@ -104,6 +105,7 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     | Outmsg.SetSelections({editorId, ranges}) =>
       SetSelections({editorId, ranges})
     | Outmsg.ShowMenu(menu) => ShowMenu(menu |> Feature_Quickmenu.Schema.map(f))
+    | Outmsg.TransformConfiguration(transformer) => TransformConfiguration(transformer)
     ;
 
 module Msg = {
@@ -377,6 +379,13 @@ let update =
           ),
         )
       | Formatting.FormatError(errorMsg) => NotifyFailure(errorMsg)
+      | Formatting.ShowMenu(menu) =>
+        let menu' = menu
+        |> Feature_Quickmenu.Schema.map(msg => Formatting(msg));
+        ShowMenu(menu');
+
+      | Formatting.TransformConfiguration(transformer) =>
+        TransformConfiguration(transformer)
       };
 
     ({...model, formatting: formatting'}, outMsg');

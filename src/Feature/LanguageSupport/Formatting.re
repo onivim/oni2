@@ -101,7 +101,9 @@ type outmsg =
       displayName: string,
       editCount: int,
     })
-  | FormatError(string);
+  | FormatError(string)
+  | TransformConfiguration(ConfigurationTransformer.t)
+  | ShowMenu(Feature_Quickmenu.Schema.menu(msg));
 
 module Internal = {
   let clearSession = model => {...model, activeSession: None};

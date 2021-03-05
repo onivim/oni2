@@ -734,6 +734,14 @@ let update =
         |> Feature_Quickmenu.Schema.map(msg => Actions.LanguageSupport(msg));
         let quickmenu' = Feature_Quickmenu.show(~menu=menu', state.newQuickmenu);
         ({...state, newQuickmenu: quickmenu'}, Isolinear.Effect.none)
+
+      | TransformConfiguration(transformer) =>
+        let config' =
+              Feature_Configuration.queueTransform(
+                ~transformer,
+                state.config,
+              );
+        ({...state, config: config'}, Isolinear.Effect.none);
       }
     );
 
