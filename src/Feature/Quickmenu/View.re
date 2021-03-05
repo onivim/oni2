@@ -144,7 +144,6 @@ let make =
           onClick={() => onSelect(index)}
           theme
           label={`Custom(elem)}
-          //icon={item.icon}
           onMouseOver={() => onFocusedChange(index)}
           isFocused
         />;
