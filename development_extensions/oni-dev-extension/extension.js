@@ -36,6 +36,21 @@ function activate(context) {
     )
 
     cleanup(
+        vscode.commands.registerCommand("developer.oni.logBufferUpdates", () => {
+                vscode.window.showInformationMessage("Logging buffer updates!");
+                vscode.workspace.onDidChangeTextDocument((e) => {
+                    console.log({
+                        type: "workspace.onDidChangeTextDocument",
+                        filename: e.document.fileName,
+                        version: e.document.version,
+                        contentChanges: e.contentChanges,
+                        fullText: e.document.getText(),
+                    });
+                });
+        }),
+    )
+
+    cleanup(
         vscode.commands.registerCommand("developer.oni.tryOpenDocument", () => {
             vscode.workspace.openTextDocument(vscode.Uri.file("package.json"))
             .then((document) => {

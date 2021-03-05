@@ -392,6 +392,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       } else {
         newBuffer;
       };
+
     let markerUpdate =
       MarkerUpdate.create(~update, ~original=oldBuffer, ~updated=buffer);
     (

@@ -17,17 +17,16 @@ let create = (~rangeLength: int, ~range: CharacterRange.t, ~text: string, ()) =>
 };
 
 let joinLines = (separator: string, lines: list(string)) => {
-  String.concat(separator, lines);
+  let joined = String.concat(separator, lines);
+
+  if (lines != []) {
+    joined ++ separator;
+  } else {
+    joined;
+  };
 };
 
 let getRangeFromEdit = (bu: BufferUpdate.t) => {
-  let newLines = Array.length(bu.lines);
-  let isInsert =
-    EditorCoreTypes.(
-      newLines >= LineNumber.toZeroBased(bu.endLine)
-      - LineNumber.toZeroBased(bu.startLine)
-    );
-
   let startLine = EditorCoreTypes.LineNumber.toZeroBased(bu.startLine);
   let endLine =
     EditorCoreTypes.LineNumber.toZeroBased(bu.endLine) |> max(startLine);
@@ -48,7 +47,7 @@ let getRangeFromEdit = (bu: BufferUpdate.t) => {
       }
     );
 
-  (isInsert, range);
+  range;
 };
 
 let getRangeLengthFromEdit =
@@ -72,11 +71,9 @@ let getRangeLengthFromEdit =
 
 let ofBufferUpdate =
     (~previousBuffer, bu: Oni_Core.BufferUpdate.t, eol: Eol.t) => {
-  let (isInsert, range) = getRangeFromEdit(bu);
+  let range = getRangeFromEdit(bu);
   let text = joinLines(Eol.toString(eol), bu.lines |> Array.to_list);
   let rangeLength = getRangeLengthFromEdit(~previousBuffer, ~eol, bu);
-
-  let text = isInsert ? text ++ Eol.toString(eol) : text;
 
   {range: OneBasedRange.ofRange(range), text, rangeLength};
 };
