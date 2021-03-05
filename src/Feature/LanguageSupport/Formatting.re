@@ -416,18 +416,53 @@ let update =
     switch (maybeBuffer) {
     | None => (model, Nothing)
     | Some(buf) =>
-      let matchingFormatters =
+      let matchingDocumentFormatters =
         model.availableDocumentFormatters
         |> List.filter(({selector, _}) =>
              DocumentSelector.matchesBuffer(~buffer=buf, selector)
            );
 
+      let matchingRangeFormatters =
+        model.availableRangeFormatters
+        |> List.filter(({selector, _}) =>
+             DocumentSelector.matchesBuffer(~buffer=buf, selector)
+           );
+
+      // If there isn't a document formatter, but there is a range formatter -
+      // just use the range formatter for the whole range
+      let (formatters, formatFn) =
+        if (matchingDocumentFormatters == [] && matchingRangeFormatters != []) {
+          let bufferRange =
+            CharacterRange.{
+              start:
+                CharacterPosition.{
+                  line: EditorCoreTypes.LineNumber.zero,
+                  character: CharacterIndex.zero,
+                },
+              stop:
+                CharacterPosition.{
+                  line:
+                    Buffer.getNumberOfLines(buf)
+                    |> EditorCoreTypes.LineNumber.ofZeroBased,
+                  character: CharacterIndex.zero,
+                },
+            };
+          let formatFn =
+            Service_Exthost.Effects.LanguageFeatures.provideDocumentRangeFormattingEdits(
+              ~range=bufferRange,
+            );
+          (matchingRangeFormatters, formatFn);
+        } else {
+          let formatFn = Service_Exthost.Effects.LanguageFeatures.provideDocumentFormattingEdits;
+          (matchingDocumentFormatters, formatFn);
+        };
+
       Internal.runFormat(
         ~config,
         ~languageConfiguration,
-        ~formatFn=Service_Exthost.Effects.LanguageFeatures.provideDocumentFormattingEdits,
+        ~formatFn,
         ~model,
-        ~matchingFormatters,
+        ~matchingFormatters=formatters,
         ~buf,
         ~extHostClient,
         ~range=
