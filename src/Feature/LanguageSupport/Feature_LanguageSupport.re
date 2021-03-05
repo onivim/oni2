@@ -77,7 +77,8 @@ type outmsg =
   | SetSelections({
       editorId: int,
       ranges: list(CharacterRange.t),
-    });
+    })
+  | ShowMenu(Feature_Quickmenu.Schema.menu(msg));
 
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
@@ -101,7 +102,9 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
       }) =>
       CodeLensesChanged({handle, bufferId, lenses, startLine, stopLine})
     | Outmsg.SetSelections({editorId, ranges}) =>
-      SetSelections({editorId, ranges});
+      SetSelections({editorId, ranges})
+    | Outmsg.ShowMenu(menu) => ShowMenu(menu |> Feature_Quickmenu.Schema.map(f))
+    ;
 
 module Msg = {
   let exthost = msg => Exthost(msg);

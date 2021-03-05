@@ -728,6 +728,12 @@ let update =
                )
              );
         ({...state, layout: layout'}, Isolinear.Effect.none);
+
+      | ShowMenu(menu) =>
+        let menu' = menu
+        |> Feature_Quickmenu.Schema.map(msg => Actions.LanguageSupport(msg));
+        let quickmenu' = Feature_Quickmenu.show(~menu=menu', state.newQuickmenu);
+        ({...state, newQuickmenu: quickmenu'}, Isolinear.Effect.none)
       }
     );
 

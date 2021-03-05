@@ -30,6 +30,7 @@ type internalMsg('a) =
       editorId: int,
       ranges: list(CharacterRange.t),
     })
+  | ShowMenu(Feature_Quickmenu.Schema.menu('a))
   | Effect(Isolinear.Effect.t('a));
 
 let map = f =>

@@ -80,7 +80,8 @@ type outmsg =
   | SetSelections({
       editorId: int,
       ranges: list(CharacterRange.t),
-    });
+    })
+  | ShowMenu(Feature_Quickmenu.Schema.menu(msg));
 
 let update:
   (
