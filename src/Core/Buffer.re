@@ -337,3 +337,20 @@ let setFont = (font, buf) => {
 let getSaveTick = ({saveTick, _}) => saveTick;
 
 let incrementSaveTick = buffer => {...buffer, saveTick: buffer.saveTick + 1};
+
+let toDebugString = buf => {
+  let lines =
+    buf
+    |> getLines
+    |> Array.to_list
+    |> List.mapi((idx, str) =>
+         "Line  " ++ string_of_int(idx) ++ ": |" ++ str ++ "|"
+       )
+    |> String.concat("\n");
+  Printf.sprintf(
+    "Buffer %d (version %d):\n---\n%s\n---\n",
+    getId(buf),
+    getVersion(buf),
+    lines,
+  );
+};

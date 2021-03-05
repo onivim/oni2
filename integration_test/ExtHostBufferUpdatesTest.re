@@ -87,10 +87,35 @@ runTest(~name="ExtHostBufferUpdates", ({input, dispatch, wait, key, _}) => {
   // Finally, modify a single line
   input("gg");
   input("Iabc");
+  key(EditorInput.Key.Escape);
 
   TS.validateTextIsSynchronized(
     ~expectedText=Some("abca|b|c|"),
     ~description="after inserting some text in an existing line",
+    dispatch,
+    wait,
+  );
+
+  // Insert multiple lines, and then undo
+  // This was a case discovered while investigating #2196
+  input("gg");
+  input("O");
+  key(EditorInput.Key.Return);
+  key(EditorInput.Key.Return);
+  key(EditorInput.Key.Escape);
+
+  TS.validateTextIsSynchronized(
+    ~expectedText=Some("|||abca|b|c|"),
+    ~description="after inserting multiple lines",
+    dispatch,
+    wait,
+  );
+
+  // Undo the change - we also had bugs here!
+  input("u");
+  TS.validateTextIsSynchronized(
+    ~expectedText=Some("abca|b|c|"),
+    ~description="after inserting multiple lines",
     dispatch,
     wait,
   );

@@ -36,6 +36,7 @@
 - #3226 - Keybindings: Fix issue opening keybindings.json from the command palette
 - #3227 - Configuration: Allow string numbers as font sizes
 - #3230 - Font: Treat "FiraCode-Regular.ttf" as default font
+- #3233 - Formatting: Fix buffer de-sync when applying formatting edits (fixes #2196, #2820)
 
 ### Performance
 
@@ -47,6 +48,7 @@
 - #3181 - Snippets: Initial snippets section
 - #3185 - Emmet: Initial emmet section
 - #3223 - Languages: Split out ReScript into separate section
+- #3237 - Languages: Remove exuberant ctags from C/C++ section
 
 ### Infrastructure / Refactoring
 

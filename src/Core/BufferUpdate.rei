@@ -22,3 +22,5 @@ let create:
     unit
   ) =>
   t;
+
+let toDebugString: t => string;

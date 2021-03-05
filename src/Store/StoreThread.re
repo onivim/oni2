@@ -129,11 +129,14 @@ let start =
 
   let initialState = getState();
 
-  let attachStdio =
+  let attachExthostStdio =
     Oni_CLI.(
       {
         initialState.cli.attachToForeground
-        && Option.is_some(initialState.cli.logLevel);
+        && (
+          Option.is_some(initialState.cli.logLevel)
+          || initialState.cli.logExthost
+        );
       }
     );
 
@@ -144,7 +147,7 @@ let start =
   let (extHostClientResult, extHostStream) =
     ExtensionClient.create(
       ~initialWorkspace,
-      ~attachStdio,
+      ~attachStdio=attachExthostStdio,
       ~config=getState().config,
       ~extensions,
       ~setup,
