@@ -144,15 +144,6 @@ module Internal = {
     let startLine = EditorCoreTypes.LineNumber.toZeroBased(range.start.line);
     let stopLine = EditorCoreTypes.LineNumber.toZeroBased(range.stop.line);
 
-    prerr_endline(
-      Printf.sprintf(
-        "StartLine: %d StopLine: %d Lines: %d",
-        startLine,
-        stopLine,
-        Array.length(lines),
-      ),
-    );
-
     if (startLine >= 0
         && startLine < Array.length(lines)
         && stopLine <= Array.length(lines)) {
@@ -202,6 +193,18 @@ module Internal = {
     );
   };
 
+  let getDisplayName = (~fileType, {extensionId, _}: documentFormatter) => {
+    let name = ExtensionId.toString(extensionId);
+    // HACK: Why are the reason / OCaml formatters coming up this way?
+    if (name == "nullExtensionDescription"
+        && fileType == "reason"
+        || fileType == "ocaml") {
+      "ocamllsp";
+    } else {
+      name;
+    };
+  };
+
   let runFormat =
       (
         ~config,
@@ -230,9 +233,7 @@ module Internal = {
       )
 
     // Single formatter - just use it
-    | [formatter] =>
-      prerr_endline("Single formatter found...");
-      (
+    | [formatter] => (
         model |> startSession(~sessionId, ~buffer=buf),
         Effect(
           formatFn(
@@ -248,19 +249,23 @@ module Internal = {
             res => {
             switch (res) {
             | Ok(edits) =>
-              prerr_endline("Edits received");
               EditsReceived({
-                displayName: ExtensionId.toString(formatter.extensionId),
+                displayName:
+                  getDisplayName(
+                    ~fileType=
+                      buf
+                      |> Oni_Core.Buffer.getFileType
+                      |> Oni_Core.Buffer.FileType.toString,
+                    formatter,
+                  ),
                 sessionId,
                 edits: List.map(extHostEditToVimEdit, edits),
-              });
-            | Error(msg) =>
-              prerr_endline("Edit failed");
-              EditRequestFailed({sessionId, msg});
+              })
+            | Error(msg) => EditRequestFailed({sessionId, msg})
             }
           }),
         ),
-      );
+      )
 
     // Multiple formatters - we need to figure out which one to use
     | multipleFormatters =>
@@ -313,7 +318,14 @@ module Internal = {
                 switch (res) {
                 | Ok(edits) =>
                   EditsReceived({
-                    displayName: ExtensionId.toString(formatter.extensionId),
+                    displayName:
+                      getDisplayName(
+                        ~fileType=
+                          buf
+                          |> Oni_Core.Buffer.getFileType
+                          |> Oni_Core.Buffer.FileType.toString,
+                        formatter,
+                      ),
                     sessionId,
                     edits: List.map(extHostEditToVimEdit, edits),
                   })
