@@ -197,6 +197,7 @@ module Internal = {
     Feature_Quickmenu.Schema.menu(
       ~onItemSelected=toMsg,
       ~toString=Fun.id,
+      ~placeholderText="Select a default formatter...",
       itemNames,
     );
   };

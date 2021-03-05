@@ -10,6 +10,7 @@ module Schema: {
       ~onItemFocused: 'item => 'outmsg=?,
       ~onItemSelected: 'item => 'outmsg=?,
       ~onCancelled: unit => 'outmsg=?,
+      ~placeholderText: string=?,
       ~toString: 'item => string,
       list('item)
     ) =>
