@@ -30,6 +30,18 @@ let initial = {
   activeSession: None,
 };
 
+// CONFIGURATION
+
+module Configuration = {
+  open Config.Schema;
+
+  let defaultFormatter = setting(
+    "editor.defaultFormatter",
+    nullable(string),
+    ~default=None,
+  );
+};
+
 [@deriving show]
 type command =
   | FormatDocument
@@ -375,4 +387,6 @@ module Commands = {
 
 module Contributions = {
   let commands = [Commands.formatDocument];
+
+  let configuration = [Configuration.defaultFormatter.spec];
 };

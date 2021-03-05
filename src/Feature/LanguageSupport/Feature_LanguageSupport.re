@@ -602,6 +602,7 @@ module Contributions = {
     CodeLens.Contributions.configuration
     @ Completion.Contributions.configuration
     @ DocumentHighlights.Contributions.configuration
+    @ Formatting.Contributions.configuration
     @ SignatureHelp.Contributions.configuration;
 
   let contextKeys =
