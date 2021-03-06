@@ -93,6 +93,7 @@ type internal('item, 'outmsg) = {
   onItemFocused: option('item => 'outmsg),
   onItemSelected: option('item => 'outmsg),
   onCancelled: option(unit => 'outmsg),
+  placeholderText: string,
   itemRenderer: Renderer.t('item),
   toString: 'item => string,
   items: list('item),
@@ -106,6 +107,7 @@ let menu:
     ~onItemFocused: 'item => 'outmsg=?,
     ~onItemSelected: 'item => 'outmsg=?,
     ~onCancelled: unit => 'outmsg=?,
+    ~placeholderText: string=?,
     ~itemRenderer: Renderer.t('item)=?,
     ~toString: 'item => string,
     list('item)
@@ -115,6 +117,7 @@ let menu:
     ~onItemFocused=?,
     ~onItemSelected=?,
     ~onCancelled=?,
+    ~placeholderText="type to search...",
     ~itemRenderer=Renderer.default,
     ~toString,
     initialItems,
@@ -123,6 +126,7 @@ let menu:
       onItemFocused,
       onItemSelected,
       onCancelled,
+      placeholderText,
       itemRenderer,
       toString,
       items: initialItems,
@@ -295,7 +299,7 @@ let instantiate: menu('outmsg) => Instance.t('outmsg) =
       text:
         Component_InputText.empty
         |> Component_InputText.setPlaceholder(
-             ~placeholder="type to search...",
+             ~placeholder=internal.placeholderText,
            ),
       allItems: internal.items,
       filteredItems: [||],

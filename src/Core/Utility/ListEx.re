@@ -16,6 +16,8 @@ let boundedLength = (~max, list) => {
   loop(0, list);
 };
 
+let nth_opt = (idx, list) => List.nth_opt(list, idx);
+
 /**
  * Return the last element in a list.
  */

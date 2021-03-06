@@ -27,6 +27,7 @@ module Schema: {
       ~onItemFocused: 'item => 'outmsg=?,
       ~onItemSelected: 'item => 'outmsg=?,
       ~onCancelled: unit => 'outmsg=?,
+      ~placeholderText: string=?,
       ~itemRenderer: Renderer.t('item)=?,
       ~toString: 'item => string,
       list('item)
