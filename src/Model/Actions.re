@@ -195,11 +195,6 @@ and quickmenuVariant =
   | OpenBuffersPicker
   | Wildmenu([@opaque] Vim.Types.cmdlineType)
   | ThemesPicker([@opaque] list(Feature_Theme.theme))
-  | FileTypesPicker({
-      bufferId: int,
-      languages:
-        list((string, option(Oni_Core.IconTheme.IconDefinition.t))),
-    })
   | Extension({
       id: int,
       hasItems: bool,

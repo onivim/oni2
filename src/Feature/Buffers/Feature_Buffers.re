@@ -142,28 +142,9 @@ let modified = model => {
   |> List.of_seq;
 };
 
-type outmsg =
-  | Nothing
-  | BufferUpdated({
-      update: Oni_Core.BufferUpdate.t,
-      markerUpdate: Oni_Core.MarkerUpdate.t,
-      newBuffer: Oni_Core.Buffer.t,
-      oldBuffer: Oni_Core.Buffer.t,
-      triggerKey: option(string),
-    })
-  | BufferSaved(Oni_Core.Buffer.t)
-  | CreateEditor({
-      buffer: Oni_Core.Buffer.t,
-      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
-      position: option(BytePosition.t),
-      grabFocus: bool,
-      preview: bool,
-    })
-  | BufferModifiedSet(int, bool)
-  | NotifyInfo(string);
-
 [@deriving show]
 type command =
+  | ChangeFiletype({maybeBufferId: option(int)})
   | DetectIndentation;
 
 [@deriving show({with_path: false})]
@@ -243,7 +224,34 @@ module Msg = {
   let updated = (~update, ~newBuffer, ~oldBuffer, ~triggerKey) => {
     Update({update, oldBuffer, newBuffer, triggerKey});
   };
+
+  let selectFileTypeClicked = (~bufferId: int) =>
+    Command(ChangeFiletype({maybeBufferId: Some(bufferId)}));
 };
+
+type outmsg =
+  | Nothing
+  | BufferUpdated({
+      update: Oni_Core.BufferUpdate.t,
+      markerUpdate: Oni_Core.MarkerUpdate.t,
+      newBuffer: Oni_Core.Buffer.t,
+      oldBuffer: Oni_Core.Buffer.t,
+      triggerKey: option(string),
+    })
+  | BufferSaved(Oni_Core.Buffer.t)
+  | CreateEditor({
+      buffer: Oni_Core.Buffer.t,
+      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      position: option(BytePosition.t),
+      grabFocus: bool,
+      preview: bool,
+    })
+  | BufferModifiedSet(int, bool)
+  | ShowMenu(
+      (Exthost.LanguageInfo.t, IconTheme.t) =>
+      Feature_Quickmenu.Schema.menu(msg),
+    )
+  | NotifyInfo(string);
 
 module Configuration = {
   open Config.Schema;
@@ -414,6 +422,35 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
 
   | Command(command) =>
     switch (command) {
+    | ChangeFiletype({maybeBufferId}) =>
+      let menuFn =
+          (languageInfo: Exthost.LanguageInfo.t, iconTheme: IconTheme.t) => {
+        let bufferId = maybeBufferId |> Option.value(~default=activeBufferId);
+        let languages =
+          languageInfo
+          |> Exthost.LanguageInfo.languages
+          |> List.map(language =>
+               (
+                 language,
+                 Oni_Core.IconTheme.getIconForLanguage(iconTheme, language),
+               )
+             );
+
+        Feature_Quickmenu.Schema.menu(
+          ~itemRenderer=
+            Feature_Quickmenu.Schema.Renderer.defaultWithIcon(snd),
+          ~onItemSelected=
+            language =>
+              FileTypeChanged({
+                id: bufferId,
+                fileType: Buffer.FileType.explicit(fst(language)),
+              }),
+          ~toString=fst,
+          languages,
+        );
+      };
+      (model, ShowMenu(menuFn));
+
     | DetectIndentation =>
       let maybeBuffer = IntMap.find_opt(activeBufferId, model.buffers);
 
@@ -602,6 +639,14 @@ module Commands = {
       "editor.action.detectIndentation",
       Command(DetectIndentation),
     );
+
+  let changeFiletype =
+    define(
+      ~category="Editor",
+      ~title="Select file type",
+      "workbench.action.editor.changeLanguageMode",
+      Command(ChangeFiletype({maybeBufferId: None})),
+    );
 };
 
 let sub = model =>
@@ -632,7 +677,8 @@ module Contributions = {
       indentSize.spec,
     ];
 
-  let commands = Commands.[detectIndentation] |> Command.Lookup.fromList;
+  let commands =
+    Commands.[changeFiletype, detectIndentation] |> Command.Lookup.fromList;
 
   let keybindings =
     Feature_Input.Schema.[

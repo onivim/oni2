@@ -136,30 +136,14 @@ let make =
     };
 
     let renderItem = index => {
-      switch (Schema.Instance.itemAndHighlights(~index, current)) {
+      switch (Schema.Instance.render(~index, ~theme, ~font, current)) {
       | None => React.empty
-      | Some((text, highlights)) =>
+      | Some(elem) =>
         let isFocused = Some(index) == focused;
-
-        let style = Styles.label(~theme);
-        // TODO:
-        let normalStyle = style(~highlighted=false);
-        let highlightStyle = style(~highlighted=true);
-        let labelView =
-          <HighlightText
-            fontFamily={font.family}
-            fontSize=12.
-            style=normalStyle
-            highlightStyle
-            text
-            highlights
-          />;
-
         <MenuItem
           onClick={() => onSelect(index)}
           theme
-          label={`Custom(labelView)}
-          // icon={item.icon}
+          label={`Custom(elem)}
           onMouseOver={() => onFocusedChange(index)}
           isFocused
         />;

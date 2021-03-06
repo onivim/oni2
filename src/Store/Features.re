@@ -1072,24 +1072,27 @@ let update =
           |> Feature_Layout.activeEditor
           |> Feature_Editor.Editor.getBufferId;
 
-        let languages =
-          state.languageInfo
-          |> Exthost.LanguageInfo.languages
-          |> List.map(language =>
-               (
-                 language,
-                 Oni_Core.IconTheme.getIconForLanguage(
-                   state.iconTheme,
-                   language,
-                 ),
-               )
-             );
+        // TODO: Port to buffer filetype picker
+        // let languages =
+        //   state.languageInfo
+        //   |> Exthost.LanguageInfo.languages
+        //   |> List.map(language =>
+        //        (
+        //          language,
+        //          Oni_Core.IconTheme.getIconForLanguage(
+        //            state.iconTheme,
+        //            language,
+        //          ),
+        //        )
+        //      );
         (
           state',
           Isolinear.Effect.createWithDispatch(
             ~name="statusBar.fileTypePicker", dispatch => {
             dispatch(
-              Actions.QuickmenuShow(FileTypesPicker({bufferId, languages})),
+              Actions.Buffers(
+                Feature_Buffers.Msg.selectFileTypeClicked(~bufferId),
+              ),
             )
           }),
         );
@@ -1116,6 +1119,13 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Effect.none)
+
+    | ShowMenu(menuFn) =>
+      let menu =
+        menuFn(state.languageInfo, state.iconTheme)
+        |> Feature_Quickmenu.Schema.map(msg => Buffers(msg));
+      let quickmenu = Feature_Quickmenu.show(~menu, state.newQuickmenu);
+      ({...state, newQuickmenu: quickmenu}, Isolinear.Effect.none);
 
     | NotifyInfo(msg) => (
         state,
