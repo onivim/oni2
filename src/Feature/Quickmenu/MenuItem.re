@@ -1,6 +1,5 @@
 open Revery;
 open Revery.UI;
-open Oni_Core;
 
 module FontAwesome = Oni_Components.FontAwesome;
 module FontIcon = Oni_Components.FontIcon;
@@ -52,32 +51,7 @@ module Styles = {
 
 let noop = () => ();
 
-let make =
-    (
-      ~icon=None,
-      ~label,
-      ~isFocused,
-      ~theme,
-      ~onClick=noop,
-      ~onMouseOver=noop,
-      (),
-    ) => {
-  let iconView =
-    switch (icon) {
-    | Some(v) =>
-      IconTheme.IconDefinition.(
-        <Text
-          style={Styles.icon(v.fontColor)}
-          fontFamily={Revery.Font.Family.fromFile("seti.ttf")}
-          fontSize=Constants.iconSize
-          text={FontIcon.codeToIcon(v.fontCharacter)}
-        />
-      )
-
-    | None =>
-      <Text style={Styles.icon(Revery.Colors.transparentWhite)} text="" />
-    };
-
+let make = (~label, ~isFocused, ~theme, ~onClick=noop, ~onMouseOver=noop, ()) => {
   let labelView =
     switch (label) {
     // | `Text(text) =>
@@ -94,7 +68,6 @@ let make =
     <View
       onMouseOver={_ => onMouseOver()}
       style={Styles.container(~theme, ~isFocused)}>
-      iconView
       labelView
     </View>
   </Sneakable>;
