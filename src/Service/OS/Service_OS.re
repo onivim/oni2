@@ -60,45 +60,52 @@ module Api = {
 
   let rec fold =
           (
+            ~canStopEarly: 'a => bool,
             ~includeFiles,
             ~excludeDirectory,
             ~initial,
             accumulateFn: ('a, string) => 'a,
             rootPath,
           ) => {
-    readdir(rootPath)
-    |> LwtEx.flatMap(entries => {
-         entries
-         |> List.fold_left(
-              (accPromise, {kind, name}: Luv.File.Dirent.t) => {
-                let fullPath = Rench.Path.join(rootPath, name);
-                if (kind == `FILE && includeFiles(fullPath)) {
-                  let promise: Lwt.t('a) =
-                    accPromise
-                    |> LwtEx.flatMap(acc => {
-                         Lwt.return(accumulateFn(acc, fullPath))
-                       });
-                  promise;
-                } else if (kind == `DIR && !excludeDirectory(fullPath)) {
-                  let promise: Lwt.t('a) =
-                    accPromise
-                    |> LwtEx.flatMap(acc => {
-                         fold(
-                           ~includeFiles,
-                           ~excludeDirectory,
-                           ~initial=acc,
-                           accumulateFn,
-                           fullPath,
-                         )
-                       });
-                  promise;
-                } else {
-                  accPromise;
-                };
-              },
-              Lwt.return(initial),
-            )
-       });
+            if (canStopEarly(initial)) {
+              Lwt.return(initial)
+            } else {
+          readdir(rootPath)
+          |> LwtEx.flatMap(entries => {
+               entries
+               |> List.fold_left(
+                    (accPromise, {kind, name}: Luv.File.Dirent.t) => {
+                      let fullPath = Rench.Path.join(rootPath, name);
+                      if (kind == `FILE && includeFiles(fullPath)) {
+                        let promise: Lwt.t('a) =
+                          accPromise
+                          |> LwtEx.flatMap(acc => {
+                               prerr_endline ("Got match! " ++ fullPath);
+                               Lwt.return(accumulateFn(acc, fullPath))
+                             });
+                        promise;
+                      } else if (kind == `DIR && !excludeDirectory(fullPath)) {
+                        let promise: Lwt.t('a) =
+                          accPromise
+                          |> LwtEx.flatMap(acc => {
+                               fold(
+                                 ~canStopEarly,
+                                 ~includeFiles,
+                                 ~excludeDirectory,
+                                 ~initial=acc,
+                                 accumulateFn,
+                                 fullPath,
+                               )
+                             });
+                        promise;
+                      } else {
+                        accPromise;
+                      };
+                    },
+                    Lwt.return(initial),
+                  )
+             });
+       }
   };
 
   let glob = (~includeFiles=?, ~excludeDirectories=?, path) => {
@@ -124,6 +131,8 @@ module Api = {
       ~includeFiles=includeFilesFn,
       ~excludeDirectory=excludeDirectoryFn,
       ~initial=[],
+      // TODO: More robust
+      ~canStopEarly=items => List.length(items) > 0,
       (acc, curr) => [curr, ...acc],
       path,
     );

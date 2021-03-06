@@ -281,6 +281,9 @@ module Internal = {
 let stringToId = Hashtbl.find_opt(Internal.stringToId);
 
 let handle = (rpcId, method, args) => {
+  prerr_endline (Printf.sprintf(
+    "method: %s args: %s", method, args |> Yojson.Safe.to_string
+  ));
   rpcId
   |> Hashtbl.find_opt(Internal.idToHandler)
   |> Option.to_result(

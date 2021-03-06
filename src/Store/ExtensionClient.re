@@ -204,6 +204,10 @@ let create =
           : Lwt.return(Reply.error("Unable to open URI"))
       | Window(GetWindowVisibility) =>
         Lwt.return(Reply.okJson(`Bool(true)))
+
+      | Workspace(SaveAll({includeUntitled})) => 
+      // TODO:
+        Lwt.return(Reply.okEmpty);
       | Workspace(StartFileSearch({includePattern, excludePattern, _})) =>
         Service_OS.Api.glob(
           ~includeFiles=?includePattern,

@@ -1699,6 +1699,9 @@ module Window = {
 module Workspace = {
   [@deriving show]
   type msg =
+    | SaveAll({
+      includeUntitled: bool
+    })
     | StartFileSearch({
         includePattern: option(string),
         //        includeFolder: option(Oni_Core.Uri.t),
@@ -1735,6 +1738,14 @@ module Workspace = {
             ++ Yojson.Safe.to_string(args),
           )
         }
+
+      | "$saveAll" => switch (args) {
+        | `List(_args) => Ok(SaveAll({includeUntitled: false}))
+        | _ => Error(
+            "Unexpected arguments for $saveAll: "
+            ++ Yojson.Safe.to_string(args),
+          )
+      }
 
       | _ =>
         Error(
