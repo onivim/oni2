@@ -60,12 +60,16 @@ module Api = {
 
   let rec fold =
           (
+            ~shouldContinue: 'a => bool, 
             ~includeFiles,
             ~excludeDirectory,
             ~initial,
             accumulateFn: ('a, string) => 'a,
             rootPath,
           ) => {
+        if (!shouldContinue(initial)) {
+          Lwt.return(initial)
+        } else {
     readdir(rootPath)
     |> LwtEx.flatMap(entries => {
          entries
@@ -84,6 +88,7 @@ module Api = {
                     accPromise
                     |> LwtEx.flatMap(acc => {
                          fold(
+                           ~shouldContinue,
                            ~includeFiles,
                            ~excludeDirectory,
                            ~initial=acc,
@@ -99,9 +104,10 @@ module Api = {
               Lwt.return(initial),
             )
        });
+       };
   };
 
-  let glob = (~includeFiles=?, ~excludeDirectories=?, path) => {
+  let glob = (~maxCount=?, ~includeFiles=?, ~excludeDirectories=?, path) => {
     let includeFilesFn =
       includeFiles
       |> Option.map(filesGlobStr => {
@@ -120,7 +126,13 @@ module Api = {
          })
       |> Option.value(~default=_ => false);
 
+    let shouldContinue = switch(maxCount) {
+    | None => _ => true
+    | Some(max) => list => ListEx.boundedLength(~max, list) >= max
+    };
+
     fold(
+      ~shouldContinue,
       ~includeFiles=includeFilesFn,
       ~excludeDirectory=excludeDirectoryFn,
       ~initial=[],
