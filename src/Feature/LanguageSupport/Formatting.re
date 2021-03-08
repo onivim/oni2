@@ -7,6 +7,7 @@ type session = {
   bufferId: int,
   bufferVersion: int,
   sessionId: int,
+  saveWhenComplete: bool,
 };
 
 type documentFormatter = {
@@ -114,7 +115,7 @@ type outmsg =
 module Internal = {
   let clearSession = model => {...model, activeSession: None};
 
-  let startSession = (~sessionId, ~buffer, model) => {
+  let startSession = (~saveWhenComplete, ~sessionId, ~buffer, model) => {
     ...model,
     nextSessionId: sessionId + 1,
     activeSession:
@@ -122,6 +123,7 @@ module Internal = {
         sessionId,
         bufferId: Oni_Core.Buffer.getId(buffer),
         bufferVersion: Oni_Core.Buffer.getVersion(buffer),
+        saveWhenComplete,
       }),
   };
 
@@ -210,6 +212,7 @@ module Internal = {
 
   let runFormat =
       (
+        ~saveWhenComplete,
         ~config,
         ~languageConfiguration,
         ~formatFn,
@@ -237,7 +240,7 @@ module Internal = {
 
     // Single formatter - just use it
     | [formatter] => (
-        model |> startSession(~sessionId, ~buffer=buf),
+        model |> startSession(~saveWhenComplete, ~sessionId, ~buffer=buf),
         Effect(
           formatFn(
             ~handle=formatter.handle,
@@ -305,7 +308,7 @@ module Internal = {
             ),
           )
         | Some(formatter) => (
-            model |> startSession(~sessionId, ~buffer=buf),
+            model |> startSession(~saveWhenComplete, ~sessionId, ~buffer=buf),
             Effect(
               formatFn(
                 ~handle=formatter.handle,
