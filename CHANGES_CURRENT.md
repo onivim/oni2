@@ -39,6 +39,7 @@
 - #3233 - Formatting: Fix buffer de-sync when applying formatting edits (fixes #2196, #2820)
 - #3239 - Buffers: Fix filetype picker not working as expected without an active workspace
 - #3240 - Formatting: Fix 'Invalid Range Specified' error (fixes #3014)
+- #3241 - Extensions: Handle `maxCount` and FS errors in `vscode.workspace.findFiles` (related #3215)
 
 ### Performance
 
