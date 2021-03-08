@@ -49,7 +49,7 @@ runTest(~name="ExtHostWorkspaceSearchTest", ({dispatch, wait, _}) => {
     Actions.Extensions(
       Feature_Extensions.Msg.command(
         ~command="_test.findFiles",
-        ~arguments=[`Int(5)],
+        ~arguments=[`Int(3)],
       ),
     ),
   );
@@ -62,7 +62,7 @@ runTest(~name="ExtHostWorkspaceSearchTest", ({dispatch, wait, _}) => {
       let notifications = Feature_Notification.all(state.notifications);
       notifications
       |> List.exists((notification: Feature_Notification.notification) => {
-           notification.message == "success:5"
+           notification.message == "success:3"
          });
     },
   );
