@@ -1333,9 +1333,17 @@ let update =
            )
         |> Option.value(~default=state.config);
 
+      let (languageSupport', languageEffect') = state.languageSupport
+      |> Feature_LanguageSupport.bufferSaved(
+        ~activeBufferId = 0,
+        ~buffer,
+      );
+
       (
-        {...state, input: input', config: config'},
-        Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
+        {...state, input: input', config: config', languageSupport: languageSupport'},
+        Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect,
+        languageEffect'
+        |> Isolinear.Effect.map(msg => Actions.LanguageSupport(msg))]),
       );
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey, markerUpdate}) =>

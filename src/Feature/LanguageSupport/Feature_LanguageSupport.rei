@@ -99,6 +99,12 @@ let update:
   ) =>
   (model, outmsg);
 
+let bufferSaved: (
+  ~buffer: Oni_Core.Buffer.t,
+  ~activeBufferId: int,
+  model
+) => (model, Isolinear.Effect.t(msg));
+
 let bufferUpdated:
   (
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,

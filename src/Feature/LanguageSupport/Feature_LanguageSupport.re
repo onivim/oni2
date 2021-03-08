@@ -486,6 +486,12 @@ let bufferUpdated =
   {...model, completion, signatureHelp};
 };
 
+let bufferSaved = (
+  ~buffer,
+  ~activeBufferId,
+  model
+) => (model, Isolinear.Effect.none);
+
 let configurationChanged = (~config, model) => {
   ...model,
   completion: Completion.configurationChanged(~config, model.completion),

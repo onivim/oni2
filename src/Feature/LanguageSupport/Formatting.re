@@ -37,6 +37,9 @@ module Configuration = {
 
   let defaultFormatter =
     setting("editor.defaultFormatter", nullable(string), ~default=None);
+
+  let formatOnSave =
+    setting("editor.formatOnSave", bool, ~default=false);
 };
 
 [@deriving show]
@@ -541,5 +544,5 @@ module Commands = {
 module Contributions = {
   let commands = [Commands.formatDocument];
 
-  let configuration = [Configuration.defaultFormatter.spec];
+  let configuration = [Configuration.defaultFormatter.spec, Configuration.formatOnSave.spec];
 };
