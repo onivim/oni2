@@ -268,6 +268,7 @@ module Internal = {
   let activateFileType = (~client, fileType: string) =>
     if (!Hashtbl.mem(MutableState.activatedFileTypes, fileType)) {
       // If no entry, we haven't activated yet
+      prerr_endline ("ACTIVATING: " ++ fileType);
       Exthost.Request.ExtensionService.activateByEvent(
         ~event="onLanguage:" ++ fileType,
         client,
