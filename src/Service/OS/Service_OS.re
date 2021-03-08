@@ -70,6 +70,8 @@ module Api = {
         if (!shouldContinue(initial)) {
           Lwt.return(initial)
         } else {
+        Lwt.catch(() => {
+          
     readdir(rootPath)
     |> LwtEx.flatMap(entries => {
          entries
@@ -103,7 +105,11 @@ module Api = {
               },
               Lwt.return(initial),
             )
-       });
+       })
+      } , exn => {
+        Log.warnf(m => m("Error while running Service_OS.fold on %s: %s", rootPath, Printexc.to_string(exn)));
+        Lwt.return(initial)
+       })
        };
   };
 
