@@ -43,7 +43,7 @@
    ExCommandKeybindingNormTest.exe ExCommandKeybindingWithArgsTest.exe
    ExtConfigurationChangedTest.exe ExtHostBufferOpenTest.exe
    ExtHostBufferUpdatesTest.exe ExtHostCompletionTest.exe
-   ExtHostDefinitionTest.exe ExtHostWorkspaceSearchTest FileWatcherTest.exe
+   ExtHostDefinitionTest.exe ExtHostWorkspaceSearchTest.exe FileWatcherTest.exe
    KeybindingsInvalidJsonTest.exe KeySequenceJJTest.exe InputIgnoreTest.exe
    InputContextKeysTest.exe InputRemapMotionTest.exe LanguageCssTest.exe
    LanguageTypeScriptTest.exe LineEndingsCRLFTest.exe LineEndingsLFTest.exe
