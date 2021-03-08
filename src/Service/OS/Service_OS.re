@@ -142,7 +142,7 @@ module Api = {
     let shouldContinue =
       switch (maxCount) {
       | None => (_ => true)
-      | Some(max) => (list => ListEx.boundedLength(~max, list) >= max)
+      | Some(max) => (list => ListEx.boundedLength(~max, list) < max)
       };
 
     fold(
@@ -152,7 +152,13 @@ module Api = {
       ~initial=[],
       (acc, curr) => [curr, ...acc],
       path,
-    );
+    )
+    |> Lwt.map(items => {
+         switch (maxCount) {
+         | None => items
+         | Some(count) => items |> ListEx.firstk(count)
+         }
+       });
   };
 
   let readFile = (~chunkSize=4096, path) => {

@@ -28,7 +28,18 @@ function activate(context) {
             vscode.window.showWarningMessage("You clicked developer", [])
         }),
     )
-    
+
+    cleanup(
+        vscode.commands.registerCommand("_test.findFiles", (count) => {
+            vscode.workspace.findFiles(
+                "*.json", undefined, count
+            ).then((results) => {
+                vscode.window.showInformationMessage("success:" + results.length);
+                // vscode.window.showInformationMessage("success:1");
+            })
+        }),
+    )
+
     cleanup(
         vscode.commands.registerCommand("developer.oni.hideStatusBar", () => {
             item.hide();
@@ -37,31 +48,31 @@ function activate(context) {
 
     cleanup(
         vscode.commands.registerCommand("developer.oni.logBufferUpdates", () => {
-                vscode.window.showInformationMessage("Logging buffer updates!");
-                vscode.workspace.onDidChangeTextDocument((e) => {
-                    console.log({
-                        type: "workspace.onDidChangeTextDocument",
-                        filename: e.document.fileName,
-                        version: e.document.version,
-                        contentChanges: e.contentChanges,
-                        fullText: e.document.getText(),
-                    });
+            vscode.window.showInformationMessage("Logging buffer updates!");
+            vscode.workspace.onDidChangeTextDocument((e) => {
+                console.log({
+                    type: "workspace.onDidChangeTextDocument",
+                    filename: e.document.fileName,
+                    version: e.document.version,
+                    contentChanges: e.contentChanges,
+                    fullText: e.document.getText(),
                 });
+            });
         }),
     )
 
     cleanup(
         vscode.commands.registerCommand("developer.oni.tryOpenDocument", () => {
             vscode.workspace.openTextDocument(vscode.Uri.file("package.json"))
-            .then((document) => {
-                let text = document.getText();
-                vscode.window.showInformationMessage("Got text document: " + text);
-            }, err => {
-                vscode.window.showErrorMessage("Failed to get text document: " + err.toString());
-            })
+                .then((document) => {
+                    let text = document.getText();
+                    vscode.window.showInformationMessage("Got text document: " + text);
+                }, err => {
+                    vscode.window.showErrorMessage("Failed to get text document: " + err.toString());
+                })
         }),
     )
-    
+
     cleanup(
         vscode.commands.registerCommand("developer.oni.showStatusBar", () => {
             item.show();
@@ -83,7 +94,7 @@ function activate(context) {
                 return [vscode.CompletionItem("HelloWorld"), vscode.CompletionItem("HelloAgain")]
             },
             resolveCompletionItem: (completionItem, token) => {
-                completionItem.documentation = "RESOLVED documentation:  "+ completionItem.label;
+                completionItem.documentation = "RESOLVED documentation:  " + completionItem.label;
                 completionItem.detail = "RESOLVED detail: " + completionItem.label;
                 return completionItem;
             }
@@ -120,10 +131,10 @@ function activate(context) {
                 return new Promise((resolve) => {
                     setTimeout(() => {
                         resolve([
-                        vscode.CompletionItem("ReasonML0"),
-                        vscode.CompletionItem("OCaml0"),
-                        vscode.CompletionItem("ReasonML2"),
-                        vscode.CompletionItem("OCaml2"),
+                            vscode.CompletionItem("ReasonML0"),
+                            vscode.CompletionItem("OCaml0"),
+                            vscode.CompletionItem("ReasonML2"),
+                            vscode.CompletionItem("OCaml2"),
                         ])
                     }, 500);
                 });
@@ -135,15 +146,15 @@ function activate(context) {
     cleanup(
         vscode.languages.registerCompletionItemProvider("oni-dev", {
             provideCompletionItems: (document, position, token, context) => {
-                        const items = [
-                            vscode.CompletionItem("Incomplete" + Date.now().toString()),
-                        ];
-                        return {
-                            isIncomplete: true,
-                            items,
-                        };
-                },
-            }),
+                const items = [
+                    vscode.CompletionItem("Incomplete" + Date.now().toString()),
+                ];
+                return {
+                    isIncomplete: true,
+                    items,
+                };
+            },
+        }),
     )
 
     const output = vscode.window.createOutputChannel("oni-dev")
@@ -153,7 +164,7 @@ function activate(context) {
     output2.append("Hello output channel!")
 
     const collection = vscode.languages.createDiagnosticCollection("test")
-    
+
     let latestText = ""
 
     cleanup(
@@ -209,16 +220,16 @@ function activate(context) {
     cleanup(
         vscode.commands.registerCommand("developer.oni.showChoiceMessage", () => {
             vscode.window.showInformationMessage(
-//`Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?`
-"Hello!"
-    , "Option 1", "Option 2", "Option 3").then(
-                (result) => {
-                    vscode.window.showInformationMessage("You picked: " + result)
-                },
-                (err) => {
-                    vscode.window.showInformationMessage("Cancelled: " + err)
-                },
-            )
+                //`Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?`
+                "Hello!"
+                , "Option 1", "Option 2", "Option 3").then(
+                    (result) => {
+                        vscode.window.showInformationMessage("You picked: " + result)
+                    },
+                    (err) => {
+                        vscode.window.showInformationMessage("Cancelled: " + err)
+                    },
+                )
         }),
     )
 
@@ -392,7 +403,7 @@ function activate(context) {
 }
 
 // this method is called when your extension is deactivated
-function deactivate() {}
+function deactivate() { }
 
 module.exports = {
     activate,
