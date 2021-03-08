@@ -60,48 +60,67 @@ module Api = {
 
   let rec fold =
           (
+            ~shouldContinue: 'a => bool,
             ~includeFiles,
             ~excludeDirectory,
             ~initial,
             accumulateFn: ('a, string) => 'a,
             rootPath,
-          ) => {
-    readdir(rootPath)
-    |> LwtEx.flatMap(entries => {
-         entries
-         |> List.fold_left(
-              (accPromise, {kind, name}: Luv.File.Dirent.t) => {
-                let fullPath = Rench.Path.join(rootPath, name);
-                if (kind == `FILE && includeFiles(fullPath)) {
-                  let promise: Lwt.t('a) =
-                    accPromise
-                    |> LwtEx.flatMap(acc => {
-                         Lwt.return(accumulateFn(acc, fullPath))
-                       });
-                  promise;
-                } else if (kind == `DIR && !excludeDirectory(fullPath)) {
-                  let promise: Lwt.t('a) =
-                    accPromise
-                    |> LwtEx.flatMap(acc => {
-                         fold(
-                           ~includeFiles,
-                           ~excludeDirectory,
-                           ~initial=acc,
-                           accumulateFn,
-                           fullPath,
-                         )
-                       });
-                  promise;
-                } else {
-                  accPromise;
-                };
-              },
-              Lwt.return(initial),
+          ) =>
+    if (!shouldContinue(initial)) {
+      Lwt.return(initial);
+    } else {
+      Lwt.catch(
+        () => {
+          readdir(rootPath)
+          |> LwtEx.flatMap(entries => {
+               entries
+               |> List.fold_left(
+                    (accPromise, {kind, name}: Luv.File.Dirent.t) => {
+                      let fullPath = Rench.Path.join(rootPath, name);
+                      if (kind == `FILE && includeFiles(fullPath)) {
+                        let promise: Lwt.t('a) =
+                          accPromise
+                          |> LwtEx.flatMap(acc => {
+                               Lwt.return(accumulateFn(acc, fullPath))
+                             });
+                        promise;
+                      } else if (kind == `DIR && !excludeDirectory(fullPath)) {
+                        let promise: Lwt.t('a) =
+                          accPromise
+                          |> LwtEx.flatMap(acc => {
+                               fold(
+                                 ~shouldContinue,
+                                 ~includeFiles,
+                                 ~excludeDirectory,
+                                 ~initial=acc,
+                                 accumulateFn,
+                                 fullPath,
+                               )
+                             });
+                        promise;
+                      } else {
+                        accPromise;
+                      };
+                    },
+                    Lwt.return(initial),
+                  )
+             })
+        },
+        exn => {
+          Log.warnf(m =>
+            m(
+              "Error while running Service_OS.fold on %s: %s",
+              rootPath,
+              Printexc.to_string(exn),
             )
-       });
-  };
+          );
+          Lwt.return(initial);
+        },
+      );
+    };
 
-  let glob = (~includeFiles=?, ~excludeDirectories=?, path) => {
+  let glob = (~maxCount=?, ~includeFiles=?, ~excludeDirectories=?, path) => {
     let includeFilesFn =
       includeFiles
       |> Option.map(filesGlobStr => {
@@ -120,13 +139,26 @@ module Api = {
          })
       |> Option.value(~default=_ => false);
 
+    let shouldContinue =
+      switch (maxCount) {
+      | None => (_ => true)
+      | Some(max) => (list => ListEx.boundedLength(~max, list) < max)
+      };
+
     fold(
+      ~shouldContinue,
       ~includeFiles=includeFilesFn,
       ~excludeDirectory=excludeDirectoryFn,
       ~initial=[],
       (acc, curr) => [curr, ...acc],
       path,
-    );
+    )
+    |> Lwt.map(items => {
+         switch (maxCount) {
+         | None => items
+         | Some(count) => items |> ListEx.firstk(count)
+         }
+       });
   };
 
   let readFile = (~chunkSize=4096, path) => {

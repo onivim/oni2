@@ -204,8 +204,11 @@ let create =
           : Lwt.return(Reply.error("Unable to open URI"))
       | Window(GetWindowVisibility) =>
         Lwt.return(Reply.okJson(`Bool(true)))
-      | Workspace(StartFileSearch({includePattern, excludePattern, _})) =>
+      | Workspace(
+          StartFileSearch({includePattern, excludePattern, maxResults}),
+        ) =>
         Service_OS.Api.glob(
+          ~maxCount=?maxResults,
           ~includeFiles=?includePattern,
           ~excludeDirectories=?excludePattern,
           // TODO: Pull from store
