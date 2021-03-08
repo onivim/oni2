@@ -343,6 +343,12 @@ module Internal = {
   };
 };
 
+let bufferSaved = (
+  ~buffer,
+  ~activeBufferId,
+  model
+) => (model, Isolinear.Effect.none);
+
 let update =
     (
       ~config,

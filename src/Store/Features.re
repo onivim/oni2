@@ -1333,11 +1333,21 @@ let update =
            )
         |> Option.value(~default=state.config);
 
-      let (languageSupport', languageEffect') = state.languageSupport
-      |> Feature_LanguageSupport.bufferSaved(
-        ~activeBufferId = 0,
-        ~buffer,
-      );
+      let maybeActiveBufferId = state
+      |> Selectors.getActiveBuffer
+      |> Option.map(Oni_Core.Buffer.getId);
+
+      let (languageSupport', languageEffect') = 
+      maybeActiveBufferId
+      |> Option.map(activeBufferId => {
+        
+        state.languageSupport
+        |> Feature_LanguageSupport.bufferSaved(
+          ~activeBufferId,
+          ~buffer,
+        )
+      })
+      |> Option.value(~default=(state.languageSupport, Isolinear.Effect.none));
 
       (
         {...state, input: input', config: config', languageSupport: languageSupport'},

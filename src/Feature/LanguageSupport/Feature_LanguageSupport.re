@@ -486,11 +486,14 @@ let bufferUpdated =
   {...model, completion, signatureHelp};
 };
 
-let bufferSaved = (
-  ~buffer,
-  ~activeBufferId,
-  model
-) => (model, Isolinear.Effect.none);
+let bufferSaved = (~buffer, ~activeBufferId, model) => {
+  let (formatting', formattingEffect) =
+    Formatting.bufferSaved(~buffer, ~activeBufferId, model.formatting);
+  (
+    {...model, formatting: formatting'},
+    formattingEffect |> Isolinear.Effect.map(msg => Formatting(msg)),
+  );
+};
 
 let configurationChanged = (~config, model) => {
   ...model,
