@@ -60,58 +60,65 @@ module Api = {
 
   let rec fold =
           (
-            ~shouldContinue: 'a => bool, 
+            ~shouldContinue: 'a => bool,
             ~includeFiles,
             ~excludeDirectory,
             ~initial,
             accumulateFn: ('a, string) => 'a,
             rootPath,
-          ) => {
-        if (!shouldContinue(initial)) {
-          Lwt.return(initial)
-        } else {
-        Lwt.catch(() => {
-          
-    readdir(rootPath)
-    |> LwtEx.flatMap(entries => {
-         entries
-         |> List.fold_left(
-              (accPromise, {kind, name}: Luv.File.Dirent.t) => {
-                let fullPath = Rench.Path.join(rootPath, name);
-                if (kind == `FILE && includeFiles(fullPath)) {
-                  let promise: Lwt.t('a) =
-                    accPromise
-                    |> LwtEx.flatMap(acc => {
-                         Lwt.return(accumulateFn(acc, fullPath))
-                       });
-                  promise;
-                } else if (kind == `DIR && !excludeDirectory(fullPath)) {
-                  let promise: Lwt.t('a) =
-                    accPromise
-                    |> LwtEx.flatMap(acc => {
-                         fold(
-                           ~shouldContinue,
-                           ~includeFiles,
-                           ~excludeDirectory,
-                           ~initial=acc,
-                           accumulateFn,
-                           fullPath,
-                         )
-                       });
-                  promise;
-                } else {
-                  accPromise;
-                };
-              },
-              Lwt.return(initial),
+          ) =>
+    if (!shouldContinue(initial)) {
+      Lwt.return(initial);
+    } else {
+      Lwt.catch(
+        () => {
+          readdir(rootPath)
+          |> LwtEx.flatMap(entries => {
+               entries
+               |> List.fold_left(
+                    (accPromise, {kind, name}: Luv.File.Dirent.t) => {
+                      let fullPath = Rench.Path.join(rootPath, name);
+                      if (kind == `FILE && includeFiles(fullPath)) {
+                        let promise: Lwt.t('a) =
+                          accPromise
+                          |> LwtEx.flatMap(acc => {
+                               Lwt.return(accumulateFn(acc, fullPath))
+                             });
+                        promise;
+                      } else if (kind == `DIR && !excludeDirectory(fullPath)) {
+                        let promise: Lwt.t('a) =
+                          accPromise
+                          |> LwtEx.flatMap(acc => {
+                               fold(
+                                 ~shouldContinue,
+                                 ~includeFiles,
+                                 ~excludeDirectory,
+                                 ~initial=acc,
+                                 accumulateFn,
+                                 fullPath,
+                               )
+                             });
+                        promise;
+                      } else {
+                        accPromise;
+                      };
+                    },
+                    Lwt.return(initial),
+                  )
+             })
+        },
+        exn => {
+          Log.warnf(m =>
+            m(
+              "Error while running Service_OS.fold on %s: %s",
+              rootPath,
+              Printexc.to_string(exn),
             )
-       })
-      } , exn => {
-        Log.warnf(m => m("Error while running Service_OS.fold on %s: %s", rootPath, Printexc.to_string(exn)));
-        Lwt.return(initial)
-       })
-       };
-  };
+          );
+          Lwt.return(initial);
+        },
+      );
+    };
 
   let glob = (~maxCount=?, ~includeFiles=?, ~excludeDirectories=?, path) => {
     let includeFilesFn =
@@ -132,10 +139,11 @@ module Api = {
          })
       |> Option.value(~default=_ => false);
 
-    let shouldContinue = switch(maxCount) {
-    | None => _ => true
-    | Some(max) => list => ListEx.boundedLength(~max, list) >= max
-    };
+    let shouldContinue =
+      switch (maxCount) {
+      | None => (_ => true)
+      | Some(max) => (list => ListEx.boundedLength(~max, list) >= max)
+      };
 
     fold(
       ~shouldContinue,

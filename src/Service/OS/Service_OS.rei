@@ -2,7 +2,12 @@ open Oni_Core;
 
 module Api: {
   let glob:
-    (~maxCount: int=?, ~includeFiles: string=?, ~excludeDirectories: string=?, string) =>
+    (
+      ~maxCount: int=?,
+      ~includeFiles: string=?,
+      ~excludeDirectories: string=?,
+      string
+    ) =>
     Lwt.t(list(string));
 
   let rmdir: (~recursive: bool=?, string) => Lwt.t(unit);
