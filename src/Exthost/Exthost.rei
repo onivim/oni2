@@ -1588,6 +1588,7 @@ module Msg: {
   module Workspace: {
     [@deriving show]
     type msg =
+      | SaveAll({includeUntitled: bool})
       | StartFileSearch({
           includePattern: option(string),
           //        includeFolder: option(Oni_Core.Uri.t),

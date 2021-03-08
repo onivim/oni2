@@ -204,6 +204,15 @@ let create =
           : Lwt.return(Reply.error("Unable to open URI"))
       | Window(GetWindowVisibility) =>
         Lwt.return(Reply.okJson(`Bool(true)))
+
+      | Workspace(SaveAll({includeUntitled})) =>
+        ignore(includeUntitled);
+
+        dispatch(
+          Actions.VimExecuteCommand({command: "wa!", allowAnimation: false}),
+        );
+        Lwt.return(Reply.okEmpty);
+
       | Workspace(
           StartFileSearch({includePattern, excludePattern, maxResults}),
         ) =>
