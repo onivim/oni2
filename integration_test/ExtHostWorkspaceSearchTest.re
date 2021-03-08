@@ -39,8 +39,7 @@ runTest(~name="ExtHostWorkspaceSearchTest", ({dispatch, wait, _}) => {
       let notifications = Feature_Notification.all(state.notifications);
       notifications
       |> List.exists((notification: Feature_Notification.notification) => {
-           prerr_endline("Messages: " ++ notification.message);
-           notification.message == "success:1";
+           notification.message == "success:1"
          });
     },
   );
@@ -63,8 +62,7 @@ runTest(~name="ExtHostWorkspaceSearchTest", ({dispatch, wait, _}) => {
       let notifications = Feature_Notification.all(state.notifications);
       notifications
       |> List.exists((notification: Feature_Notification.notification) => {
-           prerr_endline("Messages: " ++ notification.message);
-           notification.message == "success:5";
+           notification.message == "success:5"
          });
     },
   );
