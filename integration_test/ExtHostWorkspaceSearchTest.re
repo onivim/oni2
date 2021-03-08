@@ -68,27 +68,4 @@ runTest(~name="ExtHostWorkspaceSearchTest", ({dispatch, wait, _}) => {
          });
     },
   );
-  // Wait for the oni-dev filetype
-  // wait(
-  //   ~timeout=30.0,
-  //   ~name="Wait for oni-dev filetype to show up",
-  //   (state: State.t) => {
-  //     let fileType =
-  //       Selectors.getActiveBuffer(state)
-  //       |> Option.map(Buffer.getFileType)
-  //       |> Option.map(Buffer.FileType.toString);
-  //     fileType == Some("oni-dev");
-  //   },
-  // );
-  // Enter some text
-  // input("i");
-  // input("R");
-  // Should get completions
-  // wait(
-  //   ~timeout=30.0,
-  //   ~name="Validate we get some completions from the 'oni-dev' extension",
-  //   (state: State.t) =>
-  //   state.languageSupport
-  //   |> Feature_LanguageSupport.Completion.availableCompletionCount > 0
-  // );
 });
