@@ -7,6 +7,11 @@ type internalMsg('a) =
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
+  | FormattingApplied({
+      displayName: string,
+      editCount: int,
+      needsToSave: bool,
+    })
   | InsertSnippet({
       meetColumn: CharacterIndex.t,
       snippet: string,

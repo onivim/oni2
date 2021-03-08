@@ -640,6 +640,32 @@ let update =
           )
           |> Isolinear.Effect.map(msg => Vim(msg)),
         );
+
+      | FormattingApplied({displayName, editCount, needsToSave}) =>
+        let msg =
+          Printf.sprintf(
+            "Formatting: Applied %d edits with %s",
+            editCount,
+            displayName,
+          );
+        let notificationEffect = Internal.notificationEffect(~kind=Info, msg);
+        let eff =
+          if (needsToSave) {
+            [
+              EffectEx.value(
+                ~name="Save Effect",
+                Actions.VimExecuteCommand({
+                  command: "w!",
+                  allowAnimation: false,
+                }),
+              ),
+              notificationEffect,
+            ]
+            |> Isolinear.Effect.batch;
+          } else {
+            notificationEffect;
+          };
+        (state, eff);
       | ReferencesAvailable =>
         let references =
           Feature_LanguageSupport.References.get(languageSupport);
@@ -1333,9 +1359,40 @@ let update =
            )
         |> Option.value(~default=state.config);
 
+      let maybeActiveBufferId =
+        state
+        |> Selectors.getActiveBuffer
+        |> Option.map(Oni_Core.Buffer.getId);
+
+      let (languageSupport', languageEffect') =
+        maybeActiveBufferId
+        |> Option.map(activeBufferId => {
+             let config = Selectors.configResolver(state);
+             state.languageSupport
+             |> Feature_LanguageSupport.bufferSaved(
+                  ~activeBufferId,
+                  ~config,
+                  ~buffer,
+                );
+           })
+        |> Option.value(
+             ~default=(state.languageSupport, Isolinear.Effect.none),
+           );
+
       (
-        {...state, input: input', config: config'},
-        Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
+        {
+          ...state,
+          input: input',
+          config: config',
+          languageSupport: languageSupport',
+        },
+        Isolinear.Effect.batch([
+          eff,
+          modelSavedEff,
+          clearSnippetCacheEffect,
+          languageEffect'
+          |> Isolinear.Effect.map(msg => Actions.LanguageSupport(msg)),
+        ]),
       );
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey, markerUpdate}) =>
