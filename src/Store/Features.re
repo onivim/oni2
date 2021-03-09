@@ -70,7 +70,7 @@ module Internal = {
     | [] => state
     | [theme] => {
         ...state,
-        colorTheme: Feature_Theme.setTheme(id(theme), state.colorTheme),
+        colorTheme: Feature_Theme.setTheme(~themeId=id(theme), state.colorTheme),
       }
     | themes => showThemePicker(themes, state)
     };

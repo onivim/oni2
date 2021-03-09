@@ -143,6 +143,9 @@ type msg =
 module Msg = {
   let openThemePicker = Command(SelectTheme);
 
+  let vimColorSchemeSelected = (~themeId) =>
+    MenuPreviewTheme({themeId: themeId});
+
   let menuPreviewTheme = (~themeId) => MenuPreviewTheme({themeId: themeId});
 
   let menuCommitTheme = (~themeId) => MenuCommitTheme({themeId: themeId});

@@ -216,7 +216,12 @@ let start =
       | ColorSchemeChanged(maybeColorScheme) =>
         switch (maybeColorScheme) {
         | None => dispatch(Actions.Theme(Feature_Theme.Msg.openThemePicker))
-        | Some(colorScheme) => dispatch(Actions.ThemeSelected(colorScheme))
+        | Some(colorScheme) =>
+          dispatch(
+            Actions.Theme(
+              Feature_Theme.Msg.vimColorSchemeSelected(~themeId=colorScheme),
+            ),
+          )
         }
 
       | MacroRecordingStarted({register}) =>
