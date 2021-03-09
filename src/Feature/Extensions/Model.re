@@ -435,7 +435,6 @@ module Internal = {
     || name == "arcticicestudio.nord-visual-studio-code";
   };
   let markActivated = (id: string, model) => {
-    prerr_endline("Mark activated: " ++ id);
     {...model, activatedIds: [id, ...model.activatedIds]};
   };
 
