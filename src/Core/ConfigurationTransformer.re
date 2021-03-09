@@ -23,6 +23,16 @@ let setField = (fieldName, value, json) => {
   };
 };
 
+let setFiletypeField = (~fileType, fieldName, value, json) => {
+  json
+  |> Utility.JsonEx.update(
+       "[" ++ fileType ++ "]",
+       fun
+       | None => Some(`Assoc([(fieldName, value)]))
+       | Some(perFileJson) => Some(setField(fieldName, value, perFileJson)),
+     );
+};
+
 let removeField = (fieldName, json) => {
   switch (json) {
   | `Assoc(elems) =>

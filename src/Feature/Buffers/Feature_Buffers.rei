@@ -60,6 +60,8 @@ module Msg: {
       ~triggerKey: option(string)
     ) =>
     msg;
+
+  let selectFileTypeClicked: (~bufferId: int) => msg;
 };
 
 type outmsg =
@@ -80,6 +82,10 @@ type outmsg =
       preview: bool,
     })
   | BufferModifiedSet(int, bool)
+  | ShowMenu(
+      (Exthost.LanguageInfo.t, IconTheme.t) =>
+      Feature_Quickmenu.Schema.menu(msg),
+    )
   | NotifyInfo(string);
 
 // UPDATE

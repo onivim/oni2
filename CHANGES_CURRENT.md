@@ -3,6 +3,7 @@
 - #3193 - Reason: Remove `reason-language-server` executable
 
 > NOTE: For native Reason & OCaml, see: https://onivim.github.io/docs/languages/reason-ocaml
+
 > NOTE: For ReScript & BuckleScript, see: https://onivim.github.io/docs/languages/rescript
 
 ### Features 
@@ -31,6 +32,14 @@
 - #3205 - Editor: Update highlights and diagnostics immediately on buffer update (fixes #2620, #1459)
 - #3207 - Status Bar: Fix ghost text in some themes with transparent statusbar colors
 - #3217 - CLI: Add -v version flag (fixes #3209)
+- #3225 - Extension - C#: Fix language server not starting on Windows (fixes #3204)
+- #3226 - Keybindings: Fix issue opening keybindings.json from the command palette
+- #3227 - Configuration: Allow string numbers as font sizes
+- #3230 - Font: Treat "FiraCode-Regular.ttf" as default font
+- #3233 - Formatting: Fix buffer de-sync when applying formatting edits (fixes #2196, #2820)
+- #3239 - Buffers: Fix filetype picker not working as expected without an active workspace
+- #3240 - Formatting: Fix 'Invalid Range Specified' error (fixes #3014)
+- #3241 - Extensions: Handle `maxCount` and FS errors in `vscode.workspace.findFiles` (related #3215)
 
 ### Performance
 
@@ -42,6 +51,7 @@
 - #3181 - Snippets: Initial snippets section
 - #3185 - Emmet: Initial emmet section
 - #3223 - Languages: Split out ReScript into separate section
+- #3237 - Languages: Remove exuberant ctags from C/C++ section
 
 ### Infrastructure / Refactoring
 
@@ -52,3 +62,5 @@
 - #3172 - Theme: Move theme loader to subscription (unblocks #3160)
 - #3178 - Commands: Remove unused contributedCommands argument
 - #3202 - Dependency: revery -> 2a59280
+- #3220 - Dependency: revery -> 26e8b73 (Unblock OCaml 4.11)
+- #3228 - Quickmenu: Initial feature implementation

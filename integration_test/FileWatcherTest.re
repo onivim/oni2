@@ -3,7 +3,7 @@
 Timber.App.enable(Timber.Reporter.console());
 Timber.App.setLevel(Timber.Level.trace);
 
-Console.log("Running FileWatcherTest...");
+print_endline("Running FileWatcherTest...");
 
 // Create test file
 let tempFilePath = Filename.temp_file("test", ".txt");
@@ -16,7 +16,7 @@ let sub =
   Service_FileWatcher.watch(
     ~path=tempFilePath,
     ~onEvent=_ => {
-      Console.log("Success!");
+      print_endline("Success!");
       Luv.Loop.stop(Luv.Loop.default());
     },
   );

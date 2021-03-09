@@ -129,11 +129,14 @@ let start =
 
   let initialState = getState();
 
-  let attachStdio =
+  let attachExthostStdio =
     Oni_CLI.(
       {
         initialState.cli.attachToForeground
-        && Option.is_some(initialState.cli.logLevel);
+        && (
+          Option.is_some(initialState.cli.logLevel)
+          || initialState.cli.logExthost
+        );
       }
     );
 
@@ -144,7 +147,7 @@ let start =
   let (extHostClientResult, extHostStream) =
     ExtensionClient.create(
       ~initialWorkspace,
-      ~attachStdio,
+      ~attachStdio=attachExthostStdio,
       ~config=getState().config,
       ~extensions,
       ~setup,
@@ -459,6 +462,11 @@ let start =
       |> Feature_Buffers.sub
       |> Isolinear.Sub.map(msg => Model.Actions.Buffers(msg));
 
+    let quickmenuSub =
+      state.newQuickmenu
+      |> Feature_Quickmenu.sub
+      |> Isolinear.Sub.map(msg => Model.Actions.Quickmenu(msg));
+
     let isExthostInitialized = Feature_Exthost.isInitialized(state.exthost);
     let configurationSub =
       state.config
@@ -501,6 +509,7 @@ let start =
       notificationSub,
       bufferSub,
       configurationSub,
+      quickmenuSub,
       themeSub,
       vimBufferSub,
     ]

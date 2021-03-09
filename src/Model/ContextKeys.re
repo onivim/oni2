@@ -1,10 +1,10 @@
 open WhenExpr.ContextKeys;
 
-let menus = (~isFocused) => {
+let menus = (~isFocused, ~isNewQuickMenuOpen) => {
   Schema.(
     fromList(
       // TODO: This should be factored to a feature...
-      isFocused
+      isFocused || isNewQuickMenuOpen
         ? Quickmenu.[
             bool(
               "commandLineFocus",
@@ -12,8 +12,8 @@ let menus = (~isFocused) => {
               | Some({variant: Wildmenu(_), _}) => true
               | _ => false,
             ),
-            bool("listFocus", model => model != None),
-            bool("inQuickOpen", model => model != None),
+            bool("listFocus", model => isNewQuickMenuOpen || model != None),
+            bool("inQuickOpen", model => isNewQuickMenuOpen || model != None),
             bool(
               "inEditorsPicker",
               fun
@@ -25,7 +25,7 @@ let menus = (~isFocused) => {
               fun
               | Some({variant: EditorsPicker, _}) => false
               | Some(_) => true
-              | None => false,
+              | None => isNewQuickMenuOpen,
             ),
             bool(
               "quickmenuCursorEnd",
@@ -174,6 +174,8 @@ let all = (state: State.t) => {
   let inputContextKeys = Feature_Input.Contributions.contextKeys(state.input);
 
   let zenContextKeys = Feature_Zen.Contributions.contextKeys(state.zen);
+  // let newQuickmenuContextKeys =
+  //   Feature_Quickmenu.Contributions.contextKeys(state.newQuickmenu);
 
   unionMany([
     Feature_Registers.Contributions.contextKeys(
@@ -194,11 +196,15 @@ let all = (state: State.t) => {
     Feature_LanguageSupport.Contributions.contextKeys
     |> Schema.map(({languageSupport, _}: State.t) => languageSupport)
     |> fromSchema(state),
-    menus(~isFocused=focus == Focus.Quickmenu || focus == Focus.Wildmenu)
+    menus(
+      ~isFocused=focus == Focus.Quickmenu || focus == Focus.Wildmenu,
+      ~isNewQuickMenuOpen=focus == Focus.NewQuickmenu,
+    )
     |> Schema.map((state: State.t) => state.quickmenu)
     |> fromSchema(state),
     editors(~isFocused=isEditorFocused) |> fromSchema(state),
     zenContextKeys,
+    //newQuickmenuContextKeys,
     Feature_Snippets.Contributions.contextKeys(state.snippets),
     other |> fromSchema(state),
   ]);
