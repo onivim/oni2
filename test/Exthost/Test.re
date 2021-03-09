@@ -147,7 +147,9 @@ let close = context => {
 };
 
 let activateByEvent = (~event, context) => {
-  Request.ExtensionService.activateByEvent(~event, context.client);
+  Request.ExtensionService.activateByEvent(~event, context.client)
+  |> Utility.LwtEx.sync
+  |> Result.get_ok;
   context;
 };
 

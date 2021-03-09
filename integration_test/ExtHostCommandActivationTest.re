@@ -1,11 +1,10 @@
-open Oni_Core;
 open Oni_Model;
 open Oni_IntegrationTestLib;
 
 // This test validates:
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, we get some completion results
-runTest(~name="ExtHostCommandActivationTest", ({input, dispatch, wait, _}) => {
+runTest(~name="ExtHostCommandActivationTest", ({dispatch, wait, _}) => {
   wait(~timeout=30.0, ~name="Exthost is initialized", (state: State.t) =>
     Feature_Exthost.isInitialized(state.exthost)
   );
@@ -23,10 +22,14 @@ runTest(~name="ExtHostCommandActivationTest", ({input, dispatch, wait, _}) => {
   );
 
   // Kick off an oni-test command that should activate the oni-test-extension:
-  dispatch(Actions.Extensions(Feature_Extensions.Msg.command(
-    ~command="oni-test.showMessage",
-    ~arguments=[`String("testing123")]
-  )));
+  dispatch(
+    Actions.Extensions(
+      Feature_Extensions.Msg.command(
+        ~command="oni-test.showMessage",
+        ~arguments=[`String("testing123")],
+      ),
+    ),
+  );
 
   wait(
     ~timeout=30.0,
@@ -46,7 +49,7 @@ runTest(~name="ExtHostCommandActivationTest", ({input, dispatch, wait, _}) => {
     state.notifications
     |> Feature_Notification.all
     |> List.exists((notification: Feature_Notification.notification) => {
-      notification.message == "testing123"
-    });
+         notification.message == "testing123"
+       })
   });
 });
