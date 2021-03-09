@@ -473,20 +473,12 @@ let start = () => {
     // Transition menus to this new-style quickmenu
     if (Feature_Quickmenu.isMenuOpen(state.newQuickmenu)) {
       switch (action) {
-      | ListFocusUp => (
-          {
-            ...state,
-            newQuickmenu: Feature_Quickmenu.prev(state.newQuickmenu),
-          },
-          Isolinear.Effect.none,
-        )
-      | ListFocusDown => (
-          {
-            ...state,
-            newQuickmenu: Feature_Quickmenu.next(state.newQuickmenu),
-          },
-          Isolinear.Effect.none,
-        )
+      | ListFocusUp =>
+        let (newQuickmenu, eff) = Feature_Quickmenu.prev(state.newQuickmenu);
+        ({...state, newQuickmenu}, eff);
+      | ListFocusDown =>
+        let (newQuickmenu, eff) = Feature_Quickmenu.next(state.newQuickmenu);
+        ({...state, newQuickmenu}, eff);
       | ListSelect =>
         let (newQuickmenu, eff) =
           Feature_Quickmenu.select(state.newQuickmenu);
