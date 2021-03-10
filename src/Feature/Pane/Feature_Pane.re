@@ -747,10 +747,6 @@ module View = {
       |> Option.value(~default=React.empty)
     };
 
-  module Animation = {
-    let openSpring = Spring.Options.create(~stiffness=600., ~damping=50., ());
-  };
-
   let closeButton = (~theme, ~dispatch, ()) => {
     <Sneakable
       sneakId="close"
