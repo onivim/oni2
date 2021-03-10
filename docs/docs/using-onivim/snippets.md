@@ -42,7 +42,7 @@ Onivim's snippet syntax follows the same [snippet syntax as Code](https://code.v
 
 ## Customizing snippets
 
-![snippet-user-config](https://user-images.githubusercontent.com/13532591/109041574-082f2480-7684-11eb-9ee4-bc7bcbc89a2c.gif)
+![user-snippets](https://user-images.githubusercontent.com/13532591/109868107-1c42cb00-7c1c-11eb-9abf-49f762e57d33.gif)
 
 Snippets may be customized globally or per-filetype - these are stored in the user `snippets` folder:
 - If the snippet file ends with extension `.json`, the filename is the relevant filetype - for example, `bat.json` provides snippets for the `bat` filetype.
