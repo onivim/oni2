@@ -131,6 +131,8 @@ type command =
 [@deriving show({with_path: false})]
 type msg =
   | Command(command)
+  | MenuPreviewTheme({themeId: string})
+  | MenuCommitTheme({themeId: string})
   | TextmateThemeLoaded({
       variant: ColorTheme.variant,
       colors: [@opaque] Textmate.ColorTheme.t,
@@ -140,16 +142,43 @@ type msg =
 
 module Msg = {
   let openThemePicker = Command(SelectTheme);
+
+  let vimColorSchemeSelected = (~themeId) =>
+    MenuPreviewTheme({themeId: themeId});
+
+  let menuPreviewTheme = (~themeId) => MenuPreviewTheme({themeId: themeId});
+
+  let menuCommitTheme = (~themeId) => MenuCommitTheme({themeId: themeId});
+};
+
+let setTheme = (~themeId, model) => {
+  ...model,
+  selectedThemeId: Some(themeId),
 };
 
 type outmsg =
   | Nothing
+  | ConfigurationTransform(ConfigurationTransformer.t)
   | OpenThemePicker(list(theme))
   | ThemeChanged(ColorTheme.Colors.t)
   | NotifyError(string);
 
 let update = (model, msg) => {
   switch (msg) {
+  | MenuCommitTheme({themeId}) =>
+    let themeTransformer = name =>
+      Oni_Core.ConfigurationTransformer.setField(
+        "workbench.colorTheme",
+        `String(name),
+      );
+
+    (
+      model |> setTheme(~themeId),
+      ConfigurationTransform(themeTransformer(themeId)),
+    );
+
+  | MenuPreviewTheme({themeId}) => (model |> setTheme(~themeId), Nothing)
+
   | TextmateThemeLoaded({variant, colors, tokenColors}) =>
     let colors =
       Textmate.ColorTheme.fold(
@@ -179,11 +208,6 @@ let update = (model, msg) => {
 
   | Command(SelectTheme) => (model, OpenThemePicker([]))
   };
-};
-
-let setTheme = (~themeId, model) => {
-  ...model,
-  selectedThemeId: Some(themeId),
 };
 
 // SUBSCRIPTION

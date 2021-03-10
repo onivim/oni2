@@ -53,8 +53,8 @@ let initial: model(_);
 
 let show: (~menu: Schema.menu('outmsg), model('outmsg)) => model('outmsg);
 
-let next: model('outmsg) => model('outmsg);
-let prev: model('outmsg) => model('outmsg);
+let next: model('outmsg) => (model('outmsg), Isolinear.Effect.t('outmsg));
+let prev: model('outmsg) => (model('outmsg), Isolinear.Effect.t('outmsg));
 
 let cancel: model('outmsg) => model('outmsg);
 
