@@ -10,7 +10,7 @@ module Colors = Feature_Theme.Colors;
 module Clickable = Revery.UI.Components.Clickable;
 
 module Constants = {
-  let menuWidth = 400;
+  let menuWidth = 600;
   let menuHeight = 320;
   let rowHeight = 40;
 };

@@ -41,6 +41,7 @@
 - #3240 - Formatting: Fix 'Invalid Range Specified' error (fixes #3014)
 - #3241 - Extensions: Handle `maxCount` and FS errors in `vscode.workspace.findFiles` (related #3215)
 - #3248 - Extension - Windows: Fix path normalization issue in document selector (fixes #3238)
+- #3251 - QuickOpen: Show filename first in Control+P/Command+P menu (fixes #2259, #3165)
 
 ### Performance
 
