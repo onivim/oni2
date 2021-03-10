@@ -17,7 +17,6 @@ and variant =
     | FilesPicker
     | OpenBuffersPicker
     | Wildmenu(Vim.Types.cmdlineType)
-    | ThemesPicker(list(Feature_Theme.theme))
     | Extension({
         id: int,
         hasItems: bool,
@@ -28,7 +27,6 @@ let placeholderText =
   fun
   | FilesPicker
   | OpenBuffersPicker
-  | ThemesPicker(_)
   | CommandPalette => "type to search..."
   | _ => "";
 
