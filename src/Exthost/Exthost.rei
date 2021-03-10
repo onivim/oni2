@@ -1750,7 +1750,7 @@ module Request: {
   };
 
   module ExtensionService: {
-    let activateByEvent: (~event: string, Client.t) => unit;
+    let activateByEvent: (~event: string, Client.t) => Lwt.t(unit);
 
     let activate:
       (~extensionId: string, ~reason: ExtensionActivationReason.t, Client.t) =>

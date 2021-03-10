@@ -5,6 +5,12 @@ module BufferTracker =
 
 module Log = (val Log.withNamespace("Service_Exthost"));
 
+module MutableState = {
+  let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
+
+  let activatedCommands: Hashtbl.t(string, bool) = Hashtbl.create(16);
+};
+
 // EFFECTS
 
 module Effects = {
@@ -12,11 +18,27 @@ module Effects = {
     let executeContributedCommand = (~command, ~arguments, client) =>
       Isolinear.Effect.create(
         ~name="exthost.commands.executeContributedCommand", () => {
-        Exthost.Request.Commands.executeContributedCommand(
-          ~command,
-          ~arguments,
-          client,
-        )
+        let promise =
+          if (!Hashtbl.mem(MutableState.activatedCommands, command)) {
+            Hashtbl.add(MutableState.activatedCommands, command, true);
+            Exthost.Request.ExtensionService.activateByEvent(
+              ~event="onCommand:" ++ command,
+              client,
+            );
+          } else {
+            Lwt.return();
+          };
+
+        let _: Lwt.t(unit) =
+          promise
+          |> Lwt.map(() => {
+               Exthost.Request.Commands.executeContributedCommand(
+                 ~command,
+                 ~arguments,
+                 client,
+               )
+             });
+        ();
       });
   };
   module Decorations = {
@@ -229,10 +251,6 @@ module Effects = {
   };
 };
 
-module MutableState = {
-  let activatedFileTypes: Hashtbl.t(string, bool) = Hashtbl.create(16);
-};
-
 module Internal = {
   let bufferMetadataToModelAddedDelta = buffer => {
     let lines = Buffer.getLines(buffer) |> Array.to_list;
@@ -268,10 +286,11 @@ module Internal = {
   let activateFileType = (~client, fileType: string) =>
     if (!Hashtbl.mem(MutableState.activatedFileTypes, fileType)) {
       // If no entry, we haven't activated yet
-      Exthost.Request.ExtensionService.activateByEvent(
-        ~event="onLanguage:" ++ fileType,
-        client,
-      );
+      let _: Lwt.t(unit) =
+        Exthost.Request.ExtensionService.activateByEvent(
+          ~event="onLanguage:" ++ fileType,
+          client,
+        );
       Hashtbl.add(MutableState.activatedFileTypes, fileType, true);
     };
 };

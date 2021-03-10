@@ -435,8 +435,7 @@ module Internal = {
     || name == "arcticicestudio.nord-visual-studio-code";
   };
   let markActivated = (id: string, model) => {
-    ...model,
-    activatedIds: [id, ...model.activatedIds],
+    {...model, activatedIds: [id, ...model.activatedIds]};
   };
 
   let getExtensions = (~category, model) => {

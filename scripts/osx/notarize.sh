@@ -4,8 +4,17 @@ SHORT_COMMIT_ID=$(git rev-parse --short HEAD)
 echo "Code signing certificate specified - notarizing zip"
 
 echo "Uploading to apple to notarize..."
-notarize_uuid=$(xcrun altool --notarize-app --primary-bundle-id "com.outrunlabs.onivim2" --username $APPLE_DEVELOPER_ID --password $APPLE_NOTARIZE_PASSWORD --file "_release/Onivim2.app.zip" 2>&1 | grep RequestUUID | awk '{print $3'})
+notarize_output=$(xcrun altool --notarize-app --primary-bundle-id "com.outrunlabs.onivim2" --username $APPLE_DEVELOPER_ID --password $APPLE_NOTARIZE_PASSWORD --file "_release/Onivim2.app.zip" 2>&1)
+
+echo "$notarize_output" > notarize_output.tmp
+echo "xcrun altool output: $notarize_output"
+
+notarize_uuid=$(grep RequestUUID notarize_output.tmp | awk '{print $3}')
+
 # Load cert
+echo "notarize uuid: $notarize_uuid"
+
+rm notarize_output.tmp
 
 if  [ -z "$notarize_uuid" ]
 then
@@ -17,7 +26,6 @@ else
 	echo "Got notarization UUID: $notarize_uuid"
 fi
 
-
 success=0
 for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
 	echo "Checking progress..."
@@ -26,6 +34,7 @@ for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
 
 	if [ $? -ne 0 ] || [[ "${progress}" =~ "Invalid" ]]; then
 		echo "Error with notarization. Exiting"
+        exit 1
 	fi
 
 	if [[ "${progress}" =~ "success" ]]; then
