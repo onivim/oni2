@@ -40,6 +40,7 @@
 - #3239 - Buffers: Fix filetype picker not working as expected without an active workspace
 - #3240 - Formatting: Fix 'Invalid Range Specified' error (fixes #3014)
 - #3241 - Extensions: Handle `maxCount` and FS errors in `vscode.workspace.findFiles` (related #3215)
+- #3248 - Extension - Windows: Fix path normalization issue in document selector (fixes #3238)
 
 ### Performance
 

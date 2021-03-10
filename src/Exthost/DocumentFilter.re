@@ -14,7 +14,11 @@ module CustomDecoders = {
       string
       |> and_then(str =>
            try(
-             str |> Re.Glob.glob(~expand_braces=true) |> Re.compile |> succeed
+             str
+             |> Utility.Path.normalizeBackSlashes
+             |> Re.Glob.glob(~expand_braces=true)
+             |> Re.compile
+             |> succeed
            ) {
            | exn => fail(Printexc.to_string(exn))
            }
@@ -45,7 +49,8 @@ let matches = (~filetype: string, ~filepath: string, filter) => {
   let patternMatches =
     switch (filter.pattern) {
     | None => true
-    | Some(glob) => Re.matches(glob, filepath) != []
+    | Some(glob) =>
+      Re.matches(glob, Utility.Path.normalizeBackSlashes(filepath)) != []
     };
 
   fileTypeMatches && patternMatches;
