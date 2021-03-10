@@ -171,7 +171,8 @@ module DocumentsAndEditors = {
 module ExtensionService = {
   open Json.Encode;
   let activateByEvent = (~event, client) => {
-    Client.notify(
+    Client.request(
+      ~decoder=Json.Decode.null,
       ~rpcName="ExtHostExtensionService",
       ~method="$activateByEvent",
       ~args=`List([`String(event)]),
