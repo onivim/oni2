@@ -32,22 +32,48 @@ module Internal = {
     );
   };
 
-  let setThemesEffect =
-      (~themes: list(Exthost.Extension.Contributions.Theme.t)) => {
+  let showThemePicker = (themes: list(Feature_Theme.theme), state: State.t) => {
+    open Exthost.Extension;
+    let label = theme => Contributions.Theme.label(theme);
+    let id = theme => Contributions.Theme.id(theme);
+
+    let menu =
+      Feature_Quickmenu.Schema.menu(
+        ~onItemFocused=
+          theme => {
+            Actions.Theme(
+              Feature_Theme.Msg.menuPreviewTheme(~themeId=id(theme)),
+            )
+          },
+        ~onItemSelected=
+          theme => {
+            Actions.Theme(
+              Feature_Theme.Msg.menuCommitTheme(~themeId=id(theme)),
+            )
+          },
+        ~toString=theme => "Theme: " ++ label(theme),
+        themes,
+      );
+    {
+      ...state,
+      newQuickmenu: Feature_Quickmenu.show(~menu, state.newQuickmenu),
+    };
+  };
+
+  let setThemes =
+      (
+        ~themes: list(Exthost.Extension.Contributions.Theme.t),
+        state: State.t,
+      ) => {
+    let id = Exthost.Extension.Contributions.Theme.id;
     switch (themes) {
-    | [] => Isolinear.Effect.none
-    | [theme] =>
-      Isolinear.Effect.createWithDispatch(
-        ~name="feature.extensions.selectTheme", dispatch => {
-        dispatch(
-          ThemeSelected(Exthost.Extension.Contributions.Theme.id(theme)),
-        )
-      })
-    | themes =>
-      Isolinear.Effect.createWithDispatch(
-        ~name="feature.extensions.showThemeAfterInstall", dispatch => {
-        dispatch(QuickmenuShow(ThemesPicker(themes)))
-      })
+    | [] => state
+    | [theme] => {
+        ...state,
+        colorTheme:
+          Feature_Theme.setTheme(~themeId=id(theme), state.colorTheme),
+      }
+    | themes => showThemePicker(themes, state)
     };
   };
 
@@ -415,9 +441,10 @@ let update =
           let eff = Internal.openFileEffect("oni://ExtensionDetails");
           (state, eff);
 
-        | SelectTheme({themes}) =>
-          let eff = Internal.setThemesEffect(~themes);
-          (state, eff);
+        | SelectTheme({themes}) => (
+            state |> Internal.setThemes(~themes),
+            Isolinear.Effect.none,
+          )
 
         | UnhandledWindowMovement(movement) => (
             state,
@@ -452,14 +479,7 @@ let update =
             );
           let themes: list(Exthost.Extension.Contributions.Theme.t) =
             Exthost.Extension.Contributions.(contributions.themes);
-          let showThemePickerEffect = Internal.setThemesEffect(~themes);
-          (
-            state,
-            Isolinear.Effect.batch([
-              notificationEffect,
-              showThemePickerEffect,
-            ]),
-          );
+          (state |> Internal.setThemes(~themes), notificationEffect);
         }
       );
     (state', effect);
@@ -1686,6 +1706,14 @@ let update =
 
     let state = {...state, colorTheme: model'};
     switch (outmsg) {
+    | ConfigurationTransform(transformer) => (
+        {
+          ...state,
+          config:
+            Feature_Configuration.queueTransform(~transformer, state.config),
+        },
+        Isolinear.Effect.none,
+      )
     | NotifyError(msg) => (
         state,
         Internal.notificationEffect(~kind=Error, msg),
@@ -1699,11 +1727,7 @@ let update =
            })
         |> List.flatten;
 
-      let eff =
-        Isolinear.Effect.createWithDispatch(~name="menu", dispatch => {
-          dispatch(Actions.QuickmenuShow(ThemesPicker(themes)))
-        });
-      (state, eff);
+      (state |> Internal.showThemePicker(themes), Isolinear.Effect.none);
     | Nothing => (state, Isolinear.Effect.none)
     | ThemeChanged(_colorTheme) =>
       let config = Selectors.configResolver(state);

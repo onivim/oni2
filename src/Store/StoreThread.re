@@ -125,8 +125,6 @@ let start =
       setClipboardText,
     );
 
-  let themeUpdater = ThemeStoreConnector.start();
-
   let initialState = getState();
 
   let attachExthostStdio =
@@ -178,7 +176,6 @@ let start =
       keyBindingsUpdater,
       commandUpdater,
       lifecycleUpdater,
-      themeUpdater,
       Features.update(
         ~grammarRepository,
         ~extHostClient,

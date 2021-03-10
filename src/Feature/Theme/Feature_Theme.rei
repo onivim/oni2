@@ -16,10 +16,16 @@ type command;
 [@deriving show]
 type msg;
 
-module Msg: {let openThemePicker: msg;};
+module Msg: {
+  let openThemePicker: msg;
+  let menuPreviewTheme: (~themeId: string) => msg;
+  let menuCommitTheme: (~themeId: string) => msg;
+  let vimColorSchemeSelected: (~themeId: string) => msg;
+};
 
 type outmsg =
   | Nothing
+  | ConfigurationTransform(ConfigurationTransformer.t)
   | OpenThemePicker(list(theme))
   | ThemeChanged(ColorTheme.Colors.t)
   | NotifyError(string);
