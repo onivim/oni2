@@ -69,3 +69,4 @@
 - #3220 - Dependency: revery -> 26e8b73 (Unblock OCaml 4.11)
 - #3228 - Quickmenu: Initial feature implementation
 - #3250 - Quickmenu: Move theme menus to new Quickmenu feature
+- #3254 - Release: Fix notarization step
