@@ -43,6 +43,7 @@
 - #3248 - Extension - Windows: Fix path normalization issue in document selector (fixes #3238)
 - #3251 - QuickOpen: Show filename first in Control+P/Command+P menu (fixes #2259, #3165)
 - #3249 - Extensions: Send 'onCommand' activation event (related #3215)
+- #3252 - UX: Remove glitchy pane animation (fixes #3245)
 
 ### Performance
 

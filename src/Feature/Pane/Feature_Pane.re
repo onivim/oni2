@@ -747,10 +747,6 @@ module View = {
       |> Option.value(~default=React.empty)
     };
 
-  module Animation = {
-    let openSpring = Spring.Options.create(~stiffness=600., ~damping=50., ());
-  };
-
   let closeButton = (~theme, ~dispatch, ()) => {
     <Sneakable
       sneakId="close"
@@ -784,20 +780,20 @@ module View = {
       </Sneakable>
     | _ => React.empty
     };
-  let%component make =
-                (
-                  ~config,
-                  ~isFocused,
-                  ~theme,
-                  ~iconTheme,
-                  ~languageInfo,
-                  ~editorFont: Service_Font.font,
-                  ~uiFont,
-                  ~dispatch: msg => unit,
-                  ~pane: model,
-                  ~workingDirectory: string,
-                  (),
-                ) => {
+  let make =
+      (
+        ~config,
+        ~isFocused,
+        ~theme,
+        ~iconTheme,
+        ~languageInfo,
+        ~editorFont: Service_Font.font,
+        ~uiFont,
+        ~dispatch: msg => unit,
+        ~pane: model,
+        ~workingDirectory: string,
+        (),
+      ) => {
     let problemsTabClicked = () => {
       dispatch(TabClicked(Diagnostics));
     };
@@ -812,21 +808,7 @@ module View = {
     };
 
     let desiredHeight = height(pane);
-    let targetHeight = !isOpen(pane) && !isFocused ? 0 : desiredHeight;
-
-    let animationEnabled =
-      pane.allowAnimation
-      && Feature_Configuration.GlobalConfiguration.animation.get(config);
-    let%hook (springHeight, _setHeightImmediately) =
-      Hooks.spring(
-        ~name="Pane Open Spring",
-        ~target=float(targetHeight),
-        ~restThreshold=10.,
-        ~enabled=animationEnabled,
-        Animation.openSpring,
-      );
-
-    let height = springHeight < 20. ? 0 : int_of_float(springHeight);
+    let height = !isOpen(pane) && !isFocused ? 0 : desiredHeight;
 
     let opacity =
       isFocused
