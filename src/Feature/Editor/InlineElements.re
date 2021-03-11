@@ -484,11 +484,6 @@ let getAllReservedSpace = ({cache, _}) => {
 
 // When there is a buffer update, shift elements as needed
 let moveMarkers = (markerUpdate: Oni_Core.MarkerUpdate.t, model) => {
-  // let startLineIdx = update.startLine |> LineNumber.toZeroBased;
-  // let endLineIdx = update.endLine |> LineNumber.toZeroBased;
-
-  // let delta = Array.length(update.lines) - (endLineIdx - startLineIdx);
-
   let shiftLines = (~afterLine, ~delta, keyToElements) => {
     let line = EditorCoreTypes.LineNumber.toZeroBased(afterLine);
     keyToElements |> IntMap.shift(~startPos=line, ~endPos=line, ~delta);
