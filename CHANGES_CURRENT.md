@@ -50,6 +50,7 @@
 
 - #3148 - Large Files: Improve performance & fix crash when opening large files (related #1670)
 - #3139 - Large Files: Fix hang when using `/` search (fixes #1670)
+- #3260 - Editor: Compute minimal updates, fix flash when reloading file
 
 ### Documentation
 
