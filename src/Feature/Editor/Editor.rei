@@ -263,7 +263,13 @@ let unprojectToPixel:
 let setSize: (~pixelWidth: int, ~pixelHeight: int, t) => t;
 
 let updateBuffer:
-  (~update: Oni_Core.BufferUpdate.t, ~buffer: EditorBuffer.t, t) => t;
+  (
+    ~update: Oni_Core.BufferUpdate.t,
+    ~markerUpdate: Oni_Core.MarkerUpdate.t,
+    ~buffer: EditorBuffer.t,
+    t
+  ) =>
+  t;
 let setBuffer: (~buffer: EditorBuffer.t, t) => t;
 
 let configurationChanged:

@@ -1439,7 +1439,12 @@ let update =
             Feature_Layout.map(
               editor =>
                 if (Editor.getBufferId(editor) == bufferId) {
-                  Editor.updateBuffer(~update=bufferUpdate, ~buffer, editor);
+                  Editor.updateBuffer(
+                    ~update=bufferUpdate,
+                    ~markerUpdate,
+                    ~buffer,
+                    editor,
+                  );
                 } else {
                   editor;
                 },
