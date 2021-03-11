@@ -1677,12 +1677,13 @@ let unprojectToPixel =
 
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
 
-let updateBuffer = (~update, ~buffer, editor) => {
+let updateBuffer = (~update, ~markerUpdate, ~buffer, editor) => {
   {
     ...editor,
     buffer,
     wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
-    inlineElements: InlineElements.shift(update, editor.inlineElements),
+    inlineElements:
+      InlineElements.moveMarkers(markerUpdate, editor.inlineElements),
   };
 };
 

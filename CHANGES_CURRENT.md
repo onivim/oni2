@@ -44,6 +44,7 @@
 - #3251 - QuickOpen: Show filename first in Control+P/Command+P menu (fixes #2259, #3165)
 - #3249 - Extensions: Send 'onCommand' activation event (related #3215)
 - #3252 - UX: Remove glitchy pane animation (fixes #3245)
+- #3255 - CodeLens: Fix disappearing lens when pressing enter in insert mode
 
 ### Performance
 

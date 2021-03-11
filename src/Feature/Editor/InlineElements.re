@@ -483,26 +483,39 @@ let getAllReservedSpace = ({cache, _}) => {
 };
 
 // When there is a buffer update, shift elements as needed
-let shift = (update: Oni_Core.BufferUpdate.t, model) => {
-  let startLineIdx = update.startLine |> LineNumber.toZeroBased;
-  let endLineIdx = update.endLine |> LineNumber.toZeroBased;
-
-  let delta = Array.length(update.lines) - (endLineIdx - startLineIdx);
-
-  if (update.isFull || delta == 0) {
-    model;
-  } else {
-    let keyToElements' =
-      model.keyToElements
-      |> IntMap.shift(
-           ~default=_ => None,
-           ~startPos=startLineIdx,
-           ~endPos=endLineIdx,
-           ~delta,
-         );
-
-    keyToElements' |> makeConsistent;
+let moveMarkers = (markerUpdate: Oni_Core.MarkerUpdate.t, model) => {
+  let shiftLines = (~afterLine, ~delta, keyToElements) => {
+    let line = EditorCoreTypes.LineNumber.toZeroBased(afterLine);
+    keyToElements |> IntMap.shift(~startPos=line, ~endPos=line, ~delta);
   };
+
+  let clearLine = (~line, keyToElements) => {
+    keyToElements
+    |> IntMap.remove(line |> EditorCoreTypes.LineNumber.toZeroBased);
+  };
+
+  let shiftCharacters =
+      (
+        ~line as _,
+        ~afterByte as _,
+        ~deltaBytes as _,
+        ~afterCharacter as _,
+        ~deltaCharacters as _,
+        keyToElements,
+      ) => {
+    keyToElements;
+  };
+
+  let keyToElements' =
+    MarkerUpdate.apply(
+      ~clearLine,
+      ~shiftLines,
+      ~shiftCharacters,
+      markerUpdate,
+      model.keyToElements,
+    );
+
+  keyToElements' |> makeConsistent;
 };
 
 let animate = (msg, model) => {
