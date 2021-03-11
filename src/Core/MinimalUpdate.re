@@ -321,9 +321,15 @@ let fromBufferUpdate = (~buffer: Buffer.t, ~update: BufferUpdate.t) => {
     } else {
       let startIdx = EditorCoreTypes.LineNumber.toZeroBased(update.startLine);
       let stopIdx = EditorCoreTypes.LineNumber.toZeroBased(update.endLine);
-      let allOriginalLines = Buffer.getLines(buffer);
-      Array.sub(allOriginalLines, startIdx, stopIdx - startIdx);
+      let lines = Buffer.getLines(buffer);
+      Utility.ArrayEx.slice(
+        ~lines,
+        ~start=startIdx,
+        ~length=stopIdx - startIdx,
+        (),
+      );
     };
+
   let updated = update.lines;
 
   Internal.compute(~original, ~updated) |> List.map(shift(update.startLine));
