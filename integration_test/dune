@@ -5,8 +5,7 @@
 (install
  (section bin)
  (package OniIntegrationTests)
- (files run-tests.sh FormatOnSaveTest.exe
-   large-c-file.c lsan.supp some-test-file.json some-test-file.txt test.crlf
-   test.unformatted.js
+ (files run-tests.sh FormatOnSaveTest.exe large-c-file.c lsan.supp
+   some-test-file.json some-test-file.txt test.crlf test.unformatted.js
    test.lf test-syntax.php utf8.txt utf8-test-file.htm
    Inconsolata-Regular.ttf PlugScriptLocal.vim))
