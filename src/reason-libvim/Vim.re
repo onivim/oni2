@@ -273,8 +273,15 @@ let _onAutocommand = (autoCommand: Types.autocmd, buffer: Buffer.t) => {
 
 let _onBufferChanged =
     (buffer: Buffer.t, startLine: int, endLine: int, extra: int) => {
+  let shouldAdjustCursorPosition = BufferUpdateTracker.shouldAdjustCursors();
   let update =
-    BufferUpdate.createIncremental(~buffer, ~startLine, ~endLine, ~extra);
+    BufferUpdate.createIncremental(
+      ~shouldAdjustCursorPosition,
+      ~buffer,
+      ~startLine,
+      ~endLine,
+      ~extra,
+    );
 
   BufferInternal.notifyUpdate(buffer);
 

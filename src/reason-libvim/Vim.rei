@@ -326,7 +326,9 @@ module Buffer: {
     ) =>
     unit;
 
-  let applyEdits: (~shouldAdjustCursors: bool, ~edits: list(Edit.t), t) => result(unit, string);
+  let applyEdits:
+    (~shouldAdjustCursors: bool, ~edits: list(Edit.t), t) =>
+    result(unit, string);
 
   let onLineEndingsChanged:
     Listeners.bufferLineEndingsChangedListener => Event.unsubscribe;

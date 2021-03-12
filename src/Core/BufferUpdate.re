@@ -9,12 +9,20 @@ type t = {
   endLine: LineNumber.t,
   lines: [@opaque] array(string),
   version: int,
-
   shouldAdjustCursorPosition: bool,
 };
 
 let create =
-    (~id=0, ~isFull=false, ~startLine, ~endLine, ~lines, ~version, ~shouldAdjustCursorPosition, ()) => {
+    (
+      ~id=0,
+      ~isFull=false,
+      ~startLine,
+      ~endLine,
+      ~lines,
+      ~version,
+      ~shouldAdjustCursorPosition,
+      (),
+    ) => {
   id,
   startLine,
   endLine,
@@ -24,7 +32,18 @@ let create =
   shouldAdjustCursorPosition,
 };
 
-let toDebugString = ({isFull, version, startLine, endLine, lines, shouldAdjustCursorPosition, _}) => {
+let toDebugString =
+    (
+      {
+        isFull,
+        version,
+        startLine,
+        endLine,
+        lines,
+        shouldAdjustCursorPosition,
+        _,
+      },
+    ) => {
   let lineStr =
     lines
     |> Array.to_list

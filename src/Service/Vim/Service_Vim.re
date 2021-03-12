@@ -59,7 +59,7 @@ module Effects = {
 
   let applyEdits =
       (
-        ~shouldAdjustCursors, 
+        ~shouldAdjustCursors,
         ~bufferId: int,
         ~version: int,
         ~edits: list(Vim.Edit.t),
@@ -157,8 +157,14 @@ module Effects = {
       let buffer = Vim.Buffer.getCurrent();
 
       if (additionalEdits != []) {
-        let _: result(unit, string) = Vim.Buffer.applyEdits(~shouldAdjustCursors=true, ~edits=additionalEdits, buffer)
-      }
+        let _: result(unit, string) =
+          Vim.Buffer.applyEdits(
+            ~shouldAdjustCursors=true,
+            ~edits=additionalEdits,
+            buffer,
+          );
+        ();
+      };
 
       dispatch(toMsg(mode));
     });

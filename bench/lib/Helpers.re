@@ -115,6 +115,7 @@ let thousandLineState =
     createUpdateAction(
       thousandLineBuffer,
       BufferUpdate.create(
+        ~shouldAdjustCursorPosition=false,
         ~startLine=LineNumber.zero,
         ~endLine=LineNumber.ofZeroBased(1),
         ~lines=thousandLines,

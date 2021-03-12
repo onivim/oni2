@@ -80,7 +80,12 @@ describe("Buffer", ({describe, _}) => {
       let updates: ref(list(BufferUpdate.t)) = ref([]);
       let dispose = Buffer.onUpdate(upd => updates := [upd, ...updates^]);
 
-      Buffer.setLines(~stop=LineNumber.zero, ~lines=[|"abc"|], buffer);
+      Buffer.setLines(
+        ~shouldAdjustCursors=false,
+        ~stop=LineNumber.zero,
+        ~lines=[|"abc"|],
+        buffer,
+      );
       let line0 = Buffer.getLine(buffer, LineNumber.zero);
       let line1 = Buffer.getLine(buffer, LineNumber.(zero + 1));
       let lineCount = Buffer.getLineCount(buffer);
