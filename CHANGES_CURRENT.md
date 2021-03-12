@@ -45,6 +45,7 @@
 - #3249 - Extensions: Send 'onCommand' activation event (related #3215)
 - #3252 - UX: Remove glitchy pane animation (fixes #3245)
 - #3255 - CodeLens: Fix disappearing lens when pressing enter in insert mode
+- #3259 - Quickmenu: Implement smart case (thanks @amiralies!)
 
 ### Performance
 
