@@ -652,6 +652,8 @@ module Contributions = {
     @ Formatting.Contributions.keybindings
     @ References.Contributions.keybindings
     @ SignatureHelp.Contributions.keybindings;
+
+  let menuGroups = Formatting.Contributions.menuGroups;
 };
 
 module OldCompletion = Completion;

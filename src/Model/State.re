@@ -540,6 +540,7 @@ let initial =
         ~menus=[],
         ~groups=
           [Feature_Workspace.Contributions.menuGroup]
+          @ Feature_LanguageSupport.Contributions.menuGroups
           @ Feature_SideBar.Contributions.menuGroups
           @ Feature_Help.Contributions.menuGroups,
       ),
