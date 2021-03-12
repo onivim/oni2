@@ -143,6 +143,38 @@ module Effects = {
     };
   };
 
+  let adjustModeForEdit = (mode: Vim.Mode.t, edit: Vim.Edit.t) => {
+    Vim.Mode.(
+      switch (mode) {
+      | Normal({cursor}) =>
+        Normal({cursor: adjustBytePositionForEdit(cursor, edit)})
+      | Insert({cursors}) =>
+        Insert({
+          cursors:
+            cursors
+            |> List.map(cursor => adjustBytePositionForEdit(cursor, edit)),
+        })
+      | Replace({cursor}) =>
+        Replace({cursor: adjustBytePositionForEdit(cursor, edit)})
+      | CommandLine({commandType, text, commandCursor, cursor}) =>
+        CommandLine({
+          commandType,
+          text,
+          commandCursor,
+          cursor: adjustBytePositionForEdit(cursor, edit),
+        })
+      | Operator({cursor, pending}) =>
+        Operator({cursor: adjustBytePositionForEdit(cursor, edit), pending})
+      | Visual(_) as vis => vis
+      | Select(_) as select => select
+      }
+    );
+  };
+
+  let adjustModeForEdits = (mode: Vim.Mode.t, edits: list(Vim.Edit.t)) => {
+    List.fold_left(adjustModeForEdit, mode, edits);
+  };
+
   let applyCompletion = (~meetColumn, ~insertText, ~toMsg, ~additionalEdits) =>
     Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
       let cursor = Vim.Cursor.get();
@@ -155,18 +187,21 @@ module Effects = {
         VimEx.inputString(insertText);
 
       let buffer = Vim.Buffer.getCurrent();
-
-      if (additionalEdits != []) {
-        let _: result(unit, string) =
+      let mode' =
+        if (additionalEdits != []) {
+          // We're manually adjusting the cursors here...
           Vim.Buffer.applyEdits(
-            ~shouldAdjustCursors=true,
+            ~shouldAdjustCursors=false,
             ~edits=additionalEdits,
             buffer,
-          );
-        ();
-      };
+          )
+          |> Result.map(() => {adjustModeForEdits(mode, additionalEdits)})
+          |> ResultEx.value(~default=mode);
+        } else {
+          mode;
+        };
 
-      dispatch(toMsg(mode));
+      dispatch(toMsg(mode'));
     });
 
   let loadBuffer = (~filePath: string, toMsg) => {

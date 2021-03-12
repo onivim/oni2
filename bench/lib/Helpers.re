@@ -142,6 +142,7 @@ let thousandLineStateWithIndents =
     createUpdateAction(
       thousandLineBuffer,
       BufferUpdate.create(
+        ~shouldAdjustCursorPosition=false,
         ~startLine=LineNumber.zero,
         ~endLine=LineNumber.ofZeroBased(1),
         ~lines=thousandLinesWithIndents,
@@ -160,6 +161,7 @@ let hundredThousandLineState =
     createUpdateAction(
       Buffer.ofLines(~font=Font.default(), [||]),
       BufferUpdate.create(
+        ~shouldAdjustCursorPosition=false,
         ~startLine=LineNumber.zero,
         ~endLine=LineNumber.ofZeroBased(1),
         ~lines=hundredThousandLines,
