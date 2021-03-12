@@ -292,9 +292,22 @@ let setIndentation = (indentation, buf) => {
 
 let getIndentation = buf => buf.indentation |> Inferred.value;
 
-let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
-  update.version > getVersion(buf);
-};
+let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) =>
+  // First, make sure the version check passes...
+  if (update.version > getVersion(buf)) {
+    // Then, if this is a full update, do a pass to see if there actually is an update.
+    // There are some cases - like undo - where a full update may come through, but actually
+    // is just bumping the change tick.
+    if (update.isFull) {
+      let bufferLines = getLines(buf);
+
+      !ArrayEx.equals(String.equal, bufferLines, update.lines);
+    } else {
+      true;
+    };
+  } else {
+    false;
+  };
 
 let update = (buf: t, update: BufferUpdate.t) =>
   if (shouldApplyUpdate(update, buf)) {
