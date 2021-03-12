@@ -84,6 +84,7 @@ type terminalRequest = {
  *
  * For information on specific events, consult the comments for that enum.
  */
+[@deriving show]
 type autocmd =
   | BufAdd
   | BufDelete
@@ -96,6 +97,7 @@ type autocmd =
   | BufNewFile
   | BufReadCmd
   | BufReadPost
+  | BufReadPre
   | BufUnload
   | BufWinEnter
   | BufWinLeave

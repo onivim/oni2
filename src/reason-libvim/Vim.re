@@ -260,6 +260,7 @@ let runWith = (~context: Context.t, f) => {
 };
 
 let _onAutocommand = (autoCommand: Types.autocmd, buffer: Buffer.t) => {
+  prerr_endline ("AUTOCOMMAND: " ++ Types.show_autocmd(autoCommand));
   Event.dispatch2(autoCommand, buffer, Listeners.autocmd);
 
   switch (autoCommand) {
