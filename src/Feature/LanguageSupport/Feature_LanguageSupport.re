@@ -487,9 +487,10 @@ let bufferUpdated =
   {...model, completion, signatureHelp};
 };
 
-let bufferSaved = (~buffer, ~config, ~activeBufferId, model) => {
+let bufferSaved = (~isLargeBuffer, ~buffer, ~config, ~activeBufferId, model) => {
   let (formatting', formattingEffect) =
     Formatting.bufferSaved(
+      ~isLargeBuffer,
       ~buffer,
       ~config,
       ~activeBufferId,

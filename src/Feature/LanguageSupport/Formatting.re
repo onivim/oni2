@@ -25,6 +25,10 @@ type model = {
   // Map of buffer id -> last format save tick
   // Used to help us decide when to autofmar
   lastFormatSaveTick: IntMap.t(int),
+  // Keep track of whether we showed a warning that the
+  // auto-format didn't proceed due to a large file,
+  // so that we only show it once.
+  largeBufferAutoFormatShowedWarning: IntSet.t,
 };
 
 let initial = {
@@ -34,6 +38,7 @@ let initial = {
   activeSession: None,
 
   lastFormatSaveTick: IntMap.empty,
+  largeBufferAutoFormatShowedWarning: IntSet.empty,
 };
 
 // CONFIGURATION
@@ -76,7 +81,8 @@ type msg =
   | EditCompleted({
       editCount: int,
       displayName: string,
-    });
+    })
+  | AutoFormatOnLargeBufferFailed({bufferId: int});
 
 let registerDocumentFormatter =
     (~handle, ~selector, ~extensionId, ~displayName, model) => {
@@ -449,7 +455,7 @@ module Internal = {
   };
 };
 
-let bufferSaved = (~config, ~buffer, ~activeBufferId, model) =>
+let bufferSaved = (~isLargeBuffer, ~config, ~buffer, ~activeBufferId, model) =>
   // Check if we should try to format on save...
   if (Configuration.formatOnSave.get(config)
       && Internal.hasDocumentFormatter(~buffer, model)
@@ -463,21 +469,31 @@ let bufferSaved = (~config, ~buffer, ~activeBufferId, model) =>
       };
 
     if (canAutoFormat) {
-      (
-        {
-          ...model,
-          lastFormatSaveTick:
-            IntMap.add(
-              Buffer.getId(buffer),
-              Buffer.getSaveTick(buffer) + 1,
-              model.lastFormatSaveTick,
-            ),
-        },
-        EffectEx.value(
-          ~name="Feature_LanguageSupport.Formatting.formatOnSave",
-          FormatOnSave,
-        ),
-      );
+      if (isLargeBuffer) {
+        (
+          model,
+          EffectEx.value(
+            ~name="Feature_LanguageSupport.Formatting.formatOnSaveFailed",
+            AutoFormatOnLargeBufferFailed({bufferId: Buffer.getId(buffer)}),
+          ),
+        );
+      } else {
+        (
+          {
+            ...model,
+            lastFormatSaveTick:
+              IntMap.add(
+                Buffer.getId(buffer),
+                Buffer.getSaveTick(buffer) + 1,
+                model.lastFormatSaveTick,
+              ),
+          },
+          EffectEx.value(
+            ~name="Feature_LanguageSupport.Formatting.formatOnSave",
+            FormatOnSave,
+          ),
+        );
+      };
     } else {
       (model, Isolinear.Effect.none);
     };
@@ -588,6 +604,20 @@ let update =
         `String(extensionId),
       );
     (model, TransformConfiguration(transformer));
+
+  | AutoFormatOnLargeBufferFailed({bufferId}) =>
+    if (IntSet.mem(bufferId, model.largeBufferAutoFormatShowedWarning)) {
+      (model, Nothing);
+    } else {
+      (
+        {
+          ...model,
+          largeBufferAutoFormatShowedWarning:
+            IntSet.add(bufferId, model.largeBufferAutoFormatShowedWarning),
+        },
+        FormatError("Buffer is too large to auto-format"),
+      );
+    }
 
   | EditsReceived({displayName, sessionId, edits}) =>
     switch (model.activeSession) {

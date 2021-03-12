@@ -1403,6 +1403,8 @@ let update =
              let config = Selectors.configResolver(state);
              state.languageSupport
              |> Feature_LanguageSupport.bufferSaved(
+                  ~isLargeBuffer=
+                    Feature_Buffers.isLargeFile(state.buffers, buffer),
                   ~activeBufferId,
                   ~config,
                   ~buffer,
