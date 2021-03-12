@@ -422,6 +422,7 @@ let start =
           ~endLine=EditorCoreTypes.LineNumber.ofOneBased(endLine),
           ~lines=update.lines,
           ~version=update.version,
+          ~shouldAdjustCursorPosition=update.shouldAdjustCursorPosition,
           (),
         );
 

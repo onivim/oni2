@@ -4,6 +4,7 @@ type t = {
   endLine: int,
   lines: array(string),
   version: int,
+  shouldAdjustCursorPosition: bool,
 };
 
 let show = (v: t) => {
@@ -45,7 +46,7 @@ let createInitial = (buffer: Native.buffer) => {
   let version = Native.vimBufferGetChangedTick(buffer) - 1;
   let lines = getAllLines(buffer);
 
-  {id, startLine: 1, endLine: (-1), lines, version};
+  {id, startLine: 1, endLine: (-1), lines, version, shouldAdjustCursorPosition: false};
 };
 
 let createIncremental =
@@ -66,7 +67,7 @@ let createIncremental =
     incr(idx);
   };
 
-  {id, startLine, endLine, lines, version};
+  {id, startLine, endLine, lines, version, shouldAdjustCursorPosition: false};
 };
 
 let createFull = (buffer: Native.buffer) => {
@@ -75,5 +76,5 @@ let createFull = (buffer: Native.buffer) => {
 
   let lines = getAllLines(buffer);
 
-  {id, startLine: 1, endLine: (-1), lines, version};
+  {id, startLine: 1, endLine: (-1), lines, version, shouldAdjustCursorPosition: false};
 };
