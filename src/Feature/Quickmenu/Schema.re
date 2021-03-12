@@ -282,6 +282,21 @@ module Instance = {
            );
       };
 
+  let focusMsg: t('a) => option('a) =
+    fun
+    | Instance({schema, filteredItems, focused, _}) => {
+        let len = Array.length(filteredItems);
+        focused
+        |> OptionEx.flatMap(focusedIndex =>
+             if (focusedIndex >= 0 && focusedIndex < len) {
+               let item = filteredItems[focusedIndex];
+               schema.onItemFocused |> Option.map(f => f(item.item));
+             } else {
+               None;
+             }
+           );
+      };
+
   let focused =
     fun
     | Instance({focused, _}) => focused;

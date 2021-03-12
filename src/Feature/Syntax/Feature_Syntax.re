@@ -266,7 +266,7 @@ let handleUpdate =
         );
     };
     newHighlights^;
-  } else if (!bufferUpdate.isFull) {
+  } else {
     // Otherwise, if not a full update, we'll pre-emptively shift highlights
     // to give immediate feedback.
     let highlights =
@@ -328,8 +328,6 @@ let handleUpdate =
         bufferHighlights.highlights,
       );
     {...bufferHighlights, highlights};
-  } else {
-    bufferHighlights;
   };
 
 let update: (t, msg) => (t, outmsg) =

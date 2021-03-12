@@ -59,11 +59,33 @@ let currentMenu = model => {
 };
 
 let next = model => {
-  updateCurrentMenu(Schema.Instance.next, model);
+  let model' = updateCurrentMenu(Schema.Instance.next, model);
+
+  let eff =
+    model'
+    |> currentMenu
+    |> Utility.OptionEx.flatMap(menu => Schema.Instance.focusMsg(menu))
+    |> Option.map(msg => {
+         EffectEx.value(~name="Feature_Quickmenu.focus.next", msg)
+       })
+    |> Option.value(~default=Isolinear.Effect.none);
+
+  (model', eff);
 };
 
 let prev = model => {
-  updateCurrentMenu(Schema.Instance.previous, model);
+  let model' = updateCurrentMenu(Schema.Instance.previous, model);
+
+  let eff =
+    model'
+    |> currentMenu
+    |> Utility.OptionEx.flatMap(menu => Schema.Instance.focusMsg(menu))
+    |> Option.map(msg => {
+         EffectEx.value(~name="Feature_Quickmenu.focus.prev", msg)
+       })
+    |> Option.value(~default=Isolinear.Effect.none);
+
+  (model', eff);
 };
 
 let cancel = _model => {menus: []};
@@ -98,10 +120,16 @@ let update = (msg, model) => {
       Nothing,
     )
 
-  | ItemFocused(index) => (
-      model |> updateCurrentMenu(Schema.Instance.focus(index)),
-      Nothing,
-    )
+  | ItemFocused(index) =>
+    let model' = model |> updateCurrentMenu(Schema.Instance.focus(index));
+    let eff =
+      model'
+      |> currentMenu
+      |> Utility.OptionEx.flatMap(menu => Schema.Instance.focusMsg(menu))
+      |> Option.map(action => Action(action))
+      |> Option.value(~default=Nothing);
+
+    (model', eff);
 
   | ItemSelected(index) =>
     let model' = model |> updateCurrentMenu(Schema.Instance.focus(index));

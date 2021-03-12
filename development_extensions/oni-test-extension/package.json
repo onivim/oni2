@@ -1,0 +1,20 @@
+{
+	"name": "oni-test-extension",
+	"description": "Development Extension for Oni (test APIs)",
+	"version": "0.0.1",
+	"repository": "https://github.com/onivim/oni2",
+	"engines": {
+		"vscode": "^1.25.0"
+	},
+	"activationEvents": [
+		"onCommand:oni-test.showMessage"
+	],
+	"main": "./extension.js",
+	"contributes": {},
+	"scripts": {
+		"postinstall": "node ./node_modules/vscode/bin/install"
+	},
+	"devDependencies": {
+		"vscode": "^1.1.22"
+	}
+}

@@ -41,11 +41,17 @@
 - #3239 - Buffers: Fix filetype picker not working as expected without an active workspace
 - #3240 - Formatting: Fix 'Invalid Range Specified' error (fixes #3014)
 - #3241 - Extensions: Handle `maxCount` and FS errors in `vscode.workspace.findFiles` (related #3215)
+- #3248 - Extension - Windows: Fix path normalization issue in document selector (fixes #3238)
+- #3251 - QuickOpen: Show filename first in Control+P/Command+P menu (fixes #2259, #3165)
+- #3249 - Extensions: Send 'onCommand' activation event (related #3215)
+- #3252 - UX: Remove glitchy pane animation (fixes #3245)
+- #3255 - CodeLens: Fix disappearing lens when pressing enter in insert mode
 
 ### Performance
 
 - #3148 - Large Files: Improve performance & fix crash when opening large files (related #1670)
 - #3139 - Large Files: Fix hang when using `/` search (fixes #1670)
+- #3260 - Editor: Compute minimal updates, fix flash when reloading file
 
 ### Documentation
 
@@ -65,3 +71,5 @@
 - #3202 - Dependency: revery -> 2a59280
 - #3220 - Dependency: revery -> 26e8b73 (Unblock OCaml 4.11)
 - #3228 - Quickmenu: Initial feature implementation
+- #3250 - Quickmenu: Move theme menus to new Quickmenu feature
+- #3254 - Release: Fix notarization step
