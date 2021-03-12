@@ -14,6 +14,25 @@ let findIndex = (predicate, array) =>
   | Found(i) => Some(i)
   };
 
+let equals = (f, a1, a2) => {
+  let len1 = Array.length(a1);
+  let len2 = Array.length(a2);
+
+  if (len1 != len2) {
+    false;
+  } else {
+    let rec loop = idx =>
+      if (idx >= len1) {
+        true;
+      } else if (!f(a1[idx], a2[idx])) {
+        false;
+      } else {
+        loop(idx + 1);
+      };
+    loop(0);
+  };
+};
+
 let slice = (~lines: array(_), ~start, ~length, ()) => {
   let len = Array.length(lines);
   if (start >= len) {

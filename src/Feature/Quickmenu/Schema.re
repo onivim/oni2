@@ -170,11 +170,12 @@ module Instance = {
           shouldLower ? String.lowercase_ascii(str) : str;
         };
         let queryStr = Component_InputText.value(text);
+        let shouldLower = queryStr == String.lowercase_ascii(queryStr);
         let query = Zed_utf8.explode(queryStr);
         let filteredItems =
           allItems
           |> List.filter(item =>
-               Filter.fuzzyMatches(query, schema.toString(item))
+               Filter.fuzzyMatches(query, format(item, ~shouldLower))
              )
           |> Filter.rank(queryStr, format)
           |> Array.of_list;
