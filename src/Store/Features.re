@@ -662,16 +662,9 @@ let update =
         );
 
       | FormattingApplied({displayName, editCount, needsToSave}) =>
-        let msg =
-          Printf.sprintf(
-            "Formatting: Applied %d edits with %s",
-            editCount,
-            displayName,
-          );
-        let notificationEffect = Internal.notificationEffect(~kind=Info, msg);
-        let eff =
+        let (formatEffect, msg) =
           if (needsToSave) {
-            [
+            (
               EffectEx.value(
                 ~name="Save Effect",
                 Actions.VimExecuteCommand({
@@ -679,12 +672,26 @@ let update =
                   allowAnimation: false,
                 }),
               ),
-              notificationEffect,
-            ]
-            |> Isolinear.Effect.batch;
+              Printf.sprintf(
+                "Formatting: Saved %d edits with %s",
+                editCount,
+                displayName,
+              ),
+            );
           } else {
-            notificationEffect;
+            (
+              Isolinear.Effect.none,
+              Printf.sprintf(
+                "Formatting: Applied %d edits with %s",
+                editCount,
+                displayName,
+              ),
+            );
           };
+
+        let eff =
+          [formatEffect, Internal.notificationEffect(~kind=Info, msg)]
+          |> Isolinear.Effect.batch;
         (state, eff);
       | ReferencesAvailable =>
         let references =
