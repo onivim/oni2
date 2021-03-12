@@ -15,6 +15,7 @@ module Effects: {
 
   let applyEdits:
     (
+      ~shouldAdjustCursors: bool,
       ~bufferId: int,
       ~version: int,
       ~edits: list(Vim.Edit.t),
@@ -24,6 +25,7 @@ module Effects: {
 
   let setLines:
     (
+      ~shouldAdjustCursors: bool,
       ~bufferId: int,
       ~start: LineNumber.t=?,
       ~stop: LineNumber.t=?,

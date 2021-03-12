@@ -895,6 +895,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
                Undo.saveRegion(lineNumber - 1, lineNumber + 1);
                // Clear out range, and replace with current line
                Buffer.setLines(
+                 ~shouldAdjustCursors=false,
                  ~start=range.start.line,
                  ~stop=EditorCoreTypes.LineNumber.(range.start.line + 1),
                  ~lines=[|updatedLine|],

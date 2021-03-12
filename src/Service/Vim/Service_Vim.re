@@ -59,6 +59,7 @@ module Effects = {
 
   let applyEdits =
       (
+        ~shouldAdjustCursors, 
         ~bufferId: int,
         ~version: int,
         ~edits: list(Vim.Edit.t),
@@ -82,7 +83,7 @@ module Effects = {
               ),
             );
           } else {
-            Vim.Buffer.applyEdits(~edits, buffer);
+            Vim.Buffer.applyEdits(~shouldAdjustCursors, ~edits, buffer);
           };
         };
 
@@ -92,6 +93,7 @@ module Effects = {
 
   let setLines =
       (
+        ~shouldAdjustCursors,
         ~bufferId: int,
         ~start=?,
         ~stop=?,
@@ -107,6 +109,7 @@ module Effects = {
           Error("No buffer found with id: " ++ string_of_int(bufferId))
         | Some(buffer) =>
           Vim.Buffer.setLines(
+            ~shouldAdjustCursors,
             ~undoable=true,
             ~start?,
             ~stop?,
@@ -140,38 +143,6 @@ module Effects = {
     };
   };
 
-  let adjustModeForEdit = (mode: Vim.Mode.t, edit: Vim.Edit.t) => {
-    Vim.Mode.(
-      switch (mode) {
-      | Normal({cursor}) =>
-        Normal({cursor: adjustBytePositionForEdit(cursor, edit)})
-      | Insert({cursors}) =>
-        Insert({
-          cursors:
-            cursors
-            |> List.map(cursor => adjustBytePositionForEdit(cursor, edit)),
-        })
-      | Replace({cursor}) =>
-        Replace({cursor: adjustBytePositionForEdit(cursor, edit)})
-      | CommandLine({commandType, text, commandCursor, cursor}) =>
-        CommandLine({
-          commandType,
-          text,
-          commandCursor,
-          cursor: adjustBytePositionForEdit(cursor, edit),
-        })
-      | Operator({cursor, pending}) =>
-        Operator({cursor: adjustBytePositionForEdit(cursor, edit), pending})
-      | Visual(_) as vis => vis
-      | Select(_) as select => select
-      }
-    );
-  };
-
-  let adjustModeForEdits = (mode: Vim.Mode.t, edits: list(Vim.Edit.t)) => {
-    List.fold_left(adjustModeForEdit, mode, edits);
-  };
-
   let applyCompletion = (~meetColumn, ~insertText, ~toMsg, ~additionalEdits) =>
     Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
       let cursor = Vim.Cursor.get();
@@ -184,16 +155,12 @@ module Effects = {
         VimEx.inputString(insertText);
 
       let buffer = Vim.Buffer.getCurrent();
-      let mode' =
-        if (additionalEdits != []) {
-          Vim.Buffer.applyEdits(~edits=additionalEdits, buffer)
-          |> Result.map(() => {adjustModeForEdits(mode, additionalEdits)})
-          |> ResultEx.value(~default=mode);
-        } else {
-          mode;
-        };
 
-      dispatch(toMsg(mode'));
+      if (additionalEdits != []) {
+        let _: result(unit, string) = Vim.Buffer.applyEdits(~shouldAdjustCursors=true, ~edits=additionalEdits, buffer)
+      }
+
+      dispatch(toMsg(mode));
     });
 
   let loadBuffer = (~filePath: string, toMsg) => {
