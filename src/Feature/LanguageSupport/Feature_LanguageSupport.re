@@ -649,6 +649,7 @@ module Contributions = {
     @ Completion.Contributions.keybindings
     @ Definition.Contributions.keybindings
     @ DocumentHighlights.Contributions.keybindings
+    @ Formatting.Contributions.keybindings
     @ References.Contributions.keybindings
     @ SignatureHelp.Contributions.keybindings;
 };
