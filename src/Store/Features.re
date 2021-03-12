@@ -664,20 +664,26 @@ let update =
       | FormattingApplied({displayName, editCount, needsToSave}) =>
         let (formatEffect, msg) =
           if (needsToSave) {
-            (
-              EffectEx.value(
-                ~name="Save Effect",
-                Actions.VimExecuteCommand({
-                  command: "w!",
-                  allowAnimation: false,
-                }),
-              ),
-              Printf.sprintf(
-                "Formatting: Saved %d edits with %s",
-                editCount,
-                displayName,
-              ),
-            );
+            state
+            |> Selectors.getActiveBuffer
+            |> Option.map(Oni_Core.Buffer.getId)
+            |> Option.map(bufferId => {
+                 (
+                   Feature_Vim.Effects.save(~bufferId)
+                   |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
+                   Printf.sprintf(
+                     "Formatting: Saved %d edits with %s",
+                     editCount,
+                     displayName,
+                   ),
+                 )
+               })
+            |> Option.value(
+                 ~default=(
+                   Isolinear.Effect.none,
+                   "Unable to apply formatting edits",
+                 ),
+               );
           } else {
             (
               Isolinear.Effect.none,
