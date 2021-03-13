@@ -882,6 +882,7 @@ module Sub = {
       type nonrec params = completionParams;
 
       type state = {
+        dispose: unit => unit,
         isDisposed: ref(bool),
         cacheId: ref(option(Exthost.SuggestResult.cacheId)),
       };
@@ -910,6 +911,10 @@ module Sub = {
       let init = (~params, ~dispatch) => {
         let isDisposed = ref(false);
         let cacheId = ref(None);
+
+        let dispose = Revery.Tick.timeout(
+          ~name="Completion",
+          () => {
         let promise =
           Exthost.Request.LanguageFeatures.provideCompletionItems(
             ~handle=params.handle,
@@ -934,13 +939,15 @@ module Sub = {
         Lwt.on_failure(promise, exn =>
           dispatch(Error(Printexc.to_string(exn)))
         );
+        }, Revery.Time.milliseconds(1));
 
-        {isDisposed, cacheId};
+        {isDisposed, cacheId, dispose};
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
       let dispose = (~params, ~state) => {
+        state.dispose();
         state.isDisposed := true;
         cleanupCache(~params, ~cacheId=state.cacheId);
       };
