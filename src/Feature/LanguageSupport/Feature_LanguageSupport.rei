@@ -243,6 +243,7 @@ module Contributions: {
   let configuration: list(Config.Schema.spec);
   let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
   let keybindings: list(Feature_Input.Schema.keybinding);
+  let menuGroups: list(MenuBar.Schema.group);
 };
 
 module Definition: {
