@@ -94,7 +94,7 @@ type t = {
   filterText: option(string),
   insertText: option(string),
   insertTextRules: InsertTextRules.t,
-  suggestRange: option(SuggestRange.t),
+  suggestRange: SuggestRange.t,
   commitCharacters: list(string),
   additionalTextEdits: list(Edit.SingleEditOperation.t),
   command: option(ExtCommand.t),
@@ -129,7 +129,7 @@ let sortText = ({sortText, label, _}) => {
 };
 
 module Dto = {
-  let decode = {
+  let decode = (~defaultRange) => {
     Json.Decode.(
       obj(({field, _}) => {
         // These fields come from the `ISuggestDataDtoField` definition:
@@ -158,7 +158,9 @@ module Dto = {
             InsertTextRules.none,
             InsertTextRules.decode,
           );
-        let suggestRange = field.optional("j", SuggestRange.decode);
+        let suggestRange =
+          field.optional("j", SuggestRange.decode)
+          |> Option.value(~default=defaultRange);
         let commitCharacters = field.withDefault("k", [], list(string));
         let additionalTextEdits =
           field.withDefault("l", [], list(Edit.SingleEditOperation.decode));
@@ -187,13 +189,10 @@ module Dto = {
 let encode = suggestItem =>
   Json.Encode.(
     {
-      let suggestRange =
-        suggestItem.suggestRange
-        |> Option.value(~default=SuggestRange.Single(OneBasedRange.one));
       obj([
         ("label", string(suggestItem.label)),
         ("kind", suggestItem.kind |> CompletionKind.toInt |> int),
-        ("range", suggestRange |> SuggestRange.encode),
+        ("range", suggestItem.suggestRange |> SuggestRange.encode),
         ("insertText", suggestItem |> insertText |> string),
       ]);
     }

@@ -958,6 +958,7 @@ module Sub = {
     handle: int,
     chainedCacheId: Exthost.ChainedCacheId.t,
     client: Exthost.Client.t,
+    defaultRange: Exthost.SuggestItem.SuggestRange.t,
   };
 
   module CompletionItemSubscription =
@@ -976,6 +977,7 @@ module Sub = {
           Exthost.Request.LanguageFeatures.resolveCompletionItem(
             ~handle=params.handle,
             ~chainedCacheId=params.chainedCacheId,
+            ~defaultRange=params.defaultRange,
             params.client,
           );
 
@@ -1082,9 +1084,10 @@ module Sub = {
     |> Isolinear.Sub.map(toMsg);
   };
 
-  let completionItem = (~handle, ~chainedCacheId, ~toMsg, client) => {
+  let completionItem =
+      (~handle, ~chainedCacheId, ~defaultRange, ~toMsg, client) => {
     CompletionItemSubscription.create(
-      {handle, chainedCacheId, client}: completionItemParams,
+      {handle, chainedCacheId, client, defaultRange}: completionItemParams,
     )
     |> Isolinear.Sub.map(toMsg);
   };
