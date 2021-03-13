@@ -47,8 +47,9 @@ additional_choice:
 
 string:
 | str = list(character) { String.concat "" str }
-| numberAsText = NUMBER { string_of_int(numberAsText) }
-| variableAsText = VARIABLE { variableAsText }
 
 character:
 | char = TEXT { char }
+| COLON; { ":" }
+| numberAsText = NUMBER { string_of_int(numberAsText) }
+| variableAsText = VARIABLE { variableAsText }
