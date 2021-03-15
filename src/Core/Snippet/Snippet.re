@@ -7,7 +7,8 @@ let parse: string => result(t, string) =
       switch (Snippet_parser.main(Snippet_lexer.token, lexbuf)) {
       | exception Snippet_lexer.Error =>
         Error("Error parsing binding: " ++ str)
-      | exception Snippet_parser.Error => Error("Error parsing snippet: " ++ str)
+      | exception Snippet_parser.Error =>
+        Error("Error parsing snippet: " ++ str)
       | v => Ok(v)
       };
 
@@ -155,7 +156,9 @@ let%test_module "parse" =
      };
 
      let%test "sass snippet bug" = {
-      parse("@media ${1:screen} ${2:and} ( ${3|max-width: ,min-width: ,height: |} )")
-      |> Result.is_ok;
-     }
+       parse(
+         "@media ${1:screen} ${2:and} ( ${3|max-width: ,min-width: ,height: |} )",
+       )
+       |> Result.is_ok;
+     };
    });
