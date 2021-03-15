@@ -93,13 +93,14 @@ let fromLine =
 
   let rec loop = (acc, currentPos) =>
     if (currentPos < 0) {
-      (false, [], 0);
+      (true, false, [], 0);
     } else {
       let uchar =
         BufferLine.getUcharExn(
           ~index=CharacterIndex.ofInt(currentPos),
           line,
         );
+      let isSpace = Uucp.White.is_white_space(uchar);
       let matchesTrigger = matchesTriggerCharacters(uchar);
       let isWordCharacter =
         LanguageConfiguration.isWordCharacter(uchar, languageConfiguration);
@@ -108,20 +109,24 @@ let fromLine =
         // an empty string is valid. However, if it's just a non-word character,
         // we require at least a single character for a meet.
         let validLength = matchesTriggerCharacters(uchar) ? 0 : 1;
-        (List.length(acc) >= validLength, acc, currentPos + 1);
+        (isSpace, List.length(acc) >= validLength, acc, currentPos + 1);
       } else if (currentPos == 0) {
         let all = [uchar, ...acc];
-        (List.length(all) >= 1, all, currentPos);
+        (true, List.length(all) >= 1, all, currentPos);
       } else {
         loop([uchar, ...acc], currentPos - 1);
       };
     };
 
-  let (isValid, characters, pos) = loop([], idx);
+  let (isPreviousCharacterASpace, isValid, characters, pos) = loop([], idx);
   let base = Zed_utf8.implode(characters);
 
   if (isValid) {
-    if (pos == 0 && characters != []) {
+    // If the token is after a space, we should use the first character as the
+    // query position. This mimics the behavior of Code, and some language extensions
+    // won't return valid results if the string is 'empty' - see:
+    // https://github.com/onivim/oni2/issues/3258
+    if (isPreviousCharacterASpace) {
       let location =
         CharacterPosition.{
           line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),

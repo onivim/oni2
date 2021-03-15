@@ -158,7 +158,11 @@ module Session = {
           filteredItems
           |> List.fold_left(
                (acc, item: Filter.result(CompletionItem.t)) => {
-                 StringMap.add(item.item.label, (meet.insertLocation, item), acc)
+                 StringMap.add(
+                   item.item.label,
+                   (meet.insertLocation, item),
+                   acc,
+                 )
                },
                StringMap.empty,
              )
