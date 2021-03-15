@@ -176,7 +176,10 @@ module Effects = {
     Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
       let overwriteBefore =
         CharacterIndex.toInt(cursor.character) - CharacterIndex.toInt(meetColumn);
+      // TODO: Handle full replace range
+      let overwriteAfter = 0;
 
+      let _: Vim.Context.t = VimEx.repeatKey(overwriteAfter, "<DEL>");
       let _: Vim.Context.t = VimEx.repeatKey(overwriteBefore, "<BS>");
       let ({mode, _}: Vim.Context.t, _effects) =
         VimEx.inputString(insertText);
