@@ -882,6 +882,7 @@ module Sub = {
       type nonrec params = completionParams;
 
       type state = {
+        dispose: unit => unit,
         isDisposed: ref(bool),
         cacheId: ref(option(Exthost.SuggestResult.cacheId)),
       };
@@ -910,37 +911,54 @@ module Sub = {
       let init = (~params, ~dispatch) => {
         let isDisposed = ref(false);
         let cacheId = ref(None);
-        let promise =
-          Exthost.Request.LanguageFeatures.provideCompletionItems(
-            ~handle=params.handle,
-            ~resource=Oni_Core.Buffer.getUri(params.buffer),
-            ~position=params.position,
-            ~context=params.context,
-            params.client,
+
+        // We debounce here to eliminate a race condition -
+        // if we request completion at a position before the buffer updates
+        // go through, completion providers that depend on up-to-buffer state
+        // could experience issues due to a race - like #2583.
+
+        // An idea to investigate further would be to have this subscription
+        // dependent on the latest 'sync'd' version - that could eliminate
+        // the need for a timeout.
+        let dispose =
+          Revery.Tick.timeout(
+            ~name="Completion",
+            () => {
+              let promise =
+                Exthost.Request.LanguageFeatures.provideCompletionItems(
+                  ~handle=params.handle,
+                  ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                  ~position=params.position,
+                  ~context=params.context,
+                  params.client,
+                );
+
+              Lwt.on_success(
+                promise,
+                suggestResult => {
+                  cacheId := suggestResult.cacheId;
+                  if (isDisposed^) {
+                    cleanupCache(~params, ~cacheId);
+                  } else {
+                    dispatch(Ok(suggestResult));
+                  };
+                },
+              );
+
+              Lwt.on_failure(promise, exn =>
+                dispatch(Error(Printexc.to_string(exn)))
+              );
+            },
+            Revery.Time.milliseconds(10),
           );
 
-        Lwt.on_success(
-          promise,
-          suggestResult => {
-            cacheId := suggestResult.cacheId;
-            if (isDisposed^) {
-              cleanupCache(~params, ~cacheId);
-            } else {
-              dispatch(Ok(suggestResult));
-            };
-          },
-        );
-
-        Lwt.on_failure(promise, exn =>
-          dispatch(Error(Printexc.to_string(exn)))
-        );
-
-        {isDisposed, cacheId};
+        {isDisposed, cacheId, dispose};
       };
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
       let dispose = (~params, ~state) => {
+        state.dispose();
         state.isDisposed := true;
         cleanupCache(~params, ~cacheId=state.cacheId);
       };
