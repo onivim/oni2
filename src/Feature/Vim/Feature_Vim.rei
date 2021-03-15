@@ -82,6 +82,7 @@ module CommandLine: {let getCompletionMeet: string => option(int);};
 module Effects: {
   let applyCompletion:
     (
+      ~cursor: EditorCoreTypes.CharacterPosition.t,
       ~meetColumn: EditorCoreTypes.CharacterIndex.t,
       ~insertText: string,
       ~additionalEdits: list(Vim.Edit.t)

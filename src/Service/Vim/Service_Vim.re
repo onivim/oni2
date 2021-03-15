@@ -172,12 +172,10 @@ module Effects = {
     List.fold_left(adjustModeForEdit, mode, edits);
   };
 
-  let applyCompletion = (~meetColumn, ~insertText, ~toMsg, ~additionalEdits) =>
+  let applyCompletion = (~cursor: CharacterPosition.t, ~meetColumn, ~insertText, ~toMsg, ~additionalEdits) =>
     Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
-      let cursor = Vim.Cursor.get();
-      // TODO: Does this logic correctly handle unicode characters?
       let delta =
-        ByteIndex.toInt(cursor.byte) - CharacterIndex.toInt(meetColumn);
+        CharacterIndex.toInt(cursor.character) - CharacterIndex.toInt(meetColumn);
 
       let _: Vim.Context.t = VimEx.repeatKey(delta, "<BS>");
       let ({mode, _}: Vim.Context.t, _effects) =
