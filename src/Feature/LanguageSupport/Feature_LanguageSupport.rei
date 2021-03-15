@@ -57,6 +57,11 @@ type outmsg =
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
+  | FormattingApplied({
+      displayName: string,
+      editCount: int,
+      needsToSave: bool,
+    })
   | InsertSnippet({
       meetColumn: CharacterIndex.t,
       snippet: string,
@@ -98,6 +103,16 @@ let update:
     model
   ) =>
   (model, outmsg);
+
+let bufferSaved:
+  (
+    ~isLargeBuffer: bool,
+    ~buffer: Oni_Core.Buffer.t,
+    ~config: Oni_Core.Config.resolver,
+    ~activeBufferId: int,
+    model
+  ) =>
+  (model, Isolinear.Effect.t(msg));
 
 let bufferUpdated:
   (

@@ -9,24 +9,24 @@
    ExCommandKeybindingNormTest ExtConfigurationChangedTest
    ExtHostBufferOpenTest ExtHostBufferUpdatesTest
    ExtHostCommandActivationTest ExtHostCompletionTest ExtHostDefinitionTest
-   ExtHostWorkspaceSearchTest FileWatcherTest KeybindingsInvalidJsonTest
-   KeySequenceJJTest InputIgnoreTest InputContextKeysTest
-   InputRemapMotionTest LanguageCssTest LanguageTypeScriptTest
-   LineEndingsLFTest LineEndingsCRLFTest QuickOpenEventuallyCompletesTest
-   SearchShowClearHighlightsTest SyntaxServer SyntaxServerCloseTest
-   SyntaxServerMessageExceptionTest SyntaxServerParentPidTest
-   SyntaxServerParentPidCorrectTest SyntaxServerReadExceptionTest
-   Regression1671Test Regression2349EnewTest Regression2988SwitchEditorTest
-   Regression3084CommandLoopTest RegressionCommandLineNoCompletionTest
-   RegressionFontFallbackTest RegressionFileModifiedIndicationTest
-   RegressionNonExistentDirectory RegressionVspEmptyInitialBufferTest
-   RegressionVspEmptyExistingBufferTest SCMGitTest SyntaxHighlightPhpTest
-   SyntaxHighlightTextMateTest SyntaxHighlightTreesitterTest
-   AddRemoveSplitTest TerminalSetPidTitleTest TerminalConfigurationTest
-   TypingBatchedTest TypingUnbatchedTest VimIncsearchScrollTest
-   VimExperimentalVimlTest VimRemapTimeoutTest VimSimpleRemapTest
-   VimlRemapCmdlineTest ClipboardChangeTest VimScriptLocalFunctionTest
-   ZenModeSingleFileModeTest ZenModeSplitTest)
+   ExtHostWorkspaceSearchTest FileWatcherTest FormatOnSaveTest
+   KeybindingsInvalidJsonTest KeySequenceJJTest InputIgnoreTest
+   InputContextKeysTest InputRemapMotionTest LanguageCssTest
+   LanguageTypeScriptTest LineEndingsLFTest LineEndingsCRLFTest
+   QuickOpenEventuallyCompletesTest SearchShowClearHighlightsTest
+   SyntaxServer SyntaxServerCloseTest SyntaxServerMessageExceptionTest
+   SyntaxServerParentPidTest SyntaxServerParentPidCorrectTest
+   SyntaxServerReadExceptionTest Regression1671Test Regression2349EnewTest
+   Regression2988SwitchEditorTest Regression3084CommandLoopTest
+   RegressionCommandLineNoCompletionTest RegressionFontFallbackTest
+   RegressionFileModifiedIndicationTest RegressionNonExistentDirectory
+   RegressionVspEmptyInitialBufferTest RegressionVspEmptyExistingBufferTest
+   SCMGitTest SyntaxHighlightPhpTest SyntaxHighlightTextMateTest
+   SyntaxHighlightTreesitterTest AddRemoveSplitTest TerminalSetPidTitleTest
+   TerminalConfigurationTest TypingBatchedTest TypingUnbatchedTest
+   VimIncsearchScrollTest VimExperimentalVimlTest VimRemapTimeoutTest
+   VimSimpleRemapTest VimlRemapCmdlineTest ClipboardChangeTest
+   VimScriptLocalFunctionTest ZenModeSingleFileModeTest ZenModeSplitTest)
  (libraries Oni_CLI Oni_IntegrationTestLib reason-native-crash-utils.asan))
 
 (install
@@ -45,7 +45,7 @@
    ExtConfigurationChangedTest.exe ExtHostBufferOpenTest.exe
    ExtHostBufferUpdatesTest.exe ExtHostCommandActivationTest.exe
    ExtHostCompletionTest.exe ExtHostDefinitionTest.exe
-   ExtHostWorkspaceSearchTest.exe FileWatcherTest.exe
+   ExtHostWorkspaceSearchTest.exe FileWatcherTest.exe FormatOnSaveTest.exe
    KeybindingsInvalidJsonTest.exe KeySequenceJJTest.exe InputIgnoreTest.exe
    InputContextKeysTest.exe InputRemapMotionTest.exe LanguageCssTest.exe
    LanguageTypeScriptTest.exe LineEndingsCRLFTest.exe LineEndingsLFTest.exe
@@ -67,6 +67,6 @@
    VimScriptLocalFunctionTest.exe VimRemapTimeoutTest.exe
    VimSimpleRemapTest.exe VimlRemapCmdlineTest.exe
    ZenModeSingleFileModeTest.exe ZenModeSplitTest.exe ClipboardChangeTest.exe
-   large-c-file.c lsan.supp some-test-file.json some-test-file.txt test.crlf
-   test.lf test-syntax.php utf8.txt utf8-test-file.htm
-   Inconsolata-Regular.ttf PlugScriptLocal.vim))
+   test.unformatted.js large-c-file.c lsan.supp some-test-file.json
+   some-test-file.txt test.crlf test.lf test-syntax.php utf8.txt
+   utf8-test-file.htm Inconsolata-Regular.ttf PlugScriptLocal.vim))
