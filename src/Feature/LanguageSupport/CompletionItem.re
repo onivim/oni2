@@ -32,7 +32,7 @@ let create = (~isFuzzyMatching: bool, ~handle, item: SuggestItem.t) => {
   insertTextRules: item.insertTextRules,
   filterText: item |> SuggestItem.filterText,
   sortText: item |> SuggestItem.sortText,
-  suggestRange: item.suggestRange,
+  suggestRange: Some(item.suggestRange),
   commitCharacters: item.commitCharacters,
   additionalTextEdits: item.additionalTextEdits,
   command: item.command,
