@@ -654,6 +654,7 @@ let update =
         (
           state,
           Feature_Vim.Effects.applyCompletion(
+            ~cursor=cursorLocation,
             ~additionalEdits,
             ~meetColumn,
             ~insertText,
