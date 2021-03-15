@@ -888,16 +888,27 @@ let update =
           result: Filter.result(CompletionItem.t),
         ) = allItems[focusedIndex];
 
-        let meetColumn =
+        let replaceSpan =
           Exthost.SuggestItem.(
             switch (result.item.suggestRange) {
             | Some(SuggestRange.Single({startColumn, _})) =>
-              startColumn - 1 |> CharacterIndex.ofInt
+              CharacterSpan.{
+                start: startColumn - 1 |> CharacterIndex.ofInt,
+                stop: activeCursor.character,
+              }
             | Some(SuggestRange.Combo({insert, _})) =>
-              Exthost.OneBasedRange.(
-                insert.startColumn - 1 |> CharacterIndex.ofInt
-              )
-            | None => location.character
+              CharacterSpan.{
+                start:
+                  Exthost.OneBasedRange.(
+                    insert.startColumn - 1 |> CharacterIndex.ofInt
+                  ),
+                stop: activeCursor.character,
+              }
+            | None =>
+              CharacterSpan.{
+                start: location.character,
+                stop: activeCursor.character,
+              }
             }
           );
 
@@ -906,12 +917,12 @@ let update =
             matches(~rule=InsertAsSnippet, result.item.insertTextRules)
           )
             ? Outmsg.InsertSnippet({
-                meetColumn,
+                replaceSpan,
                 snippet: result.item.insertText,
                 additionalEdits: result.item.additionalTextEdits,
               })
             : Outmsg.ApplyCompletion({
-                meetColumn,
+                replaceSpan,
                 insertText: result.item.insertText,
                 additionalEdits: result.item.additionalTextEdits,
               });

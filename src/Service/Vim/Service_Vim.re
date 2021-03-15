@@ -172,10 +172,18 @@ module Effects = {
     List.fold_left(adjustModeForEdit, mode, edits);
   };
 
-  let applyCompletion = (~cursor: CharacterPosition.t, ~meetColumn, ~insertText, ~toMsg, ~additionalEdits) =>
+  let applyCompletion =
+      (
+        ~cursor: CharacterPosition.t,
+        ~replaceSpan: CharacterSpan.t,
+        ~insertText,
+        ~toMsg,
+        ~additionalEdits,
+      ) =>
     Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
       let overwriteBefore =
-        CharacterIndex.toInt(cursor.character) - CharacterIndex.toInt(meetColumn);
+        CharacterIndex.toInt(cursor.character)
+        - CharacterIndex.toInt(replaceSpan.start);
       // TODO: Handle full replace range
       let overwriteAfter = 0;
 

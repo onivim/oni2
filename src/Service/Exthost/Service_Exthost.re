@@ -912,34 +912,37 @@ module Sub = {
         let isDisposed = ref(false);
         let cacheId = ref(None);
 
-        let dispose = Revery.Tick.timeout(
-          ~name="Completion",
-          () => {
-        let promise =
-          Exthost.Request.LanguageFeatures.provideCompletionItems(
-            ~handle=params.handle,
-            ~resource=Oni_Core.Buffer.getUri(params.buffer),
-            ~position=params.position,
-            ~context=params.context,
-            params.client,
+        let dispose =
+          Revery.Tick.timeout(
+            ~name="Completion",
+            () => {
+              let promise =
+                Exthost.Request.LanguageFeatures.provideCompletionItems(
+                  ~handle=params.handle,
+                  ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                  ~position=params.position,
+                  ~context=params.context,
+                  params.client,
+                );
+
+              Lwt.on_success(
+                promise,
+                suggestResult => {
+                  cacheId := suggestResult.cacheId;
+                  if (isDisposed^) {
+                    cleanupCache(~params, ~cacheId);
+                  } else {
+                    dispatch(Ok(suggestResult));
+                  };
+                },
+              );
+
+              Lwt.on_failure(promise, exn =>
+                dispatch(Error(Printexc.to_string(exn)))
+              );
+            },
+            Revery.Time.milliseconds(1),
           );
-
-        Lwt.on_success(
-          promise,
-          suggestResult => {
-            cacheId := suggestResult.cacheId;
-            if (isDisposed^) {
-              cleanupCache(~params, ~cacheId);
-            } else {
-              dispatch(Ok(suggestResult));
-            };
-          },
-        );
-
-        Lwt.on_failure(promise, exn =>
-          dispatch(Error(Printexc.to_string(exn)))
-        );
-        }, Revery.Time.milliseconds(1));
 
         {isDisposed, cacheId, dispose};
       };

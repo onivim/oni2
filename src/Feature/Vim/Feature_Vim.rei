@@ -83,7 +83,7 @@ module Effects: {
   let applyCompletion:
     (
       ~cursor: EditorCoreTypes.CharacterPosition.t,
-      ~meetColumn: EditorCoreTypes.CharacterIndex.t,
+      ~replaceSpan: EditorCoreTypes.CharacterSpan.t,
       ~insertText: string,
       ~additionalEdits: list(Vim.Edit.t)
     ) =>
