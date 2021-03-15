@@ -174,10 +174,10 @@ module Effects = {
 
   let applyCompletion = (~cursor: CharacterPosition.t, ~meetColumn, ~insertText, ~toMsg, ~additionalEdits) =>
     Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
-      let delta =
+      let overwriteBefore =
         CharacterIndex.toInt(cursor.character) - CharacterIndex.toInt(meetColumn);
 
-      let _: Vim.Context.t = VimEx.repeatKey(delta, "<BS>");
+      let _: Vim.Context.t = VimEx.repeatKey(overwriteBefore, "<BS>");
       let ({mode, _}: Vim.Context.t, _effects) =
         VimEx.inputString(insertText);
 
