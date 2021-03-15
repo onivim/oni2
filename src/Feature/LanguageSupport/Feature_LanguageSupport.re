@@ -54,6 +54,11 @@ type outmsg =
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
+  | FormattingApplied({
+      displayName: string,
+      editCount: int,
+      needsToSave: bool,
+    })
   | InsertSnippet({
       meetColumn: CharacterIndex.t,
       snippet: string,
@@ -86,6 +91,8 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     fun
     | Outmsg.ApplyCompletion({meetColumn, insertText, additionalEdits}) =>
       ApplyCompletion({meetColumn, insertText, additionalEdits})
+    | Outmsg.FormattingApplied({displayName, editCount, needsToSave}) =>
+      FormattingApplied({displayName, editCount, needsToSave})
     | Outmsg.InsertSnippet({meetColumn, snippet, additionalEdits}) =>
       InsertSnippet({meetColumn, snippet, additionalEdits})
     | Outmsg.Nothing => Nothing
@@ -382,14 +389,8 @@ let update =
       | Formatting.Nothing => Nothing
       | Formatting.Effect(eff) =>
         Effect(eff |> Isolinear.Effect.map(msg => Formatting(msg)))
-      | Formatting.FormattingApplied({displayName, editCount}) =>
-        NotifySuccess(
-          Printf.sprintf(
-            "Formatting: Applied %d edits with %s",
-            editCount,
-            displayName,
-          ),
-        )
+      | Formatting.FormattingApplied({displayName, editCount, needsToSave}) =>
+        FormattingApplied({displayName, editCount, needsToSave})
       | Formatting.FormatError(errorMsg) => NotifyFailure(errorMsg)
       | Formatting.ShowMenu(menu) =>
         let menu' =
@@ -484,6 +485,21 @@ let bufferUpdated =
       model.signatureHelp,
     );
   {...model, completion, signatureHelp};
+};
+
+let bufferSaved = (~isLargeBuffer, ~buffer, ~config, ~activeBufferId, model) => {
+  let (formatting', formattingEffect) =
+    Formatting.bufferSaved(
+      ~isLargeBuffer,
+      ~buffer,
+      ~config,
+      ~activeBufferId,
+      model.formatting,
+    );
+  (
+    {...model, formatting: formatting'},
+    formattingEffect |> Isolinear.Effect.map(msg => Formatting(msg)),
+  );
 };
 
 let configurationChanged = (~config, model) => {

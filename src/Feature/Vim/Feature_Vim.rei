@@ -87,6 +87,8 @@ module Effects: {
       ~additionalEdits: list(Vim.Edit.t)
     ) =>
     Isolinear.Effect.t(msg);
+
+  let save: (~bufferId: int) => Isolinear.Effect.t(msg);
 };
 
 // CONFIGURATION

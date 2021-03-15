@@ -1678,8 +1678,83 @@ let unprojectToPixel =
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
 
 let updateBuffer = (~update, ~markerUpdate, ~buffer, editor) => {
+  let shiftCursor = (f, mode) => {
+    switch ((mode: Vim.Mode.t)) {
+    // Don't touch command-line mode
+    | CommandLine(orig) => Vim.Mode.CommandLine(orig)
+
+    // Cancel pending operator, if we have a shift
+    | Operator({cursor, _}) => Vim.Mode.Normal({cursor: f(cursor)})
+    | Normal({cursor}) => Normal({cursor: f(cursor)})
+    | Visual(curr) =>
+      Visual(
+        Vim.VisualRange.{
+          ...curr,
+          anchor: f(curr.anchor),
+          cursor: f(curr.cursor),
+        },
+      )
+    | Select({ranges}) =>
+      // TODO: Properly shift ranges
+      Select({ranges: ranges})
+    | Replace({cursor}) => Replace({cursor: f(cursor)})
+    | Insert({cursors}) => Insert({cursors: List.map(f, cursors)})
+    };
+  };
+
+  // Check if we _should_ shift cursor
+  let shiftLines = (~afterLine, ~delta: int, mode) => {
+    let moveByte = (bytePosition: BytePosition.t) =>
+      if (bytePosition.line >= afterLine) {
+        BytePosition.{
+          ...bytePosition,
+          line: EditorCoreTypes.LineNumber.(bytePosition.line + delta),
+        };
+      } else {
+        bytePosition;
+      };
+    shiftCursor(moveByte, mode);
+  };
+
+  let clearLine = (~line as _, mode) => mode;
+
+  let shiftCharacters =
+      (
+        ~line,
+        ~afterByte,
+        ~deltaBytes,
+        ~afterCharacter as _,
+        ~deltaCharacters as _,
+        mode,
+      ) => {
+    let moveByte = (bytePosition: BytePosition.t) =>
+      if (bytePosition.line == line && bytePosition.byte >= afterByte) {
+        BytePosition.{
+          ...bytePosition,
+          byte: ByteIndex.(bytePosition.byte + deltaBytes),
+        };
+      } else {
+        bytePosition;
+      };
+    shiftCursor(moveByte, mode);
+  };
+
+  let mode' =
+    if (BufferUpdate.(update.shouldAdjustCursorPosition)) {
+      MarkerUpdate.apply(
+        ~clearLine,
+        ~shiftLines,
+        ~shiftCharacters,
+        markerUpdate,
+        editor.mode,
+      );
+    } else {
+      editor.mode;
+    };
+
   {
     ...editor,
+    mode: mode',
     buffer,
     wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
     inlineElements:

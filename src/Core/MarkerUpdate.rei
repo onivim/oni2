@@ -22,3 +22,5 @@ let apply:
     'a
   ) =>
   'a;
+
+let toDebugString: t => string;
