@@ -422,6 +422,7 @@ let start =
           ~endLine=EditorCoreTypes.LineNumber.ofOneBased(endLine),
           ~lines=update.lines,
           ~version=update.version,
+          ~shouldAdjustCursorPosition=update.shouldAdjustCursorPosition,
           (),
         );
 
@@ -750,7 +751,7 @@ let start =
         |> Vim.Buffer.getById
         |> Option.iter(buf => {
              Vim.Buffer.setModifiable(~modifiable=true, buf);
-             Vim.Buffer.setLines(~lines, buf);
+             Vim.Buffer.setLines(~shouldAdjustCursors=false, ~lines, buf);
              Vim.Buffer.setModifiable(~modifiable=false, buf);
              Vim.Buffer.setReadOnly(~readOnly=true, buf);
            });

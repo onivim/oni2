@@ -49,6 +49,7 @@
 - #3264 - Formatting: Add 'Format Document' to menu
 - #3273 - Completion: Use the default insert/replace range when provided (fixes #2388)
 - #3274 - Completion: Fix race condition between completion subscription and buffer updates (fixes #3274)
+- #3263 - Formatting: Update cursor position based on formatting edits
 
 ### Performance
 

@@ -163,6 +163,7 @@ module Internal = {
       } else {
         let effect =
           Service_Vim.Effects.applyEdits(
+            ~shouldAdjustCursors=true, // Make sure the cursor ends up in the right place, due to the formatting edits
             ~bufferId=buffer |> Oni_Core.Buffer.getId,
             ~version=buffer |> Oni_Core.Buffer.getVersion,
             ~edits,
@@ -503,6 +504,7 @@ let update =
       } else {
         let effect =
           Service_Vim.Effects.applyEdits(
+            ~shouldAdjustCursors=true,
             ~bufferId=activeSession.bufferId,
             ~version=activeSession.bufferVersion,
             ~edits,
