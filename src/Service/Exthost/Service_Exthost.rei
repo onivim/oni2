@@ -156,6 +156,7 @@ module Sub: {
     (
       ~handle: int,
       ~chainedCacheId: Exthost.ChainedCacheId.t,
+      ~defaultRange: Exthost.SuggestItem.SuggestRange.t,
       ~toMsg: result(Exthost.SuggestItem.t, string) => 'a,
       Exthost.Client.t
     ) =>

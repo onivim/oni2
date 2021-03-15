@@ -670,13 +670,72 @@ module Commands = {
     );
 };
 
+// KEYBINDINGS
+
+module Keybindings = {
+  open Feature_Input.Schema;
+
+  module Condition = {
+    let windows = "editorTextFocus && isWin" |> WhenExpr.parse;
+
+    let linux = "editorTextFocus && isLinux" |> WhenExpr.parse;
+
+    let mac = "editorTextFocus && isMac" |> WhenExpr.parse;
+  };
+
+  let formatDocumentWindows =
+    bind(
+      ~key="<A-S-F>",
+      ~command=Commands.formatDocument.id,
+      ~condition=Condition.windows,
+    );
+
+  let formatDocumentMac =
+    bind(
+      ~key="<A-S-F>",
+      ~command=Commands.formatDocument.id,
+      ~condition=Condition.mac,
+    );
+
+  let formatDocumentLinux =
+    bind(
+      ~key="<C-S-I>",
+      ~command=Commands.formatDocument.id,
+      ~condition=Condition.linux,
+    );
+};
+
+module MenuItems = {
+  open MenuBar.Schema;
+  module Edit = {
+    let formatDocument =
+      command(~title="Format Document", Commands.formatDocument);
+  };
+};
+
 // CONTRIBUTIONS
 
 module Contributions = {
   let commands = [Commands.formatDocument];
-
+  
   let configuration = [
     Configuration.defaultFormatter.spec,
     Configuration.formatOnSave.spec,
   ];
+
+  let keybindings =
+    Keybindings.[
+      formatDocumentWindows,
+      formatDocumentMac,
+      formatDocumentLinux,
+    ];
+
+  let menuGroups =
+    MenuBar.Schema.[
+      group(
+        ~order=200,
+        ~parent=Feature_MenuBar.Global.edit,
+        MenuItems.Edit.[formatDocument],
+      ),
+    ];
 };
