@@ -50,12 +50,12 @@ type msg =
 type outmsg =
   | Nothing
   | ApplyCompletion({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | InsertSnippet({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       snippet: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
@@ -84,10 +84,10 @@ type outmsg =
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
     fun
-    | Outmsg.ApplyCompletion({meetColumn, insertText, additionalEdits}) =>
-      ApplyCompletion({meetColumn, insertText, additionalEdits})
-    | Outmsg.InsertSnippet({meetColumn, snippet, additionalEdits}) =>
-      InsertSnippet({meetColumn, snippet, additionalEdits})
+    | Outmsg.ApplyCompletion({replaceSpan, insertText, additionalEdits}) =>
+      ApplyCompletion({replaceSpan, insertText, additionalEdits})
+    | Outmsg.InsertSnippet({replaceSpan, snippet, additionalEdits}) =>
+      InsertSnippet({replaceSpan, snippet, additionalEdits})
     | Outmsg.Nothing => Nothing
     | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
     | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)
