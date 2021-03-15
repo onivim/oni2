@@ -47,6 +47,8 @@
 - #3255 - CodeLens: Fix disappearing lens when pressing enter in insert mode
 - #3259 - Quickmenu: Implement smart case (thanks @amiralies!)
 - #3264 - Formatting: Add 'Format Document' to menu
+- #3273 - Completion: Use the default insert/replace range when provided (fixes #2388)
+- #3274 - Completion: Fix race condition between completion subscription and buffer updates (fixes #3274)
 - #3272 - Snippets: Fix error parsing '@media' sass snippet
 
 ### Performance

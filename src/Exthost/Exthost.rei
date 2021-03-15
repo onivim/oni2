@@ -307,7 +307,7 @@ module SuggestItem: {
     filterText: option(string),
     insertText: option(string),
     insertTextRules: InsertTextRules.t,
-    suggestRange: option(SuggestRange.t),
+    suggestRange: SuggestRange.t,
     commitCharacters: list(string),
     additionalTextEdits: list(Edit.SingleEditOperation.t),
     command: option(Command.t),
@@ -1799,7 +1799,12 @@ module Request: {
       Lwt.t(SuggestResult.t);
 
     let resolveCompletionItem:
-      (~handle: int, ~chainedCacheId: ChainedCacheId.t, Client.t) =>
+      (
+        ~handle: int,
+        ~chainedCacheId: ChainedCacheId.t,
+        ~defaultRange: SuggestItem.SuggestRange.t,
+        Client.t
+      ) =>
       Lwt.t(SuggestItem.t);
 
     let releaseCompletionItems:
