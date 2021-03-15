@@ -717,7 +717,7 @@ module MenuItems = {
 
 module Contributions = {
   let commands = [Commands.formatDocument];
-  
+
   let configuration = [
     Configuration.defaultFormatter.spec,
     Configuration.formatOnSave.spec,
