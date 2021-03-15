@@ -891,19 +891,29 @@ let update =
         let replaceSpan =
           Exthost.SuggestItem.(
             switch (result.item.suggestRange) {
-            | Some(SuggestRange.Single({startColumn, _})) =>
+            | Some(SuggestRange.Single({startColumn, endColumn, _})) =>
+              let stop =
+                max(
+                  endColumn - 1 |> CharacterIndex.ofInt,
+                  activeCursor.character,
+                );
               CharacterSpan.{
                 start: startColumn - 1 |> CharacterIndex.ofInt,
-                stop: activeCursor.character,
-              }
+                stop,
+              };
             | Some(SuggestRange.Combo({insert, _})) =>
+              let stop =
+                max(
+                  insert.endColumn - 1 |> CharacterIndex.ofInt,
+                  activeCursor.character,
+                );
               CharacterSpan.{
                 start:
                   Exthost.OneBasedRange.(
                     insert.startColumn - 1 |> CharacterIndex.ofInt
                   ),
-                stop: activeCursor.character,
-              }
+                stop,
+              };
             | None =>
               CharacterSpan.{
                 start: location.character,

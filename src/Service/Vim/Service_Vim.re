@@ -184,8 +184,13 @@ module Effects = {
       let overwriteBefore =
         CharacterIndex.toInt(cursor.character)
         - CharacterIndex.toInt(replaceSpan.start);
-      // TODO: Handle full replace range
-      let overwriteAfter = 0;
+
+      let overwriteAfter =
+        max(
+          0,
+          CharacterIndex.toInt(replaceSpan.stop)
+          - CharacterIndex.toInt(cursor.character),
+        );
 
       let _: Vim.Context.t = VimEx.repeatKey(overwriteAfter, "<DEL>");
       let _: Vim.Context.t = VimEx.repeatKey(overwriteBefore, "<BS>");
