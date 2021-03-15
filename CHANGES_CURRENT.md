@@ -48,7 +48,8 @@
 - #3259 - Quickmenu: Implement smart case (thanks @amiralies!)
 - #3264 - Formatting: Add 'Format Document' to menu
 - #3273 - Completion: Use the default insert/replace range when provided (fixes #2388)
-- #3274 - Completion: Fix race condition between completion subscription and buffer updates (fixes #3274)
+- #3274 - Completion: Fix race condition between completion subscription and buffer updates (related #2583)
+- #3276 - Completion: Handle replace range after cursor position (related #2583)
 
 ### Performance
 
