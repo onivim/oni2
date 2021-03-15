@@ -316,9 +316,14 @@ module LanguageFeatures = {
   };
 
   let resolveCompletionItem =
-      (~handle: int, ~chainedCacheId: ChainedCacheId.t, client) => {
+      (
+        ~handle: int,
+        ~chainedCacheId: ChainedCacheId.t,
+        ~defaultRange: SuggestItem.SuggestRange.t,
+        client,
+      ) => {
     Client.request(
-      ~decoder=SuggestItem.Dto.decode,
+      ~decoder=SuggestItem.Dto.decode(~defaultRange),
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$resolveCompletionItem",

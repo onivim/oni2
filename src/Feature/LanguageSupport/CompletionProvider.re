@@ -178,23 +178,27 @@ module ExthostCompletionProvider =
     selectedItem
     |> OptionEx.flatMap((selected: CompletionItem.t) =>
          if (selected.handle == Some(providerHandle) && Config.supportsResolve) {
-           selected.chainedCacheId
-           |> Option.map(chainedCacheId => {
-                let resolveSub =
-                  Service_Exthost.Sub.completionItem(
-                    ~handle=providerHandle,
-                    ~chainedCacheId,
-                    ~toMsg=
-                      fun
-                      | Ok(item) =>
-                        DetailsAvailable({handle: providerHandle, item})
-                      | Error(errorMsg) =>
-                        DetailsError({handle: providerHandle, errorMsg}),
-                    client,
-                  );
+           OptionEx.map2(
+             (chainedCacheId, defaultRange) => {
+               let resolveSub =
+                 Service_Exthost.Sub.completionItem(
+                   ~handle=providerHandle,
+                   ~chainedCacheId,
+                   ~defaultRange,
+                   ~toMsg=
+                     fun
+                     | Ok(item) =>
+                       DetailsAvailable({handle: providerHandle, item})
+                     | Error(errorMsg) =>
+                       DetailsError({handle: providerHandle, errorMsg}),
+                   client,
+                 );
 
-                [itemsSub, resolveSub] |> Isolinear.Sub.batch;
-              });
+               [itemsSub, resolveSub] |> Isolinear.Sub.batch;
+             },
+             selected.chainedCacheId,
+             selected.suggestRange,
+           );
          } else {
            None;
          }
