@@ -137,6 +137,7 @@ describe("AutoIndent", ({test, _}) => {
 
     buffer
     |> Vim.Buffer.setLines(
+         ~shouldAdjustCursors=false,
          ~lines=[|
            "line 1",
            "", // Add a line with spaces

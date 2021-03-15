@@ -484,6 +484,7 @@ module Effects = {
         | Error(msg) => SnippetInsertionError(msg);
 
       Service_Vim.Effects.setLines(
+        ~shouldAdjustCursors=false, // We're going to be manually adjusting the cursor for snippet placeholders
         ~bufferId,
         ~start=replaceStartLine,
         ~stop=LineNumber.(position.line + 1),

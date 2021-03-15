@@ -4,6 +4,7 @@ type t = {
   endLine: int,
   lines: array(string),
   version: int,
+  shouldAdjustCursorPosition: bool,
 };
 
 let show = (v: t) => {
@@ -45,11 +46,24 @@ let createInitial = (buffer: Native.buffer) => {
   let version = Native.vimBufferGetChangedTick(buffer) - 1;
   let lines = getAllLines(buffer);
 
-  {id, startLine: 1, endLine: (-1), lines, version};
+  {
+    id,
+    startLine: 1,
+    endLine: (-1),
+    lines,
+    version,
+    shouldAdjustCursorPosition: false,
+  };
 };
 
 let createIncremental =
-    (~buffer: Native.buffer, ~startLine, ~endLine, ~extra: int) => {
+    (
+      ~shouldAdjustCursorPosition,
+      ~buffer: Native.buffer,
+      ~startLine,
+      ~endLine,
+      ~extra: int,
+    ) => {
   let id = Native.vimBufferGetId(buffer);
   let version = Native.vimBufferGetChangedTick(buffer);
   let idx: ref(int) = ref(startLine);
@@ -66,14 +80,21 @@ let createIncremental =
     incr(idx);
   };
 
-  {id, startLine, endLine, lines, version};
+  {id, startLine, endLine, lines, version, shouldAdjustCursorPosition};
 };
 
-let createFull = (buffer: Native.buffer) => {
+let createFull = (~shouldAdjustCursorPosition, buffer: Native.buffer) => {
   let id = Native.vimBufferGetId(buffer);
   let version = Native.vimBufferGetChangedTick(buffer);
 
   let lines = getAllLines(buffer);
 
-  {id, startLine: 1, endLine: (-1), lines, version};
+  {
+    id,
+    startLine: 1,
+    endLine: (-1),
+    lines,
+    version,
+    shouldAdjustCursorPosition,
+  };
 };

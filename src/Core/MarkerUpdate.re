@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 
+[@deriving show]
 type movement =
   | Noop
   | DeleteLines({
@@ -18,6 +19,7 @@ type movement =
       deltaCharacters: int,
     });
 
+[@deriving show]
 type t = list(movement);
 
 module Internal = {
@@ -138,3 +140,5 @@ let apply = (~clearLine, ~shiftLines, ~shiftCharacters, markerUpdate, target) =>
        target,
      );
 };
+
+let toDebugString = show;

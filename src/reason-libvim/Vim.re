@@ -273,8 +273,15 @@ let _onAutocommand = (autoCommand: Types.autocmd, buffer: Buffer.t) => {
 
 let _onBufferChanged =
     (buffer: Buffer.t, startLine: int, endLine: int, extra: int) => {
+  let shouldAdjustCursorPosition = BufferUpdateTracker.shouldAdjustCursors();
   let update =
-    BufferUpdate.createIncremental(~buffer, ~startLine, ~endLine, ~extra);
+    BufferUpdate.createIncremental(
+      ~shouldAdjustCursorPosition,
+      ~buffer,
+      ~startLine,
+      ~endLine,
+      ~extra,
+    );
 
   BufferInternal.notifyUpdate(buffer);
 
@@ -895,6 +902,7 @@ let inputCommon = (~inputFn, ~context=Context.current(), v: string) => {
                Undo.saveRegion(lineNumber - 1, lineNumber + 1);
                // Clear out range, and replace with current line
                Buffer.setLines(
+                 ~shouldAdjustCursors=false,
                  ~start=range.start.line,
                  ~stop=EditorCoreTypes.LineNumber.(range.start.line + 1),
                  ~lines=[|updatedLine|],
