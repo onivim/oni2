@@ -14,8 +14,11 @@ type t = {
   bufferId: int,
   // Base is the prefix string
   base: string,
-  // Meet is the location where we request completions
+  // `location` is the location where we request completions
   location: CharacterPosition.t,
+  // `insertLocation` is the location where snippets are keywords should begin insertion
+  // Often, this will be overridden by the completion provider
+  insertLocation: CharacterPosition.t,
 };
 
 let shiftMeet = (~edits, meet) => {
@@ -30,6 +33,14 @@ let shiftMeet = (~edits, meet) => {
            let delta = Exthost.Edit.SingleEditOperation.deltaLineCount(edit);
            {
              ...meet,
+             insertLocation:
+               CharacterPosition.{
+                 line:
+                   EditorCoreTypes.LineNumber.(
+                     meet.insertLocation.line + delta
+                   ),
+                 character: meet.insertLocation.character,
+               },
              location:
                CharacterPosition.{
                  line: EditorCoreTypes.LineNumber.(meet.location.line + delta),
@@ -110,16 +121,30 @@ let fromLine =
   let base = Zed_utf8.implode(characters);
 
   if (isValid) {
-    let meet = {
-      bufferId,
-      location:
+    if (pos == 0 && characters != []) {
+      let location =
+        CharacterPosition.{
+          line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+          character: CharacterIndex.ofInt(pos + 1),
+        };
+
+      let insertLocation =
         CharacterPosition.{
           line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
           character: CharacterIndex.ofInt(pos),
-        },
-      base,
+        };
+      let meet = {bufferId, location, insertLocation, base};
+
+      Some(meet);
+    } else {
+      let location =
+        CharacterPosition.{
+          line: EditorCoreTypes.LineNumber.ofZeroBased(lineNumber),
+          character: CharacterIndex.ofInt(pos),
+        };
+      let meet = {bufferId, location, insertLocation: location, base};
+      Some(meet);
     };
-    Some(meet);
   } else {
     None;
   };

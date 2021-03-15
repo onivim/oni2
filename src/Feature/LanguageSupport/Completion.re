@@ -158,7 +158,7 @@ module Session = {
           filteredItems
           |> List.fold_left(
                (acc, item: Filter.result(CompletionItem.t)) => {
-                 StringMap.add(item.item.label, (meet.location, item), acc)
+                 StringMap.add(item.item.label, (meet.insertLocation, item), acc)
                },
                StringMap.empty,
              )
@@ -884,7 +884,7 @@ let update =
       | None => default
       | Some(focusedIndex) =>
         let (
-          location: CharacterPosition.t,
+          insertLocation: CharacterPosition.t,
           result: Filter.result(CompletionItem.t),
         ) = allItems[focusedIndex];
 
@@ -897,7 +897,7 @@ let update =
               Exthost.OneBasedRange.(
                 insert.startColumn - 1 |> CharacterIndex.ofInt
               )
-            | None => location.character
+            | None => insertLocation.character
             }
           );
 
