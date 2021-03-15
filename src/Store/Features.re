@@ -660,6 +660,45 @@ let update =
           )
           |> Isolinear.Effect.map(msg => Vim(msg)),
         );
+
+      | FormattingApplied({displayName, editCount, needsToSave}) =>
+        let (formatEffect, msg) =
+          if (needsToSave) {
+            state
+            |> Selectors.getActiveBuffer
+            |> Option.map(Oni_Core.Buffer.getId)
+            |> Option.map(bufferId => {
+                 (
+                   Feature_Vim.Effects.save(~bufferId)
+                   |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
+                   Printf.sprintf(
+                     "Formatting: Saved %d edits with %s",
+                     editCount,
+                     displayName,
+                   ),
+                 )
+               })
+            |> Option.value(
+                 ~default=(
+                   Isolinear.Effect.none,
+                   "Unable to apply formatting edits",
+                 ),
+               );
+          } else {
+            (
+              Isolinear.Effect.none,
+              Printf.sprintf(
+                "Formatting: Applied %d edits with %s",
+                editCount,
+                displayName,
+              ),
+            );
+          };
+
+        let eff =
+          [formatEffect, Internal.notificationEffect(~kind=Info, msg)]
+          |> Isolinear.Effect.batch;
+        (state, eff);
       | ReferencesAvailable =>
         let references =
           Feature_LanguageSupport.References.get(languageSupport);
@@ -1353,9 +1392,42 @@ let update =
            )
         |> Option.value(~default=state.config);
 
+      let maybeActiveBufferId =
+        state
+        |> Selectors.getActiveBuffer
+        |> Option.map(Oni_Core.Buffer.getId);
+
+      let (languageSupport', languageEffect') =
+        maybeActiveBufferId
+        |> Option.map(activeBufferId => {
+             let config = Selectors.configResolver(state);
+             state.languageSupport
+             |> Feature_LanguageSupport.bufferSaved(
+                  ~isLargeBuffer=
+                    Feature_Buffers.isLargeFile(state.buffers, buffer),
+                  ~activeBufferId,
+                  ~config,
+                  ~buffer,
+                );
+           })
+        |> Option.value(
+             ~default=(state.languageSupport, Isolinear.Effect.none),
+           );
+
       (
-        {...state, input: input', config: config'},
-        Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
+        {
+          ...state,
+          input: input',
+          config: config',
+          languageSupport: languageSupport',
+        },
+        Isolinear.Effect.batch([
+          eff,
+          modelSavedEff,
+          clearSnippetCacheEffect,
+          languageEffect'
+          |> Isolinear.Effect.map(msg => Actions.LanguageSupport(msg)),
+        ]),
       );
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey, markerUpdate}) =>
