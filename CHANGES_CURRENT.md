@@ -47,6 +47,7 @@
 - #3255 - CodeLens: Fix disappearing lens when pressing enter in insert mode
 - #3259 - Quickmenu: Implement smart case (thanks @amiralies!)
 - #3264 - Formatting: Add 'Format Document' to menu
+- #3272 - Snippets: Fix error parsing '@media' sass snippet
 
 ### Performance
 
