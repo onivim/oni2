@@ -7,7 +7,9 @@
 open Oni_Core;
 
 module Commands = GlobalCommands;
-let windowCommandCondition = "!insertMode || terminalFocus" |> WhenExpr.parse;
+let windowCommandCondition =
+  "!commandLineFocus && !insertMode && !inQuickOpen || terminalFocus"
+  |> WhenExpr.parse;
 
 let isMacCondition = "isMac" |> WhenExpr.parse;
 let defaultKeyBindings =
