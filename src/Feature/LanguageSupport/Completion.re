@@ -888,16 +888,37 @@ let update =
           result: Filter.result(CompletionItem.t),
         ) = allItems[focusedIndex];
 
-        let meetColumn =
+        let replaceSpan =
           Exthost.SuggestItem.(
             switch (result.item.suggestRange) {
-            | Some(SuggestRange.Single({startColumn, _})) =>
-              startColumn - 1 |> CharacterIndex.ofInt
+            | Some(SuggestRange.Single({startColumn, endColumn, _})) =>
+              let stop =
+                max(
+                  endColumn - 1 |> CharacterIndex.ofInt,
+                  activeCursor.character,
+                );
+              CharacterSpan.{
+                start: startColumn - 1 |> CharacterIndex.ofInt,
+                stop,
+              };
             | Some(SuggestRange.Combo({insert, _})) =>
-              Exthost.OneBasedRange.(
-                insert.startColumn - 1 |> CharacterIndex.ofInt
-              )
-            | None => location.character
+              let stop =
+                max(
+                  insert.endColumn - 1 |> CharacterIndex.ofInt,
+                  activeCursor.character,
+                );
+              CharacterSpan.{
+                start:
+                  Exthost.OneBasedRange.(
+                    insert.startColumn - 1 |> CharacterIndex.ofInt
+                  ),
+                stop,
+              };
+            | None =>
+              CharacterSpan.{
+                start: location.character,
+                stop: activeCursor.character,
+              }
             }
           );
 
@@ -906,12 +927,12 @@ let update =
             matches(~rule=InsertAsSnippet, result.item.insertTextRules)
           )
             ? Outmsg.InsertSnippet({
-                meetColumn,
+                replaceSpan,
                 snippet: result.item.insertText,
                 additionalEdits: result.item.additionalTextEdits,
               })
             : Outmsg.ApplyCompletion({
-                meetColumn,
+                replaceSpan,
                 insertText: result.item.insertText,
                 additionalEdits: result.item.additionalTextEdits,
               });

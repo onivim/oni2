@@ -52,6 +52,7 @@
 - #3274 - Completion: Fix race condition between completion subscription and buffer updates (fixes #3274)
 - #3263 - Formatting: Update cursor position based on formatting edits
 - #3272 - Snippets: Fix error parsing '@media' sass snippet
+- #3276 - Completion: Handle replace range after cursor position (related #2583)
 
 ### Performance
 
