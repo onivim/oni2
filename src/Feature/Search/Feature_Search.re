@@ -25,6 +25,7 @@ let resetFocus = (~query: option(string), model) => {
       query,
       focus: FindInput,
       findInput: Component_InputText.set(~text=query, model.findInput),
+      hits: query != model.query ? [] : model.hits,
     }
   };
 };
