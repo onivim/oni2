@@ -10,6 +10,7 @@
 
 - #3163 - UX: Add clear notification button (thanks @andr3h3nriqu3s11 !)
 - #3246 - Formatting: Add 'editor.formatOnSave' configuration (fixes #2464)
+- #3284 - Definition: Add 'editor.action.revealDefinitionAside' command (fixes #3261)
 
 ### Bug Fixes
 
