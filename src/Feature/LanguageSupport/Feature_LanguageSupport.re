@@ -67,6 +67,7 @@ type outmsg =
   | OpenFile({
       filePath: string,
       location: option(CharacterPosition.t),
+      direction: Oni_Core.SplitDirection.t,
     })
   | ReferencesAvailable
   | NotifySuccess(string)
@@ -99,7 +100,8 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
     | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)
     | Outmsg.ReferencesAvailable => ReferencesAvailable
-    | Outmsg.OpenFile({filePath, location}) => OpenFile({filePath, location})
+    | Outmsg.OpenFile({filePath, location, direction}) =>
+      OpenFile({filePath, location, direction})
     | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
     | Outmsg.CodeLensesChanged({
         handle,
