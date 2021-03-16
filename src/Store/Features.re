@@ -14,14 +14,14 @@ module Internal = {
   let openFileEffect = (~position=None, filePath) => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.openFileByPath", dispatch =>
-      dispatch(OpenFileByPath(filePath, None, position))
+      dispatch(OpenFileByPath(filePath, SplitDirection.Current, position))
     );
   };
 
   let previewFileEffect = (~position=None, filePath) => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.previewFileByPath", dispatch =>
-      dispatch(PreviewFileByPath(filePath, None, position))
+      dispatch(PreviewFileByPath(filePath, SplitDirection.Current, position))
     );
   };
 
@@ -1243,12 +1243,12 @@ let update =
           let editor' =
             switch (split) {
             // If we're in the same split, just re-use current editor
-            | `Current => ed
+            | SplitDirection.Current => ed
 
             // However, if we're splitting, we need to clone the editor
-            | `Horizontal
-            | `Vertical
-            | `NewTab => Editor.copy(ed)
+            | SplitDirection.Horizontal
+            | SplitDirection.Vertical
+            | SplitDirection.NewTab => Editor.copy(ed)
             };
 
           (isPreview, Editor.setPreview(~preview=isPreview, editor'));
@@ -1265,11 +1265,12 @@ let update =
 
       let layout =
         switch (split) {
-        | `Current => state.layout
-        | `Horizontal =>
+        | SplitDirection.Current => state.layout
+        | SplitDirection.Horizontal =>
           Feature_Layout.split(~editor, `Horizontal, state.layout)
-        | `Vertical => Feature_Layout.split(~editor, `Vertical, state.layout)
-        | `NewTab => Feature_Layout.addLayoutTab(state.layout)
+        | SplitDirection.Vertical =>
+          Feature_Layout.split(~editor, `Vertical, state.layout)
+        | SplitDirection.NewTab => Feature_Layout.addLayoutTab(state.layout)
         };
 
       let editor' =
@@ -1683,9 +1684,9 @@ let update =
       | TerminalCreated({name, splitDirection}) =>
         let windowTreeDirection =
           switch (splitDirection) {
-          | Horizontal => Some(`Horizontal)
-          | Vertical => Some(`Vertical)
-          | Current => None
+          | Horizontal => SplitDirection.Horizontal
+          | Vertical => SplitDirection.Vertical
+          | Current => SplitDirection.Current
           };
 
         let eff =
@@ -1735,15 +1736,7 @@ let update =
       |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
     (state, effect);
 
-  | OpenFileByPath(filePath, direction, position) =>
-    let split =
-      switch (direction) {
-      | None => `Current
-      | Some(`Current) => `Current
-      | Some(`Horizontal) => `Horizontal
-      | Some(`Vertical) => `Vertical
-      | Some(`NewTab) => `NewTab
-      };
+  | OpenFileByPath(filePath, split, position) =>
     let effect =
       Feature_Buffers.Effects.openFileInEditor(
         ~languageInfo=state.languageInfo,
@@ -1756,14 +1749,7 @@ let update =
       )
       |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
     (state, effect);
-  | PreviewFileByPath(filePath, direction, position) =>
-    let split =
-      switch (direction) {
-      | None => `Current
-      | Some(`Horizontal) => `Horizontal
-      | Some(`Vertical) => `Vertical
-      | Some(`NewTab) => `NewTab
-      };
+  | PreviewFileByPath(filePath, split, position) =>
     let effect =
       Feature_Buffers.Effects.openFileInEditor(
         ~languageInfo=state.languageInfo,
@@ -1855,7 +1841,7 @@ let update =
     let eff =
       Service_OS.Effect.statMultiple(paths, (path, stats) =>
         switch (stats.st_kind) {
-        | S_REG => OpenFileByPath(path, None, None)
+        | S_REG => OpenFileByPath(path, SplitDirection.Current, None)
         | S_DIR =>
           switch (Luv.Path.chdir(path)) {
           | Ok () =>
