@@ -111,11 +111,16 @@ let start =
       | NewHorizontal =>
         Actions.NewBuffer({direction: Core.SplitDirection.Horizontal})
       | NewVertical =>
-        Actions.NewBuffer({direction: Core.SplitDirection.Vertical})
+        Actions.NewBuffer({
+          direction: Core.SplitDirection.Vertical({shouldReuse: false}),
+        })
       | NewTabPage =>
         Actions.NewBuffer({direction: Core.SplitDirection.NewTab})
       | Vertical({filePath}) =>
-        actionForFilePath(filePath, Core.SplitDirection.Vertical)
+        actionForFilePath(
+          filePath,
+          Core.SplitDirection.Vertical({shouldReuse: false}),
+        )
       | Horizontal({filePath}) =>
         actionForFilePath(filePath, Core.SplitDirection.Horizontal)
       | TabPage({filePath}) =>

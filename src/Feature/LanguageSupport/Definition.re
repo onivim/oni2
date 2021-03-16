@@ -154,7 +154,7 @@ module Commands = {
       ~category="Language",
       ~title="Go-to Definition Aside",
       "editor.action.revealDefinitionAside",
-      Command(GotoDefinition(SplitDirection.Vertical)),
+      Command(GotoDefinition(SplitDirection.Vertical({shouldReuse: true}))),
     );
 };
 

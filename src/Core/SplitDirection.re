@@ -2,5 +2,5 @@
 type t =
   | Current
   | Horizontal
-  | Vertical
+  | Vertical({shouldReuse: bool})
   | NewTab;

@@ -1248,7 +1248,7 @@ let update =
 
             // However, if we're splitting, we need to clone the editor
             | SplitDirection.Horizontal
-            | SplitDirection.Vertical
+            | SplitDirection.Vertical(_)
             | SplitDirection.NewTab => Editor.copy(ed)
             };
 
@@ -1268,9 +1268,14 @@ let update =
         switch (split) {
         | SplitDirection.Current => state.layout
         | SplitDirection.Horizontal =>
-          Feature_Layout.split(~editor, `Horizontal, state.layout)
-        | SplitDirection.Vertical =>
-          Feature_Layout.split(~editor, `Vertical, state.layout)
+          Feature_Layout.split(
+            ~shouldReuse=false,
+            ~editor,
+            `Horizontal,
+            state.layout,
+          )
+        | SplitDirection.Vertical({shouldReuse}) =>
+          Feature_Layout.split(~shouldReuse, ~editor, `Vertical, state.layout)
         | SplitDirection.NewTab => Feature_Layout.addLayoutTab(state.layout)
         };
 
@@ -1686,7 +1691,7 @@ let update =
         let windowTreeDirection =
           switch (splitDirection) {
           | Horizontal => SplitDirection.Horizontal
-          | Vertical => SplitDirection.Vertical
+          | Vertical => SplitDirection.Vertical({shouldReuse: false})
           | Current => SplitDirection.Current
           };
 
