@@ -648,14 +648,15 @@ let update =
     Feature_LanguageSupport.(
       switch (outmsg) {
       | Nothing => (state, Isolinear.Effect.none)
-      | ApplyCompletion({insertText, meetColumn, additionalEdits}) =>
+      | ApplyCompletion({insertText, replaceSpan, additionalEdits}) =>
         let additionalEdits =
           additionalEdits |> List.map(exthostEditToVimEdit);
         (
           state,
           Feature_Vim.Effects.applyCompletion(
+            ~cursor=cursorLocation,
             ~additionalEdits,
-            ~meetColumn,
+            ~replaceSpan,
             ~insertText,
           )
           |> Isolinear.Effect.map(msg => Vim(msg)),
@@ -711,16 +712,19 @@ let update =
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
-      | InsertSnippet({meetColumn, snippet, _}) =>
+      | InsertSnippet({replaceSpan, snippet, _}) =>
         let editor = Feature_Layout.activeEditor(state.layout);
-        let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
-        let characterPosition =
-          CharacterPosition.{line: cursor.line, character: meetColumn};
-        let rangeToReplace =
-          CharacterRange.{start: characterPosition, stop: cursor};
+        // let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
+        // let characterPosition =
+        //   CharacterPosition.{line: cursor.line, character: meetColumn};
+        // let rangeToReplace =
+        //   CharacterRange.{start: characterPosition, stop: cursor};
         let maybeReplaceRange =
           Feature_Editor.Editor.characterRangeToByteRange(
-            rangeToReplace,
+            EditorCoreTypes.CharacterSpan.toRange(
+              ~line=cursorLocation.line,
+              replaceSpan,
+            ),
             editor,
           );
         (

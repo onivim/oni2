@@ -39,7 +39,8 @@ module Effects: {
 
   let applyCompletion:
     (
-      ~meetColumn: CharacterIndex.t,
+      ~cursor: CharacterPosition.t,
+      ~replaceSpan: CharacterSpan.t,
       ~insertText: string,
       ~toMsg: Vim.Mode.t => 'msg,
       ~additionalEdits: list(Vim.Edit.t)

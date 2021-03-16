@@ -53,7 +53,7 @@ module CodeLens: {
 type outmsg =
   | Nothing
   | ApplyCompletion({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
@@ -63,7 +63,7 @@ type outmsg =
       needsToSave: bool,
     })
   | InsertSnippet({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       snippet: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
