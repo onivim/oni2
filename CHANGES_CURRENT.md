@@ -53,6 +53,7 @@
 - #3263 - Formatting: Update cursor position based on formatting edits
 - #3272 - Snippets: Fix error parsing '@media' sass snippet
 - #3276 - Completion: Handle replace range after cursor position (related #2583)
+- #3280 - Quickmenu: Fix delay in processing Control+W key (fixes #3262)
 
 ### Performance
 
