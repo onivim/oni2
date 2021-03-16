@@ -28,7 +28,7 @@ type outmsg =
 
 let update: (~previewEnabled: bool, model, msg) => (model, option(outmsg));
 
-let resetFocus: model => model;
+let resetFocus: (~query: option(string), model) => model;
 
 let subscriptions:
   (

@@ -1072,7 +1072,11 @@ let update =
           | Search =>
             {
               ...state,
-              searchPane: Feature_Search.resetFocus(state.searchPane),
+              searchPane:
+                Feature_Search.resetFocus(
+                  ~query=Some("test"),
+                  state.searchPane,
+                ),
             }
             |> FocusManager.push(Focus.Search)
           | Extensions =>
