@@ -11,10 +11,11 @@ module Internal = {
     |> Isolinear.Effect.map(msg => Actions.Notification(msg));
   };
 
-  let openFileEffect = (~position=None, filePath) => {
+  let openFileEffect =
+      (~direction=SplitDirection.Current, ~position=None, filePath) => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.openFileByPath", dispatch =>
-      dispatch(OpenFileByPath(filePath, SplitDirection.Current, position))
+      dispatch(OpenFileByPath(filePath, direction, position))
     );
   };
 
@@ -731,9 +732,9 @@ let update =
           )
           |> Isolinear.Effect.map(msg => Snippets(msg)),
         );
-      | OpenFile({filePath, location}) => (
+      | OpenFile({filePath, location, direction}) => (
           state,
-          Internal.openFileEffect(~position=location, filePath),
+          Internal.openFileEffect(~direction, ~position=location, filePath),
         )
       | NotifySuccess(msg) => (
           state,

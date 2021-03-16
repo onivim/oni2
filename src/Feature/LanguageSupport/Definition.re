@@ -154,7 +154,7 @@ module Commands = {
       ~category="Language",
       ~title="Go-to Definition Aside",
       "editor.action.revealDefinitionAside",
-      Command(GotoDefinition(SplitDirection.Horizontal)),
+      Command(GotoDefinition(SplitDirection.Vertical)),
     );
 };
 
@@ -165,13 +165,13 @@ module Keybindings = {
 
   let gotoDefinition =
     bind(~key="<F12>", ~command=Commands.gotoDefinition.id, ~condition);
-
-  let gotoDefinitionAside =
-    bind(
-      ~key="<C-K>F12",
-      ~command=Commands.gotoDefinitionAside.id,
-      ~condition,
-    );
+  // TODO:
+  // let gotoDefinitionAside =
+  //   bind(
+  //     ~key="<C-K>F12",
+  //     ~command=Commands.gotoDefinitionAside.id,
+  //     ~condition,
+  //   );
 };
 
 module Contributions = {
