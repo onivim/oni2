@@ -107,12 +107,26 @@ let start = () => {
       Lwt.wakeup_exn(resolver, MenuCancelled)
     });
 
-  let makeBufferCommands = (workspace, languageInfo, iconTheme, buffers) => {
+  let makeBufferCommands =
+      (layout, workspace, languageInfo, iconTheme, buffers) => {
+    // Get visible buffers
+
+    let bufferIds: IntSet.t =
+      layout
+      |> Feature_Layout.activeLayoutGroups
+      |> List.map(Feature_Layout.Group.allEditors)
+      |> List.flatten
+      |> List.map(Feature_Editor.Editor.getBufferId)
+      |> List.fold_left(
+           (acc, curr) => {IntSet.add(curr, acc)},
+           IntSet.empty,
+         );
     // Get the current workspace, if available
     let maybeWorkspace = Feature_Workspace.openedFolder(workspace);
 
     buffers
     |> Feature_Buffers.all
+    |> List.filter(buffer => IntSet.mem(Buffer.getId(buffer), bufferIds))
     // Sort by most recerntly used
     |> List.fast_sort((a, b) =>
          - Float.compare(Buffer.getLastUsed(a), Buffer.getLastUsed(b))
@@ -159,6 +173,7 @@ let start = () => {
         buffers,
         languageInfo,
         iconTheme,
+        layout,
         workspace,
         commands,
         menus,
@@ -178,7 +193,13 @@ let start = () => {
 
     | QuickmenuShow(EditorsPicker) =>
       let items =
-        makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
+        makeBufferCommands(
+          layout,
+          workspace,
+          languageInfo,
+          iconTheme,
+          buffers,
+        );
 
       (
         Some({
@@ -200,7 +221,13 @@ let start = () => {
     | QuickmenuShow(FilesPicker) =>
       if (Feature_Workspace.openedFolder(workspace) == None) {
         let items =
-          makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
+          makeBufferCommands(
+            layout,
+            workspace,
+            languageInfo,
+            iconTheme,
+            buffers,
+          );
 
         (
           Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
@@ -229,7 +256,13 @@ let start = () => {
 
     | QuickmenuShow(OpenBuffersPicker) =>
       let items =
-        makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
+        makeBufferCommands(
+          layout,
+          workspace,
+          languageInfo,
+          iconTheme,
+          buffers,
+        );
 
       (
         Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
@@ -479,6 +512,7 @@ let start = () => {
           state.buffers,
           state.languageInfo,
           state.iconTheme,
+          state.layout,
           state.workspace,
           CommandManager.current(state),
           MenuManager.current(state),
