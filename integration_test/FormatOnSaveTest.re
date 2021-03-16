@@ -33,7 +33,13 @@ runTest(
     let unformattedFilePath = getAssetPath("test.unformatted.js");
 
     // Create a buffer
-    dispatch(Actions.OpenFileByPath(unformattedFilePath, None, None));
+    dispatch(
+      Actions.OpenFileByPath(
+        unformattedFilePath,
+        SplitDirection.Current,
+        None,
+      ),
+    );
 
     wait(
       ~timeout=30.0,

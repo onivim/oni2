@@ -179,6 +179,6 @@ module Contributions = {
 
   let keybindings = [
     Keybindings.gotoDefinition,
-    Keybindings.gotoDefinitionAside,
+    //Keybindings.gotoDefinitionAside,
   ];
 };
