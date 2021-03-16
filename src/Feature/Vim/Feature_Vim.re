@@ -120,7 +120,7 @@ let handleEffects = (effects, model) => {
 };
 
 module Effects = {
-  let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
+  let applyCompletion = (~cursor, ~replaceSpan, ~insertText, ~additionalEdits) => {
     let toMsg = mode =>
       ModeChanged({
         allowAnimation: true,
@@ -129,7 +129,8 @@ module Effects = {
         effects: [],
       });
     Service_Vim.Effects.applyCompletion(
-      ~meetColumn,
+      ~cursor,
+      ~replaceSpan,
       ~insertText,
       ~additionalEdits,
       ~toMsg,

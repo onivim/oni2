@@ -53,6 +53,10 @@
 - #3274 - Completion: Fix race condition between completion subscription and buffer updates (fixes #3274)
 - #3263 - Formatting: Update cursor position based on formatting edits
 - #3272 - Snippets: Fix error parsing '@media' sass snippet
+- #3276 - Completion: Handle replace range after cursor position (related #2583)
+- #3280 - Quickmenu: Fix delay in processing Control+W key (fixes #3262)
+- #3279 - Completion: Fix issue completing ReScript identifiers (fixes #3258)
+- #3286 - Quickmenu: Scope control+tab to visible editor (fixes #3275, #2009)
 
 ### Performance
 
