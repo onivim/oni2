@@ -4,6 +4,8 @@
 
 ### Bug Fixes
 
+- #3289 - Extensions: Fix logs location path provided to extension (related #3268)
+
 ### Performance
 
 ### Documentation
