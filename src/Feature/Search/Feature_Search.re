@@ -201,6 +201,7 @@ let update = (~previewEnabled, model, msg) => {
       | Component_VimTree.Selected(item) =>
         Some(OpenFile({filePath: item.file, location: item.location}))
       // TODO
+      | Component_VimTree.SelectedNode(_) => None
       | Component_VimTree.Collapsed(_) => None
       | Component_VimTree.Expanded(_) => None
       };
