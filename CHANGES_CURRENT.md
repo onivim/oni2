@@ -11,6 +11,8 @@
 
 ### Documentation
 
+- #3293 - Formatting: Initial formatting documentation
+
 ### Refactoring
 
 ### Infrastructure

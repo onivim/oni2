@@ -51,9 +51,3 @@ This setting is recommended to be set per-filetype, for example:
     "editor.formatOnSave": true
 }
 ```
-
-
-
-
-
-
