@@ -277,8 +277,7 @@ let notificationCount =
       ~dispatch,
       (),
     ) => {
-  let text =
-    Feature_Notification.all(notifications) |> List.length |> string_of_int;
+  let text = Feature_Notification.count(notifications) |> string_of_int;
 
   let onClick = () => dispatch(NotificationCountClicked);
   let onRightClick = () => dispatch(NotificationsCountRightClicked);
