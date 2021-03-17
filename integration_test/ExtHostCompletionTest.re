@@ -23,7 +23,9 @@ runTest(~name="ExtHostCompletionTest", ({input, dispatch, wait, _}) => {
   );
 
   // Create a buffer
-  dispatch(Actions.OpenFileByPath("test.oni-dev", None, None));
+  dispatch(
+    Actions.OpenFileByPath("test.oni-dev", SplitDirection.Current, None),
+  );
 
   // Wait for the oni-dev filetype
   wait(

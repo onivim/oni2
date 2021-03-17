@@ -26,7 +26,14 @@ let visibleEditors: model => list(Editor.t);
 let editorById: (int, model) => option(Editor.t);
 let removeEditor: (int, model) => option(model);
 
-let split: (~editor: Editor.t, [ | `Horizontal | `Vertical], model) => model;
+let split:
+  (
+    ~shouldReuse: bool,
+    ~editor: Editor.t,
+    [ | `Horizontal | `Vertical],
+    model
+  ) =>
+  model;
 
 let activeEditor: model => Editor.t;
 let activeGroupEditors: model => list(Editor.t);
