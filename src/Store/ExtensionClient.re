@@ -248,8 +248,8 @@ let create =
 
   let tempDir = Filename.get_temp_dir_name();
 
-  let logFile = tempDir |> Uri.fromPath;
-  let logsLocation =
+  let logsLocation = tempDir |> Uri.fromPath;
+  let logFile =
     Filename.temp_file(~temp_dir=tempDir, "onivim2", "exthost.log")
     |> Uri.fromPath;
 

@@ -17,7 +17,9 @@ runTest(~name="RegressionFontFallback", ({input, dispatch, wait, _}) => {
   let testFile = getAssetPath("utf8-test-file.htm");
 
   // Open test file
-  dispatch(Actions.OpenFileByPath(testFile, None, None));
+  dispatch(
+    Actions.OpenFileByPath(testFile, Oni_Core.SplitDirection.Current, None),
+  );
 
   wait(~name="Wait for cursor to be ready", (state: State.t) => {
     let location: CharacterPosition.t =

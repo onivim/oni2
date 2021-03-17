@@ -152,14 +152,14 @@ type msg =
   | Command(command)
   | EditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
-      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      split: SplitDirection.t,
       position: option(CharacterPosition.t),
       grabFocus: bool,
       preview: bool,
     })
   | NewBufferAndEditorRequested({
       buffer: [@opaque] Oni_Core.Buffer.t,
-      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      split: SplitDirection.t,
       position: option(CharacterPosition.t),
       grabFocus: bool,
       preview: bool,
@@ -241,7 +241,7 @@ type outmsg =
   | BufferSaved(Oni_Core.Buffer.t)
   | CreateEditor({
       buffer: Oni_Core.Buffer.t,
-      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      split: SplitDirection.t,
       position: option(BytePosition.t),
       grabFocus: bool,
       preview: bool,
@@ -538,7 +538,7 @@ module Effects = {
       (
         ~font: Service_Font.font,
         ~languageInfo: Exthost.LanguageInfo.t,
-        ~split=`Current,
+        ~split=SplitDirection.Current,
         ~position=None,
         ~grabFocus=true,
         ~filePath,

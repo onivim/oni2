@@ -7,7 +7,8 @@
 		"vscode": "^1.25.0"
 	},
 	"activationEvents": [
-		"onCommand:oni-test.showMessage"
+		"onCommand:oni-test.showMessage",
+		"onCommand:oni-test.exthost.validateLogPathIsDirectory"
 	],
 	"main": "./extension.js",
 	"contributes": {},

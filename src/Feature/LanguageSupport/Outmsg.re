@@ -1,3 +1,4 @@
+open Oni_Core;
 open EditorCoreTypes;
 
 type internalMsg('a) =
@@ -20,6 +21,7 @@ type internalMsg('a) =
   | OpenFile({
       filePath: string,
       location: option(CharacterPosition.t),
+      direction: SplitDirection.t,
     })
   | ReferencesAvailable
   | NotifySuccess(string)

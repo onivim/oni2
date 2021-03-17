@@ -16,7 +16,9 @@ runTest(~name="LanguageTypeScriptTest", ({input, dispatch, wait, _}) => {
     ~description="typescript completion",
     () => {
       // Create a buffer
-      dispatch(Actions.OpenFileByPath("test.ts", None, None));
+      dispatch(
+        Actions.OpenFileByPath("test.ts", SplitDirection.Current, None),
+      );
 
       wait(
         ~timeout=30.0,
