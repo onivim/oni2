@@ -8,7 +8,7 @@ runTest(~name="VimIncsearchScrollTest", ({dispatch, wait, input, key, _}) => {
   );
 
   let largeCFile = getAssetPath("large-c-file.c");
-  dispatch(Actions.OpenFileByPath(largeCFile, None, None));
+  dispatch(Actions.OpenFileByPath(largeCFile, SplitDirection.Current, None));
 
   // Wait for file to load
   wait(

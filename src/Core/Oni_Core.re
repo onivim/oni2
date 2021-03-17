@@ -53,6 +53,7 @@ module Decoration = Decoration;
 module Persistence = Persistence;
 module Setup = Setup;
 module ShellUtility = ShellUtility;
+module SplitDirection = SplitDirection;
 module StringMap = Kernel.StringMap;
 module StringSet = Kernel.StringSet;
 module SubEx = SubEx;

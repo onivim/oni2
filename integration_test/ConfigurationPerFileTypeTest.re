@@ -38,7 +38,9 @@ runTest(
       );
 
     // Create a plaintext file
-    dispatch(Actions.OpenFileByPath("test.txt", None, None));
+    dispatch(
+      Actions.OpenFileByPath("test.txt", SplitDirection.Current, None),
+    );
 
     // Verify plaintext buffer matches the default settings:
     waitForBuffer(~name="Plaintext buffer should pick up defaults", buffer => {
@@ -51,7 +53,9 @@ runTest(
     });
 
     // Open a new buffer, that should pick up the per-filetype settings
-    dispatch(Actions.OpenFileByPath("test.js", None, None));
+    dispatch(
+      Actions.OpenFileByPath("test.js", SplitDirection.Current, None),
+    );
 
     waitForBuffer(
       ~name="Wait for active buffer to pick up javascript filetype", buffer => {

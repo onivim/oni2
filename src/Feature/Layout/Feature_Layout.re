@@ -170,11 +170,11 @@ let update = (~focus, model, msg) => {
 
   | Command(SplitVertical) =>
     let editor = Feature_Editor.Editor.copy(activeEditor(model));
-    (split(~editor, `Vertical, model), SplitAdded);
+    (split(~shouldReuse=false, ~editor, `Vertical, model), SplitAdded);
 
   | Command(SplitHorizontal) =>
     let editor = Feature_Editor.Editor.copy(activeEditor(model));
-    (split(~editor, `Horizontal, model), SplitAdded);
+    (split(~shouldReuse=false, ~editor, `Horizontal, model), SplitAdded);
 
   | Command(CloseActiveEditor) =>
     switch (removeActiveEditor(model)) {

@@ -95,21 +95,13 @@ type t =
   | ListFocusDown
   | ListSelect
   | ListSelectBackground
-  | NewBuffer({direction: [ | `Current | `Horizontal | `Vertical | `NewTab]})
+  | NewBuffer({direction: SplitDirection.t})
   | OpenBufferById({
       bufferId: int,
-      direction: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      direction: SplitDirection.t,
     })
-  | OpenFileByPath(
-      string,
-      option([ | `Current | `Horizontal | `Vertical | `NewTab]),
-      option(CharacterPosition.t),
-    )
-  | PreviewFileByPath(
-      string,
-      option([ | `Horizontal | `Vertical | `NewTab]),
-      option(CharacterPosition.t),
-    )
+  | OpenFileByPath(string, SplitDirection.t, option(CharacterPosition.t))
+  | PreviewFileByPath(string, SplitDirection.t, option(CharacterPosition.t))
   | Pasted({
       rawText: string,
       isMultiLine: bool,

@@ -30,7 +30,7 @@ runTest(~name="ClipboardyypTest", ({dispatch, wait, runEffects, _}) => {
   });
 
   let testFile = getAssetPath("some-test-file.txt");
-  dispatch(Actions.OpenFileByPath(testFile, None, None));
+  dispatch(Actions.OpenFileByPath(testFile, SplitDirection.Current, None));
 
   wait(~name="Verify buffer is loaded", (state: State.t) => {
     state
