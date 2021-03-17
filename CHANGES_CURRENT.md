@@ -56,6 +56,7 @@
 - #3280 - Quickmenu: Fix delay in processing Control+W key (fixes #3262)
 - #3279 - Completion: Fix issue completing ReScript identifiers (fixes #3258)
 - #3286 - Quickmenu: Scope control+tab to visible editor (fixes #3275, #2009)
+- #3292 - Vim: Fix control+d/control+u behavior in explorer
 
 ### Performance
 
