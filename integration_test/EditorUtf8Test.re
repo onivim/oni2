@@ -11,7 +11,7 @@ runTest(~name="EditorUtf8Test", ({input, dispatch, wait, _}) => {
   );
 
   let testFile = getAssetPath("utf8.txt");
-  dispatch(Actions.OpenFileByPath(testFile, None, None));
+  dispatch(Actions.OpenFileByPath(testFile, SplitDirection.Current, None));
 
   wait(~name="Verify buffer is loaded", (state: State.t) => {
     state

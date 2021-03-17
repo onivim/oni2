@@ -515,7 +515,14 @@ switch (eff) {
     |> (ignore: Revery.App.unsubscribe => unit);
 
     List.iter(
-      v => dispatch(Model.Actions.OpenFileByPath(v, None, None)),
+      v =>
+        dispatch(
+          Model.Actions.OpenFileByPath(
+            v,
+            Oni_Core.SplitDirection.Current,
+            None,
+          ),
+        ),
       cliOptions.filesToOpen,
     );
 

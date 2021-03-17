@@ -11,7 +11,7 @@ runTest(~name="LineEndingsLFTest", ({dispatch, wait, _}) => {
   let testFile = getAssetPath("test.lf");
 
   // Create a buffer
-  dispatch(Actions.OpenFileByPath(testFile, None, None));
+  dispatch(Actions.OpenFileByPath(testFile, SplitDirection.Current, None));
 
   wait(~name="Verify buffer is loaded", (state: State.t) => {
     state

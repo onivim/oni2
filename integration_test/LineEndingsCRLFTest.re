@@ -11,7 +11,7 @@ runTest(~name="LineEndingsCRLFTest", ({dispatch, wait, _}) => {
   let testFile = getAssetPath("test.crlf");
 
   // Create a buffer
-  dispatch(Actions.OpenFileByPath(testFile, None, None));
+  dispatch(Actions.OpenFileByPath(testFile, SplitDirection.Current, None));
 
   // Wait for highlights to show up
   wait(

@@ -19,7 +19,9 @@ runTest(~name="LanguageCssTest", ({input, dispatch, wait, _}) => {
     ~description="css completion",
     () => {
       // Create a buffer
-      dispatch(Actions.OpenFileByPath("test.css", None, None));
+      dispatch(
+        Actions.OpenFileByPath("test.css", SplitDirection.Current, None),
+      );
 
       // Wait for the CSS filetype
       wait(

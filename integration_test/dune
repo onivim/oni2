@@ -6,7 +6,7 @@
    ConfigurationInvalidThemeTest ConfigurationPerFileTypeTest
    EditorFontFromPathTest EditorFontValidTest EditorSplitFileTest
    EditorUtf8Test ExCommandKeybindingTest ExCommandKeybindingWithArgsTest
-   ExCommandKeybindingNormTest ExtConfigurationChangedTest
+   ExCommandKeybindingNormTest ExtConfigurationChangedTest ExtHostContextTest
    ExtHostBufferOpenTest ExtHostBufferUpdatesTest
    ExtHostCommandActivationTest ExtHostCompletionTest ExtHostDefinitionTest
    ExtHostWorkspaceSearchTest FileWatcherTest FormatOnSaveTest
@@ -44,7 +44,7 @@
    ExCommandKeybindingNormTest.exe ExCommandKeybindingWithArgsTest.exe
    ExtConfigurationChangedTest.exe ExtHostBufferOpenTest.exe
    ExtHostBufferUpdatesTest.exe ExtHostCommandActivationTest.exe
-   ExtHostCompletionTest.exe ExtHostDefinitionTest.exe
+   ExtHostContextTest.exe ExtHostCompletionTest.exe ExtHostDefinitionTest.exe
    ExtHostWorkspaceSearchTest.exe FileWatcherTest.exe FormatOnSaveTest.exe
    KeybindingsInvalidJsonTest.exe KeySequenceJJTest.exe InputIgnoreTest.exe
    InputContextKeysTest.exe InputRemapMotionTest.exe LanguageCssTest.exe

@@ -26,7 +26,7 @@ type model = {
 
 [@deriving show]
 type command =
-  | GotoDefinition;
+  | GotoDefinition(SplitDirection.t);
 
 [@deriving show]
 type msg =
@@ -46,7 +46,7 @@ let update = (msg, model) =>
       {...model, maybeDefinition: Some(definition)},
       Outmsg.Nothing,
     )
-  | Command(GotoDefinition) =>
+  | Command(GotoDefinition(direction)) =>
     let outmsg =
       switch (model.maybeDefinition) {
       | None => Outmsg.Nothing
@@ -62,6 +62,7 @@ let update = (msg, model) =>
         Outmsg.OpenFile({
           filePath: definition.uri |> Oni_Core.Uri.toFileSystemPath,
           location: Some(position),
+          direction,
         });
       };
     (model, outmsg);
@@ -145,7 +146,15 @@ module Commands = {
       ~category="Language",
       ~title="Go-to Definition",
       "editor.action.revealDefinition",
-      Command(GotoDefinition),
+      Command(GotoDefinition(SplitDirection.Current)),
+    );
+
+  let gotoDefinitionAside =
+    define(
+      ~category="Language",
+      ~title="Go-to Definition Aside",
+      "editor.action.revealDefinitionAside",
+      Command(GotoDefinition(SplitDirection.Vertical({shouldReuse: true}))),
     );
 };
 
@@ -154,12 +163,22 @@ module Keybindings = {
 
   let condition = "normalMode" |> WhenExpr.parse;
 
-  let goToDefinition =
+  let gotoDefinition =
     bind(~key="<F12>", ~command=Commands.gotoDefinition.id, ~condition);
+  // TODO:
+  // let gotoDefinitionAside =
+  //   bind(
+  //     ~key="<C-K>F12",
+  //     ~command=Commands.gotoDefinitionAside.id,
+  //     ~condition,
+  //   );
 };
 
 module Contributions = {
-  let commands = [Commands.gotoDefinition];
+  let commands = [Commands.gotoDefinition, Commands.gotoDefinitionAside];
 
-  let keybindings = [Keybindings.goToDefinition];
+  let keybindings = [
+    Keybindings.gotoDefinition,
+    //Keybindings.gotoDefinitionAside,
+  ];
 };

@@ -234,8 +234,10 @@ let update = (~config, ~configuration, msg, model) => {
       | Component_VimTree.Nothing
       | Component_VimTree.Expanded(_)
       | Component_VimTree.Collapsed(_) => Nothing
-      | Component_VimTree.Touched(symbol) => SymbolSelected(symbol)
-      | Component_VimTree.Selected(_) => Nothing
+
+      | Component_VimTree.Touched(symbol)
+      | Component_VimTree.Selected(symbol)
+      | Component_VimTree.SelectedNode(symbol) => SymbolSelected(symbol)
       };
 
     ({...model, symbolOutline}, outmsg');

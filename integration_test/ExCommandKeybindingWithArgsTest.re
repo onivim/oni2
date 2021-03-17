@@ -16,7 +16,7 @@ runTest(
   ~name="ExCommandKeybindingTest",
   ({dispatch, wait, input, _}) => {
     let testFile = getAssetPath("some-test-file.txt");
-    dispatch(Actions.OpenFileByPath(testFile, None, None));
+    dispatch(Actions.OpenFileByPath(testFile, SplitDirection.Current, None));
 
     wait(~name="Verify buffer is loaded", (state: State.t) =>
       switch (Selectors.getActiveBuffer(state)) {

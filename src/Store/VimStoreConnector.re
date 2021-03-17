@@ -61,7 +61,12 @@ let start =
 
   let _: unit => unit =
     Vim.onVersion(() => {
-      Actions.OpenFileByPath("oni://Version", None, None) |> dispatch
+      Actions.OpenFileByPath(
+        "oni://Version",
+        Core.SplitDirection.Current,
+        None,
+      )
+      |> dispatch
     });
 
   let _: unit => unit =
@@ -96,19 +101,30 @@ let start =
 
     let actionForFilePath = (filePath, direction) => {
       switch (filePath) {
-      | Some(fp) => Actions.OpenFileByPath(fp, Some(direction), None)
+      | Some(fp) => Actions.OpenFileByPath(fp, direction, None)
       // No file path specified, so let's use the current buffer
       | None => Actions.OpenBufferById({bufferId: currentBufferId, direction})
       };
     };
     Vim.Split.(
       switch (split) {
-      | NewHorizontal => Actions.NewBuffer({direction: `Horizontal})
-      | NewVertical => Actions.NewBuffer({direction: `Vertical})
-      | NewTabPage => Actions.NewBuffer({direction: `NewTab})
-      | Vertical({filePath}) => actionForFilePath(filePath, `Vertical)
-      | Horizontal({filePath}) => actionForFilePath(filePath, `Horizontal)
-      | TabPage({filePath}) => actionForFilePath(filePath, `NewTab)
+      | NewHorizontal =>
+        Actions.NewBuffer({direction: Core.SplitDirection.Horizontal})
+      | NewVertical =>
+        Actions.NewBuffer({
+          direction: Core.SplitDirection.Vertical({shouldReuse: false}),
+        })
+      | NewTabPage =>
+        Actions.NewBuffer({direction: Core.SplitDirection.NewTab})
+      | Vertical({filePath}) =>
+        actionForFilePath(
+          filePath,
+          Core.SplitDirection.Vertical({shouldReuse: false}),
+        )
+      | Horizontal({filePath}) =>
+        actionForFilePath(filePath, Core.SplitDirection.Horizontal)
+      | TabPage({filePath}) =>
+        actionForFilePath(filePath, Core.SplitDirection.NewTab)
       }
     );
   };
@@ -151,7 +167,7 @@ let start =
 
              Actions.OpenFileByPath(
                definitionResult.uri |> Core.Uri.toFileSystemPath,
-               None,
+               Core.SplitDirection.Current,
                Some(position),
              );
            });
@@ -551,7 +567,11 @@ let start =
       if (showUpdateChangelog
           && Core.BuildInfo.commitId != Persistence.Global.version()) {
         dispatch(
-          Actions.OpenFileByPath(Core.BufferPath.updateChangelog, None, None),
+          Actions.OpenFileByPath(
+            Core.BufferPath.updateChangelog,
+            Core.SplitDirection.Current,
+            None,
+          ),
         );
       };
       libvimHasInitialized := true;
@@ -589,7 +609,7 @@ let start =
         dispatch(
           Actions.OpenBufferById({
             bufferId: newContext.bufferId,
-            direction: `Current,
+            direction: Core.SplitDirection.Current,
           }),
         );
       } else {
@@ -621,7 +641,12 @@ let start =
 
         // If we switched buffer, open it in current editor
         if (previousBufferId != bufferId) {
-          dispatch(Actions.OpenBufferById({bufferId, direction: `Current}));
+          dispatch(
+            Actions.OpenBufferById({
+              bufferId,
+              direction: Core.SplitDirection.Current,
+            }),
+          );
         };
 
         updateActiveEditorMode(subMode, mode, effects);
