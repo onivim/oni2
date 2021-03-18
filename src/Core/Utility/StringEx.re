@@ -9,15 +9,16 @@ let isSpace =
   | '\t' => true
   | _ => false;
 
+let findFirst = (~query, str) => {
+  let re = Str.regexp_string(query);
+  try(Some(Str.search_forward(re, str, 0))) {
+  | Not_found => None
+  };
+};
+
 /** [contains(query, str)] returns true if [str] contains the substring [query], false otherwise. */
 let contains = (query, str) => {
-  let re = Str.regexp_string(query);
-  try({
-    let _: int = Str.search_forward(re, str, 0);
-    true;
-  }) {
-  | Not_found => false
-  };
+  findFirst(~query, str) != None;
 };
 
 let characterCount = (~startByte, ~endByte, str) => {

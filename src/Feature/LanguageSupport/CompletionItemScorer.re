@@ -73,37 +73,85 @@ let score = {
 };
 
 let highlights = {
-  let initial = (false, []);
+  let buildHighlightsMap = (line, item: CompletionItem.t, cursor) => {
+    // Map of uchar -> occurrence count
+    let initial = IntMap.empty;
 
-  let f = (~isMatch, ~byte, acc) => {
-    let (isInHighlight, highlights) = acc;
-
-    // Not in a highlight, not in a match... return what we have
-    if (!isMatch) {
-      (false, highlights);
-    } else if (isInHighlight) {
-      // In a highlight, and a match, extend current range
-
-      let highlights' =
-        switch (highlights) {
-        | [] => [(byte, byte)]
-        | [(low, _), ...tail] => [(low, byte), ...tail]
-        };
-      (true, highlights');
-    } else {
-      (
-        // Start new range
-        true,
-        [(byte, byte), ...highlights],
-      );
+    let f = (~isMatch, ~byte, acc) => {
+      prerr_endline(Printf.sprintf("LINE: %s | %d", line, byte));
+      if (isMatch) {
+        let uchar = Zed_utf8.extract(item.filterText, byte);
+        IntMap.update(
+          Uchar.to_int(uchar),
+          fun
+          | None => Some(1)
+          | Some(v) => Some(v + 1),
+          acc,
+        );
+      } else {
+        acc;
+      };
     };
+
+    let selector = (item: CompletionItem.t) => item.filterText;
+    traverse(~f, ~initial, ~selector, line, item, cursor);
   };
 
-  let selector = (item: CompletionItem.t) => item.label;
+  (line, item: CompletionItem.t, cursor) => {
+    let highlightsMap = buildHighlightsMap(line, item, cursor);
 
-  (line, item, cursor) => {
-    let (_, highlights) =
-      traverse(~f, ~initial, ~selector, line, item, cursor);
+    let initial = (false, []);
+
+    let f = (~isMatch, ~byte, acc) => {
+      let (isInHighlight, highlights) = acc;
+
+      // Not in a highlight, not in a match... return what we have
+      if (!isMatch) {
+        (false, highlights);
+      } else if (isInHighlight) {
+        // In a highlight, and a match, extend current range
+
+        let highlights' =
+          switch (highlights) {
+          | [] => [(byte, byte)]
+          | [(low, _), ...tail] => [(low, byte), ...tail]
+          };
+        (true, highlights');
+      } else {
+        (
+          // Start new range
+          true,
+          [(byte, byte), ...highlights],
+        );
+      };
+    };
+
+    let len = String.length(item.label);
+    let rec loop = (highlightsMap, acc, byteIdx) =>
+      if (byteIdx >= len) {
+        acc;
+      } else {
+        let (uchar, nextByte) = Zed_utf8.extract_next(item.label, byteIdx);
+        let ucharCode = Uchar.to_int(uchar);
+        let isIndexHighlighted =
+          IntMap.find_opt(ucharCode, highlightsMap)
+          |> Option.map(count => count > 0)
+          |> Option.value(~default=false);
+
+        let highlightsMap' =
+          IntMap.update(
+            ucharCode,
+            fun
+            | None => None
+            | Some(count) => Some(count - 1),
+            highlightsMap,
+          );
+
+        let acc' = f(~isMatch=isIndexHighlighted, ~byte=byteIdx, acc);
+        loop(highlightsMap', acc', nextByte);
+      };
+
+    let (_, highlights) = loop(highlightsMap, initial, 0);
     highlights |> List.rev;
   };
 };
