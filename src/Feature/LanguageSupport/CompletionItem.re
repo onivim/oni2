@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open Utility;
 open Exthost;
@@ -19,6 +20,7 @@ type t = {
   additionalTextEdits: list(Edit.SingleEditOperation.t),
   command: option(Command.t),
   isFuzzyMatching: bool,
+  score: float,
 };
 
 let create = (~isFuzzyMatching: bool, ~handle, item: SuggestItem.t) => {
@@ -37,6 +39,7 @@ let create = (~isFuzzyMatching: bool, ~handle, item: SuggestItem.t) => {
   additionalTextEdits: item.additionalTextEdits,
   command: item.command,
   isFuzzyMatching,
+  score: 0.,
 };
 
 let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
@@ -61,6 +64,7 @@ let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
     additionalTextEdits: [],
     command: None,
     isFuzzyMatching,
+    score: 0.,
   };
 };
 
@@ -82,4 +86,39 @@ let snippet = (~isFuzzyMatching, ~prefix: string, snippet: string) => {
   additionalTextEdits: [],
   command: None,
   isFuzzyMatching,
+  score: 0.,
+};
+
+let replaceSpan =
+    (
+      ~activeCursor: CharacterPosition.t,
+      ~insertLocation: CharacterPosition.t,
+      item: t,
+    ) => {
+  Exthost.SuggestItem.(
+    switch (item.suggestRange) {
+    | Some(SuggestRange.Single({startColumn, endColumn, _})) =>
+      let stop =
+        max(endColumn - 1 |> CharacterIndex.ofInt, activeCursor.character);
+      CharacterSpan.{start: startColumn - 1 |> CharacterIndex.ofInt, stop};
+    | Some(SuggestRange.Combo({insert, _})) =>
+      let stop =
+        max(
+          insert.endColumn - 1 |> CharacterIndex.ofInt,
+          activeCursor.character,
+        );
+      CharacterSpan.{
+        start:
+          Exthost.OneBasedRange.(
+            insert.startColumn - 1 |> CharacterIndex.ofInt
+          ),
+        stop,
+      };
+    | None =>
+      CharacterSpan.{
+        start: insertLocation.character,
+        stop: activeCursor.character,
+      }
+    }
+  );
 };

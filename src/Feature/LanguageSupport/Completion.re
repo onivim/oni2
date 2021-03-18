@@ -522,7 +522,8 @@ let configurationChanged = (~config, model) => {
 let providerCount = ({providers, _}) => List.length(providers) - 1;
 let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
 
-let recomputeAllItems = (~snippetSortOrder, providers: list(Session.t)) => {
+let recomputeAllItems =
+    (~maybeBuffer, ~cursor, ~snippetSortOrder, providers: list(Session.t)) => {
   providers
   |> List.fold_left(
        (acc, session) => {
@@ -570,6 +571,27 @@ let recomputeAllItems = (~snippetSortOrder, providers: list(Session.t)) => {
      })
   |> StringMap.bindings
   |> List.concat_map(snd)
+  |> List.map(
+       ((loc: CharacterPosition.t, a: Filter.result(CompletionItem.t))) => {
+       maybeBuffer
+       |> Option.map(buffer => {
+            let line =
+              Oni_Core.Buffer.getLine(
+                loc.line |> EditorCoreTypes.LineNumber.toZeroBased,
+                buffer,
+              )
+              |> BufferLine.raw;
+            let score = CompletionItemScorer.score(line, a.item, loc, cursor);
+            (loc, Filter.{
+                    ...a,
+                    item: {
+                      ...a.item,
+                      score,
+                    },
+                  });
+          })
+       |> Option.value(~default=(loc, a))
+     })
   |> List.fast_sort(((_loc, a), (_loc, b)) =>
        CompletionItemSorter.compare(~snippetSortOrder, a, b)
      )
@@ -681,9 +703,14 @@ let unregister = (~handle, model) => {
     ),
 };
 
-let updateSessions = (providers, model) => {
+let updateSessions = (~buffer, ~activeCursor, providers, model) => {
   let allItems =
-    recomputeAllItems(~snippetSortOrder=model.snippetSortOrder, providers);
+    recomputeAllItems(
+      ~cursor=activeCursor,
+      ~maybeBuffer=Some(buffer),
+      ~snippetSortOrder=model.snippetSortOrder,
+      providers,
+    );
   let selection =
     Selection.ensureValidFocus(
       ~count=Array.length(allItems),
@@ -708,7 +735,7 @@ let cursorMoved =
          Session.refine(~languageConfiguration, ~buffer, ~position=current),
        );
 
-  model |> updateSessions(providers');
+  model |> updateSessions(~activeCursor=current, ~buffer, providers');
 };
 
 let invokeCompletion =
@@ -734,7 +761,7 @@ let invokeCompletion =
          ),
        );
 
-  model |> updateSessions(providers');
+  model |> updateSessions(~activeCursor, ~buffer, providers');
 };
 
 let refine = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
@@ -748,7 +775,7 @@ let refine = (~languageConfiguration, ~buffer, ~activeCursor, model) => {
          ),
        );
 
-  model |> updateSessions(providers');
+  model |> updateSessions(~activeCursor, ~buffer, providers');
 };
 
 let bufferUpdated =
@@ -893,37 +920,10 @@ let update =
         ) = allItems[focusedIndex];
 
         let replaceSpan =
-          Exthost.SuggestItem.(
-            switch (result.item.suggestRange) {
-            | Some(SuggestRange.Single({startColumn, endColumn, _})) =>
-              let stop =
-                max(
-                  endColumn - 1 |> CharacterIndex.ofInt,
-                  activeCursor.character,
-                );
-              CharacterSpan.{
-                start: startColumn - 1 |> CharacterIndex.ofInt,
-                stop,
-              };
-            | Some(SuggestRange.Combo({insert, _})) =>
-              let stop =
-                max(
-                  insert.endColumn - 1 |> CharacterIndex.ofInt,
-                  activeCursor.character,
-                );
-              CharacterSpan.{
-                start:
-                  Exthost.OneBasedRange.(
-                    insert.startColumn - 1 |> CharacterIndex.ofInt
-                  ),
-                stop,
-              };
-            | None =>
-              CharacterSpan.{
-                start: insertLocation.character,
-                stop: activeCursor.character,
-              }
-            }
+          CompletionItem.replaceSpan(
+            ~activeCursor,
+            ~insertLocation,
+            result.item,
           );
 
         let effect =
@@ -987,7 +987,12 @@ let update =
     let providers =
       model.providers |> List.map(provider => Session.update(msg, provider));
     let allItems =
-      recomputeAllItems(~snippetSortOrder=model.snippetSortOrder, providers);
+      recomputeAllItems(
+        ~cursor=activeCursor,
+        ~maybeBuffer,
+        ~snippetSortOrder=model.snippetSortOrder,
+        providers,
+      );
     let selection =
       Selection.ensureValidFocus(
         ~count=Array.length(allItems),
@@ -999,12 +1004,11 @@ let update =
 
     let model'' =
       switch (maybeCurrentSelection) {
-      | Some((previousIndex, previousItem)) =>
-        model'
-        |> tryToMaintainSelected(
-             ~previousIndex,
-             ~previousLabel=previousItem.label,
-           )
+      | Some((previousIndex, previousItem)) => model'
+      // |> tryToMaintainSelected(
+      //      ~previousIndex,
+      //      ~previousLabel=previousItem.label,
+      //    )
       | None => model'
       };
 
@@ -1474,7 +1478,13 @@ module View = {
               let CompletionItem.{label: text, kind, _} = item;
               <itemView
                 isFocused={Some(index) == focused}
-                text
+                text={
+                  text
+                  ++ "|"
+                  ++ item.filterText
+                  ++ "|"
+                  ++ string_of_float(item.score)
+                }
                 kind
                 highlight
                 theme

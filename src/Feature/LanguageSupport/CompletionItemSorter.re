@@ -1,4 +1,5 @@
 open Oni_Core;
+open Utility;
 
 let isSnippet = (item: CompletionItem.t) => {
   item.insertTextRules
@@ -7,20 +8,54 @@ let isSnippet = (item: CompletionItem.t) => {
      );
 };
 
-let compareSnippet = (~snippetSortOrder, a, b) => {
-  let isSnippetA = isSnippet(a);
-  let isSnippetB = isSnippet(b);
+module Compare = {
+  let snippetSort = (~snippetSortOrder, a, b) => {
+    let isSnippetA = isSnippet(a);
+    let isSnippetB = isSnippet(b);
 
-  if (snippetSortOrder == `Inline || snippetSortOrder == `Hidden) {
-    0;
-  } else if (isSnippetA != isSnippetB) {
-    if (isSnippetA) {
-      snippetSortOrder == `Top ? (-1) : 1;
+    if (snippetSortOrder == `Inline || snippetSortOrder == `Hidden) {
+      None;
+    } else if (isSnippetA != isSnippetB) {
+      if (isSnippetA) {
+        Some(snippetSortOrder == `Top ? (-1) : 1);
+      } else {
+        Some(snippetSortOrder == `Top ? 1 : (-1));
+      };
     } else {
-      snippetSortOrder == `Top ? 1 : (-1);
+      None;
     };
-  } else {
-    0;
+  };
+
+  let score = (a: CompletionItem.t, b: CompletionItem.t) =>
+    if (Float.equal(a.score, b.score)) {
+      None;
+    } else {
+      Some(int_of_float((b.score -. a.score) *. 1000.));
+    };
+
+  let sortTextIfNotFuzzyMatching =
+      (
+        a: Filter.result(CompletionItem.t),
+        b: Filter.result(CompletionItem.t),
+      ) =>
+    // if (!a.item.isFuzzyMatching && !b.item.isFuzzyMatching) {
+    //   Some(String.compare(a.item.sortText, b.item.sortText));
+    // } else {
+    None;
+  // };
+
+  let sortByLabel =
+      (
+        a: Filter.result(CompletionItem.t),
+        b: Filter.result(CompletionItem.t),
+      ) => {
+    let aLen = String.length(a.item.label);
+    let bLen = String.length(b.item.label);
+    if (aLen == bLen) {
+      Some(String.compare(a.item.label, b.item.label));
+    } else {
+      Some(aLen - bLen);
+    };
   };
 };
 
@@ -30,31 +65,11 @@ let compare =
       a: Filter.result(CompletionItem.t),
       b: Filter.result(CompletionItem.t),
     ) => {
-  let snippetCompare = compareSnippet(~snippetSortOrder, a.item, b.item);
-  if (snippetCompare == 0) {
-    // First, use the sortText, if available
-    let sortValue =
-      if (!a.item.isFuzzyMatching && !b.item.isFuzzyMatching) {
-        String.compare(a.item.sortText, b.item.sortText);
-      } else {
-        0;
-        // If we're fuzzy matching,
-      };
-
-    if (sortValue == 0) {
-      let aLen = String.length(a.item.label);
-      let bLen = String.length(b.item.label);
-      if (aLen == bLen) {
-        String.compare(a.item.label, b.item.label);
-      } else {
-        aLen - bLen;
-      };
-    } else {
-      sortValue;
-    };
-  } else {
-    snippetCompare;
-  };
+  Compare.snippetSort(~snippetSortOrder, a.item, b.item)
+  |> OptionEx.or_lazy(() => Compare.score(a.item, b.item))
+  |> OptionEx.or_lazy(() => Compare.sortTextIfNotFuzzyMatching(a, b))
+  |> OptionEx.or_lazy(() => Compare.sortByLabel(a, b))
+  |> Option.value(~default=0);
 };
 
 let%test_module "compare" =
