@@ -702,7 +702,7 @@ let byteToCharacter = (position: BytePosition.t, editor) => {
 
   let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
 
-  if (line >= 0 line < bufferLineCount) {
+  if (line >= 0 && line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, editor.buffer);
     let character = BufferLine.getIndex(~byte=position.byte, bufferLine);
 
