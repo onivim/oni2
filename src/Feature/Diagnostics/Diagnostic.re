@@ -25,7 +25,7 @@ let explode = (buffer, diagnostic) => {
   let lineCount = Buffer.getNumberOfLines(buffer);
   let measure = n => {
     let lineIdx = EditorCoreTypes.LineNumber.toZeroBased(n);
-    lineIdx >= 0 && lineIdx < lineCount 
+    lineIdx >= 0 && lineIdx < lineCount
       ? buffer
         |> Buffer.getLine(lineIdx)
         // TODO: Is this correct, for a character range?
