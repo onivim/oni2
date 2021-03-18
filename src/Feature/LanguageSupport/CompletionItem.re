@@ -36,7 +36,8 @@ let create = (~isFuzzyMatching: bool, ~handle, item: SuggestItem.t) => {
   commitCharacters: item.commitCharacters,
   additionalTextEdits: item.additionalTextEdits,
   command: item.command,
-  isFuzzyMatching,
+  isFuzzyMatching:
+    isFuzzyMatching && SuggestItem.sortText(item) == item.label,
 };
 
 let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
@@ -60,7 +61,7 @@ let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
     commitCharacters: [],
     additionalTextEdits: [],
     command: None,
-    isFuzzyMatching,
+    isFuzzyMatching: false,
   };
 };
 
@@ -81,5 +82,5 @@ let snippet = (~isFuzzyMatching, ~prefix: string, snippet: string) => {
   commitCharacters: [],
   additionalTextEdits: [],
   command: None,
-  isFuzzyMatching,
+  isFuzzyMatching: false,
 };

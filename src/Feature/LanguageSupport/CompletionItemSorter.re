@@ -35,11 +35,11 @@ let compare =
   if (snippetCompare == 0) {
     // First, use the sortText, if available
     let sortValue =
-      // if (!a.item.isFuzzyMatching && !b.item.isFuzzyMatching) {
+      // if (a.item.isFuzzyMatching && b.item.isFuzzyMatching) {
+      //   0
+      // }
+      // else{
       String.compare(a.item.sortText, b.item.sortText);
-    // } else {
-    //   0;
-    // If we're fuzzy matching,
     // };
 
     if (sortValue == 0) {
