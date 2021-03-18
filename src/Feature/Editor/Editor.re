@@ -702,7 +702,7 @@ let byteToCharacter = (position: BytePosition.t, editor) => {
 
   let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
 
-  if (line < bufferLineCount) {
+  if (line >= 0 line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, editor.buffer);
     let character = BufferLine.getIndex(~byte=position.byte, bufferLine);
 
@@ -730,7 +730,7 @@ let characterToByte = (position: CharacterPosition.t, editor) => {
 
   let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
 
-  if (line < bufferLineCount) {
+  if (line >= 0 && line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, editor.buffer);
     let byteIndex =
       BufferLine.getByteFromIndex(~index=position.character, bufferLine);
@@ -804,7 +804,7 @@ let getCharacterAtPosition = (~position: CharacterPosition.t, {buffer, _}) => {
   let line = EditorCoreTypes.LineNumber.toZeroBased(position.line);
   let bufferLineCount = EditorBuffer.numberOfLines(buffer);
 
-  if (line < bufferLineCount) {
+  if (line >= 0 && line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, buffer);
     try(Some(BufferLine.getUcharExn(~index=position.character, bufferLine))) {
     | _exn => None
@@ -822,7 +822,7 @@ let getCharacterBehindCursor = ({buffer, _} as editor) => {
 
     let bufferLineCount = EditorBuffer.numberOfLines(buffer);
 
-    if (line < bufferLineCount) {
+    if (line >= 0 && line < bufferLineCount) {
       let bufferLine = EditorBuffer.line(line, buffer);
       let index =
         max(
@@ -856,7 +856,7 @@ let getCharacterUnderCursor = ({buffer, _} as editor) => {
 
     let bufferLineCount = EditorBuffer.numberOfLines(buffer);
 
-    if (line < bufferLineCount) {
+    if (line >= 0 && line < bufferLineCount) {
       let bufferLine = EditorBuffer.line(line, buffer);
       let index = BufferLine.getIndex(~byte=cursor.byte, bufferLine);
       try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
