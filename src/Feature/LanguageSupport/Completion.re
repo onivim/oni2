@@ -999,12 +999,11 @@ let update =
 
     let model'' =
       switch (maybeCurrentSelection) {
-      | Some((previousIndex, previousItem)) =>
-        model'
-        |> tryToMaintainSelected(
-             ~previousIndex,
-             ~previousLabel=previousItem.label,
-           )
+      | Some((previousIndex, previousItem)) => model'
+      // |> tryToMaintainSelected(
+      //      ~previousIndex,
+      //      ~previousLabel=previousItem.label,
+      //    )
       | None => model'
       };
 
@@ -1471,10 +1470,10 @@ module View = {
             focused>
             ...{index => {
               let Filter.{highlight, item, _} = items[index] |> snd;
-              let CompletionItem.{label: text, kind, _} = item;
+              let CompletionItem.{label: text, sortText, kind, _} = item;
               <itemView
                 isFocused={Some(index) == focused}
-                text
+                text={text ++ "|" ++ sortText}
                 kind
                 highlight
                 theme

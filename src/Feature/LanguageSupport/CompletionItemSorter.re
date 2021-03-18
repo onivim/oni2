@@ -30,16 +30,17 @@ let compare =
       a: Filter.result(CompletionItem.t),
       b: Filter.result(CompletionItem.t),
     ) => {
-  let snippetCompare = compareSnippet(~snippetSortOrder, a.item, b.item);
+  //let snippetCompare = compareSnippet(~snippetSortOrder, a.item, b.item);
+  let snippetCompare = 0;
   if (snippetCompare == 0) {
     // First, use the sortText, if available
     let sortValue =
-      if (!a.item.isFuzzyMatching && !b.item.isFuzzyMatching) {
-        String.compare(a.item.sortText, b.item.sortText);
-      } else {
-        0;
-        // If we're fuzzy matching,
-      };
+      // if (!a.item.isFuzzyMatching && !b.item.isFuzzyMatching) {
+      String.compare(a.item.sortText, b.item.sortText);
+    // } else {
+    //   0;
+    // If we're fuzzy matching,
+    // };
 
     if (sortValue == 0) {
       let aLen = String.length(a.item.label);
