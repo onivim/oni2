@@ -135,7 +135,7 @@ module Session = {
           filteredItems
           |> List.fold_left(
                (acc, item: CompletionItem.t) => {
-                 StringMap.add(item.label, (meet.insertLocation, item), acc)
+                 StringMap.add(item.label, item, acc)
                },
                StringMap.empty,
              )
@@ -443,7 +443,7 @@ module Selection = {
 
 type model = {
   providers: list(Session.t),
-  allItems: array(Filter.result(CompletionItem.t)),
+  allItems: array(CompletionItem.t),
   selection: Selection.t,
   isInsertMode: bool,
   isSnippetMode: bool,
@@ -492,7 +492,15 @@ let providerCount = ({providers, _}) => List.length(providers) - 1;
 let availableCompletionCount = ({allItems, _}) => Array.length(allItems);
 
 let recomputeAllItems =
-    (~maybeBuffer, ~cursor, ~snippetSortOrder, providers: list(Session.t)) => {
+    (
+      ~maybeBuffer,
+      ~cursor: CharacterPosition.t,
+      ~snippetSortOrder,
+      providers: list(Session.t),
+    ) => {
+  let maybeLine =
+    maybeBuffer |> OptionEx.flatMap(Buffer.rawLine(cursor.line));
+
   providers
   |> List.fold_left(
        (acc, session) => {
@@ -502,8 +510,8 @@ let recomputeAllItems =
          StringMap.merge(
            (
              _key,
-             maybeA: option((CharacterPosition.t, CompletionItem.t)),
-             maybeB: option(list((CharacterPosition.t, CompletionItem.t))),
+             maybeA: option(CompletionItem.t),
+             maybeB: option(list(CompletionItem.t)),
            ) =>
              switch (maybeA, maybeB) {
              | (None, None) => None
@@ -525,43 +533,22 @@ let recomputeAllItems =
        // If multiple - remove keywords
        | items =>
          items
-         |> List.filter(item =>
-              !(Filter.(snd(item)) |> CompletionItem.isKeyword)
-            )
+         |> List.filter(item => !(Filter.(item) |> CompletionItem.isKeyword))
        }
      })
   |> StringMap.bindings
   |> List.concat_map(snd)
-  |> List.map(((loc: CharacterPosition.t, a: CompletionItem.t)) => {
-       maybeBuffer
-       |> Option.map(buffer => {
-            let line =
-              Oni_Core.Buffer.getLine(
-                loc.line |> EditorCoreTypes.LineNumber.toZeroBased,
-                buffer,
-              )
-              |> BufferLine.raw;
-            let score = CompletionItemScorer.score(line, a, cursor);
-            (
-              loc,
-              Filter.{
-                highlight: CompletionItemScorer.highlights(line, a, cursor),
-                score,
-                item: {
-                  ...a,
-                  score,
-                },
-              },
-            );
+  |> List.map((item: CompletionItem.t) => {
+       maybeLine
+       |> Option.map(line => {
+            let score = CompletionItemScorer.score(line, item, cursor);
+            {...item, score};
           })
-       |> Option.value(
-            ~default=(loc, Filter.{highlight: [], score: 0., item: a}),
-          )
+       |> Option.value(~default=item)
      })
-  |> List.fast_sort(((_loc, a), (_loc, b)) =>
+  |> List.fast_sort((a, b) =>
        CompletionItemSorter.compare(~snippetSortOrder, a, b)
      )
-  |> List.map(snd)
   |> Array.of_list;
 };
 
@@ -788,9 +775,7 @@ let bufferUpdated =
 let selected = model => {
   switch (model.selection) {
   | None => None
-  | Some(focusedIndex) =>
-    let result = model.allItems[focusedIndex];
-    Some(result.item);
+  | Some(focusedIndex) => Some(model.allItems[focusedIndex])
   };
 };
 
@@ -840,22 +825,21 @@ let update =
       | Some(focusedIndex) =>
         let result = allItems[focusedIndex];
 
-        let replaceSpan =
-          CompletionItem.replaceSpan(~activeCursor, result.item);
+        let replaceSpan = CompletionItem.replaceSpan(~activeCursor, result);
 
         let effect =
           Exthost.SuggestItem.InsertTextRules.(
-            matches(~rule=InsertAsSnippet, result.item.insertTextRules)
+            matches(~rule=InsertAsSnippet, result.insertTextRules)
           )
             ? Outmsg.InsertSnippet({
                 replaceSpan,
-                snippet: result.item.insertText,
-                additionalEdits: result.item.additionalTextEdits,
+                snippet: result.insertText,
+                additionalEdits: result.additionalTextEdits,
               })
             : Outmsg.ApplyCompletion({
                 replaceSpan,
-                insertText: result.item.insertText,
-                additionalEdits: result.item.additionalTextEdits,
+                insertText: result.insertText,
+                additionalEdits: result.additionalTextEdits,
               });
 
         (
@@ -864,8 +848,7 @@ let update =
             providers:
               List.map(
                 provider => {
-                  provider
-                  |> Session.complete(result.item.additionalTextEdits)
+                  provider |> Session.complete(result.additionalTextEdits)
                 },
                 model.providers,
               ),
@@ -1317,6 +1300,8 @@ module View = {
 
   let make =
       (
+        ~buffer,
+        ~cursor: CharacterPosition.t,
         ~x: int,
         ~y: int,
         ~lineHeight: float,
@@ -1330,6 +1315,8 @@ module View = {
     /*let hoverEnabled =
       Configuration.getValue(c => c.editorHoverEnabled, state.configuration);*/
     let items = completions |> allItems;
+
+    let maybeLine = buffer |> Buffer.rawLine(cursor.line);
 
     let colors: Colors.t = {
       suggestWidgetSelectedBackground:
@@ -1350,9 +1337,9 @@ module View = {
     let maxWidth =
       items
       |> Array.fold_left(
-           (maxWidth, this: Filter.result(CompletionItem.t)) => {
+           (maxWidth, this: CompletionItem.t) => {
              let textWidth =
-               Service_Font.measure(~text=this.item.label, editorFont);
+               Service_Font.measure(~text=this.label, editorFont);
              let thisWidth =
                int_of_float(textWidth +. 0.5) + Constants.padding;
              max(maxWidth, thisWidth);
@@ -1367,8 +1354,8 @@ module View = {
     let detail =
       switch (focused) {
       | Some(index) =>
-        let focused: Filter.result(CompletionItem.t) = items[index];
-        switch (focused.item.detail) {
+        let focused: CompletionItem.t = items[index];
+        switch (focused.detail) {
         | Some(text) =>
           <detailView text width lineHeight colors tokenTheme editorFont />
         | None => React.empty
@@ -1387,8 +1374,16 @@ module View = {
             theme
             focused>
             ...{index => {
-              let Filter.{highlight, item, _} = items[index];
+              let item = items[index];
               let CompletionItem.{label: text, kind, _} = item;
+
+              let highlight =
+                maybeLine
+                |> Option.map(line => {
+                     CompletionItemScorer.highlights(line, item, cursor)
+                   })
+                |> Option.value(~default=[]);
+
               <itemView
                 isFocused={Some(index) == focused}
                 text

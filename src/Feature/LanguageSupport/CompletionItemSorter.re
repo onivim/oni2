@@ -42,15 +42,11 @@ module Compare = {
     };
   };
 
-  let sortByLabel =
-      (
-        a: Filter.result(CompletionItem.t),
-        b: Filter.result(CompletionItem.t),
-      ) => {
-    let aLen = String.length(a.item.label);
-    let bLen = String.length(b.item.label);
+  let sortByLabel = (a: CompletionItem.t, b: CompletionItem.t) => {
+    let aLen = String.length(a.label);
+    let bLen = String.length(b.label);
     if (aLen == bLen) {
-      Some(String.compare(a.item.label, b.item.label));
+      Some(String.compare(a.label, b.label));
     } else {
       Some(aLen - bLen);
     };
@@ -58,14 +54,10 @@ module Compare = {
 };
 
 let compare =
-    (
-      ~snippetSortOrder=`Inline,
-      a: Filter.result(CompletionItem.t),
-      b: Filter.result(CompletionItem.t),
-    ) => {
-  Compare.snippetSort(~snippetSortOrder, a.item, b.item)
-  |> OptionEx.or_lazy(() => Compare.score(a.item, b.item))
-  |> OptionEx.or_lazy(() => Compare.sortBySortText(a.item, b.item))
+    (~snippetSortOrder=`Inline, a: CompletionItem.t, b: CompletionItem.t) => {
+  Compare.snippetSort(~snippetSortOrder, a, b)
+  |> OptionEx.or_lazy(() => Compare.score(a, b))
+  |> OptionEx.or_lazy(() => Compare.sortBySortText(a, b))
   |> OptionEx.or_lazy(() => Compare.sortByLabel(a, b))
   |> Option.value(~default=0);
 };

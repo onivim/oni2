@@ -77,8 +77,7 @@ let highlights = {
     // Map of uchar -> occurrence count
     let initial = IntMap.empty;
 
-    let f = (~isMatch, ~byte, acc) => {
-      prerr_endline(Printf.sprintf("LINE: %s | %d", line, byte));
+    let f = (~isMatch, ~byte, acc) =>
       if (isMatch) {
         let uchar = Zed_utf8.extract(item.filterText, byte);
         IntMap.update(
@@ -91,7 +90,6 @@ let highlights = {
       } else {
         acc;
       };
-    };
 
     let selector = (item: CompletionItem.t) => item.filterText;
     traverse(~f, ~initial, ~selector, line, item, cursor);
