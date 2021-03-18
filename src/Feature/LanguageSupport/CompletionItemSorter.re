@@ -33,17 +33,6 @@ module Compare = {
       Some(int_of_float((b.score -. a.score) *. 1000.));
     };
 
-  let sortTextIfNotFuzzyMatching =
-      (
-        a: Filter.result(CompletionItem.t),
-        b: Filter.result(CompletionItem.t),
-      ) =>
-    // if (!a.item.isFuzzyMatching && !b.item.isFuzzyMatching) {
-    //   Some(String.compare(a.item.sortText, b.item.sortText));
-    // } else {
-    None;
-  // };
-
   let sortByLabel =
       (
         a: Filter.result(CompletionItem.t),
@@ -67,7 +56,6 @@ let compare =
     ) => {
   Compare.snippetSort(~snippetSortOrder, a.item, b.item)
   |> OptionEx.or_lazy(() => Compare.score(a.item, b.item))
-  |> OptionEx.or_lazy(() => Compare.sortTextIfNotFuzzyMatching(a, b))
   |> OptionEx.or_lazy(() => Compare.sortByLabel(a, b))
   |> Option.value(~default=0);
 };
@@ -75,7 +63,7 @@ let compare =
 let%test_module "compare" =
   (module
    {
-     let create = (~isSnippet, ~isFuzzyMatching, ~label, ~sortText) => {
+     let create = (~isSnippet, ~label, ~sortText) => {
        CompletionItem.{
          chainedCacheId: None,
          handle: None,
@@ -94,7 +82,6 @@ let%test_module "compare" =
          commitCharacters: [],
          additionalTextEdits: [],
          command: None,
-         isFuzzyMatching,
        }
        |> Filter.result;
      };
@@ -103,26 +90,10 @@ let%test_module "compare" =
        (module
         {
           let aNotSnippet =
-            create(
-              ~isSnippet=false,
-              ~isFuzzyMatching=false,
-              ~label="a",
-              ~sortText="a",
-            );
-          let bSnippet =
-            create(
-              ~isSnippet=true,
-              ~isFuzzyMatching=false,
-              ~label="b",
-              ~sortText="b",
-            );
+            create(~isSnippet=false, ~label="a", ~sortText="a");
+          let bSnippet = create(~isSnippet=true, ~label="b", ~sortText="b");
           let cNotSnippet =
-            create(
-              ~isSnippet=false,
-              ~isFuzzyMatching=false,
-              ~label="c",
-              ~sortText="c",
-            );
+            create(~isSnippet=false, ~label="c", ~sortText="c");
 
           let%test "snippetSortOrder 'inline' sorts correctly" = {
             [cNotSnippet, bSnippet, aNotSnippet]
@@ -141,59 +112,25 @@ let%test_module "compare" =
         });
 
      let%test "sortText takes precedence" = {
-       let sortTextZ =
-         create(
-           ~isSnippet=false,
-           ~isFuzzyMatching=false,
-           ~label="abc",
-           ~sortText="z",
-         );
-       let sortTextA =
-         create(
-           ~isSnippet=false,
-           ~isFuzzyMatching=false,
-           ~label="def",
-           ~sortText="a",
-         );
+       let sortTextZ = create(~isSnippet=false, ~label="abc", ~sortText="z");
+       let sortTextA = create(~isSnippet=false, ~label="def", ~sortText="a");
 
        [sortTextZ, sortTextA]
        |> List.sort(compare) == [sortTextA, sortTextZ];
      };
 
      let%test "falls back to label" = {
-       let abc =
-         create(
-           ~isSnippet=false,
-           ~isFuzzyMatching=false,
-           ~label="abc",
-           ~sortText="a",
-         );
-       let def =
-         create(
-           ~isSnippet=false,
-           ~isFuzzyMatching=false,
-           ~label="def",
-           ~sortText="a",
-         );
+       let abc = create(~isSnippet=false, ~label="abc", ~sortText="a");
+       let def = create(~isSnippet=false, ~label="def", ~sortText="a");
 
        [def, abc] |> List.sort(compare) == [abc, def];
      };
 
      let%test "when falling back to label, prefer shorter result" = {
        let toString =
-         create(
-           ~isSnippet=false,
-           ~isFuzzyMatching=false,
-           ~label="toString",
-           ~sortText="a",
-         );
+         create(~isSnippet=false, ~label="toString", ~sortText="a");
        let toLocaleString =
-         create(
-           ~isSnippet=false,
-           ~isFuzzyMatching=false,
-           ~label="toLocaleString",
-           ~sortText="a",
-         );
+         create(~isSnippet=false, ~label="toLocaleString", ~sortText="a");
 
        [toLocaleString, toString]
        |> List.sort(compare) == [toString, toLocaleString];
@@ -202,19 +139,8 @@ let%test_module "compare" =
      let%test "#2235: should prefer fuzzy-matches over sort text" = {
        // ...but once we start searching
        let forEachWithIndex =
-         create(
-           ~isSnippet=false,
-           ~isFuzzyMatching=true,
-           ~label="forEachWithIndex",
-           ~sortText="a",
-         );
-       let range =
-         create(
-           ~isSnippet=false,
-           ~isFuzzyMatching=true,
-           ~label="range",
-           ~sortText="z",
-         );
+         create(~isSnippet=false, ~label="forEachWithIndex", ~sortText="a");
+       let range = create(~isSnippet=false, ~label="range", ~sortText="z");
 
        // ...prioritize fuzzy score (well, until fzy is hooked up - string length as a proxy)
        [forEachWithIndex, range]

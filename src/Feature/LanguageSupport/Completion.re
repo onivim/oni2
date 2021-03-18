@@ -117,32 +117,15 @@ module Session = {
 
       let explodedQuery = Zed_utf8.explode(query);
 
-      let items' =
-        items
-        |> List.filter((item: CompletionItem.t) =>
-             if (String.length(item.filterText) < String.length(query)) {
-               false;
-             } else {
-               Filter.fuzzyMatches(explodedQuery, item.filterText);
-             }
-           )
-        |> Filter.rank(query, toString);
-
-      // Tag as fuzzy matched
-      if (explodedQuery != []) {
-        items'
-        |> List.map((filterItem: Filter.result(CompletionItem.t)) =>
-             {
-               ...filterItem,
-               item: {
-                 ...filterItem.item,
-                 isFuzzyMatching: true,
-               },
-             }
-           );
-      } else {
-        items';
-      };
+      items
+      |> List.filter((item: CompletionItem.t) =>
+           if (String.length(item.filterText) < String.length(query)) {
+             false;
+           } else {
+             Filter.fuzzyMatches(explodedQuery, item.filterText);
+           }
+         )
+      |> Filter.rank(query, toString);
     };
 
   let filteredItems =
@@ -180,11 +163,7 @@ module Session = {
                  (~providerModel, ~meet: CompletionMeet.t, ~cursor) => {
                // TODO: What to do with the error `_outmsg` case?
                let (providerModel', _outmsg) =
-                 ProviderImpl.update(
-                   ~isFuzzyMatching=meet.base != "",
-                   internalMsg,
-                   providerModel,
-                 );
+                 ProviderImpl.update(internalMsg, providerModel);
                let (completionState, items) =
                  ProviderImpl.items(providerModel');
                switch (completionState, items) {

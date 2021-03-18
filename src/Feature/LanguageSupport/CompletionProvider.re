@@ -14,7 +14,7 @@ module type S = {
     | Nothing
     | ProviderError(string);
 
-  let update: (~isFuzzyMatching: bool, msg, model) => (model, outmsg);
+  let update: (msg, model) => (model, outmsg);
 
   let create:
     (
@@ -108,26 +108,20 @@ module ExthostCompletionProvider =
 
   let handle = () => Some(providerHandle);
 
-  let update = (~isFuzzyMatching, msg, model) =>
+  let update = (msg, model) =>
     switch (msg) {
     | ResultAvailable({handle, result}) when handle == providerHandle =>
       let isComplete = !result.isIncomplete;
       let completions =
         Exthost.SuggestResult.(result.completions)
-        |> List.map(
-             CompletionItem.create(~isFuzzyMatching, ~handle=providerHandle),
-           );
+        |> List.map(CompletionItem.create(~handle=providerHandle));
       ({isComplete, completions}, Nothing);
     | DetailsAvailable({handle, item}) when handle == providerHandle =>
       let completions' =
         model.completions
         |> List.map((previousItem: CompletionItem.t) =>
              if (previousItem.chainedCacheId == item.chainedCacheId) {
-               CompletionItem.create(
-                 ~isFuzzyMatching=previousItem.isFuzzyMatching,
-                 ~handle=providerHandle,
-                 item,
-               );
+               CompletionItem.create(~handle=providerHandle, item);
              } else {
                previousItem;
              }
@@ -264,21 +258,14 @@ module KeywordCompletionProvider =
       let keywords =
         keywords
         |> List.mapi((idx, keyword) => {
-             CompletionItem.keyword(
-               ~sortOrder=idx,
-               ~isFuzzyMatching=base != "",
-               keyword,
-             )
+             CompletionItem.keyword(~sortOrder=idx, keyword)
            });
 
       Some(keywords);
     };
   };
 
-  let update = (~isFuzzyMatching as _, _msg: msg, model: model) => (
-    model,
-    Nothing,
-  );
+  let update = (_msg: msg, model: model) => (model, Nothing);
 
   let items = model => (Complete, model);
 
@@ -354,18 +341,14 @@ module SnippetCompletionProvider =
     };
   };
 
-  let update = (~isFuzzyMatching, msg, model: model) => {
+  let update = (msg, model: model) => {
     Service_Snippets.(
       switch (msg) {
       | SnippetsAvailable(snippets) =>
         let items =
           snippets
           |> List.map((snippet: SnippetWithMetadata.t) => {
-               CompletionItem.snippet(
-                 ~isFuzzyMatching,
-                 ~prefix=snippet.prefix,
-                 snippet.snippet,
-               )
+               CompletionItem.snippet(~prefix=snippet.prefix, snippet.snippet)
              });
         ({...model, items, isComplete: true}, Nothing);
       }

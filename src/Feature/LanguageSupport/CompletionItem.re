@@ -19,11 +19,10 @@ type t = {
   commitCharacters: list(string),
   additionalTextEdits: list(Edit.SingleEditOperation.t),
   command: option(Command.t),
-  isFuzzyMatching: bool,
   score: float,
 };
 
-let create = (~isFuzzyMatching: bool, ~handle, item: SuggestItem.t) => {
+let create = (~handle, item: SuggestItem.t) => {
   chainedCacheId: item.chainedCacheId,
   handle: Some(handle),
   label: item.label,
@@ -38,11 +37,10 @@ let create = (~isFuzzyMatching: bool, ~handle, item: SuggestItem.t) => {
   commitCharacters: item.commitCharacters,
   additionalTextEdits: item.additionalTextEdits,
   command: item.command,
-  isFuzzyMatching,
   score: 0.,
 };
 
-let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
+let keyword = (~sortOrder: int, keyword) => {
   let sortText =
     "ZZZZ"
     ++ (string_of_int(sortOrder) |> StringEx.padFront(~totalLength=8, '0'));
@@ -63,14 +61,13 @@ let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
     commitCharacters: [],
     additionalTextEdits: [],
     command: None,
-    isFuzzyMatching,
     score: 0.,
   };
 };
 
 let isKeyword = ({kind, _}) => kind == Exthost.CompletionKind.Keyword;
 
-let snippet = (~isFuzzyMatching, ~prefix: string, snippet: string) => {
+let snippet = (~prefix: string, snippet: string) => {
   chainedCacheId: None,
   handle: None,
   label: prefix,
@@ -85,7 +82,6 @@ let snippet = (~isFuzzyMatching, ~prefix: string, snippet: string) => {
   commitCharacters: [],
   additionalTextEdits: [],
   command: None,
-  isFuzzyMatching,
   score: 0.,
 };
 
