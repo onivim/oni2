@@ -15,6 +15,7 @@ type notification = {
   message: string,
   source: option(string),
   yOffset: float,
+  ephemeral: bool,
 };
 
 type model;
@@ -24,6 +25,8 @@ let initial: model;
 let active: model => list(notification);
 
 let all: model => list(notification);
+
+let count: model => int;
 
 let statusBarBackground:
   (~theme: ColorTheme.Colors.t, model) => Revery.Color.t;
@@ -58,7 +61,8 @@ let changeTheme:
 
 module Effects: {
   let create:
-    (~kind: kind=?, ~source: string=?, string) => Isolinear.Effect.t(msg);
+    (~ephemeral: bool=?, ~kind: kind=?, ~source: string=?, string) =>
+    Isolinear.Effect.t(msg);
   let dismiss: notification => Isolinear.Effect.t(msg);
   let clear: unit => Isolinear.Effect.t(msg);
 };
