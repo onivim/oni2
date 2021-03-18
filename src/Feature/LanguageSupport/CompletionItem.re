@@ -40,23 +40,18 @@ let create = (~handle, item: SuggestItem.t) => {
   score: 0.,
 };
 
-let suggestRangeFromMeetCursor =
-    (~meet: CharacterPosition.t, ~cursor: CharacterPosition.t) => {
+let suggestRangeFromMeet = (~meet: CharacterPosition.t, ~base: string) => {
+  let characters = Zed_utf8.length(base);
   Exthost.SuggestItem.SuggestRange.Single({
     startLineNumber: meet.line |> EditorCoreTypes.LineNumber.toOneBased,
     startColumn: meet.character |> EditorCoreTypes.CharacterIndex.toInt,
-    endLineNumber: cursor.line |> EditorCoreTypes.LineNumber.toOneBased,
-    endColumn: (cursor.character |> EditorCoreTypes.CharacterIndex.toInt) + 1,
+    endLineNumber: meet.line |> EditorCoreTypes.LineNumber.toOneBased,
+    endColumn:
+      (meet.character |> EditorCoreTypes.CharacterIndex.toInt) + characters,
   });
 };
 
-let keyword =
-    (
-      ~meet: CharacterPosition.t,
-      ~cursor: CharacterPosition.t,
-      ~sortOrder: int,
-      keyword,
-    ) => {
+let keyword = (~meet: CharacterPosition.t, ~base, ~sortOrder: int, keyword) => {
   let sortText =
     "ZZZZ"
     ++ (string_of_int(sortOrder) |> StringEx.padFront(~totalLength=8, '0'));
@@ -73,7 +68,7 @@ let keyword =
     // Keywords should always be last, vs other completions...
     // But still sort them relative to each other
     sortText,
-    suggestRange: suggestRangeFromMeetCursor(~meet, ~cursor),
+    suggestRange: suggestRangeFromMeet(~meet, ~base),
     commitCharacters: [],
     additionalTextEdits: [],
     command: None,
@@ -83,7 +78,7 @@ let keyword =
 
 let isKeyword = ({kind, _}) => kind == Exthost.CompletionKind.Keyword;
 
-let snippet = (~meet, ~cursor, ~prefix: string, snippet: string) => {
+let snippet = (~meet, ~base, ~prefix: string, snippet: string) => {
   chainedCacheId: None,
   handle: None,
   label: prefix,
@@ -94,7 +89,7 @@ let snippet = (~meet, ~cursor, ~prefix: string, snippet: string) => {
   insertTextRules: Exthost.SuggestItem.InsertTextRules.insertAsSnippet,
   filterText: prefix,
   sortText: prefix,
-  suggestRange: suggestRangeFromMeetCursor(~meet, ~cursor),
+  suggestRange: suggestRangeFromMeet(~meet, ~base),
   commitCharacters: [],
   additionalTextEdits: [],
   command: None,

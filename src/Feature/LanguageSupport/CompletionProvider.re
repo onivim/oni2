@@ -245,7 +245,6 @@ module KeywordCompletionProvider =
         ~location: CharacterPosition.t,
       ) => {
     ignore(trigger);
-    ignore(base);
 
     if (!CompletionConfig.wordBasedSuggestions.get(config)) {
       None;
@@ -258,7 +257,7 @@ module KeywordCompletionProvider =
         |> List.mapi((idx, keyword) => {
              CompletionItem.keyword(
                ~meet=location,
-               ~cursor=location,
+               ~base,
                ~sortOrder=idx,
                keyword,
              )
@@ -294,6 +293,7 @@ type snippetModel = {
   filePaths: list(FpExp.t(FpExp.absolute)),
   fileType: string,
   meet: CharacterPosition.t,
+  base: string,
   sortOrder: [ | `Top | `Inline | `Bottom | `Hidden],
 };
 [@deriving show]
@@ -323,7 +323,6 @@ module SnippetCompletionProvider =
         ~location: CharacterPosition.t,
       ) => {
     ignore(trigger);
-    ignore(base);
 
     let sortOrder = CompletionConfig.snippetSuggestions.get(config);
     if (sortOrder == `Hidden) {
@@ -341,6 +340,7 @@ module SnippetCompletionProvider =
         isComplete: false,
         sortOrder,
         meet: location,
+        base,
       });
     };
   };
@@ -354,7 +354,7 @@ module SnippetCompletionProvider =
           |> List.map((snippet: SnippetWithMetadata.t) => {
                CompletionItem.snippet(
                  ~meet=model.meet,
-                 ~cursor=model.meet,
+                 ~base=model.base,
                  ~prefix=snippet.prefix,
                  snippet.snippet,
                )
