@@ -49,13 +49,13 @@ module Session = {
         meet: CompletionMeet.t,
         cursor: CharacterPosition.t,
         currentItems: list(CompletionItem.t),
-        filteredItems: [@opaque] list(Filter.result(CompletionItem.t)),
+        filteredItems: [@opaque] list(CompletionItem.t),
       })
     | Completed({
         providerModel: [@opaque] 'model,
         meet: CompletionMeet.t,
         allItems: list(CompletionItem.t),
-        filteredItems: [@opaque] list(Filter.result(CompletionItem.t)),
+        filteredItems: [@opaque] list(CompletionItem.t),
       })
     | Failure(string)
     | Accepted({meet: CompletionMeet.t});
@@ -109,14 +109,9 @@ module Session = {
     | Session(session) => Session({...session, state: NotStarted});
 
   let filter:
-    (~query: string, list(CompletionItem.t)) =>
-    list(Filter.result(CompletionItem.t)) =
+    (~query: string, list(CompletionItem.t)) => list(CompletionItem.t) =
     (~query, items) => {
-      let toString = (item: CompletionItem.t, ~shouldLower) =>
-        shouldLower ? String.lowercase_ascii(item.label) : item.label;
-
       let explodedQuery = Zed_utf8.explode(query);
-
       items
       |> List.filter((item: CompletionItem.t) =>
            if (String.length(item.filterText) < String.length(query)) {
@@ -124,8 +119,7 @@ module Session = {
            } else {
              Filter.fuzzyMatches(explodedQuery, item.filterText);
            }
-         )
-      |> Filter.rank(query, toString);
+         );
     };
 
   let filteredItems =
@@ -140,12 +134,8 @@ module Session = {
         | Completed({filteredItems, meet, _}) =>
           filteredItems
           |> List.fold_left(
-               (acc, item: Filter.result(CompletionItem.t)) => {
-                 StringMap.add(
-                   item.item.label,
-                   (meet.insertLocation, item),
-                   acc,
-                 )
+               (acc, item: CompletionItem.t) => {
+                 StringMap.add(item.label, (meet.insertLocation, item), acc)
                },
                StringMap.empty,
              )
@@ -512,16 +502,8 @@ let recomputeAllItems =
          StringMap.merge(
            (
              _key,
-             maybeA:
-               option(
-                 (CharacterPosition.t, Filter.result(CompletionItem.t)),
-               ),
-             maybeB:
-               option(
-                 list(
-                   (CharacterPosition.t, Filter.result(CompletionItem.t)),
-                 ),
-               ),
+             maybeA: option((CharacterPosition.t, CompletionItem.t)),
+             maybeB: option(list((CharacterPosition.t, CompletionItem.t))),
            ) =>
              switch (maybeA, maybeB) {
              | (None, None) => None
@@ -544,14 +526,13 @@ let recomputeAllItems =
        | items =>
          items
          |> List.filter(item =>
-              !(Filter.(snd(item).item) |> CompletionItem.isKeyword)
+              !(Filter.(snd(item)) |> CompletionItem.isKeyword)
             )
        }
      })
   |> StringMap.bindings
   |> List.concat_map(snd)
-  |> List.map(
-       ((loc: CharacterPosition.t, a: Filter.result(CompletionItem.t))) => {
+  |> List.map(((loc: CharacterPosition.t, a: CompletionItem.t)) => {
        maybeBuffer
        |> Option.map(buffer => {
             let line =
@@ -560,16 +541,22 @@ let recomputeAllItems =
                 buffer,
               )
               |> BufferLine.raw;
-            let score = CompletionItemScorer.score(line, a.item, loc, cursor);
-            (loc, Filter.{
-                    ...a,
-                    item: {
-                      ...a.item,
-                      score,
-                    },
-                  });
+            let score = CompletionItemScorer.score(line, a, cursor);
+            (
+              loc,
+              Filter.{
+                highlight: CompletionItemScorer.highlights(line, a, cursor),
+                score,
+                item: {
+                  ...a,
+                  score,
+                },
+              },
+            );
           })
-       |> Option.value(~default=(loc, a))
+       |> Option.value(
+            ~default=(loc, Filter.{highlight: [], score: 0., item: a}),
+          )
      })
   |> List.fast_sort(((_loc, a), (_loc, b)) =>
        CompletionItemSorter.compare(~snippetSortOrder, a, b)
@@ -807,48 +794,6 @@ let selected = model => {
   };
 };
 
-let tryToMaintainSelected = (~previousIndex, ~previousLabel, model) => {
-  let len = Array.length(model.allItems);
-  let idxToReplace = min(Array.length(model.allItems) - 1, previousIndex);
-
-  let getItemAtIndex = idx => {
-    let (_position, filterResult: Filter.result(CompletionItem.t)) = model.
-                                                                    allItems[idx];
-    filterResult.item;
-  };
-
-  // Sanity check - make sure there is a valid position.
-  // Completions list might be empty...
-  if (idxToReplace >= len || len == 0) {
-    model;
-  } else if
-    // Nothing to do - still in a good spot!
-    (getItemAtIndex(idxToReplace).label == previousLabel) {
-    model;
-  } else {
-    let idx = ref(-1);
-    let foundCurrent = ref(None);
-    while (idx^ < len - 1 && foundCurrent^ == None) {
-      incr(idx);
-      if (getItemAtIndex(idx^).label == previousLabel) {
-        foundCurrent := Some(idx^);
-      };
-    };
-
-    switch (foundCurrent^) {
-    | Some(idx) when idx == idxToReplace => model
-    | Some(idx) =>
-      // Swap idx and idx to replace, to maintain selected
-      let a = model.allItems[idxToReplace];
-      let b = model.allItems[idx];
-      model.allItems[idx] = a;
-      model.allItems[idxToReplace] = b;
-      model;
-    | None => model
-    };
-  };
-};
-
 let update =
     (
       ~config,
@@ -899,11 +844,7 @@ let update =
         ) = allItems[focusedIndex];
 
         let replaceSpan =
-          CompletionItem.replaceSpan(
-            ~activeCursor,
-            ~insertLocation,
-            result.item,
-          );
+          CompletionItem.replaceSpan(~activeCursor, result.item);
 
         let effect =
           Exthost.SuggestItem.InsertTextRules.(
@@ -984,10 +925,6 @@ let update =
     let model'' =
       switch (maybeCurrentSelection) {
       | Some((previousIndex, previousItem)) => model'
-      // |> tryToMaintainSelected(
-      //      ~previousIndex,
-      //      ~previousLabel=previousItem.label,
-      //    )
       | None => model'
       };
 

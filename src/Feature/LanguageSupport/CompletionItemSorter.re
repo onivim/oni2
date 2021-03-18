@@ -33,6 +33,15 @@ module Compare = {
       Some(int_of_float((b.score -. a.score) *. 1000.));
     };
 
+  let sortBySortText = (a: CompletionItem.t, b: CompletionItem.t) => {
+    let compare = String.compare(a.sortText, b.sortText);
+    if (compare == 0) {
+      None;
+    } else {
+      Some(compare);
+    };
+  };
+
   let sortByLabel =
       (
         a: Filter.result(CompletionItem.t),
@@ -56,6 +65,7 @@ let compare =
     ) => {
   Compare.snippetSort(~snippetSortOrder, a.item, b.item)
   |> OptionEx.or_lazy(() => Compare.score(a.item, b.item))
+  |> OptionEx.or_lazy(() => Compare.sortBySortText(a.item, b.item))
   |> OptionEx.or_lazy(() => Compare.sortByLabel(a, b))
   |> Option.value(~default=0);
 };

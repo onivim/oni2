@@ -172,13 +172,13 @@ module ExthostCompletionProvider =
     selectedItem
     |> OptionEx.flatMap((selected: CompletionItem.t) =>
          if (selected.handle == Some(providerHandle) && Config.supportsResolve) {
-           OptionEx.map2(
-             (chainedCacheId, defaultRange) => {
+           Option.map(
+             chainedCacheId => {
                let resolveSub =
                  Service_Exthost.Sub.completionItem(
                    ~handle=providerHandle,
                    ~chainedCacheId,
-                   ~defaultRange,
+                   ~defaultRange=selected.suggestRange,
                    ~toMsg=
                      fun
                      | Ok(item) =>
@@ -191,7 +191,6 @@ module ExthostCompletionProvider =
                [itemsSub, resolveSub] |> Isolinear.Sub.batch;
              },
              selected.chainedCacheId,
-             selected.suggestRange,
            );
          } else {
            None;
@@ -247,7 +246,6 @@ module KeywordCompletionProvider =
       ) => {
     ignore(trigger);
     ignore(base);
-    ignore(location);
 
     if (!CompletionConfig.wordBasedSuggestions.get(config)) {
       None;
@@ -258,7 +256,12 @@ module KeywordCompletionProvider =
       let keywords =
         keywords
         |> List.mapi((idx, keyword) => {
-             CompletionItem.keyword(~sortOrder=idx, keyword)
+             CompletionItem.keyword(
+               ~meet=location,
+               ~cursor=location,
+               ~sortOrder=idx,
+               keyword,
+             )
            });
 
       Some(keywords);
@@ -290,6 +293,7 @@ type snippetModel = {
   isComplete: bool,
   filePaths: list(FpExp.t(FpExp.absolute)),
   fileType: string,
+  meet: CharacterPosition.t,
   sortOrder: [ | `Top | `Inline | `Bottom | `Hidden],
 };
 [@deriving show]
@@ -320,7 +324,6 @@ module SnippetCompletionProvider =
       ) => {
     ignore(trigger);
     ignore(base);
-    ignore(location);
 
     let sortOrder = CompletionConfig.snippetSuggestions.get(config);
     if (sortOrder == `Hidden) {
@@ -337,6 +340,7 @@ module SnippetCompletionProvider =
         items: [],
         isComplete: false,
         sortOrder,
+        meet: location,
       });
     };
   };
@@ -348,7 +352,12 @@ module SnippetCompletionProvider =
         let items =
           snippets
           |> List.map((snippet: SnippetWithMetadata.t) => {
-               CompletionItem.snippet(~prefix=snippet.prefix, snippet.snippet)
+               CompletionItem.snippet(
+                 ~meet=model.meet,
+                 ~cursor=model.meet,
+                 ~prefix=snippet.prefix,
+                 snippet.snippet,
+               )
              });
         ({...model, items, isComplete: true}, Nothing);
       }

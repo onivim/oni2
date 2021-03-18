@@ -15,7 +15,7 @@ type t = {
   insertTextRules: SuggestItem.InsertTextRules.t,
   filterText: string,
   sortText: string,
-  suggestRange: option(SuggestItem.SuggestRange.t),
+  suggestRange: SuggestItem.SuggestRange.t,
   commitCharacters: list(string),
   additionalTextEdits: list(Edit.SingleEditOperation.t),
   command: option(Command.t),
@@ -33,14 +33,30 @@ let create = (~handle, item: SuggestItem.t) => {
   insertTextRules: item.insertTextRules,
   filterText: item |> SuggestItem.filterText,
   sortText: item |> SuggestItem.sortText,
-  suggestRange: Some(item.suggestRange),
+  suggestRange: item.suggestRange,
   commitCharacters: item.commitCharacters,
   additionalTextEdits: item.additionalTextEdits,
   command: item.command,
   score: 0.,
 };
 
-let keyword = (~sortOrder: int, keyword) => {
+let suggestRangeFromMeetCursor =
+    (~meet: CharacterPosition.t, ~cursor: CharacterPosition.t) => {
+  Exthost.SuggestItem.SuggestRange.Single({
+    startLineNumber: meet.line |> EditorCoreTypes.LineNumber.toOneBased,
+    startColumn: meet.character |> EditorCoreTypes.CharacterIndex.toInt,
+    endLineNumber: cursor.line |> EditorCoreTypes.LineNumber.toOneBased,
+    endColumn: (cursor.character |> EditorCoreTypes.CharacterIndex.toInt) + 1,
+  });
+};
+
+let keyword =
+    (
+      ~meet: CharacterPosition.t,
+      ~cursor: CharacterPosition.t,
+      ~sortOrder: int,
+      keyword,
+    ) => {
   let sortText =
     "ZZZZ"
     ++ (string_of_int(sortOrder) |> StringEx.padFront(~totalLength=8, '0'));
@@ -57,7 +73,7 @@ let keyword = (~sortOrder: int, keyword) => {
     // Keywords should always be last, vs other completions...
     // But still sort them relative to each other
     sortText,
-    suggestRange: None,
+    suggestRange: suggestRangeFromMeetCursor(~meet, ~cursor),
     commitCharacters: [],
     additionalTextEdits: [],
     command: None,
@@ -67,7 +83,7 @@ let keyword = (~sortOrder: int, keyword) => {
 
 let isKeyword = ({kind, _}) => kind == Exthost.CompletionKind.Keyword;
 
-let snippet = (~prefix: string, snippet: string) => {
+let snippet = (~meet, ~cursor, ~prefix: string, snippet: string) => {
   chainedCacheId: None,
   handle: None,
   label: prefix,
@@ -78,26 +94,21 @@ let snippet = (~prefix: string, snippet: string) => {
   insertTextRules: Exthost.SuggestItem.InsertTextRules.insertAsSnippet,
   filterText: prefix,
   sortText: prefix,
-  suggestRange: None,
+  suggestRange: suggestRangeFromMeetCursor(~meet, ~cursor),
   commitCharacters: [],
   additionalTextEdits: [],
   command: None,
   score: 0.,
 };
 
-let replaceSpan =
-    (
-      ~activeCursor: CharacterPosition.t,
-      ~insertLocation: CharacterPosition.t,
-      item: t,
-    ) => {
+let replaceSpan = (~activeCursor: CharacterPosition.t, item: t) => {
   Exthost.SuggestItem.(
     switch (item.suggestRange) {
-    | Some(SuggestRange.Single({startColumn, endColumn, _})) =>
+    | SuggestRange.Single({startColumn, endColumn, _}) =>
       let stop =
         max(endColumn - 1 |> CharacterIndex.ofInt, activeCursor.character);
       CharacterSpan.{start: startColumn - 1 |> CharacterIndex.ofInt, stop};
-    | Some(SuggestRange.Combo({insert, _})) =>
+    | SuggestRange.Combo({insert, _}) =>
       let stop =
         max(
           insert.endColumn - 1 |> CharacterIndex.ofInt,
@@ -110,11 +121,6 @@ let replaceSpan =
           ),
         stop,
       };
-    | None =>
-      CharacterSpan.{
-        start: insertLocation.character,
-        stop: activeCursor.character,
-      }
     }
   );
 };
