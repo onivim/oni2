@@ -130,8 +130,8 @@ module Session = {
         | Accepted(_) => StringMap.empty
         | Pending(_) => StringMap.empty
         | Failure(_) => StringMap.empty
-        | Partial({filteredItems, meet, _})
-        | Completed({filteredItems, meet, _}) =>
+        | Partial({filteredItems, _})
+        | Completed({filteredItems, _}) =>
           filteredItems
           |> List.fold_left(
                (acc, item: CompletionItem.t) => {
@@ -532,8 +532,7 @@ let recomputeAllItems =
        | [item] => [item]
        // If multiple - remove keywords
        | items =>
-         items
-         |> List.filter(item => !(Filter.(item) |> CompletionItem.isKeyword))
+         items |> List.filter(item => !(item |> CompletionItem.isKeyword))
        }
      })
   |> StringMap.bindings
@@ -875,15 +874,6 @@ let update =
     );
 
   | Provider(msg) =>
-    // Before updating any items, check to see if there is already
-    // a selected item. We don't want to surprise the user
-    // and change the selected underneath them when populating!
-    let maybeCurrentSelection =
-      switch (model.selection) {
-      | None => None
-      | Some(idx) => selected(model) |> Option.map(item => (idx, item))
-      };
-
     let providers =
       model.providers |> List.map(provider => Session.update(msg, provider));
     let allItems =
@@ -902,14 +892,8 @@ let update =
 
     let model' = {...model, providers, allItems, selection};
 
-    let model'' =
-      switch (maybeCurrentSelection) {
-      | Some((previousIndex, previousItem)) => model'
-      | None => model'
-      };
-
     // If the current selection is different than the one we had before...
-    (model'', Nothing);
+    (model', Nothing);
   };
 };
 
