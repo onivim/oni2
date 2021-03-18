@@ -443,7 +443,7 @@ module Selection = {
 
 type model = {
   providers: list(Session.t),
-  allItems: array((CharacterPosition.t, Filter.result(CompletionItem.t))),
+  allItems: array(Filter.result(CompletionItem.t)),
   selection: Selection.t,
   isInsertMode: bool,
   isSnippetMode: bool,
@@ -561,6 +561,7 @@ let recomputeAllItems =
   |> List.fast_sort(((_loc, a), (_loc, b)) =>
        CompletionItemSorter.compare(~snippetSortOrder, a, b)
      )
+  |> List.map(snd)
   |> Array.of_list;
 };
 
@@ -788,8 +789,7 @@ let selected = model => {
   switch (model.selection) {
   | None => None
   | Some(focusedIndex) =>
-    let (_: CharacterPosition.t, result: Filter.result(CompletionItem.t)) = model.
-                                                                    allItems[focusedIndex];
+    let result = model.allItems[focusedIndex];
     Some(result.item);
   };
 };
@@ -838,10 +838,7 @@ let update =
       switch (model.selection) {
       | None => default
       | Some(focusedIndex) =>
-        let (
-          insertLocation: CharacterPosition.t,
-          result: Filter.result(CompletionItem.t),
-        ) = allItems[focusedIndex];
+        let result = allItems[focusedIndex];
 
         let replaceSpan =
           CompletionItem.replaceSpan(~activeCursor, result.item);
@@ -1353,7 +1350,7 @@ module View = {
     let maxWidth =
       items
       |> Array.fold_left(
-           (maxWidth, (_loc, this: Filter.result(CompletionItem.t))) => {
+           (maxWidth, this: Filter.result(CompletionItem.t)) => {
              let textWidth =
                Service_Font.measure(~text=this.item.label, editorFont);
              let thisWidth =
@@ -1370,7 +1367,7 @@ module View = {
     let detail =
       switch (focused) {
       | Some(index) =>
-        let focused: Filter.result(CompletionItem.t) = items[index] |> snd;
+        let focused: Filter.result(CompletionItem.t) = items[index];
         switch (focused.item.detail) {
         | Some(text) =>
           <detailView text width lineHeight colors tokenTheme editorFont />
@@ -1390,17 +1387,11 @@ module View = {
             theme
             focused>
             ...{index => {
-              let Filter.{highlight, item, _} = items[index] |> snd;
+              let Filter.{highlight, item, _} = items[index];
               let CompletionItem.{label: text, kind, _} = item;
               <itemView
                 isFocused={Some(index) == focused}
-                text={
-                  text
-                  ++ "|"
-                  ++ item.filterText
-                  ++ "|"
-                  ++ string_of_float(item.score)
-                }
+                text
                 kind
                 highlight
                 theme
