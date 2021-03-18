@@ -6,8 +6,8 @@ open Oni_Model;
 open Actions;
 
 module Internal = {
-  let notificationEffect = (~kind, message) => {
-    Feature_Notification.Effects.create(~kind, message)
+  let notificationEffect = (~ephemeral=false, ~kind, message) => {
+    Feature_Notification.Effects.create(~ephemeral, ~kind, message)
     |> Isolinear.Effect.map(msg => Actions.Notification(msg));
   };
 
@@ -698,7 +698,10 @@ let update =
           };
 
         let eff =
-          [formatEffect, Internal.notificationEffect(~kind=Info, msg)]
+          [
+            formatEffect,
+            Internal.notificationEffect(~ephemeral=true, ~kind=Info, msg),
+          ]
           |> Isolinear.Effect.batch;
         (state, eff);
       | ReferencesAvailable =>
