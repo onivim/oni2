@@ -13,6 +13,7 @@
 ### Documentation
 
 - #3293 - Formatting: Initial formatting documentation
+- #3296 - Emmet: Add documentation on using Emmet for tsx/jsx files (fixes #3283)
 
 ### Refactoring
 
