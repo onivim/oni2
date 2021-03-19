@@ -510,7 +510,7 @@ let start = () => {
           state.quickmenu,
           action,
           state.buffers,
-          state.languageInfo,
+          state.languageSupport |> Feature_LanguageSupport.languageInfo,
           state.iconTheme,
           state.layout,
           state.workspace,
@@ -622,7 +622,7 @@ let subscriptions = (ripgrep, dispatch) => {
         [filter(query, quickmenu.items)]
         @ ripgrep(
             state.workspace,
-            state.languageInfo,
+            state.languageSupport |> Feature_LanguageSupport.languageInfo,
             state.iconTheme,
             state.config,
           )

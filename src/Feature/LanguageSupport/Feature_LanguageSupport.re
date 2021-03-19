@@ -1,5 +1,7 @@
 open EditorCoreTypes;
 
+let languageInfo = _ => Exthost.LanguageInfo.initial;
+
 type model = {
   codeLens: CodeLens.model,
   completion: Completion.model,
@@ -925,5 +927,8 @@ let sub =
   ]
   |> Isolinear.Sub.batch;
 };
+
+// TODO:
+let extensionsAdded = (_extensions, model) => model;
 
 module CompletionMeet = CompletionMeet;

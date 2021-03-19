@@ -117,7 +117,9 @@ let current = (state: State.t) => {
          Buffer.getFileType(buf) |> Buffer.FileType.toOption
        )
     |> OptionEx.flatMap(
-         Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+         Exthost.LanguageInfo.getLanguageConfiguration(
+           state.languageSupport |> Feature_LanguageSupport.languageInfo,
+         ),
        );
 
   let maybeCursor =

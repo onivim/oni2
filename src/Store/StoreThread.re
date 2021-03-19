@@ -237,7 +237,8 @@ let start =
             ~buffers=state.buffers,
             ~config,
             ~grammarInfo,
-            ~languageInfo=state.languageInfo,
+            ~languageInfo=
+              state.languageSupport |> Feature_LanguageSupport.languageInfo,
             ~setup,
             ~tokenTheme=state.colorTheme |> Feature_Theme.tokenColors,
             ~bufferVisibility=visibleRanges,
