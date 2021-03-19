@@ -38,6 +38,7 @@ module Styles = {
 
 let make =
     (
+      ~config,
       ~isFocused: bool,
       ~locationsList:
          Component_VimTree.model(location, Oni_Components.LocationListItem.t),
@@ -61,6 +62,7 @@ let make =
       </View>;
     } else {
       <Component_VimTree.View
+        config
         font=uiFont
         isActive=isFocused
         focusedIndex=None

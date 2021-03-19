@@ -118,7 +118,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `workbench.iconTheme` __(_string_ default: `"vs-seti"`)__ - Icon theme to use.
 
-- `workbench.tree.indent` __(_int_ default: `2`)__ - Indentation of the tree explorer.
+- `workbench.tree.indent` __(_int_ default: `5`)__ - Indentation of the tree explorer.
 
 - `vim.highlightedyank.enable` __(_bool_ default: `true`)__ - When `true`, briefly highlight yanks on the editor surface.
 

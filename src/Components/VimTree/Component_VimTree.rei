@@ -79,6 +79,7 @@ module Contributions: {
 module View: {
   let make:
     (
+      ~config: Config.resolver,
       ~isActive: bool,
       ~font: UiFont.t,
       ~focusedIndex: option(int),
