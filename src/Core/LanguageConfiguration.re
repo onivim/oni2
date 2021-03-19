@@ -203,32 +203,6 @@ let default: t = {
 module CustomDecoders = {
   open Json.Decode;
   let autoCloseBeforeDecode = string |> map(StringEx.explode);
-
-  let regexp =
-    string
-    |> map(OnigRegExp.create)
-    |> and_then(
-         fun
-         | Ok(regexp) => succeed(Some(regexp))
-         | Error(msg) => {
-             Log.errorf(m => m("Error %s parsing regex", msg));
-             succeed(None);
-           },
-       );
-
-  let%test "decode valid regexp" = {
-    json({|"abc"|})
-    |> decode_value(regexp)
-    |> Result.get_ok
-    |> Option.is_some;
-  };
-
-  let%test "decode invalid regexp" = {
-    json({|"(invalid"|})
-    |> decode_value(regexp)
-    |> Result.get_ok
-    |> Option.is_none;
-  };
 };
 
 module Decode = {
@@ -272,20 +246,20 @@ module Decode = {
           at.withDefault(
             ["indentationRules", "increaseIndentPattern"],
             None,
-            regexp,
+            regexp |> map(Option.some),
           ),
         decreaseIndentPattern:
           at.withDefault(
             ["indentationRules", "decreaseIndentPattern"],
             None,
-            regexp,
+            regexp |> map(Option.some),
           ),
 
         wordPattern:
           field.withDefault(
             "wordPattern",
             _defaultConfig.wordPattern,
-            regexp,
+            regexp |> map(Option.some),
           ),
       }
     );

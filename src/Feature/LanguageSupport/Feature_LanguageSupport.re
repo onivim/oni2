@@ -293,6 +293,14 @@ let update =
       Nothing,
     )
 
+  | Exthost(SetLanguageConfiguration({handle, languageId, configuration})) =>
+    // TODO - Wire up to language info pipeline, and use the onEnterRules:
+    ignore(handle);
+    ignore(languageId);
+    ignore(configuration);
+
+    (model, Nothing);
+
   | Exthost(_) =>
     // TODO:
     (model, Nothing)

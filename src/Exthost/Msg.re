@@ -1,5 +1,6 @@
 module ExtCommand = Command;
 module ExtConfig = Configuration;
+module ExtLanguageConfiguration = LanguageConfiguration;
 open Oni_Core;
 
 module Internal = {
@@ -794,6 +795,11 @@ module LanguageFeatures = {
         autoFormatTriggerCharacters: list(string),
         extensionId: ExtensionId.t,
       })
+    | SetLanguageConfiguration({
+        handle: int,
+        languageId: string,
+        configuration: ExtLanguageConfiguration.t,
+      })
     | Unregister({handle: int});
 
   let parseDocumentSelector = json => {
@@ -1104,6 +1110,34 @@ module LanguageFeatures = {
         );
       };
       ret |> Result.map_error(string_of_error);
+
+    | (
+        "$setLanguageConfiguration",
+        `List([
+          `Int(handle),
+          `String(languageId),
+          languageConfigurationJson,
+        ]),
+      ) =>
+      open Json.Decode;
+      let ret = {
+        open Base.Result.Let_syntax;
+
+        let%bind languageConfiguration =
+          languageConfigurationJson
+          |> decode_value(ExtLanguageConfiguration.decode);
+
+        Ok(
+          SetLanguageConfiguration({
+            handle,
+            languageId,
+            configuration: languageConfiguration,
+          }),
+        );
+      };
+
+      ret |> Result.map_error(string_of_error);
+
     | _ =>
       Error(
         Printf.sprintf(
