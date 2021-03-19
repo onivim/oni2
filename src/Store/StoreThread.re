@@ -534,7 +534,6 @@ let start =
 
   let _unsubscribe: unit => unit =
     Store.onAfterMsg((msg, model) => {
-      prerr_endline("!! SUBSCRIPTIONS - STARTING...");
       Features.updateSubscriptions(setup, model, dispatch);
       onAfterDispatch(msg);
       DispatchLog.debugf(m => m("After: %s", Model.Actions.show(msg)));

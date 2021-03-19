@@ -163,13 +163,7 @@ module Effects = {
           promise,
           Option.iter(edits => {
             edits
-            |> List.iter(edit =>
-                 prerr_endline(
-                   "EDIT: " ++ Exthost.Edit.SingleEditOperation.show(edit),
-                 )
-               );
-            dispatch(toMsg(Ok(edits)));
-          }),
+            |> List.iter(edit => dispatch(toMsg(Ok(edits)))),
         );
         Lwt.on_failure(promise, err =>
           dispatch(toMsg(Error(Printexc.to_string(err))))

@@ -189,14 +189,7 @@ let getLeadingWhitespacePixels = (lineNumber, editor) => {
     0.;
   } else {
     let bufferLine = buffer |> EditorBuffer.line(line);
-    prerr_endline(
-      "START: Get leading whitespace for line: " ++ string_of_int(line),
-    );
-    let ret = BufferLine.getLeadingWhitespacePixels(bufferLine);
-    prerr_endline(
-      "FINISH: Get leading whitespace for line: " ++ string_of_int(line),
-    );
-    ret;
+    BufferLine.getLeadingWhitespacePixels(bufferLine);
   };
 };
 
@@ -929,11 +922,7 @@ let setSelections = (selections: list(ByteRange.t), editor) => {
 };
 
 let withSteadyCursor = (f, editor) => {
-  prerr_endline("withSteadyCursor - start");
   let bytePosition = getPrimaryCursorByte(editor);
-  prerr_endline(
-    "withSteadyCursor - bytePosition: " ++ BytePosition.show(bytePosition),
-  );
 
   let calculateOffset = (bytePosition, editor) => {
     let wrapping = editor.wrapState |> WrapState.wrapping;
@@ -953,7 +942,6 @@ let withSteadyCursor = (f, editor) => {
   let isAnimated = Spring.isActive(editor.scrollY);
   let scrollY =
     Spring.set(~instant=!isAnimated, ~position=scrollYValue, editor.scrollY);
-  prerr_endline("withSteadyCursor - DONE");
   {
     ...editor',
     animationNonce:
@@ -1006,7 +994,6 @@ let setInlineElementSize =
 };
 
 let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => {
-  prerr_endline("replaceInlineElements - start");
   let elements': list(InlineElements.element) =
     elements
     |> List.map((inlineElement: inlineElement) =>
@@ -1019,7 +1006,6 @@ let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => 
            opacity: Component_Animation.make(Animation.fadeIn),
          }
        );
-  prerr_endline("replaceInlineElements - 10");
   editor
   |> withSteadyCursor(e =>
        {
@@ -1037,7 +1023,6 @@ let replaceInlineElements = (~key, ~startLine, ~stopLine, ~elements, editor) => 
 };
 
 let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
-  prerr_endline("setCodeLens - start");
   let inlineElements =
     lenses
     |> List.map(lens => {
@@ -1059,18 +1044,14 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
            ~view,
          );
        });
-  prerr_endline("setCodeLens - 10");
-  let ret =
-    replaceInlineElements(
-      ~startLine,
-      ~stopLine,
-      ~key="codelens:" ++ string_of_int(handle),
-      ~elements=inlineElements,
-      editor,
-    );
 
-  prerr_endline("setCodeLens - stop");
-  ret;
+  replaceInlineElements(
+    ~startLine,
+    ~stopLine,
+    ~key="codelens:" ++ string_of_int(handle),
+    ~elements=inlineElements,
+    editor,
+  );
 };
 
 let selectionOrCursorRange = editor => {
