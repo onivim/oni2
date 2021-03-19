@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 let isSpace =
   fun
   | ' '
@@ -7,15 +9,16 @@ let isSpace =
   | '\t' => true
   | _ => false;
 
+let findFirst = (~query, str) => {
+  let re = Str.regexp_string(query);
+  try(Some(Str.search_forward(re, str, 0))) {
+  | Not_found => None
+  };
+};
+
 /** [contains(query, str)] returns true if [str] contains the substring [query], false otherwise. */
 let contains = (query, str) => {
-  let re = Str.regexp_string(query);
-  try({
-    let _: int = Str.search_forward(re, str, 0);
-    true;
-  }) {
-  | Not_found => false
-  };
+  findFirst(~query, str) != None;
 };
 
 let characterCount = (~startByte, ~endByte, str) => {
@@ -29,6 +32,22 @@ let characterCount = (~startByte, ~endByte, str) => {
     };
 
   loop(0, startByte);
+};
+
+let characterToByte = (~index: EditorCoreTypes.CharacterIndex.t, str) => {
+  let idx = CharacterIndex.toInt(index);
+  let len = String.length(str);
+  let rec loop = (accBytes, count) =>
+    if (accBytes >= len) {
+      len;
+    } else if (count >= idx) {
+      accBytes;
+    } else {
+      let nextByte = Zed_utf8.next(str, accBytes);
+      loop(nextByte, count + 1);
+    };
+
+  loop(0, 0) |> ByteIndex.ofInt;
 };
 
 let firstDifference = (a, b) => {

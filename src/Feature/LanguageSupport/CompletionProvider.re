@@ -14,7 +14,7 @@ module type S = {
     | Nothing
     | ProviderError(string);
 
-  let update: (~isFuzzyMatching: bool, msg, model) => (model, outmsg);
+  let update: (msg, model) => (model, outmsg);
 
   let create:
     (
@@ -108,26 +108,20 @@ module ExthostCompletionProvider =
 
   let handle = () => Some(providerHandle);
 
-  let update = (~isFuzzyMatching, msg, model) =>
+  let update = (msg, model) =>
     switch (msg) {
     | ResultAvailable({handle, result}) when handle == providerHandle =>
       let isComplete = !result.isIncomplete;
       let completions =
         Exthost.SuggestResult.(result.completions)
-        |> List.map(
-             CompletionItem.create(~isFuzzyMatching, ~handle=providerHandle),
-           );
+        |> List.map(CompletionItem.create(~handle=providerHandle));
       ({isComplete, completions}, Nothing);
     | DetailsAvailable({handle, item}) when handle == providerHandle =>
       let completions' =
         model.completions
         |> List.map((previousItem: CompletionItem.t) =>
              if (previousItem.chainedCacheId == item.chainedCacheId) {
-               CompletionItem.create(
-                 ~isFuzzyMatching=previousItem.isFuzzyMatching,
-                 ~handle=providerHandle,
-                 item,
-               );
+               CompletionItem.create(~handle=providerHandle, item);
              } else {
                previousItem;
              }
@@ -178,13 +172,13 @@ module ExthostCompletionProvider =
     selectedItem
     |> OptionEx.flatMap((selected: CompletionItem.t) =>
          if (selected.handle == Some(providerHandle) && Config.supportsResolve) {
-           OptionEx.map2(
-             (chainedCacheId, defaultRange) => {
+           Option.map(
+             chainedCacheId => {
                let resolveSub =
                  Service_Exthost.Sub.completionItem(
                    ~handle=providerHandle,
                    ~chainedCacheId,
-                   ~defaultRange,
+                   ~defaultRange=selected.suggestRange,
                    ~toMsg=
                      fun
                      | Ok(item) =>
@@ -197,7 +191,6 @@ module ExthostCompletionProvider =
                [itemsSub, resolveSub] |> Isolinear.Sub.batch;
              },
              selected.chainedCacheId,
-             selected.suggestRange,
            );
          } else {
            None;
@@ -252,8 +245,6 @@ module KeywordCompletionProvider =
         ~location: CharacterPosition.t,
       ) => {
     ignore(trigger);
-    ignore(base);
-    ignore(location);
 
     if (!CompletionConfig.wordBasedSuggestions.get(config)) {
       None;
@@ -265,8 +256,9 @@ module KeywordCompletionProvider =
         keywords
         |> List.mapi((idx, keyword) => {
              CompletionItem.keyword(
+               ~meet=location,
+               ~base,
                ~sortOrder=idx,
-               ~isFuzzyMatching=base != "",
                keyword,
              )
            });
@@ -275,10 +267,7 @@ module KeywordCompletionProvider =
     };
   };
 
-  let update = (~isFuzzyMatching as _, _msg: msg, model: model) => (
-    model,
-    Nothing,
-  );
+  let update = (_msg: msg, model: model) => (model, Nothing);
 
   let items = model => (Complete, model);
 
@@ -303,6 +292,8 @@ type snippetModel = {
   isComplete: bool,
   filePaths: list(FpExp.t(FpExp.absolute)),
   fileType: string,
+  meet: CharacterPosition.t,
+  base: string,
   sortOrder: [ | `Top | `Inline | `Bottom | `Hidden],
 };
 [@deriving show]
@@ -332,8 +323,6 @@ module SnippetCompletionProvider =
         ~location: CharacterPosition.t,
       ) => {
     ignore(trigger);
-    ignore(base);
-    ignore(location);
 
     let sortOrder = CompletionConfig.snippetSuggestions.get(config);
     if (sortOrder == `Hidden) {
@@ -350,11 +339,13 @@ module SnippetCompletionProvider =
         items: [],
         isComplete: false,
         sortOrder,
+        meet: location,
+        base,
       });
     };
   };
 
-  let update = (~isFuzzyMatching, msg, model: model) => {
+  let update = (msg, model: model) => {
     Service_Snippets.(
       switch (msg) {
       | SnippetsAvailable(snippets) =>
@@ -362,7 +353,8 @@ module SnippetCompletionProvider =
           snippets
           |> List.map((snippet: SnippetWithMetadata.t) => {
                CompletionItem.snippet(
-                 ~isFuzzyMatching,
+                 ~meet=model.meet,
+                 ~base=model.base,
                  ~prefix=snippet.prefix,
                  snippet.snippet,
                )

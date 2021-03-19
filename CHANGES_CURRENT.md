@@ -9,6 +9,7 @@
 - #3292 - Vim: Fix control+d/control+u behavior in explorer
 - #3295 - Formatting: Make formatting notifications ephemeral
 - #3297 - Diagnostics: Fix potential crash when deleting lines with diagnostics
+- #3298 - Completion: Sort ordering improvements (related #3283)
 
 ### Performance
 

@@ -14,7 +14,7 @@ module type S = {
     | Nothing
     | ProviderError(string);
 
-  let update: (~isFuzzyMatching: bool, msg, model) => (model, outmsg);
+  let update: (msg, model) => (model, outmsg);
 
   let create:
     (

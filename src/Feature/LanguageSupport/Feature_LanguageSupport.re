@@ -691,8 +691,21 @@ module Completion = {
 
   module View = {
     let make =
-        (~x, ~y, ~lineHeight, ~theme, ~tokenTheme, ~editorFont, ~model, ()) => {
+        (
+          ~buffer,
+          ~cursor,
+          ~x,
+          ~y,
+          ~lineHeight,
+          ~theme,
+          ~tokenTheme,
+          ~editorFont,
+          ~model,
+          (),
+        ) => {
       OldCompletion.View.make(
+        ~buffer,
+        ~cursor,
         ~x,
         ~y,
         ~lineHeight,

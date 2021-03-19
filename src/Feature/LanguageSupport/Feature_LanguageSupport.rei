@@ -183,6 +183,8 @@ module Completion: {
   module View: {
     let make:
       (
+        ~buffer: Buffer.t,
+        ~cursor: CharacterPosition.t,
         ~x: int,
         ~y: int,
         ~lineHeight: float,
