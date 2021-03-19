@@ -283,6 +283,7 @@ module Styles = {
 
 let make =
     (
+      ~config,
       ~theme,
       ~uiFont: UiFont.t,
       ~iconTheme,
@@ -328,6 +329,7 @@ let make =
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
       <Component_VimTree.View
+        config
         isActive={isFocused && model.focus == ResultsPane}
         font=uiFont
         focusedIndex=None

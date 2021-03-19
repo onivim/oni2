@@ -20,7 +20,6 @@ module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 let start =
     (
       ~showUpdateChangelog: bool,
-      languageInfo: Exthost.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
       setClipboardText,
@@ -340,6 +339,8 @@ let start =
   let _: unit => unit =
     Vim.Buffer.onFilenameChanged(meta => {
       Log.debugf(m => m("Buffer metadata changed: %n", meta.id));
+      let languageInfo =
+        getState().languageSupport |> Feature_LanguageSupport.languageInfo;
       // TODO: This isn't buffer aware, so it won't be able to deal with the
       // firstline way of getting syntax, which means if that is in use,
       // it will get wiped when renaming the file.
@@ -455,6 +456,8 @@ let start =
         != Some(false);
 
       if (shouldApply) {
+        let languageInfo =
+          getState().languageSupport |> Feature_LanguageSupport.languageInfo;
         maybeBuffer
         |> Option.iter(oldBuffer => {
              let newBuffer = Core.Buffer.update(oldBuffer, bu);

@@ -52,6 +52,7 @@ module View: {
   let make:
     (
       ~key: Brisk_reconciler.Key.t=?,
+      ~config: Config.resolver,
       ~isFocused: bool,
       ~iconTheme: IconTheme.t,
       ~languageInfo: Exthost.LanguageInfo.t,

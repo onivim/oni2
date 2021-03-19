@@ -116,7 +116,6 @@ type t =
   | ReallyQuitting
   | RegisterQuitCleanup(unit => unit)
   | SearchClearHighlights(int)
-  | SetLanguageInfo([@opaque] Exthost.LanguageInfo.t)
   | SetGrammarRepository([@opaque] Oni_Syntax.GrammarRepository.t)
   | SetIconTheme([@opaque] IconTheme.t)
   | StatusBar(Feature_StatusBar.msg)
