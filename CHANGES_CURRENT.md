@@ -12,6 +12,7 @@
 - #3298 - Completion: Sort ordering improvements (related #3283)
 - #3301 - Formatting: Fix crash in default formatter with negative indentation levels
 - #3302 - Auto-Indent: Implement $setLanguageConfiguration handler (related to #3288)
+- #3300 - Formatting: Fix format edits containing a trailing newline (related to #3288)
 
 ### Performance
 
