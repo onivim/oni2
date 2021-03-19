@@ -83,6 +83,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
         | FileExplorer =>
           let dispatch = msg => dispatch(Actions.FileExplorer(msg));
           <Feature_Explorer.View
+            config
             isFocused={FocusManager.current(state) == Focus.FileExplorer}
             languageInfo={state.languageInfo}
             iconTheme={state.iconTheme}
@@ -114,6 +115,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
             GlobalContext.current().dispatch(Actions.Search(msg));
 
           <Feature_Search
+            config
             isFocused={FocusManager.current(state) == Focus.Search}
             theme
             languageInfo={state.languageInfo}
