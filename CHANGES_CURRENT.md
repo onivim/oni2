@@ -20,4 +20,6 @@
 
 ### Refactoring
 
+- #3303 - Language Support: Move language metadata into Feature_LanguageSupport (related #3288)
+
 ### Infrastructure
