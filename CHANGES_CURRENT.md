@@ -10,6 +10,7 @@
 - #3295 - Formatting: Make formatting notifications ephemeral
 - #3297 - Diagnostics: Fix potential crash when deleting lines with diagnostics
 - #3298 - Completion: Sort ordering improvements (related #3283)
+- #3301 - Formatting: Fix crash in default formatter with negative indentation levels
 
 ### Performance
 
