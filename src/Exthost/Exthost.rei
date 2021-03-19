@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 open Oni_Core;
+open Oniguruma;
 
 module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
@@ -23,6 +24,36 @@ module Label: {
 
   let ofString: string => t;
   let toString: t => string;
+
+  let decode: Json.decoder(t);
+};
+
+module LanguageConfiguration: {
+  module IndentAction: {
+    type t =
+      | Indent
+      | IndentOutdent
+      | Outdent;
+  };
+
+  module EnterAction: {
+    type t = {
+      indentAction: IndentAction.t,
+      appendText: option(string),
+      removeText: option(int),
+    };
+  };
+
+  module OnEnterRule: {
+    type t = {
+      beforeText: OnigRegExp.t,
+      afterText: option(OnigRegExp.t),
+      previousLineText: option(OnigRegExp.t),
+      action: EnterAction.t,
+    };
+  };
+
+  type t = {onEnterRules: list(OnEnterRule.t)};
 
   let decode: Json.decoder(t);
 };

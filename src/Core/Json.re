@@ -1,4 +1,5 @@
 open EditorCoreTypes;
+open Oniguruma;
 
 type t = Yojson.Safe.json;
 
@@ -164,6 +165,44 @@ module Decode = {
         };
       },
     };
+
+  let regexp = {
+    let str =
+      string
+      |> map(OnigRegExp.create)
+      |> and_then(
+           fun
+           | Ok(regexp) => succeed(regexp)
+           | Error(msg) => {
+               fail(Printf.sprintf("Error %s parsing regex", msg));
+             },
+         );
+
+    let dto =
+      obj(({field, _}) => {
+        field.required(
+          "pattern",
+          str,
+          // TODO: Flags field?
+        )
+      });
+
+    one_of([("string", str), ("dto", dto)]);
+  };
+
+  let%test "decode valid regexp" = {
+    json({|"abc"|})
+    |> decode_value(regexp)
+    |> Result.get_ok
+    |> Option.is_some;
+  };
+
+  let%test "decode invalid regexp" = {
+    json({|"(invalid"|})
+    |> decode_value(regexp)
+    |> Result.get_ok
+    |> Option.is_none;
+  };
 
   let default = default => map(Option.value(~default));
 };
