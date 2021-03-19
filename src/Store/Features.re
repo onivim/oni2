@@ -453,10 +453,6 @@ let update =
           )
 
         | NewExtensions(extensions) =>
-          extensions
-          |> List.iter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
-               prerr_endline(Exthost.Extension.Manifest.show(ext.manifest))
-             );
           let newExtensionConfigurations =
             extensions
             |> List.map((ext: Exthost.Extension.Scanner.ScanResult.t) => {
