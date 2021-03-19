@@ -191,17 +191,15 @@ module Decode = {
   };
 
   let%test "decode valid regexp" = {
-    json({|"abc"|})
+    Yojson.Safe.from_string({|"abc"|})
     |> decode_value(regexp)
-    |> Result.get_ok
-    |> Option.is_some;
+    |> Result.is_ok;
   };
 
   let%test "decode invalid regexp" = {
-    json({|"(invalid"|})
+    Yojson.Safe.from_string({|"(invalid"|})
     |> decode_value(regexp)
-    |> Result.get_ok
-    |> Option.is_none;
+    |> Result.is_error;
   };
 
   let default = default => map(Option.value(~default));

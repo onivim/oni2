@@ -30,6 +30,7 @@ module Label: {
 
 module LanguageConfiguration: {
   module IndentAction: {
+    [@deriving show]
     type t =
       | Indent
       | IndentOutdent
@@ -37,6 +38,7 @@ module LanguageConfiguration: {
   };
 
   module EnterAction: {
+    [@deriving show]
     type t = {
       indentAction: IndentAction.t,
       appendText: option(string),
@@ -45,6 +47,7 @@ module LanguageConfiguration: {
   };
 
   module OnEnterRule: {
+    [@deriving show]
     type t = {
       beforeText: OnigRegExp.t,
       afterText: option(OnigRegExp.t),
@@ -53,6 +56,7 @@ module LanguageConfiguration: {
     };
   };
 
+  [@deriving show]
   type t = {onEnterRules: list(OnEnterRule.t)};
 
   let decode: Json.decoder(t);
@@ -1399,6 +1403,11 @@ module Msg: {
           selector: DocumentSelector.t,
           autoFormatTriggerCharacters: list(string),
           extensionId: ExtensionId.t,
+        })
+      | SetLanguageConfiguration({
+          handle: int,
+          languageId: string,
+          configuration: LanguageConfiguration.t,
         })
       | Unregister({handle: int});
   };

@@ -5,6 +5,7 @@ open Oniguruma;
 open Oni_Core;
 
 module IndentAction = {
+  [@deriving show]
   type t =
     | Indent
     | IndentOutdent
@@ -32,6 +33,7 @@ module IndentAction = {
 };
 
 module EnterAction = {
+  [@deriving show]
   type t = {
     indentAction: IndentAction.t,
     appendText: option(string),
@@ -51,10 +53,11 @@ module EnterAction = {
 };
 
 module OnEnterRule = {
+  [@deriving show]
   type t = {
-    beforeText: OnigRegExp.t,
-    afterText: option(OnigRegExp.t),
-    previousLineText: option(OnigRegExp.t),
+    beforeText: [@opaque] OnigRegExp.t,
+    afterText: [@opaque] option(OnigRegExp.t),
+    previousLineText: [@opaque] option(OnigRegExp.t),
     action: EnterAction.t,
   };
 
@@ -72,6 +75,7 @@ module OnEnterRule = {
   };
 };
 
+[@deriving show]
 type t = {onEnterRules: list(OnEnterRule.t)};
 
 let decode =
