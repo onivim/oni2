@@ -57,6 +57,8 @@
 - #3279 - Completion: Fix issue completing ReScript identifiers (fixes #3258)
 - #3286 - Quickmenu: Scope control+tab to visible editor (fixes #3275, #2009)
 - #3297 - Diagnostics: Fix potential crash when deleting lines with diagnostics
+- #3298 - Completion: Sort ordering improvements (related #3283)
+- #3301 - Formatting: Fix crash in default formatter with negative indentation levels
 
 ### Performance
 
