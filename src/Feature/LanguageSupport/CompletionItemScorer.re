@@ -4,11 +4,17 @@ open Utility;
 
 module Constants = {
   let firstCharacterScore = 100.;
+  let inexactCasePenalty = 0.5;
 };
+
+type matchType =
+  | MatchExactCase
+  | MatchDifferentCase
+  | NoMatch;
 
 let traverse =
     (
-      ~f: (~isMatch: bool, ~byte: int, 'acc) => 'acc,
+      ~f: (~isMatch: matchType, ~byte: int, 'acc) => 'acc,
       ~initial,
       ~selector: CompletionItem.t => string,
       line: string,
@@ -40,10 +46,17 @@ let traverse =
 
       // Got a match
       if (Uchar.equal(lineUchar, byteUchar)) {
-        let acc' = f(~isMatch=true, ~byte=itemByte, acc);
+        let acc' = f(~isMatch=MatchExactCase, ~byte=itemByte, acc);
+        loop(acc', nextLineByte, nextItemByte);
+      } else if (Uchar.is_char(lineUchar)
+                 && Uchar.is_char(byteUchar)
+                 && Uchar.to_char(lineUchar)
+                 |> Char.lowercase_ascii
+                 == (Uchar.to_char(byteUchar) |> Char.lowercase_ascii)) {
+        let acc' = f(~isMatch=MatchDifferentCase, ~byte=itemByte, acc);
         loop(acc', nextLineByte, nextItemByte);
       } else {
-        let acc' = f(~isMatch=false, ~byte=itemByte, acc);
+        let acc' = f(~isMatch=NoMatch, ~byte=itemByte, acc);
         loop(acc', lineByte, nextItemByte);
       };
     };
@@ -57,10 +70,13 @@ let score = {
   let f = (~isMatch, ~byte as _, acc) => {
     let (score, nextBonus) = acc;
 
-    if (isMatch) {
-      (score +. nextBonus, nextBonus /. 2.);
-    } else {
-      (score, nextBonus /. 2.);
+    switch (isMatch) {
+    | MatchExactCase => (score +. nextBonus, nextBonus /. 2.)
+    | MatchDifferentCase => (
+        score +. nextBonus *. Constants.inexactCasePenalty,
+        nextBonus /. 2.,
+      )
+    | NoMatch => (score, nextBonus /. 2.)
     };
   };
 
@@ -78,7 +94,7 @@ let highlights = {
     let initial = IntMap.empty;
 
     let f = (~isMatch, ~byte, acc) =>
-      if (isMatch) {
+      if (isMatch == MatchExactCase || isMatch == MatchDifferentCase) {
         let uchar = Zed_utf8.extract(item.filterText, byte);
         IntMap.update(
           Uchar.to_int(uchar),

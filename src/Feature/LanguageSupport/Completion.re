@@ -111,13 +111,16 @@ module Session = {
   let filter:
     (~query: string, list(CompletionItem.t)) => list(CompletionItem.t) =
     (~query, items) => {
-      let explodedQuery = Zed_utf8.explode(query);
+      let explodedQuery = Zed_utf8.explode(query |> String.lowercase_ascii);
       items
       |> List.filter((item: CompletionItem.t) =>
            if (String.length(item.filterText) < String.length(query)) {
              false;
            } else {
-             Filter.fuzzyMatches(explodedQuery, item.filterText);
+             Filter.fuzzyMatches(
+               explodedQuery,
+               item.filterText |> String.lowercase_ascii,
+             );
            }
          );
     };
