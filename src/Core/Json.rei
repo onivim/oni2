@@ -20,6 +20,7 @@ module Decode: {
   };
 
   let obj: (objGetters => 'a) => decoder('a);
+  let regexp: decoder(Oniguruma.OnigRegExp.t);
   let default: ('a, decoder(option('a))) => decoder('a);
 };
 
