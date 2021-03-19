@@ -65,6 +65,8 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
     | Search => "Search"
     };
 
+  let languageInfo =
+    state.languageSupport |> Feature_LanguageSupport.languageInfo;
   let maybeBuffer = Selectors.getActiveBuffer(state);
   let maybeSymbols =
     maybeBuffer
@@ -85,7 +87,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
           <Feature_Explorer.View
             config
             isFocused={FocusManager.current(state) == Focus.FileExplorer}
-            languageInfo={state.languageInfo}
+            languageInfo
             iconTheme={state.iconTheme}
             decorations={state.decorations}
             documentSymbols=maybeSymbols
@@ -103,7 +105,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
               state.workspace,
             )}
             isFocused={FocusManager.current(state) == Focus.SCM}
-            languageInfo={state.languageInfo}
+            languageInfo
             iconTheme={state.iconTheme}
             theme
             font
@@ -118,7 +120,7 @@ let make = (~key=?, ~config, ~theme, ~state: State.t, ~dispatch, ()) => {
             config
             isFocused={FocusManager.current(state) == Focus.Search}
             theme
-            languageInfo={state.languageInfo}
+            languageInfo
             iconTheme={state.iconTheme}
             uiFont={state.uiFont}
             model={state.searchPane}

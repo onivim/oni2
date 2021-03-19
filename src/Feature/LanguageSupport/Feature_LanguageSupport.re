@@ -11,6 +11,7 @@ type model = {
   rename: Rename.model,
   references: References.model,
   signatureHelp: SignatureHelp.model,
+  languageInfo: Exthost.LanguageInfo.t,
 };
 
 let initial = {
@@ -24,7 +25,10 @@ let initial = {
   rename: Rename.initial,
   references: References.initial,
   signatureHelp: SignatureHelp.initial,
+  languageInfo: Exthost.LanguageInfo.initial,
 };
+
+let languageInfo = ({languageInfo, _}) => languageInfo;
 
 [@deriving show]
 type command =
@@ -272,6 +276,7 @@ let update =
 
   | Exthost(Unregister({handle})) => (
       {
+        ...model,
         codeLens: CodeLens.unregister(~handle, model.codeLens),
         completion: Completion.unregister(~handle, model.completion),
         definition: Definition.unregister(~handle, model.definition),
@@ -932,6 +937,12 @@ let sub =
     signatureHelpSub,
   ]
   |> Isolinear.Sub.batch;
+};
+
+let extensionsAdded = (extensions, model) => {
+  ...model,
+  languageInfo:
+    Exthost.LanguageInfo.addExtensions(extensions, model.languageInfo),
 };
 
 module CompletionMeet = CompletionMeet;
