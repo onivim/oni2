@@ -453,6 +453,10 @@ let update =
           )
 
         | NewExtensions(extensions) =>
+          extensions
+          |> List.iter((ext: Exthost.Extension.Scanner.ScanResult.t) =>
+               prerr_endline(Exthost.Extension.Manifest.show(ext.manifest))
+             );
           let newExtensionConfigurations =
             extensions
             |> List.map((ext: Exthost.Extension.Scanner.ScanResult.t) => {
@@ -461,13 +465,21 @@ let update =
                  )
                });
 
+          let languageInfo' =
+            Exthost.LanguageInfo.addExtensions(
+              extensions,
+              state.languageInfo,
+            );
           let config =
             Feature_Configuration.registerExtensionConfigurations(
               ~configurations=newExtensionConfigurations,
               state.config,
             );
 
-          ({...state, config}, Isolinear.Effect.none);
+          (
+            {...state, config, languageInfo: languageInfo'},
+            Isolinear.Effect.none,
+          );
 
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =

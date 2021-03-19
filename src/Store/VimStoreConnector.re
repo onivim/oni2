@@ -20,7 +20,6 @@ module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 let start =
     (
       ~showUpdateChangelog: bool,
-      languageInfo: Exthost.LanguageInfo.t,
       getState: unit => State.t,
       getClipboardText,
       setClipboardText,
@@ -351,7 +350,10 @@ let start =
       let fileType =
         switch (meta.filePath) {
         | Some(v) =>
-          Exthost.LanguageInfo.getLanguageFromFilePath(languageInfo, v)
+          Exthost.LanguageInfo.getLanguageFromFilePath(
+            getState().languageInfo,
+            v,
+          )
           |> Oni_Core.Buffer.FileType.inferred
         | None => Oni_Core.Buffer.FileType.none
         };
@@ -470,7 +472,7 @@ let start =
                  let fileType =
                    Oni_Core.Buffer.FileType.inferred(
                      Exthost.LanguageInfo.getLanguageFromBuffer(
-                       languageInfo,
+                       getState().languageInfo,
                        newBuffer,
                      ),
                    );
