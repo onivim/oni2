@@ -273,6 +273,7 @@ let replace =
       ~elements,
       model,
     ) => {
+  prerr_endline("- Replace - start");
   let maybeStartIdx =
     startLine |> Option.map(EditorCoreTypes.LineNumber.toZeroBased);
 
@@ -383,7 +384,9 @@ let replace =
       incomingMap,
     );
 
-  keyToElements' |> makeConsistent;
+  let ret = keyToElements' |> makeConsistent;
+  prerr_endline("Replace - stop!");
+  ret;
 };
 
 // Clear any key that starts with the prefix [key].

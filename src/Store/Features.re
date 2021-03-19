@@ -756,6 +756,7 @@ let update =
           eff |> Isolinear.Effect.map(msg => LanguageSupport(msg)),
         )
       | CodeLensesChanged({handle, bufferId, startLine, stopLine, lenses}) =>
+        prerr_endline("!! CODELENSES CHANGED");
         let layout' =
           state.layout
           |> Feature_Layout.map(editor =>
@@ -771,6 +772,7 @@ let update =
                  editor;
                }
              );
+        prerr_endline("!! CODELENSES CHANGED - DONE");
         ({...state, layout: layout'}, Isolinear.Effect.none);
 
       | SetSelections({editorId, ranges}) =>
