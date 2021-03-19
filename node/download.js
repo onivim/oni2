@@ -1,5 +1,11 @@
-const http = require("follow-redirects").http
-const https = require("follow-redirects").https
+const followRedirects = require("follow-redirects")
+
+// The default for `follow-redirects` is to limit the body to 10 MB...
+// which isn't large enough for big extensions available on open-vsx.
+followRedirects.maxBodyLength = 128 * 1024 * 1024 // 1024 MB
+
+const http = followRedirects.http
+const https = followRedirects.https
 const fs = require("fs")
 
 const url = new URL(process.argv[2])

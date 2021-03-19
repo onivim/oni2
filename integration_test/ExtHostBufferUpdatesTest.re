@@ -8,8 +8,7 @@ module TS = TextSynchronization;
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, the buffer received by the extension host
 // is in sync with the buffer in the main process
-runTestWithInput(
-  ~name="ExtHostBufferUpdates", (input, dispatch, wait, _runEffects) => {
+runTest(~name="ExtHostBufferUpdates", ({input, dispatch, wait, key, _}) => {
   wait(~timeout=30.0, ~name="Exthost is initialized", (state: State.t) =>
     Feature_Exthost.isInitialized(state.exthost)
   );
@@ -27,7 +26,9 @@ runTestWithInput(
   );
 
   // Create a buffer
-  dispatch(Actions.OpenFileByPath("test.oni-dev", None, None));
+  dispatch(
+    Actions.OpenFileByPath("test.oni-dev", SplitDirection.Current, None),
+  );
 
   // Wait for the oni-dev filetype
   wait(
@@ -47,13 +48,13 @@ runTestWithInput(
   input("i");
 
   input("a");
-  input("<CR>");
+  key(EditorInput.Key.Return);
 
   input("b");
-  input("<CR>");
+  key(EditorInput.Key.Return);
 
   input("c");
-  input("<esc>");
+  key(EditorInput.Key.Escape);
 
   // TODO: Do we need to wait to ensure the buffer update gets sent?
   TS.validateTextIsSynchronized(
@@ -88,10 +89,35 @@ runTestWithInput(
   // Finally, modify a single line
   input("gg");
   input("Iabc");
+  key(EditorInput.Key.Escape);
 
   TS.validateTextIsSynchronized(
     ~expectedText=Some("abca|b|c|"),
     ~description="after inserting some text in an existing line",
+    dispatch,
+    wait,
+  );
+
+  // Insert multiple lines, and then undo
+  // This was a case discovered while investigating #2196
+  input("gg");
+  input("O");
+  key(EditorInput.Key.Return);
+  key(EditorInput.Key.Return);
+  key(EditorInput.Key.Escape);
+
+  TS.validateTextIsSynchronized(
+    ~expectedText=Some("|||abca|b|c|"),
+    ~description="after inserting multiple lines",
+    dispatch,
+    wait,
+  );
+
+  // Undo the change - we also had bugs here!
+  input("u");
+  TS.validateTextIsSynchronized(
+    ~expectedText=Some("abca|b|c|"),
+    ~description="after inserting multiple lines",
     dispatch,
     wait,
   );

@@ -189,6 +189,16 @@ let getLine = (line: int, buffer: t) => {
   buffer.lines[line];
 };
 
+let rawLine = (line: LineNumber.t, buffer: t) => {
+  let lineIdx = LineNumber.toZeroBased(line);
+
+  if (lineIdx < 0 || lineIdx >= Array.length(buffer.lines)) {
+    None;
+  } else {
+    Some(buffer |> getLine(lineIdx) |> BufferLine.raw);
+  };
+};
+
 let getLines = (buffer: t) => buffer.lines |> Array.map(BufferLine.raw);
 
 let getVersion = (buffer: t) => buffer.version;
@@ -292,9 +302,22 @@ let setIndentation = (indentation, buf) => {
 
 let getIndentation = buf => buf.indentation |> Inferred.value;
 
-let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) => {
-  update.version > getVersion(buf);
-};
+let shouldApplyUpdate = (update: BufferUpdate.t, buf: t) =>
+  // First, make sure the version check passes...
+  if (update.version > getVersion(buf)) {
+    // Then, if this is a full update, do a pass to see if there actually is an update.
+    // There are some cases - like undo - where a full update may come through, but actually
+    // is just bumping the change tick.
+    if (update.isFull) {
+      let bufferLines = getLines(buf);
+
+      !ArrayEx.equals(String.equal, bufferLines, update.lines);
+    } else {
+      true;
+    };
+  } else {
+    false;
+  };
 
 let update = (buf: t, update: BufferUpdate.t) =>
   if (shouldApplyUpdate(update, buf)) {
@@ -337,3 +360,20 @@ let setFont = (font, buf) => {
 let getSaveTick = ({saveTick, _}) => saveTick;
 
 let incrementSaveTick = buffer => {...buffer, saveTick: buffer.saveTick + 1};
+
+let toDebugString = buf => {
+  let lines =
+    buf
+    |> getLines
+    |> Array.to_list
+    |> List.mapi((idx, str) =>
+         "Line  " ++ string_of_int(idx) ++ ": |" ++ str ++ "|"
+       )
+    |> String.concat("\n");
+  Printf.sprintf(
+    "Buffer %d (version %d):\n---\n%s\n---\n",
+    getId(buf),
+    getVersion(buf),
+    lines,
+  );
+};

@@ -824,6 +824,19 @@ colnr_T srcColumn, colnr_T wantColumn, linenr_T *destLine, colnr_T *destColumn) 
    CAMLreturn0;
 }
 
+void onCursorAdd(pos_T newCursorPosition) {
+   CAMLparam0();
+   static const value *lv_onCursorAdd = NULL;
+   if (lv_onCursorAdd == NULL) {
+     lv_onCursorAdd = caml_named_value("lv_onCursorAdd");
+   }
+    caml_callback2(*lv_onCursorAdd,
+    Val_int(newCursorPosition.lnum),
+    Val_int(newCursorPosition.col)
+    );
+  CAMLreturn0;
+}
+
 void onScrollCallback(scrollDirection_T dir, long count) {
    CAMLparam0();
 
@@ -921,6 +934,7 @@ CAMLprim value libvim_vimInit(value unit) {
   vimSetInputMapCallback(&onInputMap);
   vimSetInputUnmapCallback(&onInputUnmap);
   vimSetToggleCommentsCallback(&onToggleComments);
+  vimSetCursorAddCallback(&onCursorAdd);
   vimSetFunctionGetCharCallback(&onGetChar);
   vimSetOutputCallback(&onOutput);
   char *args[0];
@@ -1211,9 +1225,11 @@ CAMLprim value libvim_vimBufferGetFiletype(value v) {
   CAMLreturn(ret);
 }
 
-CAMLprim value libvim_vimSearchGetHighlights(value startLine, value endLine) {
-  CAMLparam2(startLine, endLine);
+CAMLprim value libvim_vimSearchGetHighlights(value vBuf, value startLine, value endLine) {
+  CAMLparam3(vBuf, startLine, endLine);
   CAMLlocal1(ret);
+
+  buf_T *buf = (buf_T *)vBuf;
 
   int start = Int_val(startLine);
   int end = Int_val(endLine);
@@ -1221,7 +1237,7 @@ CAMLprim value libvim_vimSearchGetHighlights(value startLine, value endLine) {
   int num_highlights;
   searchHighlight_T *highlights;
 
-  vimSearchGetHighlights(start, end, &num_highlights, &highlights);
+  vimSearchGetHighlights(buf, start, end, &num_highlights, &highlights);
 
   ret = caml_alloc(num_highlights, 0);
 
@@ -1230,6 +1246,22 @@ CAMLprim value libvim_vimSearchGetHighlights(value startLine, value endLine) {
   }
 
   vim_free(highlights);
+  CAMLreturn(ret);
+}
+
+CAMLprim value libvim_vimSearchGetPattern(value unit) {
+  CAMLparam0();
+  CAMLlocal2(ret, v);
+
+  char_u *szSearchPattern = vimSearchGetPattern();
+
+  if (szSearchPattern == NULL) {
+    ret = Val_none;
+  } else {
+    v = caml_copy_string((char *)szSearchPattern);
+    ret = Val_some(v);
+  }
+
   CAMLreturn(ret);
 }
 

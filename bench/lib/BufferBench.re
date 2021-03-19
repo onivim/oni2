@@ -30,6 +30,7 @@ let hundredThousandLines = Array.make(100000, "Another big buffer update");
 let addLinesToEmptyBuffer = () => {
   let _ =
     BufferUpdate.create(
+      ~shouldAdjustCursorPosition=false,
       ~id=emptyBufferId,
       ~startLine=LineNumber.zero,
       ~endLine=LineNumber.ofZeroBased(-1),
@@ -44,6 +45,7 @@ let addLinesToEmptyBuffer = () => {
 let clearLargeBuffer = () => {
   let _ =
     BufferUpdate.create(
+      ~shouldAdjustCursorPosition=false,
       ~id=hundredThousandLineBufferId,
       ~startLine=LineNumber.zero,
       ~endLine=LineNumber.ofZeroBased(-1),
@@ -58,6 +60,7 @@ let clearLargeBuffer = () => {
 let insertInMiddleOfSmallBuffer = () => {
   let _ =
     BufferUpdate.create(
+      ~shouldAdjustCursorPosition=false,
       ~id=smallBufferId,
       ~startLine=LineNumber.ofZeroBased(50),
       ~endLine=LineNumber.ofZeroBased(51),
@@ -72,6 +75,7 @@ let insertInMiddleOfSmallBuffer = () => {
 let insertInMiddleOfLargeBuffer = () => {
   let _ =
     BufferUpdate.create(
+      ~shouldAdjustCursorPosition=false,
       ~id=hundredThousandLineBufferId,
       ~startLine=LineNumber.ofZeroBased(5000),
       ~endLine=LineNumber.ofZeroBased(50001),

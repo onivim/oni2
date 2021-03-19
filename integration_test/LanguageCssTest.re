@@ -5,8 +5,7 @@ open Oni_IntegrationTestLib;
 // This test validates:
 // - The 'oni-dev' extension gets activated
 // - When typing in an 'oni-dev' buffer, we get some completion results
-runTestWithInput(
-  ~name="LanguageCssTest", (input, dispatch, wait, _runEffects) => {
+runTest(~name="LanguageCssTest", ({input, dispatch, wait, _}) => {
   wait(~name="Capture initial state", (state: State.t) =>
     Selectors.mode(state) |> Vim.Mode.isNormal
   );
@@ -20,7 +19,9 @@ runTestWithInput(
     ~description="css completion",
     () => {
       // Create a buffer
-      dispatch(Actions.OpenFileByPath("test.css", None, None));
+      dispatch(
+        Actions.OpenFileByPath("test.css", SplitDirection.Current, None),
+      );
 
       // Wait for the CSS filetype
       wait(

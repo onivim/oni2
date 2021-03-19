@@ -107,12 +107,26 @@ let start = () => {
       Lwt.wakeup_exn(resolver, MenuCancelled)
     });
 
-  let makeBufferCommands = (workspace, languageInfo, iconTheme, buffers) => {
+  let makeBufferCommands =
+      (layout, workspace, languageInfo, iconTheme, buffers) => {
+    // Get visible buffers
+
+    let bufferIds: IntSet.t =
+      layout
+      |> Feature_Layout.activeLayoutGroups
+      |> List.map(Feature_Layout.Group.allEditors)
+      |> List.flatten
+      |> List.map(Feature_Editor.Editor.getBufferId)
+      |> List.fold_left(
+           (acc, curr) => {IntSet.add(curr, acc)},
+           IntSet.empty,
+         );
     // Get the current workspace, if available
     let maybeWorkspace = Feature_Workspace.openedFolder(workspace);
 
     buffers
     |> Feature_Buffers.all
+    |> List.filter(buffer => IntSet.mem(Buffer.getId(buffer), bufferIds))
     // Sort by most recerntly used
     |> List.fast_sort((a, b) =>
          - Float.compare(Buffer.getLastUsed(a), Buffer.getLastUsed(b))
@@ -131,7 +145,7 @@ let start = () => {
                category: None,
                name,
                command: () => {
-                 Actions.OpenFileByPath(path, None, None);
+                 Actions.OpenFileByPath(path, SplitDirection.Current, None);
                },
                icon:
                  Component_FileExplorer.getFileIcon(
@@ -159,6 +173,7 @@ let start = () => {
         buffers,
         languageInfo,
         iconTheme,
+        layout,
         workspace,
         commands,
         menus,
@@ -178,7 +193,13 @@ let start = () => {
 
     | QuickmenuShow(EditorsPicker) =>
       let items =
-        makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
+        makeBufferCommands(
+          layout,
+          workspace,
+          languageInfo,
+          iconTheme,
+          buffers,
+        );
 
       (
         Some({
@@ -200,7 +221,13 @@ let start = () => {
     | QuickmenuShow(FilesPicker) =>
       if (Feature_Workspace.openedFolder(workspace) == None) {
         let items =
-          makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
+          makeBufferCommands(
+            layout,
+            workspace,
+            languageInfo,
+            iconTheme,
+            buffers,
+          );
 
         (
           Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
@@ -227,74 +254,20 @@ let start = () => {
         Isolinear.Effect.none,
       )
 
-    | QuickmenuShow(ThemesPicker(themes)) =>
-      let items =
-        themes
-        |> List.map((theme: ExtensionContributions.Theme.t) => {
-             Actions.{
-               category: Some("Theme"),
-               name: ExtensionContributions.Theme.label(theme),
-               command: () =>
-                 ThemeLoadById(ExtensionContributions.Theme.id(theme)),
-               icon: None,
-               highlight: [],
-               handle: None,
-             }
-           })
-        |> Array.of_list;
-
-      (
-        Some({...Quickmenu.defaults(ThemesPicker(themes)), items}),
-        Isolinear.Effect.none,
-      );
-
     | QuickmenuShow(OpenBuffersPicker) =>
       let items =
-        makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
+        makeBufferCommands(
+          layout,
+          workspace,
+          languageInfo,
+          iconTheme,
+          buffers,
+        );
 
       (
         Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
         Isolinear.Effect.none,
       );
-
-    | QuickmenuShow(FileTypesPicker({bufferId, languages})) =>
-      if (Feature_Workspace.openedFolder(workspace) == None) {
-        let items =
-          makeBufferCommands(workspace, languageInfo, iconTheme, buffers);
-
-        (
-          Some({...Quickmenu.defaults(OpenBuffersPicker), items}),
-          Isolinear.Effect.none,
-        );
-      } else {
-        let items =
-          languages
-          |> List.map(((fileType, maybeIcon)) => {
-               Actions.{
-                 category: None,
-                 name: fileType,
-                 command: () =>
-                   Buffers(
-                     Feature_Buffers.Msg.fileTypeChanged(
-                       ~bufferId,
-                       ~fileType=Oni_Core.Buffer.FileType.explicit(fileType),
-                     ),
-                   ),
-                 icon: maybeIcon,
-                 highlight: [],
-                 handle: None,
-               }
-             })
-          |> Array.of_list;
-
-        (
-          Some({
-            ...Quickmenu.defaults(FileTypesPicker({bufferId, languages})),
-            items,
-          }),
-          Isolinear.Effect.none,
-        );
-      }
 
     | QuickmenuPaste(text) => (
         Option.map(
@@ -508,22 +481,46 @@ let start = () => {
     };
   };
 
-  let updater = (state: State.t, action: Actions.t) => {
-    let (menuState, menuEffect) =
-      menuUpdater(
-        state.quickmenu,
-        action,
-        state.buffers,
-        state.languageInfo,
-        state.iconTheme,
-        state.workspace,
-        CommandManager.current(state),
-        MenuManager.current(state),
-        ContextKeys.all(state),
-      );
+  let updater = (state: State.t, action: Actions.t) =>
+    // Transition menus to this new-style quickmenu
+    if (Feature_Quickmenu.isMenuOpen(state.newQuickmenu)) {
+      switch (action) {
+      | ListFocusUp =>
+        let (newQuickmenu, eff) = Feature_Quickmenu.prev(state.newQuickmenu);
+        ({...state, newQuickmenu}, eff);
+      | ListFocusDown =>
+        let (newQuickmenu, eff) = Feature_Quickmenu.next(state.newQuickmenu);
+        ({...state, newQuickmenu}, eff);
+      | ListSelect =>
+        let (newQuickmenu, eff) =
+          Feature_Quickmenu.select(state.newQuickmenu);
+        ({...state, newQuickmenu}, eff);
+      | QuickmenuClose => (
+          {
+            ...state,
+            newQuickmenu: Feature_Quickmenu.cancel(state.newQuickmenu),
+          },
+          Isolinear.Effect.none,
+        )
+      | _ => (state, Isolinear.Effect.none)
+      };
+    } else {
+      let (menuState, menuEffect) =
+        menuUpdater(
+          state.quickmenu,
+          action,
+          state.buffers,
+          state.languageInfo,
+          state.iconTheme,
+          state.layout,
+          state.workspace,
+          CommandManager.current(state),
+          MenuManager.current(state),
+          ContextKeys.all(state),
+        );
 
-    ({...state, quickmenu: menuState}, menuEffect);
-  };
+      ({...state, quickmenu: menuState}, menuEffect);
+    };
 
   updater;
 };
@@ -560,7 +557,10 @@ let subscriptions = (ripgrep, dispatch) => {
 
   let ripgrep = (workspace, languageInfo, iconTheme, configuration) => {
     let filesExclude =
-      Configuration.getValue(c => c.filesExclude, configuration);
+      Feature_Configuration.Legacy.getValue(
+        c => c.filesExclude,
+        configuration,
+      );
 
     switch (Feature_Workspace.openedFolder(workspace)) {
     | None =>
@@ -574,7 +574,8 @@ let subscriptions = (ripgrep, dispatch) => {
         Actions.{
           category: None,
           name: Path.toRelative(~base=directory, fullPath),
-          command: () => Actions.OpenFileByPath(fullPath, None, None),
+          command: () =>
+            Actions.OpenFileByPath(fullPath, SplitDirection.Current, None),
           icon:
             Component_FileExplorer.getFileIcon(
               ~languageInfo,
@@ -613,7 +614,6 @@ let subscriptions = (ripgrep, dispatch) => {
       | CommandPalette
       | EditorsPicker
       | OpenBuffersPicker => [filter(query, quickmenu.items)]
-      | ThemesPicker(_) => [filter(query, quickmenu.items)]
 
       | Extension({hasItems, _}) =>
         hasItems ? [filter(query, quickmenu.items)] : []
@@ -624,10 +624,8 @@ let subscriptions = (ripgrep, dispatch) => {
             state.workspace,
             state.languageInfo,
             state.iconTheme,
-            state.configuration,
+            state.config,
           )
-
-      | FileTypesPicker(_) => [filter(query, quickmenu.items)]
 
       | Wildmenu(_) => []
       };

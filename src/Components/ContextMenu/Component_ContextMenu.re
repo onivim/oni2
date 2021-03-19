@@ -494,7 +494,7 @@ module View = {
           );
 
         switch (maybeBbox) {
-        | Some((bbox: Math.BoundingBox2d.t)) =>
+        | Some(bbox: Math.BoundingBox2d.t) =>
           let (x, y, width, height) = bbox |> Math.BoundingBox2d.getBounds;
 
           let x =

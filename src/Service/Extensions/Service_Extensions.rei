@@ -89,14 +89,14 @@ module Catalog: {
 
 module Management: {
   let install:
-    (~setup: Setup.t, ~extensionsFolder: Fp.t(Fp.absolute)=?, string) =>
+    (~setup: Setup.t, ~extensionsFolder: FpExp.t(FpExp.absolute)=?, string) =>
     Lwt.t(unit);
 
   let uninstall:
-    (~extensionsFolder: Fp.t(Fp.absolute)=?, string) => Lwt.t(unit);
+    (~extensionsFolder: FpExp.t(FpExp.absolute)=?, string) => Lwt.t(unit);
 
   let get:
-    (~extensionsFolder: Fp.t(Fp.absolute)=?, unit) =>
+    (~extensionsFolder: FpExp.t(FpExp.absolute)=?, unit) =>
     Lwt.t(list(Exthost.Extension.Scanner.ScanResult.t));
 };
 
@@ -114,7 +114,7 @@ module Query: {
 module Effects: {
   let uninstall:
     (
-      ~extensionsFolder: option(Fp.t(Fp.absolute)),
+      ~extensionsFolder: option(FpExp.t(FpExp.absolute)),
       ~toMsg: result(unit, string) => 'a,
       string
     ) =>
@@ -122,7 +122,7 @@ module Effects: {
 
   let install:
     (
-      ~extensionsFolder: option(Fp.t(Fp.absolute)),
+      ~extensionsFolder: option(FpExp.t(FpExp.absolute)),
       ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'a,
       string
     ) =>
@@ -130,7 +130,7 @@ module Effects: {
 
   let update:
     (
-      ~extensionsFolder: option(Fp.t(Fp.absolute)),
+      ~extensionsFolder: option(FpExp.t(FpExp.absolute)),
       ~toMsg: result(Exthost.Extension.Scanner.ScanResult.t, string) => 'msg,
       string
     ) =>

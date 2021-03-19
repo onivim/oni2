@@ -28,15 +28,17 @@ let simpleState = {
       ~cli=Oni_CLI.default,
       ~initialBuffer,
       ~initialBufferRenderers=BufferRenderers.initial,
-      ~getUserSettings=() => Ok(Config.Settings.empty),
+      ~configurationLoader=Feature_Configuration.ConfigurationLoader.none,
+      ~keybindingsLoader=Feature_Input.KeybindingsLoader.none,
       ~extensionGlobalPersistence=Feature_Extensions.Persistence.initial,
       ~extensionWorkspacePersistence=Feature_Extensions.Persistence.initial,
-      ~contributedCommands=[],
       ~maybeWorkspace=None,
       ~workingDirectory=Sys.getcwd(),
       ~extensionsFolder=None,
       ~licenseKeyPersistence=None,
       ~titlebarHeight=0.,
+      ~getZoom=() => 1.0,
+      ~setZoom=_zoom => (),
     );
 
   Reducer.reduce(
@@ -113,6 +115,7 @@ let thousandLineState =
     createUpdateAction(
       thousandLineBuffer,
       BufferUpdate.create(
+        ~shouldAdjustCursorPosition=false,
         ~startLine=LineNumber.zero,
         ~endLine=LineNumber.ofZeroBased(1),
         ~lines=thousandLines,
@@ -139,6 +142,7 @@ let thousandLineStateWithIndents =
     createUpdateAction(
       thousandLineBuffer,
       BufferUpdate.create(
+        ~shouldAdjustCursorPosition=false,
         ~startLine=LineNumber.zero,
         ~endLine=LineNumber.ofZeroBased(1),
         ~lines=thousandLinesWithIndents,
@@ -157,6 +161,7 @@ let hundredThousandLineState =
     createUpdateAction(
       Buffer.ofLines(~font=Font.default(), [||]),
       BufferUpdate.create(
+        ~shouldAdjustCursorPosition=false,
         ~startLine=LineNumber.zero,
         ~endLine=LineNumber.ofZeroBased(1),
         ~lines=hundredThousandLines,

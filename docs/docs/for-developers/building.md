@@ -10,7 +10,7 @@ sidebar_label: Building from Source
 
 - Install [Git](https://git-scm.com/)
 - Install [Node](https://nodejs.org/en)
-- Install [Esy](https://esy.sh) (__0.6.2__ or above is required, but the latest version is recommened: `npm install -g esy@latest`)
+- Install [Esy](https://esy.sh) (__0.6.2__ or above is required, but the latest version is recommended: `npm install -g esy@latest`)
 > __NOTE:__ **Linux-only**: if you need to install using `sudo npm install -g esy@latest` then your NPM installation **might be broken** follow [the instruction here to fix it](https://docs.npmjs.com/resolving-eacces-permissions-errors-when-installing-packages-globally) this is related to this issue [esy/esy#1099.](https://github.com/esy/esy/issues/1099)
 
 - __Windows-only__: Run `npm install -g windows-build-tools` (this installs some build tools that aren't included by default on Windows)
@@ -40,6 +40,13 @@ Some Linux distributions may need other packages:
 
 ## Build and Run
 
+### Clone repository
+
+```sh
+git clone https://github.com/onivim/oni2
+cd oni2
+```
+
 ### Install node dependencies
 
 ```sh
@@ -58,9 +65,6 @@ node install-node-deps.js
 > __NOTE:__ On macOS, if you receive an `error: Too many open files`, you can run `ulimit -Sn 4096` to increase the file limit. More info at [esy/esy#1057](https://github.com/esy/esy/issues/1057)
 
 ```sh
-git clone https://github.com/onivim/oni2
-cd oni2
-
 # Install dependencies in package.json
 esy install
 

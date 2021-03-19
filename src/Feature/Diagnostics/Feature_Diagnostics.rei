@@ -64,6 +64,10 @@ let count: model => int;
 
 let maxSeverity: list(Diagnostic.t) => Severity.t;
 
+let moveMarkers:
+  (~newBuffer: Oni_Core.Buffer.t, ~markerUpdate: MarkerUpdate.t, model) =>
+  model;
+
 /*
  * Get all diagnostics for a buffer
  */

@@ -1,0 +1,14 @@
+(ocamllex
+ (modules Snippet_lexer))
+
+(menhir
+ (modules Snippet_parser))
+
+(library
+ (name Snippet)
+ (public_name Oni2.core.snippet)
+ (inline_tests)
+ (preprocess
+  (pps ppx_deriving.show ppx_inline_test))
+ (libraries Oni2.core.kernel Oni2.core.utility Rench Revery re timber
+   oniguruma))

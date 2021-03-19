@@ -94,12 +94,29 @@ let focusOutline = model => {
     ExpandedState.implicitlyOpen(model.isSymbolOutlineExpanded),
 };
 
-let setRoot = (~rootPath, model) => {
-  ...model,
-  fileExplorer:
-    rootPath
-    |> Option.map(rootPath => Component_FileExplorer.initial(~rootPath)),
-};
+let setRoot = (~rootPath, model) =>
+  if (Option.equal(
+        FpExp.eq,
+        rootPath,
+        model.fileExplorer |> Option.map(Component_FileExplorer.root),
+      )) {
+    model;
+  } else {
+    {
+      ...model,
+      fileExplorer:
+        rootPath
+        |> Option.map(rootPath =>
+             model.fileExplorer
+             |> Option.map(explorer =>
+                  Component_FileExplorer.setRoot(~rootPath, explorer)
+                )
+             |> Option.value(
+                  ~default=Component_FileExplorer.initial(~rootPath),
+                )
+           ),
+    };
+  };
 
 let root = ({fileExplorer, _}) => {
   fileExplorer |> Option.map(Component_FileExplorer.root);
@@ -115,7 +132,7 @@ type outmsg =
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
   | PickFolder;
 
-let update = (~configuration, msg, model) => {
+let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
   | KeyboardInput(key) =>
     if (model.focus == FileExplorer) {
@@ -154,6 +171,7 @@ let update = (~configuration, msg, model) => {
     |> Option.map(fileExplorer => {
          let (fileExplorer, outmsg) =
            Component_FileExplorer.update(
+             ~config,
              ~configuration,
              fileExplorerMsg,
              fileExplorer,
@@ -216,8 +234,10 @@ let update = (~configuration, msg, model) => {
       | Component_VimTree.Nothing
       | Component_VimTree.Expanded(_)
       | Component_VimTree.Collapsed(_) => Nothing
-      | Component_VimTree.Touched(symbol) => SymbolSelected(symbol)
-      | Component_VimTree.Selected(_) => Nothing
+
+      | Component_VimTree.Touched(symbol)
+      | Component_VimTree.Selected(symbol)
+      | Component_VimTree.SelectedNode(symbol) => SymbolSelected(symbol)
       };
 
     ({...model, symbolOutline}, outmsg');

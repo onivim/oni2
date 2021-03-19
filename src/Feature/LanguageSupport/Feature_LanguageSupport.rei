@@ -32,7 +32,7 @@ module Msg: {
 };
 
 module CodeLens: {
-  type t;
+  type t = Exthost.CodeLens.lens;
 
   let lineNumber: t => int;
   let text: t => string;
@@ -53,18 +53,24 @@ module CodeLens: {
 type outmsg =
   | Nothing
   | ApplyCompletion({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
+  | FormattingApplied({
+      displayName: string,
+      editCount: int,
+      needsToSave: bool,
+    })
   | InsertSnippet({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       snippet: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | OpenFile({
       filePath: string,
       location: option(CharacterPosition.t),
+      direction: SplitDirection.t,
     })
   | ReferencesAvailable
   | NotifySuccess(string)
@@ -76,12 +82,18 @@ type outmsg =
       startLine: EditorCoreTypes.LineNumber.t,
       stopLine: EditorCoreTypes.LineNumber.t,
       lenses: list(CodeLens.t),
-    });
+    })
+  | SetSelections({
+      editorId: int,
+      ranges: list(CharacterRange.t),
+    })
+  | ShowMenu(Feature_Quickmenu.Schema.menu(msg))
+  | TransformConfiguration(ConfigurationTransformer.t);
 
 let update:
   (
     ~config: Oni_Core.Config.resolver,
-    ~configuration: Oni_Core.Configuration.t,
+    ~extensions: Feature_Extensions.model,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~maybeSelection: option(CharacterRange.t),
     ~maybeBuffer: option(Oni_Core.Buffer.t),
@@ -93,11 +105,22 @@ let update:
   ) =>
   (model, outmsg);
 
+let bufferSaved:
+  (
+    ~isLargeBuffer: bool,
+    ~buffer: Oni_Core.Buffer.t,
+    ~config: Oni_Core.Config.resolver,
+    ~activeBufferId: int,
+    model
+  ) =>
+  (model, Isolinear.Effect.t(msg));
+
 let bufferUpdated:
   (
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~buffer: Oni_Core.Buffer.t,
     ~config: Oni_Core.Config.resolver,
+    ~extensions: Feature_Extensions.model,
     ~activeCursor: CharacterPosition.t,
     ~syntaxScope: Oni_Core.SyntaxScope.t,
     ~triggerKey: option(string),
@@ -108,10 +131,31 @@ let bufferUpdated:
 let configurationChanged: (~config: Config.resolver, model) => model;
 
 let cursorMoved:
-  (~previous: CharacterPosition.t, ~current: CharacterPosition.t, model) =>
+  (
+    ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
+    ~buffer: Oni_Core.Buffer.t,
+    ~previous: CharacterPosition.t,
+    ~current: CharacterPosition.t,
+    model
+  ) =>
   model;
-let startInsertMode: model => model;
+
+let moveMarkers:
+  (~newBuffer: Buffer.t, ~markerUpdate: MarkerUpdate.t, model) => model;
+
+let startInsertMode:
+  (
+    ~config: Oni_Core.Config.resolver,
+    ~maybeBuffer: option(Oni_Core.Buffer.t),
+    model
+  ) =>
+  model;
+
 let stopInsertMode: model => model;
+
+let startSnippet: model => model;
+let stopSnippet: model => model;
+
 let isFocused: model => bool;
 
 let sub:
@@ -139,12 +183,37 @@ module Completion: {
   module View: {
     let make:
       (
+        ~buffer: Buffer.t,
+        ~cursor: CharacterPosition.t,
         ~x: int,
         ~y: int,
         ~lineHeight: float,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~editorFont: Service_Font.font,
+        ~model: model,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
+
+module SignatureHelp: {
+  let isActive: model => bool;
+
+  module View: {
+    let make:
+      (
+        ~x: int,
+        ~y: int,
+        ~theme: Oni_Core.ColorTheme.Colors.t,
+        ~tokenTheme: Oni_Syntax.TokenTheme.t,
+        ~editorFont: Service_Font.font,
+        ~uiFont: Oni_Core.UiFont.t,
+        ~languageInfo: Exthost.LanguageInfo.t,
+        ~buffer: Oni_Core.Buffer.t,
+        ~grammars: Oni_Syntax.GrammarRepository.t,
+        ~dispatch: msg => unit,
         ~model: model,
         unit
       ) =>
@@ -208,6 +277,7 @@ module Contributions: {
   let configuration: list(Config.Schema.spec);
   let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
   let keybindings: list(Feature_Input.Schema.keybinding);
+  let menuGroups: list(MenuBar.Schema.group);
 };
 
 module Definition: {

@@ -41,7 +41,8 @@ let handleUpdate:
     ~scope: string,
     ~theme: Oni_Syntax.TokenTheme.t,
     ~config: Config.resolver,
-    BufferUpdate.t,
+    ~bufferUpdate: BufferUpdate.t,
+    ~markerUpdate: MarkerUpdate.t,
     t
   ) =>
   t;
@@ -67,6 +68,7 @@ module Effect: {
 
 let subscription:
   (
+    ~buffers: Feature_Buffers.model,
     ~config: Config.resolver,
     ~grammarInfo: Exthost.GrammarInfo.t,
     ~languageInfo: Exthost.LanguageInfo.t,

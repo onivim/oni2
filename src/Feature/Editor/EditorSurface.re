@@ -16,14 +16,11 @@ module Log = (val Log.withNamespace("Oni2.UI.EditorSurface"));
 module Config = EditorConfiguration;
 
 module FontIcon = Oni_Components.FontIcon;
-module BufferHighlights = Oni_Syntax.BufferHighlights;
 module Diagnostics = Feature_Diagnostics;
 module Diagnostic = Feature_Diagnostics.Diagnostic;
 
 module Constants = {
   include Constants;
-
-  let diffMarkersMaxLineCount = 2000;
   let diffMarkerWidth = 3.;
   let gutterMargin = 3.;
 };
@@ -47,26 +44,26 @@ module Styles = {
     bottom(0),
   ];
 
-  let verticalScrollBar = [
+  let verticalScrollBar = (~thickness) => [
     position(`Absolute),
     top(0),
     right(0),
-    width(Constants.scrollBarThickness),
+    width(thickness),
     bottom(0),
   ];
 
-  let horizontalScrollBar = (gutterOffset, width) => [
+  let horizontalScrollBar = (~thickness, gutterOffset, width) => [
     position(`Absolute),
     bottom(0),
     left(gutterOffset),
     Style.width(width),
-    height(Constants.editorHorizontalScrollBarThickness),
+    height(thickness),
   ];
 };
 
 let minimap =
     (
-      ~bufferHighlights,
+      ~vim,
       ~cursorPosition: CharacterPosition.t,
       ~colors,
       ~config,
@@ -88,7 +85,7 @@ let minimap =
     Style.[
       position(`Absolute),
       top(0),
-      right(Constants.scrollBarThickness),
+      right(Editor.verticalScrollbarThickness(editor)),
       width(minimapPixelWidth),
       bottom(0),
     ];
@@ -113,7 +110,7 @@ let minimap =
       diagnostics=diagnosticsMap
       getTokensForLine={getTokensForLine(
         ~editor,
-        ~bufferHighlights,
+        ~vim,
         ~cursorLine=
           EditorCoreTypes.LineNumber.toZeroBased(cursorPosition.line),
         ~colors,
@@ -124,7 +121,7 @@ let minimap =
       selection=selectionRanges
       showSlider=showMinimapSlider
       colors
-      bufferHighlights
+      vim
       diffMarkers
       languageSupport
     />
@@ -148,12 +145,13 @@ let%component make =
                 ~editor: Editor.t,
                 ~uiFont: Oni_Core.UiFont.t,
                 ~theme,
-                ~bufferHighlights,
+                ~vim,
                 ~bufferSyntaxHighlights,
                 ~diagnostics,
                 ~tokenTheme,
                 ~languageSupport,
-                ~scm,
+                ~buffers: Feature_Buffers.model,
+                ~snippets: Feature_Snippets.model,
                 ~windowIsFocused,
                 ~perFileTypeConfig: Oni_Core.Config.fileTypeResolver,
                 ~renderOverlays,
@@ -238,14 +236,21 @@ let%component make =
     Feature_Diagnostics.getDiagnosticsMap(diagnostics, buffer);
   let selectionRanges =
     editor
-    |> Editor.selection
-    |> Option.map(selection => Selection.getRanges(selection, buffer))
-    |> Option.map(ByteRange.toHash)
-    |> Option.value(~default=Hashtbl.create(1));
+    |> Editor.selections
+    |> List.map(selection => Selection.getRanges(selection, buffer))
+    |> List.flatten
+    |> ByteRange.toHash;
 
   let diffMarkers =
-    lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
-      ? EditorDiffMarkers.generate(~scm, buffer) : None;
+    // TODO: Port this
+    //lineCount < Constants.diffMarkersMaxLineCount && showDiffMarkers
+    showDiffMarkers
+      ? Feature_Buffers.getOriginalDiff(
+          ~bufferId=Oni_Core.Buffer.getId(buffer),
+          buffers,
+        )
+      : None;
+  //) : None;
 
   let pixelHeight = Editor.getTotalHeightInPixels(editor);
 
@@ -312,6 +317,10 @@ let%component make =
       ? React.empty
       : <View style={Styles.inactiveCover(~colors, ~opacity=coverAmount)} />;
 
+  let verticalScrollbarThickness = Editor.verticalScrollbarThickness(editor);
+  let horizontalScrollbarThickness =
+    Editor.horizontalScrollbarThickness(editor);
+
   <View style={Styles.container(~colors)} onDimensionsChanged>
     gutterView
     <SurfaceView
@@ -325,11 +334,12 @@ let%component make =
       selectionRanges
       matchingPairs
       maybeYankHighlights
-      bufferHighlights
+      vim
       languageSupport
       languageConfiguration
       bufferSyntaxHighlights
       mode
+      snippets
       isActiveSplit
       gutterWidth
       bufferPixelWidth={int_of_float(layout.bufferWidthInPixels)}
@@ -342,7 +352,7 @@ let%component make =
        ? <minimap
            editor
            diagnosticsMap
-           bufferHighlights
+           vim
            cursorPosition
            colors
            config
@@ -366,25 +376,31 @@ let%component make =
       languageSupport
       theme
       tokenTheme
+      uiFont
+      grammars=grammarRepository
+      buffer
+      languageInfo
     />
     {renderOverlays(~gutterWidth)}
     hoverPopup
-    <View style=Styles.verticalScrollBar>
+    <View
+      style={Styles.verticalScrollBar(~thickness=verticalScrollbarThickness)}>
       <Scrollbar.Vertical
         dispatch
         editor
         matchingPair=matchingPairs
         cursorPosition
-        width=Constants.scrollBarThickness
+        width=verticalScrollbarThickness
         height=pixelHeight
         diagnostics=diagnosticsMap
         colors
-        bufferHighlights
+        vim
         languageSupport
       />
     </View>
     <View
       style={Styles.horizontalScrollBar(
+        ~thickness=horizontalScrollbarThickness,
         int_of_float(gutterWidth),
         int_of_float(layout.bufferWidthInPixels),
       )}>

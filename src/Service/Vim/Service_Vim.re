@@ -31,7 +31,7 @@ let quitAll = () =>
 module Effects = {
   let paste = (~toMsg, text) => {
     Isolinear.Effect.createWithDispatch(~name="vim.clipboardPaste", dispatch => {
-      let isCmdLineMode = Vim.Mode.current() == Vim.Mode.CommandLine;
+      let isCmdLineMode = Vim.Mode.isCommandLine(Vim.Mode.current());
       let isInsertMode = Vim.Mode.isInsert(Vim.Mode.current());
 
       if (isInsertMode || isCmdLineMode) {
@@ -59,6 +59,7 @@ module Effects = {
 
   let applyEdits =
       (
+        ~shouldAdjustCursors,
         ~bufferId: int,
         ~version: int,
         ~edits: list(Vim.Edit.t),
@@ -82,8 +83,40 @@ module Effects = {
               ),
             );
           } else {
-            Vim.Buffer.applyEdits(~edits, buffer);
+            Vim.Buffer.applyEdits(~shouldAdjustCursors, ~edits, buffer);
           };
+        };
+
+      result |> toMsg |> dispatch;
+    });
+  };
+
+  let setLines =
+      (
+        ~shouldAdjustCursors,
+        ~bufferId: int,
+        ~start=?,
+        ~stop=?,
+        ~lines: array(string),
+        toMsg: result(unit, string) => 'msg,
+      ) => {
+    Isolinear.Effect.createWithDispatch(~name="vim.setLines", dispatch => {
+      Log.infof(m => m("Trying to set lines for buffer: %d", bufferId));
+      let maybeBuffer = Vim.Buffer.getById(bufferId);
+      let result =
+        switch (maybeBuffer) {
+        | None =>
+          Error("No buffer found with id: " ++ string_of_int(bufferId))
+        | Some(buffer) =>
+          Vim.Buffer.setLines(
+            ~shouldAdjustCursors,
+            ~undoable=true,
+            ~start?,
+            ~stop?,
+            ~lines,
+            buffer,
+          );
+          Ok();
         };
 
       result |> toMsg |> dispatch;
@@ -123,7 +156,13 @@ module Effects = {
         })
       | Replace({cursor}) =>
         Replace({cursor: adjustBytePositionForEdit(cursor, edit)})
-      | CommandLine => CommandLine
+      | CommandLine({commandType, text, commandCursor, cursor}) =>
+        CommandLine({
+          commandType,
+          text,
+          commandCursor,
+          cursor: adjustBytePositionForEdit(cursor, edit),
+        })
       | Operator({cursor, pending}) =>
         Operator({cursor: adjustBytePositionForEdit(cursor, edit), pending})
       | Visual(_) as vis => vis
@@ -136,21 +175,40 @@ module Effects = {
     List.fold_left(adjustModeForEdit, mode, edits);
   };
 
-  let applyCompletion = (~meetColumn, ~insertText, ~toMsg, ~additionalEdits) =>
+  let applyCompletion =
+      (
+        ~cursor: CharacterPosition.t,
+        ~replaceSpan: CharacterSpan.t,
+        ~insertText,
+        ~toMsg,
+        ~additionalEdits,
+      ) =>
     Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
-      let cursor = Vim.Cursor.get();
-      // TODO: Does this logic correctly handle unicode characters?
-      let delta =
-        ByteIndex.toInt(cursor.byte) - CharacterIndex.toInt(meetColumn);
+      let overwriteBefore =
+        CharacterIndex.toInt(cursor.character)
+        - CharacterIndex.toInt(replaceSpan.start);
 
-      let _: Vim.Context.t = VimEx.repeatKey(delta, "<BS>");
+      let overwriteAfter =
+        max(
+          0,
+          CharacterIndex.toInt(replaceSpan.stop)
+          - CharacterIndex.toInt(cursor.character),
+        );
+
+      let _: Vim.Context.t = VimEx.repeatKey(overwriteAfter, "<DEL>");
+      let _: Vim.Context.t = VimEx.repeatKey(overwriteBefore, "<BS>");
       let ({mode, _}: Vim.Context.t, _effects) =
         VimEx.inputString(insertText);
 
       let buffer = Vim.Buffer.getCurrent();
       let mode' =
         if (additionalEdits != []) {
-          Vim.Buffer.applyEdits(~edits=additionalEdits, buffer)
+          // We're manually adjusting the cursors here...
+          Vim.Buffer.applyEdits(
+            ~shouldAdjustCursors=false,
+            ~edits=additionalEdits,
+            buffer,
+          )
           |> Result.map(() => {adjustModeForEdits(mode, additionalEdits)})
           |> ResultEx.value(~default=mode);
         } else {
@@ -195,4 +253,125 @@ module Sub = {
   let eval = (~toMsg, expression) => {
     EvalSubscription.create(expression) |> Isolinear.Sub.map(toMsg);
   };
+
+  type searchHighlightParams = {
+    bufferId: int,
+    version: int,
+    searchPattern: string,
+    topVisibleLine: EditorCoreTypes.LineNumber.t,
+    bottomVisibleLine: EditorCoreTypes.LineNumber.t,
+  };
+
+  module SearchHighlightsSubscription =
+    Isolinear.Sub.Make({
+      type state = {
+        dispose: unit => unit,
+        lastTopLine: EditorCoreTypes.LineNumber.t,
+        lastBottomLine: EditorCoreTypes.LineNumber.t,
+        lastVersion: int,
+      };
+      type nonrec params = searchHighlightParams;
+      type msg = array(ByteRange.t);
+      let name = "Vim.Sub.SearchHighlights";
+      let id = ({bufferId, searchPattern, _}) => {
+        Printf.sprintf("%d/%s", bufferId, searchPattern);
+      };
+
+      let queueSearchHighlights = (~debounceTime, params, dispatch) => {
+        Revery.Tick.timeout(
+          ~name="Service_Vim.Timeout.searchHighlights",
+          _ => {
+            let maybeBuffer = Vim.Buffer.getById(params.bufferId);
+            switch (maybeBuffer) {
+            | None => ()
+            | Some(buffer) =>
+              let topLine =
+                params.topVisibleLine |> EditorCoreTypes.LineNumber.toOneBased;
+              let bottomLine =
+                params.bottomVisibleLine
+                |> EditorCoreTypes.LineNumber.toOneBased;
+              Log.infof(m =>
+                m(
+                  "Getting highlights for buffer: %d (%d-%d)",
+                  params.bufferId,
+                  topLine,
+                  bottomLine,
+                )
+              );
+              let ranges =
+                Vim.Search.getHighlightsInRange(buffer, topLine, bottomLine);
+              dispatch(ranges);
+            };
+          },
+          debounceTime,
+        );
+      };
+
+      let init = (~params, ~dispatch) => {
+        // Two scenarios to accomodate:
+        // - Typing / refining search
+        // - Re-querying highlights for buffer updates
+
+        // Refining search needs to be fast, because we want to show new highlights
+        // real-time as the user types. However, re-querying highlights on buffer update
+        // doesn't need to be as quick, because in the general case we can just shift the existing highlights.
+        let debounceTime = Constants.highPriorityDebounceTime;
+
+        let dispose = queueSearchHighlights(~debounceTime, params, dispatch);
+        {
+          dispose,
+          lastTopLine: params.topVisibleLine,
+          lastBottomLine: params.bottomVisibleLine,
+          lastVersion: params.version,
+        };
+      };
+
+      let update = (~params, ~state, ~dispatch) =>
+        if (!
+              EditorCoreTypes.LineNumber.equals(
+                params.topVisibleLine,
+                state.lastTopLine,
+              )
+            || !
+                 EditorCoreTypes.LineNumber.equals(
+                   params.bottomVisibleLine,
+                   state.lastBottomLine,
+                 )
+            || state.lastVersion != params.version) {
+          let debounceTime = Constants.mediumPriorityDebounceTime;
+          state.dispose();
+          let dispose =
+            queueSearchHighlights(~debounceTime, params, dispatch);
+          {
+            dispose,
+            lastTopLine: params.topVisibleLine,
+            lastBottomLine: params.bottomVisibleLine,
+            lastVersion: params.version,
+          };
+        } else {
+          state;
+        };
+
+      let dispose = (~params as _, ~state) => {
+        state.dispose();
+      };
+    });
+
+  let searchHighlights =
+      (
+        ~bufferId,
+        ~version,
+        ~searchPattern,
+        ~topVisibleLine,
+        ~bottomVisibleLine,
+        toMsg,
+      ) =>
+    SearchHighlightsSubscription.create({
+      bufferId,
+      version,
+      searchPattern,
+      topVisibleLine,
+      bottomVisibleLine,
+    })
+    |> Isolinear.Sub.map(msg => toMsg(msg));
 };

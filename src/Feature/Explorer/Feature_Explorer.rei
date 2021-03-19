@@ -7,16 +7,16 @@ type msg;
 
 module Msg: {
   let keyPressed: string => msg;
-  let activeFileChanged: option(string) => msg;
+  let activeFileChanged: option(FpExp.t(FpExp.absolute)) => msg;
 };
 
 type model;
 
-let initial: (~rootPath: option(string)) => model;
+let initial: (~rootPath: option(FpExp.t(FpExp.absolute))) => model;
 
-let setRoot: (~rootPath: option(string), model) => model;
+let setRoot: (~rootPath: option(FpExp.t(FpExp.absolute)), model) => model;
 
-let root: model => option(string);
+let root: model => option(FpExp.t(FpExp.absolute));
 
 let focusOutline: model => model;
 
@@ -33,12 +33,18 @@ type outmsg =
   | PickFolder;
 
 let update:
-  (~configuration: Oni_Core.Configuration.t, msg, model) => (model, outmsg);
+  (
+    ~config: Config.resolver,
+    ~configuration: Feature_Configuration.model,
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 // SUBSCRIPTION
 
 let sub:
-  (~configuration: Oni_Core.Configuration.t, model) => Isolinear.Sub.t(msg);
+  (~configuration: Feature_Configuration.model, model) => Isolinear.Sub.t(msg);
 
 // VIEW
 

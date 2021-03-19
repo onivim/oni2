@@ -171,7 +171,8 @@ module DocumentsAndEditors = {
 module ExtensionService = {
   open Json.Encode;
   let activateByEvent = (~event, client) => {
-    Client.notify(
+    Client.request(
+      ~decoder=Json.Decode.null,
       ~rpcName="ExtHostExtensionService",
       ~method="$activateByEvent",
       ~args=`List([`String(event)]),
@@ -251,7 +252,7 @@ module LanguageFeatures = {
     );
   };
 
-  let resolveCodeLens = (~handle: int, ~codeLens: CodeLens.t, client) => {
+  let resolveCodeLens = (~handle: int, ~codeLens: CodeLens.lens, client) => {
     let decoder = Json.Decode.(nullable(CodeLens.decode));
     Client.request(
       ~decoder,
@@ -266,6 +267,17 @@ module LanguageFeatures = {
       client,
     );
   };
+
+  let releaseCodeLenses = (~handle: int, ~cacheId, client) => {
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$releaseCodeLenses",
+      ~args=`List([`Int(handle), `Int(cacheId)]),
+      client,
+    );
+  };
+
   let provideCompletionItems =
       (
         ~handle: int,
@@ -304,9 +316,14 @@ module LanguageFeatures = {
   };
 
   let resolveCompletionItem =
-      (~handle: int, ~chainedCacheId: ChainedCacheId.t, client) => {
+      (
+        ~handle: int,
+        ~chainedCacheId: ChainedCacheId.t,
+        ~defaultRange: SuggestItem.SuggestRange.t,
+        client,
+      ) => {
     Client.request(
-      ~decoder=SuggestItem.Dto.decode,
+      ~decoder=SuggestItem.Dto.decode(~defaultRange),
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$resolveCompletionItem",
@@ -315,6 +332,16 @@ module LanguageFeatures = {
           `Int(handle),
           chainedCacheId |> Json.Encode.encode_value(ChainedCacheId.encode),
         ]),
+      client,
+    );
+  };
+
+  let releaseCompletionItems = (~handle: int, ~cacheId, client) => {
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$releaseCompletionItems",
+      ~args=`List([`Int(handle), `Int(cacheId)]),
       client,
     );
   };
@@ -448,7 +475,7 @@ module LanguageFeatures = {
     );
   };
 
-  let releaseSignatureHelp = (~handle, ~id, client) =>
+  let releaseSignatureHelp = (~handle, ~cacheId, client) =>
     Client.notify(
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$releaseSignatureHelp",
@@ -456,7 +483,7 @@ module LanguageFeatures = {
         `List(
           Json.Encode.[
             handle |> encode_value(int),
-            id |> encode_value(int),
+            cacheId |> encode_value(int),
           ],
         ),
       client,

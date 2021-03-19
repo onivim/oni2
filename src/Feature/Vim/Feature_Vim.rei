@@ -1,3 +1,5 @@
+open EditorCoreTypes;
+
 // MODEL
 
 type model;
@@ -7,6 +9,8 @@ let initial: model;
 let recordingMacro: model => option(char);
 
 let subMode: model => Vim.SubMode.t;
+
+let experimentalViml: model => list(string);
 
 // MSG
 
@@ -20,13 +24,18 @@ type msg =
     })
   | PasteCompleted({mode: [@opaque] Vim.Mode.t})
   | Pasted(string)
+  | SearchHighlightsAvailable({
+      bufferId: int,
+      highlights: array(ByteRange.t),
+    })
   | SettingChanged(Vim.Setting.t)
   | MacroRecordingStarted({register: char})
   | MacroRecordingStopped
   | Output({
       cmd: string,
       output: option(string),
-    });
+    })
+  | Noop;
 
 type outmsg =
   | Nothing
@@ -46,19 +55,46 @@ type outmsg =
 
 let update: (msg, model) => (model, outmsg);
 
+let getSearchHighlightsByLine:
+  (~bufferId: int, ~line: LineNumber.t, model) => list(ByteRange.t);
+
+let moveMarkers:
+  (
+    ~newBuffer: Oni_Core.Buffer.t,
+    ~markerUpdate: Oni_Core.MarkerUpdate.t,
+    model
+  ) =>
+  model;
+
+// SUBSCRIPTION
+
+let sub:
+  (
+    ~buffer: Oni_Core.Buffer.t,
+    ~topVisibleLine: LineNumber.t,
+    ~bottomVisibleLine: LineNumber.t,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
+
 module CommandLine: {let getCompletionMeet: string => option(int);};
 
 module Effects: {
   let applyCompletion:
     (
-      ~meetColumn: EditorCoreTypes.CharacterIndex.t,
+      ~cursor: EditorCoreTypes.CharacterPosition.t,
+      ~replaceSpan: EditorCoreTypes.CharacterSpan.t,
       ~insertText: string,
       ~additionalEdits: list(Vim.Edit.t)
     ) =>
     Isolinear.Effect.t(msg);
+
+  let save: (~bufferId: int) => Isolinear.Effect.t(msg);
 };
 
 // CONFIGURATION
+
+let configurationChanged: (~config: Oni_Core.Config.resolver, model) => model;
 
 module Configuration: {
   type resolver = string => option(Vim.Setting.value);
@@ -66,5 +102,7 @@ module Configuration: {
   let resolver: model => resolver;
 };
 
-module Contributions: {let keybindings: list(Feature_Input.Schema.keybinding);
+module Contributions: {
+  let keybindings: list(Feature_Input.Schema.keybinding);
+  let configuration: list(Oni_Core.Config.Schema.spec);
 };

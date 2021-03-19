@@ -2,6 +2,10 @@ open Oni_Core;
 open Utility;
 open EditorCoreTypes;
 
+type completionState =
+  | Complete
+  | Incomplete;
+
 module type S = {
   type msg;
   type model;
@@ -10,11 +14,12 @@ module type S = {
     | Nothing
     | ProviderError(string);
 
-  let update: (~isFuzzyMatching: bool, msg, model) => (model, outmsg);
+  let update: (msg, model) => (model, outmsg);
 
   let create:
     (
       ~config: Oni_Core.Config.resolver,
+      ~extensions: Feature_Extensions.model,
       ~languageConfiguration: LanguageConfiguration.t,
       ~trigger: Exthost.CompletionContext.t,
       ~buffer: Oni_Core.Buffer.t,
@@ -23,13 +28,14 @@ module type S = {
     ) =>
     option(model);
 
-  let items: model => list(CompletionItem.t);
+  let items: model => (completionState, list(CompletionItem.t));
 
   let handle: unit => option(int);
 
   let sub:
     (
       ~client: Exthost.Client.t,
+      ~context: Exthost.CompletionContext.t,
       ~position: CharacterPosition.t,
       ~buffer: Oni_Core.Buffer.t,
       ~selectedItem: option(CompletionItem.t),
@@ -41,7 +47,11 @@ module type S = {
 type provider('model, 'msg) = (module S with
                                   type model = 'model and type msg = 'msg);
 
-type exthostModel = list(CompletionItem.t);
+type exthostModel = {
+  isComplete: bool,
+  completions: list(CompletionItem.t),
+};
+
 [@deriving show]
 type exthostMsg =
   | ResultAvailable({
@@ -83,6 +93,7 @@ module ExthostCompletionProvider =
   let create =
       (
         ~config as _,
+        ~extensions as _,
         ~languageConfiguration as _,
         ~trigger as _,
         ~buffer,
@@ -92,36 +103,30 @@ module ExthostCompletionProvider =
     if (!Exthost.DocumentSelector.matchesBuffer(~buffer, Config.selector)) {
       None;
     } else {
-      Some([]);
+      Some({completions: [], isComplete: true});
     };
 
   let handle = () => Some(providerHandle);
 
-  let update = (~isFuzzyMatching, msg, model) =>
+  let update = (msg, model) =>
     switch (msg) {
-    // TODO: Handle incomplete result
     | ResultAvailable({handle, result}) when handle == providerHandle =>
+      let isComplete = !result.isIncomplete;
       let completions =
         Exthost.SuggestResult.(result.completions)
-        |> List.map(
-             CompletionItem.create(~isFuzzyMatching, ~handle=providerHandle),
-           );
-      (completions, Nothing);
+        |> List.map(CompletionItem.create(~handle=providerHandle));
+      ({isComplete, completions}, Nothing);
     | DetailsAvailable({handle, item}) when handle == providerHandle =>
-      let model' =
-        model
+      let completions' =
+        model.completions
         |> List.map((previousItem: CompletionItem.t) =>
              if (previousItem.chainedCacheId == item.chainedCacheId) {
-               CompletionItem.create(
-                 ~isFuzzyMatching=previousItem.isFuzzyMatching,
-                 ~handle=providerHandle,
-                 item,
-               );
+               CompletionItem.create(~handle=providerHandle, item);
              } else {
                previousItem;
              }
            );
-      (model', Nothing);
+      ({...model, completions: completions'}, Nothing);
     | DetailsError({handle, errorMsg}) when handle == providerHandle => (
         model,
         ProviderError(errorMsg),
@@ -133,11 +138,15 @@ module ExthostCompletionProvider =
     | _ => (model, Nothing)
     };
 
-  let items = model => model;
+  let items = ({isComplete, completions}) => (
+    isComplete ? Complete : Incomplete,
+    completions,
+  );
 
   let sub =
       (
         ~client,
+        ~context,
         ~position,
         ~buffer,
         ~selectedItem: option(CompletionItem.t),
@@ -145,12 +154,7 @@ module ExthostCompletionProvider =
       ) => {
     let itemsSub =
       Service_Exthost.Sub.completionItems(
-        // TODO: proper trigger kind
-        ~context=
-          Exthost.CompletionContext.{
-            triggerKind: Invoke,
-            triggerCharacter: None,
-          },
+        ~context,
         ~handle=providerHandle,
         ~buffer,
         ~position,
@@ -168,23 +172,26 @@ module ExthostCompletionProvider =
     selectedItem
     |> OptionEx.flatMap((selected: CompletionItem.t) =>
          if (selected.handle == Some(providerHandle) && Config.supportsResolve) {
-           selected.chainedCacheId
-           |> Option.map(chainedCacheId => {
-                let resolveSub =
-                  Service_Exthost.Sub.completionItem(
-                    ~handle=providerHandle,
-                    ~chainedCacheId,
-                    ~toMsg=
-                      fun
-                      | Ok(item) =>
-                        DetailsAvailable({handle: providerHandle, item})
-                      | Error(errorMsg) =>
-                        DetailsError({handle: providerHandle, errorMsg}),
-                    client,
-                  );
+           Option.map(
+             chainedCacheId => {
+               let resolveSub =
+                 Service_Exthost.Sub.completionItem(
+                   ~handle=providerHandle,
+                   ~chainedCacheId,
+                   ~defaultRange=selected.suggestRange,
+                   ~toMsg=
+                     fun
+                     | Ok(item) =>
+                       DetailsAvailable({handle: providerHandle, item})
+                     | Error(errorMsg) =>
+                       DetailsError({handle: providerHandle, errorMsg}),
+                   client,
+                 );
 
-                [itemsSub, resolveSub] |> Isolinear.Sub.batch;
-              });
+               [itemsSub, resolveSub] |> Isolinear.Sub.batch;
+             },
+             selected.chainedCacheId,
+           );
          } else {
            None;
          }
@@ -230,6 +237,7 @@ module KeywordCompletionProvider =
   let create =
       (
         ~config,
+        ~extensions as _,
         ~languageConfiguration: LanguageConfiguration.t,
         ~trigger: Exthost.CompletionContext.t,
         ~buffer,
@@ -237,8 +245,6 @@ module KeywordCompletionProvider =
         ~location: CharacterPosition.t,
       ) => {
     ignore(trigger);
-    ignore(base);
-    ignore(location);
 
     if (!CompletionConfig.wordBasedSuggestions.get(config)) {
       None;
@@ -250,8 +256,9 @@ module KeywordCompletionProvider =
         keywords
         |> List.mapi((idx, keyword) => {
              CompletionItem.keyword(
+               ~meet=location,
+               ~base,
                ~sortOrder=idx,
-               ~isFuzzyMatching=base != "",
                keyword,
              )
            });
@@ -260,18 +267,131 @@ module KeywordCompletionProvider =
     };
   };
 
-  let update = (~isFuzzyMatching as _, _msg: msg, model: model) => (
-    model,
-    Nothing,
-  );
+  let update = (_msg: msg, model: model) => (model, Nothing);
 
-  let items = model => model;
+  let items = model => (Complete, model);
 
   let sub =
-      (~client as _, ~position as _, ~buffer as _, ~selectedItem as _, _model) => Isolinear.Sub.none;
+      (
+        ~client as _,
+        ~context as _,
+        ~position as _,
+        ~buffer as _,
+        ~selectedItem as _,
+        _model,
+      ) => Isolinear.Sub.none;
 };
 
 let keyword: provider(keywordModel, keywordMsg) = {
   (module
    KeywordCompletionProvider({}));
+};
+
+type snippetModel = {
+  items: list(CompletionItem.t),
+  isComplete: bool,
+  filePaths: list(FpExp.t(FpExp.absolute)),
+  fileType: string,
+  meet: CharacterPosition.t,
+  base: string,
+  sortOrder: [ | `Top | `Inline | `Bottom | `Hidden],
+};
+[@deriving show]
+type snippetMsg =
+  | SnippetsAvailable(list(Service_Snippets.SnippetWithMetadata.t));
+
+module SnippetCompletionProvider =
+       (())
+       : (S with type msg = snippetMsg and type model = snippetModel) => {
+  type msg = snippetMsg;
+  type model = snippetModel;
+
+  type outmsg =
+    | Nothing
+    | ProviderError(string);
+
+  let handle = () => None;
+
+  let create =
+      (
+        ~config,
+        ~extensions,
+        ~languageConfiguration as _,
+        ~trigger: Exthost.CompletionContext.t,
+        ~buffer,
+        ~base: string,
+        ~location: CharacterPosition.t,
+      ) => {
+    ignore(trigger);
+
+    let sortOrder = CompletionConfig.snippetSuggestions.get(config);
+    if (sortOrder == `Hidden) {
+      None;
+    } else {
+      let fileType = buffer |> Buffer.getFileType |> Buffer.FileType.toString;
+
+      let snippetFilePaths =
+        Feature_Extensions.snippetFilePaths(~fileType, extensions);
+
+      Some({
+        filePaths: snippetFilePaths,
+        fileType,
+        items: [],
+        isComplete: false,
+        sortOrder,
+        meet: location,
+        base,
+      });
+    };
+  };
+
+  let update = (msg, model: model) => {
+    Service_Snippets.(
+      switch (msg) {
+      | SnippetsAvailable(snippets) =>
+        let items =
+          snippets
+          |> List.map((snippet: SnippetWithMetadata.t) => {
+               CompletionItem.snippet(
+                 ~meet=model.meet,
+                 ~base=model.base,
+                 ~prefix=snippet.prefix,
+                 snippet.snippet,
+               )
+             });
+        ({...model, items, isComplete: true}, Nothing);
+      }
+    );
+  };
+
+  let items = ({items, isComplete, _}: model) => (
+    isComplete ? Complete : Incomplete,
+    items,
+  );
+
+  let sub =
+      (
+        ~client as _,
+        ~context as _,
+        ~position as _,
+        ~buffer as _,
+        ~selectedItem as _,
+        model,
+      ) => {
+    let filePaths = model.filePaths;
+    let uniqueId = "Feature_LanguageSupport.SnippetCompletionProvider";
+
+    let toMsg = snippets => SnippetsAvailable(snippets);
+    Service_Snippets.Sub.snippetFromFiles(
+      ~uniqueId,
+      ~fileType=model.fileType,
+      ~filePaths,
+      toMsg,
+    );
+  };
+};
+
+let snippet: provider(snippetModel, snippetMsg) = {
+  (module
+   SnippetCompletionProvider({}));
 };

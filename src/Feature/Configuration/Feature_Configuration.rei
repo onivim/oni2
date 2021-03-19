@@ -1,38 +1,60 @@
 open Oni_Core;
 open Exthost;
 
-module UserSettingsProvider: {
-  let getSettings: unit => result(Config.Settings.t, string);
+type model;
+
+// DEPRECATED strategy for working with configuration
+module LegacyConfiguration = LegacyConfiguration;
+module LegacyConfigurationValues = LegacyConfigurationValues;
+module LegacyConfigurationParser = LegacyConfigurationParser;
+
+module Legacy: {
+  let configuration: model => LegacyConfiguration.t;
+  let getValue:
+    (~fileType: string=?, LegacyConfigurationValues.t => 'a, model) => 'a;
+
+  let set: (LegacyConfiguration.t, model) => model;
 };
 
-type model = {
-  schema: Config.Schema.t,
-  user: Config.Settings.t,
-  merged: Config.Settings.t,
+// LOADER
+
+module ConfigurationLoader: {
+  type t;
+
+  let none: t;
+
+  let file: FpExp.t(FpExp.absolute) => t;
 };
 
 let initial:
-  (
-    ~getUserSettings: unit => result(Config.Settings.t, string),
-    list(list(Config.Schema.spec))
-  ) =>
+  (~loader: ConfigurationLoader.t, list(list(Config.Schema.spec))) => model;
+
+let registerExtensionConfigurations:
+  (~configurations: list(Extension.Contributions.Configuration.t), model) =>
   model;
 
 let toExtensionConfiguration:
-  (model, list(Extension.Scanner.ScanResult.t), Setup.t) =>
+  (
+    ~additionalExtensions: list(Exthost.Extension.Scanner.ScanResult.t),
+    model
+  ) =>
   Exthost.Configuration.t;
 
 [@deriving show]
-type msg =
-  | UserSettingsChanged;
+type msg;
+
+module Msg: {let exthost: Exthost.Msg.Configuration.msg => msg;};
 
 type outmsg =
   | ConfigurationChanged({changed: Config.Settings.t})
+  | OpenFile(FpExp.t(FpExp.absolute))
   | Nothing;
 
-let update:
-  (~getUserSettings: unit => result(Config.Settings.t, string), model, msg) =>
-  (model, outmsg);
+let update: (model, msg) => (model, outmsg);
+
+let notifyFileSaved: (FpExp.t(FpExp.absolute), model) => model;
+
+let queueTransform: (~transformer: ConfigurationTransformer.t, model) => model;
 
 let resolver:
   (
@@ -44,4 +66,14 @@ let resolver:
   ) =>
   Config.rawValue;
 
+let sub:
+  (~client: Exthost.Client.t, ~isExthostInitialized: bool, model) =>
+  Isolinear.Sub.t(msg);
+
 module GlobalConfiguration = GlobalConfiguration;
+
+// CONTRIBUTIONS
+
+module Contributions: {let commands: list(Oni_Core.Command.t(msg));};
+
+module Testing: {let transform: ConfigurationTransformer.t => msg;};

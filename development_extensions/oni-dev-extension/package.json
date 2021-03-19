@@ -41,6 +41,10 @@
 				"title": "Onivim - Developer: Try Open Document (package.json)"
 			},
 			{
+				"command": "developer.oni.logBufferUpdates",
+				"title": "Onivim - Developer: Log Buffer Updates"
+			},
+			{
 				"command": "developer.oni.showWorkspaceRootPath",
 				"title": "Onivim - Developer: Show Workspace Root Path"
 			},

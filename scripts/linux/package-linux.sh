@@ -32,7 +32,6 @@ cp _release/linux/bin/Oni2 _release/Onivim2.AppDir/usr/bin/Oni2
 
 cp vendor/ripgrep-v0.10.0/linux/rg _release/Onivim2.AppDir/usr/bin/rg
 cp vendor/node-v12.17.0/linux-x64/node _release/Onivim2.AppDir/usr/bin/node
-cp vendor/reason-language-server/bin.native.linux _release/Onivim2.AppDir/usr/bin/rls
 
 ls _release/Onivim2.AppDir/usr/share
 

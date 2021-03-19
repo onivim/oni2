@@ -69,6 +69,31 @@ let themesByName = (~filter: string, model) => {
   |> List.filter(label => Utility.StringEx.contains(filter, label));
 };
 
+let snippetFilePaths = (~fileType, model) => {
+  Exthost.Extension.(
+    model
+    |> pick((manifest: Manifest.t) => {
+         Contributions.(manifest.contributes.snippets)
+       })
+    |> List.flatten
+    |> List.filter(({language, _}: Contributions.Snippet.t) => {
+         switch (language) {
+         | None => true
+         | Some(languageId) => fileType == languageId
+         }
+       })
+    |> List.filter_map(({path, _}: Contributions.Snippet.t) =>
+         FpExp.absoluteCurrentPlatform(path)
+       )
+  );
+};
+
+let hasCompletedDiscovery = ({extensions, _}) => {
+  // TODO: This logic will need to be updated when async
+  // discovery is implemented
+  extensions != [];
+};
+
 module ListView = ListView;
 module DetailsView = DetailsView;
 

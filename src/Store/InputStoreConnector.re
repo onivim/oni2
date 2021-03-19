@@ -5,6 +5,8 @@
  */
 
 open Oni_Core;
+open Utility;
+
 open Oni_Input;
 
 module Model = Oni_Model;
@@ -54,6 +56,10 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     | Quickmenu => [Actions.QuickmenuInput(k)]
 
+    | NewQuickmenu => [
+        Actions.Quickmenu(Feature_Quickmenu.Msg.keyPressed(k)),
+      ]
+
     | Sneak => [Actions.Sneak(Feature_Sneak.KeyboardInput(k))]
 
     | FileExplorer => [
@@ -94,6 +100,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         | Editor => Actions.Vim(Feature_Vim.Pasted(rawText))
         | Wildmenu => Actions.Vim(Feature_Vim.Pasted(firstLine))
         | Quickmenu => Actions.QuickmenuPaste(firstLine)
+        | NewQuickmenu =>
+          Actions.Quickmenu(Feature_Quickmenu.Msg.pasted(firstLine))
         | Extensions =>
           Actions.Extensions(Feature_Extensions.Msg.pasted(firstLine))
         | SCM => Actions.SCM(Feature_SCM.Msg.paste(firstLine))
@@ -127,18 +135,25 @@ let start = (window: option(Revery.Window.t), runEffects) => {
     | Feature_Input.(Execute(VimExCommand(command))) => [
         Actions.VimExecuteCommand({allowAnimation: true, command}),
       ]
-    | Feature_Input.(Execute(NamedCommand(command))) => [
-        Actions.KeybindingInvoked({command: command}),
+    | Feature_Input.(Execute(NamedCommand({command, arguments}))) => [
+        Actions.KeybindingInvoked({command, arguments}),
       ]
     | Feature_Input.Text(text) => handleTextEffect(~isText=true, state, text)
     | Feature_Input.Unhandled({key, isProducedByRemap}) =>
       let isTextInputActive = isTextInputActive();
 
       let maybeKeyString =
-        Handler.keyPressToCommand(
-          ~force=isProducedByRemap,
-          ~isTextInputActive,
-          key,
+        key
+        |> EditorInput.KeyCandidate.toList
+        |> (
+          list =>
+            List.nth_opt(list, 0)
+            |> OptionEx.flatMap(
+                 Handler.keyPressToCommand(
+                   ~force=isProducedByRemap,
+                   ~isTextInputActive,
+                 ),
+               )
         );
       switch (maybeKeyString) {
       | None => []
@@ -189,7 +204,19 @@ let start = (window: option(Revery.Window.t), runEffects) => {
 
     let newState = {...state, input};
 
-    updateFromInput(newState, /*Some("Text: " ++ text),*/ actions);
+    updateFromInput(newState, actions);
+  };
+
+  let handleTimeout = (state: State.t) => {
+    let context = Model.ContextKeys.all(state);
+    let (input, effects) = Feature_Input.timeout(~context, state.input);
+
+    let actions =
+      effects |> List.map(effectToActions(state)) |> List.flatten;
+
+    let newState = {...state, input};
+
+    updateFromInput(newState, actions);
   };
 
   let handleKeyUp = (~scancode, state: State.t) => {
@@ -214,6 +241,8 @@ let start = (window: option(Revery.Window.t), runEffects) => {
       handleKeyPress(~scancode, state, time, key)
 
     | KeyUp({scancode, _}) => handleKeyUp(~scancode, state)
+
+    | KeyTimeout => handleTimeout(state)
 
     | TextInput(text, time) => handleTextInput(state, time, text)
 
@@ -251,11 +280,7 @@ let start = (window: option(Revery.Window.t), runEffects) => {
         window,
         event => {
           let time = Revery.Time.now();
-          event
-          |> reveryKeyToEditorKey
-          |> Option.iter(key => {
-               dispatch(Actions.KeyUp({key, time, scancode: event.scancode}))
-             });
+          dispatch(Actions.KeyUp({time, scancode: event.scancode}));
         },
       );
 

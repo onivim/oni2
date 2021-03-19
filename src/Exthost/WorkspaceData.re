@@ -61,8 +61,15 @@ let encode = workspace =>
     ])
   );
 
-let fromUri = (~name, ~id, uri) => {
-  id,
+module Internal = {
+  let hash =
+    fun
+    | "global" => "global"
+    | value => value |> Hashtbl.hash |> Printf.sprintf("%x");
+};
+
+let fromUri = (~name, uri) => {
+  id: Internal.hash(Uri.toString(uri)),
   name,
   folders: [{uri, name, index: 0}],
   isUntitled: false,
@@ -70,7 +77,7 @@ let fromUri = (~name, ~id, uri) => {
 };
 
 let fromPath = path => {
-  id: path,
+  id: Internal.hash(path),
   name: path,
   configuration: None,
   isUntitled: false,
