@@ -283,6 +283,8 @@ module Internal = {
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.getPrimaryCursor;
 
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let languageSupport =
       if (prevCursor != newCursor) {
         maybeBuffer
@@ -291,9 +293,7 @@ module Internal = {
                buffer
                |> Oni_Core.Buffer.getFileType
                |> Oni_Core.Buffer.FileType.toString
-               |> Exthost.LanguageInfo.getLanguageConfiguration(
-                    state.languageInfo,
-                  )
+               |> Exthost.LanguageInfo.getLanguageConfiguration(languageInfo)
                |> Option.value(~default=LanguageConfiguration.default);
              Feature_LanguageSupport.cursorMoved(
                ~languageConfiguration,
@@ -461,13 +461,21 @@ let update =
                  )
                });
 
+          let languageSupport' =
+            Feature_LanguageSupport.extensionsAdded(
+              extensions,
+              state.languageSupport,
+            );
           let config =
             Feature_Configuration.registerExtensionConfigurations(
               ~configurations=newExtensionConfigurations,
               state.config,
             );
 
-          ({...state, config}, Isolinear.Effect.none);
+          (
+            {...state, config, languageSupport: languageSupport'},
+            Isolinear.Effect.none,
+          );
 
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =
@@ -601,12 +609,14 @@ let update =
 
     let editorId = editor |> Feature_Editor.Editor.getId;
 
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let languageConfiguration =
       maybeBuffer
       |> Option.map(Oni_Core.Buffer.getFileType)
       |> Option.map(Oni_Core.Buffer.FileType.toString)
       |> OptionEx.flatMap(
-           Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+           Exthost.LanguageInfo.getLanguageConfiguration(languageInfo),
          )
       |> Option.value(~default=LanguageConfiguration.default);
 
@@ -860,10 +870,12 @@ let update =
 
   | Pane(msg) =>
     let config = Selectors.configResolver(state);
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let (model, outmsg) =
       Feature_Pane.update(
         ~font=state.editorFont,
-        ~languageInfo=state.languageInfo,
+        ~languageInfo,
         ~buffers=state.buffers,
         ~previewEnabled=
           Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
@@ -1152,19 +1164,6 @@ let update =
           |> Feature_Layout.activeEditor
           |> Feature_Editor.Editor.getBufferId;
 
-        // TODO: Port to buffer filetype picker
-        // let languages =
-        //   state.languageInfo
-        //   |> Exthost.LanguageInfo.languages
-        //   |> List.map(language =>
-        //        (
-        //          language,
-        //          Oni_Core.IconTheme.getIconForLanguage(
-        //            state.iconTheme,
-        //            language,
-        //          ),
-        //        )
-        //      );
         (
           state',
           Isolinear.Effect.createWithDispatch(
@@ -1201,8 +1200,10 @@ let update =
     | Nothing => (state, Effect.none)
 
     | ShowMenu(menuFn) =>
+      let languageInfo =
+        state.languageSupport |> Feature_LanguageSupport.languageInfo;
       let menu =
-        menuFn(state.languageInfo, state.iconTheme)
+        menuFn(languageInfo, state.iconTheme)
         |> Feature_Quickmenu.Schema.map(msg => Buffers(msg));
       let quickmenu = Feature_Quickmenu.show(~menu, state.newQuickmenu);
       ({...state, newQuickmenu: quickmenu}, Isolinear.Effect.none);
@@ -1450,13 +1451,11 @@ let update =
 
       let bufferUpdate = update;
 
+      let languageInfo =
+        state.languageSupport |> Feature_LanguageSupport.languageInfo;
       let syntaxHighlights =
         Feature_Syntax.handleUpdate(
-          ~scope=
-            Internal.getScopeForBuffer(
-              ~languageInfo=state.languageInfo,
-              newBuffer,
-            ),
+          ~scope=Internal.getScopeForBuffer(~languageInfo, newBuffer),
           ~grammars=grammarRepository,
           ~config=
             Feature_Configuration.resolver(
@@ -1727,9 +1726,11 @@ let update =
     (state, effect);
 
   | OpenBufferById({bufferId, direction}) =>
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let effect =
       Feature_Buffers.Effects.openBufferInEditor(
-        ~languageInfo=state.languageInfo,
+        ~languageInfo,
         ~font=state.editorFont,
         ~bufferId,
         ~split=direction,
@@ -1739,10 +1740,12 @@ let update =
     (state, effect);
 
   | NewBuffer({direction}) =>
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let effect =
       Feature_Buffers.Effects.openNewBuffer(
         ~split=direction,
-        ~languageInfo=state.languageInfo,
+        ~languageInfo,
         ~font=state.editorFont,
         state.buffers,
       )
@@ -1750,9 +1753,11 @@ let update =
     (state, effect);
 
   | OpenFileByPath(filePath, split, position) =>
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let effect =
       Feature_Buffers.Effects.openFileInEditor(
-        ~languageInfo=state.languageInfo,
+        ~languageInfo,
         ~font=state.editorFont,
         ~split,
         ~position,
@@ -1763,9 +1768,11 @@ let update =
       |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
     (state, effect);
   | PreviewFileByPath(filePath, split, position) =>
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let effect =
       Feature_Buffers.Effects.openFileInEditor(
-        ~languageInfo=state.languageInfo,
+        ~languageInfo,
         ~font=state.editorFont,
         ~split,
         ~position,
@@ -1941,10 +1948,12 @@ let update =
     let wasSnippetActive = Feature_Snippets.isActive(state.snippets);
 
     let selections = Feature_Editor.Editor.selections(editor);
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
 
     let (snippets', outmsg) =
       Feature_Snippets.update(
-        ~languageInfo=state.languageInfo,
+        ~languageInfo,
         ~resolverFactory,
         ~selections,
         ~maybeBuffer,
@@ -1969,6 +1978,8 @@ let update =
       let newCursor = newEditor |> Feature_Editor.Editor.getPrimaryCursor;
       let newMode = newEditor |> Feature_Editor.Editor.mode;
       let isInInsert = Vim.Mode.isInsertOrSelect(newMode);
+      let languageInfo =
+        state.languageSupport |> Feature_LanguageSupport.languageInfo;
 
       let languageSupport' =
         if (originalCursor != newCursor) {
@@ -1979,7 +1990,7 @@ let update =
                  |> Oni_Core.Buffer.getFileType
                  |> Oni_Core.Buffer.FileType.toString
                  |> Exthost.LanguageInfo.getLanguageConfiguration(
-                      state.languageInfo,
+                      languageInfo,
                     )
                  |> Option.value(~default=LanguageConfiguration.default);
                Feature_LanguageSupport.cursorMoved(
@@ -2122,6 +2133,8 @@ let update =
     let activeCursor = editor |> Feature_Editor.Editor.getPrimaryCursor;
     let activeCursorByte =
       editor |> Feature_Editor.Editor.getPrimaryCursorByte;
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
 
     let languageSupport' =
       maybeBuffer
@@ -2138,9 +2151,7 @@ let update =
              buffer
              |> Oni_Core.Buffer.getFileType
              |> Oni_Core.Buffer.FileType.toString
-             |> Exthost.LanguageInfo.getLanguageConfiguration(
-                  state.languageInfo,
-                )
+             |> Exthost.LanguageInfo.getLanguageConfiguration(languageInfo)
              |> Option.value(~default=LanguageConfiguration.default);
 
            let languageSupport =

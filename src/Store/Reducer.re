@@ -17,7 +17,6 @@ let reduce: (State.t, Actions.t) => State.t =
       };
 
       switch (a) {
-      | SetLanguageInfo(languageInfo) => {...s, languageInfo}
       | SetGrammarRepository(grammarRepository) => {...s, grammarRepository}
       | SetIconTheme(iconTheme) => {...s, iconTheme}
       | ReallyQuitting => {...s, isQuitting: true}

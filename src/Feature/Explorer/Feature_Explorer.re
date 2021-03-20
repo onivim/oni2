@@ -317,6 +317,7 @@ module View = {
   open Revery.UI;
   let%component make =
                 (
+                  ~config,
                   ~isFocused,
                   ~iconTheme,
                   ~languageInfo,
@@ -468,6 +469,7 @@ module View = {
 
       | Some(explorer) =>
         <Component_FileExplorer.View
+          config
           isFocused={isFocused && model.focus == FileExplorer}
           expanded={ExpandedState.isOpen(model.isFileExplorerExpanded)}
           iconTheme
@@ -484,6 +486,7 @@ module View = {
     <View style=Style.[flexDirection(`Column), flexGrow(1)]>
       explorerComponent
       <Component_Accordion.VimTree
+        config
         showCount=false
         title="Outline"
         expanded={ExpandedState.isOpen(model.isSymbolOutlineExpanded)}

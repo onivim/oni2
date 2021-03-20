@@ -217,7 +217,9 @@ let make = (~dispatch, ~state: State.t, ()) => {
         config
         isFocused={FocusManager.current(state) == Focus.Pane}
         iconTheme={state.iconTheme}
-        languageInfo={state.languageInfo}
+        languageInfo={
+          state.languageSupport |> Feature_LanguageSupport.languageInfo
+        }
         theme
         editorFont
         uiFont
