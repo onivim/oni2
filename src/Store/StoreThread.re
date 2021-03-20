@@ -111,7 +111,6 @@ let start =
       ~shouldLoadExtensions,
       ~overriddenExtensionsDir,
     );
-  let languageInfo = Exthost.LanguageInfo.ofExtensions(extensions);
   let grammarInfo = Exthost.GrammarInfo.ofExtensions(extensions);
   let grammarRepository = Oni_Syntax.GrammarRepository.create(grammarInfo);
 
@@ -119,7 +118,6 @@ let start =
   let (vimUpdater, vimStream) =
     VimStoreConnector.start(
       ~showUpdateChangelog,
-      languageInfo,
       getState,
       getClipboardText,
       setClipboardText,
@@ -239,7 +237,8 @@ let start =
             ~buffers=state.buffers,
             ~config,
             ~grammarInfo,
-            ~languageInfo,
+            ~languageInfo=
+              state.languageSupport |> Feature_LanguageSupport.languageInfo,
             ~setup,
             ~tokenTheme=state.colorTheme |> Feature_Theme.tokenColors,
             ~bufferVisibility=visibleRanges,
@@ -605,7 +604,6 @@ let start =
   let _: Isolinear.unsubscribe =
     Isolinear.Stream.connect(dispatch, extHostStream);
 
-  dispatch(Model.Actions.SetLanguageInfo(languageInfo));
   dispatch(Model.Actions.SetGrammarRepository(grammarRepository));
 
   /* Set icon theme */

@@ -29,6 +29,8 @@ type notification = {
   message: string,
   source: option(string),
   yOffset: float,
+  // If `ephemeral` is true, don't store in notification list
+  ephemeral: bool,
 };
 
 [@deriving show({with_path: false})]
@@ -37,6 +39,7 @@ type internal = {
   kind,
   message: string,
   source: option(string),
+  ephemeral: bool,
   yOffsetAnimation: [@opaque] option(Component_Animation.t(float)),
 };
 
@@ -47,6 +50,7 @@ let internalToExternal: internal => notification =
       kind: internal.kind,
       message: internal.message,
       source: internal.source,
+      ephemeral: internal.ephemeral,
       yOffset:
         internal.yOffsetAnimation
         |> Option.map(Component_Animation.get)
@@ -101,6 +105,9 @@ let initial = {
   statusBarBackgroundColor: None,
   statusBarForegroundColor: None,
 };
+
+let count = ({all, _}) =>
+  all |> List.filter(notification => !notification.ephemeral) |> List.length;
 
 let statusBarBackground = (~theme, {statusBarBackgroundColor, _}) => {
   statusBarBackgroundColor
@@ -257,11 +264,13 @@ let update = (~theme, ~config, model, msg) => {
     }
     |> updateColorTransition(~config, ~theme);
 
-  | Dismissed({id}) => {
+  | Dismissed({id}) =>
+    {
       ...model,
       all: List.filter(it => it.id != id, model.all),
       activeNotifications: IntSet.remove(id, model.activeNotifications),
     }
+    |> updateColorTransition(~config, ~theme)
 
   | Expire({id}) =>
     {
@@ -307,7 +316,7 @@ let update = (~theme, ~config, model, msg) => {
 // EFFECTS
 
 module Effects = {
-  let create = (~kind=Info, ~source=?, message) =>
+  let create = (~ephemeral=false, ~kind=Info, ~source=?, message) =>
     Isolinear.Effect.createWithDispatch(~name="notification.create", dispatch =>
       if (Oni_Core.Utility.StringEx.isEmpty(message)) {
         let source = source |> Option.value(~default="Unknown");
@@ -316,6 +325,7 @@ module Effects = {
         dispatch(
           Created({
             id: Internal.generateId(),
+            ephemeral,
             kind,
             message,
             source,
@@ -345,7 +355,9 @@ let sub = (model: model) => {
            ~uniqueId="Feature_Notification" ++ string_of_int(notification.id),
            ~delay=Animations.totalDuration,
            ~msg=(~current as _) =>
-           Expire({id: notification.id})
+           notification.ephemeral
+             ? Dismissed({id: notification.id})
+             : Expire({id: notification.id})
          )
        });
 

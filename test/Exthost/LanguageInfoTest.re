@@ -23,7 +23,10 @@ let li =
        },
        [],
      )
-  |> Exthost.LanguageInfo.ofExtensions;
+  |> (
+    extensions =>
+      Exthost.(LanguageInfo.addExtensions(extensions, LanguageInfo.initial))
+  );
 
 let buf = Buffer.ofLines(~font=Font.default(), [|"#!/bin/bash", "ls *"|]);
 

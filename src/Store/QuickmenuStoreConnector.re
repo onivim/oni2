@@ -145,7 +145,7 @@ let start = () => {
                category: None,
                name,
                command: () => {
-                 Actions.OpenFileByPath(path, None, None);
+                 Actions.OpenFileByPath(path, SplitDirection.Current, None);
                },
                icon:
                  Component_FileExplorer.getFileIcon(
@@ -510,7 +510,7 @@ let start = () => {
           state.quickmenu,
           action,
           state.buffers,
-          state.languageInfo,
+          state.languageSupport |> Feature_LanguageSupport.languageInfo,
           state.iconTheme,
           state.layout,
           state.workspace,
@@ -574,7 +574,8 @@ let subscriptions = (ripgrep, dispatch) => {
         Actions.{
           category: None,
           name: Path.toRelative(~base=directory, fullPath),
-          command: () => Actions.OpenFileByPath(fullPath, None, None),
+          command: () =>
+            Actions.OpenFileByPath(fullPath, SplitDirection.Current, None),
           icon:
             Component_FileExplorer.getFileIcon(
               ~languageInfo,
@@ -621,7 +622,7 @@ let subscriptions = (ripgrep, dispatch) => {
         [filter(query, quickmenu.items)]
         @ ripgrep(
             state.workspace,
-            state.languageInfo,
+            state.languageSupport |> Feature_LanguageSupport.languageInfo,
             state.iconTheme,
             state.config,
           )

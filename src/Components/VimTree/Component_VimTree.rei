@@ -36,7 +36,8 @@ type outmsg('node, 'leaf) =
   | Expanded('node)
   | Collapsed('node)
   | Touched('leaf)
-  | Selected('leaf);
+  | Selected('leaf)
+  | SelectedNode('node);
 
 let update:
   (msg, model('node, 'leaf)) => (model('node, 'leaf), outmsg('node, 'leaf));
@@ -78,6 +79,7 @@ module Contributions: {
 module View: {
   let make:
     (
+      ~config: Config.resolver,
       ~isActive: bool,
       ~font: UiFont.t,
       ~focusedIndex: option(int),

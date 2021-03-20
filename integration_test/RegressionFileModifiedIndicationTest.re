@@ -18,7 +18,7 @@ runTest(
   dispatch(
     Actions.OpenFileByPath(
       "regression-file-modified-indication.txt",
-      None,
+      SplitDirection.Current,
       None,
     ),
   );

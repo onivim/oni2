@@ -76,7 +76,7 @@ type outmsg =
   | BufferSaved(Oni_Core.Buffer.t)
   | CreateEditor({
       buffer: Oni_Core.Buffer.t,
-      split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      split: SplitDirection.t,
       position: option(BytePosition.t),
       grabFocus: bool,
       preview: bool,
@@ -113,7 +113,7 @@ module Effects: {
     (
       ~font: Service_Font.font,
       ~languageInfo: Exthost.LanguageInfo.t,
-      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      ~split: SplitDirection.t,
       model
     ) =>
     Isolinear.Effect.t(msg);
@@ -122,7 +122,7 @@ module Effects: {
     (
       ~font: Service_Font.font,
       ~languageInfo: Exthost.LanguageInfo.t,
-      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab]=?,
+      ~split: SplitDirection.t=?,
       ~position: option(CharacterPosition.t)=?,
       ~grabFocus: bool=?,
       ~filePath: string,
@@ -135,7 +135,7 @@ module Effects: {
     (
       ~font: Service_Font.font,
       ~languageInfo: Exthost.LanguageInfo.t,
-      ~split: [ | `Current | `Horizontal | `Vertical | `NewTab],
+      ~split: SplitDirection.t,
       ~bufferId: int,
       model
     ) =>

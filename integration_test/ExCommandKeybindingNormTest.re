@@ -13,7 +13,9 @@ runTest(
   ~name="ExCommandKeybindingNormTest",
   ({dispatch, wait, input, _}) => {
     let testFile = getAssetPath("some-test-file.txt");
-    dispatch(Actions.OpenFileByPath(testFile, None, None));
+    dispatch(
+      Actions.OpenFileByPath(testFile, Oni_Core.SplitDirection.Current, None),
+    );
 
     wait(~name="Verify buffer is loaded", (state: State.t) => {
       state

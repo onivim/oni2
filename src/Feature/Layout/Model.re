@@ -253,27 +253,6 @@ let insertWindow = (target, direction, focus) =>
   updateTree(Layout.insertWindow(target, direction, focus));
 let removeWindow = target => updateTree(Layout.removeWindow(target));
 
-let split = (~editor, direction, model) => {
-  let newGroup = Group.create([editor]);
-
-  updateActiveLayout(
-    layout =>
-      {
-        groups: [newGroup, ...layout.groups],
-        activeGroupId: newGroup.id,
-        tree:
-          Layout.insertWindow(
-            `After(layout.activeGroupId),
-            direction,
-            newGroup.id,
-            activeTree(layout),
-          ),
-        uncommittedTree: `None,
-      },
-    model,
-  );
-};
-
 let move = (focus, dirX, dirY, layout) => {
   let positioned = Positioned.fromLayout(0, 0, 200, 200, layout);
 
@@ -285,6 +264,46 @@ let moveLeft = current => move(current, -1, 0);
 let moveRight = current => move(current, 1, 0);
 let moveUp = current => move(current, 0, -1);
 let moveDown = current => move(current, 0, 1);
+
+let hasSplitToRight = model => {
+  let layout = model |> activeLayout;
+  let newActiveGroupId =
+    layout |> activeTree |> moveRight(layout.activeGroupId);
+
+  layout.activeGroupId != newActiveGroupId;
+};
+
+let split = (~shouldReuse, ~editor, direction, model) =>
+  if (shouldReuse && direction == `Vertical && hasSplitToRight(model)) {
+    // TODO: Consider split open direction?
+    let layout = model |> activeLayout;
+    let newActiveGroupId =
+      layout |> activeTree |> moveRight(layout.activeGroupId);
+    model
+    |> updateActiveLayout(layout =>
+         {...layout, activeGroupId: newActiveGroupId}
+       )
+    |> updateActiveGroup(Group.openEditor(editor));
+  } else {
+    let newGroup = Group.create([editor]);
+
+    updateActiveLayout(
+      layout =>
+        {
+          groups: [newGroup, ...layout.groups],
+          activeGroupId: newGroup.id,
+          tree:
+            Layout.insertWindow(
+              `After(layout.activeGroupId),
+              direction,
+              newGroup.id,
+              activeTree(layout),
+            ),
+          uncommittedTree: `None,
+        },
+      model,
+    );
+  };
 
 let nextEditor = updateActiveGroup(Group.nextEditor);
 

@@ -189,6 +189,16 @@ let getLine = (line: int, buffer: t) => {
   buffer.lines[line];
 };
 
+let rawLine = (line: LineNumber.t, buffer: t) => {
+  let lineIdx = LineNumber.toZeroBased(line);
+
+  if (lineIdx < 0 || lineIdx >= Array.length(buffer.lines)) {
+    None;
+  } else {
+    Some(buffer |> getLine(lineIdx) |> BufferLine.raw);
+  };
+};
+
 let getLines = (buffer: t) => buffer.lines |> Array.map(BufferLine.raw);
 
 let getVersion = (buffer: t) => buffer.version;

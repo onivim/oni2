@@ -64,6 +64,8 @@ let getLine: (int, t) => BufferLine.t;
 let getLines: t => array(string);
 let getNumberOfLines: t => int;
 
+let rawLine: (LineNumber.t, t) => option(string);
+
 let getVersion: t => int;
 let setVersion: (int, t) => t;
 

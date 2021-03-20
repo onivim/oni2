@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open Utility;
 open Exthost;
@@ -14,14 +15,14 @@ type t = {
   insertTextRules: SuggestItem.InsertTextRules.t,
   filterText: string,
   sortText: string,
-  suggestRange: option(SuggestItem.SuggestRange.t),
+  suggestRange: SuggestItem.SuggestRange.t,
   commitCharacters: list(string),
   additionalTextEdits: list(Edit.SingleEditOperation.t),
   command: option(Command.t),
-  isFuzzyMatching: bool,
+  score: float,
 };
 
-let create = (~isFuzzyMatching: bool, ~handle, item: SuggestItem.t) => {
+let create = (~handle, item: SuggestItem.t) => {
   chainedCacheId: item.chainedCacheId,
   handle: Some(handle),
   label: item.label,
@@ -32,14 +33,25 @@ let create = (~isFuzzyMatching: bool, ~handle, item: SuggestItem.t) => {
   insertTextRules: item.insertTextRules,
   filterText: item |> SuggestItem.filterText,
   sortText: item |> SuggestItem.sortText,
-  suggestRange: Some(item.suggestRange),
+  suggestRange: item.suggestRange,
   commitCharacters: item.commitCharacters,
   additionalTextEdits: item.additionalTextEdits,
   command: item.command,
-  isFuzzyMatching,
+  score: 0.,
 };
 
-let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
+let suggestRangeFromMeet = (~meet: CharacterPosition.t, ~base: string) => {
+  let characters = Zed_utf8.length(base);
+  Exthost.SuggestItem.SuggestRange.Single({
+    startLineNumber: meet.line |> EditorCoreTypes.LineNumber.toOneBased,
+    startColumn: meet.character |> EditorCoreTypes.CharacterIndex.toInt,
+    endLineNumber: meet.line |> EditorCoreTypes.LineNumber.toOneBased,
+    endColumn:
+      (meet.character |> EditorCoreTypes.CharacterIndex.toInt) + characters,
+  });
+};
+
+let keyword = (~meet: CharacterPosition.t, ~base, ~sortOrder: int, keyword) => {
   let sortText =
     "ZZZZ"
     ++ (string_of_int(sortOrder) |> StringEx.padFront(~totalLength=8, '0'));
@@ -56,17 +68,17 @@ let keyword = (~sortOrder: int, ~isFuzzyMatching, keyword) => {
     // Keywords should always be last, vs other completions...
     // But still sort them relative to each other
     sortText,
-    suggestRange: None,
+    suggestRange: suggestRangeFromMeet(~meet, ~base),
     commitCharacters: [],
     additionalTextEdits: [],
     command: None,
-    isFuzzyMatching,
+    score: 0.,
   };
 };
 
 let isKeyword = ({kind, _}) => kind == Exthost.CompletionKind.Keyword;
 
-let snippet = (~isFuzzyMatching, ~prefix: string, snippet: string) => {
+let snippet = (~meet, ~base, ~prefix: string, snippet: string) => {
   chainedCacheId: None,
   handle: None,
   label: prefix,
@@ -77,9 +89,33 @@ let snippet = (~isFuzzyMatching, ~prefix: string, snippet: string) => {
   insertTextRules: Exthost.SuggestItem.InsertTextRules.insertAsSnippet,
   filterText: prefix,
   sortText: prefix,
-  suggestRange: None,
+  suggestRange: suggestRangeFromMeet(~meet, ~base),
   commitCharacters: [],
   additionalTextEdits: [],
   command: None,
-  isFuzzyMatching,
+  score: 0.,
+};
+
+let replaceSpan = (~activeCursor: CharacterPosition.t, item: t) => {
+  Exthost.SuggestItem.(
+    switch (item.suggestRange) {
+    | SuggestRange.Single({startColumn, endColumn, _}) =>
+      let stop =
+        max(endColumn - 1 |> CharacterIndex.ofInt, activeCursor.character);
+      CharacterSpan.{start: startColumn - 1 |> CharacterIndex.ofInt, stop};
+    | SuggestRange.Combo({insert, _}) =>
+      let stop =
+        max(
+          insert.endColumn - 1 |> CharacterIndex.ofInt,
+          activeCursor.character,
+        );
+      CharacterSpan.{
+        start:
+          Exthost.OneBasedRange.(
+            insert.startColumn - 1 |> CharacterIndex.ofInt
+          ),
+        stop,
+      };
+    }
+  );
 };

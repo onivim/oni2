@@ -11,9 +11,10 @@
     "Basic Usage": [
       "using-onivim/moving-in-onivim",
       "using-onivim/editing-and-deleting",
-      "using-onivim/language-features",
       "using-onivim/visual-mode",
       "using-onivim/working-with-files",
+      "using-onivim/formatting",
+      "using-onivim/language-features",
       "using-onivim/command-line",
       "using-onivim/integrated-terminal",
       "using-onivim/emmet",

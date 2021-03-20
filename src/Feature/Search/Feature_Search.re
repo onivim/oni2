@@ -212,6 +212,7 @@ let update = (~previewEnabled, model, msg) => {
       | Component_VimTree.Selected(item) =>
         Some(OpenFile({filePath: item.file, location: item.location}))
       // TODO
+      | Component_VimTree.SelectedNode(_) => None
       | Component_VimTree.Collapsed(_) => None
       | Component_VimTree.Expanded(_) => None
       };
@@ -293,6 +294,7 @@ module Styles = {
 
 let make =
     (
+      ~config,
       ~theme,
       ~uiFont: UiFont.t,
       ~iconTheme,
@@ -338,6 +340,7 @@ let make =
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
       <Component_VimTree.View
+        config
         isActive={isFocused && model.focus == ResultsPane}
         font=uiFont
         focusedIndex=None

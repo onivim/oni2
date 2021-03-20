@@ -22,7 +22,7 @@ let extHostSymbolToTree: Exthost.DocumentSymbol.t => Tree.t(symbol, symbol) =
     let rec loop = (~uniqueIdPrefix, extSymbol: Exthost.DocumentSymbol.t) => {
       let newUniqueId = uniqueIdPrefix ++ "." ++ extSymbol.name;
       let children =
-        extSymbol.children |> List.map(loop(~uniqueIdPrefix=newUniqueId));
+        extSymbol.children |> List.rev_map(loop(~uniqueIdPrefix=newUniqueId));
 
       let symbol = {
         uniqueId: newUniqueId,
@@ -60,7 +60,7 @@ type msg =
 let update = (msg, model) => {
   switch (msg) {
   | DocumentSymbolsAvailable({bufferId, symbols}) =>
-    let symbolTrees = symbols |> List.map(extHostSymbolToTree);
+    let symbolTrees = symbols |> List.rev_map(extHostSymbolToTree);
     let bufferToSymbols =
       IntMap.add(bufferId, symbolTrees, model.bufferToSymbols);
     {...model, bufferToSymbols};
