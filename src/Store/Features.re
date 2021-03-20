@@ -106,7 +106,7 @@ module Internal = {
 
   let quitEffect =
     Isolinear.Effect.createWithDispatch(~name="quit", dispatch =>
-      dispatch(Actions.Quit(true))
+      dispatch(Actions.ReallyQuitting)
     );
 
   let chdir = (path: FpExp.t(FpExp.absolute)) => {
