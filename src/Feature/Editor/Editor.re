@@ -134,6 +134,7 @@ type t = {
   // Animation
   isAnimationOverride: option(bool),
   animationNonce: int,
+  editAnimation: EditAnimation.t,
 };
 
 let verticalScrollbarThickness = ({scrollbarVerticalWidth, _}) => scrollbarVerticalWidth;
@@ -216,6 +217,7 @@ let bufferBytePositionToPixelInternal =
   if (line < 0) {
     ({x: 0., y: 0.}: PixelPosition.t, 0.);
   } else if (line >= lineCount) {
+    let rowHeight = lineHeightInPixels(editor);
     let pixelY =
       // Get total offset for view lines
       float(Wrapping.numberOfLines(wrapping))
@@ -224,6 +226,11 @@ let bufferBytePositionToPixelInternal =
       +. InlineElements.getReservedSpace(
            position.line,
            editor.inlineElements,
+         )
+      +. EditAnimation.getYOffset(
+           ~rowHeight,
+           ~line=position.line,
+           editor.editAnimation,
          )
       -. scrollY
       +. 0.5;
@@ -249,10 +256,16 @@ let bufferBytePositionToPixelInternal =
     let inlineElementOffsetY =
       InlineElements.getReservedSpace(bufferLineNum, editor.inlineElements);
 
+    let rowHeight = lineHeightInPixels(editor);
     let pixelX = actualPixel -. startPixel -. scrollX +. 0.5;
     let pixelY =
       inlineElementOffsetY
-      +. lineHeightInPixels(editor)
+      +. EditAnimation.getYOffset(
+           ~rowHeight,
+           ~line=position.line,
+           editor.editAnimation,
+         )
+      +. rowHeight
       *. float(viewLine)
       -. scrollY
       +. 0.5;
@@ -589,6 +602,7 @@ let create = (~config, ~buffer, ~preview: bool, ()) => {
     // Animation
     isAnimationOverride: None,
     animationNonce: 0,
+    editAnimation: EditAnimation.initial,
 
     scrollbarHorizontalWidth: 8,
     scrollbarVerticalWidth: 15,
@@ -604,7 +618,17 @@ let viewLineToPixelY = (idx, editor) => {
     Wrapping.viewLineToBufferPosition(~line=idx, wrapping);
   let inlineElementOffsetY =
     InlineElements.getReservedSpace(bufferLine, editor.inlineElements);
-  inlineElementOffsetY +. lineHeightInPixels(editor) *. float(idx);
+  let rowHeight = lineHeightInPixels(editor);
+  let editAnimationOffsetY =
+    EditAnimation.getYOffset(
+      ~rowHeight,
+      ~line=bufferLine,
+      editor.editAnimation,
+    );
+  editAnimationOffsetY
+  +. inlineElementOffsetY
+  +. lineHeightInPixels(editor)
+  *. float(idx);
 };
 
 let getViewLineFromPixelY = (~pixelY, editor) => {
@@ -1678,7 +1702,7 @@ let unprojectToPixel =
 
 let getBufferId = ({buffer, _}) => EditorBuffer.id(buffer);
 
-let updateBuffer = (~update, ~markerUpdate, ~buffer, editor) => {
+let updateBuffer = (~update, ~minimalUpdate, ~markerUpdate, ~buffer, editor) => {
   let shiftCursor = (f, mode) => {
     switch ((mode: Vim.Mode.t)) {
     // Don't touch command-line mode
@@ -1776,6 +1800,8 @@ let updateBuffer = (~update, ~markerUpdate, ~buffer, editor) => {
     ...editor,
     mode: mode',
     buffer,
+    editAnimation:
+      EditAnimation.applyMinimalUpdate(minimalUpdate, editor.editAnimation),
     wrapState: WrapState.update(~update, ~buffer, editor.wrapState),
     inlineElements:
       InlineElements.moveMarkers(markerUpdate, editor.inlineElements),
@@ -2124,13 +2150,20 @@ let update = (msg, editor) => {
       }
       |> synchronizeMinimapScroll(~animated=true);
 
-    editor'
-    |> withSteadyCursor(e =>
-         {
-           ...e,
-           inlineElements: InlineElements.animate(msg, editor.inlineElements),
-         }
-       );
+    let editor'' =
+      editor'
+      |> withSteadyCursor(e =>
+           {
+             ...e,
+             inlineElements:
+               InlineElements.animate(msg, editor.inlineElements),
+           }
+         );
+
+    {
+      ...editor'',
+      editAnimation: EditAnimation.update(msg, editor.editAnimation),
+    };
   };
 };
 
@@ -2264,8 +2297,13 @@ let sub = editor => {
     ]
     |> List.filter_map(Fun.id);
 
+  let isEditAnimating = EditAnimation.isAnimating(editor.editAnimation);
+
   let animationSub =
-    if (isYankAnimating || isInlineElementAnimating || isScrollAnimating) {
+    if (isYankAnimating
+        || isInlineElementAnimating
+        || isScrollAnimating
+        || isEditAnimating) {
       Component_Animation.subAny(
         ~uniqueId=
           "editor."

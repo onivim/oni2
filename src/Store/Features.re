@@ -1445,7 +1445,14 @@ let update =
         ]),
       );
 
-    | BufferUpdated({update, newBuffer, oldBuffer, triggerKey, markerUpdate}) =>
+    | BufferUpdated({
+        update,
+        newBuffer,
+        oldBuffer,
+        triggerKey,
+        markerUpdate,
+        minimalUpdate,
+      }) =>
       let fileType =
         newBuffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
@@ -1526,6 +1533,7 @@ let update =
                 if (Editor.getBufferId(editor) == bufferId) {
                   Editor.updateBuffer(
                     ~update=bufferUpdate,
+                    ~minimalUpdate,
                     ~markerUpdate,
                     ~buffer,
                     editor,

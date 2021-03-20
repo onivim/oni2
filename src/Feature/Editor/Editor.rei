@@ -265,6 +265,7 @@ let setSize: (~pixelWidth: int, ~pixelHeight: int, t) => t;
 let updateBuffer:
   (
     ~update: Oni_Core.BufferUpdate.t,
+    ~minimalUpdate: Oni_Core.MinimalUpdate.t,
     ~markerUpdate: Oni_Core.MarkerUpdate.t,
     ~buffer: EditorBuffer.t,
     t
