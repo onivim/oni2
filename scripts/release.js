@@ -197,15 +197,18 @@ if (process.platform == "linux") {
     fs.removeSync(path.join(binaryDirectory, "Info.plist"))
 
     // The Oni2 and Oni2_Editor binaries can't be symlinks, so replace them with their resolved counterpart
-    const replaceWithResolved = ["Oni2", "Oni2_editor"]
-    for (const symlinkName of replaceWithResolved) {
-        const symlinkPath = path.join(binaryDirectory, symlinkName)
-        // Resolve symlinks multiple times until the real file is found
-        const resolvedPath = fs.realpathSync(symlinkPath)
+    const mustBeResolved = ["Oni2", "Oni2_editor"]
+    for (const itemName of mustBeResolved) {
+        const binaryFilePath = path.join(binaryDirectory, itemName)
+        // Resolves symlinks multiple times until the real file is found
+        const resolvedPath = fs.realpathSync(binaryFilePath)
 
-        console.log(`Replacing ${symlinkName} with its resolved binary`)
-        fs.removeSync(symlinkPath)
-        fs.copyFileSync(resolvedPath, symlinkPath)
+        // If the original and resolved path are different, it is a symlink we need to replace
+        if (binaryFilePath != resolvedPath) {
+            console.log(`Replacing ${itemName} with its resolved binary`)
+            fs.removeSync(binaryFilePath)
+            fs.copyFileSync(resolvedPath, binaryFilePath)
+        }
     }
 
     // We need to remap the binary files - we end up with font files, images, and configuration files in the bin folder
