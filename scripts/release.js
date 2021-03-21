@@ -96,7 +96,7 @@ const updateIcon = (rcedit, exe, iconFile) => {
     process.env = {
         PATH: process.env.PATH,
     }
-    fs.chmodSync(exe, 0755)
+    fs.chmodSync(exe, 0o0755)
     rcedit(exe, {
         icon: iconFile,
     })
@@ -195,6 +195,18 @@ if (process.platform == "linux") {
     fs.removeSync(path.join(binaryDirectory, "setup.json"))
     // Remove development plist file
     fs.removeSync(path.join(binaryDirectory, "Info.plist"))
+
+    // The Oni2 and Oni2_Editor binaries can't be symlinks, so replace them with their resolved counterpart
+    const replaceWithResolved = ["Oni2", "Oni2_editor"]
+    for (const symlinkName of replaceWithResolved) {
+        const symlinkPath = path.join(binaryDirectory, symlinkName)
+        // Resolve symlinks multiple times until the real file is found
+        const resolvedPath = fs.realpathSync(symlinkPath)
+
+        console.log(`Replacing ${symlinkName} with its resolved binary`)
+        fs.removeSync(symlinkPath)
+        fs.copyFileSync(resolvedPath, symlinkPath)
+    }
 
     // We need to remap the binary files - we end up with font files, images, and configuration files in the bin folder
     // These should be in 'Resources' instead. Move everything that is _not_ a binary out, and symlink back in.

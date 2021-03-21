@@ -114,7 +114,9 @@ We use auto formatting tool, you might want to run it before you commit changes
 
 - `esy format`
 
-## Release 
+## Release
+
+> __NOTE:__ On macOS, checkhealth may report that a library is not loaded (e.g. Sparkle). This is normal. To check that libraries are loaded in a generated release build, see the section on macOS below.
 
 To create a release build, run:
 
@@ -125,7 +127,7 @@ To create a release build, run:
 
 This will create a `_esy/release` folder at the root with the application bundle inside that folder there will be folders for built binaries, in `_esy/release/install/bin` the `Oni2` binary resides along `Oni2_editor`.
 
-Mind that these are actually symbolic links to `oni2/_esy/release/store/b/oni2-<hashvalue>/install/default/bin/Oni2`, the same is true for the `Oni2_editor` binary.
+With the exception of macOS, these are actually symbolic links to `oni2/_esy/release/store/b/oni2-<hashvalue>/install/default/bin/Oni2`, the same is true for the `Oni2_editor` binary. On macOS, the symlinks are replaced with the actual binaries.
 
 ### Windows
 
@@ -133,16 +135,22 @@ To create an installation package for Windows, run the following PowerShell scri
 
 - `./scripts/windows/publish.ps1`
 
-### OSX
+### macOS
 
-Once you have a release build created, you can install Oni2 in your `Applications` folder.
+When building a release on newer versions of macOS, checkhealth will report that some libraries are not loaded. This is because the libraries are not accessible until the app is fully built and can be ignored.
+
+To check that the libraries are in fact included in a generated release build, you can run the following command from the `oni2` directory:
+
+- `./_release/Onivim2.app/Contents/MacOS/Oni2 -f --checkhealth`
+
+You can also install Oni2 in your `Applications` folder.
 
 Run the following from the `oni2` directory:
 
 - `cp -R _release/Onivim2.app /Applications`
 
-If you want to open the editor from terminal with an `oni2` command, you can add Oni2 to the system PATH using a command
-item within the app:
+If you want to open the editor from the terminal with an `oni2` command, you can add Oni2 to the system PATH using a command
+from within the app:
 
 - Open Oni2 from launchpad
 - Open command palette with `Cmd + Shift + P`
@@ -171,8 +179,9 @@ If there's a problem in-between Oni2 and the extension, it can be helpful to bui
 
 #### Building
 
-- Navigate to your home directory (ie, `cd ~` on Linux / OSX, or `cd /` on Windows)
+- Navigate to your home directory (ie, `cd ~` on Linux / macOS, or `cd /` on Windows)
 - `git clone https://github.com/onivim/vscode-exthost`
+- `cd vscode-exthost`
 - `yarn install`
 - `yarn compile`
 
