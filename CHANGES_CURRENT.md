@@ -18,6 +18,7 @@
 - #3310 - Snippets: Fix parse error for printf/sprintf snippets
 - #3287 - Search: Initiate search automatically when text is selected (fixes #3277)
 - #3308 - Completion: Allow case-insensitive matches in scoring (fixes #3136)
+- #3318 - Completion: Show full incomplete results list (fixes #2583)
 
 ### Performance
 
