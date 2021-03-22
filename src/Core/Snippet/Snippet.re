@@ -161,4 +161,8 @@ let%test_module "parse" =
        )
        |> Result.is_ok;
      };
+
+     let%test "sprintf parse bug (comma in placeholder)" = {
+       parse("sprintf(${1:char *,})") |> Result.is_ok;
+     };
    });

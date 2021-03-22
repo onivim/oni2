@@ -44,10 +44,10 @@ let suggestRangeFromMeet = (~meet: CharacterPosition.t, ~base: string) => {
   let characters = Zed_utf8.length(base);
   Exthost.SuggestItem.SuggestRange.Single({
     startLineNumber: meet.line |> EditorCoreTypes.LineNumber.toOneBased,
-    startColumn: meet.character |> EditorCoreTypes.CharacterIndex.toInt,
+    startColumn: (meet.character |> EditorCoreTypes.CharacterIndex.toInt) + 1,
     endLineNumber: meet.line |> EditorCoreTypes.LineNumber.toOneBased,
     endColumn:
-      (meet.character |> EditorCoreTypes.CharacterIndex.toInt) + characters,
+      (meet.character |> EditorCoreTypes.CharacterIndex.toInt) + characters + 1,
   });
 };
 

@@ -1,5 +1,7 @@
 exception LuvException(Luv.Error.t);
 
+module Log = (val Kernel.Log.withNamespace("LuvEx"));
+
 let wrapPromise = (f, arg) => {
   let (promise, resolver) = Lwt.task();
 
@@ -10,6 +12,31 @@ let wrapPromise = (f, arg) => {
     }
   });
   promise;
+};
+
+let allocator = name => {
+  let maybeAllocatedBuffer = ref(None);
+
+  let createNewBuffer = size => {
+    let newBuffer = Luv.Buffer.create(size);
+    Log.infof(m =>
+      m("Allocating new buffer for %s with size %d", name, size)
+    );
+    maybeAllocatedBuffer := Some(newBuffer);
+    newBuffer;
+  };
+
+  size => {
+    switch (maybeAllocatedBuffer^) {
+    | Some(buffer) =>
+      if (Luv.Buffer.size(buffer) >= size) {
+        buffer;
+      } else {
+        createNewBuffer(size);
+      }
+    | None => createNewBuffer(size)
+    };
+  };
 };
 
 module Process = {

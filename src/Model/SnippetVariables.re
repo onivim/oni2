@@ -28,7 +28,7 @@ let current = (state: State.t, variable) => {
     maybeLanguage
     |> OptionEx.flatMap(language => {
          Exthost.LanguageInfo.getLanguageConfiguration(
-           state.languageInfo,
+           state.languageSupport |> Feature_LanguageSupport.languageInfo,
            language,
          )
        });
