@@ -16,6 +16,7 @@
 - #3307 - UX: Bring back 'workbench.tree.indent' configuration setting (fixes #3305)
 - #3309 - Completion: Fix off-by-one keyword / snippet completion
 - #3310 - Snippets: Fix parse error for printf/sprintf snippets
+- #3287 - Search: Initiate search automatically when text is selected (fixes #3277)
 
 ### Performance
 
