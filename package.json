@@ -237,7 +237,7 @@
     "@revery/timber": "^2.0.0",
     "axios": "^0.19.0",
     "esy-angle-prebuilt": "^1.0.0",
-    "esy-macdylibbundler": "*",
+    "esy-macdylibbundler": "^0.4.5001",
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
     "esy-sdl2": "*",
     "esy-skia": "*",
