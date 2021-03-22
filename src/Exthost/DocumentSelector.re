@@ -22,22 +22,10 @@ let matchesBuffer = (~buffer: Oni_Core.Buffer.t, filter) => {
 
   let maybeFilePath = buffer |> Buffer.getFilePath;
 
-  let ret =
-    OptionEx.map2(
-      (filetype, filepath) => {matches(~filetype, ~filepath, filter)},
-      maybeFileType,
-      maybeFilePath,
-    )
-    |> Option.value(~default=false);
-
-  prerr_endline(
-    Printf.sprintf(
-      "Matches buffer: %s - %s (%s)",
-      Buffer.getFilePath(buffer) |> Option.value(~default="(none)"),
-      ret |> string_of_bool,
-      toDebugString(filter),
-    ),
-  );
-  ret;
+  OptionEx.map2(
+    (filetype, filepath) => {matches(~filetype, ~filepath, filter)},
+    maybeFileType,
+    maybeFilePath,
+  )
+  |> Option.value(~default=false);
 };
-

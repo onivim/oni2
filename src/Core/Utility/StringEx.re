@@ -495,4 +495,3 @@ let escapeSpaces: string => string =
 let replace = (~match, ~replace, str) => {
   Str.global_replace(Str.regexp_string(match), replace, str);
 };
-
