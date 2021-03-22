@@ -327,7 +327,7 @@ module Session = {
                ~base=meet.base,
                ~trigger,
                ~buffer,
-               ~location=meet.location,
+               ~location=meet.insertLocation,
              )
              |> Option.map(model => (meet, model))
            })
