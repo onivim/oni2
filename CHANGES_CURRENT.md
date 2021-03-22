@@ -14,7 +14,8 @@
 - #3302 - Auto-Indent: Implement $setLanguageConfiguration handler (related to #3288)
 - #3300 - Formatting: Fix format edits containing a trailing newline (related to #3288)
 - #3307 - UX: Bring back 'workbench.tree.indent' configuration setting (fixes #3305)
-- #3309 - Completion: Fix off-by-one keyword / snippet completion 
+- #3309 - Completion: Fix off-by-one keyword / snippet completion
+- #3310 - Snippets: Fix parse error for printf/sprintf snippets
 
 ### Performance
 
