@@ -64,8 +64,6 @@ let flushQueuedMessages = (~dispatch, queuedMessages, client) => {
   packets |> List.iter(send(~dispatch));
 };
 
-let buffer = ref(None);
-
 let read = (~dispatch, clientPipe) => {
   let parser = ref(Packet.Parser.initial);
 
