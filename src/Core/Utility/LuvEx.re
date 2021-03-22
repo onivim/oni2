@@ -19,7 +19,9 @@ let allocator = name => {
 
   let createNewBuffer = size => {
     let newBuffer = Luv.Buffer.create(size);
-    Log.infof(m => m("Allocating new buffer of size %d", size));
+    Log.infof(m =>
+      m("Allocating new buffer for %s with size %d", name, size)
+    );
     maybeAllocatedBuffer := Some(newBuffer);
     newBuffer;
   };
