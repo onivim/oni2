@@ -4,6 +4,7 @@ open Oni_Core;
 type t = {
   language: option(string),
   pattern: option(Re.re),
+  patternString: option(string),
   scheme: option(string),
   exclusive: bool,
 };
@@ -34,6 +35,7 @@ let decode = {
         scheme: field.optional("scheme", string),
         exclusive: field.withDefault("exclusive", true, bool),
         pattern: field.optional("pattern", CustomDecoders.glob),
+        patternString: field.optional("pattern", string),
       }
     )
   );
@@ -58,8 +60,10 @@ let matches = (~filetype: string, ~filepath: string, filter) => {
 
 let toString = filter =>
   Printf.sprintf(
-    "DocumentFilter : language = %s, scheme = %s, exclusive = %b",
+    "DocumentFilter : language=%s, pattern=%s, scheme=%s, exclusive=%b",
     filter.language |> Option.value(~default="(none)"),
+    filter.patternString |> Option.value(~default="(none)"),
     filter.scheme |> Option.value(~default="(none)"),
     filter.exclusive,
   );
+
