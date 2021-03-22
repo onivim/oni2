@@ -190,6 +190,11 @@ let process = (rgPath, args, onUpdate, onComplete, onError) => {
     };
 
     Luv.Stream.read_start(
+      ~allocate=
+        size => {
+          prerr_endline("Ripgrep - allocation: " ++ string_of_int(size));
+          Luv.Buffer.create(size);
+        },
       pipe,
       fun
       | Error(`EOF) => {
@@ -314,3 +319,4 @@ let make = (~executablePath) => {
   search: search(~executablePath),
   findInFiles: findInFiles(~executablePath),
 };
+
