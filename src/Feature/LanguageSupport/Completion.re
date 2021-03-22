@@ -277,10 +277,6 @@ module Session = {
                    meet: newMeet,
                    cursor: position,
                    filteredItems: currentItems,
-                   // filter(
-                   //   ~query=CompletionMeet.(newMeet.base),
-                   //   currentItems,
-                   // ),
                  })
                | Completed({allItems, meet, _} as prev)
                    when CompletionMeet.matches(meet, newMeet) =>
@@ -1388,3 +1384,4 @@ module View = {
     </View>;
   };
 };
+
