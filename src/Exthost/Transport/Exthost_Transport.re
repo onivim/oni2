@@ -64,6 +64,8 @@ let flushQueuedMessages = (~dispatch, queuedMessages, client) => {
   packets |> List.iter(send(~dispatch));
 };
 
+let buffer = ref(None);
+
 let read = (~dispatch, clientPipe) => {
   let parser = ref(Packet.Parser.initial);
 
@@ -76,6 +78,22 @@ let read = (~dispatch, clientPipe) => {
   let handleError = handleError(~dispatch);
 
   Luv.Stream.read_start(
+    ~allocate=
+      size => {
+        let buf =
+          switch (buffer^) {
+          | None =>
+            let buf = Luv.Buffer.create(size);
+            buffer := Some(buf);
+            buf;
+          | Some(buf) => buf
+          };
+        prerr_endline(
+          "Exthost_Transport - creating buffer of size: "
+          ++ string_of_int(size),
+        );
+        buf;
+      },
     clientPipe,
     fun
     | Error(`EOF) => handleClosed()
@@ -238,3 +256,4 @@ let close = ({maybeServer, maybeClient, queuedMessages, _}) => {
   maybeClient := None;
   maybeServer := None;
 };
+
