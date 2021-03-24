@@ -491,3 +491,7 @@ let escapeSpaces: string => string =
     List.init(String.length(s), String.get(s))
     |> List.map(c => (c == ' ' ? "\\" : "") ++ String.make(1, c))
     |> String.concat("");
+
+let replace = (~match, ~replace, str) => {
+  Str.global_replace(Str.regexp_string(match), replace, str);
+};
