@@ -61,6 +61,7 @@ module Effects = {
         (
           ~previousBuffer,
           ~buffer: Buffer.t,
+          ~minimalUpdate: MinimalUpdate.t,
           ~update: BufferUpdate.t,
           client,
           toMsg,
@@ -69,16 +70,17 @@ module Effects = {
         ~name="exthost.bufferUpdate", dispatch =>
         Oni_Core.Log.perf("exthost.bufferUpdate", () =>
           if (BufferTracker.isTracking(Buffer.getId(buffer))) {
-            let modelContentChange =
-              Exthost.ModelContentChange.ofBufferUpdate(
-                ~previousBuffer,
-                update,
-                Exthost.Eol.default,
-              );
+            let eol = Exthost.Eol.default;
+            let modelContentChanges =
+              minimalUpdate
+              |> Exthost.ModelContentChange.ofMinimalUpdates(
+                   ~previousBuffer,
+                   ~eol,
+                 );
             let modelChangedEvent =
               Exthost.ModelChangedEvent.{
-                changes: [modelContentChange],
-                eol: Exthost.Eol.default,
+                changes: modelContentChanges,
+                eol,
                 versionId: update.version,
               };
 
@@ -260,15 +262,15 @@ module Internal = {
 
     // The extension host does not like a completely empty buffer,
     // so at least send a single line with an empty string.
-    let lines =
-      if (lines == []) {
-        [""];
-      } else {
-        // There needs to be an empty line at the end of the buffer to sync changes at the end
-        // TODO: How does this compare with an alternative approach to the same ends, like
-        // converting from an array back to a list?
-        lines |> List.rev |> List.append([""]) |> List.rev;
-      };
+    // let lines =
+    //   if (lines == []) {
+    //     [""];
+    //   } else {
+    // There needs to be an empty line at the end of the buffer to sync changes at the end
+    // TODO: How does this compare with an alternative approach to the same ends, like
+    // converting from an array back to a list?
+    //     lines |> List.rev |> List.append([""]) |> List.rev;
+    //   };
 
     maybeFilePath
     |> Option.map(filePath => {
