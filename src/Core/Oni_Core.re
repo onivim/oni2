@@ -29,6 +29,7 @@ module Font = Font;
 module FontLigatures = FontLigatures;
 module FontSmoothing = FontSmoothing;
 module FontMeasurementCache = FontMeasurementCache;
+module Glob = Glob;
 module IconTheme = IconTheme;
 module Indentation = Indentation;
 module IndentationSettings = IndentationSettings;
