@@ -18,6 +18,7 @@
 - #3310 - Snippets: Fix parse error for printf/sprintf snippets
 - #3287 - Search: Initiate search automatically when text is selected (fixes #3277)
 - #3308 - Completion: Allow case-insensitive matches in scoring (fixes #3136)
+- #3327 - Extensions: Fix extra newline being sent to extension host (related #3320)
 
 ### Performance
 
