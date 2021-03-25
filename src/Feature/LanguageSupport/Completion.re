@@ -166,7 +166,7 @@ module Session = {
                    meet,
                    cursor,
                    currentItems: items,
-                   filteredItems: filter(~query=meet.base, items),
+                   filteredItems: items,
                    providerModel: providerModel',
                  })
                | (Complete, items) =>
@@ -276,11 +276,7 @@ module Session = {
                    ...prev,
                    meet: newMeet,
                    cursor: position,
-                   filteredItems:
-                     filter(
-                       ~query=CompletionMeet.(newMeet.base),
-                       currentItems,
-                     ),
+                   filteredItems: currentItems,
                  })
                | Completed({allItems, meet, _} as prev)
                    when CompletionMeet.matches(meet, newMeet) =>

@@ -18,6 +18,8 @@
 - #3310 - Snippets: Fix parse error for printf/sprintf snippets
 - #3287 - Search: Initiate search automatically when text is selected (fixes #3277)
 - #3308 - Completion: Allow case-insensitive matches in scoring (fixes #3136)
+- #3317 - Extensions: Fix haskell files at root not loading language integration (related #2380)
+- #3318 - Completion: Show full incomplete results list (fixes #2583)
 - #3327 - Extensions: Fix extra newline being sent to extension host (related #3320)
 
 ### Performance
@@ -34,3 +36,5 @@
 - #3303 - Language Support: Move language metadata into Feature_LanguageSupport (related #3288)
 
 ### Infrastructure
+
+- #3319 - Dependency: esy-macdylibbundler -> 0.4.5001 to support Big Sur (thanks @brdoney !)
