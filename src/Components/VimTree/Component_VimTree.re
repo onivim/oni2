@@ -157,7 +157,7 @@ let create = (~rowHeight) => {
 
 module Constants = {
   let arrowSize = 15.;
-  let indentSize = 12;
+  let indentCaretSize = 7;
 };
 
 // UPDATE
@@ -450,10 +450,11 @@ module View = {
   };
 
   let indentGuide = (~horizontalSize, ~verticalSize, ~strokeColor) => {
+    let offset = max(0, horizontalSize);
     <View
       style=Style.[
-        marginLeft(horizontalSize / 2 + 1),
-        width(horizontalSize / 2 - 1),
+        marginLeft(Constants.indentCaretSize),
+        width(offset),
         height(verticalSize),
         borderLeft(~color=strokeColor, ~width=1),
       ]
@@ -481,6 +482,7 @@ module View = {
     </View>;
   let make =
       (
+        ~config,
         ~isActive,
         ~font,
         ~focusedIndex,
@@ -491,7 +493,10 @@ module View = {
         (),
       ) => {
     let indentHeight = model.rowHeight;
-    let indentWidth = Constants.indentSize;
+    let indentWidth =
+      Feature_Configuration.GlobalConfiguration.Workbench.treeIndent.get(
+        config,
+      );
     let activeIndentColor = Colors.List.activeIndentGuide.from(theme);
     let inactiveIndentColor = Colors.List.inactiveIndentGuide.from(theme);
 

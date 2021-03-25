@@ -702,7 +702,7 @@ let byteToCharacter = (position: BytePosition.t, editor) => {
 
   let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
 
-  if (line < bufferLineCount) {
+  if (line >= 0 && line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, editor.buffer);
     let character = BufferLine.getIndex(~byte=position.byte, bufferLine);
 
@@ -730,7 +730,7 @@ let characterToByte = (position: CharacterPosition.t, editor) => {
 
   let bufferLineCount = EditorBuffer.numberOfLines(editor.buffer);
 
-  if (line < bufferLineCount) {
+  if (line >= 0 && line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, editor.buffer);
     let byteIndex =
       BufferLine.getByteFromIndex(~index=position.character, bufferLine);
@@ -804,7 +804,7 @@ let getCharacterAtPosition = (~position: CharacterPosition.t, {buffer, _}) => {
   let line = EditorCoreTypes.LineNumber.toZeroBased(position.line);
   let bufferLineCount = EditorBuffer.numberOfLines(buffer);
 
-  if (line < bufferLineCount) {
+  if (line >= 0 && line < bufferLineCount) {
     let bufferLine = EditorBuffer.line(line, buffer);
     try(Some(BufferLine.getUcharExn(~index=position.character, bufferLine))) {
     | _exn => None
@@ -822,7 +822,7 @@ let getCharacterBehindCursor = ({buffer, _} as editor) => {
 
     let bufferLineCount = EditorBuffer.numberOfLines(buffer);
 
-    if (line < bufferLineCount) {
+    if (line >= 0 && line < bufferLineCount) {
       let bufferLine = EditorBuffer.line(line, buffer);
       let index =
         max(
@@ -856,7 +856,7 @@ let getCharacterUnderCursor = ({buffer, _} as editor) => {
 
     let bufferLineCount = EditorBuffer.numberOfLines(buffer);
 
-    if (line < bufferLineCount) {
+    if (line >= 0 && line < bufferLineCount) {
       let bufferLine = EditorBuffer.line(line, buffer);
       let index = BufferLine.getIndex(~byte=cursor.byte, bufferLine);
       try(Some(BufferLine.getUcharExn(~index, bufferLine))) {
@@ -1044,6 +1044,7 @@ let setCodeLens = (~startLine, ~stopLine, ~handle, ~lenses, editor) => {
            ~view,
          );
        });
+
   replaceInlineElements(
     ~startLine,
     ~stopLine,
@@ -1702,6 +1703,23 @@ let updateBuffer = (~update, ~markerUpdate, ~buffer, editor) => {
     };
   };
 
+  let normalize = (bytePosition: BytePosition.t) => {
+    let byte' =
+      if (bytePosition.byte < ByteIndex.zero) {
+        ByteIndex.zero;
+      } else {
+        bytePosition.byte;
+      };
+
+    let line' =
+      if (bytePosition.line < EditorCoreTypes.LineNumber.zero) {
+        EditorCoreTypes.LineNumber.zero;
+      } else {
+        bytePosition.line;
+      };
+    BytePosition.{line: line', byte: byte'};
+  };
+
   // Check if we _should_ shift cursor
   let shiftLines = (~afterLine, ~delta: int, mode) => {
     let moveByte = (bytePosition: BytePosition.t) =>
@@ -1709,7 +1727,8 @@ let updateBuffer = (~update, ~markerUpdate, ~buffer, editor) => {
         BytePosition.{
           ...bytePosition,
           line: EditorCoreTypes.LineNumber.(bytePosition.line + delta),
-        };
+        }
+        |> normalize;
       } else {
         bytePosition;
       };
@@ -1732,7 +1751,8 @@ let updateBuffer = (~update, ~markerUpdate, ~buffer, editor) => {
         BytePosition.{
           ...bytePosition,
           byte: ByteIndex.(bytePosition.byte + deltaBytes),
-        };
+        }
+        |> normalize;
       } else {
         bytePosition;
       };

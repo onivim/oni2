@@ -161,7 +161,7 @@ module Effects = {
 
         Lwt.on_success(
           promise,
-          Option.iter(edits => dispatch(toMsg(Ok(edits)))),
+          Option.iter(edits => {dispatch(toMsg(Ok(edits)))}),
         );
         Lwt.on_failure(promise, err =>
           dispatch(toMsg(Error(Printexc.to_string(err))))

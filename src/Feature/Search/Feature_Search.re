@@ -17,7 +17,18 @@ type model = {
   resultsTree: Component_VimTree.model(string, LocationListItem.t),
 };
 
-let resetFocus = model => {...model, focus: FindInput};
+let resetFocus = (~query: option(string), model) => {
+  switch (query) {
+  | None => {...model, focus: FindInput}
+  | Some(query) => {
+      ...model,
+      query,
+      focus: FindInput,
+      findInput: Component_InputText.set(~text=query, model.findInput),
+      hits: query != model.query ? [] : model.hits,
+    }
+  };
+};
 
 let initial = {
   findInput: Component_InputText.create(~placeholder="Search"),
@@ -283,6 +294,7 @@ module Styles = {
 
 let make =
     (
+      ~config,
       ~theme,
       ~uiFont: UiFont.t,
       ~iconTheme,
@@ -328,6 +340,7 @@ let make =
         text={Printf.sprintf("%n results", List.length(model.hits))}
       />
       <Component_VimTree.View
+        config
         isActive={isFocused && model.focus == ResultsPane}
         font=uiFont
         focusedIndex=None

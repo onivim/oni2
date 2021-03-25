@@ -8,6 +8,8 @@ let initial: model;
 [@deriving show]
 type msg;
 
+let languageInfo: model => Exthost.LanguageInfo.t;
+
 module Msg: {
   let exthost: Exthost.Msg.LanguageFeatures.msg => msg;
   let keyPressed: string => msg;
@@ -140,6 +142,9 @@ let cursorMoved:
   ) =>
   model;
 
+let extensionsAdded:
+  (list(Exthost.Extension.Scanner.ScanResult.t), model) => model;
+
 let moveMarkers:
   (~newBuffer: Buffer.t, ~markerUpdate: MarkerUpdate.t, model) => model;
 
@@ -183,6 +188,8 @@ module Completion: {
   module View: {
     let make:
       (
+        ~buffer: Buffer.t,
+        ~cursor: CharacterPosition.t,
         ~x: int,
         ~y: int,
         ~lineHeight: float,

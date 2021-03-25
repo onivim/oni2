@@ -11,6 +11,7 @@ type model = {
   rename: Rename.model,
   references: References.model,
   signatureHelp: SignatureHelp.model,
+  languageInfo: Exthost.LanguageInfo.t,
 };
 
 let initial = {
@@ -24,7 +25,10 @@ let initial = {
   rename: Rename.initial,
   references: References.initial,
   signatureHelp: SignatureHelp.initial,
+  languageInfo: Exthost.LanguageInfo.initial,
 };
+
+let languageInfo = ({languageInfo, _}) => languageInfo;
 
 [@deriving show]
 type command =
@@ -272,6 +276,7 @@ let update =
 
   | Exthost(Unregister({handle})) => (
       {
+        ...model,
         codeLens: CodeLens.unregister(~handle, model.codeLens),
         completion: Completion.unregister(~handle, model.completion),
         definition: Definition.unregister(~handle, model.definition),
@@ -287,6 +292,14 @@ let update =
       },
       Nothing,
     )
+
+  | Exthost(SetLanguageConfiguration({handle, languageId, configuration})) =>
+    // TODO - Wire up to language info pipeline, and use the onEnterRules:
+    ignore(handle);
+    ignore(languageId);
+    ignore(configuration);
+
+    (model, Nothing);
 
   | Exthost(_) =>
     // TODO:
@@ -691,8 +704,21 @@ module Completion = {
 
   module View = {
     let make =
-        (~x, ~y, ~lineHeight, ~theme, ~tokenTheme, ~editorFont, ~model, ()) => {
+        (
+          ~buffer,
+          ~cursor,
+          ~x,
+          ~y,
+          ~lineHeight,
+          ~theme,
+          ~tokenTheme,
+          ~editorFont,
+          ~model,
+          (),
+        ) => {
       OldCompletion.View.make(
+        ~buffer,
+        ~cursor,
         ~x,
         ~y,
         ~lineHeight,
@@ -911,6 +937,12 @@ let sub =
     signatureHelpSub,
   ]
   |> Isolinear.Sub.batch;
+};
+
+let extensionsAdded = (extensions, model) => {
+  ...model,
+  languageInfo:
+    Exthost.LanguageInfo.addExtensions(extensions, model.languageInfo),
 };
 
 module CompletionMeet = CompletionMeet;

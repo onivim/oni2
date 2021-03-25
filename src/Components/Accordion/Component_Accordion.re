@@ -176,6 +176,7 @@ module VimList = {
 module VimTree = {
   let make =
       (
+        ~config,
         ~showCount=true,
         ~focusedIndex=None,
         ~title,
@@ -194,6 +195,7 @@ module VimTree = {
     let contents =
       count > 0
         ? <Component_VimTree.View
+            config
             isActive=isFocused
             font=uiFont
             focusedIndex

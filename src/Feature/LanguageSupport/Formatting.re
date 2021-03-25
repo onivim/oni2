@@ -145,7 +145,6 @@ module Internal = {
     | Some(text) =>
       text
       |> Utility.StringEx.removeWindowsNewLines
-      |> Utility.StringEx.removeTrailingNewLine
       |> Utility.StringEx.splitNewLines;
 
   let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
