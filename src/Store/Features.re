@@ -1086,11 +1086,17 @@ let update =
             {...state, scm: Feature_SCM.resetFocus(state.scm)}
             |> FocusManager.push(Focus.SCM)
           | Search =>
+            let query =
+              FocusManager.current(state) == Focus.Editor
+                ? state.layout
+                  |> Feature_Layout.activeEditor
+                  |> Feature_Editor.Editor.singleLineSelectedText
+                : None;
             {
               ...state,
-              searchPane: Feature_Search.resetFocus(state.searchPane),
+              searchPane: Feature_Search.resetFocus(~query, state.searchPane),
             }
-            |> FocusManager.push(Focus.Search)
+            |> FocusManager.push(Focus.Search);
           | Extensions =>
             {
               ...state,

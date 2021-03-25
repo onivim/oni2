@@ -189,7 +189,9 @@ let process = (rgPath, args, onUpdate, onComplete, onError) => {
       ();
     };
 
+    let allocator = Utility.LuvEx.allocator("Ripgrep");
     Luv.Stream.read_start(
+      ~allocate=allocator,
       pipe,
       fun
       | Error(`EOF) => {
