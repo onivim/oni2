@@ -19,6 +19,7 @@
 - #3287 - Search: Initiate search automatically when text is selected (fixes #3277)
 - #3308 - Completion: Allow case-insensitive matches in scoring (fixes #3136)
 - #3317 - Extensions: Fix haskell files at root not loading language integration (related #2380)
+- #3329 - Formatting: Fix trailing newline being introduced by some providers (fixes #3320)
 
 ### Performance
 
