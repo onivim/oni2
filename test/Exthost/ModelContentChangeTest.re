@@ -161,6 +161,16 @@ describe("ModelContentChange", ({describe, _}) => {
           ];
         expect.equal(expectedChanges, actualChanges);
       });
+      test("delete last line, with utf-8 characters", ({expect, _}) => {
+        let before = ["abc", "κόσμε", "κ"];
+        let after = ["abc", "κόσμε"];
+        let actualChanges = getChanges(before, after);
+        let expectedChanges =
+          ModelContentChange.[
+            {range: range(2, 6, 3, 2), text: "", rangeLength: 2},
+          ];
+        expect.equal(expectedChanges, actualChanges);
+      });
     });
   })
 });

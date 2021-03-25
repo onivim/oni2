@@ -71,7 +71,7 @@ let getRangeLengthFromEdit =
   let length = ref(0);
   for (lineNumber in startLine to min(endLine - 1, totalLines - 1)) {
     let lineLength =
-      previousBuffer |> Buffer.getLine(lineNumber) |> BufferLine.lengthInBytes;
+      previousBuffer |> Buffer.getLine(lineNumber) |> BufferLine.lengthSlow;
     length := lineLength + eolSize + length^;
   };
 
