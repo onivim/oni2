@@ -26,7 +26,7 @@ runTest(
       )
     );
 
-    let testFilePath = getAssetPath("test.unformatted.js");
+    let testFilePath = getAssetPath("some-test-file.txt");
 
     // Create a buffer
     dispatch(
@@ -35,15 +35,11 @@ runTest(
 
     wait(~timeout=30.0, ~name="Validate buffer is loaded", (state: State.t) => {
       Selectors.getActiveBuffer(state)
-      |> Option.map(buffer =>
-           if (Buffer.getNumberOfLines(buffer) > 0) {
-             let rawLine = Buffer.getLine(0, buffer) |> BufferLine.raw;
-
-             String.equal(rawLine, "    console.log");
-           } else {
-             false;
-           }
-         )
+      |> Utility.OptionEx.flatMap(buffer => {
+           buffer
+           |> Buffer.rawLine(EditorCoreTypes.LineNumber.zero)
+           |> Option.map(String.equal("abc"))
+         })
       |> Option.value(~default=false)
     });
 
