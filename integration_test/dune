@@ -19,15 +19,16 @@
    SyntaxServerParentPidTest SyntaxServerParentPidCorrectTest
    SyntaxServerReadExceptionTest Regression1671Test Regression2349EnewTest
    Regression2988SwitchEditorTest Regression3084CommandLoopTest
-   RegressionCommandLineNoCompletionTest RegressionFontFallbackTest
-   RegressionFileModifiedIndicationTest RegressionNonExistentDirectory
-   RegressionVspEmptyInitialBufferTest RegressionVspEmptyExistingBufferTest
-   SCMGitTest SyntaxHighlightPhpTest SyntaxHighlightTextMateTest
-   SyntaxHighlightTreesitterTest AddRemoveSplitTest TerminalSetPidTitleTest
-   TerminalConfigurationTest TypingBatchedTest TypingUnbatchedTest
-   VimIncsearchScrollTest VimExperimentalVimlTest VimRemapTimeoutTest
-   VimSimpleRemapTest VimlRemapCmdlineTest ClipboardChangeTest
-   VimScriptLocalFunctionTest ZenModeSingleFileModeTest ZenModeSplitTest)
+   Regression3323DiagnosticsTest RegressionCommandLineNoCompletionTest
+   RegressionFontFallbackTest RegressionFileModifiedIndicationTest
+   RegressionNonExistentDirectory RegressionVspEmptyInitialBufferTest
+   RegressionVspEmptyExistingBufferTest SCMGitTest SyntaxHighlightPhpTest
+   SyntaxHighlightTextMateTest SyntaxHighlightTreesitterTest
+   AddRemoveSplitTest TerminalSetPidTitleTest TerminalConfigurationTest
+   TypingBatchedTest TypingUnbatchedTest VimIncsearchScrollTest
+   VimExperimentalVimlTest VimRemapTimeoutTest VimSimpleRemapTest
+   VimlRemapCmdlineTest ClipboardChangeTest VimScriptLocalFunctionTest
+   ZenModeSingleFileModeTest ZenModeSplitTest)
  (libraries Oni_CLI Oni_IntegrationTestLib reason-native-crash-utils.asan))
 
 (install
@@ -66,8 +67,9 @@
    AddRemoveSplitTest.exe TypingBatchedTest.exe TypingUnbatchedTest.exe
    VimExperimentalVimlTest.exe VimIncsearchScrollTest.exe
    VimScriptLocalFunctionTest.exe VimRemapTimeoutTest.exe
-   VimSimpleRemapTest.exe VimlRemapCmdlineTest.exe
-   ZenModeSingleFileModeTest.exe ZenModeSplitTest.exe ClipboardChangeTest.exe
+   Regression3323DiagnosticsTest.exe VimSimpleRemapTest.exe
+   VimlRemapCmdlineTest.exe ZenModeSingleFileModeTest.exe
+   ZenModeSplitTest.exe ClipboardChangeTest.exe
    ExtHostFormatSingleEditTest.exe ExtHostFormatFullEditTest.exe
    unformatted1.oni-dev test.unformatted.js large-c-file.c lsan.supp
    some-test-file.json some-test-file.txt test.crlf test.lf test-syntax.php
