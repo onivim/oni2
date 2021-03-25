@@ -60,10 +60,10 @@ let getRangeFromEdit = (~previousBuffer, bu: BufferUpdate.t) => {
 };
 
 let getRangeLengthFromEdit =
-    (~previousBuffer, ~eol: Eol.t, bu: BufferUpdate.t) => {
-  let startLine = EditorCoreTypes.LineNumber.toZeroBased(bu.startLine);
+    (~previousBuffer, ~eol: Eol.t, startLine, endLine) => {
+  let startLine = EditorCoreTypes.LineNumber.toZeroBased(startLine);
   let endLine =
-    EditorCoreTypes.LineNumber.toZeroBased(bu.endLine) |> max(startLine);
+    EditorCoreTypes.LineNumber.toZeroBased(endLine) |> max(startLine);
 
   let totalLines = Buffer.getNumberOfLines(previousBuffer);
 
@@ -112,36 +112,74 @@ let ofMinimalUpdate = (~previousBuffer, ~eol, mu: MinimalUpdate.update) => {
       switch (mu) {
       | Modified({line, original, updated}) =>
         let text = updated;
-        let rangeLength = String.length(original);
+        let length = Zed_utf8.length(original);
 
         let start = CharacterPosition.{line, character: CharacterIndex.zero};
         let stop =
-          CharacterPosition.{
-            line,
-            character: CharacterIndex.ofInt(rangeLength),
-          };
+          CharacterPosition.{line, character: CharacterIndex.ofInt(length)};
         let range = CharacterRange.{start, stop};
-        (range, text, rangeLength);
+        (range, text, length);
       | Deleted({startLine, stopLine}) =>
+        let isFirstLine = startLine == LineNumber.zero;
         let isThroughLastLine =
           LineNumber.toZeroBased(stopLine)
           >= Buffer.getNumberOfLines(previousBuffer);
         let text = "";
-        let start =
-          CharacterPosition.{line: startLine, character: CharacterIndex.zero};
 
-        let stop =
-          isThroughLastLine
-            ? lastPositionOfBuffer(previousBuffer)
-            : CharacterPosition.{
-                line: stopLine,
-                character: CharacterIndex.zero,
-              };
+        let rangeLength =
+          getRangeLengthFromEdit(~previousBuffer, ~eol, startLine, stopLine);
 
-        let range = CharacterRange.{start, stop};
-        // TODO
-        let rangeLength = 0;
-        (range, text, rangeLength);
+        // Deleting _everything_
+        if (isFirstLine && isThroughLastLine) {
+          let start = CharacterPosition.zero;
+          let stop = lastPositionOfBuffer(previousBuffer);
+          let range = CharacterRange.{start, stop};
+
+          // If we're deleting everything, the range-length calculation will have included
+          // an extra newline
+          let rangeLength' = rangeLength - Eol.sizeInBytes(eol);
+
+          (range, text, rangeLength');
+        } else if (isFirstLine) {
+          let start = CharacterPosition.zero;
+
+          let stop =
+            CharacterPosition.{
+              line: stopLine,
+              character: CharacterIndex.zero,
+            };
+
+          let range = CharacterRange.{start, stop};
+
+          (range, text, rangeLength);
+        } else {
+          // Get the range at the newline in the _previous_ line, and then through to the destination line
+          let previousLine = LineNumber.(startLine - 1);
+          let previousCharacter =
+            Buffer.characterRangeAt(previousLine, previousBuffer)
+            |> Option.get;
+
+          let start =
+            CharacterPosition.{
+              line: previousLine,
+              character: previousCharacter.stop.character,
+            };
+
+          let targetLine = LineNumber.(stopLine - 1);
+          let targetCharacter =
+            Buffer.characterRangeAt(targetLine, previousBuffer)
+            |> Option.map((target: CharacterRange.t) => target.stop)
+            |> Option.value(~default=lastPositionOfBuffer(previousBuffer));
+
+          let stop =
+            CharacterPosition.{
+              line: targetLine,
+              character: targetCharacter.character,
+            };
+
+          let range = CharacterRange.{start, stop};
+          (range, text, rangeLength);
+        };
       | Added({beforeLine, lines}) =>
         let isBeforeFirstLine = beforeLine == LineNumber.zero;
         let isThroughLastLine =

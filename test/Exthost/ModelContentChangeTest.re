@@ -105,10 +105,9 @@ describe("ModelContentChange", ({describe, _}) => {
         let after = [];
         let actualChanges = getChanges(before, after);
 
-        // TODO: Range length
         let expectedChanges =
           ModelContentChange.[
-            {range: range(1, 1, 3, 4), text: "", rangeLength: 0},
+            {range: range(1, 1, 3, 4), text: "", rangeLength: 11},
           ];
 
         expect.equal(expectedChanges, actualChanges);
@@ -119,26 +118,23 @@ describe("ModelContentChange", ({describe, _}) => {
         let after = ["def", "ghi"];
         let actualChanges = getChanges(before, after);
 
-        // TODO: Range length
         let expectedChanges =
           ModelContentChange.[
-            {range: range(1, 1, 2, 1), text: "", rangeLength: 0},
+            {range: range(1, 1, 2, 1), text: "", rangeLength: 4},
           ];
 
         expect.equal(expectedChanges, actualChanges);
       });
-      // TODO: Get test green
-      // test("delete last line", ({expect, _}) => {
-      //   let before = ["abc", "def", "ghi"];
-      //   let after = ["abc", "def"];
-      //   let actualChanges = getChanges(before, after);
-      // TODO: Range length
-      //   let expectedChanges =
-      //     ModelContentChange.[
-      //       {range: range(2, 4, 3, 4), text: "", rangeLength: 0},
-      //     ];
-      //   expect.equal(expectedChanges, actualChanges);
-      // });
+      test("delete last line", ({expect, _}) => {
+        let before = ["abc", "def", "ghi"];
+        let after = ["abc", "def"];
+        let actualChanges = getChanges(before, after);
+        let expectedChanges =
+          ModelContentChange.[
+            {range: range(2, 4, 3, 4), text: "", rangeLength: 4},
+          ];
+        expect.equal(expectedChanges, actualChanges);
+      });
     });
   })
 });

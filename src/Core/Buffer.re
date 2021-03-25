@@ -189,14 +189,35 @@ let getLine = (line: int, buffer: t) => {
   buffer.lines[line];
 };
 
-let rawLine = (line: LineNumber.t, buffer: t) => {
+let bufferLine = (line, buffer) => {
   let lineIdx = LineNumber.toZeroBased(line);
 
   if (lineIdx < 0 || lineIdx >= Array.length(buffer.lines)) {
     None;
   } else {
-    Some(buffer |> getLine(lineIdx) |> BufferLine.raw);
+    Some(buffer |> getLine(lineIdx));
   };
+};
+
+let rawLine = (line: LineNumber.t, buffer: t) => {
+  buffer |> bufferLine(line) |> Option.map(BufferLine.raw);
+};
+
+let characterRangeAt = (line, buffer) => {
+  buffer
+  |> bufferLine(line)
+  |> Option.map(bufferLine => {
+       let length = BufferLine.lengthSlow(bufferLine);
+       let start = CharacterPosition.{line, character: CharacterIndex.zero};
+
+       let stop =
+         CharacterPosition.{line, character: CharacterIndex.ofInt(length)};
+       CharacterRange.{start, stop};
+     });
+};
+
+let lastLine = buffer => {
+  buffer.lines |> Array.length |> max(1) |> LineNumber.ofOneBased;
 };
 
 let getLines = (buffer: t) => buffer.lines |> Array.map(BufferLine.raw);
