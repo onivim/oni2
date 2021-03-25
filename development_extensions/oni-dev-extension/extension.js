@@ -21,7 +21,25 @@ function activate(context) {
     item.tooltip = "Hello from oni-dev-extension!"
     item.show()
 
+
     let cleanup = (disposable) => context.subscriptions.push(disposable)
+
+    // DIAGNOSTICS
+    const diagnostics = vscode.languages.createDiagnosticCollection("oni-dev.diagnostics");
+
+    cleanup(
+        vscode.commands.registerCommand("developer.oni.diagnostics-add", () => {
+            const document = vscode.window.activeTextEditor.document;
+
+            if (document && document.lineCount > 0) {
+                const start = new vscode.Position(0, 0);
+                const stop = document.lineAt(document.lineCount - 1).range.end;
+                const range = new vscode.Range(start, stop);
+                const diagnostic = new vscode.Diagnostic(range, "Test diagnostic from oni-dev", vscode.DiagnosticSeverity.Error);
+                diagnostics.set(document.uri, [diagnostic]);
+            }
+        }),
+    )
 
     cleanup(
         vscode.commands.registerCommand("developer.oni.statusBarClicked", () => {
