@@ -80,8 +80,9 @@ runTest(
     staysTrue(~name="Validate survives multiple renders", ~timeout=5., _state =>
       true
     );
-    // Validate buffer gets updated everywhere
     // With #3323 - the rendering will crash before making it here...
+    // Once formatting fix is in  - update this:
+    // Validate buffer gets updated everywhere
     // TS.validateTextIsSynchronized(
     //   ~expectedText=Some(""),
     //   ~description="after formatting",
@@ -90,4 +91,3 @@ runTest(
     // );
   },
 );
-
