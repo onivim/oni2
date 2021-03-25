@@ -226,6 +226,40 @@ let getUri = (buffer: t) => {
 
 let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
 
+let characterRange = (buffer: t) => {
+  let start =
+    CharacterPosition.{line: LineNumber.zero, character: CharacterIndex.zero};
+
+  let lineCount = getNumberOfLines(buffer);
+
+  if (lineCount > 0) {
+    let lastLineCharacters =
+      buffer |> getLine(lineCount - 1) |> BufferLine.lengthSlow;
+
+    let stop =
+      CharacterPosition.{
+        line: LineNumber.ofZeroBased(lineCount - 1),
+        character: CharacterIndex.ofInt(lastLineCharacters),
+      };
+
+    CharacterRange.{start, stop};
+  } else {
+    CharacterRange.{start, stop: start};
+  };
+};
+
+let hasTrailingNewLine = (buffer: t) => {
+  let len = Array.length(buffer.lines);
+  if (len == 0) {
+    false;
+  } else {
+    let maybeRaw = rawLine(LineNumber.ofZeroBased(len - 1), buffer);
+    maybeRaw
+    |> Option.map(Utility.StringEx.isWhitespaceOnly)
+    |> Option.value(~default=false);
+  };
+};
+
 // TODO: This method needs a lot of improvements:
 // - It's only estimated, as the byte length is quicker to calculate
 // - It always traverses the entire buffer - we could be much smarter

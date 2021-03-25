@@ -139,19 +139,31 @@ module Internal = {
       }),
   };
 
-  let textToArray =
+  let textToArray = (~removeTrailingNewLine) =>
     fun
     | None => [||]
     | Some(text) =>
       text
       |> Utility.StringEx.removeWindowsNewLines
+      |> (
+        text =>
+          removeTrailingNewLine
+            ? Utility.StringEx.removeTrailingNewLine(text) : text
+      )
       |> Utility.StringEx.splitNewLines;
 
-  let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
-    edit => {
-      range: edit.range |> Exthost.OneBasedRange.toRange,
-      text: textToArray(edit.text),
-    };
+  let extHostEditToVimEdit =
+      (buffer, edit: Exthost.Edit.SingleEditOperation.t) => {
+    let range = edit.range |> Exthost.OneBasedRange.toRange;
+
+    let bufferRange = Oni_Core.Buffer.characterRange(buffer);
+    let removeTrailingNewLine =
+      !Oni_Core.Buffer.hasTrailingNewLine(buffer)
+      && CharacterRange.containsRange(~query=bufferRange, range);
+    (
+      {range, text: textToArray(~removeTrailingNewLine, edit.text)}: Vim.Edit.t
+    );
+  };
 
   let fallBackToDefaultFormatter =
       (~indentation, ~languageConfiguration, ~buffer, range: CharacterRange.t) => {
@@ -277,7 +289,7 @@ module Internal = {
                     formatter,
                   ),
                 sessionId,
-                edits: List.map(extHostEditToVimEdit, edits),
+                edits: List.map(extHostEditToVimEdit(buf), edits),
               })
             | Error(msg) => EditRequestFailed({sessionId, msg})
             }
@@ -345,7 +357,7 @@ module Internal = {
                         formatter,
                       ),
                     sessionId,
-                    edits: List.map(extHostEditToVimEdit, edits),
+                    edits: List.map(extHostEditToVimEdit(buf), edits),
                   })
                 | Error(msg) => EditRequestFailed({sessionId, msg})
                 }
