@@ -9,7 +9,7 @@ module TS = TextSynchronization;
 runTest(
   ~name=
     "Regression3323 - Deleting diagnostics at top of file should not crash",
-  ({input, dispatch, wait, key, staysTrue, _}) => {
+  ({input, dispatch, wait, staysTrue, _}) => {
     wait(~timeout=30.0, ~name="Exthost is initialized", (state: State.t) =>
       Feature_Exthost.isInitialized(state.exthost)
     );
