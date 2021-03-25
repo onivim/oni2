@@ -188,8 +188,25 @@ function activate(context) {
         }
     };
 
+    const noopFormatter = (_document) => [];
+
+    var formatterToUse = adjustLineFormatter;
+
+    vscode.workspace.onDidChangeConfiguration((event) => {
+        if (event.affectsConfiguration("developer.oni-dev.formatter")) {
+            const formatter = vscode.workspace.getConfiguration().get("developer.oni-dev.formatter")
+            if (formatter == "adjustLine") {
+                formatterToUse = adjustLineFormatter
+            } else if (formatter == "replaceFile") {
+                formatterToUse = replaceEntireFileFormatter;
+            } else {
+                formatterToUse = noopFormatter;
+            }
+        }
+    })
+
     vscode.languages.registerDocumentFormattingEditProvider("oni-dev", {
-        provideDocumentFormattingEdits: adjustLineFormatter
+        provideDocumentFormattingEdits: (document) => formatterToUse(document),
     });
 
     const output = vscode.window.createOutputChannel("oni-dev")
