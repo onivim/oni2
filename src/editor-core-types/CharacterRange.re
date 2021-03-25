@@ -56,6 +56,13 @@ let contains = (position: CharacterPosition.t, range) => {
   );
 };
 
+let containsRange = (~query, range) => {
+  let start = query.start;
+  let stop = query.stop;
+
+  contains(start, range) && contains(stop, range);
+};
+
 let shiftLine = (~afterLine: LineNumber.t, ~delta, range) => {
   LineNumber.(
     {

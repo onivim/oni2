@@ -157,6 +157,64 @@ function activate(context) {
         }),
     )
 
+    // FORMATTING
+
+    const adjustLineFormatter = (document) => {
+        const lineCount = document.lineCount;
+
+        const edits = []
+        for (let idx = lineCount - 1; idx >= 0; idx--) {
+            const line = document.lineAt(idx);
+            if (line.text.startsWith("DELETE")) {
+                edits.push(vscode.TextEdit.delete(line.rangeIncludingLineBreak))
+            } else if (line.text.startsWith("INSERT")) {
+                edits.push(vscode.TextEdit.insert(line.range.start, "!!"))
+            }
+        }
+        return edits
+    };
+
+    const replaceEntireFileFormatter = (document) => {
+        const lineCount = document.lineCount;
+
+        if (lineCount == 0) {
+            return []
+        } else {
+            let start = document.lineAt(0).range.start;
+            let stop = document.lineAt(lineCount - 1).rangeIncludingLineBreak.end;
+            let range = new vscode.Range(start, stop);
+            let edit = vscode.TextEdit.replace(range, "a\nb\nc\n");
+            return [edit]
+        }
+    };
+
+    const noopFormatter = (_document) => [];
+
+    var formatterToUse = adjustLineFormatter;
+
+    const setFormatter = () => {
+        const formatter = vscode.workspace.getConfiguration().get("developer.oni-dev.formatter")
+        if (formatter == "singleLine") {
+            formatterToUse = adjustLineFormatter
+        } else if (formatter == "replaceFile") {
+            formatterToUse = replaceEntireFileFormatter;
+        } else {
+            formatterToUse = noopFormatter;
+        }
+    };
+
+    vscode.workspace.onDidChangeConfiguration((event) => {
+        if (event.affectsConfiguration("developer.oni-dev.formatter")) {
+            setFormatter();
+        }
+    });
+
+    setFormatter();
+
+    vscode.languages.registerDocumentFormattingEditProvider("oni-dev", {
+        provideDocumentFormattingEdits: (document) => formatterToUse(document),
+    });
+
     const output = vscode.window.createOutputChannel("oni-dev")
     output.appendLine("Hello output channel!")
 
