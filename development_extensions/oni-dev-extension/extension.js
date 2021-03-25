@@ -192,18 +192,24 @@ function activate(context) {
 
     var formatterToUse = adjustLineFormatter;
 
+    const setFormatter = () => {
+        const formatter = vscode.workspace.getConfiguration().get("developer.oni-dev.formatter")
+        if (formatter == "singleLine") {
+            formatterToUse = adjustLineFormatter
+        } else if (formatter == "replaceFile") {
+            formatterToUse = replaceEntireFileFormatter;
+        } else {
+            formatterToUse = noopFormatter;
+        }
+    };
+
     vscode.workspace.onDidChangeConfiguration((event) => {
         if (event.affectsConfiguration("developer.oni-dev.formatter")) {
-            const formatter = vscode.workspace.getConfiguration().get("developer.oni-dev.formatter")
-            if (formatter == "adjustLine") {
-                formatterToUse = adjustLineFormatter
-            } else if (formatter == "replaceFile") {
-                formatterToUse = replaceEntireFileFormatter;
-            } else {
-                formatterToUse = noopFormatter;
-            }
+            setFormatter();
         }
-    })
+    });
+
+    setFormatter();
 
     vscode.languages.registerDocumentFormattingEditProvider("oni-dev", {
         provideDocumentFormattingEdits: (document) => formatterToUse(document),

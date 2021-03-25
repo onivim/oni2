@@ -767,4 +767,3 @@ module Contributions = {
       ),
     ];
 };
-
