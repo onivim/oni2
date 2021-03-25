@@ -59,12 +59,12 @@ runTest(
     // Format document
     input("gg=G");
 
-    // TODO: Fix this with #3327
     TS.validateTextIsSynchronized(
-      ~expectedText=Some("a|b|c|"),
+      ~expectedText=Some("a|b|c"),
       ~description="after formatting",
       dispatch,
       wait,
     );
   },
 );
+
