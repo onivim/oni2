@@ -34,3 +34,5 @@
 - #3303 - Language Support: Move language metadata into Feature_LanguageSupport (related #3288)
 
 ### Infrastructure
+
+- #3319 - Dependency: esy-macdylibbundler -> 0.4.5001 to support Big Sur (thanks @brdoney !)
