@@ -82,6 +82,19 @@ describe("ModelContentChange", ({describe, _}) => {
 
         expect.equal(expectedChanges, actualChanges);
       });
+
+      test("insert line after existing buffer text (utf8)", ({expect, _}) => {
+        let before = ["κόσμε"];
+        let after = ["κόσμε", "def"];
+        let actualChanges = getChanges(before, after);
+
+        let expectedChanges =
+          ModelContentChange.[
+            {range: range(1, 6, 1, 6), text: "\ndef", rangeLength: 0},
+          ];
+
+        expect.equal(expectedChanges, actualChanges);
+      });
     });
 
     describe("modification", ({test, _}) => {
@@ -96,7 +109,20 @@ describe("ModelContentChange", ({describe, _}) => {
           ];
 
         expect.equal(expectedChanges, actualChanges);
-      })
+      });
+
+      test("modify existing line (utf-8)", ({expect, _}) => {
+        let before = ["κόσμε"];
+        let after = ["abcd"];
+        let actualChanges = getChanges(before, after);
+
+        let expectedChanges =
+          ModelContentChange.[
+            {range: range(1, 1, 1, 6), text: "abcd", rangeLength: 5},
+          ];
+
+        expect.equal(expectedChanges, actualChanges);
+      });
     });
 
     describe("deletion", ({test, _}) => {

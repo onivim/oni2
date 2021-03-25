@@ -81,7 +81,7 @@ let getRangeLengthFromEdit =
 let getLineLength = (~buffer, ~eol, ~includeEol, line) => {
   Buffer.rawLine(line, buffer)
   |> Option.map(line => {
-       let length = String.length(line);
+       let length = Zed_utf8.length(line);
 
        if (includeEol) {
          length + Eol.sizeInBytes(eol);
