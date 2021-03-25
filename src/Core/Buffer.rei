@@ -64,6 +64,9 @@ let getLine: (int, t) => BufferLine.t;
 let getLines: t => array(string);
 let getNumberOfLines: t => int;
 
+let characterRange: t => CharacterRange.t;
+let hasTrailingNewLine: t => bool;
+
 let rawLine: (LineNumber.t, t) => option(string);
 
 let getVersion: t => int;

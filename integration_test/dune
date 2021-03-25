@@ -9,6 +9,7 @@
    ExCommandKeybindingNormTest ExtConfigurationChangedTest ExtHostContextTest
    ExtHostBufferOpenTest ExtHostBufferUpdatesTest
    ExtHostCommandActivationTest ExtHostCompletionTest ExtHostDefinitionTest
+   ExtHostFormatSingleEditTest ExtHostFormatFullEditTest
    ExtHostWorkspaceSearchTest FileWatcherTest FormatOnSaveTest
    KeybindingsInvalidJsonTest KeySequenceJJTest InputIgnoreTest
    InputContextKeysTest InputRemapMotionTest LanguageCssTest
@@ -67,6 +68,7 @@
    VimScriptLocalFunctionTest.exe VimRemapTimeoutTest.exe
    VimSimpleRemapTest.exe VimlRemapCmdlineTest.exe
    ZenModeSingleFileModeTest.exe ZenModeSplitTest.exe ClipboardChangeTest.exe
-   test.unformatted.js large-c-file.c lsan.supp some-test-file.json
-   some-test-file.txt test.crlf test.lf test-syntax.php utf8.txt
-   utf8-test-file.htm Inconsolata-Regular.ttf PlugScriptLocal.vim))
+   ExtHostFormatSingleEditTest.exe ExtHostFormatFullEditTest.exe
+   unformatted1.oni-dev test.unformatted.js large-c-file.c lsan.supp
+   some-test-file.json some-test-file.txt test.crlf test.lf test-syntax.php
+   utf8.txt utf8-test-file.htm Inconsolata-Regular.ttf PlugScriptLocal.vim))
