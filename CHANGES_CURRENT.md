@@ -21,6 +21,7 @@
 - #3317 - Extensions: Fix haskell files at root not loading language integration (related #2380)
 - #3318 - Completion: Show full incomplete results list (fixes #2583)
 - #3329 - Formatting: Fix trailing newline being introduced by some providers (fixes #3320)
+- #3331 - Editor: Fix crash when manipulating Unicode characters
 
 ### Performance
 
