@@ -17,6 +17,10 @@
 				"title": "Onivim - Developer: Show Choice Message"
 			},
 			{
+				"command": "developer.oni.diagnostics-add",
+				"title": "Onivim - Developer: Add diagnostics to file"
+			},
+			{
 				"command": "developer.oni.showWarning",
 				"title": "Onivim - Developer: Show Warning"
 			},
@@ -89,12 +93,14 @@
 				}
 			}
 		},
-		"languages": [{
-			"id": "oni-dev",
-			"extensions": [
-				".oni-dev"
-			]
-		}]
+		"languages": [
+			{
+				"id": "oni-dev",
+				"extensions": [
+					".oni-dev"
+				]
+			}
+		]
 	},
 	"scripts": {
 		"postinstall": "node ./node_modules/vscode/bin/install"
