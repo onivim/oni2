@@ -16,7 +16,7 @@ module LwtEx = Core.Utility.LwtEx;
 module OptionEx = Core.Utility.OptionEx;
 
 let installExtension =
-    (path, Oni_CLI.{overriddenExtensionsDir, proxyServer as proxy, _}) => {
+    (path, Oni_CLI.{overriddenExtensionsDir, proxyServer: proxy, _}) => {
   let setup = Core.Setup.init();
   let result =
     ExtM.install(
