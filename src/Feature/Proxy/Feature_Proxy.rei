@@ -2,7 +2,7 @@ open Oni_Core;
 
 // MODEL
 
-type model;
+type model = option(Service_Net.Proxy.t);
 
 let initial: model;
 

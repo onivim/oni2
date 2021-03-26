@@ -371,6 +371,7 @@ let start =
       Feature_SideBar.selected(state.sideBar) == Feature_SideBar.Extensions;
     let extensionsSub =
       Feature_Extensions.sub(
+        ~proxy=state.proxy,
         ~isVisible=isSideBarOpen && isExtensionsFocused,
         ~setup,
         state.extensions,

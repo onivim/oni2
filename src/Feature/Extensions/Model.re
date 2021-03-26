@@ -606,7 +606,7 @@ let checkAndUpdateSearchText = (~hasError, ~previousText, ~newText, ~query) =>
 
 let getExtensions = Internal.getExtensions;
 
-let update = (~extHostClient, msg, model) => {
+let update = (~extHostClient, ~proxy, msg, model) => {
   switch (msg) {
   | Exthost(WillActivateExtension(_)) => (model, Nothing)
 
@@ -818,6 +818,7 @@ let update = (~extHostClient, msg, model) => {
     );
     let eff =
       Service_Extensions.Effects.install(
+        ~proxy,
         ~extensionsFolder=model.extensionsFolder,
         ~toMsg,
         extensionId,
@@ -832,6 +833,7 @@ let update = (~extHostClient, msg, model) => {
     );
     let eff =
       Service_Extensions.Effects.update(
+        ~proxy,
         ~extensionsFolder=model.extensionsFolder,
         ~toMsg,
         extensionId,
@@ -864,6 +866,7 @@ let update = (~extHostClient, msg, model) => {
       model,
       Effect(
         Service_Extensions.Effects.details(
+          ~proxy,
           ~extensionId,
           ~toMsg={
             fun

@@ -47,7 +47,7 @@ module Cache = {
 
 module Request = {
   let json = (~proxy, ~setup, ~decoder: Json.decoder('a), url) => {
-    ignore(proxy: Proxy.t);
+    ignore(proxy: option(Proxy.t));
     Lwt.try_bind(
       () => NodeTask.run(~args=[url], ~setup, "request.js"),
       (output: string) => {

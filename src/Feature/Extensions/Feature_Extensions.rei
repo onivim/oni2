@@ -54,7 +54,14 @@ let isInstalled: (~extensionId: string, model) => bool;
 let isInstalling: (~extensionId: string, model) => bool;
 let isUninstalling: (~extensionId: string, model) => bool;
 
-let update: (~extHostClient: Exthost.Client.t, msg, model) => (model, outmsg);
+let update:
+  (
+    ~extHostClient: Exthost.Client.t,
+    ~proxy: option(Service_Net.Proxy.t),
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 let resetFocus: model => model;
 
@@ -63,7 +70,13 @@ let activatedIds: model => list(string);
 
 let menus: model => list(Menu.Schema.definition);
 let sub:
-  (~isVisible: bool, ~setup: Oni_Core.Setup.t, model) => Isolinear.Sub.t(msg);
+  (
+    ~proxy: option(Service_Net.Proxy.t),
+    ~isVisible: bool,
+    ~setup: Oni_Core.Setup.t,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
 
 module Persistence: {
   type t = Yojson.Safe.t;

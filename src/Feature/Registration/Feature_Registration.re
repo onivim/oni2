@@ -77,7 +77,7 @@ module Contributions = {
   let commands = Commands.[enterLicenseKey];
 };
 
-let update = (model, msg) =>
+let update = (~proxy, model, msg) =>
   switch (msg) {
   | Command(EnterLicenseKey) => (
       {...model, viewState: EnteringKey, inputModel: initialInputModel},
@@ -124,7 +124,10 @@ let update = (model, msg) =>
         let licenseKey = Component_InputText.value(model.inputModel);
         let wrapEvent = evt => Response(evt);
         Effect(
-          Service_Registration.Effect.checkLicenseKeyValidity(licenseKey)
+          Service_Registration.Effect.checkLicenseKeyValidity(
+            ~proxy,
+            licenseKey,
+          )
           |> Isolinear.Effect.map(wrapEvent),
         );
       | _ => Nothing

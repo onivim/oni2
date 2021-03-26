@@ -26,6 +26,7 @@ type t = {
   logFilter: option(string),
   logColorsEnabled: option(bool),
   needsConsole: bool,
+  proxyServer: option(Service_Net.Proxy.t),
   vimExCommands: list(string),
 };
 
@@ -98,6 +99,7 @@ let parse = (~getenv: string => option(string), args) => {
   let logFile = ref(None);
   let logFilter = ref(None);
   let logColorsEnabled = ref(None);
+  let proxyServer = ref(None);
   let gpuAcceleration = ref(`Auto);
   let vimExCommands = ref([]);
 
@@ -168,6 +170,14 @@ let parse = (~getenv: string => option(string), args) => {
       ("--checkhealth", setEffect(CheckHealth), ""),
       ("--list-extensions", setEffect(ListExtensions), ""),
       ("--install-extension", setStringEffect(s => InstallExtension(s)), ""),
+      (
+        "--proxy-server",
+        String(
+          url =>
+            proxyServer := Some(Service_Net.Proxy.{url, strictSSL: true}),
+        ),
+        "",
+      ),
       ("--query-extension", setStringEffect(s => QueryExtension(s)), ""),
       (
         "--uninstall-extension",
@@ -298,6 +308,7 @@ let parse = (~getenv: string => option(string), args) => {
     logFilter: logFilter^,
     logColorsEnabled: logColorsEnabled^,
     needsConsole,
+    proxyServer: proxyServer^,
     vimExCommands: (vimExCommands^ |> List.rev) @ anonymousExCommands,
   };
 

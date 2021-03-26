@@ -195,6 +195,7 @@ module Internal = {
              ~config=resolver,
            );
 
+      let proxy = state.proxy |> Feature_Proxy.configurationChanged(resolver);
       let colorTheme =
         state.colorTheme |> Feature_Theme.configurationChanged(~resolver);
 
@@ -240,6 +241,7 @@ module Internal = {
           languageSupport,
           sideBar,
           layout,
+          proxy,
           vim,
           zen,
           zoom,
@@ -418,7 +420,7 @@ let update =
 
   | Extensions(msg) =>
     let (model, outMsg) =
-      Feature_Extensions.update(~extHostClient, msg, state.extensions);
+      Feature_Extensions.update(~extHostClient, ~proxy=state.proxy, msg, state.extensions);
     let state = {...state, extensions: model};
     let (state', effect) =
       Feature_Extensions.(
@@ -959,7 +961,11 @@ let update =
 
   | Registration(msg) =>
     let (state', outmsg) =
-      Feature_Registration.update(state.registration, msg);
+      Feature_Registration.update(
+        ~proxy=state.proxy,
+        state.registration,
+        msg,
+      );
 
     let effect =
       switch (outmsg) {
