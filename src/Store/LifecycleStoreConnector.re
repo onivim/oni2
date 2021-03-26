@@ -19,7 +19,7 @@ let start = (~quit, ~raiseWindow) => {
   let quitAllEffect = (state: State.t, force) => {
     let anyModified = Feature_Buffers.anyModified(state.buffers);
     let canClose = force || !anyModified;
-    Isolinear.Effect.createWithDispatch(~name="lifecycle.quitAll", dispatch =>
+    Isolinear.Effect.create(~name="lifecycle.quitAll", () =>
       if (canClose) {
         quit(0);
       }
@@ -28,7 +28,7 @@ let start = (~quit, ~raiseWindow) => {
 
   let reallyQuitEffect = (state: State.t) => {
     let handlers = state.lifecycle.onQuitFunctions;
-    Isolinear.Effect.createWithDispatch(~name="lifecycle.reallyQuit", dispatch => {
+    Isolinear.Effect.create(~name="lifecycle.reallyQuit", () => {
       List.iter(h => h(), handlers);
       exit(0);
     });
