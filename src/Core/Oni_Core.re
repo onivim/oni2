@@ -46,6 +46,7 @@ module Log = Kernel.Log;
 module MarkerUpdate = MarkerUpdate;
 module Menu = Menu;
 module MenuBar = MenuBar;
+module MinimalUpdate = MinimalUpdate;
 module Mode = Mode;
 module NodeTask = NodeTask;
 module Ripgrep = Ripgrep;

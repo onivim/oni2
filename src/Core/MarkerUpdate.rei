@@ -2,8 +2,7 @@ open EditorCoreTypes;
 
 type t;
 
-let create:
-  (~update: BufferUpdate.t, ~original: Buffer.t, ~updated: Buffer.t) => t;
+let create: MinimalUpdate.t => t;
 
 let apply:
   (

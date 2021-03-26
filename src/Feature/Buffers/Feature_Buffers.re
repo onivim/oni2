@@ -234,6 +234,7 @@ type outmsg =
   | BufferUpdated({
       update: Oni_Core.BufferUpdate.t,
       markerUpdate: Oni_Core.MarkerUpdate.t,
+      minimalUpdate: Oni_Core.MinimalUpdate.t,
       newBuffer: Oni_Core.Buffer.t,
       oldBuffer: Oni_Core.Buffer.t,
       triggerKey: option(string),
@@ -392,9 +393,14 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
       } else {
         newBuffer;
       };
+    let minimalUpdate =
+      if (update.isFull) {
+        MinimalUpdate.fromBuffers(~original=oldBuffer, ~updated=buffer);
+      } else {
+        MinimalUpdate.fromBufferUpdate(~buffer=oldBuffer, ~update);
+      };
 
-    let markerUpdate =
-      MarkerUpdate.create(~update, ~original=oldBuffer, ~updated=buffer);
+    let markerUpdate = MarkerUpdate.create(minimalUpdate);
     (
       add(buffer, model) |> Internal.recomputeDiff(~bufferId=update.id),
       BufferUpdated({
@@ -403,6 +409,7 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
         oldBuffer,
         triggerKey,
         markerUpdate,
+        minimalUpdate,
       }),
     );
 
