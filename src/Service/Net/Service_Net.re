@@ -5,6 +5,13 @@ module Log = (val Log.withNamespace("Oni2.Service.Net"));
 exception ConnectionFailed;
 exception ResponseParseFailed;
 
+module Proxy = {
+  type t = {
+    url: string,
+    strictSSL: bool,
+  };
+};
+
 module Internal = {
   let getTemporaryFilePath = () => {
     open Base.Result.Let_syntax;
@@ -39,7 +46,8 @@ module Cache = {
 };
 
 module Request = {
-  let json = (~setup, ~decoder: Json.decoder('a), url) => {
+  let json = (~proxy, ~setup, ~decoder: Json.decoder('a), url) => {
+    ignore(proxy: Proxy.t);
     Lwt.try_bind(
       () => NodeTask.run(~args=[url], ~setup, "request.js"),
       (output: string) => {
