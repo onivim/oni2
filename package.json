@@ -237,7 +237,7 @@
     "@revery/timber": "^2.0.0",
     "axios": "^0.19.0",
     "esy-angle-prebuilt": "^1.0.0",
-    "esy-macdylibbundler": "*",
+    "esy-macdylibbundler": "^0.4.5001",
     "esy-oniguruma": "onivim/esy-oniguruma#4698ce4",
     "esy-sdl2": "*",
     "esy-skia": "*",
@@ -253,7 +253,7 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#26e8b73",
+    "revery": "revery-ui/revery#b746d68",
     "esy-skia": "revery-ui/esy-skia#91c98f6",
     "isolinear": "revery-ui/isolinear#53fc4eb",
     "revery-terminal": "revery-ui/revery-terminal#a9cb168",

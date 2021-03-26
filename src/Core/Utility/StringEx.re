@@ -61,14 +61,35 @@ let firstDifference = (a, b) => {
       } else {
         Some(idx);
       };
-    } else if (a.[idx] != b.[idx]) {
-      Some(idx);
     } else {
-      loop(idx + 1);
+      let (charA, idxA) = Zed_utf8.extract_next(a, idx);
+      let (charB, _) = Zed_utf8.extract_next(b, idx);
+
+      if (!Uchar.equal(charA, charB)) {
+        Some(idx);
+      } else {
+        loop(idxA);
+      };
     };
 
   loop(0);
 };
+
+let%test_module "splitAt" =
+  (module
+   {
+     let%test "no difference" = {
+       firstDifference("", "") == None;
+     };
+
+     let%test "difference at first byte" = {
+       firstDifference("a", "b") == Some(0);
+     };
+
+     let%test "unicode-aware difference" = {
+       firstDifference("κόσμε", "κόσε") == Some(7);
+     };
+   });
 
 let splitAt = (~byte: int, str) => {
   let len = String.length(str);
@@ -491,3 +512,7 @@ let escapeSpaces: string => string =
     List.init(String.length(s), String.get(s))
     |> List.map(c => (c == ' ' ? "\\" : "") ++ String.make(1, c))
     |> String.concat("");
+
+let replace = (~match, ~replace, str) => {
+  Str.global_replace(Str.regexp_string(match), replace, str);
+};

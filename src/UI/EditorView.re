@@ -31,11 +31,13 @@ module Parts = {
           ~renderOverlays,
           (),
         ) => {
+      let languageInfo =
+        state.languageSupport |> Feature_LanguageSupport.languageInfo;
       let languageConfiguration =
         buffer
         |> Oni_Core.Buffer.getFileType
         |> Oni_Core.Buffer.FileType.toString
-        |> Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo)
+        |> Exthost.LanguageInfo.getLanguageConfiguration(languageInfo)
         |> Option.value(~default=LanguageConfiguration.default);
 
       let editorDispatch = msg =>
@@ -56,7 +58,7 @@ module Parts = {
         buffer
         uiFont={state.uiFont}
         languageConfiguration
-        languageInfo={state.languageInfo}
+        languageInfo
         grammarRepository={state.grammarRepository}
         onEditorSizeChanged
         theme
