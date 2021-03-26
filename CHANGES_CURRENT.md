@@ -36,6 +36,7 @@
 
 - #3303 - Language Support: Move language metadata into Feature_LanguageSupport (related #3288)
 - #3330 - Diagnostics: Add regression test for #3233
+- #3334 - Dependency: Revery -> b746d68 (thanks @timbertson !)
 
 ### Infrastructure
 
