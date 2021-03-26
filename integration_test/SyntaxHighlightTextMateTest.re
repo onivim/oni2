@@ -14,7 +14,7 @@ runTest(~name="SyntaxHighlightTextMateTest", ({dispatch, wait, _}) => {
   let testFile = getAssetPath("large-c-file.c");
 
   // Create a buffer
-  dispatch(Actions.OpenFileByPath(testFile, None, None));
+  dispatch(Actions.OpenFileByPath(testFile, SplitDirection.Current, None));
 
   // Wait for highlights to show up
   wait(

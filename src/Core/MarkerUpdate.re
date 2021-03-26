@@ -1,5 +1,6 @@
 open EditorCoreTypes;
 
+[@deriving show]
 type movement =
   | Noop
   | DeleteLines({
@@ -18,6 +19,7 @@ type movement =
       deltaCharacters: int,
     });
 
+[@deriving show]
 type t = list(movement);
 
 module Internal = {
@@ -78,6 +80,31 @@ module Internal = {
         }
       );
     };
+
+  let%test_module "minimalUpdateToMovement" =
+    (module
+     {
+       let%test "unicode characters get shifted properly" = {
+         let update =
+           MinimalUpdate.(
+             Modified({
+               line: LineNumber.zero,
+               original: "κόσμε",
+               updated: "κόσε",
+             })
+           );
+         let actual = minimalUpdateToMovement(update);
+
+         actual
+         == ShiftCharacters({
+              line: LineNumber.zero,
+              afterByte: ByteIndex.ofInt(7),
+              deltaBytes: (-2),
+              afterCharacter: CharacterIndex.ofInt(3),
+              deltaCharacters: (-1),
+            });
+       };
+     });
 };
 
 let create = (~update: BufferUpdate.t, ~original, ~updated) =>
@@ -138,3 +165,5 @@ let apply = (~clearLine, ~shiftLines, ~shiftCharacters, markerUpdate, target) =>
        target,
      );
 };
+
+let toDebugString = show;

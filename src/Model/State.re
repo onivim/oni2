@@ -7,7 +7,9 @@
 open Oni_Core;
 
 module Commands = GlobalCommands;
-let windowCommandCondition = "!insertMode || terminalFocus" |> WhenExpr.parse;
+let windowCommandCondition =
+  "!commandLineFocus && !insertMode && !inQuickOpen || terminalFocus"
+  |> WhenExpr.parse;
 
 let isMacCondition = "isMac" |> WhenExpr.parse;
 let defaultKeyBindings =
@@ -410,7 +412,6 @@ type t = {
   iconTheme: IconTheme.t,
   isQuitting: bool,
   languageSupport: Feature_LanguageSupport.model,
-  languageInfo: Exthost.LanguageInfo.t,
   grammarRepository: Oni_Syntax.GrammarRepository.t,
   lifecycle: Lifecycle.t,
   menuBar: Feature_MenuBar.model,
@@ -534,7 +535,6 @@ let initial =
     help: Feature_Help.initial,
     iconTheme: IconTheme.create(),
     isQuitting: false,
-    languageInfo: Exthost.LanguageInfo.initial,
     menuBar:
       Feature_MenuBar.initial(
         ~menus=[],

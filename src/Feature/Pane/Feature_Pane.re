@@ -454,6 +454,7 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
           : OpenFile({filePath: item.file, position: item.location})
       | Component_VimTree.Selected(item) =>
         OpenFile({filePath: item.file, position: item.location})
+      | Component_VimTree.SelectedNode(_) => Nothing
       | Component_VimTree.Collapsed(_) => Nothing
       | Component_VimTree.Expanded({path, _}) =>
         Effect(
@@ -497,6 +498,7 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
         previewEnabled
           ? PreviewFile({filePath: item.file, position: item.location})
           : OpenFile({filePath: item.file, position: item.location})
+      | Component_VimTree.SelectedNode(_) => Nothing
       | Component_VimTree.Selected(item) =>
         OpenFile({filePath: item.file, position: item.location})
       | Component_VimTree.Collapsed(_) => Nothing
@@ -677,6 +679,7 @@ module View = {
   };
   let content =
       (
+        ~config,
         ~isFocused,
         ~selected,
         ~theme,
@@ -700,6 +703,7 @@ module View = {
     switch (selected) {
     | Locations =>
       <LocationsPaneView
+        config
         isFocused
         locationsList
         iconTheme
@@ -712,6 +716,7 @@ module View = {
 
     | Diagnostics =>
       <DiagnosticsPaneView
+        config
         isFocused
         diagnosticsList
         iconTheme
@@ -865,6 +870,7 @@ module View = {
           </View>
           <View style=Styles.content>
             <content
+              config
               isFocused
               iconTheme
               languageInfo

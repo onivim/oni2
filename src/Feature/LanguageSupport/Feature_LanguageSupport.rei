@@ -8,6 +8,8 @@ let initial: model;
 [@deriving show]
 type msg;
 
+let languageInfo: model => Exthost.LanguageInfo.t;
+
 module Msg: {
   let exthost: Exthost.Msg.LanguageFeatures.msg => msg;
   let keyPressed: string => msg;
@@ -53,18 +55,24 @@ module CodeLens: {
 type outmsg =
   | Nothing
   | ApplyCompletion({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
+  | FormattingApplied({
+      displayName: string,
+      editCount: int,
+      needsToSave: bool,
+    })
   | InsertSnippet({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       snippet: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | OpenFile({
       filePath: string,
       location: option(CharacterPosition.t),
+      direction: SplitDirection.t,
     })
   | ReferencesAvailable
   | NotifySuccess(string)
@@ -99,6 +107,16 @@ let update:
   ) =>
   (model, outmsg);
 
+let bufferSaved:
+  (
+    ~isLargeBuffer: bool,
+    ~buffer: Oni_Core.Buffer.t,
+    ~config: Oni_Core.Config.resolver,
+    ~activeBufferId: int,
+    model
+  ) =>
+  (model, Isolinear.Effect.t(msg));
+
 let bufferUpdated:
   (
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
@@ -123,6 +141,9 @@ let cursorMoved:
     model
   ) =>
   model;
+
+let extensionsAdded:
+  (list(Exthost.Extension.Scanner.ScanResult.t), model) => model;
 
 let moveMarkers:
   (~newBuffer: Buffer.t, ~markerUpdate: MarkerUpdate.t, model) => model;
@@ -167,6 +188,8 @@ module Completion: {
   module View: {
     let make:
       (
+        ~buffer: Buffer.t,
+        ~cursor: CharacterPosition.t,
         ~x: int,
         ~y: int,
         ~lineHeight: float,

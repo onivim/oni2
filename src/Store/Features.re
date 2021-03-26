@@ -6,22 +6,23 @@ open Oni_Model;
 open Actions;
 
 module Internal = {
-  let notificationEffect = (~kind, message) => {
-    Feature_Notification.Effects.create(~kind, message)
+  let notificationEffect = (~ephemeral=false, ~kind, message) => {
+    Feature_Notification.Effects.create(~ephemeral, ~kind, message)
     |> Isolinear.Effect.map(msg => Actions.Notification(msg));
   };
 
-  let openFileEffect = (~position=None, filePath) => {
+  let openFileEffect =
+      (~direction=SplitDirection.Current, ~position=None, filePath) => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.openFileByPath", dispatch =>
-      dispatch(OpenFileByPath(filePath, None, position))
+      dispatch(OpenFileByPath(filePath, direction, position))
     );
   };
 
   let previewFileEffect = (~position=None, filePath) => {
     Isolinear.Effect.createWithDispatch(
       ~name="features.previewFileByPath", dispatch =>
-      dispatch(PreviewFileByPath(filePath, None, position))
+      dispatch(PreviewFileByPath(filePath, SplitDirection.Current, position))
     );
   };
 
@@ -282,6 +283,8 @@ module Internal = {
       |> Feature_Layout.activeEditor
       |> Feature_Editor.Editor.getPrimaryCursor;
 
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let languageSupport =
       if (prevCursor != newCursor) {
         maybeBuffer
@@ -290,9 +293,7 @@ module Internal = {
                buffer
                |> Oni_Core.Buffer.getFileType
                |> Oni_Core.Buffer.FileType.toString
-               |> Exthost.LanguageInfo.getLanguageConfiguration(
-                    state.languageInfo,
-                  )
+               |> Exthost.LanguageInfo.getLanguageConfiguration(languageInfo)
                |> Option.value(~default=LanguageConfiguration.default);
              Feature_LanguageSupport.cursorMoved(
                ~languageConfiguration,
@@ -460,13 +461,21 @@ let update =
                  )
                });
 
+          let languageSupport' =
+            Feature_LanguageSupport.extensionsAdded(
+              extensions,
+              state.languageSupport,
+            );
           let config =
             Feature_Configuration.registerExtensionConfigurations(
               ~configurations=newExtensionConfigurations,
               state.config,
             );
 
-          ({...state, config}, Isolinear.Effect.none);
+          (
+            {...state, config, languageSupport: languageSupport'},
+            Isolinear.Effect.none,
+          );
 
         | InstallSucceeded({extensionId, contributions}) =>
           let notificationEffect =
@@ -600,12 +609,14 @@ let update =
 
     let editorId = editor |> Feature_Editor.Editor.getId;
 
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let languageConfiguration =
       maybeBuffer
       |> Option.map(Oni_Core.Buffer.getFileType)
       |> Option.map(Oni_Core.Buffer.FileType.toString)
       |> OptionEx.flatMap(
-           Exthost.LanguageInfo.getLanguageConfiguration(state.languageInfo),
+           Exthost.LanguageInfo.getLanguageConfiguration(languageInfo),
          )
       |> Option.value(~default=LanguageConfiguration.default);
 
@@ -648,18 +659,61 @@ let update =
     Feature_LanguageSupport.(
       switch (outmsg) {
       | Nothing => (state, Isolinear.Effect.none)
-      | ApplyCompletion({insertText, meetColumn, additionalEdits}) =>
+      | ApplyCompletion({insertText, replaceSpan, additionalEdits}) =>
         let additionalEdits =
           additionalEdits |> List.map(exthostEditToVimEdit);
         (
           state,
           Feature_Vim.Effects.applyCompletion(
+            ~cursor=cursorLocation,
             ~additionalEdits,
-            ~meetColumn,
+            ~replaceSpan,
             ~insertText,
           )
           |> Isolinear.Effect.map(msg => Vim(msg)),
         );
+
+      | FormattingApplied({displayName, editCount, needsToSave}) =>
+        let (formatEffect, msg) =
+          if (needsToSave) {
+            state
+            |> Selectors.getActiveBuffer
+            |> Option.map(Oni_Core.Buffer.getId)
+            |> Option.map(bufferId => {
+                 (
+                   Feature_Vim.Effects.save(~bufferId)
+                   |> Isolinear.Effect.map(msg => Actions.Vim(msg)),
+                   Printf.sprintf(
+                     "Formatting: Saved %d edits with %s",
+                     editCount,
+                     displayName,
+                   ),
+                 )
+               })
+            |> Option.value(
+                 ~default=(
+                   Isolinear.Effect.none,
+                   "Unable to apply formatting edits",
+                 ),
+               );
+          } else {
+            (
+              Isolinear.Effect.none,
+              Printf.sprintf(
+                "Formatting: Applied %d edits with %s",
+                editCount,
+                displayName,
+              ),
+            );
+          };
+
+        let eff =
+          [
+            formatEffect,
+            Internal.notificationEffect(~ephemeral=true, ~kind=Info, msg),
+          ]
+          |> Isolinear.Effect.batch;
+        (state, eff);
       | ReferencesAvailable =>
         let references =
           Feature_LanguageSupport.References.get(languageSupport);
@@ -672,16 +726,19 @@ let update =
           |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
-      | InsertSnippet({meetColumn, snippet, _}) =>
+      | InsertSnippet({replaceSpan, snippet, _}) =>
         let editor = Feature_Layout.activeEditor(state.layout);
-        let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
-        let characterPosition =
-          CharacterPosition.{line: cursor.line, character: meetColumn};
-        let rangeToReplace =
-          CharacterRange.{start: characterPosition, stop: cursor};
+        // let cursor = Feature_Editor.Editor.getPrimaryCursor(editor);
+        // let characterPosition =
+        //   CharacterPosition.{line: cursor.line, character: meetColumn};
+        // let rangeToReplace =
+        //   CharacterRange.{start: characterPosition, stop: cursor};
         let maybeReplaceRange =
           Feature_Editor.Editor.characterRangeToByteRange(
-            rangeToReplace,
+            EditorCoreTypes.CharacterSpan.toRange(
+              ~line=cursorLocation.line,
+              replaceSpan,
+            ),
             editor,
           );
         (
@@ -692,9 +749,9 @@ let update =
           )
           |> Isolinear.Effect.map(msg => Snippets(msg)),
         );
-      | OpenFile({filePath, location}) => (
+      | OpenFile({filePath, location, direction}) => (
           state,
-          Internal.openFileEffect(~position=location, filePath),
+          Internal.openFileEffect(~direction, ~position=location, filePath),
         )
       | NotifySuccess(msg) => (
           state,
@@ -813,10 +870,12 @@ let update =
 
   | Pane(msg) =>
     let config = Selectors.configResolver(state);
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let (model, outmsg) =
       Feature_Pane.update(
         ~font=state.editorFont,
-        ~languageInfo=state.languageInfo,
+        ~languageInfo,
         ~buffers=state.buffers,
         ~previewEnabled=
           Feature_Configuration.GlobalConfiguration.Workbench.editorEnablePreview.
@@ -1027,11 +1086,17 @@ let update =
             {...state, scm: Feature_SCM.resetFocus(state.scm)}
             |> FocusManager.push(Focus.SCM)
           | Search =>
+            let query =
+              FocusManager.current(state) == Focus.Editor
+                ? state.layout
+                  |> Feature_Layout.activeEditor
+                  |> Feature_Editor.Editor.singleLineSelectedText
+                : None;
             {
               ...state,
-              searchPane: Feature_Search.resetFocus(state.searchPane),
+              searchPane: Feature_Search.resetFocus(~query, state.searchPane),
             }
-            |> FocusManager.push(Focus.Search)
+            |> FocusManager.push(Focus.Search);
           | Extensions =>
             {
               ...state,
@@ -1105,19 +1170,6 @@ let update =
           |> Feature_Layout.activeEditor
           |> Feature_Editor.Editor.getBufferId;
 
-        // TODO: Port to buffer filetype picker
-        // let languages =
-        //   state.languageInfo
-        //   |> Exthost.LanguageInfo.languages
-        //   |> List.map(language =>
-        //        (
-        //          language,
-        //          Oni_Core.IconTheme.getIconForLanguage(
-        //            state.iconTheme,
-        //            language,
-        //          ),
-        //        )
-        //      );
         (
           state',
           Isolinear.Effect.createWithDispatch(
@@ -1154,8 +1206,10 @@ let update =
     | Nothing => (state, Effect.none)
 
     | ShowMenu(menuFn) =>
+      let languageInfo =
+        state.languageSupport |> Feature_LanguageSupport.languageInfo;
       let menu =
-        menuFn(state.languageInfo, state.iconTheme)
+        menuFn(languageInfo, state.iconTheme)
         |> Feature_Quickmenu.Schema.map(msg => Buffers(msg));
       let quickmenu = Feature_Quickmenu.show(~menu, state.newQuickmenu);
       ({...state, newQuickmenu: quickmenu}, Isolinear.Effect.none);
@@ -1204,12 +1258,12 @@ let update =
           let editor' =
             switch (split) {
             // If we're in the same split, just re-use current editor
-            | `Current => ed
+            | SplitDirection.Current => ed
 
             // However, if we're splitting, we need to clone the editor
-            | `Horizontal
-            | `Vertical
-            | `NewTab => Editor.copy(ed)
+            | SplitDirection.Horizontal
+            | SplitDirection.Vertical(_)
+            | SplitDirection.NewTab => Editor.copy(ed)
             };
 
           (isPreview, Editor.setPreview(~preview=isPreview, editor'));
@@ -1226,11 +1280,17 @@ let update =
 
       let layout =
         switch (split) {
-        | `Current => state.layout
-        | `Horizontal =>
-          Feature_Layout.split(~editor, `Horizontal, state.layout)
-        | `Vertical => Feature_Layout.split(~editor, `Vertical, state.layout)
-        | `NewTab => Feature_Layout.addLayoutTab(state.layout)
+        | SplitDirection.Current => state.layout
+        | SplitDirection.Horizontal =>
+          Feature_Layout.split(
+            ~shouldReuse=false,
+            ~editor,
+            `Horizontal,
+            state.layout,
+          )
+        | SplitDirection.Vertical({shouldReuse}) =>
+          Feature_Layout.split(~shouldReuse, ~editor, `Vertical, state.layout)
+        | SplitDirection.NewTab => Feature_Layout.addLayoutTab(state.layout)
         };
 
       let editor' =
@@ -1353,9 +1413,42 @@ let update =
            )
         |> Option.value(~default=state.config);
 
+      let maybeActiveBufferId =
+        state
+        |> Selectors.getActiveBuffer
+        |> Option.map(Oni_Core.Buffer.getId);
+
+      let (languageSupport', languageEffect') =
+        maybeActiveBufferId
+        |> Option.map(activeBufferId => {
+             let config = Selectors.configResolver(state);
+             state.languageSupport
+             |> Feature_LanguageSupport.bufferSaved(
+                  ~isLargeBuffer=
+                    Feature_Buffers.isLargeFile(state.buffers, buffer),
+                  ~activeBufferId,
+                  ~config,
+                  ~buffer,
+                );
+           })
+        |> Option.value(
+             ~default=(state.languageSupport, Isolinear.Effect.none),
+           );
+
       (
-        {...state, input: input', config: config'},
-        Isolinear.Effect.batch([eff, modelSavedEff, clearSnippetCacheEffect]),
+        {
+          ...state,
+          input: input',
+          config: config',
+          languageSupport: languageSupport',
+        },
+        Isolinear.Effect.batch([
+          eff,
+          modelSavedEff,
+          clearSnippetCacheEffect,
+          languageEffect'
+          |> Isolinear.Effect.map(msg => Actions.LanguageSupport(msg)),
+        ]),
       );
 
     | BufferUpdated({update, newBuffer, oldBuffer, triggerKey, markerUpdate}) =>
@@ -1364,13 +1457,11 @@ let update =
 
       let bufferUpdate = update;
 
+      let languageInfo =
+        state.languageSupport |> Feature_LanguageSupport.languageInfo;
       let syntaxHighlights =
         Feature_Syntax.handleUpdate(
-          ~scope=
-            Internal.getScopeForBuffer(
-              ~languageInfo=state.languageInfo,
-              newBuffer,
-            ),
+          ~scope=Internal.getScopeForBuffer(~languageInfo, newBuffer),
           ~grammars=grammarRepository,
           ~config=
             Feature_Configuration.resolver(
@@ -1611,9 +1702,9 @@ let update =
       | TerminalCreated({name, splitDirection}) =>
         let windowTreeDirection =
           switch (splitDirection) {
-          | Horizontal => Some(`Horizontal)
-          | Vertical => Some(`Vertical)
-          | Current => None
+          | Horizontal => SplitDirection.Horizontal
+          | Vertical => SplitDirection.Vertical({shouldReuse: false})
+          | Current => SplitDirection.Current
           };
 
         let eff =
@@ -1641,9 +1732,11 @@ let update =
     (state, effect);
 
   | OpenBufferById({bufferId, direction}) =>
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let effect =
       Feature_Buffers.Effects.openBufferInEditor(
-        ~languageInfo=state.languageInfo,
+        ~languageInfo,
         ~font=state.editorFont,
         ~bufferId,
         ~split=direction,
@@ -1653,28 +1746,24 @@ let update =
     (state, effect);
 
   | NewBuffer({direction}) =>
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let effect =
       Feature_Buffers.Effects.openNewBuffer(
         ~split=direction,
-        ~languageInfo=state.languageInfo,
+        ~languageInfo,
         ~font=state.editorFont,
         state.buffers,
       )
       |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
     (state, effect);
 
-  | OpenFileByPath(filePath, direction, position) =>
-    let split =
-      switch (direction) {
-      | None => `Current
-      | Some(`Current) => `Current
-      | Some(`Horizontal) => `Horizontal
-      | Some(`Vertical) => `Vertical
-      | Some(`NewTab) => `NewTab
-      };
+  | OpenFileByPath(filePath, split, position) =>
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let effect =
       Feature_Buffers.Effects.openFileInEditor(
-        ~languageInfo=state.languageInfo,
+        ~languageInfo,
         ~font=state.editorFont,
         ~split,
         ~position,
@@ -1684,17 +1773,12 @@ let update =
       )
       |> Isolinear.Effect.map(msg => Actions.Buffers(msg));
     (state, effect);
-  | PreviewFileByPath(filePath, direction, position) =>
-    let split =
-      switch (direction) {
-      | None => `Current
-      | Some(`Horizontal) => `Horizontal
-      | Some(`Vertical) => `Vertical
-      | Some(`NewTab) => `NewTab
-      };
+  | PreviewFileByPath(filePath, split, position) =>
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
     let effect =
       Feature_Buffers.Effects.openFileInEditor(
-        ~languageInfo=state.languageInfo,
+        ~languageInfo,
         ~font=state.editorFont,
         ~split,
         ~position,
@@ -1783,7 +1867,7 @@ let update =
     let eff =
       Service_OS.Effect.statMultiple(paths, (path, stats) =>
         switch (stats.st_kind) {
-        | S_REG => OpenFileByPath(path, None, None)
+        | S_REG => OpenFileByPath(path, SplitDirection.Current, None)
         | S_DIR =>
           switch (Luv.Path.chdir(path)) {
           | Ok () =>
@@ -1870,10 +1954,12 @@ let update =
     let wasSnippetActive = Feature_Snippets.isActive(state.snippets);
 
     let selections = Feature_Editor.Editor.selections(editor);
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
 
     let (snippets', outmsg) =
       Feature_Snippets.update(
-        ~languageInfo=state.languageInfo,
+        ~languageInfo,
         ~resolverFactory,
         ~selections,
         ~maybeBuffer,
@@ -1898,6 +1984,8 @@ let update =
       let newCursor = newEditor |> Feature_Editor.Editor.getPrimaryCursor;
       let newMode = newEditor |> Feature_Editor.Editor.mode;
       let isInInsert = Vim.Mode.isInsertOrSelect(newMode);
+      let languageInfo =
+        state.languageSupport |> Feature_LanguageSupport.languageInfo;
 
       let languageSupport' =
         if (originalCursor != newCursor) {
@@ -1908,7 +1996,7 @@ let update =
                  |> Oni_Core.Buffer.getFileType
                  |> Oni_Core.Buffer.FileType.toString
                  |> Exthost.LanguageInfo.getLanguageConfiguration(
-                      state.languageInfo,
+                      languageInfo,
                     )
                  |> Option.value(~default=LanguageConfiguration.default);
                Feature_LanguageSupport.cursorMoved(
@@ -2051,6 +2139,8 @@ let update =
     let activeCursor = editor |> Feature_Editor.Editor.getPrimaryCursor;
     let activeCursorByte =
       editor |> Feature_Editor.Editor.getPrimaryCursorByte;
+    let languageInfo =
+      state.languageSupport |> Feature_LanguageSupport.languageInfo;
 
     let languageSupport' =
       maybeBuffer
@@ -2067,9 +2157,7 @@ let update =
              buffer
              |> Oni_Core.Buffer.getFileType
              |> Oni_Core.Buffer.FileType.toString
-             |> Exthost.LanguageInfo.getLanguageConfiguration(
-                  state.languageInfo,
-                )
+             |> Exthost.LanguageInfo.getLanguageConfiguration(languageInfo)
              |> Option.value(~default=LanguageConfiguration.default);
 
            let languageSupport =

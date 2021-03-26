@@ -59,6 +59,7 @@ module Effects = {
 
   let applyEdits =
       (
+        ~shouldAdjustCursors,
         ~bufferId: int,
         ~version: int,
         ~edits: list(Vim.Edit.t),
@@ -82,7 +83,7 @@ module Effects = {
               ),
             );
           } else {
-            Vim.Buffer.applyEdits(~edits, buffer);
+            Vim.Buffer.applyEdits(~shouldAdjustCursors, ~edits, buffer);
           };
         };
 
@@ -92,6 +93,7 @@ module Effects = {
 
   let setLines =
       (
+        ~shouldAdjustCursors,
         ~bufferId: int,
         ~start=?,
         ~stop=?,
@@ -107,6 +109,7 @@ module Effects = {
           Error("No buffer found with id: " ++ string_of_int(bufferId))
         | Some(buffer) =>
           Vim.Buffer.setLines(
+            ~shouldAdjustCursors,
             ~undoable=true,
             ~start?,
             ~stop?,
@@ -172,21 +175,40 @@ module Effects = {
     List.fold_left(adjustModeForEdit, mode, edits);
   };
 
-  let applyCompletion = (~meetColumn, ~insertText, ~toMsg, ~additionalEdits) =>
+  let applyCompletion =
+      (
+        ~cursor: CharacterPosition.t,
+        ~replaceSpan: CharacterSpan.t,
+        ~insertText,
+        ~toMsg,
+        ~additionalEdits,
+      ) =>
     Isolinear.Effect.createWithDispatch(~name="applyCompletion", dispatch => {
-      let cursor = Vim.Cursor.get();
-      // TODO: Does this logic correctly handle unicode characters?
-      let delta =
-        ByteIndex.toInt(cursor.byte) - CharacterIndex.toInt(meetColumn);
+      let overwriteBefore =
+        CharacterIndex.toInt(cursor.character)
+        - CharacterIndex.toInt(replaceSpan.start);
 
-      let _: Vim.Context.t = VimEx.repeatKey(delta, "<BS>");
+      let overwriteAfter =
+        max(
+          0,
+          CharacterIndex.toInt(replaceSpan.stop)
+          - CharacterIndex.toInt(cursor.character),
+        );
+
+      let _: Vim.Context.t = VimEx.repeatKey(overwriteAfter, "<DEL>");
+      let _: Vim.Context.t = VimEx.repeatKey(overwriteBefore, "<BS>");
       let ({mode, _}: Vim.Context.t, _effects) =
         VimEx.inputString(insertText);
 
       let buffer = Vim.Buffer.getCurrent();
       let mode' =
         if (additionalEdits != []) {
-          Vim.Buffer.applyEdits(~edits=additionalEdits, buffer)
+          // We're manually adjusting the cursors here...
+          Vim.Buffer.applyEdits(
+            ~shouldAdjustCursors=false,
+            ~edits=additionalEdits,
+            buffer,
+          )
           |> Result.map(() => {adjustModeForEdits(mode, additionalEdits)})
           |> ResultEx.value(~default=mode);
         } else {

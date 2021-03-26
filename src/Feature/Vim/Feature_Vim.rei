@@ -82,11 +82,14 @@ module CommandLine: {let getCompletionMeet: string => option(int);};
 module Effects: {
   let applyCompletion:
     (
-      ~meetColumn: EditorCoreTypes.CharacterIndex.t,
+      ~cursor: EditorCoreTypes.CharacterPosition.t,
+      ~replaceSpan: EditorCoreTypes.CharacterSpan.t,
       ~insertText: string,
       ~additionalEdits: list(Vim.Edit.t)
     ) =>
     Isolinear.Effect.t(msg);
+
+  let save: (~bufferId: int) => Isolinear.Effect.t(msg);
 };
 
 // CONFIGURATION

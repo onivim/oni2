@@ -7,6 +7,7 @@ type session = {
   bufferId: int,
   bufferVersion: int,
   sessionId: int,
+  saveWhenComplete: bool,
 };
 
 type documentFormatter = {
@@ -21,6 +22,13 @@ type model = {
   availableDocumentFormatters: list(documentFormatter),
   availableRangeFormatters: list(documentFormatter),
   activeSession: option(session),
+  // Map of buffer id -> last format save tick
+  // Used to help us decide when to autofmar
+  lastFormatSaveTick: IntMap.t(int),
+  // Keep track of whether we showed a warning that the
+  // auto-format didn't proceed due to a large file,
+  // so that we only show it once.
+  largeBufferAutoFormatShowedWarning: IntSet.t,
 };
 
 let initial = {
@@ -28,6 +36,9 @@ let initial = {
   availableDocumentFormatters: [],
   availableRangeFormatters: [],
   activeSession: None,
+
+  lastFormatSaveTick: IntMap.empty,
+  largeBufferAutoFormatShowedWarning: IntSet.empty,
 };
 
 // CONFIGURATION
@@ -37,6 +48,8 @@ module Configuration = {
 
   let defaultFormatter =
     setting("editor.defaultFormatter", nullable(string), ~default=None);
+
+  let formatOnSave = setting("editor.formatOnSave", bool, ~default=false);
 };
 
 [@deriving show]
@@ -47,6 +60,7 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
+  | FormatOnSave
   | DefaultFormatterSelected({
       fileType: string,
       extensionId: string,
@@ -67,7 +81,8 @@ type msg =
   | EditCompleted({
       editCount: int,
       displayName: string,
-    });
+    })
+  | AutoFormatOnLargeBufferFailed({bufferId: int});
 
 let registerDocumentFormatter =
     (~handle, ~selector, ~extensionId, ~displayName, model) => {
@@ -103,6 +118,7 @@ type outmsg =
   | FormattingApplied({
       displayName: string,
       editCount: int,
+      needsToSave: bool,
     })
   | FormatError(string)
   | TransformConfiguration(ConfigurationTransformer.t)
@@ -111,7 +127,7 @@ type outmsg =
 module Internal = {
   let clearSession = model => {...model, activeSession: None};
 
-  let startSession = (~sessionId, ~buffer, model) => {
+  let startSession = (~saveWhenComplete, ~sessionId, ~buffer, model) => {
     ...model,
     nextSessionId: sessionId + 1,
     activeSession:
@@ -119,23 +135,50 @@ module Internal = {
         sessionId,
         bufferId: Oni_Core.Buffer.getId(buffer),
         bufferVersion: Oni_Core.Buffer.getVersion(buffer),
+        saveWhenComplete,
       }),
   };
 
-  let textToArray =
+  let textToArray = (~removeTrailingNewLine) =>
     fun
     | None => [||]
     | Some(text) =>
       text
       |> Utility.StringEx.removeWindowsNewLines
-      |> Utility.StringEx.removeTrailingNewLine
+      |> (
+        text =>
+          removeTrailingNewLine
+            ? Utility.StringEx.removeTrailingNewLine(text) : text
+      )
       |> Utility.StringEx.splitNewLines;
 
-  let extHostEditToVimEdit: Exthost.Edit.SingleEditOperation.t => Vim.Edit.t =
-    edit => {
-      range: edit.range |> Exthost.OneBasedRange.toRange,
-      text: textToArray(edit.text),
-    };
+  let extHostEditToVimEdit =
+      (buffer, edit: Exthost.Edit.SingleEditOperation.t) => {
+    let range = edit.range |> Exthost.OneBasedRange.toRange;
+
+    let bufferRange = Oni_Core.Buffer.characterRange(buffer);
+
+    // We need to remove the trailing new line in some specific circumstances:
+    // - The edit covers the entire buffer
+    // AND
+    // - The buffer has no trailing new line
+
+    // Some formatters, like prettier or the ocaml formatter, send a single,
+    // uber-edit - with all the formatted lines in a buffer. In addition,
+    // they _might_ add a trailing new line (and if we don't handle it -
+    // will hit bugs like #3320).
+
+    // Other formatters, like Python or clangd, send line-by-line formats -
+    // it's important to not ignore the trailing new-lines for line-by-line
+    // edits, because otherwise we'll hit bugs like #3288
+
+    let removeTrailingNewLine =
+      !Oni_Core.Buffer.hasTrailingNewLine(buffer)
+      && CharacterRange.containsRange(~query=bufferRange, range);
+    (
+      {range, text: textToArray(~removeTrailingNewLine, edit.text)}: Vim.Edit.t
+    );
+  };
 
   let fallBackToDefaultFormatter =
       (~indentation, ~languageConfiguration, ~buffer, range: CharacterRange.t) => {
@@ -159,10 +202,11 @@ module Internal = {
 
       let displayName = "Default";
       if (edits == []) {
-        FormattingApplied({displayName, editCount: 0});
+        FormattingApplied({needsToSave: false, displayName, editCount: 0});
       } else {
         let effect =
           Service_Vim.Effects.applyEdits(
+            ~shouldAdjustCursors=true, // Make sure the cursor ends up in the right place, due to the formatting edits
             ~bufferId=buffer |> Oni_Core.Buffer.getId,
             ~version=buffer |> Oni_Core.Buffer.getVersion,
             ~edits,
@@ -207,6 +251,7 @@ module Internal = {
 
   let runFormat =
       (
+        ~saveWhenComplete,
         ~config,
         ~languageConfiguration,
         ~formatFn,
@@ -234,7 +279,7 @@ module Internal = {
 
     // Single formatter - just use it
     | [formatter] => (
-        model |> startSession(~sessionId, ~buffer=buf),
+        model |> startSession(~saveWhenComplete, ~sessionId, ~buffer=buf),
         Effect(
           formatFn(
             ~handle=formatter.handle,
@@ -259,7 +304,7 @@ module Internal = {
                     formatter,
                   ),
                 sessionId,
-                edits: List.map(extHostEditToVimEdit, edits),
+                edits: List.map(extHostEditToVimEdit(buf), edits),
               })
             | Error(msg) => EditRequestFailed({sessionId, msg})
             }
@@ -302,7 +347,7 @@ module Internal = {
             ),
           )
         | Some(formatter) => (
-            model |> startSession(~sessionId, ~buffer=buf),
+            model |> startSession(~saveWhenComplete, ~sessionId, ~buffer=buf),
             Effect(
               formatFn(
                 ~handle=formatter.handle,
@@ -327,7 +372,7 @@ module Internal = {
                         formatter,
                       ),
                     sessionId,
-                    edits: List.map(extHostEditToVimEdit, edits),
+                    edits: List.map(extHostEditToVimEdit(buf), edits),
                   })
                 | Error(msg) => EditRequestFailed({sessionId, msg})
                 }
@@ -338,81 +383,32 @@ module Internal = {
       }
     };
   };
-};
 
-let update =
-    (
-      ~config,
-      ~languageConfiguration,
-      ~maybeSelection,
-      ~maybeBuffer,
-      ~extHostClient,
-      msg,
-      model,
-    ) => {
-  switch (msg) {
-  | FormatRange({startLine, endLine}) =>
-    switch (maybeBuffer) {
-    | Some(buf) =>
-      let range =
-        CharacterRange.{
-          start: {
-            line: startLine,
-            character: CharacterIndex.zero,
-          },
-          stop: {
-            line: EditorCoreTypes.LineNumber.(endLine + 1),
-            character: CharacterIndex.zero,
-          },
-        };
+  let hasDocumentFormatter = (~buffer, model) => {
+    let matchingDocumentFormatters =
+      model.availableDocumentFormatters
+      |> List.filter(({selector, _}) =>
+           DocumentSelector.matchesBuffer(~buffer, selector)
+         );
 
-      let matchingFormatters =
-        model.availableRangeFormatters
-        |> List.filter(({selector, _}) =>
-             DocumentSelector.matchesBuffer(~buffer=buf, selector)
-           );
+    let matchingRangeFormatters =
+      model.availableRangeFormatters
+      |> List.filter(({selector, _}) =>
+           DocumentSelector.matchesBuffer(~buffer, selector)
+         );
 
-      Internal.runFormat(
+    matchingDocumentFormatters != [] || matchingRangeFormatters != [];
+  };
+
+  let formatDocument =
+      (
+        ~saveWhenComplete,
         ~config,
         ~languageConfiguration,
-        ~formatFn=
-          Service_Exthost.Effects.LanguageFeatures.provideDocumentRangeFormattingEdits(
-            ~range,
-          ),
-        ~model,
-        ~matchingFormatters,
-        ~buf,
+        ~maybeBuffer,
         ~extHostClient,
-        ~range,
-      );
-    | None => (model, FormatError("No range selected"))
-    }
-  | Command(FormatSelection) =>
-    switch (maybeBuffer, maybeSelection) {
-    | (Some(buf), Some(range)) =>
-      let matchingFormatters =
-        model.availableRangeFormatters
-        |> List.filter(({selector, _}) =>
-             DocumentSelector.matchesBuffer(~buffer=buf, selector)
-           );
-
-      Internal.runFormat(
-        ~config,
-        ~languageConfiguration,
-        ~formatFn=
-          Service_Exthost.Effects.LanguageFeatures.provideDocumentRangeFormattingEdits(
-            ~range,
-          ),
-        ~model,
-        ~matchingFormatters,
-        ~buf,
-        ~extHostClient,
-        ~range,
-      );
-    | _ => (model, FormatError("No range selected."))
-    }
-
-  | Command(FormatDocument) =>
+        model,
+      ) => {
     switch (maybeBuffer) {
     | None => (model, Nothing)
     | Some(buf) =>
@@ -457,7 +453,8 @@ let update =
           (matchingDocumentFormatters, formatFn);
         };
 
-      Internal.runFormat(
+      runFormat(
+        ~saveWhenComplete,
         ~config,
         ~languageConfiguration,
         ~formatFn,
@@ -481,7 +478,150 @@ let update =
             }
           ),
       );
+    };
+  };
+};
+
+let bufferSaved = (~isLargeBuffer, ~config, ~buffer, ~activeBufferId, model) =>
+  // Check if we should try to format on save...
+  if (Configuration.formatOnSave.get(config)
+      && Internal.hasDocumentFormatter(~buffer, model)
+      && Buffer.getId(buffer) == activeBufferId) {
+    let canAutoFormat =
+      switch (
+        IntMap.find_opt(Buffer.getId(buffer), model.lastFormatSaveTick)
+      ) {
+      | None => true
+      | Some(lastSaveTick) => Buffer.getSaveTick(buffer) > lastSaveTick
+      };
+
+    if (canAutoFormat) {
+      if (isLargeBuffer) {
+        (
+          model,
+          EffectEx.value(
+            ~name="Feature_LanguageSupport.Formatting.formatOnSaveFailed",
+            AutoFormatOnLargeBufferFailed({bufferId: Buffer.getId(buffer)}),
+          ),
+        );
+      } else {
+        (
+          {
+            ...model,
+            lastFormatSaveTick:
+              IntMap.add(
+                Buffer.getId(buffer),
+                Buffer.getSaveTick(buffer) + 1,
+                model.lastFormatSaveTick,
+              ),
+          },
+          EffectEx.value(
+            ~name="Feature_LanguageSupport.Formatting.formatOnSave",
+            FormatOnSave,
+          ),
+        );
+      };
+    } else {
+      (model, Isolinear.Effect.none);
+    };
+    // We can only format on save if we have a valid formatter
+  } else {
+    (model, Isolinear.Effect.none);
+  };
+
+let update =
+    (
+      ~config,
+      ~languageConfiguration,
+      ~maybeSelection,
+      ~maybeBuffer,
+      ~extHostClient,
+      msg,
+      model,
+    ) => {
+  switch (msg) {
+  | FormatRange({startLine, endLine}) =>
+    switch (maybeBuffer) {
+    | Some(buf) =>
+      let range =
+        CharacterRange.{
+          start: {
+            line: startLine,
+            character: CharacterIndex.zero,
+          },
+          stop: {
+            line: EditorCoreTypes.LineNumber.(endLine + 1),
+            character: CharacterIndex.zero,
+          },
+        };
+
+      let matchingFormatters =
+        model.availableRangeFormatters
+        |> List.filter(({selector, _}) =>
+             DocumentSelector.matchesBuffer(~buffer=buf, selector)
+           );
+
+      Internal.runFormat(
+        ~saveWhenComplete=false,
+        ~config,
+        ~languageConfiguration,
+        ~formatFn=
+          Service_Exthost.Effects.LanguageFeatures.provideDocumentRangeFormattingEdits(
+            ~range,
+          ),
+        ~model,
+        ~matchingFormatters,
+        ~buf,
+        ~extHostClient,
+        ~range,
+      );
+    | None => (model, FormatError("No range selected"))
     }
+  | Command(FormatSelection) =>
+    switch (maybeBuffer, maybeSelection) {
+    | (Some(buf), Some(range)) =>
+      let matchingFormatters =
+        model.availableRangeFormatters
+        |> List.filter(({selector, _}) =>
+             DocumentSelector.matchesBuffer(~buffer=buf, selector)
+           );
+
+      Internal.runFormat(
+        ~saveWhenComplete=false,
+        ~config,
+        ~languageConfiguration,
+        ~formatFn=
+          Service_Exthost.Effects.LanguageFeatures.provideDocumentRangeFormattingEdits(
+            ~range,
+          ),
+        ~model,
+        ~matchingFormatters,
+        ~buf,
+        ~extHostClient,
+        ~range,
+      );
+    | _ => (model, FormatError("No range selected."))
+    }
+
+  | Command(FormatDocument) =>
+    Internal.formatDocument(
+      ~saveWhenComplete=false,
+      ~config,
+      ~languageConfiguration,
+      ~extHostClient,
+      ~maybeBuffer,
+      model,
+    )
+
+  | FormatOnSave =>
+    Internal.formatDocument(
+      ~saveWhenComplete=true,
+      ~config,
+      ~languageConfiguration,
+      ~extHostClient,
+      ~maybeBuffer,
+      model,
+    )
 
   | DefaultFormatterSelected({fileType, extensionId}) =>
     let transformer =
@@ -491,6 +631,20 @@ let update =
         `String(extensionId),
       );
     (model, TransformConfiguration(transformer));
+
+  | AutoFormatOnLargeBufferFailed({bufferId}) =>
+    if (IntSet.mem(bufferId, model.largeBufferAutoFormatShowedWarning)) {
+      (model, Nothing);
+    } else {
+      (
+        {
+          ...model,
+          largeBufferAutoFormatShowedWarning:
+            IntSet.add(bufferId, model.largeBufferAutoFormatShowedWarning),
+        },
+        FormatError("Buffer is too large to auto-format"),
+      );
+    }
 
   | EditsReceived({displayName, sessionId, edits}) =>
     switch (model.activeSession) {
@@ -503,6 +657,7 @@ let update =
       } else {
         let effect =
           Service_Vim.Effects.applyEdits(
+            ~shouldAdjustCursors=true,
             ~bufferId=activeSession.bufferId,
             ~version=activeSession.bufferVersion,
             ~edits,
@@ -515,10 +670,17 @@ let update =
       }
     }
   | EditRequestFailed({msg, _}) => (model, FormatError(msg))
-  | EditCompleted({displayName, editCount}) => (
+  | EditCompleted({displayName, editCount}) =>
+    let needsToSave =
+      switch (model.activeSession) {
+      | None => false
+      | Some({saveWhenComplete, _}) => saveWhenComplete
+      };
+
+    (
       model |> Internal.clearSession,
-      FormattingApplied({displayName, editCount}),
-    )
+      FormattingApplied({displayName, editCount, needsToSave}),
+    );
   };
 };
 
@@ -584,7 +746,10 @@ module MenuItems = {
 module Contributions = {
   let commands = [Commands.formatDocument];
 
-  let configuration = [Configuration.defaultFormatter.spec];
+  let configuration = [
+    Configuration.defaultFormatter.spec,
+    Configuration.formatOnSave.spec,
+  ];
 
   let keybindings =
     Keybindings.[

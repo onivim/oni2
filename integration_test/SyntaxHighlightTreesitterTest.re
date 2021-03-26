@@ -22,7 +22,7 @@ runTest(
     let testFile = getAssetPath("some-test-file.json");
 
     // Create a buffer
-    dispatch(Actions.OpenFileByPath(testFile, None, None));
+    dispatch(Actions.OpenFileByPath(testFile, SplitDirection.Current, None));
 
     // Wait for highlights to show up
     wait(

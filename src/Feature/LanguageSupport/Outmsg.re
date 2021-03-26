@@ -1,20 +1,27 @@
+open Oni_Core;
 open EditorCoreTypes;
 
 type internalMsg('a) =
   | Nothing
   | ApplyCompletion({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
+  | FormattingApplied({
+      displayName: string,
+      editCount: int,
+      needsToSave: bool,
+    })
   | InsertSnippet({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       snippet: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | OpenFile({
       filePath: string,
       location: option(CharacterPosition.t),
+      direction: SplitDirection.t,
     })
   | ReferencesAvailable
   | NotifySuccess(string)

@@ -50,6 +50,7 @@ let sub:
 module View: {
   let make:
     (
+      ~config: Config.resolver,
       ~isFocused: bool,
       ~iconTheme: IconTheme.t,
       ~languageInfo: Exthost.LanguageInfo.t,

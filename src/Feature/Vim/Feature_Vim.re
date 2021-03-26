@@ -120,7 +120,7 @@ let handleEffects = (effects, model) => {
 };
 
 module Effects = {
-  let applyCompletion = (~meetColumn, ~insertText, ~additionalEdits) => {
+  let applyCompletion = (~cursor, ~replaceSpan, ~insertText, ~additionalEdits) => {
     let toMsg = mode =>
       ModeChanged({
         allowAnimation: true,
@@ -129,11 +129,30 @@ module Effects = {
         effects: [],
       });
     Service_Vim.Effects.applyCompletion(
-      ~meetColumn,
+      ~cursor,
+      ~replaceSpan,
       ~insertText,
       ~additionalEdits,
       ~toMsg,
     );
+  };
+
+  let save = (~bufferId) => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Vim.Effect.save", dispatch => {
+      let context = {...Vim.Context.current(), bufferId};
+
+      let (newContext, effects) = Vim.command(~context, "w!");
+
+      dispatch(
+        ModeChanged({
+          allowAnimation: false,
+          mode: newContext.mode,
+          subMode: newContext.subMode,
+          effects,
+        }),
+      );
+    });
   };
 };
 

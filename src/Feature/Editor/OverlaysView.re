@@ -24,6 +24,8 @@ module Styles = {
 
 let completionsView =
     (
+      ~buffer,
+      ~cursor,
       ~languageSupport,
       ~cursorPixelX,
       ~cursorPixelY,
@@ -34,6 +36,8 @@ let completionsView =
     ) =>
   Feature_LanguageSupport.Completion.isActive(languageSupport)
     ? <Feature_LanguageSupport.Completion.View
+        buffer
+        cursor
         x=cursorPixelX
         y=cursorPixelY
         lineHeight={editorFont.measuredHeight}
@@ -101,6 +105,8 @@ let make =
   isActiveSplit
     ? <View style=Styles.bufferViewOverlay>
         <completionsView
+          cursor=cursorPosition
+          buffer
           languageSupport
           cursorPixelX
           cursorPixelY

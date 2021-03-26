@@ -11,6 +11,7 @@ type model = {
   rename: Rename.model,
   references: References.model,
   signatureHelp: SignatureHelp.model,
+  languageInfo: Exthost.LanguageInfo.t,
 };
 
 let initial = {
@@ -24,7 +25,10 @@ let initial = {
   rename: Rename.initial,
   references: References.initial,
   signatureHelp: SignatureHelp.initial,
+  languageInfo: Exthost.LanguageInfo.initial,
 };
+
+let languageInfo = ({languageInfo, _}) => languageInfo;
 
 [@deriving show]
 type command =
@@ -50,18 +54,24 @@ type msg =
 type outmsg =
   | Nothing
   | ApplyCompletion({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
+  | FormattingApplied({
+      displayName: string,
+      editCount: int,
+      needsToSave: bool,
+    })
   | InsertSnippet({
-      meetColumn: CharacterIndex.t,
+      replaceSpan: CharacterSpan.t,
       snippet: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
   | OpenFile({
       filePath: string,
       location: option(CharacterPosition.t),
+      direction: Oni_Core.SplitDirection.t,
     })
   | ReferencesAvailable
   | NotifySuccess(string)
@@ -84,15 +94,18 @@ type outmsg =
 let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
   f =>
     fun
-    | Outmsg.ApplyCompletion({meetColumn, insertText, additionalEdits}) =>
-      ApplyCompletion({meetColumn, insertText, additionalEdits})
-    | Outmsg.InsertSnippet({meetColumn, snippet, additionalEdits}) =>
-      InsertSnippet({meetColumn, snippet, additionalEdits})
+    | Outmsg.ApplyCompletion({replaceSpan, insertText, additionalEdits}) =>
+      ApplyCompletion({replaceSpan, insertText, additionalEdits})
+    | Outmsg.FormattingApplied({displayName, editCount, needsToSave}) =>
+      FormattingApplied({displayName, editCount, needsToSave})
+    | Outmsg.InsertSnippet({replaceSpan, snippet, additionalEdits}) =>
+      InsertSnippet({replaceSpan, snippet, additionalEdits})
     | Outmsg.Nothing => Nothing
     | Outmsg.NotifySuccess(msg) => NotifySuccess(msg)
     | Outmsg.NotifyFailure(msg) => NotifyFailure(msg)
     | Outmsg.ReferencesAvailable => ReferencesAvailable
-    | Outmsg.OpenFile({filePath, location}) => OpenFile({filePath, location})
+    | Outmsg.OpenFile({filePath, location, direction}) =>
+      OpenFile({filePath, location, direction})
     | Outmsg.Effect(eff) => Effect(eff |> Isolinear.Effect.map(f))
     | Outmsg.CodeLensesChanged({
         handle,
@@ -263,6 +276,7 @@ let update =
 
   | Exthost(Unregister({handle})) => (
       {
+        ...model,
         codeLens: CodeLens.unregister(~handle, model.codeLens),
         completion: Completion.unregister(~handle, model.completion),
         definition: Definition.unregister(~handle, model.definition),
@@ -278,6 +292,14 @@ let update =
       },
       Nothing,
     )
+
+  | Exthost(SetLanguageConfiguration({handle, languageId, configuration})) =>
+    // TODO - Wire up to language info pipeline, and use the onEnterRules:
+    ignore(handle);
+    ignore(languageId);
+    ignore(configuration);
+
+    (model, Nothing);
 
   | Exthost(_) =>
     // TODO:
@@ -382,14 +404,8 @@ let update =
       | Formatting.Nothing => Nothing
       | Formatting.Effect(eff) =>
         Effect(eff |> Isolinear.Effect.map(msg => Formatting(msg)))
-      | Formatting.FormattingApplied({displayName, editCount}) =>
-        NotifySuccess(
-          Printf.sprintf(
-            "Formatting: Applied %d edits with %s",
-            editCount,
-            displayName,
-          ),
-        )
+      | Formatting.FormattingApplied({displayName, editCount, needsToSave}) =>
+        FormattingApplied({displayName, editCount, needsToSave})
       | Formatting.FormatError(errorMsg) => NotifyFailure(errorMsg)
       | Formatting.ShowMenu(menu) =>
         let menu' =
@@ -484,6 +500,21 @@ let bufferUpdated =
       model.signatureHelp,
     );
   {...model, completion, signatureHelp};
+};
+
+let bufferSaved = (~isLargeBuffer, ~buffer, ~config, ~activeBufferId, model) => {
+  let (formatting', formattingEffect) =
+    Formatting.bufferSaved(
+      ~isLargeBuffer,
+      ~buffer,
+      ~config,
+      ~activeBufferId,
+      model.formatting,
+    );
+  (
+    {...model, formatting: formatting'},
+    formattingEffect |> Isolinear.Effect.map(msg => Formatting(msg)),
+  );
 };
 
 let configurationChanged = (~config, model) => {
@@ -673,8 +704,21 @@ module Completion = {
 
   module View = {
     let make =
-        (~x, ~y, ~lineHeight, ~theme, ~tokenTheme, ~editorFont, ~model, ()) => {
+        (
+          ~buffer,
+          ~cursor,
+          ~x,
+          ~y,
+          ~lineHeight,
+          ~theme,
+          ~tokenTheme,
+          ~editorFont,
+          ~model,
+          (),
+        ) => {
       OldCompletion.View.make(
+        ~buffer,
+        ~cursor,
         ~x,
         ~y,
         ~lineHeight,
@@ -893,6 +937,12 @@ let sub =
     signatureHelpSub,
   ]
   |> Isolinear.Sub.batch;
+};
+
+let extensionsAdded = (extensions, model) => {
+  ...model,
+  languageInfo:
+    Exthost.LanguageInfo.addExtensions(extensions, model.languageInfo),
 };
 
 module CompletionMeet = CompletionMeet;

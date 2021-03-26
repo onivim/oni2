@@ -27,6 +27,7 @@ module FormattingOptions = FormattingOptions;
 module Hover = Hover;
 module InputBoxOptions = InputBoxOptions;
 module Label = Label;
+module LanguageConfiguration = LanguageConfiguration;
 module Location = Location;
 module MarkdownString = MarkdownString;
 module Message = Message;

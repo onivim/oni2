@@ -320,12 +320,15 @@ module Buffer: {
       ~undoable: bool=?,
       ~start: LineNumber.t=?,
       ~stop: LineNumber.t=?,
+      ~shouldAdjustCursors: bool,
       ~lines: array(string),
       t
     ) =>
     unit;
 
-  let applyEdits: (~edits: list(Edit.t), t) => result(unit, string);
+  let applyEdits:
+    (~shouldAdjustCursors: bool, ~edits: list(Edit.t), t) =>
+    result(unit, string);
 
   let onLineEndingsChanged:
     Listeners.bufferLineEndingsChangedListener => Event.unsubscribe;

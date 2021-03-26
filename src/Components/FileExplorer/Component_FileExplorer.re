@@ -293,6 +293,7 @@ let update = (~config, ~configuration, msg, model) => {
         model |> setActive(Some(node.path)),
         OpenFile(FpExp.toString(node.path)),
       )
+    | Component_VimTree.SelectedNode(_) => (model, Nothing)
     | Component_VimTree.Nothing => (model, Nothing)
     };
   };

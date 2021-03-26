@@ -36,3 +36,19 @@ The following [configuration](../configuration/settings.md) is recommended for u
 ```
 
 This ensures that Emmet expansions take priority over other completion items.
+
+## Additional filetypes
+
+Emmet can be used with other filetypes, by specifying the `emmet.includeLanguages` setting.
+
+This setting is a dictionary, mapping from a source filetype to a destination filetype to be used for Emmet expansions.
+
+For example, this configuration setting:
+```
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact",
+    "typescript": "typescriptreact"
+  }
+```
+
+will allow Emmet to be used in js, jsx, ts, and tsx files.
