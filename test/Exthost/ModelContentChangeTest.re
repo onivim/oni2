@@ -26,7 +26,6 @@ describe("ModelContentChange", ({describe, _}) => {
       );
     };
 
-
     let range = (startLineNumber, startColumn, endLineNumber, endColumn) => {
       OneBasedRange.{startLineNumber, startColumn, endLineNumber, endColumn};
     };
