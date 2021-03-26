@@ -27,7 +27,7 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
         Actions.RegisterQuitCleanup(
           () => {
             Log.debug("terminating exthost");
-            Exthost.Client.terminate(extHostClient)
+            Exthost.Client.terminate(extHostClient);
           },
         ),
       )

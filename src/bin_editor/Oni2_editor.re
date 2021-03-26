@@ -507,14 +507,17 @@ switch (eff) {
 
     // Add a quit handler, so that regardless of how we quit -
     // we have the opportunity to clean up
-    Revery.App.onBeforeQuit(app, _code => {
-      if (!currentState^.isQuitting) {
-        dispatch(Model.Actions.ReallyQuitting);
-      };
-      // We perform asynchronous cleanup, and
-      // exit(0) ourselves when that's complete
-      Revery.App.PreventQuit
-    })
+    Revery.App.onBeforeQuit(
+      app,
+      _code => {
+        if (!currentState^.isQuitting) {
+          dispatch(Model.Actions.ReallyQuitting);
+        };
+        // We perform asynchronous cleanup, and
+        // exit(0) ourselves when that's complete
+        Revery.App.PreventQuit;
+      },
+    )
     |> (ignore: Revery.App.unsubscribe => unit);
 
     List.iter(
