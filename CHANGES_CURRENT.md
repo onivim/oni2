@@ -20,6 +20,8 @@
 - #3308 - Completion: Allow case-insensitive matches in scoring (fixes #3136)
 - #3317 - Extensions: Fix haskell files at root not loading language integration (related #2380)
 - #3318 - Completion: Show full incomplete results list (fixes #2583)
+- #3329 - Formatting: Fix trailing newline being introduced by some providers (fixes #3320)
+- #3331 - Editor: Fix crash when manipulating Unicode characters
 - #3327, #3329 - Formatting: Fix trailing newline being introduced by some providers (fixes #3320)
 
 ### Performance
@@ -34,6 +36,8 @@
 ### Refactoring
 
 - #3303 - Language Support: Move language metadata into Feature_LanguageSupport (related #3288)
+- #3330 - Diagnostics: Add regression test for #3233
+- #3334 - Dependency: Revery -> b746d68 (thanks @timbertson !)
 
 ### Infrastructure
 

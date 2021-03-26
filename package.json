@@ -253,7 +253,7 @@
     "revery-terminal": "*"
   },
   "resolutions": {
-    "revery": "revery-ui/revery#26e8b73",
+    "revery": "revery-ui/revery#b746d68",
     "esy-skia": "revery-ui/esy-skia#91c98f6",
     "isolinear": "revery-ui/isolinear#53fc4eb",
     "revery-terminal": "revery-ui/revery-terminal#a9cb168",

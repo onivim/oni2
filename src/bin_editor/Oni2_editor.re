@@ -507,10 +507,16 @@ switch (eff) {
 
     // Add a quit handler, so that regardless of how we quit -
     // we have the opportunity to clean up
-    Revery.App.onBeforeQuit(app, () =>
-      if (!currentState^.isQuitting) {
-        dispatch(Model.Actions.Quit(true));
-      }
+    Revery.App.onBeforeQuit(
+      app,
+      _code => {
+        if (!currentState^.isQuitting) {
+          dispatch(Model.Actions.Quit(true));
+        };
+        // TODO: This mimics the existing behavior, but will be revised in:
+        // https://github.com/onivim/oni2/pull/3326
+        AllowQuit;
+      },
     )
     |> (ignore: Revery.App.unsubscribe => unit);
 
