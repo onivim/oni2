@@ -420,7 +420,12 @@ let update =
 
   | Extensions(msg) =>
     let (model, outMsg) =
-      Feature_Extensions.update(~extHostClient, ~proxy=state.proxy, msg, state.extensions);
+      Feature_Extensions.update(
+        ~extHostClient,
+        ~proxy=state.proxy,
+        msg,
+        state.extensions,
+      );
     let state = {...state, extensions: model};
     let (state', effect) =
       Feature_Extensions.(
