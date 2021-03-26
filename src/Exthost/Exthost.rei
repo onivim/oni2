@@ -1043,19 +1043,22 @@ module OneBasedPosition: {
 };
 
 module ModelContentChange: {
+  [@deriving show]
   type t = {
     range: OneBasedRange.t,
     text: string,
     rangeLength: int,
   };
 
-  let ofBufferUpdate:
-    (~previousBuffer: Oni_Core.Buffer.t, BufferUpdate.t, Eol.t) => t;
+  let ofMinimalUpdates:
+    (~previousBuffer: Oni_Core.Buffer.t, ~eol: Eol.t, MinimalUpdate.t) =>
+    list(t);
 
   let to_yojson: t => Yojson.Safe.t;
 };
 
 module ModelChangedEvent: {
+  [@deriving show]
   type t = {
     changes: list(ModelContentChange.t),
     eol: Eol.t,

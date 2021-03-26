@@ -22,6 +22,7 @@
 - #3318 - Completion: Show full incomplete results list (fixes #2583)
 - #3329 - Formatting: Fix trailing newline being introduced by some providers (fixes #3320)
 - #3331 - Editor: Fix crash when manipulating Unicode characters
+- #3327, #3329 - Formatting: Fix trailing newline being introduced by some providers (fixes #3320)
 
 ### Performance
 

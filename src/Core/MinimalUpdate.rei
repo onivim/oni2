@@ -15,7 +15,7 @@ type update =
       updated: string,
     });
 
-type t;
+type t = list(update);
 
 let toDebugString: t => string;
 
