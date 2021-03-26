@@ -21,10 +21,11 @@ describe("ModelContentChange", ({describe, _}) => {
 
       ModelContentChange.ofMinimalUpdates(
         ~previousBuffer,
-        ~eol=Exthost.Eol.default,
+        ~eol=Exthost.Eol.LF,
         minimalUpdate,
       );
     };
+
 
     let range = (startLineNumber, startColumn, endLineNumber, endColumn) => {
       OneBasedRange.{startLineNumber, startColumn, endLineNumber, endColumn};

@@ -16,18 +16,6 @@ let create = (~rangeLength: int, ~range: CharacterRange.t, ~text: string, ()) =>
   rangeLength,
 };
 
-let joinLines = (separator: string, lines: list(string)) => {
-  String.concat(
-    separator,
-    lines,
-    // if (lines != []) {
-    //   joined ++ separator;
-    // } else {
-    //   joined;
-    // };
-  );
-};
-
 let getRangeFromEdit = (~previousBuffer, bu: BufferUpdate.t) => {
   open EditorCoreTypes;
   let startLine = LineNumber.toZeroBased(bu.startLine);
