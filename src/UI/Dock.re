@@ -48,17 +48,19 @@ module Styles = {
     ];
   };
 
-  let notification = (~scale, ~theme, ~padding) => [
+  let notification = (~theme, ~padding) => [
     position(`Absolute),
     bottom(4),
     right(4),
-    width(15),
+    minWidth(15),
+    //width(15),
     height(15),
+    flexDirection(`Row),
+    justifyContent(`Center),
     paddingTop(padding),
-    paddingLeft(padding),
+    paddingHorizontal(padding),
     borderRadius(8.),
     backgroundColor(BadgeColors.background.from(theme)),
-    transform([Revery.UI.Transform.Scale(scale)]),
   ];
 };
 module Animations = {
@@ -71,19 +73,19 @@ module Animations = {
 };
 
 module Notification = {
-  let%component make = (~notification, ~theme, ~font: UiFont.t, ()) => {
+  let make = (~notification, ~theme, ~font: UiFont.t, ()) => {
     let foregroundColor = BadgeColors.foreground.from(theme);
     let (padding, inner) =
       switch (notification) {
       | Count(count) =>
-        let text = count > 9 ? "9+" : string_of_int(count);
+        let text = count > 999 ? "999+" : string_of_int(count);
         (
           2,
           <Text
             text
             fontFamily={font.family}
             fontSize=10.
-            style=[Style.color(foregroundColor)]
+            style=[Style.marginTop(-1), Style.color(foregroundColor)]
           />,
         );
       | InProgress => (
@@ -92,13 +94,7 @@ module Notification = {
         )
       };
 
-    let%hook (scale, _state, _reset) =
-      Hooks.animation(
-        ~name="Notification Appear",
-        Animations.appear,
-        ~active=true,
-      );
-    <View style={Styles.notification(~scale, ~theme, ~padding)}>
+    <View style={Styles.notification(~theme, ~padding)}>
       inner
     </View>;
   };
@@ -167,6 +163,7 @@ let onExtensionsClick = _ => {
 let make =
     (
       ~theme: ColorTheme.Colors.t,
+      ~scm: Feature_SCM.model,
       ~sideBar: Feature_SideBar.model,
       ~extensions: Feature_Extensions.model,
       ~font: UiFont.t,
@@ -176,6 +173,11 @@ let make =
 
   let extensionNotification =
     Feature_Extensions.isBusy(extensions) ? Some(InProgress) : None;
+
+  let scmCount =
+    Feature_SCM.count(scm);
+
+  let scmNotification = scmCount > 0 ? Some(Count(scmCount)) : None;
 
   <View style={Styles.container(~theme)}>
     <item
@@ -202,6 +204,7 @@ let make =
       theme
       isActive={isSidebarVisible(SCM)}
       icon=FontAwesome.codeBranch
+      notification=?scmNotification
     />
     <item
       font
