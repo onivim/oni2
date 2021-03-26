@@ -333,8 +333,22 @@ module Commands = {
     );
 };
 
+module Keybindings = {
+  open Feature_Input.Schema;
+
+  let command = Commands.openConfigurationFile.id;
+
+  let openConfigOnMac =
+    bind(~key="<D-,>", ~condition="IsMac" |> WhenExpr.parse, ~command);
+
+  let openConfigOnOther =
+    bind(~key="<C-,>", ~condition="!IsMac" |> WhenExpr.parse, ~command);
+};
+
 // CONTRIBUTIONS
 
 module Contributions = {
   let commands = Commands.[openConfigurationFile, reload];
+
+  let keybindings = Keybindings.[openConfigOnMac, openConfigOnOther];
 };

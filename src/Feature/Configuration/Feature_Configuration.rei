@@ -74,6 +74,9 @@ module GlobalConfiguration = GlobalConfiguration;
 
 // CONTRIBUTIONS
 
-module Contributions: {let commands: list(Oni_Core.Command.t(msg));};
+module Contributions: {
+  let commands: list(Oni_Core.Command.t(msg));
+  let keybindings: list(Feature_Input.Schema.keybinding);
+};
 
 module Testing: {let transform: ConfigurationTransformer.t => msg;};
