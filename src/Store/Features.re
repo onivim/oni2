@@ -1451,7 +1451,14 @@ let update =
         ]),
       );
 
-    | BufferUpdated({update, newBuffer, oldBuffer, triggerKey, markerUpdate}) =>
+    | BufferUpdated({
+        update,
+        newBuffer,
+        oldBuffer,
+        triggerKey,
+        markerUpdate,
+        minimalUpdate,
+      }) =>
       let fileType =
         newBuffer |> Buffer.getFileType |> Buffer.FileType.toString;
 
@@ -1515,6 +1522,7 @@ let update =
           ~previousBuffer=oldBuffer,
           ~buffer=newBuffer,
           ~update,
+          ~minimalUpdate,
           extHostClient,
           () =>
           Actions.ExtensionBufferUpdateQueued({triggerKey: triggerKey})

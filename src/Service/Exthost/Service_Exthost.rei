@@ -28,6 +28,7 @@ module Effects: {
       (
         ~previousBuffer: Oni_Core.Buffer.t,
         ~buffer: Oni_Core.Buffer.t,
+        ~minimalUpdate: Oni_Core.MinimalUpdate.t,
         ~update: Oni_Core.BufferUpdate.t,
         Exthost.Client.t,
         unit => 'msg
