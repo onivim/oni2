@@ -48,17 +48,15 @@ module Styles = {
     ];
   };
 
-  let notification = (~theme, ~padding) => [
+  let notification = (~theme, ~padding as p) => [
     position(`Absolute),
     bottom(4),
     right(4),
-    minWidth(15),
-    //width(15),
-    height(15),
+    minWidth(16),
+    height(16),
     flexDirection(`Row),
     justifyContent(`Center),
-    paddingTop(padding),
-    paddingHorizontal(padding),
+    padding(p),
     borderRadius(8.),
     backgroundColor(BadgeColors.background.from(theme)),
   ];
@@ -85,18 +83,18 @@ module Notification = {
             text
             fontFamily={font.family}
             fontSize=10.
-            style=[Style.marginTop(-1), Style.color(foregroundColor)]
+            style=[Style.color(foregroundColor)]
           />,
         );
       | InProgress => (
-          3,
-          <Codicon icon=Codicon.clock fontSize=10. color=foregroundColor />,
+          2,
+          <View style=Style.[marginTop(1), marginLeft(1)]>
+            <Codicon icon=Codicon.clock fontSize=10. color=foregroundColor />
+          </View>,
         )
       };
 
-    <View style={Styles.notification(~theme, ~padding)}>
-      inner
-    </View>;
+    <View style={Styles.notification(~theme, ~padding)}> inner </View>;
   };
 };
 
@@ -174,8 +172,7 @@ let make =
   let extensionNotification =
     Feature_Extensions.isBusy(extensions) ? Some(InProgress) : None;
 
-  let scmCount =
-    Feature_SCM.count(scm);
+  let scmCount = Feature_SCM.count(scm);
 
   let scmNotification = scmCount > 0 ? Some(Count(scmCount)) : None;
 

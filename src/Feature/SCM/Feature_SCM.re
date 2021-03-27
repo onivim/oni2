@@ -221,10 +221,11 @@ type model = {
 
 let count = ({providers, _}) => {
   providers
-  |> List.fold_left((count, provider: Provider.t) => {
-    count + provider.count
-  }, 0)
-}
+  |> List.fold_left(
+       (count, provider: Provider.t) => {count + provider.count},
+       0,
+     );
+};
 
 let resetFocus = model => {...model, focus: Focus.initial};
 
