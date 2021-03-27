@@ -20,13 +20,6 @@ module Resource: {
 module ResourceGroup: {
   [@deriving show]
   type t;
-  //  type t = {
-  //    handle: int,
-  //    id: string,
-  //    label: string,
-  //    hideWhenEmpty: bool,
-  //    resources: list(Resource.t),
-  //  };
 };
 
 module Provider: {
@@ -51,6 +44,8 @@ module Provider: {
 type model;
 
 let resetFocus: model => model;
+
+let count: model => int;
 
 let initial: model;
 

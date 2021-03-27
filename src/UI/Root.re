@@ -119,7 +119,13 @@ let make = (~dispatch, ~state: State.t, ()) => {
           config,
         )
         && !zenMode) {
-      <Dock font={state.uiFont} theme sideBar extensions={state.extensions} />;
+      <Dock
+        font={state.uiFont}
+        scm={state.scm}
+        theme
+        sideBar
+        extensions={state.extensions}
+      />;
     } else {
       React.empty;
     };
