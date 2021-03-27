@@ -52,7 +52,7 @@ module Styles = {
     position(`Absolute),
     bottom(4),
     right(4),
-    minWidth(16),
+    minWidth(15),
     height(16),
     flexDirection(`Row),
     justifyContent(`Center),
