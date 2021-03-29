@@ -83,4 +83,38 @@ module Step = {
         }
       )
     );
+
+  let%test_module "Step" =
+    (module
+     {
+       let%test "decode: integer increment / total" = {
+         let actual =
+           {|
+  {"title": "test", "increment": 1, "total": 2}
+|}
+           |> Yojson.Safe.from_string
+           |> Json.Decode.decode_value(decode);
+         actual
+         == Ok({
+              message: Some("test"),
+              increment: Some(1.0),
+              total: Some(2.0),
+            });
+       };
+
+       let%test "decode: float increment / total" = {
+         let actual =
+           {|
+  {"title": "test", "increment": 1.0, "total": 2.0}
+|}
+           |> Yojson.Safe.from_string
+           |> Json.Decode.decode_value(decode);
+         actual
+         == Ok({
+              message: Some("test"),
+              increment: Some(1.0),
+              total: Some(2.0),
+            });
+       };
+     });
 };
