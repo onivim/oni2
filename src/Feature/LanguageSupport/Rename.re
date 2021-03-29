@@ -9,6 +9,7 @@ type command =
 
 [@deriving show]
 type msg =
+  | Noop
   | Command(command)
   | InputText(Component_InputText.msg)
   | RenameLocationAvailable({
@@ -16,10 +17,14 @@ type msg =
       handle: int,
     })
   | RenameLocationUnavailable
-  | NoRenameEditsAvailable
-  | ErrorGettingRenameEdits(string)
-  | RenameEditsAvailable(Exthost.WorkspaceEdit.t)
-  | Noop;
+  // Candidate edits - preview of edits while user is typing
+  | CandidateEditsFailed(string)
+  | CandidateEditsAvailable(Exthost.WorkspaceEdit.t)
+  | NoCandidateEditsAvailable
+  // Actual rename edits
+  | ApplyEditsFailed(string)
+  | ApplyEditsAvailable(Exthost.WorkspaceEdit.t)
+  | NoApplyEditsAvailable;
 
 [@deriving show]
 type provider = {
@@ -38,10 +43,7 @@ type sessionState =
       inputText: [@opaque] Component_InputText.model,
       edits: option(Exthost.WorkspaceEdit.t),
     })
-  | Applying({
-      sessionId: int,
-      edit: [@opaque] WorkspaceEdit.t,
-    });
+  | Applying({sessionId: int});
 
 [@deriving show]
 type model = {
@@ -102,7 +104,6 @@ let toVimEdits = (~buffer, workspaceEdit: Exthost.WorkspaceEdit.t) => {
 let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
   switch (msg) {
   | Noop => (model, Outmsg.Nothing)
-
   | InputText(inputMsg) =>
     switch (model.sessionState) {
     | Resolved({inputText, _} as resolved) =>
@@ -138,49 +139,77 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
 
   | RenameLocationUnavailable => (model, Outmsg.Nothing)
 
-  | NoRenameEditsAvailable => (model, Outmsg.Nothing)
+  | NoCandidateEditsAvailable => (model, Outmsg.Nothing)
 
-  | RenameEditsAvailable(edits) =>
+  | CandidateEditsAvailable(edits) =>
     let sessionState' =
       switch (model.sessionState) {
       | Resolved(session) => Resolved({...session, edits: Some(edits)})
       | other => other
       };
-    prerr_endline("EDITS: " ++ Exthost.WorkspaceEdit.show(edits));
     ({...model, sessionState: sessionState'}, Outmsg.Nothing);
 
-  | ErrorGettingRenameEdits(err) =>
-    prerr_endline("ERR: " ++ err);
-    (model, Outmsg.Nothing);
+  | CandidateEditsFailed(_err) => (model, Outmsg.Nothing)
+
+  | ApplyEditsFailed(_)
+  | NoApplyEditsAvailable => (
+      {...model, sessionState: Inactive},
+      Outmsg.Nothing,
+    )
 
   | Command(Commit) =>
+    switch (model.sessionState) {
+    | Inactive
+    | Resolving
+    | Applying(_) => (model, Outmsg.Nothing)
+    | Resolved({handle, inputText, sessionId, _}) =>
+      let eff =
+        maybeBuffer
+        |> Option.map(buffer => {
+             Service_Exthost.Effects.LanguageFeatures.provideRenameEdits(
+               ~handle,
+               ~position=cursorLocation,
+               ~newName=Component_InputText.value(inputText),
+               ~uri=Buffer.getUri(buffer),
+               client,
+               fun
+               | Ok(Some(edit)) => ApplyEditsAvailable(edit)
+               | Ok(None) => NoApplyEditsAvailable
+               | Error(msg) => ApplyEditsFailed(msg),
+             )
+           })
+        |> Option.value(~default=Isolinear.Effect.none);
+
+      (
+        {...model, sessionState: Applying({sessionId: sessionId})},
+        Outmsg.Effect(eff),
+      );
+    }
+
+  | ApplyEditsAvailable(edit) =>
     let outmsg =
       switch (model.sessionState) {
-      | Resolved({edits, _}) =>
-        switch (edits) {
-        | None => Outmsg.Nothing
-        | Some(edit) =>
-          switch (maybeBuffer) {
-          | Some(buffer) =>
-            let edits = toVimEdits(~buffer, edit);
+      | Applying(_) =>
+        switch (maybeBuffer) {
+        | Some(buffer) =>
+          let edits = toVimEdits(~buffer, edit);
 
-            let effect =
-              Service_Vim.Effects.applyEdits(
-                ~shouldAdjustCursors=true,
-                ~bufferId=buffer |> Oni_Core.Buffer.getId,
-                ~version=buffer |> Oni_Core.Buffer.getVersion,
-                ~edits,
-                // TODO
-                fun
-                | _ => Noop,
-              );
-            Outmsg.Effect(effect);
-          | None => Outmsg.Nothing
-          }
+          let effect =
+            Service_Vim.Effects.applyEdits(
+              ~shouldAdjustCursors=true,
+              ~bufferId=buffer |> Oni_Core.Buffer.getId,
+              ~version=buffer |> Oni_Core.Buffer.getVersion,
+              ~edits,
+              // TODO
+              fun
+              | _ => Noop,
+            );
+          Outmsg.Effect(effect);
+        | None => Outmsg.Nothing
         }
       | Inactive
       | Resolving
-      | Applying(_) => Outmsg.Nothing
+      | Resolved(_) => Outmsg.Nothing
       };
 
     ({...model, sessionState: Inactive}, outmsg);
@@ -243,9 +272,9 @@ let sub = (~activeBuffer, ~activePosition, ~client, model) =>
   | Resolved({handle, inputText, _}) =>
     let toMsg = (
       fun
-      | Ok(Some(edit)) => RenameEditsAvailable(edit)
-      | Ok(None) => NoRenameEditsAvailable
-      | Error(msg) => ErrorGettingRenameEdits(msg)
+      | Ok(Some(edit)) => CandidateEditsAvailable(edit)
+      | Ok(None) => NoCandidateEditsAvailable
+      | Error(msg) => CandidateEditsFailed(msg)
     );
 
     Service_Exthost.Sub.renameEdits(
