@@ -344,6 +344,8 @@ let set = (~cursor=?, ~text, model) => {
   {...model, value: text, selection};
 };
 
+let selectAll = model => {...model, selection: Selection.all(model.value)};
+
 let setPlaceholder = (~placeholder, model) => {...model, placeholder};
 
 let isCursorAtEnd = ({value, selection, _}) => {

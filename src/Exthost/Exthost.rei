@@ -297,6 +297,7 @@ module Message: {
 };
 
 module RenameLocation: {
+  [@deriving show]
   type t = {
     range: OneBasedRange.t,
     text: string,
@@ -1128,14 +1129,49 @@ module Color: {
 };
 
 module WorkspaceEdit: {
-  module FileEdit: {type t;};
+  module IconPath: {
+    [@deriving show]
+    type t =
+      | IconId({iconId: string})
+      | Uri({uri: Oni_Core.Uri.t})
+      | LightDarkUri({
+          light: Oni_Core.Uri.t,
+          dark: Oni_Core.Uri.t,
+        });
+  };
+  module EntryMetadata: {
+    [@deriving show]
+    type t = {
+      needsConfirmation: bool,
+      label: string,
+      description: option(string),
+      iconPath: option(IconPath.t),
+    };
+  };
+  module SingleEdit: {
+    [@deriving show]
+    type t = {
+      range: OneBasedRange.t,
+      text: string,
+    };
+  };
 
-  module TextEdit: {type t;};
+  module TextEdit: {
+    type t = {
+      resource: Oni_Core.Uri.t,
+      edit: SingleEdit.t,
+      modelVersionId: option(int),
+      metadata: option(EntryMetadata.t),
+    };
+  };
+
+  module FileEdit: {type t;};
 
   type edit =
     | File(FileEdit.t)
     | Text(TextEdit.t);
 
+  [@deriving show]
   type t = {
     edits: list(edit),
     rejectReason: option(string),

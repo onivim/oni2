@@ -182,6 +182,10 @@ let toFileSystemPath = (uri: t) => {
   };
 };
 
+let equals = (a, b) => {
+  String.equal(a |> toFileSystemPath, b |> toFileSystemPath);
+};
+
 let getScheme = (uri: t) => uri.scheme;
 
 let encode = uri =>
