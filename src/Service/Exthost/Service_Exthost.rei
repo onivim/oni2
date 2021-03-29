@@ -104,6 +104,17 @@ module Effects: {
       ) =>
       Isolinear.Effect.t('msg);
 
+    let provideRenameEdits:
+      (
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~position: EditorCoreTypes.CharacterPosition.t,
+        ~newName: string,
+        Exthost.Client.t,
+        result(option(Exthost.WorkspaceEdit.t), string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
+
     let resolveRenameLocation:
       (
         ~handle: int,
