@@ -202,6 +202,17 @@ module Sub: {
     ) =>
     Isolinear.Sub.t('a);
 
+  let renameEdits:
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.CharacterPosition.t,
+      ~newName: string,
+      ~toMsg: result(option(Exthost.WorkspaceEdit.t), string) => 'msg,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('msg);
+
   let signatureHelp:
     (
       ~handle: int,

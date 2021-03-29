@@ -1038,6 +1038,78 @@ module Sub = {
       };
     });
 
+  type renameEditParams = {
+    handle: int,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+    position: Exthost.OneBasedPosition.t,
+    newName: string,
+  };
+
+  module RenameEditsSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(option(Exthost.WorkspaceEdit.t), string);
+      type nonrec params = renameEditParams;
+
+      type state = unit => unit;
+
+      let name = "Service_Exthost.RenameEditsSubscription";
+      let id = ({handle, buffer, position, newName, _}: params) =>
+        idFromBufferPosition(
+          ~handle,
+          ~buffer,
+          ~position,
+          "Rename: " ++ newName,
+        );
+
+      let init = (~params, ~dispatch) => {
+        Revery.Tick.timeout(
+          ~name="Timeout.renameEdit",
+          _ => {
+            let promise =
+              Exthost.Request.LanguageFeatures.provideRenameEdits(
+                ~handle=params.handle,
+                ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                ~position=params.position,
+                ~newName=params.newName,
+                params.client,
+              );
+
+            Lwt.on_success(promise, maybeRenameEdits =>
+              maybeRenameEdits |> Result.ok |> dispatch
+            );
+
+            Lwt.on_failure(promise, err =>
+              err |> Printexc.to_string |> Result.error |> dispatch
+            );
+          },
+          Constants.mediumPriorityDebounceTime,
+        );
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params, ~state) => {
+        state();
+      };
+    });
+
+  let renameEdits =
+      (
+        ~handle,
+        ~buffer,
+        ~position,
+        ~newName,
+        ~toMsg: result(option(Exthost.WorkspaceEdit.t), string) => 'msg,
+        client,
+      ) => {
+    let position = position |> Exthost.OneBasedPosition.ofPosition;
+    RenameEditsSubscription.create(
+      {handle, buffer, position, newName, client}: renameEditParams,
+    )
+    |> Isolinear.Sub.map(toMsg);
+  };
+
   type signatureHelpParams = {
     handle: int,
     context: Exthost.SignatureHelp.RequestContext.t,
