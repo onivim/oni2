@@ -121,18 +121,15 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
     switch (model.sessionState) {
     | Resolving =>
       let sessionId = model.nextSessionId;
+      let inputText =
+        Component_InputText.create(~placeholder="")
+        |> Component_InputText.set(~text=location.text)
+        |> Component_InputText.selectAll;
       (
         {
           ...model,
           nextSessionId: sessionId + 1,
-          sessionState:
-            Resolved({
-              handle,
-              sessionId,
-              inputText:
-                Component_InputText.create(~placeholder=location.text),
-              edits: None,
-            }),
+          sessionState: Resolved({handle, sessionId, inputText, edits: None}),
         },
         Outmsg.Nothing,
       );
