@@ -69,8 +69,8 @@ module Step = {
   [@deriving show]
   type t = {
     message: option(string),
-    increment: option(int),
-    total: option(int),
+    increment: option(float),
+    total: option(float),
   };
 
   let decode =
@@ -78,8 +78,8 @@ module Step = {
       obj(({field, _}) =>
         {
           message: field.optional("title", string),
-          increment: field.optional("increment", int),
-          total: field.optional("total", int),
+          increment: field.optional("increment", float),
+          total: field.optional("total", float),
         }
       )
     );
