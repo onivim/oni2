@@ -24,6 +24,7 @@
 - #3331 - Editor: Fix crash when manipulating Unicode characters
 - #3327, #3329 - Formatting: Fix trailing newline being introduced by some providers (fixes #3320)
 - #3338 - SCM: Show changes badge in dock (fixes #3315)
+- #3341 - Diagnostics: Use one-based positions in UI
 
 ### Performance
 
