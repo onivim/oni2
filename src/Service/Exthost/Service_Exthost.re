@@ -1089,7 +1089,7 @@ module Sub = {
 
       let update = (~params as _, ~state, ~dispatch as _) => state;
 
-      let dispose = (~params, ~state) => {
+      let dispose = (~params as _, ~state) => {
         state();
       };
     });

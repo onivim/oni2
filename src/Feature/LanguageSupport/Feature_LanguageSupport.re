@@ -884,11 +884,11 @@ module Rename = {
   let isActive = model => ShadowedRename.isFocused(model.rename);
 
   module View = {
-    let make = (~theme, ~model, ~font, ~dispatch, ()) => {
+    let make = (~x, ~y, ~theme, ~model, ~font, ~dispatch, ()) => {
       let dispatch = msg => dispatch(Rename(msg));
       let model = model.rename;
 
-      <ShadowedRename.View theme model font dispatch />;
+      <ShadowedRename.View x y theme model font dispatch />;
     };
   };
 };

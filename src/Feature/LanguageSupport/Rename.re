@@ -334,6 +334,8 @@ module View = {
   module Colors = Feature_Theme.Colors;
   let make =
       (
+        ~x,
+        ~y,
         ~theme: ColorTheme.Colors.t,
         ~model: model,
         ~font: UiFont.t,
@@ -342,7 +344,7 @@ module View = {
       ) => {
     switch (model.sessionState) {
     | Resolved({inputText, _}) =>
-      <View style={Styles.boxShadow(100, 100)}>
+      <View style={Styles.boxShadow(x, y)}>
         <View
           style=Style.[
             width(400),

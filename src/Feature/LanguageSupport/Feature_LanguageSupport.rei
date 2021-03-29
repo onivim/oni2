@@ -247,6 +247,8 @@ module Rename: {
   module View: {
     let make:
       (
+        ~x: int,
+        ~y: int,
         ~theme: ColorTheme.Colors.t,
         ~model: model,
         ~font: UiFont.t,

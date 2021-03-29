@@ -103,9 +103,21 @@ module Parts = {
         Selectors.getBufferForEditor(state.buffers, editor)
         |> OptionEx.value_or_lazy(() => Buffer.empty(~font=state.editorFont));
 
-      let renderOverlays = (~gutterWidth) =>
+      let renderOverlays = (~gutterWidth) => {
+        let activeCursor = Feature_Editor.Editor.getPrimaryCursor(editor);
+        let ({x: pixelX, y: pixelY}: EditorCoreTypes.PixelPosition.t, _) =
+          Feature_Editor.Editor.bufferCharacterPositionToPixel(
+            ~position=activeCursor,
+            editor,
+          );
+
+        let lineHeight = Feature_Editor.Editor.lineHeightInPixels(editor);
+        let cursorPixelY = pixelY +. lineHeight |> int_of_float;
+        let cursorPixelX = pixelX +. gutterWidth |> int_of_float;
         [
           <Feature_LanguageSupport.Rename.View
+            x=cursorPixelX
+            y=cursorPixelY
             theme
             font=uiFont
             dispatch={msg => dispatch(LanguageSupport(msg))}
@@ -113,6 +125,7 @@ module Parts = {
           />,
         ]
         |> React.listToElement;
+      };
 
       let isDark =
         state.colorTheme |> Feature_Theme.variant != ColorTheme.Light;
