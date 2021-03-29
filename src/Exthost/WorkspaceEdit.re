@@ -1,5 +1,55 @@
 open Oni_Core;
 
+module EditType = {
+  type t =
+    | File
+    | Text;
+  // TODO:
+  // | Cell;
+
+  let ofInt =
+    fun
+    | 1 => Some(File)
+    | 2 => Some(Text)
+    | _ => None;
+
+  let toString =
+    fun
+    | File => "File"
+    | Text => "Text";
+
+  let decode =
+    Json.Decode.(
+      int
+      |> map(ofInt)
+      |> and_then(
+           fun
+           | Some(v) => succeed(v)
+           | None => fail("Unknown edit type"),
+         )
+    );
+
+  let decodeFile =
+    Json.Decode.(
+      decode
+      |> and_then(
+           fun
+           | File => succeed(File)
+           | _ => fail("Not a file type"),
+         )
+    );
+
+  let decodeText =
+    Json.Decode.(
+      decode
+      |> and_then(
+           fun
+           | Text => succeed(Text)
+           | _ => fail("Not a text type"),
+         )
+    );
+};
+
 module IconPath = {
   [@deriving show]
   type t =
@@ -47,7 +97,7 @@ module FileEdit = {
 
     let decode =
       Json.Decode.(
-        obj(({field, _}) =>
+        obj(({field, _}) => {
           {
             overwrite: field.withDefault("overwrite", false, bool),
             ignoreIfNotExists:
@@ -55,7 +105,7 @@ module FileEdit = {
             ignoreIfExists: field.withDefault("ignoreIfExists", false, bool),
             recursive: field.withDefault("recursive", false, bool),
           }
-        )
+        })
       );
 
     let default = {
@@ -76,14 +126,15 @@ module FileEdit = {
 
   let decode =
     Json.Decode.(
-      obj(({field, _}) =>
+      obj(({field, _}) => {
+        let _type = field.required("_type", EditType.decodeFile);
         {
           oldUri: field.optional("oldUri", Oni_Core.Uri.decode),
           newUri: field.optional("newUri", Oni_Core.Uri.decode),
           options: field.optional("options", Options.decode),
           metadata: field.optional("metadata", EntryMetadata.decode),
-        }
-      )
+        };
+      })
     );
 };
 
@@ -118,14 +169,16 @@ module TextEdit = {
 
   let decode =
     Json.Decode.(
-      obj(({field, _}) =>
+      obj(({field, _}) => {
+        let _type = field.required("_type", EditType.decodeText);
+
         {
           resource: field.required("resource", Oni_Core.Uri.decode),
           edit: field.required("edit", SingleEdit.decode),
           modelVersionId: field.optional("modelVersionId", int),
           metadata: field.optional("metadata", EntryMetadata.decode),
-        }
-      )
+        };
+      })
     );
 };
 
