@@ -18,7 +18,8 @@ type msg =
   | RenameLocationUnavailable
   | NoRenameEditsAvailable
   | ErrorGettingRenameEdits(string)
-  | RenameEditsAvailable(Exthost.WorkspaceEdit.t);
+  | RenameEditsAvailable(Exthost.WorkspaceEdit.t)
+  | Noop;
 
 [@deriving show]
 type provider = {
@@ -35,6 +36,7 @@ type sessionState =
       handle: int, // provider handle for rename
       sessionId: int, //location: RenameLocation.t,
       inputText: [@opaque] Component_InputText.model,
+      edits: option(Exthost.WorkspaceEdit.t),
     })
   | Applying({
       sessionId: int,
@@ -75,8 +77,32 @@ let isFocused = ({sessionState, _}) => {
   };
 };
 
+let toVimEdits = (~buffer, workspaceEdit: Exthost.WorkspaceEdit.t) => {
+  workspaceEdit.edits
+  |> List.filter_map(
+       fun
+       // TODO: Handle workspace edits
+       | Exthost.WorkspaceEdit.File(_) => None
+       | Exthost.WorkspaceEdit.Text(edit) => Some(edit),
+     )
+  |> List.filter((textEdit: Exthost.WorkspaceEdit.TextEdit.t) => {
+       let bufferUri = Buffer.getUri(buffer);
+       Uri.equals(bufferUri, textEdit.resource);
+     })
+  |> List.map((textEdit: Exthost.WorkspaceEdit.TextEdit.t) => {
+       let edit = textEdit.edit;
+
+       Vim.Edit.{
+         range: edit.range |> Exthost.OneBasedRange.toRange,
+         text: [|edit.text|],
+       };
+     });
+};
+
 let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
   switch (msg) {
+  | Noop => (model, Outmsg.Nothing)
+
   | InputText(inputMsg) =>
     switch (model.sessionState) {
     | Resolved({inputText, _} as resolved) =>
@@ -91,7 +117,7 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
     | _ => (model, Outmsg.Nothing)
     }
 
-  | RenameLocationAvailable({handle, _}) =>
+  | RenameLocationAvailable({handle, location}) =>
     switch (model.sessionState) {
     | Resolving =>
       let sessionId = model.nextSessionId;
@@ -103,7 +129,9 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
             Resolved({
               handle,
               sessionId,
-              inputText: Component_InputText.create(~placeholder="hi"),
+              inputText:
+                Component_InputText.create(~placeholder=location.text),
+              edits: None,
             }),
         },
         Outmsg.Nothing,
@@ -116,14 +144,50 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
   | NoRenameEditsAvailable => (model, Outmsg.Nothing)
 
   | RenameEditsAvailable(edits) =>
+    let sessionState' =
+      switch (model.sessionState) {
+      | Resolved(session) => Resolved({...session, edits: Some(edits)})
+      | other => other
+      };
     prerr_endline("EDITS: " ++ Exthost.WorkspaceEdit.show(edits));
-    (model, Outmsg.Nothing);
+    ({...model, sessionState: sessionState'}, Outmsg.Nothing);
 
   | ErrorGettingRenameEdits(err) =>
     prerr_endline("ERR: " ++ err);
     (model, Outmsg.Nothing);
 
-  | Command(Commit)
+  | Command(Commit) =>
+    let outmsg =
+      switch (model.sessionState) {
+      | Resolved({edits, _}) =>
+        switch (edits) {
+        | None => Outmsg.Nothing
+        | Some(edit) =>
+          switch (maybeBuffer) {
+          | Some(buffer) =>
+            let edits = toVimEdits(~buffer, edit);
+
+            let effect =
+              Service_Vim.Effects.applyEdits(
+                ~shouldAdjustCursors=true,
+                ~bufferId=buffer |> Oni_Core.Buffer.getId,
+                ~version=buffer |> Oni_Core.Buffer.getVersion,
+                ~edits,
+                // TODO
+                fun
+                | _ => Noop,
+              );
+            Outmsg.Effect(effect);
+          | None => Outmsg.Nothing
+          }
+        }
+      | Inactive
+      | Resolving
+      | Applying(_) => Outmsg.Nothing
+      };
+
+    ({...model, sessionState: Inactive}, outmsg);
+
   | Command(Cancel) => ({...model, sessionState: Inactive}, Outmsg.Nothing)
   | Command(RenameSymbol) =>
     switch (maybeBuffer) {
@@ -290,7 +354,6 @@ module View = {
           ]>
           <View style=Style.[padding(5)]>
             <Component_InputText.View
-              prefix="="
               model=inputText
               theme
               isFocused=true
