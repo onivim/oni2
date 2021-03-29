@@ -910,6 +910,7 @@ let sub =
         completion,
         documentHighlights,
         documentSymbols,
+        rename,
         signatureHelp,
         _,
       },
@@ -958,6 +959,10 @@ let sub =
     )
     |> Isolinear.Sub.map(msg => DocumentHighlights(msg));
 
+  let renameSub =
+    ShadowedRename.sub(~activeBuffer, ~activePosition, ~client, rename)
+    |> Isolinear.Sub.map(msg => Rename(msg));
+
   let signatureHelpSub =
     OldSignatureHelp.sub(
       ~isInsertMode,
@@ -974,6 +979,7 @@ let sub =
     definitionSub,
     documentHighlightsSub,
     documentSymbolsSub,
+    renameSub,
     signatureHelpSub,
   ]
   |> Isolinear.Sub.batch;

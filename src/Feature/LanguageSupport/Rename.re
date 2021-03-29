@@ -11,8 +11,14 @@ type command =
 type msg =
   | Command(command)
   | InputText(Component_InputText.msg)
-  | RenameLocationAvailable(Exthost.RenameLocation.t)
-  | RenameLocationUnavailable;
+  | RenameLocationAvailable({
+      location: Exthost.RenameLocation.t,
+      handle: int,
+    })
+  | RenameLocationUnavailable
+  | NoRenameEditsAvailable
+  | ErrorGettingRenameEdits(string)
+  | RenameEditsAvailable(Exthost.WorkspaceEdit.t);
 
 [@deriving show]
 type provider = {
@@ -26,6 +32,7 @@ type sessionState =
   | Inactive
   | Resolving
   | Resolved({
+      handle: int, // provider handle for rename
       sessionId: int, //location: RenameLocation.t,
       inputText: [@opaque] Component_InputText.model,
     })
@@ -84,7 +91,7 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
     | _ => (model, Outmsg.Nothing)
     }
 
-  | RenameLocationAvailable(_location) =>
+  | RenameLocationAvailable({handle, _}) =>
     switch (model.sessionState) {
     | Resolving =>
       let sessionId = model.nextSessionId;
@@ -94,6 +101,7 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
           nextSessionId: sessionId + 1,
           sessionState:
             Resolved({
+              handle,
               sessionId,
               inputText: Component_InputText.create(~placeholder="hi"),
             }),
@@ -105,15 +113,25 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
 
   | RenameLocationUnavailable => (model, Outmsg.Nothing)
 
+  | NoRenameEditsAvailable => (model, Outmsg.Nothing)
+
+  | RenameEditsAvailable(edits) =>
+    prerr_endline("EDITS: " ++ Exthost.WorkspaceEdit.show(edits));
+    (model, Outmsg.Nothing);
+
+  | ErrorGettingRenameEdits(err) =>
+    prerr_endline("ERR: " ++ err);
+    (model, Outmsg.Nothing);
+
   | Command(Commit)
   | Command(Cancel) => ({...model, sessionState: Inactive}, Outmsg.Nothing)
   | Command(RenameSymbol) =>
     switch (maybeBuffer) {
     | None => (model, Outmsg.Nothing)
     | Some(buffer) =>
-      let toMsg = maybeLocationResult => {
+      let toMsg = (handle, maybeLocationResult) => {
         switch (maybeLocationResult) {
-        | Ok(Some(location)) => RenameLocationAvailable(location)
+        | Ok(Some(location)) => RenameLocationAvailable({location, handle})
         | Ok(None) => RenameLocationUnavailable
         | Error(_msg) => RenameLocationUnavailable
         };
@@ -132,7 +150,7 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
                ~uri=Oni_Core.Buffer.getUri(buffer),
                ~position=cursorLocation,
                client,
-               toMsg,
+               toMsg(provider.handle),
              )
            })
         |> Isolinear.Effect.batch;
@@ -154,6 +172,30 @@ let keyPressed = (key, model) => {
     };
   {...model, sessionState: sessionState'};
 };
+
+let sub = (~activeBuffer, ~activePosition, ~client, model) =>
+  switch (model.sessionState) {
+  | Resolving
+  | Inactive
+  | Applying(_) => Isolinear.Sub.none
+
+  | Resolved({handle, inputText, _}) =>
+    let toMsg = (
+      fun
+      | Ok(Some(edit)) => RenameEditsAvailable(edit)
+      | Ok(None) => NoRenameEditsAvailable
+      | Error(msg) => ErrorGettingRenameEdits(msg)
+    );
+
+    Service_Exthost.Sub.renameEdits(
+      ~handle,
+      ~buffer=activeBuffer,
+      ~position=activePosition,
+      ~newName=Component_InputText.value(inputText),
+      ~toMsg,
+      client,
+    );
+  };
 
 module Commands = {
   open Feature_Commands.Schema;

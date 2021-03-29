@@ -1137,6 +1137,7 @@ module WorkspaceEdit: {
     | File(FileEdit.t)
     | Text(TextEdit.t);
 
+  [@deriving show]
   type t = {
     edits: list(edit),
     rejectReason: option(string),

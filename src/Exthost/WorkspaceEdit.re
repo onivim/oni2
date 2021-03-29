@@ -1,6 +1,7 @@
 open Oni_Core;
 
 module IconPath = {
+  [@deriving show]
   type t =
     | IconId({iconId: string})
     | Uri({uri: Oni_Core.Uri.t})
@@ -11,6 +12,7 @@ module IconPath = {
 };
 
 module EntryMetadata = {
+  [@deriving show]
   type t = {
     needsConfirmation: bool,
     label: string,
@@ -35,6 +37,7 @@ module EntryMetadata = {
 
 module FileEdit = {
   module Options = {
+    [@deriving show]
     type t = {
       overwrite: bool,
       ignoreIfNotExists: bool,
@@ -63,6 +66,7 @@ module FileEdit = {
     };
   };
 
+  [@deriving show]
   type t = {
     oldUri: option(Oni_Core.Uri.t),
     newUri: option(Oni_Core.Uri.t),
@@ -84,6 +88,7 @@ module FileEdit = {
 };
 
 module SingleEdit = {
+  [@deriving show]
   type t = {
     range: OneBasedRange.t,
     text: string,
@@ -103,6 +108,7 @@ module SingleEdit = {
 };
 
 module TextEdit = {
+  [@deriving show]
   type t = {
     resource: Oni_Core.Uri.t,
     edit: SingleEdit.t,
@@ -123,10 +129,12 @@ module TextEdit = {
     );
 };
 
+[@deriving show]
 type edit =
   | File(FileEdit.t)
   | Text(TextEdit.t);
 
+[@deriving show]
 type t = {
   edits: list(edit),
   rejectReason: option(string),
