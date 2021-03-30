@@ -399,7 +399,7 @@ let update =
       {
         ...state,
         diagnostics,
-        pane: Feature_Pane.setDiagnostics(diagnostics, state.pane),
+        // pane: Feature_Pane.setDiagnostics(diagnostics, state.pane),
       },
       Isolinear.Effect.none,
     );
@@ -717,13 +717,14 @@ let update =
       | ReferencesAvailable =>
         let references =
           Feature_LanguageSupport.References.get(languageSupport);
-        let pane =
-          state.pane
-          |> Feature_Pane.setLocations(
-               ~maybeActiveBuffer=maybeBuffer,
-               ~locations=references,
-             )
-          |> Feature_Pane.show(~pane=Locations);
+        let pane = state.pane;
+        // let pane =
+        //   state.pane
+        //   |> Feature_Pane.setLocations(
+        //        ~maybeActiveBuffer=maybeBuffer,
+        //        ~locations=references,
+        //      )
+        //   |> Feature_Pane.show(~pane=Locations);
         let state' = {...state, pane} |> FocusManager.push(Focus.Pane);
         (state', Isolinear.Effect.none);
       | InsertSnippet({replaceSpan, snippet, _}) =>
@@ -890,14 +891,14 @@ let update =
 
     switch (outmsg) {
     | Nothing => (state, Isolinear.Effect.none)
-    | OpenFile({filePath, position}) => (
-        state,
-        Internal.openFileEffect(~position=Some(position), filePath),
-      )
-    | PreviewFile({filePath, position}) => (
-        state,
-        Internal.previewFileEffect(~position=Some(position), filePath),
-      )
+    // | OpenFile({filePath, position}) => (
+    //     state,
+    //     Internal.openFileEffect(~position=Some(position), filePath),
+    //   )
+    // | PreviewFile({filePath, position}) => (
+    //     state,
+    //     Internal.previewFileEffect(~position=Some(position), filePath),
+    //   )
     | UnhandledWindowMovement(windowMovement) => (
         state,
         Internal.unhandledWindowMotionEffect(windowMovement),
@@ -910,24 +911,21 @@ let update =
         state |> FocusManager.pop(Focus.Pane),
         Isolinear.Effect.none,
       )
-
-    | NotificationDismissed(notification) => (
-        state,
-        Feature_Notification.Effects.dismiss(notification)
-        |> Isolinear.Effect.map(msg => Notification(msg)),
-      )
-
-    | PaneButton(pane) =>
-      switch (pane) {
-      | Notifications => (
-          state,
-          Feature_Notification.Effects.clear()
-          |> Isolinear.Effect.map(msg => Notification(msg)),
-        )
-      | _ => (state, Isolinear.Effect.none)
-      }
-
-    | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
+    // | NotificationDismissed(notification) => (
+    //     state,
+    //     Feature_Notification.Effects.dismiss(notification)
+    //     |> Isolinear.Effect.map(msg => Notification(msg)),
+    //   )
+    // | PaneButton(pane) =>
+    //   switch (pane) {
+    //   | Notifications => (
+    //       state,
+    //       Feature_Notification.Effects.clear()
+    //       |> Isolinear.Effect.map(msg => Notification(msg)),
+    //     )
+    //   | _ => (state, Isolinear.Effect.none)
+    //   }
+    // | Effect(eff) => (state, eff |> Isolinear.Effect.map(msg => Pane(msg)))
     };
 
   | Registers(msg) =>
@@ -1138,14 +1136,15 @@ let update =
       switch ((maybeOutmsg: Feature_StatusBar.outmsg)) {
       | Nothing => (state', Effect.none)
       | ToggleProblems => (
-          {
-            ...state',
-            pane:
-              Feature_Pane.toggle(
-                ~pane=Feature_Pane.Diagnostics,
-                state'.pane,
-              ),
-          },
+          state',
+          // {
+          //   ...state',
+          //   pane:
+          //     Feature_Pane.toggle(
+          //       ~pane=Feature_Pane.Diagnostics,
+          //       state'.pane,
+          //     ),
+          // },
           Effect.none,
         )
 
@@ -1154,14 +1153,15 @@ let update =
           Effect.none,
         )
       | ToggleNotifications => (
-          {
-            ...state',
-            pane:
-              Feature_Pane.toggle(
-                ~pane=Feature_Pane.Notifications,
-                state'.pane,
-              ),
-          },
+          state,
+          // {
+          //   ...state',
+          //   pane:
+          //     Feature_Pane.toggle(
+          //       ~pane=Feature_Pane.Notifications,
+          //       state'.pane,
+          //     ),
+          // },
           Effect.none,
         )
       | ShowFileTypePicker =>
@@ -1848,7 +1848,8 @@ let update =
     let theme = Feature_Theme.colors(state.colorTheme);
     let model' =
       Feature_Notification.update(~theme, ~config, state.notifications, msg);
-    let pane' = Feature_Pane.setNotifications(model', state.pane);
+    // let pane' = Feature_Pane.setNotifications(model', state.pane);
+    let pane' = state.pane;
     ({...state, notifications: model', pane: pane'}, Effect.none);
 
   | Modals(msg) =>
@@ -2279,7 +2280,8 @@ let update =
     | ModeDidChange({allowAnimation, mode, effects}) =>
       Internal.updateMode(~allowAnimation, state, mode, effects)
     | Output({cmd, output}) =>
-      let pane' = state.pane |> Feature_Pane.setOutput(cmd, output);
+      // let pane' = state.pane |> Feature_Pane.setOutput(cmd, output);
+      let pane' = state.pane;
       (
         {...state, pane: pane'} |> FocusManager.push(Pane),
         Isolinear.Effect.none,

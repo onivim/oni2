@@ -206,7 +206,7 @@ let defaultKeyBindings =
         ~condition="sneakMode" |> WhenExpr.parse,
       ),
     ]
-  @ Feature_Pane.Contributions.keybindings
+  // @ Feature_Pane.Contributions.keybindings
   @ Feature_Input.Schema.[
       bind(
         ~key="<D-W>",
@@ -430,7 +430,7 @@ type t = {
   workspace: Feature_Workspace.model,
   zen: Feature_Zen.model,
   // State of the bottom pane
-  pane: Feature_Pane.model,
+  pane: Feature_Pane.model(t, Actions.t),
   newQuickmenu: Feature_Quickmenu.model(Actions.t),
   searchPane: Feature_Search.model,
   focus: Focus.stack,
@@ -563,7 +563,8 @@ let initial =
     fileExplorer: Feature_Explorer.initial(~rootPath=maybeWorkspace),
     zen:
       Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
-    pane: Feature_Pane.initial,
+    pane:
+      Feature_Pane.initial([]: list(Feature_Pane.Schema.t(t, Actions.t))),
     newQuickmenu: Feature_Quickmenu.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,

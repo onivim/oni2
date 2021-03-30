@@ -57,14 +57,14 @@ let current = {
       )
       |> Command.Lookup.fromList
       |> Command.Lookup.map(msg => Actions.FileExplorer(msg)),
-      Feature_Pane.Contributions.commands(
-        ~isFocused={
-          focus == Focus.Pane;
-        },
-        state.pane,
-      )
-      |> Command.Lookup.fromList
-      |> Command.Lookup.map(msg => Actions.Pane(msg)),
+      // Feature_Pane.Contributions.commands(
+      //   ~isFocused={
+      //     focus == Focus.Pane;
+      //   },
+      //   state.pane,
+      // )
+      // |> Command.Lookup.fromList
+      // |> Command.Lookup.map(msg => Actions.Pane(msg)),
       Feature_SCM.Contributions.commands(
         ~isFocused={
           focus == Focus.SCM;

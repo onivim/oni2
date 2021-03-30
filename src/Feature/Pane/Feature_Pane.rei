@@ -5,32 +5,31 @@
  */
 open Oni_Core;
 
-[@deriving show({with_path: false})]
-type pane =
-  | Diagnostics
-  | Notifications
-  | Locations
-  | Output;
+module Schema: {
+  type t('model, 'msg);
+
+  let panel:
+    (
+      ~title: string,
+      ~view: (~dispatch: 'msg => unit, ~model: 'model) => Revery.UI.element,
+      ~keyPressed: string => 'msg
+    ) =>
+    t('model, 'msg);
+
+  let map:
+    (~msg: 'msgA => 'msgB, ~model: 'modelA => 'modelB, t('modelB, 'msgA)) =>
+    t('modelA, 'msgB);
+};
+
+// [@deriving show({with_path: false})]
+// type pane =
+//   | Diagnostics
+//   | Notifications
+//   | Locations
+//   | Output;
 
 [@deriving show({with_path: false})]
 type msg;
-
-type outmsg =
-  | Nothing
-  | PaneButton(pane)
-  | OpenFile({
-      filePath: string,
-      position: EditorCoreTypes.CharacterPosition.t,
-    })
-  | PreviewFile({
-      filePath: string,
-      position: EditorCoreTypes.CharacterPosition.t,
-    })
-  | UnhandledWindowMovement(Component_VimWindows.outmsg)
-  | GrabFocus
-  | ReleaseFocus
-  | NotificationDismissed(Feature_Notification.notification)
-  | Effect(Isolinear.Effect.t(msg));
 
 module Msg: {
   let keyPressed: string => msg;
@@ -39,7 +38,14 @@ module Msg: {
   let toggleMessages: msg;
 };
 
-type model;
+type outmsg('msg) =
+  | Nothing
+  | NestedMessage('msg)
+  | UnhandledWindowMovement(Component_VimWindows.outmsg)
+  | GrabFocus
+  | ReleaseFocus;
+
+type model('model, 'msg);
 
 let update:
   (
@@ -48,38 +54,39 @@ let update:
     ~languageInfo: Exthost.LanguageInfo.t,
     ~previewEnabled: bool,
     msg,
-    model
+    model('model, 'msg)
   ) =>
-  (model, outmsg);
+  (model('model, 'msg), outmsg('msg));
 
 module Contributions: {
-  let commands: (~isFocused: bool, model) => list(Command.t(msg));
-  let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
-  let keybindings: list(Feature_Input.Schema.keybinding);
+  // let commands: (~isFocused: bool, model) => list(Command.t(msg));
+  // let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
+  // let keybindings: list(Feature_Input.Schema.keybinding);
 };
 
-let initial: model;
+let initial: list(Schema.t('model, 'msg)) => model('model, 'msg);
 
-let height: model => int;
-let selected: model => pane;
-let isOpen: model => bool;
+let height: model(_, _) => int;
+//let selected: model(_, _) => pane;
+let isOpen: model(_, _) => bool;
 
-let setPane: (~pane: pane, model) => model;
-let show: (~pane: pane, model) => model;
-let toggle: (~pane: pane, model) => model;
-let close: model => model;
+//let setPane: (~pane: pane, model) => model;
+//let show: (~pane: pane, model) => model;
+//let toggle: (~pane: pane, model) => model;
 
-let setDiagnostics: (Feature_Diagnostics.model, model) => model;
-let setLocations:
-  (
-    ~maybeActiveBuffer: option(Oni_Core.Buffer.t),
-    ~locations: list(Exthost.Location.t),
-    model
-  ) =>
-  model;
-let setNotifications: (Feature_Notification.model, model) => model;
+let close: model('model, 'msg) => model('model, 'msg);
 
-let setOutput: (string, option(string), model) => model;
+// let setDiagnostics: (Feature_Diagnostics.model, model) => model;
+// let setLocations:
+//   (
+//     ~maybeActiveBuffer: option(Oni_Core.Buffer.t),
+//     ~locations: list(Exthost.Location.t),
+//     model
+//   ) =>
+//   model;
+// let setNotifications: (Feature_Notification.model, model) => model;
+
+// let setOutput: (string, option(string), model) => model;
 
 module View: {
   let make:
@@ -92,7 +99,8 @@ module View: {
       ~editorFont: Service_Font.font,
       ~uiFont: Oni_Core.UiFont.t,
       ~dispatch: msg => unit,
-      ~pane: model,
+      ~pane: model('model, 'msg),
+      ~model: 'model,
       ~workingDirectory: string,
       unit
     ) =>
