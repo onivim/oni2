@@ -117,8 +117,8 @@ module CodeAction: {
   };
 
   module List: {
-    type t = {
-      cacheId: int,
+    type nonrec t = {
+      cacheId: CacheId.t,
       actions: list(t),
     };
   };

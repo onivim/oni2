@@ -155,7 +155,7 @@ function activate(context) {
     }
 
         ;[
-            vscode.languages.registerCodeActionProvider("plaintext", codeActionProvider),
+            vscode.languages.registerCodeActionsProvider("plaintext", codeActionProvider),
             vscode.languages.registerCodeLensProvider("plaintext", codeLensProvider),
             vscode.languages.registerCompletionItemProvider("plaintext", completionProvider, ["."]),
             vscode.languages.registerDefinitionProvider("plaintext", definitionProvider),
