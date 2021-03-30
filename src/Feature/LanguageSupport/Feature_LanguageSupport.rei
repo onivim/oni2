@@ -285,6 +285,7 @@ module Contributions: {
   let contextKeys: WhenExpr.ContextKeys.Schema.t(model);
   let keybindings: list(Feature_Input.Schema.keybinding);
   let menuGroups: list(MenuBar.Schema.group);
+  let panes: list(Feature_Pane.Schema.t(model, msg));
 };
 
 module Definition: {

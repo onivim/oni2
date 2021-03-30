@@ -564,13 +564,29 @@ let initial =
     zen:
       Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
     pane:
-      Feature_Pane.initial([
-        Feature_Notification.Contributions.pane
-        |> Feature_Pane.Schema.map(
-             ~msg=msg => Actions.Notification(msg),
-             ~model=state => state.notifications,
-           ),
-      ]),
+      Feature_Pane.initial(
+        [
+          Feature_Diagnostics.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Diagnostics(msg),
+               ~model=state => state.diagnostics,
+             ),
+          Feature_Notification.Contributions.pane
+          |> Feature_Pane.Schema.map(
+               ~msg=msg => Actions.Notification(msg),
+               ~model=state => state.notifications,
+             ),
+        ]
+        @ (
+          Feature_LanguageSupport.Contributions.panes
+          |> List.map(
+               Feature_Pane.Schema.map(
+                 ~msg=msg => Actions.LanguageSupport(msg),
+                 ~model=state => state.languageSupport,
+               ),
+             )
+        ),
+      ),
     newQuickmenu: Feature_Quickmenu.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,

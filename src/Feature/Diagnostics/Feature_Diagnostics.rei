@@ -77,3 +77,5 @@ let getDiagnosticsAtPosition:
 let getDiagnosticsMap: (model, Buffer.t) => IntMap.t(list(Diagnostic.t));
 
 let getAllDiagnostics: model => list((Uri.t, Diagnostic.t));
+
+module Contributions: {let pane: Feature_Pane.Schema.t(model, msg);};

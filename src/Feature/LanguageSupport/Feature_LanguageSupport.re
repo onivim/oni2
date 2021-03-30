@@ -710,6 +710,9 @@ module Contributions = {
     @ SignatureHelp.Contributions.keybindings;
 
   let menuGroups = Formatting.Contributions.menuGroups;
+
+  // TODO: References
+  let panes = [];
 };
 
 module OldCompletion = Completion;

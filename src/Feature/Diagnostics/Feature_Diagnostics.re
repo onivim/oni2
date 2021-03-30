@@ -336,3 +336,18 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model: model) => {
     model,
   );
 };
+
+module Pane = {
+  open Feature_Pane.Schema;
+
+  let pane =
+    pane(
+      ~title="Problems",
+      ~view=(~dispatch, ~model) => Revery.UI.React.empty,
+      ~keyPressed=key => failwith("TODO"),
+    );
+};
+
+module Contributions = {
+  let pane = Pane.pane;
+};
