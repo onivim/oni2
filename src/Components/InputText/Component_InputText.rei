@@ -25,6 +25,8 @@ let paste: (~text: string, model) => model;
 let set: (~cursor: int=?, ~text: string, model) => model;
 let setPlaceholder: (~placeholder: string, model) => model;
 
+let selectAll: model => model;
+
 let isCursorAtEnd: model => bool;
 
 let cursorPosition: model => int;

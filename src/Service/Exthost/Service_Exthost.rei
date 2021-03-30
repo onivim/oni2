@@ -103,6 +103,27 @@ module Effects: {
         result(list(Exthost.Location.t), string) => 'msg
       ) =>
       Isolinear.Effect.t('msg);
+
+    let provideRenameEdits:
+      (
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~position: EditorCoreTypes.CharacterPosition.t,
+        ~newName: string,
+        Exthost.Client.t,
+        result(option(Exthost.WorkspaceEdit.t), string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
+
+    let resolveRenameLocation:
+      (
+        ~handle: int,
+        ~uri: Oni_Core.Uri.t,
+        ~position: EditorCoreTypes.CharacterPosition.t,
+        Exthost.Client.t,
+        result(option(Exthost.RenameLocation.t), string) => 'msg
+      ) =>
+      Isolinear.Effect.t('msg);
   };
 
   module Workspace: {
@@ -142,7 +163,6 @@ module Sub: {
     Isolinear.Sub.t('a);
 
   let completionItems:
-    // TODO: ~base: option(string),
     (
       ~handle: int,
       ~context: Exthost.CompletionContext.t,
@@ -191,6 +211,17 @@ module Sub: {
       Exthost.Client.t
     ) =>
     Isolinear.Sub.t('a);
+
+  let renameEdits:
+    (
+      ~handle: int,
+      ~buffer: Oni_Core.Buffer.t,
+      ~position: EditorCoreTypes.CharacterPosition.t,
+      ~newName: string,
+      ~toMsg: result(option(Exthost.WorkspaceEdit.t), string) => 'msg,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('msg);
 
   let signatureHelp:
     (

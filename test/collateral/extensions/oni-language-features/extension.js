@@ -25,6 +25,14 @@ function activate(context) {
         },
     }
 
+    const codeActionProvider = {
+        provideCodeActions: (document, range, context, token) => {
+            const codeAction1 = new vscode.CodeAction("Code Action 1");
+            const codeAction2 = new vscode.CodeAction("Code Action 2");
+            return [codeAction1, codeAction2]
+        }
+    };
+
     const completionProvider = {
         provideCompletionItems: (document, position, token, context) => {
             return [
@@ -146,41 +154,42 @@ function activate(context) {
         },
     }
 
-    ;[
-        vscode.languages.registerCodeLensProvider("plaintext", codeLensProvider),
-        vscode.languages.registerCompletionItemProvider("plaintext", completionProvider, ["."]),
-        vscode.languages.registerDefinitionProvider("plaintext", definitionProvider),
-        vscode.languages.registerDeclarationProvider("plaintext", declarationProvider),
-        vscode.languages.registerTypeDefinitionProvider("plaintext", typeDefinitionProvider),
-        vscode.languages.registerImplementationProvider("plaintext", implementationProvider),
-        vscode.languages.registerDocumentHighlightProvider("plaintext", documentHighlightProvider),
-        vscode.languages.registerReferenceProvider("plaintext", referenceProvider),
-        vscode.languages.registerDocumentSymbolProvider("plaintext", documentSymbolProvider),
-        vscode.languages.registerSignatureHelpProvider("plaintext", signatureHelpProvider, {
-            triggerCharacters: ["("],
-            retriggerCharacters: [","],
-        }),
-        vscode.languages.registerHoverProvider("plaintext", hoverProvider),
-        vscode.languages.registerOnTypeFormattingEditProvider(
-            "plaintext",
-            documentFormattingProvider,
-            "{",
-        ),
-        vscode.languages.registerDocumentFormattingEditProvider(
-            "plaintext",
-            documentFormattingProvider,
-            "{",
-        ),
-        vscode.languages.registerDocumentRangeFormattingEditProvider(
-            "plaintext",
-            documentFormattingProvider,
-            "{",
-        ),
-    ].forEach((subscription) => context.subscriptions.push(subscription))
+        ;[
+            vscode.languages.registerCodeActionsProvider("plaintext", codeActionProvider),
+            vscode.languages.registerCodeLensProvider("plaintext", codeLensProvider),
+            vscode.languages.registerCompletionItemProvider("plaintext", completionProvider, ["."]),
+            vscode.languages.registerDefinitionProvider("plaintext", definitionProvider),
+            vscode.languages.registerDeclarationProvider("plaintext", declarationProvider),
+            vscode.languages.registerTypeDefinitionProvider("plaintext", typeDefinitionProvider),
+            vscode.languages.registerImplementationProvider("plaintext", implementationProvider),
+            vscode.languages.registerDocumentHighlightProvider("plaintext", documentHighlightProvider),
+            vscode.languages.registerReferenceProvider("plaintext", referenceProvider),
+            vscode.languages.registerDocumentSymbolProvider("plaintext", documentSymbolProvider),
+            vscode.languages.registerSignatureHelpProvider("plaintext", signatureHelpProvider, {
+                triggerCharacters: ["("],
+                retriggerCharacters: [","],
+            }),
+            vscode.languages.registerHoverProvider("plaintext", hoverProvider),
+            vscode.languages.registerOnTypeFormattingEditProvider(
+                "plaintext",
+                documentFormattingProvider,
+                "{",
+            ),
+            vscode.languages.registerDocumentFormattingEditProvider(
+                "plaintext",
+                documentFormattingProvider,
+                "{",
+            ),
+            vscode.languages.registerDocumentRangeFormattingEditProvider(
+                "plaintext",
+                documentFormattingProvider,
+                "{",
+            ),
+        ].forEach((subscription) => context.subscriptions.push(subscription))
 }
 
 // this method is called when your extension is deactivated
-function deactivate() {}
+function deactivate() { }
 
 module.exports = {
     activate,

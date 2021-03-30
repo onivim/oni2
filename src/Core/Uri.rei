@@ -35,5 +35,7 @@ let getScheme: t => Scheme.t;
 
 let pp: (Format.formatter, t) => unit;
 
+let equals: (t, t) => bool;
+
 let decode: Json.decoder(t);
 let encode: Json.encoder(t);

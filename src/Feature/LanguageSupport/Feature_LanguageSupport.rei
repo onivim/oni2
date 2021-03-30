@@ -241,6 +241,24 @@ module DocumentSymbols: {
   let get: (~bufferId: int, model) => option(t);
 };
 
+module Rename: {
+  let isActive: model => bool;
+
+  module View: {
+    let make:
+      (
+        ~x: int,
+        ~y: int,
+        ~theme: ColorTheme.Colors.t,
+        ~model: model,
+        ~font: UiFont.t,
+        ~dispatch: msg => unit,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
+};
+
 module Hover: {
   module Popup: {
     let make:

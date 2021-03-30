@@ -160,7 +160,13 @@ let update =
     ) =>
   switch (msg) {
   | KeyPressed(key) => (
-      {...model, hover: Hover.keyPressed(key, model.hover)},
+      {
+        ...model,
+        hover: Hover.keyPressed(key, model.hover),
+        rename:
+          Rename.isFocused(model.rename)
+            ? Rename.keyPressed(key, model.rename) : model.rename,
+      },
       Nothing,
     )
   | Pasted(_) => (model, Nothing)
@@ -212,6 +218,18 @@ let update =
         model.signatureHelp,
       );
     ({...model, signatureHelp: sigHelp'}, Nothing);
+
+  | Exthost(
+      RegisterRenameSupport({handle, selector, supportsResolveInitialValues}),
+    ) =>
+    let rename' =
+      Rename.register(
+        ~handle,
+        ~selector,
+        ~supportsResolveInitialValues,
+        model.rename,
+      );
+    ({...model, rename: rename'}, Nothing);
 
   | Exthost(
       RegisterSuggestSupport({
@@ -439,7 +457,14 @@ let update =
     ({...model, hover: hover'}, outMsg');
 
   | Rename(renameMsg) =>
-    let (rename', outmsg) = Rename.update(renameMsg, model.rename);
+    let (rename', outmsg) =
+      Rename.update(
+        ~client,
+        ~maybeBuffer,
+        ~cursorLocation,
+        renameMsg,
+        model.rename,
+      );
     ({...model, rename: rename'}, outmsg |> map(msg => Rename(msg)));
 
   | SignatureHelp(sigHelpMsg) =>
@@ -853,6 +878,21 @@ module CodeLens = {
   module View = ShadowedCodeLens.View;
 };
 
+module ShadowedRename = Rename;
+
+module Rename = {
+  let isActive = model => ShadowedRename.isFocused(model.rename);
+
+  module View = {
+    let make = (~x, ~y, ~theme, ~model, ~font, ~dispatch, ()) => {
+      let dispatch = msg => dispatch(Rename(msg));
+      let model = model.rename;
+
+      <ShadowedRename.View x y theme model font dispatch />;
+    };
+  };
+};
+
 let sub =
     (
       ~config,
@@ -870,6 +910,7 @@ let sub =
         completion,
         documentHighlights,
         documentSymbols,
+        rename,
         signatureHelp,
         _,
       },
@@ -918,6 +959,10 @@ let sub =
     )
     |> Isolinear.Sub.map(msg => DocumentHighlights(msg));
 
+  let renameSub =
+    ShadowedRename.sub(~activeBuffer, ~activePosition, ~client, rename)
+    |> Isolinear.Sub.map(msg => Rename(msg));
+
   let signatureHelpSub =
     OldSignatureHelp.sub(
       ~isInsertMode,
@@ -934,6 +979,7 @@ let sub =
     definitionSub,
     documentHighlightsSub,
     documentSymbolsSub,
+    renameSub,
     signatureHelpSub,
   ]
   |> Isolinear.Sub.batch;

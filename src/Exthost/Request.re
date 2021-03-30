@@ -239,6 +239,80 @@ module FileSystemEventService = {
 };
 
 module LanguageFeatures = {
+  let provideCodeActionsBySpan =
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~span: Span.t,
+        ~context: CodeAction.Context.t,
+        client,
+      ) => {
+    let decoder = Json.Decode.(nullable(CodeAction.List.decode));
+    Client.request(
+      ~decoder,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideCodeActions",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          span |> Json.Encode.encode_value(Span.encode),
+          context |> Json.Encode.encode_value(CodeAction.Context.encode),
+        ]),
+      client,
+    );
+  };
+
+  let provideCodeActionsBySelection =
+      (~handle, ~resource, ~selection, ~context, client) => {
+    let decoder = Json.Decode.(nullable(CodeAction.List.decode));
+    Client.request(
+      ~decoder,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$provideCodeActions",
+      ~args=
+        `List([
+          `Int(handle),
+          Uri.to_yojson(resource),
+          selection |> Json.Encode.encode_value(Selection.encode),
+          context |> Json.Encode.encode_value(CodeAction.Context.encode),
+        ]),
+      client,
+    );
+  };
+
+  let resolveCodeAction = (~handle, ~id, client) => {
+    let decoder = Json.Decode.(nullable(WorkspaceEdit.decode));
+    Client.request(
+      ~decoder,
+      ~usesCancellationToken=true,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$resolveCodeAction",
+      ~args=
+        `List([
+          `Int(handle),
+          id |> Json.Encode.encode_value(ChainedCacheId.encode),
+        ]),
+      client,
+    );
+  };
+
+  let releaseCodeActions = (~handle, ~cacheId, client) => {
+    Client.notify(
+      ~usesCancellationToken=false,
+      ~rpcName="ExtHostLanguageFeatures",
+      ~method="$releaseCodeActions",
+      ~args=
+        `List([
+          `Int(handle),
+          cacheId |> Json.Encode.encode_value(CacheId.encode),
+        ]),
+      client,
+    );
+  };
+
   let provideCodeLenses = (~handle: int, ~resource: Uri.t, client) => {
     let decoder = Json.Decode.(nullable(CodeLens.List.decode));
 
