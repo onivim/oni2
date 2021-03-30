@@ -564,7 +564,13 @@ let initial =
     zen:
       Feature_Zen.initial(~isSingleFile=List.length(cli.filesToOpen) == 1),
     pane:
-      Feature_Pane.initial([]: list(Feature_Pane.Schema.t(t, Actions.t))),
+      Feature_Pane.initial([
+        Feature_Notification.Contributions.pane
+        |> Feature_Pane.Schema.map(
+             ~msg=msg => Actions.Notification(msg),
+             ~model=state => state.notifications,
+           ),
+      ]),
     newQuickmenu: Feature_Quickmenu.initial,
     searchPane: Feature_Search.initial,
     focus: Focus.initial,

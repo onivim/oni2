@@ -6,13 +6,21 @@ open EditorCoreTypes;
 open Oni_Core;
 
 module Schema = {
+  type uniqueId = int;
+
+  let nextId = ref(0);
+
   type t('model, 'msg) = {
     title: string,
     view: (~dispatch: 'msg => unit, ~model: 'model) => Revery.UI.element,
     keyPressed: string => 'msg,
+    uniqueId,
   };
 
-  let panel = (~title, ~view, ~keyPressed) => {title, view, keyPressed};
+  let pane = (~title, ~view, ~keyPressed) => {
+    incr(nextId);
+    {title, view, keyPressed, uniqueId: nextId^};
+  };
 
   let map = (~msg as mapMsg, ~model as mapModel, pane) => {
     let view' = (~dispatch, ~model) => {
@@ -28,7 +36,12 @@ module Schema = {
       pane.keyPressed(str) |> mapMsg;
     };
 
-    {title: pane.title, view: view', keyPressed: keyPressed'};
+    {
+      title: pane.title,
+      view: view',
+      keyPressed: keyPressed',
+      uniqueId: pane.uniqueId,
+    };
   };
 };
 
@@ -60,12 +73,12 @@ type msg =
   | ResizeHandleDragged(int)
   | ResizeCommitted
   | KeyPressed(string)
-  | VimWindowNav(Component_VimWindows.msg)
-  // | DiagnosticsList(Component_VimTree.msg)
-  // | LocationsList(Component_VimTree.msg)
-  // | NotificationsList(Component_VimList.msg)
-  // | OutputPane(Component_Output.msg)
-  | DismissNotificationClicked(Feature_Notification.notification);
+  | VimWindowNav(Component_VimWindows.msg);
+// | DiagnosticsList(Component_VimTree.msg)
+// | LocationsList(Component_VimTree.msg)
+// | NotificationsList(Component_VimList.msg)
+// | OutputPane(Component_Output.msg)
+// | DismissNotificationClicked(Feature_Notification.notification);
 // | LocationFileLoaded({
 //     filePath: string,
 //     lines: array(string),
@@ -379,7 +392,7 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
   | Command(ClosePane)
   | CloseButtonClicked => ({...model, isOpen: false}, ReleaseFocus)
 
-  | DismissNotificationClicked(notification) => (model, Nothing)
+  // | DismissNotificationClicked(notification) => (model, Nothing)
   //   model,
   //   NotificationDismissed(notification),
   // )

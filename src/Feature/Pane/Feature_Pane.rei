@@ -8,7 +8,7 @@ open Oni_Core;
 module Schema: {
   type t('model, 'msg);
 
-  let panel:
+  let pane:
     (
       ~title: string,
       ~view: (~dispatch: 'msg => unit, ~model: 'model) => Revery.UI.element,

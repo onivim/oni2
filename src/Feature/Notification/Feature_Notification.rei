@@ -119,4 +119,7 @@ module View: {
 
 // CONTRIBUTIONS
 
-module Contributions: {let colors: list(ColorTheme.Schema.definition);};
+module Contributions: {
+  let colors: list(ColorTheme.Schema.definition);
+  let pane: Feature_Pane.Schema.t(model, msg);
+};

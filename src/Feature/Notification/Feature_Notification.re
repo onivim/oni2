@@ -225,6 +225,7 @@ module Animations = {
 
 [@deriving show({with_path: false})]
 type msg =
+  | Noop
   | Created(internal)
   | Dismissed({id: int})
   | Expire({id: int})
@@ -244,6 +245,7 @@ let update = (~theme, ~config, model, msg) => {
   let animationsEnabled =
     Feature_Configuration.GlobalConfiguration.animation.get(config);
   switch (msg) {
+  | Noop => model
   | Clear({count}) =>
     let all =
       if (count == 0) {
@@ -557,6 +559,17 @@ module View = {
   };
 };
 
+module Pane = {
+  open Feature_Pane.Schema;
+
+  let pane =
+    pane(
+      ~title="Notifications",
+      ~view=(~dispatch, ~model) => Revery.UI.React.empty,
+      ~keyPressed=key => Noop,
+    );
+};
+
 // CONTRIBUTIONS
 
 module Contributions = {
@@ -569,4 +582,6 @@ module Contributions = {
       errorBackground,
       errorForeground,
     ];
+
+  let pane = Pane.pane;
 };
