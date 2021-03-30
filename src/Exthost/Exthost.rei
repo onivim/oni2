@@ -393,8 +393,8 @@ module Progress: {
     [@deriving show]
     type t = {
       message: option(string),
-      increment: option(int),
-      total: option(int),
+      increment: option(float),
+      total: option(float),
     };
 
     let decode: Json.decoder(t);
