@@ -103,18 +103,6 @@ module View: {
       ) =>
       React.element(React.node);
   };
-
-  module Item: {
-    let make:
-      (
-        ~notification: notification,
-        ~theme: ColorTheme.Colors.t,
-        ~font: UiFont.t,
-        ~onDismiss: unit => unit,
-        unit
-      ) =>
-      React.element(React.node);
-  };
 };
 
 // CONTRIBUTIONS

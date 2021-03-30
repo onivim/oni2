@@ -11,7 +11,15 @@ module Schema: {
   let pane:
     (
       ~title: string,
-      ~view: (~dispatch: 'msg => unit, ~model: 'model) => Revery.UI.element,
+      ~view: (
+               ~config: Config.resolver,
+               ~font: UiFont.t,
+               ~isFocused: bool,
+               ~theme: ColorTheme.Colors.t,
+               ~dispatch: 'msg => unit,
+               ~model: 'model
+             ) =>
+             Revery.UI.element,
       ~keyPressed: string => 'msg
     ) =>
     t('model, 'msg);
@@ -29,13 +37,13 @@ module Schema: {
 //   | Output;
 
 [@deriving show({with_path: false})]
-type msg;
+type msg('inner);
 
 module Msg: {
-  let keyPressed: string => msg;
-  let resizeHandleDragged: int => msg;
-  let resizeCommitted: msg;
-  let toggleMessages: msg;
+  let keyPressed: string => msg(_);
+  let resizeHandleDragged: int => msg(_);
+  let resizeCommitted: msg(_);
+  let toggleMessages: msg(_);
 };
 
 type outmsg('msg) =
@@ -53,7 +61,7 @@ let update:
     ~font: Service_Font.font,
     ~languageInfo: Exthost.LanguageInfo.t,
     ~previewEnabled: bool,
-    msg,
+    msg('msg),
     model('model, 'msg)
   ) =>
   (model('model, 'msg), outmsg('msg));
@@ -98,7 +106,7 @@ module View: {
       ~languageInfo: Exthost.LanguageInfo.t,
       ~editorFont: Service_Font.font,
       ~uiFont: Oni_Core.UiFont.t,
-      ~dispatch: msg => unit,
+      ~dispatch: msg('msg) => unit,
       ~pane: model('model, 'msg),
       ~model: 'model,
       ~workingDirectory: string,

@@ -911,6 +911,11 @@ let update =
         state |> FocusManager.pop(Focus.Pane),
         Isolinear.Effect.none,
       )
+
+    | NestedMessage(msg) => (
+        state,
+        EffectEx.value(~name="Feature_Pane.NestedMessage", msg),
+      )
     // | NotificationDismissed(notification) => (
     //     state,
     //     Feature_Notification.Effects.dismiss(notification)

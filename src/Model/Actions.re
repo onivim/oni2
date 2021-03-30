@@ -127,7 +127,7 @@ type t =
   | Snippets(Feature_Snippets.msg)
   | Terminal(Feature_Terminal.msg)
   | Theme(Feature_Theme.msg)
-  | Pane(Feature_Pane.msg)
+  | Pane(Feature_Pane.msg(t))
   | VimExecuteCommand({
       allowAnimation: bool,
       command: string,

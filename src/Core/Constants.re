@@ -10,6 +10,8 @@ let defaultFontSize = 14.;
 
 let defaultFontFile = "JetBrainsMono-Regular.ttf";
 
+let paneRowHeight = 20;
+
 let isDefaultFont = str => {
   // Before we switched to JetBrains Mono as the default font...
   // "FiraCode-Regular.ttf" was specified in the default configuration file.

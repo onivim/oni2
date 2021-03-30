@@ -343,7 +343,9 @@ module Pane = {
   let pane =
     pane(
       ~title="Problems",
-      ~view=(~dispatch, ~model) => Revery.UI.React.empty,
+      ~view=
+        (~config, ~font, ~isFocused, ~theme, ~dispatch, ~model) =>
+          Revery.UI.React.empty,
       ~keyPressed=key => failwith("TODO"),
     );
 };

@@ -12,7 +12,16 @@ module Schema = {
 
   type t('model, 'msg) = {
     title: string,
-    view: (~dispatch: 'msg => unit, ~model: 'model) => Revery.UI.element,
+    view:
+      (
+        ~config: Config.resolver,
+        ~font: UiFont.t,
+        ~isFocused: bool,
+        ~theme: ColorTheme.Colors.t,
+        ~dispatch: 'msg => unit,
+        ~model: 'model
+      ) =>
+      Revery.UI.element,
     keyPressed: string => 'msg,
     uniqueId,
   };
@@ -23,13 +32,20 @@ module Schema = {
   };
 
   let map = (~msg as mapMsg, ~model as mapModel, pane) => {
-    let view' = (~dispatch, ~model) => {
+    let view' = (~config, ~font, ~isFocused, ~theme, ~dispatch, ~model) => {
       let mappedModel = mapModel(model);
 
       let mappedDispatch = msg => {
         mapMsg(msg) |> dispatch;
       };
-      pane.view(~dispatch=mappedDispatch, ~model=mappedModel);
+      pane.view(
+        ~config,
+        ~font,
+        ~isFocused,
+        ~theme,
+        ~dispatch=mappedDispatch,
+        ~model=mappedModel,
+      );
     };
 
     let keyPressed' = str => {
@@ -65,10 +81,11 @@ type command =
   | ClosePane;
 
 [@deriving show({with_path: false})]
-type msg =
+type msg('inner) =
   //| TabClicked(pane)
   | CloseButtonClicked
   //| PaneButtonClicked(pane)
+  | NestedMsg([@opaque] 'inner)
   | Command(command)
   | ResizeHandleDragged(int)
   | ResizeCommitted
@@ -469,6 +486,8 @@ let update = (~buffers, ~font, ~languageInfo, ~previewEnabled, msg, model) =>
   //   )
   // }
 
+  | NestedMsg(msg) => (model, NestedMessage(msg))
+
   | VimWindowNav(navMsg) =>
     let (vimWindowNavigation, outmsg) =
       Component_VimWindows.update(navMsg, model.vimWindowNavigation);
@@ -570,6 +589,10 @@ let initial = panes => {
   // locationsView: Component_VimTree.create(~rowHeight=20),
   // notificationsView: Component_VimList.create(~rowHeight=20),
   // outputPane: None,
+};
+
+let activePane = ({selected, panes, _}) => {
+  List.nth_opt(panes, selected);
 };
 
 let selected = ({selected, _}) => selected;
@@ -711,6 +734,7 @@ module View = {
   };
   let content =
       (
+        ~activePane,
         ~config,
         ~isFocused,
         ~selected,
@@ -720,6 +744,7 @@ module View = {
         ~editorFont,
         ~uiFont,
         ~dispatch,
+        ~model,
         // ~outputPane,
         // ~locationsList,
         // ~locationsDispatch: Component_VimTree.msg => unit,
@@ -731,7 +756,20 @@ module View = {
         // ~outputDispatch: Component_Output.msg => unit,
         ~workingDirectory,
         (),
-      ) => React.empty;
+      ) => {
+    switch (activePane) {
+    | None => React.empty
+    | Some(paneSchema) =>
+      Schema.(
+        {
+          paneSchema.view(
+            ~config, ~font=uiFont, ~isFocused, ~theme, ~model, ~dispatch=msg =>
+            dispatch(NestedMsg(msg))
+          );
+        }
+      )
+    };
+  };
   // switch (selected) {
   // | Locations =>
   //   <LocationsPaneView
@@ -826,7 +864,7 @@ module View = {
         ~languageInfo,
         ~editorFont: Service_Font.font,
         ~uiFont,
-        ~dispatch: msg => unit,
+        ~dispatch: msg('msg) => unit,
         ~pane: model('model, 'msg),
         ~model: 'model,
         ~workingDirectory: string,
@@ -852,20 +890,23 @@ module View = {
     let desiredHeight = height(pane);
     let height = !isOpen(pane) && !isFocused ? 0 : desiredHeight;
 
+    let selected = pane.selected;
     let paneTabs =
       pane.panes
-      |> List.map(schema => {
+      |> List.mapi((idx, schema) => {
            Schema.(
              <PaneTab
                uiFont
                theme
                title={schema.title}
                onClick={() => ()}
-               isActive=true
+               isActive={selected == idx}
              />
            )
          })
       |> React.listToElement;
+
+    let activePane = activePane(pane);
 
     let opacity =
       isFocused
@@ -925,14 +966,16 @@ module View = {
               isFocused
               iconTheme
               languageInfo
-              // diagnosticsList={pane.diagnosticsView}
-              // locationsList={pane.locationsView}
-              // notificationsList={pane.notificationsView}
-              selected={selected(pane)}
+              selected
               theme
               dispatch
               uiFont
               editorFont
+              activePane
+              model
+              // diagnosticsList={pane.diagnosticsView}
+              // locationsList={pane.locationsView}
+              // notificationsList={pane.notificationsView}
               // outputPane={pane.outputPane}
               // diagnosticDispatch={msg => dispatch(DiagnosticsList(msg))}
               // locationsDispatch={msg => dispatch(LocationsList(msg))}

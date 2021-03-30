@@ -33,38 +33,6 @@ type notification = {
   ephemeral: bool,
 };
 
-[@deriving show({with_path: false})]
-type internal = {
-  id: int,
-  kind,
-  message: string,
-  source: option(string),
-  ephemeral: bool,
-  yOffsetAnimation: [@opaque] option(Component_Animation.t(float)),
-};
-
-let internalToExternal: internal => notification =
-  (internal: internal) => {
-    {
-      id: internal.id,
-      kind: internal.kind,
-      message: internal.message,
-      source: internal.source,
-      ephemeral: internal.ephemeral,
-      yOffset:
-        internal.yOffsetAnimation
-        |> Option.map(Component_Animation.get)
-        |> Option.value(~default=0.),
-    };
-  };
-
-type model = {
-  all: list(internal),
-  activeNotifications: IntSet.t,
-  statusBarBackgroundColor: option(Component_Animation.ColorTransition.t),
-  statusBarForegroundColor: option(Component_Animation.ColorTransition.t),
-};
-
 // COLORS
 
 module Colors = {
@@ -99,11 +67,239 @@ module Colors = {
     };
 };
 
+module Pane = {
+  type t = {notificationsView: Component_VimList.model(notification)};
+
+  [@deriving show]
+  type msg =
+    | VimList(Component_VimList.msg)
+    | KeyPressed(string);
+
+  let initial = {
+    notificationsView:
+      Component_VimList.create(~rowHeight=Constants.paneRowHeight),
+  };
+
+  let update = (msg, model) => {
+    switch (msg) {
+    | VimList(listMsg) =>
+      let (notificationsView', _outmsg) =
+        Component_VimList.update(listMsg, model.notificationsView);
+      {notificationsView: notificationsView'};
+
+    | KeyPressed(key) =>
+      let notificationsView' =
+        Component_VimList.keyPress(key, model.notificationsView);
+      {notificationsView: notificationsView'};
+    };
+  };
+
+  let set = (notifications: list(notification), model) => {
+    let searchText = (notification: notification) => {
+      notification.message;
+    };
+    let notificationsArray = notifications |> Array.of_list;
+
+    let notificationsView' =
+      model.notificationsView
+      |> Component_VimList.set(~searchText, notificationsArray);
+    {notificationsView: notificationsView'};
+  };
+
+  module View = {
+    open Revery.UI;
+    open Oni_Components;
+    module Item = {
+      module Styles = {
+        open Style;
+
+        let container = [
+          flexDirection(`Row),
+          alignItems(`Center),
+          paddingHorizontal(10),
+          paddingVertical(5),
+        ];
+
+        let text = (~foreground) => [
+          textWrap(TextWrapping.NoWrap),
+          marginLeft(6),
+          color(foreground),
+        ];
+
+        let message = (~foreground) => [flexGrow(1), ...text(~foreground)];
+
+        let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
+      };
+
+      let colorFor = (item: notification, ~theme) =>
+        switch (item.kind) {
+        | Warning => Colors.warningBackground.from(theme)
+        | Error => Colors.errorBackground.from(theme)
+        | Info => Colors.infoBackground.from(theme)
+        };
+
+      let iconFor = (item: notification) =>
+        switch (item.kind) {
+        | Warning => FontAwesome.exclamationTriangle
+        | Error => FontAwesome.exclamationCircle
+        | Info => FontAwesome.infoCircle
+        };
+
+      let make =
+          (
+            ~notification: notification,
+            ~theme,
+            ~font: UiFont.t,
+            ~onDismiss,
+            (),
+          ) => {
+        let foreground = Feature_Theme.Colors.foreground.from(theme);
+
+        let icon = () =>
+          <FontIcon
+            icon={iconFor(notification)}
+            fontSize=12.
+            color={colorFor(notification, ~theme)}
+          />;
+
+        let source = () =>
+          switch (notification.source) {
+          | Some(text) =>
+            let foreground = Color.multiplyAlpha(0.5, foreground);
+            <Text
+              style={Styles.text(~foreground)}
+              fontFamily={font.family}
+              fontSize=11.
+              text
+            />;
+          | None => React.empty
+          };
+
+        let closeButton = () => {
+          // TODO: Bring back
+          //let onClick = () => dispatch(Dismissed({id: item.id}));
+
+          let onClick = onDismiss;
+
+          <Revery.UI.Components.Clickable onClick style=Styles.closeButton>
+            <FontIcon icon=FontAwesome.times fontSize=13. color=foreground />
+          </Revery.UI.Components.Clickable>;
+        };
+
+        <View style=Styles.container>
+          <icon />
+          <source />
+          <Text
+            style={Styles.message(~foreground)}
+            fontFamily={font.family}
+            fontSize=11.
+            text={notification.message}
+          />
+          <closeButton />
+        </View>;
+      };
+    };
+    module Styles = {
+      open Style;
+      let pane = [flexGrow(1), flexDirection(`Row)];
+      let noResultsContainer = [
+        flexGrow(1),
+        alignItems(`Center),
+        justifyContent(`Center),
+      ];
+      let title = (~theme) => [
+        color(Colors.PanelTitle.activeForeground.from(theme)),
+        margin(8),
+      ];
+    };
+    let make =
+        (
+          ~isFocused: bool,
+          ~model: t,
+          ~theme,
+          ~uiFont: UiFont.t,
+          ~dispatch,
+          //~onDismiss: Feature_Notification.notification => unit,
+          (),
+        ) => {
+      let innerElement =
+        if (Component_VimList.count(model.notificationsView) == 0) {
+          <View style=Styles.noResultsContainer>
+            <Text
+              style={Styles.title(~theme)}
+              fontFamily={uiFont.family}
+              fontSize={uiFont.size}
+              text="No notifications."
+            />
+          </View>;
+        } else {
+          <Component_VimList.View
+            font=uiFont
+            isActive=isFocused
+            focusedIndex=None
+            theme
+            model={model.notificationsView}
+            dispatch={msg => dispatch(VimList(msg))}
+            render={(
+              ~availableWidth as _,
+              ~index as _,
+              ~hovered as _,
+              ~selected as _,
+              item,
+            ) =>
+              <Item
+                notification=item
+                font=uiFont
+                theme
+                onDismiss={() => ()} //onDismiss(item)}
+              />
+            }
+          />;
+        };
+      <View style=Styles.pane> innerElement </View>;
+    };
+  };
+};
+
+[@deriving show({with_path: false})]
+type internal = {
+  id: int,
+  kind,
+  message: string,
+  source: option(string),
+  ephemeral: bool,
+  yOffsetAnimation: [@opaque] option(Component_Animation.t(float)),
+};
+
+let internalToExternal: internal => notification =
+  (internal: internal) => {
+    {
+      id: internal.id,
+      kind: internal.kind,
+      message: internal.message,
+      source: internal.source,
+      ephemeral: internal.ephemeral,
+      yOffset:
+        internal.yOffsetAnimation
+        |> Option.map(Component_Animation.get)
+        |> Option.value(~default=0.),
+    };
+  };
+
+type model = {
+  all: list(internal),
+  activeNotifications: IntSet.t,
+  statusBarBackgroundColor: option(Component_Animation.ColorTransition.t),
+  statusBarForegroundColor: option(Component_Animation.ColorTransition.t),
+  pane: Pane.t,
+};
+
 let initial = {
   all: [],
   activeNotifications: IntSet.empty,
   statusBarBackgroundColor: None,
   statusBarForegroundColor: None,
+  pane: Pane.initial,
 };
 
 let count = ({all, _}) =>
@@ -194,6 +390,11 @@ let updateColorTransition = (~config, ~theme, model) => {
   };
 };
 
+let updatePane = model => {
+  let notifications = all(model);
+  {...model, pane: model.pane |> Pane.set(notifications)};
+};
+
 let changeTheme = updateColorTransition;
 
 // ANIMATIONS
@@ -229,6 +430,7 @@ type msg =
   | Dismissed({id: int})
   | Expire({id: int})
   | Clear({count: int})
+  | Pane(Pane.msg)
   | AnimateYOffset({
       id: int,
       msg: [@opaque] Component_Animation.msg,
@@ -252,7 +454,8 @@ let update = (~theme, ~config, model, msg) => {
         Utility.ListEx.firstk(count, model.all);
       };
     {...model, all, activeNotifications: IntSet.empty}
-    |> updateColorTransition(~config, ~theme);
+    |> updateColorTransition(~config, ~theme)
+    |> updatePane;
   | Created(item) =>
     let yOffsetAnimation =
       animationsEnabled
@@ -262,7 +465,8 @@ let update = (~theme, ~config, model, msg) => {
       all: [{...item, yOffsetAnimation}, ...model.all],
       activeNotifications: IntSet.add(item.id, model.activeNotifications),
     }
-    |> updateColorTransition(~config, ~theme);
+    |> updateColorTransition(~config, ~theme)
+    |> updatePane;
 
   | Dismissed({id}) =>
     {
@@ -271,6 +475,7 @@ let update = (~theme, ~config, model, msg) => {
       activeNotifications: IntSet.remove(id, model.activeNotifications),
     }
     |> updateColorTransition(~config, ~theme)
+    |> updatePane
 
   | Expire({id}) =>
     {
@@ -278,6 +483,9 @@ let update = (~theme, ~config, model, msg) => {
       activeNotifications: IntSet.remove(id, model.activeNotifications),
     }
     |> updateColorTransition(~config, ~theme)
+    |> updatePane
+
+  | Pane(paneMsg) => {...model, pane: Pane.update(paneMsg, model.pane)}
 
   | AnimateYOffset({id, msg}) => {
       ...model,
@@ -468,104 +676,7 @@ module View = {
       </View>;
     };
   };
-
   // LIST
-
-  module Item = {
-    module Styles = {
-      open Style;
-
-      let container = [
-        flexDirection(`Row),
-        alignItems(`Center),
-        paddingHorizontal(10),
-        paddingVertical(5),
-      ];
-
-      let text = (~foreground) => [
-        textWrap(TextWrapping.NoWrap),
-        marginLeft(6),
-        color(foreground),
-      ];
-
-      let message = (~foreground) => [flexGrow(1), ...text(~foreground)];
-
-      let closeButton = [alignSelf(`Stretch), paddingHorizontal(5)];
-    };
-
-    let colorFor = (item: notification, ~theme) =>
-      switch (item.kind) {
-      | Warning => Colors.warningBackground.from(theme)
-      | Error => Colors.errorBackground.from(theme)
-      | Info => Colors.infoBackground.from(theme)
-      };
-
-    let iconFor = (item: notification) =>
-      switch (item.kind) {
-      | Warning => FontAwesome.exclamationTriangle
-      | Error => FontAwesome.exclamationCircle
-      | Info => FontAwesome.infoCircle
-      };
-
-    let make =
-        (~notification: notification, ~theme, ~font: UiFont.t, ~onDismiss, ()) => {
-      let foreground = Colors.foreground.from(theme);
-
-      let icon = () =>
-        <FontIcon
-          icon={iconFor(notification)}
-          fontSize=12.
-          color={colorFor(notification, ~theme)}
-        />;
-
-      let source = () =>
-        switch (notification.source) {
-        | Some(text) =>
-          let foreground = Color.multiplyAlpha(0.5, foreground);
-          <Text
-            style={Styles.text(~foreground)}
-            fontFamily={font.family}
-            fontSize=11.
-            text
-          />;
-        | None => React.empty
-        };
-
-      let closeButton = () => {
-        // TODO: Bring back
-        //let onClick = () => dispatch(Dismissed({id: item.id}));
-
-        let onClick = onDismiss;
-
-        <Clickable onClick style=Styles.closeButton>
-          <FontIcon icon=FontAwesome.times fontSize=13. color=foreground />
-        </Clickable>;
-      };
-
-      <View style=Styles.container>
-        <icon />
-        <source />
-        <Text
-          style={Styles.message(~foreground)}
-          fontFamily={font.family}
-          fontSize=11.
-          text={notification.message}
-        />
-        <closeButton />
-      </View>;
-    };
-  };
-};
-
-module Pane = {
-  open Feature_Pane.Schema;
-
-  let pane =
-    pane(
-      ~title="Notifications",
-      ~view=(~dispatch, ~model) => Revery.UI.React.empty,
-      ~keyPressed=key => failwith("TODO"),
-    );
 };
 
 // CONTRIBUTIONS
@@ -581,5 +692,23 @@ module Contributions = {
       errorForeground,
     ];
 
-  let pane = Pane.pane;
+  open Feature_Pane.Schema;
+
+  let pane = {
+    Feature_Pane.Schema.(
+      pane(
+        ~title="Notifications",
+        ~view=
+          (~config, ~font, ~isFocused, ~theme, ~dispatch, ~model) =>
+            <Pane.View
+              uiFont=font
+              isFocused
+              theme
+              dispatch={msg => dispatch(Pane(msg))}
+              model={model.pane}
+            />,
+        ~keyPressed=key => failwith("TODO"),
+      )
+    );
+  };
 };
