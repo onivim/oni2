@@ -15,7 +15,11 @@ let experimentalViml: model => list(string);
 // MSG
 
 [@deriving show]
+type command;
+
+[@deriving show]
 type msg =
+  | Command(command)
   | ModeChanged({
       allowAnimation: bool,
       mode: [@opaque] Vim.Mode.t,
@@ -103,6 +107,7 @@ module Configuration: {
 };
 
 module Contributions: {
+  let commands: list(Oni_Core.Command.t(msg));
   let keybindings: list(Feature_Input.Schema.keybinding);
   let configuration: list(Oni_Core.Config.Schema.spec);
 };

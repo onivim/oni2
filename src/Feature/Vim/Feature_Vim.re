@@ -60,7 +60,15 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
 // MSG
 
 [@deriving show]
+type command =
+  | MoveSelectionUpward
+  | MoveSelectionDownward
+  | CopySelectionUpward
+  | CopySelectionDownward;
+
+[@deriving show]
 type msg =
+  | Command(command)
   | ModeChanged({
       allowAnimation: bool,
       mode: [@opaque] Vim.Mode.t,
@@ -158,6 +166,10 @@ module Effects = {
 
 let update = (msg, model: model) => {
   switch (msg) {
+  | Command(command) =>
+    prerr_endline("COMMAND: " ++ show_command(command));
+    failwith("Done");
+
   | ModeChanged({allowAnimation, mode, effects, subMode}) => (
       {...model, subMode} |> handleEffects(effects),
       ModeDidChange({allowAnimation, mode, effects}),
@@ -263,6 +275,46 @@ let sub = (~buffer, ~topVisibleLine, ~bottomVisibleLine, model) => {
   |> Option.value(~default=Isolinear.Sub.none);
 };
 
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let moveLinesDown =
+    define(
+      ~category="Editor",
+      ~title="Move lines down",
+      "editor.action.moveLinesDownAction",
+      Command(MoveSelectionDownward),
+    );
+
+  let moveLinesDown =
+    define(
+      ~title="Move Line Down",
+      "editor.action.moveLinesDownAction",
+      Command(MoveSelectionDownward),
+    );
+
+  let moveLinesUp =
+    define(
+      ~title="Move Line Up",
+      "editor.action.moveLinesUpAction",
+      Command(MoveSelectionUpward),
+    );
+
+  let copyLinesDown =
+    define(
+      ~category="Copy Line Down",
+      "editor.action.copyLinesDownAction",
+      Command(CopySelectionDownward),
+    );
+
+  let copyLinesUp =
+    define(
+      ~category="Copy Line Up",
+      "editor.action.copyLinesUpAction",
+      Command(CopySelectionUpward),
+    );
+};
+
 module Keybindings = {
   open Feature_Input.Schema;
   let controlSquareBracketRemap =
@@ -272,10 +324,86 @@ module Keybindings = {
       ~toKeys="<ESC>",
       ~condition=WhenExpr.Value(True),
     );
+
+  let editCondition =
+    WhenExpr.parse(
+      "normalMode || visualMode || insertMode && editorTextFocus",
+    );
+
+  let moveLineDownwardJ =
+    bind(
+      ~key="<A-j>",
+      ~command=Commands.moveLinesDown.id,
+      ~condition=editCondition,
+    );
+
+  let moveLineDownwardArrow =
+    bind(
+      ~key="<A-Down>",
+      ~command=Commands.moveLinesDown.id,
+      ~condition=editCondition,
+    );
+
+  let moveLineUpwardK =
+    bind(
+      ~key="<A-k>",
+      ~command=Commands.moveLinesUp.id,
+      ~condition=editCondition,
+    );
+
+  let moveLineUpwardArrow =
+    bind(
+      ~key="<A-Up>",
+      ~command=Commands.moveLinesUp.id,
+      ~condition=editCondition,
+    );
+
+  let copyLineDownwardJ =
+    bind(
+      ~key="<A-S-j>",
+      ~command=Commands.copyLinesDown.id,
+      ~condition=editCondition,
+    );
+
+  let copyLineDownwardArrow =
+    bind(
+      ~key="<A-S-Down>",
+      ~command=Commands.copyLinesDown.id,
+      ~condition=editCondition,
+    );
+
+  let copyLineUpwardK =
+    bind(
+      ~key="<A-S-k>",
+      ~command=Commands.copyLinesUp.id,
+      ~condition=editCondition,
+    );
+
+  let copyLineUpwardArrow =
+    bind(
+      ~key="<A-S-Up>",
+      ~command=Commands.copyLinesUp.id,
+      ~condition=editCondition,
+    );
 };
 
 module Contributions = {
-  let keybindings = Keybindings.[controlSquareBracketRemap];
+  let commands =
+    Commands.[moveLinesDown, moveLinesUp, copyLinesDown, copyLinesUp];
+  let keybindings =
+    Keybindings.[
+      // Remaps
+      controlSquareBracketRemap,
+      // Bindings
+      moveLineDownwardJ,
+      moveLineDownwardArrow,
+      moveLineUpwardK,
+      moveLineUpwardArrow,
+      copyLineDownwardJ,
+      copyLineDownwardArrow,
+      copyLineUpwardArrow,
+      copyLineUpwardK,
+    ];
 
   let configuration = Configuration.[experimentalViml.spec];
 };
