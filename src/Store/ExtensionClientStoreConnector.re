@@ -25,7 +25,10 @@ let start = (extensions, extHostClient: Exthost.Client.t) => {
       ~name="exthost.registerQuitCleanup", dispatch =>
       dispatch(
         Actions.RegisterQuitCleanup(
-          () => Exthost.Client.terminate(extHostClient),
+          () => {
+            Log.debug("terminating exthost");
+            Exthost.Client.terminate(extHostClient);
+          },
         ),
       )
     );
