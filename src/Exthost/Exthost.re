@@ -4,6 +4,7 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module CacheId = CacheId;
 module ChainedCacheId = ChainedCacheId;
 module CodeAction = CodeAction;
 module CodeLens = CodeLens;
@@ -44,7 +45,9 @@ module ReferenceContext = ReferenceContext;
 module RenameLocation = RenameLocation;
 module Reply = Reply;
 module SCM = SCM;
+module Selection = Selection;
 module SignatureHelp = SignatureHelp;
+module Span = Span;
 module SuggestItem = SuggestItem;
 module SuggestResult = SuggestResult;
 module SymbolKind = SymbolKind;

@@ -239,6 +239,34 @@ module FileSystemEventService = {
 };
 
 module LanguageFeatures = {
+  let provideCodeActionsBySpan =
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~span: Span.t,
+        ~context: CodeAction.Context.t,
+        client,
+      ) => {
+    // TODO
+    Lwt.return(None);
+  };
+
+  let provideCodeActionsBySelection =
+      (~handle, ~resource, ~selection, ~context, client) => {
+    // TODO:
+    Lwt.return(None);
+  };
+
+  let resolveCodeAction = (~handle, ~id, client) => {
+    // TODO:
+    Lwt.return(None);
+  };
+
+  let releaseCodeActions = (~handle, ~cacheId, client) => {
+    ();
+      // TODO
+  };
+
   let provideCodeLenses = (~handle: int, ~resource: Uri.t, client) => {
     let decoder = Json.Decode.(nullable(CodeLens.List.decode));
 
