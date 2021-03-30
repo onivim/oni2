@@ -163,7 +163,6 @@ module Sub: {
     Isolinear.Sub.t('a);
 
   let completionItems:
-    // TODO: ~base: option(string),
     (
       ~handle: int,
       ~context: Exthost.CompletionContext.t,

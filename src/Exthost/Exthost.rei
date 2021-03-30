@@ -6,6 +6,11 @@ module Extension = Exthost_Extension;
 module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
+module CacheId: {
+  [@deriving show]
+  type t;
+};
+
 module ChainedCacheId: {
   [@deriving show]
   type t;
@@ -72,6 +77,53 @@ module Command: {
   let decode: Json.decoder(t);
 };
 
+module CodeAction: {
+  type t = {
+    chainedCacheId: option(ChainedCacheId.t),
+    title: string,
+    edit: option(WorkspaceEdit.t),
+    diagnostics: list(Diagnostic.t),
+    command: option(Command.t),
+    kind: option(string),
+    isPreferred: bool,
+    disabled: option(string),
+  };
+
+  module TriggerType: {
+    type t =
+      | Auto
+      | Manual;
+
+    let toInt: t => int;
+
+    let encode: Json.Encode.encoder(t);
+  };
+
+  module Context: {
+    type t = {
+      // TODO: What is this for?
+      only: option(string),
+      trigger: TriggerType.t,
+    };
+
+    let encode: Json.Encode.encoder(t);
+  };
+
+  module ProviderMetadata: {
+    type t = {
+      providedKinds: list(string),
+      providedDocumentation: StringMap.t(Command.t),
+    };
+  };
+
+  module List: {
+    type nonrec t = {
+      cacheId: CacheId.t,
+      actions: list(t),
+    };
+  };
+};
+
 module CompletionContext: {
   [@deriving show]
   type triggerKind =
@@ -131,6 +183,28 @@ module OneBasedRange: {
 
   let ofRange: CharacterRange.t => t;
   let toRange: t => CharacterRange.t;
+};
+
+// Implementation of 'IRange':
+// https://github.com/onivim/vscode-exthost/blob/0d6b39803352369daaa97a444ff76352d8452be2/src/vs/base/browser/ui/inputbox/inputBox.ts#L74
+module Span: {
+  type t = {
+    start: int,
+    stop: int,
+  };
+
+  let encode: Json.Encode.encoder(t);
+};
+
+module Selection: {
+  type t = {
+    selectionStartLineNumber: int,
+    selectionStartColumn: int,
+    positionLineNumber: int,
+    positionColumn: int,
+  };
+
+  let encode: Json.Encode.encoder(t);
 };
 
 module CodeLens: {
@@ -1416,6 +1490,13 @@ module Msg: {
           supportsResolveDetails: bool,
           extensionId: string,
         })
+      | RegisterQuickFixSupport({
+          handle: int,
+          selector: DocumentSelector.t,
+          metadata: CodeAction.ProviderMetadata.t,
+          displayName: string,
+          supportsResolve: bool,
+        })
       | RegisterReferenceSupport({
           handle: int,
           selector: DocumentSelector.t,
@@ -1856,6 +1937,33 @@ module Request: {
   };
 
   module LanguageFeatures: {
+    let provideCodeActionsBySpan:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~span: Span.t,
+        ~context: CodeAction.Context.t,
+        Client.t
+      ) =>
+      Lwt.t(option(CodeAction.List.t));
+
+    let provideCodeActionsBySelection:
+      (
+        ~handle: int,
+        ~resource: Uri.t,
+        ~selection: Selection.t,
+        ~context: CodeAction.Context.t,
+        Client.t
+      ) =>
+      Lwt.t(option(CodeAction.List.t));
+
+    let resolveCodeAction:
+      (~handle: int, ~id: ChainedCacheId.t, Client.t) =>
+      Lwt.t(option(WorkspaceEdit.t));
+
+    let releaseCodeActions:
+      (~handle: int, ~cacheId: CacheId.t, Client.t) => unit;
+
     let provideCodeLenses:
       (~handle: int, ~resource: Uri.t, Client.t) =>
       Lwt.t(option(CodeLens.List.t));
