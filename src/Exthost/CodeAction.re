@@ -11,6 +11,27 @@ type t = {
   disabled: option(string),
 };
 
+module Decode = {
+  let decode = {
+    Oni_Core.Json.Decode.(
+      obj(({field, _}) =>
+        {
+          chainedCacheId:
+            field.optional("chainedCacheId", ChainedCacheId.decode),
+          title: field.required("title", string),
+          edit: field.optional("edit", WorkspaceEdit.decode),
+          diagnostics:
+            field.withDefault("diagnostics", [], list(Diagnostic.decode)),
+          command: field.optional("command", Command.decode),
+          kind: field.optional("kind", string),
+          isPreferred: field.withDefault("isPreferred", false, bool),
+          disabled: field.optional("disabled", string),
+        }
+      )
+    );
+  };
+};
+
 module TriggerType = {
   type t =
     | Auto
@@ -92,8 +113,19 @@ module ProviderMetadata = {
 };
 
 module List = {
-  type t = {
+  type nonrec t = {
     cacheId: CacheId.t,
     actions: list(t),
+  };
+
+  let decode = {
+    Oni_Core.Json.Decode.(
+      obj(({field, _}) =>
+        {
+          cacheId: field.required("cacheId", CacheId.decode),
+          actions: field.withDefault("actions", [], list(Decode.decode)),
+        }
+      )
+    );
   };
 };
