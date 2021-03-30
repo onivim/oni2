@@ -12,10 +12,7 @@ module Schema: {
     (
       ~title: string,
       ~id: option(string),
-      ~contextKeys: (
-        ~isFocused: bool,
-        'model
-      ) => WhenExpr.ContextKeys.t,
+      ~contextKeys: (~isFocused: bool, 'model) => WhenExpr.ContextKeys.t,
       ~view: (
                ~config: Config.resolver,
                ~font: UiFont.t,
@@ -72,9 +69,11 @@ let update:
   (model('model, 'msg), outmsg('msg));
 
 module Contributions: {
-  // let commands: (~isFocused: bool, model) => list(Command.t(msg));
-  // let contextKeys: (~isFocused: bool, model) => WhenExpr.ContextKeys.t;
-  // let keybindings: list(Feature_Input.Schema.keybinding);
+  let commands:
+    (~isFocused: bool, model('model, 'msg)) => list(Command.t(msg('msg)));
+  let contextKeys:
+    (~isFocused: bool, 'model, model('model, 'msg)) => WhenExpr.ContextKeys.t;
+  let keybindings: list(Feature_Input.Schema.keybinding);
 };
 
 let initial: list(Schema.t('model, 'msg)) => model('model, 'msg);

@@ -1083,15 +1083,34 @@ module Contributions = {
       : common;
   };
 
-  let contextKeys = (~isFocused, model) => {
+  let contextKeys = (~isFocused, model: 'model, pane: model('model, 'msg)) => {
+    module PanelSchema = Schema;
     open WhenExpr.ContextKeys;
     let vimNavKeys =
       isFocused
         ? Component_VimWindows.Contributions.contextKeys(
-            model.vimWindowNavigation,
+            pane.vimWindowNavigation,
           )
         : empty;
 
+    let activePanel =
+      pane
+      |> activePane
+      |> Utility.OptionEx.flatMap((pane: PanelSchema.t('model, 'msg)) => {
+           pane.id
+         })
+      |> Option.map(id => {[Schema.string("activePanel", _ => id)]})
+      |> Option.value(~default=[])
+      |> Schema.fromList
+      |> fromSchema(pane);
+
+    let activePanelContextKeys =
+      pane
+      |> activePane
+      |> Option.map((pane: PanelSchema.t('model, 'msg)) => {
+           pane.contextKeys(~isFocused, model)
+         })
+      |> Option.value(~default=empty);
     // let diagnosticsKeys =
     //   isFocused && model.selected == Diagnostics
     //     ? Component_VimTree.Contributions.contextKeys(model.diagnosticsView)
@@ -1139,10 +1158,11 @@ module Contributions = {
     let paneFocus =
       [Schema.bool("paneFocus", _ => isFocused)]
       |> Schema.fromList
-      |> fromSchema(model);
+      |> fromSchema(pane);
 
     [
-      //      activePanel,
+      activePanel,
+      activePanelContextKeys,
       paneFocus,
       vimNavKeys,
       // diagnosticsKeys,

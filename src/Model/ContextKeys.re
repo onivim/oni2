@@ -158,11 +158,12 @@ let all = (state: State.t) => {
       state.searchPane,
     );
 
-  // let paneContextKeys =
-  //   Feature_Pane.Contributions.contextKeys(
-  //     ~isFocused=focus == Focus.Pane,
-  //     state.pane,
-  //   );
+  let paneContextKeys =
+    Feature_Pane.Contributions.contextKeys(
+      ~isFocused=focus == Focus.Pane,
+      state,
+      state.pane,
+    );
 
   let isEditorFocused =
     switch (focus) {
@@ -188,7 +189,7 @@ let all = (state: State.t) => {
     scmContextKeys,
     extensionContextKeys,
     searchContextKeys,
-    // paneContextKeys,
+    paneContextKeys,
     Feature_Registration.Contributions.contextKeys(
       ~isFocused=focus == Focus.LicenseKey,
       state.registration,

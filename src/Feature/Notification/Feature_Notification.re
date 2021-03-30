@@ -696,8 +696,11 @@ module Contributions = {
 
   let pane = {
     let contextKeys = (~isFocused, model) => {
-      // TODO
-      WhenExpr.ContextKeys.empty;
+      isFocused
+        ? Component_VimList.Contributions.contextKeys(
+            model.pane.notificationsView,
+          )
+        : WhenExpr.ContextKeys.empty;
     };
 
     Feature_Pane.Schema.(

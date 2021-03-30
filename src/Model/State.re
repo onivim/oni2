@@ -206,7 +206,7 @@ let defaultKeyBindings =
         ~condition="sneakMode" |> WhenExpr.parse,
       ),
     ]
-  // @ Feature_Pane.Contributions.keybindings
+  @ Feature_Pane.Contributions.keybindings
   @ Feature_Input.Schema.[
       bind(
         ~key="<D-W>",
