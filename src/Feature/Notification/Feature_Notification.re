@@ -695,9 +695,16 @@ module Contributions = {
   open Feature_Pane.Schema;
 
   let pane = {
+    let contextKeys = (~isFocused, model) => {
+      // TODO
+      WhenExpr.ContextKeys.empty;
+    };
+
     Feature_Pane.Schema.(
-      pane(
+      panel(
         ~title="Notifications",
+        ~id=Some("workbench.panel.notifications"),
+        ~contextKeys,
         ~view=
           (~config, ~font, ~isFocused, ~theme, ~dispatch, ~model) =>
             <Pane.View

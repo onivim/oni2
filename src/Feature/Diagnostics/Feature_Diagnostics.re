@@ -340,9 +340,16 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model: model) => {
 module Pane = {
   open Feature_Pane.Schema;
 
+  let contextKeys = (~isFocused, model) => {
+    // TODO
+    WhenExpr.ContextKeys.empty;
+  };
+
   let pane =
-    pane(
+    panel(
       ~title="Problems",
+      ~id=Some("workbench.panel.markers"),
+      ~contextKeys,
       ~view=
         (~config, ~font, ~isFocused, ~theme, ~dispatch, ~model) =>
           Revery.UI.React.empty,

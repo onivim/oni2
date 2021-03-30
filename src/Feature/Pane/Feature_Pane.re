@@ -12,6 +12,8 @@ module Schema = {
 
   type t('model, 'msg) = {
     title: string,
+    id: option(string),
+    contextKeys: (~isFocused: bool, 'model) => WhenExpr.ContextKeys.t,
     view:
       (
         ~config: Config.resolver,
@@ -26,9 +28,9 @@ module Schema = {
     uniqueId,
   };
 
-  let pane = (~title, ~view, ~keyPressed) => {
+  let panel = (~title, ~id, ~contextKeys, ~view, ~keyPressed) => {
     incr(nextId);
-    {title, view, keyPressed, uniqueId: nextId^};
+    {title, id, contextKeys, view, keyPressed, uniqueId: nextId^};
   };
 
   let map = (~msg as mapMsg, ~model as mapModel, pane) => {
@@ -48,12 +50,19 @@ module Schema = {
       );
     };
 
+    let contextKeys' = (~isFocused, model) => {
+      let mappedModel = mapModel(model);
+      pane.contextKeys(~isFocused, mappedModel);
+    };
+
     let keyPressed' = str => {
       pane.keyPressed(str) |> mapMsg;
     };
 
     {
       title: pane.title,
+      id: pane.id,
+      contextKeys: contextKeys',
       view: view',
       keyPressed: keyPressed',
       uniqueId: pane.uniqueId,
@@ -1127,14 +1136,14 @@ module Contributions = {
     //   |> Schema.fromList
     //   |> fromSchema(model);
 
-    // let paneFocus =
-    //   [Schema.bool("paneFocus", (_: model) => isFocused)]
-    //   |> Schema.fromList
-    //   |> fromSchema(model);
+    let paneFocus =
+      [Schema.bool("paneFocus", _ => isFocused)]
+      |> Schema.fromList
+      |> fromSchema(model);
 
     [
       //      activePanel,
-      //paneFocus,
+      paneFocus,
       vimNavKeys,
       // diagnosticsKeys,
       // locationsKeys,

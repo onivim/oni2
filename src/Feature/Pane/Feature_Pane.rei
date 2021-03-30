@@ -8,9 +8,14 @@ open Oni_Core;
 module Schema: {
   type t('model, 'msg);
 
-  let pane:
+  let panel:
     (
       ~title: string,
+      ~id: option(string),
+      ~contextKeys: (
+        ~isFocused: bool,
+        'model
+      ) => WhenExpr.ContextKeys.t,
       ~view: (
                ~config: Config.resolver,
                ~font: UiFont.t,
