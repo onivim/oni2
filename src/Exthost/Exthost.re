@@ -5,6 +5,7 @@ module Protocol = Exthost_Protocol;
 module Transport = Exthost_Transport;
 
 module ChainedCacheId = ChainedCacheId;
+module CodeAction = CodeAction;
 module CodeLens = CodeLens;
 module Color = Color;
 module Command = Command;
