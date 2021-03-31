@@ -2251,7 +2251,12 @@ let update =
 
   | Vim(msg) =>
     let previousSubMode = state.vim |> Feature_Vim.subMode;
-    let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
+    let editor = state.layout |> Feature_Layout.activeEditor;
+    let cursor = editor |> Feature_Editor.Editor.getPrimaryCursorByte;
+
+    let selections = editor |> Feature_Editor.Editor.selections;
+    let (vim, outmsg) =
+      Feature_Vim.update(~cursor, ~selections, msg, state.vim);
     let newSubMode = state.vim |> Feature_Vim.subMode;
 
     // If we've switched to, or from, insert literal,

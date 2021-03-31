@@ -15,7 +15,11 @@ let experimentalViml: model => list(string);
 // MSG
 
 [@deriving show]
+type command;
+
+[@deriving show]
 type msg =
+  | Command(command)
   | ModeChanged({
       allowAnimation: bool,
       mode: [@opaque] Vim.Mode.t,
@@ -53,7 +57,14 @@ type outmsg =
 
 // UPDATE
 
-let update: (msg, model) => (model, outmsg);
+let update:
+  (
+    ~cursor: BytePosition.t,
+    ~selections: list(Oni_Core.VisualRange.t),
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 let getSearchHighlightsByLine:
   (~bufferId: int, ~line: LineNumber.t, model) => list(ByteRange.t);
@@ -103,6 +114,7 @@ module Configuration: {
 };
 
 module Contributions: {
+  let commands: list(Oni_Core.Command.t(msg));
   let keybindings: list(Feature_Input.Schema.keybinding);
   let configuration: list(Oni_Core.Config.Schema.spec);
 };

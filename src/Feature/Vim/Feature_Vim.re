@@ -60,7 +60,15 @@ let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
 // MSG
 
 [@deriving show]
+type command =
+  | MoveSelectionUpward
+  | MoveSelectionDownward
+  | CopySelectionUpward
+  | CopySelectionDownward;
+
+[@deriving show]
 type msg =
+  | Command(command)
   | ModeChanged({
       allowAnimation: bool,
       mode: [@opaque] Vim.Mode.t,
@@ -154,10 +162,69 @@ module Effects = {
       );
     });
   };
+
+  let command = cmd => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Vim.Effect.command", dispatch => {
+      let context = Vim.Context.current();
+      let (newContext, effects) = Vim.command(~context, cmd);
+
+      dispatch(
+        ModeChanged({
+          allowAnimation: false,
+          mode: newContext.mode,
+          subMode: newContext.subMode,
+          effects,
+        }),
+      );
+    });
+  };
 };
 
-let update = (msg, model: model) => {
+let update = (~cursor, ~selections, msg, model: model) => {
   switch (msg) {
+  | Command(command) =>
+    let (startLine, stopLine) =
+      switch (selections) {
+      | [visualRange, ..._] =>
+        let range = Oni_Core.VisualRange.(visualRange.range);
+        ByteRange.(range.start.line, range.stop.line);
+      | [] => BytePosition.(cursor.line, cursor.line)
+      };
+    let cmd =
+      switch (command) {
+      | MoveSelectionDownward
+      | MoveSelectionUpward => "m"
+
+      | CopySelectionDownward
+      | CopySelectionUpward => "t"
+      };
+
+    let destination =
+      EditorCoreTypes.(
+        switch (command) {
+        | MoveSelectionDownward => LineNumber.(stopLine + 1)
+        | MoveSelectionUpward => LineNumber.(startLine - 2)
+        | CopySelectionUpward => LineNumber.(startLine - 1)
+        | CopySelectionDownward => stopLine
+        }
+      );
+
+    let eff =
+      EditorCoreTypes.(
+        Effects.command(
+          Printf.sprintf(
+            "%s,%s%s%d",
+            startLine |> LineNumber.toOneBased |> string_of_int,
+            stopLine |> LineNumber.toOneBased |> string_of_int,
+            cmd,
+            destination |> LineNumber.toOneBased,
+          ),
+        )
+      );
+
+    (model, Effect(eff));
+
   | ModeChanged({allowAnimation, mode, effects, subMode}) => (
       {...model, subMode} |> handleEffects(effects),
       ModeDidChange({allowAnimation, mode, effects}),
@@ -263,6 +330,38 @@ let sub = (~buffer, ~topVisibleLine, ~bottomVisibleLine, model) => {
   |> Option.value(~default=Isolinear.Sub.none);
 };
 
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let moveLinesDown =
+    define(
+      ~title="Move Line Down",
+      "editor.action.moveLinesDownAction",
+      Command(MoveSelectionDownward),
+    );
+
+  let moveLinesUp =
+    define(
+      ~title="Move Line Up",
+      "editor.action.moveLinesUpAction",
+      Command(MoveSelectionUpward),
+    );
+
+  let copyLinesDown =
+    define(
+      ~category="Copy Line Down",
+      "editor.action.copyLinesDownAction",
+      Command(CopySelectionDownward),
+    );
+
+  let copyLinesUp =
+    define(
+      ~category="Copy Line Up",
+      "editor.action.copyLinesUpAction",
+      Command(CopySelectionUpward),
+    );
+};
+
 module Keybindings = {
   open Feature_Input.Schema;
   let controlSquareBracketRemap =
@@ -272,10 +371,86 @@ module Keybindings = {
       ~toKeys="<ESC>",
       ~condition=WhenExpr.Value(True),
     );
+
+  let editCondition =
+    WhenExpr.parse(
+      "normalMode || visualMode || insertMode && editorTextFocus",
+    );
+
+  let moveLineDownwardJ =
+    bind(
+      ~key="<A-j>",
+      ~command=Commands.moveLinesDown.id,
+      ~condition=editCondition,
+    );
+
+  let moveLineDownwardArrow =
+    bind(
+      ~key="<A-Down>",
+      ~command=Commands.moveLinesDown.id,
+      ~condition=editCondition,
+    );
+
+  let moveLineUpwardK =
+    bind(
+      ~key="<A-k>",
+      ~command=Commands.moveLinesUp.id,
+      ~condition=editCondition,
+    );
+
+  let moveLineUpwardArrow =
+    bind(
+      ~key="<A-Up>",
+      ~command=Commands.moveLinesUp.id,
+      ~condition=editCondition,
+    );
+
+  let copyLineDownwardJ =
+    bind(
+      ~key="<A-S-j>",
+      ~command=Commands.copyLinesDown.id,
+      ~condition=editCondition,
+    );
+
+  let copyLineDownwardArrow =
+    bind(
+      ~key="<A-S-Down>",
+      ~command=Commands.copyLinesDown.id,
+      ~condition=editCondition,
+    );
+
+  let copyLineUpwardK =
+    bind(
+      ~key="<A-S-k>",
+      ~command=Commands.copyLinesUp.id,
+      ~condition=editCondition,
+    );
+
+  let copyLineUpwardArrow =
+    bind(
+      ~key="<A-S-Up>",
+      ~command=Commands.copyLinesUp.id,
+      ~condition=editCondition,
+    );
 };
 
 module Contributions = {
-  let keybindings = Keybindings.[controlSquareBracketRemap];
+  let commands =
+    Commands.[moveLinesDown, moveLinesUp, copyLinesDown, copyLinesUp];
+  let keybindings =
+    Keybindings.[
+      // Remaps
+      controlSquareBracketRemap,
+      // Bindings
+      moveLineDownwardJ,
+      moveLineDownwardArrow,
+      moveLineUpwardK,
+      moveLineUpwardArrow,
+      copyLineDownwardJ,
+      copyLineDownwardArrow,
+      copyLineUpwardArrow,
+      copyLineUpwardK,
+    ];
 
   let configuration = Configuration.[experimentalViml.spec];
 };
