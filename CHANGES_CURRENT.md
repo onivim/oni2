@@ -2,6 +2,7 @@
 
 - #3284 - Definition: Add 'editor.action.revealDefinitionAside' command (fixes #3261)
 - #2881 - Extensions: Initial rename support
+- #3351 - Editor: Add Alt+J/Alt+K keybinding to move lines (fixes #3325)
 
 ### Bug Fixes
 
