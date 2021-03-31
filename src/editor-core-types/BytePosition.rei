@@ -19,3 +19,5 @@ let (==): (t, t) => bool;
  * - a positive integer if a is greater than b
  */
 let compare: (t, t) => int;
+
+let shiftLine: (~delta: int, t) => t;

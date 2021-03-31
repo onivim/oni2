@@ -21,3 +21,8 @@ let compare = (a, b) =>
   } else {
     LineNumber.toZeroBased(a.line) - LineNumber.toZeroBased(b.line);
   };
+
+let shiftLine = (~delta, bytePos) => {
+  ...bytePos,
+  line: LineNumber.(bytePos.line + delta),
+};

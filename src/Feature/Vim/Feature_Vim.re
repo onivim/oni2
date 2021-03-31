@@ -162,13 +162,68 @@ module Effects = {
       );
     });
   };
+
+  let command = cmd => {
+    Isolinear.Effect.createWithDispatch(
+      ~name="Feature_Vim.Effect.command", dispatch => {
+      let context = Vim.Context.current();
+      let (newContext, effects) = Vim.command(~context, cmd);
+
+      dispatch(
+        ModeChanged({
+          allowAnimation: false,
+          mode: newContext.mode,
+          subMode: newContext.subMode,
+          effects,
+        }),
+      );
+    });
+  };
 };
 
-let update = (msg, model: model) => {
+let update = (~cursor, ~selections, msg, model: model) => {
   switch (msg) {
   | Command(command) =>
-    prerr_endline("COMMAND: " ++ show_command(command));
-    failwith("Done");
+    let (startLine, stopLine) =
+      switch (selections) {
+      | [visualRange, ..._] =>
+        let range = Oni_Core.VisualRange.(visualRange.range);
+        ByteRange.(range.start.line, range.stop.line);
+      | [] => BytePosition.(cursor.line, cursor.line)
+      };
+    let cmd =
+      switch (command) {
+      | MoveSelectionDownward
+      | MoveSelectionUpward => "m"
+
+      | CopySelectionDownward
+      | CopySelectionUpward => "t"
+      };
+
+    let destination =
+      EditorCoreTypes.(
+        switch (command) {
+        | MoveSelectionDownward => LineNumber.(stopLine + 1)
+        | MoveSelectionUpward => LineNumber.(startLine - 2)
+        | CopySelectionUpward => LineNumber.(startLine - 1)
+        | CopySelectionDownward => stopLine
+        }
+      );
+
+    let eff =
+      EditorCoreTypes.(
+        Effects.command(
+          Printf.sprintf(
+            "%s,%s%s%d",
+            startLine |> LineNumber.toOneBased |> string_of_int,
+            stopLine |> LineNumber.toOneBased |> string_of_int,
+            cmd,
+            destination |> LineNumber.toOneBased,
+          ),
+        )
+      );
+
+    (model, Effect(eff));
 
   | ModeChanged({allowAnimation, mode, effects, subMode}) => (
       {...model, subMode} |> handleEffects(effects),
@@ -277,14 +332,6 @@ let sub = (~buffer, ~topVisibleLine, ~bottomVisibleLine, model) => {
 
 module Commands = {
   open Feature_Commands.Schema;
-
-  let moveLinesDown =
-    define(
-      ~category="Editor",
-      ~title="Move lines down",
-      "editor.action.moveLinesDownAction",
-      Command(MoveSelectionDownward),
-    );
 
   let moveLinesDown =
     define(

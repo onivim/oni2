@@ -57,7 +57,14 @@ type outmsg =
 
 // UPDATE
 
-let update: (msg, model) => (model, outmsg);
+let update:
+  (
+    ~cursor: BytePosition.t,
+    ~selections: list(Oni_Core.VisualRange.t),
+    msg,
+    model
+  ) =>
+  (model, outmsg);
 
 let getSearchHighlightsByLine:
   (~bufferId: int, ~line: LineNumber.t, model) => list(ByteRange.t);
