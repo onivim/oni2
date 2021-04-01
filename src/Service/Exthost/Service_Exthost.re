@@ -753,6 +753,16 @@ module Sub = {
     |> Isolinear.Sub.map(toMsg);
   };
 
+  let codeActionsBySelection =
+      (~handle, ~context, ~buffer, ~range, ~toMsg, client) => {
+    Isolinear.Sub.none;
+  };
+
+  let codeActionsByLines =
+      (~handle, ~context, ~buffer, ~lines, ~toMsg, client) => {
+    Isolinear.Sub.none;
+  };
+
   type codeLensesParams = {
     handle: int,
     eventTick: int,
