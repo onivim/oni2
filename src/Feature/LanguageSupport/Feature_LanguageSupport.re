@@ -39,6 +39,7 @@ type command =
 [@deriving show]
 type msg =
   | Exthost(Exthost.Msg.LanguageFeatures.msg)
+  | CodeActions(CodeActions.msg)
   | Completion(Completion.msg)
   | Definition(Definition.msg)
   | DocumentHighlights(DocumentHighlights.msg)
@@ -346,6 +347,13 @@ let update =
   | Exthost(_) =>
     // TODO:
     (model, Nothing)
+
+  | CodeActions(codeActionsMsg) =>
+
+    let (codeActions', outmsg) = CodeActions.update(codeActionsMsg, model.codeActions);
+    let outmsg' = outmsg
+    |> map(msg => CodeActions(msg));
+    ({...model, codeActions: codeActions'}, outmsg');
 
   | CodeLens(codeLensMsg) =>
     let (codeLens', eff) = CodeLens.update(codeLensMsg, model.codeLens);

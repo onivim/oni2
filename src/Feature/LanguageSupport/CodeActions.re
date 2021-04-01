@@ -11,6 +11,9 @@ type provider = {
 
 type model = {providers: list(provider)};
 
+[@deriving show]
+type msg = unit;
+
 let initial = {providers: []};
 
 let register =
@@ -26,4 +29,17 @@ let register =
 let unregister = (~handle, model) => {
   providers:
     model.providers |> List.filter(provider => {provider.handle != handle}),
+};
+
+let update = (msg, model) => (model, Outmsg.Nothing);
+
+let sub =
+    (
+      ~buffer,
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
+      ~client,
+      codeActions,
+    ) => {
+  Isolinear.Sub.none;
 };
