@@ -15,10 +15,12 @@ let initial = {providers: []};
 
 let register =
     (~handle, ~selector, ~metadata, ~displayName, ~supportsResolve, model) => {
-  providers: [
-    {handle, selector, metadata, displayName, supportsResolve},
-    ...model.providers,
-  ],
+  {
+    providers: [
+      {handle, selector, metadata, displayName, supportsResolve},
+      ...model.providers,
+    ],
+  };
 };
 
 let unregister = (~handle, model) => {
