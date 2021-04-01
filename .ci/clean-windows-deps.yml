@@ -27,8 +27,6 @@ steps:
     displayName: "Remove Android SDK"
   - script: rd /s /q "C:\Program Files\MongoDB"
     displayName: "Remove MongoDB"
-  - script: rd /s /q "C:\Program Files\Java"
-    displayName: "Remove Java"
   - script: rd /s /q "C:\Program Files\Internet Explorer"
     displayName: "Remove Internet Explorer"
   - script: rd /s /q "C:\Strawberry"
