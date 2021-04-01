@@ -30,6 +30,7 @@
 - #3342 - Completion: Use completion kind instead of insert text rules for sorting
 - #3346 - Extensions: Fix parse errors for progress and updateConfigurationOption APIs (related #3321)
 - #3326 - Lifecycle: Delay process termination until cleanup actions have run (fixes #3270, thanks @timbertson !)
+- #3359 - SCM: Don't show diffs for untracked or ignored files (fixes #3355)
 
 ### Performance
 
