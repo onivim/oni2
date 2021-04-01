@@ -1,6 +1,7 @@
 open EditorCoreTypes;
 
 type model = {
+  codeActions: CodeActions.model,
   codeLens: CodeLens.model,
   completion: Completion.model,
   definition: Definition.model,
@@ -15,6 +16,7 @@ type model = {
 };
 
 let initial = {
+  codeActions: CodeActions.initial,
   codeLens: CodeLens.initial,
   completion: Completion.initial,
   definition: Definition.initial,
@@ -204,6 +206,27 @@ let update =
       DocumentSymbols.register(~handle, ~selector, model.documentSymbols);
     ({...model, documentSymbols: documentSymbols'}, Nothing);
 
+  | Exthost(
+      RegisterQuickFixSupport({
+        handle,
+        selector,
+        metadata,
+        displayName,
+        supportsResolve,
+      }),
+    ) =>
+    let codeActions' =
+      CodeActions.register(
+        ~handle,
+        ~selector,
+        ~metadata,
+        ~displayName,
+        ~supportsResolve,
+        model.codeActions,
+      );
+
+    ({...model, codeActions: codeActions'}, Nothing);
+
   | Exthost(RegisterReferenceSupport({handle, selector})) =>
     let references' =
       References.register(~handle, ~selector, model.references);
@@ -295,6 +318,7 @@ let update =
   | Exthost(Unregister({handle})) => (
       {
         ...model,
+        codeActions: CodeActions.unregister(~handle, model.codeActions),
         codeLens: CodeLens.unregister(~handle, model.codeLens),
         completion: Completion.unregister(~handle, model.completion),
         definition: Definition.unregister(~handle, model.definition),
