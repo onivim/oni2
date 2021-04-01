@@ -339,10 +339,10 @@ module Keybindings = {
   let command = Commands.openConfigurationFile.id;
 
   let openConfigOnMac =
-    bind(~key="<D-,>", ~condition="IsMac" |> WhenExpr.parse, ~command);
+    bind(~key="<D-,>", ~condition="isMac" |> WhenExpr.parse, ~command);
 
   let openConfigOnOther =
-    bind(~key="<C-,>", ~condition="!IsMac" |> WhenExpr.parse, ~command);
+    bind(~key="<C-,>", ~condition="!isMac" |> WhenExpr.parse, ~command);
 };
 
 // CONTRIBUTIONS
