@@ -1,6 +1,7 @@
 ### Features 
 
 - #3284 - Definition: Add 'editor.action.revealDefinitionAside' command (fixes #3261)
+- #3352 - Keybindings: Add default keybinding for open configuration (related #1423, thanks @LiHRaM !)
 
 ### Bug Fixes
 
