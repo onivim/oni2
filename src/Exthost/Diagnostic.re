@@ -48,6 +48,7 @@ module Severity = {
     );
 };
 
+[@deriving show]
 type t = {
   range: OneBasedRange.t,
   message: string,

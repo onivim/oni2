@@ -812,15 +812,28 @@ module Sub = {
           Revery.Tick.timeout(
             ~name,
             _ => {
+              prerr_endline(
+                "Requesting at line: "
+                ++ string_of_int(params.startLine)
+                ++ " through "
+                ++ string_of_int(params.stopLine),
+              );
               let promise =
-                Exthost.Request.LanguageFeatures.provideCodeActionsBySpan(
+                Exthost.Request.LanguageFeatures.provideCodeActionsByRange(
                   ~handle=params.handle,
                   ~resource=Oni_Core.Buffer.getUri(params.buffer),
-                  ~span=
-                    Exthost.Span.{
-                      start: params.startLine,
-                      stop: params.stopLine,
+                  ~range=
+                    Exthost.OneBasedRange.{
+                      startLineNumber: 6,
+                      startColumn: 20,
+                      endLineNumber: 6,
+                      endColumn: 20,
                     },
+                  // ~span=
+                  // Exthost.Span.{
+                  //   start: params.startLine,
+                  //   stop: params.stopLine,
+                  // },
                   ~context=params.context,
                   params.client,
                 );

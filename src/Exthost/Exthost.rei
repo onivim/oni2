@@ -121,6 +121,8 @@ module CodeAction: {
       cacheId: CacheId.t,
       actions: list(t),
     };
+
+    let toDebugString: t => string;
   };
 };
 
@@ -1937,11 +1939,11 @@ module Request: {
   };
 
   module LanguageFeatures: {
-    let provideCodeActionsBySpan:
+    let provideCodeActionsByRange:
       (
         ~handle: int,
         ~resource: Uri.t,
-        ~span: Span.t,
+        ~range: OneBasedRange.t,
         ~context: CodeAction.Context.t,
         Client.t
       ) =>

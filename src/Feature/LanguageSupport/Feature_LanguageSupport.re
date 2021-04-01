@@ -349,10 +349,9 @@ let update =
     (model, Nothing)
 
   | CodeActions(codeActionsMsg) =>
-
-    let (codeActions', outmsg) = CodeActions.update(codeActionsMsg, model.codeActions);
-    let outmsg' = outmsg
-    |> map(msg => CodeActions(msg));
+    let (codeActions', outmsg) =
+      CodeActions.update(codeActionsMsg, model.codeActions);
+    let outmsg' = outmsg |> map(msg => CodeActions(msg));
     ({...model, codeActions: codeActions'}, outmsg');
 
   | CodeLens(codeLensMsg) =>
@@ -937,6 +936,7 @@ let sub =
       ~visibleBuffers,
       ~client,
       {
+        codeActions,
         codeLens,
         definition,
         completion,
@@ -958,6 +958,16 @@ let sub =
       codeLens,
     )
     |> Isolinear.Sub.map(msg => CodeLens(msg));
+
+  let codeActionsSub =
+    CodeActions.sub(
+      ~buffer=activeBuffer,
+      ~topVisibleBufferLine,
+      ~bottomVisibleBufferLine,
+      ~client,
+      codeActions,
+    )
+    |> Isolinear.Sub.map(msg => CodeActions(msg));
 
   let definitionSub =
     isInsertMode
@@ -1006,6 +1016,7 @@ let sub =
     |> Isolinear.Sub.map(msg => SignatureHelp(msg));
 
   [
+    codeActionsSub,
     codeLensSub,
     completionSub,
     definitionSub,

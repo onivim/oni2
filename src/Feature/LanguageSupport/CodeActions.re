@@ -41,5 +41,36 @@ let sub =
       ~client,
       codeActions,
     ) => {
-  Isolinear.Sub.none;
+  // TODO:
+  let context =
+    Exthost.CodeAction.(Context.{only: None, trigger: TriggerType.Auto});
+
+  let toMsg =
+    fun
+    | Ok(Some(actions)) =>
+      prerr_endline(Exthost.CodeAction.List.toDebugString(actions))
+    | Ok(None) => prerr_endline("NONE")
+    | Error(msg) => prerr_endline("ERROR:" ++ msg);
+
+  let lines =
+    EditorCoreTypes.LineSpan.{
+      start: topVisibleBufferLine,
+      stop: bottomVisibleBufferLine,
+    };
+
+  codeActions.providers
+  |> List.filter(({selector, _}) => {
+       Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
+     })
+  |> List.map(({handle, _}) => {
+       Service_Exthost.Sub.codeActionsByLines(
+         ~handle,
+         ~lines,
+         ~buffer,
+         ~context,
+         ~toMsg,
+         client,
+       )
+     })
+  |> Isolinear.Sub.batch;
 };
