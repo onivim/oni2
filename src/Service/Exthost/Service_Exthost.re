@@ -758,9 +758,118 @@ module Sub = {
     Isolinear.Sub.none;
   };
 
+  type codeActionsSpanParams = {
+    handle: int,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+    context: Exthost.CodeAction.Context.t,
+    startLine: int, // One-based start line
+    stopLine: int // One-based stop line
+  };
+
+  let idForCodeActionSpan = (~handle, ~buffer, ~startLine) => {
+    Printf.sprintf(
+      "%d-%d-%d:%d",
+      handle,
+      Oni_Core.Buffer.getId(buffer),
+      Oni_Core.Buffer.getVersion(buffer),
+      startLine,
+    );
+  };
+
+  module CodeActionSpanSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(option(Exthost.CodeAction.List.t), string);
+      type nonrec params = codeActionsSpanParams;
+
+      type state = {
+        disposeTimeout: unit => unit,
+        maybeCacheId: ref(option(Exthost.CacheId.t)),
+        isActive: ref(bool),
+      };
+
+      let name = "Service_Exthost.CodeActionsSpanSubscription";
+      let id = ({handle, buffer, startLine, _}: params) =>
+        idForCodeActionSpan(~handle, ~buffer, ~startLine);
+
+      let cleanup = (~maybeCacheId, ~params) => {
+        maybeCacheId^
+        |> Option.iter(cacheId => {
+             Exthost.Request.LanguageFeatures.releaseCodeActions(
+               ~handle=params.handle,
+               ~cacheId,
+               params.client,
+             );
+
+             maybeCacheId := None;
+           });
+      };
+
+      let init = (~params, ~dispatch) => {
+        let maybeCacheId = ref(None);
+        let isActive = ref(true);
+        let disposeTimeout =
+          Revery.Tick.timeout(
+            ~name,
+            _ => {
+              let promise =
+                Exthost.Request.LanguageFeatures.provideCodeActionsBySpan(
+                  ~handle=params.handle,
+                  ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                  ~span=
+                    Exthost.Span.{
+                      start: params.startLine,
+                      stop: params.stopLine,
+                    },
+                  ~context=params.context,
+                  params.client,
+                );
+
+              Lwt.on_success(
+                promise,
+                maybeCodeActions => {
+                  maybeCodeActions
+                  |> Option.iter(
+                       (codeActionResult: Exthost.CodeAction.List.t) => {
+                       maybeCacheId := Some(codeActionResult.cacheId)
+                     });
+
+                  if (isActive^) {
+                    dispatch(Ok(maybeCodeActions));
+                  } else {
+                    cleanup(~maybeCacheId, ~params);
+                  };
+                },
+              );
+
+              Lwt.on_failure(promise, exn => {
+                dispatch(Error(Printexc.to_string(exn)))
+              });
+            },
+            Constants.lowPriorityDebounceTime,
+          );
+        {isActive, disposeTimeout, maybeCacheId};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params, ~state) => {
+        cleanup(~params, ~maybeCacheId=state.maybeCacheId);
+        state.disposeTimeout();
+        state.isActive := false;
+      };
+    });
+
   let codeActionsByLines =
       (~handle, ~context, ~buffer, ~lines, ~toMsg, client) => {
-    Isolinear.Sub.none;
+    let startLine =
+      EditorCoreTypes.(LineSpan.(lines.start) |> LineNumber.toOneBased);
+    let stopLine =
+      EditorCoreTypes.(LineSpan.(lines.stop) |> LineNumber.toOneBased);
+    CodeActionSpanSubscription.create(
+      {handle, buffer, client, startLine, context, stopLine}: codeActionsSpanParams,
+    )
+    |> Isolinear.Sub.map(toMsg);
   };
 
   type codeLensesParams = {
