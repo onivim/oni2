@@ -763,17 +763,26 @@ module Sub = {
     client: Exthost.Client.t,
     buffer: Oni_Core.Buffer.t,
     context: Exthost.CodeAction.Context.t,
-    startLine: int, // One-based start line
-    stopLine: int // One-based stop line
+    range: Exthost.OneBasedRange.t,
   };
 
-  let idForCodeActionSpan = (~handle, ~buffer, ~startLine) => {
+  let idForOneBasedRange = (range: Exthost.OneBasedRange.t) => {
     Printf.sprintf(
-      "%d-%d-%d:%d",
+      "r%d,%d-%d,%d",
+      range.startLineNumber,
+      range.startColumn,
+      range.endLineNumber,
+      range.endColumn,
+    );
+  };
+
+  let idForCodeActionRange = (~handle, ~buffer, ~range) => {
+    Printf.sprintf(
+      "%d-%d-%d:%s",
       handle,
       Oni_Core.Buffer.getId(buffer),
       Oni_Core.Buffer.getVersion(buffer),
-      startLine,
+      idForOneBasedRange(range),
     );
   };
 
@@ -789,8 +798,8 @@ module Sub = {
       };
 
       let name = "Service_Exthost.CodeActionsSpanSubscription";
-      let id = ({handle, buffer, startLine, _}: params) =>
-        idForCodeActionSpan(~handle, ~buffer, ~startLine);
+      let id = ({handle, buffer, range, _}: params) =>
+        idForCodeActionRange(~handle, ~buffer, ~range);
 
       let cleanup = (~maybeCacheId, ~params) => {
         maybeCacheId^
@@ -812,28 +821,11 @@ module Sub = {
           Revery.Tick.timeout(
             ~name,
             _ => {
-              prerr_endline(
-                "Requesting at line: "
-                ++ string_of_int(params.startLine)
-                ++ " through "
-                ++ string_of_int(params.stopLine),
-              );
               let promise =
                 Exthost.Request.LanguageFeatures.provideCodeActionsByRange(
                   ~handle=params.handle,
                   ~resource=Oni_Core.Buffer.getUri(params.buffer),
-                  ~range=
-                    Exthost.OneBasedRange.{
-                      startLineNumber: 6,
-                      startColumn: 20,
-                      endLineNumber: 6,
-                      endColumn: 20,
-                    },
-                  // ~span=
-                  // Exthost.Span.{
-                  //   start: params.startLine,
-                  //   stop: params.stopLine,
-                  // },
+                  ~range=params.range,
                   ~context=params.context,
                   params.client,
                 );
@@ -873,14 +865,11 @@ module Sub = {
       };
     });
 
-  let codeActionsByLines =
-      (~handle, ~context, ~buffer, ~lines, ~toMsg, client) => {
-    let startLine =
-      EditorCoreTypes.(LineSpan.(lines.start) |> LineNumber.toOneBased);
-    let stopLine =
-      EditorCoreTypes.(LineSpan.(lines.stop) |> LineNumber.toOneBased);
+  let codeActionsByRange =
+      (~handle, ~context, ~buffer, ~range, ~toMsg, client) => {
+    let range = Exthost.OneBasedRange.ofRange(range);
     CodeActionSpanSubscription.create(
-      {handle, buffer, client, startLine, context, stopLine}: codeActionsSpanParams,
+      {handle, buffer, client, range, context}: codeActionsSpanParams,
     )
     |> Isolinear.Sub.map(toMsg);
   };

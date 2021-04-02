@@ -78,6 +78,7 @@ module Command: {
 };
 
 module CodeAction: {
+  [@deriving show]
   type t = {
     chainedCacheId: option(ChainedCacheId.t),
     title: string,

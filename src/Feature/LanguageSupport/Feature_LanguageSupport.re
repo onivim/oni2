@@ -349,10 +349,19 @@ let update =
     (model, Nothing)
 
   | CodeActions(codeActionsMsg) =>
-    let (codeActions', outmsg) =
-      CodeActions.update(codeActionsMsg, model.codeActions);
-    let outmsg' = outmsg |> map(msg => CodeActions(msg));
-    ({...model, codeActions: codeActions'}, outmsg');
+    maybeBuffer
+    |> Option.map(buffer => {
+         let (codeActions', outmsg) =
+           CodeActions.update(
+             ~buffer,
+             ~cursorLocation,
+             codeActionsMsg,
+             model.codeActions,
+           );
+         let outmsg' = outmsg |> map(msg => CodeActions(msg));
+         ({...model, codeActions: codeActions'}, outmsg');
+       })
+    |> Option.value(~default=(model, Nothing))
 
   | CodeLens(codeLensMsg) =>
     let (codeLens', eff) = CodeLens.update(codeLensMsg, model.codeLens);
@@ -962,6 +971,7 @@ let sub =
   let codeActionsSub =
     CodeActions.sub(
       ~buffer=activeBuffer,
+      ~activePosition,
       ~topVisibleBufferLine,
       ~bottomVisibleBufferLine,
       ~client,
