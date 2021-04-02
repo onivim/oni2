@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 open Exthost;
 
@@ -16,6 +17,17 @@ module CodeAction = {
   };
 
   let ofExthost = (~handle, action) => {handle, action};
+
+  let intersects = (pos: CharacterPosition.t, {action, _}) => {
+    let diagnostics: list(Exthost.Diagnostic.t) =
+      Exthost.CodeAction.(action.diagnostics);
+    diagnostics
+    |> List.exists((diag: Exthost.Diagnostic.t) => {
+         diag.range
+         |> Exthost.OneBasedRange.toRange
+         |> CharacterRange.contains(pos)
+       });
+  };
 };
 
 module QuickFixes = {
@@ -43,15 +55,33 @@ module QuickFixes = {
     position: EditorCoreTypes.CharacterPosition.zero,
     fixes: [],
   };
+
+  let cursorMoved = (~bufferId, ~position, qf) =>
+    // Totally different buffer, reset...
+    if (bufferId != qf.bufferId) {
+      {...initial, bufferId, position};
+    } else if (position != qf.position) {
+      {
+        ...qf,
+        position,
+        fixes: qf.fixes |> List.filter(CodeAction.intersects(position)),
+      };
+    } else {
+      qf;
+    };
+
+  let any = ({fixes, _}) => fixes != [];
 };
 
 type model = {
   providers: list(provider),
   quickFixes: QuickFixes.t,
+  lightBulbPopup: Component_Popup.model,
 };
 
 [@deriving show]
 type msg =
+  | LightBulbPopup([@opaque] Component_Popup.msg)
   | QuickFixesAvailable({
       handle: int,
       actions: list(Exthost.CodeAction.t),
@@ -62,7 +92,12 @@ type msg =
       msg: string,
     });
 
-let initial = {providers: [], quickFixes: QuickFixes.initial};
+let initial = {
+  providers: [],
+  quickFixes: QuickFixes.initial,
+
+  lightBulbPopup: Component_Popup.create(~width=32., ~height=32.),
+};
 
 let register =
     (~handle, ~selector, ~metadata, ~displayName, ~supportsResolve, model) => {
@@ -75,6 +110,16 @@ let register =
   };
 };
 
+let cursorMoved = (~buffer, ~cursor, model) => {
+  ...model,
+  quickFixes:
+    QuickFixes.cursorMoved(
+      ~bufferId=Oni_Core.Buffer.getId(buffer),
+      ~position=cursor,
+      model.quickFixes,
+    ),
+};
+
 let unregister = (~handle, model) => {
   ...model,
   providers:
@@ -84,6 +129,14 @@ let unregister = (~handle, model) => {
 let update = (~buffer, ~cursorLocation, msg, model) => {
   let bufferId = Buffer.getId(buffer);
   switch (msg) {
+  | LightBulbPopup(popupMsg) => (
+      {
+        ...model,
+        lightBulbPopup:
+          Component_Popup.update(popupMsg, model.lightBulbPopup),
+      },
+      Outmsg.Nothing,
+    )
   | QuickFixesAvailable({handle, actions}) => (
       {
         ...model,
@@ -129,19 +182,45 @@ let sub =
       stop: activePosition,
     };
 
-  codeActions.providers
-  |> List.filter(({selector, _}) => {
-       Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
-     })
-  |> List.map(({handle, _}) => {
-       Service_Exthost.Sub.codeActionsByRange(
-         ~handle,
-         ~range,
-         ~buffer,
-         ~context,
-         ~toMsg=toMsg(handle),
-         client,
-       )
-     })
-  |> Isolinear.Sub.batch;
+  let codeActionsSubs =
+    codeActions.providers
+    |> List.filter(({selector, _}) => {
+         Exthost.DocumentSelector.matchesBuffer(~buffer, selector)
+       })
+    |> List.map(({handle, _}) => {
+         Service_Exthost.Sub.codeActionsByRange(
+           ~handle,
+           ~range,
+           ~buffer,
+           ~context,
+           ~toMsg=toMsg(handle),
+           client,
+         )
+       });
+
+  let isVisible = QuickFixes.any(codeActions.quickFixes);
+  let y =
+    float(EditorCoreTypes.LineNumber.toZeroBased(activePosition.line)) *. 20.;
+  let x =
+    float(EditorCoreTypes.CharacterIndex.toInt(activePosition.character))
+    *. 20.;
+  let lightBulbPopup =
+    Component_Popup.sub(~isVisible, ~x, ~y, codeActions.lightBulbPopup)
+    |> Isolinear.Sub.map(msg => LightBulbPopup(msg));
+
+  [lightBulbPopup, ...codeActionsSubs] |> Isolinear.Sub.batch;
+};
+
+module View = {
+  let make = (~model, ()) => {
+    <Component_Popup.View
+      model={model.lightBulbPopup}
+      inner={(~transition) => {
+        <Revery.UI.Components.Container
+          width=32 height=32 color=Revery.Colors.red>
+          <Oni_Core.Codicon color=Revery.Colors.white icon=Codicon.lightbulb />
+        </Revery.UI.Components.Container>
+      }}
+    />;
+  };
 };

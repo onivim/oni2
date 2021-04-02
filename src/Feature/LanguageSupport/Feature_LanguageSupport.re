@@ -594,6 +594,8 @@ let configurationChanged = (~config, model) => {
 
 let cursorMoved =
     (~languageConfiguration, ~buffer, ~previous, ~current, model) => {
+  let codeActions =
+    CodeActions.cursorMoved(~buffer, ~cursor=current, model.codeActions);
   let completion =
     Completion.cursorMoved(
       ~languageConfiguration,
@@ -611,7 +613,7 @@ let cursorMoved =
 
   let signatureHelp =
     SignatureHelp.cursorMoved(~previous, ~current, model.signatureHelp);
-  {...model, completion, documentHighlights, signatureHelp};
+  {...model, codeActions, completion, documentHighlights, signatureHelp};
 };
 
 let moveMarkers = (~newBuffer, ~markerUpdate, model) => {
@@ -1045,3 +1047,11 @@ let extensionsAdded = (extensions, model) => {
 };
 
 module CompletionMeet = CompletionMeet;
+
+module View = {
+  module EditorWidgets = {
+    let make = (~x, ~y, ~theme, ~model, ~font, ~dispatch, ()) => {
+      <CodeActions.View model={model.codeActions} />;
+    };
+  };
+};

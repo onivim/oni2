@@ -193,8 +193,6 @@ let%component make =
   };
 
   let onBoundingBoxChanged = bbox => {
-    let str = Revery.Math.BoundingBox2d.toString(bbox);
-    Printf.sprintf("EDITOR ID: %d bbox: %s", editorId, str) |> prerr_endline;
     dispatch(Msg.BoundingBoxChanged({bbox: bbox}));
   };
 

@@ -123,6 +123,14 @@ module Parts = {
             dispatch={msg => dispatch(LanguageSupport(msg))}
             model={state.languageSupport}
           />,
+          <Feature_LanguageSupport.View.EditorWidgets
+            x=cursorPixelX
+            y=cursorPixelY
+            theme
+            font=uiFont
+            dispatch={msg => dispatch(LanguageSupport(msg))}
+            model={state.languageSupport}
+          />,
         ]
         |> React.listToElement;
       };

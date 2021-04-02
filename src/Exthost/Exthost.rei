@@ -77,56 +77,6 @@ module Command: {
   let decode: Json.decoder(t);
 };
 
-module CodeAction: {
-  [@deriving show]
-  type t = {
-    chainedCacheId: option(ChainedCacheId.t),
-    title: string,
-    edit: option(WorkspaceEdit.t),
-    diagnostics: list(Diagnostic.t),
-    command: option(Command.t),
-    kind: option(string),
-    isPreferred: bool,
-    disabled: option(string),
-  };
-
-  module TriggerType: {
-    type t =
-      | Auto
-      | Manual;
-
-    let toInt: t => int;
-
-    let encode: Json.Encode.encoder(t);
-  };
-
-  module Context: {
-    type t = {
-      // TODO: What is this for?
-      only: option(string),
-      trigger: TriggerType.t,
-    };
-
-    let encode: Json.Encode.encoder(t);
-  };
-
-  module ProviderMetadata: {
-    type t = {
-      providedKinds: list(string),
-      providedDocumentation: StringMap.t(Command.t),
-    };
-  };
-
-  module List: {
-    type nonrec t = {
-      cacheId: CacheId.t,
-      actions: list(t),
-    };
-
-    let toDebugString: t => string;
-  };
-};
-
 module CompletionContext: {
   [@deriving show]
   type triggerKind =
@@ -870,6 +820,56 @@ module Diagnostic: {
   };
 
   let decode: Json.decoder(t);
+};
+
+module CodeAction: {
+  [@deriving show]
+  type t = {
+    chainedCacheId: option(ChainedCacheId.t),
+    title: string,
+    edit: option(WorkspaceEdit.t),
+    diagnostics: list(Diagnostic.t),
+    command: option(Command.t),
+    kind: option(string),
+    isPreferred: bool,
+    disabled: option(string),
+  };
+
+  module TriggerType: {
+    type t =
+      | Auto
+      | Manual;
+
+    let toInt: t => int;
+
+    let encode: Json.Encode.encoder(t);
+  };
+
+  module Context: {
+    type t = {
+      // TODO: What is this for?
+      only: option(string),
+      trigger: TriggerType.t,
+    };
+
+    let encode: Json.Encode.encoder(t);
+  };
+
+  module ProviderMetadata: {
+    type t = {
+      providedKinds: list(string),
+      providedDocumentation: StringMap.t(Command.t),
+    };
+  };
+
+  module List: {
+    type nonrec t = {
+      cacheId: CacheId.t,
+      actions: list(t),
+    };
+
+    let toDebugString: t => string;
+  };
 };
 
 module Eol: {

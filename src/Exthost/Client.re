@@ -266,7 +266,6 @@ let request =
       };
 
       let parser = json => {
-        prerr_endline("Got response: " ++ Yojson.Safe.to_string(json));
         Oni_Core.Json.Decode.(
           json |> decode_value(decoder) |> Result.map_error(string_of_error)
         );
