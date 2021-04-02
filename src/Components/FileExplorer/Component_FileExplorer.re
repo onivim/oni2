@@ -324,13 +324,6 @@ let sub = (~configuration, {rootPath, expandedPaths, _}) => {
       }
     | Error(msg) => NodeLoadError(msg);
 
-  // let root =
-  //   Service_OS.Sub.dir(
-  //     ~uniqueId="FileExplorerSideBar",
-  //     ~toMsg=toMsg(rootPath),
-  //     FpExp.toString(rootPath),
-  //   );
-
   let allPathsToWatch = [rootPath, ...expandedPaths];
 
   let expandedPathSubs =

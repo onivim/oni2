@@ -29,12 +29,14 @@ module WatchSubscription =
       | Ok(watcher) =>
         let onEvent = (
           fun
-          | Ok((_file, events)) =>
-            dispatch({
-              path,
-              hasRenamed: List.mem(`RENAME, events),
-              hasChanged: List.mem(`CHANGE, events),
-            })
+          | Ok((_file, events)) => {
+              prerr_endline("FILE: " ++ _file);
+              dispatch({
+                path,
+                hasRenamed: List.mem(`RENAME, events),
+                hasChanged: List.mem(`CHANGE, events),
+              });
+            }
           | Error(error) =>
             Log.errorf(m => m("'%s': %s", path, Luv.Error.strerror(error)))
         );
