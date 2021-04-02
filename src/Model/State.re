@@ -32,6 +32,7 @@ let defaultKeyBindings =
   ]
   @ Feature_SideBar.Contributions.keybindings
   @ Feature_Clipboard.Contributions.keybindings
+  @ Feature_Configuration.Contributions.keybindings
   @ Feature_Input.Schema.[
       bind(
         ~key="<C-TAB>",
