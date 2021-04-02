@@ -4,8 +4,7 @@ open Oni_Core;
 [@deriving show]
 type msg =
   | ActiveFilePathChanged([@opaque] option(FpExp.t(FpExp.absolute)))
-  | TreeLoaded(FsTreeNode.t)
-  | TreeLoadError(string)
+  | NodeLoadError(string)
   | NodeLoaded(FsTreeNode.t)
   | FocusNodeLoaded(FsTreeNode.t)
   | Tree(Component_VimTree.msg);

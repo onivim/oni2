@@ -174,7 +174,7 @@ let replaceNode = (node, model: model) =>
   switch (model.tree) {
   | Some(tree) =>
     setTree(FsTreeNode.replace(~replacement=node, tree), model)
-  | None => model
+  | None => setTree(node, model)
   };
 
 let revealAndFocusPath = (~configuration, path, model: model) => {
@@ -241,9 +241,7 @@ let update = (~config, ~configuration, msg, model) => {
     | _ => (model, Nothing)
     }
 
-  | TreeLoaded(tree) => (setTree(tree, model), Nothing)
-
-  | TreeLoadError(_msg) => (model, Nothing)
+  | NodeLoadError(_msg) => (model, Nothing)
 
   | NodeLoaded(node) => (replaceNode(node, model), Nothing)
 
@@ -306,9 +304,9 @@ let sub = (~configuration, {rootPath, _}) => {
     | Ok(dirents) => {
         let children =
           dirents |> Internal.luvDirentsToFsTree(~ignored, ~cwd=rootPath);
-        TreeLoaded(FsTreeNode.directory(rootPath, ~children, ~isOpen=true));
+        NodeLoaded(FsTreeNode.directory(rootPath, ~children, ~isOpen=true));
       }
-    | Error(msg) => TreeLoadError(msg);
+    | Error(msg) => NodeLoadError(msg);
 
   Service_OS.Sub.dir(
     ~uniqueId="FileExplorerSideBar",
