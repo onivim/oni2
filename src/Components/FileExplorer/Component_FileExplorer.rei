@@ -5,10 +5,7 @@ open Oni_Core;
 [@deriving show]
 type msg;
 
-module Msg: {
-  let keyPressed: string => msg;
-  let activeFileChanged: option(FpExp.t(FpExp.absolute)) => msg;
-};
+module Msg: {let activeFileChanged: option(FpExp.t(FpExp.absolute)) => msg;};
 
 type model;
 

@@ -257,10 +257,6 @@ let update = (~config, ~configuration, msg, model) => {
     | None => (model, Nothing)
     }
 
-  | KeyboardInput(_) =>
-    // Anything to be brought back here?
-    (model, Nothing)
-
   | Tree(treeMsg) =>
     let (treeView, outmsg) =
       Component_VimTree.update(treeMsg, model.treeView);

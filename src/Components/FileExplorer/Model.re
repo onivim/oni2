@@ -8,11 +8,9 @@ type msg =
   | TreeLoadError(string)
   | NodeLoaded(FsTreeNode.t)
   | FocusNodeLoaded(FsTreeNode.t)
-  | KeyboardInput(string)
   | Tree(Component_VimTree.msg);
 
 module Msg = {
-  let keyPressed = key => KeyboardInput(key);
   let activeFileChanged = maybePath => ActiveFilePathChanged(maybePath);
 };
 
