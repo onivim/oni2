@@ -31,6 +31,7 @@
 - #3346 - Extensions: Fix parse errors for progress and updateConfigurationOption APIs (related #3321)
 - #3326 - Lifecycle: Delay process termination until cleanup actions have run (fixes #3270, thanks @timbertson !)
 - #3359 - SCM: Don't show diffs for untracked or ignored files (fixes #3355)
+- #3361 - Clipboard: Add command+v binding for paste in normal mode (fixes #3353)
 
 ### Performance
 
