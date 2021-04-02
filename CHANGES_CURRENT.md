@@ -30,6 +30,7 @@
 - #3342 - Completion: Use completion kind instead of insert text rules for sorting
 - #3346 - Extensions: Fix parse errors for progress and updateConfigurationOption APIs (related #3321)
 - #3326 - Lifecycle: Delay process termination until cleanup actions have run (fixes #3270, thanks @timbertson !)
+- #3361 - Clipboard: Add command+v binding for paste in normal mode (fixes #3353)
 
 ### Performance
 
