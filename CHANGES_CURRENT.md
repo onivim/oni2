@@ -1,6 +1,8 @@
 ### Features 
 
 - #3284 - Definition: Add 'editor.action.revealDefinitionAside' command (fixes #3261)
+- #2881 - Extensions: Initial rename support
+- #3348 - Code Actions: Implement extension host protocol for quick fix / code actions
 - #3352 - Keybindings: Add default keybinding for open configuration (related #1423, thanks @LiHRaM !)
 
 ### Bug Fixes
@@ -23,6 +25,12 @@
 - #3318 - Completion: Show full incomplete results list (fixes #2583)
 - #3329 - Formatting: Fix trailing newline being introduced by some providers (fixes #3320)
 - #3331 - Editor: Fix crash when manipulating Unicode characters
+- #3327, #3329 - Formatting: Fix trailing newline being introduced by some providers (fixes #3320)
+- #3338 - SCM: Show changes badge in dock (fixes #3315)
+- #3341 - Diagnostics: Use one-based positions in UI
+- #3342 - Completion: Use completion kind instead of insert text rules for sorting
+- #3346 - Extensions: Fix parse errors for progress and updateConfigurationOption APIs (related #3321)
+- #3326 - Lifecycle: Delay process termination until cleanup actions have run (fixes #3270, thanks @timbertson !)
 
 ### Performance
 

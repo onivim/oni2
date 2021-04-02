@@ -2,10 +2,7 @@ open Oni_Core;
 open Utility;
 
 let isSnippet = (item: CompletionItem.t) => {
-  item.insertTextRules
-  |> Exthost.SuggestItem.InsertTextRules.matches(
-       ~rule=Exthost.SuggestItem.InsertTextRules.InsertAsSnippet,
-     );
+  item.kind == Exthost.CompletionKind.Snippet;
 };
 
 module Compare = {

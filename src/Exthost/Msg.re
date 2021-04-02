@@ -768,6 +768,13 @@ module LanguageFeatures = {
         supportsResolveDetails: bool,
         extensionId: string,
       })
+    | RegisterQuickFixSupport({
+        handle: int,
+        selector: DocumentSelector.t,
+        metadata: CodeAction.ProviderMetadata.t,
+        displayName: string,
+        supportsResolve: bool,
+      })
     | RegisterReferenceSupport({
         handle: int,
         selector: list(DocumentFilter.t),
@@ -928,6 +935,39 @@ module LanguageFeatures = {
         Ok(RegisterImplementationSupport({handle, selector}))
       | Error(error) => Error(Json.Decode.string_of_error(error))
       }
+
+    | (
+        "$registerQuickFixSupport",
+        `List([
+          `Int(handle),
+          selectorJson,
+          metadataJson,
+          `String(displayName),
+          `Bool(supportsResolve),
+        ]),
+      ) =>
+      open Json.Decode;
+
+      let ret = {
+        open Base.Result.Let_syntax;
+        let%bind selector =
+          selectorJson |> decode_value(DocumentSelector.decode);
+
+        let%bind metadata =
+          metadataJson |> decode_value(CodeAction.ProviderMetadata.decode);
+
+        Ok(
+          RegisterQuickFixSupport({
+            handle,
+            selector,
+            metadata,
+            displayName,
+            supportsResolve,
+          }),
+        );
+      };
+
+      ret |> Result.map_error(string_of_error);
 
     | ("$registerReferenceSupport", `List([`Int(handle), selectorJson])) =>
       switch (parseDocumentSelector(selectorJson)) {

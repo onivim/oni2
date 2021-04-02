@@ -107,17 +107,8 @@ module Internal = {
      });
 };
 
-let create = (~update: BufferUpdate.t, ~original, ~updated) =>
-  if (update.isFull) {
-    let minimalUpdate = MinimalUpdate.fromBuffers(~original, ~updated);
-
-    MinimalUpdate.map(Internal.minimalUpdateToMovement, minimalUpdate);
-  } else {
-    let minimalUpdate =
-      MinimalUpdate.fromBufferUpdate(~buffer=original, ~update);
-
-    MinimalUpdate.map(Internal.minimalUpdateToMovement, minimalUpdate);
-  };
+let create = minimalUpdate =>
+  MinimalUpdate.map(Internal.minimalUpdateToMovement, minimalUpdate);
 
 let apply = (~clearLine, ~shiftLines, ~shiftCharacters, markerUpdate, target) => {
   markerUpdate
