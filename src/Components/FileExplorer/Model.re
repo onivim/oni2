@@ -7,6 +7,10 @@ type msg =
   | NodeLoadError(string)
   | NodeLoaded(FsTreeNode.t)
   | FocusNodeLoaded(FsTreeNode.t)
+  | FileWatcherEvent({
+      path: [@opaque] FpExp.t(FpExp.absolute),
+      event: Service_FileWatcher.event,
+    })
   | Tree(Component_VimTree.msg);
 
 module Msg = {
@@ -16,6 +20,7 @@ module Msg = {
 type model = {
   rootPath: FpExp.t(FpExp.absolute),
   rootName: string,
+  expandedPaths: list(FpExp.t(FpExp.absolute)),
   tree: option(FsTreeNode.t),
   treeView: Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
   isOpen: bool,
@@ -27,6 +32,7 @@ type model = {
 let initial = (~rootPath) => {
   rootPath,
   rootName: "",
+  expandedPaths: [],
   tree: None,
   treeView: Component_VimTree.create(~rowHeight=20),
   isOpen: true,

@@ -199,3 +199,5 @@ let hasParentDir =
   | Path(path) => Fp.hasParentDir(path);
 
 let append = At.(/);
+
+let compare = (a, b) => String.compare(toString(a), toString(b));

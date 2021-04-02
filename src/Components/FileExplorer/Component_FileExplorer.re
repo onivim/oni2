@@ -216,8 +216,25 @@ let revealAndFocusPath = (~configuration, path, model: model) => {
   };
 };
 
+let expand = (path, model) => {
+  let expandedPaths =
+    [path, ...model.expandedPaths]
+    |> Base.List.dedup_and_sort(~compare=FpExp.compare);
+  {...model, expandedPaths};
+};
+
+let collapse = (path, model) => {
+  let expandedPaths = model.expandedPaths |> List.filter(p => p != path);
+  {...model, expandedPaths};
+};
+
 let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
+  | FileWatcherEvent({path, event}) => (
+      // TODO:
+      model,
+      Nothing,
+    )
   | ActiveFilePathChanged(maybeFilePath) =>
     switch (model) {
     | {active, _} when active != maybeFilePath =>
@@ -262,14 +279,13 @@ let update = (~config, ~configuration, msg, model) => {
     let model = {...model, treeView};
     switch (outmsg) {
     | Component_VimTree.Expanded(node) => (
-        model,
-        Effect(
-          Effects.load(node.path, configuration, ~onComplete=newNode =>
-            NodeLoaded(newNode)
-          ),
-        ),
+        model |> expand(node.path),
+        Nothing,
       )
-    | Component_VimTree.Collapsed(_) => (model, Nothing)
+    | Component_VimTree.Collapsed(node) => (
+        model |> collapse(node.path),
+        Nothing,
+      )
     | Component_VimTree.Touched(node) =>
       // Set active here to avoid scrolling in BufferEnter
       (
@@ -295,24 +311,53 @@ let update = (~config, ~configuration, msg, model) => {
 
 module View = View;
 
-let sub = (~configuration, {rootPath, _}) => {
+let sub = (~configuration, {rootPath, expandedPaths, _}) => {
   let ignored =
     Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
 
-  let toMsg =
+  let toMsg = path =>
     fun
     | Ok(dirents) => {
         let children =
-          dirents |> Internal.luvDirentsToFsTree(~ignored, ~cwd=rootPath);
-        NodeLoaded(FsTreeNode.directory(rootPath, ~children, ~isOpen=true));
+          dirents |> Internal.luvDirentsToFsTree(~ignored, ~cwd=path);
+        NodeLoaded(FsTreeNode.directory(path, ~children, ~isOpen=true));
       }
     | Error(msg) => NodeLoadError(msg);
 
-  Service_OS.Sub.dir(
-    ~uniqueId="FileExplorerSideBar",
-    ~toMsg,
-    FpExp.toString(rootPath),
-  );
+  // let root =
+  //   Service_OS.Sub.dir(
+  //     ~uniqueId="FileExplorerSideBar",
+  //     ~toMsg=toMsg(rootPath),
+  //     FpExp.toString(rootPath),
+  //   );
+
+  let allPathsToWatch = [rootPath, ...expandedPaths];
+
+  let expandedPathSubs =
+    allPathsToWatch
+    |> List.map(path => {
+         Service_OS.Sub.dir(
+           ~uniqueId="FileExplorer:Sub" ++ FpExp.toString(path),
+           ~toMsg=toMsg(path),
+           FpExp.toString(path),
+         )
+       });
+
+  let onEvent = (path, evt: Service_FileWatcher.event) => {
+    prerr_endline("EVENT: " ++ Service_FileWatcher.show_event(evt));
+    FileWatcherEvent({path, event: evt});
+  };
+
+  let watchers =
+    allPathsToWatch
+    |> List.map(path => {
+         Service_FileWatcher.watch(
+           ~path=FpExp.toString(path),
+           ~onEvent=onEvent(path),
+         )
+       });
+
+  expandedPathSubs @ watchers |> Isolinear.Sub.batch;
 };
 
 module Contributions = {
