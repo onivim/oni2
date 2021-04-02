@@ -31,10 +31,14 @@ let quitAll = () =>
 module Effects = {
   let paste = (~toMsg, text) => {
     Isolinear.Effect.createWithDispatch(~name="vim.clipboardPaste", dispatch => {
-      let isCmdLineMode = Vim.Mode.isCommandLine(Vim.Mode.current());
-      let isInsertMode = Vim.Mode.isInsert(Vim.Mode.current());
+      let mode = Vim.Mode.current();
+      let isCmdLineMode = Vim.Mode.isCommandLine(mode);
+      let isInsertMode = Vim.Mode.isInsert(mode);
+      let isSelectMode = Vim.Mode.isSelect(mode);
+      let isNormalMode = Vim.Mode.isNormal(mode);
+      let isVisualMode = Vim.Mode.isVisual(mode);
 
-      if (isInsertMode || isCmdLineMode) {
+      if (isInsertMode || isCmdLineMode || isSelectMode) {
         if (!isCmdLineMode) {
           Vim.command("set paste") |> ignore;
         };
@@ -47,6 +51,10 @@ module Effects = {
           Vim.command("set nopaste") |> ignore;
           dispatch(toMsg(latestContext.mode));
         };
+      } else if (isVisualMode || isNormalMode) {
+        let (latestContext: Vim.Context.t, _effects) =
+          Oni_Core.VimEx.inputString("\"*p");
+        dispatch(toMsg(latestContext.mode));
       };
     });
   };
