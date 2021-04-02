@@ -7,7 +7,9 @@ let saveAllAndQuit: unit => Isolinear.Effect.t(_);
 let quitAll: unit => Isolinear.Effect.t(_);
 
 module Effects: {
-  let paste: (~toMsg: Vim.Mode.t => 'msg, string) => Isolinear.Effect.t('msg);
+  let paste:
+    (~context: Vim.Context.t=?, ~toMsg: Vim.Mode.t => 'msg, string) =>
+    Isolinear.Effect.t('msg);
 
   let getRegisterValue:
     (~toMsg: option(array(string)) => 'msg, char) =>
