@@ -2251,7 +2251,8 @@ let update =
 
   | Vim(msg) =>
     let previousSubMode = state.vim |> Feature_Vim.subMode;
-    let (vim, outmsg) = Feature_Vim.update(msg, state.vim);
+    let vimContext = VimContext.current(state);
+    let (vim, outmsg) = Feature_Vim.update(~vimContext, msg, state.vim);
     let newSubMode = state.vim |> Feature_Vim.subMode;
 
     // If we've switched to, or from, insert literal,

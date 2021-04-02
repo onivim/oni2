@@ -156,7 +156,7 @@ module Effects = {
   };
 };
 
-let update = (msg, model: model) => {
+let update = (~vimContext, msg, model: model) => {
   switch (msg) {
   | ModeChanged({allowAnimation, mode, effects, subMode}) => (
       {...model, subMode} |> handleEffects(effects),
@@ -165,6 +165,7 @@ let update = (msg, model: model) => {
   | Pasted(text) =>
     let eff =
       Service_Vim.Effects.paste(
+        ~context=vimContext,
         ~toMsg=mode => PasteCompleted({mode: mode}),
         text,
       );
