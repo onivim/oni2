@@ -33,6 +33,7 @@
 - #3326 - Lifecycle: Delay process termination until cleanup actions have run (fixes #3270, thanks @timbertson !)
 - #3359 - SCM: Don't show diffs for untracked or ignored files (fixes #3355)
 - #3361 - Clipboard: Add command+v binding for paste in normal mode (fixes #3353)
+- #3364 - Input: Add context key to differentiate sidebar panels
 
 ### Performance
 
