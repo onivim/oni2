@@ -241,6 +241,40 @@ let markNodeAsLoaded = (node, model) => {
 
 let reload = model => {...model, pathsToLoad: model.expandedPaths};
 
+// `ensureSelected` verifies that the current 'active' path
+// index is up to date in the inner tree. This is important
+// when a file is loaded or deleted, because the index would still
+// be in the previous location, if it would be shifted by the change.
+let ensureSelected = model => {
+  model.active
+  |> Utility.OptionEx.flatMap(active => {
+       let pred =
+           (
+             node:
+               Component_VimTree.nodeOrLeaf(
+                 FsTreeNode.metadata,
+                 FsTreeNode.metadata,
+               ),
+           ) => {
+         switch (node) {
+         | Leaf({data, _})
+         | Node({data, _}) => FpExp.eq(data.path, active)
+         };
+       };
+
+       // Find the index for the currently active item...
+       let maybeIndex = Component_VimTree.findIndex(pred, model.treeView);
+       // And select it, if it is available
+       maybeIndex
+       |> Option.map(selected => {
+            let treeView =
+              Component_VimTree.setSelected(~selected, model.treeView);
+            {...model, treeView};
+          });
+     })
+  |> Option.value(~default=model);
+};
+
 let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
   | FileWatcherEvent({path, event}) => (
@@ -274,7 +308,7 @@ let update = (~config, ~configuration, msg, model) => {
   | NodeLoadError(_msg) => (model, Nothing)
 
   | NodeLoaded(node) => (
-      model |> replaceNode(node) |> markNodeAsLoaded(node),
+      model |> replaceNode(node) |> markNodeAsLoaded(node) |> ensureSelected,
       Nothing,
     )
 
@@ -282,6 +316,7 @@ let update = (~config, ~configuration, msg, model) => {
     switch (model.active) {
     | Some(activePath) =>
       model
+      |> expand(FsTreeNode.getPath(node))
       |> replaceNode(node)
       |> markNodeAsLoaded(node)
       |> revealAndFocusPath(~configuration, activePath)
