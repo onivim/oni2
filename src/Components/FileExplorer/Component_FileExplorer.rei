@@ -15,6 +15,8 @@ let root: model => FpExp.t(FpExp.absolute);
 
 let keyPress: (string, model) => model;
 
+let reload: model => model;
+
 let getFileIcon:
   (~languageInfo: Exthost.LanguageInfo.t, ~iconTheme: IconTheme.t, string) =>
   option(IconTheme.IconDefinition.t);

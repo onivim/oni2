@@ -21,6 +21,7 @@ type model = {
   rootPath: FpExp.t(FpExp.absolute),
   rootName: string,
   expandedPaths: list(FpExp.t(FpExp.absolute)),
+  pathsToLoad: list(FpExp.t(FpExp.absolute)),
   tree: option(FsTreeNode.t),
   treeView: Component_VimTree.model(FsTreeNode.metadata, FsTreeNode.metadata),
   isOpen: bool,
@@ -32,7 +33,8 @@ type model = {
 let initial = (~rootPath) => {
   rootPath,
   rootName: "",
-  expandedPaths: [],
+  expandedPaths: [rootPath],
+  pathsToLoad: [rootPath],
   tree: None,
   treeView: Component_VimTree.create(~rowHeight=20),
   isOpen: true,
@@ -47,6 +49,8 @@ let setRoot = (~rootPath, model) => {
   tree: None,
   active: None,
   focus: None,
+  expandedPaths: [rootPath],
+  pathsToLoad: [rootPath],
 };
 
 let root = ({rootPath, _}) => rootPath;

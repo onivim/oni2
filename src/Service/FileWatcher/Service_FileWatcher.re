@@ -30,7 +30,6 @@ module WatchSubscription =
         let onEvent = (
           fun
           | Ok((_file, events)) => {
-              prerr_endline("FILE: " ++ _file);
               dispatch({
                 path,
                 hasRenamed: List.mem(`RENAME, events),

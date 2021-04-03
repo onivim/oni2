@@ -220,7 +220,11 @@ let expand = (path, model) => {
   let expandedPaths =
     [path, ...model.expandedPaths]
     |> Base.List.dedup_and_sort(~compare=FpExp.compare);
-  {...model, expandedPaths};
+
+  let pathsToLoad =
+    [path, ...model.pathsToLoad]
+    |> Base.List.dedup_and_sort(~compare=FpExp.compare);
+  {...model, expandedPaths, pathsToLoad};
 };
 
 let collapse = (path, model) => {
@@ -228,11 +232,20 @@ let collapse = (path, model) => {
   {...model, expandedPaths};
 };
 
+let markNodeAsLoaded = (node, model) => {
+  let pathsToLoad =
+    model.pathsToLoad
+    |> List.filter(p => !FpExp.eq(FsTreeNode.getPath(node), p));
+  {...model, pathsToLoad};
+};
+
+let reload = model => {...model, pathsToLoad: model.expandedPaths};
+
 let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
   | FileWatcherEvent({path, event}) => (
       // TODO:
-      model,
+      model |> expand(path),
       Nothing,
     )
   | ActiveFilePathChanged(maybeFilePath) =>
@@ -260,13 +273,17 @@ let update = (~config, ~configuration, msg, model) => {
 
   | NodeLoadError(_msg) => (model, Nothing)
 
-  | NodeLoaded(node) => (replaceNode(node, model), Nothing)
+  | NodeLoaded(node) => (
+      model |> replaceNode(node) |> markNodeAsLoaded(node),
+      Nothing,
+    )
 
   | FocusNodeLoaded(node) =>
     switch (model.active) {
     | Some(activePath) =>
       model
       |> replaceNode(node)
+      |> markNodeAsLoaded(node)
       |> revealAndFocusPath(~configuration, activePath)
 
     | None => (model, Nothing)
@@ -311,7 +328,7 @@ let update = (~config, ~configuration, msg, model) => {
 
 module View = View;
 
-let sub = (~configuration, {rootPath, expandedPaths, _}) => {
+let sub = (~configuration, {rootPath, expandedPaths, pathsToLoad, _}) => {
   let ignored =
     Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
 
@@ -324,10 +341,10 @@ let sub = (~configuration, {rootPath, expandedPaths, _}) => {
       }
     | Error(msg) => NodeLoadError(msg);
 
-  let allPathsToWatch = [rootPath, ...expandedPaths];
+  let allPathsToLoad = pathsToLoad;
 
   let expandedPathSubs =
-    allPathsToWatch
+    allPathsToLoad
     |> List.map(path => {
          Service_OS.Sub.dir(
            ~uniqueId="FileExplorer:Sub" ++ FpExp.toString(path),
@@ -337,9 +354,10 @@ let sub = (~configuration, {rootPath, expandedPaths, _}) => {
        });
 
   let onEvent = (path, evt: Service_FileWatcher.event) => {
-    prerr_endline("EVENT: " ++ Service_FileWatcher.show_event(evt));
     FileWatcherEvent({path, event: evt});
   };
+
+  let allPathsToWatch = expandedPaths;
 
   let watchers =
     allPathsToWatch
