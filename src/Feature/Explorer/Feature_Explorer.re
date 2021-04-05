@@ -86,7 +86,6 @@ let initial = (~rootPath) => {
   symbolOutline: Component_VimTree.create(~rowHeight=20),
   vimWindowNavigation: Component_VimWindows.initial,
 };
-
 let focusOutline = model => {
   ...model,
   focus: Outline,
@@ -509,10 +508,10 @@ module View = {
   };
 };
 
-let sub = (~configuration, model) => {
+let sub = (~config, ~configuration, model) => {
   model.fileExplorer
   |> Option.map(explorer => {
-       Component_FileExplorer.sub(~configuration, explorer)
+       Component_FileExplorer.sub(~config, ~configuration, explorer)
        |> Isolinear.Sub.map(msg => FileExplorer(msg))
      })
   |> Option.value(~default=Isolinear.Sub.none);

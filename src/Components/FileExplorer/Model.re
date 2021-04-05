@@ -33,26 +33,26 @@ type model = {
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(FpExp.t(FpExp.absolute)),
-  focus: option(FpExp.t(FpExp.absolute)), // path
-  useFileWatcher: bool,
+  focus: option(FpExp.t(FpExp.absolute)) // path
 };
 
 let initial = (~rootPath) => {
-  fileWatcherKey:
-    Service_FileWatcher.Key.create(
-      ~friendlyName="Explorer:" ++ FpExp.toString(rootPath),
-    ),
-  rootPath,
-  rootName: "",
-  expandedPaths: [rootPath],
-  pathsToLoad: [rootPath],
-  tree: None,
-  treeView: Component_VimTree.create(~rowHeight=20),
-  isOpen: true,
-  scrollOffset: `Start(0.),
-  active: None,
-  focus: None,
-  useFileWatcher: false,
+  {
+    fileWatcherKey:
+      Service_FileWatcher.Key.create(
+        ~friendlyName="Explorer:" ++ FpExp.toString(rootPath),
+      ),
+    rootPath,
+    rootName: "",
+    expandedPaths: [rootPath],
+    pathsToLoad: [rootPath],
+    tree: None,
+    treeView: Component_VimTree.create(~rowHeight=20),
+    isOpen: true,
+    scrollOffset: `Start(0.),
+    active: None,
+    focus: None,
+  };
 };
 
 let setRoot = (~rootPath, model) => {

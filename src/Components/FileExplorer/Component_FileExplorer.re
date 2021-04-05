@@ -13,11 +13,6 @@ module Configuration = {
     setting("files.useExperimentalFileWatcher", bool, ~default=false);
 };
 
-let configurationChanged = (~config, model) => {
-  ...model,
-  useFileWatcher: Configuration.useFileWatcher.get(config),
-};
-
 module Internal = {
   let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
     switch (a, b) {
@@ -387,8 +382,9 @@ module View = View;
 
 let sub =
     (
+      ~config,
       ~configuration,
-      {useFileWatcher, fileWatcherKey, expandedPaths, pathsToLoad, _},
+      {fileWatcherKey, expandedPaths, pathsToLoad, _},
     ) => {
   let ignored =
     Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
@@ -420,9 +416,10 @@ let sub =
 
   let allPathsToWatch = expandedPaths;
 
+  let useFileWatcher = Configuration.useFileWatcher.get(config);
   let watchers =
     !useFileWatcher
-      ? Isolinear.Sub.none
+      ? [Isolinear.Sub.none]
       : allPathsToWatch
         |> List.map(path => {
              Service_FileWatcher.watch(
@@ -458,7 +455,7 @@ module Contributions = {
         );
   };
 
-  let configuration = Configuration.[useFileWatcher];
+  let configuration = Configuration.[useFileWatcher.spec];
 
   let contextKeys = (~isFocused, model) => {
     open WhenExpr.ContextKeys;

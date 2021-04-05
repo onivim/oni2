@@ -48,7 +48,12 @@ let update:
 // SUBSCRIPTION
 
 let sub:
-  (~configuration: Feature_Configuration.model, model) => Isolinear.Sub.t(msg);
+  (
+    ~config: Config.resolver,
+    ~configuration: Feature_Configuration.model,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
 
 // VIEW
 

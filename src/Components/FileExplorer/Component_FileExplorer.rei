@@ -9,8 +9,6 @@ module Msg: {let activeFileChanged: option(FpExp.t(FpExp.absolute)) => msg;};
 
 type model;
 
-let configurationChanged: (~config: Config.resolver, model) => model;
-
 let initial: (~rootPath: FpExp.t(FpExp.absolute)) => model;
 let setRoot: (~rootPath: FpExp.t(FpExp.absolute), model) => model;
 let root: model => FpExp.t(FpExp.absolute);
@@ -48,7 +46,12 @@ let update:
 // SUBSCRIPTION
 
 let sub:
-  (~configuration: Feature_Configuration.model, model) => Isolinear.Sub.t(msg);
+  (
+    ~config: Config.resolver,
+    ~configuration: Feature_Configuration.model,
+    model
+  ) =>
+  Isolinear.Sub.t(msg);
 
 // VIEW
 
