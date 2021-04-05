@@ -127,6 +127,10 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
   | PreviewFile(string)
+  | WatchedPathChanged({
+      path: FpExp.t(FpExp.absolute),
+      stat: option(Luv.File.Stat.t),
+    })
   | GrabFocus
   | UnhandledWindowMovement(Component_VimWindows.outmsg)
   | SymbolSelected(Feature_LanguageSupport.DocumentSymbols.symbol)
@@ -186,6 +190,8 @@ let update = (~config, ~configuration, msg, model) => {
            | Component_FileExplorer.PreviewFile(filePath) =>
              PreviewFile(filePath)
            | GrabFocus => GrabFocus
+           | Component_FileExplorer.WatchedPathChanged({path, stat}) =>
+             WatchedPathChanged({path, stat})
            };
 
          ({...model, fileExplorer: Some(fileExplorer)}, outmsg');

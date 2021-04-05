@@ -28,7 +28,11 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
   | PreviewFile(string)
-  | GrabFocus;
+  | GrabFocus
+  | WatchedPathChanged({
+      path: FpExp.t(FpExp.absolute),
+      stat: option(Luv.File.Stat.t),
+    });
 
 let update:
   (

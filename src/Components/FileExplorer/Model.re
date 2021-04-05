@@ -38,7 +38,9 @@ type model = {
 
 let initial = (~rootPath) => {
   fileWatcherKey:
-    Service_FileWatcher.Key.create("Explorer:" ++ FpExp.toString(rootPath)),
+    Service_FileWatcher.Key.create(
+      ~friendlyName="Explorer:" ++ FpExp.toString(rootPath),
+    ),
   rootPath,
   rootName: "",
   expandedPaths: [rootPath],

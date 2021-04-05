@@ -110,7 +110,11 @@ type outmsg =
   | Effect(Isolinear.Effect.t(msg))
   | OpenFile(string)
   | PreviewFile(string)
-  | GrabFocus;
+  | GrabFocus
+  | WatchedPathChanged({
+      path: FpExp.t(FpExp.absolute),
+      stat: option(Luv.File.Stat.t),
+    });
 
 let setTree = (tree, model) => {
   let uniqueId = (data: FsTreeNode.metadata) => FpExp.toString(data.path);
@@ -278,9 +282,8 @@ let ensureSelected = (~maybeActivePath, model) => {
 let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
   | FileWatcherEvent({path, event}) => (
-      // TODO:
       model |> expand(path),
-      Nothing,
+      WatchedPathChanged({path, stat: event.stat}),
     )
   | ActiveFilePathChanged(maybeFilePath) =>
     switch (model) {
@@ -370,11 +373,7 @@ let update = (~config, ~configuration, msg, model) => {
 
 module View = View;
 
-let sub =
-    (
-      ~configuration,
-      {fileWatcherKey, rootPath, expandedPaths, pathsToLoad, _},
-    ) => {
+let sub = (~configuration, {fileWatcherKey, expandedPaths, pathsToLoad, _}) => {
   let ignored =
     Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
 

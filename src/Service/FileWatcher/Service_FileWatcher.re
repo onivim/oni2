@@ -11,6 +11,7 @@ type event = {
   changedPath: [@opaque] FpExp.t(FpExp.absolute),
   hasRenamed: bool,
   hasChanged: bool,
+  stat: [@opaque] option(Luv.File.Stat.t),
 };
 
 type params = {
@@ -47,11 +48,28 @@ module WatchSubscription =
         let onEvent = (
           fun
           | Ok((file, events)) => {
-              dispatch({
-                watchedPath: params.path,
-                changedPath: FpExp.At.(params.path / file),
-                hasRenamed: List.mem(`RENAME, events),
-                hasChanged: List.mem(`CHANGE, events),
+              let changedPath = FpExp.At.(params.path / file);
+
+              let promise = Service_OS.Api.stat(FpExp.toString(changedPath));
+
+              Lwt.on_success(promise, statResult => {
+                dispatch({
+                  watchedPath: params.path,
+                  changedPath: FpExp.At.(params.path / file),
+                  hasRenamed: List.mem(`RENAME, events),
+                  hasChanged: List.mem(`CHANGE, events),
+                  stat: Some(statResult),
+                })
+              });
+
+              Lwt.on_failure(promise, _exn => {
+                dispatch({
+                  watchedPath: params.path,
+                  changedPath: FpExp.At.(params.path / file),
+                  hasRenamed: List.mem(`RENAME, events),
+                  hasChanged: List.mem(`CHANGE, events),
+                  stat: None,
+                })
               });
             }
           | Error(error) =>

@@ -12,6 +12,7 @@ type event = {
   changedPath: FpExp.t(FpExp.absolute),
   hasRenamed: bool,
   hasChanged: bool,
+  stat: option(Luv.File.Stat.t),
 };
 
 let watch:

@@ -143,8 +143,7 @@ let replace = (~replacement, tree) => {
              ) => {
                switch (child) {
                | Tree.Leaf(_) => acc
-               | Tree.Node({expanded, data, children}) =>
-                 IntMap.add(data.hash, child, acc)
+               | Tree.Node(_) => IntMap.add(data.hash, child, acc)
                }
              },
              IntMap.empty,
