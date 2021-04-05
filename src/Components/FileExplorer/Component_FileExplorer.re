@@ -245,8 +245,8 @@ let reload = model => {...model, pathsToLoad: model.expandedPaths};
 // index is up to date in the inner tree. This is important
 // when a file is loaded or deleted, because the index would still
 // be in the previous location, if it would be shifted by the change.
-let ensureSelected = model => {
-  model.active
+let ensureSelected = (~maybeActivePath, model) => {
+  maybeActivePath
   |> Utility.OptionEx.flatMap(active => {
        let pred =
            (
@@ -307,10 +307,15 @@ let update = (~config, ~configuration, msg, model) => {
 
   | NodeLoadError(_msg) => (model, Nothing)
 
-  | NodeLoaded(node) => (
-      model |> replaceNode(node) |> markNodeAsLoaded(node) |> ensureSelected,
+  | NodeLoaded(node) =>
+    let maybeActivePath = model.active;
+    (
+      model
+      |> replaceNode(node)
+      |> markNodeAsLoaded(node)
+      |> ensureSelected(~maybeActivePath),
       Nothing,
-    )
+    );
 
   | FocusNodeLoaded(node) =>
     switch (model.active) {
