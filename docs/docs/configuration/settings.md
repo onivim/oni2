@@ -136,7 +136,6 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `files.useExperimentalFileWatcher` __(_bool_ default: `false`)__ When `true`, a file watcher will be used to monitor file system changes and update the explorer in the sidebar.
 
-
 ### Layout
 
 - `workbench.editor.showTabs` __(_bool_ default: `true`)__ - When `false`, hides the editor tabs.
