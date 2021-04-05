@@ -2,52 +2,91 @@ open Oni_Core;
 
 module Log = (val Log.withNamespace("Oni2.Service.FileWatcher"));
 
+module Key =
+  Oni_Core.UniqueId.Make({});
+
 [@deriving show({with_path: false})]
 type event = {
-  path: string,
+  watchedPath: [@opaque] FpExp.t(FpExp.absolute),
+  changedPath: [@opaque] FpExp.t(FpExp.absolute),
   hasRenamed: bool,
   hasChanged: bool,
+  stat: [@opaque] option(Luv.File.Stat.t),
+};
+
+type params = {
+  path: FpExp.t(FpExp.absolute),
+  key: Key.t,
 };
 
 module WatchSubscription =
   Isolinear.Sub.Make({
     type state = {
-      path: string,
+      path: FpExp.t(FpExp.absolute),
       watcher: option(Luv.FS_event.t),
     };
 
     type nonrec msg = event;
-    type nonrec params = string;
+    type nonrec params = params;
 
     let name = "FileWatcher";
-    let id = Fun.id;
+    let id = params => {
+      String.concat(
+        ":",
+        [params.key |> Key.toString, FpExp.toString(params.path)],
+      );
+    };
 
-    let init = (~params as path, ~dispatch) => {
-      Log.tracef(m => m("Starting file watcher for %s", path));
+    let init = (~params: params, ~dispatch) => {
+      Log.tracef(m =>
+        m("Starting file watcher for %s", FpExp.toString(params.path))
+      );
 
+      let pathStr = FpExp.toString(params.path);
       switch (Luv.FS_event.init()) {
       | Ok(watcher) =>
         let onEvent = (
           fun
-          | Ok((_file, events)) =>
-            dispatch({
-              path,
-              hasRenamed: List.mem(`RENAME, events),
-              hasChanged: List.mem(`CHANGE, events),
-            })
+          | Ok((file, events)) => {
+              let changedPath = FpExp.At.(params.path / file);
+
+              let promise = Service_OS.Api.stat(FpExp.toString(changedPath));
+
+              Lwt.on_success(promise, statResult => {
+                dispatch({
+                  watchedPath: params.path,
+                  changedPath: FpExp.At.(params.path / file),
+                  hasRenamed: List.mem(`RENAME, events),
+                  hasChanged: List.mem(`CHANGE, events),
+                  stat: Some(statResult),
+                })
+              });
+
+              Lwt.on_failure(promise, _exn => {
+                dispatch({
+                  watchedPath: params.path,
+                  changedPath: FpExp.At.(params.path / file),
+                  hasRenamed: List.mem(`RENAME, events),
+                  hasChanged: List.mem(`CHANGE, events),
+                  stat: None,
+                })
+              });
+            }
           | Error(error) =>
-            Log.errorf(m => m("'%s': %s", path, Luv.Error.strerror(error)))
+            Log.errorf(m =>
+              m("'%s': %s", pathStr, Luv.Error.strerror(error))
+            )
         );
 
-        Luv.FS_event.start(watcher, path, onEvent);
+        Luv.FS_event.start(watcher, pathStr, onEvent);
 
-        {path, watcher: Some(watcher)};
+        {path: params.path, watcher: Some(watcher)};
 
       | Error(error) =>
         let message = Luv.Error.strerror(error);
-        Log.errorf(m => m("init failed for '%s': %s", path, message));
+        Log.errorf(m => m("init failed for '%s': %s", pathStr, message));
 
-        {path, watcher: None};
+        {path: params.path, watcher: None};
       };
     };
 
@@ -55,8 +94,10 @@ module WatchSubscription =
       // Since the path is the id, there's nothing to change
       state;
 
-    let dispose = (~params as path, ~state) => {
-      Log.tracef(m => m("Disposing file watcher for %s", path));
+    let dispose = (~params: params, ~state) => {
+      Log.tracef(m =>
+        m("Disposing file watcher for %s", FpExp.toString(params.path))
+      );
 
       switch (state.watcher) {
       | Some(watcher) => ignore(Luv__FS_event.stop(watcher): result(_))
@@ -65,6 +106,6 @@ module WatchSubscription =
     };
   });
 
-let watch = (~path, ~onEvent) =>
-  WatchSubscription.create(path)
+let watch = (~key, ~path, ~onEvent) =>
+  WatchSubscription.create({key, path})
   |> Isolinear.Sub.map(event => onEvent(event));

@@ -69,6 +69,7 @@ module TreeList = TreeList;
 module Tokenizer = Tokenizer;
 module TrustedDomains = TrustedDomains;
 module UiFont = UiFont;
+module UniqueId = UniqueId;
 module Uri = Uri;
 module Utility = Utility;
 module Views = Views;

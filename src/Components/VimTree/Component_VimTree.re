@@ -129,6 +129,11 @@ let findIndex = (f, {treeAsList, _}) => {
   Component_VimList.findIndex(pred, treeAsList);
 };
 
+let setSelected = (~selected, {treeAsList, _} as model) => {
+  let treeAsList' = treeAsList |> Component_VimList.setSelected(~selected);
+  {...model, treeAsList: treeAsList'};
+};
+
 let keyPress = (key, {treeAsList, _} as model) => {
   ...model,
   treeAsList: Component_VimList.keyPress(key, treeAsList),

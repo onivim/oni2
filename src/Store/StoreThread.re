@@ -344,7 +344,11 @@ let start =
       );
 
     let fileExplorerSub =
-      Feature_Explorer.sub(~configuration=state.config, state.fileExplorer)
+      Feature_Explorer.sub(
+        ~config,
+        ~configuration=state.config,
+        state.fileExplorer,
+      )
       |> Isolinear.Sub.map(msg => Model.Actions.FileExplorer(msg));
 
     let languageSupportSub =

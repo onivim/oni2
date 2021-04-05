@@ -544,6 +544,15 @@ let update =
              })
           |> Option.value(~default=Isolinear.Effect.none);
         (state, eff);
+
+      | WatchedPathChanged({path, stat}) =>
+        let eff =
+          Service_Exthost.Effects.FileSystemEventService.onPathChanged(
+            ~path,
+            ~maybeStat=stat,
+            extHostClient,
+          );
+        (state, eff);
       }
     );
 
@@ -1373,13 +1382,8 @@ let update =
       (state'', Effect.none);
     | BufferSaved(buffer) =>
       let eff =
-        Service_Exthost.Effects.FileSystemEventService.onFileEvent(
-          ~events=
-            Exthost.Files.FileSystemEvents.{
-              created: [],
-              deleted: [],
-              changed: [buffer |> Oni_Core.Buffer.getUri],
-            },
+        Service_Exthost.Effects.FileSystemEventService.onBufferChanged(
+          ~buffer,
           extHostClient,
         );
 

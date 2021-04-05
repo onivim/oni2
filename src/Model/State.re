@@ -443,6 +443,7 @@ let initial =
     Feature_Configuration.initial(
       ~loader=configurationLoader,
       [
+        Component_FileExplorer.Contributions.configuration,
         Feature_AutoUpdate.Contributions.configuration,
         Feature_Buffers.Contributions.configuration,
         Feature_Editor.Contributions.configuration,
