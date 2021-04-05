@@ -2,8 +2,13 @@ open Oni_Core;
 // MODEL
 
 [@deriving show]
+type command =
+  | Reload;
+
+[@deriving show]
 type msg =
   | ActiveFilePathChanged([@opaque] option(FpExp.t(FpExp.absolute)))
+  | Command(command)
   | NodeLoadError(string)
   | NodeLoaded(FsTreeNode.t)
   | FocusNodeLoaded(FsTreeNode.t)

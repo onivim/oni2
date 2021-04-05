@@ -324,6 +324,8 @@ let update = (~config, ~configuration, msg, model) => {
     | None => (model, Nothing)
     }
 
+  | Command(Reload) => (reload(model), Nothing)
+
   | Tree(treeMsg) =>
     let (treeView, outmsg) =
       Component_VimTree.update(treeMsg, model.treeView);
@@ -406,12 +408,27 @@ let sub = (~configuration, {rootPath, expandedPaths, pathsToLoad, _}) => {
   expandedPathSubs @ watchers |> Isolinear.Sub.batch;
 };
 
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let reload =
+    define(
+      ~category="Explorer",
+      ~title="Reload",
+      "workbench.todo.explorer-reload",
+      Command(Reload),
+    );
+};
+
 module Contributions = {
   let commands = (~isFocused) => {
     !isFocused
       ? []
-      : Component_VimTree.Contributions.commands
-        |> List.map(Oni_Core.Command.map(msg => Tree(msg)));
+      : [Commands.reload]
+        @ (
+          Component_VimTree.Contributions.commands
+          |> List.map(Oni_Core.Command.map(msg => Tree(msg)))
+        );
   };
 
   let contextKeys = (~isFocused, model) => {

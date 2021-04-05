@@ -58,12 +58,7 @@ type model = {
 };
 
 [@deriving show]
-type command =
-  | Reload;
-
-[@deriving show]
 type msg =
-  | Command(command)
   | KeyboardInput(string)
   | FileExplorer(Component_FileExplorer.msg)
   | SymbolOutline(Component_VimTree.msg)
@@ -139,14 +134,6 @@ type outmsg =
 
 let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
-  | Command(Reload) =>
-    let model' = {
-      ...model,
-      fileExplorer:
-        model.fileExplorer |> Option.map(Component_FileExplorer.reload),
-    };
-    (model', Nothing);
-
   | KeyboardInput(key) =>
     if (model.focus == FileExplorer) {
       if (model.fileExplorer == None) {
@@ -525,18 +512,6 @@ let sub = (~configuration, model) => {
   |> Option.value(~default=Isolinear.Sub.none);
 };
 
-module Commands = {
-  open Feature_Commands.Schema;
-
-  let reload =
-    define(
-      ~category="Explorer",
-      ~title="Reload",
-      "workbench.todo.explorer-reload",
-      Command(Reload),
-    );
-};
-
 module Contributions = {
   let commands = (~isFocused, model) => {
     let explorerCommands =
@@ -557,7 +532,7 @@ module Contributions = {
           |> List.map(Oni_Core.Command.map(msg => VimWindowNav(msg)))
         : [];
 
-    explorerCommands @ vimNavCommands @ outlineCommands @ Commands.[reload];
+    explorerCommands @ vimNavCommands @ outlineCommands;
   };
 
   let contextKeys = (~isFocused, model) => {
