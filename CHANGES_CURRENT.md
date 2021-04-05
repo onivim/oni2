@@ -32,6 +32,7 @@
 - #3326 - Lifecycle: Delay process termination until cleanup actions have run (fixes #3270, thanks @timbertson !)
 - #3359 - SCM: Don't show diffs for untracked or ignored files (fixes #3355)
 - #3361 - Clipboard: Add command+v binding for paste in normal mode (fixes #3353)
+- #3365 - Explorer: Add manual refresh command and experimental `files.useExperimentalFileWatcher` setting (fixes #3350)
 
 ### Performance
 
@@ -51,4 +52,4 @@
 ### Infrastructure
 
 - #3319 - Dependency: esy-macdylibbundler -> 0.4.5001 to support Big Sur (thanks @brdoney !)
-- ##3313 - Packaging: Fix macOS Big Sur release bundling issues (fixes #2813, thanks @brdoney !)
+- #3313 - Packaging: Fix macOS Big Sur release bundling issues (fixes #2813, thanks @brdoney !)
