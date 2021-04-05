@@ -23,6 +23,7 @@ module Msg = {
 };
 
 type model = {
+  fileWatcherKey: Service_FileWatcher.Key.t,
   rootPath: FpExp.t(FpExp.absolute),
   rootName: string,
   expandedPaths: list(FpExp.t(FpExp.absolute)),
@@ -36,6 +37,8 @@ type model = {
 };
 
 let initial = (~rootPath) => {
+  fileWatcherKey:
+    Service_FileWatcher.Key.create("Explorer:" ++ FpExp.toString(rootPath)),
   rootPath,
   rootName: "",
   expandedPaths: [rootPath],

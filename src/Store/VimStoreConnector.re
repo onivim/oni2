@@ -17,6 +17,11 @@ module Editor = Feature_Editor.Editor;
 
 module Log = (val Core.Log.withNamespace("Oni2.Store.Vim"));
 
+let vimFileWatcherKey =
+  Service_FileWatcher.Key.create(
+    ~friendlyName="VimStoreConnector.FileWatcher",
+  );
+
 let start =
     (
       ~showUpdateChangelog: bool,
@@ -950,7 +955,8 @@ let start =
       switch (Selectors.getActiveBuffer(state)) {
       | Some(buffer)
           when
-            Core.Buffer.getFilePath(buffer) == Some(event.path)
+            Core.Buffer.getFilePath(buffer)
+            == Some(Core.FpExp.toString(event.watchedPath))
             && !Core.Buffer.isModified(buffer) => (
           state,
           Service_Vim.reload(),
@@ -1061,8 +1067,10 @@ let subscriptions = (state: State.t) => {
   |> List.filter_map(buffer =>
        buffer
        |> Core.Buffer.getFilePath
+       |> OptionEx.flatMap(Core.FpExp.absoluteCurrentPlatform)
        |> Option.map(path =>
-            Service_FileWatcher.watch(~path, ~onEvent=event =>
+            Service_FileWatcher.watch(
+              ~key=vimFileWatcherKey, ~path, ~onEvent=event =>
               Actions.FileChanged(event)
             )
           )

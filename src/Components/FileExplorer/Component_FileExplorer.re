@@ -370,7 +370,11 @@ let update = (~config, ~configuration, msg, model) => {
 
 module View = View;
 
-let sub = (~configuration, {rootPath, expandedPaths, pathsToLoad, _}) => {
+let sub =
+    (
+      ~configuration,
+      {fileWatcherKey, rootPath, expandedPaths, pathsToLoad, _},
+    ) => {
   let ignored =
     Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
 
@@ -405,7 +409,8 @@ let sub = (~configuration, {rootPath, expandedPaths, pathsToLoad, _}) => {
     allPathsToWatch
     |> List.map(path => {
          Service_FileWatcher.watch(
-           ~path=FpExp.toString(path),
+           ~key=fileWatcherKey,
+           ~path,
            ~onEvent=onEvent(path),
          )
        });
