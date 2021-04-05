@@ -2,4 +2,4 @@
 
 steps:
   - script: npm install -g esy@next
-    displayName: 'Install Esy: npm install -g esy@0.6.7'
+    displayName: 'Install Esy: npm install -g esy@next'
