@@ -33,7 +33,10 @@ module Internal = {
     if (kind == `FILE || kind == `LINK) {
       Some(FsTreeNode.file(path));
     } else if (kind == `DIR) {
-      Some(FsTreeNode.directory(path, ~children=[]));
+      //let isOpen = expandedPaths |> List.exists(FpExp.eq(path));
+      Some(
+        FsTreeNode.directory(path, ~children=[]),
+      );
     } else {
       None;
     };
@@ -400,15 +403,25 @@ let sub =
 
   let allPathsToLoad = pathsToLoad;
 
+  // Sort expanded paths so we load the root first, then subdirs, etc.
   let expandedPathSubs =
     allPathsToLoad
-    |> List.map(path => {
-         Service_OS.Sub.dir(
-           ~uniqueId="FileExplorer:Sub" ++ FpExp.toString(path),
-           ~toMsg=toMsg(path),
-           FpExp.toString(path),
-         )
-       });
+    |> List.sort((a, b) => {
+         String.length(FpExp.toString(a))
+         - String.length(FpExp.toString(b))
+       })
+    |> (
+      l =>
+        List.nth_opt(l, 0)
+        |> Option.map(path => {
+             Service_OS.Sub.dir(
+               ~uniqueId="FileExplorer:Sub" ++ FpExp.toString(path),
+               ~toMsg=toMsg(path),
+               FpExp.toString(path),
+             )
+           })
+        |> Option.value(~default=Isolinear.Sub.none)
+    );
 
   let onEvent = (path, evt: Service_FileWatcher.event) => {
     FileWatcherEvent({path, event: evt});
@@ -429,7 +442,7 @@ let sub =
              )
            });
 
-  expandedPathSubs @ watchers |> Isolinear.Sub.batch;
+  [expandedPathSubs, ...watchers] |> Isolinear.Sub.batch;
 };
 
 module Commands = {

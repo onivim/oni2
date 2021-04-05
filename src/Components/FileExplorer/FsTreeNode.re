@@ -130,8 +130,8 @@ let replace = (~replacement, tree) => {
     // Merge the 'old' children with the 'new' children, so that we don't have to recursively
     // refresh if we don't have to.
     | (
-        Tree.Node({children: oldChildren, _}),
-        Tree.Node({children: newChildren, expanded, data}),
+        Tree.Node({children: oldChildren, expanded, _}),
+        Tree.Node({children: newChildren, data, _}),
       ) =>
       // Grab a map of previous children. For any that were existing, use the old metadata - some children might be expanded, for example.
       let previousMap =
@@ -143,7 +143,7 @@ let replace = (~replacement, tree) => {
              ) => {
                switch (child) {
                | Tree.Leaf(_) => acc
-               | Tree.Node(_) => IntMap.add(data.hash, child, acc)
+               | Tree.Node({data, _}) => IntMap.add(data.hash, child, acc)
                }
              },
              IntMap.empty,
