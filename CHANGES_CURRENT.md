@@ -53,4 +53,5 @@
 ### Infrastructure
 
 - #3319 - Dependency: esy-macdylibbundler -> 0.4.5001 to support Big Sur (thanks @brdoney !)
-- ##3313 - Packaging: Fix macOS Big Sur release bundling issues (fixes #2813, thanks @brdoney !)
+- #3313 - Packaging: Fix macOS Big Sur release bundling issues (fixes #2813, thanks @brdoney !)
+- #3369 - CI: Install python3 on CentOS dockerfile
