@@ -6,6 +6,18 @@ module Log = (val Log.withNamespace("Oni2.Feature.Explorer"));
 
 include Model;
 
+module Configuration = {
+  open Config.Schema;
+
+  let useFileWatcher =
+    setting("files.useExperimentalFileWatcher", bool, ~default=false);
+};
+
+let configurationChanged = (~config, model) => {
+  ...model,
+  useFileWatcher: Configuration.useFileWatcher.get(config),
+};
+
 module Internal = {
   let sortByLoweredDisplayName = (a: FsTreeNode.t, b: FsTreeNode.t) => {
     switch (a, b) {
@@ -373,7 +385,11 @@ let update = (~config, ~configuration, msg, model) => {
 
 module View = View;
 
-let sub = (~configuration, {fileWatcherKey, expandedPaths, pathsToLoad, _}) => {
+let sub =
+    (
+      ~configuration,
+      {useFileWatcher, fileWatcherKey, expandedPaths, pathsToLoad, _},
+    ) => {
   let ignored =
     Feature_Configuration.Legacy.getValue(c => c.filesExclude, configuration);
 
@@ -405,14 +421,16 @@ let sub = (~configuration, {fileWatcherKey, expandedPaths, pathsToLoad, _}) => {
   let allPathsToWatch = expandedPaths;
 
   let watchers =
-    allPathsToWatch
-    |> List.map(path => {
-         Service_FileWatcher.watch(
-           ~key=fileWatcherKey,
-           ~path,
-           ~onEvent=onEvent(path),
-         )
-       });
+    !useFileWatcher
+      ? Isolinear.Sub.none
+      : allPathsToWatch
+        |> List.map(path => {
+             Service_FileWatcher.watch(
+               ~key=fileWatcherKey,
+               ~path,
+               ~onEvent=onEvent(path),
+             )
+           });
 
   expandedPathSubs @ watchers |> Isolinear.Sub.batch;
 };
@@ -439,6 +457,8 @@ module Contributions = {
           |> List.map(Oni_Core.Command.map(msg => Tree(msg)))
         );
   };
+
+  let configuration = Configuration.[useFileWatcher];
 
   let contextKeys = (~isFocused, model) => {
     open WhenExpr.ContextKeys;

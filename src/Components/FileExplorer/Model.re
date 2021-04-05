@@ -33,7 +33,8 @@ type model = {
   isOpen: bool,
   scrollOffset: [ | `Start(float) | `Middle(float) | `Reveal(int)],
   active: option(FpExp.t(FpExp.absolute)),
-  focus: option(FpExp.t(FpExp.absolute)) // path
+  focus: option(FpExp.t(FpExp.absolute)), // path
+  useFileWatcher: bool,
 };
 
 let initial = (~rootPath) => {
@@ -51,6 +52,7 @@ let initial = (~rootPath) => {
   scrollOffset: `Start(0.),
   active: None,
   focus: None,
+  useFileWatcher: false,
 };
 
 let setRoot = (~rootPath, model) => {
