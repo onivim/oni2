@@ -35,6 +35,7 @@
 - #3361 - Clipboard: Add command+v binding for paste in normal mode (fixes #3353)
 - #3364 - Input: Add context key to differentiate sidebar panels
 - #3365 - Explorer: Add manual refresh command and experimental `files.useExperimentalFileWatcher` setting (fixes #3350)
+- #3371 - Explorer: Fix regression in auto-focus behavior
 
 ### Performance
 
