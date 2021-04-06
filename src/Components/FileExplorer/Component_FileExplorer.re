@@ -436,6 +436,7 @@ let sub =
       : allPathsToWatch
         |> List.map(path => {
              Service_FileWatcher.watch(
+               ~watchChanges=false,
                ~key=fileWatcherKey,
                ~path,
                ~onEvent=onEvent(path),

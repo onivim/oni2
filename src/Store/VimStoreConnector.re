@@ -1070,7 +1070,7 @@ let subscriptions = (state: State.t) => {
        |> OptionEx.flatMap(Core.FpExp.absoluteCurrentPlatform)
        |> Option.map(path =>
             Service_FileWatcher.watch(
-              ~key=vimFileWatcherKey, ~path, ~onEvent=event =>
+              ~watchChanges=true, ~key=vimFileWatcherKey, ~path, ~onEvent=event =>
               Actions.FileChanged(event)
             )
           )

@@ -17,6 +17,7 @@ let key = Service_FileWatcher.Key.create(~friendlyName="FileWatcherTest");
 // System under test
 let sub =
   Service_FileWatcher.watch(
+    ~watchChanges=true,
     ~key,
     ~path=FpExp.absoluteCurrentPlatform(tempFilePath) |> Option.get,
     ~onEvent=_ => {
