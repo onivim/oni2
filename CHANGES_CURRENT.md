@@ -3,6 +3,7 @@
 - #3284 - Definition: Add 'editor.action.revealDefinitionAside' command (fixes #3261)
 - #2881 - Extensions: Initial rename support
 - #3348 - Code Actions: Implement extension host protocol for quick fix / code actions
+- #3352 - Keybindings: Add default keybinding for open configuration (related #1423, thanks @LiHRaM !)
 
 ### Bug Fixes
 
@@ -30,6 +31,10 @@
 - #3342 - Completion: Use completion kind instead of insert text rules for sorting
 - #3346 - Extensions: Fix parse errors for progress and updateConfigurationOption APIs (related #3321)
 - #3326 - Lifecycle: Delay process termination until cleanup actions have run (fixes #3270, thanks @timbertson !)
+- #3359 - SCM: Don't show diffs for untracked or ignored files (fixes #3355)
+- #3361 - Clipboard: Add command+v binding for paste in normal mode (fixes #3353)
+- #3364 - Input: Add context key to differentiate sidebar panels
+- #3365 - Explorer: Add manual refresh command and experimental `files.useExperimentalFileWatcher` setting (fixes #3350)
 
 ### Performance
 
@@ -49,4 +54,5 @@
 ### Infrastructure
 
 - #3319 - Dependency: esy-macdylibbundler -> 0.4.5001 to support Big Sur (thanks @brdoney !)
-- ##3313 - Packaging: Fix macOS Big Sur release bundling issues (fixes #2813, thanks @brdoney !)
+- #3313 - Packaging: Fix macOS Big Sur release bundling issues (fixes #2813, thanks @brdoney !)
+- #3369 - CI: Install python3 on CentOS dockerfile

@@ -21,4 +21,7 @@ let update: (msg, model) => (model, outmsg);
 
 module Commands: {let paste: Command.t(msg);};
 
-module Contributions: {let commands: list(Command.t(msg));};
+module Contributions: {
+  let commands: list(Command.t(msg));
+  let keybindings: list(Feature_Input.Schema.keybinding);
+};

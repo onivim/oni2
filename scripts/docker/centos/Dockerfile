@@ -9,7 +9,7 @@ RUN scl enable llvm-toolset-7.0 'clang -v'
 
 RUN yum -y install gcc-c++ make sudo
 RUN curl -sL https://rpm.nodesource.com/setup_10.x | sudo -E bash -
-RUN yum -y install nodejs npm coreutils grep tar sed gawk diffutils autoconf unzip
+RUN yum -y install nodejs npm coreutils grep tar sed gawk diffutils autoconf unzip python3
 
 RUN yum -y install file fuse fuse-devel wget bzip2-devel libXt-devel libSM-devel libICE-devel ncurses-devel libacl-devel libxrandr-devel libXinerama-devel libXcursor-devel libXi-devel mesa-libGL-devel mesa-libGLU-devel gtk3-devel perl-Digest-SHA bzip2 m4 patch which cmake3 git libxkbfile-devel
 
@@ -32,3 +32,4 @@ RUN yum -y install git222
 RUN node -v
 RUN npm -v
 RUN git --version
+RUN python3 --version
