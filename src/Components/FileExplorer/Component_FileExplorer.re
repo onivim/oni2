@@ -214,9 +214,8 @@ let revealAndFocusPath = (~configuration, path, model: model) => {
     | `Success(_) =>
       let tree = FsTreeNode.updateNodesInPath(FsTreeNode.setOpen, path, tree);
 
-      let maybePathIndex = getIndex(path, model);
-
       let model = model |> setFocus(Some(path)) |> setTree(tree);
+      let maybePathIndex = getIndex(path, model);
 
       let scrolledModel =
         maybePathIndex
@@ -255,40 +254,6 @@ let markNodeAsLoaded = (node, model) => {
 
 let reload = model => {...model, pathsToLoad: model.expandedPaths};
 
-// `ensureSelected` verifies that the current 'active' path
-// index is up to date in the inner tree. This is important
-// when a file is loaded or deleted, because the index would still
-// be in the previous location, if it would be shifted by the change.
-let ensureSelected = (~maybeActivePath, model) => {
-  maybeActivePath
-  |> Utility.OptionEx.flatMap(active => {
-       let pred =
-           (
-             node:
-               Component_VimTree.nodeOrLeaf(
-                 FsTreeNode.metadata,
-                 FsTreeNode.metadata,
-               ),
-           ) => {
-         switch (node) {
-         | Leaf({data, _})
-         | Node({data, _}) => FpExp.eq(data.path, active)
-         };
-       };
-
-       // Find the index for the currently active item...
-       let maybeIndex = Component_VimTree.findIndex(pred, model.treeView);
-       // And select it, if it is available
-       maybeIndex
-       |> Option.map(selected => {
-            let treeView =
-              Component_VimTree.setSelected(~selected, model.treeView);
-            {...model, treeView};
-          });
-     })
-  |> Option.value(~default=model);
-};
-
 let update = (~config, ~configuration, msg, model) => {
   switch (msg) {
   | FileWatcherEvent({path, event}) => (
@@ -320,15 +285,10 @@ let update = (~config, ~configuration, msg, model) => {
 
   | NodeLoadError(_msg) => (model, Nothing)
 
-  | NodeLoaded(node) =>
-    let maybeActivePath = model.active;
-    (
-      model
-      |> replaceNode(node)
-      |> markNodeAsLoaded(node)
-      |> ensureSelected(~maybeActivePath),
+  | NodeLoaded(node) => (
+      model |> replaceNode(node) |> markNodeAsLoaded(node),
       Nothing,
-    );
+    )
 
   | FocusNodeLoaded(node) =>
     switch (model.active) {
