@@ -4,7 +4,7 @@
 // Tool for testing the textmate grammars
 //
 // Can be run via:
-// `esy @test x TextmateCli --file=package.json --grammar=test/reason-textmate/json.json --line=25
+// `esy @test x TextmateCli --file=package.json --grammar=extensions/json/JSON.tmLanguage.json --theme=extensions/onedark-pro/themes/OneDark-Pro.json --line=25
 
 open Textmate;
 
@@ -12,12 +12,14 @@ module Cli = {
   type t = {
     sourceFile: string,
     grammarFile: string,
+    themeFile: string,
     lineNumber: int,
   };
 
   let parse = args => {
     let sourceFile = ref(None);
     let grammarFile = ref(None);
+    let themeFile = ref(None);
     let lineNumber = ref(0);
     let () =
       Arg.parse_argv(
@@ -35,6 +37,11 @@ module Cli = {
             "Grammar file to use",
           ),
           ("--line", Int(i => lineNumber := i), "Line number to show"),
+          (
+            "--theme",
+            String(s => themeFile := Some(s)),
+            "Theme file to use",
+          ),
         ],
         _ => (),
         "",
@@ -52,20 +59,23 @@ module Cli = {
     {
       sourceFile: getRequiredParameter("file", sourceFile),
       grammarFile: getRequiredParameter("grammar", grammarFile),
+      themeFile: getRequiredParameter("theme", themeFile),
       lineNumber: lineNumber^,
     };
   };
 
-  let toString = ({sourceFile, grammarFile, lineNumber}) =>
+  let toString = ({sourceFile, grammarFile, themeFile, lineNumber}) =>
     Printf.sprintf(
       {|
 Using arguments:
 - sourceFile: %s
 - grammarFile: %s
+- themeFile: %s
 - lineNumber: %d
 	|},
       sourceFile,
       grammarFile,
+      themeFile,
       lineNumber,
     );
 };
@@ -80,10 +90,21 @@ let getOkOrFail = (~msg, res) => {
   };
 };
 
+let getTokenWithColour = (theme, token) => {
+  let colour =
+    TokenTheme.match(Theme.getTokenColors(theme), Token.show(token));
+
+  Printf.sprintf(
+    {|%s, Colour: (%s)|},
+    Token.show(token),
+    colour.TokenTheme.ResolvedStyle.foreground,
+  );
+};
+
 let run = () => {
   print_endline("** Welcome to TextmateCli **");
 
-  let Cli.{sourceFile, grammarFile, lineNumber} as args =
+  let Cli.{sourceFile, grammarFile, lineNumber, themeFile} as args =
     Cli.parse(Sys.argv);
   print_endline(args |> Cli.toString);
 
@@ -98,6 +119,13 @@ let run = () => {
 
   let scopeName = Grammar.getScopeName(grammar);
   print_endline("Grammar loaded - using scope: " ++ scopeName);
+
+  print_endline("Loading theme: " ++ themeFile);
+
+  let theme =
+    themeFile
+    |> Theme.from_file
+    |> getOkOrFail(~msg="Unable to load theme " ++ grammarFile);
 
   print_endline("Trying to read file: " ++ sourceFile);
   let lines =
@@ -126,7 +154,7 @@ let run = () => {
   print_endline(Printf.sprintf("Line %d: %s", lineNumber, latestLine^));
   print_endline("** Tokens: **");
 
-  latestTokens^ |> List.map(Token.show) |> List.iter(print_endline);
+  latestTokens^ |> List.map(getTokenWithColour(theme)) |> List.iter(print_endline);
 
   print_endline("Done!");
 };
