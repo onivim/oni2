@@ -17,6 +17,7 @@ type msg =
       handle: int,
     })
   | RenameLocationUnavailable
+  | RenameLocationError(string)
   // Candidate edits - preview of edits while user is typing
   | CandidateEditsFailed(string)
   | CandidateEditsAvailable(Exthost.WorkspaceEdit.t)
@@ -79,28 +80,6 @@ let isFocused = ({sessionState, _}) => {
   };
 };
 
-let toVimEdits = (~buffer, workspaceEdit: Exthost.WorkspaceEdit.t) => {
-  workspaceEdit.edits
-  |> List.filter_map(
-       fun
-       // TODO: Handle workspace edits
-       | Exthost.WorkspaceEdit.File(_) => None
-       | Exthost.WorkspaceEdit.Text(edit) => Some(edit),
-     )
-  |> List.filter((textEdit: Exthost.WorkspaceEdit.TextEdit.t) => {
-       let bufferUri = Buffer.getUri(buffer);
-       Uri.equals(bufferUri, textEdit.resource);
-     })
-  |> List.map((textEdit: Exthost.WorkspaceEdit.TextEdit.t) => {
-       let edit = textEdit.edit;
-
-       Vim.Edit.{
-         range: edit.range |> Exthost.OneBasedRange.toRange,
-         text: [|edit.text|],
-       };
-     });
-};
-
 let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
   switch (msg) {
   | Noop => (model, Outmsg.Nothing)
@@ -138,6 +117,8 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
     }
 
   | RenameLocationUnavailable => (model, Outmsg.Nothing)
+
+  | RenameLocationError(msg) => (model, Outmsg.NotifyFailure(msg))
 
   | NoCandidateEditsAvailable => (model, Outmsg.Nothing)
 
@@ -189,24 +170,7 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
   | ApplyEditsAvailable(edit) =>
     let outmsg =
       switch (model.sessionState) {
-      | Applying(_) =>
-        switch (maybeBuffer) {
-        | Some(buffer) =>
-          let edits = toVimEdits(~buffer, edit);
-
-          let effect =
-            Service_Vim.Effects.applyEdits(
-              ~shouldAdjustCursors=true,
-              ~bufferId=buffer |> Oni_Core.Buffer.getId,
-              ~version=buffer |> Oni_Core.Buffer.getVersion,
-              ~edits,
-              // TODO
-              fun
-              | _ => Noop,
-            );
-          Outmsg.Effect(effect);
-        | None => Outmsg.Nothing
-        }
+      | Applying(_) => Outmsg.ApplyWorkspaceEdit(edit)
       | Inactive
       | Resolving
       | Resolved(_) => Outmsg.Nothing
@@ -223,7 +187,7 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
         switch (maybeLocationResult) {
         | Ok(Some(location)) => RenameLocationAvailable({location, handle})
         | Ok(None) => RenameLocationUnavailable
-        | Error(_msg) => RenameLocationUnavailable
+        | Error(msg) => RenameLocationError(msg)
         };
       };
       let eff =
