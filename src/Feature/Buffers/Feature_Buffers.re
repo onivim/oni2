@@ -443,9 +443,12 @@ let update = (~activeBufferId, ~config, msg: msg, model: model) => {
                )
              );
 
+        let itemToIcon = item => {
+          item |> snd |> Option.map(Feature_Quickmenu.Schema.Icon.seti);
+        };
         Feature_Quickmenu.Schema.menu(
           ~itemRenderer=
-            Feature_Quickmenu.Schema.Renderer.defaultWithIcon(snd),
+            Feature_Quickmenu.Schema.Renderer.defaultWithIcon(itemToIcon),
           ~onItemSelected=
             language =>
               FileTypeChanged({
