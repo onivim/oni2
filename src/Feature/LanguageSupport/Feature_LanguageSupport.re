@@ -58,6 +58,7 @@ type outmsg =
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
+  | ApplyWorkspaceEdit(Exthost.WorkspaceEdit.t)
   | FormattingApplied({
       displayName: string,
       editCount: int,
@@ -96,6 +97,7 @@ let map: ('a => msg, Outmsg.internalMsg('a)) => outmsg =
     fun
     | Outmsg.ApplyCompletion({replaceSpan, insertText, additionalEdits}) =>
       ApplyCompletion({replaceSpan, insertText, additionalEdits})
+    | Outmsg.ApplyWorkspaceEdit(edit) => ApplyWorkspaceEdit(edit)
     | Outmsg.FormattingApplied({displayName, editCount, needsToSave}) =>
       FormattingApplied({displayName, editCount, needsToSave})
     | Outmsg.InsertSnippet({replaceSpan, snippet, additionalEdits}) =>

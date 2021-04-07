@@ -8,6 +8,7 @@ type internalMsg('a) =
       insertText: string,
       additionalEdits: list(Exthost.Edit.SingleEditOperation.t),
     })
+  | ApplyWorkspaceEdit(Exthost.WorkspaceEdit.t)
   | FormattingApplied({
       displayName: string,
       editCount: int,

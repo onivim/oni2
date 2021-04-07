@@ -682,6 +682,45 @@ let update =
           |> Isolinear.Effect.map(msg => Vim(msg)),
         );
 
+      | ApplyWorkspaceEdit(workspaceEdit) =>
+        let toVimEdits = (~buffer, workspaceEdit: Exthost.WorkspaceEdit.t) => {
+          workspaceEdit.edits
+          |> List.filter_map(
+               fun
+               // TODO: Handle workspace edits
+               | Exthost.WorkspaceEdit.File(_) => None
+               | Exthost.WorkspaceEdit.Text(edit) => Some(edit),
+             )
+          |> List.filter((textEdit: Exthost.WorkspaceEdit.TextEdit.t) => {
+               let bufferUri = Buffer.getUri(buffer);
+               Uri.equals(bufferUri, textEdit.resource);
+             })
+          |> List.map((textEdit: Exthost.WorkspaceEdit.TextEdit.t) => {
+               let edit = textEdit.edit;
+
+               Vim.Edit.{
+                 range: edit.range |> Exthost.OneBasedRange.toRange,
+                 text: [|edit.text|],
+               };
+             });
+        };
+        let eff =
+          switch (maybeBuffer) {
+          | Some(buffer) =>
+            let edits = toVimEdits(~buffer, workspaceEdit);
+
+            Service_Vim.Effects.applyEdits(
+              ~shouldAdjustCursors=true,
+              ~bufferId=buffer |> Oni_Core.Buffer.getId,
+              ~version=buffer |> Oni_Core.Buffer.getVersion,
+              ~edits,
+              fun
+              | _ => Noop,
+            );
+          | None => Isolinear.Effect.none
+          };
+        (state, eff);
+
       | FormattingApplied({displayName, editCount, needsToSave}) =>
         let (formatEffect, msg) =
           if (needsToSave) {

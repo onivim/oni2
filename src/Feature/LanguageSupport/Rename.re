@@ -80,28 +80,6 @@ let isFocused = ({sessionState, _}) => {
   };
 };
 
-let toVimEdits = (~buffer, workspaceEdit: Exthost.WorkspaceEdit.t) => {
-  workspaceEdit.edits
-  |> List.filter_map(
-       fun
-       // TODO: Handle workspace edits
-       | Exthost.WorkspaceEdit.File(_) => None
-       | Exthost.WorkspaceEdit.Text(edit) => Some(edit),
-     )
-  |> List.filter((textEdit: Exthost.WorkspaceEdit.TextEdit.t) => {
-       let bufferUri = Buffer.getUri(buffer);
-       Uri.equals(bufferUri, textEdit.resource);
-     })
-  |> List.map((textEdit: Exthost.WorkspaceEdit.TextEdit.t) => {
-       let edit = textEdit.edit;
-
-       Vim.Edit.{
-         range: edit.range |> Exthost.OneBasedRange.toRange,
-         text: [|edit.text|],
-       };
-     });
-};
-
 let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
   switch (msg) {
   | Noop => (model, Outmsg.Nothing)
@@ -192,24 +170,7 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
   | ApplyEditsAvailable(edit) =>
     let outmsg =
       switch (model.sessionState) {
-      | Applying(_) =>
-        switch (maybeBuffer) {
-        | Some(buffer) =>
-          let edits = toVimEdits(~buffer, edit);
-
-          let effect =
-            Service_Vim.Effects.applyEdits(
-              ~shouldAdjustCursors=true,
-              ~bufferId=buffer |> Oni_Core.Buffer.getId,
-              ~version=buffer |> Oni_Core.Buffer.getVersion,
-              ~edits,
-              // TODO
-              fun
-              | _ => Noop,
-            );
-          Outmsg.Effect(effect);
-        | None => Outmsg.Nothing
-        }
+      | Applying(_) => Outmsg.ApplyWorkspaceEdit(edit)
       | Inactive
       | Resolving
       | Resolved(_) => Outmsg.Nothing
