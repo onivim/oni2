@@ -91,11 +91,13 @@ module View = {
     let getTransform = (~direction, transitionAmount) => {
       let angle =
         Revery.Math.Angle.Degrees(
-          (-60.0) *. direction *. (1.0 -. transitionAmount),
+          (-45.0) *. direction *. (1.0 -. transitionAmount),
         );
 
-      let deltaY = (1.0 -. transitionAmount) *. 30.0 *. direction;
+      let deltaY = (1.0 -. transitionAmount) *. 20.0 *. direction;
+      let scale = 1.0 -. (1.0 -. transitionAmount) *. 0.1;
       [
+        Revery.UI.Transform.Scale(scale),
         Revery.UI.Transform.RotateX(angle),
         Revery.UI.Transform.TranslateY(deltaY),
       ];

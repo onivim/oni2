@@ -212,13 +212,15 @@ let sub =
 };
 
 module View = {
-  let make = (~model, ()) => {
+  let make = (~theme, ~model, ()) => {
+    let foregroundColor =
+      Feature_Theme.Colors.Editor.lightBulbForeground.from(theme);
     <Component_Popup.View
       model={model.lightBulbPopup}
       inner={(~transition) => {
         <Revery.UI.Components.Container
-          width=32 height=32 color=Revery.Colors.red>
-          <Oni_Core.Codicon color=Revery.Colors.white icon=Codicon.lightbulb />
+          width=32 height=32 color=Revery.Colors.transparentWhite>
+          <Oni_Core.Codicon color=foregroundColor icon=Codicon.lightbulb />
         </Revery.UI.Components.Container>
       }}
     />;

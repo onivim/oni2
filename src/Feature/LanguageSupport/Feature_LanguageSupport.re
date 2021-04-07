@@ -1051,7 +1051,7 @@ module CompletionMeet = CompletionMeet;
 module View = {
   module EditorWidgets = {
     let make = (~x, ~y, ~theme, ~model, ~font, ~dispatch, ()) => {
-      <CodeActions.View model={model.codeActions} />;
+      <CodeActions.View theme model={model.codeActions} />;
     };
   };
 };

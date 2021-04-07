@@ -189,10 +189,16 @@ module Editor = {
     );
 
   let lightBulbForeground =
-    define("editorLightBulb.foreground", all(ref(foreground)));
+    define(
+      "editorLightBulb.foreground",
+      {light: hex("#DDB100"), dark: hex("#FFCC00"), hc: hex("#FFCC00")},
+    );
 
   let lightBulbAutoFixForeground =
-    define("editorLightBulbAutoFix.foreground", all(ref(foreground)));
+    define(
+      "editorLightBulbAutoFix.foreground",
+      {light: hex("#007ACC"), dark: hex("#75BEFF"), hc: hex("#75BEFF")},
+    );
 
   let lineHighlightBackground =
     define("editor.lineHighlightBackground", all(unspecified));
@@ -213,6 +219,8 @@ module Editor = {
     findMatchBackground,
     findMatchBorder,
     findMatchHighlightsBackground,
+    lightBulbForeground,
+    lightBulbAutoFixForeground,
     lineHighlightBackground,
     selectionBackground,
     wordHighlightBackground,
