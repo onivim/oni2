@@ -312,8 +312,7 @@ let update = (~focus, model, msg) => {
     switch (focus) {
     | Some(Center) =>
       let layout = model |> activeLayout;
-      let newActiveGroupId =
-        layout |> activeTree |> moveTopLeft(layout.activeGroupId);
+      let newActiveGroupId = layout |> activeTree |> Layout.topLeft;
       (
         updateActiveLayout(
           layout => {...layout, activeGroupId: newActiveGroupId},
@@ -331,8 +330,7 @@ let update = (~focus, model, msg) => {
     switch (focus) {
     | Some(Center) =>
       let layout = model |> activeLayout;
-      let newActiveGroupId =
-        layout |> activeTree |> moveBottomRight(layout.activeGroupId);
+      let newActiveGroupId = layout |> activeTree |> Layout.bottomRight;
       (
         updateActiveLayout(
           layout => {...layout, activeGroupId: newActiveGroupId},
@@ -346,8 +344,32 @@ let update = (~focus, model, msg) => {
     | Some(Bottom)
     | None => (model, Nothing)
     }
-  | Command(CycleForward)
-  | Command(CycleBackward) => failwith("Not implemented yet")
+  | Command(CycleForward) =>
+    let layout = model |> activeLayout;
+    let newActiveGroupId =
+      layout
+      |> activeTree
+      |> Layout.cycle(~direction=`Forward, ~activeId=layout.activeGroupId);
+    (
+      updateActiveLayout(
+        layout => {...layout, activeGroupId: newActiveGroupId},
+        model,
+      ),
+      Nothing,
+    );
+  | Command(CycleBackward) =>
+    let layout = model |> activeLayout;
+    let newActiveGroupId =
+      layout
+      |> activeTree
+      |> Layout.cycle(~direction=`Backward, ~activeId=layout.activeGroupId);
+    (
+      updateActiveLayout(
+        layout => {...layout, activeGroupId: newActiveGroupId},
+        model,
+      ),
+      Nothing,
+    );
 
   | Command(RotateForward) =>
     switch (focus) {
