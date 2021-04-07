@@ -83,6 +83,8 @@ module QuickFixes = {
          CharacterRange.(range.start);
        });
   };
+
+  let all = ({fixes, _}) => fixes;
 };
 
 type model = {
@@ -92,7 +94,12 @@ type model = {
 };
 
 [@deriving show]
+type command =
+  | QuickFix;
+
+[@deriving show]
 type msg =
+  | Command(command)
   | LightBulbPopup([@opaque] Component_Popup.msg)
   | QuickFixesAvailable({
       handle: int,
@@ -141,6 +148,17 @@ let unregister = (~handle, model) => {
 let update = (~buffer, ~cursorLocation, msg, model) => {
   let bufferId = Buffer.getId(buffer);
   switch (msg) {
+  | Command(QuickFix) =>
+    let all = QuickFixes.all(model.quickFixes);
+    let allCount = List.length(all);
+    if (allCount == 0) {
+      (model, Outmsg.NotifyFailure("No quickfixes available here."));
+    } else if (allCount == 1) {
+      (model, Outmsg.NotifyFailure("Got a quickfix, need to apply!!"));
+    } else {
+      (model, Outmsg.NotifyFailure("Context menu not yet implemented"));
+    };
+
   | LightBulbPopup(popupMsg) => (
       {
         ...model,
@@ -229,6 +247,39 @@ let sub =
     |> Isolinear.Sub.map(msg => LightBulbPopup(msg));
 
   [lightBulbPopup, ...codeActionsSubs] |> Isolinear.Sub.batch;
+};
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let quickFix =
+    define(
+      ~category="Language Support",
+      ~title="Quick Fix",
+      "editor.action.quickFix",
+      Command(QuickFix),
+    );
+};
+
+module Keybindings = {
+  open Feature_Input.Schema;
+
+  let isMac = Revery.Environment.isMac;
+
+  let condition = "editorTextFocus && normalMode" |> WhenExpr.parse;
+
+  let quickFix =
+    bind(
+      ~key=isMac ? "<D-.>" : "<C-.>",
+      ~command=Commands.quickFix.id,
+      ~condition,
+    );
+};
+
+module Contributions = {
+  let commands = Commands.[quickFix];
+
+  let keybindings = Keybindings.[quickFix];
 };
 
 module View = {

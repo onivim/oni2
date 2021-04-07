@@ -692,6 +692,10 @@ module Contributions = {
       |> List.map(Oni_Core.Command.map(msg => Completion(msg)))
     )
     @ (
+      CodeActions.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => CodeActions(msg)))
+    )
+    @ (
       Rename.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Rename(msg)))
     )
@@ -744,6 +748,7 @@ module Contributions = {
   let keybindings =
     Keybindings.[close]
     @ Rename.Contributions.keybindings
+    @ CodeActions.Contributions.keybindings
     @ Completion.Contributions.keybindings
     @ Definition.Contributions.keybindings
     @ DocumentHighlights.Contributions.keybindings
