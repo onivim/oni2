@@ -633,8 +633,21 @@ module LanguageFeatures = {
   };
 
   let resolveRenameLocation = (~handle, ~resource, ~position) => {
+    let decoder =
+      Json.Decode.(
+        one_of([
+          (
+            "RenameLocation.ok",
+            nullable(RenameLocation.decode) |> map(rl => Ok(rl)),
+          ),
+          (
+            "RenameLocation.rejection",
+            RejectReason.decode |> map(Result.error),
+          ),
+        ])
+      );
     Client.request(
-      ~decoder=Json.Decode.(nullable(RenameLocation.decode)),
+      ~decoder,
       ~usesCancellationToken=true,
       ~rpcName="ExtHostLanguageFeatures",
       ~method="$resolveRenameLocation",

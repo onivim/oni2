@@ -2073,7 +2073,7 @@ module Request: {
         ~position: OneBasedPosition.t,
         Client.t
       ) =>
-      Lwt.t(option(RenameLocation.t));
+      Lwt.t(result(option(RenameLocation.t), string));
 
     let provideTypeDefinition:
       (

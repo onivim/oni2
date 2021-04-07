@@ -17,6 +17,7 @@ type msg =
       handle: int,
     })
   | RenameLocationUnavailable
+  | RenameLocationError(string)
   // Candidate edits - preview of edits while user is typing
   | CandidateEditsFailed(string)
   | CandidateEditsAvailable(Exthost.WorkspaceEdit.t)
@@ -139,6 +140,8 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
 
   | RenameLocationUnavailable => (model, Outmsg.Nothing)
 
+  | RenameLocationError(msg) => (model, Outmsg.NotifyFailure(msg))
+
   | NoCandidateEditsAvailable => (model, Outmsg.Nothing)
 
   | CandidateEditsAvailable(edits) =>
@@ -223,7 +226,7 @@ let update = (~client, ~maybeBuffer, ~cursorLocation, msg, model) => {
         switch (maybeLocationResult) {
         | Ok(Some(location)) => RenameLocationAvailable({location, handle})
         | Ok(None) => RenameLocationUnavailable
-        | Error(_msg) => RenameLocationUnavailable
+        | Error(msg) => RenameLocationError(msg)
         };
       };
       let eff =
