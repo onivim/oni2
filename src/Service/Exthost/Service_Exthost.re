@@ -289,7 +289,7 @@ module Effects = {
           );
 
         Lwt.on_success(promise, maybeLocation =>
-          dispatch(toMsg(Ok(maybeLocation)))
+          dispatch(toMsg(maybeLocation))
         );
 
         Lwt.on_failure(promise, err =>

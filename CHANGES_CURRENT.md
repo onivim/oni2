@@ -37,11 +37,13 @@
 - #3365 - Explorer: Add manual refresh command and experimental `files.useExperimentalFileWatcher` setting (fixes #3350)
 - #3371 - Explorer: Fix regression in auto-focus behavior
 - #3376 - Vim: Missing Control+W,W bindings (related #1721)
+- #3379 - Rename: Handle parsing 'rejectReason'
 
 ### Performance
 
 - #3316 - Transport: Re-use Luv.Buffer.t when possible for reads
 - #3374 - FileWatcher: Don't stat on file changes (related #3373)
+- #3378 - libuv: Run event loop once each Revery iteration
 
 ### Documentation
 
