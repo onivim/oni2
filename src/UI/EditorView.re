@@ -133,7 +133,8 @@ module Parts = {
               x=cursorPixelX
               y=cursorPixelY
               theme
-              font=uiFont
+              uiFont
+              editorFont
               dispatch={msg => dispatch(LanguageSupport(msg))}
               model={state.languageSupport}
             />

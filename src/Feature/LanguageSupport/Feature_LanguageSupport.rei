@@ -251,7 +251,8 @@ module View: {
         ~y: int,
         ~theme: ColorTheme.Colors.t,
         ~model: model,
-        ~font: UiFont.t,
+        ~editorFont: Service_Font.font,
+        ~uiFont: UiFont.t,
         ~dispatch: msg => unit,
         unit
       ) =>

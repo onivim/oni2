@@ -219,11 +219,7 @@ let sub =
          let {x, y}: PixelPosition.t = positionToRelativePixel(position);
          PixelPosition.{x, y: y +. lineHeightInPixels};
        });
-  // let y =
-  //   float(EditorCoreTypes.LineNumber.toZeroBased(activePosition.line)) *. 20.;
-  // let x =
-  //   float(EditorCoreTypes.CharacterIndex.toInt(activePosition.character))
-  //   *. 20.;
+
   let lightBulbPopup =
     Component_Popup.sub(
       ~isVisible,
@@ -236,15 +232,21 @@ let sub =
 };
 
 module View = {
-  let make = (~theme, ~model, ()) => {
+  let make = (~theme, ~editorFont: Service_Font.font, ~model, ()) => {
     let foregroundColor =
       Feature_Theme.Colors.Editor.lightBulbForeground.from(theme);
+
+    let fontSize = editorFont.fontSize;
     <Component_Popup.View
       model={model.lightBulbPopup}
       inner={(~transition) => {
         <Revery.UI.Components.Container
-          width=32 height=32 color=Revery.Colors.transparentWhite>
-          <Oni_Core.Codicon color=foregroundColor icon=Codicon.lightbulb />
+          width=24 height=24 color=Revery.Colors.transparentWhite>
+          <Oni_Core.Codicon
+            fontSize
+            color=foregroundColor
+            icon=Codicon.lightbulb
+          />
         </Revery.UI.Components.Container>
       }}
     />;
