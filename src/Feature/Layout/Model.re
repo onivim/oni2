@@ -265,6 +265,26 @@ let moveRight = current => move(current, 1, 0);
 let moveUp = current => move(current, 0, -1);
 let moveDown = current => move(current, 0, 1);
 
+let rec moveTopLeft = (current, layout) => {
+  let next = move(current, -1, -1, layout);
+
+  if (next == current) {
+    current;
+  } else {
+    moveTopLeft(next, layout);
+  };
+};
+
+let rec moveBottomRight = (current, layout) => {
+  let next = move(current, 1, 1, layout);
+
+  if (next == current) {
+    current;
+  } else {
+    moveBottomRight(next, layout);
+  };
+};
+
 let hasSplitToRight = model => {
   let layout = model |> activeLayout;
   let newActiveGroupId =

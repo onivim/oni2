@@ -243,6 +243,41 @@ let defaultKeyBindings =
         ~condition=windowCommandCondition,
       ),
       bind(
+        ~key="<C-W>T",
+        ~command=Feature_Layout.Commands.moveTopLeft.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-T>",
+        ~command=Feature_Layout.Commands.moveTopLeft.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>B",
+        ~command=Feature_Layout.Commands.moveBottomRight.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-B>",
+        ~command=Feature_Layout.Commands.moveBottomRight.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W>W",
+        ~command=Feature_Layout.Commands.cycleForward.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><C-W>",
+        ~command=Feature_Layout.Commands.cycleForward.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
+        ~key="<C-W><S-W>",
+        ~command=Feature_Layout.Commands.cycleBackward.id,
+        ~condition=windowCommandCondition,
+      ),
+      bind(
         ~key="<C-W><C-S>",
         ~command=Feature_Layout.Commands.splitHorizontal.id,
         ~condition=windowCommandCondition,

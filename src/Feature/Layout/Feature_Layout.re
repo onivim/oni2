@@ -308,6 +308,47 @@ let update = (~focus, model, msg) => {
     | None => (model, Nothing)
     }
 
+  | Command(MoveTopLeft) =>
+    switch (focus) {
+    | Some(Center) =>
+      let layout = model |> activeLayout;
+      let newActiveGroupId =
+        layout |> activeTree |> moveTopLeft(layout.activeGroupId);
+      (
+        updateActiveLayout(
+          layout => {...layout, activeGroupId: newActiveGroupId},
+          model,
+        ),
+        Nothing,
+      );
+
+    | Some(Left)
+    | Some(Right)
+    | Some(Bottom)
+    | None => (model, Nothing)
+    }
+  | Command(MoveBottomRight) =>
+    switch (focus) {
+    | Some(Center) =>
+      let layout = model |> activeLayout;
+      let newActiveGroupId =
+        layout |> activeTree |> moveBottomRight(layout.activeGroupId);
+      (
+        updateActiveLayout(
+          layout => {...layout, activeGroupId: newActiveGroupId},
+          model,
+        ),
+        Nothing,
+      );
+
+    | Some(Left)
+    | Some(Right)
+    | Some(Bottom)
+    | None => (model, Nothing)
+    }
+  | Command(CycleForward)
+  | Command(CycleBackward) => failwith("Not implemented yet")
+
   | Command(RotateForward) =>
     switch (focus) {
     | Some(Center) => (rotate(`Forward, model), Nothing)
@@ -608,6 +649,26 @@ module Commands = {
       Command(MoveDown),
     );
 
+  let moveTopLeft =
+    define(
+      ~category="View",
+      ~title="Focus Top Left Window",
+      "window.moveTopLeft",
+      Command(MoveTopLeft),
+    );
+
+  let moveBottomRight =
+    define(
+      ~category="View",
+      ~title="Focus Bottom Right Window",
+      "window.moveBottomRight",
+      Command(MoveBottomRight),
+    );
+
+  let cycleForward = define("window.cycleForward", Command(CycleForward));
+
+  let cycleBackward = define("window.cycleBackward", Command(CycleBackward));
+
   let decreaseSize =
     define(
       ~category="View",
@@ -785,6 +846,10 @@ module Contributions = {
       moveRight,
       moveUp,
       moveDown,
+      moveTopLeft,
+      moveBottomRight,
+      cycleForward,
+      cycleBackward,
       increaseSize,
       decreaseSize,
       increaseHorizontalSize,
