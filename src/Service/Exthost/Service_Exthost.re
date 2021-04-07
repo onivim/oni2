@@ -106,12 +106,48 @@ module Effects = {
     };
   };
   module FileSystemEventService = {
-    let onFileEvent = (~events, extHostClient) =>
-      Isolinear.Effect.create(~name="fileSystemEventService.onFileEvent", () => {
+    let onBufferChanged = (~buffer, extHostClient) =>
+      Isolinear.Effect.create(
+        ~name="fileSystemEventService.onBufferChanged", () => {
+        Exthost.Request.FileSystemEventService.onFileEvent(
+          ~events=
+            Exthost.Files.FileSystemEvents.{
+              created: [],
+              deleted: [],
+              changed: [buffer |> Oni_Core.Buffer.getUri],
+            },
+          extHostClient,
+        )
+      });
+
+    let onPathChanged =
+        (
+          ~path: FpExp.t(FpExp.absolute),
+          ~maybeStat: option(Luv.File.Stat.t),
+          extHostClient,
+        ) =>
+      Isolinear.Effect.create(~name="fileSystemEventService.onPathChanged", () => {
+        let fileUri = path |> Oni_Core.Uri.fromFilePath;
+        let events =
+          if (maybeStat == None) {
+            Exthost.Files.FileSystemEvents.{
+              created: [],
+              deleted: [fileUri],
+              changed: [],
+            };
+          } else {
+            // TODO: Differentiate between created and changed
+            Exthost.Files.FileSystemEvents.{
+              created: [],
+              deleted: [],
+              changed: [fileUri],
+            };
+          };
+
         Exthost.Request.FileSystemEventService.onFileEvent(
           ~events,
           extHostClient,
-        )
+        );
       });
   };
 

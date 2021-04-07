@@ -56,6 +56,9 @@ let keyPress: (string, model('node, 'leaf)) => model('node, 'leaf);
 let findIndex:
   (nodeOrLeaf('node, 'leaf) => bool, model('node, 'leaf)) => option(int);
 
+let setSelected:
+  (~selected: int, model('node, 'leaf)) => model('node, 'leaf);
+
 let scrollTo:
   (
     ~index: int,

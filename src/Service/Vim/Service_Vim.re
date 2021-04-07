@@ -29,24 +29,37 @@ let quitAll = () =>
   );
 
 module Effects = {
-  let paste = (~toMsg, text) => {
+  let paste = (~context=?, ~toMsg, text) => {
     Isolinear.Effect.createWithDispatch(~name="vim.clipboardPaste", dispatch => {
-      let isCmdLineMode = Vim.Mode.isCommandLine(Vim.Mode.current());
-      let isInsertMode = Vim.Mode.isInsert(Vim.Mode.current());
+      let context =
+        switch (context) {
+        | None => Vim.Context.current()
+        | Some(ctx) => ctx
+        };
+      let mode = context.mode;
+      let isCmdLineMode = Vim.Mode.isCommandLine(mode);
+      let isInsertMode = Vim.Mode.isInsert(mode);
+      let isSelectMode = Vim.Mode.isSelect(mode);
+      let isNormalMode = Vim.Mode.isNormal(mode);
+      let isVisualMode = Vim.Mode.isVisual(mode);
 
-      if (isInsertMode || isCmdLineMode) {
+      if (isInsertMode || isCmdLineMode || isSelectMode) {
         if (!isCmdLineMode) {
           Vim.command("set paste") |> ignore;
         };
 
         Log.infof(m => m("Pasting: %s", text));
         let (latestContext: Vim.Context.t, _effects) =
-          Oni_Core.VimEx.inputString(text);
+          Vim.input(~context, text);
 
         if (!isCmdLineMode) {
           Vim.command("set nopaste") |> ignore;
           dispatch(toMsg(latestContext.mode));
         };
+      } else if (isVisualMode || isNormalMode) {
+        let (latestContext: Vim.Context.t, _effects) =
+          Oni_Core.VimEx.inputString("\"*p");
+        dispatch(toMsg(latestContext.mode));
       };
     });
   };
