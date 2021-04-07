@@ -154,7 +154,18 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
     if (allCount == 0) {
       (model, Outmsg.NotifyFailure("No quickfixes available here."));
     } else if (allCount == 1) {
-      (model, Outmsg.NotifyFailure("Got a quickfix, need to apply!!"));
+      let maybeEdit =
+        List.nth_opt(all, 0)
+        |> Utility.OptionEx.flatMap((fix: CodeAction.t) =>
+             Exthost.CodeAction.(fix.action.edit)
+           );
+      let outmsg =
+        maybeEdit
+        |> Option.map((edit: Exthost.WorkspaceEdit.t) =>
+             Outmsg.ApplyWorkspaceEdit(edit)
+           )
+        |> Option.value(~default=Outmsg.Nothing);
+      (model, outmsg);
     } else {
       (model, Outmsg.NotifyFailure("Context menu not yet implemented"));
     };
