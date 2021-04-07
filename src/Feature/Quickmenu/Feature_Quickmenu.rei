@@ -10,7 +10,8 @@ module Schema: {
 
     let seti: IconTheme.IconDefinition.t => t;
 
-    let codicon: (~fontSize: float=?, ~color: Revery.Color.t=?, int) => t;
+    let codicon:
+      (~fontSize: float=?, ~color: ColorTheme.Schema.definition=?, int) => t;
   };
 
   module Renderer: {

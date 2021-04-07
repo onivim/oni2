@@ -6,7 +6,7 @@ module Icon = {
     | Seti(IconTheme.IconDefinition.t)
     | Codicon({
         fontSize: option(float),
-        color: option(Revery.Color.t),
+        color: option(ColorTheme.Schema.definition),
         icon: int,
       });
 
@@ -55,6 +55,14 @@ module Renderer = {
         textWrap(TextWrapping.NoWrap),
         marginRight(10),
       ];
+
+    let codiconStyle =
+      Style.[
+        marginRight(10),
+        flexDirection(`Row),
+        justifyContent(`Center),
+        alignItems(`Center),
+      ];
   };
 
   let common: t(_) =
@@ -96,7 +104,16 @@ module Renderer = {
             text={Oni_Components.FontIcon.codeToIcon(icon.fontCharacter)}
           />
         )
-      | Some(Icon.Codicon({fontSize, color, icon})) => <Text text="*" />
+      | Some(Icon.Codicon({fontSize, color, icon})) =>
+        let fontSize = fontSize |> Option.value(~default=font.size);
+        let colorSchema: Oni_Core.ColorTheme.Schema.definition =
+          color |> Option.value(~default=Feature_Theme.Colors.Menu.foreground);
+
+        let color = colorSchema.from(theme);
+
+        <Revery.UI.View style=Styles.codiconStyle>
+          <Codicon icon fontSize color />
+        </Revery.UI.View>;
       | None =>
         <Text style={Styles.icon(Revery.Colors.transparentWhite)} text="" />
       };

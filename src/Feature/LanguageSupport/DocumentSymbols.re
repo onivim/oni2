@@ -107,10 +107,20 @@ let update = (~maybeBuffer, msg, model) => {
                Quickmenu(SymbolSelected({filePath, symbol}));
              };
 
+             let itemToIcon = ({kind, _}: symbol) => {
+               let icon =
+                 Oni_Components.SymbolIcon.Internal.symbolToIcon(kind);
+               let color =
+                 Oni_Components.SymbolIcon.Internal.symbolToColor(kind);
+               Some(Feature_Quickmenu.Schema.Icon.codicon(~color, icon));
+             };
+             let itemRenderer =
+               Feature_Quickmenu.Schema.Renderer.defaultWithIcon(itemToIcon);
              Outmsg.ShowMenu(
                Feature_Quickmenu.Schema.menu(
                  ~onItemSelected,
                  ~toString=(symbol: symbol) => symbol.name,
+                 ~itemRenderer,
                  allItems,
                ),
              );
