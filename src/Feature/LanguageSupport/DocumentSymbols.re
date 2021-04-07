@@ -196,8 +196,24 @@ module Keybindings = {
     bind(~key="gs", ~command=Commands.gotoSymbol.id, ~condition);
 };
 
+module MenuItems = {
+  open MenuBar.Schema;
+
+  let gotoBufferSymbol =
+    command(~title="Goto buffer symbol...", Commands.gotoSymbol);
+};
+
 module Contributions = {
   let commands = Commands.[gotoSymbol];
 
   let keybindings = Keybindings.[gotoSymbol];
+
+  let menuGroups =
+    MenuBar.Schema.[
+      group(
+        ~order=200,
+        ~parent=Feature_MenuBar.Global.go,
+        MenuItems.[gotoBufferSymbol],
+      ),
+    ];
 };

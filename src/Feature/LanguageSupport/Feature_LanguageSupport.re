@@ -723,7 +723,9 @@ module Contributions = {
     @ References.Contributions.keybindings
     @ SignatureHelp.Contributions.keybindings;
 
-  let menuGroups = Formatting.Contributions.menuGroups;
+  let menuGroups =
+    DocumentSymbols.Contributions.menuGroups
+    @ Formatting.Contributions.menuGroups;
 };
 
 module OldCompletion = Completion;

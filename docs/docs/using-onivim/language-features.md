@@ -66,3 +66,5 @@ Typing the closing pair will result in the cursor 'passing through'. Pressing <k
 ## Symbol Outline
 
 If the language extension supports it, `gO` can be used to navigate to the symbol outline.
+
+In addition, `gs` can be used in normal to go-to a specific symbol in the file.
