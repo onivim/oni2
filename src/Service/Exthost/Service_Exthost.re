@@ -789,6 +789,122 @@ module Sub = {
     |> Isolinear.Sub.map(toMsg);
   };
 
+  type codeActionsSpanParams = {
+    handle: int,
+    client: Exthost.Client.t,
+    buffer: Oni_Core.Buffer.t,
+    context: Exthost.CodeAction.Context.t,
+    range: Exthost.OneBasedRange.t,
+  };
+
+  let idForOneBasedRange = (range: Exthost.OneBasedRange.t) => {
+    Printf.sprintf(
+      "r%d,%d-%d,%d",
+      range.startLineNumber,
+      range.startColumn,
+      range.endLineNumber,
+      range.endColumn,
+    );
+  };
+
+  let idForCodeActionRange = (~handle, ~buffer, ~range) => {
+    Printf.sprintf(
+      "%d-%d-%d:%s",
+      handle,
+      Oni_Core.Buffer.getId(buffer),
+      Oni_Core.Buffer.getVersion(buffer),
+      idForOneBasedRange(range),
+    );
+  };
+
+  module CodeActionSpanSubscription =
+    Isolinear.Sub.Make({
+      type nonrec msg = result(option(Exthost.CodeAction.List.t), string);
+      type nonrec params = codeActionsSpanParams;
+
+      type state = {
+        disposeTimeout: unit => unit,
+        maybeCacheId: ref(option(Exthost.CacheId.t)),
+        isActive: ref(bool),
+      };
+
+      let name = "Service_Exthost.CodeActionsSpanSubscription";
+      let id = ({handle, buffer, range, _}: params) =>
+        idForCodeActionRange(~handle, ~buffer, ~range);
+
+      let cleanup = (~maybeCacheId, ~params) => {
+        maybeCacheId^
+        |> Option.iter(cacheId => {
+             Exthost.Request.LanguageFeatures.releaseCodeActions(
+               ~handle=params.handle,
+               ~cacheId,
+               params.client,
+             );
+
+             maybeCacheId := None;
+           });
+      };
+
+      let init = (~params, ~dispatch) => {
+        let maybeCacheId = ref(None);
+        let isActive = ref(true);
+        let disposeTimeout =
+          Revery.Tick.timeout(
+            ~name,
+            _ => {
+              let promise =
+                Exthost.Request.LanguageFeatures.provideCodeActionsByRange(
+                  ~handle=params.handle,
+                  ~resource=Oni_Core.Buffer.getUri(params.buffer),
+                  ~range=params.range,
+                  ~context=params.context,
+                  params.client,
+                );
+
+              Lwt.on_success(
+                promise,
+                maybeCodeActions => {
+                  maybeCodeActions
+                  |> Option.iter(
+                       (codeActionResult: Exthost.CodeAction.List.t) => {
+                       maybeCacheId := Some(codeActionResult.cacheId)
+                     });
+
+                  if (isActive^) {
+                    dispatch(Ok(maybeCodeActions));
+                  } else {
+                    cleanup(~maybeCacheId, ~params);
+                  };
+                },
+              );
+
+              Lwt.on_failure(promise, exn => {
+                dispatch(Error(Printexc.to_string(exn)))
+              });
+            },
+            Constants.lowPriorityDebounceTime,
+          );
+        {isActive, disposeTimeout, maybeCacheId};
+      };
+
+      let update = (~params as _, ~state, ~dispatch as _) => state;
+
+      let dispose = (~params, ~state) => {
+        cleanup(~params, ~maybeCacheId=state.maybeCacheId);
+        state.disposeTimeout();
+        state.isActive := false;
+      };
+    });
+
+  let codeActionsByRange =
+      (~handle, ~context, ~buffer, ~range, ~toMsg, client) => {
+    let range = Exthost.OneBasedRange.ofRange(range);
+    CodeActionSpanSubscription.create(
+      {handle, buffer, client, range, context}: codeActionsSpanParams,
+    )
+    |> Isolinear.Sub.map(toMsg);
+  };
+
   type codeLensesParams = {
     handle: int,
     eventTick: int,

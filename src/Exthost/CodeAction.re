@@ -1,5 +1,6 @@
 module StringMap = Oni_Core.StringMap;
 
+[@deriving show]
 type t = {
   chainedCacheId: option(ChainedCacheId.t),
   title: string,
@@ -127,5 +128,9 @@ module List = {
         }
       )
     );
+  };
+
+  let toDebugString = ({actions, _}) => {
+    actions |> List.map(action => show(action)) |> String.concat("\n");
   };
 };

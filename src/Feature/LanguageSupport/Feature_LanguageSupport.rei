@@ -171,6 +171,8 @@ let sub:
     ~isAnimatingScroll: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
     ~activePosition: CharacterPosition.t,
+    ~lineHeightInPixels: float,
+    ~positionToRelativePixel: CharacterPosition.t => PixelPosition.t,
     ~topVisibleBufferLine: EditorCoreTypes.LineNumber.t,
     ~bottomVisibleBufferLine: EditorCoreTypes.LineNumber.t,
     ~visibleBuffers: list(Oni_Core.Buffer.t),
@@ -240,6 +242,23 @@ module DocumentSymbols: {
   type t = list(Tree.t(symbol, symbol));
 
   let get: (~bufferId: int, model) => option(t);
+};
+
+module View: {
+  module EditorWidgets: {
+    let make:
+      (
+        ~x: int,
+        ~y: int,
+        ~theme: ColorTheme.Colors.t,
+        ~model: model,
+        ~editorFont: Service_Font.font,
+        ~uiFont: UiFont.t,
+        ~dispatch: msg => unit,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
 };
 
 module Rename: {
