@@ -187,6 +187,13 @@ module Editor = {
       "editor.findMatchHighlightBackground",
       {light: hex("#EA5C0055"), dark: hex("#EA5C0055"), hc: unspecified},
     );
+
+  let lightBulbForeground =
+    define("editorLightBulb.foreground", all(ref(foreground)));
+
+  let lightBulbAutoFixForeground =
+    define("editorLightBulbAutoFix.foreground", all(ref(foreground)));
+
   let lineHighlightBackground =
     define("editor.lineHighlightBackground", all(unspecified));
   let selectionBackground =
