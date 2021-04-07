@@ -59,19 +59,28 @@ let configurationChanged = (~config as _, model) => {
   model;
 };
 
-let sub = (~isVisible: bool, ~x: float, ~y: float, model) => {
+let sub = (~isVisible: bool, ~pixelPosition: option(PixelPosition.t), model) => {
   let visibleSubUniqueId =
     "Component_Popup.Visible" ++ string_of_bool(isVisible);
 
   let visibleSub =
     SubEx.value(~uniqueId=visibleSubUniqueId, isVisible ? Show : Hide);
 
-  let position = PixelPosition.{x, y};
-  let positionSubUniqueId =
-    Printf.sprintf("Component_Popup.Position.%f.%f", x, y);
-
   let positionSub =
-    SubEx.value(~uniqueId=positionSubUniqueId, PositionChanged(position));
+    pixelPosition
+    |> Option.map((position: PixelPosition.t) => {
+         let positionSubUniqueId =
+           Printf.sprintf(
+             "Component_Popup.Position.%f.%f",
+             position.x,
+             position.y,
+           );
+         SubEx.value(
+           ~uniqueId=positionSubUniqueId,
+           PositionChanged(position),
+         );
+       })
+    |> Option.value(~default=Isolinear.Sub.none);
 
   let springSub =
     if (Component_Animation.Spring.isActive(model.enterExitSpring)) {

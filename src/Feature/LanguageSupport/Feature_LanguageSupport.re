@@ -942,6 +942,8 @@ let sub =
       ~isAnimatingScroll,
       ~activeBuffer,
       ~activePosition,
+      ~lineHeightInPixels,
+      ~positionToRelativePixel,
       ~topVisibleBufferLine,
       ~bottomVisibleBufferLine,
       ~visibleBuffers,
@@ -976,6 +978,8 @@ let sub =
       ~activePosition,
       ~topVisibleBufferLine,
       ~bottomVisibleBufferLine,
+      ~lineHeightInPixels,
+      ~positionToRelativePixel,
       ~client,
       codeActions,
     )

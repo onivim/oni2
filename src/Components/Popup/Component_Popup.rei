@@ -1,3 +1,4 @@
+open EditorCoreTypes;
 open Oni_Core;
 type model;
 
@@ -10,7 +11,8 @@ let update: (msg, model) => model;
 let configurationChanged: (~config: Config.resolver, model) => model;
 
 let sub:
-  (~isVisible: bool, ~x: float, ~y: float, model) => Isolinear.Sub.t(msg);
+  (~isVisible: bool, ~pixelPosition: option(PixelPosition.t), model) =>
+  Isolinear.Sub.t(msg);
 
 module View: {
   let make:

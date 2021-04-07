@@ -71,6 +71,18 @@ module QuickFixes = {
     };
 
   let any = ({fixes, _}) => fixes != [];
+
+  let position = ({fixes, _}) => {
+    Base.List.nth(fixes, 0)
+    |> Utility.OptionEx.flatMap((fix: CodeAction.t) => {
+         Base.List.nth(fix.action.diagnostics, 0)
+       })
+    |> Option.map((diagnostic: Exthost.Diagnostic.t) => {
+         let range = diagnostic.range |> Exthost.OneBasedRange.toRange;
+
+         CharacterRange.(range.start);
+       });
+  };
 };
 
 type model = {
@@ -162,6 +174,8 @@ let sub =
       ~activePosition,
       ~topVisibleBufferLine,
       ~bottomVisibleBufferLine,
+      ~lineHeightInPixels,
+      ~positionToRelativePixel,
       ~client,
       codeActions,
     ) => {
@@ -199,13 +213,23 @@ let sub =
        });
 
   let isVisible = QuickFixes.any(codeActions.quickFixes);
-  let y =
-    float(EditorCoreTypes.LineNumber.toZeroBased(activePosition.line)) *. 20.;
-  let x =
-    float(EditorCoreTypes.CharacterIndex.toInt(activePosition.character))
-    *. 20.;
+  let pixelPosition =
+    QuickFixes.position(codeActions.quickFixes)
+    |> Option.map(position => {
+         let {x, y}: PixelPosition.t = positionToRelativePixel(position);
+         PixelPosition.{x, y: y +. lineHeightInPixels};
+       });
+  // let y =
+  //   float(EditorCoreTypes.LineNumber.toZeroBased(activePosition.line)) *. 20.;
+  // let x =
+  //   float(EditorCoreTypes.CharacterIndex.toInt(activePosition.character))
+  //   *. 20.;
   let lightBulbPopup =
-    Component_Popup.sub(~isVisible, ~x, ~y, codeActions.lightBulbPopup)
+    Component_Popup.sub(
+      ~isVisible,
+      ~pixelPosition,
+      codeActions.lightBulbPopup,
+    )
     |> Isolinear.Sub.map(msg => LightBulbPopup(msg));
 
   [lightBulbPopup, ...codeActionsSubs] |> Isolinear.Sub.batch;

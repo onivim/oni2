@@ -170,6 +170,8 @@ let sub:
     ~isAnimatingScroll: bool,
     ~activeBuffer: Oni_Core.Buffer.t,
     ~activePosition: CharacterPosition.t,
+    ~lineHeightInPixels: float,
+    ~positionToRelativePixel: CharacterPosition.t => PixelPosition.t,
     ~topVisibleBufferLine: EditorCoreTypes.LineNumber.t,
     ~bottomVisibleBufferLine: EditorCoreTypes.LineNumber.t,
     ~visibleBuffers: list(Oni_Core.Buffer.t),
