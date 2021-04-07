@@ -3,6 +3,12 @@ open Oni_Core;
 open Utility;
 open Component_Animation;
 
+// A pixel position relative to the top, left of the current editor
+type relativePixelPosition = PixelPosition.t;
+
+// A pixel position relative to the top, left of the screen
+type absolutePixelPosition = PixelPosition.t;
+
 module GlobalState = {
   let lastId = ref(0);
 
@@ -110,6 +116,8 @@ type t = {
   minimapMaxColumnWidth: int,
   minimapScrollY: float,
   mode: [@opaque] Vim.Mode.t,
+  pixelX: float,
+  pixelY: float,
   pixelWidth: int,
   pixelHeight: int,
   yankHighlight: option(yankHighlight),
@@ -134,6 +142,11 @@ type t = {
   // Animation
   isAnimationOverride: option(bool),
   animationNonce: int,
+};
+
+let setBoundingBox = (bbox, editor) => {
+  let (top, left, _, _) = Revery.Math.BoundingBox2d.getBounds(bbox);
+  {...editor, pixelY: top, pixelX: left};
 };
 
 let verticalScrollbarThickness = ({scrollbarVerticalWidth, _}) => scrollbarVerticalWidth;
@@ -451,6 +464,13 @@ let bufferCharacterPositionToPixel =
   };
 };
 
+let relativeToAbsolutePixel = (relativePixel, editor) => {
+  PixelPosition.{
+    x: editor.pixelX +. relativePixel.x,
+    y: editor.pixelY +. relativePixel.y,
+  };
+};
+
 let getContentPixelWidth = editor => {
   let layout: EditorLayout.t = getLayout(editor);
   layout.bufferWidthInPixels;
@@ -569,6 +589,8 @@ let create = (~config, ~buffer, ~preview: bool, ()) => {
             byte: ByteIndex.zero,
           },
       }),
+    pixelX: 0.,
+    pixelY: 0.,
     pixelWidth: 1,
     pixelHeight: 1,
     yankHighlight: None,

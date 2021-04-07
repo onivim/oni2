@@ -351,6 +351,17 @@ let start =
       )
       |> Isolinear.Sub.map(msg => Model.Actions.FileExplorer(msg));
 
+    let positionToRelativePixel = position => {
+      let (pixelPosition, _) =
+        state.layout
+        |> Feature_Layout.activeEditor
+        |> Feature_Editor.Editor.bufferCharacterPositionToPixel(~position);
+      pixelPosition;
+    };
+
+    let lineHeightInPixels =
+      activeEditor |> Feature_Editor.Editor.lineHeightInPixels;
+
     let languageSupportSub =
       maybeActiveBuffer
       |> Option.map(activeBuffer => {
@@ -360,6 +371,8 @@ let start =
              ~isAnimatingScroll,
              ~activeBuffer,
              ~activePosition,
+             ~lineHeightInPixels,
+             ~positionToRelativePixel,
              ~topVisibleBufferLine,
              ~bottomVisibleBufferLine,
              ~visibleBuffers,

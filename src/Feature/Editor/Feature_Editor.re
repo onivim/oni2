@@ -128,6 +128,10 @@ let update = (editor, msg) => {
     let maybeCharacter = Editor.getCharacterUnderMouse(editor);
     (editor, MouseHovered(maybeCharacter));
 
+  | BoundingBoxChanged({bbox}) =>
+    let editor' = Editor.setBoundingBox(bbox, editor);
+    (editor', Nothing);
+
   | ModeChanged({allowAnimation, mode, effects}) =>
     let handleScrollEffect = (~count, ~direction, editor) => {
       let count = max(count, 1);
