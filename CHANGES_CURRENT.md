@@ -42,6 +42,7 @@
 
 - #3316 - Transport: Re-use Luv.Buffer.t when possible for reads
 - #3374 - FileWatcher: Don't stat on file changes (related #3373)
+- #3378 - libuv: Run event loop once each Revery iteration
 
 ### Documentation
 
