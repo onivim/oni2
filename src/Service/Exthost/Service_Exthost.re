@@ -789,11 +789,6 @@ module Sub = {
     |> Isolinear.Sub.map(toMsg);
   };
 
-  let codeActionsBySelection =
-      (~handle, ~context, ~buffer, ~range, ~toMsg, client) => {
-    Isolinear.Sub.none;
-  };
-
   type codeActionsSpanParams = {
     handle: int,
     client: Exthost.Client.t,

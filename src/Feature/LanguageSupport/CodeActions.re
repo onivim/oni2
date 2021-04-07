@@ -201,8 +201,8 @@ let sub =
     (
       ~buffer,
       ~activePosition,
-      ~topVisibleBufferLine,
-      ~bottomVisibleBufferLine,
+      ~topVisibleBufferLine as _,
+      ~bottomVisibleBufferLine as _,
       ~lineHeightInPixels,
       ~positionToRelativePixel,
       ~client,
@@ -301,7 +301,7 @@ module View = {
     let fontSize = editorFont.fontSize;
     <Component_Popup.View
       model={model.lightBulbPopup}
-      inner={(~transition) => {
+      inner={(~transition as _) => {
         <Revery.UI.Components.Container
           width=24 height=24 color=Revery.Colors.transparentWhite>
           <Oni_Core.Codicon
