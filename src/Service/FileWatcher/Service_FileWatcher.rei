@@ -16,5 +16,10 @@ type event = {
 };
 
 let watch:
-  (~key: Key.t, ~path: FpExp.t(FpExp.absolute), ~onEvent: event => 'msg) =>
+  (
+    ~watchChanges: bool,
+    ~key: Key.t,
+    ~path: FpExp.t(FpExp.absolute),
+    ~onEvent: event => 'msg
+  ) =>
   Isolinear.Sub.t('msg);

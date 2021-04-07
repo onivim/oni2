@@ -15,6 +15,7 @@ type event = {
 };
 
 type params = {
+  watchChanges: bool,
   path: FpExp.t(FpExp.absolute),
   key: Key.t,
 };
@@ -49,28 +50,32 @@ module WatchSubscription =
           fun
           | Ok((file, events)) => {
               let changedPath = FpExp.At.(params.path / file);
+              let hasRenamed = List.mem(`RENAME, events);
+              let hasChanged = List.mem(`CHANGE, events);
 
-              let promise = Service_OS.Api.stat(FpExp.toString(changedPath));
-
-              Lwt.on_success(promise, statResult => {
+              let complete = maybeStatResult =>
                 dispatch({
                   watchedPath: params.path,
                   changedPath: FpExp.At.(params.path / file),
-                  hasRenamed: List.mem(`RENAME, events),
-                  hasChanged: List.mem(`CHANGE, events),
-                  stat: Some(statResult),
-                })
-              });
+                  hasRenamed,
+                  hasChanged,
+                  stat: maybeStatResult,
+                });
 
-              Lwt.on_failure(promise, _exn => {
-                dispatch({
-                  watchedPath: params.path,
-                  changedPath: FpExp.At.(params.path / file),
-                  hasRenamed: List.mem(`RENAME, events),
-                  hasChanged: List.mem(`CHANGE, events),
-                  stat: None,
-                })
-              });
+              if (hasRenamed) {
+                // PERF: #3373 - only stat if there was a rename (creation, unlink, etc)
+                let promise =
+                  Service_OS.Api.stat(FpExp.toString(changedPath));
+                Lwt.on_success(promise, statResult => {
+                  complete(Some(statResult))
+                });
+
+                Lwt.on_failure(promise, _exn => {complete(None)});
+              } else if (params.watchChanges) {
+                complete(None);
+              } else {
+                ();
+              };
             }
           | Error(error) =>
             Log.errorf(m =>
@@ -106,6 +111,6 @@ module WatchSubscription =
     };
   });
 
-let watch = (~key, ~path, ~onEvent) =>
-  WatchSubscription.create({key, path})
+let watch = (~watchChanges, ~key, ~path, ~onEvent) =>
+  WatchSubscription.create({watchChanges, key, path})
   |> Isolinear.Sub.map(event => onEvent(event));
