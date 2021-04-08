@@ -239,11 +239,11 @@ module FileSystemEventService = {
 };
 
 module LanguageFeatures = {
-  let provideCodeActionsBySpan =
+  let provideCodeActionsByRange =
       (
         ~handle: int,
         ~resource: Uri.t,
-        ~span: Span.t,
+        ~range: OneBasedRange.t,
         ~context: CodeAction.Context.t,
         client,
       ) => {
@@ -257,7 +257,7 @@ module LanguageFeatures = {
         `List([
           `Int(handle),
           Uri.to_yojson(resource),
-          span |> Json.Encode.encode_value(Span.encode),
+          range |> Json.Encode.encode_value(OneBasedRange.encode),
           context |> Json.Encode.encode_value(CodeAction.Context.encode),
         ]),
       client,

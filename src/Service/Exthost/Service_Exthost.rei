@@ -159,6 +159,28 @@ module Sub: {
     (~activeEditorId: string, ~client: Exthost.Client.t) =>
     Isolinear.Sub.t(unit);
 
+  // let codeActionsBySelection:
+  //   (
+  //     ~handle: int,
+  //     ~context: Exthost.CodeAction.Context.t,
+  //     ~buffer: Oni_Core.Buffer.t,
+  //     ~range: CharacterRange.t,
+  //     ~toMsg: result(option(Exthost.CodeAction.List.t), string) => 'msg,
+  //     Exthost.Client.t
+  //   ) =>
+  //   Isolinear.Sub.t('msg);
+
+  let codeActionsByRange:
+    (
+      ~handle: int,
+      ~context: Exthost.CodeAction.Context.t,
+      ~buffer: Oni_Core.Buffer.t,
+      ~range: CharacterRange.t,
+      ~toMsg: result(option(Exthost.CodeAction.List.t), string) => 'msg,
+      Exthost.Client.t
+    ) =>
+    Isolinear.Sub.t('msg);
+
   let codeLenses:
     (
       ~handle: int,
