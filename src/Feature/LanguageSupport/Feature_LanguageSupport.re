@@ -1075,4 +1075,24 @@ module View = {
       <CodeActions.View editorFont theme model={model.codeActions} />;
     };
   };
+
+  module Overlay = {
+    let make = (~theme, ~model, ~editorFont, ~uiFont, ~dispatch, ()) => {
+      Revery.UI.React.empty;
+      // <Revery.UI.Components.Clickable
+      //   onClick={_ => prerr_endline("clicked")}
+      //   style=Revery.UI.Style.[
+      //     pointerEvents(`Allow),
+      //     position(`Absolute),
+      //     top(0),
+      //     left(0),
+      //   ]>
+      //   <Revery.UI.Components.Container
+      //     width=32
+      //     height=32
+      //     color=Revery.Colors.magenta
+      //   />
+      // </Revery.UI.Components.Clickable>;
+    };
+  };
 };

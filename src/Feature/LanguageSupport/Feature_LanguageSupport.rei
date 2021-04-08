@@ -259,6 +259,19 @@ module View: {
       ) =>
       Revery.UI.element;
   };
+
+  module Overlay: {
+    let make:
+      (
+        ~theme: ColorTheme.Colors.t,
+        ~model: model,
+        ~editorFont: Service_Font.font,
+        ~uiFont: UiFont.t,
+        ~dispatch: msg => unit,
+        unit
+      ) =>
+      Revery.UI.element;
+  };
 };
 
 module Rename: {
