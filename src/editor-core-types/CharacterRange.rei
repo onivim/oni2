@@ -30,3 +30,4 @@ let shiftCharacters:
 let toHash: list(t) => Hashtbl.t(LineNumber.t, list(t));
 
 let equals: (t, t) => bool;
+let compare: (t, t) => int;

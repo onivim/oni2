@@ -5,6 +5,15 @@ open Oni_Core;
 module Schema: {
   type menu('outmsg);
 
+  module Icon: {
+    type t;
+
+    let seti: IconTheme.IconDefinition.t => t;
+
+    let codicon:
+      (~fontSize: float=?, ~color: ColorTheme.Schema.definition=?, int) => t;
+  };
+
   module Renderer: {
     type t('item) =
       (
@@ -18,8 +27,7 @@ module Schema: {
 
     let default: t(_);
 
-    let defaultWithIcon:
-      ('item => option(IconTheme.IconDefinition.t)) => t('item);
+    let defaultWithIcon: ('item => option(Icon.t)) => t('item);
   };
 
   let menu:

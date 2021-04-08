@@ -6,6 +6,7 @@ type provider = {
   selector: Exthost.DocumentSelector.t,
 };
 
+[@deriving show]
 type symbol = {
   uniqueId: string,
   name: string,
@@ -13,6 +14,10 @@ type symbol = {
   kind: Exthost.SymbolKind.t,
   range: CharacterRange.t,
   selectionRange: CharacterRange.t,
+};
+
+let sortSymbolsByPosition = (a: symbol, b: symbol) => {
+  CharacterRange.compare(a.range, b.range);
 };
 
 type t = list(Tree.t(symbol, symbol));
@@ -51,24 +56,95 @@ type model = {
 let initial = {providers: [], bufferToSymbols: IntMap.empty};
 
 [@deriving show]
+type command =
+  | GotoSymbol;
+
+[@deriving show]
+type quickmenu =
+  | SymbolSelected({
+      filePath: string,
+      symbol,
+    });
+
+[@deriving show]
 type msg =
+  | Command(command)
+  | Quickmenu(quickmenu)
   | DocumentSymbolsAvailable({
       bufferId: int,
       symbols: list(Exthost.DocumentSymbol.t),
     });
 
-let update = (msg, model) => {
+let get = (~bufferId, model) => {
+  IntMap.find_opt(bufferId, model.bufferToSymbols);
+};
+
+let update = (~maybeBuffer, msg, model) => {
   switch (msg) {
+  | Command(GotoSymbol) =>
+    let maybeFilePath =
+      maybeBuffer |> Utility.OptionEx.flatMap(Buffer.getFilePath);
+    let outmsg =
+      maybeBuffer
+      |> Option.map(Oni_Core.Buffer.getId)
+      |> Utility.OptionEx.flatMap(bufferId => get(~bufferId, model))
+      |> Utility.OptionEx.map2(
+           (filePath, symbols) => {
+             let allItems =
+               symbols
+               |> List.map(TreeList.ofTree)
+               |> List.flatten
+               |> List.map(
+                    TreeList.(
+                      fun
+                      | ViewLeaf({data, _}) => data
+                      | ViewNode({data, _}) => data
+                    ),
+                  )
+               |> List.sort(sortSymbolsByPosition);
+
+             let onItemSelected = symbol => {
+               Quickmenu(SymbolSelected({filePath, symbol}));
+             };
+
+             let itemToIcon = ({kind, _}: symbol) => {
+               let icon =
+                 Oni_Components.SymbolIcon.Internal.symbolToIcon(kind);
+               let color =
+                 Oni_Components.SymbolIcon.Internal.symbolToColor(kind);
+               Some(Feature_Quickmenu.Schema.Icon.codicon(~color, icon));
+             };
+             let itemRenderer =
+               Feature_Quickmenu.Schema.Renderer.defaultWithIcon(itemToIcon);
+             Outmsg.ShowMenu(
+               Feature_Quickmenu.Schema.menu(
+                 ~onItemSelected,
+                 ~toString=(symbol: symbol) => symbol.name,
+                 ~itemRenderer,
+                 allItems,
+               ),
+             );
+           },
+           maybeFilePath,
+         )
+      |> Option.value(~default=Outmsg.Nothing);
+
+    (model, outmsg);
   | DocumentSymbolsAvailable({bufferId, symbols}) =>
     let symbolTrees = symbols |> List.rev_map(extHostSymbolToTree);
     let bufferToSymbols =
       IntMap.add(bufferId, symbolTrees, model.bufferToSymbols);
-    {...model, bufferToSymbols};
-  };
-};
+    ({...model, bufferToSymbols}, Outmsg.Nothing);
 
-let get = (~bufferId, model) => {
-  IntMap.find_opt(bufferId, model.bufferToSymbols);
+  | Quickmenu(SymbolSelected({filePath, symbol})) => (
+      model,
+      Outmsg.OpenFile({
+        filePath,
+        location: Some(symbol.range.start),
+        direction: SplitDirection.Current,
+      }),
+    )
+  };
 };
 
 let register = (~handle: int, ~selector, model) => {
@@ -97,4 +173,47 @@ let sub = (~buffer, ~client, model) => {
        Service_Exthost.Sub.documentSymbols(~handle, ~buffer, ~toMsg, client)
      })
   |> Isolinear.Sub.batch;
+};
+
+module Commands = {
+  open Feature_Commands.Schema;
+
+  let gotoSymbol =
+    define(
+      ~category="Language Support",
+      ~title="Go to buffer symbol",
+      "workbench.action.gotoSymbol",
+      Command(GotoSymbol),
+    );
+};
+
+module Keybindings = {
+  open Feature_Input.Schema;
+
+  let condition = "editorTextFocus && normalMode" |> WhenExpr.parse;
+
+  let gotoSymbol =
+    bind(~key="gs", ~command=Commands.gotoSymbol.id, ~condition);
+};
+
+module MenuItems = {
+  open MenuBar.Schema;
+
+  let gotoBufferSymbol =
+    command(~title="Goto buffer symbol...", Commands.gotoSymbol);
+};
+
+module Contributions = {
+  let commands = Commands.[gotoSymbol];
+
+  let keybindings = Keybindings.[gotoSymbol];
+
+  let menuGroups =
+    MenuBar.Schema.[
+      group(
+        ~order=200,
+        ~parent=Feature_MenuBar.Global.go,
+        MenuItems.[gotoBufferSymbol],
+      ),
+    ];
 };
