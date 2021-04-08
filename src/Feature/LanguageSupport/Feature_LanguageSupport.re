@@ -427,9 +427,16 @@ let update =
     );
 
   | DocumentSymbols(documentSymbolsMsg) =>
-    let documentSymbols' =
-      DocumentSymbols.update(documentSymbolsMsg, model.documentSymbols);
-    ({...model, documentSymbols: documentSymbols'}, Nothing);
+    let (documentSymbols', outmsg) =
+      DocumentSymbols.update(
+        ~maybeBuffer,
+        documentSymbolsMsg,
+        model.documentSymbols,
+      );
+    (
+      {...model, documentSymbols: documentSymbols'},
+      outmsg |> map(msg => DocumentSymbols(msg)),
+    );
 
   | References(referencesMsg) =>
     let (references', outmsg) =
@@ -710,6 +717,10 @@ module Contributions = {
       |> List.map(Oni_Core.Command.map(msg => DocumentHighlights(msg)))
     )
     @ (
+      DocumentSymbols.Contributions.commands
+      |> List.map(Oni_Core.Command.map(msg => DocumentSymbols(msg)))
+    )
+    @ (
       Hover.Contributions.commands
       |> List.map(Oni_Core.Command.map(msg => Hover(msg)))
     )
@@ -754,11 +765,14 @@ module Contributions = {
     @ Completion.Contributions.keybindings
     @ Definition.Contributions.keybindings
     @ DocumentHighlights.Contributions.keybindings
+    @ DocumentSymbols.Contributions.keybindings
     @ Formatting.Contributions.keybindings
     @ References.Contributions.keybindings
     @ SignatureHelp.Contributions.keybindings;
 
-  let menuGroups = Formatting.Contributions.menuGroups;
+  let menuGroups =
+    DocumentSymbols.Contributions.menuGroups
+    @ Formatting.Contributions.menuGroups;
 };
 
 module OldCompletion = Completion;

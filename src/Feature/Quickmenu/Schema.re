@@ -1,6 +1,21 @@
 open Oni_Core;
 open Utility;
 
+module Icon = {
+  type t =
+    | Seti(IconTheme.IconDefinition.t)
+    | Codicon({
+        fontSize: option(float),
+        color: option(ColorTheme.Schema.definition),
+        icon: int,
+      });
+
+  let seti = iconDefinition => Seti(iconDefinition);
+
+  let codicon = (~fontSize=?, ~color=?, icon) =>
+    Codicon({fontSize, color, icon});
+};
+
 module Renderer = {
   open Revery;
   open Revery.UI;
@@ -40,6 +55,14 @@ module Renderer = {
         textWrap(TextWrapping.NoWrap),
         marginRight(10),
       ];
+
+    let codiconStyle =
+      Style.[
+        marginRight(10),
+        flexDirection(`Row),
+        justifyContent(`Center),
+        alignItems(`Center),
+      ];
   };
 
   let common: t(_) =
@@ -72,7 +95,7 @@ module Renderer = {
     let icon = iconSelector(item);
     let iconView =
       switch (icon) {
-      | Some(icon) =>
+      | Some(Icon.Seti(icon)) =>
         Oni_Core.IconTheme.IconDefinition.(
           <Text
             style={Styles.icon(icon.fontColor)}
@@ -81,6 +104,16 @@ module Renderer = {
             text={Oni_Components.FontIcon.codeToIcon(icon.fontCharacter)}
           />
         )
+      | Some(Icon.Codicon({fontSize, color, icon})) =>
+        let fontSize = fontSize |> Option.value(~default=font.size);
+        let colorSchema: Oni_Core.ColorTheme.Schema.definition =
+          color |> Option.value(~default=Feature_Theme.Colors.Menu.foreground);
+
+        let color = colorSchema.from(theme);
+
+        <Revery.UI.View style=Styles.codiconStyle>
+          <Codicon icon fontSize color />
+        </Revery.UI.View>;
       | None =>
         <Text style={Styles.icon(Revery.Colors.transparentWhite)} text="" />
       };
@@ -173,12 +206,21 @@ module Instance = {
         let shouldLower = queryStr == String.lowercase_ascii(queryStr);
         let query = Zed_utf8.explode(queryStr);
         let filteredItems =
-          allItems
-          |> List.filter(item =>
-               Filter.fuzzyMatches(query, format(item, ~shouldLower))
-             )
-          |> Filter.rank(queryStr, format)
-          |> Array.of_list;
+          if (StringEx.isEmpty(queryStr)) {
+            // If there is no query, preserve original item order
+            allItems
+            |> List.mapi((idx, item) =>
+                 Filter.{item, highlight: [], score: (-1.0) *. float(idx)}
+               )
+            |> Array.of_list;
+          } else {
+            allItems
+            |> List.filter(item =>
+                 Filter.fuzzyMatches(query, format(item, ~shouldLower))
+               )
+            |> Filter.rank(queryStr, format)
+            |> Array.of_list;
+          };
 
         Instance({...orig, filteredItems});
       };
