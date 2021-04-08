@@ -91,6 +91,7 @@ type model = {
   providers: list(provider),
   quickFixes: QuickFixes.t,
   lightBulbPopup: Component_Popup.model,
+  quickFixContextMenu: Component_EditorContextMenu.model(CodeAction.t),
 };
 
 [@deriving show]
@@ -101,6 +102,9 @@ type command =
 type msg =
   | Command(command)
   | LightBulbPopup([@opaque] Component_Popup.msg)
+  | QuickFixContextMenu(
+      [@opaque] Component_EditorContextMenu.msg(CodeAction.t),
+    )
   | QuickFixesAvailable({
       handle: int,
       actions: list(Exthost.CodeAction.t),
@@ -116,6 +120,8 @@ let initial = {
   quickFixes: QuickFixes.initial,
 
   lightBulbPopup: Component_Popup.create(~width=32., ~height=32.),
+
+  quickFixContextMenu: Component_EditorContextMenu.initial,
 };
 
 let register =
@@ -178,6 +184,20 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
       },
       Outmsg.Nothing,
     )
+
+  | QuickFixContextMenu(contextMenuMsg) =>
+    let (quickFixContextMenu', outmsg) =
+      model.quickFixContextMenu
+      |> Component_EditorContextMenu.update(contextMenuMsg);
+
+    // TODO
+    let eff =
+      switch (outmsg) {
+      | _ => Outmsg.Nothing
+      };
+
+    ({...model, quickFixContextMenu: quickFixContextMenu'}, eff);
+
   | QuickFixesAvailable({handle, actions}) => (
       {
         ...model,
@@ -257,7 +277,16 @@ let sub =
     )
     |> Isolinear.Sub.map(msg => LightBulbPopup(msg));
 
-  [lightBulbPopup, ...codeActionsSubs] |> Isolinear.Sub.batch;
+  let quickFixContextMenuSub =
+    Component_EditorContextMenu.sub(
+      ~isVisible=true,
+      ~pixelPosition=Some(PixelPosition.zero),
+      codeActions.quickFixContextMenu,
+    )
+    |> Isolinear.Sub.map(msg => QuickFixContextMenu(msg));
+
+  [lightBulbPopup, quickFixContextMenuSub, ...codeActionsSubs]
+  |> Isolinear.Sub.batch;
 };
 
 module Commands = {

@@ -21,6 +21,8 @@ let create = items => {
   items,
 };
 
+let initial = [] |> create;
+
 let set = (~items, model) => {...model, items};
 
 type msg('item) =

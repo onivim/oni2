@@ -3,7 +3,7 @@ open Oni_Core;
 
 type model('item);
 
-let create: list('item) => model('item);
+let initial: model(_);
 
 let set: (~items: list('item), model('item)) => model('item);
 
