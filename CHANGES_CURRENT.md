@@ -39,6 +39,7 @@
 - #3371 - Explorer: Fix regression in auto-focus behavior
 - #3376 - Vim: Missing Control+W,W bindings (related #1721)
 - #3379 - Rename: Handle parsing 'rejectReason'
+- #3382 - Input: Handle `<capslock>` key
 
 ### Performance
 
