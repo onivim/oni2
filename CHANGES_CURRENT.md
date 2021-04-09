@@ -4,6 +4,7 @@
 - #2881 - Extensions: Initial rename support
 - #3348 - Code Actions: Implement extension host protocol for quick fix / code actions
 - #3352 - Keybindings: Add default keybinding for open configuration (related #1423, thanks @LiHRaM !)
+- #3381 - Language Support: Symbols - implement go-to buffer symbol menu
 
 ### Bug Fixes
 
@@ -38,6 +39,7 @@
 - #3371 - Explorer: Fix regression in auto-focus behavior
 - #3376 - Vim: Missing Control+W,W bindings (related #1721)
 - #3379 - Rename: Handle parsing 'rejectReason'
+- #3382 - Input: Handle `<capslock>` key
 
 ### Performance
 

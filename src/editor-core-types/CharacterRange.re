@@ -125,5 +125,16 @@ let toHash = ranges => {
   hash;
 };
 
+let compare = (a, b) =>
+  if (a.start.line != b.start.line) {
+    LineNumber.compare(a.start.line, b.start.line);
+  } else if (a.start.character != b.stop.character) {
+    CharacterIndex.compare(a.start.character, b.start.character);
+  } else if (a.stop.line != b.stop.line) {
+    LineNumber.compare(a.stop.line, b.stop.line);
+  } else {
+    CharacterIndex.compare(a.stop.character, b.stop.character);
+  };
+
 let equals = (a, b) =>
   CharacterPosition.(a.start == b.start && a.stop == b.stop);
