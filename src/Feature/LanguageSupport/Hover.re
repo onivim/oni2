@@ -277,9 +277,10 @@ module Popup = {
         ~editorId,
       ) =>
     if (model.editorID != editorId) {
-      None;
-    } else if (model.contents == []) {
-      None;
+      None// Contents nothing...
+          //   prerr_endlin
+          ; // } else if (model.contents == []) {
+          //   None;
     } else {
       let maybeLocation: option(EditorCoreTypes.CharacterPosition.t) =
         switch (model.triggeredFrom, model.shown) {
@@ -331,12 +332,22 @@ module Popup = {
              |> React.listToElement;
            };
 
-           let diagnostics =
-             Feature_Diagnostics.getDiagnosticsAtPosition(
-               diagnostics,
-               buffer,
+           let maybeRange =
+             Buffer.tokenAt(
+               ~languageConfiguration=LanguageConfiguration.default,
                location,
+               buffer,
              );
+           let diagnostics =
+             maybeRange
+             |> Option.map(range => {
+                  Feature_Diagnostics.getDiagnosticsInRange(
+                    diagnostics,
+                    buffer,
+                    range,
+                  )
+                })
+             |> Option.value(~default=[]);
 
            let diagnosticsSection =
              if (diagnostics == []) {
