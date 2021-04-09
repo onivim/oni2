@@ -25,17 +25,20 @@ module Session = {
     requestId: int,
     editorId: int,
     contents: list(Exthost.MarkdownString.t),
+    diagnostics: list(Feature_Diagnostics.Diagnostic.t),
   };
 
-  let start = (~requestId, ~editorId, ~triggeredFrom) => {
+  let start = (~diagnostics, ~requestId, ~editorId, ~triggeredFrom) => {
     range: None,
     triggeredFrom,
     requestId,
     editorId,
     contents: [],
+    diagnostics,
   };
 
-  let hasContent = session => session.contents != [];
+  let hasContent = session =>
+    session.contents != [] || session.diagnostics != [];
 
   let position = ({triggeredFrom, _}) =>
     switch (triggeredFrom) {
@@ -114,9 +117,22 @@ let getEffectsForLocation =
   |> Isolinear.Effect.batch;
 };
 
+let getDiagnosticsForPosition =
+    (~buffer, ~languageConfiguration, ~diagnostics, ~position) => {
+  let maybeRange = Buffer.tokenAt(~languageConfiguration, position, buffer);
+
+  maybeRange
+  |> Option.map(range => {
+       Feature_Diagnostics.getDiagnosticsInRange(diagnostics, buffer, range)
+     })
+  |> Option.value(~default=[]);
+};
+
 let update =
     (
+      ~languageConfiguration,
       ~cursorLocation: CharacterPosition.t,
+      ~diagnostics,
       ~maybeBuffer,
       ~editorId,
       ~extHostClient,
@@ -137,6 +153,7 @@ let update =
           ~requestId,
           ~editorId,
         );
+
       (
         {
           ...model,
@@ -144,6 +161,13 @@ let update =
           activeSession:
             Some(
               Session.start(
+                ~diagnostics=
+                  getDiagnosticsForPosition(
+                    ~buffer,
+                    ~diagnostics,
+                    ~position=cursorLocation,
+                    ~languageConfiguration,
+                  ),
                 ~requestId,
                 ~editorId,
                 ~triggeredFrom=`CommandPalette(cursorLocation),
@@ -174,6 +198,13 @@ let update =
           activeSession:
             Some(
               Session.start(
+                ~diagnostics=
+                  getDiagnosticsForPosition(
+                    ~buffer,
+                    ~diagnostics,
+                    ~position=cursorLocation,
+                    ~languageConfiguration,
+                  ),
                 ~requestId,
                 ~editorId,
                 ~triggeredFrom=`Mouse(location),
@@ -269,7 +300,6 @@ module Styles = {
 module Popup = {
   let make =
       (
-        ~diagnostics,
         ~theme,
         ~tokenTheme,
         ~languageInfo,
@@ -331,32 +361,13 @@ module Popup = {
              |> React.listToElement;
            };
 
-           let maybeRange =
-             Buffer.tokenAt(
-               ~languageConfiguration=LanguageConfiguration.default,
-               position,
-               buffer,
-             );
-           let diagnostics =
-             maybeRange
-             |> Option.map(range => {
-                  Feature_Diagnostics.getDiagnosticsInRange(
-                    diagnostics,
-                    buffer,
-                    range,
-                  )
-                })
-             |> Option.value(~default=[]);
-
            let diagnosticsSection =
-             if (diagnostics == []) {
+             if (session.diagnostics == []) {
                [];
              } else {
                let element =
-                 List.map(
-                   diag => <hoverDiagnostic diagnostic=diag />,
-                   diagnostics,
-                 )
+                 session.diagnostics
+                 |> List.map(diag => <hoverDiagnostic diagnostic=diag />)
                  |> React.listToElement;
                [Oni_Components.Popup.Section.{element, position: `Below}];
              };

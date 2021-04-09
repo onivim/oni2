@@ -278,7 +278,6 @@ let%component make =
         ~uiFont,
         ~editorFont,
         ~model=languageSupport,
-        ~diagnostics,
         ~tokenTheme,
         ~grammars=grammarRepository,
         ~buffer,
