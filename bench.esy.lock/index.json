@@ -1,5 +1,5 @@
 {
-  "checksum": "238466c3ee7120bc2017f843c4dd8075",
+  "checksum": "4d31aa6f35d5e6ae0e6b99c4319b11a4",
   "root": "Oni2@link-dev:./package.json",
   "node": {
     "yarn-pkg-config@github:esy-ocaml/yarn-pkg-config#db3a0b63883606dd57c54a7158d560d6cba8cd79@d41d8cd9": {
@@ -118,7 +118,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "revery@github:revery-ui/revery#b746d68@d41d8cd9",
+        "revery@github:revery-ui/revery#4337e2c@d41d8cd9",
         "isolinear@github:revery-ui/isolinear#53fc4eb@d41d8cd9",
         "@revery/timber@2.0.0@d41d8cd9",
         "@revery/esy-libvterm@1.0.3@d41d8cd9",
@@ -126,13 +126,13 @@
       ],
       "devDependencies": []
     },
-    "revery@github:revery-ui/revery#b746d68@d41d8cd9": {
-      "id": "revery@github:revery-ui/revery#b746d68@d41d8cd9",
+    "revery@github:revery-ui/revery#4337e2c@d41d8cd9": {
+      "id": "revery@github:revery-ui/revery#4337e2c@d41d8cd9",
       "name": "revery",
-      "version": "github:revery-ui/revery#b746d68",
+      "version": "github:revery-ui/revery#4337e2c",
       "source": {
         "type": "install",
-        "source": [ "github:revery-ui/revery#b746d68" ]
+        "source": [ "github:revery-ui/revery#4337e2c" ]
       },
       "overrides": [],
       "dependencies": [
@@ -883,7 +883,7 @@
       },
       "overrides": [],
       "dependencies": [
-        "concat-map@0.0.1@d41d8cd9", "balanced-match@1.0.0@d41d8cd9"
+        "concat-map@0.0.1@d41d8cd9", "balanced-match@1.0.2@d41d8cd9"
       ],
       "devDependencies": []
     },
@@ -901,14 +901,14 @@
       "dependencies": [],
       "devDependencies": []
     },
-    "balanced-match@1.0.0@d41d8cd9": {
-      "id": "balanced-match@1.0.0@d41d8cd9",
+    "balanced-match@1.0.2@d41d8cd9": {
+      "id": "balanced-match@1.0.2@d41d8cd9",
       "name": "balanced-match",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.0.tgz#sha1:89b4d199ab2bee49de164ea02b89ce462d71b767"
+          "archive:https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz#sha1:e83e3a7e3f300b34cb9d87f615fa0cbf357690ee"
         ]
       },
       "overrides": [],
@@ -977,7 +977,7 @@
       "overrides": [ "bench.json" ],
       "dependencies": [
         "revery-terminal@github:revery-ui/revery-terminal#a9cb168@d41d8cd9",
-        "revery@github:revery-ui/revery#b746d68@d41d8cd9",
+        "revery@github:revery-ui/revery#4337e2c@d41d8cd9",
         "reperf@1.5.1@d41d8cd9", "rench@1.10.0@d41d8cd9",
         "refmterr@3.3.2@d41d8cd9",
         "reason-native-crash-utils@github:onivim/reason-native-crash-utils#38c8f00@d41d8cd9",
@@ -2530,7 +2530,7 @@
         "@opam/dune-build-info@opam:2.6.2@03ffe168",
         "@opam/dune@opam:2.5.0@e0bac278",
         "@opam/dot-merlin-reader@opam:3.4.2@55baebb0",
-        "@opam/csexp@opam:1.4.0@bd1cb034", "@esy-ocaml/substs@0.0.1@d41d8cd9"
+        "@opam/csexp@opam:1.5.1@f2f16ef6", "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
         "ocaml@4.10.0@d41d8cd9",
@@ -2542,7 +2542,7 @@
         "@opam/dune-build-info@opam:2.6.2@03ffe168",
         "@opam/dune@opam:2.5.0@e0bac278",
         "@opam/dot-merlin-reader@opam:3.4.2@55baebb0",
-        "@opam/csexp@opam:1.4.0@bd1cb034"
+        "@opam/csexp@opam:1.5.1@f2f16ef6"
       ]
     },
     "@opam/ocaml-compiler-libs@opam:v0.12.3@f0f069bd": {
@@ -3238,7 +3238,7 @@
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/result@opam:1.5@6b753c82",
         "@opam/ocamlfind@opam:1.9.1@b748edf6",
-        "@opam/dune@opam:2.5.0@e0bac278", "@opam/csexp@opam:1.4.0@bd1cb034",
+        "@opam/dune@opam:2.5.0@e0bac278", "@opam/csexp@opam:1.5.1@f2f16ef6",
         "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
@@ -3246,7 +3246,7 @@
         "@opam/yojson@github:onivim/yojson:yojson.opam#f480aef@d41d8cd9",
         "@opam/result@opam:1.5@6b753c82",
         "@opam/ocamlfind@opam:1.9.1@b748edf6",
-        "@opam/dune@opam:2.5.0@e0bac278", "@opam/csexp@opam:1.4.0@bd1cb034"
+        "@opam/dune@opam:2.5.0@e0bac278", "@opam/csexp@opam:1.5.1@f2f16ef6"
       ]
     },
     "@opam/dir@github:bryphe/reason-native:dir.opam#e16590c@d41d8cd9": {
@@ -3359,30 +3359,29 @@
         "@opam/base-bytes@opam:base@19d0c2ff"
       ]
     },
-    "@opam/csexp@opam:1.4.0@bd1cb034": {
-      "id": "@opam/csexp@opam:1.4.0@bd1cb034",
+    "@opam/csexp@opam:1.5.1@f2f16ef6": {
+      "id": "@opam/csexp@opam:1.5.1@f2f16ef6",
       "name": "@opam/csexp",
-      "version": "opam:1.4.0",
+      "version": "opam:1.5.1",
       "source": {
         "type": "install",
         "source": [
-          "archive:https://opam.ocaml.org/cache/sha256/8e/8e3d6fca87f102a126dee8b72a2a0d146f10439c47218dfc149d51bf3edf364e#sha256:8e3d6fca87f102a126dee8b72a2a0d146f10439c47218dfc149d51bf3edf364e",
-          "archive:https://github.com/ocaml-dune/csexp/releases/download/1.4.0/csexp-1.4.0.tbz#sha256:8e3d6fca87f102a126dee8b72a2a0d146f10439c47218dfc149d51bf3edf364e"
+          "archive:https://opam.ocaml.org/cache/sha256/d6/d605e4065fa90a58800440ef2f33a2d931398bf2c22061a8acb7df845c0aac02#sha256:d605e4065fa90a58800440ef2f33a2d931398bf2c22061a8acb7df845c0aac02",
+          "archive:https://github.com/ocaml-dune/csexp/releases/download/1.5.1/csexp-1.5.1.tbz#sha256:d605e4065fa90a58800440ef2f33a2d931398bf2c22061a8acb7df845c0aac02"
         ],
         "opam": {
           "name": "csexp",
-          "version": "1.4.0",
-          "path": "bench.esy.lock/opam/csexp.1.4.0"
+          "version": "1.5.1",
+          "path": "bench.esy.lock/opam/csexp.1.5.1"
         }
       },
       "overrides": [],
       "dependencies": [
-        "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
-        "@opam/dune@opam:2.5.0@e0bac278", "@esy-ocaml/substs@0.0.1@d41d8cd9"
+        "ocaml@4.10.0@d41d8cd9", "@opam/dune@opam:2.5.0@e0bac278",
+        "@esy-ocaml/substs@0.0.1@d41d8cd9"
       ],
       "devDependencies": [
-        "ocaml@4.10.0@d41d8cd9", "@opam/result@opam:1.5@6b753c82",
-        "@opam/dune@opam:2.5.0@e0bac278"
+        "ocaml@4.10.0@d41d8cd9", "@opam/dune@opam:2.5.0@e0bac278"
       ]
     },
     "@opam/cppo@opam:1.6.7@c28ac3ae": {

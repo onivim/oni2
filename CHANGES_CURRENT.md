@@ -39,6 +39,7 @@
 - #3371 - Explorer: Fix regression in auto-focus behavior
 - #3376 - Vim: Missing Control+W,W bindings (related #1721)
 - #3379 - Rename: Handle parsing 'rejectReason'
+- #3382 - Input: Handle `<capslock>` key
 
 ### Performance
 
@@ -56,6 +57,7 @@
 - #3303 - Language Support: Move language metadata into Feature_LanguageSupport (related #3288)
 - #3330 - Diagnostics: Add regression test for #3233
 - #3334 - Dependency: Revery -> b746d68 (thanks @timbertson !)
+- #3385 - Dependency: Revery -> 4337e2c
 
 ### Infrastructure
 
