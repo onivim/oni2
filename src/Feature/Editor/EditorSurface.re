@@ -282,7 +282,7 @@ let%component make =
         ~tokenTheme,
         ~grammars=grammarRepository,
         ~buffer,
-        ~editorId=Some(editorId),
+        ~editorId,
         ~languageInfo,
       );
 

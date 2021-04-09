@@ -292,7 +292,7 @@ module Hover: {
         ~grammars: Oni_Syntax.GrammarRepository.t,
         ~model: model,
         ~buffer: Oni_Core.Buffer.t,
-        ~editorId: option(int)
+        ~editorId: int
       ) =>
       option((CharacterPosition.t, list(Oni_Components.Popup.Section.t)));
   };
