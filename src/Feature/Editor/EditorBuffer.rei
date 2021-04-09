@@ -1,15 +1,21 @@
+open EditorCoreTypes;
+open Oni_Core;
 // EditorBuffer is a subset of the buffer model,
 // specifically containing the functions and data
 // needed by the editor surface.
 
 type t;
 
-let ofBuffer: Oni_Core.Buffer.t => t;
+let ofBuffer: Buffer.t => t;
 let id: t => int;
 let getEstimatedMaxLineLength: t => int;
 let numberOfLines: t => int;
-let line: (int, t) => Oni_Core.BufferLine.t;
+let line: (int, t) => BufferLine.t;
 let hasLine: (EditorCoreTypes.LineNumber.t, t) => bool;
-let font: t => Oni_Core.Font.t;
-let fileType: t => Oni_Core.Buffer.FileType.t;
+let font: t => Font.t;
+let fileType: t => Buffer.FileType.t;
 let measure: (Uchar.t, t) => float;
+
+let tokenAt:
+  (~languageConfiguration: LanguageConfiguration.t, CharacterPosition.t, t) =>
+  option(CharacterRange.t);
