@@ -61,6 +61,7 @@ module View: {
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
       ~workingDirectory: string,
+      ~modeIndicator: string,
       unit
     ) =>
     Revery.UI.element;
@@ -68,7 +69,10 @@ module View: {
 
 // CONFIGURATION
 
-module Configuration: {let visible: Config.Schema.setting(bool);};
+module Configuration: {
+  let visible: Config.Schema.setting(bool);
+  let modeIndicator: Config.Schema.setting(string);
+};
 
 // CONTRIBUTIONS
 

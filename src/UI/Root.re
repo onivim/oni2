@@ -107,6 +107,9 @@ let make = (~dispatch, ~state: State.t, ()) => {
           workingDirectory={Feature_Workspace.workingDirectory(
             state.workspace,
           )}
+          modeIndicator={
+            Feature_StatusBar.Configuration.modeIndicator.get(config)
+          }
         />
       </View>;
     } else {

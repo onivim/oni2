@@ -392,6 +392,7 @@ module View = {
         ~theme,
         ~dispatch,
         ~workingDirectory: string,
+        ~modeIndicator: string,
         (),
       ) => {
     let activeNotifications = Feature_Notification.active(notifications);
@@ -557,7 +558,27 @@ module View = {
       |> Option.map(register => <macro register />)
       |> Option.value(~default=React.empty);
 
+    let modeIndicatorStart =
+      switch (modeIndicator) {
+      | "left" =>
+        <section align=`FlexStart>
+          <ModeIndicator font theme mode subMode />
+        </section>
+      | _ => React.empty
+      };
+
+    let modeIndicatorEnd =
+      switch (modeIndicator) {
+      | "left"
+      | "none" => React.empty
+      | _ =>
+        <section align=`FlexEnd>
+          <ModeIndicator font theme mode subMode />
+        </section>
+      };
+
     <View ?key style={Styles.view(background, yOffset)}>
+      modeIndicatorStart
       <section align=`FlexStart>
         <notificationCount
           dispatch
@@ -585,9 +606,7 @@ module View = {
         </section>
         <notificationPopups />
       </sectionGroup>
-      <section align=`FlexEnd>
-        <ModeIndicator font theme mode subMode />
-      </section>
+      modeIndicatorEnd
     </View>;
   };
 };
@@ -595,8 +614,10 @@ module View = {
 module Configuration = {
   open Config.Schema;
   let visible = setting("workbench.statusBar.visible", bool, ~default=true);
+  let modeIndicator =
+    setting("workbench.statusBar.modeIndicator", string, ~default="rigth");
 };
 
 module Contributions = {
-  let configuration = Configuration.[visible.spec];
+  let configuration = Configuration.[visible.spec, modeIndicator.spec];
 };

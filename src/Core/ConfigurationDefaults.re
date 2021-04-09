@@ -36,6 +36,7 @@ let getDefaultConfigString = configName =>
   "workbench.sideBar.location": "left",
   "workbench.sideBar.visible": true,
   "workbench.statusBar.visible": true,
+  "workbench.statusBar.modeIndicator": "left",
   "workbench.tree.indent": 2,
   "vim.useSystemClipboard": ["yank"]
 }
