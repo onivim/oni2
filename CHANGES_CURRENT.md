@@ -40,6 +40,7 @@
 - #3376 - Vim: Missing Control+W,W bindings (related #1721)
 - #3379 - Rename: Handle parsing 'rejectReason'
 - #3382 - Input: Handle `<capslock>` key
+- #3389 - Editor: Render diagnostics with squiggly lines (fixes #2827)
 
 ### Performance
 
