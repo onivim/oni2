@@ -41,6 +41,7 @@
 - #3379 - Rename: Handle parsing 'rejectReason'
 - #3382 - Input: Handle `<capslock>` key
 - #3389 - Editor: Render diagnostics with squiggly lines (fixes #2827)
+- #3390 - Diagnostics: Some diagnostics wouldn't show in hover UI (related #3231)
 
 ### Performance
 
