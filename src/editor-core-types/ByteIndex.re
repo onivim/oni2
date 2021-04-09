@@ -12,7 +12,14 @@ let (>) = (a, b) => a > b;
 let (<=) = (a, b) => a <= b;
 let (>=) = (a, b) => a >= b;
 
-let next = (str, idx) => Zed_utf8.next(str, idx);
+let next = (str, idx) => {
+  let len = String.length(str);
+  if (idx >= len) {
+    len;
+  } else {
+    Zed_utf8.next(str, idx);
+  };
+};
 
 let%test_module "next" =
   (module
