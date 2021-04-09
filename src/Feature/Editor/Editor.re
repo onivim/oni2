@@ -1338,39 +1338,8 @@ let getLeftVisibleColumn = view => {
 };
 
 let getTokenAt =
-    (~languageConfiguration, {line, character}: CharacterPosition.t, editor) => {
-  let lineNumber = line |> EditorCoreTypes.LineNumber.toZeroBased;
-
-  if (lineNumber < 0
-      || lineNumber >= EditorBuffer.numberOfLines(editor.buffer)) {
-    None;
-  } else {
-    let bufferLine = EditorBuffer.line(lineNumber, editor.buffer);
-    let f = uchar =>
-      LanguageConfiguration.isWordCharacter(uchar, languageConfiguration);
-    let startIndex =
-      BufferLine.traverse(
-        ~f,
-        ~direction=`Backwards,
-        ~index=character,
-        bufferLine,
-      )
-      |> Option.value(~default=character);
-    let stopIndex =
-      BufferLine.traverse(
-        ~f,
-        ~direction=`Forwards,
-        ~index=character,
-        bufferLine,
-      )
-      |> Option.value(~default=character);
-    Some(
-      CharacterRange.{
-        start: CharacterPosition.{line, character: startIndex},
-        stop: CharacterPosition.{line, character: stopIndex},
-      },
-    );
-  };
+    (~languageConfiguration, position: CharacterPosition.t, editor) => {
+  EditorBuffer.tokenAt(~languageConfiguration, position, editor.buffer);
 };
 
 let getContentPixelWidth = editor => {

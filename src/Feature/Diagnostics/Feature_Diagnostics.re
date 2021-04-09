@@ -269,7 +269,7 @@ let getDiagnosticsAtPosition = (instance, buffer, position) => {
      );
 };
 let getDiagnosticsInRange = (model, buffer, query) => {
-  model(instance, buffer)
+  getDiagnostics(model, buffer)
   |> List.filter((Diagnostic.{range, _}) =>
        CharacterRange.intersects(query, range)
      );
