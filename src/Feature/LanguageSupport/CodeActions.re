@@ -279,7 +279,7 @@ let sub =
 
   let quickFixContextMenuSub =
     Component_EditorContextMenu.sub(
-      ~isVisible=true,
+      ~isVisible,
       ~pixelPosition=Some(PixelPosition.zero),
       codeActions.quickFixContextMenu,
     )
@@ -323,23 +323,55 @@ module Contributions = {
 };
 
 module View = {
-  let make = (~theme, ~editorFont: Service_Font.font, ~model, ()) => {
-    let foregroundColor =
-      Feature_Theme.Colors.Editor.lightBulbForeground.from(theme);
+  module EditorWidgets = {
+    let make = (~theme, ~editorFont: Service_Font.font, ~model, ()) => {
+      let foregroundColor =
+        Feature_Theme.Colors.Editor.lightBulbForeground.from(theme);
 
-    let fontSize = editorFont.fontSize;
-    <Component_Popup.View
-      model={model.lightBulbPopup}
-      inner={(~transition as _) => {
-        <Revery.UI.Components.Container
-          width=24 height=24 color=Revery.Colors.transparentWhite>
-          <Oni_Core.Codicon
-            fontSize
-            color=foregroundColor
-            icon=Codicon.lightbulb
-          />
-        </Revery.UI.Components.Container>
-      }}
-    />;
+      let fontSize = editorFont.fontSize;
+      <Component_Popup.View
+        model={model.lightBulbPopup}
+        inner={(~transition as _) => {
+          <Revery.UI.Components.Container
+            width=24 height=24 color=Revery.Colors.transparentWhite>
+            <Oni_Core.Codicon
+              fontSize
+              color=foregroundColor
+              icon=Codicon.lightbulb
+            />
+          </Revery.UI.Components.Container>
+        }}
+      />;
+    };
+  };
+
+  module Overlay = {
+    let make =
+        (
+          ~dispatch,
+          ~theme,
+          ~uiFont,
+          ~editorFont: Service_Font.font,
+          ~model,
+          (),
+        ) => {
+      <Component_EditorContextMenu.View
+        model={model.quickFixContextMenu}
+        // <Revery.UI.Components.Clickable
+        //   onClick={_ => prerr_endline("clicked")}
+        //   style=Revery.UI.Style.[
+        //     pointerEvents(`Allow),
+        //     position(`Absolute),
+        //     top(0),
+        //     left(0),
+        //   ]>
+        //   <Revery.UI.Components.Container
+        //     width=32
+        //     height=32
+        //     color=Revery.Colors.magenta
+        //   />
+        // </Revery.UI.Components.Clickable>;
+      />;
+    };
   };
 };
