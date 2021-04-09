@@ -30,4 +30,7 @@ let%test_module "next" =
      let%test "utf-8" = {
        next("κόσμε", zero) |> toInt == 2;
      };
+     let%test "past length" = {
+       next("abc", 99) |> toInt == 3;
+     };
    });
