@@ -38,6 +38,8 @@ module QuickFixes = {
   };
 
   let addQuickFixes = (~handle, ~bufferId, ~position, ~newActions, quickFixes) => {
+    newActions |> List.iter(qf => prerr_endline(Exthost.CodeAction.show(qf)));
+
     let actions = newActions |> List.map(CodeAction.ofExthost(~handle));
     // If at the same location, just append!
     let fixes =
@@ -50,6 +52,7 @@ module QuickFixes = {
 
     {bufferId, position, fixes};
   };
+
   let initial = {
     bufferId: (-1),
     position: EditorCoreTypes.CharacterPosition.zero,
@@ -72,7 +75,11 @@ module QuickFixes = {
 
   let any = ({fixes, _}) => fixes != [];
 
-  let position = ({fixes, _}) => {
+  let appliesToBuffer = (buffer, {bufferId, _}) => {
+    bufferId == Buffer.getId(buffer);
+  };
+
+  let position = ({fixes, position, _}) => {
     Base.List.nth(fixes, 0)
     |> Utility.OptionEx.flatMap((fix: CodeAction.t) => {
          Base.List.nth(fix.action.diagnostics, 0)
@@ -81,7 +88,14 @@ module QuickFixes = {
          let range = diagnostic.range |> Exthost.OneBasedRange.toRange;
 
          CharacterRange.(range.start);
-       });
+       })
+    |> Utility.OptionEx.or_lazy(() =>
+         if (fixes == []) {
+           None;
+         } else {
+           Some(position);
+         }
+       );
   };
 
   let all = ({fixes, _}) => fixes;
@@ -91,6 +105,7 @@ type model = {
   providers: list(provider),
   quickFixes: QuickFixes.t,
   lightBulbPopup: Component_Popup.model,
+  lightBulbActiveEditorId: option(int),
 };
 
 [@deriving show]
@@ -100,7 +115,10 @@ type command =
 [@deriving show]
 type msg =
   | Command(command)
-  | LightBulbPopup([@opaque] Component_Popup.msg)
+  | LightBulbPopup({
+      editorId: int,
+      msg: [@opaque] Component_Popup.msg,
+    })
   | QuickFixesAvailable({
       handle: int,
       actions: list(Exthost.CodeAction.t),
@@ -116,6 +134,7 @@ let initial = {
   quickFixes: QuickFixes.initial,
 
   lightBulbPopup: Component_Popup.create(~width=32., ~height=32.),
+  lightBulbActiveEditorId: None,
 };
 
 let register =
@@ -170,11 +189,11 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
       (model, Outmsg.NotifyFailure("Context menu not yet implemented"));
     };
 
-  | LightBulbPopup(popupMsg) => (
+  | LightBulbPopup({editorId, msg}) => (
       {
         ...model,
-        lightBulbPopup:
-          Component_Popup.update(popupMsg, model.lightBulbPopup),
+        lightBulbPopup: Component_Popup.update(msg, model.lightBulbPopup),
+        lightBulbActiveEditorId: Some(editorId),
       },
       Outmsg.Nothing,
     )
@@ -200,6 +219,7 @@ let update = (~buffer, ~cursorLocation, msg, model) => {
 let sub =
     (
       ~buffer,
+      ~activeEditor,
       ~activePosition,
       ~topVisibleBufferLine as _,
       ~bottomVisibleBufferLine as _,
@@ -255,7 +275,7 @@ let sub =
       ~pixelPosition,
       codeActions.lightBulbPopup,
     )
-    |> Isolinear.Sub.map(msg => LightBulbPopup(msg));
+    |> Isolinear.Sub.map(msg => LightBulbPopup({editorId: activeEditor, msg}));
 
   [lightBulbPopup, ...codeActionsSubs] |> Isolinear.Sub.batch;
 };
@@ -294,23 +314,26 @@ module Contributions = {
 };
 
 module View = {
-  let make = (~theme, ~editorFont: Service_Font.font, ~model, ()) => {
-    let foregroundColor =
-      Feature_Theme.Colors.Editor.lightBulbForeground.from(theme);
+  let make = (~editorId, ~theme, ~editorFont: Service_Font.font, ~model, ()) =>
+    if (Some(editorId) == model.lightBulbActiveEditorId) {
+      let foregroundColor =
+        Feature_Theme.Colors.Editor.lightBulbForeground.from(theme);
 
-    let fontSize = editorFont.fontSize;
-    <Component_Popup.View
-      model={model.lightBulbPopup}
-      inner={(~transition as _) => {
-        <Revery.UI.Components.Container
-          width=24 height=24 color=Revery.Colors.transparentWhite>
-          <Oni_Core.Codicon
-            fontSize
-            color=foregroundColor
-            icon=Codicon.lightbulb
-          />
-        </Revery.UI.Components.Container>
-      }}
-    />;
-  };
+      let fontSize = editorFont.fontSize;
+      <Component_Popup.View
+        model={model.lightBulbPopup}
+        inner={(~transition as _) => {
+          <Revery.UI.Components.Container
+            width=24 height=24 color=Revery.Colors.transparentWhite>
+            <Oni_Core.Codicon
+              fontSize
+              color=foregroundColor
+              icon=Codicon.lightbulb
+            />
+          </Revery.UI.Components.Container>
+        }}
+      />;
+    } else {
+      Revery.UI.React.empty;
+    };
 };

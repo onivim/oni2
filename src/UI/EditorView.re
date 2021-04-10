@@ -132,6 +132,7 @@ module Parts = {
             <Feature_LanguageSupport.View.EditorWidgets
               x=cursorPixelX
               y=cursorPixelY
+              editorId={Feature_Editor.Editor.getId(editor)}
               theme
               uiFont
               editorFont
