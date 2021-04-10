@@ -27,7 +27,7 @@ module Styles = {
 
   let item = [flexDirection(`Row), flexGrow(1), alignItems(`Center)];
 
-  let text = (~isFocus, ~isActive, ~decoration, ~theme) => [
+  let text = (~isFocus, ~isActive, ~decoration, ~theme, ~maxWidth) => [
     color(
       switch (
         Option.bind(
@@ -49,6 +49,8 @@ module Styles = {
     // Minor adjustment to align with seti-icon
     marginTop(4),
     textWrap(TextWrapping.NoWrap),
+    textOverflow(`Ellipsis),
+    width(maxWidth),
   ];
 };
 
@@ -61,6 +63,7 @@ let nodeView =
       ~icon,
       ~node: FsTreeNode.metadata,
       ~decorations=[],
+      ~width,
       (),
     ) => {
   let decoration =
@@ -78,11 +81,20 @@ let nodeView =
     };
   };
 
+  // TODO: How to get the icon size?
+  let maxTextWidth = width - 30;
+
   <Tooltip text=tooltipText style=Styles.item>
     icon
     <Text
       text={node.displayName}
-      style={Styles.text(~isFocus, ~isActive, ~decoration, ~theme)}
+      style={Styles.text(
+        ~isFocus,
+        ~isActive,
+        ~decoration,
+        ~theme,
+        ~maxWidth=maxTextWidth,
+      )}
       fontFamily={font.family}
       fontSize=12.
     />
@@ -122,13 +134,7 @@ let make =
     model=treeView
     dispatch={msg => dispatch(Tree(msg))}
     onClick=onRootClicked
-    render={(
-      ~availableWidth as _,
-      ~index as _,
-      ~hovered as _,
-      ~selected,
-      item,
-    ) => {
+    render={(~availableWidth, ~index as _, ~hovered as _, ~selected, item) => {
       open FsTreeNode;
       let (icon, data) =
         switch (item) {
@@ -156,6 +162,7 @@ let make =
         theme
         node=data
         decorations
+        width=availableWidth
       />;
     }}
   />;
