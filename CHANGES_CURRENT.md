@@ -41,6 +41,7 @@
 - #3379 - Rename: Handle parsing 'rejectReason'
 - #3382 - Input: Handle `<capslock>` key
 - #3389 - Editor: Render diagnostics with squiggly lines (fixes #2827)
+- #3394 - Extensions: Fix error parsing extension manifest with boolean when express (related #3388)
 
 ### Performance
 
