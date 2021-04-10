@@ -107,8 +107,12 @@ let make = (~dispatch, ~state: State.t, ()) => {
           workingDirectory={Feature_Workspace.workingDirectory(
             state.workspace,
           )}
-          modeIndicator={
-            Feature_StatusBar.Configuration.modeIndicator.get(config)
+          startItems={Feature_StatusBar.Configuration.startItems.get(config)}
+          endItems={Feature_StatusBar.Configuration.endItems.get(config)}
+          hideOnNotification={
+            Feature_StatusBar.Configuration.hideOnNotification.get(
+              config,
+            )
           }
         />
       </View>;

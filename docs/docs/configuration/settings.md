@@ -144,10 +144,6 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `workbench.sideBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the sidebar.
 
-- `workbench.statusBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the status bar.
-
-- `workbench.statusBar.modeIndicator` __(_"left"|"right"|"none"_ default: `right`)__ - Controls the position of the mode indicator.
-
 - `window.menuBarVisibility` __(_"visible" | "hidden"_ default: `"visible"`)__ - Controls the visibility of the menu bar.
 
 - `oni.layout.showLayoutTabs` __(_"always"|"smart"|"never"_ default: `"smart"`)__ - Controls the display of layout tabs. `"smart"` will only show the tabs if there's more than one.
@@ -155,6 +151,31 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 - `oni.layout.layoutTabPosition` __(_"top"|"bottom"_ default: `"bottom"`)__ - Controls the position of the layout tabs.
 
 - `oni.layout.singleTabMode` __(_bool_ default: `false`)__ - When `true`, groups will only hold a single editor, and closing this editor will always close the group. It will also hide the editor tabs, and therefore essentially hide the concept of editor groups.
+
+- `workbench.statusBar.visible` __(_bool_ default: `true`)__ - Controls the visibility of the status bar.
+
+- `workbench.statusBar.items.start` __(_[items]_ default: `["notificationCount"]`)__ - Defines the first group of items that appear.
+
+- `workbench.statusBar.items.notification.start` __(_[items]_ default: `["macro", "leftItems", "diagnosticCount", "git"]`)__ - Defines the group of items that appears after the right after `...items.start` group, these items are hidden by a notification message.
+
+- `workbench.statusBar.items.notification.center` __(_[items]_ default: `[]`)__ - Defines the group of items that appears after the `...items.notification.start` group, but these are centered, these items are hidden by a notification message.
+
+- `workbench.statusBar.items.notification.end` __(_[items]_ default: `["rightItems", "lineEndings", "indentation", "fileType", "position"]`)__ - Defines the group of items that appears before the `items.end` group, these items are hidden by a notification message.
+
+- `workbench.statusBar.items.end` __(_[items]_ default: `["modeIndicator"]`)__ - Defines the group of items that appears at the end of the status bar, these items are hidden by a notification message.
+
+- `workbench.statusBar.items.end` __(_[items]_ default: `["modeIndicator"]`)__ - Defines the group of items that appears at the end of the status bar, these items are hidden by a notification message.
+    - _"notificationCount"_ - Notification Count icon and counter
+    - _"macro"_ - The vim macro indicator
+    - _"leftItems/rightItems"_ - Items that generated based on other factors, like extensions
+    - _"diagnosticCount"_ - Problem icon and counter
+    - _"git"_ - Source control information
+    - _"lineEndings"_ - Line endings information
+    - _"indentation"_ - Indentation information
+    - _"fileType"_ - File type information
+    - _"position"_ - Position information
+    - _"modeIndicator"_ - Vim mode indicator
+    - _"..."_ - The rest of the items in that group, as by the default, that are not defined in other groups 
 
 ### Rendering
 

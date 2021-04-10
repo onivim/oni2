@@ -194,7 +194,8 @@ module Styles = {
     transform(Transform.[TranslateY(yOffset)]),
   ];
 
-  let sectionGroup = [
+  let sectionGroup = background => [
+    backgroundColor(background),
     position(`Relative),
     flexDirection(`Row),
     justifyContent(`SpaceBetween),
@@ -232,8 +233,7 @@ let positionToString =
     )
   | None => "";
 
-let sectionGroup = (~children, ()) =>
-  <View style=Styles.sectionGroup> children </View>;
+let sectionGroup = (~style, ~children, ()) => <View style> children </View>;
 
 let section = (~children=React.empty, ~align, ()) =>
   <View style={Styles.section(align)}> children </View>;
@@ -392,7 +392,9 @@ module View = {
         ~theme,
         ~dispatch,
         ~workingDirectory: string,
-        ~modeIndicator: string,
+        ~startItems: list(string),
+        ~hideOnNotification: list(string),
+        ~endItems: list(string),
         (),
       ) => {
     let activeNotifications = Feature_Notification.active(notifications);
@@ -558,28 +560,43 @@ module View = {
       |> Option.map(register => <macro register />)
       |> Option.value(~default=React.empty);
 
-    let modeIndicatorStart =
-      switch (modeIndicator) {
-      | "left" =>
-        <section align=`FlexStart>
-          <ModeIndicator font theme mode subMode />
-        </section>
-      | _ => React.empty
+    let allItems =
+      List.concat([
+        startItems,
+        endItems,
+      ])
+      |> List.filter(a => a != "...");
+
+    let itemsTextMapper = (def, str) =>
+      switch (str) {
+      | "..." => def
+      | str => [str]
       };
 
-    let modeIndicatorEnd =
-      switch (modeIndicator) {
-      | "left"
-      | "none" => React.empty
-      | _ =>
-        <section align=`FlexEnd>
-          <ModeIndicator font theme mode subMode />
-        </section>
-      };
+    let def = ["macro", "leftItems", "diagnosticCount", "git", "rightItems", "lineEndings", "indentation", "fileType", "position"] |> List.filter(a => !List.exists(b => a == b, hideOnNotification));
+    let hideOnNotification = hideOnNotification |> List.map(str =>
+      switch (str) {
+      | "..." => def 
+      | str => [str]
+    }) |> List.concat;
 
-    <View ?key style={Styles.view(background, yOffset)}>
-      modeIndicatorStart
-      <section align=`FlexStart>
+    let def = ["notificationCount", "macro", "leftItems", "diagnosticCount", "git"] |> List.filter(a => !List.exists(b => a == b, allItems));
+    let startItems = startItems |> List.map(itemsTextMapper(def)) |> List.concat;
+
+    let def = ["rightItems", "lineEndings", "indentation", "fileType", "position", "modeIndicator"] |> List.filter(a => !List.exists(b => a == b, allItems));
+    let endItems = endItems |> List.map(itemsTextMapper(def)) |> List.concat;
+
+    let notificationItemsStart = startItems |> List.filter(a => List.exists(b => a == b, hideOnNotification))
+    let startItems = startItems |> List.filter(a => !List.exists(b => a == b, hideOnNotification))
+
+    let notificationItemsEnd = endItems |> List.filter(a => List.exists(b => a == b, hideOnNotification))
+    let endItems = endItems |> List.filter(a => !List.exists(b => a == b, hideOnNotification))
+
+
+    let fieldMaper = str =>
+      switch (str) {
+      | "modeIndicator" => <ModeIndicator font theme mode subMode />
+      | "notificationCount" =>
         <notificationCount
           dispatch
           theme
@@ -588,25 +605,40 @@ module View = {
           notifications
           maybeContextMenu={statusBar.contextMenu}
         />
-      </section>
-      <sectionGroup>
-        <section align=`FlexStart> macroElement </section>
-        <section align=`FlexStart> leftItems </section>
-        <section align=`FlexStart>
-          <diagnosticCount font theme diagnostics dispatch />
-          scmItems
-        </section>
-        <section align=`Center />
-        <section align=`FlexEnd> rightItems </section>
-        <section align=`FlexEnd>
-          <lineEndings />
-          <indentation />
-          <fileType />
-          <position />
-        </section>
+      | "diagnosticCount" =>
+        <diagnosticCount font theme diagnostics dispatch />
+      | "lineEndings" => <lineEndings />
+      | "indentation" => <indentation />
+      | "fileType" => <fileType />
+      | "position" => <position />
+      | "macro" => macroElement
+      | "leftItems" => leftItems
+      | "git" => scmItems
+      | "rightItems" => rightItems
+      | _ => React.empty
+      };
+
+    let startItems =
+      startItems |> List.map(fieldMaper) |> React.listToElement;
+    let notificationItemsStart =
+      notificationItemsStart |> List.map(fieldMaper) |> React.listToElement;
+    let notificationItemsEnd =
+      notificationItemsEnd |> List.map(fieldMaper) |> React.listToElement;
+    let endItems = endItems |> List.map(fieldMaper) |> React.listToElement;
+
+    <View
+      ?key
+      style={Styles.view(
+        Feature_Theme.Colors.StatusBar.background.from(theme),
+        yOffset,
+      )}>
+      <section align=`FlexStart> startItems </section>
+      <sectionGroup style={Styles.sectionGroup(background)}>
+        <section align=`FlexStart> notificationItemsStart </section>
+        <section align=`FlexEnd> notificationItemsEnd </section>
         <notificationPopups />
       </sectionGroup>
-      modeIndicatorEnd
+      <section align=`FlexStart> endItems </section>
     </View>;
   };
 };
@@ -614,10 +646,32 @@ module View = {
 module Configuration = {
   open Config.Schema;
   let visible = setting("workbench.statusBar.visible", bool, ~default=true);
-  let modeIndicator =
-    setting("workbench.statusBar.modeIndicator", string, ~default="rigth");
+  let startItems =
+    setting(
+      "workbench.statusBar.items.start",
+      list(string),
+      ~default=["..."],
+    );
+  let endItems =
+    setting(
+      "workbench.statusBar.items.end",
+      list(string),
+      ~default=["..."],
+    );
+  let hideOnNotification =
+    setting(
+      "workbench.statusBar.items.hideOnNotification",
+      list(string),
+      ~default=["..."],
+    );
 };
 
 module Contributions = {
-  let configuration = Configuration.[visible.spec, modeIndicator.spec];
+  let configuration =
+    Configuration.[
+      visible.spec,
+      startItems.spec,
+      hideOnNotification.spec,
+      endItems.spec,
+    ];
 };

@@ -61,7 +61,9 @@ module View: {
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
       ~workingDirectory: string,
-      ~modeIndicator: string,
+      ~startItems: list(string),
+      ~hideOnNotification: list(string),
+      ~endItems: list(string),
       unit
     ) =>
     Revery.UI.element;
@@ -71,7 +73,9 @@ module View: {
 
 module Configuration: {
   let visible: Config.Schema.setting(bool);
-  let modeIndicator: Config.Schema.setting(string);
+  let startItems: Config.Schema.setting(list(string));
+  let hideOnNotification: Config.Schema.setting(list(string));
+  let endItems: Config.Schema.setting(list(string));
 };
 
 // CONTRIBUTIONS
