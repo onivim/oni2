@@ -46,7 +46,7 @@ let renderLine =
           | Info => colors.infoForeground
           }
         );
-      Draw.underline(~context, ~color, diagnostic.range);
+      Draw.squiggly(~context, ~color, diagnostic.range);
     };
 
     /* Draw error markers */

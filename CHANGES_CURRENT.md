@@ -4,6 +4,7 @@
 - #2881 - Extensions: Initial rename support
 - #3348 - Code Actions: Implement extension host protocol for quick fix / code actions
 - #3352 - Keybindings: Add default keybinding for open configuration (related #1423, thanks @LiHRaM !)
+- #3381 - Language Support: Symbols - implement go-to buffer symbol menu
 
 ### Bug Fixes
 
@@ -38,6 +39,10 @@
 - #3371 - Explorer: Fix regression in auto-focus behavior
 - #3376 - Vim: Missing Control+W,W bindings (related #1721)
 - #3379 - Rename: Handle parsing 'rejectReason'
+- #3382 - Input: Handle `<capslock>` key
+- #3389 - Editor: Render diagnostics with squiggly lines (fixes #2827)
+- #3394 - Extensions: Fix error parsing extension manifest with boolean when express (related #3388)
+- #3390 - Diagnostics: Some diagnostics wouldn't show in hover UI (related #3231)
 
 ### Performance
 
@@ -55,6 +60,7 @@
 - #3303 - Language Support: Move language metadata into Feature_LanguageSupport (related #3288)
 - #3330 - Diagnostics: Add regression test for #3233
 - #3334 - Dependency: Revery -> b746d68 (thanks @timbertson !)
+- #3385 - Dependency: Revery -> 4337e2c
 
 ### Infrastructure
 

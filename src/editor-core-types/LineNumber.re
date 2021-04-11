@@ -16,3 +16,5 @@ let equals = (a, b) => a == b;
 let (==) = (a, b) => a == b;
 let (<) = (a, b) => a < b;
 let (>) = (a, b) => a > b;
+
+let compare = (a, b) => a - b;

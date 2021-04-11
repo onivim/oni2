@@ -278,11 +278,10 @@ let%component make =
         ~uiFont,
         ~editorFont,
         ~model=languageSupport,
-        ~diagnostics,
         ~tokenTheme,
         ~grammars=grammarRepository,
         ~buffer,
-        ~editorId=Some(editorId),
+        ~editorId,
         ~languageInfo,
       );
 
