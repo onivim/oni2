@@ -637,6 +637,7 @@ let update =
     let (languageSupport, outmsg) =
       Feature_LanguageSupport.update(
         ~config,
+        ~diagnostics=state.diagnostics,
         ~languageConfiguration,
         ~extensions=state.extensions,
         ~maybeBuffer,

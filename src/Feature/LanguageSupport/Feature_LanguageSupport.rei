@@ -96,6 +96,7 @@ type outmsg =
 let update:
   (
     ~config: Oni_Core.Config.resolver,
+    ~diagnostics: Feature_Diagnostics.model,
     ~extensions: Feature_Extensions.model,
     ~languageConfiguration: Oni_Core.LanguageConfiguration.t,
     ~maybeSelection: option(CharacterRange.t),
@@ -283,7 +284,6 @@ module Hover: {
   module Popup: {
     let make:
       (
-        ~diagnostics: Feature_Diagnostics.model,
         ~theme: Oni_Core.ColorTheme.Colors.t,
         ~tokenTheme: Oni_Syntax.TokenTheme.t,
         ~languageInfo: Exthost.LanguageInfo.t,
@@ -292,7 +292,7 @@ module Hover: {
         ~grammars: Oni_Syntax.GrammarRepository.t,
         ~model: model,
         ~buffer: Oni_Core.Buffer.t,
-        ~editorId: option(int)
+        ~editorId: int
       ) =>
       option((CharacterPosition.t, list(Oni_Components.Popup.Section.t)));
   };
