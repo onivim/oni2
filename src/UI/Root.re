@@ -107,11 +107,7 @@ let make = (~dispatch, ~state: State.t, ()) => {
           workingDirectory={Feature_Workspace.workingDirectory(
             state.workspace,
           )}
-          startItems={Feature_StatusBar.Configuration.startItems.get(config)}
-          endItems={Feature_StatusBar.Configuration.endItems.get(config)}
-          showOnNotification={
-            Feature_StatusBar.Configuration.showOnNotification.get(config)
-          }
+          items={Feature_StatusBar.Configuration.items.get(config)}
         />
       </View>;
     } else {

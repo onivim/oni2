@@ -40,6 +40,41 @@ module Item = {
   };
 };
 
+module ConfigurationItems = {
+  [@deriving show]
+  type t = {
+    startItems: list(string),
+    endItems: list(string),
+    showOnNotification: list(string),
+  };
+
+  let decode =
+    Json.Decode.(
+      obj(({field, _}) =>
+        {
+          startItems: field.withDefault("start", ["..."], list(string)),
+          endItems: field.withDefault("end", ["..."], list(string)),
+          showOnNotification:
+            field.withDefault("showOnNotification", ["..."], list(string)),
+        }
+      )
+    );
+
+  let encode = configurationItems =>
+    Json.Encode.(
+      obj([
+        ("start", configurationItems.startItems |> list(string)),
+        (
+          "showOnNotification",
+          configurationItems.showOnNotification |> list(string),
+        ),
+        ("end", configurationItems.endItems |> list(string)),
+      ])
+    );
+
+  let codec = Config.Schema.DSL.custom(~decode, ~encode);
+};
+
 // MSG
 
 [@deriving show]
@@ -392,11 +427,13 @@ module View = {
         ~theme,
         ~dispatch,
         ~workingDirectory: string,
-        ~startItems: list(string),
-        ~showOnNotification: list(string),
-        ~endItems: list(string),
+        ~items: ConfigurationItems.t,
         (),
       ) => {
+    let startItems = items.startItems;
+    let endItems = items.endItems;
+    let showOnNotification = items.showOnNotification;
+
     let activeNotifications = Feature_Notification.active(notifications);
     let background =
       Feature_Notification.statusBarBackground(~theme, notifications);
@@ -443,21 +480,6 @@ module View = {
       <item ?onClick backgroundColor> viewOrTooltip </item>;
     };
 
-    let leftItems =
-      statusBar.items
-      |> List.filter((item: Item.t) => item.alignment == Left)
-      |> List.map(
-           ({command, label, color, tooltip, backgroundColor, _}: Item.t) =>
-           toStatusBarElement(
-             ~command?,
-             ~backgroundColor?,
-             ~color?,
-             ~tooltip?,
-             label,
-           )
-         )
-      |> React.listToElement;
-
     let scmItems =
       scm
       |> Feature_SCM.statusBarCommands(~workingDirectory)
@@ -467,14 +489,6 @@ module View = {
              ~tooltip=?command.tooltip,
              command.title |> Exthost.Label.ofString,
            )
-         )
-      |> React.listToElement;
-
-    let rightItems =
-      statusBar.items
-      |> List.filter((item: Item.t) => item.alignment == Right)
-      |> List.map(({command, label, color, tooltip, _}: Item.t) =>
-           toStatusBarElement(~command?, ~color?, ~tooltip?, label)
          )
       |> React.listToElement;
 
@@ -569,6 +583,34 @@ module View = {
       | str => [str]
       };
 
+    let rightItems =
+      statusBar.items
+      |> List.filter((item: Item.t) =>
+           item.alignment == Right
+           && !List.exists(s => s == item.id, allItems)
+         )
+      |> List.map(({command, label, color, tooltip, _}: Item.t) =>
+           toStatusBarElement(~command?, ~color?, ~tooltip?, label)
+         )
+      |> React.listToElement;
+
+    let leftItems =
+      statusBar.items
+      |> List.filter((item: Item.t) =>
+           item.alignment == Left && !List.exists(s => s == item.id, allItems)
+         )
+      |> List.map(
+           ({command, label, color, tooltip, backgroundColor, _}: Item.t) =>
+           toStatusBarElement(
+             ~command?,
+             ~backgroundColor?,
+             ~color?,
+             ~tooltip?,
+             label,
+           )
+         )
+      |> React.listToElement;
+
     let def = ["notificationCount", "modeIndicator"];
     let showOnNotification =
       showOnNotification
@@ -634,7 +676,13 @@ module View = {
       | "leftItems" => leftItems
       | "git" => scmItems
       | "rightItems" => rightItems
-      | _ => React.empty
+      | str =>
+        statusBar.items
+        |> List.filter((item: Item.t) => item.id == str)
+        |> List.map(({command, label, color, tooltip, _}: Item.t) =>
+             toStatusBarElement(~command?, ~color?, ~tooltip?, label)
+           )
+        |> React.listToElement
       };
 
     let startItems =
@@ -665,32 +713,18 @@ module View = {
 module Configuration = {
   open Config.Schema;
   let visible = setting("workbench.statusBar.visible", bool, ~default=true);
-  let startItems =
+  let items =
     setting(
-      "workbench.statusBar.items.start",
-      list(string),
-      ~default=["..."],
-    );
-  let endItems =
-    setting(
-      "workbench.statusBar.items.end",
-      list(string),
-      ~default=["..."],
-    );
-  let showOnNotification =
-    setting(
-      "workbench.statusBar.items.showOnNotification",
-      list(string),
-      ~default=["notificationCount", "modeIndicator"],
+      "workbench.statusBar.items",
+      ConfigurationItems.codec,
+      ~default={
+        startItems: ["..."],
+        endItems: ["..."],
+        showOnNotification: ["..."],
+      },
     );
 };
 
 module Contributions = {
-  let configuration =
-    Configuration.[
-      visible.spec,
-      startItems.spec,
-      showOnNotification.spec,
-      endItems.spec,
-    ];
+  let configuration = Configuration.[visible.spec, items.spec];
 };

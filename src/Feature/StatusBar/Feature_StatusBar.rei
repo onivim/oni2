@@ -17,6 +17,13 @@ module Item: {
     t;
 };
 
+module ConfigurationItems: {
+  type t = {
+    startItems: list(string),
+    endItems: list(string),
+    showOnNotification: list(string),
+  };
+};
 // MODEL
 
 [@deriving show]
@@ -61,9 +68,7 @@ module View: {
       ~theme: ColorTheme.Colors.t,
       ~dispatch: msg => unit,
       ~workingDirectory: string,
-      ~startItems: list(string),
-      ~showOnNotification: list(string),
-      ~endItems: list(string),
+      ~items: ConfigurationItems.t,
       unit
     ) =>
     Revery.UI.element;
@@ -73,9 +78,7 @@ module View: {
 
 module Configuration: {
   let visible: Config.Schema.setting(bool);
-  let startItems: Config.Schema.setting(list(string));
-  let showOnNotification: Config.Schema.setting(list(string));
-  let endItems: Config.Schema.setting(list(string));
+  let items: Config.Schema.setting(ConfigurationItems.t);
 };
 
 // CONTRIBUTIONS
