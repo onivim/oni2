@@ -216,6 +216,45 @@ let characterRangeAt = (line, buffer) => {
      });
 };
 
+let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
+
+let tokenAt = (~languageConfiguration, position: CharacterPosition.t, buffer) => {
+  let line = position.line;
+  let character = position.character;
+  let lineNumber = line |> EditorCoreTypes.LineNumber.toZeroBased;
+  let numberOfLines = getNumberOfLines(buffer);
+
+  if (lineNumber < 0 || lineNumber >= numberOfLines) {
+    None;
+  } else {
+    let bufferLine = getLine(lineNumber, buffer);
+    let f = uchar =>
+      LanguageConfiguration.isWordCharacter(uchar, languageConfiguration);
+    let startIndex =
+      BufferLine.traverse(
+        ~f,
+        ~direction=`Backwards,
+        ~index=character,
+        bufferLine,
+      )
+      |> Option.value(~default=character);
+    let stopIndex =
+      BufferLine.traverse(
+        ~f,
+        ~direction=`Forwards,
+        ~index=character,
+        bufferLine,
+      )
+      |> Option.value(~default=character);
+    Some(
+      CharacterRange.{
+        start: CharacterPosition.{line, character: startIndex},
+        stop: CharacterPosition.{line, character: stopIndex},
+      },
+    );
+  };
+};
+
 let lastLine = buffer => {
   buffer.lines |> Array.length |> max(1) |> LineNumber.ofOneBased;
 };
@@ -244,8 +283,6 @@ let getUri = (buffer: t) => {
   | Some(v) => Uri.fromPath(v)
   };
 };
-
-let getNumberOfLines = (buffer: t) => Array.length(buffer.lines);
 
 let characterRange = (buffer: t) => {
   let start =

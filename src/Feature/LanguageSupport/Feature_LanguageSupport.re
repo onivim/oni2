@@ -153,6 +153,7 @@ module Msg = {
 let update =
     (
       ~config,
+      ~diagnostics,
       ~extensions,
       ~languageConfiguration,
       ~maybeSelection,
@@ -488,7 +489,9 @@ let update =
   | Hover(hoverMsg) =>
     let (hover', outMsg) =
       Hover.update(
+        ~languageConfiguration,
         ~cursorLocation,
+        ~diagnostics,
         ~maybeBuffer,
         ~editorId,
         ~extHostClient=client,
@@ -897,7 +900,6 @@ module Hover = {
   module Popup = {
     let make =
         (
-          ~diagnostics,
           ~theme,
           ~tokenTheme,
           ~languageInfo,
@@ -910,7 +912,6 @@ module Hover = {
         ) => {
       let {hover, _} = model;
       OldHover.Popup.make(
-        ~diagnostics,
         ~theme,
         ~tokenTheme,
         ~languageInfo,
