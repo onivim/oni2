@@ -156,13 +156,7 @@ The configuration file, `configuration.json` is in the Oni2 directory, whose loc
 
 - `workbench.statusBar.items.start` __(_[items]_ default: `["notificationCount"]`)__ - Defines the first group of items that appear.
 
-- `workbench.statusBar.items.notification.start` __(_[items]_ default: `["macro", "leftItems", "diagnosticCount", "git"]`)__ - Defines the group of items that appears after the right after `...items.start` group, these items are hidden by a notification message.
-
-- `workbench.statusBar.items.notification.center` __(_[items]_ default: `[]`)__ - Defines the group of items that appears after the `...items.notification.start` group, but these are centered, these items are hidden by a notification message.
-
-- `workbench.statusBar.items.notification.end` __(_[items]_ default: `["rightItems", "lineEndings", "indentation", "fileType", "position"]`)__ - Defines the group of items that appears before the `items.end` group, these items are hidden by a notification message.
-
-- `workbench.statusBar.items.end` __(_[items]_ default: `["modeIndicator"]`)__ - Defines the group of items that appears at the end of the status bar, these items are hidden by a notification message.
+- `workbench.statusBar.items.showOnNotification` __(_[items]_ default: `["notificationCount", "modeIndicator"]`)__ - Defines the group of items that are hiden by the notification popup text.
 
 - `workbench.statusBar.items.end` __(_[items]_ default: `["modeIndicator"]`)__ - Defines the group of items that appears at the end of the status bar, these items are hidden by a notification message.
     - _"notificationCount"_ - Notification Count icon and counter

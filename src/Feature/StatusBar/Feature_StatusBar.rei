@@ -62,7 +62,7 @@ module View: {
       ~dispatch: msg => unit,
       ~workingDirectory: string,
       ~startItems: list(string),
-      ~hideOnNotification: list(string),
+      ~showOnNotification: list(string),
       ~endItems: list(string),
       unit
     ) =>
@@ -74,7 +74,7 @@ module View: {
 module Configuration: {
   let visible: Config.Schema.setting(bool);
   let startItems: Config.Schema.setting(list(string));
-  let hideOnNotification: Config.Schema.setting(list(string));
+  let showOnNotification: Config.Schema.setting(list(string));
   let endItems: Config.Schema.setting(list(string));
 };
 

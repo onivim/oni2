@@ -393,7 +393,7 @@ module View = {
         ~dispatch,
         ~workingDirectory: string,
         ~startItems: list(string),
-        ~hideOnNotification: list(string),
+        ~showOnNotification: list(string),
         ~endItems: list(string),
         (),
       ) => {
@@ -573,8 +573,8 @@ module View = {
       | str => [str]
       };
 
-    let def = ["macro", "leftItems", "diagnosticCount", "git", "rightItems", "lineEndings", "indentation", "fileType", "position"] |> List.filter(a => !List.exists(b => a == b, hideOnNotification));
-    let hideOnNotification = hideOnNotification |> List.map(str =>
+    let def = ["notificationCount", "modeIndicator"];
+    let showOnNotification = showOnNotification |> List.map(str =>
       switch (str) {
       | "..." => def 
       | str => [str]
@@ -586,11 +586,11 @@ module View = {
     let def = ["rightItems", "lineEndings", "indentation", "fileType", "position", "modeIndicator"] |> List.filter(a => !List.exists(b => a == b, allItems));
     let endItems = endItems |> List.map(itemsTextMapper(def)) |> List.concat;
 
-    let notificationItemsStart = startItems |> List.filter(a => List.exists(b => a == b, hideOnNotification))
-    let startItems = startItems |> List.filter(a => !List.exists(b => a == b, hideOnNotification))
+    let notificationItemsStart = startItems |> List.filter(a => !List.exists(b => a == b, showOnNotification))
+    let startItems = startItems |> List.filter(a => List.exists(b => a == b, showOnNotification))
 
-    let notificationItemsEnd = endItems |> List.filter(a => List.exists(b => a == b, hideOnNotification))
-    let endItems = endItems |> List.filter(a => !List.exists(b => a == b, hideOnNotification))
+    let notificationItemsEnd = endItems |> List.filter(a => !List.exists(b => a == b, showOnNotification))
+    let endItems = endItems |> List.filter(a => List.exists(b => a == b, showOnNotification))
 
 
     let fieldMaper = str =>
@@ -658,11 +658,11 @@ module Configuration = {
       list(string),
       ~default=["..."],
     );
-  let hideOnNotification =
+  let showOnNotification =
     setting(
-      "workbench.statusBar.items.hideOnNotification",
+      "workbench.statusBar.items.showOnNotification",
       list(string),
-      ~default=["..."],
+      ~default=["notificationCount", "modeIndicator"],
     );
 };
 
@@ -671,7 +671,7 @@ module Contributions = {
     Configuration.[
       visible.spec,
       startItems.spec,
-      hideOnNotification.spec,
+      showOnNotification.spec,
       endItems.spec,
     ];
 };

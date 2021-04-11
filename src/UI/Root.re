@@ -109,8 +109,8 @@ let make = (~dispatch, ~state: State.t, ()) => {
           )}
           startItems={Feature_StatusBar.Configuration.startItems.get(config)}
           endItems={Feature_StatusBar.Configuration.endItems.get(config)}
-          hideOnNotification={
-            Feature_StatusBar.Configuration.hideOnNotification.get(
+          showOnNotification={
+            Feature_StatusBar.Configuration.showOnNotification.get(
               config,
             )
           }
